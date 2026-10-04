@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prisma } from "@feedbackme/db";
+import { prisma, type Prisma } from "@feedbackme/db";
 import type { DbClient } from "./tokens";
 
 // Accept either an absolute https?: URL or an internal relative path
@@ -46,11 +46,7 @@ export async function updateProfile(
   await db.user.update({ where: { id: userId }, data });
 }
 
-/** Foundational GDPR export — all data tied to the user, in JSON. Never includes passwordHash. */
-export async function exportProfile(userId: string, db: DbClient = prisma) {
-  return db.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: {
+const EXPORT_SELECT = {
       id: true,
       email: true,
       emailVerifiedAt: true,
@@ -99,6 +95,21 @@ export async function exportProfile(userId: string, db: DbClient = prisma) {
         },
         orderBy: { introducedAt: "asc" },
       },
+      // LANG G6 — góp ý bài viết do AI sinh cho chính người dùng (kèm trích đoạn bài viết của họ): dữ liệu
+      // học tập riêng tư gửi tới nhà cung cấp AI, nên phải nằm trong bản xuất.
+      writingFeedbacksReceived: {
+        select: {
+          id: true,
+          courseId: true,
+          status: true,
+          model: true,
+          body: true,
+          generatedAt: true,
+          reviewedAt: true,
+          reviewerNote: true,
+        },
+        orderBy: { generatedAt: "asc" },
+      },
       verificationTokens: { select: { id: true, purpose: true, createdAt: true, consumedAt: true } },
       portfolio: {
         select: {
@@ -110,6 +121,14 @@ export async function exportProfile(userId: string, db: DbClient = prisma) {
           items: { select: { submissionId: true, note: true, createdAt: true } },
         },
       },
-    },
+} satisfies Prisma.UserSelect;
+
+export type ExportedProfile = Prisma.UserGetPayload<{ select: typeof EXPORT_SELECT }>;
+
+/** Foundational GDPR export — all data tied to the user, in JSON. Never includes passwordHash. */
+export async function exportProfile(userId: string, db: DbClient = prisma): Promise<ExportedProfile> {
+  return db.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: EXPORT_SELECT,
   });
 }

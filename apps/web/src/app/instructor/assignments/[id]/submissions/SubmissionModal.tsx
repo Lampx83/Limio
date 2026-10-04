@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { UserAvatar, StatusBadge, DateTime } from "@/components/ui";
 import GradeForm from "./GradeForm";
+import WritingFeedbackReview from "@/components/WritingFeedbackReview";
 import AttachmentPreview from "./AttachmentPreview";
 
 export type SubmissionNav = {
@@ -176,6 +177,8 @@ export default function SubmissionModal({
                   isGraded={isGraded}
                   onDirtyChange={setDirty}
                 />
+                {/* LANG G6 — góp ý AI học viên đã nhờ (khoá ngoại ngữ): giảng viên sửa/duyệt/từ chối. Không hiện nếu chưa có bản nào. */}
+                <WritingFeedbackReview key={submission.id} submissionId={submission.id} />
               </div>
             </div>
           </div>

@@ -84,6 +84,10 @@ export const LearningEventType = {
   // LANG G5e — luyện đề (bảng riêng, không phải lượt thi): trả lời một câu đã chấm, và kết thúc buổi.
   ExamPracticeAnswered: "exam.practice.answered",
   ExamPracticeCompleted: "exam.practice.completed",
+  // LANG G6 — góp ý bài viết do AI sinh: sinh ra, giảng viên duyệt, giảng viên từ chối.
+  WritingFeedbackGenerated: "writing.feedback.generated",
+  WritingFeedbackApproved: "writing.feedback.approved",
+  WritingFeedbackRejected: "writing.feedback.rejected",
   ExamAttemptForceSubmitted: "exam.attempt.force_submitted",
   ExamAttemptSessionReset: "exam.attempt.session_reset",
   ExamAttemptDisqualified: "exam.attempt.disqualified",

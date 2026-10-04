@@ -2,11 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { getMockSkillSummary, getPracticeSkillSummary, isUserEnrolled } from "@feedbackme/core-lms";
-import { getFlashcardStats, getLanguageProfile } from "@feedbackme/core-feedback";
+import { getFlashcardStats, getLanguageProfile, getWritingErrorSummary } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import LanguageProfileView from "@/components/LanguageProfileView";
 import MockSkillBlock from "@/components/MockSkillBlock";
 import PracticeSkillBlock from "@/components/PracticeSkillBlock";
+import WritingErrorsBlock from "@/components/WritingErrorsBlock";
 
 export const dynamic = "force-dynamic";
 
@@ -28,12 +29,14 @@ export default async function LanguageSkillsPage({ params }: { params: { slug: s
   if (!course) notFound();
   if (!(await isUserEnrolled(userId, course.id))) redirect(`/catalog/${params.slug}?locked=1`);
 
-  const [profile, flashcards, mockSummary, practiceSummary] = await Promise.all([
+  const [profile, flashcards, mockSummary, practiceSummary, writingErrors] = await Promise.all([
     getLanguageProfile(userId, course.id, "learner"),
     getFlashcardStats(userId, course.id),
     // Khối "Thi thử" (G5d.6): lỗi ở đây không được làm hỏng cả hồ sơ.
     getMockSkillSummary(userId, course.id).catch(() => null),
     getPracticeSkillSummary(userId, course.id).catch(() => null),
+    // Khối "Lỗi hay gặp khi viết" (G6d): chỉ từ bản góp ý đã được giảng viên duyệt.
+    getWritingErrorSummary(userId, course.id).catch(() => null),
   ]);
 
   return (
@@ -51,6 +54,11 @@ export default async function LanguageSkillsPage({ params }: { params: { slug: s
       {mockSummary && mockSummary.skills.length > 0 && (
         <div className="mt-6">
           <MockSkillBlock summary={mockSummary} />
+        </div>
+      )}
+      {writingErrors && (
+        <div className="mt-6">
+          <WritingErrorsBlock summary={writingErrors} />
         </div>
       )}
       {practiceSummary && practiceSummary.skills.length > 0 && (

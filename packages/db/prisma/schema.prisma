@@ -179,8 +179,10 @@ model User {
   portfolio Portfolio?
 
   // A6 — Certification
-  certificates         Certificate[]
-  examPracticeSessions ExamPracticeSession[]
+  certificates             Certificate[]
+  examPracticeSessions     ExamPracticeSession[]
+  writingFeedbacksReceived WritingFeedback[]     @relation("WritingFeedbackOwner")
+  writingFeedbacksReviewed WritingFeedback[]     @relation("WritingFeedbackReviewer")
 
   @@index([createdAt])
 }
@@ -1672,11 +1674,12 @@ model AssignmentSubmission {
   reflection String? @db.Text
   aiFeedback Json?
 
-  assignment     Assignment      @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  user           User            @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
-  grader         User?           @relation("Grader", fields: [graderId], references: [id])
+  assignment       Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user             User              @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
+  grader           User?             @relation("Grader", fields: [graderId], references: [id])
   // A8 — bài này đang được ghim vào e-portfolio của học viên.
-  portfolioItems PortfolioItem[]
+  portfolioItems   PortfolioItem[]
+  writingFeedbacks WritingFeedback[]
 
   // Idempotent — one row per (assignment, user). Re-submission updates this row.
   @@unique([assignmentId, userId])
@@ -5295,4 +5298,46 @@ model ExamPracticeAnswer {
 
   @@unique([sessionId, questionId])
   @@index([questionId])
+}
+
+// LANG G6 — góp ý bài viết ngoại ngữ do AI sinh. Học viên bấm, trừ ví token của học viên; bản sinh ra là
+// NHÁP (học viên thấy kèm nhãn "chưa duyệt") cho tới khi giảng viên duyệt. Mỗi bản mang toạ độ SSMMD
+// riêng (§4.8), ghi lúc sinh.
+enum WritingFeedbackStatus {
+  draft
+  approved
+  rejected
+}
+
+model WritingFeedback {
+  id                String                @id @default(uuid())
+  submissionId      String
+  userId            String
+  // Khoá của bài nộp — để tổng hợp lỗi lặp lại theo khoá không cần join ngược lên lesson.
+  courseId          String
+  status            WritingFeedbackStatus @default(draft)
+  // Hash nội dung bài nộp lúc phân tích: cùng nội dung thì trả bản cũ, không gọi AI/trừ token lại.
+  submissionHash    String
+  // { summary, criteria[{key,level,comment}], errors[{id,category,quote,correction,explanation}], nextSteps[] }
+  body              Json
+  model             String
+  tokensIn          Int
+  tokensOut         Int
+  // ── Toạ độ SSMMD (B9) — bắt buộc, thiếu là lỗi (không lưu).
+  level             FeedbackLevel
+  levels            Json
+  elaboration       FeedbackElaboration
+  sourceKind        FeedbackSourceKind
+  generationContext Json
+  generatedAt       DateTime              @default(now())
+  reviewedById      String?
+  reviewedAt        DateTime?
+  reviewerNote      String?               @db.Text
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  user       User                 @relation("WritingFeedbackOwner", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer   User?                @relation("WritingFeedbackReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([submissionId, generatedAt])
+  @@index([userId, courseId, status])
 }
