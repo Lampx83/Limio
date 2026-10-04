@@ -97,6 +97,9 @@ export async function deleteUser(
     await tx.courseInstructor.deleteMany({ where: { userId: targetUserId } });
     // Ghi chú cá nhân — nội dung riêng tư, không có giá trị thống kê.
     await tx.note.deleteMany({ where: { userId: targetUserId } });
+    // LANG G6 — góp ý bài viết do AI chứa trích đoạn bài viết riêng của học viên (đã gửi tới nhà cung cấp
+    // AI): nội dung riêng tư, không có giá trị thống kê sau khi ẩn danh, nên xoá hẳn như ghi chú.
+    await tx.writingFeedback.deleteMany({ where: { userId: targetUserId } });
     // A8 — e-portfolio là trang trưng bày gắn danh tính; ẩn danh hoá mà giữ
     // lại thì /p/<slug> vẫn sống. Item cascade theo Portfolio.
     await tx.portfolio.deleteMany({ where: { userId: targetUserId } });

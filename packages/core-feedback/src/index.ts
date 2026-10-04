@@ -13,3 +13,4 @@ export * from "./learningPath";
 export * from "./languageProfile";
 export * from "./flashcardSrs";
 export * from "./flashcards";
+export * from "./writing/index";

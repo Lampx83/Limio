@@ -43,7 +43,7 @@ async function logUsage(
 }
 
 /** Wraps OpenAI's structured-output API. Returns parsed JSON + usage. */
-async function callJsonModel<T>(
+export async function callJsonModel<T>(
   openai: OpenAI,
   model: string,
   systemPrompt: string,

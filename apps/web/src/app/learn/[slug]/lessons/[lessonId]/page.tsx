@@ -10,7 +10,7 @@ import {
   listThreadsForLesson,
   resolveQuizScore,
 } from "@feedbackme/core-lms";
-import { shouldSkipLesson } from "@feedbackme/core-feedback";
+import { getWritingFeedbackForLearner, resolveFeedbackVariant, shouldSkipLesson } from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import LessonContent from "@/components/LessonContent";
@@ -117,7 +117,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
       // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
@@ -432,6 +432,18 @@ export default async function LessonPage({
     });
   }
 
+  // LANG G6 — góp ý bài viết bằng AI: chỉ khoá ngoại ngữ và lớp không phải đối chứng.
+  const writingFeedbackEnabled =
+    lesson.module.course.languageMode &&
+    (await resolveFeedbackVariant(userId, lesson.module.course.id)).variant !== "minimal";
+  const writingFeedbackBySubmission = new Map<string, Awaited<ReturnType<typeof getWritingFeedbackForLearner>>>();
+  if (writingFeedbackEnabled) {
+    for (const a of visibleAssignments) {
+      const sub = a.submissions[0];
+      if (sub) writingFeedbackBySubmission.set(sub.id, await getWritingFeedbackForLearner(userId, sub.id));
+    }
+  }
+
   const tasks: TaskItem[] = [
     ...visibleQuizzes.map<TaskItem>((q) => {
       const best = bestAttemptByQuiz.get(q.id);
@@ -458,6 +470,16 @@ export default async function LessonPage({
       requireReflection: a.requireReflection,
       submission: a.submissions[0]
         ? {
+            id: a.submissions[0].id,
+            writingFeedback: writingFeedbackEnabled
+              ? {
+                  enabled: true as const,
+                  initial: (() => {
+                    const f = writingFeedbackBySubmission.get(a.submissions[0]!.id);
+                    return f ? { review: f.review, body: f.body, reviewerNote: f.reviewerNote } : null;
+                  })(),
+                }
+              : undefined,
             status: a.submissions[0].status,
             submittedAt: a.submissions[0].submittedAt,
             score: a.submissions[0].score,
