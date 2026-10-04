@@ -21,6 +21,12 @@ interface DemoAccount {
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
+    email: "giangvien.mau@feedbackme.dev",
+    label: "Giảng viên Mẫu",
+    roleLabel: "Instructor",
+    hint: "Có khoá \"Hướng dẫn sử dụng Limio\" (nháp) và khoá \"Nhập môn Lập trình\" với 36 học viên giả — dùng để xem thử và chụp ảnh hướng dẫn.",
+  },
+  {
     email: "alice@feedbackme.dev",
     label: "Alice",
     roleLabel: "Instructor",

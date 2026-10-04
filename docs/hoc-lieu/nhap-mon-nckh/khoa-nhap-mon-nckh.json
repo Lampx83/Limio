@@ -1,0 +1,1326 @@
+{
+  "course": {
+    "title": "NCKH 101 · Nhập môn Nghiên cứu khoa học",
+    "slug": "nhap-mon-nckh",
+    "description": "Khoá dành cho sinh viên đại học chuẩn bị hoặc đang làm đề tài NCKH sinh viên, khoá luận hoặc bài tập lớn có tính nghiên cứu — lần đầu phải tự đặt câu hỏi, tự đọc tài liệu, tự chọn cách trả lời, không còn đề bài có sẵn. Năm bài đi đúng trình tự làm một đề tài thật: đặt được một câu hỏi nghiên cứu khả thi (không phải một chủ đề rộng); đọc và tổng hợp tài liệu có hệ thống thay vì đọc rời rạc; trích dẫn đúng và giữ liêm chính học thuật; chọn một thiết kế nghiên cứu cơ bản phù hợp với câu hỏi đã đặt; và viết, trình bày được kết quả trước hội đồng. Khoá không dạy lý thuyết phương pháp luận trừu tượng. Mỗi bài đặt một khung khái niệm có nguồn gốc rõ ràng, cho thấy khung ấy áp vào một tình huống cụ thể ra sao, rồi buộc người học chạy nó trên chính đề tài họ đang định làm — dùng một đề tài xuyên suốt cả khoá, có sản phẩm dùng lại được ngay cho đề tài thật, không phải bài tập rời rạc bỏ đi. Mỗi bài kết bằng một bài kiểm tra ngắn, phương án sai được gắn mã lỗi tư duy để phản hồi chỉ đúng chỗ hiểu nhầm thay vì báo sai chung chung.",
+    "language": "vi",
+    "level": "beginner",
+    "category": "Nghiên cứu khoa học",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "nckh.research-is-summary",
+      "name": "Coi nghiên cứu khoa học là tổng hợp lại thông tin có sẵn",
+      "description": "Hiểu làm NCKH là gom nhiều nguồn, viết lại cho gọn và trình bày mạch lạc — giống một bài thu hoạch. NCKH phải tạo ra một câu trả lời chưa có sẵn ở bất kỳ nguồn đơn lẻ nào, bằng một phương pháp người khác kiểm lại được; tổng hợp tài liệu chỉ là một bước chuẩn bị, không phải sản phẩm cuối."
+    },
+    {
+      "code": "nckh.question-too-broad",
+      "name": "Đặt câu hỏi nghiên cứu quá rộng, không giới hạn phạm vi",
+      "description": "Nêu câu hỏi kiểu 'ảnh hưởng của mạng xã hội tới sinh viên' — đúng hướng nhưng không trả lời được trong khuôn khổ một đề tài NCKH sinh viên vì thiếu đối tượng cụ thể, khung thời gian, và khía cạnh muốn đo. Câu hỏi tốt phải đủ hẹp để một người, trong vài tháng, với nguồn lực sinh viên, trả lời được."
+    },
+    {
+      "code": "nckh.yesno-question",
+      "name": "Đặt câu hỏi nghiên cứu ở dạng có/không",
+      "description": "Hỏi kiểu 'mạng xã hội có ảnh hưởng tới kết quả học tập không' — trả lời được bằng một chữ 'có' mà không cần phân tích gì thêm, nên không mở ra được dữ liệu. Câu hỏi mở bằng 'ở mức nào', 'khác nhau ra sao giữa các nhóm', 'qua cơ chế nào' mới buộc phải đo lường và so sánh."
+    },
+    {
+      "code": "nckh.topic-is-question",
+      "name": "Nhầm đề tài (chủ đề rộng) với câu hỏi nghiên cứu",
+      "description": "Coi cái tên đề tài — 'động lực học tập của sinh viên năm nhất' — đã là câu hỏi nghiên cứu, trong khi đó chỉ là vùng đất để đi tìm câu hỏi. Câu hỏi nghiên cứu phải là một câu có thể trả lời bằng dữ liệu cụ thể, không phải tên một lĩnh vực quan tâm."
+    },
+    {
+      "code": "nckh.interest-is-enough",
+      "name": "Thấy đề tài thú vị là đủ, không kiểm khả thi",
+      "description": "Chọn câu hỏi chỉ vì thấy hay, mà không kiểm xem có tiếp cận được đối tượng khảo sát, có đủ thời gian, có đủ công cụ và có được phép làm không. Một câu hỏi hay mà không khả thi thì tốn hết một học kỳ vẫn không ra được dữ liệu để trả lời."
+    },
+    {
+      "code": "nckh.novelty-means-new-topic",
+      "name": "Hiểu 'mới' là phải chọn chủ đề chưa ai từng nghe tới",
+      "description": "Nghĩ rằng tính mới (novelty) đòi hỏi một chủ đề hoàn toàn chưa xuất hiện trong tài liệu nào, nên loại bỏ mọi đề tài đã có người làm. Tính mới ở cấp NCKH sinh viên thường đến từ bối cảnh mới (nhóm đối tượng, thời điểm, địa bàn khác), góc nhìn mới hoặc phương pháp mới trên một vấn đề đã được nghiên cứu, không nhất thiết phải là chủ đề chưa ai chạm tới."
+    },
+    {
+      "code": "nckh.read-cover-to-cover",
+      "name": "Đọc bài báo tuần tự từ đầu đến cuối",
+      "description": "Mở một bài báo và đọc từ chữ đầu tiên, kể cả phần cơ sở lý thuyết và tổng quan của chính bài báo đó — thứ người đọc sẽ tự viết lại theo cách của mình, không cần đọc kỹ của người khác. Cách đọc này tốn rất nhiều thời gian mà không giúp quyết định nhanh bài có liên quan hay không."
+    },
+    {
+      "code": "nckh.google-is-enough",
+      "name": "Chỉ tìm tài liệu bằng Google thường",
+      "description": "Gõ từ khoá vào công cụ tìm kiếm phổ thông và coi kết quả trả về là đủ, bỏ qua Google Scholar, thư viện số của trường và các cơ sở dữ liệu chuyên ngành. Google thường xếp hạng theo độ phổ biến, không lọc theo việc nội dung đã qua bình duyệt học thuật hay chưa, nên dễ trộn lẫn bài báo khoa học với blog và tin tức."
+    },
+    {
+      "code": "nckh.no-notes-system",
+      "name": "Đọc xong không ghi chú có cấu trúc",
+      "description": "Đọc nhiều bài báo nhưng chỉ nhớ đại khái, không ghi lại theo một khung cố định. Khi ngồi viết phần tổng quan, người đọc phải mở lại gần hết số bài đã đọc vì đã quên chi tiết phương pháp và kết quả — ma trận tổng quan tồn tại chính là để tránh việc này."
+    },
+    {
+      "code": "nckh.gap-claim-without-basis",
+      "name": "Tuyên bố khoảng trống nghiên cứu không có căn cứ",
+      "description": "Viết 'chưa có nghiên cứu nào về vấn đề này' chỉ vì đọc lướt vài bài mà không thấy, không nói rõ đã tìm ở đâu và bao nhiêu nguồn. Khoảng trống chỉ đứng được khi có căn cứ cụ thể từ ma trận tổng quan — bao nhiêu nguồn đã đọc, và chính xác điều gì trong số đó chưa từng được làm."
+    },
+    {
+      "code": "nckh.summary-not-synthesis",
+      "name": "Viết tổng quan bằng cách liệt kê tuần tự từng tác giả",
+      "description": "Viết tổng quan tài liệu theo kiểu 'tác giả A nói X, tác giả B nói Y, tác giả C nói Z' — đúng thông tin nhưng không kết nối thành luận điểm nào. Tổng quan cần nhóm các nguồn theo luận điểm chung hoặc mâu thuẫn, để từ đó chỉ ra được khoảng trống, không phải chỉ chứng minh đã đọc nhiều."
+    },
+    {
+      "code": "nckh.paraphrase-is-enough",
+      "name": "Đổi vài từ đồng nghĩa là đã paraphrase đúng",
+      "description": "Thay một vài từ trong câu gốc bằng từ đồng nghĩa, giữ nguyên cấu trúc câu, rồi coi đó là đã viết lại bằng lời của mình. Đây là paraphrase không đủ (word-switching) — vẫn tính là đạo văn dù có trích dẫn nguồn ở cuối câu, vì cách diễn đạt chưa thật sự khác với bản gốc."
+    },
+    {
+      "code": "nckh.no-citation-if-my-words",
+      "name": "Viết bằng lời của mình thì không cần trích dẫn nữa",
+      "description": "Tin rằng chỉ cần không sao chép nguyên văn — viết lại hoàn toàn bằng cách diễn đạt của riêng mình — là đủ, không cần trích dẫn nguồn nữa. Trích dẫn bảo vệ nguồn của ý tưởng hoặc kết luận, không chỉ của câu chữ; đạo văn ý tưởng vẫn xảy ra dù không câu nào trùng chữ với bản gốc."
+    },
+    {
+      "code": "nckh.plagiarism-is-copy-only",
+      "name": "Chỉ tính là đạo văn khi sao chép nguyên văn",
+      "description": "Hiểu đạo văn hẹp thành việc chép đúng câu chữ không trích dẫn, bỏ qua ba dạng khác: paraphrase không đủ, đạo văn ý tưởng, và tự đạo văn — cả ba đều bị coi là vi phạm liêm chính học thuật dù không có câu nào trùng chữ với nguồn."
+    },
+    {
+      "code": "nckh.self-plagiarism-not-an-issue",
+      "name": "Dùng lại bài của chính mình không phải đạo văn",
+      "description": "Nộp lại nguyên hoặc gần nguyên một bài đã nộp cho môn khác, không khai báo, vì nghĩ 'đây là bài của mình, không phải chép của ai'. Người chấm bài mới kỳ vọng đây là sản phẩm mới; dùng lại không khai báo là tự đạo văn, kể cả khi tác giả gốc chính là người nộp."
+    },
+    {
+      "code": "nckh.similarity-score-is-the-goal",
+      "name": "Độ trùng lặp thấp nghĩa là bài đã liêm chính học thuật",
+      "description": "Coi chỉ số similarity index thấp từ công cụ chống đạo văn là bằng chứng đầy đủ rằng bài không có vấn đề gì về liêm chính học thuật. Công cụ này chỉ đo độ trùng câu chữ, không bắt được đạo văn ý tưởng hay paraphrase kỹ mà quên trích dẫn nguồn."
+    },
+    {
+      "code": "nckh.qual-quant-by-preference",
+      "name": "Chọn định lượng/định tính theo cái mình thấy dễ hơn",
+      "description": "Chọn thiết kế nghiên cứu vì thấy số liệu 'khoa học hơn' hoặc vì thấy phỏng vấn 'dễ làm hơn thống kê', thay vì chọn theo loại câu hỏi nghiên cứu. Câu hỏi hỏi về mức độ hay mối quan hệ giữa các biến cần định lượng; câu hỏi hỏi về trải nghiệm hay cơ chế cần định tính — sở thích cá nhân không phải căn cứ để chọn."
+    },
+    {
+      "code": "nckh.iv-dv-confusion",
+      "name": "Nhầm biến độc lập với biến phụ thuộc",
+      "description": "Xác định sai chiều tác động khi tách một câu hỏi nghiên cứu thành biến: gọi biến kết quả là biến độc lập, hoặc coi cả hai biến đều là nguyên nhân. Biến phụ thuộc là thứ được đo như kết quả; biến độc lập là thứ được coi là yếu tố tác động tới kết quả đó."
+    },
+    {
+      "code": "nckh.convenience-sample-generalizes",
+      "name": "Coi mẫu thuận tiện đại diện được cho dân số rộng hơn",
+      "description": "Khảo sát bạn cùng lớp hoặc một nhóm Facebook dễ tiếp cận, rồi kết luận cho cả 'sinh viên nói chung' hoặc một dân số rộng hơn nhiều so với mẫu đã khảo sát. Mẫu thuận tiện chỉ đại diện cho đúng nhóm đã khảo sát, không đại diện cho dân số rộng hơn, bất kể cỡ mẫu lớn tới đâu."
+    },
+    {
+      "code": "nckh.sample-size-bigger-always-better",
+      "name": "Mẫu lớn luôn đại diện tốt hơn mẫu nhỏ",
+      "description": "Tin rằng cỡ mẫu lớn tự động đồng nghĩa với đại diện tốt, bỏ qua cách chọn mẫu. Một mẫu lớn nhưng chọn theo cách thiên lệch (ví dụ chỉ từ một nhóm Facebook) vẫn không đại diện tốt hơn một mẫu nhỏ được chọn ngẫu nhiên đúng cách từ toàn bộ dân số."
+    },
+    {
+      "code": "nckh.leading-question-blind",
+      "name": "Không nhận ra câu hỏi khảo sát mang tính dẫn dắt",
+      "description": "Viết câu hỏi đã gợi sẵn câu trả lời mong muốn (ví dụ 'Bạn có đồng ý rằng X luôn tốt không?'), khiến người trả lời khó nói khác với hướng câu hỏi gợi ý. Câu hỏi khảo sát cần trung lập, không giả định sẵn kết luận nào là đúng."
+    },
+    {
+      "code": "nckh.double-barreled-blind",
+      "name": "Không nhận ra câu hỏi hỏi hai điều trong một câu",
+      "description": "Gộp hai nội dung khác nhau vào một câu hỏi (ví dụ hỏi cùng lúc về phân vai trò và về tần suất họp), khiến người trả lời không biết đang trả lời phần nào khi hai câu trả lời khác nhau. Mỗi câu hỏi khảo sát chỉ nên hỏi đúng một nội dung."
+    },
+    {
+      "code": "nckh.abstract-written-first",
+      "name": "Viết Tóm tắt trước khi có kết quả",
+      "description": "Viết phần Tóm tắt (Abstract) ngay sau khi chốt câu hỏi nghiên cứu, khi chưa có kết quả thật. Tóm tắt phải tóm lại những gì báo cáo đã có — câu hỏi, phương pháp, kết quả, ý nghĩa — nên chỉ viết được sau cùng, khi các phần khác đã hoàn thành."
+    },
+    {
+      "code": "nckh.absolute-claims",
+      "name": "Dùng ngôn ngữ tuyệt đối thay vì đúng mức độ chắc chắn",
+      "description": "Viết kết luận bằng từ ngữ tuyệt đối như 'chứng minh', 'chắc chắn', 'luôn luôn' cho một nghiên cứu trên mẫu thuận tiện, cỡ mẫu trung bình. Kết luận cần dùng ngôn ngữ hedged ('kết quả cho thấy', 'có thể do', 'dữ liệu gợi ý') đúng với mức độ bằng chứng thật có."
+    },
+    {
+      "code": "nckh.claim-beyond-data",
+      "name": "Kết luận vượt quá phạm vi dữ liệu đã thu thập",
+      "description": "Suy rộng kết luận từ một mẫu thuận tiện (một lớp, một khoa, một trường) ra một dân số rộng hơn nhiều như 'sinh viên Việt Nam' hay 'sinh viên nói chung'. Kết luận chỉ nên nói trong đúng phạm vi mẫu đã khảo sát, như đã học ở Bài 4.1 về giới hạn của mẫu thuận tiện."
+    },
+    {
+      "code": "nckh.slide-is-report",
+      "name": "Nhồi nguyên văn báo cáo vào slide",
+      "description": "Đưa cả đoạn văn dài từ báo cáo lên slide thuyết trình, rồi đứng đọc lại. Khán giả đọc nhanh hơn người nói nên đọc xong slide trước khi người nói xong câu, sau đó ngừng nghe. Slide chỉ nên có từ khóa, số liệu chính hoặc một hình/bảng; phần diễn giải nằm ở lời nói."
+    },
+    {
+      "code": "nckh.must-answer-everything",
+      "name": "Bịa câu trả lời khi bị hội đồng hỏi điều không biết",
+      "description": "Đưa ra một câu trả lời nghe hợp lý dù không chắc đúng, vì sợ bị coi là thiếu chuẩn bị khi không trả lời được. Hội đồng có chuyên môn thường nhận ra ngay khi câu trả lời sai; nói thẳng chưa nắm rõ và cam kết tìm hiểu thêm giữ được uy tín tốt hơn."
+    },
+    {
+      "code": "nckh.defensive-to-criticism",
+      "name": "Phản ứng phòng thủ khi hội đồng góp ý hoặc hỏi khó",
+      "description": "Giải thích dài dòng, đổ lỗi cho hoàn cảnh, hoặc cãi lại ngay khi bị chỉ ra một điểm yếu trong nghiên cứu. Góp ý là để bài tốt hơn, không phải một cuộc tấn công cá nhân; cách phản hồi tốt hơn là ghi nhận điểm đó rồi nói cách đã hoặc sẽ xử lý nó."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "nckh.research-is-summary",
+      "body": "Tự hỏi: nếu ai đó đọc hết mọi nguồn bạn đang đọc, họ đã có câu trả lời chưa, hay vẫn còn thiếu một mảnh mà chỉ có dữ liệu của riêng bạn mới lấp được? Nếu câu trả lời đã nằm sẵn trong tài liệu, đó là việc tổng hợp; NCKH bắt đầu từ chỗ tài liệu dừng lại.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.question-too-broad",
+      "body": "Thêm vào câu hỏi của bạn: đối tượng cụ thể là ai, ở đâu, trong khung thời gian nào, và khía cạnh nào bạn đo. Một câu hỏi trả lời được trong một đề tài NCKH sinh viên thường đọc lên nghe 'hẹp' hơn bạn tưởng.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.yesno-question",
+      "body": "Đổi câu hỏi có/không thành câu hỏi mở: thay 'có ảnh hưởng không' bằng 'ảnh hưởng ở mức nào', 'khác nhau ra sao giữa nhóm A và nhóm B', hoặc 'qua cơ chế nào'. Câu hỏi mở mới cho biết bạn sẽ đo cái gì.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.topic-is-question",
+      "body": "Đề tài là vùng đất, câu hỏi nghiên cứu là một điểm cụ thể trên vùng đất đó. Thử viết lại điều bạn quan tâm dưới dạng một câu có dấu hỏi chấm, có thể trả lời bằng số liệu hoặc bằng chứng cứ thu thập được — nếu chưa viết được câu như vậy, bạn vẫn đang ở đề tài, chưa tới câu hỏi.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.interest-is-enough",
+      "body": "Trước khi đi tiếp, tự trả lời bốn câu của khung khả thi: bạn tiếp cận được đúng đối tượng cần khảo sát chứ? Có đủ thời gian trong một học kỳ? Có công cụ hoặc kỹ năng cần thiết? Có được phép thu thập dữ liệu đó không? Thiếu một câu trả lời 'có' là dấu hiệu cần thu hẹp thêm hoặc đổi hướng.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.novelty-means-new-topic",
+      "body": "Tính mới không đòi hỏi chủ đề chưa ai nghe tới. Hãy tìm cách làm nó mới theo một trong ba hướng: đối tượng hoặc bối cảnh khác với các nghiên cứu đã có, góc nhìn khác, hoặc phương pháp khác để trả lời cùng một câu hỏi.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.read-cover-to-cover",
+      "body": "Thử đọc theo thứ tự tóm tắt → kết luận/thảo luận → hình và bảng số liệu trước, chỉ đọc kỹ phần phương pháp nếu bài vẫn còn liên quan sau ba bước đó. Cách này lọc nhanh hơn nhiều mà không bỏ sót thông tin quan trọng.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.google-is-enough",
+      "body": "Chuyển sang Google Scholar và thư viện số của trường cho vòng tìm kiếm chính — chúng lọc theo bình duyệt học thuật và cho truy cập toàn văn, thứ Google thường không làm được. Dùng Google thường chỉ để tìm ngữ cảnh nhanh, không phải để tìm nguồn trích dẫn.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.no-notes-system",
+      "body": "Lập một ma trận tổng quan — mỗi dòng một nguồn, mỗi cột một tiêu chí cố định — và điền ngay sau khi đọc xong từng bài, không dồn lại. Đây là cách duy nhất tránh phải đọc lại toàn bộ nguồn khi ngồi viết.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.gap-claim-without-basis",
+      "body": "Trước khi viết 'chưa ai nghiên cứu điều này', hãy tự hỏi: mình đã tìm ở nguồn nào, và trong bao nhiêu bài đã đọc? Viết rõ số liệu đó ra ('trong 8 bài đã đọc về X, không bài nào làm ở Y') để khoảng trống có căn cứ kiểm được, không phải một cảm giác.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.summary-not-synthesis",
+      "body": "Thử nhóm lại các dòng trong ma trận theo luận điểm chung hoặc mâu thuẫn, rồi viết một câu cho mỗi nhóm, trích dẫn tất cả nguồn thuộc nhóm đó trong cùng câu. Nếu đoạn văn của bạn đọc lên nghe như danh sách 'tác giả này nói, tác giả kia nói', đó vẫn là liệt kê.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.paraphrase-is-enough",
+      "body": "Thử kỹ thuật 4 bước: đọc đoạn gốc, che lại, viết lại từ trí nhớ, rồi so sánh với bản gốc. Nếu câu của bạn vẫn đi theo đúng thứ tự từ và cấu trúc câu gốc, đó là dấu hiệu cần viết lại lần nữa — dù đã trích dẫn.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.no-citation-if-my-words",
+      "body": "Tự hỏi: kết luận hoặc ý tưởng trong câu này đến từ đâu — từ chính dữ liệu bạn thu thập, hay từ một nguồn bạn đã đọc? Nếu là từ một nguồn, vẫn cần trích dẫn dù câu chữ đã hoàn toàn khác với bản gốc. Trích dẫn bảo vệ nguồn của ý tưởng, không chỉ của câu chữ.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.plagiarism-is-copy-only",
+      "body": "Đạo văn còn ba dạng khác ngoài sao chép nguyên văn: paraphrase không đủ, đạo văn ý tưởng, và tự đạo văn. Xem lại bảng bốn dạng đạo văn ở bài học và tự kiểm đoạn văn của bạn với cả bốn dạng, không chỉ dạng đầu tiên.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.self-plagiarism-not-an-issue",
+      "body": "Dùng lại nội dung bạn đã viết cho một bài khác vẫn cần khai báo rõ, hoặc viết lại hoàn toàn cho bài mới. Người chấm bài kỳ vọng đây là sản phẩm mới; im lặng dùng lại đánh lừa kỳ vọng đó, kể cả khi tác giả gốc chính là bạn.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.similarity-score-is-the-goal",
+      "body": "Độ trùng lặp thấp chỉ cho biết không có đoạn nào trùng câu chữ với cơ sở dữ liệu của công cụ — nó không kiểm được đạo văn ý tưởng hay paraphrase kỹ mà quên trích dẫn. Kiểm lại từng claim quan trọng bằng tay: claim này có nguồn không, nguồn đó đã được trích dẫn chưa.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.qual-quant-by-preference",
+      "body": "Quay lại câu hỏi nghiên cứu của bạn và hỏi: câu hỏi này đang hỏi về mức độ/mối quan hệ giữa các biến (định lượng), hay về trải nghiệm/cơ chế (định tính)? Chọn thiết kế theo câu trả lời đó, không theo việc bạn thấy số hay lời dễ xử lý hơn.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.iv-dv-confusion",
+      "body": "Biến phụ thuộc luôn là thứ bạn đo như một KẾT QUẢ; biến độc lập là thứ bạn coi là yếu tố TÁC ĐỘNG tới kết quả đó. Thử hỏi: 'Nếu biến này thay đổi, biến kia có khả năng thay đổi theo không, hay ngược lại?' — chiều trả lời cho biết đâu là biến nào.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.convenience-sample-generalizes",
+      "body": "Mẫu thuận tiện (bạn cùng lớp, một nhóm Facebook) chỉ nói được về đúng nhóm đã khảo sát. Viết kết luận trong phạm vi đó, và ghi rõ hạn chế này trong bài, thay vì suy rộng ra 'sinh viên nói chung' hay một dân số bạn chưa thật sự tiếp cận được.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.sample-size-bigger-always-better",
+      "body": "Cỡ mẫu lớn không cứu được một cách chọn mẫu thiên lệch. Trước khi tin vào cỡ mẫu, hỏi: mẫu này được chọn từ đâu, và mọi người trong dân số mục tiêu có cơ hội xuất hiện trong mẫu như nhau không?",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.leading-question-blind",
+      "body": "Đọc lại câu hỏi và tự hỏi: câu này có đang gợi sẵn một câu trả lời được coi là 'đúng' hay 'nên' không? Nếu có, viết lại thành câu trung lập, không giả định trước kết luận nào.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.double-barreled-blind",
+      "body": "Đọc lại câu hỏi và đếm xem nó đang hỏi bao nhiêu nội dung khác nhau. Nếu người trả lời có thể đồng ý với phần này mà không đồng ý với phần kia, tách câu đó thành hai câu riêng.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.abstract-written-first",
+      "body": "Để phần Tóm tắt lại sau cùng. Viết trước các phần Đặt vấn đề, Tổng quan, Phương pháp, Kết quả, Thảo luận — rồi tóm lại đúng những gì các phần đó đã có, không phải những gì bạn dự định làm.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.absolute-claims",
+      "body": "Đọc lại câu kết luận và tự hỏi: mức độ chắc chắn trong câu này có khớp với cỡ mẫu và cách chọn mẫu thật của bạn không? Đổi 'chứng minh', 'chắc chắn', 'luôn luôn' thành 'kết quả cho thấy', 'có thể do', 'dữ liệu gợi ý rằng'.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.claim-beyond-data",
+      "body": "Kết luận chỉ nên nói trong đúng phạm vi mẫu đã khảo sát ở Bài 4.1. Nếu mẫu là một lớp hoặc một khoa, viết 'kết quả này cho thấy xu hướng ở [đúng nhóm đã khảo sát]', không suy rộng ra một dân số bạn chưa thật sự tiếp cận.",
+      "priority": 10
+    },
+    {
+      "misconception": "nckh.slide-is-report",
+      "body": "Rút slide xuống còn từ khóa, số liệu chính hoặc một hình/bảng duy nhất. Nếu một slide có một đoạn văn dài, chuyển phần đó sang lời nói khi thuyết trình, không để nguyên trên màn hình.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.must-answer-everything",
+      "body": "Khi không nắm rõ một câu hỏi, nói thẳng 'em chưa nắm rõ phần đó, em sẽ tìm hiểu thêm' thay vì bịa câu trả lời. Hội đồng có chuyên môn nhận ra ngay khi câu trả lời sai, và điều đó tổn hại uy tín nhiều hơn việc thẳng thắn.",
+      "priority": 9
+    },
+    {
+      "misconception": "nckh.defensive-to-criticism",
+      "body": "Khi bị chỉ ra một điểm yếu, ghi nhận nó trước ('Đúng là đây là một hạn chế'), rồi nói cách bạn đã hoặc sẽ xử lý. Góp ý là để bài tốt hơn, không phải một cuộc tấn công cá nhân cần phòng thủ lại.",
+      "priority": 9
+    }
+  ],
+  "modules": [
+    {
+      "title": "Nhập môn NCKH",
+      "description": "Toàn bộ lộ trình làm một đề tài NCKH sinh viên lần đầu, từ đặt câu hỏi tới viết và trình bày, dùng một đề tài do người học tự chọn xuyên suốt cả 5 bài: (1) đặt câu hỏi nghiên cứu khả thi bằng khung FINER, (2) đọc tài liệu có hệ thống và tìm khoảng trống, (3) trích dẫn đúng và giữ liêm chính học thuật, (4) chọn thiết kế và thu thập dữ liệu, (5) viết báo cáo và trình bày trước hội đồng.",
+      "lessons": [
+        {
+          "title": "Bài 1.1 · Nghiên cứu khoa học là gì và đặt câu hỏi nghiên cứu thế nào",
+          "durationMin": 60,
+          "description": "Phân biệt NCKH với tổng hợp thông tin; dùng khung FINER để kiểm một câu hỏi nghiên cứu có khả thi và có giá trị không; thu hẹp một chủ đề rộng thành câu hỏi cụ thể, đo được.",
+          "objectives": [
+            "Phân biệt được nghiên cứu khoa học với tổng hợp/trình bày lại thông tin có sẵn qua ví dụ cụ thể",
+            "Áp dụng được khung FINER để đánh giá một câu hỏi nghiên cứu có khả thi và có giá trị không",
+            "Thu hẹp được một chủ đề rộng thành ít nhất ba câu hỏi nghiên cứu cụ thể, đo được",
+            "Nhận diện được lỗi câu hỏi quá rộng, câu hỏi dạng có/không, và nhầm chủ đề với câu hỏi trong bài của người khác"
+          ],
+          "summary": [
+            "NCKH tạo ra hoặc kiểm chứng một câu trả lời chưa có sẵn, bằng phương pháp người khác lặp lại và kiểm tra được; tổng hợp tài liệu chỉ là bước chuẩn bị, không phải sản phẩm cuối.",
+            "Một câu hỏi nghiên cứu tốt phải khả thi, thú vị với người ngoài mình, có phần mới, đạo đức được và liên quan tới ai đó ngoài người hỏi — năm chữ đầu của FINER.",
+            "Đề tài là vùng đất, câu hỏi nghiên cứu là một điểm cụ thể có thể trả lời bằng dữ liệu. Nhầm hai thứ này là lỗi phổ biến nhất ở người mới làm NCKH.",
+            "Câu hỏi dạng có/không đóng cửa phân tích ngay từ đầu; câu hỏi mở bằng 'ở mức nào', 'khác nhau ra sao', 'qua cơ chế nào' mới tạo chỗ cho dữ liệu lên tiếng."
+          ],
+          "splitSections": true,
+          "body": "\nMột đề bài trên lớp luôn có sẵn câu hỏi — thầy cô ra đề, bạn trả lời. Nghiên cứu khoa học đảo ngược thứ tự đó: không ai giao câu hỏi cho bạn, và phần khó nhất — cũng là phần quyết định cả đề tài có chạy được hay không — nằm ngay ở bước đầu tiên, trước khi đọc bất kỳ tài liệu nào. Bài đi qua bốn phần: trước hết phân biệt nghiên cứu khoa học với việc tổng hợp lại thông tin có sẵn; sau đó dùng khung FINER để kiểm nhanh một câu hỏi nghiên cứu có khả thi và có giá trị không; tiếp theo là quy trình thu hẹp một chủ đề rộng thành câu hỏi cụ thể; và kết bằng hai lỗi thường gặp khiến câu hỏi không dùng được — dạng có/không và quá rộng — trước khi sang phần luyện tập.\n\n## NCKH khác gì với \"làm báo cáo\"\n\nRất nhiều sinh viên bắt đầu đề tài đầu tiên bằng cách đọc 10-15 bài viết về một chủ đề, tóm tắt lại, xếp theo mục, rồi thêm phần kết luận. Sản phẩm đọc trôi chảy, có trích dẫn đầy đủ, và hoàn toàn không phải là nghiên cứu khoa học.\n\n> [!ghi-nho] Nghiên cứu khoa học là quá trình tạo ra một câu trả lời **chưa tồn tại sẵn** ở bất kỳ nguồn đơn lẻ nào, bằng một phương pháp mà người khác có thể lặp lại và kiểm tra. Tổng hợp tài liệu là bước chuẩn bị cần thiết, không phải là đích.\n\nPhép thử đơn giản: nếu một người đọc hết mọi nguồn mà bạn đang đọc, người đó **đã có câu trả lời** cho câu hỏi của bạn chưa? Nếu có — bạn đang làm việc tổng hợp, dù viết hay đến đâu. Nếu chưa — nghĩa là vẫn còn một khoảng trống mà chỉ dữ liệu của riêng bạn (khảo sát, phỏng vấn, thực nghiệm, phân tích một bộ dữ liệu chưa ai phân tích theo cách đó) mới lấp được. Khoảng trống đó chính là chỗ nghiên cứu của bạn cần đứng vào.\n\n| | Tổng hợp thông tin | Nghiên cứu khoa học |\n|---|---|---|\n| Câu trả lời | Đã có sẵn, rải trong nhiều nguồn | Chưa có sẵn ở bất kỳ nguồn nào |\n| Việc chính | Đọc, chọn, sắp xếp lại | Thu thập hoặc phân tích dữ liệu mới |\n| Kiểm tra được bằng | Đọc lại đúng các nguồn đã trích | Người khác lặp lại phương pháp, ra kết quả tương tự |\n| Sản phẩm cuối | Bài viết trình bày lại tri thức cũ | Một câu trả lời mới cho một câu hỏi cụ thể |\n\n> [!vi-du] Hai sinh viên cùng quan tâm tới \"áp lực học tập của sinh viên năm nhất\". Sinh viên A đọc 12 bài báo về áp lực học tập, tóm tắt các nguyên nhân đã được nêu, viết thành một bài 15 trang có trích dẫn đầy đủ — đây là tổng hợp tốt, nhưng chưa phải nghiên cứu. Sinh viên B đọc đúng 12 bài báo đó để biết người khác đã đo áp lực học tập bằng công cụ nào, rồi phát hiện chưa ai đo riêng cho sinh viên năm nhất ngành Kỹ thuật tại các trường ở Hà Nội trong học kỳ chuyển từ học online sang học trực tiếp — và tự thu thập dữ liệu để trả lời đúng khoảng trống đó. B đang làm nghiên cứu.\n\n## Bốn chữ đầu của FINER — câu hỏi nghiên cứu có đứng được không\n\nTrước khi đọc tài liệu sâu, một câu hỏi nghiên cứu cần được kiểm nhanh bằng khung **FINER**, được Hulley và cộng sự dùng để huấn luyện nghiên cứu viên lâm sàng nhưng áp được cho hầu hết ngành. FINER là chữ đầu của năm tiêu chí:\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.7rem\">FINER — năm phép thử cho một câu hỏi nghiên cứu</div>\n  <div style=\"display:flex;flex-direction:column;gap:.4rem\">\n    <div style=\"background:rgba(59,130,246,.14);border-left:4px solid rgba(59,130,246,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>F — Feasible (khả thi)</b> — tiếp cận được đối tượng, đủ thời gian, đủ công cụ, đủ ngân sách</div>\n    <div style=\"background:rgba(139,92,246,.14);border-left:4px solid rgba(139,92,246,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>I — Interesting (thú vị)</b> — người ngoài bạn (giảng viên, hội đồng, người đọc) cũng thấy đáng quan tâm, không chỉ riêng bạn</div>\n    <div style=\"background:rgba(13,148,136,.14);border-left:4px solid rgba(13,148,136,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>N — Novel (mới)</b> — thêm được điều gì đó vào tri thức đã có: bối cảnh khác, góc nhìn khác, hoặc phương pháp khác</div>\n    <div style=\"background:rgba(217,150,40,.14);border-left:4px solid rgba(217,150,40,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>E — Ethical (đạo đức được)</b> — không gây hại, xin được sự đồng ý của người tham gia, qua được hội đồng đạo đức nếu cần</div>\n    <div style=\"background:rgba(219,90,140,.14);border-left:4px solid rgba(219,90,140,.7);padding:.55rem .8rem;border-radius:.3rem;font-size:1.15rem\"><b>R — Relevant (liên quan)</b> — kết quả có ý nghĩa cho ai đó ngoài người hỏi: chính sách, thực hành, hoặc một khung lý thuyết</div>\n  </div>\n</div>\n```\n\n> [!canh-bao] FINER không phải một bảng chấm điểm để làm cho đẹp hồ sơ — nó là công cụ để **loại bớt câu hỏi trước khi tốn thời gian**. Một câu hỏi trượt tiêu chí F (khả thi) đáng bị bỏ ngay từ tuần đầu, chứ không phải phát hiện ra ở tuần thứ mười khi đã đọc xong 30 bài báo.\n\n> [!vi-du] Câu hỏi \"Trải nghiệm của sinh viên khiếm thị khi học trực tuyến trong đại dịch khác gì so với sinh viên không khiếm thị?\" nghe rất Interesting và Relevant, nhưng nếu trường bạn chỉ có 2-3 sinh viên khiếm thị đang học và bạn không có kênh tiếp cận họ một cách phù hợp, câu hỏi trượt tiêu chí F ngay từ đầu — không phải vì câu hỏi tồi, mà vì đề tài này cần nguồn lực (thời gian, mạng lưới, đôi khi cả kỹ năng nghiên cứu với nhóm dễ bị tổn thương) vượt quá một đề tài NCKH sinh viên một học kỳ.\n\n> [!vi-du] Một nhóm khác muốn biết \"sinh viên đối phó thế nào với áp lực tài chính\", và định làm bằng cách xem lịch sử giao dịch ngân hàng của các bạn cùng lớp mà không hỏi ý kiến ai, với lý do \"chỉ quan sát, không phỏng vấn nên không ảnh hưởng tới ai\". Câu hỏi này có thể rất Interesting và Relevant, nhưng trượt tiêu chí E (Ethical) ngay lập tức: xem dữ liệu tài chính cá nhân của người khác mà không có sự đồng ý là vi phạm quyền riêng tư, bất kể mục đích nghiên cứu tốt đẹp tới đâu. Sửa đúng hướng là đổi sang khảo sát ẩn danh, tự nguyện, có giải thích rõ mục đích trước khi người tham gia đồng ý trả lời.\n\n## Từ chủ đề rộng đến câu hỏi cụ thể\n\nLỗi phổ biến nhất ở người mới không phải là chọn sai chủ đề, mà là **dừng lại ở chủ đề** và tưởng đó đã là câu hỏi nghiên cứu.\n\n> [!ghi-nho] **Đề tài** (chủ đề) là một vùng quan tâm rộng — \"động lực học tập\", \"mạng xã hội và sinh viên\", \"kỹ năng làm việc nhóm\". **Câu hỏi nghiên cứu** là một câu cụ thể, có thể trả lời bằng dữ liệu thu thập được, nằm trong vùng đất đó.\n\n| Đề tài (rộng, chưa dùng được) | Câu hỏi nghiên cứu (cụ thể, dùng được) |\n|---|---|\n| Mạng xã hội và sinh viên | Thời gian dùng TikTok mỗi ngày liên hệ thế nào với điểm trung bình học kỳ của sinh viên năm hai khoa X? |\n| Động lực học tập | Sinh viên năm nhất chuyển từ học online sang học trực tiếp báo cáo động lực học tập thay đổi qua những cơ chế nào? |\n| Làm việc nhóm | Cách phân vai trò trong nhóm ảnh hưởng thế nào tới mức độ hài lòng của thành viên trong các dự án học phần cuối kỳ? |\n\nBa câu hỏi bên phải đều còn có thể hẹp thêm — đó là bình thường, thu hẹp là một quá trình nhiều vòng, không phải một lần là xong.\n\n**Quy trình 5 bước** để đi từ chủ đề rộng sang câu hỏi cụ thể:\n\n1. **Viết ra chủ đề rộng** đúng như nó đang tồn tại trong đầu bạn — không cần chỉnh gì cả.\n2. **Thêm bốn thành phần**: đối tượng cụ thể (ai), bối cảnh (ở đâu, khi nào), khía cạnh muốn đo (cái gì), và mối quan hệ hoặc so sánh muốn xem (giữa cái gì với cái gì).\n3. **Viết lại thành câu hỏi mở** — bắt đầu bằng \"như thế nào\", \"ở mức nào\", \"khác nhau ra sao\", \"qua cơ chế nào\" — không dùng câu hỏi có/không.\n4. **Chạy khung FINER** trên câu hỏi vừa viết; câu nào trượt F hoặc E thì loại hoặc viết lại ngay, đừng mang qua bước sau.\n5. **Đối chiếu với 2-3 bài báo đã biết** trong lĩnh vực: câu hỏi của bạn có thêm được điều gì (bối cảnh, góc nhìn, phương pháp) so với những gì họ đã làm không.\n\n> [!vi-du] Một sinh viên khoa Kinh tế bắt đầu từ chủ đề \"làm việc nhóm\". **Bước 1:** giữ nguyên chủ đề. **Bước 2:** thêm thành phần — đối tượng là sinh viên năm 3 khoa Kinh tế, bối cảnh là các dự án nhóm trong học phần Marketing, khía cạnh muốn đo là mức độ hài lòng, mối quan hệ muốn xem là cách phân vai trò ảnh hưởng ra sao tới mức độ đó. **Bước 3:** viết lại thành câu hỏi mở: \"Cách phân vai trò trong nhóm ảnh hưởng thế nào tới mức độ hài lòng của sinh viên năm 3 khoa Kinh tế trong các dự án học phần Marketing?\" **Bước 4:** chạy FINER — khả thi (lớp học phần có sẵn, dễ khảo sát), thú vị (giảng viên bộ môn quan tâm vì ảnh hưởng tới cách chia nhóm sau này), mới (chưa có nghiên cứu nào làm riêng cho sinh viên khoa Kinh tế ở trường này), đạo đức được (khảo sát ẩn danh, không định danh cá nhân), liên quan (giúp giảng viên thiết kế cách chia nhóm tốt hơn) — cả năm tiêu chí đều đạt. **Bước 5:** đối chiếu với hai bài báo về vai trò nhóm đã đọc, thấy cả hai đều làm ở môi trường doanh nghiệp, chưa có bài nào làm ở môi trường học phần đại học — đó chính là phần mới của câu hỏi này.\n\n> [!meo] Nếu sau 5 bước vẫn có nhiều hơn một câu hỏi khả thi, đừng chọn ngay — giữ cả 2-3 câu hỏi qua Bài 1.2 (tổng quan tài liệu). Đọc tài liệu thường sẽ tự loại giúp bạn một vài câu, vì bạn sẽ thấy câu nào đã được trả lời quá kỹ, câu nào còn khoảng trống thật.\n\n## Hai lỗi khiến câu hỏi không dùng được\n\n**Câu hỏi dạng có/không.** \"Mạng xã hội có ảnh hưởng tới kết quả học tập không?\" trả lời được bằng một chữ \"có\" mà không cần đo gì — và câu trả lời gần như luôn là có ở mức độ nào đó, nên câu hỏi này không tạo ra tri thức mới. Sửa bằng cách hỏi *mức độ*, *cơ chế* hoặc *sự khác biệt*: \"Ở mức nào\", \"qua kênh nào\", \"khác nhau ra sao giữa nhóm dùng nhiều và dùng ít\".\n\n> [!vi-du] Câu hỏi ban đầu: \"Việc học nhóm online qua Zoom có hiệu quả không?\" — dạng có/không, và hầu như ai cũng đoán được câu trả lời là \"có, một phần\", nên hỏi xong vẫn chưa biết gì thêm. Viết lại thành câu hỏi mở: \"Sinh viên gặp khó khăn gì khi phối hợp làm bài nhóm qua Zoom so với khi gặp trực tiếp?\" — câu này buộc phải liệt kê và so sánh các khó khăn cụ thể, tạo ra dữ liệu thật để phân tích thay vì một câu trả lời gọn trong một chữ.\n\n**Quá rộng để trả lời trong một đề tài.** \"Ảnh hưởng của công nghệ tới giáo dục\" là một chủ đề cho cả một ngành nghiên cứu, không phải cho một đề tài NCKH sinh viên. Dấu hiệu nhận biết: nếu bạn không thể tưởng tượng ra bảng khảo sát hoặc bộ dữ liệu cụ thể sẽ dùng để trả lời câu hỏi, câu hỏi còn quá rộng.\n\n> [!vi-du] Một nhóm sinh viên đặt câu hỏi \"Trí tuệ nhân tạo có thay thế giáo viên không?\" — vừa quá rộng (không giới hạn cấp học, môn học, khu vực) vừa gần như là câu hỏi có/không kiểu ẩn (câu trả lời thực tế luôn là \"một phần, tuỳ việc\", không đo được gì thêm). Sau khi áp quy trình 5 bước, nhóm viết lại thành: \"Giáo viên tiểu học tại một trường ở Hà Nội thay đổi cách phân bổ thời gian lớp học ra sao sau khi đưa công cụ chấm bài tự động vào một học kỳ?\" — hẹp hơn nhiều, nhưng trả lời được bằng phỏng vấn và quan sát lớp học thật.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (20 phút)\n\nViết ra một chủ đề rộng bạn thật sự quan tâm (không cần đã \"chốt\" đề tài). Chạy quy trình 5 bước ở trên để tạo ra **ba câu hỏi nghiên cứu cụ thể** khác nhau từ chủ đề đó. Với mỗi câu hỏi, tự chấm nhanh 5 tiêu chí FINER (Đạt / Chưa chắc / Không đạt) và ghi một câu giải thích cho mỗi tiêu chí bị chấm \"Chưa chắc\" hoặc \"Không đạt\".\n\n### Nhóm 3-4 người (25 phút)\n\nMỗi người đọc **một** câu hỏi mình thấy tự tin nhất, không đọc phần chấm FINER của mình. Nhóm nghe và tự chấm FINER độc lập, rồi so với phần tự chấm của người viết. Chỗ nào nhóm và người viết chấm khác nhau là chỗ cần thảo luận kỹ nhất — thường lệch ở tiêu chí F (khả thi, vì người ngoài không biết hết nguồn lực bạn có) và N (mới, vì người viết dễ đánh giá cao đề tài của chính mình). Cuối buổi, mỗi nhóm chọn ra câu hỏi được đánh giá tốt nhất và giải thích tại sao bằng đúng ngôn ngữ FINER.\n\n### Bài tập về nhà (45-60 phút)\n\nTừ ba câu hỏi đã viết ở phần cá nhân, chọn **một** câu hỏi để mang tiếp qua Bài 1.2 (tổng quan tài liệu) và Bài 1.3 (trích dẫn). Viết một trang gồm: (a) câu hỏi nghiên cứu cuối cùng, viết dưới dạng câu hỏi mở; (b) bảng chấm FINER đầy đủ với lý do cho từng tiêu chí; (c) nếu ban đầu bạn có một chủ đề khác rộng hơn, mô tả ngắn quá trình thu hẹp — chủ đề đó đã mất thành phần gì để trở thành câu hỏi này.\n\n:::mau Mẫu nộp bài tập về nhà\n**Chủ đề ban đầu (nếu có):** …\n\n**Câu hỏi nghiên cứu:** …\n\n**Chấm FINER**\n\n| Tiêu chí | Đạt / Chưa chắc / Không đạt | Lý do |\n|---|---|---|\n| Feasible (khả thi) | … | … |\n| Interesting (thú vị) | … | … |\n| Novel (mới) | … | … |\n| Ethical (đạo đức) | … | … |\n| Relevant (liên quan) | … | … |\n\n**Quá trình thu hẹp (nếu có):** …\n:::\n\n### Nguồn tham khảo\n\n- Hulley, S. B., Cummings, S. R., Browner, W. S., Grady, D. G., & Newman, T. B. (2013). *Designing Clinical Research* (4th ed.). Lippincott Williams & Wilkins. — nguồn gốc khung FINER.\n- Booth, W. C., Colomb, G. G., & Williams, J. M. (2016). *The Craft of Research* (4th ed.). University of Chicago Press. — chương về việc chuyển từ chủ đề sang câu hỏi nghiên cứu.\n- Creswell, J. W., & Creswell, J. D. (2018). *Research Design: Qualitative, Quantitative, and Mixed Methods Approaches* (5th ed.). SAGE Publications.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "1.1-nckh-vs-tonghop",
+                "type": "mcq",
+                "prompt": "Điểm khác biệt cốt lõi giữa nghiên cứu khoa học và tổng hợp thông tin là gì?",
+                "explanation": "NCKH tạo ra một câu trả lời chưa có sẵn ở bất kỳ nguồn đơn lẻ nào, bằng phương pháp người khác lặp lại và kiểm tra được. Tổng hợp thông tin trình bày lại tri thức đã có sẵn, dù trình bày hay và có trích dẫn đầy đủ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "NCKH tạo ra câu trả lời chưa có sẵn ở nguồn nào, bằng phương pháp kiểm tra lại được; tổng hợp trình bày lại tri thức đã có",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "NCKH cần trích dẫn nhiều nguồn hơn tổng hợp thông tin",
+                    "isCorrect": false,
+                    "misconception": "nckh.research-is-summary"
+                  },
+                  {
+                    "label": "NCKH chỉ khác ở việc viết dài hơn và có phần phương pháp",
+                    "isCorrect": false,
+                    "misconception": "nckh.research-is-summary"
+                  },
+                  {
+                    "label": "Không có khác biệt, hai việc chỉ là hai tên gọi của cùng một hoạt động",
+                    "isCorrect": false,
+                    "misconception": "nckh.research-is-summary"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-de-tai-vs-cau-hoi",
+                "type": "mcq",
+                "prompt": "'Động lực học tập của sinh viên năm nhất' là một đề tài rộng. Câu nào dưới đây là một câu hỏi nghiên cứu dùng được, thu hẹp từ đề tài đó?",
+                "explanation": "Câu hỏi nghiên cứu phải cụ thể về đối tượng, bối cảnh và khía cạnh đo, và mở (không phải có/không). 'Sinh viên năm nhất chuyển từ học online sang học trực tiếp báo cáo động lực học tập thay đổi qua những cơ chế nào?' đáp ứng cả hai điều kiện.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sinh viên năm nhất chuyển từ học online sang học trực tiếp báo cáo động lực học tập thay đổi qua những cơ chế nào?",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Động lực học tập của sinh viên năm nhất",
+                    "isCorrect": false,
+                    "misconception": "nckh.topic-is-question"
+                  },
+                  {
+                    "label": "Sinh viên năm nhất có động lực học tập không?",
+                    "isCorrect": false,
+                    "misconception": "nckh.yesno-question"
+                  },
+                  {
+                    "label": "Động lực học tập nói chung của sinh viên đại học Việt Nam",
+                    "isCorrect": false,
+                    "misconception": "nckh.question-too-broad"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-loi-cau-hoi-yesno",
+                "type": "mcq",
+                "prompt": "Câu hỏi 'Mạng xã hội có ảnh hưởng tới kết quả học tập không?' có vấn đề gì lớn nhất?",
+                "explanation": "Câu hỏi có/không hầu như luôn có câu trả lời 'có ở mức độ nào đó', nên không tạo ra tri thức mới và không buộc phải đo lường gì cụ thể. Cần đổi thành câu hỏi mở về mức độ, cơ chế hoặc sự khác biệt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đây là câu hỏi dạng có/không, gần như chắc chắn trả lời là 'có' mà không đo được gì cụ thể",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Câu hỏi này không đủ thú vị để nghiên cứu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Câu hỏi này vi phạm đạo đức nghiên cứu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Câu hỏi này không có gì sai, có thể dùng ngay",
+                    "isCorrect": false,
+                    "misconception": "nckh.yesno-question"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-finer-kha-thi",
+                "type": "mcq",
+                "prompt": "Một nhóm sinh viên muốn nghiên cứu trải nghiệm của sinh viên khiếm thị khi học trực tuyến, nhưng trường chỉ có 2 sinh viên khiếm thị và nhóm không có kênh tiếp cận phù hợp. Câu hỏi này đang trượt tiêu chí nào trong FINER?",
+                "explanation": "Đây là vấn đề về khả năng thực hiện được trong nguồn lực và thời gian của một đề tài sinh viên — đúng tiêu chí Feasible (F), không phải vì câu hỏi thiếu thú vị hay thiếu liên quan.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Feasible — khả thi: không đủ khả năng tiếp cận đối tượng trong nguồn lực hiện có",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Interesting — thú vị: đề tài không đủ hấp dẫn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Relevant — liên quan: kết quả không có ý nghĩa với ai",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Novel — mới: đề tài này đã có quá nhiều người làm",
+                    "isCorrect": false,
+                    "misconception": "nckh.novelty-means-new-topic"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-tinh-moi",
+                "type": "mcq",
+                "prompt": "Một sinh viên bỏ ý tưởng nghiên cứu 'áp lực học tập' vì đã có rất nhiều bài báo về chủ đề này. Nhận định nào đúng nhất về quyết định đó?",
+                "explanation": "Tính mới (Novel) trong FINER không đòi hỏi chủ đề chưa ai từng nghiên cứu. Nó có thể đến từ bối cảnh khác (nhóm đối tượng, thời điểm, địa bàn), góc nhìn khác, hoặc phương pháp khác áp vào cùng một vấn đề.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không cần bỏ hẳn — có thể giữ chủ đề và tạo tính mới bằng cách chọn bối cảnh, đối tượng hoặc phương pháp khác với các nghiên cứu đã có",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, chủ đề đã có nhiều người nghiên cứu thì không thể làm nghiên cứu mới về nó nữa",
+                    "isCorrect": false,
+                    "misconception": "nckh.novelty-means-new-topic"
+                  },
+                  {
+                    "label": "Đúng, nhưng chỉ vì lý do đạo đức, không liên quan tới tính mới",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không nên bỏ, vì tính mới không quan trọng bằng tính khả thi trong FINER",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "1.1-thu-tu-5buoc",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự 5 bước thu hẹp một chủ đề rộng thành câu hỏi nghiên cứu cụ thể.",
+                "explanation": "Bắt đầu từ chủ đề rộng, thêm các thành phần cụ thể, viết lại thành câu hỏi mở, kiểm bằng FINER, rồi đối chiếu với tài liệu đã biết để xác nhận tính mới.",
+                "points": 3,
+                "sequence": [
+                  "Viết ra chủ đề rộng đúng như nó đang tồn tại trong đầu",
+                  "Thêm đối tượng cụ thể, bối cảnh, khía cạnh muốn đo và mối quan hệ muốn so sánh",
+                  "Viết lại thành một câu hỏi mở, không dùng dạng có/không",
+                  "Chạy khung FINER trên câu hỏi vừa viết, loại hoặc sửa ngay câu trượt F hoặc E",
+                  "Đối chiếu với 2-3 bài báo đã biết để xem câu hỏi có thêm được điều gì mới"
+                ]
+              },
+              {
+                "key": "1.1-noi-vi-du-finer",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với tiêu chí FINER mà nó đang vi phạm hoặc thể hiện rõ nhất.",
+                "explanation": "Mỗi tình huống ứng với đúng một chữ trong FINER: không tiếp cận được đối tượng là Feasible; câu hỏi chỉ đối tượng nghiên cứu thấy quan trọng còn người ngoài thấy vô nghĩa là Interesting; nghiên cứu lặp lại nguyên cách làm cũ không thêm gì mới là Novel; thu thập dữ liệu trẻ em không xin phép phụ huynh là Ethical.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Không có kênh nào tiếp cận được nhóm đối tượng cần khảo sát trong một học kỳ",
+                    "right": "Feasible"
+                  },
+                  {
+                    "left": "Câu hỏi chỉ có ý nghĩa với đúng người đặt ra nó, không ai khác thấy đáng quan tâm",
+                    "right": "Interesting"
+                  },
+                  {
+                    "left": "Lặp lại nguyên vẹn một nghiên cứu đã có, cùng đối tượng, cùng phương pháp, không thêm góc nhìn nào",
+                    "right": "Novel"
+                  },
+                  {
+                    "left": "Thu thập dữ liệu từ học sinh tiểu học mà không xin phép phụ huynh hoặc nhà trường",
+                    "right": "Ethical"
+                  }
+                ]
+              },
+              {
+                "key": "1.1-tu-de-tai-den-cau-hoi",
+                "type": "essay",
+                "prompt": "Chọn một chủ đề rộng bạn quan tâm. Viết 150-250 từ gồm: (a) chủ đề ban đầu; (b) ba câu hỏi nghiên cứu cụ thể thu hẹp từ chủ đề đó; (c) với câu hỏi bạn thấy mạnh nhất, chấm nhanh cả 5 tiêu chí FINER và giải thích lý do cho tiêu chí bạn tự thấy yếu nhất.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 2.1 · Đọc tài liệu có hệ thống và tìm khoảng trống nghiên cứu",
+          "durationMin": 75,
+          "description": "Đọc bài báo theo trật tự chiến lược thay vì tuần tự; tìm tài liệu bằng Google Scholar và thư viện số thay vì chỉ Google thường; ghi chú vào ma trận tổng quan; viết đoạn tổng hợp chỉ ra khoảng trống nghiên cứu có căn cứ.",
+          "objectives": [
+            "Áp dụng được cách đọc chiến lược (tóm tắt → kết luận → hình/bảng → phương pháp) để lọc nhanh bài báo có liên quan tới câu hỏi nghiên cứu",
+            "Dùng được ít nhất hai nguồn tra cứu học thuật (Google Scholar và một thư viện số/cơ sở dữ liệu) để tìm tài liệu cho một câu hỏi nghiên cứu",
+            "Lập được một ma trận tổng quan tài liệu cho ít nhất 6 nguồn, ghi đủ tác giả, phương pháp, kết quả chính và hạn chế",
+            "Viết được một đoạn tổng hợp theo luận điểm, chỉ ra khoảng trống nghiên cứu có căn cứ, thay vì liệt kê từng bài báo"
+          ],
+          "summary": [
+            "Đọc một bài báo theo trật tự chiến lược — tóm tắt, kết luận, hình/bảng, rồi mới tới phương pháp — nhanh hơn đọc tuần tự nhiều lần và vẫn lọc đúng bài liên quan.",
+            "Google thường trả về kết quả phổ biến, không lọc theo bình duyệt học thuật; Google Scholar và thư viện số của trường mới là nơi tìm được tài liệu đáng tin và toàn văn.",
+            "Ma trận tổng quan — mỗi dòng một nguồn, mỗi cột một tiêu chí cố định — là cách duy nhất để không phải đọc lại 15 bài báo khi ngồi viết phần tổng quan.",
+            "Tổng quan tài liệu phải tổng hợp theo luận điểm ('nhiều nghiên cứu đồng ý X, nhưng chưa ai làm ở bối cảnh Y'), không phải liệt kê tuần tự 'bài A nói, bài B nói'."
+          ],
+          "splitSections": true,
+          "body": "\nMang câu hỏi nghiên cứu đã chốt ở Bài 1.1 sang bài này. Mục tiêu của bài không phải là \"đọc nhiều tài liệu\", mà là biết đủ để trả lời được câu hỏi: người khác đã làm gì rồi, và phần còn thiếu — chỗ nghiên cứu của bạn sẽ đứng vào — nằm ở đâu. Bài đi theo bốn bước: trước hết là cách đọc chiến lược để lọc nhanh bài báo liên quan thay vì đọc tuần tự từ đầu; sau đó là tìm tài liệu ở những nguồn học thuật đáng tin thay vì chỉ Google thường; tiếp theo là ghi chú vào một ma trận tổng quan để không phải đọc lại từ đầu khi ngồi viết; và kết bằng cách chuyển ma trận đó thành một đoạn tổng hợp chỉ ra khoảng trống nghiên cứu có căn cứ.\n\n## Đọc chiến lược, không đọc tuần tự\n\nSai lầm tốn thời gian nhất ở người mới là mở một bài báo 20 trang và đọc từ chữ đầu tiên. Phần lớn thời gian đọc theo cách đó bị đổ vào phần cơ sở lý thuyết và tổng quan của chính bài báo đó — thứ bạn sẽ tự viết lại theo cách của mình, không cần đọc kỹ của người khác.\n\n> [!ghi-nho] **Đọc chiến lược** là đọc theo thứ tự giúp bạn quyết định nhanh nhất bài báo này có đáng đọc kỹ không, theo thứ tự: **Tóm tắt (Abstract)** → **Kết luận/Thảo luận** → **Hình và bảng số liệu** → nếu vẫn còn liên quan, mới đọc **Phương pháp** và phần còn lại.\n\nLý do của thứ tự này: tóm tắt cho biết câu hỏi và kết quả chính trong 200 từ; kết luận nói rõ hơn kết quả đó có ý nghĩa gì và tác giả tự thấy hạn chế ở đâu; hình và bảng cho thấy dữ liệu thật, thường nhanh hơn đọc chữ. Ba phần này đọc hết khoảng 5 phút và đủ để quyết định 90% trường hợp: bài này có liên quan đủ để đọc tiếp không.\n\n| Bước đọc | Trả lời được câu hỏi gì | Thời gian |\n|---|---|---|\n| Tóm tắt | Bài này hỏi gì, dùng cách nào, kết luận gì | 1 phút |\n| Kết luận / Thảo luận | Kết quả có ý nghĩa gì, tác giả tự nhận hạn chế gì | 2 phút |\n| Hình và bảng số liệu | Dữ liệu thật trông ra sao, có khớp với điều tóm tắt nói không | 2 phút |\n| Phương pháp (chỉ khi bài liên quan) | Họ đo bằng công cụ gì, trên đối tượng nào, mẫu bao lớn | 5-10 phút |\n\n> [!canh-bao] Đọc chiến lược không có nghĩa là bỏ qua phần Phương pháp. Với 3-5 bài báo **gần nhất** với câu hỏi của bạn — bài bạn định dùng để so sánh phương pháp hoặc mượn công cụ đo — vẫn phải đọc kỹ phần Phương pháp. Đọc chiến lược chỉ áp dụng ở vòng lọc đầu, để không phải đọc kỹ cả 20-30 bài mới tìm ra 5 bài đáng dùng.\n\n> [!vi-du] Với câu hỏi \"cách phân vai trò trong nhóm ảnh hưởng thế nào tới mức độ hài lòng của thành viên\", một sinh viên tìm được 22 bài có chữ \"phân vai trò nhóm\" trong tiêu đề hoặc tóm tắt. Đọc chiến lược 5 phút mỗi bài, sinh viên loại ngay 14 bài vì tóm tắt cho thấy chúng nói về nhóm trong doanh nghiệp lâu năm, không phải nhóm học phần ngắn hạn. Còn 8 bài đọc kỹ hình/bảng, loại tiếp 3 bài vì đo bằng công cụ không phù hợp (chỉ đo hiệu suất, không đo hài lòng). Còn 5 bài đọc kỹ Phương pháp — tổng thời gian: khoảng 2 giờ cho 22 bài, so với nếu đọc tuần tự hết 22 bài sẽ mất hơn một ngày.\n\n## Tìm tài liệu ở đâu\n\nGoogle thường trả về kết quả theo độ phổ biến — bài báo trên báo, blog, diễn đàn — không lọc theo việc bài viết đã qua bình duyệt học thuật hay chưa. Với NCKH, cần bắt đầu từ nguồn lọc được điều đó.\n\n| Nguồn | Đặc điểm | Dùng khi |\n|---|---|---|\n| Google Scholar | Chỉ mục bài báo, luận văn, sách học thuật; hiện số lượt trích dẫn; có nút \"Cited by\" | Điểm bắt đầu cho mọi tìm kiếm |\n| Thư viện số của trường | Toàn văn các tạp chí trường đã mua quyền truy cập (ScienceDirect, JSTOR, ProQuest, Springer…) | Khi Google Scholar chỉ cho xem tóm tắt, cần bản đầy đủ |\n| Cơ sở dữ liệu chuyên ngành | Ví dụ ERIC (giáo dục), PubMed (y sinh), IEEE Xplore (kỹ thuật) | Khi đề tài thuộc một ngành có cơ sở dữ liệu riêng |\n| Trích dẫn ngược (\"Cited by\" / \"Được trích dẫn bởi\") | Từ một bài quan trọng đã tìm được, xem ai trích nó sau này | Tìm nghiên cứu **mới hơn** cùng chủ đề |\n| Trích dẫn xuôi (danh mục tham khảo cuối bài) | Xem bài quan trọng đó đã trích ai | Tìm nghiên cứu **gốc, nền tảng** của chủ đề |\n\n> [!meo] Từ khoá tìm kiếm nên thử nhiều biến thể, không chỉ một lần: đồng nghĩa (mức độ hài lòng ≈ sự thoả mãn ≈ satisfaction), tiếng Anh song song với tiếng Việt (phần lớn tài liệu gốc bằng tiếng Anh), và kết hợp hai khái niệm bằng dấu ngoặc kép cho cụm từ cố định — \"phân công vai trò\" khác với phân công và vai trò tìm riêng.\n\n> [!vi-du] Sinh viên tìm \"phân vai trò nhóm sinh viên\" trên Google Scholar, chỉ ra 6 kết quả, phần lớn không liên quan. Đổi sang \"role assignment\" AND \"student teamwork\", ra 340 kết quả — quá nhiều. Thêm giới hạn theo năm (2015 trở lên) và đọc tóm tắt 20 bài đầu theo độ liên quan, tìm được 2 bài sát nhất. Từ 2 bài đó, dùng \"Cited by\" để tìm bài mới hơn trích chúng, và dùng danh mục tham khảo để tìm bài gốc mà chúng dựa vào — tổng cộng thêm 6 bài, đủ cho một tổng quan cỡ NCKH sinh viên.\n\n## Ma trận tổng quan — ghi chú để dùng lại được\n\nĐọc 15 bài báo mà chỉ nhớ đại khái là chuẩn bị cho việc phải đọc lại toàn bộ khi ngồi viết. Cách duy nhất tránh được việc đó là ghi chú **có cấu trúc, cùng một cột cho mọi nguồn**, ngay khi đọc xong từng bài — không dồn lại đọc hết mới ghi.\n\n> [!ghi-nho] **Ma trận tổng quan** là một bảng, mỗi dòng là một nguồn, mỗi cột là một tiêu chí cố định: tác giả & năm, câu hỏi/mục tiêu của họ, phương pháp, kết quả chính, hạn chế họ tự nhận, và liên quan thế nào tới câu hỏi của bạn. Không có ma trận, việc viết tổng quan biến thành việc đọc lại toàn bộ nguồn một lần nữa.\n\n| Tác giả, năm | Câu hỏi/mục tiêu | Phương pháp | Kết quả chính | Hạn chế | Liên quan tới đề tài của tôi |\n|---|---|---|---|---|---|\n| Nguyễn & Trần (2021) | Vai trò nhóm ảnh hưởng hiệu suất dự án doanh nghiệp thế nào | Khảo sát 210 nhân viên, hồi quy | Vai trò rõ ràng tăng hiệu suất, không tăng hài lòng | Chỉ đo hiệu suất, không đo hài lòng; mẫu doanh nghiệp lớn | Cùng biến \"vai trò\" nhưng khác biến phụ thuộc (hài lòng) và khác bối cảnh (SV, không phải nhân viên) |\n| Pham et al. (2019) | Phong cách lãnh đạo nhóm ảnh hưởng gắn kết nhóm sinh viên | Phỏng vấn 24 SV, phân tích chủ đề | Lãnh đạo chia sẻ tăng gắn kết hơn lãnh đạo tập quyền | Chỉ 1 trường, không đo hài lòng cá nhân | Cùng đối tượng (SV) nhưng khác biến chính (lãnh đạo, không phải phân vai trò) |\n\n> [!meo] Điền ma trận ngay sau khi đọc xong mỗi bài, đừng để dồn — nếu để đọc hết 15 bài rồi mới ngồi điền, bạn sẽ phải mở lại gần hết số đó vì đã quên chi tiết phương pháp. Dùng Google Sheets hoặc bảng tương tự để dễ sắp xếp lại theo cột khi cần nhóm các bài theo luận điểm ở bước sau.\n\n## Từ tổng quan tới khoảng trống nghiên cứu\n\nCó ma trận đầy đủ chưa có nghĩa là có một tổng quan tài liệu. Bước cuối — cũng là bước hay bị làm sai nhất — là chuyển từ **liệt kê** sang **tổng hợp**.\n\n| | Liệt kê (tóm tắt) | Tổng hợp (synthesis) |\n|---|---|---|\n| Cách viết | \"Nguyễn & Trần (2021) thấy A. Phạm và cộng sự (2019) thấy B. Lê (2020) thấy C.\" | \"Nhiều nghiên cứu đồng ý rằng vai trò rõ ràng cải thiện kết quả nhóm (Nguyễn & Trần, 2021; Lê, 2020), nhưng phần lớn đo ở môi trường doanh nghiệp và đo hiệu suất, chưa đo mức hài lòng của thành viên trong nhóm học phần ngắn hạn.\" |\n| Tổ chức theo | Từng tác giả, theo thứ tự đọc | Từng luận điểm hoặc chủ đề, không theo tác giả |\n| Cho thấy điều gì | Bạn đã đọc | Bạn đã hiểu được điều gì chung và điều gì còn thiếu |\n\n> [!canh-bao] Tuyên bố \"chưa ai nghiên cứu điều này\" chỉ đứng được khi có căn cứ từ chính ma trận — ví dụ \"trong 8 bài đã đọc về phân vai trò nhóm, không bài nào đo ở nhóm sinh viên Việt Nam trong một học phần một kỳ\". Nói \"chưa ai nghiên cứu điều này\" chỉ vì chưa tìm thấy trong 2-3 bài đọc lướt là một khẳng định không có cơ sở — rất dễ bị hội đồng hỏi ngược \"bạn đã tìm ở đâu, bao nhiêu bài\".\n\nQuy trình viết đoạn tổng hợp, đi từ ma trận đã có:\n\n1. **Nhóm các dòng trong ma trận theo luận điểm** (không theo tác giả): những nguồn nào cùng kết luận một điều, những nguồn nào mâu thuẫn nhau.\n2. **Viết một câu cho mỗi nhóm luận điểm**, trích dẫn tất cả nguồn thuộc nhóm đó trong cùng một câu.\n3. **Chỉ ra khoảng trống** bằng cách nêu cụ thể: đối tượng nào, bối cảnh nào, hoặc biến nào chưa từng được nghiên cứu cùng nhau — dựa trên đúng những gì có/không có trong ma trận, không suy đoán thêm.\n4. **Nối khoảng trống đó với câu hỏi nghiên cứu** của bạn: câu hỏi của bạn lấp đúng khoảng trống này như thế nào.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (35 phút)\n\nDùng câu hỏi nghiên cứu đã chốt ở Bài 1.1. Tìm ít nhất **6 nguồn học thuật** (qua Google Scholar và một thư viện số/cơ sở dữ liệu), đọc chiến lược để lọc, rồi điền vào **ma trận tổng quan** đủ 6 cột: tác giả & năm, câu hỏi/mục tiêu, phương pháp, kết quả chính, hạn chế, liên quan tới đề tài của tôi.\n\n### Nhóm 3-4 người (25 phút)\n\nMỗi người trình bày ma trận của mình trong 3 phút. Nhóm cùng thử nhóm các dòng của tất cả thành viên theo luận điểm chung (dù đề tài khác nhau, nhiều luận điểm về phương pháp đọc/tìm tài liệu vẫn lặp lại). Với mỗi người, nhóm đặt câu hỏi: \"Khoảng trống bạn định nêu có thật sự chưa ai làm, hay chỉ vì 6 nguồn của bạn chưa đủ?\" — câu hỏi này thường lộ ra chỗ cần tìm thêm tài liệu trước khi khẳng định.\n\n### Bài tập về nhà (60-90 phút)\n\nTừ ma trận đã có, viết một đoạn tổng hợp **200-300 từ**, theo đúng quy trình 4 bước ở mục trên: nhóm theo luận điểm, viết một câu cho mỗi nhóm có trích dẫn, chỉ ra khoảng trống cụ thể có căn cứ, và nối khoảng trống đó với câu hỏi nghiên cứu của bạn.\n\n:::mau Mẫu nộp bài tập về nhà\n**Câu hỏi nghiên cứu (từ Bài 1.1):** …\n\n**Ma trận tổng quan (tối thiểu 6 nguồn)**\n\n| Tác giả, năm | Câu hỏi/mục tiêu | Phương pháp | Kết quả chính | Hạn chế | Liên quan tới đề tài của tôi |\n|---|---|---|---|---|---|\n| … | … | … | … | … | … |\n\n**Đoạn tổng hợp (200-300 từ):** …\n\n**Khoảng trống nêu ra:** … (dựa trên đúng bao nhiêu nguồn, chưa nguồn nào làm gì)\n:::\n\n### Nguồn tham khảo\n\n- Hart, C. (1998). *Doing a Literature Review: Releasing the Social Science Research Imagination.* SAGE Publications.\n- Booth, W. C., Colomb, G. G., & Williams, J. M. (2016). *The Craft of Research* (4th ed.). University of Chicago Press. — chương về đọc và ghi chú nguồn.\n- Creswell, J. W., & Creswell, J. D. (2018). *Research Design: Qualitative, Quantitative, and Mixed Methods Approaches* (5th ed.). SAGE Publications. — chương về tổng quan tài liệu.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "2.1-doc-chien-luoc",
+                "type": "mcq",
+                "prompt": "Cách đọc nào giúp lọc nhanh một bài báo có liên quan tới câu hỏi nghiên cứu hay không, mà không tốn thời gian đọc hết cả bài?",
+                "explanation": "Đọc theo trật tự tóm tắt → kết luận/thảo luận → hình và bảng số liệu cho biết đủ thông tin để quyết định trong khoảng 5 phút, chỉ đọc kỹ phần phương pháp khi bài đã được xác định là liên quan.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đọc tóm tắt, rồi kết luận/thảo luận, rồi hình và bảng số liệu; chỉ đọc kỹ phương pháp nếu bài vẫn còn liên quan",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đọc từ trang đầu tới trang cuối theo đúng thứ tự bài báo in ra",
+                    "isCorrect": false,
+                    "misconception": "nckh.read-cover-to-cover"
+                  },
+                  {
+                    "label": "Chỉ đọc tiêu đề và tên tác giả để quyết định có liên quan hay không",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đọc phần cơ sở lý thuyết của bài báo trước tiên để hiểu khung khái niệm",
+                    "isCorrect": false,
+                    "misconception": "nckh.read-cover-to-cover"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-nguon-tra-cuu",
+                "type": "mcq",
+                "prompt": "Một sinh viên chỉ tìm tài liệu bằng cách gõ từ khoá vào Google thường. Vấn đề lớn nhất với cách làm này là gì?",
+                "explanation": "Google thường xếp hạng theo độ phổ biến, không lọc theo việc nội dung đã qua bình duyệt học thuật hay chưa. Google Scholar và thư viện số của trường mới lọc được điều đó và cho truy cập toàn văn các tạp chí đã qua bình duyệt.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Google thường không lọc theo bình duyệt học thuật, dễ trộn lẫn bài báo khoa học với blog, tin tức, diễn đàn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Google thường chỉ trả kết quả tiếng Anh, không có tiếng Việt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Google thường không cho tìm theo từ khoá kết hợp bằng dấu ngoặc kép",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có vấn đề gì, Google thường đủ dùng cho mọi loại tìm kiếm tài liệu",
+                    "isCorrect": false,
+                    "misconception": "nckh.google-is-enough"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-muc-dich-ma-tran",
+                "type": "mcq",
+                "prompt": "Ma trận tổng quan tài liệu (mỗi dòng một nguồn, mỗi cột một tiêu chí cố định) giải quyết vấn đề gì?",
+                "explanation": "Ghi chú có cấu trúc ngay khi đọc xong từng bài giúp không phải đọc lại toàn bộ nguồn khi ngồi viết phần tổng quan hoặc tìm khoảng trống nghiên cứu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Giúp không phải đọc lại toàn bộ các nguồn khi ngồi viết tổng quan hoặc xác định khoảng trống nghiên cứu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giúp bài viết dài hơn và có vẻ công phu hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Là yêu cầu hình thức của hội đồng, không phục vụ việc viết",
+                    "isCorrect": false,
+                    "misconception": "nckh.no-notes-system"
+                  },
+                  {
+                    "label": "Thay thế được việc phải đọc bài báo, chỉ cần đọc ma trận là đủ",
+                    "isCorrect": false,
+                    "misconception": "nckh.no-notes-system"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-khoang-trong-co-can-cu",
+                "type": "mcq",
+                "prompt": "Một sinh viên đọc lướt 3 bài báo, không tìm thấy bài nào giống ý tưởng của mình, và viết trong bài: 'Chưa có nghiên cứu nào về vấn đề này.' Nhận định nào đúng nhất?",
+                "explanation": "Tuyên bố khoảng trống phải có căn cứ cụ thể: đã tìm ở đâu, bao nhiêu nguồn, qua nguồn tra cứu nào. Đọc lướt 3 bài không đủ cơ sở để khẳng định 'chưa ai làm', và hội đồng thường hỏi ngược lại câu này.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tuyên bố này thiếu căn cứ — cần nói rõ đã tìm bao nhiêu nguồn, qua nguồn tra cứu nào, rồi mới khẳng định khoảng trống dựa trên đúng những gì có/không có trong đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tuyên bố này ổn, vì đọc 3 bài là đủ để đại diện cho cả một lĩnh vực",
+                    "isCorrect": false,
+                    "misconception": "nckh.gap-claim-without-basis"
+                  },
+                  {
+                    "label": "Tuyên bố này sai vì không nghiên cứu nào có khoảng trống thật, mọi chủ đề đều đã có người làm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tuyên bố này chỉ cần sửa câu chữ cho lịch sự hơn, không cần thêm bằng chứng",
+                    "isCorrect": false,
+                    "misconception": "nckh.gap-claim-without-basis"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-tong-hop-vs-liet-ke",
+                "type": "mcq",
+                "prompt": "Đoạn văn nào dưới đây là tổng hợp (synthesis) đúng nghĩa, không phải liệt kê?",
+                "explanation": "Tổng hợp nhóm các nguồn theo luận điểm chung trong cùng một câu và chỉ ra khoảng trống cụ thể; liệt kê chỉ lặp lại tuần tự 'tác giả này nói, tác giả kia nói' mà không kết nối thành một luận điểm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Nhiều nghiên cứu đồng ý vai trò rõ ràng cải thiện kết quả nhóm (A, 2021; B, 2020), nhưng phần lớn đo ở doanh nghiệp, chưa đo mức hài lòng trong nhóm học phần ngắn hạn.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Tác giả A (2021) nghiên cứu về vai trò nhóm. Tác giả B (2020) nghiên cứu về sự hài lòng. Tác giả C (2019) nghiên cứu về lãnh đạo nhóm.'",
+                    "isCorrect": false,
+                    "misconception": "nckh.summary-not-synthesis"
+                  },
+                  {
+                    "label": "'Có rất nhiều nghiên cứu về làm việc nhóm trên thế giới, đây là một lĩnh vực rất được quan tâm.'",
+                    "isCorrect": false,
+                    "misconception": "nckh.summary-not-synthesis"
+                  },
+                  {
+                    "label": "'Theo tác giả A, nhóm là một tập hợp người cùng làm việc hướng tới mục tiêu chung.'",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "2.1-thu-tu-quy-trinh",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự quy trình từ tìm tài liệu tới xác định khoảng trống nghiên cứu.",
+                "explanation": "Bắt đầu từ từ khoá, tìm qua nhiều nguồn tra cứu, đọc chiến lược để lọc, ghi vào ma trận, rồi nhóm theo luận điểm để viết đoạn tổng hợp và chỉ ra khoảng trống.",
+                "points": 3,
+                "sequence": [
+                  "Xác định các từ khoá và biến thể đồng nghĩa từ câu hỏi nghiên cứu",
+                  "Tìm nguồn qua Google Scholar, thư viện số và trích dẫn ngược/xuôi",
+                  "Đọc chiến lược (tóm tắt → kết luận → hình/bảng) để lọc bài liên quan",
+                  "Ghi mỗi nguồn liên quan vào ma trận tổng quan ngay khi đọc xong",
+                  "Nhóm các dòng trong ma trận theo luận điểm và viết đoạn tổng hợp chỉ ra khoảng trống"
+                ]
+              },
+              {
+                "key": "2.1-noi-nguon-tra-cuu",
+                "type": "matching",
+                "prompt": "Nối mỗi nguồn hoặc kỹ thuật tra cứu với đặc điểm đúng của nó.",
+                "explanation": "Google Scholar chỉ mục học thuật và hiện số trích dẫn; thư viện số cho toàn văn các tạp chí trường đã mua; trích dẫn ngược ('Cited by') tìm nghiên cứu mới hơn; danh mục tham khảo cuối bài dẫn tới nghiên cứu gốc, nền tảng.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Google Scholar",
+                    "right": "Chỉ mục bài báo và luận văn học thuật, hiện số lượt trích dẫn"
+                  },
+                  {
+                    "left": "Thư viện số của trường",
+                    "right": "Toàn văn các tạp chí trả phí trường đã mua quyền truy cập"
+                  },
+                  {
+                    "left": "Trích dẫn ngược ('Cited by')",
+                    "right": "Tìm các nghiên cứu mới hơn đã trích dẫn một bài quan trọng"
+                  },
+                  {
+                    "left": "Danh mục tham khảo cuối bài",
+                    "right": "Dẫn tới các nghiên cứu gốc, nền tảng mà bài đó dựa vào"
+                  }
+                ]
+              },
+              {
+                "key": "2.1-viet-doan-tong-hop",
+                "type": "essay",
+                "prompt": "Từ ma trận tổng quan bạn đã lập ở phần luyện tập, viết một đoạn tổng hợp 150-250 từ gồm: (a) một câu tổng hợp nhóm ít nhất hai nguồn cùng luận điểm, có trích dẫn; (b) một câu chỉ ra khoảng trống cụ thể, nói rõ dựa trên bao nhiêu nguồn và khoảng trống đó là gì; (c) một câu nối khoảng trống đó với câu hỏi nghiên cứu của bạn.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 3.1 · Trích dẫn đúng và giữ liêm chính học thuật",
+          "durationMin": 60,
+          "description": "Phân biệt nội dung cần trích dẫn với kiến thức phổ thông; nhận diện bốn dạng đạo văn thường gặp; paraphrase đúng kỹ thuật thay vì đổi vài từ; trích dẫn theo chuẩn APA 7 và hiểu giới hạn của công cụ chống đạo văn.",
+          "objectives": [
+            "Phân biệt được nội dung cần trích dẫn (số liệu, luận điểm, định nghĩa chuyên ngành của người khác) với kiến thức phổ thông không cần trích dẫn",
+            "Nhận diện được bốn dạng đạo văn — sao chép nguyên văn, paraphrase không đủ, đạo văn ý tưởng, tự đạo văn — qua ví dụ cụ thể",
+            "Paraphrase được một đoạn văn theo đúng kỹ thuật (đọc, che, viết lại từ trí nhớ, so sánh) thay vì chỉ đổi vài từ trong câu gốc",
+            "Trích dẫn đúng theo chuẩn APA 7 cho cả trích dẫn trong bài và danh mục tham khảo, và giải thích được công cụ chống đạo văn đo gì và không đo được gì"
+          ],
+          "summary": [
+            "Trích dẫn không chỉ để tránh bị bắt đạo văn — nó cho người đọc thấy claim nào có nguồn, ý nào là của bạn, và cho phép người khác kiểm lại được.",
+            "Đổi vài từ trong câu gốc bằng từ đồng nghĩa không phải paraphrase — đó là word-switching, vẫn tính là đạo văn dù có trích dẫn ở cuối câu.",
+            "Viết lại hoàn toàn bằng lời của mình cũng không thoát được việc trích dẫn nếu ý tưởng hay kết luận đến từ người khác — trích dẫn bảo vệ nguồn của ý tưởng, không chỉ của câu chữ.",
+            "Công cụ chống đạo văn chỉ đo độ trùng câu chữ (similarity index); nó không bắt được đạo văn ý tưởng hay paraphrase kỹ mà không trích dẫn, nên độ trùng thấp không đồng nghĩa với liêm chính học thuật."
+          ],
+          "splitSections": true,
+          "body": "\nMa trận tổng quan ở Bài 2.1 đã có sẵn các nguồn bạn sẽ trích dẫn. Bài này không dạy bạn đọc thêm gì mới — nó dạy cách đưa những gì đã đọc vào bài viết của mình mà không biến việc đó thành đạo văn. Bài đi qua bốn phần: trước hết phân biệt nội dung nào cần trích dẫn với kiến thức phổ thông; sau đó điểm qua bốn dạng đạo văn thường gặp, kể cả những dạng không sao chép nguyên văn; tiếp theo là kỹ thuật paraphrase đúng cách thay vì chỉ đổi vài từ; và kết bằng cách trích dẫn theo chuẩn APA 7 cùng giới hạn thật sự của công cụ chống đạo văn.\n\n## Vì sao phải trích dẫn\n\nTrích dẫn thường bị hiểu chỉ là thủ tục để tránh bị phần mềm chống đạo văn bắt. Thực ra nó làm hai việc quan trọng hơn: cho người đọc biết claim nào có nguồn kiểm lại được, và tách rõ ý nào là của người khác, ý nào là của bạn.\n\n> [!ghi-nho] **Đạo văn** là trình bày lời, ý tưởng, số liệu hoặc kết luận của người khác như thể là của mình, mà không ghi nguồn — bất kể có sao chép nguyên văn hay không. Đạo văn ý tưởng (lấy kết luận của người khác, viết lại bằng lời mình, không trích dẫn) vẫn là đạo văn, dù không một câu nào trùng chữ với bản gốc.\n\nKhông phải mọi câu trong bài đều cần trích dẫn. Phân biệt bằng câu hỏi: nếu một người đọc bất kỳ trong ngành cũng biết điều này mà không cần tra, đó là kiến thức phổ thông; nếu phải tra một nguồn cụ thể mới biết, đó cần trích dẫn.\n\n| Cần trích dẫn | Không cần trích dẫn (kiến thức phổ thông trong ngành) |\n|---|---|\n| Số liệu, kết quả khảo sát hoặc thực nghiệm của người khác | Định nghĩa cơ bản ai học ngành đó cũng biết (ví dụ: \"nhóm là tập hợp người cùng hướng tới một mục tiêu chung\") |\n| Luận điểm, kết luận hoặc mô hình lý thuyết của người khác | Sự kiện lịch sử hoặc địa lý phổ biến (ví dụ: Việt Nam có 63 tỉnh thành trước sáp nhập) |\n| Định nghĩa thuật ngữ chuyên ngành có nguồn cụ thể | Ý kiến hoặc nhận xét của riêng bạn, rút ra từ chính dữ liệu bạn thu thập |\n| Hình ảnh, biểu đồ, bảng số liệu mượn từ nguồn khác | Câu chuyển ý, câu tóm tắt lại chính phần bạn vừa viết |\n\n> [!vi-du] \"Nghiên cứu của Nguyễn & Trần (2021) trên 210 nhân viên cho thấy vai trò rõ ràng làm tăng hiệu suất nhóm 18%\" — cần trích dẫn, vì số liệu và kết luận này là của một nghiên cứu cụ thể. \"Một nhóm làm việc hiệu quả thường có sự phân công rõ ràng giữa các thành viên\" — nếu đây là quan sát chung, gần như hiển nhiên trong ngành, không cần trích dẫn; nhưng nếu câu này diễn đạt lại đúng kết luận của Nguyễn & Trần, nó vẫn cần trích dẫn dù không nhắc số liệu.\n\n## Bốn dạng đạo văn thường gặp ở sinh viên\n\nĐạo văn không chỉ là \"chép nguyên văn không để ngoặc kép\". Bốn dạng dưới đây đều bị coi là đạo văn, kể cả ba dạng sau — thứ nhiều sinh viên không nghĩ là vi phạm.\n\n| Dạng | Biểu hiện | Có tính là đạo văn không |\n|---|---|---|\n| Sao chép nguyên văn | Chép đúng câu chữ, không để trong dấu ngoặc kép, không trích dẫn | Có — dạng rõ nhất |\n| Paraphrase không đủ | Chỉ đổi vài từ bằng từ đồng nghĩa, giữ nguyên cấu trúc câu gốc | Có — dù có trích dẫn ở cuối câu |\n| Đạo văn ý tưởng | Viết lại hoàn toàn bằng lời riêng, nhưng không trích dẫn nguồn của ý tưởng/kết luận | Có — không cần trùng chữ nào |\n| Tự đạo văn | Nộp lại nguyên hoặc gần nguyên một bài đã nộp cho môn khác, không khai báo | Có — kể cả khi đó là bài của chính mình |\n\n> [!canh-bao] Dùng văn bản do AI sinh ra (ChatGPT, Claude…) và nộp thẳng mà không kiểm chứng lại, không khai báo là đã dùng AI theo quy định của môn/trường, cũng là một vi phạm liêm chính học thuật — không phải vì AI \"đạo văn\" theo nghĩa cũ, mà vì bài nộp không còn là sản phẩm của chính bạn như bạn cam kết. Luôn đọc lại, kiểm tra từng claim và trích dẫn nguồn gốc thật của các claim đó, dù văn bản do AI viết ra.\n\n> [!vi-du] Một sinh viên đã viết một đoạn về \"vai trò lãnh đạo chia sẻ\" cho bài tập môn Tâm lý học kỳ trước. Học kỳ này, khi viết tổng quan cho đề tài NCKH có nhắc lại đúng chủ đề đó, sinh viên copy nguyên đoạn cũ vào bài mới vì \"đây là bài của chính mình, không phải chép của ai\". Đây vẫn là tự đạo văn: hội đồng chấm bài mới có quyền kỳ vọng đây là sản phẩm mới, và việc dùng lại không khai báo đánh lừa kỳ vọng đó — cách xử lý đúng là trích dẫn lại chính công trình cũ của mình, hoặc viết lại hoàn toàn cho bài mới.\n\n## Paraphrase đúng cách — không phải đổi vài từ\n\nParaphrase không đủ là lỗi phổ biến nhất, vì nó có cảm giác giống như \"đã cố viết lại\" nhưng thực ra chỉ thay từ, giữ nguyên cấu trúc câu — công cụ chống đạo văn hiện đại vẫn bắt được, và về nguyên tắc vẫn là đạo văn dù có trích dẫn.\n\n> [!vi-du] Câu gốc: \"Effective time management requires distinguishing between urgent and important tasks.\" Bản \"paraphrase\" chỉ đổi từ: \"Quản lý thời gian hiệu quả yêu cầu phân biệt giữa các nhiệm vụ khẩn cấp và quan trọng\" — đây chỉ là dịch/đổi từ, giữ nguyên cấu trúc câu gốc, **chưa đủ** để coi là paraphrase, dù có trích dẫn ở cuối. Bản paraphrase đúng: \"Một người quản lý thời gian tốt không xử lý mọi việc theo thứ tự khẩn cấp — họ dừng lại để hỏi việc nào thật sự đóng góp cho mục tiêu dài hạn, trước khi quyết định làm gì trước\" — cấu trúc câu, thứ tự ý và cách diễn đạt đều khác bản gốc, nhưng giữ đúng ý.\n\nKỹ thuật paraphrase đáng tin: **đọc** đoạn gốc cho hiểu ý chính, **che hoặc gấp** đoạn đó lại (không nhìn khi viết), **viết lại từ trí nhớ** bằng cách diễn đạt của riêng bạn, rồi **so sánh lại** với bản gốc — nếu câu của bạn vẫn đi theo đúng thứ tự từ và cấu trúc câu gốc, viết lại lần nữa.\n\n> [!meo] Nếu paraphrase xong mà thấy khó nhớ cấu trúc câu gốc là gì, đó là dấu hiệu tốt — nghĩa là bạn đã thật sự diễn đạt lại theo cách hiểu của mình, không phải đang \"dịch\" câu gốc sang một câu khác cùng khung.\n\n## Trích dẫn theo chuẩn và quản lý nguồn bằng công cụ\n\nKhóa này dùng chuẩn **APA 7** cho mọi trích dẫn (đúng như phần \"Nguồn tham khảo\" ở hai bài trước). Hai phần cần khớp nhau: trích dẫn trong bài, và danh mục tham khảo cuối bài.\n\n| Tình huống | Trích dẫn trong bài (APA 7) |\n|---|---|\n| Một tác giả | (Nguyễn, 2021) hoặc Nguyễn (2021) cho thấy… |\n| Hai tác giả | (Nguyễn & Trần, 2021) |\n| Ba tác giả trở lên | (Nguyễn và cộng sự, 2021) |\n| Trích dẫn gián tiếp (đọc qua nguồn khác, chưa đọc bản gốc) | (Trần, 2015, trích trong Lê, 2020) — chỉ dùng khi không tìm được bản gốc |\n\nDanh mục tham khảo cho một bài báo: `Tác giả, A. A. (Năm). Tên bài báo. Tên tạp chí, số(kỳ), trang.` Cho một cuốn sách: `Tác giả, A. A. (Năm). Tên sách (in nghiêng). Nhà xuất bản.` — đúng định dạng đã dùng ở phần tham khảo của Bài 1.1 và 2.1.\n\n> [!ghi-nho] Với một đề tài có 15-20 nguồn, ghi trích dẫn thủ công rất dễ lệch định dạng hoặc quên cập nhật khi thêm/bớt nguồn. Công cụ quản lý trích dẫn (**Zotero**, miễn phí, hoặc Mendeley) lưu thông tin từng nguồn một lần, rồi tự sinh cả trích dẫn trong bài và danh mục tham khảo đúng định dạng — thêm hay xoá một nguồn thì danh mục tự cập nhật theo.\n\nCông cụ chống đạo văn (Turnitin, DupliChecker, Grammarly…) đo **độ trùng câu chữ** (similarity index) giữa bài của bạn với một cơ sở dữ liệu văn bản khác. Đây là công cụ hữu ích nhưng có giới hạn rõ:\n\n| Công cụ chống đạo văn bắt được | Công cụ chống đạo văn KHÔNG bắt được |\n|---|---|\n| Sao chép nguyên văn hoặc gần nguyên văn | Đạo văn ý tưởng (viết lại hoàn toàn khác câu chữ, không trích dẫn nguồn ý) |\n| Paraphrase không đủ nếu cấu trúc câu còn gần giống bản gốc | Paraphrase kỹ nhưng vẫn không trích dẫn nguồn của ý tưởng |\n| Trùng với các bài đã có trong cơ sở dữ liệu của công cụ | Tự đạo văn nếu bài cũ không nằm trong cơ sở dữ liệu công cụ quét |\n\n> [!canh-bao] Độ trùng lặp thấp (ví dụ dưới 10%) không đồng nghĩa với việc bài viết đã liêm chính học thuật. Một bài có thể trùng 0% về câu chữ mà vẫn đạo văn ý tưởng ở mọi đoạn, nếu toàn bộ luận điểm lấy từ người khác mà không trích dẫn. Chỉ số này là một tín hiệu, không phải bằng chứng đầy đủ.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (25 phút)\n\nTừ ma trận tổng quan ở Bài 2.1, chọn **một** kết luận quan trọng của một nguồn. Áp kỹ thuật paraphrase 4 bước (đọc, che, viết lại từ trí nhớ, so sánh) để viết lại kết luận đó bằng lời của bạn, rồi trích dẫn đúng theo APA 7. Viết cả hai phiên bản — câu gốc (hoặc bản dịch gần với gốc) và bản paraphrase của bạn — để so sánh cấu trúc.\n\n### Nhóm 3-4 người (20 phút)\n\nĐổi bản paraphrase cho nhau (không đổi câu gốc). Mỗi người đọc bản paraphrase của bạn cùng nhóm và tự đoán câu gốc nói gì mà không nhìn bản gốc — nếu đoán đúng gần như nguyên văn, đó là dấu hiệu paraphrase chưa đủ khác cấu trúc. Cả nhóm cùng kiểm bốn dạng đạo văn: trong các đoạn paraphrase của nhóm, có ai đang paraphrase không đủ hoặc quên trích dẫn ý tưởng không.\n\n### Bài tập về nhà (45 phút)\n\nViết một đoạn văn **150-200 từ**, trích dẫn ít nhất **3 nguồn** từ ma trận tổng quan, đúng cả trích dẫn trong bài và danh mục tham khảo theo APA 7. Kèm bảng tự kiểm bốn dạng đạo văn cho chính đoạn văn đó.\n\n:::mau Mẫu nộp bài tập về nhà\n**Đoạn văn (150-200 từ, trích dẫn ≥ 3 nguồn):** …\n\n**Danh mục tham khảo (APA 7) cho các nguồn đã trích:** …\n\n**Tự kiểm bốn dạng đạo văn**\n\n| Dạng | Có mắc phải không | Vì sao |\n|---|---|---|\n| Sao chép nguyên văn | … | … |\n| Paraphrase không đủ | … | … |\n| Đạo văn ý tưởng | … | … |\n| Tự đạo văn | … | … |\n:::\n\n### Nguồn tham khảo\n\n- American Psychological Association. (2020). *Publication Manual of the American Psychological Association* (7th ed.).\n- Booth, W. C., Colomb, G. G., & Williams, J. M. (2016). *The Craft of Research* (4th ed.). University of Chicago Press. — chương về trích dẫn và tránh đạo văn.\n- Pecorari, D. (2013). *Teaching to Avoid Plagiarism: How to Promote Good Source Use.* Open University Press. — về đạo văn ý tưởng và paraphrase không đủ.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "3.1-can-trich-dan",
+                "type": "mcq",
+                "prompt": "Câu nào dưới đây CẦN trích dẫn nguồn?",
+                "explanation": "Số liệu và kết luận cụ thể từ một nghiên cứu phải trích dẫn nguồn. Định nghĩa phổ thông trong ngành, sự kiện phổ biến, hoặc ý kiến của chính người viết dựa trên dữ liệu của mình không cần trích dẫn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Nghiên cứu của Nguyễn & Trần (2021) trên 210 nhân viên cho thấy vai trò rõ ràng làm tăng hiệu suất nhóm 18%.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Một nhóm là tập hợp người cùng hướng tới một mục tiêu chung.'",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "'Theo dữ liệu khảo sát của chính tôi, 60% sinh viên trong lớp thích làm việc theo cặp.'",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "'Việt Nam là một quốc gia ở Đông Nam Á.'",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "3.1-word-switching",
+                "type": "mcq",
+                "prompt": "Một sinh viên đổi vài từ trong câu gốc bằng từ đồng nghĩa, giữ nguyên cấu trúc câu, rồi trích dẫn nguồn ở cuối câu. Đây có được coi là paraphrase đúng cách không?",
+                "explanation": "Đổi từ đồng nghĩa mà giữ nguyên cấu trúc câu là paraphrase không đủ (word-switching) — vẫn tính là đạo văn dù có trích dẫn, vì cách diễn đạt chưa thật sự là của người viết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Không — đây là paraphrase không đủ (word-switching), vẫn tính là đạo văn dù có trích dẫn ở cuối câu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Có, vì có trích dẫn nguồn nên không thể coi là đạo văn",
+                    "isCorrect": false,
+                    "misconception": "nckh.paraphrase-is-enough"
+                  },
+                  {
+                    "label": "Có, miễn là không câu nào giống 100% với bản gốc",
+                    "isCorrect": false,
+                    "misconception": "nckh.paraphrase-is-enough"
+                  },
+                  {
+                    "label": "Không cần quan tâm, vì công cụ chống đạo văn sẽ tự phát hiện nếu có vấn đề",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "3.1-dao-van-y-tuong",
+                "type": "mcq",
+                "prompt": "Một sinh viên đọc kết luận của một nghiên cứu, viết lại hoàn toàn bằng lời của mình (không câu nào giống bản gốc), nhưng không trích dẫn nguồn của kết luận đó. Đây có tính là đạo văn không?",
+                "explanation": "Đạo văn ý tưởng xảy ra khi lấy kết luận hoặc luận điểm của người khác mà không trích dẫn, kể cả khi đã viết lại hoàn toàn bằng lời riêng và không câu nào trùng chữ với bản gốc.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Có — đây là đạo văn ý tưởng, vì kết luận vẫn là của người khác dù câu chữ đã được viết lại hoàn toàn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không, vì viết bằng lời của chính mình thì không cần trích dẫn nữa",
+                    "isCorrect": false,
+                    "misconception": "nckh.no-citation-if-my-words"
+                  },
+                  {
+                    "label": "Không, chỉ tính là đạo văn khi có câu chữ trùng với bản gốc",
+                    "isCorrect": false,
+                    "misconception": "nckh.plagiarism-is-copy-only"
+                  },
+                  {
+                    "label": "Có, nhưng chỉ vì paraphrase chưa đủ tốt, không liên quan tới việc thiếu trích dẫn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "3.1-tu-dao-van",
+                "type": "mcq",
+                "prompt": "Một sinh viên nộp lại nguyên một đoạn đã viết cho bài tập môn khác ở học kỳ trước, không khai báo, vì nghĩ 'đây là bài của chính mình, không phải chép của ai'. Nhận định nào đúng?",
+                "explanation": "Đây là tự đạo văn: hội đồng chấm bài mới kỳ vọng đây là sản phẩm mới, và dùng lại không khai báo đánh lừa kỳ vọng đó, kể cả khi tác giả của đoạn văn là chính người nộp.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đây là tự đạo văn — cần khai báo việc dùng lại, hoặc viết lại hoàn toàn cho bài mới",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không sao, vì tác giả của đoạn văn đó chính là người nộp bài",
+                    "isCorrect": false,
+                    "misconception": "nckh.self-plagiarism-not-an-issue"
+                  },
+                  {
+                    "label": "Chỉ có vấn đề nếu công cụ chống đạo văn phát hiện ra sự trùng lặp",
+                    "isCorrect": false,
+                    "misconception": "nckh.self-plagiarism-not-an-issue"
+                  },
+                  {
+                    "label": "Không sao, vì tự đạo văn chỉ áp dụng cho các bài báo đã xuất bản, không áp dụng cho bài tập trong trường",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "3.1-do-trung-lap-thap",
+                "type": "mcq",
+                "prompt": "Một bài viết chạy qua công cụ chống đạo văn và có độ trùng lặp (similarity index) 0%. Điều này chứng minh được gì?",
+                "explanation": "Công cụ chống đạo văn chỉ đo độ trùng câu chữ. Một bài có thể trùng 0% về câu chữ mà vẫn đạo văn ý tưởng ở mọi đoạn nếu các luận điểm lấy từ người khác mà không trích dẫn — chỉ số này là một tín hiệu, không phải bằng chứng đầy đủ về liêm chính học thuật.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chỉ chứng minh được là không có đoạn văn nào trùng câu chữ với cơ sở dữ liệu của công cụ — không chứng minh được bài đã liêm chính học thuật",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chứng minh bài viết hoàn toàn không có đạo văn dưới mọi hình thức",
+                    "isCorrect": false,
+                    "misconception": "nckh.similarity-score-is-the-goal"
+                  },
+                  {
+                    "label": "Chứng minh mọi trích dẫn trong bài đều đúng định dạng APA",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có ý nghĩa gì, vì công cụ chống đạo văn không đáng tin cậy",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "3.1-thu-tu-paraphrase",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự bốn bước paraphrase đáng tin cậy.",
+                "explanation": "Đọc để hiểu ý chính, che hoặc gấp lại để không nhìn khi viết, viết lại từ trí nhớ bằng lời của mình, rồi so sánh với bản gốc để chắc chắn không giữ nguyên cấu trúc câu.",
+                "points": 3,
+                "sequence": [
+                  "Đọc đoạn gốc cho hiểu ý chính",
+                  "Che hoặc gấp đoạn gốc lại, không nhìn khi viết",
+                  "Viết lại từ trí nhớ bằng cách diễn đạt của riêng mình",
+                  "So sánh bản viết lại với bản gốc để kiểm cấu trúc câu có còn giống không",
+                  "Trích dẫn nguồn của ý tưởng, dù đã viết lại hoàn toàn bằng lời mình"
+                ]
+              },
+              {
+                "key": "3.1-noi-dang-dao-van",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với đúng dạng đạo văn mà nó thể hiện.",
+                "explanation": "Chép nguyên câu không trích dẫn là sao chép nguyên văn; chỉ đổi từ đồng nghĩa giữ nguyên cấu trúc là paraphrase không đủ; viết lại hoàn toàn bằng lời riêng nhưng không trích dẫn nguồn ý tưởng là đạo văn ý tưởng; nộp lại bài cũ của chính mình không khai báo là tự đạo văn.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Chép đúng nguyên câu từ bài báo, không để trong dấu ngoặc kép, không trích dẫn",
+                    "right": "Sao chép nguyên văn"
+                  },
+                  {
+                    "left": "Đổi vài từ bằng từ đồng nghĩa, giữ nguyên cấu trúc câu gốc",
+                    "right": "Paraphrase không đủ"
+                  },
+                  {
+                    "left": "Viết lại hoàn toàn bằng lời riêng, không câu nào trùng chữ, nhưng không trích dẫn nguồn của kết luận",
+                    "right": "Đạo văn ý tưởng"
+                  },
+                  {
+                    "left": "Nộp lại một đoạn đã viết cho bài tập môn khác học kỳ trước, không khai báo",
+                    "right": "Tự đạo văn"
+                  }
+                ]
+              },
+              {
+                "key": "3.1-viet-doan-trich-dan",
+                "type": "essay",
+                "prompt": "Chọn một kết luận quan trọng từ ma trận tổng quan ở Bài 2.1. Viết 150-200 từ gồm: (a) paraphrase kết luận đó theo đúng kỹ thuật 4 bước, có trích dẫn trong bài theo APA 7; (b) một câu giải thích vì sao bản paraphrase của bạn không còn giữ cấu trúc câu gốc; (c) mục tham khảo APA 7 đầy đủ cho nguồn đó.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 4.1 · Chọn cách trả lời câu hỏi nghiên cứu — thiết kế cơ bản",
+          "durationMin": 75,
+          "description": "Chọn thiết kế định lượng/định tính/hỗn hợp theo loại câu hỏi; xác định biến và thang đo; chọn mẫu và hiểu giới hạn của mẫu thuận tiện; thiết kế bảng hỏi/hướng dẫn phỏng vấn không mắc lỗi cơ bản.",
+          "objectives": [
+            "Chọn được thiết kế định lượng, định tính hoặc hỗn hợp phù hợp với loại câu hỏi nghiên cứu đã chốt ở Bài 1.1",
+            "Xác định được biến độc lập, biến phụ thuộc và loại thang đo phù hợp cho một câu hỏi định lượng",
+            "Giải thích được vì sao mẫu thuận tiện không đại diện cho một dân số rộng hơn, và nêu được cách hạn chế đó ảnh hưởng tới kết luận",
+            "Nhận diện và sửa được lỗi câu hỏi dẫn dắt (leading) và câu hỏi hai-trong-một (double-barreled) trong một bảng hỏi hoặc hướng dẫn phỏng vấn"
+          ],
+          "summary": [
+            "Loại thiết kế chọn theo loại câu hỏi, không theo việc mình thấy con số hay lời nói dễ làm hơn: câu hỏi về mức độ hoặc mối quan hệ cần định lượng, câu hỏi về trải nghiệm hoặc cơ chế cần định tính.",
+            "Một câu hỏi định lượng phải tách được thành biến độc lập và biến phụ thuộc, và mỗi biến phải gắn với một loại thang đo cụ thể trước khi thiết kế công cụ đo.",
+            "Mẫu thuận tiện (khảo sát bạn cùng lớp) chỉ nói được về đúng nhóm đã khảo sát — cỡ mẫu lớn không cứu được một mẫu chọn theo cách thiên lệch.",
+            "Câu hỏi dẫn dắt và câu hỏi hai-trong-một là hai lỗi phổ biến nhất trong bảng hỏi tự soạn, và cả hai đều làm dữ liệu thu về không đo đúng thứ cần đo."
+          ],
+          "splitSections": true,
+          "body": "\nBạn đã có câu hỏi nghiên cứu (Bài 1.1), đã biết người khác làm gì rồi (Bài 2.1), và biết cách trích dẫn đúng (Bài 3.1). Bài này trả lời câu hỏi tiếp theo: bạn sẽ **thu thập dữ liệu gì, từ ai, và bằng công cụ nào** để thật sự trả lời được câu hỏi đó. Bài đi qua bốn phần: trước hết là chọn thiết kế định lượng, định tính hay hỗn hợp theo đúng loại câu hỏi; sau đó với hướng định lượng là xác định biến và thang đo; tiếp theo là chọn mẫu và hiểu giới hạn của mẫu thuận tiện; và kết bằng cách thiết kế bảng hỏi hoặc hướng dẫn phỏng vấn không mắc hai lỗi cơ bản.\n\n## Ba cách trả lời một câu hỏi nghiên cứu\n\nKhông phải mọi câu hỏi nghiên cứu đều trả lời bằng cùng một cách. Loại câu hỏi quyết định loại thiết kế, không phải việc bạn thấy làm khảo sát hay phỏng vấn dễ hơn.\n\n> [!ghi-nho] **Định lượng** đo hiện tượng bằng số và kiểm định mối quan hệ giữa các biến — phù hợp với câu hỏi hỏi \"ở mức nào\", \"khác nhau ra sao giữa các nhóm\", \"có liên hệ gì với nhau\". **Định tính** tìm hiểu trải nghiệm, cơ chế hoặc ý nghĩa qua lời của người tham gia — phù hợp với câu hỏi hỏi \"trải nghiệm ra sao\", \"qua cơ chế nào\", \"vì sao lại như vậy\". **Hỗn hợp** kết hợp cả hai khi một câu hỏi cần cả đo lường và cả hiểu sâu.\n\n| Câu hỏi nghiên cứu (dạng) | Thiết kế phù hợp |\n|---|---|\n| \"X liên hệ thế nào với Y?\", \"X khác nhau ra sao giữa nhóm A và nhóm B?\" | Định lượng |\n| \"Người tham gia trải nghiệm X ra sao?\", \"X xảy ra qua cơ chế nào?\" | Định tính |\n| Cần vừa đo mức độ, vừa hiểu vì sao mức độ đó xảy ra | Hỗn hợp |\n\n> [!canh-bao] Chọn định lượng vì \"thấy số liệu dễ chấm hơn văn bản\", hoặc chọn định tính vì \"ghét thống kê\", đều là chọn sai lý do. Việc chọn phải xuất phát từ chính câu hỏi bạn đã đặt ra ở Bài 1.1, không phải từ điều bạn thấy thuận tiện.\n\n> [!vi-du] Câu hỏi \"Cách phân vai trò trong nhóm ảnh hưởng thế nào tới mức độ hài lòng của thành viên?\" hỏi về **mối quan hệ giữa hai biến đo được** (cách phân vai trò, mức độ hài lòng) — đây là câu hỏi định lượng, trả lời bằng khảo sát. Nhưng nếu bạn muốn hiểu thêm **vì sao** một cách phân vai trò lại làm tăng hoặc giảm hài lòng — cơ chế tâm lý hay tình huống cụ thể nào tạo ra điều đó — bạn có thể bổ sung một vòng phỏng vấn ngắn với vài người có điểm hài lòng cao và thấp nhất trong khảo sát. Khi đó thiết kế trở thành hỗn hợp: định lượng đo mối quan hệ, định tính giải thích cơ chế.\n\n## Định lượng: từ câu hỏi tới biến và thang đo\n\nVới thiết kế định lượng, bước đầu tiên là tách câu hỏi thành các biến cụ thể.\n\n> [!ghi-nho] **Biến độc lập** là thứ bạn cho là nguyên nhân hoặc yếu tố tác động (trong ví dụ trên: cách phân vai trò). **Biến phụ thuộc** là thứ bạn đo kết quả (mức độ hài lòng). Mỗi biến cần một **thang đo** cụ thể trước khi có thể thiết kế câu hỏi khảo sát.\n\n| Loại thang đo | Đặc điểm | Ví dụ |\n|---|---|---|\n| Định danh (nominal) | Phân loại, không có thứ tự | Ngành học, giới tính, có/không tham gia hoạt động ngoại khóa |\n| Thứ bậc (ordinal) | Có thứ tự, khoảng cách giữa các mức không đều nhau | Likert 5 điểm (hoàn toàn không đồng ý → hoàn toàn đồng ý) |\n| Khoảng/tỉ lệ (interval/ratio) | Có thứ tự, khoảng cách đều, có thể tính trung bình cộng hợp lý | Điểm trung bình học kỳ, số giờ học mỗi tuần |\n\n> [!vi-du] Với câu hỏi ví dụ ở trên: biến độc lập \"cách phân vai trò\" có thể đo bằng thang định danh (có phân vai trò rõ ràng / không có phân vai trò rõ ràng) hoặc thứ bậc (mức độ rõ ràng của phân vai trò, thang Likert 5 điểm). Biến phụ thuộc \"mức độ hài lòng\" đo bằng thang Likert 5 điểm trên 4-5 câu hỏi cụ thể, ví dụ: \"Tôi hài lòng với cách công việc được chia trong nhóm\" (hoàn toàn không đồng ý — hoàn toàn đồng ý), rồi lấy trung bình các câu để ra một điểm hài lòng chung.\n\n## Chọn mẫu — ai sẽ trả lời, và mẫu đó nói được điều gì\n\nXác định xong biến và thang đo, câu hỏi tiếp theo là: khảo sát ai, và mẫu đó có nói được điều bạn muốn kết luận không.\n\n> [!ghi-nho] **Dân số nghiên cứu** (population) là toàn bộ nhóm bạn muốn nói tới trong kết luận (ví dụ: sinh viên năm 3 khoa Kinh tế trên cả nước). **Mẫu** (sample) là nhóm nhỏ bạn thật sự thu thập dữ liệu. Kết luận chỉ đáng tin trong phạm vi mẫu đại diện được cho dân số nào — không phải phạm vi bạn muốn nói tới.\n\n| Cách chọn mẫu | Cách làm | Đại diện tốt cho dân số rộng không |\n|---|---|---|\n| Ngẫu nhiên đơn giản | Mỗi người trong dân số có cơ hội được chọn bằng nhau (ví dụ: bốc số ngẫu nhiên từ danh sách toàn khoa) | Có, nếu danh sách đầy đủ và cỡ mẫu đủ lớn |\n| Phân tầng | Chia dân số theo nhóm (ví dụ: theo năm học), chọn ngẫu nhiên trong mỗi nhóm theo đúng tỉ lệ | Có, và đảm bảo mọi nhóm nhỏ đều có mặt |\n| Thuận tiện (convenience) | Khảo sát người dễ tiếp cận nhất — bạn cùng lớp, nhóm Facebook | Không — chỉ đại diện cho đúng nhóm đã khảo sát |\n\n> [!canh-bao] Mẫu thuận tiện là cách phổ biến nhất ở NCKH sinh viên vì dễ làm, và **không sai khi dùng nó** — nhưng kết luận chỉ được nói trong phạm vi \"sinh viên lớp/khoa đã khảo sát\", không được suy rộng ra \"sinh viên nói chung\" hay \"sinh viên Việt Nam\". Ghi rõ hạn chế này trong bài thay vì im lặng bỏ qua.\n\n> [!vi-du] Một nhóm khảo sát 500 sinh viên bằng cách đăng link trong nhóm Facebook của khoa mình — cỡ mẫu lớn, nhưng vẫn là mẫu thuận tiện: chỉ những ai đang theo dõi nhóm Facebook đó và có xu hướng trả lời khảo sát online mới xuất hiện trong mẫu. Một mẫu khác chỉ 120 người nhưng được chọn ngẫu nhiên từ danh sách sinh viên toàn khoá do phòng đào tạo cung cấp lại đại diện tốt hơn nhiều, dù cỡ mẫu nhỏ hơn. Cỡ mẫu lớn không cứu được một cách chọn mẫu thiên lệch.\n\n## Thiết kế bảng hỏi và hướng dẫn phỏng vấn không mắc lỗi cơ bản\n\nCó biến, thang đo và mẫu rõ ràng, bước cuối là viết đúng câu hỏi. Hai lỗi dưới đây phổ biến nhất ở bảng hỏi tự soạn.\n\n| Lỗi | Ví dụ sai | Vì sao hỏng | Cách sửa |\n|---|---|---|---|\n| Câu hỏi dẫn dắt (leading) | \"Bạn có đồng ý rằng phân vai trò rõ ràng luôn giúp nhóm làm việc tốt hơn không?\" | Gợi sẵn câu trả lời \"có\", người trả lời khó nói khác | \"Cách phân vai trò trong nhóm của bạn ảnh hưởng thế nào tới hiệu quả làm việc?\" — trung lập, không gợi hướng trả lời |\n| Câu hỏi hai-trong-một (double-barreled) | \"Bạn có hài lòng với cách phân vai trò và tiến độ hoàn thành công việc của nhóm không?\" | Hỏi hai điều trong một câu — người trả lời không rõ đang trả lời phần nào nếu hai câu trả lời khác nhau | Tách thành hai câu riêng: một câu về phân vai trò, một câu về tiến độ |\n\n> [!vi-du] Bảng hỏi ban đầu có câu: \"Bạn có nghĩ rằng nhóm nên phân vai trò rõ ràng và họp thường xuyên hơn không?\" — vừa dẫn dắt (giả định \"nên\" là đúng) vừa hai-trong-một (phân vai trò và họp thường xuyên là hai việc khác nhau). Sửa lại thành hai câu trung lập: \"Nhóm của bạn hiện phân vai trò rõ ràng ở mức nào?\" (thang Likert 5 điểm) và \"Nhóm của bạn họp với tần suất nào?\" (định danh: hằng ngày / vài lần một tuần / một lần một tuần / ít hơn).\n\n> [!meo] Trước khi phát chính thức, luôn **thử nghiệm bảng hỏi (pilot test)** với 5-10 người không tham gia vào việc soạn câu hỏi. Hỏi họ có câu nào khó hiểu, câu nào họ không chắc nên chọn đáp án nào — đây là cách rẻ nhất để bắt lỗi trước khi gửi cho hàng trăm người và không sửa được nữa.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (30 phút)\n\nVới câu hỏi nghiên cứu đã chốt ở Bài 1.1: (1) xác định thiết kế phù hợp (định lượng/định tính/hỗn hợp) và giải thích vì sao dựa trên loại câu hỏi; (2) nếu định lượng, xác định biến độc lập, biến phụ thuộc và thang đo cho mỗi biến — nếu định tính, viết 3 câu hỏi phỏng vấn chính; (3) soạn **5-8 câu hỏi khảo sát hoặc câu hỏi phỏng vấn** dựa trên các biến/câu hỏi chính đó.\n\n### Nhóm 3-4 người (25 phút)\n\nĐổi bảng hỏi/hướng dẫn phỏng vấn cho nhau. Mỗi người tìm trong bài của bạn cùng nhóm: có câu nào dẫn dắt không, có câu nào hai-trong-một không, thang đo của mỗi câu có rõ ràng không. Ghi lại ít nhất một lỗi tìm được (nếu có) và cách sửa đề xuất.\n\n### Bài tập về nhà (60 phút)\n\nHoàn thiện bảng hỏi hoặc hướng dẫn phỏng vấn thành **8-10 câu**, đã sửa theo góp ý của nhóm. Thử nghiệm (pilot test) với **3 người** không tham gia soạn câu hỏi, ghi lại phản hồi và bản chỉnh sửa cuối.\n\n:::mau Mẫu nộp bài tập về nhà\n**Câu hỏi nghiên cứu:** …\n\n**Thiết kế đã chọn (định lượng/định tính/hỗn hợp) và lý do:** …\n\n**Biến và thang đo (nếu định lượng) hoặc câu hỏi phỏng vấn chính (nếu định tính):** …\n\n**Bảng hỏi/hướng dẫn phỏng vấn hoàn thiện (8-10 câu):** …\n\n**Kết quả pilot test với 3 người**\n\n| Người pilot | Câu họ thấy khó hiểu | Chỉnh sửa đã áp dụng |\n|---|---|---|\n| … | … | … |\n:::\n\n### Nguồn tham khảo\n\n- Fowler, F. J. (2014). *Survey Research Methods* (5th ed.). SAGE Publications. — chương về thiết kế câu hỏi khảo sát.\n- Creswell, J. W., & Creswell, J. D. (2018). *Research Design: Qualitative, Quantitative, and Mixed Methods Approaches* (5th ed.). SAGE Publications.\n- Babbie, E. (2016). *The Practice of Social Research* (14th ed.). Cengage Learning. — chương về chọn mẫu.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "4.1-chon-thiet-ke",
+                "type": "mcq",
+                "prompt": "Câu hỏi nghiên cứu 'Sinh viên trải nghiệm áp lực thi cử ra sao trong kỳ thi cuối kỳ?' phù hợp với thiết kế nào nhất, và vì sao?",
+                "explanation": "Câu hỏi hỏi về trải nghiệm, không phải mức độ hay mối quan hệ giữa các biến đo được — phù hợp với thiết kế định tính. Việc chọn thiết kế phải dựa vào loại câu hỏi, không phải cảm giác cá nhân về việc số hay lời dễ xử lý hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Định tính, vì câu hỏi tìm hiểu trải nghiệm và ý nghĩa, không đo mức độ hay mối quan hệ giữa các biến",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Định lượng, vì cứ nghiên cứu khoa học thì nên có số liệu cho có tính khoa học",
+                    "isCorrect": false,
+                    "misconception": "nckh.qual-quant-by-preference"
+                  },
+                  {
+                    "label": "Định tính, vì định tính dễ làm hơn định lượng nên chọn cho nhanh",
+                    "isCorrect": false,
+                    "misconception": "nckh.qual-quant-by-preference"
+                  },
+                  {
+                    "label": "Không thiết kế nào phù hợp, cần đổi câu hỏi trước",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.1-bien-doc-lap-phu-thuoc",
+                "type": "mcq",
+                "prompt": "Với câu hỏi 'Số giờ tự học mỗi tuần liên hệ thế nào với điểm trung bình học kỳ của sinh viên?', biến nào là biến phụ thuộc?",
+                "explanation": "Biến phụ thuộc là thứ được đo như kết quả — ở đây là điểm trung bình học kỳ. Số giờ tự học là biến độc lập, thứ được coi là yếu tố tác động.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Điểm trung bình học kỳ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Số giờ tự học mỗi tuần",
+                    "isCorrect": false,
+                    "misconception": "nckh.iv-dv-confusion"
+                  },
+                  {
+                    "label": "Cả hai đều là biến độc lập",
+                    "isCorrect": false,
+                    "misconception": "nckh.iv-dv-confusion"
+                  },
+                  {
+                    "label": "Không biến nào là biến phụ thuộc trong câu hỏi này",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.1-mau-thuan-tien",
+                "type": "mcq",
+                "prompt": "Một nhóm khảo sát 500 sinh viên bằng cách đăng link trong nhóm Facebook của khoa mình, rồi kết luận 'sinh viên Việt Nam nói chung có mức hài lòng X'. Vấn đề lớn nhất ở đây là gì?",
+                "explanation": "Đây là mẫu thuận tiện, chỉ đại diện cho đúng nhóm đã khảo sát (sinh viên theo dõi nhóm Facebook đó và có xu hướng trả lời khảo sát online). Kết luận suy rộng ra 'sinh viên Việt Nam nói chung' vượt quá phạm vi mẫu có thể đại diện, bất kể cỡ mẫu lớn.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Mẫu thuận tiện chỉ đại diện cho nhóm đã khảo sát; kết luận suy rộng ra 'sinh viên Việt Nam nói chung' vượt quá phạm vi mẫu cho phép",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì 500 là một cỡ mẫu đủ lớn để đại diện cho sinh viên Việt Nam",
+                    "isCorrect": false,
+                    "misconception": "nckh.convenience-sample-generalizes"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là bảng hỏi có thể có câu hỏi dẫn dắt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì khảo sát online luôn đại diện tốt hơn khảo sát giấy",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.1-co-mau-lon-hon-tot-hon",
+                "type": "mcq",
+                "prompt": "Mẫu A: 500 người, chọn bằng cách đăng link trong một nhóm Facebook. Mẫu B: 120 người, chọn ngẫu nhiên từ danh sách sinh viên toàn khoá do phòng đào tạo cung cấp. Mẫu nào đại diện tốt hơn cho sinh viên toàn khoá?",
+                "explanation": "Cỡ mẫu lớn không cứu được một cách chọn mẫu thiên lệch. Mẫu B, dù nhỏ hơn, được chọn ngẫu nhiên từ toàn bộ dân số nên đại diện tốt hơn mẫu A — mẫu A chỉ đại diện cho nhóm đang theo dõi trang Facebook đó.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mẫu B — chọn ngẫu nhiên từ toàn bộ dân số, dù cỡ mẫu nhỏ hơn, đại diện tốt hơn một mẫu thuận tiện thiên lệch",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Mẫu A — cỡ mẫu lớn hơn nên luôn đại diện tốt hơn, bất kể cách chọn",
+                    "isCorrect": false,
+                    "misconception": "nckh.sample-size-bigger-always-better"
+                  },
+                  {
+                    "label": "Cả hai đại diện tốt như nhau vì đều là sinh viên",
+                    "isCorrect": false,
+                    "misconception": "nckh.sample-size-bigger-always-better"
+                  },
+                  {
+                    "label": "Không thể so sánh vì thiếu thông tin về nội dung khảo sát",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "4.1-loi-cau-hoi",
+                "type": "mcq",
+                "prompt": "Câu khảo sát: 'Bạn có đồng ý rằng phân vai trò rõ ràng và họp nhóm thường xuyên luôn giúp nhóm làm việc tốt hơn không?' mắc lỗi gì?",
+                "explanation": "Câu này vừa dẫn dắt (giả định sẵn 'luôn giúp tốt hơn' là đúng, gợi câu trả lời 'có') vừa hai-trong-một (phân vai trò và họp thường xuyên là hai việc khác nhau, gộp vào một câu hỏi).",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Vừa là câu hỏi dẫn dắt (giả định sẵn kết luận là đúng) vừa là câu hỏi hai-trong-một (hỏi hai điều khác nhau trong một câu)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ là câu hỏi dẫn dắt, không liên quan tới việc hỏi hai điều một lúc",
+                    "isCorrect": false,
+                    "misconception": "nckh.double-barreled-blind"
+                  },
+                  {
+                    "label": "Chỉ là câu hỏi hai-trong-một, không có yếu tố dẫn dắt nào",
+                    "isCorrect": false,
+                    "misconception": "nckh.leading-question-blind"
+                  },
+                  {
+                    "label": "Câu này không có lỗi gì, có thể dùng ngay trong bảng hỏi",
+                    "isCorrect": false,
+                    "misconception": "nckh.leading-question-blind"
+                  }
+                ]
+              },
+              {
+                "key": "4.1-thu-tu-thiet-ke",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước thiết kế công cụ thu thập dữ liệu định lượng, từ câu hỏi nghiên cứu tới bảng hỏi hoàn thiện.",
+                "explanation": "Từ câu hỏi nghiên cứu, xác định biến độc lập/phụ thuộc, chọn thang đo cho mỗi biến, viết câu hỏi khảo sát, rồi pilot test trước khi phát chính thức.",
+                "points": 3,
+                "sequence": [
+                  "Xác định biến độc lập và biến phụ thuộc từ câu hỏi nghiên cứu",
+                  "Chọn loại thang đo phù hợp cho mỗi biến (định danh, thứ bậc, khoảng/tỉ lệ)",
+                  "Viết câu hỏi khảo sát tương ứng với từng biến, tránh dẫn dắt và hai-trong-một",
+                  "Thử nghiệm bảng hỏi (pilot test) với một nhóm nhỏ không tham gia soạn câu hỏi",
+                  "Sửa theo phản hồi pilot test rồi mới phát chính thức cho toàn bộ mẫu"
+                ]
+              },
+              {
+                "key": "4.1-noi-thang-do",
+                "type": "matching",
+                "prompt": "Nối mỗi biến với đúng loại thang đo phù hợp nhất để đo nó.",
+                "explanation": "Ngành học là thang định danh (chỉ phân loại, không có thứ tự). Mức độ đồng ý là thang thứ bậc (có thứ tự nhưng khoảng cách giữa các mức không đều). Điểm trung bình học kỳ là thang khoảng/tỉ lệ (có thể tính trung bình cộng hợp lý).",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Ngành học của sinh viên",
+                    "right": "Thang định danh (nominal)"
+                  },
+                  {
+                    "left": "Mức độ đồng ý với một phát biểu (Likert 5 điểm)",
+                    "right": "Thang thứ bậc (ordinal)"
+                  },
+                  {
+                    "left": "Điểm trung bình học kỳ",
+                    "right": "Thang khoảng/tỉ lệ (interval/ratio)"
+                  },
+                  {
+                    "left": "Có tham gia hoạt động ngoại khóa hay không",
+                    "right": "Thang định danh (nominal)"
+                  }
+                ]
+              },
+              {
+                "key": "4.1-soan-bang-hoi",
+                "type": "essay",
+                "prompt": "Từ câu hỏi nghiên cứu của bạn (Bài 1.1), viết 5 câu hỏi khảo sát hoặc câu hỏi phỏng vấn cho đúng biến/nội dung cần thu thập. Với mỗi câu, ghi rõ: (a) biến hoặc nội dung câu hỏi đó đo/khai thác; (b) loại thang đo (nếu khảo sát) hoặc loại câu hỏi dò dự kiến (nếu phỏng vấn); (c) một lý do vì sao câu hỏi này không mắc lỗi dẫn dắt hoặc hai-trong-một.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 5.1 · Viết báo cáo và trình bày trước hội đồng",
+          "durationMin": 75,
+          "description": "Ghép câu hỏi, tổng quan, phương pháp và trích dẫn từ bốn bài trước thành một báo cáo NCKH sinh viên có cấu trúc; viết đúng mức độ chắc chắn (hedging); thiết kế slide/poster không nhồi chữ; chuẩn bị trả lời hội đồng không bịa và không phòng thủ.",
+          "objectives": [
+            "Ghép được nội dung đã làm ở Bài 1.1-4.1 vào đúng cấu trúc một báo cáo NCKH sinh viên, viết Tóm tắt sau cùng chứ không viết đầu tiên",
+            "Viết được câu kết luận đúng mức độ chắc chắn (hedging) phù hợp với bằng chứng, tránh ngôn ngữ tuyệt đối và kết luận vượt quá phạm vi mẫu",
+            "Thiết kế được slide hoặc poster theo nguyên tắc một thông điệp một slide, không nhồi nguyên văn báo cáo",
+            "Chuẩn bị được câu trả lời cho các câu hỏi hội đồng thường gặp, và biết cách trả lời khi không biết mà không bịa"
+          ],
+          "summary": [
+            "Tóm tắt là phần viết SAU CÙNG, không phải đầu tiên — nó tóm lại đúng những gì báo cáo đã có, không phải những gì bạn dự định làm.",
+            "Kết luận khoa học cần đúng mức độ chắc chắn với bằng chứng: 'kết quả cho thấy', 'có thể do' thường đúng hơn 'chứng minh', 'chắc chắn' — và không được vượt quá phạm vi mẫu đã thu thập ở Bài 4.1.",
+            "Slide hoặc poster không phải bản thu nhỏ của báo cáo — mỗi slide mang một thông điệp, chữ ít, để khán giả nghe bạn nói thay vì đọc màn hình.",
+            "Khi hội đồng hỏi điều bạn không biết, nói rõ mình chưa nắm phần đó thay vì bịa ra một câu trả lời — điều này giữ được uy tín hơn nhiều so với việc bị phát hiện trả lời sai."
+          ],
+          "splitSections": true,
+          "body": "\nĐến đây bạn đã có đủ nguyên liệu: câu hỏi nghiên cứu (Bài 1.1), tổng quan tài liệu và khoảng trống (Bài 2.1), cách trích dẫn đúng (Bài 3.1), và thiết kế thu thập dữ liệu (Bài 4.1). Bài cuối này không thêm nguyên liệu mới — nó dạy cách ghép những gì đã có thành một báo cáo mạch lạc và trình bày được trước hội đồng. Bài đi qua bốn phần: trước hết là cấu trúc bảy phần của một báo cáo NCKH sinh viên và nguyên liệu từ các bài trước ghép vào đâu; sau đó là văn phong học thuật đúng mức độ chắc chắn (hedging); tiếp theo là cách thiết kế slide hoặc poster không nhồi chữ; và kết bằng cách chuẩn bị trả lời câu hỏi của hội đồng mà không bịa hay phòng thủ.\n\n## Cấu trúc một báo cáo NCKH sinh viên\n\nMột báo cáo NCKH sinh viên thường có bảy phần, và mỗi phần đã có sẵn nguyên liệu từ một bài trước trong khóa này.\n\n| Phần báo cáo | Nội dung | Nguyên liệu đã có từ |\n|---|---|---|\n| Tóm tắt (Abstract) | 150-250 từ: câu hỏi, phương pháp, kết quả chính, ý nghĩa | Viết SAU CÙNG, tóm cả 6 phần dưới |\n| Đặt vấn đề | Vì sao chủ đề này quan trọng, câu hỏi nghiên cứu | Bài 1.1 |\n| Tổng quan tài liệu | Tổng hợp theo luận điểm, khoảng trống nghiên cứu | Bài 2.1 |\n| Phương pháp | Thiết kế, biến/thang đo, mẫu, công cụ thu thập | Bài 4.1 |\n| Kết quả | Dữ liệu thu được, không kèm bình luận | Dữ liệu thật đã thu thập |\n| Thảo luận và kết luận | Kết quả có ý nghĩa gì, hạn chế, hướng tiếp theo | Kết quả + khoảng trống ở Bài 2.1 |\n| Tài liệu tham khảo | Danh mục APA 7 đầy đủ | Bài 3.1 |\n\n> [!canh-bao] Viết Tóm tắt đầu tiên là lỗi thường gặp: lúc đó bạn mới có dự định, chưa có kết quả thật, nên Tóm tắt biến thành một đoạn \"sẽ làm gì\" chứ không phải \"đã làm gì và tìm ra gì\". Luôn viết Tóm tắt sau cùng, khi toàn bộ sáu phần còn lại đã hoàn thành.\n\n> [!vi-du] Một sinh viên viết Tóm tắt ngay sau khi chốt câu hỏi nghiên cứu: \"Nghiên cứu này sẽ khảo sát mối liên hệ giữa phân vai trò nhóm và mức độ hài lòng…\" — đúng ngữ pháp nhưng sai thời điểm, vì chưa có gì để tóm tắt. Sau khi hoàn thành thu thập và phân tích dữ liệu, Tóm tắt được viết lại: \"Khảo sát 145 sinh viên năm 3 khoa Kinh tế cho thấy nhóm có phân vai trò rõ ràng có mức hài lòng trung bình cao hơn 0,6 điểm (thang 5) so với nhóm không rõ vai trò…\" — giờ đây là một tóm tắt thật, nói được điều gì đã tìm ra.\n\n## Văn phong học thuật — khách quan và đúng mức độ chắc chắn\n\nKết luận khoa học cần khớp với độ mạnh của bằng chứng — không mạnh hơn, không yếu hơn. Kỹ thuật này gọi là **hedging** (làm mềm mức độ chắc chắn).\n\n> [!ghi-nho] **Hedging** là dùng từ ngữ phản ánh đúng mức độ chắc chắn mà dữ liệu cho phép: \"kết quả cho thấy\", \"có thể do\", \"dữ liệu gợi ý rằng\" — thay cho \"chứng minh\", \"chắc chắn\", \"luôn luôn\". Một nghiên cứu định lượng trên mẫu thuận tiện, cỡ mẫu trung bình, hầu như không bao giờ đủ mạnh để dùng từ \"chứng minh\".\n\n| Câu quá chắc chắn | Câu đúng mức độ chắc chắn (hedged) |\n|---|---|\n| \"Nghiên cứu này chứng minh rằng phân vai trò rõ ràng luôn cải thiện sự hài lòng.\" | \"Kết quả cho thấy nhóm có phân vai trò rõ ràng có mức hài lòng trung bình cao hơn, trong phạm vi mẫu đã khảo sát.\" |\n| \"Sinh viên chắc chắn thích làm việc nhóm có cấu trúc rõ ràng hơn.\" | \"Dữ liệu gợi ý rằng phần lớn sinh viên trong mẫu nghiêng về cấu trúc rõ ràng, song 15% số người trả lời không cho thấy sự khác biệt.\" |\n\n> [!canh-bao] Nhớ lại Bài 4.1: nếu mẫu của bạn là mẫu thuận tiện (khảo sát một lớp, một khoa), kết luận chỉ được viết trong phạm vi đó. \"Kết quả này cho thấy xu hướng ở sinh viên năm 3 khoa Kinh tế của trường X\" đúng phạm vi hơn \"kết quả này cho thấy xu hướng ở sinh viên Việt Nam\" — dù cả hai đọc lên đều \"nghe\" khoa học.\n\nNgoài hedging, tránh đưa cảm xúc cá nhân hoặc văn nói vào báo cáo: \"Kết quả này thật đáng buồn vì cho thấy sinh viên chưa quan tâm đúng mức\" nên viết lại thành \"Kết quả cho thấy X, một phát hiện có thể phản ánh Y\" — nêu diễn giải, không nêu cảm xúc.\n\n## Trình bày trước hội đồng — poster hoặc slide\n\nSlide hoặc poster **không phải bản thu nhỏ của báo cáo** — chúng phục vụ một việc khác: giúp khán giả theo dõi khi bạn nói, không phải để họ tự đọc.\n\n| | Poster | Slide thuyết trình |\n|---|---|---|\n| Dùng khi | Trưng bày, người xem tự đi qua đọc, có thể hỏi trực tiếp | Thuyết trình có thời gian cố định (5-10 phút), hội đồng ngồi nghe |\n| Lượng chữ | Nhiều hơn slide nhưng vẫn phải lược, dùng hình/bảng làm trọng tâm | Rất ít — mỗi slide 1 ý chính, vài từ khóa hoặc 1 hình/bảng |\n| Cấu trúc | Theo đúng 7 phần báo cáo, thu gọn | Theo 7 phần nhưng có thể gộp Đặt vấn đề + Tổng quan thành 1-2 slide mở đầu |\n\n> [!canh-bao] Nhồi cả đoạn văn từ báo cáo vào slide, rồi đứng đọc lại, là lỗi phổ biến nhất. Hội đồng đọc nhanh hơn bạn nói, nên họ đọc xong slide trước khi bạn nói xong câu, và sau đó ngừng nghe. Slide chỉ nên có từ khóa, số liệu chính, hoặc một hình/bảng — phần diễn giải nằm ở lời nói của bạn, không nằm trên màn hình.\n\n> [!vi-du] Slide \"Kết quả\" ban đầu có nguyên đoạn văn 80 từ mô tả số liệu khảo sát. Sửa lại: chỉ giữ một bảng 2 dòng (mức hài lòng trung bình của 2 nhóm) và một câu ngắn \"Nhóm có phân vai trò rõ ràng: hài lòng cao hơn 0,6 điểm\" — phần giải thích ý nghĩa của con số đó được nói bằng lời, không viết lên slide.\n\n## Trả lời câu hỏi của hội đồng\n\nPhần hỏi-đáp không phải để \"qua được\" — nó là cơ hội cho thấy bạn hiểu chính đề tài mình làm, không chỉ đọc thuộc slide.\n\nBa câu hỏi hội đồng thường hỏi nhất: *\"Mẫu này đại diện được cho ai?\"* (liên hệ Bài 4.1 — trả lời đúng phạm vi mẫu, không suy rộng), *\"Hạn chế lớn nhất của nghiên cứu là gì?\"* (nêu thật, không né tránh — mọi nghiên cứu đều có hạn chế), và *\"Nếu làm lại, bạn sẽ thay đổi gì?\"* (cho thấy bạn hiểu rõ những gì chưa hoàn hảo trong thiết kế của chính mình).\n\n> [!ghi-nho] Khi bị hỏi điều bạn không nắm rõ, câu trả lời tốt nhất là: \"Em chưa nắm rõ phần đó, nhưng em sẽ tìm hiểu thêm và có thể trả lời qua email/trong bản báo cáo chỉnh sửa.\" Hội đồng có chuyên môn thường nhận ra ngay khi một câu trả lời được bịa ra để có vẻ đầy đủ — và điều đó tổn hại uy tín nhiều hơn việc thẳng thắn nói chưa biết.\n\n> [!canh-bao] Khi bị hỏi khó hoặc bị chỉ ra một điểm yếu, phản ứng phòng thủ (giải thích dài dòng, đổ lỗi cho hoàn cảnh, cãi lại ngay) khiến hội đồng khó tiếp tục góp ý. Cách phản hồi tốt hơn: ghi nhận điểm đó (\"Đúng là đây là một hạn chế của thiết kế hiện tại\"), rồi nói cách bạn đã xử lý hoặc sẽ xử lý nó — góp ý là để bài tốt hơn, không phải một cuộc tấn công cá nhân.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (30 phút)\n\nViết **Tóm tắt 150-250 từ** cho đề tài của bạn, dùng nội dung đã có từ Bài 1.1 (câu hỏi), Bài 2.1 (khoảng trống), Bài 4.1 (phương pháp) — nếu chưa có dữ liệu thật, viết dựa trên kế hoạch thu thập dữ liệu, ghi rõ đây là bản dự kiến. Sau đó liệt kê **3 câu hỏi hội đồng có khả năng gặp nhất** với đề tài của bạn và phác câu trả lời ngắn cho mỗi câu.\n\n### Nhóm 3-4 người (25 phút)\n\nMỗi người trình bày Tóm tắt của mình trong 2 phút, như một buổi thuyết trình thật. Sau mỗi lượt, nhóm đóng vai hội đồng, hỏi ít nhất một trong ba câu hỏi thường gặp (mẫu đại diện, hạn chế, sẽ thay đổi gì). Người trình bày thực hành trả lời — kể cả khi câu trả lời là \"em chưa nắm rõ phần đó\".\n\n### Bài tập về nhà (60-90 phút)\n\nHoàn thiện **outline đầy đủ báo cáo** theo cấu trúc 7 phần (dùng lại nội dung đã làm ở Bài 1.1-4.1), và thiết kế **1 slide tóm tắt kết quả chính** theo nguyên tắc một thông điệp một slide.\n\n:::mau Mẫu nộp bài tập về nhà\n**Tóm tắt (150-250 từ):** …\n\n**Outline 7 phần** (mỗi phần 2-4 câu, không cần viết đầy đủ)\n\n| Phần | Nội dung tóm gọn |\n|---|---|\n| Đặt vấn đề | … |\n| Tổng quan tài liệu | … |\n| Phương pháp | … |\n| Kết quả (dự kiến/đã có) | … |\n| Thảo luận và kết luận | … |\n| Tài liệu tham khảo | (số nguồn, định dạng APA 7 đã kiểm) |\n\n**Slide tóm tắt kết quả chính:** mô tả nội dung slide (thông điệp chính, hình/bảng dùng, số từ trên slide)\n\n**3 câu hỏi hội đồng dự kiến và câu trả lời phác thảo:** …\n:::\n\n### Nguồn tham khảo\n\n- Booth, W. C., Colomb, G. G., & Williams, J. M. (2016). *The Craft of Research* (4th ed.). University of Chicago Press. — chương về viết kết luận và hedging.\n- Hyland, K. (1998). *Hedging in Scientific Research Articles.* John Benjamins Publishing.\n- American Psychological Association. (2020). *Publication Manual of the American Psychological Association* (7th ed.). — cấu trúc báo cáo và phong cách viết khoa học.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5.1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "5.1-thu-tu-viet-tom-tat",
+                "type": "mcq",
+                "prompt": "Nên viết phần Tóm tắt (Abstract) của báo cáo vào lúc nào?",
+                "explanation": "Tóm tắt phải tóm lại những gì báo cáo đã có — câu hỏi, phương pháp, kết quả thật, ý nghĩa — nên chỉ viết được sau khi các phần khác đã hoàn thành, không phải trước khi có kết quả.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Viết sau cùng, khi các phần Đặt vấn đề, Tổng quan, Phương pháp, Kết quả, Thảo luận đã hoàn thành",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Viết đầu tiên, ngay sau khi chốt câu hỏi nghiên cứu, để định hướng các phần sau",
+                    "isCorrect": false,
+                    "misconception": "nckh.abstract-written-first"
+                  },
+                  {
+                    "label": "Viết cùng lúc với Đặt vấn đề, vì hai phần này nội dung giống nhau",
+                    "isCorrect": false,
+                    "misconception": "nckh.abstract-written-first"
+                  },
+                  {
+                    "label": "Không quan trọng viết lúc nào, miễn là có đủ trong bản nộp cuối",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "5.1-hedging",
+                "type": "mcq",
+                "prompt": "Với một khảo sát trên mẫu thuận tiện 145 sinh viên, câu kết luận nào đúng mức độ chắc chắn nhất?",
+                "explanation": "Với mẫu thuận tiện, cỡ mẫu trung bình, kết luận nên dùng ngôn ngữ hedged ('kết quả cho thấy', trong phạm vi mẫu) thay vì tuyệt đối ('chứng minh', 'luôn luôn', suy rộng ra một dân số chưa khảo sát.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Kết quả cho thấy nhóm có phân vai trò rõ ràng có mức hài lòng trung bình cao hơn, trong phạm vi mẫu đã khảo sát.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Nghiên cứu này chứng minh rằng phân vai trò rõ ràng luôn cải thiện sự hài lòng của mọi sinh viên.'",
+                    "isCorrect": false,
+                    "misconception": "nckh.absolute-claims"
+                  },
+                  {
+                    "label": "'Sinh viên chắc chắn thích làm việc nhóm có cấu trúc rõ ràng hơn là không có cấu trúc.'",
+                    "isCorrect": false,
+                    "misconception": "nckh.absolute-claims"
+                  },
+                  {
+                    "label": "'Không thể kết luận gì từ dữ liệu này vì mẫu quá nhỏ để nói bất cứ điều gì.'",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "5.1-vuot-pham-vi-mau",
+                "type": "mcq",
+                "prompt": "Khảo sát chỉ thực hiện trên sinh viên năm 3 khoa Kinh tế của một trường (mẫu thuận tiện, theo Bài 4.1). Câu kết luận nào giữ đúng phạm vi mẫu?",
+                "explanation": "Kết luận chỉ nên nói trong phạm vi mẫu đã khảo sát — sinh viên năm 3 khoa Kinh tế của trường đó — không suy rộng ra 'sinh viên Việt Nam' hay 'sinh viên nói chung', đúng như giới hạn của mẫu thuận tiện đã học ở Bài 4.1.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Kết quả này cho thấy một xu hướng ở sinh viên năm 3 khoa Kinh tế của trường đã khảo sát.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Kết quả này cho thấy xu hướng chung của sinh viên Việt Nam.'",
+                    "isCorrect": false,
+                    "misconception": "nckh.claim-beyond-data"
+                  },
+                  {
+                    "label": "'Kết quả này áp dụng cho mọi sinh viên đại học, bất kể ngành học.'",
+                    "isCorrect": false,
+                    "misconception": "nckh.claim-beyond-data"
+                  },
+                  {
+                    "label": "'Kết quả này không nói lên được điều gì vì chỉ khảo sát một trường.'",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "5.1-thiet-ke-slide",
+                "type": "mcq",
+                "prompt": "Slide 'Kết quả' đang có một đoạn văn 80 từ mô tả chi tiết số liệu khảo sát. Nên xử lý thế nào?",
+                "explanation": "Slide nên chỉ giữ từ khóa, số liệu chính hoặc một hình/bảng — phần diễn giải nên nói bằng lời, không viết nguyên văn lên slide, vì khán giả đọc nhanh hơn người nói và sẽ ngừng nghe khi đọc xong.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Rút gọn thành một bảng hoặc số liệu chính, chuyển phần diễn giải sang lời nói khi thuyết trình",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ nguyên đoạn văn để hội đồng có đủ thông tin chi tiết ngay trên slide",
+                    "isCorrect": false,
+                    "misconception": "nckh.slide-is-report"
+                  },
+                  {
+                    "label": "Thêm chi tiết hơn nữa để slide đầy đủ như một trang báo cáo",
+                    "isCorrect": false,
+                    "misconception": "nckh.slide-is-report"
+                  },
+                  {
+                    "label": "Xóa hết slide Kết quả, chỉ nói bằng lời không cần hình ảnh gì",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "5.1-tra-loi-khong-biet",
+                "type": "mcq",
+                "prompt": "Hội đồng hỏi một câu về phương pháp thống kê mà bạn chưa thật sự nắm rõ. Cách trả lời nào giữ được uy tín tốt nhất?",
+                "explanation": "Thẳng thắn nói chưa nắm rõ và cam kết tìm hiểu thêm giữ được uy tín tốt hơn việc bịa một câu trả lời — hội đồng có chuyên môn thường nhận ra ngay khi câu trả lời không chính xác, và điều đó tổn hại uy tín nhiều hơn.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Em chưa nắm rõ phần đó, em sẽ tìm hiểu thêm và trả lời sau.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đưa ra một câu trả lời nghe hợp lý dù không chắc đúng, để không có vẻ thiếu chuẩn bị",
+                    "isCorrect": false,
+                    "misconception": "nckh.must-answer-everything"
+                  },
+                  {
+                    "label": "Đổi sang trả lời một câu hỏi khác dễ hơn mà không nói gì về câu đã hỏi",
+                    "isCorrect": false,
+                    "misconception": "nckh.must-answer-everything"
+                  },
+                  {
+                    "label": "Giải thích dài dòng về hoàn cảnh làm bài gấp để tránh phải trả lời trực tiếp",
+                    "isCorrect": false,
+                    "misconception": "nckh.defensive-to-criticism"
+                  }
+                ]
+              },
+              {
+                "key": "5.1-thu-tu-bao-cao",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các phần trong một báo cáo NCKH sinh viên hoàn chỉnh.",
+                "explanation": "Thứ tự chuẩn: Tóm tắt (dù viết sau cùng, luôn đặt ở đầu bản nộp), Đặt vấn đề, Tổng quan tài liệu, Phương pháp, Kết quả, Thảo luận và kết luận, Tài liệu tham khảo.",
+                "points": 3,
+                "sequence": [
+                  "Tóm tắt",
+                  "Đặt vấn đề",
+                  "Tổng quan tài liệu",
+                  "Phương pháp",
+                  "Kết quả",
+                  "Thảo luận và kết luận",
+                  "Tài liệu tham khảo"
+                ]
+              },
+              {
+                "key": "5.1-noi-phan-bao-cao-module",
+                "type": "matching",
+                "prompt": "Nối mỗi phần báo cáo với bài học trong khóa đã cung cấp nguyên liệu chính cho phần đó.",
+                "explanation": "Đặt vấn đề dùng câu hỏi nghiên cứu từ Bài 1.1; Tổng quan tài liệu dùng ma trận và khoảng trống từ Bài 2.1; Phương pháp dùng thiết kế/biến/mẫu từ Bài 4.1; Tài liệu tham khảo dùng cách trích dẫn APA 7 từ Bài 3.1.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Đặt vấn đề",
+                    "right": "Bài 1.1 · Câu hỏi nghiên cứu"
+                  },
+                  {
+                    "left": "Tổng quan tài liệu",
+                    "right": "Bài 2.1 · Ma trận và khoảng trống"
+                  },
+                  {
+                    "left": "Phương pháp",
+                    "right": "Bài 4.1 · Thiết kế, biến, mẫu"
+                  },
+                  {
+                    "left": "Tài liệu tham khảo",
+                    "right": "Bài 3.1 · Trích dẫn APA 7"
+                  }
+                ]
+              },
+              {
+                "key": "5.1-viet-tom-tat",
+                "type": "essay",
+                "prompt": "Viết Tóm tắt (Abstract) 150-250 từ cho đề tài của bạn, dùng nội dung đã có từ Bài 1.1, 2.1 và 4.1. Tóm tắt phải có đủ bốn phần: (a) câu hỏi/vấn đề nghiên cứu; (b) phương pháp và mẫu; (c) kết quả chính (thật hoặc dự kiến, ghi rõ nếu là dự kiến); (d) một câu về ý nghĩa/khoảng trống mà nghiên cứu này lấp vào.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
