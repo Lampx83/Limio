@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { apiUrl } from "@/lib/apiUrl";
+import LanguageTemplatePicker from "./LanguageTemplatePicker";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -196,6 +197,8 @@ export default function NewCoursePage() {
           Khởi tạo nháp — bạn có thể bổ sung module, lesson, quiz ở bước tiếp theo.
         </p>
       </div>
+
+      <LanguageTemplatePicker />
 
       {/* Cùng khung, cùng thứ tự trường với form "Sửa" thông tin khoá ở tab
           Tổng quan (CourseMetaForm) để tạo mới và chỉnh sửa trông như một. */}

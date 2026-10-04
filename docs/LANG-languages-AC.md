@@ -521,8 +521,25 @@ Schema (chỉ thêm): `SubmissionTranscript(id, submissionId, userId, courseId, 
 
 ## G8 · Khoá mẫu ngoại ngữ
 
-- [ ] Đóng gói chế độ ngoại ngữ, bốn kỹ năng, rubric Viết/Nói, khung đề thi thử HSK/IELTS/TOEIC (nội dung mẫu tự soạn).
-- [ ] Không ảnh hưởng khoá hiện có.
+> **Trạng thái: đã build + test, chờ review** (nhánh `feat/lang-g8-sample-course`; chưa commit). Mã: `packages/core-lms/src/languageTemplates/`, route `POST /api/courses/language-template`, lối tắt ở `/instructor/courses/new`. Đã chốt: làm cả Tiếng Trung và Tiếng Anh; bài Nghe không kèm audio giả; đặt ở trang tạo khoá. Khoá mẫu là một hàm dịch vụ
+> `createLanguageSampleCourse` đi qua đúng các hàm `createCourse → createModule → createLesson → …` mà UI đi
+> (không INSERT tay), nên mọi bất biến (auto-tag, personalization, event) tự đúng.
+
+- [x] **LANG.8.1** Giảng viên chọn "Khoá mẫu ngoại ngữ" (Tiếng Trung · Tiếng Anh) ở trang tạo khoá → nhận **bản nháp**
+  thuộc về mình, bật sẵn `languageMode` (kéo theo `personalizationEnabled`), chưa xuất bản, chưa ghi danh ai.
+- [x] **LANG.8.2** Khoá có 4 module/bài tương ứng **Nghe · Nói · Đọc · Viết**, mỗi bài gắn đúng `languageSkill`; bài Từ vựng
+  và Hội thoại dùng đúng khối nội dung ngoại ngữ (G2). Bài Nghe **không kèm audio** (không có audio tự soạn có bản
+  quyền rõ ràng): có ghi chú "tải audio của bạn vào đây" thay vì file giả.
+- [x] **LANG.8.3** Bài tập **Viết** mang rubric (`rubricText`) và bật được Feedback AI (G6); bài tập **Nói** mang rubric
+  dạng văn bản, ghi rõ "chấm tự động chưa bật" cho đến khi G7 xong.
+- [x] **LANG.8.4** Có sẵn **đề thi thử** dựng từ khung HSK (khoá Tiếng Trung) / IELTS-style (khoá Tiếng Anh): đủ phần
+  Nghe/Đọc/Viết, mỗi phần có giờ và ≥ 1 câu hỏi, **xuất bản được ngay** (qua `validateMockExamForPublish`).
+  Nội dung tự soạn, đánh dấu "mẫu" ở tiêu đề; không dùng câu/đoạn của đề thật.
+- [x] **LANG.8.5** Chạy lại không tạo trùng vô hạn: mỗi lần là một khoá mới (slug `-2`, `-3`…), giống tạo khoá thường.
+- [x] **LANG.8.6** **Không ảnh hưởng khoá hiện có**: không đổi dữ liệu nào ngoài khoá mới; không thêm cột/migration;
+  người không phải giảng viên bị chặn.
+- [x] **LANG.8.7** Sửa `duplicateCourse` để **giữ `languageMode`, `Lesson.languageSkill` và cấu hình chấm của bài tập (`rubricText`, `responseFormat`, `assessmentModes`, …)** (trước đây rơi về mặc định) —
+  khoá mẫu nhân bản được mà không mất chế độ ngoại ngữ. Có test hồi quy; khoá thường nhân bản y như cũ.
 
 ---
 
