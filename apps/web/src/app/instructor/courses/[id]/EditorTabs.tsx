@@ -34,8 +34,8 @@ export type EditorTab =
 const TABS: Array<{ key: EditorTab; label: string; icon: LucideIcon }> = [
   { key: "overview", label: "Tổng quan", icon: Info },
   { key: "content", label: "Nội dung", icon: BookOpen },
-  { key: "students", label: "Học viên", icon: Users },
   { key: "sections", label: "Lớp học", icon: School },
+  { key: "students", label: "Học viên", icon: Users },
   { key: "assignments", label: "Grade", icon: GraduationCap },
   { key: "analytics", label: "Phân tích", icon: BarChart3 },
   { key: "gamification", label: "Gamification", icon: Trophy },

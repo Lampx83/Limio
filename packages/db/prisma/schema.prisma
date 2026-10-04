@@ -4118,6 +4118,9 @@ model CourseSection {
   assignmentDues AssignmentSectionDue[]
   quizSchedules  QuizSectionSchedule[]
 
+  // Kỳ học của lớp — nhãn tự gõ (vd "HK1 2026-27"), chỉ để hiển thị/sắp xếp; không liên kết với AcademicTerm.
+  termLabel String?
+
   @@unique([courseId, name])
   @@unique([courseId, code])
   @@index([courseId])

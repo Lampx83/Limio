@@ -19,11 +19,15 @@ import { getCourseProgress } from "../learning/progress";
 
 export const CreateCourseSectionInput = z.object({
   name: z.string().min(1).max(200).trim(),
+  // Kỳ học: nhãn tự gõ, rỗng = không có.
+  termLabel: z.string().trim().max(100).nullable().optional(),
+  // Ghi chú của lớp (cột description).
   description: z.string().max(2000).optional(),
 });
 
 export const UpdateCourseSectionInput = z.object({
   name: z.string().min(1).max(200).trim().optional(),
+  termLabel: z.string().trim().max(100).nullable().optional(),
   description: z.string().max(2000).optional().nullable(),
   // B10 — điều kiện feedback của lớp (xem docs/B10-per-section-feedback-variant-AC.md).
   feedbackVariant: z.enum(["personalized", "minimal"]).optional(),
@@ -46,6 +50,9 @@ async function createUniqueInviteCode(db: PrismaClient): Promise<string> {
 export interface CourseSectionItem {
   id: string;
   name: string;
+  /** Kỳ học (nhãn tự gõ); null = không có. */
+  termLabel: string | null;
+  /** Ghi chú của lớp. */
   description: string | null;
   inviteCode: string | null;
   isDefault: boolean;
@@ -71,7 +78,8 @@ export async function createCourseSection(
       data: {
         courseId,
         name: parsed.data.name,
-        description: parsed.data.description ?? null,
+        termLabel: parsed.data.termLabel?.trim() || null,
+        description: parsed.data.description?.trim() || null,
         inviteCode,
         isDefault: false,
       },
@@ -79,6 +87,7 @@ export async function createCourseSection(
     return {
       id: section.id,
       name: section.name,
+      termLabel: section.termLabel,
       description: section.description,
       inviteCode: section.inviteCode,
       isDefault: section.isDefault,
@@ -133,6 +142,7 @@ export async function listCourseSections(
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
+    termLabel: r.termLabel,
     description: r.description,
     inviteCode: r.inviteCode,
     isDefault: r.isDefault,
@@ -174,10 +184,12 @@ export async function updateCourseSection(
 
   const data: {
     name?: string;
+    termLabel?: string | null;
     description?: string | null;
     feedbackVariant?: "personalized" | "minimal";
   } = {};
   if (parsed.data.name !== undefined) data.name = parsed.data.name;
+  if (parsed.data.termLabel !== undefined) data.termLabel = parsed.data.termLabel?.trim() || null;
   if (parsed.data.description !== undefined) data.description = parsed.data.description;
   if (parsed.data.feedbackVariant !== undefined) {
     data.feedbackVariant = parsed.data.feedbackVariant;

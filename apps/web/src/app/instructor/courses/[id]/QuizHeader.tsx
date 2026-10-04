@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Eye, EyeOff, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
 import { toast } from "@/lib/toast";
-import SectionDeadlinesPanel from "@/components/instructor/SectionDeadlinesPanel";
+import SectionDeadlinesPanel, {
+  type Schedule,
+  type SectionDeadlinesHandle,
+} from "@/components/instructor/SectionDeadlinesPanel";
 
 export type ScoringPolicy = "highest" | "latest" | "average";
 
@@ -179,10 +182,13 @@ export function QuizEditForm({
   const [attemptsLimited, setAttemptsLimited] = useState(quiz.maxAttempts !== null);
   const [maxAttempts, setMaxAttempts] = useState(quiz.maxAttempts ?? 3);
   const [scoringPolicy, setScoringPolicy] = useState<ScoringPolicy>(quiz.scoringPolicy ?? "highest");
-  const [opensEnabled, setOpensEnabled] = useState(!!quiz.opensAt);
-  const [opensLocal, setOpensLocal] = useState(quiz.opensAt ? toDateTimeInputValue(quiz.opensAt) : "");
-  const [dueEnabled, setDueEnabled] = useState(!!quiz.dueAt);
-  const [dueLocal, setDueLocal] = useState(quiz.dueAt ? toDateTimeInputValue(quiz.dueAt) : "");
+  const [schedule, setSchedule] = useState<Schedule>({
+    opensEnabled: !!quiz.opensAt,
+    opensLocal: quiz.opensAt ? toDateTimeInputValue(quiz.opensAt) : "",
+    dueEnabled: !!quiz.dueAt,
+    dueLocal: quiz.dueAt ? toDateTimeInputValue(quiz.dueAt) : "",
+  });
+  const sectionsRef = useRef<SectionDeadlinesHandle>(null);
   const [error, setError] = useState<string | null>(null);
   const [timeLimitEnabled, setTimeLimitEnabled] = useState(quiz.timeLimitSec !== null);
   const [timeLimitMin, setTimeLimitMin] = useState(
@@ -195,18 +201,15 @@ export function QuizEditForm({
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const opensAt = opensEnabled ? fromDateTimeInputValue(opensLocal) : null;
-    if (opensEnabled && !opensAt) {
-      setError("Chọn ngày giờ cho hạn mở, hoặc tắt hạn mở.");
-      return;
-    }
-    const dueAt = dueEnabled ? fromDateTimeInputValue(dueLocal) : null;
-    if (dueEnabled && !dueAt) {
-      setError("Chọn ngày giờ cho hạn đóng, hoặc tắt hạn đóng.");
-      return;
-    }
+    const opensAt = schedule.opensEnabled ? fromDateTimeInputValue(schedule.opensLocal) : null;
+    const dueAt = schedule.dueEnabled ? fromDateTimeInputValue(schedule.dueLocal) : null;
     if (opensAt && dueAt && new Date(opensAt).getTime() >= new Date(dueAt).getTime()) {
-      setError("Hạn mở phải trước hạn đóng.");
+      setError("Giờ mở bài phải trước giờ đóng bài.");
+      return;
+    }
+    const sectionError = sectionsRef.current?.validate();
+    if (sectionError) {
+      setError(sectionError);
       return;
     }
     setBusy(true);
@@ -228,9 +231,15 @@ export function QuizEditForm({
         }),
       });
       if (res.ok) {
+        // Cài đặt quiz đã lưu; lịch riêng từng lớp lưu tiếp ngay sau đó (cùng một lần bấm Lưu).
+        const sectionsOk = (await sectionsRef.current?.save()) ?? true;
+        router.refresh();
+        if (!sectionsOk) {
+          setError("Đã lưu cài đặt quiz nhưng chưa lưu được lịch riêng của các lớp. Kiểm tra rồi bấm Lưu lại.");
+          return;
+        }
         toast.success("Đã lưu cài đặt quiz");
         onClose();
-        router.refresh();
       } else {
         const d = (await res.json().catch(() => ({}))) as { error?: string };
         setError(`Chưa lưu được cài đặt quiz (${d.error ?? res.statusText}).`);
@@ -243,10 +252,8 @@ export function QuizEditForm({
   }
 
   const numInput = "input h-7 w-16 px-1.5 py-0 text-center text-sm";
-  const dateInput = "input h-7 w-full px-1.5 py-0 text-sm";
 
   return (
-    <div className="space-y-2.5">
     <form onSubmit={save} className="space-y-2.5 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
       <input
         value={title}
@@ -298,46 +305,6 @@ export function QuizEditForm({
             />
             <span className="text-muted">lần tối đa</span>
           </div>
-        </SettingCell>
-
-        <SettingCell
-          id="quiz-opens"
-          label="Hạn mở"
-          enabled={opensEnabled}
-          onToggle={(v) => {
-            setOpensEnabled(v);
-            if (v && !opensLocal) setOpensLocal(toDateTimeInputValue(new Date()));
-          }}
-          hint="Mở ngay"
-        >
-          <input
-            type="datetime-local"
-            value={opensLocal}
-            onChange={(e) => setOpensLocal(e.target.value)}
-            aria-label="Hạn mở (giờ Việt Nam)"
-            className={dateInput}
-          />
-        </SettingCell>
-
-        <SettingCell
-          id="quiz-due"
-          label="Hạn đóng"
-          enabled={dueEnabled}
-          onToggle={(v) => {
-            setDueEnabled(v);
-            if (v && !dueLocal) {
-              setDueLocal(toDateTimeInputValue(new Date(Date.now() + 7 * 86_400_000)));
-            }
-          }}
-          hint="Không có hạn"
-        >
-          <input
-            type="datetime-local"
-            value={dueLocal}
-            onChange={(e) => setDueLocal(e.target.value)}
-            aria-label="Hạn đóng (giờ Việt Nam)"
-            className={dateInput}
-          />
         </SettingCell>
 
         {!singleAttempt && (
@@ -409,10 +376,18 @@ export function QuizEditForm({
         )}
       </div>
 
+      <SectionDeadlinesPanel
+        ref={sectionsRef}
+        kind="quiz"
+        itemId={quiz.id}
+        base={schedule}
+        onBaseChange={setSchedule}
+      />
+
       <div className="flex flex-wrap items-center gap-2">
         <p className="min-w-0 flex-1 text-xs text-muted">
-          Giờ theo múi giờ Việt Nam. Trước hạn mở hoặc sau hạn đóng, học viên không bắt đầu được lượt làm mới
-          (lượt đang làm dở vẫn nộp được).
+          Giờ Việt Nam. Ngoài khung giờ mở – đóng, học viên không bắt đầu được lượt làm mới; lượt đang làm dở vẫn
+          nộp được.
         </p>
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
           {busy ? "Đang lưu…" : "Lưu"}
@@ -427,8 +402,5 @@ export function QuizEditForm({
         </p>
       )}
     </form>
-    {/* Ngoài <form> để bấm Enter trong ô ngày của panel không lưu nhầm cài đặt quiz. */}
-    <SectionDeadlinesPanel kind="quiz" itemId={quiz.id} />
-    </div>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BackButton } from "@/components/ui";
+import { pageMetadata } from "@/lib/seo";
 import {
   ASSIGNMENT_DEEP_REFLECTION_XP,
   DAILY_CAPS,
@@ -13,7 +14,14 @@ import {
   SPEED_RUN_THRESHOLD_SEC,
 } from "@feedbackme/core-gamification";
 
-export const metadata = { title: "Cách tính điểm (XP) — Limio" };
+// Không tự gắn "— Limio": template của root layout đã thêm hậu tố thương hiệu.
+export const metadata = pageMetadata({
+  title: "Cách tính điểm (XP)",
+  description:
+    "Cách Limio tính điểm kinh nghiệm (XP): XP cho từng hoạt động học, giới hạn mỗi ngày, " +
+    "hệ số theo mức thành thạo và các cơ chế chống gian lận.",
+  path: "/xp-guide",
+});
 
 interface Row {
   action: string;

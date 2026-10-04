@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { ClipboardList, Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDateTime, fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
-import SectionDeadlinesPanel from "@/components/instructor/SectionDeadlinesPanel";
+import SectionDeadlinesPanel, {
+  type Schedule,
+  type SectionDeadlinesHandle,
+} from "@/components/instructor/SectionDeadlinesPanel";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 
@@ -47,7 +50,14 @@ export default function AssignmentSection({
   const [title, setTitle] = useState(assignment.title);
   const [description, setDescription] = useState(plainToRichHtml(assignment.description));
   // datetime-local không mang múi giờ: đổ/đọc bằng giờ Việt Nam (cắt ISO UTC làm lệch 7 tiếng mỗi lần sửa).
-  const [dueAt, setDueAt] = useState(assignment.dueAt ? toDateTimeInputValue(assignment.dueAt) : "");
+  const [schedule, setSchedule] = useState<Schedule>({
+    opensEnabled: false,
+    opensLocal: "",
+    dueEnabled: !!assignment.dueAt,
+    dueLocal: assignment.dueAt ? toDateTimeInputValue(assignment.dueAt) : "",
+  });
+  const [error, setError] = useState<string | null>(null);
+  const sectionsRef = useRef<SectionDeadlinesHandle>(null);
   const [maxScore, setMaxScore] = useState(String(assignment.maxScore));
   const [isHidden, setIsHidden] = useState(assignment.isHidden);
   const [pedagogicalIntent, setPedagogicalIntent] = useState<
@@ -63,6 +73,13 @@ export default function AssignmentSection({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+    const dueAt = schedule.dueEnabled ? fromDateTimeInputValue(schedule.dueLocal) : null;
+    const sectionError = sectionsRef.current?.validate();
+    if (sectionError) {
+      setError(sectionError);
+      return;
+    }
     setBusy(true);
     const payload: Record<string, unknown> = {
       title,
@@ -76,17 +93,26 @@ export default function AssignmentSection({
       payload.responseFormat =
         GENERATIVE_PRESETS[pedagogicalIntent].responseFormat;
     }
-    if (dueAt) payload.dueAt = fromDateTimeInputValue(dueAt);
+    payload.dueAt = dueAt;
     const res = await fetch(apiUrl(`/api/assignments/${assignment.id}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    setBusy(false);
-    if (res.ok) {
-      setEditing(false);
-      router.refresh();
+    if (!res.ok) {
+      setBusy(false);
+      setError("Chưa lưu được bài tập. Kiểm tra rồi thử lại.");
+      return;
     }
+    // Hạn riêng từng lớp lưu tiếp ngay sau đó (cùng một lần bấm Lưu).
+    const sectionsOk = (await sectionsRef.current?.save()) ?? true;
+    setBusy(false);
+    router.refresh();
+    if (!sectionsOk) {
+      setError("Đã lưu bài tập nhưng chưa lưu được hạn riêng của các lớp. Kiểm tra rồi bấm Lưu lại.");
+      return;
+    }
+    setEditing(false);
   }
 
   async function toggleHidden() {
@@ -233,21 +259,28 @@ export default function AssignmentSection({
               </label>
             </fieldset>
           )}
-          <div className="flex flex-wrap gap-2">
-            <input
-              type="datetime-local"
-              value={dueAt}
-              onChange={(e) => setDueAt(e.target.value)}
-              className="input flex-1"
-            />
+          <label className="flex items-center gap-2 text-xs text-muted">
+            Điểm tối đa
             <input
               type="number"
               min={1}
               value={maxScore}
               onChange={(e) => setMaxScore(e.target.value)}
-              className="input w-24"
+              className="input h-8 w-24"
             />
-          </div>
+          </label>
+          <SectionDeadlinesPanel
+            ref={sectionsRef}
+            kind="assignment"
+            itemId={assignment.id}
+            base={schedule}
+            onBaseChange={setSchedule}
+          />
+          {error && (
+            <p role="alert" className="banner-danger text-sm">
+              {error}
+            </p>
+          )}
           <div className="flex gap-2">
             <button type="submit" disabled={busy} className="btn-primary btn-sm">
               Lưu
@@ -261,12 +294,6 @@ export default function AssignmentSection({
             </button>
           </div>
         </form>
-      )}
-      {editing && (
-        <div className="mt-3">
-          {/* Ngoài <form> để bấm Enter trong ô ngày của panel không lưu nhầm form bài tập. */}
-          <SectionDeadlinesPanel kind="assignment" itemId={assignment.id} />
-        </div>
       )}
     </div>
   );
