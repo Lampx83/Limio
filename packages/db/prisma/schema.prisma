@@ -4393,6 +4393,9 @@ model ExamSection {
   durationMin             Int?
   // LANG G5a/G5d — kỹ năng của phần, để gom kết quả theo kỹ năng.
   languageSkill           LanguageSkill?
+  // LANG G5d — bảng quy đổi điểm thô của phần → nhãn ước lượng, do giảng viên nhập:
+  // [{ from, to, label }] không chồng nhau. Hệ thống không mang sẵn số liệu chính thức.
+  scoreBands              Json?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Timer } from "lucide-react";
+import { formatScoreBands, parseScoreBandsText, type Band } from "@/lib/scoreBandsText";
 
 type Skill = "listening" | "speaking" | "reading" | "writing";
 type Section = {
@@ -12,6 +13,7 @@ type Section = {
   selectionMode: "fixed" | "random_from_bank";
   durationMin: number | null;
   languageSkill: Skill | null;
+  scoreBands: Band[] | null;
 };
 
 const SKILL_OPTIONS: { value: Skill; label: string }[] = [
@@ -210,6 +212,26 @@ export default function MockExamPanel({
                 <b>{total} phút</b>
                 {missing > 0 && <span className="ml-2 text-amber-700">· {missing} phần chưa có giờ — chưa xuất bản được</span>}
               </p>
+              <div className="mt-4 space-y-2" data-testid="score-bands">
+                <h3 className="text-sm font-semibold">Bảng quy đổi điểm (tuỳ chọn)</h3>
+                <p className="text-xs text-faint">
+                  Để học viên thấy <b>khoảng điểm ước lượng</b> theo từng phần. Hệ thống không mang sẵn số liệu chính thức của
+                  HSK/IELTS/TOEIC — bạn tự đối chiếu nguồn rồi nhập; học viên luôn thấy nhãn “không phải điểm chính thức”.
+                  Không nhập thì chỉ hiện “đúng X/Y câu”. Sửa được bất cứ lúc nào, kể cả sau khi có người thi.
+                </p>
+                {sections.map((sec) => (
+                  <BandsEditor
+                    key={sec.id}
+                    section={sec}
+                    disabled={busy}
+                    onSave={async (bands) => {
+                      const ok = await call(`/api/exam-sections/${sec.id}`, { scoreBands: bands });
+                      await refresh();
+                      return ok;
+                    }}
+                  />
+                ))}
+              </div>
             </>
           )}
         </div>
@@ -252,5 +274,64 @@ function DurationInput({
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
       }}
     />
+  );
+}
+
+/** Ô soạn bảng quy đổi của một phần: mỗi dòng "từ-đến: nhãn". */
+function BandsEditor({
+  section,
+  disabled,
+  onSave,
+}: {
+  section: Section;
+  disabled: boolean;
+  onSave: (bands: Band[]) => Promise<boolean>;
+}) {
+  const [text, setText] = useState(formatScoreBands(section.scoreBands));
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  useEffect(() => setText(formatScoreBands(section.scoreBands)), [section.scoreBands]);
+
+  async function save() {
+    const parsed = parseScoreBandsText(text);
+    if (!parsed.ok) {
+      setMsg({ ok: false, text: `Dòng ${parsed.line} sai cú pháp. Dùng dạng “0-9: 100–150” (mỗi dòng một khoảng).` });
+      return;
+    }
+    const ok = await onSave(parsed.bands);
+    setMsg(ok ? { ok: true, text: parsed.bands.length ? "Đã lưu bảng quy đổi." : "Đã bỏ bảng quy đổi." } : { ok: false, text: "Không lưu được — các khoảng không được chồng nhau (từ ≤ đến)." });
+  }
+
+  return (
+    <details className="rounded border border-default px-3 py-2">
+      <summary className="cursor-pointer text-sm">
+        {section.title}
+        <span className="ml-2 text-xs text-faint">
+          {section.scoreBands && section.scoreBands.length > 0 ? `${section.scoreBands.length} khoảng` : "chưa có bảng"}
+        </span>
+      </summary>
+      <textarea
+        aria-label={`Bảng quy đổi của ${section.title}`}
+        className="mt-2 w-full rounded border border-default p-2 font-mono text-sm"
+        rows={5}
+        value={text}
+        placeholder={"0-9: 100–150\n10-19: 150–200"}
+        onChange={(e) => setText(e.target.value)}
+      />
+      <div className="mt-2 flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => void save()}
+          disabled={disabled}
+          className="rounded border border-default px-3 py-1 text-sm hover:bg-slate-50 disabled:opacity-50"
+        >
+          Lưu bảng
+        </button>
+        {msg && (
+          <span role="status" className={`text-xs ${msg.ok ? "text-emerald-700" : "text-red-700"}`}>
+            {msg.text}
+          </span>
+        )}
+      </div>
+    </details>
   );
 }

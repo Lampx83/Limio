@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getExamAttemptResult, getExamAttemptReview } from "@feedbackme/core-lms";
+import { getExamAttemptResult, getExamAttemptReview, getMockAttemptResult } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import AnswerReview from "@/components/exam/AnswerReview";
+import MockSectionResults from "@/components/exam/MockSectionResults";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,9 @@ export default async function ExamResultPage({
         params.attemptId,
       ).catch(() => null)
     : null;
+
+  // LANG G5d — đề thi thử: kết quả theo phần (null nếu đề thường).
+  const sectionResult = await getMockAttemptResult(session.user.id, params.attemptId).catch(() => null);
 
   const pending = result.status !== "graded";
   const pct = result.scorePct ?? null;
@@ -54,9 +58,19 @@ export default async function ExamResultPage({
         </div>
       )}
 
+      {sectionResult && <MockSectionResults result={sectionResult} />}
+
       {review && <AnswerReview questions={review.questions} />}
 
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap items-center gap-4">
+        {sectionResult && (
+          <Link
+            href={`/learn/${params.slug}/exams/${params.examId}?retake=1`}
+            className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white"
+          >
+            Thi lại
+          </Link>
+        )}
         <Link
           href={`/learn/${params.slug}`}
           className="text-sm text-blue-600 underline"

@@ -37,6 +37,8 @@ export * from "./mock-sections";
 export * from "./audio-plays";
 export * from "./mock-catalog";
 export * from "./mock-templates";
+export * from "./section-results";
+export * from "./mock-results";
 export * from "./clone";
 export * from "./analytics";
 export * from "./patterns";

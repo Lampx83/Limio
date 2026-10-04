@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { isUserEnrolled } from "@feedbackme/core-lms";
+import { getMockSkillSummary, isUserEnrolled } from "@feedbackme/core-lms";
 import { getFlashcardStats, getLanguageProfile } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import LanguageProfileView from "@/components/LanguageProfileView";
+import MockSkillBlock from "@/components/MockSkillBlock";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +27,11 @@ export default async function LanguageSkillsPage({ params }: { params: { slug: s
   if (!course) notFound();
   if (!(await isUserEnrolled(userId, course.id))) redirect(`/catalog/${params.slug}?locked=1`);
 
-  const [profile, flashcards] = await Promise.all([
+  const [profile, flashcards, mockSummary] = await Promise.all([
     getLanguageProfile(userId, course.id, "learner"),
     getFlashcardStats(userId, course.id),
+    // Khối "Thi thử" (G5d.6): lỗi ở đây không được làm hỏng cả hồ sơ.
+    getMockSkillSummary(userId, course.id).catch(() => null),
   ]);
 
   return (
@@ -43,6 +46,11 @@ export default async function LanguageSkillsPage({ params }: { params: { slug: s
       <div className="mt-6">
         <LanguageProfileView slug={params.slug} profile={profile} flashcards={flashcards} />
       </div>
+      {mockSummary && mockSummary.skills.length > 0 && (
+        <div className="mt-6">
+          <MockSkillBlock summary={mockSummary} />
+        </div>
+      )}
     </main>
   );
 }
