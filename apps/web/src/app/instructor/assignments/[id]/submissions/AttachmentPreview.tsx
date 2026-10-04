@@ -44,7 +44,7 @@ export default function AttachmentPreview({ url }: { url: string }) {
         <iframe
           src={url}
           title="Xem trước PDF bài nộp"
-          className="h-[60vh] w-full rounded-xl border border-token bg-white lg:h-[75vh]"
+          className="h-[60vh] w-full rounded-xl border border-token bg-white lg:h-[calc(75vh-5.5rem)]"
         />
       );
       break;
@@ -55,7 +55,7 @@ export default function AttachmentPreview({ url }: { url: string }) {
             src={url}
             alt="Ảnh bài nộp"
             loading="lazy"
-            className="max-h-[75vh] w-full rounded-xl border border-token bg-white object-contain"
+            className="max-h-[75vh] w-full rounded-xl border border-token bg-white object-contain lg:max-h-[calc(75vh-5.5rem)]"
           />
         </a>
       );
@@ -66,7 +66,7 @@ export default function AttachmentPreview({ url }: { url: string }) {
           src={url}
           controls
           preload="metadata"
-          className="max-h-[75vh] w-full rounded-xl bg-black"
+          className="max-h-[75vh] w-full rounded-xl bg-black lg:max-h-[calc(75vh-5.5rem)]"
         />
       );
       break;
@@ -81,7 +81,7 @@ export default function AttachmentPreview({ url }: { url: string }) {
             src={src}
             title="Xem trước tài liệu Google"
             loading="lazy"
-            className="h-[60vh] w-full rounded-xl border border-token bg-white lg:h-[75vh]"
+            className="h-[60vh] w-full rounded-xl border border-token bg-white lg:h-[calc(75vh-8.5rem)]"
           />
           <p className="text-xs text-faint">
             Nếu khung trống hoặc hiện trang đăng nhập, tài liệu chưa mở quyền
