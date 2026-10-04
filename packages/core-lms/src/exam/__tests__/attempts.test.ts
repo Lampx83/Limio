@@ -424,7 +424,7 @@ describe("shuffle snapshot", () => {
         where: { id: examId },
         select: { courseId: true },
       });
-      await enrollInCourse(stranger.userId, course.courseId);
+      await enrollInCourse(stranger.userId, course.courseId!);
       const a = await startExamAttempt(stranger.userId, examId);
       const attempt = await prisma.examAttempt.findUniqueOrThrow({
         where: { id: a.attemptId },
