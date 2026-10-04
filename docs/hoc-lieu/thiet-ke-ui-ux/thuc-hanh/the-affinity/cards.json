@@ -1,0 +1,268 @@
+[
+  {
+    "key": "ban-do-1",
+    "text": "Phần bản đồ câu hỏi không thể hiện rõ những câu đã làm hoặc chưa làm",
+    "src": "B · người thử 1",
+    "type": "quan-sat",
+    "cluster": "ban-do"
+  },
+  {
+    "key": "ban-do-2",
+    "text": "Phân vân ans => kh phân biệt đc",
+    "src": "C",
+    "type": "quan-sat",
+    "cluster": "ban-do"
+  },
+  {
+    "key": "ban-do-3",
+    "text": "Những câu mình chưa chắc thì mình thường phải tự nhớ số câu thôi, chứ trên này không có chỗ đánh dấu",
+    "src": "F · người thử 2",
+    "type": "quan-sat",
+    "cluster": "ban-do"
+  },
+  {
+    "key": "ban-do-4",
+    "text": "Phân vân => kh điền nữa, big problem",
+    "src": "C",
+    "type": "quan-sat",
+    "cluster": "ban-do"
+  },
+  {
+    "key": "ban-do-dx",
+    "text": "Thêm tính năng đánh dấu những câu hỏi đang phân vân",
+    "src": "H · nhóm 1",
+    "type": "de-xuat",
+    "cluster": "ban-do"
+  },
+  {
+    "key": "thoat-1",
+    "text": "chọn đáp án xong rồi thoát ra ko rõ là lưu nháp hay nộp bài hay ko lưu kết quả",
+    "src": "A · người thử 2",
+    "type": "quan-sat",
+    "cluster": "thoat-luu"
+  },
+  {
+    "key": "thoat-2",
+    "text": "Sẽ phải làm lại bài từ đầu, cảm thấy khó chịu, đang làm dở phải làm lại.",
+    "src": "D · người thử 1",
+    "type": "quan-sat",
+    "cluster": "thoat-luu"
+  },
+  {
+    "key": "thoat-3",
+    "text": "Mình sẽ bị mất bài làm, quay trở về màn hình chính của khoá học.",
+    "src": "D · người thử 2",
+    "type": "quan-sat",
+    "cluster": "thoat-luu"
+  },
+  {
+    "key": "thoat-4",
+    "text": "Sau khi chọn đáp án xong và thoát ra thì bất ngờ khi bài làm đã được nộp",
+    "src": "A · người thử 2",
+    "type": "quan-sat",
+    "cluster": "thoat-luu"
+  },
+  {
+    "key": "thoat-5",
+    "text": "kh lưu=> acp mong là k mất => tạo rủi ro",
+    "src": "C",
+    "type": "quan-sat",
+    "cluster": "thoat-luu"
+  },
+  {
+    "key": "nop-1",
+    "text": "Nút nộp bài để ở vị trí rất dễ bấm nhầm, đang làm bài dễ bị out ra phải làm lại từ đầu",
+    "src": "D · người thử 2",
+    "type": "quan-sat",
+    "cluster": "nop-nham"
+  },
+  {
+    "key": "nop-2",
+    "text": "Thi thoảng, ấn nộp bài nhầm xong bị điểm kém",
+    "src": "G · người thử 2",
+    "type": "quan-sat",
+    "cluster": "nop-nham"
+  },
+  {
+    "key": "nop-3",
+    "text": "Nộp bài là xong ; nộp r là ok yên tâm; có gần câu hỏi, có dễ bấm nhầm",
+    "src": "C",
+    "type": "quan-sat",
+    "cluster": "nop-nham"
+  },
+  {
+    "key": "nop-4",
+    "text": "Submit=>mong muốn có xác nhận, bất an nếu k có",
+    "src": "C",
+    "type": "quan-sat",
+    "cluster": "nop-nham"
+  },
+  {
+    "key": "nop-5",
+    "text": "Nút nộp bài bởi vì nó dễ bị ấn nhầm với các câu hỏi",
+    "src": "H · nhóm 1",
+    "type": "quan-sat",
+    "cluster": "nop-nham"
+  },
+  {
+    "key": "nop-dx",
+    "text": "Đổi nút nộp bài thành màu khác, to hơn cho dễ nhìn và không bị ấn nhầm.",
+    "src": "D · người thử 1",
+    "type": "de-xuat",
+    "cluster": "nop-nham"
+  },
+  {
+    "key": "xn-1",
+    "text": "Nút đấu trường và chuỗi streak vì nó bắt mắt hơn các nút khác, nếu ấn vào có khả năng bị out ra.",
+    "src": "D · người thử 1",
+    "type": "quan-sat",
+    "cluster": "xao-nhang"
+  },
+  {
+    "key": "xn-2",
+    "text": "Nút đấu trường, và nút streak nổi bật quá so với các nút còn lại.",
+    "src": "D · người thử 2",
+    "type": "quan-sat",
+    "cluster": "xao-nhang"
+  },
+  {
+    "key": "xn-3",
+    "text": "Mục Streak và đấu trường không thực sự cần thiết trong giao diện này và màu sắc nổi bật dễ gây xao nhãng",
+    "src": "A · người thử 3",
+    "type": "quan-sat",
+    "cluster": "xao-nhang"
+  },
+  {
+    "key": "xn-4",
+    "text": "Khó chịu, gây mất tập trung khi đang làm bài",
+    "src": "G · người thử 1",
+    "type": "quan-sat",
+    "cluster": "xao-nhang"
+  },
+  {
+    "key": "dh-1",
+    "text": "Ô thời gian chưa đủ to để chú ý tới",
+    "src": "B · người thử 3",
+    "type": "quan-sat",
+    "cluster": "dong-ho"
+  },
+  {
+    "key": "dh-2",
+    "text": "Thời gian làm bài tạo áp lực",
+    "src": "I · phỏng vấn",
+    "type": "quan-sat",
+    "cluster": "dong-ho"
+  },
+  {
+    "key": "kq-1",
+    "text": "Lướt xuống vì nghĩ lời giải chi tiết ngay dưới câu trả lời. Nếu không có lời giải thích thì phải thoát ra chuyển qua chatgpt.",
+    "src": "J · người thử 1",
+    "type": "quan-sat",
+    "cluster": "ket-qua"
+  },
+  {
+    "key": "kq-2",
+    "text": "Người dùng sử dụng touchpad để lướt xuống xem câu khác.",
+    "src": "J · người thử 2",
+    "type": "quan-sat",
+    "cluster": "ket-qua"
+  },
+  {
+    "key": "kq-3",
+    "text": "chữ master khó nhìn (màu xám nhạt trong phông xanh lục đậm)",
+    "src": "E · người thử 3",
+    "type": "quan-sat",
+    "cluster": "ket-qua"
+  },
+  {
+    "key": "kq-dx",
+    "text": "Thêm danh sách ô chọn câu muốn xem ở góc phải, ô nào đúng thì tô xanh lá, ô sai thì tô đỏ vì người dùng không muốn lướt xuống quá nhiều, mất thời gian.",
+    "src": "J · người thử 1",
+    "type": "de-xuat",
+    "cluster": "ket-qua"
+  },
+  {
+    "key": "tq-1",
+    "text": "Phân vân giữa khóa đã đăng ký và khóa đã enroll, hỏi lại là “khóa đã enroll là khóa đã đăng kỹ phải không?”",
+    "src": "M · người thử 1",
+    "type": "quan-sat",
+    "cluster": "tong-quan"
+  },
+  {
+    "key": "tq-2",
+    "text": "Nhìn đúng vào vị trí ngọn lửa và trả lời nhưng không chắc chắn đó là chuỗi",
+    "src": "M · người thử 2",
+    "type": "quan-sat",
+    "cluster": "tong-quan"
+  },
+  {
+    "key": "tq-3",
+    "text": "Mình bị thu hút bởi banner và không thể tập trung vào các tính năng khác",
+    "src": "K · người thử 1",
+    "type": "quan-sat",
+    "cluster": "tong-quan"
+  },
+  {
+    "key": "tq-4",
+    "text": "Chỉ bấm vào các mục nổi ở giữa màn hình để trải nghiệm chức năng của những phần đó, bỏ qua các mục ở góc màn hình",
+    "src": "K · người thử 3",
+    "type": "quan-sat",
+    "cluster": "tong-quan"
+  },
+  {
+    "key": "tq-5",
+    "text": "Quá nhiều thông báo gây nhiễu cản trở, việc tìm các thông tin quan trọng trở nên khó khăn hơn",
+    "src": "L · người thử",
+    "type": "quan-sat",
+    "cluster": "tong-quan"
+  },
+  {
+    "key": "tq-6",
+    "text": "Muốn về trang chủ phải dùng nút quay lại của trình duyệt hoặc ấn vào workspace không có nút quay lại trực tiếp",
+    "src": "L · người thử",
+    "type": "quan-sat",
+    "cluster": "tong-quan"
+  },
+  {
+    "key": "le-1",
+    "text": "chọn 1 hơi khó hiểu",
+    "src": "I · phỏng vấn",
+    "type": "mo-ho",
+    "cluster": "khac"
+  },
+  {
+    "key": "le-2",
+    "text": "Giao diện nhạt nhòa chưa có điểm nhấn, chữ nhỏ khó đọc",
+    "src": "B · người thử 1",
+    "type": "quan-sat",
+    "cluster": "khac"
+  },
+  {
+    "key": "le-3",
+    "text": "Bấm 'Câu sau' thì chắc chắn, còn bấm 'Câu trước' thì cứ ngờ ngợ không biết có quay lại được không vì nó mờ quá",
+    "src": "F · người thử 1",
+    "type": "quan-sat",
+    "cluster": "khac"
+  },
+  {
+    "key": "le-dx1",
+    "text": "Cả hai nút nên in đậm đều nhau và chữ to lên cho dễ nhìn",
+    "src": "F · người thử 1",
+    "type": "de-xuat",
+    "cluster": "khac"
+  },
+  {
+    "key": "le-dx2",
+    "text": "Nên hiện rank của mình và hiện còn cách người đứng trước bao nhiêu để lên hạng (hình thức như Kahoot!)",
+    "src": "L · người thử",
+    "type": "de-xuat",
+    "cluster": "khac"
+  },
+  {
+    "key": "le-dx3",
+    "text": "Câu hỏi cần được in to lên",
+    "src": "I · phỏng vấn",
+    "type": "de-xuat",
+    "cluster": "khac"
+  }
+]
