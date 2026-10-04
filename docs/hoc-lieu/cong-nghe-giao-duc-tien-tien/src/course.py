@@ -397,6 +397,34 @@ MISCONCEPTIONS = [
             "có nhiều bên cùng ghi không, có bên thứ ba đáng tin không, có cần chống sửa với cả người vận hành không."
         ),
     },
+    {
+        "code": "cngdtt.free-equals-open",
+        "name": "Miễn phí, công khai thì là học liệu mở",
+        "description": (
+            "Coi tài nguyên xem không mất tiền hoặc đăng công khai trên mạng là được tự do dùng, sửa và phát lại. Mở là chuyện của giấy phép (năm quyền 5R), không phải của giá."
+        ),
+    },
+    {
+        "code": "cngdtt.attribution-replaces-license",
+        "name": "Ghi nguồn là đủ, thay được giấy phép",
+        "description": (
+            "Tin rằng chỉ cần ghi nguồn là được dùng hoặc sửa mọi tài nguyên. Ghi nguồn chỉ là một điều kiện của giấy phép; không có giấy phép cho phép thì ghi nguồn cũng không hợp pháp hoá việc dùng."
+        ),
+    },
+    {
+        "code": "cngdtt.education-exempts-license",
+        "name": "Dùng cho giáo dục thì được miễn giấy phép",
+        "description": (
+            "Coi mục đích giáo dục, không thu tiền là ngoại lệ tự động. Ngoại lệ giảng dạy trong luật hẹp và gắn điều kiện; một sản phẩm phát hành công khai vẫn cần giấy phép."
+        ),
+    },
+    {
+        "code": "cngdtt.collection-as-derivative",
+        "name": "Lẫn tuyển tập với tác phẩm phái sinh",
+        "description": (
+            "Xét tương thích giấy phép cho cả những tài nguyên chỉ đặt cạnh nhau nguyên trạng, hoặc ngược lại bỏ qua tương thích khi đã sửa, ghép lẫn. Dẫn tới loại nhầm tài nguyên tốt hoặc gắn giấy phép quá chặt cho cả sản phẩm."
+        ),
+    },
 ]
 
 FEEDBACK_TEMPLATES = [
@@ -761,6 +789,34 @@ FEEDBACK_TEMPLATES = [
         "body": (
             "Chạy lại bộ năm câu hỏi: chỉ một bên ghi hoặc có trung gian đáng tin thì cơ sở dữ liệu thường kèm chữ "
             "ký số rẻ hơn và đủ dùng. Chuỗi khối chỉ xứng khi cả bốn câu đầu đều trả lời có."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.free-equals-open",
+        "body": (
+            "Hỏi lại bằng khung 5R: bạn có được giữ bản sao, sửa, phối trộn và phát lại không? Nếu trang không nêu giấy phép mở thì xem được không có nghĩa là dùng được."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.attribution-replaces-license",
+        "body": (
+            "Ghi nguồn là điều kiện của giấy phép, không phải giấy phép. Tìm giấy phép trên trang gốc trước; nếu có, ghi đủ TASL (tên, tác giả, nguồn, giấy phép) và nói rõ đã sửa gì."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.education-exempts-license",
+        "body": (
+            "Ngoại lệ giảng dạy chỉ che lớp học của bạn, có điều kiện. Sách AR phát hành công khai cho nhiều trường cần tài nguyên có giấy phép mở hoặc thư cho phép bằng văn bản."
+        ),
+        "priority": 10,
+    },
+    {
+        "misconception": "cngdtt.collection-as-derivative",
+        "body": (
+            "Hỏi trước: tài nguyên này đặt cạnh nhau nguyên trạng (tuyển tập, mỗi phần giữ giấy phép riêng) hay đã bị sửa, ghép lẫn (phái sinh, phải tương thích)? Chỉ trường hợp sau mới tra bảng tương thích."
         ),
         "priority": 10,
     },

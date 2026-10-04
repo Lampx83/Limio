@@ -148,6 +148,11 @@ export const LessonSpec = z.object({
    */
   objectives: z.array(z.string().min(1).max(500)).max(10).optional(),
   /**
+   * Câu dẫn đứng trên danh sách mục tiêu. Mặc định xưng "bạn" (khoá cho sinh
+   * viên); khoá nói với giảng viên đặt "Học xong bài này, thầy/cô có thể:".
+   */
+  objectivesLead: z.string().min(1).max(200).optional(),
+  /**
    * Tổng kết cuối bài — vài ý người học nên mang theo. Chèn NGAY TRƯỚC mục
    * luyện tập chứ không phải sau cùng: đọc xong nội dung là tới tổng kết, rồi
    * mới tới bài tập; đặt sau phần nguồn tham khảo thì không ai còn đọc.
@@ -712,6 +717,13 @@ export function markdownToHtml(
       para.push(lines[i]!.trim());
       i++;
     }
+    // Dòng bắt đầu bằng `![`, `|`, ``` … mà nhánh riêng của nó không nhận (ví dụ ảnh có dấu
+    // `"` trong chú thích) sẽ bị vòng `while` trên bỏ qua, `i` đứng yên và vòng ngoài đẩy `<p>`
+    // rỗng vô hạn — từng ăn hết RAM rồi tràn ra đĩa. Luôn ăn ít nhất một dòng.
+    if (para.length === 0) {
+      para.push(lines[i]!.trim());
+      i++;
+    }
     out.push(`<p style="${p}">${inline(para.join(" "))}</p>`);
   }
 
@@ -757,7 +769,7 @@ export function markdownToHtml(
  * Khối "Học xong bài này, bạn có thể…" đặt trên cùng, trước mục lục: người học
  * cần biết bài này để làm gì trước khi quyết định đọc tiếp.
  */
-function objectivesBox(items: string[]): string {
+function objectivesBox(items: string[], lead = "Học xong bài này, bạn có thể:"): string {
   const lis = items
     .map((it) => `<li style="margin:.3rem 0">${inline(it)}</li>`)
     .join("");
@@ -766,7 +778,7 @@ function objectivesBox(items: string[]): string {
     `background:rgba(59,130,246,.06);border-radius:.35rem;padding:.9rem 1.1rem;margin:0 0 1.3rem">` +
     `<div style="font-size:${CAPTION};font-weight:600;color:${MUTED};letter-spacing:.04em;` +
     `text-transform:uppercase;margin:0 0 .35rem">Mục tiêu bài học</div>` +
-    `<p style="margin:0 0 .5rem;font-size:${TEXT};line-height:1.7">Học xong bài này, bạn có thể:</p>` +
+    `<p style="margin:0 0 .5rem;font-size:${TEXT};line-height:1.7">${inline(lead)}</p>` +
     `<ul style="margin:0;padding-left:1.3rem;font-size:${TEXT};line-height:1.7">${lis}</ul>` +
     `</section>`
   );
@@ -956,7 +968,7 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
 
   const head =
     (chips.length > 1 ? metaBar(chips) : "") +
-    (l.objectives?.length ? objectivesBox(l.objectives) : "");
+    (l.objectives?.length ? objectivesBox(l.objectives, l.objectivesLead) : "");
   if (head) blocks.push(head);
 
   if (l.vocab?.length) blocks.push(vocabTable(l.vocab));
