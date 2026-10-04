@@ -22,6 +22,7 @@ export type StoredFileKind =
   | "lesson_image"
   | "lesson_pdf"
   | "lesson_html"
+  | "lesson_file"
   | "lesson_transcript"
   | "exam_asset"
   | "submission"
@@ -48,6 +49,7 @@ const KIND_PREFIXES: ReadonlyArray<readonly [string, StoredFileKind]> = [
   ["lesson-media/images/", "lesson_image"],
   ["lesson-media/pdfs/", "lesson_pdf"],
   ["lesson-media/html/", "lesson_html"],
+  ["lesson-media/files/", "lesson_file"],
   ["lesson-media/transcripts/", "lesson_transcript"],
   ["exam-assets/", "exam_asset"],
   ["submissions/", "submission"],

@@ -171,8 +171,8 @@ const TILES: Tile[] = [
     icon: Paperclip,
     color: "bg-slate-100 text-slate-700",
     name: "File đính kèm",
-    description: "Tài liệu để học viên download",
-    keywords: "file download attachment",
+    description: "Tải file lên (tối đa 10 MB) hoặc dán link để học viên tải về",
+    keywords: "file download attachment upload tải về",
     pick: { kind: "content", subtype: "file" },
   },
   {

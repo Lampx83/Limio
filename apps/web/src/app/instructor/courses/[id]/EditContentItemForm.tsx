@@ -27,6 +27,7 @@ const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
 });
 
 import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import LessonFileUploadPanel from "./LessonFileUploadPanel";
 import {
   dialogueEditorFromPayload,
   dialoguePayloadFromEditor,
@@ -81,6 +82,13 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   const [html, setHtml] = useState<string>(String(initial.html ?? ""));
   const [url, setUrl] = useState<string>(String(initial.url ?? ""));
   const [filename, setFilename] = useState<string>(String(initial.filename ?? ""));
+  // Cỡ + kiểu của file đính kèm: giữ của bản cũ nếu không đổi file; upload mới
+  // thì thay; gõ tay URL khác thì bỏ.
+  const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(() =>
+    typeof initial.sizeBytes === "number" && typeof initial.mimeType === "string"
+      ? { sizeBytes: initial.sizeBytes, mimeType: initial.mimeType }
+      : null,
+  );
   const [linkTitle, setLinkTitle] = useState<string>(String(initial.title ?? ""));
   const [htmlBlockBody, setHtmlBlockBody] = useState<string>(
     String(initial.body ?? ""),
@@ -152,7 +160,7 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         payload = { url };
         break;
       case "file":
-        payload = { url, filename };
+        payload = { url, filename, ...(fileMeta ?? {}) };
         break;
       case "external_link":
       case "pdf":
@@ -316,14 +324,30 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         type === "file" ||
         type === "external_link" ||
         type === "pdf") && (
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          required
-          type="url"
-          placeholder="URL"
-          className="input"
-        />
+        <div className="space-y-2">
+          <input
+            value={url}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setFileMeta(null);
+            }}
+            required
+            // video / file / pdf có thể là đường dẫn cùng origin (/api/lesson-media/...)
+            // của file đã upload — type="url" từ chối dạng đó, như ở AddContentItemForm.
+            type={type === "embed" || type === "external_link" ? "url" : "text"}
+            placeholder="URL"
+            className="input"
+          />
+          {type === "file" && (
+            <LessonFileUploadPanel
+              onUploaded={(f) => {
+                setUrl(f.url);
+                setFileMeta({ sizeBytes: f.sizeBytes, mimeType: f.mime });
+                setFilename(f.originalName.slice(0, 200));
+              }}
+            />
+          )}
+        </div>
       )}
 
       {type === "file" && (

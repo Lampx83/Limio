@@ -8,6 +8,7 @@ import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import { AUDIO_MAX_BYTES, AUDIO_UPLOAD_ACCEPT } from "@/lib/lessonAudio";
 import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import LessonFileUploadPanel from "./LessonFileUploadPanel";
 import {
   dialogueEditorFromPayload,
   dialoguePayloadFromEditor,
@@ -162,6 +163,9 @@ export default function AddContentItemForm({
   const [aiSaved, setAiSaved] = useState(false);
   const [htmlBlockBody, setHtmlBlockBody] = useState("");
   const [filename, setFilename] = useState("");
+  // File đính kèm tự upload: cỡ + kiểu để học viên thấy "… · 1,2 MB". Gõ tay
+  // URL khác thì bỏ (không còn đúng file đó nữa).
+  const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(null);
   const [linkTitle, setLinkTitle] = useState("");
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioShowTranscript, setAudioShowTranscript] = useState(true);
@@ -268,6 +272,7 @@ export default function AddContentItemForm({
     setHtml("");
     setAiSaved(false);
     setFilename("");
+    setFileMeta(null);
     setLinkTitle("");
     setScormPackageId("");
     setH5pPackageId("");
@@ -426,7 +431,7 @@ export default function AddContentItemForm({
         payload = { url };
         break;
       case "file":
-        payload = { url, filename };
+        payload = { url, filename, ...(fileMeta ?? {}) };
         break;
       case "external_link":
         payload = { url, title: linkTitle.trim() || undefined };
@@ -711,7 +716,10 @@ export default function AddContentItemForm({
         <div className="space-y-2">
           <input
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setFileMeta(null);
+            }}
             required
             // For video / file / pdf the URL may be a same-origin path (e.g.
             // /api/lesson-media/videos/<file>) populated by the upload panel
@@ -726,7 +734,9 @@ export default function AddContentItemForm({
                 ? "Dán URL: YouTube · Vimeo · Loom · Wistia · Bunny · Mux — hoặc upload file bên dưới"
                 : type === "pdf"
                   ? "URL PDF (https://.../file.pdf) — hoặc upload file bên dưới"
-                  : "URL"
+                  : type === "file"
+                    ? "URL file (https://...) — hoặc tải file lên bên dưới"
+                    : "URL"
             }
             className="input"
           />
@@ -736,6 +746,17 @@ export default function AddContentItemForm({
               setUploading={setUploading}
               setError={setError}
               onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+            />
+          )}
+          {type === "file" && (
+            <LessonFileUploadPanel
+              onUploaded={(f) => {
+                setUrl(f.url);
+                setFileMeta({ sizeBytes: f.sizeBytes, mimeType: f.mime });
+                // Tên hiển thị = tên gốc (server đặt tên ngẫu nhiên). Ghi đè cả
+                // khi đã có: upload file mới thì tên cũ không còn đúng.
+                setFilename(f.originalName.slice(0, 200));
+              }}
             />
           )}
           {type === "pdf" && (
@@ -1031,7 +1052,7 @@ export default function AddContentItemForm({
           onChange={(e) => setFilename(e.target.value)}
           required
           maxLength={200}
-          placeholder="Tên file (eg. handout.pdf)"
+          placeholder="Tên file học viên thấy (vd: handout.pdf)"
           className="input"
         />
       )}

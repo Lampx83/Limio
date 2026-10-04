@@ -25,6 +25,7 @@ export const SWEEPABLE_KINDS: StoredFileKind[] = [
   "lesson_image",
   "lesson_pdf",
   "lesson_html",
+  "lesson_file",
   "lesson_transcript",
   "submission",
   "exam_asset",
