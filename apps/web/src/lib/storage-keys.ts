@@ -9,6 +9,7 @@
  *     lesson-media/audio/{yyyy}/{mm}/{filename}
  *     lesson-media/pdfs/{yyyy}/{mm}/{filename}
  *     lesson-media/html/{yyyy}/{mm}/{filename}
+ *     lesson-media/files/{yyyy}/{mm}/{filename}
  *     exam-assets/{yyyy}/{mm}/{filename}
  *     board-attachments/{yyyy}/{mm}/{filename}
  *   private/                                         # auth-gated
@@ -87,6 +88,7 @@ type DateShardedKind =
   | "lesson-media/audio"
   | "lesson-media/pdfs"
   | "lesson-media/html"
+  | "lesson-media/files"
   | "lesson-media/transcripts"
   | "exam-assets"
   | "submissions"
@@ -121,6 +123,10 @@ export function lessonPdfKey(date: Date, filename: string): StorageKey {
 }
 export function lessonHtmlKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/html", date, filename);
+}
+/** Tài nguyên "File đính kèm" của bài học — học viên tải về (≤10 MB). */
+export function lessonFileKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "lesson-media/files", date, filename);
 }
 /** A2.7 — Interactive transcript: GV upload file .vtt/.srt cho video YouTube. */
 export function lessonTranscriptKey(date: Date, filename: string): StorageKey {
@@ -196,6 +202,9 @@ export function lessonPdfKeyFromFilename(filename: string): StorageKey | null {
 }
 export function lessonHtmlKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/html", filename);
+}
+export function lessonFileKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "lesson-media/files", filename);
 }
 export function lessonTranscriptKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/transcripts", filename);

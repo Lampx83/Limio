@@ -3,9 +3,10 @@
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ExternalLink, Globe } from "lucide-react";
+import { Download, ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
+import { formatBytes } from "@/lib/formatBytes";
 import SafeHtml from "./SafeHtml";
 import AudioLessonPlayer from "./AudioLessonPlayer";
 import VocabListView, { type VocabViewItem } from "./VocabListView";
@@ -367,10 +368,18 @@ function ContentBlock({
       return (
         <a
           href={p.url}
-          download
+          // File tự upload có tên ngẫu nhiên trên server — `download` đặt lại
+          // tên gốc khi lưu (chỉ có tác dụng với URL cùng origin).
+          download={p.filename}
           className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
         >
-          {p.filename}
+          <Download className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="break-all">{p.filename}</span>
+          {typeof p.sizeBytes === "number" && (
+            <span className="shrink-0 text-xs font-normal text-muted">
+              · {formatBytes(p.sizeBytes)}
+            </span>
+          )}
         </a>
       );
     }
