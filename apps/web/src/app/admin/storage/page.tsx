@@ -11,6 +11,7 @@ const KIND_LABEL: Record<string, string> = {
   lesson_image: "Ảnh bài giảng",
   lesson_pdf: "PDF bài giảng",
   lesson_html: "HTML bài giảng",
+  lesson_file: "File đính kèm bài giảng",
   lesson_transcript: "Phụ đề bài giảng",
   submission: "Bài nộp của học viên",
   exam_asset: "Ảnh/âm thanh đề thi",

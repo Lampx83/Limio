@@ -6,6 +6,7 @@ import {
   leaveCourseTeam,
   regenerateCourseTeamCode,
   removeCourseTeamMember,
+  renameCourseTeam,
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
@@ -30,7 +31,8 @@ type Body =
   | { action: "join"; code?: string }
   | { action: "leave" }
   | { action: "regenerate" }
-  | { action: "remove"; userId?: string };
+  | { action: "remove"; userId?: string }
+  | { action: "rename"; name?: string };
 
 /** Mọi thao tác của học viên trên nhóm, phân theo `action`. Trả về trạng thái nhóm mới. */
 export async function POST(req: Request, { params }: { params: { id: string } }) {
@@ -50,6 +52,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         break;
       case "regenerate":
         await regenerateCourseTeamCode(userId, params.id);
+        break;
+      case "rename":
+        await renameCourseTeam(userId, params.id, String(body.name ?? ""));
         break;
       case "remove":
         if (!body.userId) return NextResponse.json({ error: "validation_failed" }, { status: 400 });

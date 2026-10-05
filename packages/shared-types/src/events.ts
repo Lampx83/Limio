@@ -41,6 +41,8 @@ export const LearningEventType = {
   CourseTeamJoined: "course.team.joined",
   CourseTeamLeft: "course.team.left",
   CourseTeamCodeRegenerated: "course.team.code_regenerated",
+  // Đổi tên nhóm (trưởng nhóm khi chưa khoá, hoặc GV). Payload: teamId, from, to, actorId.
+  CourseTeamRenamed: "course.team.renamed",
   CourseTeamCaptainChanged: "course.team.captain_changed",
   CourseTeamMemberMoved: "course.team.member_moved",
   // GV đổi số người tối đa / khoá-mở khoá danh sách nhóm. Subject là GV.
