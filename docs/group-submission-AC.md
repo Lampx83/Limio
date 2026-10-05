@@ -41,6 +41,8 @@
 
 **A5 — Mời ra khỏi nhóm.** *When* trưởng nhóm gỡ một thành viên (khi chưa khoá). *Then* người đó rời nhóm; ghi `course.team.left` với `removedBy`.
 
+**A5b — Đổi tên nhóm** (thêm 2026-10-05). *When* trưởng nhóm bấm "Đổi tên" và nhập tên mới khi danh sách chưa khoá. *Then* tên nhóm đổi cho mọi thành viên; ghi `course.team.renamed` với `from`, `to`, `actorId`. Cùng luật tên như A1 (1–60 ký tự, không trùng nhóm khác trong khoá). Giữ nguyên tên thì không ghi gì. Thành viên thường không đổi được; đã khoá thì trưởng nhóm cũng không.
+
 **A6 — Gộp nhóm.** Không có nút riêng: một trưởng nhóm rời nhóm của mình (A3) rồi vào nhóm kia bằng mã (A2). Tài liệu hướng dẫn ghi rõ cách này.
 
 **A7 — Chỗ hiển thị.** Trang khoá học có khối **"Nhóm của tôi"**: tên nhóm, mã (chỉ thành viên thấy), danh sách thành viên, biểu tượng trưởng nhóm, các nút ở A1–A5. Trên thẻ bài tập nhóm, sinh viên chưa có nhóm thấy lời nhắc dẫn tới khối này.
@@ -54,6 +56,8 @@
 **B3 — Tổng quan.** Trang "Nhóm" của khoá: danh sách nhóm (tên, trưởng nhóm, số thành viên / tối đa), và danh sách **sinh viên chưa có nhóm**. Lọc theo lớp (section).
 
 **B4 — Chuyển, gỡ, thêm.** Giảng viên chuyển một sinh viên sang nhóm khác, gỡ khỏi nhóm, thêm sinh viên chưa có nhóm vào một nhóm, đổi trưởng nhóm — **kể cả khi đã khoá**. Ghi sự kiện tương ứng (`course.team.member_moved`, …) và lưu ai thực hiện.
+
+**B4b — GV đổi tên nhóm** (thêm 2026-10-05). Giảng viên đổi tên bất kỳ nhóm nào, **kể cả khi đã khoá** (vd. nhóm đặt tên "a"). Cùng luật tên và cùng sự kiện như A5b.
 
 **B5 — Quyền.** Chỉ người sửa được khoá học mới dùng được B1–B4. Sinh viên chỉ thấy nhóm của mình (tên + thành viên), không thấy mã của nhóm khác.
 

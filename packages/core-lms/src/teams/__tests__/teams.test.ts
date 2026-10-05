@@ -11,6 +11,8 @@ import {
   leaveCourseTeam,
   regenerateCourseTeamCode,
   removeCourseTeamMember,
+  renameCourseTeam,
+  instructorRenameCourseTeam,
   updateCourseTeamSettings,
 } from "../teams";
 import { registerUser } from "../../auth/register";
@@ -263,5 +265,61 @@ describe("Nhóm của khoá — giảng viên quản lý (B)", () => {
     const b = await createCourseTeam(s.learners[2]!, s.courseId, "B");
     await instructorMoveTeamMember(s.instId, s.courseId, s.learners[0]!, b.teamId);
     expect((await getMyCourseTeam(s.learners[1]!, s.courseId)).team?.captainId).toBe(s.learners[1]);
+  });
+});
+
+describe("Đổi tên nhóm", () => {
+  it("trưởng nhóm đổi tên khi chưa khoá; ghi sự kiện có tên cũ và mới", async () => {
+    const s = await setup(2);
+    const t = await createCourseTeam(s.learners[0]!, s.courseId, "a");
+    await joinCourseTeamByCode(s.learners[1]!, s.courseId, t.joinCode);
+    await renameCourseTeam(s.learners[0]!, s.courseId, "  Nhóm   Mây  ");
+    expect((await getMyCourseTeam(s.learners[1]!, s.courseId)).team?.name).toBe("Nhóm Mây");
+    const ev = await events(LearningEventType.CourseTeamRenamed);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]!.payload).toMatchObject({ teamId: t.teamId, from: "a", to: "Nhóm Mây", actorId: s.learners[0] });
+  });
+
+  it("thành viên thường không đổi được; người chưa có nhóm cũng không", async () => {
+    const s = await setup(3);
+    const t = await createCourseTeam(s.learners[0]!, s.courseId, "A");
+    await joinCourseTeamByCode(s.learners[1]!, s.courseId, t.joinCode);
+    await expect(renameCourseTeam(s.learners[1]!, s.courseId, "B")).rejects.toMatchObject({ code: "not_captain" });
+    await expect(renameCourseTeam(s.learners[2]!, s.courseId, "B")).rejects.toMatchObject({ code: "not_in_team" });
+  });
+
+  it("tên trùng nhóm khác hoặc rỗng/quá dài bị chặn; giữ nguyên tên thì không ghi sự kiện", async () => {
+    const s = await setup(2);
+    await createCourseTeam(s.learners[0]!, s.courseId, "A");
+    await createCourseTeam(s.learners[1]!, s.courseId, "B");
+    await expect(renameCourseTeam(s.learners[0]!, s.courseId, "B")).rejects.toMatchObject({ code: "team_name_taken" });
+    await expect(renameCourseTeam(s.learners[0]!, s.courseId, "   ")).rejects.toMatchObject({ code: "validation_failed" });
+    await expect(renameCourseTeam(s.learners[0]!, s.courseId, "x".repeat(61))).rejects.toMatchObject({
+      code: "validation_failed",
+    });
+    await renameCourseTeam(s.learners[0]!, s.courseId, " A ");
+    expect(await events(LearningEventType.CourseTeamRenamed)).toHaveLength(0);
+  });
+
+  it("khoá danh sách thì trưởng nhóm không đổi được, nhưng giảng viên vẫn đổi được", async () => {
+    const s = await setup(1);
+    const t = await createCourseTeam(s.learners[0]!, s.courseId, "a");
+    await updateCourseTeamSettings(s.instId, s.courseId, { locked: true });
+    await expect(renameCourseTeam(s.learners[0]!, s.courseId, "Mây")).rejects.toMatchObject({ code: "teams_locked" });
+    await instructorRenameCourseTeam(s.instId, s.courseId, t.teamId, "Nhóm Mây");
+    expect((await getMyCourseTeam(s.learners[0]!, s.courseId)).team?.name).toBe("Nhóm Mây");
+    const ev = await events(LearningEventType.CourseTeamRenamed);
+    expect(ev[0]!.payload).toMatchObject({ actorId: s.instId, from: "a", to: "Nhóm Mây" });
+  });
+
+  it("giảng viên: nhóm của khoá khác báo không tìm thấy; học viên không gọi được hàm của giảng viên", async () => {
+    const s = await setup(1);
+    const other = await setup(1);
+    const t = await createCourseTeam(other.learners[0]!, other.courseId, "X");
+    await expect(instructorRenameCourseTeam(s.instId, s.courseId, t.teamId, "Y")).rejects.toMatchObject({
+      code: "team_not_found",
+    });
+    const mine = await createCourseTeam(s.learners[0]!, s.courseId, "A");
+    await expect(instructorRenameCourseTeam(s.learners[0]!, s.courseId, mine.teamId, "B")).rejects.toThrow();
   });
 });
