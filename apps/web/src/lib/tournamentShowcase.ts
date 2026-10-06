@@ -62,3 +62,9 @@ export function paginate<T>(items: T[], page: number, size: number) {
   const p = Number.isFinite(page) ? Math.min(Math.max(1, Math.floor(page)), pages) : 1;
   return { items: items.slice((p - 1) * size, p * size), page: p, pages, total };
 }
+
+/** Bài trước/sau trong khung xem trước; null ở đầu/cuối danh sách (không vòng lại, tránh nhảy bài ngoài ý muốn). */
+export function stepIndex(index: number, total: number, dir: 1 | -1): number | null {
+  const next = index + dir;
+  return index < 0 || next < 0 || next >= total ? null : next;
+}
