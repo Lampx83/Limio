@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import type { LessonFormatTemplateKey } from "@feedbackme/shared-types";
-import { assertWithinCaps, recordAiUsage } from "./aiTutor";
+import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { normalizeTerm } from "../flashcardSrs";
 
 /**
@@ -127,7 +127,7 @@ export async function suggestSkillsForContent(
   userId: string,
   contentText: string,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<SkillSuggestion[]> {
   if (!contentText.trim()) {
@@ -249,7 +249,7 @@ export async function suggestActivitiesForContent(
   userId: string,
   contentText: string,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<ActivitySuggestion[]> {
   if (!contentText.trim()) {
@@ -330,7 +330,7 @@ export async function generateFeedbackBody(
     skillNames?: string[];
   },
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<FeedbackBodyDraft> {
   if (!input.misconceptionName.trim() || !input.misconceptionDescription.trim()) {
@@ -430,7 +430,7 @@ export async function generateQuestions(
   userId: string,
   input: z.infer<typeof QuestionDraftInput>,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<QuestionDraft[]> {
   await assertWithinCaps(userId, db, "generator");
@@ -566,7 +566,7 @@ export async function suggestMisconceptionsForQuestion(
   userId: string,
   question: MisconceptionQuestionInput,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
   opts: MisconceptionSuggestOptions = {},
 ): Promise<MisconceptionProposal[]> {
@@ -771,7 +771,7 @@ export async function formatLessonContent(
   userId: string,
   input: FormatLessonContentInput,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<{ html: string }> {
   const raw = input.html.trim();
@@ -990,7 +990,7 @@ export async function extractQuestionsFromText(
   userId: string,
   input: ExtractQuestionsInput,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<{ questions: ExtractedAiQuestion[]; skipped: SkippedAiQuestion[] }> {
   const raw = input.rawText.trim();
@@ -1277,7 +1277,7 @@ export async function extractVocabFromText(
   userId: string,
   input: ExtractVocabInput,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<{ items: ExtractedVocabItem[]; skipped: SkippedVocab[] }> {
   const raw = input.rawText.trim();
@@ -1337,7 +1337,7 @@ export async function suggestAssignmentGrade(
   userId: string,
   input: SuggestAssignmentGradeInput,
   openai: OpenAI,
-  model = "gpt-4o-mini",
+  model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<AssignmentGradeSuggestion> {
   if (!input.submissionBody.trim()) {

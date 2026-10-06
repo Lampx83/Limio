@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { AiTutorError } from "./errors";
+import { getChatModel } from "./llm";
 import { assertHasTokenBudget, chargeTokens } from "./tokenWallet";
 
 export { AiTutorError } from "./errors";
@@ -80,8 +81,10 @@ async function resolveGlobalTokenCap(db: PrismaClient): Promise<number> {
   return DEFAULT_GLOBAL_TOKENS_PER_DAY;
 }
 
-// Default model. gpt-4o-mini = cheap + fast. Override per-conversation if needed.
-export const DEFAULT_MODEL = "gpt-4o-mini";
+// Default chat model — LLM tự host qua vLLM (xem llm.ts), không còn gpt-4o-mini.
+// Override per-conversation if needed. Giá không có trong bảng dưới ⇒ cost = 0
+// (tự host: tốn hạ tầng chứ không tính theo token); token vẫn được đếm cho cap.
+export const DEFAULT_MODEL = getChatModel();
 
 /** Số ký tự tối đa của đoạn bôi đen gửi kèm câu hỏi. */
 export const MAX_QUOTE_CHARS = 800;

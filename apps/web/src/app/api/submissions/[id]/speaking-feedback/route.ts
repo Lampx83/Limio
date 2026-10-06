@@ -26,7 +26,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   try {
     const r = await requestSpeakingFeedback(userId, params.id, {
       // Lấy khách hàng AI CHẬM: bản cũ/lỗi điều kiện không đòi cấu hình AI.
-      openai: () => getOpenaiClient(),
+      openai: () => getOpenaiClient({ needsOpenaiKey: true }), // còn dùng Whisper
       loadAudio: (url) => loadSubmissionAudio(url, userId),
     });
     return NextResponse.json(r, { status: r.reused ? 200 : 201 });

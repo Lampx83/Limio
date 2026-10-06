@@ -14,7 +14,7 @@ import {
   DEFAULT_MONTHLY_TOKENS_LEARNER,
   chargeTokens,
 } from "../aiTutor/tokenWallet";
-import { assertWithinCaps } from "../aiTutor/aiTutor";
+import { DEFAULT_MODEL, assertWithinCaps } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { embedMaterial } from "../oralExam/materialEmbeddings";
 import { runOralExamTurn } from "../oralExam/examinerChat";
@@ -104,7 +104,7 @@ describe("runOralExamTurn (A6.3)", () => {
     expect(turns[0]!.role).toBe("examiner");
 
     const usage = await prisma.aiUsageLog.findFirst({
-      where: { userId: s.learnerId, model: "gpt-4o-mini" },
+      where: { userId: s.learnerId, model: DEFAULT_MODEL },
     });
     expect(usage?.tokensInput).toBe(10);
     expect(usage?.tokensOutput).toBe(20);

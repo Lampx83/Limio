@@ -8,6 +8,7 @@ import {
   registerUser,
 } from "@feedbackme/core-lms";
 import { AiTutorError } from "../aiTutor/errors";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { embedMaterial } from "../oralExam/materialEmbeddings";
 import { runOralExamPreviewTurn } from "../oralExam/examinerChat";
 import type { ChatComputeFn, ChatMessage } from "../oralExam/chat";
@@ -115,7 +116,7 @@ describe("runOralExamPreviewTurn — GV thử vấn đáp không ghi DB", () => 
       computeEmbed: fakeEmbed(),
     });
     const usage = await prisma.aiUsageLog.findFirst({
-      where: { userId: s.ownerId, model: "gpt-4o-mini" },
+      where: { userId: s.ownerId, model: DEFAULT_MODEL },
     });
     expect(usage?.tokensInput).toBe(10);
     expect(usage?.tokensOutput).toBe(20);

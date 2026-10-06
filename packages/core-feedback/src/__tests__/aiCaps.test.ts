@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import {
   AiTutorError,
+  DEFAULT_MODEL,
   GLOBAL_TOKENS_PER_DAY_KEY,
   MAX_TURNS_PER_HOUR,
   assertWithinCaps,
@@ -17,7 +18,7 @@ import {
   vnMonthKey,
 } from "../aiTutor/tokenWallet";
 
-const MODEL = "gpt-4o-mini";
+const MODEL = DEFAULT_MODEL;
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
