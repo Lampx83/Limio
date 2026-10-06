@@ -4,6 +4,7 @@ import {
   buildMissionPayload,
   defaultMissionForm,
   deadlinePresets,
+  lateSupported,
   modeOfMission,
   peerSummary,
   stateFromMission,
@@ -239,5 +240,38 @@ describe("tiện ích", () => {
       expect(iso >= ctx.tournamentStart && iso <= ctx.tournamentEnd && iso > ctx.now).toBe(true);
     }
     expect(presets[presets.length - 1]!.value).toBe("2026-10-15T23:00");
+  });
+});
+
+describe("cho nộp muộn", () => {
+  const add = { kind: "add", teamSize: 1 } as const;
+  const edit = { kind: "edit", teamSize: 1 } as const;
+
+  it("lateSupported: chỉ chế độ nộp qua MissionSubmission", () => {
+    expect(lateSupported("quiz", false)).toBe(true);
+    expect(lateSupported("check", false)).toBe(true);
+    expect(lateSupported("peer", false)).toBe(true);
+    expect(lateSupported("manual", true)).toBe(true);
+    // GV chấm kiểu cá nhân nộp qua form bài tập: không có chỗ ghi dấu muộn.
+    expect(lateSupported("manual", false)).toBe(false);
+    expect(lateSupported("course", false)).toBe(false);
+    expect(lateSupported(null, false)).toBe(false);
+  });
+
+  it("payload mang cờ khi chế độ hỗ trợ", () => {
+    const p = buildMissionPayload(form({ mode: "peer", deadline: "2026-10-08T23:59", allowLate: true }), add);
+    expect(p.allowLateSubmission).toBe(true);
+  });
+
+  it("chế độ không hỗ trợ: tạo mới không gửi cờ, sửa thì ép tắt (tránh cờ bật sót khi đổi chế độ)", () => {
+    const s = form({ mode: "manual", isTeamSubmission: false, deadline: "2026-10-08T23:59", allowLate: true });
+    expect(buildMissionPayload(s, add).allowLateSubmission).toBeUndefined();
+    expect(buildMissionPayload(s, edit).allowLateSubmission).toBe(false);
+  });
+
+  it("stateFromMission đọc lại cờ từ mission", () => {
+    const base = { title: "x", points: 1, missionType: "CUSTOM", verifyMode: "PEER_REVIEW" } as never;
+    expect(stateFromMission({ ...(base as object), allowLateSubmission: true } as never).allowLate).toBe(true);
+    expect(stateFromMission(base).allowLate).toBe(false);
   });
 });

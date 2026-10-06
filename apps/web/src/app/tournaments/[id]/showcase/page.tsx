@@ -175,6 +175,7 @@ export default async function ShowcasePage({
       missionOrder: m.orderIndex,
       missionPoints: m.points,
       kind: "mission" as "mission" | "assignment",
+      isLate: s.isLate,
       status: s.status as string,
       scoreLabel: showcaseScoreLabel({ kind: "mission", finalScore: s.finalScore, score: null, maxScore: null }),
       sortScore: s.finalScore as number | null,
@@ -194,6 +195,7 @@ export default async function ShowcasePage({
       missionOrder: m.orderIndex,
       missionPoints: m.points,
       kind: "assignment" as "mission" | "assignment",
+      isLate: false,
       status: s.status as string,
       scoreLabel: showcaseScoreLabel({
         kind: "assignment",
@@ -260,6 +262,7 @@ export default async function ShowcasePage({
       statusTone: st.tone,
       scoreLabel: f.scoreLabel,
       submittedAtLabel: formatDateTime(f.submittedAt),
+      isLate: f.isLate,
       writeup: writeup ? writeup.slice(0, 20000) : null,
       repoHref: safeHref(f.payload.repoUrl),
       slidesHref: safeHttpUrl(f.payload.slidesUrl),
@@ -522,6 +525,11 @@ export default async function ShowcasePage({
                         </span>
                       );
                     })()}
+                    {f.isLate && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                        Nộp muộn
+                      </span>
+                    )}
                     {f.scoreLabel && (
                       <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 font-semibold tabular-nums">
                         Điểm {f.scoreLabel}

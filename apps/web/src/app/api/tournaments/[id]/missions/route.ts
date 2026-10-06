@@ -49,6 +49,7 @@ export async function GET(
       contentPayload: true,
       autoCheckRule: true,
       isTeamSubmission: true,
+      allowLateSubmission: true,
     },
   });
 
@@ -88,6 +89,7 @@ const CustomMissionInput = z.object({
   reviewWindowEndAt: z.string().datetime().nullable().optional(),
   passThreshold: z.number().min(0).max(1).nullable().optional(),
   isTeamSubmission: z.boolean().optional().default(false),
+  allowLateSubmission: z.boolean().optional().default(false),
 });
 
 const PostInput = z.object({
@@ -300,6 +302,7 @@ export async function POST(
         reviewWindowEndAt:  parsed.data.reviewWindowEndAt ? new Date(parsed.data.reviewWindowEndAt) : null,
         passThreshold:      parsed.data.passThreshold ?? null,
         isTeamSubmission:   parsed.data.isTeamSubmission,
+        allowLateSubmission: parsed.data.allowLateSubmission,
       },
       select: { id: true },
     });

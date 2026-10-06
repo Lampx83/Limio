@@ -56,6 +56,7 @@ export type MissionFormState = {
   conditionScope: "course" | "global";
   // Hạn
   deadline: string; // "YYYY-MM-DDTHH:mm" giờ VN
+  allowLate: boolean; // cho nộp sau hạn, bài nộp đánh dấu "Nộp muộn"
   // Kiểm tra tự động
   checkKind: "link" | "file" | "raw";
   checkLinkText: string;
@@ -74,6 +75,14 @@ export type MissionFormState = {
   prerequisiteId: string;
   isTeamSubmission: boolean;
 };
+
+/**
+ * Cho nộp muộn dùng được khi bài nộp đi qua MissionSubmission (có chỗ ghi dấu "Nộp muộn").
+ * Giảng viên chấm kiểu cá nhân nộp bằng form bài tập (hạn là dueAt của bài tập) nên không áp dụng.
+ */
+export function lateSupported(mode: MissionModeId | null, isTeamSubmission: boolean): boolean {
+  return mode === "quiz" || mode === "check" || mode === "peer" || (mode === "manual" && isTeamSubmission);
+}
 
 export const DEFAULT_RUBRIC: RubricCriterion[] = [
   { id: "noi-dung", label: "Nội dung", scale: "1-5", weight: 2 },
@@ -96,6 +105,7 @@ export function defaultMissionForm(): MissionFormState {
     conditionSkillCode: "",
     conditionScope: "course",
     deadline: "",
+    allowLate: false,
     checkKind: "link",
     checkLinkText: "",
     checkFileTypes: ["pdf"],
@@ -262,6 +272,9 @@ export function buildMissionPayload(s: MissionFormState, opts: PayloadOptions): 
     p.verifyMode = { quiz: "AUTO_GRADE", manual: "MANUAL_REVIEW", peer: "PEER_REVIEW", check: "AUTO_CHECK" }[mode];
   }
   p.submissionDeadline = fromDateTimeInputValue(s.deadline);
+  // Chỉ chế độ nộp qua MissionSubmission mới đánh dấu muộn được; không hỗ trợ thì luôn tắt.
+  if (lateSupported(mode, s.isTeamSubmission)) p.allowLateSubmission = s.allowLate;
+  else if (opts.kind === "edit") p.allowLateSubmission = false;
   if (external) p.contentPayload = { ...(s.contentExtra ?? {}), url: s.externalUrl.trim() };
 
   if (mode === "manual") p.passThreshold = s.manualPassThreshold;
@@ -318,6 +331,7 @@ export type MissionLike = {
   contentPayload?: { url?: string; [k: string]: unknown } | null;
   autoCheckRule?: { type?: string; config?: Record<string, unknown> } | null;
   isTeamSubmission?: boolean;
+  allowLateSubmission?: boolean;
 };
 
 export function modeOfMission(m: Pick<MissionLike, "missionType" | "verifyMode">): MissionModeId {
@@ -340,6 +354,7 @@ export function stateFromMission(m: MissionLike): MissionFormState {
     isTeamSubmission: Boolean(m.isTeamSubmission),
     captainsOnly: Boolean(m.peerReviewCaptainsOnly),
     deadline: toInput(m.submissionDeadline),
+    allowLate: Boolean(m.allowLateSubmission),
     conditionType: m.conditionType ?? "",
     conditionValue: m.conditionValue != null ? String(m.conditionValue) : "",
     conditionMinScore: m.conditionMinScore != null ? String(m.conditionMinScore) : "",

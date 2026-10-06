@@ -2029,6 +2029,9 @@ model TournamentMission {
   // Submission window — required when verifyMode is set; null means
   // "completion derived from behavior" (COURSE_LINKED).
   submissionDeadline DateTime?
+  // Cho nộp sau submissionDeadline (bài nộp lúc đó đánh dấu MissionSubmission.isLate).
+  // Vẫn bị chặn khi giải đã kết thúc. Mặc định tắt: quá hạn là đóng như cũ.
+  allowLateSubmission Boolean @default(false)
 
   // CUSTOM/EXTERNAL content payload.
   // Shape varies by missionType:
@@ -2100,6 +2103,8 @@ model MissionSubmission {
   // 0..1; set after verify.
   finalScore  Float?
   verifiedAt  DateTime?
+  // Lần nộp gần nhất diễn ra sau hạn (chỉ có khi mission cho nộp muộn). Nộp lại đúng hạn thì về false.
+  isLate      Boolean                 @default(false)
 
   mission           TournamentMission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
   user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)

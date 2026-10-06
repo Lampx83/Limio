@@ -18,6 +18,7 @@ export type ViewerItem = {
   statusTone: "ok" | "bad" | "wait";
   scoreLabel: string | null;
   submittedAtLabel: string;
+  isLate: boolean;
   writeup: string | null;
   repoHref: string | null;
   slidesHref: string | null;
@@ -310,6 +311,11 @@ function ViewerDialog({
         <aside className="max-h-[38vh] space-y-4 overflow-y-auto border-t border-token p-4 lg:max-h-none lg:border-l lg:border-t-0">
           <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
             <span className={`rounded-full px-2 py-0.5 font-semibold ${toneCls}`}>{item.statusLabel}</span>
+            {item.isLate && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                Nộp muộn
+              </span>
+            )}
             {item.scoreLabel && (
               <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 font-semibold tabular-nums">
                 Điểm {item.scoreLabel}

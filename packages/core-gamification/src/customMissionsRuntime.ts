@@ -20,6 +20,7 @@ import {
   decideWindowAction,
   isOutlier,
   isSpeedRunSubmission,
+  submissionTiming,
   planBalancedReviewerAssignments,
   resolveReviewQuorum,
   type ReviewerPlanReviewer,
@@ -126,7 +127,14 @@ export async function submitMission(
       reason: "mission missing submissionDeadline",
     });
   }
-  if (now >= deadline) throw new CustomMissionError("past_deadline");
+  // Quá hạn: đóng, trừ khi mission cho nộp muộn (bài đánh dấu isLate; vẫn chặn khi giải đã đóng ở trên).
+  const timing = submissionTiming({
+    now,
+    submissionDeadline: deadline,
+    allowLate: mission.allowLateSubmission,
+  });
+  if (timing === "closed") throw new CustomMissionError("past_deadline");
+  const isLate = timing === "late";
 
   // AC-6.3: AUTO_GRADE speed-run guard.
   if (
@@ -172,6 +180,7 @@ export async function submitMission(
       submissionDeadline: deadline,
       hasCompletedReview: existing.reviewAssignments.length > 0,
       isAssignmentGraded,
+      allowLate: mission.allowLateSubmission,
     });
     if (!ok) throw new CustomMissionError("resubmit_blocked");
   }
@@ -188,11 +197,13 @@ export async function submitMission(
       status: "pending",
       finalScore: null,
       verifiedAt: null,
+      isLate,
     },
     create: {
       missionId: mission.id,
       userId: input.userId,
       payload: input.payload,
+      isLate,
     },
   });
 
@@ -204,6 +215,7 @@ export async function submitMission(
       submissionId: submission.id,
       missionType: mission.missionType,
       verifyMode: mission.verifyMode,
+      isLate,
     },
     courseId: mission.tournament.courseId,
   });

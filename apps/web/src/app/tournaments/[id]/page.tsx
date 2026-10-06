@@ -354,7 +354,7 @@ export default async function TournamentDetailPage({
           if (!actionable) return false;
           if (lockedFor(m)) return false;
           if (statusFor(m) !== null) return false;
-          if (m.submissionDeadline && now >= m.submissionDeadline) return false;
+          if (m.submissionDeadline && now >= m.submissionDeadline && !m.allowLateSubmission) return false;
           // Nhiệm vụ nộp chung theo đội: chỉ đội trưởng nộp được.
           if (m.isTeamSubmission && tournament.teamSize > 1 && !isCaptain) return false;
           return true;
@@ -670,7 +670,8 @@ export default async function TournamentDetailPage({
                                   actionable &&
                                   !mStatus &&
                                   !!mission.submissionDeadline &&
-                                  now >= mission.submissionDeadline
+                                  now >= mission.submissionDeadline &&
+                                  !mission.allowLateSubmission
                                 }
                               />
                             )}
