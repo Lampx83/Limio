@@ -123,11 +123,28 @@ export function canResubmit(params: {
   submissionDeadline: Date;
   hasCompletedReview?: boolean;
   isAssignmentGraded?: boolean;
+  /** Mission cho nộp muộn: quá hạn vẫn nộp lại được (bài sẽ đánh dấu "Nộp muộn"). */
+  allowLate?: boolean;
 }): boolean {
   // Resubmission is allowed freely until the deadline — only the deadline locks
   // it. (Product decision: supersedes the earlier per-mode locks that froze
   // resubmit once a peer review landed / a manual grade was given.)
-  return params.now < params.submissionDeadline;
+  return params.allowLate === true || params.now < params.submissionDeadline;
+}
+
+export type SubmissionTiming = "on_time" | "late" | "closed";
+
+/**
+ * Bài nộp lúc này có nhận không, và có bị đánh dấu muộn không.
+ * Hạn là mốc loại trừ: đúng giờ hạn đã tính là muộn (khớp kiểm tra `now >= deadline` cũ).
+ */
+export function submissionTiming(params: {
+  now: Date;
+  submissionDeadline: Date;
+  allowLate: boolean;
+}): SubmissionTiming {
+  if (params.now < params.submissionDeadline) return "on_time";
+  return params.allowLate ? "late" : "closed";
 }
 
 /**

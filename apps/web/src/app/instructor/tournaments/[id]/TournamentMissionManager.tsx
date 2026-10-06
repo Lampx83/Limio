@@ -42,6 +42,7 @@ interface Mission {
   contentPayload?: { url?: string; instructions?: string; markdown?: string } | null;
   autoCheckRule?: { type?: string; config?: Record<string, unknown> } | null;
   isTeamSubmission?: boolean;
+  allowLateSubmission?: boolean;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -197,6 +197,9 @@ export default async function MissionSubmissionsPage({
           </h1>
           <p className="mt-1 text-sm text-muted">
             {mission.submissions.length} bài nộp
+            {mission.submissions.some((s) => s.isLate) && (
+              <> · {mission.submissions.filter((s) => s.isLate).length} nộp muộn</>
+            )}
           </p>
         </div>
         {mission.verifyMode === "PEER_REVIEW" && (
@@ -359,6 +362,11 @@ export default async function MissionSubmissionsPage({
                         <>{s.user.email} · </>
                       )}
                       Nộp lúc {formatDateTime(s.submittedAt)}
+                      {s.isLate && (
+                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                          Nộp muộn
+                        </span>
+                      )}
                     </p>
                   </div>
                   <span

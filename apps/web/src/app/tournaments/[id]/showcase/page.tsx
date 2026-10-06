@@ -6,8 +6,10 @@ import { isAdmin } from "@feedbackme/core-lms";
 import { showcaseAccess, canVoteInShowcase, normalizeShowcaseMode } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import VoteButton from "./VoteButton";
+import { CardCover, OpenViewerButton, ShowcaseViewerProvider, ViewLabel, type ViewerItem } from "./ShowcaseViewer";
 import { formatDateTime } from "@/lib/datetime";
 import { safeHref, safeHttpUrl } from "@/lib/safeUrl";
+import { showcaseThumbnail } from "@/lib/showcaseEmbed";
 import {
   paginate,
   showcaseScoreLabel,
@@ -31,24 +33,10 @@ type SortKey = "recent" | "votes" | "score" | "mission";
 
 const PAGE_SIZE = 24;
 
-// Extract YouTube video ID from common URL formats so we can build a thumbnail.
-function youtubeThumbnail(url: string | undefined): string | null {
-  if (!url) return null;
-  try {
-    const u = new URL(url);
-    let id: string | null = null;
-    if (u.hostname === "youtu.be") {
-      id = u.pathname.slice(1) || null;
-    } else if (/youtube\.com$/.test(u.hostname.replace(/^www\./, ""))) {
-      if (u.pathname === "/watch") id = u.searchParams.get("v");
-      else if (u.pathname.startsWith("/embed/")) id = u.pathname.split("/")[2] ?? null;
-      else if (u.pathname.startsWith("/shorts/")) id = u.pathname.split("/")[2] ?? null;
-    }
-    if (!id || !/^[\w-]{6,20}$/.test(id)) return null;
-    return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-  } catch {
-    return null;
-  }
+// Phần mô tả chỉ lấy chữ học viên viết. artifactMarkdown của form nhóm là đoạn tóm tắt link tự sinh
+// (lặp lại đúng các link đã có chip), nên chỉ dùng cho bài chấm chéo kiểu cũ.
+function writeupOf(p: HackathonPayload): string | null {
+  return p.writeup || (p.hackathon ? null : p.artifactMarkdown) || null;
 }
 
 export default async function ShowcasePage({
@@ -187,6 +175,7 @@ export default async function ShowcasePage({
       missionOrder: m.orderIndex,
       missionPoints: m.points,
       kind: "mission" as "mission" | "assignment",
+      isLate: s.isLate,
       status: s.status as string,
       scoreLabel: showcaseScoreLabel({ kind: "mission", finalScore: s.finalScore, score: null, maxScore: null }),
       sortScore: s.finalScore as number | null,
@@ -206,6 +195,7 @@ export default async function ShowcasePage({
       missionOrder: m.orderIndex,
       missionPoints: m.points,
       kind: "assignment" as "mission" | "assignment",
+      isLate: false,
       status: s.status as string,
       scoreLabel: showcaseScoreLabel({
         kind: "assignment",
@@ -255,6 +245,38 @@ export default async function ShowcasePage({
     default:
       flat = flat.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
   }
+
+  // Dữ liệu cho khung xem trước: TOÀN BỘ bài đang lọc theo thứ tự đang sắp xếp (không chỉ trang hiện tại),
+  // để Trước/Sau chạy hết danh sách. Link đã qua bộ lọc http/https ở máy chủ.
+  const viewerItems: ViewerItem[] = flat.map((f) => {
+    const st = showcaseStatus(f.kind, f.status);
+    const writeup = writeupOf(f.payload);
+    return {
+      submissionId: f.submissionId,
+      missionId: f.missionId,
+      missionTitle: f.missionTitle,
+      teamLabel: showcaseTeamLabel({ teamName: f.team?.name ?? null, captainName: f.captain.displayName, teamSize: tournament.teamSize }),
+      captainName: f.captain.displayName,
+      memberNames: f.team?.registrations.map((r) => r.user.displayName) ?? [],
+      statusLabel: st.label,
+      statusTone: st.tone,
+      scoreLabel: f.scoreLabel,
+      submittedAtLabel: formatDateTime(f.submittedAt),
+      isLate: f.isLate,
+      writeup: writeup ? writeup.slice(0, 20000) : null,
+      repoHref: safeHref(f.payload.repoUrl),
+      slidesHref: safeHttpUrl(f.payload.slidesUrl),
+      demoHref: safeHttpUrl(f.payload.demoVideoUrl),
+      votable: f.votable,
+      voteCount: f.voteCount,
+      voted: myVoteByMission.get(f.missionId) === f.submissionId,
+      voteDisabled: !canVote || myTeamCaptainId === f.captain.id,
+      voteDisabledReason: !canVote
+        ? "Chỉ người chơi được bình chọn, khi giải cho xem bài của tất cả các đội"
+        : "Không thể bình chọn cho đội của bạn",
+      isTopVoted: f.isTopVoted,
+    };
+  });
 
   const sortLabels: Record<SortKey, string> = {
     recent: "Mới nhất",
@@ -385,6 +407,7 @@ export default async function ShowcasePage({
           </p>
         </div>
       ) : (
+        <ShowcaseViewerProvider tournamentId={params.id} items={viewerItems}>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {paged.items.map((f) => {
             const team = f.team;
@@ -392,7 +415,8 @@ export default async function ShowcasePage({
             const demoHref = safeHttpUrl(f.payload.demoVideoUrl);
             const repoHref = safeHref(f.payload.repoUrl);
             const slidesHref = safeHttpUrl(f.payload.slidesUrl);
-            const thumb = youtubeThumbnail(demoHref ?? undefined);
+            // Ưu tiên ảnh bìa từ video demo; không có thì lấy từ slide/mã nguồn nếu là link YouTube/Drive.
+            const thumb = showcaseThumbnail(demoHref) ?? showcaseThumbnail(slidesHref) ?? showcaseThumbnail(repoHref);
             return (
               <article
                 key={f.submissionId}
@@ -407,35 +431,13 @@ export default async function ShowcasePage({
                   </span>
                 )}
 
-                {/* Thumbnail or gradient header */}
-                {thumb ? (
-                  <a
-                    href={demoHref ?? undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative block aspect-video overflow-hidden bg-slate-900"
-                    title="Xem demo video"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={thumb}
-                      alt={`Video demo của ${showcaseTeamLabel({ teamName: team?.name ?? null, captainName: f.captain.displayName, teamSize: tournament.teamSize })}`}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition-opacity group-hover:opacity-100">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/95 text-rose-600 shadow-lg">
-                        <Play size={20} fill="currentColor" />
-                      </span>
-                    </span>
-                  </a>
-                ) : (
-                  <div className="bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500 p-4 text-white">
-                    <p className="text-xs font-bold uppercase tracking-wider opacity-90">
-                      {f.missionTitle}
-                    </p>
-                  </div>
-                )}
+                {/* Ảnh bìa (ưu tiên video) hoặc nền màu — bấm để xem trước ngay trong trang */}
+                <CardCover
+                  submissionId={f.submissionId}
+                  label={`Xem bài của ${showcaseTeamLabel({ teamName: team?.name ?? null, captainName: f.captain.displayName, teamSize: tournament.teamSize })}`}
+                  thumbSrc={thumb}
+                  missionTitle={f.missionTitle}
+                />
 
                 <div className="flex-1 p-4">
                   {thumb && (
@@ -456,18 +458,19 @@ export default async function ShowcasePage({
                     )}
                   </p>
 
-                  {f.payload.writeup && (
+                  {writeupOf(f.payload) && (
                     <p className="mt-2 line-clamp-3 text-sm text-[rgb(var(--text-muted))]">
-                      {f.payload.writeup}
-                    </p>
-                  )}
-                  {!f.payload.writeup && !thumb && f.payload.artifactMarkdown && (
-                    <p className="mt-2 line-clamp-3 text-sm text-[rgb(var(--text-muted))]">
-                      {f.payload.artifactMarkdown.slice(0, 200)}
+                      {writeupOf(f.payload)}
                     </p>
                   )}
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
+                    <OpenViewerButton
+                      submissionId={f.submissionId}
+                      className="inline-flex items-center gap-1 rounded-full border border-brand-300 bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100 dark:border-brand-700 dark:text-brand-300"
+                    >
+                      <ViewLabel />
+                    </OpenViewerButton>
                     {repoHref && (
                       <a
                         href={repoHref}
@@ -490,7 +493,7 @@ export default async function ShowcasePage({
                         Slide
                       </a>
                     )}
-                    {demoHref && !thumb && (
+                    {demoHref && (
                       <a
                         href={demoHref}
                         target="_blank"
@@ -522,6 +525,11 @@ export default async function ShowcasePage({
                         </span>
                       );
                     })()}
+                    {f.isLate && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                        Nộp muộn
+                      </span>
+                    )}
                     {f.scoreLabel && (
                       <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 font-semibold tabular-nums">
                         Điểm {f.scoreLabel}
@@ -551,6 +559,7 @@ export default async function ShowcasePage({
             );
           })}
         </div>
+        </ShowcaseViewerProvider>
       )}
 
       {paged.pages > 1 && (

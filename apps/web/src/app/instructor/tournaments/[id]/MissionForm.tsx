@@ -33,6 +33,7 @@ import {
   addDaysToInput,
   buildMissionPayload,
   deadlinePresets,
+  lateSupported,
   defaultMissionForm,
   peerSummary,
   stateFromMission,
@@ -572,6 +573,18 @@ export default function MissionForm({
                 <Chip key={p.value} on={s.deadline === p.value} onClick={() => setDeadline(p.value)}>{p.label}</Chip>
               ))}
             </div>
+          )}
+          {lateSupported(mode, s.isTeamSubmission) && (
+          <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand-600" checked={s.allowLate}
+              onChange={(e) => set({ allowLate: e.target.checked })} />
+            <span>
+              Cho nộp muộn
+              <span className="block text-xs text-muted">
+                Sau hạn học viên vẫn nộp được và bài được đánh dấu "Nộp muộn". Vẫn không nhận bài khi giải đã kết thúc.
+              </span>
+            </span>
+          </label>
           )}
         </Field>
       )}

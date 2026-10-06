@@ -3,13 +3,14 @@
 import { getClientId } from "@/lib/clientId";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { Plus, X, Pencil, Link as LinkIcon, Image as ImageIcon, Video, Music } from "lucide-react";
-import { apiUrl } from "@/lib/apiUrl";
+import { Plus, X, Pencil, Upload, Link as LinkIcon, Image as ImageIcon, Video, Music } from "lucide-react";
+import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import {
   BOARD_NOTE_COLORS,
   rotationForNote,
   detectMediaKind,
   isValidAttachmentUrl,
+  BOARD_ATTACHMENT_MAX_BYTES,
   groupNotesByColumn,
   columnHeaderColor,
 } from "@/app/instructor/classroom/boardNoteStyle";
@@ -139,6 +140,7 @@ export default function JoinBoardPage() {
   const [editColor, setEditColor] = useState<string | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editInfo, setEditInfo] = useState<string | null>(null);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   // Restore name từ localStorage
   useEffect(() => {
@@ -280,6 +282,47 @@ export default function JoinBoardPage() {
     setEditingDrawingId(null);
     setModalOpen(true);
     setInfo(null);
+  };
+
+  // Tải ảnh lên làm đính kèm. Trả về URL tuyệt đối để đi qua cùng validation http/https
+  // với URL dán tay.
+  const uploadAttachmentImage = async (file: File): Promise<string> => {
+    const maxMb = Math.round(BOARD_ATTACHMENT_MAX_BYTES / (1024 * 1024));
+    if (file.size > BOARD_ATTACHMENT_MAX_BYTES) throw new Error(`Ảnh quá lớn — tối đa ${maxMb}MB`);
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(apiUrl(`/api/public/boards/${code}/attachments`), {
+      method: "POST",
+      headers: { "x-client-id": getClientId() },
+      body: form,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      if (err.error === "file_too_large") throw new Error(`Ảnh quá lớn — tối đa ${maxMb}MB`);
+      if (err.error === "unsupported_media_type") throw new Error("Chỉ nhận ảnh PNG, JPG, GIF hoặc WebP");
+      if (err.error === "rate_limited") throw new Error("Bạn tải lên hơi nhanh — thử lại sau vài giây");
+      if (err.error === "board_closed") throw new Error("Bảng đã đóng");
+      throw new Error("Lỗi tải ảnh lên");
+    }
+    const data = (await res.json()) as { url: string };
+    return shareUrl(data.url);
+  };
+
+  const handleUploadImage = async (
+    file: File | null,
+    setUrl: (u: string) => void,
+    setMsg: (m: string | null) => void,
+  ) => {
+    if (!file) return;
+    setUploadingAttachment(true);
+    setMsg(null);
+    try {
+      setUrl(await uploadAttachmentImage(file));
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Lỗi tải ảnh lên");
+    } finally {
+      setUploadingAttachment(false);
+    }
   };
 
   const handleSaveEditNote = async () => {
@@ -575,6 +618,20 @@ export default function JoinBoardPage() {
                   maxLength={2000}
                   className="w-full bg-white/70 backdrop-blur border border-white/80 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
+                <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    disabled={uploadingAttachment}
+                    onChange={(e) => {
+                      handleUploadImage(e.target.files?.[0] ?? null, setEditAttachmentUrl, setEditInfo);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Upload size={12} />
+                  {uploadingAttachment ? "Đang tải lên..." : "hoặc tải ảnh lên (≤5MB)"}
+                </label>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider mr-1">Màu:</span>
@@ -719,6 +776,20 @@ export default function JoinBoardPage() {
                      <LinkIcon size={16} />}
                   </span>
                 </div>
+                <label className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 hover:text-brand-800 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    disabled={uploadingAttachment}
+                    onChange={(e) => {
+                      handleUploadImage(e.target.files?.[0] ?? null, setAttachmentUrl, setInfo);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Upload size={12} />
+                  {uploadingAttachment ? "Đang tải lên..." : "hoặc tải ảnh lên (≤5MB)"}
+                </label>
                 {previewKind && (
                   <p className="text-[11px] text-gray-700 mt-1 ml-1">
                     Sẽ hiển thị dạng: <span className="font-semibold">{previewKind === "youtube" ? "YouTube embed" : previewKind === "vimeo" ? "Vimeo embed" : previewKind === "image" ? "Ảnh" : previewKind === "video" ? "Video player" : previewKind === "audio" ? "Audio player" : "Link"}</span>

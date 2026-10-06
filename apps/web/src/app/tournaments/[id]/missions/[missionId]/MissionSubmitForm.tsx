@@ -15,6 +15,7 @@ export default function MissionSubmitForm({
   quizId,
   assignmentId,
   submissionDeadlineIso,
+  allowLate = false,
   hackathonMode = false,
 }: {
   missionId: string;
@@ -22,6 +23,8 @@ export default function MissionSubmitForm({
   quizId: string | null;
   assignmentId: string | null;
   submissionDeadlineIso: string | null;
+  /** Mission cho nộp muộn: quá hạn vẫn hiện form, bài nộp được đánh dấu "Nộp muộn". */
+  allowLate?: boolean;
   hackathonMode?: boolean;
 }) {
   const router = useRouter();
@@ -43,7 +46,7 @@ export default function MissionSubmitForm({
     ? new Date() >= new Date(submissionDeadlineIso)
     : false;
 
-  if (pastDeadline) {
+  if (pastDeadline && !allowLate) {
     return (
       <p className="text-sm text-danger-600">Hết hạn nộp.</p>
     );

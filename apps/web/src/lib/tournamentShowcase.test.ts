@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { paginate, showcaseScoreLabel, showcaseStatus, showcaseTeamLabel, topVotedSubmissionIds } from "./tournamentShowcase";
+import { stepIndex, paginate, showcaseScoreLabel, showcaseStatus, showcaseTeamLabel, topVotedSubmissionIds } from "./tournamentShowcase";
 
 describe("showcaseStatus", () => {
   it("bài chấm chéo/giảng viên chấm theo MissionSubmission", () => {
@@ -77,5 +77,18 @@ describe("paginate", () => {
 
   it("danh sách rỗng vẫn có 1 trang", () => {
     expect(paginate([], 1, 24)).toMatchObject({ items: [], page: 1, pages: 1, total: 0 });
+  });
+});
+
+describe("stepIndex", () => {
+  it("đi tới/lui trong danh sách, dừng ở hai đầu", () => {
+    expect(stepIndex(0, 3, 1)).toBe(1);
+    expect(stepIndex(2, 3, -1)).toBe(1);
+    expect(stepIndex(0, 3, -1)).toBeNull();
+    expect(stepIndex(2, 3, 1)).toBeNull();
+  });
+
+  it("bài đang mở không còn trong danh sách (index -1) thì không đi đâu", () => {
+    expect(stepIndex(-1, 3, 1)).toBeNull();
   });
 });

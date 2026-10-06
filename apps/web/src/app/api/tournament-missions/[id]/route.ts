@@ -43,6 +43,7 @@ const PatchInput = z
     reviewWindowEndAt:  z.string().datetime().nullable().optional(),
     passThreshold:      z.number().min(0).max(1).nullable().optional(),
     isTeamSubmission:   z.boolean().optional(),
+    allowLateSubmission: z.boolean().optional(),
   })
   .strict();
 
@@ -238,6 +239,7 @@ export async function PATCH(
         ...(reopeningWindow && { reviewExtendCount: 0 }),
         ...(data.passThreshold      !== undefined && { passThreshold:      data.passThreshold }),
         ...(data.isTeamSubmission   !== undefined && { isTeamSubmission:   data.isTeamSubmission }),
+        ...(data.allowLateSubmission !== undefined && { allowLateSubmission: data.allowLateSubmission }),
       },
       select: {
         id: true,
@@ -263,6 +265,7 @@ export async function PATCH(
         contentPayload: true,
         autoCheckRule: true,
         isTeamSubmission: true,
+        allowLateSubmission: true,
       },
     });
 
