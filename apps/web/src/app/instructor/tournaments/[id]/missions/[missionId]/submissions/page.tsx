@@ -25,6 +25,13 @@ import AutoAssignReviewersButton from "./AutoAssignReviewersButton";
 import ReviewerLoadPlanner from "./ReviewerLoadPlanner";
 import ReviewDetailsPanel from "./ReviewDetailsPanel";
 import CloseReviewsButton from "./CloseReviewsButton";
+import {
+  OpenViewerButton,
+  ShowcaseViewerProvider,
+  ViewLabel,
+  type ViewerItem,
+} from "@/app/tournaments/[id]/showcase/ShowcaseViewer";
+import { showcaseScoreLabel, showcaseStatus, showcaseWriteup } from "@/lib/tournamentShowcase";
 
 export const dynamic = "force-dynamic";
 
@@ -170,6 +177,39 @@ export default async function MissionSubmissionsPage({
     })
     .sort((a, b) => (b.score ?? -1) - (a.score ?? -1));
 
+  // Khung xem trước (video/slide nhúng, Trước/Sau theo đúng thứ tự bảng). Chỉ mission "GV chấm"
+  // mới có nút Đạt / Chưa đạt trong khung; chấm chéo do reviewer chấm nên GV chỉ xem.
+  const viewerItems: ViewerItem[] = mission.submissions.map((s) => {
+    const team = teamByUser.get(s.userId);
+    const payload = (s.payload ?? {}) as HackathonPayload;
+    const st = showcaseStatus("mission", s.status);
+    const writeup = showcaseWriteup(payload);
+    return {
+      submissionId: s.id,
+      missionId: mission.id,
+      missionTitle: mission.title,
+      teamLabel: team?.name ?? s.user.displayName,
+      captainName: s.user.displayName,
+      memberNames: team ? team.registrations.map((r) => r.user.displayName) : [],
+      statusLabel: st.label,
+      statusTone: st.tone,
+      scoreLabel: showcaseScoreLabel({ kind: "mission", finalScore: s.finalScore, score: null, maxScore: null }),
+      submittedAtLabel: formatDateTime(s.submittedAt),
+      isLate: s.isLate,
+      writeup: writeup ? writeup.slice(0, 20000) : null,
+      repoHref: safeHref(payload.repoUrl),
+      slidesHref: safeHttpUrl(payload.slidesUrl),
+      demoHref: safeHttpUrl(payload.demoVideoUrl),
+      votable: false,
+      voteCount: 0,
+      voted: false,
+      voteDisabled: true,
+      voteDisabledReason: "",
+      isTopVoted: false,
+      ...(mission.verifyMode === "MANUAL_REVIEW" ? { grade: { status: s.status } } : {}),
+    };
+  });
+
   return (
     <main>
       <Link
@@ -313,6 +353,7 @@ export default async function MissionSubmissionsPage({
           )}
         </div>
       ) : (
+        <ShowcaseViewerProvider tournamentId={params.id} items={viewerItems}>
         <ul className="mt-6 space-y-3">
           {mission.submissions.map((s) => {
             const team = teamByUser.get(s.userId);
@@ -369,6 +410,13 @@ export default async function MissionSubmissionsPage({
                       )}
                     </p>
                   </div>
+                  <div className="flex items-center gap-2">
+                  <OpenViewerButton
+                    submissionId={s.id}
+                    className="inline-flex items-center gap-1 rounded-full border border-brand-300 bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100 dark:border-brand-700 dark:text-brand-300"
+                  >
+                    <ViewLabel />
+                  </OpenViewerButton>
                   <span
                     className={`inline-flex items-center gap-1 rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-semibold ${statusCls}`}
                   >
@@ -380,6 +428,7 @@ export default async function MissionSubmissionsPage({
                       </span>
                     )}
                   </span>
+                  </div>
                 </header>
 
                 {isCollective && team && (
@@ -438,6 +487,7 @@ export default async function MissionSubmissionsPage({
                 {/* Legacy artifactMarkdown (non-hackathon PEER_REVIEW) */}
                 {!payload.writeup &&
                   !payload.repoUrl &&
+                  !payload.hackathon &&
                   payload.artifactMarkdown && (
                     <p className="mt-3 whitespace-pre-wrap rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-3 text-sm">
                       {payload.artifactMarkdown}
@@ -482,6 +532,7 @@ export default async function MissionSubmissionsPage({
             );
           })}
         </ul>
+        </ShowcaseViewerProvider>
       )}
     </main>
   );

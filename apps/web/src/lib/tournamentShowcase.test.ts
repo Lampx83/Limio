@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { stepIndex, paginate, showcaseScoreLabel, showcaseStatus, showcaseTeamLabel, topVotedSubmissionIds } from "./tournamentShowcase";
+import { showcaseWriteup, stepIndex, paginate, showcaseScoreLabel, showcaseStatus, showcaseTeamLabel, topVotedSubmissionIds } from "./tournamentShowcase";
 
 describe("showcaseStatus", () => {
   it("bài chấm chéo/giảng viên chấm theo MissionSubmission", () => {
@@ -90,5 +90,20 @@ describe("stepIndex", () => {
 
   it("bài đang mở không còn trong danh sách (index -1) thì không đi đâu", () => {
     expect(stepIndex(-1, 3, 1)).toBeNull();
+  });
+});
+
+describe("showcaseWriteup", () => {
+  it("ưu tiên chữ đội viết", () => {
+    expect(showcaseWriteup({ hackathon: true, writeup: "Mô tả", artifactMarkdown: "**Repo:** x" })).toBe("Mô tả");
+  });
+
+  it("form nhóm không có mô tả: bỏ đoạn tóm tắt link tự sinh", () => {
+    expect(showcaseWriteup({ hackathon: true, artifactMarkdown: "**Repo:** —\n**Slides:** https://x" })).toBeNull();
+  });
+
+  it("chấm chéo kiểu cũ (không hackathon): dùng artifactMarkdown", () => {
+    expect(showcaseWriteup({ artifactMarkdown: "Bài viết" })).toBe("Bài viết");
+    expect(showcaseWriteup({})).toBeNull();
   });
 });

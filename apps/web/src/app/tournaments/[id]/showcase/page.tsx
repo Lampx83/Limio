@@ -13,6 +13,7 @@ import { showcaseThumbnail } from "@/lib/showcaseEmbed";
 import {
   paginate,
   showcaseScoreLabel,
+  showcaseWriteup,
   showcaseStatus,
   showcaseTeamLabel,
   topVotedSubmissionIds,
@@ -32,12 +33,6 @@ type HackathonPayload = {
 type SortKey = "recent" | "votes" | "score" | "mission";
 
 const PAGE_SIZE = 24;
-
-// Phần mô tả chỉ lấy chữ học viên viết. artifactMarkdown của form nhóm là đoạn tóm tắt link tự sinh
-// (lặp lại đúng các link đã có chip), nên chỉ dùng cho bài chấm chéo kiểu cũ.
-function writeupOf(p: HackathonPayload): string | null {
-  return p.writeup || (p.hackathon ? null : p.artifactMarkdown) || null;
-}
 
 export default async function ShowcasePage({
   params,
@@ -250,7 +245,7 @@ export default async function ShowcasePage({
   // để Trước/Sau chạy hết danh sách. Link đã qua bộ lọc http/https ở máy chủ.
   const viewerItems: ViewerItem[] = flat.map((f) => {
     const st = showcaseStatus(f.kind, f.status);
-    const writeup = writeupOf(f.payload);
+    const writeup = showcaseWriteup(f.payload);
     return {
       submissionId: f.submissionId,
       missionId: f.missionId,
@@ -458,9 +453,9 @@ export default async function ShowcasePage({
                     )}
                   </p>
 
-                  {writeupOf(f.payload) && (
+                  {showcaseWriteup(f.payload) && (
                     <p className="mt-2 line-clamp-3 text-sm text-[rgb(var(--text-muted))]">
-                      {writeupOf(f.payload)}
+                      {showcaseWriteup(f.payload)}
                     </p>
                   )}
 
