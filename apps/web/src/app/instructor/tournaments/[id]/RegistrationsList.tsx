@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Users, Crown, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, Download, Users, Crown, Pencil, Search, X } from "lucide-react";
+import { apiUrl } from "@/lib/apiUrl";
+import { tournamentErrorMessage } from "@/lib/tournamentText";
 import { formatDateTime } from "@/lib/datetime";
 
 export type Registration = {
@@ -28,11 +31,122 @@ function csvEscape(s: string): string {
   return s;
 }
 
+/** Tên đội kèm nút sửa (GV): bấm bút chì → ô nhập tại chỗ, Enter lưu, Esc huỷ. */
+function TeamNameEditor({
+  tournamentId,
+  teamId,
+  name,
+}: {
+  tournamentId: string;
+  teamId: string;
+  name: string;
+}) {
+  const router = useRouter();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    const next = value.trim();
+    if (!next || next === name) {
+      setEditing(false);
+      setError(null);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(apiUrl(`/api/instructor/tournaments/${tournamentId}/teams/${teamId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: next }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(tournamentErrorMessage(body, "Chưa đổi được tên. Vui lòng thử lại."));
+        return;
+      }
+      setEditing(false);
+      router.refresh();
+    } catch {
+      setError(tournamentErrorMessage({ error: "network_error" }));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!editing) {
+    return (
+      <>
+        <span className="rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
+          {name}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            setValue(name);
+            setEditing(true);
+          }}
+          className="rounded p-1 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+          aria-label={`Đổi tên ${name}`}
+          title="Đổi tên đội"
+        >
+          <Pencil size={13} />
+        </button>
+      </>
+    );
+  }
+  return (
+    <span className="flex flex-wrap items-center gap-1.5">
+      <input
+        autoFocus
+        value={value}
+        maxLength={80}
+        disabled={busy}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") void save();
+          if (e.key === "Escape") {
+            setEditing(false);
+            setError(null);
+          }
+        }}
+        aria-label="Tên đội mới"
+        className="input h-7 w-56 py-0 text-sm"
+      />
+      <button type="button" onClick={() => void save()} disabled={busy} className="btn-primary btn-sm inline-flex h-7 items-center gap-1" aria-label="Lưu tên đội">
+        <Check size={13} />
+        Lưu
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          setEditing(false);
+          setError(null);
+        }}
+        disabled={busy}
+        className="btn-secondary btn-sm inline-flex h-7 items-center"
+        aria-label="Huỷ"
+      >
+        <X size={13} />
+      </button>
+      {error && (
+        <span role="alert" className="w-full text-xs font-medium text-danger-600">
+          {error}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export default function RegistrationsList({
+  tournamentId,
   registrations,
   teamSize,
   tournamentTitle,
 }: {
+  tournamentId: string;
   registrations: Registration[];
   teamSize: number;
   tournamentTitle: string;
@@ -168,9 +282,17 @@ export default function RegistrationsList({
           <div key={g.teamId ?? "_solo"}>
             {isTeamBased && (
               <h3 className="mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold">
-                <span className="rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
-                  {g.items[0]?.teamName ?? (g.teamId ? `Đội ${g.teamId.slice(0,6)}` : "Chưa phân đội")}
-                </span>
+                {g.teamId ? (
+                  <TeamNameEditor
+                    tournamentId={tournamentId}
+                    teamId={g.teamId}
+                    name={g.items[0]?.teamName ?? `Đội ${g.teamId.slice(0, 6)}`}
+                  />
+                ) : (
+                  <span className="rounded bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-700 dark:bg-brand-950/40 dark:text-brand-300">
+                    Chưa phân đội
+                  </span>
+                )}
                 <span className="text-xs font-normal text-faint">
                   {g.items.length}/{teamSize} người
                 </span>

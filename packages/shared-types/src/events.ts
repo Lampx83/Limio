@@ -186,6 +186,7 @@ export const LearningEventType = {
   TournamentPublished: "tournament.published",
   TournamentRegistered: "tournament.registered",
   TournamentTeamFormed: "tournament.team.formed",
+  TournamentTeamRenamed: "tournament.team.renamed",
   TournamentStarted: "tournament.started",
   TournamentEnded: "tournament.ended",
   TournamentMissionUnlocked: "tournament.mission.unlocked",

@@ -9,6 +9,7 @@ import {
   showcaseAccess,
   canVoteInShowcase,
   normalizeShowcaseMode,
+  normalizeTeamName,
 } from "../tournamentRules";
 
 const T0 = new Date("2026-06-01T08:00:00Z");
@@ -197,5 +198,20 @@ describe("canVoteInShowcase", () => {
 
   it("giải nháp không bình chọn được", () => {
     expect(canVoteInShowcase({ ...p, mode: "always", status: "draft" })).toBe(false);
+  });
+});
+
+describe("normalizeTeamName", () => {
+  it("cắt khoảng trắng đầu/cuối và gộp khoảng trắng liên tiếp", () => {
+    expect(normalizeTeamName("  Đội   Rồng  Vàng ")).toBe("Đội Rồng Vàng");
+  });
+
+  it("từ chối tên rỗng, chỉ có khoảng trắng, dài quá 80 ký tự hoặc không phải chuỗi", () => {
+    expect(normalizeTeamName("")).toBeNull();
+    expect(normalizeTeamName("   ")).toBeNull();
+    expect(normalizeTeamName("a".repeat(81))).toBeNull();
+    expect(normalizeTeamName("a".repeat(80))).toBe("a".repeat(80));
+    expect(normalizeTeamName(null)).toBeNull();
+    expect(normalizeTeamName(42)).toBeNull();
   });
 });

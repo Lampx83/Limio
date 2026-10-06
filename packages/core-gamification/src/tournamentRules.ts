@@ -141,3 +141,12 @@ export function canVoteInShowcase(input: {
   const access = showcaseAccess({ mode: input.mode, status: input.status, isCreatorOrAdmin: false, isParticipant: true });
   return access.canView && access.scope === "all";
 }
+
+export const TEAM_NAME_MAX = 80;
+
+/** Tên đội hợp lệ: cắt khoảng trắng đầu/cuối, gộp khoảng trắng liên tiếp, 1–80 ký tự. null nếu không hợp lệ. */
+export function normalizeTeamName(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const name = raw.replace(/\s+/g, " ").trim();
+  return name.length >= 1 && name.length <= TEAM_NAME_MAX ? name : null;
+}
