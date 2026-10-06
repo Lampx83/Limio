@@ -11,7 +11,7 @@
  *         --course=thiet-ke-ui-ux --out=./uiux.misconceptions.json
  *
  *   (b) Offline, đọc file đã trích sẵn — không cần nối tới DB production,
- *       không cần mật khẩu DB. Chỉ cần OPENAI_API_KEY:
+ *       không cần mật khẩu DB. Chỉ cần LLM_BASE_URL (+ LLM_SECKEY) hoặc OPENAI_API_KEY:
  *       pnpm --filter @feedbackme/core-feedback propose:misconceptions -- \
  *         --from-export=./tt3.export.json --out=./tt3.misconceptions.json
  */
@@ -23,6 +23,7 @@ import {
   type MisconceptionCatalogueEntry,
   type MisconceptionProposal,
 } from "../src/aiTutor/generators";
+import { createChatRoutingFetch, getChatModel, isSelfHostedChat } from "../src/aiTutor/llm";
 import fs from "node:fs";
 
 function arg(name: string): string | undefined {
@@ -33,7 +34,7 @@ function arg(name: string): string | undefined {
 const courseSlug = arg("course");
 const outPath = arg("out");
 const limit = Number(arg("limit") ?? "0");
-const model = arg("model") ?? "gpt-4o-mini";
+const model = arg("model") ?? getChatModel();
 /**
  * Chế độ offline: đọc câu hỏi từ file trích sẵn thay vì từ DB. Dùng khi dữ liệu
  * nằm ở production mà máy chạy script không nối tới được — không cần tunnel,
@@ -45,6 +46,8 @@ const fromExport = arg("from-export");
 const TAGGABLE = ["mcq", "true_false"] as const;
 
 async function resolveOpenAiKey(): Promise<string> {
+  // Chat đã chuyển sang LLM tự host (LLM_BASE_URL) — không cần OpenAI key.
+  if (isSelfHostedChat()) return "self-hosted-llm";
   if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
   if (fromExport) {
     // Offline thì không có DB prod để lấy khoá — phải có sẵn trong env.
@@ -180,7 +183,7 @@ async function main() {
       "Thiếu tham số. Một trong hai:\n" +
         "  --course=<slug> --out=<file.json>            (đọc DB)\n" +
         "  --from-export=<file.json> --out=<file.json>  (offline)\n" +
-        "Tuỳ chọn: --limit=N --model=gpt-4o",
+        "Tuỳ chọn: --limit=N --model=<tên model>",
     );
     process.exitCode = 1;
     return;
@@ -210,7 +213,10 @@ async function main() {
     `Nguồn: ${source.label}\nCâu cần xử lý: ${questions.length} · model=${model}\n`,
   );
 
-  const openai = new OpenAI({ apiKey: await resolveOpenAiKey() });
+  const openai = new OpenAI({
+    apiKey: await resolveOpenAiKey(),
+    fetch: createChatRoutingFetch(),
+  });
 
   const items: Array<{
     questionId: string;

@@ -24,6 +24,10 @@ const Schema = z.object({
 
   // Optional — features degrade if missing.
   OPENAI_API_KEY: optionalString(),
+  // Chat LLM tự host (vLLM) — xem packages/core-feedback/src/aiTutor/llm.ts.
+  LLM_BASE_URL: optionalUrl(),
+  LLM_CHAT_MODEL: optionalString(),
+  LLM_SECKEY: optionalString(),
   SECRETS_MASTER_KEY: optionalString(),
   SENTRY_DSN: optionalUrl(),
   NEXT_PUBLIC_SENTRY_DSN: optionalUrl(),

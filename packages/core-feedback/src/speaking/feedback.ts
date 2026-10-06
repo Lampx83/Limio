@@ -3,7 +3,7 @@ import { toFile } from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
+import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
 import { callJsonModel } from "../aiTutor/generators";
 import { resolveFeedbackVariant } from "../variant";
 import {
@@ -38,7 +38,6 @@ import type { OpenAiSource } from "../writing/feedback";
  */
 
 export const SPEAKING_STT_MODEL = "whisper-1";
-const DEFAULT_MODEL = "gpt-4o-mini";
 
 export interface AudioPayload {
   buffer: Buffer;

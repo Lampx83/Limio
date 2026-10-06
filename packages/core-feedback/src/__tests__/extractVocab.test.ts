@@ -8,6 +8,7 @@ import {
   extractVocabFromText,
   normalizeExtractedVocab,
 } from "../aiTutor/generators";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
 
@@ -118,11 +119,11 @@ describe("extractVocabFromText — ví token và trần AI (G2.5.1.2, G2.5.1.3)"
 });
 
 describe("yêu cầu gửi cho mô hình (G2.5.1.4, G2.5.1.5)", () => {
-  it("dùng gpt-4o-mini, JSON schema nghiêm ngặt, văn bản giảng viên nằm trong khối được rào ở tin nhắn người dùng", async () => {
+  it("dùng model chat mặc định, JSON schema nghiêm ngặt, văn bản giảng viên nằm trong khối được rào ở tin nhắn người dùng", async () => {
     const userId = await makeUser("prompt");
     const cap: Captured = { calls: 0 };
     await extractVocabFromText(userId, { rawText: RAW }, fakeOpenAI([], [], [1, 1], cap));
-    expect(cap.model).toBe("gpt-4o-mini");
+    expect(cap.model).toBe(DEFAULT_MODEL);
     expect(cap.response_format?.type).toBe("json_schema");
     expect(cap.response_format?.json_schema.strict).toBe(true);
     const [system, user] = cap.messages!;

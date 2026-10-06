@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { AiGenerationError } from "../aiTutor/generators";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
@@ -139,7 +140,7 @@ describe("requestSpeakingFeedback — happy path (G7a, G7b, G7d.1, G7d.2)", () =
       sourceKind: "llm", level: "self_regulation", elaboration: "elaborated", tokensIn: 400, tokensOut: 300,
     });
     expect(row.levels).toEqual(["task", "process", "self_regulation"]);
-    expect(row.generationContext).toMatchObject({ promptVersion: "g7.speaking.v1", sttModel: "whisper-1", model: "gpt-4o-mini", transcriptHash: tr.textHash });
+    expect(row.generationContext).toMatchObject({ promptVersion: "g7.speaking.v1", sttModel: "whisper-1", model: DEFAULT_MODEL, transcriptHash: tr.textHash });
     const body = row.body as { criteria: { key: string }[]; errors: unknown[] };
     expect(body.criteria.map((c) => c.key)).toEqual(["task", "language", "fluency", "coherence"]);
     expect(JSON.stringify(row.body)).not.toMatch(/pronunciation|score/i);
@@ -148,7 +149,7 @@ describe("requestSpeakingFeedback — happy path (G7a, G7b, G7d.1, G7d.2)", () =
     const after = await getTokenBudget(f.userId);
     expect(before.total - after.total).toBe(4000 + 700);
     const logs = await prisma.aiUsageLog.findMany({ where: { userId: f.userId } });
-    expect(logs.map((l) => l.model).sort()).toEqual(["gpt-4o-mini", "whisper-1"]);
+    expect(logs.map((l) => l.model).sort()).toEqual([DEFAULT_MODEL, "whisper-1"].sort());
     expect(await prisma.learningEvent.count({ where: { eventType: "speaking.feedback.generated", userId: f.userId } })).toBe(1);
   });
 

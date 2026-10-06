@@ -1,12 +1,11 @@
 import { isOpenaiOverloaded } from "@/lib/openaiResilience";
-import { createOpenaiClient } from "@/lib/openaiClient";
+import { createOpenaiClient, getChatOnlyApiKey } from "@/lib/openaiClient";
 import {
   AiTutorError,
   getOrCreateConversation,
   runChatTurn,
 } from "@feedbackme/core-feedback";
 import {
-  getIntegrationSecret,
   IntegrationError,
   isUserEnrolled,
 } from "@feedbackme/core-lms";
@@ -58,7 +57,7 @@ export async function POST(req: Request) {
   // Resolve OpenAI key from saved credential or env fallback.
   let openaiKey: string;
   try {
-    openaiKey = await getIntegrationSecret("openai");
+    openaiKey = await getChatOnlyApiKey();
   } catch (e) {
     if (e instanceof IntegrationError && e.code === "key_not_found") {
       return new Response(

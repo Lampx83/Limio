@@ -3,6 +3,7 @@ import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
 import { formatLessonContent } from "../aiTutor/generators";
 import { AiTutorError } from "../aiTutor/errors";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
 
 /**
@@ -75,7 +76,7 @@ describe("formatLessonContent — happy path", () => {
 
     const dayKey = new Date().toISOString().slice(0, 10);
     const log = await prisma.aiUsageLog.findUnique({
-      where: { userId_dayKey_model: { userId, dayKey, model: "gpt-4o-mini" } },
+      where: { userId_dayKey_model: { userId, dayKey, model: DEFAULT_MODEL } },
     });
     expect(log?.tokensInput).toBe(600);
     expect(log?.tokensOutput).toBe(400);
