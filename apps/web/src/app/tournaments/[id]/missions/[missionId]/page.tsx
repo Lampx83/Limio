@@ -296,8 +296,8 @@ function SubmissionStatusBlock({
         )}
         {verifyMode === "PEER_REVIEW" && submission.status === "pending" && (
           <p className="mt-1 text-sm">
-            Review hoàn thành: {completed} / {peerReviewerCount ?? total}.
-            <span className="ml-1 text-faint">XP reviewer sẽ award khi window đóng.</span>
+            Số lượt chấm đã xong: {completed} / {peerReviewerCount ?? total}.
+            <span className="ml-1 text-faint">Điểm XP cho người chấm sẽ được cộng khi hết thời gian chấm.</span>
           </p>
         )}
       </div>
@@ -333,10 +333,10 @@ function SubmissionStatusBlock({
           <div className="rounded-xl border border-token">
             <div className="border-b border-token bg-[rgb(var(--surface-muted))] px-3 py-2">
               <p className="text-sm font-semibold">
-                💬 Nhận xét bạn nhận được ({feedback.length} reviewer)
+                💬 Nhận xét bạn nhận được ({feedback.length} người chấm)
               </p>
               <p className="text-[11px] text-faint">
-                Ẩn danh người chấm. Hiện ngay khi reviewer nộp; điểm cuối là trung
+                Người chấm được ẩn danh. Nhận xét hiện ngay khi người chấm nộp; điểm cuối là trung
                 vị các đánh giá (sau khi chốt).
               </p>
             </div>

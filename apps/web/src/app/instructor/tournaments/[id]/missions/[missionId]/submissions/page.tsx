@@ -291,9 +291,9 @@ export default async function MissionSubmissionsPage({
         mission.submissions.length > 0 && (
           <section className="mt-4 overflow-hidden rounded-xl border border-token">
             <div className="flex items-center justify-between bg-[rgb(var(--surface-muted))] px-3 py-2">
-              <h2 className="text-sm font-semibold">🏆 Xếp hạng mission</h2>
+              <h2 className="text-sm font-semibold">🏆 Xếp hạng nhiệm vụ</h2>
               <span className="text-[11px] text-faint">
-                Điểm chưa chốt là <em>tạm tính</em> theo review đã hoàn thành
+                Điểm chưa chốt là <em>tạm tính</em> theo các lượt chấm đã xong
               </span>
             </div>
             <table className="w-full text-sm">
