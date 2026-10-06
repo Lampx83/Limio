@@ -380,122 +380,110 @@ export default async function MissionSubmissionsPage({
                     ? "Bị loại"
                     : "Chờ chấm";
 
+            // Vạch màu bên trái thẻ theo trạng thái: lướt qua là biết bài nào chờ chấm.
+            const accent =
+              s.status === "passed"
+                ? "border-l-success-500"
+                : s.status === "failed" || s.status === "disqualified"
+                  ? "border-l-danger-500"
+                  : "border-l-amber-400";
+            const repoHref = safeHref(payload.repoUrl);
+            const slidesHref = safeHttpUrl(payload.slidesUrl);
+            const demoHref = safeHttpUrl(payload.demoVideoUrl);
+            const writeup = showcaseWriteup(payload);
+            const linkCls =
+              "inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1 text-xs font-medium transition-colors hover:border-brand-400 hover:bg-brand-soft hover:text-brand-700 dark:hover:text-brand-300";
+
             return (
               <li
                 key={s.id}
-                className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-sm"
+                className={`overflow-hidden rounded-2xl border border-l-4 border-token bg-[rgb(var(--surface))] shadow-sm transition-shadow hover:shadow-md ${accent}`}
               >
-                <header className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      {isCollective && <Crown size={14} className="text-amber-500" />}
-                      <p className="font-semibold">
-                        {team?.name ?? s.user.displayName}
+                <div className="p-5">
+                  <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {isCollective && <Crown size={16} className="shrink-0 text-amber-500" />}
+                        <h3 className="text-lg font-bold leading-tight">
+                          {team?.name ?? s.user.displayName}
+                        </h3>
+                        {s.isLate && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+                            Nộp muộn
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-muted">
+                        {isCollective && team ? (
+                          <>
+                            Đội trưởng <span className="font-medium text-[rgb(var(--text))]">{s.user.displayName}</span>
+                            {" · "}
+                            {team.registrations.length} thành viên
+                          </>
+                        ) : (
+                          <>{s.user.email}</>
+                        )}
+                        {" · "}Nộp lúc {formatDateTime(s.submittedAt)}
                       </p>
                     </div>
-                    <p className="mt-0.5 text-xs text-faint">
-                      {isCollective && team ? (
-                        <>
-                          Captain: {s.user.displayName} ·{" "}
-                          {team.registrations.length} thành viên ·{" "}
-                        </>
-                      ) : (
-                        <>{s.user.email} · </>
-                      )}
-                      Nộp lúc {formatDateTime(s.submittedAt)}
-                      {s.isLate && (
-                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-                          Nộp muộn
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                  <OpenViewerButton
-                    submissionId={s.id}
-                    className="inline-flex items-center gap-1 rounded-full border border-brand-300 bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100 dark:border-brand-700 dark:text-brand-300"
-                  >
-                    <ViewLabel />
-                  </OpenViewerButton>
-                  <span
-                    className={`inline-flex items-center gap-1 rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-semibold ${statusCls}`}
-                  >
-                    <StatusIcon size={12} />
-                    {statusLabel}
-                    {s.finalScore !== null && (
-                      <span className="ml-1">
-                        · {Math.round(s.finalScore * 100)}%
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-semibold ${statusCls}`}
+                      >
+                        <StatusIcon size={12} />
+                        {statusLabel}
+                        {s.finalScore !== null && (
+                          <span className="ml-1">· {Math.round(s.finalScore * 100)}%</span>
+                        )}
                       </span>
-                    )}
-                  </span>
-                  </div>
-                </header>
-
-                {isCollective && team && (
-                  <p className="mt-2 text-xs text-muted">
-                    Thành viên:{" "}
-                    {team.registrations
-                      .map((r) => r.user.displayName)
-                      .join(", ")}
-                  </p>
-                )}
-
-                {payload.writeup && (
-                  <p className="mt-3 whitespace-pre-wrap rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-3 text-sm">
-                    {payload.writeup}
-                  </p>
-                )}
-
-                {(safeHref(payload.repoUrl) || safeHttpUrl(payload.slidesUrl) || safeHttpUrl(payload.demoVideoUrl)) && (
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {safeHref(payload.repoUrl) && (
-                      <a
-                        href={safeHref(payload.repoUrl) ?? undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
+                      <OpenViewerButton
+                        submissionId={s.id}
+                        className="btn-primary btn-sm !px-4 !py-2 text-sm font-semibold"
                       >
-                        <Code2 size={12} />
-                        Mã nguồn
-                      </a>
-                    )}
-                    {safeHttpUrl(payload.slidesUrl) && (
-                      <a
-                        href={safeHttpUrl(payload.slidesUrl) ?? undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
-                      >
-                        <Presentation size={12} />
-                        Slide
-                      </a>
-                    )}
-                    {safeHttpUrl(payload.demoVideoUrl) && (
-                      <a
-                        href={safeHttpUrl(payload.demoVideoUrl) ?? undefined}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium hover:bg-brand-50 hover:text-brand-700 dark:hover:bg-brand-950/40"
-                      >
-                        <Video size={12} />
-                        Video demo
-                      </a>
-                    )}
-                  </div>
-                )}
+                        <ViewLabel />
+                      </OpenViewerButton>
+                    </div>
+                  </header>
 
-                {/* Legacy artifactMarkdown (non-hackathon PEER_REVIEW) */}
-                {!payload.writeup &&
-                  !payload.repoUrl &&
-                  !payload.hackathon &&
-                  payload.artifactMarkdown && (
-                    <p className="mt-3 whitespace-pre-wrap rounded-lg border border-token bg-[rgb(var(--surface-muted))] p-3 text-sm">
-                      {payload.artifactMarkdown}
+                  {isCollective && team && (
+                    <p className="mt-3 text-xs leading-relaxed text-muted">
+                      <span className="font-medium text-faint">Thành viên:</span>{" "}
+                      {team.registrations.map((r) => r.user.displayName).join(", ")}
                     </p>
                   )}
 
-                {/* Action footer */}
-                <footer className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-token pt-3 text-xs">
+                  {writeup && (
+                    <p className="mt-4 whitespace-pre-wrap rounded-xl bg-[rgb(var(--surface-muted))] px-4 py-3 text-sm leading-relaxed">
+                      {writeup}
+                    </p>
+                  )}
+
+                  {(demoHref || slidesHref || repoHref) && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {demoHref && (
+                        <a href={demoHref} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                          <Video size={13} />
+                          Video demo
+                        </a>
+                      )}
+                      {slidesHref && (
+                        <a href={slidesHref} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                          <Presentation size={13} />
+                          Slide
+                        </a>
+                      )}
+                      {repoHref && (
+                        <a href={repoHref} target="_blank" rel="noopener noreferrer" className={linkCls}>
+                          <Code2 size={13} />
+                          Mã nguồn
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Chấm điểm / chia reviewer */}
+                <footer className="border-t border-token bg-[rgb(var(--surface-muted))]/60 px-5 py-3 text-xs">
                   {mission.verifyMode === "MANUAL_REVIEW" ? (
                     <MissionGradeForm
                       tournamentId={params.id}
@@ -520,14 +508,13 @@ export default async function MissionSubmissionsPage({
                   ) : (
                     <span className="text-faint">Hệ thống tự chấm</span>
                   )}
+                  {mission.verifyMode === "PEER_REVIEW" && (
+                    <ReviewDetailsPanel
+                      tournamentId={params.id}
+                      submissionId={s.id}
+                    />
+                  )}
                 </footer>
-
-                {mission.verifyMode === "PEER_REVIEW" && (
-                  <ReviewDetailsPanel
-                    tournamentId={params.id}
-                    submissionId={s.id}
-                  />
-                )}
               </li>
             );
           })}
