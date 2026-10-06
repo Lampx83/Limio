@@ -56,6 +56,14 @@ export function topVotedSubmissionIds(
   return out;
 }
 
+/**
+ * Phần mô tả của đội: chỉ lấy chữ học viên viết. `artifactMarkdown` của form nhóm (hackathon) là đoạn
+ * tóm tắt link tự sinh, lặp lại đúng các link đã có chip, nên chỉ dùng cho bài chấm chéo kiểu cũ.
+ */
+export function showcaseWriteup(p: { hackathon?: boolean; writeup?: string; artifactMarkdown?: string }): string | null {
+  return p.writeup || (p.hackathon ? null : p.artifactMarkdown) || null;
+}
+
 export function paginate<T>(items: T[], page: number, size: number) {
   const total = items.length;
   const pages = Math.max(1, Math.ceil(total / size));

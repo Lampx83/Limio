@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Code2, Crown, ExternalLink, Eye, Play, Presentation, Video, X } from "lucide-react";
 import VoteButton from "./VoteButton";
+import MissionGradeForm from "@/app/instructor/tournaments/[id]/missions/[missionId]/submissions/MissionGradeForm";
 import { showcaseEmbed } from "@/lib/showcaseEmbed";
 import { stepIndex } from "@/lib/tournamentShowcase";
 
@@ -29,6 +30,8 @@ export type ViewerItem = {
   voteDisabled: boolean;
   voteDisabledReason: string;
   isTopVoted: boolean;
+  /** Chỉ trang chấm điểm của GV (mission "GV chấm") truyền vào: hiện nút Đạt / Chưa đạt trong khung. */
+  grade?: { status: "pending" | "passed" | "failed" | "disqualified" };
 };
 
 type Ctx = { open: (submissionId: string) => void };
@@ -355,6 +358,23 @@ function ViewerDialog({
             </div>
           ) : (
             <p className="text-xs text-faint">Đội không viết mô tả.</p>
+          )}
+
+          {item.grade && (
+            <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-faint">Chấm bài</p>
+              <div className="mt-2 text-xs">
+                <MissionGradeForm
+                  tournamentId={tournamentId}
+                  submissionId={item.submissionId}
+                  status={item.grade.status}
+                  onGraded={onNext ?? undefined}
+                />
+              </div>
+              <p className="mt-2 text-[11px] text-faint">
+                {onNext ? "Chấm xong tự chuyển sang bài kế." : "Đây là bài cuối danh sách."}
+              </p>
+            </div>
           )}
 
           <p className="hidden text-[11px] text-faint lg:block">Phím ← → chuyển bài, Esc đóng.</p>
