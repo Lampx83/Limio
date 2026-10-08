@@ -57,15 +57,42 @@ export function submitWarning(input: {
 }
 
 /**
- * Lời nhắc khi rời trang giữa chừng. Null nếu chưa chọn đáp án nào (không có gì để mất).
- *
- * Nói đúng sự thật về cách hệ thống đang chạy: đáp án chỉ được gửi lên lúc bấm
- * "Nộp bài". Vì vậy rời trang trước đó là mất các câu đã chọn, dù lượt làm bài
- * vẫn còn và đồng hồ vẫn chạy khi quay lại.
+ * Lời nhắc khi rời trang mà còn câu chưa được lưu lên máy chủ (thiếu số sao, mất mạng,
+ * hoặc vừa chọn xong chưa kịp lưu). Null nếu mọi câu đã chọn đều đã lưu: lượt làm bài
+ * vẫn còn, người học vào lại là làm tiếp.
  */
-export function leaveWarning(answeredCount: number): string | null {
-  if (answeredCount <= 0) return null;
-  return `Bạn chưa nộp bài. ${answeredCount} câu bạn đã chọn chỉ được ghi nhận khi bạn bấm "Nộp bài", nên nếu rời đi bây giờ bạn sẽ phải chọn lại. Bạn vẫn muốn rời đi?`;
+export function leaveWarning(unsavedNumbers: number[]): string | null {
+  if (unsavedNumbers.length === 0) return null;
+  return `Câu ${joinNumbers(unsavedNumbers)} chưa được lưu. Nếu rời đi bây giờ, ${
+    unsavedNumbers.length === 1 ? "câu đó" : "những câu đó"
+  } sẽ không còn khi bạn quay lại. Bạn vẫn muốn rời đi?`;
+}
+
+/** Chữ ký của một đáp án (nội dung + độ tự tin), để biết câu nào đã lưu đúng bản đang hiện. */
+export function answerSignature(response: unknown, confidence: number | null): string {
+  return JSON.stringify([response ?? null, confidence ?? null]);
+}
+
+export type SaveState =
+  | { kind: "idle" }
+  | { kind: "saving" }
+  | { kind: "saved"; at: number }
+  | { kind: "error" };
+
+/**
+ * Dòng trạng thái lưu bài. `formatClock` do nơi gọi truyền vào (giờ Việt Nam) để hàm
+ * này không phụ thuộc múi giờ của máy chạy kiểm thử.
+ */
+export function saveStatusText(
+  state: SaveState,
+  unsavedCount: number,
+  formatClock: (ms: number) => string,
+): string {
+  if (state.kind === "saving") return "Đang lưu…";
+  if (state.kind === "error") return "Chưa lưu được. Bạn kiểm tra kết nối mạng rồi chọn lại đáp án.";
+  if (unsavedCount > 0) return `Còn ${unsavedCount} câu chưa được lưu.`;
+  if (state.kind === "saved") return `Đã lưu lúc ${formatClock(state.at)}.`;
+  return "Bài làm được lưu ngay khi bạn chọn xong mỗi câu.";
 }
 
 /** Khoá localStorage cho các câu đánh dấu xem lại của một lượt làm bài. */

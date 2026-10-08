@@ -469,6 +469,95 @@ describe("B12 — thời gian thật của từng câu", () => {
     expect(row.isCorrect).toBe(false);
   });
 
+  describe("lưu lại cùng một đáp án (máy khách lưu ngay khi chọn rồi gửi lại lúc nộp)", () => {
+    const answeredEvents = (userId: string, attemptId: string) =>
+      prisma.learningEvent.count({
+        where: {
+          userId,
+          eventType: LearningEventType.QuizQuestionAnswered,
+          payload: { path: ["attemptId"], equals: attemptId },
+        },
+      });
+
+    it("gửi lại đúng đáp án cũ không tính là lần sửa và không sinh thêm sự kiện", async () => {
+      const { learnerId, quizId, questionIds } = await setup("b12f");
+      const att = await startAttempt(learnerId, quizId);
+      const right = await getOptionId(questionIds[0]!, "2");
+      await new Promise((r) => setTimeout(r, 60));
+
+      await submitAnswer(learnerId, att.attemptId, {
+        questionId: questionIds[0]!,
+        response: [right],
+        latencyMs: 20,
+      });
+      const first = await prisma.answerResponse.findFirstOrThrow({
+        where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+      });
+      await new Promise((r) => setTimeout(r, 30));
+      await submitAnswer(learnerId, att.attemptId, {
+        questionId: questionIds[0]!,
+        response: [right],
+        latencyMs: 55,
+      });
+
+      const row = await prisma.answerResponse.findFirstOrThrow({
+        where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+      });
+      expect(row.revisionCount).toBe(0);
+      expect(await answeredEvents(learnerId, att.attemptId)).toBe(1);
+      // Thời điểm trả lời giữ ở lần chọn thật, không dời sang lúc gửi lại.
+      expect(row.answeredAt.getTime()).toBe(first.answeredAt.getTime());
+      expect(row.responseTimeMs).toBe(first.responseTimeMs);
+    });
+
+    it("gửi lại đáp án cũ kèm thời gian dài hơn thì cập nhật thời gian riêng của câu", async () => {
+      const { learnerId, quizId, questionIds } = await setup("b12g");
+      const att = await startAttempt(learnerId, quizId);
+      const right = await getOptionId(questionIds[0]!, "2");
+      await new Promise((r) => setTimeout(r, 120));
+
+      await submitAnswer(learnerId, att.attemptId, { questionId: questionIds[0]!, response: [right], latencyMs: 30 });
+      await submitAnswer(learnerId, att.attemptId, { questionId: questionIds[0]!, response: [right], latencyMs: 90 });
+
+      const row = await prisma.answerResponse.findFirstOrThrow({
+        where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+      });
+      expect(row.latencyMs).toBe(90);
+      expect(row.revisionCount).toBe(0);
+    });
+
+    it("thời gian gửi lại ngắn hơn thì không ghi đè số đã cộng dồn", async () => {
+      const { learnerId, quizId, questionIds } = await setup("b12h");
+      const att = await startAttempt(learnerId, quizId);
+      const right = await getOptionId(questionIds[0]!, "2");
+      await new Promise((r) => setTimeout(r, 120));
+
+      await submitAnswer(learnerId, att.attemptId, { questionId: questionIds[0]!, response: [right], latencyMs: 90 });
+      await submitAnswer(learnerId, att.attemptId, { questionId: questionIds[0]!, response: [right], latencyMs: 30 });
+
+      const row = await prisma.answerResponse.findFirstOrThrow({
+        where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+      });
+      expect(row.latencyMs).toBe(90);
+    });
+
+    it("đổi độ tự tin dù giữ nguyên đáp án vẫn là một lần sửa có sự kiện", async () => {
+      const { learnerId, quizId, questionIds } = await setup("b12i", { requireConfidence: true });
+      const att = await startAttempt(learnerId, quizId);
+      const right = await getOptionId(questionIds[0]!, "2");
+
+      await submitAnswer(learnerId, att.attemptId, { questionId: questionIds[0]!, response: [right], confidence: 2 });
+      await submitAnswer(learnerId, att.attemptId, { questionId: questionIds[0]!, response: [right], confidence: 5 });
+
+      const row = await prisma.answerResponse.findFirstOrThrow({
+        where: { attemptId: att.attemptId, questionId: questionIds[0]! },
+      });
+      expect(row.revisionCount).toBe(1);
+      expect(row.confidence).toBe(5);
+      expect(await answeredEvents(learnerId, att.attemptId)).toBe(2);
+    });
+  });
+
   it("từ chối latencyMs âm hoặc quá trần hai tiếng", async () => {
     const { learnerId, quizId, questionIds } = await setup("b12e");
     const att = await startAttempt(learnerId, quizId);

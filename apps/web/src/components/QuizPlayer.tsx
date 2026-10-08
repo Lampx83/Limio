@@ -26,13 +26,17 @@ import { Check, Flag } from "lucide-react";
 import ConfidenceStars from "@/components/quiz/ConfidenceStars";
 import { setQuizLeaveGuard } from "@/lib/quizLeaveGuard";
 import {
+  answerSignature,
   flagStorageKey,
   leaveWarning,
   parseFlagged,
   questionStatus,
+  saveStatusText,
   submitWarning,
   type QuestionStatus,
+  type SaveState,
 } from "@/lib/quizPlayerState";
+import { formatTime } from "@/lib/datetime";
 import { plainToRichHtml, htmlToPlainText } from "@/lib/richText";
 
 type QType =
@@ -132,9 +136,22 @@ export default function QuizPlayer({
   const [now, setNow] = useState(() => Date.now());
   /** Câu người học tự đánh dấu "xem lại". Chỉ nằm ở trình duyệt, không gửi lên máy chủ. */
   const [flagged, setFlagged] = useState<Set<string>>(new Set());
-  /** Số câu đã chọn đủ, để hộp "rời trang" và beforeunload biết có gì để mất. */
-  const answeredRef = useRef(0);
+  /** Các câu chọn dở mà chưa lưu được lên máy chủ (số thứ tự từ 1), để hộp "rời trang" và beforeunload biết có gì để mất. */
+  const unsavedRef = useRef<number[]>([]);
   const submittedRef = useRef(false);
+  /**
+   * Luôn là đáp án MỚI NHẤT. Hàm lưu được gọi qua setTimeout/onBlur từ lần vẽ trước nên
+   * nếu đọc thẳng `answers` sẽ thấy dữ liệu cũ — đó là lỗi khiến đáp án chỉ được lưu
+   * lúc bấm Nộp bài (chọn xong không gửi gì lên máy chủ).
+   */
+  const answersRef = useRef<Record<string, AnswerState>>({});
+  /** Chữ ký bản đã lưu thành công của từng câu; so với bản đang hiện để biết câu nào chưa lưu. */
+  const savedSigRef = useRef<Record<string, string>>({});
+  const [savedSig, setSavedSig] = useState<Record<string, string>>({});
+  const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
+  /** Mỗi câu một hàng đợi: hai lần lưu cùng một câu không bao giờ chạy chồng nhau. */
+  const saveQueueRef = useRef<Record<string, Promise<void>>>({});
+  answersRef.current = answers;
 
   useEffect(() => {
     fetch(apiUrl(`/api/attempts/${attemptId}`))
@@ -149,6 +166,10 @@ export default function QuizPlayer({
           };
         }
         setAnswers(init);
+        const sigs: Record<string, string> = {};
+        for (const r of d.responses) sigs[r.questionId] = answerSignature(r.response, r.confidence);
+        savedSigRef.current = sigs;
+        setSavedSig(sigs);
         try {
           setFlagged(
             parseFlagged(
@@ -162,11 +183,11 @@ export default function QuizPlayer({
       });
   }, [attemptId]);
 
-  // Rời trang khi đã chọn đáp án mà chưa nộp: hỏi lại. Đáp án chỉ được gửi lên lúc bấm Nộp bài.
+  // Rời trang khi còn câu chưa lưu được: hỏi lại. Câu đã lưu thì không mất, vào lại là làm tiếp.
   useEffect(() => {
-    setQuizLeaveGuard(() => (submittedRef.current ? null : leaveWarning(answeredRef.current)));
+    setQuizLeaveGuard(() => (submittedRef.current ? null : leaveWarning(unsavedRef.current)));
     function onBeforeUnload(e: BeforeUnloadEvent) {
-      if (submittedRef.current || answeredRef.current <= 0) return;
+      if (submittedRef.current || unsavedRef.current.length === 0) return;
       e.preventDefault();
       e.returnValue = "";
     }
@@ -325,21 +346,47 @@ export default function QuizPlayer({
     });
   }
 
-  async function saveAnswer(question: Question) {
-    const a = answers[question.id];
+  /**
+   * Lưu đáp án một câu lên máy chủ. Xếp hàng theo từng câu để không bao giờ chạy chồng
+   * nhau, và bỏ qua nếu bản đang hiện đã lưu rồi (trừ khi `force`: lúc nộp bài gửi lại để
+   * chốt thời gian riêng của câu — máy chủ không tính đó là một lần sửa).
+   */
+  function saveAnswer(question: Question, opts?: { force?: boolean }): Promise<void> {
+    const prev = saveQueueRef.current[question.id] ?? Promise.resolve();
+    const next = prev.then(() => saveAnswerNow(question, opts));
+    saveQueueRef.current[question.id] = next.catch(() => undefined);
+    return next;
+  }
+
+  async function saveAnswerNow(question: Question, opts?: { force?: boolean }): Promise<void> {
+    // Chờ một nhịp để lần vẽ lại sau thao tác của người học kịp cập nhật `answersRef`.
+    await Promise.resolve();
+    const a = answersRef.current[question.id];
     if (!a) return;
     if (isResponseEmpty(question, a.response)) return;
     if (quiz.requireConfidence && a.confidence === null) return;
-    await fetch(apiUrl(`/api/attempts/${attemptId}/answers`), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        questionId: question.id,
-        response: a.response,
-        confidence: a.confidence ?? undefined,
-        latencyMs: latencyRef.current[question.id],
-      }),
-    });
+    const sig = answerSignature(a.response, a.confidence);
+    if (!opts?.force && savedSigRef.current[question.id] === sig) return;
+    setSaveState({ kind: "saving" });
+    try {
+      const res = await fetch(apiUrl(`/api/attempts/${attemptId}/answers`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: question.id,
+          response: a.response,
+          confidence: a.confidence ?? undefined,
+          latencyMs: latencyRef.current[question.id],
+        }),
+      });
+      if (!res.ok) throw new Error(`save_failed_${res.status}`);
+      savedSigRef.current = { ...savedSigRef.current, [question.id]: sig };
+      setSavedSig(savedSigRef.current);
+      setSaveState({ kind: "saved", at: Date.now() });
+    } catch (e) {
+      setSaveState({ kind: "error" });
+      throw e;
+    }
   }
 
   /** Đếm ngay tại thời điểm gọi — `answeredCount` bên dưới nằm sau early return. */
@@ -386,8 +433,20 @@ export default function QuizPlayer({
     flushLatency();
     setSubmitting(true);
     setError(null);
-    for (const q of quiz.questions) {
-      await saveAnswer(q);
+    const failed: number[] = [];
+    for (const [i, q] of quiz.questions.entries()) {
+      try {
+        await saveAnswer(q, { force: true });
+      } catch {
+        failed.push(i + 1);
+      }
+    }
+    // Nộp tay mà có câu không lưu được (mất mạng) thì dừng: nộp tiếp là bỏ mất những câu đó.
+    // Hết giờ tự nộp thì vẫn phải nộp, vì không còn cách nào khác.
+    if (failed.length > 0 && !opts?.auto) {
+      setError(`Chưa lưu được câu ${failed.join(", ")}. Bạn kiểm tra kết nối mạng rồi bấm Nộp bài lại.`);
+      setSubmitting(false);
+      return;
     }
     const res = await fetch(apiUrl(`/api/attempts/${attemptId}/submit`), { method: "POST" });
     if (!res.ok) {
@@ -404,8 +463,15 @@ export default function QuizPlayer({
     (q) => !isAnswerIncomplete(q, answers[q.id]),
   ).length;
 
-  // Tính cả câu mới chọn đáp án mà thiếu số sao: rời trang là mất luôn những câu đó.
-  answeredRef.current = quiz.questions.filter((q) => statusOf(q) !== "empty").length;
+  // Câu đã chọn mà bản đang hiện chưa lưu được: thiếu số sao, mất mạng, hoặc vừa chọn xong chưa kịp gửi.
+  const unsavedNumbers = quiz.questions
+    .map((q, i) => ({ q, n: i + 1 }))
+    .filter(({ q }) => {
+      if (statusOf(q) === "empty") return false;
+      return savedSig[q.id] !== answerSignature(answers[q.id]?.response, answers[q.id]?.confidence ?? null);
+    })
+    .map(({ n }) => n);
+  unsavedRef.current = unsavedNumbers;
 
   // Timer: dùng attempt.startedAt + quiz.timeLimitSec để tính thời gian còn lại.
   // Không auto-submit (khác exam-take) — quiz LMS không cần proctoring.
@@ -605,9 +671,13 @@ export default function QuizPlayer({
             )}
           </div>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-muted">
-          Bài chưa được nộp. Đáp án của bạn chỉ được ghi nhận khi bạn bấm “Nộp bài”, vì vậy hãy nộp bài trước khi
-          rời trang.
+        <p className="mt-2 text-xs leading-relaxed text-muted" aria-live="polite">
+          <span className="font-medium text-[rgb(var(--text))]">
+            {saveStatusText(saveState, unsavedNumbers.length, (ms) =>
+              formatTime(ms, { hour: "2-digit", minute: "2-digit" }),
+            )}
+          </span>{" "}
+          Bài chưa được nộp: thoát ra thì vào lại bạn làm tiếp từ chỗ đã lưu. Nhớ bấm “Nộp bài” khi xong.
         </p>
       </div>
 
