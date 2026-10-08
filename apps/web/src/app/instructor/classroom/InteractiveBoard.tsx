@@ -10,6 +10,7 @@ import {
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
+import { shrinkImageForUpload } from "@/lib/resizeImage";
 import { formatVN } from "@/lib/datetime";
 import {
   BOARD_NOTE_COLORS,
@@ -439,8 +440,9 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
   // Trả về URL TUYỆT ĐỐI (qua shareUrl) để khớp isValidAttachmentUrl (http/https)
   // dùng chung ở cả note create/edit — dán URL ngoài hay upload nội bộ đều
   // đi qua cùng 1 validation.
-  const uploadAttachmentFile = async (file: File): Promise<string> => {
+  const uploadAttachmentFile = async (original: File): Promise<string> => {
     if (!current) throw new Error("Chưa mở board");
+    const file = await shrinkImageForUpload(original); // ảnh thu nhỏ; PDF giữ nguyên
     if (file.size > BOARD_ATTACHMENT_MAX_BYTES) {
       throw new Error(`File quá lớn — tối đa ${Math.round(BOARD_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`);
     }

@@ -1,22 +1,9 @@
-import { randomBytes } from "node:crypto";
 import { prisma } from "@feedbackme/db";
 import { rateLimit } from "@/lib/realtime/rateLimit";
-import { storageFor } from "@/lib/storage";
-import { boardAttachmentKey } from "@/lib/storage-keys";
+import { saveBoardImage } from "@/lib/boardImage";
 import { BOARD_ATTACHMENT_MAX_BYTES } from "@/app/instructor/classroom/boardNoteStyle";
 
 export const runtime = "nodejs";
-
-// Nhận dạng định dạng theo magic bytes — không tin Content-Type do client gửi.
-function sniffImageExt(buf: Buffer): "png" | "jpg" | "gif" | "webp" | null {
-  if (buf.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((b, i) => buf[i] === b)) return "png";
-  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpg";
-  if (buf.length >= 6 && buf.subarray(0, 4).toString("ascii") === "GIF8") return "gif";
-  if (buf.length >= 12 && buf.subarray(0, 4).toString("ascii") === "RIFF" && buf.subarray(8, 12).toString("ascii") === "WEBP") {
-    return "webp";
-  }
-  return null;
-}
 
 // POST — public: học viên tải ảnh lên làm đính kèm note (PNG/JPEG/GIF/WebP, ≤5MB).
 // Chỉ ảnh (không PDF) vì học viên không đăng nhập; chỉ nhận trên board còn mở.
@@ -71,15 +58,9 @@ export async function POST(req: Request, { params }: { params: { code: string } 
     );
   }
 
-  const buf = Buffer.from(await file.arrayBuffer());
-  const ext = sniffImageExt(buf);
-  if (!ext) return Response.json({ error: "unsupported_media_type" }, { status: 415 });
+  // Kiểm magic bytes + giải mã thử, thu nhỏ, bỏ EXIF, tạo thumbnail (xem lib/boardImage).
+  const saved = await saveBoardImage(board.id, Buffer.from(await file.arrayBuffer()));
+  if (!saved) return Response.json({ error: "unsupported_media_type" }, { status: 415 });
 
-  const now = new Date();
-  const filename = `${board.id}-${now.getTime()}-${randomBytes(6).toString("hex")}.${ext}`;
-  const key = boardAttachmentKey(now, filename);
-  const mime = ext === "jpg" ? "image/jpeg" : `image/${ext}`;
-  await storageFor(key).put(key.key, buf, mime);
-
-  return Response.json({ url: `/api/board-attachments/${filename}` }, { status: 201 });
+  return Response.json({ url: `/api/board-attachments/${saved.filename}` }, { status: 201 });
 }

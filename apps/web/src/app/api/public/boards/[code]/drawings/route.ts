@@ -1,13 +1,9 @@
-import { randomBytes } from "node:crypto";
 import { prisma } from "@feedbackme/db";
 import { rateLimit } from "@/lib/realtime/rateLimit";
-import { storageFor } from "@/lib/storage";
-import { boardAttachmentKey } from "@/lib/storage-keys";
+import { saveBoardImage, sniffImageExt } from "@/lib/boardImage";
 import { BOARD_ATTACHMENT_MAX_BYTES } from "@/app/instructor/classroom/boardNoteStyle";
 
 export const runtime = "nodejs";
-
-const PNG_MAGIC = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 // POST — public: học viên tải hình vẽ Draw-it (PNG) lên, trả về URL để đính vào note.
 // Chỉ nhận trên board bật drawingMode và còn mở; chỉ PNG (kiểm cả magic bytes, không tin Content-Type).
@@ -61,14 +57,11 @@ export async function POST(req: Request, { params }: { params: { code: string } 
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
-  if (!PNG_MAGIC.every((b, i) => buf[i] === b)) {
+  if (sniffImageExt(buf) !== "png") {
     return Response.json({ error: "unsupported_media_type" }, { status: 415 });
   }
+  const saved = await saveBoardImage(board.id, buf);
+  if (!saved) return Response.json({ error: "unsupported_media_type" }, { status: 415 });
 
-  const now = new Date();
-  const filename = `${board.id}-${now.getTime()}-${randomBytes(6).toString("hex")}.png`;
-  const key = boardAttachmentKey(now, filename);
-  await storageFor(key).put(key.key, buf, "image/png");
-
-  return Response.json({ url: `/api/board-attachments/${filename}` }, { status: 201 });
+  return Response.json({ url: `/api/board-attachments/${saved.filename}` }, { status: 201 });
 }
