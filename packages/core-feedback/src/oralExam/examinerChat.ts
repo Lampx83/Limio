@@ -37,6 +37,35 @@ const LANGUAGE_DIRECTIVE: Record<"vi" | "en" | "zh", string> = {
   zh: "全程用中文提问和回答，包括开场的第一个问题——不要混用越南语或英语。",
 };
 
+type OralLanguage = "vi" | "en" | "zh";
+
+// Phần còn lại của prompt viết bằng tiếng Việt. Riêng đề en/zh, nếu chỉ có một dòng chỉ thị ở cuối thì lượt
+// chào (chưa có câu trả lời nào của sinh viên để mô hình bám theo) vẫn trôi về tiếng Việt — nên đặt chỉ thị
+// ở ĐẦU prompt và nói rõ phạm vi (chào, giới thiệu, làm quen, câu hỏi, lời kết). Đề tiếng Việt giữ nguyên.
+const LANGUAGE_HEADER: Record<OralLanguage, string> = {
+  vi: "",
+  en: "LANGUAGE: Everything you say to the student must be in English — greeting, self-introduction, warm-up, questions and closing. The instructions below are written in Vietnamese for the exam designer only; never reply in Vietnamese or mix Vietnamese into your reply.\n\n",
+  zh: "语言：你对学生说的每一句话——问候、自我介绍、热身问题、提问和结束语——都必须使用中文。下面的指令用越南语写给出题教师看，你绝不能用越南语回复，也不要夹杂越南语。\n\n",
+};
+
+// Các cụm cố định mà prompt bắt AI nói nguyên văn — phải theo ngôn ngữ của đề, nếu không đề en/zh vẫn
+// nghe một câu tiếng Việt giữa buổi.
+const FINAL_QUESTION_CUE: Record<OralLanguage, string> = {
+  vi: "Đây là câu hỏi cuối.",
+  en: "This is the final question.",
+  zh: "这是最后一个问题。",
+};
+const REVIEW_HEADING: Record<OralLanguage, string> = {
+  vi: "Nhìn lại buổi vấn đáp",
+  en: "Looking back at the oral exam",
+  zh: "回顾本次口试",
+};
+const FALLBACK_CLOSING: Record<OralLanguage, string> = {
+  vi: "Cảm ơn bạn đã tham gia. Buổi vấn đáp đã hoàn tất.",
+  en: "Thank you for taking part. The oral exam is now complete.",
+  zh: "感谢你的参与。口试到此结束。",
+};
+
 /**
  * A6.7 — Buổi vấn đáp có nhiều PHA, mỗi pha một bộ quy tắc:
  * - warmup: chỉ khi đề bật oralWarmup. Lượt AI đầu chỉ chào, giới thiệu và hỏi một câu làm quen — CHƯA
@@ -79,13 +108,17 @@ export interface OralPromptTopic {
   brief: string;
 }
 
-export function buildOralSystemPrompt(params: {
+export function buildOralSystemPrompt(params: Parameters<typeof buildOralPromptBody>[0]): string {
+  return LANGUAGE_HEADER[params.language] + buildOralPromptBody(params);
+}
+
+function buildOralPromptBody(params: {
   /** null khi đề vấn đáp không gắn khoá học (đề độc lập). */
   courseTitle: string | null;
   examTitle: string;
   contextChunks: string[];
   phase: OralPhase;
-  language: "vi" | "en" | "zh";
+  language: OralLanguage;
   /** GV tự soạn — chèn thêm, KHÔNG thay thế nguyên tắc cứng bên dưới. */
   examinerInstructions?: string | null;
   /** Chủ đề hệ thống giao cho sinh viên này; null = đề không có chủ đề riêng. */
@@ -113,7 +146,7 @@ ${
     params.closingSummary
       ? `Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết, TUYỆT ĐỐI KHÔNG đặt thêm câu hỏi nào, gồm 2 phần:
 1. Một câu cảm ơn sinh viên (gọi tên nếu bạn biết) và thông báo buổi vấn đáp đã hoàn tất.
-2. Mục "Nhìn lại buổi vấn đáp": 2–3 điểm sinh viên làm tốt và 2–3 điểm nên cải thiện, mỗi ý MỘT câu ngắn, dựa trên CHÍNH các câu trả lời trong hội thoại (nhắc đúng ý họ đã nói). KHÔNG cho điểm số hay xếp loại, KHÔNG nêu đáp án đầy đủ, KHÔNG hứa hẹn kết quả — điểm do giảng viên quyết định sau.`
+2. Mục "${REVIEW_HEADING[params.language]}": 2–3 điểm sinh viên làm tốt và 2–3 điểm nên cải thiện, mỗi ý MỘT câu ngắn, dựa trên CHÍNH các câu trả lời trong hội thoại (nhắc đúng ý họ đã nói). KHÔNG cho điểm số hay xếp loại, KHÔNG nêu đáp án đầy đủ, KHÔNG hứa hẹn kết quả — điểm do giảng viên quyết định sau.`
       : "Buổi vấn đáp đã đến lúc kết thúc. Viết lời kết ngắn gọn (2-3 câu), TUYỆT ĐỐI KHÔNG đặt thêm câu hỏi: cảm ơn sinh viên (gọi tên nếu bạn biết), KHÔNG chấm điểm, KHÔNG tiết lộ đúng/sai, KHÔNG hứa hẹn kết quả — chỉ thông báo buổi vấn đáp đã hoàn tất."
   }`;
   }
@@ -125,7 +158,7 @@ ${
   const timingBlock = params.timing
     ? `\nThời gian buổi vấn đáp: tổng ${params.timing.durationMin} phút, đã trôi khoảng ${params.timing.elapsedMin} phút (còn khoảng ${remainingMin} phút). ${
         lastQuestion
-          ? 'Đã đến lúc chốt: lượt này hỏi MỘT câu chốt cuối, mở đầu bằng đúng cụm "Đây là câu hỏi cuối." và không mở thêm chủ đề mới.'
+          ? `Đã đến lúc chốt: lượt này hỏi MỘT câu chốt cuối, mở đầu bằng đúng cụm "${FINAL_QUESTION_CUE[params.language]}" và không mở thêm chủ đề mới.`
           : "Còn nhiều thời gian: đừng nhắc số phút ở mỗi lượt."
       }\n`
     : "";
@@ -200,8 +233,6 @@ export function stripEvaluativeOpener(text: string): string {
   return rest.charAt(0).toLocaleUpperCase("vi") + rest.slice(1);
 }
 
-const FALLBACK_CLOSING = "Cảm ơn bạn đã tham gia. Buổi vấn đáp đã hoàn tất.";
-
 /**
  * Lời kết hợp lệ = không kết thúc bằng câu hỏi. Dữ liệu thật: khoảng 30% lần kết thúc mô hình bỏ qua lệnh "viết lời
  * kết" (vì cả lịch sử toàn hỏi–đáp) và hỏi tiếp, nên buổi đóng lại bằng một câu hỏi dang dở và sinh viên không
@@ -213,10 +244,10 @@ export function isValidClosing(text: string): boolean {
 }
 
 /** Tin nhắn cuối cùng (vai "user") ép mô hình chuyển sang viết lời kết — mạnh hơn hẳn chỉ dặn trong system. */
-function closingDirective(summary: boolean, retry: boolean): ChatMessage {
+function closingDirective(summary: boolean, retry: boolean, language: OralLanguage): ChatMessage {
   return {
     role: "user",
-    content: `[Thông báo của hệ thống, không phải sinh viên nói] ${retry ? "Bạn vừa đặt một câu hỏi, nhưng buổi vấn đáp ĐÃ HẾT GIỜ. " : "Buổi vấn đáp đã hết giờ. "}Hãy viết lời kết ngay bây giờ theo hướng dẫn${summary ? ' (có mục "Nhìn lại buổi vấn đáp")' : ""}. Không đặt thêm câu hỏi nào.`,
+    content: `[Thông báo của hệ thống, không phải sinh viên nói] ${retry ? "Bạn vừa đặt một câu hỏi, nhưng buổi vấn đáp ĐÃ HẾT GIỜ. " : "Buổi vấn đáp đã hết giờ. "}Hãy viết lời kết ngay bây giờ theo hướng dẫn${summary ? ` (có mục "${REVIEW_HEADING[language]}")` : ""}. Không đặt thêm câu hỏi nào. ${LANGUAGE_DIRECTIVE[language]}`,
   };
 }
 
@@ -227,13 +258,14 @@ function closingDirective(summary: boolean, retry: boolean): ChatMessage {
 async function generateClosing(params: {
   messages: ChatMessage[];
   summary: boolean;
+  language: OralLanguage;
   computeChat: ChatComputeFn;
   onDelta?: (delta: string) => void;
 }): Promise<{ content: string; inputTokens: number; outputTokens: number }> {
   let inputTokens = 0;
   let outputTokens = 0;
   for (const retry of [false, true]) {
-    const r = await params.computeChat([...params.messages, closingDirective(params.summary, retry)]);
+    const r = await params.computeChat([...params.messages, closingDirective(params.summary, retry, params.language)]);
     inputTokens += r.inputTokens;
     outputTokens += r.outputTokens;
     if (isValidClosing(r.content)) {
@@ -241,8 +273,9 @@ async function generateClosing(params: {
       return { content: r.content, inputTokens, outputTokens };
     }
   }
-  params.onDelta?.(FALLBACK_CLOSING);
-  return { content: FALLBACK_CLOSING, inputTokens, outputTokens };
+  const fallback = FALLBACK_CLOSING[params.language];
+  params.onDelta?.(fallback);
+  return { content: fallback, inputTokens, outputTokens };
 }
 
 /** Số ký tự đầu được giữ lại chờ quyết định lọc — đủ chứa "Rất chính xác, Nguyễn Văn An!". */
@@ -498,6 +531,7 @@ export async function runOralExamTurn(
       chatResult = await generateClosing({
         messages,
         summary: attempt.exam.oralClosingSummary,
+        language: attempt.exam.language,
         computeChat: input.computeChat,
         onDelta: input.onDelta,
       });
@@ -681,6 +715,7 @@ export async function runOralExamPreviewTurn(
       chatResult = await generateClosing({
         messages: [{ role: "system", content: systemPrompt }, ...history],
         summary: exam.oralClosingSummary,
+        language: exam.language,
         computeChat: input.computeChat,
         onDelta: input.onDelta,
       });
