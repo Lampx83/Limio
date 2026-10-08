@@ -4,6 +4,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import type { LessonFormatTemplateKey } from "@feedbackme/shared-types";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { normalizeTerm } from "../flashcardSrs";
+import { toPlainText } from "./plainText";
 
 /**
  * AI authoring generators — used by instructor UI to draft skill tags,
@@ -1383,6 +1384,7 @@ Cách chấm (bắt buộc):
 
 Các trường còn lại:
 - feedback: 2-4 câu, TIẾNG VIỆT, viết trực tiếp cho học viên (xưng "bạn"), chỉ ra điểm được và điểm cần cải thiện cụ thể — không chung chung.
+- ĐỊNH DẠNG: mọi trường chữ (name, evidence, feedback, rationale) là CHỮ THƯỜNG, văn xuôi. TUYỆT ĐỐI không dùng markdown hay ký hiệu code: không **, __, #, \`, gạch đầu dòng, bảng, khối code. Khi trích bài nộp thì đặt trong dấu ngoặc kép "…".
 - rationale: 1-2 câu NGẮN GỌN cho giảng viên về lý do điểm tổng — không phải để học viên đọc.
 - Trả JSON: { criteria: [{ name, maxPoints, evidence, points }], feedback, rationale }. Không trả điểm tổng, hệ thống tự cộng.`;
 
@@ -1421,10 +1423,10 @@ Chấm từng tiêu chí (evidence trước, points sau) rồi trả JSON.`;
   const criteria = (data.criteria ?? [])
     .filter((c) => c && Number.isFinite(c.maxPoints) && c.maxPoints > 0)
     .map((c) => ({
-      name: String(c.name ?? "").trim(),
+      name: toPlainText(String(c.name ?? "")),
       maxPoints: c.maxPoints,
       points: Math.max(0, Math.min(c.maxPoints, Number.isFinite(c.points) ? c.points : 0)),
-      evidence: String(c.evidence ?? "").trim(),
+      evidence: toPlainText(String(c.evidence ?? "")),
     }));
   const sumMax = criteria.reduce((a, c) => a + c.maxPoints, 0);
   const sumPts = criteria.reduce((a, c) => a + c.points, 0);
@@ -1435,7 +1437,7 @@ Chấm từng tiêu chí (evidence trước, points sau) rồi trả JSON.`;
   return {
     score,
     criteria,
-    feedback: data.feedback?.trim() ?? "",
-    rationale: data.rationale?.trim() ?? "",
+    feedback: toPlainText(data.feedback),
+    rationale: toPlainText(data.rationale),
   };
 }
