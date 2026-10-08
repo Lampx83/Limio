@@ -3,7 +3,7 @@ import {
   createChatRoutingFetch,
   getChatModel,
   DEFAULT_CHAT_MODEL,
-  OPENAI_FALLBACK_CHAT_MODEL,
+  LlmNotConfiguredError,
 } from "../aiTutor/llm";
 
 const ENV_KEYS = ["LLM_BASE_URL", "LLM_CHAT_MODEL", "LLM_SECKEY"] as const;
@@ -71,26 +71,24 @@ describe("createChatRoutingFetch", () => {
     expect(req.headers.get("authorization")).toBe("Bearer sk-openai");
   });
 
-  it("không đặt LLM_BASE_URL ⇒ chat vẫn đi OpenAI", async () => {
+  it("không đặt LLM_BASE_URL ⇒ chat bị từ chối, KHÔNG rơi về OpenAI", async () => {
     delete process.env.LLM_BASE_URL;
     const base = fakeFetch();
-    await createChatRoutingFetch(base)("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { authorization: "Bearer sk-openai" },
-      body: "{}",
-    });
-    const req = base.mock.calls[0]![0] as Request;
-    expect(req.url).toBe("https://api.openai.com/v1/chat/completions");
+    await expect(
+      createChatRoutingFetch(base)("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { authorization: "Bearer sk-openai" },
+        body: "{}",
+      }),
+    ).rejects.toBeInstanceOf(LlmNotConfiguredError);
+    expect(base).not.toHaveBeenCalled();
   });
 });
 
 describe("getChatModel", () => {
-  it("có LLM_BASE_URL ⇒ mặc định Qwen; chưa có ⇒ model OpenAI hợp lệ; LLM_CHAT_MODEL ghi đè được", () => {
+  it("mặc định là Qwen; LLM_CHAT_MODEL ghi đè được", () => {
     delete process.env.LLM_CHAT_MODEL;
-    process.env.LLM_BASE_URL = "http://llm.test/v1";
     expect(getChatModel()).toBe(DEFAULT_CHAT_MODEL);
-    delete process.env.LLM_BASE_URL;
-    expect(getChatModel()).toBe(OPENAI_FALLBACK_CHAT_MODEL);
     process.env.LLM_CHAT_MODEL = "other-model";
     expect(getChatModel()).toBe("other-model");
   });
