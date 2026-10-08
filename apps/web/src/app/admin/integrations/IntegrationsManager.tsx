@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
+import OpenAiFullTest from "./OpenAiFullTest";
 
 interface Status {
   key: string;
@@ -18,7 +19,7 @@ const LABELS: Record<
   openai: {
     name: "OpenAI API key",
     placeholder: "sk-proj-...",
-    help: "Dùng cho AI tutor, auto-tag skill, generate feedback. Lấy ở console.openai.com.",
+    help: "Dùng cho embeddings, Whisper (nghe) và TTS (đọc) của vấn đáp AI; chat có thể chạy trên LLM tự host. Lấy ở platform.openai.com.",
     emoji: "",
   },
   "stripe.secret": {
@@ -403,6 +404,8 @@ function IntegrationField({
           )}
         </div>
       )}
+
+      {status.key === "openai" && <OpenAiFullTest value={value} />}
 
       {testResult && (
         <p
