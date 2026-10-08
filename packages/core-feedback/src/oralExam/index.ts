@@ -6,3 +6,4 @@ export * from "./examinerChat";
 export * from "./evaluation";
 export * from "./vbee";
 export * from "./openaiVoice";
+export * from "./keywordSearch";

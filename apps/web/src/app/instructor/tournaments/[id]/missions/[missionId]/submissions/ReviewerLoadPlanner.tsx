@@ -66,11 +66,16 @@ export default function ReviewerLoadPlanner({
     reviewsPerReviewer: 1,
   });
 
+  // Với cách đặt hiện tại, trung bình mỗi người chấm khoảng mấy bài.
+  const currentLoad =
+    poolSize > 0 ? Math.round((currentN * submissionCount) / poolSize) : 0;
+  const poolLabel = captainsOnly ? "đội trưởng" : "người";
+
   async function apply() {
     if (!kValid || overMax) return;
     if (
       !window.confirm(
-        `Đặt ${suggestedN} reviewer/bài rồi phân lại cân bằng (xóa lượt chưa chấm, giữ lượt đã chấm). Tiếp tục?`,
+        `Mỗi bài sẽ có ${suggestedN} người chấm. Các lượt chưa chấm sẽ được xóa rồi chia lại cho đều, các lượt đã chấm được giữ nguyên. Tiếp tục?`,
       )
     ) {
       return;
@@ -100,7 +105,7 @@ export default function ReviewerLoadPlanner({
       }
       setMsg({
         kind: "ok",
-        text: `Đã đặt ${suggestedN} reviewer/bài · gỡ ${data.unassignedCount ?? 0}, phân ${data.assignedCount ?? 0} lượt.`,
+        text: `Mỗi bài giờ có ${suggestedN} người chấm. Đã gỡ ${data.unassignedCount ?? 0} lượt chưa chấm và chia mới ${data.assignedCount ?? 0} lượt.`,
       });
       router.refresh();
     } catch {
@@ -114,32 +119,38 @@ export default function ReviewerLoadPlanner({
     <section className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
       <div className="flex items-center gap-1.5 text-xs font-semibold">
         <Calculator size={14} className="text-brand-600" />
-        Tính số reviewer theo tải mỗi người
+        Mỗi người chấm bao nhiêu bài?
       </div>
-      <p className="mt-1 text-xs text-muted">
-        {submissionCount} bài · {poolSize} người đủ điều kiện chấm
-        {captainsOnly ? " (chỉ captain)" : ""} · đang đặt {currentN} reviewer/bài.
-        Để mọi người chấm ≥1 bài cần{" "}
-        <button
-          type="button"
-          onClick={() => setK("1")}
-          className="font-semibold text-brand-700 underline-offset-2 hover:underline dark:text-brand-300"
-        >
-          {minN} reviewer/bài
-        </button>
-        .
-      </p>
+      <div className="mt-1 space-y-0.5 text-xs text-muted">
+        <p>
+          Có {submissionCount} bài nộp và {poolSize} {poolLabel} được đi chấm.
+          Hiện mỗi bài có {currentN} người chấm, nên mỗi người phải chấm khoảng{" "}
+          {currentLoad} bài.
+        </p>
+        <p>
+          Hãy nhập số bài mỗi người chấm, hệ thống sẽ tính mỗi bài cần mấy
+          người chấm. Muốn ai cũng chấm ít nhất 1 bài thì mỗi bài cần{" "}
+          <button
+            type="button"
+            onClick={() => setK("1")}
+            className="font-semibold text-brand-700 underline-offset-2 hover:underline dark:text-brand-300"
+          >
+            {minN} người chấm
+          </button>
+          .
+        </p>
+      </div>
 
       <div className="mt-2 flex flex-wrap items-end gap-2">
         <label className="text-xs">
-          <span className="block text-faint">Mỗi reviewer chấm</span>
+          <span className="block text-faint">Mỗi người chấm</span>
           <span className="mt-1 flex items-center gap-1">
             <input
               type="number"
               min={1}
               value={k}
               onChange={(e) => setK(e.target.value)}
-              placeholder="vd 1"
+              placeholder="vd 3"
               className="input w-20 text-sm"
             />
             bài
@@ -150,16 +161,16 @@ export default function ReviewerLoadPlanner({
           <div className="text-xs">
             {overMax ? (
               <span className="text-danger-600">
-                → cần {suggestedN} reviewer/bài, vượt giới hạn {MAX_N}. Giảm số
-                bài/reviewer.
+                → mỗi bài cần {suggestedN} người chấm, vượt giới hạn {MAX_N}.
+                Hãy giảm số bài mỗi người chấm.
               </span>
             ) : (
               <span className="text-muted">
-                → cần{" "}
+                → mỗi bài cần{" "}
                 <strong className="text-[rgb(var(--text))]">
-                  {suggestedN} reviewer/bài
+                  {suggestedN} người chấm
                 </strong>{" "}
-                · phủ {covered}/{poolSize} người
+                · {covered}/{poolSize} {poolLabel} được giao chấm
               </span>
             )}
           </div>
@@ -181,7 +192,7 @@ export default function ReviewerLoadPlanner({
           ) : (
             <Calculator size={14} />
           )}
-          Áp dụng & phân lại
+          Áp dụng và chia lại lượt chấm
         </button>
       </div>
 

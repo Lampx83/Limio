@@ -40,9 +40,13 @@ function statusRank(r: RosterRow): number {
 export default function RosterTable({
   roster,
   maxScore,
+  assignmentId,
+  rubricText,
 }: {
   roster: RosterRow[];
   maxScore: number;
+  assignmentId: string;
+  rubricText: string | null;
 }) {
   const [search, setSearch] = useState("");
   const [sectionId, setSectionId] = useState<string>("all");
@@ -236,6 +240,8 @@ export default function RosterTable({
           user={openRow.user}
           submission={openRow.submission}
           maxScore={maxScore}
+          assignmentId={assignmentId}
+          rubricText={rubricText}
           nav={
             nav && {
               position: nav.position,

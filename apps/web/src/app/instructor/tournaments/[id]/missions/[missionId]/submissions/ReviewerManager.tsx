@@ -81,7 +81,7 @@ export default function ReviewerManager({
         {shortBy > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
             <AlertTriangle size={11} />
-            Thiếu {shortBy} reviewer
+            Thiếu {shortBy} người chấm
           </span>
         )}
       </div>
@@ -104,7 +104,7 @@ export default function ReviewerManager({
                 disabled={busy}
                 onClick={() => onRemove(a)}
                 aria-label={`Gỡ ${a.name}`}
-                title={a.completedAt ? "Đã chấm — gỡ sẽ xóa điểm" : "Gỡ reviewer"}
+                title={a.completedAt ? "Đã chấm — gỡ sẽ xóa điểm" : "Gỡ người chấm"}
                 className="rounded-full p-0.5 text-faint hover:bg-danger-50 hover:text-danger-600 disabled:opacity-40 dark:hover:bg-danger-950/40"
               >
                 <X size={12} />
@@ -122,7 +122,7 @@ export default function ReviewerManager({
           className="rounded-lg border border-token bg-[rgb(var(--surface))] px-2 py-1 text-xs disabled:opacity-40"
         >
           <option value="">
-            {available.length === 0 ? "Hết người để thêm" : "+ Thêm reviewer…"}
+            {available.length === 0 ? "Hết người để thêm" : "+ Thêm người chấm…"}
           </option>
           {available.map((p) => (
             <option key={p.userId} value={p.userId}>

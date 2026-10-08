@@ -3573,7 +3573,7 @@ model OralExamMaterial {
 }
 
 // A6.2 — mảnh nhỏ cắt ra từ OralExamMaterial.extractedText, kèm vector ngữ
-// nghĩa (OpenAI text-embedding-3-small, 1536 chiều) để "giảng viên ảo" (A6.3)
+// nghĩa (Qwen3-Embedding cắt còn 1536 chiều; model cụ thể ghi ở `embeddingModel`) để "giảng viên ảo" (A6.3)
 // tìm đúng đoạn liên quan thay vì phải đọc nguyên tài liệu mỗi lượt hỏi.
 // `embedding` là Unsupported vì Prisma Client chưa có kiểu vector native —
 // đọc/ghi qua raw SQL (packages/core-feedback/src/oralExam/).
@@ -3583,6 +3583,9 @@ model OralExamMaterialChunk {
   chunkIndex Int
   chunkText  String                       @db.Text
   embedding  Unsupported("vector(1536)")?
+  // Model đã sinh `embedding`. Vector của hai model không so sánh được, nên tìm kiếm chỉ xét chunk cùng
+  // model với model hiện hành; NULL = chưa có vector (lưu khi chưa cấu hình embeddings).
+  embeddingModel String?
   createdAt  DateTime                     @default(now())
 
   material OralExamMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)

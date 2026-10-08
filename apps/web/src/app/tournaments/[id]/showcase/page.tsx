@@ -462,7 +462,7 @@ export default async function ShowcasePage({
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     <OpenViewerButton
                       submissionId={f.submissionId}
-                      className="inline-flex items-center gap-1 rounded-full border border-brand-300 bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100 dark:border-brand-700 dark:text-brand-300"
+                      className="btn-primary btn-sm font-semibold"
                     >
                       <ViewLabel />
                     </OpenViewerButton>

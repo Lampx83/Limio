@@ -4,6 +4,7 @@ import {
   getChatModel,
   DEFAULT_CHAT_MODEL,
   LlmNotConfiguredError,
+  SYSTEM_ONLY_USER_PLACEHOLDER,
 } from "../aiTutor/llm";
 
 const ENV_KEYS = ["LLM_BASE_URL", "LLM_CHAT_MODEL", "LLM_SECKEY"] as const;
@@ -82,6 +83,58 @@ describe("createChatRoutingFetch", () => {
       }),
     ).rejects.toBeInstanceOf(LlmNotConfiguredError);
     expect(base).not.toHaveBeenCalled();
+  });
+});
+
+// vLLM + chat template của Qwen trả HTTP 400 "No user query found in messages." khi không có tin `user`
+// nào. Lượt mở màn vấn đáp và bước chấm vấn đáp chỉ gửi một tin `system`; OpenAI chấp nhận, Qwen thì không.
+describe("createChatRoutingFetch — hội thoại không có tin user", () => {
+  async function sentMessages(messages: unknown) {
+    process.env.LLM_BASE_URL = "http://llm.test/v1";
+    const base = fakeFetch();
+    await createChatRoutingFetch(base)("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      body: JSON.stringify({ model: "m", messages }),
+    });
+    return JSON.parse(base.mock.calls[0]![1]!.body as string).messages as
+      | { role: string; content: string }[]
+      | undefined;
+  }
+
+  it("chỉ có system ⇒ thêm một tin user cuối, system giữ nguyên ở đầu", async () => {
+    const sent = await sentMessages([{ role: "system", content: "Bạn là giám khảo." }]);
+    expect(sent).toEqual([
+      { role: "system", content: "Bạn là giám khảo." },
+      { role: "user", content: SYSTEM_ONLY_USER_PLACEHOLDER },
+    ]);
+  });
+
+  it("đã có tin user ⇒ không thêm gì", async () => {
+    const msgs = [
+      { role: "system", content: "s" },
+      { role: "user", content: "u" },
+      { role: "assistant", content: "a" },
+    ];
+    expect(await sentMessages(msgs)).toEqual(msgs);
+  });
+
+  it("không có messages / không phải mảng ⇒ không ném lỗi và không bịa messages", async () => {
+    expect(await sentMessages(undefined)).toBeUndefined();
+    expect(await sentMessages("oops")).toBe("oops");
+  });
+
+  it("danh sách rỗng ⇒ cũng bổ sung (vẫn không có tin user nào)", async () => {
+    expect(await sentMessages([])).toEqual([{ role: "user", content: SYSTEM_ONLY_USER_PLACEHOLDER }]);
+  });
+
+  it("request không phải chat (vd Whisper/TTS) ⇒ giữ nguyên body, không thêm tin user", async () => {
+    process.env.LLM_BASE_URL = "http://llm.test/v1";
+    const base = fakeFetch();
+    const body = JSON.stringify({ messages: [{ role: "system", content: "s" }] });
+    await createChatRoutingFetch(base)("https://api.openai.com/v1/audio/speech", { method: "POST", body });
+    const req = base.mock.calls[0]![0] as Request;
+    expect(req.url).toBe("https://api.openai.com/v1/audio/speech");
+    expect(await req.text()).toBe(body);
   });
 });
 

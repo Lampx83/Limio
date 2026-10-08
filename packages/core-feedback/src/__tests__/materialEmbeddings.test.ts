@@ -3,8 +3,12 @@ import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { GLOBAL_TOKENS_PER_DAY_KEY } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
-import { embedMaterial, searchMaterialChunks } from "../oralExam/materialEmbeddings";
-import type { EmbedComputeFn } from "../oralExam/embeddings";
+import {
+  embedMaterial,
+  findMaterialsNeedingReembed,
+  searchMaterialChunks,
+} from "../oralExam/materialEmbeddings";
+import { DEFAULT_EMBEDDING_MODEL, type EmbedComputeFn } from "../oralExam/embeddings";
 
 const DIM = 1536;
 
@@ -91,7 +95,7 @@ describe("embedMaterial (A6.2)", () => {
     const material = await makeMaterial(exam.id, owner.id, "Nội dung ôn tập chương 1.", "e1");
 
     const r = await embedMaterial(owner.id, material.id, constantEmbed(fakeVector(1, 0)));
-    expect(r).toEqual({ chunkCount: 1, skipped: false });
+    expect(r).toEqual({ chunkCount: 1, skipped: false, embedded: true });
 
     const chunks = await prisma.oralExamMaterialChunk.findMany({ where: { materialId: material.id } });
     expect(chunks).toHaveLength(1);
@@ -112,7 +116,7 @@ describe("embedMaterial (A6.2)", () => {
     };
 
     const r = await embedMaterial(owner.id, material.id, compute);
-    expect(r).toEqual({ chunkCount: 0, skipped: true });
+    expect(r).toEqual({ chunkCount: 0, skipped: true, embedded: false });
     expect(computeCalled).toBe(false);
   });
 
@@ -184,7 +188,7 @@ describe("embedMaterial (A6.2)", () => {
     await embedMaterial(owner.id, material.id, constantEmbed(fakeVector(1, 0), 77));
 
     const usage = await prisma.aiUsageLog.findFirst({
-      where: { userId: owner.id, model: "text-embedding-3-small" },
+      where: { userId: owner.id, model: DEFAULT_EMBEDDING_MODEL },
     });
     expect(usage?.tokensInput).toBe(77);
 
@@ -240,5 +244,56 @@ describe("searchMaterialChunks (A6.2)", () => {
     // 2 chunk tổng cộng — k=1 phải trả đúng 1, không phải cả 2.
     const results = await searchMaterialChunks(exam.id, fakeVector(1, 0), 1);
     expect(results).toHaveLength(1);
+  });
+});
+
+describe("vector của model cũ (đổi model embeddings)", () => {
+  /** Chunk do model KHÁC sinh ra — giống vector OpenAI còn lại sau khi chuyển sang Qwen3-Embedding. */
+  async function insertLegacyChunk(materialId: string, text: string, vector: number[]) {
+    await prisma.$executeRaw`
+      INSERT INTO "OralExamMaterialChunk" (id, "materialId", "chunkIndex", "chunkText", embedding, "embeddingModel", "createdAt")
+      VALUES (gen_random_uuid()::text, ${materialId}, 0, ${text}, ${`[${vector.join(",")}]`}::vector, 'text-embedding-3-small', now())
+    `;
+  }
+
+  it("tìm kiếm bỏ qua chunk của model khác dù vector rất gần câu hỏi", async () => {
+    const owner = await makeOwner("m1");
+    const course = await makeCourse("m1");
+    const exam = await makeOralExam(course.id, "m1");
+    const legacy = await makeMaterial(exam.id, owner.id, "Cũ.", "m1a");
+    const fresh = await makeMaterial(exam.id, owner.id, "Mới.", "m1b");
+    await insertLegacyChunk(legacy.id, "Cũ.", fakeVector(1, 0));
+    await embedMaterial(owner.id, fresh.id, constantEmbed(fakeVector(0, 1)));
+
+    const results = await searchMaterialChunks(exam.id, fakeVector(1, 0), 5);
+    expect(results.map((r) => r.materialId)).toEqual([fresh.id]);
+  });
+
+  it("findMaterialsNeedingReembed liệt kê tài liệu còn vector cũ; embed lại xong thì biến mất", async () => {
+    const owner = await makeOwner("m2");
+    const course = await makeCourse("m2");
+    const exam = await makeOralExam(course.id, "m2");
+    const legacy = await makeMaterial(exam.id, owner.id, "Cũ.", "m2a");
+    const ok = await makeMaterial(exam.id, owner.id, "Đúng model.", "m2b");
+    await insertLegacyChunk(legacy.id, "Cũ.", fakeVector(1, 0));
+    await embedMaterial(owner.id, ok.id, constantEmbed(fakeVector(0, 1)));
+
+    const listed = async () => (await findMaterialsNeedingReembed(1000)).map((m) => m.id);
+    expect(await listed()).toContain(legacy.id);
+    expect(await listed()).not.toContain(ok.id);
+    const row = (await findMaterialsNeedingReembed(1000)).find((m) => m.id === legacy.id)!;
+    expect(row.uploadedById).toBe(owner.id);
+
+    await embedMaterial(owner.id, legacy.id, constantEmbed(fakeVector(1, 0)));
+    expect(await listed()).not.toContain(legacy.id);
+  });
+
+  it("chunk lưu khi chưa cấu hình embeddings (compute=null) cũng được embed lại về sau", async () => {
+    const owner = await makeOwner("m3");
+    const course = await makeCourse("m3");
+    const exam = await makeOralExam(course.id, "m3");
+    const m = await makeMaterial(exam.id, owner.id, "Chưa có vector.", "m3");
+    await embedMaterial(owner.id, m.id, null);
+    expect((await findMaterialsNeedingReembed(1000)).map((x) => x.id)).toContain(m.id);
   });
 });

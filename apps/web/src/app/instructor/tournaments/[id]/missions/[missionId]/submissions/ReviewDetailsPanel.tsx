@@ -78,7 +78,7 @@ export default function ReviewDetailsPanel({
         {busy ? (
           <Loader2 size={12} className="animate-spin" />
         ) : data ? (
-          `(${done.length} reviewer)`
+          `(${done.length} người chấm)`
         ) : null}
       </button>
 
@@ -89,12 +89,12 @@ export default function ReviewDetailsPanel({
       {open && data && (
         <div className="mt-2 overflow-x-auto rounded-lg border border-token">
           {done.length === 0 ? (
-            <p className="p-3 text-xs text-muted">Chưa có reviewer nào chấm xong.</p>
+            <p className="p-3 text-xs text-muted">Chưa có ai chấm xong bài này.</p>
           ) : (
             <table className="w-full text-xs">
               <thead className="bg-[rgb(var(--surface-muted))] text-left text-faint">
                 <tr>
-                  <th className="px-2 py-1.5 font-medium">Reviewer</th>
+                  <th className="px-2 py-1.5 font-medium">Người chấm</th>
                   {data.rubric.map((c) => (
                     <th key={c.id} className="px-2 py-1.5 font-medium" title={c.scale}>
                       {c.label}

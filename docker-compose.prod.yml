@@ -60,6 +60,10 @@ x-web-env: &web-env
   LLM_BASE_URL: ${LLM_BASE_URL:-}
   LLM_CHAT_MODEL: ${LLM_CHAT_MODEL:-}
   LLM_SECKEY: ${LLM_SECKEY:-}
+  # Embeddings tự host (Ollama) — xem .env.prod.example. Thiếu EMBED_BASE_URL ⇒ AI chọn đoạn theo từ khoá.
+  EMBED_BASE_URL: ${EMBED_BASE_URL:-}
+  EMBED_MODEL: ${EMBED_MODEL:-}
+  EMBED_SECKEY: ${EMBED_SECKEY:-}
   # Lớp chịu tải OpenAI (apps/web/src/lib/openaiClient.ts). Bỏ trống → dùng mặc định
   # trong code (20 request đồng thời MỖI replica, 4 lần thử lại, chờ hàng đợi 20s).
   # Prod chạy 3 replica nên trần thật = 3 × OPENAI_MAX_CONCURRENCY.

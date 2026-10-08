@@ -1,7 +1,7 @@
-import { createOpenaiClient } from "@/lib/openaiClient";
+import { getOralExamTextAi } from "@/lib/oralExamEmbed";
 import { NextResponse } from "next/server";
-import { AiTutorError, embedMaterial, openAiEmbedCompute } from "@feedbackme/core-feedback";
-import { IntegrationError, getIntegrationSecret, listOralMaterials } from "@feedbackme/core-lms";
+import { AiTutorError, embedMaterial } from "@feedbackme/core-feedback";
+import { listOralMaterials } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
@@ -38,19 +38,18 @@ export async function POST(
     return NextResponse.json({ error: "material_not_found" }, { status: 404 });
   }
 
-  let openaiKey: string;
+  let ai: Awaited<ReturnType<typeof getOralExamTextAi>>;
   try {
-    openaiKey = await getIntegrationSecret("openai");
+    ai = await getOralExamTextAi();
   } catch (e) {
-    if (e instanceof IntegrationError && e.code === "key_not_found") {
+    if ((e as Error).message === "openai_not_configured") {
       return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
     }
     throw e;
   }
 
   try {
-    const openai = createOpenaiClient(openaiKey);
-    const r = await embedMaterial(userId, params.materialId, openAiEmbedCompute(openai));
+    const r = await embedMaterial(userId, params.materialId, ai.computeEmbed);
     return NextResponse.json(r);
   } catch (e) {
     if (e instanceof AiTutorError) {

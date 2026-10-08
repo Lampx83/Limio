@@ -1305,8 +1305,18 @@ export async function extractVocabFromText(
 // của mọi generator trong file này.
 // =====================================================================
 
+export interface AssignmentGradeCriterion {
+  name: string;
+  maxPoints: number;
+  points: number;
+  /** Trích/diễn giải đúng chỗ trong bài nộp làm căn cứ cho điểm tiêu chí này. */
+  evidence: string;
+}
+
 export interface AssignmentGradeSuggestion {
   score: number;
+  /** Điểm từng tiêu chí — `score` là tổng của chúng, không phải một con số model tự nghĩ ra. */
+  criteria: AssignmentGradeCriterion[];
   /** Viết trực tiếp cho học viên đọc. */
   feedback: string;
   /** Giải thích ngắn cho GV vì sao cho mức điểm này — không phải cho học viên. */
@@ -1317,11 +1327,24 @@ const ASSIGNMENT_GRADE_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
-    score: { type: "number" },
+    criteria: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+          maxPoints: { type: "number" },
+          evidence: { type: "string" },
+          points: { type: "number" },
+        },
+        required: ["name", "maxPoints", "evidence", "points"],
+      },
+    },
     feedback: { type: "string" },
     rationale: { type: "string" },
   },
-  required: ["score", "feedback", "rationale"],
+  required: ["criteria", "feedback", "rationale"],
 };
 
 export interface SuggestAssignmentGradeInput {
@@ -1347,18 +1370,21 @@ export async function suggestAssignmentGrade(
 
   const rubricBlock = input.rubricText?.trim()
     ? `# Rubric chấm điểm (GV cung cấp)\n${input.rubricText.trim()}`
-    : `# Rubric chấm điểm\n(GV chưa cung cấp — chấm theo hiểu biết chung về đề bài, độ chính xác sẽ thấp hơn khi có rubric)`;
+    : `# Rubric chấm điểm\n(GV chưa cung cấp — tự tách đề bài thành 3-5 tiêu chí rõ ràng, ví dụ: đáp ứng yêu cầu đề bài, độ chính xác nội dung/ngôn ngữ, mức độ đầy đủ, cách trình bày. Nêu rõ trong "rationale" là đang chấm không có rubric.)`;
 
-  const system = `Bạn là trợ giảng chấm bài tập cho một LMS. Nhiệm vụ: đọc đề bài, rubric (nếu có), và bài nộp của học viên, rồi đề xuất điểm + nhận xét.
+  const system = `Bạn là trợ giảng chấm bài tập cho một LMS. Nhiệm vụ: đọc đề bài, rubric (nếu có), và bài nộp của học viên, rồi chấm TỪNG TIÊU CHÍ và nhận xét.
 
-Quy tắc bắt buộc:
-- Điểm là số trong khoảng [0, ${input.maxScore}] — KHÔNG vượt quá ${input.maxScore}, KHÔNG âm.
-- Nếu có rubric: bám sát từng tiêu chí trong rubric, không tự đặt tiêu chí khác.
-- Nếu KHÔNG có rubric: chấm theo mức độ bài nộp đáp ứng đề bài, nêu rõ trong "rationale" là đang chấm không có rubric.
+Cách chấm (bắt buộc):
+1. Liệt kê các tiêu chí (lấy đúng từ rubric nếu có). Tổng "maxPoints" của mọi tiêu chí PHẢI bằng ${input.maxScore}.
+2. Với mỗi tiêu chí, trước hết ghi "evidence": trích hoặc diễn giải CỤ THỂ chỗ trong bài nộp cho thấy mức đạt (hoặc chỉ ra rằng bài thiếu phần đó). Chỉ sau đó mới cho "points".
+3. "points" của mỗi tiêu chí nằm trong [0, maxPoints] và tuỳ theo bằng chứng — có thể là số lẻ (ví dụ 6.5). KHÔNG làm tròn về các mốc quen thuộc; mỗi bài có điểm riêng theo đúng nội dung của nó.
+4. Dùng cả thang điểm: bài lạc đề, sơ sài, nhiều lỗi thì điểm tiêu chí phải thấp; chỉ bài thực sự xuất sắc mới gần tối đa. Không mặc định "an toàn" ở mức khá.
+5. Không bịa nội dung bài nộp không có — chỉ đánh giá đúng những gì học viên đã viết.
+
+Các trường còn lại:
 - feedback: 2-4 câu, TIẾNG VIỆT, viết trực tiếp cho học viên (xưng "bạn"), chỉ ra điểm được và điểm cần cải thiện cụ thể — không chung chung.
-- rationale: 1-2 câu giải thích NGẮN GỌN cho giảng viên vì sao cho mức điểm này — không phải để học viên đọc.
-- KHÔNG bịa nội dung bài nộp không có — chỉ đánh giá dựa trên đúng những gì học viên đã viết.
-- Trả JSON: { score, feedback, rationale }`;
+- rationale: 1-2 câu NGẮN GỌN cho giảng viên về lý do điểm tổng — không phải để học viên đọc.
+- Trả JSON: { criteria: [{ name, maxPoints, evidence, points }], feedback, rationale }. Không trả điểm tổng, hệ thống tự cộng.`;
 
   const user = `# Đề bài: ${input.assignmentTitle}
 ${input.assignmentDescription}
@@ -1372,22 +1398,43 @@ ${rubricBlock}
 ${input.submissionBody.slice(0, 20_000)}
 """
 
-Trả JSON: { score, feedback, rationale }`;
+Chấm từng tiêu chí (evidence trước, points sau) rồi trả JSON.`;
 
-  const { data, inputTokens, outputTokens } = await callJsonModel<AssignmentGradeSuggestion>(
+  const { data, inputTokens, outputTokens } = await callJsonModel<{
+    criteria?: AssignmentGradeCriterion[];
+    score?: number;
+    feedback?: string;
+    rationale?: string;
+  }>(
     openai,
     model,
     system,
     user,
     "assignment_grade_suggestion",
     ASSIGNMENT_GRADE_SCHEMA,
-    1200,
+    2000,
   );
 
   await logUsage(userId, model, inputTokens, outputTokens, db);
 
+  // Kẹp từng tiêu chí rồi cộng; model đôi khi để tổng maxPoints lệch maxScore → quy đổi lại cho khớp.
+  const criteria = (data.criteria ?? [])
+    .filter((c) => c && Number.isFinite(c.maxPoints) && c.maxPoints > 0)
+    .map((c) => ({
+      name: String(c.name ?? "").trim(),
+      maxPoints: c.maxPoints,
+      points: Math.max(0, Math.min(c.maxPoints, Number.isFinite(c.points) ? c.points : 0)),
+      evidence: String(c.evidence ?? "").trim(),
+    }));
+  const sumMax = criteria.reduce((a, c) => a + c.maxPoints, 0);
+  const sumPts = criteria.reduce((a, c) => a + c.points, 0);
+  const raw = criteria.length > 0 && sumMax > 0 ? (sumPts / sumMax) * input.maxScore : Number(data.score ?? 0);
+  // AssignmentSubmission.score là Int → làm tròn nguyên; chỉ làm tròn MỘT lần ở tổng, không làm tròn từng tiêu chí.
+  const score = Math.max(0, Math.min(input.maxScore, Math.round(raw)));
+
   return {
-    score: Math.max(0, Math.min(input.maxScore, Math.round(data.score))),
+    score,
+    criteria,
     feedback: data.feedback?.trim() ?? "",
     rationale: data.rationale?.trim() ?? "",
   };

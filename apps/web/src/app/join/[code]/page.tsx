@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Plus, X, Pencil, Upload, Link as LinkIcon, Image as ImageIcon, Video, Music } from "lucide-react";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
+import { shrinkImageForUpload } from "@/lib/resizeImage";
 import {
   BOARD_NOTE_COLORS,
   rotationForNote,
@@ -286,8 +287,10 @@ export default function JoinBoardPage() {
 
   // Tải ảnh lên làm đính kèm. Trả về URL tuyệt đối để đi qua cùng validation http/https
   // với URL dán tay.
-  const uploadAttachmentImage = async (file: File): Promise<string> => {
+  const uploadAttachmentImage = async (original: File): Promise<string> => {
     const maxMb = Math.round(BOARD_ATTACHMENT_MAX_BYTES / (1024 * 1024));
+    // Thu nhỏ trước: nhanh hơn khi up và nhẹ hơn khi hiển thị; kiểm cỡ trên bản đã thu nhỏ.
+    const file = await shrinkImageForUpload(original);
     if (file.size > BOARD_ATTACHMENT_MAX_BYTES) throw new Error(`Ảnh quá lớn — tối đa ${maxMb}MB`);
     const form = new FormData();
     form.append("file", file);

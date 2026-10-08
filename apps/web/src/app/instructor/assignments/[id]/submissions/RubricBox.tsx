@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { toast } from "@/lib/toast";
@@ -14,9 +14,12 @@ import { toast } from "@/lib/toast";
 export default function RubricBox({
   assignmentId,
   initialRubric,
+  compact = false,
 }: {
   assignmentId: string;
   initialRubric: string | null;
+  /** Trong modal chấm bài: bỏ khung card + lề trên, vì đã nằm trong khối thu gọn. */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(initialRubric ?? "");
@@ -24,6 +27,12 @@ export default function RubricBox({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dirty = text.trim() !== saved.trim();
+
+  // Rubric có thể vừa được lưu từ ô còn lại (trang vs modal) → router.refresh đổi prop → đồng bộ lại.
+  useEffect(() => {
+    setSaved(initialRubric ?? "");
+    setText(initialRubric ?? "");
+  }, [initialRubric]);
 
   async function save() {
     setBusy(true);
@@ -50,7 +59,7 @@ export default function RubricBox({
   }
 
   return (
-    <section className="card mt-6 space-y-2">
+    <section className={compact ? "space-y-2" : "card mt-6 space-y-2"}>
       <label htmlFor={`rubric-${assignmentId}`} className="text-sm font-semibold">
         Rubric chấm điểm{" "}
         <span className="text-xs font-normal text-faint">(không bắt buộc)</span>

@@ -11,6 +11,7 @@ export const TOURNAMENT_TERMS = {
   prize: "Giải thưởng",
   team: "Đội",
   captain: "Đội trưởng",
+  reviewer: "Người chấm",
   registration: "Đăng ký",
   judge: "Giám khảo",
   leaderboard: "Bảng xếp hạng",

@@ -10,6 +10,7 @@ import {
 import { toast } from "@/lib/toast";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
+import { shrinkImageForUpload } from "@/lib/resizeImage";
 import { formatVN } from "@/lib/datetime";
 import {
   BOARD_NOTE_COLORS,
@@ -76,10 +77,8 @@ interface InteractiveBoardProps {
 export default function InteractiveBoard({ onExit, drawing = false }: InteractiveBoardProps) {
   const [current, setCurrent] = useState<Board | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  // Mặc định full-screen ngay khi vào phiên board — che luôn top nav +
-  // sidebar + "← Quay lại" của trang cha (xem TeachingToolsClient.tsx),
-  // tránh 2 nút exit cùng hiển thị. Nút "⛶ Thoát" vẫn cho phép thu nhỏ lại.
-  const [isFullscreen, setIsFullscreen] = useState(true);
+  // Phiên board luôn full-screen — che luôn top nav + sidebar + "← Quay lại" của
+  // trang cha (xem TeachingToolsClient.tsx) nên chỉ có đúng 1 nút "Thoát" (onExit).
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrPanelOpen, setQrPanelOpen] = useState(true);
   const [history, setHistory] = useState<BoardHistoryItem[]>([]);
@@ -439,8 +438,9 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
   // Trả về URL TUYỆT ĐỐI (qua shareUrl) để khớp isValidAttachmentUrl (http/https)
   // dùng chung ở cả note create/edit — dán URL ngoài hay upload nội bộ đều
   // đi qua cùng 1 validation.
-  const uploadAttachmentFile = async (file: File): Promise<string> => {
+  const uploadAttachmentFile = async (original: File): Promise<string> => {
     if (!current) throw new Error("Chưa mở board");
+    const file = await shrinkImageForUpload(original); // ảnh thu nhỏ; PDF giữ nguyên
     if (file.size > BOARD_ATTACHMENT_MAX_BYTES) {
       throw new Error(`File quá lớn — tối đa ${Math.round(BOARD_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`);
     }
@@ -683,9 +683,8 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
   // ── Active board view — same layout as student /join page + moderation ──
   if (current) {
     const visibleCount = current.notes.filter((n) => !n.hidden).length;
-    const wrapper = isFullscreen
-      ? "fixed inset-0 z-50 isolate overflow-y-auto bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900"
-      : "relative isolate rounded-2xl overflow-hidden border border-brand-200/60 bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900 shadow-card pb-24";
+    const wrapper =
+      "fixed inset-0 z-50 isolate overflow-y-auto bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900";
     const previewKind = noteAttachmentUrl.trim() && isValidAttachmentUrl(noteAttachmentUrl.trim())
       ? detectMediaKind(noteAttachmentUrl.trim())
       : null;
@@ -755,12 +754,6 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
               </button>
               )}
               <button
-                onClick={() => setIsFullscreen((v) => !v)}
-                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
-              >
-                {isFullscreen ? "⛶ Thoát" : "⛶ Full"}
-              </button>
-              <button
                 onClick={handleReset}
                 disabled={isResetting}
                 className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5"
@@ -774,7 +767,7 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
                   onClick={onExit}
                   className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
                 >
-                  ✕ Exit
+                  ✕ Thoát
                 </button>
               )}
             </div>
@@ -798,7 +791,7 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
               setModalOpen(true);
               setPostInfo(null);
             }}
-            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-2xl hover:shadow-brand-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
+            className={`fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-2xl hover:shadow-brand-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
             title="Thêm note"
             aria-label="Thêm note"
           >
@@ -811,7 +804,7 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
             (vd. lớp đông, học viên ngồi xa). */}
         {qrPanelOpen && joinUrl && (
           <div
-            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 left-6 z-40 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-brand-200 animate-fade-in-up`}
+            className={`fixed bottom-6 left-6 z-40 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-brand-200 animate-fade-in-up`}
           >
             <button
               onClick={() => setQrPanelOpen(false)}

@@ -5,6 +5,7 @@ import { UserAvatar, StatusBadge, DateTime } from "@/components/ui";
 import GradeForm from "./GradeForm";
 import WritingFeedbackReview from "@/components/WritingFeedbackReview";
 import AttachmentPreview from "./AttachmentPreview";
+import RubricBox from "./RubricBox";
 
 export type SubmissionNav = {
   position: number;
@@ -19,6 +20,8 @@ export default function SubmissionModal({
   user,
   submission,
   maxScore,
+  assignmentId,
+  rubricText,
   nav,
   onClose,
 }: {
@@ -33,6 +36,8 @@ export default function SubmissionModal({
     feedback: string | null;
   };
   maxScore: number;
+  assignmentId: string;
+  rubricText: string | null;
   nav?: SubmissionNav | null;
   onClose: () => void;
 }) {
@@ -167,6 +172,18 @@ export default function SubmissionModal({
               <p className="mt-4 whitespace-pre-wrap rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4 text-sm">
                 {submission.body}
               </p>
+
+              <details className="mt-4 rounded-xl border border-token p-3" open={!rubricText}>
+                <summary className="cursor-pointer text-sm font-semibold">
+                  Rubric chấm điểm{" "}
+                  <span className="text-xs font-normal text-faint">
+                    {rubricText ? "(bấm để xem / sửa)" : "(chưa có — AI sẽ chấm kém căn cứ hơn)"}
+                  </span>
+                </summary>
+                <div className="mt-3">
+                  <RubricBox assignmentId={assignmentId} initialRubric={rubricText} compact />
+                </div>
+              </details>
 
               <div className="mt-4 border-t border-token pt-4">
                 <GradeForm

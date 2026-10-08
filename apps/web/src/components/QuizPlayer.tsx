@@ -22,7 +22,21 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
+import { Check, Flag } from "lucide-react";
 import ConfidenceStars from "@/components/quiz/ConfidenceStars";
+import { setQuizLeaveGuard } from "@/lib/quizLeaveGuard";
+import {
+  answerSignature,
+  flagStorageKey,
+  leaveWarning,
+  parseFlagged,
+  questionStatus,
+  saveStatusText,
+  submitWarning,
+  type QuestionStatus,
+  type SaveState,
+} from "@/lib/quizPlayerState";
+import { formatTime } from "@/lib/datetime";
 import { plainToRichHtml, htmlToPlainText } from "@/lib/richText";
 
 type QType =
@@ -120,6 +134,24 @@ export default function QuizPlayer({
   const latencyRef = useRef<Record<string, number>>({});
   const stepEnteredAtRef = useRef<number>(Date.now());
   const [now, setNow] = useState(() => Date.now());
+  /** Câu người học tự đánh dấu "xem lại". Chỉ nằm ở trình duyệt, không gửi lên máy chủ. */
+  const [flagged, setFlagged] = useState<Set<string>>(new Set());
+  /** Các câu chọn dở mà chưa lưu được lên máy chủ (số thứ tự từ 1), để hộp "rời trang" và beforeunload biết có gì để mất. */
+  const unsavedRef = useRef<number[]>([]);
+  const submittedRef = useRef(false);
+  /**
+   * Luôn là đáp án MỚI NHẤT. Hàm lưu được gọi qua setTimeout/onBlur từ lần vẽ trước nên
+   * nếu đọc thẳng `answers` sẽ thấy dữ liệu cũ — đó là lỗi khiến đáp án chỉ được lưu
+   * lúc bấm Nộp bài (chọn xong không gửi gì lên máy chủ).
+   */
+  const answersRef = useRef<Record<string, AnswerState>>({});
+  /** Chữ ký bản đã lưu thành công của từng câu; so với bản đang hiện để biết câu nào chưa lưu. */
+  const savedSigRef = useRef<Record<string, string>>({});
+  const [savedSig, setSavedSig] = useState<Record<string, string>>({});
+  const [saveState, setSaveState] = useState<SaveState>({ kind: "idle" });
+  /** Mỗi câu một hàng đợi: hai lần lưu cùng một câu không bao giờ chạy chồng nhau. */
+  const saveQueueRef = useRef<Record<string, Promise<void>>>({});
+  answersRef.current = answers;
 
   useEffect(() => {
     fetch(apiUrl(`/api/attempts/${attemptId}`))
@@ -134,8 +166,37 @@ export default function QuizPlayer({
           };
         }
         setAnswers(init);
+        const sigs: Record<string, string> = {};
+        for (const r of d.responses) sigs[r.questionId] = answerSignature(r.response, r.confidence);
+        savedSigRef.current = sigs;
+        setSavedSig(sigs);
+        try {
+          setFlagged(
+            parseFlagged(
+              window.localStorage.getItem(flagStorageKey(attemptId)),
+              new Set(d.quiz.questions.map((q) => q.id)),
+            ),
+          );
+        } catch {
+          // localStorage bị chặn (chế độ riêng tư): không nhớ được câu đánh dấu, vẫn làm bài bình thường.
+        }
       });
   }, [attemptId]);
+
+  // Rời trang khi còn câu chưa lưu được: hỏi lại. Câu đã lưu thì không mất, vào lại là làm tiếp.
+  useEffect(() => {
+    setQuizLeaveGuard(() => (submittedRef.current ? null : leaveWarning(unsavedRef.current)));
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      if (submittedRef.current || unsavedRef.current.length === 0) return;
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => {
+      setQuizLeaveGuard(null);
+      window.removeEventListener("beforeunload", onBeforeUnload);
+    };
+  }, []);
 
   // Timer tick — chỉ khi quiz có giới hạn thời gian.
   useEffect(() => {
@@ -262,21 +323,70 @@ export default function QuizPlayer({
     return false;
   }
 
-  async function saveAnswer(question: Question) {
+  function statusOf(question: Question): QuestionStatus {
     const a = answers[question.id];
+    return questionStatus({
+      hasResponse: !isResponseEmpty(question, a?.response ?? null),
+      confidence: a?.confidence ?? null,
+      requireConfidence: quiz.requireConfidence,
+    });
+  }
+
+  function toggleFlag(qId: string) {
+    setFlagged((prev) => {
+      const next = new Set(prev);
+      if (next.has(qId)) next.delete(qId);
+      else next.add(qId);
+      try {
+        window.localStorage.setItem(flagStorageKey(attemptId), JSON.stringify([...next]));
+      } catch {
+        // Không lưu được thì thôi: câu vẫn được đánh dấu trong lần mở này.
+      }
+      return next;
+    });
+  }
+
+  /**
+   * Lưu đáp án một câu lên máy chủ. Xếp hàng theo từng câu để không bao giờ chạy chồng
+   * nhau, và bỏ qua nếu bản đang hiện đã lưu rồi (trừ khi `force`: lúc nộp bài gửi lại để
+   * chốt thời gian riêng của câu — máy chủ không tính đó là một lần sửa).
+   */
+  function saveAnswer(question: Question, opts?: { force?: boolean }): Promise<void> {
+    const prev = saveQueueRef.current[question.id] ?? Promise.resolve();
+    const next = prev.then(() => saveAnswerNow(question, opts));
+    saveQueueRef.current[question.id] = next.catch(() => undefined);
+    return next;
+  }
+
+  async function saveAnswerNow(question: Question, opts?: { force?: boolean }): Promise<void> {
+    // Chờ một nhịp để lần vẽ lại sau thao tác của người học kịp cập nhật `answersRef`.
+    await Promise.resolve();
+    const a = answersRef.current[question.id];
     if (!a) return;
     if (isResponseEmpty(question, a.response)) return;
     if (quiz.requireConfidence && a.confidence === null) return;
-    await fetch(apiUrl(`/api/attempts/${attemptId}/answers`), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        questionId: question.id,
-        response: a.response,
-        confidence: a.confidence ?? undefined,
-        latencyMs: latencyRef.current[question.id],
-      }),
-    });
+    const sig = answerSignature(a.response, a.confidence);
+    if (!opts?.force && savedSigRef.current[question.id] === sig) return;
+    setSaveState({ kind: "saving" });
+    try {
+      const res = await fetch(apiUrl(`/api/attempts/${attemptId}/answers`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questionId: question.id,
+          response: a.response,
+          confidence: a.confidence ?? undefined,
+          latencyMs: latencyRef.current[question.id],
+        }),
+      });
+      if (!res.ok) throw new Error(`save_failed_${res.status}`);
+      savedSigRef.current = { ...savedSigRef.current, [question.id]: sig };
+      setSavedSig(savedSigRef.current);
+      setSaveState({ kind: "saved", at: Date.now() });
+    } catch (e) {
+      setSaveState({ kind: "error" });
+      throw e;
+    }
   }
 
   /** Đếm ngay tại thời điểm gọi — `answeredCount` bên dưới nằm sau early return. */
@@ -302,18 +412,20 @@ export default function QuizPlayer({
   }
 
   async function onSubmit(opts?: { auto?: boolean }) {
-    // Nộp bài là việc không lùi lại được. Trước đây nút nộp trông y hệt nút
-    // "Câu sau" và nằm ngay cạnh, nên một cú bấm nhầm là kết thúc lượt làm bài
-    // của người học. Hỏi lại, và nói rõ còn thiếu bao nhiêu câu.
-    const missing = (data?.quiz.questions.length ?? 0) - answeredCountNow();
-    if (missing > 0 && !opts?.auto) {
-      const reason = quiz.requireConfidence
-        ? "chưa trả lời hoặc chưa chọn độ tự tin"
-        : "chưa trả lời";
-      const ok = window.confirm(
-        `Bạn còn ${missing} câu ${reason}. Nộp bài bây giờ thì những câu đó tính là bỏ trống và không sửa lại được.\n\nVẫn nộp?`,
-      );
-      if (!ok) return;
+    // Nộp bài là việc không lùi lại được. Hỏi lại và gọi đúng tên từng câu còn
+    // thiếu, vì với một bài dài thì con số "còn 3 câu" không giúp tìm lại câu nào.
+    if (!opts?.auto) {
+      const empty: number[] = [];
+      const needsConfidence: number[] = [];
+      const flaggedNumbers: number[] = [];
+      quiz.questions.forEach((q, i) => {
+        const s = statusOf(q);
+        if (s === "empty") empty.push(i + 1);
+        else if (s === "needs-confidence") needsConfidence.push(i + 1);
+        if (flagged.has(q.id)) flaggedNumbers.push(i + 1);
+      });
+      const msg = submitWarning({ empty, needsConfidence, flagged: flaggedNumbers });
+      if (msg && !window.confirm(msg)) return;
     }
 
     // Chốt sổ câu đang mở trước khi gửi, nếu không thì đúng câu người học vừa
@@ -321,8 +433,20 @@ export default function QuizPlayer({
     flushLatency();
     setSubmitting(true);
     setError(null);
-    for (const q of quiz.questions) {
-      await saveAnswer(q);
+    const failed: number[] = [];
+    for (const [i, q] of quiz.questions.entries()) {
+      try {
+        await saveAnswer(q, { force: true });
+      } catch {
+        failed.push(i + 1);
+      }
+    }
+    // Nộp tay mà có câu không lưu được (mất mạng) thì dừng: nộp tiếp là bỏ mất những câu đó.
+    // Hết giờ tự nộp thì vẫn phải nộp, vì không còn cách nào khác.
+    if (failed.length > 0 && !opts?.auto) {
+      setError(`Chưa lưu được câu ${failed.join(", ")}. Bạn kiểm tra kết nối mạng rồi bấm Nộp bài lại.`);
+      setSubmitting(false);
+      return;
     }
     const res = await fetch(apiUrl(`/api/attempts/${attemptId}/submit`), { method: "POST" });
     if (!res.ok) {
@@ -331,12 +455,23 @@ export default function QuizPlayer({
       setSubmitting(false);
       return;
     }
+    submittedRef.current = true;
     window.location.href = `/learn/${courseSlug}/attempts/${attemptId}/result`;
   }
 
   const answeredCount = quiz.questions.filter(
     (q) => !isAnswerIncomplete(q, answers[q.id]),
   ).length;
+
+  // Câu đã chọn mà bản đang hiện chưa lưu được: thiếu số sao, mất mạng, hoặc vừa chọn xong chưa kịp gửi.
+  const unsavedNumbers = quiz.questions
+    .map((q, i) => ({ q, n: i + 1 }))
+    .filter(({ q }) => {
+      if (statusOf(q) === "empty") return false;
+      return savedSig[q.id] !== answerSignature(answers[q.id]?.response, answers[q.id]?.confidence ?? null);
+    })
+    .map(({ n }) => n);
+  unsavedRef.current = unsavedNumbers;
 
   // Timer: dùng attempt.startedAt + quiz.timeLimitSec để tính thời gian còn lại.
   // Không auto-submit (khác exam-take) — quiz LMS không cần proctoring.
@@ -379,6 +514,14 @@ export default function QuizPlayer({
     setCurrentStepIndex(next);
   }
 
+  const mapCells: MapCell[] = quiz.questions.map((q, idx) => ({
+    id: q.id,
+    number: idx + 1,
+    status: statusOf(q),
+    isCurrent: idx === currentStepIndex,
+    isFlagged: flagged.has(q.id),
+  }));
+
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-6">
       {/* LEFT — question content */}
@@ -420,19 +563,35 @@ export default function QuizPlayer({
                     : (TYPE_LABEL[currentQ.type] ?? currentQ.type)}
                 </span>
               </div>
-              <span className="text-xs font-medium text-faint">
-                {currentQ.points} điểm
-              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleFlag(currentQ.id)}
+                  aria-pressed={flagged.has(currentQ.id)}
+                  title="Đánh dấu câu này để xem lại trước khi nộp"
+                  className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                    flagged.has(currentQ.id)
+                      ? "border-amber-400 bg-amber-100 text-amber-900"
+                      : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"
+                  }`}
+                >
+                  <Flag size={14} aria-hidden />
+                  {flagged.has(currentQ.id) ? "Đã đánh dấu" : "Đánh dấu"}
+                </button>
+                <span className="text-xs font-medium text-faint">
+                  {currentQ.points} điểm
+                </span>
+              </div>
             </div>
             {/* drag_drop_fill renders the prompt itself with drop zones in
                 place of [[N]] placeholders, so skip the standard SafeHtml. */}
             {currentQ.type !== "drag_drop_fill" && (
               <SafeHtml
                 html={plainToRichHtml(currentQ.prompt)}
-                className="prose prose-base mt-3 max-w-none leading-relaxed dark:prose-invert"
+                className="prose prose-lg mt-4 max-w-none leading-relaxed dark:prose-invert"
               />
             )}
-            <div className="mt-4">
+            <div className="mt-6">
               <QuestionInput
                 question={currentQ}
                 answer={answers[currentQ.id]}
@@ -450,21 +609,34 @@ export default function QuizPlayer({
             cạnh nút Câu sau/Nộp bài, không phụ thuộc độ dài câu hỏi. */}
         <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-3">
           {quiz.requireConfidence && currentQ && (
-            <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-token pb-3">
-              <span className="text-sm font-medium text-muted">Độ tự tin:</span>
-              <ConfidenceStars
-                value={answers[currentQ.id]?.confidence ?? null}
-                onChange={(n) => {
-                  setConfidence(currentQ.id, n);
-                  setTimeout(() => saveAnswer(currentQ), 0);
-                }}
-              />
-              {!isResponseEmpty(currentQ, answers[currentQ.id]?.response ?? null) &&
-                (answers[currentQ.id]?.confidence ?? null) === null && (
-                  <p className="banner-warning w-full py-1.5 text-xs">
-                    Chưa chọn độ tự tin — câu này chưa được lưu, cần chọn trước khi nộp bài.
-                  </p>
-                )}
+            <div className="mb-3 border-b border-token pb-3">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="text-sm font-semibold text-[rgb(var(--text))]">
+                  Độ tự tin của bạn với câu này:
+                </span>
+                <ConfidenceStars
+                  value={answers[currentQ.id]?.confidence ?? null}
+                  onChange={(n) => {
+                    setConfidence(currentQ.id, n);
+                    setTimeout(() => saveAnswer(currentQ), 0);
+                  }}
+                />
+              </div>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted">
+                Bạn chọn số sao theo mức chắc chắn với đáp án vừa chọn. Số sao không làm tăng hay giảm điểm của
+                câu, nhưng quiz này cần có số sao thì câu mới được ghi nhận.
+              </p>
+              {statusOf(currentQ) === "needs-confidence" && (
+                <p
+                  role="alert"
+                  className="mt-2 flex items-start gap-2 rounded-lg border-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900"
+                >
+                  <span aria-hidden>⚠</span>
+                  <span>
+                    Bạn đã chọn đáp án nhưng chưa chọn số sao. Hãy chọn số sao ở trên để câu này được ghi nhận.
+                  </span>
+                </p>
+              )}
             </div>
           )}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -472,11 +644,11 @@ export default function QuizPlayer({
               type="button"
               onClick={() => jumpTo(currentStepIndex - 1)}
               disabled={isFirst}
-              className="btn-ghost btn-sm disabled:opacity-40"
+              className="btn-secondary min-w-[7.5rem] text-base disabled:opacity-40"
             >
               ← Câu trước
             </button>
-            <span className="text-sm text-muted tabular-nums">
+            <span className="text-base font-medium text-muted tabular-nums">
               Câu {currentStepIndex + 1}/{quiz.questions.length}
             </span>
             {isLast ? (
@@ -484,7 +656,7 @@ export default function QuizPlayer({
                 type="button"
                 onClick={() => onSubmit()}
                 disabled={submitting}
-                className={`${submitClass} btn-sm`}
+                className={`${submitClass} min-w-[7.5rem] text-base`}
               >
                 {submitting ? "Đang nộp…" : "Nộp bài"}
               </button>
@@ -492,18 +664,26 @@ export default function QuizPlayer({
               <button
                 type="button"
                 onClick={() => jumpTo(currentStepIndex + 1)}
-                className="btn-primary btn-sm"
+                className="btn-primary min-w-[7.5rem] text-base"
               >
                 Câu sau →
               </button>
             )}
           </div>
         </div>
+        <p className="mt-2 text-xs leading-relaxed text-muted" aria-live="polite">
+          <span className="font-medium text-[rgb(var(--text))]">
+            {saveStatusText(saveState, unsavedNumbers.length, (ms) =>
+              formatTime(ms, { hour: "2-digit", minute: "2-digit" }),
+            )}
+          </span>{" "}
+          Bài chưa được nộp: thoát ra thì vào lại bạn làm tiếp từ chỗ đã lưu. Nhớ bấm “Nộp bài” khi xong.
+        </p>
       </div>
 
       {/* RIGHT — sticky info panel (desktop only) */}
       <aside className="hidden lg:block">
-        <div className="sticky top-20 space-y-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm">
+        <div className="sticky top-6 space-y-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm">
           <div>
             <h1 className="text-base font-semibold leading-snug">
               {quiz.title}
@@ -536,39 +716,30 @@ export default function QuizPlayer({
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-faint">
               Bản đồ câu hỏi
             </p>
-            <div className="grid grid-cols-6 gap-1.5">
-              {quiz.questions.map((q, idx) => {
-                const answered = !isAnswerIncomplete(q, answers[q.id]);
-                const isCurrent = idx === currentStepIndex;
-                return (
-                  <button
-                    key={q.id}
-                    type="button"
-                    onClick={() => jumpTo(idx)}
-                    className={`flex h-9 items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors ${
-                      isCurrent
-                        ? "bg-brand-600 text-white ring-2 ring-brand-300"
-                        : answered
-                          ? "bg-brand-soft text-brand-700 hover:bg-brand-100"
-                          : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-base-100"
-                    }`}
-                    aria-label={`Câu ${idx + 1}${answered ? " (đã trả lời)" : ""}`}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
-            </div>
+            <QuestionMap
+              cells={mapCells}
+              onJump={jumpTo}
+              size="lg"
+            />
+            <MapLegend showConfidence={quiz.requireConfidence} />
           </div>
 
-          <button
-            type="button"
-            onClick={() => onSubmit()}
-            disabled={submitting}
-            className={`${submitClass} w-full`}
-          >
-            {submitting ? "Đang nộp…" : "Nộp bài"}
-          </button>
+          <div className="border-t border-token pt-4">
+            <p className="mb-2 text-xs leading-relaxed text-muted">
+              {allAnswered
+                ? "Bạn đã xong tất cả các câu."
+                : `Còn ${quiz.questions.length - answeredCount} câu chưa xong.`}{" "}
+              Nộp bài xong thì không sửa lại được.
+            </p>
+            <button
+              type="button"
+              onClick={() => onSubmit()}
+              disabled={submitting}
+              className={`${submitClass} w-full`}
+            >
+              {submitting ? "Đang nộp…" : "Nộp bài"}
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -596,30 +767,101 @@ export default function QuizPlayer({
             {submitting ? "Đang nộp…" : "Nộp bài"}
           </button>
         </div>
-        <div className="flex flex-wrap gap-1">
-          {quiz.questions.map((q, idx) => {
-            const answered = !isAnswerIncomplete(q, answers[q.id]);
-            const isCurrent = idx === currentStepIndex;
-            return (
-              <button
-                key={q.id}
-                type="button"
-                onClick={() => jumpTo(idx)}
-                className={`flex h-7 w-7 items-center justify-center rounded-md text-xs font-semibold tabular-nums ${
-                  isCurrent
-                    ? "bg-brand-600 text-white"
-                    : answered
-                      ? "bg-brand-soft text-brand-700"
-                      : "bg-[rgb(var(--surface-muted))] text-muted"
-                }`}
-              >
-                {idx + 1}
-              </button>
-            );
-          })}
-        </div>
+        <QuestionMap cells={mapCells} onJump={jumpTo} size="sm" />
       </div>
     </div>
+  );
+}
+
+interface MapCell {
+  id: string;
+  number: number;
+  status: QuestionStatus;
+  isCurrent: boolean;
+  isFlagged: boolean;
+}
+
+/**
+ * Bản đồ câu hỏi. Mỗi ô nói MỘT việc bằng hình dạng chứ không chỉ bằng màu:
+ *  - dấu ✓ = đã xong; viền cam = đã chọn đáp án nhưng thiếu số sao (chưa được ghi nhận);
+ *  - cờ vàng = người học đánh dấu xem lại; viền đậm = câu đang mở.
+ * Câu đang mở không còn tô xanh đặc, vì màu xanh bị hiểu là "đã làm xong" dù chưa chọn gì.
+ */
+function QuestionMap({
+  cells,
+  onJump,
+  size,
+}: {
+  cells: MapCell[];
+  onJump: (index: number) => void;
+  size: "lg" | "sm";
+}) {
+  const box = size === "lg" ? "h-9" : "h-8 w-8";
+  const grid = size === "lg" ? "grid grid-cols-6 gap-1.5" : "flex flex-wrap gap-1.5";
+  return (
+    <div className={grid}>
+      {cells.map((c, idx) => {
+        const fill =
+          c.status === "done"
+            ? "bg-brand-soft text-brand-700 hover:bg-brand-100"
+            : c.status === "needs-confidence"
+              ? "border-2 border-amber-400 bg-amber-50 text-amber-900"
+              : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-base-100";
+        const ring = c.isCurrent ? "ring-2 ring-offset-1 ring-[rgb(var(--text))]" : "";
+        const label =
+          `Câu ${c.number}` +
+          (c.status === "done" ? ", đã xong" : c.status === "needs-confidence" ? ", thiếu số sao độ tự tin" : ", chưa làm") +
+          (c.isFlagged ? ", đã đánh dấu xem lại" : "") +
+          (c.isCurrent ? ", đang xem" : "");
+        return (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => onJump(idx)}
+            aria-label={label}
+            aria-current={c.isCurrent ? "step" : undefined}
+            className={`relative flex ${box} items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors ${fill} ${ring}`}
+          >
+            {c.number}
+            {c.status === "done" && (
+              <Check size={10} aria-hidden className="absolute right-0.5 top-0.5 text-brand-700" strokeWidth={3} />
+            )}
+            {c.isFlagged && (
+              <Flag size={10} aria-hidden className="absolute left-0.5 top-0.5 fill-amber-400 text-amber-600" />
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MapLegend({ showConfidence }: { showConfidence: boolean }) {
+  return (
+    <ul className="mt-3 space-y-1 text-[11px] text-muted">
+      <li className="flex items-center gap-2">
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-brand-soft text-brand-700">
+          <Check size={10} aria-hidden strokeWidth={3} />
+        </span>
+        Đã xong
+      </li>
+      {showConfidence && (
+        <li className="flex items-center gap-2">
+          <span className="inline-block h-4 w-4 rounded border-2 border-amber-400 bg-amber-50" />
+          Đã chọn đáp án, thiếu số sao
+        </li>
+      )}
+      <li className="flex items-center gap-2">
+        <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-[rgb(var(--surface-muted))]">
+          <Flag size={10} aria-hidden className="fill-amber-400 text-amber-600" />
+        </span>
+        Đánh dấu xem lại
+      </li>
+      <li className="flex items-center gap-2">
+        <span className="inline-block h-4 w-4 rounded bg-[rgb(var(--surface-muted))] ring-2 ring-[rgb(var(--text))]" />
+        Câu đang xem
+      </li>
+    </ul>
   );
 }
 

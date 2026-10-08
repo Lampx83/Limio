@@ -123,7 +123,7 @@ export default function ReviewForm({
       {error && <p className="text-sm text-danger-600">Lỗi: {error}</p>}
 
       <button type="submit" disabled={busy} className="btn-primary">
-        {busy ? "Đang nộp..." : "Nộp review"}
+        {busy ? "Đang nộp..." : "Nộp kết quả chấm"}
       </button>
     </form>
   );

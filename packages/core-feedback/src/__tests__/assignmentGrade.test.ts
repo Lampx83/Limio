@@ -12,6 +12,21 @@ import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
  * AI với mọi generator khác (AiUsageLog + ví).
  */
 
+/** Model trả điểm từng tiêu chí (cách chấm mới); `score` tổng do code cộng. */
+function fakeOpenAICriteria(points: number[], maxPoints: number[]): OpenAI {
+  const criteria = points.map((p, i) => ({ name: `Tiêu chí ${i + 1}`, maxPoints: maxPoints[i], points: p, evidence: "…" }));
+  return {
+    chat: {
+      completions: {
+        create: async () => ({
+          choices: [{ message: { content: JSON.stringify({ criteria, feedback: "ok", rationale: "ok" }) } }],
+          usage: { prompt_tokens: 400, completion_tokens: 150 },
+        }),
+      },
+    },
+  } as unknown as OpenAI;
+}
+
 function fakeOpenAI(score: number, feedback = "Bài làm ổn.", rationale = "Đáp ứng 80% rubric."): OpenAI {
   return {
     chat: {
@@ -75,6 +90,25 @@ describe("suggestAssignmentGrade — happy path", () => {
     const userId2 = await makeUser("under");
     const underScore = await suggestAssignmentGrade(userId2, BASE_INPUT, fakeOpenAI(-5));
     expect(underScore.score).toBe(0);
+  });
+
+  it("điểm tổng = tổng điểm tiêu chí (không phải số model tự nghĩ), nên không dồn về mốc tròn", async () => {
+    const userId = await makeUser("criteria");
+    const r = await suggestAssignmentGrade(userId, BASE_INPUT, fakeOpenAICriteria([3.5, 3.2], [5, 5]));
+    expect(r.criteria).toHaveLength(2);
+    expect(r.score).toBe(7); // 6.7 → 7
+    const r2 = await suggestAssignmentGrade(userId, BASE_INPUT, fakeOpenAICriteria([2, 2.4], [5, 5]));
+    expect(r2.score).toBe(4); // 4.4 → 4
+  });
+
+  it("điểm tiêu chí vượt maxPoints bị kẹp; tổng maxPoints lệch maxScore thì quy đổi lại", async () => {
+    const userId = await makeUser("criteria-clamp");
+    // 9/5 → kẹp 5; 4/5 → 4; tổng 9/10 → 0.9 * 10 = 9
+    const r = await suggestAssignmentGrade(userId, BASE_INPUT, fakeOpenAICriteria([9, 4], [5, 5]));
+    expect(r.score).toBe(9);
+    // maxPoints tổng 100 nhưng maxScore 10: 70/100 → 7
+    const r2 = await suggestAssignmentGrade(userId, BASE_INPUT, fakeOpenAICriteria([40, 30], [50, 50]));
+    expect(r2.score).toBe(7);
   });
 
   it("không có rubric vẫn chấm được (rubricText null)", async () => {

@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { storageFor } from "@/lib/storage";
 import { boardAttachmentKey } from "@/lib/storage-keys";
+import { saveBoardImage } from "@/lib/boardImage";
 import {
   BOARD_ATTACHMENT_MAX_BYTES,
   BOARD_ATTACHMENT_MIME_TO_EXT,
@@ -54,10 +55,18 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     );
   }
 
-  const now = new Date();
-  const filename = `${board.id}-${now.getTime()}-${randomBytes(6).toString("hex")}.${ext}`;
-  const key = boardAttachmentKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
+
+  // Ảnh: kiểm + thu nhỏ + thumbnail. PDF: lưu nguyên.
+  if (ext !== "pdf") {
+    const saved = await saveBoardImage(board.id, buf);
+    if (!saved) return Response.json({ error: "unsupported_media_type" }, { status: 415 });
+    return Response.json({ url: `/api/board-attachments/${saved.filename}` }, { status: 201 });
+  }
+
+  const now = new Date();
+  const filename = `${board.id}-${now.getTime()}-${randomBytes(6).toString("hex")}.pdf`;
+  const key = boardAttachmentKey(now, filename);
   await storageFor(key).put(key.key, buf, file.type);
 
   return Response.json({ url: `/api/board-attachments/${filename}` }, { status: 201 });

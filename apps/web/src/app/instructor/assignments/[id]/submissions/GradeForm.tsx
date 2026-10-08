@@ -73,13 +73,24 @@ export default function GradeForm({
         setAiError(describeAiGradeError(res.status, (d as { error?: string }).error));
         return;
       }
-      const suggestion = d as { score: number; feedback: string; rationale: string; hadRubric: boolean };
+      const suggestion = d as {
+        score: number;
+        feedback: string;
+        rationale: string;
+        hadRubric: boolean;
+        criteria?: { name: string; maxPoints: number; points: number }[];
+      };
       setScore(String(suggestion.score));
       setFeedback(suggestion.feedback);
       setScoreError(null);
       setAiNote(
         (suggestion.hadRubric ? "" : "⚠ Chưa có rubric — hãy nhập ở ô Rubric chấm điểm phía trên để AI chấm sát hơn. ") +
-          `AI: ${suggestion.rationale}`,
+          `AI: ${suggestion.rationale}` +
+          (suggestion.criteria?.length
+            ? ` — Theo tiêu chí: ${suggestion.criteria
+                .map((c) => `${c.name} ${c.points}/${c.maxPoints}`)
+                .join("; ")}.`
+            : ""),
       );
     } catch {
       setAiError("Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.");

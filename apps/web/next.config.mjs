@@ -27,7 +27,7 @@ const nextConfig = {
     };
   },
   experimental: {
-    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
+    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs", "sharp"],
     outputFileTracingRoot: resolve(__dirname, "../../"),
     // NOTE: outputFileTracingIncludes is intentionally omitted.
     // A glob over node_modules/**  in a pnpm workspace (with its large

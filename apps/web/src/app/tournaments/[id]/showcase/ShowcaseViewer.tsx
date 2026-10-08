@@ -384,11 +384,11 @@ function ViewerDialog({
   );
 }
 
-/** Nhãn nhỏ "Xem bài" dùng trên thẻ. */
+/** Nhãn "Xem bài" cho nút mở khung xem (đặt trong nút btn-primary). */
 export function ViewLabel() {
   return (
-    <span className="inline-flex items-center gap-1">
-      <Eye size={12} />
+    <span className="inline-flex items-center gap-1.5">
+      <Eye size={15} />
       Xem bài
     </span>
   );
