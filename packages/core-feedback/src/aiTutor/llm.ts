@@ -39,6 +39,15 @@ export function isSelfHostedChat(): boolean {
   return getChatBaseUrl() !== null;
 }
 
+/**
+ * Tin `user` giả điền vào khi hội thoại chỉ có `system`. Chat template của Qwen (vLLM) từ chối request
+ * không có tin `user` nào bằng HTTP 400 "No user query found in messages." — còn OpenAI thì chấp nhận,
+ * nên lượt mở màn vấn đáp và bước chấm vấn đáp (chỉ gửi một tin system) chạy được trên gpt-4o-mini nhưng
+ * hỏng ngay khi chuyển sang LLM tự host. Cố ý là dấu hiệu trung tính, không phải câu tiếng Việt: đề thi
+ * tiếng Anh/Trung đã được system prompt chỉ định ngôn ngữ, không để câu này kéo lệch.
+ */
+export const SYSTEM_ONLY_USER_PLACEHOLDER = "[start]";
+
 function isChatCompletions(url: URL): boolean {
   return url.pathname.endsWith("/chat/completions");
 }
@@ -48,6 +57,7 @@ function isChatCompletions(url: URL): boolean {
  * request khác đi nguyên. Khi chuyển:
  * - bỏ `Authorization` — nó mang OpenAI key, không được gửi sang máy chủ khác;
  * - gắn `x-ollama-seckey` từ `LLM_SECKEY`;
+ * - hội thoại không có tin `user` nào thì thêm một tin cuối (SYSTEM_ONLY_USER_PLACEHOLDER) — xem hằng số;
  * - thêm `chat_template_kwargs.enable_thinking=false`: Qwen3.5 mặc định "nghĩ"
  *   trước khi trả lời, tốn token + trễ, và `response_format` JSON không cần.
  */
@@ -73,6 +83,12 @@ export function createChatRoutingFetch(baseFetch: typeof fetch = fetch): typeof 
             ? (json.chat_template_kwargs as Record<string, unknown>)
             : {};
         json.chat_template_kwargs = { enable_thinking: false, ...existing };
+        if (
+          Array.isArray(json.messages) &&
+          !json.messages.some((m) => (m as { role?: unknown } | null)?.role === "user")
+        ) {
+          json.messages = [...json.messages, { role: "user", content: SYSTEM_ONLY_USER_PLACEHOLDER }];
+        }
         body = JSON.stringify(json);
       } catch {
         body = text; // không phải JSON thì để server tự báo lỗi

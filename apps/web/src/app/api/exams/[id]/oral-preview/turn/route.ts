@@ -1,16 +1,13 @@
 import { isOpenaiOverloaded } from "@/lib/openaiResilience";
-import { createOpenaiClient } from "@/lib/openaiClient";
+import { getOralExamTextAi } from "@/lib/oralExamEmbed";
 import {
   AiTutorError,
   openAiChatCompute,
-  openAiEmbedCompute,
   runOralExamPreviewTurn,
 } from "@feedbackme/core-feedback";
 import {
   assertCanEditExam,
   CourseAuthzError,
-  getIntegrationSecret,
-  IntegrationError,
 } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
@@ -65,17 +62,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   // A6.7 — chủ đề thử: chỉ nhận chuỗi; runOralExamPreviewTurn kiểm chủ đề có thuộc đề này không.
   const topicId = typeof body?.topicId === "string" && body.topicId ? body.topicId : null;
 
-  let openaiKey: string;
+  let ai: Awaited<ReturnType<typeof getOralExamTextAi>>;
   try {
-    openaiKey = await getIntegrationSecret("openai");
+    ai = await getOralExamTextAi();
   } catch (e) {
-    if (e instanceof IntegrationError && e.code === "key_not_found") {
+    if ((e as Error).message === "openai_not_configured") {
       return Response.json({ error: "openai_not_configured" }, { status: 503 });
     }
     throw e;
   }
 
-  const openai = createOpenaiClient(openaiKey);
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -93,8 +89,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
           studentMessage,
           forceEnd: body?.forceEnd === true,
           topicId,
-          computeChat: openAiChatCompute(openai),
-          computeEmbed: openAiEmbedCompute(openai),
+          computeChat: openAiChatCompute(ai.openai),
+          computeEmbed: ai.computeEmbed,
           onDelta: (delta) => send("delta", delta),
         });
         send("done", { ended: result.ended, questionsAsked: result.questionsAsked });

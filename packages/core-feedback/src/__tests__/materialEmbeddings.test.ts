@@ -91,7 +91,7 @@ describe("embedMaterial (A6.2)", () => {
     const material = await makeMaterial(exam.id, owner.id, "Nội dung ôn tập chương 1.", "e1");
 
     const r = await embedMaterial(owner.id, material.id, constantEmbed(fakeVector(1, 0)));
-    expect(r).toEqual({ chunkCount: 1, skipped: false });
+    expect(r).toEqual({ chunkCount: 1, skipped: false, embedded: true });
 
     const chunks = await prisma.oralExamMaterialChunk.findMany({ where: { materialId: material.id } });
     expect(chunks).toHaveLength(1);
@@ -112,7 +112,7 @@ describe("embedMaterial (A6.2)", () => {
     };
 
     const r = await embedMaterial(owner.id, material.id, compute);
-    expect(r).toEqual({ chunkCount: 0, skipped: true });
+    expect(r).toEqual({ chunkCount: 0, skipped: true, embedded: false });
     expect(computeCalled).toBe(false);
   });
 

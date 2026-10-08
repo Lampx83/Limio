@@ -5,6 +5,7 @@ import { AiTutorError } from "../aiTutor/errors";
 import { assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
 import { chunkText } from "./chunk";
 import { DEFAULT_EMBEDDING_MODEL, type EmbedComputeFn } from "./embeddings";
+import { rankChunksByKeyword } from "./keywordSearch";
 
 function toVectorLiteral(embedding: number[]): string {
   return `[${embedding.join(",")}]`;
@@ -14,6 +15,11 @@ export interface EmbedMaterialResult {
   chunkCount: number;
   /** true khi extractedText null (chưa parse được ở A6.1) — không có gì để embed. */
   skipped: boolean;
+  /**
+   * true khi chunk đã có vector. false khi không có compute (không OpenAI key): chunk vẫn được lưu để
+   * AI tìm theo từ khoá, chỉ chưa tìm được theo nghĩa.
+   */
+  embedded: boolean;
 }
 
 /**
@@ -23,11 +29,15 @@ export interface EmbedMaterialResult {
  *
  * `compute` được inject (không tự dựng OpenAI client ở đây) để phần lưu-trữ
  * này test được bằng compute fn giả — xem embeddings.ts.
+ *
+ * `compute = null` (không có OpenAI key — chat chạy trên LLM tự host): vẫn cắt đoạn và lưu chunk với
+ * embedding NULL, không gọi AI, không tính trần token. Vấn đáp bằng chữ khi đó chọn đoạn theo từ khoá
+ * (searchMaterialChunksByKeyword). Có key sau này thì embed lại, hàm này xoá chunk cũ ghi chunk có vector.
  */
 export async function embedMaterial(
   actorUserId: string,
   materialId: string,
-  compute: EmbedComputeFn,
+  compute: EmbedComputeFn | null,
   db: PrismaClient = prisma,
 ): Promise<EmbedMaterialResult> {
   const material = await db.oralExamMaterial.findUnique({
@@ -41,33 +51,41 @@ export async function embedMaterial(
     // Chưa có text để embed (A6.1: extractedText null = parse thất bại, GV
     // cần biết để xử lý) — không phải lỗi, không tạo chunk rỗng.
     await db.oralExamMaterialChunk.deleteMany({ where: { materialId } });
-    return { chunkCount: 0, skipped: true };
+    return { chunkCount: 0, skipped: true, embedded: false };
   }
 
-  await assertWithinCaps(actorUserId, db, "generator");
+  // Không gọi AI thì không tiêu token: chỉ kiểm trần khi thật sự sẽ embed.
+  if (compute) await assertWithinCaps(actorUserId, db, "generator");
 
   // Xoá chunk cũ TRƯỚC khi gọi OpenAI: nếu compute() lỗi giữa chừng, material
   // tạm thời 0 chunk (retry được) chứ không lẫn chunk cũ với chunk mới.
   await db.oralExamMaterialChunk.deleteMany({ where: { materialId } });
 
-  let result: Awaited<ReturnType<EmbedComputeFn>>;
-  try {
-    result = await compute(texts);
-  } catch (e) {
-    throw new AiTutorError("openai_error", (e as Error).message, e);
-  }
-  if (result.embeddings.length !== texts.length) {
-    throw new AiTutorError("openai_error", "embedding_count_mismatch");
-  }
-
-  for (let i = 0; i < texts.length; i++) {
-    await db.$executeRaw`
-      INSERT INTO "OralExamMaterialChunk" (id, "materialId", "chunkIndex", "chunkText", embedding, "createdAt")
-      VALUES (${randomUUID()}, ${materialId}, ${i}, ${texts[i]}, ${toVectorLiteral(result.embeddings[i]!)}::vector, now())
-    `;
+  let result: Awaited<ReturnType<EmbedComputeFn>> | null = null;
+  if (compute) {
+    try {
+      result = await compute(texts);
+    } catch (e) {
+      throw new AiTutorError("openai_error", (e as Error).message, e);
+    }
+    if (result.embeddings.length !== texts.length) {
+      throw new AiTutorError("openai_error", "embedding_count_mismatch");
+    }
   }
 
-  await recordAiUsage(actorUserId, DEFAULT_EMBEDDING_MODEL, result.tokensUsed, 0, db);
+  if (result) {
+    for (let i = 0; i < texts.length; i++) {
+      await db.$executeRaw`
+        INSERT INTO "OralExamMaterialChunk" (id, "materialId", "chunkIndex", "chunkText", embedding, "createdAt")
+        VALUES (${randomUUID()}, ${materialId}, ${i}, ${texts[i]}, ${toVectorLiteral(result.embeddings[i]!)}::vector, now())
+      `;
+    }
+    await recordAiUsage(actorUserId, DEFAULT_EMBEDDING_MODEL, result.tokensUsed, 0, db);
+  } else {
+    await db.oralExamMaterialChunk.createMany({
+      data: texts.map((chunkText, chunkIndex) => ({ materialId, chunkIndex, chunkText })),
+    });
+  }
 
   // B15-style — xem lý do trong aiTutor.ts: mọi lượt gọi AI phải để lại dấu
   // vết trên dòng thời gian, kể cả hành động của GV chứ không chỉ SV.
@@ -80,12 +98,13 @@ export async function embedMaterial(
         examId: material.exam.id,
         materialId,
         chunkCount: texts.length,
-        tokensUsed: result.tokensUsed,
+        tokensUsed: result?.tokensUsed ?? 0,
+        embedded: result !== null,
       },
     },
   });
 
-  return { chunkCount: texts.length, skipped: false };
+  return { chunkCount: texts.length, skipped: false, embedded: result !== null };
 }
 
 export interface MaterialChunkMatch {
@@ -115,8 +134,28 @@ export async function searchMaterialChunks(
            1 - (c.embedding <=> ${vectorLiteral}::vector) AS similarity
     FROM "OralExamMaterialChunk" c
     JOIN "OralExamMaterial" m ON m.id = c."materialId"
-    WHERE m."examId" = ${examId}
+    WHERE m."examId" = ${examId} AND c.embedding IS NOT NULL
     ORDER BY c.embedding <=> ${vectorLiteral}::vector
     LIMIT ${k}
   `;
+}
+
+/**
+ * Phương án lùi khi không có vector (không OpenAI key, hoặc tài liệu được lưu trước khi có key): lấy
+ * các đoạn của đề rồi xếp hạng theo từ khoá. Số đoạn mỗi đề nhỏ (tài liệu vấn đáp cỡ chục trang) nên
+ * xếp hạng trong bộ nhớ là đủ — không cần dựng chỉ mục full-text riêng cho tiếng Việt/Trung.
+ * Trả rỗng khi không từ nào trùng; `similarity` mang điểm từ khoá (không cùng thang với cosine).
+ */
+export async function searchMaterialChunksByKeyword(
+  examId: string,
+  query: string,
+  k: number,
+  db: PrismaClient = prisma,
+): Promise<MaterialChunkMatch[]> {
+  const chunks = await db.oralExamMaterialChunk.findMany({
+    where: { material: { examId } },
+    orderBy: [{ material: { orderIndex: "asc" } }, { chunkIndex: "asc" }],
+    select: { id: true, materialId: true, chunkIndex: true, chunkText: true },
+  });
+  return rankChunksByKeyword(query, chunks, k).map(({ score, ...c }) => ({ ...c, similarity: score }));
 }

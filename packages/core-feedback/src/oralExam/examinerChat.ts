@@ -4,7 +4,7 @@ import { AiTutorError } from "../aiTutor/errors";
 import { assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
 import { DEFAULT_EXAMINER_MODEL, type ChatComputeFn, type ChatMessage } from "./chat";
 import { DEFAULT_EMBEDDING_MODEL, type EmbedComputeFn } from "./embeddings";
-import { searchMaterialChunks } from "./materialEmbeddings";
+import { searchMaterialChunks, searchMaterialChunksByKeyword } from "./materialEmbeddings";
 
 // Buổi vấn đáp KHÔNG giới hạn số câu hỏi — chỉ kết thúc khi hết giờ (ExamAttempt.durationSec) hoặc sinh viên bấm
 // kết thúc (forceEnd). Trước đây có trần cứng 8 câu; đã bỏ theo yêu cầu vì con số đó giáo viên không thấy, không đổi
@@ -298,6 +298,10 @@ function buildExtraRules(params: { phase: OralPhase; topic?: OralPromptTopic | n
  * chỉ theo câu trả lời — trước đây câu trả lời của sinh viên là thứ duy nhất lái việc chọn đoạn, nên
  * họ lái sang đâu thì AI nhận tài liệu ở đó và "hỏi tuần tự theo chủ đề" không đảm bảo được.
  * Không có chủ đề: hành vi cũ (lượt mở màn lấy vài đoạn đầu của tài liệu đứng đầu, sau đó tìm theo câu trả lời).
+ *
+ * `computeEmbed = null` (không có OpenAI key): bỏ bước vector, tìm theo từ khoá. Cùng đường lùi này dùng
+ * khi vector không ra đoạn nào (vd tài liệu được lưu trước khi có key nên chunk chưa có embedding) hoặc
+ * lời gọi embeddings lỗi, để một khoá thiếu/hạn chế quyền không làm hỏng lượt thi.
  */
 async function gatherOralContext(params: {
   db: PrismaClient;
@@ -305,7 +309,7 @@ async function gatherOralContext(params: {
   phase: OralPhase;
   topic: OralPromptTopic | null;
   answer: string | null;
-  computeEmbed: EmbedComputeFn;
+  computeEmbed: EmbedComputeFn | null;
 }): Promise<{ chunks: string[]; embedTokens: number }> {
   const { db, examId, phase, topic, answer, computeEmbed } = params;
   if (phase === "closing" || phase === "warmup") return { chunks: [], embedTokens: 0 };
@@ -315,14 +319,30 @@ async function gatherOralContext(params: {
   if (opening && !topicText) return { chunks: await getOpeningChunks(examId, db), embedTokens: 0 };
 
   const query = opening ? topicText! : topicText ? `${topicText}\n${answer ?? ""}` : answer!;
-  const embedResult = await computeEmbed([query]);
-  const found = (
-    await searchMaterialChunks(examId, embedResult.embeddings[0]!, CONTEXT_CHUNK_COUNT, db)
-  ).map((c) => c.chunkText);
-  if (found.length === 0 && opening) {
-    return { chunks: await getOpeningChunks(examId, db), embedTokens: embedResult.tokensUsed };
+  let found: string[] = [];
+  let embedTokens = 0;
+  if (computeEmbed) {
+    // Embeddings chỉ để chọn đoạn tài liệu cho khéo; lỗi ở đây (key hạn chế quyền, 429, mạng) không được
+    // làm hỏng cả lượt thi — lùi về từ khoá bên dưới và ghi log để admin còn biết key đang có vấn đề.
+    try {
+      const embedResult = await computeEmbed([query]);
+      embedTokens = embedResult.tokensUsed;
+      found = (
+        await searchMaterialChunks(examId, embedResult.embeddings[0]!, CONTEXT_CHUNK_COUNT, db)
+      ).map((c) => c.chunkText);
+    } catch (e) {
+      console.warn("[oral-exam] embeddings thất bại, lùi về tìm theo từ khoá:", (e as Error).message);
+    }
   }
-  return { chunks: found, embedTokens: embedResult.tokensUsed };
+  if (found.length === 0) {
+    found = (await searchMaterialChunksByKeyword(examId, query, CONTEXT_CHUNK_COUNT, db)).map(
+      (c) => c.chunkText,
+    );
+  }
+  if (found.length === 0 && opening) {
+    return { chunks: await getOpeningChunks(examId, db), embedTokens };
+  }
+  return { chunks: found, embedTokens };
 }
 
 // Số câu KIẾN THỨC đã hỏi: lượt khởi động (chào + làm quen) không tính là câu hỏi.
@@ -336,7 +356,8 @@ export interface RunOralExamTurnInput {
   /** null CHỈ hợp lệ cho lượt gọi đầu tiên (chưa có câu trả lời nào). */
   studentMessage: string | null;
   computeChat: ChatComputeFn;
-  computeEmbed: EmbedComputeFn;
+  /** null = không có OpenAI key: chọn đoạn tài liệu theo từ khoá thay vì vector. */
+  computeEmbed: EmbedComputeFn | null;
   model?: string;
   onDelta?: (delta: string) => void;
   /**
@@ -551,7 +572,8 @@ export interface RunOralExamPreviewTurnInput {
   /** null CHỈ hợp lệ khi history rỗng (lượt mở màn). */
   studentMessage: string | null;
   computeChat: ChatComputeFn;
-  computeEmbed: EmbedComputeFn;
+  /** null = không có OpenAI key: chọn đoạn tài liệu theo từ khoá thay vì vector. */
+  computeEmbed: EmbedComputeFn | null;
   model?: string;
   onDelta?: (delta: string) => void;
   forceEnd?: boolean;
