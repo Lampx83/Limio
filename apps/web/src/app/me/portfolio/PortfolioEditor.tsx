@@ -12,21 +12,27 @@ type Row = {
   assignmentTitle: string;
   groupKey: string;
   groupTitle: string;
+  status: "submitted" | "graded";
   score: number | null;
   maxScore: number;
+  submittedAt: string;
   gradedAt: string | null;
   pinned: boolean;
   note: string | null;
 };
 
-type Settings = { slug: string; isPublic: boolean; headline: string };
+type Course = { courseId: string; title: string; certNumber: string; issuedAt: string; pinned: boolean };
+
+type Settings = { slug: string; isPublic: boolean; headline: string; about: string };
 
 const NOTE_MAX = 500;
+const ABOUT_MAX = 500;
 
 const ERRORS: Record<string, string> = {
   slug_invalid: "Đường dẫn chỉ gồm chữ thường không dấu, số và dấu gạch ngang (3–40 ký tự).",
   slug_taken: "Đường dẫn này đã có người dùng.",
-  not_graded: "Bài này chưa được chấm lại nên chưa ghim được.",
+  course_not_completed: "Bạn cần hoàn thành khoá học này trước.",
+  group_full: "Mỗi khoá chỉ khoe được số bài tối đa cho phép. Bỏ một bài để chọn bài khác.",
   validation_failed: "Nội dung không hợp lệ.",
 };
 
@@ -41,9 +47,22 @@ async function send(url: string, method: string, body?: unknown) {
   return data;
 }
 
-export default function PortfolioEditor({ initial, rows: initialRows }: { initial: Settings; rows: Row[] }) {
+export default function PortfolioEditor({
+  initial,
+  rows: initialRows,
+  courses: initialCourses,
+  maxPerGroup,
+}: {
+  initial: Settings;
+  rows: Row[];
+  courses: Course[];
+  /** Trần bài khoe mỗi khoá — server là nguồn sự thật, UI chỉ phản chiếu. */
+  maxPerGroup: number;
+}) {
   const [settings, setSettings] = useState(initial);
   const [headline, setHeadline] = useState(initial.headline);
+  const [about, setAbout] = useState(initial.about);
+  const [courses, setCourses] = useState(initialCourses);
   const [slugDraft, setSlugDraft] = useState<string | null>(null);
   const [rows, setRows] = useState(initialRows);
   const [busy, setBusy] = useState(false);
@@ -52,27 +71,40 @@ export default function PortfolioEditor({ initial, rows: initialRows }: { initia
     typeof window === "undefined" ? `/p/${settings.slug}` : `${window.location.origin}/p/${settings.slug}`;
   const pinnedCount = rows.filter((r) => r.pinned).length;
 
-  const groups = useMemo(() => {
-    const m = new Map<string, { title: string; rows: Row[] }>();
-    for (const r of rows) {
-      const g = m.get(r.groupKey) ?? { title: r.groupTitle, rows: [] };
-      g.rows.push(r);
-      m.set(r.groupKey, g);
-    }
-    return [...m.values()];
+  const rowsByGroup = useMemo(() => {
+    const m = new Map<string, Row[]>();
+    for (const r of rows) m.set(r.groupKey, [...(m.get(r.groupKey) ?? []), r]);
+    return m;
   }, [rows]);
+  const courseKeys = new Set(courses.map((c) => `course:${c.courseId}`));
+  const otherGroups = useMemo(
+    () => [...rowsByGroup.entries()].filter(([key]) => !courseKeys.has(key)),
+    // courseKeys đổi theo `courses`, không đổi khi chỉ bật/tắt khoe khoá.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [rowsByGroup, courses.length],
+  );
 
   async function saveSettings(patch: Partial<Settings>) {
     setBusy(true);
     try {
       const r = await send("/api/me/portfolio", "PATCH", patch);
-      setSettings({ slug: r.slug, isPublic: r.isPublic, headline: r.headline ?? "" });
+      setSettings({ slug: r.slug, isPublic: r.isPublic, headline: r.headline ?? "", about: r.about ?? "" });
       return true;
     } catch (e) {
       toast.error((e as Error).message);
       return false;
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function toggleCourse(course: Course) {
+    const url = `/api/me/portfolio/courses/${course.courseId}`;
+    try {
+      await send(url, course.pinned ? "DELETE" : "PUT");
+      setCourses((cs) => cs.map((c) => (c.courseId === course.courseId ? { ...c, pinned: !course.pinned } : c)));
+    } catch (e) {
+      toast.error((e as Error).message);
     }
   }
 
@@ -166,12 +198,29 @@ export default function PortfolioEditor({ initial, rows: initialRows }: { initia
               value={headline}
               onChange={(e) => setHeadline(e.target.value)}
             />
+          </div>
+          <label className="text-meta mt-3 block" htmlFor="pf-about">
+            Giới thiệu ngắn (tuỳ chọn)
+          </label>
+          <textarea
+            id="pf-about"
+            className="textarea mt-1 text-sm"
+            rows={3}
+            maxLength={ABOUT_MAX}
+            placeholder="Vài câu về bạn: bạn thích làm gì, đang tìm cơ hội nào?"
+            value={about}
+            onChange={(e) => setAbout(e.target.value)}
+          />
+          <div className="mt-1 flex items-center justify-between">
+            <span className="text-caption">
+              {about.length}/{ABOUT_MAX}
+            </span>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
-              disabled={busy || headline === settings.headline}
+              disabled={busy || (headline === settings.headline && about === settings.about)}
               onClick={async () => {
-                if (await saveSettings({ headline })) toast.success("Đã lưu");
+                if (await saveSettings({ headline, about })) toast.success("Đã lưu");
               }}
             >
               Lưu
@@ -219,38 +268,126 @@ export default function PortfolioEditor({ initial, rows: initialRows }: { initia
 
       <section className="mt-8">
         <h2 className="text-h3">
-          Bài đã được chấm <span className="text-meta font-normal">· đã chọn {pinnedCount}</span>
+          Khoá học và sản phẩm <span className="text-meta font-normal">· đã chọn {pinnedCount} bài</span>
         </h2>
-        {rows.length === 0 ? (
+        <p className="text-meta mt-1">
+          Tick khoá bạn muốn khoe (kèm giấy chứng nhận), rồi chọn tối đa {maxPerGroup} bài tiêu biểu trong khoá đó. Bài của
+          khoá chưa tick sẽ không hiện ra ngoài.
+        </p>
+        {courses.length === 0 && otherGroups.length === 0 ? (
           <EmptyState
             className="mt-4"
             icon="🗂️"
-            title="Chưa có bài nào được chấm"
-            description="Khi giáo viên chấm bài tập của bạn, bài sẽ hiện ở đây để bạn chọn đưa vào portfolio."
+            title="Chưa có khoá nào hoàn thành"
+            description="Khi hoàn thành 100% một khoá học, bạn nhận giấy chứng nhận và khoe khoá đó cùng bài làm ở đây."
           />
         ) : (
-          groups.map((g) => (
-            <div key={g.title} className="mt-5">
-              <h3 className="text-h4">{g.title}</h3>
-              <ul className="mt-2 space-y-2">
-                {g.rows.map((r) => (
-                  <PortfolioRow key={r.submissionId} row={r} onToggle={() => togglePin(r)} onSaveNote={(n) => saveNote(r, n)} />
-                ))}
-              </ul>
-            </div>
-          ))
+          <>
+            {courses.map((c) => (
+              <GroupSection
+                key={c.courseId}
+                title={c.title}
+                subtitle={`Hoàn thành ${formatDate(c.issuedAt)} · Chứng nhận ${c.certNumber}`}
+                course={c}
+                onToggleCourse={() => toggleCourse(c)}
+                rows={rowsByGroup.get(`course:${c.courseId}`) ?? []}
+                maxPerGroup={maxPerGroup}
+                onTogglePin={togglePin}
+                onSaveNote={saveNote}
+              />
+            ))}
+            {otherGroups.map(([key, groupRows]) => (
+              <GroupSection
+                key={key}
+                title={groupRows[0]!.groupTitle}
+                rows={groupRows}
+                maxPerGroup={maxPerGroup}
+                onTogglePin={togglePin}
+                onSaveNote={saveNote}
+              />
+            ))}
+          </>
         )}
       </section>
     </>
   );
 }
 
+function GroupSection({
+  title,
+  subtitle,
+  course,
+  onToggleCourse,
+  rows,
+  maxPerGroup,
+  onTogglePin,
+  onSaveNote,
+}: {
+  title: string;
+  subtitle?: string;
+  course?: Course;
+  onToggleCourse?: () => Promise<void>;
+  rows: Row[];
+  maxPerGroup: number;
+  onTogglePin: (row: Row) => Promise<void>;
+  onSaveNote: (row: Row, note: string) => Promise<void>;
+}) {
+  const pinned = rows.filter((r) => r.pinned).length;
+  const full = pinned >= maxPerGroup;
+  const hidden = course && !course.pinned;
+  return (
+    <div className="card mt-4 p-3 sm:p-4">
+      {course ? (
+        <label className="flex cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 shrink-0 accent-brand-600"
+            checked={course.pinned}
+            onChange={() => void onToggleCourse?.()}
+          />
+          <span className="min-w-0 flex-1">
+            <span className="text-h4 block break-words">{title}</span>
+            <span className="text-caption">{subtitle}</span>
+          </span>
+          <span className={course.pinned ? "chip-success" : "chip"}>{course.pinned ? "Đang khoe" : "Đang ẩn"}</span>
+        </label>
+      ) : (
+        <h3 className="text-h4">{title}</h3>
+      )}
+      {rows.length > 0 && (
+        <div className={`mt-3 ${hidden ? "opacity-60" : ""}`}>
+          <p className={`text-caption mb-2 ${full ? "font-semibold text-brand-700" : ""}`}>
+            {full
+              ? `Đã chọn đủ ${pinned}/${maxPerGroup} bài. Bỏ một bài để chọn bài khác.`
+              : `Đã chọn ${pinned}/${maxPerGroup} bài`}
+            {hidden && " · Bài chỉ hiện ra ngoài khi bạn khoe khoá này."}
+          </p>
+          <ul className="space-y-2">
+            {rows.map((r) => (
+              <PortfolioRow
+                key={r.submissionId}
+                row={r}
+                locked={full && !r.pinned}
+                onToggle={() => onTogglePin(r)}
+                onSaveNote={(n) => onSaveNote(r, n)}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PortfolioRow({
   row,
+  locked,
   onToggle,
   onSaveNote,
 }: {
   row: Row;
+  /** Khoá đã đủ trần: ô chưa tick không bấm được, ô đã tick vẫn bỏ được. */
+  locked: boolean;
   onToggle: () => Promise<void>;
   onSaveNote: (note: string) => Promise<void>;
 }) {
@@ -258,13 +395,16 @@ function PortfolioRow({
   const [pending, setPending] = useState(false);
 
   return (
-    <li className={`card p-3 sm:p-4 ${row.pinned ? "border-brand-300" : ""}`}>
-      <label className="flex cursor-pointer items-start gap-3">
+    <li
+      className={`card p-3 sm:p-4 ${row.pinned ? "border-brand-300" : ""} ${locked ? "opacity-50" : ""}`}
+      title={locked ? "Đã đủ số bài cho khoá này. Bỏ một bài để chọn bài này." : undefined}
+    >
+      <label className={`flex items-start gap-3 ${locked ? "cursor-not-allowed" : "cursor-pointer"}`}>
         <input
           type="checkbox"
           className="mt-1 h-4 w-4 shrink-0 accent-brand-600"
           checked={row.pinned}
-          disabled={pending}
+          disabled={pending || locked}
           onChange={async () => {
             setPending(true);
             await onToggle();
@@ -275,7 +415,11 @@ function PortfolioRow({
         <span className="min-w-0 flex-1">
           <span className="block font-medium">{row.assignmentTitle}</span>
           <span className="text-caption">
-            {row.gradedAt && <>Chấm ngày {formatDate(row.gradedAt)} · </>}
+            {row.status === "graded" && row.gradedAt ? (
+              <>Chấm ngày {formatDate(row.gradedAt)} · </>
+            ) : (
+              <>Nộp ngày {formatDate(row.submittedAt)} · chưa chấm</>
+            )}
             {row.score != null && (
               <span title="Chỉ bạn thấy điểm">
                 {row.score}/{row.maxScore} điểm (chỉ bạn thấy)

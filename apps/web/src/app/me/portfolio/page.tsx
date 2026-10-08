@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getPortfolioEditor } from "@feedbackme/core-lms";
+import { getPortfolioEditor, PORTFOLIO_MAX_ITEMS_PER_GROUP } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import PortfolioEditor from "./PortfolioEditor";
 
@@ -9,7 +9,7 @@ export default async function PortfolioPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/me/portfolio");
 
-  const { portfolio, rows } = await getPortfolioEditor(session.user.id);
+  const { portfolio, rows, courses } = await getPortfolioEditor(session.user.id);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-6 lg:px-6">
@@ -19,11 +19,22 @@ export default async function PortfolioPage() {
         cho nhà tuyển dụng, trường học khác hoặc bất kỳ ai muốn xem năng lực thực tế của bạn.
       </p>
       <p className="mt-2 text-meta">
-        Chọn những bài đã được giáo viên chấm mà bạn muốn khoe, rồi bật công khai để gửi link cho người khác.
+        Chọn khoá học đã hoàn thành và vài bài tiêu biểu mà bạn muốn khoe, rồi bật công khai để gửi link cho người khác.
       </p>
       <PortfolioEditor
-        initial={{ slug: portfolio.slug, isPublic: portfolio.isPublic, headline: portfolio.headline ?? "" }}
-        rows={rows.map((r) => ({ ...r, gradedAt: r.gradedAt?.toISOString() ?? null }))}
+        initial={{
+          slug: portfolio.slug,
+          isPublic: portfolio.isPublic,
+          headline: portfolio.headline ?? "",
+          about: portfolio.about ?? "",
+        }}
+        rows={rows.map((r) => ({
+          ...r,
+          submittedAt: r.submittedAt.toISOString(),
+          gradedAt: r.gradedAt?.toISOString() ?? null,
+        }))}
+        courses={courses.map((c) => ({ ...c, issuedAt: c.issuedAt.toISOString() }))}
+        maxPerGroup={PORTFOLIO_MAX_ITEMS_PER_GROUP}
       />
     </main>
   );

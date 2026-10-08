@@ -65,6 +65,8 @@ export const LearningEventType = {
   PortfolioItemAdded: "portfolio.item.added",
   PortfolioItemUpdated: "portfolio.item.updated",
   PortfolioItemRemoved: "portfolio.item.removed",
+  PortfolioCourseAdded: "portfolio.course.added",
+  PortfolioCourseRemoved: "portfolio.course.removed",
   PortfolioVisibilityChanged: "portfolio.visibility.changed",
   CourseInstructorAdded: "course.instructor.added",
   CourseInstructorRemoved: "course.instructor.removed",

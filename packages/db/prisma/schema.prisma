@@ -961,6 +961,8 @@ model Certificate {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
+  portfolioCourses PortfolioCourse[]
+
   @@unique([userId, courseId])
   @@index([courseId])
 }
@@ -5225,11 +5227,30 @@ model Portfolio {
   // false = trang /p/<slug> trả 404 cho mọi người.
   isPublic  Boolean  @default(false)
   headline  String?
+  // Đoạn giới thiệu ngắn (≤ PORTFOLIO_ABOUT_MAX ký tự), học viên tự viết.
+  about     String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items PortfolioItem[]
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items   PortfolioItem[]
+  courses PortfolioCourse[]
+}
+
+// Khoá học học viên chọn khoe trên trang công khai. Trỏ vào Certificate chứ
+// không phải Course: chỉ khoá đã hoàn thành (đã có chứng nhận) mới khoe được,
+// và link xác thực /verify/<certNumber> đi kèm sẵn.
+model PortfolioCourse {
+  id            String   @id @default(uuid())
+  portfolioId   String
+  certificateId String
+  createdAt     DateTime @default(now())
+
+  portfolio   Portfolio   @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  certificate Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, certificateId])
+  @@index([certificateId])
 }
 
 model PortfolioItem {

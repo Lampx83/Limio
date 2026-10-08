@@ -134,9 +134,11 @@ const EXPORT_SELECT = {
           slug: true,
           isPublic: true,
           headline: true,
+          about: true,
           createdAt: true,
           updatedAt: true,
           items: { select: { submissionId: true, note: true, createdAt: true } },
+          courses: { select: { certificateId: true, createdAt: true } },
         },
       },
       // Nộp theo nhóm — nhóm đang tham gia trong từng khoá. Lịch sử vào/rời nằm

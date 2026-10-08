@@ -2,22 +2,21 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import {
   getOrCreatePortfolio,
-  pinPortfolioItem,
-  unpinPortfolioItem,
+  pinPortfolioCourse,
+  unpinPortfolioCourse,
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
-import { mapKnownError, readJson } from "@/lib/apiHelpers";
+import { mapKnownError } from "@/lib/apiHelpers";
 
-type Ctx = { params: { submissionId: string } };
+type Ctx = { params: { courseId: string } };
 
-/** A8 — ghim bài vào e-portfolio (đã chấm hay chưa đều được), hoặc sửa câu giới thiệu. Body: { note?: string | null } */
-export async function PUT(req: Request, { params }: Ctx) {
+/** A8 — khoe một khoá đã hoàn thành (có chứng nhận) trên e-portfolio. */
+export async function PUT(_req: Request, { params }: Ctx) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const body = (await readJson(req)) as { note?: unknown } | null;
   try {
-    const r = await pinPortfolioItem(userId, params.submissionId, body?.note ?? null);
-    revalidatePath(`/p/${(await getOrCreatePortfolio(userId)).slug}`);
+    const r = await pinPortfolioCourse(userId, params.courseId);
+    if (r.created) revalidatePath(`/p/${(await getOrCreatePortfolio(userId)).slug}`);
     return NextResponse.json(r);
   } catch (e) {
     const m = mapKnownError(e);
@@ -26,10 +25,11 @@ export async function PUT(req: Request, { params }: Ctx) {
   }
 }
 
+/** Thôi khoe khoá. Bài đã ghim của khoá được giữ lại nhưng ẩn khỏi trang công khai. */
 export async function DELETE(_req: Request, { params }: Ctx) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const r = await unpinPortfolioItem(userId, params.submissionId);
+  const r = await unpinPortfolioCourse(userId, params.courseId);
   if (r.removed) revalidatePath(`/p/${(await getOrCreatePortfolio(userId)).slug}`);
   return NextResponse.json(r);
 }
