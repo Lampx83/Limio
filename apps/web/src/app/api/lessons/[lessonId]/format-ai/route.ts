@@ -21,11 +21,16 @@ export async function POST(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
-  const body = (await readJson(req)) as { html?: string; template?: string } | null;
+  const body = (await readJson(req)) as { html?: string; template?: string; addObjectivesSummary?: unknown } | null;
   if (!body || typeof body.html !== "string" || !body.html.trim()) {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   }
   if (!isLessonFormatTemplateKey(body.template)) {
+    return NextResponse.json({ error: "validation_failed" }, { status: 400 });
+  }
+
+  // Cờ tuỳ chọn; thiếu = bật (mặc định của formatLessonContent). Chỉ boolean thật mới hợp lệ.
+  if (body.addObjectivesSummary !== undefined && typeof body.addObjectivesSummary !== "boolean") {
     return NextResponse.json({ error: "validation_failed" }, { status: 400 });
   }
 
@@ -49,7 +54,11 @@ export async function POST(
   }
 
   try {
-    const result = await formatLessonContent(userId, { html: body.html, template: body.template }, openai);
+    const result = await formatLessonContent(
+      userId,
+      { html: body.html, template: body.template, addObjectivesSummary: body.addObjectivesSummary },
+      openai,
+    );
     return NextResponse.json(result);
   } catch (e) {
     if (e instanceof AiTutorError) {

@@ -692,7 +692,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
     label: "Sạch sẽ",
     rules: `- font-family: ${FONT_STACK} cho MỌI thẻ
 - <h2>: style="color:#1e40af;font-size:1.7rem;font-weight:700;margin:1.5rem 0 .6rem"
-- <h3> (mục tiêu/tổng kết): style="color:#1e40af;font-size:1.42rem;margin:0 0 .6rem"
+- <h3> (mục tiêu/tổng kết/mục con): style="color:#1e40af;font-size:1.42rem;margin:0 0 .6rem"
 - <p>/<li>: style="color:#374151;font-size:1.25rem;line-height:1.7"
 - <div class="callout">: style="background:#eff6ff;border-left:4px solid #1e40af;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"
 - <table>: style="border-collapse:collapse;width:100%;margin:12px 0"
@@ -766,6 +766,13 @@ export interface FormatLessonContentInput {
   /** HTML hiện có trong ô richtext — thường là văn bản thô dán vào, lộn xộn. */
   html: string;
   template: LessonFormatTemplateKey;
+  /**
+   * Mặc định BẬT. Bật: AI luôn dựng Mục tiêu học tập + Tổng kết, tóm từ chính
+   * nội dung bài. Tắt: chỉ thêm khi bài gốc đủ cơ sở, không thì bỏ qua — GV
+   * muốn giữ nguyên bài thì tắt. (Trước đây chỉ có chế độ "tắt", nên AI hay bỏ
+   * hẳn hai phần này, nhất là Tổng kết ở cuối bài.)
+   */
+  addObjectivesSummary?: boolean;
 }
 
 export async function formatLessonContent(
@@ -788,20 +795,35 @@ export async function formatLessonContent(
   }
   await assertWithinCaps(userId, db, "generator");
 
+  const addObjSum = input.addObjectivesSummary !== false;
+  const objectivesLine = `<div class="lesson-objectives"><h3>Mục tiêu học tập</h3><ul><li>...</li></ul></div> — mỗi mục dùng ĐỘNG TỪ HÀNH ĐỘNG cụ thể theo thang Bloom (vd "phân biệt được", "áp dụng được", "phân tích được" — KHÔNG dùng "hiểu", "biết" chung chung)`;
+  const summaryLine = `<div class="lesson-summary"><h3>Tổng kết</h3><ul><li>...</li></ul></div>`;
+  const structureRules = addObjSum
+    ? `Cấu trúc — LUÔN thêm cả Mục tiêu học tập (đầu bài) lẫn Tổng kết (cuối bài), kể cả khi bài gốc không có đoạn nào như vậy. Hai phần này CHỈ được rút từ nội dung bài (3–5 ý mỗi phần), KHÔNG đưa kiến thức ngoài bài:
+1. ${objectivesLine}
+2. Dựng phân cấp đề mục 2 tầng — mục lớn <h2>...</h2> (TỐI ĐA 5 mục), và khi một mục đủ dài hoặc có nhiều ý nhỏ thì tách mục con <h3>...</h3> nằm TRONG mục <h2> đó (khoảng 2–4 mục con mỗi mục; mục ngắn thì KHÔNG tách). Không dùng cấp sâu hơn <h3>. Nội dung đặt trong <p>/<ul>/<table> (được chỉnh câu chữ theo quy tắc biên tập bên dưới).
+   Nhận diện đề mục ngầm trong bản gốc (dòng đánh số "1.", "1.1", "Bước 1", "Phần A", đoạn in đậm đứng riêng một dòng, dòng ngắn VIẾT HOA, câu hỏi dẫn dắt đứng riêng) rồi gán cấp: ý chính → <h2>, ý phụ thuộc ý chính → <h3>. Nếu bản gốc chưa có đề mục nào, tự đặt tiêu đề ngắn (≤ 10 từ), mô tả đúng nội dung đoạn đó. Tiêu đề gốc giữ nguyên ý nghĩa và số thứ tự đi kèm (vd "1. Nguyên tắc gần nhau là gì"); tiêu đề do bạn tự đặt thì KHÔNG đánh số. Nếu có nhiều hơn 5 ý chính, gộp các ý gần nhau thành một <h2> và đưa phần còn lại xuống <h3>.
+   <h3> làm mục con dùng đúng style <h3> của phong cách bên dưới nhưng margin:1.2rem 0 .6rem (không dính vào đoạn trước).
+3. Đoạn ghi chú/lưu ý quan trọng (nếu có trong bài gốc): bọc trong <div class="callout">...</div>
+4. ${summaryLine} — tóm các ý chính đã trình bày ở trên; nếu bài gốc đã có đoạn tổng kết/kết luận thì dùng lại, đừng viết trùng.`
+    : `Cấu trúc — chỉ thêm phần nào có đủ cơ sở từ nội dung gốc, KHÔNG bịa:
+1. Nếu suy ra được mục tiêu học tập: ${objectivesLine}
+2. Dựng phân cấp đề mục 2 tầng — mục lớn <h2>...</h2> (TỐI ĐA 5 mục), và khi một mục đủ dài hoặc có nhiều ý nhỏ thì tách mục con <h3>...</h3> nằm TRONG mục <h2> đó (khoảng 2–4 mục con mỗi mục; mục ngắn thì KHÔNG tách). Không dùng cấp sâu hơn <h3>. Nội dung đặt trong <p>/<ul>/<table> (được chỉnh câu chữ theo quy tắc biên tập bên dưới).
+   Nhận diện đề mục ngầm trong bản gốc (dòng đánh số "1.", "1.1", "Bước 1", "Phần A", đoạn in đậm đứng riêng một dòng, dòng ngắn VIẾT HOA, câu hỏi dẫn dắt đứng riêng) rồi gán cấp: ý chính → <h2>, ý phụ thuộc ý chính → <h3>. Nếu bản gốc chưa có đề mục nào, tự đặt tiêu đề ngắn (≤ 10 từ), mô tả đúng nội dung đoạn đó. Tiêu đề gốc giữ nguyên ý nghĩa và số thứ tự đi kèm (vd "1. Nguyên tắc gần nhau là gì"); tiêu đề do bạn tự đặt thì KHÔNG đánh số. Nếu có nhiều hơn 5 ý chính, gộp các ý gần nhau thành một <h2> và đưa phần còn lại xuống <h3>.
+   <h3> làm mục con dùng đúng style <h3> của phong cách bên dưới nhưng margin:1.2rem 0 .6rem (không dính vào đoạn trước).
+3. Đoạn ghi chú/lưu ý quan trọng (nếu có trong bài gốc): bọc trong <div class="callout">...</div>
+4. Nếu suy ra được tổng kết: ${summaryLine}`;
+
   const system = `Bạn là chuyên gia thiết kế học liệu. Định dạng lại nội dung bài học (dán thô, có thể lộn xộn) thành HTML sạch, có cấu trúc, và ÁP DỤNG đúng phong cách bên dưới.
 
-Cấu trúc — chỉ thêm phần nào có đủ cơ sở từ nội dung gốc, KHÔNG bịa:
-1. Nếu suy ra được mục tiêu học tập: <div class="lesson-objectives"><h3>Mục tiêu học tập</h3><ul><li>...</li></ul></div> — mỗi mục dùng ĐỘNG TỪ HÀNH ĐỘNG cụ thể theo thang Bloom (vd "phân biệt được", "áp dụng được", "phân tích được" — KHÔNG dùng "hiểu", "biết" chung chung)
-2. Chia nội dung thành các mục <h2>...</h2> — TỐI ĐA 5 mục, giữ nguyên câu chữ trong <p>/<ul>/<table>
-3. Đoạn ghi chú/lưu ý quan trọng (nếu có trong bài gốc): bọc trong <div class="callout">...</div>
-4. Nếu suy ra được tổng kết: <div class="lesson-summary"><h3>Tổng kết</h3><ul><li>...</li></ul></div>
+${structureRules}
 
 Phong cách "${guide.label}" — áp bằng inline style="..." trực tiếp trên từng thẻ, KHÔNG dùng thẻ <style>:
 ${guide.rules}
 
 Quy tắc bắt buộc:
-- KHÔNG thêm, xoá, hay diễn giải lại Ý NGHĨA nội dung gốc — chỉ định dạng lại cách trình bày.
-- KHÔNG bịa mục tiêu/tổng kết nếu nội dung gốc không đủ cơ sở — bỏ qua phần đó thay vì đoán.
+- Quy tắc biên tập — ĐƯỢC: sửa lỗi chính tả, dấu câu, ngữ pháp; viết lại câu lủng củng/dài dòng cho mạch lạc; thêm câu dẫn/chuyển ý hoặc giải thích ngắn khi giúp người học dễ theo dõi; lược phần lặp thừa hoặc rời rạc. KHÔNG ĐƯỢC: đổi ý nghĩa, số liệu, thuật ngữ chuyên môn, tên riêng, trích dẫn, href/src; đưa kiến thức hay khẳng định mới không có cơ sở trong bài; xoá ý quan trọng. Nội dung trong <blockquote> (trích dẫn) giữ nguyên từng chữ.
+${addObjSum ? "- Mục tiêu/tổng kết phải bám sát nội dung bài; không bịa ý không có trong bài." : "- KHÔNG bịa mục tiêu/tổng kết nếu nội dung gốc không đủ cơ sở — bỏ qua phần đó thay vì đoán."}
 - Có <table>: LUÔN bọc trong <div style="overflow-x:auto">...</div> để bảng dài không vỡ layout trên di động.
 - Output CHỈ chứa thẻ: div, h2, h3, p, ul, ol, li, strong, em, table, thead, tbody, tr, td, th, a, img, blockquote. KHÔNG <script>, <style>, <iframe>, <form>, thuộc tính onXxx.
 - Giữ nguyên href/src của link/ảnh có trong nội dung gốc.

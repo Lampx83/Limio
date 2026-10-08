@@ -60,6 +60,7 @@ export default function AiFormatPanel({
 }) {
   const [revealed, setRevealed] = useState(false);
   const [template, setTemplate] = useState<LessonFormatTemplateKey>("vibrant");
+  const [addObjectivesSummary, setAddObjectivesSummary] = useState(true);
   const [busyFormat, setBusyFormat] = useState(false);
   const [busySave, setBusySave] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +79,7 @@ export default function AiFormatPanel({
       const res = await fetch(apiUrl(`/api/lessons/${lessonId}/format-ai`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html, template }),
+        body: JSON.stringify({ html, template, addObjectivesSummary }),
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -169,6 +170,23 @@ export default function AiFormatPanel({
         <p className="mt-1.5 text-sm text-muted">{LESSON_FORMAT_TEMPLATE_HINTS[template]}</p>
       </div>
 
+      <label className="flex items-start gap-2 text-sm text-default">
+        <input
+          type="checkbox"
+          checked={addObjectivesSummary}
+          onChange={(e) => setAddObjectivesSummary(e.target.checked)}
+          disabled={busyFormat || busySave}
+          className="mt-0.5 h-4 w-4 shrink-0"
+        />
+        <span>
+          Tự thêm <strong>Mục tiêu học tập</strong> và <strong>Tổng kết</strong>
+          <span className="block text-muted">
+            AI tóm từ chính nội dung bài. Bỏ chọn nếu muốn giữ nguyên bài gốc —
+            khi đó chỉ thêm nếu bài có sẵn đủ ý.
+          </span>
+        </span>
+      </label>
+
       <div>
         <div className="flex justify-center">
           <button
@@ -191,8 +209,9 @@ export default function AiFormatPanel({
           </button>
         </div>
         <p className="mt-1.5 text-sm text-muted">
-          AI sắp xếp lại đúng nội dung đang có theo giao diện đã chọn — không
-          thêm bớt ý. &ldquo;Áp dụng&rdquo; sẽ lưu thẳng vào bài học.
+          AI sắp xếp lại nội dung theo giao diện đã chọn, sửa chính tả và câu cú,
+          có thể thêm bớt nhẹ cho mạch lạc — không đổi ý nghĩa, số liệu hay
+          thuật ngữ. &ldquo;Áp dụng&rdquo; sẽ lưu thẳng vào bài học — nên đọc lại kết quả trước.
         </p>
       </div>
 

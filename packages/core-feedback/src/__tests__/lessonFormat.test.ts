@@ -182,6 +182,118 @@ describe("formatLessonContent — happy path", () => {
   });
 });
 
+describe("formatLessonContent — tuỳ chọn thêm mục tiêu & tổng kết", () => {
+  async function captureSystemPrompt(
+    slug: string,
+    extra: { addObjectivesSummary?: boolean },
+  ): Promise<string> {
+    const userId = await makeUser(slug);
+    let captured = "";
+    const openai = {
+      chat: {
+        completions: {
+          create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+            captured = req.messages.find((m) => m.role === "system")?.content ?? "";
+            return {
+              choices: [{ message: { content: JSON.stringify({ html: "<p>x</p>" }) } }],
+              usage: { prompt_tokens: 1, completion_tokens: 1 },
+            };
+          },
+        },
+      },
+    } as unknown as OpenAI;
+    await formatLessonContent(userId, { html: "<p>x</p>", template: "clean", ...extra }, openai);
+    return captured;
+  }
+
+  it("mặc định (không truyền cờ) = BẬT: bắt buộc có cả Mục tiêu học tập lẫn Tổng kết", async () => {
+    const prompt = await captureSystemPrompt("objsum-default", {});
+    expect(prompt).toContain("LUÔN thêm");
+    expect(prompt).toContain("lesson-objectives");
+    expect(prompt).toContain("lesson-summary");
+    // Không còn đường "bỏ qua thay vì đoán" — chính câu này khiến AI hay bỏ phần cuối.
+    expect(prompt).not.toContain("bỏ qua phần đó thay vì đoán");
+    // Vẫn chặn kiến thức ngoài bài.
+    expect(prompt).toContain("CHỈ được rút từ nội dung bài");
+  });
+
+  it("TẮT: giữ hành vi cũ — chỉ thêm khi đủ cơ sở, cho phép bỏ qua", async () => {
+    const prompt = await captureSystemPrompt("objsum-off", { addObjectivesSummary: false });
+    expect(prompt).not.toContain("LUÔN thêm");
+    expect(prompt).toContain("bỏ qua phần đó thay vì đoán");
+  });
+});
+
+describe("formatLessonContent — quy tắc biên tập", () => {
+  it("cho phép sửa chính tả/câu cú + thêm bớt nhẹ, nhưng vẫn cấm đổi nghĩa/số liệu/kiến thức mới (cả hai chế độ cờ)", async () => {
+    for (const addObjectivesSummary of [true, false]) {
+      const userId = await makeUser(`edit-${addObjectivesSummary}`);
+      let prompt = "";
+      const openai = {
+        chat: {
+          completions: {
+            create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+              prompt = req.messages.find((m) => m.role === "system")?.content ?? "";
+              return {
+                choices: [{ message: { content: JSON.stringify({ html: "<p>x</p>" }) } }],
+                usage: { prompt_tokens: 1, completion_tokens: 1 },
+              };
+            },
+          },
+        },
+      } as unknown as OpenAI;
+      await formatLessonContent(
+        userId,
+        { html: "<p>x</p>", template: "clean", addObjectivesSummary },
+        openai,
+      );
+      expect(prompt).toContain("sửa lỗi chính tả");
+      expect(prompt).toContain("lược phần lặp thừa");
+      expect(prompt).toContain("KHÔNG ĐƯỢC: đổi ý nghĩa, số liệu");
+      // Luật cũ "không thêm bớt" đã bị gỡ — mâu thuẫn với quy tắc biên tập.
+      expect(prompt).not.toContain("KHÔNG thêm, xoá, hay diễn giải lại Ý NGHĨA");
+      expect(prompt).not.toContain("giữ nguyên câu chữ trong");
+    }
+  });
+});
+
+describe("formatLessonContent — phân cấp đề mục", () => {
+  it("dặn dựng 2 tầng h2/h3, nhận diện đề mục ngầm, giữ trần 5 h2, không dùng h4 — cả hai chế độ cờ và cả 4 template", async () => {
+    for (const template of ["clean", "academic", "modern", "vibrant"] as const) {
+      for (const addObjectivesSummary of [true, false]) {
+        const userId = await makeUser(`hier-${template}-${addObjectivesSummary}`);
+        let prompt = "";
+        const openai = {
+          chat: {
+            completions: {
+              create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+                prompt = req.messages.find((m) => m.role === "system")?.content ?? "";
+                return {
+                  choices: [{ message: { content: JSON.stringify({ html: "<p>x</p>" }) } }],
+                  usage: { prompt_tokens: 1, completion_tokens: 1 },
+                };
+              },
+            },
+          },
+        } as unknown as OpenAI;
+        await formatLessonContent(
+          userId,
+          { html: "<p>x</p>", template, addObjectivesSummary },
+          openai,
+        );
+        expect(prompt).toContain("phân cấp đề mục 2 tầng");
+        expect(prompt).toContain("mục con <h3>");
+        expect(prompt).toContain("Nhận diện đề mục ngầm");
+        expect(prompt).toContain("TỐI ĐA 5 mục");
+        expect(prompt).toContain("Không dùng cấp sâu hơn <h3>");
+        // Danh sách thẻ cho phép KHÔNG được thêm h4 (output sanitize theo tập này).
+        expect(prompt).toContain("Output CHỈ chứa thẻ: div, h2, h3, p,");
+        expect(prompt).not.toContain("<h4>");
+      }
+    }
+  });
+});
+
 describe("formatLessonContent — hạn mức ví token", () => {
   it("hết ví tháng → no_token_budget, KHÔNG gọi OpenAI (chặn trước khi tốn tiền)", async () => {
     const userId = await makeUser("broke");
