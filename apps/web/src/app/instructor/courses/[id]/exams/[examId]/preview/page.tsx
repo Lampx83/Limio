@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { assertCanEditExam, CourseAuthzError } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { plainToRichHtml } from "@/lib/richText";
+import { oralUiText, resolveOralUiLang } from "@/lib/oralUiText";
 import OralExamRoom from "@/components/exam/OralExamRoom";
 import OralVoiceRoom from "@/components/exam/OralVoiceRoom";
 
@@ -34,6 +35,7 @@ export default async function OralExamPreviewPage({
       courseId: true,
       createdById: true,
       answerMode: true,
+      language: true,
       description: true,
       durationMin: true,
       course: { select: { title: true } },
@@ -65,7 +67,7 @@ export default async function OralExamPreviewPage({
     examId: exam.id,
     attemptId: "preview", // không có lượt thi thật — các nhánh dùng attemptId đã bị tắt ở chế độ preview
     examTitle: exam.title,
-    courseTitle: exam.course?.title ?? "Đề độc lập",
+    courseTitle: exam.course?.title ?? oralUiText(resolveOralUiLang(exam.language)).standaloneExam,
     startedAt: now,
     durationSec: exam.durationMin * 60,
     serverNow: now,
@@ -76,6 +78,7 @@ export default async function OralExamPreviewPage({
     studentName: session.user.name,
     studentImageUrl: session.user.image,
     preview: true,
+    language: resolveOralUiLang(exam.language),
     previewTopicId: chosenTopic?.id ?? null,
     topicCard: chosenTopic?.studentBrief ? { title: chosenTopic.title, text: chosenTopic.studentBrief } : null,
   };

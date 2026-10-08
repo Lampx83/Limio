@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { getAttemptRuntime, getOralAttemptQuota } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { oralUiText, resolveOralUiLang } from "@/lib/oralUiText";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +36,9 @@ export default async function OralExamSubmittedPage({
 
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { title: true, courseId: true },
+    select: { title: true, courseId: true, language: true },
   });
+  const t = oralUiText(resolveOralUiLang(exam?.language)).submitted;
 
   // Thi nhiều lượt: hiện số lượt đã dùng + nút "Thi lại" (chỉ khi còn lượt và không có lượt đang làm dở).
   const quota = await getOralAttemptQuota(session.user.id, params.examId);
@@ -60,31 +62,30 @@ export default async function OralExamSubmittedPage({
         href={`/learn/${params.slug}`}
         className="absolute left-4 top-4 text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300 sm:left-6 sm:top-6"
       >
-        ← Khoá học
+        {t.backToCourseArrow}
       </a>
       <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl">
         ✓
       </div>
-      <h1 className="mb-2 text-h3">Đã nộp bài vấn đáp</h1>
+      <h1 className="mb-2 text-h3">{t.title}</h1>
       <p className="mb-1 text-body text-faint">{exam?.title}</p>
       <p className="mt-4 banner-info px-4 py-3 text-sm">
-        Buổi vấn đáp đã kết thúc. Giảng viên sẽ nghe lại và chấm điểm — kết
-        quả sẽ được thông báo riêng, không hiện tự động ở đây.
+        {t.banner}
       </p>
       {quota.policy === "multi" && (
         <p className="mt-4 text-sm text-faint">
-          Bạn đã dùng {quota.used}/{quota.max} lượt.
-          {quota.remaining === 0 && " Đã hết lượt thi."}
+          {t.used(quota.used, quota.max)}
+          {quota.remaining === 0 && t.noAttemptsLeft}
         </p>
       )}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         {retakeHref && (
           <a href={retakeHref} className="btn btn-primary btn-sm">
-            Thi lại (còn {quota.remaining} lượt)
+            {t.retake(quota.remaining)}
           </a>
         )}
         <a href={`/learn/${params.slug}`} className="btn btn-secondary btn-sm">
-          Quay lại khoá học
+          {t.backToCourse}
         </a>
       </div>
     </main>

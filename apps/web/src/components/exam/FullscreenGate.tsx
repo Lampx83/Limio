@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { oralUiText, type OralUiLang } from "@/lib/oralUiText";
 
 /**
  * Initial overlay shown before the learner enters fullscreen, and again if
@@ -28,6 +29,7 @@ export default function FullscreenGate({
   onEnter,
   required,
   preview = false,
+  lang = "vi",
 }: {
   examTitle: string;
   /** Called right after fullscreen request resolves (success or failure). */
@@ -36,7 +38,10 @@ export default function FullscreenGate({
   required: boolean;
   /** Giáo viên thử — giữ nguyên giao diện nhưng không hứa "ghi lại" vì bản thử không ghi gì. */
   preview?: boolean;
+  /** Ngôn ngữ giao diện (phòng vấn đáp theo ngôn ngữ của đề); mặc định tiếng Việt. */
+  lang?: OralUiLang;
 }) {
+  const t = oralUiText(lang).gate;
   // Bắt đầu đóng, rồi mới mở nếu máy làm được — dò tính năng phải chạy phía
   // client, không phải lúc render trên server.
   const [open, setOpen] = useState(false);
@@ -111,25 +116,16 @@ export default function FullscreenGate({
       <div className="max-w-md rounded-lg bg-white p-6 text-center shadow-xl">
         <h2 className="mb-2 text-lg font-semibold">{examTitle}</h2>
         {exited ? (
-          <p className="mb-4 text-sm text-red-700">
-            Bài thi đang không ở chế độ toàn màn hình. Vui lòng quay lại để
-            tiếp tục làm bài{preview ? "." : " — rời quá lâu sẽ được ghi vào nhật ký buổi thi."}
-          </p>
+          <p className="mb-4 text-sm text-red-700">{t.exitedBody(preview)}</p>
         ) : (
-          <p className="mb-4 text-sm text-faint">
-            Bài thi yêu cầu chế độ toàn màn hình. Nhấn nút bên dưới để bắt
-            đầu.{" "}
-            {preview
-              ? "Đây là bản thử — việc rời tab hay thoát toàn màn hình không bị ghi lại."
-              : "Việc rời tab hoặc thoát chế độ toàn màn hình sẽ được ghi lại."}
-          </p>
+          <p className="mb-4 text-sm text-faint">{t.enterBody(preview)}</p>
         )}
         <button
           type="button"
           onClick={requestFs}
           className="rounded bg-lime-600 px-4 py-2 text-sm font-medium text-white hover:bg-lime-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-500"
         >
-          {exited ? "Quay lại toàn màn hình" : "Vào toàn màn hình & bắt đầu"}
+          {exited ? t.exitedButton : t.enterButton}
         </button>
       </div>
     </div>
