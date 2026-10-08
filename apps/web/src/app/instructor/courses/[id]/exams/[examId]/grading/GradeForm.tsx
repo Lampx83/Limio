@@ -47,7 +47,7 @@ export default function GradeForm({
       const code = typeof data?.error === "string" ? data.error : "llm_failed";
       setError(
         code === "openai_not_configured"
-          ? "Chưa cấu hình OpenAI. Vào Admin → Tích hợp để thêm khóa."
+          ? "Chưa cấu hình AI. Vào Admin → Tích hợp để thêm khóa."
           : `Gợi ý lỗi: ${code}`,
       );
       return;

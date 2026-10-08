@@ -161,7 +161,7 @@ export default async function AdminDashboard() {
           icon=""
           tone="brand"
         />
-        <IntegrationKpi label="OpenAI" ok={openaiOk} />
+        <IntegrationKpi label="AI API Key" ok={openaiOk} />
         <IntegrationKpi label="Stripe" ok={stripeOk} optional />
         <IntegrationKpi label="VNPay" ok={vnpayOk} optional />
         <IntegrationKpi label="Google Analytics" ok={ga4Ok} optional />
