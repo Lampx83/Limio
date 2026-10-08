@@ -8,10 +8,10 @@ type NavItem = { href: string; label: string };
 
 const NAV: Record<string, NavItem[]> = {
   guest: [
-    { href: "/catalog", label: "Catalog" },
+    { href: "/catalog", label: "Danh mục khoá học" },
   ],
   learner: [
-    { href: "/catalog", label: "Catalog" },
+    { href: "/catalog", label: "Danh mục khoá học" },
     { href: "/me/enrollments", label: "Khóa của tôi" },
     { href: "/tournaments", label: "🏆 Đấu trường thi đấu" },
     { href: "/me/skills", label: "Skill" },
@@ -19,7 +19,7 @@ const NAV: Record<string, NavItem[]> = {
     { href: "/me/dashboard", label: "Tổng quan" },
   ],
   instructor: [
-    { href: "/catalog", label: "Catalog" },
+    { href: "/catalog", label: "Danh mục khoá học" },
     { href: "/instructor/courses", label: "Khoá học" },
     { href: "/instructor/assignments", label: "Bài tập" },
     { href: "/instructor/tournaments", label: "🏆 Đấu trường thi đấu" },

@@ -62,7 +62,7 @@ const GROUPS: Group[] = [
     id: "explore",
     label: "Khám phá",
     items: [
-      { label: "Catalog khoá học", href: "/catalog", icon: Compass, tourId: "help-tour-nav-catalog" },
+      { label: "Danh mục khoá học", href: "/catalog", icon: Compass, tourId: "help-tour-nav-catalog" },
       { label: "Đấu trường", href: "/tournaments", icon: Trophy, tourId: "help-tour-nav-tournaments" },
       { label: "Bảng xếp hạng", href: "/leaderboard", icon: BarChart3, tourId: "help-tour-nav-leaderboard" },
     ],
@@ -128,7 +128,7 @@ export default function StudentLeftMenu({
           </div>
           <div className="min-w-0">
             <div className="text-xs font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-              Workspace
+              Khu vực
             </div>
             <div className="truncate text-sm font-semibold text-emerald-900 dark:text-emerald-100">
               Học viên

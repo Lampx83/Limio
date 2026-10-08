@@ -1,4 +1,5 @@
 import BadgeIcon from "@/components/ui/BadgeIcon";
+import { Award, BookOpen, CheckCircle2, Target } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -149,7 +150,7 @@ export default async function LearnerDashboard({
       {continueTarget && (
         <Link
           href={`/learn/${continueTarget.e.course.slug}/lessons/${continueTarget.e.lastLessonId}`}
-          className="group relative mt-6 block overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover transition-transform hover:-translate-y-0.5 sm:p-8"
+          className="group relative mt-6 block overflow-hidden rounded-2xl bg-brand-gradient p-4 text-white shadow-card-hover transition-transform hover:-translate-y-0.5 sm:p-5"
         >
           <div
             className="absolute inset-0 bg-hero-grid opacity-20"
@@ -161,7 +162,7 @@ export default async function LearnerDashboard({
               <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide backdrop-blur">
                 Tiếp tục học
               </span>
-              <p className="mt-3 h-display text-2xl font-bold sm:text-3xl">
+              <p className="mt-2 h-display text-xl font-bold sm:text-2xl">
                 {continueTarget.e.course.title}
               </p>
               <div className="mt-3 flex items-center gap-3">
@@ -176,7 +177,7 @@ export default async function LearnerDashboard({
                 </span>
               </div>
             </div>
-            <span className="text-3xl transition-transform group-hover:translate-x-2">
+            <span className="text-2xl transition-transform group-hover:translate-x-2">
               →
             </span>
           </div>
@@ -185,31 +186,30 @@ export default async function LearnerDashboard({
 
       {/* KPI cards */}
       <div data-tour="help-tour-kpis" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        {/* Bốn thẻ cùng một kiểu: cùng màu số, cùng có biểu tượng. Trước đây chỉ
+            một thẻ có biểu tượng và số "Chủ đề vững" tô cam, nên sinh viên đọc
+            thành cảnh báo dù đó là con số tốt. */}
         <Stat
-          label="Khóa đã enroll"
+          label="Khóa đã đăng ký"
           value={enrollments.length}
-          tone="brand"
-          icon=""
+          icon={<BookOpen size={18} aria-hidden />}
           href="/me/enrollments"
         />
         <Stat
           label="Bài đã hoàn thành"
           value={`${completedLessons}/${totalLessons}`}
-          tone="success"
-          icon="✓"
+          icon={<CheckCircle2 size={18} aria-hidden />}
         />
         <Stat
           label="Chủ đề vững"
           value={masteredSkills}
-          tone="accent"
-          icon=""
+          icon={<Target size={18} aria-hidden />}
           href="/me/skills"
         />
         <Stat
           label="Huy hiệu"
           value={recentBadges.length}
-          tone="brand"
-          icon=""
+          icon={<Award size={18} aria-hidden />}
           href="/me/badges"
         />
       </div>
@@ -229,7 +229,7 @@ export default async function LearnerDashboard({
               <p className="mt-4 text-sm text-muted">
                 Chưa có khóa nào.{" "}
                 <Link href="/catalog" className="link">
-                  Vào catalog
+                  Vào danh mục khoá học
                 </Link>
                 .
               </p>
@@ -490,27 +490,19 @@ export default async function LearnerDashboard({
 function Stat({
   label,
   value,
-  tone,
   icon,
   href,
 }: {
   label: string;
   value: string | number;
-  tone: "brand" | "success" | "accent" | "danger";
-  icon: string;
+  icon: React.ReactNode;
   href?: string;
 }) {
-  const toneClass = {
-    brand: "text-brand-600",
-    success: "text-success-600",
-    accent: "text-accent-600",
-    danger: "text-danger-600",
-  }[tone];
   const inner = (
     <>
-      <div className="flex items-baseline justify-between">
-        <span className="text-xl">{icon}</span>
-        <span className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-brand-600">{icon}</span>
+        <span className="h-display text-2xl font-bold tabular-nums text-brand-600">
           {value}
         </span>
       </div>

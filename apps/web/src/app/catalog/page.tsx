@@ -167,10 +167,10 @@ export default async function CatalogPage({
                 Trang chủ
               </Link>
               <span aria-hidden="true">/</span>
-              <span className="text-[rgb(var(--text))]">Catalog</span>
+              <span className="text-[rgb(var(--text))]">Danh mục khoá học</span>
             </nav>
           ) : (
-            <span className="chip-brand">Catalog</span>
+            <span className="chip-brand">Danh mục khoá học</span>
           )}
           <h1 className="mt-3 h-display text-h1">Khám phá khóa học</h1>
           <p className="mt-2 text-meta">
