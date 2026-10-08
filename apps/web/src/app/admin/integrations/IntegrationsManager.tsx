@@ -19,7 +19,7 @@ const LABELS: Record<
   openai: {
     name: "OpenAI API key",
     placeholder: "sk-proj-...",
-    help: "Dùng cho embeddings, Whisper (nghe) và TTS (đọc) của vấn đáp AI; chat có thể chạy trên LLM tự host. Lấy ở platform.openai.com.",
+    help: "Chỉ dùng cho Whisper (nghe) và TTS (đọc) của vấn đáp bằng giọng nói. Chat và embeddings chạy trên máy chủ tự host (LLM_BASE_URL, EMBED_BASE_URL), không dùng key này. Lấy key ở platform.openai.com.",
     emoji: "",
   },
   "stripe.secret": {

@@ -96,8 +96,6 @@ const PRICE_PER_1K_INPUT: Record<string, number> = {
   "gpt-4o": 0.0025,
   // LANG G7 — Whisper tính theo phút (0,006 USD); 1 phút = 6.000 token ví nên ≈ 0,001 USD / 1K token ví.
   "whisper-1": 0.001,
-  // A6.2 — embeddings không có output token, giá tính hết vào input.
-  "text-embedding-3-small": 0.00002,
 };
 const PRICE_PER_1K_OUTPUT: Record<string, number> = {
   "gpt-4o-mini": 0.0006,
