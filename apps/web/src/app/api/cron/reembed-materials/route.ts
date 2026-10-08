@@ -7,6 +7,9 @@ import {
 } from "@feedbackme/core-feedback";
 
 export const runtime = "nodejs";
+// BẮT BUỘC: GET handler không đụng dynamic API sẽ bị Next prerender tĩnh lúc build (không có env, không có
+// DB) rồi phục vụ kết quả đóng băng — route không bao giờ chạy thật. Các route cron khác cũng làm vậy.
+export const dynamic = "force-dynamic";
 // Mỗi tài liệu vài chục đoạn × vài giây; chạy lô nhỏ, gọi lại cho tới khi `remaining` = 0.
 export const maxDuration = 300;
 
