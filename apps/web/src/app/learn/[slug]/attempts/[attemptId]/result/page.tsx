@@ -17,6 +17,8 @@ import SafeHtml from "@/components/SafeHtml";
 import AnswerBreakdown from "@/components/quiz/AnswerBreakdown";
 import ConfidenceStars from "@/components/quiz/ConfidenceStars";
 import { plainToRichHtml } from "@/lib/richText";
+import { formatPoints, summarizeScore, xpMultiplierNote } from "@/lib/quizResultView";
+import { Zap } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -54,12 +56,19 @@ export default async function ResultPage({
   }
 
   const correctCount = result.items.filter((i) => i.isCorrect).length;
+  const scoreSummary = summarizeScore({
+    scorePct: result.attempt.scorePct,
+    totalPoints: result.items.reduce((s, i) => s + i.points, 0),
+    correctCount,
+    totalQuestions: result.items.length,
+  });
 
   // B4 AC-2.9 — sau MỌI lần nộp (không chờ trượt 2 lần): nhãn của bài vừa làm
   // + bước tiếp theo trong lộ trình. Quiz không gắn bài thì chưa có nhãn để nói.
   const quizContext = await prisma.quiz.findUnique({
     where: { id: result.attempt.quizId },
     select: {
+      title: true,
       courseId: true,
       lesson: { select: { id: true, title: true } },
     },
@@ -186,8 +195,17 @@ export default async function ResultPage({
           ]),
         );
 
+  /** Liên kết "hỏi thêm" tới trợ giảng AI của bài học chứa quiz. Dùng cho mọi câu sai, kể cả câu chưa có lời giải. */
+  const askMoreHref = (prompt: string) =>
+    quizLesson?.lessonId
+      ? `/learn/${params.slug}/lessons/${quizLesson.lessonId}?hoi=${encodeURIComponent(
+          `Mình vừa làm sai câu: “${prompt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300)}”. ` +
+            `Bạn giải thích giúp mình vì sao đáp án mình chọn lại chưa đúng nhé.`,
+        )}`
+      : null;
+
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
+    <main id="dau-trang" className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <Link
         href={`/learn/${params.slug}`}
         className="link inline-flex items-center gap-1 text-sm"
@@ -195,9 +213,13 @@ export default async function ResultPage({
         ← Quay lại khóa học
       </Link>
 
+      {/* Trang này trước đây không có tiêu đề: người mở lại từ lịch sử không biết đây là kết quả của bài nào. */}
+      <p className="mt-4 text-meta">Kết quả bài kiểm tra</p>
+      <h1 className="h-display text-2xl font-bold">{quizContext?.title ?? "Bài kiểm tra"}</h1>
+
       {/* Hero score */}
       <section
-        className="relative mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 p-8 text-white shadow-card-hover"
+        className="relative mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 p-6 text-white shadow-card-hover"
       >
         <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/15 blur-3xl" aria-hidden />
         <div className="absolute -bottom-16 -left-12 h-56 w-56 rounded-full bg-white/10 blur-3xl" aria-hidden />
@@ -205,26 +227,29 @@ export default async function ResultPage({
           {greetName && (
             <p className="mt-3 text-lg font-semibold">Chào {greetName},</p>
           )}
-          <p className="mt-4 h-display text-6xl font-bold tabular-nums">
+          <p className="mt-3 h-display text-5xl font-bold tabular-nums">
             {result.attempt.scorePct?.toFixed(1) ?? "—"}
             <span className="text-3xl opacity-70">%</span>
           </p>
-          <p className="mt-2 text-sm opacity-90">
+          <p className="mt-2 text-base font-medium">
             {correctCount}/{result.items.length} câu đúng
+            {scoreSummary && (
+              <>
+                {" · "}
+                {formatPoints(scoreSummary.earnedPoints)}/{formatPoints(scoreSummary.totalPoints)} điểm
+              </>
+            )}
           </p>
+          {scoreSummary?.note && <p className="mt-1 max-w-xl text-sm">{scoreSummary.note}</p>}
           {xpPayload?.amount !== undefined && (
-            <div className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 backdrop-blur">
-              <span className="text-lg"></span>
-              <span className="font-semibold">+{xpPayload.amount} XP</span>
-              {xpPayload.adaptiveMultiplier !== undefined &&
-                xpPayload.adaptiveMultiplier !== 1 && (
-                  <span className="text-xs opacity-80">
-                    · ×{xpPayload.adaptiveMultiplier}
-                    {xpPayload.adaptiveMultiplier < 1
-                      ? " (đã master)"
-                      : " (skill khó · bonus)"}
-                  </span>
-                )}
+            <div className="mt-4 rounded-xl bg-black/25 px-3 py-2">
+              <div className="inline-flex items-center gap-2">
+                <Zap size={18} aria-hidden />
+                <span className="font-semibold">+{xpPayload.amount} XP</span>
+              </div>
+              {xpMultiplierNote(xpPayload.adaptiveMultiplier) && (
+                <p className="mt-1 text-sm">{xpMultiplierNote(xpPayload.adaptiveMultiplier)}</p>
+              )}
             </div>
           )}
         </div>
@@ -285,15 +310,17 @@ export default async function ResultPage({
         </section>
       )}
 
+      <div className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-6">
       {/* Per-question results */}
-      <ol className="mt-8 space-y-4">
+      <ol className="space-y-4">
         {result.items.map((item, i) => {
           const fb = feedbackByQuestion.get(item.questionId);
           const isCorrect = item.isCorrect;
           return (
             <li
               key={item.questionId}
-              className={`overflow-hidden rounded-2xl border bg-[rgb(var(--surface))] shadow-card ${
+              id={`cau-${i + 1}`}
+              className={`scroll-mt-24 overflow-hidden rounded-2xl border bg-[rgb(var(--surface))] shadow-card ${
                 isCorrect ? "border-success-100" : "border-danger-100"
               }`}
             >
@@ -313,7 +340,8 @@ export default async function ResultPage({
                     {isCorrect ? "✓" : "✗"}
                   </span>
                   <span className="text-sm font-semibold">
-                    Câu {i + 1} · {item.points} điểm
+                    Câu {i + 1}
+                    <span className="ml-1.5 font-normal opacity-90">({item.points} điểm)</span>
                   </span>
                 </div>
                 {item.confidence !== null && (
@@ -348,12 +376,9 @@ export default async function ResultPage({
                     <p className="mt-2 whitespace-pre-wrap text-sm text-danger-700/90">
                       {fb.body}
                     </p>
-                    {quizLesson?.lessonId && (
+                    {askMoreHref(item.prompt) && (
                       <Link
-                        href={`/learn/${params.slug}/lessons/${quizLesson.lessonId}?hoi=${encodeURIComponent(
-                          `Mình vừa làm sai câu: “${item.prompt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300)}”. ` +
-                            `Bạn giải thích giúp mình vì sao đáp án mình chọn lại chưa đúng nhé.`,
-                        )}`}
+                        href={askMoreHref(item.prompt)!}
                         className="mt-3 inline-flex items-center gap-1 rounded-lg border border-danger-200 bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-danger-700 transition-colors hover:bg-danger-50"
                       >
                         Chỗ này mình chưa rõ — hỏi thêm
@@ -388,6 +413,24 @@ export default async function ResultPage({
                   </div>
                 )}
 
+                {/* Câu sai mà chưa có phản hồi hay lời giải: trước đây không hiện gì, người
+                    học phải tự đi tra ở chỗ khác. Nói rõ và chỉ đường tới trợ giảng. */}
+                {!isCorrect && !fb && !item.explanation && (
+                  <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+                    <p className="text-sm text-muted">
+                      Câu này chưa có lời giải trong bài. Bạn có thể hỏi trợ giảng AI để hiểu vì sao đáp án chưa đúng.
+                    </p>
+                    {askMoreHref(item.prompt) && (
+                      <Link
+                        href={askMoreHref(item.prompt)!}
+                        className="mt-3 inline-flex items-center gap-1 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                      >
+                        Hỏi trợ giảng về câu này
+                      </Link>
+                    )}
+                  </div>
+                )}
+
                 {/* B11 — câu sai đã có giải thích ghép sẵn trong khối phản hồi;
                     hiện lại ở đây là bắt đọc hai lần. */}
                 {item.explanation && !fb && (
@@ -406,6 +449,44 @@ export default async function ResultPage({
           );
         })}
       </ol>
+
+      {/* Ô chọn câu: xem lại từng câu mà không phải cuộn dài. Neo # nên không cần JavaScript. */}
+      <aside className="mt-6 lg:mt-0">
+        <nav
+          aria-label="Chọn câu để xem lại"
+          className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card lg:sticky lg:top-6"
+        >
+          <p className="text-meta">Xem lại từng câu</p>
+          <div className="mt-2 grid grid-cols-6 gap-1.5 lg:grid-cols-5">
+            {result.items.map((item, i) => (
+              <a
+                key={item.questionId}
+                href={`#cau-${i + 1}`}
+                aria-label={`Câu ${i + 1}: ${item.isCorrect ? "đúng" : "sai"}`}
+                className={`flex h-9 items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors ${
+                  item.isCorrect
+                    ? "bg-success-50 text-success-700 hover:bg-success-100"
+                    : "bg-danger-50 text-danger-700 hover:bg-danger-100"
+                }`}
+              >
+                {i + 1}
+              </a>
+            ))}
+          </div>
+          <ul className="mt-3 space-y-1 text-[11px] text-muted">
+            <li className="flex items-center gap-2">
+              <span className="inline-block h-3.5 w-3.5 rounded bg-success-50 ring-1 ring-success-200" /> Câu đúng
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="inline-block h-3.5 w-3.5 rounded bg-danger-50 ring-1 ring-danger-200" /> Câu sai
+            </li>
+          </ul>
+          <a href="#dau-trang" className="link mt-3 inline-block text-xs">
+            ↑ Về đầu trang
+          </a>
+        </nav>
+      </aside>
+      </div>
     </main>
   );
 }
