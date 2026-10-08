@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { DEFAULT_EMBEDDING_MODEL, isSelfHostedChat } from "@feedbackme/core-feedback";
+import { DEFAULT_EMBEDDING_MODEL, embedTexts, isEmbeddingConfigured, isSelfHostedChat } from "@feedbackme/core-feedback";
 import { getIntegrationSecret, IntegrationError, isAdmin } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
@@ -15,12 +15,12 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 /**
- * "Test đầy đủ" cho AI: thử thật chat, embeddings, Whisper và TTS (xem aiCapabilityCheck.ts). Hai chế độ
+ * "Test đầy đủ" cho AI: thử thật chat, embeddings (cả hai đều tự host), Whisper và TTS (xem aiCapabilityCheck.ts). Hai chế độ
  * như nút test cũ:
  *   - body { value: "sk-..." } — thử key đang gõ, trước khi lưu
  *   - body rỗng — thử key đã lưu
  * Chat luôn đi đúng đường production (LLM tự host nếu đã đặt LLM_BASE_URL), nên key OpenAI đang thử
- * không ảnh hưởng kết quả chat. Chưa có key OpenAI thì chỉ chat được thử, ba khả năng còn lại báo "bỏ qua".
+ * không ảnh hưởng kết quả chat. Embeddings đi đường tự host (EMBED_BASE_URL). Chưa có key OpenAI thì Whisper/TTS báo "bỏ qua".
  * Tốn dưới 0,001 USD mỗi lần bấm.
  */
 export async function POST(req: Request) {
@@ -54,6 +54,13 @@ export async function POST(req: Request) {
   const results = await runAiCapabilityChecks({
     chat: chatKey ? (createOpenaiClient(chatKey) as unknown as AiCapabilityClient) : null,
     openai: openaiKey ? (createOpenaiClient(openaiKey) as unknown as AiCapabilityClient) : null,
+    embed: isEmbeddingConfigured()
+      ? {
+          // Đi đúng đường production (embedTexts: xin 1536 chiều, header seckey). `signal` bị bỏ qua vì embedTexts
+          // đã tự đặt timeout riêng; kết quả check vẫn bị cắt bởi timeout ngoài của runAiCapabilityChecks.
+          create: async (body) => ({ data: [{ embedding: (await embedTexts([body.input])).embeddings[0]! }] }),
+        }
+      : null,
     chatBackend: selfHosted ? "self-hosted" : "openai",
     embeddingModel: DEFAULT_EMBEDDING_MODEL,
   });

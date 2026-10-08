@@ -3,8 +3,8 @@ import { toFile } from "openai";
 /**
  * "Test đầy đủ" cho tích hợp AI ở /admin/integrations.
  *
- * Nút test cũ chỉ gọi GET /v1/models nên báo xanh cả khi key (Restricted) thiếu quyền Whisper/TTS/
- * Embeddings, hoặc khi chat tự host (Qwen) từ chối request — đúng những lỗi chỉ lộ ra giữa buổi vấn đáp.
+ * Nút test cũ chỉ gọi GET /v1/models nên báo xanh cả khi key (Restricted) thiếu quyền Whisper/TTS,
+ * hoặc khi chat tự host (Qwen) từ chối request — đúng những lỗi chỉ lộ ra giữa buổi vấn đáp.
  * Ở đây thử thật từng khả năng mà hệ thống dùng, mỗi cái độc lập: một cái hỏng không che cái khác.
  *
  * Nhận client dạng cấu trúc (AiCapabilityClient) thay vì `OpenAI` để test bằng client giả; route ép kiểu
@@ -64,7 +64,7 @@ const DEFAULT_TIMEOUT_MS = 25_000;
 
 const META: Record<AiCheckId, { label: string; usedFor: string }> = {
   chat: { label: "Chat (LLM)", usedFor: "mọi tính năng AI: tutor, sinh câu hỏi, chấm, giám khảo vấn đáp" },
-  embeddings: { label: "Embeddings", usedFor: "chọn đoạn tài liệu theo nghĩa khi vấn đáp (không bắt buộc — có từ khoá thay thế)" },
+  embeddings: { label: "Embeddings (LLM tự host)", usedFor: "chọn đoạn tài liệu theo nghĩa khi vấn đáp (không bắt buộc — có từ khoá thay thế)" },
   stt: { label: "Whisper (nghe)", usedFor: "vấn đáp bằng giọng nói: nhận dạng câu trả lời của sinh viên" },
   tts: { label: "TTS (đọc)", usedFor: "vấn đáp bằng giọng nói: đọc câu hỏi thành tiếng (không bắt buộc)" },
 };
@@ -109,14 +109,18 @@ function describeError(
 ): { error: string; hint?: string } {
   const err = (e ?? {}) as ErrLike;
   const raw = scrub(String(err.message ?? e ?? "unknown")).slice(0, 300);
-  const selfHostedChat = id === "chat" && backend === "self-hosted";
+  // Chat và embeddings đều chạy trên máy chủ tự host (hai gateway/seckey riêng); Whisper/TTS là OpenAI.
+  const selfHostedChat = (id === "chat" || id === "embeddings") && backend === "self-hosted";
+  const what = id === "embeddings" ? "máy chủ embeddings" : "LLM tự host";
+  const seckey = id === "embeddings" ? "EMBED_SECKEY" : "LLM_SECKEY";
+  const baseVar = id === "embeddings" ? "EMBED_BASE_URL" : "LLM_BASE_URL";
   const status = err.status;
 
   if (err.name === "TimeoutError" || /timed? ?out/i.test(raw)) {
     return {
       error: raw,
       hint: selfHostedChat
-        ? "Quá thời gian chờ — LLM tự host chậm hoặc không phản hồi; kiểm tra máy chủ vLLM còn chạy."
+        ? `Quá thời gian chờ — ${what} chậm hoặc không phản hồi; kiểm tra máy chủ còn chạy.`
         : "Quá thời gian chờ — máy chủ AI chậm hoặc không phản hồi; thử lại sau ít phút.",
     };
   }
@@ -127,7 +131,7 @@ function describeError(
     return {
       error: raw,
       hint: selfHostedChat
-        ? "Gateway LLM từ chối xác thực — kiểm tra LLM_SECKEY."
+        ? `Gateway từ chối xác thực — kiểm tra ${seckey}.`
         : "Key sai hoặc đã bị thu hồi — tạo key mới ở platform.openai.com rồi lưu lại.",
     };
   }
@@ -141,14 +145,16 @@ function describeError(
     return {
       error: raw,
       hint: selfHostedChat
-        ? "Gateway LLM từ chối — kiểm tra LLM_SECKEY."
+        ? `Gateway từ chối — kiểm tra ${seckey}.`
         : `Key thiếu quyền ${need[id]}. Vào platform.openai.com → API keys → sửa quyền key.`,
     };
   }
   if (status === 404) {
     return {
       error: raw,
-      hint: "Project OpenAI chưa bật model này (hoặc tên model không còn tồn tại) — kiểm tra Project → Limits → Allowed models.",
+      hint: selfHostedChat
+        ? `${what[0]!.toUpperCase()}${what.slice(1)} không có model này — kiểm tra tên model (${id === "embeddings" ? "EMBED_MODEL" : "LLM_CHAT_MODEL"}) đã được tải trên máy chủ.`
+        : "Project OpenAI chưa bật model này (hoặc tên model không còn tồn tại) — kiểm tra Project → Limits → Allowed models.",
     };
   }
   if (status === 429) {
@@ -170,7 +176,7 @@ function describeError(
     return {
       error: raw,
       hint: selfHostedChat
-        ? "LLM tự host báo lỗi máy chủ — xem log vLLM."
+        ? `${what[0]!.toUpperCase()}${what.slice(1)} báo lỗi máy chủ — xem log trên máy chủ đó.`
         : "OpenAI báo lỗi máy chủ — thử lại sau ít phút.",
     };
   }
@@ -178,7 +184,7 @@ function describeError(
     return {
       error: raw,
       hint: selfHostedChat
-        ? "Không kết nối được tới LLM tự host — kiểm tra LLM_BASE_URL và mạng từ server web."
+        ? `Không kết nối được tới ${what} — kiểm tra ${baseVar} và mạng từ server web.`
         : "Không kết nối được tới OpenAI — kiểm tra mạng từ server web.",
     };
   }
@@ -222,13 +228,15 @@ const skipped = (id: AiCheckId, why: string): AiCheckResult => ({
 export async function runAiCapabilityChecks(opts: {
   /** Client cho chat (có thể là key giả khi chat tự host). null = bỏ qua. */
   chat: AiCapabilityClient | null;
-  /** Client OpenAI thật cho embeddings/Whisper/TTS. null = chưa có key ⇒ bỏ qua ba cái này. */
+  /** Client OpenAI thật cho Whisper/TTS. null = chưa có key ⇒ bỏ qua hai cái này. */
   openai: AiCapabilityClient | null;
+  /** Embeddings tự host (Ollama). null = chưa đặt EMBED_BASE_URL ⇒ bỏ qua; vấn đáp tìm đoạn theo từ khoá. */
+  embed: AiCapabilityClient["embeddings"] | null;
   chatBackend: "openai" | "self-hosted";
   embeddingModel: string;
   timeoutMs?: number;
 }): Promise<AiCheckResult[]> {
-  const { chat, openai, chatBackend, embeddingModel } = opts;
+  const { chat, openai, embed, chatBackend, embeddingModel } = opts;
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const noKey = "Chưa có OpenAI key";
 
@@ -251,16 +259,16 @@ export async function runAiCapabilityChecks(opts: {
         })
       : Promise.resolve(skipped("chat", "Chưa có client chat")),
 
-    openai
-      ? timed("embeddings", "openai", timeoutMs, async (signal) => {
-          const res = await openai.embeddings.create({ model: embeddingModel, input: "test" }, { signal });
+    embed
+      ? timed("embeddings", "self-hosted", timeoutMs, async (signal) => {
+          const res = await embed.create({ model: embeddingModel, input: "test" }, { signal });
           const dim = res.data[0]?.embedding?.length ?? 0;
           if (dim !== EMBEDDING_DIM) {
             throw new Error(`Vector ${dim} chiều, cột pgvector cần ${EMBEDDING_DIM}`);
           }
           return `${embeddingModel} · ${dim} chiều`;
         })
-      : Promise.resolve(skipped("embeddings", noKey)),
+      : Promise.resolve(skipped("embeddings", "Chưa đặt EMBED_BASE_URL")),
 
     openai
       ? timed("stt", "openai", timeoutMs, async (signal) => {

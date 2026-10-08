@@ -33,8 +33,17 @@ function fakeClient(over: {
   return { client, calls };
 }
 
-const run = (o: Omit<Parameters<typeof runAiCapabilityChecks>[0], "embeddingModel">) =>
-  runAiCapabilityChecks({ embeddingModel: "text-embedding-3-small", ...o });
+// Embeddings tách khỏi client OpenAI: mặc định dùng embeddings của client giả trừ khi test chỉ định `embed`.
+const run = (
+  o: Omit<Parameters<typeof runAiCapabilityChecks>[0], "embeddingModel" | "embed"> & {
+    embed?: Parameters<typeof runAiCapabilityChecks>[0]["embed"];
+  },
+) =>
+  runAiCapabilityChecks({
+    embeddingModel: "qwen3-embedding:8b-ctx16k",
+    embed: "embed" in o ? (o.embed ?? null) : (o.chat?.embeddings ?? o.openai?.embeddings ?? null),
+    ...o,
+  } as Parameters<typeof runAiCapabilityChecks>[0]);
 
 const byId = (rs: AiCheckResult[], id: string) => rs.find((r) => r.id === id)!;
 
@@ -98,9 +107,9 @@ describe("runAiCapabilityChecks", () => {
     expect(byId(rs, "chat").ok).toBe(true);
   });
 
-  it("không có client OpenAI ⇒ embeddings/stt/tts được bỏ qua, chat vẫn chạy", async () => {
+  it("không có client OpenAI và chưa cấu hình embeddings ⇒ embeddings/stt/tts được bỏ qua, chat vẫn chạy", async () => {
     const { client, calls } = fakeClient();
-    const rs = await run({ chat: client, openai: null, chatBackend: "self-hosted" });
+    const rs = await run({ chat: client, openai: null, embed: null, chatBackend: "self-hosted" });
     expect(byId(rs, "chat").ok).toBe(true);
     for (const id of ["embeddings", "stt", "tts"]) {
       expect(byId(rs, id).skipped).toBe(true);
@@ -109,6 +118,22 @@ describe("runAiCapabilityChecks", () => {
     expect(calls.embed).not.toHaveBeenCalled();
     expect(calls.stt).not.toHaveBeenCalled();
     expect(calls.tts).not.toHaveBeenCalled();
+  });
+
+  it("không có OpenAI key nhưng embeddings tự host chạy ⇒ embeddings vẫn được thử, stt/tts bỏ qua", async () => {
+    const { client, calls } = fakeClient();
+    const rs = await run({ chat: client, openai: null, embed: client.embeddings, chatBackend: "self-hosted" });
+    expect(byId(rs, "embeddings").ok).toBe(true);
+    expect(byId(rs, "embeddings").detail).toContain("qwen3-embedding");
+    expect(byId(rs, "stt").skipped).toBe(true);
+    expect(byId(rs, "tts").skipped).toBe(true);
+    expect(calls.embed).toHaveBeenCalledTimes(1);
+  });
+
+  it("embeddings 401 ⇒ gợi ý kiểm tra EMBED_SECKEY (không nhắc key OpenAI)", async () => {
+    const { client } = fakeClient({ embed: async () => { throw apiError(401, "unauthorized"); } });
+    const rs = await run({ chat: client, openai: client, chatBackend: "self-hosted" });
+    expect(byId(rs, "embeddings").hint).toContain("EMBED_SECKEY");
   });
 
   it("không có client chat ⇒ chat được bỏ qua", async () => {
