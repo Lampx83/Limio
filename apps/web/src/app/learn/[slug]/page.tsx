@@ -1,7 +1,7 @@
 import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Lock } from "lucide-react";
+import { ChevronRight, Lock } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import {
   canEditCourse,
@@ -25,6 +25,8 @@ import { reviewableToday } from "@/lib/flashcardSession";
 import { auth } from "@/lib/auth";
 import { StickyMobileCTA } from "@/components/ui";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
+import SmartBackLink from "@/components/SmartBackLink";
+import { continueButtonText, describeLevel, streakLabel } from "@/lib/courseHomeView";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 import LearningPathList from "@/components/LearningPathList";
 import CourseTeamPanel, { type CourseTeamState } from "@/components/course/CourseTeamPanel";
@@ -165,6 +167,20 @@ export default async function LearnCoursePage({
     .find((l) => !l.completed && !l.locked)?.id;
   const continueLessonId = enrollment.lastLessonId || firstOpenLessonId;
   const continueLabel = enrollment.lastLessonId ? "Tiếp tục" : firstOpenLessonId ? "Bắt đầu" : null;
+  const lessonTitleById = new Map(
+    course.modules.flatMap((m) => m.lessons.map((l) => [l.id, l.title] as const)),
+  );
+  const continueTitle = continueLessonId ? (lessonTitleById.get(continueLessonId) ?? null) : null;
+  // Bài để đánh dấu trong danh sách: bài đang học dở nếu có, nếu không thì bài chưa học đầu tiên.
+  // Bài gần nhất mà đã xong thì không còn là "đang học", nên đánh dấu bài kế tiếp thay vào đó.
+  const lastLessonDone = enrollment.lastLessonId ? completedSet.has(enrollment.lastLessonId) : false;
+  const markedLessonId =
+    enrollment.lastLessonId && !lastLessonDone ? enrollment.lastLessonId : (firstOpenLessonId ?? null);
+  const currentMark: "current" | "next" | null = !markedLessonId
+    ? null
+    : enrollment.lastLessonId && !lastLessonDone
+      ? "current"
+      : "next";
 
   // B4 AC-2.13 — ghi mẫu số uptake. Đo lường không được làm hỏng trang.
   if (learningPath.steps.length > 0) {
@@ -176,12 +192,7 @@ export default async function LearnCoursePage({
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
       {/* Breadcrumb */}
-      <Link
-        href={`/catalog/${params.slug}`}
-        className="link inline-flex items-center gap-1 text-sm"
-      >
-        ← Course detail
-      </Link>
+      <SmartBackLink fallbackHref="/me/dashboard" />
 
       {/* Hero header */}
       <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
@@ -207,7 +218,7 @@ export default async function LearnCoursePage({
               >
                 <span aria-hidden className="text-lg leading-none">🔥</span>
                 <span>
-                  {streak.currentStreak} ngày
+                  {streakLabel(streak.currentStreak)}
                   {streak.isActiveToday && (
                     <span className="ml-1 text-xs opacity-80">· hôm nay ✓</span>
                   )}
@@ -228,11 +239,12 @@ export default async function LearnCoursePage({
             <ProgressTile
               label="Điểm tương tác"
               value={`${xp.xp} XP`}
-              hint={
-                xp.isMaxLevel
-                  ? `Level ${xp.level} · ${xp.levelName} (tối đa)`
-                  : `Level ${xp.level} · ${xp.levelName} — +${xp.xpToNext} → L${xp.level + 1}`
-              }
+              hint={describeLevel({
+                level: xp.level,
+                levelName: xp.levelName,
+                xpToNext: xp.xpToNext,
+                isMaxLevel: xp.isMaxLevel,
+              })}
               pct={xp.levelProgressPct}
               barClass="bg-accent-300"
               tone="white"
@@ -241,7 +253,7 @@ export default async function LearnCoursePage({
                   href="/xp-guide"
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium text-white backdrop-blur transition-colors hover:bg-white/30"
                 >
-                  💡 Cách tính điểm
+                  Cách tính điểm
                 </Link>
               }
             />
@@ -249,12 +261,12 @@ export default async function LearnCoursePage({
 
           {/* Action buttons */}
           <div className="mt-5 flex flex-wrap gap-2">
-            {enrollment.lastLessonId && (
+            {continueLessonId && (
               <Link
-                href={`/learn/${params.slug}/lessons/${enrollment.lastLessonId}`}
+                href={`/learn/${params.slug}/lessons/${continueLessonId}`}
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02]"
               >
-                Tiếp tục bài gần nhất
+                {continueButtonText(enrollment.lastLessonId ? "continue" : "start", continueTitle)}
               </Link>
             )}
             {isComplete && (
@@ -430,6 +442,9 @@ export default async function LearnCoursePage({
               modules={course.modules}
               slug={params.slug}
               completedSet={completedSet}
+              collapsible
+              markLessonId={markedLessonId}
+              markKind={currentMark}
             />
           </section>
 
@@ -490,6 +505,7 @@ export default async function LearnCoursePage({
 
           {/* Leaderboard */}
           <CourseLeaderboardCard
+            showGuideLink={false}
             courseId={course.id}
             weekly={weeklyLeaderboard}
             allTime={allTimeLeaderboard}
@@ -607,16 +623,27 @@ function ModuleList({
   slug,
   completedSet,
   lessonQuery = "",
+  collapsible = false,
+  markLessonId = null,
+  markKind = null,
 }: {
   modules: ModuleForList[];
   slug: string;
   completedSet: Set<string>;
   lessonQuery?: string;
+  /** Thu gọn từng module; chỉ mở module chứa bài đang học (hoặc module đầu). Bản xem trước giữ mở hết. */
+  collapsible?: boolean;
+  markLessonId?: string | null;
+  markKind?: "current" | "next" | null;
 }) {
+  const visibleModules = modules.filter((m) => !m.isHidden);
+  const openModuleId =
+    visibleModules.find((m) => markLessonId && m.lessons.some((l) => l.id === markLessonId))?.id ??
+    visibleModules[0]?.id ??
+    null;
   return (
     <ol className="mt-4 space-y-4">
-              {modules
-                .filter((m) => !m.isHidden)
+              {visibleModules
                 .map((m) => {
                   const visibleLessons = m.lessons.filter((l) => !l.isHidden);
                   const done = visibleLessons.filter((l) =>
@@ -629,9 +656,14 @@ function ModuleList({
                       : 0;
                   return (
                     <li key={m.id} className="card">
-                    <header className="border-b border-token pb-3">
+                    <details open={!collapsible || m.id === openModuleId} className="group">
+                    <summary className="cursor-pointer list-none border-b border-token pb-3 [&::-webkit-details-marker]:hidden">
                       <div className="flex items-baseline justify-between gap-3">
                         <h3 className="font-semibold">
+                          <ChevronRight
+                            aria-hidden
+                            className="mr-1 inline h-4 w-4 text-faint transition-transform group-open:rotate-90"
+                          />
                           <span className="mr-2 text-faint">Module</span>
                           {m.title}
                         </h3>
@@ -658,13 +690,14 @@ function ModuleList({
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                    </header>
+                    </summary>
                     <ol className="mt-3 space-y-1.5">
                       {m.lessons.map((l, li) => {
                         if (l.isHidden) return null;
 
                         const completed = completedSet.has(l.id);
                         const locked = m.isLocked || l.isLocked;
+                        const isMarked = !!markKind && l.id === markLessonId && !completed && !locked;
 
                         // B14 — khoá thì vẫn thấy tên bài (để biết lộ trình còn
                         // gì) nhưng không phải liên kết: bấm vào rồi mới bị chặn
@@ -692,7 +725,9 @@ function ModuleList({
                           <li key={l.id}>
                             <Link
                               href={`/learn/${slug}/lessons/${l.id}${lessonQuery}`}
-                              className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                              className={`group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-[rgb(var(--surface-muted))] ${
+                                isMarked ? "bg-brand-soft ring-1 ring-brand-300" : ""
+                              }`}
                               prefetch={false}
                             >
                               <span
@@ -711,6 +746,11 @@ function ModuleList({
                               >
                                 {l.title}
                               </span>
+                              {isMarked && (
+                                <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white">
+                                  {markKind === "current" ? "Đang học" : "Bài tiếp theo"}
+                                </span>
+                              )}
                               <span className="text-xs text-faint opacity-0 transition-opacity group-hover:opacity-100">
                                 →
                               </span>
@@ -719,6 +759,7 @@ function ModuleList({
                         );
                       })}
                     </ol>
+                    </details>
                   </li>
                 );
               })}

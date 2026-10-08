@@ -9,6 +9,7 @@ import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import { formatDate, toDayKey } from "@/lib/datetime";
+import { continueButtonText } from "@/lib/courseHomeView";
 import MasteryBadge from "@/components/MasteryBadge";
 import HelpTour from "@/components/HelpTour";
 import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
@@ -109,6 +110,13 @@ export default async function LearnerDashboard({
     .map((e, i) => ({ e, p: progressByCourse[i]! }))
     .filter((x) => x.e.lastLessonId && x.p.courseCompletionPct < 100)[0];
 
+  const continueLesson = continueTarget?.e.lastLessonId
+    ? await prisma.lesson.findUnique({
+        where: { id: continueTarget.e.lastLessonId },
+        select: { title: true },
+      })
+    : null;
+
   const totalLessons = progressByCourse.reduce((s, p) => s + p.totalLessons, 0);
   const completedLessons = progressByCourse.reduce((s, p) => s + p.completedLessons, 0);
 
@@ -164,6 +172,9 @@ export default async function LearnerDashboard({
               </span>
               <p className="mt-2 h-display text-xl font-bold sm:text-2xl">
                 {continueTarget.e.course.title}
+              </p>
+              <p className="mt-1 text-sm font-medium">
+                {continueButtonText("continue", continueLesson?.title ?? null)}
               </p>
               <div className="mt-3 flex items-center gap-3">
                 <div className="h-2 w-48 overflow-hidden rounded-full bg-white/25">
