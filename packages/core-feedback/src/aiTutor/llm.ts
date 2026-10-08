@@ -1,8 +1,9 @@
 /**
  * Cấu hình LLM chat tự host (vLLM, API tương thích OpenAI) — thay gpt-4o-mini.
  *
- * Chỉ `/chat/completions` đi sang đây. Embeddings, Whisper (STT) và TTS vẫn là
- * OpenAI vì vLLM này không phục vụ các endpoint đó.
+ * Chỉ `/chat/completions` đi sang đây, và là đường DUY NHẤT cho chat: chưa đặt
+ * LLM_BASE_URL thì từ chối chứ không rơi về OpenAI. Embeddings, Whisper (STT) và
+ * TTS vẫn là OpenAI vì vLLM này không phục vụ các endpoint đó.
  *
  * Định tuyến làm ở tầng `fetch` chứ không ở từng call site: ~20 chỗ gọi chat
  * (generator, tutor, giám khảo vấn đáp, chấm bài…) giữ nguyên code, và tầng
@@ -12,29 +13,28 @@
 /** Model mặc định khi chat chạy trên vLLM tự host. Đổi qua `LLM_CHAT_MODEL`. */
 export const DEFAULT_CHAT_MODEL = "qwen3.5-35b-a3b-int4";
 
-/**
- * Model dùng khi chưa đặt `LLM_BASE_URL` (chat vẫn đi OpenAI). Phải là tên model
- * OpenAI hợp lệ: nếu mặc định luôn là Qwen thì máy chủ nào deploy trước khi kịp
- * đặt LLM_BASE_URL sẽ gửi "qwen…" tới OpenAI và hỏng toàn bộ AI.
- */
-export const OPENAI_FALLBACK_CHAT_MODEL = "gpt-4o-mini";
-
 /** Header xác thực của gateway vLLM (không phải `Authorization`). */
 const SECKEY_HEADER = "x-ollama-seckey";
 
 export function getChatModel(): string {
-  const explicit = process.env.LLM_CHAT_MODEL?.trim();
-  if (explicit) return explicit;
-  return getChatBaseUrl() ? DEFAULT_CHAT_MODEL : OPENAI_FALLBACK_CHAT_MODEL;
+  return process.env.LLM_CHAT_MODEL?.trim() || DEFAULT_CHAT_MODEL;
 }
 
-/** Base URL của vLLM, vd `http://host:8037/vllm/v1`. Rỗng ⇒ chat vẫn đi OpenAI. */
+/** Chat được gọi mà chưa đặt `LLM_BASE_URL`. Không còn đường dự phòng sang OpenAI. */
+export class LlmNotConfiguredError extends Error {
+  constructor() {
+    super("llm_not_configured: đặt LLM_BASE_URL để chat dùng LLM tự host");
+    this.name = "LlmNotConfiguredError";
+  }
+}
+
+/** Base URL của vLLM, vd `http://host:8037/vllm/v1`. Rỗng ⇒ chat bị từ chối (LlmNotConfiguredError). */
 export function getChatBaseUrl(): string | null {
   const raw = process.env.LLM_BASE_URL?.trim();
   return raw ? raw.replace(/\/+$/, "") : null;
 }
 
-/** Chat đang chạy trên LLM tự host (không cần OpenAI key cho các route chỉ chat). */
+/** Đã cấu hình LLM chat tự host (`LLM_BASE_URL`). */
 export function isSelfHostedChat(): boolean {
   return getChatBaseUrl() !== null;
 }
@@ -53,8 +53,8 @@ function isChatCompletions(url: URL): boolean {
 }
 
 /**
- * Bọc `baseFetch`: request `/chat/completions` được chuyển sang vLLM; mọi
- * request khác đi nguyên. Khi chuyển:
+ * Bọc `baseFetch`: request `/chat/completions` được chuyển sang vLLM (ném
+ * LlmNotConfiguredError nếu chưa cấu hình); mọi request khác đi nguyên. Khi chuyển:
  * - bỏ `Authorization` — nó mang OpenAI key, không được gửi sang máy chủ khác;
  * - gắn `x-ollama-seckey` từ `LLM_SECKEY`;
  * - hội thoại không có tin `user` nào thì thêm một tin cuối (SYSTEM_ONLY_USER_PLACEHOLDER) — xem hằng số;
@@ -66,7 +66,8 @@ export function createChatRoutingFetch(baseFetch: typeof fetch = fetch): typeof 
     const target = getChatBaseUrl();
     const req = new Request(input, init);
     const url = new URL(req.url);
-    if (!target || !isChatCompletions(url)) return baseFetch(req);
+    if (!isChatCompletions(url)) return baseFetch(req);
+    if (!target) throw new LlmNotConfiguredError();
 
     const headers = new Headers(req.headers);
     headers.delete("authorization");

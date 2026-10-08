@@ -11,7 +11,7 @@
  *         --course=thiet-ke-ui-ux --out=./uiux.misconceptions.json
  *
  *   (b) Offline, đọc file đã trích sẵn — không cần nối tới DB production,
- *       không cần mật khẩu DB. Chỉ cần LLM_BASE_URL (+ LLM_SECKEY) hoặc OPENAI_API_KEY:
+ *       không cần mật khẩu DB. Chỉ cần LLM_BASE_URL (+ LLM_SECKEY):
  *       pnpm --filter @feedbackme/core-feedback propose:misconceptions -- \
  *         --from-export=./tt3.export.json --out=./tt3.misconceptions.json
  */
@@ -45,20 +45,12 @@ const fromExport = arg("from-export");
 /** Chỉ hai loại này khớp được misconception — xem AC nhóm 1. */
 const TAGGABLE = ["mcq", "true_false"] as const;
 
-async function resolveOpenAiKey(): Promise<string> {
-  // Chat đã chuyển sang LLM tự host (LLM_BASE_URL) — không cần OpenAI key.
-  if (isSelfHostedChat()) return "self-hosted-llm";
-  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
-  if (fromExport) {
-    // Offline thì không có DB prod để lấy khoá — phải có sẵn trong env.
-    throw new Error(
-      "Chế độ --from-export cần OPENAI_API_KEY trong môi trường (hoặc trong packages/db/.env).",
-    );
+/** Script chỉ chat → chạy trên LLM tự host, không cần OpenAI key (header Authorization bị bỏ khi định tuyến). */
+function resolveApiKey(): string {
+  if (!isSelfHostedChat()) {
+    throw new Error("Cần LLM_BASE_URL (+ LLM_SECKEY) trong môi trường — chat chạy trên LLM tự host.");
   }
-  // Khoá thật nằm trong IntegrationCredential (đã mã hoá). core-lms là
-  // devDependency của package này, dùng được trong script tooling.
-  const { getIntegrationSecret } = await import("@feedbackme/core-lms");
-  return getIntegrationSecret("openai");
+  return "self-hosted-llm";
 }
 
 interface SourceOption {
@@ -214,7 +206,7 @@ async function main() {
   );
 
   const openai = new OpenAI({
-    apiKey: await resolveOpenAiKey(),
+    apiKey: resolveApiKey(),
     fetch: createChatRoutingFetch(),
   });
 

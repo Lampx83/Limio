@@ -2411,7 +2411,7 @@ model AiConversation {
   userId    String
   lessonId  String
   title     String? // First user message snippet, set after first turn.
-  model     String   @default("gpt-4o-mini")
+  model     String   @default("qwen3.5-35b-a3b-int4")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -56,7 +56,7 @@ x-web-env: &web-env
   # Hạn mức hiển thị ở admin/emails (mặc định gói free Resend: 100/ngày, 3000/tháng; 0 = ẩn).
   EMAIL_DAILY_LIMIT: ${EMAIL_DAILY_LIMIT:-}
   EMAIL_MONTHLY_LIMIT: ${EMAIL_MONTHLY_LIMIT:-}
-  # Chat LLM tự host (vLLM) — xem .env.prod.example. Thiếu LLM_BASE_URL ⇒ chat đi OpenAI.
+  # Chat LLM tự host (vLLM) — xem .env.prod.example. Thiếu LLM_BASE_URL ⇒ chat báo chưa cấu hình.
   LLM_BASE_URL: ${LLM_BASE_URL:-}
   LLM_CHAT_MODEL: ${LLM_CHAT_MODEL:-}
   LLM_SECKEY: ${LLM_SECKEY:-}

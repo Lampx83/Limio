@@ -42,28 +42,22 @@ export function openaiBusyResponse(): Response {
 }
 
 /**
- * Key cho client CHỈ dùng chat. Chat đã chuyển sang LLM tự host nên không cần
- * OpenAI key: thiếu key thì dùng placeholder (SDK bắt buộc có apiKey; header
- * Authorization bị bỏ trước khi gửi đi, xem createChatRoutingFetch). Route cần
- * embeddings/STT/TTS KHÔNG dùng hàm này — vẫn phải có key OpenAI thật.
- * Ném IntegrationError "key_not_found" khi chat vẫn đi OpenAI mà chưa có key.
+ * Key cho client CHỈ dùng chat. Chat chạy trên LLM tự host nên không cần OpenAI
+ * key: dùng placeholder (SDK bắt buộc có apiKey; header Authorization bị bỏ
+ * trước khi gửi đi, xem createChatRoutingFetch). Route cần embeddings/STT/TTS
+ * KHÔNG dùng hàm này — vẫn phải có key OpenAI thật.
+ * Chưa đặt LLM_BASE_URL ⇒ ném IntegrationError "key_not_found" để các route
+ * hiện có trả 503 `openai_not_configured` như khi thiếu cấu hình AI.
  */
 export async function getChatOnlyApiKey(): Promise<string> {
-  try {
-    return await getIntegrationSecret("openai");
-  } catch (e) {
-    if (e instanceof IntegrationError && e.code === "key_not_found" && isSelfHostedChat()) {
-      return "self-hosted-llm";
-    }
-    throw e;
-  }
+  if (!isSelfHostedChat()) throw new IntegrationError("key_not_found", { reason: "llm_base_url_missing" });
+  return "self-hosted-llm";
 }
 
 /**
- * Client chat. Throws "openai_not_configured" khi chat vẫn đi OpenAI mà chưa
- * cấu hình key (đã đặt LLM_BASE_URL thì không cần key). Truyền
+ * Client chat. Throws "openai_not_configured" khi chưa đặt LLM_BASE_URL. Truyền
  * `needsOpenaiKey` khi caller còn dùng Whisper/TTS/embeddings — những thứ đó
- * vẫn là OpenAI nên luôn cần key thật.
+ * vẫn là OpenAI nên cần key thật.
  */
 export async function getOpenaiClient(opts: { needsOpenaiKey?: boolean } = {}): Promise<OpenAI> {
   let key: string;
