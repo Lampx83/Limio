@@ -17,7 +17,7 @@ const LABELS: Record<
   { name: string; placeholder: string; help?: string; emoji?: string; multiline?: boolean }
 > = {
   openai: {
-    name: "OpenAI API key",
+    name: "AI API Key",
     placeholder: "sk-proj-...",
     help: "Chỉ dùng cho Whisper (nghe) và TTS (đọc) của vấn đáp bằng giọng nói. Chat và embeddings chạy trên máy chủ tự host (LLM_BASE_URL, EMBED_BASE_URL), không dùng key này. Lấy key ở platform.openai.com.",
     emoji: "",
