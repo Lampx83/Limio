@@ -8,23 +8,17 @@ const mocks = vi.hoisted(() => {
   }
   return {
     IntegrationError,
-    getIntegrationSecret: vi.fn(),
-    isSelfHostedChat: vi.fn(),
     embedMaterial: vi.fn(),
-    openAiEmbedCompute: vi.fn(),
+    getEmbedCompute: vi.fn(),
     createOpenaiClient: vi.fn(),
     getChatOnlyApiKey: vi.fn(),
   };
 });
 
-vi.mock("@feedbackme/core-lms", () => ({
-  IntegrationError: mocks.IntegrationError,
-  getIntegrationSecret: mocks.getIntegrationSecret,
-}));
+vi.mock("@feedbackme/core-lms", () => ({ IntegrationError: mocks.IntegrationError }));
 vi.mock("@feedbackme/core-feedback", () => ({
-  isSelfHostedChat: mocks.isSelfHostedChat,
   embedMaterial: mocks.embedMaterial,
-  openAiEmbedCompute: mocks.openAiEmbedCompute,
+  getEmbedCompute: mocks.getEmbedCompute,
 }));
 vi.mock("@/lib/openaiClient", () => ({
   createOpenaiClient: mocks.createOpenaiClient,
@@ -33,62 +27,58 @@ vi.mock("@/lib/openaiClient", () => ({
 
 import { getOralExamTextAi, tryEmbedMaterial } from "./oralExamEmbed";
 
-const noKey = () => new mocks.IntegrationError("key_not_found");
-
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.createOpenaiClient.mockImplementation((k: string) => ({ apiKey: k }));
-  mocks.openAiEmbedCompute.mockReturnValue("EMBED_FN");
   mocks.getChatOnlyApiKey.mockResolvedValue("self-hosted-llm");
+  mocks.getEmbedCompute.mockReturnValue("EMBED_FN");
 });
 
 describe("getOralExamTextAi", () => {
-  it("có OpenAI key: dùng key thật và có hàm embeddings (đường vector như cũ)", async () => {
-    mocks.getIntegrationSecret.mockResolvedValue("sk-real");
+  it("đã cấu hình embeddings: có hàm embeddings (đường vector), chat không cần OpenAI key", async () => {
     const r = await getOralExamTextAi();
-    expect(mocks.createOpenaiClient).toHaveBeenCalledWith("sk-real");
+    expect(mocks.createOpenaiClient).toHaveBeenCalledWith("self-hosted-llm");
     expect(r.computeEmbed).toBe("EMBED_FN");
   });
 
-  it("không key nhưng chat tự host: vẫn chạy, computeEmbed = null và dùng key giả cho chat", async () => {
-    mocks.getIntegrationSecret.mockRejectedValue(noKey());
-    mocks.isSelfHostedChat.mockReturnValue(true);
+  it("chưa đặt EMBED_BASE_URL: computeEmbed = null ⇒ lõi vấn đáp tìm theo từ khoá", async () => {
+    mocks.getEmbedCompute.mockReturnValue(null);
     const r = await getOralExamTextAi();
     expect(r.computeEmbed).toBeNull();
-    expect(mocks.createOpenaiClient).toHaveBeenCalledWith("self-hosted-llm");
   });
 
-  it("không key và chat vẫn đi OpenAI: ném openai_not_configured (không có gì để hỏi)", async () => {
-    mocks.getIntegrationSecret.mockRejectedValue(noKey());
-    mocks.isSelfHostedChat.mockReturnValue(false);
+  it("chưa đặt LLM_BASE_URL (chat): ném openai_not_configured", async () => {
+    mocks.getChatOnlyApiKey.mockRejectedValue(new mocks.IntegrationError("key_not_found"));
     await expect(getOralExamTextAi()).rejects.toThrow("openai_not_configured");
   });
 
-  it("lỗi khác key_not_found (vd giải mã hỏng) không bị nuốt thành 'tự host'", async () => {
-    mocks.getIntegrationSecret.mockRejectedValue(new mocks.IntegrationError("decrypt_failed"));
-    mocks.isSelfHostedChat.mockReturnValue(true);
-    await expect(getOralExamTextAi()).rejects.toThrow("decrypt_failed");
+  it("lỗi khác (vd thiếu master key) không bị nuốt thành openai_not_configured", async () => {
+    mocks.getChatOnlyApiKey.mockRejectedValue(new mocks.IntegrationError("master_key_missing"));
+    await expect(getOralExamTextAi()).rejects.toMatchObject({ code: "master_key_missing" });
   });
 });
 
 describe("tryEmbedMaterial", () => {
-  it("không key + tự host: lưu chunk không vector và báo tài liệu dùng được (true)", async () => {
-    mocks.getIntegrationSecret.mockRejectedValue(noKey());
-    mocks.isSelfHostedChat.mockReturnValue(true);
+  it("có hàm embeddings: embed bằng nó và báo true", async () => {
+    mocks.embedMaterial.mockResolvedValue({ chunkCount: 3, skipped: false, embedded: true });
+    expect(await tryEmbedMaterial("u1", "m1")).toBe(true);
+    expect(mocks.embedMaterial).toHaveBeenCalledWith("u1", "m1", "EMBED_FN");
+  });
+
+  it("chưa cấu hình embeddings: vẫn lưu đoạn (compute=null) và báo true — AI tìm theo từ khoá", async () => {
+    mocks.getEmbedCompute.mockReturnValue(null);
     mocks.embedMaterial.mockResolvedValue({ chunkCount: 3, skipped: false, embedded: false });
     expect(await tryEmbedMaterial("u1", "m1")).toBe(true);
     expect(mocks.embedMaterial).toHaveBeenCalledWith("u1", "m1", null);
   });
 
-  it("tài liệu không có chữ (skipped): false để GV biết", async () => {
-    mocks.getIntegrationSecret.mockResolvedValue("sk-real");
+  it("tài liệu chưa trích được chữ (skipped) ⇒ false", async () => {
     mocks.embedMaterial.mockResolvedValue({ chunkCount: 0, skipped: true, embedded: false });
     expect(await tryEmbedMaterial("u1", "m1")).toBe(false);
   });
 
-  it("không bao giờ ném: không key và không tự host ⇒ false", async () => {
-    mocks.getIntegrationSecret.mockRejectedValue(noKey());
-    mocks.isSelfHostedChat.mockReturnValue(false);
+  it("không bao giờ ném: chat chưa cấu hình ⇒ false, không gọi embedMaterial", async () => {
+    mocks.getChatOnlyApiKey.mockRejectedValue(new mocks.IntegrationError("key_not_found"));
     expect(await tryEmbedMaterial("u1", "m1")).toBe(false);
     expect(mocks.embedMaterial).not.toHaveBeenCalled();
   });
