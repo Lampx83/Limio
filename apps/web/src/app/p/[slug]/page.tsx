@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getPublicPortfolio, type PublicPortfolio } from "@feedbackme/core-lms";
 import UserAvatar from "@/components/ui/UserAvatar";
 import PortfolioAttachment from "@/components/portfolio/PortfolioAttachment";
+import PreviewBackLink from "@/components/portfolio/PreviewBackLink";
 import { formatDate } from "@/lib/datetime";
 
 // A8 — trang trưng bày công khai. Cache ISR; API sửa hồ sơ gọi revalidatePath
@@ -36,6 +38,9 @@ export default async function PublicPortfolioPage({ params }: Props) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:px-6">
+      <Suspense fallback={null}>
+        <PreviewBackLink />
+      </Suspense>
       <header className="card bg-brand-gradient-soft p-4 sm:p-6">
         <div className="flex items-center gap-4">
           <UserAvatar name={p.displayName} imageUrl={p.avatarUrl} size="xl" />

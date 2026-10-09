@@ -178,7 +178,7 @@ export default function PortfolioEditor({
               >
                 Sao chép link
               </button>
-              <Link href={`/p/${settings.slug}`} target="_blank" className="btn btn-secondary btn-sm">
+              <Link href={`/p/${settings.slug}?from=me`} className="btn btn-secondary btn-sm">
                 Xem
               </Link>
             </div>
