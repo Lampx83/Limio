@@ -159,6 +159,10 @@ export default function OralSessionControl({
             </button>
           )}
         </div>
+        <p className="mt-1 text-caption text-faint">
+          Chỉ áp dụng cho các lượt bắt đầu sau khi lưu; lần mở sau vẫn nhớ số này. Nếu phần mô tả
+          đề có ghi số phút, nhớ cho khớp.
+        </p>
         {!sessionOpen && attemptCount > 0 && (
           <p className="mt-1 text-caption text-faint">
             Mở lại nếu còn học viên chưa thi kịp — mã tham gia cũ vẫn dùng lại
