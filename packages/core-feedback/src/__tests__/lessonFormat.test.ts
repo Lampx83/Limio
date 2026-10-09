@@ -294,6 +294,54 @@ describe("formatLessonContent — phân cấp đề mục", () => {
   });
 });
 
+describe("formatLessonContent — style khối Mục tiêu / Tổng kết", () => {
+  it("cả 4 theme đều dặn style cho lesson-objectives & lesson-summary; Sinh động dùng màu cố định (khối nằm ngoài mọi h2)", async () => {
+    // Bug: khối Mục tiêu nằm ngoài mọi <h2>, mà quy tắc <h3> của "Sinh động" chỉ
+    // nói "dùng màu của mục cha" → AI để tiêu đề đen/mặc định, không khớp theme.
+    for (const template of ["clean", "academic", "modern", "vibrant"] as const) {
+      const userId = await makeUser(`objstyle-${template}`);
+      let prompt = "";
+      const openai = {
+        chat: {
+          completions: {
+            create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+              prompt = req.messages.find((m) => m.role === "system")?.content ?? "";
+              return {
+                choices: [{ message: { content: JSON.stringify({ html: "<p>x</p>" }) } }],
+                usage: { prompt_tokens: 1, completion_tokens: 1 },
+              };
+            },
+          },
+        },
+      } as unknown as OpenAI;
+      await formatLessonContent(userId, { html: "<p>x</p>", template }, openai);
+      expect(prompt).toMatch(/<div class="lesson-objectives"> \(Mục tiêu học tập\) và <div class="lesson-summary">/);
+    }
+  });
+
+  it("Sinh động: khối mục tiêu/tổng kết có màu lam cố định cho cả nền lẫn h3", async () => {
+    const userId = await makeUser("objstyle-vibrant-color");
+    let prompt = "";
+    const openai = {
+      chat: {
+        completions: {
+          create: async (req: { messages: Array<{ role: string; content: string }> }) => {
+            prompt = req.messages.find((m) => m.role === "system")?.content ?? "";
+            return {
+              choices: [{ message: { content: JSON.stringify({ html: "<p>x</p>" }) } }],
+              usage: { prompt_tokens: 1, completion_tokens: 1 },
+            };
+          },
+        },
+      },
+    } as unknown as OpenAI;
+    await formatLessonContent(userId, { html: "<p>x</p>", template: "vibrant" }, openai);
+    expect(prompt).toContain("lấy màu 1 (lam) cố định");
+    expect(prompt).toMatch(/lesson-summary">[^\n]*background:rgba\(59,130,246,\.14\)/);
+    expect(prompt).toMatch(/lesson-summary">[^\n]*<h3> bên trong style="color:rgb\(40,118,245\)/);
+  });
+});
+
 describe("formatLessonContent — hạn mức ví token", () => {
   it("hết ví tháng → no_token_budget, KHÔNG gọi OpenAI (chặn trước khi tốn tiền)", async () => {
     const userId = await makeUser("broke");

@@ -695,6 +695,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h3> (mục tiêu/tổng kết/mục con): style="color:#1e40af;font-size:1.42rem;margin:0 0 .6rem"
 - <p>/<li>: style="color:#374151;font-size:1.25rem;line-height:1.7"
 - <div class="callout">: style="background:#eff6ff;border-left:4px solid #1e40af;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"
+- <div class="lesson-objectives"> (Mục tiêu học tập) và <div class="lesson-summary"> (Tổng kết): dùng ĐÚNG style của <div class="callout"> ở trên (cùng background, border-left, padding, margin, font-size); <h3> bên trong có style <h3> ở trên; <ul>/<li> bên trong theo style <p>/<li>
 - <table>: style="border-collapse:collapse;width:100%;margin:12px 0"
 - <th>: style="border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#374151;font-size:1.25rem;line-height:1.7;padding:8px 12px"
@@ -708,6 +709,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h3>: style="color:#581c87;font-size:1.42rem;margin:0 0 .6rem;font-family:Georgia,serif"
 - <p>/<li>: style="color:#1f2937;font-size:1.25rem;line-height:1.7"
 - <div class="callout">: style="background:#f3f4f6;border-left:3px solid #581c87;padding:12px;border-radius:4px;margin:16px 0;font-size:1.25rem"
+- <div class="lesson-objectives"> (Mục tiêu học tập) và <div class="lesson-summary"> (Tổng kết): dùng ĐÚNG style của <div class="callout"> ở trên (cùng background, border-left, padding, margin, font-size); <h3> bên trong có style <h3> ở trên; <ul>/<li> bên trong theo style <p>/<li>
 - <table>: style="border-collapse:collapse;width:100%;margin:16px 0;font-family:${FONT_STACK}"
 - <th>: style="border:1px solid #d8b4fe;background:#f3f4f6;color:#581c87;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#1f2937;font-size:1.25rem;line-height:1.7;padding:8px 12px"
@@ -721,6 +723,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h3>: style="color:#0d9488;font-size:1.42rem;margin:0 0 .6rem"
 - <p>/<li>: style="color:#111827;font-size:1.25rem;line-height:1.7"
 - <div class="callout">: style="background:#dcfce7;border-left:4px solid #16a34a;padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem" (đổi sang #fed7aa/#f97316 nếu là cảnh báo, #dbeafe/#0284c7 nếu là ví dụ)
+- <div class="lesson-objectives"> (Mục tiêu học tập) và <div class="lesson-summary"> (Tổng kết): dùng ĐÚNG style của <div class="callout"> ở trên (cùng background, border-left, padding, margin, font-size); <h3> bên trong có style <h3> ở trên; <ul>/<li> bên trong theo style <p>/<li>
 - <table>: style="border-collapse:collapse;width:100%;margin:12px 0"
 - <th>: style="border:1px solid #5eead4;background:#0d9488;color:#ffffff;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#111827;font-size:1.25rem;line-height:1.7;padding:8px 12px"
@@ -745,6 +748,7 @@ const STYLE_GUIDES: Record<LessonFormatTemplateKey, StyleGuide> = {
 - <h3> bên trong mục nào thì dùng ĐÚNG màu chữ của mục cha đó: style="color:rgb(<màu chữ của mục cha>);font-size:1.42rem;margin:0 0 .6rem"
 - <p>/<li>: style="color:#111827;font-size:1.25rem;line-height:1.7" (không đổi màu theo mục — chỉ heading đổi màu)
 - <div class="callout"> bên trong mục nào thì dùng màu nền+chữ của mục đó: style="background:rgba(<màu nền của mục>);border-left:4px solid rgb(<màu chữ của mục>);padding:12px;border-radius:4px;margin:12px 0;font-size:1.25rem"
+- <div class="lesson-objectives"> (Mục tiêu học tập) và <div class="lesson-summary"> (Tổng kết) nằm NGOÀI các mục <h2> nên lấy màu 1 (lam) cố định, KHÔNG để đen/mặc định: <div> style="background:rgba(59,130,246,.14);border-left:4px solid rgb(40,118,245);padding:12px 16px;border-radius:4px;margin:12px 0"; <h3> bên trong style="color:rgb(40,118,245);font-size:1.42rem;margin:0 0 .6rem"; <ul>/<li> bên trong theo style <p>/<li>
 - <table>: style="border-collapse:collapse;width:100%;margin:12px 0" (không đổi màu theo mục — như <p>/<li>)
 - <th>: style="border:1px solid #e5e7eb;background:#f9fafb;color:#111827;font-size:1.25rem;font-weight:700;padding:8px 12px;text-align:left"
 - <td>: style="border:1px solid #e5e7eb;color:#111827;font-size:1.25rem;line-height:1.7;padding:8px 12px"
