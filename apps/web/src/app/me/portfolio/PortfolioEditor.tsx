@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Check, Copy, Eye } from "lucide-react";
 import EmptyState from "@/components/ui/EmptyState";
 import { copyText } from "@/lib/clipboard";
 import { formatDate } from "@/lib/datetime";
@@ -66,6 +67,7 @@ export default function PortfolioEditor({
   const [slugDraft, setSlugDraft] = useState<string | null>(null);
   const [rows, setRows] = useState(initialRows);
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const publicUrl =
     typeof window === "undefined" ? `/p/${settings.slug}` : `${window.location.origin}/p/${settings.slug}`;
@@ -168,18 +170,25 @@ export default function PortfolioEditor({
             <code className="min-w-0 flex-1 truncate rounded-lg bg-[rgb(var(--surface-muted))] px-3 py-2 text-sm">
               {publicUrl}
             </code>
-            <div className="flex gap-2">
+            <div className="flex shrink-0 gap-2">
               <button
                 type="button"
-                className="btn btn-primary btn-sm"
+                className="btn btn-secondary btn-sm px-2.5"
+                aria-label="Sao chép link"
+                title="Sao chép link"
                 onClick={async () => {
-                  if (await copyText(publicUrl)) toast.success("Đã sao chép link");
+                  if (await copyText(publicUrl)) {
+                    toast.success("Đã sao chép link");
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }
                 }}
               >
-                Sao chép link
+                {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
               </button>
-              <Link href={`/p/${settings.slug}?from=me`} className="btn btn-secondary btn-sm">
-                Xem
+              <Link href={`/p/${settings.slug}?from=me`} className="btn btn-primary btn-sm">
+                <Eye className="h-4 w-4" aria-hidden />
+                Xem trước
               </Link>
             </div>
           </div>
