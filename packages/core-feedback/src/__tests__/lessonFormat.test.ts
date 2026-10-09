@@ -316,6 +316,12 @@ describe("formatLessonContent — style khối Mục tiêu / Tổng kết", () =
       } as unknown as OpenAI;
       await formatLessonContent(userId, { html: "<p>x</p>", template }, openai);
       expect(prompt).toMatch(/<div class="lesson-objectives"> \(Mục tiêu học tập\) và <div class="lesson-summary">/);
+      // Bug: chữ trong 2 khối này nhỏ hơn thân bài vì <li> bị bỏ sót font-size
+      // → phải dặn rõ cỡ chữ trên div/ul/từng li, không nói chung "theo style p/li".
+      const line = prompt.split("\n").find((l) => l.includes('class="lesson-objectives"> (Mục tiêu học tập)')) ?? "";
+      expect(line).toContain("CỠ CHỮ phải bằng thân bài");
+      expect(line).toContain("MỖI <li> bên trong PHẢI");
+      expect(line).toContain("font-size:1.25rem");
     }
   });
 
