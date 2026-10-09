@@ -16,6 +16,11 @@
 #   * Uploads are mirrored with rsync (cheap, only deltas) plus a weekly tar for
 #     point-in-time recovery. A daily full tar of a growing video library would
 #     waste hours and disk for no extra safety.
+#   * A failed uploads mirror does NOT abort the run: the verified DB dump, the
+#     manifest, the off-site DB copy and rotation still happen, then the run
+#     exits non-zero with an explicit message. (Before, it aborted right there —
+#     every night from 2026-09-27 the DB was dumped but no manifest was written
+#     and rotation never ran, because the web container name had changed.)
 #   * Off-site copy is attempted but its failure does not fail the run — the
 #     local copy still has value. It is recorded in the manifest and surfaced in
 #     the exit summary, because the neighbouring ScoreUp backup silently failed
@@ -38,7 +43,10 @@ MIRROR_DIR="${LOCAL_ROOT}/uploads-mirror"
 LOG="${LOCAL_ROOT}/backup.log"
 
 PG_CTR="feedbackme-postgres-1"
-WEB_CTR="feedbackme-web-1"
+# Compose numbers web replicas afresh on every deploy (web-1 → web-3/4/5 → …),
+# so a hard-coded name rots. All replicas mount the same uploads volume; any
+# running one will do. `|| true`: no match must not trip `set -e` here.
+WEB_CTR="$(docker ps --format '{{.Names}}' | grep -E '^feedbackme-web-[0-9]+$' | sort -V | head -1 || true)"
 UPLOADS_PATH="/app/apps/web/uploads"
 
 # Off-site target. A failure here does not fail the run — the local copy still
@@ -107,10 +115,22 @@ log "rows: $(cat "${LOCAL_DIR}/rowcounts.txt" 2>/dev/null || echo '?')"
 # Mirror first (fast, delta-only), then snapshot from the mirror so the tar is
 # taken from a quiet directory rather than a live one.
 log "mirror uploads"
-docker cp "${WEB_CTR}:${UPLOADS_PATH}/." "${MIRROR_DIR}/" >> "$LOG" 2>&1 || fail "docker cp uploads"
+UPLOADS_OK=1
+if [[ -z "$WEB_CTR" ]]; then
+  log "FAIL: uploads — không thấy container feedbackme-web-N nào đang chạy"
+  UPLOADS_OK=0
+elif ! docker cp "${WEB_CTR}:${UPLOADS_PATH}/." "${MIRROR_DIR}/" >> "$LOG" 2>&1; then
+  log "FAIL: uploads — docker cp từ ${WEB_CTR} lỗi"
+  UPLOADS_OK=0
+fi
+# On failure these describe the mirror as it stood BEFORE this run (stale).
 MIRROR_SIZE=$(du -sh "$MIRROR_DIR" | cut -f1)
 MIRROR_FILES=$(find "$MIRROR_DIR" -type f | wc -l)
-log "mirror ok — ${MIRROR_SIZE}, ${MIRROR_FILES} file"
+if [[ "$UPLOADS_OK" -eq 1 ]]; then
+  log "mirror ok — ${MIRROR_SIZE}, ${MIRROR_FILES} file (từ ${WEB_CTR})"
+else
+  log "mirror KHÔNG được cập nhật — bản cũ còn ${MIRROR_SIZE}, ${MIRROR_FILES} file"
+fi
 
 # No tar snapshot of uploads. The library is ~9 GB of video and grows; gzipping
 # it weekly would cost hours of CPU and ~70 GB of disk to protect files that are
@@ -118,7 +138,7 @@ log "mirror ok — ${MIRROR_SIZE}, ${MIRROR_FILES} file"
 # complete copy and, because it only ever adds, an accidental delete on the live
 # volume does not propagate into it. Restores read from the mirror.
 # Verify the mirror actually holds the media the DB references.
-if [[ "$MODE" != "daily" ]]; then
+if [[ "$MODE" != "daily" && "$UPLOADS_OK" -eq 1 ]]; then
   log "verify mirror vs DB"
   MISSING=0
   while IFS= read -r url; do
@@ -144,6 +164,7 @@ fi
   echo "db_tables=$DUMP_TABLES"
   echo "rows=$(cat "${LOCAL_DIR}/rowcounts.txt" 2>/dev/null || echo '?')"
   echo "uploads_mirror=${MIRROR_SIZE} (${MIRROR_FILES} files)"
+  if [[ "$UPLOADS_OK" -eq 1 ]]; then echo "uploads_status=ok"; else echo "uploads_status=FAILED (mirror là bản cũ)"; fi
   echo "image=$(docker inspect "$WEB_CTR" --format '{{.Config.Image}}' 2>/dev/null || echo '?')"
 } > "${LOCAL_DIR}/MANIFEST.txt"
 
@@ -167,7 +188,7 @@ if timeout 6 bash -c "cat < /dev/null > /dev/tcp/${NAS_HOST}/22" 2>/dev/null; th
   # The uploads mirror lives outside LOCAL_DIR, so the sync above only carries
   # the DB dump — and the DB is the part we *can* rebuild. Push the media too:
   # delta-only, so after the first ~9 GB each run moves just the new files.
-  if [[ "$OFFSITE" == "ok" ]]; then
+  if [[ "$OFFSITE" == "ok" && "$UPLOADS_OK" -eq 1 ]]; then
     log "rsync uploads mirror -> NAS"
     if rsync -a --partial --rsync-path=/usr/bin/rsync -e "ssh $SSH_OPTS" \
          "${MIRROR_DIR}/" "${NAS_USER}@${NAS_HOST}:${NAS_ROOT}/uploads-mirror/" >> "$LOG" 2>&1; then
@@ -190,6 +211,10 @@ for d in "${old[@]:-}"; do
 done
 
 # ── 6. Summary ──────────────────────────────────────────────────────────
+if [[ "$UPLOADS_OK" -ne 1 ]]; then
+  log "DONE $NAME — LỖI: sao lưu uploads thất bại, mirror là bản cũ. Dump DB thì ĐÃ xong và kiểm chứng."
+  exit 1
+fi
 if [[ "$OFFSITE" != "ok" ]]; then
   log "DONE $NAME — LƯU Ý: chưa có bản sao ngoài máy (offsite=$OFFSITE)."
   log "  Bản backup chỉ nằm trên chính server này; hỏng ổ đĩa là mất cả gốc lẫn backup."
