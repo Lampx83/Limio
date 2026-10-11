@@ -190,7 +190,12 @@ model User {
   speakingFeedbacksReceived SpeakingFeedback[]     @relation("SpeakingFeedbackOwner")
   speakingFeedbacksReviewed SpeakingFeedback[]     @relation("SpeakingFeedbackReviewer")
 
+  // Growth attribution — điểm chạm đầu tiên (utm/click-id/referrer) lúc đăng ký.
+  acquisitionTouch AcquisitionTouch?
+
   @@index([createdAt])
+  // Luồng growth events phân trang theo mốc xác minh email (xem AcquisitionTouch).
+  @@index([emailVerifiedAt])
 }
 
 model AuthProvider {
@@ -839,6 +844,8 @@ model Enrollment {
   @@index([sectionId])
   // Cron reaper (enrollment-access-expiry-check) quét theo cặp này mỗi ngày.
   @@index([status, accessExpiresAt])
+  // Growth events: phân trang "ghi danh đầu tiên" theo thời gian.
+  @@index([enrolledAt])
 }
 
 // A3 — Note attached to a lesson, optionally to a content item, optionally
@@ -2637,6 +2644,9 @@ model Order {
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
+  // Growth events: phân trang order.paid / order.refunded theo thời gian.
+  @@index([paidAt])
+  @@index([refundedAt])
 }
 
 // =====================================================================
@@ -5507,4 +5517,34 @@ model SpeakingFeedback {
 
   @@index([submissionId, generatedAt])
   @@index([userId, courseId, status])
+}
+
+// =====================================================================
+// Growth attribution — "lần chạm đầu tiên" của mỗi user (first touch).
+//
+// Ghi lúc đăng ký từ cookie first-party `limio_attr` (middleware đặt khi khách
+// đến từ utm_* / click-id / referrer ngoài). Một dòng / user, xoá user ⇒ xoá
+// dòng. KHÔNG lưu giá trị click id (chỉ loại), không lưu query string, không
+// lưu IP / user agent. Đọc bởi GET /api/internal/growth/events (SIM) — id đã
+// được HMAC ẩn danh trước khi rời hệ thống. Xem docs/growth-events.md.
+// =====================================================================
+
+model AcquisitionTouch {
+  userId       String   @id
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  utmContent   String?
+  utmTerm      String?
+  // "fbclid" | "gclid" | "ttclid" — chỉ loại, không bao giờ lưu giá trị.
+  clickIdKind  String?
+  // Đường dẫn trang đích: không query string, đã che đoạn giống mã/token.
+  landingPath  String?
+  // Chỉ host của Referer ngoài site.
+  referrerHost String?
+  // Lúc cookie được tạo (không phải lúc đăng ký).
+  firstSeenAt  DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -88,6 +88,13 @@ x-web-env: &web-env
   S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
   S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
   S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-}
+  # Growth attribution (docs/growth-events.md). Mặc định TẮT: để trống cả 3 biến thì
+  # không có cookie `limio_attr`, không ghi AcquisitionTouch, và
+  # /api/internal/growth/events trả 404. Compose không tự truyền biến vào container
+  # trừ khi khai ở đây.
+  GROWTH_ATTRIBUTION_ENABLED: ${GROWTH_ATTRIBUTION_ENABLED:-}
+  GROWTH_EVENTS_SECRET: ${GROWTH_EVENTS_SECRET:-}
+  GROWTH_ANON_SECRET: ${GROWTH_ANON_SECRET:-}
 
 services:
   postgres:
