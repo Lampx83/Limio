@@ -60,8 +60,12 @@ export function applyAttributionCookie(
     });
 
     if (decision.action === "set") {
+      // Sau hai lớp proxy (nginx → Caddy → app) ứng dụng thấy kết nối là http thường dù
+      // người dùng vào bằng https, nên x-forwarded-proto không đủ tin. Site công khai
+      // đã khai https qua NEXTAUTH_URL thì cookie luôn Secure.
       const proto = (h.get("x-forwarded-proto") ?? req.nextUrl.protocol).toLowerCase();
-      const secure = proto.startsWith("https");
+      const secure =
+        proto.startsWith("https") || (env.NEXTAUTH_URL ?? "").trim().toLowerCase().startsWith("https://");
       res.cookies.set(ATTRIBUTION_COOKIE, decision.value, attributionCookieOptions(secure));
     }
     return decision;

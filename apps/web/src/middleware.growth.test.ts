@@ -53,6 +53,21 @@ describe("middleware — growth attribution cookie", () => {
     expect(c).not.toMatch(/Secure/i);
   });
 
+  it("sau proxy chỉ thấy http nhưng NEXTAUTH_URL là https: vẫn Secure", () => {
+    process.env.GROWTH_ATTRIBUTION_ENABLED = "true";
+    process.env.NEXTAUTH_URL = "https://limio.vn";
+    const c = setCookie(middleware(req("http://web:3000/?utm_source=x", { "x-forwarded-proto": "http" })))!;
+    expect(c).toMatch(/^limio_attr=/);
+    expect(c).toMatch(/Secure/i);
+  });
+
+  it("NEXTAUTH_URL http (dev): không Secure", () => {
+    process.env.GROWTH_ATTRIBUTION_ENABLED = "true";
+    process.env.NEXTAUTH_URL = "http://localhost:3000";
+    const c = setCookie(middleware(req("http://localhost:3000/?utm_source=x")))!;
+    expect(c).not.toMatch(/Secure/i);
+  });
+
   it("không ghi đè cookie hợp lệ; bỏ qua /api, asset, POST, referrer nội bộ", () => {
     process.env.GROWTH_ATTRIBUTION_ENABLED = "true";
     const first = setCookie(middleware(req("https://limio.vn/?utm_source=first")))!;

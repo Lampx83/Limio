@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  */
 
 /** Chờ sự kiện "lắng" trước khi phát: transaction chưa commit có `now()` cũ. */
-export const SETTLE_MS = 30_000;
+const SETTLE_MS = 30_000;
 /** Mỗi phút tối đa chừng này request (toàn cục) — SIM poll vài phút một lần. */
 const RATE_LIMIT_PER_MIN = 60;
 
