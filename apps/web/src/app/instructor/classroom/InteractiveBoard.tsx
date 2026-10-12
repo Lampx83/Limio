@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { copyText } from "@/lib/clipboard";
 import {
   StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2, Pencil, Upload,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
   PanelLeftOpen, PanelLeftClose, LayoutGrid, Clipboard, ClipboardX,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
-import dynamic from "next/dynamic";
+import JoinQrCard from "@/components/ui/JoinQrCard";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { shrinkImageForUpload } from "@/lib/resizeImage";
 import { formatVN } from "@/lib/datetime";
@@ -24,16 +23,6 @@ import {
 } from "./boardNoteStyle";
 import NoteAttachment from "./NoteAttachment";
 import { LimeSliceIcon, WatermelonSliceIcon } from "@/components/BrandIcons";
-
-const QRCode = dynamic(
-  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="bg-white p-3 rounded-lg border border-token" style={{ width: 200, height: 200 }} />
-    ),
-  },
-);
 
 interface BoardNote {
   id: string;
@@ -79,7 +68,6 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
   const [isCreating, setIsCreating] = useState(false);
   // Phiên board luôn full-screen — che luôn top nav + sidebar + "← Quay lại" của
   // trang cha (xem TeachingToolsClient.tsx) nên chỉ có đúng 1 nút "Thoát" (onExit).
-  const [showQrModal, setShowQrModal] = useState(false);
   const [qrPanelOpen, setQrPanelOpen] = useState(true);
   const [history, setHistory] = useState<BoardHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -799,66 +787,16 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
           </button>
         )}
 
-        {/* Khung QR nhỏ, đứng yên góc màn hình — luôn thấy được cùng lúc với các note đổ về,
-            khác với modal full-screen cũ vốn che mất NotesGrid. Bấm vào QR để phóng to khi cần
-            (vd. lớp đông, học viên ngồi xa). */}
+        {/* Khung QR nhỏ, đứng yên góc màn hình — luôn thấy được cùng lúc với các note đổ về.
+            Bấm vào QR để phóng to popup khi cần (vd. lớp đông, học viên ngồi xa). */}
         {qrPanelOpen && joinUrl && (
-          <div
-            className={`fixed bottom-6 left-6 z-40 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-brand-200 animate-fade-in-up`}
-          >
-            <button
-              onClick={() => setQrPanelOpen(false)}
-              className="absolute -top-2 -right-2 rounded-full bg-white p-1 shadow ring-1 ring-gray-200 hover:bg-gray-100"
-              aria-label="Ẩn khung QR"
-              title="Ẩn khung QR"
-            >
-              <X size={12} />
-            </button>
-            <button
-              onClick={() => setShowQrModal(true)}
-              title="Bấm để phóng to"
-              className="rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
-            >
-              <QRCode value={joinUrl} size={110} level="H" includeMargin />
-            </button>
-            <p className="text-sm font-extrabold font-mono tracking-[0.15em] text-brand-700">{current.code}</p>
-          </div>
-        )}
-
-        {/* QR Modal phóng to — bấm vào khung QR góc màn hình hoặc nút mã để hiện QR to hơn */}
-        {showQrModal && joinUrl && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in-up p-4"
-            onClick={(e) => { if (e.target === e.currentTarget) setShowQrModal(false); }}
-          >
-            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl max-w-md text-center">
-              <button
-                onClick={() => setShowQrModal(false)}
-                className="absolute top-3 right-3 p-2 rounded-lg hover:bg-gray-100"
-                aria-label="Đóng"
-              >
-                <X size={20} />
-              </button>
-              <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-2">Quét để tham gia</p>
-              <div className="inline-block bg-white p-4 rounded-xl ring-2 ring-brand-200">
-                <QRCode value={joinUrl} size={280} level="H" includeMargin />
-              </div>
-              <p className="mt-4 text-4xl font-extrabold font-mono tracking-[0.3em] text-brand-700">{current.code}</p>
-              <p className="mt-2 text-sm text-gray-600">
-                Hoặc truy cập: <code className="font-mono px-1.5 py-0.5 bg-brand-50 rounded">/join/{current.code}</code>
-              </p>
-              <button
-                onClick={async () => {
-                  const ok = await copyText(joinUrl);
-                  if (ok) toast.success("Đã copy link");
-                  else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
-                }}
-                className="mt-3 text-sm text-brand-600 hover:text-brand-700 font-medium underline"
-              >
-                Copy link tham gia
-              </button>
-            </div>
-          </div>
+          <JoinQrCard
+            url={joinUrl}
+            code={current.code}
+            title="Quét để tham gia"
+            onHide={() => setQrPanelOpen(false)}
+            className="fixed bottom-6 left-6 z-40 animate-fade-in-up"
+          />
         )}
 
         {/* Panel quản lý cột (grid theo nhóm) — bật/sửa/xoá cột ngay giữa buổi */}

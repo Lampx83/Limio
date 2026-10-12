@@ -193,7 +193,7 @@ export default function OralSessionControl({
             </button>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <QrZoom url={joinUrl!} title="Quét mã để vào phiên vấn đáp">
+            <QrZoom url={joinUrl!} title="Quét mã để vào phiên vấn đáp" code={joinCode ?? undefined} copyable>
               <div className="rounded-lg border border-default bg-white p-1.5">
                 <QRCode value={joinUrl!} size={96} level="M" />
               </div>

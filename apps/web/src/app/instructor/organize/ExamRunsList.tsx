@@ -6,12 +6,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, ChevronDown, Copy, Download, QrCode, Radio } from "lucide-react";
 import dynamic from "next/dynamic";
+import QrZoom from "@/components/ui/QrZoom";
 import RoomsExpand from "./RoomsExpand";
 import type { ExamRun } from "@feedbackme/core-lms";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 
-/** Kích thước QR: đủ to để quét từ cuối lớp khi chiếu lên máy chiếu. */
-const QR_SIZE = 220;
+/** QR hiển thị nhỏ ở góc; bấm vào để phóng popup đủ to cho cả lớp quét (QrZoom). */
+const QR_SIZE = 112;
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -324,12 +325,14 @@ function Row({ r, showRooms }: { r: ExamRun; showRooms: boolean }) {
       {showQr && fullUrl && (
         <div className="w-full border-t border-emerald-200 pt-3">
           <div className="flex flex-wrap items-center gap-4">
-            <div className="rounded-lg border border-emerald-300 bg-white p-3">
-              <QRCode value={fullUrl} size={QR_SIZE} level="M" />
-            </div>
+            <QrZoom url={fullUrl} title="Quét để vào thi" code={r.code ?? undefined} copyable>
+              <div className="rounded-lg border border-emerald-300 bg-white p-2">
+                <QRCode value={fullUrl} size={QR_SIZE} level="M" />
+              </div>
+            </QrZoom>
             <div className="min-w-48 flex-1">
               <p className="text-sm text-emerald-900">
-                Chiếu lên màn hình để cả lớp quét.
+                Bấm vào mã QR để phóng to và chiếu lên màn hình cho cả lớp quét.
               </p>
               <p className="mt-1 text-sm text-emerald-800">
                 Ai không quét được thì vào{" "}
