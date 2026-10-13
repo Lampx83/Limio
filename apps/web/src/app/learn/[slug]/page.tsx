@@ -26,7 +26,7 @@ import { auth } from "@/lib/auth";
 import { StickyMobileCTA } from "@/components/ui";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
 import SmartBackLink from "@/components/SmartBackLink";
-import { continueButtonText, describeLevel, streakLabel } from "@/lib/courseHomeView";
+import { continueButtonText, describeLevel, pickContinueLesson, streakLabel } from "@/lib/courseHomeView";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 import LearningPathList from "@/components/LearningPathList";
 import CourseTeamPanel, { type CourseTeamState } from "@/components/course/CourseTeamPanel";
@@ -160,27 +160,21 @@ export default async function LearnCoursePage({
 
   const isComplete = progress.courseCompletionPct >= 100;
 
-  // Bài chưa học đầu tiên theo thứ tự khoá — không cá nhân hoá, nên lớp đối
-  // chứng và khoá tắt cá nhân hoá cũng có nút vào học (B4 AC-2.8).
-  const firstOpenLessonId = progress.modules
-    .flatMap((m) => m.lessons)
-    .find((l) => !l.completed && !l.locked)?.id;
-  const continueLessonId = enrollment.lastLessonId || firstOpenLessonId;
-  const continueLabel = enrollment.lastLessonId ? "Tiếp tục" : firstOpenLessonId ? "Bắt đầu" : null;
+  // Bài để vào học tiếp — chung cho nút "Tiếp tục", dấu "Đang học/Bài tiếp theo" trong danh sách và nút
+  // cuối trang trên điện thoại. Không cá nhân hoá, nên lớp đối chứng và khoá tắt cá nhân hoá cũng có
+  // nút vào học (B4 AC-2.8).
+  const continuePick = pickContinueLesson(
+    enrollment.lastLessonId,
+    progress.modules.flatMap((m) => m.lessons),
+  );
+  const continueLessonId = continuePick?.id;
+  const continueLabel = continuePick ? (enrollment.lastLessonId ? "Tiếp tục" : "Bắt đầu") : null;
   const lessonTitleById = new Map(
     course.modules.flatMap((m) => m.lessons.map((l) => [l.id, l.title] as const)),
   );
-  const continueTitle = continueLessonId ? (lessonTitleById.get(continueLessonId) ?? null) : null;
-  // Bài để đánh dấu trong danh sách: bài đang học dở nếu có, nếu không thì bài chưa học đầu tiên.
-  // Bài gần nhất mà đã xong thì không còn là "đang học", nên đánh dấu bài kế tiếp thay vào đó.
-  const lastLessonDone = enrollment.lastLessonId ? completedSet.has(enrollment.lastLessonId) : false;
-  const markedLessonId =
-    enrollment.lastLessonId && !lastLessonDone ? enrollment.lastLessonId : (firstOpenLessonId ?? null);
-  const currentMark: "current" | "next" | null = !markedLessonId
-    ? null
-    : enrollment.lastLessonId && !lastLessonDone
-      ? "current"
-      : "next";
+  const continueTitle = continuePick ? (lessonTitleById.get(continuePick.id) ?? continuePick.title) : null;
+  const markedLessonId = continuePick?.id ?? null;
+  const currentMark = continuePick?.kind ?? null;
 
   // B4 AC-2.13 — ghi mẫu số uptake. Đo lường không được làm hỏng trang.
   if (learningPath.steps.length > 0) {
@@ -452,7 +446,7 @@ export default async function LearnCoursePage({
             <div className="rounded-2xl border border-success-100 bg-success-50 p-5 text-center">
               <p className="text-2xl"></p>
               <p className="mt-1 font-semibold text-success-700">
-                Bạn đã hoàn thành khóa học này!
+                Bạn đã hoàn thành khoá học này!
               </p>
             </div>
           )}

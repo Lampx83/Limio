@@ -38,7 +38,7 @@ describe("xpMultiplierNote", () => {
   });
   it("hệ số nhỏ hơn 1 nói vì sao bị giảm, không dùng từ 'master'", () => {
     const n = xpMultiplierNote(0.5);
-    expect(n).toContain("×0.5");
+    expect(n).toContain("×0,5");
     expect(n).toContain("đã vững");
     expect(n).not.toContain("master");
   });

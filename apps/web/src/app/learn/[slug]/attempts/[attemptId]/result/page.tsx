@@ -210,7 +210,7 @@ export default async function ResultPage({
         href={`/learn/${params.slug}`}
         className="link inline-flex items-center gap-1 text-sm"
       >
-        ← Quay lại khóa học
+        ← Quay lại khoá học
       </Link>
 
       {/* Trang này trước đây không có tiêu đề: người mở lại từ lịch sử không biết đây là kết quả của bài nào. */}
@@ -228,7 +228,7 @@ export default async function ResultPage({
             <p className="mt-3 text-lg font-semibold">Chào {greetName},</p>
           )}
           <p className="mt-3 h-display text-5xl font-bold tabular-nums">
-            {result.attempt.scorePct?.toFixed(1) ?? "—"}
+            {result.attempt.scorePct != null ? formatPoints(result.attempt.scorePct) : "—"}
             <span className="text-3xl opacity-70">%</span>
           </p>
           <p className="mt-2 text-base font-medium">
@@ -442,6 +442,16 @@ export default async function ResultPage({
                       html={plainToRichHtml(item.explanation)}
                       className="prose prose-sm mt-1.5 max-w-none dark:prose-invert"
                     />
+                    {/* Câu sai có lời giải nhưng không có phản hồi cá nhân hoá — trường hợp hay gặp nhất —
+                        cũng phải có lối hỏi tiếp: đọc lời giải xong vẫn có thể chưa hiểu. */}
+                    {!isCorrect && askMoreHref(item.prompt) && (
+                      <Link
+                        href={askMoreHref(item.prompt)!}
+                        className="mt-3 inline-flex items-center gap-1 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                      >
+                        Hỏi trợ giảng về câu này
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>

@@ -5,6 +5,7 @@ import {
   gapText,
   gapToNextRank,
   levelNameVi,
+  pickContinueLesson,
   streakLabel,
 } from "./courseHomeView";
 
@@ -70,5 +71,34 @@ describe("gapToNextRank", () => {
   });
   it("ngang điểm thì nói là ngang điểm", () => {
     expect(gapText({ aboveRank: 2, gapXp: 0 })).toBe("Bạn đang ngang điểm với hạng 2.");
+  });
+});
+
+describe("pickContinueLesson — nút Tiếp tục và dấu trong danh sách trỏ cùng một bài", () => {
+  const L = (id: string, completed = false, locked = false) => ({ id, title: `Bài ${id}`, completed, locked });
+
+  it("bài mở gần nhất còn dở → bài đó, Đang học", () => {
+    expect(pickContinueLesson("1.2", [L("1.1", true), L("1.2"), L("1.3")])).toEqual({ id: "1.2", title: "Bài 1.2", kind: "current" });
+  });
+
+  it("bài mở gần nhất đã xong → bài chưa học đầu tiên, Bài tiếp theo (không còn 'Tiếp tục: Bài 1.1')", () => {
+    expect(pickContinueLesson("1.1", [L("1.1", true), L("1.2"), L("1.3")])).toEqual({ id: "1.2", title: "Bài 1.2", kind: "next" });
+  });
+
+  it("bỏ qua bài bị khoá khi tìm bài tiếp theo", () => {
+    expect(pickContinueLesson("1.1", [L("1.1", true), L("1.2", false, true), L("1.3")])?.id).toBe("1.3");
+  });
+
+  it("chưa mở bài nào → bài chưa học đầu tiên", () => {
+    expect(pickContinueLesson(null, [L("1.1"), L("1.2")])).toEqual({ id: "1.1", title: "Bài 1.1", kind: "next" });
+  });
+
+  it("bài gần nhất đã bị xoá/ẩn khỏi khoá → không trỏ vào nó", () => {
+    expect(pickContinueLesson("da-xoa", [L("1.1", true), L("1.2")])?.id).toBe("1.2");
+  });
+
+  it("học xong cả khoá → quay lại bài gần nhất để ôn; chưa có gì → null", () => {
+    expect(pickContinueLesson("1.2", [L("1.1", true), L("1.2", true)])).toEqual({ id: "1.2", title: "Bài 1.2", kind: "current" });
+    expect(pickContinueLesson(null, [])).toBeNull();
   });
 });

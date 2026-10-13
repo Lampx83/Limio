@@ -45,7 +45,7 @@ export function summarizeScore(input: {
 export function xpMultiplierNote(multiplier: number | undefined): string | null {
   if (multiplier === undefined || multiplier === 1) return null;
   if (multiplier < 1) {
-    return `Thưởng nhân ×${multiplier} vì bạn đã vững chủ đề này, nên bài dễ không được thưởng đủ.`;
+    return `Thưởng nhân ×${formatPoints(multiplier)} vì bạn đã vững chủ đề này, nên bài dễ không được thưởng đủ.`;
   }
-  return `Thưởng nhân ×${multiplier} vì chủ đề này còn khó với bạn.`;
+  return `Thưởng nhân ×${formatPoints(multiplier)} vì chủ đề này còn khó với bạn.`;
 }

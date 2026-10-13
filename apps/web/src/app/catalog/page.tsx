@@ -172,11 +172,11 @@ export default async function CatalogPage({
           ) : (
             <span className="chip-brand">Danh mục khoá học</span>
           )}
-          <h1 className="mt-3 h-display text-h1">Khám phá khóa học</h1>
+          <h1 className="mt-3 h-display text-h1">Khám phá khoá học</h1>
           <p className="mt-2 text-meta">
             {items.length > 0
-              ? `${items.length} khóa học đang được cộng đồng theo học`
-              : "Chưa có khóa học nào được publish."}
+              ? `${items.length} khoá học đang được cộng đồng theo học`
+              : "Chưa có khoá học nào được publish."}
           </p>
         </div>
       </div>
@@ -207,7 +207,7 @@ export default async function CatalogPage({
             <input
               name="q"
               defaultValue={searchParams.q ?? ""}
-              placeholder="Tìm khóa học theo tên hoặc mô tả..."
+              placeholder="Tìm khoá học theo tên hoặc mô tả..."
               className="input pl-9"
               aria-label="Từ khoá tìm kiếm"
             />
@@ -298,7 +298,7 @@ export default async function CatalogPage({
                   <span className="h-6 w-1.5 shrink-0 rounded-full bg-brand-gradient" aria-hidden />
                   <h2 className="h-display text-h3">{section.title}</h2>
                 </div>
-                <span className="text-meta">{section.courses.length} khóa học</span>
+                <span className="text-meta">{section.courses.length} khoá học</span>
               </div>
               <CourseGrid
                 courses={section.courses}

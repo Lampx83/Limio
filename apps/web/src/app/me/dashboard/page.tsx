@@ -9,7 +9,7 @@ import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import { formatDate, toDayKey } from "@/lib/datetime";
-import { continueButtonText } from "@/lib/courseHomeView";
+import { continueButtonText, pickContinueLesson } from "@/lib/courseHomeView";
 import MasteryBadge from "@/components/MasteryBadge";
 import HelpTour from "@/components/HelpTour";
 import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
@@ -110,11 +110,9 @@ export default async function LearnerDashboard({
     .map((e, i) => ({ e, p: progressByCourse[i]! }))
     .filter((x) => x.e.lastLessonId && x.p.courseCompletionPct < 100)[0];
 
-  const continueLesson = continueTarget?.e.lastLessonId
-    ? await prisma.lesson.findUnique({
-        where: { id: continueTarget.e.lastLessonId },
-        select: { title: true },
-      })
+  // Cùng quy tắc với trang khoá: bài vừa mở đã xong thì sang bài chưa học đầu tiên.
+  const continueLesson = continueTarget
+    ? pickContinueLesson(continueTarget.e.lastLessonId, continueTarget.p.modules.flatMap((m) => m.lessons))
     : null;
 
   const totalLessons = progressByCourse.reduce((s, p) => s + p.totalLessons, 0);
@@ -155,9 +153,9 @@ export default async function LearnerDashboard({
       )}
 
       {/* Continue learning hero CTA */}
-      {continueTarget && (
+      {continueTarget && continueLesson && (
         <Link
-          href={`/learn/${continueTarget.e.course.slug}/lessons/${continueTarget.e.lastLessonId}`}
+          href={`/learn/${continueTarget.e.course.slug}/lessons/${continueLesson.id}`}
           className="group relative mt-6 block overflow-hidden rounded-2xl bg-brand-gradient p-4 text-white shadow-card-hover transition-transform hover:-translate-y-0.5 sm:p-5"
         >
           <div
@@ -201,7 +199,7 @@ export default async function LearnerDashboard({
             một thẻ có biểu tượng và số "Chủ đề vững" tô cam, nên sinh viên đọc
             thành cảnh báo dù đó là con số tốt. */}
         <Stat
-          label="Khóa đã đăng ký"
+          label="Khoá đã đăng ký"
           value={enrollments.length}
           icon={<BookOpen size={18} aria-hidden />}
           href="/me/enrollments"
@@ -233,12 +231,12 @@ export default async function LearnerDashboard({
           {/* Enrolled courses */}
           <section className="card order-1 lg:order-none">
             <header className="flex items-baseline justify-between border-b border-token pb-3">
-              <h2 className="text-base font-semibold">Khóa đã đăng ký</h2>
+              <h2 className="text-base font-semibold">Khoá đã đăng ký</h2>
               <span className="text-xs text-faint">{enrollments.length}</span>
             </header>
             {enrollments.length === 0 ? (
               <p className="mt-4 text-sm text-muted">
-                Chưa có khóa nào.{" "}
+                Chưa có khoá nào.{" "}
                 <Link href="/catalog" className="link">
                   Vào danh mục khoá học
                 </Link>
@@ -381,8 +379,8 @@ export default async function LearnerDashboard({
           </section>
         </div>
         <div className="contents lg:flex lg:flex-col lg:gap-8">
-          {/* Lịch tuần/tháng (cột phải, cạnh Khóa đã đăng ký): đánh dấu hạn nộp bài tập, chip chi tiết bên dưới.
-              self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khóa đã đăng ký. */}
+          {/* Lịch tuần/tháng (cột phải, cạnh Khoá đã đăng ký): đánh dấu hạn nộp bài tập, chip chi tiết bên dưới.
+              self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khoá đã đăng ký. */}
           <div className="order-2 space-y-8 lg:order-none">
             <CalendarLoader userId={userId} audience="learner" />
             {/* Việc cần làm (top 5 việc có hạn, thống kê, khu không hạn, xem đủ + phân trang): ngay dưới lịch để

@@ -12,7 +12,7 @@ const NAV: Record<string, NavItem[]> = {
   ],
   learner: [
     { href: "/catalog", label: "Danh mục khoá học" },
-    { href: "/me/enrollments", label: "Khóa của tôi" },
+    { href: "/me/enrollments", label: "Khoá của tôi" },
     { href: "/tournaments", label: "🏆 Đấu trường thi đấu" },
     { href: "/me/skills", label: "Skill" },
     { href: "/me/badges", label: "Huy hiệu" },

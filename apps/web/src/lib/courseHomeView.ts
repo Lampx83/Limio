@@ -32,6 +32,31 @@ export function describeLevel(input: {
   return `${head}. Cần thêm ${input.xpToNext} XP để lên cấp ${input.level + 1}.`;
 }
 
+export interface LessonProgressItem {
+  id: string;
+  title: string;
+  completed: boolean;
+  locked: boolean;
+}
+
+/**
+ * Bài mà nút "Tiếp tục" trỏ tới — và cũng là bài được đánh dấu trong danh sách, để hai chỗ không bao giờ
+ * nói khác nhau. Bài mở gần nhất còn dở thì là bài đó ("Đang học"); đã xong thì là bài chưa học đầu tiên
+ * ("Bài tiếp theo"). Trước đây nút cứ trỏ về bài mở gần nhất, nên học xong Bài 1.1 vẫn thấy
+ * "Tiếp tục: Bài 1.1" ngay trên dòng "Bài 1.2 · Bài tiếp theo".
+ * `lessons` theo thứ tự khoá. Học xong cả khoá thì quay về bài gần nhất (để ôn); null nếu chưa có gì.
+ */
+export function pickContinueLesson(
+  lastLessonId: string | null,
+  lessons: LessonProgressItem[],
+): { id: string; title: string; kind: "current" | "next" } | null {
+  const last = lastLessonId ? lessons.find((l) => l.id === lastLessonId) : undefined;
+  if (last && !last.completed) return { id: last.id, title: last.title, kind: "current" };
+  const next = lessons.find((l) => !l.completed && !l.locked);
+  if (next) return { id: next.id, title: next.title, kind: "next" };
+  return last ? { id: last.id, title: last.title, kind: "current" } : null;
+}
+
 /** Nhãn nút vào học: nói rõ bài nào. `title` rỗng thì quay về câu chung. */
 export function continueButtonText(kind: "continue" | "start", title: string | null): string {
   const verb = kind === "continue" ? "Tiếp tục" : "Bắt đầu";
