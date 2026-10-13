@@ -1,10 +1,6 @@
-export type OralAvatarState = "idle" | "thinking" | "talking";
+import { oralUiText, type OralUiLang } from "@/lib/oralUiText";
 
-const STATE_LABEL: Record<OralAvatarState, string> = {
-  idle: "Sẵn sàng",
-  thinking: "Đang soạn câu hỏi…",
-  talking: "Đang hỏi…",
-};
+export type OralAvatarState = "idle" | "thinking" | "talking";
 
 // A6.6 (UI) — video loop thật cho từng state (quay/tạo sẵn 1 lần, phục vụ
 // như asset tĩnh — không sinh theo lượt nên không tốn thêm chi phí/độ trễ).
@@ -32,9 +28,11 @@ const ALL_VIDEO_SRCS = Object.values(STATE_VIDEO);
 export default function OralAiAvatar({
   state,
   className,
+  lang = "vi",
 }: {
   state: OralAvatarState;
   className?: string;
+  lang?: OralUiLang;
 }) {
   const videoSrc = STATE_VIDEO[state];
   return (
@@ -118,7 +116,7 @@ export default function OralAiAvatar({
             />
           </span>
         )}
-        <span>{STATE_LABEL[state]}</span>
+        <span>{oralUiText(lang).avatar[state]}</span>
       </div>
     </div>
   );

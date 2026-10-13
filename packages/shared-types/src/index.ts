@@ -7,3 +7,4 @@ export * from "./mastery";
 export * from "./academicTerm";
 export * from "./languageSkills";
 export * from "./flashcards";
+export * from "./aiGrading";

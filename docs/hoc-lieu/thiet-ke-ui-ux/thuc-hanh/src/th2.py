@@ -116,7 +116,7 @@ layer_tree = (
 
 part1 = part("teal", "Phần 1 — Làm quen Figma: dựng lại thẻ bài tập của Limio", "30 phút", "".join([
     p("Figma là công cụ thiết kế giao diện chạy ngay trên trình duyệt, nhiều người cùng sửa một file một lúc và thấy con trỏ của nhau. Trong khoá này bạn dùng Figma để dựng màn hình — và là công cụ chính của bài tập cuối kỳ."),
-    p("Phần này làm <strong>cá nhân</strong>, trong một file nháp của riêng bạn. Mục tiêu là quen tay, không phải làm đẹp."),
+    p("Phần này mỗi người làm <strong>trên máy mình</strong>, trong một file nháp của riêng bạn. Mục tiêu là quen tay, không phải làm đẹp. Ở Phần 3 bạn sẽ mang kết quả vào file của nhóm — đó mới là thứ nộp."),
     h3("Bốn vùng của màn hình làm việc · 5 phút", "teal"),
     figma_ui, ui_legend,
     h3("Sáu khái niệm cần phân biệt", "teal"),
@@ -232,7 +232,7 @@ pages_table = table("amber", ["Page", "Chứa gì", "Khi nào điền"], [
     ["<strong>00 Bìa</strong>", "Tên nhóm, thành viên và vai, trang Limio nhóm đã chọn, 3 quy luật được chia", "Hôm nay"],
     ["<strong>01 Từ giữa kỳ</strong>", "Ảnh chụp trang Limio hiện tại, ảnh bản giấy, kết quả hỏi 5 bạn, góp ý nhận được hôm thuyết trình", "Ngay sau buổi thuyết trình giữa kỳ"],
     ["<strong>02 Hệ thống thiết kế</strong>", "Màu, chữ, khoảng cách và các thành phần dùng chung, bám theo Limio", "Bài tập cuối kỳ — Mốc 1"],
-    ["<strong>03 Giao diện</strong>", "Các màn hình hoàn chỉnh, bản điện thoại và máy tính, prototype bấm được", "Bài tập cuối kỳ — Mốc 1, 2"],
+    ["<strong>03 Giao diện</strong>", "Hôm nay: mỗi người một frame “TH2 – Họ tên” chứa bài Phần 1, 2. Về sau: các màn hình hoàn chỉnh, bản điện thoại và máy tính, prototype bấm được", "Hôm nay · Bài tập cuối kỳ — Mốc 1, 2"],
     ["<strong>04 Kiểm thử</strong>", "Kiểm thử với 5 người, đánh giá chéo của nhóm bạn, bản sửa trước/sau", "Bài tập cuối kỳ — Mốc 2"],
     ["<strong>05 Bàn giao</strong>", "Đặc tả cho lập trình viên, kế hoạch đo lường", "Bài tập cuối kỳ — Mốc 3"],
     ["<strong>06 Bản nộp cuối kỳ</strong>", "Case study để trình bày hôm bảo vệ", "Bảo vệ cuối kỳ"],
@@ -245,12 +245,14 @@ part3 = part("amber", "Phần 3 — Dựng file nhóm cho bài tập cuối kỳ
     p("Page chưa tới lúc thì cứ tạo sẵn và để trống. Mở file ra là thấy ngay nhóm đang ở đâu.", small=True, muted=True),
     steps("amber", [
         ("Bước 1 · 8 phút", "Một bạn làm <strong>người giữ team</strong>: tạo team “Nhóm 03 – Lớp …”, trong đó tạo project “Bài tập nhóm”, rồi tạo file Design “Nhóm 03 – Hồ sơ thiết kế” <strong>trong project đó</strong> (không phải <em>Drafts</em>). Mời cả nhóm quyền <em>can edit</em>. Tạo đủ bảy page."),
-        ("Bước 2 · 10 phút", "Ở page 00 Bìa, dựng một frame 1440 × 1024: tên nhóm, bảng thành viên và vai, trang Limio đã chọn, 3 quy luật được chia. Dùng đúng những gì vừa luyện ở Phần 1, 2."),
+        ("Bước 2 · 7 phút", "Ở page 00 Bìa, dựng một frame 1440 × 1024: tên nhóm, bảng thành viên và vai, trang Limio đã chọn, 3 quy luật được chia. Dùng đúng những gì vừa luyện ở Phần 1, 2."),
+        ("Bước 3 · 5 phút — Mang bài của mình sang", "Mỗi người mở file nháp <strong>TH2 – Họ tên</strong>, chọn các frame của Phần 1 và Phần 2, <kbd>Ctrl/⌘ C</kbd>, rồi dán vào <strong>page 03 Giao diện</strong> của file nhóm. Gộp chúng vào một frame lớn tên <strong>“TH2 – Họ tên”</strong>. Giảng viên chấm Phần 1, 2 ngay tại đây, nên file nháp ở Drafts không phải nộp."),
     ]),
     steps("amber", [
-        ("Bước 3 · 7 phút", "Bấm <em>Share</em>, mời giảng viên vào team với quyền <em>can view</em>. Rồi mỗi người bấm <kbd>C</kbd>, để một bình luận trên trang bìa, <strong>@nhắc tên</strong> một bạn khác về một việc cụ thể; người được nhắc trả lời rồi bấm <em>Resolve</em>."),
-        ("Bước 4 · 5 phút", "<kbd>Ctrl/⌘ Alt S</kbd> lưu phiên bản tên <strong>“TH2 – Dựng xong file”</strong>, ghi một dòng mô tả. Mở <em>Version history</em> kiểm tra nó đã nằm đó."),
+        ("Bước 4 · 6 phút", "Bấm <em>Share</em>, mời giảng viên vào team với quyền <em>can view</em>. Rồi mỗi người bấm <kbd>C</kbd>, để một bình luận trên trang bìa, <strong>@nhắc tên</strong> một bạn khác về một việc cụ thể; người được nhắc trả lời rồi bấm <em>Resolve</em>."),
+        ("Bước 5 · 4 phút", "<kbd>Ctrl/⌘ Alt S</kbd> lưu phiên bản tên <strong>“TH2 – Dựng xong file”</strong>, ghi một dòng mô tả. Mở <em>Version history</em> kiểm tra nó đã nằm đó."),
     ]),
+    p("Các frame “TH2 – Họ tên” cứ để nguyên ở page 03; sang Mốc 1 của bài cuối kỳ nhóm sẽ tự dọn.", small=True, muted=True),
     aside("amber", "Cảnh báo — file trong Drafts là file của một người",
         "File để trong <em>Drafts</em> thuộc về đúng người tạo ra nó. Bạn ấy nghỉ học, đổi email hay hết hạn gói Education là cả nhóm mất file. "
         "File trong <strong>project của team</strong> thì thuộc về team. Lỡ tạo trong Drafts thì kéo nó vào project ngay."),
@@ -263,6 +265,7 @@ part3 = part("amber", "Phần 3 — Dựng file nhóm cho bài tập cuối kỳ
 file_checklist = [
     "File nằm trong <strong>project của team</strong>, không nằm trong Drafts của ai.",
     "Đủ bảy page, đúng tên và đúng thứ tự.",
+    "Page 03 có frame “TH2 – Họ tên” của <strong>từng thành viên</strong>, mỗi frame đủ ba trạng thái thẻ và màn hình từ bản giấy.",
     "Trang bìa có tên nhóm, thành viên và vai, trang Limio đã chọn, 3 quy luật.",
     "Mọi thành viên có quyền sửa; giảng viên đã được mời quyền xem.",
     "Không còn lớp mang tên mặc định (“Frame 12”, “Rectangle 3”) trên trang bìa.",
@@ -275,7 +278,7 @@ part4 = part("blue", "Phần 4 — Soát chéo và nộp", "20 phút", "".join([
     steps("blue", [
         ("Bước 1 · 10 phút — Soát", "Đi qua danh sách bên dưới trên file của nhóm bạn. Mục nào chưa đạt: bấm <kbd>C</kbd>, đặt bình luận ngay chỗ đó, mở đầu bằng <strong>[Soát]</strong>, nói rõ thiếu gì."),
         ("Bước 2 · 7 phút — Sửa", "Quay về file nhà. Sửa theo từng bình luận <strong>[Soát]</strong> nhận được, xong cái nào bấm <em>Resolve</em> cái đó. Không đồng ý thì trả lời vì sao, đừng lặng lẽ bỏ qua."),
-        ("Bước 3 · 3 phút — Nộp", "Nộp lên Limio theo mục “Sản phẩm nộp” cuối trang."),
+        ("Bước 3 · 3 phút — Nộp", "<strong>Người giữ team</strong> nộp link file nhóm lên Limio, ở bài tập nhóm của bài này — nộp một lần là cả nhóm có bài. Mỗi người tự ghi ô <em>Phần việc của tôi</em>: mình dựng gì, soát gì."),
     ]),
     h3("Danh sách soát file nhóm", "blue"),
     checklist(file_checklist),
@@ -287,15 +290,16 @@ part4 = part("blue", "Phần 4 — Soát chéo và nộp", "20 phút", "".join([
 
 # ---------------------------------------------------------------- sản phẩm nộp
 deliver = summary_box("Sản phẩm nộp và cách chấm", "".join([
-    check("Link file nháp cá nhân <strong>TH2 – Họ tên</strong>: page Phần 1 (ba trạng thái thẻ) và page Phần 2 (màn hình từ bản giấy) — mỗi người tự nộp"),
-    check("Link file nhóm <strong>Nhóm … – Hồ sơ thiết kế</strong> (quyền xem) — người giữ team nộp"),
+    check("Link file nhóm <strong>Nhóm … – Hồ sơ thiết kế</strong> (quyền xem), có frame “TH2 – Họ tên” của từng thành viên ở page 03 — người giữ team nộp, <strong>một lần cho cả nhóm</strong>"),
+    check("Ô <em>Phần việc của tôi</em> trên Limio — mỗi người tự ghi"),
     '<div style="height:.6rem"></div>',
     table("green", ["Tiêu chí", "Điểm"], [
-        ["Phần 1 — thẻ bài tập: đúng frame, lớp có tên, khoảng cách đúng, đủ ba trạng thái", "25"],
-        ["Phần 2 — màn hình từ bản giấy: đúng thông số, dùng lại thẻ Phần 1, một màu nhấn, ghi chú đỏ đã xử lý", "35"],
+        ["Phần 1 — thẻ bài tập (frame “TH2 – Họ tên” ở page 03): đúng frame, lớp có tên, khoảng cách đúng, đủ ba trạng thái", "25"],
+        ["Phần 2 — màn hình từ bản giấy (cùng frame đó): đúng thông số, dùng lại thẻ Phần 1, một màu nhấn, ghi chú đỏ đã xử lý", "35"],
         ["Phần 3 — file nhóm: đạt danh sách soát ở Phần 4", "20"],
         ["Phần 4 — soát chéo: bình luận gửi nhóm bạn cụ thể, chỉ đúng chỗ; bình luận nhận được đã xử lý hoặc trả lời", "20"],
     ], big_cols=(0, 1)),
+    p("Chấm <strong>một lần cho cả nhóm</strong>. Thành viên nào chưa có frame Phần 1, 2 đủ trong file, hoặc ô <em>Phần việc của tôi</em> không khớp với lịch sử phiên bản, giảng viên chỉnh điểm riêng cho bạn đó.", small=True, muted=True),
 ]))
 
 refs = sources([
@@ -325,7 +329,7 @@ html = page(
     ]),
     h2("Lịch trình 120 phút", "lich-trinh"),
     timeline([("teal", 30, "Làm quen Figma"), ("purple", 40, "Từ giấy lên Figma"), ("amber", 30, "Dựng file nhóm"), ("blue", 20, "Soát chéo, nộp")]),
-    p("Phần 1 và 2 làm cá nhân, Phần 3 và 4 làm theo nhóm. Mở lần lượt từng phần khi đến giờ — đỡ rối mắt vì thấy hết nội dung buổi học cùng lúc.", small=True, muted=True),
+    p("Phần 1 và 2 mỗi người làm trên máy mình, Phần 3 và 4 làm theo nhóm — và cả nhóm nộp <strong>một</strong> file. Mở lần lượt từng phần khi đến giờ — đỡ rối mắt vì thấy hết nội dung buổi học cùng lúc.", small=True, muted=True),
     part1, part2, part3, part4,
     deliver,
     refs,

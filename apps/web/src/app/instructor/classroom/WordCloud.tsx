@@ -1,22 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { copyText } from "@/lib/clipboard";
 import { RefreshCw, RotateCcw } from "lucide-react";
 import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import { toast } from "@/lib/toast";
-import dynamic from "next/dynamic";
+import JoinQrCard from "@/components/ui/JoinQrCard";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
-
-const QRCode = dynamic(
-  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
-  {
-    ssr: false,
-    loading: () => <div className="tool-qr" style={{ width: 200, height: 200 }} />
-  }
-);
 
 interface WordCloud {
   id: string;
@@ -321,26 +312,14 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
 
         <div className="flex-1">
           {cloudUrl ? (
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-              <div className="flex flex-col items-center gap-3">
-                <div className="tool-qr">
-                  <QRCode value={cloudUrl} size={200} level="H" includeMargin />
-                </div>
-                <button
-                  onClick={async () => {
-                    // Báo theo kết quả THẬT. Bản cũ luôn hiện "Đã copy!" kể cả
-                    // khi clipboard không dùng được (http trần) — người dùng
-                    // tin là xong rồi đi dán ra thứ khác.
-                    const ok = await copyText(cloudUrl);
-                    if (ok) toast.success("Đã copy link!");
-                    else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
-                  }}
-                  className="text-xs text-brand-600 hover:text-brand-700 underline"
-                >
-                  Copy link
-                </button>
-              </div>
-              <div className="md:col-span-2">
+            <div className="mt-6">
+              {/* QR nhỏ ở góc, bấm để phóng popup — đám mây từ được rộng hết chỗ. */}
+              <JoinQrCard
+                url={cloudUrl}
+                title="Quét để gửi từ khoá"
+                className="fixed bottom-6 left-6 z-40"
+              />
+              <div>
                 <p className="text-4xl md:text-5xl font-bold text-center mb-8 leading-tight">{currentCloud.prompt}</p>
                 <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
               </div>
@@ -395,15 +374,15 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
           </div>
         </div>
 
-        {cloudUrl && (
-          <div className="mb-6 flex justify-center">
-            <div className="tool-qr">
-              <QRCode value={cloudUrl} size={150} level="H" includeMargin />
-            </div>
-          </div>
-        )}
-
-        <p className="text-lg font-semibold text-center mb-4">{currentCloud.prompt}</p>
+        {/* Câu hỏi ở giữa, QR nhỏ nép góc phải; bấm QR để phóng popup.
+            Cột đệm bên trái giữ câu hỏi nằm giữa thật. */}
+        <div className="mb-4 flex items-start gap-3">
+          {cloudUrl && <div aria-hidden className="hidden w-[7.5rem] shrink-0 sm:block" />}
+          <p className="min-w-0 flex-1 text-lg font-semibold text-center">{currentCloud.prompt}</p>
+          {cloudUrl && (
+            <JoinQrCard url={cloudUrl} title="Quét để gửi từ khoá" className="shrink-0" />
+          )}
+        </div>
         <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
 
         {isStateless && (

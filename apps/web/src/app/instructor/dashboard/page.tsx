@@ -21,6 +21,7 @@ import {
   userIsAnyProctor,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { hourVN } from "@/lib/datetime";
 import FeatureBlockedToast from "@/components/FeatureBlockedToast";
 import UserAvatar from "@/components/ui/UserAvatar";
 import HelpTour from "@/components/HelpTour";
@@ -107,7 +108,7 @@ const CATEGORY_ICON: Record<Category, LucideIcon> = {
 };
 
 function greeting(): string {
-  const h = new Date().getHours();
+  const h = hourVN();
   if (h < 12) return "Chào buổi sáng";
   if (h < 18) return "Chào buổi chiều";
   return "Chào buổi tối";

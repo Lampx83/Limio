@@ -13,6 +13,7 @@ import {
   shareExamLink,
   startExamAttempt,
 } from "../";
+import { roundFor } from "../../test/roundFor";
 
 const BASE = "http://localhost:3000";
 
@@ -159,10 +160,10 @@ describe("khung giờ của ĐỢT suy từ các ca", () => {
   it("khung hiển thị bám theo ca, không bám cột của đợt", async () => {
     const s = await setup("derive");
     const shared = await shareExamLink(s.ownerId, s.examId);
-    const session = await prisma.examSession.findUniqueOrThrow({
-      where: { id: shared.sessionId },
-      select: { roundId: true },
-    });
+    // Khung hiển thị là của ĐỢT — ca phải thuộc một đợt thật (buổi đơn không có đợt).
+    const roundId = await roundFor(s.examId);
+    await prisma.examSession.update({ where: { id: shared.sessionId }, data: { roundId } });
+    const session = { roundId };
 
     // Cố tình đặt cột của đợt lệch hẳn khỏi ca — đúng tình trạng 4/6 đợt trên
     // production. Khung hiển thị phải bỏ qua nó.

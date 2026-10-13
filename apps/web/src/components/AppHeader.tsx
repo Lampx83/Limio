@@ -7,7 +7,7 @@ import { getRegisterEnabled } from "@/lib/site-settings";
 import UserMenu from "./UserMenu";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
-import ScanExamQrButton from "./ScanExamQrButton";
+import ScanQrButton from "./ScanQrButton";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
@@ -88,7 +88,7 @@ export default async function AppHeader() {
             🏆 Đấu trường
           </Link>
 
-          {user && activeRole === "learner" && <ScanExamQrButton />}
+          {user && activeRole === "learner" && <ScanQrButton />}
           {user && (
             <NotificationBell
               initialUnread={notiUnread}

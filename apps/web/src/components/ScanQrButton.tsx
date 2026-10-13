@@ -4,23 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { ScanLine, X } from "lucide-react";
-
-// Lấy mã thi từ nội dung QR: có thể là link đầy đủ (…/exam/ABC123) hoặc chính
-// mã thi. Backend dùng mã 6 (mở) hoặc 8 (gán sẵn) ký tự chữ-số viết hoa.
-function extractExamCode(raw: string): string | null {
-  const text = raw.trim();
-  const m = text.match(/\/exam\/([A-Za-z0-9]{6,8})(?:[/?#]|$)/);
-  if (m?.[1]) return m[1].toUpperCase();
-  if (/^[A-Za-z0-9]{6,8}$/.test(text)) return text.toUpperCase();
-  return null;
-}
+import { parseScanTarget } from "@/lib/scanTarget";
 
 /**
- * Nút quét QR vào thi — chỉ hiện ở mobile (`sm:hidden`), đặt cạnh chuông
- * thông báo trên header. Ưu tiên BarcodeDetector native, fallback jsQR
- * (iOS Safari chưa có BarcodeDetector).
+ * Nút quét QR dùng chung cho thi và vấn đáp — chỉ hiện ở mobile (`sm:hidden`),
+ * đặt cạnh chuông thông báo trên header. Không biết trước QR thuộc loại nào:
+ * nội dung QR quyết định đích đến (xem `parseScanTarget`). Ưu tiên
+ * BarcodeDetector native, fallback jsQR (iOS Safari chưa có BarcodeDetector).
  */
-export default function ScanExamQrButton() {
+export default function ScanQrButton() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -37,7 +29,7 @@ export default function ScanExamQrButton() {
 
     const start = async () => {
       if (!navigator.mediaDevices?.getUserMedia) {
-        setErr("Trình duyệt không hỗ trợ mở camera. Hãy nhập mã thi thủ công.");
+        setErr("Trình duyệt không hỗ trợ mở camera. Hãy nhập mã thủ công.");
         return;
       }
       try {
@@ -65,14 +57,14 @@ export default function ScanExamQrButton() {
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
       const handle = (value: string) => {
-        const code = extractExamCode(value);
-        if (!code) {
-          setErr("QR này không phải mã vào thi. Hãy quét QR do giám thị cung cấp.");
+        const target = parseScanTarget(value);
+        if (!target) {
+          setErr("QR này không phải mã vào thi hay vấn đáp. Hãy quét QR do giám thị hoặc giảng viên cung cấp.");
           return false;
         }
         stopped = true;
         setOpen(false);
-        router.push(`/exam/${code}`);
+        router.push(target.path);
         return true;
       };
 
@@ -113,8 +105,8 @@ export default function ScanExamQrButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Quét QR vào thi"
-        title="Quét QR vào thi"
+        aria-label="Quét QR"
+        title="Quét QR vào thi hoặc vấn đáp"
         className="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 sm:hidden"
       >
         <ScanLine className="h-5 w-5" />
@@ -126,11 +118,11 @@ export default function ScanExamQrButton() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Quét QR vào thi"
+            aria-label="Quét QR"
             className="fixed inset-0 z-50 flex flex-col bg-black"
           >
             <div className="flex items-center justify-between p-4 text-white">
-              <span className="font-semibold">Quét QR vào thi</span>
+              <span className="font-semibold">Quét QR</span>
               <button
                 type="button"
                 onClick={close}
@@ -150,7 +142,7 @@ export default function ScanExamQrButton() {
               <div className="pointer-events-none absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-2xl border-4 border-white/80" />
             </div>
             <div className="p-4 text-center text-sm text-white">
-              {err ?? "Đưa mã QR của ca thi vào khung hình."}
+              {err ?? "Đưa mã QR của ca thi hoặc buổi vấn đáp vào khung hình."}
             </div>
           </div>,
           document.body,

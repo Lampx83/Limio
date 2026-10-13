@@ -4,14 +4,33 @@ import { useState } from "react";
 import { copyText } from "@/lib/clipboard";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, ChevronDown, Copy, Download, QrCode, Radio } from "lucide-react";
+import {
+  BarChart3,
+  CalendarClock,
+  Check,
+  ChevronDown,
+  Copy,
+  DoorOpen,
+  Download,
+  KeyRound,
+  Play,
+  QrCode,
+  Radio,
+  Settings2,
+  Square,
+  Timer,
+  UserCheck,
+} from "lucide-react";
 import dynamic from "next/dynamic";
+import QrZoom from "@/components/ui/QrZoom";
 import RoomsExpand from "./RoomsExpand";
 import type { ExamRun } from "@feedbackme/core-lms";
+import { RUN_KIND, runKind } from "./runKind";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
+import { formatTime, formatVN } from "@/lib/datetime";
 
-/** Kích thước QR: đủ to để quét từ cuối lớp khi chiếu lên máy chiếu. */
-const QR_SIZE = 220;
+/** QR hiển thị nhỏ ở góc; bấm vào để phóng popup đủ to cho cả lớp quét (QrZoom). */
+const QR_SIZE = 112;
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -26,14 +45,16 @@ const QRCode = dynamic(
   },
 );
 
-const fmt = (iso: string) =>
-  new Date(iso).toLocaleString("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
-    hour: "2-digit",
-    minute: "2-digit",
-    day: "2-digit",
-    month: "2-digit",
-  });
+/** "16:14 · 09/10" — thêm năm khi khác năm nay (ca đặt hạn đóng tận năm sau
+    mà không ghi năm thì trông như đã đóng từ lâu). */
+const fmt = (iso: string) => {
+  const d = new Date(iso);
+  const sameYear =
+    formatVN(d, { year: "numeric" }) === formatVN(new Date(), { year: "numeric" });
+  // Ghép tay: vi-VN bỏ năm thì in "09-10", dễ đọc nhầm thành khoảng ngày.
+  const day = `${formatVN(d, { day: "2-digit" })}/${formatVN(d, { month: "2-digit" })}`;
+  return `${formatTime(d)} · ${sameYear ? day : `${day}/${formatVN(d, { year: "numeric" })}`}`;
+};
 
 /**
  * Lịch sử các lần thi CÙNG MỘT DẠNG.
@@ -46,19 +67,23 @@ export default function ExamRunsList({
   runs,
   emptyHint,
   showRooms = false,
+  showKind = false,
 }: {
   runs: ExamRun[];
   emptyHint?: string;
-  /** Bung ra danh sách phòng + mã giám thị. Chỉ bật ở kỳ thi chính thức: thi
-      nhanh mỗi ca đúng một phòng mặc định, bung ra là thêm bấm cho không. */
+  /** Bung ra danh sách phòng + mã giám thị — chỉ ở dòng kỳ thi chính thức:
+      thi nhanh mỗi ca đúng một phòng mặc định, bung ra là thêm bấm cho không. */
   showRooms?: boolean;
+  /** Ghi hình thức tổ chức trên từng dòng — chỉ cần ở trang Lịch sử thi, nơi
+      ba hình thức nằm chung một danh sách. */
+  showKind?: boolean;
 }) {
   const open = runs.filter((r) => r.isOpen);
   const past = runs.filter((r) => !r.isOpen);
 
   if (runs.length === 0) {
     return (
-      <p className="rounded-lg border border-default bg-white px-4 py-6 text-center text-sm text-faint">
+      <p className="rounded-lg border border-token bg-white px-4 py-6 text-center text-sm text-faint">
         {emptyHint ?? "Chưa có lần thi nào."}
       </p>
     );
@@ -73,7 +98,7 @@ export default function ExamRunsList({
           </h2>
           <ul className="mt-2 space-y-2">
             {open.map((r) => (
-              <Row key={r.sessionId} r={r} showRooms={showRooms} />
+              <Row key={r.sessionId} r={r} showRooms={showRooms} showKind={showKind} />
             ))}
           </ul>
         </section>
@@ -86,7 +111,7 @@ export default function ExamRunsList({
           </h2>
           <ul className="mt-2 space-y-2">
             {past.map((r) => (
-              <Row key={r.sessionId} r={r} showRooms={showRooms} />
+              <Row key={r.sessionId} r={r} showRooms={showRooms} showKind={showKind} />
             ))}
           </ul>
         </section>
@@ -95,7 +120,15 @@ export default function ExamRunsList({
   );
 }
 
-function Row({ r, showRooms }: { r: ExamRun; showRooms: boolean }) {
+function Row({
+  r,
+  showRooms,
+  showKind,
+}: {
+  r: ExamRun;
+  showRooms: boolean;
+  showKind: boolean;
+}) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [copyErr, setCopyErr] = useState(false);
@@ -142,159 +175,209 @@ function Row({ r, showRooms }: { r: ExamRun; showRooms: boolean }) {
     }
   };
 
+  const kind = RUN_KIND[runKind(r)];
+
   return (
-    <li
-      className={`flex flex-wrap items-center gap-3 rounded-lg border px-3 py-2.5 ${
-        r.isOpen
-          ? "border-emerald-300 bg-emerald-50"
-          : "border-default bg-white"
-      }`}
-    >
-      <span className="inline-flex items-center gap-1.5">
-        <span
-          className={`font-mono text-base font-semibold tracking-widest ${
-            r.isOpen ? "text-emerald-900" : "text-faint"
-          }`}
-        >
-          {r.code ??
-            (r.accessMode === "assigned_code" ? "mã riêng" : "ghi danh")}
-        </span>
-        {r.isOpen && r.code && (
-          <button
-            type="button"
-            onClick={copy}
-            className="rounded p-1 text-emerald-800 hover:bg-emerald-100"
-            aria-label={`Sao chép link buổi thi ${r.examTitle}`}
-          >
-            {copied ? (
-              <Check className="h-3.5 w-3.5" />
+    <li className="relative overflow-hidden rounded-xl border border-token bg-white shadow-sm">
+      {/* Dải màu bên trái = hình thức thi (xem RUN_KIND). Ca đã đóng giữ màu
+          nhưng nhạt đi; trạng thái mở/đóng đọc ở nhãn ngay đầu thẻ. */}
+      <span
+        aria-hidden
+        className={`absolute inset-y-0 left-0 w-1.5 ${kind.stripe} ${r.isOpen ? "" : "opacity-40"}`}
+      />
+      <div className="flex gap-3 px-4 py-3 sm:gap-4">
+        <div className="min-w-0 flex-1">
+          {/* Dòng nhãn: trạng thái → hình thức → cách vào thi. Mã chung là thứ
+              duy nhất cần đọc to cho lớp nên được tô mono; ca không có mã
+              chung thì chỉ ghi cách vào, chữ thường — trước đây "ghi danh"
+              cũng bị in mono giãn chữ như một cái mã, đọc rất lạ. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {r.isOpen ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800 ring-1 ring-inset ring-emerald-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
+                Đang mở
+              </span>
             ) : (
-              <Copy className="h-3.5 w-3.5" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" aria-hidden />
+                Đã đóng
+              </span>
             )}
-          </button>
-        )}
-        {r.isOpen && r.code && fullUrl && (
-          <button
-            type="button"
-            onClick={() => setShowQr((v) => !v)}
-            aria-expanded={showQr}
-            className={`rounded p-1 text-emerald-800 hover:bg-emerald-100 ${
-              showQr ? "bg-emerald-100" : ""
-            }`}
-            aria-label={
-              showQr
-                ? `Ẩn mã QR buổi thi ${r.examTitle}`
-                : `Hiện mã QR để chiếu cho lớp — buổi thi ${r.examTitle}`
-            }
-            title={showQr ? "Ẩn mã QR" : "Hiện mã QR để chiếu cho lớp"}
-          >
-            <QrCode className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </span>
+            {showKind && (
+              <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${kind.chip}`}>
+                {kind.label}
+              </span>
+            )}
+            {r.code ? (
+              <span className="inline-flex items-center gap-0.5 rounded-full border border-token bg-white py-0.5 pl-2 pr-0.5 text-xs">
+                <span className="text-faint">Mã</span>
+                <span
+                  className={`ml-1 font-mono font-semibold tracking-wider ${
+                    r.isOpen ? "text-slate-900 dark:text-slate-100" : "text-faint"
+                  }`}
+                >
+                  {r.code}
+                </span>
+                {r.isOpen && (
+                  <button
+                    type="button"
+                    onClick={copy}
+                    className="ml-0.5 rounded-full p-1 text-muted hover:bg-slate-100"
+                    aria-label={`Sao chép link buổi thi ${r.examTitle}`}
+                    title="Sao chép link vào thi"
+                  >
+                    {copied ? (
+                      <Check className="h-3 w-3 text-emerald-600" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
+                {r.isOpen && fullUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setShowQr((v) => !v)}
+                    aria-expanded={showQr}
+                    className={`rounded-full p-1 text-muted hover:bg-slate-100 ${
+                      showQr ? "bg-slate-100" : ""
+                    }`}
+                    aria-label={
+                      showQr
+                        ? `Ẩn mã QR buổi thi ${r.examTitle}`
+                        : `Hiện mã QR để chiếu cho lớp — buổi thi ${r.examTitle}`
+                    }
+                    title={showQr ? "Ẩn mã QR" : "Hiện mã QR để chiếu cho lớp"}
+                  >
+                    <QrCode className="h-3 w-3" />
+                  </button>
+                )}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-token px-2 py-0.5 text-xs text-muted">
+                {r.accessMode === "assigned_code" ? (
+                  <>
+                    <KeyRound className="h-3 w-3 text-faint" aria-hidden />
+                    Mã riêng từng thí sinh
+                  </>
+                ) : (
+                  <>
+                    <UserCheck className="h-3 w-3 text-faint" aria-hidden />
+                    Học viên đã ghi danh
+                  </>
+                )}
+              </span>
+            )}
+          </div>
 
-      {/* min-w-48 chứ không min-w-0: khối này chứa TÊN ĐỀ, thứ giáo viên
-          dùng để nhận ra dòng nào là dòng nào. Cho nó co vô hạn thì mọi nút
-          khác giành hết chỗ và tên đề cụt thành "Bài kiểm tra ...". Có sàn thì
-          khi chật, cụm nút xuống dòng — dài thêm một dòng còn hơn mất tên. */}
-      <span className="min-w-48 flex-1">
-        <span className="block truncate text-sm font-medium">{r.examTitle}</span>
-        {r.startedCount > r.submittedCount && (
-          <span className="block text-caption text-amber-700">
-            {r.startedCount - r.submittedCount} người đang làm dở
-          </span>
-        )}
-        {copyErr && (
-          <span className="block text-caption text-red-700">
-            Không sao chép được — đọc mã cho lớp hoặc bôi đen rồi copy tay.
-          </span>
-        )}
-        <span className="block text-caption text-faint">
-          {fmt(r.opensAt)} · {r.durationMin} phút
-          {r.isOpen && !r.closesAt ? " · đóng khi bạn bấm" : ""}
-          {r.closesAt ? ` · đóng ${fmt(r.closesAt)}` : ""}
-        </span>
-      </span>
+          {/* Tên đề là thứ giáo viên dùng để nhận ra dòng nào là dòng nào —
+              cho xuống 2 dòng chứ không cắt cụt. */}
+          <h3 className="mt-1 line-clamp-3 text-base sm:line-clamp-2 font-semibold leading-snug">
+            {r.examTitle}
+          </h3>
 
-      {/* Số bài đã nộp, kiểu Google Form: nhãn + số trong vòng tròn đậm.
-          Trước đây nó nằm lẫn trong dòng phụ ("0/0 đã nộp") giữa giờ mở và
-          thời lượng — thứ giáo viên mở trang này để xem đầu tiên lại là thứ
-          khó thấy nhất.
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-caption text-faint">
+            <span className="inline-flex items-center gap-1">
+              <CalendarClock className="h-3.5 w-3.5" aria-hidden />
+              {fmt(r.opensAt)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Timer className="h-3.5 w-3.5" aria-hidden />
+              {r.durationMin} phút
+            </span>
+            {r.closesAt ? (
+              <span>Đóng {fmt(r.closesAt)}</span>
+            ) : (
+              r.isOpen && <span>Đóng khi bạn bấm</span>
+            )}
+          </p>
 
-          Đếm bài ĐÃ NỘP, không đếm bài đã bắt đầu: người mở đề rồi bỏ ngang
-          chưa phải một lượt thi. Số đang làm dở hiện riêng, và chỉ khi có. */}
-      <Link
-        href={`/instructor/exam-runs/${r.sessionId}`}
-        className="flex shrink-0 items-center gap-2 rounded px-1 py-0.5 hover:bg-black/5"
-        title={`${r.submittedCount} bài đã nộp — bấm để xem chi tiết`}
-      >
-        <span className="text-sm text-ink-2">Bài đã nộp</span>
-        <span className="flex h-7 min-w-7 items-center justify-center rounded-full bg-slate-800 px-1.5 text-sm font-semibold tabular-nums text-white">
-          {r.submittedCount}
-        </span>
-      </Link>
+          {r.startedCount > r.submittedCount && (
+            <p className="mt-1 inline-flex items-center gap-1.5 text-caption font-medium text-amber-700">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" aria-hidden />
+              {r.startedCount - r.submittedCount} người đang làm dở
+            </p>
+          )}
+          {copyErr && (
+            <p className="mt-1 text-caption text-red-700">
+              Không sao chép được — đọc mã cho lớp hoặc bôi đen rồi copy tay.
+            </p>
+          )}
+        </div>
 
-      <span className="flex shrink-0 items-center gap-2">
-        {/* Giám sát: xem ai đang làm tới đâu. Có cả khi ca ĐÃ ĐÓNG — lúc đó
-            màn hình chuyển sang "Xem lại", giữ nguyên toàn bộ bài làm của ca.
-            Trang đó vốn lọc 24h gần nhất; truyền sessionId thì bỏ cửa sổ đó,
-            vì chính ca đã bó tập bài làm rồi. */}
-        <Link
-          href={`/instructor/courses/${r.courseId}/exams/${r.examId}/live?sessionId=${r.sessionId}`}
-          className="inline-flex items-center gap-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
-          title={
-            r.isOpen
-              ? "Xem ai đang làm bài, tới câu nào"
-              : "Xem lại diễn biến của ca đã đóng"
-          }
-        >
-          <Radio
-            className={`h-3 w-3 shrink-0 ${r.isOpen ? "text-red-500" : "text-faint"}`}
-          />
-          {r.isOpen ? "Giám sát" : "Xem lại"}
-        </Link>
+        {/* Số bài đã nộp — thứ giáo viên mở trang này để xem đầu tiên, nên to
+            và đứng riêng một góc. Đếm bài ĐÃ NỘP, không đếm bài đã bắt đầu:
+            người mở đề rồi bỏ ngang chưa phải một lượt thi. */}
         <Link
           href={`/instructor/exam-runs/${r.sessionId}`}
-          className="text-xs underline"
+          className="flex shrink-0 flex-col items-center justify-center self-start rounded-lg px-1.5 py-1.5 sm:px-3 text-center hover:bg-slate-50"
+          title={`${r.submittedCount} bài đã nộp — bấm để xem kết quả`}
         >
+          <span
+            className={`text-2xl font-bold leading-none tabular-nums ${
+              r.submittedCount > 0 ? "text-slate-900 dark:text-slate-100" : "text-faint"
+            }`}
+          >
+            {r.submittedCount}
+          </span>
+          <span className="mt-1 whitespace-nowrap text-caption text-faint">
+            <span className="hidden sm:inline">bài </span>đã nộp
+          </span>
+        </Link>
+      </div>
+
+      {/* Hàng thao tác: mọi nút cùng một kiểu, chỉ nút Đóng tách sang phải và
+          tô đỏ — đóng ca là cắt dòng người đang vào thi, không được bấm nhầm
+          khi đang lướt qua hàng nút. "Mở lại" thì không: mở thêm một cánh cửa
+          chẳng hỏng gì. */}
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-token bg-slate-50/70 px-4 py-1.5">
+        {/* Có cả khi ca ĐÃ ĐÓNG — lúc đó màn hình chuyển sang "Xem lại", giữ
+            nguyên toàn bộ bài làm. Truyền sessionId để bỏ cửa sổ 24h mặc định
+            của trang đó, vì chính ca đã bó tập bài làm rồi. */}
+        <Link
+          href={`/instructor/courses/${r.courseId}/exams/${r.examId}/live?sessionId=${r.sessionId}`}
+          className={BTN}
+          title={r.isOpen ? "Xem ai đang làm bài, tới câu nào" : "Xem lại diễn biến của ca đã đóng"}
+        >
+          <Radio className={`h-3.5 w-3.5 ${r.isOpen ? "text-red-500" : "text-faint"}`} />
+          {r.isOpen ? "Giám sát" : "Xem lại"}
+        </Link>
+        <Link href={`/instructor/exam-runs/${r.sessionId}`} className={BTN}>
+          <BarChart3 className="h-3.5 w-3.5 text-faint" />
           Kết quả
         </Link>
-        {/* Kỳ thi chính thức thuộc một đợt: ca này nằm ở đợt nào, xếp phòng ra sao
-            là ở trang quản lý đợt — không có lối này thì lịch sử chỉ dẫn được tới
-            kết quả, mất đường quay về chỗ sửa ca. */}
-        {r.scale === "formal" && (
+        <a
+          href={apiUrl(`/api/exams/${r.examId}/results?sessionId=${r.sessionId}`)}
+          className={BTN}
+          title="Tải kết quả thí sinh của lần thi này"
+        >
+          <Download className="h-3.5 w-3.5 text-faint" />
+          Tải
+        </a>
+        {/* Kỳ thi chính thức thuộc một đợt: không có lối này thì lịch sử chỉ dẫn
+            được tới kết quả, mất đường quay về chỗ sửa giờ, xếp phòng. */}
+        {r.scale === "formal" && r.roundId && (
           <Link
             href={`/instructor/exam-rounds/${r.roundId}?tab=sessions`}
-            className="text-xs underline"
+            className={BTN}
             title="Mở đợt thi chứa ca này để sửa giờ, xếp phòng, cấp mã"
           >
+            <Settings2 className="h-3.5 w-3.5 text-faint" />
             Quản lý ca
           </Link>
         )}
-        <a
-          href={apiUrl(
-            `/api/exams/${r.examId}/results?sessionId=${r.sessionId}`,
-          )}
-          className="inline-flex items-center gap-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
-          title="Tải kết quả thí sinh của lần thi này"
-        >
-          <Download className="h-3 w-3 shrink-0" />
-          Tải
-        </a>
-        {showRooms && (
+        {showRooms && r.scale === "formal" && (
           <button
             type="button"
             onClick={() => setOpenRooms((v) => !v)}
             aria-expanded={openRooms}
-            className="inline-flex items-center gap-1 rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50"
+            className={`${BTN} ${openRooms ? "bg-slate-100" : ""}`}
             title="Xem các phòng của ca này và mã giám thị từng phòng"
           >
-            <ChevronDown
-              className={`h-3 w-3 shrink-0 transition-transform ${
-                openRooms ? "rotate-180" : ""
-              }`}
-            />
+            <DoorOpen className="h-3.5 w-3.5 text-faint" />
             Phòng thi
+            <ChevronDown
+              className={`h-3.5 w-3.5 text-faint transition-transform ${openRooms ? "rotate-180" : ""}`}
+            />
           </button>
         )}
         {r.timingMode === "manual" && (
@@ -302,39 +385,39 @@ function Row({ r, showRooms }: { r: ExamRun; showRooms: boolean }) {
             type="button"
             onClick={() => toggle(!r.isOpen)}
             disabled={busy}
-            /* Đóng ca là hành động cắt dòng người đang vào thi — tô đỏ sẫm để
-               không ai bấm nhầm khi đang lướt qua hàng nút. "Mở lại" thì
-               không: mở thêm một cánh cửa chẳng hỏng gì. */
             className={
               r.isOpen
-                ? "rounded border border-danger-700 bg-danger-700 px-2 py-1 text-xs font-medium text-white hover:bg-danger-600 disabled:opacity-50"
-                : "rounded border border-default bg-white px-2 py-1 text-xs hover:bg-slate-50 disabled:opacity-50"
+                ? "ml-auto inline-flex items-center gap-1.5 rounded-md bg-danger-700 px-3 py-1 text-xs font-medium text-white hover:bg-danger-600 disabled:opacity-50"
+                : `ml-auto ${BTN}`
             }
           >
-            {busy ? "…" : r.isOpen ? "Đóng" : "Mở lại"}
+            {r.isOpen ? (
+              <Square className="h-3 w-3 fill-current" />
+            ) : (
+              <Play className="h-3.5 w-3.5 text-faint" />
+            )}
+            {busy ? "…" : r.isOpen ? "Đóng ca" : "Mở lại"}
           </button>
         )}
-      </span>
+      </div>
 
-      {/* Bảng chiếu. `w-full` để flex-wrap đẩy nó xuống hẳn một dòng riêng
-          thay vì chen vào giữa cụm nút.
-
-          Nền trắng + viền quiet zone: QR đặt trên nền màu hoặc sát mép thì
-          máy quét hay không bắt được — nền của thẻ này đang là xanh nhạt. */}
+      {/* Bảng chiếu. Nền trắng + viền quiet zone: QR đặt trên nền màu hoặc
+          sát mép thì máy quét hay không bắt được. */}
       {showQr && fullUrl && (
-        <div className="w-full border-t border-emerald-200 pt-3">
+        <div className="border-t border-token p-4">
           <div className="flex flex-wrap items-center gap-4">
-            <div className="rounded-lg border border-emerald-300 bg-white p-3">
-              <QRCode value={fullUrl} size={QR_SIZE} level="M" />
-            </div>
+            <QrZoom url={fullUrl} title="Quét để vào thi" code={r.code ?? undefined} copyable>
+              <div className="rounded-lg border border-token bg-white p-2">
+                <QRCode value={fullUrl} size={QR_SIZE} level="M" />
+              </div>
+            </QrZoom>
             <div className="min-w-48 flex-1">
-              <p className="text-sm text-emerald-900">
-                Chiếu lên màn hình để cả lớp quét.
+              <p className="text-sm text-muted">
+                Bấm vào mã QR để phóng to và chiếu lên màn hình cho cả lớp quét.
               </p>
-              <p className="mt-1 text-sm text-emerald-800">
+              <p className="mt-1 text-sm text-muted">
                 Ai không quét được thì vào{" "}
-                <span className="font-medium">{shareUrl("/thi")}</span> rồi gõ
-                mã:
+                <span className="font-medium">{shareUrl("/thi")}</span> rồi gõ mã:
               </p>
               {/* Mã to hẳn: đây là đường dự phòng khi máy ảnh không bắt được
                   QR, mà lúc đó người gõ đang nhìn từ cuối lớp. */}
@@ -346,13 +429,15 @@ function Row({ r, showRooms }: { r: ExamRun; showRooms: boolean }) {
         </div>
       )}
 
-      {openRooms && (
-        <RoomsExpand
-          sessionId={r.sessionId}
-          courseId={r.courseId}
-          examId={r.examId}
-        />
+      {openRooms && r.scale === "formal" && (
+        <div className="border-t border-token px-4 pb-4">
+          <RoomsExpand sessionId={r.sessionId} courseId={r.courseId} examId={r.examId} />
+        </div>
       )}
     </li>
   );
 }
+
+/** Một kiểu nút cho cả hàng thao tác — trước đây lẫn lộn nút viền và chữ gạch chân. */
+const BTN =
+  "inline-flex items-center gap-1.5 rounded-md border border-token bg-white px-2.5 py-1 text-xs font-medium text-muted hover:bg-slate-50";

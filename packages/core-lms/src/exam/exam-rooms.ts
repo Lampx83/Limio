@@ -315,21 +315,28 @@ async function updateExamRoomImpl(
   if (parsed.data.graderUserIds)
     for (const g of parsed.data.graderUserIds) await assertUserExists(db, g);
 
-  // PR2.19 — Khi đổi sessionId, validate session thuộc cùng round với phòng
-  // hiện tại (không cho move chéo round).
+  // PR2.19 — Khi đổi sessionId, chỉ cho chuyển phòng trong cùng PHẠM VI: cùng
+  // đợt, hoặc (ca buổi đơn, không đợt) cùng đề. Hai ca cùng null round không
+  // được coi là cùng đợt.
   if (parsed.data.sessionId) {
     const newSession = await db.examSession.findUnique({
       where: { id: parsed.data.sessionId },
-      select: { roundId: true },
+      select: { roundId: true, examId: true },
     });
     const currentSession = await db.examSession.findUnique({
       where: { id: (await db.examRoom.findUniqueOrThrow({
         where: { id: roomId },
         select: { sessionId: true },
       })).sessionId },
-      select: { roundId: true },
+      select: { roundId: true, examId: true },
     });
-    if (!newSession || !currentSession || newSession.roundId !== currentSession.roundId) {
+    const sameScope =
+      !!newSession &&
+      !!currentSession &&
+      (currentSession.roundId
+        ? newSession.roundId === currentSession.roundId
+        : newSession.roundId === null && newSession.examId === currentSession.examId);
+    if (!sameScope) {
       throw new ExamError("validation_failed", {
         reason: "session_round_mismatch",
       });
@@ -480,48 +487,6 @@ async function assertUserExists(db: PrismaClient, userId: string): Promise<void>
     throw new ExamError("validation_failed", { reason: "user_not_found" });
 }
 
-// A5.3 PR1c.5 — Returns the default ExamRound for an exam, creating one (with
-// ExamRoundCourse bridge) if no round is yet linked to any of the exam's
-// sessions. Idempotent. Used by `createExamSession()` to satisfy NOT NULL
-// roundId on new sessions created via legacy exam-scoped paths.
-export async function ensureDefaultRound(
-  examId: string,
-  db: PrismaClient = prisma,
-): Promise<string> {
-  // After PR1c.5, every session has a roundId (NOT NULL), so any existing
-  // session of this exam can give us a round to reuse.
-  const linked = await db.examSession.findFirst({
-    where: { examId },
-    select: { roundId: true },
-  });
-  if (linked) return linked.roundId;
-
-  const exam = await db.exam.findUniqueOrThrow({
-    where: { id: examId },
-    select: {
-      id: true,
-      courseId: true,
-      title: true,
-      openAt: true,
-      closeAt: true,
-      status: true,
-    },
-  });
-
-  const round = await db.examRound.create({
-    data: {
-      code: `AUTO-EXAM-${exam.id.slice(0, 8)}-${Date.now().toString(36)}`,
-      title: `Đợt thi tự động — ${exam.title}`,
-      opensAt: exam.openAt,
-      closesAt: exam.closeAt,
-      status: exam.status === "archived" ? "archived" : "draft",
-      courseId: exam.courseId,
-    },
-    select: { id: true },
-  });
-  return round.id;
-}
-
 // A5.3 PR1c.3 — Returns the default ExamSession for an exam, creating one
 // (with its ExamRound + ExamRoundCourse) if none exists. Idempotent: mirrors
 // the PR1b migration backfill so legacy exam-scoped flows can keep working
@@ -531,8 +496,6 @@ export async function ensureDefaultSession(
   examId: string,
   db: PrismaClient = prisma,
 ): Promise<string> {
-  // After PR1c.5 every session has a roundId, so reusing the earliest session
-  // is sufficient — no need to fix up a null roundId mid-flight.
   const existing = await db.examSession.findFirst({
     where: { examId },
     orderBy: [{ opensAt: "asc" }, { createdAt: "asc" }],
@@ -540,7 +503,7 @@ export async function ensureDefaultSession(
   });
   if (existing) return existing.id;
 
-  const roundId = await ensureDefaultRound(examId, db);
+  // Buổi đơn: không có đợt. Đợt chỉ dành cho kỳ thi chính thức (xem schema).
   const exam = await db.exam.findUniqueOrThrow({
     where: { id: examId },
     select: { openAt: true, closeAt: true },
@@ -548,11 +511,12 @@ export async function ensureDefaultSession(
   const created = await db.examSession.create({
     data: {
       examId,
-      roundId,
+      roundId: null,
       code: "CA-DEFAULT",
       title: "Ca mặc định",
       opensAt: exam.openAt,
       closesAt: exam.closeAt,
+      scale: "simple",
     },
     select: { id: true },
   });

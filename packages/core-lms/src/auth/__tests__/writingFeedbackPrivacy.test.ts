@@ -22,7 +22,7 @@ async function setup(tag: string) {
   const sub = await prisma.assignmentSubmission.create({ data: { assignmentId: a.id, userId: u.userId, body: "The weather are nice" } });
   const fb = await prisma.writingFeedback.create({
     data: {
-      submissionId: sub.id, userId: u.userId, courseId: course.id, submissionHash: "h", model: "gpt-4o-mini",
+      submissionId: sub.id, userId: u.userId, courseId: course.id, submissionHash: "h", model: "qwen3.5-35b-a3b-int4",
       tokensIn: 1, tokensOut: 1, level: "task", levels: ["task"], elaboration: "kcr", sourceKind: "llm", generationContext: {},
       body: { summary: "s", criteria: [], errors: [{ id: "1", category: "grammar", quote: "The weather are nice", correction: "is", explanation: "e" }], nextSteps: [], dropped: 0 },
     },

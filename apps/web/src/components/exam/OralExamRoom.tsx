@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Eye, EyeOff, Info, LogOut, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { oralUiText, type OralUiLang } from "@/lib/oralUiText";
 import { usePacedReveal } from "@/hooks/usePacedReveal";
 import UserAvatar from "@/components/ui/UserAvatar";
 import SafeHtml from "@/components/SafeHtml";
@@ -54,14 +55,9 @@ interface Props {
   previewTopicId?: string | null;
   /** A6.8 — thẻ "Tình huống của bạn" ghim trong phòng thi (chỉ khi chủ đề có mô tả cho sinh viên). */
   topicCard?: { title: string; text: string } | null;
+  /** Ngôn ngữ của đề (Exam.language) — quyết định ngôn ngữ giao diện. Mặc định tiếng Việt. */
+  language?: OralUiLang;
 }
-
-const FRIENDLY_ERROR: Record<string, string> = {
-  openai_not_configured: "Admin chưa cấu hình OpenAI key — báo giảng viên/admin.",
-  rate_limited: "Bạn thao tác quá nhanh, đợi một chút rồi thử lại.",
-  openai_busy: "Hệ thống AI đang quá tải nên chưa phản hồi được — đợi vài giây rồi thử lại; nếu vẫn lỗi, báo giám thị/giảng viên. Đây không phải lỗi của bạn.",
-  global_token_cap: "Hệ thống đã chạm trần AI hôm nay — báo giảng viên, đây không phải lỗi của bạn.",
-};
 
 export default function OralExamRoom({
   examId,
@@ -80,8 +76,10 @@ export default function OralExamRoom({
   preview = false,
   previewTopicId = null,
   topicCard = null,
+  language = "vi",
 }: Props) {
   const router = useRouter();
+  const t = oralUiText(language);
   const [turns, setTurns] = useState<Turn[]>(initialTurns);
   const [questionsAsked, setQuestionsAsked] = useState(
     initialTurns.filter((t) => t.role === "examiner").length,
@@ -302,7 +300,7 @@ export default function OralExamRoom({
     const live = liveRef.current;
     if (!live.ended && !live.streaming && live.turns.length > 0) {
       setIsEnding(true);
-      const finalMessage = live.input.trim() || "(Đã hết giờ, không kịp trả lời.)";
+      const finalMessage = live.input.trim() || t.expiredAnswer;
       setInput("");
       // Bản thử không có đồng hồ phía server — chủ động báo hết giờ bằng forceEnd.
       void sendTurn(finalMessage, preview ? { forceEnd: true } : undefined);
@@ -425,27 +423,30 @@ export default function OralExamRoom({
         onEnter={() => setStarted(true)}
         required={!isEnding && !ended}
         preview={preview}
+        lang={language}
       />
       {confirmKind && !ended && !isEnding && (
         <InRoomConfirm
           danger={confirmKind === "end"}
-          title={confirmKind === "end" ? "Kết thúc buổi vấn đáp?" : preview ? "Thoát bản thử?" : "Rời phòng vấn đáp?"}
+          title={confirmKind === "end" ? t.confirmEndTitle : preview ? t.confirmLeavePreviewTitle : t.confirmLeaveTitle}
           message={
             confirmKind === "end"
-              ? "Không thể tiếp tục sau khi kết thúc."
+              ? t.confirmEndMessage
               : preview
-                ? "Hội thoại thử sẽ mất."
-                : "Bài làm vẫn giữ nguyên, quay lại sau để tiếp tục."
+                ? t.confirmLeavePreviewMessage
+                : t.confirmLeaveMessage
           }
-          confirmLabel={confirmKind === "end" ? "Kết thúc ngay" : preview ? "Thoát bản thử" : "Rời phòng"}
+          confirmLabel={confirmKind === "end" ? t.confirmEndLabel : preview ? t.confirmLeavePreviewLabel : t.confirmLeaveLabel}
+          cancelLabel={t.cancel}
           onConfirm={confirmKind === "end" ? confirmEnd : confirmLeave}
           onCancel={() => setConfirmKind(null)}
         />
       )}
-      <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
+      <TabBlurWarning onBlur={() => logIncident("tab_blur")} lang={language} />
       {!preview && (
         <MultiTabDetector
           attemptId={attemptId}
+          lang={language}
           onConflict={(peerTabId) => logIncident("multi_tab", { peerTabId })}
         />
       )}
@@ -456,8 +457,8 @@ export default function OralExamRoom({
             type="button"
             onClick={() => setConfirmKind("leave")}
             className="shrink-0 rounded-full p-1.5 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-ink"
-            aria-label="Thoát phòng vấn đáp"
-            title="Thoát phòng vấn đáp"
+            aria-label={t.exitRoom}
+            title={t.exitRoom}
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
@@ -469,7 +470,7 @@ export default function OralExamRoom({
         <div className="flex shrink-0 items-center gap-3">
           {preview && (
             <span className="rounded-full bg-lime-100 px-2.5 py-1 text-xs font-semibold text-lime-800 dark:bg-lime-900/40 dark:text-lime-200">
-              Bản thử · không lưu
+              {t.previewBadge}
             </span>
           )}
           {/* Ẩn/hiện giảng viên ảo: trên máy tính ảnh chiếm gần nửa chiều cao và đẩy nội dung hội thoại xuống. Nhớ lựa
@@ -477,10 +478,10 @@ export default function OralExamRoom({
           {questionNumber > 0 && (
             <span
               className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-xs font-medium text-faint"
-              title="Số câu chỉ là ước lượng theo thời gian — buổi vấn đáp không giới hạn số câu, hết giờ là kết thúc."
+              title={t.turnTooltip}
             >
-              Lượt {questionNumber}
-              {typicalQuestions ? <span className="hidden sm:inline"> · thường ~{typicalQuestions}</span> : null}
+              {t.turn(questionNumber)}
+              {typicalQuestions ? <span className="hidden sm:inline">{t.typicalHint(typicalQuestions)}</span> : null}
             </span>
           )}
           {instructionsHtml && (
@@ -497,7 +498,7 @@ export default function OralExamRoom({
               }`}
             >
               <Info className="h-3.5 w-3.5" />
-              Hướng dẫn
+              {t.instructions}
             </button>
           )}
           <button
@@ -507,17 +508,18 @@ export default function OralExamRoom({
               setHideAvatar(!avatarIsHidden);
             }}
             aria-pressed={avatarIsHidden}
-            title={avatarIsHidden ? "Hiện giảng viên ảo" : "Ẩn giảng viên ảo"}
+            title={avatarIsHidden ? t.showExaminer : t.hideExaminer}
             className="inline-flex items-center gap-1.5 rounded-full border border-token px-2.5 py-1 text-xs font-medium text-faint hover:text-ink"
           >
             {avatarIsHidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{avatarIsHidden ? "Hiện GV ảo" : "Ẩn GV ảo"}</span>
+            <span className="hidden sm:inline">{avatarIsHidden ? t.showExaminerShort : t.hideExaminerShort}</span>
           </button>
           <RoomCountdown
             deadlineEpoch={deadlineEpoch}
             clockSkewMs={clockSkewMs}
             totalSec={durationSec}
             onExpire={handleExpire}
+            lang={language}
           />
         </div>
       </header>
@@ -525,7 +527,7 @@ export default function OralExamRoom({
       {topicCard && (
         <details className="border-b border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm sm:px-6">
           <summary className="cursor-pointer select-none font-medium">
-            Tình huống của bạn: <span className="text-brand-700">{topicCard.title}</span>
+            {t.topicCard}: <span className="text-brand-700">{topicCard.title}</span>
           </summary>
           <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-line text-faint">{topicCard.text}</p>
         </details>
@@ -542,7 +544,7 @@ export default function OralExamRoom({
             <div className="h-56 w-56 rounded-full bg-brand-300/30 blur-3xl dark:bg-brand-500/10 sm:h-80 sm:w-80" />
           </div>
           <div className="relative z-10">
-            <OralAiAvatar state={avatarState} />
+            <OralAiAvatar state={avatarState} lang={language} />
           </div>
           {instructionsHtml && (
             <button
@@ -551,7 +553,7 @@ export default function OralExamRoom({
               className="relative z-10 inline-flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))]/90 px-3 py-1 text-xs font-medium text-faint hover:text-ink"
             >
               <Info className="h-3.5 w-3.5" />
-              Xem hướng dẫn
+              {t.viewInstructions}
             </button>
           )}
         </div>
@@ -560,10 +562,10 @@ export default function OralExamRoom({
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
             <div className="mx-auto max-w-2xl space-y-4">
               {turns.length === 0 && !streaming && (
-                <p className="text-center text-sm text-faint">Đang chuẩn bị câu hỏi đầu tiên…</p>
+                <p className="text-center text-sm text-faint">{t.preparing}</p>
               )}
               {turns.map((t, i) => (
-                <Bubble
+                <Bubble language={language}
                   key={i}
                   role={t.role}
                   content={t.content}
@@ -572,8 +574,8 @@ export default function OralExamRoom({
                 />
               ))}
               {streaming && reveal.revealed && (
-                <div onClick={() => reveal.skip()} className="cursor-pointer" title="Chạm để hiện hết">
-                  <Bubble role="examiner" content={reveal.revealed} typing />
+                <div onClick={() => reveal.skip()} className="cursor-pointer" title={t.tapToReveal}>
+                  <Bubble language={language} role="examiner" content={reveal.revealed} typing />
                 </div>
               )}
               {streaming && !reveal.revealed && (
@@ -583,17 +585,17 @@ export default function OralExamRoom({
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "150ms" }} />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand-500" style={{ animationDelay: "300ms" }} />
                   </span>
-                  AI giám khảo đang soạn câu hỏi…
+                  {t.composing}
                 </div>
               )}
               {ended && (
                 <div className="banner-success px-4 py-3 text-sm">
-                  Buổi vấn đáp đã kết thúc. Bạn đọc xong nhận xét thì bấm “Hoàn tất” để tiếp tục.
+                  {t.endedBanner}
                 </div>
               )}
               {error && (
                 <div className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
-                  {preview && error === "openai_not_configured" ? "Hệ thống chưa cấu hình khoá OpenAI nên AI chưa hỏi được — thêm khoá ở phần tích hợp của quản trị rồi thử lại." : (FRIENDLY_ERROR[error] ?? `Lỗi: ${error}`)}
+                  {preview && error === "openai_not_configured" ? t.previewNoOpenAi : (t.errors[error] ?? t.errorPrefix(error))}
                 </div>
               )}
             </div>
@@ -608,7 +610,7 @@ export default function OralExamRoom({
                 onClick={() => setPinExpanded((v) => !v)}
                 className={`mx-auto mb-2 w-full max-w-2xl rounded-lg border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-left text-base sm:text-sm ${compact ? "block" : "block lg:hidden"}`}
               >
-                <span className="font-semibold text-brand-700">Câu hỏi: </span>
+                <span className="font-semibold text-brand-700">{t.pinnedQuestion}</span>
                 <span className={pinExpanded ? "" : "line-clamp-2"}>{lastExaminer.content}</span>
               </button>
             )}
@@ -641,10 +643,10 @@ export default function OralExamRoom({
                 rows={2}
                 placeholder={
                   ended
-                    ? "Buổi vấn đáp đã kết thúc."
+                    ? t.placeholderEnded
                     : canAnswer
-                      ? "Trả lời câu hỏi... (Enter = gửi · Shift+Enter = xuống dòng)"
-                      : "AI đang nói — bạn có thể gõ sẵn câu trả lời…"
+                      ? t.placeholderAnswer
+                      : t.placeholderAiSpeaking
                 }
                 className="textarea flex-1 resize-none text-sm"
               />
@@ -655,12 +657,12 @@ export default function OralExamRoom({
                 disabled={!canAnswer || !input.trim()}
                 className="btn-sm self-stretch inline-flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
               >
-                Gửi
+                {t.send}
               </button>
             </div>
             {pasteBlocked && (
               <div className="mx-auto mt-1.5 max-w-2xl text-xs text-red-600">
-                Không thể dán nội dung vào ô trả lời — hãy tự gõ câu trả lời của bạn.
+                {t.pasteBlocked}
               </div>
             )}
             <div className="mx-auto mt-2 flex max-w-2xl justify-end">
@@ -670,7 +672,7 @@ export default function OralExamRoom({
                   onClick={() => router.push(preview ? exitUrl : submittedUrl)}
                   className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700"
                 >
-                  Hoàn tất
+                  {t.finish}
                 </button>
               ) : (
                 <button
@@ -680,7 +682,7 @@ export default function OralExamRoom({
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-[rgb(var(--text-muted))] underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <LogOut className="h-3.5 w-3.5" />
-                  Kết thúc buổi vấn đáp
+                  {t.endExam}
                 </button>
               )}
             </div>
@@ -698,12 +700,12 @@ export default function OralExamRoom({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-semibold">Hướng dẫn</h2>
+              <h2 className="text-base font-semibold">{t.instructions}</h2>
               <button
                 type="button"
                 onClick={() => setShowInstructions(false)}
                 className="rounded p-1 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-ink"
-                aria-label="Đóng"
+                aria-label={t.close}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -722,7 +724,9 @@ function Bubble({
   typing,
   studentName,
   studentImageUrl,
+  language,
 }: {
+  language: OralUiLang;
   role: "student" | "examiner";
   content: string;
   typing?: boolean;
@@ -735,7 +739,7 @@ function Bubble({
       {!isStudent && (
         <img
           src="/oral-avatar/idle-poster.png"
-          alt="AI giám khảo"
+          alt={oralUiText(language).examinerAlt}
           className="h-8 w-8 shrink-0 rounded-full object-cover shadow-sm"
         />
       )}

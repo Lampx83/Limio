@@ -7,6 +7,7 @@ import { AiGenerationError } from "../aiTutor/generators";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
 import {
   getSpeakingFeedbackForLearner,
+  ensureTranscriptForGrading,
   listSpeakingFeedbackForReview,
   requestSpeakingFeedback,
   reviewSpeakingFeedback,
@@ -406,5 +407,58 @@ describe("hiển thị cho học viên và duyệt của giảng viên (G7c, G7d
     await reviewSpeakingFeedback(f.reviewerId, r.feedbackId, { action: "reject", note: "Sai nhiều" });
     expect(await prisma.learningEvent.count({ where: { eventType: "speaking.feedback.rejected", userId: f.reviewerId } })).toBe(1);
     await expect(reviewSpeakingFeedback(f.reviewerId, "00000000-0000-4000-8000-000000000000", { action: "approve" })).rejects.toMatchObject({ code: "feedback_not_found" });
+  });
+});
+
+describe("ensureTranscriptForGrading — bản chữ cho Gợi ý điểm bằng AI", () => {
+  async function grader() {
+    return (await prisma.user.create({ data: { email: `sf-g-${Date.now()}-${seq++}@e.com`, passwordHash: "x", displayName: "GV chấm" } })).id;
+  }
+  const audioOf = async (submissionId: string) =>
+    (await prisma.assignmentSubmission.findUniqueOrThrow({ where: { id: submissionId } })).attachmentUrl!;
+
+  it("đã có bản chữ của đúng file → dùng lại, không gọi Whisper, không trừ ví ai", async () => {
+    const f = await fx();
+    await requestSpeakingFeedback(f.userId, f.submissionId, { openai: fakeOpenAI().openai, loadAudio: loadOk, transcribe: fakeStt().transcribe });
+    const g = await grader();
+    const stt = fakeStt();
+    const r = await ensureTranscriptForGrading(g, f.submissionId, await audioOf(f.submissionId), { loadAudio: loadOk, transcribe: async () => stt.transcribe });
+    expect(r).toEqual({ text: TRANSCRIPT, created: false });
+    expect(stt.calls).toHaveLength(0);
+    expect(await prisma.aiUsageLog.count({ where: { userId: g } })).toBe(0);
+  });
+
+  it("chưa có → chuyển chữ ngay, trừ ví GIẢNG VIÊN, bản chữ lưu dưới tên học viên; không giới hạn 3 phút", async () => {
+    const f = await fx({ languageMode: false });
+    const g = await grader();
+    const stt = fakeStt({ durationSec: 600 }); // 10 phút: quá trần góp ý bài nói nhưng vẫn chấm được
+    const r = await ensureTranscriptForGrading(g, f.submissionId, await audioOf(f.submissionId), { loadAudio: loadOk, transcribe: async () => stt.transcribe });
+    expect(r).toEqual({ text: TRANSCRIPT, created: true });
+    expect(stt.calls).toHaveLength(1);
+    const row = await prisma.submissionTranscript.findFirstOrThrow({ where: { submissionId: f.submissionId } });
+    expect(row.userId).toBe(f.userId);
+    expect(row.courseId).toBe(f.courseId);
+    expect(await prisma.aiUsageLog.count({ where: { userId: g } })).toBe(1);
+    expect(await prisma.aiUsageLog.count({ where: { userId: f.userId } })).toBe(0);
+  });
+
+  it("nộp lại file khác thì không dùng bản chữ cũ; file không do hệ thống lưu → audio_not_hosted", async () => {
+    const f = await fx();
+    await requestSpeakingFeedback(f.userId, f.submissionId, { openai: fakeOpenAI().openai, loadAudio: loadOk, transcribe: fakeStt().transcribe });
+    const g = await grader();
+    const stt = fakeStt({ text: "Second take." });
+    const r = await ensureTranscriptForGrading(g, f.submissionId, "/api/assignment-media/khac.webm", { loadAudio: loadOk, transcribe: async () => stt.transcribe });
+    expect(r?.text).toBe("Second take.");
+    await expect(
+      ensureTranscriptForGrading(g, f.submissionId, "https://evil.example/a.mp3", { loadAudio: async () => null, transcribe: async () => stt.transcribe }),
+    ).rejects.toMatchObject({ code: "audio_not_hosted" });
+  });
+
+  it("file im lặng → null (không có gì để chấm), Whisper vẫn bị tính tiền", async () => {
+    const f = await fx();
+    const g = await grader();
+    const stt = fakeStt({ text: "  " });
+    expect(await ensureTranscriptForGrading(g, f.submissionId, await audioOf(f.submissionId), { loadAudio: loadOk, transcribe: async () => stt.transcribe })).toBeNull();
+    expect(await prisma.aiUsageLog.count({ where: { userId: g } })).toBe(1);
   });
 });

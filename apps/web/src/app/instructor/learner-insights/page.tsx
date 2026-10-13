@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import CourseFilterSelect from "@/components/CourseFilterSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -199,26 +199,18 @@ export default async function LearnerInsightsPage({
       )}
 
       {/* Course filter */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Khoá:
-        </span>
-        <Link
-          href={filterHref(undefined)}
-          className={!courseFilter ? "chip-brand" : "chip"}
-        >
-          Tất cả
-        </Link>
-        {ownedCourses.map((c) => (
-          <Link
-            key={c.id}
-            href={filterHref(c.id)}
-            className={courseFilter === c.id ? "chip-brand" : "chip"}
-            prefetch={false}
-          >
-            {c.title}
-          </Link>
-        ))}
+      <div className="mt-6">
+        <CourseFilterSelect
+          value={courseFilter ?? ""}
+          options={[
+            { value: "", label: "Tất cả khoá", href: filterHref() },
+            ...ownedCourses.map((c) => ({
+              value: c.id,
+              label: c.title,
+              href: filterHref(c.id),
+            })),
+          ]}
+        />
       </div>
 
       {/* Matrix */}

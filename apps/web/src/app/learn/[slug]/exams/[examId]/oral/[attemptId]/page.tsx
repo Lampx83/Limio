@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { getAttemptRuntime } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { plainToRichHtml } from "@/lib/richText";
+import { oralUiText, resolveOralUiLang } from "@/lib/oralUiText";
 import OralExamRoom from "@/components/exam/OralExamRoom";
 import OralVoiceRoom from "@/components/exam/OralVoiceRoom";
 
@@ -42,6 +43,7 @@ export default async function OralExamRuntimePage({
     select: {
       kind: true,
       answerMode: true,
+      language: true,
       title: true,
       description: true,
       course: { select: { title: true } },
@@ -64,11 +66,13 @@ export default async function OralExamRuntimePage({
     ? { title: assigned.oralTopic.title, text: assigned.oralTopic.studentBrief }
     : null;
 
+  const language = resolveOralUiLang(exam.language);
   const roomProps = {
+    language,
     examId: params.examId,
     attemptId: params.attemptId,
     examTitle: exam.title,
-    courseTitle: exam.course?.title ?? "Đề độc lập",
+    courseTitle: exam.course?.title ?? oralUiText(language).standaloneExam,
     startedAt: runtime.startedAt,
     durationSec: runtime.durationSec,
     serverNow: runtime.serverNow,

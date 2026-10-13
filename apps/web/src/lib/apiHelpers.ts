@@ -262,7 +262,11 @@ export function mapKnownError(err: unknown): NextResponse | null {
   }
   if (err instanceof PortfolioError) {
     const status =
-      err.code === "submission_not_found" ? 404 : err.code === "slug_taken" ? 409 : 400;
+      err.code === "submission_not_found"
+        ? 404
+        : err.code === "slug_taken" || err.code === "group_full"
+          ? 409
+          : 400;
     return NextResponse.json({ error: err.code }, { status });
   }
   return null;

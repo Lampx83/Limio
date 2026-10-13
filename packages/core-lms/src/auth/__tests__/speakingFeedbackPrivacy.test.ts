@@ -35,7 +35,7 @@ async function setup(tag: string) {
   });
   const fb = await prisma.speakingFeedback.create({
     data: {
-      submissionId: sub.id, transcriptId: tr.id, userId: u.userId, courseId: course.id, transcriptHash: "h", model: "gpt-4o-mini",
+      submissionId: sub.id, transcriptId: tr.id, userId: u.userId, courseId: course.id, transcriptHash: "h", model: "qwen3.5-35b-a3b-int4",
       tokensIn: 1, tokensOut: 1, level: "task", levels: ["task"], elaboration: "kcr", sourceKind: "llm", generationContext: {},
       body: { summary: "s", criteria: [], errors: [], nextSteps: [], dropped: 0 },
     },

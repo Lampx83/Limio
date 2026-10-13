@@ -1,20 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { copyText } from "@/lib/clipboard";
 import { BarChart3, RefreshCw, RotateCcw } from "lucide-react";
 import { toast } from "@/lib/toast";
-import dynamic from "next/dynamic";
+import JoinQrCard from "@/components/ui/JoinQrCard";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
-
-const QRCode = dynamic(
-  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
-  {
-    ssr: false,
-    loading: () => <div className="tool-qr" style={{ width: 200, height: 200 }} />
-  }
-);
 
 interface Poll {
   id: string;
@@ -345,33 +336,17 @@ export default function QuickPoll({
 
         <div className="flex-1">
 
-        {/* QR Code Section (only in classroom mode) */}
+        {/* QR nhỏ ở góc màn hình, bấm để phóng popup — kết quả được rộng hết chỗ.
+            Chỉ có ở chế độ lớp học (pollUrl rỗng khi chạy stateless). */}
         {pollUrl && (
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            {/* QR Code */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="tool-qr">
-                <QRCode
-                  value={pollUrl}
-                  size={200}
-                  level="H"
-                  includeMargin={true}
-                />
-              </div>
-              <button
-                onClick={async () => {
-                  const ok = await copyText(pollUrl);
-                  if (ok) toast.success("Đã copy link!");
-                  else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
-                }}
-                className="text-xs text-brand-600 hover:text-brand-700 underline"
-              >
-                Copy link
-              </button>
-            </div>
-
+          <div className="mt-6">
+            <JoinQrCard
+              url={pollUrl}
+              title="Quét để bình chọn"
+              className="fixed bottom-6 left-6 z-40"
+            />
             {/* Poll Results */}
-            <div className="md:col-span-2">
+            <div className="mx-auto max-w-4xl">
               <p className="text-lg font-semibold text-center mb-6">
                 {displayResults.question}
               </p>
@@ -533,23 +508,17 @@ export default function QuickPoll({
           </div>
         </div>
 
-        <p className="text-lg font-semibold text-center mb-6">
-          {displayResults.question}
-        </p>
-
-        {/* QR Code Section - Show in normal view when available */}
-        {pollUrl && (
-          <div className="mb-6 flex justify-center">
-            <div className="tool-qr">
-              <QRCode
-                value={pollUrl}
-                size={150}
-                level="H"
-                includeMargin={true}
-              />
-            </div>
-          </div>
-        )}
+        {/* Câu hỏi ở giữa, QR nhỏ nép góc phải; bấm QR để phóng popup.
+            Cột đệm bên trái giữ câu hỏi nằm giữa thật. */}
+        <div className="mb-6 flex items-start gap-3">
+          {pollUrl && <div aria-hidden className="hidden w-[7.5rem] shrink-0 sm:block" />}
+          <p className="min-w-0 flex-1 text-lg font-semibold text-center">
+            {displayResults.question}
+          </p>
+          {pollUrl && (
+            <JoinQrCard url={pollUrl} title="Quét để bình chọn" className="shrink-0" />
+          )}
+        </div>
 
         <div className="space-y-4">
           {displayResults.options.map((option, idx) => {

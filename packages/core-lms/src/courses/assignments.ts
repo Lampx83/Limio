@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
+import { Prisma, prisma, type PrismaClient, type ResponseFormat } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditCourse } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
@@ -643,6 +643,11 @@ export interface SubmissionGradingContext {
   maxScore: number;
   rubricText: string | null;
   submissionBody: string;
+  /** Tệp/link học viên nộp kèm — tầng gọi quyết định đọc được gì từ nó (Google Docs, bản chữ bài nói…). */
+  attachmentUrl: string | null;
+  responseFormat: ResponseFormat;
+  /** Người tải tệp lên (nộp nhóm: người bấm nộp) — tên file mang userId của họ, dùng để chặn link file của người khác. */
+  uploaderUserId: string;
 }
 
 /**
@@ -661,12 +666,16 @@ export async function getSubmissionGradingContext(
     where: { id: submissionId },
     select: {
       body: true,
+      attachmentUrl: true,
+      userId: true,
+      submittedById: true,
       assignment: {
         select: {
           title: true,
           description: true,
           maxScore: true,
           rubricText: true,
+          responseFormat: true,
           lesson: { select: { module: { select: { courseId: true } } } },
           tournamentMission: { select: { tournament: { select: { courseId: true, creatorId: true } } } },
         },
@@ -692,6 +701,9 @@ export async function getSubmissionGradingContext(
     maxScore: submission.assignment.maxScore,
     rubricText: submission.assignment.rubricText,
     submissionBody: submission.body,
+    attachmentUrl: submission.attachmentUrl,
+    responseFormat: submission.assignment.responseFormat,
+    uploaderUserId: submission.submittedById ?? submission.userId,
   };
 }
 

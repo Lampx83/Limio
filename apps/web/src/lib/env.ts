@@ -28,6 +28,10 @@ const Schema = z.object({
   LLM_BASE_URL: optionalUrl(),
   LLM_CHAT_MODEL: optionalString(),
   LLM_SECKEY: optionalString(),
+  // Embeddings tự host (Ollama, Qwen3-Embedding) — xem packages/core-feedback/src/oralExam/embeddings.ts.
+  EMBED_BASE_URL: optionalUrl(),
+  EMBED_MODEL: optionalString(),
+  EMBED_SECKEY: optionalString(),
   SECRETS_MASTER_KEY: optionalString(),
   SENTRY_DSN: optionalUrl(),
   NEXT_PUBLIC_SENTRY_DSN: optionalUrl(),

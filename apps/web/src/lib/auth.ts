@@ -14,6 +14,8 @@ import {
   loginCredentials,
   loginOrLinkSso,
 } from "@feedbackme/core-lms";
+import { ATTRIBUTION_COOKIE } from "@/lib/growth/attribution";
+import { recordAcquisitionTouch } from "@/lib/growth/touchStore";
 
 /**
  * Auth providers — Credentials (email+password) plus optional SSO via Google
@@ -153,6 +155,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         emailVerifiedByProvider: true,
       });
       if (!result) return false;
+
+      // Growth attribution cho đăng ký qua SSO (best-effort, tắt mặc định —
+      // không bao giờ throw). `loginOrLinkSso` không báo user mới hay cũ nên chỉ
+      // lưu khi tài khoản vừa tạo trong vài phút; user cũ đăng nhập lại bị bỏ qua.
+      try {
+        await recordAcquisitionTouch(result.id, cookies().get(ATTRIBUTION_COOKIE)?.value, {
+          onlyIfFreshUser: true,
+        });
+      } catch {
+        // cookies() có thể không khả dụng ngoài request scope — bỏ qua.
+      }
 
       user.id = result.id;
       (user as { isEmailVerified?: boolean }).isEmailVerified = result.isEmailVerified;

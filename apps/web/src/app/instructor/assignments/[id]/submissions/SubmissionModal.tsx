@@ -192,6 +192,7 @@ export default function SubmissionModal({
                   initialScore={submission.score}
                   initialFeedback={submission.feedback}
                   isGraded={isGraded}
+                  attachmentUrl={submission.attachmentUrl}
                   onDirtyChange={setDirty}
                   onSavedNext={nav?.onNext}
                 />

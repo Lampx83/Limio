@@ -191,6 +191,7 @@ export default function TeamSubmissionModal({
                   initialScore={latest.teamScore}
                   initialFeedback={latest.feedback}
                   isGraded={isGraded}
+                  attachmentUrl={latest.attachmentUrl}
                   onDirtyChange={setDirty}
                   onSavedNext={nav?.onNext}
                 />

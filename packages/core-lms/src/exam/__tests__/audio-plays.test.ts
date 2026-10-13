@@ -15,6 +15,7 @@ import {
   startExamAttempt,
   endCurrentSection,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 /**
  * LANG G5b — nghe một lần / giới hạn lượt phát trong đề thi thử.
@@ -65,6 +66,7 @@ async function setup(slug: string, o: Opts = {}) {
     passageIds.push(passageId);
   }
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
   const learner = await registerUser({ email: `ap-l-${slug}@e.com`, password: "password1234", displayName: "L" }, BASE);
   await enrollInCourse(learner.userId, course.courseId);
   const { attemptId } = await startExamAttempt(learner.userId, examId);

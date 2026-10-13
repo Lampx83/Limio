@@ -190,7 +190,12 @@ model User {
   speakingFeedbacksReceived SpeakingFeedback[]     @relation("SpeakingFeedbackOwner")
   speakingFeedbacksReviewed SpeakingFeedback[]     @relation("SpeakingFeedbackReviewer")
 
+  // Growth attribution — điểm chạm đầu tiên (utm/click-id/referrer) lúc đăng ký.
+  acquisitionTouch AcquisitionTouch?
+
   @@index([createdAt])
+  // Luồng growth events phân trang theo mốc xác minh email (xem AcquisitionTouch).
+  @@index([emailVerifiedAt])
 }
 
 model AuthProvider {
@@ -839,6 +844,8 @@ model Enrollment {
   @@index([sectionId])
   // Cron reaper (enrollment-access-expiry-check) quét theo cặp này mỗi ngày.
   @@index([status, accessExpiresAt])
+  // Growth events: phân trang "ghi danh đầu tiên" theo thời gian.
+  @@index([enrolledAt])
 }
 
 // A3 — Note attached to a lesson, optionally to a content item, optionally
@@ -960,6 +967,8 @@ model Certificate {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  portfolioCourses PortfolioCourse[]
 
   @@unique([userId, courseId])
   @@index([courseId])
@@ -2411,7 +2420,7 @@ model AiConversation {
   userId    String
   lessonId  String
   title     String? // First user message snippet, set after first turn.
-  model     String   @default("gpt-4o-mini")
+  model     String   @default("qwen3.5-35b-a3b-int4")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2635,6 +2644,9 @@ model Order {
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
+  // Growth events: phân trang order.paid / order.refunded theo thời gian.
+  @@index([paidAt])
+  @@index([refundedAt])
 }
 
 // =====================================================================
@@ -3573,7 +3585,7 @@ model OralExamMaterial {
 }
 
 // A6.2 — mảnh nhỏ cắt ra từ OralExamMaterial.extractedText, kèm vector ngữ
-// nghĩa (OpenAI text-embedding-3-small, 1536 chiều) để "giảng viên ảo" (A6.3)
+// nghĩa (Qwen3-Embedding cắt còn 1536 chiều; model cụ thể ghi ở `embeddingModel`) để "giảng viên ảo" (A6.3)
 // tìm đúng đoạn liên quan thay vì phải đọc nguyên tài liệu mỗi lượt hỏi.
 // `embedding` là Unsupported vì Prisma Client chưa có kiểu vector native —
 // đọc/ghi qua raw SQL (packages/core-feedback/src/oralExam/).
@@ -3583,6 +3595,9 @@ model OralExamMaterialChunk {
   chunkIndex Int
   chunkText  String                       @db.Text
   embedding  Unsupported("vector(1536)")?
+  // Model đã sinh `embedding`. Vector của hai model không so sánh được, nên tìm kiếm chỉ xét chunk cùng
+  // model với model hiện hành; NULL = chưa có vector (lưu khi chưa cấu hình embeddings).
+  embeddingModel String?
   createdAt  DateTime                     @default(now())
 
   material OralExamMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
@@ -4257,10 +4272,12 @@ model CohortMember {
 model ExamSession {
   id                  String                @id @default(uuid())
   examId              String
-  // A5.3 PR1c.5 — ca thi thuộc về 1 đợt thi. Required. createExamSession()
-  // tự ensure round mặc định cho legacy exam-scoped callers.
-  roundId             String
-  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Unique trong round.
+  // Đợt thi chứa ca — CHỈ kỳ thi chính thức có đợt (Đợt › Ca › Phòng). Link
+  // thi nhanh, thử nghiệm câu hỏi và vấn đáp là BUỔI ĐƠN: không có đợt, null.
+  // Trước đây mọi ca bắt buộc có đợt nên hệ thống tự dựng "Đợt thi tự động"
+  // làm thùng chứa — xem bước 2 của kế hoạch đợt/ca.
+  roundId             String?
+  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Không unique.
   // KHÔNG phải mã access cho SV — xem `openCode` bên dưới.
   code                String?
   // A5.3 PR1a additive — tên hiển thị (vd "Ca 1 — Sáng 14/5").
@@ -4325,13 +4342,16 @@ model ExamSession {
   updatedAt           DateTime              @updatedAt
 
   exam       Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
-  round      ExamRound       @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  round      ExamRound?      @relation(fields: [roundId], references: [id], onDelete: Restrict)
   cohort     CourseSection?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   rooms      ExamRoom[]
   candidates ExamCandidate[]
   attempts   ExamAttempt[]
 
-  @@unique([roundId, openCode])
+  // Mã vào thi phải duy nhất TOÀN HỆ THỐNG: người nhập mã không biết ca nào,
+  // nên hai ca trùng mã là thí sinh vào nhầm ca. NULL (ca không dùng mã chung)
+  // không xung đột — Postgres coi mỗi NULL là khác nhau.
+  @@unique([openCode])
   @@index([examId, opensAt])
   @@index([roundId, opensAt])
   @@index([cohortId])
@@ -5222,11 +5242,30 @@ model Portfolio {
   // false = trang /p/<slug> trả 404 cho mọi người.
   isPublic  Boolean  @default(false)
   headline  String?
+  // Đoạn giới thiệu ngắn (≤ PORTFOLIO_ABOUT_MAX ký tự), học viên tự viết.
+  about     String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items PortfolioItem[]
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items   PortfolioItem[]
+  courses PortfolioCourse[]
+}
+
+// Khoá học học viên chọn khoe trên trang công khai. Trỏ vào Certificate chứ
+// không phải Course: chỉ khoá đã hoàn thành (đã có chứng nhận) mới khoe được,
+// và link xác thực /verify/<certNumber> đi kèm sẵn.
+model PortfolioCourse {
+  id            String   @id @default(uuid())
+  portfolioId   String
+  certificateId String
+  createdAt     DateTime @default(now())
+
+  portfolio   Portfolio   @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  certificate Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, certificateId])
+  @@index([certificateId])
 }
 
 model PortfolioItem {
@@ -5483,4 +5522,34 @@ model SpeakingFeedback {
 
   @@index([submissionId, generatedAt])
   @@index([userId, courseId, status])
+}
+
+// =====================================================================
+// Growth attribution — "lần chạm đầu tiên" của mỗi user (first touch).
+//
+// Ghi lúc đăng ký từ cookie first-party `limio_attr` (middleware đặt khi khách
+// đến từ utm_* / click-id / referrer ngoài). Một dòng / user, xoá user ⇒ xoá
+// dòng. KHÔNG lưu giá trị click id (chỉ loại), không lưu query string, không
+// lưu IP / user agent. Đọc bởi GET /api/internal/growth/events (SIM) — id đã
+// được HMAC ẩn danh trước khi rời hệ thống. Xem docs/growth-events.md.
+// =====================================================================
+
+model AcquisitionTouch {
+  userId       String   @id
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  utmContent   String?
+  utmTerm      String?
+  // "fbclid" | "gclid" | "ttclid" — chỉ loại, không bao giờ lưu giá trị.
+  clickIdKind  String?
+  // Đường dẫn trang đích: không query string, đã che đoạn giống mã/token.
+  landingPath  String?
+  // Chỉ host của Referer ngoài site.
+  referrerHost String?
+  // Lúc cookie được tạo (không phải lúc đăng ký).
+  firstSeenAt  DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

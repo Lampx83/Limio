@@ -17,6 +17,7 @@ import {
   getSectionHeartbeat,
   autoSubmitExpiredAttemptsMarkOnly,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 /**
  * LANG G5a — đề thi thử: giờ riêng từng phần, làm lần lượt, không quay lại.
@@ -76,7 +77,10 @@ async function setup(slug: string, o: Opts = {}) {
     }
     sections.push({ id, questionIds });
   }
-  if (publish) await publishExam(owner.userId, examId);
+  if (publish) {
+    await publishExam(owner.userId, examId);
+    await openForEnrolled(owner.userId, examId);
+  }
   const learner = await registerUser(
     { email: `ms-l-${slug}@e.com`, password: "password1234", displayName: "L" },
     BASE,

@@ -4,9 +4,9 @@ import { registerUser } from "../../auth/register";
 import { createCourse } from "../../courses/courses";
 import {
   createExam,
-  ensureDefaultRound,
   ensureDefaultRoomForSession,
 } from "../";
+import { roundFor } from "../../test/roundFor";
 
 const BASE = "http://localhost:3000";
 
@@ -27,7 +27,7 @@ it("hai ca của cùng một gói đề đều tạo được phòng mặc đị
   const { examId } = await createExam(owner.userId, course.courseId, {
     title: "Đề room", durationMin: 20,
   });
-  const roundId = await ensureDefaultRound(examId);
+  const roundId = await roundFor(examId);
 
   const mk = () =>
     prisma.examSession.create({

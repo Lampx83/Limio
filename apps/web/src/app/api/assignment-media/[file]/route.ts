@@ -36,6 +36,7 @@ const MIME_BY_EXT: Record<string, string> = {
   ".webm": "video/webm",
   ".mov": "video/quicktime",
   ".pdf": "application/pdf",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ".json": "application/json",
   ".zip": "application/zip",
   ".txt": "text/plain",

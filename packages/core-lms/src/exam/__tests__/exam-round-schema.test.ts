@@ -199,24 +199,51 @@ describe("A5.3 — ExamSession (Prisma model renamed from ExamSchedule in PR1c.1
     expect(ownerId).toBeTruthy();
   });
 
-  it("rejects ExamSession without roundId (PR1c.5 NOT NULL)", async () => {
+  it("accepts ExamSession without roundId — buổi đơn (link nhanh, thử nghiệm, vấn đáp) không thuộc đợt", async () => {
     const { courseId } = await newOwnerAndCourse(`bc-${Date.now().toString(36)}`);
     const exam = await prisma.exam.create({
       data: {
         courseId,
-        title: "Legacy exam",
+        title: "Buổi đơn",
         durationMin: 60,
         openAt: new Date(),
         closeAt: new Date(Date.now() + 60_000),
       },
     });
-    await expect(
-      prisma.examSession.create({
+    const s = await prisma.examSession.create({
+      data: {
+        examId: exam.id,
+        opensAt: new Date(),
+        closesAt: new Date(Date.now() + 60_000),
+      },
+    });
+    expect(s.roundId).toBeNull();
+  });
+
+  it("mã vào thi trùng giữa hai đợt khác nhau bị DB từ chối (duy nhất toàn hệ thống)", async () => {
+    const { courseId } = await newOwnerAndCourse(`oc-${Date.now().toString(36)}`);
+    const exam = await prisma.exam.create({
+      data: { courseId, title: "Mã", durationMin: 30, openAt: new Date(), closeAt: new Date(Date.now() + 60_000) },
+    });
+    const mk = (code: string) =>
+      prisma.examRound.create({
         data: {
-          examId: exam.id,
+          code: `R-${code}-${Math.random().toString(36).slice(2, 6)}`,
+          title: "R",
           opensAt: new Date(),
           closesAt: new Date(Date.now() + 60_000),
-        } as never,
+          status: "draft",
+          courseId,
+        },
+      });
+    const r1 = await mk("A");
+    const r2 = await mk("B");
+    await prisma.examSession.create({
+      data: { examId: exam.id, roundId: r1.id, opensAt: new Date(), closesAt: new Date(Date.now() + 60_000), openCode: "QWERTY" },
+    });
+    await expect(
+      prisma.examSession.create({
+        data: { examId: exam.id, roundId: r2.id, opensAt: new Date(), closesAt: new Date(Date.now() + 60_000), openCode: "QWERTY" },
       }),
     ).rejects.toThrow();
   });
@@ -360,7 +387,7 @@ describe("A5.3 PR1a — ExamRoom / ExamCandidate additive columns", () => {
 });
 
 describe("A5.3 PR1c.3 — createExamRoom auto session + orderIndex", () => {
-  it("creates default ExamSession+ExamRound for exam with no session, sets orderIndex=1", async () => {
+  it("creates default ExamSession (buổi đơn, không đợt) for exam with no session, sets orderIndex=1", async () => {
     const owner = await registerUser(
       {
         email: `crm-${Date.now()}@e.com`,
@@ -395,8 +422,9 @@ describe("A5.3 PR1c.3 — createExamRoom auto session + orderIndex", () => {
     expect(room.sessionId).not.toBeNull();
     expect(room.orderIndex).toBe(1);
     expect(room.session.code).toBe("CA-DEFAULT");
-    expect(room.session.roundId).not.toBeNull();
-    expect(room.session.round?.code.startsWith("AUTO-EXAM-")).toBe(true);
+    // Không còn "Đợt thi tự động": ca mặc định của đề là buổi đơn.
+    expect(room.session.roundId).toBeNull();
+    expect(room.session.scale).toBe("simple");
   });
 
   it("reuses existing session + increments orderIndex on subsequent rooms", async () => {
