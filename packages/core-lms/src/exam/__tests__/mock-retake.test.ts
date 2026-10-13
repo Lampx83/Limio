@@ -13,6 +13,7 @@ import {
   startExamAttempt,
   updateExam,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 /**
  * LANG G5c.4 / G5c.7 — đề thi thử làm được nhiều lượt (mỗi lượt độc lập, bắt đầu lượt mới
@@ -35,6 +36,7 @@ async function setup(slug: string, mock = true) {
   const { id: sectionId } = await createSection(owner.userId, examId, { title: "Nghe", durationMin: 10, languageSkill: "listening" });
   await createExamQuestion(owner.userId, examId, { ...MCQ, sectionId });
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
   const learner = await registerUser({ email: `rt-l-${slug}@e.com`, password: "password1234", displayName: "L" }, BASE);
   await enrollInCourse(learner.userId, course.courseId);
   return { ownerId: owner.userId, courseId: course.courseId, examId, learnerId: learner.userId, subject: { kind: "user" as const, userId: learner.userId } };

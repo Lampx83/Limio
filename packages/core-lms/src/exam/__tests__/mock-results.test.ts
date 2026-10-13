@@ -18,6 +18,7 @@ import {
   startExamAttempt,
   updateSection,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 /**
  * LANG G5d — kết quả theo phần của đề thi thử: đọc từ dữ liệu thật (đáp án đã chấm), so với lượt
@@ -48,6 +49,7 @@ async function setup(slug: string, mock = true) {
     sectionId: viet.id,
   });
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
   const learner = await registerUser({ email: `mr-l-${slug}@e.com`, password: "password1234", displayName: "L" }, BASE);
   await enrollInCourse(learner.userId, course.courseId);
   return {

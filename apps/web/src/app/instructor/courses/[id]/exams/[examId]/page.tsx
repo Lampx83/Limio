@@ -203,12 +203,7 @@ export default async function EditExamPage({
             </Link>
           )}
           {exam.kind === "written" && (
-            <PublishBar
-              examId={exam.id}
-              status={exam.status}
-              openAt={exam.openAt.toISOString()}
-              closeAt={exam.closeAt.toISOString()}
-            />
+            <PublishBar examId={exam.id} status={exam.status} mock={exam.mockMode} />
           )}
           {exam.kind === "oral" && (
             <DeleteOralExamButton

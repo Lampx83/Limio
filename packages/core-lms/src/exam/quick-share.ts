@@ -2,7 +2,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import type { RevealPolicy } from "./reveal-policy";
 import { assertCanEditExam } from "../courses/authz";
 import { generateOpenCode } from "./code-access";
-import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
+import { ensureDefaultRoomForSession } from "./exam-rooms";
 import { isSessionOpen } from "./session-window";
 import { ExamError } from "./types";
 import { LearningEventType } from "@feedbackme/shared-types";
@@ -178,7 +178,8 @@ async function shareExamLinkImpl(
     };
   }
 
-  const roundId = await ensureDefaultRound(examId, db);
+  // Link thi nhanh là BUỔI ĐƠN: không thuộc đợt nào, kể cả khi đề đang nằm trong
+  // một kỳ thi chính thức — nên không bao giờ bị nhét vào đợt của giáo viên.
   const manual = wantManual;
 
   // 31^6 ≈ 887 triệu tổ hợp nên đụng mã gần như không xảy ra, nhưng vẫn thử lại.
@@ -188,7 +189,6 @@ async function shareExamLinkImpl(
       const s = await db.examSession.create({
         data: {
           examId,
-          roundId,
           accessMode: "open_code",
           openCode: code,
           timingMode: manual ? "manual" : "scheduled",

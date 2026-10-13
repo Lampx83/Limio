@@ -15,8 +15,8 @@ import type { RevealPolicy } from "./reveal-policy";
  */
 export interface ExamRun {
   sessionId: string;
-  /** Đợt thi chứa ca này — để nối sang trang quản lý đợt. */
-  roundId: string;
+  /** Đợt thi chứa ca này — null với buổi đơn (link nhanh, thử nghiệm, vấn đáp). */
+  roundId: string | null;
   /** Còn cho học sinh vào không. */
   isOpen: boolean;
   opensAt: string;

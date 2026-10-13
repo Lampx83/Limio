@@ -355,7 +355,7 @@ function Row({
         </a>
         {/* Kỳ thi chính thức thuộc một đợt: không có lối này thì lịch sử chỉ dẫn
             được tới kết quả, mất đường quay về chỗ sửa giờ, xếp phòng. */}
-        {r.scale === "formal" && (
+        {r.scale === "formal" && r.roundId && (
           <Link
             href={`/instructor/exam-rounds/${r.roundId}?tab=sessions`}
             className={BTN}
