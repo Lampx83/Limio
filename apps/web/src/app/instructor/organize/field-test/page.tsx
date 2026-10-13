@@ -56,8 +56,7 @@ export default async function OrganizeFieldTestPage({
       title="Thử nghiệm câu hỏi"
       blurb="Đo chất lượng câu hỏi trước khi kết nạp vào ngân hàng. Mặc định không hiện đáp án để không đốt câu hỏi."
       runs={runs}
-      historyTitle="Các đợt đã thử"
-      emptyHint="Chưa có đợt thử nghiệm nào."
+      historyType="field-test"
     >
       {courses.length === 0 ? (
         <p className="text-sm">

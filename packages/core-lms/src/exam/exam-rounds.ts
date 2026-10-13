@@ -22,6 +22,7 @@ import { ensureDefaultRoomForSession } from "./exam-rooms";
 import { ExamError } from "./types";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { changedFields, courseIdOf, emitOrganizeEvent } from "./organize-events";
+import { sessionOpenState, type SessionOpenState } from "./session-window";
 
 // ============================================================================
 // Schemas
@@ -447,6 +448,13 @@ export interface ExamRoundSessionItem {
   courseId: string | null;
   courseTitle: string | null;
   roomCount: number;
+  timingMode: "scheduled" | "manual";
+  /**
+   * Thí sinh vào được lúc này không — tính theo đúng luật của đường vào thi
+   * (session-window.ts). `status` một mình không trả lời được: ca theo lịch
+   * vẫn để "draft" mà đang trong giờ thì thí sinh vẫn vào bình thường.
+   */
+  openState: SessionOpenState;
 }
 
 export interface ExamSessionDetail {
@@ -1759,6 +1767,7 @@ export async function listExamSessionsForRound(
       closesAt: true,
       accessMode: true,
       openCode: true,
+      timingMode: true,
       exam: {
         select: {
           id: true,
@@ -1769,6 +1778,7 @@ export async function listExamSessionsForRound(
       _count: { select: { rooms: true } },
     },
   });
+  const now = new Date();
   return rows.map((r) => ({
     id: r.id,
     code: r.code,
@@ -1783,6 +1793,8 @@ export async function listExamSessionsForRound(
     courseId: r.exam.course?.id ?? null,
     courseTitle: r.exam.course?.title ?? null,
     roomCount: r._count.rooms,
+    timingMode: r.timingMode,
+    openState: sessionOpenState(r, now),
   }));
 }
 
