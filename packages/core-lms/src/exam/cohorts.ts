@@ -703,6 +703,7 @@ export async function assertEligibleForExam(
       openAt: true,
       closeAt: true,
       durationMin: true,
+      mockMode: true,
       schedules: {
         select: {
           id: true,
@@ -735,13 +736,21 @@ export async function assertEligibleForExam(
   const enrolled = await isUserEnrolled(userId, exam.courseId, db);
   if (!enrolled) throw new ExamError("not_enrolled");
 
+  // Đề luyện thi không phải lần thi có tổ chức: học viên ghi danh khoá là làm
+  // được, bất cứ lúc nào, không cần ca. Ca (nếu còn sót từ trước) bị bỏ qua để
+  // luyện thi không âm thầm đóng theo khung giờ cũ. Thời lượng thật là tổng giờ
+  // các phần — startExamAttempt cắt theo mockExamTotalSec.
+  if (exam.mockMode) {
+    return { durationSec: exam.durationMin * 60, scheduleId: null };
+  }
+
   // Đề KHÔNG có ca thi thì không thi được — dứt khoát thay vì âm thầm rơi về
   // khung giờ của đề. Khung đó là tầng thời gian thứ ba mà giao diện vẫn hiện
   // như thể có tác dụng, trong khi nó chỉ sống khi đề chưa có ca nào; kết quả
   // là giáo viên sửa nó rồi tưởng đã đổi được gì đó.
   //
-  // Đường mở buổi thi hiện tại luôn dựng sẵn một ca, nên trạng
-  // thái này chỉ còn là đề chưa phát bao giờ.
+  // Publish không tự mở thi nữa, nên đây là trạng thái bình thường của đề đã
+  // sẵn sàng mà giáo viên chưa tổ chức.
   if (exam.schedules.length === 0) {
     throw new ExamError("exam_not_open", {
       reason: "no_session",

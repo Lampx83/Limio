@@ -15,6 +15,7 @@ import {
   startExamAttempt,
   submitExamAttempt,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -64,6 +65,7 @@ async function setupWithEssay(slug: string) {
     skillIds: [skill.id],
   });
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
 
   const learner = await registerUser(
     { email: `mg-l-${slug}@e.com`, password: "password1234", displayName: "L" },

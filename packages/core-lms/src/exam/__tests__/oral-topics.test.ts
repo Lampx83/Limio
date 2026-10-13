@@ -16,6 +16,7 @@ import {
   updateExam,
   updateOralTopic,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -158,6 +159,7 @@ describe("topic assignment when an attempt starts (A6.7)", () => {
     for (const title of titles) await createOralTopic(s.ownerId, s.examId, { title, brief: `Bối cảnh ${title}` });
     await createOralMaterialTopicList(s.ownerId, s.examId, { title: "M", text: "m" });
     await publishExam(s.ownerId, s.examId);
+    await openForEnrolled(s.ownerId, s.examId);
     return s;
   }
 
@@ -165,6 +167,7 @@ describe("topic assignment when an attempt starts (A6.7)", () => {
     const s = await newOralExam("a1");
     await createOralMaterialTopicList(s.ownerId, s.examId, { title: "M", text: "m" });
     await publishExam(s.ownerId, s.examId);
+    await openForEnrolled(s.ownerId, s.examId);
     const learner = await newLearner("a1", s.courseId);
     const r = await startOralExamAttempt(learner, s.examId);
     const attempt = await prisma.examAttempt.findUniqueOrThrow({ where: { id: r.attemptId } });
@@ -221,6 +224,7 @@ describe("topic assignment when an attempt starts (A6.7)", () => {
     const t = await createOralTopic(s.ownerId, s.examId, { title: "A", brief: "b" });
     await createOralMaterialTopicList(s.ownerId, s.examId, { title: "M", text: "m" });
     await publishExam(s.ownerId, s.examId);
+    await openForEnrolled(s.ownerId, s.examId);
     const learner = await newLearner("a5", s.courseId);
     const r = await startOralExamAttempt(learner, s.examId);
     await prisma.oralExamTopic.delete({ where: { id: t.topicId } });
@@ -272,6 +276,7 @@ describe("student-facing brief + feedback flags (A6.8)", () => {
     const s = await newOralExam("fl2");
     await createOralMaterialTopicList(s.ownerId, s.examId, { title: "M", text: "m" });
     await publishExam(s.ownerId, s.examId);
+    await openForEnrolled(s.ownerId, s.examId);
     const learner = await newLearner("fl2", s.courseId);
     await startOralExamAttempt(learner, s.examId);
     await expect(updateExam(s.ownerId, s.examId, { oralFeedbackMode: "coaching" })).rejects.toMatchObject({

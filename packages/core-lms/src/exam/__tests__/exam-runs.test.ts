@@ -10,6 +10,7 @@ import {
   publishExam,
   shareExamLink,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -82,10 +83,12 @@ describe("listExamRuns", () => {
   it("liệt kê cả lần thi cho học viên đã ghi danh", async () => {
     const s = await setup("auth");
     await publishExam(s.ownerId, s.examId);
+    // Publish không tự mở thi — tổ chức một đợt chính thức cho học viên ghi danh.
+    const sessionId = await openForEnrolled(s.ownerId, s.examId);
 
     const runs = await listExamRuns(s.ownerId);
-    // publishExam dựng sẵn một ca mặc định, accessMode = authenticated.
-    expect(runs.some((r) => r.examId === s.examId)).toBe(true);
+    const mine = runs.find((r) => r.sessionId === sessionId);
+    expect(mine?.accessMode).toBe("authenticated");
   });
 
   it("giữ cả lần đã đóng, có cờ phân biệt", async () => {

@@ -14,6 +14,7 @@ import {
   startOralExamAttempt,
   submitOralEvaluation,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -41,6 +42,7 @@ async function setup(slug: string) {
   });
   await createOralMaterialTopicList(owner.userId, examId, { title: "Chủ đề", text: "x" });
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
 
   const learner = await registerUser(
     { email: `oev-l-${slug}@e.com`, password: "password1234", displayName: "L" },
