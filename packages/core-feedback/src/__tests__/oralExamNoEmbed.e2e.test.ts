@@ -7,6 +7,7 @@ import {
   createOralMaterialTopicList,
   enrollInCourse,
   publishExam,
+  openOralExamSession,
   registerUser,
   startOralExamAttempt,
 } from "@feedbackme/core-lms";
@@ -79,6 +80,7 @@ async function setup(slug: string) {
     null,
   );
   await publishExam(owner.userId, examId);
+  await openOralExamSession(owner.userId, examId);
 
   const learner = await registerUser(
     { email: `ne-l-${slug}@e.com`, password: "password1234", displayName: "L" },
