@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Crown, Info, Trophy } from "lucide-react";
 import type { BoardResponse, Period } from "@feedbackme/core-gamification";
 import { UserAvatar } from "@/components/ui";
+import { gapText, gapToNextRank } from "@/lib/courseHomeView";
 
 const TABS: { period: Period; label: string }[] = [
   { period: "weekly", label: "Tuần này" },
@@ -20,14 +21,18 @@ export default function CourseLeaderboardCard({
   courseId,
   weekly,
   allTime,
+  showGuideLink = true,
 }: {
   courseId: string;
   weekly: BoardResponse;
   allTime: BoardResponse;
+  /** Trang khoá học đã có liên kết "Cách tính điểm" ở khối tiến độ; hiện thêm ở đây là hai nút cho một việc. */
+  showGuideLink?: boolean;
 }) {
   const [period, setPeriod] = useState<Period>("weekly");
   const board = period === "weekly" ? weekly : allTime;
   const meInList = board.entries.some((e) => e.isYou);
+  const gap = gapToNextRank({ entries: board.entries, me: board.me });
 
   return (
     <div className="card">
@@ -67,17 +72,22 @@ export default function CourseLeaderboardCard({
             );
           })}
         </div>
-        <Link
-          href="/xp-guide"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface-muted))] text-muted transition-colors hover:text-brand-700"
-          aria-label="Cách tính điểm"
-          title="Cách tính điểm"
-        >
-          <Info className="h-4 w-4" aria-hidden />
-        </Link>
+        {showGuideLink && (
+          <Link
+            href="/xp-guide"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface-muted))] text-muted transition-colors hover:text-brand-700"
+            aria-label="Cách tính điểm"
+            title="Cách tính điểm"
+          >
+            <Info className="h-4 w-4" aria-hidden />
+          </Link>
+        )}
       </div>
 
       <p className="mt-2 text-xs text-faint">{board.totalParticipants} người tham gia</p>
+      {gap && !board.selfOptedOut && (
+        <p className="mt-1 text-xs font-medium text-brand-700">{gapText(gap)}</p>
+      )}
 
       {board.selfOptedOut && (
         <p className="mt-2 text-xs text-faint">
