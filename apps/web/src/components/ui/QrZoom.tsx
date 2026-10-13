@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Check, Copy, Maximize2, X } from "lucide-react";
 import { copyText } from "@/lib/clipboard";
 
@@ -73,67 +74,72 @@ export default function QrZoom({
         </span>
       </button>
 
-      {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={title ?? "Mã QR"}
-          onClick={() => setOpen(false)}
-          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-black/80 p-4"
-        >
-          <button
-            type="button"
+      {/* Portal ra body: cha nào có transform/filter (vd. `animate-fade-in-up` của
+          JoinQrCard) sẽ thành khung chứa cho `fixed`, nhốt popup trong ô QR nhỏ. */}
+      {open &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={title ?? "Mã QR"}
             onClick={() => setOpen(false)}
-            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
-            aria-label="Đóng"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-black/80 p-4"
           >
-            <X className="h-5 w-5" aria-hidden />
-          </button>
-          {title && <p className="text-h3 text-white">{title}</p>}
-          <div className="rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
-            <QRCodeSVG value={url} size={size} level="M" />
-          </div>
-          {code && (
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              aria-label="Đóng"
+            >
+              <X className="h-5 w-5" aria-hidden />
+            </button>
+            {title && <p className="text-h3 text-white">{title}</p>}
+            <div className="rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+              <QRCodeSVG value={url} size={size} level="M" />
+            </div>
+            {code && (
+              <p
+                onClick={(e) => e.stopPropagation()}
+                className="select-all text-center font-mono text-5xl font-extrabold tracking-[0.25em] text-white sm:text-6xl"
+              >
+                {code}
+              </p>
+            )}
             <p
               onClick={(e) => e.stopPropagation()}
-              className="select-all text-center font-mono text-5xl font-extrabold tracking-[0.25em] text-white sm:text-6xl"
+              className={
+                code
+                  ? "max-w-full select-all break-all text-center font-mono text-base leading-tight text-white/80 sm:text-xl"
+                  : "max-w-full select-all break-all text-center font-mono text-2xl font-bold leading-tight text-white sm:text-4xl"
+              }
             >
-              {code}
+              {url}
             </p>
-          )}
-          <p
-            onClick={(e) => e.stopPropagation()}
-            className={
-              code
-                ? "max-w-full select-all break-all text-center font-mono text-base leading-tight text-white/80 sm:text-xl"
-                : "max-w-full select-all break-all text-center font-mono text-2xl font-bold leading-tight text-white sm:text-4xl"
-            }
-          >
-            {url}
-          </p>
-          {copyable && (
-            <div onClick={(e) => e.stopPropagation()} className="flex flex-col items-center gap-1">
-              <button
-                type="button"
-                onClick={onCopy}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20"
-              >
-                {copied === "ok" ? (
-                  <Check className="h-4 w-4" aria-hidden />
-                ) : (
-                  <Copy className="h-4 w-4" aria-hidden />
+            {copyable && (
+              <div onClick={(e) => e.stopPropagation()} className="flex flex-col items-center gap-1">
+                <button
+                  type="button"
+                  onClick={onCopy}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/20"
+                >
+                  {copied === "ok" ? (
+                    <Check className="h-4 w-4" aria-hidden />
+                  ) : (
+                    <Copy className="h-4 w-4" aria-hidden />
+                  )}
+                  {copied === "ok" ? "Đã sao chép" : "Sao chép link"}
+                </button>
+                {copied === "failed" && (
+                  <p role="alert" className="text-caption text-white/80">
+                    Không sao chép được — bôi đen link ở trên rồi copy tay giúp.
+                  </p>
                 )}
-                {copied === "ok" ? "Đã sao chép" : "Sao chép link"}
-              </button>
-              {copied === "failed" && (
-                <p role="alert" className="text-caption text-white/80">
-                  Không sao chép được — bôi đen link ở trên rồi copy tay giúp.
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+              </div>
+            )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

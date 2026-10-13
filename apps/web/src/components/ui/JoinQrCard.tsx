@@ -45,9 +45,13 @@ export default function JoinQrCard({
   className?: string;
 }) {
   const t = TONES[tone];
+  // Chỉ thêm `relative` (neo nút ×) khi chỗ dùng không tự định vị. Trong CSS
+  // Tailwind, `relative` đứng sau `fixed`/`absolute` nên luôn đè lên — khung
+  // "ghim góc" sẽ rơi xuống cuối luồng trang (bị đẩy khuất hoặc ra giữa đáy).
+  const positioned = /(^|\s)(fixed|absolute|sticky)(\s|$)/.test(className);
   return (
     <div
-      className={`relative flex flex-col items-center gap-1 rounded-xl bg-white p-2 shadow-lg ring-2 ${t.ring} ${className}`}
+      className={`${positioned ? "" : "relative "}flex flex-col items-center gap-1 rounded-xl bg-white p-2 shadow-lg ring-2 ${t.ring} ${className}`}
     >
       {onHide && (
         <button

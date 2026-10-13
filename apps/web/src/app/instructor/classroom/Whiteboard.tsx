@@ -413,6 +413,7 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
             }}
           />
 
+          {/* bottom-16: nằm trên thanh thu phóng/hoàn tác của Excalidraw ở góc dưới trái. */}
           {qrPanelOpen && joinUrl && (
             <JoinQrCard
               url={joinUrl}
@@ -420,7 +421,7 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
               title="Quét để tham gia vẽ"
               tone="pink"
               onHide={() => setQrPanelOpen(false)}
-              className="absolute bottom-4 left-4 z-10 animate-fade-in-up"
+              className="absolute bottom-16 left-4 z-10 animate-fade-in-up"
             />
           )}
         </div>
