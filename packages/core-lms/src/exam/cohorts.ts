@@ -13,7 +13,7 @@ import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
-import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
+import { ensureDefaultRoomForSession } from "./exam-rooms";
 import type { RevealPolicy } from "./reveal-policy";
 import { capDurationToWindow, isSessionOpen, sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
@@ -477,18 +477,17 @@ async function createExamSessionImpl(
       throw new ExamError("cohort_not_found");
   }
 
-  // A5.3 PR1c.5 — ExamSession.roundId is NOT NULL. Legacy callers don't pass
-  // roundId yet (UI still on schedules panel), so ensure the exam has a
-  // default round and attach to it. cohortId column kept temporarily for UI
-  // backward-compat; dropped when SchedulesPanel is replaced by the new IA.
-  const roundId = await ensureDefaultRound(examId, db);
+  // Đường cũ theo đề (cohort): buổi đơn, không có đợt. cohortId giữ tạm cho
+  // tương thích UI cũ; sẽ bỏ khi SchedulesPanel được thay.
   // Ca thủ công mở NGAY khi tạo — đó là toàn bộ lý do nó tồn tại. status=open
   // là nguồn sự thật; opensAt chỉ để hiển thị và sắp xếp danh sách.
   const isManual = d.timingMode === "manual";
   const s = await db.examSession.create({
     data: {
       examId,
-      roundId,
+      // Buổi đơn → simple. Scale mặc định của cột là formal (ca trong đợt), nên
+      // phải ghi tường minh, nếu không ca này lọt vào tab Kỳ thi chính thức.
+      scale: "simple",
       cohortId: d.cohortId ?? null,
       timingMode: d.timingMode,
       status: isManual ? "open" : "draft",

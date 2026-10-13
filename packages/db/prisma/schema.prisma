@@ -4272,10 +4272,12 @@ model CohortMember {
 model ExamSession {
   id                  String                @id @default(uuid())
   examId              String
-  // A5.3 PR1c.5 — ca thi thuộc về 1 đợt thi. Required. createExamSession()
-  // tự ensure round mặc định cho legacy exam-scoped callers.
-  roundId             String
-  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Unique trong round.
+  // Đợt thi chứa ca — CHỈ kỳ thi chính thức có đợt (Đợt › Ca › Phòng). Link
+  // thi nhanh, thử nghiệm câu hỏi và vấn đáp là BUỔI ĐƠN: không có đợt, null.
+  // Trước đây mọi ca bắt buộc có đợt nên hệ thống tự dựng "Đợt thi tự động"
+  // làm thùng chứa — xem bước 2 của kế hoạch đợt/ca.
+  roundId             String?
+  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Không unique.
   // KHÔNG phải mã access cho SV — xem `openCode` bên dưới.
   code                String?
   // A5.3 PR1a additive — tên hiển thị (vd "Ca 1 — Sáng 14/5").
@@ -4340,13 +4342,16 @@ model ExamSession {
   updatedAt           DateTime              @updatedAt
 
   exam       Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
-  round      ExamRound       @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  round      ExamRound?      @relation(fields: [roundId], references: [id], onDelete: Restrict)
   cohort     CourseSection?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   rooms      ExamRoom[]
   candidates ExamCandidate[]
   attempts   ExamAttempt[]
 
-  @@unique([roundId, openCode])
+  // Mã vào thi phải duy nhất TOÀN HỆ THỐNG: người nhập mã không biết ca nào,
+  // nên hai ca trùng mã là thí sinh vào nhầm ca. NULL (ca không dùng mã chung)
+  // không xung đột — Postgres coi mỗi NULL là khác nhau.
+  @@unique([openCode])
   @@index([examId, opensAt])
   @@index([roundId, opensAt])
   @@index([cohortId])

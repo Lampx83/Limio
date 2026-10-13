@@ -17,7 +17,8 @@ const STATUS_LABEL: Record<SessionStatus, string> = {
 
 interface SessionDetail {
   id: string;
-  roundId: string;
+  /** Null với buổi đơn (không đợt) — trang này chỉ dành cho ca trong đợt. */
+  roundId: string | null;
   examId: string;
   examTitle: string;
   examAccessMode: string;

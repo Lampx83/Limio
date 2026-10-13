@@ -133,13 +133,15 @@ describe("lọc lịch sử theo hình thức tổ chức", () => {
     expect(formal.some((r) => r.sessionId === shared.sessionId)).toBe(false);
   });
 
-  it("ca sinh ra từ đường đợt/ca mặc định là formal", async () => {
-    const s = await setup("scale-formal");
+  it("ca mặc định của đề là buổi đơn (simple), không lẫn vào kỳ thi chính thức", async () => {
+    const s = await setup("scale-default");
     await publishExam(s.ownerId, s.examId);
     const sessionId = await ensureDefaultSession(s.examId);
 
+    const simple = await listExamRuns(s.ownerId, { scale: "simple" });
+    expect(simple.some((r) => r.sessionId === sessionId)).toBe(true);
     const formal = await listExamRuns(s.ownerId, { scale: "formal" });
-    expect(formal.some((r) => r.sessionId === sessionId)).toBe(true);
+    expect(formal.some((r) => r.sessionId === sessionId)).toBe(false);
   });
 
   it("đề thử nghiệm không lẫn vào lịch sử link nhanh", async () => {
