@@ -399,6 +399,9 @@ describe("Assignments — A5", () => {
     expect(ctx.maxScore).toBe(20);
     expect(ctx.rubricText).toBe("10đ nội dung, 10đ hình thức");
     expect(ctx.submissionBody).toBe("Bài làm của học viên");
+    expect(ctx.attachmentUrl).toBeNull();
+    expect(ctx.responseFormat).toBe("text");
+    expect(ctx.uploaderUserId).toBe(s.learnerId);
   });
 
   it("getSubmissionGradingContext blocks non-editors, 404s on missing submission", async () => {

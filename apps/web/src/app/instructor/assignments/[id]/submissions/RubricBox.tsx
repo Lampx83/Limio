@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { toast } from "@/lib/toast";
+import { AI_GRADE_CHAR_BUDGET_TEXT, AI_GRADE_PAGE_LIMIT } from "@feedbackme/shared-types";
 
 /**
  * Rubric chấm điểm của cả bài tập — nhập ngay ở trang chấm bài, cạnh nút
@@ -66,7 +67,9 @@ export default function RubricBox({
       </label>
       <p className="text-xs text-faint">
         Tiêu chí và thang điểm bạn dùng để chấm. Khi bấm &ldquo;✨ Gợi ý điểm bằng
-        AI&rdquo; ở từng bài nộp, AI sẽ đọc rubric này cùng đề bài và bài làm.
+        AI&rdquo; ở từng bài nộp, AI sẽ đọc rubric này cùng đề bài và bài làm. AI sẽ chấm tối
+        đa được {AI_GRADE_CHAR_BUDGET_TEXT} ký tự (khoảng {AI_GRADE_PAGE_LIMIT} trang) mỗi bài — muốn AI
+        chấm đủ, hãy yêu cầu sinh viên nộp không quá {AI_GRADE_PAGE_LIMIT} trang.
       </p>
       <textarea
         id={`rubric-${assignmentId}`}

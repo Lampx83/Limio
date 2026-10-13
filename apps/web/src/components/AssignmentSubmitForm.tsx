@@ -7,6 +7,7 @@ import AudioRecorder from "@/components/AudioRecorder";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import {
   GENERATIVE_PRESETS,
+  SPEAKING_BODY_PLACEHOLDER,
   acceptForFormat,
   requiresUpload,
   type GenerativeActivityType,
@@ -119,7 +120,7 @@ export default function AssignmentSubmitForm({
     }
     setBusy(true);
     const payload: Record<string, unknown> = {
-      body: body.trim() || (isSpeaking ? "(bài nói)" : body),
+      body: body.trim() || (isSpeaking ? SPEAKING_BODY_PLACEHOLDER : body),
       attachmentUrl: attachmentUrl.trim() || null,
     };
     if (selfRating !== "") payload.selfRating = Number(selfRating);

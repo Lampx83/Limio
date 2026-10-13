@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import type { LessonFormatTemplateKey } from "@feedbackme/shared-types";
+import { AI_GRADE_CHAR_BUDGET, type LessonFormatTemplateKey } from "@feedbackme/shared-types";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { normalizeTerm } from "../flashcardSrs";
 import { toPlainText } from "./plainText";
@@ -1348,6 +1348,8 @@ export interface AssignmentGradeSuggestion {
   feedback: string;
   /** Giải thích ngắn cho GV vì sao cho mức điểm này — không phải cho học viên. */
   rationale: string;
+  /** Bài dài hơn ngân sách ký tự → model chỉ nhận phần đầu; giao diện phải nói cho giảng viên. */
+  truncated?: { sentChars: number; totalChars: number };
 }
 
 const ASSIGNMENT_GRADE_SCHEMA = {
@@ -1381,6 +1383,13 @@ export interface SuggestAssignmentGradeInput {
   /** Rubric GV tự gõ — null/rỗng vẫn chấm được, chỉ kém căn cứ hơn. */
   rubricText: string | null;
   submissionBody: string;
+  /** Phần đính kèm đã đọc ra chữ (Google Docs, bản chữ bài nói…) — chấm như một phần của bài nộp. */
+  attachments?: Array<{ label: string; text: string }>;
+  /**
+   * Mô tả phần học viên CÓ nộp nhưng AI không xem được (ảnh, video, Doc chưa mở quyền…). Có giá trị
+   * thì prompt cấm coi phần đó là thiếu — nếu không, model trừ điểm "bài thiếu nội dung" oan.
+   */
+  unreadAttachment?: string | null;
 }
 
 export async function suggestAssignmentGrade(
@@ -1390,7 +1399,9 @@ export async function suggestAssignmentGrade(
   model = DEFAULT_MODEL,
   db: PrismaClient = prisma,
 ): Promise<AssignmentGradeSuggestion> {
-  if (!input.submissionBody.trim()) {
+  const body = input.submissionBody.trim();
+  const attachments = (input.attachments ?? []).filter((a) => a.text.trim());
+  if (!body && attachments.length === 0) {
     throw new AiGenerationError("validation_failed", "empty_submission");
   }
   await assertWithinCaps(userId, db, "generator");
@@ -1407,12 +1418,40 @@ Cách chấm (bắt buộc):
 3. "points" của mỗi tiêu chí nằm trong [0, maxPoints] và tuỳ theo bằng chứng — có thể là số lẻ (ví dụ 6.5). KHÔNG làm tròn về các mốc quen thuộc; mỗi bài có điểm riêng theo đúng nội dung của nó.
 4. Dùng cả thang điểm: bài lạc đề, sơ sài, nhiều lỗi thì điểm tiêu chí phải thấp; chỉ bài thực sự xuất sắc mới gần tối đa. Không mặc định "an toàn" ở mức khá.
 5. Không bịa nội dung bài nộp không có — chỉ đánh giá đúng những gì học viên đã viết.
+6. Phần "Nội dung đính kèm" (nếu có) là một phần của bài nộp: chấm cùng phần chữ như một bài thống nhất. Bản chữ chuyển từ ghi âm có thể sai chính tả do máy nghe — không trừ điểm vì lỗi chính tả trong bản chữ đó.
 
 Các trường còn lại:
 - feedback: 2-4 câu, TIẾNG VIỆT, viết trực tiếp cho học viên (xưng "bạn"), chỉ ra điểm được và điểm cần cải thiện cụ thể — không chung chung.
 - ĐỊNH DẠNG: mọi trường chữ (name, evidence, feedback, rationale) là CHỮ THƯỜNG, văn xuôi. TUYỆT ĐỐI không dùng markdown hay ký hiệu code: không **, __, #, \`, gạch đầu dòng, bảng, khối code. Khi trích bài nộp thì đặt trong dấu ngoặc kép "…".
 - rationale: 1-2 câu NGẮN GỌN cho giảng viên về lý do điểm tổng — không phải để học viên đọc.
 - Trả JSON: { criteria: [{ name, maxPoints, evidence, points }], feedback, rationale }. Không trả điểm tổng, hệ thống tự cộng.`;
+
+  // Chữ học viên gõ vào ô nội dung ưu tiên trước, đính kèm chia phần ngân sách còn lại theo thứ tự.
+  let budget = AI_GRADE_CHAR_BUDGET;
+  const totalChars = body.length + attachments.reduce((n, a) => n + a.text.trim().length, 0);
+  const take = (t: string) => {
+    const out = t.slice(0, Math.max(0, budget));
+    budget -= out.length;
+    return out;
+  };
+  const parts = [`# Bài nộp của học viên (phần chữ)\n"""\n${body ? take(body) : "(học viên không gõ chữ, bài nằm ở phần đính kèm)"}\n"""`];
+  for (const a of attachments) {
+    if (budget <= 0) break;
+    parts.push(`# Nội dung đính kèm: ${a.label}\n"""\n${take(a.text.trim())}\n"""`);
+  }
+  if (input.unreadAttachment?.trim()) {
+    parts.push(
+      `# Phần đính kèm bạn KHÔNG xem được\nHọc viên có nộp kèm ${input.unreadAttachment.trim()}, nhưng nội dung đó không được gửi cho bạn. Đây KHÔNG phải bằng chứng học viên bỏ trống: không được trừ điểm với lý do "bài thiếu phần đó". Với tiêu chí phụ thuộc chủ yếu vào phần không xem được, ghi rõ trong evidence là "chưa xem được tệp đính kèm" và chấm theo phần mô tả bằng chữ nếu có. Nhắc giảng viên trong "rationale" rằng điểm chưa tính phần đính kèm này.`,
+    );
+  }
+  const sentChars = AI_GRADE_CHAR_BUDGET - Math.max(0, budget);
+  if (totalChars > sentChars) {
+    const pct = Math.round((sentChars / totalChars) * 100);
+    parts.push(
+      `# Bài nộp bị cắt\nBài dài hơn mức bạn được nhận: bạn chỉ thấy khoảng ${pct}% đầu bài, phần sau bị lược đi. Phần không thấy KHÔNG phải là học viên bỏ trống: không được trừ điểm với lý do thiếu kết luận, thiếu phần cuối hay thiếu tài liệu tham khảo. Chấm theo phần đã thấy và nhắc giảng viên trong "rationale" rằng điểm chỉ dựa trên phần đầu bài.`,
+    );
+  }
+  const submissionBlock = parts.join("\n\n");
 
   const user = `# Đề bài: ${input.assignmentTitle}
 ${input.assignmentDescription}
@@ -1421,10 +1460,7 @@ ${input.assignmentDescription}
 
 ${rubricBlock}
 
-# Bài nộp của học viên
-"""
-${input.submissionBody.slice(0, 20_000)}
-"""
+${submissionBlock}
 
 Chấm từng tiêu chí (evidence trước, points sau) rồi trả JSON.`;
 
@@ -1465,5 +1501,6 @@ Chấm từng tiêu chí (evidence trước, points sau) rồi trả JSON.`;
     criteria,
     feedback: toPlainText(data.feedback),
     rationale: toPlainText(data.rationale),
+    ...(totalChars > sentChars ? { truncated: { sentChars, totalChars } } : {}),
   };
 }
