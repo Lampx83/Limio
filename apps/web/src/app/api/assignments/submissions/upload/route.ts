@@ -38,6 +38,8 @@ const MIME_TO_EXT: Record<string, { ext: string; kind: string }> = {
   "video/quicktime": { ext: "mov", kind: "video" },
   // generic / concept-map exports
   "application/pdf": { ext: "pdf", kind: "file" },
+  // Word — trước đây bị 415 dù dạng "file" cho chọn mọi tệp; AI gợi ý chấm đọc được chữ trong .docx.
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { ext: "docx", kind: "file" },
   "application/json": { ext: "json", kind: "file" },
   "application/zip": { ext: "zip", kind: "file" },
   "text/plain": { ext: "txt", kind: "file" },

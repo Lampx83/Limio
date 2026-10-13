@@ -144,3 +144,67 @@ describe("suggestAssignmentGrade — hạn mức ví token", () => {
     expect(called).toBe(false);
   });
 });
+
+describe("suggestAssignmentGrade — phần đính kèm (Google Docs, bản chữ bài nói)", () => {
+  function capturingOpenAI() {
+    const prompts: string[] = [];
+    const openai = {
+      chat: {
+        completions: {
+          create: async (args: { messages: { role: string; content: string }[] }) => {
+            prompts.push(args.messages.map((m) => m.content).join("\n"));
+            return {
+              choices: [{ message: { content: JSON.stringify({ criteria: [{ name: "Nội dung", maxPoints: 10, points: 7, evidence: "…" }], feedback: "ok", rationale: "ok" }) } }],
+              usage: { prompt_tokens: 10, completion_tokens: 10 },
+            };
+          },
+        },
+      },
+    } as unknown as OpenAI;
+    return { openai, prompts };
+  }
+
+  it("ô chữ trống nhưng có đính kèm đọc được → vẫn chấm, nội dung đính kèm nằm trong prompt", async () => {
+    const userId = await makeUser("attach");
+    const { openai, prompts } = capturingOpenAI();
+    const r = await suggestAssignmentGrade(
+      userId,
+      { ...BASE_INPUT, submissionBody: "", attachments: [{ label: "Google Docs học viên dán link", text: "Bài luận nằm trên Google Docs." }] },
+      openai,
+    );
+    expect(r.score).toBe(7);
+    expect(prompts[0]).toContain("# Nội dung đính kèm: Google Docs học viên dán link");
+    expect(prompts[0]).toContain("Bài luận nằm trên Google Docs.");
+    expect(prompts[0]).not.toContain("KHÔNG xem được");
+  });
+
+  it("ô chữ trống và đính kèm toàn chữ trắng → empty_submission, không gọi model", async () => {
+    const { openai, prompts } = capturingOpenAI();
+    await expect(
+      suggestAssignmentGrade("no-such-user", { ...BASE_INPUT, submissionBody: " ", attachments: [{ label: "x", text: "  " }] }, openai),
+    ).rejects.toMatchObject({ details: "empty_submission" });
+    expect(prompts).toHaveLength(0);
+  });
+
+  it("có phần không xem được → prompt cấm trừ điểm vì 'thiếu' phần đó", async () => {
+    const userId = await makeUser("unread");
+    const { openai, prompts } = capturingOpenAI();
+    await suggestAssignmentGrade(userId, { ...BASE_INPUT, unreadAttachment: "một ảnh" }, openai);
+    expect(prompts[0]).toContain("Học viên có nộp kèm một ảnh");
+    expect(prompts[0]).toContain("không được trừ điểm");
+  });
+
+  it("chữ + đính kèm dùng chung ngân sách ký tự — chữ học viên gõ được giữ trọn trước", async () => {
+    const userId = await makeUser("budget");
+    const { openai, prompts } = capturingOpenAI();
+    const body = "a".repeat(19_990);
+    await suggestAssignmentGrade(
+      userId,
+      { ...BASE_INPUT, submissionBody: body, attachments: [{ label: "Doc", text: "b".repeat(5_000) }] },
+      openai,
+    );
+    expect(prompts[0]).toContain(body);
+    expect(prompts[0]).toMatch(/# Nội dung đính kèm: Doc\n"""\nb{10}\n"""/);
+  });
+});
+
