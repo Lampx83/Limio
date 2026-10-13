@@ -206,5 +206,26 @@ describe("suggestAssignmentGrade — phần đính kèm (Google Docs, bản ch�
     expect(prompts[0]).toContain(body);
     expect(prompts[0]).toMatch(/# Nội dung đính kèm: Doc\n"""\nb{10}\n"""/);
   });
+
+  it("bài dài hơn ngân sách → báo truncated, prompt cấm trừ điểm vì phần bị lược", async () => {
+    const userId = await makeUser("truncated");
+    const { openai, prompts } = capturingOpenAI();
+    const r = await suggestAssignmentGrade(
+      userId,
+      { ...BASE_INPUT, submissionBody: "Mở bài.", attachments: [{ label: "tệp PDF", text: "p".repeat(60_000) }] },
+      openai,
+    );
+    expect(r.truncated).toEqual({ sentChars: 20_000, totalChars: 60_007 });
+    expect(prompts[0]).toContain("# Bài nộp bị cắt");
+    expect(prompts[0]).toContain("khoảng 33% đầu bài");
+  });
+
+  it("bài vừa ngân sách → không có truncated, không có đoạn 'bị cắt'", async () => {
+    const userId = await makeUser("fits");
+    const { openai, prompts } = capturingOpenAI();
+    const r = await suggestAssignmentGrade(userId, BASE_INPUT, openai);
+    expect(r.truncated).toBeUndefined();
+    expect(prompts[0]).not.toContain("# Bài nộp bị cắt");
+  });
 });
 

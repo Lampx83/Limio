@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
+import { AI_GRADE_CHAR_BUDGET_TEXT, AI_GRADE_PAGE_LIMIT, estimatePages } from "@feedbackme/shared-types";
 
 type Unread = { what: string; why: string };
 
@@ -66,12 +67,14 @@ export default function GradeForm({
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiNote, setAiNote] = useState<string | null>(null);
   const [aiUnread, setAiUnread] = useState<Unread | null>(null);
+  const [aiTruncated, setAiTruncated] = useState<{ sentChars: number; totalChars: number } | null>(null);
 
   async function suggestWithAi() {
     setAiBusy(true);
     setAiError(null);
     setAiNote(null);
     setAiUnread(null);
+    setAiTruncated(null);
     try {
       const res = await fetch(apiUrl(`/api/submissions/${submissionId}/suggest-grade`), {
         method: "POST",
@@ -91,11 +94,13 @@ export default function GradeForm({
         criteria?: { name: string; maxPoints: number; points: number }[];
         read?: string[];
         unread?: Unread | null;
+        truncated?: { sentChars: number; totalChars: number };
       };
       setScore(String(suggestion.score));
       setFeedback(suggestion.feedback);
       setScoreError(null);
       setAiUnread(suggestion.unread ?? null);
+      setAiTruncated(suggestion.truncated ?? null);
       setAiNote(
         (suggestion.read?.length ? `AI đã đọc: ${suggestion.read.join(", ")}. ` : "") +
         (suggestion.hadRubric ? "" : "⚠ Chưa có rubric — hãy nhập ở ô Rubric chấm điểm phía trên để AI chấm sát hơn. ") +
@@ -188,11 +193,20 @@ export default function GradeForm({
               xem, và nghe bài nói (chưa có bản chữ thì chuyển ngay, tính vào ví AI của bạn). AI không chấm ảnh
               và video — phần đó bạn tự xem.
             </>
-          )}
+          )}{" "}
+          AI sẽ chấm tối đa được {AI_GRADE_CHAR_BUDGET_TEXT} ký tự (khoảng {AI_GRADE_PAGE_LIMIT} trang) mỗi bài;
+          muốn AI chấm đủ, hãy yêu cầu sinh viên nộp không quá {AI_GRADE_PAGE_LIMIT} trang.
         </p>
         {aiError && (
           <p role="alert" className="banner-danger mt-1.5 text-sm">
             {aiError}
+          </p>
+        )}
+        {aiTruncated && (
+          <p role="status" className="banner-warning mt-1.5 text-xs">
+            ⚠ Bài dài khoảng {estimatePages(aiTruncated.totalChars)} trang — AI sẽ chấm tối đa được{" "}
+            {AI_GRADE_CHAR_BUDGET_TEXT} ký tự (khoảng {AI_GRADE_PAGE_LIMIT} trang) nên điểm gợi ý chưa tính phần
+            sau. Muốn AI chấm đủ, hãy yêu cầu sinh viên nộp không quá {AI_GRADE_PAGE_LIMIT} trang.
           </p>
         )}
         {aiUnread && (

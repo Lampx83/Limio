@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import type { LessonFormatTemplateKey } from "@feedbackme/shared-types";
+import { AI_GRADE_CHAR_BUDGET, type LessonFormatTemplateKey } from "@feedbackme/shared-types";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { normalizeTerm } from "../flashcardSrs";
 import { toPlainText } from "./plainText";
@@ -1348,6 +1348,8 @@ export interface AssignmentGradeSuggestion {
   feedback: string;
   /** Giải thích ngắn cho GV vì sao cho mức điểm này — không phải cho học viên. */
   rationale: string;
+  /** Bài dài hơn ngân sách ký tự → model chỉ nhận phần đầu; giao diện phải nói cho giảng viên. */
+  truncated?: { sentChars: number; totalChars: number };
 }
 
 const ASSIGNMENT_GRADE_SCHEMA = {
@@ -1390,9 +1392,6 @@ export interface SuggestAssignmentGradeInput {
   unreadAttachment?: string | null;
 }
 
-/** Tổng số ký tự bài nộp (chữ + đính kèm) gửi cho model — chung một ngân sách, chữ của học viên ưu tiên trước. */
-const GRADE_SUBMISSION_CHAR_BUDGET = 20_000;
-
 export async function suggestAssignmentGrade(
   userId: string,
   input: SuggestAssignmentGradeInput,
@@ -1428,7 +1427,8 @@ Các trường còn lại:
 - Trả JSON: { criteria: [{ name, maxPoints, evidence, points }], feedback, rationale }. Không trả điểm tổng, hệ thống tự cộng.`;
 
   // Chữ học viên gõ vào ô nội dung ưu tiên trước, đính kèm chia phần ngân sách còn lại theo thứ tự.
-  let budget = GRADE_SUBMISSION_CHAR_BUDGET;
+  let budget = AI_GRADE_CHAR_BUDGET;
+  const totalChars = body.length + attachments.reduce((n, a) => n + a.text.trim().length, 0);
   const take = (t: string) => {
     const out = t.slice(0, Math.max(0, budget));
     budget -= out.length;
@@ -1442,6 +1442,13 @@ Các trường còn lại:
   if (input.unreadAttachment?.trim()) {
     parts.push(
       `# Phần đính kèm bạn KHÔNG xem được\nHọc viên có nộp kèm ${input.unreadAttachment.trim()}, nhưng nội dung đó không được gửi cho bạn. Đây KHÔNG phải bằng chứng học viên bỏ trống: không được trừ điểm với lý do "bài thiếu phần đó". Với tiêu chí phụ thuộc chủ yếu vào phần không xem được, ghi rõ trong evidence là "chưa xem được tệp đính kèm" và chấm theo phần mô tả bằng chữ nếu có. Nhắc giảng viên trong "rationale" rằng điểm chưa tính phần đính kèm này.`,
+    );
+  }
+  const sentChars = AI_GRADE_CHAR_BUDGET - Math.max(0, budget);
+  if (totalChars > sentChars) {
+    const pct = Math.round((sentChars / totalChars) * 100);
+    parts.push(
+      `# Bài nộp bị cắt\nBài dài hơn mức bạn được nhận: bạn chỉ thấy khoảng ${pct}% đầu bài, phần sau bị lược đi. Phần không thấy KHÔNG phải là học viên bỏ trống: không được trừ điểm với lý do thiếu kết luận, thiếu phần cuối hay thiếu tài liệu tham khảo. Chấm theo phần đã thấy và nhắc giảng viên trong "rationale" rằng điểm chỉ dựa trên phần đầu bài.`,
     );
   }
   const submissionBlock = parts.join("\n\n");
@@ -1494,5 +1501,6 @@ Chấm từng tiêu chí (evidence trước, points sau) rồi trả JSON.`;
     criteria,
     feedback: toPlainText(data.feedback),
     rationale: toPlainText(data.rationale),
+    ...(totalChars > sentChars ? { truncated: { sentChars, totalChars } } : {}),
   };
 }
