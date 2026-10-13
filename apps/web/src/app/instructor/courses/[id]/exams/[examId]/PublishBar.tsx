@@ -4,18 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
-import { formatDateTime } from "@/lib/datetime";
 import { humanizePublishDetail, humanizePublishError } from "@/lib/examPublishErrors";
 
 interface Props {
   examId: string;
   status: string;
-  /** Khung giờ của đề — publish dựng sẵn một ca thi lấy khung này làm giá trị đầu. */
-  openAt?: string;
-  closeAt?: string;
+  /** Đề luyện thi: học viên ghi danh làm được ngay, không cần tổ chức thi. */
+  mock?: boolean;
 }
 
-export default function PublishBar({ examId, status, openAt, closeAt }: Props) {
+export default function PublishBar({ examId, status, mock = false }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,12 +21,12 @@ export default function PublishBar({ examId, status, openAt, closeAt }: Props) {
   const [justPublished, setJustPublished] = useState(false);
 
   async function publish() {
-    // Publish không hoàn tác được từ giao diện và dựng sẵn một ca thi mở theo
-    // khung giờ của đề, nên nói rõ trước khi bấm thay vì để giảng viên bất ngờ.
-    const window_ =
-      openAt && closeAt
-        ? `\n\nHệ thống sẽ dựng sẵn một ca thi mở từ ${formatDateTime(openAt)} đến ${formatDateTime(closeAt)}; học viên đã ghi danh khoá học có thể vào thi trong khung giờ này. Bạn chỉnh giờ, chia ca, xếp phòng ở mục Tổ chức thi.`
-        : "";
+    // Publish không hoàn tác được từ giao diện, và KHÔNG tự mở thi — nói rõ
+    // trước khi bấm để giảng viên khỏi tưởng học viên đã vào được. Đề luyện
+    // thi là ngoại lệ: không phải lần thi có tổ chức, học viên làm được ngay.
+    const window_ = mock
+      ? "\n\nĐây là đề luyện thi: học viên đã ghi danh khoá học làm được ngay sau khi publish, bất cứ lúc nào."
+      : "\n\nPublish chỉ làm đề sẵn sàng — chưa ai vào thi được. Muốn cho thi, vào Tổ chức thi chọn Link thi nhanh, Thử nghiệm câu hỏi hoặc Kỳ thi chính thức.";
     if (
       !window.confirm(
         "Publish đề này?\n\nSau khi có người làm bài, thời lượng, cách chấm và các cài đặt khác của đề sẽ bị khoá; chỉ còn sửa được tiêu đề, mô tả và giờ đóng." +
@@ -80,16 +78,20 @@ export default function PublishBar({ examId, status, openAt, closeAt }: Props) {
           className="max-w-md rounded border border-emerald-300 bg-emerald-50 p-3 text-xs text-emerald-900"
         >
           <p className="font-medium">Đã publish đề.</p>
-          <p className="mt-0.5">
-            Bước tiếp theo:{" "}
-            <Link
-              href={`/instructor/organize?examId=${examId}`}
-              className="font-semibold underline"
-            >
-              Tổ chức thi →
-            </Link>{" "}
-            (chọn hình thức, giờ mở, ai được vào).
-          </p>
+          {mock ? (
+            <p className="mt-0.5">Học viên đã ghi danh khoá học làm được ngay.</p>
+          ) : (
+            <p className="mt-0.5">
+              Bước tiếp theo:{" "}
+              <Link
+                href={`/instructor/organize?examId=${examId}`}
+                className="font-semibold underline"
+              >
+                Tổ chức thi →
+              </Link>{" "}
+              (chọn hình thức, giờ mở, ai được vào).
+            </p>
+          )}
         </div>
       )}
       {error && (

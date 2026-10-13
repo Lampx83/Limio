@@ -30,6 +30,7 @@ import {
   Crown,
   Bot,
   Clock,
+  History,
   PenTool,
   Brush,
   Gamepad2,
@@ -245,6 +246,7 @@ const MODULES: ModuleDef[] = [
       "/instructor/exam-rounds",
       "/instructor/exam-runs",
       "/instructor/exam-sessions",
+      "/instructor/exam-history",
     ],
     items: [
       // Thứ tự bám theo trình tự làm việc thật: soạn câu → gom thành gói đề →
@@ -253,6 +255,7 @@ const MODULES: ModuleDef[] = [
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Thiết kế đề thi", href: "/instructor/exams", icon: FlaskConical },
       { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },
+      { label: "Lịch sử thi", href: "/instructor/exam-history", icon: History },
     ],
   },
   {

@@ -6,9 +6,9 @@ import { enrollInCourse } from "../../learning/enroll";
 import {
   createExam,
   createExamQuestion,
-  ensureDefaultRound,
   listExamResults,
 } from "../";
+import { roundFor } from "../../test/roundFor";
 
 const BASE = "http://localhost:3000";
 
@@ -48,7 +48,7 @@ describe("kết quả lọc theo ca — học viên đã ghi danh", () => {
       },
       points: 10,
     });
-    const roundId = await ensureDefaultRound(examId);
+    const roundId = await roundFor(examId);
     const ca = await prisma.examSession.create({
       data: {
         examId,
@@ -121,7 +121,7 @@ describe("kết quả lọc theo ca — học viên đã ghi danh", () => {
       },
       points: 10,
     });
-    const roundId = await ensureDefaultRound(examId);
+    const roundId = await roundFor(examId);
     const mk = () =>
       prisma.examSession.create({
         data: {

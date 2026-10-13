@@ -4,7 +4,6 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditCourse, assertCanEditExam, CourseAuthzError } from "../courses/authz";
 import { isInstructor } from "../auth/roles";
 import { emitEvent } from "../learning/events";
-import { ensureDefaultSession } from "./exam-rooms";
 import { ExamError } from "./types";
 import { validateMockExamForPublish } from "./mock-sections";
 import { importPreviewToExam } from "./blueprint";
@@ -494,12 +493,11 @@ export async function publishExam(
     },
   });
 
-  // Ca thi là tầng DUY NHẤT quyết định giờ mở/đóng, nên đề publish mà không có
-  // ca nào thì không ai vào được. Dựng sẵn một ca mặc định lấy khung giờ của
-  // đề làm giá trị khởi tạo — giáo viên không phải học khái niệm "ca thi", còn
-  // khung giờ của đề trở thành hạt giống cho ca đầu tiên thay vì một cổng chặn
-  // sống song song.
-  await ensureDefaultSession(examId, db);
+  // Publish chỉ làm đề SẴN SÀNG, không tự mở thi. Trước đây bước này dựng ngầm
+  // một "Đợt thi tự động" + "Ca mặc định" — nguồn của hàng chục đợt rác lẫn vào
+  // trang Đợt thi và tab Kỳ thi chính thức. Muốn cho thi thì giáo viên vào Tổ
+  // chức thi chọn hình thức (link nhanh / thử nghiệm / kỳ thi chính thức). Đề
+  // luyện thi (mockMode) không cần ca — xem assertEligibleForExam.
 
   await emitEvent(
     actorUserId,

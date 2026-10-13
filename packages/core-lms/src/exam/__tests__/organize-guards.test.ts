@@ -13,6 +13,7 @@ import {
 } from "../";
 import { deleteCohort, createCohort } from "../cohorts";
 import { removeCandidateFromRoom } from "../exam-rounds";
+import { roundFor } from "../../test/roundFor";
 
 const BASE = "http://localhost:3000";
 
@@ -124,13 +125,10 @@ describe("xoá đề / ca / lớp / thí sinh khi đã có bài làm", () => {
   it("removeCandidateFromRoom: thí sinh đã có bài làm bị chặn", async () => {
     const { ownerId, examId } = await setup("rm-cand");
     const sessionId = await publishWithQuestion(ownerId, examId, "rm-cand");
-    const session = await prisma.examSession.findUniqueOrThrow({
-      where: { id: sessionId },
-      select: { roundId: true },
-    });
-    await prisma.examRoundAdmin.create({
-      data: { roundId: session.roundId, userId: ownerId },
-    });
+    // Quyền theo đợt: ca phải thuộc một đợt thật (buổi đơn thì quyền theo khoá).
+    const roundId = await roundFor(examId);
+    await prisma.examSession.update({ where: { id: sessionId }, data: { roundId } });
+    await prisma.examRoundAdmin.create({ data: { roundId, userId: ownerId } });
     const room = await prisma.examRoom.create({
       data: { examId, sessionId, orderIndex: 0, name: "P1", proctorUserId: ownerId },
     });

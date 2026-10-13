@@ -55,8 +55,7 @@ export default async function OrganizeQuickPage({
       title="Link thi nhanh"
       blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp. Chọn đề thi, đặt thời lượng, bấm Mở."
       runs={runs}
-      historyTitle="Các buổi đã mở"
-      emptyHint="Chưa mở buổi thi nào. Tạo ở phần trên."
+      historyType="quick"
     >
       {courses.length === 0 ? (
         <p className="text-sm">
