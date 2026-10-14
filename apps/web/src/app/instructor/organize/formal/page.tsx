@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@feedbackme/db";
-import { listExamRuns } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import OrganizeLayout from "../OrganizeLayout";
 
@@ -23,18 +22,13 @@ export default async function OrganizeFormalPage() {
     redirect("/signin?callbackUrl=/instructor/organize/formal");
   const userId = session.user.id;
 
-  const [courseCount, runs] = await Promise.all([
-    prisma.course.count({ where: { instructors: { some: { userId } } } }),
-    listExamRuns(userId, { scale: "formal" }),
-  ]);
+  const courseCount = await prisma.course.count({ where: { instructors: { some: { userId } } } });
 
   return (
     <OrganizeLayout
       title="Kỳ thi chính thức"
       blurb="Nhiều ca, nhiều phòng, có giám thị. Chia ca, xếp phòng, cấp mã từng thí sinh, in phiếu."
-      runs={runs}
       historyType="formal"
-      showRooms
     >
       {courseCount === 0 ? (
         <p className="text-sm">
