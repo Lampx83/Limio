@@ -6,13 +6,14 @@ import {
   openAiChatCompute,
   openAiEmbedCompute,
   openAiSpeechToText,
-  openAiTextToSpeech,
+  isTtsProviderError,
   OpenAiVoiceError,
   runOralExamTurn,
 } from "@feedbackme/core-feedback";
 import { getIntegrationSecret, IntegrationError } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
+import { resolveTextToSpeech } from "@/lib/speechProvider";
 
 export const runtime = "nodejs";
 
@@ -112,14 +113,14 @@ export async function POST(
   let audioChunks: string[] = [];
   let contentType = "audio/mpeg";
   try {
-    const tts = await openAiTextToSpeech(openai)(turnResult.assistantContent);
+    const tts = await (await resolveTextToSpeech(openai))(turnResult.assistantContent);
     audioChunks = tts.audioChunks.map((b) => b.toString("base64"));
     contentType = tts.contentType;
   } catch (e) {
     // Câu hỏi/lời kết vẫn đã lưu vào transcript ở runOralExamTurn — không
     // mất gì nếu chỉ riêng bước đọc thành tiếng lỗi. Trả về không có audio,
     // SV dùng bản chữ (assistantText) qua nút "chuyển sang gõ chữ".
-    if (!(e instanceof OpenAiVoiceError)) throw e;
+    if (!isTtsProviderError(e)) throw e;
   }
 
   return NextResponse.json({
