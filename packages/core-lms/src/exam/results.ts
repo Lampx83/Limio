@@ -50,6 +50,8 @@ export interface ExamResultsSummary {
   notStarted: number;
   /** Trung bình % trên các bài đã chấm xong. Null khi chưa có bài nào. */
   avgScorePct: number | null;
+  /** Số bài đã chấm xong làm cơ sở cho avgScorePct (không tính bài còn câu chờ chấm). */
+  avgScoreCount: number;
   /** Số bài còn câu chờ chấm tay. */
   pendingGrading: number;
 }
@@ -237,6 +239,7 @@ export async function listExamResults(
       graded.length > 0
         ? graded.reduce((s, r) => s + (r.scorePct ?? 0), 0) / graded.length
         : null,
+    avgScoreCount: graded.length,
     pendingGrading: rows.filter((r) => r.needsGrading).length,
   };
 
