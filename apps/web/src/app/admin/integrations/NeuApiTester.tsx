@@ -92,9 +92,9 @@ export default function NeuApiTester() {
   const tooLong = text.trim().length > MAX_CHARS;
 
   return (
-    <section className="card">
-      <header className="border-b border-token pb-3">
-        <h2 className="text-base font-semibold">Thử NEU API</h2>
+    <div className="mt-5 border-t border-token pt-5">
+      <header className="pb-3">
+        <h3 className="text-sm font-semibold">Thử NEU API</h3>
         <p className="mt-1.5 text-xs text-muted">
           Gọi qua Kong bằng key đã lưu ở trên. Hiện có TTS; API khác của NEU sẽ thêm thành section
           riêng trong card này.
@@ -195,6 +195,6 @@ export default function NeuApiTester() {
           </ul>
         )}
       </div>
-    </section>
+    </div>
   );
 }

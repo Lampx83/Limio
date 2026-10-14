@@ -66,7 +66,7 @@ const LABELS: Record<
  */
 const GROUPS: Record<
   string,
-  { name: string; help?: string; emoji?: string; keys: string[]; testEndpoint?: string }
+  { name: string; help?: string; emoji?: string; keys: string[]; testEndpoint?: string; embedsTester?: boolean }
 > = {
   vbee: {
     name: "Vbee — vấn đáp AI bằng giọng nói",
@@ -82,6 +82,7 @@ const GROUPS: Record<
     name: "NEU TTS — đọc giọng tiếng Việt (vấn đáp)",
     help: "Khi đã nhập Base URL, luồng vấn đáp đọc bằng NEU TTS thay cho OpenAI. Để trống Base URL = dùng OpenAI TTS.",
     keys: ["neutts.base_url", "neutts.api_key", "neutts.voice"],
+    embedsTester: true,
   },
   ga4: {
     name: "Google Analytics 4 — traffic & acquisition",
@@ -116,15 +117,24 @@ export default function IntegrationsManager({
           .filter((s): s is Status => s !== undefined);
         if (members.length === 0) return null;
         return (
-          <IntegrationGroupCard key={groupId} group={group} members={members} onChange={refresh} />
+          <IntegrationGroupCard
+            key={groupId}
+            group={group}
+            members={members}
+            onChange={refresh}
+            extra={
+              group.embedsTester &&
+              byKey.get("neutts.base_url")?.hasValue &&
+              byKey.get("neutts.api_key")?.hasValue ? (
+                <NeuApiTester />
+              ) : null
+            }
+          />
         );
       })}
       {standalone.map((s) => (
         <IntegrationRow key={s.key} status={s} onChange={refresh} />
       ))}
-      {byKey.get("neutts.base_url")?.hasValue && byKey.get("neutts.api_key")?.hasValue && (
-        <NeuApiTester />
-      )}
     </div>
   );
 }
@@ -133,10 +143,12 @@ function IntegrationGroupCard({
   group,
   members,
   onChange,
+  extra,
 }: {
-  group: { name: string; help?: string; emoji?: string; testEndpoint?: string };
+  group: { name: string; help?: string; emoji?: string; testEndpoint?: string; embedsTester?: boolean };
   members: Status[];
   onChange: () => void;
+  extra?: React.ReactNode;
 }) {
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -168,6 +180,8 @@ function IntegrationGroupCard({
           </div>
         ))}
       </div>
+
+      {extra}
 
       {group.testEndpoint && allConfigured && (
         <div className="mt-4 border-t border-token pt-4">
