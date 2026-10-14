@@ -11,11 +11,9 @@ const TABS: Array<{ key: SessionTab; label: string; Icon: typeof FileText }> = [
 ];
 
 export default function SessionTabs({
-  roundId,
   sessionId,
   active,
 }: {
-  roundId: string;
   sessionId: string;
   active: SessionTab;
 }) {
@@ -23,7 +21,7 @@ export default function SessionTabs({
     <nav className="flex flex-wrap gap-1 border-b border-default">
       {TABS.map((t) => {
         const isActive = t.key === active;
-        const base = `/instructor/exam-rounds/${roundId}/sessions/${sessionId}`;
+        const base = `/instructor/exam-sessions/${sessionId}`;
         const href = t.key === "overview" ? base : `${base}?tab=${t.key}`;
         const Icon = t.Icon;
         return (

@@ -1,45 +1,28 @@
 import Link from "next/link";
 import { History } from "lucide-react";
-import type { ExamRun } from "@feedbackme/core-lms";
-import ExamRunsList from "./ExamRunsList";
 
 /**
  * Khung chung cho ba trang tổ chức thi.
  *
- * Trên: TẠO MỚI. Dưới: chỉ các ca CÙNG DẠNG còn ĐANG MỞ — vừa bấm mở link
- * nhanh là cần mã/QR ngay tại chỗ, không bắt chạy sang trang khác. Các lần đã
- * đóng nằm ở Lịch sử thi (một chỗ cho mọi hình thức, chia tab), nên ở đây chỉ
- * còn một lối sang đúng tab của hình thức này.
+ * Trang này CHỈ để cấu hình/tạo mới. Mọi lần thi đã tổ chức — đang mở hay đã
+ * đóng — nằm ở Lịch sử thi, một chỗ cho mọi hình thức (chia tab). Vừa tạo xong
+ * thì mã/QR hiện ngay trong chính form (xem QuickExamForm); quay lại sau đó
+ * thì chỉ có một lối sang đúng tab của hình thức này, không liệt kê lại ca ở
+ * đây — cùng một ca hiện ở hai nơi là hai lối vào cho một việc.
  */
 export default function OrganizeLayout({
   title,
   blurb,
   children,
-  runs,
   historyType,
-  showRooms = false,
 }: {
   title: string;
   blurb: string;
-  /** Phần tạo mới. */
+  /** Phần tạo mới / cấu hình. */
   children: React.ReactNode;
-  runs: ExamRun[];
   /** Tab tương ứng ở trang Lịch sử thi. */
   historyType: "quick" | "field-test" | "formal";
-  /** Chỉ kỳ thi chính thức mới có nhiều phòng để mà xem. */
-  showRooms?: boolean;
 }) {
-  const open = runs.filter((r) => r.isOpen);
-  const historyLink = (
-    <Link
-      href={`/instructor/exam-history?type=${historyType}`}
-      className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline"
-    >
-      <History className="h-4 w-4" aria-hidden />
-      Xem các lần đã thi trong Lịch sử thi →
-    </Link>
-  );
-
   return (
     <main>
       <Link href="/instructor/organize" className="text-sm text-faint hover:underline">
@@ -52,19 +35,15 @@ export default function OrganizeLayout({
         {children}
       </section>
 
-      <section className="mt-10">
-        {open.length > 0 ? (
-          <>
-            <ExamRunsList runs={open} showRooms={showRooms} />
-            <div className="mt-4">{historyLink}</div>
-          </>
-        ) : (
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed border-token px-4 py-3">
-            <p className="text-sm text-faint">Không có ca nào đang mở.</p>
-            {historyLink}
-          </div>
-        )}
-      </section>
+      <p className="mt-6">
+        <Link
+          href={`/instructor/exam-history?type=${historyType}`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline"
+        >
+          <History className="h-4 w-4" aria-hidden />
+          Xem các lần đã tổ chức trong Lịch sử thi →
+        </Link>
+      </p>
     </main>
   );
 }

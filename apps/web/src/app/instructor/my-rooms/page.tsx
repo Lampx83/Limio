@@ -130,11 +130,12 @@ function RoomCard({ r, now }: { r: ProctorRoom; now: number }) {
   const closesAt = r.closesAt ? new Date(r.closesAt).getTime() : Number.POSITIVE_INFINITY;
   const isFuture = opensAt > now;
   const isLive = opensAt <= now && now < closesAt;
-  // Phòng trong đợt có trang chi tiết riêng; buổi đơn (link nhanh, thử nghiệm,
-  // vấn đáp) không thuộc đợt nên xem ở trang lần thi.
-  const detailHref = r.roundId
-    ? `/instructor/exam-rounds/${r.roundId}/sessions/${r.sessionId}/rooms/${r.id}`
-    : `/instructor/exam-runs/${r.sessionId}`;
+  // Ca chính thức (thuộc đợt hay không) có trang phòng riêng; buổi đơn (link
+  // nhanh, thử nghiệm, vấn đáp) xem ở trang lần thi.
+  const detailHref =
+    r.scale === "formal"
+      ? `/instructor/exam-sessions/${r.sessionId}/rooms/${r.id}`
+      : `/instructor/exam-runs/${r.sessionId}`;
   const projHref = `/proctor/rooms/${r.id}/projection`;
   return (
               <li

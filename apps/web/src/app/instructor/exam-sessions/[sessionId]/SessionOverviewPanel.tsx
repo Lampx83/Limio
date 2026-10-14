@@ -23,7 +23,7 @@ interface SessionDetail {
   examTitle: string;
   examAccessMode: string;
   examStatus: string;
-  courseId: string;
+  courseId: string | null;
   courseTitle: string;
   code: string | null;
   title: string | null;
@@ -88,7 +88,9 @@ export default function SessionOverviewPanel({
         setErr(j?.error ?? `HTTP ${r.status}`);
         return;
       }
-      window.location.href = `/instructor/exam-rounds/${detail.roundId}?tab=sessions`;
+      window.location.href = detail.roundId
+        ? `/instructor/exam-rounds/${detail.roundId}?tab=sessions`
+        : "/instructor/organize/formal";
     } finally {
       setBusy(false);
     }
@@ -142,7 +144,7 @@ export default function SessionOverviewPanel({
             </Field>
             <Field label="Đề thi" wide>
               <Link
-                href={`/instructor/courses/${detail.courseId}/exams/${detail.examId}`}
+                href={`/instructor/courses/${detail.courseId ?? "none"}/exams/${detail.examId}`}
                 className="text-blue-600 hover:underline"
               >
                 {detail.examTitle}

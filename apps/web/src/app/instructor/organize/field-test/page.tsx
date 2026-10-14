@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@feedbackme/db";
-import { listExamRuns } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import OrganizeLayout from "../OrganizeLayout";
 import QuickExamForm from "../../exams/quick/QuickExamForm";
@@ -25,29 +24,26 @@ export default async function OrganizeFieldTestPage({
     orderBy: { updatedAt: "desc" },
   });
 
-  const [papers, runs] = await Promise.all([
-    prisma.exam.findMany({
-      where: {
-        courseId: { in: courses.map((c) => c.id) },
-        status: { not: "archived" },
-        // KHÔNG lọc theo purpose. Thử nghiệm là tính chất của BUỔI THI, nên
-        // gói đề bình thường cũng đem đo chất lượng câu hỏi được — đó mới là
-        // việc giáo viên hay làm. Lọc `purpose: "field_test"` như trước khiến
-        // danh sách luôn rỗng, vì mọi đường tạo gói đề đều ghi cứng
-        // "assessment" và không màn nào cho đổi lúc tạo.
-        questions: { some: {} },
-      },
-      select: {
-        id: true,
-        title: true,
-        courseId: true,
-        _count: { select: { questions: true } },
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 100,
-    }),
-    listExamRuns(userId, { purpose: "field_test", scale: "simple" }),
-  ]);
+  const papers = await prisma.exam.findMany({
+    where: {
+      courseId: { in: courses.map((c) => c.id) },
+      status: { not: "archived" },
+      // KHÔNG lọc theo purpose. Thử nghiệm là tính chất của BUỔI THI, nên
+      // gói đề bình thường cũng đem đo chất lượng câu hỏi được — đó mới là
+      // việc giáo viên hay làm. Lọc `purpose: "field_test"` như trước khiến
+      // danh sách luôn rỗng, vì mọi đường tạo gói đề đều ghi cứng
+      // "assessment" và không màn nào cho đổi lúc tạo.
+      questions: { some: {} },
+    },
+    select: {
+      id: true,
+      title: true,
+      courseId: true,
+      _count: { select: { questions: true } },
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 100,
+  });
 
   const courseTitleById = new Map(courses.map((c) => [c.id, c.title]));
 
@@ -55,7 +51,6 @@ export default async function OrganizeFieldTestPage({
     <OrganizeLayout
       title="Thử nghiệm câu hỏi"
       blurb="Đo chất lượng câu hỏi trước khi kết nạp vào ngân hàng. Mặc định không hiện đáp án để không đốt câu hỏi."
-      runs={runs}
       historyType="field-test"
     >
       {courses.length === 0 ? (

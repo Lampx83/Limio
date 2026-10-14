@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 /**
  * Trang chọn hình thức tổ chức.
  *
- * Chỉ ba thẻ, không danh sách: mỗi hình thức có trang riêng gồm hai phần — tạo
- * mới và lịch sử các lần CÙNG DẠNG. Tách lịch sử theo hình thức vì ba loại cần
- * thấy thông tin khác nhau; gộp lại thì bảng phải cõng mọi cột cho mọi kiểu.
+ * Chỉ ba thẻ, không danh sách: mỗi hình thức có trang riêng để TẠO MỚI / cấu
+ * hình. Các lần đã tổ chức không hiện ở đây mà ở Lịch sử thi (chia tab theo
+ * hình thức) — một việc, một chỗ.
  *
  * Ba hình thức khác nhau trên HAI trục độc lập, không phải một:
  *   mục đích (đo học sinh / đo câu hỏi) × quy mô (một buổi / nhiều ca)
