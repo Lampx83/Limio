@@ -17,6 +17,8 @@ export interface ExamRun {
   sessionId: string;
   /** Đợt thi chứa ca này — null với buổi đơn (link nhanh, thử nghiệm, vấn đáp). */
   roundId: string | null;
+  /** Tên đợt chứa ca — để thẻ ở Lịch sử thi nói được "ca này của kỳ nào". */
+  roundTitle: string | null;
   /** Còn cho học sinh vào không. */
   isOpen: boolean;
   opensAt: string;
@@ -85,6 +87,7 @@ export async function listExamRuns(
     select: {
       id: true,
       roundId: true,
+      round: { select: { title: true } },
       openCode: true,
       opensAt: true,
       closesAt: true,
@@ -160,6 +163,7 @@ export async function listExamRuns(
   return open.map((r) => ({
     sessionId: r.id,
     roundId: r.roundId,
+    roundTitle: r.round?.title ?? null,
     isOpen: isSessionOpen(r, now),
     opensAt: r.opensAt.toISOString(),
     examId: r.exam.id,
