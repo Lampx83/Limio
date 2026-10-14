@@ -656,7 +656,8 @@ async function deleteExamSessionImpl(
       OR: [{ sessionId }, { candidate: { sessionId } }],
     },
   });
-  if (attempts > 0) throw new ExamError("session_has_attempts");
+  // Kèm số bài làm để popup ở giao diện nói được "đã có N bài làm".
+  if (attempts > 0) throw new ExamError("session_has_attempts", { count: attempts });
   await db.examSession.delete({ where: { id: sessionId } });
 }
 

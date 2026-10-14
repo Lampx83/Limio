@@ -12,7 +12,7 @@ import {
   publishExam,
 } from "../";
 import { deleteCohort, createCohort } from "../cohorts";
-import { removeCandidateFromRoom } from "../exam-rounds";
+import { deleteExamRound, removeCandidateFromRoom } from "../exam-rounds";
 import { roundFor } from "../../test/roundFor";
 
 const BASE = "http://localhost:3000";
@@ -98,6 +98,7 @@ describe("xoá đề / ca / lớp / thí sinh khi đã có bài làm", () => {
 
     await expect(deleteExamSession(ownerId, sessionId)).rejects.toMatchObject({
       code: "session_has_attempts",
+      details: { count: 1 },
     });
     expect(await prisma.examAttempt.count({ where: { sessionId } })).toBe(1);
     expect(await prisma.examCandidate.count({ where: { sessionId } })).toBe(1);
@@ -161,5 +162,50 @@ describe("publishExam — section ngẫu nhiên chưa chốt", () => {
     });
     const e = await prisma.exam.findUniqueOrThrow({ where: { id: examId } });
     expect(e.status).toBe("draft");
+  });
+});
+
+describe("xoá đợt thi", () => {
+  /** Đợt thật + một ca thuộc đợt, chưa có bài làm. */
+  async function roundWithSession(ownerId: string, examId: string, slug: string) {
+    const sessionId = await publishWithQuestion(ownerId, examId, slug);
+    const roundId = await roundFor(examId);
+    await prisma.examSession.update({ where: { id: sessionId }, data: { roundId } });
+    await prisma.examRoundAdmin.create({ data: { roundId, userId: ownerId } });
+    const round = await prisma.examRound.findUniqueOrThrow({
+      where: { id: roundId },
+      select: { title: true },
+    });
+    return { roundId, sessionId, title: round.title };
+  }
+
+  it("gõ sai tên đợt thì không xoá", async () => {
+    const { ownerId, examId } = await setup("rd-mismatch");
+    const { roundId } = await roundWithSession(ownerId, examId, "rd-mismatch");
+    await expect(deleteExamRound(ownerId, roundId, "tên sai")).rejects.toMatchObject({
+      code: "title_mismatch",
+    });
+    expect(await prisma.examRound.findUnique({ where: { id: roundId } })).not.toBeNull();
+  });
+
+  it("đợt có ca đã có bài làm bị chặn, báo số bài, không xoá gì", async () => {
+    const { ownerId, examId } = await setup("rd-attempts");
+    const { roundId, sessionId, title } = await roundWithSession(ownerId, examId, "rd-attempts");
+    await candidateWithAttempt(examId, sessionId);
+    await expect(deleteExamRound(ownerId, roundId, title)).rejects.toMatchObject({
+      code: "round_has_attempts",
+      details: { count: 1 },
+    });
+    expect(await prisma.examRound.findUnique({ where: { id: roundId } })).not.toBeNull();
+    expect(await prisma.examSession.findUnique({ where: { id: sessionId } })).not.toBeNull();
+    expect(await prisma.examAttempt.count({ where: { sessionId } })).toBe(1);
+  });
+
+  it("đợt có ca chưa có bài làm: xoá cả đợt lẫn ca, gõ đúng tên", async () => {
+    const { ownerId, examId } = await setup("rd-ok");
+    const { roundId, sessionId, title } = await roundWithSession(ownerId, examId, "rd-ok");
+    await deleteExamRound(ownerId, roundId, `  ${title}  `);
+    expect(await prisma.examRound.findUnique({ where: { id: roundId } })).toBeNull();
+    expect(await prisma.examSession.findUnique({ where: { id: sessionId } })).toBeNull();
   });
 });

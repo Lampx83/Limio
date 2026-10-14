@@ -92,7 +92,7 @@ describe("nhóm tổ chức thi — mọi thay đổi để lại LearningEvent"
       fields: expect.arrayContaining(["status", "title"]),
     });
 
-    await deleteExamRound(ownerId, roundId);
+    await deleteExamRound(ownerId, roundId, (await prisma.examRound.findUniqueOrThrow({ where: { id: roundId }, select: { title: true } })).title);
     ev = await eventsOf(ownerId, LearningEventType.ExamRoundDeleted);
     expect(ev).toHaveLength(1);
     expect(ev[0]!.courseId).toBe(courseId); // lấy trước khi xoá, dù đợt đã mất
