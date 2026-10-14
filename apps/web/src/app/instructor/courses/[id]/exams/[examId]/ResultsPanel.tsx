@@ -70,7 +70,12 @@ export default function ResultsPanel({
           value={s ? `${s.submitted}/${s.expected}` : "—"}
         />
         <Stat
-          label="điểm trung bình"
+          // Chỉ tính các bài đã chấm xong — bài còn câu chờ chấm chưa có điểm cuối.
+          label={
+            s?.avgScorePct != null
+              ? `điểm trung bình · ${s.avgScoreCount} bài đã chấm`
+              : "điểm trung bình"
+          }
           value={s?.avgScorePct != null ? `${s.avgScorePct.toFixed(1)}%` : "—"}
         />
         <Stat
@@ -301,18 +306,33 @@ function Row({
       </td>
       <td className="px-3 py-2 text-right tabular-nums">
         {r.score != null ? `${r.score}/${totalPoints}` : "—"}
+        {/* Còn câu chờ chấm: số này mới là phần tự chấm, chưa phải điểm cuối. */}
+        {r.score != null && r.needsGrading && (
+          <div className="text-[11px] font-normal text-amber-700">chưa gồm câu chờ chấm</div>
+        )}
       </td>
       <td className="px-3 py-2">
         <Verdict r={r} />
       </td>
       <td className="px-3 py-2 text-right">
         {r.attemptId && (
-          <Link
-            href={`/instructor/courses/${courseId}/exams/${examId}/live/${r.attemptId}`}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            Xem bài
-          </Link>
+          <span className="inline-flex items-center gap-3">
+            {/* Chỉ bài đã nộp mới có đáp án để xem/chấm; bài đang làm chỉ có log. */}
+            {r.status !== "in_progress" && r.status !== "not_started" && (
+              <Link
+                href={`/instructor/courses/${courseId}/exams/${examId}/attempts/${r.attemptId}`}
+                className="text-xs font-medium text-blue-600 hover:underline"
+              >
+                Xem bài làm
+              </Link>
+            )}
+            <Link
+              href={`/instructor/courses/${courseId}/exams/${examId}/live/${r.attemptId}`}
+              className="text-xs text-blue-600 hover:underline"
+            >
+              Xem log làm bài
+            </Link>
+          </span>
         )}
       </td>
     </tr>
@@ -326,6 +346,8 @@ function Verdict({ r }: { r: ExamResultRow }) {
     return <span className="text-xs text-blue-700">Đang làm</span>;
   if (r.needsGrading)
     return <span className="text-xs text-amber-700">Chờ chấm</span>;
+  if (r.status === "graded")
+    return <span className="text-xs text-emerald-700">Đã chấm</span>;
   return <span className="text-xs text-faint">Đã nộp</span>;
 }
 
