@@ -84,16 +84,20 @@ export async function listLiveSessionHistory(
   for (const c of clouds) responses.set(c.id, c._count.submissions);
   for (const b of boards) responses.set(b.id, b._count.notes);
 
-  return sessions.map((s) => {
-    const ids = Object.values(refsOf(s));
-    return {
-      id: s.id,
-      startedAt: s.startedAt,
-      endedAt: s.endedAt,
-      interactiveCount: ids.length,
-      responseCount: ids.reduce((sum, id) => sum + (responses.get(id) ?? 0), 0),
-    };
-  });
+  return sessions
+    .map((s) => {
+      const ids = Object.values(refsOf(s));
+      return {
+        id: s.id,
+        startedAt: s.startedAt,
+        endedAt: s.endedAt,
+        interactiveCount: ids.length,
+        responseCount: ids.reduce((sum, id) => sum + (responses.get(id) ?? 0), 0),
+      };
+    })
+    // Ẩn lượt đã kết thúc mà không có phản hồi nào (vẫn giữ trong DB, mở bằng link vẫn được).
+    // Lượt đang mở luôn hiện để GV không mất phiên đang trình chiếu.
+    .filter((s) => s.endedAt === null || s.responseCount > 0);
 }
 
 export type LiveSlideResult =

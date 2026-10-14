@@ -94,6 +94,21 @@ describe("lịch sử tương tác Limio-Live", () => {
     });
   });
 
+  it("ẩn lượt đã kết thúc không có phản hồi; lượt đang mở vẫn hiện; dữ liệu vẫn còn trong DB", async () => {
+    const teacher = await makeUser("gv");
+    const deck = await prisma.liveDeck.create({ data: { userId: teacher.id, title: "Trống" } });
+    const emptyEnded = await prisma.liveSession.create({
+      data: { deckId: deck.id, userId: teacher.id, endedAt: new Date() },
+    });
+    const emptyOpen = await prisma.liveSession.create({ data: { deckId: deck.id, userId: teacher.id } });
+
+    const history = await listLiveSessionHistory(deck.id, teacher.id, prisma);
+    expect(history.map((h) => h.id)).toEqual([emptyOpen.id]);
+
+    const stillInDb = await prisma.liveSession.findUnique({ where: { id: emptyEnded.id } });
+    expect(stillInDb).not.toBeNull();
+  });
+
   it("từ chối xem lịch sử bài giảng của người khác", async () => {
     const teacher = await makeUser("gv");
     const other = await makeUser("khac");
