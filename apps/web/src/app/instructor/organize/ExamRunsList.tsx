@@ -19,6 +19,7 @@ import {
   Settings2,
   Square,
   Timer,
+  Trash2,
   UserCheck,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -135,6 +136,8 @@ function Row({
   const [busy, setBusy] = useState(false);
   const [showQr, setShowQr] = useState(false);
   const [openRooms, setOpenRooms] = useState(false);
+  const [del, setDel] = useState<DeleteState>(null);
+  const [delBusy, setDelBusy] = useState(false);
 
   // Lần thi dùng mã cấp riêng hoặc vào bằng tài khoản thì không có link chung
   // để phát cho cả lớp.
@@ -172,6 +175,54 @@ function Row({
       router.refresh();
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Xoá chỉ thành công khi ca chưa có bài làm. Có bài thì server trả 409 kèm số
+  // bài — popup đổi sang cảnh báo và đề xuất lưu trữ, không xoá gì cả.
+  const doDelete = async () => {
+    setDelBusy(true);
+    try {
+      const res = await fetch(apiUrl(`/api/exam-sessions/${r.sessionId}`), { method: "DELETE" });
+      if (res.ok) {
+        setDel(null);
+        router.refresh();
+        return;
+      }
+      const j = (await res.json().catch(() => null)) as {
+        error?: string;
+        details?: { count?: number };
+      } | null;
+      if (res.status === 409 && j?.error === "session_has_attempts") {
+        setDel({ kind: "blocked", count: j.details?.count ?? 0 });
+        return;
+      }
+      setDel({ kind: "error", message: "Không xoá được ca. Vui lòng thử lại." });
+    } catch {
+      setDel({ kind: "error", message: "Mất kết nối khi xoá ca. Vui lòng thử lại." });
+    } finally {
+      setDelBusy(false);
+    }
+  };
+
+  const doArchive = async () => {
+    setDelBusy(true);
+    try {
+      const res = await fetch(apiUrl(`/api/exam-sessions/${r.sessionId}`), {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status: "archived" }),
+      });
+      if (!res.ok) {
+        setDel({ kind: "error", message: "Không lưu trữ được ca. Vui lòng thử lại." });
+        return;
+      }
+      setDel(null);
+      router.refresh();
+    } catch {
+      setDel({ kind: "error", message: "Mất kết nối khi lưu trữ ca. Vui lòng thử lại." });
+    } finally {
+      setDelBusy(false);
     }
   };
 
@@ -399,7 +450,28 @@ function Row({
             {busy ? "…" : r.isOpen ? "Đóng ca" : "Mở lại"}
           </button>
         )}
+        <button
+          type="button"
+          onClick={() => setDel({ kind: "confirm" })}
+          disabled={delBusy}
+          className={`${BTN} ${r.timingMode === "manual" ? "" : "ml-auto"} text-danger-700`}
+          title="Xoá ca thi này"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+          Xoá
+        </button>
       </div>
+
+      {del && (
+        <DeleteDialog
+          state={del}
+          title={r.examTitle}
+          busy={delBusy}
+          onCancel={() => setDel(null)}
+          onConfirm={doDelete}
+          onArchive={doArchive}
+        />
+      )}
 
       {/* Bảng chiếu. Nền trắng + viền quiet zone: QR đặt trên nền màu hoặc
           sát mép thì máy quét hay không bắt được. */}
@@ -435,6 +507,115 @@ function Row({
         </div>
       )}
     </li>
+  );
+}
+
+type DeleteState =
+  | null
+  | { kind: "confirm" }
+  | { kind: "blocked"; count: number }
+  | { kind: "error"; message: string };
+
+/**
+ * Popup xoá ca. Hai việc khác nhau nên hai nội dung khác nhau:
+ * - xác nhận: ca chưa có bài làm, xoá được;
+ * - bị chặn: ca đã có bài làm, không xoá, đề xuất lưu trữ (giữ nguyên dữ liệu).
+ */
+function DeleteDialog({
+  state,
+  title,
+  busy,
+  onCancel,
+  onConfirm,
+  onArchive,
+}: {
+  state: NonNullable<DeleteState>;
+  title: string;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+  onArchive: () => void;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+      onClick={busy ? undefined : onCancel}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-run-title"
+        className="w-full max-w-md rounded-lg border border-token bg-white p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {state.kind === "confirm" && (
+          <>
+            <h2 id="delete-run-title" className="text-base font-semibold">Xoá ca thi?</h2>
+            <p className="mt-2 text-sm text-muted">
+              Xoá “{title}”. Ca sẽ biến mất khỏi danh sách và không hoàn tác được.
+            </p>
+          </>
+        )}
+        {state.kind === "blocked" && (
+          <>
+            <h2 id="delete-run-title" className="text-base font-semibold text-amber-800">
+              Không xoá được ca
+            </h2>
+            <p className="mt-2 text-sm text-muted">
+              Không xoá được vì đã có {state.count > 0 ? `${state.count} bài làm` : "bài làm"}.
+              Ca có bài làm được giữ lại để bảo toàn kết quả và lịch sử thi.
+            </p>
+            <p className="mt-2 text-sm text-muted">
+              Bạn có thể <b>lưu trữ</b> ca thay vì xoá. Dữ liệu được giữ nguyên.
+            </p>
+          </>
+        )}
+        {state.kind === "error" && (
+          <>
+            <h2 id="delete-run-title" className="text-base font-semibold text-danger-700">Có lỗi</h2>
+            <p className="mt-2 text-sm text-muted">{state.message}</p>
+          </>
+        )}
+
+        <div className="mt-5 flex flex-wrap justify-end gap-2">
+          {state.kind === "confirm" && (
+            <>
+              <button type="button" onClick={onCancel} disabled={busy} className={BTN}>
+                Huỷ
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-md bg-danger-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-danger-600 disabled:opacity-50"
+              >
+                {busy ? "Đang xoá…" : "Xoá ca"}
+              </button>
+            </>
+          )}
+          {state.kind === "blocked" && (
+            <>
+              <button type="button" onClick={onCancel} disabled={busy} className={BTN}>
+                Đóng
+              </button>
+              <button
+                type="button"
+                onClick={onArchive}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-md bg-slate-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+              >
+                {busy ? "Đang lưu trữ…" : "Lưu trữ ca"}
+              </button>
+            </>
+          )}
+          {state.kind === "error" && (
+            <button type="button" onClick={onCancel} className={BTN}>
+              Đóng
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

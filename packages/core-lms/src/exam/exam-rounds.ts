@@ -1862,25 +1862,62 @@ export async function listExamSessionsForRound(
   }));
 }
 
-async function deleteExamRoundImpl(
+/**
+ * Xoá đợt thi cùng các ca thuộc đợt.
+ *
+ * Quy tắc giống xoá ca: chỉ xoá khi KHÔNG ca nào của đợt có bài làm. Có bài thì
+ * báo `round_has_attempts` kèm số bài để giao diện đề xuất lưu trữ. Ca chưa có
+ * bài làm được xoá cùng đợt, trong một transaction — hoặc xoá hết, hoặc không gì.
+ *
+ * Bắt gõ đúng tên đợt (`confirmTitle`), cùng cơ chế với xoá khoá học.
+ */
+export async function deleteExamRound(
   actorUserId: string,
   roundId: string,
+  confirmTitle: string,
   db: PrismaClient = prisma,
 ): Promise<void> {
   await assertCanEdit(actorUserId, roundId, db);
+  const round = await db.examRound.findUnique({
+    where: { id: roundId },
+    select: { title: true },
+  });
+  if (!round) throw new ExamError("round_not_found");
+  if (confirmTitle.trim() !== round.title.trim()) throw new ExamError("title_mismatch");
+
+  // Lấy khoá học và danh sách ca TRƯỚC khi xoá: sau đó dòng đã mất.
+  const courseId = await courseIdOf({ roundId }, db);
+  const sessionIds = (
+    await db.examSession.findMany({ where: { roundId }, select: { id: true } })
+  ).map((s) => s.id);
+
+  if (sessionIds.length > 0) {
+    const attempts = await db.examAttempt.count({
+      where: {
+        OR: [
+          { sessionId: { in: sessionIds } },
+          { candidate: { sessionId: { in: sessionIds } } },
+        ],
+      },
+    });
+    if (attempts > 0) throw new ExamError("round_has_attempts", { count: attempts });
+  }
+
   try {
-    await db.examRound.delete({ where: { id: roundId } });
+    await db.$transaction([
+      db.examSession.deleteMany({ where: { roundId } }),
+      db.examRound.delete({ where: { id: roundId } }),
+    ]);
   } catch (e) {
     if ((e as { code?: string }).code === "P2025")
       throw new ExamError("round_not_found");
-    // FK Restrict on ExamSession.roundId — round can't be deleted while it
-    // owns sessions. Surface as validation rather than crash.
-    if ((e as { code?: string }).code === "P2003")
-      throw new ExamError("validation_failed", {
-        reason: "round_has_sessions",
-      });
     throw e;
   }
+
+  for (const sessionId of sessionIds) {
+    await emitOrganizeEvent(actorUserId, LearningEventType.ExamSessionDeleted, { sessionId, roundId }, courseId, db);
+  }
+  await emitOrganizeEvent(actorUserId, LearningEventType.ExamRoundDeleted, { roundId }, courseId, db);
 }
 
 // ============================================================================
@@ -2021,16 +2058,6 @@ export async function updateExamRound(
   );
 }
 
-export async function deleteExamRound(
-  ...args: Parameters<typeof deleteExamRoundImpl>
-): ReturnType<typeof deleteExamRoundImpl> {
-  const [actorUserId, roundId] = args;
-  const db = args[2] ?? prisma;
-  // Lấy khoá học TRƯỚC: sau khi xoá thì dòng đã mất.
-  const courseId = await courseIdOf({ roundId }, db);
-  await deleteExamRoundImpl(...args);
-  await emitOrganizeEvent(actorUserId, LearningEventType.ExamRoundDeleted, { roundId }, courseId, db);
-}
 
 export async function addAdminToRound(
   ...args: Parameters<typeof addAdminToRoundImpl>

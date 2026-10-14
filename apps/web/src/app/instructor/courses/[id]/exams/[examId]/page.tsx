@@ -186,6 +186,16 @@ export default async function EditExamPage({
               Thử vấn đáp
             </Link>
           )}
+          {exam.kind === "written" && (
+            // Bản thử không tạo lượt thi — xem thi-thu/page.tsx.
+            <Link
+              href={`/instructor/courses/${courseSegment}/exams/${exam.id}/thi-thu`}
+              className="btn btn-secondary btn-sm"
+              prefetch={false}
+            >
+              Thi thử
+            </Link>
+          )}
           {exam.kind === "oral" && isPublished && (
             <Link
               href={`/instructor/courses/${courseSegment}/exams/${exam.id}/live`}
