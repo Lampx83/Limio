@@ -135,6 +135,14 @@ function describeError(
         : "Key sai hoặc đã bị thu hồi — tạo key mới ở platform.openai.com rồi lưu lại.",
     };
   }
+  if (status === 403 && /project .*does not have access to model/i.test(raw)) {
+    // Giới hạn model đặt ở cấp Project (không phải quyền của riêng key): sửa key không giúp được gì.
+    const model = /model [`'"]?([A-Za-z0-9._:-]+)[`'"]?/i.exec(raw)?.[1] ?? "model này";
+    return {
+      error: raw,
+      hint: `Project OpenAI đang chặn ${model}. Vào platform.openai.com → chọn đúng Project → Limits → Allowed models, bật ${model} (không cần đổi quyền key).`,
+    };
+  }
   if (status === 403) {
     const need: Record<AiCheckId, string> = {
       chat: "Chat completions",
