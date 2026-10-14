@@ -4,7 +4,6 @@ import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import NeuApiTester from "./NeuApiTester";
 import { formatDateTime } from "@/lib/datetime";
-import OpenAiFullTest from "./OpenAiFullTest";
 
 interface Status {
   key: string;
@@ -18,9 +17,9 @@ const LABELS: Record<
   { name: string; placeholder: string; help?: string; emoji?: string; multiline?: boolean }
 > = {
   openai: {
-    name: "AI API Key",
+    name: "OpenAI API key",
     placeholder: "sk-proj-...",
-    help: "Chỉ dùng cho Whisper (nghe) và TTS (đọc) của vấn đáp bằng giọng nói. Chat và embeddings chạy trên máy chủ tự host (LLM_BASE_URL, EMBED_BASE_URL), không dùng key này. Lấy key ở platform.openai.com.",
+    help: "Dùng cho AI tutor, auto-tag skill, generate feedback. Lấy ở console.openai.com.",
     emoji: "",
   },
   "stripe.secret": {
@@ -249,6 +248,12 @@ function StatusChip({ status }: { status: Status }) {
  * test, thời điểm cập nhật. Mỗi field tự quản state của riêng nó — lưu App-Id
  * không đụng gì tới Token.
  */
+// Giọng của NEU TTS (đo từ /v1/voices, 2026-10). Mặc định: baotrang.
+const NEU_TTS_VOICES = [
+  "baotrang", "giahuy", "hamy", "huuduc", "kimoanh", "maichi", "quangminh", "tiendat",
+] as const;
+const NEU_TTS_DEFAULT_VOICE = "baotrang";
+
 function IntegrationField({
   status,
   onChange,
@@ -259,7 +264,7 @@ function IntegrationField({
   hideLabel?: boolean;
 }) {
   const meta = LABELS[status.key] ?? { name: status.key, placeholder: "" };
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(status.key === "neutts.voice" ? NEU_TTS_DEFAULT_VOICE : "");
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(!status.hasValue);
@@ -349,7 +354,19 @@ function IntegrationField({
 
       {showInput ? (
         <div className="space-y-3">
-          {meta.multiline ? (
+          {status.key === "neutts.voice" ? (
+            <select
+              value={value || NEU_TTS_DEFAULT_VOICE}
+              onChange={(e) => setValue(e.target.value)}
+              className="input font-mono"
+            >
+              {NEU_TTS_VOICES.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          ) : meta.multiline ? (
             <textarea
               value={value}
               onChange={(e) => setValue(e.target.value)}
@@ -428,8 +445,6 @@ function IntegrationField({
           )}
         </div>
       )}
-
-      {status.key === "openai" && <OpenAiFullTest value={value} />}
 
       {testResult && (
         <p

@@ -5,7 +5,13 @@ import { apiUrl } from "@/lib/apiUrl";
 
 // Trùng NEU_TTS_MAX_CHARS ở packages/core-feedback (route cũng kiểm tra lại).
 const MAX_CHARS = 500;
-const SAMPLE_TEXT = "Xin chào, em hãy giới thiệu về bản thân và ngành học của em.";
+// Model NEU TTS được huấn luyện cho tiếng Việt; câu tiếng Anh chỉ để thử.
+type Lang = "vi" | "en";
+const SAMPLE_TEXTS: Record<Lang, string> = {
+  vi: "Xin chào, em hãy giới thiệu về bản thân và ngành học của em.",
+  en: "Hello, please introduce yourself and the subject you are studying.",
+};
+const LANG_LABELS: Record<Lang, string> = { vi: "Tiếng Việt", en: "English (thử)" };
 
 type VoiceRow = {
   voice: string;
@@ -21,7 +27,8 @@ type VoiceRow = {
 export default function NeuApiTester() {
   const [voices, setVoices] = useState<string[] | null>(null);
   const [voicesError, setVoicesError] = useState<string | null>(null);
-  const [text, setText] = useState(SAMPLE_TEXT);
+  const [lang, setLang] = useState<Lang>("vi");
+  const [text, setText] = useState(SAMPLE_TEXTS.vi);
   const [rows, setRows] = useState<VoiceRow[]>([]);
   const [busy, setBusy] = useState(false);
   const urlsRef = useRef<string[]>([]);
@@ -116,6 +123,27 @@ export default function NeuApiTester() {
           <label className="text-xs font-medium text-muted" htmlFor="neu-tts-text">
             Nội dung ({text.trim().length}/{MAX_CHARS} ký tự)
           </label>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <label className="text-xs font-medium text-muted" htmlFor="neu-tts-lang">
+              Ngôn ngữ
+            </label>
+            <select
+              id="neu-tts-lang"
+              value={lang}
+              onChange={(e) => {
+                const next = e.target.value as Lang;
+                setLang(next);
+                setText(SAMPLE_TEXTS[next]);
+              }}
+              className="input w-auto py-1 text-sm"
+            >
+              {(Object.keys(LANG_LABELS) as Lang[]).map((l) => (
+                <option key={l} value={l}>
+                  {LANG_LABELS[l]}
+                </option>
+              ))}
+            </select>
+          </div>
           <textarea
             id="neu-tts-text"
             value={text}
