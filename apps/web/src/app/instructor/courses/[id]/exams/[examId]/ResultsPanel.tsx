@@ -315,24 +315,14 @@ function Row({
         <Verdict r={r} />
       </td>
       <td className="px-3 py-2 text-right">
-        {r.attemptId && (
-          <span className="inline-flex items-center gap-3">
-            {/* Chỉ bài đã nộp mới có đáp án để xem/chấm; bài đang làm chỉ có log. */}
-            {r.status !== "in_progress" && r.status !== "not_started" && (
-              <Link
-                href={`/instructor/courses/${courseId}/exams/${examId}/attempts/${r.attemptId}`}
-                className="text-xs font-medium text-blue-600 hover:underline"
-              >
-                Xem bài làm
-              </Link>
-            )}
-            <Link
-              href={`/instructor/courses/${courseId}/exams/${examId}/live/${r.attemptId}`}
-              className="text-xs text-blue-600 hover:underline"
-            >
-              Xem log làm bài
-            </Link>
-          </span>
+        {/* Chỉ bài đã nộp mới có đáp án để xem/chấm. */}
+        {r.attemptId && r.status !== "in_progress" && r.status !== "not_started" && (
+          <Link
+            href={`/instructor/courses/${courseId}/exams/${examId}/attempts/${r.attemptId}`}
+            className="text-xs font-medium text-blue-600 hover:underline"
+          >
+            Xem bài làm
+          </Link>
         )}
       </td>
     </tr>
