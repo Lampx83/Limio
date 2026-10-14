@@ -8,7 +8,8 @@ export async function GET() {
   }
 
   const clouds = await prisma.wordCloud.findMany({
-    where: { createdById: userId },
+    // Word cloud sinh từ slide bài giảng tương tác (Limio-Live) nằm trong lịch sử bài giảng, không ở đây.
+    where: { createdById: userId, session: { liveSessions: { none: {} } } },
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {
