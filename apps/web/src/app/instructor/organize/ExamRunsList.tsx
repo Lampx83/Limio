@@ -19,6 +19,7 @@ import {
   Settings2,
   Square,
   Timer,
+  Trash2,
   UserCheck,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -133,6 +134,7 @@ function Row({
   const [copied, setCopied] = useState(false);
   const [copyErr, setCopyErr] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [delErr, setDelErr] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
   const [openRooms, setOpenRooms] = useState(false);
 
@@ -169,6 +171,44 @@ function Row({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ open }),
       });
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Xoá chỉ cho ca rỗng và đang đóng: ca đang mở thì người đang làm sẽ mất
+  // bài; ca đã có bài nộp thì mất kết quả. Server vẫn kiểm lại (bài đang làm
+  // dở cũng chặn), nên lỗi từ đó được hiện ra thay vì nuốt im lặng.
+  const canDelete = !r.isOpen && r.submittedCount === 0;
+  const deleteHint = r.isOpen
+    ? "Đóng ca trước khi xoá"
+    : r.submittedCount > 0
+      ? "Ca đã có bài nộp — không xoá được để giữ kết quả"
+      : "Xoá ca này (chưa có bài nộp)";
+
+  const remove = async () => {
+    if (
+      !confirm(
+        `Xoá ca "${r.examTitle}"? Không thể hoàn tác. Chỉ xoá được khi chưa có bài làm.`,
+      )
+    )
+      return;
+    setBusy(true);
+    setDelErr(null);
+    try {
+      const res = await fetch(apiUrl(`/api/exam-sessions/${r.sessionId}`), {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        setDelErr(
+          j?.error === "session_has_attempts"
+            ? "Ca đã có bài làm nên không xoá được."
+            : `Không xoá được (${j?.error ?? `HTTP ${res.status}`}).`,
+        );
+        return;
+      }
       router.refresh();
     } finally {
       setBusy(false);
@@ -380,6 +420,17 @@ function Row({
             />
           </button>
         )}
+        <button
+          type="button"
+          onClick={remove}
+          disabled={busy || !canDelete}
+          title={deleteHint}
+          aria-label={`Xoá ca ${r.examTitle}`}
+          className={`${BTN} disabled:cursor-not-allowed disabled:opacity-40`}
+        >
+          <Trash2 className="h-3.5 w-3.5 text-faint" />
+          Xoá
+        </button>
         {r.timingMode === "manual" && (
           <button
             type="button"
@@ -400,6 +451,10 @@ function Row({
           </button>
         )}
       </div>
+
+      {delErr && (
+        <p className="border-t border-token px-4 py-1.5 text-caption text-red-700">{delErr}</p>
+      )}
 
       {/* Bảng chiếu. Nền trắng + viền quiet zone: QR đặt trên nền màu hoặc
           sát mép thì máy quét hay không bắt được. */}
