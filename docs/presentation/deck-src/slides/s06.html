@@ -1,0 +1,338 @@
+<section class="slide tone-dark" id="s06" data-title="Mô hình người học: mỗi chủ đề một xác suất nắm vững" data-section="Cá nhân hoá">
+  <div class="slide-in">
+    <div class="eyebrow rv">Mô hình người học · BKT</div>
+    <h2 class="h2 rv">Mỗi chủ đề, một xác suất nắm vững</h2>
+
+    <div class="s06-main">
+      <div class="card s06-chart rv rv-s">
+        <div class="s06-cap">
+          <span class="s06-leg"><i class="ok"></i>Đúng<i class="no"></i>Sai</span>
+          <span class="mono s06-step" id="s06-step" aria-live="polite">Chưa trả lời · P(L0) = 0,100</span>
+        </div>
+        <svg id="s06-svg" viewBox="0 0 700 332" role="img" aria-label="Biểu đồ P(L) theo số lần trả lời, với hai ngưỡng 0,60 và 0,85"></svg>
+      </div>
+
+      <div class="s06-side">
+        <div class="card s06-view rv">
+          <div class="s06-top">
+            <div class="s06-vh"><span class="ico"><svg class="i"><use href="#i-eye"/></svg></span><div><b>Giảng viên</b><div class="s06-tag">thấy con số</div></div></div>
+            <span class="s06-num" id="s06-num">0,100</span>
+          </div>
+          <div>
+            <div class="s06-g"><div class="s06-gf" id="s06-gf"></div><i style="left:60%"></i><i style="left:85%"></i></div>
+            <div class="s06-gt"><span style="left:60%">0,60</span><span style="left:85%">0,85</span></div>
+          </div>
+        </div>
+
+        <div class="card s06-view rv">
+          <div class="s06-top">
+            <div class="s06-vh"><span class="ico pink"><svg class="i"><use href="#i-user"/></svg></span><div><b>Người học</b><div class="s06-tag">chỉ thấy nhãn</div></div></div>
+            <span class="s06-lab" id="s06-lab" data-lv="low">Cần ôn</span>
+          </div>
+          <div class="s06-hint" id="s06-hint"><b>Gợi ý:</b> xem lại bài giảng.</div>
+          <div class="s06-lad" id="s06-lad" data-lv="low"><i></i><i></i><i></i></div>
+        </div>
+
+        <div class="s06-ctl rv rv-f">
+          <span class="s06-ctl-t">Tự thử:</span>
+          <button type="button" class="btn s06-b s06-bok" data-a="ok" disabled>Đúng</button>
+          <button type="button" class="btn s06-b s06-bno" data-a="no" disabled>Sai</button>
+          <button type="button" class="btn s06-b" data-a="re" disabled>Phát lại</button>
+          <span class="mono s06-cnt" id="s06-cnt">0 / 12</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="s06-bottom">
+      <div class="card flat s06-form rv">
+        <div class="s06-fr" data-r="tr"><span class="s06-fl">Sau mỗi câu</span><span class="s06-fx">P(L′) = p + (1−p)·P(T)</span></div>
+        <div class="s06-fn">p: xác suất sau khi biết đúng / sai</div>
+      </div>
+
+      <div class="card flat s06-par rv">
+        <div class="s06-pt">
+          <div><div class="s06-pr"><span class="mono s06-pn">P(L0)</span><span class="s06-pv">0,10</span></div><span class="s06-pd">biết từ đầu</span></div>
+          <div><div class="s06-pr"><span class="mono s06-pn">P(T)</span><span class="s06-pv">0,10</span></div><span class="s06-pd">học được</span></div>
+          <div><div class="s06-pr"><span class="mono s06-pn">P(S)</span><span class="s06-pv">0,10</span></div><span class="s06-pd">biết mà sai</span></div>
+          <div><div class="s06-pr"><span class="mono s06-pn">P(G)</span><span class="s06-pv">0,20</span></div><span class="s06-pd">đoán đúng</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notes">
+    <p>(≈ 100 giây) Đây là bộ mô phỏng chạy đúng công thức và tham số trong mã nguồn. Mỗi bài học là một chủ đề; sau mỗi câu trả lời, hệ thống cập nhật xác suất người học đã nắm chủ đề đó theo Bayesian Knowledge Tracing (Corbett &amp; Anderson, 1994).</p>
+    <p>Chuỗi mẫu đúng, đúng, sai, đúng, đúng đưa P(L) từ 0,10 lên 0,400, 0,775, giảm còn 0,371 sau câu sai, rồi 0,754 và 0,939. Nhấn hai điểm: giảng viên thấy con số; người học chỉ thấy một nhãn và một gợi ý, vì con số dễ bị đọc như điểm thi. Có thể bấm nút để thử tiếp.</p>
+    <p>Công thức đầy đủ (không in lên màn hình). Trả lời đúng: P(L|đúng) = P(L)(1−P(S)) / [P(L)(1−P(S)) + (1−P(L))P(G)]. Trả lời sai: P(L|sai) = P(L)P(S) / [P(L)P(S) + (1−P(L))(1−P(G))]. Sau đó P(L′) = p + (1−p)·P(T), với p là P(L|đúng) hoặc P(L|sai). Ngưỡng nhãn: dưới 0,60 là Cần ôn; từ 0,60 đến dưới 0,85 là Nên luyện thêm; từ 0,85 trở lên là Vững.</p>
+    <p>Bốn tham số: P(L0) = 0,10 là xác suất biết từ đầu; P(T) = 0,10 xác suất học được sau mỗi lần; P(S) = 0,10 xác suất biết mà trả lời sai; P(G) = 0,20 xác suất đoán đúng. Đây chỉ là giá trị khởi đầu thận trọng, chưa hiệu chỉnh bằng dữ liệu thực.</p>
+    <p>Chuyển tiếp: vậy cách thiết kế này dựa trên những công trình khoa học nào?</p>
+  </aside>
+
+  <style>
+    #s06 .slide-in{gap:.8rem}
+    #s06 .eyebrow{font-size:1rem}
+    #s06 .h2{font-size:2.3rem}
+    #s06 .btn{font-size:1.05rem}
+    #s06 .s06-main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:1.2rem;align-items:stretch}
+    #s06 .s06-chart{padding:.7rem .9rem .5rem;display:flex;flex-direction:column;gap:.25rem;min-width:0}
+    #s06 .s06-cap{display:flex;justify-content:space-between;align-items:center;gap:.4rem 1rem;flex-wrap:wrap;font-size:1rem;color:var(--fg2);min-height:1.5rem}
+    #s06 .s06-leg{display:inline-flex;align-items:center;gap:.4rem;font-weight:600;font-size:1.05rem}
+    #s06 .s06-leg i{width:.9rem;height:.9rem;border-radius:50%;display:inline-block}
+    #s06 .s06-leg i.ok{background:#84CC16;border:2px solid #3F6212}
+    #s06 .s06-leg i.no{background:#DB2777;border:2px solid #9D174D;margin-left:.8rem}
+    #s06 .s06-step{color:var(--fg);font-size:1rem}
+    #s06 #s06-svg{display:block;width:100%;height:auto;overflow:visible}
+    #s06 #s06-svg text{font-family:var(--font);font-size:18px}
+    #s06 .t{fill:var(--fg2)}
+    #s06 .tb{fill:var(--fg);font-weight:700}
+    #s06 .pl{font-weight:700;font-size:19px;fill:var(--fg)}
+    #s06 .pl.no{fill:#BE185D}
+    #s06 .zl{font-weight:800;font-size:18px;text-anchor:end}
+    #s06 .zl-low{fill:#BE185D}#s06 .zl-mid{fill:#92600A}#s06 .zl-hi{fill:#3F6212}
+    #s06 .gl{stroke:var(--line);stroke-width:1}
+    #s06 .ax{stroke:var(--fg2);stroke-width:1.3;opacity:.55}
+    #s06 .th{stroke-width:2;stroke-dasharray:7 6;animation:s06dash 3s linear infinite}
+    #s06 .th85{stroke:#4D7C0F}#s06 .th60{stroke:#C2700B}
+    @keyframes s06dash{to{stroke-dashoffset:-26}}
+    #s06 .s06-guide{stroke:var(--fg2);stroke-width:1;stroke-dasharray:2 4;opacity:.35}
+    #s06 .s06-ring{fill:none;stroke:#4D7C0F;stroke-width:2;transform-box:fill-box;transform-origin:center;animation:s06ring 2.4s ease-out infinite;opacity:0}
+    @keyframes s06ring{0%{transform:scale(.7);opacity:.75}100%{transform:scale(2.6);opacity:0}}
+
+    #s06 .s06-side{display:flex;flex-direction:column;gap:.7rem;min-width:0}
+    #s06 .s06-view{display:flex;flex-direction:column;justify-content:center;gap:.55rem;padding:.8rem 1.1rem;flex:1}
+    #s06 .s06-top{display:flex;align-items:center;justify-content:space-between;gap:.8rem}
+    #s06 .s06-vh{display:flex;align-items:center;gap:.65rem}
+    #s06 .s06-vh b{font-size:1.25rem;display:block;line-height:1.2}
+    #s06 .s06-tag{font-size:1rem;line-height:1.3;color:var(--fg2)}
+    #s06 .s06-num{font-size:3.3rem;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums;color:var(--fg)}
+    #s06 .s06-g{position:relative;height:.8rem;border-radius:99px;overflow:hidden;background:linear-gradient(90deg,rgba(236,72,153,.2) 0 60%,rgba(248,179,36,.26) 60% 85%,rgba(132,204,22,.32) 85% 100%)}
+    #s06 .s06-gf{position:absolute;left:0;top:0;bottom:0;width:10%;background:var(--acc);border-radius:99px;transition:width 1s var(--ease)}
+    #s06 .s06-g i{position:absolute;top:0;bottom:0;width:2px;background:#fff;opacity:.9;transform:translateX(-1px)}
+    #s06 .s06-gt{position:relative;height:1.4rem;margin-top:.25rem}
+    #s06 .s06-gt span{position:absolute;transform:translateX(-50%);font-family:var(--mono);font-size:1rem;color:var(--fg2)}
+    #s06 .s06-lab{display:inline-flex;align-items:center;font-size:1.45rem;font-weight:800;line-height:1.1;padding:.35rem .85rem;border-radius:12px;border:1.5px solid;white-space:nowrap;transition:opacity .28s var(--ease),transform .28s var(--ease),color .6s,background .6s,border-color .6s}
+    #s06 .s06-lab[data-lv=low]{color:#BE185D;background:rgba(236,72,153,.1);border-color:rgba(236,72,153,.4)}
+    #s06 .s06-lab[data-lv=mid]{color:#92600A;background:rgba(248,179,36,.17);border-color:rgba(217,119,6,.45)}
+    #s06 .s06-lab[data-lv=hi]{color:#3F6212;background:rgba(132,204,22,.2);border-color:rgba(101,163,13,.55)}
+    #s06 .s06-lab.swap{opacity:0;transform:translateY(7px)}
+    #s06 .s06-hint{font-size:1.15rem;line-height:1.4;color:var(--fg2);min-height:1.6rem;transition:opacity .28s var(--ease)}
+    #s06 .s06-hint b{color:var(--fg)}
+    #s06 .s06-hint.swap{opacity:0}
+    #s06 .s06-lad{display:flex;gap:.3rem}
+    #s06 .s06-lad i{flex:1;height:.5rem;border-radius:4px;background:var(--line);transition:background .6s}
+    #s06 .s06-lad[data-lv=low] i:nth-child(1){background:#EC4899}
+    #s06 .s06-lad[data-lv=mid] i:nth-child(-n+2){background:#F59E0B}
+    #s06 .s06-lad[data-lv=hi] i{background:#84CC16}
+
+    #s06 .s06-ctl{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.45rem .7rem;border-radius:12px;background:var(--soft);border:1px solid var(--line)}
+    #s06 .s06-ctl-t{font-size:1.05rem;font-weight:700;color:var(--fg2);margin-right:.2rem}
+    #s06 .s06-b{padding:.38rem .8rem;font-size:1.05rem;border-radius:9px}
+    #s06 .s06-b[disabled]{opacity:.45;pointer-events:none}
+    #s06 .s06-bok::before,#s06 .s06-bno::before{content:"";width:.65rem;height:.65rem;border-radius:50%}
+    #s06 .s06-bok::before{background:#84CC16;box-shadow:0 0 0 2px #3F6212}
+    #s06 .s06-bno::before{background:#DB2777;box-shadow:0 0 0 2px #9D174D}
+    #s06 .s06-cnt{margin-left:auto;font-size:1.05rem;color:var(--fg2)}
+
+    #s06 .s06-bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:1.2rem;align-items:stretch}
+    #s06 .s06-form{display:flex;flex-direction:column;justify-content:center;gap:.2rem;padding:.6rem .8rem}
+    #s06 .s06-fr{display:flex;flex-direction:column;gap:.1rem;padding:.3rem .6rem;border-radius:9px;transition:background .5s var(--ease),box-shadow .5s var(--ease)}
+    #s06 .s06-fr.act{background:var(--soft);box-shadow:inset 3px 0 0 var(--acc)}
+    #s06 .s06-fl{font-size:1rem;font-weight:700;color:var(--fg2)}
+    #s06 .s06-fx{font-family:var(--mono);font-size:1.35rem;font-weight:600;color:var(--fg);line-height:1.3;white-space:nowrap}
+    #s06 .s06-fn{font-size:1rem;color:var(--fg2);padding:0 .6rem}
+    #s06 .s06-par{display:flex;flex-direction:column;justify-content:center;padding:.6rem .8rem}
+    #s06 .s06-pt{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem}
+    #s06 .s06-pt>div{display:flex;flex-direction:column;gap:.1rem;padding:.35rem .6rem;border-radius:10px;background:var(--soft);border:1px solid var(--line)}
+    #s06 .s06-pr{display:flex;align-items:baseline;justify-content:space-between;gap:.4rem}
+    #s06 .s06-pn{font-size:1rem;color:var(--fg2)}
+    #s06 .s06-pv{font-size:1.8rem;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--fg)}
+    #s06 .s06-pd{font-size:1.05rem;color:var(--fg2)}
+    @media (max-width:1000px){
+      #s06 .s06-main,#s06 .s06-bottom{grid-template-columns:minmax(0,1fr)}
+      #s06 .s06-pt{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+  </style>
+
+  <script>(function(){
+    var NS='http://www.w3.org/2000/svg';
+    var BKT={L0:0.10,T:0.10,S:0.10,G:0.20};
+    /* đúng công thức của packages/core-feedback/src/bkt.ts */
+    function updateMasteryBkt(prior,isCorrect){
+      var pL=Math.min(1,Math.max(0,prior)),pN=1-pL,num,den,post;
+      if(isCorrect){num=pL*(1-BKT.S);den=num+pN*BKT.G}
+      else{num=pL*BKT.S;den=num+pN*(1-BKT.G)}
+      post=den===0?pL:num/den;
+      return {newMastery:Math.min(1,Math.max(0,post+(1-post)*BKT.T)),posterior:post};
+    }
+    function levelOf(v){return v<0.60?'low':(v<0.85?'mid':'hi')}
+    var LV={low:{t:'Cần ôn',h:'xem lại bài giảng.'},
+            mid:{t:'Nên luyện thêm',h:'luyện thêm vài câu.'},
+            hi:{t:'Vững',h:'có thể lướt qua bài sau.'}};
+    function f3(v){return v.toFixed(3).replace('.',',')}
+    var SEQ=[true,true,false,true,true],MAXN=12;
+
+    var root=document.getElementById('s06');
+    function q(s){return root.querySelector(s)}
+    function mk(tag,at,par,txt){var e=document.createElementNS(NS,tag);for(var k in at)e.setAttribute(k,at[k]);if(txt!=null)e.textContent=txt;if(par)par.appendChild(e);return e}
+    var X0=62,DX=50,Y0=244,H=216,XR=692;
+    function X(n){return X0+n*DX}
+    function Y(p){return Y0-H*p}
+
+    /* ---- phần tĩnh của biểu đồ ---- */
+    var svg=q('#s06-svg'),i;
+    mk('rect',{x:X0,y:Y(1),width:XR-X0,height:Y(.85)-Y(1),fill:'rgba(132,204,22,.16)'},svg);
+    mk('rect',{x:X0,y:Y(.85),width:XR-X0,height:Y(.6)-Y(.85),fill:'rgba(248,179,36,.14)'},svg);
+    mk('rect',{x:X0,y:Y(.6),width:XR-X0,height:Y0-Y(.6),fill:'rgba(236,72,153,.07)'},svg);
+    [0.2,0.4,1].forEach(function(p){mk('line',{x1:X0,x2:XR,y1:Y(p),y2:Y(p),class:'gl'},svg)});
+    mk('line',{x1:X0,x2:XR,y1:Y(.85),y2:Y(.85),class:'th th85'},svg);
+    mk('line',{x1:X0,x2:XR,y1:Y(.6),y2:Y(.6),class:'th th60'},svg);
+    mk('line',{x1:X0,x2:X0,y1:Y(1),y2:Y0,class:'ax'},svg);
+    mk('line',{x1:X0,x2:XR,y1:Y0,y2:Y0,class:'ax'},svg);
+    [[0,'0,00'],[.2,'0,20'],[.4,'0,40'],[.6,'0,60'],[.85,'0,85'],[1,'1,00']].forEach(function(a){
+      mk('text',{x:X0-9,y:Y(a[0])+6,'text-anchor':'end',class:(a[0]===.6||a[0]===.85)?'tb':'t'},svg,a[1])});
+    mk('text',{x:X0,y:15,class:'tb'},svg,'P(L)');
+    for(i=0;i<=MAXN;i++){
+      mk('line',{x1:X(i),x2:X(i),y1:Y0,y2:Y0+6,class:'ax'},svg);
+      mk('text',{x:X(i),y:Y0+26,'text-anchor':'middle',class:'t'},svg,String(i));
+    }
+    mk('text',{x:(X0+XR)/2,y:327,'text-anchor':'middle',class:'t'},svg,'Số lần trả lời');
+    mk('text',{x:XR-8,y:Y(.925)+6,class:'zl zl-hi'},svg,'Vững');
+    mk('text',{x:XR-8,y:Y(.725)+6,class:'zl zl-mid'},svg,'Nên luyện thêm');
+    mk('text',{x:XR-8,y:Y(.3)+6,class:'zl zl-low'},svg,'Cần ôn');
+    var gG=mk('g',{},svg),gL=mk('g',{},svg);
+    var ring=mk('circle',{r:8,cx:X(0),cy:Y(BKT.L0),class:'s06-ring',visibility:'hidden'},svg);
+    var gP=mk('g',{},svg),gA=mk('g',{},svg);
+
+    Deck.on('s06',{enter:function(c){
+      var numEl=q('#s06-num'),gf=q('#s06-gf'),lab=q('#s06-lab'),hint=q('#s06-hint'),lad=q('#s06-lad'),
+          stepEl=q('#s06-step'),cnt=q('#s06-cnt'),btns=root.querySelectorAll('.s06-b'),
+          rows=root.querySelectorAll('.s06-fr');
+      var red=Deck.reduce,EASE='cubic-bezier(.22,.8,.24,1)';
+      var vals,shown,curLv,busy,tk=0;
+
+      function setBtns(){
+        var full=vals.length-1>=MAXN;
+        btns.forEach(function(b){
+          var a=b.getAttribute('data-a');
+          b.disabled=busy||(a!=='re'&&full);
+        });
+        cnt.textContent=(vals.length-1)+' / '+MAXN;
+      }
+      function setLevelNow(lv){
+        curLv=lv;lab.textContent=LV[lv].t;lab.setAttribute('data-lv',lv);lad.setAttribute('data-lv',lv);
+        hint.innerHTML='<b>Gợi ý:</b> '+LV[lv].h;
+      }
+      function setLevel(lv){
+        if(lv===curLv)return;curLv=lv;
+        if(red){setLevelNow(lv);return}
+        lab.classList.add('swap');hint.classList.add('swap');
+        c.timeout(function(){
+          lab.textContent=LV[lv].t;lab.setAttribute('data-lv',lv);lad.setAttribute('data-lv',lv);
+          hint.innerHTML='<b>Gợi ý:</b> '+LV[lv].h;
+          lab.classList.remove('swap');hint.classList.remove('swap');
+        },290);
+      }
+      function tween(from,to,dur,fn){
+        var my=++tk;
+        if(red||dur<=0){fn(to);return}
+        var s=performance.now();
+        (function f(t){
+          if(!c.alive||my!==tk)return;
+          var p=Math.min(1,Math.max(0,(t-s)/dur)),e=1-Math.pow(1-p,3);
+          fn(from+(to-from)*e);
+          if(p<1)requestAnimationFrame(f);
+        })(s);
+      }
+      function showValue(v){shown=v;numEl.textContent=f3(v)}
+      function pointEl(n,v,ok){
+        var x=X(n),y=Y(v),col=ok===null?{f:'#fff',s:'#4D5D45',r:8}:(ok?{f:'#84CC16',s:'#3F6212',r:9}:{f:'#DB2777',s:'#9D174D',r:9});
+        return mk('circle',{cx:x,cy:y,r:col.r,fill:col.f,stroke:col.s,'stroke-width':2.5},gP);
+      }
+      function fadeIn(el,delay){
+        el.style.opacity='0';el.style.transformBox='fill-box';el.style.transformOrigin='center';el.style.transform='scale(.35)';
+        c.timeout(function(){
+          el.style.transition='opacity .45s ease,transform .6s '+EASE;
+          el.style.opacity='1';el.style.transform='scale(1)';
+        },red?0:delay);
+      }
+      function reset(){
+        gG.textContent='';gL.textContent='';gP.textContent='';gA.textContent='';
+        ring.setAttribute('visibility','hidden');
+        vals=[BKT.L0];busy=true;
+        showValue(BKT.L0);gf.style.transition='none';gf.style.width=(BKT.L0*100)+'%';void gf.offsetWidth;gf.style.transition='';
+        setLevelNow(levelOf(BKT.L0));
+        stepEl.textContent='Chưa trả lời · P(L0) = '+f3(BKT.L0);
+        rows.forEach(function(r){r.classList.remove('act')});
+        var p0=pointEl(0,BKT.L0,null);
+        var t0=mk('text',{x:X(0)+12,y:Y(BKT.L0)+28,class:'pl'},gP,f3(BKT.L0));
+        fadeIn(p0,0);
+        setBtns();
+      }
+      function step(ok){
+        var n=vals.length;if(n-1>=MAXN)return;
+        var prev=vals[n-1],v=updateMasteryBkt(prev,ok).newMastery;
+        vals.push(v);
+        var x0=X(n-1),y0=Y(prev),x1=X(n),y1=Y(v);
+        /* đoạn thẳng vẽ nét */
+        var seg=mk('path',{d:'M'+x0+' '+y0+' L'+x1+' '+y1,pathLength:1,fill:'none',stroke:'#3F6212','stroke-width':3.6,'stroke-linecap':'round'},gL);
+        seg.style.strokeDasharray='1';seg.style.strokeDashoffset=red?'0':'1';
+        if(!red){void seg.getBoundingClientRect();seg.style.transition='stroke-dashoffset .9s '+EASE;seg.style.strokeDashoffset='0'}
+        /* đường dóng xuống trục */
+        var gd=mk('line',{x1:x1,x2:x1,y1:y1,y2:Y0,class:'s06-guide'},gG);
+        gd.style.opacity='0';c.timeout(function(){gd.style.transition='opacity .5s';gd.style.opacity='.35'},red?0:600);
+        /* điểm + nhãn giá trị */
+        var pt=pointEl(n,v,ok);
+        var lx,ly,anc,cls='pl';
+        if(ok){
+          if(n===1){lx=x1+12;ly=Math.min(y1+27,Y0-5);anc='start'}
+          else{lx=x1-12;ly=Math.max(18,y1-12);anc='end'}
+        }else{lx=x1+11;ly=Math.min(y1+29,Y0-5);anc='start';cls='pl no'}
+        var tx=mk('text',{x:lx,y:ly,'text-anchor':anc,class:cls},gP,(ok?'':'Sai · ')+f3(v));
+        tx.style.opacity='0';
+        /* ô kết quả dưới trục */
+        var pill=mk('circle',{cx:x1,cy:297,r:13,fill:ok?'#84CC16':'#DB2777',stroke:ok?'#3F6212':'#9D174D','stroke-width':1.5},gA);
+        var pt2=mk('text',{x:x1,y:303.5,'text-anchor':'middle',fill:ok?'#1B3A10':'#fff',style:'font-weight:800;font-size:18px'},gA,ok?'Đ':'S');
+        fadeIn(pt,red?0:700);fadeIn(pill,red?0:700);
+        pt2.style.opacity='0';
+        c.timeout(function(){
+          tx.style.transition='opacity .5s';tx.style.opacity='1';
+          pt2.style.transition='opacity .5s';pt2.style.opacity='1';
+          ring.setAttribute('cx',x1);ring.setAttribute('cy',y1);ring.setAttribute('visibility','visible');
+        },red?0:760);
+        /* số đếm, thanh, nhãn người học */
+        var from=shown;
+        gf.style.width=(v*100)+'%';
+        tween(from,v,1000,showValue);
+        c.timeout(function(){setLevel(levelOf(v))},red?0:650);
+        stepEl.textContent='Câu '+n+': '+(ok?'Đúng':'Sai')+' · P(L) '+f3(prev)+' → '+f3(v);
+        rows.forEach(function(r){var k=r.getAttribute('data-r');r.classList.toggle('act',k==='tr'?false:(ok?k==='ok':k==='no'))});
+        c.timeout(function(){rows.forEach(function(r){if(r.getAttribute('data-r')==='tr')r.classList.add('act')})},red?0:550);
+        setBtns();
+      }
+      function autoplay(){
+        busy=true;setBtns();
+        var gap=red?120:1300;
+        SEQ.forEach(function(ok,k){
+          c.timeout(function(){
+            step(ok);
+            if(k===SEQ.length-1)c.timeout(function(){busy=false;setBtns()},red?0:1400);
+          },k*gap);
+        });
+      }
+
+      reset();
+      c.timeout(autoplay,red?200:1600);
+
+      btns.forEach(function(b){
+        c.on(b,'click',function(){
+          if(busy)return;
+          var a=b.getAttribute('data-a');
+          if(a==='re'){reset();c.timeout(autoplay,350);return}
+          busy=true;setBtns();
+          step(a==='ok');
+          c.timeout(function(){busy=false;setBtns()},red?0:700);
+        });
+      });
+    },leave:function(c){}});
+  })();</script>
+</section>

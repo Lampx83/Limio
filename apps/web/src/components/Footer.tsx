@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getFooterSettings } from "@/lib/site-settings";
+import { getFooterSettings, getRegisterEnabled } from "@/lib/site-settings";
 
 /**
  * Hàng link ở footer tồn tại vì SEO, không phải vì điều hướng: header chỉ có
@@ -10,12 +10,17 @@ import { getFooterSettings } from "@/lib/site-settings";
 const FOOTER_LINKS = [
   { href: "/", label: "Trang chủ" },
   { href: "/catalog", label: "Khoá học" },
-  { href: "/register", label: "Đăng ký" },
+  { href: "/gioi-thieu", label: "Giới thiệu" },
+  { href: "/xp-guide", label: "Cách tính điểm" },
+  { href: "/register", label: "Đăng ký", needsRegister: true },
   { href: "/signin", label: "Đăng nhập" },
 ];
 
 export default async function Footer() {
-  const { text, enabled } = await getFooterSettings();
+  const [{ text, enabled }, registerEnabled] = await Promise.all([
+    getFooterSettings(),
+    getRegisterEnabled(),
+  ]);
   // Công tắc ở /admin/settings tắt cả footer (nhãn "Đã tắt footer"), không chỉ
   // dòng credit — tôn trọng nguyên vẹn, kể cả khi mất mấy link nội bộ.
   if (!enabled) return null;
@@ -26,8 +31,10 @@ export default async function Footer() {
         aria-label="Liên kết chân trang"
         className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-5 gap-y-2 px-4"
       >
-        {FOOTER_LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className="link">
+        {FOOTER_LINKS.filter((l) => registerEnabled || !l.needsRegister).map((l) => (
+          // `/gioi-thieu` là file tĩnh (rewrite), không phải route của Next —
+          // prefetch RSC sẽ trượt và gây request thừa trên mọi trang.
+          <Link key={l.href} href={l.href} className="link" prefetch={false}>
             {l.label}
           </Link>
         ))}

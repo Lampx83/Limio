@@ -6,6 +6,19 @@ import dynamic from "next/dynamic";
 import { FileCheck2, FileUp } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
+import { AUDIO_MAX_BYTES, AUDIO_UPLOAD_ACCEPT } from "@/lib/lessonAudio";
+import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import LessonFileUploadPanel from "./LessonFileUploadPanel";
+import {
+  dialogueEditorFromPayload,
+  dialoguePayloadFromEditor,
+  validateDialogueEditor,
+  validateVocabEditor,
+  vocabEditorFromPayload,
+  vocabPayloadFromEditor,
+  type DialogueEditorValue,
+  type VocabEditorValue,
+} from "@/lib/langBlockEditor";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import SafeHtml from "@/components/SafeHtml";
 import AiFormatPanel from "@/components/AiFormatPanel";
@@ -86,7 +99,10 @@ type ContentType =
   | "lti"
   | "h5p"
   | "teacher_note"
-  | "html_block";
+  | "html_block"
+  | "audio"
+  | "vocab_list"
+  | "dialogue";
 
 const TYPE_LABEL: Record<ContentType, string> = {
   richtext: "Văn bản (rich text)",
@@ -101,6 +117,9 @@ const TYPE_LABEL: Record<ContentType, string> = {
   lti: "LTI 1.3",
   h5p: "H5P",
   html_block: "HTML tự tải lên",
+  audio: "Audio (bài nghe)",
+  vocab_list: "Từ vựng (bảng từ)",
+  dialogue: "Hội thoại",
 };
 
 export default function AddContentItemForm({
@@ -144,7 +163,14 @@ export default function AddContentItemForm({
   const [aiSaved, setAiSaved] = useState(false);
   const [htmlBlockBody, setHtmlBlockBody] = useState("");
   const [filename, setFilename] = useState("");
+  // File đính kèm tự upload: cỡ + kiểu để học viên thấy "… · 1,2 MB". Gõ tay
+  // URL khác thì bỏ (không còn đúng file đó nữa).
+  const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(null);
   const [linkTitle, setLinkTitle] = useState("");
+  const [audioTranscript, setAudioTranscript] = useState("");
+  const [audioShowTranscript, setAudioShowTranscript] = useState(true);
+  const [vocabValue, setVocabValue] = useState<VocabEditorValue>(() => vocabEditorFromPayload(null));
+  const [dialogueValue, setDialogueValue] = useState<DialogueEditorValue>(() => dialogueEditorFromPayload(null));
   const [scormPackages, setScormPackages] = useState<ScormPackageRow[]>([]);
   const [scormPackageId, setScormPackageId] = useState("");
   const [h5pPackages, setH5pPackages] = useState<H5pPackageRow[]>([]);
@@ -157,6 +183,9 @@ export default function AddContentItemForm({
   // flag, tách khỏi `uploading` (scorm/h5p) như transcriptUploading bên dưới.
   const [docxUploading, setDocxUploading] = useState(false);
   const [docxWarnings, setDocxWarnings] = useState<string[]>([]);
+  // `html` đang là HTML do server dựng từ .docx (không phải chữ thô người dùng gõ):
+  // hiện bản xem trước thay vì đổ mã HTML ra ô nhập.
+  const [docxImported, setDocxImported] = useState(false);
   // In-video cuepoint editor state — only used when type === "video".
   const [lessonQuizzes, setLessonQuizzes] = useState<LessonQuizRow[]>([]);
   const [skills, setSkills] = useState<SkillRow[]>([]);
@@ -243,12 +272,18 @@ export default function AddContentItemForm({
     setHtml("");
     setAiSaved(false);
     setFilename("");
+    setFileMeta(null);
     setLinkTitle("");
     setScormPackageId("");
     setH5pPackageId("");
     setLtiToolId("");
+    setAudioTranscript("");
+    setAudioShowTranscript(true);
+    setVocabValue(vocabEditorFromPayload(null));
+    setDialogueValue(dialogueEditorFromPayload(null));
     setCuepoints([]);
     setDocxWarnings([]);
+    setDocxImported(false);
     setError(null);
   }
 
@@ -396,7 +431,7 @@ export default function AddContentItemForm({
         payload = { url };
         break;
       case "file":
-        payload = { url, filename };
+        payload = { url, filename, ...(fileMeta ?? {}) };
         break;
       case "external_link":
         payload = { url, title: linkTitle.trim() || undefined };
@@ -411,6 +446,35 @@ export default function AddContentItemForm({
           body: htmlBlockBody.trim() || undefined,
         };
         break;
+      case "audio":
+        payload = {
+          url: url.trim(),
+          title: linkTitle.trim() || undefined,
+          transcript: audioTranscript.trim() || undefined,
+          // Chỉ ghi khi giảng viên tắt: mặc định hiện, nên payload gọn.
+          ...(audioShowTranscript ? {} : { showTranscript: false }),
+        };
+        break;
+      case "vocab_list": {
+        const problems = validateVocabEditor(vocabValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = vocabPayloadFromEditor(vocabValue);
+        break;
+      }
+      case "dialogue": {
+        const problems = validateDialogueEditor(dialogueValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = dialoguePayloadFromEditor(dialogueValue);
+        break;
+      }
       case "scorm":
         if (!scormPackageId) {
           setError(lmsErrorMessage("missing_scorm_package"));
@@ -528,9 +592,16 @@ export default function AddContentItemForm({
           {aiSaved ? (
             <details className="rounded-xl border border-token bg-[rgb(var(--surface))] p-3 text-sm">
               <summary className="cursor-pointer text-muted">Xem bản gốc</summary>
-              <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs text-muted">
-                {html}
-              </pre>
+              {docxImported ? (
+                <SafeHtml
+                  html={html}
+                  className="prose prose-sm mt-2 max-h-60 max-w-none overflow-auto dark:prose-invert"
+                />
+              ) : (
+                <pre className="mt-2 max-h-60 overflow-auto whitespace-pre-wrap text-xs text-muted">
+                  {html}
+                </pre>
+              )}
             </details>
           ) : (
           <div className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
@@ -548,6 +619,7 @@ export default function AddContentItemForm({
               onImported={(importedHtml, warnings) => {
                 setHtml(importedHtml);
                 setDocxWarnings(warnings);
+                setDocxImported(true);
               }}
             />
             {docxWarnings.length > 0 && (
@@ -561,13 +633,32 @@ export default function AddContentItemForm({
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
                 Nội dung thô
               </label>
-              <textarea
-                value={html}
-                onChange={(e) => setHtml(e.target.value)}
-                rows={8}
-                placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn. Hoặc tải file .docx ở trên."
-                className="textarea"
-              />
+              {docxImported ? (
+                <div className="space-y-1.5">
+                  <div className="max-h-72 overflow-y-auto rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
+                    <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHtml("");
+                      setDocxWarnings([]);
+                      setDocxImported(false);
+                    }}
+                    className="link text-xs"
+                  >
+                    Bỏ nội dung đã tải, nhập tay
+                  </button>
+                </div>
+              ) : (
+                <textarea
+                  value={html}
+                  onChange={(e) => setHtml(e.target.value)}
+                  rows={8}
+                  placeholder="Dán hoặc gõ văn bản thô ở đây — AI sẽ định dạng đẹp cho bạn. Hoặc tải file .docx ở trên."
+                  className="textarea"
+                />
+              )}
             </div>
           </div>
           )}
@@ -625,7 +716,10 @@ export default function AddContentItemForm({
         <div className="space-y-2">
           <input
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setFileMeta(null);
+            }}
             required
             // For video / file / pdf the URL may be a same-origin path (e.g.
             // /api/lesson-media/videos/<file>) populated by the upload panel
@@ -640,7 +734,9 @@ export default function AddContentItemForm({
                 ? "Dán URL: YouTube · Vimeo · Loom · Wistia · Bunny · Mux — hoặc upload file bên dưới"
                 : type === "pdf"
                   ? "URL PDF (https://.../file.pdf) — hoặc upload file bên dưới"
-                  : "URL"
+                  : type === "file"
+                    ? "URL file (https://...) — hoặc tải file lên bên dưới"
+                    : "URL"
             }
             className="input"
           />
@@ -650,6 +746,17 @@ export default function AddContentItemForm({
               setUploading={setUploading}
               setError={setError}
               onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+            />
+          )}
+          {type === "file" && (
+            <LessonFileUploadPanel
+              onUploaded={(f) => {
+                setUrl(f.url);
+                setFileMeta({ sizeBytes: f.sizeBytes, mimeType: f.mime });
+                // Tên hiển thị = tên gốc (server đặt tên ngẫu nhiên). Ghi đè cả
+                // khi đã có: upload file mới thì tên cũ không còn đúng.
+                setFilename(f.originalName.slice(0, 200));
+              }}
             />
           )}
           {type === "pdf" && (
@@ -697,6 +804,74 @@ export default function AddContentItemForm({
               ✓ Đã upload transcript: {transcriptUrl.split("/").pop()}
             </p>
           )}
+        </div>
+      )}
+
+      {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
+      {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
+
+      {type === "audio" && (
+        <div className="space-y-2">
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề bài nghe (vd: Hội thoại bài 5)"
+            className="input"
+          />
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+            type="text"
+            placeholder="URL https của file audio — hoặc upload file bên dưới"
+            className="input"
+          />
+          <AudioUploadPanel
+            uploading={uploading}
+            setUploading={setUploading}
+            setError={setError}
+            onUploaded={(uploadedUrl, originalName) => {
+              setUrl(uploadedUrl);
+              const t = originalName.replace(/\.[A-Za-z0-9]+$/, "").trim();
+              if (t) setLinkTitle((cur) => (cur.trim() ? cur : t.slice(0, 200)));
+            }}
+          />
+          {url.trim() && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- bản nghe thử cho giảng viên; lời thoại nhập ở ô bên dưới
+            <audio src={url.trim()} controls preload="metadata" className="w-full" />
+          )}
+          <div>
+            <label
+              htmlFor="audio-transcript"
+              className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint"
+            >
+              Lời thoại <span className="font-normal normal-case">(không bắt buộc)</span>
+            </label>
+            <textarea
+              id="audio-transcript"
+              value={audioTranscript}
+              onChange={(e) => setAudioTranscript(e.target.value)}
+              maxLength={20000}
+              rows={5}
+              placeholder="Chép lại nội dung audio. Mỗi người nói một dòng, ví dụ: A：你好！"
+              className="input"
+            />
+          </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={audioShowTranscript}
+              onChange={(e) => setAudioShowTranscript(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Cho học viên xem lời thoại
+              <span className="block text-xs text-muted">
+                Bỏ chọn với bài nghe hiểu: lời thoại sẽ không được gửi tới học viên.
+              </span>
+            </span>
+          </label>
         </div>
       )}
 
@@ -877,7 +1052,7 @@ export default function AddContentItemForm({
           onChange={(e) => setFilename(e.target.value)}
           required
           maxLength={200}
-          placeholder="Tên file (eg. handout.pdf)"
+          placeholder="Tên file học viên thấy (vd: handout.pdf)"
           className="input"
         />
       )}
@@ -1521,6 +1696,71 @@ function VideoUploadPanel({
         ))}
         <span className="text-faint">· tối đa 500 MB</span>
       </div>
+    </div>
+  );
+}
+
+function AudioUploadPanel({
+  uploading,
+  setUploading,
+  setError,
+  onUploaded,
+}: {
+  uploading: boolean;
+  setUploading: (v: boolean) => void;
+  setError: (v: string | null) => void;
+  onUploaded: (url: string, originalName: string) => void;
+}) {
+  async function handleFile(file: File) {
+    setError(null);
+    // Kiểm trước khi gửi: đỡ chờ upload cả chục MB rồi mới biết bị từ chối.
+    if (file.size > AUDIO_MAX_BYTES) {
+      setError(lmsErrorMessage("file_too_large", 413));
+      return;
+    }
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(apiUrl("/api/lesson-media/audio"), { method: "POST", body: fd });
+    } catch (networkErr) {
+      setUploading(false);
+      console.error("[AudioUploadPanel] network error", networkErr);
+      setError(lmsErrorMessage("network_error"));
+      return;
+    }
+    setUploading(false);
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(lmsErrorMessage((d as { error?: string }).error ?? "upload_failed", res.status));
+      return;
+    }
+    const data = (await res.json()) as { url: string };
+    onUploaded(data.url, file.name);
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-faint">
+        Hoặc upload file audio từ máy
+      </p>
+      <input
+        type="file"
+        accept={AUDIO_UPLOAD_ACCEPT}
+        disabled={uploading}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+        }}
+        className="mt-2 block w-full text-xs file:mr-2 file:rounded file:border-0 file:bg-brand-soft file:px-3 file:py-1.5 file:font-medium file:text-brand-700 hover:file:bg-brand-100"
+      />
+      {uploading && <p className="mt-1 text-xs text-muted">Đang upload...</p>}
+      <p className="mt-2 text-[11px] text-muted">
+        <span className="font-semibold uppercase tracking-wide">Định dạng hỗ trợ:</span>{" "}
+        MP3, M4A, OGG, WebM · tối đa {Math.round(AUDIO_MAX_BYTES / (1024 * 1024))} MB.
+        Xuất bản ghi âm ra MP3 hoặc M4A 96–128 kbps (không dùng WAV).
+      </p>
     </div>
   );
 }

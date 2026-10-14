@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { assertCanEditExam, CourseAuthzError } from "@feedbackme/core-lms";
 import {
   AiTutorError,
+  DEFAULT_MODEL,
   assertWithinCaps,
   recordAiUsage,
 } from "@feedbackme/core-feedback";
@@ -107,10 +108,10 @@ export async function POST(
     .filter(Boolean)
     .join("\n");
 
-  // Endpoint này gọi thẳng OpenAI chứ không đi qua generator, nên trước đây
+  // Endpoint này gọi thẳng LLM chứ không đi qua generator, nên trước đây
   // nằm ngoài mọi hạn mức VÀ ngoài mọi sổ sách: token nó tiêu không hiện trong
   // AiUsageLog, tức là vừa không bị chặn vừa âm thầm nới cap của chỗ khác.
-  const AI_MODEL = "gpt-4o-mini";
+  const AI_MODEL = DEFAULT_MODEL;
   try {
     await assertWithinCaps(userId, prisma, "generator");
   } catch (e) {

@@ -19,6 +19,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
+import { ScoreBandsInput } from "./section-results";
 
 // ============================================================================
 // Pool filter schema + sampler
@@ -249,6 +250,11 @@ export const CreateSectionInput = z.object({
   selectionMode: SelectionMode.optional(),
   resolutionMode: ResolutionMode.optional(),
   poolFilter: PoolFilter.optional(),
+  // LANG G5a — chỉ có nghĩa khi đề là thi thử. null = bỏ giờ / bỏ nhãn.
+  durationMin: z.number().int().min(1).max(240).nullable().optional(),
+  languageSkill: z.enum(["listening", "speaking", "reading", "writing"]).nullable().optional(),
+  // LANG G5d — bảng quy đổi điểm thô → nhãn ước lượng; null/[] = bỏ bảng.
+  scoreBands: ScoreBandsInput.nullable().optional(),
 });
 
 async function assertExamEditable(
@@ -291,6 +297,8 @@ export async function createSection(
       selectionMode: d.selectionMode ?? "fixed",
       resolutionMode: d.resolutionMode ?? "per_attempt",
       poolFilter: (d.poolFilter ?? undefined) as Prisma.InputJsonValue | undefined,
+      durationMin: d.durationMin ?? null,
+      languageSkill: d.languageSkill ?? null,
     },
     select: { id: true },
   });
@@ -305,6 +313,10 @@ export interface SectionListItem {
   resolutionMode: "per_attempt" | "per_publish";
   poolFilter: PoolFilterT | null;
   itemCount: number;
+  /** LANG G5a — chỉ có nghĩa khi đề là thi thử. */
+  durationMin: number | null;
+  languageSkill: "listening" | "speaking" | "reading" | "writing" | null;
+  scoreBands: { from: number; to: number; label: string }[] | null;
 }
 
 export async function listSections(
@@ -323,6 +335,9 @@ export async function listSections(
       selectionMode: true,
       resolutionMode: true,
       poolFilter: true,
+      durationMin: true,
+      languageSkill: true,
+      scoreBands: true,
       _count: { select: { items: true } },
     },
   });
@@ -334,6 +349,9 @@ export async function listSections(
     resolutionMode: r.resolutionMode,
     poolFilter: (r.poolFilter ?? null) as PoolFilterT | null,
     itemCount: r._count.items,
+    durationMin: r.durationMin,
+    languageSkill: r.languageSkill,
+    scoreBands: Array.isArray(r.scoreBands) ? (r.scoreBands as unknown as { from: number; to: number; label: string }[]) : null,
   }));
 }
 
@@ -345,7 +363,7 @@ export async function updateSection(
 ): Promise<void> {
   const s = await db.examSection.findUnique({
     where: { id: sectionId },
-    select: { id: true, exam: { select: { courseId: true, createdById: true } } },
+    select: { id: true, examId: true, exam: { select: { courseId: true, createdById: true } } },
   });
   if (!s) throw new ExamError("section_not_found");
   await assertCanEditExam(actorUserId, s.exam, db);
@@ -359,7 +377,18 @@ export async function updateSection(
   if (d.resolutionMode !== undefined) data.resolutionMode = d.resolutionMode;
   if (d.poolFilter !== undefined)
     data.poolFilter = d.poolFilter as Prisma.InputJsonValue;
+  if (d.durationMin !== undefined) data.durationMin = d.durationMin;
+  if (d.languageSkill !== undefined) data.languageSkill = d.languageSkill;
+  if (d.scoreBands !== undefined) {
+    data.scoreBands = d.scoreBands && d.scoreBands.length > 0 ? (d.scoreBands as Prisma.InputJsonValue) : Prisma.JsonNull;
+  }
   if (Object.keys(data).length === 0) return;
+  // Giờ phần đã có người thi thì không đổi được: đổi giữa chừng làm các lượt
+  // thi không cùng điều kiện (cùng nguyên tắc với durationMin của đề).
+  if ("durationMin" in data) {
+    const used = await db.examAttempt.count({ where: { examId: s.examId } });
+    if (used > 0) throw new ExamError("exam_has_attempts", { fields: ["durationMin"] });
+  }
   await db.examSection.update({ where: { id: sectionId }, data });
 }
 

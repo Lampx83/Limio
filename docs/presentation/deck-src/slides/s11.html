@@ -1,0 +1,198 @@
+<section class="slide tone-dark" id="s11" data-title="Triển khai độc lập, dữ liệu thuộc về đơn vị" data-section="Vận hành">
+  <div class="slide-in">
+    <div class="eyebrow rv">Vận hành và hạ tầng</div>
+    <h2 class="h2 rv">Triển khai độc lập, dữ liệu ở lại đơn vị</h2>
+
+    <div class="split s11-split" style="--a:1.6fr;--b:1fr;align-items:center">
+      <div class="s11-dgwrap rv rv-l">
+        <svg class="dg" viewBox="0 0 640 340" role="img" aria-label="Đường ống triển khai tự động gồm đẩy mã, build, migrate, triển khai, kiểm tra sức khoẻ, đưa mã lên hai cụm độc lập limio.vn và limio.hust.edu.vn; hai cụm không đồng bộ dữ liệu">
+          <text class="t cap" x="0" y="13">Chạy mỗi lần đẩy mã lên nhánh chính</text>
+
+          <!-- liên kết đường ống -->
+          <g class="plinks">
+            <path class="draw lkb" id="s11-l0" pathLength="1" d="M112 55 H132"/>
+            <path class="draw lkb" id="s11-l1" pathLength="1" d="M244 55 H264"/>
+            <path class="draw lkb" id="s11-l2" pathLength="1" d="M376 55 H396"/>
+            <path class="draw lkb" id="s11-l3" pathLength="1" d="M508 55 H528"/>
+            <path class="fdl" d="M113 55 H131"/><path class="fdl" d="M245 55 H263"/><path class="fdl" d="M377 55 H395"/><path class="fdl" d="M509 55 H527"/>
+          </g>
+          <!-- đường triển khai xuống hai cụm -->
+          <g class="dlinks">
+            <path class="draw lkb" id="s11-d1" pathLength="1" d="M452 88 V112 H135 V132"/>
+            <path class="draw lkb" id="s11-d2" pathLength="1" d="M452 88 V112 H505 V132"/>
+            <path class="fdl" d="M452 90 V112 H137 V130"/><path class="fdl" d="M452 90 V112 H503 V130"/>
+          </g>
+
+          <!-- 5 nút đường ống -->
+          <g class="pn" id="s11-n0"><rect class="pr" x="0" y="24" width="112" height="62" rx="12"/><rect class="pulse" x="0" y="24" width="112" height="62" rx="12"/><text class="t nm" x="56" y="61" text-anchor="middle">Đẩy mã</text><use class="ck" href="#i-check" x="93" y="28" width="14" height="14"/></g>
+          <g class="pn" id="s11-n1"><rect class="pr" x="132" y="24" width="112" height="62" rx="12"/><rect class="pulse" x="132" y="24" width="112" height="62" rx="12"/><text class="t nm" x="188" y="61" text-anchor="middle">Build</text><use class="ck" href="#i-check" x="225" y="28" width="14" height="14"/></g>
+          <g class="pn" id="s11-n2"><rect class="pr" x="264" y="24" width="112" height="62" rx="12"/><rect class="pulse" x="264" y="24" width="112" height="62" rx="12"/><text class="t nm" x="320" y="61" text-anchor="middle">Migrate</text><use class="ck" href="#i-check" x="357" y="28" width="14" height="14"/></g>
+          <g class="pn" id="s11-n3"><rect class="pr" x="396" y="24" width="112" height="62" rx="12"/><rect class="pulse" x="396" y="24" width="112" height="62" rx="12"/><text class="t nm" x="452" y="61" text-anchor="middle">Triển khai</text><use class="ck" href="#i-check" x="489" y="28" width="14" height="14"/></g>
+          <g class="pn" id="s11-n4"><rect class="pr" x="528" y="24" width="112" height="62" rx="12"/><rect class="pulse" x="528" y="24" width="112" height="62" rx="12"/><text class="t nm" x="584" y="52" text-anchor="middle">Kiểm tra</text><text class="t nm" x="584" y="73" text-anchor="middle">sức khoẻ</text><use class="ck" href="#i-check" x="621" y="28" width="14" height="14"/></g>
+
+          <!-- cụm 1 -->
+          <g class="cl" id="s11-cl1">
+            <rect class="pulse" x="0" y="134" width="270" height="206" rx="16"/>
+            <rect class="cb" x="0" y="134" width="270" height="206" rx="16"/>
+            <use class="ic" href="#i-server" x="14" y="144" width="26" height="26"/>
+            <text class="t mono dm" x="50" y="165">limio.vn</text>
+            <g class="hl"><circle class="hr" cx="252" cy="157" r="5"/><circle class="hd" cx="252" cy="157" r="5"/></g>
+            <line class="sp" x1="14" y1="181" x2="256" y2="181"/>
+            <g class="tl"><rect x="10" y="194" width="120" height="64" rx="10"/><use class="ic" href="#i-server" x="57" y="201" width="26" height="26"/><text class="t sb" x="70" y="249" text-anchor="middle">Web</text></g>
+            <g class="tl"><rect x="140" y="194" width="120" height="64" rx="10"/><use class="ic" href="#i-database" x="187" y="201" width="26" height="26"/><text class="t sb" x="200" y="249" text-anchor="middle">Cơ sở dữ liệu</text></g>
+            <g class="tl"><rect x="10" y="266" width="120" height="64" rx="10"/><use class="ic" href="#i-folder" x="57" y="273" width="26" height="26"/><text class="t sb" x="70" y="321" text-anchor="middle">Tệp tải lên</text></g>
+            <g class="tl"><rect x="140" y="266" width="120" height="64" rx="10"/><use class="ic" href="#i-lock" x="187" y="273" width="26" height="26"/><text class="t sb" x="200" y="321" text-anchor="middle">Cấu hình riêng</text></g>
+          </g>
+          <!-- cụm 2 -->
+          <g class="cl" id="s11-cl2" transform="translate(370 0)">
+            <rect class="pulse" x="0" y="134" width="270" height="206" rx="16"/>
+            <rect class="cb" x="0" y="134" width="270" height="206" rx="16"/>
+            <use class="ic" href="#i-server" x="14" y="144" width="26" height="26"/>
+            <text class="t mono dm" x="50" y="165">limio.hust.edu.vn</text>
+            <g class="hl"><circle class="hr" cx="252" cy="157" r="5" style="animation-delay:.9s"/><circle class="hd" cx="252" cy="157" r="5"/></g>
+            <line class="sp" x1="14" y1="181" x2="256" y2="181"/>
+            <g class="tl"><rect x="10" y="194" width="120" height="64" rx="10"/><use class="ic" href="#i-server" x="57" y="201" width="26" height="26"/><text class="t sb" x="70" y="249" text-anchor="middle">Web</text></g>
+            <g class="tl"><rect x="140" y="194" width="120" height="64" rx="10"/><use class="ic" href="#i-database" x="187" y="201" width="26" height="26"/><text class="t sb" x="200" y="249" text-anchor="middle">Cơ sở dữ liệu</text></g>
+            <g class="tl"><rect x="10" y="266" width="120" height="64" rx="10"/><use class="ic" href="#i-folder" x="57" y="273" width="26" height="26"/><text class="t sb" x="70" y="321" text-anchor="middle">Tệp tải lên</text></g>
+            <g class="tl"><rect x="140" y="266" width="120" height="64" rx="10"/><use class="ic" href="#i-lock" x="187" y="273" width="26" height="26"/><text class="t sb" x="200" y="321" text-anchor="middle">Cấu hình riêng</text></g>
+          </g>
+
+          <!-- ở giữa: không đồng bộ -->
+          <g class="nosync">
+            <path class="gp" d="M274 220 H304"/><path class="gp" d="M336 220 H366"/>
+            <g class="xm" transform="translate(320 220)"><line x1="-9" y1="-9" x2="9" y2="9"/><line x1="-9" y1="9" x2="9" y2="-9"/></g>
+            <text class="t pk" x="320" y="256" text-anchor="middle">không</text>
+            <text class="t pk" x="320" y="277" text-anchor="middle">đồng bộ</text>
+            <text class="t pk" x="320" y="298" text-anchor="middle">dữ liệu</text>
+          </g>
+          <g id="s11-parts"></g>
+        </svg>
+      </div>
+
+      <div class="s11-list">
+        <div class="s11-it rv rv-r"><span class="ico"><svg class="i"><use href="#i-layers"/></svg></span><div><h3>Docker và triển khai tự động</h3></div></div>
+        <div class="s11-it rv rv-r"><span class="ico"><svg class="i"><use href="#i-database"/></svg></span><div><h3>Sao lưu, tự kiểm chứng</h3></div></div>
+        <div class="s11-it rv rv-r"><span class="ico pink"><svg class="i"><use href="#i-shield"/></svg></span><div><h3>Quyền riêng tư mặc định</h3></div></div>
+        <div class="s11-it rv rv-r"><span class="ico"><svg class="i"><use href="#i-users"/></svg></span><div><h3>Thi 5.000 thí sinh đồng thời <span class="chip hi">mục tiêu thiết kế</span></h3></div></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="notes">
+    <p>(≈ 90 giây)</p>
+    <p>Về vận hành: Limio chạy hoàn toàn bằng Docker và có hai bản triển khai độc lập, limio.vn và limio.hust.edu.vn. Mỗi bản có cơ sở dữ liệu, tệp tải lên và cấu hình riêng; hai bản không đồng bộ dữ liệu, nên dữ liệu của đơn vị nằm lại ở đơn vị. Cấu hình theo tổ chức đi qua biến môi trường, không gắn cứng theo tên miền.</p>
+    <p>Phía trên là đường ống tự động: mỗi lần đẩy mã lên nhánh chính, hệ thống tự build, áp migration, triển khai và kiểm tra sức khoẻ. Sao lưu cơ sở dữ liệu hằng ngày và hằng tuần, mỗi bản được tự kiểm chứng. Về quyền riêng tư, endpoint hồ sơ học tập yêu cầu xác thực và phân quyền. Docker gồm web, cơ sở dữ liệu, bộ nhớ đệm và tác vụ định kỳ. Sao lưu mỗi bản được kiểm chứng ngay sau khi tạo. Người học có thể rút khỏi bảng xếp hạng. Kịch bản thi 5.000 thí sinh đồng thời dựa trên nhiều bản sao web và chấm điểm chạy nền; xin lưu ý đó là mục tiêu thiết kế, không phải kết quả đã công bố. Giao diện thích ứng máy tính, máy tính bảng và điện thoại. Chuyển tiếp: phần cuối là nơi hệ thống đang được thử nghiệm và liên hệ.</p>
+  </aside>
+
+  <style>
+    #s11 .s11-dgwrap{display:flex;align-items:center}
+    #s11 svg.dg{width:100%;height:auto;display:block;overflow:visible}
+    #s11 .slide-in{gap:1rem}
+    #s11 .eyebrow{font-size:.95rem}
+    #s11 .h2{font-size:2.4rem}
+    #s11 .t{fill:var(--fg);font-family:var(--font)}
+    #s11 .t.mono{font-family:var(--mono)}
+    #s11 .t.cap{font-size:15px;fill:var(--fg2)}
+    #s11 .t.nm{font-size:18px;font-weight:700}
+    #s11 .t.dm{font-size:18px;font-weight:700;fill:var(--acc)}
+    #s11 .t.sb{font-size:15px;fill:var(--fg)}
+    #s11 .t.pk{font-size:16px;font-weight:600;fill:var(--hi)}
+    #s11 .ic{color:var(--acc);fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+    #s11 .lkb{fill:none;stroke:var(--acc);stroke-width:1.8;opacity:.4;stroke-linejoin:round}
+    #s11 .fdl{fill:none;stroke:var(--acc);stroke-width:2.2;stroke-linecap:round;stroke-dasharray:2 9;opacity:.6;animation:s11fl 1.5s linear infinite}
+    @keyframes s11fl{to{stroke-dashoffset:-22}}
+
+    #s11 .pr{fill:var(--card);stroke:var(--cardline);stroke-width:1.5;transition:fill .5s var(--ease),stroke .5s var(--ease)}
+    #s11 .pn .t{transition:fill .5s}
+    #s11 .pulse{fill:none;stroke:var(--acc);stroke-width:2;opacity:0;transform-box:fill-box;transform-origin:center}
+    #s11 .pn.on .pr{fill:var(--soft);stroke:var(--acc);stroke-width:2.6}
+    #s11 .pn.on .pulse{animation:s11ring 1.5s var(--ease) both}
+    #s11 .pn.done .pr{fill:var(--soft);stroke:var(--acc);stroke-opacity:.6}
+    #s11 .ck{color:var(--acc);fill:none;stroke:currentColor;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0;transition:opacity .4s}
+    #s11 .pn.done .ck{opacity:1}
+    @keyframes s11ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.24,1.5)}}
+
+    #s11 .cb{fill:var(--card);stroke:var(--cardline);stroke-width:1.5;transition:stroke .5s var(--ease),fill .5s var(--ease)}
+    #s11 .cl.go .cb{stroke:var(--acc);stroke-width:2.4;fill:var(--soft)}
+    #s11 .cl.go .pulse{animation:s11ringc 1.6s var(--ease) both}
+    @keyframes s11ringc{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.07,1.1)}}
+    #s11 .sp{stroke:var(--line);stroke-width:1.3}
+    #s11 .tl rect{fill:rgba(190,242,100,.06);stroke:var(--line);stroke-width:1.2}
+    #s11 .tl .ic{animation:s11br 4.8s ease-in-out infinite}
+    #s11 .tl:nth-of-type(2) .ic{animation-delay:.6s}
+    #s11 .hr{fill:none;stroke:var(--acc);stroke-width:1.6;transform-box:fill-box;transform-origin:center;animation:s11hr 2.6s ease-out infinite}
+    #s11 .hd{fill:var(--acc)}
+    #s11 .cl.ok .hr{animation-duration:1s;stroke-width:2.4}
+    @keyframes s11hr{0%{transform:scale(.7);opacity:.9}100%{transform:scale(3);opacity:0}}
+    @keyframes s11br{50%{opacity:.55}}
+
+    #s11 .nosync .gp{stroke:var(--hi);stroke-width:1.6;stroke-dasharray:4 5;opacity:.55;fill:none}
+    #s11 .nosync .xm line{stroke:var(--hi);stroke-width:3.2;stroke-linecap:round}
+    #s11 .nosync .xm{animation:s11x 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+    @keyframes s11x{50%{opacity:.5}}
+    #s11 .pt{fill:#A3E635;filter:drop-shadow(0 0 5px #A3E635)}
+    #s11 .pt.p{fill:#F472B6;filter:drop-shadow(0 0 5px #F472B6)}
+
+    #s11 .s11-list{display:flex;flex-direction:column;gap:1rem}
+    #s11 .s11-it{display:flex;gap:1rem;align-items:center;padding:1rem 1.1rem;border-radius:12px;background:var(--card);border:1px solid var(--cardline)}
+    #s11 .s11-it h3{margin:0;font-size:1.3rem;line-height:1.3;font-weight:700;display:flex;flex-wrap:wrap;gap:.35rem .6rem;align-items:center}
+    #s11 .s11-it .ico{width:3rem;height:3rem}
+    #s11 .s11-it .ico .i{width:1.6rem;height:1.6rem}
+    #s11 .s11-it .chip{font-size:.95rem;padding:.15rem .6rem}
+  </style>
+
+  <script>(function(){
+    var NS='http://www.w3.org/2000/svg';
+    Deck.on('s11',{
+      enter:function(c){
+        var R=c.root,parts=R.querySelector('#s11-parts');
+        function q(id){return R.querySelector(id)}
+        var nodes=[0,1,2,3,4].map(function(i){return q('#s11-n'+i)});
+        var cls=[q('#s11-cl1'),q('#s11-cl2')];
+        var svg=R.querySelector('svg.dg');
+        function restart(el,cn,ms){el.classList.remove(cn);void svg.getBoundingClientRect();el.classList.add(cn);if(ms)c.timeout(function(){el.classList.remove(cn)},ms)}
+        function along(path,dur,pink,done){
+          var L=path.getTotalLength();
+          var p=document.createElementNS(NS,'circle');p.setAttribute('r','7');p.setAttribute('class','pt'+(pink?' p':''));parts.appendChild(p);
+          var t0=null;(function f(t){
+            if(!c.alive){if(p.parentNode)p.parentNode.removeChild(p);return}
+            if(t0===null)t0=t;var k=Math.min(1,(t-t0)/dur),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;
+            var pt=path.getPointAtLength(L*e);p.setAttribute('cx',pt.x);p.setAttribute('cy',pt.y);
+            p.setAttribute('opacity',k<.1?k/.1:(k>.92?(1-k)/.08:1));
+            if(k<1)requestAnimationFrame(f);else{if(p.parentNode)p.parentNode.removeChild(p);done&&done()}
+          })(performance.now());
+        }
+        function reset(){
+          nodes.forEach(function(n){n.classList.remove('on','done')});
+          cls.forEach(function(n){n.classList.remove('go','ok')});
+          parts.innerHTML='';
+        }
+        function step(i){
+          if(i>0){nodes[i-1].classList.remove('on');nodes[i-1].classList.add('done')}
+          restart(nodes[i],'on');
+          if(i<4&&!Deck.reduce)along(q('#s11-l'+i),850,false);
+          if(i===3){
+            [q('#s11-d1'),q('#s11-d2')].forEach(function(d,k){
+              if(!Deck.reduce)along(d,1500,true,function(){restart(cls[k],'go',1800)});
+              else restart(cls[k],'go',1800);
+            });
+          }
+          if(i===4){c.timeout(function(){cls.forEach(function(n){n.classList.add('ok')})},300);
+            c.timeout(function(){nodes[4].classList.remove('on');nodes[4].classList.add('done')},1200)}
+        }
+        function play(){
+          reset();
+          for(var i=0;i<5;i++)(function(i){c.timeout(function(){step(i)},i*1100)})(i);
+          c.timeout(play,5*1100+3000);
+        }
+        reset();
+        c.timeout(play,1500);
+      },
+      leave:function(c){
+        var R=c.root;R.querySelector('#s11-parts').innerHTML='';
+        Array.prototype.forEach.call(R.querySelectorAll('.pn,.cl'),function(e){e.classList.remove('on','done','go','ok')});
+      }
+    });
+  })();</script>
+</section>

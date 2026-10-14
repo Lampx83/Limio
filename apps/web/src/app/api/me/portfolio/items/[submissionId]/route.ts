@@ -10,7 +10,7 @@ import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
 type Ctx = { params: { submissionId: string } };
 
-/** A8 — ghim bài đã chấm vào e-portfolio, hoặc sửa câu giới thiệu. Body: { note?: string | null } */
+/** A8 — ghim bài vào e-portfolio (đã chấm hay chưa đều được), hoặc sửa câu giới thiệu. Body: { note?: string | null } */
 export async function PUT(req: Request, { params }: Ctx) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });

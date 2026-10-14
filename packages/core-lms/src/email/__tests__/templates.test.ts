@@ -36,6 +36,20 @@ describe("template fallback khi DB rỗng (trạng thái production)", () => {
     expect(r.html).toContain("display:none;max-height:0"); // preheader ẩn
   });
 
+  it("link trong bản text và subject không bị escape HTML (token=… giữ nguyên dấu =)", async () => {
+    const url = "https://limio.vn/reset?token=abc123&x=1";
+    const r = await renderTemplate({
+      key: "auth.password_reset",
+      variables: { displayName: "An & Bình", resetUrl: url },
+    });
+    expect(r.text).toContain(url);
+    expect(r.text).not.toContain("&#x3D;");
+    expect(r.text).toContain("An & Bình");
+    // HTML thì vẫn phải escape (an toàn XSS) — trình duyệt giải mã lại trong href.
+    expect(r.html).not.toContain("<script");
+    expect(r.html).toContain("&amp;x&#x3D;1");
+  });
+
   it("mẫu DB dạng HTML gọn được thêm style inline lúc render (admin không phải viết CSS)", async () => {
     findFirst.mockResolvedValueOnce({
       subject: "s",

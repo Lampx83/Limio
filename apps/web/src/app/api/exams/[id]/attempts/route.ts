@@ -2,20 +2,22 @@ import { NextResponse } from "next/server";
 import { startExamAttempt } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
-import { mapKnownError } from "@/lib/apiHelpers";
+import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { upsertOnStart } from "@/lib/exam-live-bus";
 
 export const runtime = "nodejs";
 
 /** A7.4.1 / A7.4.5 — Start or resume an attempt. */
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const r = await startExamAttempt(userId, params.id);
+    // LANG G5c — { retake: true } chỉ có tác dụng với đề thi thử (lượt mới sau khi đã nộp).
+    const body = (await readJson(req)) as { retake?: unknown } | null;
+    const r = await startExamAttempt(userId, params.id, undefined, { retake: body?.retake === true });
     const a = await prisma.examAttempt.findUnique({
       where: { id: r.attemptId },
       select: {

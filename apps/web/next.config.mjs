@@ -19,8 +19,15 @@ const nextConfig = {
     "@feedbackme/db",
     "@feedbackme/shared-types",
   ],
+  // Bản web trình chiếu giới thiệu hệ thống: file tĩnh ở public/gioi-thieu/.
+  // Next không tự map thư mục → index.html nên rewrite tường minh.
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: "/gioi-thieu", destination: "/gioi-thieu/index.html" }],
+    };
+  },
   experimental: {
-    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs"],
+    serverComponentsExternalPackages: ["@prisma/client", "bcryptjs", "sharp"],
     outputFileTracingRoot: resolve(__dirname, "../../"),
     // NOTE: outputFileTracingIncludes is intentionally omitted.
     // A glob over node_modules/**  in a pnpm workspace (with its large

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { UserAvatar, StatusBadge, DateTime } from "@/components/ui";
 import SubmissionModal from "./SubmissionModal";
+import { neighborSubmissions } from "./submissionNav";
 
 export type RosterRow = {
   user: { id: string; displayName: string; email: string };
@@ -39,15 +40,20 @@ function statusRank(r: RosterRow): number {
 export default function RosterTable({
   roster,
   maxScore,
+  assignmentId,
+  rubricText,
 }: {
   roster: RosterRow[];
   maxScore: number;
+  assignmentId: string;
+  rubricText: string | null;
 }) {
   const [search, setSearch] = useState("");
   const [sectionId, setSectionId] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [openSubmissionId, setOpenSubmissionId] = useState<string | null>(null);
+  const [pendingOnly, setPendingOnly] = useState(false);
 
   const sections = useMemo(() => {
     const map = new Map<string, string>();
@@ -114,6 +120,10 @@ export default function RosterTable({
   }, [filtered, sortKey, sortDir]);
 
   const openRow = sorted.find((r) => r.submission?.id === openSubmissionId) ?? null;
+  // Trước/Sau đi theo đúng thứ tự bảng GV đang thấy (đã lọc + sắp xếp).
+  const nav = openSubmissionId
+    ? neighborSubmissions(sorted, openSubmissionId, pendingOnly)
+    : null;
 
   return (
     <>
@@ -187,7 +197,7 @@ export default function RosterTable({
                     </td>
                     <td className="px-3 py-2">
                       <StatusBadge tone={s ? (isGraded ? "success" : "warning") : "neutral"}>
-                        {s ? "Đã nộp" : "Chưa nộp"}
+                        {s ? (isGraded ? "Đã chấm" : "Đã nộp") : "Chưa nộp"}
                       </StatusBadge>
                     </td>
                     <td className="px-3 py-2 text-muted">
@@ -230,6 +240,18 @@ export default function RosterTable({
           user={openRow.user}
           submission={openRow.submission}
           maxScore={maxScore}
+          assignmentId={assignmentId}
+          rubricText={rubricText}
+          nav={
+            nav && {
+              position: nav.position,
+              total: nav.total,
+              pendingOnly,
+              onTogglePendingOnly: setPendingOnly,
+              onPrev: nav.prevId ? () => setOpenSubmissionId(nav.prevId) : null,
+              onNext: nav.nextId ? () => setOpenSubmissionId(nav.nextId) : null,
+            }
+          }
           onClose={() => setOpenSubmissionId(null)}
         />
       )}

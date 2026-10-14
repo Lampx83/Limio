@@ -7,3 +7,4 @@ export * from "./evaluation";
 export * from "./vbee";
 export * from "./openaiVoice";
 export * from "./neuTts";
+export * from "./keywordSearch";

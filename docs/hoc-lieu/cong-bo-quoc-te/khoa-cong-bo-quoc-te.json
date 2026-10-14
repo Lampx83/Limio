@@ -1,0 +1,1716 @@
+{
+  "course": {
+    "title": "NCKH 301 · NCKH nâng cao & Công bố quốc tế",
+    "slug": "cong-bo-quoc-te",
+    "description": "Khoá dành cho nghiên cứu sinh đang xây dựng một mạch nghiên cứu (research agenda) hướng tới công bố quốc tế, không phải một luận văn đơn lẻ. Bảy bài đi từ định vị nghiên cứu và xác định đóng góp lý thuyết; tổng quan tài liệu hệ thống đầy đủ theo PRISMA kèm thẩm định chất lượng nguồn; phương pháp nghiên cứu nâng cao (multi-group analysis, thiết kế thực nghiệm, longitudinal); viết bài báo khoa học theo cấu trúc IMRaD bằng tiếng Anh và trả lời phản biện (rebuttal) đúng cách; chọn tạp chí theo quartile Scopus/SCImago và nhận diện tạp chí săn mồi; dùng công cụ AI hỗ trợ viết có kiểm soát và khai báo đúng quy định; và viết đề xuất xin tài trợ, xây mạng lưới học thuật quốc tế. Khoá dùng đúng đề tài nghiên cứu và bản thảo bài báo thật của từng nghiên cứu sinh xuyên suốt cả 7 bài. Mỗi bài kết bằng một bài kiểm tra ngắn, phương án sai gắn mã lỗi tư duy để phản hồi chỉ đúng chỗ hiểu nhầm.",
+    "language": "vi",
+    "level": "advanced",
+    "category": "Nghiên cứu khoa học",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "cbqt.single-paper-thinking",
+      "name": "Coi mỗi bài báo là một dự án độc lập, không nối vào research agenda",
+      "description": "Chọn đề tài cho từng bài báo theo trào lưu hoặc cơ hội dữ liệu có sẵn, không hỏi đề tài đó nối với những gì đã và sẽ làm ra sao. Kết quả là một danh mục công bố rời rạc, không cộng dồn thành một câu chuyện chuyên môn nhất quán."
+    },
+    {
+      "code": "cbqt.contribution-is-novelty-only",
+      "name": "Coi đóng góp lý thuyết chỉ cần 'chưa ai làm'",
+      "description": "Dừng lại ở tuyên bố 'chưa có nghiên cứu nào về điều này' mà không nói rõ nghiên cứu thay đổi gì trong cách hiểu lý thuyết hiện có. Ở mức công bố quốc tế, đóng góp lý thuyết cần nêu cụ thể nó thách thức, mở rộng hay tích hợp lý thuyết nào."
+    },
+    {
+      "code": "cbqt.no-so-what-test",
+      "name": "Không kiểm tra độ sâu đóng góp bằng bài tập 'So what?'",
+      "description": "Chấp nhận một câu trả lời hời hợt cho 'đóng góp là gì' mà không tự hỏi tiếp 'so what?' để đào sâu. Một đóng góp chỉ dừng ở 'vì nó mới' sau nhiều lần tự hỏi là dấu hiệu chưa đủ sâu để định hướng một bài báo."
+    },
+    {
+      "code": "cbqt.eligibility-criteria-after-search",
+      "name": "Đặt tiêu chí chọn/loại sau khi đã xem kết quả tìm kiếm",
+      "description": "Xác định tiêu chí chọn/loại nguồn sau khi đã xem qua nội dung các nghiên cứu tìm được, thay vì xác định trước theo khung PICOS. Đây là một dạng thiên lệch xác nhận — tiêu chí bị chọn sao cho vừa khớp với điều mình muốn tìm thấy."
+    },
+    {
+      "code": "cbqt.no-quality-appraisal",
+      "name": "Không thẩm định chất lượng phương pháp của nguồn trước khi tổng hợp",
+      "description": "Đưa mọi nguồn tìm được vào tổng hợp mà coi chúng có giá trị ngang nhau, không dùng công cụ thẩm định chất lượng phù hợp (Cochrane Risk of Bias, MMAT, CASP...). Điều này làm loãng chất lượng của toàn bộ tổng quan."
+    },
+    {
+      "code": "cbqt.meta-analysis-forced",
+      "name": "Cố gộp số liệu bằng meta-analysis khi các nghiên cứu không đủ đồng nhất",
+      "description": "Chạy meta-analysis dù chỉ số I² cao (các nghiên cứu đo khác thang đo, khác định nghĩa biến, hoặc quá khác biệt), tạo ra một con số gộp không có ý nghĩa thật dù về mặt tính toán vẫn ra được kết quả. Khi không đủ đồng nhất, tổng hợp tường thuật là lựa chọn đúng, không phải lựa chọn kém hơn."
+    },
+    {
+      "code": "cbqt.mediation-moderation-separate",
+      "name": "Chạy riêng mediation và moderation khi lý thuyết đề xuất moderated mediation",
+      "description": "Kiểm định một hiệu ứng trung gian và một hiệu ứng điều tiết bằng hai mô hình riêng biệt, dù lý thuyết thực chất đề xuất hiệu ứng trung gian thay đổi theo mức của biến điều tiết. Cách này làm mất thông tin về việc hiệu ứng trung gian mạnh hay yếu ở điều kiện nào."
+    },
+    {
+      "code": "cbqt.compare-groups-no-invariance",
+      "name": "So sánh path coefficient giữa các nhóm mà không kiểm đo lường bất biến",
+      "description": "So sánh trực tiếp hệ số đường dẫn giữa các nhóm (ví dụ nam/nữ) trong multi-group analysis mà chưa kiểm configural và metric invariance. Nếu thang đo không đo cùng một cách giữa các nhóm, sự khác biệt về path có thể do khác biệt đo lường, không phải khác biệt thật."
+    },
+    {
+      "code": "cbqt.no-manipulation-check",
+      "name": "Không kiểm tra manipulation check trong thiết kế thực nghiệm",
+      "description": "Đọc thẳng kết quả biến phụ thuộc trong một thí nghiệm mà không xác nhận can thiệp có thực sự tạo ra sự khác biệt ở biến độc lập như dự kiến. Nếu manipulation thất bại, một kết quả không có ý nghĩa có thể do manipulation yếu, không phải do lý thuyết sai."
+    },
+    {
+      "code": "cbqt.two-wave-enough-for-causality",
+      "name": "Coi hai lần đo là đủ để khẳng định nhân quả hoàn toàn",
+      "description": "Kết luận nhân quả chắc chắn chỉ vì đã đo hai lần theo thời gian (T1, T2) và thấy X dự báo Y có ý nghĩa thống kê. Trình tự thời gian là điều kiện cần nhưng chưa đủ — các yếu tố gây nhiễu không được kiểm soát vẫn có thể tạo ra mối quan hệ giả."
+    },
+    {
+      "code": "cbqt.imrad-same-as-thesis",
+      "name": "Viết bài báo như bản thu gọn của luận văn 5 chương",
+      "description": "Chép và cắt gọn nguyên cấu trúc, nội dung luận văn để thành bài báo, thay vì viết lại theo logic IMRaD súc tích. Introduction của bài báo cần cấu trúc hình nón riêng, khác với cách mở đầu dàn trải của một luận văn."
+    },
+    {
+      "code": "cbqt.overclaim-in-english",
+      "name": "Dùng ngôn ngữ tiếng Anh quá mạnh so với độ mạnh của thiết kế",
+      "description": "Viết 'demonstrates', 'proves', 'causes' cho kết quả từ một thiết kế cắt ngang hoặc tương quan, khi thiết kế đó chỉ cho phép nói về sự liên hệ. Mức hedging tiếng Anh phải khớp với độ mạnh thật của bằng chứng, không phải mức độ mong muốn của tác giả."
+    },
+    {
+      "code": "cbqt.no-comparison-to-literature",
+      "name": "Viết Discussion không đối chiếu với tài liệu đã tổng quan",
+      "description": "Diễn giải từng kết quả một cách cô lập, chỉ lặp lại số liệu đã có ở Results, không đối chiếu với các nghiên cứu đã nêu ở Introduction/Literature Review — đồng thuận ở đâu, mâu thuẫn ở đâu, và vì sao."
+    },
+    {
+      "code": "cbqt.rebuttal-defensive",
+      "name": "Viết rebuttal letter phòng thủ hoặc bỏ qua comment khó",
+      "description": "Tranh luận bảo vệ bản thảo gốc bằng mọi giá, hoặc phớt lờ những comment khó chịu của reviewer, thay vì ghi nhận và nêu hành động cụ thể đã thực hiện. Reviewer đọc rebuttal để xem tác giả có tiếp thu góp ý nghiêm túc không, không phải để xem ai đúng ai sai."
+    },
+    {
+      "code": "cbqt.quartile-only-no-scope",
+      "name": "Chọn tạp chí chỉ theo quartile cao nhất, không xét scope",
+      "description": "Gửi bài tới tạp chí có quartile cao nhất tìm được mà không đọc Aims & Scope hoặc đối chiếu với đóng góp của bài. Quartile cao nhưng sai phạm vi chủ đề thường dẫn tới desk reject nhanh, không liên quan tới chất lượng nghiên cứu."
+    },
+    {
+      "code": "cbqt.predatory-journal-signs",
+      "name": "Không nhận diện dấu hiệu tạp chí săn mồi",
+      "description": "Bị dụ bởi lời mời viết bài dồn dập, thời gian bình duyệt bất thường ngắn, hoặc phí không minh bạch, mà không kiểm tra tạp chí trong Scopus/Web of Science/DOAJ trước khi gửi bài."
+    },
+    {
+      "code": "cbqt.reject-means-bad-research",
+      "name": "Coi mọi quyết định reject là bằng chứng nghiên cứu tồi",
+      "description": "Không phân biệt được desk reject (thường do sai scope hoặc lỗi định dạng) với reject sau bình duyệt đầy đủ (do chất lượng). Hiểu sai này làm mất động lực không cần thiết và có thể khiến từ bỏ một nghiên cứu tốt chỉ vì gửi nhầm venue."
+    },
+    {
+      "code": "cbqt.salami-slicing",
+      "name": "Chia một nghiên cứu thành nhiều bài báo nhỏ không cần thiết",
+      "description": "Tách một bộ dữ liệu và thiết kế nghiên cứu thành nhiều bài báo nhỏ chỉ để tăng số lượng công bố, làm loãng đóng góp thật của mỗi bài. Đây bị nhiều tạp chí coi là vi phạm đạo đức xuất bản khi phát hiện."
+    },
+    {
+      "code": "cbqt.ai-writes-content",
+      "name": "Để AI viết thay nội dung khoa học chưa qua kiểm chứng",
+      "description": "Yêu cầu AI viết thẳng phần Kết quả hoặc Discussion rồi nộp mà không tự kiểm chứng và viết lại theo hiểu biết của chính mình. AI không hiểu bối cảnh nghiên cứu sâu bằng người nghiên cứu và không thể chịu trách nhiệm nếu diễn giải sai."
+    },
+    {
+      "code": "cbqt.no-ai-disclosure",
+      "name": "Không khai báo sử dụng AI theo yêu cầu của tạp chí",
+      "description": "Dùng AI đáng kể để soạn hoặc chỉnh sửa bản thảo mà không khai báo, dù tạp chí yêu cầu khai báo việc này. Đây là vi phạm quy định xuất bản, tương tự không khai báo xung đột lợi ích."
+    },
+    {
+      "code": "cbqt.unverified-ai-citations",
+      "name": "Dùng trích dẫn do AI gợi ý mà không tự tay kiểm chứng",
+      "description": "Đưa vào bản thảo một trích dẫn do AI gợi ý mà không tự tra lại nguồn thật. AI có thể tạo ra trích dẫn hoàn toàn không tồn tại (tên tác giả, năm, tên bài giả) một cách rất tự nhiên và thuyết phục."
+    },
+    {
+      "code": "cbqt.ai-as-coauthor",
+      "name": "Ghi công cụ AI là tác giả hoặc đồng tác giả",
+      "description": "Thêm tên công cụ AI vào danh sách tác giả vì đã đóng góp đáng kể vào việc viết. Một tác giả phải chịu trách nhiệm về nội dung công bố theo tiêu chí ICMJE — AI không thể chịu trách nhiệm hoặc được liên hệ để giải trình, nên không đủ điều kiện làm tác giả."
+    },
+    {
+      "code": "cbqt.vague-aims",
+      "name": "Viết Specific Aims mơ hồ, không đo được",
+      "description": "Viết mục tiêu đề xuất chung chung ('nghiên cứu về AI trong giáo dục') thay vì cụ thể, đo được. Specific Aims mơ hồ khiến người xét duyệt không hình dung được nghiên cứu sẽ thực sự làm gì, thường bị từ chối ngay từ vòng đầu."
+    },
+    {
+      "code": "cbqt.unrealistic-timeline",
+      "name": "Viết timeline không có buffer thực tế",
+      "description": "Lên kế hoạch các bước nghiên cứu diễn ra suôn sẻ liên tiếp, không tính thời gian chờ phê duyệt đạo đức, thu thập dữ liệu chậm hơn dự kiến, hoặc một vòng phân tích lại. Timeline không thực tế làm giảm độ tin cậy của đề xuất."
+    },
+    {
+      "code": "cbqt.conference-passive",
+      "name": "Chỉ trình bày bài tại hội thảo rồi rời đi, không networking",
+      "description": "Tham dự hội thảo quốc tế chỉ để trình bày đúng slot của mình rồi rời khỏi hội trường, không chủ động tương tác. Hội thảo là nơi các hợp tác nghiên cứu thường bắt đầu — bỏ qua networking là bỏ lỡ phần lớn giá trị của việc tham dự."
+    },
+    {
+      "code": "cbqt.generic-proposal-multiple-funders",
+      "name": "Gửi một đề xuất chung chung cho nhiều quỹ tài trợ khác nhau",
+      "description": "Gửi cùng một bản đề xuất, chỉ đổi tên quỹ ở đầu trang, cho nhiều quỹ tài trợ khác nhau. Mỗi quỹ có ưu tiên riêng; đề xuất cần được điều chỉnh cách trình bày đóng góp để khớp với đúng ưu tiên của từng quỹ."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "cbqt.single-paper-thinking",
+      "body": "Trước khi chọn đề tài tiếp theo, viết ra một câu: đề tài này nối với những gì bạn đã làm hoặc dự định làm ra sao? Nếu không trả lời được, đề tài đó có thể đúng nhưng chưa được đặt vào đúng chỗ trong hành trình chuyên môn của bạn.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.contribution-is-novelty-only",
+      "body": "Viết lại đóng góp theo mẫu: 'Nghiên cứu này thách thức/mở rộng/tích hợp lý thuyết X bằng cách chỉ ra Y.' Nếu không điền được lý thuyết cụ thể vào chỗ X, đóng góp vẫn đang dừng ở mức 'chưa ai làm'.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.no-so-what-test",
+      "body": "Viết câu trả lời hiện tại cho 'đóng góp là gì', rồi tự hỏi 'so what?' — ai quan tâm, và vì sao — ít nhất ba lần liên tiếp. Dừng khi câu trả lời đã cụ thể tới mức nói được ai, ngoài chính bạn, nên đọc kết quả này.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.eligibility-criteria-after-search",
+      "body": "Viết khung PICOS đầy đủ và cố định nó trước khi chạy tìm kiếm thật. Nếu cần thay đổi tiêu chí sau khi đã thấy kết quả, ghi rõ lý do thay đổi đó trong bài báo — đừng thay đổi lặng lẽ.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.no-quality-appraisal",
+      "body": "Chọn một công cụ thẩm định chất lượng phù hợp với loại thiết kế của các nguồn, chạy cho từng nguồn, và báo cáo kết quả trong một bảng. Nguồn có rủi ro thiên lệch cao nên được xem xét riêng, không trộn chung với nguồn chất lượng cao.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.meta-analysis-forced",
+      "body": "Kiểm chỉ số I² trước khi quyết định gộp số liệu. Nếu I² cao, chuyển sang tổng hợp tường thuật hoặc theo chủ đề — đây là quyết định phương pháp đúng đắn, không phải một sự nhượng bộ khi không làm được thống kê.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.mediation-moderation-separate",
+      "body": "Nếu lý thuyết của bạn nói 'cơ chế này chỉ mạnh trong điều kiện X', đó là dấu hiệu cần một mô hình moderated mediation tích hợp, không phải hai mô hình riêng. Kiểm conditional indirect effect ở từng mức của biến điều tiết.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.compare-groups-no-invariance",
+      "body": "Trước khi so sánh path giữa các nhóm, chạy kiểm configural rồi metric invariance. Chỉ diễn giải sự khác biệt path là khác biệt thật sau khi cả hai bước này đã đạt.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.no-manipulation-check",
+      "body": "Thêm một câu hỏi đo lại biến độc lập sau khi thực hiện can thiệp (ví dụ đo lại mức tin tưởng sau khi đọc đoạn văn), và kiểm nó có khác biệt như dự kiến giữa các nhóm không, trước khi đọc kết quả biến phụ thuộc.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.two-wave-enough-for-causality",
+      "body": "Viết rõ trong phần hạn chế: trình tự thời gian đã được xác lập, nhưng các yếu tố gây nhiễu khác chưa đo và kiểm soát vẫn có thể ảnh hưởng tới kết luận nhân quả. Cân nhắc thêm biến kiểm soát hoặc thiết kế thực nghiệm nếu cần khẳng định chắc hơn.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.imrad-same-as-thesis",
+      "body": "Viết lại Introduction từ đầu theo cấu trúc hình nón, không mở file luận văn ra cắt dán. Hỏi: đoạn này có đang dẫn người đọc từ bối cảnh rộng tới đúng khoảng trống và câu đóng góp không, hay đang liệt kê lại mọi thứ đã viết trong luận văn?",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.overclaim-in-english",
+      "body": "Đối chiếu lại bảng mức hedging theo thiết kế thật của bạn. Nếu dữ liệu là cắt ngang, đổi 'demonstrates'/'causes' thành 'is associated with'/'suggests' ở mọi câu kết luận.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.no-comparison-to-literature",
+      "body": "Với mỗi đoạn Discussion, thêm một câu trích dẫn cụ thể tới một nghiên cứu đã tổng quan và nói rõ kết quả của bạn đồng thuận hay mâu thuẫn với nó, và vì sao.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.rebuttal-defensive",
+      "body": "Với mỗi comment, viết theo mẫu: ghi nhận → hành động cụ thể → vị trí đã sửa. Nếu không đồng ý với một comment, giải thích rõ lý do một cách tôn trọng, không phớt lờ hay tranh cãi.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.quartile-only-no-scope",
+      "body": "Trước khi gửi bài, đọc Aims & Scope và 2-3 bài đã công bố gần đây của tạp chí. Nếu đóng góp của bạn không khớp rõ với những gì tạp chí đang xuất bản, tìm tạp chí khác dù quartile thấp hơn.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.predatory-journal-signs",
+      "body": "Trước khi gửi bài tới một tạp chí chưa quen, kiểm tra tạp chí đó trong danh mục Scopus/Web of Science hoặc DOAJ, và chạy qua checklist Think.Check.Submit.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.reject-means-bad-research",
+      "body": "Đọc kỹ lý do reject: nếu là desk reject vì scope, tìm tạp chí phù hợp hơn ngay, không cần thay đổi nghiên cứu. Nếu là reject sau bình duyệt đầy đủ, đọc comment kỹ để cải thiện trước khi gửi nơi khác.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.salami-slicing",
+      "body": "Tự hỏi: nếu tách nghiên cứu thành nhiều bài, mỗi bài có đủ đóng góp riêng để đứng độc lập không, hay chúng chỉ là các phần của một câu chuyện duy nhất? Nếu là phần của một câu chuyện, gộp lại thành một bài mạnh hơn nhiều bài yếu.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.ai-writes-content",
+      "body": "Dùng AI cho phần văn phong, nhưng tự viết lại nội dung khoa học (Kết quả, Discussion) bằng hiểu biết của chính mình. Nếu dùng AI để phác thảo, đọc lại và viết lại từng câu theo cách hiểu của bạn trước khi giữ nó trong bản thảo.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.no-ai-disclosure",
+      "body": "Kiểm 'Instructions for Authors' của tạp chí trước khi gửi. Nếu có dùng AI đáng kể để soạn văn bản, viết một đoạn khai báo ngắn ở phần được yêu cầu (Methods hoặc Acknowledgment).",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.unverified-ai-citations",
+      "body": "Với mọi trích dẫn trong bản thảo — kể cả trích dẫn nghe rất quen — tự tay tra trên Google Scholar/Scopus để xác nhận bài báo có thật và nội dung claim khớp với bài gốc.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.ai-as-coauthor",
+      "body": "Không ghi công cụ AI vào danh sách tác giả, dù đóng góp bao nhiêu vào việc viết. Nếu cần ghi nhận, dùng phần khai báo sử dụng AI (đã học ở mục trên), không phải danh sách tác giả.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.vague-aims",
+      "body": "Viết lại mỗi aim theo mẫu: đo [biến gì], trên [đối tượng nào], bằng [phương pháp nào]. Nếu người đọc không hình dung được bạn sẽ thu thập dữ liệu gì, aim đó còn quá mơ hồ.",
+      "priority": 10
+    },
+    {
+      "misconception": "cbqt.unrealistic-timeline",
+      "body": "Với mỗi bước trong timeline, tự hỏi: bước này từng bị chậm ở nghiên cứu trước chưa, hoặc phụ thuộc vào một bên khác (hội đồng đạo đức, đối tác thu thập dữ liệu) không? Thêm buffer cho những bước đó.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.conference-passive",
+      "body": "Trước hội thảo, chọn 3-5 bài liên quan tới research agenda của bạn để đọc trước và chuẩn bị câu hỏi. Sau hội thảo, trong vòng một tuần, gửi một email ngắn cho người bạn đã trò chuyện, khi ấn tượng còn mới.",
+      "priority": 9
+    },
+    {
+      "misconception": "cbqt.generic-proposal-multiple-funders",
+      "body": "Đọc lại call for proposal của từng quỹ và viết ra ưu tiên riêng của quỹ đó. Sửa lại cách trình bày đóng góp (Bài 1) để nhấn mạnh đúng phần khớp với ưu tiên đó, cho từng quỹ riêng biệt.",
+      "priority": 9
+    }
+  ],
+  "modules": [
+    {
+      "title": "NCKH nâng cao & Công bố quốc tế",
+      "description": "Toàn bộ quy trình đưa một hướng nghiên cứu tới công bố quốc tế: (1) định vị nghiên cứu và đóng góp, (2) tổng quan tài liệu hệ thống đầy đủ, (3) phương pháp nghiên cứu nâng cao, (4) viết bài báo IMRaD và trả lời phản biện, (5) chọn venue và tránh tạp chí săn mồi, (6) dùng AI hỗ trợ viết có kiểm soát, (7) viết đề xuất xin tài trợ và networking.",
+      "lessons": [
+        {
+          "title": "Bài 1 · Định vị nghiên cứu và xác định đóng góp",
+          "durationMin": 90,
+          "description": "Đặt một nghiên cứu vào một research agenda dài hơi thay vì một dự án cô lập; phân loại đóng góp theo hai trục nguyên bản và ứng dụng; vượt qua 'chưa ai làm' để nói rõ đóng góp lý thuyết là gì; dùng bài tập 'So what?' để kiểm tra đóng góp trước khi viết.",
+          "objectives": [
+            "Đặt một đề tài nghiên cứu vào một research agenda nhiều năm, xác định đề tài hiện tại giải quyết phần nào của mạch câu hỏi lớn hơn",
+            "Phân loại đóng góp dự kiến của nghiên cứu theo hai trục nguyên bản (originality) và ứng dụng (utility)",
+            "Viết được một câu đóng góp lý thuyết cụ thể — nói rõ nghiên cứu này thách thức, mở rộng hay tích hợp lý thuyết nào — không chỉ dừng ở 'chưa ai làm'",
+            "Áp dụng được bài tập 'So what?' ba lần liên tiếp để kiểm tra một đóng góp có đủ sâu trước khi bắt đầu viết bài báo"
+          ],
+          "summary": [
+            "Một bài báo công bố quốc tế nên là một bước trong một research agenda nhiều năm, không phải một dự án cô lập — điều này giúp các bài báo của một nghiên cứu sinh cộng dồn thành một câu chuyện học thuật nhất quán, thứ các nhà tuyển dụng học thuật và quỹ tài trợ đều tìm kiếm.",
+            "Đóng góp của một nghiên cứu nằm trên hai trục độc lập: mức độ nguyên bản (từ mở rộng nhỏ tới thách thức nền tảng) và loại ứng dụng (khoa học hay thực tiễn) — biết mình đang nhắm vào ô nào giúp chọn đúng venue và viết đúng phần đóng góp.",
+            "'Chưa ai nghiên cứu điều này' không phải một đóng góp lý thuyết — đóng góp thật phải nói rõ nghiên cứu này thách thức, mở rộng, hay tích hợp lý thuyết cụ thể nào, và thay đổi gì trong cách hiểu hiện có.",
+            "Bài tập 'So what?' — tự hỏi liên tiếp 'vậy thì sao?' sau mỗi câu trả lời — buộc đóng góp phải cụ thể tới mức trả lời được câu hỏi cuối cùng: ai, ngoài chính người viết, nên quan tâm tới kết quả này, và vì sao."
+          ],
+          "splitSections": true,
+          "body": "\nKhác với một luận văn cao học — nơi đích là hoàn thành một công trình và bảo vệ thành công — mục tiêu ở cấp nghiên cứu sinh là một chuỗi công bố có tính tích lũy. Bài này dựng phần định hướng đó trước khi đi vào kỹ thuật ở các bài sau, đi qua bốn phần: trước hết đặt một đề tài vào research agenda nhiều năm thay vì một dự án cô lập; sau đó xác định đóng góp dự kiến rơi vào ô nào trên hai trục nguyên bản và ứng dụng; tiếp theo phân biệt một đóng góp lý thuyết thật với việc chỉ dừng ở \"chưa ai làm\"; và kết bằng bài tập \"So what?\" để kiểm tra đóng góp đó có đủ sâu trước khi bắt đầu viết.\n\n## Research agenda — một bài báo không phải một dự án cô lập\n\n> [!ghi-nho] **Research agenda** là một mạch câu hỏi nghiên cứu liên kết với nhau qua nhiều năm và nhiều công bố, thường xoay quanh một hiện tượng, một lý thuyết, hoặc một phương pháp mà nghiên cứu sinh dần xây dựng thành chuyên môn sâu. Mỗi bài báo trả lời một phần của mạch câu hỏi lớn hơn, không phải một đề tài rời rạc chọn vì \"nghe hay\".\n\n> [!canh-bao] Coi mỗi bài báo là một dự án độc lập, chọn đề tài theo trào lưu hoặc theo cơ hội dữ liệu có sẵn mà không hỏi \"đề tài này nối với những gì tôi đã và sẽ làm ra sao\", dẫn tới một danh mục công bố rời rạc — mỗi bài đọc riêng thì được, nhưng không cộng dồn thành một câu chuyện chuyên môn nào. Hội đồng học thuật, nhà tuyển dụng và quỹ tài trợ đều tìm kiếm một mạch nhất quán, không phải một danh sách bài báo ngẫu nhiên.\n\n> [!vi-du] Một nghiên cứu sinh có research agenda \"vai trò của AI trong đánh giá học tập\". Bài báo thứ nhất kiểm tra độ tin cậy của AI khi chấm bài luận so với giảng viên; bài thứ hai khảo sát nhận thức và sự tin tưởng của giảng viên với công cụ chấm AI; bài thứ ba mở rộng sang câu hỏi công bằng đánh giá — liệu AI có thiên lệch với văn phong của sinh viên không phải bản ngữ. Ba bài khác nhau về câu hỏi cụ thể, nhưng cùng xây một hiểu biết tích lũy về một hiện tượng.\n\n## Hai trục xác định loại đóng góp\n\nTrước khi viết, cần xác định rõ đóng góp dự kiến rơi vào đâu trên hai trục độc lập.\n\n> [!ghi-nho] **Nguyên bản (originality):** từ mở rộng nhỏ trên một lý thuyết đã có (incremental) tới thách thức một giả định nền tảng của lý thuyết đó (revelatory). **Ứng dụng (utility):** đóng góp chủ yếu cho giới học thuật (scientific utility — thay đổi cách nhà nghiên cứu khác hiểu vấn đề) hay chủ yếu cho người thực hành (practical utility — thay đổi cách nhà quản lý/nhà giáo dục hành động).\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem\">Ma trận đóng góp (Corley & Gioia, 2011)</div>\n  <div style=\"display:grid;grid-template-columns:1fr 1fr;gap:.6rem;font-size:1.05rem\">\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.5rem;padding:.7rem .9rem\"><b>Mở rộng + Khoa học</b><br><span style=\"font-size:.95rem;opacity:.85\">Thêm một biến điều tiết mới vào một mô hình lý thuyết đã có</span></div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.5rem;padding:.7rem .9rem\"><b>Thách thức + Khoa học</b><br><span style=\"font-size:.95rem;opacity:.85\">Chỉ ra một giả định nền tảng của lý thuyết không còn đúng trong bối cảnh mới</span></div>\n    <div style=\"background:rgba(13,148,136,.14);border-radius:.5rem;padding:.7rem .9rem\"><b>Mở rộng + Thực tiễn</b><br><span style=\"font-size:.95rem;opacity:.85\">Kiểm định một mô hình đã biết trên một ngành/bối cảnh mới để hướng dẫn thực hành</span></div>\n    <div style=\"background:rgba(217,150,40,.14);border-radius:.5rem;padding:.7rem .9rem\"><b>Thách thức + Thực tiễn</b><br><span style=\"font-size:.95rem;opacity:.85\">Đề xuất một cách làm mới thay thế thực hành đang được khuyến nghị rộng rãi</span></div>\n  </div>\n</div>\n```\n\nBiết trước mình đang nhắm vào ô nào giúp chọn đúng venue (một tạp chí lý thuyết thuần sẽ ít quan tâm đóng góp thực tiễn thuần) và viết đúng phần đóng góp trong bài — không cố nói bài của mình \"vừa mang tính cách mạng vừa rất ứng dụng\" khi thực tế nó chỉ nằm ở một ô.\n\n> [!canh-bao] Cái bẫy phổ biến nhất khi tự xếp ô: nhầm **kiểm định một mô hình đã biết ở một bối cảnh/quốc gia mới** thành \"Thách thức\" chỉ vì bối cảnh đó \"chưa ai làm\". Nếu kết quả ở bối cảnh mới **khớp** với lý thuyết gốc, đây vẫn chỉ là \"Mở rộng\" (mở rộng phạm vi áp dụng, không thách thức gì cả). Chỉ khi kết quả ở bối cảnh mới **trái ngược** với dự đoán của lý thuyết gốc — và bạn giải thích được vì sao — mới thực sự chuyển sang ô \"Thách thức\". Nghiên cứu sinh thường tự đánh giá cao đóng góp của mình vì lý do này.\n\n## Đóng góp lý thuyết — vượt qua \"chưa ai làm\"\n\n> [!canh-bao] \"Chưa ai nghiên cứu điều này ở bối cảnh X\" — thứ đủ để đứng vững ở một luận văn cao học (Bài 1-2 của khoá Phương pháp nghiên cứu) — **không phải một đóng góp lý thuyết** ở mức công bố quốc tế. Reviewer của tạp chí quốc tế sẽ hỏi: đóng góp này thay đổi gì trong cách một nhà nghiên cứu khác **hiểu** hiện tượng, không chỉ là một điểm dữ liệu mới được thêm vào.\n\n| Đóng góp yếu (chỉ có \"mới\") | Đóng góp mạnh (nói rõ thay đổi gì) |\n|---|---|\n| \"Chưa có nghiên cứu nào về AI tạo sinh và giảng viên tại Đông Nam Á.\" | \"Nghiên cứu này thách thức giả định của TAM rằng nhận thức hữu ích luôn là yếu tố dự báo mạnh nhất — trong bối cảnh AI tạo sinh, lo ngại về mất kiểm soát chuyên môn dự báo hành vi chấp nhận mạnh hơn nhận thức hữu ích, gợi ý TAM cần mở rộng thêm một cấu trúc mới cho công nghệ có tính tự động hoá cao.\" |\n\n> [!vi-du] Một nghiên cứu sinh ban đầu định hình đóng góp là \"nghiên cứu đầu tiên đo trải nghiệm giảng viên với AI chấm bài ở Việt Nam\". Sau khi tự hỏi \"điều này thay đổi gì trong lý thuyết chấp nhận công nghệ\", nghiên cứu sinh viết lại: kết quả cho thấy với công nghệ có tính tự động hoá thay thế một phần vai trò chuyên môn (khác với phần mềm hỗ trợ thông thường mà TAM ban đầu nghiên cứu), một cấu trúc mới — \"lo ngại mất kiểm soát chuyên môn\" — cần được thêm vào mô hình, và biến này dự báo mạnh hơn các biến TAM gốc trong bối cảnh này.\n\n## Bài tập \"So what?\" — kiểm tra đóng góp trước khi viết\n\n> [!ghi-nho] Kỹ thuật \"So what?\" (vậy thì sao?): viết ra một câu trả lời cho \"đóng góp của nghiên cứu này là gì\", rồi tự hỏi \"so what?\" — vậy thì ai quan tâm, và tại sao — cho câu trả lời đó. Lặp lại ít nhất ba lần. Nếu tới lần thứ ba mà câu trả lời vẫn chỉ là \"vì nó mới\" hoặc \"vì chưa ai làm\", đóng góp chưa đủ sâu để viết bài.\n\n> [!vi-du] **Câu 1:** \"Nghiên cứu cho thấy giảng viên lo ngại AI chấm bài làm giảm vai trò chuyên môn của họ.\" **So what? →** \"Điều này quan trọng vì các trường đang triển khai AI chấm bài mà không tính tới phản ứng tâm lý này của giảng viên.\" **So what? →** \"Nếu không tính tới, các trường có thể gặp phản ứng ngầm hoặc chống đối khi triển khai, làm thất bại các sáng kiến công nghệ giáo dục đã đầu tư.\" **So what? →** \"Điều này gợi ý mô hình chấp nhận công nghệ cho AI tự động hoá cao cần thêm biến 'đe dọa bản sắc nghề nghiệp' — một hướng chưa được các mô hình TAM/UTAUT hiện có tính đến.\" Tới lần thứ ba, đóng góp đã đủ cụ thể để định hướng cả bài báo.\n\n> [!canh-bao] Một chuỗi \"So what?\" có thể **thất bại** — dấu hiệu là câu trả lời bắt đầu lặp lại chính nó thay vì đào sâu thêm. Ví dụ: \"Nghiên cứu là đầu tiên khảo sát vấn đề này ở Việt Nam.\" **So what? →** \"Vì vậy nó lấp một khoảng trống trong tài liệu.\" **So what? →** \"Vì khoảng trống này chưa được lấp, nghiên cứu này lấp được nó.\" Câu trả lời thứ ba chỉ diễn đạt lại câu đầu bằng từ khác — không có thông tin mới nào được thêm vào. Đây là dấu hiệu rõ ràng: bản thân đóng góp gốc chỉ dừng ở \"tính mới\", chưa có gì để đào sâu thêm — cần quay lại bước xác định đóng góp lý thuyết (mục trên), không nên cố viết tiếp chuỗi \"So what?\" cho ra vẻ đủ ba lần.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nViết một đoạn mô tả research agenda của bạn (150-200 từ): hiện tượng/lý thuyết trung tâm, và đề tài hiện tại giải quyết phần nào trong đó. Xác định đóng góp dự kiến rơi vào ô nào trong ma trận 2×2, và chạy bài tập \"So what?\" ba lần cho đóng góp đó.\n\n### Nhóm 3-4 người (25 phút)\n\nĐọc đóng góp \"So what?\" lần cuối của nhau. Với mỗi người, hỏi thêm một lần \"so what?\" nữa — nếu vẫn còn trả lời được cụ thể, đóng góp đang rất chắc; nếu bắt đầu lặp lại hoặc mơ hồ, đó là giới hạn thật của đóng góp hiện tại, cần biết trước khi viết.\n\n### Bài tập về nhà (60 phút)\n\nViết đoạn \"Đóng góp nghiên cứu\" (200-250 từ, có thể viết song ngữ hoặc tiếng Anh nếu đã sẵn sàng cho Bài 4) dùng cho phần mở đầu bài báo, đủ cụ thể để trả lời được: đóng góp này thách thức/mở rộng/tích hợp lý thuyết nào, và ai ngoài chính bạn nên quan tâm.\n\n:::mau Mẫu nộp bài tập về nhà\n**Research agenda (150-200 từ):** …\n\n**Ô trong ma trận đóng góp:** ☐ Mở rộng + Khoa học ☐ Thách thức + Khoa học ☐ Mở rộng + Thực tiễn ☐ Thách thức + Thực tiễn\n\n**Chuỗi \"So what?\" (tối thiểu 3 lần):** …\n\n**Đoạn Đóng góp nghiên cứu hoàn chỉnh (200-250 từ):** …\n:::\n\n### Nguồn tham khảo\n\n- Whetten, D. A. (1989). What constitutes a theoretical contribution? *Academy of Management Review*, 14(4), 490-495.\n- Corley, K. G., & Gioia, D. A. (2011). Building theory about theory building: What constitutes a theoretical contribution? *Academy of Management Review*, 36(1), 12-32.\n- Colquitt, J. A., & Zapata-Phelan, C. P. (2007). Trends in theory building and theory testing: A five-decade study of the Academy of Management Journal. *Academy of Management Journal*, 50(6), 1281-1303.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "cbqt1-research-agenda",
+                "type": "mcq",
+                "prompt": "Vì sao nên đặt một đề tài nghiên cứu vào một research agenda nhiều năm, thay vì chọn từng đề tài độc lập theo cơ hội?",
+                "explanation": "Một mạch nghiên cứu liên kết giúp các công bố cộng dồn thành một câu chuyện chuyên môn nhất quán — điều hội đồng học thuật, nhà tuyển dụng và quỹ tài trợ đều tìm kiếm, thay vì một danh mục bài báo rời rạc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Để các công bố cộng dồn thành một câu chuyện chuyên môn nhất quán, thay vì một danh mục bài báo rời rạc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Để dễ tìm dữ liệu có sẵn cho từng bài báo mà không cần tìm đề tài mới",
+                    "isCorrect": false,
+                    "misconception": "cbqt.single-paper-thinking"
+                  },
+                  {
+                    "label": "Không có lý do học thuật nào, chỉ để tiết kiệm thời gian viết đề cương",
+                    "isCorrect": false,
+                    "misconception": "cbqt.single-paper-thinking"
+                  },
+                  {
+                    "label": "Để tránh phải học phương pháp mới cho mỗi bài báo",
+                    "isCorrect": false,
+                    "misconception": "cbqt.single-paper-thinking"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt1-hai-truc-dong-gop",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu thêm một biến điều tiết mới vào một mô hình lý thuyết đã có, với mục đích chủ yếu là giúp nhà nghiên cứu khác hiểu rõ hơn một cơ chế lý thuyết. Nghiên cứu này rơi vào ô nào trong ma trận đóng góp?",
+                "explanation": "Thêm một biến điều tiết vào mô hình đã có là đóng góp mức mở rộng (không thách thức giả định nền tảng), và mục đích chủ yếu là khoa học (giúp hiểu cơ chế lý thuyết) hơn là hướng dẫn thực hành trực tiếp.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Mở rộng + Khoa học",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thách thức + Khoa học",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Mở rộng + Thực tiễn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thách thức + Thực tiễn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt1-dong-gop-ly-thuyet",
+                "type": "mcq",
+                "prompt": "Câu nào thể hiện đúng một đóng góp lý thuyết ở mức công bố quốc tế?",
+                "explanation": "Đóng góp lý thuyết cần nói rõ nghiên cứu này thách thức, mở rộng hay tích hợp lý thuyết cụ thể nào, và thay đổi gì trong cách hiểu hiện có — không chỉ là một tuyên bố về việc chưa ai từng nghiên cứu điều này.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Nghiên cứu này thách thức giả định của TAM rằng nhận thức hữu ích luôn là yếu tố dự báo mạnh nhất, gợi ý cần thêm một cấu trúc mới cho công nghệ tự động hoá cao.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Chưa có nghiên cứu nào về AI tạo sinh và giảng viên tại Đông Nam Á.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.contribution-is-novelty-only"
+                  },
+                  {
+                    "label": "'Đây là nghiên cứu đầu tiên đo trải nghiệm giảng viên với AI chấm bài ở Việt Nam.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.contribution-is-novelty-only"
+                  },
+                  {
+                    "label": "'Nghiên cứu này bổ sung thêm một điểm dữ liệu mới vào lĩnh vực này.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.contribution-is-novelty-only"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt1-so-what",
+                "type": "mcq",
+                "prompt": "Sau khi chạy bài tập 'So what?' ba lần, câu trả lời của một nghiên cứu sinh vẫn là 'vì nó mới, chưa ai làm'. Điều này cho thấy gì?",
+                "explanation": "Nếu tới lần thứ ba câu trả lời vẫn chỉ dừng ở 'mới' hoặc 'chưa ai làm', đóng góp chưa đủ sâu để định hướng một bài báo — cần tiếp tục đào sâu hoặc xem lại đề tài trước khi viết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đóng góp chưa đủ sâu để viết bài, cần tiếp tục đào sâu câu trả lời hoặc xem lại đề tài",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đóng góp đã đủ mạnh vì tính mới luôn là yếu tố quan trọng nhất",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-so-what-test"
+                  },
+                  {
+                    "label": "Không cần lo, vì reviewer quốc tế không quan tâm tới câu hỏi 'so what'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-so-what-test"
+                  },
+                  {
+                    "label": "Nên dừng bài tập này vì ba lần là quá nhiều",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt1-venue-phu-hop",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu có đóng góp chủ yếu ở ô 'Mở rộng + Thực tiễn'. Nên tránh viết đóng góp bài báo theo hướng nào?",
+                "explanation": "Nên viết đóng góp đúng với ô thực tế của nghiên cứu — cố tuyên bố nghiên cứu 'vừa mang tính cách mạng lý thuyết vừa rất ứng dụng' khi thực tế chỉ là mở rộng cho thực tiễn sẽ không thuyết phục được reviewer và có thể chọn nhầm venue.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tránh tuyên bố nghiên cứu 'mang tính cách mạng lý thuyết' khi thực tế đóng góp chỉ là mở rộng cho thực tiễn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tránh nói bất cứ điều gì về ứng dụng thực tiễn của nghiên cứu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tránh gửi bài báo này tới bất kỳ tạp chí nào có yếu tố lý thuyết",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần tránh gì, mọi cách viết đóng góp đều phù hợp với mọi venue",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt1-thu-tu-dinh-vi",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước định vị nghiên cứu trước khi bắt đầu viết bài báo.",
+                "explanation": "Từ xác định vị trí đề tài trong research agenda, xác định ô đóng góp, viết câu đóng góp lý thuyết cụ thể, rồi kiểm tra độ sâu bằng bài tập So what?",
+                "points": 3,
+                "sequence": [
+                  "Xác định đề tài hiện tại giải quyết phần nào của research agenda dài hơi",
+                  "Xác định ô đóng góp trên ma trận nguyên bản × ứng dụng",
+                  "Viết câu đóng góp lý thuyết cụ thể, nêu rõ thách thức/mở rộng/tích hợp lý thuyết nào",
+                  "Chạy bài tập 'So what?' liên tiếp ít nhất ba lần để kiểm tra độ sâu",
+                  "Chỉ bắt đầu viết bài báo sau khi đóng góp đã qua được bài tập So what?"
+                ]
+              },
+              {
+                "key": "cbqt1-noi-loai-dong-gop",
+                "type": "matching",
+                "prompt": "Nối mỗi ví dụ với đúng ô trong ma trận đóng góp (nguyên bản × ứng dụng).",
+                "explanation": "Thêm biến điều tiết mới là mở rộng và hướng khoa học; chỉ ra giả định nền tảng sai là thách thức và hướng khoa học; kiểm định mô hình đã biết ở bối cảnh mới để hướng dẫn thực hành là mở rộng và thực tiễn; đề xuất cách làm mới thay thế khuyến nghị hiện tại là thách thức và thực tiễn.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Thêm một biến điều tiết mới vào mô hình lý thuyết đã có",
+                    "right": "Mở rộng + Khoa học"
+                  },
+                  {
+                    "left": "Chỉ ra một giả định nền tảng của lý thuyết không còn đúng trong bối cảnh mới",
+                    "right": "Thách thức + Khoa học"
+                  },
+                  {
+                    "left": "Kiểm định một mô hình đã biết trên bối cảnh mới để hướng dẫn thực hành",
+                    "right": "Mở rộng + Thực tiễn"
+                  },
+                  {
+                    "left": "Đề xuất một cách làm mới thay thế thực hành đang được khuyến nghị rộng rãi",
+                    "right": "Thách thức + Thực tiễn"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt1-viet-dong-gop",
+                "type": "essay",
+                "prompt": "Viết đoạn 'Đóng góp nghiên cứu' cho đề tài của bạn (200-250 từ), gồm: (a) research agenda và vị trí của đề tài hiện tại trong đó; (b) ô đóng góp trên ma trận nguyên bản × ứng dụng; (c) câu đóng góp lý thuyết cụ thể (thách thức/mở rộng/tích hợp lý thuyết nào); (d) chuỗi 'So what?' đã chạy ít nhất ba lần.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 2 · Tổng quan tài liệu hệ thống đầy đủ",
+          "durationMin": 100,
+          "description": "Xác định tiêu chí chọn/loại trước khi tìm kiếm theo PRISMA đầy đủ; thẩm định chất lượng phương pháp của từng nguồn trước khi tổng hợp; chọn đúng giữa gộp số liệu (meta-analysis) và tổng hợp tường thuật; đăng ký protocol trước để tăng minh bạch.",
+          "objectives": [
+            "Xác định tiêu chí chọn/loại (eligibility criteria) theo khung PICOS trước khi bắt đầu tìm kiếm, không đặt tiêu chí sau khi đã xem kết quả",
+            "Áp dụng được một công cụ thẩm định chất lượng phù hợp với loại thiết kế của các nguồn được đưa vào tổng quan",
+            "Quyết định đúng giữa gộp số liệu bằng meta-analysis và tổng hợp tường thuật/theo chủ đề, dựa trên mức độ đồng nhất giữa các nghiên cứu",
+            "Đăng ký protocol tổng quan trước khi bắt đầu tìm kiếm để tăng minh bạch và giảm nghi ngờ về thiên lệch lựa chọn"
+          ],
+          "summary": [
+            "Tiêu chí chọn/loại nguồn (eligibility criteria) phải được xác định theo khung PICOS trước khi xem kết quả tìm kiếm — đặt tiêu chí sau khi đã biết kết quả dễ dẫn tới chọn tiêu chí vừa khớp với điều mình muốn tìm thấy.",
+            "Không phải mọi nguồn tìm được có giá trị ngang nhau — một tổng quan hệ thống đầy đủ cần thẩm định chất lượng phương pháp của từng nguồn (Cochrane risk of bias, MMAT, CASP tuỳ loại thiết kế) trước khi đưa vào tổng hợp.",
+            "Gộp số liệu bằng meta-analysis chỉ có ý nghĩa khi các nghiên cứu đủ đồng nhất về cách đo lường và định nghĩa biến; khi không đủ đồng nhất, tổng hợp tường thuật hoặc theo chủ đề là lựa chọn đúng, không phải lựa chọn kém hơn.",
+            "Đăng ký protocol (tiêu chí, chiến lược tìm kiếm, kế hoạch phân tích) trước khi bắt đầu tìm kiếm thật làm tăng độ tin cậy của tổng quan và là yêu cầu ngày càng phổ biến ở các tạp chí quốc tế."
+          ],
+          "splitSections": true,
+          "body": "\nMa trận tổng quan và PRISMA rút gọn (đã học ở khoá Phương pháp nghiên cứu) đủ cho một luận văn. Ở mức công bố quốc tế, tổng quan tài liệu — đặc biệt nếu bản thân nó là một bài báo review — cần đầy đủ và minh bạch hơn nhiều: bài đi qua bốn bước, từ xác định tiêu chí chọn/loại nguồn theo khung PICOS trước khi tìm kiếm, tới thẩm định chất lượng phương pháp của từng nguồn, quyết định giữa gộp số liệu bằng meta-analysis hay tổng hợp tường thuật, và kết bằng việc đăng ký protocol trước khi bắt đầu tìm kiếm thật.\n\n## Xác định tiêu chí chọn/loại trước khi tìm kiếm\n\n> [!ghi-nho] Khung **PICOS** (Population, Intervention/Exposure, Comparison, Outcome, Study design) giúp xác định rõ tiêu chí chọn/loại nguồn **trước khi** chạy tìm kiếm: đối tượng nghiên cứu nào được tính, can thiệp/hiện tượng nào, so sánh gì (nếu có), đo kết quả nào, và chỉ nhận thiết kế nghiên cứu nào (ví dụ chỉ nhận nghiên cứu định lượng có nhóm đối chứng, hoặc mọi thiết kế).\n\n> [!canh-bao] Đặt tiêu chí chọn/loại **sau khi** đã xem qua kết quả tìm kiếm — ví dụ thấy một nhóm nghiên cứu cho kết quả không như mong đợi rồi mới nghĩ ra lý do để loại chúng — là một dạng thiên lệch xác nhận nghiêm trọng. Tiêu chí phải cố định trước khi nhìn thấy nội dung các nghiên cứu, chỉ dựa trên đặc điểm khách quan (năm xuất bản, ngôn ngữ, loại thiết kế, đối tượng).\n\n> [!vi-du] Với câu hỏi \"AI tạo sinh ảnh hưởng tới động lực học tập của sinh viên đại học ra sao\", khung PICOS được xác định trước: P = sinh viên đại học (loại học sinh phổ thông và sau đại học), I = sử dụng công cụ AI tạo sinh trong học tập, C = không bắt buộc có nhóm so sánh, O = động lực học tập đo bằng thang đo đã công bố, S = nghiên cứu định lượng hoặc hỗn hợp có đo lường định lượng (loại nghiên cứu định tính thuần và bài quan điểm/bình luận).\n\nVới tiêu chí PICOS đã cố định, luồng lọc nguồn theo PRISMA cho một con số cụ thể ở mỗi bước — ví dụ minh hoạ:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Tìm được từ các cơ sở dữ liệu (Scopus, WoS, ERIC)          n = 450\n  − Loại trùng lặp                                          − 130\nSàng lọc theo tiêu đề/tóm tắt                                n = 320\n  − Loại theo tiêu chí PICOS (không đúng P, I, hoặc S)       − 250\nĐọc toàn văn để đánh giá đủ điều kiện                        n = 70\n  − Loại sau đọc toàn văn (ghi rõ lý do từng bài, ví dụ:\n    không đo đúng O = 25, không phải nghiên cứu gốc = 10,\n    không đủ dữ liệu báo cáo = 5)                            − 40\nĐưa vào tổng quan                                            n = 30</pre></div>\n```\n\n> [!meo] PRISMA yêu cầu ghi rõ **lý do loại** ở bước đọc toàn văn (không chỉ ở bước tiêu đề/tóm tắt) — vì đây là bước duy nhất reviewer có thể kiểm tra được tính nhất quán của việc áp dụng tiêu chí. Một tổng quan chỉ báo \"n = 30 được đưa vào\" mà không có số liệu ở các bước trung gian không đạt chuẩn PRISMA 2020.\n\n## Thẩm định chất lượng nguồn\n\nMột tổng quan chỉ liệt kê nguồn mà không đánh giá chất lượng phương pháp coi một nghiên cứu thiết kế yếu và một nghiên cứu thiết kế mạnh có giá trị ngang nhau khi tổng hợp — điều này không đứng được ở mức công bố quốc tế.\n\n| Loại nguồn | Công cụ thẩm định chất lượng phổ biến |\n|---|---|\n| Nghiên cứu định lượng có nhóm đối chứng/thực nghiệm | Cochrane Risk of Bias Tool |\n| Nghiên cứu định lượng không thực nghiệm (khảo sát cắt ngang...) | Các checklist tương ứng trong bộ công cụ JBI (Joanna Briggs Institute) |\n| Nghiên cứu định tính | CASP (Critical Appraisal Skills Programme) Qualitative Checklist |\n| Tổng quan có cả định lượng và định tính | MMAT (Mixed Methods Appraisal Tool) |\n\n> [!canh-bao] Đưa mọi nguồn tìm được vào tổng hợp mà không thẩm định chất lượng — coi một nghiên cứu mẫu 15 người không mô tả rõ phương pháp chọn mẫu có giá trị ngang một nghiên cứu mẫu 500 người chọn ngẫu nhiên phân tầng — làm loãng chất lượng của toàn bộ tổng quan. Kết quả thẩm định (ví dụ phân loại rủi ro thiên lệch cao/trung bình/thấp) nên được báo cáo trong bảng và có thể dùng để quyết định có loại một số nguồn khỏi tổng hợp chính hay chỉ đưa vào phân tích bổ sung.\n\n## Gộp số liệu hay tổng hợp tường thuật\n\nSau khi có danh sách nguồn đã thẩm định chất lượng, quyết định tiếp theo là cách tổng hợp.\n\n> [!ghi-nho] **Meta-analysis** gộp effect size từ nhiều nghiên cứu bằng phương pháp thống kê để ra một ước lượng chung, mạnh hơn từng nghiên cứu riêng lẻ — nhưng chỉ có ý nghĩa khi các nghiên cứu đủ **đồng nhất** (cùng đo một hiện tượng bằng cách tương thích được). Mức độ không đồng nhất được đo bằng chỉ số **I²** — I² cao (thường > 75%) là dấu hiệu các nghiên cứu quá khác nhau để gộp số một cách có nghĩa.\n\n> [!canh-bao] Cố gộp effect size từ các nghiên cứu đo \"động lực học tập\" bằng những thang đo hoàn toàn khác nhau, định nghĩa khái niệm khác nhau, hoặc trên đối tượng quá khác biệt, tạo ra một con số gộp không có ý nghĩa gì thật — dù về mặt tính toán vẫn ra được một số. Khi I² cao hoặc các nghiên cứu không đủ tương thích, **tổng hợp tường thuật hoặc theo chủ đề** (narrative/thematic synthesis) là lựa chọn đúng đắn, không phải một lựa chọn \"kém hơn\" khi không làm được thống kê.\n\nI² ước lượng phần trăm biến thiên **giữa các nghiên cứu** không do sai số ngẫu nhiên (khác với biến thiên nội tại của từng nghiên cứu). Với 4 nghiên cứu đo cùng một effect size (ví dụ hệ số tương quan giữa dùng AI và động lực học tập):\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Nghiên cứu    r       n\nA             0.42    120\nB             0.15    95\nC             0.51    150\nD             0.08    80\n\nI² = (Q − df) / Q × 100%   (Q: thống kê Cochran, df = số nghiên cứu − 1)\n   → với 4 nghiên cứu có độ trải effect size lớn (0.08 tới 0.51) và cỡ mẫu\n     đủ lớn để chênh lệch này khó do ngẫu nhiên, Q thường vượt xa df,\n     cho I² ở khoảng 70-85% — mức cao</pre></div>\n```\n\n> [!ghi-nho] Không cần tự tay tính Q trong bài này (phần mềm như R `metafor` hoặc RevMan tính tự động) — điều quan trọng là **đọc đúng** con số I² phần mềm trả ra và biết ngưỡng: theo Higgins et al. (2003), I² quanh 25% là thấp, 50% là vừa, 75% trở lên là cao. Với ví dụ trên, r dao động từ 0.08 tới 0.51 (chênh lệch hơn 6 lần) trên cỡ mẫu đủ lớn để loại trừ khả năng đây chỉ là nhiễu ngẫu nhiên — đây chính là biểu hiện thực tế của I² cao: các nghiên cứu đang đo những thứ đủ khác nhau (có thể do khác định nghĩa \"dùng AI\", khác đối tượng) để việc gộp thành một con số duy nhất che giấu sự khác biệt quan trọng đó.\n\n| Tình huống | Cách tổng hợp phù hợp |\n|---|---|\n| Nhiều nghiên cứu định lượng, cùng đo một biến bằng thang đo tương thích, I² thấp | Meta-analysis |\n| Các nghiên cứu đo khác nhau, thiết kế khác nhau, hoặc trộn định lượng/định tính | Tổng hợp tường thuật hoặc theo chủ đề |\n| Ít nghiên cứu (dưới 5-10), hoặc chất lượng phương pháp không đồng đều | Thường không đủ điều kiện cho meta-analysis đáng tin |\n\n## Đăng ký protocol trước khi tìm kiếm\n\n> [!ghi-nho] **Đăng ký protocol** (ví dụ trên PROSPERO cho tổng quan y sinh, hoặc OSF cho các lĩnh vực khác) là công bố trước công khai: câu hỏi nghiên cứu, tiêu chí PICOS, chiến lược tìm kiếm, và kế hoạch phân tích — **trước khi** bắt đầu tìm kiếm thật.\n\n> [!canh-bao] Không đăng ký protocol trước không tự động làm tổng quan sai, nhưng nó làm mất một lớp bảo vệ chống thiên lệch: không có bằng chứng khách quan cho thấy tiêu chí và kế hoạch phân tích không bị thay đổi sau khi đã biết kết quả. Nhiều tạp chí quốc tế hàng đầu hiện yêu cầu hoặc ưu tiên các tổng quan có đăng ký protocol trước.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (45 phút)\n\nXác định khung PICOS cho câu hỏi tổng quan của bạn, trước khi xem lại bất kỳ kết quả tìm kiếm đã có. Chọn công cụ thẩm định chất lượng phù hợp với loại nguồn dự kiến. Ước lượng: dữ liệu của bạn có khả năng đủ đồng nhất cho meta-analysis, hay nên đi hướng tổng hợp tường thuật?\n\n### Nhóm 3-4 người (30 phút)\n\nĐổi khung PICOS cho nhau. Kiểm: tiêu chí có đủ khách quan để áp dụng nhất quán không, hay có kẽ hở cho việc chọn tiêu chí theo ý muốn sau khi xem kết quả? Thảo luận lựa chọn công cụ thẩm định chất lượng có phù hợp với loại thiết kế nguồn dự kiến không.\n\n### Bài tập về nhà (90 phút)\n\nViết bản protocol tổng quan (400-600 từ): câu hỏi nghiên cứu, khung PICOS, chiến lược tìm kiếm (nguồn tra cứu, từ khoá), công cụ thẩm định chất lượng sẽ dùng, và kế hoạch tổng hợp (meta-analysis hoặc tường thuật, kèm lý do).\n\n:::mau Mẫu nộp bài tập về nhà\n**Câu hỏi tổng quan:** …\n\n**Khung PICOS:** P … I/E … C … O … S …\n\n**Chiến lược tìm kiếm:** nguồn tra cứu … , từ khoá …\n\n**Công cụ thẩm định chất lượng:** …\n\n**Kế hoạch tổng hợp và lý do:** ☐ Meta-analysis ☐ Tổng hợp tường thuật/theo chủ đề — vì …\n:::\n\n### Nguồn tham khảo\n\n- Page, M. J., et al. (2021). The PRISMA 2020 statement: An updated guideline for reporting systematic reviews. *BMJ*, 372, n71.\n- Higgins, J. P. T., et al. (Eds.). (2019). *Cochrane Handbook for Systematic Reviews of Interventions* (2nd ed.). Wiley.\n- Hong, Q. N., et al. (2018). The Mixed Methods Appraisal Tool (MMAT), version 2018, for information professionals and researchers. *Education for Information*, 34(4), 285-291.\n- Popay, J., et al. (2006). *Guidance on the Conduct of Narrative Synthesis in Systematic Reviews.* ESRC Methods Programme.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "cbqt2-picos-truoc-tim-kiem",
+                "type": "mcq",
+                "prompt": "Vì sao tiêu chí chọn/loại nguồn (theo khung PICOS) cần được xác định trước khi xem kết quả tìm kiếm, không phải sau?",
+                "explanation": "Đặt tiêu chí sau khi đã xem kết quả dễ dẫn tới việc chọn tiêu chí sao cho vừa khớp với điều mình muốn tìm thấy — một dạng thiên lệch xác nhận. Tiêu chí phải dựa trên đặc điểm khách quan, cố định trước khi biết nội dung các nghiên cứu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Để tránh thiên lệch xác nhận — chọn tiêu chí sao cho vừa khớp với kết quả mình muốn tìm thấy",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có lý do đặc biệt, chỉ là quy ước trình bày trong bài báo",
+                    "isCorrect": false,
+                    "misconception": "cbqt.eligibility-criteria-after-search"
+                  },
+                  {
+                    "label": "Vì các cơ sở dữ liệu học thuật yêu cầu nhập tiêu chí trước khi tìm kiếm",
+                    "isCorrect": false,
+                    "misconception": "cbqt.eligibility-criteria-after-search"
+                  },
+                  {
+                    "label": "Chỉ cần thiết với tổng quan y sinh, không cần với các lĩnh vực khác",
+                    "isCorrect": false,
+                    "misconception": "cbqt.eligibility-criteria-after-search"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt2-tham-dinh-chat-luong",
+                "type": "mcq",
+                "prompt": "Một tổng quan đưa mọi nguồn tìm được vào tổng hợp, coi một nghiên cứu mẫu 15 người không rõ phương pháp chọn mẫu có giá trị ngang một nghiên cứu mẫu 500 người chọn ngẫu nhiên phân tầng. Vấn đề của cách làm này là gì?",
+                "explanation": "Không phải mọi nguồn có giá trị ngang nhau — thiếu thẩm định chất lượng làm loãng chất lượng của toàn bộ tổng quan, vì các nghiên cứu thiết kế yếu và mạnh được đối xử như nhau khi tổng hợp.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Thiếu thẩm định chất lượng phương pháp — coi các nguồn có chất lượng khác nhau có giá trị ngang nhau khi tổng hợp",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì tổng quan chỉ cần liệt kê đầy đủ mọi nguồn tìm được",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-quality-appraisal"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là nên loại bỏ hết các nghiên cứu mẫu nhỏ",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-quality-appraisal"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, cỡ mẫu không liên quan tới chất lượng phương pháp",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt2-i2-cao",
+                "type": "mcq",
+                "prompt": "Chỉ số I² giữa các nghiên cứu trong một tổng quan là 85% (rất cao). Quyết định nào phù hợp?",
+                "explanation": "I² cao là dấu hiệu các nghiên cứu quá khác nhau để gộp số liệu bằng meta-analysis một cách có nghĩa. Trong trường hợp này, tổng hợp tường thuật hoặc theo chủ đề là lựa chọn đúng đắn, không phải lựa chọn kém hơn.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chuyển sang tổng hợp tường thuật hoặc theo chủ đề, vì các nghiên cứu quá không đồng nhất để gộp số có nghĩa",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vẫn chạy meta-analysis vì phần mềm thống kê vẫn tính ra được một con số",
+                    "isCorrect": false,
+                    "misconception": "cbqt.meta-analysis-forced"
+                  },
+                  {
+                    "label": "Loại bỏ chỉ số I² khỏi báo cáo để tránh làm phức tạp bài viết",
+                    "isCorrect": false,
+                    "misconception": "cbqt.meta-analysis-forced"
+                  },
+                  {
+                    "label": "Tăng số lượng nghiên cứu đưa vào để giảm I²",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt2-dang-ky-protocol",
+                "type": "mcq",
+                "prompt": "Đăng ký protocol tổng quan trước khi tìm kiếm (trên PROSPERO hoặc OSF) mang lại lợi ích gì?",
+                "explanation": "Đăng ký trước công khai câu hỏi, tiêu chí và kế hoạch phân tích trước khi biết kết quả, tạo một lớp bảo vệ chống thiên lệch và tăng độ tin cậy của tổng quan — nhiều tạp chí quốc tế hàng đầu hiện ưu tiên các tổng quan có đăng ký protocol.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Tạo bằng chứng khách quan cho thấy tiêu chí và kế hoạch phân tích không bị thay đổi sau khi biết kết quả",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giúp tìm kiếm tài liệu nhanh hơn vì hệ thống PROSPERO tự động tìm nguồn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Là yêu cầu bắt buộc với mọi loại bài báo, không riêng tổng quan hệ thống",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có lợi ích gì thực chất, chỉ là thủ tục hình thức thêm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt2-cong-cu-tham-dinh",
+                "type": "mcq",
+                "prompt": "Một tổng quan có cả nguồn định lượng và định tính. Công cụ thẩm định chất lượng nào phù hợp nhất?",
+                "explanation": "MMAT (Mixed Methods Appraisal Tool) được thiết kế riêng cho tổng quan có cả nghiên cứu định lượng và định tính, khác với Cochrane Risk of Bias (chỉ cho thực nghiệm) hoặc CASP (chỉ cho định tính).",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "MMAT (Mixed Methods Appraisal Tool)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ dùng Cochrane Risk of Bias Tool cho toàn bộ nguồn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ dùng CASP Qualitative Checklist cho toàn bộ nguồn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần công cụ thẩm định nào nếu tổng quan có cả hai loại nguồn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt2-thu-tu-tong-quan-day-du",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước làm một tổng quan tài liệu hệ thống đầy đủ ở mức công bố quốc tế.",
+                "explanation": "Từ xác định PICOS và đăng ký protocol, tìm kiếm và lọc theo PRISMA, thẩm định chất lượng từng nguồn, tới quyết định cách tổng hợp dựa trên mức độ đồng nhất.",
+                "points": 3,
+                "sequence": [
+                  "Xác định khung PICOS và đăng ký protocol trước khi tìm kiếm",
+                  "Tìm kiếm và lọc nguồn theo luồng PRISMA đầy đủ",
+                  "Thẩm định chất lượng phương pháp của từng nguồn được đưa vào",
+                  "Đánh giá mức độ đồng nhất (I²) giữa các nghiên cứu",
+                  "Chọn cách tổng hợp: meta-analysis nếu đủ đồng nhất, tổng hợp tường thuật nếu không"
+                ]
+              },
+              {
+                "key": "cbqt2-noi-cong-cu-tong-quan",
+                "type": "matching",
+                "prompt": "Nối mỗi công cụ hoặc khái niệm với đúng vai trò của nó trong tổng quan hệ thống đầy đủ.",
+                "explanation": "PICOS xác định tiêu chí chọn/loại; Cochrane Risk of Bias thẩm định chất lượng nghiên cứu thực nghiệm; I² đo mức độ đồng nhất giữa các nghiên cứu; PROSPERO/OSF là nơi đăng ký protocol trước khi tìm kiếm.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Khung PICOS",
+                    "right": "Xác định tiêu chí chọn/loại nguồn trước khi tìm kiếm"
+                  },
+                  {
+                    "left": "Cochrane Risk of Bias Tool",
+                    "right": "Thẩm định chất lượng nghiên cứu thực nghiệm/có đối chứng"
+                  },
+                  {
+                    "left": "Chỉ số I²",
+                    "right": "Đo mức độ đồng nhất giữa các nghiên cứu trước khi quyết định gộp số"
+                  },
+                  {
+                    "left": "PROSPERO / OSF",
+                    "right": "Nơi đăng ký protocol tổng quan trước khi bắt đầu tìm kiếm"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt2-viet-protocol",
+                "type": "essay",
+                "prompt": "Viết bản protocol tổng quan cho đề tài của bạn (250-350 từ), gồm: (a) khung PICOS đầy đủ; (b) chiến lược tìm kiếm (nguồn tra cứu, từ khoá chính); (c) công cụ thẩm định chất lượng sẽ dùng và lý do chọn; (d) kế hoạch tổng hợp dự kiến (meta-analysis hoặc tường thuật) và lý do.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 3 · Phương pháp nghiên cứu nâng cao",
+          "durationMin": 100,
+          "description": "Kiểm định hiệu ứng trung gian có điều kiện (moderated mediation) khi lý thuyết đòi hỏi; kiểm đo lường bất biến trước khi so sánh mô hình giữa các nhóm; dùng manipulation check trong thiết kế thực nghiệm; hiểu vì sao longitudinal design xác lập nhân quả tốt hơn hai lần đo cắt ngang.",
+          "objectives": [
+            "Nhận diện khi nào lý thuyết đòi hỏi một mô hình moderated mediation tích hợp, thay vì kiểm mediation và moderation riêng rẽ",
+            "Kiểm đo lường bất biến (measurement invariance) trước khi so sánh path coefficient giữa các nhóm trong multi-group analysis",
+            "Thiết kế và diễn giải đúng manipulation check trong một thiết kế thực nghiệm trước khi đọc kết quả biến phụ thuộc",
+            "Giải thích được vì sao longitudinal design xác lập trình tự thời gian tốt hơn thiết kế hai lần đo, và giới hạn còn lại của nó với các yếu tố gây nhiễu"
+          ],
+          "summary": [
+            "Khi lý thuyết đề xuất một hiệu ứng trung gian thay đổi theo mức của một biến điều tiết, cần một mô hình moderated mediation tích hợp — chạy riêng hai mô hình mediation và moderation làm mất thông tin về việc hiệu ứng trung gian mạnh hay yếu ở điều kiện nào.",
+            "So sánh path coefficient giữa các nhóm (multi-group analysis) chỉ có ý nghĩa sau khi đã xác nhận đo lường bất biến — nếu thang đo không đo cùng một cách giữa các nhóm, sự khác biệt về path có thể do khác biệt đo lường, không phải khác biệt thật về mối quan hệ.",
+            "Manipulation check xác nhận can thiệp thực nghiệm có thực sự tạo ra sự khác biệt ở biến độc lập như dự kiến — không kiểm bước này trước khi đọc kết quả biến phụ thuộc là đọc một kết quả không rõ nguyên nhân thật.",
+            "Longitudinal design (đo nhiều lần theo thời gian) xác lập được trình tự thời gian, điều mà thiết kế cắt ngang không làm được — nhưng ngay cả thiết kế hai lần đo cũng chưa đủ để khẳng định nhân quả hoàn toàn nếu các yếu tố gây nhiễu chưa được kiểm soát."
+          ],
+          "splitSections": true,
+          "body": "\nCác kỹ thuật ở khoá Phương pháp nghiên cứu (SEM/PLS-SEM cơ bản, mediation, moderation riêng lẻ) đủ cho một luận văn. Reviewer của tạp chí quốc tế thường kỳ vọng một bước sâu hơn khi lý thuyết của bạn đòi hỏi: bài đi qua bốn kỹ thuật nâng cao, từ moderated mediation khi hiệu ứng trung gian thay đổi theo một biến điều tiết, tới kiểm đo lường bất biến trước khi so sánh mô hình giữa các nhóm, dùng manipulation check để xác nhận can thiệp thực nghiệm có hiệu quả, và kết bằng longitudinal design cùng giới hạn thật của nó trong việc xác lập nhân quả.\n\n## Hiệu ứng trung gian có điều kiện: moderated mediation\n\n> [!ghi-nho] **Moderated mediation** kiểm định khi một hiệu ứng trung gian (indirect effect, đã học ở khoá Phương pháp nghiên cứu) **thay đổi độ mạnh tuỳ theo mức của một biến điều tiết** — gọi là **conditional indirect effect**. Đây khác với việc chỉ có một mediator hoặc chỉ có một moderator riêng lẻ.\n\n> [!canh-bao] Nếu lý thuyết của bạn thực chất đề xuất \"cơ chế trung gian này chỉ hoạt động mạnh trong một số điều kiện\" — ví dụ hiệu ứng trung gian của \"ý định sử dụng\" giữa nhận thức hữu ích và hành vi sử dụng chỉ mạnh ở người có kinh nghiệm công nghệ thấp — chạy riêng một mô hình mediation và một mô hình moderation sẽ **mất thông tin quan trọng nhất**: bạn sẽ biết có trung gian, biết có điều tiết, nhưng không biết trung gian đó mạnh/yếu ở điều kiện nào.\n\n> [!vi-du] Một nghiên cứu kiểm mô hình: nhận thức hữu ích → ý định sử dụng (mediator) → hành vi sử dụng, với kinh nghiệm công nghệ là moderator trên đường dẫn ý định → hành vi. Chạy moderated mediation cho thấy conditional indirect effect có ý nghĩa ở nhóm kinh nghiệm thấp (β = 0.38, p < 0.01) nhưng không có ý nghĩa ở nhóm kinh nghiệm cao (β = 0.06, p = 0.41) — một phát hiện chỉ nhìn thấy được khi hai cơ chế được kiểm cùng lúc trong một mô hình tích hợp.\n\n> [!ghi-nho] Ngoài việc so sánh conditional indirect effect ở từng mức riêng lẻ (thấp/cao), cách báo cáo chặt chẽ hơn là **index of moderated mediation (Hayes, 2015)** — một chỉ số duy nhất kiểm định trực tiếp xem độ dốc của conditional indirect effect theo moderator có khác 0 hay không (tức là bản thân sự \"thay đổi theo moderator\" có ý nghĩa thống kê, chứ không chỉ suy luận gián tiếp từ việc một điều kiện có ý nghĩa còn điều kiện kia thì không). Với ví dụ trên, index = −0.021 (khoảng tin cậy bootstrap 95% [−0.038, −0.006], không chứa 0) xác nhận độ mạnh của hiệu ứng trung gian **thực sự giảm dần** khi kinh nghiệm công nghệ tăng lên — một kết luận mạnh hơn việc chỉ nói \"có ý nghĩa ở nhóm này, không ở nhóm kia\" (hai nhóm có thể \"trông khác nhau\" mà bản thân sự khác biệt đó lại không có ý nghĩa thống kê nếu không kiểm trực tiếp).\n\n## Multi-group analysis: kiểm đo lường bất biến trước khi so sánh\n\nNghiên cứu công bố quốc tế thường so sánh mô hình giữa các nhóm (nam/nữ, các quốc gia, các ngành...) — nhưng bước này có một điều kiện tiên quyết hay bị bỏ qua.\n\n> [!canh-bao] So sánh trực tiếp path coefficient giữa hai nhóm mà chưa kiểm **đo lường bất biến (measurement invariance)** là lỗi phổ biến nhất trong multi-group analysis (MGA). Nếu thang đo không đo cùng một cách ở hai nhóm (ví dụ một item được hiểu khác nhau giữa nam và nữ), sự khác biệt về path coefficient giữa hai nhóm có thể do khác biệt trong cách đo lường, không phải do khác biệt thật trong mối quan hệ giữa các biến.\n\n> [!ghi-nho] Quy trình MGA đúng thứ tự: kiểm **configural invariance** (cấu trúc mô hình giống nhau giữa các nhóm) → **metric invariance** (hệ số tải factor loading tương đương giữa các nhóm) → chỉ khi đã đạt các bước này mới so sánh path coefficient giữa các nhóm bằng kiểm định (ví dụ permutation test trong PLS-SEM, hoặc chi-square difference test trong CB-SEM).\n\nVới CB-SEM, metric invariance được kiểm bằng cách so sánh độ khớp mô hình giữa hai mô hình lồng nhau (nested): mô hình để factor loading tự do ước lượng riêng cho từng nhóm, so với mô hình ràng buộc factor loading bằng nhau giữa các nhóm.\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Mô hình configural (loading tự do từng nhóm)     CFI = 0.951\nMô hình metric (loading ràng buộc bằng nhau)     CFI = 0.947\nΔCFI = 0.951 − 0.947 = 0.004</pre></div>\n```\n\n> [!ghi-nho] Ngưỡng thường dùng (Cheung & Rensvold, 2002): **ΔCFI ≤ 0.01** giữa hai mô hình lồng nhau được coi là đạt metric invariance — ràng buộc loading bằng nhau giữa các nhóm không làm độ khớp mô hình xấu đi đáng kể. Với ví dụ trên, ΔCFI = 0.004 < 0.01 → đạt metric invariance, có thể tiến tới so sánh path coefficient giữa hai nhóm một cách đáng tin cậy.\n\n> [!canh-bao] ΔCFI vượt 0.01 (ví dụ 0.025) nghĩa là thang đo **không đo cùng một cách** giữa hai nhóm — dừng lại ở đây, không so sánh path coefficient. Bước tiếp theo là tìm item nào gây ra sự không bất biến (partial invariance) trước khi quyết định có thể so sánh phần còn lại của mô hình hay không, không phải bỏ qua cảnh báo và so sánh path như bình thường.\n\n## Manipulation check trong thiết kế thực nghiệm\n\nKhi đóng góp của bạn cần khẳng định nhân quả mạnh hơn những gì một mô hình cắt ngang (SEM/PLS-SEM) cho phép, thiết kế thực nghiệm hoặc bán thực nghiệm (quasi-experimental) là công cụ phù hợp — nhưng cần một bước kiểm tra trước khi đọc kết quả chính.\n\n> [!ghi-nho] **Manipulation check** là bước kiểm tra can thiệp thực nghiệm có thực sự tạo ra sự khác biệt ở biến độc lập **như dự kiến** hay không, trước khi nhìn vào kết quả biến phụ thuộc. Ví dụ: nếu thí nghiệm định tạo ra hai mức \"tin tưởng vào AI\" (cao/thấp) bằng cách cho hai nhóm đọc hai đoạn văn khác nhau, cần đo lại mức tin tưởng thật của người tham gia sau khi đọc — không giả định đoạn văn chắc chắn tạo ra đúng hiệu ứng dự kiến.\n\n> [!canh-bao] Bỏ qua manipulation check và đọc thẳng kết quả biến phụ thuộc là đọc một kết quả **không rõ nguyên nhân thật**: nếu can thiệp không thực sự tạo ra sự khác biệt ở biến độc lập (manipulation thất bại), một kết quả không có ý nghĩa ở biến phụ thuộc có thể là do manipulation yếu, không phải do lý thuyết sai — hai kết luận rất khác nhau.\n\n## Longitudinal design và giới hạn còn lại của nó\n\n> [!ghi-nho] **Longitudinal design** (đo cùng một mẫu ở nhiều thời điểm) xác lập được **trình tự thời gian** giữa các biến — điều kiện cần (nhưng chưa đủ) cho việc khẳng định nhân quả, và điều mà thiết kế cắt ngang (đã học ở Bài 5, khoá Phương pháp nghiên cứu) không làm được. Mô hình **cross-lagged panel** (đo X và Y ở cả hai thời điểm, kiểm cả hai chiều tác động) cho phép so sánh: X ở T1 dự báo Y ở T2 mạnh hơn, hay Y ở T1 dự báo X ở T2 mạnh hơn.\n\n> [!canh-bao] Chỉ đo hai lần (T1, T2) và thấy X ở T1 dự báo Y ở T2 có ý nghĩa thống kê **chưa đủ** để khẳng định nhân quả hoàn toàn — trình tự thời gian là một điều kiện cần, nhưng các yếu tố gây nhiễu (confounders) không được đo và kiểm soát vẫn có thể tạo ra mối quan hệ giả. Longitudinal design cải thiện đáng kể so với cắt ngang, nhưng không thay thế được một thiết kế thực nghiệm có phân nhóm ngẫu nhiên nếu mục tiêu là khẳng định nhân quả chắc chắn.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (45 phút)\n\nXem lại khung lý thuyết của bạn: có mối quan hệ nào thực chất là moderated mediation (một mediator mà độ mạnh thay đổi theo một moderator) mà bạn đang định kiểm riêng rẽ không? Nếu đề tài của bạn so sánh giữa các nhóm, viết quy trình kiểm đo lường bất biến trước khi so sánh path. Nếu dùng thiết kế thực nghiệm, viết cách bạn sẽ đo manipulation check.\n\n### Nhóm 3-4 người (30 phút)\n\nPhản biện chéo: với thiết kế multi-group, hỏi \"bạn đã kiểm configural và metric invariance trước khi so sánh path chưa?\" Với thiết kế thực nghiệm, hỏi \"manipulation check của bạn đo được gì, và nếu nó thất bại thì bạn sẽ diễn giải kết quả biến phụ thuộc thế nào?\"\n\n### Bài tập về nhà (90 phút)\n\nViết phần Phương pháp nâng cao cho bài báo (300-400 từ): mô tả kỹ thuật cụ thể sẽ dùng (moderated mediation, multi-group analysis, thiết kế thực nghiệm, hoặc longitudinal), quy trình kiểm định đi kèm (invariance, manipulation check...), và lý do kỹ thuật này phù hợp với câu hỏi/lý thuyết của bạn.\n\n:::mau Mẫu nộp bài tập về nhà\n**Kỹ thuật nâng cao đã chọn:** ☐ Moderated mediation ☐ Multi-group analysis ☐ Thiết kế thực nghiệm ☐ Longitudinal\n\n**Lý do chọn (nối với lý thuyết/câu hỏi):** …\n\n**Quy trình kiểm định đi kèm:** …\n\n**Kết quả dự kiến nếu giả thuyết đúng, và nếu giả thuyết sai:** …\n:::\n\n### Nguồn tham khảo\n\n- Hayes, A. F. (2022). *Introduction to Mediation, Moderation, and Conditional Process Analysis* (3rd ed.). Guilford Press.\n- Henseler, J., Ringle, C. M., & Sarstedt, M. (2016). Testing measurement invariance of composites using partial least squares. *International Marketing Review*, 33(3), 405-431.\n- Perdue, B. C., & Summers, J. O. (1986). Checking the success of manipulations in marketing experiments. *Journal of Marketing Research*, 23(4), 317-326.\n- Ployhart, R. E., & Vandenberg, R. J. (2010). Longitudinal research: The theory, design, and analysis of change. *Journal of Management*, 36(1), 94-120.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "cbqt3-moderated-mediation",
+                "type": "mcq",
+                "prompt": "Lý thuyết cho rằng hiệu ứng trung gian của 'ý định sử dụng' chỉ mạnh ở người có kinh nghiệm công nghệ thấp, yếu ở người kinh nghiệm cao. Cách kiểm định nào đúng?",
+                "explanation": "Đây là một moderated mediation: hiệu ứng trung gian thay đổi theo mức của biến điều tiết. Chạy riêng mediation và moderation làm mất thông tin về việc hiệu ứng trung gian mạnh/yếu ở điều kiện nào.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chạy một mô hình moderated mediation tích hợp để kiểm conditional indirect effect ở từng mức của biến điều tiết",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chạy riêng một mô hình mediation và một mô hình moderation, rồi so sánh kết quả bằng mắt",
+                    "isCorrect": false,
+                    "misconception": "cbqt.mediation-moderation-separate"
+                  },
+                  {
+                    "label": "Chỉ cần chạy mediation, vì moderation chỉ là chi tiết phụ không cần kiểm riêng",
+                    "isCorrect": false,
+                    "misconception": "cbqt.mediation-moderation-separate"
+                  },
+                  {
+                    "label": "Không thể kiểm định được loại quan hệ này bằng bất kỳ mô hình thống kê nào",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt3-mga-invariance",
+                "type": "mcq",
+                "prompt": "Trước khi so sánh path coefficient giữa nhóm nam và nữ trong một multi-group analysis, bước nào cần thực hiện trước?",
+                "explanation": "Cần kiểm đo lường bất biến (configural và metric invariance) trước — nếu thang đo không đo cùng một cách giữa hai nhóm, sự khác biệt về path có thể do khác biệt đo lường, không phải khác biệt thật.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Kiểm đo lường bất biến (configural và metric invariance) giữa hai nhóm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần bước nào trước, có thể so sánh path coefficient trực tiếp giữa hai nhóm",
+                    "isCorrect": false,
+                    "misconception": "cbqt.compare-groups-no-invariance"
+                  },
+                  {
+                    "label": "Chỉ cần đảm bảo cỡ mẫu hai nhóm bằng nhau",
+                    "isCorrect": false,
+                    "misconception": "cbqt.compare-groups-no-invariance"
+                  },
+                  {
+                    "label": "Chỉ cần chạy lại Cronbach's Alpha cho từng nhóm",
+                    "isCorrect": false,
+                    "misconception": "cbqt.compare-groups-no-invariance"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt3-manipulation-check",
+                "type": "mcq",
+                "prompt": "Một thí nghiệm cho hai nhóm đọc hai đoạn văn khác nhau để tạo ra hai mức 'tin tưởng vào AI' (cao/thấp), rồi đo thẳng biến phụ thuộc mà không kiểm tra lại mức tin tưởng thật của người tham gia. Vấn đề của thiết kế này là gì?",
+                "explanation": "Thiếu manipulation check: không biết liệu đoạn văn có thực sự tạo ra sự khác biệt về mức tin tưởng như dự kiến hay không — nếu manipulation thất bại, một kết quả không có ý nghĩa ở biến phụ thuộc có thể do manipulation yếu, không phải do lý thuyết sai.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Thiếu manipulation check — không xác nhận được can thiệp có thực sự tạo ra sự khác biệt ở biến độc lập như dự kiến",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì đã có hai nhóm khác nhau đọc hai đoạn văn khác nhau",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-manipulation-check"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là cần tăng số người tham gia trong mỗi nhóm",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-manipulation-check"
+                  },
+                  {
+                    "label": "Không có vấn đề, miễn là kết quả biến phụ thuộc có ý nghĩa thống kê",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-manipulation-check"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt3-longitudinal-vs-causal",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu đo X và Y ở hai thời điểm (T1, T2), thấy X ở T1 dự báo Y ở T2 có ý nghĩa thống kê, và kết luận 'X gây ra Y'. Nhận định nào đúng?",
+                "explanation": "Trình tự thời gian là điều kiện cần nhưng chưa đủ cho nhân quả — các yếu tố gây nhiễu không được đo và kiểm soát vẫn có thể tạo ra mối quan hệ giả, dù đã có bằng chứng về trình tự thời gian.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Kết luận còn vội — trình tự thời gian là điều kiện cần nhưng chưa đủ, các yếu tố gây nhiễu chưa được kiểm soát vẫn có thể tạo ra mối quan hệ giả",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Kết luận đúng hoàn toàn, vì đo hai lần theo thời gian là đủ để khẳng định nhân quả",
+                    "isCorrect": false,
+                    "misconception": "cbqt.two-wave-enough-for-causality"
+                  },
+                  {
+                    "label": "Kết luận sai hoàn toàn, vì thiết kế longitudinal không cho biết gì về nhân quả",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Kết luận đúng nếu cỡ mẫu đủ lớn ở cả hai thời điểm",
+                    "isCorrect": false,
+                    "misconception": "cbqt.two-wave-enough-for-causality"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt3-khi-nao-dung-ky-thuat",
+                "type": "mcq",
+                "prompt": "Câu hỏi nghiên cứu cần khẳng định nhân quả chắc chắn hơn những gì một mô hình PLS-SEM cắt ngang cho phép. Hướng nào phù hợp nhất?",
+                "explanation": "Thiết kế thực nghiệm hoặc bán thực nghiệm với phân nhóm ngẫu nhiên và manipulation check là công cụ phù hợp nhất để khẳng định nhân quả mạnh hơn một mô hình cắt ngang.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chuyển sang thiết kế thực nghiệm hoặc bán thực nghiệm với phân nhóm ngẫu nhiên và manipulation check",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tăng cỡ mẫu của mô hình PLS-SEM cắt ngang để p-value nhỏ hơn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chạy lại mô hình PLS-SEM nhiều lần với các mẫu con khác nhau",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần thay đổi gì, PLS-SEM cắt ngang luôn đủ để khẳng định nhân quả nếu p < 0.05",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt3-thu-tu-mga",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước thực hiện multi-group analysis.",
+                "explanation": "Từ kiểm configural invariance (cấu trúc mô hình giống nhau), tới metric invariance (hệ số tải tương đương), rồi mới so sánh path coefficient giữa các nhóm bằng kiểm định phù hợp.",
+                "points": 3,
+                "sequence": [
+                  "Xác định các nhóm cần so sánh (ví dụ theo giới tính, quốc gia)",
+                  "Kiểm configural invariance: cấu trúc mô hình giống nhau giữa các nhóm",
+                  "Kiểm metric invariance: hệ số tải factor loading tương đương giữa các nhóm",
+                  "So sánh path coefficient giữa các nhóm bằng kiểm định phù hợp",
+                  "Diễn giải sự khác biệt path là khác biệt thật, chỉ sau khi đã qua các bước kiểm invariance"
+                ]
+              },
+              {
+                "key": "cbqt3-noi-ky-thuat-nang-cao",
+                "type": "matching",
+                "prompt": "Nối mỗi kỹ thuật nâng cao với đúng vấn đề nó giải quyết.",
+                "explanation": "Moderated mediation kiểm hiệu ứng trung gian có điều kiện; multi-group analysis so sánh mô hình giữa các nhóm (cần invariance trước); manipulation check xác nhận can thiệp thực nghiệm có hiệu quả; longitudinal design xác lập trình tự thời gian.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Moderated mediation",
+                    "right": "Kiểm hiệu ứng trung gian thay đổi theo mức của biến điều tiết"
+                  },
+                  {
+                    "left": "Multi-group analysis (sau khi kiểm invariance)",
+                    "right": "So sánh mô hình đường dẫn giữa các nhóm khác nhau"
+                  },
+                  {
+                    "left": "Manipulation check",
+                    "right": "Xác nhận can thiệp thực nghiệm tạo ra khác biệt đúng như dự kiến"
+                  },
+                  {
+                    "left": "Longitudinal design",
+                    "right": "Xác lập trình tự thời gian giữa các biến"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt3-viet-phuong-phap-nang-cao",
+                "type": "essay",
+                "prompt": "Viết phần Phương pháp nâng cao cho bài báo của bạn (250-350 từ), gồm: (a) kỹ thuật nâng cao đã chọn và lý do nối với lý thuyết/câu hỏi; (b) quy trình kiểm định đi kèm (invariance, manipulation check, hoặc thiết kế đo lặp); (c) một câu giải thích kết quả sẽ khác gì nếu chỉ dùng kỹ thuật cơ bản (SEM cắt ngang đơn giản) thay vì kỹ thuật nâng cao này.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 4 · Viết bài báo khoa học tiếng Anh và trả lời phản biện",
+          "durationMin": 100,
+          "description": "Viết theo cấu trúc IMRaD súc tích, không phải bản thu gọn của luận văn 5 chương; dùng đúng mức hedging tiếng Anh theo độ mạnh của bằng chứng; viết Discussion đối chiếu với tổng quan tài liệu, không lặp lại Results; trả lời phản biện (rebuttal) point-by-point, không phòng thủ.",
+          "objectives": [
+            "Viết phần Introduction theo cấu trúc hình nón (funnel) của IMRaD, khác với cách mở đầu dàn trải của một luận văn",
+            "Chọn đúng mức hedging tiếng Anh (may, suggests, appears to...) phù hợp với độ mạnh của thiết kế và bằng chứng, tránh overclaim",
+            "Viết Discussion đối chiếu kết quả với các nghiên cứu đã tổng quan, không chỉ lặp lại số liệu ở Results",
+            "Viết một rebuttal letter trả lời phản biện theo cấu trúc point-by-point, ghi nhận và hành động cụ thể, không phòng thủ hay tranh cãi"
+          ],
+          "summary": [
+            "Introduction của một bài báo IMRaD đi theo cấu trúc hình nón — từ bối cảnh rộng, hẹp dần tới khoảng trống cụ thể, kết bằng câu đóng góp — súc tích hơn nhiều so với phần mở đầu của một luận văn, không phải một bản thu gọn giữ nguyên cấu trúc 5 chương.",
+            "Mức hedging tiếng Anh phải khớp với độ mạnh của thiết kế: 'suggests', 'appears to', 'is associated with' cho thiết kế cắt ngang hoặc mẫu nhỏ; chỉ dùng 'demonstrates' hoặc 'confirms' khi thiết kế đủ mạnh (thực nghiệm, mẫu lớn, đã kiểm soát nhiễu) để biện minh cho mức độ chắc chắn đó.",
+            "Discussion phải đối chiếu kết quả với các nghiên cứu đã tổng quan ở phần Introduction/Literature Review — đồng thuận ở đâu, mâu thuẫn ở đâu, và vì sao — không chỉ diễn giải kết quả một cách cô lập.",
+            "Rebuttal letter trả lời từng comment của reviewer theo cấu trúc: trích lại comment, ghi nhận, nêu hành động cụ thể đã thực hiện (kèm số trang/dòng đã sửa) — phòng thủ hoặc tranh cãi với reviewer làm giảm khả năng bài được nhận."
+          ],
+          "splitSections": true,
+          "body": "\nĐóng góp đã định vị (Bài 1), tổng quan đã hệ thống (Bài 2), phương pháp đã sẵn sàng (Bài 3) — bài này là lúc đưa tất cả vào khuôn bài báo, viết đúng văn phong tiếng Anh học thuật, và sống sót qua vòng phản biện. Bài đi qua bốn phần: trước hết cấu trúc IMRaD khác gì với một luận văn 5 chương; sau đó chọn đúng mức hedging tiếng Anh theo độ mạnh của bằng chứng; tiếp theo viết Discussion đối chiếu với tổng quan tài liệu thay vì lặp lại Results; và kết bằng cách trả lời phản biện (rebuttal letter) point-by-point.\n\n## Cấu trúc IMRaD — khác gì với luận văn 5 chương\n\n> [!canh-bao] Viết bài báo bằng cách **thu gọn nguyên luận văn 5 chương**, giữ y cấu trúc và cắt bớt câu chữ, là một lỗi phổ biến. Bài báo IMRaD (Introduction, Methods, Results, and Discussion) có logic khác: súc tích hơn nhiều (thường 6.000-8.000 từ tổng), và **Introduction đi theo cấu trúc hình nón** — bắt đầu từ bối cảnh rộng, hẹp dần qua tổng quan có chọn lọc (không phải toàn bộ tổng quan hệ thống ở Bài 2), tới khoảng trống cụ thể, và kết bằng **câu đóng góp** đã viết ở Bài 1.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem\">Cấu trúc hình nón của Introduction</div>\n  <div style=\"display:flex;flex-direction:column;align-items:center;gap:.4rem;font-size:1.05rem\">\n    <div style=\"width:100%;background:rgba(59,130,246,.14);border-radius:.4rem;padding:.55rem .8rem;text-align:center\">Bối cảnh rộng — vì sao hiện tượng này quan trọng</div>\n    <div style=\"width:80%;background:rgba(139,92,246,.14);border-radius:.4rem;padding:.55rem .8rem;text-align:center\">Tổng quan có chọn lọc — điều đã biết, theo luận điểm</div>\n    <div style=\"width:60%;background:rgba(13,148,136,.14);border-radius:.4rem;padding:.55rem .8rem;text-align:center\">Khoảng trống cụ thể</div>\n    <div style=\"width:40%;background:rgba(217,150,40,.14);border-radius:.4rem;padding:.55rem .8rem;text-align:center;font-weight:600\">Câu đóng góp (từ Bài 1)</div>\n  </div>\n</div>\n```\n\nPhần tổng quan tài liệu hệ thống đầy đủ ở Bài 2 **không được chép nguyên vào Introduction** — nó là nguyên liệu; Introduction chỉ trích những luận điểm cần để dẫn tới khoảng trống, súc tích trong 2-4 đoạn.\n\n> [!vi-du] Bốn tầng của cấu trúc hình nón viết đầy đủ cho ví dụ AI chấm bài: **Bối cảnh rộng** — \"AI tạo sinh đang được triển khai nhanh chóng trong đánh giá học tập tại các trường đại học, hứa hẹn giảm tải công việc chấm bài cho giảng viên.\" **Tổng quan chọn lọc** — \"Các nghiên cứu trước tập trung vào độ chính xác của AI khi chấm so với giảng viên (Nguyen et al., 2023) và nhận thức hữu ích của giảng viên với công cụ này (Tran & Le, 2022), dựa chủ yếu trên mô hình TAM gốc.\" **Khoảng trống cụ thể** — \"Tuy nhiên, các mô hình này chưa tính tới việc AI tạo sinh, khác với phần mềm hỗ trợ thông thường, có thể kích hoạt lo ngại về mất kiểm soát chuyên môn — một cơ chế tâm lý riêng biệt với nhận thức hữu ích.\" **Câu đóng góp** — \"Nghiên cứu này mở rộng TAM bằng cách bổ sung 'lo ngại mất kiểm soát chuyên môn' như một cấu trúc dự báo độc lập, kiểm định trên mẫu giảng viên đại học tại Việt Nam.\" Bốn câu này đọc liền mạch, mỗi câu hẹp hơn câu trước — đúng hình dạng cái phễu, không nhảy cóc từ bối cảnh thẳng tới đóng góp.\n\n## Hedging tiếng Anh — đúng mức với độ mạnh bằng chứng\n\n> [!ghi-nho] Tiếng Anh học thuật có một thang mức độ chắc chắn rõ ràng: **\"demonstrates\", \"confirms\", \"proves\"** (rất mạnh — chỉ dùng khi thiết kế đủ mạnh, ví dụ thực nghiệm có phân nhóm ngẫu nhiên) → **\"shows\", \"indicates\"** (mạnh, thường dùng cho kết quả có ý nghĩa thống kê rõ) → **\"suggests\", \"is associated with\", \"appears to\"** (vừa — phù hợp với kết quả cắt ngang, tương quan) → **\"may\", \"might\", \"could\"** (yếu — dùng cho suy luận, chưa có bằng chứng trực tiếp).\n\n| Thiết kế / bằng chứng | Mức hedging phù hợp |\n|---|---|\n| Thực nghiệm có phân nhóm ngẫu nhiên, manipulation check đạt | \"demonstrates\", \"the results confirm\" |\n| PLS-SEM/SEM cắt ngang, path có ý nghĩa thống kê | \"is associated with\", \"the results suggest\" |\n| Longitudinal hai chiều (cross-lagged), chưa kiểm soát hết nhiễu | \"the findings are consistent with\", \"may precede\" |\n| Suy luận từ kết quả, chưa đo trực tiếp | \"may reflect\", \"could be explained by\" |\n\n> [!canh-bao] Dùng \"demonstrates\" hoặc \"prove\" cho một mô hình PLS-SEM cắt ngang là **overclaim** — reviewer quốc tế có kinh nghiệm sẽ đọc ra ngay sự lệch giữa mức độ chắc chắn của câu chữ và mức độ chắc chắn mà thiết kế thực sự cho phép, và thường yêu cầu sửa lại ngôn ngữ này ở vòng phản biện đầu tiên.\n\n> [!vi-du] Sửa một câu overclaim thực tế: bản gốc — \"*This study proves that AI concern reduces teachers' adoption intention.*\" (PLS-SEM cắt ngang, không có phân nhóm ngẫu nhiên). Sửa lại đúng mức — \"*This study provides evidence that professional-control concern is associated with lower adoption intention, consistent with a moderated-mediation mechanism.*\" Câu sửa vẫn giữ nguyên phát hiện chính, chỉ đổi động từ chính (\"proves\" → \"provides evidence that... is associated with\") và thêm \"consistent with\" thay vì khẳng định cơ chế nhân quả trực tiếp — không làm yếu đóng góp, chỉ làm câu chữ khớp đúng với những gì thiết kế thực sự chứng minh được.\n\n## Discussion: đối chiếu, không lặp lại\n\n> [!canh-bao] Viết Discussion bằng cách diễn giải riêng từng kết quả mà không đối chiếu lại với các nghiên cứu đã nêu ở Introduction/Literature Review là một lỗi khiến bài đọc rời rạc — reviewer sẽ hỏi \"kết quả này khớp hay mâu thuẫn với nghiên cứu X mà bạn đã trích ở phần đầu?\"\n\n> [!ghi-nho] Mỗi đoạn Discussion nên đi theo cấu trúc: nêu lại kết quả chính (một câu, không lặp số liệu chi tiết đã có ở Results) → đối chiếu với 1-2 nghiên cứu cụ thể đã tổng quan (đồng thuận hay mâu thuẫn) → giải thích **vì sao** (dựa trên lý thuyết hoặc đặc điểm bối cảnh) → nêu hàm ý.\n\n> [!vi-du] \"Kết quả cho thấy lo ngại mất kiểm soát chuyên môn dự báo ý định chấp nhận AI chấm bài mạnh hơn nhận thức hữu ích (β = 0.38 so với β = 0.19). Phát hiện này khác với Nguyen et al. (2023), nơi nhận thức hữu ích vẫn là yếu tố dự báo mạnh nhất trong bối cảnh phần mềm quản lý học tập thông thường. Sự khác biệt có thể do AI tạo sinh, khác với phần mềm quản lý thông thường, tự động hoá một phần công việc chuyên môn của giảng viên — kích hoạt một cơ chế tâm lý mà TAM gốc chưa tính đến.\"\n\n## Trả lời phản biện (rebuttal letter)\n\n> [!ghi-nho] Rebuttal letter trả lời **từng comment** của reviewer theo cấu trúc: (1) trích lại nguyên văn comment, (2) một câu ghi nhận, (3) hành động cụ thể đã thực hiện, kèm vị trí đã sửa trong bản thảo (ví dụ \"đã sửa ở trang 8, đoạn 2\"). Không bỏ qua comment nào, kể cả comment khó chịu hoặc có vẻ hiểu nhầm bài của bạn — với comment do hiểu nhầm, vẫn cần giải thích rõ và có thể là dấu hiệu cần viết lại đoạn đó rõ hơn.\n\n> [!canh-bao] Viết rebuttal theo hướng **tranh luận, bảo vệ bản thảo gốc bằng mọi giá**, hoặc phớt lờ những comment khó, làm giảm mạnh khả năng bài được nhận ở vòng sau — reviewer đọc rebuttal để xem tác giả có tiếp thu góp ý một cách nghiêm túc không, không phải để xem ai đúng ai sai.\n\n| Rebuttal phòng thủ (không dùng) | Rebuttal đúng cách |\n|---|---|\n| \"Chúng tôi không đồng ý với nhận xét này, vì phương pháp của chúng tôi đã đúng theo chuẩn ngành.\" | \"Cảm ơn phản biện đã chỉ ra điều này. Chúng tôi đã bổ sung phần giải thích về lựa chọn phương pháp ở trang 12, đoạn 3, và thêm một hạn chế liên quan ở phần Discussion.\" |\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (45 phút)\n\nViết đoạn Introduction theo cấu trúc hình nón cho bài báo của bạn (300-400 từ), kết bằng câu đóng góp từ Bài 1. Rà lại một đoạn Discussion (nếu đã có) hoặc phác một đoạn dự kiến, kiểm mức hedging có khớp với độ mạnh thiết kế của bạn không.\n\n### Nhóm 3-4 người (30 phút)\n\nĐổi đoạn Introduction cho nhau, kiểm cấu trúc hình nón có đủ rõ không (bối cảnh → tổng quan chọn lọc → khoảng trống → đóng góp). Đọc đoạn Discussion, chỉ ra câu nào đang lặp lại Results thay vì đối chiếu với tài liệu.\n\n### Bài tập về nhà (90 phút)\n\nNếu đã có bản thảo nhận được phản biện, viết một rebuttal letter đầy đủ point-by-point cho ít nhất 3 comment. Nếu chưa có, viết một đoạn Discussion hoàn chỉnh (300-400 từ) đối chiếu kết quả với ít nhất 2 nghiên cứu đã tổng quan ở Bài 2.\n\n:::mau Mẫu nộp bài tập về nhà\n**Đoạn Introduction (cấu trúc hình nón, 300-400 từ):** …\n\n**Đoạn Discussion (đối chiếu với ≥ 2 nghiên cứu, 300-400 từ):** …\n\n**Rebuttal letter (nếu có, ≥ 3 comment)**\n\n| Comment của reviewer | Ghi nhận | Hành động cụ thể (trang/đoạn đã sửa) |\n|---|---|---|\n| … | … | … |\n:::\n\n### Nguồn tham khảo\n\n- Swales, J. M., & Feak, C. B. (2012). *Academic Writing for Graduate Students: Essential Tasks and Skills* (3rd ed.). University of Michigan Press.\n- Hyland, K. (1998). *Hedging in Scientific Research Articles.* John Benjamins Publishing.\n- Belcher, W. L. (2019). *Writing Your Journal Article in Twelve Weeks* (2nd ed.). University of Chicago Press.\n- Noble, W. S. (2017). A quick guide to organizing computational biology projects. *PLOS Computational Biology* — ví dụ điển hình về cấu trúc IMRaD súc tích (tham khảo phong cách, không phải nội dung).\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "cbqt4-imrad-vs-luan-van",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh viết Introduction cho bài báo bằng cách chép và cắt gọn nguyên phần Chương 1-2 của luận văn. Vấn đề của cách làm này là gì?",
+                "explanation": "Introduction của IMRaD cần cấu trúc hình nón súc tích (bối cảnh → tổng quan chọn lọc → khoảng trống → đóng góp), không phải một bản thu gọn giữ nguyên cấu trúc và nội dung của luận văn 5 chương.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Introduction cần cấu trúc hình nón súc tích, không phải bản thu gọn giữ nguyên cấu trúc luận văn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì nội dung luận văn và bài báo nên giống nhau hoàn toàn",
+                    "isCorrect": false,
+                    "misconception": "cbqt.imrad-same-as-thesis"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là cần dịch sang tiếng Anh, không liên quan tới cấu trúc",
+                    "isCorrect": false,
+                    "misconception": "cbqt.imrad-same-as-thesis"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, các tạp chí quốc tế đều chấp nhận cấu trúc như luận văn",
+                    "isCorrect": false,
+                    "misconception": "cbqt.imrad-same-as-thesis"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt4-hedging-dung-muc",
+                "type": "mcq",
+                "prompt": "Một bài báo dùng mô hình PLS-SEM trên dữ liệu cắt ngang viết: 'The results demonstrate that perceived usefulness causes higher intention to use.' Vấn đề của câu này là gì?",
+                "explanation": "'Demonstrate' và 'causes' là mức hedging quá mạnh cho một thiết kế cắt ngang — nên dùng 'is associated with' hoặc 'the results suggest' để khớp với mức độ chắc chắn mà thiết kế này thực sự cho phép.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Dùng mức hedging quá mạnh ('demonstrate', 'causes') cho một thiết kế cắt ngang chỉ cho phép nói về sự liên hệ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, PLS-SEM luôn cho phép dùng ngôn ngữ nhân quả mạnh",
+                    "isCorrect": false,
+                    "misconception": "cbqt.overclaim-in-english"
+                  },
+                  {
+                    "label": "Câu này sai ngữ pháp, không liên quan tới mức độ chắc chắn",
+                    "isCorrect": false,
+                    "misconception": "cbqt.overclaim-in-english"
+                  },
+                  {
+                    "label": "Không có vấn đề gì miễn là p-value nhỏ hơn 0.05",
+                    "isCorrect": false,
+                    "misconception": "cbqt.overclaim-in-english"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt4-discussion-doi-chieu",
+                "type": "mcq",
+                "prompt": "Một đoạn Discussion viết: 'Kết quả cho thấy β = 0.38, p < 0.01, R² = 0.42' và không nhắc gì tới các nghiên cứu đã tổng quan. Vấn đề của đoạn này là gì?",
+                "explanation": "Discussion cần đối chiếu kết quả với các nghiên cứu đã tổng quan — đồng thuận ở đâu, mâu thuẫn ở đâu, vì sao — không chỉ lặp lại số liệu đã có ở phần Results.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Chỉ lặp lại số liệu của Results, thiếu đối chiếu với các nghiên cứu đã tổng quan",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, Discussion chỉ cần nhắc lại số liệu chính cho rõ",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-comparison-to-literature"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là thiếu định dạng bảng cho số liệu",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-comparison-to-literature"
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu số liệu đã đủ chi tiết",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-comparison-to-literature"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt4-rebuttal-dung-cach",
+                "type": "mcq",
+                "prompt": "Reviewer nhận xét phương pháp chọn mẫu chưa phù hợp. Cách trả lời nào trong rebuttal letter đúng hướng nhất?",
+                "explanation": "Rebuttal cần ghi nhận và nêu hành động cụ thể đã thực hiện (kèm vị trí đã sửa) — tranh luận bảo vệ bản thảo gốc bằng mọi giá làm giảm khả năng bài được nhận, vì reviewer đọc rebuttal để xem tác giả có tiếp thu nghiêm túc không.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Cảm ơn phản biện đã chỉ ra điều này. Chúng tôi đã bổ sung giải thích về lựa chọn phương pháp ở trang 12, đoạn 3, và thêm một hạn chế liên quan ở Discussion.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Chúng tôi không đồng ý với nhận xét này, vì phương pháp của chúng tôi đã đúng theo chuẩn ngành.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.rebuttal-defensive"
+                  },
+                  {
+                    "label": "Không trả lời comment này vì cảm thấy reviewer đã hiểu nhầm bài viết",
+                    "isCorrect": false,
+                    "misconception": "cbqt.rebuttal-defensive"
+                  },
+                  {
+                    "label": "'Nhận xét này không quan trọng so với các đóng góp khác của bài báo.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.rebuttal-defensive"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt4-cau-truc-hinh-non",
+                "type": "mcq",
+                "prompt": "Đoạn cuối cùng của một Introduction theo cấu trúc hình nón nên chứa gì?",
+                "explanation": "Introduction kết bằng câu đóng góp — nêu cụ thể nghiên cứu này thách thức/mở rộng/tích hợp lý thuyết nào, đã được chuẩn bị từ Bài 1 — không phải một câu tóm tắt phương pháp hay kết quả.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Câu đóng góp cụ thể — nghiên cứu này thách thức/mở rộng/tích hợp lý thuyết nào",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Một bản tóm tắt đầy đủ phương pháp nghiên cứu sẽ dùng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Một bảng số liệu tóm tắt kết quả chính",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Danh sách toàn bộ tài liệu tham khảo đã đọc",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt4-thu-tu-viet-bai-bao",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước viết và hoàn thiện một bài báo IMRaD.",
+                "explanation": "Từ viết Introduction theo cấu trúc hình nón, tới Methods/Results, viết Discussion đối chiếu tài liệu, kiểm lại mức hedging, rồi chuẩn bị trả lời phản biện khi nhận được.",
+                "points": 3,
+                "sequence": [
+                  "Viết Introduction theo cấu trúc hình nón, kết bằng câu đóng góp",
+                  "Viết Methods và Results dựa trên thiết kế và dữ liệu đã có",
+                  "Viết Discussion đối chiếu kết quả với các nghiên cứu đã tổng quan",
+                  "Rà lại toàn bài, kiểm mức hedging có khớp với độ mạnh thiết kế không",
+                  "Viết rebuttal letter point-by-point khi nhận được phản biện"
+                ]
+              },
+              {
+                "key": "cbqt4-noi-muc-hedging",
+                "type": "matching",
+                "prompt": "Nối mỗi loại thiết kế/bằng chứng với đúng mức hedging tiếng Anh phù hợp.",
+                "explanation": "Thực nghiệm có phân nhóm ngẫu nhiên đủ mạnh cho 'demonstrates'; SEM cắt ngang phù hợp với 'is associated with/suggests'; longitudinal hai chiều chưa kiểm hết nhiễu phù hợp với 'may precede'; suy luận chưa đo trực tiếp phù hợp với 'may reflect'.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Thực nghiệm có phân nhóm ngẫu nhiên, manipulation check đạt",
+                    "right": "'demonstrates', 'the results confirm'"
+                  },
+                  {
+                    "left": "PLS-SEM/SEM cắt ngang, path có ý nghĩa thống kê",
+                    "right": "'is associated with', 'suggests'"
+                  },
+                  {
+                    "left": "Longitudinal hai chiều, chưa kiểm soát hết nhiễu",
+                    "right": "'may precede', 'is consistent with'"
+                  },
+                  {
+                    "left": "Suy luận từ kết quả, chưa đo trực tiếp",
+                    "right": "'may reflect', 'could be explained by'"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt4-viet-introduction",
+                "type": "essay",
+                "prompt": "Viết đoạn Introduction cho bài báo của bạn theo cấu trúc hình nón (300-400 từ, có thể viết tiếng Anh hoặc tiếng Việt), gồm: (a) một đoạn bối cảnh rộng; (b) tổng quan có chọn lọc (2-3 luận điểm, không phải toàn bộ tổng quan hệ thống); (c) khoảng trống cụ thể; (d) câu đóng góp từ Bài 1, dùng đúng mức hedging phù hợp với thiết kế của bạn.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 5 · Chọn venue và quy trình xuất bản",
+          "durationMin": 90,
+          "description": "Chọn tạp chí theo quartile Scopus/SCImago và đúng scope, không chỉ theo quartile cao nhất; nhận diện tạp chí săn mồi; hiểu ý nghĩa các quyết định bình duyệt; giữ đạo đức xuất bản về quyền tác giả và tránh chia nhỏ/công bố trùng lặp.",
+          "objectives": [
+            "Kiểm tra được quartile của một tạp chí qua Scopus/SCImago Journal Rank và đối chiếu với scope của bài báo trước khi gửi",
+            "Nhận diện được các dấu hiệu của tạp chí săn mồi và biết dùng công cụ kiểm tra trước khi gửi bài",
+            "Hiểu đúng ý nghĩa các quyết định bình duyệt (desk reject, major/minor revision, reject) để quyết định bước tiếp theo phù hợp",
+            "Áp dụng đúng tiêu chí quyền tác giả (theo ICMJE) và tránh chia nhỏ nghiên cứu (salami slicing) hoặc công bố trùng lặp"
+          ],
+          "summary": [
+            "Chọn tạp chí cần cân đối cả quartile và scope — một tạp chí quartile cao nhưng không đúng phạm vi chủ đề của bài thường dẫn tới bị từ chối nhanh (desk reject) vì 'out of scope', tốn thời gian hơn là gửi đúng tạp chí phù hợp ngay từ đầu.",
+            "Tạp chí săn mồi có các dấu hiệu nhận biết được: mời viết bài dồn dập, thời gian bình duyệt bất thường ngắn, phí không minh bạch, không có trong Scopus/Web of Science/DOAJ — luôn kiểm tra trước khi gửi, không chỉ tin vào tên nghe có vẻ uy tín.",
+            "Quyết định bình duyệt cần được hiểu đúng: desk reject thường do sai scope hoặc lỗi định dạng, không nhất thiết do chất lượng nghiên cứu; major/minor revision là cơ hội cải thiện, không phải một lời từ chối; reject sau bình duyệt đầy đủ cần được xem lại kỹ để quyết định sửa và gửi tạp chí khác hay không.",
+            "Quyền tác giả cần dựa trên tiêu chí đóng góp thực chất (theo ICMJE), không phải quan hệ xã giao — và một nghiên cứu không nên bị chia nhỏ thành nhiều bài báo không cần thiết chỉ để tăng số lượng công bố."
+          ],
+          "splitSections": true,
+          "body": "\nBài báo đã viết xong (Bài 4) — bước tiếp theo quyết định phần lớn thời gian tính từ đây tới khi công bố thật: chọn đúng venue, và hiểu đúng luật chơi của quy trình xuất bản quốc tế. Bài đi qua bốn phần: chọn tạp chí theo cả quartile lẫn scope, nhận diện dấu hiệu của tạp chí săn mồi, hiểu đúng ý nghĩa các quyết định bình duyệt (desk reject, revision, reject), và kết bằng đạo đức xuất bản về quyền tác giả cùng việc tránh chia nhỏ/công bố trùng lặp.\n\n## Chọn tạp chí: quartile và scope\n\n> [!ghi-nho] **Quartile Scopus** (Q1-Q4) xếp hạng tạp chí theo phần trăm CiteScore trong đúng lĩnh vực chuyên môn (subject category) — một tạp chí có thể là Q1 ở lĩnh vực này nhưng Q3 ở lĩnh vực khác. **SCImago Journal Rank (SJR)** là một chỉ số tương tự, kiểm tra được miễn phí tại scimagojr.com. Cả hai chỉ số này chỉ có ý nghĩa khi so sánh trong cùng một lĩnh vực chuyên môn.\n\n> [!vi-du] Một tạp chí có CiteScore percentile 92 trong subject category \"Education\" (tức đứng trên 92% tạp chí cùng lĩnh vực) — percentile trên 75 tương ứng Q1, 50-75 là Q2, 25-50 là Q3, dưới 25 là Q4. Tạp chí này là Q1 cho *Education*. Nhưng cùng tạp chí đó, nếu Scopus xếp thêm vào category \"Computer Science Applications\" với percentile chỉ 58, nó lại là Q2 ở category kia — **quartile luôn phải nói kèm category**, câu \"tạp chí Q1\" một mình không đủ thông tin nếu tạp chí được xếp vào nhiều lĩnh vực.\n\n> [!meo] Tra nhanh: vào scimagojr.com, gõ tên tạp chí, xem \"SJR\" và biểu đồ quartile theo từng category tạp chí được xếp — nếu nghiên cứu của bạn thuộc nhiều lĩnh vực giao thoa (ví dụ Giáo dục + Công nghệ), kiểm quartile ở **category gần với đóng góp chính** của bài (đã định vị ở Bài 1), không phải category có quartile đẹp nhất.\n\n> [!canh-bao] Chọn tạp chí chỉ theo quartile cao nhất có thể, không xét **scope** (phạm vi chủ đề) và đối tượng đọc của tạp chí, thường dẫn tới **desk reject** nhanh vì \"out of scope\" — biên tập viên từ chối trước khi gửi bình duyệt vì bài không phù hợp với phạm vi tạp chí, dù chất lượng nghiên cứu tốt. Đọc kỹ Aims & Scope và vài bài đã công bố gần đây của tạp chí trước khi gửi, không chỉ nhìn vào chỉ số.\n\n## Nhận diện tạp chí săn mồi\n\n> [!canh-bao] **Tạp chí săn mồi (predatory journal)** thu phí xuất bản mà không cung cấp quy trình bình duyệt thật. Dấu hiệu thường gặp: lời mời viết bài gửi dồn dập qua email dù không quen biết, thời gian từ nộp tới nhận (accept) bất thường ngắn (vài ngày tới một tuần), phí xuất bản không minh bạch hoặc chỉ công bố sau khi bài được \"nhận\", ban biên tập không xác minh được danh tính hoặc chuyên môn thật, và tạp chí không có trong Scopus, Web of Science, hoặc DOAJ (Directory of Open Access Journals).\n\n> [!ghi-nho] Trước khi gửi bài tới một tạp chí chưa quen, luôn kiểm tra: tạp chí có trong danh mục Scopus/Web of Science không (tra tại trang chủ Scopus hoặc Web of Science Master Journal List), có trong DOAJ không (nếu là open access), và dùng công cụ **Think. Check. Submit.** (thinkchecksubmit.org) — một checklist miễn phí được nhiều đại học khuyến nghị.\n\n> [!meo] Một cách kiểm tra nhanh thêm, không cần công cụ chuyên dụng: tra **tên và cơ quan** của 2-3 thành viên ban biên tập (editorial board) được liệt kê trên website tạp chí — tìm hồ sơ học thuật thật của họ (Google Scholar, trang khoa của trường) và xác nhận họ có thực sự công khai nhận vai trò này ở đúng tạp chí đó không. Tạp chí săn mồi thường liệt kê tên các nhà nghiên cứu có thật nhưng chưa từng đồng ý, hoặc liệt kê chức danh/học hàm không xác minh được. Cũng nên kiểm ISSN của tạp chí có khớp với ISSN đăng ký chính thức (tra tại portal.issn.org) không — một số tạp chí săn mồi dùng tên rất giống một tạp chí uy tín đã có (typosquatting) nhưng ISSN khác.\n\n## Hiểu đúng các quyết định bình duyệt\n\n| Quyết định | Ý nghĩa | Bước tiếp theo |\n|---|---|---|\n| Desk reject | Biên tập viên từ chối trước khi gửi bình duyệt, thường do sai scope hoặc lỗi định dạng nghiêm trọng | Xem lại scope, gửi tạp chí khác phù hợp hơn — không nhất thiết phải sửa nội dung |\n| Major/Minor revision | Bài có tiềm năng, cần sửa theo mức độ được yêu cầu | Đây là cơ hội, không phải một lời từ chối — trả lời rebuttal (Bài 4) và sửa lại |\n| Reject sau bình duyệt đầy đủ | Bài không đạt yêu cầu sau khi đã qua bình duyệt của chuyên gia | Đọc kỹ comment, cân nhắc sửa đáng kể và gửi tạp chí khác phù hợp hơn |\n\n> [!canh-bao] Coi mọi quyết định \"reject\" là bằng chứng nghiên cứu tồi là một cách hiểu sai làm mất động lực không cần thiết. Desk reject vì sai scope không nói gì về chất lượng nghiên cứu — nó chỉ nói bài đã gửi nhầm venue. Ngay cả reject sau bình duyệt đầy đủ cũng thường đi kèm comment có giá trị để cải thiện bản thảo trước khi gửi tạp chí khác.\n\n## Đạo đức xuất bản\n\n> [!ghi-nho] Theo tiêu chí **ICMJE** (International Committee of Medical Journal Editors, được nhiều lĩnh vực khác tham chiếu), một người đủ tiêu chuẩn là tác giả cần đồng thời: (1) đóng góp đáng kể vào ý tưởng/thiết kế hoặc thu thập/phân tích dữ liệu, (2) tham gia soạn hoặc duyệt lại bản thảo một cách quan trọng, (3) đồng ý chịu trách nhiệm về toàn bộ nội dung công bố.\n\n> [!canh-bao] **Gift authorship** — thêm tên một người vào danh sách tác giả vì quan hệ xã giao, cấp bậc, hoặc để \"trả ơn\" mà không đủ ba tiêu chí trên — là một vi phạm đạo đức xuất bản, dù rất phổ biến trong thực tế. Tương tự, bỏ sót một người thực sự đủ tiêu chuẩn (ghost authorship) cũng là vi phạm.\n\n> [!canh-bao] **Salami slicing** — chia một nghiên cứu (một bộ dữ liệu, một thiết kế) thành nhiều bài báo nhỏ không cần thiết chỉ để tăng số lượng công bố — làm loãng đóng góp thật của mỗi bài và bị nhiều tạp chí coi là vi phạm đạo đức xuất bản khi phát hiện. Tương tự, gửi cùng một nghiên cứu (hoặc phần lớn trùng lặp) tới nhiều tạp chí cùng lúc, hoặc công bố lại không khai báo nguồn gốc, là **duplicate/redundant publication** — cũng là vi phạm nghiêm trọng.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (35 phút)\n\nKiểm tra quartile của 3 tạp chí bạn đang cân nhắc gửi bài, qua Scopus hoặc SCImago. Đọc Aims & Scope của mỗi tạp chí, đối chiếu với đóng góp bài báo của bạn (Bài 1). Với danh sách tác giả dự kiến, kiểm từng người theo ba tiêu chí ICMJE.\n\n### Nhóm 3-4 người (25 phút)\n\nChia sẻ lựa chọn tạp chí của nhau, phản biện: bài này có thực sự phù hợp scope của tạp chí đã chọn không? Thảo luận một tình huống giả định về gift authorship hoặc salami slicing và cách xử lý đúng.\n\n### Bài tập về nhà (60 phút)\n\nViết một trang lựa chọn venue: 3 tạp chí ứng viên (quartile, scope, lý do phù hợp), kết quả kiểm tra tạp chí không phải săn mồi (Scopus/DOAJ), và danh sách tác giả đã kiểm theo tiêu chí ICMJE.\n\n:::mau Mẫu nộp bài tập về nhà\n**3 tạp chí ứng viên**\n\n| Tạp chí | Quartile | Scope có khớp không | Kiểm tra Scopus/DOAJ |\n|---|---|---|---|\n| … | … | … | … |\n\n**Danh sách tác giả và kiểm tiêu chí ICMJE**\n\n| Tên | Đóng góp ý tưởng/dữ liệu | Soạn/duyệt bản thảo | Chịu trách nhiệm nội dung | Đủ tiêu chuẩn? |\n|---|---|---|---|---|\n| … | … | … | … | … |\n:::\n\n### Nguồn tham khảo\n\n- International Committee of Medical Journal Editors. (2024). *Defining the Role of Authors and Contributors.* ICMJE Recommendations.\n- Beall, J. (2015). Criteria for determining predatory open-access publishers. *Scholarly Open Access.*\n- Committee on Publication Ethics (COPE). *Guidelines on Good Publication Practice.*\n- Think. Check. Submit. — thinkchecksubmit.org\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "cbqt5-quartile-scope",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh chọn gửi bài tới tạp chí có quartile Q1 cao nhất tìm được, không đọc Aims & Scope trước. Bài bị desk reject vì 'out of scope'. Bài học đúng nhất là gì?",
+                "explanation": "Chọn tạp chí cần cân đối cả quartile và scope — quartile cao nhưng không đúng phạm vi chủ đề thường dẫn tới desk reject nhanh, không liên quan tới chất lượng nghiên cứu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Cần đọc Aims & Scope và đối chiếu với đóng góp của bài trước khi chọn tạp chí, không chỉ theo quartile cao nhất",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nên chọn tạp chí quartile thấp hơn để tránh bị desk reject",
+                    "isCorrect": false,
+                    "misconception": "cbqt.quartile-only-no-scope"
+                  },
+                  {
+                    "label": "Desk reject nghĩa là nghiên cứu chất lượng kém, cần làm lại từ đầu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần thay đổi gì, chỉ cần gửi lại đúng tạp chí đó lần nữa",
+                    "isCorrect": false,
+                    "misconception": "cbqt.quartile-only-no-scope"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt5-tap-chi-san-moi",
+                "type": "mcq",
+                "prompt": "Một email mời viết bài, gửi dồn dập, hứa 'accept trong 5 ngày', phí công bố chỉ công bố sau khi bài được nhận. Dấu hiệu này gợi ý điều gì?",
+                "explanation": "Đây là các dấu hiệu điển hình của tạp chí săn mồi: lời mời dồn dập, thời gian bình duyệt bất thường ngắn, phí không minh bạch trước — cần kiểm tra tạp chí trong Scopus/DOAJ trước khi gửi.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Đây là các dấu hiệu điển hình của tạp chí săn mồi, cần kiểm tra Scopus/DOAJ trước khi gửi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đây là dấu hiệu một tạp chí uy tín đang tích cực tìm bài chất lượng cao",
+                    "isCorrect": false,
+                    "misconception": "cbqt.predatory-journal-signs"
+                  },
+                  {
+                    "label": "Thời gian accept nhanh luôn là điều tốt, nên chấp nhận lời mời ngay",
+                    "isCorrect": false,
+                    "misconception": "cbqt.predatory-journal-signs"
+                  },
+                  {
+                    "label": "Không cần kiểm tra gì thêm nếu tên tạp chí nghe có vẻ học thuật",
+                    "isCorrect": false,
+                    "misconception": "cbqt.predatory-journal-signs"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt5-hieu-dung-reject",
+                "type": "mcq",
+                "prompt": "Một bài báo bị desk reject vì lý do 'out of scope'. Nhận định nào đúng nhất?",
+                "explanation": "Desk reject vì sai scope không nói gì về chất lượng nghiên cứu — nó chỉ nói bài đã gửi nhầm venue. Bước tiếp theo hợp lý là gửi tới tạp chí có scope phù hợp hơn, không phải viết lại toàn bộ nghiên cứu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Desk reject vì sai scope không phản ánh chất lượng nghiên cứu; nên tìm tạp chí có scope phù hợp hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đây là bằng chứng nghiên cứu có vấn đề nghiêm trọng về chất lượng",
+                    "isCorrect": false,
+                    "misconception": "cbqt.reject-means-bad-research"
+                  },
+                  {
+                    "label": "Nên từ bỏ bài báo này hoàn toàn vì đã bị một tạp chí từ chối",
+                    "isCorrect": false,
+                    "misconception": "cbqt.reject-means-bad-research"
+                  },
+                  {
+                    "label": "Nên gửi lại đúng tạp chí đó ngay lập tức mà không thay đổi gì",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt5-icmje-authorship",
+                "type": "mcq",
+                "prompt": "Một giảng viên được thêm vào danh sách tác giả vì là trưởng bộ môn, nhưng không đóng góp vào ý tưởng, thu thập/phân tích dữ liệu, hay soạn/duyệt bản thảo. Đây là vi phạm gì?",
+                "explanation": "Đây là gift authorship — thêm tên vì quan hệ/cấp bậc mà không đủ ba tiêu chí ICMJE (đóng góp ý tưởng/dữ liệu, soạn/duyệt bản thảo, chịu trách nhiệm nội dung).",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Gift authorship — thêm tên tác giả không đủ tiêu chí ICMJE vì quan hệ hoặc cấp bậc",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vi phạm gì, vì trưởng bộ môn luôn có quyền được ghi tên tác giả",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đây là salami slicing",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đây là duplicate publication",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt5-salami-slicing",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh chia một bộ dữ liệu và một thiết kế nghiên cứu thành 4 bài báo nhỏ không cần thiết chỉ để tăng số lượng công bố. Đây là vi phạm gì?",
+                "explanation": "Đây là salami slicing — chia một nghiên cứu thành nhiều bài báo nhỏ không cần thiết, làm loãng đóng góp thật của mỗi bài và bị nhiều tạp chí coi là vi phạm đạo đức xuất bản.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Salami slicing — chia một nghiên cứu thành nhiều bài báo nhỏ không cần thiết",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vi phạm gì, vì công bố nhiều bài luôn tốt cho hồ sơ học thuật",
+                    "isCorrect": false,
+                    "misconception": "cbqt.salami-slicing"
+                  },
+                  {
+                    "label": "Đây là gift authorship",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Đây là hành vi được khuyến khích ở mọi tạp chí quốc tế",
+                    "isCorrect": false,
+                    "misconception": "cbqt.salami-slicing"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt5-thu-tu-chon-venue",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước chọn venue và chuẩn bị gửi bài.",
+                "explanation": "Từ xác định danh sách tạp chí ứng viên, đọc scope, kiểm tra không phải săn mồi, kiểm danh sách tác giả theo ICMJE, tới gửi bài.",
+                "points": 3,
+                "sequence": [
+                  "Lập danh sách tạp chí ứng viên theo quartile và lĩnh vực",
+                  "Đọc Aims & Scope và vài bài đã công bố gần đây của mỗi tạp chí",
+                  "Kiểm tra tạp chí có trong Scopus/Web of Science/DOAJ, không phải săn mồi",
+                  "Kiểm danh sách tác giả theo ba tiêu chí ICMJE",
+                  "Gửi bài tới tạp chí phù hợp nhất về cả quartile và scope"
+                ]
+              },
+              {
+                "key": "cbqt5-noi-quyet-dinh-binh-duyet",
+                "type": "matching",
+                "prompt": "Nối mỗi quyết định bình duyệt với đúng ý nghĩa và bước tiếp theo phù hợp.",
+                "explanation": "Desk reject thường do sai scope, nên tìm tạp chí khác; major/minor revision là cơ hội sửa và trả lời rebuttal; reject sau bình duyệt đầy đủ cần đọc kỹ comment để cải thiện trước khi gửi nơi khác.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Desk reject",
+                    "right": "Thường do sai scope hoặc lỗi định dạng, nên tìm tạp chí khác phù hợp"
+                  },
+                  {
+                    "left": "Major/Minor revision",
+                    "right": "Cơ hội cải thiện, cần trả lời rebuttal và sửa theo yêu cầu"
+                  },
+                  {
+                    "left": "Reject sau bình duyệt đầy đủ",
+                    "right": "Đọc kỹ comment, cân nhắc sửa đáng kể và gửi tạp chí khác"
+                  },
+                  {
+                    "left": "Gift authorship",
+                    "right": "Vi phạm đạo đức khi thêm tác giả không đủ tiêu chí ICMJE"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt5-viet-lua-chon-venue",
+                "type": "essay",
+                "prompt": "Viết một đoạn 200-300 từ trình bày lựa chọn venue cho bài báo của bạn, gồm: (a) 2-3 tạp chí ứng viên với quartile và lý do scope phù hợp; (b) kết quả kiểm tra không phải tạp chí săn mồi; (c) danh sách tác giả dự kiến, mỗi người kèm một câu giải thích vì sao đủ tiêu chí ICMJE.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 6 · Dùng AI hỗ trợ viết có kiểm soát",
+          "durationMin": 75,
+          "description": "Dùng AI đúng vai trò trợ lý văn phong, không để AI viết thay nội dung khoa học; khai báo sử dụng AI theo yêu cầu tạp chí; tự tay kiểm chứng mọi trích dẫn AI gợi ý vì AI có thể tạo ra nguồn không tồn tại; hiểu vì sao AI không thể được ghi là tác giả.",
+          "objectives": [
+            "Phân biệt được việc dùng AI đúng vai trò (sửa văn phong, gợi ý cấu trúc) với việc để AI viết thay nội dung khoa học chưa qua kiểm chứng",
+            "Khai báo đúng cách sử dụng AI trong bài báo theo yêu cầu ngày càng phổ biến của các tạp chí quốc tế",
+            "Tự tay kiểm chứng mọi trích dẫn hoặc claim do AI gợi ý trước khi đưa vào bản thảo, vì AI có thể tạo ra nguồn không tồn tại một cách rất tự nhiên",
+            "Giải thích được vì sao một công cụ AI không thể được ghi là tác giả hoặc đồng tác giả theo tiêu chí ICMJE"
+          ],
+          "summary": [
+            "AI hỗ trợ viết tốt nhất ở vai trò trợ lý văn phong — sửa ngữ pháp, gợi ý cách diễn đạt tiếng Anh, tóm tắt nhanh để quyết định đọc kỹ — không nên để AI viết thay toàn bộ nội dung khoa học như phần Kết quả hoặc Discussion.",
+            "Nhiều tạp chí quốc tế hiện yêu cầu khai báo cụ thể việc sử dụng AI hỗ trợ viết, thường ở phần Methods hoặc Acknowledgment — không khai báo khi đã dùng AI đáng kể là vi phạm quy định ngày càng phổ biến này.",
+            "AI có thể tạo ra trích dẫn hoàn toàn không tồn tại (tên tác giả, năm, tên bài giả) một cách rất tự nhiên và thuyết phục — mọi trích dẫn do AI gợi ý phải được tự tay kiểm tra nguồn thật trước khi đưa vào bản thảo.",
+            "AI không thể chịu trách nhiệm về nội dung công bố — một trong ba tiêu chí ICMJE bắt buộc với tác giả — nên không thể được ghi là tác giả hoặc đồng tác giả, dù đóng góp bao nhiêu vào việc viết."
+          ],
+          "splitSections": true,
+          "body": "\nCông cụ AI (Claude, ChatGPT...) có thể tăng tốc đáng kể việc viết bài báo tiếng Anh (Bài 4) — nhưng chỉ khi dùng đúng vai trò và kiểm soát chặt, vì hậu quả của việc dùng sai ở mức công bố quốc tế nghiêm trọng hơn nhiều so với một bài tập trong lớp. Bài đi qua bốn phần: vai trò đúng của AI là trợ lý văn phong chứ không viết thay nội dung khoa học; khai báo việc dùng AI theo yêu cầu của tạp chí; tự tay kiểm chứng mọi trích dẫn AI gợi ý vì AI có thể tạo ra nguồn không tồn tại; và kết bằng lý do vì sao AI không thể được ghi là tác giả.\n\n## Vai trò đúng của AI trong viết bài báo\n\n> [!ghi-nho] AI phù hợp nhất ở vai trò **trợ lý văn phong**: sửa ngữ pháp và cách diễn đạt tiếng Anh, gợi ý cách viết lại một câu cho súc tích hơn, hoặc tóm tắt nhanh một bài báo để quyết định có đọc kỹ hay không (đọc chiến lược, đã học ở các khoá trước). AI **không** nên được dùng để viết thay nội dung khoa học — đặc biệt phần Kết quả (mô tả dữ liệu thật của bạn) và phần lớn Discussion (diễn giải đòi hỏi hiểu sâu bối cảnh nghiên cứu của chính bạn).\n\n> [!canh-bao] Đưa số liệu vào AI và yêu cầu \"viết phần Discussion cho tôi\", rồi nộp thẳng kết quả mà không tự kiểm chứng và viết lại theo hiểu biết của mình, là để AI làm việc mà chính bạn phải chịu trách nhiệm chuyên môn. AI không biết bối cảnh nghiên cứu của bạn sâu bằng bạn, và không thể chịu trách nhiệm nếu diễn giải sai.\n\n> [!vi-du] Dùng đúng vai trò trợ lý văn phong: bản gốc do chính tác giả viết — \"*The result show that teacher which have more experience with AI tool have less worry about it, this maybe because they understand more how it work.*\" (nội dung và ý là của tác giả, chỉ ngữ pháp/diễn đạt còn thô). Sau khi yêu cầu AI \"sửa ngữ pháp và cách diễn đạt, giữ nguyên ý\" — \"*The results show that teachers with more experience using AI tools report lower levels of concern, possibly because greater familiarity leads to a better understanding of how the tool functions.*\" Nội dung khoa học (ai nói gì với ai) hoàn toàn không đổi — chỉ ngữ pháp và cách diễn đạt được cải thiện. Đây là ranh giới đúng: nếu so sánh bản trước/sau mà **ý** đã khác (thêm claim mới, đổi mức độ chắc chắn), đó không còn là sửa văn phong nữa.\n\n## Khai báo sử dụng AI\n\n> [!ghi-nho] Nhiều tạp chí quốc tế hiện yêu cầu khai báo cụ thể nếu AI được dùng đáng kể trong việc viết bản thảo — thường ở phần Methods (nếu AI được dùng trong phân tích) hoặc một mục riêng gần Acknowledgment (nếu dùng để hỗ trợ viết văn phong). Yêu cầu này dựa trên hướng dẫn của COPE (Committee on Publication Ethics) và ngày càng phổ biến.\n\n> [!canh-bao] Không khai báo dù đã dùng AI đáng kể để soạn hoặc chỉnh sửa văn bản, khi tạp chí yêu cầu khai báo, là vi phạm quy định xuất bản — tương tự việc không khai báo một nguồn tài trợ hoặc xung đột lợi ích. Kiểm hướng dẫn \"Instructions for Authors\" của từng tạp chí trước khi gửi, vì yêu cầu khai báo khác nhau giữa các tạp chí.\n\n> [!vi-du] Một đoạn khai báo mẫu (dịch từ khuyến nghị COPE, điều chỉnh cho trường hợp chỉ dùng để sửa văn phong): \"*During the preparation of this manuscript, the author(s) used [tên công cụ, ví dụ ChatGPT-4] to improve the language and readability of the text. After using this tool, the author(s) reviewed and edited the content as needed and take(s) full responsibility for the content of the published article.*\" Nếu AI cũng được dùng để hỗ trợ tìm ý tưởng phân tích (không chỉ văn phong), khai báo cần nói rõ thêm ở phần nào và mức độ ra sao — không dùng một câu chung chung cho mọi trường hợp sử dụng.\n\n## Kiểm chứng mọi trích dẫn do AI gợi ý\n\n> [!canh-bao] Mô hình ngôn ngữ có thể tạo ra trích dẫn **hoàn toàn không tồn tại** — tên tác giả, năm, tên bài báo nghe rất hợp lý và đúng định dạng, nhưng không có thật — một hiện tượng gọi là \"hallucination\". Điều nguy hiểm là văn bản do AI viết ra luôn đọc trôi chảy và tự tin, không có dấu hiệu nào cho thấy trích dẫn đó là giả.\n\n> [!ghi-nho] Nguyên tắc bắt buộc: **mọi trích dẫn xuất hiện trong bản thảo phải được tự tay tra lại** — tìm đúng bài báo đó trên Google Scholar/Scopus, xác nhận tên tác giả, năm, và đặc biệt là nội dung claim có đúng như bài gốc nói không (AI cũng có thể trích dẫn đúng một nguồn có thật nhưng gán sai nội dung cho nó). Không có ngoại lệ, kể cả khi trích dẫn \"nghe rất quen\".\n\n> [!vi-du] Một nghiên cứu sinh dùng AI để soạn nhanh phần tổng quan, AI trích \"Nguyen & Pham (2021), published in Journal of Educational Technology, found that AI feedback increases motivation by 23%\". Khi tra lại, không tìm thấy bài báo này tồn tại — AI đã tạo ra một trích dẫn nghe hợp lý (đúng kiểu tên tác giả Việt Nam, đúng kiểu tạp chí, số liệu cụ thể tăng độ tin) nhưng hoàn toàn giả. Nếu nộp thẳng không kiểm tra, đây trở thành một trích dẫn giả trong bài báo công bố — hậu quả nghiêm trọng hơn rất nhiều so với một lỗi thông thường.\n\n## AI không thể là tác giả\n\n> [!canh-bao] Theo tiêu chí ICMJE (Bài 5), một tác giả phải **chịu trách nhiệm về nội dung công bố** — một công cụ AI không thể chịu trách nhiệm, không thể được liên hệ để giải trình, và không có sự đồng ý (trong nghĩa pháp lý/đạo đức) về việc công bố. Do đó, dù AI đóng góp bao nhiêu vào việc viết, nó **không thể được ghi là tác giả hoặc đồng tác giả** — hướng dẫn này được ICMJE, COPE và hầu hết các tạp chí lớn khẳng định rõ.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (30 phút)\n\nRà lại một đoạn bản thảo (nếu đã dùng AI hỗ trợ) và phân loại từng câu: AI chỉ sửa văn phong (giữ nguyên nội dung của bạn), hay AI đã tạo ra nội dung/claim mới cần kiểm chứng lại? Với mọi trích dẫn trong bản thảo, tự tay tra lại nguồn — đặc biệt các trích dẫn được gợi ý bởi AI.\n\n### Nhóm 3-4 người (20 phút)\n\nĐọc hướng dẫn \"Instructions for Authors\" của một tạp chí bạn đang cân nhắc, tìm phần yêu cầu khai báo AI (nếu có). Chia sẻ cách bạn dự định khai báo việc dùng AI trong bản thảo của mình.\n\n### Bài tập về nhà (30-45 phút)\n\nViết đoạn khai báo sử dụng AI (nếu có dùng) cho bài báo của bạn, và danh sách xác nhận đã tự tay kiểm tra từng trích dẫn trong bản thảo.\n\n:::mau Mẫu nộp bài tập về nhà\n**Đoạn khai báo sử dụng AI (nếu có):** …\n\n**Danh sách trích dẫn đã kiểm tra tự tay**\n\n| Trích dẫn trong bản thảo | Đã tra lại nguồn thật? | Nội dung claim khớp với bài gốc không? |\n|---|---|---|\n| … | … | … |\n:::\n\n### Nguồn tham khảo\n\n- Committee on Publication Ethics (COPE). (2023). *Authorship and AI Tools.* COPE Position Statement.\n- International Committee of Medical Journal Editors. (2024). *Defining the Role of Authors and Contributors.*\n- Thorp, H. H. (2023). ChatGPT is fun, but not an author. *Science*, 379(6630), 313.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 6",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "cbqt6-vai-tro-ai",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh nhập số liệu vào AI và yêu cầu 'viết phần Discussion cho tôi', rồi nộp thẳng kết quả. Vấn đề của cách làm này là gì?",
+                "explanation": "AI không biết bối cảnh nghiên cứu sâu bằng chính người nghiên cứu và không thể chịu trách nhiệm nếu diễn giải sai — để AI viết thay nội dung khoa học đòi hỏi hiểu sâu là dùng sai vai trò của công cụ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "AI không hiểu bối cảnh nghiên cứu sâu bằng người nghiên cứu, và không thể chịu trách nhiệm nếu diễn giải sai",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, miễn là văn phong đọc trôi chảy",
+                    "isCorrect": false,
+                    "misconception": "cbqt.ai-writes-content"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì AI luôn hiểu dữ liệu tốt hơn con người",
+                    "isCorrect": false,
+                    "misconception": "cbqt.ai-writes-content"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là cần yêu cầu AI viết dài hơn",
+                    "isCorrect": false,
+                    "misconception": "cbqt.ai-writes-content"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt6-khai-bao-ai",
+                "type": "mcq",
+                "prompt": "Một tạp chí yêu cầu khai báo nếu AI được dùng đáng kể để soạn bản thảo. Một tác giả đã dùng AI để viết lại nhiều đoạn nhưng không khai báo. Đây là vấn đề gì?",
+                "explanation": "Không khai báo dù tạp chí yêu cầu là vi phạm quy định xuất bản, tương tự việc không khai báo nguồn tài trợ hoặc xung đột lợi ích.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Vi phạm quy định khai báo của tạp chí, tương tự việc không khai báo xung đột lợi ích",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu văn bản cuối cùng không có lỗi ngữ pháp",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-ai-disclosure"
+                  },
+                  {
+                    "label": "Không cần khai báo vì AI chỉ là một công cụ soạn thảo văn bản thông thường",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-ai-disclosure"
+                  },
+                  {
+                    "label": "Chỉ cần khai báo nếu bài báo bị phát hiện dùng AI",
+                    "isCorrect": false,
+                    "misconception": "cbqt.no-ai-disclosure"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt6-trich-dan-gia",
+                "type": "mcq",
+                "prompt": "AI gợi ý một trích dẫn 'Nguyen & Pham (2021), Journal of Educational Technology' nghe rất hợp lý. Trước khi đưa vào bản thảo, cần làm gì?",
+                "explanation": "AI có thể tạo ra trích dẫn hoàn toàn không tồn tại một cách rất tự nhiên. Mọi trích dẫn do AI gợi ý phải được tự tay tra lại nguồn thật và xác nhận nội dung claim khớp với bài gốc.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tự tay tra lại trên Google Scholar/Scopus để xác nhận bài báo này có thật và nội dung khớp với claim",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần kiểm tra gì, vì trích dẫn nghe hợp lý và đúng định dạng học thuật",
+                    "isCorrect": false,
+                    "misconception": "cbqt.unverified-ai-citations"
+                  },
+                  {
+                    "label": "Chỉ cần kiểm tra nếu năm xuất bản nghe không hợp lý",
+                    "isCorrect": false,
+                    "misconception": "cbqt.unverified-ai-citations"
+                  },
+                  {
+                    "label": "Tin tưởng trích dẫn này vì AI không bao giờ tạo ra nguồn giả",
+                    "isCorrect": false,
+                    "misconception": "cbqt.unverified-ai-citations"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt6-ai-khong-la-tac-gia",
+                "type": "mcq",
+                "prompt": "Một nhóm tác giả muốn ghi tên công cụ AI đã hỗ trợ viết đáng kể như một đồng tác giả trong bài báo. Đây có phù hợp không?",
+                "explanation": "Một tác giả phải chịu trách nhiệm về nội dung công bố theo tiêu chí ICMJE — AI không thể chịu trách nhiệm hoặc được liên hệ để giải trình, nên không thể được ghi là tác giả hoặc đồng tác giả dù đóng góp bao nhiêu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không phù hợp — AI không thể chịu trách nhiệm về nội dung công bố nên không đủ điều kiện làm tác giả",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Phù hợp, nếu AI đóng góp đáng kể vào việc viết bản thảo",
+                    "isCorrect": false,
+                    "misconception": "cbqt.ai-as-coauthor"
+                  },
+                  {
+                    "label": "Phù hợp, miễn là ghi rõ tên công cụ và phiên bản đã dùng",
+                    "isCorrect": false,
+                    "misconception": "cbqt.ai-as-coauthor"
+                  },
+                  {
+                    "label": "Chỉ phù hợp nếu tạp chí không có quy định cụ thể về việc này",
+                    "isCorrect": false,
+                    "misconception": "cbqt.ai-as-coauthor"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt6-vai-tro-phu-hop",
+                "type": "mcq",
+                "prompt": "Việc dùng AI nào dưới đây phù hợp nhất với vai trò 'trợ lý văn phong'?",
+                "explanation": "Sửa lại cách diễn đạt một câu tiếng Anh đã viết sẵn, giữ nguyên nội dung và ý nghĩa của người viết, là đúng vai trò trợ lý văn phong — khác với việc để AI tạo ra nội dung/claim khoa học mới.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Yêu cầu AI sửa lại cách diễn đạt một câu tiếng Anh đã viết sẵn, giữ nguyên nội dung",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Yêu cầu AI tự phân tích dữ liệu và viết kết luận mà không kiểm tra lại",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Yêu cầu AI tạo ra một đóng góp lý thuyết mới thay cho tác giả",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Yêu cầu AI viết toàn bộ phần Discussion từ đầu tới cuối rồi nộp thẳng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt6-thu-tu-kiem-soat-ai",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước dùng AI hỗ trợ viết bài báo một cách có kiểm soát.",
+                "explanation": "Từ dùng AI cho vai trò trợ lý văn phong, kiểm tra hướng dẫn khai báo của tạp chí, tự tay tra lại mọi trích dẫn, tới không ghi AI là tác giả trong danh sách cuối cùng.",
+                "points": 3,
+                "sequence": [
+                  "Dùng AI để sửa văn phong hoặc gợi ý cách diễn đạt, không để AI viết thay nội dung khoa học",
+                  "Kiểm hướng dẫn 'Instructions for Authors' của tạp chí về yêu cầu khai báo AI",
+                  "Tự tay tra lại mọi trích dẫn xuất hiện trong bản thảo, đặc biệt trích dẫn do AI gợi ý",
+                  "Viết đoạn khai báo sử dụng AI nếu tạp chí yêu cầu",
+                  "Không ghi công cụ AI vào danh sách tác giả khi hoàn thiện bản thảo"
+                ]
+              },
+              {
+                "key": "cbqt6-noi-khai-niem-ai",
+                "type": "matching",
+                "prompt": "Nối mỗi khái niệm với đúng nguyên tắc sử dụng AI trong viết bài báo.",
+                "explanation": "Vai trò trợ lý văn phong là dùng đúng cách; hallucination là rủi ro cần tự tay kiểm chứng; khai báo AI là yêu cầu của nhiều tạp chí; tiêu chí ICMJE giải thích vì sao AI không thể là tác giả.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Vai trò trợ lý văn phong",
+                    "right": "Sửa ngữ pháp, gợi ý diễn đạt — không viết thay nội dung khoa học"
+                  },
+                  {
+                    "left": "AI hallucination",
+                    "right": "AI có thể tạo ra trích dẫn hoàn toàn không tồn tại một cách tự nhiên"
+                  },
+                  {
+                    "left": "Khai báo sử dụng AI",
+                    "right": "Yêu cầu ngày càng phổ biến ở nhiều tạp chí quốc tế"
+                  },
+                  {
+                    "left": "Tiêu chí ICMJE về tác giả",
+                    "right": "Giải thích vì sao AI không thể chịu trách nhiệm và không được ghi là tác giả"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt6-viet-khai-bao",
+                "type": "essay",
+                "prompt": "Viết đoạn khai báo sử dụng AI cho bài báo của bạn (100-150 từ, dù có dùng hay không), mô tả cụ thể: (a) công cụ AI đã dùng (nếu có) và ở phần nào của bản thảo; (b) cách bạn đã kiểm chứng lại nội dung/trích dẫn do AI gợi ý; (c) xác nhận AI không được ghi là tác giả.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 7 · Viết đề xuất xin tài trợ và networking học thuật",
+          "durationMin": 90,
+          "description": "Viết Specific Aims cụ thể, đo được thay vì mơ hồ; lập ngân sách và timeline có căn cứ và buffer thực tế; networking chủ động tại hội thảo quốc tế; khớp đề xuất với đúng ưu tiên của từng quỹ tài trợ thay vì gửi một bản chung chung.",
+          "objectives": [
+            "Viết được Specific Aims cụ thể, đo được cho một đề xuất xin tài trợ, thay vì mục tiêu mơ hồ không kiểm tra được",
+            "Lập ngân sách có căn cứ cho từng khoản và timeline có buffer thực tế, tính tới các bước dễ bị chậm như phê duyệt đạo đức",
+            "Networking chủ động tại hội thảo quốc tế thay vì chỉ trình bày bài rồi rời đi",
+            "Đọc đúng call for proposal và điều chỉnh đề xuất khớp với ưu tiên cụ thể của từng quỹ tài trợ"
+          ],
+          "summary": [
+            "Specific Aims là phần quan trọng nhất của một đề xuất xin tài trợ — mỗi aim nên là một câu hỏi con cụ thể, đo được, không phải một mục tiêu mơ hồ như 'nghiên cứu về AI trong giáo dục'.",
+            "Ngân sách cần được biện minh cho từng khoản cụ thể, không phải những con số tròn đẹp; timeline cần buffer thực tế cho các bước dễ chậm như phê duyệt đạo đức, thu thập dữ liệu, hoặc phân tích lại.",
+            "Hội thảo quốc tế là cơ hội networking, không chỉ là nơi trình bày bài rồi rời đi — đọc trước abstract của người khác, chủ động đặt câu hỏi, và theo dõi liên lạc sau hội thảo là những gì tạo ra hợp tác thật.",
+            "Một đề xuất chung chung gửi cho nhiều quỹ tài trợ khác nhau thường thất bại — mỗi quỹ có ưu tiên riêng, và đề xuất cần được điều chỉnh khớp với đúng ưu tiên của quỹ đang gửi."
+          ],
+          "splitSections": true,
+          "body": "\nNghiên cứu cần thời gian, dữ liệu, và đôi khi kinh phí — bài cuối này chuẩn bị cho việc xin tài trợ và xây dựng mạng lưới hỗ trợ research agenda dài hơi đã định vị ở Bài 1. Bài đi qua bốn phần: viết Specific Aims cụ thể, đo được — trái tim của một đề xuất; lập ngân sách và timeline có căn cứ và buffer thực tế; networking chủ động tại hội thảo quốc tế thay vì chỉ trình bày rồi rời đi; và kết bằng cách đọc đúng call for proposal để khớp đề xuất với ưu tiên của từng quỹ tài trợ.\n\n## Specific Aims: trái tim của một đề xuất\n\n> [!ghi-nho] Phần **Specific Aims** (mục tiêu cụ thể) thường là phần đầu tiên và quan trọng nhất mà người xét duyệt đọc — nhiều quỹ tài trợ quyết định phần lớn ấn tượng chỉ từ một trang này. Mỗi aim nên là **một câu hỏi con cụ thể, đo được**, đóng góp vào câu hỏi lớn của research agenda (Bài 1), không phải một mục tiêu mơ hồ.\n\n| Specific Aim mơ hồ (không dùng được) | Specific Aim cụ thể (dùng được) |\n|---|---|\n| \"Nghiên cứu về AI trong giáo dục.\" | \"Aim 1: Đo mức độ và cách thức giảng viên đại học sử dụng AI tạo sinh trong chấm bài, qua khảo sát trên 300 giảng viên tại 5 trường. Aim 2: Kiểm định mô hình các yếu tố dự báo ý định tiếp tục sử dụng, dùng PLS-SEM.\" |\n\n> [!canh-bao] Specific Aims mơ hồ khiến người xét duyệt không hình dung được nghiên cứu sẽ thực sự làm gì, và không đánh giá được tính khả thi — đây là lý do phổ biến khiến đề xuất bị từ chối ngay từ vòng đầu, trước cả khi xét tới chất lượng phương pháp.\n\n## Ngân sách và timeline có căn cứ\n\n> [!canh-bao] Ngân sách với những con số tròn đẹp không có căn cứ (ví dụ \"chi phí khảo sát: 50 triệu đồng\") không thuyết phục được người xét duyệt — mỗi khoản cần biện minh cụ thể (số người tham gia × mức thù lao, chi phí phần mềm phân tích cụ thể, chi phí đi thực địa theo số chuyến và khoảng cách).\n\n> [!ghi-nho] Timeline cần **buffer thực tế** cho các bước dễ bị chậm: phê duyệt đạo đức (đã học ở khoá Phương pháp nghiên cứu, thường mất vài tuần tới vài tháng), thu thập dữ liệu thực tế thường chậm hơn dự kiến (đặc biệt với đối tượng khó tiếp cận), và luôn dành thời gian cho một vòng phân tích lại sau khi phát hiện vấn đề dữ liệu.\n\n> [!canh-bao] Timeline giả định mọi bước diễn ra suôn sẻ, không có buffer — ví dụ lên kế hoạch thu thập dữ liệu trong đúng 4 tuần ngay sau khi nộp đề cương, không tính thời gian chờ phê duyệt đạo đức — thường không thực hiện được và làm giảm độ tin cậy của đề xuất trong mắt người xét duyệt có kinh nghiệm.\n\n> [!vi-du] Timeline có buffer cho một nghiên cứu 12 tháng:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Tháng 1-2    Phê duyệt đạo đức (dự kiến 4 tuần, buffer thêm 4 tuần dự phòng)\nTháng 3-4    Thí điểm công cụ khảo sát + hiệu chỉnh\nTháng 5-7    Thu thập dữ liệu chính (dự kiến 8 tuần, buffer thêm 4 tuần\n             cho đối tượng khó tiếp cận)\nTháng 8      Làm sạch và phân tích dữ liệu lần 1\nTháng 9      Buffer: phân tích lại sau khi phát hiện vấn đề dữ liệu\n             (gần như luôn xảy ra — xem Khoá 401, Bài 1)\nTháng 10-11  Viết bản thảo\nTháng 12     Buffer: sửa theo góp ý nội bộ trước khi nộp/gửi bài</pre></div>\n```\n\n> [!meo] Quy tắc ước lượng nhanh: cộng thêm **25-30% thời gian dự phòng** vào tổng thời gian dự kiến ban đầu cho toàn bộ dự án — không rải buffer đều cho mọi bước, mà tập trung buffer vào các bước có lịch sử dễ chậm nhất (phê duyệt đạo đức, thu thập dữ liệu với đối tượng khó tiếp cận). Người xét duyệt có kinh nghiệm nhận ra ngay một timeline không có buffer nào ở bất kỳ bước nào.\n\n## Networking chủ động tại hội thảo quốc tế\n\n> [!canh-bao] Chỉ trình bày bài của mình trong đúng slot được phân công rồi rời khỏi hội thảo là bỏ lỡ phần lớn giá trị của việc tham dự — hội thảo quốc tế là nơi các hợp tác nghiên cứu và cơ hội công bố chung thường bắt đầu, không chỉ là nơi báo cáo kết quả.\n\n> [!ghi-nho] Networking chủ động gồm: đọc trước chương trình và abstract của các bài liên quan tới research agenda của bạn, chủ động đặt câu hỏi sau các bài trình bày liên quan (không chỉ ngồi nghe), giới thiệu ngắn gọn về nghiên cứu của mình khi trò chuyện giữa giờ, và quan trọng nhất — **theo dõi liên lạc sau hội thảo** (một email ngắn nhắc lại cuộc trò chuyện, gửi kèm bài báo liên quan) trong vòng một tuần, khi ấn tượng còn mới.\n\n| Email theo dõi yếu (không dùng) | Email theo dõi đúng cách |\n|---|---|\n| \"Dear Professor, I attended your presentation and found it interesting. I would like to collaborate with you.\" | \"Dear Prof. [Tên], it was great discussing [chủ đề cụ thể đã nói] after your talk on [tên bài] at [tên hội thảo]. As mentioned, I'm attaching our recent paper on [chủ đề liên quan] — I think the measurement approach in Section 3 connects closely with the [khía cạnh cụ thể] you raised. Would be glad to hear your thoughts whenever convenient.\" |\n\n> [!meo] Email theo dõi tốt luôn nhắc lại **một chi tiết cụ thể** của cuộc trò chuyện (không phải \"rất thú vị\" chung chung) — điều này chứng minh bạn thực sự lắng nghe, không phải gửi hàng loạt cùng một mẫu cho mọi người đã gặp ở hội thảo.\n\n## Đọc call for proposal đúng cách\n\n> [!canh-bao] Gửi cùng một đề xuất chung chung cho nhiều quỹ tài trợ khác nhau, chỉ đổi tên quỹ ở đầu trang, thường thất bại — mỗi quỹ có ưu tiên riêng (ví dụ một quỹ ưu tiên nghiên cứu ứng dụng có tác động chính sách ngay, quỹ khác ưu tiên đóng góp lý thuyết nền tảng). Đề xuất cần đọc kỹ call for proposal và **điều chỉnh cách trình bày đóng góp** (đã định vị ở Bài 1) để khớp với đúng ưu tiên của quỹ đang gửi — không đổi bản chất nghiên cứu, mà đổi cách nhấn mạnh đóng góp nào lên trước.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nViết Specific Aims cho đề tài của bạn (2-3 aim, mỗi aim cụ thể và đo được). Lập ngân sách sơ bộ cho 3 khoản chính, mỗi khoản kèm căn cứ. Vẽ timeline có ít nhất một buffer cho bước dễ chậm nhất trong nghiên cứu của bạn.\n\n### Nhóm 3-4 người (25 phút)\n\nĐổi Specific Aims cho nhau, kiểm mỗi aim có đủ cụ thể để hình dung được nghiên cứu sẽ làm gì không. Chia sẻ kinh nghiệm (hoặc kế hoạch) networking tại hội thảo sắp tới — có bài nào của người khác bạn nên đọc trước và chủ động đặt câu hỏi không?\n\n### Bài tập về nhà (60 phút)\n\nTìm một call for proposal thật (từ quỹ tài trợ trong nước hoặc quốc tế liên quan tới lĩnh vực của bạn), đọc kỹ ưu tiên của quỹ, và viết một đoạn (200-250 từ) trình bày đóng góp của bạn (từ Bài 1) theo cách khớp với đúng ưu tiên đó.\n\n:::mau Mẫu nộp bài tập về nhà\n**Specific Aims (2-3 aim):** …\n\n**Ngân sách sơ bộ (3 khoản chính, có căn cứ):** …\n\n**Timeline (có buffer):** …\n\n**Call for proposal đã chọn và ưu tiên của quỹ:** …\n\n**Đoạn trình bày đóng góp khớp với ưu tiên quỹ (200-250 từ):** …\n:::\n\n### Nguồn tham khảo\n\n- Przeworski, A., & Salomon, F. (1995). *On the Art of Writing Proposals.* Social Science Research Council.\n- Chapin, P. G. (2004). *Research Projects and Research Proposals: A Guide for Scientists Seeking Funding.* Cambridge University Press.\n- Locke, L. F., Silverman, S. J., & Spirduso, W. W. (2013). *Reading and Understanding Research* (4th ed.). SAGE Publications.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 7",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "cbqt7-specific-aims",
+                "type": "mcq",
+                "prompt": "Aim nào dưới đây viết đúng chuẩn cho phần Specific Aims của một đề xuất xin tài trợ?",
+                "explanation": "Specific Aims cần cụ thể, đo được, để người xét duyệt hình dung được nghiên cứu sẽ thực sự làm gì và đánh giá được tính khả thi — 'nghiên cứu về AI trong giáo dục' quá mơ hồ để đánh giá.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Đo mức độ và cách thức giảng viên đại học sử dụng AI tạo sinh trong chấm bài, qua khảo sát trên 300 giảng viên tại 5 trường.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Nghiên cứu về AI trong giáo dục.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.vague-aims"
+                  },
+                  {
+                    "label": "'Tìm hiểu sâu hơn về công nghệ trong giảng dạy.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.vague-aims"
+                  },
+                  {
+                    "label": "'Góp phần vào sự phát triển của giáo dục Việt Nam.'",
+                    "isCorrect": false,
+                    "misconception": "cbqt.vague-aims"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt7-timeline-buffer",
+                "type": "mcq",
+                "prompt": "Một đề xuất lên kế hoạch thu thập dữ liệu trong đúng 4 tuần ngay sau khi nộp đề cương, không tính thời gian chờ phê duyệt đạo đức. Vấn đề của timeline này là gì?",
+                "explanation": "Timeline không có buffer cho các bước dễ bị chậm (như phê duyệt đạo đức) thường không thực hiện được trong thực tế và làm giảm độ tin cậy của đề xuất trong mắt người xét duyệt có kinh nghiệm.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Thiếu buffer cho các bước dễ bị chậm như phê duyệt đạo đức, khiến timeline không thực tế",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì timeline càng ngắn càng gây ấn tượng tốt với người xét duyệt",
+                    "isCorrect": false,
+                    "misconception": "cbqt.unrealistic-timeline"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, phê duyệt đạo đức luôn diễn ra ngay lập tức",
+                    "isCorrect": false,
+                    "misconception": "cbqt.unrealistic-timeline"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là 4 tuần quá dài, nên rút ngắn hơn nữa",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt7-networking-chu-dong",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh trình bày bài tại hội thảo quốc tế xong rồi rời khỏi hội trường ngay, không tham gia hoạt động nào khác. Nhận định nào đúng nhất?",
+                "explanation": "Hội thảo quốc tế là nơi các hợp tác nghiên cứu thường bắt đầu — chỉ trình bày rồi rời đi bỏ lỡ phần lớn giá trị của việc tham dự, đặc biệt là cơ hội networking chủ động.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bỏ lỡ phần lớn giá trị của hội thảo — cơ hội networking và hợp tác thường đến từ việc chủ động tương tác, không chỉ trình bày",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì trình bày bài là mục đích duy nhất của việc tham dự hội thảo",
+                    "isCorrect": false,
+                    "misconception": "cbqt.conference-passive"
+                  },
+                  {
+                    "label": "Đây là cách làm hiệu quả nhất để tiết kiệm thời gian cho nghiên cứu",
+                    "isCorrect": false,
+                    "misconception": "cbqt.conference-passive"
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu bài trình bày được đánh giá tốt",
+                    "isCorrect": false,
+                    "misconception": "cbqt.conference-passive"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt7-generic-proposal",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh gửi cùng một đề xuất, chỉ đổi tên quỹ ở đầu trang, cho 4 quỹ tài trợ khác nhau. Vấn đề của cách làm này là gì?",
+                "explanation": "Mỗi quỹ có ưu tiên riêng — đề xuất chung chung không điều chỉnh theo ưu tiên cụ thể của từng quỹ thường thất bại, vì không cho thấy nghiên cứu khớp với điều quỹ đang tìm kiếm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Mỗi quỹ có ưu tiên riêng; đề xuất cần điều chỉnh cách trình bày đóng góp để khớp với đúng ưu tiên của từng quỹ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, càng gửi nhiều quỹ càng tăng khả năng được nhận",
+                    "isCorrect": false,
+                    "misconception": "cbqt.generic-proposal-multiple-funders"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, mọi quỹ tài trợ đều có cùng tiêu chí xét duyệt",
+                    "isCorrect": false,
+                    "misconception": "cbqt.generic-proposal-multiple-funders"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là cần thêm ngân sách cho mỗi bản đề xuất",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt7-ngan-sach-can-cu",
+                "type": "mcq",
+                "prompt": "Khoản ngân sách nào dưới đây được biện minh đúng cách?",
+                "explanation": "Ngân sách cần biện minh cụ thể cho từng khoản (số người × mức thù lao) thay vì những con số tròn không có căn cứ — giúp người xét duyệt thấy được tính hợp lý của đề xuất.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Chi phí khảo sát: 300 người tham gia × 100.000đ thù lao = 30 triệu đồng.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Chi phí khảo sát: 50 triệu đồng.'",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "'Chi phí nghiên cứu: 100 triệu đồng (dự trù chung).'",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "'Ngân sách sẽ được xác định sau khi đề xuất được duyệt.'",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "cbqt7-thu-tu-de-xuat",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước chuẩn bị một đề xuất xin tài trợ.",
+                "explanation": "Từ đọc call for proposal để hiểu ưu tiên, viết Specific Aims cụ thể khớp với ưu tiên đó, lập ngân sách có căn cứ, tới timeline có buffer thực tế.",
+                "points": 3,
+                "sequence": [
+                  "Đọc kỹ call for proposal để hiểu ưu tiên cụ thể của quỹ",
+                  "Viết Specific Aims cụ thể, đo được, khớp với ưu tiên của quỹ",
+                  "Lập ngân sách có căn cứ cho từng khoản",
+                  "Vẽ timeline có buffer cho các bước dễ bị chậm",
+                  "Rà lại toàn bộ đề xuất để đảm bảo nhất quán với đóng góp đã định vị ở Bài 1"
+                ]
+              },
+              {
+                "key": "cbqt7-noi-khai-niem-de-xuat",
+                "type": "matching",
+                "prompt": "Nối mỗi khái niệm với đúng vai trò của nó trong việc xin tài trợ và networking.",
+                "explanation": "Specific Aims cụ thể hoá nghiên cứu sẽ làm gì; ngân sách có căn cứ tăng độ tin cậy; buffer trong timeline xử lý rủi ro chậm trễ; theo dõi liên lạc sau hội thảo biến gặp gỡ thành hợp tác thật.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Specific Aims",
+                    "right": "Cụ thể hoá nghiên cứu sẽ thực sự làm gì, giúp đánh giá tính khả thi"
+                  },
+                  {
+                    "left": "Ngân sách có căn cứ",
+                    "right": "Biện minh từng khoản cụ thể, tăng độ tin cậy của đề xuất"
+                  },
+                  {
+                    "left": "Buffer trong timeline",
+                    "right": "Dự phòng cho các bước dễ bị chậm như phê duyệt đạo đức"
+                  },
+                  {
+                    "left": "Theo dõi liên lạc sau hội thảo",
+                    "right": "Biến một cuộc trò chuyện ngắn thành cơ hội hợp tác thật"
+                  }
+                ]
+              },
+              {
+                "key": "cbqt7-viet-specific-aims",
+                "type": "essay",
+                "prompt": "Viết phần Specific Aims cho một đề xuất xin tài trợ dựa trên đề tài của bạn (200-300 từ), gồm: (a) 2-3 aim cụ thể, đo được; (b) một câu nối mỗi aim với đóng góp đã định vị ở Bài 1; (c) một khoản ngân sách chính có căn cứ cụ thể cho aim đó.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,998 @@
+[
+ {
+  "n": "21",
+  "title": "我去邮局寄包裹 (Tôi đến bưu điện gửi bưu phẩm)",
+  "questions": [
+   {
+    "type": "mcq",
+    "prompt": "\"包裹\" (bāoguǒ) có nghĩa là gì?",
+    "explanation": "包裹 (bāoguǒ) nghĩa là bưu phẩm/bưu kiện — gói hàng gửi qua đường bưu điện.",
+    "options": [
+     {
+      "label": "Bưu phẩm, kiện hàng",
+      "isCorrect": true
+     },
+     {
+      "label": "Tem thư",
+      "isCorrect": false
+     },
+     {
+      "label": "Vé máy bay",
+      "isCorrect": false
+     },
+     {
+      "label": "Hộ chiếu",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "Trong câu \"我去邮局寄包裹\" (Wǒ qù yóujú jì bāoguǒ), cấu trúc ngữ pháp được sử dụng là gì?",
+    "explanation": "Cấu trúc \"去/来 + địa điểm + làm việc gì\" là câu liên động, dùng để biểu đạt mục đích của hành động di chuyển.",
+    "options": [
+     {
+      "label": "Câu chữ 把",
+      "isCorrect": false
+     },
+     {
+      "label": "Câu liên động (hai động từ nối tiếp)",
+      "isCorrect": true
+     },
+     {
+      "label": "Câu bị động",
+      "isCorrect": false
+     },
+     {
+      "label": "Câu so sánh",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "\"顺便\" (shùnbiàn) gần nghĩa nhất với từ nào?",
+    "explanation": "顺便 nghĩa là \"tiện thể, nhân tiện\" — làm thêm một việc gì đó trong khi đang làm việc khác.",
+    "options": [
+     {
+      "label": "Cố ý",
+      "isCorrect": false
+     },
+     {
+      "label": "Tiện thể, nhân tiện",
+      "isCorrect": true
+     },
+     {
+      "label": "Vội vàng",
+      "isCorrect": false
+     },
+     {
+      "label": "Chắc chắn",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "Từ nào sau đây có nghĩa là \"thay, hộ, giúp (ai làm việc gì)\"?",
+    "explanation": "替 (tì) nghĩa là \"thay, hộ, giúp\" — ví dụ 替我买 (mua giúp tôi).",
+    "options": [
+     {
+      "label": "拿 (ná)",
+      "isCorrect": false
+     },
+     {
+      "label": "替 (tì)",
+      "isCorrect": true
+     },
+     {
+      "label": "办 (bàn)",
+      "isCorrect": false
+     },
+     {
+      "label": "当 (dāng)",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "\"普通邮票\" nghĩa là \"tem kỷ niệm đặc biệt\".",
+    "explanation": "普通 (pǔtōng) nghĩa là \"phổ thông, thông thường\". Tem kỷ niệm phải là 纪念邮票 (jìniàn yóupiào).",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": false
+     },
+     {
+      "label": "Sai",
+      "isCorrect": true
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "Câu liên động biểu đạt mục đích có dạng \"去/来 + địa điểm + làm việc gì\".",
+    "explanation": "Đây chính là mẫu câu ngữ pháp trọng tâm của bài 21, ví dụ: 我去邮局寄包裹 (tôi đi bưu điện gửi bưu phẩm).",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": true
+     },
+     {
+      "label": "Sai",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "\"不用\" (búyòng) nghĩa là \"cần phải\".",
+    "explanation": "不用 nghĩa là \"không cần, không phải\" — ngược nghĩa với \"cần phải\".",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": false
+     },
+     {
+      "label": "Sai",
+      "isCorrect": true
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "\"代表团\" (dàibiǎotuán) nghĩa là \"đoàn đại biểu\".",
+    "explanation": "代表 (đại biểu) + 团 (đoàn) ghép lại thành \"đoàn đại biểu\".",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": true
+     },
+     {
+      "label": "Sai",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "我去邮局＿＿包裹。(Tôi đến bưu điện ＿＿ bưu phẩm.)",
+    "explanation": "寄 nghĩa là \"gửi\" (thư, bưu phẩm...), phù hợp ngữ cảnh câu.",
+    "answers": [
+     "寄",
+     "jì"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "你要＿＿邮票还是普通邮票?(Bạn muốn tem ＿＿ hay tem phổ thông?)",
+    "explanation": "Câu gốc trong bài đối lập 纪念邮票 (tem kỷ niệm) với 普通邮票 (tem phổ thông).",
+    "answers": [
+     "纪念",
+     "jìniàn"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "明天老师来给我＿＿。(Ngày mai thầy giáo đến ＿＿ cho tôi.)",
+    "explanation": "辅导 nghĩa là \"phụ đạo, kèm cặp, hướng dẫn thêm\".",
+    "answers": [
+     "辅导",
+     "fǔdǎo"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "明天我们代表团去上海＿＿。(Ngày mai đoàn đại biểu chúng tôi đi Thượng Hải ＿＿.)",
+    "explanation": "参观 nghĩa là \"tham quan\" — phù hợp với hoạt động của đoàn đại biểu khi đi công tác.",
+    "answers": [
+     "参观",
+     "cānguān"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “我去邮局寄包裹。”",
+    "explanation": "Theo cấu trúc câu liên động: Chủ ngữ + 去 + địa điểm + động từ mục đích + tân ngữ.",
+    "sequence": [
+     "我",
+     "去",
+     "邮局",
+     "寄",
+     "包裹"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “你顺便帮我买邮票。”",
+    "explanation": "顺便 đứng trước động từ chính, làm trạng ngữ chỉ cách thức tiện thể.",
+    "sequence": [
+     "你",
+     "顺便",
+     "帮我",
+     "买",
+     "邮票"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “我明天去上海。”",
+    "explanation": "Trạng ngữ chỉ thời gian (明天) đứng sau chủ ngữ, trước động từ.",
+    "sequence": [
+     "我",
+     "明天",
+     "去",
+     "上海"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “你坐飞机去还是坐火车去?”",
+    "explanation": "Cấu trúc câu hỏi lựa chọn \"A还是B\" đặt hai phương án cạnh nhau bằng liên từ 还是.",
+    "sequence": [
+     "你",
+     "坐飞机去",
+     "还是",
+     "坐火车去"
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→2, B→4, C→1, D→3",
+    "pairs": [
+     {
+      "left": "寄",
+      "right": "Gửi (thư, bưu phẩm)"
+     },
+     {
+      "left": "包裹",
+      "right": "Bưu phẩm"
+     },
+     {
+      "left": "辅导",
+      "right": "Phụ đạo, kèm cặp"
+     },
+     {
+      "left": "顺便",
+      "right": "Tiện thể, nhân tiện"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→4, C→1, D→2",
+    "pairs": [
+     {
+      "left": "邮票",
+      "right": "Tem thư"
+     },
+     {
+      "left": "纪念",
+      "right": "Kỷ niệm"
+     },
+     {
+      "left": "普通",
+      "right": "Phổ thông, thông thường"
+     },
+     {
+      "left": "拿",
+      "right": "Cầm, lấy, nắm"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→2, C→4, D→1",
+    "pairs": [
+     {
+      "left": "旅行",
+      "right": "Du hành, đi du lịch"
+     },
+     {
+      "left": "代表",
+      "right": "Đại biểu"
+     },
+     {
+      "left": "团",
+      "right": "Đoàn"
+     },
+     {
+      "left": "参观",
+      "right": "Tham quan"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→2, C→4, D→1",
+    "pairs": [
+     {
+      "left": "翻译",
+      "right": "Phiên dịch"
+     },
+     {
+      "left": "飞机",
+      "right": "Máy bay"
+     },
+     {
+      "left": "火车",
+      "right": "Tàu hỏa"
+     },
+     {
+      "left": "问题",
+      "right": "Vấn đề, câu hỏi"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "n": "22",
+  "title": "我看看这件大衣 (Tôi xem thử áo khoác này)",
+  "questions": [
+   {
+    "type": "mcq",
+    "prompt": "\"大衣\" (dàyī) nghĩa là gì?",
+    "explanation": "大衣 nghĩa là \"áo khoác/áo choàng dài\".",
+    "options": [
+     {
+      "label": "Áo khoác dài",
+      "isCorrect": true
+     },
+     {
+      "label": "Giày",
+      "isCorrect": false
+     },
+     {
+      "label": "Vé máy bay",
+      "isCorrect": false
+     },
+     {
+      "label": "Túi xách",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "Cấu trúc \"又...又...\" trong bài dùng để làm gì?",
+    "explanation": "\"又...又...\" (vừa...vừa...) nối hai tính từ/động từ để diễn tả hai đặc điểm/tính chất tồn tại đồng thời, ví dụ: 又好看又便宜 (vừa đẹp vừa rẻ).",
+    "options": [
+     {
+      "label": "So sánh hơn kém",
+      "isCorrect": false
+     },
+     {
+      "label": "Liên kết hai tính chất/trạng thái cùng tồn tại song song",
+      "isCorrect": true
+     },
+     {
+      "label": "Biểu thị nguyên nhân - kết quả",
+      "isCorrect": false
+     },
+     {
+      "label": "Biểu thị điều kiện",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "Câu \"你看看这件怎么样?\" sử dụng hình thức nào của động từ?",
+    "explanation": "看看 là dạng lặp lại (AA) của động từ đơn âm tiết 看, biểu thị hành động ngắn, nhẹ nhàng, mang tính thử.",
+    "options": [
+     {
+      "label": "Động từ trùng lặp (dạng AA)",
+      "isCorrect": true
+     },
+     {
+      "label": "Bổ ngữ kết quả",
+      "isCorrect": false
+     },
+     {
+      "label": "Câu bị động",
+      "isCorrect": false
+     },
+     {
+      "label": "Câu so sánh",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "\"有一点儿贵\" và \"贵一点儿\" khác nhau như thế nào?",
+    "explanation": "Theo phần ngữ pháp của bài, \"有(一)点儿\" làm trạng ngữ đứng trước tính từ và thường mang sắc thái không như ý; còn \"một chút\" đặt sau tính từ (làm bổ ngữ) mang tính trung lập, thường dùng khi yêu cầu/đề nghị.",
+    "options": [
+     {
+      "label": "Hoàn toàn giống nhau",
+      "isCorrect": false
+     },
+     {
+      "label": "\"有(一)点儿 + tính từ\" đứng trước tính từ, thường biểu thị ý không hài lòng; \"tính từ + 一点儿\" đứng sau tính từ, mang ý trung tính/yêu cầu",
+      "isCorrect": true
+     },
+     {
+      "label": "Cả hai đều là chủ ngữ",
+      "isCorrect": false
+     },
+     {
+      "label": "Không có khác biệt ngữ pháp",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "Dạng trùng lặp của động từ song âm tiết là \"AABB\".",
+    "explanation": "Dạng trùng lặp đúng của động từ song âm tiết là \"ABAB\" (ví dụ: 介绍介绍), không phải \"AABB\".",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": false
+     },
+     {
+      "label": "Sai",
+      "isCorrect": true
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "\"当然\" (dāngrán) nghĩa là \"đương nhiên, tất nhiên\".",
+    "explanation": "当然 đúng nghĩa là \"đương nhiên, tất nhiên\".",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": true
+     },
+     {
+      "label": "Sai",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "\"瘦\" (shòu) trong bài này mang nghĩa \"chật, bó sát (khi nói về quần áo)\".",
+    "explanation": "Khi nói về người, 瘦 nghĩa là gầy; khi nói về quần áo, 瘦 nghĩa là chật, bó.",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": true
+     },
+     {
+      "label": "Sai",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "Động từ đang biểu thị hành động tiếp diễn (như đang 在 làm gì) vẫn có thể lặp lại bình thường.",
+    "explanation": "Theo ngữ pháp bài học, động từ biểu thị hành động đang tiến hành thì không thể dùng dạng trùng lặp (không thể nói \"正在看看书\").",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": false
+     },
+     {
+      "label": "Sai",
+      "isCorrect": true
+     }
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "这件大衣＿＿漂亮＿＿便宜。(Chiếc áo khoác này vừa đẹp vừa rẻ.)",
+    "explanation": "Cấu trúc \"又...又...\" nối hai tính từ 漂亮 và 便宜 để diễn tả hai đặc điểm cùng tồn tại.",
+    "answers": [
+     "又...又...",
+     "又…又…",
+     "又又",
+     "yòu...yòu..."
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "我可以＿＿一下吗?(Tôi có thể ＿＿ (thử) một chút được không?)",
+    "explanation": "试 (shì) nghĩa là \"thử\"; dạng lặp 试试 mang sắc thái nhẹ nhàng, thường dùng khi hỏi xin phép thử đồ.",
+    "answers": [
+     "试",
+     "shì"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "这条裤子太＿＿了,能不能便宜点儿?(Cái quần này ＿＿ quá, có thể rẻ hơn một chút không?)",
+    "explanation": "贵 nghĩa là \"đắt\" — phù hợp ngữ cảnh mặc cả giá.",
+    "answers": [
+     "贵",
+     "guì"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "这件衣服颜色太深了,有没有＿＿一点儿的?(Màu áo này đậm quá, có màu ＿＿ hơn không?)",
+    "explanation": "浅 (nhạt) là từ trái nghĩa với 深 (đậm) đã xuất hiện trong bài.",
+    "answers": [
+     "浅",
+     "qiǎn"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “这件又好看又便宜。”",
+    "explanation": "Cấu trúc \"又...又...\" đặt trước mỗi tính từ được liên kết.",
+    "sequence": [
+     "这件",
+     "又",
+     "好看",
+     "又",
+     "便宜"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “我可以试试吗?”",
+    "explanation": "Trật tự câu hỏi xin phép: Chủ ngữ + 可以 + động từ (dạng lặp) + 吗?",
+    "sequence": [
+     "我",
+     "可以",
+     "试试",
+     "吗"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “这条裤子太长了。”",
+    "explanation": "Cấu trúc \"太 + tính từ + 了\" biểu thị mức độ vượt quá, thường mang ý không hài lòng.",
+    "sequence": [
+     "这条裤子",
+     "太",
+     "长",
+     "了"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “应该便宜一点儿。”",
+    "explanation": "应该 (nên) đứng trước động từ/tính từ làm vị ngữ; \"一点儿\" đặt sau tính từ để yêu cầu giảm nhẹ mức độ.",
+    "sequence": [
+     "应该",
+     "便宜",
+     "一点儿"
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→4, C→2, D→1",
+    "pairs": [
+     {
+      "left": "可以",
+      "right": "Có thể"
+     },
+     {
+      "left": "试",
+      "right": "Thử"
+     },
+     {
+      "left": "皮",
+      "right": "Da"
+     },
+     {
+      "left": "大衣",
+      "right": "Áo khoác"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→2, B→4, C→3, D→1",
+    "pairs": [
+     {
+      "left": "真",
+      "right": "Thật, chân thực"
+     },
+     {
+      "left": "当然",
+      "right": "Đương nhiên"
+     },
+     {
+      "left": "长",
+      "right": "Dài"
+     },
+     {
+      "left": "短",
+      "right": "Ngắn"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→4, C→2, D→1",
+    "pairs": [
+     {
+      "left": "深",
+      "right": "Đậm (màu)"
+     },
+     {
+      "left": "浅",
+      "right": "Nhạt (màu)"
+     },
+     {
+      "left": "肥",
+      "right": "Rộng (quần áo)"
+     },
+     {
+      "left": "瘦",
+      "right": "Chật, bó (quần áo)"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→4, C→2, D→1",
+    "pairs": [
+     {
+      "left": "合适",
+      "right": "Hợp, thích hợp"
+     },
+     {
+      "left": "应该",
+      "right": "Nên, cần phải"
+     },
+     {
+      "left": "便宜",
+      "right": "Rẻ"
+     },
+     {
+      "left": "卖",
+      "right": "Bán"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "n": "23",
+  "title": "你的生日是几月几号?(Sinh nhật của bạn vào ngày tháng nào?)",
+  "questions": [
+   {
+    "type": "mcq",
+    "prompt": "\"属狗\" (shǔ gǒu) nghĩa là gì?",
+    "explanation": "属 (shǔ) dùng để chỉ năm sinh theo 12 con giáp; 属狗 nghĩa là sinh năm con chó (tuổi Tuất).",
+    "options": [
+     {
+      "label": "Nuôi chó",
+      "isCorrect": false
+     },
+     {
+      "label": "Tuổi Tuất (cầm tinh con chó)",
+      "isCorrect": true
+     },
+     {
+      "label": "Yêu quý loài chó",
+      "isCorrect": false
+     },
+     {
+      "label": "Sợ chó",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "Câu vị ngữ danh từ (nominal predicate sentence) thường dùng để biểu đạt điều gì?",
+    "explanation": "Theo ngữ pháp bài 23, câu có vị ngữ là danh từ/cụm số lượng thường dùng biểu đạt thời gian, giá cả, ngày tháng, tuổi tác, thời tiết, quê quán...",
+    "options": [
+     {
+      "label": "Hành động đang diễn ra",
+      "isCorrect": false
+     },
+     {
+      "label": "Thời gian, ngày tháng, tuổi tác, giá cả, thời tiết...",
+      "isCorrect": true
+     },
+     {
+      "label": "So sánh hơn kém",
+      "isCorrect": false
+     },
+     {
+      "label": "Câu bị động",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "Trong câu vị ngữ danh từ ở thể khẳng định, trước vị ngữ danh từ thường KHÔNG dùng từ nào?",
+    "explanation": "Ở thể khẳng định, câu vị ngữ danh từ không cần \"是\" (ví dụ: 我二十一岁了 chứ không nói 我是二十一岁了); nhưng ở thể phủ định phải thêm \"不是\".",
+    "options": [
+     {
+      "label": "不",
+      "isCorrect": false
+     },
+     {
+      "label": "是",
+      "isCorrect": true
+     },
+     {
+      "label": "很",
+      "isCorrect": false
+     },
+     {
+      "label": "没",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "mcq",
+    "prompt": "\"正好\" (zhènghǎo) nghĩa là gì?",
+    "explanation": "正好 nghĩa là \"vừa vặn, đúng lúc, trùng hợp\".",
+    "options": [
+     {
+      "label": "Đúng lúc, vừa vặn",
+      "isCorrect": true
+     },
+     {
+      "label": "Sai lệch",
+      "isCorrect": false
+     },
+     {
+      "label": "Có lẽ",
+      "isCorrect": false
+     },
+     {
+      "label": "Chắc chắn",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "Câu vị ngữ danh từ có thể dùng để nói ngày tháng, tuổi tác, giá tiền, thời tiết.",
+    "explanation": "Đây chính là công dụng chính của loại câu này theo phần ngữ pháp bài 23.",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": true
+     },
+     {
+      "label": "Sai",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "Thể phủ định của câu vị ngữ danh từ là thêm trực tiếp \"不\" trước danh từ.",
+    "explanation": "Thể phủ định phải dùng \"不是 + danh từ\", không phải chỉ thêm \"不\".",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": false
+     },
+     {
+      "label": "Sai",
+      "isCorrect": true
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "Thứ tự đọc ngày tháng năm trong tiếng Hán giống tiếng Việt: ngày - tháng - năm.",
+    "explanation": "Trong tiếng Hán, thứ tự đọc là năm - tháng - ngày (年 - 月 - 日), ngược với tiếng Việt.",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": false
+     },
+     {
+      "label": "Sai",
+      "isCorrect": true
+     }
+    ]
+   },
+   {
+    "type": "true_false",
+    "prompt": "12 con giáp trong tiếng Hán bắt đầu bằng Tý (鼠 - chuột) và kết thúc bằng Hợi (猪 - lợn).",
+    "explanation": "Thứ tự 12 con giáp: 鼠牛虎兔龙蛇马羊猴鸡狗猪 (Tý, Sửu, Dần, Mão, Thìn, Tỵ, Ngọ, Mùi, Thân, Dậu, Tuất, Hợi).",
+    "options": [
+     {
+      "label": "Đúng",
+      "isCorrect": true
+     },
+     {
+      "label": "Sai",
+      "isCorrect": false
+     }
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "你的生日是几月几＿＿?(Sinh nhật của bạn là ngày mấy tháng mấy?)",
+    "explanation": "号 dùng để hỏi/nói ngày trong tháng (khẩu ngữ); văn viết dùng 日.",
+    "answers": [
+     "号",
+     "hào"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "我是一九八二年＿＿的。(Tôi ＿＿ (sinh) năm 1982.)",
+    "explanation": "出生 nghĩa là \"sinh ra, ra đời\" — dùng với cấu trúc \"是...的\" để nhấn mạnh thời điểm sinh.",
+    "answers": [
+     "出生",
+     "chūshēng"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "祝你生日＿＿!(Chúc mừng sinh nhật ＿＿!)",
+    "explanation": "快乐 nghĩa là \"vui vẻ\" — cụm cố định 生日快乐 (chúc mừng sinh nhật).",
+    "answers": [
+     "快乐",
+     "kuàilè"
+    ]
+   },
+   {
+    "type": "fill_in",
+    "prompt": "你＿＿举行生日晚会?(Bạn ＿＿ tổ chức tiệc sinh nhật như thế nào?)",
+    "explanation": "打算 nghĩa là \"dự định, có kế hoạch\" — phù hợp ngữ cảnh hỏi về kế hoạch tổ chức tiệc.",
+    "answers": [
+     "打算",
+     "dǎsuàn"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “你的生日是几月几号?”",
+    "explanation": "Câu vị ngữ danh từ dạng hỏi: Chủ ngữ (你的生日) + 是 + cụm danh từ hỏi ngày tháng.",
+    "sequence": [
+     "你的",
+     "生日",
+     "是",
+     "几月",
+     "几号"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “我二十一岁了。”",
+    "explanation": "Câu vị ngữ danh từ biểu đạt tuổi: Chủ ngữ + số lượng từ (tuổi), không cần \"是\".",
+    "sequence": [
+     "我",
+     "二十一",
+     "岁",
+     "了"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “晚会星期六晚上七点举行。”",
+    "explanation": "Trạng ngữ chỉ thời gian (星期六晚上七点) đứng trước động từ 举行 (tổ chức, tiến hành).",
+    "sequence": [
+     "晚会",
+     "星期六",
+     "晚上",
+     "七点",
+     "举行"
+    ]
+   },
+   {
+    "type": "ordering",
+    "prompt": "Sắp xếp thành câu đúng: “祝你生日快乐!”",
+    "explanation": "Cấu trúc chúc mừng cố định: 祝 + đối tượng + lời chúc (生日快乐).",
+    "sequence": [
+     "祝",
+     "你",
+     "生日",
+     "快乐"
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→2, B→4, C→3, D→1",
+    "pairs": [
+     {
+      "left": "年",
+      "right": "Năm"
+     },
+     {
+      "left": "岁",
+      "right": "Tuổi"
+     },
+     {
+      "left": "生日",
+      "right": "Sinh nhật"
+     },
+     {
+      "left": "月",
+      "right": "Tháng"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→2, B→4, C→1, D→3",
+    "pairs": [
+     {
+      "left": "毕业",
+      "right": "Tốt nghiệp"
+     },
+     {
+      "left": "属",
+      "right": "Cầm tinh, thuộc tuổi (con giáp)"
+     },
+     {
+      "left": "出生",
+      "right": "Sinh ra, ra đời"
+     },
+     {
+      "left": "正好",
+      "right": "Vừa vặn, đúng lúc"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→1, C→4, D→2",
+    "pairs": [
+     {
+      "left": "打算",
+      "right": "Dự định"
+     },
+     {
+      "left": "准备",
+      "right": "Chuẩn bị"
+     },
+     {
+      "left": "举行",
+      "right": "Tổ chức, tiến hành"
+     },
+     {
+      "left": "参加",
+      "right": "Tham gia"
+     }
+    ]
+   },
+   {
+    "type": "matching",
+    "prompt": "Ghép từ Hán với nghĩa tiếng Việt.",
+    "explanation": "Đáp án: A→3, B→4, C→1, D→2",
+    "pairs": [
+     {
+      "left": "时间",
+      "right": "Thời gian"
+     },
+     {
+      "left": "一定",
+      "right": "Nhất định"
+     },
+     {
+      "left": "祝",
+      "right": "Chúc"
+     },
+     {
+      "left": "快乐",
+      "right": "Vui vẻ"
+     }
+    ]
+   }
+  ]
+ }
+]

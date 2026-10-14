@@ -7,6 +7,8 @@ import {
   startOralExamAttempt,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import ExamPreRoom from "@/components/exam/ExamPreRoom";
+import ExamRoomChrome from "@/components/exam/ExamRoomChrome";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +43,7 @@ export default async function ExamLandingPage({
   // Server-side validation: exam must exist and belong to this course.
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, title: true, status: true, kind: true },
+    select: { id: true, courseId: true, title: true, status: true, kind: true, mockMode: true, allowMock: true },
   });
   if (!exam || exam.courseId !== course.id) notFound();
 
@@ -76,6 +78,65 @@ export default async function ExamLandingPage({
     }
   }
 
+  // LANG G5c.5 — đề thi thử: màn trước phòng thi (luật, thử loa, "Tôi đã sẵn sàng"); đồng hồ
+  // chỉ chạy khi học viên xác nhận. Đang có lượt dở thì vào thẳng (tiếp tục), đã nộp mà không
+  // có ?retake=1 thì sang kết quả — mở lại link/F5 không tự đốt lượt.
+  if (exam.mockMode && exam.status === "published") {
+    const attempts = await prisma.examAttempt.findMany({
+      where: { examId: exam.id, userId: session.user.id },
+      orderBy: { startedAt: "desc" },
+      select: { id: true, status: true },
+    });
+    const inProgress = attempts.find((a) => a.status === "in_progress");
+    if (!inProgress) {
+      if (attempts.length > 0 && !retake) {
+        redirect(`/learn/${params.slug}/exams/${params.examId}/${attempts[0]!.id}/result`);
+      }
+      if (!exam.allowMock) {
+        return (
+          <main className="mx-auto max-w-3xl px-4 py-8 text-center">
+            <h1 className="mb-3 text-2xl font-semibold">Thi thử đang tạm đóng</h1>
+            <p className="text-faint">Giảng viên đã tạm tắt thi thử cho đề này.</p>
+          </main>
+        );
+      }
+      const [sections, passages] = await Promise.all([
+        prisma.examSection.findMany({
+          where: { examId: exam.id },
+          orderBy: { orderIndex: "asc" },
+          select: { title: true, languageSkill: true, durationMin: true },
+        }),
+        prisma.examPassage.findMany({
+          where: { examId: exam.id },
+          select: { contentJson: true, audioPolicy: true, maxAudioPlays: true },
+        }),
+      ]);
+      const audioPassages = passages.filter((p) => JSON.stringify(p.contentJson).includes('"type":"audio"'));
+      const once = audioPassages.some((p) => p.audioPolicy === "once_only");
+      const limited = audioPassages.filter((p) => p.audioPolicy === "limited_replay");
+      const audioRule = once
+        ? "Bài nghe chỉ phát MỘT lần: không tua, không dừng, không nghe lại."
+        : limited.length > 0
+          ? `Bài nghe chỉ được phát tối đa ${Math.min(...limited.map((p) => p.maxAudioPlays ?? 1))} lần (mỗi lần nghe từ đầu, không tua).`
+          : null;
+      return (
+        <>
+          <ExamRoomChrome />
+          <ExamPreRoom
+            slug={params.slug}
+            examId={exam.id}
+            title={exam.title}
+            sections={sections.map((s) => ({ title: s.title, languageSkill: s.languageSkill, durationMin: s.durationMin ?? 0 }))}
+            hasAudio={audioPassages.length > 0}
+            audioRule={audioRule}
+            retake={retake}
+            attemptNo={attempts.length + 1}
+          />
+        </>
+      );
+    }
+  }
+
   try {
     const r = await startExamAttempt(session.user.id, params.examId);
     redirect(
@@ -87,6 +148,7 @@ export default async function ExamLandingPage({
       if (e.code === "attempt_already_submitted") {
         const existing = await prisma.examAttempt.findFirst({
           where: { examId: exam.id, userId: session.user.id },
+          orderBy: { startedAt: "desc" },
           select: { id: true },
         });
         if (existing) {

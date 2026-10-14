@@ -13,7 +13,7 @@ import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
-import { ensureDefaultRound, ensureDefaultRoomForSession } from "./exam-rooms";
+import { ensureDefaultRoomForSession } from "./exam-rooms";
 import type { RevealPolicy } from "./reveal-policy";
 import { capDurationToWindow, isSessionOpen, sessionOpenState } from "./session-window";
 import { ExamError } from "./types";
@@ -477,18 +477,17 @@ async function createExamSessionImpl(
       throw new ExamError("cohort_not_found");
   }
 
-  // A5.3 PR1c.5 — ExamSession.roundId is NOT NULL. Legacy callers don't pass
-  // roundId yet (UI still on schedules panel), so ensure the exam has a
-  // default round and attach to it. cohortId column kept temporarily for UI
-  // backward-compat; dropped when SchedulesPanel is replaced by the new IA.
-  const roundId = await ensureDefaultRound(examId, db);
+  // Đường cũ theo đề (cohort): buổi đơn, không có đợt. cohortId giữ tạm cho
+  // tương thích UI cũ; sẽ bỏ khi SchedulesPanel được thay.
   // Ca thủ công mở NGAY khi tạo — đó là toàn bộ lý do nó tồn tại. status=open
   // là nguồn sự thật; opensAt chỉ để hiển thị và sắp xếp danh sách.
   const isManual = d.timingMode === "manual";
   const s = await db.examSession.create({
     data: {
       examId,
-      roundId,
+      // Buổi đơn → simple. Scale mặc định của cột là formal (ca trong đợt), nên
+      // phải ghi tường minh, nếu không ca này lọt vào tab Kỳ thi chính thức.
+      scale: "simple",
       cohortId: d.cohortId ?? null,
       timingMode: d.timingMode,
       status: isManual ? "open" : "draft",
@@ -657,7 +656,8 @@ async function deleteExamSessionImpl(
       OR: [{ sessionId }, { candidate: { sessionId } }],
     },
   });
-  if (attempts > 0) throw new ExamError("session_has_attempts");
+  // Kèm số bài làm để popup ở giao diện nói được "đã có N bài làm".
+  if (attempts > 0) throw new ExamError("session_has_attempts", { count: attempts });
   await db.examSession.delete({ where: { id: sessionId } });
 }
 
@@ -703,6 +703,7 @@ export async function assertEligibleForExam(
       openAt: true,
       closeAt: true,
       durationMin: true,
+      mockMode: true,
       schedules: {
         select: {
           id: true,
@@ -735,13 +736,21 @@ export async function assertEligibleForExam(
   const enrolled = await isUserEnrolled(userId, exam.courseId, db);
   if (!enrolled) throw new ExamError("not_enrolled");
 
+  // Đề luyện thi không phải lần thi có tổ chức: học viên ghi danh khoá là làm
+  // được, bất cứ lúc nào, không cần ca. Ca (nếu còn sót từ trước) bị bỏ qua để
+  // luyện thi không âm thầm đóng theo khung giờ cũ. Thời lượng thật là tổng giờ
+  // các phần — startExamAttempt cắt theo mockExamTotalSec.
+  if (exam.mockMode) {
+    return { durationSec: exam.durationMin * 60, scheduleId: null };
+  }
+
   // Đề KHÔNG có ca thi thì không thi được — dứt khoát thay vì âm thầm rơi về
   // khung giờ của đề. Khung đó là tầng thời gian thứ ba mà giao diện vẫn hiện
   // như thể có tác dụng, trong khi nó chỉ sống khi đề chưa có ca nào; kết quả
   // là giáo viên sửa nó rồi tưởng đã đổi được gì đó.
   //
-  // Đường mở buổi thi hiện tại luôn dựng sẵn một ca, nên trạng
-  // thái này chỉ còn là đề chưa phát bao giờ.
+  // Publish không tự mở thi nữa, nên đây là trạng thái bình thường của đề đã
+  // sẵn sàng mà giáo viên chưa tổ chức.
   if (exam.schedules.length === 0) {
     throw new ExamError("exam_not_open", {
       reason: "no_session",

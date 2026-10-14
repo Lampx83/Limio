@@ -44,15 +44,20 @@ export async function PATCH(
   }
 }
 
+/**
+ * Body: { confirmTitle } — phải gõ đúng tên đợt mới xoá được (như xoá khoá học).
+ */
 export async function DELETE(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
   if (!userId)
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const body = (await readJson(req)) as { confirmTitle?: unknown } | null;
+  const confirmTitle = typeof body?.confirmTitle === "string" ? body.confirmTitle : "";
   try {
-    await deleteExamRound(userId, params.id);
+    await deleteExamRound(userId, params.id, confirmTitle);
     return NextResponse.json({ ok: true });
   } catch (e) {
     const mapped = mapKnownError(e);

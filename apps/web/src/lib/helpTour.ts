@@ -31,13 +31,33 @@ export type HelpTourStep = {
   // data-tour attribute của phần tử cần highlight. Không có = modal căn giữa.
   target?: string;
   placement?: "top" | "bottom" | "left" | "right";
+  // Ghi đè nhãn 2 nút — dùng cho bước hỏi ý đầu tiên ("Có/Không") thay vì
+  // nhãn mặc định "Bắt đầu"/"Bỏ qua" của HelpTour.tsx.
+  skipLabel?: string;
+  nextLabel?: string;
+  // Sidebar 2 tầng (rail + cột module, vd InstructorLeftMenu) — id module cần
+  // tự mở cột item ra khi vào bước này, để người dùng thấy tính năng con bên
+  // trong chứ không chỉ thấy icon rail được khoanh. "home" (hoặc bỏ trống) =
+  // thu cột lại. Không áp dụng cho sidebar phẳng (StudentLeftMenu).
+  revealModuleId?: string;
+  // data-tour của phần tử khác cần gộp CHUNG 1 khối spotlight với `target`
+  // (vd cột module vừa mở ra bởi revealModuleId) — khoanh sáng liền icon +
+  // cột tính năng thay vì chỉ mỗi icon nhỏ.
+  unionTarget?: string;
 };
 
 export const LEARNER_TOUR_STEPS: HelpTourStep[] = [
   {
     id: "welcome",
-    title: "Limio chào mừng bạn 👋",
-    body: "Đây là trang tổng quan học tập của bạn. Xem nhanh vài điểm chính trước khi bắt đầu nhé.",
+    title: "Đây là lần đầu tiên bạn sử dụng Limio?",
+    body: "Nếu đây là lần đầu tiên bạn sử dụng Limio, bạn có muốn xem tour hướng dẫn nhanh về các tính năng chính của Limio không?",
+    skipLabel: "Không, để sau",
+    nextLabel: "Có, xem hướng dẫn",
+  },
+  {
+    id: "about",
+    title: "Limio là gì?",
+    body: "Limio là nền tảng học tập tích hợp AI feedback cá nhân hoá và gamification — giúp việc học vừa hiệu quả vừa thú vị hơn. Giờ cùng xem các tính năng chính nhé.",
   },
   {
     id: "kpis",
@@ -126,15 +146,22 @@ export const LEARNER_TOUR_STEPS: HelpTourStep[] = [
   {
     id: "done",
     title: "Vậy là xong!",
-    body: "Bạn có thể xem lại hướng dẫn này bất cứ lúc nào từ mục Cài đặt. Chúc bạn học vui!",
+    body: "Bạn có thể xem lại hướng dẫn này bất cứ lúc nào từ mục Cài đặt. Chúc bạn có trải nghiệm thú vị cùng Limio!",
   },
 ];
 
 export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
   {
     id: "welcome",
-    title: "Limio chào mừng bạn 👋",
-    body: "Đây là trang tổng quan giảng dạy. Cùng xem nhanh 6 module chính nằm ở cột icon bên trái nhé.",
+    title: "Đây là lần đầu tiên bạn sử dụng Limio?",
+    body: "Nếu đây là lần đầu tiên bạn sử dụng Limio, bạn có muốn xem tour hướng dẫn nhanh về các tính năng chính của Limio không?",
+    skipLabel: "Không, để sau",
+    nextLabel: "Có, xem hướng dẫn",
+  },
+  {
+    id: "about",
+    title: "Limio là gì?",
+    body: "Limio là nền tảng dạy học toàn diện — từ LMS eLearning, dạy trực tiếp, đến tổ chức thi, đều có AI hỗ trợ xuyên suốt. Đặc biệt là Vấn đáp AI và chấm bài tự động bằng AI, giúp thầy cô tiết kiệm rất nhiều thời gian. Giờ cùng xem 6 module chính nhé.",
   },
   {
     id: "rail-lms",
@@ -142,6 +169,8 @@ export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
     body: "Khoá học, assignment và forum Q&A của bạn — nơi bạn dành phần lớn thời gian soạn bài.",
     target: "help-tour-rail-lms",
     placement: "right",
+    revealModuleId: "lms",
+    unionTarget: "help-tour-instructor-panel",
   },
   {
     id: "rail-limio-live",
@@ -149,6 +178,8 @@ export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
     body: "Dạy học trực tiếp: vote, word cloud, whiteboard, gameshow... để tương tác ngay trong buổi học.",
     target: "help-tour-rail-limio-live",
     placement: "right",
+    revealModuleId: "limio-live",
+    unionTarget: "help-tour-instructor-panel",
   },
   {
     id: "rail-oral",
@@ -156,6 +187,8 @@ export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
     body: "Tổ chức và chấm thi vấn đáp qua hội thoại với AI, không cần giám khảo ngồi nghe trực tiếp.",
     target: "help-tour-rail-oral",
     placement: "right",
+    revealModuleId: "oral",
+    unionTarget: "help-tour-instructor-panel",
   },
   {
     id: "rail-exam",
@@ -163,6 +196,8 @@ export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
     body: "Soạn ngân hàng câu hỏi, gom thành đề thi, rồi tổ chức đợt/ca thi — theo đúng trình tự làm việc thật.",
     target: "help-tour-rail-exam",
     placement: "right",
+    revealModuleId: "exam",
+    unionTarget: "help-tour-instructor-panel",
   },
   {
     id: "rail-tournament",
@@ -170,6 +205,8 @@ export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
     body: "Tạo giải đấu, nhiệm vụ cho học viên thi đua với nhau, tăng động lực học.",
     target: "help-tour-rail-tournament",
     placement: "right",
+    revealModuleId: "tournament",
+    unionTarget: "help-tour-instructor-panel",
   },
   {
     id: "rail-analytics",
@@ -177,10 +214,12 @@ export const INSTRUCTOR_TOUR_STEPS: HelpTourStep[] = [
     body: "Nắm kiến thức của từng học viên và quản lý Token AI đang dùng cho lớp.",
     target: "help-tour-rail-analytics",
     placement: "right",
+    revealModuleId: "analytics",
+    unionTarget: "help-tour-instructor-panel",
   },
   {
     id: "done",
     title: "Vậy là xong!",
-    body: "Bạn có thể xem lại hướng dẫn này bất cứ lúc nào từ mục Cài đặt. Chúc giảng dạy vui vẻ!",
+    body: "Bạn có thể xem lại hướng dẫn này bất cứ lúc nào từ mục Cài đặt. Chúc bạn có trải nghiệm thú vị cùng Limio!",
   },
 ];

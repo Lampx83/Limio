@@ -19,13 +19,25 @@ import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import AiFormatPanel from "@/components/AiFormatPanel";
 import SafeHtml from "@/components/SafeHtml";
-import { formatHtml } from "@/lib/formatHtml";
 import { EXTENSIONS } from "@/components/RichTextEditor";
 import { probeEditorLoss } from "@/components/richtext/lossProbe";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
 });
+
+import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import LessonFileUploadPanel from "./LessonFileUploadPanel";
+import {
+  dialogueEditorFromPayload,
+  dialoguePayloadFromEditor,
+  validateDialogueEditor,
+  validateVocabEditor,
+  vocabEditorFromPayload,
+  vocabPayloadFromEditor,
+  type DialogueEditorValue,
+  type VocabEditorValue,
+} from "@/lib/langBlockEditor";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -42,7 +54,10 @@ type ContentType =
   | "scorm"
   | "lti"
   | "h5p"
-  | "html_block";
+  | "html_block"
+  | "audio"
+  | "vocab_list"
+  | "dialogue";
 
 interface Props {
   item: {
@@ -67,20 +82,30 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   const [html, setHtml] = useState<string>(String(initial.html ?? ""));
   const [url, setUrl] = useState<string>(String(initial.url ?? ""));
   const [filename, setFilename] = useState<string>(String(initial.filename ?? ""));
+  // Cỡ + kiểu của file đính kèm: giữ của bản cũ nếu không đổi file; upload mới
+  // thì thay; gõ tay URL khác thì bỏ.
+  const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(() =>
+    typeof initial.sizeBytes === "number" && typeof initial.mimeType === "string"
+      ? { sizeBytes: initial.sizeBytes, mimeType: initial.mimeType }
+      : null,
+  );
   const [linkTitle, setLinkTitle] = useState<string>(String(initial.title ?? ""));
   const [htmlBlockBody, setHtmlBlockBody] = useState<string>(
     String(initial.body ?? ""),
   );
+  const [audioTranscript, setAudioTranscript] = useState<string>(String(initial.transcript ?? ""));
+  const [audioShowTranscript, setAudioShowTranscript] = useState<boolean>(initial.showTranscript !== false);
+  const [vocabValue, setVocabValue] = useState<VocabEditorValue>(() => vocabEditorFromPayload(item.payload));
+  const [dialogueValue, setDialogueValue] = useState<DialogueEditorValue>(() => dialogueEditorFromPayload(item.payload));
 
   // Nội dung richtext đã qua AI format (heading màu, callout, bảng có style
   // riêng...) không có schema tương ứng trong RichTextEditor — mở thẳng bằng
   // WYSIWYG sẽ mất định dạng ngay lần sửa đầu, và trước đây hiện cảnh báo đỏ
   // dọa người dùng. Giờ dò 1 lần lúc mount: nếu phức tạp, ưu tiên hiện PREVIEW
-  // đẹp + hướng dẫn thân thiện, chỉ khi bấm "Sửa mã HTML" mới lộ ra textarea.
+  // đẹp + hướng dẫn thân thiện; không lộ mã HTML ra cho người dùng.
   // null = chưa dò xong (chỉ dò được ở trình duyệt).
   const [aiSaved, setAiSaved] = useState(false);
   const [richtextComplex, setRichtextComplex] = useState<boolean | null>(null);
-  const [rawHtmlEditing, setRawHtmlEditing] = useState(false);
   const initialHtmlRef = useRef(String(initial.html ?? ""));
 
   useEffect(() => {
@@ -135,7 +160,7 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         payload = { url };
         break;
       case "file":
-        payload = { url, filename };
+        payload = { url, filename, ...(fileMeta ?? {}) };
         break;
       case "external_link":
       case "pdf":
@@ -146,6 +171,37 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
           url,
           title: linkTitle.trim() || undefined,
           body: htmlBlockBody.trim() || undefined,
+        };
+        break;
+      case "vocab_list": {
+        const problems = validateVocabEditor(vocabValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = vocabPayloadFromEditor(vocabValue);
+        break;
+      }
+      case "dialogue": {
+        const problems = validateDialogueEditor(dialogueValue);
+        if (problems.length) {
+          setError(problems.join(" "));
+          setBusy(false);
+          return;
+        }
+        payload = dialoguePayloadFromEditor(dialogueValue);
+        break;
+      }
+      case "audio":
+        // Giữ nguyên các trường form này không sửa (caption, durationSec) —
+        // PATCH thay cả payload nên bỏ sót là mất.
+        payload = {
+          ...initial,
+          url: url.trim(),
+          title: linkTitle.trim() || undefined,
+          transcript: audioTranscript.trim() || undefined,
+          showTranscript: audioShowTranscript ? undefined : false,
         };
         break;
       case "scorm":
@@ -245,59 +301,15 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         </div>
       )}
 
-      {type === "richtext" && richtextComplex === true && !rawHtmlEditing && (
+      {type === "richtext" && richtextComplex === true && (
         <div className="space-y-3">
           <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
             <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
           </div>
           <p className="banner-info text-sm">
-            Nội dung này đã được AI format sang mã HTML. Muốn sửa nội dung, bấm
-            &ldquo;Sửa mã HTML&rdquo;. Nếu bạn không rành sửa HTML, copy đoạn mã
-            đó sang Gemini/ChatGPT/Claude, mô tả điều bạn muốn sửa để AI sửa
-            giúp, rồi dán kết quả lại đây.
+            Nội dung này đã được AI định dạng nên không sửa trực tiếp trong trình soạn
+            thảo được. Muốn thay đổi, dùng &ldquo;Định dạng bằng AI&rdquo; bên dưới.
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              // Mã do AI sinh thường dồn một dòng — dàn lại cho dễ đọc/sửa.
-              setHtml((h) => formatHtml(h));
-              setRawHtmlEditing(true);
-            }}
-            className="btn-secondary btn-sm"
-          >
-            Sửa mã HTML
-          </button>
-        </div>
-      )}
-
-      {type === "richtext" && richtextComplex === true && rawHtmlEditing && (
-        <div className="space-y-3">
-          <div>
-            <div className="mb-1 flex items-center justify-between">
-              <label className="text-xs font-semibold uppercase tracking-wide text-faint">
-                Mã HTML
-              </label>
-              <button
-                type="button"
-                onClick={() => setRawHtmlEditing(false)}
-                className="link text-xs"
-              >
-                ← Xem trước
-              </button>
-            </div>
-            {aiSaved ? (
-              <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
-                <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
-              </div>
-            ) : (
-              <textarea
-                value={html}
-                onChange={(e) => setHtml(e.target.value)}
-                rows={12}
-                className="textarea font-mono text-xs"
-              />
-            )}
-          </div>
           <AiFormatPanel
             lessonId={lessonId}
             html={html}
@@ -312,14 +324,30 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         type === "file" ||
         type === "external_link" ||
         type === "pdf") && (
-        <input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          required
-          type="url"
-          placeholder="URL"
-          className="input"
-        />
+        <div className="space-y-2">
+          <input
+            value={url}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setFileMeta(null);
+            }}
+            required
+            // video / file / pdf có thể là đường dẫn cùng origin (/api/lesson-media/...)
+            // của file đã upload — type="url" từ chối dạng đó, như ở AddContentItemForm.
+            type={type === "embed" || type === "external_link" ? "url" : "text"}
+            placeholder="URL"
+            className="input"
+          />
+          {type === "file" && (
+            <LessonFileUploadPanel
+              onUploaded={(f) => {
+                setUrl(f.url);
+                setFileMeta({ sizeBytes: f.sizeBytes, mimeType: f.mime });
+                setFilename(f.originalName.slice(0, 200));
+              }}
+            />
+          )}
+        </div>
       )}
 
       {type === "file" && (
@@ -374,6 +402,64 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
             className="input"
           />
         </>
+      )}
+
+      {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
+      {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
+
+      {type === "audio" && (
+        <div className="space-y-2">
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề bài nghe"
+            className="input"
+          />
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            required
+            type="text"
+            placeholder="URL audio"
+            className="input"
+          />
+          {url.trim() && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- bản nghe thử cho giảng viên
+            <audio src={url.trim()} controls preload="metadata" className="w-full" />
+          )}
+          <div>
+            <label
+              htmlFor="audio-transcript-edit"
+              className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint"
+            >
+              Lời thoại <span className="font-normal normal-case">(không bắt buộc)</span>
+            </label>
+            <textarea
+              id="audio-transcript-edit"
+              value={audioTranscript}
+              onChange={(e) => setAudioTranscript(e.target.value)}
+              maxLength={20000}
+              rows={5}
+              placeholder="Chép lại nội dung audio. Mỗi người nói một dòng, ví dụ: A：你好！"
+              className="input"
+            />
+          </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={audioShowTranscript}
+              onChange={(e) => setAudioShowTranscript(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              Cho học viên xem lời thoại
+              <span className="block text-xs text-muted">
+                Bỏ chọn với bài nghe hiểu: lời thoại sẽ không được gửi tới học viên.
+              </span>
+            </span>
+          </label>
+        </div>
       )}
 
       {type === "pdf" && url.trim() && (

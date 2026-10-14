@@ -159,6 +159,7 @@ export default function InstructorTournamentTabs({
         {/* Registrations Tab */}
         {activeTab === "registrations" && (
           <RegistrationsList
+            tournamentId={tournamentId}
             registrations={registrations}
             teamSize={teamSize}
             tournamentTitle={tournamentTitle}

@@ -12,6 +12,15 @@ export const LearningEventType = {
   LessonEngaged: "lesson.engaged",
   EnrollmentSectionChanged: "enrollment.section_changed",
   AiTutorAsked: "ai.tutor.asked",
+  // Annotation theo vùng chọn trong bài (LessonAnnotation). Payload không mang
+  // chữ của annotation — xem LessonAnnotationCreatedPayload.
+  LessonAnnotationCreated: "lesson.annotation.created",
+  LessonAnnotationPublished: "lesson.annotation.published",
+  LessonAnnotationReplied: "lesson.annotation.replied",
+  LessonAnnotationRemoved: "lesson.annotation.removed",
+  // LANG G4 — một lượt ôn flashcard. Payload: itemId, contentItemId, rating, mode,
+  // intervalDays, reviewId. Idempotent qua eventKey `flashcard.reviewed:<userId>:<reviewId>`.
+  FlashcardReviewed: "flashcard.reviewed",
   /** In-video quiz cuepoint passed (formative — not a full QuizAttempt). */
   VideoCuepointPassed: "video.cuepoint.passed",
   QuizStarted: "quiz.started",
@@ -21,6 +30,23 @@ export const LearningEventType = {
   AssignmentGraded: "assignment.graded",
   AssignmentSelfRated: "assignment.self_rated",
   AssignmentReflected: "assignment.reflected",
+  // Nộp theo nhóm (docs/group-submission-AC.md). "Phần việc của tôi" của một
+  // thành viên — payload chỉ mang độ dài, không mang chữ.
+  AssignmentContributionNoted: "assignment.contribution.noted",
+  // GV chỉnh điểm riêng một thành viên của bài nhóm (score = null ⇒ bỏ chỉnh, về điểm nhóm).
+  AssignmentScoreOverridden: "assignment.score.overridden",
+  // Nhóm cố định của khoá (CourseTeam). Subject là học viên bị ảnh hưởng;
+  // thao tác của GV mang actorId trong payload.
+  CourseTeamCreated: "course.team.created",
+  CourseTeamJoined: "course.team.joined",
+  CourseTeamLeft: "course.team.left",
+  CourseTeamCodeRegenerated: "course.team.code_regenerated",
+  // Đổi tên nhóm (trưởng nhóm khi chưa khoá, hoặc GV). Payload: teamId, from, to, actorId.
+  CourseTeamRenamed: "course.team.renamed",
+  CourseTeamCaptainChanged: "course.team.captain_changed",
+  CourseTeamMemberMoved: "course.team.member_moved",
+  // GV đổi số người tối đa / khoá-mở khoá danh sách nhóm. Subject là GV.
+  CourseTeamsSettingsChanged: "course.teams.settings_changed",
   ForumPosted: "forum.posted",
   ForumUpvoted: "forum.upvoted",
   ForumAnswered: "forum.answered",
@@ -39,6 +65,8 @@ export const LearningEventType = {
   PortfolioItemAdded: "portfolio.item.added",
   PortfolioItemUpdated: "portfolio.item.updated",
   PortfolioItemRemoved: "portfolio.item.removed",
+  PortfolioCourseAdded: "portfolio.course.added",
+  PortfolioCourseRemoved: "portfolio.course.removed",
   PortfolioVisibilityChanged: "portfolio.visibility.changed",
   CourseInstructorAdded: "course.instructor.added",
   CourseInstructorRemoved: "course.instructor.removed",
@@ -69,6 +97,20 @@ export const LearningEventType = {
   ExamIncidentFlagged: "exam.incident.flagged",
   // A5.3.5 — Instructor live actions
   ExamAttemptExtended: "exam.attempt.extended",
+  // LANG G5a — đề thi thử: phần thi bắt đầu/kết thúc (suy ra từ giờ, phát lười, idempotent).
+  ExamSectionStarted: "exam.section.started",
+  ExamSectionEnded: "exam.section.ended",
+  // LANG G5e — luyện đề (bảng riêng, không phải lượt thi): trả lời một câu đã chấm, và kết thúc buổi.
+  ExamPracticeAnswered: "exam.practice.answered",
+  ExamPracticeCompleted: "exam.practice.completed",
+  // LANG G6 — góp ý bài viết do AI sinh: sinh ra, giảng viên duyệt, giảng viên từ chối.
+  WritingFeedbackGenerated: "writing.feedback.generated",
+  WritingFeedbackApproved: "writing.feedback.approved",
+  WritingFeedbackRejected: "writing.feedback.rejected",
+  // LANG G7 — góp ý bài nói do AI sinh (từ bản chữ máy nghe được): sinh ra, giảng viên duyệt, từ chối.
+  SpeakingFeedbackGenerated: "speaking.feedback.generated",
+  SpeakingFeedbackApproved: "speaking.feedback.approved",
+  SpeakingFeedbackRejected: "speaking.feedback.rejected",
   ExamAttemptForceSubmitted: "exam.attempt.force_submitted",
   ExamAttemptSessionReset: "exam.attempt.session_reset",
   ExamAttemptDisqualified: "exam.attempt.disqualified",
@@ -146,6 +188,7 @@ export const LearningEventType = {
   TournamentPublished: "tournament.published",
   TournamentRegistered: "tournament.registered",
   TournamentTeamFormed: "tournament.team.formed",
+  TournamentTeamRenamed: "tournament.team.renamed",
   TournamentStarted: "tournament.started",
   TournamentEnded: "tournament.ended",
   TournamentMissionUnlocked: "tournament.mission.unlocked",
@@ -276,6 +319,45 @@ export interface AiTutorAskedPayload {
   turnIndex: number;
 }
 
+/**
+ * Annotation theo vùng chọn. Như B15, KHÔNG mang nội dung chữ: nó đã nằm
+ * nguyên văn ở LessonAnnotation / LessonAnnotationReply, nhân bản sang bảng
+ * append-only chỉ làm rộng bề mặt dữ liệu. Event trả lời "ai ghi chú ở bài
+ * nào, công khai hay riêng, ai xoá".
+ */
+export interface LessonAnnotationCreatedPayload {
+  annotationId: string;
+  lessonId: string;
+  contentItemId: string;
+  quoteLength: number;
+  bodyLength: number;
+  published: boolean;
+}
+
+export interface LessonAnnotationPublishedPayload {
+  annotationId: string;
+  lessonId: string;
+  /** false = tác giả thu hồi về riêng tư. */
+  published: boolean;
+}
+
+export interface LessonAnnotationRepliedPayload {
+  annotationId: string;
+  replyId: string;
+  lessonId: string;
+  /** Tác giả annotation — để dựng "ai được hồi đáp" mà không phải join. */
+  annotationAuthorId: string;
+}
+
+export interface LessonAnnotationRemovedPayload {
+  /** "annotation" hoặc "reply". */
+  kind: "annotation" | "reply";
+  targetId: string;
+  lessonId: string;
+  /** "author" tự xoá; "moderator" là giảng viên gỡ nội dung công khai. */
+  by: "author" | "moderator";
+}
+
 export interface EnrollmentCreatedPayload {
   enrollmentId: string;
   courseId: string;
@@ -385,6 +467,44 @@ export interface ExamPublishedPayload {
   courseId: string;
   questionCount: number;
   totalPoints: number;
+}
+
+export interface ExamSectionStartedPayload {
+  examId: string;
+  attemptId: string;
+  sectionId: string;
+  /** Vị trí phần trong đề, từ 0. */
+  sectionIndex: number;
+  languageSkill: string | null;
+  /** Giờ phần bắt đầu theo đồng hồ máy chủ (không phải lúc sự kiện được ghi). */
+  startedAt: string;
+}
+
+export interface ExamSectionEndedPayload extends ExamSectionStartedPayload {
+  endedAt: string;
+  /** Vì sao phần kết thúc: hết giờ phần hay học viên nộp sớm. */
+  reason: "time_up" | "submitted_early";
+}
+
+export interface ExamPracticeAnsweredPayload {
+  examId: string;
+  sessionId: string;
+  questionId: string;
+  correct: boolean;
+  score: number | null;
+  maxScore: number;
+  /** Kỹ năng của phần chứa câu hỏi (nghe/nói/đọc/viết), null nếu phần chưa gán. */
+  languageSkill: string | null;
+  /** Thẻ kỹ năng của câu hỏi — để sau này nuôi mô hình người học mà không phải làm lại. */
+  skillIds: string[];
+}
+
+export interface ExamPracticeCompletedPayload {
+  examId: string;
+  sessionId: string;
+  questionCount: number;
+  correct: number;
+  total: number;
 }
 
 export interface ExamStartedPayload {

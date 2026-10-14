@@ -10,13 +10,20 @@ import {
   listThreadsForLesson,
   resolveQuizScore,
 } from "@feedbackme/core-lms";
-import { shouldSkipLesson } from "@feedbackme/core-feedback";
+import {
+  getSpeakingFeedbackForLearner,
+  getWritingFeedbackForLearner,
+  resolveFeedbackVariant,
+  shouldSkipLesson,
+} from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import LessonContent from "@/components/LessonContent";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
+import LessonAnnotations from "@/components/lesson/LessonAnnotations";
+import { withoutHiddenAudioTranscripts } from "@/lib/lessonAudio";
 import SafeHtml from "@/components/SafeHtml";
 import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
 import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
@@ -115,7 +122,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
       // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
@@ -143,6 +150,7 @@ export default async function LessonPage({
           requireSelfRating: true,
           requireReflection: true,
           countsTowardGrade: true,
+          submissionMode: true,
           submissions: {
             // NEVER pass a nullable userId straight in: Prisma reads `undefined`
             // as "drop this condition", so an anonymous visitor would match every
@@ -158,6 +166,11 @@ export default async function LessonPage({
               feedback: true,
               selfRating: true,
               reflection: true,
+              // Nộp theo nhóm — ai nộp lần cuối, lúc nào, và "Phần việc của tôi".
+              teamId: true,
+              teamSubmittedAt: true,
+              contributionNote: true,
+              submittedBy: { select: { displayName: true } },
             },
           },
         },
@@ -340,9 +353,11 @@ export default async function LessonPage({
         </header>
         <div className="mt-8">
           <LessonContent
-            items={lesson.contentItems
-              .filter((c) => !c.isHidden)
-              .map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex }))}
+            items={withoutHiddenAudioTranscripts(
+              lesson.contentItems
+                .filter((c) => !c.isHidden)
+                .map((c) => ({ id: c.id, type: c.type, payload: c.payload, orderIndex: c.orderIndex })),
+            )}
             courseId={course.id}
             lessonId={lesson.id}
             interactive={!anonymous}
@@ -396,6 +411,28 @@ export default async function LessonPage({
     visibleAssignments.map((a) => ({ id: a.id, courseId: lesson.module.course.id, dueAt: a.dueAt })),
   );
 
+  // Nộp theo nhóm — học viên đã có nhóm trong khoá chưa, và danh sách nhóm đã khoá chưa
+  // (thẻ bài tập nhóm dùng để chọn lời nhắc). Chỉ truy vấn khi bài có bài tập nhóm.
+  const hasTeamAssignment = visibleAssignments.some((a) => a.submissionMode === "team");
+  const [teamMembership, teamSettings] = hasTeamAssignment
+    ? await Promise.all([
+        prisma.courseTeamMember.findUnique({
+          where: { courseId_userId: { courseId: lesson.module.course.id, userId } },
+          select: { team: { select: { id: true, name: true } } },
+        }),
+        prisma.course.findUnique({
+          where: { id: lesson.module.course.id },
+          select: { teamsLockedAt: true },
+        }),
+      ])
+    : [null, null];
+  const teamContext = hasTeamAssignment
+    ? {
+        team: teamMembership?.team ?? null,
+        locked: teamSettings?.teamsLockedAt != null,
+      }
+    : null;
+
   const quizAttempts = visibleQuizzes.length
     ? await prisma.quizAttempt.findMany({
         where: { userId, quizId: { in: visibleQuizzes.map((q) => q.id) } },
@@ -428,6 +465,25 @@ export default async function LessonPage({
     });
   }
 
+  // LANG G6 — góp ý bài viết bằng AI: chỉ khoá ngoại ngữ và lớp không phải đối chứng.
+  const writingFeedbackEnabled =
+    lesson.module.course.languageMode &&
+    (await resolveFeedbackVariant(userId, lesson.module.course.id)).variant !== "minimal";
+  const writingFeedbackBySubmission = new Map<string, Awaited<ReturnType<typeof getWritingFeedbackForLearner>>>();
+  // LANG G7 — bài nộp dạng ghi âm dùng góp ý bài NÓI (bản chữ + nhịp nói), không phải góp ý bài viết.
+  const speakingFeedbackBySubmission = new Map<string, Awaited<ReturnType<typeof getSpeakingFeedbackForLearner>>>();
+  if (writingFeedbackEnabled) {
+    for (const a of visibleAssignments) {
+      const sub = a.submissions[0];
+      if (!sub) continue;
+      if (a.responseFormat === "audio") {
+        speakingFeedbackBySubmission.set(sub.id, await getSpeakingFeedbackForLearner(userId, sub.id));
+      } else {
+        writingFeedbackBySubmission.set(sub.id, await getWritingFeedbackForLearner(userId, sub.id));
+      }
+    }
+  }
+
   const tasks: TaskItem[] = [
     ...visibleQuizzes.map<TaskItem>((q) => {
       const best = bestAttemptByQuiz.get(q.id);
@@ -452,12 +508,37 @@ export default async function LessonPage({
       responseFormat: a.responseFormat,
       requireSelfRating: a.requireSelfRating,
       requireReflection: a.requireReflection,
+      submissionMode: a.submissionMode,
       submission: a.submissions[0]
         ? {
+            id: a.submissions[0].id,
+            speakingFeedback:
+              writingFeedbackEnabled && a.responseFormat === "audio"
+                ? {
+                    enabled: true as const,
+                    initial: (() => {
+                      const f = speakingFeedbackBySubmission.get(a.submissions[0]!.id);
+                      return f ? { review: f.review, body: f.body, reviewerNote: f.reviewerNote, transcript: f.transcript } : null;
+                    })(),
+                  }
+                : undefined,
+            writingFeedback: writingFeedbackEnabled && a.responseFormat !== "audio"
+              ? {
+                  enabled: true as const,
+                  initial: (() => {
+                    const f = writingFeedbackBySubmission.get(a.submissions[0]!.id);
+                    return f ? { review: f.review, body: f.body, reviewerNote: f.reviewerNote } : null;
+                  })(),
+                }
+              : undefined,
             status: a.submissions[0].status,
             submittedAt: a.submissions[0].submittedAt,
             score: a.submissions[0].score,
             feedback: a.submissions[0].feedback,
+            teamId: a.submissions[0].teamId,
+            teamSubmittedAt: a.submissions[0].teamSubmittedAt,
+            submittedByName: a.submissions[0].submittedBy?.displayName ?? null,
+            contributionNote: a.submissions[0].contributionNote,
           }
         : null,
       _sort: a.createdAt.getTime(),
@@ -518,19 +599,21 @@ export default async function LessonPage({
   // Ghi chú giảng viên là một LOẠI nội dung riêng, không phải khối bị ẩn: học
   // viên không bao giờ nhận được nó, kể cả khi ai đó lỡ bật `isHidden` sai.
   const teacherNotes = lesson.contentItems.filter((c) => c.type === "teacher_note");
-  const visibleItems = lesson.contentItems
-    .filter((c) => !c.isHidden)
-    // Người dạy nhận ghi chú NGAY TỪ ĐẦU, bật/tắt chỉ là đổi hiển thị bằng CSS.
-    // Trước đây bật ghi chú phải đi một vòng lên máy chủ để render lại cả bài —
-    // mất vài giây, mà trong lúc ấy màn hình không đổi gì, nên người dạy tưởng
-    // nút hỏng và bấm tiếp. Học viên vẫn không bao giờ nhận được khối này.
-    .filter((c) => c.type !== "teacher_note" || canEdit)
-    .map((c) => ({
-      id: c.id,
-      type: c.type,
-      payload: c.payload,
-      orderIndex: c.orderIndex,
-    }));
+  const visibleItems = withoutHiddenAudioTranscripts(
+      lesson.contentItems
+      .filter((c) => !c.isHidden)
+      // Người dạy nhận ghi chú NGAY TỪ ĐẦU, bật/tắt chỉ là đổi hiển thị bằng CSS.
+      // Trước đây bật ghi chú phải đi một vòng lên máy chủ để render lại cả bài —
+      // mất vài giây, mà trong lúc ấy màn hình không đổi gì, nên người dạy tưởng
+      // nút hỏng và bấm tiếp. Học viên vẫn không bao giờ nhận được khối này.
+      .filter((c) => c.type !== "teacher_note" || canEdit)
+      .map((c) => ({
+        id: c.id,
+        type: c.type,
+        payload: c.payload,
+        orderIndex: c.orderIndex,
+      })),
+  );
 
   // Mục lục nổi "Trong bài này" (LessonSectionNav) chỉ hiện khi bài có từ 2 thẻ
   // h2 có id trở lên — cùng ngưỡng với chính component đó. Tính sẵn ở máy chủ
@@ -699,20 +782,29 @@ export default async function LessonPage({
             auto-placement đẩy vào cột 1 (16rem). Bài không có mục lục thì không
             dùng grid, nội dung thẳng hàng với tiêu đề. */}
         <div className={hasSectionNav ? "xl:col-start-2" : undefined}>
-        {/* Trên màn chiếu, tên bài phải luôn nhìn thấy: người vào muộn hoặc ngẩng
-            lên giữa chừng cần biết đang học bài nào mà không phải hỏi. Dính theo
-            mép trên vì cuộn tới mục 4 thì tiêu đề bài đã trôi mất từ lâu. */}
+        {/* Trên màn chiếu, tên bài nằm ở đầu trang và cuộn đi cùng nội dung. Từng
+            dính theo mép trên, nhưng header site bị ẩn nên offset 74px chừa một
+            khoảng hở cho nội dung chạy xuyên qua phía trên tiêu đề, và tiêu đề
+            che mất một phần màn chiếu dù giảng viên đã cuộn đi. */}
         {stageMode && (
-          <div className="sticky top-[74px] z-10 mb-4 border-b border-token bg-[rgb(var(--surface))] pb-2">
+          <div className="stage-title mb-4 border-b border-token pb-2">
             <p className="text-sm font-medium text-muted">{lesson.module.title}</p>
             <p className="h-display text-2xl font-bold leading-tight">{lesson.title}</p>
           </div>
         )}
+        {/* Bọc ngoài để lề annotation (absolute, bên phải) nằm NGOÀI #lesson-content: LessonAnnotations
+            quan sát DOM của #lesson-content, nên dấu ở lề đặt trong đó sẽ tự kích hoạt vòng vẽ lại. */}
+        <div className="relative">
         <div id="lesson-content">
         <LessonContent
           items={visibleItems}
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
+        />
+        </div>
+        <div
+          id="lesson-annotation-gutter"
+          className="pointer-events-none absolute bottom-0 right-0 top-0 hidden w-14 lg:block xl:w-44"
         />
         </div>
         </div>
@@ -727,7 +819,7 @@ export default async function LessonPage({
       >
         {{
           tasks: (
-            <LessonTasksTab items={tasks} courseSlug={params.slug} />
+            <LessonTasksTab items={tasks} courseSlug={params.slug} teamContext={teamContext} />
           ),
           forum: (
             <LessonForumSection
@@ -773,6 +865,18 @@ export default async function LessonPage({
       )}
 
       {!previewMode && <AiTutorPanel lessonId={lesson.id} />}
+
+      {/* Bôi đen → chuột phải → annotation / hỏi AI. Không gắn khi chiếu lớp
+          (stage): menu chuột phải bất ngờ hiện trên màn chiếu là điều không ai
+          muốn. Cần có tài khoản — người đọc ẩn danh của khoá công khai không
+          có annotation để lưu. */}
+      {!previewMode && !stageMode && userId && (enrolled || canEdit) && (
+        <LessonAnnotations
+          lessonId={lesson.id}
+          canModerate={canEdit}
+          aiEnabled={!previewMode}
+        />
+      )}
     </main>
   );
 }

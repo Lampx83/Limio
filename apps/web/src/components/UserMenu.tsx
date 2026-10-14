@@ -84,7 +84,7 @@ export default function UserMenu({
   );
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" data-user-menu>
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full border border-token bg-[rgb(var(--surface))] py-1 pl-1 pr-3 text-sm transition-shadow hover:shadow-card"

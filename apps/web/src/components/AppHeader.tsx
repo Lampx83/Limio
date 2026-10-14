@@ -7,7 +7,7 @@ import { getRegisterEnabled } from "@/lib/site-settings";
 import UserMenu from "./UserMenu";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
-import ScanExamQrButton from "./ScanExamQrButton";
+import ScanQrButton from "./ScanQrButton";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
@@ -88,7 +88,7 @@ export default async function AppHeader() {
             🏆 Đấu trường
           </Link>
 
-          {user && activeRole === "learner" && <ScanExamQrButton />}
+          {user && activeRole === "learner" && <ScanQrButton />}
           {user && (
             <NotificationBell
               initialUnread={notiUnread}
@@ -108,11 +108,11 @@ export default async function AppHeader() {
             />
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Link href="/signin" className={registerEnabled ? "btn-ghost btn-sm" : "btn-primary btn-sm"}>
+              <Link href="/signin" className="btn-primary btn-sm">
                 Đăng nhập
               </Link>
               {registerEnabled && (
-                <Link href="/register" className="btn-primary btn-sm">
+                <Link href="/register" className="btn-ghost btn-sm">
                   Đăng ký
                 </Link>
               )}

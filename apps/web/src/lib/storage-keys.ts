@@ -6,8 +6,10 @@
  *     avatars/{userId}/{hex}.{ext}
  *     lesson-media/images/{yyyy}/{mm}/{filename}
  *     lesson-media/videos/{yyyy}/{mm}/{filename}
+ *     lesson-media/audio/{yyyy}/{mm}/{filename}
  *     lesson-media/pdfs/{yyyy}/{mm}/{filename}
  *     lesson-media/html/{yyyy}/{mm}/{filename}
+ *     lesson-media/files/{yyyy}/{mm}/{filename}
  *     exam-assets/{yyyy}/{mm}/{filename}
  *     board-attachments/{yyyy}/{mm}/{filename}
  *   private/                                         # auth-gated
@@ -83,8 +85,10 @@ export function platformSignatureKey(filename: string): StorageKey {
 type DateShardedKind =
   | "lesson-media/images"
   | "lesson-media/videos"
+  | "lesson-media/audio"
   | "lesson-media/pdfs"
   | "lesson-media/html"
+  | "lesson-media/files"
   | "lesson-media/transcripts"
   | "exam-assets"
   | "submissions"
@@ -111,11 +115,18 @@ export function lessonImageKey(date: Date, filename: string): StorageKey {
 export function lessonVideoKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/videos", date, filename);
 }
+export function lessonAudioKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "lesson-media/audio", date, filename);
+}
 export function lessonPdfKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/pdfs", date, filename);
 }
 export function lessonHtmlKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/html", date, filename);
+}
+/** Tài nguyên "File đính kèm" của bài học — học viên tải về (≤10 MB). */
+export function lessonFileKey(date: Date, filename: string): StorageKey {
+  return dateSharded("public", "lesson-media/files", date, filename);
 }
 /** A2.7 — Interactive transcript: GV upload file .vtt/.srt cho video YouTube. */
 export function lessonTranscriptKey(date: Date, filename: string): StorageKey {
@@ -183,11 +194,17 @@ export function lessonImageKeyFromFilename(filename: string): StorageKey | null 
 export function lessonVideoKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/videos", filename);
 }
+export function lessonAudioKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "lesson-media/audio", filename);
+}
 export function lessonPdfKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/pdfs", filename);
 }
 export function lessonHtmlKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/html", filename);
+}
+export function lessonFileKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("public", "lesson-media/files", filename);
 }
 export function lessonTranscriptKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("public", "lesson-media/transcripts", filename);

@@ -24,6 +24,7 @@ import {
   updateExamRound,
   updateExamSession,
 } from "../";
+import { roundFor } from "../../test/roundFor";
 
 const BASE = "http://localhost:3000";
 
@@ -91,7 +92,7 @@ describe("nhóm tổ chức thi — mọi thay đổi để lại LearningEvent"
       fields: expect.arrayContaining(["status", "title"]),
     });
 
-    await deleteExamRound(ownerId, roundId);
+    await deleteExamRound(ownerId, roundId, (await prisma.examRound.findUniqueOrThrow({ where: { id: roundId }, select: { title: true } })).title);
     ev = await eventsOf(ownerId, LearningEventType.ExamRoundDeleted);
     expect(ev).toHaveLength(1);
     expect(ev[0]!.courseId).toBe(courseId); // lấy trước khi xoá, dù đợt đã mất
@@ -148,15 +149,17 @@ describe("nhóm tổ chức thi — mọi thay đổi để lại LearningEvent"
     });
     const room1 = await createExamRoom(ownerId, examId, { name: "P1", proctorUserId: ownerId });
     const room2 = await createExamRoom(ownerId, examId, { name: "P2", proctorUserId: ownerId });
-    // Phòng tạo qua createExamRoom nằm ở ca/đợt mặc định của đề; thao tác thí sinh
-    // cần quyền trưởng đợt của đợt đó.
+    // Phòng tạo qua createExamRoom nằm ở ca mặc định của đề (buổi đơn, không đợt).
+    // Thao tác thí sinh cần quyền trên ĐỢT — nên gắn ca vào một đợt rồi cấp quyền.
     const home = await prisma.examRoom.findUniqueOrThrow({
       where: { id: room1.id },
-      select: { session: { select: { roundId: true } } },
+      select: { sessionId: true },
     });
+    const homeRoundId = await roundFor(examId);
+    await prisma.examSession.update({ where: { id: home.sessionId }, data: { roundId: homeRoundId } });
     await prisma.examRoundAdmin.upsert({
-      where: { roundId_userId: { roundId: home.session.roundId, userId: ownerId } },
-      create: { roundId: home.session.roundId, userId: ownerId },
+      where: { roundId_userId: { roundId: homeRoundId, userId: ownerId } },
+      create: { roundId: homeRoundId, userId: ownerId },
       update: {},
     });
     expect(await eventsOf(ownerId, LearningEventType.ExamRoomCreated)).toHaveLength(2);

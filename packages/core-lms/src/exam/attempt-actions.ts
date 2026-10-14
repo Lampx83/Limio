@@ -22,6 +22,7 @@ import {
   type ExamSubmitResult,
   type MarkAttemptResult,
 } from "./submission";
+import { addExtensionToActiveSection } from "./mock-sections";
 import { ExamError } from "./types";
 
 const MAX_EXTENSION_MIN = 30;
@@ -104,6 +105,8 @@ export async function extendAttempt(
     where: { id: attemptId },
     data: { durationSec: newDurationSec },
   });
+  // LANG G5a — đề thi thử: phần thêm giờ cộng vào phần đang chạy (đề thường no-op).
+  await addExtensionToActiveSection(attemptId, minutes * 60, db);
   await emitEvent(
     actorUserId,
     LearningEventType.ExamAttemptExtended,

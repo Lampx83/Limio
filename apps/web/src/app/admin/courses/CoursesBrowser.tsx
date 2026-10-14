@@ -12,6 +12,8 @@ interface CourseRow {
   status: string;
   priceCents: number | null;
   currency: string;
+  publicAccess: boolean;
+  isSample: boolean;
   activeAccessPlanCount: number;
 }
 
@@ -34,6 +36,34 @@ export default function CoursesBrowser() {
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [page, setPage] = useState(0);
+  const [sampleError, setSampleError] = useState<string | null>(null);
+  const [savingSample, setSavingSample] = useState<string | null>(null);
+
+  async function toggleSample(c: CourseRow, next: boolean) {
+    setSampleError(null);
+    setSavingSample(c.id);
+    try {
+      const r = await fetch(apiUrl(`/api/admin/courses/${c.id}/sample`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isSample: next }),
+      });
+      if (!r.ok) {
+        const d = (await r.json().catch(() => ({}))) as { error?: string };
+        setSampleError(
+          d.error === "sample_requires_public"
+            ? `"${c.title}" cần đã publish và bật đọc công khai thì mới làm khoá mẫu được.`
+            : "Không lưu được, thử lại sau.",
+        );
+        return;
+      }
+      setData((d) =>
+        d ? { ...d, courses: d.courses.map((x) => (x.id === c.id ? { ...x, isSample: next } : x)) } : d,
+      );
+    } finally {
+      setSavingSample(null);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +104,12 @@ export default function CoursesBrowser() {
         />
       </div>
 
+      {sampleError && (
+        <p role="alert" className="banner-danger mb-3 rounded-lg px-3 py-2 text-sm">
+          {sampleError}
+        </p>
+      )}
+
       <div className="card overflow-x-auto p-0">
         <table className="min-w-full text-sm">
           <thead className="border-b border-token bg-base-50 text-xs uppercase text-faint">
@@ -82,20 +118,23 @@ export default function CoursesBrowser() {
               <th className="px-4 py-2 text-left font-medium">Trạng thái</th>
               <th className="px-4 py-2 text-left font-medium">Giá vĩnh viễn</th>
               <th className="px-4 py-2 text-left font-medium">Gói bán</th>
+              <th className="px-4 py-2 text-left font-medium" title="Hiện cho giảng viên chưa có khoá nào xem thử">
+                Khoá mẫu
+              </th>
               <th className="px-4 py-2 text-right font-medium">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-token">
             {loading && !data && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted">
+                <td colSpan={6} className="px-4 py-6 text-center text-muted">
                   Đang tải…
                 </td>
               </tr>
             )}
             {data?.courses.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-muted">
+                <td colSpan={6} className="px-4 py-6 text-center text-muted">
                   Không có khoá học nào khớp.
                 </td>
               </tr>
@@ -118,6 +157,31 @@ export default function CoursesBrowser() {
                   ) : (
                     `${c.activeAccessPlanCount} gói đang bán`
                   )}
+                </td>
+                <td className="px-4 py-2.5">
+                  {/* Chỉ bật được khi khoá đã publish + đọc công khai (giảng viên mới không ghi danh nên
+                      chỉ xem được khoá công khai). Đang là mẫu thì luôn cho tắt, dù khoá đã đổi sang riêng tư. */}
+                  <label
+                    className="inline-flex items-center gap-2 text-xs"
+                    title={
+                      c.isSample || (c.status === "published" && c.publicAccess)
+                        ? "Hiện cho giảng viên chưa có khoá nào xem thử"
+                        : "Cần publish và bật đọc công khai trước"
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked={c.isSample}
+                      disabled={
+                        savingSample === c.id ||
+                        (!c.isSample && !(c.status === "published" && c.publicAccess))
+                      }
+                      onChange={(e) => void toggleSample(c, e.target.checked)}
+                      className="h-4 w-4 rounded border-token"
+                      aria-label={`Khoá mẫu: ${c.title}`}
+                    />
+                    <span className="text-muted">{c.isSample ? "Đang là mẫu" : "Không"}</span>
+                  </label>
                 </td>
                 <td className="px-4 py-2.5 text-right">
                   <Link

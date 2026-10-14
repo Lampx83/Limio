@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { RoleName } from "@feedbackme/shared-types";
 import { logAudit } from "../auth/audit";
+import { isAdmin } from "../auth/roles";
 import { uniqueCourseSlug } from "./slug";
 import { assertCanEditCourse, assertIsOwner, CourseAuthzError } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
@@ -26,6 +27,7 @@ export const CreateCourseInput = z.object({
   category: z.string().max(80).optional(),
   coverUrl: z.string().url().max(500).optional(),
   personalizationEnabled: z.boolean().optional(),
+  languageMode: z.boolean().optional(),
   enrollMode: z.enum(["open", "invite_only"]).optional(),
 });
 
@@ -39,6 +41,7 @@ export const UpdateCourseInput = z.object({
   priceCents: z.number().int().min(0).optional().nullable(),
   currency: z.enum(["VND", "USD"]).optional(),
   personalizationEnabled: z.boolean().optional(),
+  languageMode: z.boolean().optional(),
   publicAccess: z.boolean().optional(),
   enrollMode: z.enum(["open", "invite_only"]).optional(),
 });
@@ -48,6 +51,7 @@ export const UpdateCourseInput = z.object({
 // answerable after the fact.
 const AUDITED_FLAGS = {
   personalizationEnabled: "course.personalization.toggled",
+  languageMode: "course.language_mode.toggled",
   publicAccess: "course.public_access.toggled",
 } as const;
 type AuditedFlag = keyof typeof AUDITED_FLAGS;
@@ -69,7 +73,9 @@ export class CourseError extends Error {
       | "section_not_found"
       | "section_name_taken"
       | "section_has_enrollments"
-      | "researcher_only",
+      | "researcher_only"
+      | "sample_requires_public"
+      | "language_mode_requires_personalization",
     public readonly details?: unknown,
   ) {
     super(code);
@@ -99,6 +105,12 @@ export async function createCourse(
 
   const slug = await uniqueCourseSlug(parsed.data.slug ?? parsed.data.title, db);
 
+  // LANG G3 — bất biến languageMode ⇒ personalizationEnabled (xem updateCourse).
+  const personalizationEnabled = parsed.data.personalizationEnabled ?? true;
+  if (parsed.data.languageMode && !personalizationEnabled) {
+    throw new CourseError("language_mode_requires_personalization");
+  }
+
   return db.$transaction(async (tx) => {
     const course = await tx.course.create({
       data: {
@@ -109,7 +121,8 @@ export async function createCourse(
         level: parsed.data.level ?? "beginner",
         category: parsed.data.category ?? null,
         coverUrl: parsed.data.coverUrl ?? null,
-        personalizationEnabled: parsed.data.personalizationEnabled ?? true,
+        personalizationEnabled,
+        languageMode: parsed.data.languageMode ?? false,
         enrollMode: parsed.data.enrollMode ?? "open",
         status: "draft",
         version: 1,
@@ -151,8 +164,18 @@ export async function updateCourse(
   if (touched.length > 0) {
     const cur = await db.course.findUniqueOrThrow({
       where: { id: courseId },
-      select: { personalizationEnabled: true, publicAccess: true },
+      select: { personalizationEnabled: true, languageMode: true, publicAccess: true },
     });
+    // LANG G3 — chế độ ngoại ngữ cần cá nhân hoá: nhãn kỹ năng chỉ đi vào Skill khi
+    // cá nhân hoá bật, nên hồ sơ 4 kỹ năng không có dữ liệu để gộp nếu thiếu nó. Ép ở
+    // đây (không chỉ ở form) để không đường nào khác tạo ra tổ hợp đó, theo cả hai
+    // chiều: bật chế độ ngoại ngữ khi cá nhân hoá tắt, hoặc tắt cá nhân hoá khi đang
+    // ở chế độ ngoại ngữ.
+    const nextPersonalization = (data.personalizationEnabled as boolean | undefined) ?? cur.personalizationEnabled;
+    const nextLanguageMode = (data.languageMode as boolean | undefined) ?? cur.languageMode;
+    if (nextLanguageMode && !nextPersonalization) {
+      throw new CourseError("language_mode_requires_personalization");
+    }
     for (const flag of touched) {
       const to = data[flag] as boolean;
       // Only a real flip is audited — re-saving the form unchanged is not an event.
@@ -200,6 +223,63 @@ export async function updateCourse(
   if (personalizationTurnedOn) {
     await backfillCourseTags(courseId, { force: true }, db);
   }
+}
+
+/**
+ * Admin đánh dấu / bỏ đánh dấu "khoá mẫu". Chỉ admin nền tảng — khoá của giảng
+ * viên nào được đem ra làm mẫu cho người mới là quyết định của nền tảng, không
+ * phải của chủ khoá.
+ *
+ * Chỉ khoá đang published + publicAccess mới đánh dấu được: giảng viên mới chưa
+ * ghi danh khoá nào, nên chỉ xem được khoá nếu nó đọc công khai. Đánh dấu một
+ * khoá riêng tư sẽ cho ra nút bấm vào là bị chặn.
+ */
+export async function setCourseSample(
+  actorUserId: string,
+  courseId: string,
+  isSample: boolean,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  if (!(await isAdmin(actorUserId, db))) throw new CourseAuthzError("forbidden");
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: { status: true, publicAccess: true, isSample: true },
+  });
+  if (!course) throw new CourseAuthzError("not_found");
+  if (isSample && !(course.status === "published" && course.publicAccess)) {
+    throw new CourseError("sample_requires_public");
+  }
+  // Chỉ lần lật thật mới ghi (lưu lại form không đổi gì thì không phải sự kiện).
+  if (course.isSample === isSample) return;
+  await db.course.update({ where: { id: courseId }, data: { isSample } });
+  await logAudit(
+    {
+      action: "course.sample.toggled",
+      actorUserId,
+      payload: { courseId, from: course.isSample, to: isSample },
+    },
+    db,
+  );
+}
+
+/**
+ * Các khoá mẫu đang xem được. Lọc lại published + publicAccess ở đây (không tin
+ * mỗi cờ isSample): khoá từng là mẫu rồi sau đó bị gỡ publish hay chuyển riêng
+ * tư thì phải biến khỏi danh sách, không để lại link dẫn tới trang 404.
+ */
+export async function listSampleCourses(db: PrismaClient = prisma) {
+  return db.course.findMany({
+    where: { isSample: true, status: "published", publicAccess: true },
+    orderBy: { title: "asc" },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      coverUrl: true,
+      level: true,
+    },
+  });
 }
 
 /**
@@ -544,6 +624,8 @@ export async function duplicateCourse(
         // causing the copy to lose personalization / pricing / org scope and
         // appear "hidden" or misconfigured to learners after publish.
         personalizationEnabled: src.personalizationEnabled,
+        // LANG G8 — chế độ ngoại ngữ (kéo theo nhãn kỹ năng của bài, bên dưới).
+        languageMode: src.languageMode,
         publicAccess: src.publicAccess,
         priceCents: src.priceCents,
         currency: src.currency,
@@ -573,6 +655,7 @@ export async function duplicateCourse(
             orderIndex: l.orderIndex,
             completionThresholdPct: l.completionThresholdPct,
             durationSec: l.durationSec,
+            languageSkill: l.languageSkill,
           },
         });
         for (const c of l.contentItems) {
@@ -606,6 +689,16 @@ export async function duplicateCourse(
               description: a.description,
               dueAt: a.dueAt,
               maxScore: a.maxScore,
+              // Cấu hình chấm: trước đây rơi về mặc định ⇒ bản sao mất rubric.
+              rubricText: a.rubricText,
+              pedagogicalIntent: a.pedagogicalIntent,
+              responseFormat: a.responseFormat,
+              assessmentModes: a.assessmentModes,
+              requireSelfRating: a.requireSelfRating,
+              requireReflection: a.requireReflection,
+              countsTowardGrade: a.countsTowardGrade,
+              // Nhóm KHÔNG được chép sang khoá mới — chỉ chế độ nộp.
+              submissionMode: a.submissionMode,
             },
           });
           await attachLessonActivity(tx, newLesson.id, "assignment", newAssignment.id);

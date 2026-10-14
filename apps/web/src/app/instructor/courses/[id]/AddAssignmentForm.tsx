@@ -8,6 +8,7 @@ import { lmsErrorMessage } from "@/lib/lmsErrors";
 import GenerativeTypePicker from "@/components/GenerativeTypePicker";
 import { Sparkles } from "lucide-react";
 import { plainToRichHtml } from "@/lib/richText";
+import SubmissionModeField, { type SubmissionMode } from "./SubmissionModeField";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -53,6 +54,7 @@ export default function AddAssignmentForm({
     useState<GenerativeActivityType | "">("");
   const [requireSelfRating, setRequireSelfRating] = useState(false);
   const [requireReflection, setRequireReflection] = useState(false);
+  const [submissionMode, setSubmissionMode] = useState<SubmissionMode>("individual");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
@@ -99,6 +101,7 @@ export default function AddAssignmentForm({
     setPedagogicalIntent("");
     setRequireSelfRating(false);
     setRequireReflection(false);
+    setSubmissionMode("individual");
     setError(null);
   }
 
@@ -137,6 +140,7 @@ export default function AddAssignmentForm({
       maxScore: Number(maxScore) || 100,
       requireSelfRating,
       requireReflection,
+      submissionMode,
     };
     if (dueAt) payload.dueAt = new Date(dueAt).toISOString();
     if (pedagogicalIntent) {
@@ -279,6 +283,11 @@ export default function AddAssignmentForm({
           />
         </label>
       </div>
+      <SubmissionModeField
+        name={`submission-mode-new-${lessonId}`}
+        value={submissionMode}
+        onChange={setSubmissionMode}
+      />
       {showResearch && (
         <fieldset className="grid grid-cols-1 gap-1 rounded-lg border border-token bg-[rgb(var(--surface))] p-2 text-xs sm:grid-cols-2">
           <label className="flex items-center gap-2">

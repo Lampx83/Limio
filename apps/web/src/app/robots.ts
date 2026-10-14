@@ -19,6 +19,12 @@ import { SITE_URL } from "@/lib/seo";
  *     không biết: một bài học chỉ được index khi khoá của nó `publicAccess`.
  */
 
+// BẮT BUỘC dynamic. Không khai thì Next prerender file này lúc `next build`, khi
+// `NEXTAUTH_URL` chưa có → `SITE_URL` rơi về `localhost` → nhánh "staging" bên dưới
+// chạy và bản build đóng cứng `Disallow: /` cho MỌI domain production: Google bị
+// chặn toàn bộ site mà không có lỗi nào báo ra. (`sitemap.ts` cùng lý do.)
+export const dynamic = "force-dynamic";
+
 const PRIVATE_PREFIXES = [
   "/api/",
   "/admin",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
+import { listLiveRuntimeRefIds } from "@feedbackme/core-lms";
 import { requireFeature } from "@/lib/session";
 import { generateUniqueBoardCode, normalizeBoardColumns } from "@/lib/board";
 
@@ -71,8 +72,10 @@ export async function GET() {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
+  // Bảng sinh từ slide Limio-Live nằm trong lịch sử bài giảng, không ở đây.
+  const liveRefIds = await listLiveRuntimeRefIds(userId, prisma);
   const boards = await prisma.interactiveBoard.findMany({
-    where: { ownerId: userId },
+    where: { ownerId: userId, id: { notIn: liveRefIds } },
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {

@@ -1,0 +1,33 @@
+</main>
+<footer class="foot">
+  <button data-act="prev" aria-label="Slide trước"><svg class="i"><use href="#i-left"/></svg></button>
+  <div class="dots"></div>
+  <button data-act="next" aria-label="Slide sau"><svg class="i"><use href="#i-right"/></svg></button>
+</footer>
+<div class="progress"><i></i></div>
+
+<aside class="drawer" id="notes" aria-label="Ghi chú người trình bày">
+  <header><h4>Ghi chú người trình bày</h4><div class="row" style="--g:.6rem"><span class="timer" id="timer">00:00</span><button class="x" id="timer-reset" title="Đặt lại giờ" aria-label="Đặt lại giờ"><svg class="i"><use href="#i-refresh"/></svg></button><button class="x" data-act="close" aria-label="Đóng"><svg class="i"><use href="#i-x"/></svg></button></div></header>
+  <div class="body" id="notes-body"></div>
+</aside>
+<aside class="drawer qa" id="qa" aria-label="Hỏi đáp dự kiến">
+  <header><h4>Hỏi – đáp dự kiến</h4><button class="x" data-act="close" aria-label="Đóng"><svg class="i"><use href="#i-x"/></svg></button></header>
+  <div class="body">
+    <details><summary>AI có thay giảng viên chấm bài không?</summary><p>Không. AI chỉ gợi ý điểm và nhận xét dựa trên rubric; giảng viên xem, sửa và là người quyết định kết quả cuối cùng. Với thi vấn đáp, AI đặt câu hỏi và ghi nhận, giảng viên vẫn xem lại bản ghi.</p></details>
+    <details><summary>Dữ liệu nằm ở đâu, ai kiểm soát?</summary><p>Limio chạy bằng Docker trên máy chủ của từng đơn vị triển khai. Hiện có hai bản độc lập (limio.vn và limio.hust.edu.vn), mỗi bản có cơ sở dữ liệu, tệp tải lên và cấu hình riêng, không đồng bộ dữ liệu với nhau.</p></details>
+    <details><summary>Mô hình BKT có đủ tin cậy không?</summary><p>BKT là mô hình kinh điển (Corbett &amp; Anderson, 1994). Limio đang dùng bộ tham số khởi đầu thận trọng (P(L0)=0,10; P(T)=0,10; P(S)=0,10; P(G)=0,20). Các tham số này chưa được hiệu chỉnh bằng dữ liệu thực; đó là bước nghiên cứu tiếp theo và hệ thống đã ghi đủ dữ liệu để làm việc này.</p></details>
+    <details><summary>Đã có bằng chứng hiệu quả học tập chưa?</summary><p>Chưa công bố. Sản phẩm mới ra mắt và đang được thử nghiệm ở một số học phần. Nền tảng được thiết kế để đo được: nhật ký sự kiện bất biến, mã hoá từng phản hồi, đo mức người học mở nội dung ôn tập, và cho phép đặt lớp đối chứng.</p></details>
+    <details><summary>Khác gì Moodle / LMS thông thường?</summary><p>LMS chấm điểm rồi đi tiếp; Limio cập nhật mức nắm vững theo từng chủ đề ngay trong lượt nộp bài và phản hồi đúng chỗ còn yếu. Ngoài ra Live, thi, vấn đáp AI, chấm chữa, điểm thưởng và e-portfolio dùng chung một dòng dữ liệu nên luôn khớp nhau.</p></details>
+    <details><summary>Chống gian lận khi thi thế nào?</summary><p>Giảng viên giám sát thời gian thực, hệ thống cảnh báo khi thí sinh rời tab hoặc thoát toàn màn hình. Cảnh báo là căn cứ để giảng viên xem xét, không tự động kết luận vi phạm.</p></details>
+    <details><summary>Điểm thưởng có làm lệch việc học thật không?</summary><p>Có cơ chế chống lạm dụng: giới hạn theo ngày, điều chỉnh XP theo năng lực (quiz dễ với người giỏi thì XP thấp), và lượt làm dưới 10 giây không được cộng điểm, chỉ ghi vết kiểm toán. Người học có thể rút khỏi bảng xếp hạng.</p></details>
+    <details><summary>Người học có thấy phần trăm mức nắm vững không?</summary><p>Không. Người học chỉ thấy nhãn Cần ôn / Nên luyện thêm / Vững. Con số xác suất chỉ hiển thị cho giảng viên, vì dễ bị đọc như điểm thi.</p></details>
+  </div>
+</aside>
+<div class="overview" id="overview" role="dialog" aria-label="Tổng quan bài trình bày"><h4 style="margin:0 0 1rem;letter-spacing:.14em;text-transform:uppercase;font-size:.8rem;color:var(--l400)">Tổng quan — bấm để nhảy tới slide</h4><div class="grid"></div></div>
+<div class="overview" id="audmodal" role="dialog" aria-label="Chọn đối tượng người nghe"><h4 style="margin:0 0 .4rem;letter-spacing:.14em;text-transform:uppercase;font-size:.8rem;color:var(--l400)">Bạn đang trình bày cho ai?</h4><p style="margin:0 0 1.2rem;color:#B6C8AA;font-size:.95rem">Mỗi đối tượng có bộ slide riêng. Có thể đổi bất cứ lúc nào (phím A).</p><div class="grid"></div></div>
+<aside class="drawer" id="jump" aria-label="Nhảy tới trang demo"><header><h4>Nhảy tới trang demo thật</h4><button class="x" data-act="close" aria-label="Đóng"><svg class="i"><use href="#i-x"/></svg></button></header><div class="body" id="jump-body"></div></aside>
+<a class="openreal" id="openreal" target="_blank" rel="noopener" hidden><svg class="i"><use href="#i-link"/></svg><span></span></a>
+<div class="laser" id="laser" hidden></div><div class="spot" id="spot" hidden></div><canvas class="pen" id="pen" hidden></canvas><div class="toast" id="toast" hidden></div>
+<div class="zoom" id="zoom"><img alt="Ảnh phóng to"></div>
+</body>
+</html>

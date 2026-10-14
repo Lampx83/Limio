@@ -7,6 +7,7 @@ import {
   createOralTopic,
   enrollInCourse,
   publishExam,
+  openOralExamSession,
   registerUser,
   startOralExamAttempt,
 } from "@feedbackme/core-lms";
@@ -79,6 +80,7 @@ async function setup(slug: string, opts: { warmup: boolean; topics: Array<[strin
   });
   await embedMaterial(owner.userId, materialId, recordingEmbed([]));
   await publishExam(owner.userId, examId);
+  await openOralExamSession(owner.userId, examId);
 
   const learner = await registerUser(
     { email: `tw-l-${slug}@e.com`, password: "password1234", displayName: "L" },
@@ -375,6 +377,23 @@ describe("prompt rules by feedback mode, last-question cue, closing summary (A6.
     const sum = buildOralSystemPrompt({ ...base, phase: "closing", closingSummary: true });
     expect(sum).toContain("Nhìn lại buổi vấn đáp");
     expect(sum).toContain("KHÔNG cho điểm số");
+  });
+
+  it("English exam: the language rule leads every phase, and fixed phrases are not Vietnamese", () => {
+    const en = { ...base, language: "en" as const };
+    const topic = { title: "QR attendance", brief: "30% of QR codes get shared." };
+    for (const phase of ["warmup", "first", "topic_intro", "normal", "closing"] as const) {
+      const p = buildOralSystemPrompt({ ...en, phase, topic });
+      expect(p.startsWith("LANGUAGE: Everything you say to the student must be in English")).toBe(true);
+    }
+    const late = buildOralSystemPrompt({ ...en, phase: "normal", timing: { durationMin: 15, elapsedMin: 13 } });
+    expect(late).toContain("This is the final question.");
+    expect(late).not.toContain("Đây là câu hỏi cuối.");
+    const sum = buildOralSystemPrompt({ ...en, phase: "closing", closingSummary: true });
+    expect(sum).toContain("Looking back at the oral exam");
+    expect(sum).not.toContain("Nhìn lại buổi vấn đáp");
+    // đề tiếng Việt không đổi: không có phần đầu thêm
+    expect(buildOralSystemPrompt({ ...base, phase: "warmup" }).startsWith("Bạn là giảng viên ảo")).toBe(true);
   });
 });
 

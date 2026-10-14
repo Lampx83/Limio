@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
+import AudioRecorder from "@/components/AudioRecorder";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import {
   GENERATIVE_PRESETS,
+  SPEAKING_BODY_PLACEHOLDER,
   acceptForFormat,
   requiresUpload,
   type GenerativeActivityType,
@@ -20,12 +22,20 @@ export default function AssignmentSubmitForm({
   responseFormat = "text",
   requireSelfRating = false,
   requireReflection = false,
+  teamMode = false,
+  teamName = null,
+  alreadyGraded = false,
 }: {
   assignmentId: string;
   pedagogicalIntent?: GenerativeActivityType | null;
   responseFormat?: ResponseFormat;
   requireSelfRating?: boolean;
   requireReflection?: boolean;
+  /** Bài tập nộp theo nhóm: một người nộp là cả nhóm có bài (docs/group-submission-AC.md C2, C5). */
+  teamMode?: boolean;
+  teamName?: string | null;
+  /** Bài nhóm đã chấm — nộp lại sẽ đưa cả nhóm về chưa chấm, nên hỏi xác nhận trước. */
+  alreadyGraded?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -37,10 +47,17 @@ export default function AssignmentSubmitForm({
   const [uploading, setUploading] = useState(false);
   const needUpload = requiresUpload(responseFormat);
 
+  // LANG G7 — bài nói: ghi âm ngay trong trang; chữ ghi chú không bắt buộc (bản ghi là bài làm).
+  const isSpeaking = responseFormat === "audio";
+
   async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
+    await uploadFile(f);
+  }
+
+  async function uploadFile(f: File) {
     setUploading(true);
     try {
       const fd = new FormData();
@@ -94,9 +111,16 @@ export default function AssignmentSubmitForm({
       toast.error("Hoạt động này cần tải lên file hoặc dán URL.");
       return;
     }
+    if (
+      teamMode &&
+      alreadyGraded &&
+      !window.confirm("Nộp lại sẽ đưa bài của cả nhóm về trạng thái chưa chấm. Tiếp tục?")
+    ) {
+      return;
+    }
     setBusy(true);
     const payload: Record<string, unknown> = {
-      body,
+      body: body.trim() || (isSpeaking ? SPEAKING_BODY_PLACEHOLDER : body),
       attachmentUrl: attachmentUrl.trim() || null,
     };
     if (selfRating !== "") payload.selfRating = Number(selfRating);
@@ -110,9 +134,11 @@ export default function AssignmentSubmitForm({
     setBusy(false);
     if (res.ok) {
       toast.success("Đã nộp bài", {
-        description: pedagogicalIntent
-          ? "Phản hồi sẽ được tổng hợp dần."
-          : "Chờ instructor chấm điểm.",
+        description: teamMode
+          ? "Cả nhóm đã có bài. Chờ giảng viên chấm."
+          : pedagogicalIntent
+            ? "Phản hồi sẽ được tổng hợp dần."
+            : "Chờ instructor chấm điểm.",
       });
       reset();
       setOpen(false);
@@ -120,8 +146,12 @@ export default function AssignmentSubmitForm({
     } else {
       const d = await res.json().catch(() => ({}));
       toast.error("Nộp bài thất bại", {
-        description: d.error ?? "Vui lòng thử lại.",
+        description:
+          d.error === "no_team"
+            ? "Bài tập này nộp theo nhóm. Bạn cần vào một nhóm trước khi nộp."
+            : (d.error ?? "Vui lòng thử lại."),
       });
+      if (d.error === "no_team") router.refresh();
     }
   }
 
@@ -138,6 +168,12 @@ export default function AssignmentSubmitForm({
       onSubmit={onSubmit}
       className="space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
     >
+      {teamMode && (
+        <p className="text-xs text-muted">
+          {teamName ? <>Bạn nộp cho nhóm <span className="font-semibold">{teamName}</span>. </> : null}
+          Một người nộp là cả nhóm có bài.
+        </p>
+      )}
       {promptHint && (
         <p className="rounded-lg border border-brand-200 bg-brand-soft p-2 text-xs text-brand-700">
           💡 {promptHint}
@@ -146,11 +182,12 @@ export default function AssignmentSubmitForm({
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        required
-        rows={6}
-        placeholder="Nội dung bài làm..."
+        required={!isSpeaking}
+        rows={isSpeaking ? 2 : 6}
+        placeholder={isSpeaking ? "Ghi chú thêm cho giảng viên (không bắt buộc)" : "Nội dung bài làm..."}
         className="textarea"
       />
+      {isSpeaking && <AudioRecorder onRecorded={(f) => void uploadFile(f)} disabled={uploading} />}
       {needUpload && (
         <div className="space-y-1 rounded-lg border border-token bg-[rgb(var(--surface))] p-2">
           <span className="text-xs font-medium text-default">
@@ -192,6 +229,12 @@ export default function AssignmentSubmitForm({
         }
         className="input text-xs"
       />
+      {/google\.com\//i.test(attachmentUrl) && (
+        <p className="banner-warning text-xs">
+          Hãy mở quyền chia sẻ của tài liệu là “Bất kỳ ai có đường liên kết”
+          (người xem) — nếu không, giảng viên sẽ không mở được bài của bạn để chấm.
+        </p>
+      )}
 
       {(requireSelfRating || requireReflection) && (
         <div className="space-y-2 rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
@@ -258,7 +301,9 @@ export default function AssignmentSubmitForm({
         </button>
       </div>
       <p className="text-xs text-faint">
-        Nộp lại sẽ ghi đè bài cũ và trở về trạng thái &ldquo;chưa chấm&rdquo;.
+        {teamMode
+          ? <>Nộp lại sẽ ghi đè bài của cả nhóm và đưa cả nhóm về trạng thái &ldquo;chưa chấm&rdquo;.</>
+          : <>Nộp lại sẽ ghi đè bài cũ và trở về trạng thái &ldquo;chưa chấm&rdquo;.</>}
       </p>
     </form>
   );

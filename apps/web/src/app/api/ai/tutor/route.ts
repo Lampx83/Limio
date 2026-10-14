@@ -1,12 +1,11 @@
 import { isOpenaiOverloaded } from "@/lib/openaiResilience";
-import { createOpenaiClient } from "@/lib/openaiClient";
+import { createOpenaiClient, getChatOnlyApiKey } from "@/lib/openaiClient";
 import {
   AiTutorError,
   getOrCreateConversation,
   runChatTurn,
 } from "@feedbackme/core-feedback";
 import {
-  getIntegrationSecret,
   IntegrationError,
   isUserEnrolled,
 } from "@feedbackme/core-lms";
@@ -16,7 +15,7 @@ import { requireUserId } from "@/lib/session";
 export const runtime = "nodejs";
 
 /**
- * AI Tutor streaming endpoint. Body: { lessonId, message, conversationId? }.
+ * AI Tutor streaming endpoint. Body: { lessonId, message, conversationId?, quote? }.
  * Returns Server-Sent Events:
  *   event: meta  data: { conversationId }
  *   event: delta data: "<text>"
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
   if (!userId) return new Response("unauthorized", { status: 401 });
 
   const body = (await req.json().catch(() => null)) as
-    | { lessonId?: string; message?: string; conversationId?: string }
+    | { lessonId?: string; message?: string; conversationId?: string; quote?: string }
     | null;
   if (!body?.lessonId || !body?.message) {
     return new Response(
@@ -58,7 +57,7 @@ export async function POST(req: Request) {
   // Resolve OpenAI key from saved credential or env fallback.
   let openaiKey: string;
   try {
-    openaiKey = await getIntegrationSecret("openai");
+    openaiKey = await getChatOnlyApiKey();
   } catch (e) {
     if (e instanceof IntegrationError && e.code === "key_not_found") {
       return new Response(
@@ -98,6 +97,7 @@ export async function POST(req: Request) {
           conversationId: conversationId!,
           userId,
           userMessage: body.message!,
+          quote: typeof body.quote === "string" ? body.quote : undefined,
           openai,
           onDelta: (delta) => send("delta", delta),
         });

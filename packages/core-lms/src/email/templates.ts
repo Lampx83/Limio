@@ -64,11 +64,14 @@ export type SendTemplatedEmailInput = {
 Handlebars.registerHelper("helperMissing", () => "");
 const compileCache = new Map<string, HandlebarsTemplateDelegate>();
 
-function compile(source: string): HandlebarsTemplateDelegate {
-  let fn = compileCache.get(source);
+const compilePlainCache = new Map<string, HandlebarsTemplateDelegate>();
+
+function compile(source: string, noEscape = false): HandlebarsTemplateDelegate {
+  const cache = noEscape ? compilePlainCache : compileCache;
+  let fn = cache.get(source);
   if (!fn) {
-    fn = Handlebars.compile(source, { noEscape: false });
-    compileCache.set(source, fn);
+    fn = Handlebars.compile(source, { noEscape });
+    cache.set(source, fn);
   }
   return fn;
 }
@@ -89,6 +92,24 @@ export function renderField(template: string, vars: Record<string, string>): str
   } catch {
     return template;
   }
+}
+
+/**
+ * Render cho phần KHÔNG phải HTML (bản text, subject). Không escape: nếu escape
+ * thì `?token=abc` thành `?token&#x3D;abc` — link trong bản text hỏng, subject
+ * hiện "&amp;" nguyên văn. Biến chèn vào HTML vẫn đi qua renderField (có escape).
+ * Subject bỏ xuống dòng để biến người dùng không chèn được header.
+ */
+export function renderPlain(template: string, vars: Record<string, string>): string {
+  try {
+    return compile(template, true)(vars);
+  } catch {
+    return template;
+  }
+}
+
+function renderSubject(template: string, vars: Record<string, string>): string {
+  return renderPlain(template, vars).replace(/[\r\n]+/g, " ").trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -235,8 +256,8 @@ export async function renderTemplate(input: {
 
   if (loaded) {
     const inner = renderField(loaded.bodyHtml, vars);
-    const text = loaded.bodyText ? renderField(loaded.bodyText, vars) : stripHtml(inner);
-    const subject = renderField(loaded.subject, vars);
+    const text = loaded.bodyText ? renderPlain(loaded.bodyText, vars) : stripHtml(inner);
+    const subject = renderSubject(loaded.subject, vars);
     return { subject, html: frame(inner, subject, text), text, source: loaded.source };
   }
 
@@ -246,8 +267,8 @@ export async function renderTemplate(input: {
       `No template found for key=${input.key} (no DB row + no hard-coded fallback)`,
     );
   }
-  const subject = renderField(fb.subject, vars);
-  const text = renderField(fb.bodyText, vars);
+  const subject = renderSubject(fb.subject, vars);
+  const text = renderPlain(fb.bodyText, vars);
   return {
     subject,
     html: frame(renderField(fb.bodyHtml, vars), subject, text),

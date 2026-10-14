@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import {
   AccessCodeError,
+  AnnotationError,
   AssignmentError,
   CourseAuthzError,
   CourseError,
+  CourseTeamError,
   EnrollError,
   ExamError,
+  LanguageTemplateError,
   LearningError,
   MisconceptionError,
   NoteError,
@@ -23,6 +26,12 @@ export function mapKnownError(err: unknown): NextResponse | null {
   if (err instanceof CourseAuthzError) {
     const status = err.code === "not_found" ? 404 : 403;
     return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof LanguageTemplateError) {
+    return NextResponse.json(
+      err.details ? { error: err.code, details: err.details } : { error: err.code },
+      { status: err.code === "forbidden" ? 403 : 400 },
+    );
   }
   if (err instanceof CourseError) {
     const status =
@@ -95,6 +104,22 @@ export function mapKnownError(err: unknown): NextResponse | null {
       { status },
     );
   }
+  if (err instanceof AnnotationError) {
+    const status =
+      err.code === "lesson_not_found" ||
+      err.code === "annotation_not_found" ||
+      err.code === "reply_not_found"
+        ? 404
+        : err.code === "not_enrolled"
+          ? 403
+          : err.code === "too_many"
+            ? 429
+            : 400;
+    return NextResponse.json(
+      err.details ? { error: err.code, details: err.details } : { error: err.code },
+      { status },
+    );
+  }
   if (err instanceof NoteError) {
     const status =
       err.code === "lesson_not_found" || err.code === "note_not_found"
@@ -147,12 +172,15 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.code === "cohort_not_found" ||
       err.code === "schedule_not_found" ||
       err.code === "section_not_found" ||
+      err.code === "practice_session_not_found" ||
       err.code === "round_not_found" ||
       err.code === "material_not_found" ||
       err.code === "topic_not_found"
         ? 404
         : err.code === "attempt_belongs_to_other" ||
             err.code === "not_enrolled" ||
+            err.code === "audio_plays_exhausted" ||
+            err.code === "practice_disabled" ||
             err.code === "forbidden"
           ? 403
           : err.code === "exam_has_attempts" ||
@@ -162,6 +190,11 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "attempt_already_submitted" ||
               err.code === "attempt_limit_reached" ||
               err.code === "session_stale" ||
+              err.code === "section_not_active" ||
+              err.code === "mock_disabled" ||
+              err.code === "practice_session_closed" ||
+              err.code === "practice_check_disabled" ||
+              err.code === "practice_not_answered" ||
               err.code === "exam_not_open" ||
               err.code === "exam_window_closed" ||
               err.code === "attempt_not_in_progress" ||
@@ -170,12 +203,14 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "access_mode_mismatch" ||
               err.code === "candidate_has_attempts" ||
               err.code === "session_has_attempts" ||
+              err.code === "round_has_attempts" ||
               err.code === "student_code_in_use" ||
               err.code === "cohort_has_attempts" ||
               err.code === "cohort_name_taken" ||
               err.code === "cohort_required"
             ? 409
             : err.code === "exam_not_publishable" ||
+                err.code === "practice_scope_empty" ||
                 err.code === "duration_extension_too_large" ||
                 err.code === "bank_question_not_publishable" ||
                 err.code === "bank_question_already_archived" ||
@@ -196,6 +231,20 @@ export function mapKnownError(err: unknown): NextResponse | null {
       { status },
     );
   }
+  if (err instanceof CourseTeamError) {
+    const status =
+      err.code === "course_not_found" || err.code === "team_not_found" || err.code === "join_code_invalid"
+        ? 404
+        : err.code === "not_enrolled" || err.code === "not_captain"
+          ? 403
+          : err.code === "already_in_team" ||
+              err.code === "team_full" ||
+              err.code === "team_name_taken" ||
+              err.code === "teams_locked"
+            ? 409
+            : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
   if (err instanceof AssignmentError) {
     const status =
       err.code === "lesson_not_found" ||
@@ -204,7 +253,9 @@ export function mapKnownError(err: unknown): NextResponse | null {
         ? 404
         : err.code === "not_enrolled" || err.code === "forbidden"
           ? 403
-          : 400;
+          : err.code === "no_team"
+            ? 409
+            : 400;
     return NextResponse.json(
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
@@ -212,7 +263,11 @@ export function mapKnownError(err: unknown): NextResponse | null {
   }
   if (err instanceof PortfolioError) {
     const status =
-      err.code === "submission_not_found" ? 404 : err.code === "slug_taken" ? 409 : 400;
+      err.code === "submission_not_found"
+        ? 404
+        : err.code === "slug_taken" || err.code === "group_full"
+          ? 409
+          : 400;
     return NextResponse.json({ error: err.code }, { status });
   }
   return null;

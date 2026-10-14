@@ -188,7 +188,7 @@ describe("A5.3 — deleteExamRound", () => {
       closesAt: new Date(Date.now() + 120_000),
       courseId,
     });
-    await deleteExamRound(userId, id);
+    await deleteExamRound(userId, id, "T");
     await expect(getExamRound(userId, id)).rejects.toMatchObject({
       code: "round_not_found",
     });

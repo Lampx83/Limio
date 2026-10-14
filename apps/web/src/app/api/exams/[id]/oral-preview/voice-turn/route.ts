@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import {
   AiTutorError,
   openAiChatCompute,
-  openAiEmbedCompute,
+  getEmbedCompute,
   openAiSpeechToText,
   isTtsProviderError,
   OpenAiVoiceError,
@@ -109,7 +109,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       forceEnd,
       topicId,
       computeChat: openAiChatCompute(openai),
-      computeEmbed: openAiEmbedCompute(openai),
+      computeEmbed: getEmbedCompute(),
     });
   } catch (e) {
     if (isOpenaiOverloaded(e)) return openaiBusyResponse();

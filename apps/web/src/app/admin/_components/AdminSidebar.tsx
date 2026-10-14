@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSidebarNav } from "@/components/useSidebarNav";
 import {
   Users,
   Network,
@@ -96,35 +96,20 @@ const GROUPS: Group[] = [
 const LS_KEY = "fbm-admin-menu-collapsed";
 
 export default function AdminSidebar() {
-  const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const { pathname, collapsed, toggle, pendingHref, linkProps } = useSidebarNav(LS_KEY);
   const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) setCollapsed(JSON.parse(raw));
-    } catch {}
-  }, []);
+  // Mục vừa bấm coi như đang active ngay, không đợi URL đổi.
+  const current = pendingHref ?? pathname;
+  const closeDrawer = () => setMobileOpen(false);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
 
-  const toggle = (id: string) => {
-    setCollapsed((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      try {
-        localStorage.setItem(LS_KEY, JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  };
-
   const isActive = (href?: string) => {
     if (!href) return false;
-    if (href === "/admin/dashboard") return pathname === href;
-    return pathname === href || pathname.startsWith(href + "/");
+    if (href === "/admin/dashboard") return current === href;
+    return current === href || current.startsWith(href + "/");
   };
 
   const nav = (
@@ -133,6 +118,7 @@ export default function AdminSidebar() {
       <div className="mb-3 px-4">
         <Link
           href="/admin/dashboard"
+          {...linkProps("/admin/dashboard", closeDrawer)}
           aria-current={isActive("/admin/dashboard") ? "page" : undefined}
           className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-colors ${
             isActive("/admin/dashboard")
@@ -207,12 +193,13 @@ export default function AdminSidebar() {
                     <li key={it.label}>
                       <Link
                         href={it.href}
+                        {...linkProps(it.href, closeDrawer)}
+                        aria-current={active ? "page" : undefined}
                         className={`${baseRow} ${
                           active
                             ? "bg-pink-50 font-semibold text-pink-700 shadow-sm dark:bg-pink-950/40 dark:text-pink-200"
                             : "text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
                         }`}
-                        prefetch={false}
                       >
                         {active && (
                           <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-pink-500" />

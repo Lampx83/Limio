@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Circle, Info, Trash2 } from "lucide-react";
+import { CheckCircle2, Circle, Info } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
 import type { ReadinessItem } from "@/lib/roundReadiness";
+import DeleteRoundButton from "./DeleteRoundButton";
 
 type RoundStatus = "draft" | "open" | "closed" | "archived";
 
@@ -87,35 +88,6 @@ export default function OverviewPanel({
         return;
       }
       router.refresh();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const onDeleteRound = async () => {
-    if (
-      !window.confirm(
-        "Xoá đợt thi này? Không thể hoàn tác. Nếu đợt còn ca thi, sẽ bị từ chối.",
-      )
-    )
-      return;
-    setBusy(true);
-    setErr(null);
-    try {
-      const r = await fetch(`/api/exam-rounds/${round.id}`, {
-        method: "DELETE",
-      });
-      const j = (await r.json().catch(() => null)) as {
-        error?: string;
-        details?: { reason?: string };
-      } | null;
-      if (!r.ok) {
-        if (j?.details?.reason === "round_has_sessions")
-          setErr("Đợt thi còn ca thi — xoá hết ca trước.");
-        else setErr(j?.error ?? `HTTP ${r.status}`);
-        return;
-      }
-      window.location.href = "/instructor/exam-rounds";
     } finally {
       setBusy(false);
     }
@@ -229,15 +201,10 @@ export default function OverviewPanel({
             Vùng nguy hiểm
           </h2>
           <p className="mt-1 text-xs text-red-700">
-            Xoá đợt thi sẽ gỡ luôn cả trưởng đợt. Chỉ xoá được khi không còn ca thi.
+            Xoá đợt thi sẽ xoá luôn các ca chưa có bài làm và gỡ trưởng đợt. Nếu đã có bài làm thì
+            không xoá được — khi đó có thể lưu trữ đợt.
           </p>
-          <button
-            onClick={onDeleteRound}
-            disabled={busy}
-            className="mt-3 inline-flex items-center gap-1.5 rounded border border-red-400 bg-white px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
-          >
-            <Trash2 size={14} /> Xoá đợt thi
-          </button>
+          <DeleteRoundButton roundId={round.id} roundTitle={round.title} />
         </section>
       )}
 

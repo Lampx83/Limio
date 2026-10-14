@@ -1,0 +1,1269 @@
+{
+  "course": {
+    "title": "NCKH 401 · Xử lý & Phân tích dữ liệu nghiên cứu",
+    "slug": "xu-ly-du-lieu-nghien-cuu",
+    "description": "Khoá thực hành dùng chung cho học viên cao học và nghiên cứu sinh — khác các khoá kỹ năng nghiên cứu khác ở chỗ đây không dạy lại 'khi nào dùng phương pháp nào' (đã có ở khoá Phương pháp nghiên cứu và NCKH nâng cao), mà đưa tay vào thực hành trên một bộ dữ liệu khảo sát mẫu có lỗi thật, xuyên suốt cả khoá: làm sạch dữ liệu bằng công thức cụ thể (Excel/R); đọc đúng bảng kết quả thống kê mô tả và kiểm định giả thuyết; đọc đúng bảng EFA và độ tin cậy; mã hoá dữ liệu định tính và tính độ tin cậy giữa người mã hoá bằng tay; và trực quan hoá dữ liệu đúng cách kèm đóng gói để tái lập kết quả. Mỗi bài đưa ra số liệu, công thức và output thật để người học tự tay tính hoặc đọc, không chỉ đọc lý thuyết. Mỗi bài kết bằng một bài kiểm tra ngắn, phương án sai gắn mã lỗi tư duy để phản hồi chỉ đúng chỗ hiểu nhầm.",
+    "language": "vi",
+    "level": "intermediate",
+    "category": "Nghiên cứu khoa học",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "xldl.duplicate-not-checked",
+      "name": "Không kiểm tra dòng trùng lặp trước khi phân tích",
+      "description": "Không kiểm ID trùng lặp trước khi tính điểm trung bình construct hoặc chạy kiểm định. Dòng trùng lặp không bị phần mềm thống kê tự động cảnh báo, và khiến một người có trọng số gấp đôi trong mọi phép tính sau đó."
+    },
+    {
+      "code": "xldl.out-of-range-not-caught",
+      "name": "Không kiểm giá trị ngoài khoảng hợp lệ trước khi phân tích",
+      "description": "Để nguyên giá trị ngoài khoảng hợp lệ của thang đo (ví dụ nhập 7 cho thang Likert 1-5) chạy thẳng vào phân tích. Đây luôn là lỗi nhập liệu cần xử lý, không phải dữ liệu thật cần giữ nguyên."
+    },
+    {
+      "code": "xldl.straight-lining-ignored",
+      "name": "Không phát hiện câu trả lời straight-lining",
+      "description": "Không kiểm độ lệch chuẩn giữa các item của cùng một người trong một construct, nên không phát hiện được người chọn cùng một giá trị cho mọi câu — dấu hiệu không đọc kỹ câu hỏi, cần được xem xét trước khi tính vào phân tích."
+    },
+    {
+      "code": "xldl.reverse-code-formula-wrong",
+      "name": "Dùng sai công thức đảo hướng item",
+      "description": "Dùng công thức đảo hướng sai (ví dụ chỉ lấy giá trị lớn nhất trừ giá trị gốc, bỏ qua giá trị nhỏ nhất) hoặc quên đảo hướng hoàn toàn trước khi tính điểm construct. Công thức đúng là (giá trị lớn nhất + giá trị nhỏ nhất) − giá trị gốc."
+    },
+    {
+      "code": "xldl.mean-without-sd",
+      "name": "Báo cáo Mean mà không kèm SD hoặc N",
+      "description": "Báo cáo giá trị trung bình mà không kèm độ lệch chuẩn hoặc cỡ mẫu. Người đọc không đánh giá được độ phân tán của dữ liệu quanh giá trị trung bình hay độ tin cậy của số liệu dựa trên cỡ mẫu."
+    },
+    {
+      "code": "xldl.ignore-levenes-test",
+      "name": "Đọc bảng t-test mà không kiểm Levene's test trước",
+      "description": "Đọc thẳng dòng kết quả t-test (thường là dòng đầu tiên) mà không kiểm Levene's test để biết chọn dòng 'Equal variances assumed' hay 'not assumed'. Hai dòng cho kết quả t, df và Sig. khác nhau, chọn sai dòng có thể đổi kết luận."
+    },
+    {
+      "code": "xldl.anova-significant-no-posthoc",
+      "name": "Kết luận nhóm nào khác nhóm nào chỉ từ ANOVA, không chạy post-hoc",
+      "description": "Thấy ANOVA có ý nghĩa thống kê (p < 0.05) rồi kết luận ngay nhóm nào cao hơn/thấp hơn nhóm nào mà không chạy kiểm định post-hoc. ANOVA chỉ cho biết có ít nhất một cặp khác nhau, không cho biết cặp nào."
+    },
+    {
+      "code": "xldl.chisquare-small-expected-count",
+      "name": "Tin vào Pearson Chi-Square dù expected count quá nhỏ",
+      "description": "Bỏ qua cảnh báo về expected count dưới 5 ở nhiều ô trong bảng chéo và vẫn báo cáo kết quả Pearson Chi-Square như bình thường. Khi vi phạm điều kiện này, cần chuyển sang Fisher's Exact Test."
+    },
+    {
+      "code": "xldl.efa-skip-kmo-bartlett",
+      "name": "Đọc factor loading mà không kiểm KMO/Bartlett's trước",
+      "description": "Chạy EFA và đọc thẳng ma trận factor loading mà không kiểm KMO và Bartlett's Test trước để xác nhận dữ liệu đủ tương quan và phù hợp cho phân tích nhân tố có ý nghĩa."
+    },
+    {
+      "code": "xldl.wrong-factor-count",
+      "name": "Chọn sai số lượng nhân tố cần trích xuất",
+      "description": "Không áp dụng quy tắc Kaiser (eigenvalue > 1) hoặc bỏ qua đối chiếu với lý thuyết nền khi quyết định số nhân tố trích xuất — giữ hoặc bỏ nhân tố tuỳ tiện, làm sai lệch toàn bộ ma trận loading đọc sau đó."
+    },
+    {
+      "code": "xldl.keep-crossloading-item",
+      "name": "Giữ nguyên item cross-loading trong cấu trúc construct",
+      "description": "Giữ một item load cao ở nhiều nhân tố (cross-loading) trong cấu trúc construct mà không xem xét loại bỏ hoặc viết lại. Item cross-loading không đo rõ một khái niệm duy nhất và làm mờ cấu trúc đo lường."
+    },
+    {
+      "code": "xldl.alpha-not-recalculated",
+      "name": "Không tính lại Cronbach's Alpha sau khi điều chỉnh cấu trúc theo EFA",
+      "description": "Báo cáo Cronbach's Alpha tính trên bộ item ban đầu (trước khi loại item có vấn đề theo EFA) mà không tính lại cho cấu trúc construct đã điều chỉnh. Con số Alpha ban đầu không còn phản ánh đúng cấu trúc sẽ thực sự dùng trong phân tích."
+    },
+    {
+      "code": "xldl.code-too-abstract-early",
+      "name": "Trừu tượng hóa mã ngay từ open coding",
+      "description": "Gán nhãn trừu tượng, mang tính lý thuyết ngay từ bước open coding, thay vì mô tả cụ thể bám sát điều người tham gia thực sự nói. Trừu tượng hóa quá sớm làm mất chi tiết và sắc thái của dữ liệu gốc, không lấy lại được sau đó."
+    },
+    {
+      "code": "xldl.agreement-percent-not-kappa",
+      "name": "Chỉ báo cáo tỉ lệ đồng thuận thô, không tính Cohen's Kappa",
+      "description": "Báo cáo tỉ lệ phần trăm hai người mã hóa chọn giống nhau mà không tính thêm Cohen's Kappa. Tỉ lệ đồng thuận thô không trừ đi phần đồng thuận có thể xảy ra do ngẫu nhiên, nên có thể bị thổi phồng so với mức đồng thuận thật."
+    },
+    {
+      "code": "xldl.kappa-low-ignored",
+      "name": "Bỏ qua Kappa thấp và tiếp tục mã hóa như không có gì xảy ra",
+      "description": "Ghi nhận một giá trị Kappa thấp (dưới 0.4) vào báo cáo rồi tiếp tục mã hóa phần còn lại của dữ liệu mà không thảo luận lại định nghĩa mã. Kappa thấp là dấu hiệu cần hai người mã hóa làm rõ định nghĩa trước khi tiếp tục."
+    },
+    {
+      "code": "xldl.pie-chart-too-many-slices",
+      "name": "Dùng biểu đồ tròn cho quá nhiều phần",
+      "description": "Dùng biểu đồ tròn để thể hiện tỉ lệ khi có nhiều hơn 5-6 phần (ví dụ 9-10 nhóm). Mắt người không phân biệt tốt góc của các hình quạt gần bằng nhau — biểu đồ cột dễ so sánh hơn nhiều khi có nhiều nhóm."
+    },
+    {
+      "code": "xldl.truncated-yaxis-bar-chart",
+      "name": "Trục y bị cắt trên biểu đồ cột",
+      "description": "Vẽ biểu đồ cột với trục y không bắt đầu từ 0, làm sự khác biệt nhỏ giữa các nhóm trông lớn hơn nhiều so với thực tế. Biểu đồ cột nên luôn bắt đầu trục y từ 0."
+    },
+    {
+      "code": "xldl.dual-axis-misleading",
+      "name": "Dùng biểu đồ hai trục y gây hiểu sai về tương quan",
+      "description": "Vẽ hai đường với hai thang đo khác nhau trên cùng một biểu đồ, chọn tỉ lệ hai trục sao cho hai đường trông giống hình dạng nhau. Điều này dễ khiến người xem ngộ nhận có mối tương quan mạnh trong khi mối tương quan thật có thể rất yếu."
+    },
+    {
+      "code": "xldl.no-readme-reproducibility",
+      "name": "Không lưu script và codebook để tái lập kết quả",
+      "description": "Chỉ lưu lại file dữ liệu cuối cùng và bảng kết quả, không lưu script phân tích hay codebook giải thích từng biến. Không ai, kể cả chính người phân tích sau này, tái lập lại được chính xác quy trình đã làm."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "xldl.duplicate-not-checked",
+      "body": "Trước khi tính bất kỳ điểm trung bình hay kiểm định nào, chạy một bước kiểm ID trùng lặp (COUNTIF hoặc duplicated()). Xoá bớt dòng trùng khi xác nhận đó là lỗi nhập liệu, không phải hai người khác nhau vô tình cùng mã.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.out-of-range-not-caught",
+      "body": "Chạy một bước kiểm khoảng giá trị hợp lệ cho mỗi biến (min/max của thang đo) trước khi phân tích. Giá trị ngoài khoảng luôn cần xử lý — sửa lại nếu suy ra được giá trị đúng, hoặc đặt thành thiếu.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.straight-lining-ignored",
+      "body": "Tính độ lệch chuẩn giữa các item trong cùng construct cho từng người. SD = 0 hoặc rất thấp là dấu hiệu cần xem xét kỹ, đặc biệt nếu xảy ra trên toàn bộ các construct của khảo sát.",
+      "priority": 9
+    },
+    {
+      "misconception": "xldl.reverse-code-formula-wrong",
+      "body": "Dùng đúng công thức (giá trị lớn nhất + giá trị nhỏ nhất) − giá trị gốc. Kiểm bằng tay 1-2 dòng đầu: sau khi đảo, item đã đảo và các item cùng construct nên có xu hướng cùng chiều với nhau.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.mean-without-sd",
+      "body": "Luôn báo cáo Mean kèm SD và N trong cùng một câu: 'Mean = X (SD = Y, N = Z)'. Không để một con số Mean đứng riêng không có ngữ cảnh.",
+      "priority": 9
+    },
+    {
+      "misconception": "xldl.ignore-levenes-test",
+      "body": "Trước khi đọc t/df/Sig., nhìn sang cột Sig. của Levene's test. Sig. > 0.05 thì đọc dòng 'Equal variances assumed'; Sig. ≤ 0.05 thì đọc dòng 'not assumed'.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.anova-significant-no-posthoc",
+      "body": "Sau khi thấy ANOVA có ý nghĩa, luôn chạy thêm post-hoc test (Tukey HSD hoặc Games-Howell) trước khi viết bất kỳ câu nào về việc nhóm nào khác nhóm nào.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.chisquare-small-expected-count",
+      "body": "Đọc dòng cảnh báo dưới bảng Chi-Square Tests trước khi tin vào Sig. Nếu có cảnh báo về expected count thấp, chuyển sang đọc kết quả Fisher's Exact Test thay vì Pearson Chi-Square.",
+      "priority": 9
+    },
+    {
+      "misconception": "xldl.efa-skip-kmo-bartlett",
+      "body": "Trước khi mở bảng factor loading, luôn nhìn bảng KMO and Bartlett's Test. KMO dưới 0.6 hoặc Bartlett's Sig. ≥ 0.05 là dấu hiệu dừng lại, không nên tin vào loading.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.wrong-factor-count",
+      "body": "Nhìn bảng Total Variance Explained, giữ lại nhân tố có eigenvalue > 1 (quy tắc Kaiser). Khi eigenvalue của nhân tố kế tiếp gần sát 1, đối chiếu thêm với scree plot và số construct dự kiến theo lý thuyết trước khi quyết định.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.keep-crossloading-item",
+      "body": "Với item cross-loading, xem lại nội dung câu hỏi — có đang hỏi lẫn hai khái niệm không? Cân nhắc loại item hoặc viết lại và thu thập lại dữ liệu thí điểm trước khi dùng cho nghiên cứu chính thức.",
+      "priority": 9
+    },
+    {
+      "misconception": "xldl.alpha-not-recalculated",
+      "body": "Sau mỗi lần loại hoặc thay đổi item dựa trên EFA, chạy lại Cronbach's Alpha ngay cho cấu trúc mới. Con số Alpha báo cáo trong bài phải khớp với đúng danh sách item cuối cùng sẽ dùng.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.code-too-abstract-early",
+      "body": "Khi gán nhãn, tự hỏi: nhãn này có bám sát đúng từ ngữ và ý người tham gia dùng không, hay đã thêm diễn giải của riêng bạn? Giữ mã mô tả cụ thể ở vòng đầu, để việc trừu tượng hóa diễn ra có chủ đích ở bước axial coding.",
+      "priority": 9
+    },
+    {
+      "misconception": "xldl.agreement-percent-not-kappa",
+      "body": "Luôn tính thêm Cohen's Kappa bên cạnh tỉ lệ đồng thuận thô. Nếu một nhóm chiếm đa số trong dữ liệu, tỉ lệ đồng thuận thô có thể cao giả tạo — Kappa mới cho biết mức đồng thuận thật sau khi trừ phần ngẫu nhiên.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.kappa-low-ignored",
+      "body": "Khi Kappa dưới 0.4, dừng lại và cùng người mã hóa thứ hai xem lại từng đoạn hai người mã khác nhau, thống nhất lại ranh giới định nghĩa của mỗi mã, trước khi mã hóa tiếp.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.pie-chart-too-many-slices",
+      "body": "Với hơn 5-6 phần, đổi sang biểu đồ cột và sắp xếp theo giá trị giảm dần — dễ so sánh hơn nhiều so với các hình quạt gần bằng nhau trên biểu đồ tròn.",
+      "priority": 9
+    },
+    {
+      "misconception": "xldl.truncated-yaxis-bar-chart",
+      "body": "Đặt lại trục y bắt đầu từ 0 cho mọi biểu đồ cột. Nếu khác biệt trông quá nhỏ khi vẽ đủ trục, đó là phản ánh đúng thực tế, không phải lý do để cắt trục.",
+      "priority": 10
+    },
+    {
+      "misconception": "xldl.dual-axis-misleading",
+      "body": "Tách thành hai biểu đồ riêng đặt cạnh nhau, hoặc chuẩn hóa hai biến về cùng thang (z-score) trước khi vẽ chung một trục — tránh để phần mềm tự chọn tỉ lệ hai trục y khác nhau.",
+      "priority": 9
+    },
+    {
+      "misconception": "xldl.no-readme-reproducibility",
+      "body": "Lưu đủ ba phần cùng nhau: dữ liệu (thô và đã làm sạch), script/cú pháp đã chạy, và một codebook ngắn giải thích từng biến — làm ngay khi phân tích, không để dồn lại viết sau.",
+      "priority": 10
+    }
+  ],
+  "modules": [
+    {
+      "title": "Xử lý & Phân tích dữ liệu nghiên cứu",
+      "description": "Thực hành công cụ trên một bộ dữ liệu khảo sát mẫu có lỗi thật, xuyên suốt cả khoá: (1) làm sạch dữ liệu, (2) thống kê mô tả và kiểm định giả thuyết, (3) EFA và độ tin cậy, (4) mã hoá dữ liệu định tính và độ tin cậy giữa người mã hoá, (5) trực quan hoá dữ liệu và đóng gói để tái lập kết quả.",
+      "lessons": [
+        {
+          "title": "Bài 1 · Làm sạch một bộ dữ liệu khảo sát thật",
+          "durationMin": 90,
+          "description": "Tự tay tìm và sửa 5 loại lỗi trong một bộ dữ liệu khảo sát mẫu: giá trị thiếu, dòng trùng lặp, giá trị ngoài khoảng hợp lệ, câu trả lời straight-lining, và item chưa đảo hướng — bằng công thức Excel và mã R cụ thể, không chỉ đọc lý thuyết.",
+          "objectives": [
+            "Phát hiện được giá trị thiếu và dòng trùng lặp trong một bộ dữ liệu bằng công thức Excel hoặc mã R cụ thể",
+            "Phát hiện được giá trị ngoài khoảng hợp lệ và câu trả lời straight-lining bằng ngưỡng và công thức cụ thể",
+            "Đảo hướng đúng công thức cho item đảo hướng trên thang Likert, và tính điểm construct sau khi đã đảo",
+            "Tạo ra được một bộ dữ liệu đã làm sạch hoàn chỉnh từ một bộ dữ liệu thô có đủ 5 loại lỗi thường gặp"
+          ],
+          "summary": [
+            "Một bộ dữ liệu khảo sát thô thường có ít nhất 5 loại lỗi cần tìm bằng công thức cụ thể: giá trị thiếu, dòng trùng lặp, giá trị ngoài khoảng hợp lệ, câu trả lời straight-lining, và item chưa đảo hướng — không loại nào tự lộ ra khi chỉ nhìn qua bảng dữ liệu.",
+            "Dòng trùng lặp không bị phần mềm thống kê tự động cảnh báo — nó âm thầm khiến một người trả lời có trọng số gấp đôi trong mọi phép tính trung bình và kiểm định sau đó.",
+            "Công thức đảo hướng đúng cho thang Likert là (giá trị lớn nhất + giá trị nhỏ nhất) − giá trị gốc — với thang 1-5 là 6 − giá trị, không phải 5 − giá trị.",
+            "Straight-lining (chọn cùng một giá trị cho mọi câu hỏi trong một construct) là dấu hiệu người trả lời không đọc kỹ câu hỏi — phát hiện bằng độ lệch chuẩn giữa các item của cùng một người bằng 0 hoặc rất thấp."
+          ],
+          "splitSections": true,
+          "body": "\nCác khoá trước đã nói *vì sao* cần làm sạch dữ liệu trước khi phân tích. Bài này đưa một bộ dữ liệu thô thật — 11 dòng, đủ nhỏ để tự tay kiểm — và đi qua từng công thức cụ thể để tìm và sửa lỗi: trước hết nhận diện đủ 5 loại lỗi có mặt trong bộ dữ liệu mẫu, sau đó lần lượt phát hiện giá trị thiếu và dòng trùng lặp, rồi tới giá trị ngoài khoảng hợp lệ và straight-lining, và cuối cùng là đảo hướng item để tính đúng điểm construct. Bài kết bằng phần luyện tập tự tay làm sạch trọn bộ dữ liệu và tài liệu tham khảo.\n\n## Bộ dữ liệu thô và 5 loại lỗi cần tìm\n\nBộ dữ liệu mẫu: khảo sát 10 người về hài lòng (Q1, Q2 — Q2 là item **đảo hướng**) và nhận thức hữu ích (Q3), thang Likert 1-5.\n\n| ID | Q1 (Hài lòng) | Q2 (Hài lòng, đảo hướng) | Q3 (Nhận thức hữu ích) | Tuổi | Giới tính |\n|---|---|---|---|---|---|\n| 1 | 4 | 2 | 4 | 20 | Nữ |\n| 2 | 3 | *(trống)* | 3 | 21 | Nam |\n| 2 | 3 | *(trống)* | 3 | 21 | Nam |\n| 3 | 5 | 1 | 5 | 22 | Nữ |\n| 4 | 2 | 4 | 2 | 19 | Nam |\n| 5 | **7** | 2 | 4 | 23 | Nữ |\n| 6 | 3 | 3 | 3 | 20 | Nam |\n| 7 | 4 | 1 | 5 | **999** | Nữ |\n| 8 | 3 | 3 | 3 | 21 | Nam |\n| 9 | 5 | 2 | 4 | 22 | Nữ |\n| 10 | 4 | 2 | 4 | 20 | Nam |\n\n> [!ghi-nho] Bảng trên chứa đủ 5 loại lỗi cần tìm trước khi phân tích: **giá trị thiếu** (Q2 của ID2), **dòng trùng lặp** (ID2 xuất hiện hai lần với cùng giá trị), **giá trị ngoài khoảng hợp lệ** (Q1 của ID5 = 7, ngoài thang 1-5; Tuổi của ID7 = 999), **straight-lining** (ID8 chọn đúng giá trị 3 cho cả ba câu — nghi ngờ không đọc kỹ), và **item chưa đảo hướng** (Q2 là item đảo hướng, chưa được xử lý).\n\n## Phát hiện giá trị thiếu và dòng trùng lặp\n\n**Giá trị thiếu** — đếm số ô trống trong mỗi cột:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Excel:  =COUNTBLANK(C2:C11)          → đếm số ô trống trong cột Q2\nR:      sum(is.na(df$Q2))            → 2 (vì ID2 xuất hiện hai lần, cả hai đều thiếu Q2)</pre></div>\n```\n\n**Dòng trùng lặp** — tìm ID xuất hiện nhiều hơn một lần:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Excel:  =COUNTIF($A$2:$A$11, A2) &gt; 1  → điền công thức này ở cột phụ, kéo xuống, lọc giá trị TRUE\nR:      df[duplicated(df$ID) | duplicated(df$ID, fromLast = TRUE), ]   → in ra cả hai dòng của ID2</pre></div>\n```\n\n> [!canh-bao] Dòng trùng lặp không bị phần mềm thống kê tự động cảnh báo khi chạy phân tích — nó âm thầm cho người đó trọng số gấp đôi trong mọi điểm trung bình và kiểm định sau này. Với bộ dữ liệu 10 người, ID2 xuất hiện hai lần nghĩa là ý kiến của một người chiếm 2/11 tổng trọng số thay vì 1/10 đúng ra phải có — **luôn kiểm trùng lặp theo ID trước khi làm bất cứ điều gì khác**, xoá bớt một trong hai dòng trùng khi xác nhận đó là lỗi nhập liệu (không phải hai người khác nhau vô tình cùng ID).\n\n## Phát hiện giá trị ngoài khoảng và straight-lining\n\n**Giá trị ngoài khoảng hợp lệ** — với thang Likert 1-5, mọi giá trị ngoài [1, 5] là lỗi nhập liệu:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Excel:  =OR(B2&lt;1, B2&gt;5)              → TRUE nếu Q1 ngoài khoảng 1-5\nR:      df$ID[df$Q1 &lt; 1 | df$Q1 &gt; 5] → 5 (ID5 có Q1 = 7)</pre></div>\n```\n\nVới biến liên tục như Tuổi, ngưỡng hợp lệ dựa trên bối cảnh thực tế (ví dụ 18-60 cho khảo sát học viên/giảng viên):\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">R:      df$ID[df$Tuoi &gt; 60]          → 7 (ID7 có Tuổi = 999 — rõ ràng là mã lỗi/placeholder, không phải tuổi thật)</pre></div>\n```\n\nKhi không có ngưỡng hợp lý rõ ràng theo bối cảnh (ví dụ biến ít quen thuộc, hoặc cỡ mẫu lớn khó rà bằng mắt), dùng quy tắc thống kê **IQR (khoảng tứ phân vị)**: giá trị ngoài [Q1 − 1.5×IQR, Q3 + 1.5×IQR] được coi là outlier.\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">R:      Q1 &lt;- quantile(df$Tuoi, .25); Q3 &lt;- quantile(df$Tuoi, .75)\n        IQR &lt;- Q3 - Q1\n        df$ID[df$Tuoi &lt; Q1 - 1.5*IQR | df$Tuoi &gt; Q3 + 1.5*IQR]</pre></div>\n```\n\n> [!meo] Ngưỡng theo bối cảnh (ví dụ 18-60 tuổi cho khảo sát học viên/giảng viên) luôn ưu tiên hơn IQR khi đã có sẵn — IQR chỉ là phương án dự phòng khi không có ngưỡng hợp lý rõ ràng. Dùng IQR một cách máy móc có thể đánh dấu nhầm một giá trị hợp lệ nhưng hiếm gặp (ví dụ một học viên 55 tuổi trong lớp đa số 20-25 tuổi) thành outlier — luôn xem lại bối cảnh trước khi loại.\n\n**Straight-lining** — tính độ lệch chuẩn giữa các item trong cùng một construct, cho từng người:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">R:      apply(df[, c(\"Q1\",\"Q2_rev\",\"Q3\")], 1, sd, na.rm = TRUE)\n        → ID8 có SD = 0 (chọn đúng 3 cho cả ba câu) — dấu hiệu straight-lining</pre></div>\n```\n\n> [!canh-bao] SD = 0 hoặc rất thấp giữa các item của cùng một người là dấu hiệu straight-lining — không có nghĩa chắc chắn người đó trả lời gian dối, nhưng cần xem xét kỹ (ví dụ so sánh thời gian hoàn thành khảo sát của người đó nếu có, hoặc quyết định loại nếu SD = 0 trên toàn bộ các construct, không chỉ một construct).\n\n## Đảo hướng item và tính điểm construct đúng cách\n\n> [!ghi-nho] Công thức đảo hướng đúng cho thang Likert: **(giá trị lớn nhất + giá trị nhỏ nhất) − giá trị gốc**. Với thang 1-5 (lớn nhất = 5, nhỏ nhất = 1): công thức là **6 − giá trị gốc**, không phải 5 − giá trị gốc (lỗi rất dễ mắc — 5 là giá trị lớn nhất, nhưng công thức cần cả lớn nhất **và** nhỏ nhất).\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">R:      df$Q2_rev &lt;- 6 - df$Q2        → ID1: Q2 = 2 → Q2_rev = 4 (khớp hướng với Q1 = 4)\nExcel:  =6-C2                         → áp dụng cho cả cột Q2</pre></div>\n```\n\n> [!canh-bao] Dùng sai công thức (ví dụ 5 − giá trị, quên cộng giá trị nhỏ nhất) cho ra kết quả đảo hướng sai lệch một cách có hệ thống — không phải lỗi ngẫu nhiên mà lỗi này làm sai **toàn bộ** cột đã đảo, làm sai điểm construct và mọi kiểm định dùng construct đó sau này. Luôn kiểm bằng tay 1-2 dòng đầu: nếu Q1 và Q2_rev sau khi đảo có xu hướng cùng chiều nhau (người hài lòng cao ở Q1 cũng có Q2_rev cao), công thức đã đúng.\n\nSau khi đảo hướng Q2, điểm construct \"Hài lòng\" của mỗi người là trung bình của Q1 và Q2_rev — **không phải trung bình của Q1 và Q2 gốc**.\n\n:::mau Ví dụ minh hoạ nhanh (bộ số liệu khác, không phải bảng dùng để luyện tập ở mục dưới)\nBa người trả lời thang Likert 1-5 cho Q1 (Hài lòng) và Q2 (Hài lòng, đảo hướng):\n\n| Người | Q1 | Q2 | Q2_rev = 6 − Q2 | Hài lòng = (Q1 + Q2_rev)/2 |\n|---|---|---|---|---|\n| X | 5 | 1 | 5 | 5.0 |\n| Y | 2 | 5 | 1 | 1.5 |\n| Z | 4 | 4 | 2 | 3.0 |\n\nNgười X và Y nhất quán: Q1 cao đi cùng Q2_rev cao (X), Q1 thấp đi cùng Q2_rev thấp (Y) — đúng như kỳ vọng khi cả hai item đo cùng một khái niệm. Người Z lại **mâu thuẫn nội bộ**: Q1 = 4 (hài lòng cao) nhưng sau khi đảo hướng, Q2_rev chỉ còn 2 (ngụ ý hài lòng thấp) — hai item của cùng một construct đang \"nói ngược nhau\". Đây không phải straight-lining (SD giữa hai item của Z không bằng 0), nhưng vẫn là dấu hiệu đáng ghi chú: có thể Z hiểu nhầm chiều của câu hỏi đảo hướng, hoặc thực sự có cảm nhận mâu thuẫn — điểm construct 3.0 của Z che giấu sự mâu thuẫn này chứ không phản ánh một cảm nhận \"trung bình\" thực sự.\n:::\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nDùng bảng dữ liệu thô ở mục 1, tự tay (hoặc bằng Excel/R) thực hiện đủ 5 bước: (1) đếm giá trị thiếu, (2) xoá dòng trùng lặp, (3) đánh dấu giá trị ngoài khoảng (Q1 của ID5, Tuổi của ID7), (4) đánh dấu straight-lining (ID8), (5) đảo hướng Q2 và tính điểm construct Hài lòng cho mỗi người còn lại sau khi xử lý các lỗi trên.\n\n### Nhóm 3-4 người (25 phút)\n\nSo sánh bộ dữ liệu đã làm sạch của nhau. Có ai xử lý ID5 (Q1=7) hoặc ID7 (Tuổi=999) khác cách của bạn không (sửa lại vs loại bỏ dòng)? Thảo luận: khi nào nên sửa lại một giá trị lỗi rõ ràng (nếu có cách suy ra giá trị đúng) và khi nào nên loại bỏ cả dòng.\n\n### Bài tập về nhà (60 phút)\n\nViết đoạn mô tả quy trình làm sạch dữ liệu (200-250 từ) dùng cho phần Phương pháp của bài báo/luận văn, kèm bảng tóm tắt số liệu đã xử lý (bao nhiêu dòng thiếu, trùng, ngoài khoảng, straight-lining, đã loại/sửa bao nhiêu).\n\n:::mau Mẫu nộp bài tập về nhà\n**Đoạn mô tả quy trình làm sạch dữ liệu (200-250 từ):** …\n\n**Bảng tóm tắt xử lý**\n\n| Loại lỗi | Số trường hợp phát hiện | Cách xử lý |\n|---|---|---|\n| Giá trị thiếu | … | … |\n| Dòng trùng lặp | … | … |\n| Ngoài khoảng hợp lệ | … | … |\n| Straight-lining | … | … |\n| Item đảo hướng | … | … |\n\n**Điểm construct Hài lòng sau khi làm sạch (cho từng ID còn lại):** …\n:::\n\n### Nguồn tham khảo\n\n- Van den Broeck, J., Cunningham, S. A., Eeckels, R., & Herbst, K. (2005). Data cleaning: Detecting, diagnosing, and editing data abnormalities. *PLOS Medicine*, 2(10), e267.\n- Meade, A. W., & Craig, S. B. (2012). Identifying careless responses in survey data. *Psychological Methods*, 17(3), 437-455.\n- Wickham, H., & Grolemund, G. (2017). *R for Data Science.* O'Reilly Media. — chương về làm sạch dữ liệu với dplyr.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "xldl1-phat-hien-trung-lap",
+                "type": "mcq",
+                "prompt": "Trong bộ dữ liệu mẫu, ID nào xuất hiện dưới dạng dòng trùng lặp?",
+                "explanation": "ID2 xuất hiện hai lần với cùng giá trị Q1, Q3, Tuổi, Giới tính — đây là dòng trùng lặp cần xoá bớt một dòng trước khi phân tích, nếu không người này sẽ có trọng số gấp đôi.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "ID2",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có dòng nào trùng lặp trong bộ dữ liệu này",
+                    "isCorrect": false,
+                    "misconception": "xldl.duplicate-not-checked"
+                  },
+                  {
+                    "label": "ID8, vì có giá trị giống nhau ở cả ba câu",
+                    "isCorrect": false,
+                    "misconception": "xldl.duplicate-not-checked"
+                  },
+                  {
+                    "label": "ID5, vì có giá trị bất thường",
+                    "isCorrect": false,
+                    "misconception": "xldl.duplicate-not-checked"
+                  }
+                ]
+              },
+              {
+                "key": "xldl1-cong-thuc-dao-huong",
+                "type": "mcq",
+                "prompt": "Với thang Likert 1-5, công thức đúng để đảo hướng một item là gì?",
+                "explanation": "Công thức đảo hướng đúng là (giá trị lớn nhất + giá trị nhỏ nhất) − giá trị gốc. Với thang 1-5, đó là (5+1) − giá trị = 6 − giá trị, không phải chỉ 5 − giá trị.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "6 − giá trị gốc (vì (5 + 1) − giá trị gốc)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "5 − giá trị gốc",
+                    "isCorrect": false,
+                    "misconception": "xldl.reverse-code-formula-wrong"
+                  },
+                  {
+                    "label": "Giá trị gốc × (-1)",
+                    "isCorrect": false,
+                    "misconception": "xldl.reverse-code-formula-wrong"
+                  },
+                  {
+                    "label": "Không cần công thức, chỉ cần đổi thứ tự các câu trả lời trong bảng hỏi lần sau",
+                    "isCorrect": false,
+                    "misconception": "xldl.reverse-code-formula-wrong"
+                  }
+                ]
+              },
+              {
+                "key": "xldl1-gia-tri-ngoai-khoang",
+                "type": "mcq",
+                "prompt": "ID5 có Q1 = 7 trên thang Likert 1-5. Cách xử lý nào đúng trước khi phân tích?",
+                "explanation": "Giá trị 7 ngoài khoảng hợp lệ [1,5] là lỗi nhập liệu rõ ràng — cần xử lý (sửa lại nếu suy ra được giá trị đúng, hoặc đặt thành thiếu/loại dòng) trước khi tính vào bất kỳ phân tích nào, không được giữ nguyên.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Xử lý như lỗi nhập liệu — sửa lại nếu suy ra được giá trị đúng, hoặc đặt thành thiếu/loại dòng, không giữ nguyên giá trị 7",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ nguyên giá trị 7 vì đó là dữ liệu thật do người tham gia nhập",
+                    "isCorrect": false,
+                    "misconception": "xldl.out-of-range-not-caught"
+                  },
+                  {
+                    "label": "Đổi thang đo từ 1-5 thành 1-7 để giá trị này hợp lệ",
+                    "isCorrect": false,
+                    "misconception": "xldl.out-of-range-not-caught"
+                  },
+                  {
+                    "label": "Không cần làm gì, phần mềm thống kê sẽ tự động loại giá trị này",
+                    "isCorrect": false,
+                    "misconception": "xldl.out-of-range-not-caught"
+                  }
+                ]
+              },
+              {
+                "key": "xldl1-straight-lining",
+                "type": "mcq",
+                "prompt": "ID8 chọn đúng giá trị 3 cho cả ba câu Q1, Q2, Q3. Đây là dấu hiệu gì, và nên xử lý thế nào?",
+                "explanation": "Đây là dấu hiệu straight-lining (SD giữa các item bằng 0) — cần xem xét kỹ, có thể loại nếu xảy ra trên toàn bộ các construct trong khảo sát, không nên tính thẳng vào phân tích mà không xem xét.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Dấu hiệu straight-lining (SD = 0 giữa các item) — cần xem xét kỹ, có thể loại nếu xảy ra ở toàn bộ khảo sát",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có gì bất thường, đây chỉ là một người trả lời trung lập nhất quán",
+                    "isCorrect": false,
+                    "misconception": "xldl.straight-lining-ignored"
+                  },
+                  {
+                    "label": "Đây là dấu hiệu tốt cho thấy dữ liệu nhất quán, nên giữ nguyên không cần xem xét",
+                    "isCorrect": false,
+                    "misconception": "xldl.straight-lining-ignored"
+                  },
+                  {
+                    "label": "Cần xoá toàn bộ khảo sát này ngay không cần xem xét thêm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl1-tuoi-999",
+                "type": "mcq",
+                "prompt": "ID7 có Tuổi = 999. Cách hiểu đúng nhất về giá trị này là gì?",
+                "explanation": "999 là một giá trị không hợp lý cho tuổi con người, thường là mã lỗi hoặc giá trị placeholder mặc định của phần mềm khảo sát khi người trả lời bỏ qua câu hỏi — cần xử lý như dữ liệu thiếu, không phải tuổi thật.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Rất có thể là mã lỗi/placeholder khi người trả lời bỏ qua câu hỏi, cần xử lý như dữ liệu thiếu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Có thể là tuổi thật của một người tham gia rất lớn tuổi",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần xử lý gì vì biến Tuổi không quan trọng trong phân tích",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nên giữ nguyên vì đây là số liệu do người tham gia tự khai",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl1-thu-tu-lam-sach",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước làm sạch bộ dữ liệu mẫu trước khi tính điểm construct.",
+                "explanation": "Từ kiểm giá trị thiếu, xoá dòng trùng lặp, xử lý giá trị ngoài khoảng, xem xét straight-lining, tới đảo hướng item và tính điểm construct — thứ tự này đảm bảo mỗi bước không bị ảnh hưởng bởi lỗi của bước trước.",
+                "points": 3,
+                "sequence": [
+                  "Đếm và kiểm tra giá trị thiếu trong mỗi cột",
+                  "Tìm và xoá bớt dòng trùng lặp theo ID",
+                  "Xử lý giá trị ngoài khoảng hợp lệ (Likert, tuổi)",
+                  "Kiểm tra và xem xét các trường hợp straight-lining",
+                  "Đảo hướng item cần đảo, rồi tính điểm construct"
+                ]
+              },
+              {
+                "key": "xldl1-noi-cong-thuc",
+                "type": "matching",
+                "prompt": "Nối mỗi loại lỗi với đúng công thức hoặc cách phát hiện nó.",
+                "explanation": "COUNTBLANK/is.na phát hiện thiếu; COUNTIF trên ID/duplicated() phát hiện trùng lặp; kiểm khoảng [1,5] phát hiện giá trị ngoài khoảng; SD giữa các item bằng 0 phát hiện straight-lining.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Giá trị thiếu",
+                    "right": "COUNTBLANK (Excel) / is.na() (R)"
+                  },
+                  {
+                    "left": "Dòng trùng lặp",
+                    "right": "COUNTIF theo ID (Excel) / duplicated() (R)"
+                  },
+                  {
+                    "left": "Giá trị ngoài khoảng hợp lệ",
+                    "right": "Kiểm giá trị nằm ngoài [giá trị nhỏ nhất, giá trị lớn nhất] của thang đo"
+                  },
+                  {
+                    "left": "Straight-lining",
+                    "right": "Độ lệch chuẩn (SD) giữa các item của cùng một người bằng 0 hoặc rất thấp"
+                  }
+                ]
+              },
+              {
+                "key": "xldl1-lam-sach-thuc-hanh",
+                "type": "essay",
+                "prompt": "Từ bảng dữ liệu thô ở mục 1, viết kết quả làm sạch của bạn: (a) danh sách các lỗi đã tìm thấy (thiếu, trùng, ngoài khoảng, straight-lining) kèm ID cụ thể; (b) cách bạn xử lý mỗi lỗi; (c) công thức đảo hướng Q2 đã dùng; (d) điểm construct Hài lòng (trung bình Q1 và Q2 đã đảo) cho ít nhất 3 người trong dữ liệu còn lại sau khi làm sạch.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 2 · Thống kê mô tả và kiểm định giả thuyết",
+          "durationMin": 90,
+          "description": "Đọc đúng bảng thống kê mô tả (không chỉ nhìn trung bình); kiểm Levene's test trước khi đọc t-test; chạy post-hoc sau ANOVA có ý nghĩa để biết nhóm nào khác nhóm nào; chọn đúng giữa Chi-square và Fisher's Exact Test theo expected count.",
+          "objectives": [
+            "Đọc đầy đủ một bảng thống kê mô tả (N, Mean, SD, Min, Max, Skewness) và nhận ra khi phân phối lệch đáng kể",
+            "Đọc đúng thứ tự bảng kết quả independent samples t-test: kiểm Levene's test trước khi chọn dòng kết quả phù hợp",
+            "Chạy kiểm định hậu định (post-hoc) sau khi ANOVA cho kết quả có ý nghĩa để xác định cụ thể nhóm nào khác nhóm nào",
+            "Chọn đúng giữa Chi-square và Fisher's Exact Test dựa trên expected count của bảng chéo"
+          ],
+          "summary": [
+            "Một bảng thống kê mô tả đầy đủ cần N, Mean, SD, Min, Max — báo cáo Mean mà không kèm SD hoặc N khiến người đọc không đánh giá được độ phân tán hay độ tin cậy của số liệu.",
+            "Bảng kết quả independent samples t-test luôn có Levene's test đi trước — phải đọc Levene's test để biết chọn dòng 'Equal variances assumed' hay 'not assumed', đọc thẳng dòng t-test mà không kiểm Levene's trước là đọc sai dòng.",
+            "ANOVA có ý nghĩa (p < 0.05) chỉ cho biết có sự khác biệt tổng thể giữa các nhóm, không cho biết nhóm nào khác nhóm nào — cần chạy post-hoc test (Tukey HSD, Bonferroni) để xác định cụ thể.",
+            "Chi-square chỉ đáng tin khi expected count đủ lớn (thường ≥ 5) ở đa số ô trong bảng chéo — khi không đạt, cần chuyển sang Fisher's Exact Test."
+          ],
+          "splitSections": true,
+          "body": "\nVới dữ liệu đã làm sạch ở Bài 1, bài này đọc đúng các bảng output thống kê phổ biến nhất trong SPSS/R — từng bảng, từng dòng, đúng thứ tự. Bài đi qua bốn kiểm định theo thứ tự: đọc đầy đủ một bảng thống kê mô tả chứ không chỉ nhìn Mean, rồi tới independent samples t-test với bước kiểm Levene's test bắt buộc trước khi chọn dòng kết quả, tiếp theo ANOVA và lý do có ý nghĩa chưa đủ để biết nhóm nào khác nhóm nào, và kết bằng Chi-square cùng điều kiện expected count cần kiểm trước khi tin kết quả — trước khi sang phần luyện tập và tài liệu tham khảo.\n\n## Thống kê mô tả: đọc hết bảng, không chỉ Mean\n\n> [!ghi-nho] Một bảng thống kê mô tả (Descriptives) đầy đủ cần đọc cả: **N** (cỡ mẫu thật, sau khi loại thiếu), **Mean**, **SD** (độ lệch chuẩn — cho biết dữ liệu phân tán quanh Mean bao nhiêu), **Min/Max** (kiểm nhanh còn giá trị ngoài khoảng nào sót lại từ Bài 1 không), và **Skewness** (độ lệch — giá trị tuyệt đối lớn hơn 2 gợi ý phân phối lệch đáng kể, ảnh hưởng tới việc chọn kiểm định tham số hay phi tham số).\n\n| Biến | N | Mean | SD | Min | Max | Skewness |\n|---|---|---|---|---|---|---|\n| Hài lòng | 9 | 3.44 | 1.01 | 2.00 | 5.00 | -0.12 |\n| Nhận thức hữu ích | 9 | 3.78 | 0.97 | 2.00 | 5.00 | -0.31 |\n\n> [!canh-bao] Báo cáo \"Điểm hài lòng trung bình là 3.44\" mà không kèm SD hoặc N là báo cáo thiếu — người đọc không biết 3.44 đó đến từ một nhóm đồng nhất (SD nhỏ) hay rất phân tán (SD lớn, có thể che giấu hai nhóm ý kiến rất khác nhau), và không biết kết luận này dựa trên bao nhiêu người.\n\n## Independent samples t-test: đọc Levene's test trước\n\nSo sánh điểm Hài lòng giữa Nam và Nữ — bảng SPSS luôn có hai phần, và thứ tự đọc quan trọng.\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Group Statistics\nGiới tính     N     Mean     SD\nNữ            4     4.25     0.50\nNam           5     2.80     0.84\n\nIndependent Samples Test\n                              Levene's Test         t-test for Equality of Means\n                           F      Sig.        t        df      Sig.(2-tailed)\nEqual variances assumed   1.82   0.214      3.05      7        0.018\nEqual variances not assumed              3.13      5.4        0.021</pre></div>\n```\n\n> [!ghi-nho] **Levene's test** kiểm giả định phương sai hai nhóm bằng nhau — đọc cột **Sig.** của Levene's test **trước**: nếu Sig. > 0.05 (như ví dụ trên, 0.214), phương sai được coi là bằng nhau, đọc dòng **\"Equal variances assumed\"**. Nếu Sig. ≤ 0.05, phương sai không bằng nhau, đọc dòng **\"Equal variances not assumed\"** (dùng df đã điều chỉnh, ở đây là 5.4).\n\n> [!canh-bao] Đọc thẳng dòng đầu tiên (hoặc dòng quen mắt) của bảng t-test mà không kiểm Levene's test trước là đọc sai dòng khi phương sai hai nhóm khác nhau đáng kể — hai dòng cho ra t, df và Sig. khác nhau, và chọn sai dòng có thể đổi kết luận có ý nghĩa thống kê hay không.\n\nVới ví dụ trên: Levene's Sig. = 0.214 > 0.05 → đọc dòng \"Equal variances assumed\" → t = 3.05, df = 7, Sig. (2-tailed) = 0.018 < 0.05 → **có sự khác biệt có ý nghĩa** giữa Nam và Nữ về điểm Hài lòng.\n\n> [!ghi-nho] Có ý nghĩa thống kê (p < 0.05) chưa nói lên **độ lớn** của sự khác biệt — cần thêm **Cohen's d** (effect size). Với hai nhóm ở trên (Nữ: Mean=4.25, SD=0.50, n=4; Nam: Mean=2.80, SD=0.84, n=5):\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">SD gộp (pooled) = √[((n1-1)×SD1² + (n2-1)×SD2²) / (n1+n2-2)]\n                = √[(3×0.50² + 4×0.84²) / 7] = √[(0.75 + 2.82) / 7] = √0.510 = 0.714\n\nCohen's d = (Mean1 - Mean2) / SD gộp = (4.25 - 2.80) / 0.714 ≈ 2.03</pre></div>\n```\n\nTheo quy ước của Cohen (1988): d ≈ 0.2 là **nhỏ**, 0.5 là **vừa**, 0.8 trở lên là **lớn**. d ≈ 2.03 ở đây là một khác biệt rất lớn — đáng báo cáo cùng với p-value, vì với cỡ mẫu nhỏ (n=9), một kết quả có ý nghĩa thống kê **và** effect size lớn thuyết phục hơn nhiều so với chỉ có p < 0.05.\n\n> [!canh-bao] Chỉ báo cáo \"p = 0.018, có ý nghĩa thống kê\" mà không kèm Cohen's d là báo cáo thiếu — với cỡ mẫu đủ lớn, ngay cả một khác biệt rất nhỏ (d ≈ 0.1, gần như không có ý nghĩa thực tiễn) cũng có thể cho p < 0.05. Effect size cho biết khác biệt đó có **đáng quan tâm** hay không, p-value chỉ cho biết nó có **khác 0** hay không.\n\n## ANOVA: có ý nghĩa không cho biết nhóm nào khác nhóm nào\n\nKhi so sánh 3 nhóm hoặc nhiều hơn (ví dụ Hài lòng theo 3 khoa), ANOVA cho một kiểm định tổng thể trước.\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">ANOVA\n                Sum of Squares   df    Mean Square    F      Sig.\nBetween Groups      12.400        2       6.200      5.14    0.023\nWithin Groups        9.600       16       0.600\nTotal               22.000       18</pre></div>\n```\n\n> [!canh-bao] Sig. = 0.023 < 0.05 chỉ cho biết **có ít nhất một cặp nhóm khác nhau có ý nghĩa** trong ba khoa — nó **không** cho biết khoa nào khác khoa nào. Kết luận ngay \"Khoa A cao hơn Khoa B\" chỉ từ bảng ANOVA mà không chạy thêm kiểm định là một kết luận không có cơ sở từ chính bảng này.\n\n> [!ghi-nho] Sau ANOVA có ý nghĩa, chạy **post-hoc test** (Tukey HSD nếu phương sai các nhóm tương đương, Games-Howell nếu không) để so sánh từng cặp nhóm cụ thể và xác định chính xác cặp nào khác nhau có ý nghĩa.\n\nVới ví dụ trên (3 khoa A, B, C), bảng Tukey HSD sau ANOVA có thể cho kết quả sau:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Multiple Comparisons (Tukey HSD)\nKhoa (I)   Khoa (J)   Mean Difference (I-J)   Sig.\nA          B                  0.80            0.041\nA          C                  1.10            0.009\nB          C                  0.30            0.612</pre></div>\n```\n\nĐọc cột **Sig.** của từng cặp: A khác B có ý nghĩa (0.041 < 0.05), A khác C có ý nghĩa (0.009 < 0.05), nhưng B và C **không** khác nhau có ý nghĩa (0.612 > 0.05). Kết luận đầy đủ: \"Khoa A có điểm Hài lòng cao hơn có ý nghĩa so với cả Khoa B và Khoa C; Khoa B và C không khác biệt có ý nghĩa với nhau\" — chi tiết hơn nhiều so với chỉ nói \"có sự khác biệt giữa 3 khoa\".\n\nCũng nên báo cáo **eta-squared (η²)** — effect size cho ANOVA — dùng ngay số liệu trong bảng ANOVA phía trên: η² = Sum of Squares Between ÷ Sum of Squares Total = 12.400 / 22.000 ≈ **0.56**. Theo quy ước Cohen (1988): η² ≈ 0.01 là nhỏ, 0.06 là vừa, 0.14 trở lên là lớn — 0.56 là một effect size rất lớn, khoa học có ảnh hưởng mạnh tới điểm Hài lòng trong ví dụ này.\n\n## Chi-square: kiểm expected count trước khi tin kết quả\n\nVới hai biến định danh (ví dụ Giới tính × Có/không sử dụng công cụ AI), bảng chéo và Chi-square cho kết quả sau:\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Chi-Square Tests\n                          Value    df    Asymp. Sig. (2-sided)\nPearson Chi-Square        4.02      1          0.045</pre></div>\n```\n\n> [!canh-bao] Chi-square chỉ đáng tin khi **expected count** (số lượng kỳ vọng theo giả thuyết không có liên hệ) đủ lớn — quy tắc thường dùng: không quá 20% số ô có expected count dưới 5, và không ô nào dưới 1. SPSS tự in cảnh báo này dưới bảng (\"X cells have expected count less than 5\"); **đọc dòng cảnh báo này trước khi tin vào Sig.** Khi vi phạm, chuyển sang **Fisher's Exact Test** (chính xác hơn với mẫu nhỏ), không tiếp tục dùng Pearson Chi-Square.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nVới dữ liệu đã làm sạch ở Bài 1, tính hoặc mô tả bảng thống kê mô tả đầy đủ (N, Mean, SD, Min, Max) cho điểm construct Hài lòng. Nếu có biến nhóm (Giới tính), phác một bảng t-test giả định và xác định trước sẽ đọc dòng nào dựa trên Levene's test.\n\n### Nhóm 3-4 người (25 phút)\n\nĐổi bảng ANOVA hoặc Chi-square giả định cho nhau (tự tạo số liệu mẫu). Kiểm: người làm bài có đọc đúng Levene's test trước t-test không? Có chạy post-hoc sau ANOVA có ý nghĩa không? Có kiểm expected count trước khi tin Chi-square không?\n\n### Bài tập về nhà (60-90 phút)\n\nChạy (hoặc mô phỏng bằng tay có số liệu cụ thể) một t-test hoặc ANOVA trên dữ liệu của bạn, viết đoạn báo cáo kết quả đầy đủ đúng chuẩn APA (kèm t/F, df, p, và Mean/SD của các nhóm).\n\n:::mau Mẫu nộp bài tập về nhà\n**Bảng thống kê mô tả:** …\n\n**Kiểm định đã chạy:** ☐ t-test ☐ ANOVA (+ post-hoc) ☐ Chi-square (+ kiểm expected count)\n\n**Kết quả đầy đủ (kèm t/F/χ², df, p):** …\n\n**Đoạn báo cáo chuẩn APA:** …\n:::\n\n### Nguồn tham khảo\n\n- Field, A. (2018). *Discovering Statistics Using IBM SPSS Statistics* (5th ed.). SAGE Publications.\n- Tabachnick, B. G., & Fidell, L. S. (2019). *Using Multivariate Statistics* (7th ed.). Pearson.\n- Agresti, A. (2018). *Statistical Methods for the Social Sciences* (5th ed.). Pearson. — chương về Chi-square và Fisher's Exact Test.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "xldl2-mean-can-sd",
+                "type": "mcq",
+                "prompt": "Một báo cáo viết 'Điểm hài lòng trung bình là 3.44' mà không kèm số liệu nào khác. Vấn đề của cách báo cáo này là gì?",
+                "explanation": "Thiếu SD và N khiến người đọc không đánh giá được độ phân tán của dữ liệu quanh giá trị trung bình hay độ tin cậy dựa trên cỡ mẫu — một báo cáo đầy đủ cần cả Mean, SD và N.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiếu SD và N, khiến không đánh giá được độ phân tán dữ liệu và độ tin cậy của số liệu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, Mean luôn là số liệu đầy đủ để báo cáo",
+                    "isCorrect": false,
+                    "misconception": "xldl.mean-without-sd"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là nên làm tròn thành 3.4 cho gọn",
+                    "isCorrect": false,
+                    "misconception": "xldl.mean-without-sd"
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu cỡ mẫu đủ lớn",
+                    "isCorrect": false,
+                    "misconception": "xldl.mean-without-sd"
+                  }
+                ]
+              },
+              {
+                "key": "xldl2-levene-truoc",
+                "type": "mcq",
+                "prompt": "Trong bảng Independent Samples Test của SPSS, cần đọc gì trước khi chọn dòng kết quả t-test?",
+                "explanation": "Cần đọc cột Sig. của Levene's test trước — nếu Sig. > 0.05 đọc dòng 'Equal variances assumed', nếu Sig. ≤ 0.05 đọc dòng 'Equal variances not assumed'. Đọc sai dòng có thể đổi kết luận có ý nghĩa thống kê hay không.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Cột Sig. của Levene's test, để biết chọn dòng 'Equal variances assumed' hay 'not assumed'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần đọc gì trước, luôn dùng dòng đầu tiên của bảng",
+                    "isCorrect": false,
+                    "misconception": "xldl.ignore-levenes-test"
+                  },
+                  {
+                    "label": "Chỉ cần đọc cột t ở dòng 'Equal variances assumed', bỏ qua Levene's test",
+                    "isCorrect": false,
+                    "misconception": "xldl.ignore-levenes-test"
+                  },
+                  {
+                    "label": "Cột Mean của bảng Group Statistics",
+                    "isCorrect": false,
+                    "misconception": "xldl.ignore-levenes-test"
+                  }
+                ]
+              },
+              {
+                "key": "xldl2-anova-post-hoc",
+                "type": "mcq",
+                "prompt": "Bảng ANOVA cho Sig. = 0.023 khi so sánh Hài lòng giữa 3 khoa. Kết luận nào đúng?",
+                "explanation": "ANOVA có ý nghĩa chỉ cho biết có ít nhất một cặp nhóm khác nhau, không cho biết khoa nào khác khoa nào — cần chạy post-hoc test (Tukey HSD hoặc Games-Howell) để xác định cụ thể cặp nhóm nào khác nhau.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Có ít nhất một cặp khoa khác nhau có ý nghĩa; cần chạy post-hoc test để biết cụ thể khoa nào khác khoa nào",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Khoa có Mean cao nhất chắc chắn khác biệt có ý nghĩa với khoa có Mean thấp nhất, không cần kiểm thêm",
+                    "isCorrect": false,
+                    "misconception": "xldl.anova-significant-no-posthoc"
+                  },
+                  {
+                    "label": "Cả ba khoa đều khác nhau có ý nghĩa với nhau từng cặp",
+                    "isCorrect": false,
+                    "misconception": "xldl.anova-significant-no-posthoc"
+                  },
+                  {
+                    "label": "Không cần làm gì thêm, ANOVA đã cho đủ thông tin cần thiết",
+                    "isCorrect": false,
+                    "misconception": "xldl.anova-significant-no-posthoc"
+                  }
+                ]
+              },
+              {
+                "key": "xldl2-chi-square-expected-count",
+                "type": "mcq",
+                "prompt": "Một bảng chéo 2×2 có 30% số ô với expected count dưới 5, và bảng Chi-Square Tests của SPSS in cảnh báo về điều này. Nên làm gì?",
+                "explanation": "Khi expected count không đủ lớn (nhiều ô dưới 5), Pearson Chi-Square không đáng tin — cần chuyển sang Fisher's Exact Test, chính xác hơn với mẫu nhỏ hoặc expected count thấp.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chuyển sang Fisher's Exact Test thay vì tin vào Pearson Chi-Square",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Bỏ qua cảnh báo và vẫn báo cáo kết quả Pearson Chi-Square như bình thường",
+                    "isCorrect": false,
+                    "misconception": "xldl.chisquare-small-expected-count"
+                  },
+                  {
+                    "label": "Tăng mức ý nghĩa (alpha) lên 0.10 để bù cho expected count thấp",
+                    "isCorrect": false,
+                    "misconception": "xldl.chisquare-small-expected-count"
+                  },
+                  {
+                    "label": "Không cần làm gì khác, cảnh báo này không ảnh hưởng tới độ tin cậy của kết quả",
+                    "isCorrect": false,
+                    "misconception": "xldl.chisquare-small-expected-count"
+                  }
+                ]
+              },
+              {
+                "key": "xldl2-skewness",
+                "type": "mcq",
+                "prompt": "Một biến có Skewness = 2.8 trong bảng thống kê mô tả. Điều này gợi ý gì?",
+                "explanation": "Giá trị tuyệt đối của Skewness lớn hơn 2 gợi ý phân phối lệch đáng kể, có thể ảnh hưởng tới việc chọn kiểm định tham số (giả định phân phối chuẩn) hay phi tham số.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Phân phối của biến này lệch đáng kể, cần xem xét khi chọn kiểm định tham số hay phi tham số",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có ý nghĩa gì đặc biệt, Skewness chỉ là một chỉ số phụ có thể bỏ qua",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Biến này chắc chắn có lỗi nhập liệu cần loại bỏ hoàn toàn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Phân phối của biến này hoàn toàn chuẩn (normal distribution)",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl2-thu-tu-doc-ttest",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự đọc một bảng Independent Samples Test của SPSS.",
+                "explanation": "Đọc Group Statistics để biết Mean/SD từng nhóm, kiểm Levene's test, chọn dòng phù hợp dựa trên kết quả Levene's, rồi đọc t/df/Sig. của dòng đó.",
+                "points": 3,
+                "sequence": [
+                  "Đọc bảng Group Statistics để biết N, Mean, SD của từng nhóm",
+                  "Đọc cột Sig. của Levene's Test for Equality of Variances",
+                  "Chọn dòng 'Equal variances assumed' hoặc 'not assumed' dựa trên Levene's Sig.",
+                  "Đọc t, df, và Sig. (2-tailed) của đúng dòng đã chọn",
+                  "Kết luận có ý nghĩa thống kê hay không dựa trên Sig. của dòng đó"
+                ]
+              },
+              {
+                "key": "xldl2-noi-kiem-dinh",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với đúng kiểm định hoặc bước cần thực hiện.",
+                "explanation": "So sánh 2 nhóm dùng t-test (sau khi kiểm Levene's); so sánh 3+ nhóm dùng ANOVA rồi post-hoc; hai biến định danh dùng Chi-square (kiểm expected count trước); phân phối lệch mạnh cần xem xét kiểm định phi tham số.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "So sánh trung bình giữa 2 nhóm độc lập",
+                    "right": "Independent samples t-test (kiểm Levene's test trước)"
+                  },
+                  {
+                    "left": "So sánh trung bình giữa 3 nhóm trở lên",
+                    "right": "ANOVA, kèm post-hoc test nếu có ý nghĩa"
+                  },
+                  {
+                    "left": "Kiểm liên hệ giữa hai biến định danh",
+                    "right": "Chi-square (kiểm expected count trước khi tin kết quả)"
+                  },
+                  {
+                    "left": "Expected count dưới 5 ở nhiều ô trong bảng chéo",
+                    "right": "Chuyển sang Fisher's Exact Test"
+                  }
+                ]
+              },
+              {
+                "key": "xldl2-doc-bang-ket-qua",
+                "type": "essay",
+                "prompt": "Cho bảng Independent Samples Test với Levene's Sig. = 0.03, dòng 'Equal variances assumed' có t=2.1, df=18, Sig.=0.05, dòng 'Equal variances not assumed' có t=2.3, df=12.4, Sig.=0.04. Viết đoạn 150-200 từ giải thích: (a) dòng nào nên đọc và vì sao; (b) kết luận cuối cùng về ý nghĩa thống kê; (c) một câu về việc kết luận có thể khác đi nếu đọc nhầm dòng.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 3 · Đọc bảng EFA và độ tin cậy",
+          "durationMin": 90,
+          "description": "Kiểm KMO và Bartlett's Test trước khi tin kết quả EFA; đọc ma trận factor loading để quyết định giữ, loại, hay viết lại từng item; tính lại Cronbach's Alpha sau khi đã điều chỉnh cấu trúc theo EFA, không dùng con số ban đầu.",
+          "objectives": [
+            "Đọc và diễn giải đúng KMO và Bartlett's Test of Sphericity trước khi tin vào kết quả EFA",
+            "Áp dụng quy tắc Kaiser (eigenvalue > 1) để xác định số lượng nhân tố cần trích xuất, đối chiếu với lý thuyết nền khi cần",
+            "Đọc một ma trận factor loading thật để quyết định giữ, loại, hay xem xét viết lại từng item, bao gồm item cross-loading",
+            "Tính lại Cronbach's Alpha cho cấu trúc construct đã điều chỉnh sau EFA, không dùng con số Alpha tính trên bộ item ban đầu",
+            "Tổng hợp một quy trình EFA hoàn chỉnh từ dữ liệu thô tới cấu trúc construct cuối cùng đã xác nhận"
+          ],
+          "summary": [
+            "KMO nên đạt tối thiểu 0.6 (tốt hơn nếu ≥ 0.8) và Bartlett's Test cần có p < 0.05 trước khi tin vào bất kỳ kết quả EFA nào — hai chỉ số này xác nhận dữ liệu đủ tương quan để chạy phân tích nhân tố có ý nghĩa.",
+            "Quy tắc Kaiser (chỉ giữ nhân tố có eigenvalue > 1) quyết định số lượng nhân tố trích xuất — khi eigenvalue nhân tố kế tiếp gần sát 1, cần đối chiếu thêm với scree plot và lý thuyết nền, không áp máy móc một quy tắc.",
+            "Loading từ 0.4-0.5 trở lên (tuỳ quy ước ngành) mới coi là item 'load' vào một nhân tố; item cross-loading (load cao ở nhiều nhân tố) hoặc loading thấp ở mọi nhân tố cần được xem xét loại hoặc viết lại, không giữ nguyên như dự kiến ban đầu.",
+            "Sau khi loại hoặc thay đổi item dựa trên EFA, Cronbach's Alpha phải được tính lại cho cấu trúc construct đã điều chỉnh — báo cáo Alpha tính trên bộ item ban đầu (trước điều chỉnh) là báo cáo sai con số cho cấu trúc thực tế sẽ dùng.",
+            "Một quy trình EFA hoàn chỉnh đi theo thứ tự: kiểm KMO/Bartlett's → trích xuất và xoay nhân tố → đọc ma trận loading để quyết định cấu trúc cuối cùng → tính lại độ tin cậy cho cấu trúc đó."
+          ],
+          "splitSections": true,
+          "body": "\nKhoá Phương pháp nghiên cứu đã giải thích *vì sao* cần EFA. Bài này đọc từng bảng output thật, theo đúng thứ tự, với một ví dụ cụ thể: 6 item dự kiến đo hai construct (Hài lòng, Nhận thức hữu ích) — bắt đầu từ kiểm KMO và Bartlett's Test trước khi tin bất kỳ kết quả nào, xác định số nhân tố cần trích xuất theo quy tắc Kaiser, đọc ma trận factor loading để quyết định giữ/loại/viết lại từng item, và kết bằng việc tính lại Cronbach's Alpha cho cấu trúc đã điều chỉnh. Phần luyện tập và tài liệu tham khảo ở cuối giúp áp dụng cả quy trình này trên dữ liệu của người học.\n\n## Kiểm điều kiện trước khi chạy EFA\n\nTrước khi nhìn vào bất kỳ hệ số tải nào, hai chỉ số sau quyết định EFA có đáng tin không.\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">KMO and Bartlett's Test\nKaiser-Meyer-Olkin Measure of Sampling Adequacy       0.71\nBartlett's Test of Sphericity    Approx. Chi-Square    142.30\n                                 df                     15\n                                 Sig.                   0.000</pre></div>\n```\n\n> [!ghi-nho] **KMO (Kaiser-Meyer-Olkin)** đo mức độ phù hợp của dữ liệu cho EFA — ngưỡng tối thiểu thường dùng là **0.6**, từ 0.8 trở lên được coi là tốt. **Bartlett's Test of Sphericity** kiểm giả thuyết ma trận tương quan giữa các item là ma trận đơn vị (các item không tương quan với nhau) — cần **Sig. < 0.05** để bác bỏ giả thuyết này, xác nhận các item đủ tương quan để phân tích nhân tố có ý nghĩa.\n\n> [!canh-bao] Chạy EFA và đọc thẳng bảng factor loading mà không kiểm KMO và Bartlett's trước là bỏ qua bước xác nhận dữ liệu có đáng để phân tích nhân tố hay không. Với ví dụ trên, KMO = 0.71 (đạt) và Bartlett's Sig. = 0.000 (đạt) — dữ liệu đủ điều kiện để tin vào bước tiếp theo.\n\n## Xác định số lượng nhân tố cần trích xuất\n\nTrước khi đọc ma trận loading, cần biết **trích xuất bao nhiêu nhân tố** — quyết định này ảnh hưởng trực tiếp tới toàn bộ ma trận loading đọc ở bước sau. Với 6 item ở ví dụ này, bảng Total Variance Explained:\n\n| Nhân tố | Eigenvalue | % Phương sai | % Tích lũy |\n|---|---|---|---|\n| 1 | 2.81 | 46.83 | 46.83 |\n| 2 | 1.34 | 22.33 | 69.16 |\n| 3 | 0.68 | 11.33 | 80.49 |\n| 4 | 0.52 | 8.67 | 89.16 |\n| 5 | 0.38 | 6.33 | 95.49 |\n| 6 | 0.27 | 4.51 | 100.00 |\n\n> [!ghi-nho] Quy tắc **Kaiser (eigenvalue > 1)**: chỉ giữ lại các nhân tố có eigenvalue lớn hơn 1 — ở bảng trên, chỉ Nhân tố 1 (2.81) và Nhân tố 2 (1.34) đạt ngưỡng này, khớp với kỳ vọng lý thuyết là 2 construct (Hài lòng, Nhận thức hữu ích). Hai nhân tố này giải thích được 69.16% tổng phương sai — mức chấp nhận được (thường ngưỡng tối thiểu 60% trong khoa học xã hội).\n\n> [!canh-bao] Quy tắc Kaiser chỉ là điểm khởi đầu, không phải quyết định cuối cùng. Khi eigenvalue của nhân tố kế tiếp nằm sát ngưỡng 1 (ví dụ 0.95-1.05), cần đối chiếu thêm với **scree plot** (biểu đồ eigenvalue theo thứ tự nhân tố — tìm điểm \"gãy khuỷu tay\", nơi đường bắt đầu phẳng lại) và với **số construct dự kiến theo khung lý thuyết** trước khi chốt số nhân tố, không áp máy móc chỉ một quy tắc.\n\n## Đọc ma trận factor loading\n\nVới 6 item dự kiến đo 2 construct (Q1-Q3 cho Hài lòng, Q4-Q6 cho Nhận thức hữu ích), ma trận loading sau khi xoay (rotated) như sau:\n\n| Item | Nhân tố 1 | Nhân tố 2 |\n|---|---|---|\n| Q1 | 0.81 | 0.12 |\n| Q2 | 0.76 | 0.15 |\n| Q3 | 0.45 | **0.52** |\n| Q4 | 0.10 | 0.79 |\n| Q5 | 0.18 | 0.74 |\n| Q6 | 0.22 | 0.31 |\n\n> [!ghi-nho] Item **\"load\"** vào một nhân tố khi hệ số tải đạt ngưỡng (thường **0.4-0.5** trở lên, tuỳ quy ước ngành) ở đúng một nhân tố, và thấp ở các nhân tố còn lại. Q1, Q2 load rõ vào Nhân tố 1; Q4, Q5 load rõ vào Nhân tố 2 — đây là cấu trúc mong đợi.\n\n> [!canh-bao] Hai item trong bảng trên có vấn đề: **Q3** load gần bằng nhau ở cả hai nhân tố (0.45 và 0.52) — đây là **cross-loading**, dấu hiệu item này không đo rõ một khái niệm duy nhất, có thể do câu hỏi mơ hồ hoặc thực chất đo một khái niệm pha trộn cả hai. **Q6** không load đủ mạnh ở nhân tố nào (0.22 và 0.31, cả hai dưới ngưỡng 0.4) — item này không đo tốt bất kỳ construct nào trong mô hình.\n\n> [!vi-du] Với Q3 (cross-loading) và Q6 (loading thấp), quyết định hợp lý là: loại cả hai khỏi cấu trúc construct cuối cùng, hoặc — nếu về mặt nội dung hai item này quan trọng — xem lại cách viết câu hỏi (có thể Q3 đang hỏi lẫn cả hài lòng và nhận thức hữu ích trong một câu) và thu thập lại dữ liệu thí điểm với câu hỏi đã sửa trước khi dùng cho nghiên cứu chính thức. **Không nên giữ nguyên Q3 và Q6** trong cấu trúc construct chỉ vì đã viết sẵn từ đầu.\n\n## Tính lại độ tin cậy sau khi điều chỉnh cấu trúc\n\n> [!canh-bao] Sau khi loại Q3 và Q6 dựa trên kết quả EFA, Cronbach's Alpha **phải được tính lại** cho cấu trúc mới — Alpha ban đầu tính trên 3 item Q1-Q3 (bao gồm Q3 có vấn đề) không còn phản ánh đúng construct Hài lòng sẽ thực sự dùng trong phân tích (chỉ còn Q1, Q2).\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Trước khi loại Q3:  Hài lòng (Q1, Q2, Q3)     Cronbach's Alpha = 0.74\nSau khi loại Q3:    Hài lòng (Q1, Q2)          Cronbach's Alpha = 0.81</pre></div>\n```\n\n> [!ghi-nho] Trong ví dụ này, Alpha thực ra **tăng** sau khi loại Q3 — dấu hiệu cho thấy Q3 đang làm giảm độ nhất quán nội bộ của construct, càng xác nhận quyết định loại là đúng. Báo cáo con số Alpha = 0.74 (tính trên bộ item ban đầu) trong bài báo/luận văn khi cấu trúc thực tế đã đổi là báo cáo sai con số cho construct sẽ dùng trong các phân tích tiếp theo.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nVới dữ liệu của bạn (thật hoặc thí điểm), chạy hoặc mô phỏng EFA: ghi lại KMO, Bartlett's Sig., và ma trận loading. Xác định item nào cross-loading hoặc loading thấp, quyết định giữ/loại/viết lại, và tính lại Cronbach's Alpha cho cấu trúc đã điều chỉnh.\n\n### Nhóm 3-4 người (25 phút)\n\nĐổi ma trận loading cho nhau. Với mỗi ma trận, tìm item có vấn đề (cross-loading hoặc loading thấp) mà người làm có thể đã bỏ sót. Thảo luận: nên loại item hay viết lại và thu thập lại — khi nào chọn cách nào?\n\n### Bài tập về nhà (60 phút)\n\nViết phần báo cáo EFA cho Chương 4/phần Kết quả (250-350 từ): KMO, Bartlett's, bảng loading đầy đủ, quyết định về từng item có vấn đề, và Cronbach's Alpha đã tính lại cho cấu trúc cuối cùng.\n\n:::mau Mẫu nộp bài tập về nhà\n**KMO:** … **Bartlett's Sig.:** …\n\n**Ma trận loading (đầy đủ các item):** …\n\n**Item có vấn đề và quyết định:** …\n\n**Cronbach's Alpha trước và sau điều chỉnh, cho từng construct:** …\n:::\n\n### Nguồn tham khảo\n\n- Tabachnick, B. G., & Fidell, L. S. (2019). *Using Multivariate Statistics* (7th ed.). Pearson.\n- Kaiser, H. F. (1974). An index of factorial simplicity. *Psychometrika*, 39(1), 31-36.\n- Hair, J. F., Black, W. C., Babin, B. J., & Anderson, R. E. (2019). *Multivariate Data Analysis* (8th ed.). Cengage Learning.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "xldl3-kmo-bartlett-truoc",
+                "type": "mcq",
+                "prompt": "Vì sao cần kiểm KMO và Bartlett's Test trước khi đọc ma trận factor loading?",
+                "explanation": "KMO và Bartlett's xác nhận dữ liệu đủ tương quan và phù hợp để phân tích nhân tố có ý nghĩa — chạy EFA và đọc loading mà không kiểm hai chỉ số này trước là bỏ qua bước xác nhận dữ liệu có đáng phân tích hay không.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Để xác nhận dữ liệu đủ tương quan và phù hợp cho phân tích nhân tố có ý nghĩa trước khi tin vào loading",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần thiết, factor loading luôn đáng tin bất kể KMO và Bartlett's cho kết quả gì",
+                    "isCorrect": false,
+                    "misconception": "xldl.efa-skip-kmo-bartlett"
+                  },
+                  {
+                    "label": "Chỉ cần thiết khi cỡ mẫu dưới 100",
+                    "isCorrect": false,
+                    "misconception": "xldl.efa-skip-kmo-bartlett"
+                  },
+                  {
+                    "label": "Chỉ là bước hình thức, không ảnh hưởng tới việc diễn giải loading",
+                    "isCorrect": false,
+                    "misconception": "xldl.efa-skip-kmo-bartlett"
+                  }
+                ]
+              },
+              {
+                "key": "xldl3-doc-kmo",
+                "type": "mcq",
+                "prompt": "KMO = 0.71 và Bartlett's Sig. = 0.000. Kết luận nào đúng?",
+                "explanation": "KMO = 0.71 vượt ngưỡng tối thiểu 0.6, và Bartlett's Sig. = 0.000 < 0.05 xác nhận các item đủ tương quan — dữ liệu đủ điều kiện để tin vào kết quả EFA tiếp theo.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Dữ liệu đủ điều kiện để chạy và tin vào kết quả EFA",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Dữ liệu không đủ điều kiện vì KMO dưới 0.8",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không thể kết luận gì nếu chưa biết cỡ mẫu cụ thể",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Bartlett's Sig. = 0.000 cho thấy dữ liệu không phù hợp để chạy EFA",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl3-quy-tac-kaiser",
+                "type": "mcq",
+                "prompt": "Bảng Total Variance Explained cho 6 nhân tố với eigenvalue lần lượt là 2.81, 1.34, 0.68, 0.52, 0.38, 0.27. Theo quy tắc Kaiser, nên giữ lại bao nhiêu nhân tố?",
+                "explanation": "Quy tắc Kaiser chỉ giữ lại nhân tố có eigenvalue lớn hơn 1 — ở đây chỉ Nhân tố 1 (2.81) và Nhân tố 2 (1.34) đạt ngưỡng này, khớp với 2 construct dự kiến theo lý thuyết.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "2 nhân tố — chỉ Nhân tố 1 và Nhân tố 2 có eigenvalue lớn hơn 1",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "6 nhân tố — giữ tất cả vì mỗi nhân tố đều giải thích một phần phương sai",
+                    "isCorrect": false,
+                    "misconception": "xldl.wrong-factor-count"
+                  },
+                  {
+                    "label": "1 nhân tố — chỉ giữ nhân tố có eigenvalue cao nhất",
+                    "isCorrect": false,
+                    "misconception": "xldl.wrong-factor-count"
+                  },
+                  {
+                    "label": "Không thể xác định nếu chưa có ma trận factor loading",
+                    "isCorrect": false,
+                    "misconception": "xldl.wrong-factor-count"
+                  }
+                ]
+              },
+              {
+                "key": "xldl3-cross-loading",
+                "type": "mcq",
+                "prompt": "Item Q3 có loading 0.45 ở Nhân tố 1 và 0.52 ở Nhân tố 2. Nên xử lý thế nào?",
+                "explanation": "Đây là cross-loading — item không load rõ vào một nhân tố duy nhất. Nên xem xét loại item này hoặc viết lại câu hỏi và thu thập lại dữ liệu, không giữ nguyên trong cấu trúc construct.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Xem xét loại item này khỏi cấu trúc construct, hoặc viết lại câu hỏi và thu thập lại dữ liệu thí điểm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ nguyên item này trong construct có loading cao hơn (Nhân tố 2) vì 0.52 > 0.45",
+                    "isCorrect": false,
+                    "misconception": "xldl.keep-crossloading-item"
+                  },
+                  {
+                    "label": "Giữ nguyên item này ở cả hai construct vì cả hai loading đều trên 0.4",
+                    "isCorrect": false,
+                    "misconception": "xldl.keep-crossloading-item"
+                  },
+                  {
+                    "label": "Không cần làm gì, cross-loading là hiện tượng bình thường không ảnh hưởng gì",
+                    "isCorrect": false,
+                    "misconception": "xldl.keep-crossloading-item"
+                  }
+                ]
+              },
+              {
+                "key": "xldl3-tinh-lai-alpha",
+                "type": "mcq",
+                "prompt": "Sau khi loại Q3 khỏi construct Hài lòng dựa trên kết quả EFA, Cronbach's Alpha ban đầu (tính trên Q1, Q2, Q3) là 0.74. Bước tiếp theo đúng là gì?",
+                "explanation": "Cần tính lại Cronbach's Alpha cho cấu trúc mới (chỉ còn Q1, Q2) — Alpha ban đầu không còn phản ánh đúng construct sẽ thực sự dùng trong các phân tích tiếp theo.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tính lại Cronbach's Alpha chỉ với Q1 và Q2, và báo cáo con số mới cho cấu trúc đã điều chỉnh",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Giữ báo cáo Alpha = 0.74 vì đó là con số đã tính được ban đầu",
+                    "isCorrect": false,
+                    "misconception": "xldl.alpha-not-recalculated"
+                  },
+                  {
+                    "label": "Không cần tính lại Alpha nếu đã loại item theo đúng kết quả EFA",
+                    "isCorrect": false,
+                    "misconception": "xldl.alpha-not-recalculated"
+                  },
+                  {
+                    "label": "Báo cáo cả hai con số Alpha như nhau vì chúng đo cùng một khái niệm",
+                    "isCorrect": false,
+                    "misconception": "xldl.alpha-not-recalculated"
+                  }
+                ]
+              },
+              {
+                "key": "xldl3-loading-thap",
+                "type": "mcq",
+                "prompt": "Item Q6 có loading 0.22 ở Nhân tố 1 và 0.31 ở Nhân tố 2, cả hai dưới ngưỡng 0.4. Điều này gợi ý gì?",
+                "explanation": "Loading thấp ở mọi nhân tố nghĩa là item này không đo tốt bất kỳ construct nào trong mô hình hiện tại — cần xem xét loại khỏi cấu trúc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Item này không đo tốt bất kỳ construct nào trong mô hình, nên xem xét loại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Item này đo một construct thứ ba chưa được tính tới trong mô hình",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Item này vẫn nên giữ vì mọi item trong bảng hỏi ban đầu đều quan trọng",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Loading thấp không có ý nghĩa gì, chỉ cần quan tâm tới Cronbach's Alpha tổng",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl3-thu-tu-efa",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước thực hiện EFA từ dữ liệu thô tới cấu trúc construct cuối cùng.",
+                "explanation": "Từ kiểm KMO/Bartlett's, xác định số nhân tố theo eigenvalue, trích xuất và xoay nhân tố, đọc ma trận loading để quyết định cấu trúc, tới tính lại độ tin cậy cho cấu trúc đã điều chỉnh.",
+                "points": 3,
+                "sequence": [
+                  "Kiểm KMO và Bartlett's Test of Sphericity",
+                  "Xác định số lượng nhân tố cần trích xuất theo quy tắc Kaiser (eigenvalue > 1)",
+                  "Trích xuất nhân tố và xoay (rotation) ma trận loading",
+                  "Đọc ma trận loading, xác định item cross-loading hoặc loading thấp",
+                  "Quyết định giữ, loại, hoặc viết lại từng item có vấn đề",
+                  "Tính lại Cronbach's Alpha cho cấu trúc construct đã điều chỉnh"
+                ]
+              },
+              {
+                "key": "xldl3-noi-chi-so-efa",
+                "type": "matching",
+                "prompt": "Nối mỗi chỉ số hoặc khái niệm với đúng vai trò của nó trong EFA.",
+                "explanation": "KMO đo độ phù hợp dữ liệu; Bartlett's kiểm các item có đủ tương quan; cross-loading là item load cao ở nhiều nhân tố; Cronbach's Alpha sau điều chỉnh phản ánh đúng cấu trúc cuối cùng.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "KMO",
+                    "right": "Đo mức độ phù hợp của dữ liệu cho phân tích nhân tố"
+                  },
+                  {
+                    "left": "Bartlett's Test of Sphericity",
+                    "right": "Kiểm các item có đủ tương quan với nhau để phân tích"
+                  },
+                  {
+                    "left": "Cross-loading",
+                    "right": "Item load cao ở nhiều nhân tố, không đo rõ một khái niệm"
+                  },
+                  {
+                    "left": "Cronbach's Alpha sau điều chỉnh",
+                    "right": "Phản ánh đúng độ tin cậy của cấu trúc construct cuối cùng"
+                  }
+                ]
+              },
+              {
+                "key": "xldl3-doc-ma-tran-loading",
+                "type": "essay",
+                "prompt": "Cho ma trận loading ở mục 2 của bài học (6 item, 2 nhân tố). Viết đoạn 150-200 từ: (a) xác định item nào load tốt, item nào có vấn đề (cross-loading hoặc loading thấp); (b) quyết định của bạn cho mỗi item có vấn đề; (c) cấu trúc construct cuối cùng (item nào thuộc construct nào) sau khi đã điều chỉnh.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 4 · Mã hóa dữ liệu định tính và độ tin cậy giữa người mã hóa",
+          "durationMin": 90,
+          "description": "Mã hóa một đoạn transcript thật bằng open coding mô tả cụ thể, không trừu tượng hóa quá sớm; nhóm mã thành chủ đề; tự tay tính Cohen's Kappa từ bảng đồng thuận giữa hai người mã hóa; diễn giải Kappa đúng ngưỡng và biết khi nào cần quay lại thảo luận định nghĩa mã.",
+          "objectives": [
+            "Mã hóa một đoạn transcript bằng open coding mô tả cụ thể, tránh trừu tượng hóa quá sớm làm mất chi tiết dữ liệu gốc",
+            "Nhóm các mã mô tả thành chủ đề lớn hơn (axial coding) từ một tập mã cụ thể",
+            "Tự tay tính Cohen's Kappa từ bảng đồng thuận 2×2 giữa hai người mã hóa, phân biệt với tỉ lệ đồng thuận thô",
+            "Diễn giải giá trị Kappa theo ngưỡng chuẩn và biết khi nào cần quay lại thảo luận định nghĩa mã trước khi tiếp tục"
+          ],
+          "summary": [
+            "Open coding nên mô tả cụ thể điều đang xảy ra trong dữ liệu trước khi trừu tượng hóa thành khái niệm lý thuyết — gán nhãn trừu tượng quá sớm làm mất chi tiết mà sau này không lấy lại được.",
+            "Axial coding nhóm các mã mô tả cụ thể thành chủ đề lớn hơn, dựa trên việc chúng cùng nói về một khía cạnh chung của hiện tượng, không phải nhóm theo cảm tính.",
+            "Tỉ lệ đồng thuận thô (% hai người mã hóa chọn giống nhau) không tính tới đồng thuận có thể xảy ra do ngẫu nhiên — Cohen's Kappa trừ đi phần ngẫu nhiên đó, và là chỉ số đáng tin hơn để báo cáo.",
+            "Kappa dưới 0.4 (theo ngưỡng Landis & Koch) là dấu hiệu cần quay lại thảo luận định nghĩa từng mã với người mã hóa thứ hai trước khi tiếp tục mã hóa phần còn lại của dữ liệu, không phải một con số chỉ để báo cáo rồi bỏ qua."
+          ],
+          "splitSections": true,
+          "body": "\nKhoá Phương pháp nghiên cứu đã nói cần ít nhất hai người mã hóa độc lập. Bài này thực hành mã hóa thật trên một đoạn transcript, và tính tay độ tin cậy giữa hai người mã hóa — đi từ open coding mô tả cụ thể trước khi trừu tượng hóa, tới axial coding nhóm các mã thành chủ đề, rồi tính Cohen's Kappa từng bước từ bảng đồng thuận, và cuối cùng diễn giải Kappa theo ngưỡng chuẩn để biết khi nào cần quay lại thảo luận định nghĩa mã. Bài khép lại bằng phần luyện tập và tài liệu tham khảo.\n\n## Open coding: mô tả cụ thể trước, trừu tượng hóa sau\n\n> [!vi-du] Đoạn transcript (phỏng vấn giảng viên về công cụ AI chấm bài): *\"Lúc đầu tôi thấy nó tiết kiệm thời gian lắm, chấm được nhiều bài hơn. Nhưng sau vài tuần tôi nhận ra học sinh không còn nhận được góp ý riêng cho bài của mình nữa, AI chấm theo khuôn mẫu chung. Tôi cũng lo là dần dần mình sẽ mất khả năng đánh giá bài viết tinh tế như trước, vì cứ để AI làm hết.\"*\n\n> [!ghi-nho] **Open coding** gắn nhãn mô tả **cụ thể** cho từng đoạn dữ liệu, bám sát điều người tham gia thực sự nói, trước khi trừu tượng hóa thành khái niệm lý thuyết. Với đoạn trên: \"tiết kiệm thời gian chấm bài\" (không phải nhãn trừu tượng \"hiệu quả công nghệ\"), \"mất góp ý cá nhân hóa cho học sinh\" (không phải \"chất lượng giảng dạy giảm\"), \"lo mất kỹ năng đánh giá của bản thân\" (không phải \"đe dọa chuyên môn\" — đó là diễn giải, chưa phải mô tả).\n\n> [!canh-bao] Gán nhãn trừu tượng ngay từ open coding (ví dụ nhãn hóa thẳng thành \"đe dọa bản sắc nghề nghiệp\" cho câu trên) làm mất chi tiết cụ thể của dữ liệu gốc — một khi đã trừu tượng hóa, không thể lấy lại được sắc thái ban đầu (ở đây, giảng viên đang lo về \"kỹ năng\", chưa chắc là \"bản sắc nghề nghiệp\" — hai điều gần nhau nhưng không giống nhau, và kết luận sau này về hai khái niệm này rất khác). Giữ mã mô tả cụ thể ở vòng đầu; việc nhóm và trừu tượng hóa diễn ra ở bước axial coding tiếp theo.\n\n## Axial coding: nhóm mã thành chủ đề\n\nSau khi mã hóa nhiều đoạn dữ liệu (giả sử có thêm các mã mô tả từ những phỏng vấn khác: \"chấm được nhiều bài hơn trong ít thời gian\", \"không phải làm việc ngoài giờ để chấm bài\", \"học sinh phàn nàn phản hồi AI chung, không cụ thể\", \"cảm thấy vai trò của mình bị thay thế một phần\"), bước tiếp theo là nhóm các mã có liên quan.\n\n| Mã mô tả cụ thể | Chủ đề (sau axial coding) |\n|---|---|\n| Tiết kiệm thời gian chấm bài, chấm nhiều bài hơn | Hiệu quả về thời gian |\n| Không phải làm việc ngoài giờ để chấm bài | Hiệu quả về thời gian |\n| Mất góp ý cá nhân hóa cho học sinh | Chất lượng phản hồi cho học sinh |\n| Học sinh phàn nàn phản hồi chung, không cụ thể | Chất lượng phản hồi cho học sinh |\n| Lo mất kỹ năng đánh giá của bản thân | Lo ngại về vai trò chuyên môn |\n| Cảm thấy vai trò của mình bị thay thế một phần | Lo ngại về vai trò chuyên môn |\n\n> [!meo] Axial coding nhóm theo việc các mã cùng nói về một **khía cạnh chung** của hiện tượng, không phải nhóm theo cảm tính \"nghe có vẻ giống nhau\". Luôn quay lại đọc chính đoạn dữ liệu gốc của mỗi mã trước khi quyết định nhóm nó vào chủ đề nào — nhóm sai làm sai cả cấu trúc phân tích sau đó.\n\n## Tính Cohen's Kappa giữa hai người mã hóa\n\nHai người mã hóa độc lập 20 đoạn phỏng vấn vào hai nhóm: \"Có lo ngại về vai trò chuyên môn\" (A) hoặc \"Không lo ngại\" (B). Bảng đồng thuận:\n\n| | Người 2: A | Người 2: B | Tổng |\n|---|---|---|---|\n| **Người 1: A** | 8 | 2 | 10 |\n| **Người 1: B** | 3 | 7 | 10 |\n| **Tổng** | 11 | 9 | 20 |\n\n> [!ghi-nho] **Tỉ lệ đồng thuận thô** (Po) = số lần hai người chọn giống nhau ÷ tổng số: Po = (8+7)/20 = **0.75** (75%). Nhưng con số này không trừ đi phần đồng thuận có thể xảy ra **do ngẫu nhiên** — nếu một nhóm (ví dụ A) chiếm đa số, hai người mã hóa ngẫu nhiên vẫn dễ \"trùng\" nhau ở nhóm đó mà không thực sự đồng ý về nội dung.\n\n**Tính Cohen's Kappa từng bước:**\n\n```html\n<div style=\"background:rgba(127,127,127,.07);border:1px solid rgba(127,127,127,.28);border-radius:.5rem;padding:.8rem 1rem;margin:1rem 0;overflow-x:auto\"><pre style=\"margin:0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:1rem;line-height:1.7;white-space:pre\">Pe (đồng thuận kỳ vọng do ngẫu nhiên)\n  = (Tổng A của Người 1 ÷ 20 × Tổng A của Người 2 ÷ 20) + (Tổng B của Người 1 ÷ 20 × Tổng B của Người 2 ÷ 20)\n  = (10/20 × 11/20) + (10/20 × 9/20)\n  = (0.5 × 0.55) + (0.5 × 0.45)\n  = 0.275 + 0.225 = 0.5\n\nKappa (κ) = (Po − Pe) / (1 − Pe)\n          = (0.75 − 0.5) / (1 − 0.5)\n          = 0.25 / 0.5 = 0.5</pre></div>\n```\n\n> [!canh-bao] Chỉ báo cáo tỉ lệ đồng thuận thô (75%) mà không tính Kappa là báo cáo một con số bị **thổi phồng** — sau khi trừ đồng thuận do ngẫu nhiên, mức độ đồng thuận thật (Kappa = 0.5) thấp hơn nhiều so với 75% nghe được.\n\n> [!vi-du] Kappa có thể còn **âm**. Giả sử với 10 đoạn khác (Người 1: A=6/B=4; Người 2: A=3/B=7), hai người chỉ thực sự đồng ý ở 4 đoạn (A&A=1, B&B=3): Po = 4/10 = 0.4. Pe = (6/10×3/10) + (4/10×7/10) = 0.18 + 0.28 = 0.46. Kappa = (0.4 − 0.46) / (1 − 0.46) = −0.06/0.54 ≈ **−0.11**. Đồng thuận quan sát được còn **thấp hơn cả** mức kỳ vọng do ngẫu nhiên — nghĩa là hai người đang lệch nhau còn hệ thống hơn việc đoán ngẫu nhiên theo tỉ lệ riêng của mỗi người. Đây là dấu hiệu nghiêm trọng hơn cả Kappa thấp: không chỉ mơ hồ mà định nghĩa mã của hai người đang **xung đột** nhau — cần dừng hẳn và thảo luận lại từ đầu, không chỉ xem lại vài đoạn khác biệt.\n\n> [!meo] Cách tính Po và Pe ở trên áp dụng tương tự khi có **nhiều hơn 2 danh mục** (không chỉ A/B) — dựng bảng đồng thuận k×k, Po vẫn là tổng các ô trên đường chéo chia cho tổng số, Pe vẫn là tổng các tích giữa tổng hàng và tổng cột tương ứng (chia cho tổng số bình phương) của từng danh mục cộng lại.\n\n## Diễn giải Kappa và bước tiếp theo\n\n> [!ghi-nho] Theo ngưỡng thường dùng (Landis & Koch, 1977): Kappa < 0.4 là **kém**, 0.4-0.6 là **trung bình (fair-moderate)**, 0.6-0.8 là **tốt**, trên 0.8 là **rất tốt**. Với ví dụ trên, Kappa = 0.5 rơi vào mức trung bình — chấp nhận được nhưng chưa mạnh.\n\n> [!canh-bao] Kappa thấp (đặc biệt dưới 0.4) không nên chỉ được ghi vào báo cáo rồi tiếp tục mã hóa phần còn lại của dữ liệu như không có gì xảy ra. Đây là dấu hiệu cần **hai người mã hóa ngồi lại thảo luận** những đoạn họ mã khác nhau, làm rõ định nghĩa từng mã (ranh giới giữa \"có lo ngại\" và \"không lo ngại\" đang được hiểu khác nhau ở đâu), rồi mới tiếp tục mã hóa với định nghĩa đã thống nhất rõ hơn.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nMã hóa (open coding) một đoạn transcript của bạn (thật hoặc tự viết mô phỏng, 3-5 câu) bằng nhãn mô tả cụ thể. Nhóm các mã (của bạn và ít nhất 3-4 mã giả định khác) thành 2-3 chủ đề bằng axial coding.\n\n### Nhóm 3-4 người (30 phút)\n\nĐổi transcript đã mã hóa cho một người khác mã hóa độc lập cùng đoạn đó. So sánh nhãn — tạo bảng đồng thuận 2×2 nếu có thể quy về hai nhóm, và tính Kappa. Nếu Kappa thấp, thảo luận ngay tại sao hai người hiểu định nghĩa mã khác nhau.\n\n### Bài tập về nhà (60 phút)\n\nViết phần báo cáo mã hóa cho luận văn/bài báo (200-300 từ): mô tả quy trình open coding → axial coding, bảng đồng thuận 2×2 thật hoặc giả định, và Kappa đã tính kèm diễn giải theo ngưỡng.\n\n:::mau Mẫu nộp bài tập về nhà\n**Mã mô tả (open coding, ít nhất 5 mã):** …\n\n**Chủ đề sau axial coding:** …\n\n**Bảng đồng thuận 2×2 giữa hai người mã hóa:** …\n\n**Po, Pe, Kappa (tính từng bước):** …\n\n**Diễn giải và bước tiếp theo (nếu Kappa thấp):** …\n:::\n\n### Nguồn tham khảo\n\n- Cohen, J. (1960). A coefficient of agreement for nominal scales. *Educational and Psychological Measurement*, 20(1), 37-46.\n- Landis, J. R., & Koch, G. G. (1977). The measurement of observer agreement for categorical data. *Biometrics*, 33(1), 159-174.\n- Charmaz, K. (2014). *Constructing Grounded Theory* (2nd ed.). SAGE Publications. — về open coding và axial coding.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "xldl4-open-coding-cu-the",
+                "type": "mcq",
+                "prompt": "Một giảng viên nói 'tôi lo dần mình sẽ mất khả năng đánh giá bài viết tinh tế'. Nhãn open coding nào đúng cách nhất?",
+                "explanation": "Open coding nên mô tả cụ thể, bám sát điều người tham gia thực sự nói. 'Lo mất kỹ năng đánh giá của bản thân' bám sát câu nói; 'đe dọa bản sắc nghề nghiệp' là trừu tượng hóa quá sớm, có thể không đúng hoàn toàn với ý người nói.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Lo mất kỹ năng đánh giá của bản thân' — mô tả cụ thể, bám sát câu nói",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Đe dọa bản sắc nghề nghiệp' — trừu tượng hóa ngay từ đầu",
+                    "isCorrect": false,
+                    "misconception": "xldl.code-too-abstract-early"
+                  },
+                  {
+                    "label": "'Khủng hoảng tồn tại nghề nghiệp trong thời đại AI'",
+                    "isCorrect": false,
+                    "misconception": "xldl.code-too-abstract-early"
+                  },
+                  {
+                    "label": "'Vấn đề tâm lý học đường'",
+                    "isCorrect": false,
+                    "misconception": "xldl.code-too-abstract-early"
+                  }
+                ]
+              },
+              {
+                "key": "xldl4-po-vs-kappa",
+                "type": "mcq",
+                "prompt": "Hai người mã hóa có tỉ lệ đồng thuận thô 75%. Vì sao không nên chỉ báo cáo con số này mà cần tính thêm Cohen's Kappa?",
+                "explanation": "Tỉ lệ đồng thuận thô không trừ đi phần đồng thuận có thể xảy ra do ngẫu nhiên — nếu một nhóm chiếm đa số, hai người mã hóa ngẫu nhiên vẫn dễ 'trùng' mà không thực sự đồng ý. Kappa trừ đi phần này, cho một con số đáng tin hơn.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tỉ lệ đồng thuận thô không trừ đi phần đồng thuận có thể xảy ra do ngẫu nhiên, nên có thể bị thổi phồng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần tính Kappa nếu tỉ lệ đồng thuận thô đã trên 70%",
+                    "isCorrect": false,
+                    "misconception": "xldl.agreement-percent-not-kappa"
+                  },
+                  {
+                    "label": "Tỉ lệ đồng thuận thô luôn chính xác hơn Kappa nên không cần tính thêm",
+                    "isCorrect": false,
+                    "misconception": "xldl.agreement-percent-not-kappa"
+                  },
+                  {
+                    "label": "Kappa chỉ cần tính khi có hơn hai người mã hóa",
+                    "isCorrect": false,
+                    "misconception": "xldl.agreement-percent-not-kappa"
+                  }
+                ]
+              },
+              {
+                "key": "xldl4-tinh-kappa",
+                "type": "mcq",
+                "prompt": "Với bảng đồng thuận ở bài học (Po = 0.75, Pe = 0.5), Kappa tính được là bao nhiêu?",
+                "explanation": "Kappa = (Po − Pe) / (1 − Pe) = (0.75 − 0.5) / (1 − 0.5) = 0.25 / 0.5 = 0.5.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "0.5",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "0.75",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "0.25",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "1.25",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl4-kappa-thap-xu-ly",
+                "type": "mcq",
+                "prompt": "Hai người mã hóa tính được Kappa = 0.28 (mức kém theo Landis & Koch). Nên làm gì tiếp theo?",
+                "explanation": "Kappa thấp là dấu hiệu cần hai người mã hóa ngồi lại thảo luận những đoạn mã khác nhau, làm rõ định nghĩa từng mã, trước khi tiếp tục mã hóa phần còn lại — không nên chỉ ghi vào báo cáo và tiếp tục như không có gì xảy ra.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Ngồi lại thảo luận các đoạn mã khác nhau, làm rõ định nghĩa mã, trước khi tiếp tục mã hóa phần còn lại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ghi Kappa = 0.28 vào báo cáo và tiếp tục mã hóa phần còn lại như bình thường",
+                    "isCorrect": false,
+                    "misconception": "xldl.kappa-low-ignored"
+                  },
+                  {
+                    "label": "Bỏ hẳn việc tính Kappa vì kết quả không như mong đợi",
+                    "isCorrect": false,
+                    "misconception": "xldl.kappa-low-ignored"
+                  },
+                  {
+                    "label": "Chỉ cần một người mã hóa lại toàn bộ một mình cho nhanh",
+                    "isCorrect": false,
+                    "misconception": "xldl.kappa-low-ignored"
+                  }
+                ]
+              },
+              {
+                "key": "xldl4-nguong-kappa",
+                "type": "mcq",
+                "prompt": "Theo ngưỡng Landis & Koch (1977), Kappa = 0.5 được xếp vào mức nào?",
+                "explanation": "Theo ngưỡng thường dùng: dưới 0.4 là kém, 0.4-0.6 là trung bình (fair-moderate), 0.6-0.8 là tốt, trên 0.8 là rất tốt. Kappa = 0.5 rơi vào mức trung bình.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Trung bình (fair-moderate)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Kém",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tốt",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Rất tốt (excellent)",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl4-thu-tu-ma-hoa",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự quy trình mã hóa dữ liệu định tính có kiểm độ tin cậy.",
+                "explanation": "Từ open coding mô tả cụ thể, nhóm thành chủ đề (axial coding), hai người mã hóa độc lập một phần dữ liệu, tính Kappa, tới thảo luận nếu Kappa thấp trước khi tiếp tục.",
+                "points": 3,
+                "sequence": [
+                  "Mã hóa mô tả cụ thể (open coding) cho từng đoạn dữ liệu",
+                  "Nhóm các mã mô tả thành chủ đề lớn hơn (axial coding)",
+                  "Có người thứ hai mã hóa độc lập một phần dữ liệu",
+                  "Tính Cohen's Kappa từ bảng đồng thuận giữa hai người",
+                  "Nếu Kappa thấp, thảo luận định nghĩa mã trước khi mã hóa tiếp phần còn lại"
+                ]
+              },
+              {
+                "key": "xldl4-noi-khai-niem-ma-hoa",
+                "type": "matching",
+                "prompt": "Nối mỗi khái niệm với đúng vai trò của nó trong quy trình mã hóa định tính.",
+                "explanation": "Open coding mô tả cụ thể; axial coding nhóm mã thành chủ đề; Po là tỉ lệ đồng thuận thô; Kappa trừ đi phần đồng thuận do ngẫu nhiên để cho con số đáng tin hơn.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Open coding",
+                    "right": "Gắn nhãn mô tả cụ thể cho từng đoạn dữ liệu"
+                  },
+                  {
+                    "left": "Axial coding",
+                    "right": "Nhóm các mã mô tả thành chủ đề lớn hơn"
+                  },
+                  {
+                    "left": "Po (tỉ lệ đồng thuận thô)",
+                    "right": "Số lần hai người chọn giống nhau chia cho tổng số"
+                  },
+                  {
+                    "left": "Cohen's Kappa",
+                    "right": "Đồng thuận thật sau khi trừ đi phần có thể do ngẫu nhiên"
+                  }
+                ]
+              },
+              {
+                "key": "xldl4-tinh-kappa-moi",
+                "type": "essay",
+                "prompt": "Cho bảng đồng thuận mới giữa hai người mã hóa 25 đoạn dữ liệu vào 2 nhóm (A/B): Người 1 chọn A cho 15 đoạn, B cho 10 đoạn; Người 2 chọn A cho 12 đoạn, B cho 13 đoạn; số đoạn cả hai cùng chọn A là 10. Viết 150-200 từ: (a) dựng bảng đồng thuận 2×2 đầy đủ; (b) tính Po, Pe, Kappa từng bước; (c) diễn giải mức Kappa theo ngưỡng Landis & Koch và đề xuất bước tiếp theo.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 5 · Trực quan hóa dữ liệu và đóng gói để tái lập kết quả",
+          "durationMin": 75,
+          "description": "Chọn đúng loại biểu đồ theo loại dữ liệu; tránh trục y bị cắt trên biểu đồ cột và biểu đồ hai trục gây hiểu sai; chuyển một bảng output thô thành biểu đồ đúng cách; đóng gói dữ liệu, script và codebook để người khác (hoặc chính mình sau này) tái lập được kết quả.",
+          "objectives": [
+            "Chọn đúng loại biểu đồ (cột, đường, phân tán, hộp) theo loại dữ liệu và mục đích so sánh",
+            "Nhận diện và tránh hai lỗi trực quan hóa phổ biến: trục y bị cắt trên biểu đồ cột, và biểu đồ hai trục y gây hiểu sai về tương quan",
+            "Chuyển một bảng kết quả thống kê thô thành một biểu đồ đúng cách, có chú thích đầy đủ",
+            "Đóng gói dữ liệu, script phân tích và codebook thành một bộ hồ sơ để tái lập được kết quả sau này"
+          ],
+          "summary": [
+            "Loại biểu đồ phải khớp với loại dữ liệu và mục đích: biểu đồ cột cho so sánh giữa các nhóm, biểu đồ đường cho thay đổi theo thời gian, biểu đồ phân tán cho tương quan giữa hai biến liên tục — không phải chọn theo biểu đồ nào 'nhìn đẹp'.",
+            "Biểu đồ cột không bắt đầu trục y từ 0 làm sự khác biệt giữa các nhóm trông lớn hơn thực tế — đây là lỗi trực quan hóa phổ biến và dễ gây hiểu sai nhất.",
+            "Biểu đồ hai trục y (dùng hai thang đo khác nhau cho hai đường trên cùng một biểu đồ) dễ khiến người xem ngộ nhận về mối tương quan không thực chất tồn tại, vì có thể chọn tỉ lệ hai trục để hai đường trông giống nhau.",
+            "Một bộ hồ sơ tái lập kết quả cần đủ ba phần: dữ liệu, script phân tích, và codebook giải thích từng biến — thiếu một trong ba phần khiến không ai, kể cả chính người phân tích một năm sau, tái lập lại được đúng quy trình."
+          ],
+          "splitSections": true,
+          "body": "\nVới các bảng output đã đọc đúng ở Bài 2-4, bài cuối này chuyển kết quả thành biểu đồ đúng cách, và đóng gói toàn bộ quy trình để tái lập được. Bài đi qua bốn phần: chọn đúng loại biểu đồ theo loại dữ liệu, nhận diện hai lỗi trực quan hóa gây hiểu sai (trục y bị cắt, biểu đồ hai trục), chuyển một bảng kết quả thống kê thô thành biểu đồ đúng cách có chú thích đầy đủ, và đóng gói dữ liệu — script — codebook thành một bộ hồ sơ để tái lập được kết quả sau này. Phần luyện tập và tài liệu tham khảo khép lại khoá học.\n\n## Chọn đúng loại biểu đồ\n\n| Mục đích | Loại biểu đồ phù hợp |\n|---|---|\n| So sánh giá trị trung bình giữa các nhóm | Biểu đồ cột (bar chart) |\n| Thay đổi của một biến theo thời gian | Biểu đồ đường (line chart) |\n| Mối tương quan giữa hai biến liên tục | Biểu đồ phân tán (scatter plot) |\n| Phân phối của một biến liên tục (xem hình dạng, outlier) | Histogram hoặc box plot |\n| Tỉ lệ phần trăm của một tổng, khi có ít hơn 5-6 phần | Biểu đồ tròn (dùng hạn chế) |\n\n> [!canh-bao] Dùng biểu đồ tròn cho một biến có 8-10 phần (ví dụ tỉ lệ sinh viên theo 10 ngành học) làm người xem không thể so sánh chính xác các phần gần bằng nhau — mắt người không phân biệt tốt góc của các hình quạt nhỏ. Với nhiều hơn 5-6 phần, **biểu đồ cột** luôn dễ so sánh hơn biểu đồ tròn.\n\nVới biểu đồ phân tán (scatter plot), luôn tính kèm hệ số tương quan **r** và diễn giải độ mạnh của nó theo cùng quy ước Cohen (1988) đã dùng cho Cohen's d và eta-squared ở Bài 2:\n\n| |r| | Mức độ tương quan |\n|---|---|\n| 0.10 – 0.29 | Yếu |\n| 0.30 – 0.49 | Vừa |\n| ≥ 0.50 | Mạnh |\n\n> [!vi-du] Biểu đồ phân tán giữa \"số giờ tự học mỗi tuần\" và \"điểm hài lòng với công cụ AI chấm bài\" cho r = 0.42 — tương quan dương mức **vừa**: xu hướng chung là tự học nhiều hơn đi kèm hài lòng cao hơn, nhưng r = 0.42 (không phải r gần 1) nghĩa là các điểm trên biểu đồ vẫn phân tán khá rộng quanh đường xu hướng, không nằm sát một đường thẳng.\n\n> [!canh-bao] Độ mạnh tương quan (r) và ý nghĩa thống kê (p-value) là hai điều khác nhau — đừng lẫn lộn. Với cỡ mẫu lớn, một r rất nhỏ (ví dụ 0.12, mức \"yếu\") vẫn có thể cho p < 0.05; ngược lại với cỡ mẫu nhỏ, một r khá lớn (ví dụ 0.45) có thể chưa đạt p < 0.05. Khi trình bày biểu đồ phân tán, nên ghi cả r và p (nếu có) thay vì chỉ nói \"có tương quan có ý nghĩa\" mà không cho biết tương quan đó mạnh hay yếu.\n\n## Hai lỗi trực quan hóa gây hiểu sai\n\n> [!canh-bao] **Trục y bị cắt trên biểu đồ cột** (không bắt đầu từ 0) là lỗi phổ biến và dễ gây hiểu sai nhất: một sự khác biệt nhỏ (ví dụ Mean 3.44 so với 3.60) khi vẽ trên trục y chạy từ 3.4 tới 3.7 trông như một khác biệt rất lớn, trong khi trên trục y đầy đủ từ 0 tới 5 (đúng với thang Likert), sự khác biệt đó trông nhỏ hơn nhiều — và đúng với thực tế hơn. **Biểu đồ cột nên luôn bắt đầu trục y từ 0.**\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem\">Cùng số liệu, hai cách vẽ khác nhau</div>\n  <div style=\"display:flex;gap:1.2rem;flex-wrap:wrap\">\n    <div style=\"flex:1;min-width:200px\">\n      <div style=\"font-size:1rem;color:rgba(217,150,40,.95);font-weight:600;margin-bottom:.4rem\">Trục y từ 3.0 (gây hiểu sai)</div>\n      <div style=\"display:flex;align-items:flex-end;gap:.6rem;height:80px\">\n        <div style=\"width:40px;height:70px;background:rgba(59,130,246,.5);border-radius:.2rem 0.2rem 0 0\"></div>\n        <div style=\"width:40px;height:44px;background:rgba(139,92,246,.5);border-radius:.2rem 0.2rem 0 0\"></div>\n      </div>\n      <div style=\"font-size:.95rem;color:rgba(127,127,127,.85);margin-top:.3rem\">Nhóm A: 3.60 &nbsp;&nbsp; Nhóm B: 3.44 — trông như gấp rưỡi</div>\n    </div>\n    <div style=\"flex:1;min-width:200px\">\n      <div style=\"font-size:1rem;color:rgba(13,148,136,.95);font-weight:600;margin-bottom:.4rem\">Trục y từ 0 (đúng thực tế)</div>\n      <div style=\"display:flex;align-items:flex-end;gap:.6rem;height:80px\">\n        <div style=\"width:40px;height:72px;background:rgba(59,130,246,.5);border-radius:.2rem 0.2rem 0 0\"></div>\n        <div style=\"width:40px;height:69px;background:rgba(139,92,246,.5);border-radius:.2rem 0.2rem 0 0\"></div>\n      </div>\n      <div style=\"font-size:.95rem;color:rgba(127,127,127,.85);margin-top:.3rem\">Nhóm A: 3.60 &nbsp;&nbsp; Nhóm B: 3.44 — khác biệt thật, khá nhỏ</div>\n    </div>\n  </div>\n</div>\n```\n\n> [!canh-bao] **Biểu đồ hai trục y** (vẽ hai đường với hai thang đo khác nhau trên cùng một biểu đồ, ví dụ số lượt dùng AI bên trái, điểm hài lòng bên phải) rất dễ bị chọn tỉ lệ hai trục sao cho hai đường \"khớp\" nhau về hình dạng, khiến người xem ngộ nhận có mối tương quan mạnh — trong khi mối tương quan thật (nếu tính hệ số) có thể rất yếu. Nếu cần so sánh hai biến khác đơn vị, ưu tiên hai biểu đồ riêng đặt cạnh nhau, hoặc chuẩn hóa cả hai về cùng thang (z-score) trước khi vẽ chung.\n\n## Từ bảng output thô tới biểu đồ đúng\n\nVới bảng t-test ở Bài 2 (Nữ: Mean=4.25, SD=0.50; Nam: Mean=2.80, SD=0.84), biểu đồ cột đúng cách cần: trục y từ 0 tới 5 (đúng thang Likert), có **thanh sai số** (error bar, thường ±1 SD hoặc khoảng tin cậy 95%) để người xem thấy được độ phân tán, không chỉ điểm trung bình, và chú thích rõ đơn vị đo (thang Likert 1-5) cùng cỡ mẫu mỗi nhóm.\n\n> [!meo] Luôn tự hỏi trước khi hoàn thiện một biểu đồ: nếu chỉ nhìn biểu đồ này mà không đọc chữ nào khác, người xem có hiểu đúng độ lớn thật của sự khác biệt/mối quan hệ không? Nếu câu trả lời là biểu đồ đang \"phóng đại\" ấn tượng so với số liệu thật, cần vẽ lại.\n\n## Đóng gói dữ liệu để tái lập kết quả\n\n> [!ghi-nho] Một bộ hồ sơ tái lập kết quả (reproducibility package) đầy đủ cần ba phần: **dữ liệu** (cả bản thô và bản đã làm sạch, giữ riêng hai bản), **script phân tích** (mã R/cú pháp SPSS đã chạy, không phải chỉ lưu kết quả output), và **codebook** (giải thích mỗi biến là gì, đơn vị đo, thang đo, cách các biến dẫn xuất — như điểm construct — được tính từ biến gốc).\n\n> [!canh-bao] Chỉ lưu lại file dữ liệu cuối cùng và bảng kết quả, không lưu script hay codebook, khiến không ai — kể cả chính người phân tích một năm sau — tái lập lại được chính xác quy trình đã làm: item nào đã bị loại, công thức đảo hướng nào đã dùng, hay tiêu chí loại outlier nào đã áp dụng đều bị mất theo thời gian nếu không ghi lại.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (35 phút)\n\nVới một bảng kết quả bạn đã có (từ Bài 2, 3, hoặc dữ liệu của bạn), chọn đúng loại biểu đồ và vẽ (hoặc mô tả) nó, đảm bảo trục y bắt đầu từ 0 nếu là biểu đồ cột, và có chú thích đơn vị/cỡ mẫu.\n\n### Nhóm 3-4 người (20 phút)\n\nĐổi biểu đồ cho nhau. Kiểm: biểu đồ này có \"phóng đại\" ấn tượng so với số liệu thật không? Loại biểu đồ đã chọn có đúng với loại dữ liệu và mục đích không?\n\n### Bài tập về nhà (45-60 phút)\n\nĐóng gói một bộ hồ sơ tái lập kết quả cho một phân tích bạn đã làm ở các bài trước: dữ liệu thô + đã làm sạch, script/cú pháp đã dùng, và codebook giải thích từng biến.\n\n:::mau Mẫu nộp bài tập về nhà\n**Biểu đồ đã chọn và lý do phù hợp với loại dữ liệu:** …\n\n**Hồ sơ tái lập kết quả**\n\n| Thành phần | Có / Chưa có | Ghi chú |\n|---|---|---|\n| Dữ liệu thô | … | … |\n| Dữ liệu đã làm sạch | … | … |\n| Script/cú pháp phân tích | … | … |\n| Codebook (giải thích từng biến) | … | … |\n:::\n\n### Nguồn tham khảo\n\n- Tufte, E. R. (2001). *The Visual Display of Quantitative Information* (2nd ed.). Graphics Press.\n- Wilkinson, L. (2005). *The Grammar of Graphics* (2nd ed.). Springer.\n- Wilson, G., et al. (2017). Good enough practices in scientific computing. *PLOS Computational Biology*, 13(6), e1005510.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "xldl5-chon-bieu-do",
+                "type": "mcq",
+                "prompt": "Bạn muốn thể hiện tỉ lệ sinh viên theo 9 ngành học khác nhau. Loại biểu đồ nào phù hợp nhất?",
+                "explanation": "Với nhiều hơn 5-6 phần, biểu đồ tròn khiến mắt người khó phân biệt các phần gần bằng nhau — biểu đồ cột luôn dễ so sánh hơn khi có nhiều nhóm.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Biểu đồ cột",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Biểu đồ tròn",
+                    "isCorrect": false,
+                    "misconception": "xldl.pie-chart-too-many-slices"
+                  },
+                  {
+                    "label": "Biểu đồ đường",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Biểu đồ phân tán",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl5-truc-y-cat",
+                "type": "mcq",
+                "prompt": "Một biểu đồ cột so sánh Mean 3.44 và 3.60 (thang Likert 1-5) vẽ trục y chạy từ 3.0 tới 3.8. Vấn đề của biểu đồ này là gì?",
+                "explanation": "Trục y bị cắt (không bắt đầu từ 0) làm sự khác biệt nhỏ trông như lớn hơn nhiều so với thực tế — biểu đồ cột nên luôn bắt đầu trục y từ 0, đặc biệt với thang đo có điểm 0 rõ ràng như Likert.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Trục y bị cắt (không bắt đầu từ 0) làm sự khác biệt nhỏ trông như lớn hơn nhiều so với thực tế",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, cắt trục y luôn giúp biểu đồ dễ đọc hơn",
+                    "isCorrect": false,
+                    "misconception": "xldl.truncated-yaxis-bar-chart"
+                  },
+                  {
+                    "label": "Không có vấn đề gì với biểu đồ cột, chỉ cần tránh với biểu đồ đường",
+                    "isCorrect": false,
+                    "misconception": "xldl.truncated-yaxis-bar-chart"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là màu sắc chưa đủ nổi bật",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl5-hai-truc-y",
+                "type": "mcq",
+                "prompt": "Một biểu đồ vẽ hai đường (số lượt dùng AI và điểm hài lòng) trên hai trục y khác nhau, và hai đường trông rất giống hình dạng nhau. Rủi ro của cách trình bày này là gì?",
+                "explanation": "Biểu đồ hai trục y dễ bị chọn tỉ lệ trục sao cho hai đường 'khớp' hình dạng, khiến người xem ngộ nhận có mối tương quan mạnh trong khi mối tương quan thật có thể rất yếu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Dễ khiến người xem ngộ nhận có mối tương quan mạnh giữa hai biến, dù mối tương quan thật có thể yếu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có rủi ro gì, hai trục y luôn giúp so sánh chính xác hơn một trục",
+                    "isCorrect": false,
+                    "misconception": "xldl.dual-axis-misleading"
+                  },
+                  {
+                    "label": "Rủi ro duy nhất là khó đọc màu sắc trên biểu đồ",
+                    "isCorrect": false,
+                    "misconception": "xldl.dual-axis-misleading"
+                  },
+                  {
+                    "label": "Không có rủi ro nếu cả hai biến đều có ý nghĩa thống kê riêng",
+                    "isCorrect": false,
+                    "misconception": "xldl.dual-axis-misleading"
+                  }
+                ]
+              },
+              {
+                "key": "xldl5-tai-lap-thieu-gi",
+                "type": "mcq",
+                "prompt": "Một nhà nghiên cứu chỉ lưu lại file dữ liệu cuối cùng và bảng kết quả, không lưu script phân tích hay codebook. Một năm sau, vấn đề nào sẽ xảy ra?",
+                "explanation": "Không lưu script và codebook khiến không ai, kể cả chính người phân tích, tái lập lại được chính xác quy trình đã làm — item nào bị loại, công thức nào đã dùng đều bị mất theo thời gian.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không ai, kể cả chính người phân tích, tái lập lại được chính xác quy trình đã làm để ra kết quả đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì file dữ liệu cuối cùng đã đủ để hiểu lại toàn bộ quy trình",
+                    "isCorrect": false,
+                    "misconception": "xldl.no-readme-reproducibility"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, miễn là bảng kết quả đã được công bố",
+                    "isCorrect": false,
+                    "misconception": "xldl.no-readme-reproducibility"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là mất thời gian định dạng lại file dữ liệu",
+                    "isCorrect": false,
+                    "misconception": "xldl.no-readme-reproducibility"
+                  }
+                ]
+              },
+              {
+                "key": "xldl5-error-bar",
+                "type": "mcq",
+                "prompt": "Vì sao nên thêm thanh sai số (error bar) vào biểu đồ cột so sánh trung bình giữa các nhóm?",
+                "explanation": "Thanh sai số cho người xem thấy được độ phân tán của dữ liệu, không chỉ điểm trung bình — hai nhóm có Mean khác nhau nhưng SD lớn có thể không thực sự khác biệt có ý nghĩa.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Để người xem thấy được độ phân tán của dữ liệu, không chỉ điểm trung bình đơn lẻ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ để biểu đồ trông chuyên nghiệp hơn, không có ý nghĩa thống kê",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Để thay thế hoàn toàn cho việc báo cáo p-value trong văn bản",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần thiết nếu đã có bảng số liệu đầy đủ đi kèm",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xldl5-thu-tu-truc-quan-hoa",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước tạo một biểu đồ đúng cách từ bảng kết quả thô.",
+                "explanation": "Từ chọn loại biểu đồ đúng với loại dữ liệu, đặt trục y từ 0 (nếu là biểu đồ cột), thêm thanh sai số, chú thích đơn vị/cỡ mẫu, tới tự kiểm biểu đồ có phóng đại ấn tượng so với số liệu thật không.",
+                "points": 3,
+                "sequence": [
+                  "Chọn loại biểu đồ phù hợp với loại dữ liệu và mục đích so sánh",
+                  "Đặt trục y bắt đầu từ 0 nếu là biểu đồ cột",
+                  "Thêm thanh sai số hoặc khoảng tin cậy để thể hiện độ phân tán",
+                  "Chú thích đầy đủ đơn vị đo và cỡ mẫu",
+                  "Tự kiểm lại: biểu đồ có phóng đại ấn tượng so với số liệu thật không"
+                ]
+              },
+              {
+                "key": "xldl5-noi-thanh-phan-tai-lap",
+                "type": "matching",
+                "prompt": "Nối mỗi thành phần với đúng vai trò của nó trong một bộ hồ sơ tái lập kết quả.",
+                "explanation": "Dữ liệu thô là điểm bắt đầu chưa xử lý; dữ liệu đã làm sạch là đầu vào cho phân tích; script ghi lại chính xác các bước đã chạy; codebook giải thích ý nghĩa của từng biến.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Dữ liệu thô",
+                    "right": "Điểm bắt đầu chưa qua xử lý, giữ lại để đối chiếu"
+                  },
+                  {
+                    "left": "Dữ liệu đã làm sạch",
+                    "right": "Đầu vào thực sự dùng cho các phân tích"
+                  },
+                  {
+                    "left": "Script/cú pháp phân tích",
+                    "right": "Ghi lại chính xác các bước tính toán đã chạy"
+                  },
+                  {
+                    "left": "Codebook",
+                    "right": "Giải thích ý nghĩa, đơn vị đo, và cách tính của từng biến"
+                  }
+                ]
+              },
+              {
+                "key": "xldl5-thiet-ke-bieu-do",
+                "type": "essay",
+                "prompt": "Từ bảng t-test ở Bài 2 (Nữ: Mean=4.25, SD=0.50, N=4; Nam: Mean=2.80, SD=0.84, N=5), viết mô tả một biểu đồ cột đúng cách (150-200 từ): (a) khoảng trục y sẽ dùng và vì sao; (b) cách thể hiện thanh sai số; (c) các chú thích cần có (đơn vị, cỡ mẫu); (d) một câu xác nhận biểu đồ này không phóng đại ấn tượng so với số liệu thật.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

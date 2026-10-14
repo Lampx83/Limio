@@ -12,6 +12,7 @@ import {
   startExamAttempt,
   submitExamAttempt,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -58,6 +59,7 @@ async function setup(slug: string, opts: { essay?: boolean } = {}) {
       })
     : null;
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
   return {
     ownerId: owner.userId,
     courseId: course.courseId,
@@ -148,6 +150,7 @@ describe("listExamResults", () => {
 
     const r = await listExamResults(s.ownerId, s.examId);
     expect(r.summary.avgScorePct).toBeCloseTo((100 + 100 + 0) / 3, 5);
+    expect(r.summary.avgScoreCount).toBe(3);
   });
 
   it("đếm bài còn chờ chấm tay", async () => {

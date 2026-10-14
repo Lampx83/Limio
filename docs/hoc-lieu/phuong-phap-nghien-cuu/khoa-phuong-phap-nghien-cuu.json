@@ -1,0 +1,1446 @@
+{
+  "course": {
+    "title": "NCKH 201 · Phương pháp nghiên cứu & Viết luận văn",
+    "slug": "phuong-phap-nghien-cuu",
+    "description": "Khoá dành cho học viên cao học đang làm luận văn — đã có đề tài (do tự chọn hoặc được giao cùng giảng viên hướng dẫn), cần đưa đề tài đó qua trọn quy trình tới bản luận văn hoàn chỉnh sẵn sàng bảo vệ. Sáu bài đi đúng trình tự: dựng khung lý thuyết từ câu hỏi nghiên cứu; làm tổng quan tài liệu có hệ thống, không chỉ đọc rời rạc như ở NCKH sinh viên; chọn thiết kế nghiên cứu ở mức học thuật cao hơn — SEM/PLS-SEM cho định lượng, case study và phỏng vấn sâu cho định tính; thu thập và xử lý dữ liệu với SPSS/R (độ tin cậy, EFA, hồi quy); viết đúng cấu trúc luận văn 5 chương; và đạo đức nghiên cứu với dữ liệu người tham gia. Khoá dùng đúng đề tài luận văn thật của từng học viên xuyên suốt cả 6 bài — sản phẩm mỗi bài (khung lý thuyết, ma trận tổng quan, bảng hỏi, một chương luận văn) là bản dùng lại được ngay cho luận văn thật, không phải bài tập minh hoạ. Mỗi bài kết bằng một bài kiểm tra ngắn, phương án sai gắn mã lỗi tư duy để phản hồi chỉ đúng chỗ hiểu nhầm.",
+    "language": "vi",
+    "level": "intermediate",
+    "category": "Nghiên cứu khoa học",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "ppnc.gap-is-my-interest",
+      "name": "Coi khoảng trống là điều mình thấy thú vị, chưa xác nhận bằng tổng quan",
+      "description": "Khẳng định 'chưa ai nghiên cứu điều này' chỉ vì thấy chủ đề thú vị và chưa tìm thấy trong vài phút tìm kiếm, không dựa trên một tổng quan tài liệu có hệ thống. Ở mức luận văn, khoảng trống chỉ đứng được sau khi đã tìm và đọc một khối lượng tài liệu đủ rộng qua nhiều nguồn."
+    },
+    {
+      "code": "ppnc.framework-is-diagram-only",
+      "name": "Coi khung lý thuyết chỉ là một sơ đồ đẹp",
+      "description": "Dựng một sơ đồ hộp-và-mũi-tên cho khung lý thuyết mà không kèm đoạn giải thích cơ chế — tại sao biến này ảnh hưởng biến kia, qua kênh nào, dựa trên lý thuyết hoặc lập luận nào. Sơ đồ không kèm giải thích chỉ là hình trang trí, không phải một khung lý thuyết."
+    },
+    {
+      "code": "ppnc.hypothesis-not-testable",
+      "name": "Viết giả thuyết không đo được hoặc không thể bị bác bỏ",
+      "description": "Viết giả thuyết dạng niềm tin chung ('công nghệ luôn tốt cho việc học') không nêu biến cụ thể và không có kết quả dữ liệu nào có thể chứng minh nó sai. Giả thuyết nghiên cứu phải đo được và có thể bị bác bỏ bằng dữ liệu."
+    },
+    {
+      "code": "ppnc.theory-borrowed-blindly",
+      "name": "Mượn lý thuyết có sẵn mà không kiểm tra giả định có còn đúng",
+      "description": "Áp một lý thuyết (TAM, UTAUT, TPB...) vào bối cảnh nghiên cứu mới mà không giải thích lý thuyết đó giả định gì và liệu giả định đó còn đúng trong bối cảnh của mình không. Mượn lý thuyết đúng cách cần kiểm tra và điều chỉnh biến nếu bối cảnh khác với nơi lý thuyết được xây dựng ban đầu."
+    },
+    {
+      "code": "ppnc.regression-instead-of-sem",
+      "name": "Chạy nhiều hồi quy riêng lẻ thay vì SEM cho mô hình có trung gian/điều tiết",
+      "description": "Kiểm định một khung lý thuyết có nhiều biến trung gian hoặc điều tiết bằng cách chạy từng hồi quy tuyến tính riêng lẻ cho mỗi đường dẫn. Cách này làm mất mối liên hệ giữa các đường dẫn trong toàn mô hình và tích lũy sai số qua từng bước ước lượng — SEM/PLS-SEM ước lượng toàn bộ mô hình đường dẫn cùng một lúc."
+    },
+    {
+      "code": "ppnc.skip-measurement-model",
+      "name": "Đọc mô hình cấu trúc trước khi kiểm mô hình đo",
+      "description": "Đọc kết quả path coefficient của mô hình cấu trúc trong PLS-SEM mà chưa kiểm độ tin cậy và độ giá trị của mô hình đo. Nếu thang đo chưa đạt tiêu chuẩn, các hệ số đường dẫn được tính từ dữ liệu không đáng tin, bất kể p-value nhỏ tới đâu."
+    },
+    {
+      "code": "ppnc.fixed-sample-qualitative",
+      "name": "Cố định cỡ mẫu định tính trước khi thu thập dữ liệu",
+      "description": "Quyết định trước một số cụ thể người tham gia phỏng vấn hoặc số ca nghiên cứu mà không dựa trên tiêu chí nào. Cỡ mẫu định tính nên được quyết định bởi bão hòa dữ liệu — điểm mà thu thập thêm không còn sinh ra thông tin mới — không phải một con số cố định từ trước."
+    },
+    {
+      "code": "ppnc.mixed-is-just-both",
+      "name": "Coi thiết kế hỗn hợp là làm cả hai phương pháp tách biệt",
+      "description": "Thực hiện cả khảo sát định lượng và phỏng vấn định tính nhưng trình bày hai phần kết quả cạnh nhau, không có chiến lược tích hợp cụ thể. Thiết kế hỗn hợp đúng nghĩa cần nói rõ kết quả định tính giải thích, xác nhận hoặc mở rộng kết quả định lượng ở điểm nào cụ thể."
+    },
+    {
+      "code": "ppnc.skip-data-cleaning",
+      "name": "Chạy phân tích chính mà không làm sạch dữ liệu trước",
+      "description": "Nhập dữ liệu xong chạy thẳng phân tích chính mà không kiểm dữ liệu thiếu, outlier, hoặc item đảo hướng. Phần mềm thống kê không tự phát hiện dữ liệu nhiễu — nó vẫn cho ra kết quả, nhưng kết quả đó tính trên dữ liệu chưa được làm sạch nên không đáng tin."
+    },
+    {
+      "code": "ppnc.alpha-only-no-structure",
+      "name": "Coi Cronbach's Alpha cao là đủ để khẳng định cấu trúc thang đo đúng",
+      "description": "Chỉ chạy Cronbach's Alpha và coi Alpha đạt ngưỡng là đủ chứng minh các item đo đúng cùng một cấu trúc nhân tố. Alpha chỉ đo tương quan nội bộ; cần EFA (hoặc CFA) để kiểm các item có thật sự load đúng vào cấu trúc như thiết kế, đặc biệt với thang đo mới hoặc đã điều chỉnh."
+    },
+    {
+      "code": "ppnc.significant-equals-important",
+      "name": "Nhầm ý nghĩa thống kê với ý nghĩa thực tế",
+      "description": "Kết luận một mối quan hệ 'có ảnh hưởng đáng kể' chỉ vì p < 0.05, không nhìn vào độ lớn của hệ số (effect size). Với mẫu đủ lớn, một hệ số rất nhỏ vẫn có thể đạt ý nghĩa thống kê mà không có ý nghĩa gì đáng chú ý trong thực tế."
+    },
+    {
+      "code": "ppnc.one-coder-only",
+      "name": "Một người mã hóa toàn bộ dữ liệu định tính không kiểm chứng",
+      "description": "Tự mã hóa hết dữ liệu phỏng vấn hoặc case study một mình, không có người thứ hai mã hóa độc lập để so sánh. Không có gì đảm bảo mã hóa đó không bị ảnh hưởng bởi kỳ vọng chủ quan có sẵn của người mã hóa duy nhất."
+    },
+    {
+      "code": "ppnc.chapter1-written-once",
+      "name": "Không sửa lại Chương 1 sau khi có kết quả",
+      "description": "Coi Chương 1 (mục tiêu, câu hỏi nghiên cứu) là viết một lần rồi để nguyên tới lúc nộp. Kết quả thật thường không khớp hoàn toàn với dự định ban đầu; Chương 1 cần được sửa lại sau khi hoàn thành Chương 4-5 để khớp với nội dung thật của luận văn."
+    },
+    {
+      "code": "ppnc.discussion-repeats-results",
+      "name": "Chương 5 chỉ lặp lại số liệu của Chương 4",
+      "description": "Viết Chương 5 (thảo luận, kết luận) bằng cách liệt kê lại các số liệu đã trình bày ở Chương 4 mà không thêm diễn giải ý nghĩa. Chương 5 phải giải thích kết quả đó đóng góp gì về lý thuyết và thực tiễn, không phải chỗ nhắc lại số liệu."
+    },
+    {
+      "code": "ppnc.limitations-generic",
+      "name": "Viết phần hạn chế chung chung, không nêu ảnh hưởng cụ thể",
+      "description": "Viết hạn chế bằng công thức chung như 'do thời gian và nguồn lực hạn chế' mà không nêu nó ảnh hưởng tới kết luận nào cụ thể. Hạn chế dùng được phải chỉ ra chính xác nó làm giảm giá trị của kết luận nào — khả năng khái quát hóa, chiều nhân quả, độ chính xác của một construct."
+    },
+    {
+      "code": "ppnc.cross-sectional-causal-claim",
+      "name": "Diễn giải nhân quả từ dữ liệu cắt ngang",
+      "description": "Viết kết quả path coefficient có ý nghĩa thống kê từ dữ liệu cắt ngang (thu thập một lần) như một quan hệ nhân quả ('X dẫn tới Y'). Dữ liệu cắt ngang không xác lập được trình tự thời gian, nên chỉ có thể khẳng định hai biến có liên hệ với nhau, không thể khẳng định chiều tác động."
+    },
+    {
+      "code": "ppnc.ethics-is-paperwork",
+      "name": "Coi đạo đức nghiên cứu là thủ tục giấy tờ",
+      "description": "Hiểu đạo đức nghiên cứu chỉ là các form cần điền để được phép thu thập dữ liệu, không phải trách nhiệm thật bảo vệ người tham gia khỏi tổn hại thể chất, tâm lý, xã hội và kinh tế."
+    },
+    {
+      "code": "ppnc.consent-implied-by-participation",
+      "name": "Coi việc tham gia là đã đồng ý, không cần thông tin đầy đủ trước",
+      "description": "Cho rằng người tham gia điền khảo sát là đã 'đồng ý', dù chưa được cung cấp đầy đủ thông tin về mục đích, rủi ro, và quyền rút khỏi nghiên cứu trước đó — nhất là khi khảo sát chạm tới chủ đề nhạy cảm."
+    },
+    {
+      "code": "ppnc.anonymize-confuse-confidential",
+      "name": "Nhầm ẩn danh với bảo mật",
+      "description": "Tuyên bố dữ liệu 'ẩn danh hoàn toàn' trong khi vẫn giữ thông tin hoặc tổ hợp đặc điểm có thể truy ngược ra một cá nhân cụ thể. Ẩn danh nghĩa là không ai truy ngược được danh tính; nếu nhà nghiên cứu vẫn biết và chỉ giữ kín, đó là bảo mật, không phải ẩn danh."
+    },
+    {
+      "code": "ppnc.skip-ethics-review-informal",
+      "name": "Nghĩ nghiên cứu quy mô nhỏ trong trường không cần xem xét đạo đức",
+      "description": "Cho rằng một khảo sát trong trường tự động được miễn yêu cầu đạo đức vì quy mô nhỏ hoặc bối cảnh học thuật. Dữ liệu nhạy cảm hoặc đối tượng dễ bị tổn thương vẫn cần được xem xét qua hội đồng đạo đức hoặc quy trình tương đương, bất kể quy mô nghiên cứu."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "ppnc.gap-is-my-interest",
+      "body": "Trước khi viết 'chưa ai nghiên cứu điều này', hãy tự hỏi: mình đã tìm ở nguồn nào (Google Scholar, Scopus, cơ sở dữ liệu chuyên ngành), và đã đọc đủ sâu để loại trừ các nghiên cứu gần giống chưa? Khoảng trống cần một tổng quan có hệ thống đứng sau nó, không phải một cảm giác.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.framework-is-diagram-only",
+      "body": "Thêm một đoạn văn giải thích cơ chế đi kèm sơ đồ: tại sao biến này ảnh hưởng biến kia, qua kênh nào, dựa trên lý thuyết hoặc lập luận nào. Nếu bỏ sơ đồ đi mà đoạn văn vẫn giải thích được đầy đủ, khung của bạn đang đứng vững; nếu không có đoạn văn nào để bỏ, sơ đồ chưa phải một khung lý thuyết.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.hypothesis-not-testable",
+      "body": "Viết lại giả thuyết với biến cụ thể và mối quan hệ đo được — thử hỏi: kết quả dữ liệu nào sẽ khiến giả thuyết này sai? Nếu không tưởng tượng được kết quả nào bác bỏ được nó, giả thuyết chưa đủ cụ thể.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.theory-borrowed-blindly",
+      "body": "Trước khi dùng lý thuyết này, viết ra: lý thuyết được xây cho loại đối tượng/bối cảnh nào, và bối cảnh của bạn khác gì. Nếu có khác biệt, giải thích rõ bạn điều chỉnh biến nào và vì sao — đừng áp thẳng nguyên bản gốc.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.regression-instead-of-sem",
+      "body": "Nếu khung lý thuyết của bạn có biến trung gian hoặc điều tiết, hãy chuyển sang SEM/PLS-SEM để ước lượng toàn bộ mô hình đường dẫn cùng lúc, thay vì chạy từng hồi quy riêng lẻ cho mỗi đường dẫn.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.skip-measurement-model",
+      "body": "Trước khi đọc path coefficient, kiểm lại độ tin cậy (Cronbach's Alpha, Composite Reliability) và độ giá trị (AVE, HTMT) của từng construct. Chỉ đọc kết quả mô hình cấu trúc sau khi mô hình đo đã đạt tiêu chuẩn.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.fixed-sample-qualitative",
+      "body": "Thay vì chốt trước một số cụ thể, theo dõi bão hòa dữ liệu trong quá trình thu thập: khi hai, ba người tham gia gần nhất không còn mang lại chủ đề mới, đó là điểm để dừng — ghi lại rõ điều này trong phần phương pháp.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.mixed-is-just-both",
+      "body": "Viết rõ một câu về chiến lược tích hợp: kết quả định tính của bạn giải thích, xác nhận hay mở rộng điều gì cụ thể từ kết quả định lượng? Nếu không trả lời được câu này, hai phần đang đứng tách biệt, chưa phải một thiết kế hỗn hợp.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.skip-data-cleaning",
+      "body": "Trước khi chạy phân tích chính, xem thống kê mô tả (min, max, mean, số dòng thiếu) cho từng biến. Một giá trị bất thường hoặc tỉ lệ thiếu cao thường lộ ra ngay ở bước này, trước khi nó làm sai kết quả phân tích phía sau.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.alpha-only-no-structure",
+      "body": "Chạy thêm EFA (nhìn vào ma trận factor loading) bên cạnh Cronbach's Alpha, đặc biệt nếu thang đo đã dịch hoặc điều chỉnh. Alpha cao không loại trừ khả năng các item đang tách thành nhiều nhân tố khác nhau.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.significant-equals-important",
+      "body": "Khi viết kết luận, luôn nêu cả p-value và độ lớn hệ số (beta, R²) trong cùng một câu, và tự hỏi: hệ số này có đủ lớn để đáng chú ý trong thực tế không, hay chỉ đạt p < 0.05 vì cỡ mẫu lớn?",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.one-coder-only",
+      "body": "Mời một người thứ hai mã hóa độc lập một phần dữ liệu (ví dụ 20-30%), rồi so sánh nhãn với nhau. Chỗ hai người mã hóa khác nhau chính là nơi cần làm rõ định nghĩa mã, không phải điều nên bỏ qua.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.chapter1-written-once",
+      "body": "Sau khi hoàn thành Chương 4-5, đọc lại mục tiêu và câu hỏi ở Chương 1: chúng còn khớp với những gì luận văn thực sự trả lời được không? Nếu một giả thuyết không được ủng hộ hoặc có phát hiện ngoài dự kiến, sửa lại Chương 1 để phản ánh đúng nội dung thật.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.discussion-repeats-results",
+      "body": "Với mỗi số liệu ở Chương 4 được nhắc lại ở Chương 5, thêm một câu diễn giải: kết quả này đóng góp gì cho khung lý thuyết, hoặc ai nên làm gì khác đi vì kết quả này? Nếu không thêm được câu đó, đoạn văn đang lặp lại, chưa phải thảo luận.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.limitations-generic",
+      "body": "Viết lại mỗi hạn chế theo mẫu: 'Hạn chế X khiến kết luận Y không thể khẳng định được ở mức Z.' Nếu không điền được cả ba phần, hạn chế đang viết còn quá chung để hội đồng đánh giá.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.cross-sectional-causal-claim",
+      "body": "Với dữ liệu thu thập một lần, đổi mọi câu 'X dẫn tới/gây ra Y' thành 'X có liên hệ với Y', và thêm một câu ghi rõ thiết kế cắt ngang không xác lập được chiều tác động.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.ethics-is-paperwork",
+      "body": "Trước khi soạn form, tự hỏi: người tham gia nghiên cứu này có thể gặp tổn hại gì — tâm lý, xã hội, kinh tế? Thiết kế biện pháp bảo vệ cho đúng loại tổn hại đó, rồi mới viết form phản ánh các biện pháp đó, không phải ngược lại.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.consent-implied-by-participation",
+      "body": "Hiển thị đầy đủ thông tin về mục đích, rủi ro và quyền rút khỏi nghiên cứu **trước** câu hỏi đầu tiên, không phải sau. Với chủ đề nhạy cảm, người tham gia cần biết trước để quyết định có tiếp tục hay không.",
+      "priority": 10
+    },
+    {
+      "misconception": "ppnc.anonymize-confuse-confidential",
+      "body": "Kiểm lại: dữ liệu của bạn có giữ thông tin nào (email, số điện thoại, tổ hợp đặc điểm hiếm) có thể truy ngược ra một cá nhân không? Nếu có, gọi đúng tên là bảo mật, không phải ẩn danh, và nói rõ với người tham gia.",
+      "priority": 9
+    },
+    {
+      "misconception": "ppnc.skip-ethics-review-informal",
+      "body": "Hỏi giảng viên hướng dẫn hoặc khoa về yêu cầu đạo đức trước khi thu thập dữ liệu, đặc biệt nếu nghiên cứu chạm tới dữ liệu nhạy cảm hoặc đối tượng dễ bị tổn thương — quy mô nhỏ không tự động miễn trừ yêu cầu này.",
+      "priority": 9
+    }
+  ],
+  "modules": [
+    {
+      "title": "Phương pháp nghiên cứu & Viết luận văn",
+      "description": "Toàn bộ quy trình đưa một đề tài luận văn đã có từ khung lý thuyết tới bản luận văn hoàn chỉnh, dùng đúng đề tài của từng học viên xuyên suốt: (1) khung lý thuyết và giả thuyết, (2) tổng quan tài liệu hệ thống, (3) thiết kế nghiên cứu, (4) thu thập và xử lý dữ liệu, (5) viết luận văn 5 chương, (6) đạo đức nghiên cứu.",
+      "lessons": [
+        {
+          "title": "Bài 1 · Từ câu hỏi nghiên cứu đến khung lý thuyết",
+          "durationMin": 90,
+          "description": "Xác nhận khoảng trống học thuật bằng tổng quan có hệ thống, không phải cảm giác; phân biệt khung lý thuyết với khung khái niệm; xác định biến, mối quan hệ và viết giả thuyết đo được; mượn lý thuyết có sẵn đúng cách.",
+          "objectives": [
+            "Phân biệt được khoảng trống học thuật đã xác nhận với điều bản thân thấy thú vị nhưng chưa kiểm tra",
+            "Chọn được giữa khung lý thuyết (dựa trên lý thuyết có sẵn) và khung khái niệm (tự xây dựng) phù hợp với đề tài của mình",
+            "Xác định được biến độc lập, phụ thuộc, trung gian, điều tiết và viết được giả thuyết đo được, có thể bị bác bỏ",
+            "Đánh giá được một lý thuyết mượn (TAM, UTAUT, TPB...) có phù hợp với bối cảnh nghiên cứu của mình không, và biết cách điều chỉnh nếu cần"
+          ],
+          "summary": [
+            "Khoảng trống học thuật phải được xác nhận bằng một tổng quan tài liệu có hệ thống, không phải bằng cảm giác 'tôi thấy điều này thú vị và chưa ai làm'.",
+            "Khung lý thuyết mượn nguyên một lý thuyết có sẵn và giải thích cơ chế của nó; khung khái niệm tự tổng hợp từ nhiều nguồn khi chưa có lý thuyết nào áp thẳng được — cả hai đều cần giải thích cơ chế, không chỉ là một sơ đồ hộp và mũi tên.",
+            "Một giả thuyết tốt phải đo được và có thể bị bác bỏ bằng dữ liệu; giả thuyết mơ hồ hoặc chắc chắn đúng trong mọi trường hợp không kiểm định được gì.",
+            "Mượn một lý thuyết có sẵn (TAM, UTAUT, TPB...) đòi hỏi giải thích lý thuyết đó giả định gì và vì sao giả định đó còn đúng trong bối cảnh nghiên cứu của bạn — áp thẳng không giải thích là dấu hiệu chưa hiểu lý thuyết đang dùng."
+          ],
+          "splitSections": true,
+          "body": "\nKhác với NCKH sinh viên — nơi một câu hỏi khả thi và thú vị là đủ để bắt đầu — một luận văn cao học cần đứng trên một khoảng trống đã được xác nhận và một khung lý thuyết giải thích được tại sao các biến trong nghiên cứu của bạn liên hệ với nhau. Bài này dựng phần nền đó qua bốn phần, trước khi đi vào tổng quan tài liệu chi tiết ở Bài 2: trước hết phân biệt khoảng trống học thuật đã xác nhận với điều chỉ đơn thuần thấy thú vị; sau đó so sánh khung lý thuyết (mượn lý thuyết có sẵn) với khung khái niệm (tự tổng hợp) và vì sao một sơ đồ không kèm giải thích cơ chế là chưa đủ; tiếp theo xác định các loại biến và cách viết giả thuyết đo được, có thể bị bác bỏ; và kết bằng cách mượn một lý thuyết có sẵn đúng cách, không áp thẳng mà không giải thích.\n\n## Khoảng trống học thuật — khác gì với \"điều tôi thấy thú vị\"\n\n> [!ghi-nho] **Khoảng trống học thuật** (research gap) là một chỗ trống đã được **xác nhận bằng tổng quan tài liệu có hệ thống** — bạn đã tìm và đọc một khối lượng tài liệu đủ rộng trong lĩnh vực, và có thể chỉ ra cụ thể điều gì trong khối đó chưa được làm. Đây khác với việc thấy một ý tưởng thú vị và giả định rằng chưa ai làm.\n\nỞ mức luận văn, \"khoảng trống\" không đứng được nếu chỉ dựa trên 5-10 bài đọc lướt. Việc xác nhận khoảng trống là công việc chính của Bài 2 (tổng quan tài liệu hệ thống); bài này giả định bạn đã có một hướng nghiên cứu ban đầu và cần chuẩn bị khung để đặt hướng đó vào.\n\n> [!canh-bao] Câu \"chưa ai nghiên cứu điều này ở Việt Nam\" chỉ đứng được sau khi đã tìm bằng nhiều nguồn (Google Scholar, Scopus, các cơ sở dữ liệu chuyên ngành) và đọc đủ sâu để loại trừ các nghiên cứu gần giống. Nói câu này chỉ vì \"tôi chưa thấy\" trong vài phút tìm kiếm là một khẳng định không có cơ sở — và thường là câu đầu tiên hội đồng phản biện sẽ hỏi ngược lại.\n\n> [!vi-du] Một học viên muốn nghiên cứu \"ảnh hưởng của AI tạo sinh tới động lực học tập của sinh viên\" vì thấy chủ đề này \"đang hot\". Sau khi tìm trên Scopus với các từ khoá tiếng Anh và tiếng Việt, học viên phát hiện đã có hơn 40 nghiên cứu về AI tạo sinh và động lực học tập trong hai năm gần đây, phần lớn ở các nước phát triển và đo trên sinh viên STEM. Khoảng trống thật không phải là \"chưa ai nghiên cứu AI và động lực học tập\" — mà là \"chưa có nghiên cứu nào đo ở sinh viên ngành khoa học xã hội tại Việt Nam, nơi mức độ tiếp cận công cụ AI và văn hoá học thuật khác với các nước đã được nghiên cứu\".\n\n## Khung lý thuyết và khung khái niệm\n\nSau khi có hướng nghiên cứu, bước tiếp theo là chọn cách giải thích **vì sao** các biến trong nghiên cứu của bạn liên hệ với nhau.\n\n| | Khung lý thuyết (theoretical framework) | Khung khái niệm (conceptual framework) |\n|---|---|---|\n| Nguồn gốc | Dựa trên một (hoặc vài) lý thuyết đã có sẵn, được kiểm chứng nhiều lần | Tự tổng hợp từ nhiều nguồn lý thuyết và thực nghiệm khác nhau |\n| Dùng khi | Có một lý thuyết đã được dùng rộng rãi cho đúng loại hiện tượng bạn nghiên cứu | Chưa có lý thuyết đơn lẻ nào áp thẳng được vào bối cảnh hoặc tổ hợp biến của bạn |\n| Rủi ro thường gặp | Áp lý thuyết vào bối cảnh không phù hợp mà không giải thích | Tổng hợp thành một sơ đồ rời rạc, các biến không có cơ chế nối với nhau |\n\n> [!canh-bao] Một khung lý thuyết hay khái niệm **không phải là một sơ đồ hộp-và-mũi-tên đẹp**. Sơ đồ chỉ là hình minh hoạ; phần quan trọng là đoạn văn giải thích **cơ chế** — tại sao biến A ảnh hưởng tới biến B, qua kênh nào, dựa trên lý thuyết hoặc lập luận nào. Một sơ đồ không kèm giải thích cơ chế là một hình trang trí, không phải một khung lý thuyết.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem\">Ví dụ một khung khái niệm đơn giản (3 biến)</div>\n  <div style=\"display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;font-size:1.1rem\">\n    <div style=\"background:rgba(59,130,246,.14);border-radius:.5rem;padding:.7rem 1rem;text-align:center\"><b>Nhận thức hữu ích</b><br><span style=\"font-size:.95rem;opacity:.85\">(biến độc lập)</span></div>\n    <div style=\"font-weight:700;color:rgba(127,127,127,0.9)\">→</div>\n    <div style=\"background:rgba(139,92,246,.14);border-radius:.5rem;padding:.7rem 1rem;text-align:center\"><b>Ý định sử dụng</b><br><span style=\"font-size:.95rem;opacity:.85\">(biến trung gian)</span></div>\n    <div style=\"font-weight:700;color:rgba(127,127,127,0.9)\">→</div>\n    <div style=\"background:rgba(13,148,136,.14);border-radius:.5rem;padding:.7rem 1rem;text-align:center\"><b>Mức độ sử dụng thực tế</b><br><span style=\"font-size:.95rem;opacity:.85\">(biến phụ thuộc)</span></div>\n  </div>\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);margin-top:.8rem;line-height:1.6\">Sơ đồ này chỉ có ý nghĩa cùng với một đoạn giải thích: theo lý thuyết TAM, nhận thức hữu ích không tác động trực tiếp tới hành vi sử dụng, mà đi qua ý định sử dụng — người dùng phải muốn dùng trước khi thực sự dùng.</div>\n</div>\n```\n\n## Biến, mối quan hệ và giả thuyết nghiên cứu\n\nỞ mức luận văn, khung lý thuyết thường có nhiều hơn hai loại biến.\n\n| Loại biến | Vai trò | Ví dụ |\n|---|---|---|\n| Độc lập (IV) | Yếu tố được coi là tác động | Nhận thức hữu ích |\n| Phụ thuộc (DV) | Kết quả được đo | Mức độ sử dụng thực tế |\n| Trung gian (mediator) | Biến nằm giữa, giải thích **cơ chế** IV tác động tới DV | Ý định sử dụng (giải thích vì sao nhận thức hữu ích dẫn tới hành vi sử dụng) |\n| Điều tiết (moderator) | Biến làm mối quan hệ IV-DV **mạnh lên hoặc yếu đi**, không nằm trên đường dẫn | Kinh nghiệm sử dụng công nghệ (người có kinh nghiệm thì mối quan hệ nhận thức hữu ích – ý định sử dụng yếu hơn) |\n\n> [!ghi-nho] Phân biệt nhanh: nếu bỏ biến đó ra mà đường dẫn từ IV tới DV **đứt** (không giải thích được cơ chế nữa), đó là biến trung gian. Nếu bỏ biến đó ra mà đường dẫn vẫn còn nhưng **độ mạnh** của nó thay đổi theo nhóm, đó là biến điều tiết.\n\nTừ khung, mỗi mối quan hệ được viết thành một giả thuyết cụ thể.\n\n| Giả thuyết không dùng được | Giả thuyết dùng được |\n|---|---|\n| \"AI tạo sinh có ảnh hưởng đến sinh viên.\" | \"H1: Mức độ sử dụng AI tạo sinh trong học tập có quan hệ dương với động lực học tập nội tại của sinh viên.\" |\n| \"Công nghệ luôn tốt cho việc học.\" | \"H2: Nhận thức hữu ích của công cụ AI tạo sinh có tác động dương tới ý định tiếp tục sử dụng, thông qua trung gian là mức độ tin tưởng vào công cụ.\" |\n\n> [!canh-bao] Giả thuyết phải **đo được** (có biến, có thang đo cụ thể) và **có thể bị bác bỏ** (tồn tại một kết quả dữ liệu khiến giả thuyết đó sai). \"Công nghệ luôn tốt cho việc học\" không đo được biến nào cụ thể và không có cách nào dữ liệu bác bỏ được nó — đây là một niềm tin, không phải giả thuyết nghiên cứu.\n\n## Mượn lý thuyết đúng cách\n\nCác lý thuyết như TAM (Technology Acceptance Model), UTAUT, TPB (Theory of Planned Behavior), Diffusion of Innovation... được mượn rất phổ biến trong luận văn, nhưng mượn không giải thích là lỗi thường gặp nhất ở người mới.\n\n> [!canh-bao] Áp một lý thuyết vào bối cảnh mới mà không giải thích lý thuyết đó **giả định gì** và **vì sao giả định đó còn đúng** trong bối cảnh của bạn là mượn lý thuyết mù quáng. TAM được xây dựng cho việc chấp nhận công nghệ ở nơi làm việc vào thập niên 1980 — dùng nó cho sinh viên dùng AI tạo sinh năm 2026 cần giải thích rõ vì sao logic \"nhận thức hữu ích dẫn tới ý định sử dụng\" đó vẫn còn áp dụng được, và biến nào của TAM gốc không còn phù hợp.\n\nBa câu hỏi cần trả lời trước khi mượn một lý thuyết: (1) Lý thuyết này ra đời để giải thích loại hiện tượng gì, và hiện tượng của bạn có đủ giống không? (2) Lý thuyết này giả định gì về đối tượng (ví dụ TAM giả định người dùng có lựa chọn tự nguyện) — giả định đó có đúng với đối tượng của bạn không? (3) Có cần thêm, bỏ hoặc điều chỉnh biến nào của lý thuyết gốc để phù hợp với bối cảnh của bạn không, và bạn có giải thích được lý do điều chỉnh đó không?\n\n> [!vi-du] Một học viên mượn UTAUT (ban đầu xây cho nhân viên dùng phần mềm doanh nghiệp, có phần \"điều kiện thuận lợi\" giả định tổ chức hỗ trợ hạ tầng) để nghiên cứu sinh viên dùng ứng dụng học ngoại ngữ tự nguyện. Học viên chỉ ra: giả định \"ảnh hưởng xã hội\" của UTAUT (đồng nghiệp/cấp trên khuyến khích dùng) cần đổi thành \"ảnh hưởng từ bạn học và mạng xã hội\" cho phù hợp bối cảnh sinh viên, và biến \"điều kiện thuận lợi\" cần đổi nội dung đo từ \"hỗ trợ IT của công ty\" sang \"tốc độ mạng và chi phí dữ liệu di động\" — mượn có điều chỉnh và giải thích, không áp thẳng.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nVới đề tài luận văn của bạn: (1) viết một đoạn giải thích khoảng trống nghiên cứu, nêu rõ đã tìm bằng nguồn nào và tại sao đây là khoảng trống thật (không chỉ \"tôi thấy thú vị\"); (2) chọn khung lý thuyết hoặc khung khái niệm, vẽ sơ đồ biến (dùng khối HTML nếu quen) kèm đoạn giải thích cơ chế; (3) viết 3-5 giả thuyết, mỗi giả thuyết đo được và có thể bị bác bỏ.\n\n### Nhóm 3-4 người (30 phút)\n\nĐổi khung lý thuyết cho nhau. Với mỗi khung của bạn cùng nhóm, kiểm tra ba điều: khoảng trống có được nêu căn cứ cụ thể không, sơ đồ có kèm giải thích cơ chế không, và mỗi giả thuyết có đo được/bác bỏ được không. Nếu có mượn lý thuyết có sẵn, hỏi thêm: bạn đã điều chỉnh gì so với lý thuyết gốc, và vì sao?\n\n### Bài tập về nhà (90 phút)\n\nHoàn thiện phần **Khung lý thuyết/khái niệm** để đưa vào luận văn: sơ đồ + đoạn giải thích cơ chế (300-500 từ) + danh sách giả thuyết đầy đủ, mỗi giả thuyết ghi rõ biến độc lập, phụ thuộc, trung gian/điều tiết (nếu có) và lý thuyết nền tương ứng.\n\n:::mau Mẫu nộp bài tập về nhà\n**Khoảng trống nghiên cứu (có căn cứ tìm kiếm):** …\n\n**Khung đã chọn:** ☐ Khung lý thuyết (lý thuyết nền: …) ☐ Khung khái niệm\n\n**Sơ đồ biến:** (mô tả hoặc dán sơ đồ)\n\n**Đoạn giải thích cơ chế (300-500 từ):** …\n\n**Danh sách giả thuyết**\n\n| Mã | Giả thuyết | Biến độc lập | Biến phụ thuộc | Trung gian/điều tiết (nếu có) |\n|---|---|---|---|---|\n| H1 | … | … | … | … |\n| H2 | … | … | … | … |\n:::\n\n### Nguồn tham khảo\n\n- Davis, F. D. (1989). Perceived usefulness, perceived ease of use, and user acceptance of information technology. *MIS Quarterly*, 13(3), 319-340.\n- Venkatesh, V., Morris, M. G., Davis, G. B., & Davis, F. D. (2003). User acceptance of information technology: Toward a unified view. *MIS Quarterly*, 27(3), 425-478.\n- Creswell, J. W., & Creswell, J. D. (2018). *Research Design: Qualitative, Quantitative, and Mixed Methods Approaches* (5th ed.). SAGE Publications. — chương về khung lý thuyết.\n- Baron, R. M., & Kenny, D. A. (1986). The moderator-mediator variable distinction in social psychological research. *Journal of Personality and Social Psychology*, 51(6), 1173-1182.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "ppnc1-khoang-trong-xac-nhan",
+                "type": "mcq",
+                "prompt": "Điều gì làm cho một 'khoảng trống nghiên cứu' đứng được ở mức luận văn cao học?",
+                "explanation": "Khoảng trống phải được xác nhận bằng một tổng quan tài liệu có hệ thống, chỉ ra cụ thể điều gì chưa được làm — không chỉ dựa trên cảm giác chưa thấy ai làm sau khi đọc lướt vài bài.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đã tìm và đọc một khối lượng tài liệu đủ rộng qua nhiều nguồn, và chỉ ra được cụ thể điều gì trong đó chưa được làm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Cảm thấy chủ đề này thú vị và chưa thấy ai nói tới trong vài phút tìm kiếm",
+                    "isCorrect": false,
+                    "misconception": "ppnc.gap-is-my-interest"
+                  },
+                  {
+                    "label": "Giảng viên hướng dẫn xác nhận đây là chủ đề hay",
+                    "isCorrect": false,
+                    "misconception": "ppnc.gap-is-my-interest"
+                  },
+                  {
+                    "label": "Chủ đề đang được nhiều người quan tâm trên truyền thông",
+                    "isCorrect": false,
+                    "misconception": "ppnc.gap-is-my-interest"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc1-khung-khong-chi-so-do",
+                "type": "mcq",
+                "prompt": "Một khung lý thuyết chỉ có một sơ đồ hộp-mũi tên đẹp, không có đoạn văn giải thích nào kèm theo. Vấn đề của khung này là gì?",
+                "explanation": "Sơ đồ chỉ là hình minh hoạ; phần quan trọng là giải thích cơ chế — tại sao biến này ảnh hưởng tới biến kia, qua kênh nào, dựa trên lý thuyết hoặc lập luận nào. Thiếu phần đó, sơ đồ chỉ là hình trang trí.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiếu đoạn giải thích cơ chế — vì sao các biến liên hệ với nhau, qua kênh nào, dựa trên lý thuyết nào",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, sơ đồ đẹp là đủ để hội đồng hiểu khung lý thuyết",
+                    "isCorrect": false,
+                    "misconception": "ppnc.framework-is-diagram-only"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là sơ đồ cần thêm màu sắc cho sinh động hơn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.framework-is-diagram-only"
+                  },
+                  {
+                    "label": "Không có vấn đề, vì khung lý thuyết đúng nghĩa chỉ cần là một sơ đồ",
+                    "isCorrect": false,
+                    "misconception": "ppnc.framework-is-diagram-only"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc1-gia-thuyet-do-duoc",
+                "type": "mcq",
+                "prompt": "Giả thuyết nào dưới đây đo được và có thể bị bác bỏ bằng dữ liệu?",
+                "explanation": "Giả thuyết dùng được phải nêu rõ biến cụ thể và mối quan hệ đo được, để một kết quả dữ liệu có thể chứng minh nó sai. 'Công nghệ luôn tốt cho việc học' không nêu biến cụ thể và không có kết quả dữ liệu nào có thể bác bỏ được nó.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "'Mức độ sử dụng AI tạo sinh trong học tập có quan hệ dương với động lực học tập nội tại của sinh viên.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Công nghệ luôn tốt cho việc học.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.hypothesis-not-testable"
+                  },
+                  {
+                    "label": "'AI tạo sinh có ảnh hưởng đến sinh viên.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.hypothesis-not-testable"
+                  },
+                  {
+                    "label": "'Sinh viên nên dùng AI tạo sinh một cách có trách nhiệm.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.hypothesis-not-testable"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc1-muon-ly-thuyet",
+                "type": "mcq",
+                "prompt": "Trước khi mượn một lý thuyết có sẵn (như TAM) áp vào đề tài của mình, việc quan trọng nhất cần làm là gì?",
+                "explanation": "Cần kiểm tra lý thuyết đó giả định gì và liệu giả định đó còn đúng trong bối cảnh nghiên cứu của mình không, rồi điều chỉnh biến cho phù hợp — áp thẳng lý thuyết vào bối cảnh mới mà không giải thích là mượn lý thuyết mù quáng.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Kiểm tra lý thuyết đó giả định gì, giả định đó có còn đúng trong bối cảnh của mình không, và điều chỉnh biến nếu cần",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần kiểm tra gì, vì lý thuyết đã được nhiều nghiên cứu khác dùng nên chắc chắn đúng",
+                    "isCorrect": false,
+                    "misconception": "ppnc.theory-borrowed-blindly"
+                  },
+                  {
+                    "label": "Chỉ cần đổi tên biến sang tiếng Việt cho phù hợp với luận văn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.theory-borrowed-blindly"
+                  },
+                  {
+                    "label": "Tìm lý thuyết nào có tên nghe học thuật nhất để tăng độ tin cậy cho luận văn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.theory-borrowed-blindly"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc1-mediator-moderator",
+                "type": "mcq",
+                "prompt": "'Kinh nghiệm sử dụng công nghệ' làm cho mối quan hệ giữa nhận thức hữu ích và ý định sử dụng mạnh hơn ở người ít kinh nghiệm, yếu hơn ở người nhiều kinh nghiệm — nhưng không nằm trên đường dẫn giải thích cơ chế. Đây là loại biến gì?",
+                "explanation": "Đây là biến điều tiết (moderator): nó làm độ mạnh của mối quan hệ IV-DV thay đổi theo nhóm, không nằm trên đường dẫn giải thích cơ chế như biến trung gian.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Biến điều tiết (moderator)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Biến trung gian (mediator)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Biến độc lập (IV)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Biến phụ thuộc (DV)",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc1-thu-tu-dung-khung",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước dựng khung lý thuyết/khái niệm cho một luận văn.",
+                "explanation": "Bắt đầu từ khoảng trống đã xác nhận, chọn loại khung phù hợp, xác định biến và vai trò của chúng, rồi viết giả thuyết đo được cho mỗi mối quan hệ.",
+                "points": 3,
+                "sequence": [
+                  "Xác nhận khoảng trống nghiên cứu bằng tổng quan tài liệu, không chỉ bằng cảm giác",
+                  "Chọn khung lý thuyết (mượn lý thuyết có sẵn) hoặc khung khái niệm (tự tổng hợp)",
+                  "Xác định vai trò từng biến: độc lập, phụ thuộc, trung gian, điều tiết",
+                  "Viết đoạn giải thích cơ chế cho sơ đồ biến",
+                  "Viết giả thuyết cho mỗi mối quan hệ, đảm bảo đo được và có thể bị bác bỏ"
+                ]
+              },
+              {
+                "key": "ppnc1-noi-loai-bien",
+                "type": "matching",
+                "prompt": "Nối mỗi loại biến với đúng vai trò của nó trong khung lý thuyết.",
+                "explanation": "IV là yếu tố tác động, DV là kết quả được đo, trung gian giải thích cơ chế nằm trên đường dẫn giữa IV và DV, điều tiết làm thay đổi độ mạnh của mối quan hệ IV-DV mà không nằm trên đường dẫn đó.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Biến độc lập (IV)",
+                    "right": "Yếu tố được coi là tác động tới kết quả"
+                  },
+                  {
+                    "left": "Biến phụ thuộc (DV)",
+                    "right": "Kết quả được đo trong nghiên cứu"
+                  },
+                  {
+                    "left": "Biến trung gian (mediator)",
+                    "right": "Giải thích cơ chế, nằm trên đường dẫn giữa IV và DV"
+                  },
+                  {
+                    "left": "Biến điều tiết (moderator)",
+                    "right": "Làm độ mạnh mối quan hệ IV-DV thay đổi theo nhóm"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc1-viet-khung-ly-thuyet",
+                "type": "essay",
+                "prompt": "Viết khung lý thuyết hoặc khung khái niệm cho đề tài luận văn của bạn, gồm: (a) một câu nêu khoảng trống nghiên cứu và căn cứ tìm kiếm; (b) mô tả các biến và vai trò của chúng (độc lập, phụ thuộc, trung gian/điều tiết nếu có); (c) một đoạn 150-200 từ giải thích cơ chế giữa các biến, có nêu lý thuyết nền nếu mượn lý thuyết có sẵn; (d) 2-3 giả thuyết viết đúng dạng đo được.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 2 · Tổng quan tài liệu hệ thống",
+          "durationMin": 90,
+          "description": "Lập ma trận tổng quan mở rộng cho 15+ nguồn; dùng PRISMA rút gọn để ghi minh bạch quy trình chọn nguồn; đọc bản đồ trích dẫn (VOSviewer) để thấy cấu trúc cả một lĩnh vực; viết tổng quan theo luận điểm và xác nhận khoảng trống bằng số liệu tìm kiếm cụ thể.",
+          "objectives": [
+            "Lập được ma trận tổng quan cho ít nhất 15 nguồn, đủ các cột để dùng lại khi viết Chương 2",
+            "Ghi được quy trình chọn nguồn theo PRISMA rút gọn (số nguồn tìm được, loại bỏ, giữ lại) để tổng quan minh bạch và có thể kiểm chứng",
+            "Đọc được một bản đồ trích dẫn (VOSviewer) để nhận diện các nhóm chủ đề chính và vị trí của đề tài mình trong đó",
+            "Viết được một khoảng trống nghiên cứu có căn cứ bằng số liệu tìm kiếm cụ thể, không phải cảm giác"
+          ],
+          "summary": [
+            "Ma trận tổng quan ở mức luận văn cần đủ rộng (15+ nguồn) và đủ cột để dùng lại trực tiếp khi viết Chương 2, không phải ghi chú tạm.",
+            "PRISMA rút gọn — ghi lại số nguồn tìm được, số loại bỏ theo từng lý do, số giữ lại — làm quy trình chọn nguồn minh bạch và kiểm chứng được, khác với việc chỉ nói 'tôi đã đọc nhiều tài liệu'.",
+            "Bản đồ trích dẫn (VOSviewer) cho thấy cấu trúc của cả một lĩnh vực bằng hình ảnh — các nhóm chủ đề nào đang tồn tại, và đề tài của bạn nằm ở đâu trong đó hoặc lấp vào khoảng trống nào giữa các nhóm.",
+            "Khoảng trống nghiên cứu ở mức luận văn phải được viết kèm số liệu cụ thể: tìm được bao nhiêu nguồn, qua nguồn tra cứu nào, và chính xác điều gì trong số đó chưa được làm."
+          ],
+          "splitSections": true,
+          "body": "\nBài 1 giả định bạn đã có một hướng khoảng trống ban đầu để dựng khung lý thuyết. Bài này làm việc xác nhận khoảng trống đó một cách nghiêm túc — đủ chặt để đứng vững trước hội đồng — và tạo ra chính nội dung sẽ trở thành Chương 2 của luận văn, đi qua bốn phần: trước hết mở rộng ma trận tổng quan lên quy mô luận văn với đủ cột để dùng lại khi viết; sau đó ghi luồng chọn nguồn theo PRISMA rút gọn để quy trình minh bạch, kiểm chứng được; tiếp theo đọc bản đồ trích dẫn (VOSviewer) để thấy cấu trúc cả một lĩnh vực và vị trí đề tài trong đó; và kết bằng cách viết khoảng trống nghiên cứu kèm số liệu cụ thể, khớp với ma trận và luồng PRISMA đã lập.\n\n## Ma trận tổng quan ở quy mô luận văn\n\nMa trận tổng quan không phải là khái niệm mới, nhưng ở quy mô luận văn nó cần rộng hơn nhiều so với một đề tài NCKH sinh viên, và cần đủ cột để dùng thẳng khi viết Chương 2.\n\n> [!ghi-nho] Với luận văn, ma trận tổng quan nên có tối thiểu **15-30 nguồn** (tuỳ ngành và độ hẹp của đề tài), và các cột nên đủ để trả lời được: nguồn này thuộc lý thuyết/khung nào, đo biến gì bằng công cụ nào, kết quả và cỡ hiệu ứng ra sao (nếu có), hạn chế tác giả tự nhận, và nó khớp vào đâu trong khung lý thuyết bạn đang dựng.\n\n| Tác giả, năm | Lý thuyết/khung dùng | Biến & công cụ đo | Mẫu & bối cảnh | Kết quả chính | Hạn chế | Vị trí trong khung của tôi |\n|---|---|---|---|---|---|---|\n| Nguyễn & Trần (2022) | TAM | Nhận thức hữu ích, ý định sử dụng (thang Likert 5, Davis 1989) | 320 SV kỹ thuật, Hà Nội | Nhận thức hữu ích → ý định (β = 0.42) | Cắt ngang, không đo hành vi thực tế | Xác nhận đường dẫn nhận thức hữu ích → ý định sử dụng trong khung của tôi |\n| Pham et al. (2021) | UTAUT | Ảnh hưởng xã hội, điều kiện thuận lợi | 210 SV kinh tế, TP.HCM | Ảnh hưởng xã hội không có ý nghĩa | Mẫu thuận tiện, một trường | Gợi ý biến ảnh hưởng xã hội cần đo lại cho phù hợp bối cảnh AI tạo sinh |\n\n> [!meo] Với số lượng nguồn lớn, dùng bảng tính (Google Sheets/Excel) thay vì tài liệu văn bản để dễ lọc, sắp xếp lại theo cột khi nhóm nguồn theo luận điểm ở bước viết — và để chia sẻ, đối chiếu với giảng viên hướng dẫn thuận tiện hơn một file Word.\n\n## PRISMA rút gọn — ghi minh bạch quy trình chọn nguồn\n\nMột tổng quan chỉ nói \"tôi đã đọc nhiều tài liệu\" không kiểm chứng được. **PRISMA** (Preferred Reporting Items for Systematic Reviews) là khung báo cáo tiêu chuẩn cho tổng quan hệ thống; ở mức luận văn, dùng một **bản rút gọn** là đủ, không cần đầy đủ mọi bước như một bài tổng quan hệ thống chuyên biệt.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem\">PRISMA rút gọn — luồng chọn nguồn</div>\n  <div style=\"display:flex;flex-direction:column;gap:.5rem;font-size:1.1rem\">\n    <div style=\"background:rgba(59,130,246,.14);border-left:4px solid rgba(59,130,246,.7);padding:.6rem .9rem;border-radius:.3rem\"><b>Tìm được:</b> 187 bài (Scopus: 94, Web of Science: 52, Google Scholar: 41)</div>\n    <div style=\"text-align:center;color:rgba(127,127,127,.7)\">↓ loại trùng lặp: −23</div>\n    <div style=\"background:rgba(139,92,246,.14);border-left:4px solid rgba(139,92,246,.7);padding:.6rem .9rem;border-radius:.3rem\"><b>Sau loại trùng:</b> 164 bài → lọc theo tiêu đề/tóm tắt</div>\n    <div style=\"text-align:center;color:rgba(127,127,127,.7)\">↓ loại không liên quan: −129</div>\n    <div style=\"background:rgba(13,148,136,.14);border-left:4px solid rgba(13,148,136,.7);padding:.6rem .9rem;border-radius:.3rem\"><b>Đọc toàn văn:</b> 35 bài</div>\n    <div style=\"text-align:center;color:rgba(127,127,127,.7)\">↓ loại theo tiêu chí (không đo đúng biến, không đúng đối tượng): −17</div>\n    <div style=\"background:rgba(217,150,40,.14);border-left:4px solid rgba(217,150,40,.7);padding:.6rem .9rem;border-radius:.3rem\"><b>Đưa vào ma trận tổng quan:</b> 18 bài</div>\n  </div>\n</div>\n```\n\n> [!canh-bao] Ghi lại con số ở mỗi bước **ngay khi đang tìm**, không dựng lại bằng trí nhớ sau khi đã đọc xong. Số liệu dựng lại sau thường không khớp với số nguồn thực tế trong ma trận, và hội đồng có thể yêu cầu xem lại chi tiết quy trình tìm kiếm.\n\n## Đọc bản đồ trích dẫn để thấy cấu trúc cả lĩnh vực\n\nVới một lĩnh vực có hàng trăm bài báo, đọc từng bài không đủ để thấy **cấu trúc chung**. Công cụ như **VOSviewer** (miễn phí) dựng bản đồ đồng trích dẫn (co-citation) hoặc đồng xuất hiện từ khoá (co-occurrence) từ dữ liệu xuất ra từ Scopus/Web of Science.\n\n> [!ghi-nho] Bản đồ trích dẫn hiển thị các bài báo hoặc từ khoá dưới dạng các điểm, khoảng cách giữa hai điểm gần nhau nghĩa là chúng thường được trích dẫn cùng nhau hoặc xuất hiện cùng nhau — tức là chúng thuộc cùng một nhóm chủ đề (cluster). Đọc bản đồ giúp thấy: lĩnh vực này có bao nhiêu nhóm chủ đề chính, và đề tài của bạn rơi vào nhóm nào hoặc lấp vào khoảng trống giữa các nhóm.\n\n> [!vi-du] Xuất 200 bài về \"AI tạo sinh trong giáo dục\" từ Scopus, chạy VOSviewer theo đồng xuất hiện từ khoá, học viên thấy 4 cụm: (1) AI tạo sinh và viết học thuật, (2) AI tạo sinh và đạo đức/đạo văn, (3) AI tạo sinh và giảng viên/thiết kế giảng dạy, (4) AI tạo sinh và động lực/cảm xúc người học. Đề tài \"AI tạo sinh và động lực học tập của sinh viên khoa học xã hội tại Việt Nam\" rơi vào cụm 4, nhưng cụm 4 chủ yếu là các nghiên cứu ở sinh viên STEM tại các nước phát triển — xác nhận trực quan cho khoảng trống đã nêu ở Bài 1.\n\n> [!meo] Không cần đọc hết 200 bài để dựng bản đồ — VOSviewer chỉ cần file xuất dữ liệu thư mục trích dẫn (.csv/.ris) từ Scopus hoặc Web of Science, không cần toàn văn. Đây là công cụ định hướng đọc, không thay thế việc đọc — sau khi thấy cụm nào gần đề tài mình nhất, mới đọc kỹ các bài trong cụm đó.\n\n## Từ ma trận tới khoảng trống có số liệu\n\nKhoảng trống ở mức luận văn cần được viết kèm chính số liệu từ quy trình PRISMA rút gọn và ma trận tổng quan, không phải một câu khẳng định chung.\n\n| Cách viết yếu | Cách viết có số liệu |\n|---|---|\n| \"Chưa có nghiên cứu nào về AI tạo sinh và động lực học tập ở Việt Nam.\" | \"Trong 18 nghiên cứu về AI tạo sinh và động lực học tập được đưa vào tổng quan (từ 187 nguồn tìm được qua Scopus, Web of Science và Google Scholar), không nghiên cứu nào thực hiện trên sinh viên khoa học xã hội tại Việt Nam; 15/18 nghiên cứu thực hiện trên sinh viên STEM tại các nước có mức tiếp cận công nghệ khác biệt.\" |\n\n> [!canh-bao] Số liệu này phải khớp chính xác với PRISMA rút gọn và ma trận tổng quan đã lập — hội đồng có thể hỏi ngược \"18 nguồn đó là những nguồn nào\" và bạn cần chỉ ra được ngay trong ma trận.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (50 phút)\n\nMở rộng ma trận tổng quan từ Bài 1 lên tối thiểu **15 nguồn**, đủ 7 cột như mẫu ở mục 1. Ghi lại luồng PRISMA rút gọn (số tìm được theo từng nguồn tra cứu, số loại trùng, số loại theo tiêu đề/tóm tắt, số đọc toàn văn, số đưa vào ma trận).\n\n### Nhóm 3-4 người (30 phút)\n\nĐổi ma trận và luồng PRISMA cho nhau. Kiểm tra: số liệu trong luồng PRISMA có khớp với số dòng trong ma trận không, ma trận có đủ 7 cột không, và các nguồn có phân bố đa dạng qua nhiều nguồn tra cứu (không chỉ một cơ sở dữ liệu) không.\n\n### Bài tập về nhà (90-120 phút)\n\nViết phần **Tổng quan tài liệu** cho Chương 2 (800-1200 từ): tổng hợp theo luận điểm (không liệt kê tuần tự), có sơ đồ hoặc mô tả bản đồ trích dẫn nếu đã dùng VOSviewer, kết thúc bằng đoạn khoảng trống nghiên cứu có số liệu cụ thể khớp với ma trận và luồng PRISMA.\n\n:::mau Mẫu nộp bài tập về nhà\n**Luồng PRISMA rút gọn:** tìm được … (qua …) → sau loại trùng … → đọc toàn văn … → đưa vào ma trận …\n\n**Ma trận tổng quan (≥ 15 nguồn):** (đính kèm hoặc dán bảng)\n\n**Đoạn tổng quan (800-1200 từ):** …\n\n**Khoảng trống nghiên cứu (có số liệu):** …\n:::\n\n### Nguồn tham khảo\n\n- Page, M. J., et al. (2021). The PRISMA 2020 statement: An updated guideline for reporting systematic reviews. *BMJ*, 372, n71.\n- van Eck, N. J., & Waltman, L. (2010). Software survey: VOSviewer, a computer program for bibliometric mapping. *Scientometrics*, 84(2), 523-538.\n- Hart, C. (1998). *Doing a Literature Review: Releasing the Social Science Research Imagination.* SAGE Publications.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "ppnc2-quy-mo-ma-tran",
+                "type": "mcq",
+                "prompt": "Vì sao ma trận tổng quan ở mức luận văn cần nhiều cột hơn ma trận ở mức NCKH sinh viên (như 'lý thuyết dùng', 'công cụ đo', 'cỡ hiệu ứng')?",
+                "explanation": "Ma trận ở mức luận văn cần dùng thẳng để viết Chương 2 và bảo vệ trước hội đồng, nên cần đủ chi tiết để trả lời được các câu hỏi sâu về lý thuyết, công cụ đo và kết quả — không chỉ ghi chú tổng quát.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Để dùng thẳng khi viết Chương 2 và trả lời được các câu hỏi chi tiết của hội đồng về lý thuyết, công cụ đo, kết quả",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Để bảng nhìn dài và ấn tượng hơn với giảng viên hướng dẫn",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có lý do gì khác biệt thật sự, chỉ là quy ước hình thức",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Để dễ dàng đếm được đã đọc bao nhiêu trang tài liệu",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc2-prisma-muc-dich",
+                "type": "mcq",
+                "prompt": "Ghi lại luồng PRISMA rút gọn (số nguồn tìm được, loại trùng, loại theo tiêu đề, đọc toàn văn, đưa vào ma trận) phục vụ mục đích gì?",
+                "explanation": "PRISMA rút gọn làm quy trình chọn nguồn minh bạch và kiểm chứng được — khác với việc chỉ nói 'tôi đã đọc nhiều tài liệu' mà không ai kiểm lại được đã tìm và lọc thế nào.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Làm quy trình chọn nguồn minh bạch và kiểm chứng được, thay cho việc chỉ nói đã đọc nhiều tài liệu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Là yêu cầu hình thức bắt buộc, không phục vụ việc kiểm chứng gì",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Giúp tổng quan có vẻ khoa học hơn dù không thay đổi nội dung thật",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Thay thế được việc phải đọc toàn văn các bài báo đã chọn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc2-doc-ban-do-trich-dan",
+                "type": "mcq",
+                "prompt": "Trên bản đồ đồng xuất hiện từ khoá của VOSviewer, hai từ khoá nằm gần nhau nghĩa là gì?",
+                "explanation": "Khoảng cách gần trên bản đồ nghĩa là hai từ khoá (hoặc bài báo) thường xuất hiện cùng nhau hoặc được trích dẫn cùng nhau — tức là chúng thuộc cùng một nhóm chủ đề (cluster), không phải là chúng giống nhau về nội dung câu chữ.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chúng thường xuất hiện cùng nhau trong các bài báo, nên có khả năng thuộc cùng một nhóm chủ đề",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chúng được xuất bản trong cùng một tạp chí",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chúng do cùng một tác giả viết",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có ý nghĩa gì, khoảng cách trên bản đồ là ngẫu nhiên",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc2-khoang-trong-so-lieu",
+                "type": "mcq",
+                "prompt": "Câu nào viết khoảng trống nghiên cứu đúng chuẩn ở mức luận văn?",
+                "explanation": "Khoảng trống ở mức luận văn cần kèm số liệu cụ thể khớp với ma trận và luồng PRISMA — số nguồn tìm được, qua đâu, và chính xác điều gì trong số đó chưa được làm — để hội đồng kiểm chứng được, thay vì một khẳng định chung không có cơ sở.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Trong 18 nghiên cứu được đưa vào tổng quan (từ 187 nguồn qua Scopus, Web of Science, Google Scholar), không nghiên cứu nào thực hiện trên sinh viên khoa học xã hội tại Việt Nam.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Chưa có nghiên cứu nào về vấn đề này ở Việt Nam.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.gap-is-my-interest"
+                  },
+                  {
+                    "label": "'Đây là một chủ đề rất mới và thú vị, chưa được khai thác nhiều.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.gap-is-my-interest"
+                  },
+                  {
+                    "label": "'Có rất nhiều nghiên cứu về AI tạo sinh, nên đề tài này chắc chắn có giá trị.'",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc2-ghi-so-lieu-khi-nao",
+                "type": "mcq",
+                "prompt": "Nên ghi lại số liệu của luồng PRISMA rút gọn (số tìm được, số loại trùng...) vào lúc nào?",
+                "explanation": "Ghi ngay khi đang thực hiện quy trình tìm kiếm và lọc, không dựng lại bằng trí nhớ sau khi đã đọc xong — số liệu dựng lại sau thường không khớp với số nguồn thực tế và khó chịu được trách nhiệm khi hội đồng hỏi lại chi tiết.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Ghi ngay khi đang thực hiện từng bước tìm kiếm và lọc, không dựng lại bằng trí nhớ sau đó",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Ghi sau khi đã đọc xong toàn bộ tài liệu, ước lượng lại số liệu cho hợp lý",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần ghi số liệu cụ thể, chỉ cần mô tả chung là 'đã tìm và lọc kỹ'",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ cần ghi số liệu nếu giảng viên hướng dẫn yêu cầu",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc2-thu-tu-tong-quan",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự quy trình làm tổng quan tài liệu hệ thống ở mức luận văn.",
+                "explanation": "Từ tìm kiếm đa nguồn, ghi luồng PRISMA rút gọn, lọc và đọc toàn văn, điền ma trận, tới việc dùng bản đồ trích dẫn định hướng và viết khoảng trống có số liệu.",
+                "points": 3,
+                "sequence": [
+                  "Tìm kiếm qua nhiều nguồn tra cứu (Scopus, Web of Science, Google Scholar)",
+                  "Ghi số liệu PRISMA rút gọn ngay khi loại trùng lặp và lọc theo tiêu đề/tóm tắt",
+                  "Đọc toàn văn các bài còn lại và điền vào ma trận tổng quan",
+                  "Dùng bản đồ trích dẫn (nếu có) để xác nhận vị trí đề tài trong cấu trúc lĩnh vực",
+                  "Viết đoạn khoảng trống nghiên cứu có số liệu khớp với ma trận và luồng PRISMA"
+                ]
+              },
+              {
+                "key": "ppnc2-noi-cong-cu",
+                "type": "matching",
+                "prompt": "Nối mỗi công cụ hoặc khái niệm với đúng vai trò của nó trong tổng quan tài liệu hệ thống.",
+                "explanation": "PRISMA ghi minh bạch luồng chọn nguồn; VOSviewer dựng bản đồ trực quan cấu trúc lĩnh vực; ma trận tổng quan lưu chi tiết từng nguồn để dùng lại; Scopus/Web of Science là nguồn tra cứu chính cho dữ liệu trích dẫn.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "PRISMA rút gọn",
+                    "right": "Ghi minh bạch luồng tìm kiếm và lọc nguồn"
+                  },
+                  {
+                    "left": "VOSviewer",
+                    "right": "Dựng bản đồ trực quan cấu trúc chủ đề của lĩnh vực"
+                  },
+                  {
+                    "left": "Ma trận tổng quan",
+                    "right": "Lưu chi tiết từng nguồn để dùng lại khi viết Chương 2"
+                  },
+                  {
+                    "left": "Scopus / Web of Science",
+                    "right": "Nguồn tra cứu chính, xuất dữ liệu trích dẫn cho bản đồ"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc2-viet-khoang-trong",
+                "type": "essay",
+                "prompt": "Từ ma trận tổng quan và luồng PRISMA rút gọn của bạn, viết một đoạn 200-300 từ trình bày khoảng trống nghiên cứu, gồm: (a) số liệu cụ thể (tìm được bao nhiêu, qua đâu, đưa vào bao nhiêu); (b) tổng hợp ngắn theo luận điểm những gì đã biết; (c) chỉ rõ khoảng trống và nối với câu hỏi/khung lý thuyết ở Bài 1.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 3 · Thiết kế nghiên cứu",
+          "durationMin": 100,
+          "description": "Chọn thiết kế phù hợp với khung lý thuyết đã dựng ở Bài 1; hiểu quy trình hai bước của PLS-SEM (mô hình đo trước, mô hình cấu trúc sau); thiết kế case study/phỏng vấn sâu theo tiêu chí lý thuyết và bão hòa dữ liệu; chọn đúng dạng thiết kế hỗn hợp khi cần cả hai.",
+          "objectives": [
+            "Biện luận được khi nào một khung lý thuyết có nhiều biến trung gian/điều tiết cần SEM thay vì nhiều hồi quy riêng lẻ",
+            "Trình bày được quy trình hai bước của PLS-SEM: kiểm mô hình đo (reliability, validity) trước khi đọc kết quả mô hình cấu trúc (path coefficient)",
+            "Thiết kế được case study hoặc phỏng vấn sâu với tiêu chí chọn mẫu theo lý thuyết và nguyên tắc bão hòa dữ liệu, không cố định số lượng trước",
+            "Chọn được một trong ba dạng thiết kế hỗn hợp (đồng thời, tuần tự giải thích, tuần tự khám phá) phù hợp với mục đích tích hợp dữ liệu của đề tài"
+          ],
+          "summary": [
+            "Một khung lý thuyết có nhiều biến trung gian hoặc điều tiết nên được kiểm bằng SEM/PLS-SEM — chạy nhiều hồi quy riêng lẻ làm mất mối liên hệ giữa các đường dẫn và tích lũy sai số.",
+            "PLS-SEM luôn đi hai bước: kiểm mô hình đo (độ tin cậy, độ giá trị của thang đo) trước, chỉ đọc kết quả mô hình cấu trúc (path coefficient, R²) sau khi mô hình đo đã đạt — đọc path trước khi kiểm đo là đọc một kết quả không có ý nghĩa.",
+            "Cỡ mẫu định tính (số ca nghiên cứu, số người phỏng vấn) không cố định trước một số cụ thể — nó được quyết định bởi tiêu chí lý thuyết và điểm bão hòa dữ liệu, tức là lúc thêm dữ liệu không còn sinh ra thông tin mới.",
+            "Thiết kế hỗn hợp không phải là làm định lượng và định tính tách biệt rồi ghép báo cáo lại — nó cần một chiến lược tích hợp cụ thể: đồng thời để so sánh, tuần tự để giải thích, hoặc tuần tự để khám phá và xây công cụ."
+          ],
+          "splitSections": true,
+          "body": "\nBài 1 đã dựng khung lý thuyết với các biến và giả thuyết. Bài này chọn công cụ để kiểm định khung đó — và ở mức luận văn, việc chọn công cụ cần biện luận chặt hơn nhiều so với việc chỉ chọn \"định lượng hay định tính\" — đi qua bốn phần: trước hết nối đặc điểm của khung lý thuyết với công cụ phù hợp; sau đó đi sâu vào quy trình hai bước bắt buộc của PLS-SEM và cách phân biệt construct phản ánh với construct hình thành; tiếp theo là thiết kế case study/phỏng vấn sâu theo tiêu chí lý thuyết và điểm bão hòa dữ liệu; và kết bằng ba chiến lược tích hợp của thiết kế hỗn hợp khi cần cả định lượng lẫn định tính.\n\n## Từ khung lý thuyết tới thiết kế\n\nKhung lý thuyết ở Bài 1 quyết định phần lớn việc chọn thiết kế, không phải sở thích hay năng lực có sẵn.\n\n> [!canh-bao] Một khung có nhiều biến trung gian hoặc điều tiết (ví dụ: IV → mediator → DV, với một moderator tác động vào một đường dẫn) mà kiểm bằng **nhiều phép hồi quy tuyến tính riêng lẻ** (một hồi quy IV→mediator, một hồi quy mediator→DV) là một lỗi thống kê phổ biến: mỗi hồi quy ước lượng riêng, sai số của bước trước không được đưa vào bước sau, và mối quan hệ giữa các đường dẫn trong toàn mô hình bị mất. **SEM/PLS-SEM** ước lượng toàn bộ mô hình đường dẫn (bao gồm tất cả các đường dẫn, trung gian, điều tiết) cùng một lúc.\n\n| Đặc điểm khung lý thuyết | Công cụ phù hợp |\n|---|---|\n| Chỉ 1-2 biến, không có trung gian/điều tiết, cỡ mẫu nhỏ | Hồi quy tuyến tính/logistic đơn giản là đủ |\n| Nhiều biến, có trung gian và/hoặc điều tiết, các construct đo bằng nhiều item (Likert) | SEM/PLS-SEM |\n| Muốn hiểu sâu trải nghiệm, cơ chế, hoặc một hiện tượng phức tạp trong một bối cảnh cụ thể | Case study hoặc phỏng vấn sâu (định tính) |\n| Cần vừa kiểm định mối quan hệ vừa hiểu cơ chế/trải nghiệm | Thiết kế hỗn hợp |\n\n## Định lượng nâng cao: quy trình hai bước của PLS-SEM\n\nPLS-SEM (Partial Least Squares Structural Equation Modeling) là công cụ phổ biến nhất cho luận văn dùng dữ liệu khảo sát với construct đa item. Điểm mấu chốt: **luôn đi hai bước**, không được đọc kết quả bước 2 nếu bước 1 chưa đạt.\n\n> [!ghi-nho] **Bước 1 — Mô hình đo (measurement/outer model):** kiểm độ tin cậy (Cronbach's Alpha, Composite Reliability, cả hai nên ≥ 0.7) và độ giá trị (AVE ≥ 0.5 cho hội tụ; HTMT < 0.85-0.90 cho phân biệt) của từng thang đo. **Bước 2 — Mô hình cấu trúc (structural/inner model):** chỉ đọc path coefficient, R², và kiểm định bootstrap (t-value, p-value) sau khi bước 1 đã đạt tiêu chuẩn.\n\n> [!canh-bao] Đọc kết quả path coefficient của mô hình cấu trúc trước khi kiểm mô hình đo là đọc một kết quả **không có ý nghĩa thống kê thật**: nếu thang đo không đạt độ tin cậy hoặc độ giá trị, các hệ số đường dẫn được tính từ dữ liệu không đáng tin, bất kể p-value có nhỏ đến đâu.\n\n```html\n<div style=\"border:1px solid rgba(127,127,127,0.32);border-radius:.6rem;padding:1rem 1.1rem;margin:1.2rem 0\">\n  <div style=\"font-size:1rem;color:rgba(127,127,127,0.95);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:.8rem\">Quy trình PLS-SEM — không đảo thứ tự</div>\n  <div style=\"display:flex;flex-direction:column;gap:.5rem;font-size:1.1rem\">\n    <div style=\"background:rgba(59,130,246,.14);border-left:4px solid rgba(59,130,246,.7);padding:.6rem .9rem;border-radius:.3rem\"><b>1. Mô hình đo</b> — Cronbach's Alpha, Composite Reliability, AVE, HTMT</div>\n    <div style=\"text-align:center;color:rgba(127,127,127,.7)\">↓ chỉ đi tiếp nếu đạt tiêu chuẩn</div>\n    <div style=\"background:rgba(13,148,136,.14);border-left:4px solid rgba(13,148,136,.7);padding:.6rem .9rem;border-radius:.3rem\"><b>2. Mô hình cấu trúc</b> — path coefficient, R², bootstrap (t/p-value)</div>\n  </div>\n</div>\n```\n\nMột khái niệm hay bị bỏ qua: **construct phản ánh (reflective) và construct hình thành (formative)**. Construct phản ánh (ví dụ \"sự hài lòng\") có các item đều **phản ánh** cùng một khái niệm nền — bỏ một item vẫn đo được khái niệm đó, các item tương quan cao với nhau. Construct hình thành (ví dụ \"tình trạng kinh tế gia đình\" = thu nhập + tài sản + nợ) có các item **tạo thành** khái niệm — bỏ một thành phần là khái niệm đổi nghĩa, và các thành phần không cần tương quan cao với nhau. Áp nhầm loại construct làm sai toàn bộ cách kiểm định mô hình đo.\n\n> [!vi-du] Một học viên đo \"mức độ số hoá của doanh nghiệp\" bằng ba chỉ số: tỉ lệ quy trình đã số hoá, số lượng phần mềm quản trị đang dùng, và mức đầu tư công nghệ hàng năm. Ba chỉ số này không cần tương quan cao với nhau (một doanh nghiệp có thể đầu tư nhiều tiền nhưng ít quy trình số hoá) — đây là construct **hình thành**, không phải phản ánh. Áp kiểm định Cronbach's Alpha (dành cho construct phản ánh) vào đây sẽ cho kết quả gây hiểu nhầm là thang đo \"không đáng tin cậy\".\n\n## Định tính chuyên sâu: case study và phỏng vấn sâu\n\nVới thiết kế định tính, hai quyết định quan trọng nhất là chọn ca nghiên cứu (case) theo tiêu chí gì, và biết khi nào dừng thu thập dữ liệu.\n\n> [!ghi-nho] Case study chọn theo **tiêu chí lý thuyết** (theoretical sampling) — chọn ca vì nó đại diện điển hình, đối lập cực đoan, hoặc hiếm gặp và có giá trị lý thuyết — không chọn vì đó là ca dễ tiếp cận nhất. Case study **đơn ca** phù hợp khi hiện tượng hiếm hoặc mang tính cực đoan điển hình; **đa ca** phù hợp khi muốn so sánh giữa các bối cảnh khác nhau để tìm mẫu hình chung.\n\n> [!canh-bao] Cố định trước \"sẽ phỏng vấn đúng 10 người\" trước khi bắt đầu thu thập dữ liệu là một lỗi phổ biến. Cỡ mẫu định tính nên được quyết định bởi **bão hòa dữ liệu** (data saturation) — điểm mà việc phỏng vấn thêm người không còn sinh ra chủ đề hoặc thông tin mới. Có thể là 8 người, có thể là 20 — biết trước con số chính xác trước khi thu thập dữ liệu là dấu hiệu chưa hiểu logic của lấy mẫu định tính.\n\n> [!vi-du] Một học viên nghiên cứu trải nghiệm giảng viên chuyển đổi sang dạy trực tuyến trong đại dịch, dự kiến phỏng vấn 12 giảng viên. Sau phỏng vấn thứ 9, các chủ đề mới không còn xuất hiện — hai giảng viên tiếp theo lặp lại đúng các chủ đề đã có (khó khăn kỹ thuật, mất kết nối với sinh viên, áp lực chuẩn bị tài liệu mới). Học viên dừng ở 11 người và ghi rõ trong luận văn: \"dữ liệu đạt bão hòa sau người tham gia thứ 9, phỏng vấn thêm 2 người để xác nhận không có chủ đề mới xuất hiện.\"\n\n## Thiết kế hỗn hợp: ba chiến lược tích hợp\n\nKhi khung lý thuyết cần cả đo lường và hiểu cơ chế, thiết kế hỗn hợp cần một **chiến lược tích hợp cụ thể** — không phải làm hai phần tách biệt rồi ghép báo cáo.\n\n| Dạng | Trình tự | Mục đích tích hợp |\n|---|---|---|\n| Đồng thời (convergent) | Định lượng và định tính thu thập cùng lúc, độc lập | So sánh hai bộ kết quả để xác nhận hoặc làm rõ điểm khác biệt |\n| Tuần tự giải thích (explanatory sequential) | Định lượng trước → định tính sau | Dùng phỏng vấn để giải thích **vì sao** một kết quả định lượng (đặc biệt kết quả bất ngờ) lại xảy ra |\n| Tuần tự khám phá (exploratory sequential) | Định tính trước → định lượng sau | Dùng phỏng vấn để khám phá biến/khái niệm mới, rồi xây thang đo và kiểm định trên mẫu lớn hơn |\n\n> [!canh-bao] \"Làm cả khảo sát và phỏng vấn\" không tự động là thiết kế hỗn hợp đúng nghĩa nếu không có chiến lược tích hợp: phần thảo luận phải nói rõ kết quả định tính giải thích/xác nhận/mở rộng kết quả định lượng ở điểm nào cụ thể, không phải trình bày hai phần kết quả cạnh nhau không liên hệ.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (45 phút)\n\nVới đề tài của bạn: nếu định lượng, vẽ sơ đồ mô hình đo (construct nào phản ánh, construct nào hình thành) và mô hình cấu trúc (đường dẫn chính, trung gian, điều tiết nếu có). Nếu định tính, viết tiêu chí chọn case hoặc người tham gia theo lý thuyết, và dự kiến (không cố định) khoảng cỡ mẫu. Nếu hỗn hợp, chọn một trong ba dạng và viết một đoạn giải thích chiến lược tích hợp.\n\n### Nhóm 3-4 người (30 phút)\n\nPhản biện chéo. Với thiết kế định lượng: kiểm mỗi construct đã được xác định đúng là phản ánh hay hình thành chưa. Với định tính: kiểm tiêu chí chọn case có dựa trên lý thuyết không, hay chỉ là \"dễ tiếp cận\". Với hỗn hợp: hỏi \"kết quả định tính của bạn sẽ giải thích/xác nhận/mở rộng điều gì cụ thể từ kết quả định lượng?\"\n\n### Bài tập về nhà (90 phút)\n\nViết phần **Thiết kế nghiên cứu** cho Chương 3: loại thiết kế đã chọn và lý do (nối lại với khung lý thuyết ở Bài 1), mô tả công cụ/quy trình cụ thể (PLS-SEM hai bước, hoặc tiêu chí chọn case/bão hòa dữ liệu, hoặc chiến lược tích hợp hỗn hợp).\n\n:::mau Mẫu nộp bài tập về nhà\n**Loại thiết kế đã chọn:** ☐ Định lượng (SEM/PLS-SEM) ☐ Định tính (case study/phỏng vấn sâu) ☐ Hỗn hợp (…)\n\n**Lý do chọn (nối với khung lý thuyết Bài 1):** …\n\n**Nếu định lượng:** danh sách construct, loại (phản ánh/hình thành), số item dự kiến mỗi construct\n\n**Nếu định tính:** tiêu chí chọn case/người tham gia, khoảng cỡ mẫu dự kiến, tiêu chí dừng\n\n**Nếu hỗn hợp:** chiến lược tích hợp cụ thể (đồng thời/tuần tự giải thích/tuần tự khám phá) và lý do\n:::\n\n### Nguồn tham khảo\n\n- Hair, J. F., Hult, G. T. M., Ringle, C. M., & Sarstedt, M. (2021). *A Primer on Partial Least Squares Structural Equation Modeling (PLS-SEM)* (3rd ed.). SAGE Publications.\n- Yin, R. K. (2018). *Case Study Research and Applications: Design and Methods* (6th ed.). SAGE Publications.\n- Creswell, J. W., & Plano Clark, V. L. (2018). *Designing and Conducting Mixed Methods Research* (3rd ed.). SAGE Publications.\n- Guest, G., Bunce, A., & Johnson, L. (2006). How many interviews are enough? An experiment with data saturation and variability. *Field Methods*, 18(1), 59-82.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "ppnc3-sem-vs-hoi-quy",
+                "type": "mcq",
+                "prompt": "Một khung lý thuyết có 2 biến trung gian và 1 biến điều tiết. Vì sao nên dùng SEM/PLS-SEM thay vì chạy nhiều hồi quy tuyến tính riêng lẻ cho từng đường dẫn?",
+                "explanation": "Chạy nhiều hồi quy riêng lẻ ước lượng từng đường dẫn độc lập, làm mất mối liên hệ giữa các đường dẫn trong toàn mô hình và tích lũy sai số qua các bước — SEM ước lượng toàn bộ mô hình đường dẫn cùng lúc.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nhiều hồi quy riêng lẻ làm mất mối liên hệ giữa các đường dẫn và tích lũy sai số qua từng bước ước lượng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hồi quy tuyến tính không thể chạy trên phần mềm thống kê hiện đại",
+                    "isCorrect": false,
+                    "misconception": "ppnc.regression-instead-of-sem"
+                  },
+                  {
+                    "label": "Không có khác biệt thật sự, chỉ là SEM nghe học thuật hơn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.regression-instead-of-sem"
+                  },
+                  {
+                    "label": "SEM luôn cho p-value nhỏ hơn hồi quy nên dễ đạt ý nghĩa thống kê",
+                    "isCorrect": false,
+                    "misconception": "ppnc.regression-instead-of-sem"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc3-thu-tu-plssem",
+                "type": "mcq",
+                "prompt": "Trong PLS-SEM, vì sao không nên đọc kết quả path coefficient của mô hình cấu trúc trước khi kiểm mô hình đo?",
+                "explanation": "Nếu thang đo chưa đạt độ tin cậy hoặc độ giá trị ở mô hình đo, các hệ số đường dẫn ở mô hình cấu trúc được tính từ dữ liệu không đáng tin — kết quả không có ý nghĩa thống kê thật, bất kể p-value nhỏ tới đâu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Nếu thang đo không đạt độ tin cậy/độ giá trị, các hệ số đường dẫn được tính từ dữ liệu không đáng tin cậy",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Vì phần mềm PLS-SEM luôn tính mô hình đo trước theo mặc định, không thể đổi thứ tự",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-measurement-model"
+                  },
+                  {
+                    "label": "Không có lý do thống kê nào, chỉ là quy ước trình bày trong luận văn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-measurement-model"
+                  },
+                  {
+                    "label": "Vì mô hình cấu trúc luôn cho kết quả không có ý nghĩa nếu chạy trước",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc3-reflective-formative",
+                "type": "mcq",
+                "prompt": "'Tình trạng kinh tế gia đình' được đo bằng ba chỉ số không cần tương quan cao với nhau: thu nhập, tài sản, nợ. Đây là loại construct nào?",
+                "explanation": "Construct hình thành (formative): các thành phần tạo thành khái niệm chứ không phản ánh chung một khái niệm nền, nên không cần tương quan cao với nhau như construct phản ánh.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Construct hình thành (formative)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Construct phản ánh (reflective)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Biến điều tiết (moderator)",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Biến trung gian (mediator)",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc3-co-mau-dinh-tinh",
+                "type": "mcq",
+                "prompt": "Một học viên quyết định trước 'sẽ phỏng vấn đúng 10 người' cho nghiên cứu định tính, không dựa trên tiêu chí nào khác. Nhận định nào đúng nhất?",
+                "explanation": "Cỡ mẫu định tính nên được quyết định bởi bão hòa dữ liệu — điểm mà phỏng vấn thêm không còn sinh ra thông tin mới — không cố định một số trước khi thu thập dữ liệu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nên quyết định dừng dựa trên bão hòa dữ liệu, không cố định số lượng trước khi thu thập",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "10 người luôn là cỡ mẫu chuẩn cho mọi nghiên cứu định tính",
+                    "isCorrect": false,
+                    "misconception": "ppnc.fixed-sample-qualitative"
+                  },
+                  {
+                    "label": "Cỡ mẫu định tính không quan trọng vì không cần đại diện cho ai",
+                    "isCorrect": false,
+                    "misconception": "ppnc.fixed-sample-qualitative"
+                  },
+                  {
+                    "label": "Nên tăng lên ít nhất 30 người để có ý nghĩa thống kê",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc3-hon-hop-tich-hop",
+                "type": "mcq",
+                "prompt": "Một học viên làm cả khảo sát định lượng và phỏng vấn định tính, nhưng trình bày hai phần kết quả cạnh nhau trong luận văn mà không liên hệ chúng với nhau. Vấn đề của thiết kế này là gì?",
+                "explanation": "Thiết kế hỗn hợp cần một chiến lược tích hợp cụ thể — kết quả định tính phải giải thích, xác nhận hoặc mở rộng kết quả định lượng ở điểm cụ thể nào — làm hai phần tách biệt không liên hệ không phải là thiết kế hỗn hợp đúng nghĩa.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Thiếu chiến lược tích hợp cụ thể — không có kết quả nào giải thích, xác nhận hoặc mở rộng kết quả còn lại",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, làm cả hai phần là đủ để gọi là thiết kế hỗn hợp",
+                    "isCorrect": false,
+                    "misconception": "ppnc.mixed-is-just-both"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là thứ tự trình bày hai phần trong luận văn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.mixed-is-just-both"
+                  },
+                  {
+                    "label": "Không nên làm cả hai phần, nên chọn hẳn một trong hai phương pháp",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc3-thu-tu-thiet-ke",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước thiết kế nghiên cứu định lượng bằng PLS-SEM.",
+                "explanation": "Từ khung lý thuyết, xác định loại construct, thu thập dữ liệu, kiểm mô hình đo trước, chỉ đọc mô hình cấu trúc sau khi mô hình đo đạt.",
+                "points": 3,
+                "sequence": [
+                  "Xác định các construct từ khung lý thuyết ở Bài 1",
+                  "Phân loại mỗi construct là phản ánh (reflective) hay hình thành (formative)",
+                  "Thu thập dữ liệu khảo sát theo thang đo đã chọn",
+                  "Kiểm mô hình đo: độ tin cậy và độ giá trị của từng construct",
+                  "Đọc kết quả mô hình cấu trúc (path coefficient, R²) chỉ sau khi mô hình đo đạt tiêu chuẩn"
+                ]
+              },
+              {
+                "key": "ppnc3-noi-thiet-ke-hon-hop",
+                "type": "matching",
+                "prompt": "Nối mỗi dạng thiết kế hỗn hợp với đúng mục đích tích hợp của nó.",
+                "explanation": "Đồng thời so sánh hai bộ kết quả độc lập; tuần tự giải thích dùng định tính để hiểu vì sao một kết quả định lượng xảy ra; tuần tự khám phá dùng định tính để tìm biến mới trước khi xây thang đo định lượng.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Đồng thời (convergent)",
+                    "right": "So sánh hai bộ kết quả thu thập độc lập, cùng lúc"
+                  },
+                  {
+                    "left": "Tuần tự giải thích (explanatory sequential)",
+                    "right": "Dùng định tính để giải thích một kết quả định lượng đã có"
+                  },
+                  {
+                    "left": "Tuần tự khám phá (exploratory sequential)",
+                    "right": "Dùng định tính để khám phá biến mới, rồi xây thang đo định lượng"
+                  },
+                  {
+                    "left": "Case study đa ca",
+                    "right": "So sánh nhiều bối cảnh để tìm mẫu hình chung"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc3-viet-thiet-ke",
+                "type": "essay",
+                "prompt": "Viết phần Thiết kế nghiên cứu cho đề tài của bạn (200-300 từ), gồm: (a) loại thiết kế đã chọn và lý do nối với khung lý thuyết ở Bài 1; (b) nếu định lượng — construct nào phản ánh/hình thành; nếu định tính — tiêu chí chọn case/người tham gia và tiêu chí dừng; nếu hỗn hợp — chiến lược tích hợp cụ thể.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 4 · Thu thập và xử lý dữ liệu",
+          "durationMin": 100,
+          "description": "Làm sạch và mã hóa dữ liệu trước khi phân tích; chạy Cronbach's Alpha và EFA đúng thứ tự để kiểm cấu trúc thang đo; diễn giải hồi quy/PLS-SEM đúng, không nhầm ý nghĩa thống kê với ý nghĩa thực tế; mã hóa dữ liệu định tính có kiểm độ tin cậy giữa người code.",
+          "objectives": [
+            "Làm sạch và mã hóa một bộ dữ liệu khảo sát trước khi phân tích: xử lý thiếu, outlier, item đảo hướng",
+            "Chạy và diễn giải đúng Cronbach's Alpha và EFA để kiểm cấu trúc nhân tố của thang đo trước khi kiểm định giả thuyết",
+            "Diễn giải hệ số hồi quy/path coefficient đúng, phân biệt ý nghĩa thống kê (p-value) với ý nghĩa thực tế (effect size)",
+            "Mã hóa dữ liệu định tính theo quy trình có kiểm độ tin cậy giữa người code, không chỉ một người code chủ quan"
+          ],
+          "summary": [
+            "Dữ liệu phải được làm sạch (thiếu, outlier, item đảo hướng) và mã hóa theo một codebook cố định trước khi chạy bất kỳ phân tích nào — bỏ qua bước này khiến kết quả sau đó không đáng tin dù kỹ thuật thống kê có đúng.",
+            "Cronbach's Alpha cao chỉ cho biết các item có tương quan nội bộ, không đảm bảo chúng đo đúng cấu trúc nhân tố như thiết kế — EFA (hoặc CFA) cần chạy để kiểm cấu trúc đó, đặc biệt với thang đo mới hoặc đã điều chỉnh.",
+            "Ý nghĩa thống kê (p < 0.05) và ý nghĩa thực tế là hai việc khác nhau: với mẫu đủ lớn, một hệ số rất nhỏ vẫn có thể đạt p < 0.05 mà không có nghĩa hiệu ứng đó quan trọng trong thực tế.",
+            "Dữ liệu định tính cần quy trình mã hóa có kiểm độ tin cậy giữa người code (ít nhất hai người code độc lập rồi so sánh) — một người code hết dữ liệu một mình dễ chủ quan mà không ai kiểm chứng được."
+          ],
+          "splitSections": true,
+          "body": "\nThiết kế đã chọn ở Bài 3 quyết định công cụ; bài này là lúc dữ liệu thật (hoặc dữ liệu thí điểm) bắt đầu chạy qua các công cụ đó — và là lúc các lỗi thầm lặng nhất thường xảy ra, vì phần mềm luôn cho ra một kết quả, đúng hay sai. Bài đi qua bốn phần: trước hết làm sạch và mã hóa dữ liệu (thiếu, outlier, item đảo hướng) trước khi phân tích; sau đó chạy Cronbach's Alpha và EFA đúng thứ tự để kiểm cấu trúc thang đo trước khi tin vào nó; tiếp theo diễn giải hệ số hồi quy/path coefficient đúng, phân biệt ý nghĩa thống kê với ý nghĩa thực tế; và kết bằng quy trình mã hóa dữ liệu định tính có kiểm độ tin cậy giữa người code.\n\n## Chuẩn bị dữ liệu trước khi phân tích\n\nTrước khi mở SPSS hoặc R để chạy bất kỳ kiểm định nào, dữ liệu cần qua ba bước làm sạch.\n\n> [!ghi-nho] **Xử lý dữ liệu thiếu (missing data):** nếu tỉ lệ thiếu thấp (dưới 5% và ngẫu nhiên), loại bỏ theo dòng (listwise deletion) là chấp nhận được; nếu cao hơn, cần phương pháp thay thế (imputation) và phải báo cáo rõ cách xử lý. **Kiểm outlier:** giá trị bất thường có thể do lỗi nhập liệu (ví dụ điểm 15 trên thang 5) hoặc do người trả lời không nghiêm túc (trả lời giống nhau cho mọi câu) — cả hai cần được xử lý trước khi phân tích. **Item đảo hướng (reverse-coded):** một số câu hỏi Likert được viết theo hướng ngược (ví dụ 'Tôi không thấy công cụ này hữu ích') cần đảo điểm lại trước khi tính điểm tổng của construct.\n\n> [!canh-bao] Nhập dữ liệu xong chạy thẳng phân tích mà không kiểm ba bước trên là lỗi thầm lặng nhất trong xử lý dữ liệu: phần mềm không báo lỗi gì, vẫn cho ra kết quả — nhưng kết quả đó tính trên dữ liệu có nhiễu. Luôn kiểm tra bằng thống kê mô tả (min, max, mean, số dòng thiếu) cho từng biến trước khi chạy phân tích chính.\n\n## Cronbach's Alpha và EFA — kiểm cấu trúc trước khi tin thang đo\n\nCronbach's Alpha cao **không đảm bảo** thang đo đo đúng cấu trúc nhân tố như thiết kế ban đầu — nó chỉ cho biết các item có tương quan nội bộ với nhau.\n\n> [!ghi-nho] **Cronbach's Alpha** (≥ 0.7 là ngưỡng thường dùng) đo độ tin cậy nội bộ — các item trong cùng một construct có nhất quán với nhau không. **EFA (Exploratory Factor Analysis)** kiểm xem các item có thật sự nhóm lại (load) đúng vào các nhân tố như bạn thiết kế không — cần chạy khi dùng thang đo mới, đã dịch, hoặc đã điều chỉnh so với bản gốc, trước khi tin vào cấu trúc đó cho các phân tích tiếp theo (hồi quy, SEM).\n\n| Tình huống | Có cần chạy EFA không |\n|---|---|\n| Thang đo gốc đã được validate nhiều lần, dùng nguyên văn, đúng bối cảnh gốc | Có thể bỏ qua EFA, chỉ cần kiểm Alpha |\n| Thang đo đã dịch sang tiếng Việt hoặc điều chỉnh từ ngữ | Nên chạy EFA để xác nhận cấu trúc nhân tố còn giữ nguyên sau khi dịch/điều chỉnh |\n| Thang đo tự phát triển hoặc kết hợp item từ nhiều nguồn khác nhau | Bắt buộc chạy EFA trước khi tin vào cấu trúc construct |\n\n> [!canh-bao] Alpha = 0.85 cho một construct 5 item không chứng minh được cả 5 item đang đo cùng một khái niệm duy nhất — có thể 3 item load vào một nhân tố và 2 item còn lại load vào một nhân tố khác mà Alpha tổng vẫn cao. Chỉ EFA (nhìn vào ma trận hệ số tải factor loading) mới phát hiện được điều này.\n\n> [!vi-du] Một học viên dịch thang đo \"sự hài lòng với công cụ AI học tập\" từ tiếng Anh sang tiếng Việt, 6 item, Alpha = 0.81 — đạt ngưỡng. Chạy EFA phát hiện 2 item liên quan tới \"tốc độ phản hồi của công cụ\" tách thành một nhân tố riêng, không load cùng 4 item còn lại (về \"chất lượng nội dung phản hồi\"). Học viên tách construct ban đầu thành hai construct riêng: \"hài lòng về tốc độ\" và \"hài lòng về nội dung\" — một phát hiện mà chỉ nhìn Alpha sẽ bỏ lỡ.\n\n## Từ thang đo đạt tới diễn giải kết quả kiểm định\n\nSau khi thang đo đạt (Alpha, EFA/CFA như đã học), kết quả hồi quy hoặc path coefficient (PLS-SEM, Bài 3) mới đáng đọc — nhưng đọc đúng cũng cần phân biệt hai loại ý nghĩa.\n\n> [!ghi-nho] **Ý nghĩa thống kê** (p < 0.05) cho biết mối quan hệ quan sát được khó xảy ra do ngẫu nhiên. **Ý nghĩa thực tế** (effect size — hệ số beta, R², Cohen's d) cho biết mối quan hệ đó **lớn tới đâu** trong thực tế. Hai điều này độc lập với nhau: với mẫu đủ lớn, một hệ số beta = 0.08 (rất nhỏ) vẫn có thể đạt p < 0.05.\n\n| Kết quả | Ý nghĩa thống kê | Ý nghĩa thực tế | Kết luận đúng |\n|---|---|---|---|\n| β = 0.08, p = 0.03, n = 800 | Có (p < 0.05) | Rất nhỏ | Mối quan hệ tồn tại nhưng quá nhỏ để có ý nghĩa ứng dụng |\n| β = 0.45, p = 0.04, n = 120 | Có (p < 0.05) | Lớn | Mối quan hệ vừa có ý nghĩa thống kê vừa đáng chú ý trong thực tế |\n\n> [!canh-bao] Viết \"kết quả cho thấy X có ảnh hưởng đáng kể tới Y\" chỉ vì p < 0.05, mà không nhìn vào độ lớn hệ số, là nhầm ý nghĩa thống kê với ý nghĩa thực tế — một lỗi diễn giải rất phổ biến trong luận văn dùng cỡ mẫu lớn.\n\n## Mã hóa dữ liệu định tính có kiểm độ tin cậy\n\nVới dữ liệu định tính (phỏng vấn, case study từ Bài 3), mã hóa (coding) là bước biến lời nói thành dữ liệu phân tích được — và cần được kiểm chứng, không chỉ dựa vào cách hiểu của một người.\n\n> [!ghi-nho] Quy trình mã hóa cơ bản: **open coding** (gắn nhãn mô tả cho từng đoạn dữ liệu, không gò theo khung có trước), **axial coding** (nhóm các nhãn liên quan thành chủ đề lớn hơn), **selective coding** (chọn ra chủ đề trung tâm nối các chủ đề khác lại). Để đảm bảo độ tin cậy, **ít nhất hai người mã hóa độc lập** một phần dữ liệu, rồi so sánh và thảo luận chỗ khác nhau — sự khác biệt đó chính là nơi cần làm rõ định nghĩa mã, không phải điều nên giấu đi.\n\n> [!canh-bao] Một người mã hóa toàn bộ dữ liệu một mình, không ai kiểm chứng lại, là điểm yếu phổ biến nhất bị hội đồng chỉ ra ở luận văn định tính — không có gì đảm bảo mã hóa đó không bị ảnh hưởng bởi kỳ vọng có sẵn của người mã hóa. Báo cáo độ tin cậy giữa người mã hóa (ví dụ hệ số Cohen's Kappa, hoặc tỉ lệ phần trăm đồng thuận) làm quy trình đáng tin hơn nhiều.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (45 phút)\n\nVới dữ liệu thí điểm hoặc dữ liệu thật đã thu thập: (1) kiểm ba bước làm sạch (thiếu, outlier, item đảo hướng) và ghi lại số liệu đã xử lý; (2) chạy Cronbach's Alpha cho mỗi construct — nếu thang đo mới/đã điều chỉnh, chạy thêm EFA và ghi lại kết quả factor loading.\n\n### Nhóm 3-4 người (30 phút)\n\nĐổi kết quả EFA/Alpha cho nhau. Kiểm: có construct nào Alpha cao nhưng EFA cho thấy item tách thành nhiều nhân tố không? Nếu có dữ liệu định tính, thử mã hóa cùng một đoạn transcript độc lập rồi so sánh nhãn — thảo luận chỗ khác nhau.\n\n### Bài tập về nhà (90-120 phút)\n\nViết phần **Kết quả** liên quan tới kiểm định thang đo (Chương 4, phần đầu): bảng Alpha/EFA cho mỗi construct, và nếu đã có kết quả hồi quy/path, viết một đoạn diễn giải phân biệt rõ ý nghĩa thống kê và ý nghĩa thực tế.\n\n:::mau Mẫu nộp bài tập về nhà\n**Xử lý dữ liệu:** thiếu … dòng (xử lý bằng …), outlier … , item đảo hướng đã đảo: …\n\n**Bảng Cronbach's Alpha / EFA**\n\n| Construct | Số item | Alpha | Kết quả EFA (nếu có) |\n|---|---|---|---|\n| … | … | … | … |\n\n**Diễn giải kết quả kiểm định (nếu có):** …\n:::\n\n### Nguồn tham khảo\n\n- Field, A. (2018). *Discovering Statistics Using IBM SPSS Statistics* (5th ed.). SAGE Publications.\n- Tabachnick, B. G., & Fidell, L. S. (2019). *Using Multivariate Statistics* (7th ed.). Pearson. — chương về EFA.\n- Wasserstein, R. L., & Lazar, N. A. (2016). The ASA statement on p-values: Context, process, and purpose. *The American Statistician*, 70(2), 129-133.\n- Miles, M. B., Huberman, A. M., & Saldaña, J. (2020). *Qualitative Data Analysis: A Methods Sourcebook* (4th ed.). SAGE Publications.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "ppnc4-lam-sach-truoc",
+                "type": "mcq",
+                "prompt": "Vì sao cần kiểm dữ liệu thiếu, outlier và item đảo hướng trước khi chạy phân tích chính, dù phần mềm vẫn chạy được và cho ra kết quả nếu bỏ qua bước này?",
+                "explanation": "Phần mềm thống kê không báo lỗi khi dữ liệu có nhiễu — nó vẫn tính ra một kết quả, nhưng kết quả đó không đáng tin vì tính trên dữ liệu chưa được làm sạch.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Phần mềm không tự phát hiện dữ liệu nhiễu; nó vẫn cho ra kết quả nhưng kết quả đó không đáng tin",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần thiết nếu cỡ mẫu đủ lớn, vì mẫu lớn tự động loại bỏ nhiễu",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-data-cleaning"
+                  },
+                  {
+                    "label": "Chỉ cần thiết khi dùng SPSS, không cần khi dùng R",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-data-cleaning"
+                  },
+                  {
+                    "label": "Không cần thiết, vì đây chỉ là yêu cầu hình thức của giảng viên hướng dẫn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-data-cleaning"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc4-alpha-khong-du",
+                "type": "mcq",
+                "prompt": "Một construct 5 item có Cronbach's Alpha = 0.85. Điều này chứng minh được gì?",
+                "explanation": "Alpha cao chỉ cho biết các item có tương quan nội bộ với nhau, không chứng minh được cả 5 item đang đo cùng một cấu trúc nhân tố duy nhất — cần EFA để kiểm điều đó, đặc biệt với thang đo mới hoặc đã điều chỉnh.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chỉ chứng minh các item có tương quan nội bộ cao; chưa chứng minh được cả 5 item đo đúng cùng một cấu trúc nhân tố như thiết kế",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chứng minh chắc chắn cả 5 item đo đúng cùng một khái niệm duy nhất, không cần kiểm gì thêm",
+                    "isCorrect": false,
+                    "misconception": "ppnc.alpha-only-no-structure"
+                  },
+                  {
+                    "label": "Chứng minh thang đo này tốt hơn mọi thang đo khác có Alpha thấp hơn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.alpha-only-no-structure"
+                  },
+                  {
+                    "label": "Không chứng minh được gì, Alpha là một chỉ số không có ý nghĩa thống kê",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc4-khi-nao-can-efa",
+                "type": "mcq",
+                "prompt": "Trường hợp nào bắt buộc phải chạy EFA trước khi tin vào cấu trúc construct?",
+                "explanation": "Thang đo tự phát triển hoặc kết hợp item từ nhiều nguồn khác nhau chưa từng được kiểm cấu trúc nhân tố trong bối cảnh đó, nên bắt buộc chạy EFA trước khi dùng cho các phân tích tiếp theo như hồi quy hoặc SEM.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thang đo tự phát triển hoặc kết hợp item từ nhiều nguồn khác nhau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thang đo gốc đã validate nhiều lần, dùng nguyên văn, đúng bối cảnh gốc",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không bao giờ cần EFA nếu đã có Cronbach's Alpha đạt ngưỡng",
+                    "isCorrect": false,
+                    "misconception": "ppnc.alpha-only-no-structure"
+                  },
+                  {
+                    "label": "Chỉ cần khi cỡ mẫu dưới 100",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc4-y-nghia-thong-ke-vs-thuc-te",
+                "type": "mcq",
+                "prompt": "Kết quả hồi quy: β = 0.08, p = 0.03, n = 800. Kết luận nào đúng nhất?",
+                "explanation": "Với mẫu lớn, một hệ số rất nhỏ vẫn có thể đạt ý nghĩa thống kê (p < 0.05). Mối quan hệ tồn tại về mặt thống kê nhưng quá nhỏ để có ý nghĩa ứng dụng thực tế — cần phân biệt rõ hai loại ý nghĩa này khi viết kết luận.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Mối quan hệ có ý nghĩa thống kê nhưng độ lớn thực tế rất nhỏ, cần nói rõ cả hai khi diễn giải",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Kết quả cho thấy X có ảnh hưởng đáng kể tới Y vì p < 0.05",
+                    "isCorrect": false,
+                    "misconception": "ppnc.significant-equals-important"
+                  },
+                  {
+                    "label": "Kết quả này không có ý nghĩa gì vì hệ số beta quá nhỏ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Kết quả này sai vì p-value và beta phải luôn tỉ lệ thuận với nhau",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc4-ma-hoa-mot-nguoi",
+                "type": "mcq",
+                "prompt": "Một học viên tự mã hóa toàn bộ 20 bản phỏng vấn một mình, không có ai kiểm chứng lại. Vấn đề chính của cách làm này là gì?",
+                "explanation": "Không có cách nào đảm bảo mã hóa đó không bị ảnh hưởng bởi kỳ vọng có sẵn của người mã hóa nếu không có người thứ hai mã hóa độc lập để so sánh — đây là điểm yếu phổ biến hội đồng thường chỉ ra ở luận văn định tính.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không có cách kiểm chứng mã hóa đó không bị ảnh hưởng bởi kỳ vọng chủ quan của người mã hóa duy nhất",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, một người mã hóa vẫn đủ tin cậy nếu người đó cẩn thận",
+                    "isCorrect": false,
+                    "misconception": "ppnc.one-coder-only"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là tốn thời gian, không liên quan tới độ tin cậy",
+                    "isCorrect": false,
+                    "misconception": "ppnc.one-coder-only"
+                  },
+                  {
+                    "label": "Cần ít nhất 5 người mã hóa độc lập mới coi là đủ tin cậy",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc4-thu-tu-xu-ly",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước xử lý dữ liệu định lượng, từ thu thập tới diễn giải kết quả.",
+                "explanation": "Từ làm sạch dữ liệu, kiểm Cronbach's Alpha, chạy EFA nếu cần, tới kiểm định giả thuyết và diễn giải phân biệt ý nghĩa thống kê với ý nghĩa thực tế.",
+                "points": 3,
+                "sequence": [
+                  "Làm sạch dữ liệu: xử lý thiếu, outlier, đảo hướng item",
+                  "Chạy Cronbach's Alpha cho từng construct",
+                  "Chạy EFA nếu thang đo mới hoặc đã điều chỉnh, kiểm cấu trúc nhân tố",
+                  "Chạy kiểm định giả thuyết (hồi quy hoặc mô hình cấu trúc PLS-SEM)",
+                  "Diễn giải kết quả, phân biệt ý nghĩa thống kê và ý nghĩa thực tế"
+                ]
+              },
+              {
+                "key": "ppnc4-noi-khai-niem-xu-ly",
+                "type": "matching",
+                "prompt": "Nối mỗi khái niệm với đúng vai trò của nó trong xử lý dữ liệu.",
+                "explanation": "Cronbach's Alpha đo độ tin cậy nội bộ; EFA kiểm cấu trúc nhân tố; effect size đo độ lớn thực tế của mối quan hệ; bão hòa dữ liệu (đã học ở Bài 3) và độ tin cậy giữa người mã hóa đều thuộc quy trình xử lý dữ liệu định tính.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Cronbach's Alpha",
+                    "right": "Đo độ tin cậy nội bộ của các item trong một construct"
+                  },
+                  {
+                    "left": "EFA (Exploratory Factor Analysis)",
+                    "right": "Kiểm các item có load đúng vào cấu trúc nhân tố như thiết kế"
+                  },
+                  {
+                    "left": "Effect size (beta, R², Cohen's d)",
+                    "right": "Đo độ lớn thực tế của một mối quan hệ, khác với p-value"
+                  },
+                  {
+                    "left": "Độ tin cậy giữa người mã hóa",
+                    "right": "Kiểm chứng mã hóa dữ liệu định tính không chỉ dựa vào một người"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc4-viet-ket-qua-kiem-dinh",
+                "type": "essay",
+                "prompt": "Từ dữ liệu (thật hoặc thí điểm) của bạn, viết một đoạn 200-300 từ báo cáo: (a) các bước làm sạch dữ liệu đã thực hiện; (b) kết quả Cronbach's Alpha (và EFA nếu áp dụng) cho các construct; (c) nếu đã có kết quả kiểm định giả thuyết, một câu diễn giải phân biệt rõ ý nghĩa thống kê và ý nghĩa thực tế.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 5 · Viết luận văn và chuẩn bị bảo vệ",
+          "durationMin": 100,
+          "description": "Ghép nội dung từ Bài 1-4 vào đúng cấu trúc luận văn 5 chương; viết Chương 5 với hàm ý và hạn chế cụ thể, không chung chung; tránh diễn giải quan hệ nhân quả từ dữ liệu cắt ngang; chuẩn bị trả lời các câu hỏi hội đồng thường gặp ở mức cao học.",
+          "objectives": [
+            "Ghép nội dung đã làm ở Bài 1-4 vào đúng cấu trúc 5 chương, và biết chương nào cần viết lại sau khi có kết quả",
+            "Viết được phần hàm ý lý thuyết và thực tiễn cụ thể, và phần hạn chế nêu rõ ảnh hưởng tới kết luận nào, không dùng công thức chung chung",
+            "Nhận diện và tránh được việc diễn giải quan hệ nhân quả từ dữ liệu cắt ngang, dùng đúng ngôn ngữ hedge cho thiết kế đã chọn",
+            "Chuẩn bị được câu trả lời cho các câu hỏi hội đồng thường gặp ở mức cao học: giả định thống kê, lựa chọn phương pháp, khái quát hóa, đóng góp mới"
+          ],
+          "summary": [
+            "Chương 1 (đặt vấn đề, mục tiêu, câu hỏi) thường cần viết lại sau khi có kết quả ở Chương 4-5, để mục tiêu và câu hỏi ban đầu khớp với những gì luận văn thực sự trả lời được — không phải một bản viết một lần rồi để nguyên.",
+            "Hàm ý và hạn chế phải cụ thể, nối trực tiếp với kết quả và thiết kế đã chọn — 'do thời gian và nguồn lực hạn chế' không nói lên điều gì mà hội đồng có thể đánh giá được.",
+            "Dữ liệu cắt ngang (thu thập một lần, một thời điểm) không xác lập được trình tự thời gian, nên không đủ cơ sở để viết 'X dẫn đến Y' — chỉ có thể viết 'X có liên hệ với Y', dù mô hình cấu trúc cho kết quả path có ý nghĩa thống kê.",
+            "Câu hỏi hội đồng ở mức cao học thường xoáy vào giả định thống kê, lý do chọn phương pháp và giới hạn khái quát hóa — chuẩn bị trước bằng cách tự đặt câu hỏi đó cho chính luận văn của mình."
+          ],
+          "splitSections": true,
+          "body": "\nBốn bài trước đã tạo ra gần như toàn bộ nội dung của một luận văn. Bài này là bước ghép lại đúng cấu trúc, viết phần còn thiếu (Chương 5), và chuẩn bị cho buổi bảo vệ, đi qua bốn phần: trước hết ghép nội dung Bài 1-4 vào đúng cấu trúc luận văn 5 chương; sau đó viết hàm ý lý thuyết và hạn chế cụ thể cho Chương 5, không dùng công thức chung chung; tiếp theo tránh diễn giải quan hệ nhân quả từ dữ liệu cắt ngang; và kết bằng chuẩn bị trả lời các câu hỏi hội đồng thường gặp ở mức cao học.\n\n## Cấu trúc luận văn 5 chương\n\n| Chương | Nội dung | Nguyên liệu đã có từ |\n|---|---|---|\n| 1. Mở đầu | Đặt vấn đề, mục tiêu, câu hỏi/giả thuyết, đối tượng và phạm vi, ý nghĩa nghiên cứu | Bài 1 |\n| 2. Tổng quan tài liệu và khung lý thuyết | Tổng hợp theo luận điểm, khoảng trống có số liệu, khung lý thuyết/khái niệm | Bài 1 + Bài 2 |\n| 3. Phương pháp nghiên cứu | Thiết kế, biến, mẫu, công cụ thu thập dữ liệu | Bài 3 |\n| 4. Kết quả nghiên cứu | Kiểm định thang đo, kiểm định giả thuyết, dữ liệu định tính (nếu có) | Bài 4 |\n| 5. Kết luận, hàm ý và hạn chế | Tổng hợp kết quả, hàm ý lý thuyết/thực tiễn, hạn chế, hướng nghiên cứu tiếp theo | Viết mới ở bài này |\n\n> [!canh-bao] Chương 1 hay bị coi là \"viết một lần, xong luôn\" — nhưng mục tiêu và câu hỏi nghiên cứu viết ở đầu quá trình thường không khớp hoàn toàn với những gì luận văn thực sự trả lời được sau khi có kết quả (một giả thuyết có thể không được ủng hộ, hoặc một phát hiện ngoài dự kiến xuất hiện). **Luôn quay lại sửa Chương 1** sau khi hoàn thành Chương 4-5, để mục tiêu, câu hỏi và ý nghĩa nghiên cứu khớp với nội dung thật của luận văn — không phải với dự định ban đầu.\n\n## Chương 5: hàm ý và hạn chế phải cụ thể\n\nChương 5 không phải là chỗ lặp lại số liệu của Chương 4 — nó là chỗ diễn giải kết quả đó có ý nghĩa gì, và trung thực về những gì luận văn chưa làm được.\n\n> [!ghi-nho] **Hàm ý lý thuyết** trả lời: kết quả này đóng góp gì cho khung lý thuyết đã dùng — xác nhận, mở rộng, hay mâu thuẫn với các nghiên cứu trước trong Chương 2? **Hàm ý thực tiễn** trả lời: ai (nhà quản lý, nhà giáo dục, người làm chính sách) nên làm gì khác đi dựa trên kết quả này, cụ thể tới đâu?\n\n| Hàm ý/hạn chế chung chung (không dùng được) | Hàm ý/hạn chế cụ thể (dùng được) |\n|---|---|\n| \"Nghiên cứu này có ý nghĩa quan trọng đối với lĩnh vực giáo dục.\" | \"Kết quả cho thấy ảnh hưởng xã hội không có ý nghĩa trong mô hình (khác với UTAUT gốc), gợi ý rằng với công cụ AI tạo sinh — khác với phần mềm doanh nghiệp UTAUT ban đầu nghiên cứu — quyết định sử dụng ở sinh viên ít chịu tác động từ áp lực xã hội hơn từ nhận thức hữu ích cá nhân.\" |\n| \"Do thời gian và nguồn lực hạn chế, nghiên cứu còn nhiều thiếu sót.\" | \"Mẫu thuận tiện tại một trường hạn chế khả năng khái quát hóa sang sinh viên các ngành khác; thiết kế cắt ngang không xác lập được liệu mức độ sử dụng tăng có dẫn tới thay đổi động lực theo thời gian hay ngược lại.\" |\n\n> [!canh-bao] \"Do thời gian và nguồn lực hạn chế\" là một công thức không nói lên điều gì mà hội đồng đánh giá được. Hạn chế cần nêu **cụ thể** nó ảnh hưởng tới **kết luận nào**: hạn chế về mẫu ảnh hưởng tới khả năng khái quát hóa; hạn chế về thiết kế cắt ngang ảnh hưởng tới việc không thể khẳng định chiều nhân quả; hạn chế về công cụ đo ảnh hưởng tới độ chính xác của một construct cụ thể.\n\n## Không diễn giải nhân quả từ dữ liệu cắt ngang\n\nMột lỗi diễn giải nghiêm trọng và phổ biến ở Chương 5: viết kết quả path coefficient có ý nghĩa thống kê (Bài 4) như một quan hệ nhân quả.\n\n> [!canh-bao] **Dữ liệu cắt ngang** (thu thập tại một thời điểm duy nhất) không xác lập được **trình tự thời gian** giữa các biến — điều kiện cần để khẳng định nhân quả. Một path coefficient có ý nghĩa thống kê giữa \"nhận thức hữu ích\" và \"ý định sử dụng\" chỉ cho biết hai biến này **có liên hệ với nhau** trong mẫu đã thu thập tại thời điểm đó — không chứng minh được nhận thức hữu ích **dẫn tới** ý định sử dụng, vì hoàn toàn có thể chiều tác động ngược lại (người đã có ý định dùng thì có xu hướng đánh giá công cụ hữu ích hơn), hoặc cả hai cùng bị một yếu tố thứ ba chưa đo tác động.\n\n| Diễn giải sai (nhân quả) | Diễn giải đúng (tương quan, đúng mức thiết kế) |\n|---|---|\n| \"Nhận thức hữu ích dẫn tới/gây ra ý định sử dụng cao hơn.\" | \"Nhận thức hữu ích có liên hệ dương với ý định sử dụng (β = 0.42, p < 0.01); do thiết kế cắt ngang, không thể khẳng định chiều tác động.\" |\n\n## Chuẩn bị bảo vệ ở mức cao học\n\nHội đồng bảo vệ luận văn cao học thường hỏi sâu hơn NCKH sinh viên, tập trung vào các giả định phương pháp và giới hạn khái quát hóa.\n\nBốn nhóm câu hỏi hay gặp nhất: *\"Vì sao chọn phương pháp/lý thuyết này mà không phải phương pháp/lý thuyết khác?\"* (chuẩn bị lại lý do biện luận ở Bài 1 và Bài 3), *\"Kết quả này khái quát hóa được tới đâu?\"* (trả lời đúng phạm vi mẫu, không suy rộng), *\"Giả định thống kê nào của mô hình bạn dùng có được kiểm tra không?\"* (chuẩn bị lại kết quả kiểm mô hình đo ở Bài 4), và *\"Đóng góp mới của luận văn này là gì, so với các nghiên cứu đã có ở Chương 2?\"* (câu trả lời phải cụ thể, nối lại với khoảng trống đã nêu ở Bài 2).\n\n> [!meo] Trước buổi bảo vệ, tự viết ra 3 điểm yếu nhất của luận văn — mẫu, thiết kế, hoặc công cụ đo — và chuẩn bị câu trả lời cho từng điểm. Hội đồng gần như luôn hỏi về điểm yếu; chuẩn bị trước tốt hơn nhiều so với việc bị hỏi bất ngờ và trả lời phòng thủ.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (45 phút)\n\nRà lại Chương 1 (đã viết ở Bài 1) và sửa lại mục tiêu/câu hỏi nghiên cứu để khớp với kết quả thật (nếu đã có) hoặc kết quả dự kiến. Viết phần Hàm ý và Hạn chế cho Chương 5 theo đúng mức cụ thể ở mục 2, và kiểm lại mọi câu diễn giải kết quả định lượng có đang ngầm ý nhân quả không.\n\n### Nhóm 3-4 người (30 phút)\n\nĐóng vai hội đồng cho nhau, hỏi ít nhất 2 trong 4 nhóm câu hỏi thường gặp. Người trình bày thực hành trả lời, đặc biệt câu về giới hạn khái quát hóa và giả định thống kê.\n\n### Bài tập về nhà (90-120 phút)\n\nHoàn thiện Chương 5 đầy đủ (600-900 từ): tổng hợp kết quả chính, hàm ý lý thuyết và thực tiễn cụ thể, hạn chế nêu rõ ảnh hưởng tới kết luận nào, và hướng nghiên cứu tiếp theo cụ thể (không phải \"cần nghiên cứu thêm\" chung chung).\n\n:::mau Mẫu nộp bài tập về nhà\n**Chương 1 đã sửa lại (mục tiêu/câu hỏi khớp kết quả):** …\n\n**Hàm ý lý thuyết (cụ thể):** …\n\n**Hàm ý thực tiễn (cụ thể):** …\n\n**Hạn chế (nêu rõ ảnh hưởng tới kết luận nào)**\n\n| Hạn chế | Ảnh hưởng cụ thể tới kết luận |\n|---|---|\n| … | … |\n\n**Hướng nghiên cứu tiếp theo (cụ thể):** …\n\n**3 điểm yếu tự nhận và câu trả lời chuẩn bị trước:** …\n:::\n\n### Nguồn tham khảo\n\n- Bem, D. J. (1995). Writing a review article for Psychological Bulletin. *Psychological Bulletin*, 118(2), 172-177. — về viết phần thảo luận và hàm ý.\n- Antonakis, J., Bendahan, S., Jacquart, P., & Lalive, R. (2010). On making causal claims: A review and recommendations. *The Leadership Quarterly*, 21(6), 1086-1120.\n- American Psychological Association. (2020). *Publication Manual of the American Psychological Association* (7th ed.).\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "ppnc5-chuong1-sua-lai",
+                "type": "mcq",
+                "prompt": "Vì sao Chương 1 (mục tiêu, câu hỏi nghiên cứu) thường cần được viết lại sau khi hoàn thành Chương 4-5?",
+                "explanation": "Kết quả thật (một giả thuyết không được ủng hộ, hoặc phát hiện ngoài dự kiến) thường không khớp hoàn toàn với dự định ban đầu — Chương 1 cần sửa lại để khớp với nội dung thật của luận văn, không phải với dự định lúc bắt đầu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Để mục tiêu và câu hỏi khớp với những gì luận văn thực sự trả lời được, không phải với dự định ban đầu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không cần sửa lại, Chương 1 viết một lần là đủ cho toàn bộ luận văn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.chapter1-written-once"
+                  },
+                  {
+                    "label": "Chỉ cần sửa nếu giảng viên hướng dẫn yêu cầu",
+                    "isCorrect": false,
+                    "misconception": "ppnc.chapter1-written-once"
+                  },
+                  {
+                    "label": "Chỉ cần sửa lỗi chính tả, nội dung không cần thay đổi",
+                    "isCorrect": false,
+                    "misconception": "ppnc.chapter1-written-once"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc5-chuong5-khong-lap-lai",
+                "type": "mcq",
+                "prompt": "Chương 5 của một luận văn chỉ liệt kê lại các số liệu đã có ở Chương 4 mà không thêm diễn giải. Vấn đề của cách viết này là gì?",
+                "explanation": "Chương 5 phải diễn giải ý nghĩa của kết quả — hàm ý lý thuyết, hàm ý thực tiễn — không phải chỗ lặp lại số liệu đã trình bày ở Chương 4.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiếu phần diễn giải ý nghĩa — hàm ý lý thuyết và thực tiễn của kết quả, không chỉ lặp lại số liệu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, lặp lại số liệu giúp người đọc nhớ lại kết quả dễ hơn",
+                    "isCorrect": false,
+                    "misconception": "ppnc.discussion-repeats-results"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là nên dùng bảng thay vì liệt kê bằng chữ",
+                    "isCorrect": false,
+                    "misconception": "ppnc.discussion-repeats-results"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì Chương 5 chỉ cần tóm tắt lại kết quả",
+                    "isCorrect": false,
+                    "misconception": "ppnc.discussion-repeats-results"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc5-han-che-cu-the",
+                "type": "mcq",
+                "prompt": "Phần hạn chế nào dưới đây dùng được cho một luận văn?",
+                "explanation": "Hạn chế phải nêu cụ thể nó ảnh hưởng tới kết luận nào — mẫu thuận tiện ảnh hưởng tới khả năng khái quát hóa, thiết kế cắt ngang ảnh hưởng tới việc không xác lập được nhân quả. 'Do thời gian và nguồn lực hạn chế' không nói lên điều gì cụ thể.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Mẫu thuận tiện tại một trường hạn chế khả năng khái quát hóa sang sinh viên các ngành khác; thiết kế cắt ngang không xác lập được chiều tác động.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Do thời gian và nguồn lực hạn chế, nghiên cứu còn nhiều thiếu sót.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.limitations-generic"
+                  },
+                  {
+                    "label": "'Nghiên cứu này còn một số hạn chế cần được khắc phục trong tương lai.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.limitations-generic"
+                  },
+                  {
+                    "label": "Không cần nêu hạn chế nếu kết quả nghiên cứu đều có ý nghĩa thống kê",
+                    "isCorrect": false,
+                    "misconception": "ppnc.limitations-generic"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc5-cat-ngang-nhan-qua",
+                "type": "mcq",
+                "prompt": "Một mô hình PLS-SEM cho kết quả path coefficient giữa 'nhận thức hữu ích' và 'ý định sử dụng' có ý nghĩa thống kê, thu thập từ dữ liệu khảo sát một lần. Kết luận nào diễn giải đúng?",
+                "explanation": "Dữ liệu cắt ngang không xác lập được trình tự thời gian, nên không thể khẳng định nhân quả — chỉ có thể nói hai biến có liên hệ với nhau, dù path coefficient có ý nghĩa thống kê.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "'Nhận thức hữu ích có liên hệ dương với ý định sử dụng; do thiết kế cắt ngang, không thể khẳng định chiều tác động.'",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "'Nhận thức hữu ích dẫn tới ý định sử dụng cao hơn.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.cross-sectional-causal-claim"
+                  },
+                  {
+                    "label": "'Nhận thức hữu ích là nguyên nhân trực tiếp gây ra ý định sử dụng.'",
+                    "isCorrect": false,
+                    "misconception": "ppnc.cross-sectional-causal-claim"
+                  },
+                  {
+                    "label": "Không thể nói gì về mối quan hệ giữa hai biến này nếu không thu thập dữ liệu nhiều lần",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc5-cau-hoi-hoi-dong",
+                "type": "mcq",
+                "prompt": "Hội đồng hỏi 'Đóng góp mới của luận văn này là gì so với các nghiên cứu đã có ở Chương 2?'. Câu trả lời nào chuẩn bị đúng hướng nhất?",
+                "explanation": "Câu trả lời cần nối trực tiếp với khoảng trống đã nêu ở Bài 2 (Chương 2) — chỉ ra cụ thể điều luận văn này làm được mà các nghiên cứu trước chưa làm, không phải một câu chung chung.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Nối lại với khoảng trống cụ thể đã nêu ở Chương 2: luận văn này làm được điều gì mà các nghiên cứu trước chưa làm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Nói rằng luận văn này là nghiên cứu đầu tiên và quan trọng nhất về chủ đề này",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nhắc lại toàn bộ Chương 1 để cho thấy đã chuẩn bị kỹ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nói rằng đóng góp mới sẽ được xác định sau khi có thêm nghiên cứu",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc5-thu-tu-hoan-thien",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước hoàn thiện luận văn ở giai đoạn cuối.",
+                "explanation": "Từ có kết quả Chương 4, viết Chương 5 với hàm ý và hạn chế cụ thể, kiểm lại diễn giải nhân quả, sửa lại Chương 1 cho khớp kết quả, rồi chuẩn bị câu trả lời cho các câu hỏi hội đồng thường gặp.",
+                "points": 3,
+                "sequence": [
+                  "Hoàn thành Chương 4 với kết quả kiểm định đầy đủ",
+                  "Viết Chương 5: hàm ý lý thuyết và thực tiễn cụ thể, hạn chế nêu rõ ảnh hưởng",
+                  "Kiểm lại mọi câu diễn giải kết quả định lượng, tránh ngôn ngữ nhân quả từ dữ liệu cắt ngang",
+                  "Quay lại sửa Chương 1 để mục tiêu và câu hỏi khớp với kết quả thật",
+                  "Chuẩn bị câu trả lời cho các câu hỏi hội đồng thường gặp"
+                ]
+              },
+              {
+                "key": "ppnc5-noi-chuong-nguyen-lieu",
+                "type": "matching",
+                "prompt": "Nối mỗi chương luận văn với đúng bài học đã cung cấp nguyên liệu chính cho nó.",
+                "explanation": "Chương 1 dùng câu hỏi nghiên cứu và khung lý thuyết từ Bài 1; Chương 2 dùng tổng quan tài liệu hệ thống từ Bài 2; Chương 3 dùng thiết kế nghiên cứu từ Bài 3; Chương 4 dùng kết quả xử lý dữ liệu từ Bài 4.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Chương 1 · Mở đầu",
+                    "right": "Bài 1 · Khung lý thuyết và câu hỏi nghiên cứu"
+                  },
+                  {
+                    "left": "Chương 2 · Tổng quan tài liệu",
+                    "right": "Bài 2 · Tổng quan tài liệu hệ thống"
+                  },
+                  {
+                    "left": "Chương 3 · Phương pháp nghiên cứu",
+                    "right": "Bài 3 · Thiết kế nghiên cứu"
+                  },
+                  {
+                    "left": "Chương 4 · Kết quả nghiên cứu",
+                    "right": "Bài 4 · Thu thập và xử lý dữ liệu"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc5-viet-chuong5",
+                "type": "essay",
+                "prompt": "Viết một đoạn 200-300 từ cho Chương 5 của luận văn bạn, gồm: (a) một câu hàm ý lý thuyết cụ thể, nối với khung lý thuyết ở Bài 1; (b) một câu hàm ý thực tiễn cụ thể; (c) một hạn chế nêu rõ ảnh hưởng tới kết luận nào; (d) kiểm tra lại không có câu nào diễn giải nhân quả nếu dữ liệu của bạn là cắt ngang.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 6 · Đạo đức nghiên cứu với dữ liệu người tham gia",
+          "durationMin": 75,
+          "description": "Hiểu đạo đức nghiên cứu là trách nhiệm bảo vệ người tham gia, không phải thủ tục giấy tờ; soạn đúng sự đồng ý có hiểu biết; phân biệt ẩn danh với bảo mật; biết khi nào cần thông qua hội đồng đạo đức, đặc biệt với đối tượng dễ bị tổn thương.",
+          "objectives": [
+            "Giải thích được đạo đức nghiên cứu bảo vệ người tham gia khỏi những loại tổn hại nào, không chỉ là thủ tục để được phép thu thập dữ liệu",
+            "Soạn được một bản thông tin đồng ý tham gia (informed consent) đầy đủ các thành phần bắt buộc",
+            "Phân biệt được ẩn danh (anonymization) với bảo mật (confidentiality), và nhận diện được khi dữ liệu 'ẩn danh' vẫn có thể truy ra danh tính",
+            "Xác định được khi nào một nghiên cứu cần thông qua hội đồng đạo đức hoặc quy trình tương đương, đặc biệt với đối tượng dễ bị tổn thương"
+          ],
+          "summary": [
+            "Đạo đức nghiên cứu bảo vệ người tham gia khỏi tổn hại thể chất, tâm lý, xã hội và kinh tế — nó là một trách nhiệm thật, không phải thủ tục giấy tờ cần hoàn thành để được phép thu thập dữ liệu.",
+            "Sự đồng ý có hiểu biết cần đủ các thành phần: mục đích nghiên cứu, quy trình tham gia, rủi ro và lợi ích, quyền rút khỏi nghiên cứu bất cứ lúc nào không bị phạt, cách bảo mật dữ liệu, và thông tin liên hệ.",
+            "Ẩn danh (không ai, kể cả nhà nghiên cứu, truy ra được danh tính) khác với bảo mật (nhà nghiên cứu biết nhưng giữ kín) — gọi dữ liệu là 'ẩn danh' khi vẫn có thể truy ra qua tổ hợp thông tin là một tuyên bố sai.",
+            "Nghiên cứu trên đối tượng dễ bị tổn thương hoặc dữ liệu nhạy cảm cần thông qua hội đồng đạo đức hoặc quy trình tương đương — 'chỉ là khảo sát trong trường' không tự động miễn trừ yêu cầu này."
+          ],
+          "splitSections": true,
+          "body": "\nBài cuối này áp dụng cho toàn bộ quy trình từ Bài 1 tới Bài 5 — bất kể thiết kế định lượng, định tính hay hỗn hợp, mọi luận văn thu thập dữ liệu từ người tham gia cần đi qua các nguyên tắc đạo đức dưới đây. Bài đi qua bốn phần: trước hết đặt lại đạo đức nghiên cứu là trách nhiệm bảo vệ người tham gia, không phải thủ tục giấy tờ; sau đó soạn đúng sự đồng ý có hiểu biết với đủ các thành phần bắt buộc; tiếp theo phân biệt ẩn danh với bảo mật và lưu ý riêng với đối tượng dễ bị tổn thương; và kết bằng khi nào cần thông qua hội đồng đạo đức hoặc quy trình tương đương.\n\n## Đạo đức nghiên cứu không phải thủ tục giấy tờ\n\n> [!canh-bao] Coi đạo đức nghiên cứu là \"điền cho đủ form để được phép thu thập dữ liệu\" là hiểu sai bản chất. Đạo đức nghiên cứu là trách nhiệm **bảo vệ người tham gia khỏi tổn hại** — tổn hại thể chất (hiếm trong nghiên cứu khoa học xã hội, nhưng có thể xảy ra trong nghiên cứu y sinh), tổn hại tâm lý (câu hỏi khơi lại trải nghiệm đau buồn), tổn hại xã hội (thông tin bị lộ ảnh hưởng tới quan hệ, công việc), và tổn hại kinh tế (dữ liệu tài chính bị lộ).\n\n> [!ghi-nho] Bốn nguyên tắc nền tảng (từ Belmont Report, 1979 — vẫn là khung tham chiếu chính hiện nay): **tôn trọng con người** (đồng ý tự nguyện, có hiểu biết), **không gây hại** (tối thiểu hoá rủi ro), **lợi ích** (cân đối rủi ro và lợi ích của nghiên cứu), **công bằng** (không dồn rủi ro vào một nhóm dễ bị tổn thương để nhóm khác hưởng lợi).\n\n## Sự đồng ý có hiểu biết\n\nMột bản thông tin đồng ý tham gia (informed consent) cần đủ các thành phần dưới đây trước khi người tham gia bắt đầu trả lời khảo sát hoặc phỏng vấn.\n\n| Thành phần | Nội dung |\n|---|---|\n| Mục đích nghiên cứu | Nghiên cứu này làm gì, dùng dữ liệu để làm gì |\n| Quy trình tham gia | Người tham gia sẽ làm gì, mất bao lâu |\n| Rủi ro và lợi ích | Rủi ro thực tế (nếu có) và lợi ích (thường là lợi ích gián tiếp, không phải tiền) |\n| Quyền rút khỏi nghiên cứu | Có thể dừng tham gia bất cứ lúc nào, không bị phạt hay mất quyền lợi gì |\n| Cách bảo mật dữ liệu | Dữ liệu được lưu, xử lý, và (nếu có) công bố như thế nào |\n| Thông tin liên hệ | Ai có thể liên hệ nếu có câu hỏi hoặc khiếu nại |\n\n> [!canh-bao] Coi việc người tham gia điền form khảo sát là đã \"đồng ý\" (implied consent), mà không cung cấp đủ thông tin trên trước đó, không đủ với nghiên cứu có rủi ro hoặc thu thập dữ liệu nhạy cảm (sức khỏe tâm thần, tài chính, xu hướng cá nhân). Với khảo sát ẩn danh, rủi ro thấp, một số hội đồng cho phép đồng ý ngầm định qua việc bắt đầu làm khảo sát — nhưng chỉ sau khi đã hiển thị đầy đủ thông tin ở trên trước khi câu hỏi đầu tiên xuất hiện.\n\n> [!vi-du] Một học viên gửi link khảo sát về \"trải nghiệm bị bắt nạt trên mạng xã hội của sinh viên\" chỉ có một câu mở đầu \"Khảo sát về mạng xã hội, mất 5 phút\" rồi vào câu hỏi ngay — không nêu chủ đề nhạy cảm thật, không nêu quyền rút, không nêu cách bảo mật. Đây không phải đồng ý có hiểu biết: người tham gia không biết trước họ sẽ được hỏi về trải nghiệm có thể gây khó chịu, và không biết quyền dừng lại giữa chừng.\n\n## Ẩn danh, bảo mật, và đối tượng dễ bị tổn thương\n\n> [!ghi-nho] **Ẩn danh (anonymization)** nghĩa là không ai — kể cả nhà nghiên cứu — có thể truy ngược dữ liệu về đúng một cá nhân cụ thể. **Bảo mật (confidentiality)** nghĩa là nhà nghiên cứu biết ai đã cung cấp dữ liệu nào, nhưng cam kết giữ kín, không công bố thông tin định danh. Hai khái niệm này thường bị dùng lẫn cho nhau.\n\n> [!canh-bao] Tuyên bố \"dữ liệu này được ẩn danh hoàn toàn\" trong khi vẫn thu thập email, số điện thoại, hoặc tổ hợp đặc điểm hiếm (ví dụ: \"giảng viên nữ, trên 60 tuổi, dạy môn X tại khoa Y\") là một tuyên bố sai — tổ hợp đó có thể truy ngược ra đúng một người trong một khoa nhỏ. Nếu vẫn cần liên hệ lại người tham gia (ví dụ để phỏng vấn theo dõi), dữ liệu đó là **bảo mật**, không phải ẩn danh — cần nói đúng loại bảo vệ nào đang áp dụng.\n\nVới **đối tượng dễ bị tổn thương** (trẻ em, người khuyết tật, nhóm thiểu số dễ bị phân biệt, người có tình trạng sức khỏe tâm thần), cần quy trình đồng ý bổ sung: với trẻ em, cần đồng ý của phụ huynh/người giám hộ **và** sự đồng thuận (assent) của chính trẻ ở mức phù hợp với tuổi; với nhóm dễ bị tổn thương khác, cần đánh giá kỹ hơn về rủi ro và có thể cần thêm biện pháp bảo vệ (ví dụ không hỏi trực tiếp về trải nghiệm sang chấn mà không có chuyên gia hỗ trợ đi kèm).\n\n## Hội đồng đạo đức — khi nào cần và quy trình tương đương\n\n> [!canh-bao] Nghĩ \"đây chỉ là khảo sát trong trường, không cần qua hội đồng đạo đức nào\" là một giả định nguy hiểm khi nghiên cứu chạm tới dữ liệu nhạy cảm hoặc đối tượng dễ bị tổn thương — quy mô nhỏ hoặc bối cảnh học thuật không tự động miễn trừ yêu cầu đạo đức.\n\nỞ các trường đã có hội đồng đạo đức nghiên cứu (Research Ethics Board/IRB) chính thức, đề cương cần được hội đồng thông qua trước khi thu thập dữ liệu nếu nghiên cứu có đối tượng con người. Ở nơi chưa có hội đồng chính thức, quy trình tương đương thường là: đề cương được giảng viên hướng dẫn và khoa thông qua, có kèm bản đồng ý tham gia đầy đủ thành phần đã nêu, và có kế hoạch xử lý dữ liệu rõ ràng — về nguyên tắc là cùng các yêu cầu, chỉ khác ở cơ chế phê duyệt hình thức.\n\n> [!meo] Nếu không chắc nghiên cứu của mình có cần thông qua hội đồng đạo đức hay không, hỏi trực tiếp giảng viên hướng dẫn hoặc bộ môn — trước khi bắt đầu thu thập dữ liệu, không phải sau. Nhiều trường hợp chỉ cần một email xác nhận ngắn từ khoa, nhưng có nó trước khi thu thập dữ liệu quan trọng hơn nhiều so với việc bổ sung sau.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (30 phút)\n\nSoạn bản thông tin đồng ý tham gia cho đề tài của bạn, đủ 6 thành phần đã nêu ở mục 2. Kiểm lại: dữ liệu bạn thu thập là ẩn danh thật hay chỉ bảo mật (còn giữ thông tin có thể truy ngược danh tính)? Nếu nghiên cứu chạm tới đối tượng dễ bị tổn thương, ghi rõ biện pháp bổ sung.\n\n### Nhóm 3-4 người (20 phút)\n\nĐổi bản đồng ý tham gia cho nhau. Kiểm tra: có thiếu thành phần nào trong 6 thành phần bắt buộc không? Câu chữ có đủ rõ để một người không chuyên ngành hiểu được rủi ro thật không (không dùng thuật ngữ mơ hồ)?\n\n### Bài tập về nhà (45 phút)\n\nHoàn thiện bản thông tin đồng ý tham gia chính thức, kèm một đoạn ngắn (100-150 từ) mô tả cách dữ liệu sẽ được lưu trữ, ai có quyền truy cập, và thời gian lưu giữ sau khi luận văn hoàn thành.\n\n:::mau Mẫu nộp bài tập về nhà\n**Bản thông tin đồng ý tham gia:** (đủ 6 thành phần)\n\n**Loại bảo vệ dữ liệu:** ☐ Ẩn danh hoàn toàn ☐ Bảo mật (có giữ thông tin định danh)\n\n**Đối tượng dễ bị tổn thương (nếu có) và biện pháp bổ sung:** …\n\n**Kế hoạch lưu trữ dữ liệu (100-150 từ):** …\n\n**Đã xác nhận với giảng viên hướng dẫn/khoa về yêu cầu đạo đức:** ☐ Rồi ☐ Chưa — dự kiến làm vào: …\n:::\n\n### Nguồn tham khảo\n\n- National Commission for the Protection of Human Subjects of Biomedical and Behavioral Research. (1979). *The Belmont Report.*\n- Israel, M., & Hay, I. (2006). *Research Ethics for Social Scientists.* SAGE Publications.\n- American Psychological Association. (2017). *Ethical Principles of Psychologists and Code of Conduct.*\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 6",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "ppnc6-dao-duc-khong-la-thu-tuc",
+                "type": "mcq",
+                "prompt": "Đạo đức nghiên cứu chủ yếu là gì?",
+                "explanation": "Đạo đức nghiên cứu là trách nhiệm bảo vệ người tham gia khỏi tổn hại thể chất, tâm lý, xã hội và kinh tế — không phải thủ tục giấy tờ cần hoàn thành để được phép thu thập dữ liệu.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Trách nhiệm bảo vệ người tham gia khỏi tổn hại thể chất, tâm lý, xã hội và kinh tế",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Thủ tục giấy tờ cần hoàn thành để được phép thu thập dữ liệu",
+                    "isCorrect": false,
+                    "misconception": "ppnc.ethics-is-paperwork"
+                  },
+                  {
+                    "label": "Yêu cầu chỉ áp dụng cho nghiên cứu y sinh, không áp dụng cho khoa học xã hội",
+                    "isCorrect": false,
+                    "misconception": "ppnc.ethics-is-paperwork"
+                  },
+                  {
+                    "label": "Một bước hình thức không ảnh hưởng tới cách thiết kế nghiên cứu",
+                    "isCorrect": false,
+                    "misconception": "ppnc.ethics-is-paperwork"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc6-dong-y-ngam-dinh",
+                "type": "mcq",
+                "prompt": "Một khảo sát về trải nghiệm bị bắt nạt trên mạng xã hội chỉ có câu mở đầu 'Khảo sát về mạng xã hội, mất 5 phút' rồi vào câu hỏi ngay, không nêu chủ đề nhạy cảm thật hay quyền rút khỏi nghiên cứu. Vấn đề chính là gì?",
+                "explanation": "Đây không phải đồng ý có hiểu biết: người tham gia không được biết trước về chủ đề nhạy cảm và không biết quyền dừng lại giữa chừng — thiếu các thành phần bắt buộc của sự đồng ý có hiểu biết.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Thiếu thông tin về chủ đề nhạy cảm thật, rủi ro, và quyền rút khỏi nghiên cứu trước khi người tham gia bắt đầu",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì người tham gia đã tự nguyện bấm vào làm khảo sát",
+                    "isCorrect": false,
+                    "misconception": "ppnc.consent-implied-by-participation"
+                  },
+                  {
+                    "label": "Không có vấn đề gì với khảo sát online, chỉ cần quan tâm với phỏng vấn trực tiếp",
+                    "isCorrect": false,
+                    "misconception": "ppnc.consent-implied-by-participation"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là khảo sát quá ngắn, cần kéo dài hơn 5 phút",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc6-an-danh-vs-bao-mat",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu thu thập dữ liệu kèm mô tả 'giảng viên nữ, trên 60 tuổi, dạy môn X tại khoa Y' và tuyên bố dữ liệu này 'ẩn danh hoàn toàn'. Nhận định nào đúng?",
+                "explanation": "Tổ hợp đặc điểm hiếm này có thể truy ngược ra đúng một người trong một khoa nhỏ — đây không phải ẩn danh thật, mà nhiều nhất là bảo mật (nếu nhà nghiên cứu cam kết không công bố). Gọi đây là 'ẩn danh hoàn toàn' là một tuyên bố sai.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tuyên bố sai — tổ hợp đặc điểm này có thể truy ngược ra một cá nhân cụ thể, nên đây không phải ẩn danh thật",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, vì không nêu tên thật của người tham gia thì luôn được coi là ẩn danh",
+                    "isCorrect": false,
+                    "misconception": "ppnc.anonymize-confuse-confidential"
+                  },
+                  {
+                    "label": "Đúng, vì ẩn danh và bảo mật là hai từ khác nhau chỉ cùng một khái niệm",
+                    "isCorrect": false,
+                    "misconception": "ppnc.anonymize-confuse-confidential"
+                  },
+                  {
+                    "label": "Không quan trọng, vì đây chỉ là dữ liệu học thuật không ai để ý",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc6-can-hoi-dong-dao-duc",
+                "type": "mcq",
+                "prompt": "Một học viên nghĩ 'đây chỉ là khảo sát trong trường, không cần qua hội đồng đạo đức nào' cho một nghiên cứu hỏi về tình trạng sức khỏe tâm thần của sinh viên. Nhận định nào đúng?",
+                "explanation": "Quy mô nhỏ hoặc bối cảnh học thuật không tự động miễn trừ yêu cầu đạo đức — dữ liệu nhạy cảm như sức khỏe tâm thần cần được xem xét qua hội đồng đạo đức hoặc quy trình tương đương (giảng viên hướng dẫn, khoa) trước khi thu thập.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Sai — dữ liệu nhạy cảm như sức khỏe tâm thần cần được xem xét qua hội đồng đạo đức hoặc quy trình tương đương trước khi thu thập",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, mọi khảo sát trong trường đều được miễn yêu cầu đạo đức",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-ethics-review-informal"
+                  },
+                  {
+                    "label": "Đúng, chỉ nghiên cứu y sinh mới cần qua hội đồng đạo đức",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-ethics-review-informal"
+                  },
+                  {
+                    "label": "Chỉ cần qua hội đồng đạo đức nếu công bố quốc tế",
+                    "isCorrect": false,
+                    "misconception": "ppnc.skip-ethics-review-informal"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc6-tre-em-assent",
+                "type": "mcq",
+                "prompt": "Nghiên cứu có trẻ em tham gia cần loại đồng ý nào?",
+                "explanation": "Với trẻ em, cần đồng ý của phụ huynh/người giám hộ và sự đồng thuận (assent) của chính trẻ ở mức phù hợp với tuổi — chỉ có đồng ý của phụ huynh là chưa đủ.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đồng ý của phụ huynh/người giám hộ và sự đồng thuận (assent) của chính trẻ ở mức phù hợp với tuổi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ cần đồng ý của phụ huynh, không cần hỏi ý kiến trẻ",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ cần đồng ý của nhà trường nơi trẻ đang học",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không cần đồng ý nào nếu nghiên cứu chỉ quan sát, không phỏng vấn trực tiếp",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "ppnc6-thu-tu-dao-duc",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước xử lý đạo đức nghiên cứu trước khi thu thập dữ liệu.",
+                "explanation": "Từ soạn bản đồng ý đầy đủ thành phần, xác định loại bảo vệ dữ liệu, xác nhận yêu cầu đạo đức với khoa/hội đồng, tới thu thập dữ liệu chỉ sau khi đã được xác nhận.",
+                "points": 3,
+                "sequence": [
+                  "Soạn bản thông tin đồng ý tham gia đủ 6 thành phần bắt buộc",
+                  "Xác định rõ dữ liệu sẽ được ẩn danh hay chỉ bảo mật",
+                  "Đánh giá nghiên cứu có chạm đối tượng dễ bị tổn thương hoặc dữ liệu nhạy cảm không",
+                  "Xác nhận yêu cầu đạo đức với giảng viên hướng dẫn/khoa hoặc hội đồng đạo đức",
+                  "Chỉ thu thập dữ liệu sau khi đã có xác nhận"
+                ]
+              },
+              {
+                "key": "ppnc6-noi-khai-niem-dao-duc",
+                "type": "matching",
+                "prompt": "Nối mỗi khái niệm đạo đức nghiên cứu với đúng định nghĩa của nó.",
+                "explanation": "Ẩn danh là không ai truy ngược được danh tính; bảo mật là nhà nghiên cứu biết nhưng giữ kín; đồng ý có hiểu biết cần đủ thông tin trước khi tham gia; đối tượng dễ bị tổn thương cần quy trình đồng ý bổ sung.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Ẩn danh (anonymization)",
+                    "right": "Không ai, kể cả nhà nghiên cứu, truy ngược được danh tính"
+                  },
+                  {
+                    "left": "Bảo mật (confidentiality)",
+                    "right": "Nhà nghiên cứu biết danh tính nhưng cam kết giữ kín"
+                  },
+                  {
+                    "left": "Đồng ý có hiểu biết (informed consent)",
+                    "right": "Đủ thông tin về mục đích, rủi ro, quyền rút trước khi tham gia"
+                  },
+                  {
+                    "left": "Đối tượng dễ bị tổn thương",
+                    "right": "Cần quy trình đồng ý bổ sung, ví dụ đồng ý của phụ huynh và assent của trẻ"
+                  }
+                ]
+              },
+              {
+                "key": "ppnc6-soan-dong-y",
+                "type": "essay",
+                "prompt": "Soạn bản thông tin đồng ý tham gia cho đề tài của bạn (150-250 từ), đủ 6 thành phần: mục đích, quy trình tham gia, rủi ro/lợi ích, quyền rút khỏi nghiên cứu, cách bảo mật dữ liệu, và thông tin liên hệ. Ghi rõ dữ liệu của bạn là ẩn danh hay chỉ bảo mật, và giải thích vì sao.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

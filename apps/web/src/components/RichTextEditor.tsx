@@ -98,7 +98,7 @@ export default function RichTextEditor({
   minHeight = 160,
 }: Props) {
   const [uploadError, setUploadError] = useState<string | null>(null);
-  // null = chưa dò xong (chỉ dò được ở trình duyệt). "source" = soạn HTML thô.
+  // null = chưa dò xong (chỉ dò được ở trình duyệt). "source" = chỉ xem bản hiển thị, giữ nguyên nội dung.
   const [mode, setMode] = useState<"wysiwyg" | "source" | null>(null);
   const [loss, setLoss] = useState<LossReport | null>(null);
   // Chỉ dò một lần cho nội dung ban đầu: sau khi người dùng bắt đầu gõ, `value`
@@ -186,38 +186,14 @@ export default function RichTextEditor({
   }
 
   if (mode === "source") {
+    // Nội dung có định dạng mà editor trực quan không biểu diễn được: chỉ cho xem
+    // bản hiển thị thật, không lộ mã HTML. Giữ nguyên văn cho tới khi người dùng
+    // chủ động chuyển sang trình soạn thảo (LossBanner có xác nhận).
     return (
       <div className="rounded-lg border border-token bg-[rgb(var(--surface))]">
         {loss && <LossBanner loss={loss} onForceWysiwyg={() => setMode("wysiwyg")} />}
-        <div className="border-b border-token">
-          <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wide text-faint">
-            Xem trước — đúng những gì học viên sẽ thấy
-          </p>
-          <div className="max-h-72 overflow-y-auto px-3 pb-3 pt-1">
-            <SafeHtml html={value} className="prose prose-sm max-w-none dark:prose-invert" />
-          </div>
-        </div>
-        <p className="px-3 pt-2 text-[11px] font-semibold uppercase tracking-wide text-faint">
-          Mã HTML — sửa trực tiếp nếu cần
-        </p>
-        <textarea
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          spellCheck={false}
-          style={{ minHeight }}
-          className="w-full resize-y bg-transparent px-3 py-2 font-mono text-xs leading-relaxed focus:outline-none"
-        />
-        <div className="flex items-center justify-between border-t border-token px-3 py-1.5 text-xs text-faint">
-          <span>Chế độ HTML — nội dung được lưu đúng nguyên văn.</span>
-          {!loss && (
-            <button
-              type="button"
-              onClick={() => setMode("wysiwyg")}
-              className="rounded px-2 py-0.5 font-medium text-brand-600 hover:bg-[rgb(var(--surface-muted))]"
-            >
-              Về trình soạn thảo
-            </button>
-          )}
+        <div className="max-h-[28rem] overflow-y-auto px-3 py-2">
+          <SafeHtml html={value} className="prose prose-sm max-w-none dark:prose-invert" />
         </div>
       </div>
     );
@@ -225,11 +201,7 @@ export default function RichTextEditor({
 
   return (
     <div className="rounded-lg border border-token bg-[rgb(var(--surface))]">
-      <Toolbar
-        editor={editor}
-        onUpload={insertImageFiles}
-        onSourceMode={() => setMode("source")}
-      />
+      <Toolbar editor={editor} onUpload={insertImageFiles} />
       <EditorContent editor={editor} />
       {uploadError && (
         <p className="border-t border-token px-3 py-1.5 text-xs text-danger-600">
@@ -268,7 +240,7 @@ function LossBanner({
       </p>
       <p className="mt-0.5">
         Mở bằng trình soạn thảo rồi lưu sẽ mất {parts.join(", ")} — kể cả khi bạn
-        không sửa gì. Vì vậy nó đang mở ở chế độ HTML, nơi mọi thứ được giữ nguyên.
+        không sửa gì. Vì vậy nội dung đang được giữ nguyên và chỉ hiển thị bên dưới.
       </p>
       <button
         type="button"
@@ -292,11 +264,9 @@ function LossBanner({
 function Toolbar({
   editor,
   onUpload,
-  onSourceMode,
 }: {
   editor: Editor;
   onUpload: (files: File[]) => Promise<void>;
-  onSourceMode: () => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [colorOpen, setColorOpen] = useState(false);
@@ -552,14 +522,6 @@ function Toolbar({
         title="Xoá định dạng"
       >
         ⌫
-      </button>
-      <button
-        type="button"
-        onClick={onSourceMode}
-        className={btn(false)}
-        title="Sửa HTML thô — giữ nguyên mọi định dạng"
-      >
-        HTML
       </button>
     </div>
   );

@@ -15,6 +15,7 @@ import {
   startExamAttempt,
   submitExamAttempt,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -64,6 +65,7 @@ async function setupWithEssay(slug: string) {
     skillIds: [skill.id],
   });
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
 
   const learner = await registerUser(
     { email: `mg-l-${slug}@e.com`, password: "password1234", displayName: "L" },
@@ -131,6 +133,25 @@ describe("listPendingExamGrades (A7.6.1)", () => {
 });
 
 describe("gradeManualExamAnswer (A7.6.2)", () => {
+  it("chấm bài của thí sinh vào bằng mã (không có userId): lưu điểm và event gắn candidateId", async () => {
+    const a = await setupWithEssay("gc1");
+    const session = await prisma.examSession.findFirstOrThrow({ where: { examId: a.examId } });
+    const cand = await prisma.examCandidate.create({
+      data: { examId: a.examId, sessionId: session.id, displayName: "Thí sinh mã" },
+    });
+    await prisma.examAttempt.update({
+      where: { id: a.attemptId },
+      data: { userId: null, candidateId: cand.id },
+    });
+    const r = await gradeManualExamAnswer(a.ownerId, a.essayAnswerId, { manualScore: 3, comment: "ok" });
+    expect(r.finalized).toBe(true);
+    const ev = await prisma.learningEvent.findFirst({
+      where: { eventType: LearningEventType.ExamGraded, candidateId: cand.id },
+    });
+    expect(ev).not.toBeNull();
+    expect(ev!.userId).toBeNull();
+  });
+
   it("first grade finalizes attempt; emits exam.graded; writes history", async () => {
     const a = await setupWithEssay("g1");
     const r = await gradeManualExamAnswer(a.ownerId, a.essayAnswerId, {

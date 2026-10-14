@@ -1,5 +1,6 @@
 "use client";
 
+import { LANGUAGE_SKILLS, LANGUAGE_SKILL_LABEL, type LanguageSkill } from "@feedbackme/shared-types";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, AlertTriangle, Lock } from "lucide-react";
@@ -31,6 +32,8 @@ export default function LessonMetaBar({
   siblingLessonIds,
   modules,
   hideUntaggedWarning = false,
+  languageMode = false,
+  languageSkill: initialLanguageSkill = null,
 }: {
   lessonId: string;
   order?: number;
@@ -43,11 +46,15 @@ export default function LessonMetaBar({
   siblingLessonIds?: string[];
   modules?: ModuleRef[];
   hideUntaggedWarning?: boolean;
+  /** LANG G3 — chỉ hiện ô chọn kỹ năng khi khoá ở chế độ ngoại ngữ. */
+  languageMode?: boolean;
+  languageSkill?: LanguageSkill | null;
 }) {
   const router = useRouter();
   const [isHidden, setIsHidden] = useState(initialIsHidden);
   const [isLocked, setIsLocked] = useState(initialIsLocked);
   const [previewable, setPreviewable] = useState(initialPreviewable);
+  const [languageSkill, setLanguageSkill] = useState<LanguageSkill | "">(initialLanguageSkill ?? "");
   const [skillsOpen, setSkillsOpen] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -96,6 +103,11 @@ export default function LessonMetaBar({
     await patch({ previewable: next });
   }
 
+  async function changeLanguageSkill(next: LanguageSkill | "") {
+    setLanguageSkill(next);
+    await patch({ languageSkill: next === "" ? null : next });
+  }
+
   const noSkill = tags.length === 0;
   const showSkillsCluster = !(noSkill && hideUntaggedWarning);
 
@@ -117,6 +129,27 @@ export default function LessonMetaBar({
           <Lock className="h-3 w-3" aria-hidden />
           Đang khoá
         </span>
+      )}
+
+      {/* LANG G3 — kỹ năng ngôn ngữ chính của bài (nghe/nói/đọc/viết). Ô chọn cũng là
+          nhãn hiển thị, nên giảng viên thấy bài thuộc kỹ năng nào ngay trên thanh này. */}
+      {languageMode && (
+        <label className="inline-flex items-center gap-1.5">
+          <span>Kỹ năng</span>
+          <select
+            value={languageSkill}
+            onChange={(e) => void changeLanguageSkill(e.target.value as LanguageSkill | "")}
+            aria-label="Kỹ năng ngôn ngữ của bài"
+            className="select !h-7 !w-auto !py-0 text-xs"
+          >
+            <option value="">Không gán</option>
+            {LANGUAGE_SKILLS.map((s) => (
+              <option key={s} value={s}>
+                {LANGUAGE_SKILL_LABEL[s]}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
 
       {/* Skills cluster — hidden when course personalization is off and no tags */}

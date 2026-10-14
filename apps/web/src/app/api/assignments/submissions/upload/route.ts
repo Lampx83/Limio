@@ -29,12 +29,17 @@ const MIME_TO_EXT: Record<string, { ext: string; kind: string }> = {
   "audio/ogg": { ext: "ogg", kind: "audio" },
   "audio/wav": { ext: "wav", kind: "audio" },
   "audio/webm": { ext: "webm", kind: "audio" },
+  // LANG G7 — Safari/iPhone ghi âm ra mp4/m4a.
+  "audio/mp4": { ext: "m4a", kind: "audio" },
+  "audio/x-m4a": { ext: "m4a", kind: "audio" },
   // video
   "video/mp4": { ext: "mp4", kind: "video" },
   "video/webm": { ext: "webm", kind: "video" },
   "video/quicktime": { ext: "mov", kind: "video" },
   // generic / concept-map exports
   "application/pdf": { ext: "pdf", kind: "file" },
+  // Word — trước đây bị 415 dù dạng "file" cho chọn mọi tệp; AI gợi ý chấm đọc được chữ trong .docx.
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { ext: "docx", kind: "file" },
   "application/json": { ext: "json", kind: "file" },
   "application/zip": { ext: "zip", kind: "file" },
   "text/plain": { ext: "txt", kind: "file" },

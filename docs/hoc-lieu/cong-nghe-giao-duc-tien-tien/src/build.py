@@ -7,7 +7,7 @@ import course, m1_l1, m1_l2, m1_l3, m1_l4, m1_l5, m1_l6, m1_l7
 import m2_l1, m2_l2, m2_l3, m2_l4, m2_l5, m2_l6
 import m3_l1, m3_l2, m3_l3, m3_l4, m3_l5, m3_l6
 import m4_l1, m4_l2, m4_l3, m4_l4, m4_l5, m4_l6, m4_l7
-import m5_l1, m5_l2, m5_l3, m5_l4, m5_l5, m5_l6
+import m5_l1, m5_l2, m5_l3, m5_l4, m5_l5, m5_l6, m5_l7, m5_l8
 
 MODULES = [
     {
@@ -57,7 +57,7 @@ MODULES = [
             "liệu nhập vai, xưởng kỹ thuật dựng và tối ưu bản AR, thử nghiệm với người học thật, đưa sản "
             "phẩm từ thí điểm vào vận hành, và buổi bảo vệ. Mốc 5 và mốc 6 của đồ án nằm ở đây."
         ),
-        "lessons": [m.LESSON for m in (m5_l1, m5_l2, m5_l3, m5_l4, m5_l5, m5_l6)],
+        "lessons": [m.LESSON for m in (m5_l1, m5_l2, m5_l3, m5_l4, m5_l5, m5_l6, m5_l7, m5_l8)],
     },
 ]
 

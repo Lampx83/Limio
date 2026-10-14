@@ -1,57 +1,47 @@
 import Link from "next/link";
-import type { ExamRun } from "@feedbackme/core-lms";
-import ExamRunsList from "./ExamRunsList";
+import { History } from "lucide-react";
 
 /**
  * Khung chung cho ba trang tổ chức thi.
  *
- * Mỗi trang chia đúng hai phần: TẠO MỚI ở trên, LỊCH SỬ cùng dạng ở dưới. Tách
- * lịch sử theo hình thức chứ không gộp — ba hình thức cần thấy thông tin khác
- * nhau, và gộp lại thì bảng phải cõng mọi cột cho mọi kiểu.
+ * Chỉ còn phần TẠO MỚI. Các lần thi — đang mở lẫn đã đóng, kèm Giám sát / Kết quả / Đóng ca — nằm ở
+ * Lịch sử thi (một chỗ cho mọi hình thức, chia tab); ở đây chỉ còn một lối sang đúng tab. Mã và QR
+ * của link vừa mở đã hiện ngay trong form tạo, nên không cần danh sách thẻ để lấy mã.
  */
 export default function OrganizeLayout({
   title,
   blurb,
   children,
-  runs,
-  historyTitle,
-  emptyHint,
-  showRooms = false,
+  historyType,
 }: {
   title: string;
   blurb: string;
   /** Phần tạo mới. */
   children: React.ReactNode;
-  runs: ExamRun[];
-  historyTitle: string;
-  emptyHint: string;
-  /** Chỉ kỳ thi chính thức mới có nhiều phòng để mà xem. */
-  showRooms?: boolean;
+  /** Tab tương ứng ở trang Lịch sử thi. */
+  historyType: "quick" | "field-test" | "formal";
 }) {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6 lg:px-6">
+    <main>
       <Link href="/instructor/organize" className="text-sm text-faint hover:underline">
         ← Tổ chức thi
       </Link>
       <h1 className="mt-2 text-2xl font-bold">{title}</h1>
       <p className="mt-1 text-body text-faint">{blurb}</p>
 
-      <section className="mt-6 rounded-lg border border-default bg-white p-4 sm:p-5">
+      <section className="mt-6 rounded-lg border border-token bg-white p-4 sm:p-5">
         {children}
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-base font-semibold">
-          {historyTitle}
-          {runs.length > 0 && (
-            <span className="ml-1 font-normal text-faint">· {runs.length}</span>
-          )}
-        </h2>
-        <p className="mb-3 mt-0.5 text-caption text-faint">
-          Bấm “Kết quả” để xem chi tiết, hoặc “Tải” để lấy file điểm của lần thi đó.
-        </p>
-        <ExamRunsList runs={runs} emptyHint={emptyHint} showRooms={showRooms} />
-      </section>
+      <p className="mt-6">
+        <Link
+          href={`/instructor/exam-history?type=${historyType}`}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline"
+        >
+          <History className="h-4 w-4" aria-hidden />
+          Xem và quản lý các lần thi trong Lịch sử thi →
+        </Link>
+      </p>
     </main>
   );
 }

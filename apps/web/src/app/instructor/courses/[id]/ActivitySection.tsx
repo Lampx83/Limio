@@ -67,6 +67,7 @@ interface Assignment {
   requireReflection?: boolean;
   countsTowardGrade?: boolean;
   rubricText?: string | null;
+  submissionMode?: "individual" | "team";
 }
 
 interface LessonActivityRow {

@@ -200,9 +200,6 @@ export default function NewCoursePage() {
       {/* Cùng khung, cùng thứ tự trường với form "Sửa" thông tin khoá ở tab
           Tổng quan (CourseMetaForm) để tạo mới và chỉnh sửa trông như một. */}
       <form ref={formRef} onSubmit={onSubmit} noValidate className="mt-5 card space-y-4">
-        <p className="text-meta text-muted">
-          <span className="text-danger-600" aria-hidden="true">*</span> Bắt buộc
-        </p>
         <header className="border-b border-token pb-3">
           <h3 className="text-base font-semibold">Thông tin course</h3>
         </header>

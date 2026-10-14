@@ -218,6 +218,26 @@
    "code": "cngdtt.blockchain-default-solution",
    "name": "Có nhiều bên hay có tiếng là dùng chuỗi khối",
    "description": "Chọn chuỗi khối vì nó hiện đại hoặc vì một nơi nổi tiếng đã dùng, không chạy qua các câu hỏi: có nhiều bên cùng ghi không, có bên thứ ba đáng tin không, có cần chống sửa với cả người vận hành không."
+  },
+  {
+   "code": "cngdtt.free-equals-open",
+   "name": "Miễn phí, công khai thì là học liệu mở",
+   "description": "Coi tài nguyên xem không mất tiền hoặc đăng công khai trên mạng là được tự do dùng, sửa và phát lại. Mở là chuyện của giấy phép (năm quyền 5R), không phải của giá."
+  },
+  {
+   "code": "cngdtt.attribution-replaces-license",
+   "name": "Ghi nguồn là đủ, thay được giấy phép",
+   "description": "Tin rằng chỉ cần ghi nguồn là được dùng hoặc sửa mọi tài nguyên. Ghi nguồn chỉ là một điều kiện của giấy phép; không có giấy phép cho phép thì ghi nguồn cũng không hợp pháp hoá việc dùng."
+  },
+  {
+   "code": "cngdtt.education-exempts-license",
+   "name": "Dùng cho giáo dục thì được miễn giấy phép",
+   "description": "Coi mục đích giáo dục, không thu tiền là ngoại lệ tự động. Ngoại lệ giảng dạy trong luật hẹp và gắn điều kiện; một sản phẩm phát hành công khai vẫn cần giấy phép."
+  },
+  {
+   "code": "cngdtt.collection-as-derivative",
+   "name": "Lẫn tuyển tập với tác phẩm phái sinh",
+   "description": "Xét tương thích giấy phép cho cả những tài nguyên chỉ đặt cạnh nhau nguyên trạng, hoặc ngược lại bỏ qua tương thích khi đã sửa, ghép lẫn. Dẫn tới loại nhầm tài nguyên tốt hoặc gắn giấy phép quá chặt cho cả sản phẩm."
   }
  ],
  "feedbackTemplates": [
@@ -429,6 +449,26 @@
   {
    "misconception": "cngdtt.blockchain-default-solution",
    "body": "Chạy lại bộ năm câu hỏi: chỉ một bên ghi hoặc có trung gian đáng tin thì cơ sở dữ liệu thường kèm chữ ký số rẻ hơn và đủ dùng. Chuỗi khối chỉ xứng khi cả bốn câu đầu đều trả lời có.",
+   "priority": 10
+  },
+  {
+   "misconception": "cngdtt.free-equals-open",
+   "body": "Hỏi lại bằng khung 5R: bạn có được giữ bản sao, sửa, phối trộn và phát lại không? Nếu trang không nêu giấy phép mở thì xem được không có nghĩa là dùng được.",
+   "priority": 10
+  },
+  {
+   "misconception": "cngdtt.attribution-replaces-license",
+   "body": "Ghi nguồn là điều kiện của giấy phép, không phải giấy phép. Tìm giấy phép trên trang gốc trước; nếu có, ghi đủ TASL (tên, tác giả, nguồn, giấy phép) và nói rõ đã sửa gì.",
+   "priority": 10
+  },
+  {
+   "misconception": "cngdtt.education-exempts-license",
+   "body": "Ngoại lệ giảng dạy chỉ che lớp học của bạn, có điều kiện. Sách AR phát hành công khai cho nhiều trường cần tài nguyên có giấy phép mở hoặc thư cho phép bằng văn bản.",
+   "priority": 10
+  },
+  {
+   "misconception": "cngdtt.collection-as-derivative",
+   "body": "Hỏi trước: tài nguyên này đặt cạnh nhau nguyên trạng (tuyển tập, mỗi phần giữ giấy phép riêng) hay đã bị sửa, ghép lẫn (phái sinh, phải tương thích)? Chỉ trường hợp sau mới tra bảng tương thích.",
    "priority": 10
   }
  ],
@@ -10932,6 +10972,659 @@
         "type": "essay",
         "prompt": "Viết 250–350 từ kịch bản ba phút mở đầu buổi bảo vệ của bạn, không nhắc tên bất kỳ công cụ nào: người học tắc ở đâu và bạn biết từ đâu, vì sao nội dung này cần lớp phủ ba chiều, và bằng chứng nào bạn sẽ dẫn ra trong ba phút ấy.",
         "points": 5
+       }
+      ]
+     }
+    },
+    {
+     "title": "Bài 5.7 · Tài nguyên giáo dục mở: giấy phép, phối trộn và bảng đăng ký tài sản",
+     "durationMin": 90,
+     "description": "Buổi học tương tác 90 phút: phân biệt miễn phí với mở bằng khung 5R, đọc đúng giấy phép Creative Commons, quyết định phối trộn tài nguyên (tuyển tập hay tác phẩm phái sinh), thẩm định bằng chứng về hiệu quả của OER, và lập bảng đăng ký tài sản cho đồ án sách AR.",
+     "objectives": [
+      "Phân biệt được tài nguyên miễn phí với tài nguyên mở bằng khung 5R, và nêu được định nghĩa OER trong Khuyến nghị UNESCO 2019",
+      "Đọc đúng sáu giấy phép Creative Commons và CC0, viết được dòng ghi nguồn đủ bốn thành phần TASL",
+      "Quyết định được hai tài nguyên có phối trộn được không và sản phẩm phải mang giấy phép gì, phân biệt tuyển tập với tác phẩm phái sinh",
+      "Đánh giá phê phán bằng chứng về hiệu quả của OER và chỉ ra giới hạn phương pháp của các nghiên cứu đó"
+     ],
+     "summary": [
+      "Miễn phí chưa phải là mở. Một tài nguyên chỉ mở khi thuộc phạm vi công cộng hoặc có giấy phép mở trao đủ năm quyền: giữ, dùng lại, sửa, phối trộn, phân phối lại.",
+      "Bốn điều kiện BY, SA, NC, ND ghép thành sáu giấy phép Creative Commons. Ghi nguồn đúng chuẩn gồm đủ tên tác phẩm, tác giả, nguồn và giấy phép (TASL), kèm ghi rõ đã chỉnh sửa gì.",
+      "Đặt các tài nguyên cạnh nhau nguyên trạng là tuyển tập, mỗi phần giữ giấy phép riêng. Sửa hoặc ghép lẫn mới là tác phẩm phái sinh, lúc đó giấy phép đầu vào phải tương thích; SA và NC không ghép phái sinh được với nhau, ND thì không phát hành được bản sửa.",
+      "Bằng chứng mạnh nhất của OER là về chi phí, tiếp cận và tỉ lệ bỏ học; kết quả học tập nhìn chung không kém đi, nhưng phần lớn nghiên cứu là bán thực nghiệm nên chưa tách được tác động của tài liệu khỏi tác động của người dạy."
+     ],
+     "body": "\n> [!meo] **Bài này dành cho đồ án của bạn.** Một cuốn sách AR đẹp nhưng dùng tài nguyên sai giấy phép thì không phát hành công khai được, không đưa vào hồ sơ năng lực được, và nhà trường không thể nhân rộng. Bài 5.6 đã nói rõ: mọi tài nguyên phải rõ nguồn và giấy phép là một trong ba điều kiện để được bảo vệ. Sản phẩm của bài này, **bảng đăng ký tài sản**, nộp cùng Mốc 5.\n\n## Miễn phí chưa phải là mở\n\n### Khởi động: tấm ảnh này có dùng được không?\n\nBạn tìm \"3D heart model\" trên Google Hình ảnh, thấy một ảnh rất đẹp, không kèm ghi chú gì. Bạn định đưa nó vào trang sách AR sẽ phát hành công khai cho các trường phổ thông. Được không?\n\nBa câu trả lời phổ biến nhất đều sai, và mỗi câu là một hiểu nhầm riêng. *\"Được, vì ảnh công khai trên mạng\"*: công khai không có nghĩa là được phép. *\"Được, nếu ghi nguồn là Google\"*: Google Hình ảnh chỉ là công cụ tìm kiếm, không phải chủ sở hữu, và ghi nguồn không thay được giấy phép. *\"Được, vì dùng cho giáo dục\"*: mục đích giáo dục không tự động là ngoại lệ, nhất là khi sản phẩm được phát hành rộng. Câu trả lời đúng là **chưa biết được**: phải tìm ra chủ sở hữu và giấy phép trước đã.\n\n### OER là gì: ba mốc và một định nghĩa\n\nCụm từ *Open Educational Resources* xuất hiện lần đầu tại một diễn đàn của UNESCO năm 2002, ngay sau khi MIT công bố đưa tài liệu các môn học lên mạng (OpenCourseWare). Năm 2012, Tuyên bố Paris về OER kêu gọi các chính phủ phát hành học liệu do ngân sách công tài trợ theo giấy phép mở. Năm 2019, **Khuyến nghị UNESCO về OER** được thông qua, là văn bản chuẩn mực quốc tế đầu tiên về chủ đề này.\n\nDiễn đạt lại định nghĩa của Khuyến nghị 2019: OER là *tài liệu dạy, học và nghiên cứu ở mọi định dạng, thuộc phạm vi công cộng hoặc được phát hành theo giấy phép mở, cho phép người khác truy cập không mất phí, dùng lại, điều chỉnh mục đích, chỉnh sửa và phân phối lại.* Khuyến nghị đặt ra năm lĩnh vực hành động: xây dựng năng lực, chính sách hỗ trợ, truy cập công bằng và bao trùm, mô hình bền vững, và hợp tác quốc tế.\n\nChú ý cụm **giấy phép mở**. Định nghĩa không nói \"miễn phí trên mạng\". Một video YouTube xem không mất tiền nhưng thường không phải OER, vì bạn không có quyền tải về, sửa rồi phát lại. Phần lớn khoá học trên các nền tảng học trực tuyến lớn cũng vậy: xem được, nhưng không được giữ và sửa.\n\n### Khung 5R: mở nghĩa là có năm quyền\n\nDavid Wiley đề xuất đo độ \"mở\" của một tài nguyên bằng năm quyền mà người dùng nhận được.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Năm quyền của tài nguyên mở, đặt vào đồ án sách AR</div>\n  <table style=\"min-width:38rem;border-collapse:collapse;width:100%;font-size:1rem;line-height:1.5\">\n    <thead><tr style=\"text-align:left\"><th style=\"padding:.5rem;border-bottom:2px solid rgba(127,127,127,.3)\">Quyền</th><th style=\"padding:.5rem;border-bottom:2px solid rgba(127,127,127,.3)\">Nghĩa</th><th style=\"padding:.5rem;border-bottom:2px solid rgba(127,127,127,.3)\">Trong đồ án sách AR</th></tr></thead>\n    <tbody>\n      <tr><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\"><span style=\"background:rgba(37,99,235,.85);color:#fff;padding:.1rem .5rem;border-radius:.25rem\">Retain · Giữ</span></td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Tải về, lưu, sở hữu và kiểm soát bản sao</td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Lưu tệp <code>.glb</code> vào kho đồ án, không phụ thuộc trang gốc còn sống</td></tr>\n      <tr><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\"><span style=\"background:rgba(37,99,235,.85);color:#fff;padding:.1rem .5rem;border-radius:.25rem\">Reuse · Dùng lại</span></td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Dùng nguyên trạng ở nhiều bối cảnh</td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Đặt mô hình tim vào một trang sách</td></tr>\n      <tr><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\"><span style=\"background:rgba(13,148,136,.88);color:#fff;padding:.1rem .5rem;border-radius:.25rem\">Revise · Sửa</span></td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Chỉnh sửa, dịch, rút gọn</td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Giảm số đa giác, đổi nhãn sang tiếng Việt</td></tr>\n      <tr><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\"><span style=\"background:rgba(13,148,136,.88);color:#fff;padding:.1rem .5rem;border-radius:.25rem\">Remix · Phối trộn</span></td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Kết hợp với tài nguyên khác thành cái mới</td><td style=\"padding:.5rem;border-bottom:1px solid rgba(127,127,127,.25)\">Ghép mô hình tim với hình động dòng máu</td></tr>\n      <tr><td style=\"padding:.5rem\"><span style=\"background:rgba(124,58,237,.85);color:#fff;padding:.1rem .5rem;border-radius:.25rem\">Redistribute · Phân phối lại</span></td><td style=\"padding:.5rem\">Chia sẻ bản gốc hoặc bản sửa cho người khác</td><td style=\"padding:.5rem\">Đăng sách AR lên trang của trường</td></tr>\n    </tbody>\n  </table>\n</div>\n```\n\n\"Miễn phí\" thường chỉ trao quyền thứ hai, đôi khi chưa đủ cả quyền thứ nhất. Đồ án sách AR cần cả năm, và quyền **Retain** hay bị coi nhẹ nhất: một mô hình chỉ xem được trên trang chia sẻ mà không tải về được thì không thuộc về bạn. Trang đó đổi điều khoản hoặc đóng cửa, trang sách của bạn chết theo.\n\n> [!canh-bao] **Hiểu nhầm phổ biến:** \"miễn phí, công khai trên mạng thì là học liệu mở\". Không phải. Giá bằng không mới chỉ là quyền được xem. Mở là chuyện của **giấy phép**, không phải của giá.\n\n## Đọc giấy phép Creative Commons\n\n### Bốn điều kiện, sáu giấy phép\n\nCreative Commons (CC) là bộ giấy phép mở phổ biến nhất cho học liệu. Bốn điều kiện ghép lại thành sáu giấy phép, cộng thêm CC0 ở đầu mở nhất.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Phổ giấy phép, từ mở nhất đến đóng nhất</div>\n  <div style=\"min-width:40rem;display:flex;gap:.3rem;font-size:.92rem;line-height:1.3;text-align:center;color:#fff;font-weight:600\">\n    <div style=\"flex:1;background:rgba(13,148,136,.88);border-radius:.35rem;padding:.55rem .2rem\">CC0</div>\n    <div style=\"flex:1;background:rgba(13,148,136,.88);border-radius:.35rem;padding:.55rem .2rem\">CC BY</div>\n    <div style=\"flex:1;background:rgba(37,99,235,.85);border-radius:.35rem;padding:.55rem .2rem\">CC BY-SA</div>\n    <div style=\"flex:1;background:rgba(217,150,40,.9);border-radius:.35rem;padding:.55rem .2rem\">CC BY-NC</div>\n    <div style=\"flex:1;background:rgba(217,150,40,.9);border-radius:.35rem;padding:.55rem .2rem\">CC BY-NC-SA</div>\n    <div style=\"flex:1;background:rgba(220,38,38,.85);border-radius:.35rem;padding:.55rem .2rem\">CC BY-ND</div>\n    <div style=\"flex:1;background:rgba(220,38,38,.85);border-radius:.35rem;padding:.55rem .2rem\">CC BY-NC-ND</div>\n    <div style=\"flex:1;background:rgba(120,113,108,.85);border-radius:.35rem;padding:.55rem .2rem\">Bảo lưu mọi quyền</div>\n  </div>\n  <div style=\"min-width:40rem;display:flex;justify-content:space-between;font-size:.9rem;opacity:.7;margin:.3rem 0 .9rem\"><span>← mở nhất: dùng tự do vào sách AR</span><span>đóng nhất: phải xin phép →</span></div>\n  <div style=\"min-width:40rem;display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-size:1rem;line-height:1.5\">\n    <div style=\"border:1px solid rgba(127,127,127,.3);border-radius:.4rem;padding:.55rem .75rem\"><strong>BY · Ghi công</strong><br>Phải ghi tên tác giả. Có mặt ở cả sáu giấy phép.</div>\n    <div style=\"border:1px solid rgba(127,127,127,.3);border-radius:.4rem;padding:.55rem .75rem\"><strong>SA · Chia sẻ tương tự</strong><br>Bản sửa đổi phải mang cùng giấy phép.</div>\n    <div style=\"border:1px solid rgba(127,127,127,.3);border-radius:.4rem;padding:.55rem .75rem\"><strong>NC · Phi thương mại</strong><br>Không dùng chủ yếu nhằm lợi thế thương mại hay thù lao.</div>\n    <div style=\"border:1px solid rgba(127,127,127,.3);border-radius:.4rem;padding:.55rem .75rem\"><strong>ND · Không phái sinh</strong><br>Chỉ dùng nguyên trạng, không phát hành bản đã sửa.</div>\n  </div>\n</div>\n```\n\nBa điểm hay bị hiểu sai. Thứ nhất, **CC0** không hẳn là giấy phép mà là lời tác giả từ bỏ quyền ở mức pháp luật cho phép, nên tác phẩm gần như thuộc phạm vi công cộng; vẫn nên ghi nguồn để người sau truy được gốc. Thứ hai, **ND không cấm dùng**: nó cho dùng nguyên trạng, kể cả trong giáo dục, chỉ cấm phát hành bản đã sửa. Với đồ án AR, ND thường là giấy phép gây phiền nhất, vì gần như mô hình nào cũng phải giảm đa giác hay đổi định dạng. Thứ ba, **NC mơ hồ ở vùng ranh giới**: một trường đại học thu học phí dùng tài nguyên NC trong khoá học trực tuyến có phải \"thương mại\" không thì cách hiểu không thống nhất. Đó là lý do người thiết kế học liệu nên ưu tiên CC BY và CC BY-SA.\n\nGiấy phép chỉ phủ phần **nội dung**. Tên và logo của tổ chức phát hành (ví dụ tên OpenStax hay PhET) thường là nhãn hiệu, nằm ngoài giấy phép CC của nội dung. Các trang \"miễn phí kèm ghi nguồn\" tự đặt điều khoản riêng (nhiều trang biểu tượng, nhạc nền) cũng không phải giấy phép CC; phải đọc điều khoản đó, vì chúng thường cấm phân phối lại tài nguyên gốc.\n\n### Ghi nguồn đúng chuẩn: TASL\n\nGhi công theo giấy phép CC cần đủ bốn thành phần: **T**itle (tên tác phẩm), **A**uthor (tác giả), **S**ource (đường dẫn tới trang gốc), **L**icense (tên giấy phép kèm đường dẫn). Nếu đã chỉnh sửa, ghi thêm sửa gì.\n\n> [!vi-du] *\"Gravity and Orbits\"* · PhET Interactive Simulations, University of Colorado Boulder · phet.colorado.edu · CC BY 4.0.\n> *\"Heart\"* · [tên tác giả] · sketchfab.com/… · CC BY 4.0 · đã chỉnh sửa: giảm đa giác, dịch nhãn sang tiếng Việt.\n\nBa cách ghi sai hay gặp nhất: \"Nguồn: Internet\", \"Nguồn: Google\", \"Ảnh: Wikimedia Commons\". Cách thứ ba nghe có vẻ đúng nhưng chỉ nói *nơi để*, không nói *tác phẩm nào, của ai, được phép gì*, giống như ghi \"Nguồn: thư viện\" trong khoá luận.\n\n### Hoạt động cá nhân · Thám tử giấy phép (13 phút)\n\nMỗi bạn nhận một tài nguyên theo **chữ số cuối mã sinh viên**: 0–1 ảnh *The Earth seen from Apollo 17* trên Wikimedia Commons; 2–3 mô phỏng PhET *Gravity and Orbits*; 4–5 giáo trình OpenStax *Biology 2e*; 6–7 bài *Hoàng thành Thăng Long* trên Wikipedia tiếng Việt; 8–9 một mô hình 3D tự chọn trên Sketchfab, chủ đề tế bào hoặc tim người. Trong 8 phút:\n\n1. Tìm **giấy phép thật** ngay trên trang, không đoán theo tên trang.\n2. Viết **dòng ghi nguồn TASL** cho tài nguyên.\n3. Trả lời một câu: mình có được sửa và phát hành lại nó trong sách AR không, điều kiện là gì?\n\nDán kết quả lên bảng ghi chú chung của lớp. Giảng viên chọn ba ghi chú để chữa trước lớp: một đúng hoàn toàn, một thiếu thành phần TASL, một hiểu sai giấy phép. Nhóm số cuối 8–9 thường gặp bài học quan trọng nhất: trên cùng một trang, **mỗi mô hình một giấy phép**, và nhiều mô hình không cho tải.\n\n## Phối trộn: tuyển tập hay tác phẩm phái sinh?\n\n### Ranh giới quyết định mọi thứ\n\nĐây là điểm vượt mức đọc biểu tượng, và là nơi các nhóm đồ án hay sai nhất.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Cùng hai tài nguyên, hai cách dùng, hai kết luận khác nhau</div>\n  <div style=\"min-width:38rem;display:grid;grid-template-columns:1fr 1fr;gap:.7rem;font-size:1.02rem;line-height:1.55\">\n    <div style=\"border-left:5px solid rgba(13,148,136,.88);background:rgba(13,148,136,.07);border-radius:0 .4rem .4rem 0;padding:.7rem .9rem\"><strong>Tuyển tập</strong><br>Đặt các tài nguyên <strong>cạnh nhau, nguyên trạng</strong>: mô hình ở trang 3, ảnh ở trang 4.<br><br>→ Mỗi phần <strong>giữ giấy phép riêng</strong>. Không cần tương thích. Ghi nguồn từng phần tại chỗ nó xuất hiện.</div>\n    <div style=\"border-left:5px solid rgba(220,38,38,.85);background:rgba(220,38,38,.06);border-radius:0 .4rem .4rem 0;padding:.7rem .9rem\"><strong>Tác phẩm phái sinh</strong><br><strong>Sửa hoặc ghép lẫn</strong> tài nguyên vào nhau: dán ảnh làm texture lên mô hình, lồng tiếng vào video.<br><br>→ Giấy phép đầu vào <strong>phải tương thích</strong>. Sản phẩm mang giấy phép chặt nhất trong các đầu vào.</div>\n  </div>\n</div>\n```\n\nPhần lớn một cuốn sách AR là **tuyển tập**: các trang đặt cạnh nhau những tài nguyên khác nhau. Vì vậy đừng vội loại một tài nguyên tốt chỉ vì giấy phép của nó khác phần còn lại. Nhưng ngay khi bạn sửa một mô hình (giảm đa giác, thay texture, đổi màu) thì riêng mô hình đó đã thành tác phẩm phái sinh, và phải xét giấy phép của nó cùng mọi thứ bạn ghép vào nó.\n\n### Bảng tương thích khi ghép phái sinh\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Ghép hai đầu vào: sản phẩm phải mang giấy phép nào?</div>\n  <table style=\"min-width:40rem;border-collapse:collapse;width:100%;font-size:.98rem;line-height:1.45;text-align:center\">\n    <thead><tr><th style=\"padding:.45rem;border-bottom:2px solid rgba(127,127,127,.3);text-align:left\">Đầu vào</th><th style=\"padding:.45rem;border-bottom:2px solid rgba(127,127,127,.3)\">CC0</th><th style=\"padding:.45rem;border-bottom:2px solid rgba(127,127,127,.3)\">BY</th><th style=\"padding:.45rem;border-bottom:2px solid rgba(127,127,127,.3)\">BY-SA</th><th style=\"padding:.45rem;border-bottom:2px solid rgba(127,127,127,.3)\">BY-NC</th><th style=\"padding:.45rem;border-bottom:2px solid rgba(127,127,127,.3)\">BY-NC-SA</th></tr></thead>\n    <tbody>\n      <tr><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);text-align:left\"><strong>CC0</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ tuỳ chọn</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-SA</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC-SA</td></tr>\n      <tr><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);text-align:left\"><strong>BY</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-SA</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC-SA</td></tr>\n      <tr><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);text-align:left\"><strong>BY-SA</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-SA</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-SA</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-SA</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);background:rgba(220,38,38,.12)\"><strong>✗</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);background:rgba(220,38,38,.12)\"><strong>✗</strong></td></tr>\n      <tr><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);text-align:left\"><strong>BY-NC</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);background:rgba(220,38,38,.12)\"><strong>✗</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC</td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">✓ BY-NC-SA</td></tr>\n      <tr><td style=\"padding:.45rem;text-align:left\"><strong>BY-NC-SA</strong></td><td style=\"padding:.45rem\">✓ BY-NC-SA</td><td style=\"padding:.45rem\">✓ BY-NC-SA</td><td style=\"padding:.45rem;background:rgba(220,38,38,.12)\"><strong>✗</strong></td><td style=\"padding:.45rem\">✓ BY-NC-SA</td><td style=\"padding:.45rem\">✓ BY-NC-SA</td></tr>\n    </tbody>\n  </table>\n  <div style=\"min-width:40rem;font-size:.95rem;opacity:.8;margin:.5rem 0 0\">Bất kỳ đầu vào nào mang <strong>ND</strong>: không phát hành được bản phái sinh. Bảng chỉ dùng khi sửa hoặc ghép lẫn; tuyển tập không cần tra.</div>\n</div>\n```\n\nHai ô đỏ hay gặp nhất trong đồ án là **SA với NC** và **SA với NC-SA**. SA đòi sản phẩm phải mang đúng giấy phép BY-SA; NC đòi sản phẩm phải phi thương mại. Không có giấy phép nào thoả cả hai, nên hai tài nguyên đó không ghép lẫn được với nhau. Lối ra có hai: thay một trong hai tài nguyên, hoặc giữ chúng tách riêng ở hai chỗ khác nhau trong sách (tuyển tập).\n\n> [!ghi-nho] Khi gặp một tài nguyên NC, nhiều nhóm chọn giấy phép NC cho **cả sản phẩm** \"cho an toàn\". Làm vậy là đóng bớt quyền của mọi người dùng sau bạn. Hãy hỏi trước: có tài nguyên thay thế mở hơn không, hoặc có giữ nó thành một phần tách riêng được không?\n\n### Hoạt động nhóm 5 người · Xưởng phối trộn (23 phút)\n\nMỗi nhóm là một nhóm đồ án đang dựng **một trang sách AR**, nhận một thẻ tình huống gồm bốn tài nguyên kèm giấy phép. Một số tài nguyên có bẫy.\n\n- **Nhóm 1 · Quỹ đạo Trái Đất:** mô hình Trái Đất của NASA (phạm vi công cộng); ảnh thiên hà ESA/Hubble (CC BY 4.0); mô phỏng PhET (CC BY 4.0); nhạc nền từ kênh \"No Copyright Music\" (không ghi giấy phép).\n- **Nhóm 2 · Tế bào thực vật:** mô hình Sketchfab (CC BY-NC 4.0); sơ đồ tế bào trên Commons (CC BY-SA 4.0); đoạn văn OpenStax *Biology 2e* (CC BY 4.0); ảnh hiển vi chụp lại từ sách giáo khoa.\n- **Nhóm 3 · Phân tử nước:** mô hình glTF trên Poly Haven (CC0); ảnh liên kết hiđro trên Commons (CC BY-SA 3.0); video bài giảng trực tuyến (CC BY-NC-SA); đoạn giải thích do chatbot sinh.\n- **Nhóm 4 · Hoàng thành Thăng Long:** ảnh Đoan Môn trên Commons (CC BY-SA 4.0); mô hình quét 3D trên Sketchfab (giấy phép Standard, không cho tải tự do); đoạn trích Wikipedia tiếng Việt (CC BY-SA 4.0); bản đồ Thăng Long thế kỉ XIX (phạm vi công cộng).\n- **Nhóm 5 · Hệ tuần hoàn:** mô hình tim Sketchfab (CC BY 4.0); hình minh hoạ OpenStax *Anatomy and Physiology* (CC BY 4.0); video YouTube (CC BY); ảnh trong slide của một giảng viên khác, không rõ nguồn.\n- **Nhóm 6 · Vòng tuần hoàn nước:** ảnh minh hoạ trên Commons (CC BY-NC-SA 4.0); hoạt động H5P (CC BY-SA 4.0); ảnh vệ tinh NASA (phạm vi công cộng); bộ biểu tượng \"miễn phí kèm ghi nguồn\" (điều khoản riêng của trang).\n\n**Nhiệm vụ (16 phút):** lập **bảng đăng ký tài sản** trên tờ A3 với các cột *Tài nguyên · Giấy phép · Dùng nguyên trạng hay sửa/ghép · Quyết định (dùng / thay / bỏ) · Dòng TASL*. Dưới bảng, trả lời hai câu: giấy phép cho trang sách của nhóm là gì và vì sao; một rủi ro nhóm chưa giải quyết được và cách xử lý. Cử một người giữ thời gian, một người ghi chép, một người phản biện luôn hỏi \"chắc chưa?\".\n\n**Báo cáo (7 phút):** mỗi nhóm đăng ảnh tờ A3 lên bảng chung kèm câu \"Quyết định khó nhất của nhóm là…\". Giảng viên gọi ngẫu nhiên hai nhóm, và gọi ngẫu nhiên cả người trình bày, mỗi nhóm 90 giây; nhóm kế bên đặt một câu phản biện.\n\n**Chấm theo (10 điểm):** giấy phép từng tài nguyên đúng (2đ) · phân biệt đúng tuyển tập với phái sinh cho từng tài nguyên (2đ) · phát hiện bẫy và có phương án thay thế cụ thể (3đ) · giấy phép sản phẩm hợp lý, có cân nhắc người dùng sau (2đ) · dòng TASL đủ bốn thành phần (1đ).\n\n## Thẩm định OER: bằng chứng, giới hạn và bối cảnh\n\n### Bằng chứng: OER có hiệu quả không?\n\nTách câu hỏi \"OER có hiệu quả không?\" thành ba câu nhỏ, như cách ta đã làm ở Bài 1.4.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Ba dòng nghiên cứu về OER và điều chúng cho biết</div>\n  <div style=\"min-width:38rem;display:flex;flex-direction:column;gap:.4rem;font-size:1.02rem;line-height:1.5\">\n    <div style=\"display:flex;gap:.6rem;align-items:stretch\"><div style=\"flex:0 0 9rem;background:rgba(13,148,136,.88);color:#fff;border-radius:.35rem;padding:.5rem .6rem;font-weight:700\">Chi phí</div><div style=\"flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.35rem;padding:.5rem .7rem\">Tiết kiệm chi phí cho người học là kết quả nhất quán nhất trong các tổng quan của Hilton (2016; 2020).</div></div>\n    <div style=\"display:flex;gap:.6rem;align-items:stretch\"><div style=\"flex:0 0 9rem;background:rgba(37,99,235,.85);color:#fff;border-radius:.35rem;padding:.5rem .6rem;font-weight:700\">Kết quả học tập</div><div style=\"flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.35rem;padding:.5rem .7rem\">Nhìn chung <strong>không kém đi</strong>. Phân tích tổng hợp của Clinton &amp; Khan (2019) không thấy khác biệt đáng kể giữa lớp dùng giáo trình mở và giáo trình thương mại.</div></div>\n    <div style=\"display:flex;gap:.6rem;align-items:stretch\"><div style=\"flex:0 0 9rem;background:rgba(124,58,237,.85);color:#fff;border-radius:.35rem;padding:.5rem .6rem;font-weight:700\">Bỏ học, công bằng</div><div style=\"flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.35rem;padding:.5rem .7rem\">Tỉ lệ rút môn thấp hơn ở lớp dùng OER (Clinton &amp; Khan, 2019). Colvard, Watson &amp; Park (2018) ghi nhận cải thiện lớn hơn ở sinh viên thu nhập thấp, học bán thời gian và nhóm thiểu số.</div></div>\n  </div>\n</div>\n```\n\nĐọc kết quả bằng con mắt của Bài 1.4. Phần lớn nghiên cứu là **bán thực nghiệm**: so sánh lớp trước và sau khi đổi sách, hoặc lớp dùng và không dùng, không phân ngẫu nhiên. Giảng viên chủ động chuyển sang OER thường cũng là người đang đổi mới cách dạy, nên khó tách tác động của tài liệu khỏi tác động của người dạy. Một nghiên cứu chặt hơn sẽ phân ngẫu nhiên theo lớp, cho cùng giảng viên dạy cả hai điều kiện, và tính hiệu ứng thiết kế khi đơn vị phân nhóm là lớp chứ không phải từng sinh viên.\n\nKết luận có cơ sở: **bằng chứng mạnh nhất của OER là về tiếp cận và công bằng**, không phải \"tài liệu mở thì dạy giỏi hơn\". Một tài liệu mở mà thiết kế dạy học kém thì vẫn kém. Đó vẫn là bài học của Bài 1.2: công nghệ không dạy, thiết kế dạy học mới dạy.\n\n### Ba câu người thẩm định phải hỏi\n\n1. **Bền vững:** ai trả tiền cập nhật tài nguyên khi dự án tài trợ kết thúc? Nhiều kho OER từng sôi nổi rồi đứng im; tài nguyên vẫn còn nhưng lỗi thời.\n2. **Chất lượng và khả năng tìm thấy:** kho càng lớn càng khó tìm cái tốt. Mở không đồng nghĩa đã được phản biện.\n3. **Mở trên danh nghĩa:** nền tảng gọi là \"mở\", \"free\" nhưng không cho tải, không cho sửa, hoặc dùng NC-ND để giữ người dùng trong nền tảng. Kiểm bằng khung 5R: thiếu Retain hay Revise là chưa mở.\n\n### Bối cảnh Việt Nam và nội dung do AI tạo\n\n**Thư viện Học liệu Mở Việt Nam (VOER)** là một trong những kho OER tiếng Việt sớm nhất. Hãy thẩm định nó như mọi kho khác: hiện cập nhật đến đâu, và giấy phép của từng học liệu là gì.\n\n**Luật Sở hữu trí tuệ (sửa đổi, bổ sung năm 2022)** có một số trường hợp được dùng tác phẩm phục vụ giảng dạy mà không phải xin phép. Các ngoại lệ này **hẹp**: giới hạn phạm vi, không nhằm mục đích thương mại, phải dẫn nguồn, và không được ảnh hưởng tới việc khai thác bình thường của tác phẩm. Lớp học của bạn có thể dựa vào ngoại lệ đó; **một sản phẩm phát hành công khai lên mạng cho nhiều trường dùng thì không**. Đồ án sách AR là sản phẩm phát hành.\n\n**Nội dung do AI tạo** không tự động là OER. Ở nhiều nơi, nội dung thuần do máy sinh có thể không được bảo hộ quyền tác giả, nhưng vẫn còn ba câu hỏi: điều khoản dịch vụ của nhà cung cấp cho phép làm gì, nội dung có chính xác không, và nó có tái tạo gần nguyên một tác phẩm có sẵn không. Phần nào do AI sinh thì ghi vào nhật ký AI (Bài 2.6) và vào bảng đăng ký tài sản.\n\n> [!canh-bao] Gặp một ca pháp lý cụ thể mà bạn không chắc, đừng tự kết luận. Hỏi bộ phận sở hữu trí tuệ của trường. Nguyên tắc an toàn cho đồ án: **không chắc thì không dùng, hoặc xin phép bằng văn bản** và lưu lại thư cho phép trong hồ sơ.\n\n## Luyện tập và tài liệu tham khảo\n\n### Tiến trình buổi học trên lớp (90 phút)\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"min-width:42rem;display:flex;height:3.4rem;border-radius:.45rem;overflow:hidden;color:#fff;font-size:.88rem;text-align:center;line-height:1.2\">\n    <div style=\"flex:8;background:rgba(217,150,40,.9);display:flex;align-items:center;justify-content:center;padding:0 .15rem\">Khởi động<br>word cloud, vote</div>\n    <div style=\"flex:14;background:rgba(37,99,235,.85);display:flex;align-items:center;justify-content:center;padding:0 .15rem\">Giảng 1<br>OER, 5R, CC</div>\n    <div style=\"flex:13;background:rgba(13,148,136,.88);display:flex;align-items:center;justify-content:center;padding:0 .15rem\">Cá nhân<br>thám tử giấy phép</div>\n    <div style=\"flex:8;background:rgba(124,58,237,.85);display:flex;align-items:center;justify-content:center;padding:0 .15rem\">Gameshow</div>\n    <div style=\"flex:12;background:rgba(37,99,235,.7);display:flex;align-items:center;justify-content:center;padding:0 .15rem\">Giảng 2<br>bằng chứng</div>\n    <div style=\"flex:29;background:rgba(13,148,136,.7);display:flex;align-items:center;justify-content:center;padding:0 .15rem\">Nhóm<br>xưởng phối trộn + báo cáo</div>\n    <div style=\"flex:6;background:rgba(120,113,108,.85);display:flex;align-items:center;justify-content:center;padding:0 .15rem\">Tổng kết</div>\n  </div>\n  <div style=\"min-width:42rem;display:flex;font-size:.88rem;opacity:.75;margin:.3rem 0 0\">\n    <div style=\"flex:8\">0′</div><div style=\"flex:14\">8′</div><div style=\"flex:13\">22′</div><div style=\"flex:8\">35′</div><div style=\"flex:12\">43′</div><div style=\"flex:29\">55′</div><div style=\"flex:6\">84′–90′</div>\n  </div>\n</div>\n```\n\nBuổi học không có giải lao, nên hai hoạt động trên điện thoại (thám tử giấy phép, gameshow) được đặt xen giữa hai phần giảng để không ai phải ngồi nghe liền quá 15 phút.\n\n### Cá nhân · Phiếu ra cửa (5 phút)\n\nQuay lại câu hỏi khởi động: nếu được thay từ \"miễn phí\" trong định nghĩa học liệu mở bằng một từ khác, bạn chọn từ gì? Sau đó trả lời ba câu trắc nghiệm nhanh về định nghĩa OER, ghép phái sinh, và bằng chứng. Câu nào lớp đúng dưới 70% sẽ được mở lại ở đầu buổi sau.\n\n### Bài tập về nhà · sản phẩm số: Bảng đăng ký tài sản cho sách AR (nộp cùng Mốc 5)\n\nBạn sẽ lập một **bảng đăng ký tài sản** cho toàn bộ cuốn sách AR của nhóm, kèm **trang \"Nguồn tài nguyên\"** hiển thị được ngay trong sách. Đây là hồ sơ chứng minh điều kiện \"mọi tài nguyên rõ nguồn và giấy phép\" ở buổi bảo vệ.\n\n**Cách làm (gợi ý từng bước):**\n\n1. **Liệt kê mọi tài sản** trong sách: mô hình 3D, texture, ảnh, âm thanh, video, mô phỏng, phông chữ, biểu tượng, đoạn văn trích, và mọi đoạn do AI sinh. Mở từng trang sách và đếm, đừng liệt kê theo trí nhớ.\n2. **Lập bảng tính** với các cột: *Tài sản · Đường dẫn gốc · Giấy phép (kèm đường dẫn) · Ngày kiểm tra · Nguyên trạng hay đã sửa (sửa gì) · Vị trí trong sách · Dòng TASL · Ghi chú rủi ro*.\n3. **Kiểm tra tương thích** cho mọi tài sản đã sửa hoặc ghép, dùng bảng tương thích ở mục 3. Tài sản nào không đạt, ghi phương án thay thế và thực hiện luôn.\n4. **Lưu bản sao (quyền Retain)** của mọi tài sản vào kho đồ án, kèm ảnh chụp trang giấy phép ở ngày bạn kiểm tra, vì giấy phép trên trang có thể đổi.\n5. **Chọn giấy phép cho cuốn sách** của nhóm, viết 100–150 chữ lý giải (vì sao CC BY hay CC BY-SA, hoặc vì sao buộc phải chặt hơn), rồi đặt dòng giấy phép và trang \"Nguồn tài nguyên\" ở cuối sách AR.\n\n**Chấm theo (10 điểm):** đủ tài sản, không bỏ sót (2đ) · giấy phép đúng, có đường dẫn và ngày kiểm tra (2đ) · phân biệt đúng tuyển tập với phái sinh và kiểm tra tương thích đúng (2đ) · dòng TASL đủ bốn thành phần, ghi rõ chỉnh sửa (2đ) · giấy phép sản phẩm hợp lý, lập luận có cân nhắc người dùng sau (1đ) · trang \"Nguồn tài nguyên\" hiển thị được trong sách AR (1đ).\n\n### Nguồn tham khảo\n\n- UNESCO (2019). *Recommendation on Open Educational Resources (OER).* — [unesco.org](https://www.unesco.org/en/legal-affairs/recommendation-open-educational-resources-oer)\n- Wiley, D. *Defining the \"Open\" in Open Content and Open Educational Resources* (khung 5R). — [opencontent.org](https://opencontent.org/definition/)\n- Creative Commons. *About CC Licenses* và *Frequently Asked Questions.* — [creativecommons.org](https://creativecommons.org/share-your-work/cclicenses/)\n- Hilton, J. (2016). Open educational resources and college textbook choices: a review of research on efficacy and perceptions. *Educational Technology Research and Development, 64*(4), 573–590.\n- Hilton, J. (2020). Open educational resources, student efficacy, and user perceptions: a synthesis of research published between 2015 and 2018. *Educational Technology Research and Development, 68*(3), 853–876.\n- Colvard, N. B., Watson, C. E. & Park, H. (2018). The impact of open educational resources on various student success metrics. *International Journal of Teaching and Learning in Higher Education, 30*(2), 262–276.\n- Clinton, V. & Khan, S. (2019). Efficacy of open textbook adoption on learning performance and course withdrawal rates: a meta-analysis. *AERA Open, 5*(3).\n- Quốc hội (2022). *Luật sửa đổi, bổ sung một số điều của Luật Sở hữu trí tuệ.* — [vbpl.vn](https://vbpl.vn/)\n- Thư viện Học liệu Mở Việt Nam (VOER). — [voer.edu.vn](https://voer.edu.vn/)\n",
+     "quiz": {
+      "title": "Kiểm tra Bài 5.7",
+      "passThresholdPct": 70,
+      "questions": [
+       {
+        "key": "oer-dinh-nghia",
+        "type": "mcq",
+        "prompt": "Theo Khuyến nghị UNESCO 2019, điều gì khiến một tài nguyên là tài nguyên giáo dục mở?",
+        "explanation": "Điều kiện là trạng thái pháp lý: thuộc phạm vi công cộng hoặc có giấy phép mở cho dùng lại, chỉnh sửa và phân phối lại. Công khai hay không thu phí chỉ là quyền được xem.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Thuộc phạm vi công cộng hoặc có giấy phép mở cho phép dùng lại, chỉnh sửa và phân phối lại",
+          "isCorrect": true
+         },
+         {
+          "label": "Được đăng công khai trên mạng, ai cũng xem được",
+          "isCorrect": false,
+          "misconception": "cngdtt.free-equals-open"
+         },
+         {
+          "label": "Không thu phí người xem",
+          "isCorrect": false,
+          "misconception": "cngdtt.free-equals-open"
+         },
+         {
+          "label": "Do một cơ quan nhà nước hoặc trường công làm ra",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oer-anh-google",
+        "type": "mcq",
+        "prompt": "Bạn thấy một ảnh mô hình tim rất đẹp trên Google Hình ảnh, không kèm ghi chú gì, và muốn đưa vào sách AR sẽ phát hành công khai. Làm gì là đúng?",
+        "explanation": "Google chỉ là công cụ tìm kiếm. Phải lần tới trang gốc, tìm chủ sở hữu và giấy phép; không tìm được thì không dùng hoặc xin phép bằng văn bản.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Lần tới trang gốc tìm chủ sở hữu và giấy phép; không rõ thì không dùng hoặc xin phép",
+          "isCorrect": true
+         },
+         {
+          "label": "Dùng được, chỉ cần ghi \"Nguồn: Google\"",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         },
+         {
+          "label": "Dùng được vì mục đích giáo dục, không thu tiền",
+          "isCorrect": false,
+          "misconception": "cngdtt.education-exempts-license"
+         },
+         {
+          "label": "Dùng được vì ảnh đã công khai trên mạng",
+          "isCorrect": false,
+          "misconception": "cngdtt.free-equals-open"
+         }
+        ]
+       },
+       {
+        "key": "oer-5r-noi",
+        "type": "matching",
+        "prompt": "Nối mỗi quyền trong khung 5R với việc tương ứng trong đồ án sách AR:",
+        "explanation": "Retain là giữ bản sao của riêng mình; Revise là sửa chính tài nguyên; Remix là ghép nó với tài nguyên khác; Redistribute là phát hành cho người khác.",
+        "points": 2,
+        "pairs": [
+         {
+          "left": "Retain · Giữ",
+          "right": "Lưu tệp .glb vào kho đồ án"
+         },
+         {
+          "left": "Revise · Sửa",
+          "right": "Giảm số đa giác, dịch nhãn sang tiếng Việt"
+         },
+         {
+          "left": "Remix · Phối trộn",
+          "right": "Ghép mô hình tim với hình động dòng máu"
+         },
+         {
+          "left": "Redistribute · Phân phối lại",
+          "right": "Đăng sách AR lên trang của trường"
+         }
+        ]
+       },
+       {
+        "key": "oer-nd-giam-da-giac",
+        "type": "mcq",
+        "prompt": "Một mô hình 3D mang giấy phép CC BY-ND 4.0. Bạn muốn giảm số đa giác để nó chạy mượt trên điện thoại rồi đưa vào sách AR công khai. Có được không?",
+        "explanation": "Giảm đa giác là tạo bản phái sinh, và ND cấm phát hành bản phái sinh. ND vẫn cho dùng nguyên trạng, kể cả trong giáo dục. Lối ra: xin phép tác giả hoặc tìm mô hình khác.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Không, vì đó là bản phái sinh và ND cấm phát hành bản phái sinh",
+          "isCorrect": true
+         },
+         {
+          "label": "Được, vì đã ghi công tác giả",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         },
+         {
+          "label": "Được, vì giảm đa giác không đổi nội dung",
+          "isCorrect": false
+         },
+         {
+          "label": "Không, vì ND cấm mọi việc dùng trong giáo dục",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oer-pho-giay-phep",
+        "type": "ordering",
+        "prompt": "Sắp xếp các giấy phép từ MỞ NHẤT đến ĐÓNG NHẤT:",
+        "explanation": "CC0 gần như phạm vi công cộng; BY chỉ đòi ghi công; SA thêm điều kiện giữ cùng giấy phép; NC-ND cấm cả thương mại lẫn phái sinh.",
+        "points": 2,
+        "sequence": [
+         "CC0",
+         "CC BY",
+         "CC BY-SA",
+         "CC BY-NC-ND"
+        ]
+       },
+       {
+        "key": "oer-tasl",
+        "type": "mcq",
+        "prompt": "Dòng ghi nguồn \"Ảnh: Wikimedia Commons\" thiếu những gì?",
+        "explanation": "Wikimedia Commons là nơi lưu, không phải tác giả. Dòng TASL cần tên tác phẩm, tác giả, đường dẫn gốc và giấy phép.",
+        "points": 1,
+        "options": [
+         {
+          "label": "Tên tác phẩm, tác giả và giấy phép",
+          "isCorrect": true
+         },
+         {
+          "label": "Chỉ thiếu tên tác giả",
+          "isCorrect": false
+         },
+         {
+          "label": "Chỉ thiếu giấy phép",
+          "isCorrect": false
+         },
+         {
+          "label": "Không thiếu gì, vì đã ghi nơi lấy ảnh",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         }
+        ]
+       },
+       {
+        "key": "oer-tuyen-tap",
+        "type": "mcq",
+        "prompt": "Trang 3 của sách AR đặt NGUYÊN TRẠNG một mô hình CC BY-NC; trang 7 đặt NGUYÊN TRẠNG một ảnh CC BY-SA. Hai tài nguyên không bị sửa, không ghép lẫn. Kết luận nào đúng?",
+        "explanation": "Đặt cạnh nhau, nguyên trạng là tuyển tập: mỗi phần giữ giấy phép riêng, không cần tương thích. Xung khắc NC–SA chỉ là vấn đề khi ghép phái sinh.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Được, đây là tuyển tập; mỗi phần giữ giấy phép riêng và ghi nguồn tại chỗ",
+          "isCorrect": true
+         },
+         {
+          "label": "Không được, vì NC và SA xung khắc",
+          "isCorrect": false,
+          "misconception": "cngdtt.collection-as-derivative"
+         },
+         {
+          "label": "Được, nhưng cả cuốn sách phải mang CC BY-NC-SA",
+          "isCorrect": false,
+          "misconception": "cngdtt.collection-as-derivative"
+         },
+         {
+          "label": "Chỉ được nếu sách không phát hành công khai",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oer-sa-cong-by",
+        "type": "mcq",
+        "prompt": "Bạn SỬA một ảnh CC BY-SA để làm texture cho một mô hình CC BY. Mô hình đã dán texture phải mang giấy phép nào?",
+        "explanation": "Ghép lẫn là tác phẩm phái sinh. SA đòi bản phái sinh mang cùng giấy phép BY-SA; BY không cản điều đó.",
+        "points": 2,
+        "options": [
+         {
+          "label": "CC BY-SA",
+          "isCorrect": true
+         },
+         {
+          "label": "CC BY",
+          "isCorrect": false
+         },
+         {
+          "label": "CC BY-NC",
+          "isCorrect": false
+         },
+         {
+          "label": "Tuỳ chọn, miễn ghi công cả hai tác giả",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         }
+        ]
+       },
+       {
+        "key": "oer-sa-nc-xung-khac",
+        "type": "true_false",
+        "prompt": "Có thể ghép lẫn (phái sinh) một tài nguyên CC BY-SA với một tài nguyên CC BY-NC-SA rồi phát hành dưới giấy phép CC BY-NC-SA.",
+        "explanation": "Sai. SA của đầu vào thứ nhất đòi sản phẩm mang đúng CC BY-SA, còn đầu vào thứ hai đòi phi thương mại. Không giấy phép nào thoả cả hai; phải thay một tài nguyên hoặc giữ chúng tách riêng.",
+        "points": 1,
+        "options": [
+         {
+          "label": "Đúng",
+          "isCorrect": false,
+          "misconception": "cngdtt.collection-as-derivative"
+         },
+         {
+          "label": "Sai",
+          "isCorrect": true
+         }
+        ]
+       },
+       {
+        "key": "oer-youtube",
+        "type": "mcq",
+        "prompt": "Một video YouTube để giấy phép mặc định của YouTube. Cách dùng nào an toàn trong sách AR?",
+        "explanation": "Giấy phép mặc định không cho tải về hay sửa. Nhúng bằng trình phát chính thức của YouTube và dẫn đường dẫn là cách dùng nằm trong điều khoản của nền tảng.",
+        "points": 1,
+        "options": [
+         {
+          "label": "Nhúng bằng trình phát của YouTube và dẫn đường dẫn",
+          "isCorrect": true
+         },
+         {
+          "label": "Tải về, cắt đoạn 30 giây cần dùng",
+          "isCorrect": false,
+          "misconception": "cngdtt.education-exempts-license"
+         },
+         {
+          "label": "Tải về, ghi nguồn rồi đăng lại lên trang của trường",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         },
+         {
+          "label": "Tải về, lồng tiếng Việt cho học sinh dễ hiểu",
+          "isCorrect": false,
+          "misconception": "cngdtt.education-exempts-license"
+         }
+        ]
+       },
+       {
+        "key": "oer-chon-giay-phep-sp",
+        "type": "mcq",
+        "prompt": "Trang sách AR của nhóm dùng nguyên trạng ba tài nguyên CC BY và một ảnh CC BY-NC đặt riêng một góc. Nhóm định gắn CC BY-NC cho cả cuốn sách \"cho an toàn\". Lời khuyên tốt nhất là gì?",
+        "explanation": "Đây là tuyển tập: ảnh NC giữ giấy phép riêng, không buộc cả sách thành NC. Gắn NC cho cả sách là đóng bớt quyền của người dùng sau; nên giữ sách mở (CC BY) và ghi rõ ảnh NC là ngoại lệ, hoặc thay ảnh đó.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Giữ sách CC BY, ghi rõ ảnh NC là phần ngoại lệ mang giấy phép riêng, hoặc thay ảnh đó",
+          "isCorrect": true
+         },
+         {
+          "label": "Đồng ý, NC cho cả sách là an toàn nhất",
+          "isCorrect": false,
+          "misconception": "cngdtt.collection-as-derivative"
+         },
+         {
+          "label": "Phải gắn CC BY-NC-ND để không ai sửa được",
+          "isCorrect": false
+         },
+         {
+          "label": "Không cần gắn giấy phép nào cho sách",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oer-bang-chung",
+        "type": "mcq",
+        "prompt": "Kết luận nào về hiệu quả của OER được bằng chứng hiện có ủng hộ tốt nhất?",
+        "explanation": "Tổng quan cho thấy chi phí giảm, kết quả học tập nhìn chung không kém và tỉ lệ rút môn thấp hơn. Phần lớn là bán thực nghiệm nên không đủ để nói OER làm học giỏi hơn.",
+        "points": 2,
+        "options": [
+         {
+          "label": "OER giảm chi phí, kết quả học tập nhìn chung không kém, và có dấu hiệu giảm tỉ lệ rút môn",
+          "isCorrect": true
+         },
+         {
+          "label": "OER làm sinh viên học giỏi hơn rõ rệt, vì có rất nhiều trường đang dùng",
+          "isCorrect": false,
+          "misconception": "cngdtt.hype-as-evidence"
+         },
+         {
+          "label": "OER kém chất lượng hơn giáo trình thương mại",
+          "isCorrect": false
+         },
+         {
+          "label": "Chưa có nghiên cứu nào đo hiệu quả của OER",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oer-ban-thuc-nghiem",
+        "type": "mcq",
+        "prompt": "Một khoa so sánh điểm lớp năm nay (giảng viên tự chuyển sang giáo trình mở) với lớp năm ngoái (giáo trình thương mại) và thấy điểm tăng. Mối đe doạ lớn nhất tới kết luận \"giáo trình mở làm tăng điểm\" là gì?",
+        "explanation": "Giảng viên chủ động chuyển sang OER thường cũng đổi cách dạy, và hai khoá khác nhau về người học. Thiết kế không phân ngẫu nhiên nên không tách được tác động của tài liệu.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Giảng viên đổi tài liệu cũng có thể đã đổi cách dạy, và hai khoá khác nhau về người học",
+          "isCorrect": true
+         },
+         {
+          "label": "Cỡ mẫu một lớp là quá lớn",
+          "isCorrect": false
+         },
+         {
+          "label": "Giáo trình mở không có bài tập",
+          "isCorrect": false
+         },
+         {
+          "label": "Không có mối đe doạ nào vì điểm là số liệu khách quan",
+          "isCorrect": false,
+          "misconception": "cngdtt.hype-as-evidence"
+         }
+        ]
+       },
+       {
+        "key": "oer-ngoai-le-giang-day",
+        "type": "true_false",
+        "prompt": "Vì Luật Sở hữu trí tuệ có ngoại lệ cho giảng dạy, nhóm có thể dùng mọi ảnh trên mạng trong cuốn sách AR phát hành công khai cho nhiều trường, miễn là ghi nguồn.",
+        "explanation": "Sai. Ngoại lệ cho giảng dạy hẹp, gắn với điều kiện về phạm vi, không thương mại và không ảnh hưởng khai thác bình thường của tác phẩm. Một sản phẩm phát hành công khai cần giấy phép, không dựa vào ngoại lệ.",
+        "points": 1,
+        "options": [
+         {
+          "label": "Đúng",
+          "isCorrect": false,
+          "misconception": "cngdtt.education-exempts-license"
+         },
+         {
+          "label": "Sai",
+          "isCorrect": true
+         }
+        ]
+       },
+       {
+        "key": "oer-ai-sinh",
+        "type": "mcq",
+        "prompt": "Nhóm dùng ảnh do một công cụ AI tạo cho một trang sách AR. Cách xử lý nào đúng?",
+        "explanation": "Nội dung do AI tạo không tự động là OER: phải đọc điều khoản dịch vụ, kiểm chứng độ chính xác, kiểm tra không trùng tác phẩm có sẵn, và ghi vào nhật ký AI cùng bảng đăng ký tài sản.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Đọc điều khoản của công cụ, kiểm chứng nội dung, kiểm tra không trùng tác phẩm có sẵn, ghi vào nhật ký AI và bảng đăng ký tài sản",
+          "isCorrect": true
+         },
+         {
+          "label": "Dùng tự do vì AI tạo ra thì không ai giữ bản quyền",
+          "isCorrect": false,
+          "misconception": "cngdtt.free-equals-open"
+         },
+         {
+          "label": "Ghi tác giả là tên nhóm, không cần nhắc tới AI",
+          "isCorrect": false
+         },
+         {
+          "label": "Không bao giờ được dùng bất kỳ nội dung nào do AI tạo",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oer-dang-ky-tai-san",
+        "type": "essay",
+        "prompt": "Chọn ba tài sản thật trong sách AR của nhóm bạn (ít nhất một tài sản đã bị sửa). Với mỗi tài sản, viết: giấy phép (kèm đường dẫn), dùng nguyên trạng hay đã sửa, dòng TASL đầy đủ. Sau đó viết 100–150 từ: giấy phép bạn chọn cho cả cuốn sách là gì, vì sao, và tài sản nào là rủi ro lớn nhất cùng cách xử lý.",
+        "points": 5
+       }
+      ]
+     }
+    },
+    {
+     "title": "Bài 5.8 · Tài nguyên giáo dục mở: lý thuyết cốt lõi trong 30 phút",
+     "durationMin": 30,
+     "description": "Bản giảng lý thuyết cô đọng về tài nguyên giáo dục mở: định nghĩa và khung 5R, sáu giấy phép Creative Commons cùng cách ghi nguồn TASL, quy tắc phối trộn, và bốn câu hỏi thẩm định. Dùng khi chỉ có một tiết lý thuyết; phần thực hành đầy đủ nằm ở Bài 5.7.",
+     "objectives": [
+      "Phát biểu được định nghĩa OER của UNESCO 2019 và dùng khung 5R để phân biệt miễn phí với mở",
+      "Đọc được bốn điều kiện BY, SA, NC, ND và viết dòng ghi nguồn đủ bốn thành phần TASL",
+      "Áp dụng được quy tắc tuyển tập – phái sinh và bảng tương thích để quyết định một lần phối trộn"
+     ],
+     "summary": [
+      "OER là tài liệu thuộc phạm vi công cộng hoặc có giấy phép mở, cho phép giữ, dùng lại, sửa, phối trộn và phân phối lại (5R). Miễn phí chỉ là được xem.",
+      "Bốn điều kiện BY (ghi công), SA (chia sẻ tương tự), NC (phi thương mại), ND (không phái sinh) ghép thành sáu giấy phép CC; CC0 gần như phạm vi công cộng. Ghi nguồn đủ TASL: tên, tác giả, nguồn, giấy phép.",
+      "Đặt cạnh nhau nguyên trạng là tuyển tập, mỗi phần giữ giấy phép riêng. Sửa hoặc ghép lẫn là phái sinh: đầu vào phải tương thích; SA không ghép được với NC, ND không cho phát hành bản sửa.",
+      "Bằng chứng mạnh nhất của OER là về chi phí, tiếp cận và tỉ lệ bỏ học, không phải về việc tài liệu mở tự làm người học giỏi hơn."
+     ],
+     "body": "\n> [!meo] **Bài này là phần lý thuyết cô đọng, khoảng 30 phút.** Nếu lớp có một buổi 90 phút, hãy dùng Bài 5.7: cùng nội dung nhưng có hoạt động thám tử giấy phép, xưởng phối trộn và bảng đăng ký tài sản cho đồ án.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Tiến trình 30 phút</div>\n  <div style=\"min-width:38rem;display:flex;height:3rem;border-radius:.45rem;overflow:hidden;color:#fff;font-size:.9rem;text-align:center;line-height:1.2\">\n    <div style=\"flex:3;background:rgba(217,150,40,.9);display:flex;align-items:center;justify-content:center\">Mở đầu</div>\n    <div style=\"flex:7;background:rgba(37,99,235,.85);display:flex;align-items:center;justify-content:center\">1 · OER và 5R</div>\n    <div style=\"flex:7;background:rgba(13,148,136,.88);display:flex;align-items:center;justify-content:center\">2 · Giấy phép CC</div>\n    <div style=\"flex:7;background:rgba(124,58,237,.85);display:flex;align-items:center;justify-content:center\">3 · Phối trộn</div>\n    <div style=\"flex:4;background:rgba(220,38,38,.85);display:flex;align-items:center;justify-content:center\">4 · Thẩm định</div>\n    <div style=\"flex:2;background:rgba(120,113,108,.85);display:flex;align-items:center;justify-content:center\">Chốt</div>\n  </div>\n  <div style=\"min-width:38rem;display:flex;font-size:.88rem;opacity:.75;margin:.3rem 0 0\">\n    <div style=\"flex:3\">0′</div><div style=\"flex:7\">3′</div><div style=\"flex:7\">10′</div><div style=\"flex:7\">17′</div><div style=\"flex:4\">24′</div><div style=\"flex:2\">28′–30′</div>\n  </div>\n</div>\n```\n\n**Câu hỏi mở đầu (3 phút):** một ảnh rất đẹp trên Google Hình ảnh, không kèm ghi chú gì, có được đưa vào sách AR phát hành công khai không? Hãy giữ câu trả lời của bạn; cuối bài ta quay lại.\n\n## OER là gì: miễn phí chưa phải là mở\n\n**Định nghĩa.** Theo Khuyến nghị UNESCO về OER (2019), văn bản chuẩn mực quốc tế đầu tiên về chủ đề này, tài nguyên giáo dục mở là *tài liệu dạy, học và nghiên cứu ở mọi định dạng, thuộc phạm vi công cộng hoặc được phát hành theo giấy phép mở, cho phép người khác truy cập không mất phí, dùng lại, điều chỉnh, chỉnh sửa và phân phối lại* (diễn đạt lại). Cụm từ OER xuất hiện lần đầu ở một diễn đàn UNESCO năm 2002; Tuyên bố Paris năm 2012 kêu gọi phát hành học liệu do ngân sách công tài trợ theo giấy phép mở.\n\nĐiểm then chốt của định nghĩa là **trạng thái pháp lý**, không phải giá. Một video xem không mất tiền nhưng không cho tải về và sửa thì chưa phải OER.\n\n**Khung 5R** (David Wiley) đo độ mở bằng năm quyền người dùng nhận được:\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Năm quyền: miễn phí thường chỉ trao quyền thứ hai</div>\n  <div style=\"min-width:38rem;display:flex;gap:.4rem;font-size:.98rem;line-height:1.4\">\n    <div style=\"flex:1;background:rgba(37,99,235,.85);color:#fff;border-radius:.4rem;padding:.6rem\"><strong>Retain</strong><br>Giữ, sở hữu bản sao</div>\n    <div style=\"flex:1;background:rgba(37,99,235,.85);color:#fff;border-radius:.4rem;padding:.6rem\"><strong>Reuse</strong><br>Dùng nguyên trạng</div>\n    <div style=\"flex:1;background:rgba(13,148,136,.88);color:#fff;border-radius:.4rem;padding:.6rem\"><strong>Revise</strong><br>Sửa, dịch, rút gọn</div>\n    <div style=\"flex:1;background:rgba(13,148,136,.88);color:#fff;border-radius:.4rem;padding:.6rem\"><strong>Remix</strong><br>Ghép với tài nguyên khác</div>\n    <div style=\"flex:1;background:rgba(124,58,237,.85);color:#fff;border-radius:.4rem;padding:.6rem\"><strong>Redistribute</strong><br>Chia sẻ bản gốc hoặc bản sửa</div>\n  </div>\n</div>\n```\n\n> [!canh-bao] **Ba hiểu nhầm phải gỡ ngay:** *công khai trên mạng thì dùng được* (công khai không phải là được phép); *ghi nguồn là đủ* (ghi nguồn là một điều kiện của giấy phép, không thay được giấy phép); *dùng cho giáo dục thì được miễn* (ngoại lệ giảng dạy trong luật hẹp và có điều kiện, không phủ một sản phẩm phát hành công khai).\n\n## Giấy phép Creative Commons và cách ghi nguồn\n\nBốn điều kiện ghép thành sáu giấy phép, cộng CC0 ở đầu mở nhất.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Phổ giấy phép và bốn điều kiện</div>\n  <div style=\"min-width:40rem;display:flex;gap:.3rem;font-size:.9rem;line-height:1.3;text-align:center;color:#fff;font-weight:600\">\n    <div style=\"flex:1;background:rgba(13,148,136,.88);border-radius:.35rem;padding:.5rem .2rem\">CC0</div>\n    <div style=\"flex:1;background:rgba(13,148,136,.88);border-radius:.35rem;padding:.5rem .2rem\">BY</div>\n    <div style=\"flex:1;background:rgba(37,99,235,.85);border-radius:.35rem;padding:.5rem .2rem\">BY-SA</div>\n    <div style=\"flex:1;background:rgba(217,150,40,.9);border-radius:.35rem;padding:.5rem .2rem\">BY-NC</div>\n    <div style=\"flex:1;background:rgba(217,150,40,.9);border-radius:.35rem;padding:.5rem .2rem\">BY-NC-SA</div>\n    <div style=\"flex:1;background:rgba(220,38,38,.85);border-radius:.35rem;padding:.5rem .2rem\">BY-ND</div>\n    <div style=\"flex:1;background:rgba(220,38,38,.85);border-radius:.35rem;padding:.5rem .2rem\">BY-NC-ND</div>\n  </div>\n  <div style=\"min-width:40rem;display:flex;justify-content:space-between;font-size:.88rem;opacity:.7;margin:.3rem 0 .8rem\"><span>← mở nhất</span><span>đóng nhất →</span></div>\n  <table style=\"min-width:40rem;border-collapse:collapse;width:100%;font-size:1rem;line-height:1.5\">\n    <tbody>\n      <tr><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25);width:5rem\"><strong>BY</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">Ghi công tác giả. Có mặt ở cả sáu giấy phép.</td></tr>\n      <tr><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\"><strong>SA</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">Bản sửa đổi phải mang cùng giấy phép.</td></tr>\n      <tr><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\"><strong>NC</strong></td><td style=\"padding:.45rem;border-bottom:1px solid rgba(127,127,127,.25)\">Không dùng chủ yếu nhằm lợi thế thương mại hay thù lao. Ranh giới mơ hồ.</td></tr>\n      <tr><td style=\"padding:.45rem\"><strong>ND</strong></td><td style=\"padding:.45rem\">Chỉ dùng nguyên trạng; được dùng, nhưng không phát hành bản đã sửa.</td></tr>\n    </tbody>\n  </table>\n</div>\n```\n\nBa lưu ý: **CC0** là lời từ bỏ quyền, không hẳn là giấy phép, nhưng vẫn nên ghi nguồn; **ND không cấm dùng**, chỉ cấm phát hành bản sửa, nên với mô hình 3D phải giảm đa giác thì ND gần như chặn đứng; **NC** mơ hồ ở vùng ranh giới, vì vậy người thiết kế học liệu nên ưu tiên CC BY và CC BY-SA.\n\n**Ghi nguồn TASL:** **T**itle (tên tác phẩm) · **A**uthor (tác giả) · **S**ource (đường dẫn trang gốc) · **L**icense (giấy phép, kèm đường dẫn). Đã sửa thì ghi thêm sửa gì.\n\n> [!vi-du] *\"Gravity and Orbits\"* · PhET Interactive Simulations, University of Colorado Boulder · phet.colorado.edu · CC BY 4.0.\n> Sai thường gặp: \"Nguồn: Internet\", \"Nguồn: Google\", \"Ảnh: Wikimedia Commons\" — chỉ nói nơi để, không nói tác phẩm nào, của ai, được phép gì.\n\n## Phối trộn: tuyển tập hay tác phẩm phái sinh\n\nQuy tắc quan trọng nhất của bài, vì nó quyết định có phải xét tương thích hay không.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"min-width:38rem;display:grid;grid-template-columns:1fr 1fr;gap:.7rem;font-size:1.02rem;line-height:1.55\">\n    <div style=\"border-left:5px solid rgba(13,148,136,.88);background:rgba(13,148,136,.07);border-radius:0 .4rem .4rem 0;padding:.7rem .9rem\"><strong>Tuyển tập</strong><br>Đặt <strong>cạnh nhau, nguyên trạng</strong> (mô hình ở trang 3, ảnh ở trang 4).<br>→ Mỗi phần <strong>giữ giấy phép riêng</strong>, không cần tương thích.</div>\n    <div style=\"border-left:5px solid rgba(220,38,38,.85);background:rgba(220,38,38,.06);border-radius:0 .4rem .4rem 0;padding:.7rem .9rem\"><strong>Tác phẩm phái sinh</strong><br><strong>Sửa hoặc ghép lẫn</strong> (dán ảnh làm texture lên mô hình).<br>→ Đầu vào <strong>phải tương thích</strong>; sản phẩm mang giấy phép chặt nhất.</div>\n  </div>\n</div>\n```\n\nKhi ghép phái sinh, ba quy tắc đủ dùng cho hầu hết tình huống:\n\n1. **CC0 và BY** ghép được với mọi giấy phép không có ND; sản phẩm mang giấy phép chặt hơn trong hai đầu vào.\n2. **SA không ghép được với NC** (kể cả NC-SA): SA đòi sản phẩm mang đúng BY-SA, NC đòi sản phẩm phi thương mại — không giấy phép nào thoả cả hai.\n3. **ND ở bất kỳ đầu vào nào** thì không phát hành được bản phái sinh.\n\n```html\n<div style=\"margin:1.3rem 0;overflow-x:auto\">\n  <div style=\"font-size:1rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;opacity:.65;margin:0 0 .6rem\">Trước khi dùng một tài nguyên: bốn câu hỏi theo thứ tự</div>\n  <div style=\"min-width:36rem;display:flex;flex-direction:column;gap:.35rem;font-size:1.02rem;line-height:1.5\">\n    <div style=\"display:flex;gap:.6rem\"><div style=\"flex:0 0 2.2rem;background:rgba(37,99,235,.85);color:#fff;border-radius:.35rem;display:flex;align-items:center;justify-content:center;font-weight:700\">1</div><div style=\"flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.35rem;padding:.45rem .7rem\"><strong>Giấy phép trên trang gốc là gì?</strong> <span style=\"opacity:.75\">Không tìm thấy ⇒ không dùng, hoặc xin phép bằng văn bản.</span></div></div>\n    <div style=\"display:flex;gap:.6rem\"><div style=\"flex:0 0 2.2rem;background:rgba(37,99,235,.85);color:#fff;border-radius:.35rem;display:flex;align-items:center;justify-content:center;font-weight:700\">2</div><div style=\"flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.35rem;padding:.45rem .7rem\"><strong>Mình dùng nguyên trạng hay sẽ sửa, ghép?</strong> <span style=\"opacity:.75\">Nguyên trạng ⇒ tuyển tập, sang câu 4.</span></div></div>\n    <div style=\"display:flex;gap:.6rem\"><div style=\"flex:0 0 2.2rem;background:rgba(124,58,237,.85);color:#fff;border-radius:.35rem;display:flex;align-items:center;justify-content:center;font-weight:700\">3</div><div style=\"flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.35rem;padding:.45rem .7rem\"><strong>Có ND không, có cặp SA – NC không?</strong> <span style=\"opacity:.75\">Có ⇒ thay tài nguyên hoặc giữ tách riêng.</span></div></div>\n    <div style=\"display:flex;gap:.6rem\"><div style=\"flex:0 0 2.2rem;background:rgba(13,148,136,.88);color:#fff;border-radius:.35rem;display:flex;align-items:center;justify-content:center;font-weight:700\">4</div><div style=\"flex:1;border:1px solid rgba(127,127,127,.3);border-radius:.35rem;padding:.45rem .7rem\"><strong>Đã ghi đủ TASL, kể cả phần đã sửa chưa?</strong> <span style=\"opacity:.75\">Ghi ngay lúc tải, đừng để tới lúc nộp.</span></div></div>\n  </div>\n</div>\n```\n\n> [!ghi-nho] Gặp một tài nguyên NC, đừng vội gắn NC cho **cả** sản phẩm \"cho an toàn\": làm vậy là đóng bớt quyền của mọi người dùng sau bạn. Nếu nó chỉ nằm cạnh các phần khác (tuyển tập), cả sản phẩm vẫn giữ được giấy phép mở hơn.\n\n## Thẩm định: OER mang lại gì, và giới hạn ở đâu\n\n**Bằng chứng.** Các tổng quan của Hilton (2016; 2020) cho thấy tiết kiệm chi phí là kết quả nhất quán nhất, và kết quả học tập nhìn chung không kém đi. Phân tích tổng hợp của Clinton & Khan (2019) không thấy khác biệt đáng kể về kết quả học tập nhưng ghi nhận tỉ lệ rút môn thấp hơn; Colvard, Watson & Park (2018) thấy mức cải thiện lớn hơn ở nhóm sinh viên thu nhập thấp và học bán thời gian. Phần lớn là **bán thực nghiệm**, nên chưa tách được tác động của tài liệu khỏi tác động của người dạy đã chủ động đổi mới. Kết luận có cơ sở: OER mạnh nhất ở **tiếp cận và công bằng**.\n\n**Bốn câu hỏi thẩm định một kho hay dự án OER:** (1) *Bền vững* — ai trả tiền cập nhật khi hết tài trợ? (2) *Chất lượng* — đã được phản biện chưa, tìm có dễ không? (3) *Mở thật hay mở danh nghĩa* — đủ 5R không, hay \"free\" nhưng không cho tải, không cho sửa? (4) *Bối cảnh pháp lý* — sản phẩm phát hành công khai cần giấy phép, không dựa vào ngoại lệ giảng dạy của Luật Sở hữu trí tuệ.\n\n**Nội dung do AI tạo** không tự động là OER: còn điều khoản của nhà cung cấp, độ chính xác, và nguy cơ trùng một tác phẩm có sẵn. Ghi rõ phần nào do AI sinh.\n\n**Quay lại câu mở đầu.** Ảnh trên Google Hình ảnh: *chưa biết được* — Google là công cụ tìm kiếm, không phải chủ sở hữu. Lần tới trang gốc, áp bốn câu hỏi ở mục 3.\n\n## Luyện tập và tài liệu tham khảo\n\n### Tự kiểm tra nhanh (2 phút, cá nhân)\n\nKhông xem lại bài, viết ra: năm chữ R; bốn chữ cái của TASL; và một câu giải thích vì sao CC BY-SA không ghép phái sinh được với CC BY-NC. Sau đó làm phần **Kiểm tra Bài 5.8** bên dưới.\n\n### Bài tập về nhà · sản phẩm số: Thẻ quyết định giấy phép (45 phút)\n\nLàm một **thẻ tra cứu một trang** (ảnh, PDF hoặc trang HTML) để bạn và nhóm đồ án dùng mỗi lần định lấy một tài nguyên của người khác.\n\n**Cách làm (gợi ý từng bước):**\n\n1. Vẽ một sơ đồ quyết định bắt đầu từ câu \"Giấy phép trên trang gốc là gì?\", rẽ nhánh theo bốn câu hỏi ở mục 3, kết thúc ở một trong ba ô: *Dùng*, *Thay tài nguyên*, *Xin phép bằng văn bản*.\n2. Thêm ở góc thẻ một bảng nhỏ sáu giấy phép CC kèm một dòng \"được sửa và phát hành lại không?\".\n3. Thêm khuôn mẫu dòng TASL để điền.\n4. Kiểm thẻ bằng ba tài nguyên thật bạn định dùng cho sách AR; ghi kết quả đi qua sơ đồ của từng tài nguyên dưới thẻ.\n\nCông cụ gợi ý: Canva, Google Slides, hoặc một tệp HTML đơn giản.\n\n**Chấm theo (10 điểm):** sơ đồ đi đúng thứ tự bốn câu hỏi và có đủ ba ô kết thúc (3đ) · phân biệt rõ nhánh tuyển tập với nhánh phái sinh, có quy tắc SA – NC và ND (3đ) · bảng giấy phép đúng (2đ) · ba tài nguyên thật được đưa qua sơ đồ cho kết quả đúng (2đ).\n\n### Nguồn tham khảo\n\n- UNESCO (2019). *Recommendation on Open Educational Resources (OER).* — [unesco.org](https://www.unesco.org/en/legal-affairs/recommendation-open-educational-resources-oer)\n- Wiley, D. *Defining the \"Open\" in Open Content and Open Educational Resources.* — [opencontent.org](https://opencontent.org/definition/)\n- Creative Commons. *About CC Licenses.* — [creativecommons.org](https://creativecommons.org/share-your-work/cclicenses/)\n- Hilton, J. (2020). Open educational resources, student efficacy, and user perceptions: a synthesis of research published between 2015 and 2018. *Educational Technology Research and Development, 68*(3), 853–876.\n- Clinton, V. & Khan, S. (2019). Efficacy of open textbook adoption on learning performance and course withdrawal rates: a meta-analysis. *AERA Open, 5*(3).\n- Colvard, N. B., Watson, C. E. & Park, H. (2018). The impact of open educational resources on various student success metrics. *International Journal of Teaching and Learning in Higher Education, 30*(2), 262–276.\n",
+     "quiz": {
+      "title": "Kiểm tra Bài 5.8",
+      "passThresholdPct": 70,
+      "questions": [
+       {
+        "key": "oerc-dinh-nghia",
+        "type": "mcq",
+        "prompt": "Điểm then chốt trong định nghĩa OER của UNESCO 2019 là gì?",
+        "explanation": "Định nghĩa dựa trên trạng thái pháp lý: phạm vi công cộng hoặc giấy phép mở cho dùng lại, sửa, phân phối lại. Giá bằng không chỉ là quyền được xem.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Thuộc phạm vi công cộng hoặc có giấy phép mở cho dùng lại, chỉnh sửa và phân phối lại",
+          "isCorrect": true
+         },
+         {
+          "label": "Không thu phí người học",
+          "isCorrect": false,
+          "misconception": "cngdtt.free-equals-open"
+         },
+         {
+          "label": "Đăng công khai trên một nền tảng lớn",
+          "isCorrect": false,
+          "misconception": "cngdtt.free-equals-open"
+         },
+         {
+          "label": "Do một trường đại học uy tín biên soạn",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oerc-5r",
+        "type": "ordering",
+        "prompt": "Sắp xếp năm quyền của khung 5R theo đúng thứ tự Wiley trình bày:",
+        "explanation": "Retain (giữ) → Reuse (dùng lại) → Revise (sửa) → Remix (phối trộn) → Redistribute (phân phối lại).",
+        "points": 1,
+        "sequence": [
+         "Retain · Giữ",
+         "Reuse · Dùng lại",
+         "Revise · Sửa",
+         "Remix · Phối trộn",
+         "Redistribute · Phân phối lại"
+        ]
+       },
+       {
+        "key": "oerc-dieu-kien",
+        "type": "matching",
+        "prompt": "Nối mỗi điều kiện của Creative Commons với ý nghĩa:",
+        "explanation": "BY ghi công; SA giữ cùng giấy phép cho bản sửa; NC phi thương mại; ND chỉ dùng nguyên trạng.",
+        "points": 2,
+        "pairs": [
+         {
+          "left": "BY",
+          "right": "Phải ghi công tác giả"
+         },
+         {
+          "left": "SA",
+          "right": "Bản sửa đổi mang cùng giấy phép"
+         },
+         {
+          "left": "NC",
+          "right": "Không dùng chủ yếu nhằm lợi ích thương mại"
+         },
+         {
+          "left": "ND",
+          "right": "Chỉ dùng nguyên trạng, không phát hành bản sửa"
+         }
+        ]
+       },
+       {
+        "key": "oerc-nd",
+        "type": "true_false",
+        "prompt": "Giấy phép CC BY-ND cấm mọi việc dùng tài nguyên trong lớp học.",
+        "explanation": "Sai. ND cho dùng nguyên trạng, kể cả trong giáo dục; nó chỉ cấm phát hành bản đã sửa.",
+        "points": 1,
+        "options": [
+         {
+          "label": "Đúng",
+          "isCorrect": false
+         },
+         {
+          "label": "Sai",
+          "isCorrect": true
+         }
+        ]
+       },
+       {
+        "key": "oerc-tasl",
+        "type": "mcq",
+        "prompt": "Dòng ghi nguồn nào đủ bốn thành phần TASL?",
+        "explanation": "TASL cần tên tác phẩm, tác giả, nguồn (đường dẫn gốc) và giấy phép. Ba lựa chọn còn lại đều thiếu ít nhất hai thành phần.",
+        "points": 2,
+        "options": [
+         {
+          "label": "\"Gravity and Orbits\" · PhET Interactive Simulations, University of Colorado Boulder · phet.colorado.edu · CC BY 4.0",
+          "isCorrect": true
+         },
+         {
+          "label": "Nguồn: Wikimedia Commons",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         },
+         {
+          "label": "Mô phỏng PhET, CC BY",
+          "isCorrect": false
+         },
+         {
+          "label": "Nguồn: Google Hình ảnh",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         }
+        ]
+       },
+       {
+        "key": "oerc-tuyen-tap",
+        "type": "mcq",
+        "prompt": "Trang 2 đặt nguyên trạng một ảnh CC BY-NC, trang 5 đặt nguyên trạng một ảnh CC BY-SA. Có cần xét tương thích giấy phép giữa hai ảnh không?",
+        "explanation": "Không. Đặt cạnh nhau nguyên trạng là tuyển tập; mỗi phần giữ giấy phép riêng và được ghi nguồn tại chỗ.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Không, đây là tuyển tập; mỗi ảnh giữ giấy phép riêng",
+          "isCorrect": true
+         },
+         {
+          "label": "Có, và vì NC với SA xung khắc nên không được dùng cả hai",
+          "isCorrect": false,
+          "misconception": "cngdtt.collection-as-derivative"
+         },
+         {
+          "label": "Có, cả sản phẩm phải mang CC BY-NC-SA",
+          "isCorrect": false,
+          "misconception": "cngdtt.collection-as-derivative"
+         },
+         {
+          "label": "Không, vì dùng cho giáo dục",
+          "isCorrect": false,
+          "misconception": "cngdtt.education-exempts-license"
+         }
+        ]
+       },
+       {
+        "key": "oerc-phai-sinh",
+        "type": "mcq",
+        "prompt": "Bạn sửa một ảnh CC BY rồi ghép lẫn với một sơ đồ CC BY-SA thành một hình mới. Hình mới mang giấy phép gì?",
+        "explanation": "Ghép lẫn là phái sinh; SA đòi sản phẩm mang BY-SA, BY không cản điều đó.",
+        "points": 2,
+        "options": [
+         {
+          "label": "CC BY-SA",
+          "isCorrect": true
+         },
+         {
+          "label": "CC BY",
+          "isCorrect": false
+         },
+         {
+          "label": "Tuỳ chọn, miễn ghi công cả hai",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         },
+         {
+          "label": "Không ghép được",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oerc-sa-nc",
+        "type": "mcq",
+        "prompt": "Vì sao một tài nguyên CC BY-SA không ghép phái sinh được với một tài nguyên CC BY-NC?",
+        "explanation": "SA đòi sản phẩm mang đúng BY-SA (cho phép thương mại), NC đòi sản phẩm phi thương mại. Không giấy phép nào thoả cả hai điều kiện.",
+        "points": 2,
+        "options": [
+         {
+          "label": "SA đòi sản phẩm mang đúng BY-SA, NC đòi phi thương mại; không giấy phép nào thoả cả hai",
+          "isCorrect": true
+         },
+         {
+          "label": "Vì hai tác giả khác nhau",
+          "isCorrect": false
+         },
+         {
+          "label": "Vì NC cấm mọi việc chỉnh sửa",
+          "isCorrect": false
+         },
+         {
+          "label": "Thật ra ghép được, chỉ cần ghi công cả hai",
+          "isCorrect": false,
+          "misconception": "cngdtt.attribution-replaces-license"
+         }
+        ]
+       },
+       {
+        "key": "oerc-bang-chung",
+        "type": "mcq",
+        "prompt": "Kết luận nào về OER được bằng chứng ủng hộ tốt nhất?",
+        "explanation": "Chi phí giảm, học tập nhìn chung không kém, tỉ lệ rút môn thấp hơn. Thiết kế bán thực nghiệm không đủ để nói OER làm học giỏi hơn.",
+        "points": 2,
+        "options": [
+         {
+          "label": "Giảm chi phí, học tập nhìn chung không kém, có dấu hiệu giảm tỉ lệ rút môn",
+          "isCorrect": true
+         },
+         {
+          "label": "OER làm người học giỏi hơn rõ rệt vì nhiều trường dùng",
+          "isCorrect": false,
+          "misconception": "cngdtt.hype-as-evidence"
+         },
+         {
+          "label": "OER kém chất lượng hơn giáo trình thương mại",
+          "isCorrect": false
+         },
+         {
+          "label": "Chưa có nghiên cứu nào",
+          "isCorrect": false
+         }
+        ]
+       },
+       {
+        "key": "oerc-ngoai-le",
+        "type": "true_false",
+        "prompt": "Một cuốn sách AR phát hành công khai cho nhiều trường có thể dùng ảnh bất kỳ trên mạng nhờ ngoại lệ giảng dạy của Luật Sở hữu trí tuệ.",
+        "explanation": "Sai. Ngoại lệ giảng dạy hẹp và có điều kiện; sản phẩm phát hành công khai cần tài nguyên có giấy phép phù hợp hoặc thư cho phép.",
+        "points": 1,
+        "options": [
+         {
+          "label": "Đúng",
+          "isCorrect": false,
+          "misconception": "cngdtt.education-exempts-license"
+         },
+         {
+          "label": "Sai",
+          "isCorrect": true
+         }
+        ]
        }
       ]
      }

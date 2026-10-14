@@ -1,4 +1,5 @@
 import BadgeIcon from "@/components/ui/BadgeIcon";
+import { Award, BookOpen, CheckCircle2, Target } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -8,6 +9,7 @@ import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import { formatDate, toDayKey } from "@/lib/datetime";
+import { continueButtonText, pickContinueLesson } from "@/lib/courseHomeView";
 import MasteryBadge from "@/components/MasteryBadge";
 import HelpTour from "@/components/HelpTour";
 import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from "@/lib/helpTour";
@@ -33,31 +35,69 @@ export default async function LearnerDashboard({
   // cho học viên nên bỏ qua mentor thay vì đoán nội dung phù hợp cho họ.
   const activeRole = getActiveRole(session.user.roles ?? []);
   const isLearnerWorkspace = activeRole === "learner";
-  let shouldShowTour = false;
-  if (isLearnerWorkspace) {
-    const meTour = await prisma.user.findUniqueOrThrow({
-      where: { id: userId },
-      select: { helpTourCompletedByRole: true },
-    });
-    const forceReplay = searchParams?.tour === "1";
-    shouldShowTour =
-      forceReplay ||
-      !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "learner");
-  }
+  const now = new Date();
 
-  const enrollments = await prisma.enrollment.findMany({
-    where: { userId },
-    include: { course: { select: { id: true, slug: true, title: true } } },
-    orderBy: { enrolledAt: "desc" },
-  });
+  // Các truy vấn dưới đây độc lập nhau → chạy song song. Trước đây ~10 await
+  // nối tiếp nên thời gian vào trang = tổng độ trễ DB của từng truy vấn, và đây
+  // là trang người học hạ cánh ngay sau khi đăng nhập.
+  const [
+    meTour,
+    { enrollments, progressByCourse },
+    xpByCourse,
+    allSkillStates,
+    recentBadges,
+    // Việc cần làm (bài tập + quiz chưa nộp, có hạn lẫn không hạn) cho khu "Việc cần làm".
+    todoItems,
+    recentResolved,
+    weeklyBoard,
+  ] = await Promise.all([
+    isLearnerWorkspace
+      ? prisma.user.findUniqueOrThrow({
+          where: { id: userId },
+          select: { helpTourCompletedByRole: true },
+        })
+      : null,
+    // Tiến độ từng khoá phụ thuộc danh sách ghi danh nên 2 bước này nối nhau,
+    // nhưng cả chuỗi vẫn chạy song song với các truy vấn khác.
+    (async () => {
+      const enrollments = await prisma.enrollment.findMany({
+        where: { userId },
+        include: { course: { select: { id: true, slug: true, title: true } } },
+        orderBy: { enrolledAt: "desc" },
+      });
+      const progressByCourse = await Promise.all(
+        enrollments.map((e) => getCourseProgress(userId, e.course.id)),
+      );
+      return { enrollments, progressByCourse };
+    })(),
+    prisma.userCourseProgress.findMany({ where: { userId } }),
+    getLearnerSkillStates(userId, undefined),
+    prisma.userBadge.findMany({
+      where: { userId },
+      orderBy: { earnedAt: "desc" },
+      take: 5,
+      include: { badge: { select: { code: true, name: true } } },
+    }),
+    loadLearnerTodo(userId, now),
+    prisma.learningEvent.findMany({
+      where: { userId, eventType: LearningEventType.MisconceptionResolved },
+      orderBy: { occurredAt: "desc" },
+      take: 5,
+    }),
+    getLeaderboard({
+      scope: "global",
+      period: "weekly",
+      viewerId: userId,
+      limit: 5,
+    }),
+  ]);
 
-  const progressByCourse = await Promise.all(
-    enrollments.map((e) => getCourseProgress(userId, e.course.id)),
-  );
-  const xpByCourse = await prisma.userCourseProgress.findMany({ where: { userId } });
+  const shouldShowTour =
+    meTour != null &&
+    (searchParams?.tour === "1" ||
+      !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "learner"));
+
   const xpMap = new Map(xpByCourse.map((x) => [x.courseId, x]));
-
-  const allSkillStates = await getLearnerSkillStates(userId, undefined);
   const weakSkills = allSkillStates
     .filter((s) => masteryLabel(s.masteryProbability) === "needs_review")
     .slice(0, 5);
@@ -65,34 +105,15 @@ export default async function LearnerDashboard({
     (s) => masteryLabel(s.masteryProbability) === "solid",
   ).length;
 
-  const recentBadges = await prisma.userBadge.findMany({
-    where: { userId },
-    orderBy: { earnedAt: "desc" },
-    take: 5,
-    include: { badge: { select: { code: true, name: true } } },
-  });
-
-  // Việc cần làm (bài tập + quiz chưa nộp, có hạn lẫn không hạn) cho khu "Việc cần làm".
-  const now = new Date();
-  const todoItems = await loadLearnerTodo(userId, now);
-
-  const recentResolved = await prisma.learningEvent.findMany({
-    where: { userId, eventType: LearningEventType.MisconceptionResolved },
-    orderBy: { occurredAt: "desc" },
-    take: 5,
-  });
-
-  const weeklyBoard = await getLeaderboard({
-    scope: "global",
-    period: "weekly",
-    viewerId: userId,
-    limit: 5,
-  });
-
   // "Continue learning" — most-recent in-progress enrollment with lastLessonId.
   const continueTarget = enrollments
     .map((e, i) => ({ e, p: progressByCourse[i]! }))
     .filter((x) => x.e.lastLessonId && x.p.courseCompletionPct < 100)[0];
+
+  // Cùng quy tắc với trang khoá: bài vừa mở đã xong thì sang bài chưa học đầu tiên.
+  const continueLesson = continueTarget
+    ? pickContinueLesson(continueTarget.e.lastLessonId, continueTarget.p.modules.flatMap((m) => m.lessons))
+    : null;
 
   const totalLessons = progressByCourse.reduce((s, p) => s + p.totalLessons, 0);
   const completedLessons = progressByCourse.reduce((s, p) => s + p.completedLessons, 0);
@@ -132,10 +153,10 @@ export default async function LearnerDashboard({
       )}
 
       {/* Continue learning hero CTA */}
-      {continueTarget && (
+      {continueTarget && continueLesson && (
         <Link
-          href={`/learn/${continueTarget.e.course.slug}/lessons/${continueTarget.e.lastLessonId}`}
-          className="group relative mt-6 block overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover transition-transform hover:-translate-y-0.5 sm:p-8"
+          href={`/learn/${continueTarget.e.course.slug}/lessons/${continueLesson.id}`}
+          className="group relative mt-6 block overflow-hidden rounded-2xl bg-brand-gradient p-4 text-white shadow-card-hover transition-transform hover:-translate-y-0.5 sm:p-5"
         >
           <div
             className="absolute inset-0 bg-hero-grid opacity-20"
@@ -147,8 +168,11 @@ export default async function LearnerDashboard({
               <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide backdrop-blur">
                 Tiếp tục học
               </span>
-              <p className="mt-3 h-display text-2xl font-bold sm:text-3xl">
+              <p className="mt-2 h-display text-xl font-bold sm:text-2xl">
                 {continueTarget.e.course.title}
+              </p>
+              <p className="mt-1 text-sm font-medium">
+                {continueButtonText("continue", continueLesson?.title ?? null)}
               </p>
               <div className="mt-3 flex items-center gap-3">
                 <div className="h-2 w-48 overflow-hidden rounded-full bg-white/25">
@@ -162,7 +186,7 @@ export default async function LearnerDashboard({
                 </span>
               </div>
             </div>
-            <span className="text-3xl transition-transform group-hover:translate-x-2">
+            <span className="text-2xl transition-transform group-hover:translate-x-2">
               →
             </span>
           </div>
@@ -171,31 +195,30 @@ export default async function LearnerDashboard({
 
       {/* KPI cards */}
       <div data-tour="help-tour-kpis" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
+        {/* Bốn thẻ cùng một kiểu: cùng màu số, cùng có biểu tượng. Trước đây chỉ
+            một thẻ có biểu tượng và số "Chủ đề vững" tô cam, nên sinh viên đọc
+            thành cảnh báo dù đó là con số tốt. */}
         <Stat
-          label="Khóa đã enroll"
+          label="Khoá đã đăng ký"
           value={enrollments.length}
-          tone="brand"
-          icon=""
+          icon={<BookOpen size={18} aria-hidden />}
           href="/me/enrollments"
         />
         <Stat
           label="Bài đã hoàn thành"
           value={`${completedLessons}/${totalLessons}`}
-          tone="success"
-          icon="✓"
+          icon={<CheckCircle2 size={18} aria-hidden />}
         />
         <Stat
           label="Chủ đề vững"
           value={masteredSkills}
-          tone="accent"
-          icon=""
+          icon={<Target size={18} aria-hidden />}
           href="/me/skills"
         />
         <Stat
           label="Huy hiệu"
           value={recentBadges.length}
-          tone="brand"
-          icon=""
+          icon={<Award size={18} aria-hidden />}
           href="/me/badges"
         />
       </div>
@@ -208,14 +231,14 @@ export default async function LearnerDashboard({
           {/* Enrolled courses */}
           <section className="card order-1 lg:order-none">
             <header className="flex items-baseline justify-between border-b border-token pb-3">
-              <h2 className="text-base font-semibold">Khóa đã đăng ký</h2>
+              <h2 className="text-base font-semibold">Khoá đã đăng ký</h2>
               <span className="text-xs text-faint">{enrollments.length}</span>
             </header>
             {enrollments.length === 0 ? (
               <p className="mt-4 text-sm text-muted">
-                Chưa có khóa nào.{" "}
+                Chưa có khoá nào.{" "}
                 <Link href="/catalog" className="link">
-                  Vào catalog
+                  Vào danh mục khoá học
                 </Link>
                 .
               </p>
@@ -356,8 +379,8 @@ export default async function LearnerDashboard({
           </section>
         </div>
         <div className="contents lg:flex lg:flex-col lg:gap-8">
-          {/* Lịch tuần/tháng (cột phải, cạnh Khóa đã đăng ký): đánh dấu hạn nộp bài tập, chip chi tiết bên dưới.
-              self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khóa đã đăng ký. */}
+          {/* Lịch tuần/tháng (cột phải, cạnh Khoá đã đăng ký): đánh dấu hạn nộp bài tập, chip chi tiết bên dưới.
+              self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khoá đã đăng ký. */}
           <div className="order-2 space-y-8 lg:order-none">
             <CalendarLoader userId={userId} audience="learner" />
             {/* Việc cần làm (top 5 việc có hạn, thống kê, khu không hạn, xem đủ + phân trang): ngay dưới lịch để
@@ -476,27 +499,19 @@ export default async function LearnerDashboard({
 function Stat({
   label,
   value,
-  tone,
   icon,
   href,
 }: {
   label: string;
   value: string | number;
-  tone: "brand" | "success" | "accent" | "danger";
-  icon: string;
+  icon: React.ReactNode;
   href?: string;
 }) {
-  const toneClass = {
-    brand: "text-brand-600",
-    success: "text-success-600",
-    accent: "text-accent-600",
-    danger: "text-danger-600",
-  }[tone];
   const inner = (
     <>
-      <div className="flex items-baseline justify-between">
-        <span className="text-xl">{icon}</span>
-        <span className={`h-display text-2xl font-bold tabular-nums ${toneClass}`}>
+      <div className="flex items-center justify-between">
+        <span className="text-brand-600">{icon}</span>
+        <span className="h-display text-2xl font-bold tabular-nums text-brand-600">
           {value}
         </span>
       </div>

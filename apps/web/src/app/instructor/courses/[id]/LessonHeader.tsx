@@ -9,6 +9,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 import LessonMetaBar from "./LessonMetaBar";
+import type { LanguageSkill } from "@feedbackme/shared-types";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -42,6 +43,8 @@ export default function LessonHeader({
   modules,
   courseSlug,
   hideUntaggedWarning = false,
+  languageMode = false,
+  languageSkill = null,
   titleAside,
 }: {
   lessonId: string;
@@ -60,6 +63,8 @@ export default function LessonHeader({
   modules?: ModuleRef[];
   courseSlug?: string;
   hideUntaggedWarning?: boolean;
+  languageMode?: boolean;
+  languageSkill?: LanguageSkill | null;
   /** Góc phải hàng tiêu đề (ở trang sửa bài: công tắc Sửa/Xem trước). */
   titleAside?: React.ReactNode;
 }) {
@@ -224,6 +229,8 @@ export default function LessonHeader({
           siblingLessonIds={siblingLessonIds}
           modules={modules}
           hideUntaggedWarning={hideUntaggedWarning}
+          languageMode={languageMode}
+          languageSkill={languageSkill}
         />
         {description && (
           <SafeHtml

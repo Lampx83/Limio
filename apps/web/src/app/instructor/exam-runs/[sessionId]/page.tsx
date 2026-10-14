@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canViewExamRound } from "@feedbackme/core-lms";
+import { canViewSession } from "@feedbackme/core-lms";
 import { formatDateTime } from "@/lib/datetime";
 import { auth } from "@/lib/auth";
 import ResultsPanel from "../../courses/[id]/exams/[examId]/ResultsPanel";
@@ -56,7 +56,12 @@ export default async function ExamRunPage({
   // có thể không phải giảng viên của khoá — trước đây họ nhận 404 dù vừa bấm từ
   // chính trang quản lý đợt).
   const isCourseInstructor = (run.exam.course?.instructors.length ?? 0) > 0;
-  if (!isCourseInstructor && !(await canViewExamRound(session.user.id, run.roundId))) notFound();
+  // Buổi đơn (không đợt) quyền theo khoá của đề; ca trong đợt quyền theo đợt.
+  if (
+    !isCourseInstructor &&
+    !(await canViewSession(session.user.id, { roundId: run.roundId, examId: run.exam.id }))
+  )
+    notFound();
 
   // A6.5 — ResultsPanel bên dưới giả định ExamQuestion/ExamAnswer (câu nào
   // lớp sai nhiều, %điểm theo câu...) — vấn đáp AI không có gì trong số đó
@@ -70,7 +75,7 @@ export default async function ExamRunPage({
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:px-6">
       {/* Quay về đúng nơi đã đi từ đó: kỳ thi chính thức thì về trang quản lý đợt. */}
-      {run.scale === "formal" ? (
+      {run.scale === "formal" && run.roundId ? (
         <Link
           href={`/instructor/exam-rounds/${run.roundId}?tab=results`}
           className="text-sm text-faint hover:underline"

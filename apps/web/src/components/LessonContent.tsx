@@ -3,10 +3,14 @@
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { ExternalLink, Globe } from "lucide-react";
+import { Download, ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
+import { formatBytes } from "@/lib/formatBytes";
 import SafeHtml from "./SafeHtml";
+import AudioLessonPlayer from "./AudioLessonPlayer";
+import VocabListView, { type VocabViewItem } from "./VocabListView";
+import DialogueView, { type DialogueViewTurn } from "./DialogueView";
 
 const ScormPlayer = dynamic(() => import("./ScormPlayer"), { ssr: false });
 const LtiLaunch = dynamic(() => import("./LtiLaunch"), { ssr: false });
@@ -51,6 +55,14 @@ interface VideoPayload {
   transcriptUrl?: string;
   durationSec?: number;
   cuepoints?: Array<{ atSec: number; quizId: string }>;
+}
+interface AudioPayload {
+  url: string;
+  title?: string;
+  caption?: string;
+  transcript?: string;
+  showTranscript?: boolean;
+  durationSec?: number;
 }
 interface MarkdownPayload {
   body: string;
@@ -250,6 +262,48 @@ function ContentBlock({
         </div>
       );
     }
+    case "audio": {
+      const p = payload as AudioPayload;
+      return (
+        <AudioLessonPlayer
+          url={p.url}
+          title={p.title}
+          caption={p.caption}
+          transcript={p.transcript}
+          showTranscript={p.showTranscript}
+        />
+      );
+    }
+    case "vocab_list": {
+      const p = (payload ?? {}) as {
+        title?: string;
+        readingLabel?: string;
+        items?: VocabViewItem[];
+      };
+      const items = Array.isArray(p.items) ? p.items : [];
+      if (items.length === 0) return null;
+      return <VocabListView title={p.title} readingLabel={p.readingLabel} items={items} />;
+    }
+    case "dialogue": {
+      const p = (payload ?? {}) as {
+        title?: string;
+        caption?: string;
+        readingLabel?: string;
+        audioUrl?: string;
+        turns?: DialogueViewTurn[];
+      };
+      const turns = Array.isArray(p.turns) ? p.turns : [];
+      if (turns.length === 0) return null;
+      return (
+        <DialogueView
+          title={p.title}
+          caption={p.caption}
+          readingLabel={p.readingLabel}
+          audioUrl={p.audioUrl}
+          turns={turns}
+        />
+      );
+    }
     case "markdown": {
       const p = payload as MarkdownPayload;
       return (
@@ -314,10 +368,18 @@ function ContentBlock({
       return (
         <a
           href={p.url}
-          download
+          // File tự upload có tên ngẫu nhiên trên server — `download` đặt lại
+          // tên gốc khi lưu (chỉ có tác dụng với URL cùng origin).
+          download={p.filename}
           className="inline-flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-sm font-medium transition-all hover:border-brand-200 hover:bg-brand-soft hover:text-brand-700"
         >
-          {p.filename}
+          <Download className="h-4 w-4 shrink-0" aria-hidden />
+          <span className="break-all">{p.filename}</span>
+          {typeof p.sizeBytes === "number" && (
+            <span className="shrink-0 text-xs font-normal text-muted">
+              · {formatBytes(p.sizeBytes)}
+            </span>
+          )}
         </a>
       );
     }

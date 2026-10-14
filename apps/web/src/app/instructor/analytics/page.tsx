@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isResearcher } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import CourseFilterSelect from "@/components/CourseFilterSelect";
 
 export const dynamic = "force-dynamic";
 
@@ -43,11 +43,15 @@ export default async function InstructorAnalyticsPage({
     );
   }
 
-  const selectedId =
+  const courseFilter =
     searchParams?.course && ownedCourses.some((c) => c.id === searchParams.course)
       ? searchParams.course
-      : ownedCourses[0]!.id;
-  const selected = ownedCourses.find((c) => c.id === selectedId)!;
+      : null;
+  // Không chọn khoá = gộp mọi khoá đang dạy. CSV chỉ xuất khi chọn đúng một khoá.
+  const scopeIds = courseFilter ? [courseFilter] : ownedCourses.map((c) => c.id);
+  const selected = courseFilter
+    ? ownedCourses.find((c) => c.id === courseFilter)!
+    : null;
 
   // ── Aggregate metrics ─────────────────────────────────────────────────
   const trendCutoff = new Date(Date.now() - TREND_DAYS * 24 * 3600 * 1000);
@@ -66,31 +70,37 @@ export default async function InstructorAnalyticsPage({
   ] = await Promise.all([
     prisma.enrollment.groupBy({
       by: ["status"],
-      where: { courseId: selectedId },
+      where: { courseId: { in: scopeIds } },
       _count: true,
     }),
     prisma.lesson.findMany({
-      where: { module: { courseId: selectedId } },
-      orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
+      where: { module: { courseId: { in: scopeIds } } },
+      orderBy: [
+        { module: { course: { title: "asc" } } },
+        { module: { orderIndex: "asc" } },
+        { orderIndex: "asc" },
+      ],
       select: {
         id: true,
         title: true,
-        module: { select: { title: true } },
+        module: {
+          select: { title: true, course: { select: { title: true } } },
+        },
       },
     }),
     prisma.assignmentSubmission.groupBy({
       by: ["status"],
-      where: { assignment: { lesson: { module: { courseId: selectedId } } } },
+      where: { assignment: { lesson: { module: { courseId: { in: scopeIds } } } } },
       _count: true,
     }),
     prisma.quizAttempt.aggregate({
-      where: { quiz: { courseId: selectedId }, status: "submitted" },
+      where: { quiz: { courseId: { in: scopeIds } }, status: "submitted" },
       _count: true,
       _avg: { scorePct: true },
     }),
     prisma.learningEvent.findMany({
       where: {
-        courseId: selectedId,
+        courseId: { in: scopeIds },
         occurredAt: { gte: sevenDaysAgo },
         eventType: { in: ACTIVITY_EVENT_TYPES },
       },
@@ -99,18 +109,18 @@ export default async function InstructorAnalyticsPage({
     }),
     prisma.learningEvent.findMany({
       where: {
-        courseId: selectedId,
+        courseId: { in: scopeIds },
         occurredAt: { gte: trendCutoff },
         eventType: { in: ACTIVITY_EVENT_TYPES },
       },
       select: { occurredAt: true, eventType: true },
     }),
     prisma.learningEvent.findMany({
-      where: { courseId: selectedId, eventType: "lesson.viewed" },
+      where: { courseId: { in: scopeIds }, eventType: "lesson.viewed" },
       select: { userId: true, payload: true },
     }),
     prisma.learningEvent.findMany({
-      where: { courseId: selectedId, eventType: "lesson.completed" },
+      where: { courseId: { in: scopeIds }, eventType: "lesson.completed" },
       select: { userId: true, payload: true },
     }),
     prisma.aiUsageLog.findMany({
@@ -221,21 +231,23 @@ export default async function InstructorAnalyticsPage({
         </p>
       </header>
 
-      {/* Course picker */}
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-faint">
-          Khoá:
-        </span>
-        {ownedCourses.map((c) => (
-          <Link
-            key={c.id}
-            href={`/instructor/analytics?course=${c.id}`}
-            className={c.id === selectedId ? "chip-brand" : "chip"}
-            prefetch={false}
-          >
-            {c.title}
-          </Link>
-        ))}
+      {/* Course filter */}
+      <div className="mt-6">
+        <CourseFilterSelect
+          value={courseFilter ?? ""}
+          options={[
+            {
+              value: "",
+              label: "Tất cả khoá",
+              href: "/instructor/analytics",
+            },
+            ...ownedCourses.map((c) => ({
+              value: c.id,
+              label: c.title,
+              href: `/instructor/analytics?course=${c.id}`,
+            })),
+          ]}
+        />
       </div>
 
       {/* KPI */}
@@ -256,7 +268,7 @@ export default async function InstructorAnalyticsPage({
         <Kpi
           label={`AI cost ${TREND_DAYS}d`}
           value={`$${aiCost.toFixed(4)}`}
-          sub={`${aiTokens.toLocaleString()} tokens`}
+          sub={`${aiTokens.toLocaleString()} tokens · toàn tài khoản`}
           tone="brand"
         />
       </section>
@@ -387,7 +399,7 @@ export default async function InstructorAnalyticsPage({
                     <td className="px-4 py-3 align-top">
                       <p className="font-medium">{l.title}</p>
                       <p className="mt-0.5 text-xs text-faint">
-                        {l.module.title}
+                        {l.module.course.title} · {l.module.title}
                       </p>
                     </td>
                     <td className="px-4 py-3 text-right align-top tabular-nums">
@@ -429,7 +441,8 @@ export default async function InstructorAnalyticsPage({
         </p>
       </section>
 
-      {/* Exports / Reports */}
+      {/* Exports / Reports — mỗi file CSV là của một khoá, nên chỉ hiện khi đã chọn khoá */}
+      {selected ? (
       <section className="mt-10">
         <h2 className="text-base font-semibold">Báo cáo (CSV)</h2>
         <p className="text-xs text-faint">
@@ -437,32 +450,37 @@ export default async function InstructorAnalyticsPage({
         </p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <ExportCard
-            href={`/api/instructor/courses/${selectedId}/analytics/exports/enrollments`}
+            href={`/api/instructor/courses/${selected.id}/analytics/exports/enrollments`}
             title="Enrollments"
             desc="Danh sách enroll, trạng thái, ngày ghi danh / hoàn thành."
           />
           <ExportCard
-            href={`/api/instructor/courses/${selectedId}/analytics/exports/lesson-progress`}
+            href={`/api/instructor/courses/${selected.id}/analytics/exports/lesson-progress`}
             title="Lesson progress"
             desc="Tiến độ từng học viên trên từng bài (viewed / completed)."
           />
           <ExportCard
-            href={`/api/instructor/courses/${selectedId}/analytics/exports/quiz-gradebook`}
+            href={`/api/instructor/courses/${selected.id}/analytics/exports/quiz-gradebook`}
             title="Quiz gradebook"
             desc="Điểm quiz của mọi học viên × quiz."
           />
           <ExportCard
-            href={`/api/instructor/courses/${selectedId}/analytics/exports/assignment-gradebook`}
+            href={`/api/instructor/courses/${selected.id}/analytics/exports/assignment-gradebook`}
             title="Assignment gradebook"
             desc="Điểm assignment + feedback đã chấm."
           />
           <ExportCard
-            href={`/api/instructor/courses/${selectedId}/analytics/exports/gamification`}
+            href={`/api/instructor/courses/${selected.id}/analytics/exports/gamification`}
             title="Gamification"
             desc="XP, level, streak và badge của từng học viên."
           />
         </div>
       </section>
+      ) : (
+        <p className="mt-10 text-xs text-faint">
+          Chọn một khoá để xuất báo cáo CSV.
+        </p>
+      )}
     </main>
   );
 }

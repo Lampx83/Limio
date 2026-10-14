@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { Prisma, prisma } from "@feedbackme/db";
+import { listLiveRuntimeRefIds } from "@feedbackme/core-lms";
 import { requireFeature } from "@/lib/session";
 import { generateUniqueWhiteboardCode } from "@/lib/whiteboard";
 
@@ -63,8 +64,10 @@ export async function GET() {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
+  // Whiteboard sinh từ slide Limio-Live nằm trong lịch sử bài giảng, không ở đây.
+  const liveRefIds = await listLiveRuntimeRefIds(userId, prisma);
   const boards = await prisma.whiteboard.findMany({
-    where: { ownerId: userId },
+    where: { ownerId: userId, id: { notIn: liveRefIds } },
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {

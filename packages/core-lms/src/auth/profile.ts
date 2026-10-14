@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prisma } from "@feedbackme/db";
+import { prisma, type Prisma } from "@feedbackme/db";
 import type { DbClient } from "./tokens";
 
 // Accept either an absolute https?: URL or an internal relative path
@@ -46,11 +46,7 @@ export async function updateProfile(
   await db.user.update({ where: { id: userId }, data });
 }
 
-/** Foundational GDPR export — all data tied to the user, in JSON. Never includes passwordHash. */
-export async function exportProfile(userId: string, db: DbClient = prisma) {
-  return db.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: {
+const EXPORT_SELECT = {
       id: true,
       email: true,
       emailVerifiedAt: true,
@@ -70,17 +66,97 @@ export async function exportProfile(userId: string, db: DbClient = prisma) {
         },
       },
       enrollments: true,
+      // LANG G3 — mức nắm vững (BKT) của chính người dùng theo từng chủ đề: dữ liệu
+      // học tập nhạy cảm (§5 nguyên tắc 4) và là nền của hồ sơ 4 kỹ năng. Trước đây
+      // bản xuất bỏ sót nó.
+      skillStates: {
+        select: {
+          masteryProbability: true,
+          attempts: true,
+          correctCount: true,
+          lastUpdatedAt: true,
+          skill: { select: { code: true, name: true } },
+        },
+        orderBy: { lastUpdatedAt: "asc" },
+      },
+      // LANG G4 — lịch ôn flashcard (lần ôn, độ dễ, hạn kế tiếp) của chính người dùng.
+      flashcardStates: {
+        select: {
+          itemId: true,
+          easeFactor: true,
+          intervalDays: true,
+          repetitions: true,
+          lapses: true,
+          dueAt: true,
+          introducedAt: true,
+          lastReviewedAt: true,
+          lastRating: true,
+          course: { select: { slug: true } },
+        },
+        orderBy: { introducedAt: "asc" },
+      },
+      // LANG G6 — góp ý bài viết do AI sinh cho chính người dùng (kèm trích đoạn bài viết của họ): dữ liệu
+      // học tập riêng tư gửi tới nhà cung cấp AI, nên phải nằm trong bản xuất.
+      writingFeedbacksReceived: {
+        select: {
+          id: true,
+          courseId: true,
+          status: true,
+          model: true,
+          body: true,
+          generatedAt: true,
+          reviewedAt: true,
+          reviewerNote: true,
+        },
+        orderBy: { generatedAt: "asc" },
+      },
+      // LANG G7 — lời nói của người dùng đã được máy chuyển thành chữ (kèm link file ghi âm) và góp ý bài nói.
+      submissionTranscripts: {
+        select: { id: true, courseId: true, submissionId: true, audioUrl: true, language: true, text: true, durationSec: true, createdAt: true },
+        orderBy: { createdAt: "asc" },
+      },
+      speakingFeedbacksReceived: {
+        select: {
+          id: true,
+          courseId: true,
+          status: true,
+          model: true,
+          body: true,
+          generatedAt: true,
+          reviewedAt: true,
+          reviewerNote: true,
+        },
+        orderBy: { generatedAt: "asc" },
+      },
       verificationTokens: { select: { id: true, purpose: true, createdAt: true, consumedAt: true } },
       portfolio: {
         select: {
           slug: true,
           isPublic: true,
           headline: true,
+          about: true,
           createdAt: true,
           updatedAt: true,
           items: { select: { submissionId: true, note: true, createdAt: true } },
+          courses: { select: { certificateId: true, createdAt: true } },
         },
       },
-    },
+      // Nộp theo nhóm — nhóm đang tham gia trong từng khoá. Lịch sử vào/rời nằm
+      // trong LearningEvent (course.team.*), đã có ở bản xuất hoạt động.
+      courseTeamMemberships: {
+        select: {
+          joinedAt: true,
+          team: { select: { name: true, course: { select: { slug: true, title: true } } } },
+        },
+      },
+} satisfies Prisma.UserSelect;
+
+export type ExportedProfile = Prisma.UserGetPayload<{ select: typeof EXPORT_SELECT }>;
+
+/** Foundational GDPR export — all data tied to the user, in JSON. Never includes passwordHash. */
+export async function exportProfile(userId: string, db: DbClient = prisma): Promise<ExportedProfile> {
+  return db.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: EXPORT_SELECT,
   });
 }

@@ -1,0 +1,74 @@
+BÀI TẬP NHÓM GIỮA KỲ: LAWS OF UX TRÊN LIMIO
+
+Làm theo nhóm 4–5 người. Sản phẩm cuối cùng: một bài thuyết trình 10 phút trước lớp.
+
+BÀI TẬP NÀY LÀ GÌ?
+
+Laws of UX (lawsofux.com) là một bộ 30 quy luật về cách con người nhìn, nhớ và bấm trên màn hình. Ví dụ: "thứ gì khác hẳn xung quanh thì dễ được chú ý", hay "càng nhiều lựa chọn thì càng lâu quyết định".
+
+Nhóm sẽ tìm hiểu 3 quy luật, rồi dùng chúng để "soi" một trang trên Limio — chính hệ thống các bạn đang học. Trang đó đã làm tốt chỗ nào, chưa tốt chỗ nào? Nếu chưa tốt thì sửa thế nào? Cách sửa được vẽ tay trên giấy (paper prototype).
+
+NHÓM CẦN LÀM 5 VIỆC
+
+1. Tìm hiểu 3 quy luật do giảng viên chia cho nhóm. Với mỗi quy luật, trả lời: Nó nói gì? Ai tìm ra? Cho một ví dụ ngoài đời thường. Nó có luôn đúng không?
+
+2. Chọn một trang của sinh viên trên Limio. Ví dụ: trang tổng quan, trang bài học, trang nộp bài, trang làm bài kiểm tra, trang xem điểm và nhận xét, trang huy hiệu và bảng xếp hạng.
+
+3. Soi trang đó bằng 3 quy luật. Chụp màn hình, khoanh đỏ chỗ làm tốt và chỗ chưa tốt. Viết ra điều nhóm đoán. Ví dụ: "Nhãn 'Chưa nộp' màu xám mờ, chắc nhiều bạn không để ý mình còn bài chưa nộp."
+
+4. Hỏi 5 bạn sinh viên (không phải thành viên nhóm) dùng thử trang đó. Điều nhóm đoán có đúng không? Đoán sai cũng không sao — cứ trình bày đúng như những gì các bạn ấy làm và nói.
+
+5. Vẽ lại bằng giấy (paper prototype).
+• Mỗi màn hình vẽ trên một tờ giấy, khung bằng màn hình điện thoại. Vẽ bằng bút, không cần đẹp, chỉ cần đọc được.
+• Phần thay đổi khi bấm (hộp thông báo, menu xổ xuống…) vẽ trên mẩu giấy riêng để đặt chồng lên.
+• Vẽ 3–5 màn hình — đủ để người thử đi một mạch từ đầu tới cuối việc cần làm, và sửa đúng những chỗ nhóm đã tìm ra ở bước 3–4.
+• Cho ít nhất 2 bạn thử: bạn thử dùng ngón tay "bấm" lên giấy, một thành viên đóng vai "máy tính" — đổi tờ giấy theo chỗ bạn ấy bấm. Ghi lại chỗ bạn ấy còn lúng túng.
+• Chụp ảnh bản giấy để đưa vào slide, đặt cạnh ảnh chụp Limio hiện tại.
+
+THUYẾT TRÌNH: 10 PHÚT + 5 PHÚT TRẢ LỜI CÂU HỎI
+
+Gợi ý khoảng 8 slide:
+• Slide 1: Tên nhóm, thành viên, trang Limio đã chọn.
+• Slide 2–4: Ba quy luật — mỗi quy luật một slide: nói gì, ví dụ đời thường, có luôn đúng không.
+• Slide 5: Trang Limio hiện tại — ảnh chụp, khoanh chỗ tốt và chỗ chưa tốt.
+• Slide 6: Kết quả hỏi 5 bạn — điều nhóm đoán đúng hay sai?
+• Slide 7: Bản giấy — trước (Limio hiện tại) và sau (ảnh chụp từng màn hình giấy), kèm kết quả 2 bạn thử.
+• Slide 8: Điều nhóm học được.
+• Phụ lục (slide cuối, không cần trình chiếu): bảng tóm tắt 5 bạn được hỏi (bạn số mấy, đã làm gì, đã nói gì) và 2 bạn đã bấm thử bản giấy.
+
+Mang bản giấy thật lên lớp: trong lúc thuyết trình, nhóm mời một bạn trong lớp lên "bấm thử" 1 phút.
+Mọi thành viên đều phải nói trong buổi thuyết trình.
+
+NỘP GÌ, KHI NÀO
+
+Bài tập này NỘP THEO NHÓM trên Limio.
+
+1. Lập nhóm (trước ngày [...]): trưởng nhóm vào trang khoá học, ở khối "Nhóm của tôi" bấm "Tạo nhóm" → nhận mã nhóm 6 ký tự → gửi mã cho các bạn. Các bạn bấm "Vào nhóm bằng mã" rồi nhập mã. Lập nhóm xong, giảng viên chia 3 quy luật cho từng nhóm. Khi giảng viên đã khoá danh sách nhóm, muốn đổi nhóm thì nhắn giảng viên.
+
+2. Một bạn nộp cho cả nhóm (trước buổi thuyết trình, ngày [...]): một thành viên bất kỳ nộp là cả nhóm có bài. Ai trong nhóm cũng nộp lại được; bài mới thay bài cũ cho cả nhóm. Chưa có nhóm thì chưa nộp được.
+   • Tệp tải lên (bắt buộc): slide thuyết trình XUẤT RA PDF. Limio không nhận file PowerPoint (.pptx).
+     PowerPoint: File → Save As → PDF. Google Slides: Tệp → Tải xuống → PDF. Canva: Chia sẻ → Tải xuống → PDF.
+     Slide phải có: ảnh chụp trang Limio đã khoanh, ảnh chụp từng màn hình bản giấy (3–5 ảnh), và phụ lục ở slide cuối.
+   • Ô nội dung (bắt buộc): điền theo mẫu 3 dòng
+     Nhóm: …
+     3 quy luật: …
+     Trang Limio đã chọn: …
+   • Ô đường link (không bắt buộc): video dưới 1 phút quay một bạn bấm thử bản giấy — chỉ quay tay và giấy, không quay mặt, xin phép trước. Để chế độ "bất kỳ ai có đường liên kết đều xem được".
+
+3. Mỗi người ghi "Phần việc của tôi": sau khi nhóm đã nộp, MỖI thành viên mở bài tập và ghi 1–2 câu vào ô "Phần việc của tôi" — mình đã làm gì cho bài này. Giảng viên đọc ô này khi chấm và có thể chỉnh điểm riêng cho từng người.
+
+• Hôm thuyết trình: mang theo bản giấy thật.
+
+CÁCH CHẤM (100 ĐIỂM)
+
+• Hiểu đúng 3 quy luật, có ví dụ, biết lúc nào quy luật không đúng — 20
+• Tìm đúng chỗ trên Limio, có ảnh chụp, giải thích được vì sao — 20
+• Có hỏi 5 người dùng thật và trình bày trung thực kết quả — 20
+• Bản giấy sửa đúng chỗ đã tìm ra, có trước và sau, đã cho 2 bạn thử — 25
+• Thuyết trình rõ ràng, đúng giờ, trả lời được câu hỏi — 15
+
+LƯU Ý
+
+• Chê Limio thoải mái, miễn là có lý do. Không ai bị trừ điểm vì chỉ ra chỗ chưa tốt của Limio.
+• Không ghi tên thật của những bạn được hỏi. Chỉ chụp màn hình từ tài khoản của chính mình.
+• Được dùng AI để tìm hiểu, nhưng không được bịa ra câu trả lời của người dùng.

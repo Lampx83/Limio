@@ -921,7 +921,9 @@ export async function searchQuestions(
     lastSampledAt: r.lastSampledAt?.toISOString() ?? null,
     examRoundCodes: [
       ...new Set(
-        r.copiedTo.flatMap((c) => c.examQuestion.exam.schedules.map((s) => s.round.code)),
+        r.copiedTo.flatMap((c) =>
+          c.examQuestion.exam.schedules.map((s) => s.round?.code ?? null),
+        ).filter((code): code is string => code !== null),
       ),
     ].sort(),
   }));

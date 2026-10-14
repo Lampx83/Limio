@@ -16,6 +16,12 @@ export type ResponseFormat =
   | "concept_map"
   | "mixed";
 
+/**
+ * Bài nói nộp không kèm chữ thì ô nội dung được điền chuỗi này (cột body bắt buộc có giá trị).
+ * Nó không phải bài làm — chỗ nào đọc body để chấm phải coi như trống.
+ */
+export const SPEAKING_BODY_PLACEHOLDER = "(bài nói)";
+
 export type AssessmentMode =
   | "instructor_graded"
   | "self_assessed"
@@ -125,7 +131,7 @@ export function acceptForFormat(format: ResponseFormat): string | undefined {
     case "concept_map":
       return "image/*,application/pdf,application/json";
     case "mixed":
-      return "image/*,audio/*,video/*,application/pdf";
+      return "image/*,audio/*,video/*,application/pdf,.docx";
     case "file":
       return undefined;
     default:

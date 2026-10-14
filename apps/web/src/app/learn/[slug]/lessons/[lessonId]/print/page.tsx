@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { blockToPlainLines } from "@/lib/langBlocks";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { canEditCourse, isUserEnrolled } from "@feedbackme/core-lms";
@@ -158,6 +159,19 @@ export default async function LessonPrintPage({
               html={html}
               className="prose prose-sm mt-6 max-w-none dark:prose-invert"
             />
+          );
+        }
+        // Từ vựng và hội thoại in thành chữ (không nút nghe, không đường dẫn audio).
+        const blockLines = blockToPlainLines(item.type, item.payload);
+        if (blockLines.length > 0) {
+          return (
+            <div key={item.id} className="mt-6 space-y-1 text-body">
+              {blockLines.map((line, i) => (
+                <p key={i} className="whitespace-pre-wrap">
+                  {line}
+                </p>
+              ))}
+            </div>
           );
         }
         // Nội dung không in ra giấy được (video, nhúng, tệp): ghi lại đường dẫn

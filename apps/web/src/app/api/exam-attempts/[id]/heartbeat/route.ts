@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { logExamIncident } from "@feedbackme/core-lms";
+import { getSectionHeartbeat, logExamIncident } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireExamSubject } from "@/lib/session";
 import { clientIp } from "@/lib/rate-limit";
@@ -128,9 +128,20 @@ export async function POST(
     (subject.kind === "user"
       ? cur.userId === subject.userId
       : cur.candidateId === subject.candidateId);
+  // LANG G5a — đề thi thử: phần đang chạy + giây còn lại của phần, để máy thí
+  // sinh chuyển phần đúng giờ máy chủ. Đề thường không có trường này.
+  let section: Awaited<ReturnType<typeof getSectionHeartbeat>> = null;
+  if (mine && cur.status === "in_progress") {
+    try {
+      section = await getSectionHeartbeat(subject, params.id);
+    } catch {
+      // Heartbeat không được hỏng vì phần tính phần thi.
+    }
+  }
   return NextResponse.json({
     ok: true,
     serverNow: new Date().toISOString(),
     ...(mine ? { status: cur.status, durationSec: cur.durationSec } : {}),
+    ...(section ? { section } : {}),
   });
 }

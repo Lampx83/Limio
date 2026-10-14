@@ -12,6 +12,7 @@ import {
   planBalancedReviewerAssignments,
   resolveReviewQuorum,
   reviewerCoverage,
+  submissionTiming,
   suggestPeerReviewerCount,
   type ReviewerPlanInput,
   type RubricCriterion,
@@ -603,5 +604,34 @@ describe("planBalancedReviewerAssignments", () => {
     expect(planBalancedReviewerAssignments(input)).toEqual(
       planBalancedReviewerAssignments(input),
     );
+  });
+});
+
+describe("nộp muộn", () => {
+  const deadline = new Date("2026-05-21T12:00:00Z");
+  const before = new Date("2026-05-21T11:59:59Z");
+  const after = new Date("2026-05-21T13:00:00Z");
+
+  it("submissionTiming: trước hạn đúng giờ dù có cho nộp muộn hay không", () => {
+    expect(submissionTiming({ now: before, submissionDeadline: deadline, allowLate: false })).toBe("on_time");
+    expect(submissionTiming({ now: before, submissionDeadline: deadline, allowLate: true })).toBe("on_time");
+  });
+
+  it("submissionTiming: quá hạn → đóng nếu không cho nộp muộn, muộn nếu cho", () => {
+    expect(submissionTiming({ now: after, submissionDeadline: deadline, allowLate: false })).toBe("closed");
+    expect(submissionTiming({ now: after, submissionDeadline: deadline, allowLate: true })).toBe("late");
+  });
+
+  it("submissionTiming: đúng giờ hạn đã là muộn (mốc loại trừ)", () => {
+    expect(submissionTiming({ now: deadline, submissionDeadline: deadline, allowLate: true })).toBe("late");
+    expect(submissionTiming({ now: deadline, submissionDeadline: deadline, allowLate: false })).toBe("closed");
+  });
+
+  it("canResubmit: quá hạn vẫn nộp lại được khi cho nộp muộn, mọi chế độ chấm", () => {
+    for (const verifyMode of ["AUTO_GRADE", "AUTO_CHECK", "PEER_REVIEW", "MANUAL_REVIEW"] as const) {
+      expect(canResubmit({ verifyMode, now: after, submissionDeadline: deadline, allowLate: true })).toBe(true);
+      expect(canResubmit({ verifyMode, now: after, submissionDeadline: deadline, allowLate: false })).toBe(false);
+      expect(canResubmit({ verifyMode, now: after, submissionDeadline: deadline })).toBe(false);
+    }
   });
 });

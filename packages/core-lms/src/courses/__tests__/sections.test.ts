@@ -9,6 +9,14 @@ import {
   transferEnrollmentSection,
   updateCourseSection,
 } from "../sections";
+import {
+  generateSectionImportTemplateXlsx,
+  importCourseSections,
+  parseSectionImportSheet,
+  previewSectionImport,
+  SectionImportError,
+} from "../sectionImport";
+import * as XLSX from "xlsx";
 import { createCourse, CourseError, publishCourse } from "../courses";
 import { createModule } from "../modules";
 import { createLesson } from "../lessons";
@@ -290,5 +298,107 @@ describe("transferEnrollmentSection", () => {
     await expect(
       transferEnrollmentSection(strangerId, enrollment.id, secB.id),
     ).rejects.toThrow();
+  });
+});
+
+describe("kỳ học (chữ tự gõ) và ghi chú của lớp", () => {
+  it("lưu kỳ học + ghi chú khi tạo; cắt khoảng trắng; rỗng thành null", async () => {
+    const ownerId = await makeUser("term-a@e.com");
+    const courseId = await publishedCourse(ownerId, "term-a");
+    const a = await createCourseSection(ownerId, courseId, {
+      name: "Lớp A",
+      termLabel: "  HK1 2026-27 ",
+      description: "Thứ 7 chiều",
+    });
+    expect(a).toMatchObject({ termLabel: "HK1 2026-27", description: "Thứ 7 chiều" });
+    const b = await createCourseSection(ownerId, courseId, { name: "Lớp B", termLabel: "   ", description: "  " });
+    expect(b).toMatchObject({ termLabel: null, description: null });
+  });
+
+  it("đổi và xoá kỳ học / ghi chú qua update; tên không đụng tới", async () => {
+    const ownerId = await makeUser("term-b@e.com");
+    const courseId = await publishedCourse(ownerId, "term-b");
+    const s = await createCourseSection(ownerId, courseId, { name: "Lớp A", termLabel: "HK1" });
+    await updateCourseSection(ownerId, s.id, { termLabel: "HK2", description: "mới" });
+    let [row] = await listCourseSections(ownerId, courseId);
+    expect(row).toMatchObject({ name: "Lớp A", termLabel: "HK2", description: "mới" });
+    await updateCourseSection(ownerId, s.id, { termLabel: null, description: null });
+    [row] = await listCourseSections(ownerId, courseId);
+    expect(row).toMatchObject({ termLabel: null, description: null });
+  });
+
+  it("từ chối kỳ học quá 100 ký tự", async () => {
+    const ownerId = await makeUser("term-c@e.com");
+    const courseId = await publishedCourse(ownerId, "term-c");
+    await expect(
+      createCourseSection(ownerId, courseId, { name: "Lớp A", termLabel: "x".repeat(101) }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+});
+
+describe("import lớp học từ Excel", () => {
+  function sheet(rows: unknown[][]): Buffer {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "S");
+    return XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
+  }
+
+  it("đọc file theo tên cột (bất kể thứ tự, nhận 'Kì học'); không có header thì theo thứ tự Tên/Kỳ/Ghi chú", () => {
+    const rows = parseSectionImportSheet(
+      sheet([
+        ["Ghi chú", "Tên lớp", "Kì học"],
+        ["sáng", "A1", "HK1"],
+        ["", "", ""],
+      ]),
+    );
+    expect(rows).toEqual([{ line: 2, name: "A1", termLabel: "HK1", note: "sáng" }]);
+    expect(parseSectionImportSheet(sheet([["B1", "HK2", "ghi"]]))[0]).toMatchObject({
+      name: "B1",
+      termLabel: "HK2",
+      note: "ghi",
+    });
+  });
+
+  it("xem trước phân loại từng dòng và không ghi gì", async () => {
+    const ownerId = await makeUser("imp-a@e.com");
+    const courseId = await publishedCourse(ownerId, "imp-a");
+    await createCourseSection(ownerId, courseId, { name: "Đã có" });
+    const preview = await previewSectionImport(ownerId, courseId, [
+      { line: 2, name: "Mới 1", termLabel: "HK1" },
+      { line: 3, name: "" },
+      { line: 4, name: "Mới 1" },
+      { line: 5, name: "Đã có" },
+    ]);
+    expect(preview.rows.map((r) => r.status)).toEqual(["ok", "missing_name", "duplicate_in_file", "name_exists"]);
+    expect(preview.actionable).toBe(1);
+    expect(await listCourseSections(ownerId, courseId)).toHaveLength(1);
+  });
+
+  it("import chỉ tạo dòng hợp lệ, có kỳ học + ghi chú; dòng lỗi được báo lại", async () => {
+    const ownerId = await makeUser("imp-b@e.com");
+    const courseId = await publishedCourse(ownerId, "imp-b");
+    const res = await importCourseSections(ownerId, courseId, [
+      { line: 2, name: "L1", termLabel: "HK1", note: "Sáng T2" },
+      { line: 3, name: "L2" },
+      { line: 4, name: "L1" },
+    ]);
+    expect(res.created).toBe(2);
+    expect(res.failed).toEqual([{ line: 4, name: "L1", error: "duplicate_in_file" }]);
+    const list = await listCourseSections(ownerId, courseId);
+    expect(list.find((s) => s.name === "L1")).toMatchObject({ termLabel: "HK1", description: "Sáng T2" });
+  });
+
+  it("chặn file rỗng, quá nhiều dòng, và người không có quyền", async () => {
+    const ownerId = await makeUser("imp-c@e.com");
+    const courseId = await publishedCourse(ownerId, "imp-c");
+    await expect(previewSectionImport(ownerId, courseId, [])).rejects.toBeInstanceOf(SectionImportError);
+    const many = Array.from({ length: 201 }, (_, i) => ({ line: i + 2, name: `X${i}` }));
+    await expect(previewSectionImport(ownerId, courseId, many)).rejects.toMatchObject({ code: "too_many_rows" });
+    const stranger = await makeUser("imp-stranger@e.com");
+    await expect(previewSectionImport(stranger, courseId, [{ line: 2, name: "A" }])).rejects.toBeDefined();
+  });
+
+  it("file mẫu đọc lại được đúng 2 dòng", () => {
+    expect(parseSectionImportSheet(generateSectionImportTemplateXlsx())).toHaveLength(2);
   });
 });

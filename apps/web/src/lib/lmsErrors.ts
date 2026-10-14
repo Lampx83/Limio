@@ -32,6 +32,8 @@ const LMS_ERROR_MESSAGES: Record<string, string> = {
 
   // Upload
   file_too_large: "File quá lớn so với giới hạn cho phép.",
+  language_mode_requires_personalization:
+    "Chế độ ngoại ngữ cần bật Cá nhân hoá học tập. Hãy bật Cá nhân hoá trước (hoặc tắt Chế độ ngoại ngữ trước khi tắt Cá nhân hoá).",
   unsupported_media_type: "Định dạng file này chưa được hỗ trợ.",
   convert_failed: "Không xử lý được file này. Hãy kiểm tra file rồi tải lên lại.",
   upload_failed: "Tải file lên không thành công. Vui lòng thử lại.",

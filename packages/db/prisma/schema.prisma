@@ -66,11 +66,14 @@ model User {
   lessonEngagements              LessonEngagement[]
   verificationTokens             VerificationToken[]
   notes                          Note[]
+  lessonAnnotations              LessonAnnotation[]
+  lessonAnnotationReplies        LessonAnnotationReply[]
   courseProgress                 UserCourseProgress[]
   xpTransactions                 XpTransaction[]
   userBadges                     UserBadge[]
   streakRecords                  StreakRecord[]
   skillStates                    LearnerSkillState[]
+  flashcardStates                FlashcardState[]
   misconceptionFlags             MisconceptionFlag[]
   feedbackDeliveries             FeedbackDelivery[]
   assignmentSubmissions          AssignmentSubmission[]    @relation("Submitter")
@@ -81,6 +84,9 @@ model User {
   tournamentRegistrations        TournamentRegistration[]
   tournamentCreated              Tournament[]              @relation("TournamentCreator")
   tournamentTeamsCaptained       TournamentTeam[]          @relation("TeamCaptain")
+  courseTeamsCaptained           CourseTeam[]              @relation("CourseTeamCaptain")
+  courseTeamMemberships          CourseTeamMember[]
+  teamSubmissionsSubmitted       AssignmentSubmission[]    @relation("TeamSubmitter")
   hackathonVotes                 HackathonVote[]           @relation("HackathonVoter")
   tournamentJudgeOf              TournamentJudge[]         @relation("TournamentJudge")
   missionSubmissions             MissionSubmission[]
@@ -176,9 +182,20 @@ model User {
   portfolio Portfolio?
 
   // A6 — Certification
-  certificates Certificate[]
+  certificates              Certificate[]
+  examPracticeSessions      ExamPracticeSession[]
+  writingFeedbacksReceived  WritingFeedback[]      @relation("WritingFeedbackOwner")
+  writingFeedbacksReviewed  WritingFeedback[]      @relation("WritingFeedbackReviewer")
+  submissionTranscripts     SubmissionTranscript[]
+  speakingFeedbacksReceived SpeakingFeedback[]     @relation("SpeakingFeedbackOwner")
+  speakingFeedbacksReviewed SpeakingFeedback[]     @relation("SpeakingFeedbackReviewer")
+
+  // Growth attribution — điểm chạm đầu tiên (utm/click-id/referrer) lúc đăng ký.
+  acquisitionTouch AcquisitionTouch?
 
   @@index([createdAt])
+  // Luồng growth events phân trang theo mốc xác minh email (xem AcquisitionTouch).
+  @@index([emailVerifiedAt])
 }
 
 model AuthProvider {
@@ -425,6 +442,10 @@ model Course {
   /// đang có giữ nguyên hành vi sau khi migrate.
   enrollMode             EnrollMode   @default(open)
   personalizationEnabled Boolean      @default(false)
+  /// LANG G3 — chế độ ngoại ngữ: bật trang "Hồ sơ 4 kỹ năng" và ô chọn kỹ năng ở
+  /// form sửa bài. Bất biến (ép ở core-lms/courses.ts): languageMode ⇒
+  /// personalizationEnabled, vì nhãn kỹ năng chỉ đi vào Skill khi cá nhân hoá bật.
+  languageMode           Boolean      @default(false)
   // Public access: when true, anyone — including logged-out visitors — may read the
   // course's lessons (content + video) without enrolling, in the same read-only
   // preview mode a non-enrolled learner gets. Account-only features (progress,
@@ -432,13 +453,24 @@ model Course {
   // Only takes effect while `status = published`; a draft course is never public.
   // Default false — existing courses keep login-gated behaviour.
   publicAccess           Boolean      @default(false)
+  /// Khoá mẫu: admin đánh dấu để giảng viên chưa có khoá nào bấm vào xem một khoá
+  /// "dựng xong trông thế nào". Chỉ có tác dụng khi khoá đang published + publicAccess
+  /// (giảng viên mới không ghi danh nên cần đọc công khai mới xem được) — điều kiện
+  /// này được ép ở setCourseSample và lọc lại ở listSampleCourses.
+  isSample               Boolean      @default(false)
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents             Int?
   currency               String       @default("USD")
+  /// Nộp bài theo nhóm — số người tối đa mỗi nhóm (null = không giới hạn).
+  teamMaxSize            Int?
+  /// Nộp bài theo nhóm — khi khác null, sinh viên không tự tạo/vào/rời nhóm
+  /// được nữa; chỉ giảng viên chuyển người. Xem docs/group-submission-AC.md.
+  teamsLockedAt          DateTime?
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
 
   modules               Module[]
+  teams                 CourseTeam[]
   enrollments           Enrollment[]
   instructors           CourseInstructor[]
   liveDeckGroups        LiveDeckGroup[]
@@ -452,6 +484,7 @@ model Course {
   exams                 Exam[]
   questionBanks         QuestionBank[]
   sections              CourseSection[]
+  flashcardStates       FlashcardState[]
   cohortExamClasses     CohortExamClass[]
   examRounds            ExamRound[]
   accessCodes           CourseAccessCode[]
@@ -535,24 +568,27 @@ model Module {
 }
 
 model Lesson {
-  id                     String   @id @default(uuid())
+  id                     String         @id @default(uuid())
   moduleId               String
   title                  String
   description            String?
   orderIndex             Int
   // A3 acceptance: lesson hoàn thành khi xem ≥80% video, hoặc click mark complete.
   // completionThreshold = % of video duration. NULL for non-video.
-  completionThresholdPct Int?     @default(80)
+  completionThresholdPct Int?           @default(80)
   durationSec            Int?
   // True = visible to non-enrolled users as a free preview sample
-  previewable            Boolean  @default(false)
+  previewable            Boolean        @default(false)
   // Instructor-controlled visibility (false = hidden from all learners)
-  isHidden               Boolean  @default(false)
+  isHidden               Boolean        @default(false)
   /// B14 — xem giải thích ở Module.isLocked. Bài nằm trong module đã khoá thì
   /// coi như khoá theo, không cần bật cờ này.
-  isLocked               Boolean  @default(false)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  isLocked               Boolean        @default(false)
+  /// LANG G3 — kỹ năng chính của bài (nghe/nói/đọc/viết); null = không gán. Nguồn
+  /// do giảng viên đặt; autoTags sao sang Skill tự sinh của bài.
+  languageSkill          LanguageSkill?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
 
   module            Module                @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   contentItems      ContentItem[]
@@ -565,11 +601,30 @@ model Lesson {
   forumThreads      ForumThread[]
   aiConversations   AiConversation[]
   notes             Note[]
+  annotations       LessonAnnotation[]
   skillTags         ContentSkillMapping[] @relation("LessonSkill")
   classroomSessions ClassroomSession[]
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
+}
+
+/// LANG G3 — bốn kỹ năng ngôn ngữ. Khớp LANGUAGE_SKILLS trong
+/// packages/shared-types/src/languageSkills.ts (đổi một bên phải đổi cả hai).
+enum LanguageSkill {
+  listening
+  speaking
+  reading
+  writing
+}
+
+/// LANG G4 — mức tự đánh giá sau khi lật thẻ. Khớp FLASHCARD_RATINGS trong
+/// packages/shared-types/src/flashcards.ts.
+enum FlashcardRating {
+  again
+  hard
+  good
+  easy
 }
 
 enum ContentType {
@@ -592,6 +647,51 @@ enum ContentType {
   // allow-same-origin — script trong file không được đọc cookie/session của
   // Limio). Khác "embed" (chỉ nhận URL ngoài) và "file" (chỉ tải xuống).
   html_block
+  // LANG G1 — bài nghe: file audio tự upload (mp3/m4a/ogg/webm) hoặc link https,
+  // có trình phát tốc độ/lặp và lời thoại tuỳ chọn. Khác "video" ở chỗ không có
+  // cuepoint và không có khung hình.
+  audio
+  // LANG G2 — bảng từ vựng (term/reading/meaning + ví dụ + audio từng dòng) và
+  // hội thoại (các lượt có người nói, phiên âm, bản dịch, audio từng lượt).
+  // Payload JSON; mỗi dòng/lượt có `id` ổn định do server gán.
+  vocab_list
+  dialogue
+}
+
+/// LANG G4 — lịch ôn flashcard của MỘT học viên cho MỘT dòng từ vựng. Chỉ có dòng
+/// sau lần ôn đầu tiên: thẻ chưa ôn không có hàng nào (= "Mới"), nên bảng không
+/// phình theo cỡ bộ từ vựng. Đây là trạng thái dẫn xuất, dựng lại được từ event
+/// `flashcard.reviewed`; không dính vào LearnerSkillState (flashcard là tự đánh giá
+/// việc ghi nhớ, không phải bằng chứng khách quan về kỹ năng).
+model FlashcardState {
+  id             String          @id @default(uuid())
+  userId         String
+  courseId       String
+  contentItemId  String
+  /// `id` ổn định của dòng trong payload của khối vocab_list (G2). Không có FK vì
+  /// dòng nằm trong JSON; dòng bị xoá khỏi payload để lại hàng mồ côi, bị bỏ qua.
+  itemId         String
+  easeFactor     Float           @default(2.5)
+  intervalDays   Int             @default(0)
+  repetitions    Int             @default(0)
+  lapses         Int             @default(0)
+  /// Đầu ngày (giờ VN) mà thẻ đến hạn.
+  dueAt          DateTime
+  /// Lần ôn đầu tiên — để đếm trần thẻ mới mỗi ngày.
+  introducedAt   DateTime
+  lastReviewedAt DateTime
+  lastRating     FlashcardRating
+  /// Lượt ôn gần nhất đã áp, để gửi lại cùng lượt (mất mạng, bấm đúp) không tính hai lần.
+  lastReviewId   String?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId])
+  /// Chỉ mục nóng: "thẻ nào của tôi trong khoá này đến hạn".
+  @@index([userId, courseId, dueAt])
+  @@index([contentItemId])
 }
 
 model ContentItem {
@@ -608,9 +708,11 @@ model ContentItem {
   isHidden   Boolean     @default(false)
   createdAt  DateTime    @default(now())
 
-  lesson         Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  notes          Note[]
-  lessonActivity LessonActivity?
+  lesson          Lesson             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  notes           Note[]
+  annotations     LessonAnnotation[]
+  flashcardStates FlashcardState[]
+  lessonActivity  LessonActivity?
 
   @@index([lessonId])
 }
@@ -742,6 +844,8 @@ model Enrollment {
   @@index([sectionId])
   // Cron reaper (enrollment-access-expiry-check) quét theo cặp này mỗi ngày.
   @@index([status, accessExpiresAt])
+  // Growth events: phân trang "ghi danh đầu tiên" theo thời gian.
+  @@index([enrolledAt])
 }
 
 // A3 — Note attached to a lesson, optionally to a content item, optionally
@@ -765,6 +869,59 @@ model Note {
 }
 
 // =====================================================================
+// A3 — Annotation theo vùng chọn. Học viên/giảng viên bôi đen một cụm chữ
+// trong bài rồi ghi chú. Khác `Note` (gắn cả bài, riêng tư tuyệt đối): có
+// toạ độ trong văn bản, và tác giả có thể PUBLISH để cả khoá cùng thấy + reply.
+//
+// Neo vị trí theo kiểu "text quote" (Hypothesis/W3C Web Annotation): lưu đoạn
+// trích + chữ liền trước/sau + offset trong khối nội dung. Offset để dựng lại
+// nhanh; quote/prefix/suffix để tìm lại khi giảng viên sửa bài làm offset lệch.
+// Không tìm lại được thì annotation thành "mồ côi" (vẫn còn dữ liệu, không vẽ).
+// =====================================================================
+enum AnnotationVisibility {
+  private
+  published
+}
+
+model LessonAnnotation {
+  id            String               @id @default(uuid())
+  userId        String
+  lessonId      String
+  contentItemId String
+  quote         String               @db.Text
+  prefix        String               @default("")
+  suffix        String               @default("")
+  startOffset   Int
+  endOffset     Int
+  body          String               @db.Text
+  visibility    AnnotationVisibility @default(private)
+  publishedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson                  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  contentItem ContentItem             @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  replies     LessonAnnotationReply[]
+
+  @@index([lessonId, visibility])
+  @@index([userId, lessonId])
+}
+
+model LessonAnnotationReply {
+  id           String   @id @default(uuid())
+  annotationId String
+  userId       String
+  body         String   @db.Text
+  createdAt    DateTime @default(now())
+
+  annotation LessonAnnotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([annotationId, createdAt])
+}
+
+// =====================================================================
 // A6 — Certification. Cấp 1 lần khi học viên hoàn thành 100% một khoá học
 // (idempotent theo (userId, courseId)). Tên học viên + tên khoá được snapshot
 // tại thời điểm cấp — đổi displayName/course title sau đó không sửa lại
@@ -772,44 +929,46 @@ model Note {
 // =====================================================================
 
 model Certificate {
-  id                  String   @id @default(uuid())
-  userId              String
-  courseId            String
+  id                     String   @id @default(uuid())
+  userId                 String
+  courseId               String
   // Mã tra cứu công khai ở /verify/[certNumber] — random, không suy ra được
   // từ userId/courseId (tránh dò mã theo kiểu liệt kê).
-  certNumber          String   @unique
-  userNameSnapshot    String
-  courseTitleSnapshot String
+  certNumber             String   @unique
+  userNameSnapshot       String
+  courseTitleSnapshot    String
   // "Limio" cho khoá không thuộc Organization nào, "Limio × <tên trường>" khi
   // khoá thuộc 1 Organization (multi-tenant, PR2.17) — snapshot lúc cấp, đổi
   // tên trường sau đó không sửa lại chứng nhận đã cấp.
-  issuerName          String
+  issuerName             String
   // Logo của Organization tại thời điểm cấp (Organization.brandingLogoUrl),
   // null nếu trường không có logo hoặc khoá không thuộc Organization nào.
   // Snapshot cùng lý do với issuerName: trường đổi logo sau đó không được
   // làm đổi ảnh trên chứng nhận đã cấp.
-  issuerLogoUrl       String?
+  issuerLogoUrl          String?
   // Tên riêng của Organization (KHÔNG có tiền tố "Limio × ") — null khi khoá
   // không thuộc Organization nào. Tách riêng khỏi issuerName (chuỗi ghép sẵn
   // dùng cho dòng "Cấp bởi ...") vì header 2 logo trái/phải cần tên trường
   // đứng một mình, không dựng lại bằng cách cắt chuỗi issuerName.
-  issuerOrgName       String?
+  issuerOrgName          String?
   // Ảnh chữ ký — snapshot cùng lý do với issuerLogoUrl (đổi chữ ký sau đó
   // không sửa lại chứng nhận đã cấp). platformSignatureUrl là chữ ký Limio
   // dùng chung (SiteSetting), null nếu lúc cấp Limio chưa cấu hình; ngược lại
   // issuerSignatureUrl là chữ ký riêng của Organization, null nếu khoá không
   // thuộc Organization nào hoặc trường chưa upload.
-  platformSignatureUrl String?
-  issuerSignatureUrl    String?
+  platformSignatureUrl   String?
+  issuerSignatureUrl     String?
   // Tên + chức danh người ký, snapshot cùng lý do — in dưới ảnh chữ ký.
   platformSignatureName  String?
   platformSignatureTitle String?
   issuerSignatureName    String?
   issuerSignatureTitle   String?
-  issuedAt            DateTime @default(now())
+  issuedAt               DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  portfolioCourses PortfolioCourse[]
 
   @@unique([userId, courseId])
   @@index([courseId])
@@ -879,10 +1038,10 @@ model Quiz {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
 
-  lesson            Lesson?            @relation(fields: [lessonId], references: [id])
+  lesson            Lesson?               @relation(fields: [lessonId], references: [id])
   questions         QuizQuestion[]
   attempts          QuizAttempt[]
-  tournamentMission TournamentMission? @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
+  tournamentMission TournamentMission?    @relation(fields: [tournamentMissionId], references: [id], onDelete: SetNull)
   lessonActivity    LessonActivity?
   gameSessions      GameSession[]
   sectionSchedules  QuizSectionSchedule[]
@@ -1016,11 +1175,15 @@ model Misconception {
 // =====================================================================
 
 model Skill {
-  id          String   @id @default(uuid())
-  code        String   @unique // e.g. "linear_regression.basics"
-  name        String
-  description String?  @db.Text
-  createdAt   DateTime @default(now())
+  id            String         @id @default(uuid())
+  code          String         @unique // e.g. "linear_regression.basics"
+  name          String
+  description   String?        @db.Text
+  /// LANG G3 — bản sao của Lesson.languageSkill cho Skill tự sinh (`lesson.<id>`).
+  /// Hồ sơ 4 kỹ năng gộp LearnerSkillState theo cột này (một join, không đi vòng
+  /// qua bài), và đề thi dùng chung Skill nên vào cùng chiều mà không cần gì thêm.
+  languageSkill LanguageSkill?
+  createdAt     DateTime       @default(now())
 
   prerequisites     SkillPrerequisite[]    @relation("SkillToPrerequisite")
   dependents        SkillPrerequisite[]    @relation("PrerequisiteToSkill")
@@ -1445,6 +1608,9 @@ model Assignment {
   requireSelfRating Boolean                 @default(false)
   requireReflection Boolean                 @default(false)
   countsTowardGrade Boolean                 @default(true)
+  /// individual = mỗi học viên một bài; team = một người nộp cho cả nhóm
+  /// (CourseTeam), bài được chép thành một dòng cho từng thành viên.
+  submissionMode    SubmissionMode          @default(individual)
 
   // GV tự gõ, dùng làm ngữ cảnh khi bấm "Gợi ý điểm bằng AI" trên từng bài
   // nộp — không bắt buộc, AI vẫn chấm được nếu để trống (chỉ kém căn cứ hơn).
@@ -1532,16 +1698,79 @@ model AssignmentSubmission {
   reflection String? @db.Text
   aiFeedback Json?
 
-  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  user       User       @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
-  grader     User?      @relation("Grader", fields: [graderId], references: [id])
+  // Nộp theo nhóm (Assignment.submissionMode = team). Mỗi thành viên lúc nộp
+  // có một dòng cùng body/attachmentUrl/teamId. teamScore = điểm GV chấm cho
+  // cả nhóm; score = điểm thực của người này (= teamScore trừ khi
+  // scoreOverridden — GV chỉnh riêng, chấm lại nhóm không ghi đè).
+  teamId            String?
+  submittedById     String?
+  // Mốc chung của một lần nộp nhóm — mọi dòng chép ra từ cùng một lần bấm nộp
+  // mang cùng giá trị. Chấm nhóm chỉ áp cho lần nộp mới nhất; dòng của người
+  // đã rời nhóm giữ mốc cũ nên không bị chấm đè.
+  teamSubmittedAt   DateTime?
+  contributionNote  String?   @db.Text
+  teamScore         Int?
+  scoreOverridden   Boolean   @default(false)
+  scoreOverrideNote String?
+
+  assignment        Assignment             @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user              User                   @relation("Submitter", fields: [userId], references: [id], onDelete: Cascade)
+  team              CourseTeam?            @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  submittedBy       User?                  @relation("TeamSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+  grader            User?                  @relation("Grader", fields: [graderId], references: [id])
   // A8 — bài này đang được ghim vào e-portfolio của học viên.
-  portfolioItems PortfolioItem[]
+  portfolioItems    PortfolioItem[]
+  writingFeedbacks  WritingFeedback[]
+  transcripts       SubmissionTranscript[]
+  speakingFeedbacks SpeakingFeedback[]
 
   // Idempotent — one row per (assignment, user). Re-submission updates this row.
   @@unique([assignmentId, userId])
   @@index([userId, submittedAt])
   @@index([assignmentId, status])
+  @@index([assignmentId, teamId])
+}
+
+enum SubmissionMode {
+  individual
+  team
+}
+
+/// Nhóm cố định của một khoá học, do học viên tự lập (trưởng nhóm tạo, gửi mã
+/// cho thành viên — cùng mẫu TournamentTeam). Mỗi khoá một bộ nhóm, mỗi học
+/// viên tối đa một nhóm trong một khoá. Xem docs/group-submission-AC.md.
+model CourseTeam {
+  id        String   @id @default(uuid())
+  courseId  String
+  name      String
+  // SetNull: trưởng nhóm bị xoá hẳn thì nhóm vẫn còn (bài nộp còn trỏ vào).
+  captainId String?
+  joinCode  String   @unique
+  createdAt DateTime @default(now())
+
+  course      Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  captain     User?                  @relation("CourseTeamCaptain", fields: [captainId], references: [id], onDelete: SetNull)
+  members     CourseTeamMember[]
+  submissions AssignmentSubmission[]
+
+  @@unique([courseId, name])
+  @@index([courseId])
+}
+
+model CourseTeamMember {
+  id       String   @id @default(uuid())
+  teamId   String
+  // Lặp lại courseId của nhóm để ép "mỗi học viên một nhóm trong một khoá"
+  // bằng unique index thay vì kiểm tra ở tầng ứng dụng.
+  courseId String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  team CourseTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+  @@index([teamId, joinedAt])
 }
 
 // =====================================================================
@@ -1809,6 +2038,9 @@ model TournamentMission {
   // Submission window — required when verifyMode is set; null means
   // "completion derived from behavior" (COURSE_LINKED).
   submissionDeadline DateTime?
+  // Cho nộp sau submissionDeadline (bài nộp lúc đó đánh dấu MissionSubmission.isLate).
+  // Vẫn bị chặn khi giải đã kết thúc. Mặc định tắt: quá hạn là đóng như cũ.
+  allowLateSubmission Boolean @default(false)
 
   // CUSTOM/EXTERNAL content payload.
   // Shape varies by missionType:
@@ -1880,6 +2112,8 @@ model MissionSubmission {
   // 0..1; set after verify.
   finalScore  Float?
   verifiedAt  DateTime?
+  // Lần nộp gần nhất diễn ra sau hạn (chỉ có khi mission cho nộp muộn). Nộp lại đúng hạn thì về false.
+  isLate      Boolean                 @default(false)
 
   mission           TournamentMission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
   user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2186,7 +2420,7 @@ model AiConversation {
   userId    String
   lessonId  String
   title     String? // First user message snippet, set after first turn.
-  model     String   @default("gpt-4o-mini")
+  model     String   @default("qwen3.5-35b-a3b-int4")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2410,6 +2644,9 @@ model Order {
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
+  // Growth events: phân trang order.paid / order.refunded theo thời gian.
+  @@index([paidAt])
+  @@index([refundedAt])
 }
 
 // =====================================================================
@@ -3187,6 +3424,13 @@ model Exam {
   durationMin            Int
   openAt                 DateTime
   closeAt                DateTime
+  // LANG G5 — đề thi thử (HSK/IELTS/TOEIC...): bật giờ riêng từng phần, làm lần
+  // lượt không quay lại. false = đề thi thật, mọi hành vi giữ nguyên.
+  mockMode               Boolean             @default(false)
+  // LANG G5c — giảng viên tắt = học viên không tự bắt đầu thi thử mới được (lượt đang làm dở vẫn tiếp tục).
+  allowMock              Boolean             @default(true)
+  // LANG G5e — công tắc "Cho luyện đề": tắt thì học viên không bắt đầu được buổi luyện mới.
+  allowPractice          Boolean             @default(true)
   attemptPolicy          ExamAttemptPolicy   @default(single)
   // Số lượt tối đa mỗi người khi attemptPolicy=multi (chỉ đề vấn đáp AI). Bỏ qua khi single.
   maxAttempts            Int                 @default(3)
@@ -3250,21 +3494,22 @@ model Exam {
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
 
-  course        Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  createdBy     User?              @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  wizardConfig  ExamWizardConfig?
-  blueprint     ExamBlueprint?
-  passages      ExamPassage[]
-  questions     ExamQuestion[]
-  attempts      ExamAttempt[]
-  assets        ExamAsset[]
-  messages      ExamMessage[]
-  candidates    ExamCandidate[]
-  schedules     ExamSession[]
-  sections      ExamSection[]
-  rooms         ExamRoom[]
-  oralMaterials OralExamMaterial[]
-  oralTopics    OralExamTopic[]
+  course           Course?               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdBy        User?                 @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  wizardConfig     ExamWizardConfig?
+  blueprint        ExamBlueprint?
+  passages         ExamPassage[]
+  questions        ExamQuestion[]
+  attempts         ExamAttempt[]
+  assets           ExamAsset[]
+  messages         ExamMessage[]
+  candidates       ExamCandidate[]
+  schedules        ExamSession[]
+  sections         ExamSection[]
+  rooms            ExamRoom[]
+  oralMaterials    OralExamMaterial[]
+  oralTopics       OralExamTopic[]
+  practiceSessions ExamPracticeSession[]
 
   @@index([courseId, status])
   @@index([status, openAt, closeAt])
@@ -3340,7 +3585,7 @@ model OralExamMaterial {
 }
 
 // A6.2 — mảnh nhỏ cắt ra từ OralExamMaterial.extractedText, kèm vector ngữ
-// nghĩa (OpenAI text-embedding-3-small, 1536 chiều) để "giảng viên ảo" (A6.3)
+// nghĩa (Qwen3-Embedding cắt còn 1536 chiều; model cụ thể ghi ở `embeddingModel`) để "giảng viên ảo" (A6.3)
 // tìm đúng đoạn liên quan thay vì phải đọc nguyên tài liệu mỗi lượt hỏi.
 // `embedding` là Unsupported vì Prisma Client chưa có kiểu vector native —
 // đọc/ghi qua raw SQL (packages/core-feedback/src/oralExam/).
@@ -3350,6 +3595,9 @@ model OralExamMaterialChunk {
   chunkIndex Int
   chunkText  String                       @db.Text
   embedding  Unsupported("vector(1536)")?
+  // Model đã sinh `embedding`. Vector của hai model không so sánh được, nên tìm kiếm chỉ xét chunk cùng
+  // model với model hiện hành; NULL = chưa có vector (lưu khi chưa cấu hình embeddings).
+  embeddingModel String?
   createdAt  DateTime                     @default(now())
 
   material OralExamMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
@@ -3578,13 +3826,14 @@ model ExamQuestion {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
-  exam        Exam                   @relation(fields: [examId], references: [id], onDelete: Cascade)
-  passage     ExamPassage?           @relation(fields: [passageId], references: [id], onDelete: Cascade)
-  answers     ExamAnswer[]
-  skillTags   ExamQuestionSkillTag[]
-  fromBank    ExamQuestionFromBank?
-  sectionItem ExamSectionItem?
-  stats       ExamQuestionStats?
+  exam            Exam                   @relation(fields: [examId], references: [id], onDelete: Cascade)
+  passage         ExamPassage?           @relation(fields: [passageId], references: [id], onDelete: Cascade)
+  answers         ExamAnswer[]
+  skillTags       ExamQuestionSkillTag[]
+  fromBank        ExamQuestionFromBank?
+  sectionItem     ExamSectionItem?
+  stats           ExamQuestionStats?
+  practiceAnswers ExamPracticeAnswer[]
 
   @@index([examId, orderInExam])
   @@index([passageId, orderInPassage])
@@ -3664,6 +3913,8 @@ model ExamAttempt {
   // cả lớp hỏi chung theo tài liệu). SetNull: xoá chủ đề không được kéo bài làm đi theo.
   oralTopicId      String?
   oralTopic        OralExamTopic?           @relation(fields: [oralTopicId], references: [id], onDelete: SetNull)
+  sectionStates    ExamAttemptSection[]
+  audioPlays       ExamAudioPlay[]
 
   // P0 single attempt per user per exam. Implemented as partial unique index
   // in raw SQL because Prisma doesn't model partial unique. See migration.
@@ -3961,16 +4212,19 @@ model CourseSection {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
-  course      Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  instructor  User?             @relation("CohortInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
-  members     CohortMember[]
-  schedules   ExamSession[]
-  candidates  ExamCandidate[]
-  examClasses CohortExamClass[]
-  enrollments Enrollment[]
+  course         Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructor     User?                  @relation("CohortInstructor", fields: [instructorId], references: [id], onDelete: SetNull)
+  members        CohortMember[]
+  schedules      ExamSession[]
+  candidates     ExamCandidate[]
+  examClasses    CohortExamClass[]
+  enrollments    Enrollment[]
   // Hạn nộp / lịch quiz riêng của lớp này (ghi đè hạn chung của bài).
   assignmentDues AssignmentSectionDue[]
   quizSchedules  QuizSectionSchedule[]
+
+  // Kỳ học của lớp — nhãn tự gõ (vd "HK1 2026-27"), chỉ để hiển thị/sắp xếp; không liên kết với AcademicTerm.
+  termLabel String?
 
   @@unique([courseId, name])
   @@unique([courseId, code])
@@ -4018,10 +4272,12 @@ model CohortMember {
 model ExamSession {
   id                  String                @id @default(uuid())
   examId              String
-  // A5.3 PR1c.5 — ca thi thuộc về 1 đợt thi. Required. createExamSession()
-  // tự ensure round mặc định cho legacy exam-scoped callers.
-  roundId             String
-  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Unique trong round.
+  // Đợt thi chứa ca — CHỈ kỳ thi chính thức có đợt (Đợt › Ca › Phòng). Link
+  // thi nhanh, thử nghiệm câu hỏi và vấn đáp là BUỔI ĐƠN: không có đợt, null.
+  // Trước đây mọi ca bắt buộc có đợt nên hệ thống tự dựng "Đợt thi tự động"
+  // làm thùng chứa — xem bước 2 của kế hoạch đợt/ca.
+  roundId             String?
+  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Không unique.
   // KHÔNG phải mã access cho SV — xem `openCode` bên dưới.
   code                String?
   // A5.3 PR1a additive — tên hiển thị (vd "Ca 1 — Sáng 14/5").
@@ -4086,13 +4342,16 @@ model ExamSession {
   updatedAt           DateTime              @updatedAt
 
   exam       Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
-  round      ExamRound       @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  round      ExamRound?      @relation(fields: [roundId], references: [id], onDelete: Restrict)
   cohort     CourseSection?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   rooms      ExamRoom[]
   candidates ExamCandidate[]
   attempts   ExamAttempt[]
 
-  @@unique([roundId, openCode])
+  // Mã vào thi phải duy nhất TOÀN HỆ THỐNG: người nhập mã không biết ca nào,
+  // nên hai ca trùng mã là thí sinh vào nhầm ca. NULL (ca không dùng mã chung)
+  // không xung đột — Postgres coi mỗi NULL là khác nhau.
+  @@unique([openCode])
   @@index([examId, opensAt])
   @@index([roundId, opensAt])
   @@index([cohortId])
@@ -4240,11 +4499,19 @@ model ExamSection {
   poolFilter              Json?
   // resolutionMode=per_publish only: snapshot of question IDs picked once.
   materializedQuestionIds Json?
+  // LANG G5a — chỉ dùng khi Exam.mockMode: số phút của riêng phần này (1–240).
+  durationMin             Int?
+  // LANG G5a/G5d — kỹ năng của phần, để gom kết quả theo kỹ năng.
+  languageSkill           LanguageSkill?
+  // LANG G5d — bảng quy đổi điểm thô của phần → nhãn ước lượng, do giảng viên nhập:
+  // [{ from, to, label }] không chồng nhau. Hệ thống không mang sẵn số liệu chính thức.
+  scoreBands              Json?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
 
-  exam  Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
-  items ExamSectionItem[]
+  exam            Exam                 @relation(fields: [examId], references: [id], onDelete: Cascade)
+  items           ExamSectionItem[]
+  attemptSections ExamAttemptSection[]
 
   @@unique([examId, orderIndex])
   @@index([examId])
@@ -4543,31 +4810,31 @@ model SystemRelease {
 // in practice, nhưng giữ flexibility).
 // =====================================================================
 model Organization {
-  id              String   @id @default(uuid())
+  id                         String   @id @default(uuid())
   // Mã trường ngắn (vd "BKHN"), unique, dùng làm slug.
-  code            String   @unique
-  name            String
-  locale          String   @default("vi")
-  timezone        String   @default("Asia/Ho_Chi_Minh")
-  brandingLogoUrl String?
+  code                       String   @unique
+  name                       String
+  locale                     String   @default("vi")
+  timezone                   String   @default("Asia/Ho_Chi_Minh")
+  brandingLogoUrl            String?
   // Ảnh chữ ký người đại diện trường — hiện trên chứng nhận hoàn thành khoá
   // học, cạnh chữ ký Limio (xem SiteSetting key branding.limio_signature_url).
-  signatureImageUrl String?
+  signatureImageUrl          String?
   // Tên + chức danh in dưới ảnh chữ ký (vd "Nguyễn Văn A" / "Hiệu trưởng") —
   // null nếu chưa cấu hình, khi đó chỉ hiện ảnh (nếu có) không kèm chữ.
-  signatureName   String?
-  signatureTitle  String?
+  signatureName              String?
+  signatureTitle             String?
   // Import hàng loạt (Platform Admin hoặc OrgAdmin) có gửi email mời đặt mật
   // khẩu cho tài khoản mới tạo không. Mặc định TẮT: import 500 dòng không
   // được phát 500 email ngoài ý muốn; bật chủ động khi muốn.
-  inviteEmailOnImport Boolean @default(false)
+  inviteEmailOnImport        Boolean  @default(false)
   // Gửi email mời đặt mật khẩu cho tài khoản MỚI được tạo khi thêm bằng email
   // làm đồng giảng viên (khoá) / GV lớp / GV đợt thi, hoặc giám thị phòng thi.
   // Mặc định BẬT (giữ hành vi cũ); trường không muốn phát mail thì tắt.
-  inviteEmailOnInstructorAdd Boolean @default(true)
-  inviteEmailOnProctorAdd    Boolean @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  inviteEmailOnInstructorAdd Boolean  @default(true)
+  inviteEmailOnProctorAdd    Boolean  @default(true)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
 
   users            User[]
   courses          Course[]
@@ -4975,11 +5242,30 @@ model Portfolio {
   // false = trang /p/<slug> trả 404 cho mọi người.
   isPublic  Boolean  @default(false)
   headline  String?
+  // Đoạn giới thiệu ngắn (≤ PORTFOLIO_ABOUT_MAX ký tự), học viên tự viết.
+  about     String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items PortfolioItem[]
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items   PortfolioItem[]
+  courses PortfolioCourse[]
+}
+
+// Khoá học học viên chọn khoe trên trang công khai. Trỏ vào Certificate chứ
+// không phải Course: chỉ khoá đã hoàn thành (đã có chứng nhận) mới khoe được,
+// và link xác thực /verify/<certNumber> đi kèm sẵn.
+model PortfolioCourse {
+  id            String   @id @default(uuid())
+  portfolioId   String
+  certificateId String
+  createdAt     DateTime @default(now())
+
+  portfolio   Portfolio   @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  certificate Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, certificateId])
+  @@index([certificateId])
 }
 
 model PortfolioItem {
@@ -5013,30 +5299,30 @@ model PortfolioItem {
 // =====================================================================
 
 model StoredFile {
-  id           String    @id @default(uuid())
+  id             String    @id @default(uuid())
   // "public" | "private" | "tmp" — khớp StorageLayer ở apps/web/src/lib/storage-keys.ts
-  layer        String
+  layer          String
   // Key tương đối theo layer, đúng như truyền vào adapter.put.
-  key          String
+  key            String
   // BigInt: video có thể vượt 2 GB khi lên S3/R2.
-  sizeBytes    BigInt
-  contentType  String?
+  sizeBytes      BigInt
+  contentType    String?
   // Phân loại suy từ key (avatar, lesson_video, submission…) — để báo cáo.
-  kind         String
+  kind           String
   // Người bấm upload, suy từ tên file (`<userId>-<ms>-<hex>.ext`) hoặc thư mục
   // avatar. null = không suy được.
   uploaderUserId String?
   // Dung lượng này tính cho ai: chủ khoá nếu tìm được tham chiếu, không thì
   // rơi về người upload. null = chưa gán được (báo cáo hiện riêng).
-  billedUserId String?
-  courseId     String?
+  billedUserId   String?
+  courseId       String?
   // Vì sao gán như vậy: "reference:content_item" | "reference:submission" |
   // "reference:exam_asset" | "uploader" | ... — để kiểm tra lại được.
-  attribution  String?
-  attributedAt DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
+  attribution    String?
+  attributedAt   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
   @@unique([layer, key])
   // Tổng dung lượng của một người: WHERE billedUserId AND deletedAt IS NULL.
@@ -5044,4 +5330,226 @@ model StoredFile {
   @@index([uploaderUserId])
   @@index([kind, deletedAt])
   @@index([courseId])
+}
+
+// LANG G5a — chỉ ghi khi học viên nộp sớm một phần hoặc giảng viên gia hạn.
+// Phần đang chạy được SUY RA từ startedAt + giờ các phần (resolveSectionTimeline),
+// nên không có hàng nào để "quên cập nhật" khi hết giờ phần.
+model ExamAttemptSection {
+  id        String    @id @default(uuid())
+  attemptId String
+  sectionId String
+  // Học viên bấm "Nộp phần này" lúc nào (null = chưa nộp sớm).
+  endedAt   DateTime?
+  // Giây giảng viên gia hạn riêng cho phần này.
+  extraSec  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  section ExamSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, sectionId])
+  @@index([sectionId])
+}
+
+// LANG G5b — mỗi dòng là MỘT lượt phát audio đã được máy chủ cấp trong đề thi thử
+// (chỉ ghi khi chính sách là limited_replay/once_only). Đếm số dòng = số lượt đã
+// dùng; playId do máy khách sinh nên gửi lại vì mất mạng không tính hai lần.
+model ExamAudioPlay {
+  id        String   @id @default(uuid())
+  attemptId String
+  passageId String
+  // Nguồn của audio trong tài liệu bài đọc (một bài có thể có nhiều audio, mỗi
+  // audio có hạn mức riêng).
+  audioKey  String
+  playId    String
+  createdAt DateTime @default(now())
+
+  attempt ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, playId])
+  @@index([attemptId, passageId, audioKey])
+}
+
+// LANG G5e — LUYỆN ĐỀ theo kỹ năng. Cố ý là bảng RIÊNG, không dùng ExamAttempt: lượt luyện không có
+// giờ ép buộc, không có cron tự nộp, không vào bảng điểm/giám sát/thống kê của giảng viên, nên
+// không đụng chỉ mục "mỗi người một lượt dở" và mọi chỗ đếm ExamAttempt.
+enum ExamPracticeStatus {
+  in_progress
+  completed
+  abandoned
+}
+
+model ExamPracticeSession {
+  id           String             @id @default(uuid())
+  examId       String
+  userId       String
+  status       ExamPracticeStatus @default(in_progress)
+  // { sectionIds, questionIds (đã chốt lúc bắt đầu, theo thứ tự), filter, retryOfSessionId? }
+  scope        Json
+  // Học viên bật "Kiểm tra từng câu" (xem đúng/sai ngay sau khi trả lời).
+  checkEnabled Boolean            @default(true)
+  // Chỉ để HIỂN THỊ đồng hồ (không ép).
+  timed        Boolean            @default(false)
+  startedAt    DateTime           @default(now())
+  completedAt  DateTime?
+
+  exam    Exam                 @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers ExamPracticeAnswer[]
+
+  @@index([userId, examId, status])
+}
+
+model ExamPracticeAnswer {
+  id         String    @id @default(uuid())
+  sessionId  String
+  questionId String
+  answerJson Json
+  // null = chưa chấm hoặc câu chấm tay (tự luận) không có đúng/sai tự động.
+  isCorrect  Boolean?
+  score      Float?
+  checkedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  session  ExamPracticeSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question ExamQuestion        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@index([questionId])
+}
+
+// LANG G6 — góp ý bài viết ngoại ngữ do AI sinh. Học viên bấm, trừ ví token của học viên; bản sinh ra là
+// NHÁP (học viên thấy kèm nhãn "chưa duyệt") cho tới khi giảng viên duyệt. Mỗi bản mang toạ độ SSMMD
+// riêng (§4.8), ghi lúc sinh.
+enum WritingFeedbackStatus {
+  draft
+  approved
+  rejected
+}
+
+model WritingFeedback {
+  id                String                @id @default(uuid())
+  submissionId      String
+  userId            String
+  // Khoá của bài nộp — để tổng hợp lỗi lặp lại theo khoá không cần join ngược lên lesson.
+  courseId          String
+  status            WritingFeedbackStatus @default(draft)
+  // Hash nội dung bài nộp lúc phân tích: cùng nội dung thì trả bản cũ, không gọi AI/trừ token lại.
+  submissionHash    String
+  // { summary, criteria[{key,level,comment}], errors[{id,category,quote,correction,explanation}], nextSteps[] }
+  body              Json
+  model             String
+  tokensIn          Int
+  tokensOut         Int
+  // ── Toạ độ SSMMD (B9) — bắt buộc, thiếu là lỗi (không lưu).
+  level             FeedbackLevel
+  levels            Json
+  elaboration       FeedbackElaboration
+  sourceKind        FeedbackSourceKind
+  generationContext Json
+  generatedAt       DateTime              @default(now())
+  reviewedById      String?
+  reviewedAt        DateTime?
+  reviewerNote      String?               @db.Text
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  user       User                 @relation("WritingFeedbackOwner", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer   User?                @relation("WritingFeedbackReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([submissionId, generatedAt])
+  @@index([userId, courseId, status])
+}
+
+// LANG G7 — bản chữ do máy (Whisper) nghe được từ file ghi âm của một bài nộp. DỮ LIỆU DẪN XUẤT: một bản cho
+// mỗi (bài nộp, file ghi âm); nộp lại bằng file khác thì có bản mới. Chứa lời nói riêng của học viên nên bị xoá
+// cùng yêu cầu xoá tài khoản và nằm trong bản xuất dữ liệu cá nhân.
+model SubmissionTranscript {
+  id           String   @id @default(uuid())
+  submissionId String
+  userId       String
+  courseId     String
+  audioUrl     String
+  // Hash của bản chữ chuẩn hoá — cùng nội dung thì trả góp ý cũ, không gọi AI/trừ token lại.
+  textHash     String
+  language     String?
+  text         String   @db.Text
+  // { pauses: number[], longPauses: number, wordsPerMin: number, ... } — số liệu nhịp nói đo từ mốc thời gian.
+  metrics      Json
+  durationSec  Float
+  model        String
+  createdAt    DateTime @default(now())
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feedbacks  SpeakingFeedback[]
+
+  @@unique([submissionId, audioUrl])
+  @@index([userId, courseId])
+}
+
+// LANG G7 — góp ý bài nói do AI sinh từ bản chữ + số liệu nhịp nói. Cùng vòng đời duyệt với WritingFeedback
+// (nháp "chưa duyệt" → giảng viên duyệt/từ chối) và cùng toạ độ SSMMD (§4.8). KHÔNG chấm phát âm.
+model SpeakingFeedback {
+  id                String                @id @default(uuid())
+  submissionId      String
+  transcriptId      String
+  userId            String
+  courseId          String
+  status            WritingFeedbackStatus @default(draft)
+  transcriptHash    String
+  // { summary, criteria[{key,level,comment}], errors[{id,category,quote,correction,explanation}], nextSteps[] }
+  body              Json
+  model             String
+  tokensIn          Int
+  tokensOut         Int
+  level             FeedbackLevel
+  levels            Json
+  elaboration       FeedbackElaboration
+  sourceKind        FeedbackSourceKind
+  generationContext Json
+  generatedAt       DateTime              @default(now())
+  reviewedById      String?
+  reviewedAt        DateTime?
+  reviewerNote      String?               @db.Text
+
+  submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  transcript SubmissionTranscript @relation(fields: [transcriptId], references: [id], onDelete: Cascade)
+  user       User                 @relation("SpeakingFeedbackOwner", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer   User?                @relation("SpeakingFeedbackReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([submissionId, generatedAt])
+  @@index([userId, courseId, status])
+}
+
+// =====================================================================
+// Growth attribution — "lần chạm đầu tiên" của mỗi user (first touch).
+//
+// Ghi lúc đăng ký từ cookie first-party `limio_attr` (middleware đặt khi khách
+// đến từ utm_* / click-id / referrer ngoài). Một dòng / user, xoá user ⇒ xoá
+// dòng. KHÔNG lưu giá trị click id (chỉ loại), không lưu query string, không
+// lưu IP / user agent. Đọc bởi GET /api/internal/growth/events (SIM) — id đã
+// được HMAC ẩn danh trước khi rời hệ thống. Xem docs/growth-events.md.
+// =====================================================================
+
+model AcquisitionTouch {
+  userId       String   @id
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  utmContent   String?
+  utmTerm      String?
+  // "fbclid" | "gclid" | "ttclid" — chỉ loại, không bao giờ lưu giá trị.
+  clickIdKind  String?
+  // Đường dẫn trang đích: không query string, đã che đoạn giống mã/token.
+  landingPath  String?
+  // Chỉ host của Referer ngoài site.
+  referrerHost String?
+  // Lúc cookie được tạo (không phải lúc đăng ký).
+  firstSeenAt  DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

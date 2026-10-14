@@ -1,12 +1,10 @@
 import { isOpenaiOverloaded } from "@/lib/openaiResilience";
-import { createOpenaiClient } from "@/lib/openaiClient";
+import { getOralExamTextAi } from "@/lib/oralExamEmbed";
 import {
   AiTutorError,
   openAiChatCompute,
-  openAiEmbedCompute,
   runOralExamTurn,
 } from "@feedbackme/core-feedback";
-import { getIntegrationSecret, IntegrationError } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { recordAnswered, recordStatus } from "@/lib/exam-live-bus";
 
@@ -35,11 +33,11 @@ export async function POST(
   const studentMessage = body?.message?.trim() || null;
   const forceEnd = body?.forceEnd === true;
 
-  let openaiKey: string;
+  let ai: Awaited<ReturnType<typeof getOralExamTextAi>>;
   try {
-    openaiKey = await getIntegrationSecret("openai");
+    ai = await getOralExamTextAi();
   } catch (e) {
-    if (e instanceof IntegrationError && e.code === "key_not_found") {
+    if ((e as Error).message === "openai_not_configured") {
       return new Response(
         JSON.stringify({ error: "openai_not_configured" }),
         { status: 503, headers: { "content-type": "application/json" } },
@@ -48,7 +46,6 @@ export async function POST(
     throw e;
   }
 
-  const openai = createOpenaiClient(openaiKey);
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -68,8 +65,8 @@ export async function POST(
           studentUserId: userId,
           studentMessage,
           forceEnd,
-          computeChat: openAiChatCompute(openai),
-          computeEmbed: openAiEmbedCompute(openai),
+          computeChat: openAiChatCompute(ai.openai),
+          computeEmbed: ai.computeEmbed,
           onDelta: (delta) => send("delta", delta),
         });
         send("done", { ended: result.ended, questionsAsked: result.questionsAsked });

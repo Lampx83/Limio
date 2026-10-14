@@ -49,10 +49,10 @@ const WEEKDAY_LONG = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ
 // `rank` nhỏ = đáng chú ý hơn: ngày có nhiều bài thì chấm dưới số lấy màu của bài gấp nhất.
 const STATE_META: Record<CalendarItemState, { label: string; chip: string; dot: string; rank: number }> = {
   overdue: { label: "Quá hạn", chip: "chip-danger", dot: "bg-danger-500", rank: 0 },
-  todo: { label: "Chưa nộp", chip: "chip-accent", dot: "bg-accent-500", rank: 1 },
+  todo: { label: "Chưa nộp", chip: "chip-accent", dot: "bg-accent-600", rank: 1 },
   submitted: { label: "Đã nộp", chip: "chip-brand", dot: "bg-brand-500", rank: 2 },
   graded: { label: "Đã chấm", chip: "chip-success", dot: "bg-success-500", rank: 3 },
-  upcoming: { label: "Sắp đến hạn", chip: "chip-accent", dot: "bg-accent-500", rank: 1 },
+  upcoming: { label: "Sắp đến hạn", chip: "chip-accent", dot: "bg-accent-600", rank: 1 },
   closed: { label: "Đã hết hạn", chip: "chip", dot: "bg-slate-400", rank: 4 },
 };
 
@@ -86,20 +86,26 @@ export default function WorkspaceCalendar({
   organizationName,
   terms,
   assignments,
-  defaultView = "week",
+  defaultView = "month",
   initialDay,
 }: {
   todayKey: string;
   organizationName: string | null;
   terms: AcademicTermLike[];
   assignments?: CalendarAssignment[];
-  /** Mặc định "week" (1 hàng) cho gọn; "month" mở sẵn cả tháng. */
+  /** Mặc định "month" (cả tháng, nhìn tổng quan); "week" chỉ 1 hàng cho gọn hơn nữa. */
   defaultView?: View;
   /** Ngày chọn sẵn (mặc định hôm nay). Chủ yếu để test lịch ở tuần không phải tuần hiện tại. */
   initialDay?: string;
 }) {
   const [view, setView] = useState<View>(defaultView);
-  // Ngày đang chọn đồng thời là mỏ neo: lịch tháng hiển thị tháng chứa nó, lịch tuần hiển thị tuần chứa nó.
+  // Hai thứ tách bạch:
+  //  - `anchor`: mỏ neo "đang xem" — lịch tháng hiển thị tháng chứa nó, lịch tuần hiển thị tuần chứa nó.
+  //    Trước/Sau và ô chọn tháng/năm chỉ dịch cái này.
+  //  - `selected`: ngày người dùng CHỌN (ô xanh đậm + danh sách bên dưới). Mặc định là hôm nay và
+  //    đứng yên khi lật tháng/tuần; chỉ đổi khi người dùng bấm vào một ngày (hoặc "hạn nộp tiếp theo").
+  // Trước đây gộp làm một nên lật sang tháng khác là ô xanh đậm bị kéo theo sang mùng 1.
+  const [anchor, setAnchor] = useState(initialDay ?? todayKey);
   const [selected, setSelected] = useState(initialDay ?? todayKey);
   const [open, setOpen] = useState(true);
 
@@ -107,8 +113,8 @@ export default function WorkspaceCalendar({
   const showWeekColumn = inOrg && terms.length > 0;
   const showList = assignments !== undefined;
 
-  const rows = useMemo(() => (view === "month" ? monthGrid(selected) : [weekDays(selected)]), [view, selected]);
-  const viewedMonth = selected.slice(0, 7);
+  const rows = useMemo(() => (view === "month" ? monthGrid(anchor) : [weekDays(anchor)]), [view, anchor]);
+  const viewedMonth = anchor.slice(0, 7);
   const currentWeekStart = weekDays(todayKey)[0]!;
 
   const byDay = useMemo(() => {
@@ -122,14 +128,20 @@ export default function WorkspaceCalendar({
     return map;
   }, [assignments]);
 
-  /** Sang tháng khác: về "hôm nay" nếu tháng đó chứa hôm nay, không thì mùng 1. */
+  /** Người dùng bấm một ngày: chọn nó và đưa lịch tới đó (ngày ngoài tháng thì lịch nhảy sang tháng ấy). */
+  function pickDay(day: string) {
+    setSelected(day);
+    setAnchor(day);
+  }
+
+  /** Xem tháng khác: chỉ dịch mỏ neo — về "hôm nay" nếu tháng đó chứa hôm nay, không thì mùng 1. */
   function goToMonth(firstOfMonth: string) {
-    setSelected(firstOfMonth.slice(0, 7) === todayKey.slice(0, 7) ? todayKey : firstOfMonth);
+    setAnchor(firstOfMonth.slice(0, 7) === todayKey.slice(0, 7) ? todayKey : firstOfMonth);
   }
 
   function move(direction: -1 | 1) {
-    if (view === "month") goToMonth(addMonthsToKey(selected, direction));
-    else setSelected(addDaysToKey(selected, 7 * direction));
+    if (view === "month") goToMonth(addMonthsToKey(anchor, direction));
+    else setAnchor(addDaysToKey(anchor, 7 * direction));
   }
 
   const todayYear = Number(todayKey.slice(0, 4));
@@ -139,9 +151,26 @@ export default function WorkspaceCalendar({
   ).sort((a, b) => a - b);
 
   // Tiêu đề bám theo ngày/tuần ĐANG XEM (lật tuần thì số tuần đổi theo); "Hôm nay" đưa về tuần hiện tại.
-  const position = inOrg ? resolveAcademicPosition(selected, terms) : null;
-  const weekDaysOfSelected = weekDays(selected);
+  const position = inOrg ? resolveAcademicPosition(anchor, terms) : null;
+  const weekDaysOfAnchor = weekDays(anchor);
+  // Chip "Tuần N" ở danh sách bên dưới thuộc về NGÀY ĐƯỢC CHỌN, không phải tuần đang xem.
   const viewedWeek = showWeekColumn ? weekLabelForDay(selected, terms) : null;
+
+  // "Về hôm nay": chỉ hiện khi đang xem/chọn chỗ khác hôm nay. Nằm ở HÀNG ĐẦU của header, bên trái công tắc
+  // Tuần/Tháng (căn phải nên công tắc không bị đẩy). Nhãn ngắn "Hôm nay" (không viền/đệm): "Về hôm nay" hay nút có viền làm tiêu đề "Tuần 12/15" bị ép xuống dòng ở thẻ hẹp. KHÔNG đặt ở hàng Trước/Sau (hiện/ẩn làm hàng đó cao thêm,
+  // các nút nhảy lệch) và KHÔNG đặt ở dòng phụ "kỳ · trường" (chiếm chỗ làm dòng đó bị cắt).
+  const goToday =
+    anchor !== todayKey || selected !== todayKey ? (
+      <button
+        type="button"
+        onClick={() => pickDay(todayKey)}
+        title="Về hôm nay"
+        aria-label="Về hôm nay"
+        className="link shrink-0 whitespace-nowrap text-xs font-medium"
+      >
+        Hôm nay
+      </button>
+    ) : null;
 
   const dayItems = byDay.get(selected) ?? [];
   const nextDueDay = useMemo(
@@ -150,13 +179,15 @@ export default function WorkspaceCalendar({
   );
 
   return (
-    <section className="card p-3 sm:p-4" aria-label="Lịch">
-      <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <div className="min-w-0 grow basis-36">
+    <section className="card p-3" aria-label="Lịch">
+      {/* Lưới 2 cột: hàng 1 = tiêu đề | công tắc Tuần/Tháng + thu gọn; hàng 2 = dòng phụ chạy suốt chiều rộng.
+            Trước đây flex-wrap nên ở cột hẹp công tắc rớt xuống dòng riêng, header cao 82px. */}
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-1.5 gap-y-0.5">
+        <div className="contents">
           {position && organizationName ? (
             <>
-              <h2 className="flex items-center gap-1.5 text-base font-bold leading-tight">
-                <CalendarDays className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+              <h2 className="col-start-1 row-start-1 flex items-center gap-1 whitespace-nowrap text-[15px] font-bold leading-tight">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
                 {position.kind === "in_term" ? (
                   <span className="whitespace-nowrap">
                     Tuần {position.week}
@@ -168,12 +199,12 @@ export default function WorkspaceCalendar({
                   <span>Ngoài kỳ học</span>
                 )}
               </h2>
-              <p className="mt-0.5 text-xs text-muted">
+              <p className="col-span-2 row-start-2 text-xs text-muted">
                 {position.kind === "in_term" && <>{position.term.name} · </>}
                 {position.kind === "before_term" && (
                   <>
                     {position.term.name} bắt đầu{" "}
-                    {selected === todayKey
+                    {anchor === todayKey
                       ? `sau ${position.daysUntilStart} ngày`
                       : formatDayKey(termFirstDay(position.term))}{" "}
                     ·{" "}
@@ -184,18 +215,19 @@ export default function WorkspaceCalendar({
             </>
           ) : (
             <>
-              <h2 className="flex items-center gap-1.5 text-base font-bold leading-tight">
-                <CalendarDays className="h-4 w-4 shrink-0 text-brand-600" aria-hidden />
+              <h2 className="col-start-1 row-start-1 flex items-center gap-1 whitespace-nowrap text-[15px] font-bold leading-tight">
+                <CalendarDays className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
                 Lịch
               </h2>
-              <p className="mt-0.5 text-xs text-muted">
+              <p className="col-span-2 row-start-2 text-xs text-muted">
                 Hôm nay, {WEEKDAY_LONG[weekdayIndexMon0(todayKey)]?.toLowerCase()} {formatDayKey(todayKey)}
               </p>
             </>
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="col-start-2 row-start-1 flex shrink-0 items-center gap-1.5">
+          {goToday}
           <div role="group" aria-label="Chế độ xem" className="inline-flex rounded-lg border border-token p-0.5 text-xs">
             {(["week", "month"] as const).map((v) => (
               <button
@@ -203,7 +235,7 @@ export default function WorkspaceCalendar({
                 type="button"
                 onClick={() => setView(v)}
                 aria-pressed={view === v}
-                className={`rounded-md px-2 py-0.5 font-medium transition-colors ${
+                className={`rounded-md px-1 py-0.5 font-medium transition-colors ${
                   view === v ? "bg-brand-600 text-white" : "text-muted hover:text-token"
                 }`}
               >
@@ -216,7 +248,7 @@ export default function WorkspaceCalendar({
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
             aria-label={open ? "Thu gọn lịch" : "Mở rộng lịch"}
-            className="btn-ghost btn-sm px-2"
+            className="btn-ghost btn-sm px-1"
           >
             <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} />
           </button>
@@ -226,7 +258,7 @@ export default function WorkspaceCalendar({
       {open && (
         <>
           {/* Điều hướng đối xứng: Trước (trái) — khoảng đang xem (giữa) — Sau (phải). Nút to, có viền và chữ để khỏi bấm nhầm. */}
-          <div className="mt-2 grid grid-cols-[auto_1fr_auto] items-center gap-2">
+          <div className="mt-1.5 grid grid-cols-[auto_1fr_auto] items-center gap-2">
             <button
               type="button"
               onClick={() => move(-1)}
@@ -267,14 +299,8 @@ export default function WorkspaceCalendar({
                 </div>
               ) : (
                 <p className="whitespace-nowrap text-center text-sm font-semibold tabular-nums">
-                  {weekRangeText(weekDaysOfSelected)}
+                  {weekRangeText(weekDaysOfAnchor)}
                 </p>
-              )}
-              {/* Chỉ hiện khi đang xem chỗ khác hôm nay — ở hôm nay thì không cần, đỡ rối. */}
-              {selected !== todayKey && (
-                <button type="button" onClick={() => setSelected(todayKey)} className="link text-xs">
-                  Về hôm nay
-                </button>
               )}
             </div>
 
@@ -291,7 +317,7 @@ export default function WorkspaceCalendar({
 
           {/* Lưới không viền: số ngày trong vòng tròn, chấm nhỏ dưới ngày có hạn nộp. */}
           <div
-            className={`mt-1.5 grid items-center ${
+            className={`mt-1 grid items-center ${
               showWeekColumn
                 ? "grid-cols-[1.75rem_repeat(7,minmax(0,1fr))]"
                 : "grid-cols-7"
@@ -322,14 +348,14 @@ export default function WorkspaceCalendar({
                   todayKey={todayKey}
                   selected={selected}
                   byDay={byDay}
-                  onSelect={setSelected}
+                  onSelect={pickDay}
                 />
               );
             })}
           </div>
 
           {showList && (
-            <div className="mt-2 border-t border-token pt-2">
+            <div className="mt-1.5 border-t border-token pt-1.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-xs font-semibold">
                   Ngày {String(dayNumber(selected)).padStart(2, "0")} tháng {selected.slice(5, 7)}
@@ -349,7 +375,7 @@ export default function WorkspaceCalendar({
                   {nextDueDay && (
                     <button
                       type="button"
-                      onClick={() => setSelected(nextDueDay)}
+                      onClick={() => pickDay(nextDueDay)}
                       className="link mt-0.5 text-left text-xs"
                     >
                       Hạn nộp tiếp theo: {WEEKDAY_LONG[weekdayIndexMon0(nextDueDay)]} {shortDay(nextDueDay)} →
@@ -458,17 +484,23 @@ function Row({
             }`}
           >
             <span
-              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs tabular-nums transition-colors sm:h-8 sm:w-8 sm:text-sm ${circle}`}
+              className={`flex h-6 w-6 items-center justify-center rounded-full text-xs tabular-nums transition-colors ${circle}`}
             >
               {dayNumber(day)}
             </span>
             {/* Luôn giữ chỗ cho chấm để hàng không nhảy chiều cao. */}
-            <span className="flex h-1.5 items-center gap-0.5" aria-hidden>
+            {/* Chấm 8px (trước là 4px, nhìn như hạt bụi trên nền trắng) kèm vòng
+                trắng mảnh để không chìm vào ô đang chọn / tuần hiện tại. */}
+            <span className="flex h-2.5 items-center gap-0.5" aria-hidden>
               {worst && (
                 <>
-                  <span className={`h-1 w-1 rounded-full ${STATE_META[worst].dot}`} />
+                  <span
+                    className={`h-2 w-2 rounded-full ring-1 ring-[rgb(var(--surface))] ${STATE_META[worst].dot}`}
+                  />
                   {items.length > 1 && (
-                    <span className="text-[9px] font-semibold leading-none text-muted">{items.length}</span>
+                    <span className="text-[10px] font-bold leading-none text-[rgb(var(--text))]">
+                      {items.length}
+                    </span>
                   )}
                 </>
               )}

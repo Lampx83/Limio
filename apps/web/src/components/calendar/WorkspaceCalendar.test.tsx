@@ -169,8 +169,8 @@ describe("WorkspaceCalendar — giáo viên", () => {
   });
 });
 
-describe("WorkspaceCalendar — gọn (mặc định xem tuần)", () => {
-  it("mặc định chỉ 1 hàng tuần: có khoảng ngày + chip số tuần, không có ô chọn tháng/năm", () => {
+describe("WorkspaceCalendar — chế độ xem (mặc định tháng; tuần là bản gọn)", () => {
+  it("xem tuần chỉ 1 hàng: có khoảng ngày + chip số tuần, không có ô chọn tháng/năm", () => {
     const out = html({ defaultView: "week", organizationName: "Trường A", terms: [HK1], assignments: HW });
     expect(text(out)).toContain("28/9 – 4/10/2026");
     expect(text(out)).toContain("Tuần 4");
@@ -180,11 +180,14 @@ describe("WorkspaceCalendar — gọn (mặc định xem tuần)", () => {
     expect(out).not.toContain('aria-label="10/09');
   });
 
-  it("không truyền defaultView thì là tuần", () => {
+  it("không truyền defaultView thì là tháng (có ô chọn tháng/năm, đủ các tuần)", () => {
     const out = renderToStaticMarkup(
       <WorkspaceCalendar todayKey="2026-09-30" organizationName={null} terms={[]} />,
     );
-    expect(out).not.toContain('aria-label="Năm"');
+    expect(out).toContain('aria-label="Năm"');
+    expect(out).toContain('aria-label="Tháng sau"');
+    // tháng 9 có cả đầu tháng lẫn cuối tháng
+    expect(out).toContain('aria-label="1/09');
   });
 });
 
@@ -278,8 +281,9 @@ describe("WorkspaceCalendar — nút điều hướng", () => {
   });
 
   it("'Về hôm nay' chỉ hiện khi đang xem ngày khác hôm nay", () => {
-    expect(text(html({ defaultView: "week" }))).not.toContain("Về hôm nay");
-    expect(text(html({ defaultView: "week", initialDay: "2026-10-12" }))).toContain("Về hôm nay");
+    // Nút có nhãn "Hôm nay" (chữ "Hôm nay" còn xuất hiện ở chỗ khác nên nhận diện bằng aria-label).
+    expect(html({ defaultView: "week" })).not.toContain('aria-label="Về hôm nay"');
+    expect(html({ defaultView: "week", initialDay: "2026-10-12" })).toContain('aria-label="Về hôm nay"');
   });
 });
 

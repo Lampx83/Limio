@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createExam, createExamFromWizard, listExamsForCourse } from "@feedbackme/core-lms";
+import { createExam, createExamFromWizard, createMockExamFromTemplate, listExamsForCourse } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
@@ -43,9 +43,13 @@ export async function POST(
   const body = await readJson(req);
   try {
     // A5.5 — wizard path when body contains wizardConfig
-    const result = (body as Record<string, unknown>).wizardConfig
-      ? await createExamFromWizard(userId, courseId, body)
-      : await createExam(userId, courseId, body);
+    // LANG G5c.1 — mockTemplate: dựng đề thi thử từ khung (chỉ cấu trúc).
+    const b = body as Record<string, unknown>;
+    const result = b.mockTemplate
+      ? await createMockExamFromTemplate(userId, courseId, { title: b.title, template: b.mockTemplate })
+      : b.wizardConfig
+        ? await createExamFromWizard(userId, courseId, body)
+        : await createExam(userId, courseId, body);
     return NextResponse.json(result, { status: 201 });
   } catch (e) {
     const mapped = mapKnownError(e);

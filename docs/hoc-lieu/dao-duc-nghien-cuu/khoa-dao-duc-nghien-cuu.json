@@ -1,0 +1,1501 @@
+{
+  "course": {
+    "title": "NCKH 501 · Đạo đức nghiên cứu khoa học",
+    "slug": "dao-duc-nghien-cuu",
+    "description": "Khoá dùng chung cho sinh viên, học viên cao học và nghiên cứu sinh — đào sâu đạo đức nghiên cứu ở những góc chưa được dạy tại 3 khoá kia trong bộ kỹ năng nghiên cứu: liêm chính học thuật (đạo văn, tự đạo văn, ngụy tạo/sửa dữ liệu); quy trình hội đồng đạo đức đầy đủ (phân loại rủi ro, nhóm dễ bị tổn thương); đạo đức dữ liệu nghiên cứu (ẩn danh hoá kỹ thuật, đối chiếu Luật Bảo vệ dữ liệu cá nhân 2025 của Việt Nam); xung đột lợi ích; đạo đức dùng AI trong toàn bộ quy trình nghiên cứu, không chỉ khâu viết bài; và văn hoá liêm chính, báo cáo sai phạm. Mỗi bài dùng tình huống cụ thể, không chỉ nguyên tắc trừu tượng, và kết bằng một bài kiểm tra ngắn, phương án sai gắn mã lỗi tư duy để phản hồi chỉ đúng chỗ hiểu nhầm.",
+    "language": "vi",
+    "level": "intermediate",
+    "category": "Nghiên cứu khoa học",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "dd.paraphrase-no-citation",
+      "name": "Diễn giải ý tưởng người khác mà không trích dẫn",
+      "description": "Coi việc diễn giải (paraphrase) chỉ cần đổi từ ngữ khác với nguyên văn là đủ, không cần trích dẫn nguồn — đạo văn xảy ra khi lấy Ý TƯỞNG của người khác mà không ghi nguồn, không chỉ khi sao chép nguyên văn câu chữ."
+    },
+    {
+      "code": "dd.self-plagiarism-no-issue",
+      "name": "Coi tự đạo văn không phải vấn đề vì tự mình viết ra",
+      "description": "Dùng lại nguyên văn đoạn văn từ bài đã công bố trước đó của chính mình mà không trích dẫn hoặc khai báo, coi đây không phải vi phạm vì 'mình là người viết ra'. Tạp chí giữ bản quyền sau khi xuất bản, và độc giả có quyền biết nội dung đã công bố ở đâu."
+    },
+    {
+      "code": "dd.ffp-vs-qrp-confused",
+      "name": "Không phân biệt FFP với lỗi phương pháp thông thường",
+      "description": "Không phân biệt được vi phạm liêm chính nghiêm trọng (Fabrication, Falsification, Plagiarism — cố ý và có tính lừa dối) với sai sót phương pháp hoặc questionable research practices ở mức nhẹ hơn — hai loại này bị xử lý rất khác nhau."
+    },
+    {
+      "code": "dd.misconduct-no-consequence",
+      "name": "Nghĩ vi phạm liêm chính không có hậu quả nếu chưa bị phát hiện",
+      "description": "Cho rằng một vi phạm liêm chính chỉ trở thành vấn đề khi bị phát hiện, bỏ qua thực tế rằng công cụ phát hiện đạo văn, quy trình rà soát hậu kiểm, và việc người khác không tái lập được kết quả đều có thể phát hiện vi phạm nhiều năm sau khi công bố."
+    },
+    {
+      "code": "dd.skip-risk-classification",
+      "name": "Không phân loại mức rủi ro trước khi nộp hồ sơ hội đồng đạo đức",
+      "description": "Nộp hồ sơ xin duyệt đạo đức mà không tự đánh giá trước nghiên cứu thuộc mức rủi ro nào (minimal risk hay greater than minimal risk) — việc này quyết định quy trình thẩm định sẽ là rút gọn (expedited) hay đầy đủ (full board review)."
+    },
+    {
+      "code": "dd.vulnerable-group-no-extra-safeguard",
+      "name": "Không áp dụng biện pháp bảo vệ bổ sung cho nhóm dễ bị tổn thương",
+      "description": "Áp dụng quy trình đồng ý tham gia (consent) tiêu chuẩn cho nhóm dễ bị tổn thương (trẻ em, người có năng lực hạn chế, nhóm yếu thế) mà không có biện pháp bảo vệ bổ sung (đồng ý của người đại diện, đánh giá năng lực, giảm thiểu áp lực tham gia)."
+    },
+    {
+      "code": "dd.one-time-approval-enough",
+      "name": "Nghĩ phê duyệt đạo đức một lần là đủ cho toàn bộ nghiên cứu",
+      "description": "Cho rằng phê duyệt ban đầu của hội đồng đạo đức có hiệu lực vĩnh viễn, không cần báo cáo định kỳ (continuing review), báo cáo sửa đổi protocol, hay báo cáo sự cố bất lợi phát sinh trong quá trình nghiên cứu."
+    },
+    {
+      "code": "dd.belmont-principle-confused",
+      "name": "Nhầm lẫn giữa ba nguyên tắc Belmont",
+      "description": "Nhầm lẫn giữa Tôn trọng con người (Respect for Persons — tự nguyện tham gia, bảo vệ người có năng lực hạn chế), Làm điều thiện (Beneficence — tối đa hoá lợi ích, tối thiểu hoá rủi ro), và Công bằng (Justice — phân bổ công bằng gánh nặng/lợi ích nghiên cứu giữa các nhóm)."
+    },
+    {
+      "code": "dd.rename-is-anonymization",
+      "name": "Coi đổi tên/mã hoá ID là đã ẩn danh hoàn toàn",
+      "description": "Cho rằng chỉ cần thay tên thật bằng mã số (ID1, ID2...) là dữ liệu đã được ẩn danh hoàn toàn, bỏ qua rủi ro tái nhận dạng (re-identification) khi tổ hợp các biến còn lại (tuổi, giới tính, đơn vị công tác, thời điểm) vẫn có thể chỉ đúng một người."
+    },
+    {
+      "code": "dd.no-data-management-plan",
+      "name": "Không có kế hoạch quản lý dữ liệu trước khi thu thập",
+      "description": "Bắt đầu thu thập dữ liệu mà không có kế hoạch quản lý dữ liệu (data management plan) xác định trước: ai sở hữu dữ liệu, lưu ở đâu, ai được truy cập, lưu bao lâu, và huỷ khi nào."
+    },
+    {
+      "code": "dd.ignore-bvdlcn-law",
+      "name": "Bỏ qua nghĩa vụ theo Luật Bảo vệ dữ liệu cá nhân khi xử lý dữ liệu nhạy cảm",
+      "description": "Thu thập dữ liệu cá nhân nhạy cảm (dữ liệu trẻ em, dữ liệu sinh trắc học) mà không biết hoặc bỏ qua nghĩa vụ theo Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 — ví dụ không xin đồng ý của cả trẻ (từ đủ 7 tuổi) và người đại diện, hoặc không lập hồ sơ đánh giá tác động xử lý dữ liệu cá nhân khi luật yêu cầu."
+    },
+    {
+      "code": "dd.share-data-no-agreement",
+      "name": "Chia sẻ dữ liệu nghiên cứu mà không có thoả thuận bảo mật rõ ràng",
+      "description": "Chia sẻ bộ dữ liệu nghiên cứu (cho đồng nghiệp, tạp chí yêu cầu open data, hoặc dịch vụ AI bên thứ ba) mà không có thoả thuận rõ ràng về mục đích sử dụng, thời hạn lưu trữ, và trách nhiệm bảo mật của bên nhận."
+    },
+    {
+      "code": "dd.coi-only-if-affects",
+      "name": "Chỉ công bố xung đột lợi ích khi tin rằng nó thực sự ảnh hưởng",
+      "description": "Chỉ công bố một xung đột lợi ích (tài trợ, quan hệ cá nhân) khi tự đánh giá rằng nó thực sự ảnh hưởng tới kết quả — nguyên tắc đúng là công bố MỌI xung đột lợi ích tiềm ẩn, để người đọc/hội đồng tự đánh giá, không phải người trong cuộc tự quyết."
+    },
+    {
+      "code": "dd.no-recusal-conflict",
+      "name": "Không tự rút khỏi vai trò phản biện/hội đồng khi có xung đột lợi ích",
+      "description": "Tiếp tục đóng vai trò phản biện hoặc thành viên hội đồng cho một nghiên cứu dù có xung đột lợi ích rõ ràng (quan hệ thầy trò, đồng tác giả trước đây, cạnh tranh trực tiếp về ý tưởng), thay vì tự rút (recusal) và báo cho ban biên tập/chủ tịch hội đồng."
+    },
+    {
+      "code": "dd.sponsor-controls-publication",
+      "name": "Chấp nhận điều khoản tài trợ cho nhà tài trợ kiểm soát việc công bố",
+      "description": "Ký hợp đồng tài trợ cho phép nhà tài trợ (doanh nghiệp) có quyền ngăn công bố kết quả bất lợi cho họ — vi phạm nguyên tắc độc lập học thuật, dù khoản tài trợ hợp pháp."
+    },
+    {
+      "code": "dd.personal-relationship-not-coi",
+      "name": "Không coi quan hệ cá nhân trong hội đồng là xung đột lợi ích",
+      "description": "Không công bố quan hệ cá nhân (thầy trò, người thân, đồng nghiệp thân thiết) khi tham gia hội đồng phản biện hoặc đánh giá một nghiên cứu liên quan tới người đó — xung đột lợi ích không chỉ giới hạn ở tiền bạc."
+    },
+    {
+      "code": "dd.ai-analysis-no-verify",
+      "name": "Chấp nhận thẳng kết quả phân tích do AI đưa ra mà không kiểm chứng",
+      "description": "Dùng AI để phân tích dữ liệu (chạy thống kê, gợi ý mô hình) và chấp nhận kết quả mà không tự kiểm chứng bằng công cụ thống kê chuẩn hoặc hiểu được logic tính toán — coi AI như một hộp đen đáng tin tuyệt đối."
+    },
+    {
+      "code": "dd.synthetic-data-as-real",
+      "name": "Dùng dữ liệu tổng hợp rồi báo cáo như dữ liệu thu thập thật",
+      "description": "Dùng dữ liệu tổng hợp (synthetic data, kể cả do AI tạo ra) để lấp khoảng trống mẫu hoặc thử nghiệm, nhưng báo cáo hoặc trình bày như thể đó là dữ liệu thu thập thật — đây là ngụy tạo dữ liệu (fabrication), một vi phạm liêm chính nghiêm trọng."
+    },
+    {
+      "code": "dd.ai-summary-no-read-source",
+      "name": "Dùng bản tóm tắt tài liệu do AI tạo mà không tự đọc nguồn gốc",
+      "description": "Đưa vào tổng quan tài liệu một luận điểm hoặc số liệu dựa hoàn toàn vào bản tóm tắt do AI tạo ra, mà không tự đọc lại bài báo gốc để xác nhận tóm tắt đó phản ánh đúng nội dung, mức độ chắc chắn, và bối cảnh của nghiên cứu gốc."
+    },
+    {
+      "code": "dd.ai-blackbox-no-disclosure",
+      "name": "Không khai báo việc dùng AI trong khâu phân tích/thu thập dữ liệu",
+      "description": "Dùng AI đáng kể trong khâu phân tích hoặc thu thập/tổng hợp dữ liệu (không chỉ viết văn) mà không khai báo trong phần Methods — khác và nghiêm trọng hơn việc không khai báo dùng AI để sửa văn phong."
+    },
+    {
+      "code": "dd.no-report-fear-retaliation",
+      "name": "Không báo cáo sai phạm vì sợ trả đũa",
+      "description": "Chứng kiến hoặc nghi ngờ một sai phạm liêm chính nhưng chọn im lặng vì sợ ảnh hưởng tới quan hệ thầy trò/đồng nghiệp hoặc sự nghiệp của bản thân, coi đây là lựa chọn an toàn duy nhất — bỏ qua các kênh báo cáo bảo mật đã được thiết lập."
+    },
+    {
+      "code": "dd.pi-not-responsible-culture",
+      "name": "Người hướng dẫn/PI cho rằng văn hoá liêm chính là trách nhiệm cá nhân",
+      "description": "Người hướng dẫn (PI) cho rằng liêm chính nghiên cứu chỉ là trách nhiệm cá nhân của từng thành viên, không phải trách nhiệm của người dẫn dắt nhóm trong việc xây dựng quy trình, làm gương, và tạo môi trường an toàn để nêu vấn đề."
+    },
+    {
+      "code": "dd.rcr-training-once-enough",
+      "name": "Nghĩ đào tạo liêm chính nghiên cứu một lần là đủ",
+      "description": "Cho rằng hoàn thành một khoá đào tạo về liêm chính nghiên cứu (RCR) khi mới bắt đầu là đủ cho toàn bộ sự nghiệp nghiên cứu, bỏ qua nhu cầu cập nhật định kỳ khi công nghệ (như AI) và tình huống thực tế thay đổi liên tục."
+    },
+    {
+      "code": "dd.whistleblower-identity-not-protected",
+      "name": "Không bảo mật danh tính người tố cáo trong quy trình xử lý",
+      "description": "Xử lý một báo cáo sai phạm mà không bảo mật danh tính người tố cáo, hoặc tiết lộ danh tính cho bên bị tố cáo trước khi có kết luận điều tra — làm giảm khả năng người khác dám báo cáo trong tương lai."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "dd.paraphrase-no-citation",
+      "body": "Nguyên tắc: trích dẫn theo Ý TƯỞNG, không phải theo việc có sao chép nguyên văn hay không. Nếu ý đó không phải của bạn tự nghĩ ra, luôn ghi nguồn, dù đã viết lại hoàn toàn bằng lời của mình.",
+      "priority": 10
+    },
+    {
+      "misconception": "dd.self-plagiarism-no-issue",
+      "body": "Khi dùng lại đoạn văn từ bài đã công bố trước đó của chính mình, luôn trích dẫn lại bài đó như một nguồn, hoặc diễn đạt lại — không copy nguyên văn coi như nội dung mới.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.ffp-vs-qrp-confused",
+      "body": "FFP (Fabrication, Falsification, Plagiarism) là vi phạm nghiêm trọng, có tính cố ý lừa dối, xử lý bằng kỷ luật/rút bài. Questionable research practices (như p-hacking) là vấn đề phương pháp cần cải thiện, không cùng mức độ nghiêm trọng — nhưng cả hai đều cần được nhận diện đúng tên.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.misconduct-no-consequence",
+      "body": "Công cụ phát hiện đạo văn, rà soát hậu kiểm của tạp chí, và việc người khác cố tái lập không thành công đều có thể phát hiện vi phạm nhiều năm sau — không có 'vùng an toàn' chỉ vì chưa bị phát hiện ngay.",
+      "priority": 8
+    },
+    {
+      "misconception": "dd.skip-risk-classification",
+      "body": "Trước khi nộp hồ sơ, tự đánh giá nghiên cứu thuộc minimal risk hay greater than minimal risk — việc này quyết định quy trình sẽ nhanh (expedited) hay đầy đủ (full board), và chuẩn bị hồ sơ khớp với đúng quy trình.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.vulnerable-group-no-extra-safeguard",
+      "body": "Với nhóm dễ bị tổn thương, luôn thêm biện pháp bảo vệ: đồng ý của người đại diện hợp pháp, đánh giá năng lực tham gia, và giảm thiểu áp lực (ví dụ không để người có quyền lực trực tiếp mời tham gia).",
+      "priority": 10
+    },
+    {
+      "misconception": "dd.one-time-approval-enough",
+      "body": "Lên lịch báo cáo định kỳ (continuing review) và báo cáo ngay khi có thay đổi protocol hoặc sự cố bất lợi — phê duyệt ban đầu không phải giấy phép vĩnh viễn.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.belmont-principle-confused",
+      "body": "Ghi nhớ bằng câu hỏi: Respect for Persons hỏi 'người tham gia có tự nguyện và đủ hiểu biết không?'; Beneficence hỏi 'lợi ích có lớn hơn rủi ro không?'; Justice hỏi 'ai gánh rủi ro, ai hưởng lợi — có công bằng không?'.",
+      "priority": 8
+    },
+    {
+      "misconception": "dd.rename-is-anonymization",
+      "body": "Sau khi đổi tên thành mã số, kiểm lại: tổ hợp các biến còn lại (tuổi, đơn vị, thời điểm, chức vụ) có thể chỉ đúng một người trong bối cảnh cụ thể không? Nếu có, cần ẩn danh hoá sâu hơn (gộp nhóm, làm mờ giá trị) hoặc giới hạn công bố chi tiết đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "dd.no-data-management-plan",
+      "body": "Trước khi thu thập dữ liệu, viết một kế hoạch ngắn: ai sở hữu, lưu ở đâu, ai truy cập được, lưu bao lâu, huỷ khi nào — nhiều quỹ tài trợ và hội đồng đạo đức hiện yêu cầu văn bản này trước khi phê duyệt.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.ignore-bvdlcn-law",
+      "body": "Với dữ liệu trẻ em hoặc dữ liệu sinh trắc học, đối chiếu Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15: trẻ từ đủ 7 tuổi cần đồng ý của cả trẻ và người đại diện (Điều 24), và cân nhắc nghĩa vụ lập hồ sơ đánh giá tác động (Điều 21) nếu quy mô xử lý đủ lớn.",
+      "priority": 10
+    },
+    {
+      "misconception": "dd.share-data-no-agreement",
+      "body": "Trước khi chia sẻ dữ liệu (kể cả với dịch vụ AI bên thứ ba), lập thoả thuận rõ mục đích, thời hạn, và trách nhiệm bảo mật — hoặc ưu tiên khử nhận dạng dữ liệu trước khi gửi đi khi có thể.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.coi-only-if-affects",
+      "body": "Công bố mọi xung đột lợi ích tiềm ẩn, để người đọc/hội đồng tự đánh giá mức độ ảnh hưởng — không tự mình phán xét trước rằng nó 'không đáng kể' rồi bỏ qua việc công bố.",
+      "priority": 10
+    },
+    {
+      "misconception": "dd.no-recusal-conflict",
+      "body": "Khi phát hiện xung đột lợi ích với một nghiên cứu mình được mời phản biện/đánh giá, báo ngay cho ban biên tập/chủ tịch hội đồng và tự rút (recusal), không tự đánh giá 'mình vẫn khách quan được' rồi tiếp tục.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.sponsor-controls-publication",
+      "body": "Trước khi ký hợp đồng tài trợ, đảm bảo điều khoản giữ quyền công bố độc lập của nhà nghiên cứu — từ chối điều khoản cho phép nhà tài trợ ngăn công bố kết quả bất lợi.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.personal-relationship-not-coi",
+      "body": "Công bố quan hệ cá nhân (thầy trò, người thân, đồng nghiệp thân thiết) khi được mời vào vai trò phản biện/hội đồng — xung đột lợi ích không chỉ là chuyện tiền bạc.",
+      "priority": 8
+    },
+    {
+      "misconception": "dd.ai-analysis-no-verify",
+      "body": "Dùng kết quả AI phân tích như một gợi ý ban đầu, luôn tự kiểm chứng lại bằng công cụ thống kê chuẩn hoặc tự tay tính lại ở một phần đủ để tin tưởng logic tính toán.",
+      "priority": 10
+    },
+    {
+      "misconception": "dd.synthetic-data-as-real",
+      "body": "Nếu dùng dữ liệu tổng hợp (synthetic) ở bất kỳ giai đoạn nào, khai báo rõ ràng đó là dữ liệu tổng hợp và mục đích dùng nó (thử pipeline, bảo vệ privacy) — không bao giờ trình bày lẫn với dữ liệu thu thập thật.",
+      "priority": 10
+    },
+    {
+      "misconception": "dd.ai-summary-no-read-source",
+      "body": "Dùng bản tóm tắt của AI để quyết định có đáng đọc kỹ hay không (đọc chiến lược), nhưng trước khi trích dẫn bất kỳ luận điểm hay số liệu nào vào bản thảo, tự đọc lại bài gốc để xác nhận.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.ai-blackbox-no-disclosure",
+      "body": "Khai báo rõ trong Methods nếu AI được dùng đáng kể ở khâu thu thập hoặc phân tích dữ liệu — khác với và cần chi tiết hơn khai báo dùng AI chỉ để sửa văn phong.",
+      "priority": 9
+    },
+    {
+      "misconception": "dd.no-report-fear-retaliation",
+      "body": "Dùng kênh báo cáo bảo mật (research integrity officer, đường dây riêng) thay vì im lặng — các quy trình liêm chính hiện đại được thiết kế để bảo vệ danh tính người báo cáo.",
+      "priority": 8
+    },
+    {
+      "misconception": "dd.pi-not-responsible-culture",
+      "body": "Người hướng dẫn/PI cần chủ động xây dựng quy trình rõ ràng, làm gương về liêm chính, và tạo không khí an toàn để thành viên nhóm dám nêu câu hỏi hoặc lo ngại — đây là trách nhiệm lãnh đạo, không chỉ trách nhiệm cá nhân từng người.",
+      "priority": 8
+    },
+    {
+      "misconception": "dd.rcr-training-once-enough",
+      "body": "Coi đào tạo liêm chính nghiên cứu là quá trình liên tục, đặc biệt cập nhật khi có công nghệ mới (như AI) làm xuất hiện tình huống chưa từng gặp trước đó.",
+      "priority": 7
+    },
+    {
+      "misconception": "dd.whistleblower-identity-not-protected",
+      "body": "Khi xử lý một báo cáo sai phạm, giữ kín danh tính người tố cáo trong suốt quá trình điều tra ban đầu — tiết lộ sớm có thể dẫn tới trả đũa và làm giảm khả năng người khác dám báo cáo sau này.",
+      "priority": 9
+    }
+  ],
+  "modules": [
+    {
+      "title": "Đạo đức nghiên cứu khoa học",
+      "description": "Đào sâu đạo đức nghiên cứu ở những góc chưa dạy tại 3 khoá kia trong bộ kỹ năng nghiên cứu: (1) liêm chính học thuật — đạo văn, tự đạo văn, ngụy tạo/sửa dữ liệu, (2) quy trình hội đồng đạo đức đầy đủ, (3) đạo đức dữ liệu nghiên cứu kèm khung pháp lý Việt Nam, (4) xung đột lợi ích, (5) đạo đức dùng AI trong toàn bộ quy trình nghiên cứu, (6) văn hoá liêm chính và báo cáo sai phạm.",
+      "lessons": [
+        {
+          "title": "Bài 1 · Liêm chính học thuật: đạo văn, tự đạo văn và ngụy tạo dữ liệu",
+          "durationMin": 90,
+          "description": "Phân biệt bốn hình thức vi phạm liêm chính nghiên cứu (FFP + đạo văn) với sai sót phương pháp thông thường; nhận diện đạo văn ý tưởng (không chỉ sao chép nguyên văn); hiểu đúng tự đạo văn và text recycling; thấy hậu quả kỷ luật thực tế qua tình huống cụ thể.",
+          "objectives": [
+            "Phân biệt được Fabrication, Falsification, Plagiarism (FFP) với questionable research practices — hai mức độ vi phạm rất khác nhau",
+            "Nhận diện đạo văn xảy ra ở cấp độ Ý TƯỞNG, không chỉ khi sao chép nguyên văn câu chữ — bao gồm cả đạo văn khảm (mosaic/patchwriting)",
+            "Phân biệt tự đạo văn (self-plagiarism) với salami slicing đã học ở khoá NCKH nâng cao — hai vi phạm khác nhau dù cùng liên quan tới nhiều bài báo",
+            "Mô tả được hậu quả kỷ luật thực tế của vi phạm liêm chính (rút bài, kỷ luật học thuật) qua một tình huống cụ thể"
+          ],
+          "summary": [
+            "Fabrication (bịa dữ liệu), Falsification (sửa dữ liệu/kết quả), và Plagiarism (đạo văn) — gọi tắt FFP — là vi phạm liêm chính nghiêm trọng, có tính cố ý lừa dối; khác về bản chất với sai sót phương pháp hoặc questionable research practices như p-hacking.",
+            "Đạo văn xảy ra khi lấy Ý TƯỞNG của người khác mà không trích dẫn, kể cả khi đã diễn giải hoàn toàn bằng lời của mình — không phải chỉ khi sao chép nguyên văn câu chữ.",
+            "Tự đạo văn (dùng lại nguyên văn từ bài đã công bố trước của chính mình mà không trích dẫn/khai báo) khác với salami slicing (chia nhỏ một nghiên cứu thành nhiều bài) — tự đạo văn là vấn đề về VĂN BẢN được tái sử dụng, salami slicing là vấn đề về NGHIÊN CỨU bị chia nhỏ không cần thiết.",
+            "Vi phạm liêm chính không có 'vùng an toàn' chỉ vì chưa bị phát hiện — công cụ phát hiện đạo văn, rà soát hậu kiểm, và việc người khác không tái lập được kết quả đều có thể phát hiện vi phạm nhiều năm sau khi công bố."
+          ],
+          "splitSections": true,
+          "body": "\nTrước khi đi vào các quy trình đạo đức cụ thể (hội đồng đạo đức, dữ liệu, xung đột lợi ích) ở các bài sau, bài này dựng nền cho toàn khoá: liêm chính học thuật nghĩa là gì cụ thể. Bài đi qua bốn phần: trước hết phân biệt bốn hình thức vi phạm nghiêm trọng (FFP) với sai sót phương pháp thông thường; sau đó xác định ranh giới giữa diễn giải đúng cách và đạo văn; tiếp theo làm rõ tự đạo văn khác gì với salami slicing đã học ở khoá NCKH nâng cao; và kết bằng một tình huống thực tế cho thấy hậu quả kỷ luật khi vi phạm bị phát hiện.\n\n## Bốn hình thức vi phạm liêm chính nghiên cứu\n\n> [!ghi-nho] **FFP** — ba hình thức vi phạm liêm chính nghiêm trọng nhất, được hầu hết các tổ chức học thuật quốc tế (ORI, COPE) công nhận: **Fabrication** (bịa ra dữ liệu hoặc kết quả chưa từng thu thập/tồn tại), **Falsification** (thao túng dữ liệu, thiết bị, hoặc quy trình thật để kết quả không còn phản ánh đúng thực tế — ví dụ bỏ bớt số liệu bất lợi, chỉnh sửa ảnh chụp), và **Plagiarism** (đạo văn — trình bày ý tưởng hoặc câu chữ của người khác như của mình mà không ghi nguồn).\n\n| Hình thức | Ví dụ cụ thể |\n|---|---|\n| Fabrication | Báo cáo đã khảo sát 300 người trong khi thực tế chỉ thu được 80 phiếu, phần còn lại tự điền số liệu |\n| Falsification | Loại bỏ các điểm dữ liệu không khớp với giả thuyết mà không báo cáo lý do, để kết quả có ý nghĩa thống kê hơn |\n| Plagiarism | Chép nguyên đoạn tổng quan tài liệu từ một bài báo khác, chỉ đổi vài từ, không trích dẫn |\n\n> [!canh-bao] FFP khác về bản chất với **questionable research practices (QRP)** — như p-hacking (thử nhiều cách phân tích tới khi ra kết quả có ý nghĩa) hay HARKing (đặt giả thuyết sau khi đã biết kết quả, trình bày như thể đặt trước). QRP là vấn đề về phương pháp cần cải thiện và thường được xử lý bằng đào tạo/sửa quy trình; FFP có tính **cố ý lừa dối** và thường dẫn tới kỷ luật nghiêm trọng, kể cả rút bằng hoặc chấm dứt sự nghiệp nghiên cứu. Không phân biệt được hai mức độ này khiến người học hoặc đánh giá quá nhẹ FFP, hoặc phản ứng quá mức với những sai sót phương pháp thông thường.\n\n## Đạo văn: ranh giới giữa diễn giải đúng và đạo văn\n\n> [!canh-bao] Sai lầm phổ biến nhất: nghĩ rằng chỉ cần **đổi từ ngữ** so với câu gốc là đã tránh được đạo văn. Đạo văn xảy ra ở cấp độ **Ý TƯỞNG** — nếu một luận điểm, một cách phân loại, hay một kết luận không phải do bạn tự nghĩ ra, bạn phải trích dẫn nguồn, dù đã viết lại hoàn toàn bằng lời của chính mình.\n\n| Không trích dẫn (đạo văn) | Trích dẫn đúng cách |\n|---|---|\n| \"Công nghệ AI trong giáo dục mang lại ba lợi ích chính: cá nhân hoá học tập, tiết kiệm thời gian chấm bài, và phản hồi tức thời cho học viên.\" (lấy nguyên khung phân loại 3 lợi ích từ một bài báo, chỉ viết lại câu) | \"Theo Nguyen (2023), công nghệ AI trong giáo dục mang lại ba lợi ích chính: cá nhân hoá học tập, tiết kiệm thời gian chấm bài, và phản hồi tức thời cho học viên.\" |\n\n> [!ghi-nho] **Đạo văn khảm (mosaic plagiarism / patchwriting)** — thay một vài từ trong câu gốc bằng từ đồng nghĩa, giữ nguyên cấu trúc câu và trình tự ý — vẫn là đạo văn, dù không sao chép y nguyên 100%. Công cụ phát hiện đạo văn hiện đại thường bắt được cả dạng này qua độ tương đồng cấu trúc câu, không chỉ khớp từ-với-từ.\n\n> [!vi-du] Câu gốc: \"Students who received personalized AI feedback showed a 15% improvement in revision quality compared to those receiving generic feedback.\" Patchwriting (vẫn là đạo văn): \"Learners given individualized AI feedback demonstrated a 15% increase in revision quality relative to those given generic feedback.\" — chỉ đổi từ, giữ nguyên cấu trúc và số liệu, không trích dẫn. Diễn giải đúng cách: \"Nguyen (2023) found that AI-personalized feedback led to substantially better revisions than generic feedback, with a 15-percentage-point gap in quality scores.\"\n\n## Tự đạo văn — khác gì với salami slicing đã học\n\n> [!canh-bao] **Tự đạo văn (self-plagiarism)** là dùng lại nguyên văn đoạn văn (không chỉ ý tưởng, mà câu chữ cụ thể) từ một bài đã công bố trước đó của chính mình, mà không trích dẫn hoặc khai báo — kể cả khi bạn là tác giả của cả hai bài. Sau khi công bố, tạp chí thường giữ bản quyền đoạn văn đó, và độc giả có quyền biết nội dung này đã xuất hiện ở đâu trước.\n\n> [!ghi-nho] Tự đạo văn **khác** với **salami slicing** (đã học ở khoá NCKH nâng cao & Công bố quốc tế, Bài 5) — salami slicing là chia MỘT nghiên cứu thành nhiều bài báo nhỏ không cần thiết (vấn đề về phạm vi nghiên cứu bị chia cắt); tự đạo văn là tái sử dụng VĂN BẢN đã viết trước đó mà không khai báo (vấn đề về câu chữ được dùng lại). Một nghiên cứu sinh có thể phạm một trong hai, cả hai, hoặc không phạm lỗi nào dù viết nhiều bài từ cùng một đề tài lớn.\n\n| Tình huống | Đây là gì? |\n|---|---|\n| Chia một bộ dữ liệu thành 4 bài báo nhỏ không cần thiết chỉ để tăng số lượng công bố | Salami slicing |\n| Copy nguyên đoạn mô tả phương pháp (Methods) từ bài báo trước của chính mình vào bài mới mà không trích dẫn | Tự đạo văn |\n| Dùng lại một đoạn mô tả bối cảnh chung (background) đã viết ở luận văn, có trích dẫn lại luận văn đó như một nguồn | Chấp nhận được (đã khai báo nguồn) |\n\n> [!meo] Nguyên tắc an toàn: nếu bạn thấy mình copy-paste một đoạn từ bài viết cũ của chính mình, dừng lại và tự hỏi \"đoạn này đã từng công bố chưa?\" — nếu có, hoặc viết lại hoàn toàn theo cách diễn đạt mới, hoặc trích dẫn lại công trình cũ như một nguồn tham khảo bình thường.\n\n## Hệ quả kỷ luật thực tế\n\n> [!vi-du] Tình huống tổng hợp (ẩn danh, dựa trên các trường hợp đã công bố công khai bởi các tổ chức liêm chính nghiên cứu quốc tế): một nghiên cứu sinh nộp bài báo dùng lại một bộ dữ liệu đã công bố ở một hội thảo trước đó, nhưng trình bày như dữ liệu thu thập mới hoàn toàn cho tạp chí (không trích dẫn công trình trước). Một reviewer nhận ra sự trùng lặp qua tìm kiếm nhanh trên Google Scholar. Hậu quả: bài báo bị từ chối, tạp chí gửi cảnh báo chính thức tới đơn vị chủ quản của tác giả, và trường đại học mở một cuộc điều tra liêm chính nội bộ kéo dài nhiều tháng — ảnh hưởng tới tiến độ bảo vệ luận án dù cuối cùng được xác định là do thiếu hiểu biết về quy tắc, không phải cố ý lừa dối.\n\n> [!canh-bao] Vi phạm liêm chính không có \"vùng an toàn\" chỉ vì chưa bị phát hiện ngay lúc công bố. Ba cơ chế phát hiện muộn phổ biến: (1) công cụ phát hiện đạo văn ngày càng tinh vi, có thể quét lại các bài đã công bố nhiều năm trước; (2) quy trình rà soát hậu kiểm (post-publication review) của cộng đồng khoa học, đặc biệt qua các nền tảng như PubPeer; (3) người khác cố tái lập nghiên cứu không thành công, dẫn tới điều tra ngược lại dữ liệu gốc. Hậu quả khi phát hiện muộn thường nghiêm trọng hơn nhiều so với việc chủ động sửa lỗi sớm.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nRà lại một đoạn tổng quan tài liệu bạn đã viết (hoặc một đoạn ví dụ). Với mỗi câu, tự hỏi: ý này là của bạn hay của người khác? Nếu của người khác, đã trích dẫn đúng nguồn chưa, hay chỉ đổi từ ngữ (patchwriting)? Kiểm thêm: có đoạn nào bạn đã dùng lại nguyên văn từ bài viết trước của chính mình mà chưa khai báo không?\n\n### Nhóm 3-4 người (25 phút)\n\nĐọc cặp câu \"Không trích dẫn / Trích dẫn đúng cách\" và cặp patchwriting/diễn giải đúng ở mục 2. Tự viết thêm một cặp ví dụ tương tự từ chính lĩnh vực của bạn, đổi cho nhau kiểm tra xem cặp ví dụ có phân biệt rõ ranh giới không.\n\n### Bài tập về nhà (60 phút)\n\nViết một đoạn (200-250 từ) mô tả quy tắc trích dẫn bạn sẽ áp dụng cho luận văn/bài báo sắp tới, kèm ít nhất 2 ví dụ cụ thể từ đề tài của bạn: một ví dụ trích dẫn ý tưởng đúng cách, một ví dụ cách bạn sẽ xử lý nếu cần dùng lại nội dung từ bài viết trước của chính mình.\n\n:::mau Mẫu nộp bài tập về nhà\n**Quy tắc trích dẫn áp dụng cho đề tài của tôi (200-250 từ):** …\n\n**Ví dụ trích dẫn ý tưởng đúng cách (từ đề tài của tôi):** …\n\n**Cách xử lý nội dung dùng lại từ bài viết trước của chính mình (nếu có):** …\n:::\n\n### Nguồn tham khảo\n\n- Office of Research Integrity (ORI), U.S. Department of Health and Human Services. *Definition of Research Misconduct.*\n- Roig, M. (2015). *Avoiding Plagiarism, Self-plagiarism, and Other Questionable Writing Practices: A Guide to Ethical Writing.* Office of Research Integrity.\n- Committee on Publication Ethics (COPE). *Discussion Document: Text Recycling Guidelines.*\n- Fanelli, D. (2009). How many scientists fabricate and falsify research? A systematic review and meta-analysis of survey data. *PLOS ONE*, 4(5), e5738.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 1",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "dd1-ffp-vs-qrp",
+                "type": "mcq",
+                "prompt": "Một nhà nghiên cứu thử nhiều cách phân tích thống kê khác nhau tới khi ra kết quả có ý nghĩa (p-hacking), nhưng không bịa hay sửa dữ liệu gốc. Đây là loại vi phạm nào?",
+                "explanation": "Đây là questionable research practice (QRP) — vấn đề về phương pháp, khác về bản chất với FFP (Fabrication, Falsification, Plagiarism) vốn có tính cố ý lừa dối và xử lý nghiêm trọng hơn nhiều.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Questionable research practice (QRP) — vấn đề phương pháp, không phải FFP",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Fabrication, vì kết quả cuối cùng không phản ánh đúng dữ liệu gốc",
+                    "isCorrect": false,
+                    "misconception": "dd.ffp-vs-qrp-confused"
+                  },
+                  {
+                    "label": "Không phải vi phạm gì, vì dữ liệu gốc vẫn được giữ nguyên",
+                    "isCorrect": false,
+                    "misconception": "dd.ffp-vs-qrp-confused"
+                  },
+                  {
+                    "label": "Plagiarism, vì kết quả phân tích lấy từ nhiều nguồn khác nhau",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd1-patchwriting",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh đổi vài từ trong câu gốc bằng từ đồng nghĩa, giữ nguyên cấu trúc câu và số liệu, không trích dẫn nguồn. Đây có phải đạo văn không?",
+                "explanation": "Đây là đạo văn khảm (mosaic plagiarism/patchwriting) — vẫn là đạo văn dù không sao chép y nguyên, vì ý tưởng và cấu trúc lập luận vẫn lấy từ nguồn gốc mà không ghi nhận.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Có — đây là đạo văn khảm (patchwriting), vẫn cần trích dẫn dù đã đổi từ ngữ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không, vì không có câu nào giống 100% với bản gốc",
+                    "isCorrect": false,
+                    "misconception": "dd.paraphrase-no-citation"
+                  },
+                  {
+                    "label": "Không, vì đạo văn chỉ tính khi copy-paste nguyên văn không đổi từ nào",
+                    "isCorrect": false,
+                    "misconception": "dd.paraphrase-no-citation"
+                  },
+                  {
+                    "label": "Chỉ là vấn đề văn phong, không liên quan tới liêm chính học thuật",
+                    "isCorrect": false,
+                    "misconception": "dd.paraphrase-no-citation"
+                  }
+                ]
+              },
+              {
+                "key": "dd1-self-plagiarism",
+                "type": "mcq",
+                "prompt": "Một tác giả copy nguyên đoạn mô tả phương pháp từ bài báo đã công bố trước đó của chính mình vào bài mới, không trích dẫn. Vì đây là bài viết của chính mình, điều này có vấn đề gì không?",
+                "explanation": "Đây là tự đạo văn — dù là tác giả, tạp chí thường giữ bản quyền sau khi công bố, và độc giả có quyền biết nội dung đã xuất hiện ở đâu trước. Cần trích dẫn lại hoặc viết lại bằng cách diễn đạt mới.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Có vấn đề — đây là tự đạo văn, cần trích dẫn lại công trình cũ hoặc viết lại bằng cách diễn đạt mới",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì tác giả có quyền dùng lại nội dung của chính mình bất cứ lúc nào",
+                    "isCorrect": false,
+                    "misconception": "dd.self-plagiarism-no-issue"
+                  },
+                  {
+                    "label": "Không có vấn đề gì miễn là hai bài đăng ở hai tạp chí khác nhau",
+                    "isCorrect": false,
+                    "misconception": "dd.self-plagiarism-no-issue"
+                  },
+                  {
+                    "label": "Đây là salami slicing, không phải tự đạo văn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd1-self-plagiarism-vs-salami",
+                "type": "mcq",
+                "prompt": "Điểm khác biệt cốt lõi giữa tự đạo văn và salami slicing (đã học ở khoá NCKH nâng cao) là gì?",
+                "explanation": "Tự đạo văn là vấn đề về VĂN BẢN được tái sử dụng mà không khai báo; salami slicing là vấn đề về NGHIÊN CỨU bị chia nhỏ không cần thiết thành nhiều bài. Một tác giả có thể mắc một trong hai, cả hai, hoặc không mắc lỗi nào.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tự đạo văn là tái sử dụng văn bản không khai báo; salami slicing là chia một nghiên cứu thành nhiều bài không cần thiết",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hai khái niệm này hoàn toàn giống nhau, chỉ khác tên gọi",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Tự đạo văn nghiêm trọng hơn salami slicing trong mọi trường hợp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Salami slicing chỉ áp dụng cho dữ liệu định lượng, tự đạo văn chỉ áp dụng cho định tính",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd1-hau-qua-muon",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh nghĩ 'bài báo của tôi đã công bố 3 năm rồi, không ai phát hiện gì thì coi như an toàn'. Nhận định này có đúng không?",
+                "explanation": "Vi phạm liêm chính không có 'vùng an toàn' chỉ vì chưa bị phát hiện — công cụ phát hiện đạo văn, rà soát hậu kiểm, và việc người khác không tái lập được kết quả đều có thể phát hiện vi phạm nhiều năm sau khi công bố.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Không đúng — công cụ phát hiện, rà soát hậu kiểm, và nỗ lực tái lập của người khác có thể phát hiện vi phạm nhiều năm sau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, vì tạp chí chỉ kiểm tra liêm chính tại thời điểm nộp bài",
+                    "isCorrect": false,
+                    "misconception": "dd.misconduct-no-consequence"
+                  },
+                  {
+                    "label": "Đúng, vì không có cơ chế nào rà soát lại các bài đã công bố",
+                    "isCorrect": false,
+                    "misconception": "dd.misconduct-no-consequence"
+                  },
+                  {
+                    "label": "Không đúng, nhưng chỉ vì lý do pháp lý về thời hiệu khiếu nại",
+                    "isCorrect": false,
+                    "misconception": "dd.misconduct-no-consequence"
+                  }
+                ]
+              },
+              {
+                "key": "dd1-thu-tu-kiem-tra",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước tự kiểm tra liêm chính trước khi nộp một bản thảo.",
+                "explanation": "Từ kiểm từng ý tưởng có phải của mình không, kiểm đoạn nào trùng với bài viết trước của chính mình, kiểm công cụ phát hiện đạo văn, tới xác nhận mọi số liệu đều từ dữ liệu thu thập thật.",
+                "points": 3,
+                "sequence": [
+                  "Rà từng câu: ý này của tôi hay của người khác — nếu của người khác, đã trích dẫn chưa",
+                  "Kiểm đoạn nào có thể trùng với nội dung đã công bố trước đó của chính mình",
+                  "Chạy công cụ phát hiện đạo văn để rà soát độ tương đồng với các nguồn đã xuất bản",
+                  "Xác nhận mọi số liệu trong bản thảo đều từ dữ liệu thu thập thật, không có điểm nào bị chỉnh sửa hay bịa",
+                  "Nộp bản thảo sau khi đã hoàn thành các bước kiểm tra trên"
+                ]
+              },
+              {
+                "key": "dd1-noi-khai-niem-ffp",
+                "type": "matching",
+                "prompt": "Nối mỗi khái niệm với đúng định nghĩa của nó.",
+                "explanation": "Fabrication là bịa dữ liệu chưa từng tồn tại; Falsification là thao túng dữ liệu thật; Plagiarism là trình bày ý tưởng người khác như của mình; patchwriting là đổi từ ngữ nhưng vẫn giữ cấu trúc/ý gốc mà không trích dẫn.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Fabrication",
+                    "right": "Bịa ra dữ liệu hoặc kết quả chưa từng thu thập/tồn tại"
+                  },
+                  {
+                    "left": "Falsification",
+                    "right": "Thao túng dữ liệu hoặc quy trình thật để kết quả không còn phản ánh đúng thực tế"
+                  },
+                  {
+                    "left": "Plagiarism",
+                    "right": "Trình bày ý tưởng hoặc câu chữ của người khác như của mình mà không ghi nguồn"
+                  },
+                  {
+                    "left": "Patchwriting (đạo văn khảm)",
+                    "right": "Đổi từ ngữ nhưng giữ nguyên cấu trúc và ý của câu gốc, không trích dẫn"
+                  }
+                ]
+              },
+              {
+                "key": "dd1-viet-quy-tac",
+                "type": "essay",
+                "prompt": "Viết đoạn 200-250 từ mô tả quy tắc trích dẫn bạn sẽ áp dụng cho đề tài của mình, gồm: (a) cách bạn sẽ đảm bảo trích dẫn đúng cả khi diễn giải ý tưởng (không chỉ khi trích nguyên văn); (b) cách bạn sẽ xử lý nếu cần dùng lại nội dung từ bài viết trước của chính mình; (c) một bước cụ thể bạn sẽ làm trước khi nộp bản thảo để tự kiểm tra liêm chính.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 2 · Hội đồng đạo đức nghiên cứu (IRB) — quy trình đầy đủ",
+          "durationMin": 90,
+          "description": "Áp dụng ba nguyên tắc Belmont để đánh giá một thiết kế nghiên cứu; phân loại đúng mức rủi ro (minimal risk / greater than minimal) để chọn quy trình thẩm định phù hợp; thêm biện pháp bảo vệ bổ sung cho nhóm dễ bị tổn thương; hiểu quy trình đầy đủ gồm cả continuing review, không dừng ở phê duyệt lần đầu.",
+          "objectives": [
+            "Áp dụng ba nguyên tắc Belmont (Respect for Persons, Beneficence, Justice) để đánh giá tính đạo đức của một thiết kế nghiên cứu cụ thể",
+            "Phân loại đúng một nghiên cứu thuộc mức minimal risk hay greater than minimal risk, và quy trình thẩm định tương ứng (expedited hay full board)",
+            "Xác định biện pháp bảo vệ bổ sung cần thiết khi nghiên cứu liên quan tới nhóm dễ bị tổn thương",
+            "Mô tả được quy trình đầy đủ của hội đồng đạo đức, bao gồm continuing review và báo cáo sự cố bất lợi, không chỉ phê duyệt ban đầu"
+          ],
+          "summary": [
+            "Ba nguyên tắc Belmont (1979) — Tôn trọng con người, Làm điều thiện, Công bằng — là nền tảng lý luận cho mọi quy trình hội đồng đạo đức hiện đại, và có thể dùng để tự đánh giá một thiết kế nghiên cứu trước khi nộp hồ sơ.",
+            "Phân loại mức rủi ro (minimal risk hay greater than minimal risk) quyết định quy trình thẩm định sẽ là rút gọn (expedited) hay đầy đủ (full board review) — tự đánh giá sai mức rủi ro làm chậm cả quy trình xin duyệt.",
+            "Nhóm dễ bị tổn thương (trẻ em, người có năng lực hạn chế, nhóm yếu thế) cần biện pháp bảo vệ bổ sung ngoài quy trình đồng ý tham gia tiêu chuẩn — không áp dụng đồng loạt một quy trình cho mọi đối tượng.",
+            "Phê duyệt đạo đức ban đầu không phải giấy phép vĩnh viễn — nghiên cứu đang triển khai cần continuing review định kỳ, báo cáo khi sửa đổi protocol, và báo cáo ngay khi có sự cố bất lợi phát sinh."
+          ],
+          "splitSections": true,
+          "body": "\nKhoá Phương pháp nghiên cứu đã nói *khi nào* cần xin phê duyệt đạo đức. Bài này đi sâu vào *quy trình* thật của hội đồng đạo đức, đi qua bốn phần: trước hết là ba nguyên tắc nền tảng của Belmont Report để tự đánh giá một thiết kế nghiên cứu; sau đó cách phân loại mức rủi ro để chọn đúng quy trình thẩm định (rút gọn hay đầy đủ); tiếp theo là biện pháp bảo vệ bổ sung cần thiết cho nhóm dễ bị tổn thương; và kết bằng những gì xảy ra sau khi được phê duyệt lần đầu — continuing review, báo cáo sửa đổi, báo cáo sự cố bất lợi.\n\n## Ba nguyên tắc nền tảng: Belmont Report\n\n> [!ghi-nho] **Belmont Report** (1979, Hoa Kỳ) đặt ra ba nguyên tắc nền tảng mà hầu hết các quy trình hội đồng đạo đức trên thế giới hiện nay đều dựa vào: **Tôn trọng con người (Respect for Persons)** — người tham gia phải tự nguyện và đủ hiểu biết để quyết định (informed consent), và những người có năng lực ra quyết định hạn chế cần được bảo vệ bổ sung; **Làm điều thiện (Beneficence)** — tối đa hoá lợi ích tiềm năng, tối thiểu hoá rủi ro có thể xảy ra; **Công bằng (Justice)** — gánh nặng và lợi ích của nghiên cứu phải được phân bổ công bằng, không dồn rủi ro vào một nhóm yếu thế trong khi lợi ích chủ yếu thuộc về nhóm khác.\n\n| Câu hỏi tự kiểm | Nguyên tắc tương ứng |\n|---|---|\n| Người tham gia có thực sự hiểu họ đang đồng ý điều gì, và có thể rút lui bất cứ lúc nào không? | Tôn trọng con người |\n| Lợi ích khoa học/xã hội của nghiên cứu có lớn hơn rủi ro mà người tham gia phải chịu không? | Làm điều thiện |\n| Nhóm chịu rủi ro (ví dụ học sinh một trường cụ thể) có phải cũng là nhóm hưởng lợi từ kết quả không, hay lợi ích chủ yếu thuộc về nhóm khác? | Công bằng |\n\n> [!canh-bao] Ba nguyên tắc này thường bị nhầm lẫn hoặc dùng thay thế cho nhau. Một thiết kế có thể đạt tốt ở một nguyên tắc nhưng vi phạm nguyên tắc khác — ví dụ một thử nghiệm công nghệ giáo dục có consent rõ ràng (đạt Tôn trọng con người) nhưng chỉ thử trên lớp học của học sinh có hoàn cảnh khó khăn để \"dễ tiếp cận\", trong khi lợi ích công nghệ (nếu thành công) sẽ áp dụng cho toàn trường — đây là vi phạm nguyên tắc Công bằng dù không vi phạm hai nguyên tắc kia.\n\n## Phân loại mức rủi ro trước khi nộp hồ sơ\n\n> [!ghi-nho] **Minimal risk** — mức rủi ro của nghiên cứu không lớn hơn những rủi ro gặp phải trong đời sống thường ngày hoặc khi khám sức khoẻ/tâm lý định kỳ thông thường (ví dụ: khảo sát ẩn danh về thói quen học tập, phỏng vấn về trải nghiệm dùng một phần mềm). **Greater than minimal risk** — rủi ro vượt ngưỡng đó (ví dụ: khảo sát về trải nghiệm bị bắt nạt học đường, can thiệp thực nghiệm có thể gây căng thẳng tâm lý, nghiên cứu trên nhóm dễ bị tổn thương về chủ đề nhạy cảm).\n\n| Mức rủi ro | Quy trình thẩm định | Ví dụ |\n|---|---|---|\n| Minimal risk | Rút gọn (expedited review) — một hoặc vài thành viên hội đồng xem xét, không cần họp toàn hội đồng | Khảo sát ẩn danh về mức độ hài lòng với một khoá học |\n| Greater than minimal risk | Đầy đủ (full board review) — họp toàn hội đồng, thảo luận và biểu quyết | Phỏng vấn sâu về trải nghiệm sang chấn tâm lý; thử nghiệm can thiệp có thể ảnh hưởng tới kết quả học tập thật của học sinh |\n\n> [!canh-bao] Tự đánh giá sai mức rủi ro (ví dụ nộp hồ sơ dạng rút gọn cho một nghiên cứu thực chất thuộc greater than minimal risk) thường bị hội đồng trả lại yêu cầu nộp lại đúng quy trình — làm chậm tiến độ nhiều tuần so với việc đánh giá đúng ngay từ đầu. Khi không chắc chắn, nên tham khảo văn phòng hội đồng đạo đức của đơn vị trước khi nộp, thay vì tự đoán.\n\n## Nhóm dễ bị tổn thương cần biện pháp bảo vệ bổ sung\n\n> [!canh-bao] Áp dụng đúng một quy trình đồng ý tham gia (consent) tiêu chuẩn cho mọi đối tượng, kể cả nhóm dễ bị tổn thương (trẻ em, người có năng lực ra quyết định hạn chế, nhóm yếu thế về kinh tế-xã hội hoặc quyền lực), là không đủ — các nhóm này cần biện pháp bảo vệ bổ sung vì khả năng tự nguyện hoặc đủ hiểu biết để đồng ý có thể bị hạn chế.\n\n| Nhóm dễ bị tổn thương | Biện pháp bảo vệ bổ sung thường áp dụng |\n|---|---|\n| Trẻ em | Đồng ý (consent) của người đại diện hợp pháp, cộng thêm assent (sự ưng thuận) của chính trẻ nếu đủ tuổi hiểu |\n| Người có năng lực ra quyết định hạn chế | Đánh giá năng lực trước khi mời tham gia; có thể cần người đại diện đồng ý thay |\n| Sinh viên/học viên của chính người nghiên cứu | Người mời tham gia không nên là người có quyền lực trực tiếp (chấm điểm, đánh giá) với người được mời, để tránh áp lực ngầm phải đồng ý |\n\n> [!vi-du] Một giảng viên muốn khảo sát trải nghiệm của chính sinh viên đang dạy về một công cụ AI mới. Vì giảng viên có quyền chấm điểm, sinh viên có thể cảm thấy áp lực ngầm phải tham gia hoặc phải trả lời tích cực dù không muốn. Biện pháp bảo vệ: nhờ một người không liên quan tới việc chấm điểm (ví dụ trợ giảng khác lớp) mời và thu thập phản hồi, đảm bảo ẩn danh hoàn toàn trước khi giảng viên tiếp cận dữ liệu, và nói rõ việc tham gia/từ chối không ảnh hưởng gì tới điểm số.\n\n## Quy trình đầy đủ: không dừng ở phê duyệt lần đầu\n\n> [!canh-bao] Nhiều nghiên cứu sinh coi phê duyệt đạo đức ban đầu là bước \"xong việc\" một lần cho toàn bộ nghiên cứu — thực tế, quy trình đầy đủ còn tiếp diễn trong suốt thời gian triển khai.\n\n> [!ghi-nho] Ba nghĩa vụ tiếp diễn sau khi được phê duyệt: **Continuing review** — báo cáo định kỳ (thường hằng năm với nghiên cứu kéo dài) để hội đồng xác nhận nghiên cứu vẫn đang triển khai đúng như đã duyệt; **báo cáo sửa đổi (amendment)** — bất kỳ thay đổi nào với protocol (thêm câu hỏi khảo sát, đổi cách thu thập dữ liệu, mở rộng đối tượng) cần được hội đồng duyệt lại trước khi áp dụng, không tự ý sửa rồi báo sau; **báo cáo sự cố bất lợi (adverse event)** — nếu có sự cố ngoài dự kiến ảnh hưởng tới người tham gia (ví dụ một câu hỏi khảo sát gây khó chịu tâm lý bất ngờ), cần báo cáo ngay cho hội đồng, không đợi tới kỳ continuing review.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nVới đề tài của bạn, tự đánh giá theo ba nguyên tắc Belmont (bảng câu hỏi tự kiểm ở mục 1). Phân loại nghiên cứu của bạn: minimal risk hay greater than minimal risk, và vì sao. Nếu nghiên cứu liên quan tới nhóm dễ bị tổn thương, liệt kê biện pháp bảo vệ bổ sung bạn sẽ áp dụng.\n\n### Nhóm 3-4 người (25 phút)\n\nĐổi bảng tự đánh giá rủi ro cho nhau. Phản biện: phân loại minimal risk / greater than minimal risk của người kia có hợp lý không? Có bỏ sót biện pháp bảo vệ nào cho nhóm dễ bị tổn thương không?\n\n### Bài tập về nhà (60 phút)\n\nViết một trang tóm tắt hồ sơ xin phê duyệt đạo đức cho đề tài của bạn (300-400 từ): đánh giá theo Belmont, phân loại mức rủi ro và quy trình thẩm định tương ứng, biện pháp bảo vệ nhóm dễ bị tổn thương (nếu có), và kế hoạch continuing review nếu nghiên cứu kéo dài trên một năm.\n\n:::mau Mẫu nộp bài tập về nhà\n**Đánh giá theo ba nguyên tắc Belmont:** …\n\n**Phân loại mức rủi ro và lý do:** ☐ Minimal risk ☐ Greater than minimal risk — vì …\n\n**Biện pháp bảo vệ nhóm dễ bị tổn thương (nếu có):** …\n\n**Kế hoạch continuing review / báo cáo sửa đổi (nếu nghiên cứu kéo dài):** …\n:::\n\n### Nguồn tham khảo\n\n- National Commission for the Protection of Human Subjects of Biomedical and Behavioral Research. (1979). *The Belmont Report.*\n- World Medical Association. (2013). *Declaration of Helsinki — Ethical Principles for Medical Research Involving Human Subjects.*\n- Office for Human Research Protections (OHRP), U.S. Department of Health and Human Services. *Institutional Review Board Guidebook.*\n- Israel, M., & Hay, I. (2006). *Research Ethics for Social Scientists.* SAGE Publications.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 2",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "dd2-belmont-cong-bang",
+                "type": "mcq",
+                "prompt": "Một thử nghiệm công nghệ giáo dục chỉ chọn lớp học của học sinh hoàn cảnh khó khăn để thử vì 'dễ tiếp cận', dù lợi ích công nghệ (nếu thành công) sẽ áp dụng cho toàn trường. Nguyên tắc Belmont nào bị vi phạm?",
+                "explanation": "Đây là vi phạm nguyên tắc Công bằng (Justice) — gánh nặng rủi ro của thử nghiệm dồn vào một nhóm cụ thể trong khi lợi ích thuộc về nhóm rộng hơn, dù consent có thể vẫn rõ ràng (không vi phạm Tôn trọng con người).",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Công bằng (Justice) — gánh nặng rủi ro dồn vào một nhóm trong khi lợi ích thuộc về nhóm rộng hơn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tôn trọng con người (Respect for Persons), vì học sinh không được hỏi ý kiến",
+                    "isCorrect": false,
+                    "misconception": "dd.belmont-principle-confused"
+                  },
+                  {
+                    "label": "Làm điều thiện (Beneficence), vì công nghệ này có thể không hiệu quả",
+                    "isCorrect": false,
+                    "misconception": "dd.belmont-principle-confused"
+                  },
+                  {
+                    "label": "Không vi phạm nguyên tắc nào nếu công nghệ được chứng minh an toàn",
+                    "isCorrect": false,
+                    "misconception": "dd.belmont-principle-confused"
+                  }
+                ]
+              },
+              {
+                "key": "dd2-phan-loai-rui-ro",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu phỏng vấn sâu học sinh về trải nghiệm bị bắt nạt học đường. Nên nộp hồ sơ theo quy trình nào?",
+                "explanation": "Chủ đề nhạy cảm có thể gây căng thẳng tâm lý cho người tham gia thuộc mức greater than minimal risk — cần quy trình thẩm định đầy đủ (full board review), không phải rút gọn.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Full board review (greater than minimal risk) — chủ đề nhạy cảm có thể gây căng thẳng tâm lý",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Expedited review (minimal risk), vì chỉ là phỏng vấn, không có can thiệp y tế",
+                    "isCorrect": false,
+                    "misconception": "dd.skip-risk-classification"
+                  },
+                  {
+                    "label": "Không cần phê duyệt đạo đức nếu học sinh tự nguyện tham gia",
+                    "isCorrect": false,
+                    "misconception": "dd.skip-risk-classification"
+                  },
+                  {
+                    "label": "Quy trình thẩm định như nhau cho mọi loại nghiên cứu, không cần phân loại trước",
+                    "isCorrect": false,
+                    "misconception": "dd.skip-risk-classification"
+                  }
+                ]
+              },
+              {
+                "key": "dd2-nhom-de-ton-thuong",
+                "type": "mcq",
+                "prompt": "Một giảng viên muốn khảo sát trải nghiệm của chính sinh viên đang dạy, tự mình mời và thu thập phản hồi. Vấn đề tiềm ẩn ở đây là gì?",
+                "explanation": "Vì giảng viên có quyền chấm điểm sinh viên, sinh viên có thể cảm thấy áp lực ngầm phải tham gia hoặc trả lời tích cực — cần biện pháp bảo vệ bổ sung như nhờ người không liên quan tới chấm điểm thu thập dữ liệu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Sinh viên có thể cảm thấy áp lực ngầm phải tham gia/trả lời tích cực vì quan hệ quyền lực với người chấm điểm",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì giảng viên hiểu rõ sinh viên của mình nhất",
+                    "isCorrect": false,
+                    "misconception": "dd.vulnerable-group-no-extra-safeguard"
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu khảo sát được thực hiện ẩn danh ngay từ khi thiết kế bảng hỏi",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là cần xin phép ban giám hiệu trước",
+                    "isCorrect": false,
+                    "misconception": "dd.vulnerable-group-no-extra-safeguard"
+                  }
+                ]
+              },
+              {
+                "key": "dd2-continuing-review",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu kéo dài 18 tháng đã được hội đồng đạo đức phê duyệt lúc bắt đầu. Nghiên cứu sinh cho rằng không cần làm gì thêm cho tới khi hoàn thành. Nhận định này đúng không?",
+                "explanation": "Nghiên cứu kéo dài cần continuing review định kỳ, báo cáo khi sửa đổi protocol, và báo cáo ngay khi có sự cố bất lợi — phê duyệt ban đầu không phải giấy phép vĩnh viễn cho toàn bộ thời gian nghiên cứu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không đúng — cần continuing review định kỳ và báo cáo ngay khi có sửa đổi protocol hoặc sự cố bất lợi",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, phê duyệt ban đầu có hiệu lực cho tới khi nghiên cứu hoàn thành, không cần báo cáo gì thêm",
+                    "isCorrect": false,
+                    "misconception": "dd.one-time-approval-enough"
+                  },
+                  {
+                    "label": "Đúng, trừ khi hội đồng chủ động liên hệ hỏi thăm tiến độ",
+                    "isCorrect": false,
+                    "misconception": "dd.one-time-approval-enough"
+                  },
+                  {
+                    "label": "Không đúng, nhưng chỉ vì lý do hành chính, không liên quan tới bảo vệ người tham gia",
+                    "isCorrect": false,
+                    "misconception": "dd.one-time-approval-enough"
+                  }
+                ]
+              },
+              {
+                "key": "dd2-consent-tre-em",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu mời trẻ em 10 tuổi tham gia phỏng vấn. Quy trình đồng ý tham gia nào phù hợp?",
+                "explanation": "Với trẻ em, cần đồng ý (consent) của người đại diện hợp pháp, cộng thêm assent (sự ưng thuận) của chính trẻ nếu đủ tuổi hiểu — không chỉ xin phép một bên.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Đồng ý của người đại diện hợp pháp, cộng thêm assent của chính trẻ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ cần đồng ý của người đại diện, không cần hỏi ý kiến trẻ",
+                    "isCorrect": false,
+                    "misconception": "dd.vulnerable-group-no-extra-safeguard"
+                  },
+                  {
+                    "label": "Chỉ cần hỏi trực tiếp trẻ, không cần thông qua người đại diện",
+                    "isCorrect": false,
+                    "misconception": "dd.vulnerable-group-no-extra-safeguard"
+                  },
+                  {
+                    "label": "Không cần quy trình đặc biệt nào khác với người lớn",
+                    "isCorrect": false,
+                    "misconception": "dd.vulnerable-group-no-extra-safeguard"
+                  }
+                ]
+              },
+              {
+                "key": "dd2-thu-tu-quy-trinh",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước trong quy trình đầy đủ làm việc với hội đồng đạo đức.",
+                "explanation": "Từ tự đánh giá theo Belmont, phân loại mức rủi ro, nộp hồ sơ đúng quy trình, tới continuing review và báo cáo sự cố trong suốt quá trình triển khai.",
+                "points": 3,
+                "sequence": [
+                  "Tự đánh giá thiết kế nghiên cứu theo ba nguyên tắc Belmont",
+                  "Phân loại mức rủi ro: minimal risk hay greater than minimal risk",
+                  "Xác định biện pháp bảo vệ bổ sung nếu liên quan tới nhóm dễ bị tổn thương",
+                  "Nộp hồ sơ theo đúng quy trình thẩm định tương ứng (expedited hoặc full board)",
+                  "Thực hiện continuing review và báo cáo sự cố bất lợi trong suốt quá trình triển khai"
+                ]
+              },
+              {
+                "key": "dd2-noi-nguyen-tac",
+                "type": "matching",
+                "prompt": "Nối mỗi nguyên tắc hoặc khái niệm với đúng vai trò của nó trong quy trình hội đồng đạo đức.",
+                "explanation": "Tôn trọng con người liên quan tới consent tự nguyện; Làm điều thiện cân đối lợi ích-rủi ro; Công bằng phân bổ gánh nặng/lợi ích; continuing review giám sát nghiên cứu đang triển khai.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Tôn trọng con người (Respect for Persons)",
+                    "right": "Đảm bảo người tham gia tự nguyện và đủ hiểu biết để đồng ý"
+                  },
+                  {
+                    "left": "Làm điều thiện (Beneficence)",
+                    "right": "Tối đa hoá lợi ích, tối thiểu hoá rủi ro cho người tham gia"
+                  },
+                  {
+                    "left": "Công bằng (Justice)",
+                    "right": "Phân bổ công bằng gánh nặng và lợi ích của nghiên cứu giữa các nhóm"
+                  },
+                  {
+                    "left": "Continuing review",
+                    "right": "Giám sát định kỳ nghiên cứu đang triển khai, không dừng ở phê duyệt lần đầu"
+                  }
+                ]
+              },
+              {
+                "key": "dd2-viet-ho-so",
+                "type": "essay",
+                "prompt": "Viết tóm tắt hồ sơ xin phê duyệt đạo đức cho đề tài của bạn (250-350 từ), gồm: (a) đánh giá theo ba nguyên tắc Belmont; (b) phân loại mức rủi ro và lý do; (c) biện pháp bảo vệ bổ sung nếu liên quan tới nhóm dễ bị tổn thương; (d) một câu về kế hoạch continuing review nếu nghiên cứu kéo dài.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 3 · Đạo đức dữ liệu nghiên cứu",
+          "durationMin": 90,
+          "description": "Lập kế hoạch quản lý dữ liệu trước khi thu thập; phân biệt ẩn danh hoá kỹ thuật thật sự với việc chỉ đổi tên/mã hoá ID; đối chiếu nghĩa vụ theo Luật Bảo vệ dữ liệu cá nhân 2025 của Việt Nam khi xử lý dữ liệu nhạy cảm; lập thoả thuận rõ ràng khi chia sẻ dữ liệu nghiên cứu.",
+          "objectives": [
+            "Lập được một kế hoạch quản lý dữ liệu (data management plan) cơ bản trước khi bắt đầu thu thập",
+            "Phân biệt ẩn danh hoá kỹ thuật thật sự (xử lý rủi ro tái nhận dạng từ tổ hợp biến) với việc chỉ đổi tên/mã hoá ID",
+            "Đối chiếu đúng nghĩa vụ xử lý dữ liệu cá nhân nhạy cảm (trẻ em, sinh trắc học) theo Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 của Việt Nam",
+            "Lập thoả thuận rõ ràng về mục đích, thời hạn và trách nhiệm bảo mật khi chia sẻ dữ liệu nghiên cứu"
+          ],
+          "summary": [
+            "Một kế hoạch quản lý dữ liệu (data management plan) cần xác định trước khi thu thập: ai sở hữu dữ liệu, lưu ở đâu, ai được truy cập, lưu bao lâu, và huỷ khi nào — nhiều quỹ tài trợ và hội đồng đạo đức hiện yêu cầu văn bản này.",
+            "Chỉ đổi tên thật bằng mã số không phải ẩn danh hoá hoàn toàn — tổ hợp các biến còn lại (tuổi, đơn vị công tác, thời điểm) vẫn có thể chỉ đúng một người, gọi là rủi ro tái nhận dạng (re-identification).",
+            "Từ 01/01/2026, Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15 và Nghị định 356/2025/NĐ-CP thay thế Nghị định 13/2023 — có nghĩa vụ cụ thể với dữ liệu trẻ em, dữ liệu sinh trắc học, và xử lý dữ liệu trong môi trường AI/dữ liệu lớn.",
+            "Dữ liệu đã khử nhận dạng đúng cách (theo Điều 2 khoản 1 của Luật) không còn là dữ liệu cá nhân — đây là biện pháp thiết kế mạnh nhất khi cần gửi dữ liệu nghiên cứu sang dịch vụ bên thứ ba, kể cả dịch vụ AI."
+          ],
+          "splitSections": true,
+          "body": "\nBài 2 (khoá Phương pháp nghiên cứu) đã dạy ẩn danh hoá cơ bản và thời điểm xin phê duyệt đạo đức. Bài này đi sâu vào kỹ thuật ẩn danh hoá thật sự và khung pháp lý Việt Nam mới nhất — phần thường bị bỏ qua vì đến gần đây mới có luật riêng. Bài đi qua bốn phần: bắt đầu từ việc lập kế hoạch quản lý dữ liệu trước khi thu thập; sau đó phân biệt ẩn danh hoá kỹ thuật thật sự với việc chỉ đổi tên/mã hoá ID; tiếp theo đối chiếu các điều khoản liên quan của Luật Bảo vệ dữ liệu cá nhân 2025; và kết bằng nguyên tắc lưu trữ, chia sẻ dữ liệu có trách nhiệm.\n\n## Kế hoạch quản lý dữ liệu trước khi thu thập\n\n> [!ghi-nho] **Kế hoạch quản lý dữ liệu (data management plan)** là văn bản ngắn xác định trước khi thu thập dữ liệu: ai **sở hữu** dữ liệu (thường là đơn vị chủ quản nghiên cứu, không phải cá nhân nhà nghiên cứu), dữ liệu **lưu ở đâu** (máy tính cá nhân là lựa chọn kém nhất — nên dùng hệ thống lưu trữ có sao lưu của đơn vị), **ai được truy cập** (danh sách cụ thể, không phải \"cả nhóm nghiên cứu\" chung chung), **lưu bao lâu** sau khi nghiên cứu kết thúc, và **huỷ khi nào/bằng cách nào**.\n\n> [!canh-bao] Bắt đầu thu thập dữ liệu mà chưa có kế hoạch này thường dẫn tới tình huống lúng túng về sau: dữ liệu nằm rải rác trên nhiều máy tính cá nhân, không ai chắc bản nào là bản mới nhất, và khi có yêu cầu xoá dữ liệu (từ người tham gia rút đồng ý, hoặc hết thời hạn lưu trữ theo quy định) không biết phải xoá ở đâu cho đủ. Nhiều quỹ tài trợ quốc tế và hội đồng đạo đức hiện yêu cầu nộp kế hoạch này cùng hồ sơ xin phê duyệt.\n\n## Ẩn danh hoá kỹ thuật: hơn cả việc đổi tên\n\n> [!canh-bao] Sai lầm phổ biến nhất về ẩn danh hoá: nghĩ rằng chỉ cần thay tên thật bằng mã số (ID1, ID2...) là dữ liệu đã \"ẩn danh hoàn toàn\". Trên thực tế, nếu các biến còn lại (tuổi, giới tính, đơn vị công tác, chức vụ, thời điểm tham gia) đủ đặc biệt, tổ hợp của chúng vẫn có thể **chỉ đúng một người** trong bối cảnh cụ thể — gọi là rủi ro **tái nhận dạng (re-identification)**.\n\n> [!vi-du] Một khảo sát nội bộ trong một khoa có 15 giảng viên, thu thập: mã ID, tuổi, giới tính, chức danh (giảng viên/phó giáo sư/giáo sư), số năm công tác, ý kiến về một chính sách mới. Nếu khoa chỉ có một giáo sư nữ trên 55 tuổi, dòng dữ liệu của người này — dù đã \"ẩn danh\" bằng mã ID — vẫn chỉ đúng một người mà bất kỳ đồng nghiệp nào trong khoa cũng suy ra được, đặc biệt nếu ý kiến của người đó là tiêu cực và nhạy cảm.\n\n> [!ghi-nho] Cách xử lý đúng: (1) **gộp nhóm** các biến định danh cao thành khoảng rộng hơn (tuổi → nhóm tuổi 10 năm, thay vì tuổi cụ thể); (2) **làm mờ hoặc lược bỏ** biến không cần thiết cho phân tích chính nếu nó làm tăng rủi ro tái nhận dạng (ví dụ chức danh cụ thể nếu không phải biến trung tâm); (3) với dữ liệu định tính, thay đổi chi tiết không cốt lõi (ví dụ đổi tên đơn vị công tác cụ thể thành \"một khoa thuộc khối kỹ thuật\") khi trích dẫn trực tiếp lời người tham gia trong báo cáo.\n\n## Khung pháp lý Việt Nam: Luật Bảo vệ dữ liệu cá nhân 2025\n\n> [!ghi-nho] Từ **01/01/2026**, **Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15** (Quốc hội thông qua 26/6/2025) cùng **Nghị định 356/2025/NĐ-CP** hướng dẫn thi hành thay thế Nghị định 13/2023 làm căn cứ pháp lý chính khi nghiên cứu xử lý dữ liệu cá nhân tại Việt Nam. Một số điều khoản trực tiếp liên quan tới nghiên cứu:\n\n| Điều | Nội dung | Áp dụng khi nào trong nghiên cứu |\n|---|---|---|\n| Điều 21 | Lập, lưu trữ hồ sơ đánh giá tác động xử lý dữ liệu cá nhân, gửi 1 bản chính cho cơ quan chuyên trách trong 60 ngày kể từ ngày đầu tiên xử lý | Nghiên cứu xử lý dữ liệu cá nhân ở quy mô đủ lớn (kiểm quy định cụ thể theo Nghị định 356/2025) |\n| Điều 24 | Dữ liệu trẻ em: người đại diện theo pháp luật thay mặt thực hiện quyền; công bố/tiết lộ thông tin đời sống riêng tư của trẻ từ đủ 7 tuổi cần đồng ý của cả trẻ và người đại diện | Nghiên cứu giáo dục có đối tượng là học sinh dưới 18 tuổi |\n| Điều 30 | Xử lý dữ liệu cá nhân trong môi trường dữ liệu lớn, AI, điện toán đám mây | Nghiên cứu dùng dịch vụ AI/cloud bên thứ ba để xử lý dữ liệu người tham gia |\n| Điều 31 | Dữ liệu vị trí và dữ liệu sinh trắc học (bao gồm nhận diện khuôn mặt): bảo mật vật lý thiết bị, hạn chế truy cập, hệ thống theo dõi xâm phạm | Nghiên cứu thu thập ảnh khuôn mặt, dữ liệu vị trí GPS, hoặc dữ liệu sinh trắc khác |\n| Điều 2 khoản 1 | Dữ liệu đã khử nhận dạng đúng cách không còn là dữ liệu cá nhân | Biện pháp thiết kế mạnh nhất khi cần gửi dữ liệu sang dịch vụ bên thứ ba |\n\n> [!canh-bao] Nghiên cứu giáo dục thu thập dữ liệu học sinh dưới 18 tuổi (rất phổ biến trong lĩnh vực công nghệ giáo dục) cần đặc biệt lưu ý Điều 24: với trẻ **từ đủ 7 tuổi**, việc công bố hoặc tiết lộ thông tin đời sống riêng tư (ví dụ trích dẫn trực tiếp lời của học sinh trong bài báo, kèm chi tiết có thể nhận diện) cần đồng ý của **cả trẻ lẫn người đại diện** — không chỉ xin phép phụ huynh là đủ.\n\n> [!meo] Điều 2 khoản 1 là công cụ thiết kế quan trọng nhất cho nghiên cứu hiện đại: nếu dữ liệu được khử nhận dạng đúng cách (không chỉ đổi tên, mà xử lý cả rủi ro tái nhận dạng như mục 2 ở trên) **trước khi** gửi cho một dịch vụ AI nước ngoài để hỗ trợ phân tích, dữ liệu đó không còn là \"dữ liệu cá nhân\" theo luật — giảm đáng kể nghĩa vụ pháp lý khi cần dùng công cụ AI bên thứ ba.\n\n## Lưu trữ và chia sẻ dữ liệu có trách nhiệm\n\n> [!canh-bao] Chia sẻ bộ dữ liệu nghiên cứu — cho đồng nghiệp, theo yêu cầu open data của tạp chí, hoặc gửi cho dịch vụ AI bên thứ ba để hỗ trợ phân tích — mà không có thoả thuận rõ ràng về mục đích sử dụng, thời hạn lưu trữ, và trách nhiệm bảo mật của bên nhận, là một lỗ hổng đạo đức dữ liệu phổ biến. \"Tôi tin tưởng người này\" không thay thế được một thoả thuận bằng văn bản.\n\n> [!ghi-nho] Trước khi chia sẻ, ưu tiên theo thứ tự: (1) **khử nhận dạng** dữ liệu trước khi gửi nếu mục đích nhận không đòi hỏi dữ liệu định danh (theo Điều 2 khoản 1 ở trên); (2) nếu bắt buộc phải giữ định danh (ví dụ cần liên hệ lại người tham gia), lập **thoả thuận chia sẻ dữ liệu (data sharing agreement)** ghi rõ mục đích, thời hạn, và cam kết bảo mật của bên nhận; (3) với yêu cầu open data của tạp chí, kiểm dữ liệu công khai có còn giữ rủi ro tái nhận dạng không trước khi tải lên kho dữ liệu công khai — không tự động coi \"đã ẩn danh\" là an toàn để công khai.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (40 phút)\n\nLập kế hoạch quản lý dữ liệu ngắn cho đề tài của bạn (ai sở hữu, lưu ở đâu, ai truy cập, lưu bao lâu, huỷ khi nào). Với bộ biến bạn dự định thu thập, đánh giá rủi ro tái nhận dạng: có biến nào, khi tổ hợp lại, có thể chỉ đúng một người trong bối cảnh nghiên cứu của bạn không?\n\n### Nhóm 3-4 người (25 phút)\n\nĐổi đánh giá rủi ro tái nhận dạng cho nhau. Với đề tài có đối tượng dưới 18 tuổi hoặc thu thập dữ liệu sinh trắc học, kiểm: đã tính tới nghĩa vụ theo Điều 24 hoặc Điều 31 của Luật Bảo vệ dữ liệu cá nhân chưa?\n\n### Bài tập về nhà (60 phút)\n\nViết kế hoạch quản lý và bảo vệ dữ liệu đầy đủ cho đề tài của bạn (300-400 từ): kế hoạch quản lý dữ liệu, biện pháp ẩn danh hoá kỹ thuật cụ thể, đối chiếu nghĩa vụ pháp lý liên quan (nếu có), và kế hoạch chia sẻ dữ liệu (nếu dự định chia sẻ hoặc công khai).\n\n:::mau Mẫu nộp bài tập về nhà\n**Kế hoạch quản lý dữ liệu (sở hữu, lưu trữ, truy cập, thời hạn, huỷ):** …\n\n**Đánh giá rủi ro tái nhận dạng và biện pháp ẩn danh hoá:** …\n\n**Nghĩa vụ pháp lý liên quan (Điều 21/24/30/31 nếu áp dụng):** …\n\n**Kế hoạch chia sẻ/công khai dữ liệu (nếu có):** …\n:::\n\n### Nguồn tham khảo\n\n- Quốc hội nước CHXHCN Việt Nam. (2025). *Luật Bảo vệ dữ liệu cá nhân số 91/2025/QH15.*\n- Chính phủ nước CHXHCN Việt Nam. (2025). *Nghị định số 356/2025/NĐ-CP quy định chi tiết một số điều của Luật Bảo vệ dữ liệu cá nhân.*\n- El Emam, K., & Arbuckle, L. (2013). *Anonymizing Health Data: Case Studies and Methods to Get You Started.* O'Reilly Media.\n- Research Data Alliance. *FAIR Data Principles* (Findable, Accessible, Interoperable, Reusable).\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 3",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "dd3-dmp-truoc-thu-thap",
+                "type": "mcq",
+                "prompt": "Một nhóm nghiên cứu bắt đầu thu thập dữ liệu khảo sát mà chưa xác định trước ai sở hữu, lưu ở đâu, và huỷ khi nào. Vấn đề của cách làm này là gì?",
+                "explanation": "Thiếu kế hoạch quản lý dữ liệu thường dẫn tới dữ liệu rải rác không kiểm soát được, khó xử lý khi có yêu cầu xoá hoặc hết thời hạn lưu trữ — cần lập kế hoạch trước khi thu thập, không phải xử lý khi có vấn đề phát sinh.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Thiếu kế hoạch quản lý dữ liệu — dễ dẫn tới dữ liệu rải rác, khó kiểm soát khi cần xoá hoặc hết hạn lưu trữ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, kế hoạch quản lý dữ liệu chỉ cần thiết cho nghiên cứu y sinh",
+                    "isCorrect": false,
+                    "misconception": "dd.no-data-management-plan"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, miễn là dữ liệu được lưu trên máy tính của người phụ trách chính",
+                    "isCorrect": false,
+                    "misconception": "dd.no-data-management-plan"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là cần backup dữ liệu thường xuyên hơn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd3-doi-ten-chua-du",
+                "type": "mcq",
+                "prompt": "Một khảo sát nội bộ khoa có 15 giảng viên đổi tên thật thành mã ID, nhưng vẫn giữ tuổi, giới tính, và chức danh cụ thể. Nếu khoa chỉ có một giáo sư nữ trên 55 tuổi, đây có phải đã ẩn danh hoàn toàn chưa?",
+                "explanation": "Chưa — dù đã đổi tên thành mã ID, tổ hợp tuổi + giới tính + chức danh vẫn có thể chỉ đúng một người trong bối cảnh cụ thể (rủi ro tái nhận dạng). Cần gộp nhóm hoặc làm mờ thêm các biến định danh cao.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Chưa — tổ hợp tuổi, giới tính, chức danh vẫn có thể chỉ đúng một người (rủi ro tái nhận dạng)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đã đủ, vì tên thật không còn xuất hiện trong dữ liệu",
+                    "isCorrect": false,
+                    "misconception": "dd.rename-is-anonymization"
+                  },
+                  {
+                    "label": "Đã đủ, vì mã ID không thể truy ngược lại tên thật bằng mắt thường",
+                    "isCorrect": false,
+                    "misconception": "dd.rename-is-anonymization"
+                  },
+                  {
+                    "label": "Không liên quan tới ẩn danh hoá, vì đây chỉ là vấn đề bảo mật kỹ thuật",
+                    "isCorrect": false,
+                    "misconception": "dd.rename-is-anonymization"
+                  }
+                ]
+              },
+              {
+                "key": "dd3-tre-em-dieu-24",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu giáo dục muốn trích dẫn trực tiếp lời của một học sinh 10 tuổi (kèm chi tiết có thể nhận diện) trong bài báo công bố. Theo Điều 24 của Luật Bảo vệ dữ liệu cá nhân, cần đồng ý của ai?",
+                "explanation": "Với trẻ từ đủ 7 tuổi, việc công bố/tiết lộ thông tin đời sống riêng tư cần đồng ý của CẢ trẻ lẫn người đại diện theo pháp luật — không chỉ xin phép phụ huynh là đủ.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Cần đồng ý của cả học sinh (từ đủ 7 tuổi) và người đại diện theo pháp luật",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chỉ cần đồng ý của phụ huynh/người đại diện, không cần hỏi học sinh",
+                    "isCorrect": false,
+                    "misconception": "dd.ignore-bvdlcn-law"
+                  },
+                  {
+                    "label": "Chỉ cần đồng ý của học sinh, vì đây là trải nghiệm cá nhân của em",
+                    "isCorrect": false,
+                    "misconception": "dd.ignore-bvdlcn-law"
+                  },
+                  {
+                    "label": "Không cần đồng ý gì thêm nếu đã ẩn danh tên học sinh trong bài báo",
+                    "isCorrect": false,
+                    "misconception": "dd.ignore-bvdlcn-law"
+                  }
+                ]
+              },
+              {
+                "key": "dd3-chia-se-du-lieu",
+                "type": "mcq",
+                "prompt": "Một nhà nghiên cứu gửi dữ liệu khảo sát (còn giữ định danh) cho một dịch vụ AI bên thứ ba để hỗ trợ phân tích, không có thoả thuận bảo mật hay khử nhận dạng trước. Vấn đề của cách làm này là gì?",
+                "explanation": "Chia sẻ dữ liệu còn định danh mà không có thoả thuận rõ ràng về mục đích, thời hạn, và trách nhiệm bảo mật là lỗ hổng đạo đức dữ liệu — nên ưu tiên khử nhận dạng trước khi gửi, hoặc lập thoả thuận chia sẻ dữ liệu rõ ràng.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Thiếu khử nhận dạng hoặc thoả thuận bảo mật rõ ràng trước khi chia sẻ dữ liệu còn định danh với bên thứ ba",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu dịch vụ AI đó là công cụ phổ biến, nhiều người dùng",
+                    "isCorrect": false,
+                    "misconception": "dd.share-data-no-agreement"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì mục đích chỉ để hỗ trợ phân tích, không phải công bố công khai",
+                    "isCorrect": false,
+                    "misconception": "dd.share-data-no-agreement"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là nên chọn dịch vụ AI trả phí thay vì miễn phí",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd3-khu-nhan-dang",
+                "type": "mcq",
+                "prompt": "Theo Điều 2 khoản 1 của Luật Bảo vệ dữ liệu cá nhân, dữ liệu đã khử nhận dạng đúng cách có còn là dữ liệu cá nhân không?",
+                "explanation": "Không — dữ liệu đã khử nhận dạng đúng cách (xử lý cả rủi ro tái nhận dạng, không chỉ đổi tên) không còn là dữ liệu cá nhân theo luật, đây là biện pháp thiết kế mạnh nhất khi cần chia sẻ dữ liệu với bên thứ ba.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Không, dữ liệu đã khử nhận dạng đúng cách không còn là dữ liệu cá nhân theo luật",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Có, mọi dữ liệu từng liên quan tới một cá nhân đều mãi là dữ liệu cá nhân",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ đúng nếu dữ liệu được lưu trữ tại Việt Nam",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Luật không quy định gì về vấn đề này",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd3-thu-tu-quan-ly-du-lieu",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước quản lý dữ liệu có đạo đức trong một nghiên cứu.",
+                "explanation": "Từ lập kế hoạch quản lý dữ liệu trước khi thu thập, đánh giá rủi ro tái nhận dạng, đối chiếu nghĩa vụ pháp lý, tới khử nhận dạng/lập thoả thuận trước khi chia sẻ.",
+                "points": 3,
+                "sequence": [
+                  "Lập kế hoạch quản lý dữ liệu trước khi bắt đầu thu thập",
+                  "Đánh giá rủi ro tái nhận dạng từ tổ hợp các biến sẽ thu thập",
+                  "Đối chiếu nghĩa vụ theo Luật Bảo vệ dữ liệu cá nhân nếu có dữ liệu nhạy cảm",
+                  "Áp dụng biện pháp ẩn danh hoá kỹ thuật (gộp nhóm, làm mờ biến định danh cao)",
+                  "Khử nhận dạng hoặc lập thoả thuận chia sẻ dữ liệu rõ ràng trước khi chia sẻ với bên thứ ba"
+                ]
+              },
+              {
+                "key": "dd3-noi-dieu-luat",
+                "type": "matching",
+                "prompt": "Nối mỗi điều khoản của Luật Bảo vệ dữ liệu cá nhân với đúng nội dung áp dụng trong nghiên cứu.",
+                "explanation": "Điều 21 quy định hồ sơ đánh giá tác động; Điều 24 bảo vệ dữ liệu trẻ em; Điều 30 áp dụng khi xử lý dữ liệu qua AI/cloud; Điều 31 áp dụng cho dữ liệu sinh trắc học/vị trí.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Điều 21",
+                    "right": "Lập và lưu trữ hồ sơ đánh giá tác động xử lý dữ liệu cá nhân"
+                  },
+                  {
+                    "left": "Điều 24",
+                    "right": "Bảo vệ dữ liệu trẻ em, cần đồng ý của cả trẻ (từ đủ 7 tuổi) và người đại diện"
+                  },
+                  {
+                    "left": "Điều 30",
+                    "right": "Xử lý dữ liệu cá nhân trong môi trường dữ liệu lớn, AI, điện toán đám mây"
+                  },
+                  {
+                    "left": "Điều 31",
+                    "right": "Bảo mật dữ liệu vị trí và dữ liệu sinh trắc học (bao gồm nhận diện khuôn mặt)"
+                  }
+                ]
+              },
+              {
+                "key": "dd3-viet-ke-hoach",
+                "type": "essay",
+                "prompt": "Viết kế hoạch quản lý và bảo vệ dữ liệu cho đề tài của bạn (250-350 từ), gồm: (a) kế hoạch quản lý dữ liệu cơ bản (sở hữu, lưu trữ, truy cập, thời hạn); (b) đánh giá rủi ro tái nhận dạng và biện pháp ẩn danh hoá cụ thể; (c) nghĩa vụ pháp lý liên quan theo Luật Bảo vệ dữ liệu cá nhân (nếu áp dụng); (d) kế hoạch chia sẻ dữ liệu nếu có.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 4 · Xung đột lợi ích trong nghiên cứu",
+          "durationMin": 90,
+          "description": "Nhận diện ba loại xung đột lợi ích (tài chính, cá nhân, học thuật); công bố mọi COI tiềm ẩn thay vì tự đánh giá trước mức ảnh hưởng; tự rút khỏi vai trò phản biện khi có xung đột; giữ quyền công bố độc lập khi nhận tài trợ từ doanh nghiệp.",
+          "objectives": [
+            "Phân loại được một tình huống cụ thể thuộc xung đột lợi ích tài chính, cá nhân, hay học thuật",
+            "Áp dụng nguyên tắc công bố mọi xung đột lợi ích tiềm ẩn, không tự đánh giá trước mức độ ảnh hưởng rồi quyết định có công bố hay không",
+            "Nhận biết khi nào cần tự rút (recusal) khỏi vai trò phản biện hoặc thành viên hội đồng vì xung đột lợi ích",
+            "Đánh giá được một điều khoản hợp đồng tài trợ có vi phạm quyền công bố độc lập của nhà nghiên cứu hay không"
+          ],
+          "summary": [
+            "Xung đột lợi ích trong nghiên cứu có ba loại chính: tài chính (tài trợ, cổ phần), cá nhân (quan hệ họ hàng, thầy trò, tình cảm), và học thuật (cạnh tranh trực tiếp về ý tưởng, đối thủ trong cùng lĩnh vực) — không chỉ giới hạn ở tiền bạc.",
+            "Nguyên tắc đúng là công bố MỌI xung đột lợi ích tiềm ẩn, để người đọc/hội đồng/ban biên tập tự đánh giá mức độ ảnh hưởng — người trong cuộc không nên tự phán xét trước rằng xung đột đó 'không đáng kể' rồi bỏ qua việc công bố.",
+            "Khi phát hiện xung đột lợi ích với một nghiên cứu mình được mời phản biện hoặc đánh giá, cần tự rút (recusal) và báo ngay cho ban biên tập/chủ tịch hội đồng — không tự tin rằng mình vẫn đủ khách quan để tiếp tục.",
+            "Hợp đồng tài trợ từ doanh nghiệp cần giữ quyền công bố độc lập của nhà nghiên cứu — điều khoản cho phép nhà tài trợ ngăn công bố kết quả bất lợi là vi phạm nguyên tắc độc lập học thuật, dù khoản tài trợ hoàn toàn hợp pháp."
+          ],
+          "splitSections": true,
+          "body": "\nKhoá NCKH nâng cao & Công bố quốc tế (Bài 5) đã dạy tiêu chí quyền tác giả theo ICMJE. Bài này nhìn xung đột lợi ích ở một góc rộng hơn — không chỉ ai được ghi tên tác giả, mà toàn bộ các mối quan hệ có thể ảnh hưởng tới tính khách quan của nghiên cứu. Bài đi qua bốn phần: trước hết phân loại ba loại xung đột lợi ích — tài chính, cá nhân, học thuật; sau đó xác định nguyên tắc công bố mọi xung đột tiềm ẩn thay vì tự đánh giá trước mức ảnh hưởng; tiếp theo là khi nào cần tự rút khỏi vai trò phản biện hoặc hội đồng; và kết bằng cách giữ quyền công bố độc lập khi nhận tài trợ từ doanh nghiệp.\n\n## Ba loại xung đột lợi ích\n\n> [!ghi-nho] **Xung đột lợi ích (Conflict of Interest — COI)** xảy ra khi một nhà nghiên cứu có lợi ích thứ cấp (tài chính, cá nhân, hoặc học thuật) có khả năng ảnh hưởng — dù không nhất thiết đã ảnh hưởng — tới tính khách quan trong công việc nghiên cứu, phản biện, hoặc đánh giá của họ. Ba loại chính: **Tài chính** (nhận tài trợ, sở hữu cổ phần, nhận thù lao tư vấn từ một bên có lợi ích trong kết quả nghiên cứu); **Cá nhân** (quan hệ họ hàng, thầy trò, tình cảm, hoặc bạn bè thân thiết với người liên quan tới nghiên cứu đang được đánh giá); **Học thuật** (cạnh tranh trực tiếp về cùng một ý tưởng hoặc hướng nghiên cứu, khiến việc đánh giá công bằng trở nên khó khăn).\n\n| Loại xung đột | Ví dụ cụ thể |\n|---|---|\n| Tài chính | Nhà nghiên cứu đánh giá hiệu quả một phần mềm giáo dục trong khi đang là cố vấn trả lương cho công ty sản xuất phần mềm đó |\n| Cá nhân | Được mời phản biện luận án của chính học trò cũ mà mình từng hướng dẫn trực tiếp |\n| Học thuật | Phản biện một bài báo đề xuất đúng ý tưởng mà bản thân đang chuẩn bị công bố một nghiên cứu cạnh tranh |\n\n> [!canh-bao] Nhiều người chỉ nghĩ tới xung đột lợi ích **tài chính**, bỏ qua hai loại còn lại — một quan hệ thầy trò hoặc một sự cạnh tranh ý tưởng có thể ảnh hưởng tới tính khách quan không kém gì tiền bạc, và vẫn cần được công bố hoặc xử lý bằng cách tự rút.\n\n## Công bố mọi xung đột lợi ích tiềm ẩn\n\n> [!canh-bao] Sai lầm phổ biến: chỉ công bố xung đột lợi ích khi **tự đánh giá** rằng nó thực sự ảnh hưởng tới kết quả — ví dụ nghĩ \"khoản tài trợ này nhỏ, chắc không ảnh hưởng gì nên không cần ghi vào\". Nguyên tắc đúng ngược lại: công bố **mọi** xung đột lợi ích tiềm ẩn, để người đọc/hội đồng/ban biên tập — chứ không phải người trong cuộc — tự đánh giá mức độ ảnh hưởng.\n\n> [!ghi-nho] Mẫu công bố COI thường theo mẫu ICMJE: liệt kê mọi khoản tài trợ, quan hệ tư vấn, cổ phần liên quan trong 36 tháng gần nhất, kể cả những khoản không trực tiếp tài trợ cho chính nghiên cứu này. Ví dụ câu công bố: \"*Tác giả A nhận tài trợ nghiên cứu từ Công ty X trong giai đoạn 2022-2023, không liên quan trực tiếp tới nghiên cứu này. Các tác giả khác không có xung đột lợi ích cần công bố.*\"\n\n> [!vi-du] Một nhà nghiên cứu nhận một khoản tài trợ nhỏ (5 triệu đồng) từ một công ty công nghệ giáo dục hai năm trước, không liên quan trực tiếp tới nghiên cứu hiện tại đang đánh giá một sản phẩm khác của công ty đó. Dù số tiền nhỏ và không liên quan trực tiếp, nguyên tắc đúng vẫn là công bố khoản tài trợ này trong phần disclosure — để người đọc tự quyết định có coi đây là đáng lo ngại hay không, thay vì nhà nghiên cứu tự quyết định thay người đọc rằng \"không đáng kể\".\n\n## Xung đột lợi ích trong phản biện và hội đồng\n\n> [!canh-bao] Tiếp tục đóng vai trò phản biện hoặc thành viên hội đồng cho một nghiên cứu dù có xung đột lợi ích rõ ràng — thay vì tự rút (**recusal**) — là vi phạm phổ biến, thường xuất phát từ tâm lý \"tôi tự tin mình vẫn khách quan được\" hoặc ngại từ chối lời mời.\n\n> [!ghi-nho] Khi phát hiện xung đột lợi ích với một nghiên cứu được mời đánh giá, bước đúng là: báo ngay cho ban biên tập (nếu là phản biện tạp chí) hoặc chủ tịch hội đồng (nếu là hội đồng đánh giá), và **tự rút** khỏi vai trò đó — không tự mình quyết định \"vẫn tiếp tục vì tôi khách quan\". Quyết định có nên tự rút hay không không nên do chính người có xung đột lợi ích tự đánh giá.\n\n| Tình huống | Nên làm gì |\n|---|---|\n| Được mời phản biện luận án của học trò cũ mình từng hướng dẫn | Từ chối lời mời, báo lý do cho đơn vị tổ chức |\n| Được mời phản biện bài báo của một đồng tác giả cũ (trong 2-3 năm gần đây) | Thường cần khai báo và có thể vẫn được nhận nếu tạp chí chấp thuận, tuỳ chính sách — luôn khai báo trước, không tự quyết định im lặng |\n| Được mời đánh giá đề xuất tài trợ cạnh tranh trực tiếp với hướng nghiên cứu của chính mình | Từ chối hoặc báo xung đột học thuật cho đơn vị tài trợ |\n\n## Tài trợ từ doanh nghiệp: giữ quyền công bố độc lập\n\n> [!canh-bao] Một số hợp đồng tài trợ từ doanh nghiệp có điều khoản cho phép nhà tài trợ **xem trước và có quyền ngăn công bố** nếu kết quả bất lợi cho sản phẩm/dịch vụ của họ. Chấp nhận điều khoản này — dù khoản tài trợ hoàn toàn hợp pháp — là vi phạm nguyên tắc độc lập học thuật: kết quả nghiên cứu khoa học không nên bị lọc theo lợi ích thương mại của bên tài trợ.\n\n> [!ghi-nho] Trước khi ký hợp đồng tài trợ, kiểm cụ thể: nhà tài trợ có quyền xem bản thảo trước khi nộp không (chấp nhận được nếu chỉ để kiểm tra thông tin bảo mật thương mại không liên quan tới kết quả khoa học, không chấp nhận nếu để quyết định có cho công bố hay không); nhà tài trợ có quyền yêu cầu sửa đổi kết luận khoa học không (không bao giờ chấp nhận); hợp đồng có đảm bảo quyền công bố dù kết quả bất lợi cho nhà tài trợ không (nên có điều khoản rõ ràng về việc này).\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (35 phút)\n\nRà lại các mối quan hệ tài chính, cá nhân, và học thuật của bạn liên quan tới đề tài hiện tại. Với mỗi mối quan hệ có khả năng là xung đột lợi ích, viết một câu công bố theo mẫu ICMJE ở mục 2, dù bạn tự đánh giá nó \"không đáng kể\".\n\n### Nhóm 3-4 người (25 phút)\n\nĐọc ba tình huống ở bảng mục 3 (recusal). Thảo luận thêm 2 tình huống giả định từ chính lĩnh vực của bạn — khi nào rõ ràng cần tự rút, khi nào chỉ cần khai báo và có thể tiếp tục.\n\n### Bài tập về nhà (60 phút)\n\nViết đoạn công bố xung đột lợi ích đầy đủ cho đề tài của bạn (150-200 từ, có thể là \"không có xung đột lợi ích cần công bố\" nếu đúng thực tế). Nếu đề tài có nhận tài trợ từ doanh nghiệp hoặc tổ chức bên ngoài, viết thêm một đoạn kiểm tra ba điều khoản ở mục 4 (quyền xem trước, quyền yêu cầu sửa, quyền công bố dù bất lợi).\n\n:::mau Mẫu nộp bài tập về nhà\n**Đoạn công bố xung đột lợi ích (150-200 từ):** …\n\n**Kiểm tra hợp đồng tài trợ (nếu có)**\n\n| Điều khoản | Có trong hợp đồng? | Chấp nhận được không? |\n|---|---|---|\n| Nhà tài trợ xem bản thảo trước khi nộp | … | … |\n| Nhà tài trợ có quyền yêu cầu sửa kết luận | … | … |\n| Đảm bảo quyền công bố dù kết quả bất lợi | … | … |\n:::\n\n### Nguồn tham khảo\n\n- International Committee of Medical Journal Editors. (2024). *ICMJE Form for Disclosure of Potential Conflicts of Interest.*\n- Committee on Publication Ethics (COPE). *Guidance on Conflicts of Interest for Editors.*\n- Resnik, D. B. (2015). *What is Ethics in Research & Why is it Important?* National Institute of Environmental Health Sciences (NIEHS).\n- Krimsky, S. (2013). Do financial conflicts of interest bias research? An inquiry into the \"funding effect\" hypothesis. *Science, Technology, & Human Values*, 38(4), 566-587.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 4",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "dd4-ba-loai-coi",
+                "type": "mcq",
+                "prompt": "Một nhà nghiên cứu được mời phản biện luận án của chính học trò cũ mình từng hướng dẫn trực tiếp. Đây là loại xung đột lợi ích nào?",
+                "explanation": "Đây là xung đột lợi ích cá nhân (quan hệ thầy trò), không phải tài chính — xung đột lợi ích không chỉ giới hạn ở tiền bạc, quan hệ cá nhân cũng có thể ảnh hưởng tới tính khách quan.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Xung đột lợi ích cá nhân (quan hệ thầy trò)",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không phải xung đột lợi ích, vì không có tiền bạc liên quan",
+                    "isCorrect": false,
+                    "misconception": "dd.personal-relationship-not-coi"
+                  },
+                  {
+                    "label": "Xung đột lợi ích tài chính, vì học trò có thể trả ơn bằng cách nào đó",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Xung đột lợi ích học thuật, vì cả hai cùng lĩnh vực nghiên cứu",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd4-cong-bo-moi-coi",
+                "type": "mcq",
+                "prompt": "Một nhà nghiên cứu nhận khoản tài trợ nhỏ, không liên quan trực tiếp tới nghiên cứu hiện tại, và tự nghĩ 'chắc không ảnh hưởng gì nên không cần ghi vào'. Cách làm này có đúng không?",
+                "explanation": "Không đúng — nguyên tắc là công bố MỌI xung đột lợi ích tiềm ẩn để người đọc/hội đồng tự đánh giá mức độ ảnh hưởng, không phải để người trong cuộc tự quyết định trước rằng nó không đáng kể.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không đúng — cần công bố mọi xung đột lợi ích tiềm ẩn, để người đọc tự đánh giá mức độ ảnh hưởng",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, chỉ cần công bố khi bản thân tin rằng nó thực sự ảnh hưởng tới kết quả",
+                    "isCorrect": false,
+                    "misconception": "dd.coi-only-if-affects"
+                  },
+                  {
+                    "label": "Đúng, vì khoản tài trợ nhỏ không đáng để công bố",
+                    "isCorrect": false,
+                    "misconception": "dd.coi-only-if-affects"
+                  },
+                  {
+                    "label": "Đúng, miễn là khoản tài trợ không liên quan trực tiếp tới nghiên cứu hiện tại",
+                    "isCorrect": false,
+                    "misconception": "dd.coi-only-if-affects"
+                  }
+                ]
+              },
+              {
+                "key": "dd4-recusal",
+                "type": "mcq",
+                "prompt": "Một nhà nghiên cứu phát hiện xung đột lợi ích rõ ràng với một bài báo mình được mời phản biện, nhưng tự tin rằng mình vẫn có thể đánh giá khách quan nên tiếp tục nhận lời. Cách làm này có đúng không?",
+                "explanation": "Không đúng — khi có xung đột lợi ích rõ ràng, cần báo cho ban biên tập/chủ tịch hội đồng và tự rút (recusal), không tự mình quyết định 'vẫn khách quan được' rồi tiếp tục.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không đúng — cần báo cho ban biên tập và tự rút khỏi vai trò phản biện, không tự quyết định tiếp tục",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, vì bản thân người phản biện là người hiểu rõ nhất khả năng khách quan của chính mình",
+                    "isCorrect": false,
+                    "misconception": "dd.no-recusal-conflict"
+                  },
+                  {
+                    "label": "Đúng, miễn là không nhận thù lao phản biện",
+                    "isCorrect": false,
+                    "misconception": "dd.no-recusal-conflict"
+                  },
+                  {
+                    "label": "Đúng, vì từ chối lời mời phản biện có thể ảnh hưởng tới quan hệ với tạp chí",
+                    "isCorrect": false,
+                    "misconception": "dd.no-recusal-conflict"
+                  }
+                ]
+              },
+              {
+                "key": "dd4-tai-tro-doanh-nghiep",
+                "type": "mcq",
+                "prompt": "Một hợp đồng tài trợ từ doanh nghiệp có điều khoản cho phép nhà tài trợ ngăn công bố nếu kết quả bất lợi cho sản phẩm của họ. Nên xử lý điều khoản này thế nào?",
+                "explanation": "Không nên chấp nhận điều khoản này — dù khoản tài trợ hợp pháp, cho phép nhà tài trợ ngăn công bố kết quả bất lợi vi phạm nguyên tắc độc lập học thuật.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Từ chối điều khoản này, yêu cầu đảm bảo quyền công bố độc lập dù kết quả bất lợi cho nhà tài trợ",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Chấp nhận điều khoản này miễn là khoản tài trợ đủ lớn và hợp pháp",
+                    "isCorrect": false,
+                    "misconception": "dd.sponsor-controls-publication"
+                  },
+                  {
+                    "label": "Chấp nhận, vì nhà tài trợ có quyền bảo vệ lợi ích thương mại của họ trong mọi trường hợp",
+                    "isCorrect": false,
+                    "misconception": "dd.sponsor-controls-publication"
+                  },
+                  {
+                    "label": "Không có vấn đề gì nếu điều khoản này không được nêu công khai trong bài báo",
+                    "isCorrect": false,
+                    "misconception": "dd.sponsor-controls-publication"
+                  }
+                ]
+              },
+              {
+                "key": "dd4-xung-dot-hoc-thuat",
+                "type": "mcq",
+                "prompt": "Một nhà nghiên cứu được mời phản biện một bài báo đề xuất đúng ý tưởng mà bản thân đang chuẩn bị công bố một nghiên cứu cạnh tranh. Đây là loại xung đột lợi ích nào, và nên làm gì?",
+                "explanation": "Đây là xung đột lợi ích học thuật (cạnh tranh ý tưởng) — nên từ chối phản biện hoặc báo xung đột này cho ban biên tập, vì việc đánh giá công bằng trở nên khó khăn khi có lợi ích cạnh tranh trực tiếp.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Xung đột lợi ích học thuật — nên từ chối phản biện hoặc báo xung đột cho ban biên tập",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không phải xung đột lợi ích, vì đây chỉ là sự trùng hợp về đề tài nghiên cứu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Xung đột lợi ích tài chính, vì cả hai nghiên cứu đều nhắm tới công bố quốc tế",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Nên nhận lời phản biện để có thêm thông tin cho nghiên cứu của chính mình",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd4-thu-tu-xu-ly-coi",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước xử lý khi phát hiện một xung đột lợi ích tiềm ẩn.",
+                "explanation": "Từ nhận diện loại xung đột, không tự đánh giá mức ảnh hưởng, công bố hoặc báo cho bên liên quan, tới tự rút nếu là vai trò phản biện/hội đồng.",
+                "points": 3,
+                "sequence": [
+                  "Nhận diện xung đột lợi ích thuộc loại tài chính, cá nhân, hay học thuật",
+                  "Không tự đánh giá trước mức độ ảnh hưởng để quyết định có công bố hay không",
+                  "Công bố xung đột lợi ích theo mẫu chuẩn (ví dụ ICMJE) nếu là tác giả",
+                  "Báo cho ban biên tập/chủ tịch hội đồng nếu là vai trò phản biện/đánh giá",
+                  "Tự rút (recusal) khỏi vai trò đó nếu xung đột đủ nghiêm trọng"
+                ]
+              },
+              {
+                "key": "dd4-noi-loai-xung-dot",
+                "type": "matching",
+                "prompt": "Nối mỗi tình huống với đúng loại xung đột lợi ích.",
+                "explanation": "Nhận tài trợ/cổ phần là xung đột tài chính; quan hệ họ hàng/thầy trò là xung đột cá nhân; cạnh tranh ý tưởng là xung đột học thuật; hợp đồng cho nhà tài trợ ngăn công bố là vi phạm độc lập học thuật.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Nhận thù lao tư vấn từ công ty có lợi ích trong kết quả nghiên cứu",
+                    "right": "Xung đột lợi ích tài chính"
+                  },
+                  {
+                    "left": "Phản biện luận án của học trò cũ mình từng hướng dẫn",
+                    "right": "Xung đột lợi ích cá nhân"
+                  },
+                  {
+                    "left": "Phản biện bài báo cạnh tranh trực tiếp với hướng nghiên cứu của mình",
+                    "right": "Xung đột lợi ích học thuật"
+                  },
+                  {
+                    "left": "Hợp đồng tài trợ cho phép nhà tài trợ ngăn công bố kết quả bất lợi",
+                    "right": "Vi phạm nguyên tắc độc lập học thuật"
+                  }
+                ]
+              },
+              {
+                "key": "dd4-viet-cong-bo",
+                "type": "essay",
+                "prompt": "Viết đoạn công bố xung đột lợi ích cho đề tài của bạn (150-200 từ, kể cả nếu không có xung đột nào cần công bố), gồm: (a) rà soát cả ba loại xung đột (tài chính, cá nhân, học thuật); (b) nếu có tài trợ từ bên ngoài, một câu xác nhận quyền công bố độc lập; (c) nếu từng ở vai trò phản biện/hội đồng có khả năng xung đột, mô tả cách bạn đã hoặc sẽ xử lý.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 5 · Đạo đức khi dùng AI trong toàn bộ quy trình nghiên cứu",
+          "durationMin": 90,
+          "description": "Nhận diện rủi ro AI riêng ở từng giai đoạn nghiên cứu (tổng quan, thu thập, phân tích — không chỉ viết bài); tự kiểm chứng kết quả AI phân tích thay vì tin tuyệt đối; phân biệt dữ liệu tổng hợp chính đáng với ngụy tạo dữ liệu; đọc nguồn gốc thay vì chỉ dựa vào tóm tắt AI.",
+          "objectives": [
+            "Nhận diện rủi ro đạo đức riêng của AI ở ba giai đoạn nghiên cứu: tổng quan tài liệu, thu thập dữ liệu, và phân tích dữ liệu",
+            "Áp dụng nguyên tắc tự kiểm chứng kết quả phân tích do AI đưa ra, không chấp nhận AI như một hộp đen đáng tin tuyệt đối",
+            "Phân biệt việc dùng dữ liệu tổng hợp (synthetic data) một cách chính đáng với việc ngụy tạo dữ liệu bằng AI",
+            "Đọc nguồn gốc tài liệu thay vì chỉ dựa vào bản tóm tắt do AI tạo ra trước khi trích dẫn vào bản thảo"
+          ],
+          "summary": [
+            "AI mang lại rủi ro đạo đức khác nhau ở từng giai đoạn nghiên cứu — rủi ro khi dùng AI tổng hợp tài liệu (bỏ qua đọc nguồn gốc) khác với rủi ro khi dùng AI phân tích dữ liệu (chấp nhận kết quả không kiểm chứng), khác với rủi ro khi viết bài (đã học ở khoá NCKH nâng cao, Bài 6).",
+            "Dùng AI để phân tích dữ liệu (gợi ý mô hình, chạy thống kê) mà không tự kiểm chứng bằng công cụ chuẩn hoặc hiểu được logic tính toán là coi AI như một hộp đen đáng tin tuyệt đối — rủi ro cao khi AI đưa ra kết quả sai mà không có dấu hiệu cảnh báo nào.",
+            "Dữ liệu tổng hợp (synthetic data) chính đáng khi dùng để thử nghiệm pipeline phân tích hoặc bảo vệ quyền riêng tư — nhưng báo cáo dữ liệu tổng hợp như thể là dữ liệu thu thập thật là ngụy tạo dữ liệu (fabrication), một vi phạm liêm chính nghiêm trọng đã học ở Bài 1.",
+            "Dùng bản tóm tắt tài liệu do AI tạo ra để quyết định có đáng đọc kỹ hay không là hợp lý, nhưng trước khi trích dẫn bất kỳ luận điểm hay số liệu nào vào bản thảo, luôn phải tự đọc lại nguồn gốc để xác nhận tóm tắt phản ánh đúng nội dung."
+          ],
+          "splitSections": true,
+          "body": "\nKhoá NCKH nâng cao & Công bố quốc tế (Bài 6) đã dạy dùng AI có kiểm soát khi VIẾT bài báo — vai trò trợ lý văn phong, khai báo sử dụng, kiểm chứng trích dẫn. Bài này mở rộng ra các giai đoạn khác của quy trình nghiên cứu, nơi rủi ro đạo đức khác hẳn. Bài đi qua bốn phần: mở đầu bằng bản đồ rủi ro AI ở từng giai đoạn nghiên cứu; sau đó đi sâu vào rủi ro coi AI như hộp đen khi hỗ trợ phân tích dữ liệu; tiếp theo phân biệt dữ liệu tổng hợp dùng chính đáng với việc ngụy tạo dữ liệu bằng AI; và kết bằng nguyên tắc đọc nguồn gốc thay vì chỉ dựa vào tóm tắt AI khi tổng hợp tài liệu.\n\n## Bốn giai đoạn dùng AI và rủi ro riêng từng giai đoạn\n\n> [!ghi-nho] AI có thể tham gia ở nhiều giai đoạn nghiên cứu, mỗi giai đoạn mang rủi ro đạo đức khác nhau: **(1) Tổng quan tài liệu** — rủi ro trích dẫn giả (hallucination) và dựa vào tóm tắt thay vì đọc gốc; **(2) Thu thập dữ liệu** — rủi ro dùng dữ liệu tổng hợp thay dữ liệu thật mà không khai báo; **(3) Phân tích dữ liệu** — rủi ro chấp nhận kết quả không kiểm chứng được; **(4) Viết bài** — đã học kỹ ở khoá NCKH nâng cao, Bài 6 (vai trò trợ lý văn phong, không viết thay nội dung khoa học).\n\n| Giai đoạn | Rủi ro đạo đức đặc trưng | Đã học ở đâu |\n|---|---|---|\n| Tổng quan tài liệu | Trích dẫn giả (hallucination); dựa vào tóm tắt AI mà không đọc gốc | Một phần ở Khóa 3 Bài 6 (trích dẫn khi viết); bài này mở rộng sang cả khâu tổng hợp tài liệu |\n| Thu thập dữ liệu | Dùng dữ liệu tổng hợp thay dữ liệu thật mà không khai báo | Chưa học — trọng tâm chính của bài này |\n| Phân tích dữ liệu | Chấp nhận kết quả AI không kiểm chứng được | Chưa học — trọng tâm chính của bài này |\n| Viết bài | Vai trò trợ lý văn phong, khai báo sử dụng, không được là tác giả | Khóa 3 (NCKH nâng cao), Bài 6 |\n\n## AI hỗ trợ phân tích dữ liệu: rủi ro hộp đen\n\n> [!canh-bao] Dùng AI để phân tích dữ liệu — ví dụ yêu cầu AI \"chạy hồi quy cho bộ dữ liệu này và cho tôi kết quả\" — rồi chấp nhận kết quả mà không tự kiểm chứng bằng công cụ thống kê chuẩn (SPSS, R) hoặc hiểu được logic tính toán, là coi AI như một **hộp đen đáng tin tuyệt đối**. Khác với công cụ thống kê truyền thống (có thể kiểm tra công thức, xem log tính toán), một số công cụ AI tạo sinh có thể đưa ra kết quả sai (ví dụ nhầm công thức, tính sai bậc tự do) mà không có dấu hiệu cảnh báo nào — câu trả lời vẫn đọc tự tin và có định dạng đúng.\n\n> [!ghi-nho] Nguyên tắc: dùng kết quả AI phân tích như một **gợi ý ban đầu** hoặc để tăng tốc thao tác (ví dụ viết code phân tích), nhưng luôn tự kiểm chứng lại bằng công cụ thống kê chuẩn cho những phần quan trọng của bài báo, hoặc tự tay tính lại một phần đủ để tin tưởng vào logic tính toán trước khi dùng cho toàn bộ bộ dữ liệu.\n\n> [!vi-du] Một nghiên cứu sinh dùng AI để viết code R chạy mô hình hồi quy đa biến cho một bộ dữ liệu 200 quan sát. Thay vì chỉ chạy code và chép kết quả, nghiên cứu sinh đối chiếu: hệ số hồi quy có dấu (+/-) hợp lý với kỳ vọng lý thuyết không? R² có nằm trong khoảng hợp lý so với các nghiên cứu tương tự đã đọc ở phần tổng quan không? Chạy lại với một phần mềm khác (ví dụ SPSS) cho 2-3 biến chính để đối chiếu con số có khớp không. Việc đối chiếu này phát hiện AI đã nhầm cách mã hoá một biến định danh (dummy coding sai), dẫn tới hệ số hồi quy sai lệch — nếu không kiểm chứng, sai sót này sẽ đi thẳng vào bài báo.\n\n## Dữ liệu tổng hợp: chính đáng hay ngụy tạo\n\n> [!ghi-nho] **Dữ liệu tổng hợp (synthetic data)** — dữ liệu được tạo ra bằng thuật toán (kể cả AI) để có đặc điểm thống kê tương tự dữ liệu thật — có ứng dụng chính đáng: thử nghiệm pipeline phân tích trước khi có dữ liệu thật (kiểm code có chạy đúng không), hoặc bảo vệ quyền riêng tư khi cần chia sẻ dữ liệu công khai mà không lộ thông tin cá nhân thật.\n\n> [!canh-bao] Ranh giới với **ngụy tạo dữ liệu (fabrication, đã học ở Bài 1)** nằm ở việc **khai báo**: dùng dữ liệu tổng hợp để thử nghiệm rồi công bố kết quả phân tích trên dữ liệu tổng hợp đó **như thể là dữ liệu thu thập thật** — ví dụ dùng AI tạo ra 200 \"phản hồi khảo sát\" giả để lấp đầy cỡ mẫu còn thiếu, rồi báo cáo N=200 như dữ liệu thu thập được — là ngụy tạo dữ liệu, một vi phạm liêm chính nghiêm trọng, dù công cụ tạo ra nó là AI hiện đại thay vì tự tay bịa số như trước đây.\n\n| Tình huống | Chính đáng hay ngụy tạo? |\n|---|---|\n| Dùng AI tạo 50 dòng dữ liệu giả để kiểm tra code phân tích chạy đúng trước khi có dữ liệu thật, không đưa vào báo cáo kết quả | Chính đáng (chỉ để thử pipeline) |\n| Dùng AI tạo thêm 40 \"phản hồi khảo sát\" để đủ cỡ mẫu 200 như đã đăng ký trong protocol, gộp chung và báo cáo N=200 thu thập được | Ngụy tạo dữ liệu (fabrication) |\n| Công bố một bộ dữ liệu tổng hợp thay cho dữ liệu thật để chia sẻ công khai, có ghi rõ \"đây là dữ liệu tổng hợp mô phỏng theo phân phối của dữ liệu gốc\" | Chính đáng (đã khai báo rõ ràng) |\n\n## AI trong thu thập và tổng hợp tài liệu\n\n> [!canh-bao] Khác với rủi ro trích dẫn giả khi VIẾT bài (đã học kỹ ở Khóa 3, Bài 6), rủi ro ở khâu **tổng hợp tài liệu** là: yêu cầu AI \"tóm tắt xu hướng nghiên cứu về chủ đề X trong 5 năm qua\" và dùng bản tóm tắt đó để định hình cả cấu trúc tổng quan tài liệu, mà không tự đọc phần lớn các nguồn được liệt kê. Bản tóm tắt AI có thể bỏ sót sắc thái quan trọng (một nghiên cứu có phát hiện trái ngược nhưng bị gộp chung vào xu hướng đa số), hoặc đơn giản hoá quá mức một tranh luận học thuật đang diễn ra.\n\n> [!ghi-nho] Nguyên tắc: dùng tóm tắt AI để **quyết định có đáng đọc kỹ hay không** (đọc chiến lược, tiết kiệm thời gian sàng lọc ban đầu) — nhưng với bất kỳ nguồn nào sẽ được trích dẫn hoặc dùng để định hình lập luận trong bản thảo, luôn tự đọc lại nguồn gốc đầy đủ, không chỉ dựa vào tóm tắt.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (35 phút)\n\nRà lại cách bạn đang dùng AI trong quy trình nghiên cứu của mình (nếu có): phân loại theo 4 giai đoạn ở mục 1. Với khâu phân tích (nếu có dùng AI), mô tả cách bạn sẽ kiểm chứng lại kết quả. Với khâu tổng quan tài liệu, kiểm: có nguồn nào bạn mới chỉ đọc qua tóm tắt AI mà chưa đọc gốc không?\n\n### Nhóm 3-4 người (25 phút)\n\nĐọc bảng \"Dữ liệu tổng hợp: chính đáng hay ngụy tạo\" ở mục 3. Thảo luận thêm một tình huống ranh giới (ví dụ: dùng AI tạo dữ liệu mô phỏng cho power analysis trước khi thu thập — có cần khai báo không, và khai báo ở đâu trong bài báo?).\n\n### Bài tập về nhà (45-60 phút)\n\nViết một đoạn (200-250 từ) mô tả nguyên tắc bạn sẽ áp dụng khi dùng AI ở từng giai đoạn nghiên cứu của đề tài mình (tổng quan, thu thập, phân tích — không cần nhắc lại phần viết bài đã học ở Khóa 3), kèm ít nhất một ví dụ cụ thể về cách kiểm chứng.\n\n:::mau Mẫu nộp bài tập về nhà\n**Nguyên tắc dùng AI trong tổng quan tài liệu (kèm cách kiểm chứng nguồn):** …\n\n**Nguyên tắc dùng AI trong thu thập dữ liệu, nếu có (kèm cách khai báo nếu dùng dữ liệu tổng hợp):** …\n\n**Nguyên tắc dùng AI trong phân tích dữ liệu (kèm cách kiểm chứng kết quả):** …\n:::\n\n### Nguồn tham khảo\n\n- Committee on Publication Ethics (COPE). (2023). *Authorship and AI Tools.* COPE Position Statement.\n- Resnik, D. B., & Hosseini, M. (2025). The ethics of using artificial intelligence in scientific research: new guidance needed for a new tool. *AI and Ethics*.\n- Jobin, A., Ienca, M., & Vayena, E. (2019). The global landscape of AI ethics guidelines. *Nature Machine Intelligence*, 1(9), 389-399.\n- Raghunathan, T. E. (2021). Synthetic data. *Annual Review of Statistics and Its Application*, 8, 129-140.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 5",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "dd5-rui-ro-tung-giai-doan",
+                "type": "mcq",
+                "prompt": "Rủi ro đạo đức khi dùng AI ở khâu PHÂN TÍCH dữ liệu khác gì với rủi ro ở khâu VIẾT bài (đã học ở Khóa 3, Bài 6)?",
+                "explanation": "Rủi ro ở khâu phân tích là chấp nhận kết quả tính toán sai mà không kiểm chứng được (AI như hộp đen); rủi ro ở khâu viết là overclaim văn phong hoặc trích dẫn giả — hai loại rủi ro khác nhau, cần biện pháp kiểm soát khác nhau.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Rủi ro phân tích là chấp nhận kết quả tính toán sai không kiểm chứng được; rủi ro viết bài là văn phong/trích dẫn — cần biện pháp kiểm soát khác nhau",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Hai loại rủi ro này hoàn toàn giống nhau, chỉ cần một biện pháp kiểm soát chung",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có rủi ro gì ở khâu phân tích, vì AI luôn tính toán chính xác hơn con người",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-analysis-no-verify"
+                  },
+                  {
+                    "label": "Rủi ro chỉ tồn tại ở khâu viết bài, các khâu khác dùng AI luôn an toàn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd5-hop-den-phan-tich",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh yêu cầu AI 'chạy hồi quy cho bộ dữ liệu này' rồi chép thẳng kết quả vào bài báo mà không kiểm chứng gì thêm. Vấn đề của cách làm này là gì?",
+                "explanation": "Đây là coi AI như một hộp đen đáng tin tuyệt đối — AI có thể đưa ra kết quả sai (nhầm công thức, mã hoá biến sai) mà không có dấu hiệu cảnh báo, cần tự kiểm chứng bằng công cụ chuẩn hoặc đối chiếu logic trước khi dùng.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Coi AI như hộp đen đáng tin tuyệt đối — cần tự kiểm chứng kết quả bằng công cụ thống kê chuẩn hoặc đối chiếu logic tính toán",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, AI luôn tính toán chính xác hơn phần mềm thống kê truyền thống",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-analysis-no-verify"
+                  },
+                  {
+                    "label": "Không có vấn đề gì miễn là bộ dữ liệu đủ lớn",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-analysis-no-verify"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là cần yêu cầu AI giải thích rõ hơn cách tính, không cần kiểm chứng độc lập",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-analysis-no-verify"
+                  }
+                ]
+              },
+              {
+                "key": "dd5-synthetic-data",
+                "type": "mcq",
+                "prompt": "Một nhóm nghiên cứu dùng AI tạo thêm 40 'phản hồi khảo sát' để đủ cỡ mẫu 200 như đã đăng ký, gộp chung và báo cáo N=200 thu thập được, không khai báo gì thêm. Đây là vi phạm gì?",
+                "explanation": "Đây là ngụy tạo dữ liệu (fabrication) — dùng dữ liệu tổng hợp nhưng báo cáo như thể là dữ liệu thu thập thật, một vi phạm liêm chính nghiêm trọng dù công cụ tạo ra là AI hiện đại.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Ngụy tạo dữ liệu (fabrication) — dùng dữ liệu tổng hợp nhưng báo cáo như dữ liệu thu thập thật",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vi phạm gì, vì dữ liệu tổng hợp có đặc điểm thống kê tương tự dữ liệu thật",
+                    "isCorrect": false,
+                    "misconception": "dd.synthetic-data-as-real"
+                  },
+                  {
+                    "label": "Không có vi phạm gì, vì mục đích chỉ để đạt đúng cỡ mẫu đã đăng ký từ đầu",
+                    "isCorrect": false,
+                    "misconception": "dd.synthetic-data-as-real"
+                  },
+                  {
+                    "label": "Đây là questionable research practice, không nghiêm trọng bằng fabrication",
+                    "isCorrect": false,
+                    "misconception": "dd.synthetic-data-as-real"
+                  }
+                ]
+              },
+              {
+                "key": "dd5-tom-tat-ai",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh trích dẫn một luận điểm vào tổng quan tài liệu chỉ dựa trên bản tóm tắt do AI tạo ra, không tự đọc lại bài báo gốc. Vấn đề tiềm ẩn là gì?",
+                "explanation": "Bản tóm tắt AI có thể bỏ sót sắc thái quan trọng hoặc đơn giản hoá quá mức — trước khi trích dẫn vào bản thảo, luôn cần tự đọc lại nguồn gốc để xác nhận tóm tắt phản ánh đúng nội dung.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Bản tóm tắt AI có thể bỏ sót sắc thái hoặc đơn giản hoá quá mức — cần tự đọc gốc trước khi trích dẫn",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì tóm tắt AI luôn phản ánh chính xác 100% nội dung bài gốc",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-summary-no-read-source"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, miễn là trích dẫn đúng tên tác giả và năm xuất bản",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-summary-no-read-source"
+                  },
+                  {
+                    "label": "Vấn đề chỉ xảy ra nếu bài báo gốc viết bằng ngôn ngữ khác tiếng Việt",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-summary-no-read-source"
+                  }
+                ]
+              },
+              {
+                "key": "dd5-khai-bao-ai-phan-tich",
+                "type": "mcq",
+                "prompt": "Một nhóm nghiên cứu dùng AI đáng kể để hỗ trợ thu thập và phân tích dữ liệu, nhưng chỉ khai báo trong phần Methods rằng 'AI được dùng để sửa văn phong'. Vấn đề của cách khai báo này là gì?",
+                "explanation": "Khai báo không đầy đủ — dùng AI ở khâu thu thập/phân tích dữ liệu cần được khai báo cụ thể và nghiêm túc hơn nhiều so với chỉ dùng để sửa văn phong, vì ảnh hưởng trực tiếp tới độ tin cậy của kết quả khoa học.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Khai báo không đầy đủ — dùng AI ở khâu thu thập/phân tích cần khai báo cụ thể hơn nhiều so với chỉ sửa văn phong",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì đã có khai báo về việc dùng AI trong bản thảo",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-blackbox-no-disclosure"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, miễn là kết quả cuối cùng có ý nghĩa thống kê",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-blackbox-no-disclosure"
+                  },
+                  {
+                    "label": "Không cần khai báo gì thêm nếu AI chỉ được dùng để viết code, không trực tiếp ra quyết định phân tích",
+                    "isCorrect": false,
+                    "misconception": "dd.ai-blackbox-no-disclosure"
+                  }
+                ]
+              },
+              {
+                "key": "dd5-thu-tu-kiem-soat-ai-quy-trinh",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước kiểm soát khi dùng AI xuyên suốt một quy trình nghiên cứu.",
+                "explanation": "Từ dùng tóm tắt AI để sàng lọc tài liệu (đọc gốc trước khi trích dẫn), tới phân biệt dữ liệu tổng hợp với dữ liệu thật, kiểm chứng kết quả phân tích AI, và khai báo đầy đủ trong Methods.",
+                "points": 3,
+                "sequence": [
+                  "Dùng tóm tắt AI để sàng lọc tài liệu, tự đọc lại nguồn gốc trước khi trích dẫn",
+                  "Nếu dùng dữ liệu tổng hợp, chỉ dùng cho mục đích thử nghiệm và khai báo rõ, không gộp vào dữ liệu thật",
+                  "Dùng AI hỗ trợ phân tích như gợi ý ban đầu, không chấp nhận thẳng kết quả",
+                  "Tự kiểm chứng kết quả phân tích bằng công cụ chuẩn hoặc đối chiếu logic tính toán",
+                  "Khai báo đầy đủ trong Methods mọi khâu có dùng AI đáng kể, không chỉ khâu viết văn"
+                ]
+              },
+              {
+                "key": "dd5-noi-giai-doan-ai",
+                "type": "matching",
+                "prompt": "Nối mỗi giai đoạn nghiên cứu với đúng rủi ro đạo đức đặc trưng khi dùng AI.",
+                "explanation": "Tổng quan tài liệu có rủi ro trích dẫn giả/tóm tắt sai lệch; thu thập dữ liệu có rủi ro dữ liệu tổng hợp bị coi như thật; phân tích dữ liệu có rủi ro hộp đen không kiểm chứng được; viết bài có rủi ro overclaim/không khai báo (đã học ở Khóa 3).",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Tổng quan tài liệu",
+                    "right": "Trích dẫn giả (hallucination); dựa vào tóm tắt AI mà không đọc gốc"
+                  },
+                  {
+                    "left": "Thu thập dữ liệu",
+                    "right": "Dùng dữ liệu tổng hợp thay dữ liệu thật mà không khai báo"
+                  },
+                  {
+                    "left": "Phân tích dữ liệu",
+                    "right": "Chấp nhận kết quả AI như hộp đen, không tự kiểm chứng"
+                  },
+                  {
+                    "left": "Viết bài (đã học ở Khóa 3)",
+                    "right": "Overclaim văn phong, không khai báo sử dụng AI"
+                  }
+                ]
+              },
+              {
+                "key": "dd5-viet-nguyen-tac-ai",
+                "type": "essay",
+                "prompt": "Viết đoạn 200-250 từ mô tả nguyên tắc dùng AI cho đề tài của bạn ở các giai đoạn ngoài viết bài, gồm: (a) cách bạn sẽ kiểm chứng nguồn khi dùng AI tổng hợp tài liệu; (b) nếu có dùng dữ liệu tổng hợp, cách bạn sẽ khai báo rõ ràng; (c) cách bạn sẽ kiểm chứng kết quả nếu dùng AI hỗ trợ phân tích dữ liệu.",
+                "points": 5
+              }
+            ]
+          }
+        },
+        {
+          "title": "Bài 6 · Báo cáo sai phạm và văn hoá liêm chính nghiên cứu",
+          "durationMin": 75,
+          "description": "Vượt qua rào cản tâm lý để báo cáo sai phạm qua kênh bảo mật thay vì im lặng; hiểu quy trình xử lý tố cáo bảo vệ danh tính người báo cáo; nhận diện trách nhiệm của người hướng dẫn trong xây dựng văn hoá liêm chính nhóm; hiểu vì sao đào tạo liêm chính (RCR) cần lặp lại định kỳ.",
+          "objectives": [
+            "Nhận diện các rào cản tâm lý phổ biến khiến người chứng kiến sai phạm chọn im lặng, và biết dùng kênh báo cáo bảo mật thay vì tự xử lý",
+            "Mô tả được quy trình xử lý tố cáo cơ bản, đặc biệt nguyên tắc bảo mật danh tính người báo cáo",
+            "Giải thích được vai trò của người hướng dẫn/PI trong việc xây dựng văn hoá liêm chính của cả nhóm nghiên cứu, không chỉ trách nhiệm cá nhân từng thành viên",
+            "Giải thích được vì sao đào tạo liêm chính nghiên cứu (RCR) cần được lặp lại định kỳ, không chỉ một lần khi mới bắt đầu"
+          ],
+          "summary": [
+            "Rào cản tâm lý phổ biến khiến người chứng kiến sai phạm chọn im lặng — sợ trả đũa, sợ ảnh hưởng quan hệ thầy trò, sợ bị coi là 'làm quá' — có thể vượt qua bằng cách dùng kênh báo cáo bảo mật đã được thiết lập, thay vì tự xử lý hoặc im lặng hoàn toàn.",
+            "Quy trình xử lý tố cáo nghiêm túc luôn bảo mật danh tính người báo cáo trong giai đoạn điều tra ban đầu — tiết lộ sớm có thể dẫn tới trả đũa và làm giảm khả năng người khác dám báo cáo trong tương lai.",
+            "Xây dựng văn hoá liêm chính là trách nhiệm của người hướng dẫn/PI, không chỉ trách nhiệm cá nhân từng thành viên — bao gồm làm gương, thiết lập quy trình rõ ràng, và tạo môi trường an toàn để nêu câu hỏi hoặc lo ngại.",
+            "Đào tạo liêm chính nghiên cứu (Responsible Conduct of Research — RCR) cần lặp lại định kỳ, đặc biệt khi công nghệ mới (như AI) làm xuất hiện tình huống đạo đức chưa từng gặp trước đó — một lần đào tạo khi mới vào không đủ cho toàn bộ sự nghiệp."
+          ],
+          "splitSections": true,
+          "body": "\nNăm bài trước dựng nền tảng đạo đức nghiên cứu ở nhiều góc cụ thể. Bài cuối này khép lại bằng câu hỏi: khi phát hiện sai phạm, phải làm gì — và làm sao xây dựng một môi trường nghiên cứu nơi liêm chính là chuẩn mực chứ không phải ngoại lệ. Bài đi qua bốn phần: trước hết lý giải vì sao người chứng kiến sai phạm thường chọn im lặng; sau đó mô tả quy trình xử lý tố cáo và cách bảo mật danh tính người báo cáo; tiếp theo là trách nhiệm của người hướng dẫn/PI trong xây dựng văn hoá liêm chính của cả nhóm; và kết bằng lý do vì sao đào tạo liêm chính (RCR) cần lặp lại định kỳ.\n\n## Vì sao người chứng kiến sai phạm thường chọn im lặng\n\n> [!canh-bao] Ba rào cản tâm lý phổ biến nhất khiến người chứng kiến hoặc nghi ngờ một sai phạm liêm chính chọn im lặng: **sợ trả đũa** (lo ảnh hưởng tới cơ hội học bổng, đề tài, hoặc thư giới thiệu từ người hướng dẫn); **sợ ảnh hưởng quan hệ thầy trò/đồng nghiệp** (đặc biệt khi người nghi ngờ có sai phạm là người có quyền lực trực tiếp với mình); **sợ bị coi là \"làm quá\"** hoặc không chắc chắn đủ bằng chứng để báo cáo.\n\n> [!ghi-nho] Các rào cản này có thật và hợp lý về mặt tâm lý — nhưng các quy trình liêm chính nghiên cứu hiện đại được thiết kế cụ thể để giảm thiểu chúng: kênh báo cáo **bảo mật** (không phải nặc danh hoàn toàn, nhưng danh tính được bảo vệ trong quá trình điều tra), quy định rõ **cấm trả đũa** người báo cáo trung thực (dù sau điều tra kết luận không đủ căn cứ), và không yêu cầu người báo cáo phải tự chứng minh được toàn bộ vụ việc — chỉ cần nêu đủ căn cứ hợp lý để bắt đầu xem xét.\n\n> [!vi-du] Một nghiên cứu sinh nghi ngờ một thành viên khác trong nhóm đang chỉnh sửa số liệu trước khi đưa vào phân tích chung, nhưng ngần ngại vì người đó là \"đàn anh\" thân thiết và có ảnh hưởng tới cơ hội đồng tác giả của mình trong tương lai. Thay vì im lặng hoàn toàn hoặc đối chất trực tiếp (có thể gây xung đột không cần thiết nếu nghi ngờ sai), kênh đúng là liên hệ **văn phòng liêm chính nghiên cứu** hoặc người phụ trách được chỉ định của đơn vị, trình bày quan sát cụ thể (không cần kết luận sẵn ai đúng ai sai) — để người có thẩm quyền và quy trình phù hợp xem xét khách quan.\n\n## Quy trình xử lý tố cáo\n\n> [!ghi-nho] Quy trình xử lý tố cáo liêm chính nghiêm túc thường gồm: (1) tiếp nhận báo cáo qua kênh chỉ định (research integrity officer, hoặc kênh tương đương của đơn vị); (2) đánh giá sơ bộ xem có đủ căn cứ để mở điều tra chính thức không; (3) nếu mở điều tra, thành lập hội đồng độc lập với các bên liên quan; (4) cho cả người bị tố cáo cơ hội trình bày và phản hồi (đảm bảo công bằng cho cả hai phía); (5) kết luận và xử lý theo mức độ vi phạm.\n\n> [!canh-bao] Xuyên suốt quy trình này, **danh tính người tố cáo cần được bảo mật**, đặc biệt trong giai đoạn điều tra ban đầu — tiết lộ danh tính cho bên bị tố cáo trước khi có kết luận có thể dẫn tới trả đũa trực tiếp hoặc gián tiếp (ví dụ ảnh hưởng ngầm tới đánh giá học tập/công việc), và quan trọng hơn, làm giảm mạnh khả năng người khác dám báo cáo trong tương lai khi biết rằng bảo mật không được giữ.\n\n## Trách nhiệm của người hướng dẫn/PI trong văn hoá liêm chính\n\n> [!canh-bao] Một quan niệm sai phổ biến: liêm chính nghiên cứu chỉ là trách nhiệm cá nhân của từng thành viên, người hướng dẫn (PI — Principal Investigator) chỉ cần \"không tự mình vi phạm\" là đủ. Thực tế, văn hoá liêm chính của cả nhóm phần lớn được định hình bởi người dẫn dắt.\n\n> [!ghi-nho] Ba việc cụ thể người hướng dẫn/PI có thể làm để xây dựng văn hoá liêm chính: **làm gương** — công khai thừa nhận và sửa sai khi chính mình phát hiện lỗi trong nhóm, thay vì che giấu; **thiết lập quy trình rõ ràng** — ví dụ quy định cụ thể về cách lưu trữ dữ liệu thô, ai được sửa số liệu và khi nào, cách ghi công đồng tác giả ngay từ đầu dự án thay vì để tới lúc viết bài mới bàn; **tạo môi trường an toàn để nêu câu hỏi** — thành viên trẻ trong nhóm cần cảm thấy có thể hỏi \"cách làm này có ổn không?\" mà không sợ bị coi là thiếu tin tưởng hay yếu năng lực.\n\n| Hành vi của PI | Tác động tới văn hoá nhóm |\n|---|---|\n| Công khai thừa nhận và sửa một lỗi phân tích do chính PI phát hiện, chia sẻ với cả nhóm về cách phòng tránh | Thành viên trẻ học được rằng thừa nhận sai sót là bình thường, không phải điều đáng xấu hổ |\n| Im lặng khi phát hiện một thành viên \"làm đẹp\" số liệu, vì \"kết quả cuối cùng vẫn ổn\" | Thành viên khác học được rằng làm đẹp số liệu được chấp nhận nếu không bị phát hiện |\n| Quy định rõ từ đầu dự án: ai ghi tên đồng tác giả cho những đóng góp nào | Giảm xung đột và tranh cãi về quyền tác giả khi tới lúc công bố |\n\n## Đào tạo liêm chính nghiên cứu (RCR) cần lặp lại định kỳ\n\n> [!ghi-nho] **Responsible Conduct of Research (RCR)** là chương trình đào tạo có hệ thống về liêm chính nghiên cứu, thường bao gồm các chủ đề: quản lý dữ liệu, quyền tác giả, phản biện đồng nghiệp, xung đột lợi ích, làm việc với đối tượng nghiên cứu (con người/động vật), và ứng xử trong nhóm nghiên cứu (mentor-mentee).\n\n> [!canh-bao] Cho rằng hoàn thành một khoá đào tạo RCR khi mới bắt đầu chương trình cao học/nghiên cứu sinh là đủ cho toàn bộ sự nghiệp là một quan niệm sai lầm phổ biến. Tình huống thực tế thay đổi liên tục — ví dụ toàn bộ Bài 5 của khoá này (đạo đức dùng AI trong nghiên cứu) là một mảng hoàn toàn chưa tồn tại trong các chương trình RCR cách đây 10 năm. Đào tạo liêm chính cần được xem là quá trình học tập liên tục, không phải một chứng chỉ hoàn thành một lần.\n\n## Luyện tập và tài liệu tham khảo\n\n### Cá nhân (30 phút)\n\nTìm hiểu (hoặc hỏi người hướng dẫn/phòng quản lý khoa học) kênh báo cáo sai phạm liêm chính nghiên cứu của đơn vị bạn — có tồn tại kênh chính thức không, ai phụ trách, quy trình bảo mật ra sao. Nếu chưa rõ, ghi lại đây là một khoảng trống cần hỏi thêm.\n\n### Nhóm 3-4 người (20 phút)\n\nThảo luận tình huống ở mục 1 (nghi ngờ \"đàn anh\" chỉnh sửa số liệu). Mỗi người chia sẻ: rào cản tâm lý nào (trong 3 loại ở mục 1) mạnh nhất với bản thân nếu rơi vào tình huống tương tự, và cách nào có thể giúp vượt qua rào cản đó.\n\n### Bài tập về nhà (30-45 phút)\n\nViết một đoạn (200-250 từ) mô tả: (a) kênh báo cáo sai phạm liêm chính của đơn vị bạn (nếu đã tìm hiểu được); (b) một việc cụ thể bạn có thể làm (dù ở vai trò thành viên nhóm hay người hướng dẫn trong tương lai) để góp phần xây dựng văn hoá liêm chính; (c) một chủ đề RCR bạn cảm thấy mình cần cập nhật thêm.\n\n:::mau Mẫu nộp bài tập về nhà\n**Kênh báo cáo sai phạm liêm chính của đơn vị (nếu đã tìm hiểu):** …\n\n**Một việc cụ thể tôi có thể làm để góp phần xây dựng văn hoá liêm chính:** …\n\n**Chủ đề RCR tôi cần cập nhật thêm:** …\n:::\n\n### Nguồn tham khảo\n\n- Steneck, N. H. (2007). *ORI Introduction to the Responsible Conduct of Research.* Office of Research Integrity, U.S. Department of Health and Human Services.\n- National Academies of Sciences, Engineering, and Medicine. (2017). *Fostering Integrity in Research.* The National Academies Press.\n- Committee on Publication Ethics (COPE). *Whistleblowing Guidelines for Editors.*\n- DuBois, J. M., et al. (2013). Understanding research misconduct: a comparative analysis of 120 cases of professional wrongdoing. *Accountability in Research*, 20(5-6), 320-338.\n",
+          "quiz": {
+            "title": "Kiểm tra nhanh · Bài 6",
+            "passThresholdPct": 70,
+            "questions": [
+              {
+                "key": "dd6-im-lang-vi-so",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh nghi ngờ một 'đàn anh' thân thiết trong nhóm đang chỉnh sửa số liệu, nhưng chọn im lặng vì sợ ảnh hưởng tới quan hệ và cơ hội đồng tác giả. Cách xử lý nào phù hợp hơn?",
+                "explanation": "Nên dùng kênh báo cáo bảo mật (văn phòng liêm chính nghiên cứu) để trình bày quan sát cụ thể, không cần tự kết luận ai đúng ai sai — quy trình bảo mật được thiết kế để giảm rào cản sợ trả đũa.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Liên hệ kênh báo cáo bảo mật (văn phòng liêm chính nghiên cứu), trình bày quan sát cụ thể để người có thẩm quyền xem xét",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Tiếp tục im lặng vì đây là lựa chọn an toàn duy nhất để bảo vệ quan hệ và cơ hội của bản thân",
+                    "isCorrect": false,
+                    "misconception": "dd.no-report-fear-retaliation"
+                  },
+                  {
+                    "label": "Tự mình đối chất trực tiếp và công khai với người bị nghi ngờ trước cả nhóm",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Chỉ báo cáo nếu có bằng chứng chắc chắn 100%, còn nghi ngờ thì nên im lặng",
+                    "isCorrect": false,
+                    "misconception": "dd.no-report-fear-retaliation"
+                  }
+                ]
+              },
+              {
+                "key": "dd6-bao-mat-danh-tinh",
+                "type": "mcq",
+                "prompt": "Trong quá trình xử lý một tố cáo sai phạm, người phụ trách tiết lộ danh tính người tố cáo cho bên bị tố cáo ngay khi mới tiếp nhận, trước khi có kết luận điều tra. Vấn đề của cách làm này là gì?",
+                "explanation": "Tiết lộ danh tính sớm có thể dẫn tới trả đũa và làm giảm mạnh khả năng người khác dám báo cáo trong tương lai — danh tính người tố cáo cần được bảo mật trong giai đoạn điều tra ban đầu.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Tiết lộ sớm có thể dẫn tới trả đũa và làm giảm khả năng người khác dám báo cáo sau này",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Không có vấn đề gì, vì bên bị tố cáo có quyền biết ai đã tố cáo mình ngay lập tức",
+                    "isCorrect": false,
+                    "misconception": "dd.whistleblower-identity-not-protected"
+                  },
+                  {
+                    "label": "Không có vấn đề gì, miễn là tố cáo đó cuối cùng được xác nhận là đúng",
+                    "isCorrect": false,
+                    "misconception": "dd.whistleblower-identity-not-protected"
+                  },
+                  {
+                    "label": "Vấn đề duy nhất là nên tiết lộ danh tính bằng văn bản thay vì lời nói",
+                    "isCorrect": false,
+                    "misconception": "dd.whistleblower-identity-not-protected"
+                  }
+                ]
+              },
+              {
+                "key": "dd6-trach-nhiem-pi",
+                "type": "mcq",
+                "prompt": "Một người hướng dẫn (PI) im lặng khi phát hiện một thành viên trong nhóm 'làm đẹp' số liệu, vì nghĩ 'đó là trách nhiệm cá nhân của thành viên đó, không phải việc của tôi'. Nhận định này có đúng không?",
+                "explanation": "Không đúng — xây dựng văn hoá liêm chính là trách nhiệm của PI, không chỉ trách nhiệm cá nhân từng thành viên; im lặng trong tình huống này gửi tín hiệu rằng hành vi đó được chấp nhận nếu không bị phát hiện.",
+                "points": 3,
+                "options": [
+                  {
+                    "label": "Không đúng — PI có trách nhiệm xây dựng văn hoá liêm chính của cả nhóm, im lặng gửi tín hiệu sai tới các thành viên khác",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, vì PI không trực tiếp thực hiện hành vi sai phạm nên không có trách nhiệm gì",
+                    "isCorrect": false,
+                    "misconception": "dd.pi-not-responsible-culture"
+                  },
+                  {
+                    "label": "Đúng, miễn là kết quả cuối cùng của nghiên cứu vẫn chính xác",
+                    "isCorrect": false,
+                    "misconception": "dd.pi-not-responsible-culture"
+                  },
+                  {
+                    "label": "Không đúng, nhưng chỉ vì lý do pháp lý, không liên quan tới văn hoá nhóm",
+                    "isCorrect": false,
+                    "misconception": "dd.pi-not-responsible-culture"
+                  }
+                ]
+              },
+              {
+                "key": "dd6-rcr-mot-lan",
+                "type": "mcq",
+                "prompt": "Một nghiên cứu sinh hoàn thành khoá đào tạo RCR (Responsible Conduct of Research) khi mới bắt đầu chương trình, và nghĩ như vậy là đủ cho toàn bộ sự nghiệp nghiên cứu sau này. Nhận định này có đúng không?",
+                "explanation": "Không đúng — tình huống thực tế thay đổi liên tục (ví dụ đạo đức dùng AI trong nghiên cứu là mảng gần như chưa tồn tại 10 năm trước), đào tạo liêm chính cần được xem là quá trình học tập liên tục, không phải một chứng chỉ một lần.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Không đúng — cần cập nhật định kỳ vì tình huống thực tế (như đạo đức dùng AI) thay đổi liên tục",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đúng, các nguyên tắc liêm chính nghiên cứu không bao giờ thay đổi theo thời gian",
+                    "isCorrect": false,
+                    "misconception": "dd.rcr-training-once-enough"
+                  },
+                  {
+                    "label": "Đúng, miễn là nghiên cứu sinh tự đọc thêm tài liệu khi cần mà không cần đào tạo chính thức",
+                    "isCorrect": false,
+                    "misconception": "dd.rcr-training-once-enough"
+                  },
+                  {
+                    "label": "Không đúng, nhưng chỉ vì lý do hành chính yêu cầu tái chứng nhận định kỳ",
+                    "isCorrect": false,
+                    "misconception": "dd.rcr-training-once-enough"
+                  }
+                ]
+              },
+              {
+                "key": "dd6-rao-can-tam-ly",
+                "type": "mcq",
+                "prompt": "Đâu KHÔNG phải là một trong ba rào cản tâm lý phổ biến khiến người chứng kiến sai phạm chọn im lặng, theo bài học?",
+                "explanation": "Ba rào cản phổ biến là sợ trả đũa, sợ ảnh hưởng quan hệ thầy trò/đồng nghiệp, và sợ bị coi là 'làm quá'/không chắc đủ bằng chứng — thiếu kênh báo cáo là vấn đề về hệ thống, không phải rào cản tâm lý cá nhân.",
+                "points": 2,
+                "options": [
+                  {
+                    "label": "Không biết cách đọc bảng thống kê mô tả",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Sợ trả đũa, ảnh hưởng tới cơ hội học bổng hoặc thư giới thiệu",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sợ ảnh hưởng quan hệ thầy trò hoặc đồng nghiệp",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Sợ bị coi là 'làm quá' hoặc không chắc đủ bằng chứng để báo cáo",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "dd6-thu-tu-quy-trinh-to-cao",
+                "type": "ordering",
+                "prompt": "Sắp xếp đúng thứ tự các bước trong quy trình xử lý một tố cáo sai phạm liêm chính.",
+                "explanation": "Từ tiếp nhận báo cáo qua kênh chỉ định, đánh giá sơ bộ, thành lập hội đồng độc lập, cho cả hai bên trình bày, tới kết luận và xử lý — xuyên suốt giữ bảo mật danh tính người tố cáo.",
+                "points": 3,
+                "sequence": [
+                  "Tiếp nhận báo cáo qua kênh chỉ định (research integrity officer)",
+                  "Đánh giá sơ bộ xem có đủ căn cứ để mở điều tra chính thức không",
+                  "Thành lập hội đồng độc lập với các bên liên quan nếu mở điều tra",
+                  "Cho cả người tố cáo và người bị tố cáo cơ hội trình bày, phản hồi",
+                  "Kết luận và xử lý theo mức độ vi phạm, vẫn giữ bảo mật danh tính người tố cáo"
+                ]
+              },
+              {
+                "key": "dd6-noi-khai-niem-van-hoa",
+                "type": "matching",
+                "prompt": "Nối mỗi khái niệm với đúng vai trò của nó trong văn hoá liêm chính nghiên cứu.",
+                "explanation": "Kênh báo cáo bảo mật giảm rào cản sợ trả đũa; bảo mật danh tính bảo vệ người tố cáo; làm gương của PI định hình chuẩn mực nhóm; RCR định kỳ cập nhật tình huống mới.",
+                "points": 3,
+                "pairs": [
+                  {
+                    "left": "Kênh báo cáo bảo mật",
+                    "right": "Giảm rào cản tâm lý sợ trả đũa khi báo cáo sai phạm"
+                  },
+                  {
+                    "left": "Bảo mật danh tính người tố cáo",
+                    "right": "Bảo vệ người báo cáo khỏi trả đũa trong quá trình điều tra"
+                  },
+                  {
+                    "left": "PI làm gương và thiết lập quy trình rõ ràng",
+                    "right": "Định hình chuẩn mực liêm chính cho cả nhóm nghiên cứu"
+                  },
+                  {
+                    "left": "Đào tạo RCR định kỳ",
+                    "right": "Cập nhật tình huống đạo đức mới phát sinh theo thời gian"
+                  }
+                ]
+              },
+              {
+                "key": "dd6-viet-van-hoa-liem-chinh",
+                "type": "essay",
+                "prompt": "Viết đoạn 200-250 từ, gồm: (a) mô tả kênh báo cáo sai phạm liêm chính của đơn vị bạn (nếu biết, hoặc mô tả bạn sẽ tìm hiểu thế nào); (b) một việc cụ thể bạn có thể làm để góp phần xây dựng văn hoá liêm chính trong nhóm nghiên cứu của mình; (c) một chủ đề liêm chính nghiên cứu bạn cảm thấy cần học thêm sau khi hoàn thành khoá học này.",
+                "points": 5
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

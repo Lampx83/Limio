@@ -44,6 +44,7 @@ import {
   Check,
   MonitorPlay,
   Play,
+  History,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
@@ -550,6 +551,13 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           )}
         </button>
         <div className="flex-grow" />
+        <Link
+          href={`/instructor/limio-live/${deckId}/history`}
+          title="Xem kết quả vote, word cloud, Padlet và whiteboard của các lượt đã trình chiếu"
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-token px-2.5 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
+        >
+          <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
+        </Link>
         <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" role="radiogroup" aria-label="Giao diện slide">
           <span className="mr-1 hidden text-xs text-faint sm:inline">Giao diện</span>
           {SLIDE_THEMES.map((t) => (

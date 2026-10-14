@@ -23,6 +23,7 @@ import {
   AUTO_LESSON_SKILL_PREFIX,
   isAutoLessonSkillCode,
   lessonSkillCode,
+  type LanguageSkill,
 } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 
@@ -47,6 +48,7 @@ export interface EnsureTagResult {
 async function provisionLessonTag(
   lessonId: string,
   title: string,
+  languageSkill: LanguageSkill | null,
   db: DbClient,
 ): Promise<EnsureTagResult> {
   const code = lessonSkillCode(lessonId);
@@ -56,9 +58,12 @@ async function provisionLessonTag(
     select: { id: true },
   });
   const skill = existingSkill
-    ? await db.skill.update({ where: { code }, data: { name: title }, select: { id: true } })
+    ? // LANG G3: nhãn kỹ năng ngôn ngữ của bài được sao sang Skill ở mỗi lần provision
+      // (kể cả backfill), nên Skill lệch với bài sẽ tự về đúng. Id Skill không đổi
+      // nên LearnerSkillState đã tích luỹ vẫn còn nguyên.
+      await db.skill.update({ where: { code }, data: { name: title, languageSkill }, select: { id: true } })
     : await db.skill.create({
-        data: { code, name: title, description: AUTO_SKILL_DESCRIPTION },
+        data: { code, name: title, description: AUTO_SKILL_DESCRIPTION, languageSkill },
         select: { id: true },
       });
 
@@ -95,11 +100,12 @@ export async function ensureLessonTag(
     select: {
       id: true,
       title: true,
+      languageSkill: true,
       module: { select: { course: { select: { personalizationEnabled: true } } } },
     },
   });
   if (!lesson || !lesson.module.course.personalizationEnabled) return null;
-  const { skillId } = await provisionLessonTag(lesson.id, lesson.title, db);
+  const { skillId } = await provisionLessonTag(lesson.id, lesson.title, lesson.languageSkill, db);
   return skillId;
 }
 
@@ -220,12 +226,12 @@ export async function backfillCourseTags(
 
   const lessons = await db.lesson.findMany({
     where: { module: { courseId } },
-    select: { id: true, title: true },
+    select: { id: true, title: true, languageSkill: true },
     orderBy: { id: "asc" },
   });
 
   for (const lesson of lessons) {
-    const result = await provisionLessonTag(lesson.id, lesson.title, db);
+    const result = await provisionLessonTag(lesson.id, lesson.title, lesson.languageSkill, db);
     if (result.createdSkill) stats.skillsCreated += 1;
     if (result.createdMapping) stats.mappingsCreated += 1;
 

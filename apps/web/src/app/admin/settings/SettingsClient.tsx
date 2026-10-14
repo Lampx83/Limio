@@ -258,18 +258,18 @@ export default function SettingsClient({
         <header className="border-b border-token pb-4">
           <h2 className="text-base font-semibold">Đăng ký tài khoản</h2>
           <p className="mt-1 text-xs text-muted">
-            Nút/mục mời tạo tài khoản mới ở trang chủ. Không chặn truy cập trực tiếp trang{" "}
-            <code>/register</code> — chỉ ẩn lời mời trên trang chủ.
+            Nút/mục mời tạo tài khoản mới ở trang chủ, header, footer và trang đăng nhập. Không chặn truy cập trực tiếp trang{" "}
+            <code>/register</code> — chỉ ẩn lời mời.
           </p>
         </header>
 
         <div className="divide-y divide-token">
           <ToggleRow
-            label="Hiện mục đăng ký tài khoản ở trang chủ"
+            label="Hiện mục đăng ký tài khoản"
             description={
               registerEnabled
-                ? "Đang bật — trang chủ hiện các nút mời tạo tài khoản học viên/giáo viên."
-                : "Đang tắt — trang chủ ẩn các nút đăng ký, chỉ còn lối vào khám phá khoá học."
+                ? "Đang bật — các nút mời tạo tài khoản học viên/giáo viên."
+                : "Đang tắt — các nút đăng ký bị ẩn khắp nơi, chỉ còn lối vào khám phá khoá học."
             }
             checked={registerEnabled}
             onChange={toggleRegister}

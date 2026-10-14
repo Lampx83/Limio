@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Slide xấu — Bài 7.2 (dùng cho giảng viên, không đăng cho sinh viên)</title>
+<!--
+  Cố ý làm xấu: sáu lỗi, mỗi lỗi vi phạm đúng một nguyên tắc trong Bài 7.2.
+  Mở file này chiếu lên màn hình, KHÔNG giải thích. Bảng đáp án ở Phụ lục B của script.
+    1. Nhất quán    : nền hoa văn, ảnh hoạt hình, ảnh động hài hước không phục vụ mục tiêu
+    2. Chỉ dấu      : ý quan trọng chìm trong khối chữ cùng cỡ
+    3. Không trùng  : toàn văn lời giảng in lên slide
+    4. Gần nhau     : chú thích ở cuối slide, cách xa sơ đồ
+    5. Chia đoạn    : "tự chạy 40 phút, không có điểm dừng"
+    6. Kênh phối hợp: hình động kèm dòng chữ chạy thay cho lời nói
+-->
+<style>
+  html,body{margin:0;height:100%;background:#222}
+  .slide{position:relative;width:min(100vw,177.78vh);aspect-ratio:16/9;margin:auto;overflow:hidden;
+    background:
+      repeating-linear-gradient(45deg,#fde68a 0 18px,#a7f3d0 18px 36px,#fbcfe8 36px 54px,#bfdbfe 54px 72px);
+    font-family:"Comic Sans MS","Chalkboard SE",cursive,sans-serif;color:#333;font-size:clamp(9px,1.35vw,20px)}
+  .title{position:absolute;left:4%;top:3%;font-size:2.1em;font-weight:700;color:#7c2d12;width:70%;line-height:1.1}
+  .mascot{position:absolute;right:3%;top:2%;font-size:5.2em;animation:wob 1s infinite alternate ease-in-out}
+  .gif{position:absolute;right:15%;top:5%;font-size:3.4em;animation:spin 2s infinite linear}
+  @keyframes wob{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+  /* khối chữ: ý quan trọng không khác gì các câu còn lại */
+  .text{position:absolute;left:4%;top:22%;width:55%;line-height:1.35;background:rgba(255,255,255,.55);padding:.5em .7em}
+  .text p{margin:.15em 0}
+
+  /* sơ đồ ở nửa trên bên phải, chú thích dồn xuống cuối slide */
+  .diagram{position:absolute;right:3%;top:24%;width:34%;display:flex;flex-wrap:wrap;gap:.4em}
+  .diagram div{flex:1 1 28%;text-align:center;background:#fff;border:2px solid #7c2d12;border-radius:.4em;padding:.5em .2em;
+    font-size:1.1em;font-weight:700;animation:pop 3s infinite}
+  .diagram div:nth-child(2){animation-delay:.6s}.diagram div:nth-child(3){animation-delay:1.2s}
+  .diagram div:nth-child(4){animation-delay:1.8s}.diagram div:nth-child(5){animation-delay:2.4s}
+  @keyframes pop{0%,70%,100%{transform:scale(1)}85%{transform:scale(1.25)}}
+  .notes{position:absolute;left:4%;bottom:9%;right:4%;font-size:.8em;line-height:1.3;background:rgba(255,255,255,.7);padding:.3em .6em}
+
+  /* chữ chạy thay cho lời nói */
+  .marquee{position:absolute;left:0;right:0;bottom:0;height:7%;background:#7c2d12;color:#fff;overflow:hidden;
+    display:flex;align-items:center;white-space:nowrap}
+  .marquee span{display:inline-block;padding-left:100%;animation:run 14s linear infinite;font-size:.95em}
+  @keyframes run{to{transform:translateX(-100%)}}
+  .counter{position:absolute;left:1%;bottom:8%;font-size:.7em;background:#111;color:#fff;padding:.15em .5em;border-radius:.3em}
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="title">Mô hình ADDIE trong thiết kế bài giảng điện tử</div>
+  <div class="mascot">🦄</div>
+  <div class="gif">🤪</div>
+
+  <div class="text">
+    <p>Mô hình ADDIE là một khung quy trình gồm năm giai đoạn là Phân tích, Thiết kế, Phát triển, Triển khai và Đánh giá, được dùng rộng rãi trong thiết kế bài giảng điện tử để giúp người thiết kế đi từ nhu cầu của người học tới sản phẩm hoàn chỉnh một cách có hệ thống.</p>
+    <p>Trong thực tế, Đánh giá diễn ra ở mọi giai đoạn, không chỉ cuối cùng, và kết quả đánh giá ở mỗi giai đoạn được dùng để điều chỉnh giai đoạn trước nó, vì vậy mô hình này nên được hiểu như một vòng lặp chứ không phải một dây chuyền một chiều.</p>
+    <p>Như tôi sắp nói với các bạn đây, mô hình ADDIE là một khung quy trình gồm năm giai đoạn, và tôi sẽ đọc lại gần như nguyên văn những gì đang hiển thị trên màn hình này cho các bạn nghe.</p>
+  </div>
+
+  <div class="diagram"><div>A</div><div>D</div><div>D</div><div>I</div><div>E</div></div>
+
+  <div class="notes">
+    (1) Phân tích nhu cầu người học và mục tiêu. &nbsp; (2) Thiết kế mục tiêu, cấu trúc, đánh giá. &nbsp;
+    (3) Phát triển học liệu. &nbsp; (4) Triển khai cho người học. &nbsp; (5) Đánh giá kết quả và điều chỉnh.
+  </div>
+
+  <div class="counter">Slide 12/40 — tự chạy 40 phút, không có điểm dừng</div>
+  <div class="marquee"><span>Phân tích → Thiết kế → Phát triển → Triển khai → Đánh giá. Phân tích → Thiết kế → Phát triển → Triển khai → Đánh giá.</span></div>
+</div>
+</body>
+</html>

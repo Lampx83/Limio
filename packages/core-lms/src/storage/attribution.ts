@@ -23,9 +23,11 @@ async function findReference(
 ): Promise<Reference | null> {
   switch (kind) {
     case "lesson_video":
+    case "lesson_audio":
     case "lesson_image":
     case "lesson_pdf":
     case "lesson_html":
+    case "lesson_file":
     case "lesson_transcript": {
       // URL nằm trong payload của ContentItem, hoặc nhúng trong mô tả bài học.
       const rows = await db.$queryRaw<Array<{ courseId: string }>>`
@@ -95,9 +97,11 @@ async function findReference(
 
 const REFERABLE: StoredFileKind[] = [
   "lesson_video",
+  "lesson_audio",
   "lesson_image",
   "lesson_pdf",
   "lesson_html",
+  "lesson_file",
   "lesson_transcript",
   "submission",
   "exam_asset",

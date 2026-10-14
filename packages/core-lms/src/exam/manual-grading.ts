@@ -255,6 +255,8 @@ export async function gradeManualExamAnswer(
         },
         {
           courseId: answer.attempt.exam.courseId,
+          // Lượt thi của thí sinh vào bằng mã không có userId — event thuộc về candidate.
+          ...(answer.attempt.candidateId ? { candidateId: answer.attempt.candidateId } : {}),
           eventKey: `exam.graded:${answer.attemptId}`,
         },
         db,
@@ -275,6 +277,7 @@ export async function gradeManualExamAnswer(
       },
       {
         courseId: answer.attempt.exam.courseId,
+        ...(answer.attempt.candidateId ? { candidateId: answer.attempt.candidateId } : {}),
         // Reasons may be reused — include timestamp via the history row id to
         // make replays unique. Read back the freshest entry.
         eventKey: `exam.regraded:${answerId}:${now.getTime()}`,

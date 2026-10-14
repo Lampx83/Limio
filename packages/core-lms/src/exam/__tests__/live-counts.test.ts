@@ -5,10 +5,10 @@ import { createCourse } from "../../courses/courses";
 import {
   createExam,
   createExamQuestion,
-  ensureDefaultRound,
   liveCountsByRoom,
   liveCountsBySession,
 } from "../";
+import { roundFor } from "../../test/roundFor";
 
 const BASE = "http://localhost:3000";
 
@@ -37,7 +37,7 @@ async function setup(slug: string) {
     },
     points: 10,
   });
-  const roundId = await ensureDefaultRound(examId);
+  const roundId = await roundFor(examId);
   return { ownerId: owner.userId, examId, roundId };
 }
 

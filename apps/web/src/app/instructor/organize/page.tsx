@@ -50,7 +50,8 @@ export default async function OrganizePage({
     <main>
       <h1 className="text-2xl font-bold">Tổ chức thi</h1>
       <p className="mt-1 text-body text-faint">
-        Bạn định tổ chức kiểu gì? Chọn xong hệ thống lo phần còn lại.
+        Vui lòng chọn hình thức tổ chức phù hợp với mục đích đánh giá. Hệ thống sẽ hướng dẫn các bước
+        tiếp theo tương ứng với từng hình thức.
       </p>
 
       {exam && (
@@ -60,12 +61,12 @@ export default async function OrganizePage({
             "Chọn hình thức bên dưới — đề này sẽ được chọn sẵn."
           ) : (
             <>
-              Đề chưa publish nên chưa mở thi được.{" "}
+              Đề thi chưa được publish nên chưa thể mở thi.{" "}
               <Link
                 href={`/instructor/courses/${exam.courseId}/exams/${exam.id}`}
                 className="font-semibold underline"
               >
-                Publish đề trước →
+                Publish đề thi →
               </Link>
             </>
           )}
@@ -74,7 +75,7 @@ export default async function OrganizePage({
 
       {courseCount === 0 ? (
         <div className="mt-6 banner-info px-4 py-3 text-sm">
-          Bạn cần là giảng viên của một khoá học trước đã.{" "}
+          Cần là giảng viên của ít nhất một khoá học để tổ chức thi.{" "}
           <Link href="/instructor/courses/new" className="underline">
             Tạo khoá đầu tiên
           </Link>
@@ -95,7 +96,7 @@ export default async function OrganizePage({
             icon={<FlaskConical className="h-5 w-5" aria-hidden />}
             title="Thử nghiệm câu hỏi"
             blurb="Đo chất lượng câu trước khi kết nạp vào ngân hàng."
-            detail="Chở được câu chưa kết nạp. Không hiện đáp án, để không đốt câu hỏi."
+            detail="Có thể dùng câu hỏi chưa đưa vào ngân hàng. Đáp án không được hiển thị để giữ bí mật câu hỏi."
           />
           <OptionCard
             href={`/instructor/organize/formal${q}`}
@@ -112,7 +113,7 @@ export default async function OrganizePage({
         <Link href="/instructor/exams" className="underline">
           Đề thi
         </Link>
-        ; ở đây quyết định chạy khi nào, bao lâu, ai vào.
+        ; trang này dùng để thiết lập thời gian, thời lượng và đối tượng dự thi.
       </p>
     </main>
   );

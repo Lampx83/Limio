@@ -1,0 +1,263 @@
+[
+ {
+  "name": "1-1-thanh-dieu-huong",
+  "caption": "Thanh điều hướng bên trái và trang \"Khoá học của tôi\". Các số trên hình được giải thích ngay bên dưới.",
+  "need": "/instructor/courses ở màn hình rộng, tài khoản Giảng viên Mẫu. Cột trái chỉ có biểu tượng; bấm biểu tượng mũ cử nhân (mục LMS) để cột thứ hai hiện Khoá học của tôi / Assignment / Forum Q&A, mục Khoá học của tôi đang được chọn. Chụp cột biểu tượng, cột thứ hai và nút tên tài khoản ở góc trên bên phải.",
+  "marks": [
+   "Biểu tượng mũ cử nhân (mục LMS)",
+   "Mục Khoá học của tôi",
+   "Tên tài khoản"
+  ]
+ },
+ {
+  "name": "1-2-bieu-mau-tao-khoa",
+  "caption": "Biểu mẫu \"Tạo khóa học mới\" với các ô đã điền mẫu.",
+  "need": "Trang /instructor/courses/new, đăng nhập bằng tài khoản giảng viên. Điền sẵn: Tiêu đề \"Nhập môn Lập trình\", Mô tả vài dòng (ví dụ \"Python cho sinh viên năm nhất ngành Công nghệ thông tin\"), ô \"Level\" chọn \"Cơ bản\", Ngôn ngữ \"Tiếng Việt\", ô \"Category\" điền \"Công nghệ thông tin\", ô \"Bật cá nhân hoá học tập\" để ở trạng thái tắt, nhóm \"Ai vào được khoá này\" chọn \"Mở — ai cũng tự đăng ký được\". Chụp cả trang từ tiêu đề tới hai nút \"Hủy\" và \"Tạo và tiếp tục\".",
+  "marks": [
+   "Tiêu đề",
+   "Mô tả",
+   "Ô \"Level\" (trình độ)",
+   "Ngôn ngữ",
+   "Ô \"Category\" (lĩnh vực)",
+   "Bật cá nhân hoá học tập",
+   "Ai vào được khoá này",
+   "Tạo và tiếp tục"
+  ]
+ },
+ {
+  "name": "1-3-tab-noi-dung",
+  "caption": "Tab Nội dung của một khoá có các chương và bài học.",
+  "need": "Trang /instructor/courses/{id} đang ở tab \"Nội dung\" của khoá \"Hướng dẫn sử dụng Limio\" (còn Nháp), thấy tiêu đề \"Modules\" kèm \"4 modules · 12 bài\", nút \"Xem trước\", ô \"Tìm bài học…\", \"Gập hết\", \"Mở hết\". Rê chuột vào hàng Chương 1 để hiện hàng nút ẩn/hiện, khoá, sửa, xoá; chương này mở sẵn các bài 1.1 tới 1.4 và nút \"+ Thêm lesson\" ở cuối chương.",
+  "marks": [
+   "Ô tìm bài học (cùng nút Gập hết, Mở hết)",
+   "Nút \"Xem trước\"",
+   "Nút sửa chương (bút chì)",
+   "Một dòng bài học",
+   "Nút \"+ Thêm lesson\""
+  ]
+ },
+ {
+  "name": "1-3-trang-bai-hoc",
+  "caption": "Trang của một bài học, sau khi bấm vào dòng bài ở tab Nội dung.",
+  "need": "Từ tab \"Nội dung\" của khoá \"Hướng dẫn sử dụng Limio\", bấm vào dòng \"Bài 1.1 · Làm quen với Limio\". Chụp trang bài: tên bài kèm bút chì, nút \"Xem như học viên\", chip \"1 chủ đề\", menu \"⋮\", danh sách \"Hoạt động (4)\" có tay cầm kéo thả và nút \"Mở trình soạn\" ở mỗi khối, và nút \"+ Thêm hoạt động/tài nguyên\" ở cuối.",
+  "marks": [
+   "Nút \"Xem như học viên\"",
+   "Chip \"1 chủ đề\"",
+   "Tay cầm kéo thả",
+   "Nút \"Mở trình soạn\"",
+   "Nút \"+ Thêm hoạt động/tài nguyên\""
+  ]
+ },
+ {
+  "name": "1-3-menu-bai-hoc",
+  "caption": "Menu \"⋮\" của một bài học.",
+  "need": "Ở trang bài \"Bài 1.1 · Làm quen với Limio\", bấm biểu tượng ba chấm dọc \"⋮\" ngay dưới nút \"Xem như học viên\" để menu mở ra. Chụp vùng góc trên bên phải của trang bài cùng menu đang mở: ba công tắc Hiện bài này / Khoá nội dung / Cho xem thử, rồi Nhân bản bài, Chuyển lên, Chuyển xuống, Chuyển sang module khác và Xóa bài học.",
+  "marks": [
+   "Công tắc \"Hiện bài này\"",
+   "Công tắc \"Khoá nội dung\"",
+   "Công tắc \"Cho xem thử\"",
+   "\"Chuyển sang module khác\"",
+   "\"Xóa bài học\""
+  ]
+ },
+ {
+  "name": "1-3-chon-khoi-noi-dung",
+  "caption": "Hộp thoại \"Thêm hoạt động/tài nguyên\" khi bấm nút \"+ Thêm hoạt động/tài nguyên\".",
+  "need": "Mở một bài học trong tab \"Nội dung\" của khoá \"Hướng dẫn sử dụng Limio\", bấm nút \"+ Thêm hoạt động/tài nguyên\". Chụp hộp thoại đang mở ở bộ lọc \"Tất cả\": thấy ô \"Tìm hoạt động...\", ba bộ lọc Tất cả / Tài nguyên / Hoạt động, nhóm \"Tài nguyên\" (Văn bản — AI hỗ trợ, Ghi chú giảng viên, Video, PDF…) và nhóm \"Hoạt động\" (Quiz, Assignment, SCORM, H5P, LTI).",
+  "marks": [
+   "Ô tìm \"Tìm hoạt động...\"",
+   "Bộ lọc \"Tất cả\"",
+   "Thẻ \"Văn bản — AI hỗ trợ\"",
+   "Thẻ \"Ghi chú giảng viên\"",
+   "Thẻ \"Quiz\""
+  ]
+ },
+ {
+  "name": "1-4-dau-trang-khoa-nhap",
+  "caption": "Đầu trang của một khoá còn ở trạng thái Nháp.",
+  "need": "Trang /instructor/courses/{id} của khoá \"Hướng dẫn sử dụng Limio\" còn Nháp, đang mở tab \"Nội dung\". Chụp phần đầu trang: nút xanh \"Publish\" ở góc phải, tên khoá kèm chip \"Nháp\" và nút \"Chế độ đứng lớp\", hàng tab (chỉ có Tổng quan và Nội dung), và nút \"Xem trước\" ở dòng tiêu đề \"Modules\".",
+  "marks": [
+   "Chip \"Nháp\"",
+   "Nút \"Chế độ đứng lớp\"",
+   "Nút \"Publish\"",
+   "Hàng tab (\"Tổng quan\", \"Nội dung\")",
+   "Nút \"Xem trước\""
+  ]
+ },
+ {
+  "name": "1-4-o-cong-khai",
+  "caption": "Ô giá và ô \"Công khai\" trong biểu mẫu mở bằng nút \"Sửa\" ở tab Tổng quan.",
+  "need": "Khoá \"Nhập môn Lập trình\" (kiểu truy cập \"Mở\"), tab \"Tổng quan\", bấm nút \"Sửa\" để mở biểu mẫu. Cuộn tới nhóm \"Ai vào được khoá này\", chụp từ nhóm này tới ô chọn \"Công khai — xem được không cần đăng nhập\" (đang bỏ chọn), thấy cả ô giá \"Để trống = miễn phí\" kèm ô chọn USD.",
+  "marks": [
+   "Nhóm \"Ai vào được khoá này\"",
+   "Ô giá (\"Để trống = miễn phí\")",
+   "Ô \"Công khai — xem được không cần đăng nhập\""
+  ]
+ },
+ {
+  "name": "2-1-trinh-soan-cau-hoi",
+  "caption": "Hình minh hoạ: trình soạn bài kiểm tra, với ba nút thêm câu hỏi và danh sách câu hỏi.",
+  "need": "Trang /instructor/courses/{id}/quizzes/{quizId}/edit của bài kiểm tra \"Kiểm tra: Vòng lặp for\" (khoá \"Nhập môn Lập trình\"), đã có 3 câu hỏi (một trắc nghiệm về \"for i in range(3): print(i)\", một đúng/sai, một sắp xếp thứ tự), chưa mở hộp Cài đặt. Chụp thanh tóm tắt cài đặt, nút \"Cài đặt\", dải \"Thêm câu hỏi\" với ba nút (AI import, Excel import, Nhập thủ công), cột \"Câu hỏi (3)\" bên trái và khung nội dung câu đang chọn bên phải.",
+  "marks": [
+   "Nút Cài đặt",
+   "Ba nút thêm câu hỏi",
+   "Danh sách câu hỏi"
+  ]
+ },
+ {
+  "name": "2-1-cai-dat-bai-kiem-tra",
+  "caption": "Hình minh hoạ: bảng cài đặt của bài kiểm tra.",
+  "need": "Cùng trang trình soạn bài kiểm tra, đã bấm nút \"Cài đặt\" để mở bảng cài đặt, chưa tick ô nào (bốn thẻ Thời gian làm bài, Số lần làm, Hạn mở, Hạn đóng đều ở mặc định). Chụp từ ô tên bài kiểm tra tới mục thu gọn \"Lịch theo lớp\", gồm dòng \"Cách tính điểm khi làm nhiều lần\" với ba nút Cao nhất / Lần cuối / Trung bình và hai nút Lưu / Hủy.",
+  "marks": [
+   "Ô chọn của từng cài đặt",
+   "Hạn mở và hạn đóng",
+   "Cách tính điểm khi làm nhiều lần",
+   "Lịch theo lớp"
+  ]
+ },
+ {
+  "name": "2-2-trang-bat-dau",
+  "caption": "Hình minh hoạ: trang \"Kiểm tra đánh giá\" với ba bước theo thứ tự.",
+  "need": "Trang /instructor/assessment (menu Kiểm tra đánh giá, mục Bắt đầu) của giảng viên mẫu (khoá \"Nhập môn Lập trình\"), có ngân hàng \"Nhập môn Lập trình – giữa kỳ\" nhưng chưa có đề thi nào, để Bước 1 hiện nhãn \"Đã xong\", Bước 2 hiện \"Làm tiếp bước này\" kèm nút \"Tạo đề thi →\", Bước 3 hiện \"Chưa tới bước này\". Chụp tiêu đề, dòng giới thiệu và cả ba thẻ Bước 1, Bước 2, Bước 3.",
+  "marks": [
+   "Nhãn Đã xong",
+   "Nhãn Làm tiếp bước này",
+   "Nút Tạo đề thi",
+   "Nhãn Chưa tới bước này"
+  ]
+ },
+ {
+  "name": "2-2-bang-ngan-hang-cau-hoi",
+  "caption": "Hình minh hoạ: bảng câu hỏi trong một ngân hàng, với các cột và nhãn thẩm định.",
+  "need": "Trang /instructor/question-banks/{id} của ngân hàng \"Nhập môn Lập trình – giữa kỳ\" (nhãn Riêng tư) có 8 câu hỏi nhiều loại, nhãn Thẩm định gồm Chưa thẩm định và Cần sửa (nên có thêm ít nhất một câu Đã duyệt), trạng thái Nháp và Đã publish. Chụp phần đầu trang có ba nút (AI import, Excel import, + Nhập thủ công), hàng bộ lọc và hàng tiêu đề cột cùng các dòng câu hỏi.",
+  "marks": [
+   "Nút Nhập thủ công",
+   "Cột Trạng thái",
+   "Cột Thẩm định"
+  ]
+ },
+ {
+  "name": "2-3-ban-dinh-to-chuc-kieu-gi",
+  "caption": "Hình minh hoạ: trang \"Tổ chức thi\" với ba thẻ để chọn hình thức.",
+  "need": "Trang /instructor/organize của giảng viên mẫu (có khoá \"Nhập môn Lập trình\"; không mở kèm đề cụ thể). Chụp tiêu đề \"Tổ chức thi\", dòng hỏi cách tổ chức và đủ ba thẻ: Link thi nhanh, Thử nghiệm câu hỏi, Kỳ thi chính thức.",
+  "marks": [
+   "Thẻ Link thi nhanh",
+   "Thẻ Thử nghiệm câu hỏi",
+   "Thẻ Kỳ thi chính thức"
+  ]
+ },
+ {
+  "name": "2-3-tong-quan-dot-thi",
+  "caption": "Hình minh hoạ: trang một đợt thi, với các thẻ và nhãn trạng thái của đợt.",
+  "need": "Trang /instructor/exam-rounds/{id} của đợt thi \"Thi giữa kỳ — Nhập môn Lập trình, học kỳ I\" (có một ca thi, trạng thái Nháp) đang ở thẻ \"Tổng quan\". Cần thấy hàng thẻ Tổng quan / Ca thi / Phòng thi / Trưởng đợt / Kết quả, chip \"Nháp\" cạnh tên đợt, mục \"Sẵn sàng thi chưa?\" và mục \"Đổi trạng thái\" với dòng ghi chú rằng trạng thái chỉ để phân loại, không tự mở hay đóng ca thi.",
+  "marks": [
+   "Các thẻ của đợt thi",
+   "Nhãn Nháp cạnh tên đợt",
+   "Mục Đổi trạng thái"
+  ]
+ },
+ {
+  "name": "3-1-man-hinh-bai-tap",
+  "caption": "Hình minh hoạ: màn hình quản lý bài tập của giảng viên, có bốn thẻ số, hai tab và danh sách khoá học.",
+  "need": "Trang /instructor/assignments (thanh điều hướng: Bài giảng trực tuyến > Bài tập), đăng nhập bằng giảng viên mẫu có khoá \"Nhập môn Lập trình\" (2 bài tập: 8 + 6 bài chờ chấm, 12 bài đã chấm, 1 bài tập quá hạn; các thẻ số là 2 / 14 / 12 / 1). Để tab \"Danh sách assignment\" đang mở. Chụp thấy tiêu đề, bốn thẻ số, hai tab (tab Cần chấm có chấm số 14) và mục \"Chọn khoá học\".",
+  "marks": [
+   "Tab Danh sách bài tập",
+   "Thẻ Đang chờ chấm",
+   "Tab Cần chấm"
+  ]
+ },
+ {
+  "name": "3-1-cua-so-cham-bai",
+  "caption": "Hình minh hoạ: cửa sổ chấm một bài nộp, chụp khi chưa bấm gợi ý điểm bằng AI nên hai ô còn trống.",
+  "need": "Từ trang bài nộp của \"Bài tập 1: Tính điểm trung bình\" bấm \"Xem bài làm\" ở một dòng chưa chấm để mở cửa sổ chấm. CHƯA bấm \"Gợi ý điểm bằng AI\" (không gọi AI thật), nên ô Điểm và ô Nhận xét còn trống. Chụp thấy tên và email học viên mẫu, nhãn \"Chờ chấm\", mã nguồn bài nộp, nút gợi ý, ô Điểm, ô Nhận xét, nút \"Chấm điểm\" và nút \"Quay lại danh sách\".",
+  "marks": [
+   "Nút Gợi ý điểm bằng AI",
+   "Ô Điểm",
+   "Ô Nhận xét",
+   "Nút Chấm điểm"
+  ]
+ },
+ {
+  "name": "3-2-gan-quan-niem-sai",
+  "caption": "Hình minh hoạ: các đáp án của một câu trắc nghiệm, mỗi đáp án sai có một ô chọn quan niệm sai ở góc phải.",
+  "need": "Trong trình soạn bài kiểm tra \"Kiểm tra: Vòng lặp for\" của khoá \"Nhập môn Lập trình\" (đã bật \"cá nhân hoá học tập\"), mở biểu mẫu sửa câu trắc nghiệm \"Đoạn mã for i in range(3): print(i) in ra những số nào?\". Chụp phần bốn đáp án: Đáp án 1 \"0, 1, 2\" (đúng, có dấu tích), Đáp án 2 \"1, 2, 3\" gắn mã py.index_from_1, Đáp án 3 \"0, 1, 2, 3\" gắn mã py.range_inclusive, Đáp án 4 \"Báo lỗi\" để \"Không gắn quan niệm sai\".",
+  "marks": [
+   "Đáp án đúng (có dấu tích)",
+   "Ô chọn quan niệm sai của Đáp án 2",
+   "Ô chọn quan niệm sai của Đáp án 3"
+  ]
+ },
+ {
+  "name": "3-2-lo-trinh-cua-hoc-vien",
+  "caption": "Hình minh hoạ: phần \"Lộ trình của bạn\" trên trang khoá học, nhìn từ phía học viên.",
+  "need": "Đăng nhập bằng học viên mẫu sv.demo.01@feedbackme.dev của khoá \"Nhập môn Lập trình\" (đã bật \"cá nhân hoá học tập\"), mở trang khoá học (/learn/nhap-mon-lap-trinh). Chụp phần \"Lộ trình của bạn\" với bốn bước: Ôn lại trước khi học tiếp (Các kiểu dữ liệu cơ bản, nhãn Cần ôn), Bài tiếp theo (Định nghĩa và gọi hàm, chưa có nhãn), Luyện thêm cho chắc (Câu lệnh if, Nên luyện thêm), Luyện thêm cho chắc (Vòng lặp for, Nên luyện thêm). Màn hình không có phần trăm.",
+  "marks": [
+   "Bước Ôn lại trước khi học tiếp",
+   "Nhãn Cần ôn",
+   "Nhãn Nên luyện thêm"
+  ]
+ },
+ {
+  "name": "4-1-the-link-moi-lop",
+  "caption": "Hình minh hoạ: khung của một lớp, gồm tên lớp, nút nhập học viên, số học viên và khung “Link mời vào lớp”.",
+  "need": "Trang /instructor/courses/{id}, tab \"Lớp học\" đang mở, khoá \"Nhập môn Lập trình\" (đã xuất bản). Lớp \"K65-CS1\" có 14 học viên, mô tả \"Lớp K65-CS1 — Nhập môn Lập trình, học kỳ I\". Chụp khung của lớp này: tên lớp, nút \"Nhập học viên\", nút ba chấm, ô \"14 học viên | Xem danh sách\" và khung \"Link mời vào lớp\" kèm đường dẫn /enroll/mã, nút \"Sao chép\", nút \"Mã QR\". Menu ba chấm không cần mở.",
+  "marks": [
+   "Khung Link mời vào lớp",
+   "Nút Mã QR",
+   "Nút Nhập học viên",
+   "Xem danh sách"
+  ]
+ },
+ {
+  "name": "4-1-han-theo-lop",
+  "caption": "Hình minh hoạ: bảng “Hạn theo lớp” đang mở trong biểu mẫu sửa bài tập, đã chọn hai lớp.",
+  "need": "Trang bài \"Câu lệnh if\" của khoá \"Nhập môn Lập trình\" (có ba lớp K65-CS1, K65-CS2, K65-CS3). Bấm biểu tượng bút chì ở khối Bài tập, kéo xuống, bấm dòng \"Hạn theo lớp\" để mở. Tích chọn hai lớp K65-CS1 và K65-CS2, lớp K65-CS3 không tích. Chụp từ dòng tiêu đề \"Hạn theo lớp\" tới hết các nút \"Áp dụng cho 2 lớp\", \"Dùng hạn chung\", \"Bỏ chọn\".",
+  "marks": [
+   "Dòng Hạn chung",
+   "Chọn tất cả lớp",
+   "Dòng của một lớp",
+   "Nút Sửa"
+  ]
+ },
+ {
+  "name": "4-2-dien-dan-hoi-dap",
+  "caption": "Hình minh hoạ: trang “Diễn đàn hỏi đáp” của giảng viên, đang lọc “Chưa giải đáp”.",
+  "need": "Trang /instructor/forum (tiêu đề \"Forum Q&A\"), tất cả khoá học. Dữ liệu mẫu có 4 chủ đề: 3 chưa giải đáp (một chủ đề đã quá 48 giờ, hiện nhãn \"Stale\"), 1 đã xử lý; ví dụ \"Đặt tên biến thế nào cho dễ đọc?\" và \"range(1, 5) có in ra số 5 không?\". Bộ lọc \"Chưa giải đáp\" đang chọn; thấy bốn thẻ số, bốn nút lọc, bảng chủ đề và nút \"Mở thread\" ở cuối dòng.",
+  "marks": [
+   "Nút lọc \"Chưa giải đáp\" đang chọn",
+   "Một chủ đề chưa giải đáp",
+   "Nút \"Mở thread\""
+  ]
+ },
+ {
+  "name": "4-2-menu-chuot-phai",
+  "caption": "Hình minh hoạ: đoạn chữ được bôi đen trong bài “Vòng lặp for” (chụp từ tài khoản học viên) và menu chuột phải có hai lựa chọn.",
+  "need": "Bài \"Vòng lặp for\" của khoá \"Nhập môn Lập trình\", đăng nhập bằng tài khoản học viên đã ghi danh (không phải chế độ xem trước). Bôi đen câu \"biến đếm nhận các giá trị từ 0 đến n - 1\" rồi bấm chuột phải. Chụp đoạn chữ có nền xanh nhạt và menu hai lựa chọn \"Viết annotation\", \"Hỏi AI về đoạn này\" ngay bên dưới.",
+  "marks": [
+   "Đoạn chữ được bôi đen",
+   "Viết annotation",
+   "Hỏi AI về đoạn này"
+  ]
+ },
+ {
+  "name": "4-3-trang-chu-giang-vien",
+  "caption": "Hình minh hoạ: trang chủ của giảng viên với phần “Cần xử lý gấp”, lịch và “Hoạt động gần đây”.",
+  "need": "Trang /instructor/dashboard của giảng viên mẫu (2 khoá đang dạy, 36 học viên). Thấy lời chào, bốn thẻ số, mục \"Cần xử lý gấp\" với thẻ \"1 thread forum > 48h chưa giải đáp\" và \"14 assignment chờ chấm\", lịch ở chế độ Tháng (nút \"Tuần\" / \"Tháng\", \"Hôm nay\") và đầu mục \"Hoạt động gần đây\" ở cột phải.",
+  "marks": [
+   "Cần xử lý gấp",
+   "Hoạt động gần đây",
+   "Lịch"
+  ]
+ },
+ {
+  "name": "4-3-muc-gamification",
+  "caption": "Hình minh hoạ: mục thành tích của khoá học (tab “Gamification”), giảng viên chỉ xem số liệu.",
+  "need": "Trang /instructor/courses/{id}, tab \"Gamification\" đang mở, khoá \"Nhập môn Lập trình\" (36 học viên chia ba lớp K65-CS1, K65-CS2, K65-CS3, đã có XP và huy hiệu). Chụp phần đầu trang: nút \"Tải CSV\", ô chọn \"Lớp\" và nút \"Lọc\", năm thẻ số (Học viên, Tổng XP, XP trung bình, Badge đã cấp, Đang có streak), dòng \"Phân bố level\" và bảng từng học viên bên dưới (có hình huy hiệu ở mỗi dòng).",
+  "marks": [
+   "Ô chọn lớp",
+   "Nút Tải CSV",
+   "Các thẻ số",
+   "Bảng từng học viên"
+  ]
+ }
+]
