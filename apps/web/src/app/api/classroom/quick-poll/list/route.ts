@@ -8,7 +8,8 @@ export async function GET() {
   }
 
   const polls = await prisma.classroomPoll.findMany({
-    where: { createdById: userId },
+    // Poll sinh từ slide bài giảng tương tác (Limio-Live) nằm trong lịch sử bài giảng, không ở đây.
+    where: { createdById: userId, session: { liveSessions: { none: {} } } },
     orderBy: { createdAt: "desc" },
     take: 50,
     select: {
