@@ -264,6 +264,11 @@ services:
       WEB_URL: http://web:3000
       CRON_SECRET: ${CRON_SECRET}
       TZ: ${TZ:-Asia/Ho_Chi_Minh}
+      # Cảnh báo khi job cron lỗi (docker/cron/alert.sh). Trống = chỉ ghi log.
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      ALERT_HOST_LABEL: ${ALERT_HOST_LABEL:-}
+      # Chỉ để gắn nhãn máy (limio.vn / limio.hust.edu.vn) khi ALERT_HOST_LABEL trống.
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
     depends_on:
       web:
         condition: service_started
