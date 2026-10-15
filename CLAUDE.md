@@ -280,7 +280,9 @@ docker cp <dir>/postgres.dump feedbackme-postgres-1:/tmp/rt.dump
 docker exec feedbackme-postgres-1 pg_restore -U feedbackme -d restore_test /tmp/rt.dump
 ```
 - **Cron secret rotation**: đổi `CRON_SECRET` trong `.env.prod` rồi `$COMPOSE up -d web cron` (cả hai cần cùng giá trị).
-- **Healthcheck web** dùng `GET /` — nếu đổi sang đường health riêng (vd. `/api/health`), nhớ sửa cả `Dockerfile` và workflow `Wait for web to become healthy`.
+- **Healthcheck web** dùng `GET ${NEXT_PUBLIC_BASE_PATH}/api/health` (kiểm Postgres `SELECT 1` + Redis `PING`, 200/503, không auth, body chỉ `{status}`). Đổi đường này thì sửa cả `HEALTHCHECK` trong `Dockerfile` và bước `Wait for web replicas to become healthy` trong `deploy.yml` (bước đó gọi lại endpoint qua `web-proxy`). Worker có healthcheck riêng trong compose (`apps/web/scripts/worker-healthcheck.cjs`, ping Redis).
+- **Log container** xoay vòng `json-file` 20m × 5 cho mọi service (anchor `x-logging` trong `docker-compose.prod.yml`) — đĩa dùng chung với uploads + backup.
+- **Sentry**: server/edge nạp qua `apps/web/src/instrumentation.ts`, client qua `src/instrumentation-client.ts`, worker init riêng trong `src/worker/index.ts`. Thiếu `SENTRY_DSN` (runtime) / `NEXT_PUBLIC_SENTRY_DSN` (build) ⇒ không gửi gì. Source map chỉ upload khi build có `SENTRY_AUTH_TOKEN`.
 
 ## 8. Tham chiếu nhanh
 

@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +28,9 @@ const nextConfig = {
     };
   },
   experimental: {
+    // Next 14 chỉ nạp src/instrumentation.ts (khởi tạo Sentry server/edge) khi
+    // bật cờ này. withSentryConfig cũng tự bật, ghi rõ để khỏi phụ thuộc ngầm.
+    instrumentationHook: true,
     serverComponentsExternalPackages: ["@prisma/client", "bcryptjs", "sharp"],
     outputFileTracingRoot: resolve(__dirname, "../../"),
     // NOTE: outputFileTracingIncludes is intentionally omitted.
@@ -37,4 +41,22 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Upload source map lên Sentry chỉ khi có SENTRY_AUTH_TOKEN (+ SENTRY_ORG /
+// SENTRY_PROJECT) lúc build. Thiếu token: không sinh/upload source map, không
+// tạo release — build phải chạy bình thường. Thiếu DSN cũng không sao: các file
+// sentry.*.config / instrumentation-client chỉ init khi có DSN lúc chạy.
+const hasSentryAuthToken = Boolean(process.env.SENTRY_AUTH_TOKEN);
+
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  telemetry: false,
+  sourcemaps: { disable: !hasSentryAuthToken },
+  release: { create: hasSentryAuthToken, finalize: hasSentryAuthToken },
+  // Lỗi của plugin (mạng, token sai...) chỉ cảnh báo, không làm fail build.
+  errorHandler: (err) => {
+    console.warn("[sentry] build plugin error (ignored):", err.message);
+  },
+});
