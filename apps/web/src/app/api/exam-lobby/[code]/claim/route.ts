@@ -5,6 +5,7 @@ import { requireUserId } from "@/lib/session";
 import { allow } from "@/lib/rate-limit";
 import { leaveLobby } from "@/lib/exam-lobby-presence";
 import { claimResponse } from "@/lib/exam-claim-response";
+import { checkExamNetwork, networkBlockedResponse } from "@/lib/exam-network";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,7 @@ export const runtime = "nodejs";
  * POST /api/exam-lobby/[code]/claim — vào thi bằng tài khoản đã đăng nhập (ca mã chung).
  * Đây là bước duy nhất tạo lượt làm và bắt đầu đếm giờ.
  */
-export async function POST(_req: Request, { params }: { params: { code: string } }) {
+export async function POST(req: Request, { params }: { params: { code: string } }) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
@@ -25,6 +26,10 @@ export async function POST(_req: Request, { params }: { params: { code: string }
     );
 
   const target = await resolveLobbyTarget(params.code);
+  if (target) {
+    const net = await checkExamNetwork(target.examId, req.headers);
+    if (!net.allowed) return networkBlockedResponse(net);
+  }
   try {
     const result = await claimByAccount(params.code, userId);
     if (target) await leaveLobby(target.sessionId, userId);

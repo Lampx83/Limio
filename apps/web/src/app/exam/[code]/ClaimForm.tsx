@@ -385,6 +385,7 @@ function humanizeError(code: string, body: ClaimErrorBody | null = null): string
     attempt_already_submitted: "Bài thi đã được nộp trước đó.",
     student_code_in_use:
       "Mã sinh viên này đang làm bài trong ca thi. Nếu là bạn, hãy nhập đúng email hoặc số điện thoại đã dùng lúc đầu (nếu lúc đó bạn không nhập, hãy nhập đúng họ tên) để tiếp tục. Nếu không được, báo giám thị.",
+    network_not_allowed: "Bạn đang ở dải mạng không phù hợp để vào thi.",
     cohort_not_found: "Mã lớp không tồn tại. Kiểm tra lại với GV.",
     invalid_room_code: "Mã phòng thi không đúng. Kiểm tra lại với giám thị.",
     exam_not_written:

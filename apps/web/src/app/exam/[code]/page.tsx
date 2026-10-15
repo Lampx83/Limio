@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
 import { LOBBY_LEAD_MIN, lobbyPhase, resolveLobbyTarget, sessionOpenState } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import NetworkBlocked from "@/components/exam/NetworkBlocked";
+import { checkExamNetwork } from "@/lib/exam-network";
 import { Clock, Lock, AlertCircle, XCircle } from "lucide-react";
 import ClaimForm from "./ClaimForm";
 import AccountClaim from "./AccountClaim";
@@ -291,6 +293,19 @@ export default async function ExamClaimPage({
     manual: meta?.timingMode === "manual",
     strict: meta ? requiresSeb(meta.exam.proctoringLevel) : false,
   };
+
+  // Giới hạn mạng của trường (nếu có): chặn ngay từ trang vào ca, trước phòng chờ.
+  if (target) {
+    const net = await checkExamNetwork(target.examId, headers());
+    if (!net.allowed)
+      return (
+        <NetworkBlocked
+          displayName={session?.user?.name ?? session?.user?.email ?? ""}
+          examTitle={entryMeta.headline}
+          subtitle={entryMeta.subtitle}
+        />
+      );
+  }
 
   if (r.state === "not_yet")
     return <NotYet examTitle={r.examTitle} opensAt={r.opensAt} />;

@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import EmptyState from "@/components/ui/EmptyState";
 import OrgSettingsClient from "./OrgSettingsClient";
 import AcademicTermsManager from "./AcademicTermsManager";
+import ExamNetworkSettings from "./ExamNetworkSettings";
 import { toDayKey } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export default async function OrgSettingsPage() {
           inviteEmailOnImport: true,
           inviteEmailOnInstructorAdd: true,
           inviteEmailOnProctorAdd: true,
+          examAllowedIps: true,
         },
       },
     },
@@ -78,6 +80,13 @@ export default async function OrgSettingsPage() {
           inviteEmailOnProctorAdd: primary.organization.inviteEmailOnProctorAdd,
         }}
       />
+
+      <div className="mt-6">
+        <ExamNetworkSettings
+          organizationId={primary.organizationId}
+          initialRules={primary.organization.examAllowedIps}
+        />
+      </div>
 
       <div className="mt-6">
         <AcademicTermsManager

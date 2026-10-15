@@ -7,7 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { formatVN } from "@/lib/datetime";
 import EntryShell, { EntryFacts, EntryGreeting } from "@/components/exam/EntryShell";
 
-type Conn = "ok" | "retrying";
+type Conn = "ok" | "retrying" | "blocked";
 
 const R = 74;
 const C = 2 * Math.PI * R;
@@ -66,6 +66,12 @@ export default function ExamLobby({
         if (!alive) return;
         if (r.status === 401) {
           router.replace(`/signin?callbackUrl=${encodeURIComponent(`/exam/${code}`)}`);
+          return;
+        }
+        if (r.status === 403) {
+          // Đổi sang mạng không được phép khi đang chờ: tải lại để thấy giải thích.
+          setConn("blocked");
+          router.refresh();
           return;
         }
         if (!r.ok) {
@@ -128,7 +134,7 @@ export default function ExamLobby({
           ) : (
             <>
               <WifiOff className="h-3.5 w-3.5" aria-hidden />
-              Mất kết nối, đang thử lại…
+              {conn === "blocked" ? "Bạn đang ở dải mạng không phù hợp để vào thi" : "Mất kết nối, đang thử lại…"}
             </>
           )}
         </span>

@@ -14,6 +14,7 @@ const MESSAGES: Record<string, string> = {
   candidate_disabled: "Thí sinh này đã bị vô hiệu hoá. Liên hệ giảng viên.",
   forbidden: "Tài khoản này không được vào ca thi này. Liên hệ giảng viên.",
   rate_limited: "Bạn thao tác quá nhanh. Thử lại sau ít phút.",
+  network_not_allowed: "Bạn đang ở dải mạng không phù hợp để vào thi.",
 };
 
 /** Vào thi bằng tài khoản đang đăng nhập — không hỏi lại tên hay MSSV. */

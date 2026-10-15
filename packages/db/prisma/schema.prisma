@@ -4833,6 +4833,10 @@ model Organization {
   // Mặc định BẬT (giữ hành vi cũ); trường không muốn phát mail thì tắt.
   inviteEmailOnInstructorAdd Boolean  @default(true)
   inviteEmailOnProctorAdd    Boolean  @default(true)
+  // Dải mạng được phép VÀO THI các đề thuộc trường này: mỗi phần tử là một IP đơn
+  // hoặc CIDR (IPv4/IPv6). Rỗng = không giới hạn. Chỉ áp ở bước vào thi (mã
+  // chung, mã cá nhân, phòng chờ, bắt đầu lượt làm); mọi tính năng khác không bị chặn.
+  examAllowedIps             String[] @default([])
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 

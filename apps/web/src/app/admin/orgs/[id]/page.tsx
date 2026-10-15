@@ -6,6 +6,7 @@ import OrgAdminManager from "./OrgAdminManager";
 import OrgMembersClient from "@/app/org-admin/members/OrgMembersClient";
 import OrgSettingsClient from "@/app/org-admin/settings/OrgSettingsClient";
 import AcademicTermsManager from "@/app/org-admin/settings/AcademicTermsManager";
+import ExamNetworkSettings from "@/app/org-admin/settings/ExamNetworkSettings";
 import { toDayKey } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export default async function AdminOrgDetailPage({
       inviteEmailOnImport: true,
       inviteEmailOnInstructorAdd: true,
       inviteEmailOnProctorAdd: true,
+      examAllowedIps: true,
     },
   });
   if (!org) notFound();
@@ -68,6 +70,10 @@ export default async function AdminOrgDetailPage({
             inviteEmailOnProctorAdd: org.inviteEmailOnProctorAdd,
           }}
         />
+      </section>
+
+      <section className="mt-6">
+        <ExamNetworkSettings organizationId={org.id} initialRules={org.examAllowedIps} />
       </section>
 
       <section className="mt-6">

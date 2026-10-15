@@ -3,10 +3,12 @@ import {
   claimByAssignedCode,
   claimByOpenCode,
   ExamError,
+  resolveLobbyTarget,
 } from "@feedbackme/core-lms";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { allow, clientIp, isBlocked } from "@/lib/rate-limit";
 import { claimResponse } from "@/lib/exam-claim-response";
+import { checkExamNetwork, networkBlockedResponse } from "@/lib/exam-network";
 
 export const runtime = "nodejs";
 
@@ -76,6 +78,14 @@ export async function POST(req: Request) {
 
   // Auto-detect mode by length (matches generators in code-access.ts).
   // 6 = open, 8 = assigned. Anything else → invalid.
+  // Giới hạn mạng của trường (nếu có) — chỉ áp cho đề của trường đó. Mã không
+  // tồn tại thì bỏ qua để đường cũ trả invalid_code như trước.
+  const target = await resolveLobbyTarget(code);
+  if (target) {
+    const net = await checkExamNetwork(target.examId, req.headers);
+    if (!net.allowed) return networkBlockedResponse(net);
+  }
+
   let result;
   try {
     if (code.length === 6) {

@@ -47,6 +47,7 @@ export * from "./exam-rooms";
 export * from "./room-authz";
 export * from "./exam-rounds";
 export * from "./lobby";
+export * from "./ip-policy";
 export * from "./bulk-import-full";
 export * from "./session-import";
 export * from "./wizard";
