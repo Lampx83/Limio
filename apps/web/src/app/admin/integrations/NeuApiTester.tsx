@@ -5,13 +5,15 @@ import { apiUrl } from "@/lib/apiUrl";
 
 // Trùng NEU_TTS_MAX_CHARS ở packages/core-feedback (route cũng kiểm tra lại).
 const MAX_CHARS = 500;
-// Model NEU TTS được huấn luyện cho tiếng Việt; câu tiếng Anh chỉ để thử.
-type Lang = "vi" | "en";
-const SAMPLE_TEXTS: Record<Lang, string> = {
+// Mỗi giọng của NEU TTS thuộc một ngôn ngữ (vi/en/zh); câu mẫu theo ngôn ngữ.
+const SAMPLE_TEXTS: Record<string, string> = {
   vi: "Xin chào, em hãy giới thiệu về bản thân và ngành học của em.",
   en: "Hello, please introduce yourself and the subject you are studying.",
+  zh: "你好，请介绍一下你自己和你所学的专业。",
 };
-const LANG_LABELS: Record<Lang, string> = { vi: "Tiếng Việt", en: "English (thử)" };
+const FALLBACK_LANG_LABELS: Record<string, string> = { vi: "Tiếng Việt", en: "English", zh: "中文" };
+
+type Voice = { voice: string; language: string };
 
 type VoiceRow = {
   voice: string;
@@ -25,10 +27,11 @@ type VoiceRow = {
  * khác của NEU sẽ thêm thành section mới trong cùng card này.
  */
 export default function NeuApiTester() {
-  const [voices, setVoices] = useState<string[] | null>(null);
+  const [allVoices, setAllVoices] = useState<Voice[] | null>(null);
+  const [langLabels, setLangLabels] = useState<Record<string, string>>(FALLBACK_LANG_LABELS);
   const [voicesError, setVoicesError] = useState<string | null>(null);
-  const [lang, setLang] = useState<Lang>("vi");
-  const [text, setText] = useState(SAMPLE_TEXTS.vi);
+  const [lang, setLang] = useState("vi");
+  const [text, setText] = useState(SAMPLE_TEXTS.vi ?? "");
   const [rows, setRows] = useState<VoiceRow[]>([]);
   const [busy, setBusy] = useState(false);
   const urlsRef = useRef<string[]>([]);
@@ -41,7 +44,10 @@ export default function NeuApiTester() {
         const j = await r.json();
         if (cancelled) return;
         if (!j.ok) setVoicesError(j.error ?? "unknown_error");
-        else setVoices(j.voices ?? []);
+        else {
+          setAllVoices(j.voices ?? []);
+          setLangLabels({ ...FALLBACK_LANG_LABELS, ...(j.languages ?? {}) });
+        }
       } catch {
         if (!cancelled) setVoicesError("network_error");
       }
@@ -90,6 +96,10 @@ export default function NeuApiTester() {
   }
 
   const tooLong = text.trim().length > MAX_CHARS;
+  const langs = allVoices
+    ? [...new Set(allVoices.map((v) => v.language))]
+    : Object.keys(FALLBACK_LANG_LABELS);
+  const voices = allVoices?.filter((v) => v.language === lang).map((v) => v.voice) ?? null;
 
   return (
     <div className="mt-5 border-t border-token pt-5">
@@ -114,7 +124,7 @@ export default function NeuApiTester() {
           )}
           {voices && (
             <p className="mt-2 text-xs text-muted">
-              {voices.length} giọng: {voices.join(", ")}
+              {voices.length} giọng {langLabels[lang] ?? lang}: {voices.join(", ")}
             </p>
           )}
         </div>
@@ -130,16 +140,19 @@ export default function NeuApiTester() {
             <select
               id="neu-tts-lang"
               value={lang}
+              disabled={busy}
               onChange={(e) => {
-                const next = e.target.value as Lang;
+                const next = e.target.value;
                 setLang(next);
-                setText(SAMPLE_TEXTS[next]);
+                setText(SAMPLE_TEXTS[next] ?? "");
+                setRows([]);
+                clearUrls();
               }}
               className="input w-auto py-1 text-sm"
             >
-              {(Object.keys(LANG_LABELS) as Lang[]).map((l) => (
+              {langs.map((l) => (
                 <option key={l} value={l}>
-                  {LANG_LABELS[l]}
+                  {langLabels[l] ?? l}
                 </option>
               ))}
             </select>
