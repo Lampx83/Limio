@@ -209,6 +209,9 @@ services:
         # Empty basePath for root domain serving (e.g., fit.neu.edu.vn/)
         # Set to "/limio" only if serving at sub-path (e.g., domain.com/limio/)
         NEXT_PUBLIC_BASE_PATH: "${NEXT_PUBLIC_BASE_PATH}"
+        # Cùng DSN với server (SENTRY_DSN) cho Sentry phía trình duyệt. Inline
+        # lúc build → đổi DSN phải rebuild image (deploy.yml luôn rebuild).
+        NEXT_PUBLIC_SENTRY_DSN: "${SENTRY_DSN:-}"
     image: feedbackme/web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     logging: *default-logging

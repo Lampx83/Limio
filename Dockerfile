@@ -40,6 +40,10 @@ ENV SKIP_ENV_VALIDATION=1
 # Override at build time: docker compose build --build-arg NEXT_PUBLIC_BASE_PATH=/limio
 ARG NEXT_PUBLIC_BASE_PATH=""
 ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
+# DSN cho Sentry phía trình duyệt (src/instrumentation-client.ts) — inline lúc
+# build. compose truyền từ SENTRY_DSN; rỗng = client không gửi lỗi.
+ARG NEXT_PUBLIC_SENTRY_DSN=""
+ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
