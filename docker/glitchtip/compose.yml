@@ -1,0 +1,102 @@
+# GlitchTip — nơi nhận lỗi (tương thích Sentry SDK) cho Limio, tự host trên
+# server 224. Stack RIÊNG, tách khỏi docker-compose.prod.yml: deploy app không
+# đụng tới nó, và nó sập cũng không kéo app sập theo (SDK chỉ bỏ qua lỗi gửi).
+#
+#   ENV=/etc/glitchtip/.env
+#   docker compose -f docker/glitchtip/compose.yml --env-file $ENV up -d
+#
+# Cài lần đầu, tạo admin, tạo project và lấy DSN: xem README.md cùng thư mục.
+#
+# GlitchTip ≥ 6 chạy MỘT process (granian) vừa phục vụ HTTP, vừa chạy task
+# queue + scheduler, và tự migrate DB lúc khởi động — không còn service
+# worker/migrate riêng như bản cũ.
+
+name: glitchtip
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "3"
+    compress: "true"
+
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      POSTGRES_USER: glitchtip
+      POSTGRES_DB: glitchtip
+      POSTGRES_PASSWORD: ${GLITCHTIP_POSTGRES_PASSWORD:?GLITCHTIP_POSTGRES_PASSWORD required}
+    # GlitchTip partition bảng event theo ngày; truy vấn không thu hẹp được về
+    # 1 partition sẽ khoá mọi partition + index → mặc định 64 không đủ.
+    # 512 là mức tài liệu GlitchTip khuyến nghị cho self-host.
+    command: ["postgres", "-c", "max_locks_per_transaction=512"]
+    volumes:
+      # Postgres 18 đổi chỗ lưu dữ liệu: mount ở /var/lib/postgresql (không
+      # còn /data) — image tự tạo thư mục con theo major version.
+      - glitchtip-pg:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U glitchtip -d glitchtip"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:9
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  web:
+    image: glitchtip/glitchtip:6.2.6
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://glitchtip:${GLITCHTIP_POSTGRES_PASSWORD}@postgres:5432/glitchtip
+      VALKEY_URL: redis://valkey:6379/0
+      SECRET_KEY: ${GLITCHTIP_SECRET_KEY:?GLITCHTIP_SECRET_KEY required}
+      # Domain công khai (https). DSN sinh ra dùng domain này — trình duyệt của
+      # học viên gửi lỗi thẳng tới đây, server HUST cũng vậy.
+      GLITCHTIP_DOMAIN: https://${GLITCHTIP_HOSTNAME:?GLITCHTIP_HOSTNAME required}
+      # localhost để healthcheck bên dưới (Host: localhost) không bị Django chặn.
+      ALLOWED_HOSTS: ${GLITCHTIP_HOSTNAME},localhost
+      CSRF_TRUSTED_ORIGINS: https://${GLITCHTIP_HOSTNAME}
+      DEFAULT_FROM_EMAIL: ${GLITCHTIP_FROM_EMAIL:-glitchtip@limio.vn}
+      # Bỏ trống = email chỉ in ra log (không gửi được cảnh báo qua mail).
+      EMAIL_URL: ${GLITCHTIP_EMAIL_URL:-consolemail://}
+      # Không cho người lạ tự đăng ký. Admin tạo bằng createsuperuser.
+      ENABLE_USER_REGISTRATION: "false"
+      ENABLE_ORGANIZATION_CREATION: "false"
+      # Giữ lỗi 30 ngày — đủ để điều tra, giữ DB nhỏ (đĩa dùng chung uploads).
+      GLITCHTIP_RETENTION_DAYS: ${GLITCHTIP_RETENTION_DAYS:-30}
+    # Chỉ bind localhost; reverse proxy ngoài host lo TLS cho GLITCHTIP_DOMAIN.
+    ports:
+      - "127.0.0.1:${GLITCHTIP_PORT:-8010}:8000"
+    volumes:
+      - glitchtip-uploads:/code/uploads
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/_health/', timeout=5).status == 200 else 1)"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # Lần đầu chạy migrate toàn bộ schema — cho thời gian.
+      start_period: 120s
+
+volumes:
+  glitchtip-pg:
+  glitchtip-uploads:

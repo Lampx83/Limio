@@ -210,6 +210,7 @@ Reverse proxy ngoài compose (Caddy/Nginx/Traefik) đứng trước `web` để 
 | `.env.prod.example` | Template biến môi trường production. **Không commit** `.env.prod`. |
 | `.github/workflows/ci.yml` | Lint/typecheck/test/build trên `ubuntu-latest` (cloud, free) + verify Docker image build. |
 | `.github/workflows/deploy.yml` | Chạy trên `[self-hosted, Linux]`. Build → migrate → roll out → wait healthy → prune. |
+| `docker/glitchtip/*` | GlitchTip tự host (nhận lỗi qua Sentry SDK) — stack **riêng** trên server 224, không đi qua deploy.yml. Mỗi server 1 project/1 `SENTRY_DSN`; DSN inline vào bundle trình duyệt nên đổi DSN phải rebuild. Cài đặt: `docker/glitchtip/README.md`. |
 
 ### 7.3. Setup 1 lần trên server 224
 
