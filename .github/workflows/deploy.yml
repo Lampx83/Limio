@@ -242,8 +242,26 @@ jobs:
         if: steps.ci-gate.outputs.skip != 'true'
         run: |
           set -euo pipefail
-          # Mỗi replica có healthcheck riêng — đợi TẤT CẢ thành healthy
-          # trước khi tuyên bố deploy xong. Nếu 1 cái unhealthy → fail sớm.
+          # Mỗi replica có healthcheck riêng (HEALTHCHECK trong Dockerfile →
+          # GET ${NEXT_PUBLIC_BASE_PATH}/api/health, kiểm Postgres + Redis) — đợi
+          # TẤT CẢ thành healthy trước khi tuyên bố deploy xong. Nếu 1 cái
+          # unhealthy → in log healthcheck + log web rồi fail sớm.
+          #
+          # Sau đó gọi /api/health thêm 1 lần QUA web-proxy (đường request thật
+          # đi), để bắt lỗi Caddy/basePath mà healthcheck trong container không thấy.
+          read_env() { grep -E "^$1=" "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' || true; }
+          WEB_PORT=$(read_env WEB_PORT)
+          BASE_PATH=$(read_env NEXT_PUBLIC_BASE_PATH)
+          HEALTH_URL="http://localhost:${WEB_PORT:-8004}${BASE_PATH}/api/health"
+          check_via_proxy() {
+            for j in $(seq 1 6); do
+              if curl -fsS --max-time 10 "$HEALTH_URL"; then echo; return 0; fi
+              echo "[$j] $HEALTH_URL chưa OK, thử lại sau 5s"
+              sleep 5
+            done
+            echo "::error::$HEALTH_URL không trả 200 qua web-proxy"
+            return 1
+          }
           for i in $(seq 1 60); do
             ids=$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps -q web)
             if [ -z "$ids" ]; then
@@ -260,11 +278,15 @@ jobs:
               [ "$s" = "unhealthy" ] && any_unhealthy=1
             done
             if [ "$any_unhealthy" = "1" ]; then
+              for id in $ids; do
+                docker inspect --format '{{range .State.Health.Log}}{{.End}} exit={{.ExitCode}} {{.Output}}{{end}}' "$id" || true
+              done
               docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --tail=200 web
               exit 1
             fi
             if [ "$all_healthy" = "1" ]; then
-              exit 0
+              check_via_proxy
+              exit $?
             fi
             sleep 5
           done
