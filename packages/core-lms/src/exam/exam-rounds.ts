@@ -1421,7 +1421,7 @@ export const AddRoomCandidatesInput = z.object({
     .max(500),
 });
 
-function genAccessCode(): string {
+export function genAccessCode(): string {
   // 8-char alphanumeric (capital + digit, no ambiguous chars).
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";

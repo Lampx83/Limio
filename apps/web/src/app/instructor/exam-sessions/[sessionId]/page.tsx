@@ -14,6 +14,7 @@ import { auth } from "@/lib/auth";
 import SessionOverviewPanel from "./SessionOverviewPanel";
 import SessionRoomsPanel from "./SessionRoomsPanel";
 import SessionTabs from "./SessionTabs";
+import LobbyCounter from "./LobbyCounter";
 import ExamReadinessWarning from "./ExamReadinessWarning";
 import ExamAccessModeCard from "./ExamAccessModeCard";
 import SessionResultsPanel, { type CandidateResult } from "./SessionResultsPanel";
@@ -194,6 +195,9 @@ export default async function ExamSessionDetailPage({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {detail.status !== "closed" && detail.status !== "archived" && (
+            <LobbyCounter sessionId={detail.id} />
+          )}
           {detail.roomCount > 0 && (
             <Link
               href={`/instructor/exam-sessions/${detail.id}/print-room-codes`}

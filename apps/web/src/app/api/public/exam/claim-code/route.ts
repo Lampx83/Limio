@@ -4,15 +4,9 @@ import {
   claimByOpenCode,
   ExamError,
 } from "@feedbackme/core-lms";
-import { prisma } from "@feedbackme/db";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { allow, clientIp, isBlocked } from "@/lib/rate-limit";
-import {
-  EXAM_SESSION_COOKIE,
-  examSessionCookieOptions,
-  signExamSession,
-} from "@/lib/exam-session";
-import { upsertOnStart } from "@/lib/exam-live-bus";
+import { claimResponse } from "@/lib/exam-claim-response";
 
 export const runtime = "nodejs";
 
@@ -119,55 +113,5 @@ export async function POST(req: Request) {
     throw e;
   }
 
-  // Push the new (or resumed) attempt onto the live bus so an open instructor
-  // dashboard sees the candidate appear without needing to refresh.
-  try {
-    const totalQuestions = await prisma.examQuestion.count({
-      where: { examId: result.examId },
-    });
-    const subjectType: "open" | "assigned" = code.length === 6 ? "open" : "assigned";
-    await upsertOnStart(result.examId, {
-      attemptId: result.attemptId,
-      userId: null,
-      userName: result.displayName,
-      subjectType,
-      status: "in_progress",
-      startedAt: Date.now(),
-      expiresAt: Date.now() + result.ttlSec * 1000,
-      submittedAt: null,
-      answeredQuestionIds: [],
-      totalQuestions,
-      incidentCount: 0,
-      lastSeenAt: Date.now(),
-      resumeCount: 0,
-    });
-  } catch {
-    // Best-effort. Bus push must not break the claim.
-  }
-
-  // Issue exam_session cookie (HS256 JWT) and return the attemptId so the
-  // client redirects to /exam-take/[attemptId]. Cookie TTL matches the claim
-  // result's ttlSec, capped to exam-window + grace.
-  const jwt = signExamSession({
-    candidateId: result.candidateId,
-    attemptId: result.attemptId,
-    examId: result.examId,
-    sessionToken: result.sessionToken,
-    exp: Math.floor(Date.now() / 1000) + result.ttlSec,
-  });
-  const opts = examSessionCookieOptions(result.ttlSec);
-  const res = NextResponse.json({
-    attemptId: result.attemptId,
-    examId: result.examId,
-    displayName: result.displayName,
-    resumed: result.resumed,
-  });
-  res.cookies.set(EXAM_SESSION_COOKIE, jwt, {
-    httpOnly: opts.httpOnly,
-    secure: opts.secure,
-    sameSite: opts.sameSite,
-    path: opts.path,
-    maxAge: opts.maxAge,
-  });
-  return res;
+  return claimResponse(result, code.length === 6 ? "open" : "assigned");
 }

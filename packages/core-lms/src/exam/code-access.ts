@@ -33,7 +33,7 @@ import { ExamError } from "./types";
  * precedence as the enrolled-user path (cohorts.ts `assertEligibleForExam`).
  * Falls back to the exam duration when no session or no override.
  */
-async function resolveDurationSec(
+export async function resolveDurationSec(
   examDurationMin: number,
   sessionId: string | null,
   db: PrismaClient,
@@ -201,7 +201,7 @@ function isSameOwner(
 /** Ca thủ công không có giờ đóng — cookie sống 24h là đủ cho một buổi học. */
 const MANUAL_SESSION_TTL_SEC = 24 * 3600;
 
-function computeTtlSec(closeAt: Date | null): number {
+export function computeTtlSec(closeAt: Date | null): number {
   // Q6 — cookie covers active exam window + 1h grace for late submit/review.
   // Hard cap at 7 days; floor at 5 min so a near-end claim still has room.
   if (closeAt === null) return MANUAL_SESSION_TTL_SEC;
