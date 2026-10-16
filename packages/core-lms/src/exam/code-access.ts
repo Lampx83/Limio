@@ -239,6 +239,7 @@ export async function claimByOpenCode(
       closesAt: true,
       timingMode: true,
       status: true,
+      maxCandidates: true,
       exam: {
         select: {
           id: true,
@@ -476,10 +477,14 @@ export async function claimByOpenCode(
 
       // Cap on total candidates (anti-spam — Q2 IP rate-limit is layered on
       // top). Chỉ áp cho người MỚI: người vào lại không được bị chặn vì ca đầy.
-      if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
-        const used = await tx.examCandidate.count({ where: { examId: exam.id } });
-        if (used >= exam.openMaxAttempts)
-          throw new ExamError("open_max_attempts_reached");
+      // Mã resolve qua ca → trần của CA, đếm trong ca; mã đề cũ (không có ca) →
+      // trần của đề, đếm cả đề.
+      const cap = sessionMatch ? sessionMatch.maxCandidates : exam.openMaxAttempts;
+      if (cap !== null && cap !== undefined) {
+        const used = await tx.examCandidate.count({
+          where: sessionMatch ? { sessionId } : { examId: exam.id },
+        });
+        if (used >= cap) throw new ExamError("open_max_attempts_reached");
       }
 
       const c = await tx.examCandidate.create({

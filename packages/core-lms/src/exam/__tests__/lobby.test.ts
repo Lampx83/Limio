@@ -11,7 +11,9 @@ import {
   LOBBY_LEAD_MIN,
   lobbyPhase,
   publishExam,
+  getExamSession,
   resolveLobbyTarget,
+  updateExamSession,
 } from "../";
 
 const BASE = "http://localhost:3000";
@@ -160,7 +162,7 @@ describe("claimByAccount — vào thi bằng tài khoản, không hỏi tên/MSS
     expect(await prisma.examCandidate.count({ where: { sessionId: s.sessionId } })).toBe(1);
   });
 
-  it("ca đã đầy (openMaxAttempts): người mới bị chặn, người đã có trong danh sách và người vào lại thì không", async () => {
+  it("ca đã đầy (maxCandidates): người mới bị chặn, người đã có trong danh sách và người vào lại thì không", async () => {
     const s = await setup("cap", { opensInMin: -5, closesInMin: 60 });
     const inRoster = await learner("cap-roster", "Có trong danh sách");
     const outsider = await learner("cap-out", "Người mới");
@@ -171,7 +173,7 @@ describe("claimByAccount — vào thi bằng tài khoản, không hỏi tên/MSS
       [{ examClassCode: "P1", displayName: "Có trong danh sách", email: inRoster.email }],
       BASE,
     );
-    await prisma.exam.update({ where: { id: s.examId }, data: { openMaxAttempts: 1 } });
+    await prisma.examSession.update({ where: { id: s.sessionId }, data: { maxCandidates: 1 } });
 
     // Người ngoài danh sách: ca đã đủ số lượng → bị chặn, không tạo thí sinh.
     await expect(claimByAccount(s.code, outsider.userId)).rejects.toMatchObject({
@@ -186,10 +188,50 @@ describe("claimByAccount — vào thi bằng tài khoản, không hỏi tên/MSS
     expect(again.attemptId).toBe(first.attemptId);
   });
 
+  it("trần tính riêng từng ca: ca khác của cùng đề không bị ảnh hưởng", async () => {
+    const a = await setup("cap-per-a", { opensInMin: -5, closesInMin: 60 });
+    const first = await learner("cap-per-1", "Người một");
+    const second = await learner("cap-per-2", "Người hai");
+    // Ca B cùng đề với ca A.
+    const now = Date.now();
+    const { id: sessionB } = await createFormalSession(a.ownerId, {
+      examId: a.examId,
+      accessMode: "open_code",
+      opensAt: new Date(now - 5 * MIN),
+      closesAt: new Date(now + 60 * MIN),
+    });
+    const codeB = (
+      await prisma.examSession.findUniqueOrThrow({
+        where: { id: sessionB },
+        select: { openCode: true },
+      })
+    ).openCode!;
+    await prisma.examSession.update({ where: { id: a.sessionId }, data: { maxCandidates: 1 } });
+
+    await claimByAccount(a.code, first.userId);
+    // Ca A đầy → người hai bị chặn ở ca A, nhưng vào được ca B (không có trần).
+    await expect(claimByAccount(a.code, second.userId)).rejects.toMatchObject({
+      code: "open_max_attempts_reached",
+    });
+    const r = await claimByAccount(codeB, second.userId);
+    expect(r.resumed).toBe(false);
+  });
+
+  it("giảng viên đặt và xoá trần của ca; trần sai bị từ chối", async () => {
+    const s = await setup("cap-edit", { opensInMin: -5, closesInMin: 60 });
+    await updateExamSession(s.ownerId, s.sessionId, { maxCandidates: 40 });
+    expect((await getExamSession(s.ownerId, s.sessionId)).maxCandidates).toBe(40);
+    await updateExamSession(s.ownerId, s.sessionId, { maxCandidates: null });
+    expect((await getExamSession(s.ownerId, s.sessionId)).maxCandidates).toBeNull();
+    await expect(
+      updateExamSession(s.ownerId, s.sessionId, { maxCandidates: 0 }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
   it("chưa tới trần thì người mới vào được", async () => {
     const s = await setup("cap-ok", { opensInMin: -5, closesInMin: 60 });
     const l = await learner("cap-ok");
-    await prisma.exam.update({ where: { id: s.examId }, data: { openMaxAttempts: 2 } });
+    await prisma.examSession.update({ where: { id: s.sessionId }, data: { maxCandidates: 2 } });
     const r = await claimByAccount(s.code, l.userId);
     expect(r.resumed).toBe(false);
   });

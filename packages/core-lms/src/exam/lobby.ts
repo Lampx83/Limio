@@ -172,12 +172,11 @@ export async function claimByAccount(
 
   const exam = await db.exam.findUniqueOrThrow({
     where: { id: target.examId },
-    select: {
-      durationMin: true,
-      shuffleQuestions: true,
-      shuffleOptions: true,
-      openMaxAttempts: true,
-    },
+    select: { durationMin: true, shuffleQuestions: true, shuffleOptions: true },
+  });
+  const { maxCandidates } = await db.examSession.findUniqueOrThrow({
+    where: { id: target.sessionId },
+    select: { maxCandidates: true },
   });
   const sessionId = target.sessionId;
   const email = user.email.trim().toLowerCase();
@@ -214,13 +213,12 @@ export async function claimByAccount(
     });
 
     if (!candidate) {
-      // Trần số thí sinh của đề (chống spam, cùng luật với claimByOpenCode). Chỉ áp
+      // Trần số thí sinh của CA (chống spam, cùng luật với claimByOpenCode). Chỉ áp
       // cho người MỚI: người đã có trong danh sách, hoặc vào lại, không bị chặn vì
       // ca đã đầy.
-      if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
-        const used = await tx.examCandidate.count({ where: { examId: target.examId } });
-        if (used >= exam.openMaxAttempts)
-          throw new ExamError("open_max_attempts_reached");
+      if (maxCandidates !== null) {
+        const used = await tx.examCandidate.count({ where: { sessionId } });
+        if (used >= maxCandidates) throw new ExamError("open_max_attempts_reached");
       }
       const created = await tx.examCandidate.create({
         data: {

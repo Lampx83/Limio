@@ -536,6 +536,8 @@ export interface ExamSessionDetail {
   /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
   closesAt: string | null;
   durationOverrideMin: number | null;
+  /** Số thí sinh tối đa của ca (mã chung). Null = không giới hạn. */
+  maxCandidates: number | null;
   ipAllowlist: string[];
   createdAt: string;
   updatedAt: string;
@@ -782,6 +784,7 @@ export const UpdateExamSessionInput = z
       .max(24 * 60)
       .nullable()
       .optional(),
+    maxCandidates: z.number().int().min(1).max(100000).nullable().optional(),
     status: z.enum(["draft", "open", "closed", "archived"]).optional(),
     // PR2.12 — Per-session mode. Khi đổi sang open_code, service tự sinh
     // openCode mới nếu chưa có.
@@ -895,6 +898,7 @@ async function updateExamSessionImpl(
         ...(d.durationOverrideMin !== undefined
           ? { durationOverrideMin: d.durationOverrideMin }
           : {}),
+        ...(d.maxCandidates !== undefined ? { maxCandidates: d.maxCandidates } : {}),
         ...(d.status !== undefined ? { status: d.status } : {}),
         ...(d.accessMode !== undefined ? { accessMode: d.accessMode } : {}),
         ...openCodePatch,
@@ -926,6 +930,7 @@ export async function getExamSession(
       opensAt: true,
       closesAt: true,
       durationOverrideMin: true,
+      maxCandidates: true,
       ipAllowlist: true,
       accessMode: true,
       openCode: true,
@@ -968,6 +973,7 @@ export async function getExamSession(
     opensAt: s.opensAt.toISOString(),
     closesAt: s.closesAt?.toISOString() ?? null,
     durationOverrideMin: s.durationOverrideMin,
+    maxCandidates: s.maxCandidates,
     ipAllowlist: s.ipAllowlist,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
@@ -2129,6 +2135,7 @@ export const CreateFormalSessionInput = z
     opensAt: z.coerce.date().optional(),
     closesAt: z.coerce.date().optional(),
     durationOverrideMin: z.number().int().min(1).max(24 * 60).optional().nullable(),
+    maxCandidates: z.number().int().min(1).max(100000).optional().nullable(),
     accessMode: z.enum(["assigned_code", "open_code"]),
     revealAnswers: z
       .enum(["immediately", "never", "after_close", "score_only"])
@@ -2188,6 +2195,7 @@ async function createFormalSessionImpl(
       opensAt,
       closesAt,
       durationOverrideMin: d.durationOverrideMin ?? null,
+      maxCandidates: d.maxCandidates ?? null,
       accessMode: d.accessMode,
       openCode,
       revealAnswers: d.revealAnswers ?? null,
