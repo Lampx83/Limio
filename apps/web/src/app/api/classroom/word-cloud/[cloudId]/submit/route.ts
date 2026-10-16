@@ -59,7 +59,7 @@ export async function POST(
     const { text } = body;
 
     const wordCloud = await prisma.wordCloud.findUnique({
-      where: { id: params.cloudId },
+      where: { id: params.cloudId, deletedAt: null },
       select: { id: true },
     });
 

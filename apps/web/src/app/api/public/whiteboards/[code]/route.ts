@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 // đảm bảo guest join giữa chừng vào đúng trang đang dạy.
 export async function GET(req: Request, { params }: { params: { code: string } }) {
   const board = await prisma.whiteboard.findUnique({
-    where: { code: params.code.toUpperCase() },
+    where: { code: params.code.toUpperCase(), deletedAt: null },
     select: {
       id: true,
       code: true,

@@ -2774,11 +2774,15 @@ model ClassroomPoll {
   createdBy   User?   @relation("PollCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   votes ClassroomPollVote[]
 
   @@index([sessionId, createdAt])
   @@index([createdById, createdAt])
+  @@index([deletedAt])
 }
 
 model ClassroomPollVote {
@@ -2811,9 +2815,13 @@ model WordCloud {
   submissions WordCloudSubmission[]
 
   createdAt DateTime @default(now())
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([sessionId])
   @@index([createdById, createdAt])
+  @@index([deletedAt])
 }
 
 model WordCloudSubmission {
@@ -2868,10 +2876,14 @@ model InteractiveBoard {
 
   createdAt DateTime  @default(now())
   closedAt  DateTime?
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([ownerId, createdAt])
   @@index([sessionId])
   @@index([status, createdAt])
+  @@index([deletedAt])
 }
 
 model BoardNote {
@@ -2933,10 +2945,14 @@ model Whiteboard {
 
   createdAt DateTime  @default(now())
   closedAt  DateTime?
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([ownerId, createdAt])
   @@index([sessionId])
   @@index([status, createdAt])
+  @@index([deletedAt])
 }
 
 // Quick Grouping

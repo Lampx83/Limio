@@ -11,7 +11,7 @@ export default async function LearnerWordCloudPage({
 }) {
   // Get word cloud details without auth check - public page
   const wordCloud = await prisma.wordCloud.findUnique({
-    where: { id: params.cloudId },
+    where: { id: params.cloudId, deletedAt: null },
     select: {
       id: true,
       prompt: true,
