@@ -12,6 +12,7 @@ const MESSAGES: Record<string, string> = {
   invalid_code: "Mã vào thi không còn hiệu lực.",
   attempt_already_submitted: "Bạn đã nộp bài trong ca này.",
   candidate_disabled: "Thí sinh này đã bị vô hiệu hoá. Liên hệ giảng viên.",
+  open_max_attempts_reached: "Ca thi đã đủ số lượng thí sinh tối đa. Liên hệ giảng viên.",
   forbidden: "Tài khoản này không được vào ca thi này. Liên hệ giảng viên.",
   rate_limited: "Bạn thao tác quá nhanh. Thử lại sau ít phút.",
   network_not_allowed: "Bạn đang ở dải mạng không phù hợp để vào thi.",

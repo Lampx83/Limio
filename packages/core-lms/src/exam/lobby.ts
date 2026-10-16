@@ -119,6 +119,8 @@ export async function resolveLobbyTarget(
     examTitle: session.exam.title,
     courseId: session.exam.courseId,
     mode,
+    candidateId: candidate?.id ?? null,
+    candidateName: candidate?.displayName ?? null,
     phase: lobbyPhase(session, now),
     opensAt: session.opensAt,
     closesAt: session.closesAt,
@@ -165,7 +167,12 @@ export async function claimByAccount(
 
   const exam = await db.exam.findUniqueOrThrow({
     where: { id: target.examId },
-    select: { durationMin: true, shuffleQuestions: true, shuffleOptions: true },
+    select: {
+      durationMin: true,
+      shuffleQuestions: true,
+      shuffleOptions: true,
+      openMaxAttempts: true,
+    },
   });
   const sessionId = target.sessionId;
   const email = user.email.trim().toLowerCase();
