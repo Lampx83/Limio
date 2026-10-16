@@ -27,6 +27,7 @@ function fmt(sec: number): string {
  */
 export default function ExamLobby({
   code,
+  mode,
   examTitle,
   subtitle,
   opensAt,
@@ -36,6 +37,8 @@ export default function ExamLobby({
   strict,
 }: {
   code: string;
+  /** open = đăng nhập; assigned = mã cá nhân, không cần tài khoản. */
+  mode: "open" | "assigned";
   examTitle: string;
   subtitle: string | null;
   opensAt: string;
@@ -64,7 +67,7 @@ export default function ExamLobby({
       try {
         const r = await fetch(apiUrl(`/api/exam-lobby/${code}`), { method: "POST" });
         if (!alive) return;
-        if (r.status === 401) {
+        if (r.status === 401 && mode === "open") {
           router.replace(`/signin?callbackUrl=${encodeURIComponent(`/exam/${code}`)}`);
           return;
         }
@@ -92,7 +95,7 @@ export default function ExamLobby({
       alive = false;
       clearInterval(t);
     };
-  }, [code, router]);
+  }, [code, mode, router]);
 
   const remainingSec = Math.max(0, Math.ceil((opensMs - now) / 1000));
   const opening = !manual && remainingSec === 0;
@@ -111,7 +114,7 @@ export default function ExamLobby({
       : "stroke-brand-500";
 
   return (
-    <EntryShell step={2}>
+    <EntryShell step={2} firstStepLabel={mode === "assigned" ? "Nhập mã" : "Đăng nhập"}>
       {/* Trạng thái kết nối */}
       <div className="flex justify-center">
         <span

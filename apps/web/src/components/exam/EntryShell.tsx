@@ -4,9 +4,15 @@ import { Check } from "lucide-react";
  * Khung chung cho các màn trước khi làm bài: phòng chờ và "Sẵn sàng vào thi".
  * Giữ cùng một bố cục để học viên thấy đây là một luồng liền mạch ba bước.
  */
-const STEPS = ["Đăng nhập", "Phòng chờ", "Làm bài"] as const;
-
-export function EntryStepper({ step }: { step: 1 | 2 | 3 }) {
+export function EntryStepper({
+  step,
+  firstStepLabel = "Đăng nhập",
+}: {
+  step: 1 | 2 | 3;
+  /** Bước đầu: "Đăng nhập" với mã chung, "Nhập mã" với mã cá nhân (không cần tài khoản). */
+  firstStepLabel?: string;
+}) {
+  const STEPS = [firstStepLabel, "Phòng chờ", "Làm bài"];
   return (
     <ol className="flex items-center justify-center gap-2 text-xs" aria-label="Các bước vào thi">
       {STEPS.map((label, i) => {
@@ -49,9 +55,11 @@ export function EntryStepper({ step }: { step: 1 | 2 | 3 }) {
 
 export default function EntryShell({
   step,
+  firstStepLabel,
   children,
 }: {
   step: 1 | 2 | 3;
+  firstStepLabel?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -62,7 +70,7 @@ export default function EntryShell({
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-96 bg-[radial-gradient(60%_80%_at_50%_0%,rgb(var(--brand)/0.14),transparent)]"
       />
       <div className="mx-auto w-full max-w-xl">
-        <EntryStepper step={step} />
+        <EntryStepper step={step} firstStepLabel={firstStepLabel} />
         <div className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 shadow-card sm:p-8">
           {children}
         </div>

@@ -211,6 +211,66 @@ describe("claimByAccount — vào thi bằng tài khoản, không hỏi tên/MSS
   });
 });
 
+describe("resolveLobbyTarget — mã cá nhân (không cần tài khoản)", () => {
+  it("trả thí sinh sở hữu mã và pha của ca; thí sinh bị vô hiệu hoá thì không", async () => {
+    const owner = await registerUser(
+      { email: `lobby-assigned-${Date.now()}@e.com`, password: "password1234", displayName: "GV" },
+      BASE,
+    );
+    const course = await createCourse(owner.userId, {
+      title: "C assigned",
+      description: "x",
+      slug: `lobby-course-assigned-${Date.now()}`,
+    });
+    const { examId } = await createExam(owner.userId, course.courseId, {
+      title: "Đề assigned",
+      durationMin: 20,
+    });
+    await createExamQuestion(owner.userId, examId, {
+      type: "mcq",
+      prompt: "Q",
+      config: {
+        options: [
+          { id: "a", label: "A", isCorrect: true },
+          { id: "b", label: "B", isCorrect: false },
+        ],
+      },
+      points: 10,
+    });
+    await publishExam(owner.userId, examId);
+    const now = Date.now();
+    const { id: sessionId } = await createFormalSession(owner.userId, {
+      examId,
+      accessMode: "assigned_code",
+      opensAt: new Date(now + 5 * MIN),
+      closesAt: new Date(now + 65 * MIN),
+    });
+    await importSessionRooms(
+      owner.userId,
+      sessionId,
+      [{ examClassCode: "PA", displayName: "Thí sinh Một", mssv: "A001" }],
+      BASE,
+    );
+    const cand = await prisma.examCandidate.findFirstOrThrow({
+      where: { sessionId },
+      select: { id: true, accessCode: true },
+    });
+
+    const t = await resolveLobbyTarget(cand.accessCode!);
+    expect(t).not.toBeNull();
+    expect(t!.mode).toBe("assigned");
+    expect(t!.candidateId).toBe(cand.id);
+    expect(t!.candidateName).toBe("Thí sinh Một");
+    expect(t!.phase).toBe("lobby");
+
+    await prisma.examCandidate.update({
+      where: { id: cand.id },
+      data: { disabledAt: new Date() },
+    });
+    expect(await resolveLobbyTarget(cand.accessCode!)).toBeNull();
+  });
+});
+
 describe("resolveLobbyTarget", () => {
   it("trả đúng ca, mã và pha theo cửa sổ thời gian", async () => {
     const s = await setup("resolve", { opensInMin: 5, closesInMin: 65 });

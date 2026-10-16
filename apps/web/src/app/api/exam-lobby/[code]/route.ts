@@ -15,18 +15,23 @@ export const runtime = "nodejs";
  */
 export async function POST(req: Request, { params }: { params: { code: string } }) {
   const userId = await requireUserId();
-  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const target = await resolveLobbyTarget(params.code);
   if (!target) return NextResponse.json({ error: "invalid_code" }, { status: 404 });
+  // Mã chung: cần tài khoản để biết là ai. Mã cá nhân: chính mã đã xác định thí
+  // sinh nên không cần đăng nhập — nhận diện theo thí sinh.
+  if (target.mode === "open" && !userId)
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!target.ready) return NextResponse.json({ error: "not_ready" }, { status: 409 });
 
   // Ngoài mạng được phép thì không chờ ở đây: không ghi nhận có mặt.
   const net = await checkExamNetwork(target.examId, req.headers);
   if (!net.allowed) return networkBlockedResponse(net);
 
-  if (target.phase === "lobby" || target.phase === "open")
-    await touchLobby(target.sessionId, userId);
+  if (target.phase === "lobby" || target.phase === "open") {
+    const who = target.mode === "open" ? userId! : `c:${target.candidateId}`;
+    await touchLobby(target.sessionId, who);
+  }
 
   return NextResponse.json({
     phase: target.phase,

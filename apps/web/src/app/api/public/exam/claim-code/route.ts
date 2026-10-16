@@ -8,6 +8,7 @@ import {
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { allow, clientIp, isBlocked } from "@/lib/rate-limit";
 import { claimResponse } from "@/lib/exam-claim-response";
+import { leaveLobby } from "@/lib/exam-lobby-presence";
 import { checkExamNetwork, networkBlockedResponse } from "@/lib/exam-network";
 
 export const runtime = "nodejs";
@@ -122,6 +123,10 @@ export async function POST(req: Request) {
     if (mapped) return mapped;
     throw e;
   }
+
+  // Vào bằng mã cá nhân: rời phòng chờ ngay (mã chung thì /exam-lobby/.../claim lo).
+  if (target?.mode === "assigned" && target.candidateId)
+    await leaveLobby(target.sessionId, `c:${target.candidateId}`).catch(() => {});
 
   return claimResponse(result, code.length === 6 ? "open" : "assigned");
 }

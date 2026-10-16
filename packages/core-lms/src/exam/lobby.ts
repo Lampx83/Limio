@@ -65,6 +65,9 @@ export interface LobbyTarget {
   courseId: string | null;
   /** open = mã chung của ca; assigned = mã cá nhân của thí sinh. */
   mode: "open" | "assigned";
+  /** Chỉ có khi mode = assigned: thí sinh sở hữu mã (không cần tài khoản). */
+  candidateId: string | null;
+  candidateName: string | null;
   phase: LobbyPhase;
   opensAt: Date;
   closesAt: Date | null;
@@ -95,6 +98,7 @@ export async function resolveLobbyTarget(
   const c = code.trim().toUpperCase();
   let session;
   let mode: "open" | "assigned";
+  let candidate: { id: string; displayName: string } | null = null;
   if (c.length === 6) {
     mode = "open";
     session = await db.examSession.findFirst({
@@ -105,9 +109,10 @@ export async function resolveLobbyTarget(
     mode = "assigned";
     const cand = await db.examCandidate.findFirst({
       where: { accessCode: c, disabledAt: null },
-      select: { session: { select: SESSION_SELECT } },
+      select: { id: true, displayName: true, session: { select: SESSION_SELECT } },
     });
     session = cand?.session ?? null;
+    candidate = cand ? { id: cand.id, displayName: cand.displayName } : null;
   } else {
     return null;
   }
@@ -209,6 +214,14 @@ export async function claimByAccount(
     });
 
     if (!candidate) {
+      // Trần số thí sinh của đề (chống spam, cùng luật với claimByOpenCode). Chỉ áp
+      // cho người MỚI: người đã có trong danh sách, hoặc vào lại, không bị chặn vì
+      // ca đã đầy.
+      if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
+        const used = await tx.examCandidate.count({ where: { examId: target.examId } });
+        if (used >= exam.openMaxAttempts)
+          throw new ExamError("open_max_attempts_reached");
+      }
       const created = await tx.examCandidate.create({
         data: {
           examId: target.examId,

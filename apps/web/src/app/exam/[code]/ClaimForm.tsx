@@ -170,7 +170,7 @@ export default function ClaimForm({
             type="button"
             onClick={() => submitClaim(stage.cohort.id)}
             disabled={busy}
-            className="flex-1 rounded bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="btn-primary btn-lg flex-1"
           >
             {busy ? "Đang vào..." : "Xác nhận → Bắt đầu thi"}
           </button>
@@ -290,7 +290,7 @@ export default function ClaimForm({
       <button
         type="submit"
         disabled={busy}
-        className="w-full rounded bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="btn-primary btn-lg w-full"
       >
         {busy ? "Đang xử lý..." : mode === "open" && cohortCode.trim() ? "Tiếp tục →" : "Bắt đầu thi"}
       </button>

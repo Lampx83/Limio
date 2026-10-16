@@ -5,6 +5,7 @@ import { prisma } from "@feedbackme/db";
 import { LOBBY_LEAD_MIN, lobbyPhase, resolveLobbyTarget, sessionOpenState } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import NetworkBlocked from "@/components/exam/NetworkBlocked";
+import EntryShell, { EntryGreeting } from "@/components/exam/EntryShell";
 import { checkExamNetwork } from "@/lib/exam-network";
 import { Clock, Lock, AlertCircle, XCircle } from "lucide-react";
 import ClaimForm from "./ClaimForm";
@@ -244,11 +245,17 @@ export default async function ExamClaimPage({
   const r = await resolveCode(code);
   if (!r) return <NotFoundCode code={code} />;
 
-  // Vào ca (kể cả phòng chờ) phải đăng nhập: lobby cần biết học viên là ai.
-  // Ca đã đóng / chưa sẵn sàng không cần đăng nhập để xem thông báo.
+  // Mã chung (6 ký tự) phải đăng nhập: lobby cần biết học viên là ai. Mã cá nhân
+  // (8 ký tự) KHÔNG cần: chính mã đã xác định thí sinh. Ca đã đóng / chưa sẵn sàng
+  // không cần đăng nhập để xem thông báo.
+  const isAssigned = code.length === 8;
   const session = await auth();
   const userId = session?.user?.id ?? null;
-  if (!userId && (r.state === "ok" || r.state === "lobby" || r.state === "not_yet"))
+  if (
+    !isAssigned &&
+    !userId &&
+    (r.state === "ok" || r.state === "lobby" || r.state === "not_yet")
+  )
     redirect(`/signin?callbackUrl=${encodeURIComponent(`/exam/${code}`)}`);
 
   const target =
@@ -277,6 +284,12 @@ export default async function ExamClaimPage({
       })
     : null;
 
+  // Tên hiển thị trong lời chào: tài khoản đang đăng nhập (mã chung) hoặc thí sinh
+  // sở hữu mã (mã cá nhân).
+  const greetName = isAssigned
+    ? (target?.candidateName ?? "")
+    : (session?.user?.name ?? session?.user?.email ?? "");
+
   // Học viên nhận ra ca của mình trước: tên ca làm tiêu đề, tên đề + tên khoá ở
   // dòng nhỏ. Ca chưa đặt tên thì tiêu đề là tên đề, dòng nhỏ chỉ còn tên khoá.
   const sessionName = meta?.title?.trim() || null;
@@ -300,7 +313,7 @@ export default async function ExamClaimPage({
     if (!net.allowed)
       return (
         <NetworkBlocked
-          displayName={session?.user?.name ?? session?.user?.email ?? ""}
+          displayName={greetName}
           examTitle={entryMeta.headline}
           subtitle={entryMeta.subtitle}
         />
@@ -313,12 +326,13 @@ export default async function ExamClaimPage({
     return (
       <ExamLobby
         code={code}
+        mode={isAssigned ? "assigned" : "open"}
         examTitle={entryMeta.headline}
         subtitle={entryMeta.subtitle}
         opensAt={r.opensAt.toISOString()}
         manual={entryMeta.manual}
         leadMin={LOBBY_LEAD_MIN}
-        displayName={session?.user?.name ?? session?.user?.email ?? ""}
+        displayName={greetName}
         strict={entryMeta.strict}
       />
     );
@@ -371,17 +385,23 @@ export default async function ExamClaimPage({
     );
   }
 
+  // Mã cá nhân: không cần tài khoản, chỉ xác nhận danh tính. Cùng khung với các
+  // màn khác để luồng vào thi liền mạch.
   return (
-    <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">{r.examTitle}</h1>
-      <p className="mt-1 text-sm text-faint">Xác nhận danh tính để bắt đầu thi</p>
+    <EntryShell step={3} firstStepLabel="Nhập mã">
+      <EntryGreeting name={r.candidateName ?? greetName} />
+      <div className="mt-4 text-center">
+        <h1 className="text-h2 text-[rgb(var(--text))]">{entryMeta.headline}</h1>
+        {entryMeta.subtitle && <p className="mt-1 text-sm text-muted">{entryMeta.subtitle}</p>}
+        <p className="mt-3 text-sm text-muted">Xác nhận danh tính để bắt đầu thi</p>
+      </div>
       <ClaimForm
         code={code}
         mode={r.mode}
         candidateName={r.candidateName}
         courseId={r.courseId}
       />
-    </main>
+    </EntryShell>
   );
 }
 
