@@ -325,6 +325,18 @@ function Row({
           <h3 className="mt-1 line-clamp-3 text-base sm:line-clamp-2 font-semibold leading-snug">
             {r.examTitle}
           </h3>
+          {r.roundTitle && r.roundId && (
+            <p className="mt-0.5 truncate text-caption text-faint" title={r.roundTitle}>
+              Đợt:{" "}
+              <Link
+                href={`/instructor/exam-rounds/${r.roundId}`}
+                className="hover:underline"
+                prefetch={false}
+              >
+                {r.roundTitle}
+              </Link>
+            </p>
+          )}
 
           <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-caption text-faint">
             <span className="inline-flex items-center gap-1">
@@ -406,11 +418,11 @@ function Row({
         </a>
         {/* Kỳ thi chính thức thuộc một đợt: không có lối này thì lịch sử chỉ dẫn
             được tới kết quả, mất đường quay về chỗ sửa giờ, xếp phòng. */}
-        {r.scale === "formal" && r.roundId && (
+        {r.scale === "formal" && (
           <Link
-            href={`/instructor/exam-rounds/${r.roundId}?tab=sessions`}
+            href={`/instructor/exam-sessions/${r.sessionId}`}
             className={BTN}
-            title="Mở đợt thi chứa ca này để sửa giờ, xếp phòng, cấp mã"
+            title="Mở trang ca thi để sửa giờ, xếp phòng, cấp mã"
           >
             <Settings2 className="h-3.5 w-3.5 text-faint" />
             Quản lý ca

@@ -42,7 +42,7 @@ export default function DeleteRoundButton({
         body: JSON.stringify({ confirmTitle: typed }),
       });
       if (res.ok) {
-        window.location.href = "/instructor/exam-rounds";
+        window.location.href = "/instructor/organize/formal";
         return;
       }
       const j = (await res.json().catch(() => null)) as {

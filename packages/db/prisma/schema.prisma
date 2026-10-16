@@ -4354,6 +4354,10 @@ model ExamSession {
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
   // Empty array = no allowlist; non-empty = only these IPs/CIDRs pass.
   ipAllowlist         String[]              @default([])
+  // Số thí sinh tối đa của RIÊNG ca này (chỉ áp cho ca mã chung, người vào mới).
+  // NULL = không giới hạn. Thí sinh đã có trong danh sách nhập và người vào lại
+  // không bị tính vào chặn. Thay Exam.openMaxAttempts (cộng dồn theo cả đề).
+  maxCandidates       Int?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -4849,6 +4853,10 @@ model Organization {
   // Mặc định BẬT (giữ hành vi cũ); trường không muốn phát mail thì tắt.
   inviteEmailOnInstructorAdd Boolean  @default(true)
   inviteEmailOnProctorAdd    Boolean  @default(true)
+  // Dải mạng được phép VÀO THI các đề thuộc trường này: mỗi phần tử là một IP đơn
+  // hoặc CIDR (IPv4/IPv6). Rỗng = không giới hạn. Chỉ áp ở bước vào thi (mã
+  // chung, mã cá nhân, phòng chờ, bắt đầu lượt làm); mọi tính năng khác không bị chặn.
+  examAllowedIps             String[] @default([])
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 

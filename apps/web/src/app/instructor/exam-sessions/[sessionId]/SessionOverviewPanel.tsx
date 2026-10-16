@@ -23,7 +23,7 @@ interface SessionDetail {
   examTitle: string;
   examAccessMode: string;
   examStatus: string;
-  courseId: string;
+  courseId: string | null;
   courseTitle: string;
   code: string | null;
   title: string | null;
@@ -32,6 +32,8 @@ interface SessionDetail {
   /** Null khi ca chạy chế độ thủ công. */
   closesAt: string | null;
   durationOverrideMin: number | null;
+  /** Số thí sinh tối đa của ca (ca mã chung). Null = không giới hạn. */
+  maxCandidates: number | null;
   ipAllowlist: string[];
 }
 
@@ -88,7 +90,9 @@ export default function SessionOverviewPanel({
         setErr(j?.error ?? `HTTP ${r.status}`);
         return;
       }
-      window.location.href = `/instructor/exam-rounds/${detail.roundId}?tab=sessions`;
+      window.location.href = detail.roundId
+        ? `/instructor/exam-rounds/${detail.roundId}?tab=sessions`
+        : "/instructor/organize/formal";
     } finally {
       setBusy(false);
     }
@@ -136,13 +140,22 @@ export default function SessionOverviewPanel({
                 ? `${detail.durationOverrideMin} phút`
                 : "(Theo đề thi)"}
             </Field>
+            {detail.examAccessMode === "open_code" && (
+              <Field label="Số thí sinh tối đa">
+                {detail.maxCandidates ? (
+                  `${detail.maxCandidates} thí sinh`
+                ) : (
+                  <span className="text-faint">(Không giới hạn)</span>
+                )}
+              </Field>
+            )}
             <Field label="Mở từ">{formatDate(detail.opensAt)}</Field>
             <Field label="Đóng lúc">
               {detail.closesAt ? formatDate(detail.closesAt) : "Khi giám thị bấm đóng"}
             </Field>
             <Field label="Đề thi" wide>
               <Link
-                href={`/instructor/courses/${detail.courseId}/exams/${detail.examId}`}
+                href={`/instructor/courses/${detail.courseId ?? "none"}/exams/${detail.examId}`}
                 className="text-blue-600 hover:underline"
               >
                 {detail.examTitle}
@@ -251,6 +264,9 @@ function EditForm({
   const [duration, setDuration] = useState(
     detail.durationOverrideMin?.toString() ?? "",
   );
+  const [maxCandidates, setMaxCandidates] = useState(
+    detail.maxCandidates?.toString() ?? "",
+  );
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -272,6 +288,13 @@ function EditForm({
           durationOverrideMin: duration.trim()
             ? Number.parseInt(duration, 10)
             : null,
+          ...(detail.examAccessMode === "open_code"
+            ? {
+                maxCandidates: maxCandidates.trim()
+                  ? Number.parseInt(maxCandidates, 10)
+                  : null,
+              }
+            : {}),
         }),
       });
       if (!r.ok) {
@@ -374,6 +397,26 @@ function EditForm({
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
         />
       </label>
+      {detail.examAccessMode === "open_code" && (
+        <label className="block">
+          <span className="block text-xs font-medium text-slate-600">
+            Số thí sinh tối đa
+          </span>
+          <input
+            type="number"
+            value={maxCandidates}
+            onChange={(e) => setMaxCandidates(e.target.value)}
+            min={1}
+            max={100000}
+            placeholder="Để trống = không giới hạn"
+            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          />
+          <span className="mt-1 block text-[11px] text-faint">
+            Tính trong riêng ca này. Thí sinh đã có trong danh sách nhập và người vào
+            lại không bị tính vào giới hạn.
+          </span>
+        </label>
+      )}
       {err && (
         <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700">
           {err}

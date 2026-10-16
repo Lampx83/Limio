@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import ImportRoomsDialog from "./ImportRoomsDialog";
 import { ArrowDown, ArrowUp, Mail, Trash2, X } from "lucide-react";
 
 interface RoomRow {
@@ -33,6 +34,7 @@ export default function SessionRoomsPanel({
   const pathname = usePathname();
   const [editing, setEditing] = useState<RoomRow | null>(null);
   const [showBulk, setShowBulk] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -122,12 +124,21 @@ export default function SessionRoomsPanel({
             " Sửa tên / địa điểm bằng cách click vào ô. Đổi giám thị qua nút ✎."}
         </p>
         {canEdit && (
-          <button
-            onClick={() => setShowBulk(true)}
-            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-          >
-            + Thêm phòng thi
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowImport(true)}
+              className="rounded border border-token bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50"
+              title="Dán bảng từ Excel: phòng, giám thị, lớp học và thí sinh"
+            >
+              Nhập từ danh sách
+            </button>
+            <button
+              onClick={() => setShowBulk(true)}
+              className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+            >
+              + Thêm phòng thi
+            </button>
+          </div>
         )}
       </div>
 
@@ -312,6 +323,16 @@ export default function SessionRoomsPanel({
         />
       )}
 
+      {showImport && (
+        <ImportRoomsDialog
+          sessionId={sessionId}
+          onClose={() => setShowImport(false)}
+          onDone={() => {
+            setShowImport(false);
+            router.refresh();
+          }}
+        />
+      )}
       {showBulk && (
         <BulkCreateDialog
           sessionId={sessionId}

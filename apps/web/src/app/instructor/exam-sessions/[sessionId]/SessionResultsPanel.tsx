@@ -21,7 +21,9 @@ export interface CandidateResult {
 }
 
 interface Props {
-  roundId: string;
+  /** Null với ca không thuộc đợt — bảng điểm lấy theo đề + ca. */
+  roundId: string | null;
+  examId: string;
   sessionId: string;
   candidates: CandidateResult[];
 }
@@ -42,7 +44,7 @@ const STATUS_TONE: Record<CandidateResult["attemptStatus"], string> = {
   none: "bg-slate-100 text-slate-600",
 };
 
-export default function SessionResultsPanel({ roundId, sessionId, candidates }: Props) {
+export default function SessionResultsPanel({ roundId, examId, sessionId, candidates }: Props) {
   const router = useRouter();
   // Per-row "đang chấm lại" busy state, keyed by attemptId.
   const [regrading, setRegrading] = useState<Set<string>>(new Set());
@@ -114,7 +116,11 @@ export default function SessionResultsPanel({ roundId, sessionId, candidates }: 
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{candidates.length} thí sinh</p>
         <a
-          href={`/api/exam-rounds/${roundId}/gradebook?sessionId=${sessionId}`}
+          href={
+            roundId
+              ? `/api/exam-rounds/${roundId}/gradebook?sessionId=${sessionId}`
+              : `/api/exams/${examId}/results?sessionId=${sessionId}`
+          }
           download
           className="inline-flex items-center gap-1.5 rounded border border-default bg-white px-3 py-1.5 text-xs font-medium hover:bg-slate-50"
         >

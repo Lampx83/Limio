@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { upsertOnStart } from "@/lib/exam-live-bus";
+import { checkExamNetwork, networkBlockedResponse } from "@/lib/exam-network";
 
 export const runtime = "nodejs";
 
@@ -14,6 +15,9 @@ export async function POST(
 ) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  // Giới hạn mạng của trường: chỉ áp ở bước bắt đầu/tiếp tục lượt làm.
+  const net = await checkExamNetwork(params.id, req.headers);
+  if (!net.allowed) return networkBlockedResponse(net);
   try {
     // LANG G5c — { retake: true } chỉ có tác dụng với đề thi thử (lượt mới sau khi đã nộp).
     const body = (await readJson(req)) as { retake?: unknown } | null;

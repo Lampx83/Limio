@@ -21,6 +21,14 @@ function normalizePhrase(text: string): string {
     .trim();
 }
 
+// snapshot whiteboard: { "<trang>": [element Excalidraw...] } — có nét vẽ khi còn element chưa xoá.
+function hasDrawing(snapshot: unknown): boolean {
+  if (!snapshot || typeof snapshot !== "object") return false;
+  return Object.values(snapshot as Record<string, unknown>).some(
+    (els) => Array.isArray(els) && els.some((el) => !(el as { isDeleted?: boolean })?.isDeleted)
+  );
+}
+
 /**
  * Id mọi bản ghi runtime (poll/word cloud/bảng/whiteboard) mà các lượt trình chiếu của user đã sinh ra.
  * Bảng và whiteboard không có khoá nối với ClassroomSession, nên ẩn chúng khỏi "Hoạt động nhanh" bằng id này.
@@ -63,7 +71,7 @@ export async function listLiveSessionHistory(
 
   // Id runtime là cuid duy nhất giữa các bảng, nên tra một lần cho cả lịch sử và không cần biết loại slide.
   const allIds = sessions.flatMap((s) => Object.values(refsOf(s)));
-  const [polls, clouds, boards] = await Promise.all([
+  const [polls, clouds, boards, whiteboards] = await Promise.all([
     db.classroomPoll.findMany({
       where: { id: { in: allIds } },
       select: { id: true, _count: { select: { votes: true } } },
@@ -77,23 +85,33 @@ export async function listLiveSessionHistory(
       // Chỉ đếm ghi chú đang hiển thị, khớp với phần chi tiết (ghi chú bị ẩn không được tính).
       select: { id: true, _count: { select: { notes: { where: { hidden: false } } } } },
     }),
+    db.whiteboard.findMany({
+      where: { id: { in: allIds } },
+      select: { id: true, snapshot: true },
+    }),
   ]);
 
   const responses = new Map<string, number>();
   for (const p of polls) responses.set(p.id, p._count.votes);
   for (const c of clouds) responses.set(c.id, c._count.submissions);
   for (const b of boards) responses.set(b.id, b._count.notes);
+  // Whiteboard không có số phản hồi riêng: coi là 1 phản hồi nếu bảng đã có ít nhất một nét vẽ.
+  for (const w of whiteboards) responses.set(w.id, hasDrawing(w.snapshot) ? 1 : 0);
 
-  return sessions.map((s) => {
-    const ids = Object.values(refsOf(s));
-    return {
-      id: s.id,
-      startedAt: s.startedAt,
-      endedAt: s.endedAt,
-      interactiveCount: ids.length,
-      responseCount: ids.reduce((sum, id) => sum + (responses.get(id) ?? 0), 0),
-    };
-  });
+  return sessions
+    .map((s) => {
+      const ids = Object.values(refsOf(s));
+      return {
+        id: s.id,
+        startedAt: s.startedAt,
+        endedAt: s.endedAt,
+        interactiveCount: ids.length,
+        responseCount: ids.reduce((sum, id) => sum + (responses.get(id) ?? 0), 0),
+      };
+    })
+    // Ẩn lượt đã kết thúc mà không có phản hồi nào (vẫn giữ trong DB, mở bằng link vẫn được).
+    // Lượt đang mở luôn hiện để GV không mất phiên đang trình chiếu.
+    .filter((s) => s.endedAt === null || s.responseCount > 0);
 }
 
 export type LiveSlideResult =

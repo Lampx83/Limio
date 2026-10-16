@@ -94,6 +94,60 @@ describe("lịch sử tương tác Limio-Live", () => {
     });
   });
 
+  it("ẩn lượt đã kết thúc không có phản hồi; lượt đang mở vẫn hiện; dữ liệu vẫn còn trong DB", async () => {
+    const teacher = await makeUser("gv");
+    const deck = await prisma.liveDeck.create({ data: { userId: teacher.id, title: "Trống" } });
+    const emptyEnded = await prisma.liveSession.create({
+      data: { deckId: deck.id, userId: teacher.id, endedAt: new Date() },
+    });
+    const emptyOpen = await prisma.liveSession.create({ data: { deckId: deck.id, userId: teacher.id } });
+
+    const history = await listLiveSessionHistory(deck.id, teacher.id, prisma);
+    expect(history.map((h) => h.id)).toEqual([emptyOpen.id]);
+
+    const stillInDb = await prisma.liveSession.findUnique({ where: { id: emptyEnded.id } });
+    expect(stillInDb).not.toBeNull();
+  });
+
+  it("whiteboard: lượt có nét vẽ được tính phản hồi, lượt bảng trống bị ẩn", async () => {
+    const teacher = await makeUser("gv");
+    const deck = await prisma.liveDeck.create({ data: { userId: teacher.id, title: "Bảng trắng" } });
+    const wbSlide = await prisma.liveSlide.create({
+      data: { deckId: deck.id, type: "whiteboard", orderIndex: 1, config: { title: "Vẽ" } },
+    });
+    const drawn = await prisma.whiteboard.create({
+      data: {
+        code: uniqueCode(),
+        ownerId: teacher.id,
+        title: "Vẽ",
+        snapshot: { "0": [{ id: "e1", type: "rectangle", isDeleted: false }] },
+      },
+    });
+    const blank = await prisma.whiteboard.create({
+      data: { code: uniqueCode(), ownerId: teacher.id, title: "Trống", snapshot: { "0": [] } },
+    });
+    await prisma.liveSession.create({
+      data: {
+        deckId: deck.id,
+        userId: teacher.id,
+        endedAt: new Date(),
+        slideRuntimeRefs: { [wbSlide.id]: drawn.id },
+      },
+    });
+    await prisma.liveSession.create({
+      data: {
+        deckId: deck.id,
+        userId: teacher.id,
+        endedAt: new Date(),
+        slideRuntimeRefs: { [wbSlide.id]: blank.id },
+      },
+    });
+
+    const history = await listLiveSessionHistory(deck.id, teacher.id, prisma);
+    expect(history).toHaveLength(1);
+    expect(history[0]?.responseCount).toBe(1);
+  });
+
   it("từ chối xem lịch sử bài giảng của người khác", async () => {
     const teacher = await makeUser("gv");
     const other = await makeUser("khac");
