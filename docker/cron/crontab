@@ -23,3 +23,6 @@
 # Dọn file mồ côi (file không còn nội dung nào dùng). CHỦ NHẬT 3h30. Mặc định CHỈ
 # BÁO CÁO vào log; xoá thật khi đặt STORAGE_ORPHAN_SWEEP=apply trong .env.prod.
 30 3 * * 0  /usr/local/bin/run.sh storage-orphan-sweep
+# Thùng rác Hoạt động nhanh — xoá vĩnh viễn phiên đã xoá quá 30 ngày. Chạy trước
+# storage-orphan-sweep (Chủ nhật 3h30) để file đính kèm Padlet kịp thành mồ côi.
+15 3 * * *  /usr/local/bin/run.sh quick-activity-trash-purge

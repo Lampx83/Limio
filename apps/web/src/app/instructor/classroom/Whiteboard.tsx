@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  PenTool, RefreshCw, RotateCcw, QrCode, Download,
+  PenTool, RotateCcw, QrCode, Download,
   PanelLeftOpen, PanelLeftClose, Lock, Unlock,
   FileImage, FileText, ChevronLeft, ChevronRight, Trash2,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import JoinQrCard from "@/components/ui/JoinQrCard";
+import ToolHistory from "./ToolHistory";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatVN } from "@/lib/datetime";
 import WhiteboardCanvas from "./WhiteboardCanvas";
@@ -27,6 +28,7 @@ interface WhiteboardHistoryItem {
   title: string;
   status: string;
   createdAt: string;
+  deletedAt?: string | null;
   kioskMode?: boolean;
 }
 
@@ -40,8 +42,6 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
   const [isFullscreen, setIsFullscreen] = useState(true);
   const [qrPanelOpen, setQrPanelOpen] = useState(true);
   const [menuHidden, setMenuHidden] = useState(true);
-  const [history, setHistory] = useState<WhiteboardHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [title, setTitle] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
@@ -200,18 +200,6 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
       toast.error("Lỗi mạng");
     } finally {
       setIsChangingPage(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const res = await fetch(apiUrl("/api/instructor/teaching-tools/whiteboards"));
-      if (res.ok) setHistory(await res.json());
-    } catch {
-      toast.error("Lỗi tải lịch sử");
-    } finally {
-      setIsLoadingHistory(false);
     }
   };
 
@@ -598,33 +586,36 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
       </div>
 
       {/* History */}
-      <div className="mt-6 border-t border-token pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-muted">Whiteboard đã tạo trước đây</p>
-          <button onClick={loadHistory} disabled={isLoadingHistory} className="tool-action">
-            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
-            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-          </button>
-        </div>
-        {history.length === 0 && !isLoadingHistory && (
-          <p className="py-2 text-center text-xs text-muted">Bấm &quot;Tải lịch sử&quot; để xem các whiteboard cũ</p>
+      <ToolHistory<WhiteboardHistoryItem>
+        kind="whiteboard"
+        heading="Whiteboard đã tạo trước đây"
+        noun="whiteboard"
+        listUrl="/api/instructor/teaching-tools/whiteboards"
+        toEntry={(item) => ({
+          id: item.id,
+          title: item.title,
+          code: item.code,
+          responseCount: null,
+          createdAt: item.createdAt,
+          deletedAt: item.deletedAt,
+          isOpen: item.status === "open",
+        })}
+        onOpen={handleLoadBoard}
+        containerClassName="grid max-h-96 gap-2 overflow-y-auto sm:grid-cols-2"
+        renderItem={(item) => (
+          <>
+            <div className="mb-0.5 flex items-center justify-between gap-2">
+              <p className="truncate text-sm font-medium">{item.title}</p>
+              <span className="chip shrink-0 font-mono text-[11px]">{item.code}</span>
+            </div>
+            <p className="text-xs text-muted">
+              {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              {item.kioskMode && " · 🖥 Kiosk"}
+              {item.status === "closed" && " · 🔒 Đã đóng"}
+            </p>
+          </>
         )}
-        <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
-          {history.map((item) => (
-            <button key={item.id} onClick={() => handleLoadBoard(item)} className="tool-list-item">
-              <div className="mb-0.5 flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-medium">{item.title}</p>
-                <span className="chip shrink-0 font-mono text-[11px]">{item.code}</span>
-              </div>
-              <p className="text-xs text-muted">
-                {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                {item.kioskMode && " · 🖥 Kiosk"}
-                {item.status === "closed" && " · 🔒 Đã đóng"}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
+      />
     </div>
   );
 }

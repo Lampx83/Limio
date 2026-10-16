@@ -17,7 +17,16 @@ export interface Toast {
   description?: string;
   /** ms before auto-dismiss. Defaults to 4000; pass 0 to keep until manually closed. */
   duration?: number;
+  /** Nút hành động trong toast (vd "Hoàn tác"). Bấm xong toast tự đóng. */
+  action?: ToastAction;
 }
+
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
+type ToastOptions = { description?: string; duration?: number; action?: ToastAction };
 
 type Listener = (toasts: Toast[]) => void;
 
@@ -45,7 +54,7 @@ export function dismissToast(id: number) {
 function push(
   variant: ToastVariant,
   message: string,
-  opts: { description?: string; duration?: number } = {},
+  opts: ToastOptions = {},
 ): number {
   const id = nextId++;
   const duration = opts.duration ?? 4000;
@@ -58,13 +67,13 @@ function push(
 }
 
 export const toast = {
-  success(message: string, opts?: { description?: string; duration?: number }) {
+  success(message: string, opts?: ToastOptions) {
     return push("success", message, opts);
   },
-  error(message: string, opts?: { description?: string; duration?: number }) {
+  error(message: string, opts?: ToastOptions) {
     return push("error", message, opts);
   },
-  info(message: string, opts?: { description?: string; duration?: number }) {
+  info(message: string, opts?: ToastOptions) {
     return push("info", message, opts);
   },
   dismiss: dismissToast,
