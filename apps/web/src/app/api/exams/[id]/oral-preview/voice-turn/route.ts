@@ -6,7 +6,7 @@ import {
   openAiChatCompute,
   getEmbedCompute,
   openAiSpeechToText,
-  openAiTextToSpeech,
+  isTtsProviderError,
   OpenAiVoiceError,
   runOralExamPreviewTurn,
 } from "@feedbackme/core-feedback";
@@ -18,6 +18,7 @@ import {
 } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
+import { resolveTextToSpeech } from "@/lib/speechProvider";
 
 export const runtime = "nodejs";
 
@@ -121,12 +122,12 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   let audioChunks: string[] = [];
   let contentType = "audio/mpeg";
   try {
-    const tts = await openAiTextToSpeech(openai)(turnResult.assistantContent);
+    const tts = await (await resolveTextToSpeech(openai))(turnResult.assistantContent);
     audioChunks = tts.audioChunks.map((b) => b.toString("base64"));
     contentType = tts.contentType;
   } catch (e) {
     // Như bản thật: lỗi đọc thành tiếng thì vẫn trả chữ, không làm hỏng lượt.
-    if (!(e instanceof OpenAiVoiceError)) throw e;
+    if (!isTtsProviderError(e)) throw e;
   }
 
   return NextResponse.json({

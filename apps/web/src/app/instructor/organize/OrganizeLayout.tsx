@@ -4,11 +4,9 @@ import { History } from "lucide-react";
 /**
  * Khung chung cho ba trang tổ chức thi.
  *
- * Trang này CHỈ để cấu hình/tạo mới. Mọi lần thi đã tổ chức — đang mở hay đã
- * đóng — nằm ở Lịch sử thi, một chỗ cho mọi hình thức (chia tab). Vừa tạo xong
- * thì mã/QR hiện ngay trong chính form (xem QuickExamForm); quay lại sau đó
- * thì chỉ có một lối sang đúng tab của hình thức này, không liệt kê lại ca ở
- * đây — cùng một ca hiện ở hai nơi là hai lối vào cho một việc.
+ * Chỉ còn phần TẠO MỚI. Các lần thi — đang mở lẫn đã đóng, kèm Giám sát / Kết quả / Đóng ca — nằm ở
+ * Lịch sử thi (một chỗ cho mọi hình thức, chia tab); ở đây chỉ còn một lối sang đúng tab. Mã và QR
+ * của link vừa mở đã hiện ngay trong form tạo, nên không cần danh sách thẻ để lấy mã.
  */
 export default function OrganizeLayout({
   title,
@@ -41,7 +39,7 @@ export default function OrganizeLayout({
           className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:underline"
         >
           <History className="h-4 w-4" aria-hidden />
-          Xem các lần đã tổ chức trong Lịch sử thi →
+          Xem và quản lý các lần thi trong Lịch sử thi →
         </Link>
       </p>
     </main>

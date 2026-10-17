@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2, Pencil, Upload,
+  StickyNote, RotateCcw, EyeOff, Eye, Trash2, Pencil, Upload,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
   PanelLeftOpen, PanelLeftClose, LayoutGrid, Clipboard, ClipboardX,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
 import JoinQrCard from "@/components/ui/JoinQrCard";
+import ToolHistory from "./ToolHistory";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { shrinkImageForUpload } from "@/lib/resizeImage";
 import { formatVN } from "@/lib/datetime";
@@ -54,8 +55,11 @@ interface BoardHistoryItem {
   status: string;
   drawingMode?: boolean;
   createdAt: string;
+  deletedAt?: string | null;
   _count: { notes: number };
 }
+
+const BOARD_HISTORY_COLORS = ["#F7FEE7", "#ECFCCB", "#E0F2FE", "#D1FAE5", "#FEF9C3", "#EDE9FE"];
 
 interface InteractiveBoardProps {
   onExit?: () => void;
@@ -69,8 +73,6 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
   // Phiên board luôn full-screen — che luôn top nav + sidebar + "← Quay lại" của
   // trang cha (xem TeachingToolsClient.tsx) nên chỉ có đúng 1 nút "Thoát" (onExit).
   const [qrPanelOpen, setQrPanelOpen] = useState(true);
-  const [history, setHistory] = useState<BoardHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   // Grid theo nhóm — tùy chọn lúc tạo board, mặc định TẮT (masonry tự do như trước).
@@ -317,21 +319,6 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
       setPostInfo("Lỗi mạng");
     } finally {
       setPosting(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const res = await fetch(apiUrl("/api/instructor/teaching-tools/boards"));
-      if (res.ok) {
-        const all = (await res.json()) as BoardHistoryItem[];
-        setHistory(all.filter((b) => !!b.drawingMode === drawing));
-      }
-    } catch {
-      toast.error("Lỗi tải lịch sử");
-    } finally {
-      setIsLoadingHistory(false);
     }
   };
 
@@ -1236,44 +1223,46 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
       </div>
 
       {/* History — mỗi bảng cũ là một tờ note pastel (tông dịu, cùng họ với lime) */}
-      <div className="mt-6 border-t border-token pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-muted">Bảng đã tạo trước đây</p>
-          <button onClick={loadHistory} disabled={isLoadingHistory} className="tool-action">
-            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
-            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-          </button>
-        </div>
-        {history.length === 0 && !isLoadingHistory && (
-          <p className="py-2 text-center text-xs text-muted">Bấm "Tải lịch sử" để xem các bảng cũ</p>
+      <ToolHistory<BoardHistoryItem>
+        kind="board"
+        heading="Bảng đã tạo trước đây"
+        noun={drawing ? "bảng vẽ" : "bảng"}
+        listUrl="/api/instructor/teaching-tools/boards"
+        include={(b) => !!b.drawingMode === drawing}
+        toEntry={(item) => ({
+          id: item.id,
+          title: item.title,
+          code: item.code,
+          responseCount: item._count.notes,
+          createdAt: item.createdAt,
+          deletedAt: item.deletedAt,
+          isOpen: item.status === "open",
+        })}
+        onOpen={handleLoadBoard}
+        containerClassName="grid max-h-96 gap-3 overflow-y-auto p-1 sm:grid-cols-2"
+        itemStyle={(_item, idx) => ({
+          className:
+            "w-full rounded-xl p-3.5 text-left shadow-sm ring-1 ring-black/5 transition-all hover:scale-[1.02] hover:shadow-md",
+          style: {
+            backgroundColor: BOARD_HISTORY_COLORS[idx % BOARD_HISTORY_COLORS.length],
+            transform: `rotate(${idx % 2 === 0 ? -0.5 : 0.5}deg)`,
+          },
+        })}
+        renderItem={(item) => (
+          <>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="truncate text-sm font-semibold text-gray-900">{item.title}</p>
+              <span className="shrink-0 rounded-md bg-white/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-800">
+                {item.code}
+              </span>
+            </div>
+            <p className="text-xs text-gray-700">
+              {item._count.notes} note · {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              {item.status === "closed" && " · 🔒 Đã đóng"}
+            </p>
+          </>
         )}
-        <div className="grid max-h-72 gap-3 overflow-y-auto p-1 sm:grid-cols-2">
-          {history.map((item, idx) => {
-            const noteColors = ["#F7FEE7", "#ECFCCB", "#E0F2FE", "#D1FAE5", "#FEF9C3", "#EDE9FE"];
-            const bg = noteColors[idx % noteColors.length];
-            const tilt = idx % 2 === 0 ? -0.5 : 0.5;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleLoadBoard(item)}
-                className="rounded-xl p-3.5 text-left shadow-sm ring-1 ring-black/5 transition-all hover:scale-[1.02] hover:shadow-md"
-                style={{ backgroundColor: bg, transform: `rotate(${tilt}deg)` }}
-              >
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-gray-900">{item.title}</p>
-                  <span className="shrink-0 rounded-md bg-white/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-800">
-                    {item.code}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-700">
-                  {item._count.notes} note · {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                  {item.status === "closed" && " · 🔒 Đã đóng"}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      />
     </div>
   );
 }

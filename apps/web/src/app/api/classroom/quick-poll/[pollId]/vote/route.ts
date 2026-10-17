@@ -49,7 +49,7 @@ export async function POST(
 
   try {
     const poll = await prisma.classroomPoll.findUnique({
-      where: { id: params.pollId },
+      where: { id: params.pollId, deletedAt: null },
       select: { id: true, options: true, sessionId: true },
     });
 

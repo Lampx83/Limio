@@ -36,7 +36,7 @@ export async function POST(req: Request, { params }: { params: { code: string } 
   }
 
   const board = await prisma.interactiveBoard.findUnique({
-    where: { code },
+    where: { code, deletedAt: null },
     select: { id: true, status: true },
   });
   if (!board) return Response.json({ error: "not_found" }, { status: 404 });
