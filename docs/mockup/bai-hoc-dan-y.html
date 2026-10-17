@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tạo bài từ tài liệu (bản mẫu)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Noto+Serif:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --line: #e6e8ec; --line-strong: #d5d9e0;
+    --text: #1d2330; --muted: #5d6576; --faint: #8b93a3;
+    --brand: #5b8a1c; --brand-ink: #ffffff; --brand-soft: #eef6e3; --brand-line: #c9e0a8;
+    --warn-bg: #fff7e6; --warn-ink: #8a5300; --danger: #c2410c;
+    --shadow: 0 1px 2px rgba(16,24,40,.05), 0 8px 24px rgba(16,24,40,.06);
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 "Be Vietnam Pro", system-ui, sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  [hidden] { display: none !important; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  /* ---------- Thanh trên: quay lại · tên · các bước · trạng thái lưu ---------- */
+  .top { position: sticky; top: 0; z-index: 30; height: 56px; display: flex; align-items: center; gap: 16px;
+    padding: 0 20px; background: rgba(255,255,255,.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .back { border: 0; background: none; color: var(--muted); display: inline-flex; align-items: center; gap: 4px; padding: 6px 8px; border-radius: 8px; }
+  .back:hover { background: var(--bg); color: var(--text); }
+  .top h1 { font-size: 15px; font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .steps { display: flex; align-items: center; gap: 6px; margin: 0 auto; }
+  .step { display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; padding: 6px 10px; border-radius: 999px; color: var(--faint); font-weight: 500; }
+  .step .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; border: 1.5px solid currentColor; }
+  .step.done { color: var(--brand); }
+  .step.done .n { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .step.on { color: var(--text); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .step.on .n { background: var(--text); border-color: var(--text); color: #fff; }
+  .step-sep { width: 24px; height: 1.5px; background: var(--line-strong); }
+  .saved { color: var(--faint); font-size: 12px; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .saved::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+
+  /* ---------- Bước 1: tài liệu ---------- */
+  .src { max-width: 720px; margin: 48px auto; padding: 0 16px; }
+  .src h2 { font-size: 26px; line-height: 1.25; margin: 0 0 6px; letter-spacing: -.01em; }
+  .src p.lead { color: var(--muted); margin: 0 0 24px; }
+  .drop { display: block; cursor: pointer; background: var(--surface); border: 1.5px dashed var(--line-strong); border-radius: 18px; padding: 36px 24px; text-align: center; transition: .15s; }
+  .drop:hover { border-color: var(--brand); background: #fbfdf8; }
+  .drop .ic { width: 52px; height: 52px; border-radius: 14px; background: var(--brand-soft); color: var(--brand); display: grid; place-items: center; margin: 0 auto 12px; }
+  .drop b { display: block; font-size: 16px; }
+  .drop small { color: var(--faint); }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--faint); margin: 18px 0; font-size: 12px; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .paste { width: 100%; min-height: 120px; resize: vertical; border: 1px solid var(--line-strong); border-radius: 12px; padding: 12px 14px; background: var(--surface); }
+  .paste:focus { outline: 2px solid var(--brand-line); border-color: var(--brand); }
+  .src-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; gap: 12px; flex-wrap: wrap; }
+  .file-chip { display: inline-flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 8px 12px; }
+  .file-chip .doc { width: 28px; height: 34px; border-radius: 4px; background: #2b579a; color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: end center; padding-bottom: 3px; }
+  .btn { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:hover { border-color: var(--faint); }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.primary:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+  .btn.ghost { border-color: transparent; background: none; color: var(--muted); }
+  .reading { margin-top: 28px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; display: none; }
+  .reading.show { display: block; }
+  .rd-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; color: var(--muted); }
+  .rd-row.ok { color: var(--text); }
+  .rd-row .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-strong); flex: none; }
+  .rd-row.ok .dot { background: var(--brand); border-color: var(--brand); }
+  .rd-row.run .dot { border-color: var(--brand); border-right-color: transparent; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Bước 2: hai cột — dàn ý | xem trước ---------- */
+  .studio { display: grid; grid-template-columns: minmax(380px, 46fr) 54fr; height: calc(100vh - 56px); }
+  .pane { min-height: 0; display: flex; flex-direction: column; }
+  .left { border-right: 1px solid var(--line); background: var(--surface); }
+  .scroll { flex: 1; overflow-y: auto; padding: 18px 20px 24px; }
+  .lesson-title { font-size: 22px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; margin: 0; padding: 4px 6px; margin-left: -6px; border-radius: 8px; outline: none; }
+  .lesson-title:hover, .ed:hover { background: var(--bg); }
+  .lesson-title:focus, .ed:focus { background: #fff; box-shadow: 0 0 0 2px var(--brand-line); }
+  .meta { color: var(--faint); font-size: 12.5px; margin: 4px 0 14px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .meta b { color: var(--muted); font-weight: 600; }
+
+  .blk-label { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); margin: 16px 0 6px; display: flex; align-items: center; justify-content: space-between; }
+  .blk-label button { text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12px; color: var(--brand); border: 0; background: none; padding: 2px 4px; }
+  .goals { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .goals li { display: flex; gap: 8px; align-items: flex-start; padding: 5px 8px; border-radius: 8px; }
+  .goals li:hover { background: var(--bg); }
+  .goals li::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); margin-top: 8px; flex: none; }
+  .ed { outline: none; border-radius: 6px; padding: 0 4px; margin: 0 -4px; flex: 1; }
+
+  .warn { display: flex; align-items: center; gap: 10px; background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 8px 12px; font-size: 13px; margin: 12px 0 4px; }
+  .warn button { margin-left: auto; border: 0; background: none; color: inherit; font-weight: 700; text-decoration: underline; padding: 0; }
+
+  .lesson-group { margin-top: 14px; }
+  .group-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); padding: 6px 0; }
+  .group-head b { color: var(--text); font-size: 13.5px; }
+  .group-head .grow { flex: 1; height: 1px; background: var(--line); }
+  .group-head button { border: 0; background: none; color: var(--brand); font-weight: 600; font-size: 12px; padding: 2px 4px; }
+
+  .rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .row { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); transition: border-color .15s, box-shadow .15s; }
+  .row:hover { border-color: var(--line-strong); }
+  .row.open { border-color: var(--brand-line); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .row.dragging { opacity: .4; }
+  .row.drop-above { box-shadow: 0 -3px 0 var(--brand); }
+  .row-main { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 4px; min-height: 46px; }
+  .grip { width: 22px; height: 30px; display: grid; place-items: center; color: var(--faint); cursor: grab; border-radius: 6px; flex: none; opacity: .5; }
+  .row:hover .grip { opacity: 1; }
+  .num { width: 22px; text-align: center; font-weight: 700; color: var(--faint); font-size: 12.5px; flex: none; }
+  .row-title { flex: 1; min-width: 0; font-weight: 600; padding: 3px 6px; border-radius: 6px; outline: none; }
+  .row-title:hover { background: var(--bg); }
+  .row-title:focus { background: #fff; box-shadow: 0 0 0 2px var(--brand-line); }
+  .lay-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 3px 8px 3px 6px; color: var(--muted); font-size: 12px; white-space: nowrap; flex: none; }
+  .lay-btn:hover { border-color: var(--line-strong); color: var(--text); }
+  .lay-btn svg { color: var(--brand); }
+  .src-chip { border: 0; background: none; font-size: 12px; color: var(--faint); padding: 3px 6px; border-radius: 6px; white-space: nowrap; flex: none; }
+  .src-chip:hover { background: var(--bg); color: var(--text); }
+  .chev { border: 0; background: none; width: 28px; height: 28px; border-radius: 8px; color: var(--faint); display: grid; place-items: center; flex: none; transition: transform .15s; }
+  .chev:hover { background: var(--bg); color: var(--text); }
+  .row.open .chev { transform: rotate(180deg); }
+  .row-body { display: none; padding: 0 12px 12px 58px; }
+  .row.open .row-body { display: block; }
+  .pts { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+  .pts li { display: flex; gap: 8px; align-items: flex-start; padding: 3px 0; color: var(--muted); }
+  .pts li::before { content: "–"; color: var(--faint); }
+  .addline { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+  .addline span { font-size: 12px; color: var(--faint); margin-right: 2px; }
+  .tag { border: 1px dashed var(--line-strong); background: none; border-radius: 8px; padding: 3px 8px; font-size: 12px; color: var(--muted); }
+  .tag:hover { border-style: solid; color: var(--text); }
+  .tag.on { border: 1px solid var(--brand-line); background: var(--brand-soft); color: var(--brand); }
+  .split-gap { height: 10px; position: relative; }
+  .split-gap button { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); opacity: 0; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 999px; font-size: 11.5px; padding: 1px 10px; color: var(--muted); transition: opacity .12s; }
+  .split-gap:hover button { opacity: 1; }
+  .add-row { margin-top: 8px; width: 100%; border: 1px dashed var(--line-strong); background: none; border-radius: 12px; padding: 10px; color: var(--muted); font-weight: 500; }
+  .add-row:hover { border-color: var(--brand); color: var(--brand); background: #fbfdf8; }
+
+  /* Bảng chọn bố cục (mở tại chỗ, không phải hộp thoại) */
+  .lay-pop { position: fixed; z-index: 50; width: 300px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 8px; display: none; }
+  .lay-pop.show { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .lay-opt { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px; text-align: left; display: grid; gap: 6px; }
+  .lay-opt:hover { border-color: var(--brand-line); background: #fbfdf8; }
+  .lay-opt.on { border-color: var(--brand); background: var(--brand-soft); }
+  .lay-opt span { font-size: 12px; font-weight: 600; }
+  .lay-opt svg { color: var(--brand); }
+
+  /* Thanh chốt (cuối cột trái) */
+  .commit { border-top: 1px solid var(--line); padding: 12px 20px 14px; background: var(--surface); display: grid; gap: 10px; }
+  .commit-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .seg { display: inline-flex; background: var(--bg); border-radius: 10px; padding: 3px; }
+  .seg button { border: 0; background: none; border-radius: 8px; padding: 5px 10px; font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(16,24,40,.12); }
+  .hint { font-size: 12px; color: var(--faint); }
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--muted); }
+  .switch input { width: 32px; height: 18px; appearance: none; background: var(--line-strong); border-radius: 999px; position: relative; transition: .15s; }
+  .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: .15s; }
+  .switch input:checked { background: var(--brand); }
+  .switch input:checked::after { left: 16px; }
+  .check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+  .check input { width: 16px; height: 16px; accent-color: var(--brand); }
+  .commit .go { margin-left: auto; }
+  .tok { font-size: 12px; color: var(--faint); }
+
+  /* ---------- Cột phải: xem trước / tài liệu gốc ---------- */
+  .right { background: var(--bg); }
+  .tabs { display: flex; align-items: center; gap: 4px; padding: 10px 20px; border-bottom: 1px solid var(--line); background: rgba(246,247,249,.9); }
+  .tabs button { border: 0; background: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; color: var(--muted); }
+  .tabs button.on { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+  .look { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .look span { font-size: 12px; color: var(--faint); margin-right: 2px; }
+  .sw { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line-strong); padding: 0; }
+  .sw.on { box-shadow: 0 0 0 2px var(--text); }
+
+  .paper { max-width: 760px; margin: 22px auto; background: var(--p-bg); color: var(--p-text); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 34px 40px; font-size: 15px; line-height: 1.7; transition: background .2s; }
+  .paper.serif h2, .paper.serif h3, .paper.serif .p-title { font-family: "Noto Serif", serif; }
+  .p-title { font-size: 26px; font-weight: 700; margin: 0 0 14px; line-height: 1.25; }
+  .p-box { background: var(--p-soft); border-radius: 12px; padding: 12px 16px; margin: 0 0 18px; }
+  .p-box b { color: var(--p-accent); display: block; margin-bottom: 2px; }
+  .p-box ul { margin: 0; padding-left: 18px; }
+  .p-sec { margin-top: 22px; --a: var(--p-accent); --s: var(--p-soft); border-radius: 8px; transition: box-shadow .2s, background .2s; }
+  .p-sec.flash { box-shadow: 0 0 0 6px color-mix(in srgb, var(--a) 18%, transparent); background: color-mix(in srgb, var(--a) 5%, transparent); }
+  .p-sec h2 { font-size: 19px; margin: 0 0 10px; padding-bottom: 5px; border-bottom: 3px solid var(--a); }
+  .sk { height: 9px; border-radius: 999px; background: color-mix(in srgb, var(--p-text) 12%, transparent); margin: 7px 0; }
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 8px; }
+  .card { border: 1px solid color-mix(in srgb, var(--p-text) 12%, transparent); border-top: 4px solid var(--a); border-radius: 10px; padding: 10px; }
+  .card b, .stp b, .faq b { font-size: 13.5px; color: var(--a); }
+  .stat { background: var(--s); border-radius: 10px; padding: 10px; }
+  .stat b { font-size: 24px; font-weight: 800; color: var(--a); display: block; line-height: 1.1; }
+  .stp { display: flex; gap: 10px; margin: 8px 0; }
+  .stp i { width: 26px; height: 26px; border-radius: 50%; background: var(--a); color: var(--p-bg); font-style: normal; font-weight: 700; display: grid; place-items: center; flex: none; font-size: 13px; }
+  .faq { border: 1px solid color-mix(in srgb, var(--p-text) 12%, transparent); border-radius: 10px; padding: 8px 12px; margin-top: 6px; }
+  .img-lay { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; align-items: start; }
+  .ph { aspect-ratio: 4/3; border-radius: 10px; background: var(--s); display: grid; place-items: center; color: var(--a); font-size: 12px; }
+  .preview-note { text-align: center; color: var(--faint); font-size: 12px; margin: -6px 0 24px; }
+
+  .source { max-width: 760px; margin: 22px auto; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 26px 30px; }
+  .source h3 { margin: 0 0 4px; font-size: 15px; }
+  .source .sub { color: var(--faint); font-size: 12px; margin-bottom: 14px; }
+  .para { display: grid; grid-template-columns: 34px 1fr; gap: 8px; padding: 6px 8px; border-radius: 8px; margin: 0 -8px; color: var(--muted); }
+  .para .pn { font-size: 11.5px; color: var(--faint); text-align: right; padding-top: 2px; }
+  .para.hit { background: #f1f8e6; color: var(--text); }
+  .para.orphan { background: var(--warn-bg); color: var(--text); }
+  .para.orphan .pn::after { content: " !"; color: var(--warn-ink); font-weight: 700; }
+
+  /* ---------- Bước 3: tạo bài ---------- */
+  .gen { max-width: 760px; margin: 22px auto; }
+  .gen-card { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 22px 24px; }
+  .gen-card h3 { margin: 0 0 4px; font-size: 18px; }
+  .bar { height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; margin: 14px 0 10px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--brand); border-radius: 999px; transition: width .5s; }
+  .gen-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .gen-list li { display: flex; align-items: center; gap: 10px; padding: 7px 4px; color: var(--faint); }
+  .gen-list li.ok { color: var(--text); }
+  .gen-list li.run { color: var(--text); font-weight: 600; }
+  .gen-list .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-strong); flex: none; display: grid; place-items: center; }
+  .gen-list li.ok .dot { background: var(--brand); border-color: var(--brand); }
+  .gen-list li.ok .dot::after { content: ""; width: 8px; height: 4px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px,-1px); }
+  .gen-list li.run .dot { border-color: var(--brand); border-right-color: transparent; animation: spin .8s linear infinite; }
+  .done-bar { display: none; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .done-bar.show { display: flex; }
+  .check-note { background: #f1f8e6; color: #3c5a12; border-radius: 10px; padding: 8px 12px; font-size: 13px; margin-top: 12px; display: none; }
+  .check-note.show { display: block; }
+
+  /* Bước 3: dàn ý đã chốt — chỉ xem, không sửa */
+  .studio.locked .left .scroll { opacity: .55; pointer-events: none; }
+  .studio.locked .commit { display: none; }
+
+  /* Thanh chuyển tab chỉ hiện trên điện thoại */
+  .mtabs { display: none; }
+  @media (max-width: 860px) {
+    .top { padding: 0 10px; gap: 8px; }
+    .top h1 { display: none; }
+    .back { white-space: nowrap; }
+    .commit { padding: 10px 12px; gap: 8px; }
+    .commit .hint, .commit .tok { display: none; }
+    .steps .lbl { display: none; }
+    .studio { grid-template-columns: 1fr; height: auto; }
+    .left { border-right: 0; }
+    .scroll { overflow: visible; }
+    .commit { position: sticky; bottom: 0; z-index: 20; }
+    .mtabs { display: flex; position: sticky; top: 56px; z-index: 25; background: var(--surface); border-bottom: 1px solid var(--line); padding: 6px 12px; gap: 4px; }
+    .mtabs button { flex: 1; border: 0; background: none; padding: 7px; border-radius: 8px; font-weight: 600; color: var(--muted); }
+    .mtabs button.on { background: var(--bg); color: var(--text); }
+    .studio[data-m="outline"] .right, .studio[data-m="preview"] .left { display: none; }
+    .tabs { display: none; }
+    .paper { margin: 12px; padding: 22px 18px; }
+    .row-body { padding-left: 14px; }
+    .src-chip { display: none; }
+    .lay-btn .lbl { display: none; }
+    .img-lay { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-grip" viewBox="0 0 16 16"><circle cx="5.5" cy="3.5" r="1.3"/><circle cx="10.5" cy="3.5" r="1.3"/><circle cx="5.5" cy="8" r="1.3"/><circle cx="10.5" cy="8" r="1.3"/><circle cx="5.5" cy="12.5" r="1.3"/><circle cx="10.5" cy="12.5" r="1.3"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 16 16"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 16V4m0 0l-5 5m5-5l5 5M5 20h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="L-text" viewBox="0 0 28 20"><rect x="2" y="3" width="24" height="2.5" rx="1" fill="currentColor"/><rect x="2" y="8" width="20" height="2" rx="1" fill="currentColor" opacity=".45"/><rect x="2" y="12" width="22" height="2" rx="1" fill="currentColor" opacity=".45"/><rect x="2" y="16" width="16" height="2" rx="1" fill="currentColor" opacity=".45"/></symbol>
+  <symbol id="L-image" viewBox="0 0 28 20"><rect x="2" y="3" width="12" height="2" rx="1" fill="currentColor" opacity=".45"/><rect x="2" y="7" width="12" height="2" rx="1" fill="currentColor" opacity=".45"/><rect x="2" y="11" width="10" height="2" rx="1" fill="currentColor" opacity=".45"/><rect x="16" y="3" width="10" height="13" rx="2" fill="currentColor"/></symbol>
+  <symbol id="L-cards" viewBox="0 0 28 20"><rect x="2" y="4" width="7" height="12" rx="1.5" fill="currentColor"/><rect x="10.5" y="4" width="7" height="12" rx="1.5" fill="currentColor" opacity=".7"/><rect x="19" y="4" width="7" height="12" rx="1.5" fill="currentColor" opacity=".45"/></symbol>
+  <symbol id="L-compare" viewBox="0 0 28 20"><rect x="2" y="3" width="11" height="14" rx="1.5" fill="currentColor"/><rect x="15" y="3" width="11" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="L-steps" viewBox="0 0 28 20"><circle cx="5" cy="4" r="2.6" fill="currentColor"/><circle cx="5" cy="10" r="2.6" fill="currentColor" opacity=".7"/><circle cx="5" cy="16" r="2.6" fill="currentColor" opacity=".45"/><rect x="10" y="3" width="15" height="2" rx="1" fill="currentColor" opacity=".45"/><rect x="10" y="9" width="13" height="2" rx="1" fill="currentColor" opacity=".45"/><rect x="10" y="15" width="14" height="2" rx="1" fill="currentColor" opacity=".45"/></symbol>
+  <symbol id="L-faq" viewBox="0 0 28 20"><rect x="2" y="2.5" width="24" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="11.5" width="24" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".55"/><path d="M5 5.5h2M6 4.5v2" stroke="currentColor" stroke-width="1.4"/></symbol>
+  <symbol id="L-stats" viewBox="0 0 28 20"><rect x="2" y="3" width="11" height="14" rx="1.5" fill="currentColor" opacity=".25"/><rect x="15" y="3" width="11" height="14" rx="1.5" fill="currentColor" opacity=".25"/><rect x="4" y="6" width="6" height="4" rx="1" fill="currentColor"/><rect x="17" y="6" width="6" height="4" rx="1" fill="currentColor"/></symbol>
+</svg>
+
+<header class="top">
+  <button class="back" type="button" aria-label="Quay lại bài học">
+    <svg width="16" height="16"><use href="#i-chev" transform="rotate(90 8 8)"/></svg>Bài 2.3
+  </button>
+  <h1>Tạo bài từ tài liệu</h1>
+  <nav class="steps" aria-label="Các bước">
+    <button class="step" data-go="1" type="button"><span class="n">1</span><span class="lbl">Tài liệu</span></button>
+    <span class="step-sep"></span>
+    <button class="step" data-go="2" type="button"><span class="n">2</span><span class="lbl">Dàn ý</span></button>
+    <span class="step-sep"></span>
+    <button class="step" data-go="3" type="button"><span class="n">3</span><span class="lbl">Bài học</span></button>
+  </nav>
+  <span class="saved" id="saved">Đã lưu</span>
+</header>
+
+<!-- ===== Bước 1 ===== -->
+<section id="s1" class="src">
+  <h2>Biến tài liệu của thầy/cô thành bài học</h2>
+  <p class="lead">AI đọc tài liệu và đề xuất dàn ý trước. Thầy/cô sửa dàn ý xong, chốt lại, rồi AI mới viết bài.</p>
+  <label class="drop">
+    <input type="file" class="sr" accept=".docx,.pdf,.txt,.md">
+    <div class="ic"><svg width="24" height="24"><use href="#i-up"/></svg></div>
+    <b>Kéo thả tệp vào đây hoặc bấm để chọn</b>
+    <small>Word, PDF, .txt, .md · tối đa 10 MB · ảnh trong Word được giữ lại</small>
+  </label>
+  <div class="or">hoặc dán nội dung</div>
+  <textarea class="paste" placeholder="Dán nội dung bài vào đây..."></textarea>
+  <div class="src-foot">
+    <span class="file-chip"><span class="doc">W</span><span><b>Bai-2.3-Nguyen-tac-gan-nhau.docx</b><br><small style="color:var(--faint)">6 trang · 4 ảnh · 2.140 từ</small></span></span>
+    <button class="btn primary" id="readBtn" type="button">Đọc tài liệu và lập dàn ý</button>
+  </div>
+  <div class="reading" id="reading">
+    <div class="rd-row" data-i="0"><span class="dot"></span>Đọc tệp và tách đoạn</div>
+    <div class="rd-row" data-i="1"><span class="dot"></span>Nhận ra các ý chính và tiêu đề có sẵn</div>
+    <div class="rd-row" data-i="2"><span class="dot"></span>Đề xuất mục, bố cục và các hộp</div>
+  </div>
+</section>
+
+<!-- ===== Bước 2 + 3 ===== -->
+<div class="mtabs" id="mtabs" hidden>
+  <button type="button" class="on" data-m="outline">Dàn ý</button>
+  <button type="button" data-m="preview">Xem trước</button>
+</div>
+<main id="s2" class="studio" data-m="outline" hidden>
+  <section class="pane left">
+    <div class="scroll" id="leftScroll">
+      <h2 class="lesson-title" contenteditable="true" spellcheck="false">Nguyên tắc gần nhau trong thiết kế giao diện</h2>
+      <div class="meta"><span><b id="mSec">5</b> mục</span><span>đọc khoảng <b>12 phút</b></span><span>từ <b>18 đoạn</b> của tài liệu</span></div>
+
+      <div class="blk-label">Mục tiêu học tập <button type="button">+ Thêm</button></div>
+      <ul class="goals">
+        <li><span class="ed" contenteditable="true">Giải thích được nguyên tắc gần nhau và vai trò của khoảng trắng.</span></li>
+        <li><span class="ed" contenteditable="true">Phân biệt được nhóm bằng khoảng cách và nhóm bằng khung viền.</span></li>
+        <li><span class="ed" contenteditable="true">Áp dụng được nguyên tắc gần nhau để sắp xếp lại một biểu mẫu.</span></li>
+      </ul>
+
+      <div class="warn" id="orphanWarn">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        2 đoạn của tài liệu chưa thuộc mục nào
+        <button type="button" id="showOrphans">Xem</button>
+      </div>
+
+      <div id="groups"></div>
+      <button class="add-row" type="button" id="addRow">+ Thêm mục</button>
+
+      <div class="blk-label" style="margin-top:20px">Tổng kết</div>
+      <p class="hint" style="margin:0">AI rút 3 đến 5 ý từ chính các mục ở trên khi viết bài.</p>
+    </div>
+
+    <div class="commit">
+      <div class="commit-row">
+        <div class="seg" role="radiogroup" aria-label="Cách viết">
+          <button type="button" class="on" data-w="keep" role="radio" aria-checked="true">Giữ nguyên lời</button>
+          <button type="button" data-w="edit" role="radio" aria-checked="false">Biên tập cho mạch lạc</button>
+        </div>
+        <span class="hint" id="wHint">Giữ câu chữ của tài liệu, chỉ sửa chính tả và sắp xếp.</span>
+      </div>
+      <div class="commit-row">
+        <label class="switch"><input type="checkbox" checked> Thêm Mục tiêu và Tổng kết</label>
+        <span class="tok">Dự kiến khoảng 9.000 token</span>
+      </div>
+      <div class="commit-row">
+        <label class="check"><input type="checkbox" id="reviewed"> Tôi đã xem dàn ý</label>
+        <button class="btn primary go" id="goBtn" type="button" disabled>Chốt và tạo bài</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane right">
+    <div class="tabs">
+      <button type="button" class="on" data-t="preview">Xem trước</button>
+      <button type="button" data-t="source">Tài liệu gốc</button>
+      <div class="look" id="look"><span>Giao diện</span></div>
+    </div>
+    <div class="scroll" id="rightScroll" style="padding:0 16px"></div>
+  </section>
+</main>
+
+<div class="lay-pop" id="layPop" role="dialog" aria-label="Chọn bố cục"></div>
+
+<script>
+const LAYOUTS = { text:"Văn bản", image:"Chữ và ảnh", cards:"Thẻ khái niệm", compare:"So sánh hai cột", steps:"Các bước", faq:"Hỏi và đáp", stats:"Số liệu nổi bật" };
+const PALETTES = {
+  limio:  { name:"Xanh Limio", bg:"#ffffff", text:"#1f2937", accent:"#1d4ed8", soft:"#eef3ff" },
+  paper:  { name:"Giấy ấm", bg:"#fbf7ef", text:"#33291e", accent:"#9a4a0b", soft:"#f4ead6" },
+  forest: { name:"Rừng thông", bg:"#ffffff", text:"#1c2a22", accent:"#166534", soft:"#ecf7f0" },
+  sunset: { name:"Hoàng hôn", bg:"#ffffff", text:"#2b1f1a", accent:"#b23a0a", soft:"#fff1e8" },
+  vibrant:{ name:"Sinh động", bg:"#ffffff", text:"#1f2937", accent:"#1d4ed8", soft:"#eef3ff",
+            cycle:[["#1d4ed8","#eef3ff"],["#15803d","#ecf7f0"],["#a14a06","#fff4e5"],["#be185d","#fdf0f6"],["#6d28d9","#f4effe"]] },
+  plain:  { name:"Trang nhã", bg:"#ffffff", text:"#111827", accent:"#374151", soft:"#f3f4f6" },
+};
+const PARAS = [
+  "Bài này giới thiệu nguyên tắc gần nhau, một trong các nguyên tắc Gestalt thường dùng nhất trong thiết kế giao diện.",
+  "Nguyên tắc gần nhau phát biểu rằng mắt người có xu hướng xem các phần tử đặt gần nhau là thuộc cùng một nhóm.",
+  "Khi hai nút bấm đặt sát nhau và cách xa phần còn lại, người dùng hiểu rằng hai nút đó liên quan với nhau.",
+  "Khoảng trắng không phải chỗ thừa. Nó cho người đọc biết đâu là ranh giới giữa các nhóm thông tin.",
+  "Ngoài nguyên tắc gần nhau, thiết kế giao diện còn dựa vào nguyên tắc tương đồng, vùng chung và liên tục.",
+  "Tương đồng: các phần tử giống nhau về màu hoặc hình được xem là cùng loại.",
+  "Vùng chung: các phần tử nằm trong cùng một khung được xem là một nhóm.",
+  "Có hai cách phổ biến để gom các phần tử: dùng khoảng cách hoặc dùng khung viền.",
+  "Dùng khoảng cách cho giao diện thoáng, nhưng khoảng cách giữa các nhóm phải lớn hơn rõ rệt.",
+  "Dùng khung viền tạo ranh giới rõ, nhưng nhiều khung lồng nhau dễ làm giao diện nặng nề.",
+  "Lưu ý: hãy thử khoảng cách trước, chỉ thêm khung khi khoảng cách chưa đủ.",
+  "Để sắp xếp lại một biểu mẫu, trước hết liệt kê tất cả các ô nhập liệu.",
+  "Sau đó gom các trường cùng chủ đề vào một nhóm.",
+  "Đặt khoảng cách giữa các nhóm lớn gấp đôi khoảng cách giữa các trường trong nhóm.",
+  "Cuối cùng nhờ một người chưa thấy biểu mẫu chỉ ra các nhóm để kiểm tra.",
+  "Câu hỏi thường gặp: nguyên tắc gần nhau có áp dụng cho chữ không? Có, tiêu đề cần gần đoạn của nó hơn.",
+  "Bài tập về nhà: sắp xếp lại trang đăng ký của một ứng dụng quen thuộc.",
+  "Tài liệu tham khảo: Lidwell, Holden và Butler (2010), Universal Principles of Design.",
+];
+let state = {
+  look: "vibrant", serif: false, open: "s1", writing: "keep",
+  lessons: [
+    { name: "Bài 1", rows: [
+      { id:"s1", title:"Nguyên tắc gần nhau là gì", layout:"image", src:[0,3], pts:["Mắt người gom các phần tử đặt gần nhau thành một nhóm.","Khoảng trắng đánh dấu ranh giới giữa các nhóm."], boxes:["definition"] },
+      { id:"s2", title:"Bốn nguyên tắc Gestalt thường dùng", layout:"cards", src:[4,6], pts:["Gần nhau, tương đồng, vùng chung, liên tục."], boxes:[] },
+      { id:"s3", title:"Khoảng cách hay khung viền", layout:"compare", src:[7,10], pts:["Khoảng cách: thoáng, cần chênh lệch rõ.","Khung viền: ranh giới rõ, dễ nặng nề."], boxes:["note"] },
+    ]},
+    { name: "Bài 2", rows: [
+      { id:"s4", title:"Sắp xếp lại một biểu mẫu", layout:"steps", src:[11,14], pts:["Liệt kê, gom nhóm, đặt khoảng cách, kiểm tra."], boxes:["example"] },
+      { id:"s5", title:"Câu hỏi thường gặp", layout:"faq", src:[15,15], pts:["Nguyên tắc gần nhau với chữ."], boxes:[] },
+    ]},
+  ],
+};
+const ORPHANS = [16, 17];
+const BOX = { note:"Lưu ý", example:"Ví dụ", definition:"Định nghĩa" };
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+const ico = (id, w = 28, h = 20) => `<svg width="${w}" height="${h}"><use href="#${id}"/></svg>`;
+const allRows = () => state.lessons.flatMap(l => l.rows);
+
+/* ---------- Bước ---------- */
+function go(step) {
+  $("#s1").hidden = step !== 1;
+  $("#s2").hidden = step === 1;
+  $("#mtabs").hidden = step === 1;
+  document.querySelectorAll(".step").forEach(b => {
+    const n = +b.dataset.go;
+    b.classList.toggle("on", n === step);
+    b.classList.toggle("done", n < step);
+  });
+  $("#s2").classList.toggle("locked", step === 3);
+  if (step === 3) renderGen(); else if (step === 2) renderRight();
+  state.step = step;
+}
+document.querySelectorAll(".step").forEach(b => b.onclick = () => go(+b.dataset.go));
+
+$("#readBtn").onclick = () => {
+  const r = $("#reading"); r.classList.add("show");
+  const rows = [...r.querySelectorAll(".rd-row")];
+  rows.forEach((x, i) => setTimeout(() => { rows.forEach((y, j) => { y.classList.toggle("ok", j < i); y.classList.toggle("run", j === i); }); }, i * 700));
+  setTimeout(() => { rows.forEach(y => { y.classList.add("ok"); y.classList.remove("run"); }); setTimeout(() => go(2), 350); }, rows.length * 700);
+};
+
+/* ---------- Cột trái: dàn ý ---------- */
+function renderLeft() {
+  let n = 0;
+  $("#groups").innerHTML = state.lessons.map((L, li) => `
+    <div class="lesson-group">
+      ${state.lessons.length > 1 ? `<div class="group-head"><b>${L.name}</b><span>${L.rows.length} mục</span><span class="grow"></span>${li > 0 ? `<button type="button" data-merge="${li}">Gộp vào bài trên</button>` : ""}</div>` : ""}
+      <ul class="rows">${L.rows.map((r, ri) => {
+        n++;
+        const gap = ri > 0 ? `<li class="split-gap"><button type="button" data-split="${li}:${ri}">Tách thành bài mới từ đây</button></li>` : "";
+        return gap + `<li class="row ${state.open === r.id ? "open" : ""}" data-id="${r.id}" draggable="true">
+          <div class="row-main">
+            <span class="grip" title="Kéo để đổi thứ tự">${ico("i-grip", 14, 14)}</span>
+            <span class="num">${n}</span>
+            <span class="row-title" contenteditable="true" spellcheck="false" data-edit="${r.id}">${esc(r.title)}</span>
+            <button class="lay-btn" type="button" data-lay="${r.id}" title="Bố cục: ${LAYOUTS[r.layout]}">${ico("L-" + r.layout, 22, 16)}<span class="lbl">${LAYOUTS[r.layout]}</span></button>
+            <button class="src-chip" type="button" data-src="${r.id}" title="Xem đoạn gốc">Đoạn ${r.src[0] + 1}${r.src[1] > r.src[0] ? "–" + (r.src[1] + 1) : ""}</button>
+            <button class="chev" type="button" data-toggle="${r.id}" aria-label="Mở ý chính">${ico("i-chev", 16, 16)}</button>
+          </div>
+          <div class="row-body">
+            <ul class="pts">${r.pts.map(p => `<li><span class="ed" contenteditable="true">${esc(p)}</span></li>`).join("")}</ul>
+            <div class="addline"><span>Hộp trong mục:</span>${Object.entries(BOX).map(([k, v]) => `<button type="button" class="tag ${r.boxes.includes(k) ? "on" : ""}" data-box="${r.id}:${k}">${r.boxes.includes(k) ? "" : "+ "}${v}</button>`).join("")}
+              <button type="button" class="tag" style="margin-left:auto;border-color:transparent;color:var(--danger)" data-del="${r.id}">Xoá mục</button></div>
+          </div>
+        </li>`;
+      }).join("")}</ul>
+    </div>`).join("");
+  $("#mSec").textContent = allRows().length;
+  bindLeft();
+}
+
+function findRow(id) { for (const L of state.lessons) { const i = L.rows.findIndex(r => r.id === id); if (i >= 0) return { L, i, r: L.rows[i] }; } }
+function touch() { const s = $("#saved"); s.textContent = "Đang lưu..."; clearTimeout(touch.t); touch.t = setTimeout(() => s.textContent = "Đã lưu", 700); renderRight(); }
+
+function bindLeft() {
+  document.querySelectorAll("[data-toggle]").forEach(b => b.onclick = () => { state.open = state.open === b.dataset.toggle ? null : b.dataset.toggle; renderLeft(); flash(b.dataset.toggle); });
+  document.querySelectorAll(".row-main").forEach(m => m.addEventListener("click", e => {
+    if (e.target.closest("button,[contenteditable]")) return;
+    const id = m.parentElement.dataset.id; state.open = state.open === id ? null : id; renderLeft(); flash(id);
+  }));
+  document.querySelectorAll("[data-edit]").forEach(el => {
+    el.onfocus = () => flash(el.dataset.edit);
+    el.oninput = () => { findRow(el.dataset.edit).r.title = el.textContent; touch(); };
+    el.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); el.blur(); } };
+  });
+  document.querySelectorAll("[data-lay]").forEach(b => b.onclick = e => openLay(b, b.dataset.lay));
+  document.querySelectorAll("[data-src]").forEach(b => b.onclick = () => { setTab("source"); highlight(findRow(b.dataset.src).r.src); });
+  document.querySelectorAll("[data-box]").forEach(b => b.onclick = () => {
+    const [id, k] = b.dataset.box.split(":"); const r = findRow(id).r;
+    r.boxes = r.boxes.includes(k) ? r.boxes.filter(x => x !== k) : [...r.boxes, k]; renderLeft(); touch();
+  });
+  document.querySelectorAll("[data-del]").forEach(b => b.onclick = () => { const f = findRow(b.dataset.del); f.L.rows.splice(f.i, 1); cleanup(); renderLeft(); touch(); });
+  document.querySelectorAll("[data-split]").forEach(b => b.onclick = () => {
+    const [li, ri] = b.dataset.split.split(":").map(Number);
+    const moved = state.lessons[li].rows.splice(ri);
+    state.lessons.splice(li + 1, 0, { name: "", rows: moved }); cleanup(); renderLeft(); touch();
+  });
+  document.querySelectorAll("[data-merge]").forEach(b => b.onclick = () => {
+    const li = +b.dataset.merge; state.lessons[li - 1].rows.push(...state.lessons[li].rows); state.lessons.splice(li, 1); cleanup(); renderLeft(); touch();
+  });
+  // Kéo thả đổi thứ tự (kể cả sang bài khác)
+  let dragId = null;
+  document.querySelectorAll(".row").forEach(row => {
+    row.ondragstart = e => { if (!e.target.closest || e.target.closest("[contenteditable]")) return; dragId = row.dataset.id; row.classList.add("dragging"); };
+    row.ondragend = () => { row.classList.remove("dragging"); document.querySelectorAll(".drop-above").forEach(x => x.classList.remove("drop-above")); };
+    row.ondragover = e => { e.preventDefault(); document.querySelectorAll(".drop-above").forEach(x => x.classList.remove("drop-above")); row.classList.add("drop-above"); };
+    row.ondrop = e => {
+      e.preventDefault(); if (!dragId || dragId === row.dataset.id) return;
+      const from = findRow(dragId); const [item] = from.L.rows.splice(from.i, 1);
+      const to = findRow(row.dataset.id); to.L.rows.splice(to.i, 0, item); cleanup(); renderLeft(); touch();
+    };
+  });
+}
+function cleanup() { state.lessons = state.lessons.filter(L => L.rows.length); state.lessons.forEach((L, i) => L.name = "Bài " + (i + 1)); }
+
+$("#addRow").onclick = () => {
+  const id = "s" + Date.now(); const last = state.lessons[state.lessons.length - 1];
+  last.rows.push({ id, title: "Mục mới", layout: "text", src: [0, 0], pts: ["Ý chính của mục."], boxes: [] });
+  state.open = id; renderLeft(); touch();
+  setTimeout(() => { const el = document.querySelector(`[data-edit="${id}"]`); el.focus(); document.getSelection().selectAllChildren(el); }, 0);
+};
+
+/* Bảng chọn bố cục, mở ngay dưới nút */
+function openLay(btn, id) {
+  const pop = $("#layPop"); const r = findRow(id).r;
+  pop.innerHTML = Object.entries(LAYOUTS).map(([k, v]) => `<button type="button" class="lay-opt ${r.layout === k ? "on" : ""}" data-k="${k}">${ico("L-" + k, 34, 24)}<span>${v}</span></button>`).join("");
+  const b = btn.getBoundingClientRect();
+  pop.style.top = Math.min(b.bottom + 6, innerHeight - 330) + "px";
+  pop.style.left = Math.max(8, Math.min(b.right - 300, innerWidth - 308)) + "px";
+  pop.classList.add("show");
+  pop.querySelectorAll(".lay-opt").forEach(o => o.onclick = () => { r.layout = o.dataset.k; pop.classList.remove("show"); renderLeft(); touch(); flash(id); });
+  setTimeout(() => document.addEventListener("mousedown", function off(e) { if (!pop.contains(e.target)) { pop.classList.remove("show"); document.removeEventListener("mousedown", off); } }), 0);
+}
+
+$("#showOrphans").onclick = () => { setTab("source"); highlight(null, ORPHANS); };
+
+/* ---------- Thanh chốt ---------- */
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".seg button").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
+  state.writing = b.dataset.w;
+  $("#wHint").textContent = b.dataset.w === "keep" ? "Giữ câu chữ của tài liệu, chỉ sửa chính tả và sắp xếp." : "Được viết lại câu cho mạch lạc, không đổi ý và số liệu.";
+});
+$("#reviewed").onchange = e => $("#goBtn").disabled = !e.target.checked;
+$("#goBtn").onclick = () => go(3);
+
+/* ---------- Cột phải ---------- */
+let tab = "preview";
+function setTab(t) { tab = t; document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t)); renderRight();
+  if (innerWidth <= 860) setM("preview"); }
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => setTab(b.dataset.t));
+
+$("#look").insertAdjacentHTML("beforeend", Object.entries(PALETTES).map(([k, p]) =>
+  `<button type="button" class="sw ${k === state.look ? "on" : ""}" data-look="${k}" title="${p.name}" style="background:${p.cycle ? `conic-gradient(${p.cycle.map(c => c[0]).join(",")})` : p.accent}"></button>`).join("") +
+  `<button type="button" class="tag" id="fontBtn" style="margin-left:6px" title="Kiểu chữ tiêu đề">Aa</button>`);
+document.querySelectorAll("[data-look]").forEach(b => b.onclick = () => { state.look = b.dataset.look; document.querySelectorAll("[data-look]").forEach(x => x.classList.toggle("on", x === b)); renderRight(); });
+$("#fontBtn").onclick = () => { state.serif = !state.serif; $("#fontBtn").classList.toggle("on", state.serif); renderRight(); };
+
+function secPreview(r, i) {
+  const p = PALETTES[state.look];
+  const [a, s] = p.cycle ? p.cycle[i % 5] : [p.accent, p.soft];
+  const sk = (w) => `<div class="sk" style="width:${w}%"></div>`;
+  const pts = r.pts;
+  let body = "";
+  if (r.layout === "text") body = pts.map(t => `<p style="margin:6px 0">${esc(t)}</p>`).join("") + sk(92) + sk(70);
+  if (r.layout === "image") body = `<div class="img-lay"><div>${pts.map(t => `<p style="margin:6px 0">${esc(t)}</p>`).join("")}${sk(90)}${sk(60)}</div><div class="ph">Ảnh từ tài liệu</div></div>`;
+  if (r.layout === "cards") body = `<div class="grid2">${["Gần nhau","Tương đồng","Vùng chung","Liên tục"].map(t => `<div class="card"><b>${t}</b>${sk(90)}${sk(60)}</div>`).join("")}</div>`;
+  if (r.layout === "compare") body = `<div class="grid2">${["Dùng khoảng cách","Dùng khung viền"].map((t, k) => `<div class="card" style="${k ? "" : "background:var(--s)"}"><b>${t}</b>${sk(85)}${sk(55)}</div>`).join("")}</div>`;
+  if (r.layout === "steps") body = ["Liệt kê các trường","Gom theo ý nghĩa","Đặt khoảng cách","Kiểm tra lại"].map((t, k) => `<div class="stp"><i>${k + 1}</i><div style="flex:1"><b>${t}</b>${sk(70)}</div></div>`).join("");
+  if (r.layout === "faq") body = pts.map(t => `<div class="faq"><b>+ ${esc(t)}</b></div>`).join("");
+  if (r.layout === "stats") body = `<div class="grid2">${["4,5 : 1","44 pt"].map(t => `<div class="stat"><b>${t}</b>${sk(80)}</div>`).join("")}</div>`;
+  const boxes = r.boxes.map(k => `<div class="p-box" style="background:${s};border-left:4px ${k === "example" ? "dashed" : "solid"} ${a};margin-top:12px"><b style="color:${a}">${BOX[k]}</b>${sk(80)}</div>`).join("");
+  return `<div class="p-sec" id="pv-${r.id}" style="--a:${a};--s:${s}"><h2>${esc(r.title) || "&nbsp;"}</h2>${body}${boxes}</div>`;
+}
+function renderRight() {
+  const host = $("#rightScroll");
+  if (tab === "source") {
+    host.innerHTML = `<div class="source"><h3>Bai-2.3-Nguyen-tac-gan-nhau.docx</h3><div class="sub">Đoạn tô xanh thuộc mục đang chọn; đoạn tô vàng chưa thuộc mục nào.</div>${PARAS.map((t, i) => `<div class="para ${ORPHANS.includes(i) ? "orphan" : ""}" data-p="${i}"><span class="pn">${i + 1}</span><span>${esc(t)}</span></div>`).join("")}</div>`;
+    const cur = state.open && findRow(state.open); if (cur) highlight(cur.r.src);
+    return;
+  }
+  const p = PALETTES[state.look];
+  let i = 0;
+  host.innerHTML = state.lessons.map((L, li) => `
+    ${state.lessons.length > 1 ? `<p class="preview-note" style="margin-top:${li ? 28 : 18}px">${L.name}</p>` : ""}
+    <article class="paper ${state.serif ? "serif" : ""}" style="--p-bg:${p.bg};--p-text:${p.text};--p-accent:${p.accent};--p-soft:${p.soft}">
+      <div class="p-title">${li === 0 ? esc($(".lesson-title").textContent) : esc(L.rows[0]?.title || "")}</div>
+      <div class="p-box"><b>Mục tiêu học tập</b><ul>${[...document.querySelectorAll(".goals .ed")].slice(0, li === 0 ? 3 : 2).map(g => `<li>${esc(g.textContent)}</li>`).join("")}</ul></div>
+      ${L.rows.map(r => secPreview(r, i++)).join("")}
+      <div class="p-box" style="margin-top:22px;border-top:4px solid ${p.accent}"><b>Tổng kết</b><div class="sk" style="width:80%"></div><div class="sk" style="width:60%"></div></div>
+    </article>`).join("") + `<p class="preview-note">Bản xem trước theo dàn ý. Chữ xám là phần AI sẽ viết ở bước 3.</p>`;
+}
+function highlight(range, list) {
+  document.querySelectorAll(".para").forEach(el => {
+    const i = +el.dataset.p;
+    el.classList.toggle("hit", !!range && i >= range[0] && i <= range[1]);
+  });
+  const first = document.querySelector(".para.hit") || (list && document.querySelector(`.para[data-p="${list[0]}"]`));
+  first?.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+function flash(id) {
+  if (tab !== "preview") { const f = findRow(id); if (f) highlight(f.r.src); return; }
+  const el = $("#pv-" + id); if (!el) return;
+  el.scrollIntoView({ block: "center", behavior: "smooth" });
+  el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 900);
+}
+
+/* Điện thoại: chuyển giữa Dàn ý và Xem trước */
+function setM(m) { $("#s2").dataset.m = m; document.querySelectorAll("#mtabs button").forEach(b => b.classList.toggle("on", b.dataset.m === m)); }
+document.querySelectorAll("#mtabs button").forEach(b => b.onclick = () => setM(b.dataset.m));
+
+/* ---------- Bước 3: AI viết bài ---------- */
+function renderGen() {
+  const rows = allRows();
+  $("#rightScroll").innerHTML = `<div class="gen"><div class="gen-card">
+    <h3 id="genTitle">AI đang viết bài theo dàn ý đã chốt</h3>
+    <div class="hint">${state.writing === "keep" ? "Cách viết: giữ nguyên lời của tài liệu." : "Cách viết: biên tập cho mạch lạc."} Thầy/cô có thể rời trang, bài vẫn được viết tiếp.</div>
+    <div class="bar"><i id="genBar"></i></div>
+    <ul class="gen-list">${["Mục tiêu học tập", ...rows.map(r => r.title), "Tổng kết"].map((t, i) => `<li data-g="${i}"><span class="dot"></span>${esc(t)}</li>`).join("")}</ul>
+    <div class="check-note" id="checkNote">Đã đối chiếu với tài liệu: mọi đoạn của tài liệu đều có trong bài. 4 ảnh được giữ đúng chỗ.</div>
+    <div class="done-bar" id="doneBar">
+      <button class="btn primary" type="button">${state.lessons.length > 1 ? `Áp dụng ${state.lessons.length} bài học` : "Áp dụng vào bài học"}</button>
+      <button class="btn" type="button" onclick="setTab('preview');go(2)">Quay lại dàn ý</button>
+      <span class="hint" style="margin-left:auto">Áp dụng xong vẫn sửa tay được từng chữ, từng khối.</span>
+    </div></div></div>`;
+  const items = [...document.querySelectorAll(".gen-list li")];
+  items.forEach((_, i) => setTimeout(() => {
+    items.forEach((x, j) => { x.classList.toggle("ok", j < i); x.classList.toggle("run", j === i); });
+    $("#genBar").style.width = Math.round(i / items.length * 100) + "%";
+  }, i * 650));
+  setTimeout(() => {
+    items.forEach(x => { x.classList.add("ok"); x.classList.remove("run"); });
+    $("#genBar").style.width = "100%";
+    $("#genTitle").textContent = "Bài đã sẵn sàng";
+    $("#checkNote").classList.add("show"); $("#doneBar").classList.add("show");
+  }, items.length * 650);
+  if (innerWidth <= 860) setM("preview");
+}
+
+renderLeft();
+go(1);
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@ export * from "./roles";
 export * from "./skills";
 export * from "./lessonFormatTemplate";
 export * from "./lessonLook";
+export * from "./lessonOutline";
 export * from "./mastery";
 export * from "./academicTerm";
 export * from "./languageSkills";
