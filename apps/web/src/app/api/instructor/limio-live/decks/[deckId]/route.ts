@@ -3,10 +3,11 @@ import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup } from "@feedbackme/core-lms";
 import { z } from "zod";
+import { SLIDE_THEME_IDS } from "@/app/instructor/limio-live/slideThemes";
 
 const UpdateDeckSchema = z.object({
   title: z.string().min(1, "Title is required").max(100).optional(),
-  theme: z.enum(["white", "cream", "mint", "sky", "blush", "brand"]).optional(),
+  theme: z.enum(SLIDE_THEME_IDS).optional(),
   // null = bỏ khỏi nhóm
   groupId: z.string().uuid().nullable().optional(),
 });

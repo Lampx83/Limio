@@ -3,6 +3,7 @@ import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import { updateLiveSlide, deleteLiveSlide } from "@feedbackme/core-lms";
 import { validateContentSlideConfig } from "@/lib/limioLiveResource";
+import { normalizeContentSlideConfig } from "@/lib/limioLiveSlides";
 import { z } from "zod";
 
 const UpdateSlideSchema = z.object({
@@ -36,10 +37,18 @@ export async function PATCH(
       }
     }
 
+    // Slide Nội dung có bố cục mới: lọc trường và độ dài ở máy chủ (slide quiz/poll... giữ nguyên).
+    const existing = validation.data.config !== undefined
+      ? await prisma.liveSlide.findFirst({ where: { id: params.slideId }, select: { type: true } })
+      : null;
+    const data =
+      validation.data.config !== undefined && existing?.type === "content"
+        ? { ...validation.data, config: normalizeContentSlideConfig(validation.data.config) }
+        : validation.data;
     const slide = await updateLiveSlide(
       params.slideId,
       userId,
-      validation.data,
+      data,
       prisma
     );
     return NextResponse.json(slide);

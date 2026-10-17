@@ -55,7 +55,9 @@ import ImportFromCourseDialog from "./ImportFromCourseDialog";
 import SlideTypePicker, { CollabBoardIcon, WordCloudIcon, type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
-import { SLIDE_THEMES, slideThemeBg } from "../slideThemes";
+import { SLIDE_THEMES, slideBgFor } from "../slideThemes";
+import { isLayoutSlide } from "../SlideLayouts";
+import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
 
@@ -115,6 +117,7 @@ function slideSummary(slide: Slide): string {
   switch (slide.type) {
     case "content":
       if (c.title) return c.title;
+      if (c.quote) return c.quote;
       if (c.resource) return `(${RESOURCE_TYPE_LABELS[c.resource.type as ResourceType]})`;
       if (c.resourceKind) return `(${RESOURCE_TYPE_LABELS[c.resourceKind as ResourceType]})`;
       if (c.imageUrl) return "(Trang nhập từ PDF)";
@@ -744,9 +747,9 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                 className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
                   selectedSlide.timerSeconds != null ? "pb-28" : ""
                 }`}
-                style={{ background: slideThemeBg(deck.theme), zoom: editorZoom }}
+                style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
-                <SlideCenterEditor slide={selectedSlide} onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)} />
+                <SlideCenterEditor slide={selectedSlide} themeId={deck.theme} onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)} />
                 {selectedSlide.timerSeconds != null && (
                   <TimerSticker seconds={selectedSlide.timerSeconds} />
                 )}
@@ -971,13 +974,17 @@ const SlideThumb = memo(function SlideThumb({
 
 function SlideCenterEditor({
   slide,
+  themeId,
   onSave,
 }: {
+  themeId?: string | null;
   slide: Slide;
   onSave: (patch: { config: Record<string, any> }) => void;
 }) {
   const config = slide.config ?? {};
 
+  if (slide.type === "content" && isLayoutSlide(config))
+    return <LayoutEditor key={config.layout} config={config} themeId={themeId} onSave={onSave} />;
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;
   if (slide.type === "quiz" || slide.type === "poll")
     return <QuestionEditor type={slide.type} config={config} onSave={onSave} />;
@@ -1079,6 +1086,8 @@ function ContentEditor({
   }
 
   return (
+    <div className="flex flex-grow flex-col gap-4">
+    <LayoutPicker config={config} onSave={onSave} draft={{ title, subtitle, bullets: bullets.filter((b) => b.trim()), ...(imageUrl.trim() ? { imageUrl: imageUrl.trim() } : {}) }} />
     <div className="flex flex-grow gap-7">
       <div className="flex flex-[1.1] flex-col justify-center gap-3">
         <input
@@ -1149,6 +1158,7 @@ function ContentEditor({
           className="w-full rounded-md border border-[#D8D4C4] bg-white/70 px-2 py-1 text-[11px] outline-none focus:ring-1 focus:ring-brand-400"
         />
       </div>
+    </div>
     </div>
   );
 }

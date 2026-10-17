@@ -1,0 +1,421 @@
+// Bố cục slide "Nội dung" của Limio-Live. Module thuần (không React, không DB) để
+// dùng chung cho trình soạn, trình chiếu, ảnh thu nhỏ và bộ test.
+//
+// Nguyên tắc: slide lưu theo TRƯỜNG có cấu trúc (tiêu đề, thẻ, bước...), còn hình
+// thức (cỡ chữ, màu, bố cục) do bố cục + giao diện tự vẽ. Nhờ vậy sửa chữ không
+// làm vỡ hình thức, và đổi bố cục không mất nội dung.
+
+export const SLIDE_LAYOUTS = [
+  "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
+  "cover",
+  "section",
+  "image",
+  "cards",
+  "compare",
+  "steps",
+  "stats",
+  "quote",
+  "summary",
+] as const;
+export type SlideLayoutId = (typeof SLIDE_LAYOUTS)[number];
+
+export const LAYOUT_META: Record<SlideLayoutId, { label: string; hint: string }> = {
+  classic: { label: "Chữ và ảnh (cũ)", hint: "Tiêu đề, ý chính và ảnh minh hoạ như trước" },
+  cover: { label: "Bìa", hint: "Slide đầu: tiêu đề lớn, mô tả ngắn, tên giảng viên" },
+  section: { label: "Tiêu đề mục", hint: "Mở đầu mỗi phần lớn của bài" },
+  image: { label: "Chữ và hình", hint: "Ba ý chính kèm hình minh hoạ" },
+  cards: { label: "Ba thẻ", hint: "Các ý song song, mỗi ý một biểu tượng" },
+  compare: { label: "So sánh hai cột", hint: "Đối chiếu hai cách làm" },
+  steps: { label: "Các bước", hint: "Quy trình hoặc dòng thời gian" },
+  stats: { label: "Số liệu", hint: "Con số lớn kèm câu giải thích" },
+  quote: { label: "Trích dẫn", hint: "Một ý chính cần nhấn mạnh" },
+  summary: { label: "Tóm tắt", hint: "Slide cuối: các điều cần ghi nhớ" },
+};
+
+export const SLIDE_ICONS = ["target", "compass", "route", "chat", "book", "sparkle", "users", "chart"] as const;
+export type SlideIconId = (typeof SLIDE_ICONS)[number];
+
+export interface LayoutItem {
+  heading: string; // tiêu đề thẻ / tên bước / con số / nội dung dòng tóm tắt
+  body: string; // câu giải thích (không dùng ở slide tóm tắt)
+  icon?: SlideIconId; // chỉ dùng ở slide ba thẻ
+}
+
+export interface LayoutColumn {
+  heading: string;
+  points: string[];
+  note: string;
+  tone: "bad" | "good";
+}
+
+/** Số mục cho phép của từng bố cục có danh sách. */
+export const ITEM_RANGE: Partial<Record<SlideLayoutId, { min: number; max: number }>> = {
+  cards: { min: 2, max: 4 },
+  steps: { min: 2, max: 5 },
+  stats: { min: 2, max: 4 },
+  summary: { min: 2, max: 5 },
+};
+
+/** Số ý chính tối đa của slide chữ và hình. */
+export const MAX_BULLETS: Partial<Record<SlideLayoutId, number>> = { image: 3, classic: 3 };
+
+/** Giới hạn độ dài từng trường (ký tự). Cắt ở máy chủ; trình soạn hiện cảnh báo trước khi chạm trần. */
+export const MAX_LEN = {
+  title: 120,
+  subtitle: 200,
+  byline: 80,
+  sectionNumber: 4,
+  bullet: 140,
+  itemHeading: 60,
+  itemBody: 140,
+  statValue: 10,
+  columnHeading: 40,
+  columnPoint: 140,
+  columnNote: 140,
+  footnote: 80,
+  quote: 200,
+  source: 80,
+  notes: 2000,
+} as const;
+
+/** Cỡ chữ nhỏ nhất trên khung thiết kế 1280×720 (tương đương 39 px ở màn 1920×1080). */
+export const MIN_FONT_PX = 26;
+
+export function resolveLayout(config: unknown): SlideLayoutId {
+  const l = (config as { layout?: unknown } | null | undefined)?.layout;
+  return typeof l === "string" && (SLIDE_LAYOUTS as readonly string[]).includes(l) ? (l as SlideLayoutId) : "classic";
+}
+
+const clip = (v: unknown, max: number): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
+
+function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
+  const range = ITEM_RANGE[layout];
+  if (!range || !Array.isArray(raw)) return [];
+  const items: LayoutItem[] = [];
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const o = r as Record<string, unknown>;
+    const isStat = layout === "stats";
+    const heading = clip(o.heading, isStat ? MAX_LEN.statValue : MAX_LEN.itemHeading);
+    const body = layout === "summary" ? "" : clip(o.body, MAX_LEN.itemBody);
+    if (!heading && !body) continue;
+    const icon =
+      layout === "cards" && typeof o.icon === "string" && (SLIDE_ICONS as readonly string[]).includes(o.icon)
+        ? (o.icon as SlideIconId)
+        : undefined;
+    items.push({ heading, body, ...(icon ? { icon } : {}) });
+    if (items.length >= range.max) break;
+  }
+  return items;
+}
+
+function sanitizeColumns(raw: unknown): LayoutColumn[] {
+  if (!Array.isArray(raw)) return [];
+  const cols: LayoutColumn[] = [];
+  for (const r of raw.slice(0, 2)) {
+    if (!r || typeof r !== "object") continue;
+    const o = r as Record<string, unknown>;
+    cols.push({
+      heading: clip(o.heading, MAX_LEN.columnHeading),
+      points: (Array.isArray(o.points) ? o.points : [])
+        .map((p) => clip(p, MAX_LEN.columnPoint))
+        .filter(Boolean)
+        .slice(0, 3),
+      note: clip(o.note, MAX_LEN.columnNote),
+      tone: o.tone === "bad" ? "bad" : "good",
+    });
+  }
+  return cols;
+}
+
+/**
+ * Chuẩn hoá config của slide có bố cục mới: chỉ giữ các trường bố cục dùng, cắt độ
+ * dài, bỏ mục rỗng. Các khoá không thuộc bố cục (vd. ghi chú giảng `presenterNote`,
+ * hẹn giờ) do nơi gọi giữ riêng. Bố cục "classic" không đi qua hàm này.
+ */
+export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { layout };
+  const title = clip(raw.title, MAX_LEN.title);
+  if (title) out.title = title;
+  const subtitle = clip(raw.subtitle, MAX_LEN.subtitle);
+  if (subtitle && (layout === "cover" || layout === "section")) out.subtitle = subtitle;
+  if (layout === "cover") {
+    const byline = clip(raw.byline, MAX_LEN.byline);
+    if (byline) out.byline = byline;
+  }
+  if (layout === "section") {
+    const n = clip(raw.sectionNumber, MAX_LEN.sectionNumber);
+    if (n) out.sectionNumber = n;
+  }
+  if (layout === "image") {
+    const bullets = (Array.isArray(raw.bullets) ? raw.bullets : [])
+      .map((b) => clip(b, MAX_LEN.bullet))
+      .filter(Boolean)
+      .slice(0, MAX_BULLETS.image);
+    if (bullets.length) out.bullets = bullets;
+    const img = clip(raw.imageUrl, 2000);
+    if (img) out.imageUrl = img;
+  }
+  if (ITEM_RANGE[layout]) out.items = sanitizeItems(raw.items, layout);
+  if (layout === "steps") {
+    const f = clip(raw.footnote, MAX_LEN.footnote);
+    if (f) out.footnote = f;
+  }
+  if (layout === "compare") out.columns = sanitizeColumns(raw.columns);
+  if (layout === "quote") {
+    const q = clip(raw.quote, MAX_LEN.quote);
+    if (q) out.quote = q;
+    const s = clip(raw.source, MAX_LEN.source);
+    if (s) out.source = s;
+    delete out.title;
+  }
+  return out;
+}
+
+/** Nội dung trống để giảng viên bắt đầu điền khi chọn một bố cục. */
+export function emptyLayoutConfig(layout: SlideLayoutId): Record<string, unknown> {
+  const blank = (n: number): LayoutItem[] => Array.from({ length: n }, () => ({ heading: "", body: "" }));
+  switch (layout) {
+    case "cover":
+      return { layout, title: "", subtitle: "", byline: "" };
+    case "section":
+      return { layout, sectionNumber: "01", title: "", subtitle: "" };
+    case "image":
+      return { layout, title: "", bullets: ["", "", ""] };
+    case "cards":
+      return {
+        layout,
+        title: "",
+        items: [
+          { heading: "", body: "", icon: "target" },
+          { heading: "", body: "", icon: "compass" },
+          { heading: "", body: "", icon: "route" },
+        ],
+      };
+    case "compare":
+      return {
+        layout,
+        title: "",
+        columns: [
+          { heading: "", points: [""], note: "", tone: "bad" },
+          { heading: "", points: [""], note: "", tone: "good" },
+        ],
+      };
+    case "steps":
+      return { layout, title: "", items: blank(4), footnote: "" };
+    case "stats":
+      return { layout, title: "", items: blank(3) };
+    case "quote":
+      return { layout, quote: "", source: "" };
+    case "summary":
+      return { layout, title: "", items: blank(3) };
+    default:
+      return { title: "", subtitle: "", bullets: [] };
+  }
+}
+
+/**
+ * Tách tiêu đề thành phần thường + phần nhấn (nhóm từ cuối, chữ chuyển màu).
+ * Chỉ nhấn khi tiêu đề từ 4 từ trở lên để tiêu đề ngắn không bị chia vụn.
+ */
+export function accentTail(title: string): { head: string; tail: string } {
+  const words = title.trim().split(/\s+/).filter(Boolean);
+  if (words.length < 4) return { head: words.join(" "), tail: "" };
+  const n = Math.ceil(words.length / 3);
+  return { head: words.slice(0, words.length - n).join(" "), tail: words.slice(words.length - n).join(" ") };
+}
+
+/**
+ * Ước lượng cỡ chữ lớn nhất (≤ maxPx) để đoạn chữ vừa `maxLines` dòng trong khung
+ * rộng `widthPx`, nhưng không nhỏ hơn `minPx`. Dùng hệ số 0,56 em cho độ rộng ký tự
+ * (font Be Vietnam Pro rộng hơn phần lớn font hệ thống). `overflow` = true khi đã
+ * xuống đáy mà vẫn không vừa — lúc đó trình soạn gợi ý tách slide.
+ */
+export function fitFontSize(
+  text: string,
+  o: { maxPx: number; minPx?: number; widthPx: number; maxLines: number },
+): { px: number; overflow: boolean } {
+  const minPx = Math.max(o.minPx ?? MIN_FONT_PX, MIN_FONT_PX);
+  const len = text.trim().length;
+  if (len === 0) return { px: o.maxPx, overflow: false };
+  for (let px = o.maxPx; px >= minPx; px -= 2) {
+    const perLine = Math.max(1, Math.floor(o.widthPx / (px * 0.56)));
+    if (Math.ceil(len / perLine) <= o.maxLines) return { px, overflow: false };
+  }
+  return { px: minPx, overflow: true };
+}
+
+/** Các trường chữ của slide, kèm khung chứa ước lượng; dùng để cảnh báo "Slide này dài". */
+export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>): string[] {
+  const problems: string[] = [];
+  const check = (label: string, text: unknown, o: Parameters<typeof fitFontSize>[1]) => {
+    if (typeof text === "string" && text && fitFontSize(text, o).overflow) problems.push(label);
+  };
+  const items: LayoutItem[] = Array.isArray(c.items) ? c.items : [];
+  switch (layout) {
+    case "cards":
+      items.forEach((it, i) => check(`Thẻ ${i + 1}`, it.body, { maxPx: 30, widthPx: 290, maxLines: 4 }));
+      break;
+    case "steps":
+      items.forEach((it, i) => check(`Bước ${i + 1}`, it.body, { maxPx: 28, widthPx: 240, maxLines: 4 }));
+      break;
+    case "stats":
+      items.forEach((it, i) => check(`Số liệu ${i + 1}`, it.body, { maxPx: 32, widthPx: 300, maxLines: 4 }));
+      break;
+    case "summary":
+      items.forEach((it, i) => check(`Dòng ${i + 1}`, it.heading, { maxPx: 40, widthPx: 880, maxLines: 2 }));
+      break;
+    case "image":
+      (Array.isArray(c.bullets) ? c.bullets : []).forEach((b: string, i: number) =>
+        check(`Ý ${i + 1}`, b, { maxPx: 38, widthPx: 560, maxLines: 3 }),
+      );
+      break;
+    case "quote":
+      check("Câu trích dẫn", c.quote, { maxPx: 66, widthPx: 1000, maxLines: 4 });
+      break;
+    case "compare":
+      (Array.isArray(c.columns) ? c.columns : []).forEach((col: LayoutColumn, i: number) =>
+        col.points.forEach((p) => check(`Cột ${i + 1}`, p, { maxPx: 32, widthPx: 480, maxLines: 3 })),
+      );
+      break;
+    default:
+      break;
+  }
+  check("Tiêu đề", c.title, { maxPx: 72, widthPx: 1088, maxLines: 2 });
+  return Array.from(new Set(problems));
+}
+
+// ── Đổi bố cục mà không mất nội dung ───────────────────────────────────────
+
+const joinSentence = (a: string, b: string): string => {
+  const h = a.trim();
+  const t = b.trim();
+  if (!h) return t;
+  if (!t) return h;
+  return /[.!?…:;]$/.test(h) ? `${h} ${t}` : `${h}. ${t}`;
+};
+
+type Pieces = { title: string; subtitle: string; texts: Array<{ heading: string; body: string }>; imageUrl: string };
+
+/** Gom nội dung của mọi bố cục về các mảnh chung: tiêu đề, phụ đề, danh sách ý, ảnh. */
+function toPieces(c: Record<string, any>): Pieces {
+  const layout = resolveLayout(c);
+  const texts: Pieces["texts"] = [];
+  if (Array.isArray(c.items)) for (const it of c.items) texts.push({ heading: String(it?.heading ?? ""), body: String(it?.body ?? "") });
+  if (Array.isArray(c.bullets)) for (const b of c.bullets) texts.push({ heading: String(b ?? ""), body: "" });
+  if (Array.isArray(c.columns)) {
+    for (const col of c.columns) {
+      const points: string[] = Array.isArray(col?.points) ? col.points : [];
+      texts.push({ heading: String(col?.heading ?? ""), body: [...points, col?.note ?? ""].filter(Boolean).join(" ") });
+    }
+  }
+  const title = String(c.title ?? c.quote ?? "");
+  const subtitle = String(c.subtitle ?? (layout === "quote" ? c.source ?? "" : "") ?? "");
+  return { title, subtitle, texts: texts.filter((t) => t.heading.trim() || t.body.trim()), imageUrl: String(c.imageUrl ?? "") };
+}
+
+/**
+ * Chuyển nội dung sang bố cục khác: tiêu đề, phụ đề, các ý và ảnh được mang theo; trường mà
+ * bố cục đích không có thì gộp vào trường gần nghĩa nhất (vd. ý của thẻ gộp thành một câu khi
+ * sang danh sách ý). Kết quả đã qua sanitizeLayoutConfig.
+ */
+export function convertLayoutConfig(from: Record<string, any>, to: SlideLayoutId): Record<string, unknown> {
+  if (to === "classic") {
+    const p = toPieces(from);
+    return {
+      title: p.title,
+      subtitle: p.subtitle,
+      bullets: p.texts.map((t) => joinSentence(t.heading, t.body)).slice(0, MAX_BULLETS.classic),
+      ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+    };
+  }
+  const p = toPieces(from);
+  const base: Record<string, unknown> = emptyLayoutConfig(to);
+  switch (to) {
+    case "cover":
+      base.title = p.title;
+      base.subtitle = p.subtitle || p.texts.map((t) => joinSentence(t.heading, t.body))[0] || "";
+      break;
+    case "section":
+      base.title = p.title;
+      base.subtitle = p.subtitle;
+      break;
+    case "image":
+      base.title = p.title;
+      base.bullets = p.texts.map((t) => joinSentence(t.heading, t.body)).slice(0, MAX_BULLETS.image);
+      if (p.imageUrl) base.imageUrl = p.imageUrl;
+      break;
+    case "cards":
+    case "steps":
+    case "stats":
+    case "summary": {
+      base.title = p.title;
+      const range = ITEM_RANGE[to]!;
+      const base_items = emptyLayoutConfig(to).items as LayoutItem[];
+      const fromTexts = p.texts.slice(0, range.max);
+      const n = Math.max(fromTexts.length, base_items.length);
+      base.items = Array.from({ length: n }, (_, i) => ({
+        ...(base_items[i] ?? { heading: "", body: "" }),
+        heading: fromTexts[i]?.heading ?? "",
+        body: to === "summary" ? "" : fromTexts[i]?.body ?? "",
+        ...(to === "summary" && fromTexts[i]?.body ? { heading: joinSentence(fromTexts[i]!.heading, fromTexts[i]!.body) } : {}),
+      }));
+      break;
+    }
+    case "compare": {
+      base.title = p.title;
+      const cols = base.columns as LayoutColumn[];
+      p.texts.slice(0, 2).forEach((t, i) => {
+        cols[i] = { ...cols[i]!, heading: t.heading, points: t.body ? [t.body] : [""] };
+      });
+      break;
+    }
+    case "quote":
+      base.quote = p.title;
+      base.source = p.subtitle;
+      break;
+    default:
+      break;
+  }
+  return sanitizeLayoutConfig(to, base);
+}
+
+/**
+ * Bù ô trống cho đủ số mục mặc định của bố cục để trình soạn luôn có ô để điền
+ * (config đã lưu bỏ mục rỗng nên có thể ít hơn).
+ */
+export function padForEditing(layout: SlideLayoutId, c: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = { ...c, layout };
+  const range = ITEM_RANGE[layout];
+  if (range) {
+    const items: LayoutItem[] = Array.isArray(c.items) ? [...c.items] : [];
+    const seed = (emptyLayoutConfig(layout).items as LayoutItem[]) ?? [];
+    while (items.length < Math.max(range.min, seed.length)) items.push({ ...(seed[items.length] ?? { heading: "", body: "" }) });
+    out.items = items;
+  }
+  if (layout === "compare") {
+    const cols: LayoutColumn[] = Array.isArray(c.columns) ? [...c.columns] : [];
+    const seed = emptyLayoutConfig("compare").columns as LayoutColumn[];
+    while (cols.length < 2) cols.push({ ...seed[cols.length]!, points: [""] });
+    out.columns = cols.map((col) => ({ ...col, points: col.points?.length ? col.points : [""] }));
+  }
+  if (layout === "image") {
+    const b: string[] = Array.isArray(c.bullets) ? [...c.bullets] : [];
+    while (b.length < (MAX_BULLETS.image ?? 3)) b.push("");
+    out.bullets = b;
+  }
+  return out;
+}
+
+/**
+ * Chuẩn hoá config của slide Nội dung ở máy chủ. Slide có bố cục mới được lọc theo
+ * sanitizeLayoutConfig (giữ ghi chú giảng); slide cũ và slide chèn học liệu giữ nguyên.
+ */
+export function normalizeContentSlideConfig(config: unknown): unknown {
+  if (!config || typeof config !== "object") return config;
+  const c = config as Record<string, unknown>;
+  const layout = resolveLayout(c);
+  if (layout === "classic" || c.resource) return config;
+  const note = typeof c.presenterNote === "string" ? c.presenterNote.trim().slice(0, MAX_LEN.notes) : "";
+  return { ...sanitizeLayoutConfig(layout, c), ...(note ? { presenterNote: note } : {}) };
+}
