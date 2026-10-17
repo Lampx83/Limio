@@ -43,13 +43,34 @@ export default function LiveJoinClient({ code, initial }: { code: string; initia
     );
   }
 
+  if (state.status === "closed") {
+    // Mã của một slide: học viên ở lại đúng slide đã quét, không tự theo giảng viên sang slide khác.
+    const text =
+      state.reason === "ended"
+        ? { head: "Phiên tương tác đã kết thúc", note: "Cảm ơn bạn đã tham gia!" }
+        : state.reason === "paused"
+          ? { head: "Giảng viên đang tạm dừng", note: "Giữ trang này mở — câu hỏi sẽ mở lại khi giảng viên tiếp tục." }
+          : { head: "Câu hỏi này đã đóng", note: "Muốn trả lời câu khác, hãy quét mã QR của câu đó trên màn chiếu." };
+    return (
+      <Card title={state.title}>
+        <div className="py-6 text-center">
+          <p className="text-base font-semibold">{text.head}</p>
+          <p className="mt-1 text-xs text-muted">{text.note}</p>
+        </div>
+      </Card>
+    );
+  }
+
   if (state.status === "waiting") {
+    const own = state.scope === "slide";
     return (
       <Card title={state.title}>
         <div className="py-6 text-center">
           <div className="mx-auto mb-3 h-2 w-2 animate-pulse rounded-full bg-brand-500" aria-hidden />
-          <p className="text-base font-semibold">Đang chờ câu hỏi tiếp theo…</p>
-          <p className="mt-1 text-xs text-muted">Giữ trang này mở — câu hỏi sẽ tự hiện khi giảng viên chuyển slide.</p>
+          <p className="text-base font-semibold">{own ? "Đang chờ giảng viên mở câu hỏi này…" : "Đang chờ câu hỏi tiếp theo…"}</p>
+          <p className="mt-1 text-xs text-muted">
+            {own ? "Giữ trang này mở — câu hỏi sẽ tự hiện khi giảng viên mở." : "Giữ trang này mở — câu hỏi sẽ tự hiện khi giảng viên chuyển slide."}
+          </p>
         </div>
       </Card>
     );

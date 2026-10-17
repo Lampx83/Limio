@@ -5209,8 +5209,25 @@ model LiveSlide {
 
   deck     LiveDeck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
   versions LiveSlideVersion[]
+  codes    LiveSlideCode[]
 
   @@index([deckId, orderIndex])
+}
+
+// Mã tham gia của MỘT slide tương tác trong MỘT phiên tương tác (LiveSession): mỗi slide có QR riêng,
+// slide không tương tác thì không có. Mã cố định suốt phiên (qua nhiều lần mở/đóng cửa sổ chiếu) và chỉ đổi
+// khi giảng viên bắt đầu phiên mới. Học viên quét mã là gắn với đúng slide này, không tự theo giảng viên sang slide khác.
+model LiveSlideCode {
+  code      String   @id
+  sessionId String
+  slideId   String
+  createdAt DateTime @default(now())
+
+  session LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  slide   LiveSlide   @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, slideId])
+  @@index([slideId])
 }
 
 // Phiên bản cũ của một slide để hoàn tác. Chụp lại TRẠNG THÁI TRƯỚC khi bị ghi đè (sửa tay, nhận
@@ -5270,9 +5287,15 @@ model LiveSession {
   startedAt DateTime  @default(now())
   endedAt   DateTime?
 
+  // Giảng viên thoát màn chiếu nhưng giữ phiên (kết quả + mã) cho lần chiếu sau: học viên không trả lời được
+  // trong lúc tạm dừng. Mở lại màn chiếu thì xoá cờ này. Chỉ phiên tương tác kết thúc (endedAt) khi giảng viên
+  // chọn "Lưu phiên và reset mã mới" hoặc "Xoá kết quả phiên này và tạo phiên tương tác mới".
+  pausedAt DateTime?
+
   deck             LiveDeck          @relation(fields: [deckId], references: [id], onDelete: Cascade)
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   classroomSession ClassroomSession? @relation(fields: [classroomSessionId], references: [id], onDelete: SetNull)
+  slideCodes       LiveSlideCode[]
 
   @@index([deckId, userId, endedAt])
   @@index([userId])

@@ -96,7 +96,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const [currentSlideId, setCurrentSlideId] = useState<string | null>(null);
   const [runtime, setRuntime] = useState<Runtime | null>(null);
   // Mã tham gia CẤP PHIÊN: học viên quét 1 QR cho cả buổi rồi tự theo slide đang chiếu.
-  const [joinCode, setJoinCode] = useState<string | null>(null);
+  // Mỗi slide tương tác một mã/QR riêng (slideId -> mã); slide nội dung không có nên không hiện QR.
+  const [slideJoinCodes, setSlideJoinCodes] = useState<Record<string, string>>({});
   const [identityMode, setIdentityMode] = useState<"anonymous" | "login">("anonymous");
   const [uiState, setUiState] = useState<UiState>({});
   const [endedAt, setEndedAt] = useState<string | null>(null);
@@ -221,7 +222,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         setSessionId(session.id);
         setUiState(session.uiState ?? {});
         setEndedAt(session.endedAt ?? null);
-        setJoinCode(session.joinCode ?? null);
+        setSlideJoinCodes(session.slideJoinCodes ?? {});
         setIdentityMode(session.identityMode === "login" ? "login" : "anonymous");
 
         if (mode === "presenter") {
@@ -269,7 +270,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         setRuntime(data.runtime);
         setUiState(data.uiState ?? {});
         setEndedAt(data.endedAt ?? null);
-        setJoinCode(data.joinCode ?? null);
+        setSlideJoinCodes(data.slideJoinCodes ?? {});
       } catch {
         /* bỏ qua lỗi poll thoáng qua — lần poll sau sẽ tự sửa */
       }
@@ -424,6 +425,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const [qrBig, setQrBig] = useState(false);
   const [qrRemote, setQrRemote] = useState(false);
   const runtimeJoin = runtime && runtime.kind !== "content" ? runtime : null;
+  const joinCode = currentSlide ? slideJoinCodes[currentSlide.id] ?? null : null;
   const joinUrl = joinCode ? shareUrl(`/learn/live/${joinCode}`) : runtimeJoin ? shareUrl(runtimeJoin.joinPath) : null;
   const joinLabel =
     joinCode ?? (runtimeJoin && (runtimeJoin.kind === "collaborate_board" || runtimeJoin.kind === "whiteboard") ? runtimeJoin.code : undefined);
@@ -494,14 +496,20 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const handleEnd = () => {
     if (sessionId) setConfirmEnd(true);
   };
-  const doEnd = async () => {
+  // leave: thoát và giữ phiên tương tác; save/discard: kết thúc phiên (lưu hoặc xoá kết quả) rồi mở phiên mới với mã mới.
+  const doEnd = async (action: "leave" | "save" | "discard" = "leave") => {
     if (!sessionId) return;
     setConfirmEnd(false);
     setEnding(true);
     try {
-      await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/present/${sessionId}/end`), {
+      const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/present/${sessionId}/end`), {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
       });
+      if (!res.ok) throw new Error();
+      if (action === "save") toast.success("Đã lưu phiên vào Lịch sử tương tác. Phiên mới dùng mã mới.");
+      if (action === "discard") toast.success("Đã xoá kết quả. Phiên mới dùng mã mới.");
       router.push(`/instructor/limio-live/${deckId}`);
     } catch {
       toast.error("Lỗi mạng");
@@ -782,12 +790,6 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             <button onClick={() => setSideOpen(false)} className="mb-3 text-xs font-medium text-muted lg:hidden">
               ✕ Gấp gọn
             </button>
-            {showPreview && !hasSidebar && joinCode && (
-              <div className="mb-6">
-                <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">Tham gia cả buổi</div>
-                <JoinBox joinPath={`/learn/live/${joinCode}`} code={joinCode} qrOnScreen={qrBig} onToggleQr={toggleQr} />
-              </div>
-            )}
             {hasSidebar && (
               <FeedbackSidebar
                 key={currentSlide.id}
@@ -830,7 +832,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       {showPreview && <Filmstrip slides={slides} currentId={currentSlideId} theme={deck.theme} onPick={(id) => sessionId && visitSlide(sessionId, id)} />}
 
       {confirmEnd && (
-        <ConfirmEndDialog onCancel={() => setConfirmEnd(false)} onConfirm={doEnd} />
+        <ConfirmEndDialog onCancel={() => setConfirmEnd(false)} onLeave={() => doEnd("leave")} onSave={() => doEnd("save")} onDiscard={() => doEnd("discard")} />
       )}
 
       {slideshow && canQr && joinUrl && (
@@ -1447,7 +1449,7 @@ function FeedbackSidebar({
   return (
     <div>
       <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">
-        {sessionCode ? "Tham gia cả buổi — quét 1 lần" : "Tham gia slide này"}
+        Tham gia slide này
       </div>
       <JoinBox
         joinPath={sessionCode ? `/learn/live/${sessionCode}` : runtime.joinPath}
@@ -1603,7 +1605,19 @@ function JoinBox({
   );
 }
 
-function ConfirmEndDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+function ConfirmEndDialog({
+  onCancel,
+  onLeave,
+  onSave,
+  onDiscard,
+}: {
+  onCancel: () => void;
+  onLeave: () => void;
+  onSave: () => void;
+  onDiscard: () => void;
+}) {
+  // Xoá kết quả không khôi phục được: bấm lần đầu chỉ chuyển sang bước xác nhận.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCancel();
@@ -1622,14 +1636,14 @@ function ConfirmEndDialog({ onCancel, onConfirm }: { onCancel: () => void; onCon
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl bg-[rgb(var(--surface))] p-5 text-[rgb(var(--text))] shadow-xl">
+      <div className="w-full max-w-md rounded-2xl bg-[rgb(var(--surface))] p-5 text-[rgb(var(--text))] shadow-xl">
         <h2 id="end-session-title" className="text-base font-bold">
           Kết thúc buổi trình chiếu?
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Học viên sẽ không trả lời thêm được nữa. Bạn vẫn có thể xem lại kết quả sau.
+          Phiên tương tác (kết quả và mã QR của từng trang) được giữ lại cho lần chiếu sau. Học viên tạm thời không trả lời được.
         </p>
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-4 flex flex-wrap justify-end gap-2">
           <button
             onClick={onCancel}
             className="rounded-full border border-token px-4 py-2 text-sm font-semibold hover:bg-[rgb(var(--surface-muted))]"
@@ -1637,12 +1651,44 @@ function ConfirmEndDialog({ onCancel, onConfirm }: { onCancel: () => void; onCon
             Tiếp tục trình chiếu
           </button>
           <button
-            onClick={onConfirm}
+            onClick={onLeave}
             autoFocus
             className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
           >
-            Kết thúc
+            Kết thúc, giữ phiên
           </button>
+        </div>
+
+        <div className="mt-5 border-t border-token pt-4">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-faint">Hoặc bắt đầu phiên tương tác mới</div>
+          <button
+            onClick={onSave}
+            className="mt-2 block w-full rounded-xl border border-token px-4 py-2.5 text-left hover:bg-[rgb(var(--surface-muted))]"
+          >
+            <span className="block text-sm font-semibold">Lưu phiên và reset mã mới</span>
+            <span className="block text-xs text-muted">Kết quả cất vào Lịch sử tương tác; mỗi trang tương tác nhận mã QR mới.</span>
+          </button>
+          {!confirmDiscard ? (
+            <button
+              onClick={() => setConfirmDiscard(true)}
+              className="mt-2 block w-full rounded-xl border border-token px-4 py-2.5 text-left hover:bg-[rgb(var(--surface-muted))]"
+            >
+              <span className="block text-sm font-semibold">Xoá kết quả phiên này và tạo phiên tương tác mới</span>
+              <span className="block text-xs text-muted">Kết quả của phiên hiện tại bị xoá hẳn; mỗi trang nhận mã QR mới.</span>
+            </button>
+          ) : (
+            <div className="mt-2 rounded-xl border border-red-300 bg-red-50 px-4 py-3">
+              <p className="text-sm font-semibold text-red-800">Xoá hẳn kết quả của phiên này? Không khôi phục được.</p>
+              <div className="mt-2 flex justify-end gap-2">
+                <button onClick={() => setConfirmDiscard(false)} className="rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-semibold">
+                  Không xoá
+                </button>
+                <button onClick={onDiscard} className="rounded-full bg-red-600 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-red-700">
+                  Xoá và tạo phiên mới
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
