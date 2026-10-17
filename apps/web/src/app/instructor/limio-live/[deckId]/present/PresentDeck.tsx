@@ -15,7 +15,7 @@ import ResourceContent, { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
 import { slideBgFor } from "../../slideThemes";
 import { LayoutSlideView, isLayoutSlide } from "../../SlideLayouts";
-import { BrandLogoOverlay, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
+import { BrandLogoOverlay, BrandLogoSpacer, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
 import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
@@ -694,6 +694,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
+              {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoSpacer role="other" edge="t" />}
               {/* Slide bố cục tự co vừa khung nên nhận mức thu phóng trực tiếp (LayoutSlideView zoom); CSS zoom sẽ bị triệt tiêu. */}
               <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide || (currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ? 1 : zoom }}>
               <SlideStage
@@ -708,6 +709,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 themeId={deck.theme}
               />
               </div>
+              {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoSpacer role="other" edge="b" />}
               {/* Slide bố cục tự vẽ logo; các loại khác (trắc nghiệm, bình chọn, bảng...) được phủ logo ở khung. */}
               {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoOverlay role="other" />}
             </div>

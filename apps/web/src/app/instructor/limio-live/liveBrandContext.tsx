@@ -45,3 +45,13 @@ export function BrandLogoOverlay({ role }: { role: SlideRole }) {
     />
   );
 }
+
+/**
+ * Chừa chỗ cho logo ở slide không dùng bộ vẽ bố cục (câu hỏi tương tác, bảng...): một dải trống ở mép có logo để logo
+ * không đè lên tiêu đề hay nút của slide. Đặt đầu thẻ slide với edge="t" và cuối thẻ với edge="b"; chỉ dải đúng phía logo mới có chiều cao.
+ */
+export function BrandLogoSpacer({ role, edge }: { role: SlideRole; edge: "t" | "b" }) {
+  const brand = useLiveBrand();
+  if (!brand?.logoUrl || !logoVisibleOn(brand.logoShow, role) || brand.logoPos[0] !== edge) return null;
+  return <div aria-hidden style={{ flex: "none", height: `${((LOGO_PX[brand.logoSize] + 16) / 720) * 100}%` }} />;
+}
