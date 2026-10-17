@@ -6,6 +6,7 @@ import {
   ChevronDown,
   Copy,
   FolderInput,
+  FileUp,
   FolderPlus,
   Link2,
   MoreHorizontal,
@@ -426,6 +427,9 @@ export default function LiveDeckList() {
           >
             <FolderPlus size={16} /> Nhóm mới
           </button>
+          <a href="/instructor/limio-live/from-document" className="btn-secondary flex items-center gap-2">
+            <FileUp size={16} /> Tạo từ tài liệu
+          </a>
           <button type="button" onClick={openCreate} className="btn-primary flex items-center gap-2">
             <Plus size={16} /> Tạo bài giảng
           </button>

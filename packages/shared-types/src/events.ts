@@ -139,6 +139,8 @@ export const LearningEventType = {
   ExamCandidatesAdded: "exam.candidates.added",
   ExamCandidatesMoved: "exam.candidates.moved",
   ExamCandidateRemoved: "exam.candidate.removed",
+  ExamCandidateUpdated: "exam.candidate.updated",
+  ExamWeightsUpdated: "exam.weights.updated",
   ExamCandidateAttendanceSet: "exam.candidate.attendance_set",
   ExamProctorInvited: "exam.proctor.invited",
   ExamShareLinkOpened: "exam.share_link.opened",
@@ -208,6 +210,15 @@ export const LearningEventType = {
   TournamentMissionReviewWindowExtended: "tournament.mission.review.window_extended",
   TournamentMissionReviewFallbackManual: "tournament.mission.review.fallback_manual",
   TournamentMissionSpeedRunBlocked: "tournament.mission.speed_run_blocked",
+
+  // Limio-Live — bài giảng tương tác sinh từ tài liệu bằng AI (H15). Chỉ đo lường việc sinh, sửa
+  // bằng AI và tỉ lệ slide bị sửa tay; không đụng nội dung học viên.
+  LiveDeckOutlineGenerated: "live.deck.outline_generated",
+  LiveDeckSlidesGenerated: "live.deck.slides_generated",
+  LiveSlideAiEditProposed: "live.slide.ai_edit_proposed",
+  LiveSlideAiEditAccepted: "live.slide.ai_edit_accepted",
+  LiveSlideEditedByUser: "live.slide.edited_by_user",
+  LiveSlideVersionRestored: "live.slide.version_restored",
 } as const;
 
 export type LearningEventType =
@@ -630,4 +641,56 @@ export interface SessionStartedPayload {
   /** Tên họ trình duyệt thô — "Chrome" | "Safari" | "Firefox" | "Edge" | "Other" | "unknown". */
   browser: string;
   provider: "credentials" | "google" | "microsoft" | (string & {});
+}
+
+// ── Limio-Live (H15) ────────────────────────────────────────────────────────
+
+export interface LiveDeckOutlineGeneratedPayload {
+  deckId: string;
+  minutes: number;
+  slideCount: number;
+  sourceChars: number;
+  /** Số cảnh báo kèm theo dàn ý (lệch số slide, thiếu tương tác...). */
+  warningCount: number;
+}
+
+export interface LiveDeckSlidesGeneratedPayload {
+  deckId: string;
+  /** "first" = tạo lần đầu; "sync" = cập nhật theo dàn ý đã sửa. */
+  mode: "first" | "sync";
+  slideCount: number;
+  /** Số slide AI viết hỏng nên dựng từ dàn ý. */
+  fallbackCount: number;
+  regenerated?: number;
+  created?: number;
+  removed?: number;
+  kept?: number;
+}
+
+export interface LiveSlideAiEditProposedPayload {
+  deckId: string;
+  slideId: string;
+  action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite";
+}
+
+export interface LiveSlideAiEditAcceptedPayload {
+  deckId: string;
+  slideId: string;
+  action: string | null;
+  slideType: string;
+}
+
+export interface LiveSlideEditedByUserPayload {
+  deckId: string;
+  slideId: string;
+  slideType: string;
+  /** Dòng dàn ý mà slide AI sinh này thuộc về. */
+  outlineId: string | null;
+}
+
+export interface LiveSlideVersionRestoredPayload {
+  deckId: string;
+  slideId: string;
+  versionId: string;
+  versionSource: string;
 }

@@ -4,3 +4,6 @@ export * from "./tokenWallet";
 export * from "./aiTutor";
 export * from "./generators";
 export * from "./llm";
+export * from "./lectureOutline";
+export * from "./lectureSlides";
+export * from "./lectureSlideEdit";

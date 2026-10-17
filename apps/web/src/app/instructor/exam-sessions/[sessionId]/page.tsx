@@ -13,6 +13,7 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import SessionOverviewPanel from "./SessionOverviewPanel";
 import SessionRoomsPanel from "./SessionRoomsPanel";
+import SessionCandidatesPanel from "./SessionCandidatesPanel";
 import SessionTabs from "./SessionTabs";
 import LobbyCounter from "./LobbyCounter";
 import ExamReadinessWarning from "./ExamReadinessWarning";
@@ -224,6 +225,7 @@ export default async function ExamSessionDetailPage({
 
       <div className="mt-6 space-y-4">
         <ExamAccessModeCard
+          sessionId={detail.id}
           examId={detail.examId}
           accessMode={detail.examAccessMode}
           openCode={detail.examOpenCode}
@@ -243,6 +245,11 @@ export default async function ExamSessionDetailPage({
             return host ? `${proto}://${host}` : "";
           })()}
           canEdit={canEdit}
+          roomsHref={
+            activeTab === "rooms"
+              ? null
+              : `/instructor/exam-sessions/${detail.id}?tab=rooms`
+          }
         />
         <ExamReadinessWarning
           courseId={detail.courseId}
@@ -262,6 +269,13 @@ export default async function ExamSessionDetailPage({
           />
         )}
         {activeTab === "rooms" && (
+          <SessionCandidatesPanel
+            sessionId={detail.id}
+            accessMode={detail.examAccessMode}
+            canEdit={canEdit}
+          />
+        )}
+        {activeTab === "rooms" && (
           <SessionRoomsPanel
             sessionId={detail.id}
             rooms={rooms}
@@ -270,8 +284,6 @@ export default async function ExamSessionDetailPage({
         )}
         {activeTab === "results" && (
           <SessionResultsPanel
-            roundId={detail.roundId}
-            examId={detail.examId}
             sessionId={detail.id}
             candidates={candidateResults}
           />

@@ -114,6 +114,12 @@ function SlideBody({ slide }: { slide: LiveSlideResult }) {
       return (
         <>
           <h2 className="mt-1 font-semibold">{slide.question}</h2>
+          {slide.slideChanged && (
+            <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              Slide này đã được sửa sau buổi dạy. Kết quả bên dưới theo câu hỏi và phương án lúc trình chiếu
+              {slide.kind === "quiz" ? "; đáp án đúng của buổi này không còn được hiển thị." : "."}
+            </p>
+          )}
           <PollResult slide={slide} />
         </>
       );

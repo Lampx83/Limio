@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
-import { LOBBY_LEAD_MIN, lobbyPhase, resolveLobbyTarget, sessionOpenState } from "@feedbackme/core-lms";
+import { LOBBY_LEAD_MIN, effectiveAccessMode, lobbyPhase, resolveLobbyTarget, sessionOpenState } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import NetworkBlocked from "@/components/exam/NetworkBlocked";
 import EntryShell, { EntryGreeting } from "@/components/exam/EntryShell";
@@ -156,7 +156,7 @@ async function resolveCode(code: string): Promise<Resolved | null> {
         displayName: true,
         disabledAt: true,
         session: {
-          select: { opensAt: true, closesAt: true, timingMode: true, status: true },
+          select: { opensAt: true, closesAt: true, timingMode: true, status: true, accessMode: true },
         },
         exam: {
           select: {
@@ -190,7 +190,7 @@ async function resolveCode(code: string): Promise<Resolved | null> {
         reason: "not_published",
         examTitle: candidate.exam.title,
       };
-    if (candidate.exam.accessMode !== "assigned_code")
+    if (effectiveAccessMode(candidate.session, candidate.exam) !== "assigned_code")
       return {
         state: "not_ready",
         reason: "wrong_mode",

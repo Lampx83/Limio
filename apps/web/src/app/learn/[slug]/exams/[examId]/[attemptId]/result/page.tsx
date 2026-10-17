@@ -53,8 +53,11 @@ export default async function ExamResultPage({
             {pct !== null ? `${pct.toFixed(1)}%` : "—"}
           </div>
           <div className="mt-2 text-sm text-faint">
-            {result.score} / {totalPoints(result)} điểm
+            {result.score} / {result.totalPoints} điểm
           </div>
+          {result.weightsNote && (
+            <div className="mt-1 text-xs text-faint">Điểm % tính theo trọng số: {result.weightsNote}</div>
+          )}
         </div>
       )}
 
@@ -95,14 +98,4 @@ function translateStatus(s: string): string {
     default:
       return s;
   }
-}
-
-function totalPoints(result: {
-  score: number | null;
-  scorePct: number | null;
-}): string {
-  if (result.score === null || result.scorePct === null || result.scorePct === 0) {
-    return "—";
-  }
-  return Math.round((result.score / result.scorePct) * 100).toString();
 }

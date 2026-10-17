@@ -3,6 +3,7 @@ import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import { addLiveSlide } from "@feedbackme/core-lms";
 import { validateContentSlideConfig } from "@/lib/limioLiveResource";
+import { normalizeContentSlideConfig } from "@/lib/limioLiveSlides";
 import { z } from "zod";
 
 const CreateSlideSchema = z.object({
@@ -46,7 +47,7 @@ export async function POST(
       userId,
       {
         type: validation.data.type,
-        config: validation.data.config,
+        config: validation.data.type === "content" ? normalizeContentSlideConfig(validation.data.config) : validation.data.config,
         timerSeconds: validation.data.timerSeconds,
       },
       prisma

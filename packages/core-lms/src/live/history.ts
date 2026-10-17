@@ -121,6 +121,8 @@ export type LiveSlideResult =
       question: string;
       totalVotes: number;
       options: { text: string; correct: boolean; count: number }[];
+      /** Slide đã được sửa sau buổi này: kết quả vẫn theo câu hỏi lúc trình chiếu, nhưng không còn biết đáp án đúng. */
+      slideChanged: boolean;
     }
   | {
       slideId: string;
@@ -176,13 +178,19 @@ export async function getLiveSessionResults(
     const config = slide.config as Record<string, any>;
 
     if (slide.type === "poll" || slide.type === "quiz") {
+      // Câu hỏi và phương án lấy từ bản ghi poll đã chụp LÚC TRÌNH CHIẾU, không lấy từ slide hiện tại: giảng
+      // viên có thể sửa slide sau đó, và phiếu bầu chỉ lưu chỉ số phương án nên đọc theo slide mới sẽ gán
+      // phiếu sai phương án (tiêu chí H12: kết quả cũ giữ theo buổi cũ).
       const poll = await db.classroomPoll.findUnique({
         where: { id: refId },
-        select: { votes: { select: { choice: true } } },
+        select: { question: true, options: true, votes: { select: { choice: true } } },
       });
       if (!poll) continue;
-      const options: { text: string; correct?: boolean }[] = config.options ?? [];
-      const counts = options.map(() => 0);
+      const current: { text: string; correct?: boolean }[] = config.options ?? [];
+      const sameOptions =
+        current.length === poll.options.length && current.every((o, i) => o.text === poll.options[i]);
+      const sameQuestion = (config.question ?? "") === poll.question;
+      const counts = poll.options.map(() => 0);
       for (const v of poll.votes) {
         const idx = Number(v.choice);
         if (Number.isInteger(idx) && idx >= 0 && idx < counts.length) counts[idx]! += 1;
@@ -190,9 +198,15 @@ export async function getLiveSessionResults(
       slideResults.push({
         slideId: slide.id,
         kind: slide.type,
-        question: config.question ?? "",
+        question: poll.question,
         totalVotes: poll.votes.length,
-        options: options.map((o, i) => ({ text: o.text, correct: !!o.correct, count: counts[i] ?? 0 })),
+        // Đáp án đúng chỉ tin được khi các phương án của slide vẫn y như lúc trình chiếu.
+        options: poll.options.map((text, i) => ({
+          text,
+          correct: sameOptions ? !!current[i]?.correct : false,
+          count: counts[i] ?? 0,
+        })),
+        slideChanged: !(sameOptions && sameQuestion),
       });
     } else if (slide.type === "word_cloud") {
       const cloud = await db.wordCloud.findUnique({

@@ -868,11 +868,19 @@ async function updateExamSessionImpl(
   // (người nhập mã không biết ca nào). Khi switching OUT, clear openCode.
   let openCodePatch: { openCode?: string | null } = {};
   if (d.accessMode !== undefined) {
-    if (d.accessMode === "open_code") {
-      const current = await db.examSession.findUniqueOrThrow({
-        where: { id: sessionId },
-        select: { openCode: true },
+    const current = await db.examSession.findUniqueOrThrow({
+      where: { id: sessionId },
+      select: { openCode: true, accessMode: true },
+    });
+    // Đổi chế độ giữa chừng làm bài đang mở mất đường vào lại (mã cũ hết
+    // hiệu lực) — cùng guard với updateExamAccess, nhưng chỉ trong ca này.
+    if (d.accessMode !== current.accessMode) {
+      const inFlight = await db.examAttempt.count({
+        where: { sessionId, status: "in_progress" },
       });
+      if (inFlight > 0) throw new ExamError("exam_has_attempts");
+    }
+    if (d.accessMode === "open_code") {
       if (!current.openCode) {
         const next = await pickFreeOpenCode(db);
         if (!next)
@@ -2239,6 +2247,37 @@ export async function bulkCreateExamSessionsInRound(
       db,
     );
   return r;
+}
+
+/**
+ * Cấp mã chung mới cho một ca Tự do; mã cũ ngừng hoạt động ngay. Mã là của
+ * CA (PR2.12), không phải Exam.openCode legacy — trang ca thi hiển thị
+ * `session.openCode ?? exam.openCode`, nên xoay mã ở Exam sẽ không đổi gì.
+ */
+export async function rotateExamSessionOpenCode(
+  actorUserId: string,
+  sessionId: string,
+  db: PrismaClient = prisma,
+): Promise<{ openCode: string }> {
+  const s = await db.examSession.findUnique({
+    where: { id: sessionId },
+    select: { roundId: true, examId: true, accessMode: true },
+  });
+  if (!s) throw new ExamError("schedule_not_found");
+  await assertCanEditSession(actorUserId, s, db);
+  if (s.accessMode !== "open_code") throw new ExamError("access_mode_mismatch");
+  const openCode = await pickFreeOpenCode(db);
+  if (!openCode)
+    throw new ExamError("validation_failed", { reason: "openCode_collision" });
+  await db.examSession.update({ where: { id: sessionId }, data: { openCode } });
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamSessionUpdated,
+    { sessionId, fields: ["openCode"] },
+    await courseIdOf({ sessionId }, db),
+    db,
+  );
+  return { openCode };
 }
 
 export async function updateExamSession(

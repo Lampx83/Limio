@@ -1,0 +1,116 @@
+/* Bố cục slide Limio-Live — thiết kế ở khung 1280 × 720 (xem SlideLayouts.tsx, co theo khung chứa).
+   Cỡ chữ không nhỏ hơn 26 px trên khung này (≈ 39 px ở 1920 × 1080) để đọc được trên máy chiếu yếu.
+   Nền do giao diện của bài giảng quyết định (slideThemes.ts); các lớp .lt-* chỉ khai báo màu chữ/nhấn. */
+  .lslide { text-align: left; width: 1280px; height: 720px; position: relative; overflow: hidden; color: var(--stext);
+    font-family: var(--sfont-body); line-height: 1.35; }
+  .lslide *, .lslide *::before, .lslide *::after { box-sizing: border-box; }
+
+  .lt-brand { --sbg: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); --stext: #20241F; --smuted: #5A6256;
+    --sa: #4D7C0F; --sa2: #BE185D; --ssoft: #ECFCCB; --ssoft2: #FCE7F3; --scard: rgba(255,255,255,.82); --scardb: #E3E8D3;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #BEF264; --sglow2: #F9A8D4;
+    --sg: linear-gradient(120deg, #4D7C0F 0%, #15803D 100%); --sgb: linear-gradient(135deg, #4D7C0F 0%, #15803D 100%); }
+  .lt-night { --sbg: linear-gradient(135deg, #0B1020 0%, #1B1A4B 100%); --stext: #F1F5F9; --smuted: #C4CCE0;
+    --sa: #38BDF8; --sa2: #C4B5FD; --ssoft: rgba(56,189,248,.16); --ssoft2: rgba(167,139,250,.16); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
+    --son: #06202E; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
+    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.025em; --sglow1: #38BDF8; --sglow2: #A78BFA;
+    --sg: linear-gradient(120deg, #38BDF8 0%, #A78BFA 100%); --sgb: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%); }
+  .lt-paper { --sbg: linear-gradient(160deg, #FBF6E9 0%, #F4E8CB 100%); --stext: #2B2118; --smuted: #6B5B4A;
+    --sa: #A34A07; --sa2: #0B5F59; --ssoft: #FDE9C7; --ssoft2: #CDEBE6; --scard: rgba(255,253,247,.9); --scardb: #E8DCC0;
+    --son: #ffffff; --sok: #166534; --sokbg: #DCFCE7; --sbad: #991B1B; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 700; --shls: -0.01em; --sglow1: #FBBF24; --sglow2: #5EEAD4;
+    --sg: linear-gradient(120deg, #A34A07 0%, #B83A0C 100%); --sgb: linear-gradient(135deg, #B45309 0%, #92400E 100%); }
+
+  .lslide .pad { position: absolute; inset: 0; padding: 72px 96px 72px; display: flex; flex-direction: column; }
+  .lslide .h { font-family: var(--sfont-head); font-weight: var(--shw); letter-spacing: var(--shls); line-height: 1.2; margin: 0; }
+  .lslide .byline { margin: 38px 0 0; font-size: 30px; color: var(--smuted); }
+  .lslide .count { font-size: 26px; color: var(--smuted); font-weight: 600; white-space: nowrap; }
+  .lslide .h { text-wrap: balance; }
+  .lslide p, .lslide li, .lslide b, .lslide .rowi span, .lslide .qt { text-wrap: pretty; }
+  .lslide .h-xxl { font-size: 96px; } .lslide .h-xl { font-size: 84px; } .lslide .h-lg { font-size: 72px; } .lslide .h-md { font-size: 58px; }
+  .lslide .lead { font-size: 36px; color: var(--smuted); margin: 0; }
+  .lslide .grad { background: var(--sg); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lslide .glow { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; }
+  .lt-night .glow { opacity: .34; }
+  .lslide .card { background: var(--scard); border: 1px solid var(--scardb); border-radius: 28px; }
+  
+  .lslide .ic { display: block; flex: none; }
+  .lslide ul.bul { list-style: none; padding: 0; margin: 0; display: grid; gap: 26px; font-size: 38px; line-height: 1.28; }
+  .lslide ul.bul li { display: flex; gap: 18px; align-items: flex-start; }
+  .lslide ul.bul li::before { content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--sgb); margin-top: 18px; }
+
+  /* 1. Bìa */
+  .ll-cover .pad { justify-content: center; }
+  .ll-cover .stack { position: absolute; right: 96px; top: 50%; margin-top: -170px; width: 330px; height: 340px; }
+  .ll-cover .stack i { position: absolute; border-radius: 28px; border: 1px solid var(--scardb); }
+  .ll-cover .stack i:nth-child(1) { inset: 20px 40px 60px 0; background: var(--ssoft); transform: rotate(-7deg); }
+  .ll-cover .stack i:nth-child(2) { inset: 40px 10px 40px 30px; background: var(--ssoft2); transform: rotate(4deg); }
+  .ll-cover .stack i:nth-child(3) { inset: 60px 0 20px 50px; background: var(--sgb); display: grid; place-items: center; color: var(--son); box-shadow: 0 30px 60px -20px rgba(0,0,0,.35); }
+    /* 2. Tiêu đề mục */
+  .ll-section .pad { justify-content: center; padding-left: 120px; }
+  .ll-section .num { font-family: var(--sfont-head); font-weight: 800; font-size: 230px; line-height: .85; color: transparent; -webkit-text-stroke: 3px var(--sa); letter-spacing: -0.04em; }
+  .ll-section .h { margin-top: 18px; max-width: 980px; }
+  /* 3. Chữ + ảnh */
+  .ll-image .pad { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+  .ll-image .tx { display: grid; gap: 30px; }
+  .ll-image .art { height: 500px; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  .ll-image .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* 4. Ba thẻ */
+  .ll-cards .pad { gap: 34px; }
+  .ll-cards .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; flex: 1; align-items: center; }
+  .ll-cards .it { padding: 32px 30px; display: flex; flex-direction: column; gap: 16px; position: relative; }
+  .ll-cards .badge { width: 76px; height: 76px; border-radius: 20px; display: grid; place-items: center; color: var(--son); background: var(--sgb); }
+  .ll-cards .it b { font-size: 40px; font-family: var(--sfont-head); line-height: 1.15; }
+  .ll-cards .it p { margin: 0; font-size: 30px; line-height: 1.3; color: var(--smuted); }
+  .ll-cards .no { position: absolute; right: 28px; top: 20px; font-size: 64px; font-weight: 800; color: var(--sa); opacity: .3; font-family: var(--sfont-head); }
+  /* 5. So sánh */
+  .ll-compare .pad { gap: 30px; }
+  .ll-compare .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
+  .ll-compare .col { padding: 32px 34px; display: flex; flex-direction: column; gap: 20px; }
+  .ll-compare .col.bad { background: var(--sbadbg); border-color: transparent; }
+  .ll-compare .col.good { background: var(--sokbg); border: 2px solid var(--sok); }
+  .ll-compare .ttl { display: flex; align-items: center; gap: 14px; font-family: var(--sfont-head); font-weight: 800; font-size: 40px; }
+  .ll-compare .bad .ttl { color: var(--sbad); } .ll-compare .good .ttl { color: var(--sok); }
+  .ll-compare .q { font-size: 32px; line-height: 1.28; padding: 16px 22px; border-radius: 18px; background: rgba(255,255,255,.55); }
+  .lt-night .ll-compare .q { background: rgba(255,255,255,.07); }
+  .ll-compare .why { font-size: 28px; color: var(--smuted); margin-top: auto; }
+  /* 6. Các bước */
+  .ll-steps .pad { gap: 40px; }
+  .ll-steps .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; margin: auto 0; }
+  .ll-steps .row::before { content: ""; position: absolute; left: 12%; right: 12%; top: 45px; height: 4px; border-radius: 4px; background: var(--sg); opacity: .5; }
+  .ll-steps .st { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+  .ll-steps .circ { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); font-weight: 800; font-size: 40px; font-family: var(--sfont-head); box-shadow: 0 0 0 10px var(--ssoft); }
+  .ll-steps .st b { font-size: 36px; font-family: var(--sfont-head); line-height: 1.15; }
+  .ll-steps .st p { margin: 0; font-size: 28px; line-height: 1.28; color: var(--smuted); }
+  .ll-steps .loop { align-self: center; display: inline-flex; align-items: center; gap: 12px; color: var(--sa); font-size: 30px; font-weight: 700; }
+  /* 7. Số liệu */
+  .ll-stats .pad { gap: 36px; }
+  .ll-stats .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; flex: 1; align-items: stretch; }
+  .ll-stats .st { padding: 34px 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .ll-stats .big { font-family: var(--sfont-head); font-weight: 800; font-size: 120px; line-height: 1; letter-spacing: -0.03em; }
+  .ll-stats .st p { margin: 0; font-size: 32px; line-height: 1.28; color: var(--smuted); }
+    /* 8. Trích dẫn */
+  .ll-quote .pad { justify-content: center; padding-left: 120px; padding-right: 110px; gap: 30px; }
+  .ll-quote .mark { font-family: var(--font-bvp), Arial, sans-serif; font-size: 220px; line-height: .6; height: 100px; color: var(--sa); opacity: .85; }
+  .ll-quote .qt { font-family: var(--sfont-head); font-weight: var(--shw); font-size: 66px; line-height: 1.18; letter-spacing: var(--shls); max-width: 1000px; }
+  .ll-quote .who { display: flex; align-items: center; gap: 14px; font-size: 30px; color: var(--smuted); }
+  .ll-quote .who i { width: 54px; height: 4px; border-radius: 4px; background: var(--sg); }
+  /* 9. Tóm tắt */
+  .ll-summary .pad { gap: 30px; }
+  .ll-summary .list { display: grid; gap: 22px; flex: 1; align-content: center; }
+  .ll-summary .rowi { display: flex; align-items: center; gap: 26px; padding: 26px 34px; }
+  .ll-summary .tick { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
+  .ll-summary .rowi span { font-size: 40px; line-height: 1.2; font-family: var(--sfont-head); font-weight: 700; }
+
+  /* ---------- Hiệu ứng nhẹ (chỉ chạy ở chế độ toàn màn hình; tắt nếu máy bật "giảm chuyển động") ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .lslide.anim .a { opacity: 0; animation: s-rise .6s cubic-bezier(.2,.7,.2,1) calc(var(--i, 0) * 130ms + 80ms) forwards; }
+    .lslide.anim .a-pop { opacity: 0; animation: s-pop .55s cubic-bezier(.2,.8,.3,1.15) calc(var(--i, 0) * 110ms + 100ms) forwards; }
+    .lslide.anim .ll-steps .row::before { transform-origin: 0 50%; transform: scaleX(0); animation: s-line 1.1s ease-out .25s forwards; }
+    @keyframes s-rise { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
+    @keyframes s-pop { from { opacity: 0; scale: .88; } to { opacity: 1; scale: 1; } }
+    @keyframes s-line { to { transform: scaleX(1); } }
+  }

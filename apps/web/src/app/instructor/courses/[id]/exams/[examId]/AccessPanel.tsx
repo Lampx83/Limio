@@ -237,7 +237,7 @@ export default function AccessPanel({
         >
           <div>
             <div className="text-xs uppercase tracking-wide text-faint">
-              Nguồn mã access cho thí sinh
+              Nguồn mã thi cho thí sinh
             </div>
             <fieldset className="mt-2 space-y-2">
               {(
@@ -250,7 +250,7 @@ export default function AccessPanel({
                   [
                     "student_code",
                     "Dùng mã sinh viên (MSSV)",
-                    "Mã access = MSSV của SV. Phải có cột studentCode khi bulk import.",
+                    "Mã thi chính là MSSV của sinh viên. File nhập danh sách phải có cột studentCode.",
                   ],
                 ] as const
               ).map(([val, label, desc]) => (

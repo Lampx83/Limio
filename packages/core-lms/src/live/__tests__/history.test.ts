@@ -178,6 +178,58 @@ describe("lịch sử tương tác Limio-Live", () => {
     expect(board.notes.map((n) => n.content)).toEqual(["ý 1"]);
   });
 
+  describe("sửa slide sau buổi dạy (H12): kết quả cũ giữ theo buổi cũ", () => {
+    it("slide chưa đổi: không đánh dấu đã sửa, đáp án đúng lấy từ slide", async () => {
+      const teacher = await makeUser("gv");
+      const { session, pollSlide } = await seedRun(teacher.id);
+      await prisma.liveSlide.update({
+        where: { id: pollSlide.id },
+        data: { type: "quiz", config: { question: "Q?", options: [{ text: "A", correct: true }, { text: "B" }] } },
+      });
+      const r = await getLiveSessionResults(session.id, teacher.id, prisma);
+      const q = r.slides[0];
+      if (q?.kind !== "quiz") throw new Error("expected quiz");
+      expect(q.slideChanged).toBe(false);
+      expect(q.options.map((o) => o.correct)).toEqual([true, false]);
+    });
+
+    it("đổi thứ tự và nội dung phương án: phiếu vẫn nằm đúng phương án của buổi cũ", async () => {
+      const teacher = await makeUser("gv");
+      const { session, pollSlide } = await seedRun(teacher.id);
+      // Sau buổi dạy giảng viên đảo thứ tự, đổi chữ, thêm phương án và đổi đáp án đúng.
+      await prisma.liveSlide.update({
+        where: { id: pollSlide.id },
+        data: {
+          type: "quiz",
+          config: { question: "Câu hỏi đã sửa?", options: [{ text: "B mới", correct: true }, { text: "A" }, { text: "C" }] },
+        },
+      });
+      const r = await getLiveSessionResults(session.id, teacher.id, prisma);
+      const q = r.slides[0];
+      if (q?.kind !== "quiz") throw new Error("expected quiz");
+      expect(q.question).toBe("Q?");
+      expect(q.options.map((o) => o.text)).toEqual(["A", "B"]);
+      expect(q.options.map((o) => o.count)).toEqual([2, 1]);
+      // Không biết đáp án đúng của buổi cũ thì không được gán bừa theo slide mới.
+      expect(q.options.every((o) => o.correct === false)).toBe(true);
+      expect(q.slideChanged).toBe(true);
+    });
+
+    it("chỉ sửa câu hỏi (phương án giữ nguyên) cũng được đánh dấu đã sửa nhưng vẫn giữ đáp án đúng", async () => {
+      const teacher = await makeUser("gv");
+      const { session, pollSlide } = await seedRun(teacher.id);
+      await prisma.liveSlide.update({
+        where: { id: pollSlide.id },
+        data: { type: "quiz", config: { question: "Câu mới?", options: [{ text: "A", correct: true }, { text: "B" }] } },
+      });
+      const q = (await getLiveSessionResults(session.id, teacher.id, prisma)).slides[0];
+      if (q?.kind !== "quiz") throw new Error("expected quiz");
+      expect(q.question).toBe("Q?");
+      expect(q.slideChanged).toBe(true);
+      expect(q.options.map((o) => o.correct)).toEqual([true, false]);
+    });
+  });
+
   it("liệt kê id runtime để ẩn khỏi Hoạt động nhanh", async () => {
     const teacher = await makeUser("gv");
     const { poll, cloud, board } = await seedRun(teacher.id);

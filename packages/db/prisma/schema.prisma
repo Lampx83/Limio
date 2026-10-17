@@ -4526,6 +4526,10 @@ model ExamSection {
   // LANG G5d — bảng quy đổi điểm thô của phần → nhãn ước lượng, do giảng viên nhập:
   // [{ from, to, label }] không chồng nhau. Hệ thống không mang sẵn số liệu chính thức.
   scoreBands              Json?
+  // Trọng số (%) của phần trong điểm chính thức của bài. Chỉ áp khi MỌI phần
+  // của đề đều có trọng số, tổng = 100 và không câu nào nằm ngoài phần — thiếu
+  // một điều kiện thì điểm tính theo tỉ lệ điểm như cũ (xem weighted-score.ts).
+  weight                  Float?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
 
@@ -5122,6 +5126,17 @@ model LiveDeck {
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
   groupId   String?
+
+  // Bài giảng sinh từ tài liệu (AI): dàn ý là bước giữa "tài liệu gốc" và "slide cuối".
+  // Cả bốn cột null với bài giảng soạn tay. outlineConfirmedAt = giảng viên đã xem và
+  // xác nhận dàn ý — chỉ khi đó mới được sinh slide.
+  outline            Json?
+  outlineMinutes     Int?
+  outlineConfirmedAt DateTime?
+  // Văn bản trích từ tài liệu gốc (giữ lại để sinh lại một phần); chỉ chủ bài giảng đọc được.
+  sourceName String?
+  sourceText String? @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -5180,9 +5195,27 @@ model LiveSlide {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  deck LiveDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  deck     LiveDeck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  versions LiveSlideVersion[]
 
   @@index([deckId, orderIndex])
+}
+
+// Phiên bản cũ của một slide để hoàn tác. Chụp lại TRẠNG THÁI TRƯỚC khi bị ghi đè (sửa tay, nhận
+// đề xuất AI, cập nhật theo dàn ý, khôi phục), cộng thêm bản "generated" lúc AI sinh slide — bản
+// này luôn được giữ, không bị dọn. Xem core-lms/live/slideVersions.ts.
+model LiveSlideVersion {
+  id        String        @id @default(uuid())
+  slideId   String
+  // generated | before_edit | before_ai | before_sync | before_restore
+  source    String
+  type      LiveSlideType
+  config    Json
+  createdAt DateTime      @default(now())
+
+  slide LiveSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@index([slideId, createdAt])
 }
 
 // Một lượt trình chiếu (Present) của 1 LiveDeck. GV bấm "Trình chiếu" sẽ

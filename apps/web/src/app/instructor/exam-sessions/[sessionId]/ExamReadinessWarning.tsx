@@ -36,8 +36,8 @@ export default function ExamReadinessWarning({
       <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
         {wrongMode && (
           <li>
-            Đề thi chưa được setup chế độ — chọn ở card "Chế độ thi" phía
-            trên (Theo phòng hoặc Tự do).
+            Ca thi chưa chọn chế độ — chọn ở thẻ "Chế độ thi" phía trên
+            (Theo phòng hoặc Tự do).
           </li>
         )}
         {notPublished && (
