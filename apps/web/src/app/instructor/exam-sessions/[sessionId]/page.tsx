@@ -284,8 +284,6 @@ export default async function ExamSessionDetailPage({
         )}
         {activeTab === "results" && (
           <SessionResultsPanel
-            roundId={detail.roundId}
-            examId={detail.examId}
             sessionId={detail.id}
             candidates={candidateResults}
           />

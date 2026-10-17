@@ -72,7 +72,7 @@ export interface ExamResultsFilter {
   roomId?: string;
 }
 
-function mapStatus(s: string): ExamResultRowStatus {
+export function attemptResultStatus(s: string): ExamResultRowStatus {
   switch (s) {
     case "in_progress":
       return "in_progress";
@@ -175,7 +175,7 @@ export async function listExamResults(
       a.candidateDisplayName ??
       "(không tên)",
     identifier: a.user?.email ?? a.candidate?.accessCode ?? null,
-    status: mapStatus(a.status),
+    status: attemptResultStatus(a.status),
     score: a.score,
     scorePct: a.scorePct,
     submittedAt: a.submittedAt?.toISOString() ?? null,

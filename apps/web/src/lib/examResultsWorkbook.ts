@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import type { ExamResultRow } from "@feedbackme/core-lms";
+import type { ExamResultRow, SessionRosterRow } from "@feedbackme/core-lms";
 import { formatDate, formatDateTime } from "./datetime";
 import { resultVerdict } from "./examResultStatus";
 
@@ -120,7 +120,13 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
   }
 }
 
-function addPerQuestionSheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) {
+/** Sheet "Theo câu" chỉ cần tên và tổng điểm của mỗi người. */
+type PerQuestionInput = {
+  questions: Array<{ number: number; points: number }>;
+  rows: Array<{ row: Pick<ExamResultRow, "displayName" | "score">; cells: string[] }>;
+};
+
+function addPerQuestionSheet(wb: ExcelJS.Workbook, input: PerQuestionInput) {
   const ws = wb.addWorksheet("Theo câu");
   const cols = [
     "STT",
@@ -157,6 +163,117 @@ function addPerQuestionSheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInp
   });
 
   ws.views = [{ state: "frozen", ySplit: 1, xSplit: 2 }];
+}
+
+/**
+ * Ô của một câu trên sheet "Theo câu": Đúng / Sai / điểm lẻ / Chờ chấm / — (chưa
+ * có bài). Câu còn chờ chấm tay luôn ghi "Chờ chấm" dù đã có điểm tự chấm một
+ * phần, vì điểm đó chưa phải điểm cuối.
+ */
+export function answerCell(
+  ans: { autoScore: number | null; manualScore: number | null; needsGrading: boolean } | undefined,
+  points: number,
+): string {
+  if (!ans) return "—";
+  if (ans.needsGrading) return "Chờ chấm";
+  const awarded = ans.manualScore ?? ans.autoScore;
+  if (awarded == null) return "—";
+  return awarded >= points ? "Đúng" : awarded > 0 ? `${awarded}/${points}` : "Sai";
+}
+
+export interface SessionRosterWorkbookInput {
+  examTitle: string;
+  sessionTitle: string;
+  exportedAt: Date;
+  totalPoints: number;
+  questions: Array<{ number: number; points: number }>;
+  rows: Array<{ row: SessionRosterRow; cells: string[] }>;
+}
+
+/**
+ * "Bảng điểm ca thi": mỗi dòng một thí sinh của ca (kể cả em chưa vào thi), có
+ * mã lớp học / mã lớp thi. Sheet "Theo câu" cùng thứ tự người.
+ */
+export function buildSessionRosterWorkbook(input: SessionRosterWorkbookInput): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "FeedBackMe";
+  wb.created = input.exportedAt;
+
+  const ws = wb.addWorksheet("Tổng hợp");
+  const cols = [
+    "STT",
+    "Họ tên",
+    "MSSV",
+    "Email",
+    "Mã lớp học",
+    "Mã lớp thi",
+    "Phòng",
+    "Mã thi",
+    "Trạng thái",
+    "Điểm",
+    "Điểm thang 10",
+    "Nộp lúc",
+    "Số lượt",
+  ];
+  const widths = [6, 28, 14, 30, 14, 14, 16, 12, 18, 9, 12, 18, 9];
+  const done = input.rows.filter((x) => x.row.status !== "not_started").length;
+
+  ws.getCell("A1").value = `Bảng điểm: ${input.examTitle}`;
+  ws.getCell("A1").font = { bold: true, size: 14 };
+  ws.getCell("A2").value =
+    `Ca thi: ${input.sessionTitle} · Tổng điểm bài thi: ${input.totalPoints} · ` +
+    `Điểm thang 10 = điểm ÷ ${input.totalPoints} × 10, làm tròn 1 chữ số`;
+  ws.getCell("A3").value =
+    `Xuất lúc ${formatDateTime(input.exportedAt)} · ${input.rows.length} thí sinh · ${done} đã làm bài · ` +
+    `${input.rows.length - done} chưa làm`;
+  ws.getCell("A3").font = MUTED_FONT;
+
+  const headerRow = 5;
+  const header = ws.getRow(headerRow);
+  header.values = cols;
+  header.font = { bold: true };
+  header.fill = HEADER_FILL;
+  header.alignment = { vertical: "middle", wrapText: true };
+  ws.columns = widths.map((width) => ({ width }));
+
+  input.rows.forEach(({ row: r }, i) => {
+    const v = resultVerdict(r);
+    const excelRow = ws.addRow([
+      i + 1,
+      r.displayName,
+      r.mssv ?? "",
+      r.email ?? "",
+      r.cohortCode ?? "",
+      r.examClassCode ?? "",
+      r.roomName ?? "",
+      r.accessCode ?? "",
+      v.label,
+      r.score ?? "",
+      // Từ scorePct (chỉ có khi đã chấm xong) nên bài còn câu chờ chấm để trống.
+      r.scorePct != null ? Math.round(r.scorePct) / 10 : "",
+      r.submittedAt ? formatDateTime(new Date(r.submittedAt)) : "",
+      r.attemptCount,
+    ]);
+    // MSSV và mã thi giữ dạng chữ: Excel không được tự bỏ số 0 đầu.
+    excelRow.getCell(3).numFmt = "@";
+    excelRow.getCell(8).numFmt = "@";
+    excelRow.getCell(11).numFmt = "0.0";
+    const fill = VERDICT_FILL[v.label];
+    if (fill) excelRow.getCell(9).fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
+    if (r.status === "not_started") excelRow.getCell(9).font = MUTED_FONT;
+  });
+
+  ws.views = [{ state: "frozen", ySplit: headerRow, xSplit: 2 }];
+  if (input.rows.length > 0) {
+    ws.autoFilter = {
+      from: { row: headerRow, column: 1 },
+      to: { row: headerRow + input.rows.length, column: cols.length },
+    };
+  }
+
+  addPerQuestionSheet(wb, input);
+
+  return wb.xlsx.writeBuffer().then((b) => Buffer.from(b));
 }
 
 /** Tên file tiếng Việt có dấu, ví dụ "Bảng điểm - Kỹ năng mềm 10 phút - 27-08-2026.xlsx". */

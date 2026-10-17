@@ -10,6 +10,7 @@ import {
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 import {
+  answerCell,
   buildExamResultsWorkbook,
   contentDisposition,
   examResultsFilename,
@@ -116,20 +117,8 @@ async function bangDiem({
     : [];
   const byKey = new Map(answers.map((a) => [`${a.attemptId}:${a.questionId}`, a]));
 
-  // Ô của một câu: Đúng / Sai / điểm lẻ / Chờ chấm / — (chưa có bài).
-  // Thứ tự kiểm tra quan trọng: câu còn chờ chấm tay luôn ghi "Chờ chấm" dù đã
-  // có điểm tự chấm một phần, vì điểm đó chưa phải điểm cuối.
-  const cellFor = (
-    attemptId: string | null,
-    q: { id: string; points: number },
-  ): string => {
-    const ans = attemptId ? byKey.get(`${attemptId}:${q.id}`) : undefined;
-    if (!ans) return "—";
-    if (ans.needsGrading) return "Chờ chấm";
-    const awarded = ans.manualScore ?? ans.autoScore;
-    if (awarded == null) return "—";
-    return awarded >= q.points ? "Đúng" : awarded > 0 ? `${awarded}/${q.points}` : "Sai";
-  };
+  const cellFor = (attemptId: string | null, q: { id: string; points: number }): string =>
+    answerCell(attemptId ? byKey.get(`${attemptId}:${q.id}`) : undefined, q.points);
 
   const exportedAt = new Date();
   const buf = await buildExamResultsWorkbook({
