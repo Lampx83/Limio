@@ -163,11 +163,6 @@ export default function BrandDialog({
 
         {mode === "org" && orgBrand && (
           <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
-            <p className="mb-1 text-[15px] font-bold">Thương hiệu do quản trị viên {org?.name} đặt</p>
-            <p className="mb-4 max-w-2xl text-sm text-muted">
-              Logo và bảng màu lấy từ cài đặt của trường, nên mọi bài giảng của trường cùng một bộ nhận diện. Chọn một mẫu phối màu cho bài này;
-              chỉ giảng viên cần đổi riêng mới chuyển sang “Riêng cho bài này”.
-            </p>
             <BrandTemplateGallery
               orgBrand={orgBrand}
               themeId={themeId}

@@ -5,5 +5,11 @@ import { defineConfig } from "vitest/config";
 // jsx = "preserve" cho Next, esbuild của vitest cần "automatic" để test component).
 export default defineConfig({
   esbuild: { jsx: "automatic" },
-  resolve: { alias: { "@": resolve(__dirname, "src") } },
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+      // next/font chỉ chạy trong trình biên dịch của Next — xem src/test/nextFontStub.ts.
+      "next/font/google": resolve(__dirname, "src/test/nextFontStub.ts"),
+    },
+  },
 });

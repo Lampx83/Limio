@@ -1,0 +1,106 @@
+import { describe, expect, it } from "vitest";
+import type { LessonOutline, SourcePara } from "@feedbackme/shared-types";
+import {
+  lessonReadingMinutes,
+  normalizeLessonOutline,
+  orphanParas,
+  outlineProblems,
+  pruneEmptyLessons,
+  sanitizeLessonOutline,
+  shouldSuggestSplit,
+} from "./lessonOutline";
+
+const PARAS: SourcePara[] = [
+  { t: "Lời chào đầu tài liệu." },
+  { t: "Nguyên tắc gần nhau phát biểu rằng các phần tử gần nhau là một nhóm." },
+  { img: "/a.png", alt: "Hình" },
+  { t: "Khoảng trắng đánh dấu ranh giới." },
+  { t: "Tài liệu tham khảo." },
+];
+
+describe("normalizeLessonOutline — dàn ý từ AI", () => {
+  it("bố cục lạ về Văn bản, hộp lạ bị bỏ, emoji bị gỡ, đoạn trùng chỉ thuộc mục đầu, đoạn ngoài phạm vi bị bỏ", () => {
+    const o = normalizeLessonOutline(
+      {
+        lessons: [
+          {
+            title: "Bài 🎯 gần nhau",
+            objectives: ["Trình bày được nguyên tắc.", "", 5],
+            sections: [
+              { title: "Khái niệm", layout: "hero", points: ["Ý một."], boxes: ["note", "quiz", "note"], paras: [1, 2, 99, -1] },
+              { title: "", layout: "steps", points: [], boxes: [], paras: [2, 3] },
+            ],
+          },
+          { title: "Bài rỗng", objectives: [], sections: [] },
+        ],
+      },
+      PARAS.length,
+    );
+    expect(o.lessons).toHaveLength(1);
+    const [a, b] = o.lessons[0]!.sections;
+    expect(o.lessons[0]!.title).toBe("Bài gần nhau");
+    expect(o.lessons[0]!.objectives).toEqual(["Trình bày được nguyên tắc."]);
+    expect(a).toMatchObject({ layout: "text", boxes: ["note"], paras: [1, 2] });
+    expect(b).toMatchObject({ title: "Mục chưa đặt tên", layout: "steps", paras: [3] });
+    expect(a!.id).not.toBe(b!.id);
+  });
+});
+
+describe("sanitizeLessonOutline — dàn ý giảng viên gửi lên", () => {
+  it("giữ id và tiêu đề trống (đang gõ dở); đoạn bỏ qua không được trùng đoạn đã gán", () => {
+    const o = sanitizeLessonOutline(
+      {
+        lessons: [{ id: "l1", title: "", objectives: [], sections: [{ id: "s1", title: "", layout: "faq", points: [], boxes: [], paras: [1] }] }],
+        ignoredParas: [0, 1, 4],
+      },
+      PARAS.length,
+    );
+    expect(o?.lessons[0]?.id).toBe("l1");
+    expect(o?.lessons[0]?.sections[0]).toMatchObject({ id: "s1", title: "", layout: "faq" });
+    expect(o?.ignoredParas).toEqual([0, 4]);
+  });
+
+  it("hình dạng sai hẳn thì trả null", () => {
+    expect(sanitizeLessonOutline(null, 3)).toBeNull();
+    expect(sanitizeLessonOutline({ lessons: "x" }, 3)).toBeNull();
+    expect(sanitizeLessonOutline({ lessons: [] }, 3)).toBeNull();
+  });
+});
+
+const BASE: LessonOutline = {
+  ignoredParas: [],
+  lessons: [
+    { id: "l1", title: "Bài", objectives: [], sections: [{ id: "s1", title: "Mục", layout: "text", points: [], boxes: [], paras: [1, 2, 3] }] },
+  ],
+};
+
+describe("kiểm tra trước khi chốt", () => {
+  it("đoạn chưa thuộc mục nào được liệt kê (D4); bỏ qua rồi thì hết", () => {
+    expect(orphanParas(BASE, PARAS)).toEqual([0, 4]);
+    expect(orphanParas({ ...BASE, ignoredParas: [0, 4] }, PARAS)).toEqual([]);
+  });
+
+  it("lỗi chặn chốt: tên bài trống, mục chưa tiêu đề, đoạn lạc", () => {
+    expect(outlineProblems(BASE, PARAS)).toEqual(["2 đoạn tài liệu chưa thuộc mục nào — gán vào một mục hoặc bỏ qua."]);
+    const bad: LessonOutline = {
+      ignoredParas: [0, 4],
+      lessons: [{ ...BASE.lessons[0]!, title: " ", sections: [{ ...BASE.lessons[0]!.sections[0]!, title: "" }] }],
+    };
+    expect(outlineProblems(bad, PARAS)).toEqual(["Bài học chưa có tên.", "Bài học có 1 mục chưa có tiêu đề."]);
+    expect(outlineProblems({ ...BASE, ignoredParas: [0, 4] }, PARAS)).toEqual([]);
+  });
+
+  it("thời gian đọc và gợi ý tách bài (D5)", () => {
+    const longParas: SourcePara[] = [{ t: "chữ ".repeat(4500) }];
+    const lesson = { ...BASE.lessons[0]!, sections: [{ ...BASE.lessons[0]!.sections[0]!, paras: [0] }] };
+    expect(lessonReadingMinutes(lesson, longParas)).toBe(23);
+    expect(shouldSuggestSplit(lesson, longParas)).toBe(true);
+    expect(shouldSuggestSplit(BASE.lessons[0]!, PARAS)).toBe(false);
+  });
+
+  it("bài không còn mục nào bị bỏ, nhưng luôn giữ ít nhất một bài", () => {
+    const two: LessonOutline = { ...BASE, lessons: [BASE.lessons[0]!, { id: "l2", title: "Rỗng", objectives: [], sections: [] }] };
+    expect(pruneEmptyLessons(two).lessons).toHaveLength(1);
+    expect(pruneEmptyLessons({ ...BASE, lessons: [{ ...BASE.lessons[0]!, sections: [] }] }).lessons).toHaveLength(1);
+  });
+});

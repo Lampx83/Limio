@@ -24,6 +24,7 @@ import SafeHtml from "@/components/SafeHtml";
 import AiFormatPanel from "@/components/AiFormatPanel";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 import { plainToRichHtml } from "@/lib/richText";
+import { DEFAULT_LESSON_LOOK, type LessonLook } from "@feedbackme/shared-types";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -158,6 +159,8 @@ export default function AddContentItemForm({
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
   const [html, setHtml] = useState("");
+  // Bảng màu + kiểu chữ cho bài văn bản soạn tay (ô "Richtext editor").
+  const [look, setLook] = useState<LessonLook>(DEFAULT_LESSON_LOOK);
   // AI mode: đã "Áp dụng và lưu" → ẩn ô nhập bản thô (bản đã format là bản duy nhất
   // hiển thị; bản thô chỉ còn trong mục thu gọn "Xem bản gốc").
   const [aiSaved, setAiSaved] = useState(false);
@@ -426,6 +429,9 @@ export default function AddContentItemForm({
         // đó thành <p>/<br> tối thiểu thay vì lưu 1 dòng chữ dính liền không
         // ngắt đoạn. HTML thật (từ RichTextEditor) đi qua hàm này không đổi.
         payload = { html: plainToRichHtml(html) };
+        // Chỉ bài soạn bằng trình soạn thảo mới mang bảng màu; bản AI định dạng
+        // kiểu cũ đã tự mang màu riêng.
+        if (type === "richtext" && richtextMode === "wysiwyg") payload.look = look;
         break;
       case "embed":
         payload = { url };
@@ -584,7 +590,14 @@ export default function AddContentItemForm({
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
             Nội dung
           </label>
-          <RichTextEditor value={html} onChange={setHtml} placeholder="Nhập nội dung văn bản..." />
+          <RichTextEditor
+            value={html}
+            onChange={setHtml}
+            placeholder="Nhập nội dung văn bản..."
+            lessonTools
+            look={look}
+            onLookChange={setLook}
+          />
         </div>
       )}
       {type === "richtext" && richtextMode === "ai" && (

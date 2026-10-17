@@ -18,6 +18,12 @@ export const LearningEventType = {
   LessonAnnotationPublished: "lesson.annotation.published",
   LessonAnnotationReplied: "lesson.annotation.replied",
   LessonAnnotationRemoved: "lesson.annotation.removed",
+  // Bài học văn bản tạo/sửa bằng AI (tiêu chí S7 — đo tỉ lệ bài bị sửa tay sau khi AI tạo).
+  // Payload không mang chữ của bài; xem LessonContentGeneratedPayload.
+  LessonContentGenerated: "lesson.content.generated",
+  LessonContentAiEdited: "lesson.content.ai_edited",
+  LessonContentRestored: "lesson.content.restored",
+  LessonContentConverted: "lesson.content.converted",
   // LANG G4 — một lượt ôn flashcard. Payload: itemId, contentItemId, rating, mode,
   // intervalDays, reviewId. Idempotent qua eventKey `flashcard.reviewed:<userId>:<reviewId>`.
   FlashcardReviewed: "flashcard.reviewed",
@@ -328,6 +334,42 @@ export interface AiTutorAskedPayload {
   questionLength: number;
   /** Lượt thứ mấy trong hội thoại này. Lượt 5 khác hẳn lượt 1. */
   turnIndex: number;
+}
+
+/**
+ * "Tạo bài từ tài liệu" — giảng viên Áp dụng bài AI viết (Mốc 3). Không mang chữ:
+ * nội dung đã nằm ở ContentItem + ContentItemVersion ("generated"); so phiên bản
+ * về sau với bản này là đo được bài bị sửa tay bao nhiêu.
+ */
+export interface LessonContentGeneratedPayload {
+  draftId: string;
+  lessonIds: string[];
+  contentItemIds: string[];
+  writing: "keep" | "edit";
+  sectionCount: number;
+  fallbackCount: number;
+  missingParaCount: number;
+  /** true = "Làm lại từ dàn ý" thay nội dung khối cũ. */
+  replaced: boolean;
+}
+
+export interface LessonContentAiEditedPayload {
+  lessonId: string;
+  /** shorter | simpler | example | spelling */
+  action: string;
+  layout: string;
+}
+
+export interface LessonContentRestoredPayload {
+  contentItemId: string;
+  versionId: string;
+  versionSource: string;
+}
+
+export interface LessonContentConvertedPayload {
+  contentItemId: string;
+  /** script = chạy hàng loạt; editor = giảng viên bấm chuyển khi mở bài. */
+  via: "script" | "editor";
 }
 
 /**

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
-import { getOwnedSession } from "@feedbackme/core-lms";
+import { ensureSlideJoinCodes, getOwnedSession } from "@feedbackme/core-lms";
 import { describeRuntime, type Runtime } from "@/lib/limioLiveRuntime";
 
 /**
@@ -42,7 +42,7 @@ export async function GET(
       currentSlideId: session.currentSlideId,
       endedAt: session.endedAt,
       uiState: session.uiState,
-      joinCode: session.joinCode,
+      slideJoinCodes: await ensureSlideJoinCodes(session.id, userId, prisma),
       identityMode: session.identityMode,
       runtime,
     });

@@ -1,0 +1,362 @@
+/*
+ * Hình thức bài học văn bản — dùng chung cho trang học viên và trình soạn thảo,
+ * nên giảng viên thấy đúng như học viên sẽ thấy.
+ *
+ * HTML của bài chỉ mang tên: <section class="lesson-section" data-layout>,
+ * <div class="lesson-part">, <div class="lesson-box" data-kind data-title>,
+ * <figure class="lesson-figure">. Mọi màu lấy từ biến --lk-*; giá trị thật do
+ * lessonStyleVars() (lib/lessonLook.ts) đặt lên khung bài. Bài chưa chọn bảng
+ * màu vẫn hiện các khối bằng màu Xanh Limio (giá trị dự phòng bên dưới).
+ */
+
+/* ---------- Biến: chọn bản sáng/tối ---------- */
+:root,
+.lesson-look {
+  --lk-bg: var(--lk-bg-l, #ffffff);
+  --lk-text: var(--lk-text-l, #1f2937);
+  --lk-muted: var(--lk-muted-l, #4b5563);
+  --lk-line: var(--lk-line-l, #e5e7eb);
+  --lk-accent: var(--lk-accent-l, #1d4ed8);
+  --lk-soft: var(--lk-soft-l, #eef3ff);
+  --lk-c1: var(--lk-c1-l, var(--lk-accent));
+  --lk-c2: var(--lk-c2-l, var(--lk-accent));
+  --lk-c3: var(--lk-c3-l, var(--lk-accent));
+  --lk-c4: var(--lk-c4-l, var(--lk-accent));
+  --lk-c5: var(--lk-c5-l, var(--lk-accent));
+  --lk-s1: var(--lk-s1-l, var(--lk-soft));
+  --lk-s2: var(--lk-s2-l, var(--lk-soft));
+  --lk-s3: var(--lk-s3-l, var(--lk-soft));
+  --lk-s4: var(--lk-s4-l, var(--lk-soft));
+  --lk-s5: var(--lk-s5-l, var(--lk-soft));
+  /* Màu nhấn của mục hiện tại — "Sinh động" đổi theo từng mục. */
+  --lk-a: var(--lk-accent);
+  --lk-s: var(--lk-soft);
+}
+.dark,
+.dark .lesson-look {
+  --lk-bg: var(--lk-bg-d, #14171d);
+  --lk-text: var(--lk-text-d, #e7e9ee);
+  --lk-muted: var(--lk-muted-d, #aab1bf);
+  --lk-line: var(--lk-line-d, #2c323d);
+  --lk-accent: var(--lk-accent-d, #8fb0ff);
+  --lk-soft: var(--lk-soft-d, #1b2436);
+  --lk-c1: var(--lk-c1-d, var(--lk-accent));
+  --lk-c2: var(--lk-c2-d, var(--lk-accent));
+  --lk-c3: var(--lk-c3-d, var(--lk-accent));
+  --lk-c4: var(--lk-c4-d, var(--lk-accent));
+  --lk-c5: var(--lk-c5-d, var(--lk-accent));
+  --lk-s1: var(--lk-s1-d, var(--lk-soft));
+  --lk-s2: var(--lk-s2-d, var(--lk-soft));
+  --lk-s3: var(--lk-s3-d, var(--lk-soft));
+  --lk-s4: var(--lk-s4-d, var(--lk-soft));
+  --lk-s5: var(--lk-s5-d, var(--lk-soft));
+  --lk-a: var(--lk-accent);
+  --lk-s: var(--lk-soft);
+}
+
+/* ---------- Khung bài khi đã chọn bảng màu + kiểu chữ ---------- */
+.lesson-look {
+  background: var(--lk-bg);
+  color: var(--lk-text);
+  font-family: var(--lk-body, inherit);
+  --tw-prose-body: var(--lk-text);
+  --tw-prose-headings: var(--lk-text);
+  --tw-prose-bold: var(--lk-text);
+  --tw-prose-links: var(--lk-accent);
+  --tw-prose-quotes: var(--lk-muted);
+  --tw-prose-quote-borders: var(--lk-line);
+  --tw-prose-captions: var(--lk-muted);
+  --tw-prose-bullets: var(--lk-muted);
+  --tw-prose-counters: var(--lk-muted);
+  --tw-prose-hr: var(--lk-line);
+  --tw-prose-th-borders: var(--lk-line);
+  --tw-prose-td-borders: var(--lk-line);
+  --tw-prose-invert-body: var(--lk-text);
+  --tw-prose-invert-headings: var(--lk-text);
+  --tw-prose-invert-bold: var(--lk-text);
+  --tw-prose-invert-links: var(--lk-accent);
+  --tw-prose-invert-quotes: var(--lk-muted);
+  --tw-prose-invert-quote-borders: var(--lk-line);
+  --tw-prose-invert-captions: var(--lk-muted);
+  --tw-prose-invert-bullets: var(--lk-muted);
+  --tw-prose-invert-counters: var(--lk-muted);
+  --tw-prose-invert-hr: var(--lk-line);
+  --tw-prose-invert-th-borders: var(--lk-line);
+  --tw-prose-invert-td-borders: var(--lk-line);
+}
+.lesson-look[data-font="modern"] {
+  --lk-body: var(--lk-font-vietnam), system-ui, sans-serif;
+  --lk-head: var(--lk-font-vietnam), system-ui, sans-serif;
+}
+.lesson-look[data-font="readable"] {
+  --lk-body: var(--lk-font-lexend), system-ui, sans-serif;
+  --lk-head: var(--lk-font-lexend), system-ui, sans-serif;
+}
+.lesson-look[data-font="academic"] {
+  --lk-body: var(--lk-font-vietnam), system-ui, sans-serif;
+  --lk-head: var(--lk-font-serif), Georgia, serif;
+}
+/* Cỡ chữ đọc bài: 16px thay cho prose-sm 14px — bài dài, đọc lâu. */
+.lesson-look.prose,
+.lesson-look .prose {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.lesson-look :is(h1, h2, h3, h4) {
+  font-family: var(--lk-head, inherit);
+  color: var(--lk-text);
+  line-height: 1.3;
+}
+.lesson-look h2 {
+  padding-bottom: 0.35rem;
+  border-bottom: 3px solid var(--lk-a);
+}
+.lesson-look h3 {
+  color: var(--lk-a);
+}
+
+/* Sinh động: mỗi mục lớn một màu, xoay vòng 5 màu. */
+.lesson-look[data-palette="vibrant"] .lesson-section:nth-of-type(5n + 1) { --lk-a: var(--lk-c1); --lk-s: var(--lk-s1); }
+.lesson-look[data-palette="vibrant"] .lesson-section:nth-of-type(5n + 2) { --lk-a: var(--lk-c2); --lk-s: var(--lk-s2); }
+.lesson-look[data-palette="vibrant"] .lesson-section:nth-of-type(5n + 3) { --lk-a: var(--lk-c3); --lk-s: var(--lk-s3); }
+.lesson-look[data-palette="vibrant"] .lesson-section:nth-of-type(5n + 4) { --lk-a: var(--lk-c4); --lk-s: var(--lk-s4); }
+.lesson-look[data-palette="vibrant"] .lesson-section:nth-of-type(5n + 5) { --lk-a: var(--lk-c5); --lk-s: var(--lk-s5); }
+
+/* ---------- Mục lớn ---------- */
+.lesson-section {
+  display: flow-root;
+  margin: 2.2em 0 0;
+}
+.lesson-section > h2:first-child {
+  margin-top: 0;
+  padding-bottom: 0.35rem;
+  border-bottom: 3px solid var(--lk-a);
+}
+.lesson-part > :first-child { margin-top: 0; }
+.lesson-part > :last-child { margin-bottom: 0; }
+.lesson-part > h3:first-child { color: var(--lk-a); }
+
+/* Văn bản: các phần nối tiếp nhau, không khung. */
+.lesson-section[data-layout="text"] > .lesson-part + .lesson-part { margin-top: 1em; }
+
+/* Chữ và ảnh: ảnh của mục sang phải, chữ chảy bên trái. */
+.lesson-section[data-layout="image"] > .lesson-figure {
+  float: right;
+  clear: right;
+  width: 42%;
+  margin: 0.3em 0 1em 1.5em;
+}
+
+/* Thẻ khái niệm và Số liệu nổi bật: các phần thành lưới. */
+.lesson-section:is([data-layout="cards"], [data-layout="stats"]) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 0.9rem;
+}
+.lesson-section:is([data-layout="cards"], [data-layout="stats"], [data-layout="compare"]) > :not(.lesson-part) {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.lesson-section[data-layout="cards"] > .lesson-part {
+  border: 1px solid var(--lk-line);
+  border-top: 4px solid var(--lk-a);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+.lesson-section[data-layout="stats"] > .lesson-part {
+  background: var(--lk-s);
+  border-radius: 12px;
+  padding: 1rem;
+}
+.lesson-section[data-layout="stats"] > .lesson-part > h3:first-child {
+  font-size: 2.1em;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 0.35rem;
+}
+
+/* So sánh hai cột. */
+.lesson-section[data-layout="compare"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem 0;
+}
+.lesson-section[data-layout="compare"] > .lesson-part {
+  border: 1px solid var(--lk-line);
+  padding: 0.9rem 1.1rem;
+}
+.lesson-section[data-layout="compare"] > .lesson-part:nth-child(odd of .lesson-part) {
+  background: var(--lk-s);
+  border-radius: 12px 0 0 12px;
+}
+.lesson-section[data-layout="compare"] > .lesson-part:nth-child(even of .lesson-part) {
+  border-left: 0;
+  border-radius: 0 12px 12px 0;
+}
+
+/* Các bước: đánh số theo thứ tự phần. */
+.lesson-section[data-layout="steps"] { counter-reset: lk-step; }
+.lesson-section[data-layout="steps"] > .lesson-part {
+  position: relative;
+  counter-increment: lk-step;
+  padding: 0 0 1.1rem 3.1rem;
+  min-height: 2.6rem;
+}
+.lesson-section[data-layout="steps"] > .lesson-part::before {
+  content: counter(lk-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: var(--lk-a);
+  color: var(--lk-bg);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-family: var(--lk-head, inherit);
+}
+.lesson-section[data-layout="steps"] > .lesson-part:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 1.02rem;
+  top: 2.4rem;
+  bottom: 0.2rem;
+  width: 2px;
+  background: var(--lk-line);
+}
+.lesson-section[data-layout="steps"] > .lesson-part > h3:first-child {
+  color: var(--lk-text);
+  padding-top: 0.15rem;
+}
+
+/* Hỏi và đáp. Trình soạn: mọi câu mở sẵn. Học viên: <details> (LessonRichText). */
+.lesson-section[data-layout="faq"] > .lesson-part,
+.lesson-section[data-layout="faq"] > details.lesson-part {
+  border: 1px solid var(--lk-line);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  margin-top: 0.5rem;
+}
+.lesson-section[data-layout="faq"] > .lesson-part > h3:first-child,
+.lesson-section[data-layout="faq"] > details.lesson-part > summary {
+  font-size: 1em;
+  color: var(--lk-text);
+}
+.lesson-section[data-layout="faq"] > div.lesson-part > h3:first-child::before {
+  content: "+ ";
+  color: var(--lk-a);
+}
+.lesson-section[data-layout="faq"] > details.lesson-part > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--lk-head, inherit);
+  list-style: none;
+  display: flex;
+  gap: 0.6rem;
+}
+.lesson-section[data-layout="faq"] > details.lesson-part > summary::-webkit-details-marker { display: none; }
+.lesson-section[data-layout="faq"] > details.lesson-part > summary::before {
+  content: "+";
+  color: var(--lk-a);
+  font-weight: 700;
+  width: 1em;
+  flex: none;
+}
+.lesson-section[data-layout="faq"] > details.lesson-part[open] > summary::before { content: "−"; }
+.lesson-section[data-layout="faq"] > details.lesson-part[open] > summary { margin-bottom: 0.5rem; }
+.lesson-section[data-layout="faq"] > details.lesson-part > :not(summary) { margin-left: 1.6rem; }
+
+/* ---------- Hộp ---------- */
+.lesson-box {
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  margin: 1.1em 0;
+}
+.lesson-box::before {
+  content: attr(data-title);
+  display: block;
+  font-weight: 700;
+  font-family: var(--lk-head, inherit);
+  color: var(--lk-a);
+  margin-bottom: 0.3rem;
+}
+/* Danh sách trong hộp: trình soạn luôn bọc mỗi mục bằng <p> — bỏ lề của <p> để danh sách gọn. */
+.lesson-box li > p { margin-top: 0.15em; margin-bottom: 0.15em; }
+.lesson-box :is(ul, ol) { margin-top: 0.3em; margin-bottom: 0; }
+.lesson-box > :first-child { margin-top: 0; }
+.lesson-box > :last-child { margin-bottom: 0; }
+.lesson-box[data-kind="objectives"] {
+  background: var(--lk-soft);
+  border: 1px solid var(--lk-line);
+  --lk-a: var(--lk-accent);
+}
+.lesson-box[data-kind="summary"] {
+  background: var(--lk-soft);
+  border-top: 4px solid var(--lk-accent);
+  margin-top: 2.2em;
+  --lk-a: var(--lk-accent);
+}
+.lesson-box[data-kind="note"] {
+  background: var(--lk-s);
+  border-left: 5px solid var(--lk-a);
+}
+.lesson-box[data-kind="example"] {
+  background: var(--lk-s);
+  border-left: 5px dashed var(--lk-a);
+}
+.lesson-box[data-kind="definition"] {
+  border: 1px solid var(--lk-a);
+  border-left-width: 5px;
+}
+
+/* ---------- Ảnh có chú thích ---------- */
+.lesson-figure { margin: 1.2em 0; }
+.lesson-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  border-radius: 10px;
+}
+.lesson-figure figcaption {
+  margin-top: 0.45rem;
+  font-size: 0.88em;
+  line-height: 1.5;
+  color: var(--lk-muted);
+}
+
+/* ---------- Điện thoại: mọi bố cục nhiều cột về một cột ---------- */
+@media (max-width: 639px) {
+  .lesson-section[data-layout="image"] > .lesson-figure {
+    float: none;
+    width: auto;
+    margin: 1em 0;
+  }
+  .lesson-section[data-layout="compare"] { grid-template-columns: 1fr; }
+  .lesson-section[data-layout="compare"] > .lesson-part:nth-child(n of .lesson-part) {
+    border: 1px solid var(--lk-line);
+    border-radius: 12px;
+  }
+}
+
+/* ---------- Chỉ trong trình soạn thảo ---------- */
+/* Mục và phần đang đặt con trỏ được viền nhẹ để biết thanh "Mục này" đang tác động vào đâu. */
+.ProseMirror .lesson-section.lk-active {
+  outline: 2px dashed color-mix(in srgb, var(--lk-a) 45%, transparent);
+  outline-offset: 6px;
+  border-radius: 4px;
+}
+.ProseMirror .lesson-part.lk-active-part {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lk-a) 35%, transparent);
+  border-radius: 8px;
+}
+.ProseMirror .lesson-box.lk-active {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--lk-a) 45%, transparent);
+}
+.ProseMirror .lesson-section[data-layout="text"] > .lesson-part {
+  border-left: 2px dotted var(--lk-line);
+  padding-left: 0.6rem;
+}

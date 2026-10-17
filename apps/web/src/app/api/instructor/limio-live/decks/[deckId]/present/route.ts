@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
-import { startOrResumeLiveSession } from "@feedbackme/core-lms";
+import { ensureSlideJoinCodes, startOrResumeLiveSession } from "@feedbackme/core-lms";
 
 /**
  * POST /api/instructor/limio-live/decks/[deckId]/present
@@ -18,7 +18,9 @@ export async function POST(
     }
 
     const session = await startOrResumeLiveSession(params.deckId, userId, prisma);
-    return NextResponse.json(session);
+    // Mỗi slide tương tác một mã (QR riêng); slide nội dung không có.
+    const slideJoinCodes = await ensureSlideJoinCodes(session.id, userId, prisma);
+    return NextResponse.json({ ...session, slideJoinCodes });
   } catch (error) {
     console.error("[Limio-Live Present API - POST]", error);
     const message = error instanceof Error ? error.message : "Unknown error";

@@ -32,14 +32,15 @@ export default async function LiveDeckHistoryPage({
         </Link>
         <h1 className="mt-2 text-2xl font-bold">Lịch sử tương tác</h1>
         <p className="mt-1 text-muted">
-          {deck.title} · Mỗi lần trình chiếu là một lượt riêng, với kết quả vote, word cloud, bảng và whiteboard của lượt đó.
+          {deck.title} · Mỗi phiên tương tác giữ kết quả vote, word cloud, bảng và whiteboard qua nhiều lần chiếu, cho tới khi bạn chọn
+          "Lưu phiên và reset mã mới" lúc kết thúc trình chiếu.
         </p>
       </div>
 
       {sessions.length === 0 ? (
         <EmptyState
-          title="Chưa có lượt trình chiếu nào"
-          description="Khi bạn trình chiếu bài giảng này, kết quả tương tác của từng lượt sẽ được lưu tại đây."
+          title="Chưa có phiên tương tác nào"
+          description="Khi bạn trình chiếu bài giảng này, kết quả tương tác của từng phiên sẽ được lưu tại đây."
         />
       ) : (
         <ul className="space-y-3">
@@ -54,7 +55,7 @@ export default async function LiveDeckHistoryPage({
                     <DateTime value={s.startedAt.toISOString()} format="datetime" />
                   </span>
                   <StatusBadge tone={s.endedAt ? "neutral" : "success"} pulse={!s.endedAt}>
-                    {s.endedAt ? "Đã kết thúc" : "Đang mở"}
+                    {s.endedAt ? "Đã lưu" : s.paused ? "Phiên hiện tại · tạm dừng" : "Phiên hiện tại"}
                   </StatusBadge>
                 </div>
                 <p className="mt-1 text-sm text-muted">

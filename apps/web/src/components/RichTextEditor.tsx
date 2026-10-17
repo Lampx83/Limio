@@ -1,27 +1,43 @@
 "use client";
 
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
-import Link from "@tiptap/extension-link";
-import Highlight from "@tiptap/extension-highlight";
-import Image from "@tiptap/extension-image";
-import { TextStyle } from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
-import { Table, TableRow, TableHeader, TableCell } from "@tiptap/extension-table";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { probeEditorLoss, type LossReport } from "./richtext/lossProbe";
-import { HeadingId } from "./richtext/headingId";
 import { cleanWordHtml } from "./richtext/wordPaste";
+import { EXTENSIONS } from "./richtext/extensions";
+import { LessonActive } from "./richtext/lessonCommands";
+import { LessonContextBar, LessonInsertMenu } from "./richtext/LessonTools";
 import SafeHtml from "./SafeHtml";
+import type { LessonLook } from "@feedbackme/shared-types";
+import { lessonStyleVars } from "@/lib/lessonLook";
+import { LESSON_FONT_VARIABLES } from "./lesson/lessonFonts";
+import LessonLookMenu from "./lesson/LessonLookMenu";
+import "./lesson/lessonLook.css";
 
 interface Props {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: number;
+  /**
+   * Bật công cụ của bài học văn bản: "Chèn khối" (mục theo bố cục, hộp, ảnh có
+   * chú thích) và thanh "Mục này / Hộp này". Chỉ bật ở nội dung bài học.
+   */
+  lessonTools?: boolean;
+  /** Bảng màu + kiểu chữ của bài — để trình soạn trông đúng như học viên thấy. */
+  look?: LessonLook | null;
+  /** Có thì hiện nút "Giao diện" ở đầu thanh công cụ để đổi bảng màu, kiểu chữ. */
+  onLookChange?: (look: LessonLook) => void;
+  /** Bài học chứa khối này — có thì bật "Nhờ AI" sửa từng mục (S2). */
+  aiLessonId?: string;
+  /** Gọi khi giảng viên dùng một đề xuất của AI (để đánh dấu lần lưu sau là "trước khi nhờ AI sửa"). */
+  onAiApplied?: () => void;
 }
+
+const EDITOR_EXTENSIONS_LESSON = [...EXTENSIONS, LessonActive];
 
 const HIGHLIGHT_COLORS = [
   { name: "Vàng", value: "#fef08a" },
@@ -44,33 +60,8 @@ const TEXT_COLORS = [
   { name: "Hồng", value: "#db2777" },
 ];
 
-/**
- * Một danh sách duy nhất, dùng cho cả editor thật lẫn hàm dò mất mát. Tách ra
- * đây vì hai chỗ đó mà lệch nhau thì lời cảnh báo sẽ nói sai sự thật.
- */
-export const EXTENSIONS = [
-  StarterKit.configure({
-    heading: { levels: [1, 2, 3] },
-  }),
-  Underline,
-  Link.configure({
-    openOnClick: false,
-    HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
-  }),
-  Highlight.configure({ multicolor: true }),
-  TextStyle,
-  Color,
-  Image.configure({
-    inline: false,
-    allowBase64: false,
-    HTMLAttributes: { class: "max-w-full h-auto rounded-md" },
-  }),
-  HeadingId,
-  Table.configure({ resizable: false }),
-  TableRow,
-  TableHeader,
-  TableCell,
-];
+// Danh sách extension dùng chung với hàm dò mất mát — xem richtext/extensions.ts.
+export { EXTENSIONS };
 
 function htmlHasText(html: string): boolean {
   return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").trim().length > 0;
@@ -96,6 +87,11 @@ export default function RichTextEditor({
   onChange,
   placeholder = "Nhập nội dung...",
   minHeight = 160,
+  lessonTools = false,
+  look = null,
+  onLookChange,
+  aiLessonId,
+  onAiApplied,
 }: Props) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   // null = chưa dò xong (chỉ dò được ở trình duyệt). "source" = chỉ xem bản hiển thị, giữ nguyên nội dung.
@@ -113,8 +109,22 @@ export default function RichTextEditor({
     setMode(report ? "source" : "wysiwyg");
   }, [value]);
 
+  // Soạn toàn màn hình (chỉ bài học): Esc để thoát; khoá cuộn trang phía sau.
+  const [full, setFull] = useState(false);
+  useEffect(() => {
+    if (!full) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setFull(false);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [full]);
+
   const editor = useEditor({
-    extensions: EXTENSIONS,
+    extensions: lessonTools ? EDITOR_EXTENSIONS_LESSON : EXTENSIONS,
     content: value || "",
     immediatelyRender: false,
     editorProps: {
@@ -199,10 +209,74 @@ export default function RichTextEditor({
     );
   }
 
-  return (
-    <div className="rounded-lg border border-token bg-[rgb(var(--surface))]">
-      <Toolbar editor={editor} onUpload={insertImageFiles} />
-      <EditorContent editor={editor} />
+  const shell = (
+    <div
+      className={
+        full
+          ? "fixed inset-0 z-[60] overflow-y-auto bg-[rgb(var(--bg))]"
+          : "rounded-lg border border-token bg-[rgb(var(--surface))]"
+      }
+      role={full ? "dialog" : undefined}
+      aria-modal={full ? true : undefined}
+      aria-label={full ? "Soạn bài toàn màn hình" : undefined}
+    >
+      {/* Bài học dài: từ màn hình rộng, thanh công cụ dính dưới thanh đầu trang
+          (cao 4rem) để "Chèn khối" và "Mục này" luôn trong tầm tay khi cuộn.
+          Màn hẹp thì không dính — thanh nhiều dòng sẽ che mất nửa bài.
+          Toàn màn hình: thanh dính sát mép trên, bài ở giữa với bề ngang đọc thoải mái. */}
+      <div
+        className={
+          full
+            ? "sticky top-0 z-10 border-b border-token bg-[rgb(var(--surface))] shadow-sm"
+            : `rounded-t-lg bg-[rgb(var(--surface))] ${lessonTools ? "relative lg:sticky lg:top-16 lg:z-10" : ""}`
+        }
+      >
+        <div className={full ? "relative mx-auto max-w-4xl" : ""}>
+        <Toolbar
+          editor={editor}
+          onUpload={insertImageFiles}
+          lead={
+            lessonTools ? (
+              <>
+                <LessonInsertMenu editor={editor} onUploadFigure={uploadImageFile} />
+                {onLookChange && <LessonLookMenu value={look} onChange={onLookChange} />}
+              </>
+            ) : null
+          }
+          tail={
+            lessonTools ? (
+              <button
+                type="button"
+                onClick={() => setFull((v) => !v)}
+                className="ml-auto inline-flex h-7 items-center gap-1 rounded px-2 text-xs font-medium text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-brand-600"
+                title={full ? "Thu nhỏ (Esc)" : "Soạn toàn màn hình"}
+                aria-pressed={full}
+              >
+                {full ? <Minimize2 className="h-3.5 w-3.5" aria-hidden /> : <Maximize2 className="h-3.5 w-3.5" aria-hidden />}
+                <span className="hidden sm:inline">{full ? "Thu nhỏ" : "Toàn màn hình"}</span>
+              </button>
+            ) : null
+          }
+        />
+        {lessonTools && <LessonContextBar editor={editor} aiLessonId={aiLessonId} look={look} onAiApplied={onAiApplied} />}
+        </div>
+      </div>
+      <div className={full ? "mx-auto my-6 max-w-4xl overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] shadow-sm" : ""}>
+      {look ? (
+        <div
+          className={`lesson-look ${LESSON_FONT_VARIABLES} ${full ? "px-2 py-4 sm:px-8 sm:py-6" : "rounded-b-lg"}`}
+          data-palette={look.palette}
+          data-font={look.font}
+          style={lessonStyleVars(look)}
+        >
+          <EditorContent editor={editor} />
+        </div>
+      ) : (
+        <div className={full ? "px-2 py-4 sm:px-8 sm:py-6" : ""}>
+          <EditorContent editor={editor} />
+        </div>
+      )}
+      </div>
       {uploadError && (
         <p className="border-t border-token px-3 py-1.5 text-xs text-danger-600">
           Lỗi upload ảnh: {uploadError}
@@ -210,6 +284,10 @@ export default function RichTextEditor({
       )}
     </div>
   );
+  // Toàn màn hình phải gắn thẳng vào <body>: khung bài nằm trong thẻ kéo thả
+  // (dnd-kit đặt transform), mà "fixed" bên trong phần tử có transform chỉ phủ
+  // được phần tử đó chứ không phủ cả màn hình.
+  return full ? createPortal(shell, document.body) : shell;
 }
 
 /**
@@ -264,9 +342,15 @@ function LossBanner({
 function Toolbar({
   editor,
   onUpload,
+  lead,
+  tail,
 }: {
   editor: Editor;
   onUpload: (files: File[]) => Promise<void>;
+  /** Nút đặt đầu thanh công cụ (vd. "Chèn khối" của bài học). */
+  lead?: ReactNode;
+  /** Nút đặt cuối thanh công cụ (vd. "Toàn màn hình"). */
+  tail?: ReactNode;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [colorOpen, setColorOpen] = useState(false);
@@ -293,6 +377,12 @@ function Toolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-token bg-[rgb(var(--surface-muted))/0.4] p-1">
+      {lead && (
+        <>
+          {lead}
+          <span className="mx-1 h-5 w-px bg-token" />
+        </>
+      )}
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -523,6 +613,7 @@ function Toolbar({
       >
         ⌫
       </button>
+      {tail}
     </div>
   );
 }
