@@ -165,4 +165,42 @@ describe("bản nháp tạo bài từ tài liệu", () => {
     expect((await prisma.lessonDraft.findUnique({ where: { id: d.id } }))?.status).toBe("applied");
     await expect(applyLessonDraft(owner, d.id)).rejects.toMatchObject({ code: "invalid_state" });
   });
+
+  it("Áp dụng giữ bản AI tạo trong lịch sử và ghi sự kiện lesson.content.generated (S3, S7)", async () => {
+    const { owner, lessonId } = await setup();
+    const d = await createLessonDraft(owner, lessonId, input);
+    await updateLessonDraft(owner, d.id, { confirm: true });
+    await saveLessonDraftResult(owner, d.id, RESULT(1));
+    const r = await applyLessonDraft(owner, d.id);
+    const v = await prisma.contentItemVersion.findMany({ where: { contentItemId: r.contentItemIds[0]! } });
+    expect(v.map((x) => x.source)).toEqual(["generated"]);
+    const ev = await prisma.learningEvent.findFirst({ where: { userId: owner, eventType: "lesson.content.generated" } });
+    expect(ev?.payload).toMatchObject({ draftId: d.id, sectionCount: 1, replaced: false, writing: "keep" });
+  });
+
+  it("Làm lại từ dàn ý: Áp dụng thay nội dung khối cũ, bản cũ vào lịch sử (S4)", async () => {
+    const { owner, lessonId } = await setup();
+    const old = await prisma.contentItem.create({
+      data: { lessonId, type: "richtext", payload: { html: "<p>Bài cũ</p>" }, orderIndex: 0 },
+    });
+    const d = await createLessonDraft(owner, lessonId, { ...input, targetContentItemId: old.id });
+    expect(d.targetContentItemId).toBe(old.id);
+    await updateLessonDraft(owner, d.id, { confirm: true });
+    await saveLessonDraftResult(owner, d.id, RESULT(1));
+    const r = await applyLessonDraft(owner, d.id);
+    expect(r.contentItemIds).toEqual([old.id]);
+    expect(await prisma.contentItem.count({ where: { lessonId } })).toBe(1);
+    const now = await prisma.contentItem.findUnique({ where: { id: old.id } });
+    expect((now?.payload as { html: string }).html).toContain("Mục 1");
+    const v = await prisma.contentItemVersion.findMany({ where: { contentItemId: old.id }, orderBy: { createdAt: "asc" } });
+    expect(v.map((x) => x.source)).toEqual(["before_regenerate", "generated"]);
+    expect((v[0]!.payload as { html: string }).html).toBe("<p>Bài cũ</p>");
+  });
+
+  it("khối đích phải là khối Văn bản của chính bài học", async () => {
+    const a = await setup();
+    const b = await setup();
+    const foreign = await prisma.contentItem.create({ data: { lessonId: b.lessonId, type: "richtext", payload: { html: "<p>x</p>" }, orderIndex: 0 } });
+    await expect(createLessonDraft(a.owner, a.lessonId, { ...input, targetContentItemId: foreign.id })).rejects.toMatchObject({ code: "not_found" });
+  });
 });

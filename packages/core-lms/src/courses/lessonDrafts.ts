@@ -1,5 +1,14 @@
 import { prisma, Prisma, type PrismaClient } from "@feedbackme/db";
-import type { LessonDraftResult, LessonLook, LessonOutline, LessonWritingMode, SourcePara } from "@feedbackme/shared-types";
+import {
+  LearningEventType,
+  type LessonDraftResult,
+  type LessonLook,
+  type LessonOutline,
+  type LessonWritingMode,
+  type SourcePara,
+} from "@feedbackme/shared-types";
+import { emitEvent } from "../learning/events";
+import { recordContentVersion } from "./contentVersions";
 import type { DbClient } from "../auth/tokens";
 import { canEditCourse } from "./authz";
 import { ensureLessonTag } from "./autoTags";
@@ -33,6 +42,8 @@ export interface LessonDraftView {
   sourceParas: SourcePara[];
   outline: LessonOutline;
   look: LessonLook | null;
+  /** "Làm lại từ dàn ý": khối sẽ bị thay khi Áp dụng. */
+  targetContentItemId: string | null;
   writing: LessonWritingMode;
   addObjectivesSummary: boolean;
   confirmedAt: Date | null;
@@ -67,6 +78,7 @@ const SELECT = {
   sourceParas: true,
   outline: true,
   look: true,
+  targetContentItemId: true,
   writing: true,
   addObjectivesSummary: true,
   confirmedAt: true,
@@ -88,6 +100,7 @@ function toView(row: Row, info: { courseId: string; lessonTitle: string }): Less
     sourceParas: row.sourceParas as unknown as SourcePara[],
     outline: row.outline as unknown as LessonOutline,
     look: (row.look as unknown as LessonLook | null) ?? null,
+    targetContentItemId: row.targetContentItemId,
     writing: row.writing === "edit" ? "edit" : "keep",
     addObjectivesSummary: row.addObjectivesSummary,
     confirmedAt: row.confirmedAt,
@@ -103,6 +116,8 @@ export interface CreateLessonDraftInput {
   sourceParas: SourcePara[];
   outline: LessonOutline;
   look?: LessonLook | null;
+  /** Thay nội dung khối này khi Áp dụng — phải là khối Văn bản của chính bài học. */
+  targetContentItemId?: string | null;
 }
 
 export async function createLessonDraft(
@@ -113,6 +128,10 @@ export async function createLessonDraft(
   db: PrismaClient = prisma,
 ): Promise<LessonDraftView> {
   const info = await assertCanEditLesson(userId, lessonId, db);
+  if (input.targetContentItemId) {
+    const target = await db.contentItem.findUnique({ where: { id: input.targetContentItemId }, select: { lessonId: true, type: true } });
+    if (!target || target.lessonId !== lessonId || target.type !== "richtext") throw new LessonDraftError("not_found");
+  }
   const row = await db.$transaction(async (tx) => {
     await tx.lessonDraft.updateMany({
       where: { lessonId, userId, status: "outline" },
@@ -127,6 +146,7 @@ export async function createLessonDraft(
         sourceParas: input.sourceParas as unknown as Prisma.InputJsonValue,
         outline: input.outline as unknown as Prisma.InputJsonValue,
         look: (input.look ?? undefined) as unknown as Prisma.InputJsonValue | undefined,
+        targetContentItemId: input.targetContentItemId ?? null,
       },
       select: SELECT,
     });
@@ -252,7 +272,8 @@ export async function applyLessonDraft(
   draftId: string,
   db: PrismaClient = prisma,
 ): Promise<ApplyLessonDraftResult> {
-  const { row } = await loadOwned(userId, draftId, db);
+  const { row, info } = await loadOwned(userId, draftId, db);
+  const courseIdOf = info.courseId;
   if (row.status !== "outline") throw new LessonDraftError("invalid_state");
   if (!row.confirmedAt) throw new LessonDraftError("not_confirmed");
   const result = row.result as unknown as LessonDraftResult | null;
@@ -285,7 +306,19 @@ export async function applyLessonDraft(
     };
 
     const lessonIds = [row.lessonId];
-    const contentItemIds = [await addContent(row.lessonId, payloads[0]!)];
+    let firstId: string;
+    const target = row.targetContentItemId
+      ? await tx.contentItem.findUnique({ where: { id: row.targetContentItemId }, select: { id: true, lessonId: true, type: true, payload: true } })
+      : null;
+    if (target && target.lessonId === row.lessonId && target.type === "richtext") {
+      // "Làm lại từ dàn ý" (S4): giữ bản hiện tại trong lịch sử rồi thay nội dung.
+      await recordContentVersion(tx, { id: target.id, payload: target.payload }, "before_regenerate", userId);
+      await tx.contentItem.update({ where: { id: target.id }, data: { payload: payloads[0] as Prisma.InputJsonValue } });
+      firstId = target.id;
+    } else {
+      firstId = await addContent(row.lessonId, payloads[0]!);
+    }
+    const contentItemIds = [firstId];
 
     const extra = result.lessons.length - 1;
     if (extra > 0) {
@@ -314,7 +347,28 @@ export async function applyLessonDraft(
       }
     }
 
+    // Bản AI viết — luôn giữ trong lịch sử, làm mốc đo bài bị sửa tay bao nhiêu (S3, S7).
+    for (let i = 0; i < contentItemIds.length; i++) {
+      await recordContentVersion(tx, { id: contentItemIds[i]!, payload: payloads[i] }, "generated", userId);
+    }
     await tx.lessonDraft.update({ where: { id: draftId }, data: { status: "applied" } });
+    const outline = row.outline as unknown as LessonOutline;
+    await emitEvent(
+      userId,
+      LearningEventType.LessonContentGenerated,
+      {
+        draftId,
+        lessonIds,
+        contentItemIds,
+        writing: result.writing,
+        sectionCount: outline.lessons.reduce((n, l) => n + l.sections.length, 0),
+        fallbackCount: result.fallbackSections.length,
+        missingParaCount: result.missingParas.length,
+        replaced: !!(target && firstId === target.id),
+      },
+      { courseId: courseIdOf },
+      tx,
+    );
     return { lessonIds, contentItemIds };
   });
 }

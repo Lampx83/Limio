@@ -34,6 +34,8 @@ interface Draft {
   addObjectivesSummary: boolean;
   confirmedAt: string | null;
   result: LessonDraftResult | null;
+  /** "Làm lại từ dàn ý": Áp dụng sẽ THAY nội dung khối này. */
+  targetContentItemId: string | null;
 }
 
 type Phase = "outline" | "generating" | "result";
@@ -492,7 +494,11 @@ function Studio({
                 </button>
                 <button type="button" onClick={apply} disabled={applying} className="btn-primary ml-auto">
                   {applying && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-                  {outline.lessons.length > 1 ? `Áp dụng ${outline.lessons.length} bài học` : "Áp dụng vào bài học"}
+                  {draft.targetContentItemId
+                    ? "Áp dụng (thay nội dung bài)"
+                    : outline.lessons.length > 1
+                      ? `Áp dụng ${outline.lessons.length} bài học`
+                      : "Áp dụng vào bài học"}
                 </button>
               </div>
             ) : draft.confirmedAt ? (

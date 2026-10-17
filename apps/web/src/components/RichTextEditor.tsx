@@ -31,6 +31,10 @@ interface Props {
   look?: LessonLook | null;
   /** Có thì hiện nút "Giao diện" ở đầu thanh công cụ để đổi bảng màu, kiểu chữ. */
   onLookChange?: (look: LessonLook) => void;
+  /** Bài học chứa khối này — có thì bật "Nhờ AI" sửa từng mục (S2). */
+  aiLessonId?: string;
+  /** Gọi khi giảng viên dùng một đề xuất của AI (để đánh dấu lần lưu sau là "trước khi nhờ AI sửa"). */
+  onAiApplied?: () => void;
 }
 
 const EDITOR_EXTENSIONS_LESSON = [...EXTENSIONS, LessonActive];
@@ -86,6 +90,8 @@ export default function RichTextEditor({
   lessonTools = false,
   look = null,
   onLookChange,
+  aiLessonId,
+  onAiApplied,
 }: Props) {
   const [uploadError, setUploadError] = useState<string | null>(null);
   // null = chưa dò xong (chỉ dò được ở trình duyệt). "source" = chỉ xem bản hiển thị, giữ nguyên nội dung.
@@ -252,7 +258,7 @@ export default function RichTextEditor({
             ) : null
           }
         />
-        {lessonTools && <LessonContextBar editor={editor} />}
+        {lessonTools && <LessonContextBar editor={editor} aiLessonId={aiLessonId} look={look} onAiApplied={onAiApplied} />}
         </div>
       </div>
       <div className={full ? "mx-auto my-6 max-w-4xl overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] shadow-sm" : ""}>

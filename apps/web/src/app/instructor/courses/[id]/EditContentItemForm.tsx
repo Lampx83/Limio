@@ -22,6 +22,9 @@ import SafeHtml from "@/components/SafeHtml";
 import { EXTENSIONS } from "@/components/RichTextEditor";
 import { readLessonLook, type LessonLook } from "@feedbackme/shared-types";
 import { probeEditorLoss } from "@/components/richtext/lossProbe";
+import VersionHistory from "@/components/lesson/VersionHistory";
+import LessonRichText from "@/components/lesson/LessonRichText";
+import { convertLegacyAiHtml, type ConvertResult } from "@/lib/legacyLessonConvert";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -110,12 +113,70 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   const [aiSaved, setAiSaved] = useState(false);
   const [richtextComplex, setRichtextComplex] = useState<boolean | null>(null);
   const initialHtmlRef = useRef(String(initial.html ?? ""));
+  // Bài AI kiểu cũ (bị khoá): thử chuyển sang dạng khối mới ngay khi mở (S5).
+  const [converted, setConverted] = useState<ConvertResult | null>(null);
+  const [converting, setConverting] = useState(false);
+  // Lần lưu này có dùng "Nhờ AI" → phiên bản cũ mang nhãn "Trước khi nhờ AI sửa" (S3).
+  const aiEditedRef = useRef(false);
+  // Đổi khoá để dựng lại trình soạn sau khi khôi phục/chuyển (trình soạn chỉ dò nội dung lúc mở).
+  const [editorKey, setEditorKey] = useState(0);
 
   useEffect(() => {
     if (type !== "richtext") return;
-    setRichtextComplex(!!probeEditorLoss(initialHtmlRef.current, EXTENSIONS));
+    const complex = !!probeEditorLoss(initialHtmlRef.current, EXTENSIONS);
+    setRichtextComplex(complex);
+    if (complex) setConverted(convertLegacyAiHtml(initialHtmlRef.current));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [type]);
+
+  /** Chuyển bài AI kiểu cũ sang dạng mới: lưu ngay, bản cũ vào lịch sử (before_convert). */
+  async function applyConversion() {
+    if (!converted?.ok) return;
+    setConverting(true);
+    try {
+      const res = await fetch(apiUrl(`/api/contents/${item.id}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payload: { html: converted.html, look: converted.look }, versionSource: "before_convert" }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setHtml(converted.html);
+      setLook(converted.look);
+      setRichtextComplex(false);
+      setEditorKey((k) => k + 1);
+      toast.success("Đã chuyển sang dạng mới — giờ sửa tay được.");
+      router.refresh();
+    } catch {
+      toast.error("Chưa chuyển được. Vui lòng thử lại.");
+    } finally {
+      setConverting(false);
+    }
+  }
+
+  /** Sau khi khôi phục một phiên bản: nạp lại nội dung và dựng lại trình soạn. */
+  function onRestored(p: { html?: string; look?: unknown }) {
+    const h = String(p.html ?? "");
+    setHtml(h);
+    setLook(readLessonLook(p.look));
+    const complex = !!probeEditorLoss(h, EXTENSIONS);
+    setRichtextComplex(complex);
+    setConverted(complex ? convertLegacyAiHtml(h) : null);
+    setAiSaved(false);
+    setEditorKey((k) => k + 1);
+    toast.success("Đã khôi phục phiên bản.");
+    router.refresh();
+  }
+
+  async function redraft() {
+    if (!window.confirm("Mở màn Dàn ý dựng từ chính bài này để sắp xếp lại và cho AI viết lại? Bài hiện tại vẫn giữ nguyên cho tới khi bạn Áp dụng, và được lưu trong Lịch sử.")) return;
+    const res = await fetch(apiUrl(`/api/contents/${item.id}/redraft`), { method: "POST" });
+    const d = (await res.json().catch(() => ({}))) as { courseId?: string; lessonId?: string; error?: string };
+    if (!res.ok || !d.courseId) {
+      toast.error(d.error === "empty_content" ? "Bài đang trống, chưa có gì để lập dàn ý." : "Chưa mở được dàn ý. Vui lòng thử lại.");
+      return;
+    }
+    router.push(`/instructor/courses/${d.courseId}/lessons/${d.lessonId}/from-document`);
+  }
 
   /**
    * "Áp dụng và lưu" trong AiFormatPanel gọi thẳng đây — PATCH ngay với HTML
@@ -239,7 +300,9 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
       res = await fetch(apiUrl(`/api/contents/${item.id}`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payload }),
+        body: JSON.stringify(
+          type === "richtext" && aiEditedRef.current ? { payload, versionSource: "before_ai" } : { payload },
+        ),
       });
     } catch (networkErr) {
       setBusy(false);
@@ -285,42 +348,62 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
       )}
 
       {type === "richtext" && richtextComplex === false && (
-        <div className="space-y-3">
-          <div>
-            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
-              Nội dung
-            </label>
-            {aiSaved ? (
-              <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
-                <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
-              </div>
-            ) : (
-              <RichTextEditor
-                value={html}
-                onChange={setHtml}
-                lessonTools
-                look={look}
-                onLookChange={setLook}
-              />
-            )}
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center gap-1">
+            <span className="mr-auto text-xs font-semibold uppercase tracking-wide text-faint">Nội dung</span>
+            <VersionHistory contentItemId={item.id} onRestored={onRestored} />
+            <button type="button" onClick={redraft} className="btn-ghost btn-sm">
+              Làm lại từ dàn ý
+            </button>
           </div>
-          <AiFormatPanel
-            lessonId={lessonId}
-            html={html}
-            onSaved={saveRichtextViaAi}
-            onClose={onClose}
-          />
+          {aiSaved ? (
+            <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
+              <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
+            </div>
+          ) : (
+            <RichTextEditor
+              key={editorKey}
+              value={html}
+              onChange={setHtml}
+              lessonTools
+              look={look}
+              onLookChange={setLook}
+              aiLessonId={lessonId}
+              onAiApplied={() => {
+                aiEditedRef.current = true;
+              }}
+            />
+          )}
         </div>
       )}
 
-      {type === "richtext" && richtextComplex === true && (
+      {type === "richtext" && richtextComplex === true && converted?.ok && (
         <div className="space-y-3">
+          <div className="banner-info flex flex-wrap items-center gap-3 text-sm">
+            <span className="flex-1">
+              Bài này được AI định dạng theo kiểu cũ nên chưa sửa tay được. Chuyển sang dạng mới để sửa thoải mái —
+              chữ và ảnh giữ nguyên, bản cũ được lưu trong Lịch sử.
+            </span>
+            <button type="button" onClick={applyConversion} disabled={converting} className="btn-primary btn-sm">
+              {converting ? "Đang chuyển…" : "Chuyển sang dạng mới"}
+            </button>
+          </div>
+          <p className="text-meta font-semibold">Bản sau khi chuyển</p>
+          <LessonRichText html={converted.html} look={converted.look} />
+        </div>
+      )}
+
+      {type === "richtext" && richtextComplex === true && !converted?.ok && (
+        <div className="space-y-3">
+          <div className="flex justify-end">
+            <VersionHistory contentItemId={item.id} onRestored={onRestored} />
+          </div>
           <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
             <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
           </div>
           <p className="banner-info text-sm">
-            Nội dung này đã được AI định dạng nên không sửa trực tiếp trong trình soạn
-            thảo được. Muốn thay đổi, dùng &ldquo;Định dạng bằng AI&rdquo; bên dưới.
+            Nội dung này có định dạng riêng mà trình soạn thảo chưa biểu diễn được, nên chưa sửa trực tiếp được.
+            Muốn thay đổi, dùng &ldquo;Định dạng bằng AI&rdquo; bên dưới.
           </p>
           <AiFormatPanel
             lessonId={lessonId}

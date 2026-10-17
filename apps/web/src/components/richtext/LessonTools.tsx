@@ -13,7 +13,9 @@ import {
   isLessonLayoutKey,
   type LessonBoxKind,
   type LessonLayoutKey,
+  type LessonLook,
 } from "@feedbackme/shared-types";
+import AiSectionMenu from "./AiSectionMenu";
 import {
   addPart,
   canMove,
@@ -165,7 +167,18 @@ export function LessonInsertMenu({
  * cho gọn; tên đầy đủ nằm ở tooltip và nhãn cho trình đọc màn hình. Mọi thao
  * tác hoàn tác được bằng Ctrl+Z.
  */
-export function LessonContextBar({ editor }: { editor: Editor }) {
+export function LessonContextBar({
+  editor,
+  aiLessonId,
+  look = null,
+  onAiApplied,
+}: {
+  editor: Editor;
+  /** Có thì hiện "Nhờ AI" cho mục đang chọn (S2). */
+  aiLessonId?: string;
+  look?: LessonLook | null;
+  onAiApplied?: () => void;
+}) {
   const s = useEditorState({
     editor,
     selector: ({ editor: ed }) => {
@@ -214,6 +227,7 @@ export function LessonContextBar({ editor }: { editor: Editor }) {
               </option>
             ))}
           </select>
+          {aiLessonId && <AiSectionMenu editor={editor} lessonId={aiLessonId} look={look} onApplied={onAiApplied} />}
           <IconBtn label="Thêm phần vào mục" onClick={() => addPart(editor, ctx())}>
             <Plus className="h-3.5 w-3.5" />
           </IconBtn>

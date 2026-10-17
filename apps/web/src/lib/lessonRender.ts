@@ -59,6 +59,29 @@ export function renderSection(s: OutlineSection, d: SectionDraft, paras: SourceP
   return `${out}</section>`;
 }
 
+/**
+ * Mục sau khi "Nhờ AI" sửa (S2): dựng lại khối từ bản đề xuất, đặt lại đúng các
+ * ảnh có chú thích của mục cũ (AI không nhìn thấy ảnh nên không làm mất được).
+ */
+export function renderEditedSection(
+  head: { title: string; layout: string },
+  d: SectionDraft,
+  figures: Array<{ src: string; alt: string; caption: string }>,
+): string {
+  let out = `<section class="lesson-section" data-layout="${escapeHtml(head.layout)}"><h2>${inline(head.title)}</h2>`;
+  out += d.intro.map(p).join("");
+  out += figures
+    .map((f) => `<figure class="lesson-figure"><img src="${escapeHtml(f.src)}" alt="${escapeHtml(f.alt)}"><figcaption>${inline(f.caption)}</figcaption></figure>`)
+    .join("");
+  for (const part of d.parts) {
+    const h = part.title ? `<h3>${inline(part.title)}</h3>` : "";
+    const body = part.paragraphs.map(p).join("") + ul(part.bullets);
+    out += `<div class="lesson-part">${h}${body || (h ? "" : "<p></p>")}</div>`;
+  }
+  for (const b of d.boxes) out += box(b.kind, b.title, b.paragraphs.map(p).join(""));
+  return `${out}</section>`;
+}
+
 /** Dự phòng khi AI không viết được mục (T5): giữ nguyên các đoạn tài liệu của mục. */
 export function fallbackSection(s: OutlineSection, paras: SourcePara[]): string {
   let out = `<section class="lesson-section" data-layout="${s.layout === "image" ? "image" : "text"}"><h2>${inline(s.title)}</h2>`;

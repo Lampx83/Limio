@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
 import type { OutlineSection, SourcePara } from "@feedbackme/shared-types";
-import { buildSectionPrompt, cleanSectionDraft, writeLessonSection } from "../aiTutor/lessonWriter";
+import { AI_EXAMPLE_BOX_TITLE, buildSectionPrompt, cleanSectionDraft, editLessonSection, writeLessonSection } from "../aiTutor/lessonWriter";
 
 /** Mốc 3 — AI viết một mục từ dàn ý đã chốt (T1, T3). */
 
@@ -68,5 +68,43 @@ describe("lessonWriter", () => {
     await expect(
       writeLessonSection(u.id, { lessonTitle: "Bài", section: SECTION, paras: PARAS, writing: "keep" }, fake({ intro: [], parts: [], boxes: [], imageCaption: "" })),
     ).rejects.toMatchObject({ code: "openai_error" });
+  });
+
+  it("Nhờ AI sửa mục: yêu cầu đúng việc; ví dụ AI thêm luôn mang nhãn 'AI gợi ý' (S2)", async () => {
+    const u = await prisma.user.create({ data: { email: `lw3-${Date.now()}@e.com`, passwordHash: "x", displayName: "GV" } });
+    const base = { lessonTitle: "Bài", title: "Khái niệm", layout: "text", intro: ["Câu gốc."], parts: [], boxes: [{ kind: "example", title: "Ví dụ", paragraphs: ["Ví dụ cũ."] }] };
+    const seen: { system?: string; user?: string } = {};
+    const out = await editLessonSection(
+      u.id,
+      { ...base, action: "example" },
+      fake(
+        {
+          intro: ["Câu gốc."],
+          parts: [],
+          boxes: [
+            { kind: "example", title: "Ví dụ", paragraphs: ["Ví dụ cũ."] },
+            { kind: "example", title: "", paragraphs: ["Ví dụ mới."] },
+          ],
+          imageCaption: "",
+        },
+        seen,
+      ),
+    );
+    expect(seen.system).toContain("THÊM đúng một ví dụ");
+    expect(seen.user).toContain('"Câu gốc."');
+    expect(out.boxes.map((b) => b.title)).toEqual(["Ví dụ", AI_EXAMPLE_BOX_TITLE]);
+
+    const sp: { system?: string } = {};
+    await editLessonSection(u.id, { ...base, action: "spelling" }, fake({ intro: ["Câu gốc."], parts: [], boxes: [], imageCaption: "" }, sp));
+    expect(sp.system).toContain("Chỉ SỬA LỖI chính tả");
+  });
+
+  it("mục trống thì không gọi AI", async () => {
+    let called = false;
+    const openai = { chat: { completions: { create: async () => ((called = true), {}) } } } as unknown as OpenAI;
+    await expect(
+      editLessonSection("u", { lessonTitle: "", title: "x", layout: "text", intro: [], parts: [], boxes: [], action: "shorter" }, openai),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+    expect(called).toBe(false);
   });
 });

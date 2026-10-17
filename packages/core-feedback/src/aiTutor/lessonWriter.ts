@@ -200,3 +200,83 @@ export async function writeLessonSummary(
   await recordAiUsage(userId, model, inputTokens, outputTokens, db);
   return asStrings(data?.points).slice(0, 5);
 }
+
+// =====================================================================
+// Nhờ AI sửa MỘT mục (Mốc 4, S2) — giảng viên chọn một việc, AI chỉ đụng mục đó.
+// Đầu vào là mục hiện có ở dạng có cấu trúc (trình soạn tách từ khối), đầu ra
+// cùng dạng SectionDraft để máy chủ/trình soạn dựng lại khối. Ảnh của mục do
+// trình soạn tự giữ, AI không nhìn thấy và không làm mất được.
+// =====================================================================
+
+export const SECTION_EDIT_ACTIONS = ["shorter", "simpler", "example", "spelling"] as const;
+export type SectionEditAction = (typeof SECTION_EDIT_ACTIONS)[number];
+
+/** Tiêu đề hộp ví dụ do AI thêm — để giảng viên nhận ra và kiểm (S2). */
+export const AI_EXAMPLE_BOX_TITLE = "Ví dụ (AI gợi ý)";
+
+const EDIT_RULES: Record<SectionEditAction, string> = {
+  shorter: "Viết NGẮN HƠN khoảng một phần ba: gộp câu lặp ý, bỏ câu thừa. Giữ mọi ý chính, số liệu, thuật ngữ, tên riêng; giữ các phần và hộp hiện có (có thể rút gọn nội dung bên trong).",
+  simpler: "Viết DỄ HIỂU HƠN cho sinh viên năm nhất: câu ngắn, mỗi câu một ý, giải thích thuật ngữ ngay lần đầu xuất hiện. Không đổi ý, số liệu, thuật ngữ; giữ các phần và hộp hiện có.",
+  example: `Chép lại NGUYÊN VĂN toàn bộ nội dung hiện có (intro, parts, boxes) và THÊM đúng một ví dụ minh hoạ trong một hộp mới { kind: "example", title: "${AI_EXAMPLE_BOX_TITLE}" }. Ví dụ cụ thể, đúng chuyên môn, phù hợp sinh viên Việt Nam, không mâu thuẫn với nội dung mục, không bịa số liệu thống kê.`,
+  spelling: "Chỉ SỬA LỖI chính tả, dấu câu, ngữ pháp và lỗi gõ. Giữ nguyên mọi câu chữ khác, giữ nguyên các phần, hộp và thứ tự.",
+};
+
+export interface SectionEditInput {
+  lessonTitle: string;
+  title: string;
+  layout: string;
+  intro: string[];
+  parts: Array<{ title: string; paragraphs: string[]; bullets: string[] }>;
+  boxes: Array<{ kind: string; title: string; paragraphs: string[] }>;
+  action: SectionEditAction;
+}
+
+export async function editLessonSection(
+  userId: string,
+  input: SectionEditInput,
+  openai: OpenAI,
+  model = DEFAULT_MODEL,
+  db: PrismaClient = prisma,
+): Promise<SectionDraft> {
+  const total = [...input.intro, ...input.parts.flatMap((p) => [p.title, ...p.paragraphs, ...p.bullets]), ...input.boxes.flatMap((b) => b.paragraphs)]
+    .join(" ").trim();
+  if (!total) throw new AiGenerationError("validation_failed", "empty_section");
+  if (total.length > 20_000) throw new AiGenerationError("validation_failed", "too_long");
+  await assertWithinCaps(userId, db, "generator");
+
+  const system = `Bạn là biên tập viên học liệu đại học. Sửa MỘT mục của bài học theo đúng yêu cầu dưới đây, không làm gì khác.
+
+Yêu cầu: ${EDIT_RULES[input.action]}
+
+Quy tắc chung:
+- Không thêm kiến thức, số liệu, khẳng định mới (trừ ví dụ khi được yêu cầu, và chỉ trong hộp ví dụ).
+- Văn phong khoa học, câu đầy đủ, không emoji. Chữ thường, không HTML, không Markdown, trừ **đậm** và *nghiêng*.
+- Giữ bố cục của mục; ý nghĩa của "parts" theo bố cục như sau.
+${LAYOUT_RULES}
+
+Trả JSON đúng lược đồ: { intro, parts: [{ title, paragraphs, bullets }], boxes: [{ kind, title, paragraphs }], imageCaption }. imageCaption để chuỗi rỗng.`;
+  const current = {
+    intro: input.intro,
+    parts: input.parts,
+    boxes: input.boxes.filter((b) => (OUTLINE_BOX_KINDS as readonly string[]).includes(b.kind)),
+  };
+  const user = `Bài học: ${input.lessonTitle}
+Mục: ${input.title}
+Bố cục: ${input.layout}
+
+Nội dung hiện tại của mục (JSON):
+${JSON.stringify(current, null, 1)}
+
+Sửa theo yêu cầu. Trả JSON.`;
+
+  const { data, inputTokens, outputTokens } = await callJsonModel<unknown>(openai, model, system, user, "lesson_section", SECTION_SCHEMA, 4000);
+  await recordAiUsage(userId, model, inputTokens, outputTokens, db);
+  const draft = cleanSectionDraft(data);
+  if (!draft.intro.length && !draft.parts.length) throw new AiGenerationError("openai_error", "empty_section");
+  if (input.action === "example") {
+    // Hộp ví dụ mới luôn mang nhãn "AI gợi ý" — kể cả khi mô hình quên đặt tên.
+    const before = new Set(current.boxes.filter((b) => b.kind === "example").map((b) => b.paragraphs.join(" ")));
+    for (const b of draft.boxes) if (b.kind === "example" && !before.has(b.paragraphs.join(" "))) b.title = AI_EXAMPLE_BOX_TITLE;
+  }
+  return draft;
+}

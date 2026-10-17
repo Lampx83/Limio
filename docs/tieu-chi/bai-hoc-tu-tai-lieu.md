@@ -1,7 +1,7 @@
 # Tiêu chí nghiệm thu: bài học văn bản từ tài liệu (AI) — dàn ý trước, sửa không hỏng định dạng
 
 Thay cho ô "Văn bản — AI hỗ trợ" hiện nay. Học theo luồng bài giảng tương tác (`bai-giang-tuong-tac-G-H.md`): tài liệu, dàn ý, chốt, rồi mới tạo bài.
-Bản mẫu giao diện: `docs/mockup/bai-hoc-bo-cuc.html`. Trạng thái: mốc 1–2 đã commit; mốc 3 đã code (2026-10-17), chưa commit; mốc 4 chưa làm. Mẫu màn dàn ý: `docs/mockup/bai-hoc-dan-y.html` (đã chốt).
+Bản mẫu giao diện: `docs/mockup/bai-hoc-bo-cuc.html`. Trạng thái: mốc 1–3 đã commit; mốc 4 đã code (2026-10-17), chưa commit. Chuyển bài AI cũ hàng loạt: `pnpm --filter @feedbackme/web exec tsx scripts/convert-legacy-ai-lessons.ts` (chạy thử), thêm `--apply` để chuyển thật. Mẫu màn dàn ý: `docs/mockup/bai-hoc-dan-y.html` (đã chốt).
 
 Quyết định đã chốt (2026-10-17): mỗi lần tạo bài, giảng viên chọn AI giữ nguyên lời hay được biên tập câu (1c); tài liệu dài thì dàn ý gợi ý tách thành nhiều bài học, giảng viên quyết (2b); luồng mới thay ô "Văn bản — AI hỗ trợ" (3a); bài đã định dạng bằng AI trước đây được tự chuyển sang dạng mới, bản cũ giữ trong lịch sử (4a).
 
