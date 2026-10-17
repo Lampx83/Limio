@@ -6,13 +6,22 @@ import { Loader2, Upload, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 import {
+  BRAND_BGS,
+  BRAND_COLOR_SLOTS,
   BRAND_POSITIONS,
   BRAND_SIZES,
   BRAND_SHOWS,
   DEFAULT_BRAND,
+  brandBackground,
+  brandEffectiveThemeId,
+  brandFrameBackground,
   brandPalette,
+  extractLogoColors,
   isBrandColor,
   sanitizeBrand,
+  type BrandBg,
+  type BrandColorSlot,
+  type BrandColors,
   type BrandConfig,
   type BrandPosition,
   type BrandShow,
@@ -22,7 +31,42 @@ import { LayoutSlideView } from "../SlideLayouts";
 import { BrandLogoOverlay, LiveBrandProvider } from "../liveBrandContext";
 import { isDarkTheme, slideBgFor } from "../slideThemes";
 
-const COLORS = ["#0A6EBD", "#B91C1C", "#0F766E", "#7C3AED", "#C2410C", "#1D4ED8", "#047857", "#BE185D"];
+// Bộ phối màu gợi ý (chính, phụ, nhấn): bấm một bộ là đặt cả ba ô.
+const PRESETS: ReadonlyArray<{ name: string; colors: Required<BrandColors> }> = [
+  { name: "Lam và cam", colors: { primary: "#0A6EBD", secondary: "#0E7490", accent: "#F59E0B" } },
+  { name: "Đỏ và vàng", colors: { primary: "#B91C1C", secondary: "#9A3412", accent: "#FACC15" } },
+  { name: "Lục và lam", colors: { primary: "#047857", secondary: "#0F766E", accent: "#38BDF8" } },
+  { name: "Tím và hồng", colors: { primary: "#6D28D9", secondary: "#BE185D", accent: "#F0ABFC" } },
+  { name: "Than và cam", colors: { primary: "#27272A", secondary: "#52525B", accent: "#F97316" } },
+  { name: "Xanh navy", colors: { primary: "#1E3A8A", secondary: "#1D4ED8", accent: "#7DD3FC" } },
+];
+const SLOT_LABEL: Record<BrandColorSlot, { name: string; hint: string }> = {
+  primary: { name: "Màu chính", hint: "Tiêu đề nổi, biểu tượng, nút, thanh tiến độ" },
+  secondary: { name: "Màu phụ", hint: "Điểm nhấn thứ hai, dải màu của chữ" },
+  accent: { name: "Màu nhấn", hint: "Vầng sáng và điểm cuối dải màu" },
+};
+const BG_LABEL: Record<BrandBg, string> = { theme: "Theo giao diện", light: "Sáng xuyệt tông", dark: "Tối xuyệt tông" };
+
+/** Đọc điểm ảnh của logo (thu nhỏ) để gợi ý màu; null nếu trình duyệt không đọc được ảnh. */
+async function logoPixels(src: Blob): Promise<Uint8ClampedArray | null> {
+  try {
+    const bmp = await createImageBitmap(src);
+    const k = Math.min(1, 96 / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return null;
+    ctx.drawImage(bmp, 0, 0, w, h);
+    bmp.close();
+    return ctx.getImageData(0, 0, w, h).data;
+  } catch {
+    return null;
+  }
+}
+
+const SLOT_ADJUST_NOTE: Record<BrandColorSlot, string> = { primary: "màu chính", secondary: "màu phụ", accent: "màu nhấn" };
 const SIZE_LABEL: Record<BrandSize, string> = { s: "Nhỏ", m: "Vừa", l: "Lớn" };
 const SHOW_LABEL: Record<BrandShow, string> = { all: "Mọi slide", nocover: "Trừ bìa", ends: "Bìa và tóm tắt" };
 const POS_LABEL: Record<BrandPosition, string> = { tl: "Góc trên trái", tr: "Góc trên phải", bl: "Góc dưới trái", br: "Góc dưới phải" };
@@ -71,8 +115,15 @@ export default function BrandDialog({
   const [sample, setSample] = useState<SampleKey>("cards");
   const [pt, setPt] = useState<PreviewTheme>("current");
   const [uploading, setUploading] = useState(false);
-  const [hexText, setHexText] = useState(draft.color ?? "");
+  // Ô nhập mã màu theo từng ô; chỉ áp khi gõ đủ mã hợp lệ.
+  const [hex, setHex] = useState<Record<BrandColorSlot, string>>({
+    primary: draft.colors?.primary ?? "",
+    secondary: draft.colors?.secondary ?? "",
+    accent: draft.colors?.accent ?? "",
+  });
   const [saved, setSaved] = useState(true);
+  // Bộ màu gợi ý lấy từ logo (chưa áp dụng cho tới khi người dùng bấm).
+  const [suggest, setSuggest] = useState<string[] | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef(draft);
   latest.current = draft;
@@ -87,7 +138,7 @@ export default function BrandDialog({
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     const d = latest.current;
-    onChange(d.logoUrl || d.color ? d : null);
+    onChange(d.logoUrl || d.colors ? d : null);
     setSaved(true);
   };
   const update = (patch: Partial<BrandConfig>, immediate = true) => {
@@ -98,6 +149,11 @@ export default function BrandDialog({
     setSaved(false);
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(flush, immediate ? 120 : 600);
+  };
+
+  const suggestFrom = async (blob: Blob) => {
+    const px = await logoPixels(blob);
+    setSuggest(px ? extractLogoColors(px) : []);
   };
 
   const uploadLogo = async (file: File) => {
@@ -113,6 +169,7 @@ export default function BrandDialog({
         return;
       }
       update({ logoUrl: j.url });
+      void suggestFrom(file);
     } catch {
       toast.error("Lỗi mạng khi tải logo");
     } finally {
@@ -122,9 +179,28 @@ export default function BrandDialog({
 
   const deckDark = isDarkTheme(themeId);
   const previewTheme = pt === "current" ? themeId : pt === "light" ? (deckDark ? "white" : themeId) : deckDark ? themeId : "night";
-  const dark = isDarkTheme(previewTheme);
-  const palette = useMemo(() => (draft.color ? brandPalette(draft.color, dark) : null), [draft.color, dark]);
-  const shownBrand = draft.logoUrl || draft.color ? draft : null;
+  const dark = isDarkTheme(brandEffectiveThemeId(draft.colors ? draft : null, previewTheme));
+  const palette = useMemo(() => brandPalette(draft.colors, dark), [draft.colors, dark]);
+  const shownBrand = draft.logoUrl || draft.colors ? draft : null;
+
+  // Đặt một ô màu. Xoá màu chính thì xoá cả bảng (phụ và nhấn chỉ có nghĩa khi có màu chính).
+  const setColor = (slot: BrandColorSlot, value: string | undefined, immediate = true) => {
+    const cur = latest.current.colors;
+    let next: BrandColors | undefined;
+    if (slot === "primary") {
+      next = value ? { ...cur, primary: value } : undefined;
+    } else if (cur) {
+      next = { ...cur, [slot]: value };
+      if (!value) delete next[slot];
+    }
+    setHex((h) => (slot === "primary" && !value ? { primary: "", secondary: "", accent: "" } : { ...h, [slot]: value ?? "" }));
+    // Bỏ màu chính là bỏ cả bảng màu, nền xuyệt tông cũng không còn nghĩa: về theo giao diện.
+    update(slot === "primary" && !value ? { colors: undefined, bg: "theme" } : { colors: next }, immediate);
+  };
+  const applyPreset = (c: Required<BrandColors>) => {
+    setHex({ primary: c.primary, secondary: c.secondary, accent: c.accent });
+    update({ colors: { ...c } });
+  };
 
   return createPortal(
     <dialog
@@ -167,7 +243,7 @@ export default function BrandDialog({
                 </button>
               ))}
               <span className="flex-1" />
-              {(
+              {(draft.bg === "theme" || !draft.colors) && (
                 [
                   ["current", "Giao diện hiện tại"],
                   ["light", "Thử nền sáng"],
@@ -188,7 +264,7 @@ export default function BrandDialog({
             <LiveBrandProvider brand={shownBrand}>
               <div
                 className="relative flex aspect-video w-full overflow-hidden rounded-xl border border-black/10"
-                style={{ background: slideBgFor(previewTheme, sample !== "quiz") }}
+                style={{ background: brandFrameBackground(shownBrand, sample !== "quiz") ?? slideBgFor(previewTheme, sample !== "quiz") }}
               >
                 {sample === "quiz" ? (
                   <div className="flex h-full w-full flex-col justify-center gap-3 p-[7%] text-[#20241F]">
@@ -291,81 +367,143 @@ export default function BrandDialog({
             )}
 
             <section aria-labelledby="brand-color-h">
-              <h3 id="brand-color-h" className="mb-1 text-[15px] font-bold">Màu thương hiệu</h3>
-              <p className="mb-2 text-[13px] text-faint">
-                Thay màu nhấn (tiêu đề nổi, biểu tượng, nút, thanh tiến độ) trên giao diện đang dùng; nền slide giữ nguyên.
+              <h3 id="brand-color-h" className="mb-1 text-[15px] font-bold">Bảng màu thương hiệu</h3>
+              <p className="mb-3 text-[13px] text-faint">
+                Ba màu thay màu nhấn trên giao diện đang dùng; nền slide giữ nguyên. Chỉ cần đặt màu chính, hai màu còn lại tự sinh nếu để trống.
               </p>
-              <div className="flex flex-wrap gap-2" role="group" aria-label="Màu gợi ý">
-                {COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    aria-label={`Màu ${c}`}
-                    aria-pressed={draft.color === c}
-                    onClick={() => {
-                      setHexText(c);
-                      update({ color: c });
-                    }}
-                    className={`h-8 w-8 rounded-full border-2 shadow-[inset_0_0_0_1px_rgb(0_0_0/.12)] ${draft.color === c ? "border-[rgb(var(--text))]" : "border-transparent"}`}
-                    style={{ background: c }}
-                  />
-                ))}
-                <button
-                  type="button"
-                  aria-label="Không dùng màu thương hiệu"
-                  title="Không dùng màu thương hiệu"
-                  aria-pressed={!draft.color}
-                  onClick={() => {
-                    setHexText("");
-                    update({ color: undefined });
-                  }}
-                  className={`h-8 w-8 rounded-full border-2 ${!draft.color ? "border-[rgb(var(--text))]" : "border-transparent"}`}
-                  style={{ background: "repeating-linear-gradient(45deg,#fff 0 5px,#e5e7eb 5px 10px)" }}
-                />
+
+              <div className="mb-4">
+                <span className="mb-1.5 block text-xs font-semibold text-muted">Bộ phối màu gợi ý</span>
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Bộ phối màu gợi ý">
+                  {PRESETS.map((pr) => {
+                    const on = draft.colors?.primary === pr.colors.primary && draft.colors?.secondary === pr.colors.secondary && draft.colors?.accent === pr.colors.accent;
+                    return (
+                      <button
+                        key={pr.name}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => applyPreset(pr.colors)}
+                        className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-[13px] font-medium ${on ? "border-brand-600 bg-brand-soft ring-1 ring-brand-600" : "border-token hover:bg-[rgb(var(--surface-muted))]"}`}
+                      >
+                        <span className="flex shrink-0">
+                          {[pr.colors.primary, pr.colors.secondary, pr.colors.accent].map((c, i) => (
+                            <i key={i} className="-ml-1.5 block h-5 w-5 rounded-full border-2 border-[rgb(var(--surface))] first:ml-0" style={{ background: c }} />
+                          ))}
+                        </span>
+                        {pr.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="mt-3 flex items-center gap-2">
-                <input
-                  type="color"
-                  aria-label="Chọn màu"
-                  value={draft.color && isBrandColor(draft.color) ? draft.color.toLowerCase() : "#0a6ebd"}
-                  onChange={(e) => {
-                    setHexText(e.target.value.toUpperCase());
-                    update({ color: e.target.value.toUpperCase() }, false);
-                  }}
-                  className="h-10 w-11 rounded-xl border border-token bg-[rgb(var(--surface))] p-0.5"
-                />
-                <input
-                  type="text"
-                  aria-label="Mã màu"
-                  placeholder="#0A6EBD"
-                  maxLength={7}
-                  value={hexText}
-                  onChange={(e) => {
-                    const raw = e.target.value.trim();
-                    const v = raw && raw[0] !== "#" ? `#${raw}` : raw;
-                    setHexText(v.toUpperCase());
-                    if (isBrandColor(v)) update({ color: v.toUpperCase() }, false);
-                  }}
-                  className="input w-32 uppercase tabular-nums"
-                />
-                {draft.color && (
-                  <button type="button" className="btn-secondary h-8 !px-3 text-[13px]" onClick={() => { setHexText(""); update({ color: undefined }); }}>
-                    Bỏ màu
-                  </button>
-                )}
+
+              {draft.logoUrl && (
+                <div className="mb-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
+                  <div className="flex items-center gap-2">
+                    <b className="flex-1 text-[13px]">Màu lấy từ logo</b>
+                    <button
+                      type="button"
+                      className="text-[13px] font-medium text-brand-700 hover:underline"
+                      onClick={async () => {
+                        try {
+                          const r = await fetch(apiUrl(draft.logoUrl!));
+                          await suggestFrom(await r.blob());
+                        } catch {
+                          setSuggest([]);
+                        }
+                      }}
+                    >
+                      {suggest ? "Lấy lại" : "Gợi ý màu từ logo"}
+                    </button>
+                  </div>
+                  {suggest && suggest.length > 0 && (
+                    <div className="mt-2 flex items-center gap-3">
+                      <span className="flex" aria-label="Màu gợi ý từ logo">
+                        {suggest.map((c, i) => (
+                          <i key={c} className="-ml-1.5 block h-7 w-7 rounded-full border-2 border-[rgb(var(--surface))] first:ml-0" style={{ background: c }} title={c} aria-label={`${SLOT_LABEL[BRAND_COLOR_SLOTS[i]!].name} ${c}`} />
+                        ))}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-secondary h-8 !px-3 text-[13px]"
+                        onClick={() => {
+                          const [primary, secondary, accent] = suggest;
+                          setHex({ primary: primary ?? "", secondary: secondary ?? "", accent: accent ?? "" });
+                          update({ colors: { primary: primary!, ...(secondary ? { secondary } : {}), ...(accent ? { accent } : {}) } });
+                        }}
+                      >
+                        Dùng bộ màu này
+                      </button>
+                    </div>
+                  )}
+                  {suggest && suggest.length === 0 && (
+                    <p className="mt-1.5 text-[12.5px] text-faint">Chưa lấy được màu nổi bật từ logo này (logo có thể chỉ gồm nền trắng hoặc xám). Hãy chọn màu tay bên dưới.</p>
+                  )}
+                </div>
+              )}
+
+              <div className="space-y-2.5">
+                {BRAND_COLOR_SLOTS.map((slot) => {
+                  const value = draft.colors?.[slot];
+                  const disabled = slot !== "primary" && !draft.colors;
+                  return (
+                    <div key={slot} className={`flex items-center gap-2 ${disabled ? "opacity-50" : ""}`}>
+                      <input
+                        type="color"
+                        aria-label={`Chọn ${SLOT_LABEL[slot].name.toLowerCase()}`}
+                        disabled={disabled}
+                        value={value && isBrandColor(value) ? value.toLowerCase() : "#0a6ebd"}
+                        onChange={(e) => setColor(slot, e.target.value.toUpperCase(), false)}
+                        className="h-10 w-11 shrink-0 rounded-xl border border-token bg-[rgb(var(--surface))] p-0.5"
+                      />
+                      <div className="grid min-w-0 flex-1 leading-tight">
+                        <b className="text-sm">{SLOT_LABEL[slot].name}</b>
+                        <small className="truncate text-xs text-faint">{SLOT_LABEL[slot].hint}</small>
+                      </div>
+                      <input
+                        type="text"
+                        aria-label={`Mã ${SLOT_LABEL[slot].name.toLowerCase()}`}
+                        placeholder={slot === "primary" ? "#0A6EBD" : "Tự động"}
+                        maxLength={7}
+                        disabled={disabled}
+                        value={hex[slot]}
+                        onChange={(e) => {
+                          const raw = e.target.value.trim();
+                          const v = raw && raw[0] !== "#" ? `#${raw}` : raw;
+                          setHex((h) => ({ ...h, [slot]: v.toUpperCase() }));
+                          if (isBrandColor(v)) setColor(slot, v.toUpperCase(), false);
+                          else if (!v && slot !== "primary") setColor(slot, undefined, false);
+                        }}
+                        className="input h-9 w-[104px] shrink-0 uppercase tabular-nums"
+                      />
+                      {value && (
+                        <button
+                          type="button"
+                          aria-label={slot === "primary" ? "Bỏ cả bảng màu" : `Bỏ ${SLOT_LABEL[slot].name.toLowerCase()} (tự động)`}
+                          title={slot === "primary" ? "Bỏ cả bảng màu" : "Để tự động"}
+                          onClick={() => setColor(slot, undefined)}
+                          className="shrink-0 text-faint hover:text-red-600"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
+
               <div className="mt-3">
                 {palette ? (
                   <>
-                    <div className="flex gap-1.5" aria-label="Bảng màu sinh từ màu đã chọn">
-                      {[palette.sa, palette.sa2, palette.soft, palette.soft2].map((c, i) => (
+                    <div className="flex items-center gap-1.5" aria-label="Bảng màu sau khi chỉnh">
+                      {[palette.sa, palette.sa2, palette.accent, palette.soft, palette.soft2].map((c, i) => (
                         <i key={i} className="block h-7 w-7 rounded-lg border border-black/10" style={{ background: c }} />
                       ))}
                     </div>
-                    <p className={`mt-2 rounded-lg px-3 py-2 text-[13px] ${palette.adjusted ? "bg-amber-50 text-amber-900" : "text-faint"}`}>
-                      {palette.adjusted
-                        ? `Đã chỉnh màu ${dark ? "sáng" : "đậm"} hơn một chút để chữ trên ${dark ? "nền tối" : "nền sáng"} vẫn dễ đọc.`
-                        : "Màu này đủ độ tương phản trên giao diện đang xem thử."}
+                    <p className={`mt-2 rounded-lg px-3 py-2 text-[13px] ${palette.adjusted.length ? "bg-amber-50 text-amber-900" : "text-faint"}`}>
+                      {palette.adjusted.length
+                        ? `Đã chỉnh ${palette.adjusted.map((k) => SLOT_ADJUST_NOTE[k]).join(" và ")} ${dark ? "sáng" : "đậm"} hơn một chút để chữ trên ${dark ? "nền tối" : "nền sáng"} vẫn dễ đọc.`
+                        : "Các màu này đủ độ tương phản trên giao diện đang xem thử."}
                     </p>
                   </>
                 ) : (
@@ -374,12 +512,44 @@ export default function BrandDialog({
               </div>
             </section>
 
-            {(draft.logoUrl || draft.color) && (
+            <section aria-labelledby="brand-bg-h" className={draft.colors ? "" : "opacity-60"}>
+              <h3 id="brand-bg-h" className="mb-1 text-[15px] font-bold">Nền slide</h3>
+              <p className="mb-2 text-[13px] text-faint">
+                {draft.colors ? "Nền xuyệt tông lấy sắc độ từ bảng màu, nên toàn slide cùng một tông." : "Đặt màu chính để dùng nền xuyệt tông."}
+              </p>
+              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Nền slide">
+                {BRAND_BGS.map((m) => {
+                  const on = (draft.colors ? draft.bg : "theme") === m;
+                  const swatch = m === "theme" ? slideBgFor(themeId, true) : draft.colors ? brandBackground(draft.colors, m) : null;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      disabled={m !== "theme" && !draft.colors}
+                      onClick={() => update({ bg: m })}
+                      className={`grid gap-1 rounded-xl border p-1.5 text-center text-[12.5px] font-medium disabled:cursor-not-allowed ${on ? "border-brand-600 ring-1 ring-brand-600" : "border-token hover:border-brand-600"}`}
+                    >
+                      <span className="block h-9 w-full rounded-lg border border-black/10" style={{ background: swatch ?? "repeating-linear-gradient(45deg,#fff 0 5px,#e5e7eb 5px 10px)" }} />
+                      <span>{BG_LABEL[m]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {draft.colors && draft.bg === "dark" && (
+                <p className="mt-2 text-[12.5px] text-faint">
+                  Nền tối chỉ áp cho slide bố cục; slide tương tác (trắc nghiệm, bình chọn, bảng) vẫn nền sáng để chữ đọc rõ.
+                </p>
+              )}
+            </section>
+
+            {(draft.logoUrl || draft.colors) && (
               <button
                 type="button"
                 className="flex items-center gap-1.5 text-sm font-medium text-red-700 hover:underline"
                 onClick={() => {
-                  setHexText("");
+                  setHex({ primary: "", secondary: "", accent: "" });
                   latest.current = DEFAULT_BRAND;
                   setDraft(DEFAULT_BRAND);
                   setSaved(false);

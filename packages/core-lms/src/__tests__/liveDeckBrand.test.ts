@@ -4,7 +4,7 @@ import { registerUser } from "../auth/register";
 import { createLiveDeck, duplicateLiveDeck, getLiveDeck, updateLiveDeck } from "../live/decks";
 
 const BASE = "http://localhost:3000";
-const BRAND = { logoUrl: "/api/limio-live-media/x-logo.png", logoPos: "bl", logoSize: "l", logoShow: "ends", color: "#0A6EBD" };
+const BRAND = { logoUrl: "/api/limio-live-media/x-logo.png", logoPos: "bl", logoSize: "l", logoShow: "ends", colors: { primary: "#0A6EBD", secondary: "#0E7490", accent: "#F59E0B" } };
 
 async function owner(tag: string) {
   const r = await registerUser({ email: `brand-${tag}-${Date.now()}@e.com`, password: "password1234", displayName: tag }, BASE);

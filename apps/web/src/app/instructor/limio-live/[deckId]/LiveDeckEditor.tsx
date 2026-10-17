@@ -63,7 +63,7 @@ import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
 import BrandDialog from "./BrandDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
-import { sanitizeBrand, type BrandConfig } from "@/lib/limioLiveBrand";
+import { brandFrameBackground, sanitizeBrand, type BrandConfig } from "@/lib/limioLiveBrand";
 import { isLayoutSlide } from "../SlideLayouts";
 import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
@@ -683,7 +683,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           title="Logo và màu thương hiệu của bài giảng"
           className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-token px-2 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
         >
-          <span className="h-5 w-5 rounded-full border border-token" style={{ background: sanitizeBrand(deck.brand)?.color ?? "linear-gradient(135deg,#BEF264,#F9A8D4)" }} aria-hidden />
+          <span className="h-5 w-5 rounded-full border border-token" style={{ background: sanitizeBrand(deck.brand)?.colors?.primary ?? "linear-gradient(135deg,#BEF264,#F9A8D4)" }} aria-hidden />
           <span className="hidden sm:inline">Thương hiệu</span>
           {sanitizeBrand(deck.brand) && <span className="hidden font-normal sm:inline">· đã đặt</span>}
         </button>
@@ -857,7 +857,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                 className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
                   selectedSlide.timerSeconds != null ? "pb-28" : ""
                 }`}
-                style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : slideBgFor(deck.theme, false), zoom: editorZoom }}
+                style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : brandFrameBackground(sanitizeBrand(deck.brand), false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
                 {(selectedSlide.type === "quiz" || selectedSlide.type === "poll" || selectedSlide.type === "word_cloud") &&
                   (usage[selectedSlide.id] ?? 0) > 0 && (

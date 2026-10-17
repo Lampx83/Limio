@@ -15,7 +15,8 @@ import ResourceContent, { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
 import { slideBgFor } from "../../slideThemes";
 import { LayoutSlideView, isLayoutSlide } from "../../SlideLayouts";
-import { BrandLogoOverlay, LiveBrandProvider } from "../../liveBrandContext";
+import { BrandLogoOverlay, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
+import { brandFrameBackground, sanitizeBrand } from "@/lib/limioLiveBrand";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
 
 const QRCode = dynamic(
@@ -682,7 +683,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               key={currentSlide.id}
               ref={cardRef}
               onScrollCapture={handleCardScroll}
-              style={{ background: slideBgFor(deck.theme, currentSlide.type === "content" && isLayoutSlide(currentSlide.config)), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
+              style={{ background: brandFrameBackground(sanitizeBrand(deck.brand), currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ?? slideBgFor(deck.theme, currentSlide.type === "content" && isLayoutSlide(currentSlide.config)), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
               className={`relative box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
               } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${
@@ -1255,6 +1256,7 @@ function Filmstrip({
   theme: string | undefined | null;
   onPick: (id: string) => void;
 }) {
+  const brandCfg = useLiveBrand();
   const curRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     curRef.current?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
@@ -1302,7 +1304,7 @@ function Filmstrip({
                 className={`relative block aspect-video min-w-0 flex-1 overflow-hidden rounded-md ${
                   active ? "ring-2 ring-brand-500" : "ring-1 ring-black/10 hover:ring-2 hover:ring-brand-300"
                 }`}
-                style={{ background: slideBgFor(theme, sl.type === "content" && isLayoutSlide(cfg)) }}
+                style={{ background: brandFrameBackground(brandCfg, sl.type === "content" && isLayoutSlide(cfg)) ?? slideBgFor(theme, sl.type === "content" && isLayoutSlide(cfg)) }}
               >
                 {pdfUrl ? (
                   <PdfFirstPage url={pdfUrl} />

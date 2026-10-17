@@ -28,7 +28,7 @@ import {
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { apiUrl } from "@/lib/apiUrl";
-import { brandCssVars, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
+import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
 import { useLiveBrand } from "./liveBrandContext";
 import { isDarkTheme, layoutThemeClass } from "./slideThemes";
 import "./slideLayouts.css";
@@ -112,7 +112,10 @@ export function LayoutSlideView({
   // và nội dung thu nhỏ vừa đủ để chừa chỗ, không chồng chữ.
   const brand = useLiveBrand();
   const showLogo = !!brand?.logoUrl && logoVisibleOn(brand.logoShow, slideRole(layout));
-  const brandVars = brandCssVars(brand?.color, isDarkTheme(themeId));
+  const brandVars = brandCssVars(brand, isDarkTheme(themeId));
+  // Nền xuyệt tông: bộ màu chữ mượn giao diện sáng/tối, nền vẽ ngay trên khung chứa để phủ kín khung slide.
+  const effThemeId = brandEffectiveThemeId(brand, themeId);
+  const frameBg = brandFrameBackground(brand, true);
   const k = showLogo && brand ? contentScaleForLogo(brand.logoSize) : 1;
   const top = !!brand && brand.logoPos[0] === "t";
   const slideStyle: CSSProperties = zoomed
@@ -126,7 +129,7 @@ export function LayoutSlideView({
       };
   const slide = (
       <div
-        className={`lslide ${layoutThemeClass(themeId)} ${animate ? "anim" : ""}`}
+        className={`lslide ${layoutThemeClass(effThemeId)} ${animate ? "anim" : ""}`}
         style={{
           ...slideStyle,
           visibility: scale > 0 ? "visible" : "hidden",
@@ -160,7 +163,11 @@ export function LayoutSlideView({
       </div>
   );
   return (
-    <div ref={ref} className={`relative min-h-0 w-full flex-1 ${zoomed ? "overflow-auto" : "overflow-hidden"}`}>
+    <div
+      ref={ref}
+      className={`relative min-h-0 w-full flex-1 ${zoomed ? "overflow-auto" : "overflow-hidden"}`}
+      style={frameBg ? { background: frameBg } : undefined}
+    >
       {zoomed ? (
         // Phóng to hơn khung: ô chứa đúng cỡ slide đã phóng, căn giữa bằng margin auto (nhỏ hơn khung thì ở giữa,
         // lớn hơn thì bắt đầu từ mép và cuộn được).
