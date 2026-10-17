@@ -45,12 +45,35 @@ export default function FromDocumentForm() {
       if (mode === "file" && file) fd.set("file", file);
       else fd.set("text", text);
       const res = await fetch(apiUrl("/api/instructor/limio-live/outline"), { method: "POST", body: fd });
-      const j = (await res.json().catch(() => null)) as { deckId?: string; error?: string } | null;
-      if (!res.ok || !j?.deckId) {
+      if (!res.ok || !res.body) {
+        // Lỗi kiểm tra đầu vào: JSON thường.
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
         setError(ERROR_TEXT[j?.error ?? ""] ?? "Không soạn được dàn ý. Vui lòng thử lại.");
         return;
       }
-      router.push(`/instructor/limio-live/${j.deckId}/outline`);
+      // Phần gọi AI trả luồng NDJSON: ping (giữ kết nối) ... done | error.
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      let deckId: string | null = null;
+      let failed: string | null = null;
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          const ev = JSON.parse(line) as { type: string; deckId?: string; error?: string };
+          if (ev.type === "done" && ev.deckId) deckId = ev.deckId;
+          else if (ev.type === "error") failed = ev.error ?? "generate_failed";
+        }
+      }
+      if (deckId) return router.push(`/instructor/limio-live/${deckId}/outline`);
+      setError(ERROR_TEXT[failed ?? ""] ?? "Không soạn được dàn ý. Vui lòng thử lại.");
+      return;
     } catch {
       setError("Mất kết nối. Vui lòng kiểm tra mạng rồi thử lại.");
     } finally {

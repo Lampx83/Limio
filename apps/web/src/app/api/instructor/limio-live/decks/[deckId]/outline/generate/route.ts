@@ -81,6 +81,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   const stream = new ReadableStream({
     async start(controller) {
       const send = (o: unknown) => controller.enqueue(enc.encode(JSON.stringify(o) + "\n"));
+      // Một lô có thể mất hơn 60 giây; proxy phía trước cắt kết nối im lặng quá lâu, nên gửi nhịp giữ kết nối.
+      const beat = setInterval(() => send({ type: "ping" }), 8000);
       try {
         send({ type: "start", total: writeIdx.length });
         const result = await generateDeckSlides({
@@ -168,6 +170,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
         console.error("[Limio-Live generate]", e);
         send({ type: "error", error: code });
       } finally {
+        clearInterval(beat);
         controller.close();
       }
     },

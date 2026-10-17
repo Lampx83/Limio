@@ -34,7 +34,8 @@ function mimeOf(file: File): string | null {
  * multipart: `file` (docx/pdf/txt/md ≤ 10 MB) HOẶC `text` (dán thẳng), `minutes` (15|30|45).
  * Đọc tài liệu → AI đề xuất dàn ý → tạo bài giảng NHÁP kèm dàn ý. Chưa sinh slide nào;
  * giảng viên sửa dàn ý rồi mới sinh slide (xem decks/[deckId]/outline).
- * Bài giảng chỉ được tạo SAU khi AI trả lời được, nên lỗi AI không để lại bài rỗng.
+ * Bài giảng chỉ được tạo SAU khi AI trả lời được, nên lỗi AI không để lại bài rỗng. Kiểm tra đầu vào trả JSON
+ * thường (4xx); phần gọi AI trả luồng NDJSON (xem bên dưới).
  */
 export async function POST(req: Request) {
   const userId = await requireFeature("limio_live.access");
@@ -89,47 +90,65 @@ export async function POST(req: Request) {
   }
 
   const range = slideRange(minutes);
-  let raw;
-  try {
-    raw = await generateLectureOutline(
-      userId,
-      { sourceText, minutes, minSlides: range.min, maxSlides: range.max, interactiveEvery: INTERACTIVE_EVERY },
-      openai,
-    );
-  } catch (e) {
-    if (e instanceof AiTutorError) return NextResponse.json({ error: e.code, details: e.details }, { status: 429 });
-    if (e instanceof AiGenerationError) {
-      return NextResponse.json({ error: e.code, details: e.details }, { status: e.code === "validation_failed" ? 400 : 502 });
-    }
-    throw e;
-  }
+  const truncated = sourceText.length > OUTLINE_MAX_SOURCE_CHARS;
+  const text = sourceText;
+  const name = sourceName;
 
-  const { outline, warnings } = normalizeOutline(raw, minutes);
-  if (outline.slides.length === 0) return NextResponse.json({ error: "empty_outline" }, { status: 502 });
+  // Từ đây trở đi là phần chậm (gọi mô hình, có thể hơn 60 giây). Trả luồng NDJSON có nhịp giữ kết nối để proxy
+  // phía trước không cắt: ... {"type":"ping"}* rồi {"type":"done",...} hoặc {"type":"error","error","status"}.
+  const enc = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (o: unknown) => controller.enqueue(enc.encode(JSON.stringify(o) + "\n"));
+      const beat = setInterval(() => send({ type: "ping" }), 8000);
+      const fail = (error: string, status: number, details?: unknown) => send({ type: "error", error, status, details });
+      try {
+        send({ type: "start" });
+        let raw;
+        try {
+          raw = await generateLectureOutline(
+            userId,
+            { sourceText: text, minutes, minSlides: range.min, maxSlides: range.max, interactiveEvery: INTERACTIVE_EVERY },
+            openai,
+          );
+        } catch (e) {
+          if (e instanceof AiTutorError) return fail(e.code, 429, e.details);
+          if (e instanceof AiGenerationError) return fail(e.code, e.code === "validation_failed" ? 400 : 502, e.details);
+          console.error("[Limio-Live outline]", e);
+          return fail("generate_failed", 500);
+        }
 
-  const deck = await prisma.liveDeck.create({
-    data: {
-      userId,
-      title: (outline.title || sourceName.replace(/\.[^.]+$/, "")).slice(0, 100) || "Bài giảng mới",
-      theme: "brand",
-      outline: outline as unknown as object,
-      outlineMinutes: minutes,
-      sourceName,
-      sourceText: sourceText.slice(0, MAX_STORED_SOURCE_CHARS),
+        const { outline, warnings } = normalizeOutline(raw, minutes);
+        if (outline.slides.length === 0) return fail("empty_outline", 502);
+
+        const deck = await prisma.liveDeck.create({
+          data: {
+            userId,
+            title: (outline.title || name.replace(/\.[^.]+$/, "")).slice(0, 100) || "Bài giảng mới",
+            theme: "brand",
+            outline: outline as unknown as object,
+            outlineMinutes: minutes,
+            sourceName: name,
+            sourceText: text.slice(0, MAX_STORED_SOURCE_CHARS),
+          },
+          select: { id: true },
+        });
+        await emitLiveEvent(userId, LearningEventType.LiveDeckOutlineGenerated, {
+          deckId: deck.id,
+          minutes,
+          slideCount: outline.slides.length,
+          sourceChars: text.length,
+          warningCount: warnings.length,
+        });
+        send({ type: "done", deckId: deck.id, outline, warnings, truncated });
+      } catch (e) {
+        console.error("[Limio-Live outline]", e);
+        fail("generate_failed", 500);
+      } finally {
+        clearInterval(beat);
+        controller.close();
+      }
     },
-    select: { id: true },
   });
-
-  await emitLiveEvent(userId, LearningEventType.LiveDeckOutlineGenerated, {
-    deckId: deck.id,
-    minutes,
-    slideCount: outline.slides.length,
-    sourceChars: sourceText.length,
-    warningCount: warnings.length,
-  });
-
-  return NextResponse.json(
-    { deckId: deck.id, outline, warnings, truncated: sourceText.length > OUTLINE_MAX_SOURCE_CHARS },
-    { status: 201 },
-  );
+  return new Response(stream, { headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" } });
 }
