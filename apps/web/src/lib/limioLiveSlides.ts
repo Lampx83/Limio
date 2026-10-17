@@ -609,6 +609,23 @@ export function splitSlideConfig(config: Record<string, any>): [Record<string, u
 }
 
 /** Hai config slide có giống hệt nhau không (không phân biệt thứ tự khoá). */
+/**
+ * Slide kế bên của slide đang sửa (delta -1 / +1) để nút ‹ › trong cửa sổ sửa chuyển sang đó.
+ * `layoutSlide` cho biết slide đích có dùng được trình sửa bố cục mới không; nếu không (quiz, bảng...)
+ * thì cửa sổ phải đóng, vì các loại đó có trình sửa riêng.
+ */
+export function adjacentSlide(
+  slides: Array<{ id: string; type: string; config?: unknown }>,
+  currentId: string,
+  delta: -1 | 1,
+): { id: string; layoutSlide: boolean } | null {
+  const i = slides.findIndex((s) => s.id === currentId);
+  const t = i < 0 ? undefined : slides[i + delta];
+  if (!t) return null;
+  const cfg = (t.config ?? {}) as { resource?: unknown };
+  return { id: t.id, layoutSlide: t.type === "content" && resolveLayout(t.config) !== "classic" && !cfg.resource };
+}
+
 export function slideConfigsEqual(a: unknown, b: unknown): boolean {
   return stable(a ?? {}) === stable(b ?? {});
 }

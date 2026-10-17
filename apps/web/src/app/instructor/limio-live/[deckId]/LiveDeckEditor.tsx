@@ -59,7 +59,7 @@ import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { SLIDE_THEMES, slideBgFor } from "../slideThemes";
 import { isLayoutSlide } from "../SlideLayouts";
-import { emptyLayoutConfig } from "@/lib/limioLiveSlides";
+import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
@@ -263,6 +263,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty]);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(initialDeck?.slides[0]?.id ?? null);
+  // Cửa sổ sửa slide (bố cục mới). Giữ ở đây để ‹ › sang slide khác mà cửa sổ không đóng mở lại.
+  const [editOpen, setEditOpen] = useState(false);
   const [pickingType, setPickingType] = useState(false);
   const [importingCourse, setImportingCourse] = useState(false);
   const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null);
@@ -561,6 +563,25 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   if (!deck) return <p className="text-sm text-muted">Đang tải...</p>;
 
   const selectedSlide = deck.slides.find((s) => s.id === selectedSlideId) ?? null;
+  // ‹ › trong cửa sổ sửa: sang slide kế bên; nếu slide đó dùng trình sửa riêng (quiz, bảng...) thì đóng cửa sổ.
+  const goAdjacent = (delta: -1 | 1) => {
+    if (!selectedSlideId) return;
+    const t = adjacentSlide(deck.slides, selectedSlideId, delta);
+    if (!t) return;
+    setSelectedSlideId(t.id);
+    if (!t.layoutSlide) setEditOpen(false);
+  };
+  // Slide đang chọn không còn dùng trình sửa bố cục (đổi sang quiz, bị xoá...) thì đóng cửa sổ, kẻo mở lại ở slide sau.
+  useEffect(() => {
+    if (editOpen && !(selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config))) setEditOpen(false);
+  }, [editOpen, selectedSlide]);
+  const slideIndex = selectedSlideId ? deck.slides.findIndex((s) => s.id === selectedSlideId) : -1;
+  const slideNav = {
+    index: Math.max(0, slideIndex),
+    total: deck.slides.length,
+    onPrev: selectedSlideId && adjacentSlide(deck.slides, selectedSlideId, -1) ? () => goAdjacent(-1) : null,
+    onNext: selectedSlideId && adjacentSlide(deck.slides, selectedSlideId, 1) ? () => goAdjacent(1) : null,
+  };
 
   return (
     <div
@@ -829,6 +850,9 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                   }
                   onSplit={(a, b) => handleSplitSlide(selectedSlide.id, a, b)}
                   onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
+                  editOpen={editOpen}
+                  onEditOpenChange={setEditOpen}
+                  nav={slideNav}
                 />
                 {selectedSlide.timerSeconds != null && (
                   <TimerSticker seconds={selectedSlide.timerSeconds} />
@@ -1068,7 +1092,13 @@ function SlideCenterEditor({
   onApplyProposal,
   onSplit,
   onSave,
+  editOpen,
+  onEditOpenChange,
+  nav,
 }: {
+  editOpen: boolean;
+  onEditOpenChange: (open: boolean) => void;
+  nav: { index: number; total: number; onPrev: (() => void) | null; onNext: (() => void) | null };
   themeId?: string | null;
   deckId: string;
   onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }, action: string) => void;
@@ -1081,7 +1111,6 @@ function SlideCenterEditor({
   if (slide.type === "content" && isLayoutSlide(config))
     return (
       <LayoutEditor
-        key={config.layout}
         config={config}
         themeId={themeId}
         onSave={onSave}
@@ -1089,6 +1118,9 @@ function SlideCenterEditor({
         slideId={slide.id}
         onApplyProposal={onApplyProposal}
         onSplit={onSplit}
+        open={editOpen}
+        onOpenChange={onEditOpenChange}
+        nav={nav}
       />
     );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;

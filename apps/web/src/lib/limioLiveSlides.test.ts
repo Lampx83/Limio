@@ -394,3 +394,28 @@ describe("slide văn bản mới (soạn thủ công)", () => {
     expect(resolveLayout(created)).not.toBe("classic");
   });
 });
+
+import { adjacentSlide } from "./limioLiveSlides";
+
+describe("adjacentSlide (nút ‹ › trong cửa sổ sửa slide)", () => {
+  const slides = [
+    { id: "a", type: "content", config: { layout: "cover" } },
+    { id: "b", type: "content", config: { layout: "cards" } },
+    { id: "c", type: "quiz", config: { question: "?" } },
+    { id: "d", type: "content", config: { title: "cũ", bullets: [] } },
+    { id: "e", type: "content", config: { layout: "image", resource: { type: "video" } } },
+  ];
+  it("trả slide kế bên theo hai chiều, null ở đầu và cuối bài", () => {
+    expect(adjacentSlide(slides, "b", 1)?.id).toBe("c");
+    expect(adjacentSlide(slides, "b", -1)?.id).toBe("a");
+    expect(adjacentSlide(slides, "a", -1)).toBeNull();
+    expect(adjacentSlide(slides, "e", 1)).toBeNull();
+    expect(adjacentSlide(slides, "không có", 1)).toBeNull();
+  });
+  it("chỉ slide nội dung có bố cục mới (không nhúng tài nguyên) mới dùng trình sửa bố cục", () => {
+    expect(adjacentSlide(slides, "a", 1)?.layoutSlide).toBe(true);
+    expect(adjacentSlide(slides, "b", 1)?.layoutSlide).toBe(false); // quiz
+    expect(adjacentSlide(slides, "c", 1)?.layoutSlide).toBe(false); // bố cục cũ
+    expect(adjacentSlide(slides, "d", 1)?.layoutSlide).toBe(false); // nhúng tài nguyên
+  });
+});

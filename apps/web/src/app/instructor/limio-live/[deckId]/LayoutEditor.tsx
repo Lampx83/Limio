@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Bold, Check, Italic, Loader2, Plus, Sparkles, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { AlertTriangle, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
@@ -16,6 +17,7 @@ import {
   toggleInlineMarker,
   resolveLayout,
   sanitizeLayoutConfig,
+  slideConfigsEqual,
   splitSlideConfig,
   type LayoutColumn,
   type LayoutItem,
@@ -102,7 +104,8 @@ interface FieldCtl {
   el: HTMLInputElement | HTMLTextAreaElement;
   latest: { current: { value: string; max: number; onChange: (v: string) => void } };
 }
-const FormatCtx = createContext<{ focus: (c: FieldCtl | null) => void } | null>(null);
+/** `ready`: cửa sổ sửa đã mở, đo được chiều cao ô nhập (lúc đóng chiều cao đo ra 0). */
+const FormatCtx = createContext<{ focus: (c: FieldCtl | null) => void; ready: boolean } | null>(null);
 
 function Field({
   label,
@@ -138,7 +141,7 @@ function Field({
     if (!multiline || !el) return;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight + 2}px`;
-  }, [value, multiline]);
+  }, [value, multiline, ctx?.ready]);
   return (
     <label className="block">
       <span className="mb-0.5 flex items-center justify-between text-xs font-semibold text-muted">
@@ -344,12 +347,20 @@ export default function LayoutEditor({
   slideId,
   onApplyProposal,
   onSplit,
+  open,
+  onOpenChange,
+  nav,
 }: {
   config: Cfg;
   themeId?: string | null;
   onSave: Save;
   deckId: string;
   slideId: string;
+  /** Cửa sổ sửa đang mở (trạng thái nằm ở trình sửa bài giảng để giữ mở khi chuyển slide). */
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Vị trí slide trong bài và nút ‹ › sang slide kế bên (null = đã ở đầu hoặc cuối). */
+  nav: { index: number; total: number; onPrev: (() => void) | null; onNext: (() => void) | null };
   /** Giảng viên chấp nhận đề xuất của AI (đổi nội dung, có thể đổi loại slide). */
   onApplyProposal: (p: Proposal, action: string) => void;
   /** Tách slide quá dài thành hai: nhận cấu hình hai slide mới. */
@@ -378,15 +389,45 @@ export default function LayoutEditor({
   const setCol = (i: number, patch: Partial<LayoutColumn>) =>
     set({ columns: columns.map((c, k) => (k === i ? { ...c, ...patch } : c)) });
 
+  const [tab, setTab] = useState<"edit" | "ai">("edit");
+  const [ready, setReady] = useState(false);
+  const dlgRef = useRef<HTMLDialogElement>(null);
   const ctx = useMemo(
     () => ({
       focus: (c: FieldCtl | null) => {
         focused.current = c ?? focused.current;
         setRichOn(c !== null);
       },
+      ready,
     }),
-    [],
+    [ready],
   );
+
+  // Đổi bố cục: nạp lại các ô theo nội dung đã chuyển đổi (trước đây làm bằng key, nhưng key làm cửa sổ đóng mở lại).
+  useEffect(() => {
+    setD(padForEditing(layout, config));
+    setPalette(-1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout]);
+
+  useEffect(() => {
+    if (!open) {
+      setReady(false);
+      return;
+    }
+    const dlg = dlgRef.current;
+    if (dlg && !dlg.open) dlg.showModal();
+    // Đặt con trỏ vào ô đầu tiên để gõ ngay, thay vì dừng ở nút ‹.
+    dlg?.querySelector<HTMLElement>("input.input, textarea")?.focus();
+    setReady(true);
+  }, [open]);
+
+  // Chốt nội dung khi đóng cửa sổ (Esc, bấm ra ngoài hoặc Xong), chỉ lưu khi có thay đổi.
+  const finish = () => {
+    const next = { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config) };
+    if (!slideConfigsEqual(next, config)) onSave({ config: next });
+    onOpenChange(false);
+  };
   const format = useCallback((marker: "**" | "*") => {
     const c = focused.current;
     if (!c || !c.el.isConnected) return;
@@ -412,50 +453,82 @@ export default function LayoutEditor({
   // Cột chỉ khi ô sửa đủ rộng: ở lg và 2xl cột phải hẹp nên xếp dọc.
   const cols = layout === "cards" || layout === "stats" ? "md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-1" : "";
 
-  return (
-    <FormatCtx.Provider value={ctx}>
-      <div
-        onKeyDown={onKeyDown}
-        className="grid w-full gap-4 2xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] 2xl:items-start 2xl:gap-6"
-      >
-        {/* Màn hẹp: xem trước, ô sửa, khối nhờ AI xếp dọc theo thứ tự này (cột trái là `contents` nên order có tác dụng).
-            Màn rộng: xem trước và khối nhờ AI thành một cột trái dính khi cuộn, ô sửa ở cột phải. */}
-        <div className="contents 2xl:sticky 2xl:-top-8 2xl:col-start-1 2xl:block 2xl:max-h-[calc(100vh-1rem)] 2xl:space-y-4 2xl:overflow-y-auto 2xl:pt-8">
-        {/* Xem trước đúng như lúc trình chiếu: luôn ở đầu và dính khi cuộn, nên vừa gõ vừa thấy.
-            -top-8 bù phần đệm của khung cuộn bên ngoài, để nó dính sát mép trên và chữ cuộn không lộ ra phía trên. */}
-        <div className="sticky -top-8 z-10 order-1 -mx-2 space-y-1 bg-white px-2 pb-2 pt-3 2xl:static 2xl:mx-0 2xl:px-0 2xl:pt-0">
-          <div className="flex items-center justify-between text-[13px] text-faint">
-            <span>Xem trước (đúng như lúc chiếu)</span>
-            {problems.length > 0 && <span className="font-semibold text-amber-800">Slide dài</span>}
-          </div>
-          <div
-            className={`relative mx-auto aspect-video w-full max-w-[560px] overflow-hidden rounded-xl border border-black/10 shadow-sm 2xl:max-w-none ${
-              problems.length > 0 ? "outline outline-[3px] outline-amber-400" : ""
-            }`}
-            style={{ background: slideBgFor(themeId, true) }}
-          >
-            <div className="absolute inset-0 flex">
-              <LayoutSlideView config={preview} themeId={themeId} />
-            </div>
-          </div>
-        </div>
+  const previewBox = (
+    <div
+      className="relative aspect-video w-full overflow-hidden rounded-xl border border-black/10 shadow-sm"
+      style={{ background: slideBgFor(themeId, true) }}
+    >
+      <div className="absolute inset-0 flex">
+        <LayoutSlideView config={preview} themeId={themeId} />
+      </div>
+    </div>
+  );
 
-        <div className="order-3">
-          <AiEditBar
-            deckId={deckId}
-            slideId={slideId}
-            config={preview}
-            themeId={themeId}
-            onApply={(p, action) => {
-              // Làm mới các ô nhập theo đề xuất (cùng bố cục); đổi loại slide thì trình soạn tự đổi theo.
-              if (p.type === "content") setD(padForEditing(layout, p.config));
-              onApplyProposal(p, action);
+  const dialog =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <dialog
+            ref={dlgRef}
+            aria-labelledby="layout-dlg-title"
+            onClose={finish}
+            onClick={(e) => {
+              if (e.target === dlgRef.current) dlgRef.current?.close();
             }}
-          />
-        </div>
-        </div>
+            onKeyDown={onKeyDown}
+            className="m-auto h-[min(780px,94vh)] w-[min(1120px,96vw)] max-w-none overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] p-0 text-[rgb(var(--text))] shadow-2xl backdrop:bg-black/50 max-sm:m-0 max-sm:h-[100dvh] max-sm:max-h-none max-sm:w-screen max-sm:rounded-none max-sm:border-0"
+          >
+            <FormatCtx.Provider value={ctx}>
+              <div className="flex h-full flex-col">
+                <div className="flex shrink-0 items-center gap-2 border-b border-token px-4 py-2.5">
+                  <button type="button" className="btn-secondary h-9 w-9 !p-0" disabled={!nav.onPrev} onClick={() => nav.onPrev?.()} aria-label="Slide trước">
+                    <ChevronLeft size={18} />
+                  </button>
+                  <button type="button" className="btn-secondary h-9 w-9 !p-0" disabled={!nav.onNext} onClick={() => nav.onNext?.()} aria-label="Slide sau">
+                    <ChevronRight size={18} />
+                  </button>
+                  <h2 id="layout-dlg-title" className="flex-1 text-lg font-bold">
+                    Slide {nav.index + 1} / {nav.total}
+                  </h2>
+                  <button type="button" className="btn-primary h-9" onClick={() => dlgRef.current?.close()}>
+                    Xong
+                  </button>
+                </div>
 
-        <div className="order-2 space-y-4 2xl:col-start-2 2xl:row-start-1">
+                <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_320px] md:grid-rows-1">
+                  {/* Xem trước thu nhỏ ở góc: vẫn cập nhật từng ký tự gõ. */}
+                  <aside className="mx-auto w-full max-w-[300px] px-4 pt-3 md:order-2 md:max-w-none md:self-start md:px-4 md:py-4 md:pl-0" aria-label="Xem trước">
+                    <div className="mb-1 flex items-center justify-between text-[13px] text-faint">
+                      <span>Xem trước</span>
+                      <span className={problems.length > 0 ? "font-semibold text-amber-800" : ""}>{problems.length > 0 ? "Slide dài" : "Độ dài vừa"}</span>
+                    </div>
+                    {previewBox}
+                  </aside>
+
+                  <div className="min-h-0 overflow-y-auto md:order-1">
+                    <div className="sticky top-0 z-10 flex gap-1 border-b border-token bg-[rgb(var(--surface))] px-4 pt-2" role="tablist" aria-label="Phần sửa">
+                      {(
+                        [
+                          ["edit", "Nội dung"],
+                          ["ai", "Nhờ AI"],
+                        ] as const
+                      ).map(([k, label]) => (
+                        <button
+                          key={k}
+                          type="button"
+                          role="tab"
+                          aria-selected={tab === k}
+                          onClick={() => setTab(k)}
+                          className={`-mb-px border-b-[3px] px-4 py-2 text-[15px] font-semibold ${
+                            tab === k ? "border-brand-600 text-[rgb(var(--text))]" : "border-transparent text-muted hover:text-[rgb(var(--text))]"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {tab === "edit" ? (
+                      <div className="space-y-4 p-4 sm:p-5" role="tabpanel" aria-label="Nội dung slide">
           <LayoutPicker config={config} onSave={onSave} draft={preview} />
 
           <div
@@ -735,9 +808,73 @@ export default function LayoutEditor({
               </>
             )}
           </div>
-        </div>
+                      </div>
+                    ) : (
+                      <div className="max-w-[640px] p-4 sm:p-5" role="tabpanel" aria-label="Nhờ AI sửa slide">
+                        <AiEditBar
+                          deckId={deckId}
+                          slideId={slideId}
+                          config={preview}
+                          themeId={themeId}
+                          onApply={(p, action) => {
+                            // Làm mới các ô nhập theo đề xuất (cùng bố cục); đổi loại slide thì trình soạn tự đổi theo.
+                            if (p.type === "content") setD(padForEditing(layout, p.config));
+                            onApplyProposal(p, action);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </FormatCtx.Provider>
+          </dialog>,
+          document.body,
+        )
+      : null;
 
-      </div>
-    </FormatCtx.Provider>
+  return (
+    <>
+      {/* Ngoài cửa sổ chỉ có slide, vừa vặn trong màn hình; bấm vào slide hoặc nút bút để sửa. */}
+      <section className="space-y-2" aria-label="Slide">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-faint">
+          <span>Xem trước (đúng như lúc chiếu)</span>
+          <span>Bấm vào slide hoặc nút bút để sửa</span>
+        </div>
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Sửa slide này"
+          onClick={() => onOpenChange(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onOpenChange(true);
+            }
+          }}
+          className={`group relative mx-auto min-w-[280px] cursor-pointer rounded-xl focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-600 ${
+            problems.length > 0 ? "outline outline-[3px] outline-amber-400" : ""
+          }`}
+          style={{ width: "min(100%, calc((100vh - 380px) * 16 / 9))" }}
+        >
+          {previewBox}
+          <button
+            type="button"
+            aria-label="Sửa slide này"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenChange(true);
+            }}
+            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] py-1.5 pl-2.5 pr-3.5 text-sm font-semibold shadow-md opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+          >
+            <Pencil size={16} /> Sửa
+          </button>
+        </div>
+        {problems.length > 0 && (
+          <p className="text-center text-xs font-semibold text-amber-800">Slide này dài; mở phần sửa để viết ngắn lại hoặc tách thành hai slide.</p>
+        )}
+      </section>
+      {dialog}
+    </>
   );
 }
