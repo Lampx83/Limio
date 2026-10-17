@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   BarChart3,
   BookOpen,
@@ -28,6 +28,7 @@ import {
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { apiUrl } from "@/lib/apiUrl";
+import { fitScaleForBox, frameHeightForContent, measureContentBox } from "@/lib/limioLiveFit";
 import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
 import { useLiveBrand } from "./liveBrandContext";
 import { isDarkTheme, layoutThemeClass } from "./slideThemes";
@@ -67,6 +68,8 @@ function Inline({ text }: { text: string }) {
     </>
   );
 }
+// Trên máy chủ useLayoutEffect không chạy và báo cảnh báo; dùng useEffect ở đó (ở trình duyệt vẫn chạy trước khi vẽ).
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 const delay = (i: number): CSSProperties => ({ ["--i" as string]: i }) as CSSProperties;
 
 /** Slide có dùng bố cục mới (không phải "classic")? */
@@ -88,6 +91,31 @@ export function LayoutSlideView({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0);
+  // Tự co: slide có chữ quá dài thì thu khối nội dung cho vừa khung 1280×720 thay vì để chữ tràn ra ngoài và bị cắt.
+  // Khi người xem phóng to thì thôi co: chữ giữ cỡ thật, khung cao thêm cho vừa nội dung và cuộn để đọc tiếp.
+  const zoomed = zoom > 1;
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [fitK, setFitK] = useState(1);
+  const [frameH, setFrameH] = useState(DESIGN_H);
+  const configKey = JSON.stringify(config);
+  useIsoLayoutEffect(() => {
+    const root = bodyRef.current;
+    if (!root) return;
+    let alive = true;
+    const run = () => {
+      if (!alive) return;
+      const box = measureContentBox(root);
+      setFrameH(frameHeightForContent(box));
+      // Hệ số co chỉ đo được khi khung đang ở 720 (nội dung căn giữa theo khung); đang phóng to thì giữ giá trị cũ.
+      if (!zoomed) setFitK(fitScaleForBox(box));
+    };
+    run();
+    // Phông chữ tải xong có thể đổi số dòng của chữ: đo lại một lần.
+    void document.fonts?.ready.then(run);
+    return () => {
+      alive = false;
+    };
+  }, [configKey, zoomed]);
 
   useEffect(() => {
     const el = ref.current;
@@ -106,7 +134,7 @@ export function LayoutSlideView({
   }, []);
 
   const scale = layoutRenderScale(fit, zoom);
-  const zoomed = zoom > 1;
+  const slideH = zoomed ? frameH : DESIGN_H;
   const layout = resolveLayout(config);
   // Thương hiệu của bài giảng: màu thay màu nhấn của giao diện; logo vẽ trong khung thiết kế (co cùng slide)
   // và nội dung thu nhỏ vừa đủ để chừa chỗ, không chồng chữ.
@@ -118,8 +146,13 @@ export function LayoutSlideView({
   const frameBg = brandFrameBackground(brand, true);
   const k = showLogo && brand ? contentScaleForLogo(brand.logoSize) : 1;
   const top = !!brand && brand.logoPos[0] === "t";
+  const body = (
+    <div ref={bodyRef} style={{ position: "absolute", inset: 0, transformOrigin: "50% 50%", ...(fitK < 1 && !zoomed ? { transform: `scale(${fitK})` } : null) }}>
+      <LayoutBody layout={layout} c={config} />
+    </div>
+  );
   const slideStyle: CSSProperties = zoomed
-    ? { position: "absolute", left: 0, top: 0, transformOrigin: "0 0", transform: `scale(${scale})` }
+    ? { position: "absolute", left: 0, top: 0, transformOrigin: "0 0", transform: `scale(${scale})`, height: slideH }
     : {
         position: "absolute",
         left: "50%",
@@ -142,13 +175,13 @@ export function LayoutSlideView({
               position: "absolute",
               inset: 0,
               transformOrigin: "0 0",
-              transform: `translate(${(DESIGN_W * (1 - k)) / 2}px, ${top ? DESIGN_H * (1 - k) : 0}px) scale(${k})`,
+              transform: `translate(${(DESIGN_W * (1 - k)) / 2}px, ${top ? slideH * (1 - k) : 0}px) scale(${k})`,
             }}
           >
-            <LayoutBody layout={layout} c={config} />
+            {body}
           </div>
         ) : (
-          <LayoutBody layout={layout} c={config} />
+          body
         )}
         {showLogo && brand?.logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -172,7 +205,7 @@ export function LayoutSlideView({
         // Phóng to hơn khung: ô chứa đúng cỡ slide đã phóng, căn giữa bằng margin auto (nhỏ hơn khung thì ở giữa,
         // lớn hơn thì bắt đầu từ mép và cuộn được).
         <div style={{ display: "flex", minWidth: "100%", minHeight: "100%" }}>
-          <div style={{ position: "relative", flex: "none", margin: "auto", width: DESIGN_W * scale, height: DESIGN_H * scale }}>{slide}</div>
+          <div style={{ position: "relative", flex: "none", margin: "auto", width: DESIGN_W * scale, height: slideH * scale }}>{slide}</div>
         </div>
       ) : (
         slide
