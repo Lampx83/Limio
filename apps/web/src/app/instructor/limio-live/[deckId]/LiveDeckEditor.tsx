@@ -39,6 +39,8 @@ import {
   ClipboardX,
   ZoomIn,
   ZoomOut,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Save,
   Check,
@@ -891,6 +893,29 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </div>
           {selectedSlide && (
             <div className="absolute bottom-20 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-1 shadow-lg lg:bottom-4">
+              {/* Xem nhanh slide trước / sau mà không phải quay sang dải slide bên trái. */}
+              <button
+                onClick={() => slideNav.onPrev?.()}
+                disabled={!slideNav.onPrev}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Slide trước"
+                title="Slide trước"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="min-w-[3.5rem] text-center text-xs font-semibold tabular-nums" aria-live="polite">
+                {slideNav.index + 1} / {slideNav.total}
+              </span>
+              <button
+                onClick={() => slideNav.onNext?.()}
+                disabled={!slideNav.onNext}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Slide sau"
+                title="Slide sau"
+              >
+                <ChevronRight size={18} />
+              </button>
+              <span className="mx-1 h-5 w-px bg-[rgb(var(--border))]" aria-hidden />
               <button
                 onClick={() => setZoomLevel(editorZoom - 0.1)}
                 disabled={editorZoom <= 0.5}
