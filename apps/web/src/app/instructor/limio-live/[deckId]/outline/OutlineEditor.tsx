@@ -45,6 +45,15 @@ interface Loaded {
   confirmedAt: string | null;
   sourceChars: number;
   slideCount: number;
+  sync: SyncInfo | null;
+}
+
+interface SyncInfo {
+  rewrite: number;
+  add: number;
+  remove: number;
+  keep: number;
+  noop: boolean;
 }
 
 const KIND_LABEL: Record<OutlineKind, string> = {
@@ -82,12 +91,14 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [syncInfo, setSyncInfo] = useState<SyncInfo | null>(null);
+  const [slideCount, setSlideCount] = useState(0);
   const [confirmErr, setConfirmErr] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [gen, setGen] = useState<
     | { state: "idle" }
     | { state: "running"; done: number; total: number }
-    | { state: "done"; slideCount: number; fallbackCount: number }
+    | { state: "done"; slideCount: number; fallbackCount: number; sync?: { regenerated: number; created: number; removed: number; kept: number } }
     | { state: "error"; message: string }
   >({ state: "idle" });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -104,6 +115,8 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
       setMinutes(j.minutes);
       setConfirmedAt(j.confirmedAt);
       setReviewed(!!j.confirmedAt);
+      setSyncInfo(j.sync);
+      setSlideCount(j.slideCount);
     })().catch(() => setLoadErr("Không tải được dàn ý."));
   }, [url]);
 
@@ -116,6 +129,13 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
         body: JSON.stringify({ outline: latest.current.outline, minutes: latest.current.minutes }),
       });
       setSave(r.ok ? "saved" : "error");
+      if (r.ok) {
+        const j = (await r.json().catch(() => null)) as { sync?: SyncInfo | null; slideCount?: number } | null;
+        if (j) {
+          setSyncInfo(j.sync ?? null);
+          setSlideCount(j.slideCount ?? 0);
+        }
+      }
     } catch {
       setSave("error");
     }
@@ -202,10 +222,14 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
     }
   };
 
-  const generate = async () => {
-    setGen({ state: "running", done: 0, total: outline.slides.length });
+  const generate = async (mode?: "sync") => {
+    setGen({ state: "running", done: 0, total: mode === "sync" && syncInfo ? syncInfo.rewrite + syncInfo.add : outline.slides.length });
     try {
-      const res = await fetch(`${url}/generate`, { method: "POST" });
+      const res = await fetch(`${url}/generate`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(mode ? { mode } : {}),
+      });
       if (!res.ok || !res.body) {
         const j = (await res.json().catch(() => null)) as { error?: string } | null;
         return setGen({ state: "error", message: GEN_ERROR[j?.error ?? ""] ?? "Không tạo được slide. Vui lòng thử lại." });
@@ -223,11 +247,16 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           const line = buf.slice(0, nl).trim();
           buf = buf.slice(nl + 1);
           if (!line) continue;
-          const ev = JSON.parse(line) as { type: string; done?: number; total?: number; slideCount?: number; fallbackCount?: number; error?: string };
+          const ev = JSON.parse(line) as { type: string; done?: number; total?: number; slideCount?: number; fallbackCount?: number; error?: string; regenerated?: number; created?: number; removed?: number; kept?: number };
           if (ev.type === "progress") setGen({ state: "running", done: ev.done ?? 0, total: ev.total ?? 0 });
           else if (ev.type === "done") {
             finished = true;
-            setGen({ state: "done", slideCount: ev.slideCount ?? 0, fallbackCount: ev.fallbackCount ?? 0 });
+            setGen({
+              state: "done",
+              slideCount: ev.slideCount ?? 0,
+              fallbackCount: ev.fallbackCount ?? 0,
+              ...(ev.regenerated !== undefined ? { sync: { regenerated: ev.regenerated, created: ev.created ?? 0, removed: ev.removed ?? 0, kept: ev.kept ?? 0 } } : {}),
+            });
           } else if (ev.type === "error") {
             finished = true;
             setGen({ state: "error", message: GEN_ERROR[ev.error ?? ""] ?? "Không tạo được slide. Vui lòng thử lại." });
@@ -344,13 +373,13 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
             ))}
           </ul>
         )}
-        {data.slideCount > 0 || gen.state === "done" ? (
+        {gen.state === "done" ? (
           <div className="space-y-3">
             <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
               <Check size={16} />
-              {gen.state === "done"
-                ? `Đã tạo ${gen.slideCount} slide từ dàn ý.`
-                : `Bài giảng đã có ${data.slideCount} slide. Việc tạo lại slide từ dàn ý sẽ có ở bản sau.`}
+              {gen.sync
+                ? `Đã cập nhật: viết lại ${gen.sync.regenerated} slide, thêm ${gen.sync.created}, xoá ${gen.sync.removed}, giữ nguyên ${gen.sync.kept} slide bạn đã sửa hoặc tự thêm.`
+                : `Đã tạo ${gen.slideCount} slide từ dàn ý.`}
             </p>
             {gen.state === "done" && gen.fallbackCount > 0 && (
               <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -368,6 +397,44 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
             <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
               <Check size={16} /> Bạn đã xác nhận dàn ý này. Sửa dàn ý sẽ huỷ xác nhận.
             </p>
+            {slideCount > 0 && syncInfo && gen.state !== "running" && (
+              <div className="space-y-3">
+                <p className="text-sm text-muted">
+                  Bài giảng đã có {slideCount} slide.{" "}
+                  {syncInfo.noop ? (
+                    <b>Các slide đã khớp với dàn ý.</b>
+                  ) : (
+                    <>
+                      Cập nhật theo dàn ý sẽ viết lại <b>{syncInfo.rewrite}</b> slide AI đã tạo và bạn chưa sửa, thêm{" "}
+                      <b>{syncInfo.add}</b> slide cho dòng mới, xoá <b>{syncInfo.remove}</b> slide của dòng đã bỏ. Giữ nguyên{" "}
+                      <b>{syncInfo.keep}</b> slide bạn đã sửa hoặc tự thêm.
+                    </>
+                  )}
+                </p>
+                {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
+                <div className="flex flex-wrap gap-2">
+                  {!syncInfo.noop && (
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Cập nhật slide theo dàn ý?\n\n• Viết lại ${syncInfo.rewrite} slide chưa sửa (nội dung cũ của các slide này sẽ bị thay)\n• Thêm ${syncInfo.add} slide\n• Xoá ${syncInfo.remove} slide\n• Giữ nguyên ${syncInfo.keep} slide bạn đã sửa hoặc tự thêm\n\nDự kiến dùng khoảng ${formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: syncInfo.rewrite + syncInfo.add }).total)} token AI.`,
+                          )
+                        )
+                          void generate("sync");
+                      }}
+                    >
+                      Cập nhật slide theo dàn ý
+                    </button>
+                  )}
+                  <a href={`/instructor/limio-live/${deckId}`} className="btn-secondary inline-flex">
+                    Mở bài giảng
+                  </a>
+                </div>
+              </div>
+            )}
             {gen.state === "running" ? (
               <div className="space-y-2" role="status">
                 <div className="h-2.5 overflow-hidden rounded-full bg-black/10">
@@ -380,7 +447,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                   <Loader2 size={14} className="animate-spin" /> Đã viết {gen.done}/{gen.total} slide. Vui lòng không đóng trang.
                 </p>
               </div>
-            ) : (
+            ) : slideCount > 0 ? null : (
               <>
                 <p className="text-sm text-muted">
                   AI sẽ viết nội dung và ghi chú giảng cho {outline.slides.length} slide theo đúng dàn ý. Dự kiến dùng khoảng{" "}
@@ -388,7 +455,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                   token AI.
                 </p>
                 {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
-                <button type="button" className="btn-primary flex items-center gap-2" onClick={generate}>
+                <button type="button" className="btn-primary flex items-center gap-2" onClick={() => void generate()}>
                   Tạo slide từ dàn ý
                 </button>
               </>

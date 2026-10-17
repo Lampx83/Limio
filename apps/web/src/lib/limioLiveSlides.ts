@@ -249,7 +249,7 @@ export function fitFontSize(
 export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>): string[] {
   const problems: string[] = [];
   const check = (label: string, text: unknown, o: Parameters<typeof fitFontSize>[1]) => {
-    if (typeof text === "string" && text && fitFontSize(text, o).overflow) problems.push(label);
+    if (typeof text === "string" && text && fitFontSize(stripInline(text), o).overflow) problems.push(label);
   };
   const items: LayoutItem[] = Array.isArray(c.items) ? c.items : [];
   switch (layout) {
@@ -433,4 +433,177 @@ export function normalizeContentSlideConfig(config: unknown): unknown {
   const layout = resolveLayout(c);
   if (layout === "classic" || c.resource) return config;
   return { ...sanitizeLayoutConfig(layout, c), ...pickMeta(c) };
+}
+
+// ── Dấu vết sinh bằng AI và việc "đã sửa tay" ───────────────────────────────
+
+const IDENTITY_KEYS = ["outlineId", "aiGenerated", "hidden", "editedByUser"] as const;
+
+function stable(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;
+  if (v && typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    return `{${Object.keys(o)
+      .filter((k) => o[k] !== undefined)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${stable(o[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(v) ?? "null";
+}
+
+/** Phần nội dung của config (bỏ các khoá nhận diện/cờ) — để so xem giảng viên có đổi chữ không. */
+function contentOf(c: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...(c ?? {}) };
+  for (const k of IDENTITY_KEYS) delete out[k];
+  if (typeof out.presenterNote === "string") out.presenterNote = out.presenterNote.trim();
+  if (!out.presenterNote) delete out.presenterNote;
+  return out;
+}
+
+/**
+ * Khi lưu config mới của một slide: giữ dấu vết nhận diện mà trình soạn có thể làm rơi
+ * (slide quiz/poll/cũ dựng lại config chỉ từ ô của mình), và đánh dấu `editedByUser` khi
+ * giảng viên sửa tay nội dung một slide do AI sinh — để lần cập nhật theo dàn ý sau không ghi đè.
+ * - `outlineId`, `aiGenerated`: luôn giữ từ bản cũ nếu bản mới thiếu;
+ * - `hidden`: giữ khi bản mới không nhắc đến (bật/tắt ẩn luôn ghi tường minh true/false);
+ * - `editedByUser`: đã đặt thì giữ; chưa đặt thì đặt khi nội dung đổi và không phải do AI sửa.
+ */
+export function mergeSlideMeta(
+  existing: Record<string, unknown> | null | undefined,
+  next: Record<string, unknown>,
+  opts: { fromAi?: boolean } = {},
+): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...next };
+  const old = existing ?? {};
+  for (const k of ["outlineId", "aiGenerated"] as const) if (out[k] === undefined && old[k] !== undefined) out[k] = old[k];
+  if (out.hidden === undefined && old.hidden === true) out.hidden = true;
+  const wasAi = old.aiGenerated === true || out.aiGenerated === true;
+  if (old.editedByUser === true || out.editedByUser === true) out.editedByUser = true;
+  else if (wasAi && !opts.fromAi && stable(contentOf(old)) !== stable(contentOf(out))) out.editedByUser = true;
+  return out;
+}
+
+// ── In đậm và in nghiêng trong dòng (tiêu chí H3) ──────────────────────────
+// Chỉ hai dấu: **in đậm** và *in nghiêng*. Không có cỡ chữ, font, màu tuỳ chọn.
+
+export interface InlineRun {
+  text: string;
+  bold?: boolean;
+  italic?: boolean;
+}
+
+/** Tách chuỗi thành các đoạn có định dạng. Dấu không có cặp đóng được giữ nguyên là chữ thường. */
+export function parseInline(text: string): InlineRun[] {
+  const runs: InlineRun[] = [];
+  const push = (t: string, bold: boolean, italic: boolean) => {
+    if (!t) return;
+    const last = runs[runs.length - 1];
+    if (last && !!last.bold === bold && !!last.italic === italic) last.text += t;
+    else runs.push({ text: t, ...(bold ? { bold: true } : {}), ...(italic ? { italic: true } : {}) });
+  };
+  let i = 0;
+  let bold = false;
+  let italic = false;
+  let buf = "";
+  // Có dấu đóng phía sau chưa? Với "*" chỉ tính dấu đơn (không thuộc một cặp "**").
+  const closes = (marker: string, from: number) => {
+    if (marker === "**") return text.indexOf("**", from) > -1;
+    for (let k = from; k < text.length; k++) {
+      if (text[k] !== "*") continue;
+      if (text[k + 1] === "*") {
+        k += 1;
+        continue;
+      }
+      return true;
+    }
+    return false;
+  };
+  while (i < text.length) {
+    if (text.startsWith("**", i) && (bold || closes("**", i + 2))) {
+      push(buf, bold, italic);
+      buf = "";
+      bold = !bold;
+      i += 2;
+    } else if (text[i] === "*" && !text.startsWith("**", i) && (italic || closes("*", i + 1))) {
+      push(buf, bold, italic);
+      buf = "";
+      italic = !italic;
+      i += 1;
+    } else {
+      buf += text[i];
+      i += 1;
+    }
+  }
+  push(buf, bold, italic);
+  return runs;
+}
+
+/** Chữ thuần (đã bỏ dấu định dạng) — dùng để ước lượng độ dài khi chọn cỡ chữ. */
+export function stripInline(text: string): string {
+  return parseInline(text)
+    .map((r) => r.text)
+    .join("");
+}
+
+/**
+ * Bọc (hoặc gỡ) dấu định dạng quanh đoạn đang chọn trong ô nhập. Không có đoạn chọn thì giữ nguyên.
+ * Trả về chuỗi mới và vùng chọn mới để giữ con trỏ.
+ */
+export function toggleInlineMarker(
+  value: string,
+  start: number,
+  end: number,
+  marker: "**" | "*",
+): { value: string; start: number; end: number } {
+  if (start >= end) return { value, start, end };
+  const m = marker.length;
+  const wrapped = value.slice(Math.max(0, start - m), start) === marker && value.slice(end, end + m) === marker;
+  // Với "*", đừng nhầm "**" đang bọc đoạn chọn thành một cặp "*".
+  const doubleAround = marker === "*" && value.slice(Math.max(0, start - 2), start) === "**" && value.slice(end, end + 2) === "**";
+  if (wrapped && !doubleAround) {
+    return { value: value.slice(0, start - m) + value.slice(start, end) + value.slice(end + m), start: start - m, end: end - m };
+  }
+  return { value: value.slice(0, start) + marker + value.slice(start, end) + marker + value.slice(end), start: start + m, end: end + m };
+}
+
+// ── Tách một slide quá dài thành hai (tiêu chí H4) ──────────────────────────
+
+/**
+ * Tách slide thành hai slide cùng bố cục, chia đều các mục. Chỉ tách được khi mỗi nửa vẫn đủ
+ * số mục tối thiểu của bố cục: danh sách từ 4 mục trở lên (thẻ, bước, số liệu, tóm tắt) và
+ * slide chữ và hình có từ 2 ý. Slide thứ hai giữ tiêu đề kèm "(tiếp)", không có ghi chú giảng
+ * và không còn gắn với dòng dàn ý. Trả null khi không tách được.
+ */
+export function splitSlideConfig(config: Record<string, any>): [Record<string, unknown>, Record<string, unknown>] | null {
+  const layout = resolveLayout(config);
+  const range = ITEM_RANGE[layout];
+  const title: string = typeof config.title === "string" ? config.title : "";
+  const cont = title ? (/\(tiếp\)\s*$/.test(title) ? title : `${title} (tiếp)`.slice(0, MAX_LEN.title)) : "";
+  const meta = pickMeta(config);
+  const firstMeta = { ...meta, editedByUser: true };
+  // Slide thứ hai là slide mới của giảng viên: không mang ghi chú, dàn ý hay dấu AI.
+  const secondMeta: Record<string, unknown> = { editedByUser: true, ...(meta.hidden ? { hidden: true } : {}) };
+
+  if (range && Array.isArray(config.items)) {
+    const items: LayoutItem[] = config.items;
+    if (items.length < 4) return null;
+    const cut = Math.ceil(items.length / 2);
+    const a = items.slice(0, cut);
+    const b = items.slice(cut);
+    if (a.length < range.min || b.length < range.min) return null;
+    return [
+      { ...sanitizeLayoutConfig(layout, { ...config, items: a }), ...firstMeta },
+      { ...sanitizeLayoutConfig(layout, { ...config, title: cont, items: b, footnote: "" }), ...secondMeta },
+    ];
+  }
+  if (layout === "image" && Array.isArray(config.bullets) && config.bullets.length >= 2) {
+    const bullets: string[] = config.bullets;
+    const cut = Math.ceil(bullets.length / 2);
+    return [
+      { ...sanitizeLayoutConfig(layout, { ...config, bullets: bullets.slice(0, cut) }), ...firstMeta },
+      { ...sanitizeLayoutConfig(layout, { ...config, title: cont, bullets: bullets.slice(cut), imageUrl: "" }), ...secondMeta },
+    ];
+  }
+  return null;
 }

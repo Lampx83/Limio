@@ -55,3 +55,11 @@ Bước chốt dàn ý là bắt buộc (đã nằm trong nhóm A và B), không
 | H15 | Ghi sự kiện sinh bài và sự kiện AI sửa slide vào `LearningEvent`, đủ để đo tỉ lệ slide bị sửa tay sau khi sinh. |
 
 Để sau (ngoài bản đầu): sinh lại một phần bài từ tài liệu gốc, màu nhấn trong dòng.
+
+## Tình trạng thực hiện (cập nhật 2026-10-17, sau mốc 4)
+
+Đã làm và đã thử trên máy dev (LLM giả): L1–L7, G1–G12, H1–H10, H13, H14. Riêng:
+- **H11 (hoàn tác bằng lịch sử phiên bản): chưa có.** Nút "Lịch sử tương tác" hiện có chỉ lưu kết quả các buổi dạy, không lưu phiên bản slide. Cần làm mới nếu muốn hoàn tác.
+- **H12 (cảnh báo khi sửa slide tương tác đã có kết quả): chưa làm.**
+- **H15 (ghi sự kiện sinh bài và AI sửa vào LearningEvent): chưa làm.** Hiện chỉ có cờ `aiGenerated` và `editedByUser` trên slide để đo tỉ lệ sửa tay.
+- Tạo lại một slide đơn lẻ từ dàn ý có nút "Viết lại từ dàn ý"; cập nhật cả bài theo dàn ý có ở trang dàn ý (giữ slide đã sửa tay).

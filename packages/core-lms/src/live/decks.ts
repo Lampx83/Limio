@@ -14,6 +14,8 @@ export interface CreateSlideInput {
 export interface UpdateSlideInput {
   config?: unknown;
   timerSeconds?: number | null;
+  /** Đổi loại slide (vd. slide nội dung → câu hỏi quiz khi chấp nhận đề xuất của AI). */
+  type?: LiveSlideType;
 }
 
 export type DeckWithSlides = LiveDeck & { slides: LiveSlide[] };
@@ -240,6 +242,7 @@ export async function updateLiveSlide(
     where: { id: slideId },
     data: {
       ...(updates.config !== undefined ? { config: updates.config as any } : {}),
+      ...(updates.type !== undefined ? { type: updates.type } : {}),
       ...(updates.timerSeconds !== undefined ? { timerSeconds: updates.timerSeconds } : {}),
     },
   });

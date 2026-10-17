@@ -477,11 +477,49 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
-  const handleSaveSlide = async (slideId: string, patch: { config?: Record<string, any>; timerSeconds?: number | null }) => {
+  // Tách một slide quá dài thành hai: cập nhật slide hiện tại, thêm slide mới rồi đặt ngay sau nó.
+  const handleSplitSlide = async (slideId: string, first: Record<string, any>, second: Record<string, any>) => {
+    if (!deck) return;
+    await flushSaves();
+    const patchRes = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ config: first }),
+    });
+    const addRes = patchRes.ok
+      ? await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "content", config: second }),
+        })
+      : null;
+    if (!patchRes.ok || !addRes?.ok) {
+      toast.error("Tách slide thất bại");
+      load();
+      return;
+    }
+    const created: Slide = await addRes.json();
+    const ids = deck.slides.map((s) => s.id);
+    ids.splice(ids.indexOf(slideId) + 1, 0, created.id);
+    const orderRes = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/reorder`), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedSlideIds: ids }),
+    });
+    if (!orderRes.ok) toast.error("Đã tách nhưng chưa đặt đúng thứ tự — hãy kéo slide mới lên sau slide gốc");
+    await load();
+    setSelectedSlideId(created.id);
+  };
+
+  const handleSaveSlide = async (
+    slideId: string,
+    patch: { config?: Record<string, any>; timerSeconds?: number | null; type?: SlideType; source?: "ai" | "manual" },
+  ) => {
     // Lạc quan: cập nhật giao diện ngay (thanh thumb, preview), server xác nhận
     // sau; lỗi thì nạp lại từ server để không lệch dữ liệu.
+    const { source: _source, ...local } = patch;
     setDeck((prev) =>
-      prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, ...patch } : s)) } : prev
+      prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, ...local } : s)) } : prev
     );
     const startedAt = Date.now();
     await trackSave(async () => {
@@ -749,7 +787,14 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                 }`}
                 style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
-                <SlideCenterEditor slide={selectedSlide} themeId={deck.theme} onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)} />
+                <SlideCenterEditor
+                  slide={selectedSlide}
+                  themeId={deck.theme}
+                  deckId={deckId}
+                  onApplyProposal={(p) => handleSaveSlide(selectedSlide.id, { config: p.config, type: p.type, source: "ai" })}
+                  onSplit={(a, b) => handleSplitSlide(selectedSlide.id, a, b)}
+                  onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
+                />
                 {selectedSlide.timerSeconds != null && (
                   <TimerSticker seconds={selectedSlide.timerSeconds} />
                 )}
@@ -975,16 +1020,33 @@ const SlideThumb = memo(function SlideThumb({
 function SlideCenterEditor({
   slide,
   themeId,
+  deckId,
+  onApplyProposal,
+  onSplit,
   onSave,
 }: {
   themeId?: string | null;
+  deckId: string;
+  onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }) => void;
+  onSplit: (a: Record<string, any>, b: Record<string, any>) => void;
   slide: Slide;
   onSave: (patch: { config: Record<string, any> }) => void;
 }) {
   const config = slide.config ?? {};
 
   if (slide.type === "content" && isLayoutSlide(config))
-    return <LayoutEditor key={config.layout} config={config} themeId={themeId} onSave={onSave} />;
+    return (
+      <LayoutEditor
+        key={config.layout}
+        config={config}
+        themeId={themeId}
+        onSave={onSave}
+        deckId={deckId}
+        slideId={slide.id}
+        onApplyProposal={onApplyProposal}
+        onSplit={onSplit}
+      />
+    );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;
   if (slide.type === "quiz" || slide.type === "poll")
     return <QuestionEditor type={slide.type} config={config} onSave={onSave} />;

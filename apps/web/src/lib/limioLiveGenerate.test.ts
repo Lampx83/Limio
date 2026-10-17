@@ -7,6 +7,7 @@ import {
   estimateGenerationTokens,
   generateDeckSlides,
   makeBatches,
+  proposalFromDraft,
   sectionNumbers,
   type SlideDraft,
 } from "./limioLiveGenerate";
@@ -213,5 +214,61 @@ describe("generateDeckSlides", () => {
   it("dàn ý rỗng trả về rỗng", async () => {
     const r = await generateDeckSlides({ outline: [], isFatal: never, generateBatch: async () => [] });
     expect(r).toEqual({ slides: [], fallbackCount: 0 });
+  });
+});
+
+describe("proposalFromDraft", () => {
+  const current = {
+    config: {
+      layout: "cards",
+      title: "Ba câu hỏi",
+      items: [{ heading: "a", body: "b" }],
+      presenterNote: "Ghi chú cũ.",
+      outlineId: "o1",
+      aiGenerated: true,
+      editedByUser: true,
+      hidden: true,
+    },
+  };
+  const cardsDraft: SlideDraft = {
+    index: 0,
+    title: "Ba câu hỏi",
+    items: [
+      { heading: "Mục tiêu", body: "Nêu rõ đích đến.", icon: "target" },
+      { heading: "Hiện trạng", body: "Chỉ ra mức đạt.", icon: "compass" },
+      { heading: "Bước tiếp", body: "Giao một việc cụ thể.", icon: "route" },
+    ],
+    notes: "Ghi chú mới của AI.",
+  };
+
+  it("giữ ghi chú và mọi dấu vết của slide cũ, nội dung lấy từ AI", () => {
+    const r = proposalFromDraft("shorter", current, cardsDraft)!;
+    expect(r.type).toBe("content");
+    expect((r.config.items as any[])[0].body).toBe("Nêu rõ đích đến.");
+    expect(r.config).toMatchObject({ presenterNote: "Ghi chú cũ.", outlineId: "o1", aiGenerated: true, editedByUser: true, hidden: true });
+  });
+  it("slide cũ chưa có ghi chú thì dùng ghi chú của AI", () => {
+    const { presenterNote: _drop, ...noNote } = current.config;
+    expect(proposalFromDraft("simpler", { config: noNote }, cardsDraft)!.config.presenterNote).toBe("Ghi chú mới của AI.");
+  });
+  it("đổi thành quiz: loại mới là quiz, bỏ khoá bố cục, vẫn giữ dấu vết", () => {
+    const r = proposalFromDraft("to_quiz", current, {
+      index: 0,
+      question: "Câu nào đúng?",
+      options: [{ text: "A", correct: false }, { text: "B", correct: true }],
+    })!;
+    expect(r.type).toBe("quiz");
+    expect(r.config.layout).toBeUndefined();
+    expect(r.config.question).toBe("Câu nào đúng?");
+    expect(r.config).toMatchObject({ outlineId: "o1", presenterNote: "Ghi chú cũ." });
+  });
+  it("nháp hỏng thì không có đề xuất (không rơi về nội dung dựng sẵn)", () => {
+    expect(proposalFromDraft("shorter", current, undefined)).toBeNull();
+    expect(proposalFromDraft("shorter", current, { index: 0, title: "x", items: [{ heading: "a", body: "" }] })).toBeNull();
+    expect(proposalFromDraft("to_quiz", current, { index: 0, question: "Q?", options: [{ text: "A", correct: true }, { text: "B", correct: true }] })).toBeNull();
+  });
+  it("bỏ emoji trong đề xuất", () => {
+    const r = proposalFromDraft("shorter", current, { ...cardsDraft, title: "Ba câu hỏi 🎯" })!;
+    expect(r.config.title).toBe("Ba câu hỏi");
   });
 });

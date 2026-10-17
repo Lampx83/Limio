@@ -51,7 +51,7 @@ export interface RawSlideDraft {
 const STR = { type: "string" };
 const STR_ARR = { type: "array", items: STR };
 
-const DRAFTS_SCHEMA = {
+export const DRAFTS_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -112,7 +112,7 @@ const DRAFTS_SCHEMA = {
 };
 
 /** Yêu cầu trường cho từng bố cục — các trường còn lại để rỗng. */
-const SPEC: Record<string, string> = {
+export const SLIDE_SPEC: Record<string, string> = {
   cover: `title (tiêu đề bài, tối đa 12 từ), subtitle (một câu hoàn chỉnh nêu giá trị của bài), byline để rỗng.`,
   section: `sectionNumber (số thứ tự mục, dạng "01", "02" theo thứ tự các slide "section" trong dàn ý), title (tên mục), subtitle (một câu hoàn chỉnh dẫn vào mục).`,
   image: `title, bullets: ĐÚNG 3 câu hoàn chỉnh, mỗi câu dưới 18 từ.`,
@@ -155,7 +155,7 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
       const key = specKeyFor(s);
       return `- Chỉ số ${s.index}, bố cục "${key}", tiêu đề dàn ý: "${s.title}"${
         s.points.length ? `, ý chính dàn ý: ${s.points.map((p) => `"${p}"`).join("; ")}` : ""
-      }.\n  Điền: ${SPEC[key] ?? SPEC.image}`;
+      }.\n  Điền: ${SLIDE_SPEC[key] ?? SLIDE_SPEC.image}`;
     })
     .join("\n");
 

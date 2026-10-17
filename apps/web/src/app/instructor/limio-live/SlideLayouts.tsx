@@ -19,6 +19,8 @@ import {
   accentTail,
   fitFontSize,
   resolveLayout,
+  parseInline,
+  stripInline,
   type LayoutColumn,
   type LayoutItem,
   type SlideIconId,
@@ -46,6 +48,20 @@ const ICONS: Record<SlideIconId, LucideIcon> = {
 };
 
 type Cfg = Record<string, any>;
+
+/** Vẽ chữ có **in đậm** và *in nghiêng* (chỉ hai định dạng này, xem parseInline). */
+function Inline({ text }: { text: string }) {
+  return (
+    <>
+      {parseInline(text ?? "").map((r, i) => {
+        let node: ReactNode = r.text;
+        if (r.italic) node = <em key={`e${i}`}>{node}</em>;
+        if (r.bold) node = <strong key={`b${i}`}>{node}</strong>;
+        return <span key={i}>{node}</span>;
+      })}
+    </>
+  );
+}
 const delay = (i: number): CSSProperties => ({ ["--i" as string]: i }) as CSSProperties;
 
 /** Slide có dùng bố cục mới (không phải "classic")? */
@@ -115,10 +131,10 @@ function Title({
   maxLines: number;
   style?: CSSProperties;
 }) {
-  const { px } = fitFontSize(text, { maxPx, widthPx, maxLines });
+  const { px } = fitFontSize(stripInline(text), { maxPx, widthPx, maxLines });
   return (
     <h2 className={`h a ${className ?? ""}`} style={{ fontSize: px, ...style }}>
-      {text}
+      <Inline text={text} />
     </h2>
   );
 }
@@ -138,8 +154,9 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
 
   switch (layout) {
     case "cover": {
-      const { head, tail } = accentTail(title);
-      const { px } = fitFontSize(title, { maxPx: 96, widthPx: 800, maxLines: 3 });
+      const plain = stripInline(title);
+      const { head, tail } = accentTail(plain);
+      const { px } = fitFontSize(plain, { maxPx: 96, widthPx: 800, maxLines: 3 });
       return (
         <div className="ll-cover">
           <Glows
@@ -159,12 +176,12 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
               </h1>
               {c.subtitle && (
                 <p className="lead a" style={{ ...delay(1), marginTop: 30, maxWidth: 720 }}>
-                  {c.subtitle}
+                  <Inline text={c.subtitle} />
                 </p>
               )}
               {c.byline && (
                 <p className="byline a" style={delay(2)}>
-                  {c.byline}
+                  <Inline text={c.byline} />
                 </p>
               )}
             </div>
@@ -192,7 +209,7 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
             <Title text={title} maxPx={84} widthPx={980} maxLines={2} style={{ ...delay(1) }} />
             {c.subtitle && (
               <p className="lead a" style={{ ...delay(2), marginTop: 22, maxWidth: 820 }}>
-                {c.subtitle}
+                <Inline text={c.subtitle} />
               </p>
             )}
           </div>
@@ -209,7 +226,7 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
               <ul className="bul">
                 {bullets.map((b, i) => (
                   <li key={i} className="a" style={delay(i + 1)}>
-                    {b}
+                    <Inline text={b} />
                   </li>
                 ))}
               </ul>
@@ -241,8 +258,12 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
                     <div className="badge">
                       <Icon size={36} strokeWidth={2} />
                     </div>
-                    <b>{it.heading}</b>
-                    <p>{it.body}</p>
+                    <b>
+                      <Inline text={it.heading} />
+                    </b>
+                    <p>
+                      <Inline text={it.body} />
+                    </p>
                   </div>
                 );
               })}
@@ -262,14 +283,18 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
                 <div key={i} className={`card col ${col.tone === "bad" ? "bad" : "good"} a`} style={delay(i * 2)}>
                   <div className="ttl">
                     {col.tone === "bad" ? <X size={38} strokeWidth={2.6} /> : <Check size={38} strokeWidth={2.6} />}
-                    {col.heading}
+                    <Inline text={col.heading} />
                   </div>
                   {col.points.map((p, k) => (
                     <div key={k} className="q">
-                      {p}
+                      <Inline text={p} />
                     </div>
                   ))}
-                  {col.note && <div className="why">{col.note}</div>}
+                  {col.note && (
+                    <div className="why">
+                      <Inline text={col.note} />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -287,14 +312,18 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
               {items.map((it, i) => (
                 <div key={i} className="st a-pop" style={delay(i * 2)}>
                   <div className="circ">{i + 1}</div>
-                  <b>{it.heading}</b>
-                  <p>{it.body}</p>
+                  <b>
+                    <Inline text={it.heading} />
+                  </b>
+                  <p>
+                    <Inline text={it.body} />
+                  </p>
                 </div>
               ))}
             </div>
             {c.footnote && (
               <div className="loop a" style={delay(items.length * 2)}>
-                <Repeat size={30} /> {c.footnote}
+                <Repeat size={30} /> <Inline text={c.footnote} />
               </div>
             )}
           </div>
@@ -310,7 +339,9 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
               {items.map((it, i) => (
                 <div key={i} className="card st a" style={delay(i)}>
                   <div className="big grad">{it.heading}</div>
-                  <p>{it.body}</p>
+                  <p>
+                    <Inline text={it.body} />
+                  </p>
                 </div>
               ))}
             </div>
@@ -320,8 +351,9 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
 
     case "quote": {
       const q: string = c.quote ?? "";
-      const { head, tail } = accentTail(q);
-      const { px } = fitFontSize(q, { maxPx: 66, widthPx: 1000, maxLines: 4 });
+      const qPlain = stripInline(q);
+      const { head, tail } = accentTail(qPlain);
+      const { px } = fitFontSize(qPlain, { maxPx: 66, widthPx: 1000, maxLines: 4 });
       return (
         <div className="ll-quote">
           <Glows
@@ -342,7 +374,7 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
             {c.source && (
               <div className="who a" style={delay(3)}>
                 <i />
-                {c.source}
+                <Inline text={c.source} />
               </div>
             )}
           </div>
@@ -361,7 +393,9 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
                   <div className="tick">
                     <Check size={34} strokeWidth={2.8} />
                   </div>
-                  <span>{it.heading}</span>
+                  <span>
+                    <Inline text={it.heading} />
+                  </span>
                 </div>
               ))}
             </div>

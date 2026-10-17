@@ -7,6 +7,8 @@ import {
   ITEM_RANGE,
   MAX_LEN,
   normalizeContentSlideConfig,
+  pickMeta,
+  resolveLayout,
   sanitizeLayoutConfig,
   type SlideLayoutId,
 } from "./limioLiveSlides";
@@ -209,6 +211,8 @@ export interface GenerateDeps {
   isFatal: (e: unknown) => boolean;
   onProgress?: (done: number, total: number) => void;
   concurrency?: number;
+  /** Số mục theo toàn bộ dàn ý, thẳng hàng với `outline` (khi chỉ viết một phần dàn ý). */
+  sectionNos?: string[];
 }
 
 export interface GenerateResult {
@@ -224,7 +228,7 @@ export interface GenerateResult {
 export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateResult> {
   const { outline } = deps;
   const total = outline.length;
-  const sections = sectionNumbers(outline);
+  const sections = deps.sectionNos ?? sectionNumbers(outline);
   const results: GeneratedSlide[] = new Array(total);
   const batches = makeBatches(total);
   let done = 0;
@@ -262,4 +266,47 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
   if (fatal) throw fatal;
 
   return { slides: results, fallbackCount: results.filter((r) => r.usedFallback).length };
+}
+
+// ── Đề xuất sửa MỘT slide bằng AI (tiêu chí H8–H10) ─────────────────────────
+
+export type SlideEditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite";
+export const SLIDE_EDIT_ACTIONS: readonly SlideEditAction[] = ["shorter", "example", "simpler", "to_quiz", "rewrite"];
+
+/** Các khoá meta của slide hiện tại không được AI đổi; phần còn lại là nội dung. */
+const GENERATED_META = ["outlineId", "aiGenerated", "presenterNote"] as const;
+
+/**
+ * Biến bản nháp AI thành ĐỀ XUẤT thay cho slide hiện tại. Đi qua cùng bộ kiểm tra như lúc sinh
+ * slide (draftToSlide); nháp hỏng thì trả null — khác với lúc sinh, ở đây KHÔNG rơi về nội dung
+ * dựng sẵn vì giảng viên đã có slide tốt hơn để giữ. Ghi chú giảng và dấu vết (ẩn, dòng dàn ý,
+ * AI sinh, đã sửa tay) của slide cũ được giữ; chỉ "đổi thành quiz" lấy ghi chú mới khi slide cũ chưa có.
+ */
+export function proposalFromDraft(
+  action: SlideEditAction,
+  current: { config: Record<string, unknown> },
+  draft: SlideDraft | undefined,
+): { type: "content" | "quiz"; config: Record<string, unknown> } | null {
+  const cfg = current.config;
+  const toQuiz = action === "to_quiz";
+  const os: OutlineSlide = {
+    id: typeof cfg.outlineId === "string" ? cfg.outlineId : "edit",
+    kind: toQuiz ? "quiz" : "content",
+    layout: toQuiz ? null : (resolveLayout(cfg) === "classic" ? "image" : (resolveLayout(cfg) as Exclude<SlideLayoutId, "classic">)),
+    title: typeof cfg.title === "string" ? cfg.title : "",
+    points: [],
+  };
+  const sectionNo = typeof cfg.sectionNumber === "string" ? cfg.sectionNumber : "";
+  const g = draftToSlide(os, draft, sectionNo);
+  if (g.usedFallback) return null;
+
+  const content: Record<string, unknown> = { ...g.config };
+  const aiNote = content.presenterNote;
+  for (const k of GENERATED_META) delete content[k];
+  const meta = pickMeta(cfg);
+  const note = meta.presenterNote ?? aiNote;
+  return {
+    type: toQuiz ? "quiz" : "content",
+    config: { ...content, ...meta, ...(note ? { presenterNote: note } : {}) },
+  };
 }

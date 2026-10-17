@@ -253,3 +253,127 @@ describe("giữ khoá meta khi lọc bố cục", () => {
     expect(pickMeta(undefined)).toEqual({});
   });
 });
+
+import { mergeSlideMeta } from "./limioLiveSlides";
+
+describe("mergeSlideMeta", () => {
+  const ai = { layout: "cards", title: "T", items: [{ heading: "a", body: "b" }], outlineId: "o1", aiGenerated: true, presenterNote: "Ghi chú." };
+
+  it("giảng viên đổi chữ slide AI sinh thì đánh dấu đã sửa tay và giữ dấu vết nhận diện", () => {
+    const out = mergeSlideMeta(ai, { layout: "cards", title: "T mới", items: [{ heading: "a", body: "b" }], presenterNote: "Ghi chú." });
+    expect(out).toMatchObject({ editedByUser: true, outlineId: "o1", aiGenerated: true });
+  });
+  it("lưu lại đúng nội dung cũ (autosave khi rời ô) không bị tính là sửa", () => {
+    const out = mergeSlideMeta(ai, { layout: "cards", title: "T", items: [{ heading: "a", body: "b" }], presenterNote: " Ghi chú. " });
+    expect(out.editedByUser).toBeUndefined();
+  });
+  it("ẩn/hiện slide không tính là sửa nội dung", () => {
+    expect(mergeSlideMeta(ai, { ...ai, hidden: true }).editedByUser).toBeUndefined();
+  });
+  it("bật ẩn thì tắt ẩn được; trình soạn làm rơi cờ ẩn thì cờ vẫn còn", () => {
+    const hid = { ...ai, hidden: true };
+    expect(mergeSlideMeta(hid, { ...ai, hidden: false }).hidden).toBe(false);
+    expect(mergeSlideMeta(hid, { layout: "cards", title: "T", items: [{ heading: "a", body: "b" }], presenterNote: "Ghi chú." }).hidden).toBe(true);
+  });
+  it("AI sửa (đã được giảng viên chấp nhận) không đánh dấu sửa tay", () => {
+    expect(mergeSlideMeta(ai, { ...ai, title: "Ngắn hơn" }, { fromAi: true }).editedByUser).toBeUndefined();
+  });
+  it("đã sửa tay thì mãi là sửa tay, kể cả khi AI sửa tiếp", () => {
+    const edited = { ...ai, editedByUser: true };
+    expect(mergeSlideMeta(edited, { ...ai, title: "x" }, { fromAi: true }).editedByUser).toBe(true);
+  });
+  it("slide soạn tay không bao giờ bị gắn dấu vết AI", () => {
+    const out = mergeSlideMeta({ title: "a", bullets: [] }, { title: "b", bullets: [] });
+    expect(out).toEqual({ title: "b", bullets: [] });
+  });
+  it("quiz do AI sinh: trình soạn quiz làm rơi dấu vết nhưng bản lưu vẫn giữ và đánh dấu khi sửa câu hỏi", () => {
+    const quiz = { question: "Q?", options: [{ text: "A", correct: true }, { text: "B", correct: false }], outlineId: "o2", aiGenerated: true };
+    const out = mergeSlideMeta(quiz, { question: "Q mới?", options: [{ text: "A", correct: true }, { text: "B", correct: false }] });
+    expect(out).toMatchObject({ outlineId: "o2", aiGenerated: true, editedByUser: true });
+  });
+});
+
+import { parseInline, splitSlideConfig, stripInline, toggleInlineMarker } from "./limioLiveSlides";
+
+describe("parseInline", () => {
+  it("tách in đậm và in nghiêng", () => {
+    expect(parseInline("Có **hai** ý và *một* ví dụ.")).toEqual([
+      { text: "Có " },
+      { text: "hai", bold: true },
+      { text: " ý và " },
+      { text: "một", italic: true },
+      { text: " ví dụ." },
+    ]);
+  });
+  it("lồng đậm trong nghiêng", () => {
+    expect(parseInline("*a **b** c*")).toEqual([{ text: "a ", italic: true }, { text: "b", bold: true, italic: true }, { text: " c", italic: true }]);
+  });
+  it("dấu không có cặp đóng giữ nguyên là chữ", () => {
+    expect(stripInline("Giá trị 2 * 3 và **chưa đóng")).toBe("Giá trị 2 * 3 và **chưa đóng");
+    expect(parseInline("a * b")).toEqual([{ text: "a * b" }]);
+  });
+  it("chuỗi rỗng và chuỗi không dấu", () => {
+    expect(parseInline("")).toEqual([]);
+    expect(parseInline("Không có dấu")).toEqual([{ text: "Không có dấu" }]);
+  });
+  it("stripInline bỏ dấu đã ghép cặp", () => {
+    expect(stripInline("**Phản hồi** là *thông tin*.")).toBe("Phản hồi là thông tin.");
+  });
+});
+
+describe("toggleInlineMarker", () => {
+  it("bọc đoạn chọn và giữ vùng chọn", () => {
+    expect(toggleInlineMarker("Phản hồi tốt", 0, 8, "**")).toEqual({ value: "**Phản hồi** tốt", start: 2, end: 10 });
+  });
+  it("bấm lần nữa thì gỡ", () => {
+    const a = toggleInlineMarker("Phản hồi tốt", 0, 8, "**");
+    expect(toggleInlineMarker(a.value, a.start, a.end, "**")).toEqual({ value: "Phản hồi tốt", start: 0, end: 8 });
+  });
+  it("không có đoạn chọn thì không đổi", () => {
+    expect(toggleInlineMarker("abc", 1, 1, "*")).toEqual({ value: "abc", start: 1, end: 1 });
+  });
+  it("in nghiêng bên trong in đậm không bị coi là đã in nghiêng", () => {
+    const r = toggleInlineMarker("**ab**", 2, 4, "*");
+    expect(r.value).toBe("***ab***");
+  });
+});
+
+describe("splitSlideConfig", () => {
+  const steps = {
+    layout: "steps",
+    title: "Quy trình",
+    items: ["a", "b", "c", "d", "e"].map((h) => ({ heading: h, body: `Câu ${h}.` })),
+    footnote: "Lặp lại.",
+    presenterNote: "Ghi chú.",
+    outlineId: "o9",
+    aiGenerated: true,
+  };
+  it("chia đều các bước; slide sau có (tiếp), không ghi chú, không dàn ý, không dòng cuối", () => {
+    const r = splitSlideConfig(steps)!;
+    expect((r[0].items as any[]).map((i) => i.heading)).toEqual(["a", "b", "c"]);
+    expect((r[1].items as any[]).map((i) => i.heading)).toEqual(["d", "e"]);
+    expect(r[1].title).toBe("Quy trình (tiếp)");
+    expect(r[1].presenterNote).toBeUndefined();
+    expect(r[1].outlineId).toBeUndefined();
+    expect(r[1].footnote).toBeUndefined();
+    expect(r[0]).toMatchObject({ presenterNote: "Ghi chú.", outlineId: "o9", editedByUser: true });
+    expect(r[1].editedByUser).toBe(true);
+  });
+  it("hai nửa đều phải đủ số mục tối thiểu: 3 thẻ thì không tách", () => {
+    expect(splitSlideConfig({ layout: "cards", title: "t", items: [1, 2, 3].map((n) => ({ heading: `h${n}`, body: "b" })) })).toBeNull();
+    expect(splitSlideConfig({ layout: "steps", title: "t", items: [1, 2].map((n) => ({ heading: `h${n}`, body: "b" })) })).toBeNull();
+  });
+  it("tiêu đề đã có (tiếp) không thêm lần nữa", () => {
+    const r = splitSlideConfig({ ...steps, title: "Quy trình (tiếp)" })!;
+    expect(r[1].title).toBe("Quy trình (tiếp)");
+  });
+  it("slide chữ và hình tách ý, bố cục khác không tách được", () => {
+    const r = splitSlideConfig({ layout: "image", title: "T", bullets: ["1.", "2.", "3."], imageUrl: "https://x/y.png" })!;
+    expect(r[0].bullets).toEqual(["1.", "2."]);
+    expect(r[1].bullets).toEqual(["3."]);
+    expect(r[1].imageUrl).toBeUndefined();
+    expect(splitSlideConfig({ layout: "cover", title: "T" })).toBeNull();
+    expect(splitSlideConfig({ layout: "compare", title: "T", columns: [] })).toBeNull();
+    expect(splitSlideConfig({ layout: "image", title: "T", bullets: ["một ý"] })).toBeNull();
+  });
+});

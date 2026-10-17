@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
 import { isValidMinutes, outlineBlockingProblems, outlineWarnings, sanitizeOutline, type Outline } from "@/lib/limioLiveOutline";
+import { planSync, syncIsNoop, syncSummary } from "@/lib/limioLiveSync";
 
 export const runtime = "nodejs";
 
@@ -17,9 +18,17 @@ async function ownedDeck(deckId: string, userId: string) {
       outlineConfirmedAt: true,
       sourceName: true,
       sourceText: true,
-      _count: { select: { slides: true } },
+      slides: { orderBy: { orderIndex: "asc" as const }, select: { id: true, type: true, config: true } },
     },
   });
+}
+
+function syncState(outline: Outline, slides: Array<{ id: string; type: string; config: unknown }>) {
+  const plan = planSync(
+    sanitizeOutline(outline).slides,
+    slides.map((s) => ({ id: s.id, type: s.type, config: (s.config ?? {}) as Record<string, unknown> })),
+  );
+  return { ...syncSummary(plan), noop: syncIsNoop(plan, slides.map((s) => s.id)) };
 }
 
 function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
@@ -33,7 +42,9 @@ function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
     outline,
     confirmedAt: deck.outlineConfirmedAt,
     sourceChars: deck.sourceText?.length ?? 0,
-    slideCount: deck._count.slides,
+    slideCount: deck.slides.length,
+    // Khi bài đã có slide: việc "cập nhật theo dàn ý" sẽ làm gì (slide đã sửa tay luôn được giữ).
+    sync: outline && deck.slides.length ? syncState(outline, deck.slides) : null,
     warnings: outline ? outlineWarnings(outline, minutes) : [],
   };
 }
@@ -82,7 +93,7 @@ export async function PUT(req: Request, { params }: { params: { deckId: string }
       outlineConfirmedAt: true,
       sourceName: true,
       sourceText: true,
-      _count: { select: { slides: true } },
+      slides: { orderBy: { orderIndex: "asc" as const }, select: { id: true, type: true, config: true } },
     },
   });
   return NextResponse.json(view(updated));
