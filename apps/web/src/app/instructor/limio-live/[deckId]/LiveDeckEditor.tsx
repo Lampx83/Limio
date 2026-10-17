@@ -59,6 +59,9 @@ import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
+import BrandDialog from "./BrandDialog";
+import { LiveBrandProvider } from "../liveBrandContext";
+import { sanitizeBrand, type BrandConfig } from "@/lib/limioLiveBrand";
 import { isLayoutSlide } from "../SlideLayouts";
 import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
@@ -79,6 +82,8 @@ interface Deck {
   id: string;
   title: string;
   theme?: string;
+  /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider / sanitizeBrand. */
+  brand?: unknown;
   slides: Slide[];
 }
 
@@ -325,6 +330,31 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     if (!res.ok) { toast.error("Lưu tên thất bại"); return; }
     setDeck((prev) => (prev ? { ...prev, title: titleDraft.trim() } : prev));
     setLastSavedAt(new Date());
+  };
+
+  const [brandOpen, setBrandOpen] = useState(false);
+  // Các lần lưu thương hiệu chạy LẦN LƯỢT: hai lần sửa sát nhau mà đến máy chủ đảo thứ tự thì lần cũ sẽ ghi đè lần mới.
+  const brandQueue = useRef<Promise<unknown>>(Promise.resolve());
+  // Thương hiệu: cập nhật ngay trên màn hình rồi lưu; lỗi thì hoàn lại như đổi giao diện.
+  const handleSetBrand = (brand: BrandConfig | null) => {
+    if (!deck) return;
+    const prev = deck.brand ?? null;
+    setDeck((d) => (d ? { ...d, brand } : d));
+    brandQueue.current = brandQueue.current.then(async () => {
+      const res = await trackSave(() =>
+        fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brand }),
+        })
+      ).catch(() => null);
+      if (!res || !res.ok) {
+        toast.error("Lưu thương hiệu thất bại");
+        setDeck((d) => (d ? { ...d, brand: prev } : d));
+        return;
+      }
+      setLastSavedAt(new Date());
+    });
   };
 
   const handleSetTheme = async (theme: string) => {
@@ -585,6 +615,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   };
 
   return (
+    <LiveBrandProvider brand={deck.brand}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
       onInput={() => {
@@ -644,6 +675,16 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
         </Link>
         <ThemePicker value={deck.theme ?? "white"} onChange={handleSetTheme} />
+        <button
+          type="button"
+          onClick={() => setBrandOpen(true)}
+          title="Logo và màu thương hiệu của bài giảng"
+          className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-token px-2 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
+        >
+          <span className="h-5 w-5 rounded-full border border-token" style={{ background: sanitizeBrand(deck.brand)?.color ?? "linear-gradient(135deg,#BEF264,#F9A8D4)" }} aria-hidden />
+          <span className="hidden sm:inline">Thương hiệu</span>
+          {sanitizeBrand(deck.brand) && <span className="hidden font-normal sm:inline">· đã đặt</span>}
+        </button>
         {/* 3 lệnh trình chiếu gom 1 khối phân đoạn (giống thanh Slide Show của PowerPoint):
             "Từ đầu" là lệnh chính (tô đặc), 2 lệnh còn lại nền trong, cùng cỡ. */}
         <div
@@ -966,7 +1007,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </>
         )}
       </div>
+      {brandOpen && (
+        <BrandDialog brand={deck.brand} themeId={deck.theme ?? "white"} onChange={handleSetBrand} onClose={() => setBrandOpen(false)} />
+      )}
     </div>
+    </LiveBrandProvider>
   );
 }
 
