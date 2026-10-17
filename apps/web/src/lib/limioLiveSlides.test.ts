@@ -212,7 +212,7 @@ describe("padForEditing", () => {
   });
 });
 
-import { normalizeContentSlideConfig } from "./limioLiveSlides";
+import { normalizeContentSlideConfig, pickMeta } from "./limioLiveSlides";
 
 describe("normalizeContentSlideConfig", () => {
   it("slide có bố cục: lọc trường lạ, giữ ghi chú giảng, cắt độ dài", () => {
@@ -231,5 +231,25 @@ describe("normalizeContentSlideConfig", () => {
     expect(normalizeContentSlideConfig(old)).toBe(old);
     const res = { layout: "cards", resource: { type: "pdf", payload: {} }, title: "x" };
     expect(normalizeContentSlideConfig(res)).toBe(res);
+  });
+});
+
+describe("giữ khoá meta khi lọc bố cục", () => {
+  it("cờ ẩn slide và dấu vết AI không bị mất khi lưu slide có bố cục", () => {
+    const out = normalizeContentSlideConfig({
+      layout: "cards",
+      title: "T",
+      hidden: true,
+      outlineId: "o1",
+      aiGenerated: true,
+      editedByUser: true,
+      rubbish: 1,
+    }) as any;
+    expect(out).toMatchObject({ hidden: true, outlineId: "o1", aiGenerated: true, editedByUser: true });
+    expect(out.rubbish).toBeUndefined();
+  });
+  it("pickMeta bỏ giá trị sai kiểu", () => {
+    expect(pickMeta({ hidden: "yes", aiGenerated: 1, outlineId: 5, presenterNote: "  " })).toEqual({});
+    expect(pickMeta(undefined)).toEqual({});
   });
 });

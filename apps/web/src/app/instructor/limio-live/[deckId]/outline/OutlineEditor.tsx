@@ -21,6 +21,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle, Check, ChevronDown, ChevronUp, GripVertical, Loader2, Plus, Trash2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { LAYOUT_META } from "@/lib/limioLiveSlides";
+import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
   DURATIONS,
   OUTLINE_LAYOUTS,
@@ -42,6 +43,8 @@ interface Loaded {
   minutes: number;
   outline: Outline;
   confirmedAt: string | null;
+  sourceChars: number;
+  slideCount: number;
 }
 
 const KIND_LABEL: Record<OutlineKind, string> = {
@@ -49,6 +52,15 @@ const KIND_LABEL: Record<OutlineKind, string> = {
   quiz: "Câu hỏi quiz",
   poll: "Bình chọn",
   word_cloud: "Đám mây từ",
+};
+
+const GEN_ERROR: Record<string, string> = {
+  openai_not_configured: "Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên.",
+  global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau.",
+  daily_token_cap: "Bạn đã dùng hết hạn mức AI hôm nay. Chưa có slide nào được tạo; hãy thử lại vào ngày mai.",
+  monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Chưa có slide nào được tạo.",
+  outline_not_confirmed: "Dàn ý chưa được xác nhận.",
+  deck_has_slides: "Bài giảng này đã có slide.",
 };
 
 const POINT_HINT: Partial<Record<OutlineLayout, string>> = {
@@ -72,6 +84,12 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [confirmErr, setConfirmErr] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [gen, setGen] = useState<
+    | { state: "idle" }
+    | { state: "running"; done: number; total: number }
+    | { state: "done"; slideCount: number; fallbackCount: number }
+    | { state: "error"; message: string }
+  >({ state: "idle" });
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef({ outline, minutes });
   latest.current = { outline, minutes };
@@ -80,13 +98,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
     (async () => {
       const r = await fetch(url);
       if (!r.ok) return setLoadErr("Không tải được dàn ý.");
-      const j = (await r.json()) as {
-        title: string;
-        sourceName: string | null;
-        minutes: number;
-        outline: Outline;
-        confirmedAt: string | null;
-      };
+      const j = (await r.json()) as Loaded;
       setData(j);
       setOutline(j.outline);
       setMinutes(j.minutes);
@@ -187,6 +199,44 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
       setSave("saved");
     } finally {
       setConfirming(false);
+    }
+  };
+
+  const generate = async () => {
+    setGen({ state: "running", done: 0, total: outline.slides.length });
+    try {
+      const res = await fetch(`${url}/generate`, { method: "POST" });
+      if (!res.ok || !res.body) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        return setGen({ state: "error", message: GEN_ERROR[j?.error ?? ""] ?? "Không tạo được slide. Vui lòng thử lại." });
+      }
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      let finished = false;
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          const ev = JSON.parse(line) as { type: string; done?: number; total?: number; slideCount?: number; fallbackCount?: number; error?: string };
+          if (ev.type === "progress") setGen({ state: "running", done: ev.done ?? 0, total: ev.total ?? 0 });
+          else if (ev.type === "done") {
+            finished = true;
+            setGen({ state: "done", slideCount: ev.slideCount ?? 0, fallbackCount: ev.fallbackCount ?? 0 });
+          } else if (ev.type === "error") {
+            finished = true;
+            setGen({ state: "error", message: GEN_ERROR[ev.error ?? ""] ?? "Không tạo được slide. Vui lòng thử lại." });
+          }
+        }
+      }
+      if (!finished) setGen({ state: "error", message: "Kết nối bị gián đoạn. Hãy mở danh sách bài giảng để kiểm tra bài đã có slide chưa." });
+    } catch {
+      setGen({ state: "error", message: "Mất kết nối. Vui lòng kiểm tra mạng rồi thử lại." });
     }
   };
 
@@ -294,11 +344,56 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
             ))}
           </ul>
         )}
-        {confirmedAt ? (
-          <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-            <Check size={16} /> Bạn đã xác nhận dàn ý này. Bước tạo slide từ dàn ý sẽ nằm ngay tại đây ở bản sau; sửa
-            dàn ý sẽ huỷ xác nhận.
-          </p>
+        {data.slideCount > 0 || gen.state === "done" ? (
+          <div className="space-y-3">
+            <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+              <Check size={16} />
+              {gen.state === "done"
+                ? `Đã tạo ${gen.slideCount} slide từ dàn ý.`
+                : `Bài giảng đã có ${data.slideCount} slide. Việc tạo lại slide từ dàn ý sẽ có ở bản sau.`}
+            </p>
+            {gen.state === "done" && gen.fallbackCount > 0 && (
+              <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                {gen.fallbackCount} slide AI chưa viết được nên được dựng thẳng từ dàn ý (hoặc để khung trống với câu hỏi
+                quiz và bình chọn). Hãy xem lại các slide đó.
+              </p>
+            )}
+            <a href={`/instructor/limio-live/${deckId}`} className="btn-primary inline-flex">
+              Mở bài giảng để xem và chỉnh slide
+            </a>
+          </div>
+        ) : confirmedAt ? (
+          <div className="space-y-3">
+            <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+              <Check size={16} /> Bạn đã xác nhận dàn ý này. Sửa dàn ý sẽ huỷ xác nhận.
+            </p>
+            {gen.state === "running" ? (
+              <div className="space-y-2" role="status">
+                <div className="h-2.5 overflow-hidden rounded-full bg-black/10">
+                  <div
+                    className="h-full rounded-full bg-brand-600 transition-all"
+                    style={{ width: `${gen.total ? Math.round((gen.done / gen.total) * 100) : 0}%` }}
+                  />
+                </div>
+                <p className="flex items-center gap-2 text-sm text-muted">
+                  <Loader2 size={14} className="animate-spin" /> Đã viết {gen.done}/{gen.total} slide. Vui lòng không đóng trang.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted">
+                  AI sẽ viết nội dung và ghi chú giảng cho {outline.slides.length} slide theo đúng dàn ý. Dự kiến dùng khoảng{" "}
+                  <b>{formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: outline.slides.length }).total)}</b>{" "}
+                  token AI.
+                </p>
+                {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
+                <button type="button" className="btn-primary flex items-center gap-2" onClick={generate}>
+                  Tạo slide từ dàn ý
+                </button>
+              </>
+            )}
+          </div>
         ) : (
           <>
             <label className="flex items-start gap-2 text-sm">
@@ -326,6 +421,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
       </section>
     </main>
   );
+}
+
+function formatTokens(n: number): string {
+  return n >= 1000 ? `${Math.round(n / 100) / 10} nghìn`.replace(".", ",") : String(n);
 }
 
 function Row({

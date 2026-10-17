@@ -11,6 +11,7 @@ import {
   convertLayoutConfig,
   layoutTextProblems,
   padForEditing,
+  pickMeta,
   resolveLayout,
   sanitizeLayoutConfig,
   type LayoutColumn,
@@ -35,7 +36,7 @@ const ICON_LABELS: Record<(typeof SLIDE_ICONS)[number], string> = {
 };
 
 /** Giữ ghi chú giảng và các khoá không thuộc bố cục khi lưu. */
-const keepExtras = (config: Cfg): Cfg => (config.presenterNote ? { presenterNote: config.presenterNote } : {});
+const keepExtras = (config: Cfg): Cfg => pickMeta(config);
 
 /** Chọn bố cục: đổi bố cục mang theo nội dung đang có (xem convertLayoutConfig). */
 export function LayoutPicker({

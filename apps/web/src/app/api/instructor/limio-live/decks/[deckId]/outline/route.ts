@@ -9,7 +9,16 @@ export const runtime = "nodejs";
 async function ownedDeck(deckId: string, userId: string) {
   return prisma.liveDeck.findFirst({
     where: { id: deckId, userId },
-    select: { id: true, title: true, outline: true, outlineMinutes: true, outlineConfirmedAt: true, sourceName: true },
+    select: {
+      id: true,
+      title: true,
+      outline: true,
+      outlineMinutes: true,
+      outlineConfirmedAt: true,
+      sourceName: true,
+      sourceText: true,
+      _count: { select: { slides: true } },
+    },
   });
 }
 
@@ -23,6 +32,8 @@ function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
     minutes,
     outline,
     confirmedAt: deck.outlineConfirmedAt,
+    sourceChars: deck.sourceText?.length ?? 0,
+    slideCount: deck._count.slides,
     warnings: outline ? outlineWarnings(outline, minutes) : [],
   };
 }
@@ -63,7 +74,16 @@ export async function PUT(req: Request, { params }: { params: { deckId: string }
   const updated = await prisma.liveDeck.update({
     where: { id: deck.id },
     data: { outline: outline as unknown as object, outlineMinutes: minutes, outlineConfirmedAt: confirmedAt },
-    select: { id: true, title: true, outline: true, outlineMinutes: true, outlineConfirmedAt: true, sourceName: true },
+    select: {
+      id: true,
+      title: true,
+      outline: true,
+      outlineMinutes: true,
+      outlineConfirmedAt: true,
+      sourceName: true,
+      sourceText: true,
+      _count: { select: { slides: true } },
+    },
   });
   return NextResponse.json(view(updated));
 }

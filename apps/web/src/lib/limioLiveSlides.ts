@@ -408,14 +408,29 @@ export function padForEditing(layout: SlideLayoutId, c: Record<string, any>): Re
 }
 
 /**
+ * Khoá "meta" đi kèm mọi slide, không thuộc bố cục: ghi chú giảng, cờ ẩn khi trình chiếu,
+ * và dấu vết sinh bằng AI (id dòng dàn ý, slide do AI sinh, đã được giảng viên sửa tay).
+ * Bộ lọc bố cục phải giữ chúng, nếu không việc ẩn slide hay ghi chú sẽ mất lặng lẽ.
+ */
+export function pickMeta(config: Record<string, unknown> | null | undefined): Record<string, unknown> {
+  const c = config ?? {};
+  const out: Record<string, unknown> = {};
+  if (typeof c.presenterNote === "string" && c.presenterNote.trim()) out.presenterNote = c.presenterNote.trim().slice(0, MAX_LEN.notes);
+  if (c.hidden === true) out.hidden = true;
+  if (typeof c.outlineId === "string" && c.outlineId) out.outlineId = c.outlineId.slice(0, 60);
+  if (c.aiGenerated === true) out.aiGenerated = true;
+  if (c.editedByUser === true) out.editedByUser = true;
+  return out;
+}
+
+/**
  * Chuẩn hoá config của slide Nội dung ở máy chủ. Slide có bố cục mới được lọc theo
- * sanitizeLayoutConfig (giữ ghi chú giảng); slide cũ và slide chèn học liệu giữ nguyên.
+ * sanitizeLayoutConfig (giữ các khoá meta); slide cũ và slide chèn học liệu giữ nguyên.
  */
 export function normalizeContentSlideConfig(config: unknown): unknown {
   if (!config || typeof config !== "object") return config;
   const c = config as Record<string, unknown>;
   const layout = resolveLayout(c);
   if (layout === "classic" || c.resource) return config;
-  const note = typeof c.presenterNote === "string" ? c.presenterNote.trim().slice(0, MAX_LEN.notes) : "";
-  return { ...sanitizeLayoutConfig(layout, c), ...(note ? { presenterNote: note } : {}) };
+  return { ...sanitizeLayoutConfig(layout, c), ...pickMeta(c) };
 }
