@@ -36,7 +36,8 @@ import "./slideLayouts.css";
 const DESIGN_W = 1280;
 const DESIGN_H = 720;
 
-const ICONS: Record<SlideIconId, LucideIcon> = {
+/** Biểu tượng của từng thẻ; dùng chung với trình sửa slide để chọn biểu tượng bằng hình. */
+export const LAYOUT_ICONS: Record<SlideIconId, LucideIcon> = {
   target: Target,
   compass: Compass,
   route: Route,
@@ -251,7 +252,7 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
             <Title text={title} maxPx={72} widthPx={1088} maxLines={2} />
             <div className="row" style={{ gridTemplateColumns: `repeat(${Math.max(items.length, 1)}, 1fr)` }}>
               {items.map((it, i) => {
-                const Icon = ICONS[it.icon ?? "target"] ?? Target;
+                const Icon = LAYOUT_ICONS[it.icon ?? "target"] ?? Target;
                 return (
                   <div key={i} className="card it a" style={delay(i)}>
                     <span className="no">{i + 1}</span>
