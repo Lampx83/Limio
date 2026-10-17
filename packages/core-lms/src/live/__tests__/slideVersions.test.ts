@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { prisma } from "@feedbackme/db";
+import { prisma, type LiveSlideType } from "@feedbackme/db";
 import {
   MAX_OTHER_VERSIONS,
   VERSION_COALESCE_MS,
@@ -18,7 +18,7 @@ async function makeSlide(userId: string, config: Record<string, unknown> = { lay
   const deck = await prisma.liveDeck.create({ data: { userId, title: "Bài" } });
   return prisma.liveSlide.create({ data: { deckId: deck.id, type: "content", orderIndex: 0, config: config as object } });
 }
-const snap = (s: { id: string; type: "content"; config: unknown }) => ({ id: s.id, type: s.type, config: s.config });
+const snap = (s: { id: string; type: LiveSlideType; config: unknown }) => ({ id: s.id, type: s.type, config: s.config });
 
 describe("recordSlideVersion", () => {
   it("chụp trạng thái cũ; nội dung giống hệt bản mới nhất thì không ghi lại", async () => {

@@ -1,4 +1,4 @@
-import { PrismaClient, LiveDeckGroup, LiveDeckGroupKind } from "@feedbackme/db";
+import { PrismaClient, LiveDeck, LiveDeckGroup, LiveDeckGroupKind } from "@feedbackme/db";
 
 export interface LiveDeckGroupInput {
   name: string;
@@ -97,7 +97,9 @@ export async function setLiveDeckGroup(
   userId: string,
   groupId: string | null,
   db: PrismaClient
-) {
+  // Kiểu trả về khai báo rõ: LiveDeck có cột Json (outline) nên kiểu suy luận kéo theo kiểu nội bộ của
+  // Prisma runtime và tsc báo TS2742 ("không đặt tên được kiểu một cách di động").
+): Promise<LiveDeck> {
   const deck = await db.liveDeck.findUnique({ where: { id: deckId } });
   if (!deck || deck.userId !== userId) {
     throw new Error("Not authorized to edit this deck");

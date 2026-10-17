@@ -61,7 +61,7 @@ async function attempt(
 }
 
 describe("listSessionRosterResults — kết quả theo ca, mỗi dòng một thí sinh", () => {
-  it("có cả em chưa vào thi; nhiều lượt thì lấy lượt nộp gần nhất và đếm số lượt", async () => {
+  it("có cả em chưa vào thi; thí sinh vào bằng mã có đúng một lượt (DB chỉ cho một bài mỗi đề)", async () => {
     const s = await setup("roster");
     await createCourseSection(s.ownerId, s.courseId, { name: "K65A" });
     await importSessionCandidates(s.ownerId, s.sessionId, [
@@ -69,9 +69,7 @@ describe("listSessionRosterResults — kết quả theo ca, mỗi dòng một th
       { line: 3, displayName: "Trần Thị Bình", mssv: "1002" },
     ]);
     const an = await prisma.examCandidate.findFirstOrThrow({ where: { sessionId: s.sessionId, displayName: "Nguyễn Văn An" } });
-    await attempt(s, { candidateId: an.id }, { status: "submitted", score: 4, submittedAt: new Date("2026-10-01T08:10:00Z") });
     await attempt(s, { candidateId: an.id }, { status: "submitted", score: 7, submittedAt: new Date("2026-10-01T08:40:00Z") });
-    await attempt(s, { candidateId: an.id }, { status: "in_progress" });
 
     const r = await listSessionRosterResults(s.ownerId, s.sessionId);
     expect(r.totalPoints).toBe(10);
@@ -83,7 +81,7 @@ describe("listSessionRosterResults — kết quả theo ca, mỗi dòng một th
       examClassCode: "P101",
       status: "submitted",
       score: 7,
-      attemptCount: 3,
+      attemptCount: 1,
     });
     expect(r.rows.find((x) => x.displayName === "Trần Thị Bình")).toMatchObject({
       status: "not_started",
@@ -92,6 +90,19 @@ describe("listSessionRosterResults — kết quả theo ca, mỗi dòng một th
       cohortCode: null,
       examClassCode: null,
     });
+  });
+
+  it("học viên đăng nhập thi nhiều lượt: lấy lượt nộp gần nhất và đếm số lượt", async () => {
+    const s = await setup("multi");
+    const hv = await user("hv-multi", "Học viên Em");
+    await enrollInCourse(hv.userId, s.courseId, prisma);
+    await attempt(s, { userId: hv.userId }, { status: "submitted", score: 4, submittedAt: new Date("2026-10-01T08:10:00Z") });
+    await attempt(s, { userId: hv.userId }, { status: "submitted", score: 7, submittedAt: new Date("2026-10-01T08:40:00Z") });
+    await attempt(s, { userId: hv.userId }, { status: "in_progress" });
+
+    const r = await listSessionRosterResults(s.ownerId, s.sessionId);
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]).toMatchObject({ displayName: "Học viên Em", status: "submitted", score: 7, attemptCount: 3 });
   });
 
   it("phòng nhập từ Excel: mã lớp thi = tên phòng, mã lớp học = lớp sở hữu lớp thi", async () => {
