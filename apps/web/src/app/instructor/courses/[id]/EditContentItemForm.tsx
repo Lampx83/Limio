@@ -20,6 +20,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import AiFormatPanel from "@/components/AiFormatPanel";
 import SafeHtml from "@/components/SafeHtml";
 import { EXTENSIONS } from "@/components/RichTextEditor";
+import { readLessonLook, type LessonLook } from "@feedbackme/shared-types";
 import { probeEditorLoss } from "@/components/richtext/lossProbe";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
@@ -80,6 +81,8 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
   // Common scalar fields, pre-filled from the existing payload.
   const [body, setBody] = useState<string>(String(initial.body ?? ""));
   const [html, setHtml] = useState<string>(String(initial.html ?? ""));
+  // Bảng màu + kiểu chữ của bài văn bản. null = bài cũ chưa chọn (hiện như trước).
+  const [look, setLook] = useState<LessonLook | null>(() => readLessonLook(initial.look));
   const [url, setUrl] = useState<string>(String(initial.url ?? ""));
   const [filename, setFilename] = useState<string>(String(initial.filename ?? ""));
   // Cỡ + kiểu của file đính kèm: giữ của bản cũ nếu không đổi file; upload mới
@@ -133,6 +136,8 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
     // Bản đã format là bản duy nhất hiển thị; đồng bộ state để nút "Lưu" chung
     // không ghi đè lại bằng bản gốc, ẩn ô nhập bản gốc.
     setHtml(formattedHtml);
+    // Bản AI định dạng kiểu cũ tự mang màu riêng — không áp bảng màu lên nữa.
+    setLook(null);
     setAiSaved(true);
     router.refresh();
   }
@@ -153,7 +158,8 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
           setBusy(false);
           return;
         }
-        payload = { html };
+        // PATCH thay cả payload: phải gửi lại bảng màu, không thì mất.
+        payload = look ? { html, look } : { html };
         break;
       case "video":
       case "embed":
@@ -289,7 +295,13 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
                 <SafeHtml html={html} className="prose prose-sm max-w-none dark:prose-invert" />
               </div>
             ) : (
-              <RichTextEditor value={html} onChange={setHtml} />
+              <RichTextEditor
+                value={html}
+                onChange={setHtml}
+                lessonTools
+                look={look}
+                onLookChange={setLook}
+              />
             )}
           </div>
           <AiFormatPanel

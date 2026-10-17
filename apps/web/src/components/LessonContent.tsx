@@ -8,6 +8,7 @@ import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import { formatBytes } from "@/lib/formatBytes";
 import SafeHtml from "./SafeHtml";
+import LessonRichText from "./lesson/LessonRichText";
 import AudioLessonPlayer from "./AudioLessonPlayer";
 import VocabListView, { type VocabViewItem } from "./VocabListView";
 import DialogueView, { type DialogueViewTurn } from "./DialogueView";
@@ -69,6 +70,8 @@ interface MarkdownPayload {
 }
 interface RichTextPayload {
   html: string;
+  /** Bảng màu + kiểu chữ (chỉ richtext) — đọc lại qua readLessonLook. */
+  look?: unknown;
 }
 interface FilePayload {
   url: string;
@@ -331,12 +334,7 @@ function ContentBlock({
     }
     case "richtext": {
       const p = payload as RichTextPayload;
-      return (
-        <SafeHtml
-          html={p.html}
-          className="prose prose-sm max-w-none rounded-xl border border-token bg-[rgb(var(--surface))] p-4 dark:prose-invert"
-        />
-      );
+      return <LessonRichText html={p.html} look={p.look} />;
     }
     /**
      * Ghi chú giảng viên. Chỉ tới được đây khi trang đã xác nhận người xem có
