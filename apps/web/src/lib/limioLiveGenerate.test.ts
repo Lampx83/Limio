@@ -119,6 +119,41 @@ describe("draftToSlide — slide tương tác", () => {
   });
 });
 
+describe("slide cộng tác từ dàn ý", () => {
+  it("Dán Note: type collaborate_board, chế độ free, prompt lấy từ dàn ý khi AI hỏng", () => {
+    const g = configFromOutline(os("b", "collaborate_board", null, "Hãy dán một vướng mắc."), "");
+    expect(g).toMatchObject({ type: "collaborate_board", usedFallback: true });
+    expect(g.config).toMatchObject({ prompt: "Hãy dán một vướng mắc.", mode: "free", allowViewOthers: true, blockPaste: false, outlineId: "b", aiGenerated: true });
+  });
+  it("Draw-it: cùng type collaborate_board nhưng mode drawing", () => {
+    const g = configFromOutline(os("d", "draw_it", null, "Vẽ sơ đồ quy trình."), "");
+    expect(g.type).toBe("collaborate_board");
+    expect(g.config).toMatchObject({ prompt: "Vẽ sơ đồ quy trình.", mode: "drawing" });
+  });
+  it("Whiteboard: config chỉ có title", () => {
+    const g = configFromOutline(os("w", "whiteboard", null, "Giải bài toán cùng nhau."), "");
+    expect(g).toMatchObject({ type: "whiteboard", usedFallback: true });
+    expect(g.config).toMatchObject({ title: "Giải bài toán cùng nhau.", outlineId: "w" });
+    expect(g.config).not.toHaveProperty("mode");
+  });
+  it("bản nháp AI hợp lệ được dùng, bỏ emoji, giữ ghi chú giảng", () => {
+    const b = draftToSlide(os("b", "collaborate_board", null, "x"), { index: 0, prompt: "Hãy dán một ví dụ 🚀 em từng gặp.", notes: "Nhắc cả lớp." }, "");
+    expect(b).toMatchObject({ type: "collaborate_board", usedFallback: false });
+    expect(b.config).toMatchObject({ prompt: "Hãy dán một ví dụ em từng gặp.", mode: "free", presenterNote: "Nhắc cả lớp." });
+    const d = draftToSlide(os("d", "draw_it", null, "x"), { index: 0, prompt: "Vẽ một sơ đồ." }, "");
+    expect(d.config).toMatchObject({ prompt: "Vẽ một sơ đồ.", mode: "drawing" });
+    const w = draftToSlide(os("w", "whiteboard", null, "x"), { index: 0, prompt: "Cùng giải bài này." }, "");
+    expect(w).toMatchObject({ type: "whiteboard", usedFallback: false });
+    expect(w.config).toMatchObject({ title: "Cùng giải bài này." });
+  });
+  it("bản nháp thiếu prompt thì rơi về dàn ý", () => {
+    for (const k of ["collaborate_board", "draw_it", "whiteboard"] as const) {
+      expect(draftToSlide(os("x", k, null, "Tiêu đề dàn ý"), { index: 0, prompt: " " }, "").usedFallback).toBe(true);
+      expect(draftToSlide(os("x", k, null, "Tiêu đề dàn ý"), undefined, "").usedFallback).toBe(true);
+    }
+  });
+});
+
 describe("sectionNumbers / estimateGenerationTokens", () => {
   it("đánh số mục theo thứ tự slide section", () => {
     const s = [os("1", "content", "cover", "a"), os("2", "content", "section", "b"), os("3", "content", "image", "c"), os("4", "content", "section", "d")];

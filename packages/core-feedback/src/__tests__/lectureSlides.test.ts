@@ -3,7 +3,7 @@ import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
 import { AiTutorError } from "../aiTutor/errors";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
-import { buildSlidesPrompt, generateSlideDrafts, specKeyFor, type OutlineSlideInput } from "../aiTutor/lectureSlides";
+import { SLIDE_SPEC, buildSlidesPrompt, generateSlideDrafts, specKeyFor, type OutlineSlideInput } from "../aiTutor/lectureSlides";
 
 const outline: OutlineSlideInput[] = [
   { index: 0, kind: "content", layout: "cover", title: "Phản hồi trong dạy học", points: ["Phản hồi giúp người học tiến bộ."] },
@@ -43,6 +43,25 @@ describe("buildSlidesPrompt", () => {
   it("specKeyFor: slide tương tác dùng kind, slide nội dung dùng layout", () => {
     expect(specKeyFor(outline[2]!)).toBe("quiz");
     expect(specKeyFor(outline[0]!)).toBe("cover");
+  });
+});
+
+describe("kind cộng tác", () => {
+  const more = [
+    ...outline,
+    { index: 90, kind: "collaborate_board" as const, layout: null, title: "Dán một vướng mắc", points: [] },
+    { index: 91, kind: "draw_it" as const, layout: null, title: "Vẽ sơ đồ", points: [] },
+    { index: 92, kind: "whiteboard" as const, layout: null, title: "Giải cùng nhau", points: [] },
+  ];
+  it("specKeyFor trả đúng khoá và SLIDE_SPEC có đặc tả cho từng loại", () => {
+    expect(more.slice(-3).map((s) => specKeyFor(s))).toEqual(["collaborate_board", "draw_it", "whiteboard"]);
+    for (const k of ["collaborate_board", "draw_it", "whiteboard"]) expect(SLIDE_SPEC[k]).toContain("prompt");
+  });
+  it("prompt yêu cầu viết lời nhắc cho học viên với từng loại", () => {
+    const { user } = buildSlidesPrompt({ ...base, outline: more, batch: [90, 91, 92] });
+    expect(user).toContain("[collaborate_board]");
+    expect(user).toContain("[draw_it]");
+    expect(user).toContain("[whiteboard]");
   });
 });
 

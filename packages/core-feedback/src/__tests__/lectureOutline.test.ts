@@ -5,6 +5,7 @@ import { AiGenerationError } from "../aiTutor/generators";
 import { AiTutorError } from "../aiTutor/errors";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
 import {
+  OUTLINE_KINDS,
   OUTLINE_MAX_SOURCE_CHARS,
   buildOutlinePrompt,
   generateLectureOutline,
@@ -56,6 +57,13 @@ describe("buildOutlinePrompt", () => {
     expect(system).toContain("khoảng 4 slide nội dung");
     expect(system).toMatch(/emoji/i);
     expect(system).toContain("không bịa số liệu");
+  });
+
+  it("cho phép ba loại slide cộng tác nhưng dặn dùng tiết kiệm, và không đặt ở đầu hoặc cuối bài", () => {
+    const { system } = buildOutlinePrompt(base);
+    for (const k of ["collaborate_board", "draw_it", "whiteboard"]) expect(system).toContain(`"${k}"`);
+    expect(system).toMatch(/tiết kiệm|tối đa một/);
+    expect(OUTLINE_KINDS).toEqual(["content", "quiz", "poll", "word_cloud", "collaborate_board", "draw_it", "whiteboard"]);
   });
 
   it("cắt tài liệu quá dài ở mức cho phép", () => {

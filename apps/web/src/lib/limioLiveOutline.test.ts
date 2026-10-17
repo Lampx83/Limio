@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   INTERACTIVE_EVERY,
+  OUTLINE_KINDS,
   normalizeOutline,
   outlineBlockingProblems,
   outlineStats,
@@ -55,6 +56,38 @@ describe("sanitizeOutline", () => {
   it("dữ liệu không phải đối tượng cho dàn ý rỗng", () => {
     expect(sanitizeOutline(null)).toEqual({ title: "", slides: [] });
     expect(sanitizeOutline("x")).toEqual({ title: "", slides: [] });
+  });
+});
+
+describe("loại slide cộng tác (Dán Note, Draw-it, Whiteboard)", () => {
+  it("OUTLINE_KINDS có đủ 7 loại, cùng tên với bộ chọn loại slide", () => {
+    expect([...OUTLINE_KINDS]).toEqual(["content", "quiz", "poll", "word_cloud", "collaborate_board", "draw_it", "whiteboard"]);
+  });
+  it("sanitizeOutline giữ kind mới, bỏ layout và ý chính như mọi slide tương tác", () => {
+    const o = sanitizeOutline({
+      slides: [
+        { kind: "collaborate_board", layout: "cards", title: "Mỗi người dán một vướng mắc.", points: ["bỏ"] },
+        { kind: "draw_it", title: "Vẽ sơ đồ quy trình." },
+        { kind: "whiteboard", title: "Giải bài toán cùng nhau." },
+      ],
+    });
+    expect(o.slides.map((s) => s.kind)).toEqual(["collaborate_board", "draw_it", "whiteboard"]);
+    for (const s of o.slides) expect(s).toMatchObject({ layout: null, points: [] });
+  });
+  it("dữ liệu dàn ý cũ chỉ có 4 loại cũ vẫn đọc nguyên vẹn", () => {
+    const o = sanitizeOutline({ slides: [inter("quiz", "Q?"), inter("poll", "P?"), inter("word_cloud", "W?")] });
+    expect(o.slides.map((s) => s.kind)).toEqual(["quiz", "poll", "word_cloud"]);
+  });
+  it("tính vào slide tương tác và vẫn bị nhắc khi đứng liền nhau hoặc ở cuối bài", () => {
+    const o = sanitizeOutline({ slides: [content("A"), inter("whiteboard", "W"), inter("draw_it", "D")] });
+    expect(outlineStats(o)).toEqual({ total: 3, content: 1, interactive: 2 });
+    const w = outlineWarnings(o, 15);
+    expect(w.some((x) => x.includes("liền nhau"))).toBe(true);
+    expect(w.some((x) => x.includes("Slide cuối"))).toBe(true);
+  });
+  it("slide tương tác mới thiếu tiêu đề thì chặn tạo slide, nêu 'câu hỏi'", () => {
+    const o = { title: "T", slides: [{ id: "1", kind: "draw_it" as const, layout: null, title: "", points: [] }] };
+    expect(outlineBlockingProblems(o)).toEqual(["Slide 1 chưa có câu hỏi."]);
   });
 });
 

@@ -18,14 +18,11 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, Check, ChevronDown, ChevronUp, GripVertical, Loader2, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, GripVertical, Loader2, Plus } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
-import { LAYOUT_META } from "@/lib/limioLiveSlides";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
   DURATIONS,
-  OUTLINE_LAYOUTS,
-  OUTLINE_LIMITS,
   newOutlineId,
   outlineBlockingProblems,
   outlineStats,
@@ -33,9 +30,11 @@ import {
   slideRange,
   type Outline,
   type OutlineKind,
-  type OutlineLayout,
   type OutlineSlide,
 } from "@/lib/limioLiveOutline";
+import { OUTLINE_KIND_LABEL, OUTLINE_KIND_ORDER, changeKind, glyphKey, kindGroupOf, rowSubtitle } from "@/lib/limioLiveOutlineUi";
+import OutlineGlyph from "./OutlineGlyph";
+import SlideDialog from "./SlideDialog";
 
 interface Loaded {
   title: string;
@@ -56,13 +55,6 @@ interface SyncInfo {
   noop: boolean;
 }
 
-const KIND_LABEL: Record<OutlineKind, string> = {
-  content: "Slide nội dung",
-  quiz: "Câu hỏi quiz",
-  poll: "Bình chọn",
-  word_cloud: "Đám mây từ",
-};
-
 const GEN_ERROR: Record<string, string> = {
   openai_not_configured: "Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên.",
   global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau.",
@@ -70,14 +62,6 @@ const GEN_ERROR: Record<string, string> = {
   monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Chưa có slide nào được tạo.",
   outline_not_confirmed: "Dàn ý chưa được xác nhận.",
   deck_has_slides: "Bài giảng này đã có slide.",
-};
-
-const POINT_HINT: Partial<Record<OutlineLayout, string>> = {
-  cards: "Mỗi ý có dạng “Tiêu đề ngắn: một câu giải thích đầy đủ.”",
-  steps: "Mỗi ý là một bước, có dạng “Tên bước: một câu giải thích.”",
-  stats: "Mỗi ý nêu một con số có trong tài liệu và câu giải thích.",
-  compare: "Hai ý đầu là hai cách làm cần đối chiếu.",
-  quote: "Ý đầu là câu trích dẫn hoặc thông điệp chính.",
 };
 
 type SaveState = "saved" | "dirty" | "saving" | "error";
@@ -95,6 +79,8 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const [slideCount, setSlideCount] = useState(0);
   const [confirmErr, setConfirmErr] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
   const [gen, setGen] = useState<
     | { state: "idle" }
     | { state: "running"; done: number; total: number }
@@ -182,16 +168,19 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
     if (j < 0 || j >= outline.slides.length) return;
     change({ ...outline, slides: arrayMove(outline.slides, i, j) });
   };
-  const add = (kind: OutlineKind) =>
-    change({
-      ...outline,
-      slides: [
-        ...outline.slides,
-        { id: newOutlineId(), kind, layout: kind === "content" ? "image" : null, title: "", points: [] },
-      ],
-    });
-  const setKind = (s: OutlineSlide, kind: OutlineKind) =>
-    patch(s.id, { kind, layout: kind === "content" ? s.layout ?? "image" : null, points: kind === "content" ? s.points : [] });
+  // Thêm sau slide đang sửa (hoặc cuối bài) rồi mở ngay cửa sổ sửa slide mới.
+  const add = (kind: OutlineKind) => {
+    const at = editingId ? outline.slides.findIndex((x) => x.id === editingId) : -1;
+    const ns: OutlineSlide = { id: newOutlineId(), kind, layout: kind === "content" ? "image" : null, title: "", points: kind === "content" ? [""] : [] };
+    const slides = [...outline.slides];
+    slides.splice(at >= 0 ? at + 1 : slides.length, 0, ns);
+    change({ ...outline, slides });
+    setAddOpen(false);
+    setEditingId(ns.id);
+  };
+  const setKind = (s: OutlineSlide, kind: OutlineKind) => patch(s.id, changeKind(s, kind));
+  const editingIndex = editingId ? outline.slides.findIndex((x) => x.id === editingId) : -1;
+  const editing = editingIndex >= 0 ? outline.slides[editingIndex]! : null;
 
   const onDragEnd = (e: DragEndEvent) => {
     if (!e.over || e.active.id === e.over.id) return;
@@ -287,8 +276,8 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           {data.sourceName ? ` · từ tài liệu “${data.sourceName}”` : ""}
         </p>
         <p className="mt-2 text-sm text-muted">
-          Sửa dàn ý thoải mái: chỉnh chữ, đổi bố cục, thêm, xoá hoặc kéo đổi thứ tự. Sửa dàn ý không tốn lượt AI. Khi dàn ý
-          ổn, xác nhận ở cuối trang để chuyển sang bước tạo slide.
+          Bấm vào một slide trong danh sách để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn,
+          xác nhận ở cuối trang để chuyển sang bước tạo slide.
         </p>
       </div>
 
@@ -335,32 +324,62 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
         </ul>
       )}
 
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={outline.slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-          <ol className="space-y-3">
-            {outline.slides.map((s, i) => (
-              <Row
-                key={s.id}
-                s={s}
-                index={i}
-                last={i === outline.slides.length - 1}
-                onPatch={(p) => patch(s.id, p)}
-                onKind={(k) => setKind(s, k)}
-                onRemove={() => remove(s.id)}
-                onMove={(d) => move(i, d)}
-              />
-            ))}
-          </ol>
-        </SortableContext>
-      </DndContext>
+      <section className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 sm:p-4" aria-labelledby="outline-list-h">
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 px-1">
+          <h2 id="outline-list-h" className="text-base font-semibold">
+            Danh sách slide
+          </h2>
+          <span className="text-[13px] text-faint">Bấm vào một slide để sửa · kéo ⋮⋮ để đổi thứ tự</span>
+        </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={outline.slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+            <ol className="space-y-1.5">
+              {outline.slides.map((s, i) => (
+                <Row key={s.id} s={s} index={i} onOpen={() => setEditingId(s.id)} />
+              ))}
+            </ol>
+          </SortableContext>
+        </DndContext>
 
-      <div className="flex flex-wrap gap-2">
-        {(Object.keys(KIND_LABEL) as OutlineKind[]).map((k) => (
-          <button key={k} type="button" className="btn-secondary flex items-center gap-1.5 text-sm" onClick={() => add(k)}>
-            <Plus size={14} /> {KIND_LABEL[k]}
+        <div className="mt-3 px-1">
+          <button type="button" className="btn-secondary flex items-center gap-1.5 text-sm" aria-expanded={addOpen} onClick={() => setAddOpen((v) => !v)}>
+            <Plus size={14} /> Thêm slide
           </button>
-        ))}
-      </div>
+          {addOpen && (
+            <div className="mt-2 space-y-1.5 rounded-xl bg-[rgb(var(--surface-muted))] p-3">
+              <span className="block text-[13px] font-semibold text-muted">Chọn loại slide mới (thêm vào cuối bài)</span>
+              <div role="group" aria-label="Loại slide mới" className="grid gap-1.5 [grid-template-columns:repeat(auto-fill,minmax(88px,1fr))]">
+                {OUTLINE_KIND_ORDER.map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    title={kindGroupOf(k)}
+                    className="grid justify-items-center gap-0.5 rounded-[10px] border border-token bg-[rgb(var(--surface))] px-1 pb-1 pt-1.5 text-[12.5px] leading-tight text-muted hover:bg-[rgb(var(--surface-muted))]"
+                    onClick={() => add(k)}
+                  >
+                    <OutlineGlyph k={k} className="h-[30px] w-full" />
+                    <span>{OUTLINE_KIND_LABEL[k]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {editing && (
+        <SlideDialog
+          slide={editing}
+          index={editingIndex}
+          total={outline.slides.length}
+          onPatch={(p) => patch(editing.id, p)}
+          onKind={(k) => setKind(editing, k)}
+          onRemove={() => remove(editing.id)}
+          onMove={(d) => move(editingIndex, d)}
+          onGoto={(d) => setEditingId(outline.slides[editingIndex + d]?.id ?? editing.id)}
+          onClose={() => setEditingId(null)}
+        />
+      )}
 
       <section className="space-y-3 rounded-2xl border-2 border-token p-5" aria-labelledby="confirm-h">
         <h2 id="confirm-h" className="text-lg font-semibold">
@@ -494,124 +513,36 @@ function formatTokens(n: number): string {
   return n >= 1000 ? `${Math.round(n / 100) / 10} nghìn`.replace(".", ",") : String(n);
 }
 
-function Row({
-  s,
-  index,
-  last,
-  onPatch,
-  onKind,
-  onRemove,
-  onMove,
-}: {
-  s: OutlineSlide;
-  index: number;
-  last: boolean;
-  onPatch: (p: Partial<OutlineSlide>) => void;
-  onKind: (k: OutlineKind) => void;
-  onRemove: () => void;
-  onMove: (d: -1 | 1) => void;
-}) {
+function Row({ s, index, onOpen }: { s: OutlineSlide; index: number; onOpen: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
-  const isContent = s.kind === "content";
-  const hint = s.layout ? POINT_HINT[s.layout] : undefined;
+  const interactive = s.kind !== "content";
 
   return (
     <li
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 }}
-      className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-4"
+      className={`flex items-center gap-1.5 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-[rgb(var(--surface-muted))] ${interactive ? "bg-indigo-50/60 dark:bg-indigo-950/20" : ""}`}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          className="cursor-grab touch-none text-faint active:cursor-grabbing"
-          aria-label={`Kéo để đổi thứ tự slide ${index + 1}`}
-        >
-          <GripVertical size={18} />
-        </button>
-        <span className="w-7 text-sm font-bold tabular-nums text-muted">{index + 1}</span>
-        <select
-          className="input py-1 text-sm"
-          value={s.kind}
-          onChange={(e) => onKind(e.target.value as OutlineKind)}
-          aria-label={`Loại slide ${index + 1}`}
-        >
-          {(Object.keys(KIND_LABEL) as OutlineKind[]).map((k) => (
-            <option key={k} value={k}>
-              {KIND_LABEL[k]}
-            </option>
-          ))}
-        </select>
-        {isContent && (
-          <select
-            className="input py-1 text-sm"
-            value={s.layout ?? "image"}
-            onChange={(e) => onPatch({ layout: e.target.value as OutlineLayout })}
-            aria-label={`Bố cục slide ${index + 1}`}
-          >
-            {OUTLINE_LAYOUTS.map((l) => (
-              <option key={l} value={l}>
-                {LAYOUT_META[l].label}
-              </option>
-            ))}
-          </select>
-        )}
-        <span className="ml-auto flex items-center gap-1">
-          <button type="button" className="rounded p-1 text-muted hover:bg-black/5 disabled:opacity-30" disabled={index === 0} onClick={() => onMove(-1)} aria-label="Đưa lên">
-            <ChevronUp size={16} />
-          </button>
-          <button type="button" className="rounded p-1 text-muted hover:bg-black/5 disabled:opacity-30" disabled={last} onClick={() => onMove(1)} aria-label="Đưa xuống">
-            <ChevronDown size={16} />
-          </button>
-          <button type="button" className="rounded p-1 text-faint hover:text-red-600" onClick={onRemove} aria-label={`Xoá slide ${index + 1}`}>
-            <Trash2 size={16} />
-          </button>
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none p-1 text-faint active:cursor-grabbing"
+        aria-label={`Kéo để đổi thứ tự slide ${index + 1}`}
+      >
+        <GripVertical size={18} />
+      </button>
+      <span className="w-6 text-sm font-bold tabular-nums text-muted">{index + 1}</span>
+      <button type="button" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg py-0.5 text-left" onClick={onOpen} aria-label={`Sửa slide ${index + 1}: ${s.title || "chưa có tiêu đề"}`}>
+        <OutlineGlyph k={glyphKey(s)} className="h-[30px] w-[46px] shrink-0 text-muted" />
+        <span className="grid min-w-0 flex-1 leading-snug">
+          <b className={`truncate text-[15px] ${s.title.trim() ? "" : "font-medium text-red-700"}`}>
+            {s.title.trim() || (interactive ? "Chưa có câu hỏi" : "Chưa có tiêu đề")}
+          </b>
+          <small className="truncate text-[13px] text-muted">{rowSubtitle(s)}</small>
         </span>
-      </div>
-
-      <label className="mt-3 block">
-        <span className="mb-0.5 block text-xs font-semibold text-muted">{isContent ? "Tiêu đề" : s.kind === "word_cloud" ? "Câu gợi ý cho học viên" : "Câu hỏi"}</span>
-        <input
-          className="input w-full text-sm"
-          value={s.title}
-          maxLength={OUTLINE_LIMITS.slideTitle}
-          onChange={(e) => onPatch({ title: e.target.value })}
-        />
-      </label>
-
-      {isContent && (
-        <div className="mt-3 space-y-2">
-          <span className="block text-xs font-semibold text-muted">Ý chính (câu hoàn chỉnh)</span>
-          {hint && <p className="text-xs text-faint">{hint}</p>}
-          {s.points.map((p, k) => (
-            <div key={k} className="flex items-start gap-2">
-              <textarea
-                className="input w-full text-sm"
-                rows={2}
-                value={p}
-                maxLength={OUTLINE_LIMITS.point}
-                onChange={(e) => onPatch({ points: s.points.map((x, j) => (j === k ? e.target.value : x)) })}
-                aria-label={`Ý ${k + 1} của slide ${index + 1}`}
-              />
-              <button
-                type="button"
-                className="mt-2 text-faint hover:text-red-600"
-                aria-label="Xoá ý này"
-                onClick={() => onPatch({ points: s.points.filter((_, j) => j !== k) })}
-              >
-                <X size={14} />
-              </button>
-            </div>
-          ))}
-          {s.points.length < OUTLINE_LIMITS.points && (
-            <button type="button" className="flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline" onClick={() => onPatch({ points: [...s.points, ""] })}>
-              <Plus size={14} /> Thêm ý
-            </button>
-          )}
-        </div>
-      )}
+        <span className="hidden shrink-0 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1 text-[13px] font-semibold text-brand-700 sm:inline">Sửa</span>
+      </button>
     </li>
   );
 }
