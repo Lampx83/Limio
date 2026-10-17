@@ -13,6 +13,7 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import SessionOverviewPanel from "./SessionOverviewPanel";
 import SessionRoomsPanel from "./SessionRoomsPanel";
+import SessionCandidatesPanel from "./SessionCandidatesPanel";
 import SessionTabs from "./SessionTabs";
 import LobbyCounter from "./LobbyCounter";
 import ExamReadinessWarning from "./ExamReadinessWarning";
@@ -265,6 +266,13 @@ export default async function ExamSessionDetailPage({
             }}
             canEdit={canEdit}
             availableExams={availableExams}
+          />
+        )}
+        {activeTab === "rooms" && (
+          <SessionCandidatesPanel
+            sessionId={detail.id}
+            accessMode={detail.examAccessMode}
+            canEdit={canEdit}
           />
         )}
         {activeTab === "rooms" && (

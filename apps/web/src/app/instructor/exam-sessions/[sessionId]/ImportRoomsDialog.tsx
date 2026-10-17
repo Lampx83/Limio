@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { PERSON_HEADERS, parsePastedTable } from "@/lib/pasteTable";
 
 type Field =
   | "examClassCode"
@@ -17,18 +18,6 @@ type Field =
 
 type Row = Partial<Record<Field, string>> & { line: number };
 
-/** Bỏ dấu, hạ chữ thường, gộp mọi ký tự không phải chữ/số thành một dấu cách. */
-const norm = (h: string) =>
-  h
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-
-// Tên cột chấp nhận (đã chuẩn hoá). "email" trơn là email thí sinh; email giảng
-// viên / giám thị phải nói rõ để khỏi nhầm.
 const HEADERS: Record<Field, string[]> = {
   examClassCode: ["ma lop thi", "lop thi", "phong", "phong thi", "ten phong", "room", "exam class", "examclass", "ma phong"],
   cohortCode: ["ma lop hoc", "lop hoc", "lop", "cohort", "cohort code", "ma lop"],
@@ -36,9 +25,9 @@ const HEADERS: Record<Field, string[]> = {
   roomLocation: ["dia diem", "dia diem thi", "location", "room location"],
   proctorEmail: ["email giam thi", "giam thi", "proctor", "proctor email"],
   stt: ["stt", "so thu tu", "no"],
-  displayName: ["ho ten", "ho va ten", "ten", "ten thi sinh", "name", "full name", "display name"],
-  email: ["email", "email thi sinh", "email sv", "email sinh vien"],
-  mssv: ["mssv", "ma sv", "ma sinh vien", "student id", "student code", "ma so sinh vien"],
+  displayName: [...PERSON_HEADERS.displayName],
+  email: [...PERSON_HEADERS.email],
+  mssv: [...PERSON_HEADERS.mssv],
 };
 
 const FIELD_LABEL: Record<Field, string> = {
@@ -59,31 +48,12 @@ const SAMPLE =
   "K65A\t\tP101\t\t\t\tTrần Thị Bình\t\t11002";
 
 function parse(raw: string): { rows: Row[]; fields: Field[]; errors: string[] } {
-  const lines = raw.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return { rows: [], fields: [], errors: [] };
-  const delim = lines[0]!.includes("\t") ? "\t" : lines[0]!.includes(";") ? ";" : ",";
-  const split = (l: string) => l.split(delim).map((c) => c.trim());
-
-  const headCells = split(lines[0]!).map(norm);
-  const colField: (Field | null)[] = headCells.map((h) => {
-    for (const f of Object.keys(HEADERS) as Field[]) if (HEADERS[f].includes(h)) return f;
-    return null;
-  });
-  const fields = Array.from(new Set(colField.filter((f): f is Field => f !== null)));
+  const { rows, fields } = parsePastedTable(raw, HEADERS);
   const errors: string[] = [];
-  if (!fields.includes("examClassCode"))
+  if (raw.trim() && !fields.includes("examClassCode"))
     errors.push(
       'Dòng đầu phải là tiêu đề cột và có cột "mã lớp thi" (hoặc "phòng"). Dán cả dòng tiêu đề khi copy từ Excel.',
     );
-
-  const rows: Row[] = lines.slice(1).map((l, i) => {
-    const cells = split(l);
-    const r: Row = { line: i + 2 };
-    colField.forEach((f, c) => {
-      if (f && cells[c]) r[f] = cells[c];
-    });
-    return r;
-  });
   return { rows, fields, errors };
 }
 

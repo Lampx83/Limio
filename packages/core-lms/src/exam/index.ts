@@ -50,6 +50,7 @@ export * from "./lobby";
 export * from "./ip-policy";
 export * from "./bulk-import-full";
 export * from "./session-import";
+export * from "./session-candidates";
 export * from "./wizard";
 export * from "./blueprint";
 export * from "./oral-materials";
