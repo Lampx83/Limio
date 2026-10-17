@@ -109,6 +109,21 @@ describe("lịch sử tương tác Limio-Live", () => {
     expect(stillInDb).not.toBeNull();
   });
 
+  it("phân biệt phiên hiện tại (có thể tạm dừng) với phiên đã lưu", async () => {
+    const teacher = await makeUser("gv");
+    const { deck, session } = await seedRun(teacher.id);
+
+    expect((await listLiveSessionHistory(deck.id, teacher.id, prisma))[0]).toMatchObject({ endedAt: null, paused: false });
+
+    await prisma.liveSession.update({ where: { id: session.id }, data: { pausedAt: new Date() } });
+    expect((await listLiveSessionHistory(deck.id, teacher.id, prisma))[0]).toMatchObject({ endedAt: null, paused: true });
+
+    await prisma.liveSession.update({ where: { id: session.id }, data: { endedAt: new Date() } });
+    const saved = (await listLiveSessionHistory(deck.id, teacher.id, prisma))[0]!;
+    expect(saved.endedAt).not.toBeNull();
+    expect(saved.paused).toBe(false); // phiên đã lưu không còn "tạm dừng"
+  });
+
   it("whiteboard: lượt có nét vẽ được tính phản hồi, lượt bảng trống bị ẩn", async () => {
     const teacher = await makeUser("gv");
     const deck = await prisma.liveDeck.create({ data: { userId: teacher.id, title: "Bảng trắng" } });

@@ -45,6 +45,8 @@ export interface LiveSessionSummary {
   id: string;
   startedAt: Date;
   endedAt: Date | null;
+  /** Phiên hiện tại đang tạm dừng (giảng viên đã thoát màn chiếu nhưng chưa lưu/đặt lại phiên). */
+  paused: boolean;
   /** Số slide tương tác đã được mở trong lượt này (poll, quiz, word cloud, bảng, whiteboard). */
   interactiveCount: number;
   /** Tổng phiếu + bài nộp + ghi chú của mọi slide trong lượt. */
@@ -66,7 +68,7 @@ export async function listLiveSessionHistory(
     where: { deckId, userId },
     orderBy: { startedAt: "desc" },
     take: SESSION_LIST_LIMIT,
-    select: { id: true, startedAt: true, endedAt: true, slideRuntimeRefs: true },
+    select: { id: true, startedAt: true, endedAt: true, pausedAt: true, slideRuntimeRefs: true },
   });
 
   // Id runtime là cuid duy nhất giữa các bảng, nên tra một lần cho cả lịch sử và không cần biết loại slide.
@@ -105,6 +107,7 @@ export async function listLiveSessionHistory(
         id: s.id,
         startedAt: s.startedAt,
         endedAt: s.endedAt,
+        paused: s.endedAt === null && s.pausedAt !== null,
         interactiveCount: ids.length,
         responseCount: ids.reduce((sum, id) => sum + (responses.get(id) ?? 0), 0),
       };
