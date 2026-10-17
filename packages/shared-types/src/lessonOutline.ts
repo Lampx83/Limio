@@ -70,3 +70,29 @@ export const OUTLINE_LIMITS = {
   titleMax: 160,
   pointMax: 300,
 } as const;
+
+/**
+ * Một mục do AI viết (Mốc 3), dạng có cấu trúc — máy chủ tự dựng HTML theo
+ * các khối của bài (apps/web/src/lib/lessonRender.ts), AI không viết HTML.
+ * Chữ được dùng **đậm** và *nghiêng*; ngoài ra là chữ thường.
+ */
+export interface SectionDraft {
+  /** Các đoạn mở đầu mục, trước các phần. */
+  intro: string[];
+  parts: Array<{ title: string; paragraphs: string[]; bullets: string[] }>;
+  boxes: Array<{ kind: OutlineBoxKind; title: string; paragraphs: string[] }>;
+  /** Chú thích cho ảnh đầu tiên của mục (nếu mục có ảnh từ tài liệu). */
+  imageCaption: string;
+}
+
+/** Bài AI đã viết từ dàn ý đã chốt, lưu trong bản nháp chờ "Áp dụng". */
+export interface LessonDraftResult {
+  /** HTML từng bài, cùng thứ tự với outline.lessons. */
+  lessons: Array<{ title: string; html: string }>;
+  /** Mục AI không viết được — đã dùng nguyên đoạn tài liệu (T5). */
+  fallbackSections: string[];
+  /** Cách "Giữ nguyên lời": đoạn tài liệu không thấy trong bài (T6), chỉ số từ 0. */
+  missingParas: number[];
+  writing: LessonWritingMode;
+  generatedAt: string;
+}

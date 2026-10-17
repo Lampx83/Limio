@@ -283,6 +283,9 @@
   color: var(--lk-a);
   margin-bottom: 0.3rem;
 }
+/* Danh sách trong hộp: trình soạn luôn bọc mỗi mục bằng <p> — bỏ lề của <p> để danh sách gọn. */
+.lesson-box li > p { margin-top: 0.15em; margin-bottom: 0.15em; }
+.lesson-box :is(ul, ol) { margin-top: 0.3em; margin-bottom: 0; }
 .lesson-box > :first-child { margin-top: 0; }
 .lesson-box > :last-child { margin-bottom: 0; }
 .lesson-box[data-kind="objectives"] {

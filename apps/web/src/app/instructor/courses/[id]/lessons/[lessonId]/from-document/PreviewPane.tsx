@@ -145,7 +145,10 @@ export function SourceView({
   onAssign,
   onIgnore,
   onRestore,
+  readOnly = false,
 }: {
+  /** Chỉ xem (bước Bài học): đoạn tô vàng là đoạn không thấy trong bài, không có nút sửa. */
+  readOnly?: boolean;
   paras: SourcePara[];
   sourceName: string;
   outline: LessonOutline;
@@ -176,14 +179,16 @@ export function SourceView({
       <div className="rounded-2xl bg-[rgb(var(--surface))] p-4 shadow-sm sm:p-6">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <p className="min-w-0 flex-1 truncate font-semibold">{sourceName}</p>
-          {orphans.length > 0 && (
+          {orphans.length > 0 && !readOnly && (
             <button type="button" className="btn-secondary btn-sm" onClick={() => onIgnore(orphans)}>
               Bỏ qua {orphans.length} đoạn chưa thuộc mục nào
             </button>
           )}
         </div>
         <p className="text-caption mb-3 text-faint">
-          Đoạn tô xanh thuộc mục đang chọn; đoạn tô vàng chưa thuộc mục nào — gán vào một mục hoặc bỏ qua.
+          {readOnly
+            ? "Đoạn tô vàng là đoạn không thấy đủ trong bài đã viết — hãy đối chiếu trước khi áp dụng."
+            : "Đoạn tô xanh thuộc mục đang chọn; đoạn tô vàng chưa thuộc mục nào — gán vào một mục hoặc bỏ qua."}
         </p>
         <ol className="space-y-0.5">
           {paras.map((p, i) => {
@@ -207,7 +212,7 @@ export function SourceView({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={p.img} alt={p.alt} className="max-h-40 rounded-md border border-token" />
                   )}
-                  {orphan && (
+                  {orphan && !readOnly && (
                     <div className="mt-1 flex flex-wrap items-center gap-2">
                       <select
                         aria-label={`Gán đoạn ${i + 1} vào mục`}
@@ -227,7 +232,7 @@ export function SourceView({
                       </button>
                     </div>
                   )}
-                  {isIgnored && (
+                  {isIgnored && !readOnly && (
                     <button type="button" className="mt-1 text-xs font-medium text-muted underline" onClick={() => onRestore(i)}>
                       Đưa lại vào bài
                     </button>

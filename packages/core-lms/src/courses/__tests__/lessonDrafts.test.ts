@@ -4,12 +4,15 @@ import type { LessonOutline, SourcePara } from "@feedbackme/shared-types";
 import { createCourse } from "../courses";
 import { createModule } from "../modules";
 import { createLesson } from "../lessons";
+import type { LessonDraftResult } from "@feedbackme/shared-types";
 import {
   LessonDraftError,
+  applyLessonDraft,
   createLessonDraft,
   discardLessonDraft,
   getActiveLessonDraftId,
   getLessonDraft,
+  saveLessonDraftResult,
   updateLessonDraft,
 } from "../lessonDrafts";
 import { registerUser } from "../../auth/register";
@@ -39,13 +42,22 @@ async function user(name: string) {
   return r.userId;
 }
 
-async function setup() {
+async function setup(personalizationEnabled = false) {
   const owner = await user("Chủ khoá");
-  const c = await createCourse(owner, { title: "Khoá nháp", description: "x" });
+  const c = await createCourse(owner, { title: "Khoá nháp", description: "x", personalizationEnabled });
   const m = await createModule(owner, c.courseId, { title: "M", orderIndex: 0 });
   const l = await createLesson(owner, m.moduleId, { title: "Bài 1", orderIndex: 0 });
-  return { owner, lessonId: l.lessonId };
+  const next = await createLesson(owner, m.moduleId, { title: "Bài 2 có sẵn", orderIndex: 1 });
+  return { owner, lessonId: l.lessonId, moduleId: m.moduleId, nextLessonId: next.lessonId };
 }
+
+const RESULT = (n: number): LessonDraftResult => ({
+  lessons: Array.from({ length: n }, (_, i) => ({ title: `Bài AI ${i + 1}`, html: `<section class="lesson-section" data-layout="text"><h2>Mục ${i + 1}</h2><p>Nội dung.</p></section>` })),
+  fallbackSections: [],
+  missingParas: [],
+  writing: "keep",
+  generatedAt: new Date().toISOString(),
+});
 
 const input = { sourceName: "tai-lieu.docx", sourceKind: "docx", sourceParas: PARAS, outline: OUTLINE };
 
@@ -111,5 +123,46 @@ describe("bản nháp tạo bài từ tài liệu", () => {
     await discardLessonDraft(owner, d.id);
     expect(await getActiveLessonDraftId(owner, lessonId)).toBeNull();
     await expect(updateLessonDraft(owner, d.id, { confirm: true })).rejects.toMatchObject({ code: "invalid_state" });
+  });
+
+  it("lưu kết quả chỉ khi dàn ý đã chốt; sửa dàn ý thì kết quả bị bỏ", async () => {
+    const { owner, lessonId } = await setup();
+    const d = await createLessonDraft(owner, lessonId, input);
+    await expect(saveLessonDraftResult(owner, d.id, RESULT(1))).rejects.toMatchObject({ code: "not_confirmed" });
+    await updateLessonDraft(owner, d.id, { confirm: true });
+    await saveLessonDraftResult(owner, d.id, RESULT(1));
+    expect((await getLessonDraft(owner, d.id)).result?.lessons).toHaveLength(1);
+    await updateLessonDraft(owner, d.id, { look: { palette: "forest", font: "readable" } });
+    expect((await getLessonDraft(owner, d.id)).result).not.toBeNull();
+    await updateLessonDraft(owner, d.id, { writing: "edit" });
+    expect((await getLessonDraft(owner, d.id)).result).toBeNull();
+  });
+
+  it("Áp dụng: bài 1 thành khối Văn bản cuối bài đang mở, bài sau thành bài mới ẩn ngay sau, có chủ đề tự sinh (T7, T8)", async () => {
+    const { owner, lessonId, moduleId, nextLessonId } = await setup(true);
+    const d = await createLessonDraft(owner, lessonId, { ...input, look: { palette: "paper", font: "academic" } });
+    await expect(applyLessonDraft(owner, d.id)).rejects.toMatchObject({ code: "not_confirmed" });
+    await updateLessonDraft(owner, d.id, { confirm: true });
+    await expect(applyLessonDraft(owner, d.id)).rejects.toMatchObject({ code: "no_result" });
+    await saveLessonDraftResult(owner, d.id, RESULT(3));
+
+    const r = await applyLessonDraft(owner, d.id);
+    expect(r.lessonIds[0]).toBe(lessonId);
+    expect(r.lessonIds).toHaveLength(3);
+
+    const order = await prisma.lesson.findMany({ where: { moduleId }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true, isHidden: true } });
+    expect(order.map((l) => l.id)).toEqual([lessonId, r.lessonIds[1], r.lessonIds[2], nextLessonId]);
+    expect(order.slice(1, 3).every((l) => l.isHidden)).toBe(true);
+    expect(order[1]!.title).toBe("Bài AI 2");
+
+    const item = await prisma.contentItem.findUnique({ where: { id: r.contentItemIds[0]! } });
+    expect(item?.type).toBe("richtext");
+    expect(item?.lessonId).toBe(lessonId);
+    expect((item?.payload as { look?: unknown }).look).toEqual({ palette: "paper", font: "academic" });
+    expect(await prisma.lessonActivity.count({ where: { contentItemId: r.contentItemIds[1]! } })).toBe(1);
+    expect(await prisma.contentSkillMapping.count({ where: { contentType: "lesson", contentId: r.lessonIds[1]! } })).toBe(1);
+
+    expect((await prisma.lessonDraft.findUnique({ where: { id: d.id } }))?.status).toBe("applied");
+    await expect(applyLessonDraft(owner, d.id)).rejects.toMatchObject({ code: "invalid_state" });
   });
 });

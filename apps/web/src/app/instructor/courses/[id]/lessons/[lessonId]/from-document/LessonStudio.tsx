@@ -8,6 +8,7 @@ import {
   LESSON_WRITING_HINTS,
   LESSON_WRITING_LABELS,
   LESSON_WRITING_MODES,
+  type LessonDraftResult,
   type LessonLook,
   type LessonOutline,
   type LessonWritingMode,
@@ -20,6 +21,7 @@ import LessonLookMenu from "@/components/lesson/LessonLookMenu";
 import SourceStep from "./SourceStep";
 import OutlinePane, { Objectives } from "./OutlinePane";
 import { OutlinePreview, SourceView } from "./PreviewPane";
+import { GenerationView, ResultView, type GenStep } from "./ResultPane";
 
 interface Draft {
   id: string;
@@ -31,7 +33,17 @@ interface Draft {
   writing: LessonWritingMode;
   addObjectivesSummary: boolean;
   confirmedAt: string | null;
+  result: LessonDraftResult | null;
 }
+
+type Phase = "outline" | "generating" | "result";
+
+const GEN_ERRORS: Record<string, string> = {
+  no_token_budget: "Bạn đã dùng hết hạn mức AI. Chưa có bài nào được tạo; dàn ý vẫn được giữ.",
+  global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau.",
+  openai_not_configured: "Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên.",
+  outline_not_confirmed: "Dàn ý chưa được chốt.",
+};
 
 type SaveState = "saved" | "dirty" | "saving" | "error";
 
@@ -55,6 +67,7 @@ export default function LessonStudio({
   const [draftId, setDraftId] = useState<string | null>(initialDraftId);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [save, setSave] = useState<SaveState>("saved");
+  const [step, setStep] = useState<2 | 3>(2);
   const backHref = `/instructor/courses/${courseId}?tab=content&lesson=${lessonId}`;
 
   return (
@@ -67,7 +80,7 @@ export default function LessonStudio({
           <span className="max-w-[12rem] truncate">{lessonTitle}</span>
         </Link>
         <span className="hidden font-semibold md:inline">Tạo bài từ tài liệu</span>
-        <Steps step={draftId ? 2 : 1} />
+        <Steps step={draftId ? step : 1} />
         <span className="ml-auto w-24 text-right text-xs text-faint">
           {draftId && (save === "saving" ? "Đang lưu…" : save === "error" ? <span className="text-danger-600">Chưa lưu được</span> : save === "dirty" ? "" : "Đã lưu")}
         </span>
@@ -78,6 +91,8 @@ export default function LessonStudio({
           draftId={draftId}
           warnings={warnings}
           onSave={setSave}
+          onStep={setStep}
+          onApplied={() => router.push(backHref)}
           onRestart={async () => {
             if (!window.confirm("Bỏ dàn ý này và bắt đầu lại với tài liệu khác?")) return;
             await fetch(apiUrl(`/api/lesson-drafts/${draftId}`), { method: "DELETE" });
@@ -138,11 +153,15 @@ function Studio({
   draftId,
   warnings,
   onSave,
+  onStep,
+  onApplied,
   onRestart,
 }: {
   draftId: string;
   warnings: string[];
   onSave: (s: SaveState) => void;
+  onStep: (s: 2 | 3) => void;
+  onApplied: () => void;
   onRestart: () => void;
 }) {
   const url = apiUrl(`/api/lesson-drafts/${draftId}`);
@@ -154,6 +173,11 @@ function Studio({
   const [reviewed, setReviewed] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [confirmErr, setConfirmErr] = useState<string[] | null>(null);
+  const [phase, setPhase] = useState<Phase>("outline");
+  const [genSteps, setGenSteps] = useState<GenStep[]>([]);
+  const [genTotal, setGenTotal] = useState(0);
+  const [genErr, setGenErr] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
   const pending = useRef<Record<string, unknown>>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -164,7 +188,11 @@ function Studio({
         if (!r.ok) throw new Error(String(r.status));
         return (await r.json()) as Draft;
       })
-      .then((d) => alive && setDraft(d))
+      .then((d) => {
+        if (!alive) return;
+        setDraft(d);
+        if (d.confirmedAt && d.result) setPhase("result");
+      })
       .catch(() => alive && setLoadErr("Không mở được bản nháp. Hãy tải lại trang."));
     return () => {
       alive = false;
@@ -197,7 +225,7 @@ function Studio({
       setDraft((d) => {
         if (!d) return d;
         const contentChange = p.outline !== undefined || p.writing !== undefined || p.addObjectivesSummary !== undefined;
-        return { ...d, ...p, confirmedAt: contentChange ? null : d.confirmedAt };
+        return { ...d, ...p, confirmedAt: contentChange ? null : d.confirmedAt, result: contentChange ? null : d.result };
       });
       if (p.outline !== undefined || p.writing !== undefined || p.addObjectivesSummary !== undefined) setReviewed(false);
       pending.current = { ...pending.current, ...p };
@@ -218,6 +246,8 @@ function Studio({
     window.addEventListener("beforeunload", beforeUnload);
     return () => window.removeEventListener("beforeunload", beforeUnload);
   }, [flush]);
+
+  useEffect(() => onStep(phase === "outline" ? 2 : 3), [phase, onStep]);
 
   const orphans = useMemo(() => (draft ? orphanParas(draft.outline, draft.sourceParas) : []), [draft]);
   const problems = useMemo(() => (draft ? outlineProblems(draft.outline, draft.sourceParas) : []), [draft]);
@@ -266,6 +296,65 @@ function Studio({
     }
   }
 
+  async function generate() {
+    if (!(await flush())) return;
+    setGenErr(null);
+    setGenSteps([]);
+    setGenTotal(0);
+    setPhase("generating");
+    setMobilePane("preview");
+    try {
+      const res = await fetch(apiUrl(`/api/lesson-drafts/${draftId}/generate`), { method: "POST" });
+      if (!res.ok || !res.body) {
+        const d = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(d.error ?? `http_${res.status}`);
+      }
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl + 1);
+          if (!line) continue;
+          const ev = JSON.parse(line) as { type: string; total?: number; label?: string; ok?: boolean; result?: LessonDraftResult; error?: string };
+          if (ev.type === "start") setGenTotal(ev.total ?? 0);
+          if (ev.type === "progress") setGenSteps((xs) => [...xs, { label: ev.label ?? "", ok: !!ev.ok }]);
+          if (ev.type === "error") throw new Error(ev.error ?? "generate_failed");
+          if (ev.type === "done" && ev.result) {
+            const result = ev.result;
+            setDraft((x) => (x ? { ...x, result } : x));
+            setTab("preview");
+            setPhase("result");
+            return;
+          }
+        }
+      }
+      throw new Error("generate_failed");
+    } catch (e) {
+      const code = e instanceof Error ? e.message : String(e);
+      setGenErr(GEN_ERRORS[code] ?? "AI chưa viết xong bài. Vui lòng thử lại sau ít phút.");
+      setPhase(draft?.result ? "result" : "outline");
+    }
+  }
+
+  async function apply() {
+    setApplying(true);
+    setGenErr(null);
+    try {
+      const r = await fetch(apiUrl(`/api/lesson-drafts/${draftId}/apply`), { method: "POST" });
+      if (!r.ok) throw new Error(String(r.status));
+      onApplied();
+    } catch {
+      setGenErr("Chưa áp dụng được. Vui lòng thử lại.");
+      setApplying(false);
+    }
+  }
+
   const showSource = (sectionId: string | null) => {
     setActiveId(sectionId);
     setTab("source");
@@ -291,7 +380,10 @@ function Studio({
       <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(24rem,46fr)_54fr]">
         {/* ---------- Cột trái: dàn ý ---------- */}
         <section className={`flex min-h-0 flex-col border-token bg-[rgb(var(--surface))] lg:border-r ${mobilePane === "outline" ? "" : "hidden lg:flex"}`}>
-          <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
+          <div
+            className={`flex-1 space-y-4 overflow-y-auto px-4 py-4 sm:px-5 ${phase === "outline" ? "" : "pointer-events-none select-none opacity-55"}`}
+            aria-disabled={phase !== "outline"}
+          >
             <div>
               <input
                 value={first.title}
@@ -383,13 +475,39 @@ function Studio({
                 {p}
               </p>
             ))}
-            {draft.confirmedAt ? (
+            {genErr && <p className="text-xs text-danger-600">{genErr}</p>}
+            {draft.confirmedAt && phase === "result" ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" className="btn-ghost btn-sm" onClick={() => setPhase("outline")}>
+                  Quay lại dàn ý
+                </button>
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={() => {
+                    if (window.confirm(`Tạo lại toàn bộ bài? Lượt này dùng thêm khoảng ${tokenEstimate.toLocaleString("vi-VN")} token.`)) void generate();
+                  }}
+                >
+                  Tạo lại
+                </button>
+                <button type="button" onClick={apply} disabled={applying} className="btn-primary ml-auto">
+                  {applying && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+                  {outline.lessons.length > 1 ? `Áp dụng ${outline.lessons.length} bài học` : "Áp dụng vào bài học"}
+                </button>
+              </div>
+            ) : draft.confirmedAt ? (
               <div className="flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700">
                   <Check className="h-4 w-4" aria-hidden /> Đã chốt dàn ý
                 </span>
-                <button type="button" disabled className="btn-primary ml-auto" title="Bước AI viết bài có ở bản tiếp theo">
-                  Tạo bài
+                {draft.result && phase === "outline" && (
+                  <button type="button" className="text-xs font-medium text-brand-700 underline" onClick={() => setPhase("result")}>
+                    Xem bài đã tạo
+                  </button>
+                )}
+                <button type="button" onClick={generate} disabled={phase === "generating"} className="btn-primary ml-auto">
+                  {phase === "generating" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+                  {phase === "generating" ? "Đang viết bài…" : draft.result ? "Tạo lại bài" : "Tạo bài"}
                 </button>
               </div>
             ) : (
@@ -416,7 +534,7 @@ function Studio({
         {/* ---------- Cột phải: xem trước / tài liệu gốc ---------- */}
         <section className={`flex min-h-0 flex-col ${mobilePane === "preview" ? "" : "hidden lg:flex"}`}>
           <div className="relative flex items-center gap-1 border-b border-token bg-[rgb(var(--bg))] px-3 py-2 sm:px-5">
-            {(["preview", "source"] as const).map((t) => (
+            {(phase === "generating" ? ([] as const) : (["preview", "source"] as const)).map((t) => (
               <button
                 key={t}
                 type="button"
@@ -425,7 +543,7 @@ function Studio({
                   tab === t ? "bg-[rgb(var(--surface))] shadow-sm ring-1 ring-[rgb(var(--border))]" : "text-muted"
                 }`}
               >
-                {t === "preview" ? "Xem trước" : "Tài liệu gốc"}
+                {t === "preview" ? (phase === "result" ? "Bài học" : "Xem trước") : "Tài liệu gốc"}
                 {t === "source" && orphans.length > 0 && (
                   <span className="ml-1.5 rounded-full bg-amber-100 px-1.5 text-[11px] text-amber-800">{orphans.length}</span>
                 )}
@@ -436,7 +554,23 @@ function Studio({
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {tab === "preview" ? (
+            {phase === "generating" ? (
+              <GenerationView steps={genSteps} total={genTotal} writing={LESSON_WRITING_LABELS[draft.writing]} />
+            ) : phase === "result" && draft.result && tab === "preview" ? (
+              <ResultView result={draft.result} look={draft.look} onShowParas={() => setTab("source")} />
+            ) : phase === "result" && draft.result ? (
+              <SourceView
+                paras={draft.sourceParas}
+                sourceName={draft.sourceName}
+                outline={outline}
+                activeId={null}
+                orphans={draft.result.missingParas}
+                readOnly
+                onAssign={() => {}}
+                onIgnore={() => {}}
+                onRestore={() => {}}
+              />
+            ) : tab === "preview" ? (
               <OutlinePreview outline={outline} paras={draft.sourceParas} look={draft.look} activeId={activeId} />
             ) : (
               <SourceView

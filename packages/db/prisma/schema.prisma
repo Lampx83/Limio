@@ -632,6 +632,9 @@ model LessonDraft {
   addObjectivesSummary Boolean   @default(true)
   /// Sửa dàn ý sau khi chốt thì xoá mốc này — phải chốt lại mới được tạo bài.
   confirmedAt          DateTime?
+  /// Bài AI đã viết từ dàn ý đã chốt (LessonDraftResult) — chờ giảng viên xem và Áp dụng.
+  /// Sửa dàn ý thì xoá, vì bài không còn khớp dàn ý.
+  result               Json?
   /// outline | applied | discarded
   status               String    @default("outline")
   createdAt            DateTime  @default(now())

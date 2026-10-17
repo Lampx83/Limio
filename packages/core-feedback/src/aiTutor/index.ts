@@ -5,3 +5,4 @@ export * from "./aiTutor";
 export * from "./generators";
 export * from "./llm";
 export * from "./lessonOutline";
+export * from "./lessonWriter";
