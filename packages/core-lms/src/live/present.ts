@@ -51,7 +51,11 @@ export async function startOrResumeLiveSession(
     where: { deckId, userId, endedAt: null },
     orderBy: { startedAt: "desc" },
   });
-  if (active) return ensureJoinCode(active, db);
+  if (active) {
+    // Mở lại màn chiếu: phiên đang tạm dừng chạy tiếp, giữ nguyên kết quả và mã.
+    const resumed = active.pausedAt ? await db.liveSession.update({ where: { id: active.id }, data: { pausedAt: null } }) : active;
+    return ensureJoinCode(resumed, db);
+  }
 
   const firstSlide = await db.liveSlide.findFirst({
     where: { deckId },
@@ -178,4 +182,134 @@ export async function endLiveSession(
       data: { endedAt: new Date() },
     });
   }
+}
+
+/** Loại slide có tương tác với học viên, và vì thế có mã/QR riêng. Slide nội dung thì không. */
+export const INTERACTIVE_SLIDE_TYPES = ["quiz", "poll", "word_cloud", "collaborate_board", "whiteboard"] as const;
+
+/**
+ * Mã tham gia theo từng slide tương tác của phiên (slideId -> mã). Tạo thêm mã còn thiếu, mã đã có giữ nguyên
+ * nên gọi lại bao nhiêu lần cũng được; slide nội dung không có mã. Mã cố định suốt phiên tương tác.
+ */
+export async function ensureSlideJoinCodes(
+  sessionId: string,
+  userId: string,
+  db: PrismaClient
+): Promise<Record<string, string>> {
+  const session = await getOwnedSession(sessionId, userId, db);
+  const slides = await db.liveSlide.findMany({
+    where: { deckId: session.deckId, type: { in: [...INTERACTIVE_SLIDE_TYPES] } },
+    select: { id: true },
+  });
+  const existing = await db.liveSlideCode.findMany({ where: { sessionId }, select: { slideId: true } });
+  const have = new Set(existing.map((c) => c.slideId));
+
+  for (const slide of slides) {
+    if (have.has(slide.id)) continue;
+    // Va chạm mã (31^6) hoặc hai cửa sổ chiếu cùng tạo một lúc: thử lại, rồi đọc lại bản ghi thắng cuộc.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const code = generateJoinCode();
+      if (await db.liveSession.findUnique({ where: { joinCode: code }, select: { id: true } })) continue;
+      try {
+        await db.liveSlideCode.create({ data: { code, sessionId, slideId: slide.id } });
+        break;
+      } catch (e) {
+        if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+        if (await db.liveSlideCode.findFirst({ where: { sessionId, slideId: slide.id }, select: { code: true } })) break;
+      }
+    }
+  }
+
+  const rows = await db.liveSlideCode.findMany({
+    where: { sessionId, slideId: { in: slides.map((s) => s.id) } },
+    select: { slideId: true, code: true },
+  });
+  return Object.fromEntries(rows.map((r) => [r.slideId, r.code]));
+}
+
+/** Giảng viên thoát màn chiếu: phiên tương tác (kết quả + mã) được giữ, học viên tạm không trả lời được. */
+export async function pauseLiveSession(sessionId: string, userId: string, db: PrismaClient): Promise<void> {
+  const session = await getOwnedSession(sessionId, userId, db);
+  if (session.endedAt) return;
+  await db.liveSession.update({ where: { id: sessionId }, data: { pausedAt: new Date() } });
+}
+
+/**
+ * Kết thúc phiên tương tác hiện tại và mở phiên mới (kết quả trống, mã mới cho mọi slide tương tác).
+ * - "save": phiên cũ được lưu vào lịch sử cùng kết quả.
+ * - "discard": xoá hẳn kết quả và phiên cũ (không khôi phục được).
+ */
+export async function resetLiveSession(
+  sessionId: string,
+  userId: string,
+  mode: "save" | "discard",
+  db: PrismaClient
+): Promise<LiveSession> {
+  const session = await getOwnedSession(sessionId, userId, db);
+
+  if (mode === "save") {
+    const now = new Date();
+    if (!session.endedAt) await db.liveSession.update({ where: { id: sessionId }, data: { endedAt: now } });
+    if (session.classroomSessionId) {
+      await db.classroomSession.update({ where: { id: session.classroomSessionId }, data: { endedAt: now } });
+    }
+  } else {
+    const refIds = Object.values((session.slideRuntimeRefs ?? {}) as Record<string, string>);
+    await db.$transaction([
+      db.classroomPoll.deleteMany({ where: { id: { in: refIds } } }),
+      db.wordCloud.deleteMany({ where: { id: { in: refIds } } }),
+      db.interactiveBoard.deleteMany({ where: { id: { in: refIds } } }),
+      db.whiteboard.deleteMany({ where: { id: { in: refIds } } }),
+      db.liveSession.delete({ where: { id: sessionId } }),
+      ...(session.classroomSessionId
+        ? [db.classroomSession.deleteMany({ where: { id: session.classroomSessionId } })]
+        : []),
+    ]);
+  }
+
+  const firstSlide = await db.liveSlide.findFirst({ where: { deckId: session.deckId }, orderBy: { orderIndex: "asc" } });
+  const created = await db.liveSession.create({
+    data: { deckId: session.deckId, userId, currentSlideId: firstSlide?.id ?? null, identityMode: session.identityMode },
+  });
+  return ensureJoinCode(created, db);
+}
+
+export type SlideJoinTarget =
+  | { status: "not_found" }
+  | { status: "closed"; title: string; identityMode: LiveIdentityMode; reason: "ended" | "paused" | "moved" }
+  | { status: "waiting"; title: string; identityMode: LiveIdentityMode }
+  | { status: "open"; title: string; identityMode: LiveIdentityMode; slide: { id: string; type: string }; refId: string };
+
+/**
+ * Học viên quét mã của MỘT slide: chỉ vào được khi phiên đang chạy, không tạm dừng và giảng viên đang chiếu đúng
+ * slide đó. Giảng viên chuyển đi thì "đã đóng" — không tự theo sang slide khác (muốn trả lời slide kia phải quét mã của nó).
+ */
+export async function resolveSlideJoinCode(code: string, db: PrismaClient): Promise<SlideJoinTarget> {
+  const row = await db.liveSlideCode.findUnique({
+    where: { code },
+    select: {
+      slide: { select: { id: true, type: true } },
+      session: {
+        select: {
+          endedAt: true,
+          pausedAt: true,
+          identityMode: true,
+          currentSlideId: true,
+          slideRuntimeRefs: true,
+          deck: { select: { title: true } },
+        },
+      },
+    },
+  });
+  if (!row) return { status: "not_found" };
+  const { slide, session } = row;
+  const title = session.deck.title;
+  if (session.endedAt) return { status: "closed", title, identityMode: session.identityMode, reason: "ended" };
+  if (session.pausedAt) return { status: "closed", title, identityMode: session.identityMode, reason: "paused" };
+  if (session.currentSlideId !== slide.id || !(INTERACTIVE_SLIDE_TYPES as readonly string[]).includes(slide.type)) {
+    return { status: "closed", title, identityMode: session.identityMode, reason: "moved" };
+  }
+  const refId = (session.slideRuntimeRefs as Record<string, string>)[slide.id];
+  if (!refId) return { status: "waiting", title, identityMode: session.identityMode };
+  return { status: "open", title, identityMode: session.identityMode, slide, refId };
 }

@@ -350,7 +350,10 @@ export default function LayoutEditor({
   open,
   onOpenChange,
   nav,
+  zoom = 1,
 }: {
+  /** Mức thu phóng của khung xem trước (1 = vừa khung; lớn hơn thì chữ to thật và cuộn để xem tiếp). */
+  zoom?: number;
   config: Cfg;
   themeId?: string | null;
   onSave: Save;
@@ -453,7 +456,8 @@ export default function LayoutEditor({
   // Cột chỉ khi ô sửa đủ rộng: ở lg và 2xl cột phải hẹp nên xếp dọc.
   const cols = layout === "cards" || layout === "stats" ? "md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-1" : "";
 
-  const previewBox = (
+  // Bản thu nhỏ trong cửa sổ sửa: khung 16:9 cố định, vừa chiều rộng cột.
+  const thumbBox = (
     <div
       className="relative aspect-video w-full overflow-hidden rounded-xl border border-black/10 shadow-sm"
       style={{ background: slideBgFor(themeId, true) }}
@@ -461,6 +465,12 @@ export default function LayoutEditor({
       <div className="absolute inset-0 flex">
         <LayoutSlideView config={preview} themeId={themeId} />
       </div>
+    </div>
+  );
+  // Khung xem trước lấp đầy vùng giữa; viền khung hình 16:9 do bộ vẽ slide tự vẽ.
+  const previewBox = (
+    <div className="absolute inset-0 flex">
+      <LayoutSlideView config={preview} themeId={themeId} zoom={zoom} frame />
     </div>
   );
 
@@ -501,7 +511,7 @@ export default function LayoutEditor({
                       <span>Xem trước</span>
                       <span className={problems.length > 0 ? "font-semibold text-amber-800" : ""}>{problems.length > 0 ? "Slide dài" : "Độ dài vừa"}</span>
                     </div>
-                    {previewBox}
+                    {thumbBox}
                   </aside>
 
                   <div className="min-h-0 overflow-y-auto md:order-1">
@@ -835,16 +845,13 @@ export default function LayoutEditor({
 
   return (
     <>
-      {/* Ngoài cửa sổ chỉ có slide, vừa vặn trong màn hình; bấm vào slide hoặc nút bút để sửa. */}
-      <section className="space-y-2" aria-label="Slide">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[13px] text-faint">
-          <span>Xem trước (đúng như lúc chiếu)</span>
-          <span>Bấm vào slide hoặc nút bút để sửa</span>
-        </div>
+      {/* Ngoài cửa sổ chỉ có slide, lấp đầy vùng giữa; bấm vào slide hoặc nút bút để sửa. */}
+      <section className="flex min-h-0 flex-1 flex-col gap-2" aria-label="Slide">
         <div
           role="button"
           tabIndex={0}
           aria-label="Sửa slide này"
+          title="Bấm vào slide để sửa"
           onClick={() => onOpenChange(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
@@ -852,10 +859,9 @@ export default function LayoutEditor({
               onOpenChange(true);
             }
           }}
-          className={`group relative mx-auto min-w-[280px] cursor-pointer rounded-xl focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-600 ${
+          className={`group relative min-h-[240px] w-full flex-1 cursor-pointer rounded-xl focus-visible:outline focus-visible:outline-[3px] focus-visible:outline-brand-600 ${
             problems.length > 0 ? "outline outline-[3px] outline-amber-400" : ""
           }`}
-          style={{ width: "min(100%, calc((100vh - 380px) * 16 / 9))" }}
         >
           {previewBox}
           <button
@@ -865,7 +871,7 @@ export default function LayoutEditor({
               e.stopPropagation();
               onOpenChange(true);
             }}
-            className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] py-1.5 pl-2.5 pr-3.5 text-sm font-semibold shadow-md opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
+            className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-full border border-token bg-[rgb(var(--surface))] py-1.5 pl-2.5 pr-3.5 text-sm font-semibold shadow-md"
           >
             <Pencil size={16} /> Sửa
           </button>

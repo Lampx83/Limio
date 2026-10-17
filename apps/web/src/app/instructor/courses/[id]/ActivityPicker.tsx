@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   Blocks,
   ClipboardList,
@@ -80,9 +81,9 @@ const TILES: Tile[] = [
     icon: FileText,
     color: "bg-blue-100 text-blue-700",
     name: "Văn bản — AI hỗ trợ",
-    description: "Copy-paste văn bản thô — AI định dạng đẹp giúp bạn",
+    description: "Tải Word, PDF hoặc dán văn bản — AI lập dàn ý, bạn chốt rồi AI viết bài",
     badge: "AI supported",
-    keywords: "text richtext ai dinh dang format van ban tho paste",
+    keywords: "text richtext ai dinh dang format van ban tho paste tai lieu word pdf dan y",
     pick: { kind: "content", subtype: "richtext", richtextMode: "ai" },
   },
   {
@@ -273,6 +274,17 @@ export default function ActivityPicker({
   showResearch?: boolean;
 }) {
   const [pickedTile, setPickedTile] = useState<Tile | null>(null);
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  // "Văn bản — AI hỗ trợ" mở màn riêng (tài liệu → dàn ý → bài học) thay vì form trong hộp thoại.
+  const pick = (t: Tile) => {
+    if (t.key === "richtext_ai" && params?.id) {
+      onClose();
+      router.push(`/instructor/courses/${params.id}/lessons/${lessonId}/from-document`);
+      return;
+    }
+    setPickedTile(t);
+  };
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
 
@@ -388,10 +400,10 @@ export default function ActivityPicker({
             )}
 
             {resources.length > 0 && (
-              <Group label="Tài nguyên" tiles={resources} onPick={setPickedTile} />
+              <Group label="Tài nguyên" tiles={resources} onPick={pick} />
             )}
             {activities.length > 0 && (
-              <Group label="Hoạt động" tiles={activities} onPick={setPickedTile} />
+              <Group label="Hoạt động" tiles={activities} onPick={pick} />
             )}
           </div>
         ) : (

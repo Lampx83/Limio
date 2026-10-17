@@ -47,7 +47,6 @@ import {
   MonitorPlay,
   Play,
   History,
-  AlertTriangle,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
@@ -292,22 +291,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     return () => document.body.classList.remove("limio-live-immersive");
   }, []);
 
-  // Số buổi dạy đã mở từng slide (cảnh báo khi sửa slide tương tác đã có kết quả — H12) và bộ đếm làm
-  // mới trình soạn sau khi khôi phục phiên bản (các ô nhập giữ state cục bộ nên phải dựng lại).
-  const [usage, setUsage] = useState<Record<string, number>>({});
+  // Bộ đếm làm mới trình soạn sau khi khôi phục phiên bản (các ô nhập giữ state cục bộ nên phải dựng lại).
   const [restoreRev, setRestoreRev] = useState(0);
-  useEffect(() => {
-    let alive = true;
-    fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/usage`))
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j: { sessions?: Record<string, number> } | null) => {
-        if (alive && j?.sessions) setUsage(j.sessions);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [deckId]);
 
   const load = async () => {
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`));
@@ -618,6 +603,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     if (editOpen && !(selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config))) setEditOpen(false);
   }, [editOpen, selectedSlide]);
   const slideIndex = selectedSlideId ? deck.slides.findIndex((s) => s.id === selectedSlideId) : -1;
+  const stageLayout = !!selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config);
   const slideNav = {
     index: Math.max(0, slideIndex),
     total: deck.slides.length,
@@ -859,26 +845,20 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
         {/* Center — live WYSIWYG preview */}
         <div className="relative flex min-w-0 flex-1 flex-col">
-          <div className="flex flex-1 overflow-y-auto p-8 pb-20">
+          <div className={stageLayout ? "flex min-h-0 flex-1 flex-col p-3 pb-20 lg:p-4 lg:pb-16" : "flex flex-1 overflow-y-auto p-8 pb-20"}>
             {selectedSlide ? (
+              // Slide bố cục: khung xem trước chiếm trọn vùng giữa (không thẻ bọc, không đệm), thu phóng do chính khung xử lý.
               <div
                 key={`${selectedSlide.id}:${restoreRev}`}
-                className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
-                  selectedSlide.timerSeconds != null ? "pb-28" : ""
-                }`}
-                style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : brandFrameBackground(effBrand, false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
+                className={
+                  stageLayout
+                    ? "relative flex min-h-0 w-full flex-1 flex-col"
+                    : `relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
+                        selectedSlide.timerSeconds != null ? "pb-28" : ""
+                      }`
+                }
+                style={stageLayout ? undefined : { background: brandFrameBackground(effBrand, false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
-                {(selectedSlide.type === "quiz" || selectedSlide.type === "poll" || selectedSlide.type === "word_cloud") &&
-                  (usage[selectedSlide.id] ?? 0) > 0 && (
-                    <p className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900" role="note">
-                      <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                      <span>
-                        Slide này đã được mở trong {usage[selectedSlide.id]} buổi dạy. Kết quả của các buổi đó được giữ nguyên theo
-                        câu hỏi lúc trình chiếu (xem ở Lịch sử tương tác); sửa slide chỉ ảnh hưởng buổi dạy mới và kết quả mới sẽ
-                        tính riêng. Nếu lỡ sửa, có thể quay lại ở mục Phiên bản bên phải.
-                      </span>
-                    </p>
-                  )}
                 <SlideCenterEditor
                   slide={selectedSlide}
                   themeId={deck.theme}
@@ -891,6 +871,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                   editOpen={editOpen}
                   onEditOpenChange={setEditOpen}
                   nav={slideNav}
+                  zoom={editorZoom}
                 />
                 {selectedSlide.timerSeconds != null && (
                   <TimerSticker seconds={selectedSlide.timerSeconds} />
@@ -1168,7 +1149,9 @@ function SlideCenterEditor({
   editOpen,
   onEditOpenChange,
   nav,
+  zoom,
 }: {
+  zoom: number;
   editOpen: boolean;
   onEditOpenChange: (open: boolean) => void;
   nav: { index: number; total: number; onPrev: (() => void) | null; onNext: (() => void) | null };
@@ -1194,6 +1177,7 @@ function SlideCenterEditor({
         open={editOpen}
         onOpenChange={onEditOpenChange}
         nav={nav}
+        zoom={zoom}
       />
     );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;

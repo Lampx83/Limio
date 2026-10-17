@@ -469,7 +469,9 @@ function InstructorLeftMenuInner({
   // Trang trình chiếu Limio-Live — chiếu lên máy chiếu, sidebar chỉ tổ nội
   // dung. Cùng cơ chế "ẩn + nút floating để mở lại" như course editor.
   const isPresentMode = /^\/instructor\/limio-live\/[^/]+\/present(?:\/|\?|$)/.test(pathname);
-  const isImmersive = isCourseEditor || isPresentMode;
+  // Màn "Tạo bài từ tài liệu" — hai cột dàn ý | xem trước cần cả bề ngang.
+  const isLessonStudio = /^\/instructor\/courses\/[^/]+\/lessons\/[^/]+\/from-document(?:\/|\?|$)/.test(pathname);
+  const isImmersive = isCourseEditor || isPresentMode || isLessonStudio;
 
   const rail = (
     <ModuleRail modules={modules} activeModuleId={activeModuleId} onSelect={setPendingModuleId} onHover={(href) => router.prefetch(href)} />

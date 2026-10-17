@@ -9,7 +9,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import BoardNotesView from "../../../BoardNotesView";
 
 export const metadata = {
-  title: "Kết quả lượt trình chiếu | Limio",
+  title: "Kết quả phiên tương tác | Limio",
 };
 
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
@@ -179,15 +179,15 @@ export default async function LiveSessionHistoryDetailPage({
         <div className="mt-2 flex flex-wrap items-center gap-2 text-muted">
           <DateTime value={results.startedAt.toISOString()} format="datetime" />
           <StatusBadge tone={results.endedAt ? "neutral" : "success"} pulse={!results.endedAt}>
-            {results.endedAt ? "Đã kết thúc" : "Đang mở"}
+            {results.endedAt ? "Đã lưu" : "Phiên hiện tại"}
           </StatusBadge>
         </div>
       </div>
 
       {results.slides.length === 0 ? (
         <EmptyState
-          title="Lượt này chưa có tương tác nào"
-          description="Không có slide tương tác nào được mở trong lượt trình chiếu này."
+          title="Phiên này chưa có tương tác nào"
+          description="Không có slide tương tác nào được mở trong phiên này."
         />
       ) : (
         <div className="space-y-4">
