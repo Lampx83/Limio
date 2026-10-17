@@ -47,7 +47,6 @@ import {
   MonitorPlay,
   Play,
   History,
-  AlertTriangle,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
@@ -292,22 +291,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     return () => document.body.classList.remove("limio-live-immersive");
   }, []);
 
-  // Số buổi dạy đã mở từng slide (cảnh báo khi sửa slide tương tác đã có kết quả — H12) và bộ đếm làm
-  // mới trình soạn sau khi khôi phục phiên bản (các ô nhập giữ state cục bộ nên phải dựng lại).
-  const [usage, setUsage] = useState<Record<string, number>>({});
+  // Bộ đếm làm mới trình soạn sau khi khôi phục phiên bản (các ô nhập giữ state cục bộ nên phải dựng lại).
   const [restoreRev, setRestoreRev] = useState(0);
-  useEffect(() => {
-    let alive = true;
-    fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/usage`))
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j: { sessions?: Record<string, number> } | null) => {
-        if (alive && j?.sessions) setUsage(j.sessions);
-      })
-      .catch(() => {});
-    return () => {
-      alive = false;
-    };
-  }, [deckId]);
 
   const load = async () => {
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`));
@@ -868,17 +853,6 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                 }`}
                 style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : brandFrameBackground(effBrand, false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
-                {(selectedSlide.type === "quiz" || selectedSlide.type === "poll" || selectedSlide.type === "word_cloud") &&
-                  (usage[selectedSlide.id] ?? 0) > 0 && (
-                    <p className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900" role="note">
-                      <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                      <span>
-                        Slide này đã được mở trong {usage[selectedSlide.id]} buổi dạy. Kết quả của các buổi đó được giữ nguyên theo
-                        câu hỏi lúc trình chiếu (xem ở Lịch sử tương tác); sửa slide chỉ ảnh hưởng buổi dạy mới và kết quả mới sẽ
-                        tính riêng. Nếu lỡ sửa, có thể quay lại ở mục Phiên bản bên phải.
-                      </span>
-                    </p>
-                  )}
                 <SlideCenterEditor
                   slide={selectedSlide}
                   themeId={deck.theme}
