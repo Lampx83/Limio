@@ -80,6 +80,21 @@ describe("runAiCapabilityChecks", () => {
     expect(byId(rs, "chat").ok && byId(rs, "embeddings").ok && byId(rs, "tts").ok).toBe(true);
   });
 
+  it("403 'Project … does not have access to model X' ⇒ chỉ đúng chỗ sửa là danh sách model của Project, nêu tên model", async () => {
+    const { client } = fakeClient({
+      stt: async () => {
+        throw apiError(403, "Project `proj_abc` does not have access to model `whisper-1`");
+      },
+    });
+    const rs = await run({ chat: client, openai: client, chatBackend: "openai" });
+    const hint = byId(rs, "stt").hint!;
+    expect(hint).toContain("whisper-1");
+    expect(hint).toMatch(/Project/);
+    expect(hint).toMatch(/Allowed models|Model usage|danh sách model/i);
+    // Không đẩy admin đi sửa quyền key — key không phải thủ phạm.
+    expect(hint).not.toMatch(/sang All|sửa quyền key/i);
+  });
+
   it("embeddings sai số chiều ⇒ hỏng, vì cột pgvector cố định 1536", async () => {
     const { client } = fakeClient({ embed: async () => ({ data: [{ embedding: [0.1, 0.2] }] }) });
     const rs = await run({ chat: client, openai: client, chatBackend: "openai" });

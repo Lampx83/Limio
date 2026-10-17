@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 // GET — public snapshot: thông tin board + notes (chỉ hidden=false)
 export async function GET(_req: Request, { params }: { params: { code: string } }) {
   const board = await prisma.interactiveBoard.findUnique({
-    where: { code: params.code.toUpperCase() },
+    where: { code: params.code.toUpperCase(), deletedAt: null },
     select: {
       id: true,
       code: true,

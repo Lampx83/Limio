@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { effectiveAccessMode } from "@feedbackme/core-lms";
 import ResultForm from "./ResultForm";
 
 export const dynamic = "force-dynamic";
@@ -45,9 +46,12 @@ export default async function ExamResultPage({
   } else if (code.length === 8) {
     const c = await prisma.examCandidate.findFirst({
       where: { accessCode: code },
-      select: { exam: { select: { title: true, accessMode: true } } },
+      select: {
+        session: { select: { accessMode: true } },
+        exam: { select: { title: true, accessMode: true } },
+      },
     });
-    if (c && c.exam.accessMode === "assigned_code") {
+    if (c && effectiveAccessMode(c.session, c.exam) === "assigned_code") {
       mode = "assigned";
       examTitle = c.exam.title;
     }

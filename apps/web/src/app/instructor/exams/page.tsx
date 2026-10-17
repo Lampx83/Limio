@@ -12,6 +12,7 @@ import {
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { formatDate } from "@/lib/datetime";
+import DeleteExamCardButton from "./DeleteExamCardButton";
 
 export const dynamic = "force-dynamic";
 
@@ -226,6 +227,12 @@ export default async function InstructorExamsHubPage() {
                         )}
                       </Link>
                     )}
+                    <DeleteExamCardButton
+                      examId={e.id}
+                      title={e.title}
+                      attempts={e._count.attempts}
+                      className={ACTION}
+                    />
                   </div>
                   <Link
                     href={`/instructor/courses/${courseSegment}/exams/${e.id}`}

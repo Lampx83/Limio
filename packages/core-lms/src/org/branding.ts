@@ -4,7 +4,7 @@
  * packages/core-lms/src/certification/index.ts). Chỉ OrgAdmin của chính
  * trường đó (hoặc Platform Admin) được sửa.
  */
-import { prisma, type PrismaClient } from "@feedbackme/db";
+import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { isOrgAdminOf } from "../auth/roles";
 import { ExamError } from "../exam/types";
 
@@ -86,4 +86,43 @@ export async function updateOrganizationName(
     data: { name: trimmed },
     select: { name: true },
   });
+}
+
+/**
+ * Cài đặt thương hiệu của trường cho slide Limio-Live (màu, nền, vị trí/cỡ/chỗ hiện logo). Dữ liệu đã được tầng web
+ * chuẩn hoá (limioLiveBrand.validateOrgBrandInput); null = xoá. Chỉ OrgAdmin của chính trường (hoặc Platform Admin).
+ */
+export async function updateOrganizationSlideBrand(
+  actorUserId: string,
+  organizationId: string,
+  brand: Record<string, unknown> | null,
+  db: PrismaClient = prisma,
+): Promise<{ slideBrand: unknown }> {
+  await assertOrgAdmin(actorUserId, organizationId, db);
+  if (brand === null) {
+    // Ghi NULL bằng SQL: ký hiệu Prisma.DbNull so sánh theo danh tính nên không đáng tin khi mô-đun bị nạp hai bản (Next).
+    await db.$executeRaw`UPDATE "Organization" SET "slideBrand" = NULL WHERE "id" = ${organizationId}`;
+    return { slideBrand: null };
+  }
+  return db.organization.update({
+    where: { id: organizationId },
+    data: { slideBrand: brand as Prisma.InputJsonObject },
+    select: { slideBrand: true },
+  });
+}
+
+/**
+ * Thương hiệu của trường mà một người dùng được hưởng: trường của chính họ (User.organizationId).
+ * Trả null nếu họ không thuộc trường nào. Mọi thành viên đều đọc được (không cần OrgAdmin).
+ */
+export async function getOrganizationSlideBrandForUser(
+  userId: string,
+  db: PrismaClient = prisma,
+): Promise<{ organizationId: string; organizationName: string; slideBrand: unknown; logoUrl: string | null } | null> {
+  const u = await db.user.findUnique({
+    where: { id: userId },
+    select: { organization: { select: { id: true, name: true, slideBrand: true, brandingLogoUrl: true } } },
+  });
+  const o = u?.organization;
+  return o ? { organizationId: o.id, organizationName: o.name, slideBrand: o.slideBrand, logoUrl: o.brandingLogoUrl } : null;
 }

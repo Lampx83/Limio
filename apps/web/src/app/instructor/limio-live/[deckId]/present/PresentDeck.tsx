@@ -13,7 +13,11 @@ import { parseVideoUrl } from "@/lib/videoUrl";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
 import ResourceContent, { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
-import { slideThemeBg } from "../../slideThemes";
+import { slideBgFor } from "../../slideThemes";
+import { LayoutSlideView, isLayoutSlide } from "../../SlideLayouts";
+import { BrandLogoOverlay, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
+import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
+import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
 
 const QRCode = dynamic(
@@ -41,6 +45,11 @@ interface Deck {
   id: string;
   title: string;
   theme?: string;
+  /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider. */
+  brand?: unknown;
+  brandOff?: boolean;
+  brandTemplate?: string | null;
+  org?: DeckOrgBrand | null;
   slides: Slide[];
 }
 
@@ -561,6 +570,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const showSidebar = !focus && (hasSidebar || !!presenterNote || showPreview) && !!currentSlide;
 
   return (
+    <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {
@@ -677,14 +687,15 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               key={currentSlide.id}
               ref={cardRef}
               onScrollCapture={handleCardScroll}
-              style={{ background: slideThemeBg(deck.theme), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
-              className={`box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
+              style={{ background: brandFrameBackground(deckEffectiveBrand(deck), currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ?? slideBgFor(deck.theme, currentSlide.type === "content" && isLayoutSlide(currentSlide.config)), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
+              className={`relative box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
               } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
-              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide ? 1 : zoom }}>
+              {/* Slide bố cục tự co vừa khung nên nhận mức thu phóng trực tiếp (LayoutSlideView zoom); CSS zoom sẽ bị triệt tiêu. */}
+              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide || (currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ? 1 : zoom }}>
               <SlideStage
                 slide={currentSlide}
                 runtime={runtime}
@@ -694,8 +705,11 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 revealed={!!uiState.revealed?.[currentSlide.id]}
                 onToggleReveal={() => handleToggleReveal(currentSlide.id)}
                 zoom={fitSlide ? 1 : zoom}
+                themeId={deck.theme}
               />
               </div>
+              {/* Slide bố cục tự vẽ logo; các loại khác (trắc nghiệm, bình chọn, bảng...) được phủ logo ở khung. */}
+              {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoOverlay role="other" />}
             </div>
             </SlideFit>
           )}
@@ -866,6 +880,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
     </div>
+    </LiveBrandProvider>
   );
 }
 
@@ -954,7 +969,9 @@ function SlideStage({
   revealed,
   onToggleReveal,
   zoom,
+  themeId,
 }: {
+  themeId?: string | null;
   slide: Slide;
   runtime: Runtime | null;
   timerStartedAt?: number;
@@ -971,6 +988,8 @@ function SlideStage({
     return (
       <ContentSlideView
         zoom={zoom}
+        themeId={themeId}
+        animate
         config={config}
         timerSeconds={slide.timerSeconds}
         timerStartedAt={timerStartedAt}
@@ -1083,7 +1102,11 @@ function ContentSlideView({
   onStartTimer,
   lazyImages,
   zoom = 1,
+  themeId,
+  animate,
 }: {
+  themeId?: string | null;
+  animate?: boolean;
   config: Record<string, any>;
   timerSeconds: number | null;
   timerStartedAt?: number;
@@ -1108,6 +1131,16 @@ function ContentSlideView({
         </div>
       </div>
     ) : null;
+
+  // Slide có bố cục mới (bìa, ba thẻ, các bước...) — do SlideLayouts vẽ trên khung 1280×720.
+  if (isLayoutSlide(config)) {
+    return (
+      <div className="relative flex min-h-0 flex-1 flex-col">
+        <LayoutSlideView config={config} themeId={themeId} animate={animate} zoom={zoom} />
+        {timerSticker}
+      </div>
+    );
+  }
 
   // Slide "Nội dung" chèn 1 tài nguyên (video/pdf/markdown/...) — ưu tiên
   // trước cả layout thường lẫn full-bleed ảnh PDF nhập (xem LiveDeckEditor).
@@ -1227,6 +1260,7 @@ function Filmstrip({
   theme: string | undefined | null;
   onPick: (id: string) => void;
 }) {
+  const brandCfg = useLiveBrand();
   const curRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     curRef.current?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
@@ -1274,7 +1308,7 @@ function Filmstrip({
                 className={`relative block aspect-video min-w-0 flex-1 overflow-hidden rounded-md ${
                   active ? "ring-2 ring-brand-500" : "ring-1 ring-black/10 hover:ring-2 hover:ring-brand-300"
                 }`}
-                style={{ background: slideThemeBg(theme) }}
+                style={{ background: brandFrameBackground(brandCfg, sl.type === "content" && isLayoutSlide(cfg)) ?? slideBgFor(theme, sl.type === "content" && isLayoutSlide(cfg)) }}
               >
                 {pdfUrl ? (
                   <PdfFirstPage url={pdfUrl} />
@@ -1288,7 +1322,7 @@ function Filmstrip({
                   </>
                 ) : plain ? (
                   <ThumbScaled width={FILM_ITEM_W - 22}>
-                    <ContentSlideView config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages />
+                    <ContentSlideView config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages themeId={theme} />
                   </ThumbScaled>
                 ) : (
                   <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 p-1.5 text-center text-[#20241F]">

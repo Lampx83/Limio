@@ -150,6 +150,7 @@ describe("listExamResults", () => {
 
     const r = await listExamResults(s.ownerId, s.examId);
     expect(r.summary.avgScorePct).toBeCloseTo((100 + 100 + 0) / 3, 5);
+    expect(r.summary.avgScoreCount).toBe(3);
   });
 
   it("đếm bài còn chờ chấm tay", async () => {

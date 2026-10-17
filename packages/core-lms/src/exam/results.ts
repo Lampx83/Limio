@@ -1,6 +1,7 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
+import { describeWeights, loadScoringPlan } from "./weighted-score";
 
 /**
  * Danh sách kết quả của MỘT bài thi, gom mọi lượt làm bất kể thuộc ca nào
@@ -50,6 +51,8 @@ export interface ExamResultsSummary {
   notStarted: number;
   /** Trung bình % trên các bài đã chấm xong. Null khi chưa có bài nào. */
   avgScorePct: number | null;
+  /** Số bài đã chấm xong làm cơ sở cho avgScorePct (không tính bài còn câu chờ chấm). */
+  avgScoreCount: number;
   /** Số bài còn câu chờ chấm tay. */
   pendingGrading: number;
 }
@@ -58,6 +61,8 @@ export interface ExamResults {
   examId: string;
   examTitle: string;
   totalPoints: number;
+  /** "Phần 1 40% · Phần 2 60%" khi điểm % tính theo trọng số; null khi theo tỉ lệ điểm. */
+  weightsNote: string | null;
   /** Chỉ hiện bộ lọc khi bài thực sự có nhiều hơn một. */
   sessions: Array<{ id: string; title: string }>;
   rooms: Array<{ id: string; name: string }>;
@@ -70,7 +75,7 @@ export interface ExamResultsFilter {
   roomId?: string;
 }
 
-function mapStatus(s: string): ExamResultRowStatus {
+export function attemptResultStatus(s: string): ExamResultRowStatus {
   switch (s) {
     case "in_progress":
       return "in_progress";
@@ -173,7 +178,7 @@ export async function listExamResults(
       a.candidateDisplayName ??
       "(không tên)",
     identifier: a.user?.email ?? a.candidate?.accessCode ?? null,
-    status: mapStatus(a.status),
+    status: attemptResultStatus(a.status),
     score: a.score,
     scorePct: a.scorePct,
     submittedAt: a.submittedAt?.toISOString() ?? null,
@@ -237,6 +242,7 @@ export async function listExamResults(
       graded.length > 0
         ? graded.reduce((s, r) => s + (r.scorePct ?? 0), 0) / graded.length
         : null,
+    avgScoreCount: graded.length,
     pendingGrading: rows.filter((r) => r.needsGrading).length,
   };
 
@@ -244,6 +250,7 @@ export async function listExamResults(
     examId: exam.id,
     examTitle: exam.title,
     totalPoints,
+    weightsNote: describeWeights(await loadScoringPlan(examId, db)),
     sessions: exam.schedules.map((s) => ({
       id: s.id,
       title: s.title ?? s.code ?? "Ca thi",

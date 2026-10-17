@@ -44,6 +44,7 @@
     "canvas-confetti": "^1.9.4",
     "docx": "^9.6.1",
     "dompurify": "^3.4.2",
+    "exceljs": "^4.4.0",
     "h5p-standalone": "^3.8.2",
     "ioredis": "^5.4.1",
     "jsqr": "^1.4.0",

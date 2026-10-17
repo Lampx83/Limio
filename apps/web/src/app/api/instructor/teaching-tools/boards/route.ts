@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
+import { listLiveRuntimeRefIds } from "@feedbackme/core-lms";
 import { requireFeature } from "@/lib/session";
 import { generateUniqueBoardCode, normalizeBoardColumns } from "@/lib/board";
 
@@ -64,17 +65,21 @@ export async function POST(req: Request) {
   }
 }
 
-// GET — list board của instructor (gần nhất trước, tối đa 50)
-export async function GET() {
+// GET — list board của instructor (gần nhất trước, tối đa 100)
+export async function GET(req: Request) {
   const userId = await requireFeature("teaching_tools.access");
   if (!userId) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 
+  // Bảng sinh từ slide Limio-Live nằm trong lịch sử bài giảng, không ở đây.
+  // ?trash=1 → thùng rác (phiên GV đã xoá, chờ dọn vĩnh viễn sau 30 ngày); mặc định chỉ phiên còn dùng.
+  const inTrash = new URL(req.url).searchParams.get("trash") === "1";
+  const liveRefIds = await listLiveRuntimeRefIds(userId, prisma);
   const boards = await prisma.interactiveBoard.findMany({
-    where: { ownerId: userId },
-    orderBy: { createdAt: "desc" },
-    take: 50,
+    where: { ownerId: userId, id: { notIn: liveRefIds }, deletedAt: inTrash ? { not: null } : null },
+    orderBy: inTrash ? { deletedAt: "desc" } : { createdAt: "desc" },
+    take: 100,
     select: {
       id: true,
       code: true,
@@ -84,6 +89,7 @@ export async function GET() {
       drawingMode: true,
       createdAt: true,
       closedAt: true,
+      deletedAt: true,
       _count: { select: { notes: { where: { hidden: false } } } },
     },
   });

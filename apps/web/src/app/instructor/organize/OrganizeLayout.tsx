@@ -16,7 +16,7 @@ export default function OrganizeLayout({
 }: {
   title: string;
   blurb: string;
-  /** Phần tạo mới. */
+  /** Phần tạo mới / cấu hình. */
   children: React.ReactNode;
   /** Tab tương ứng ở trang Lịch sử thi. */
   historyType: "quick" | "field-test" | "formal";

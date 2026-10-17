@@ -3,13 +3,36 @@ import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup } from "@feedbackme/core-lms";
 import { z } from "zod";
+import { SLIDE_THEME_IDS } from "@/app/instructor/limio-live/slideThemes";
+import { BRAND_TEMPLATE_IDS, brandLogoFilename, sanitizeBrand, validateBrandInput } from "@/lib/limioLiveBrand";
+import { withOrgBrand } from "@/lib/limioLiveBrandServer";
+import { storageFor } from "@/lib/storage";
+import { liveSlideImageKeyFromFilename } from "@/lib/storage-keys";
 
 const UpdateDeckSchema = z.object({
   title: z.string().min(1, "Title is required").max(100).optional(),
-  theme: z.enum(["white", "cream", "mint", "sky", "blush", "brand"]).optional(),
+  theme: z.enum(SLIDE_THEME_IDS).optional(),
   // null = bỏ khỏi nhóm
   groupId: z.string().uuid().nullable().optional(),
+  // Thương hiệu: null = xoá; kiểm tra chặt bằng validateBrandInput (không dùng zod để báo đúng lỗi từng trường).
+  brand: z.unknown().optional(),
+  // true = bài này không dùng thương hiệu nào (kể cả của trường).
+  brandOff: z.boolean().optional(),
+  // Mẫu thương hiệu của trường cho bài này; null = mẫu mặc định của trường.
+  brandTemplate: z.enum(BRAND_TEMPLATE_IDS).nullable().optional(),
 });
+
+/** Gỡ hoặc thay logo thì dọn tệp cũ (best-effort), trừ khi bài giảng khác (vd. bản sao) còn dùng chung tệp đó. */
+async function cleanupOldLogo(oldUrl: unknown, newUrl: unknown, deckId: string): Promise<void> {
+  const name = brandLogoFilename(oldUrl);
+  if (!name || oldUrl === newUrl) return;
+  const stillUsed = await prisma.liveDeck.count({
+    where: { id: { not: deckId }, brand: { path: ["logoUrl"], equals: oldUrl as string } },
+  });
+  if (stillUsed > 0) return;
+  const key = liveSlideImageKeyFromFilename(name);
+  if (key) await storageFor(key).delete(key.key).catch(() => undefined);
+}
 
 /**
  * GET /api/instructor/limio-live/decks/[deckId]
@@ -30,7 +53,7 @@ export async function GET(
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
-    return NextResponse.json(deck);
+    return NextResponse.json(await withOrgBrand(deck, userId));
   } catch (error) {
     console.error("[Limio-Live Deck API - GET]", error);
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -57,10 +80,20 @@ export async function PATCH(
       );
     }
 
-    const { groupId, ...rest } = validation.data;
+    const { groupId, brand: brandRaw, ...restFields } = validation.data;
+    const rest: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null } = { ...restFields };
+    let previousLogo: unknown;
+    if (brandRaw !== undefined) {
+      const v = validateBrandInput(brandRaw);
+      if (!v.ok) return NextResponse.json({ error: "Invalid input", details: { brand: v.error } }, { status: 400 });
+      const before = await prisma.liveDeck.findFirst({ where: { id: params.deckId, userId }, select: { brand: true } });
+      previousLogo = sanitizeBrand(before?.brand)?.logoUrl;
+      rest.brand = v.brand as Record<string, unknown> | null;
+    }
     let deck = null;
     if (Object.keys(rest).length > 0) {
       deck = await updateLiveDeck(params.deckId, userId, rest, prisma);
+      if (brandRaw !== undefined) await cleanupOldLogo(previousLogo, sanitizeBrand(deck.brand)?.logoUrl, params.deckId);
     }
     if (groupId !== undefined) {
       deck = await setLiveDeckGroup(params.deckId, userId, groupId, prisma);

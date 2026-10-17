@@ -33,7 +33,7 @@ import { ExamError } from "./types";
  * precedence as the enrolled-user path (cohorts.ts `assertEligibleForExam`).
  * Falls back to the exam duration when no session or no override.
  */
-async function resolveDurationSec(
+export async function resolveDurationSec(
   examDurationMin: number,
   sessionId: string | null,
   db: PrismaClient,
@@ -201,7 +201,7 @@ function isSameOwner(
 /** Ca thủ công không có giờ đóng — cookie sống 24h là đủ cho một buổi học. */
 const MANUAL_SESSION_TTL_SEC = 24 * 3600;
 
-function computeTtlSec(closeAt: Date | null): number {
+export function computeTtlSec(closeAt: Date | null): number {
   // Q6 — cookie covers active exam window + 1h grace for late submit/review.
   // Hard cap at 7 days; floor at 5 min so a near-end claim still has room.
   if (closeAt === null) return MANUAL_SESSION_TTL_SEC;
@@ -239,6 +239,7 @@ export async function claimByOpenCode(
       closesAt: true,
       timingMode: true,
       status: true,
+      maxCandidates: true,
       exam: {
         select: {
           id: true,
@@ -476,10 +477,14 @@ export async function claimByOpenCode(
 
       // Cap on total candidates (anti-spam — Q2 IP rate-limit is layered on
       // top). Chỉ áp cho người MỚI: người vào lại không được bị chặn vì ca đầy.
-      if (exam.openMaxAttempts !== null && exam.openMaxAttempts !== undefined) {
-        const used = await tx.examCandidate.count({ where: { examId: exam.id } });
-        if (used >= exam.openMaxAttempts)
-          throw new ExamError("open_max_attempts_reached");
+      // Mã resolve qua ca → trần của CA, đếm trong ca; mã đề cũ (không có ca) →
+      // trần của đề, đếm cả đề.
+      const cap = sessionMatch ? sessionMatch.maxCandidates : exam.openMaxAttempts;
+      if (cap !== null && cap !== undefined) {
+        const used = await tx.examCandidate.count({
+          where: sessionMatch ? { sessionId } : { examId: exam.id },
+        });
+        if (used >= cap) throw new ExamError("open_max_attempts_reached");
       }
 
       const c = await tx.examCandidate.create({
@@ -596,6 +601,20 @@ function parseOpenInput(raw: unknown): OpenClaimInput {
   };
 }
 
+/**
+ * Chế độ thi thực tế của một ca. Từ PR2.12 chế độ nằm ở CA; ca cũ chưa từng
+ * chọn chế độ (`authenticated` = mặc định schema) thì rơi về chế độ của Exam
+ * như trước. Dùng chung cho claim, landing và tra kết quả bằng mã cá nhân —
+ * lệch nhau là thí sinh qua được trang này rồi bị trang sau từ chối.
+ */
+export function effectiveAccessMode(
+  session: { accessMode: string } | null | undefined,
+  exam: { accessMode: string },
+): string {
+  if (session && session.accessMode !== "authenticated") return session.accessMode;
+  return exam.accessMode;
+}
+
 /** Q5: assigned-mode claim. Resumes if candidate already has an attempt. */
 export async function claimByAssignedCode(
   code: unknown,
@@ -617,6 +636,7 @@ export async function claimByAssignedCode(
           closesAt: true,
           timingMode: true,
           status: true,
+          accessMode: true,
         },
       },
       exam: {
@@ -648,7 +668,7 @@ export async function claimByAssignedCode(
         "Đây là đề vấn đáp AI — sinh viên vào thi qua trang khoá học sau khi đăng nhập, không dùng mã này.",
     });
   }
-  if (exam.accessMode !== "assigned_code")
+  if (effectiveAccessMode(candidate.session, exam) !== "assigned_code")
     throw new ExamError("access_mode_mismatch");
   if (exam.status !== "published") throw new ExamError("exam_not_open");
   // PR2.12 — Kiểm tra cửa sổ CỦA CA (candidate.session) nếu có, fallback exam

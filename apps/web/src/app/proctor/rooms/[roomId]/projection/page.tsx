@@ -43,7 +43,7 @@ export default async function RoomProjectionPage({
   return (
     <div className="min-h-screen bg-white px-8 py-6 text-slate-900">
       <Link
-        href={`/instructor/exam-rounds/${room.roundId}/sessions/${room.sessionId}/rooms/${params.roomId}`}
+        href={`/instructor/exam-sessions/${room.sessionId}/rooms/${params.roomId}`}
         className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline print:hidden"
       >
         ← Quay lại phòng thi

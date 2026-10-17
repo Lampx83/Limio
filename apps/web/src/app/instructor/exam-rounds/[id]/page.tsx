@@ -14,9 +14,8 @@ import { auth } from "@/lib/auth";
 import RoundTabs from "./RoundTabs";
 import { parseRoundTab } from "./round-tabs-helpers";
 import OverviewPanel from "./OverviewPanel";
-import SessionsPanel from "./SessionsPanel";
 import CohortsPanel from "./CohortsPanel";
-import AdminsPanel from "./AdminsPanel";
+import SessionsPanel from "./SessionsPanel";
 import ResultsPanel, { type SessionSummary } from "./ResultsPanel";
 import { formatDateTime } from "@/lib/datetime";
 import { computeRoundReadiness } from "@/lib/roundReadiness";
@@ -64,7 +63,7 @@ export default async function ExamRoundDetailPage({
             Bạn không có quyền xem đợt thi này.
           </p>
           <Link
-            href="/instructor/exam-rounds"
+            href="/instructor/organize/formal"
             className="mt-4 inline-block text-sm text-blue-600 hover:underline"
           >
             ← Về danh sách đợt thi
@@ -82,10 +81,10 @@ export default async function ExamRoundDetailPage({
     return (
       <main>
         <Link
-          href="/instructor/exam-rounds"
+          href="/instructor/organize/formal"
           className="text-sm text-blue-600 hover:underline"
         >
-          ← Danh sách đợt thi
+          ← Kỳ thi chính thức
         </Link>
         <p className="mt-4 text-sm text-faint">
           Đợt thi này không gắn khoá học (đợt tự sinh cho đề độc lập) — không
@@ -111,6 +110,7 @@ export default async function ExamRoundDetailPage({
     inProgress: sessionCounts.get(x.id)?.inProgress ?? 0,
     submitted: sessionCounts.get(x.id)?.submitted ?? 0,
   }));
+
   const cohorts = await listCohorts(userId, round.course.courseId, {
     roundId: round.id,
   });
@@ -203,7 +203,7 @@ export default async function ExamRoundDetailPage({
   return (
     <main>
       <Link
-        href="/instructor/exam-rounds"
+        href="/instructor/organize/formal"
         className="text-sm text-blue-600 hover:underline"
       >
         ← Danh sách đợt thi
@@ -280,14 +280,6 @@ export default async function ExamRoundDetailPage({
               title: s.title,
             }))}
             canEdit={canEdit}
-          />
-        )}
-        {activeTab === "admins" && (
-          <AdminsPanel
-            roundId={round.id}
-            admins={round.admins}
-            canEdit={canEdit}
-            currentUserId={userId}
           />
         )}
         {activeTab === "results" && (

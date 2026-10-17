@@ -2832,11 +2832,15 @@ model ClassroomPoll {
   createdBy   User?   @relation("PollCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   votes ClassroomPollVote[]
 
   @@index([sessionId, createdAt])
   @@index([createdById, createdAt])
+  @@index([deletedAt])
 }
 
 model ClassroomPollVote {
@@ -2869,9 +2873,13 @@ model WordCloud {
   submissions WordCloudSubmission[]
 
   createdAt DateTime @default(now())
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([sessionId])
   @@index([createdById, createdAt])
+  @@index([deletedAt])
 }
 
 model WordCloudSubmission {
@@ -2926,10 +2934,14 @@ model InteractiveBoard {
 
   createdAt DateTime  @default(now())
   closedAt  DateTime?
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([ownerId, createdAt])
   @@index([sessionId])
   @@index([status, createdAt])
+  @@index([deletedAt])
 }
 
 model BoardNote {
@@ -2991,10 +3003,14 @@ model Whiteboard {
 
   createdAt DateTime  @default(now())
   closedAt  DateTime?
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([ownerId, createdAt])
   @@index([sessionId])
   @@index([status, createdAt])
+  @@index([deletedAt])
 }
 
 // Quick Grouping
@@ -4396,6 +4412,10 @@ model ExamSession {
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
   // Empty array = no allowlist; non-empty = only these IPs/CIDRs pass.
   ipAllowlist         String[]              @default([])
+  // Số thí sinh tối đa của RIÊNG ca này (chỉ áp cho ca mã chung, người vào mới).
+  // NULL = không giới hạn. Thí sinh đã có trong danh sách nhập và người vào lại
+  // không bị tính vào chặn. Thay Exam.openMaxAttempts (cộng dồn theo cả đề).
+  maxCandidates       Int?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
@@ -4564,6 +4584,10 @@ model ExamSection {
   // LANG G5d — bảng quy đổi điểm thô của phần → nhãn ước lượng, do giảng viên nhập:
   // [{ from, to, label }] không chồng nhau. Hệ thống không mang sẵn số liệu chính thức.
   scoreBands              Json?
+  // Trọng số (%) của phần trong điểm chính thức của bài. Chỉ áp khi MỌI phần
+  // của đề đều có trọng số, tổng = 100 và không câu nào nằm ngoài phần — thiếu
+  // một điều kiện thì điểm tính theo tỉ lệ điểm như cũ (xem weighted-score.ts).
+  weight                  Float?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
 
@@ -4875,6 +4899,10 @@ model Organization {
   locale                     String   @default("vi")
   timezone                   String   @default("Asia/Ho_Chi_Minh")
   brandingLogoUrl            String?
+  // Cài đặt thương hiệu của trường cho slide Limio-Live (màu, nền, vị trí/cỡ/chỗ hiện logo): JSON chuẩn hoá bởi
+  // apps/web/src/lib/limioLiveBrand.ts (OrgBrandSettings). Logo lấy từ brandingLogoUrl. Mọi giảng viên của trường
+  // dùng bộ này cho bài giảng chưa có thương hiệu riêng.
+  slideBrand                 Json?
   // Ảnh chữ ký người đại diện trường — hiện trên chứng nhận hoàn thành khoá
   // học, cạnh chữ ký Limio (xem SiteSetting key branding.limio_signature_url).
   signatureImageUrl          String?
@@ -4891,6 +4919,10 @@ model Organization {
   // Mặc định BẬT (giữ hành vi cũ); trường không muốn phát mail thì tắt.
   inviteEmailOnInstructorAdd Boolean  @default(true)
   inviteEmailOnProctorAdd    Boolean  @default(true)
+  // Dải mạng được phép VÀO THI các đề thuộc trường này: mỗi phần tử là một IP đơn
+  // hoặc CIDR (IPv4/IPv6). Rỗng = không giới hạn. Chỉ áp ở bước vào thi (mã
+  // chung, mã cá nhân, phòng chờ, bắt đầu lượt làm); mọi tính năng khác không bị chặn.
+  examAllowedIps             String[] @default([])
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
@@ -5153,9 +5185,28 @@ model LiveDeck {
   title     String
   // Giao diện slide cho cả bài giảng — id trong limio-live/slideThemes.ts.
   theme     String   @default("white")
+  // Thương hiệu của bài giảng (logo + màu): { logoUrl?, logoPos, logoSize, logoShow, color? }, chuẩn hoá bởi
+  // apps/web/src/lib/limioLiveBrand.ts. Null = chưa đặt (slide hiển thị đúng theo giao diện).
+  brand     Json?
+  // true = bài giảng này KHÔNG dùng thương hiệu nào (kể cả của trường). false + brand null = dùng của trường.
+  brandOff  Boolean  @default(false)
+  // Mẫu thương hiệu giảng viên chọn cho bài này khi dùng thương hiệu của trường (mã trong limioLiveBrand.brandTemplates);
+  // null = mẫu mặc định của trường.
+  brandTemplate String?
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
   groupId   String?
+
+  // Bài giảng sinh từ tài liệu (AI): dàn ý là bước giữa "tài liệu gốc" và "slide cuối".
+  // Cả bốn cột null với bài giảng soạn tay. outlineConfirmedAt = giảng viên đã xem và
+  // xác nhận dàn ý — chỉ khi đó mới được sinh slide.
+  outline            Json?
+  outlineMinutes     Int?
+  outlineConfirmedAt DateTime?
+  // Văn bản trích từ tài liệu gốc (giữ lại để sinh lại một phần); chỉ chủ bài giảng đọc được.
+  sourceName String?
+  sourceText String? @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -5214,9 +5265,27 @@ model LiveSlide {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  deck LiveDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  deck     LiveDeck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  versions LiveSlideVersion[]
 
   @@index([deckId, orderIndex])
+}
+
+// Phiên bản cũ của một slide để hoàn tác. Chụp lại TRẠNG THÁI TRƯỚC khi bị ghi đè (sửa tay, nhận
+// đề xuất AI, cập nhật theo dàn ý, khôi phục), cộng thêm bản "generated" lúc AI sinh slide — bản
+// này luôn được giữ, không bị dọn. Xem core-lms/live/slideVersions.ts.
+model LiveSlideVersion {
+  id        String        @id @default(uuid())
+  slideId   String
+  // generated | before_edit | before_ai | before_sync | before_restore
+  source    String
+  type      LiveSlideType
+  config    Json
+  createdAt DateTime      @default(now())
+
+  slide LiveSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@index([slideId, createdAt])
 }
 
 // Một lượt trình chiếu (Present) của 1 LiveDeck. GV bấm "Trình chiếu" sẽ

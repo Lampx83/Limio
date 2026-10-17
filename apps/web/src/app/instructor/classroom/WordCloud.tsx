@@ -5,6 +5,7 @@ import { RefreshCw, RotateCcw } from "lucide-react";
 import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import { toast } from "@/lib/toast";
 import JoinQrCard from "@/components/ui/JoinQrCard";
+import ToolHistory from "./ToolHistory";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
@@ -24,6 +25,7 @@ interface WordCloudHistoryItem {
   id: string;
   prompt: string;
   createdAt: string;
+  deletedAt?: string | null;
   _count: { submissions: number };
 }
 
@@ -42,8 +44,6 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [history, setHistory] = useState<WordCloudHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Stateless mode: student list supplied but no lesson → manual entry, no QR
   const [submissions, setSubmissions] = useState<string[]>([]);
@@ -189,18 +189,6 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
       toast.error("Lỗi mạng");
     } finally {
       setIsResetting(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const res = await fetch(apiUrl("/api/classroom/word-cloud/list"));
-      if (res.ok) setHistory(await res.json());
-    } catch {
-      toast.error("Lỗi tải lịch sử");
-    } finally {
-      setIsLoadingHistory(false);
     }
   };
 
@@ -435,36 +423,29 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
       </div>
 
       {/* History */}
-      <div className="mt-6 border-t border-token pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-muted">Word cloud đã tạo trước đây</p>
-          <button
-            onClick={loadHistory}
-            disabled={isLoadingHistory}
-            className="tool-action"
-          >
-            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
-            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-          </button>
-        </div>
-        {history.length === 0 && !isLoadingHistory && (
-          <p className="text-xs text-muted text-center py-2">Bấm "Tải lịch sử" để xem các word cloud cũ</p>
+      <ToolHistory<WordCloudHistoryItem>
+        kind="word_cloud"
+        heading="Word cloud đã tạo trước đây"
+        noun="word cloud"
+        listUrl="/api/classroom/word-cloud/list"
+        toEntry={(item) => ({
+          id: item.id,
+          title: item.prompt,
+          responseCount: item._count.submissions,
+          createdAt: item.createdAt,
+          deletedAt: item.deletedAt,
+        })}
+        onOpen={handleLoadCloud}
+        containerClassName="space-y-2 max-h-80 overflow-y-auto"
+        renderItem={(item) => (
+          <>
+            <p className="text-sm font-medium truncate">{item.prompt}</p>
+            <p className="text-xs text-muted mt-0.5">
+              {item._count.submissions} gửi · {formatDateTime(item.createdAt)}
+            </p>
+          </>
         )}
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {history.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleLoadCloud(item)}
-              className="tool-list-item"
-            >
-              <p className="text-sm font-medium truncate">{item.prompt}</p>
-              <p className="text-xs text-muted mt-0.5">
-                {item._count.submissions} gửi · {formatDateTime(item.createdAt)}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
+      />
     </div>
   );
 }

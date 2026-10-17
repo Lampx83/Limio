@@ -3,18 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import {
-  AlertTriangle,
-  ArrowRight,
-  CalendarClock,
-  FileText,
-  Globe,
-  GraduationCap,
-  Hash,
-  Tag,
-  Users,
-  X,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, FileText, Globe, Hash, Tag, Users } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
 
 type SessionStatus = "draft" | "open" | "closed" | "archived";
@@ -104,7 +93,6 @@ export default function SessionsPanel({
   canEdit: boolean;
 }) {
   const router = useRouter();
-  const [showBulk, setShowBulk] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   // PR2.11 — 1 round = 1 course. All sessions belong to the same course;
@@ -137,56 +125,23 @@ export default function SessionsPanel({
     return null;
   };
 
-  const noExams = availableExams.length === 0;
-
   return (
     <div className="space-y-5">
-      {canEdit && noExams && (
-        <div className="banner-warning flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>
-              Khoá <strong>{course.courseTitle}</strong> chưa có đề thi nào. Cần tạo ít nhất 1 đề trước khi thêm ca thi.
-            </span>
-          </div>
-          <Link
-            href={`/instructor/exams/new?courseId=${course.courseId}`}
-            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-          >
-            Tạo đề thi →
-          </Link>
-        </div>
-      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-faint">
           {sessions.length} ca thi trong đợt · <Tag className="inline h-3.5 w-3.5 align-text-bottom text-slate-400" /> {course.courseTitle}.
           {canEdit && " Bấm vào tên, mã, đề hoặc giờ để sửa nhanh."}
         </p>
-        {canEdit && (
-          <button
-            onClick={() => setShowBulk(true)}
-            disabled={availableExams.length === 0}
-            title={
-              availableExams.length === 0
-                ? "Khoá học chưa có đề thi nào"
-                : ""
-            }
-            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-          >
-            + Thêm ca thi
-          </button>
-        )}
       </div>
 
       {sessions.length === 0 ? (
         <div className="rounded-xl border border-dashed border-token bg-white px-4 py-8 text-center text-sm text-faint">
-          Chưa có ca thi nào trong đợt này.{" "}
-          {canEdit && "Bấm “+ Thêm ca thi” để bắt đầu."}
+          Chưa có ca thi nào trong đợt này. Ca thi mới tạo ở Tổ chức thi › Kỳ thi chính thức.
         </div>
       ) : (
         <ul className="space-y-2">
           {sessions.map((s, idx) => {
-            const href = `/instructor/exam-rounds/${roundId}/sessions/${s.id}`;
+            const href = `/instructor/exam-sessions/${s.id}`;
             const state = displayState(s);
             return (
               <li
@@ -320,17 +275,6 @@ export default function SessionsPanel({
         </div>
       )}
 
-      {showBulk && (
-        <BulkCreateSessionsDialog
-          roundId={roundId}
-          availableExams={availableExams}
-          onClose={() => setShowBulk(false)}
-          onDone={() => {
-            setShowBulk(false);
-            router.refresh();
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -662,262 +606,6 @@ function AccessModeBadge({
           Đổi
         </button>
       )}
-    </div>
-  );
-}
-
-// ============================================================================
-// Bulk create sessions dialog — N + prefix + Mode picker (Phase B).
-// ============================================================================
-
-function BulkCreateSessionsDialog({
-  roundId,
-  availableExams,
-  onClose,
-  onDone,
-}: {
-  roundId: string;
-  availableExams: ExamOption[];
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const [count, setCount] = useState(3);
-  const [prefix, setPrefix] = useState("Ca");
-  const [mode, setMode] = useState<"assigned_code" | "open_code" | null>(null);
-  // Kỳ thi chính thức mặc định "sau khi đóng ca": vẫn giữ kín trong lúc thi,
-  // nhưng cả lớp nộp xong thì cho xem lại — nhu cầu chữa đề của thi thật.
-  const [reveal, setReveal] = useState<
-    "immediately" | "never" | "after_close"
-  >("after_close");
-  // "" = tự động (đề đầu tiên của khoá); ngược lại = examId đã chọn.
-  const [examId, setExamId] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  const submit = async () => {
-    setErr(null);
-    if (count < 1 || count > 50) {
-      setErr("Số ca phải từ 1 đến 50.");
-      return;
-    }
-    if (!mode) {
-      setErr("Chọn chế độ thi (Theo phòng / Tự do).");
-      return;
-    }
-    if (!examId) {
-      setErr("Chọn đề thi cho các ca.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const r = await fetch(`/api/exam-rounds/${roundId}/sessions/bulk`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          count,
-          namePrefix: prefix.trim() || "Ca",
-          // Backend applies this mode to the round's exam after creating
-          // sessions. Mode is per-exam currently (not per-session).
-          accessMode: mode,
-          revealAnswers: reveal,
-          // examId chọn tay; bỏ trống → backend lấy đề đầu tiên của khoá.
-          ...(examId ? { examId } : {}),
-        }),
-      });
-      const j = (await r.json().catch(() => null)) as {
-        created?: number;
-        error?: string;
-        details?: { reason?: string };
-      } | null;
-      if (!r.ok) {
-        if (j?.details?.reason === "round_has_no_exam")
-          setErr(
-            "Đợt chưa có đề thi nào. Tạo đề thi trong khoá học trước.",
-          );
-        else setErr(j?.error ?? `HTTP ${r.status}`);
-        return;
-      }
-      onDone();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !busy) onClose();
-      }}
-    >
-      <div className="flex w-full max-w-sm flex-col rounded-lg bg-white shadow-xl">
-        <header className="flex items-start justify-between border-b border-token px-5 py-3">
-          <h3 className="text-base font-semibold">Tạo nhiều ca thi</h3>
-          <button
-            onClick={onClose}
-            disabled={busy}
-            aria-label="Đóng"
-            className="rounded p-1 text-faint hover:bg-slate-100 disabled:opacity-50"
-          >
-            <X size={16} />
-          </button>
-        </header>
-        <div className="space-y-3 px-5 py-4">
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Số lượng ca <span className="text-red-600">*</span>
-            </span>
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={count}
-              onChange={(e) =>
-                setCount(Number.parseInt(e.target.value, 10) || 0)
-              }
-              className="mt-1 w-full rounded border border-token px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
-            <span className="mt-1 block text-[11px] text-faint">
-              Tối đa 50 ca/lần. Tên mặc định: "{prefix.trim() || "Ca"} 1",
-              "{prefix.trim() || "Ca"} 2"…
-            </span>
-          </label>
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Tiền tố tên (tuỳ chọn)
-            </span>
-            <input
-              type="text"
-              value={prefix}
-              onChange={(e) => setPrefix(e.target.value)}
-              maxLength={40}
-              placeholder="Ca"
-              className="mt-1 w-full rounded border border-token px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
-          </label>
-
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Đề thi cho các ca <span className="text-red-600">*</span>
-            </span>
-            <select
-              value={examId}
-              onChange={(e) => setExamId(e.target.value)}
-              className="mt-1 w-full rounded border border-token bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            >
-              <option value="">— Chọn đề thi —</option>
-              {availableExams.map((ex) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.title}
-                </option>
-              ))}
-            </select>
-            <span className="mt-1 block text-[11px] text-faint">
-              {availableExams.length === 0
-                ? "Khoá chưa có đề thi nào — tạo đề trong khoá trước."
-                : `Áp dụng cho tất cả ${count} ca. Có thể đổi đề từng ca sau khi tạo.`}
-            </span>
-          </label>
-
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Hiện đáp án và kết quả
-            </span>
-            <select
-              value={reveal}
-              onChange={(e) =>
-                setReveal(
-                  e.target.value as "immediately" | "never" | "after_close",
-                )
-              }
-              className="mt-1 w-full rounded border border-token bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            >
-              <option value="after_close">Hiện sau khi đóng ca</option>
-              <option value="immediately">Hiện ngay sau khi nộp</option>
-              <option value="never">Không hiện</option>
-            </select>
-            <span className="mt-1 block text-[11px] text-faint">
-              {reveal === "after_close"
-                ? "Cả ca nộp xong và bạn đóng ca thì học sinh mới xem được đáp án."
-                : reveal === "immediately"
-                  ? "Học sinh xem được đáp án ngay khi nộp — người thi sau có thể hỏi người thi trước."
-                  : "Học sinh không xem được đáp án hay điểm chi tiết."}
-            </span>
-          </label>
-
-          <div>
-            <span className="block text-xs font-medium text-slate-600">
-              Chế độ thi <span className="text-red-600">*</span>
-            </span>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setMode("assigned_code")}
-                className={`rounded-lg border-2 p-3 text-left transition-colors ${
-                  mode === "assigned_code"
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-sm"><Users className="h-3.5 w-3.5 shrink-0" /> Theo phòng</div>
-                <div className="mt-0.5 text-[11px] text-faint">
-                  Có danh sách thí sinh + mã cá nhân 8 ký tự cho từng người
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("open_code")}
-                className={`rounded-lg border-2 p-3 text-left transition-colors ${
-                  mode === "open_code"
-                    ? "border-purple-500 bg-purple-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-sm"><Globe className="h-3.5 w-3.5 shrink-0" /> Tự do</div>
-                <div className="mt-0.5 text-[11px] text-faint">
-                  1 mã chung 6 ký tự cho cả lớp, sinh viên tự nhập tên
-                </div>
-              </button>
-            </div>
-            <p className="mt-1 text-[11px] text-faint">
-              Lưu ý: cách vào thi được đặt ở cấp đề thi, ảnh hưởng tất cả ca khác dùng đề này
-              của cùng đề.
-            </p>
-          </div>
-
-          <p className="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-            Hệ thống tạo {count} ca với{" "}
-            {examId
-              ? `đề "${availableExams.find((e) => e.id === examId)?.title ?? "đã chọn"}"`
-              : "đề bạn chọn ở trên"}{" "}
-            + cửa sổ thời gian mặc định (1 giờ). Sau khi tạo, click vào ô trong
-            bảng để sửa nhanh tên / đề / thời gian / chế độ từng ca.
-          </p>
-          {err && (
-            <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {err}
-            </div>
-          )}
-        </div>
-        <footer className="flex justify-end gap-2 border-t border-token px-5 py-3">
-          <button
-            onClick={onClose}
-            disabled={busy}
-            className="rounded border border-token px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
-          >
-            Huỷ
-          </button>
-          <button
-            onClick={submit}
-            disabled={busy}
-            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-          >
-            {busy ? "Đang tạo..." : `Tạo ${count} ca thi`}
-          </button>
-        </footer>
-      </div>
     </div>
   );
 }
