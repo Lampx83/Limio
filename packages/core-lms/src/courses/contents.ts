@@ -5,6 +5,9 @@ import { assertCanEditCourse, CourseAuthzError } from "./authz";
 import { CourseError } from "./courses";
 import { validateContentPayload, type ContentTypeKey } from "./contentSchemas";
 import { attachLessonActivity } from "./lessonActivity";
+import { recordContentVersion } from "./contentVersions";
+import { LearningEventType } from "@feedbackme/shared-types";
+import { emitEvent } from "../learning/events";
 
 const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p", "html_block", "audio", "vocab_list", "dialogue"]);
 
@@ -19,6 +22,12 @@ export const UpdateContentInput = z.object({
   payload: z.unknown().optional(),
   orderIndex: z.number().int().nonnegative().optional(),
   isHidden: z.boolean().optional(),
+  /**
+   * Khối Văn bản: lý do ghi đè, để đặt nhãn cho phiên bản cũ được chụp lại
+   * (mặc định before_edit). Trình soạn gửi before_ai khi lần lưu này có dùng
+   * "Nhờ AI", before_convert khi chuyển bài AI kiểu cũ sang dạng mới.
+   */
+  versionSource: z.enum(["before_edit", "before_ai", "before_convert"]).optional(),
 });
 
 async function getCourseIdForLesson(lessonId: string, db: DbClient): Promise<string> {
@@ -117,7 +126,23 @@ export async function updateContentItem(
   if (parsed.data.orderIndex !== undefined) data.orderIndex = parsed.data.orderIndex;
   if (parsed.data.isHidden !== undefined) data.isHidden = parsed.data.isHidden;
   if (Object.keys(data).length === 0) return;
+  // S3 — khối Văn bản: chụp nội dung cũ trước khi ghi đè để hoàn tác được.
+  if (data.payload !== undefined && ctx.type === "richtext" && effectiveType === "richtext") {
+    const before = await db.contentItem.findUnique({ where: { id: contentId }, select: { payload: true } });
+    if (before) {
+      await recordContentVersion(db, { id: contentId, payload: before.payload }, parsed.data.versionSource ?? "before_edit", actorUserId);
+    }
+  }
   await db.contentItem.update({ where: { id: contentId }, data });
+  if (parsed.data.versionSource === "before_convert") {
+    await emitEvent(
+      actorUserId,
+      LearningEventType.LessonContentConverted,
+      { contentItemId: contentId, via: "editor" },
+      { courseId: ctx.courseId },
+      db,
+    );
+  }
 }
 
 /**
