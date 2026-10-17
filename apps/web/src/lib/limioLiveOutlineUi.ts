@@ -14,11 +14,11 @@ export const OUTLINE_KIND_LABEL: Record<OutlineKind, string> = {
   whiteboard: "Whiteboard",
 };
 
-/** Thứ tự hiển thị trong lưới chọn; nhóm chỉ hiện khi rê chuột. */
+/** Thứ tự hiển thị trong lưới chọn: ba loại cộng tác trên bảng đứng đầu; nhóm chỉ hiện khi rê chuột. */
 export const OUTLINE_KIND_GROUPS: ReadonlyArray<{ group: string; kinds: readonly OutlineKind[] }> = [
+  { group: "Cộng tác trên bảng", kinds: ["collaborate_board", "draw_it", "whiteboard"] },
   { group: "Trình bày", kinds: ["content"] },
   { group: "Hỏi và lấy ý kiến", kinds: ["quiz", "poll", "word_cloud"] },
-  { group: "Cộng tác trên bảng", kinds: ["collaborate_board", "draw_it", "whiteboard"] },
 ];
 export const OUTLINE_KIND_ORDER: readonly OutlineKind[] = OUTLINE_KIND_GROUPS.flatMap((g) => g.kinds);
 export const kindGroupOf = (k: OutlineKind): string => OUTLINE_KIND_GROUPS.find((g) => g.kinds.includes(k))!.group;

@@ -57,7 +57,8 @@ import ImportFromCourseDialog from "./ImportFromCourseDialog";
 import SlideTypePicker, { CollabBoardIcon, WordCloudIcon, type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
-import { SLIDE_THEMES, slideBgFor } from "../slideThemes";
+import { slideBgFor } from "../slideThemes";
+import ThemePicker from "./ThemePicker";
 import { isLayoutSlide } from "../SlideLayouts";
 import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
@@ -642,22 +643,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         >
           <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
         </Link>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" role="radiogroup" aria-label="Giao diện slide">
-          <span className="mr-1 hidden text-xs text-faint sm:inline">Giao diện</span>
-          {SLIDE_THEMES.map((t) => (
-            <button
-              key={t.id}
-              role="radio"
-              aria-checked={(deck.theme ?? "white") === t.id}
-              title={t.label}
-              onClick={() => handleSetTheme(t.id)}
-              className={`h-5 w-5 rounded-full border transition sm:h-6 sm:w-6 ${
-                (deck.theme ?? "white") === t.id ? "ring-2 ring-brand-500 ring-offset-2" : "border-token hover:scale-110"
-              }`}
-              style={{ background: t.swatch }}
-            />
-          ))}
-        </div>
+        <ThemePicker value={deck.theme ?? "white"} onChange={handleSetTheme} />
         {/* 3 lệnh trình chiếu gom 1 khối phân đoạn (giống thanh Slide Show của PowerPoint):
             "Từ đầu" là lệnh chính (tô đặc), 2 lệnh còn lại nền trong, cùng cỡ. */}
         <div
