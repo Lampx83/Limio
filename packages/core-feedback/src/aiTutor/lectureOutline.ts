@@ -17,7 +17,11 @@ export const OUTLINE_MAX_SOURCE_CHARS = 24_000;
 export const OUTLINE_MIN_SOURCE_CHARS = 200;
 
 export const OUTLINE_CONTENT_LAYOUTS = ["cover", "section", "image", "cards", "compare", "steps", "stats", "quote", "summary"] as const;
-export const OUTLINE_KINDS = ["content", "quiz", "poll", "word_cloud"] as const;
+/**
+ * Loại slide trong dàn ý. "draw_it" là Dán Note ở chế độ vẽ; khi tạo slide nó thành collaborate_board
+ * với mode "drawing" (xem limioLiveGenerate). Tên khớp với bộ chọn loại slide trong trình sửa bài giảng.
+ */
+export const OUTLINE_KINDS = ["content", "quiz", "poll", "word_cloud", "collaborate_board", "draw_it", "whiteboard"] as const;
 
 export interface LectureOutlineInput {
   sourceText: string;
@@ -72,6 +76,10 @@ Nhiệm vụ: đề xuất dàn ý từ ${input.minSlides} đến ${input.maxSli
 Quy tắc bắt buộc:
 1. Slide đầu tiên có layout "cover" (bìa). Slide nội dung cuối cùng có layout "summary" (tóm tắt các điều cần ghi nhớ). Chia bài thành các phần hợp lý, dùng layout "section" để mở phần lớn nếu bài dài.
 2. Cứ khoảng ${input.interactiveEvery} slide nội dung thì chen một slide tương tác (kind "quiz", "poll" hoặc "word_cloud") để kiểm tra hiểu bài hoặc khơi gợi ý kiến. Slide tương tác có layout null; "title" là câu hỏi hoặc câu gợi ý bằng một câu hoàn chỉnh; "points" để mảng rỗng. Không đặt slide tương tác ở đầu hoặc cuối bài.
+   Ba loại cộng tác sau dùng tiết kiệm, tối đa một slide mỗi loại cho cả bài, và chỉ khi nội dung thật sự hợp (thay cho một slide tương tác thường, không cộng thêm):
+   - "collaborate_board": cả lớp cùng dán ghi chú ngắn lên một bảng chung (thu ví dụ, vướng mắc, ý tưởng); "title" là lời mời học viên dán.
+   - "draw_it": mỗi học viên vẽ một hình hoặc sơ đồ rồi đăng lên bảng; chỉ dùng khi nội dung có hình dung (quy trình, cấu trúc, mối quan hệ); "title" là yêu cầu vẽ.
+   - "whiteboard": bảng trắng cho cả lớp cùng giải hoặc phác một bài toán, một tình huống; "title" là đề bài hoặc tình huống.
 3. Slide nội dung (kind "content") chọn layout phù hợp nhất với nội dung:
    - "image": một ý chính kèm tối đa 3 ý hỗ trợ.
    - "cards": 3 ý song song (mỗi ý có tiêu đề ngắn và một câu giải thích).

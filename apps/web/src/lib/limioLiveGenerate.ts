@@ -36,7 +36,7 @@ export interface SlideDraft {
 }
 
 export interface GeneratedSlide {
-  type: "content" | "quiz" | "poll" | "word_cloud";
+  type: "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board" | "whiteboard";
   config: Record<string, unknown>;
   /** true = nội dung dựng từ dàn ý vì bản nháp của AI thiếu hoặc hỏng. */
   usedFallback: boolean;
@@ -57,6 +57,20 @@ export function deepStripEmoji<T>(v: T): T {
   }
   return v;
 }
+
+/**
+ * Slide cộng tác: chỉ cần một câu gợi ý. Dán Note và Draw-it cùng là collaborate_board (Draw-it có mode "drawing");
+ * bảng và whiteboard thật được liên kết lúc trình chiếu, nên ở đây chỉ ghi cấu hình như bộ chọn loại slide.
+ */
+function collabSlide(os: OutlineSlide, text: string, meta: Record<string, unknown>, usedFallback: boolean): GeneratedSlide {
+  if (os.kind === "whiteboard") return { type: "whiteboard", config: { title: text, ...meta }, usedFallback };
+  return {
+    type: "collaborate_board",
+    config: { prompt: text, mode: os.kind === "draw_it" ? "drawing" : "free", allowViewOthers: true, blockPaste: false, ...meta },
+    usedFallback,
+  };
+}
+const isCollab = (k: OutlineSlide["kind"]) => k === "collaborate_board" || k === "draw_it" || k === "whiteboard";
 
 const splitHeading = (p: string): { heading: string; body: string } => {
   const i = p.indexOf(": ");
@@ -84,6 +98,7 @@ export function configFromOutline(os: OutlineSlide, sectionNo: string, notes?: s
     };
   }
   if (os.kind === "word_cloud") return { type: "word_cloud", config: { prompt: os.title, ...meta }, usedFallback: true };
+  if (isCollab(os.kind)) return collabSlide(os, os.title, meta, true);
 
   let layout: SlideLayoutId = os.layout ?? "image";
   const raw: Record<string, unknown> = { title: os.title };
@@ -175,6 +190,11 @@ export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, 
     const p = nonEmpty(d.prompt) ? d.prompt.trim().slice(0, 300) : "";
     if (!p) return configFromOutline(os, sectionNo, d.notes);
     return { type: "word_cloud", config: { prompt: p, ...meta }, usedFallback: false };
+  }
+  if (isCollab(os.kind)) {
+    const p = nonEmpty(d.prompt) ? d.prompt.trim().slice(0, 300) : "";
+    if (!p) return configFromOutline(os, sectionNo, d.notes);
+    return collabSlide(os, p, meta, false);
   }
 
   const layout: SlideLayoutId = os.layout ?? "image";

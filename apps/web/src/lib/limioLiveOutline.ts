@@ -4,8 +4,10 @@
 
 import { SLIDE_LAYOUTS, type SlideLayoutId } from "./limioLiveSlides";
 
-export type OutlineKind = "content" | "quiz" | "poll" | "word_cloud";
-export const OUTLINE_KINDS: readonly OutlineKind[] = ["content", "quiz", "poll", "word_cloud"];
+// Tên khớp bộ chọn loại slide trong trình sửa bài giảng. "draw_it" là Dán Note ở chế độ vẽ:
+// khi tạo slide nó thành collaborate_board với mode "drawing" (limioLiveGenerate).
+export type OutlineKind = "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board" | "draw_it" | "whiteboard";
+export const OUTLINE_KINDS: readonly OutlineKind[] = ["content", "quiz", "poll", "word_cloud", "collaborate_board", "draw_it", "whiteboard"];
 
 /** Bố cục dùng được trong dàn ý (không gồm "classic" — chỉ dành cho slide cũ). */
 export type OutlineLayout = Exclude<SlideLayoutId, "classic">;
@@ -142,7 +144,7 @@ export function outlineWarnings(outline: Outline, minutes: number): string[] {
   const st = outlineStats(outline);
   if (st.total < min) w.push(`Dàn ý có ${st.total} slide, ít hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
   if (st.total > max && !w.length) w.push(`Dàn ý có ${st.total} slide, nhiều hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
-  if (st.interactive === 0 && st.total >= 6) w.push("Dàn ý chưa có slide tương tác nào (bài tập, bình chọn hoặc đám mây từ).");
+  if (st.interactive === 0 && st.total >= 6) w.push("Dàn ý chưa có slide tương tác nào (trắc nghiệm, bình chọn, đám mây từ hoặc bảng cộng tác).");
   for (let i = 1; i < outline.slides.length; i++) {
     if (outline.slides[i]!.kind !== "content" && outline.slides[i - 1]!.kind !== "content") {
       w.push("Có hai slide tương tác liền nhau; nên xen slide nội dung ở giữa.");

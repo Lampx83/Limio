@@ -2,7 +2,7 @@ import type OpenAI from "openai";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
-import { OUTLINE_MAX_SOURCE_CHARS } from "./lectureOutline";
+import { OUTLINE_KINDS, OUTLINE_MAX_SOURCE_CHARS } from "./lectureOutline";
 
 /**
  * Bước 3 của "tài liệu → bài giảng tương tác": viết NỘI DUNG từng slide theo dàn ý đã được
@@ -16,7 +16,7 @@ import { OUTLINE_MAX_SOURCE_CHARS } from "./lectureOutline";
 export interface OutlineSlideInput {
   /** Vị trí 0-based trong dàn ý; mô hình trả lại đúng chỉ số này. */
   index: number;
-  kind: "content" | "quiz" | "poll" | "word_cloud";
+  kind: (typeof OUTLINE_KINDS)[number];
   layout: string | null;
   title: string;
   points: string[];
@@ -125,6 +125,9 @@ export const SLIDE_SPEC: Record<string, string> = {
   quiz: `question (một câu hỏi hoàn chỉnh kiểm tra hiểu bài), options: ĐÚNG 4 phần tử, ĐÚNG 1 phần tử correct=true, các phương án sai phải hợp lý (phản ánh hiểu lầm thường gặp); mỗi phương án dưới 14 từ.`,
   poll: `question (một câu hỏi lấy ý kiến), options: từ 2 đến 5 phần tử, mọi phần tử correct=false.`,
   word_cloud: `prompt (một câu gợi ý hoàn chỉnh, học viên trả lời bằng một từ hoặc cụm từ ngắn).`,
+  collaborate_board: `prompt (một lời mời hoàn chỉnh để học viên dán ghi chú ngắn lên bảng chung, nêu rõ dán điều gì).`,
+  draw_it: `prompt (một yêu cầu hoàn chỉnh để mỗi học viên vẽ một hình hoặc sơ đồ rồi đăng lên bảng, nêu rõ vẽ cái gì).`,
+  whiteboard: `prompt (một đề bài hoặc tình huống hoàn chỉnh để cả lớp cùng giải hoặc phác trên bảng trắng).`,
 };
 
 export function specKeyFor(s: OutlineSlideInput): string {

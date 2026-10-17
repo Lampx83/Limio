@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu: sửa một slide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --warn-bg: #fff4d6; --warn-ink: #7a4a00; --ok-bg: #e4f5dd; --ok-ink: #1f5a14; --bad: #b42318; --bad-soft: #fdecea;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 10px 26px -14px rgb(28 36 16 / .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+      --brand: #a3e635; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16;
+      --warn-bg: #3a2c0a; --warn-ink: #f6d58a; --ok-bg: #1d3318; --ok-ink: #b7ecab; --bad: #ff9b8f; --bad-soft: #3b1d19;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 16px;
+    font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 60px; }
+  h1 { font-size: 22px; margin: 18px 0 2px; }
+  .sub { margin: 0; color: var(--ink-3); font-size: 15px; }
+
+  /* ---------- khung hai cột ---------- */
+  .grid { display: grid; gap: 14px; margin-top: 14px; align-items: start; }
+  aside { display: contents; }
+  #pv { order: 1; position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; }
+  #fields { order: 2; }
+  #ai { order: 3; }
+  @media (min-width: 1100px) {
+    .grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+    aside { display: grid; gap: 14px; position: sticky; top: 14px; order: 0; max-height: calc(100vh - 28px); overflow: auto; align-content: start; }
+    #pv { position: static; padding: 0; order: 0; }
+    #fields { order: 1; }
+    #ai { order: 1; }
+  }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+
+  /* bản xem trước slide thật (giấy ấm) */
+  .stage { container-type: inline-size; aspect-ratio: 16 / 9; width: 100%; border-radius: 12px; border: 1px solid var(--line); overflow: hidden; position: relative;
+    background: linear-gradient(135deg, #fbf7ec, #f6efe0); color: #2a2a1c; box-shadow: var(--shadow); }
+  @media (max-width: 1099px) { .stage { max-width: 440px; margin: 0 auto; } }
+  .stage .in { position: absolute; inset: 0; padding: 5.5cqw 6cqw; display: flex; flex-direction: column; gap: 2.6cqw; justify-content: center; }
+  .stage h3 { margin: 0; font-size: 5.4cqw; line-height: 1.15; font-weight: 700; }
+  .stage .cols { display: grid; gap: 2.2cqw; align-items: stretch; }
+  .stage .card { background: rgba(255,255,255,.78); border-radius: 1.8cqw; padding: 2.2cqw; font-size: 2.55cqw; line-height: 1.32; box-shadow: 0 .3cqw 1cqw rgb(0 0 0 / .08); }
+  .stage .card b.h { display: block; font-size: 2.9cqw; line-height: 1.2; margin: 1cqw 0 .6cqw; }
+  .stage .ic { width: 5.2cqw; height: 5.2cqw; border-radius: 1.4cqw; background: #dcebb5; color: #3f6212; display: grid; place-items: center; }
+  .stage .ic svg { width: 62%; height: 62%; }
+  .stage .num { width: 4.6cqw; height: 4.6cqw; border-radius: 50%; background: #65a30d; color: #fff; font-weight: 700; font-size: 2.6cqw; display: grid; place-items: center; }
+  .stage .row { display: grid; grid-template-columns: 5cqw 1fr; gap: 2cqw; align-items: start; background: rgba(255,255,255,.78); border-radius: 1.6cqw; padding: 1.6cqw 2cqw; font-size: 2.5cqw; line-height: 1.3; }
+  .stage .row b { font-size: 2.8cqw; }
+  .stage ul { margin: 0; padding-left: 3.6cqw; display: grid; gap: 1.4cqw; font-size: 3cqw; line-height: 1.32; }
+  .stage .split { display: grid; grid-template-columns: 1.3fr 1fr; gap: 3cqw; align-items: center; }
+  .stage .pic { aspect-ratio: 4 / 3; border-radius: 1.8cqw; background: repeating-linear-gradient(135deg, #e6e1cd 0 1.6cqw, #efebda 1.6cqw 3.2cqw); }
+  .stage .tone-good { border-top: .8cqw solid #65a30d; } .stage .tone-bad { border-top: .8cqw solid #dc7a5e; }
+  .stage .cap { font-size: 2.2cqw; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: #6b6a4e; margin-bottom: .6cqw; }
+  .pvcap { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: var(--ink-3); margin-bottom: 6px; }
+  .long .stage { outline: 3px solid #e0a52b; }
+
+  /* ---------- thanh công cụ ---------- */
+  .tool { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); border-radius: 16px 16px 0 0; z-index: 3; }
+  @media (max-width: 1099px) { .tool { top: auto; position: static; } }
+  .tool .grp { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .tool .grp button { border: 0; background: var(--surface); width: 40px; height: 36px; font-size: 16px; }
+  .tool .grp button + button { border-left: 1px solid var(--line); }
+  .tool .grp button:hover { background: var(--surface-2); }
+  .tool .grp i { font-family: Georgia, serif; }
+  .tool .hint { font-size: 13px; color: var(--ink-3); }
+  .tool .spacer { flex: 1; }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-size: 14px; font-weight: 500; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--brand-fill); border-color: var(--brand-fill); color: #10200a; font-weight: 700; }
+  .btn.small { padding: 6px 11px; font-size: 13px; }
+  .saved { font-size: 13px; color: var(--ink-3); }
+
+  .body { padding: 16px; display: grid; gap: 18px; }
+  .field { display: grid; gap: 6px; }
+  .field > label, .field > .lab { font-size: 14px; font-weight: 600; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+  .count { font-weight: 400; color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .count.near { color: var(--warn-ink); font-weight: 600; }
+  .input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 12px; font-size: 16px; line-height: 1.45; }
+  textarea.input { resize: none; overflow: hidden; display: block; }
+  .layouts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+  .layouts button { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 6px 7px; display: grid; justify-items: center; gap: 3px; font-size: 13px; line-height: 1.25; color: var(--ink-2); }
+  .layouts button:hover { background: var(--surface-2); }
+  .layouts button[aria-pressed="true"] { border-color: var(--brand-fill); background: var(--brand-soft); color: var(--ink); font-weight: 700; box-shadow: inset 0 0 0 1px var(--brand-fill); }
+  .layouts.compact { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
+  .layouts.compact button { padding: 6px 4px 5px; font-size: 12.5px; border-radius: 10px; }
+  .layouts.compact .glyph { height: 30px; }
+  .pk { display: flex; align-items: center; gap: 10px; text-align: left; width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px 7px 9px; background: var(--surface-2); color: var(--ink); min-width: 0; }
+  .pk:hover { border-color: var(--brand-fill); }
+  .pk[aria-expanded="true"] { border-color: var(--brand-fill); background: var(--brand-soft); box-shadow: inset 0 0 0 1px var(--brand-fill); }
+  .pk .glyph { flex: none; width: 42px; height: 28px; color: var(--brand-strong); }
+  .pk .ct { flex: 1; min-width: 0; display: grid; line-height: 1.2; }
+  .pk .ct small { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+  .pk .ct b { font-size: 15px; }
+  .pk i { flex: none; font-style: normal; color: var(--ink-2); font-size: 20px; line-height: 1; transition: transform .15s; }
+  .pk[aria-expanded="true"] i { transform: rotate(180deg); }
+  .glyph { width: 100%; height: 38px; color: var(--ink-3); }
+  .layouts button[aria-pressed="true"] .glyph { color: var(--brand-strong); }
+  .more { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .alert { padding: 10px 14px; border-radius: 12px; background: var(--warn-bg); color: var(--warn-ink); font-size: 14px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+  .alert .btn { border-color: var(--warn-ink); background: transparent; color: var(--warn-ink); font-weight: 600; }
+
+  /* các mục (thẻ / bước / dòng) */
+  .items { display: grid; gap: 12px; }
+  .items.cols3, .items.cols2 { grid-template-columns: 1fr; }
+  @media (min-width: 700px) { .items.cols3 { grid-template-columns: repeat(3, 1fr); } .items.cols2 { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1100px) and (max-width: 1299px) { .items.cols3, .items.cols2 { grid-template-columns: 1fr; } }
+  .item { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 8px; align-content: start; background: var(--surface); }
+  .item:focus-within { border-color: var(--brand-fill); box-shadow: 0 0 0 1px var(--brand-fill); }
+  .ihead { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--ink-3); }
+  .ihead .sp { flex: 1; }
+  .ihead .x { border: 0; background: none; color: var(--ink-3); font-size: 20px; line-height: 1; width: 28px; height: 28px; border-radius: 8px; }
+  .ihead .x:hover { color: var(--bad); background: var(--surface-2); }
+  .iconbtn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; width: 38px; height: 38px; display: grid; place-items: center; color: var(--brand-strong); }
+  .iconbtn svg { width: 22px; height: 22px; }
+  .palette { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .palette button { border: 1px solid transparent; background: none; width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-2); }
+  .palette button:hover { background: var(--surface-2); }
+  .palette button[aria-pressed="true"] { border-color: var(--brand-fill); background: var(--brand-soft); color: var(--brand-strong); }
+  .palette svg { width: 20px; height: 20px; }
+  .linkbtn { border: 0; background: none; color: var(--brand); font-weight: 600; padding: 4px 0; text-align: left; font-size: 15px; }
+  .linkbtn:hover { text-decoration: underline; }
+  select.mini { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 3px 6px; font-size: 13px; }
+  details.sec { border-top: 1px solid var(--line); padding-top: 12px; }
+  details.sec summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  details.sec[open] summary { margin-bottom: 10px; }
+  .ver { display: grid; gap: 6px; font-size: 14px; }
+  .ver div { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface-2); border-radius: 10px; }
+
+  /* ---------- khối Nhờ AI ---------- */
+  #ai { padding: 14px 16px; display: grid; gap: 10px; }
+  #ai h2 { font-size: 16px; margin: 0; }
+  #ai p.s { margin: 0; color: var(--ink-3); font-size: 14px; }
+  .aiacts { display: grid; gap: 6px; }
+  @media (min-width: 560px) { .aiacts { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1100px) { .aiacts { grid-template-columns: 1fr; } }
+  .aiacts button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 9px 12px; display: grid; gap: 1px; }
+  .aiacts button:hover:not(:disabled) { background: var(--surface-2); border-color: var(--brand-fill); }
+  .aiacts button:disabled { opacity: .5; cursor: wait; }
+  .aiacts b { font-size: 14px; }
+  .aiacts span { font-size: 13px; color: var(--ink-3); }
+  .prop { border: 2px solid var(--brand-fill); background: var(--brand-soft); border-radius: 14px; padding: 12px; display: grid; gap: 10px; }
+  .prop h3 { margin: 0; font-size: 15px; }
+  .cmp { display: grid; gap: 8px; font-size: 14px; }
+  .cmp .pair { display: grid; gap: 6px; }
+  @media (min-width: 560px) and (max-width: 1099px) { .cmp .pair { grid-template-columns: 1fr 1fr; } }
+  .cmp .old, .cmp .new { padding: 8px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); }
+  .cmp .old { color: var(--ink-3); text-decoration: line-through; text-decoration-color: rgb(180 35 24 / .45); }
+  .cmp .new { border-color: var(--brand-fill); }
+  .cmp small { display: block; font-size: 12px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 2px; text-decoration: none; }
+  .prop .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .changes { margin: 18px 0 0; padding: 14px 18px; background: var(--brand-soft); border-radius: 14px; font-size: 14px; color: var(--ink-2); }
+  .changes b { color: var(--ink); }
+  .changes ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sửa một slide</h1>
+  <p class="sub">Bài giảng “Giới thiệu Limio” · slide 4 / 12 · AI đã tạo, bạn có thể sửa tiếp</p>
+
+  <div class="grid">
+    <section class="panel" id="fields" aria-label="Nội dung slide">
+      <div class="tool" role="toolbar" aria-label="Định dạng chữ">
+        <span class="grp">
+          <button type="button" data-fmt="**" aria-label="In đậm" title="In đậm (Ctrl+B)"><b>B</b></button>
+          <button type="button" data-fmt="*" aria-label="In nghiêng" title="In nghiêng (Ctrl+I)"><i>I</i></button>
+        </span>
+        <span class="hint">Bôi đen chữ trong một ô rồi bấm để định dạng</span>
+        <span class="spacer"></span>
+        <span class="saved" id="saved" role="status">Đã lưu</span>
+      </div>
+
+      <div class="body">
+        <div class="field">
+          <div id="layoutcur"></div>
+          <div id="layoutpick" hidden>
+            <p class="more" id="lhint"></p>
+            <div class="layouts compact" id="layouts" role="group" aria-label="Bố cục"></div>
+          </div>
+        </div>
+
+        <div class="alert" id="alert" hidden>
+          <span id="alertTxt"></span>
+          <button type="button" class="btn small" id="split">Tách thành hai slide</button>
+        </div>
+
+        <div class="field" id="titlefield">
+          <label for="f-title"><span>Tiêu đề</span><span class="count" id="c-title"></span></label>
+          <input class="input" id="f-title" data-f="1" maxlength="80">
+        </div>
+
+        <div id="items"></div>
+
+        <details class="sec">
+          <summary>Ghi chú giảng <span class="count">(chỉ giảng viên thấy khi trình chiếu)</span></summary>
+          <textarea class="input" id="f-note" rows="3" placeholder="Điều cần nhắc khi giảng slide này"></textarea>
+        </details>
+        <details class="sec">
+          <summary>Lịch sử bản sửa <span class="count">(3 bản)</span></summary>
+          <div class="ver">
+            <div><span>Bản AI vừa tạo · 09:12 hôm nay</span><button type="button" class="btn small" data-restore="1">Khôi phục</button></div>
+            <div><span>Trước khi bạn sửa tay · 09:18</span><button type="button" class="btn small" data-restore="1">Khôi phục</button></div>
+            <div><span>Bản hiện tại</span><span class="count">đang dùng</span></div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <aside>
+      <div id="pv">
+        <div class="pvcap"><span>Xem trước (đúng như lúc chiếu)</span><span id="pvlen"></span></div>
+        <div id="stagebox"></div>
+      </div>
+      <section class="panel" id="ai" aria-label="Nhờ AI sửa slide">
+        <h2>Nhờ AI sửa slide này</h2>
+        <p class="s">AI chỉ đề xuất. Bạn xem bản so sánh rồi mới chấp nhận, không có gì tự ghi vào slide.</p>
+        <div class="aiacts" id="aiacts"></div>
+        <div id="prop"></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="changes">
+    <b>Điểm khác so với bản hiện tại</b>
+    <ul>
+      <li>Cùng khuôn với màn dàn ý: xem trước slide ở đầu tiên (dính ở trên trên điện thoại, cột trái trên máy tính), các ô sửa ở cột phải hoặc bên dưới, nên vừa gõ vừa thấy.</li>
+      <li>Ba thẻ xếp thành ba cột, đúng như hình trên slide; mỗi thẻ ngắn gọn, thay cho ba khối xếp dọc rất dài.</li>
+      <li>Một thanh B / I dùng chung, thay cho các cặp nút lặp lại ở từng ô.</li>
+      <li>Bố cục là một khung gọn chỉ hiện bố cục hiện tại, bấm vào mới mở lưới hình thu nhỏ để đổi (như ở màn dàn ý); biểu tượng thẻ chọn bằng hình thay cho ô thả xuống.</li>
+      <li>Nhờ AI thành một khối riêng với mô tả từng việc; kết quả so sánh “hiện tại / đề xuất” ngay trong khối đó.</li>
+      <li>Cảnh báo slide dài kèm nút tách; ghi chú giảng và lịch sử bản sửa gập gọn ở cuối.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function rich(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\*(.+?)\*/g, "<i>$1</i>"); }
+
+  var ICONS = {
+    target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+    compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+    route: '<circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6"/>',
+    chat: '<path d="M4 5h16v11H9l-5 4z"/>',
+    book: '<path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/>',
+    sparkle: '<path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>',
+    users: '<circle cx="9" cy="9" r="3"/><path d="M3 19a6 6 0 0 1 12 0"/><circle cx="17" cy="8" r="2.4"/><path d="M16 14a5 5 0 0 1 5 5"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+  };
+  var ICON_NAME = { target: "Mục tiêu", compass: "La bàn", route: "Lộ trình", chat: "Trao đổi", book: "Sách", sparkle: "Ý tưởng", users: "Nhóm người", chart: "Biểu đồ" };
+  function icon(n) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + "</svg>"; }
+
+  var LAYOUTS = { cover: "Bìa", section: "Mở phần", image: "Chữ và hình", cards: "Ba thẻ", compare: "So sánh hai cột", steps: "Các bước", stats: "Số liệu", quote: "Trích dẫn", summary: "Tóm tắt" };
+  var LHINT = {
+    cover: "Slide đầu: tiêu đề lớn, mô tả ngắn, tên giảng viên.", section: "Mở đầu mỗi phần lớn của bài.", image: "Ba ý chính kèm hình minh hoạ.",
+    cards: "Các ý song song, mỗi ý một biểu tượng.", compare: "Đối chiếu hai cách làm.", steps: "Quy trình hoặc dòng thời gian.",
+    stats: "Con số lớn kèm câu giải thích; chỉ dùng số có trong tài liệu.", quote: "Một ý chính cần nhấn mạnh.", summary: "Slide cuối: các điều cần ghi nhớ."
+  };
+  var RANGE = { cover: [0, 0], section: [0, 0], quote: [0, 0], cards: [3, 3], steps: [3, 5], image: [1, 3], compare: [2, 2], stats: [2, 4], summary: [3, 5] };
+  var st = {
+    layout: "cards",
+    title: "Lợi ích dành cho giảng viên",
+    items: [
+      { icon: "chat", heading: "Tổ chức giảng dạy", body: "Limio-Live hỗ trợ tương tác trực tiếp và quản lý bài thi trên lớp.", tone: "good" },
+      { icon: "sparkle", heading: "Tiết kiệm thời gian", body: "Soạn bài giảng nhanh hơn từ tài liệu có sẵn, giúp tiết kiệm thời gian đáng kể.", tone: "good" },
+      { icon: "chart", heading: "Giảng dạy hiệu quả hơn", body: "Theo dõi mức độ hiểu bài của học viên ngay trong buổi học để điều chỉnh kịp thời.", tone: "good" }
+    ],
+    note: "",
+    subtitle: "Ba nhóm lợi ích chính khi dùng Limio trong giảng dạy.", byline: "Giảng viên: Nguyễn Văn A · Lớp K66", sectionNumber: "02",
+    quote: "Mỗi buổi giảng đều có thể trở thành một cuộc đối thoại.", source: "Thông điệp của bài giảng"
+  };
+  var openPalette = -1, lastField = null, proposal = null, busy = null;
+
+  /* ---- bản xem trước ---- */
+  function stage() {
+    var h = "", it = st.items.slice(0, RANGE[st.layout][1]), t = rich(st.title) || "Tiêu đề slide";
+    switch (st.layout) {
+      case "cover": h = '<h3 style="font-size:8cqw">' + t + "</h3><p style=\"margin:0;font-size:3.6cqw\">" + rich(st.subtitle) + '</p><p style="margin:0;font-size:2.6cqw;color:#6b6a4e">' + esc(st.byline) + "</p>"; break;
+      case "section": h = '<div class="cap">Phần ' + esc(st.sectionNumber) + '</div><h3 style="font-size:8cqw">' + t + "</h3><p style=\"margin:0;font-size:3.4cqw\">" + rich(st.subtitle) + "</p>"; break;
+      case "cards":
+        h = "<h3>" + t + '</h3><div class="cols" style="grid-template-columns:repeat(' + Math.max(it.length, 1) + ',1fr)">' +
+          it.map(function (x) { return '<div class="card"><div class="ic">' + icon(x.icon) + '</div><b class="h">' + rich(x.heading) + "</b>" + rich(x.body) + "</div>"; }).join("") + "</div>"; break;
+      case "steps":
+        h = "<h3>" + t + '</h3><div style="display:grid;gap:1.4cqw">' + it.map(function (x, i) { return '<div class="row"><div class="num">' + (i + 1) + "</div><div><b>" + rich(x.heading) + "</b><br>" + rich(x.body) + "</div></div>"; }).join("") + "</div>"; break;
+      case "image":
+        h = '<div class="split"><div style="display:grid;gap:2cqw"><h3>' + t + "</h3><ul>" + it.map(function (x) { return "<li>" + rich(x.body) + "</li>"; }).join("") + '</ul></div><div class="pic"></div></div>'; break;
+      case "compare":
+        h = "<h3>" + t + '</h3><div class="cols" style="grid-template-columns:1fr 1fr">' + it.map(function (x) {
+          return '<div class="card tone-' + x.tone + '"><div class="cap">' + (x.tone === "good" ? "Cách tốt" : "Cách chưa tốt") + '</div><b class="h" style="margin-top:0">' + rich(x.heading) + "</b>" + rich(x.body) + "</div>";
+        }).join("") + "</div>"; break;
+      case "stats":
+        h = "<h3>" + t + '</h3><div class="cols" style="grid-template-columns:repeat(' + Math.max(it.length, 1) + ',1fr)">' + it.map(function (x) { return '<div class="card"><div style="font-size:6.4cqw;font-weight:700;color:#3f6212;line-height:1.05">' + esc(x.heading) + "</div>" + rich(x.body) + "</div>"; }).join("") + "</div>"; break;
+      case "quote":
+        h = '<div style="border-left:1cqw solid #65a30d;padding-left:3cqw;font-size:5cqw;line-height:1.3;font-weight:600">' + rich(st.quote) + '</div><p style="margin:0;font-size:2.6cqw;color:#6b6a4e;padding-left:4cqw">' + esc(st.source) + "</p>"; break;
+      case "summary":
+        h = "<h3>" + t + "</h3><ul>" + it.map(function (x) { return "<li>" + rich(x.heading) + "</li>"; }).join("") + "</ul>"; break;
+    }
+    $("stagebox").innerHTML = '<div class="stage"><div class="in">' + h + "</div></div>";
+    var len = size();
+    $("pvlen").textContent = len > LIMIT ? "Slide dài" : "Độ dài vừa";
+    $("pv").className = len > LIMIT ? "long" : "";
+    $("alert").hidden = len <= LIMIT;
+    $("alertTxt").textContent = "Slide này dài (" + len + " ký tự): chữ đã tự thu nhỏ đến mức nhỏ nhất vẫn dễ đọc. Hãy viết ngắn lại hoặc tách thành hai slide.";
+  }
+  var LIMIT = 360;
+  function size() {
+    var it = st.items.slice(0, RANGE[st.layout][1]);
+    return st.title.length + it.reduce(function (n, x) { return n + x.heading.length + x.body.length; }, 0) + (st.layout === "quote" ? st.quote.length : 0);
+  }
+
+  /* ---- ô nhập ---- */
+  function field(label, key, i, val, max, multi, ph) {
+    var id = "i" + i + key, cnt = '<span class="count" data-cnt="' + id + '">' + val.length + "/" + max + "</span>";
+    var ctl = multi
+      ? '<textarea class="input" rows="1" id="' + id + '" data-f="1" data-i="' + i + '" data-k="' + key + '" data-max="' + max + '" maxlength="' + max + '" placeholder="' + (ph || "") + '">' + esc(val) + "</textarea>"
+      : '<input class="input" id="' + id + '" data-f="1" data-i="' + i + '" data-k="' + key + '" data-max="' + max + '" maxlength="' + max + '" value="' + esc(val) + '" placeholder="' + (ph || "") + '">';
+    return '<div class="field"><label for="' + id + '"><span>' + label + "</span>" + cnt + "</label>" + ctl + "</div>";
+  }
+  function sfield(label, key, max, multi, ph) {
+    var id = "s-" + key, val = st[key], cnt = '<span class="count" data-cnt="' + id + '">' + val.length + "/" + max + "</span>";
+    var ctl = multi
+      ? '<textarea class="input" rows="1" id="' + id + '" data-f="1" data-s="' + key + '" data-max="' + max + '" maxlength="' + max + '" placeholder="' + (ph || "") + '">' + esc(val) + "</textarea>"
+      : '<input class="input" id="' + id + '" data-f="1" data-s="' + key + '" data-max="' + max + '" maxlength="' + max + '" value="' + esc(val) + '" placeholder="' + (ph || "") + '">';
+    return '<div class="field"><label for="' + id + '"><span>' + label + "</span>" + cnt + "</label>" + ctl + "</div>";
+  }
+  var NOUN = { cards: "Thẻ", steps: "Bước", image: "Ý", compare: "Cột", stats: "Số liệu", summary: "Dòng" };
+  function items() {
+    var L = st.layout, it = st.items, r = RANGE[L], h = "", wrap = function (x) { return '<div style="display:grid;gap:18px">' + x + "</div>"; };
+    if (L === "cover" || L === "section") {
+      h = sfield(L === "cover" ? "Mô tả ngắn" : "Câu dẫn", "subtitle", 120, true, "");
+      h += L === "cover" ? sfield("Giảng viên và lớp", "byline", 80, false, "Giảng viên: Nguyễn Văn A · Lớp K66") : sfield("Số mục", "sectionNumber", 6, false, "02");
+      $("items").innerHTML = wrap(h); $("items").querySelectorAll("textarea").forEach(grow); return;
+    }
+    if (L === "quote") {
+      $("items").innerHTML = wrap(sfield("Câu trích dẫn", "quote", 160, true, "") + sfield("Nguồn hoặc thông điệp", "source", 60, false, "")); $("items").querySelectorAll("textarea").forEach(grow); return;
+    }
+    var noun = NOUN[L], shown = it.slice(0, r[1]);
+    var rm = function (i) { return shown.length > r[0] ? '<button type="button" class="x" data-rm="' + i + '" aria-label="Xoá ' + noun.toLowerCase() + " " + (i + 1) + '">×</button>' : ""; };
+    h += '<div class="items ' + (L === "cards" || L === "stats" ? "cols3" : L === "compare" ? "cols2" : "") + '">';
+    shown.forEach(function (x, i) {
+      h += '<div class="item"><div class="ihead"><span>' + noun + " " + (i + 1) + '</span><span class="sp"></span>';
+      if (L === "cards") h += '<button type="button" class="iconbtn" data-pal="' + i + '" aria-label="Đổi biểu tượng thẻ ' + (i + 1) + ", đang là " + ICON_NAME[x.icon] + '" title="Biểu tượng: ' + ICON_NAME[x.icon] + '">' + icon(x.icon) + "</button>";
+      else if (L === "compare") h += '<select class="mini" data-tone="' + i + '" aria-label="Loại cột"><option value="bad"' + (x.tone === "bad" ? " selected" : "") + '>Cách chưa tốt</option><option value="good"' + (x.tone === "good" ? " selected" : "") + ">Cách tốt</option></select>";
+      h += rm(i) + "</div>";
+      if (L === "cards" && openPalette === i) {
+        h += '<div class="palette" role="group" aria-label="Chọn biểu tượng">' + Object.keys(ICONS).map(function (n) { return '<button type="button" data-ic="' + i + ":" + n + '" aria-pressed="' + (x.icon === n) + '" aria-label="' + ICON_NAME[n] + '" title="' + ICON_NAME[n] + '">' + icon(n) + "</button>"; }).join("") + "</div>";
+      }
+      if (L === "summary") h += field("Nội dung", "heading", i, x.heading, 100, true, "Một câu đầy đủ");
+      else if (L === "image") h += field("Nội dung", "body", i, x.body, 140, true, "Một câu đầy đủ");
+      else {
+        h += field(L === "stats" ? "Con số" : "Tiêu đề", "heading", i, x.heading, L === "stats" ? 12 : 40, false, L === "stats" ? "Ví dụ: 3 bước" : "Tiêu đề ngắn");
+        h += field("Câu giải thích", "body", i, x.body, 140, true, "Một câu đầy đủ");
+      }
+      h += "</div>";
+    });
+    h += "</div>";
+    if (it.length < r[1] && shown.length < r[1] && (L === "steps" || L === "stats" || L === "summary" || L === "image")) h += '<button type="button" class="linkbtn" data-add="1">+ Thêm ' + noun.toLowerCase() + "</button>";
+    else if (shown.length < r[1] && r[1] > r[0]) h += '<button type="button" class="linkbtn" data-add="1">+ Thêm ' + noun.toLowerCase() + "</button>";
+    $("items").innerHTML = h;
+    $("items").querySelectorAll("textarea").forEach(grow);
+  }
+  function grow(t) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+  function glyph(k) {
+    var f = 'fill="currentColor"', o = 'fill="currentColor" opacity=".32"';
+    var box = '<rect x="1" y="1" width="46" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".7"/>';
+    var g = {
+      cover: '<rect x="8" y="10" width="26" height="5" rx="1.5" ' + f + '/><rect x="8" y="19" width="16" height="3" rx="1.5" ' + o + '/>',
+      section: '<rect x="8" y="13" width="22" height="5" rx="1.5" ' + f + '/><rect x="8" y="22" width="30" height="2.5" rx="1" ' + o + '/><rect x="8" y="7" width="8" height="2.5" rx="1" ' + o + '/>',
+      image: '<rect x="6" y="6" width="18" height="4" rx="1.5" ' + f + '/><rect x="6" y="14" width="20" height="2.5" rx="1" ' + o + '/><rect x="6" y="19" width="20" height="2.5" rx="1" ' + o + '/><rect x="6" y="24" width="14" height="2.5" rx="1" ' + o + '/><rect x="30" y="8" width="12" height="16" rx="2" ' + o + '/>',
+      cards: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="13" width="11" height="14" rx="2" ' + o + '/><rect x="18.5" y="13" width="11" height="14" rx="2" ' + o + '/><rect x="31" y="13" width="11" height="14" rx="2" ' + o + '/>',
+      compare: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="13" width="17" height="14" rx="2" ' + o + '/><rect x="25" y="13" width="17" height="14" rx="2" ' + o + '/>',
+      steps: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><circle cx="10" cy="17" r="3" ' + f + '/><circle cx="24" cy="17" r="3" ' + f + '/><circle cx="38" cy="17" r="3" ' + f + '/><rect x="6" y="23" width="9" height="2.5" rx="1" ' + o + '/><rect x="20" y="23" width="9" height="2.5" rx="1" ' + o + '/><rect x="33" y="23" width="9" height="2.5" rx="1" ' + o + '/>',
+      stats: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="14" width="10" height="8" rx="1.5" ' + f + '/><rect x="19" y="14" width="10" height="8" rx="1.5" ' + f + '/><rect x="32" y="14" width="10" height="8" rx="1.5" ' + f + '/><rect x="6" y="25" width="10" height="2" rx="1" ' + o + '/><rect x="19" y="25" width="10" height="2" rx="1" ' + o + '/><rect x="32" y="25" width="10" height="2" rx="1" ' + o + '/>',
+      quote: '<rect x="8" y="8" width="3" height="16" rx="1.5" ' + f + '/><rect x="14" y="9" width="26" height="4" rx="1.5" ' + f + '/><rect x="14" y="16" width="20" height="4" rx="1.5" ' + o + '/>',
+      summary: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="14" width="3" height="3" rx="1" ' + f + '/><rect x="12" y="14" width="26" height="3" rx="1" ' + o + '/><rect x="6" y="20" width="3" height="3" rx="1" ' + f + '/><rect x="12" y="20" width="22" height="3" rx="1" ' + o + '/><rect x="6" y="26" width="3" height="3" rx="1" ' + f + '/><rect x="12" y="26" width="18" height="3" rx="1" ' + o + '/>'
+    };
+    return '<svg class="glyph" viewBox="0 0 48 32" aria-hidden="true">' + box + g[k] + "</svg>";
+  }
+  var openLay = false;
+  function layouts() {
+    $("layoutcur").innerHTML = '<button type="button" class="pk" data-layopen="1" aria-expanded="' + openLay + '">' + glyph(st.layout) +
+      '<span class="ct"><small>Bố cục</small><b>' + LAYOUTS[st.layout] + "</b></span><i>▾</i></button>";
+    $("layoutpick").hidden = !openLay;
+    $("layouts").innerHTML = Object.keys(LAYOUTS).map(function (k) { return '<button type="button" data-layout="' + k + '" aria-pressed="' + (st.layout === k) + '">' + glyph(k) + "<span>" + LAYOUTS[k] + "</span></button>"; }).join("");
+    $("lhint").textContent = LHINT[st.layout] + " Đổi bố cục giữ nguyên chữ đang có.";
+    $("titlefield").hidden = st.layout === "quote";
+  }
+  function touch() { $("saved").textContent = "Đang lưu..."; clearTimeout(touch.t); touch.t = setTimeout(function () { $("saved").textContent = "Đã lưu"; }, 700); }
+
+  /* ---- Nhờ AI ---- */
+  var ACTIONS = [
+    { id: "shorter", label: "Viết ngắn hơn", d: "Rút gọn câu chữ, giữ ý chính" },
+    { id: "example", label: "Thêm ví dụ", d: "Bổ sung một ví dụ cụ thể" },
+    { id: "simpler", label: "Dễ hiểu hơn", d: "Dùng từ giản dị hơn" },
+    { id: "to_quiz", label: "Đổi thành câu hỏi quiz", d: "Biến nội dung thành một câu hỏi" },
+    { id: "rewrite", label: "Viết lại từ dàn ý", d: "Quay về ý trong dàn ý đã xác nhận" }
+  ];
+  var CANNED = {
+    shorter: [["Tổ chức giảng dạy", "Limio-Live hỗ trợ tương tác trực tiếp và quản lý bài thi."], ["Tiết kiệm thời gian", "Soạn bài nhanh hơn từ tài liệu có sẵn."], ["Giảng dạy hiệu quả hơn", "Nắm mức độ hiểu bài ngay trong buổi học."]],
+    example: [["Tổ chức giảng dạy", "Limio-Live hỗ trợ tương tác trực tiếp và quản lý bài thi trên lớp, ví dụ như bình chọn nhanh hoặc ca thi có phòng thi riêng."], ["Tiết kiệm thời gian", "Soạn bài giảng nhanh hơn từ tài liệu có sẵn; chẳng hạn một chương giáo trình thành bài giảng trong vài phút."], ["Giảng dạy hiệu quả hơn", "Theo dõi mức độ hiểu bài của học viên ngay trong buổi học để điều chỉnh kịp thời."]],
+    simpler: [["Tổ chức giảng dạy", "Limio-Live giúp thầy cô cho học viên tham gia ngay trên lớp và tổ chức kiểm tra."], ["Tiết kiệm thời gian", "Có tài liệu sẵn là soạn được bài giảng nhanh, đỡ mất nhiều thời gian."], ["Giảng dạy hiệu quả hơn", "Biết học viên hiểu bài đến đâu ngay trong giờ để chỉnh cách giảng."]],
+    rewrite: [["Tổ chức giảng dạy", "Limio-Live gom việc giảng trực tiếp và kiểm tra trên lớp về một nơi."], ["Tiết kiệm thời gian", "AI dựng bản nháp từ tài liệu để giảng viên chỉ cần rà soát."], ["Giảng dạy hiệu quả hơn", "Kết quả từng học viên giúp giảng viên điều chỉnh bài giảng."]]
+  };
+  function acts() {
+    $("aiacts").innerHTML = ACTIONS.map(function (a) {
+      return '<button type="button" data-ai="' + a.id + '"' + (busy || proposal ? " disabled" : "") + "><b>" + (busy === a.id ? "Đang nhờ AI..." : a.label) + "</b><span>" + a.d + "</span></button>";
+    }).join("");
+  }
+  function prop() {
+    var p = proposal; if (!p) { $("prop").innerHTML = ""; return; }
+    if (p.id === "to_quiz") {
+      $("prop").innerHTML = '<div class="prop"><h3>AI đề xuất: đổi slide này thành câu hỏi quiz</h3><div class="cmp"><div class="new"><small>Câu hỏi đề xuất</small>Lợi ích nào giúp giảng viên điều chỉnh bài giảng ngay trong buổi học?</div></div><p class="s" style="margin:0;font-size:13px">Chấp nhận sẽ đổi loại slide; bạn vẫn hoàn tác được trong Lịch sử bản sửa.</p><div class="row"><button type="button" class="btn primary" data-accept="1">Chấp nhận</button><button type="button" class="btn" data-reject="1">Bỏ đề xuất</button></div></div>';
+      return;
+    }
+    $("prop").innerHTML = '<div class="prop"><h3>AI đề xuất: ' + esc(p.label.toLowerCase()) + '</h3><div class="cmp">' + p.rows.map(function (r, i) {
+      var o = st.items[i]; if (!o) return "";
+      return '<div class="pair"><div class="old"><small>Hiện tại</small>' + esc(o.heading) + ": " + esc(o.body) + '</div><div class="new"><small>Đề xuất</small>' + esc(r[0]) + ": " + esc(r[1]) + "</div></div>";
+    }).join("") + '</div><div class="row"><button type="button" class="btn primary" data-accept="1">Chấp nhận</button><button type="button" class="btn" data-reject="1">Bỏ đề xuất</button></div></div>';
+  }
+
+  function all() { layouts(); items(); stage(); acts(); prop(); $("f-title").value = st.title; cnt($("f-title"), "c-title", 80); }
+  function cnt(el, id, max) { var c = $(id) || document.querySelector('[data-cnt="' + id + '"]'); if (!c) return; c.textContent = el.value.length + "/" + max; c.className = "count" + (el.value.length > max * .9 ? " near" : ""); }
+
+  /* ---- sự kiện ---- */
+  document.addEventListener("focusin", function (e) { if (e.target.dataset && e.target.dataset.f) lastField = e.target; });
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.id === "f-title") { st.title = t.value; cnt(t, "c-title", 80); }
+    else if (t.dataset && t.dataset.s) { st[t.dataset.s] = t.value; cnt(t, t.id, +t.dataset.max); if (t.tagName === "TEXTAREA") grow(t); }
+    else if (t.dataset && t.dataset.i != null) {
+      st.items[+t.dataset.i][t.dataset.k] = t.value; cnt(t, t.id, +t.dataset.max); if (t.tagName === "TEXTAREA") grow(t);
+    } else if (t.id === "f-note") { st.note = t.value; }
+    else return;
+    stage(); touch();
+  });
+  function format(m) {
+    var f = lastField; if (!f) { $("saved").textContent = "Bấm vào một ô trước"; return; }
+    var a = f.selectionStart, b = f.selectionEnd, v = f.value, sel = v.slice(a, b);
+    f.value = v.slice(0, a) + m + sel + m + v.slice(b);
+    f.focus(); f.setSelectionRange(a + m.length, a + m.length + sel.length);
+    f.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  document.addEventListener("mousedown", function (e) { if (e.target.closest("[data-fmt]")) e.preventDefault(); });
+  document.addEventListener("keydown", function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "i") && e.target.dataset && e.target.dataset.f) { e.preventDefault(); format(e.key === "b" ? "**" : "*"); }
+  });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-fmt],[data-layopen],[data-layout],[data-pal],[data-ic],[data-rm],[data-add],[data-ai],[data-accept],[data-reject],[data-restore],#split");
+    if (!t) return;
+    if (t.dataset.fmt) format(t.dataset.fmt);
+    else if (t.dataset.layopen) { openLay = !openLay; layouts(); }
+    else if (t.dataset.layout) {
+      st.layout = t.dataset.layout; var r = RANGE[st.layout];
+      while (st.items.length < r[0]) st.items.push({ icon: "target", heading: "", body: "", tone: "good" });
+      openPalette = -1; openLay = false; touch(); all();
+    } else if (t.dataset.pal != null) { openPalette = openPalette === +t.dataset.pal ? -1 : +t.dataset.pal; items(); }
+    else if (t.dataset.ic) { var p = t.dataset.ic.split(":"); st.items[+p[0]].icon = p[1]; openPalette = -1; touch(); items(); stage(); }
+    else if (t.dataset.rm != null) { st.items.splice(+t.dataset.rm, 1); touch(); items(); stage(); }
+    else if (t.dataset.add) { st.items.push({ icon: "target", heading: "", body: "", tone: "good" }); touch(); items(); stage(); }
+    else if (t.dataset.ai) {
+      var id = t.dataset.ai; busy = id; acts();
+      setTimeout(function () {
+        busy = null; var a = ACTIONS.filter(function (x) { return x.id === id; })[0];
+        proposal = { id: id, label: a.label, rows: CANNED[id] || [] }; acts(); prop();
+      }, 800);
+    }
+    else if (t.dataset.accept) {
+      if (proposal.id !== "to_quiz") proposal.rows.forEach(function (r, i) { if (st.items[i]) { st.items[i].heading = r[0]; st.items[i].body = r[1]; } });
+      proposal = null; touch(); all();
+    }
+    else if (t.dataset.reject) { proposal = null; acts(); prop(); }
+    else if (t.dataset.restore) { $("saved").textContent = "Đã khôi phục (bản mẫu)"; }
+    else if (t.id === "split") {
+      var half = st.items.splice(Math.ceil(st.items.length / 2)); $("saved").textContent = "Đã tách: " + half.length + " mục sang slide mới (bản mẫu)"; if (st.items.length < 3 && st.layout === "cards") st.layout = "compare"; all();
+    }
+  });
+  document.addEventListener("change", function (e) { if (e.target.dataset && e.target.dataset.tone != null) { st.items[+e.target.dataset.tone].tone = e.target.value; stage(); touch(); } });
+
+  all();
+})();
+</script>
+</body>
+</html>
