@@ -420,12 +420,10 @@
       '<button type="button" class="ico" data-nav="-1" aria-label="Slide trước"' + (i === 0 ? " disabled" : "") + ">‹</button>" +
       '<button type="button" class="ico" data-nav="1" aria-label="Slide sau"' + (i === slides.length - 1 ? " disabled" : "") + ">›</button>" +
       '<h2 id="dlgt">Slide ' + (i + 1) + " / " + slides.length + "</h2>" +
-      '<button type="button" class="ico" data-mv="-1" aria-label="Đưa lên"' + (i === 0 ? " disabled" : "") + ">↑</button>" +
-      '<button type="button" class="ico" data-mv="1" aria-label="Đưa xuống"' + (i === slides.length - 1 ? " disabled" : "") + ">↓</button>" +
       '<button type="button" class="btn danger" data-del="1">Xoá slide</button><span class="sepv" aria-hidden="true"></span>' +
       '<button type="button" class="btn primary" data-close="1">Xong</button></div><div class="ebody">';
     h += '<div class="side"><div class="pv-wrap"><span class="cap">Bản xem trước bố cục</span><div id="pvbox"></div>' +
-      '<p class="note">Chỉ để hình dung cách chữ sắp xếp. Màu sắc, phông chữ và hình minh hoạ do bước tạo slide quyết định.</p></div></div>';
+      '<p class="note">Ở đây chỉ dựng bố cục về mặt sắp xếp nội dung câu chữ cho bạn hình dung trước. Màu sắc, phông chữ và hình minh hoạ sẽ thể hiện ở bước sau.</p></div></div>';
     h += '<div style="display:grid;gap:18px">';
     h += '<div class="pickers">' + pk("Loại slide", x.kind, KINDS[x.kind], "kindopen", openKind) +
       (isC ? pk("Bố cục", x.layout, L.label, "layopen", openLay) : "") + "</div>";
