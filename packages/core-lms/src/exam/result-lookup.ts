@@ -16,6 +16,7 @@
 
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { ExamError } from "./types";
+import { effectiveAccessMode } from "./code-access";
 import {
   canRevealAnswers,
   canRevealScore,
@@ -66,6 +67,7 @@ export async function lookupCandidateResult(
       select: {
         id: true,
         displayName: true,
+        session: { select: { accessMode: true } },
         exam: {
           select: { id: true, title: true, showResultsAfterSubmit: true, accessMode: true },
         },
@@ -76,7 +78,7 @@ export async function lookupCandidateResult(
         },
       },
     });
-    if (!cand || cand.exam.accessMode !== "assigned_code")
+    if (!cand || effectiveAccessMode(cand.session, cand.exam) !== "assigned_code")
       throw new ExamError("invalid_code");
     if (cand.attempts.length === 0) throw new ExamError("result_not_found");
     exam = cand.exam;

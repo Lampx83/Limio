@@ -2,32 +2,55 @@
 
 import React, { useState } from "react";
 import { copyText } from "@/lib/clipboard";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, Check, Copy, Globe, GraduationCap, RefreshCw, Settings2, Shuffle, Users } from "lucide-react";
 
 /**
- * "Chế độ thi" card on the session detail page. Drives Exam.accessMode +
- * openCode through the existing /api/exams/[id]/access endpoint. Backend
- * auto-generates openCode when switching to open_code mode.
+ * "Chế độ thi" card on the session detail page.
  *
- * Caveat: accessMode lives on Exam (not Session) for now, so this card
- * affects ALL sessions of the exam. If 2 sessions of the same exam are
- * displayed at once, both will update on change.
+ * Mode + mã chung thuộc về CA (PR2.12: ExamSession.accessMode/openCode) —
+ * đổi qua PATCH /api/exam-sessions/[id], xoay mã qua .../rotate-code. Trang
+ * đọc chế độ từ ca, nên ghi vào Exam (như bản cũ) thì bấm xong không thấy gì.
+ * Backend tự sinh mã chung khi chuyển sang Tự do, và chặn đổi chế độ khi ca
+ * đang có bài làm dở.
+ *
+ * Riêng "Nguồn mã thi" (assignedCodeSource) vẫn nằm trên Exam, nên áp cho mọi
+ * ca dùng chung đề — UI nói rõ điều đó ngay dưới lựa chọn.
  */
+const ERROR_LABEL: Record<string, string> = {
+  exam_has_attempts:
+    "Ca này đang có thí sinh làm bài dở nên chưa đổi được chế độ. Chờ các em nộp bài hoặc kết thúc ca rồi thử lại.",
+  access_mode_mismatch: "Ca này không ở chế độ Tự do nên không có mã chung để đổi.",
+  forbidden: "Bạn không có quyền chỉnh ca thi này.",
+  validation_failed: "Dữ liệu không hợp lệ.",
+};
+
+async function errorFrom(r: Response): Promise<string> {
+  const j = (await r.json().catch(() => null)) as { error?: string } | null;
+  const code = j?.error ?? `HTTP ${r.status}`;
+  return ERROR_LABEL[code] ?? code;
+}
+
 export default function ExamAccessModeCard({
+  sessionId,
   examId,
   accessMode,
   openCode,
   assignedCodeSource,
   baseUrl,
   canEdit,
+  roomsHref,
 }: {
+  sessionId: string;
   examId: string;
   accessMode: string;
   openCode: string | null;
   assignedCodeSource: "random" | "student_code";
   baseUrl: string;
   canEdit: boolean;
+  /** Link tới tab Phòng thi; null khi đang đứng ở chính tab đó. */
+  roomsHref: string | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -39,14 +62,13 @@ export default function ExamAccessModeCard({
     setErr(null);
     setBusy(true);
     try {
-      const r = await fetch(`/api/exams/${examId}/access`, {
+      const r = await fetch(`/api/exam-sessions/${sessionId}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ accessMode: next }),
       });
       if (!r.ok) {
-        const j = (await r.json().catch(() => null)) as { error?: string } | null;
-        setErr(j?.error ?? `HTTP ${r.status}`);
+        setErr(await errorFrom(r));
         return;
       }
       router.refresh();
@@ -66,8 +88,7 @@ export default function ExamAccessModeCard({
         body: JSON.stringify({ assignedCodeSource: next }),
       });
       if (!r.ok) {
-        const j = (await r.json().catch(() => null)) as { error?: string } | null;
-        setErr(j?.error ?? `HTTP ${r.status}`);
+        setErr(await errorFrom(r));
         return;
       }
       router.refresh();
@@ -80,12 +101,11 @@ export default function ExamAccessModeCard({
     setBusy(true);
     setErr(null);
     try {
-      const r = await fetch(`/api/exams/${examId}/access/rotate`, {
+      const r = await fetch(`/api/exam-sessions/${sessionId}/rotate-code`, {
         method: "POST",
       });
       if (!r.ok) {
-        const j = (await r.json().catch(() => null)) as { error?: string } | null;
-        setErr(j?.error ?? `HTTP ${r.status}`);
+        setErr(await errorFrom(r));
         return;
       }
       router.refresh();
@@ -111,7 +131,7 @@ export default function ExamAccessModeCard({
           <Settings2 className="h-4 w-4 shrink-0" /> Chọn cách tổ chức thi
         </h2>
         <p className="mt-1 text-xs text-amber-800">
-          Đề thi chưa được setup chế độ. Chọn 1 trong 2:
+          Ca thi chưa chọn chế độ. Chọn 1 trong 2:
         </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <ModeButton
@@ -146,13 +166,21 @@ export default function ExamAccessModeCard({
               <Users className="h-4 w-4 shrink-0 text-blue-600" /> Chế độ thi: <span className="text-blue-700">Theo phòng</span>
             </h2>
             <p className="mt-1 text-xs text-faint">
-              Mỗi thí sinh có mã thi riêng được gán vào phòng cụ thể. Quản lý
-              phòng + thí sinh ở tab &quot;Phòng thi&quot;.
+              Mỗi thí sinh có mã thi riêng và được xếp vào một phòng cụ thể.
+              {roomsHref && (
+                <>
+                  {" "}Thêm thí sinh và xếp phòng ở tab{" "}
+                  <Link href={roomsHref} className="text-blue-700 hover:underline">
+                    Phòng thi
+                  </Link>
+                  .
+                </>
+              )}
             </p>
 
             <div className="mt-4 rounded border border-default bg-slate-50 p-3">
               <div className="text-xs font-medium text-slate-700">
-                Nguồn mã access cho thí sinh
+                Nguồn mã thi cho thí sinh
               </div>
               <div className="mt-2 flex flex-wrap gap-2">
                 <SourceButton
@@ -167,7 +195,7 @@ export default function ExamAccessModeCard({
                   onClick={() => switchAssignedSource("student_code")}
                   disabled={!canEdit || busy}
                   title={<span className="inline-flex items-center gap-1"><GraduationCap className="h-3.5 w-3.5" /> MSSV</span>}
-                  desc="Mã access = MSSV của SV"
+                  desc="Mã thi chính là MSSV của sinh viên"
                 />
               </div>
               {assignedCodeSource === "student_code" && (
@@ -176,13 +204,17 @@ export default function ExamAccessModeCard({
                   thị vật lý kiểm tra thẻ.
                 </div>
               )}
+              <p className="mt-2 text-xs text-faint">
+                Nguồn mã thi lưu theo đề thi: mọi ca dùng đề này dùng chung lựa
+                chọn. Chỉ áp cho thí sinh thêm vào sau khi đổi.
+              </p>
             </div>
           </div>
           {canEdit && (
             <button
               onClick={() => {
                 if (window.confirm(
-                  "Đổi sang chế độ Tự do? Mã cá nhân của các thí sinh sẽ bị huỷ và mất tác dụng.",
+                  "Đổi ca này sang chế độ Tự do? Mã riêng của thí sinh trong ca sẽ tạm ngừng hoạt động cho tới khi đổi lại Theo phòng.",
                 ))
                   switchMode("open_code");
               }}
@@ -271,7 +303,7 @@ export default function ExamAccessModeCard({
             <button
               onClick={() => {
                 if (window.confirm(
-                  "Đổi sang chế độ Theo phòng? Mã chung sẽ bị huỷ.",
+                  "Đổi ca này sang chế độ Theo phòng? Mã chung của ca sẽ bị huỷ.",
                 ))
                   switchMode("assigned_code");
               }}

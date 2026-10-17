@@ -601,6 +601,20 @@ function parseOpenInput(raw: unknown): OpenClaimInput {
   };
 }
 
+/**
+ * Chế độ thi thực tế của một ca. Từ PR2.12 chế độ nằm ở CA; ca cũ chưa từng
+ * chọn chế độ (`authenticated` = mặc định schema) thì rơi về chế độ của Exam
+ * như trước. Dùng chung cho claim, landing và tra kết quả bằng mã cá nhân —
+ * lệch nhau là thí sinh qua được trang này rồi bị trang sau từ chối.
+ */
+export function effectiveAccessMode(
+  session: { accessMode: string } | null | undefined,
+  exam: { accessMode: string },
+): string {
+  if (session && session.accessMode !== "authenticated") return session.accessMode;
+  return exam.accessMode;
+}
+
 /** Q5: assigned-mode claim. Resumes if candidate already has an attempt. */
 export async function claimByAssignedCode(
   code: unknown,
@@ -622,6 +636,7 @@ export async function claimByAssignedCode(
           closesAt: true,
           timingMode: true,
           status: true,
+          accessMode: true,
         },
       },
       exam: {
@@ -653,7 +668,7 @@ export async function claimByAssignedCode(
         "Đây là đề vấn đáp AI — sinh viên vào thi qua trang khoá học sau khi đăng nhập, không dùng mã này.",
     });
   }
-  if (exam.accessMode !== "assigned_code")
+  if (effectiveAccessMode(candidate.session, exam) !== "assigned_code")
     throw new ExamError("access_mode_mismatch");
   if (exam.status !== "published") throw new ExamError("exam_not_open");
   // PR2.12 — Kiểm tra cửa sổ CỦA CA (candidate.session) nếu có, fallback exam

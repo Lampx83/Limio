@@ -224,6 +224,7 @@ export default async function ExamSessionDetailPage({
 
       <div className="mt-6 space-y-4">
         <ExamAccessModeCard
+          sessionId={detail.id}
           examId={detail.examId}
           accessMode={detail.examAccessMode}
           openCode={detail.examOpenCode}
@@ -243,6 +244,11 @@ export default async function ExamSessionDetailPage({
             return host ? `${proto}://${host}` : "";
           })()}
           canEdit={canEdit}
+          roomsHref={
+            activeTab === "rooms"
+              ? null
+              : `/instructor/exam-sessions/${detail.id}?tab=rooms`
+          }
         />
         <ExamReadinessWarning
           courseId={detail.courseId}
