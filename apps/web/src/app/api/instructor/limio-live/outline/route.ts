@@ -4,6 +4,7 @@ import { extractMaterialText } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
+import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { INTERACTIVE_EVERY, isValidMinutes, normalizeOutline, slideRange } from "@/lib/limioLiveOutline";
 
 export const runtime = "nodejs";
@@ -117,6 +118,14 @@ export async function POST(req: Request) {
       sourceText: sourceText.slice(0, MAX_STORED_SOURCE_CHARS),
     },
     select: { id: true },
+  });
+
+  await emitLiveEvent(userId, LearningEventType.LiveDeckOutlineGenerated, {
+    deckId: deck.id,
+    minutes,
+    slideCount: outline.slides.length,
+    sourceChars: sourceText.length,
+    warningCount: warnings.length,
   });
 
   return NextResponse.json(

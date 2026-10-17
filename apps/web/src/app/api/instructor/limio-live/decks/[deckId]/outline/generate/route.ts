@@ -1,5 +1,7 @@
 import { AiTutorError, generateSlideDrafts, type OutlineSlideInput } from "@feedbackme/core-feedback";
 import { prisma } from "@feedbackme/db";
+import { recordSlideVersion } from "@feedbackme/core-lms";
+import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
@@ -104,9 +106,14 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           if (!plan) {
             // Lần đầu: kiểm tra lại là chưa có slide để hai lần bấm liền nhau không nhân đôi.
             if ((await tx.liveSlide.count({ where: { deckId: deck.id } })) > 0) throw new Error("deck_has_slides");
-            await tx.liveSlide.createMany({
-              data: result.slides.map((s, i) => ({ deckId: deck.id, type: s.type, config: s.config as object, orderIndex: i })),
-            });
+            for (const [i, s] of result.slides.entries()) {
+              const row = await tx.liveSlide.create({
+                data: { deckId: deck.id, type: s.type, config: s.config as object, orderIndex: i },
+                select: { id: true, type: true, config: true },
+              });
+              // Bản AI sinh ban đầu luôn được giữ để giảng viên quay lại (H11).
+              await recordSlideVersion(tx, row, "generated");
+            }
             return;
           }
           const oldBy = new Map(existing.map((s) => [s.id, s]));
@@ -115,18 +122,22 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             const old = oldBy.get(r.slideId)!;
             // Giữ cờ ẩn của slide cũ; ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
             const keepHidden = pickMeta(old.config).hidden ? { hidden: true } : {};
-            await tx.liveSlide.update({
+            await recordSlideVersion(tx, { id: r.slideId, type: old.type as never, config: old.config }, "before_sync");
+            const row = await tx.liveSlide.update({
               where: { id: r.slideId },
               data: { type: gen.type, config: { ...gen.config, ...keepHidden } as object },
+              select: { id: true, type: true, config: true },
             });
+            await recordSlideVersion(tx, row, "generated");
           }
           const createdId = new Map<string, string>();
           for (const outlineId of plan.create) {
             const gen = byOutlineId.get(outlineId)!;
             const row = await tx.liveSlide.create({
               data: { deckId: deck.id, type: gen.type, config: gen.config as object, orderIndex: 100000 },
-              select: { id: true },
+              select: { id: true, type: true, config: true },
             });
+            await recordSlideVersion(tx, row, "generated");
             createdId.set(outlineId, row.id);
           }
           if (plan.remove.length) await tx.liveSlide.deleteMany({ where: { id: { in: plan.remove }, deckId: deck.id } });
@@ -134,6 +145,15 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             const id = e.kind === "slide" ? e.id : createdId.get(e.outlineId)!;
             await tx.liveSlide.update({ where: { id }, data: { orderIndex: i } });
           }
+        });
+        await emitLiveEvent(userId, LearningEventType.LiveDeckSlidesGenerated, {
+          deckId: deck.id,
+          mode: plan ? "sync" : "first",
+          slideCount: plan ? plan.order.length : result.slides.length,
+          fallbackCount: result.fallbackCount,
+          ...(plan
+            ? { regenerated: plan.regenerate.length, created: plan.create.length, removed: plan.remove.length, kept: plan.keep.length + plan.orphans.length }
+            : {}),
         });
         send({
           type: "done",

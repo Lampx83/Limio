@@ -2,6 +2,7 @@ import { AiGenerationError, AiTutorError, generateSlideEdit, SLIDE_EDIT_ACTIONS 
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
+import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { proposalFromDraft, type SlideDraft, type SlideEditAction } from "@/lib/limioLiveGenerate";
 import { pickMeta, resolveLayout } from "@/lib/limioLiveSlides";
@@ -78,6 +79,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
     );
     const proposal = proposalFromDraft(action as SlideEditAction, { config }, draft as SlideDraft);
     if (!proposal) return json({ error: "ai_edit_failed" }, 502);
+    await emitLiveEvent(userId, LearningEventType.LiveSlideAiEditProposed, { deckId: params.deckId, slideId: params.slideId, action });
     return json({ proposal }, 200);
   } catch (e) {
     if (e instanceof AiTutorError) return json({ error: e.code, details: e.details }, 429);

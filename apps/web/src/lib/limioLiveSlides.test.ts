@@ -293,7 +293,7 @@ describe("mergeSlideMeta", () => {
   });
 });
 
-import { parseInline, splitSlideConfig, stripInline, toggleInlineMarker } from "./limioLiveSlides";
+import { parseInline, slideConfigsEqual, splitSlideConfig, stripInline, toggleInlineMarker } from "./limioLiveSlides";
 
 describe("parseInline", () => {
   it("tách in đậm và in nghiêng", () => {
@@ -375,5 +375,13 @@ describe("splitSlideConfig", () => {
     expect(splitSlideConfig({ layout: "cover", title: "T" })).toBeNull();
     expect(splitSlideConfig({ layout: "compare", title: "T", columns: [] })).toBeNull();
     expect(splitSlideConfig({ layout: "image", title: "T", bullets: ["một ý"] })).toBeNull();
+  });
+});
+
+describe("slideConfigsEqual", () => {
+  it("không phân biệt thứ tự khoá, coi undefined như thiếu khoá", () => {
+    expect(slideConfigsEqual({ a: 1, b: [1, { c: 2 }] }, { b: [1, { c: 2 }], a: 1, x: undefined })).toBe(true);
+    expect(slideConfigsEqual({ a: 1 }, { a: 2 })).toBe(false);
+    expect(slideConfigsEqual(null, {})).toBe(true);
   });
 });

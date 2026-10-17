@@ -5179,9 +5179,27 @@ model LiveSlide {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  deck LiveDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  deck     LiveDeck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  versions LiveSlideVersion[]
 
   @@index([deckId, orderIndex])
+}
+
+// Phiên bản cũ của một slide để hoàn tác. Chụp lại TRẠNG THÁI TRƯỚC khi bị ghi đè (sửa tay, nhận
+// đề xuất AI, cập nhật theo dàn ý, khôi phục), cộng thêm bản "generated" lúc AI sinh slide — bản
+// này luôn được giữ, không bị dọn. Xem core-lms/live/slideVersions.ts.
+model LiveSlideVersion {
+  id        String        @id @default(uuid())
+  slideId   String
+  // generated | before_edit | before_ai | before_sync | before_restore
+  source    String
+  type      LiveSlideType
+  config    Json
+  createdAt DateTime      @default(now())
+
+  slide LiveSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@index([slideId, createdAt])
 }
 
 // Một lượt trình chiếu (Present) của 1 LiveDeck. GV bấm "Trình chiếu" sẽ

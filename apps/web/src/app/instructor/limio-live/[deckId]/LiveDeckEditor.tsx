@@ -45,9 +45,11 @@ import {
   MonitorPlay,
   Play,
   History,
+  AlertTriangle,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
+import { formatDateTime } from "@/lib/datetime";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 import BoardNotesView from "../BoardNotesView";
 import { contentKind } from "../slideKind";
@@ -269,6 +271,23 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     document.body.classList.add("limio-live-immersive");
     return () => document.body.classList.remove("limio-live-immersive");
   }, []);
+
+  // Số buổi dạy đã mở từng slide (cảnh báo khi sửa slide tương tác đã có kết quả — H12) và bộ đếm làm
+  // mới trình soạn sau khi khôi phục phiên bản (các ô nhập giữ state cục bộ nên phải dựng lại).
+  const [usage, setUsage] = useState<Record<string, number>>({});
+  const [restoreRev, setRestoreRev] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/usage`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { sessions?: Record<string, number> } | null) => {
+        if (alive && j?.sessions) setUsage(j.sessions);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [deckId]);
 
   const load = async () => {
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`));
@@ -513,11 +532,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   const handleSaveSlide = async (
     slideId: string,
-    patch: { config?: Record<string, any>; timerSeconds?: number | null; type?: SlideType; source?: "ai" | "manual" },
+    patch: { config?: Record<string, any>; timerSeconds?: number | null; type?: SlideType; source?: "ai" | "manual"; aiAction?: string },
   ) => {
     // Lạc quan: cập nhật giao diện ngay (thanh thumb, preview), server xác nhận
     // sau; lỗi thì nạp lại từ server để không lệch dữ liệu.
-    const { source: _source, ...local } = patch;
+    const { source: _source, aiAction: _aiAction, ...local } = patch;
     setDeck((prev) =>
       prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, ...local } : s)) } : prev
     );
@@ -781,17 +800,30 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           <div className="flex flex-1 overflow-y-auto p-8 pb-20">
             {selectedSlide ? (
               <div
-                key={selectedSlide.id}
+                key={`${selectedSlide.id}:${restoreRev}`}
                 className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
                   selectedSlide.timerSeconds != null ? "pb-28" : ""
                 }`}
                 style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
+                {(selectedSlide.type === "quiz" || selectedSlide.type === "poll" || selectedSlide.type === "word_cloud") &&
+                  (usage[selectedSlide.id] ?? 0) > 0 && (
+                    <p className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900" role="note">
+                      <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                      <span>
+                        Slide này đã được mở trong {usage[selectedSlide.id]} buổi dạy. Kết quả của các buổi đó được giữ nguyên theo
+                        câu hỏi lúc trình chiếu (xem ở Lịch sử tương tác); sửa slide chỉ ảnh hưởng buổi dạy mới và kết quả mới sẽ
+                        tính riêng. Nếu lỡ sửa, có thể quay lại ở mục Phiên bản bên phải.
+                      </span>
+                    </p>
+                  )}
                 <SlideCenterEditor
                   slide={selectedSlide}
                   themeId={deck.theme}
                   deckId={deckId}
-                  onApplyProposal={(p) => handleSaveSlide(selectedSlide.id, { config: p.config, type: p.type, source: "ai" })}
+                  onApplyProposal={(p, action) =>
+                    handleSaveSlide(selectedSlide.id, { config: p.config, type: p.type, source: "ai", aiAction: action })
+                  }
                   onSplit={(a, b) => handleSplitSlide(selectedSlide.id, a, b)}
                   onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
                 />
@@ -896,9 +928,18 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               );
             })()}
             <SettingsPanel
-              key={selectedSlide.id}
+              key={`${selectedSlide.id}:${restoreRev}`}
               slide={selectedSlide}
               onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
+            />
+            <SlideVersions
+              key={`v:${selectedSlide.id}`}
+              deckId={deckId}
+              slide={selectedSlide}
+              onRestored={async () => {
+                await load();
+                setRestoreRev((n) => n + 1);
+              }}
             />
 
             <button
@@ -1027,7 +1068,7 @@ function SlideCenterEditor({
 }: {
   themeId?: string | null;
   deckId: string;
-  onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }) => void;
+  onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }, action: string) => void;
   onSplit: (a: Record<string, any>, b: Record<string, any>) => void;
   slide: Slide;
   onSave: (patch: { config: Record<string, any> }) => void;
@@ -1474,6 +1515,89 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 }
 
 // Thẻ cài đặt thống nhất: ô icon + tiêu đề (+ công tắc bên phải) + nội dung mở rộng.
+const VERSION_LABEL: Record<string, string> = {
+  generated: "Bản AI sinh ban đầu",
+  before_edit: "Trước khi sửa tay",
+  before_ai: "Trước khi dùng đề xuất của AI",
+  before_sync: "Trước khi cập nhật theo dàn ý",
+  before_restore: "Trước khi khôi phục",
+};
+
+interface SlideVersionRow {
+  id: string;
+  source: string;
+  type: string;
+  config: Record<string, any>;
+  createdAt: string;
+}
+
+/** Hoàn tác: danh sách phiên bản cũ của slide và nút khôi phục (H11). */
+function SlideVersions({ deckId, slide, onRestored }: { deckId: string; slide: Slide; onRestored: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<SlideVersionRow[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const base = apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slide.id}/versions`);
+
+  const fetchRows = async () => {
+    const res = await fetch(base);
+    if (!res.ok) return toast.error("Không tải được các phiên bản");
+    setRows(((await res.json()) as { versions: SlideVersionRow[] }).versions);
+  };
+  useEffect(() => {
+    if (open) void fetchRows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, slide.id]);
+
+  const summary = (r: SlideVersionRow) => String(r.config.title ?? r.config.question ?? r.config.prompt ?? r.config.quote ?? "").slice(0, 60) || "(không có tiêu đề)";
+
+  const restore = async (r: SlideVersionRow) => {
+    if (!window.confirm(`Khôi phục slide về phiên bản "${VERSION_LABEL[r.source] ?? r.source}"?\n\nNội dung hiện tại được lưu lại thành một phiên bản nên bạn vẫn quay lại được.`)) return;
+    setBusy(r.id);
+    try {
+      const res = await fetch(`${base}/${r.id}/restore`, { method: "POST" });
+      if (!res.ok) return toast.error("Khôi phục thất bại");
+      await onRestored();
+      await fetchRows();
+      toast.success("Đã khôi phục slide");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <section className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-3.5">
+      <button type="button" className="flex w-full items-center justify-between text-left" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="flex items-center gap-2.5 text-[13px] font-semibold">
+          <History size={15} className="text-muted" /> Phiên bản
+        </span>
+        <span className="text-[11px] text-faint">{open ? "Ẩn" : "Xem và hoàn tác"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 space-y-2">
+          {rows === null ? (
+            <p className="text-xs text-faint">Đang tải...</p>
+          ) : rows.length === 0 ? (
+            <p className="text-xs text-faint">Slide này chưa có phiên bản cũ. Phiên bản được lưu mỗi khi slide sắp bị sửa hoặc thay.</p>
+          ) : (
+            rows.map((r) => (
+              <div key={r.id} className="rounded-xl border border-token p-2.5">
+                <p className="text-[12px] font-semibold">{VERSION_LABEL[r.source] ?? r.source}</p>
+                <p className="text-[11px] text-faint">{formatDateTime(r.createdAt)}</p>
+                <p className="mt-1 truncate text-[12px] text-muted" title={summary(r)}>
+                  {summary(r)}
+                </p>
+                <button type="button" className="mt-2 text-[12px] font-semibold text-brand-700 hover:underline disabled:opacity-50" disabled={busy !== null} onClick={() => restore(r)}>
+                  {busy === r.id ? "Đang khôi phục..." : "Khôi phục phiên bản này"}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SettingCard({
   icon,
   title,

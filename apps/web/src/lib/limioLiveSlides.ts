@@ -607,3 +607,8 @@ export function splitSlideConfig(config: Record<string, any>): [Record<string, u
   }
   return null;
 }
+
+/** Hai config slide có giống hệt nhau không (không phân biệt thứ tự khoá). */
+export function slideConfigsEqual(a: unknown, b: unknown): boolean {
+  return stable(a ?? {}) === stable(b ?? {});
+}

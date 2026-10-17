@@ -209,11 +209,12 @@ function AiEditBar({
   slideId: string;
   config: Cfg;
   themeId?: string | null;
-  onApply: (p: Proposal) => void;
+  onApply: (p: Proposal, action: EditAction) => void;
 }) {
   const [busy, setBusy] = useState<EditAction | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [proposalAction, setProposalAction] = useState<EditAction>("shorter");
 
   const run = async (action: EditAction) => {
     setBusy(action);
@@ -227,6 +228,7 @@ function AiEditBar({
       const j = (await res.json().catch(() => null)) as { proposal?: Proposal; error?: string } | null;
       if (!res.ok || !j?.proposal) return setErr(AI_ERROR[j?.error ?? ""] ?? "Không nhờ AI được lúc này. Vui lòng thử lại.");
       setProposal(j.proposal);
+      setProposalAction(action);
     } catch {
       setErr("Mất kết nối. Vui lòng kiểm tra mạng rồi thử lại.");
     } finally {
@@ -277,7 +279,7 @@ function AiEditBar({
               type="button"
               className="btn-primary flex items-center gap-1.5 text-sm"
               onClick={() => {
-                onApply(proposal);
+                onApply(proposal, proposalAction);
                 setProposal(null);
               }}
             >
@@ -336,7 +338,7 @@ export default function LayoutEditor({
   deckId: string;
   slideId: string;
   /** Giảng viên chấp nhận đề xuất của AI (đổi nội dung, có thể đổi loại slide). */
-  onApplyProposal: (p: Proposal) => void;
+  onApplyProposal: (p: Proposal, action: string) => void;
   /** Tách slide quá dài thành hai: nhận cấu hình hai slide mới. */
   onSplit: (a: Cfg, b: Cfg) => void;
 }) {
@@ -379,10 +381,10 @@ export default function LayoutEditor({
         slideId={slideId}
         config={preview}
         themeId={themeId}
-        onApply={(p) => {
+        onApply={(p, action) => {
           // Làm mới các ô nhập theo đề xuất (cùng bố cục); đổi loại slide thì trình soạn tự đổi theo.
           if (p.type === "content") setD(padForEditing(layout, p.config));
-          onApplyProposal(p);
+          onApplyProposal(p, action);
         }}
       />
 
