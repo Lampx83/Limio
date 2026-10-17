@@ -603,6 +603,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     if (editOpen && !(selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config))) setEditOpen(false);
   }, [editOpen, selectedSlide]);
   const slideIndex = selectedSlideId ? deck.slides.findIndex((s) => s.id === selectedSlideId) : -1;
+  const stageLayout = !!selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config);
   const slideNav = {
     index: Math.max(0, slideIndex),
     total: deck.slides.length,
@@ -844,14 +845,19 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
         {/* Center — live WYSIWYG preview */}
         <div className="relative flex min-w-0 flex-1 flex-col">
-          <div className="flex flex-1 overflow-y-auto p-8 pb-20">
+          <div className={stageLayout ? "flex min-h-0 flex-1 flex-col p-3 pb-20 lg:p-4 lg:pb-16" : "flex flex-1 overflow-y-auto p-8 pb-20"}>
             {selectedSlide ? (
+              // Slide bố cục: khung xem trước chiếm trọn vùng giữa (không thẻ bọc, không đệm), thu phóng do chính khung xử lý.
               <div
                 key={`${selectedSlide.id}:${restoreRev}`}
-                className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
-                  selectedSlide.timerSeconds != null ? "pb-28" : ""
-                }`}
-                style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : brandFrameBackground(effBrand, false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
+                className={
+                  stageLayout
+                    ? "relative flex min-h-0 w-full flex-1 flex-col"
+                    : `relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
+                        selectedSlide.timerSeconds != null ? "pb-28" : ""
+                      }`
+                }
+                style={stageLayout ? undefined : { background: brandFrameBackground(effBrand, false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
                 <SlideCenterEditor
                   slide={selectedSlide}
@@ -865,6 +871,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                   editOpen={editOpen}
                   onEditOpenChange={setEditOpen}
                   nav={slideNav}
+                  zoom={editorZoom}
                 />
                 {selectedSlide.timerSeconds != null && (
                   <TimerSticker seconds={selectedSlide.timerSeconds} />
@@ -1142,7 +1149,9 @@ function SlideCenterEditor({
   editOpen,
   onEditOpenChange,
   nav,
+  zoom,
 }: {
+  zoom: number;
   editOpen: boolean;
   onEditOpenChange: (open: boolean) => void;
   nav: { index: number; total: number; onPrev: (() => void) | null; onNext: (() => void) | null };
@@ -1168,6 +1177,7 @@ function SlideCenterEditor({
         open={editOpen}
         onOpenChange={onEditOpenChange}
         nav={nav}
+        zoom={zoom}
       />
     );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;

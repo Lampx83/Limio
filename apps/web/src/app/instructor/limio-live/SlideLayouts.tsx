@@ -31,7 +31,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { fitScaleForBox, frameHeightForContent, measureContentBox } from "@/lib/limioLiveFit";
 import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
 import { useLiveBrand } from "./liveBrandContext";
-import { isDarkTheme, layoutThemeClass } from "./slideThemes";
+import { isDarkTheme, layoutThemeClass, slideBgFor } from "./slideThemes";
 import "./slideLayouts.css";
 
 // Bộ vẽ slide Nội dung theo bố cục. Thiết kế ở khung 1280 × 720 rồi co theo khung chứa
@@ -82,12 +82,15 @@ export function LayoutSlideView({
   themeId,
   animate = false,
   zoom = 1,
+  frame = false,
 }: {
   config: Cfg;
   themeId?: string | null;
   animate?: boolean;
   /** Thu phóng của người trình chiếu: nhân với tỉ lệ vừa khung; phóng to hơn khung thì cuộn được. */
   zoom?: number;
+  /** Trình sửa: vẽ viền khung hình 16:9 trên nền trang; phần chữ nằm dưới viền là phần phải cuộn mới thấy. */
+  frame?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0);
@@ -98,6 +101,13 @@ export function LayoutSlideView({
   const [fitK, setFitK] = useState(1);
   const [frameH, setFrameH] = useState(DESIGN_H);
   const configKey = JSON.stringify(config);
+  // Thương hiệu của bài giảng: màu thay màu nhấn của giao diện; logo vẽ trong khung thiết kế (co cùng slide)
+  // và nội dung thu nhỏ vừa đủ để chừa chỗ, không chồng chữ.
+  const brand = useLiveBrand();
+  const layout = resolveLayout(config);
+  const showLogo = !!brand?.logoUrl && logoVisibleOn(brand.logoShow, slideRole(layout));
+  const k = showLogo && brand ? contentScaleForLogo(brand.logoSize) : 1;
+  const top = !!brand && brand.logoPos[0] === "t";
   useIsoLayoutEffect(() => {
     const root = bodyRef.current;
     if (!root) return;
@@ -107,7 +117,16 @@ export function LayoutSlideView({
       const box = measureContentBox(root);
       setFrameH(frameHeightForContent(box));
       // Hệ số co chỉ đo được khi khung đang ở 720 (nội dung căn giữa theo khung); đang phóng to thì giữ giá trị cũ.
-      if (!zoomed) setFitK(fitScaleForBox(box));
+      if (!zoomed) {
+        // Có logo thì nội dung đã bị thu k lần và dịch xuống: đổi hộp đo về toạ độ cuối cùng trên khung rồi mới tính độ co.
+        const dx = (DESIGN_W * (1 - k)) / 2;
+        const dy = top ? DESIGN_H * (1 - k) : 0;
+        setFitK(
+          fitScaleForBox(
+            box && k < 1 ? { top: box.top * k + dy, bottom: box.bottom * k + dy, left: box.left * k + dx, right: box.right * k + dx } : box,
+          ),
+        );
+      }
     };
     run();
     // Phông chữ tải xong có thể đổi số dòng của chữ: đo lại một lần.
@@ -115,7 +134,7 @@ export function LayoutSlideView({
     return () => {
       alive = false;
     };
-  }, [configKey, zoomed]);
+  }, [configKey, zoomed, k, top]);
 
   useEffect(() => {
     const el = ref.current;
@@ -135,19 +154,12 @@ export function LayoutSlideView({
 
   const scale = layoutRenderScale(fit, zoom);
   const slideH = zoomed ? frameH : DESIGN_H;
-  const layout = resolveLayout(config);
-  // Thương hiệu của bài giảng: màu thay màu nhấn của giao diện; logo vẽ trong khung thiết kế (co cùng slide)
-  // và nội dung thu nhỏ vừa đủ để chừa chỗ, không chồng chữ.
-  const brand = useLiveBrand();
-  const showLogo = !!brand?.logoUrl && logoVisibleOn(brand.logoShow, slideRole(layout));
   const brandVars = brandCssVars(brand, isDarkTheme(themeId));
   // Nền xuyệt tông: bộ màu chữ mượn giao diện sáng/tối, nền vẽ ngay trên khung chứa để phủ kín khung slide.
   const effThemeId = brandEffectiveThemeId(brand, themeId);
   const frameBg = brandFrameBackground(brand, true);
-  const k = showLogo && brand ? contentScaleForLogo(brand.logoSize) : 1;
-  const top = !!brand && brand.logoPos[0] === "t";
   const body = (
-    <div ref={bodyRef} style={{ position: "absolute", inset: 0, transformOrigin: "50% 50%", ...(fitK < 1 && !zoomed ? { transform: `scale(${fitK})` } : null) }}>
+    <div ref={bodyRef} style={{ position: "absolute", inset: 0 }}>
       <LayoutBody layout={layout} c={config} />
     </div>
   );
@@ -166,23 +178,26 @@ export function LayoutSlideView({
         style={{
           ...slideStyle,
           visibility: scale > 0 ? "visible" : "hidden",
+          ...(frame ? { background: frameBg ?? slideBgFor(themeId, true), boxShadow: "0 10px 30px rgba(32, 36, 31, .14)" } : null),
           ...(brandVars as CSSProperties),
         }}
       >
-        {showLogo ? (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              transformOrigin: "0 0",
-              transform: `translate(${(DESIGN_W * (1 - k)) / 2}px, ${top ? slideH * (1 - k) : 0}px) scale(${k})`,
-            }}
-          >
-            {body}
-          </div>
-        ) : (
-          body
-        )}
+        <div style={{ position: "absolute", inset: 0, transformOrigin: "50% 50%", ...(fitK < 1 && !zoomed ? { transform: `scale(${fitK})` } : null) }}>
+          {showLogo ? (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                transformOrigin: "0 0",
+                transform: `translate(${(DESIGN_W * (1 - k)) / 2}px, ${top ? slideH * (1 - k) : 0}px) scale(${k})`,
+              }}
+            >
+              {body}
+            </div>
+          ) : (
+            body
+          )}
+        </div>
         {showLogo && brand?.logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -193,13 +208,56 @@ export function LayoutSlideView({
             style={{ position: "absolute", zIndex: 5, width: "auto", maxWidth: 280, objectFit: "contain", ...logoPlacement(brand.logoPos, brand.logoSize) }}
           />
         )}
+        {frame && (
+          <>
+            {/* Viền khung hình 16:9; dày theo tỉ lệ để luôn thấy rõ ở mọi mức thu phóng. */}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                width: DESIGN_W,
+                height: DESIGN_H,
+                zIndex: 6,
+                pointerEvents: "none",
+                boxShadow: `inset 0 0 0 ${Math.max(2, 2.5 / Math.max(scale, 0.1))}px rgba(95, 105, 125, .6)`,
+              }}
+            />
+            {slideH > DESIGN_H && (
+              <div
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: DESIGN_H,
+                  width: DESIGN_W,
+                  bottom: 0,
+                  zIndex: 6,
+                  pointerEvents: "none",
+                  background: "rgba(32, 36, 31, .08)",
+                  color: "rgba(32, 36, 31, .55)",
+                  fontSize: 22,
+                  fontWeight: 600,
+                  textAlign: "center",
+                  display: "flex",
+                  alignItems: "flex-end",
+                  justifyContent: "center",
+                  paddingBottom: 12,
+                }}
+              >
+                Ngoài khung hình: khi chiếu phóng to phải cuộn mới thấy
+              </div>
+            )}
+          </>
+        )}
       </div>
   );
   return (
     <div
       ref={ref}
       className={`relative min-h-0 w-full flex-1 ${zoomed ? "overflow-auto" : "overflow-hidden"}`}
-      style={frameBg ? { background: frameBg } : undefined}
+      style={frameBg && !frame ? { background: frameBg } : undefined}
     >
       {zoomed ? (
         // Phóng to hơn khung: ô chứa đúng cỡ slide đã phóng, căn giữa bằng margin auto (nhỏ hơn khung thì ở giữa,
