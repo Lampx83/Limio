@@ -4,7 +4,8 @@ import { prisma } from "@feedbackme/db";
 import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup } from "@feedbackme/core-lms";
 import { z } from "zod";
 import { SLIDE_THEME_IDS } from "@/app/instructor/limio-live/slideThemes";
-import { brandLogoFilename, sanitizeBrand, validateBrandInput } from "@/lib/limioLiveBrand";
+import { BRAND_TEMPLATE_IDS, brandLogoFilename, sanitizeBrand, validateBrandInput } from "@/lib/limioLiveBrand";
+import { withOrgBrand } from "@/lib/limioLiveBrandServer";
 import { storageFor } from "@/lib/storage";
 import { liveSlideImageKeyFromFilename } from "@/lib/storage-keys";
 
@@ -15,6 +16,10 @@ const UpdateDeckSchema = z.object({
   groupId: z.string().uuid().nullable().optional(),
   // Thương hiệu: null = xoá; kiểm tra chặt bằng validateBrandInput (không dùng zod để báo đúng lỗi từng trường).
   brand: z.unknown().optional(),
+  // true = bài này không dùng thương hiệu nào (kể cả của trường).
+  brandOff: z.boolean().optional(),
+  // Mẫu thương hiệu của trường cho bài này; null = mẫu mặc định của trường.
+  brandTemplate: z.enum(BRAND_TEMPLATE_IDS).nullable().optional(),
 });
 
 /** Gỡ hoặc thay logo thì dọn tệp cũ (best-effort), trừ khi bài giảng khác (vd. bản sao) còn dùng chung tệp đó. */
@@ -48,7 +53,7 @@ export async function GET(
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
 
-    return NextResponse.json(deck);
+    return NextResponse.json(await withOrgBrand(deck, userId));
   } catch (error) {
     console.error("[Limio-Live Deck API - GET]", error);
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -76,7 +81,7 @@ export async function PATCH(
     }
 
     const { groupId, brand: brandRaw, ...restFields } = validation.data;
-    const rest: { title?: string; theme?: string; brand?: Record<string, unknown> | null } = { ...restFields };
+    const rest: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null } = { ...restFields };
     let previousLogo: unknown;
     if (brandRaw !== undefined) {
       const v = validateBrandInput(brandRaw);

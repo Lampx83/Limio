@@ -39,6 +39,8 @@ import {
   ClipboardX,
   ZoomIn,
   ZoomOut,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Save,
   Check,
@@ -59,9 +61,10 @@ import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
-import BrandDialog from "./BrandDialog";
+import BrandDialog, { type BrandPatch } from "./BrandDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
-import { sanitizeBrand, type BrandConfig } from "@/lib/limioLiveBrand";
+import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
+import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import { isLayoutSlide } from "../SlideLayouts";
 import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
@@ -84,6 +87,12 @@ interface Deck {
   theme?: string;
   /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider / sanitizeBrand. */
   brand?: unknown;
+  /** true = bài này không dùng thương hiệu nào (kể cả của trường). */
+  brandOff?: boolean;
+  /** Mẫu thương hiệu của trường giảng viên chọn cho bài; null = mẫu mặc định của trường. */
+  brandTemplate?: string | null;
+  /** Bộ thương hiệu của trường mà chủ bài thuộc về (null nếu không thuộc trường nào). */
+  org?: DeckOrgBrand | null;
   slides: Slide[];
 }
 
@@ -336,21 +345,21 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   // Các lần lưu thương hiệu chạy LẦN LƯỢT: hai lần sửa sát nhau mà đến máy chủ đảo thứ tự thì lần cũ sẽ ghi đè lần mới.
   const brandQueue = useRef<Promise<unknown>>(Promise.resolve());
   // Thương hiệu: cập nhật ngay trên màn hình rồi lưu; lỗi thì hoàn lại như đổi giao diện.
-  const handleSetBrand = (brand: BrandConfig | null) => {
+  const handleSetBrand = (patch: BrandPatch) => {
     if (!deck) return;
-    const prev = deck.brand ?? null;
-    setDeck((d) => (d ? { ...d, brand } : d));
+    const prev = { brand: deck.brand ?? null, brandOff: deck.brandOff ?? false, brandTemplate: deck.brandTemplate ?? null };
+    setDeck((d) => (d ? { ...d, ...patch } : d));
     brandQueue.current = brandQueue.current.then(async () => {
       const res = await trackSave(() =>
         fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ brand }),
+          body: JSON.stringify(patch),
         })
       ).catch(() => null);
       if (!res || !res.ok) {
         toast.error("Lưu thương hiệu thất bại");
-        setDeck((d) => (d ? { ...d, brand: prev } : d));
+        setDeck((d) => (d ? { ...d, ...prev } : d));
         return;
       }
       setLastSavedAt(new Date());
@@ -594,6 +603,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   if (!deck) return <p className="text-sm text-muted">Đang tải...</p>;
 
   const selectedSlide = deck.slides.find((s) => s.id === selectedSlideId) ?? null;
+  // Thương hiệu thực sự áp cho bài: riêng của bài, của trường (theo mẫu đã chọn) hoặc không có.
+  const effBrand = deckEffectiveBrand(deck);
   // ‹ › trong cửa sổ sửa: sang slide kế bên; nếu slide đó dùng trình sửa riêng (quiz, bảng...) thì đóng cửa sổ.
   const goAdjacent = (delta: -1 | 1) => {
     if (!selectedSlideId) return;
@@ -615,7 +626,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   };
 
   return (
-    <LiveBrandProvider brand={deck.brand}>
+    <LiveBrandProvider brand={effBrand}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
       onInput={() => {
@@ -681,9 +692,9 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           title="Logo và màu thương hiệu của bài giảng"
           className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-token px-2 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
         >
-          <span className="h-5 w-5 rounded-full border border-token" style={{ background: sanitizeBrand(deck.brand)?.color ?? "linear-gradient(135deg,#BEF264,#F9A8D4)" }} aria-hidden />
+          <span className="h-5 w-5 rounded-full border border-token" style={{ background: effBrand?.colors?.primary ?? "linear-gradient(135deg,#BEF264,#F9A8D4)" }} aria-hidden />
           <span className="hidden sm:inline">Thương hiệu</span>
-          {sanitizeBrand(deck.brand) && <span className="hidden font-normal sm:inline">· đã đặt</span>}
+          {effBrand && <span className="hidden font-normal sm:inline">· {deck.brand || deck.brandOff ? "riêng" : "của trường"}</span>}
         </button>
         {/* 3 lệnh trình chiếu gom 1 khối phân đoạn (giống thanh Slide Show của PowerPoint):
             "Từ đầu" là lệnh chính (tô đặc), 2 lệnh còn lại nền trong, cùng cỡ. */}
@@ -855,7 +866,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                 className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
                   selectedSlide.timerSeconds != null ? "pb-28" : ""
                 }`}
-                style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : slideBgFor(deck.theme, false), zoom: editorZoom }}
+                style={{ background: selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config) ? "#FFFFFF" : brandFrameBackground(effBrand, false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
                 {(selectedSlide.type === "quiz" || selectedSlide.type === "poll" || selectedSlide.type === "word_cloud") &&
                   (usage[selectedSlide.id] ?? 0) > 0 && (
@@ -891,6 +902,29 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </div>
           {selectedSlide && (
             <div className="absolute bottom-20 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-1 shadow-lg lg:bottom-4">
+              {/* Xem nhanh slide trước / sau mà không phải quay sang dải slide bên trái. */}
+              <button
+                onClick={() => slideNav.onPrev?.()}
+                disabled={!slideNav.onPrev}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Slide trước"
+                title="Slide trước"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="min-w-[3.5rem] text-center text-xs font-semibold tabular-nums" aria-live="polite">
+                {slideNav.index + 1} / {slideNav.total}
+              </span>
+              <button
+                onClick={() => slideNav.onNext?.()}
+                disabled={!slideNav.onNext}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Slide sau"
+                title="Slide sau"
+              >
+                <ChevronRight size={18} />
+              </button>
+              <span className="mx-1 h-5 w-px bg-[rgb(var(--border))]" aria-hidden />
               <button
                 onClick={() => setZoomLevel(editorZoom - 0.1)}
                 disabled={editorZoom <= 0.5}
@@ -1008,7 +1042,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         )}
       </div>
       {brandOpen && (
-        <BrandDialog brand={deck.brand} themeId={deck.theme ?? "white"} onChange={handleSetBrand} onClose={() => setBrandOpen(false)} />
+        <BrandDialog
+          brand={deck.brand}
+          brandOff={deck.brandOff ?? false}
+          brandTemplate={deck.brandTemplate ?? null}
+          org={deck.org ?? null}
+          themeId={deck.theme ?? "white"}
+          onChange={handleSetBrand}
+          onClose={() => setBrandOpen(false)}
+        />
       )}
     </div>
     </LiveBrandProvider>

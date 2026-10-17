@@ -419,3 +419,21 @@ describe("adjacentSlide (nút ‹ › trong cửa sổ sửa slide)", () => {
     expect(adjacentSlide(slides, "d", 1)?.layoutSlide).toBe(false); // nhúng tài nguyên
   });
 });
+
+import { SLIDE_ZOOM_MAX, SLIDE_ZOOM_MIN, layoutRenderScale } from "./limioLiveSlides";
+
+describe("layoutRenderScale (thu phóng khi trình chiếu)", () => {
+  it("nhân tỉ lệ vừa khung với mức thu phóng", () => {
+    expect(layoutRenderScale(1.1, 1)).toBeCloseTo(1.1);
+    expect(layoutRenderScale(1.1, 1.2)).toBeCloseTo(1.32);
+    expect(layoutRenderScale(1.1, 0.8)).toBeCloseTo(0.88);
+  });
+  it("không thu phóng thì giữ nguyên; giá trị lạ về 100%", () => {
+    expect(layoutRenderScale(1, undefined)).toBe(1);
+    expect(layoutRenderScale(1, NaN)).toBe(1);
+  });
+  it("giới hạn trong khoảng cho phép của nút thu phóng", () => {
+    expect(layoutRenderScale(1, 99)).toBe(SLIDE_ZOOM_MAX);
+    expect(layoutRenderScale(1, 0.01)).toBe(SLIDE_ZOOM_MIN);
+  });
+});

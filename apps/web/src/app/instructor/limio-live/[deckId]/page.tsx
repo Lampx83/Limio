@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import { getLiveDeck } from "@feedbackme/core-lms";
+import { withOrgBrand } from "@/lib/limioLiveBrandServer";
 import LiveDeckEditor from "./LiveDeckEditor";
 
 export const metadata = {
@@ -22,5 +23,5 @@ export default async function LiveDeckEditorPage({
   const deck = await getLiveDeck(params.deckId, userId, prisma);
   if (!deck) notFound();
   // JSON round-trip: Date → chuỗi ISO, khớp đúng hình dạng API trả về.
-  return <LiveDeckEditor deckId={params.deckId} initialDeck={JSON.parse(JSON.stringify(deck))} />;
+  return <LiveDeckEditor deckId={params.deckId} initialDeck={JSON.parse(JSON.stringify(await withOrgBrand(deck, userId)))} />;
 }

@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, Check, GripVertical, Loader2, Plus } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, FileText, GripVertical, Loader2, Plus } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
@@ -261,49 +261,78 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
 
   return (
     <main className="mx-auto max-w-4xl space-y-6 pb-24">
-      <div className="border-b border-token pb-5">
-        <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
-          Limio-Live
+      <header className="space-y-3">
+        <a href="/instructor/limio-live" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-[rgb(var(--text))]">
+          <ChevronLeft size={16} /> Limio-Live
         </a>
-        <h1 className="mt-1 text-2xl font-bold">Dàn ý bài giảng</h1>
-        <p className="mt-1 text-sm text-muted">
-          {data.title}
-          {data.sourceName ? ` · từ tài liệu “${data.sourceName}”` : ""}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h1 className="text-2xl font-bold">Dàn ý bài giảng</h1>
+          {data.sourceName && (
+            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[rgb(var(--surface-muted))] px-3 py-1 text-[13px] font-medium text-muted">
+              <FileText size={14} className="shrink-0" />
+              <span className="truncate">{data.sourceName}</span>
+            </span>
+          )}
+        </div>
+        <p className="text-[15px] font-semibold leading-snug">{data.title}</p>
+        <p className="max-w-2xl text-sm leading-relaxed text-muted">
+          Bấm vào một slide để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn, xác nhận ở cuối
+          trang để AI viết slide.
         </p>
-        <p className="mt-2 text-sm text-muted">
-          Bấm vào một slide trong danh sách để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn,
-          xác nhận ở cuối trang để chuyển sang bước tạo slide.
-        </p>
-      </div>
+      </header>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-[rgb(var(--surface-muted))] px-4 py-3 text-sm">
-        <span>
-          <b>{stats.total}</b> slide ({stats.content} nội dung, {stats.interactive} tương tác)
-        </span>
-        <label className="flex items-center gap-2">
-          Buổi giảng
-          <select
-            className="input py-1 text-sm"
-            value={minutes}
-            onChange={(e) => change(outline, Number(e.target.value))}
-            aria-label="Thời lượng buổi giảng"
-          >
-            {DURATIONS.map((d) => (
-              <option key={d.minutes} value={d.minutes}>
-                {d.minutes} phút
-              </option>
-            ))}
-          </select>
-        </label>
-        <span className="text-muted">
-          Gợi ý {range.min} đến {range.max} slide
-        </span>
+      <div className="grid items-center gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:pr-6">
+          <span className="flex items-baseline gap-1.5">
+            <b className="text-3xl font-bold leading-none tabular-nums">{stats.total}</b>
+            <span className="text-sm font-medium text-muted">slide</span>
+          </span>
+          <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-[13px] font-medium text-muted">{stats.content} nội dung</span>
+          <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[13px] font-medium text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200">
+            {stats.interactive} tương tác
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:border-l sm:border-token sm:px-6">
+          <label className="grid gap-1">
+            <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-faint">Buổi giảng</span>
+            <select
+              className="input h-9 w-full py-1 text-sm font-medium"
+              value={minutes}
+              onChange={(e) => change(outline, Number(e.target.value))}
+              aria-label="Thời lượng buổi giảng"
+            >
+              {DURATIONS.map((d) => (
+                <option key={d.minutes} value={d.minutes}>
+                  {d.minutes} phút
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="grid gap-1">
+            <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-faint">Gợi ý</span>
+            {(() => {
+              const inRange = stats.total >= range.min && stats.total <= range.max;
+              return (
+                <span
+                  className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold ${
+                    inRange ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200" : "bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+                  }`}
+                  title={inRange ? "Số slide nằm trong mức gợi ý" : "Số slide ngoài mức gợi ý cho thời lượng này"}
+                >
+                  {inRange ? <Check size={14} /> : <AlertTriangle size={14} />} {range.min} đến {range.max} slide
+                </span>
+              );
+            })()}
+          </div>
+        </div>
+
         <span
-          className={`ml-auto flex items-center gap-1.5 ${save === "error" ? "text-red-700" : "text-muted"}`}
+          className={`flex items-center justify-end gap-1.5 whitespace-nowrap text-sm sm:border-l sm:border-token sm:pl-6 ${save === "error" ? "font-semibold text-red-700" : "text-muted"}`}
           role="status"
         >
           {save === "saving" && <Loader2 size={14} className="animate-spin" />}
-          {save === "saved" && <Check size={14} />}
+          {save === "saved" && <Check size={14} className="text-emerald-600" />}
           {saveLabel}
         </span>
       </div>

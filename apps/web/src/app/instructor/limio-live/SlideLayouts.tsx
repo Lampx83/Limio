@@ -18,6 +18,7 @@ import {
 import {
   accentTail,
   fitFontSize,
+  layoutRenderScale,
   resolveLayout,
   parseInline,
   stripInline,
@@ -27,7 +28,7 @@ import {
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { apiUrl } from "@/lib/apiUrl";
-import { brandCssVars, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
+import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
 import { useLiveBrand } from "./liveBrandContext";
 import { isDarkTheme, layoutThemeClass } from "./slideThemes";
 import "./slideLayouts.css";
@@ -77,20 +78,24 @@ export function LayoutSlideView({
   config,
   themeId,
   animate = false,
+  zoom = 1,
 }: {
   config: Cfg;
   themeId?: string | null;
   animate?: boolean;
+  /** Thu phóng của người trình chiếu: nhân với tỉ lệ vừa khung; phóng to hơn khung thì cuộn được. */
+  zoom?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0);
+  const [fit, setFit] = useState(0);
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // offsetWidth/Height gồm cả thanh cuộn: tỉ lệ vừa khung không đổi khi phóng to làm hiện thanh cuộn.
     const measure = () => {
-      if (el.clientWidth > 0 && el.clientHeight > 0) {
-        setScale(Math.min(el.clientWidth / DESIGN_W, el.clientHeight / DESIGN_H));
+      if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+        setFit(Math.min(el.offsetWidth / DESIGN_W, el.offsetHeight / DESIGN_H));
       }
     };
     measure();
@@ -100,24 +105,33 @@ export function LayoutSlideView({
     return () => ro.disconnect();
   }, []);
 
+  const scale = layoutRenderScale(fit, zoom);
+  const zoomed = zoom > 1;
   const layout = resolveLayout(config);
   // Thương hiệu của bài giảng: màu thay màu nhấn của giao diện; logo vẽ trong khung thiết kế (co cùng slide)
   // và nội dung thu nhỏ vừa đủ để chừa chỗ, không chồng chữ.
   const brand = useLiveBrand();
   const showLogo = !!brand?.logoUrl && logoVisibleOn(brand.logoShow, slideRole(layout));
-  const brandVars = brandCssVars(brand?.color, isDarkTheme(themeId));
+  const brandVars = brandCssVars(brand, isDarkTheme(themeId));
+  // Nền xuyệt tông: bộ màu chữ mượn giao diện sáng/tối, nền vẽ ngay trên khung chứa để phủ kín khung slide.
+  const effThemeId = brandEffectiveThemeId(brand, themeId);
+  const frameBg = brandFrameBackground(brand, true);
   const k = showLogo && brand ? contentScaleForLogo(brand.logoSize) : 1;
   const top = !!brand && brand.logoPos[0] === "t";
-  return (
-    <div ref={ref} className="relative min-h-0 w-full flex-1 overflow-hidden">
+  const slideStyle: CSSProperties = zoomed
+    ? { position: "absolute", left: 0, top: 0, transformOrigin: "0 0", transform: `scale(${scale})` }
+    : {
+        position: "absolute",
+        left: "50%",
+        top: "50%",
+        transformOrigin: "0 0",
+        transform: `translate(${(-DESIGN_W * scale) / 2}px, ${(-DESIGN_H * scale) / 2}px) scale(${scale})`,
+      };
+  const slide = (
       <div
-        className={`lslide ${layoutThemeClass(themeId)} ${animate ? "anim" : ""}`}
+        className={`lslide ${layoutThemeClass(effThemeId)} ${animate ? "anim" : ""}`}
         style={{
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          transformOrigin: "0 0",
-          transform: `translate(${(-DESIGN_W * scale) / 2}px, ${(-DESIGN_H * scale) / 2}px) scale(${scale})`,
+          ...slideStyle,
           visibility: scale > 0 ? "visible" : "hidden",
           ...(brandVars as CSSProperties),
         }}
@@ -147,6 +161,22 @@ export function LayoutSlideView({
           />
         )}
       </div>
+  );
+  return (
+    <div
+      ref={ref}
+      className={`relative min-h-0 w-full flex-1 ${zoomed ? "overflow-auto" : "overflow-hidden"}`}
+      style={frameBg ? { background: frameBg } : undefined}
+    >
+      {zoomed ? (
+        // Phóng to hơn khung: ô chứa đúng cỡ slide đã phóng, căn giữa bằng margin auto (nhỏ hơn khung thì ở giữa,
+        // lớn hơn thì bắt đầu từ mép và cuộn được).
+        <div style={{ display: "flex", minWidth: "100%", minHeight: "100%" }}>
+          <div style={{ position: "relative", flex: "none", margin: "auto", width: DESIGN_W * scale, height: DESIGN_H * scale }}>{slide}</div>
+        </div>
+      ) : (
+        slide
+      )}
     </div>
   );
 }

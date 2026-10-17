@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
 import {
+  getOrganizationSlideBrandForUser,
+  updateOrganizationSlideBrand,
   updateOrganizationLogo,
   updateOrganizationName,
   updateOrganizationSignature,
@@ -94,5 +96,36 @@ describe("updateOrganizationSignature — org branding", () => {
     await expect(
       updateOrganizationSignature(outsiderId, orgId, "/api/org-signatures/x-1.png"),
     ).rejects.toMatchObject({ code: "forbidden" });
+  });
+});
+
+describe("thương hiệu slide của trường", () => {
+  const BRAND = { colors: { primary: "#B91C1C", secondary: "#9A3412", accent: "#FACC15" }, logoPos: "tl", logoSize: "l", logoShow: "nocover", bg: "light" };
+
+  it("OrgAdmin của trường đặt, đọc lại và xoá được", async () => {
+    const { orgAdminId, orgId } = await setup("slidebrand1");
+    const set = await updateOrganizationSlideBrand(orgAdminId, orgId, BRAND);
+    expect(set.slideBrand).toEqual(BRAND);
+    expect((await prisma.organization.findUniqueOrThrow({ where: { id: orgId } })).slideBrand).toEqual(BRAND);
+    await updateOrganizationSlideBrand(orgAdminId, orgId, null);
+    expect((await prisma.organization.findUniqueOrThrow({ where: { id: orgId } })).slideBrand).toBeNull();
+  });
+
+  it("người không phải OrgAdmin của trường đó không đặt được", async () => {
+    const { outsiderId, orgId } = await setup("slidebrand2");
+    await expect(updateOrganizationSlideBrand(outsiderId, orgId, BRAND)).rejects.toMatchObject({ code: "forbidden" });
+    expect((await prisma.organization.findUniqueOrThrow({ where: { id: orgId } })).slideBrand).toBeNull();
+  });
+
+  it("thành viên của trường đọc được thương hiệu kèm logo của trường; người ngoài trường không nhận gì", async () => {
+    const { orgAdminId, outsiderId, orgId } = await setup("slidebrand3");
+    await updateOrganizationSlideBrand(orgAdminId, orgId, BRAND);
+    await updateOrganizationLogo(orgAdminId, orgId, "/api/org-logos/x-2.png");
+    const member = await registerUser({ email: `member-slidebrand3-${Date.now()}@e.com`, password: "password1234", displayName: "GV" }, BASE);
+    await prisma.user.update({ where: { id: member.userId }, data: { organizationId: orgId } });
+
+    const got = await getOrganizationSlideBrandForUser(member.userId);
+    expect(got).toMatchObject({ organizationId: orgId, slideBrand: BRAND, logoUrl: "/api/org-logos/x-2.png" });
+    expect(await getOrganizationSlideBrandForUser(outsiderId)).toBeNull();
   });
 });

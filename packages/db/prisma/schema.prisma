@@ -4841,6 +4841,10 @@ model Organization {
   locale                     String   @default("vi")
   timezone                   String   @default("Asia/Ho_Chi_Minh")
   brandingLogoUrl            String?
+  // Cài đặt thương hiệu của trường cho slide Limio-Live (màu, nền, vị trí/cỡ/chỗ hiện logo): JSON chuẩn hoá bởi
+  // apps/web/src/lib/limioLiveBrand.ts (OrgBrandSettings). Logo lấy từ brandingLogoUrl. Mọi giảng viên của trường
+  // dùng bộ này cho bài giảng chưa có thương hiệu riêng.
+  slideBrand                 Json?
   // Ảnh chữ ký người đại diện trường — hiện trên chứng nhận hoàn thành khoá
   // học, cạnh chữ ký Limio (xem SiteSetting key branding.limio_signature_url).
   signatureImageUrl          String?
@@ -5126,6 +5130,11 @@ model LiveDeck {
   // Thương hiệu của bài giảng (logo + màu): { logoUrl?, logoPos, logoSize, logoShow, color? }, chuẩn hoá bởi
   // apps/web/src/lib/limioLiveBrand.ts. Null = chưa đặt (slide hiển thị đúng theo giao diện).
   brand     Json?
+  // true = bài giảng này KHÔNG dùng thương hiệu nào (kể cả của trường). false + brand null = dùng của trường.
+  brandOff  Boolean  @default(false)
+  // Mẫu thương hiệu giảng viên chọn cho bài này khi dùng thương hiệu của trường (mã trong limioLiveBrand.brandTemplates);
+  // null = mẫu mặc định của trường.
+  brandTemplate String?
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
   groupId   String?
