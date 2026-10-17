@@ -128,6 +128,7 @@ async function bangDiem({
       : null,
     exportedAt,
     questions: questions.map((q) => ({ number: q.orderInExam + 1, points: q.points })),
+    weightsNote: results.weightsNote,
     rows: results.rows.map((row) => ({
       row,
       cells: questions.map((q) => cellFor(row.attemptId, q)),

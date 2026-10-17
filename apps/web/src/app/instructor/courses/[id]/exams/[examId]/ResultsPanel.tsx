@@ -112,6 +112,12 @@ export default function ResultsPanel({
         />
       </div>
 
+      {data?.weightsNote && (
+        <p className="mb-3 text-xs text-slate-600">
+          Điểm tính theo trọng số: <b>{data.weightsNote}</b>. Điểm thô ({data.totalPoints} điểm tối đa) giữ nguyên.
+        </p>
+      )}
+
       {/* Ba lát cắt, đúng ba câu hỏi giáo viên hay hỏi. */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Seg on={slice === "students"} onClick={() => setSlice("students")}>

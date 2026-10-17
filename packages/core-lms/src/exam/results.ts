@@ -1,6 +1,7 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
+import { describeWeights, loadScoringPlan } from "./weighted-score";
 
 /**
  * Danh sách kết quả của MỘT bài thi, gom mọi lượt làm bất kể thuộc ca nào
@@ -60,6 +61,8 @@ export interface ExamResults {
   examId: string;
   examTitle: string;
   totalPoints: number;
+  /** "Phần 1 40% · Phần 2 60%" khi điểm % tính theo trọng số; null khi theo tỉ lệ điểm. */
+  weightsNote: string | null;
   /** Chỉ hiện bộ lọc khi bài thực sự có nhiều hơn một. */
   sessions: Array<{ id: string; title: string }>;
   rooms: Array<{ id: string; name: string }>;
@@ -247,6 +250,7 @@ export async function listExamResults(
     examId: exam.id,
     examTitle: exam.title,
     totalPoints,
+    weightsNote: describeWeights(await loadScoringPlan(examId, db)),
     sessions: exam.schedules.map((s) => ({
       id: s.id,
       title: s.title ?? s.code ?? "Ca thi",

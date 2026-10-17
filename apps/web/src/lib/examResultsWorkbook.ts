@@ -22,6 +22,8 @@ export interface ExamResultsWorkbookInput {
   questions: Array<{ number: number; points: number }>;
   /** Mỗi phần tử ứng với một dòng `row`; `cells[i]` là ô của câu thứ i. */
   rows: Array<{ row: ExamResultRow; cells: string[] }>;
+  /** "Phần 1 40% · Phần 2 60%" khi tỉ lệ điểm tính theo trọng số; null/bỏ trống khi theo tỉ lệ điểm. */
+  weightsNote?: string | null;
 }
 
 const HEADER_FILL: ExcelJS.Fill = {
@@ -81,6 +83,10 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
     `Xuất lúc ${formatDateTime(input.exportedAt)} · ${input.rows.length} người · ` +
     `${input.rows.filter((x) => x.row.status !== "not_started").length} đã làm bài`;
   ws.getCell("A3").font = MUTED_FONT;
+  if (input.weightsNote) {
+    ws.getCell("A4").value = `Tỉ lệ tính theo trọng số: ${input.weightsNote}. Điểm là điểm thô, giữ nguyên.`;
+    ws.getCell("A4").font = MUTED_FONT;
+  }
 
   const headerRow = 5;
   const header = ws.getRow(headerRow);
@@ -186,8 +192,13 @@ export interface SessionRosterWorkbookInput {
   sessionTitle: string;
   exportedAt: Date;
   totalPoints: number;
+  /** "Phần 1 40% · Phần 2 60%" khi điểm tính theo trọng số; null khi theo tỉ lệ điểm. */
+  weightsNote?: string | null;
+  /** Đề chia từ 2 phần trở lên thì mỗi phần một cột điểm (điểm thô của phần). */
+  sections?: Array<{ title: string; maxPoints: number; weight: number | null }>;
   questions: Array<{ number: number; points: number }>;
-  rows: Array<{ row: SessionRosterRow; cells: string[] }>;
+  /** `sectionCells[i]` là ô của phần thứ i: điểm thô, "Chờ chấm" hoặc "—". */
+  rows: Array<{ row: SessionRosterRow; cells: string[]; sectionCells?: Array<number | string> }>;
 }
 
 /**
@@ -216,13 +227,21 @@ export function buildSessionRosterWorkbook(input: SessionRosterWorkbookInput): P
     "Số lượt",
   ];
   const widths = [6, 28, 14, 30, 14, 14, 16, 12, 18, 9, 12, 18, 9];
+  const sections = input.sections ?? [];
+  const pct = (w: number) => `${String(Math.round(w * 100) / 100).replace(".", ",")}%`;
+  for (const sec of sections) {
+    cols.push(`${sec.title} (tối đa ${sec.maxPoints}đ${sec.weight !== null ? `, ${pct(sec.weight)}` : ""})`);
+    widths.push(18);
+  }
   const done = input.rows.filter((x) => x.row.status !== "not_started").length;
 
   ws.getCell("A1").value = `Bảng điểm: ${input.examTitle}`;
   ws.getCell("A1").font = { bold: true, size: 14 };
   ws.getCell("A2").value =
     `Ca thi: ${input.sessionTitle} · Tổng điểm bài thi: ${input.totalPoints} · ` +
-    `Điểm thang 10 = điểm ÷ ${input.totalPoints} × 10, làm tròn 1 chữ số`;
+    (input.weightsNote
+      ? `Điểm thang 10 tính theo trọng số: ${input.weightsNote}, làm tròn 1 chữ số`
+      : `Điểm thang 10 = điểm ÷ ${input.totalPoints} × 10, làm tròn 1 chữ số`);
   ws.getCell("A3").value =
     `Xuất lúc ${formatDateTime(input.exportedAt)} · ${input.rows.length} thí sinh · ${done} đã làm bài · ` +
     `${input.rows.length - done} chưa làm`;
@@ -236,7 +255,7 @@ export function buildSessionRosterWorkbook(input: SessionRosterWorkbookInput): P
   header.alignment = { vertical: "middle", wrapText: true };
   ws.columns = widths.map((width) => ({ width }));
 
-  input.rows.forEach(({ row: r }, i) => {
+  input.rows.forEach(({ row: r, sectionCells }, i) => {
     const v = resultVerdict(r);
     const excelRow = ws.addRow([
       i + 1,
@@ -253,6 +272,7 @@ export function buildSessionRosterWorkbook(input: SessionRosterWorkbookInput): P
       r.scorePct != null ? Math.round(r.scorePct) / 10 : "",
       r.submittedAt ? formatDateTime(new Date(r.submittedAt)) : "",
       r.attemptCount,
+      ...sections.map((_, k) => sectionCells?.[k] ?? "—"),
     ]);
     // MSSV và mã thi giữ dạng chữ: Excel không được tự bỏ số 0 đầu.
     excelRow.getCell(3).numFmt = "@";

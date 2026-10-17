@@ -480,7 +480,8 @@ export async function listSessionCandidates(
   const ctx = await loadEditableSession(actorUserId, sessionId, db);
   const rows = await db.examCandidate.findMany({
     where: { sessionId },
-    orderBy: { createdAt: "asc" },
+    // createMany gán cùng một createdAt cho cả lượt dán, nên cần khoá phụ để thứ tự ổn định.
+    orderBy: [{ createdAt: "asc" }, { displayName: "asc" }],
     select: {
       id: true,
       displayName: true,

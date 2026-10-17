@@ -4,6 +4,7 @@ import { emitEvent } from "../learning/events";
 import { gradeExamAnswer, type GradeResult } from "./grading";
 import { assertSubjectOwnsAttempt, type ExamSubject } from "./subject";
 import { ExamError } from "./types";
+import { describeWeights, loadScoringPlan, scorePctFor } from "./weighted-score";
 import {
   canRevealAnswers,
   REVEAL_SESSION_SELECT,
@@ -77,9 +78,11 @@ async function applyAutoGrading(
   attemptId: string,
   questions: QuestionWithAnswer[],
   db: PrismaClient,
-): Promise<{ autoScore: number; allGraded: boolean }> {
+): Promise<{ autoScore: number; allGraded: boolean; scoreOf: Map<string, number> }> {
   let autoScore = 0;
   let allGraded = true;
+  // Điểm hiệu lực từng câu — để tính điểm % theo trọng số của Phần (weighted-score.ts).
+  const scoreOf = new Map<string, number>();
   await (db as typeof prisma).$transaction(async (tx) => {
     for (const q of questions) {
       let result: GradeResult;
@@ -117,10 +120,13 @@ async function applyAutoGrading(
 
       const effective = result.autoScore ?? q.answer?.manualScore ?? null;
       if (effective === null) allGraded = false;
-      else autoScore += effective;
+      else {
+        autoScore += effective;
+        scoreOf.set(q.id, effective);
+      }
     }
   });
-  return { autoScore, allGraded };
+  return { autoScore, allGraded, scoreOf };
 }
 
 export interface ExamSubmitResult {
@@ -151,9 +157,8 @@ export async function finalizeSubmission(
     };
   }
   const questions = await loadQuestionsWithAnswers(attempt.examId, attemptId, db);
-  const totalPoints = questions.reduce((s, q) => s + q.points, 0);
 
-  const { autoScore, allGraded } = await applyAutoGrading(attemptId, questions, db);
+  const { autoScore, allGraded, scoreOf } = await applyAutoGrading(attemptId, questions, db);
 
   const now = new Date();
   const nextStatus = allGraded
@@ -161,7 +166,7 @@ export async function finalizeSubmission(
     : reason === "timer_expired"
       ? "auto_submitted"
       : "submitted";
-  const scorePct = totalPoints > 0 ? (autoScore / totalPoints) * 100 : 0;
+  const scorePct = scorePctFor(await loadScoringPlan(attempt.examId, db), scoreOf, autoScore);
 
   await db.examAttempt.update({
     where: { id: attemptId },
@@ -251,7 +256,7 @@ export async function regradeExamAttempts(
     where: { examId },
     select: { id: true, type: true, config: true, points: true },
   });
-  const totalPoints = questions.reduce((s, q) => s + q.points, 0);
+  const plan = await loadScoringPlan(examId, db);
 
   const attempts = await db.examAttempt.findMany({
     where: {
@@ -287,6 +292,7 @@ export async function regradeExamAttempts(
     let autoAnswersChanged = 0;
     let scoreSum = 0;
     let allGraded = true;
+    const scoreOf = new Map<string, number>();
 
     await (db as typeof prisma).$transaction(async (tx) => {
       for (const q of questions) {
@@ -344,15 +350,19 @@ export async function regradeExamAttempts(
             autoAnswersChanged++;
           }
           scoreSum += newAuto;
+          scoreOf.set(q.id, newAuto);
         } else {
           // Tự luận: giữ nguyên điểm chấm tay.
           const eff = a?.manualScore ?? null;
           if (eff === null) allGraded = false;
-          else scoreSum += eff;
+          else {
+            scoreSum += eff;
+            scoreOf.set(q.id, eff);
+          }
         }
       }
 
-      const scorePct = totalPoints > 0 ? (scoreSum / totalPoints) * 100 : 0;
+      const scorePct = scorePctFor(plan, scoreOf, scoreSum);
       const nextStatus = allGraded
         ? "graded"
         : attempt.status === "auto_submitted"
@@ -486,11 +496,10 @@ export async function applyAutoGradingForAttempt(
     throw new ExamError("attempt_not_submitted");
   }
   const questions = await loadQuestionsWithAnswers(attempt.examId, attemptId, db);
-  const totalPoints = questions.reduce((s, q) => s + q.points, 0);
-  const { autoScore, allGraded } = await applyAutoGrading(attemptId, questions, db);
+  const { autoScore, allGraded, scoreOf } = await applyAutoGrading(attemptId, questions, db);
 
   const now = new Date();
-  const scorePct = totalPoints > 0 ? (autoScore / totalPoints) * 100 : 0;
+  const scorePct = scorePctFor(await loadScoringPlan(attempt.examId, db), scoreOf, autoScore);
 
   await db.examAttempt.update({
     where: { id: attemptId },
@@ -712,6 +721,9 @@ export async function getExamAttemptResult(
     throw new ExamError("validation_failed", "attempt_in_progress");
   }
   const isFinal = attempt.status === "graded";
+  // Điểm % có thể mang trọng số theo Phần nên KHÔNG suy tổng điểm ngược từ
+  // score ÷ scorePct (sai khi có trọng số) — trả thẳng từ đề.
+  const plan = await loadScoringPlan(attempt.examId, db);
   return {
     attemptId,
     examId: attempt.examId,
@@ -719,6 +731,8 @@ export async function getExamAttemptResult(
     status: attempt.status,
     score: isFinal ? attempt.score : null,
     scorePct: isFinal ? attempt.scorePct : null,
+    totalPoints: plan.totalPoints,
+    weightsNote: describeWeights(plan),
     showDetails:
       isFinal && canRevealAnswers(attempt.session, attempt.exam, new Date()),
     answers: attempt.answers.map((a) => ({

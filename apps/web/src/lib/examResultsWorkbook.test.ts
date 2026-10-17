@@ -245,6 +245,48 @@ describe("buildSessionRosterWorkbook — thang 10", () => {
   });
 });
 
+describe("buildSessionRosterWorkbook — trọng số và cột điểm từng phần", () => {
+  it("có trọng số: ghi chú nói tính theo trọng số, mỗi phần một cột kèm điểm thô; chưa chấm xong ghi Chờ chấm", async () => {
+    const buf = await buildSessionRosterWorkbook({
+      examTitle: "Đề",
+      sessionTitle: "Ca",
+      exportedAt,
+      totalPoints: 50,
+      weightsNote: "Trắc nghiệm 40% · Tự luận 60%",
+      sections: [
+        { title: "Trắc nghiệm", maxPoints: 30, weight: 40 },
+        { title: "Tự luận", maxPoints: 20, weight: 60 },
+      ],
+      questions: [],
+      rows: [
+        { row: rosterRow({ displayName: "An", status: "graded", score: 39, scorePct: 77 }), cells: [], sectionCells: [24, 15] },
+        { row: rosterRow({ displayName: "Bình", status: "submitted", score: 24 }), cells: [], sectionCells: [24, "Chờ chấm"] },
+        { row: rosterRow({ displayName: "Chi" }), cells: [], sectionCells: ["—", "—"] },
+      ],
+    });
+    const ws = (await readBack(buf)).getWorksheet("Tổng hợp")!;
+    expect(ws.getCell("A2").value).toContain("tính theo trọng số: Trắc nghiệm 40% · Tự luận 60%");
+    expect((ws.getRow(5).values as unknown[]).slice(14)).toEqual(["Trắc nghiệm (tối đa 30đ, 40%)", "Tự luận (tối đa 20đ, 60%)"]);
+    expect((ws.getRow(6).values as unknown[]).slice(14)).toEqual([24, 15]);
+    expect((ws.getRow(7).values as unknown[]).slice(14)).toEqual([24, "Chờ chấm"]);
+    expect(ws.getRow(6).getCell(11).value).toBe(7.7);
+  });
+
+  it("không có trọng số: ghi chú dùng công thức tỉ lệ điểm, không có cột phần khi đề chưa chia phần", async () => {
+    const buf = await buildSessionRosterWorkbook({
+      examTitle: "Đề",
+      sessionTitle: "Ca",
+      exportedAt,
+      totalPoints: 20,
+      questions: [],
+      rows: [{ row: rosterRow({}), cells: [] }],
+    });
+    const ws = (await readBack(buf)).getWorksheet("Tổng hợp")!;
+    expect(ws.getCell("A2").value).toContain("Điểm thang 10 = điểm ÷ 20 × 10");
+    expect((ws.getRow(5).values as unknown[]).length - 1).toBe(13);
+  });
+});
+
 describe("answerCell", () => {
   it("chờ chấm thắng điểm tự chấm; đúng / sai / điểm lẻ / chưa có", () => {
     expect(answerCell(undefined, 2)).toBe("—");

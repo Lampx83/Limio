@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight, Layers } from "lucide-react";
+import SectionWeightsCard from "./SectionWeightsCard";
 
 type Section = {
   id: string;
@@ -80,7 +81,8 @@ export default function SectionsPanel({ examId }: { examId: string }) {
     if (!window.confirm("Xoá phần này?")) return;
     const r = await fetch(`/api/exam-sections/${id}`, { method: "DELETE" });
     if (!r.ok) {
-      setErr(`HTTP ${r.status}`);
+      const j = (await r.json().catch(() => null)) as { details?: { message?: string } } | null;
+      setErr(j?.details?.message ?? `HTTP ${r.status}`);
       return;
     }
     await refresh();
@@ -202,6 +204,8 @@ export default function SectionsPanel({ examId }: { examId: string }) {
           </li>
             ))}
           </ul>
+
+          <SectionWeightsCard examId={examId} />
         </>
       )}
 
@@ -553,8 +557,8 @@ function AddSectionForm({
         body: JSON.stringify(body),
       });
       if (!r.ok) {
-        const j = (await r.json().catch(() => null)) as { error?: string } | null;
-        setErr(j?.error ?? `HTTP ${r.status}`);
+        const j = (await r.json().catch(() => null)) as { error?: string; details?: { message?: string } } | null;
+        setErr(j?.details?.message ?? j?.error ?? `HTTP ${r.status}`);
         return;
       }
       await onDone();

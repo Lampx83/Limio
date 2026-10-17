@@ -229,7 +229,12 @@ describe("danh sách, sửa, xoá thí sinh của ca", () => {
     const list = await listSessionCandidates(s.ownerId, s.sessionId);
     expect(list.codeSource).toBe("student_code");
     expect(list.rows).toHaveLength(2);
-    expect(list.rows[0]).toMatchObject({ roomName: null, mssv: "1001", accessCode: "1001", hasAttempt: false });
+    expect(list.rows.find((x) => x.displayName === "An")).toMatchObject({
+      roomName: null,
+      mssv: "1001",
+      accessCode: "1001",
+      hasAttempt: false,
+    });
 
     const an = list.rows.find((x) => x.displayName === "An")!;
     await updateSessionCandidate(s.ownerId, an.id, { displayName: "Nguyễn Văn An", mssv: "1009" });

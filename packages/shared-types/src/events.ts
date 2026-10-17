@@ -140,6 +140,7 @@ export const LearningEventType = {
   ExamCandidatesMoved: "exam.candidates.moved",
   ExamCandidateRemoved: "exam.candidate.removed",
   ExamCandidateUpdated: "exam.candidate.updated",
+  ExamWeightsUpdated: "exam.weights.updated",
   ExamCandidateAttendanceSet: "exam.candidate.attendance_set",
   ExamProctorInvited: "exam.proctor.invited",
   ExamShareLinkOpened: "exam.share_link.opened",

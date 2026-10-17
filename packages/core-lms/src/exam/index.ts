@@ -52,6 +52,7 @@ export * from "./bulk-import-full";
 export * from "./session-import";
 export * from "./session-candidates";
 export * from "./session-roster-results";
+export * from "./weighted-score";
 export * from "./wizard";
 export * from "./blueprint";
 export * from "./oral-materials";
