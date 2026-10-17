@@ -385,3 +385,12 @@ describe("slideConfigsEqual", () => {
     expect(slideConfigsEqual(null, {})).toBe(true);
   });
 });
+
+
+describe("slide văn bản mới (soạn thủ công)", () => {
+  it("bắt đầu ở bố cục Chữ và hình, không phải bố cục cũ, và vẫn giữ sau khi chuẩn hoá lúc tạo", () => {
+    const created = normalizeContentSlideConfig(emptyLayoutConfig("image"));
+    expect(resolveLayout(created)).toBe("image");
+    expect(resolveLayout(created)).not.toBe("classic");
+  });
+});

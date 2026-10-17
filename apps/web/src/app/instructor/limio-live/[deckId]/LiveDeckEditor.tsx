@@ -59,6 +59,7 @@ import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { SLIDE_THEMES, slideBgFor } from "../slideThemes";
 import { isLayoutSlide } from "../SlideLayouts";
+import { emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
@@ -140,7 +141,9 @@ function slideSummary(slide: Slide): string {
 function defaultConfigFor(type: SlideType): Record<string, any> {
   switch (type) {
     case "content":
-      return { title: "", subtitle: "", bullets: [""] };
+      // Slide văn bản mới bắt đầu ở bố cục "Chữ và hình" để vào ngay trình sửa mới (xem trước, B/I, Nhờ AI);
+      // bố cục cũ (classic) chỉ còn cho slide đã có từ trước.
+      return emptyLayoutConfig("image");
     case "quiz":
       return { question: "", options: [{ text: "", correct: true }, { text: "" }] };
     case "poll":
