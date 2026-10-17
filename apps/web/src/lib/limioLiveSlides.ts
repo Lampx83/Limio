@@ -626,6 +626,19 @@ export function adjacentSlide(
   return { id: t.id, layoutSlide: t.type === "content" && resolveLayout(t.config) !== "classic" && !cfg.resource };
 }
 
+/** Mức thu phóng cho phép khi trình chiếu (khớp các nút thu phóng của màn chiếu). */
+export const SLIDE_ZOOM_MIN = 0.5;
+export const SLIDE_ZOOM_MAX = 2;
+
+/**
+ * Tỉ lệ vẽ cuối cùng của slide bố cục: tỉ lệ vừa khung nhân với mức thu phóng của người trình chiếu.
+ * Slide bố cục tự co vừa khung chứa nên KHÔNG dùng CSS zoom của khung ngoài (nó bị triệt tiêu khi tự co lại).
+ */
+export function layoutRenderScale(fitScale: number, zoom: number | undefined): number {
+  const z = Number.isFinite(zoom) ? Math.min(SLIDE_ZOOM_MAX, Math.max(SLIDE_ZOOM_MIN, zoom as number)) : 1;
+  return fitScale * z;
+}
+
 export function slideConfigsEqual(a: unknown, b: unknown): boolean {
   return stable(a ?? {}) === stable(b ?? {});
 }

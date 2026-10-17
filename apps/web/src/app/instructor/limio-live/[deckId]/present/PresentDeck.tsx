@@ -689,7 +689,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
-              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide ? 1 : zoom }}>
+              {/* Slide bố cục tự co vừa khung nên nhận mức thu phóng trực tiếp (LayoutSlideView zoom); CSS zoom sẽ bị triệt tiêu. */}
+              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide || (currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ? 1 : zoom }}>
               <SlideStage
                 slide={currentSlide}
                 runtime={runtime}
@@ -1130,7 +1131,7 @@ function ContentSlideView({
   if (isLayoutSlide(config)) {
     return (
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <LayoutSlideView config={config} themeId={themeId} animate={animate} />
+        <LayoutSlideView config={config} themeId={themeId} animate={animate} zoom={zoom} />
         {timerSticker}
       </div>
     );
