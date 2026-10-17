@@ -1,0 +1,451 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { AlertTriangle, Check, ChevronDown, ChevronUp, GripVertical, Loader2, Plus, Trash2, X } from "lucide-react";
+import { apiUrl } from "@/lib/apiUrl";
+import { LAYOUT_META } from "@/lib/limioLiveSlides";
+import {
+  DURATIONS,
+  OUTLINE_LAYOUTS,
+  OUTLINE_LIMITS,
+  newOutlineId,
+  outlineBlockingProblems,
+  outlineStats,
+  outlineWarnings,
+  slideRange,
+  type Outline,
+  type OutlineKind,
+  type OutlineLayout,
+  type OutlineSlide,
+} from "@/lib/limioLiveOutline";
+
+interface Loaded {
+  title: string;
+  sourceName: string | null;
+  minutes: number;
+  outline: Outline;
+  confirmedAt: string | null;
+}
+
+const KIND_LABEL: Record<OutlineKind, string> = {
+  content: "Slide nội dung",
+  quiz: "Câu hỏi quiz",
+  poll: "Bình chọn",
+  word_cloud: "Đám mây từ",
+};
+
+const POINT_HINT: Partial<Record<OutlineLayout, string>> = {
+  cards: "Mỗi ý có dạng “Tiêu đề ngắn: một câu giải thích đầy đủ.”",
+  steps: "Mỗi ý là một bước, có dạng “Tên bước: một câu giải thích.”",
+  stats: "Mỗi ý nêu một con số có trong tài liệu và câu giải thích.",
+  compare: "Hai ý đầu là hai cách làm cần đối chiếu.",
+  quote: "Ý đầu là câu trích dẫn hoặc thông điệp chính.",
+};
+
+type SaveState = "saved" | "dirty" | "saving" | "error";
+
+export default function OutlineEditor({ deckId }: { deckId: string }) {
+  const url = apiUrl(`/api/instructor/limio-live/decks/${deckId}/outline`);
+  const [data, setData] = useState<Loaded | null>(null);
+  const [outline, setOutline] = useState<Outline>({ title: "", slides: [] });
+  const [minutes, setMinutes] = useState(30);
+  const [save, setSave] = useState<SaveState>("saved");
+  const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
+  const [reviewed, setReviewed] = useState(false);
+  const [loadErr, setLoadErr] = useState<string | null>(null);
+  const [confirmErr, setConfirmErr] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latest = useRef({ outline, minutes });
+  latest.current = { outline, minutes };
+
+  useEffect(() => {
+    (async () => {
+      const r = await fetch(url);
+      if (!r.ok) return setLoadErr("Không tải được dàn ý.");
+      const j = (await r.json()) as {
+        title: string;
+        sourceName: string | null;
+        minutes: number;
+        outline: Outline;
+        confirmedAt: string | null;
+      };
+      setData(j);
+      setOutline(j.outline);
+      setMinutes(j.minutes);
+      setConfirmedAt(j.confirmedAt);
+      setReviewed(!!j.confirmedAt);
+    })().catch(() => setLoadErr("Không tải được dàn ý."));
+  }, [url]);
+
+  const flush = useCallback(async () => {
+    setSave("saving");
+    try {
+      const r = await fetch(url, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ outline: latest.current.outline, minutes: latest.current.minutes }),
+      });
+      setSave(r.ok ? "saved" : "error");
+    } catch {
+      setSave("error");
+    }
+  }, [url]);
+
+  // Mọi thay đổi huỷ xác nhận cũ (máy chủ cũng làm vậy) và tự lưu sau khi ngừng gõ.
+  const change = useCallback(
+    (next: Outline, nextMinutes = latest.current.minutes) => {
+      setOutline(next);
+      setMinutes(nextMinutes);
+      latest.current = { outline: next, minutes: nextMinutes };
+      setConfirmedAt(null);
+      setReviewed(false);
+      setConfirmErr(null);
+      setSave("dirty");
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => void flush(), 800);
+    },
+    [flush],
+  );
+
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const stats = useMemo(() => outlineStats(outline), [outline]);
+  const range = slideRange(minutes);
+  const warnings = useMemo(() => outlineWarnings(outline, minutes), [outline, minutes]);
+  const blocking = useMemo(() => outlineBlockingProblems(outline), [outline]);
+
+  const patch = (id: string, p: Partial<OutlineSlide>) =>
+    change({ ...outline, slides: outline.slides.map((s) => (s.id === id ? { ...s, ...p } : s)) });
+  const remove = (id: string) => change({ ...outline, slides: outline.slides.filter((s) => s.id !== id) });
+  const move = (i: number, d: -1 | 1) => {
+    const j = i + d;
+    if (j < 0 || j >= outline.slides.length) return;
+    change({ ...outline, slides: arrayMove(outline.slides, i, j) });
+  };
+  const add = (kind: OutlineKind) =>
+    change({
+      ...outline,
+      slides: [
+        ...outline.slides,
+        { id: newOutlineId(), kind, layout: kind === "content" ? "image" : null, title: "", points: [] },
+      ],
+    });
+  const setKind = (s: OutlineSlide, kind: OutlineKind) =>
+    patch(s.id, { kind, layout: kind === "content" ? s.layout ?? "image" : null, points: kind === "content" ? s.points : [] });
+
+  const onDragEnd = (e: DragEndEvent) => {
+    if (!e.over || e.active.id === e.over.id) return;
+    const from = outline.slides.findIndex((s) => s.id === e.active.id);
+    const to = outline.slides.findIndex((s) => s.id === e.over!.id);
+    if (from >= 0 && to >= 0) change({ ...outline, slides: arrayMove(outline.slides, from, to) });
+  };
+
+  const confirm = async () => {
+    setConfirming(true);
+    setConfirmErr(null);
+    if (timer.current) clearTimeout(timer.current);
+    try {
+      const r = await fetch(url, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ outline, minutes, confirm: true }),
+      });
+      const j = (await r.json().catch(() => null)) as { confirmedAt?: string; details?: string[] } | null;
+      if (!r.ok) {
+        setConfirmErr(Array.isArray(j?.details) ? j!.details!.join(" ") : "Không xác nhận được dàn ý.");
+        return;
+      }
+      setConfirmedAt(j?.confirmedAt ?? new Date().toISOString());
+      setSave("saved");
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  if (loadErr) return <p className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-800">{loadErr}</p>;
+  if (!data) return <p className="text-sm text-muted">Đang tải dàn ý...</p>;
+
+  const saveLabel =
+    save === "saving" ? "Đang lưu..." : save === "dirty" ? "Chưa lưu" : save === "error" ? "Lưu lỗi, thử lại" : "Đã lưu";
+
+  return (
+    <main className="mx-auto max-w-4xl space-y-6 pb-24">
+      <div className="border-b border-token pb-5">
+        <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
+          Limio-Live
+        </a>
+        <h1 className="mt-1 text-2xl font-bold">Dàn ý bài giảng</h1>
+        <p className="mt-1 text-sm text-muted">
+          {data.title}
+          {data.sourceName ? ` · từ tài liệu “${data.sourceName}”` : ""}
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          Sửa dàn ý thoải mái: chỉnh chữ, đổi bố cục, thêm, xoá hoặc kéo đổi thứ tự. Sửa dàn ý không tốn lượt AI. Khi dàn ý
+          ổn, xác nhận ở cuối trang để chuyển sang bước tạo slide.
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-[rgb(var(--surface-muted))] px-4 py-3 text-sm">
+        <span>
+          <b>{stats.total}</b> slide ({stats.content} nội dung, {stats.interactive} tương tác)
+        </span>
+        <label className="flex items-center gap-2">
+          Buổi giảng
+          <select
+            className="input py-1 text-sm"
+            value={minutes}
+            onChange={(e) => change(outline, Number(e.target.value))}
+            aria-label="Thời lượng buổi giảng"
+          >
+            {DURATIONS.map((d) => (
+              <option key={d.minutes} value={d.minutes}>
+                {d.minutes} phút
+              </option>
+            ))}
+          </select>
+        </label>
+        <span className="text-muted">
+          Gợi ý {range.min} đến {range.max} slide
+        </span>
+        <span
+          className={`ml-auto flex items-center gap-1.5 ${save === "error" ? "text-red-700" : "text-muted"}`}
+          role="status"
+        >
+          {save === "saving" && <Loader2 size={14} className="animate-spin" />}
+          {save === "saved" && <Check size={14} />}
+          {saveLabel}
+        </span>
+      </div>
+
+      {warnings.length > 0 && (
+        <ul className="space-y-1.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {warnings.map((w) => (
+            <li key={w} className="flex items-start gap-2">
+              <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+              {w}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={outline.slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+          <ol className="space-y-3">
+            {outline.slides.map((s, i) => (
+              <Row
+                key={s.id}
+                s={s}
+                index={i}
+                last={i === outline.slides.length - 1}
+                onPatch={(p) => patch(s.id, p)}
+                onKind={(k) => setKind(s, k)}
+                onRemove={() => remove(s.id)}
+                onMove={(d) => move(i, d)}
+              />
+            ))}
+          </ol>
+        </SortableContext>
+      </DndContext>
+
+      <div className="flex flex-wrap gap-2">
+        {(Object.keys(KIND_LABEL) as OutlineKind[]).map((k) => (
+          <button key={k} type="button" className="btn-secondary flex items-center gap-1.5 text-sm" onClick={() => add(k)}>
+            <Plus size={14} /> {KIND_LABEL[k]}
+          </button>
+        ))}
+      </div>
+
+      <section className="space-y-3 rounded-2xl border-2 border-token p-5" aria-labelledby="confirm-h">
+        <h2 id="confirm-h" className="text-lg font-semibold">
+          Xác nhận dàn ý
+        </h2>
+        {blocking.length > 0 && (
+          <ul className="space-y-1 text-sm text-red-800">
+            {blocking.map((b) => (
+              <li key={b}>{b}</li>
+            ))}
+          </ul>
+        )}
+        {confirmedAt ? (
+          <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+            <Check size={16} /> Bạn đã xác nhận dàn ý này. Bước tạo slide từ dàn ý sẽ nằm ngay tại đây ở bản sau; sửa
+            dàn ý sẽ huỷ xác nhận.
+          </p>
+        ) : (
+          <>
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={reviewed}
+                onChange={(e) => setReviewed(e.target.checked)}
+                disabled={blocking.length > 0}
+              />
+              Tôi đã xem lại từng slide trong dàn ý và đồng ý với thứ tự, tiêu đề, ý chính, bố cục.
+            </label>
+            {confirmErr && <p className="text-sm font-medium text-red-800">{confirmErr}</p>}
+            <button
+              type="button"
+              className="btn-primary flex items-center gap-2"
+              disabled={!reviewed || blocking.length > 0 || confirming || save === "saving"}
+              onClick={confirm}
+            >
+              {confirming && <Loader2 size={16} className="animate-spin" />}
+              Xác nhận dàn ý
+            </button>
+          </>
+        )}
+      </section>
+    </main>
+  );
+}
+
+function Row({
+  s,
+  index,
+  last,
+  onPatch,
+  onKind,
+  onRemove,
+  onMove,
+}: {
+  s: OutlineSlide;
+  index: number;
+  last: boolean;
+  onPatch: (p: Partial<OutlineSlide>) => void;
+  onKind: (k: OutlineKind) => void;
+  onRemove: () => void;
+  onMove: (d: -1 | 1) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
+  const isContent = s.kind === "content";
+  const hint = s.layout ? POINT_HINT[s.layout] : undefined;
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 }}
+      className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-4"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="cursor-grab touch-none text-faint active:cursor-grabbing"
+          aria-label={`Kéo để đổi thứ tự slide ${index + 1}`}
+        >
+          <GripVertical size={18} />
+        </button>
+        <span className="w-7 text-sm font-bold tabular-nums text-muted">{index + 1}</span>
+        <select
+          className="input py-1 text-sm"
+          value={s.kind}
+          onChange={(e) => onKind(e.target.value as OutlineKind)}
+          aria-label={`Loại slide ${index + 1}`}
+        >
+          {(Object.keys(KIND_LABEL) as OutlineKind[]).map((k) => (
+            <option key={k} value={k}>
+              {KIND_LABEL[k]}
+            </option>
+          ))}
+        </select>
+        {isContent && (
+          <select
+            className="input py-1 text-sm"
+            value={s.layout ?? "image"}
+            onChange={(e) => onPatch({ layout: e.target.value as OutlineLayout })}
+            aria-label={`Bố cục slide ${index + 1}`}
+          >
+            {OUTLINE_LAYOUTS.map((l) => (
+              <option key={l} value={l}>
+                {LAYOUT_META[l].label}
+              </option>
+            ))}
+          </select>
+        )}
+        <span className="ml-auto flex items-center gap-1">
+          <button type="button" className="rounded p-1 text-muted hover:bg-black/5 disabled:opacity-30" disabled={index === 0} onClick={() => onMove(-1)} aria-label="Đưa lên">
+            <ChevronUp size={16} />
+          </button>
+          <button type="button" className="rounded p-1 text-muted hover:bg-black/5 disabled:opacity-30" disabled={last} onClick={() => onMove(1)} aria-label="Đưa xuống">
+            <ChevronDown size={16} />
+          </button>
+          <button type="button" className="rounded p-1 text-faint hover:text-red-600" onClick={onRemove} aria-label={`Xoá slide ${index + 1}`}>
+            <Trash2 size={16} />
+          </button>
+        </span>
+      </div>
+
+      <label className="mt-3 block">
+        <span className="mb-0.5 block text-xs font-semibold text-muted">{isContent ? "Tiêu đề" : s.kind === "word_cloud" ? "Câu gợi ý cho học viên" : "Câu hỏi"}</span>
+        <input
+          className="input w-full text-sm"
+          value={s.title}
+          maxLength={OUTLINE_LIMITS.slideTitle}
+          onChange={(e) => onPatch({ title: e.target.value })}
+        />
+      </label>
+
+      {isContent && (
+        <div className="mt-3 space-y-2">
+          <span className="block text-xs font-semibold text-muted">Ý chính (câu hoàn chỉnh)</span>
+          {hint && <p className="text-xs text-faint">{hint}</p>}
+          {s.points.map((p, k) => (
+            <div key={k} className="flex items-start gap-2">
+              <textarea
+                className="input w-full text-sm"
+                rows={2}
+                value={p}
+                maxLength={OUTLINE_LIMITS.point}
+                onChange={(e) => onPatch({ points: s.points.map((x, j) => (j === k ? e.target.value : x)) })}
+                aria-label={`Ý ${k + 1} của slide ${index + 1}`}
+              />
+              <button
+                type="button"
+                className="mt-2 text-faint hover:text-red-600"
+                aria-label="Xoá ý này"
+                onClick={() => onPatch({ points: s.points.filter((_, j) => j !== k) })}
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+          {s.points.length < OUTLINE_LIMITS.points && (
+            <button type="button" className="flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline" onClick={() => onPatch({ points: [...s.points, ""] })}>
+              <Plus size={14} /> Thêm ý
+            </button>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}

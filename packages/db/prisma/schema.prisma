@@ -5110,6 +5110,17 @@ model LiveDeck {
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
   groupId   String?
+
+  // Bài giảng sinh từ tài liệu (AI): dàn ý là bước giữa "tài liệu gốc" và "slide cuối".
+  // Cả bốn cột null với bài giảng soạn tay. outlineConfirmedAt = giảng viên đã xem và
+  // xác nhận dàn ý — chỉ khi đó mới được sinh slide.
+  outline            Json?
+  outlineMinutes     Int?
+  outlineConfirmedAt DateTime?
+  // Văn bản trích từ tài liệu gốc (giữ lại để sinh lại một phần); chỉ chủ bài giảng đọc được.
+  sourceName String?
+  sourceText String? @db.Text
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
