@@ -20,8 +20,8 @@ import { OUTLINE_KINDS, OUTLINE_LAYOUTS, type OutlineSlide } from "./limioLiveOu
 const slide = (p: Partial<OutlineSlide>): OutlineSlide => ({ id: "a", kind: "content", layout: "image", title: "T", points: [], ...p });
 
 describe("danh mục loại slide", () => {
-  it("lưới có đủ 7 loại, đúng thứ tự, mỗi loại có tên, nhãn ô nhập và nhóm", () => {
-    expect(OUTLINE_KIND_ORDER).toEqual(["content", "quiz", "poll", "word_cloud", "collaborate_board", "draw_it", "whiteboard"]);
+  it("lưới có đủ 7 loại, ba loại cộng tác đứng đầu, mỗi loại có tên, nhãn ô nhập và nhóm", () => {
+    expect(OUTLINE_KIND_ORDER).toEqual(["collaborate_board", "draw_it", "whiteboard", "content", "quiz", "poll", "word_cloud"]);
     expect([...OUTLINE_KIND_ORDER].sort()).toEqual([...OUTLINE_KINDS].sort());
     for (const k of OUTLINE_KINDS) {
       expect(OUTLINE_KIND_LABEL[k]).toBeTruthy();
@@ -29,7 +29,7 @@ describe("danh mục loại slide", () => {
       expect(kindGroupOf(k)).toBeTruthy();
       if (k !== "content") expect(OUTLINE_KIND_HINT[k]).toBeTruthy();
     }
-    expect(OUTLINE_KIND_GROUPS.map((g) => g.group)).toEqual(["Trình bày", "Hỏi và lấy ý kiến", "Cộng tác trên bảng"]);
+    expect(OUTLINE_KIND_GROUPS.map((g) => g.group)).toEqual(["Cộng tác trên bảng", "Trình bày", "Hỏi và lấy ý kiến"]);
   });
   it("tên khớp bộ chọn loại slide của trình sửa bài giảng", () => {
     expect(OUTLINE_KIND_LABEL.collaborate_board).toBe("Dán Note");

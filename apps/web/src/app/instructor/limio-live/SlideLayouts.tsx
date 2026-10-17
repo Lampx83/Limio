@@ -26,7 +26,10 @@ import {
   type SlideIconId,
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
-import { layoutThemeClass } from "./slideThemes";
+import { apiUrl } from "@/lib/apiUrl";
+import { brandCssVars, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
+import { useLiveBrand } from "./liveBrandContext";
+import { isDarkTheme, layoutThemeClass } from "./slideThemes";
 import "./slideLayouts.css";
 
 // Bộ vẽ slide Nội dung theo bố cục. Thiết kế ở khung 1280 × 720 rồi co theo khung chứa
@@ -98,6 +101,13 @@ export function LayoutSlideView({
   }, []);
 
   const layout = resolveLayout(config);
+  // Thương hiệu của bài giảng: màu thay màu nhấn của giao diện; logo vẽ trong khung thiết kế (co cùng slide)
+  // và nội dung thu nhỏ vừa đủ để chừa chỗ, không chồng chữ.
+  const brand = useLiveBrand();
+  const showLogo = !!brand?.logoUrl && logoVisibleOn(brand.logoShow, slideRole(layout));
+  const brandVars = brandCssVars(brand?.color, isDarkTheme(themeId));
+  const k = showLogo && brand ? contentScaleForLogo(brand.logoSize) : 1;
+  const top = !!brand && brand.logoPos[0] === "t";
   return (
     <div ref={ref} className="relative min-h-0 w-full flex-1 overflow-hidden">
       <div
@@ -109,9 +119,33 @@ export function LayoutSlideView({
           transformOrigin: "0 0",
           transform: `translate(${(-DESIGN_W * scale) / 2}px, ${(-DESIGN_H * scale) / 2}px) scale(${scale})`,
           visibility: scale > 0 ? "visible" : "hidden",
+          ...(brandVars as CSSProperties),
         }}
       >
-        <LayoutBody layout={layout} c={config} />
+        {showLogo ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              transformOrigin: "0 0",
+              transform: `translate(${(DESIGN_W * (1 - k)) / 2}px, ${top ? DESIGN_H * (1 - k) : 0}px) scale(${k})`,
+            }}
+          >
+            <LayoutBody layout={layout} c={config} />
+          </div>
+        ) : (
+          <LayoutBody layout={layout} c={config} />
+        )}
+        {showLogo && brand?.logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={apiUrl(brand.logoUrl)}
+            alt=""
+            aria-hidden
+            draggable={false}
+            style={{ position: "absolute", zIndex: 5, width: "auto", maxWidth: 280, objectFit: "contain", ...logoPlacement(brand.logoPos, brand.logoSize) }}
+          />
+        )}
       </div>
     </div>
   );

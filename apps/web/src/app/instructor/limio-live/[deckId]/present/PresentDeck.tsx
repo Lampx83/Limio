@@ -15,6 +15,7 @@ import ResourceContent, { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
 import { slideBgFor } from "../../slideThemes";
 import { LayoutSlideView, isLayoutSlide } from "../../SlideLayouts";
+import { BrandLogoOverlay, LiveBrandProvider } from "../../liveBrandContext";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
 
 const QRCode = dynamic(
@@ -42,6 +43,8 @@ interface Deck {
   id: string;
   title: string;
   theme?: string;
+  /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider. */
+  brand?: unknown;
   slides: Slide[];
 }
 
@@ -562,6 +565,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const showSidebar = !focus && (hasSidebar || !!presenterNote || showPreview) && !!currentSlide;
 
   return (
+    <LiveBrandProvider brand={deck.brand}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {
@@ -679,7 +683,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               ref={cardRef}
               onScrollCapture={handleCardScroll}
               style={{ background: slideBgFor(deck.theme, currentSlide.type === "content" && isLayoutSlide(currentSlide.config)), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
-              className={`box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
+              className={`relative box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
               } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
@@ -698,6 +702,8 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 themeId={deck.theme}
               />
               </div>
+              {/* Slide bố cục tự vẽ logo; các loại khác (trắc nghiệm, bình chọn, bảng...) được phủ logo ở khung. */}
+              {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoOverlay role="other" />}
             </div>
             </SlideFit>
           )}
@@ -868,6 +874,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
     </div>
+    </LiveBrandProvider>
   );
 }
 

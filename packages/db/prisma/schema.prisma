@@ -5123,6 +5123,9 @@ model LiveDeck {
   title     String
   // Giao diện slide cho cả bài giảng — id trong limio-live/slideThemes.ts.
   theme     String   @default("white")
+  // Thương hiệu của bài giảng (logo + màu): { logoUrl?, logoPos, logoSize, logoShow, color? }, chuẩn hoá bởi
+  // apps/web/src/lib/limioLiveBrand.ts. Null = chưa đặt (slide hiển thị đúng theo giao diện).
+  brand     Json?
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
   groupId   String?

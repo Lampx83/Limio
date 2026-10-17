@@ -1,4 +1,4 @@
-import { PrismaClient, LiveDeck, LiveSlide, LiveSlideType } from "@feedbackme/db";
+import { Prisma, PrismaClient, LiveDeck, LiveSlide, LiveSlideType } from "@feedbackme/db";
 
 export interface CreateDeckInput {
   userId: string;
@@ -73,7 +73,8 @@ export async function getLiveDeck(
 export async function updateLiveDeck(
   deckId: string,
   userId: string,
-  updates: { title?: string; theme?: string },
+  /** brand: thương hiệu đã được chuẩn hoá ở tầng web (limioLiveBrand); null = xoá. */
+  updates: { title?: string; theme?: string; brand?: Record<string, unknown> | null },
   db: PrismaClient
 ): Promise<LiveDeck> {
   const existing = await db.liveDeck.findUnique({ where: { id: deckId } });
@@ -89,12 +90,13 @@ export async function updateLiveDeck(
     data: {
       ...(updates.title !== undefined ? { title: updates.title.trim() } : {}),
       ...(updates.theme !== undefined ? { theme: updates.theme } : {}),
+      ...(updates.brand !== undefined ? { brand: updates.brand === null ? Prisma.DbNull : (updates.brand as Prisma.InputJsonObject) } : {}),
     },
   });
 }
 
 /**
- * Sao chép một bài giảng của chính người dùng: tạo deck mới (cùng giao diện, cùng
+ * Sao chép một bài giảng của chính người dùng: tạo deck mới (cùng giao diện, thương hiệu, cùng
  * nhóm) và chép toàn bộ slide theo đúng thứ tự trình chiếu. Không chép phiên trình chiếu
  * (LiveSession) — mỗi buổi dạy là dữ liệu riêng của bài gốc.
  */
@@ -116,7 +118,14 @@ export async function duplicateLiveDeck(
 
   return db.$transaction(async (tx) => {
     const copy = await tx.liveDeck.create({
-      data: { userId, title, theme: source.theme, groupId: source.groupId },
+      data: {
+        userId,
+        title,
+        theme: source.theme,
+        groupId: source.groupId,
+        // Bản sao mang theo thương hiệu (logo dùng chung tệp với bài gốc).
+        ...(source.brand ? { brand: source.brand as Prisma.InputJsonObject } : {}),
+      },
     });
     if (source.slides.length > 0) {
       await tx.liveSlide.createMany({

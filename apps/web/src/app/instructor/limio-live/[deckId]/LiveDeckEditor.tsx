@@ -57,8 +57,13 @@ import ImportFromCourseDialog from "./ImportFromCourseDialog";
 import SlideTypePicker, { CollabBoardIcon, WordCloudIcon, type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
-import { SLIDE_THEMES, slideBgFor } from "../slideThemes";
+import { slideBgFor } from "../slideThemes";
+import ThemePicker from "./ThemePicker";
+import BrandDialog from "./BrandDialog";
+import { LiveBrandProvider } from "../liveBrandContext";
+import { sanitizeBrand, type BrandConfig } from "@/lib/limioLiveBrand";
 import { isLayoutSlide } from "../SlideLayouts";
+import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
 import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
@@ -77,6 +82,8 @@ interface Deck {
   id: string;
   title: string;
   theme?: string;
+  /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider / sanitizeBrand. */
+  brand?: unknown;
   slides: Slide[];
 }
 
@@ -140,7 +147,9 @@ function slideSummary(slide: Slide): string {
 function defaultConfigFor(type: SlideType): Record<string, any> {
   switch (type) {
     case "content":
-      return { title: "", subtitle: "", bullets: [""] };
+      // Slide văn bản mới bắt đầu ở bố cục "Chữ và hình" để vào ngay trình sửa mới (xem trước, B/I, Nhờ AI);
+      // bố cục cũ (classic) chỉ còn cho slide đã có từ trước.
+      return emptyLayoutConfig("image");
     case "quiz":
       return { question: "", options: [{ text: "", correct: true }, { text: "" }] };
     case "poll":
@@ -260,6 +269,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty]);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(initialDeck?.slides[0]?.id ?? null);
+  // Cửa sổ sửa slide (bố cục mới). Giữ ở đây để ‹ › sang slide khác mà cửa sổ không đóng mở lại.
+  const [editOpen, setEditOpen] = useState(false);
   const [pickingType, setPickingType] = useState(false);
   const [importingCourse, setImportingCourse] = useState(false);
   const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null);
@@ -319,6 +330,31 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     if (!res.ok) { toast.error("Lưu tên thất bại"); return; }
     setDeck((prev) => (prev ? { ...prev, title: titleDraft.trim() } : prev));
     setLastSavedAt(new Date());
+  };
+
+  const [brandOpen, setBrandOpen] = useState(false);
+  // Các lần lưu thương hiệu chạy LẦN LƯỢT: hai lần sửa sát nhau mà đến máy chủ đảo thứ tự thì lần cũ sẽ ghi đè lần mới.
+  const brandQueue = useRef<Promise<unknown>>(Promise.resolve());
+  // Thương hiệu: cập nhật ngay trên màn hình rồi lưu; lỗi thì hoàn lại như đổi giao diện.
+  const handleSetBrand = (brand: BrandConfig | null) => {
+    if (!deck) return;
+    const prev = deck.brand ?? null;
+    setDeck((d) => (d ? { ...d, brand } : d));
+    brandQueue.current = brandQueue.current.then(async () => {
+      const res = await trackSave(() =>
+        fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ brand }),
+        })
+      ).catch(() => null);
+      if (!res || !res.ok) {
+        toast.error("Lưu thương hiệu thất bại");
+        setDeck((d) => (d ? { ...d, brand: prev } : d));
+        return;
+      }
+      setLastSavedAt(new Date());
+    });
   };
 
   const handleSetTheme = async (theme: string) => {
@@ -558,8 +594,28 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   if (!deck) return <p className="text-sm text-muted">Đang tải...</p>;
 
   const selectedSlide = deck.slides.find((s) => s.id === selectedSlideId) ?? null;
+  // ‹ › trong cửa sổ sửa: sang slide kế bên; nếu slide đó dùng trình sửa riêng (quiz, bảng...) thì đóng cửa sổ.
+  const goAdjacent = (delta: -1 | 1) => {
+    if (!selectedSlideId) return;
+    const t = adjacentSlide(deck.slides, selectedSlideId, delta);
+    if (!t) return;
+    setSelectedSlideId(t.id);
+    if (!t.layoutSlide) setEditOpen(false);
+  };
+  // Slide đang chọn không còn dùng trình sửa bố cục (đổi sang quiz, bị xoá...) thì đóng cửa sổ, kẻo mở lại ở slide sau.
+  useEffect(() => {
+    if (editOpen && !(selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config))) setEditOpen(false);
+  }, [editOpen, selectedSlide]);
+  const slideIndex = selectedSlideId ? deck.slides.findIndex((s) => s.id === selectedSlideId) : -1;
+  const slideNav = {
+    index: Math.max(0, slideIndex),
+    total: deck.slides.length,
+    onPrev: selectedSlideId && adjacentSlide(deck.slides, selectedSlideId, -1) ? () => goAdjacent(-1) : null,
+    onNext: selectedSlideId && adjacentSlide(deck.slides, selectedSlideId, 1) ? () => goAdjacent(1) : null,
+  };
 
   return (
+    <LiveBrandProvider brand={deck.brand}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
       onInput={() => {
@@ -618,22 +674,17 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         >
           <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
         </Link>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" role="radiogroup" aria-label="Giao diện slide">
-          <span className="mr-1 hidden text-xs text-faint sm:inline">Giao diện</span>
-          {SLIDE_THEMES.map((t) => (
-            <button
-              key={t.id}
-              role="radio"
-              aria-checked={(deck.theme ?? "white") === t.id}
-              title={t.label}
-              onClick={() => handleSetTheme(t.id)}
-              className={`h-5 w-5 rounded-full border transition sm:h-6 sm:w-6 ${
-                (deck.theme ?? "white") === t.id ? "ring-2 ring-brand-500 ring-offset-2" : "border-token hover:scale-110"
-              }`}
-              style={{ background: t.swatch }}
-            />
-          ))}
-        </div>
+        <ThemePicker value={deck.theme ?? "white"} onChange={handleSetTheme} />
+        <button
+          type="button"
+          onClick={() => setBrandOpen(true)}
+          title="Logo và màu thương hiệu của bài giảng"
+          className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-token px-2 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
+        >
+          <span className="h-5 w-5 rounded-full border border-token" style={{ background: sanitizeBrand(deck.brand)?.color ?? "linear-gradient(135deg,#BEF264,#F9A8D4)" }} aria-hidden />
+          <span className="hidden sm:inline">Thương hiệu</span>
+          {sanitizeBrand(deck.brand) && <span className="hidden font-normal sm:inline">· đã đặt</span>}
+        </button>
         {/* 3 lệnh trình chiếu gom 1 khối phân đoạn (giống thanh Slide Show của PowerPoint):
             "Từ đầu" là lệnh chính (tô đặc), 2 lệnh còn lại nền trong, cùng cỡ. */}
         <div
@@ -826,6 +877,9 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                   }
                   onSplit={(a, b) => handleSplitSlide(selectedSlide.id, a, b)}
                   onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
+                  editOpen={editOpen}
+                  onEditOpenChange={setEditOpen}
+                  nav={slideNav}
                 />
                 {selectedSlide.timerSeconds != null && (
                   <TimerSticker seconds={selectedSlide.timerSeconds} />
@@ -953,7 +1007,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </>
         )}
       </div>
+      {brandOpen && (
+        <BrandDialog brand={deck.brand} themeId={deck.theme ?? "white"} onChange={handleSetBrand} onClose={() => setBrandOpen(false)} />
+      )}
     </div>
+    </LiveBrandProvider>
   );
 }
 
@@ -1065,7 +1123,13 @@ function SlideCenterEditor({
   onApplyProposal,
   onSplit,
   onSave,
+  editOpen,
+  onEditOpenChange,
+  nav,
 }: {
+  editOpen: boolean;
+  onEditOpenChange: (open: boolean) => void;
+  nav: { index: number; total: number; onPrev: (() => void) | null; onNext: (() => void) | null };
   themeId?: string | null;
   deckId: string;
   onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }, action: string) => void;
@@ -1078,7 +1142,6 @@ function SlideCenterEditor({
   if (slide.type === "content" && isLayoutSlide(config))
     return (
       <LayoutEditor
-        key={config.layout}
         config={config}
         themeId={themeId}
         onSave={onSave}
@@ -1086,6 +1149,9 @@ function SlideCenterEditor({
         slideId={slide.id}
         onApplyProposal={onApplyProposal}
         onSplit={onSplit}
+        open={editOpen}
+        onOpenChange={onEditOpenChange}
+        nav={nav}
       />
     );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;

@@ -163,11 +163,6 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const patch = (id: string, p: Partial<OutlineSlide>) =>
     change({ ...outline, slides: outline.slides.map((s) => (s.id === id ? { ...s, ...p } : s)) });
   const remove = (id: string) => change({ ...outline, slides: outline.slides.filter((s) => s.id !== id) });
-  const move = (i: number, d: -1 | 1) => {
-    const j = i + d;
-    if (j < 0 || j >= outline.slides.length) return;
-    change({ ...outline, slides: arrayMove(outline.slides, i, j) });
-  };
   // Thêm sau slide đang sửa (hoặc cuối bài) rồi mở ngay cửa sổ sửa slide mới.
   const add = (kind: OutlineKind) => {
     const at = editingId ? outline.slides.findIndex((x) => x.id === editingId) : -1;
@@ -375,7 +370,6 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           onPatch={(p) => patch(editing.id, p)}
           onKind={(k) => setKind(editing, k)}
           onRemove={() => remove(editing.id)}
-          onMove={(d) => move(editingIndex, d)}
           onGoto={(d) => setEditingId(outline.slides[editingIndex + d]?.id ?? editing.id)}
           onClose={() => setEditingId(null)}
         />

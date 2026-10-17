@@ -35,7 +35,6 @@ interface Props {
   onPatch: (p: Partial<OutlineSlide>) => void;
   onKind: (k: OutlineKind) => void;
   onRemove: () => void;
-  onMove: (d: -1 | 1) => void;
   onGoto: (d: -1 | 1) => void;
   onClose: () => void;
 }
@@ -48,7 +47,7 @@ const tile = (on: boolean) =>
   }`;
 
 /** Cửa sổ sửa một slide: bản xem trước ở đầu, loại slide và bố cục thu gọn, nội dung bên dưới (hoặc bên phải trên màn rộng). */
-export default function SlideDialog({ slide: s, index, total, onPatch, onKind, onRemove, onMove, onGoto, onClose }: Props) {
+export default function SlideDialog({ slide: s, index, total, onPatch, onKind, onRemove, onGoto, onClose }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [openKind, setOpenKind] = useState(false);
@@ -98,12 +97,6 @@ export default function SlideDialog({ slide: s, index, total, onPatch, onKind, o
           <h2 id="outline-dlg-title" className="min-w-[7rem] flex-1 text-lg font-bold">
             Slide {index + 1} / {total}
           </h2>
-          <button type="button" className="btn-secondary h-9 w-9 !p-0" disabled={index === 0} onClick={() => onMove(-1)} aria-label="Đưa lên">
-            ↑
-          </button>
-          <button type="button" className="btn-secondary h-9 w-9 !p-0" disabled={index === total - 1} onClick={() => onMove(1)} aria-label="Đưa xuống">
-            ↓
-          </button>
           <button
             type="button"
             className="btn-secondary h-9 gap-1.5 !px-3 text-red-700"
@@ -126,7 +119,7 @@ export default function SlideDialog({ slide: s, index, total, onPatch, onKind, o
             <span className="block text-sm font-semibold text-muted">Bản xem trước bố cục</span>
             <OutlinePreview slide={s} />
             <p className="text-[13px] text-faint">
-              Chỉ để hình dung cách chữ sắp xếp. Màu sắc, phông chữ và hình minh hoạ do bước tạo slide quyết định.
+              Ở đây chỉ dựng bố cục về mặt sắp xếp nội dung câu chữ cho bạn hình dung trước. Màu sắc, phông chữ và hình minh hoạ sẽ thể hiện ở bước sau.
             </p>
           </div>
 
