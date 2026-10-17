@@ -1,10 +1,7 @@
-import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import mammoth from "mammoth";
 import JSZip from "jszip";
 import { requireUserId } from "@/lib/session";
-import { storageFor } from "@/lib/storage";
-import { lessonImageKey } from "@/lib/storage-keys";
+import { convertDocxToHtml } from "@/lib/docxToHtml";
 
 export const runtime = "nodejs";
 
@@ -30,24 +27,6 @@ const MAX_DOCX_PAGES = 5;
 
 const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-const IMAGE_EXT_BY_MIME: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/gif": "gif",
-  "image/webp": "webp",
-};
-
-// Word không có khái niệm "trích dẫn" chuẩn — chỉ có tên style. Map 2 tên
-// style hay dùng nhất sang <blockquote> thật; style khác vẫn ra <p> bình
-// thường (AI format phía sau vẫn nhận diện được ý qua nội dung). "Title"
-// cũng không nằm trong default style map của mammoth (chỉ có Heading 1-6) —
-// map thêm để dòng tiêu đề tài liệu không rơi xuống <p> ngang hàng thân bài.
-const STYLE_MAP = [
-  "p[style-name='Quote'] => blockquote:fresh",
-  "p[style-name='Intense Quote'] => blockquote:fresh",
-  "p[style-name='Title'] => h1:fresh",
-];
 
 /**
  * `docProps/app.xml` lưu số trang lúc Word save gần nhất — không phải phân
@@ -111,45 +90,17 @@ export async function POST(req: Request) {
     );
   }
 
-  const now = new Date();
-  const imageWarnings: string[] = [];
-
-  let result: { value: string; messages: Array<{ type: string; message: string }> };
+  let converted: { html: string; warnings: string[] };
   try {
-    result = await mammoth.convertToHtml(
-      { buffer },
-      {
-        styleMap: STYLE_MAP,
-        convertImage: mammoth.images.imgElement(async (image) => {
-          const ext = IMAGE_EXT_BY_MIME[image.contentType];
-          if (!ext) {
-            imageWarnings.push(
-              `Bỏ qua 1 ảnh định dạng không hỗ trợ (${image.contentType})`,
-            );
-            return { src: "" };
-          }
-          const buf = await image.readAsBuffer();
-          const suffix = randomBytes(8).toString("hex");
-          const filename = `${userId}-${now.getTime()}-${suffix}.${ext}`;
-          const key = lessonImageKey(now, filename);
-          await storageFor(key).put(key.key, buf, image.contentType);
-          return { src: `/api/lesson-media/images/${filename}` };
-        }),
-      },
-    );
+    converted = await convertDocxToHtml(buffer, userId);
   } catch (e) {
     console.error("[docx-import] mammoth convert failed", e);
     return NextResponse.json({ error: "convert_failed" }, { status: 400 });
   }
 
-  if (!result.value.trim()) {
+  if (!converted.html.trim()) {
     return NextResponse.json({ error: "validation_failed", details: "empty_document" }, { status: 400 });
   }
 
-  const warnings = [
-    ...imageWarnings,
-    ...result.messages.filter((m) => m.type === "warning").map((m) => m.message),
-  ];
-
-  return NextResponse.json({ html: result.value, warnings }, { status: 200 });
+  return NextResponse.json({ html: converted.html, warnings: converted.warnings }, { status: 200 });
 }

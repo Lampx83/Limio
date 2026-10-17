@@ -67,6 +67,7 @@ model User {
   verificationTokens             VerificationToken[]
   notes                          Note[]
   lessonAnnotations              LessonAnnotation[]
+  lessonDrafts                   LessonDraft[]
   lessonAnnotationReplies        LessonAnnotationReply[]
   courseProgress                 UserCourseProgress[]
   xpTransactions                 XpTransaction[]
@@ -604,9 +605,48 @@ model Lesson {
   annotations       LessonAnnotation[]
   skillTags         ContentSkillMapping[] @relation("LessonSkill")
   classroomSessions ClassroomSession[]
+  drafts            LessonDraft[]
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
+}
+
+/// Bài học tạo từ tài liệu bằng AI — BẢN NHÁP: tài liệu đã tách đoạn + dàn ý giảng viên
+/// đang sửa. Không phải nội dung bài: học viên không thấy gì cho tới khi giảng viên chốt
+/// dàn ý, AI viết bài và giảng viên bấm "Áp dụng" (khi đó mới ghi ContentItem/Lesson).
+/// Hình dạng các cột Json: SourcePara[] / LessonOutline / LessonLook trong
+/// packages/shared-types/src/lessonOutline.ts và lessonLook.ts.
+model LessonDraft {
+  id                   String    @id @default(uuid())
+  /// Bài học nơi giảng viên bấm "Văn bản — AI hỗ trợ"; bài thứ nhất của dàn ý ghi vào đây.
+  lessonId             String
+  userId               String
+  sourceName           String
+  /// docx | pdf | txt | md | paste
+  sourceKind           String
+  sourceParas          Json
+  outline              Json
+  look                 Json?
+  /// keep = giữ nguyên lời tài liệu · edit = biên tập cho mạch lạc
+  writing              String    @default("keep")
+  addObjectivesSummary Boolean   @default(true)
+  /// Sửa dàn ý sau khi chốt thì xoá mốc này — phải chốt lại mới được tạo bài.
+  confirmedAt          DateTime?
+  /// Bài AI đã viết từ dàn ý đã chốt (LessonDraftResult) — chờ giảng viên xem và Áp dụng.
+  /// Sửa dàn ý thì xoá, vì bài không còn khớp dàn ý.
+  result               Json?
+  /// "Làm lại từ dàn ý": khối Văn bản sẽ được THAY khi Áp dụng (thay vì thêm khối mới).
+  targetContentItemId  String?
+  /// outline | applied | discarded
+  status               String    @default("outline")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, status])
+  @@index([userId])
 }
 
 /// LANG G3 — bốn kỹ năng ngôn ngữ. Khớp LANGUAGE_SKILLS trong
@@ -713,8 +753,26 @@ model ContentItem {
   annotations     LessonAnnotation[]
   flashcardStates FlashcardState[]
   lessonActivity  LessonActivity?
+  versions        ContentItemVersion[]
 
   @@index([lessonId])
+}
+
+/// Phiên bản của một khối Văn bản (richtext) để hoàn tác — chụp TRẠNG THÁI CŨ trước mỗi lần
+/// payload bị ghi đè. source: generated (AI tạo, luôn giữ) | before_edit (sửa tay, gộp trong 5
+/// phút) | before_ai | before_restore | before_convert | before_regenerate. Giữ tối đa 30 bản
+/// ngoài "generated" (core-lms courses/contentVersions.ts).
+model ContentItemVersion {
+  id            String   @id @default(uuid())
+  contentItemId String
+  source        String
+  payload       Json
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@index([contentItemId, createdAt])
 }
 
 // Unified ordering layer for lesson-attached activities (ContentItem + Quiz +
