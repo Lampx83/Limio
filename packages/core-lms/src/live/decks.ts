@@ -74,7 +74,7 @@ export async function updateLiveDeck(
   deckId: string,
   userId: string,
   /** brand: thương hiệu đã được chuẩn hoá ở tầng web (limioLiveBrand); null = xoá. */
-  updates: { title?: string; theme?: string; brand?: Record<string, unknown> | null },
+  updates: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null },
   db: PrismaClient
 ): Promise<LiveDeck> {
   const existing = await db.liveDeck.findUnique({ where: { id: deckId } });
@@ -85,14 +85,22 @@ export async function updateLiveDeck(
     throw new Error("Title is required");
   }
 
-  return db.liveDeck.update({
+  const updated = await db.liveDeck.update({
     where: { id: deckId },
     data: {
       ...(updates.title !== undefined ? { title: updates.title.trim() } : {}),
       ...(updates.theme !== undefined ? { theme: updates.theme } : {}),
-      ...(updates.brand !== undefined ? { brand: updates.brand === null ? Prisma.DbNull : (updates.brand as Prisma.InputJsonObject) } : {}),
+      ...(updates.brandOff !== undefined ? { brandOff: updates.brandOff } : {}),
+      ...(updates.brandTemplate !== undefined ? { brandTemplate: updates.brandTemplate } : {}),
+      // brand null (xoá) xử lý ở dưới bằng SQL: ký hiệu Prisma.DbNull so sánh theo danh tính nên không đáng tin khi mô-đun bị nạp hai bản (Next).
+      ...(updates.brand ? { brand: updates.brand as Prisma.InputJsonObject } : {}),
     },
   });
+  if (updates.brand === null) {
+    await db.$executeRaw`UPDATE "LiveDeck" SET "brand" = NULL WHERE "id" = ${deckId}`;
+    return { ...updated, brand: null };
+  }
+  return updated;
 }
 
 /**
@@ -123,7 +131,9 @@ export async function duplicateLiveDeck(
         title,
         theme: source.theme,
         groupId: source.groupId,
-        // Bản sao mang theo thương hiệu (logo dùng chung tệp với bài gốc).
+        // Bản sao mang theo thương hiệu (logo dùng chung tệp với bài gốc) và cờ tắt thương hiệu.
+        brandOff: source.brandOff,
+        brandTemplate: source.brandTemplate,
         ...(source.brand ? { brand: source.brand as Prisma.InputJsonObject } : {}),
       },
     });

@@ -9,7 +9,16 @@ import {
   brandEffectiveThemeId,
   brandFrameBackground,
   extractLogoColors,
+  BRAND_TEMPLATE_IDS,
+  applyBrandTemplate,
   brandLogoFilename,
+  brandTemplates,
+  completeBrandColors,
+  deckEffectiveBrand,
+  orgBrandConfig,
+  resolveEffectiveBrand,
+  sanitizeOrgBrandSettings,
+  validateOrgBrandInput,
   brandPalette,
   contentScaleForLogo,
   contrastRatio,
@@ -306,5 +315,148 @@ describe("extractLogoColors (gợi ý màu từ logo)", () => {
     const many = px({ c: [255, 0, 0, 255], n: 90 }, { c: [0, 255, 0, 255], n: 80 }, { c: [0, 0, 255, 255], n: 70 }, { c: [255, 255, 0, 255], n: 60 });
     expect(extractLogoColors(many, 2)).toHaveLength(2);
     expect(extractLogoColors(many)).toHaveLength(3);
+  });
+});
+
+const ORG_LOGO = "/api/org-logos/bkhn-abc123.png";
+const ORG_SETTINGS = { colors: { primary: "#B91C1C", secondary: "#9A3412", accent: "#FACC15" }, logoPos: "tl", logoSize: "l", logoShow: "nocover", bg: "light" };
+
+describe("thương hiệu của đơn vị", () => {
+  it("địa chỉ logo của trường được chấp nhận làm logo thương hiệu, nhưng không bị dọn tệp như logo của bài giảng", () => {
+    expect(sanitizeBrand({ logoUrl: ORG_LOGO })!.logoUrl).toBe(ORG_LOGO);
+    expect(brandLogoFilename(ORG_LOGO)).toBeNull();
+    expect(brandLogoFilename(LOGO)).toBe("abc123-1.png");
+    expect(sanitizeBrand({ logoUrl: "/api/org-logos/../x.png" })).toBeNull();
+  });
+  it("sanitizeOrgBrandSettings giữ vị trí/cỡ logo dù chưa có màu, không có logoUrl, nền chỉ khi có màu", () => {
+    expect(sanitizeOrgBrandSettings(null)).toBeNull();
+    expect(sanitizeOrgBrandSettings({ logoPos: "bl", logoSize: "s", logoUrl: ORG_LOGO, bg: "dark" })).toEqual({ logoPos: "bl", logoSize: "s", logoShow: "all", bg: "theme" });
+    expect(sanitizeOrgBrandSettings(ORG_SETTINGS)).toEqual(ORG_SETTINGS);
+  });
+  it("validateOrgBrandInput: không nhận logoUrl, từ chối giá trị sai, null là xoá", () => {
+    expect(validateOrgBrandInput(null)).toEqual({ ok: true, brand: null });
+    expect(validateOrgBrandInput({ ...ORG_SETTINGS, logoUrl: ORG_LOGO })).toEqual({ ok: false, error: "logo_url_not_allowed" });
+    expect(validateOrgBrandInput({ colors: { primary: "đỏ" } })).toEqual({ ok: false, error: "invalid_color_primary" });
+    expect(validateOrgBrandInput({ logoPos: "giữa" })).toEqual({ ok: false, error: "invalid_logoPos" });
+    expect(validateOrgBrandInput(ORG_SETTINGS)).toEqual({ ok: true, brand: ORG_SETTINGS });
+    expect(validateOrgBrandInput({ logoPos: "br" })).toMatchObject({ ok: true, brand: { logoPos: "br", bg: "theme" } });
+  });
+  it("orgBrandConfig: ghép cài đặt với logo của trường; chưa có gì thì null; chỉ có logo vẫn dùng được", () => {
+    expect(orgBrandConfig(null, null)).toBeNull();
+    expect(orgBrandConfig({ logoPos: "br" }, null)).toBeNull();
+    expect(orgBrandConfig(null, ORG_LOGO)).toMatchObject({ logoUrl: ORG_LOGO, logoPos: "tr", bg: "theme" });
+    const b = orgBrandConfig({ ...ORG_SETTINGS, logoUrl: "/api/limio-live-media/khac.png" }, ORG_LOGO)!;
+    expect(b.logoUrl).toBe(ORG_LOGO); // bỏ qua logoUrl nằm trong JSON
+    expect(b.colors).toEqual(ORG_SETTINGS.colors);
+    expect(b.logoPos).toBe("tl");
+    expect(orgBrandConfig(ORG_SETTINGS, "https://evil/x.png")).not.toHaveProperty("logoUrl");
+  });
+});
+
+describe("resolveEffectiveBrand (bài giảng dùng thương hiệu nào)", () => {
+  const orgBrand = ORG_SETTINGS;
+  it("không có gì thì không có thương hiệu", () => {
+    expect(resolveEffectiveBrand({ deckBrand: null })).toEqual({ brand: null, source: "none" });
+  });
+  it("bài giảng chưa có thương hiệu riêng thì kế thừa của đơn vị", () => {
+    const r = resolveEffectiveBrand({ deckBrand: null, orgBrand, orgLogoUrl: ORG_LOGO });
+    expect(r.source).toBe("org");
+    expect(r.brand).toMatchObject({ logoUrl: ORG_LOGO, colors: ORG_SETTINGS.colors, bg: "light" });
+  });
+  it("thương hiệu riêng của bài thắng hoàn toàn, không trộn với của đơn vị", () => {
+    const r = resolveEffectiveBrand({ deckBrand: { colors: { primary: "#0A6EBD" } }, orgBrand, orgLogoUrl: ORG_LOGO });
+    expect(r.source).toBe("deck");
+    expect(r.brand!.colors).toEqual({ primary: "#0A6EBD" });
+    expect(r.brand).not.toHaveProperty("logoUrl");
+  });
+  it("brandOff tắt hẳn dù đơn vị hay bài có thương hiệu", () => {
+    expect(resolveEffectiveBrand({ deckBrand: { colors: { primary: "#0A6EBD" } }, brandOff: true, orgBrand, orgLogoUrl: ORG_LOGO })).toEqual({ brand: null, source: "none" });
+  });
+  it("thương hiệu riêng hỏng thì rơi về của đơn vị; đơn vị chưa có thì không có", () => {
+    expect(resolveEffectiveBrand({ deckBrand: { colors: { primary: "đỏ" } }, orgBrand, orgLogoUrl: ORG_LOGO }).source).toBe("org");
+    expect(resolveEffectiveBrand({ deckBrand: { colors: { primary: "đỏ" } } }).source).toBe("none");
+  });
+});
+
+describe("mẫu thương hiệu sinh từ màu của trường", () => {
+  const ORG = { primary: "#B91C1C", secondary: "#9A3412", accent: "#FACC15" };
+
+  it("không có màu chính thì không có mẫu; có thì mẫu đầu luôn là mặc định của trường", () => {
+    expect(brandTemplates(undefined)).toEqual([]);
+    expect(brandTemplates({ primary: "đỏ" })).toEqual([]);
+    const t = brandTemplates(ORG, "light");
+    expect(t[0]).toMatchObject({ id: "default", colors: ORG, bg: "light" });
+  });
+  it("đủ các mẫu, mã nằm trong danh mục, mỗi mẫu đều dựng được bảng màu", () => {
+    const t = brandTemplates(ORG, "theme");
+    expect(t.map((x) => x.id)).toEqual([...BRAND_TEMPLATE_IDS]);
+    for (const x of t) {
+      expect(x.label && x.hint).toBeTruthy();
+      expect(brandPalette(x.colors, x.bg === "dark")).not.toBeNull();
+    }
+  });
+  it("đảo màu hoán đổi chính/phụ; đơn sắc chỉ giữ màu chính; sáng/tối đổi nền", () => {
+    const t = Object.fromEntries(brandTemplates(ORG, "theme").map((x) => [x.id, x]));
+    expect(t["swap-light"]!.colors).toEqual({ primary: "#9A3412", secondary: "#B91C1C", accent: "#FACC15" });
+    expect(t["swap-light"]!.bg).toBe("light");
+    expect(t["swap-dark"]!.bg).toBe("dark");
+    expect(t["mono-light"]!.colors).toEqual({ primary: "#B91C1C" });
+    expect(t["mono-dark"]!.bg).toBe("dark");
+    expect(t.light!.bg).toBe("light");
+    expect(t.dark!.bg).toBe("dark");
+  });
+  it("trường chỉ có màu chính: đảo màu dùng màu phụ tự sinh, vẫn khác mẫu thường", () => {
+    const only = { primary: "#0A6EBD" };
+    const full = completeBrandColors(only)!;
+    const t = Object.fromEntries(brandTemplates(only, "theme").map((x) => [x.id, x]));
+    expect(t["swap-light"]!.colors.primary).toBe(full.secondary);
+    expect(t["swap-light"]!.colors.primary).not.toBe("#0A6EBD");
+  });
+  it("mẫu trùng hệt mẫu trước đó thì bỏ (đơn sắc khi trường chỉ có màu chính không trùng mẫu nào)", () => {
+    const t = brandTemplates({ primary: "#0A6EBD" }, "light");
+    expect(t.filter((x) => x.id === "light")).toHaveLength(0); // trùng với mặc định (nền sáng)
+    expect(t[0]!.id).toBe("default");
+  });
+  it("applyBrandTemplate giữ logo, vị trí, cỡ, chỗ hiện và chỉ đổi màu và nền; mã lạ về mặc định", () => {
+    const org = { logoUrl: ORG_LOGO, logoPos: "tl", logoSize: "l", logoShow: "nocover", colors: ORG, bg: "theme" } as const;
+    const swapped = applyBrandTemplate(org, "swap-dark");
+    expect(swapped).toMatchObject({ logoUrl: ORG_LOGO, logoPos: "tl", logoSize: "l", logoShow: "nocover", bg: "dark" });
+    expect(swapped.colors!.primary).toBe("#9A3412");
+    expect(applyBrandTemplate(org, "không có")).toBe(org);
+    expect(applyBrandTemplate(org, undefined)).toBe(org);
+    expect(applyBrandTemplate({ logoPos: "tr", logoSize: "m", logoShow: "all", bg: "theme", logoUrl: ORG_LOGO }, "dark").colors).toBeUndefined();
+  });
+  it("mẫu mặc định của trường: admin chọn được; giảng viên chọn mẫu khác cho từng bài", () => {
+    const orgSettings = { ...ORG_SETTINGS, defaultTemplate: "dark" };
+    expect(sanitizeOrgBrandSettings(orgSettings)!.defaultTemplate).toBe("dark");
+    expect(sanitizeOrgBrandSettings({ ...ORG_SETTINGS, defaultTemplate: "lạ" })).not.toHaveProperty("defaultTemplate");
+    expect(sanitizeOrgBrandSettings({ ...ORG_SETTINGS, defaultTemplate: "default" })).not.toHaveProperty("defaultTemplate");
+    expect(validateOrgBrandInput({ ...ORG_SETTINGS, defaultTemplate: "lạ" })).toEqual({ ok: false, error: "invalid_template" });
+    // không có bảng màu thì mẫu mặc định vô nghĩa
+    expect(sanitizeOrgBrandSettings({ defaultTemplate: "dark" })).not.toHaveProperty("defaultTemplate");
+
+    expect(resolveEffectiveBrand({ deckBrand: null, orgBrand: orgSettings, orgLogoUrl: ORG_LOGO }).brand!.bg).toBe("dark");
+    expect(resolveEffectiveBrand({ deckBrand: null, orgBrand: orgSettings, orgLogoUrl: ORG_LOGO, deckTemplate: "swap-light" }).brand).toMatchObject({ bg: "light" });
+    expect(resolveEffectiveBrand({ deckBrand: null, orgBrand: orgSettings, orgLogoUrl: ORG_LOGO, deckTemplate: "default" }).brand!.bg).toBe("light");
+    // mẫu của bài chỉ có tác dụng khi bài dùng thương hiệu của trường
+    expect(resolveEffectiveBrand({ deckBrand: { colors: { primary: "#0A6EBD" } }, orgBrand: orgSettings, orgLogoUrl: ORG_LOGO, deckTemplate: "dark" }).source).toBe("deck");
+    expect(resolveEffectiveBrand({ deckBrand: null, brandOff: true, orgBrand: orgSettings, orgLogoUrl: ORG_LOGO, deckTemplate: "dark" }).brand).toBeNull();
+  });
+});
+
+describe("deckEffectiveBrand (từ các trường của bài giảng)", () => {
+  const org = { slideBrand: ORG_SETTINGS, logoUrl: ORG_LOGO };
+  it("bài chưa đặt gì và trường chưa có bộ thương hiệu thì không có thương hiệu", () => {
+    expect(deckEffectiveBrand({})).toBeNull();
+    expect(deckEffectiveBrand({ org: null })).toBeNull();
+    expect(deckEffectiveBrand({ org: { slideBrand: null, logoUrl: null } })).toBeNull();
+  });
+  it("thuộc trường có bộ thương hiệu thì bài mới tự có (mẫu mặc định), đổi mẫu theo từng bài", () => {
+    expect(deckEffectiveBrand({ org })!).toMatchObject({ logoUrl: ORG_LOGO, bg: "light" });
+    expect(deckEffectiveBrand({ org, brandTemplate: "dark" })!.bg).toBe("dark");
+  });
+  it("riêng và tắt thắng của trường", () => {
+    expect(deckEffectiveBrand({ org, brand: { colors: { primary: "#0A6EBD" } } })!.colors).toEqual({ primary: "#0A6EBD" });
+    expect(deckEffectiveBrand({ org, brand: { colors: { primary: "#0A6EBD" } }, brandOff: true })).toBeNull();
   });
 });

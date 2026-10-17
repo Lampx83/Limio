@@ -36,12 +36,14 @@ export interface BrandConfig {
 
 export const DEFAULT_BRAND: BrandConfig = { logoPos: "tr", logoSize: "m", logoShow: "all", bg: "theme" };
 
-const LOGO_URL_RE = /^\/api\/limio-live-media\/[A-Za-z0-9._-]{1,200}$/;
+// Logo của bài giảng (tải ở hộp thoại Thương hiệu) hoặc logo của trường (admin trường tải, dùng chung cho cả trường).
+const LOGO_URL_RE = /^\/api\/(limio-live-media|org-logos)\/[A-Za-z0-9._-]{1,200}$/;
 const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 /** Tên tệp của logo từ địa chỉ đã lưu (để dọn tệp khi gỡ hoặc thay logo); null nếu không phải địa chỉ hợp lệ. */
 export function brandLogoFilename(url: unknown): string | null {
-  return isBrandLogoUrl(url) ? url.slice("/api/limio-live-media/".length) : null;
+  // Chỉ logo của bài giảng mới được dọn khi gỡ; logo của trường do trang cài đặt trường quản lý.
+  return typeof url === "string" && url.startsWith("/api/limio-live-media/") && isBrandLogoUrl(url) ? url.slice("/api/limio-live-media/".length) : null;
 }
 
 export const isBrandColor = (v: unknown): v is string => typeof v === "string" && COLOR_RE.test(v);
@@ -192,6 +194,19 @@ const tint = (hex: string, dark: boolean, light: number): string => {
   return dark ? "rgba(255,255,255,.14)" : hslToHex(h, Math.min(Math.max(s, 0.35), 0.7), light);
 };
 
+/** Điền ô còn trống của bảng màu bằng màu sinh từ màu chính (xoay sắc độ ±24°); null nếu chưa có màu chính hợp lệ. */
+export function completeBrandColors(colors: BrandColors | undefined): Required<BrandColors> | null {
+  if (!colors || !isBrandColor(colors.primary)) return null;
+  const [h, s0, l0] = rgbToHsl(...hexToRgb(colors.primary)!);
+  const s = Math.max(s0, 0.35);
+  const derived = (shift: number) => hslToHex(h + shift, s, Math.min(0.5, Math.max(0.32, l0)));
+  return {
+    primary: colors.primary.toUpperCase(),
+    secondary: isBrandColor(colors.secondary) ? colors.secondary.toUpperCase() : derived(24),
+    accent: isBrandColor(colors.accent) ? colors.accent.toUpperCase() : derived(-24),
+  };
+}
+
 /**
  * Bảng màu sinh từ bộ màu thương hiệu 3 ô. Màu chính và màu phụ làm màu nhấn của chữ nên được chỉnh cho đủ
  * tương phản; màu nhấn chỉ để trang trí (vầng sáng, điểm cuối của dải màu). Ô trống tự sinh từ màu chính (xoay sắc độ).
@@ -199,11 +214,9 @@ const tint = (hex: string, dark: boolean, light: number): string => {
  */
 export function brandPalette(colors: BrandColors | undefined, dark: boolean): BrandPalette | null {
   if (!colors || !isBrandColor(colors.primary)) return null;
-  const [h, s0, l0] = rgbToHsl(...hexToRgb(colors.primary)!);
-  const s = Math.max(s0, 0.35);
-  const derived = (shift: number) => hslToHex(h + shift, s, Math.min(0.5, Math.max(0.32, l0)));
-  const secondaryRaw = isBrandColor(colors.secondary) ? colors.secondary : derived(24);
-  const accentRaw = isBrandColor(colors.accent) ? colors.accent : derived(-24);
+  const full = completeBrandColors(colors)!;
+  const secondaryRaw = full.secondary;
+  const accentRaw = full.accent;
   const p = ensureContrast(colors.primary, dark);
   const q = ensureContrast(secondaryRaw, dark);
   const adjusted: BrandColorSlot[] = [];
@@ -383,4 +396,153 @@ export function logoPlacement(pos: BrandPosition, size: BrandSize): { top?: numb
     ...(pos[0] === "t" ? { top: LOGO_MARGIN_PX } : { bottom: LOGO_MARGIN_PX }),
     ...(pos[1] === "l" ? { left: LOGO_MARGIN_PX } : { right: LOGO_MARGIN_PX }),
   };
+}
+
+// ── Thương hiệu của đơn vị (trường) và cách bài giảng dùng ──────────────────
+
+export type BrandSource = "deck" | "org" | "none";
+
+/**
+ * Thương hiệu thực sự áp cho một bài giảng:
+ * - đã tắt (brandOff) → không có;
+ * - bài giảng có thương hiệu riêng → dùng riêng (không trộn với của đơn vị);
+ * - ngược lại → dùng thương hiệu của đơn vị nếu có.
+ * Thương hiệu đơn vị = phần cài đặt đã lưu + logo của trường (brandingLogoUrl, do trang cài đặt trường quản lý).
+ */
+export function resolveEffectiveBrand(input: {
+  deckBrand: unknown;
+  brandOff?: boolean;
+  orgBrand?: unknown;
+  orgLogoUrl?: string | null;
+  /** Mẫu giảng viên chọn cho bài này từ màu của trường; trống = mẫu mặc định của trường. */
+  deckTemplate?: string | null;
+}): { brand: BrandConfig | null; source: BrandSource } {
+  if (input.brandOff) return { brand: null, source: "none" };
+  const own = sanitizeBrand(input.deckBrand);
+  if (own) return { brand: own, source: "deck" };
+  const org = orgBrandConfig(input.orgBrand, input.orgLogoUrl);
+  if (!org) return { brand: null, source: "none" };
+  const settings = sanitizeOrgBrandSettings(input.orgBrand);
+  const templateId = input.deckTemplate || settings?.defaultTemplate || "default";
+  return { brand: applyBrandTemplate(org, templateId), source: "org" };
+}
+
+/** Cài đặt thương hiệu của đơn vị: như BrandConfig nhưng không có logoUrl (logo của trường quản lý riêng). */
+export type OrgBrandSettings = Omit<BrandConfig, "logoUrl"> & {
+  /** Mẫu mặc định của trường (mã trong brandTemplates); trống = "default" (đúng cài đặt của admin). */
+  defaultTemplate?: string;
+};
+
+/** Chuẩn hoá cài đặt đơn vị đọc từ DB hoặc từ admin; giữ cả vị trí/cỡ logo dù chưa có màu. null nếu không phải đối tượng. */
+export function sanitizeOrgBrandSettings(raw: unknown): OrgBrandSettings | null {
+  if (!raw || typeof raw !== "object") return null;
+  const o = raw as Record<string, unknown>;
+  const colors = readColors(o);
+  const tpl = typeof o.defaultTemplate === "string" && (BRAND_TEMPLATE_IDS as readonly string[]).includes(o.defaultTemplate) && o.defaultTemplate !== "default" ? o.defaultTemplate : undefined;
+  return {
+    logoPos: pick(BRAND_POSITIONS, o.logoPos, DEFAULT_BRAND.logoPos),
+    logoSize: pick(BRAND_SIZES, o.logoSize, DEFAULT_BRAND.logoSize),
+    logoShow: pick(BRAND_SHOWS, o.logoShow, DEFAULT_BRAND.logoShow),
+    ...(colors ? { colors } : {}),
+    bg: colors ? pick(BRAND_BGS, o.bg, DEFAULT_BRAND.bg) : DEFAULT_BRAND.bg,
+    ...(colors && tpl ? { defaultTemplate: tpl } : {}),
+  };
+}
+
+/** Thương hiệu đơn vị = cài đặt đã lưu + logo của trường (luôn lấy từ logo của trường, bỏ qua logoUrl nằm trong JSON). */
+export function orgBrandConfig(raw: unknown, orgLogoUrl: string | null | undefined): BrandConfig | null {
+  const settings = sanitizeOrgBrandSettings(raw);
+  const logoUrl = isBrandLogoUrl(orgLogoUrl) ? orgLogoUrl : undefined;
+  if (!settings) return logoUrl ? { ...DEFAULT_BRAND, logoUrl } : null;
+  if (!settings.colors && !logoUrl) return null;
+  return { ...settings, ...(logoUrl ? { logoUrl } : {}) };
+}
+
+/** Kiểm tra dữ liệu admin trường gửi lên: như validateBrandInput nhưng không nhận logoUrl (logo của trường quản lý riêng). */
+export function validateOrgBrandInput(raw: unknown): { ok: true; brand: OrgBrandSettings | null } | { ok: false; error: string } {
+  if (raw === null) return { ok: true, brand: null };
+  if (!raw || typeof raw !== "object") return { ok: false, error: "invalid_brand" };
+  const o = raw as Record<string, unknown>;
+  if (o.logoUrl != null && o.logoUrl !== "") return { ok: false, error: "logo_url_not_allowed" };
+  if (o.defaultTemplate != null && !(BRAND_TEMPLATE_IDS as readonly string[]).includes(o.defaultTemplate as string)) return { ok: false, error: "invalid_template" };
+  // Kiểm từng trường (màu, vị trí, cỡ, chỗ hiện, nền) bằng đường kiểm của bài giảng.
+  const v = validateBrandInput({ ...o, logoUrl: undefined });
+  if (!v.ok) return v;
+  return { ok: true, brand: sanitizeOrgBrandSettings(o) };
+}
+
+// ── Mẫu thương hiệu sinh từ màu của trường ──────────────────────────────────
+
+export const BRAND_TEMPLATE_IDS = ["default", "light", "dark", "swap-light", "swap-dark", "mono-light", "mono-dark"] as const;
+export type BrandTemplateId = (typeof BRAND_TEMPLATE_IDS)[number];
+
+export interface BrandTemplate {
+  id: BrandTemplateId;
+  label: string;
+  hint: string;
+  colors: BrandColors;
+  bg: BrandBg;
+}
+
+const TEMPLATE_LABEL: Record<BrandTemplateId, { label: string; hint: string }> = {
+  default: { label: "Mặc định của trường", hint: "Đúng như quản trị viên cài đặt" },
+  light: { label: "Sáng xuyệt tông", hint: "Nền nhạt lấy từ màu chính" },
+  dark: { label: "Tối xuyệt tông", hint: "Nền đậm lấy từ màu chính" },
+  "swap-light": { label: "Đảo màu, nền sáng", hint: "Màu phụ làm màu chính" },
+  "swap-dark": { label: "Đảo màu, nền tối", hint: "Màu phụ làm màu chính" },
+  "mono-light": { label: "Đơn sắc, nền sáng", hint: "Chỉ dùng màu chính" },
+  "mono-dark": { label: "Đơn sắc, nền tối", hint: "Chỉ dùng màu chính" },
+};
+
+/**
+ * Các mẫu phối màu tự sinh từ bảng màu của trường (hoán đổi vai trò chính/phụ, tông sáng/tối, đơn sắc). Thuần tính
+ * toán, ổn định. "default" luôn đứng đầu và là đúng cài đặt của admin; mẫu nào trùng hệt mẫu trước đó thì bỏ.
+ * Không có màu chính thì không có mẫu nào.
+ */
+export function brandTemplates(colors: BrandColors | undefined, defaultBg: BrandBg = "theme"): BrandTemplate[] {
+  const full = completeBrandColors(colors);
+  if (!full || !colors) return [];
+  const cfg: Record<BrandTemplateId, { colors: BrandColors; bg: BrandBg }> = {
+    default: { colors: { ...colors, primary: full.primary }, bg: defaultBg },
+    light: { colors: { ...colors, primary: full.primary }, bg: "light" },
+    dark: { colors: { ...colors, primary: full.primary }, bg: "dark" },
+    "swap-light": { colors: { primary: full.secondary, secondary: full.primary, accent: full.accent }, bg: "light" },
+    "swap-dark": { colors: { primary: full.secondary, secondary: full.primary, accent: full.accent }, bg: "dark" },
+    "mono-light": { colors: { primary: full.primary }, bg: "light" },
+    "mono-dark": { colors: { primary: full.primary }, bg: "dark" },
+  };
+  const seen = new Set<string>();
+  const out: BrandTemplate[] = [];
+  for (const id of BRAND_TEMPLATE_IDS) {
+    const c = cfg[id];
+    const key = JSON.stringify([completeBrandColors(c.colors), c.colors.secondary ? 1 : 0, c.bg]);
+    if (id !== "default" && seen.has(key)) continue;
+    seen.add(key);
+    out.push({ id, ...TEMPLATE_LABEL[id], colors: c.colors, bg: c.bg });
+  }
+  return out;
+}
+
+/** Áp một mẫu lên thương hiệu của trường: giữ logo, vị trí, cỡ, chỗ hiện; thay bảng màu và nền theo mẫu. Mã lạ = "default". */
+export function applyBrandTemplate(orgBrand: BrandConfig, templateId: string | null | undefined): BrandConfig {
+  if (!orgBrand.colors) return orgBrand;
+  const t = brandTemplates(orgBrand.colors, orgBrand.bg).find((x) => x.id === templateId);
+  if (!t || t.id === "default") return orgBrand;
+  return { ...orgBrand, colors: t.colors, bg: t.bg };
+}
+
+/** Thương hiệu thực sự áp cho một bài giảng, tính từ các trường của bài và bộ thương hiệu của trường (server gắn vào `org`). */
+export function deckEffectiveBrand(d: {
+  brand?: unknown;
+  brandOff?: boolean;
+  brandTemplate?: string | null;
+  org?: { slideBrand: unknown; logoUrl: string | null } | null;
+}): BrandConfig | null {
+  return resolveEffectiveBrand({
+    deckBrand: d.brand,
+    brandOff: d.brandOff,
+    orgBrand: d.org?.slideBrand,
+    orgLogoUrl: d.org?.logoUrl,
+    deckTemplate: d.brandTemplate,
+  }).brand;
 }

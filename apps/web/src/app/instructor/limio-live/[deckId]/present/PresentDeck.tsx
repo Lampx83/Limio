@@ -16,7 +16,8 @@ import { contentKind } from "../../slideKind";
 import { slideBgFor } from "../../slideThemes";
 import { LayoutSlideView, isLayoutSlide } from "../../SlideLayouts";
 import { BrandLogoOverlay, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
-import { brandFrameBackground, sanitizeBrand } from "@/lib/limioLiveBrand";
+import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
+import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
 
 const QRCode = dynamic(
@@ -46,6 +47,9 @@ interface Deck {
   theme?: string;
   /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider. */
   brand?: unknown;
+  brandOff?: boolean;
+  brandTemplate?: string | null;
+  org?: DeckOrgBrand | null;
   slides: Slide[];
 }
 
@@ -566,7 +570,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const showSidebar = !focus && (hasSidebar || !!presenterNote || showPreview) && !!currentSlide;
 
   return (
-    <LiveBrandProvider brand={deck.brand}>
+    <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {
@@ -683,7 +687,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               key={currentSlide.id}
               ref={cardRef}
               onScrollCapture={handleCardScroll}
-              style={{ background: brandFrameBackground(sanitizeBrand(deck.brand), currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ?? slideBgFor(deck.theme, currentSlide.type === "content" && isLayoutSlide(currentSlide.config)), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
+              style={{ background: brandFrameBackground(deckEffectiveBrand(deck), currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ?? slideBgFor(deck.theme, currentSlide.type === "content" && isLayoutSlide(currentSlide.config)), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
               className={`relative box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
               } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${

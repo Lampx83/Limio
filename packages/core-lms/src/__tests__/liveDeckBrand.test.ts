@@ -36,6 +36,28 @@ describe("thương hiệu của bài giảng Limio-Live", () => {
     expect((await getLiveDeck(deck.id, a, prisma))!.brand).toBeNull();
   });
 
+  it("cờ brandOff mặc định tắt, bật/tắt được và bản sao mang theo", async () => {
+    const userId = await owner("off");
+    const deck = await createLiveDeck({ userId, title: "Tắt thương hiệu" }, prisma);
+    expect(deck.brandOff).toBe(false);
+    await updateLiveDeck(deck.id, userId, { brandOff: true }, prisma);
+    expect((await getLiveDeck(deck.id, userId, prisma))!.brandOff).toBe(true);
+    expect((await duplicateLiveDeck(deck.id, userId, prisma)).brandOff).toBe(true);
+    await updateLiveDeck(deck.id, userId, { brandOff: false }, prisma);
+    expect((await getLiveDeck(deck.id, userId, prisma))!.brandOff).toBe(false);
+  });
+
+  it("mẫu thương hiệu của trường: mặc định trống, đặt/xoá được, bản sao mang theo", async () => {
+    const userId = await owner("tpl");
+    const deck = await createLiveDeck({ userId, title: "Chọn mẫu" }, prisma);
+    expect(deck.brandTemplate).toBeNull();
+    await updateLiveDeck(deck.id, userId, { brandTemplate: "swap-dark" }, prisma);
+    expect((await getLiveDeck(deck.id, userId, prisma))!.brandTemplate).toBe("swap-dark");
+    expect((await duplicateLiveDeck(deck.id, userId, prisma)).brandTemplate).toBe("swap-dark");
+    await updateLiveDeck(deck.id, userId, { brandTemplate: null }, prisma);
+    expect((await getLiveDeck(deck.id, userId, prisma))!.brandTemplate).toBeNull();
+  });
+
   it("nhân bản bài giảng mang theo thương hiệu; bài không có thì bản sao cũng không có", async () => {
     const userId = await owner("dup");
     const withBrand = await createLiveDeck({ userId, title: "Có" }, prisma);
