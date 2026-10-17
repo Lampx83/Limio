@@ -161,6 +161,64 @@ describe("importSessionCandidates — dán danh sách thí sinh cho cả ca", ()
   });
 });
 
+describe("mã lớp học và mã lớp thi khi dán Excel / gõ tay", () => {
+  it("khớp lớp học theo mã hoặc tên (không phân biệt hoa thường), lưu lớp thi; lớp không có trong khoá là lỗi dòng", async () => {
+    const s = await setup("cls");
+    const k65a = await createCourseSection(s.ownerId, s.courseId, { name: "Lớp K65A" });
+    await prisma.courseSection.update({ where: { id: k65a.id }, data: { code: "K65A" } });
+    const k65b = await createCourseSection(s.ownerId, s.courseId, { name: "K65B" });
+    const r = await importSessionCandidates(s.ownerId, s.sessionId, [
+      { line: 2, displayName: "An", mssv: "1", cohortCode: "k65a", examClassCode: "p101" },
+      { line: 3, displayName: "Bình", mssv: "2", cohortCode: "K65B" },
+      { line: 4, displayName: "Chi", mssv: "3", cohortCode: "K99" },
+      { line: 5, displayName: "Dũng", mssv: "4", examClassCode: "P102" },
+    ]);
+    expect(r.valid).toBe(3);
+    expect(candidateIssueMessage(r.rows.find((x) => x.line === 4)!.issue!)).toBe("Không có lớp K99 trong khoá học");
+
+    const list = await listSessionCandidates(s.ownerId, s.sessionId);
+    const by = Object.fromEntries(list.rows.map((x) => [x.displayName, x]));
+    expect(by["An"]).toMatchObject({ cohortCode: "K65A", examClassCode: "P101" });
+    expect(by["Bình"]).toMatchObject({ cohortCode: "K65B", examClassCode: null });
+    expect(by["Dũng"]).toMatchObject({ cohortCode: null, examClassCode: "P102" });
+    const an = await prisma.examCandidate.findFirstOrThrow({ where: { sessionId: s.sessionId, displayName: "An" } });
+    expect(an.cohortId).toBe(k65a.id);
+    expect(k65b.id).toBeTruthy();
+  });
+
+  it("lớp thi đã có trong khoá: tự suy ra lớp học; khai lớp học khác thì báo lỗi", async () => {
+    const s = await setup("cls2");
+    const k65a = await createCourseSection(s.ownerId, s.courseId, { name: "K65A" });
+    await createCourseSection(s.ownerId, s.courseId, { name: "K65B" });
+    await prisma.cohortExamClass.create({ data: { cohortId: k65a.id, courseId: s.courseId, code: "P101" } });
+    const r = await importSessionCandidates(s.ownerId, s.sessionId, [
+      { line: 2, displayName: "An", examClassCode: "P101" },
+      { line: 3, displayName: "Bình", examClassCode: "P101", cohortCode: "K65B" },
+    ]);
+    expect(r.valid).toBe(1);
+    expect(candidateIssueMessage(r.rows.find((x) => x.line === 3)!.issue!)).toBe("Lớp thi P101 thuộc lớp K65A, không phải K65B");
+    const an = await prisma.examCandidate.findFirstOrThrow({ where: { sessionId: s.sessionId } });
+    expect(an.cohortId).toBe(k65a.id);
+  });
+
+  it("sửa lớp học và lớp thi của một thí sinh; bỏ trống là gỡ", async () => {
+    const s = await setup("cls3");
+    await createCourseSection(s.ownerId, s.courseId, { name: "K65A" });
+    await importSessionCandidates(s.ownerId, s.sessionId, [{ line: 2, displayName: "An" }]);
+    const id = (await listSessionCandidates(s.ownerId, s.sessionId)).rows[0]!.id;
+    await updateSessionCandidate(s.ownerId, id, { cohortCode: "K65A", examClassCode: "p201" });
+    let row = (await listSessionCandidates(s.ownerId, s.sessionId)).rows[0]!;
+    expect(row).toMatchObject({ cohortCode: "K65A", examClassCode: "P201" });
+    await expect(updateSessionCandidate(s.ownerId, id, { cohortCode: "K00" })).rejects.toMatchObject({
+      code: "validation_failed",
+      details: { reason: "cohort_not_found" },
+    });
+    await updateSessionCandidate(s.ownerId, id, { cohortCode: null, examClassCode: "" });
+    row = (await listSessionCandidates(s.ownerId, s.sessionId)).rows[0]!;
+    expect(row).toMatchObject({ cohortCode: null, examClassCode: null });
+  });
+});
+
 describe("danh sách, sửa, xoá thí sinh của ca", () => {
   it("liệt kê thí sinh chưa có phòng, sửa tên và MSSV, xoá em chưa làm bài", async () => {
     const s = await setup("crud", { mssvCode: true });
@@ -232,6 +290,8 @@ describe("lấy từ lớp học và ghép MSSV theo email", () => {
     const rows = await prisma.examCandidate.findMany({ where: { sessionId: s.sessionId } });
     expect(rows.map((x) => x.userId).sort()).toEqual([s.a.userId, s.b.userId].sort());
     expect(rows.every((x) => /^[A-Z0-9]{8}$/.test(x.accessCode ?? ""))).toBe(true);
+    // Lấy từ lớp nào thì ghi lớp đó vào thí sinh — file xuất đọc được mã lớp học.
+    expect(rows.every((x) => x.cohortId === s.sectionId)).toBe(true);
   });
 
   it("mã thi là MSSV: thêm từ lớp thì chưa có mã; dán cột MSSV ghép theo email thì có mã", async () => {

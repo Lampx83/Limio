@@ -46,7 +46,10 @@ export type CandidateIssue =
   | { kind: "mssv_used"; name: string }
   | { kind: "code_taken" }
   | { kind: "email_not_found" }
-  | { kind: "code_locked" };
+  | { kind: "code_locked" }
+  | { kind: "cohort_not_found"; code: string }
+  | { kind: "no_course" }
+  | { kind: "exam_class_mismatch"; examClass: string; cohort: string; given: string };
 
 /** Câu hiển thị cho giáo viên. Đặt ở đây để xem trước và lưu nói cùng một câu. */
 export function candidateIssueMessage(issue: CandidateIssue): string {
@@ -71,6 +74,12 @@ export function candidateIssueMessage(issue: CandidateIssue): string {
       return "Không có thí sinh nào trong ca dùng email này";
     case "code_locked":
       return "Thí sinh đã vào thi nên không đổi được mã thi";
+    case "cohort_not_found":
+      return `Không có lớp ${issue.code} trong khoá học`;
+    case "no_course":
+      return "Đề thi không thuộc khoá học nào nên không gắn được lớp học";
+    case "exam_class_mismatch":
+      return `Lớp thi ${issue.examClass} thuộc lớp ${issue.cohort}, không phải ${issue.given}`;
   }
 }
 
@@ -85,6 +94,8 @@ const normMssv = (v: string | null | undefined) => clean(v).slice(0, 60) || null
 const normEmail = (v: string | null | undefined) => clean(v).toLowerCase() || null;
 /** Mã thi so khớp theo chữ hoa: claimByAssignedCode viết hoa mã người dùng gõ. */
 const asCode = (mssv: string) => mssv.toUpperCase();
+/** Mã lớp học / mã lớp thi: so khớp và lưu theo chữ hoa, như session-import. */
+const normClassCode = (v: string | null | undefined) => clean(v).slice(0, 60).toUpperCase() || null;
 
 function metaOf(m: unknown): { email?: string; studentCode?: string } & Record<string, unknown> {
   return m && typeof m === "object" && !Array.isArray(m) ? (m as Record<string, unknown>) : {};
@@ -217,6 +228,72 @@ async function emitAudit(
 }
 
 // ---------------------------------------------------------------------------
+// Lớp học / lớp thi
+// ---------------------------------------------------------------------------
+
+interface ClassLookup {
+  hasCourse: boolean;
+  /** Khoá = mã lớp, hoặc tên lớp (viết hoa). Mã thắng tên khi trùng. */
+  sectionByKey: Map<string, string>;
+  /** id lớp → nhãn hiển thị (mã, không có mã thì tên). */
+  sectionLabel: Map<string, string>;
+  /** Mã lớp thi (CohortExamClass) → id lớp học sở hữu nó. */
+  examClassCohort: Map<string, string>;
+}
+
+async function loadClassLookup(courseId: string | null, db: PrismaClient): Promise<ClassLookup> {
+  if (!courseId)
+    return { hasCourse: false, sectionByKey: new Map(), sectionLabel: new Map(), examClassCohort: new Map() };
+  const [sections, examClasses] = await Promise.all([
+    // Lớp mặc định ("học viên chưa gán lớp") không phải lớp thật để gõ mã vào.
+    db.courseSection.findMany({ where: { courseId, isDefault: false }, select: { id: true, code: true, name: true } }),
+    db.cohortExamClass.findMany({ where: { courseId }, select: { code: true, cohortId: true } }),
+  ]);
+  const sectionByKey = new Map<string, string>();
+  for (const s of sections) sectionByKey.set(s.name.trim().toUpperCase(), s.id);
+  for (const s of sections) if (s.code) sectionByKey.set(s.code.trim().toUpperCase(), s.id);
+  return {
+    hasCourse: true,
+    sectionByKey,
+    sectionLabel: new Map(sections.map((s) => [s.id, s.code ?? s.name])),
+    examClassCohort: new Map(examClasses.map((e) => [e.code.toUpperCase(), e.cohortId])),
+  };
+}
+
+/**
+ * Lớp học của một thí sinh từ mã lớp học + mã lớp thi đã khai. Lớp thi đã có
+ * trong khoá (nhập phòng từ Excel) thì biết luôn lớp học của nó; khai lớp học
+ * khác thì là dữ liệu mâu thuẫn, báo lỗi thay vì chọn đại một bên.
+ */
+function resolveCohort(
+  lookup: ClassLookup,
+  cohortCode: string | null,
+  examClassCode: string | null,
+): { cohortId: string | null; issue?: CandidateIssue } {
+  let cohortId: string | null = null;
+  if (cohortCode) {
+    if (!lookup.hasCourse) return { cohortId: null, issue: { kind: "no_course" } };
+    cohortId = lookup.sectionByKey.get(cohortCode) ?? null;
+    if (!cohortId) return { cohortId: null, issue: { kind: "cohort_not_found", code: cohortCode } };
+  }
+  const owner = examClassCode ? lookup.examClassCohort.get(examClassCode) : undefined;
+  if (owner) {
+    if (cohortId && cohortId !== owner)
+      return {
+        cohortId: null,
+        issue: {
+          kind: "exam_class_mismatch",
+          examClass: examClassCode!,
+          cohort: lookup.sectionLabel.get(owner) ?? "khác",
+          given: cohortCode!,
+        },
+      };
+    cohortId = owner;
+  }
+  return { cohortId };
+}
+
+// ---------------------------------------------------------------------------
 // Dán từ Excel / gõ từng em
 // ---------------------------------------------------------------------------
 
@@ -225,6 +302,8 @@ const DraftRow = z.object({
   displayName: z.string().max(1000).nullish(),
   mssv: z.string().max(1000).nullish(),
   email: z.string().max(1000).nullish(),
+  cohortCode: z.string().max(1000).nullish(),
+  examClassCode: z.string().max(1000).nullish(),
 });
 const DraftRows = z.array(DraftRow).min(1).max(MAX_ROWS);
 export type CandidateDraft = z.input<typeof DraftRow>;
@@ -234,6 +313,8 @@ export interface CheckedRow {
   displayName: string;
   mssv: string | null;
   email: string | null;
+  cohortCode: string | null;
+  examClassCode: string | null;
   issue?: CandidateIssue;
 }
 
@@ -258,10 +339,12 @@ export async function importSessionCandidates(
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
 
   const mssvIsCode = ctx.codeSource === "student_code";
-  const [existing, examCodes] = await Promise.all([
+  const [existing, examCodes, classes] = await Promise.all([
     loadSessionCandidates(sessionId, db),
     loadExamCodes(ctx.examId, db),
+    loadClassLookup(ctx.courseId, db),
   ]);
+  const cohortByLine = new Map<number, string | null>();
   const inSessionByMssv = new Map(existing.filter((c) => c.mssv).map((c) => [c.mssv!.toUpperCase(), c]));
   const inSessionByEmail = new Map(existing.filter((c) => c.email).map((c) => [c.email!, c]));
   const listMssv = new Map<string, number>();
@@ -273,6 +356,8 @@ export async function importSessionCandidates(
       displayName: normName(r.displayName),
       mssv: normMssv(r.mssv),
       email: normEmail(r.email),
+      cohortCode: normClassCode(r.cohortCode),
+      examClassCode: normClassCode(r.examClassCode),
     };
     const mKey = out.mssv?.toUpperCase() ?? null;
     let issue: CandidateIssue | undefined;
@@ -286,6 +371,11 @@ export async function importSessionCandidates(
       const dup = (mKey && inSessionByMssv.get(mKey)) || (out.email && inSessionByEmail.get(out.email));
       if (dup) issue = { kind: "already_in_session", name: dup.displayName };
       else if (mssvIsCode && examCodes.has(mKey!)) issue = { kind: "code_taken" };
+      else {
+        const cls = resolveCohort(classes, out.cohortCode, out.examClassCode);
+        if (cls.issue) issue = cls.issue;
+        else cohortByLine.set(r.line, cls.cohortId);
+      }
     }
     if (issue) out.issue = issue;
     else {
@@ -320,10 +410,12 @@ export async function importSessionCandidates(
     const metadata: Record<string, string> = {};
     if (r.email) metadata.email = r.email;
     if (r.mssv) metadata.studentCode = r.mssv;
+    if (r.examClassCode) metadata.examClassCode = r.examClassCode;
     return {
       id: randomUUID(),
       examId: ctx.examId,
       sessionId,
+      cohortId: cohortByLine.get(r.line) ?? null,
       displayName: r.displayName,
       userId: (r.email && userByEmail.get(r.email)) || null,
       accessCode: mssvIsCode ? asCode(r.mssv!) : uniqueRandomCode(taken),
@@ -365,6 +457,9 @@ export interface SessionCandidateRow {
   needsMssv: boolean;
   roomId: string | null;
   roomName: string | null;
+  /** Mã lớp học (lớp không có mã thì tên lớp). */
+  cohortCode: string | null;
+  examClassCode: string | null;
   linkedAccount: boolean;
   hasAttempt: boolean;
 }
@@ -394,6 +489,7 @@ export async function listSessionCandidates(
       userId: true,
       roomId: true,
       room: { select: { name: true } },
+      cohort: { select: { code: true, name: true } },
       linkedUser: { select: { email: true } },
       _count: { select: { attempts: true } },
     },
@@ -413,6 +509,8 @@ export async function listSessionCandidates(
         needsMssv: ctx.mode === "assigned_code" && r.accessCode === null,
         roomId: r.roomId,
         roomName: r.room?.name ?? null,
+        cohortCode: r.cohort ? (r.cohort.code ?? r.cohort.name) : null,
+        examClassCode: typeof md.examClassCode === "string" ? md.examClassCode : null,
         linkedAccount: r.userId !== null,
         hasAttempt: r._count.attempts > 0,
       };
@@ -424,6 +522,8 @@ const CandidatePatch = z.object({
   displayName: z.string().max(1000).optional(),
   mssv: z.string().max(1000).nullable().optional(),
   email: z.string().max(1000).nullable().optional(),
+  cohortCode: z.string().max(1000).nullable().optional(),
+  examClassCode: z.string().max(1000).nullable().optional(),
 });
 
 async function loadCandidateForEdit(actorUserId: string, candidateId: string, db: PrismaClient) {
@@ -437,6 +537,7 @@ async function loadCandidateForEdit(actorUserId: string, candidateId: string, db
       displayName: true,
       metadata: true,
       accessCode: true,
+      cohortId: true,
       session: { select: { roundId: true, examId: true } },
       exam: { select: { courseId: true, assignedCodeSource: true } },
       _count: { select: { attempts: true } },
@@ -459,7 +560,12 @@ export async function updateSessionCandidate(
   const p = parsed.data;
 
   const md = { ...metaOf(c.metadata) };
-  const data: { displayName?: string; accessCode?: string | null; metadata?: Prisma.InputJsonValue } = {};
+  const data: {
+    displayName?: string;
+    accessCode?: string | null;
+    cohortId?: string | null;
+    metadata?: Prisma.InputJsonValue;
+  } = {};
   const fields: string[] = [];
 
   if (p.displayName !== undefined) {
@@ -500,7 +606,33 @@ export async function updateSessionCandidate(
       }
     }
   }
-  if (fields.some((f) => f !== "displayName")) data.metadata = md as Prisma.InputJsonValue;
+  if (p.cohortCode !== undefined || p.examClassCode !== undefined) {
+    const examClass =
+      p.examClassCode !== undefined
+        ? normClassCode(p.examClassCode)
+        : typeof md.examClassCode === "string"
+          ? md.examClassCode
+          : null;
+    const cohortCode = p.cohortCode !== undefined ? normClassCode(p.cohortCode) : null;
+    const cls = resolveCohort(await loadClassLookup(c.exam.courseId, db), cohortCode, examClass);
+    if (cls.issue)
+      throw new ExamError("validation_failed", {
+        reason: cls.issue.kind,
+        message: candidateIssueMessage(cls.issue),
+      });
+    if (p.examClassCode !== undefined) {
+      if (examClass) md.examClassCode = examClass;
+      else delete md.examClassCode;
+      fields.push("examClassCode");
+    }
+    // Chỉ sửa lớp thi mà lớp thi đó chưa biết thuộc lớp nào ⇒ giữ lớp học cũ.
+    const nextCohort = p.cohortCode !== undefined || cls.cohortId ? cls.cohortId : c.cohortId;
+    if (nextCohort !== c.cohortId) {
+      data.cohortId = nextCohort;
+      fields.push("cohortId");
+    }
+  }
+  if (fields.some((f) => f !== "displayName" && f !== "cohortId")) data.metadata = md as Prisma.InputJsonValue;
   if (Object.keys(data).length === 0) return;
 
   await db.$transaction(async (tx) => {
@@ -578,9 +710,13 @@ export async function listSessionSections(
 }
 
 async function assertSectionOfSession(ctx: SessionCtx, sectionId: string, db: PrismaClient) {
-  const section = await db.courseSection.findUnique({ where: { id: sectionId }, select: { courseId: true } });
+  const section = await db.courseSection.findUnique({
+    where: { id: sectionId },
+    select: { courseId: true, isDefault: true },
+  });
   if (!section || !ctx.courseId || section.courseId !== ctx.courseId)
     throw new ExamError("validation_failed", { reason: "section_not_in_course" });
+  return section;
 }
 
 export interface SectionStudentOption {
@@ -626,7 +762,7 @@ export async function addSessionCandidatesFromSection(
 ): Promise<{ added: number; skipped: number }> {
   const ctx = await loadEditableSession(actorUserId, sessionId, db);
   requireAssigned(ctx);
-  await assertSectionOfSession(ctx, sectionId, db);
+  const section = await assertSectionOfSession(ctx, sectionId, db);
   const parsed = z.array(z.string().uuid()).min(1).max(MAX_ROWS).safeParse(rawUserIds);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
   const userIds = [...new Set(parsed.data)];
@@ -650,6 +786,8 @@ export async function addSessionCandidatesFromSection(
     displayName: s.displayName,
     userId: s.userId,
     accessCode: ctx.codeSource === "student_code" ? null : uniqueRandomCode(taken),
+    // Lấy từ lớp nào thì ghi lớp đó — file xuất đọc mã lớp học từ đây.
+    cohortId: section.isDefault ? null : sectionId,
     metadata: { email: s.email.toLowerCase() },
   }));
   await db.$transaction(async (tx) => {

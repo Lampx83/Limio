@@ -21,6 +21,12 @@ export const PERSON_HEADERS = {
   mssv: ["mssv", "ma sv", "ma sinh vien", "student id", "student code", "ma so sinh vien"],
 } as const;
 
+/** Mã lớp học / mã lớp thi của thí sinh (cùng tên cột với hộp "Nhập từ danh sách"). */
+export const CLASS_HEADERS = {
+  cohortCode: ["ma lop hoc", "lop hoc", "lop", "ma lop", "cohort", "cohort code"],
+  examClassCode: ["ma lop thi", "lop thi", "exam class", "examclass"],
+} as const;
+
 export type PastedRow<F extends string> = Partial<Record<F, string>> & {
   /** Số dòng trong bảng gốc, tính cả dòng tiêu đề (dòng dữ liệu đầu = 2). */
   line: number;

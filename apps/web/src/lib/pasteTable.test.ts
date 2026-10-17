@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PERSON_HEADERS, parsePastedTable } from "./pasteTable";
+import { CLASS_HEADERS, PERSON_HEADERS, parsePastedTable } from "./pasteTable";
 
 describe("parsePastedTable", () => {
   it("nhận cột theo tên, bất kể thứ tự, dấu và hoa thường; bỏ cột lạ", () => {
@@ -17,5 +17,10 @@ describe("parsePastedTable", () => {
       { line: 2, displayName: "An", mssv: "1" },
     ]);
     expect(parsePastedTable("Nguyễn Văn An\t1001", PERSON_HEADERS).fields).toEqual([]);
+  });
+
+  it("nhận cột Mã lớp học, Mã lớp thi cạnh thông tin thí sinh", () => {
+    const { rows } = parsePastedTable("Họ tên\tLớp học\tMã lớp thi\nAn\tK65A\tP101", { ...PERSON_HEADERS, ...CLASS_HEADERS });
+    expect(rows).toEqual([{ line: 2, displayName: "An", cohortCode: "K65A", examClassCode: "P101" }]);
   });
 });

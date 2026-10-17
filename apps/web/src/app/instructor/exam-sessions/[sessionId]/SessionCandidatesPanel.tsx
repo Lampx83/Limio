@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ClipboardPaste, Pencil, Search, Trash2, UserPlus, Users } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
-import { PERSON_HEADERS, parsePastedTable } from "@/lib/pasteTable";
+import { CLASS_HEADERS, PERSON_HEADERS, parsePastedTable } from "@/lib/pasteTable";
 import StickyMobileCTA from "@/components/ui/StickyMobileCTA";
 
 /**
@@ -23,6 +23,8 @@ interface CandidateRow {
   accessCode: string | null;
   needsMssv: boolean;
   roomName: string | null;
+  cohortCode: string | null;
+  examClassCode: string | null;
   linkedAccount: boolean;
   hasAttempt: boolean;
 }
@@ -40,6 +42,8 @@ interface CheckedRow {
   candidateName?: string;
   mssv: string | null;
   email: string | null;
+  cohortCode?: string | null;
+  examClassCode?: string | null;
   message?: string;
 }
 
@@ -52,6 +56,12 @@ interface CheckResult {
 }
 
 type Panel = "paste" | "manual" | "class" | "attach" | null;
+
+/** Một lớp học của khoá để chọn. value là chuỗi máy chủ khớp được (mã, không có mã thì tên). */
+interface ClassOption {
+  value: string;
+  label: string;
+}
 
 // ---------------------------------------------------------------------------
 
@@ -103,6 +113,7 @@ export default function SessionCandidatesPanel({
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [classes, setClasses] = useState<ClassOption[]>([]);
 
   const reload = useCallback(async () => {
     try {
@@ -115,6 +126,23 @@ export default function SessionCandidatesPanel({
   useEffect(() => {
     void reload();
   }, [reload, accessMode]);
+
+  const hasCourse = list?.hasCourse ?? false;
+  useEffect(() => {
+    if (!hasCourse) return;
+    call<Array<{ code: string | null; name: string; isDefault: boolean }>>(`${base}/sections`)
+      .then((all) =>
+        setClasses(
+          all
+            .filter((c) => !c.isDefault)
+            .map((c) => ({
+              value: c.code ?? c.name,
+              label: c.code && c.code !== c.name ? `${c.code} — ${c.name}` : c.name,
+            })),
+        ),
+      )
+      .catch(() => setClasses([]));
+  }, [base, hasCourse]);
 
   const done = async (msg: string, next: Panel = null) => {
     setNotice(msg);
@@ -191,6 +219,7 @@ export default function SessionCandidatesPanel({
             <ManualPanel
               base={base}
               mssvIsCode={mssvIsCode}
+              classes={classes}
               onCancel={() => setPanel(null)}
               onSaved={(name) => done(`Đã thêm ${name}.`, "manual")}
             />
@@ -223,6 +252,7 @@ export default function SessionCandidatesPanel({
               rows={list.rows}
               canEdit={canEdit}
               hasCourse={list.hasCourse}
+              classes={classes}
               onPick={(p) => {
                 setNotice(null);
                 setPanel(p);
@@ -286,6 +316,7 @@ function SourceOptions({ hasCourse, onPick }: { hasCourse: boolean; onPick: (p: 
 
 /** Bảng xem trước: dòng lỗi lên đầu, tô đỏ kèm lý do; dòng hợp lệ chỉ hiện vài dòng đầu. */
 function PreviewTable({ rows, columns }: { rows: CheckedRow[]; columns: "person" | "attach" }) {
+  const withClass = columns === "person" && rows.some((r) => r.cohortCode || r.examClassCode);
   const bad = rows.filter((r) => r.message);
   const good = rows.filter((r) => !r.message);
   const shown = [...bad, ...good.slice(0, 5)];
@@ -299,6 +330,12 @@ function PreviewTable({ rows, columns }: { rows: CheckedRow[]; columns: "person"
               <>
                 <th className="px-3 py-2">Họ tên</th>
                 <th className="px-3 py-2">MSSV</th>
+                {withClass && (
+                  <>
+                    <th className="px-3 py-2">Lớp học</th>
+                    <th className="px-3 py-2">Lớp thi</th>
+                  </>
+                )}
                 <th className="px-3 py-2">Email</th>
               </>
             ) : (
@@ -319,6 +356,12 @@ function PreviewTable({ rows, columns }: { rows: CheckedRow[]; columns: "person"
                 <>
                   <td className="px-3 py-2">{r.displayName || "—"}</td>
                   <td className="px-3 py-2 font-mono">{r.mssv || "—"}</td>
+                  {withClass && (
+                    <>
+                      <td className="px-3 py-2">{r.cohortCode ?? ""}</td>
+                      <td className="px-3 py-2">{r.examClassCode ?? ""}</td>
+                    </>
+                  )}
                   <td className="px-3 py-2 text-faint">{r.email ?? ""}</td>
                 </>
               ) : (
@@ -339,7 +382,7 @@ function PreviewTable({ rows, columns }: { rows: CheckedRow[]; columns: "person"
           ))}
           {good.length > 5 && (
             <tr className="border-t border-default">
-              <td colSpan={5} className="px-3 py-2 text-faint">
+              <td colSpan={7} className="px-3 py-2 text-faint">
                 … và {good.length - 5} dòng hợp lệ khác
               </td>
             </tr>
@@ -479,7 +522,7 @@ function PastePanel({
   onSaved: (n: number, skipped: number) => void;
 }) {
   const parse = useCallback((raw: string) => {
-    const { rows, fields } = parsePastedTable(raw, PERSON_HEADERS);
+    const { rows, fields } = parsePastedTable(raw, { ...PERSON_HEADERS, ...CLASS_HEADERS });
     const error =
       raw.trim() && !fields.includes("displayName")
         ? 'Chưa nhận ra cột họ tên. Thầy/cô dán cả dòng tiêu đề, trong đó có một cột tên là "Họ tên" (các cột khác: MSSV, Email).'
@@ -492,13 +535,17 @@ function PastePanel({
     <PasteFlow
       label={
         <>
-          Dán bảng vào ô dưới. Dòng đầu là tên cột: <b>Họ tên</b>, <b>MSSV</b>, <b>Email</b>.{" "}
-          {mssvIsCode ? "Cột MSSV bắt buộc vì mã thi là MSSV." : "Cột MSSV và Email không bắt buộc."}
+          Dán bảng vào ô dưới. Dòng đầu là tên cột: <b>Họ tên</b>, <b>MSSV</b>, <b>Email</b>,{" "}
+          <b>Mã lớp học</b>, <b>Mã lớp thi</b>. Chỉ cột Họ tên là bắt buộc
+          {mssvIsCode ? ", cùng cột MSSV vì mã thi là MSSV" : ""}. Mã lớp học phải là một lớp đã có trong khoá.
         </>
       }
-      placeholder={"Họ tên\tMSSV\tEmail\nNguyễn Văn An\t20261001\tan@sv.edu.vn"}
+      placeholder={"Họ tên\tMSSV\tEmail\tMã lớp học\tMã lớp thi\nNguyễn Văn An\t20261001\tan@sv.edu.vn\tK65A\tP101"}
       sample={
-        "Họ tên\tMSSV\tEmail\nNguyễn Văn An\t20261001\tan@sv.edu.vn\nTrần Thị Bình\t20261002\tbinh@sv.edu.vn\nLê Minh Chi\t20261003\t"
+        "Họ tên\tMSSV\tEmail\tMã lớp học\tMã lớp thi\n" +
+        "Nguyễn Văn An\t20261001\tan@sv.edu.vn\tK65A\tP101\n" +
+        "Trần Thị Bình\t20261002\tbinh@sv.edu.vn\tK65A\tP101\n" +
+        "Lê Minh Chi\t20261003\t\tK65B\tP102"
       }
       parse={parse}
       endpoint={base}
@@ -552,17 +599,22 @@ function AttachPanel({
 function ManualPanel({
   base,
   mssvIsCode,
+  classes,
   onCancel,
   onSaved,
 }: {
   base: string;
   mssvIsCode: boolean;
+  classes: ClassOption[];
   onCancel: () => void;
   onSaved: (name: string) => void;
 }) {
   const [name, setName] = useState("");
   const [mssv, setMssv] = useState("");
   const [email, setEmail] = useState("");
+  // Lớp học, lớp thi giữ nguyên giữa các lần thêm: gõ liền nhiều em cùng lớp.
+  const [cohortCode, setCohortCode] = useState("");
+  const [examClassCode, setExamClassCode] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -573,7 +625,7 @@ function ManualPanel({
     try {
       const r = await call<CheckResult>(base, {
         method: "POST",
-        body: { rows: [{ line: 1, displayName: name, mssv, email }] },
+        body: { rows: [{ line: 1, displayName: name, mssv, email, cohortCode, examClassCode }] },
       });
       const issue = r.rows[0]?.message;
       if (issue) return setErr(issue);
@@ -603,6 +655,21 @@ function ManualPanel({
           Email (không bắt buộc)
           <input className="input mt-1 w-full" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="an@sv.edu.vn" />
         </label>
+        {classes.length > 0 && (
+          <label className="text-sm text-slate-700">
+            Lớp học (không bắt buộc)
+            <ClassSelect className="mt-1 w-full" value={cohortCode} onChange={setCohortCode} classes={classes} />
+          </label>
+        )}
+        <label className="text-sm text-slate-700">
+          Mã lớp thi (không bắt buộc)
+          <input
+            className="input mt-1 w-full"
+            value={examClassCode}
+            onChange={(e) => setExamClassCode(e.target.value)}
+            placeholder="P101"
+          />
+        </label>
       </div>
       {err && <p className="mt-2 text-sm font-semibold text-red-700">{err}</p>}
       <div className="mt-3 flex justify-end gap-2">
@@ -618,6 +685,31 @@ function ManualPanel({
 }
 
 // ---------------------------------------------------------------------------
+
+function ClassSelect({
+  value,
+  onChange,
+  classes,
+  className = "",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  classes: ClassOption[];
+  className?: string;
+}) {
+  const known = !value || classes.some((c) => c.value === value);
+  return (
+    <select className={`input ${className}`} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">— Chưa gán lớp —</option>
+      {!known && <option value={value}>{value}</option>}
+      {classes.map((c) => (
+        <option key={c.value} value={c.value}>
+          {c.label}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 interface SectionOption {
   id: string;
@@ -776,6 +868,7 @@ function CandidateTable({
   rows,
   canEdit,
   hasCourse,
+  classes,
   onPick,
   onChanged,
 }: {
@@ -783,6 +876,7 @@ function CandidateTable({
   rows: CandidateRow[];
   canEdit: boolean;
   hasCourse: boolean;
+  classes: ClassOption[];
   onPick: (p: Panel) => void;
   onChanged: () => Promise<void>;
 }) {
@@ -793,7 +887,11 @@ function CandidateTable({
     const k = q.trim().toLowerCase();
     return [...rows]
       .sort(byVietnameseName)
-      .filter((r) => !k || r.displayName.toLowerCase().includes(k) || (r.mssv ?? "").toLowerCase().includes(k));
+      .filter(
+        (r) =>
+          !k ||
+          [r.displayName, r.mssv, r.cohortCode, r.examClassCode].some((v) => (v ?? "").toLowerCase().includes(k)),
+      );
   }, [rows, q]);
 
   const remove = async (r: CandidateRow) => {
@@ -815,8 +913,8 @@ function CandidateTable({
             className="input w-full pl-8"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Tìm theo tên hoặc MSSV"
-            aria-label="Tìm thí sinh theo tên hoặc MSSV"
+            placeholder="Tìm theo tên, MSSV hoặc mã lớp"
+            aria-label="Tìm thí sinh theo tên, MSSV hoặc mã lớp"
           />
         </label>
         {canEdit && (
@@ -838,11 +936,13 @@ function CandidateTable({
 
       <div className="mt-3 overflow-x-auto rounded-lg border border-default">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs text-slate-500">
+          <thead className="whitespace-nowrap bg-slate-50 text-left text-xs text-slate-500">
             <tr>
               <th className="w-12 px-3 py-2">STT</th>
               <th className="px-3 py-2">Họ tên</th>
               <th className="px-3 py-2">MSSV</th>
+              <th className="px-3 py-2">Lớp học</th>
+              <th className="px-3 py-2">Lớp thi</th>
               <th className="px-3 py-2">Email</th>
               <th className="px-3 py-2">Phòng</th>
               <th className="px-3 py-2">Mã thi</th>
@@ -857,6 +957,7 @@ function CandidateTable({
                   base={base}
                   row={r}
                   index={i + 1}
+                  classes={classes}
                   onDone={async () => {
                     setEditing(null);
                     await onChanged();
@@ -866,11 +967,13 @@ function CandidateTable({
               ) : (
                 <tr key={r.id} className="border-t border-default align-top">
                   <td className="px-3 py-2 text-faint">{i + 1}</td>
-                  <td className="px-3 py-2">
+                  <td className="whitespace-nowrap px-3 py-2">
                     {r.displayName}
                     {rowErr?.id === r.id && <div className="text-xs font-semibold text-red-700">{rowErr.msg}</div>}
                   </td>
                   <td className="px-3 py-2 font-mono">{r.mssv ?? <span className="text-faint">—</span>}</td>
+                  <td className="whitespace-nowrap px-3 py-2">{r.cohortCode ?? <span className="text-faint">—</span>}</td>
+                  <td className="whitespace-nowrap px-3 py-2">{r.examClassCode ?? <span className="text-faint">—</span>}</td>
                   <td className="px-3 py-2 text-faint">{r.email ?? ""}</td>
                   <td className="whitespace-nowrap px-3 py-2">{r.roomName ?? <span className="text-faint">Chưa chia</span>}</td>
                   <td className="whitespace-nowrap px-3 py-2 font-mono">
@@ -885,7 +988,7 @@ function CandidateTable({
                           setEditing(r.id);
                         }}
                         aria-label={`Sửa ${r.displayName}`}
-                        title="Sửa họ tên, MSSV"
+                        title="Sửa họ tên, MSSV, lớp"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -905,7 +1008,7 @@ function CandidateTable({
             )}
             {shown.length === 0 && (
               <tr className="border-t border-default">
-                <td colSpan={7} className="px-3 py-6 text-center text-faint">
+                <td colSpan={9} className="px-3 py-6 text-center text-faint">
                   Không có thí sinh nào khớp với “{q}”.
                 </td>
               </tr>
@@ -924,17 +1027,21 @@ function EditRow({
   base,
   row,
   index,
+  classes,
   onDone,
   onCancel,
 }: {
   base: string;
   row: CandidateRow;
   index: number;
+  classes: ClassOption[];
   onDone: () => Promise<void>;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(row.displayName);
   const [mssv, setMssv] = useState(row.mssv ?? "");
+  const [cohortCode, setCohortCode] = useState(row.cohortCode ?? "");
+  const [examClassCode, setExamClassCode] = useState(row.examClassCode ?? "");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -945,6 +1052,9 @@ function EditRow({
       const patch: Record<string, string | null> = {};
       if (name.trim() !== row.displayName) patch.displayName = name;
       if (mssv.trim() !== (row.mssv ?? "")) patch.mssv = mssv.trim() || null;
+      if (cohortCode !== (row.cohortCode ?? "")) patch.cohortCode = cohortCode || null;
+      if (examClassCode.trim().toUpperCase() !== (row.examClassCode ?? ""))
+        patch.examClassCode = examClassCode.trim() || null;
       if (Object.keys(patch).length) await call(`${base}/${row.id}`, { method: "PATCH", body: patch });
       await onDone();
     } catch (e) {
@@ -962,6 +1072,21 @@ function EditRow({
       </td>
       <td className="px-3 py-2">
         <input className="input w-32" value={mssv} onChange={(e) => setMssv(e.target.value)} aria-label="MSSV" />
+      </td>
+      <td className="px-3 py-2">
+        {classes.length > 0 ? (
+          <ClassSelect value={cohortCode} onChange={setCohortCode} classes={classes} />
+        ) : (
+          <span className="text-faint">{row.cohortCode ?? "—"}</span>
+        )}
+      </td>
+      <td className="px-3 py-2">
+        <input
+          className="input w-24"
+          value={examClassCode}
+          onChange={(e) => setExamClassCode(e.target.value)}
+          aria-label="Mã lớp thi"
+        />
       </td>
       <td className="px-3 py-2 text-faint">{row.email ?? ""}</td>
       <td colSpan={2} className="px-3 py-2" />
