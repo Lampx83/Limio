@@ -60,6 +60,24 @@ describe("generateLessonOutline", () => {
     expect((log?.tokensInput ?? 0) + (log?.tokensOutput ?? 0)).toBe(1600);
   });
 
+  it("lời nhắc theo mẫu bài: mặc định Bài lý thuyết; mẫu thực hành và ôn tập có khung riêng; chỉ 4 cách trình bày", async () => {
+    const userId = await makeUser();
+    const payload = { lessons: [] };
+    const seen: { system?: string } = {};
+    await generateLessonOutline(userId, { sourceName: "a", paras: PARAS, words: 90 }, fakeOpenAI(payload, seen));
+    expect(seen.system).toContain("BÀI LÝ THUYẾT");
+    expect(seen.system).not.toContain('"cards"');
+    expect(seen.system).not.toContain('"compare"');
+
+    await generateLessonOutline(userId, { template: "practice", sourceName: "a", paras: PARAS, words: 90 }, fakeOpenAI(payload, seen));
+    expect(seen.system).toContain("BÀI HƯỚNG DẪN THỰC HÀNH");
+    expect(seen.system).toContain('"Lỗi thường gặp"');
+
+    await generateLessonOutline(userId, { template: "review", sourceName: "a", paras: PARAS, words: 90 }, fakeOpenAI(payload, seen));
+    expect(seen.system).toContain("BÀI ÔN TẬP");
+    expect(seen.system).toContain('"Tự kiểm tra"');
+  });
+
   it("tài liệu quá ngắn: báo lỗi, không gọi mô hình", async () => {
     let called = false;
     const openai = {

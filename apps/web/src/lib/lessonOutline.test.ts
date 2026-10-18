@@ -19,7 +19,7 @@ const PARAS: SourcePara[] = [
 ];
 
 describe("normalizeLessonOutline — dàn ý từ AI", () => {
-  it("bố cục lạ về Văn bản, hộp lạ bị bỏ, emoji bị gỡ, đoạn trùng chỉ thuộc mục đầu, đoạn ngoài phạm vi bị bỏ", () => {
+  it("bố cục lạ bị thay, hộp lạ bị bỏ, emoji bị gỡ, đoạn trùng chỉ thuộc mục đầu, đoạn ngoài phạm vi bị bỏ", () => {
     const o = normalizeLessonOutline(
       {
         lessons: [
@@ -34,15 +34,39 @@ describe("normalizeLessonOutline — dàn ý từ AI", () => {
           { title: "Bài rỗng", objectives: [], sections: [] },
         ],
       },
-      PARAS.length,
+      PARAS,
     );
     expect(o.lessons).toHaveLength(1);
     const [a, b] = o.lessons[0]!.sections;
     expect(o.lessons[0]!.title).toBe("Bài gần nhau");
     expect(o.lessons[0]!.objectives).toEqual(["Trình bày được nguyên tắc."]);
-    expect(a).toMatchObject({ layout: "text", boxes: ["note"], paras: [1, 2] });
+    // Mục có ảnh (đoạn 2) luôn là "Chữ và ảnh", dù mô hình trả bố cục lạ.
+    expect(a).toMatchObject({ layout: "image", boxes: ["note"], paras: [1, 2] });
     expect(b).toMatchObject({ title: "Mục chưa đặt tên", layout: "steps", paras: [3] });
     expect(a!.id).not.toBe(b!.id);
+    expect(o.template).toBe("theory");
+  });
+
+  it("chỉ nhận 4 cách trình bày AI được chọn; Chữ và ảnh mà không có ảnh về Văn bản; mẫu bài được ghi vào dàn ý", () => {
+    const o = normalizeLessonOutline(
+      {
+        lessons: [
+          {
+            title: "Ôn tập",
+            objectives: [],
+            sections: [
+              { title: "Ý chính", layout: "image", points: [], boxes: [], paras: [0, 3] },
+              { title: "Thẻ", layout: "cards", points: [], boxes: [], paras: [1] },
+              { title: "Tự kiểm tra", layout: "faq", points: [], boxes: [], paras: [4] },
+            ],
+          },
+        ],
+      },
+      PARAS,
+      "review",
+    );
+    expect(o.lessons[0]!.sections.map((s) => s.layout)).toEqual(["text", "text", "faq"]);
+    expect(o.template).toBe("review");
   });
 });
 

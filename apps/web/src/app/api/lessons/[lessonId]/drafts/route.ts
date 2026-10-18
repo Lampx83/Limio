@@ -7,7 +7,7 @@ import {
   extractMaterialText,
   getActiveLessonDraftId,
 } from "@feedbackme/core-lms";
-import { DEFAULT_LESSON_LOOK, type SourcePara } from "@feedbackme/shared-types";
+import { DEFAULT_LESSON_LOOK, isLessonTemplateKey, type SourcePara } from "@feedbackme/shared-types";
 import { requireUserId } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { convertDocxToHtml } from "@/lib/docxToHtml";
@@ -48,7 +48,8 @@ export async function GET(_req: Request, { params }: { params: { lessonId: strin
 
 /**
  * POST — "Tạo bài từ tài liệu", bước Tài liệu → Dàn ý.
- * multipart: `file` (.docx/.pdf/.txt/.md ≤ 10 MB) HOẶC `text` (dán thẳng).
+ * multipart: `file` (.docx/.pdf/.txt/.md ≤ 10 MB) HOẶC `text` (dán thẳng), kèm
+ * `template` (theory | practice | review — mẫu bài, mặc định theory).
  * Tách tài liệu thành đoạn (ảnh trong Word được giữ, tải lên kho ảnh bài học),
  * AI đề xuất dàn ý, rồi mới tạo bản nháp — lỗi AI không để lại bản nháp rỗng.
  * Kiểm tra đầu vào trả JSON 4xx; phần gọi AI trả luồng NDJSON có nhịp giữ kết nối:
@@ -73,6 +74,8 @@ export async function POST(req: Request, { params }: { params: { lessonId: strin
     return NextResponse.json({ error: "invalid_form_data" }, { status: 400 });
   }
 
+  const rawTemplate = form.get("template");
+  const template = isLessonTemplateKey(rawTemplate) ? rawTemplate : "theory";
   const warnings: string[] = [];
   let paras: SourcePara[];
   let sourceName = "Văn bản dán";
@@ -141,14 +144,14 @@ export async function POST(req: Request, { params }: { params: { lessonId: strin
         send({ type: "stage", stage: "outlining" });
         let raw;
         try {
-          raw = await generateLessonOutline(userId, { sourceName: name, paras, words }, openai);
+          raw = await generateLessonOutline(userId, { template, sourceName: name, paras, words }, openai);
         } catch (e) {
           if (e instanceof AiTutorError) return fail(e.code, 429, e.details);
           if (e instanceof AiGenerationError) return fail(e.code, e.code === "validation_failed" ? 400 : 502, e.details);
           console.error("[lesson-draft outline]", e);
           return fail("generate_failed", 500);
         }
-        const outline = normalizeLessonOutline(raw, paras.length);
+        const outline = normalizeLessonOutline(raw, paras, template);
         if (outline.lessons.length === 0) return fail("empty_outline", 502);
         const draft = await createLessonDraft(userId, lessonId, {
           sourceName: name,
