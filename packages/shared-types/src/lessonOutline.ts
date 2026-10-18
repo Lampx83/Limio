@@ -34,10 +34,43 @@ export interface OutlineLesson {
   sections: OutlineSection[];
 }
 
+/**
+ * "Mẫu bài" — giảng viên chọn MỘT LẦN cho cả bài, thay cho việc chọn bố cục
+ * và hộp ở từng mục (quyết định 2026-10-18: giảng viên ít việc hơn). Mẫu quyết
+ * định khung các mục; cách trình bày từng mục do AI tự chọn theo quy tắc cố định.
+ */
+/**
+ * Cách trình bày AI được tự chọn khi lập dàn ý — ít và dễ đoán (2026-10-18).
+ * Trình soạn thảo vẫn có đủ 7 bố cục; ba bố cục còn lại chỉ do giảng viên chọn.
+ */
+export const OUTLINE_AUTO_LAYOUTS = ["text", "image", "steps", "faq"] as const satisfies readonly LessonLayoutKey[];
+
+export const LESSON_TEMPLATE_KEYS = ["theory", "practice", "review"] as const;
+export type LessonTemplateKey = (typeof LESSON_TEMPLATE_KEYS)[number];
+
+export const LESSON_TEMPLATE_LABELS: Record<LessonTemplateKey, string> = {
+  theory: "Bài lý thuyết",
+  practice: "Bài hướng dẫn thực hành",
+  review: "Bài ôn tập",
+};
+
+/** Khung bài hiện cho giảng viên khi chọn mẫu. */
+export const LESSON_TEMPLATE_HINTS: Record<LessonTemplateKey, string> = {
+  theory: "Mục tiêu → các mục nội dung theo tài liệu → Tổng kết",
+  practice: "Mục tiêu → Chuẩn bị → Các bước → Lỗi thường gặp → Tổng kết",
+  review: "Ý chính cần nhớ → Câu hỏi thường gặp → Tự kiểm tra",
+};
+
+export function isLessonTemplateKey(v: unknown): v is LessonTemplateKey {
+  return typeof v === "string" && (LESSON_TEMPLATE_KEYS as readonly string[]).includes(v);
+}
+
 export interface LessonOutline {
   lessons: OutlineLesson[];
   /** Đoạn tài liệu giảng viên chủ động bỏ (lời chào, tài liệu tham khảo…). */
   ignoredParas: number[];
+  /** Mẫu bài đã dùng để lập dàn ý. Thiếu = "theory" (bản nháp trước khi có mẫu). */
+  template?: LessonTemplateKey;
 }
 
 export const LESSON_WRITING_MODES = ["keep", "edit"] as const;
