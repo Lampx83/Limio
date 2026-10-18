@@ -3,6 +3,7 @@
 // Không tin thẳng đầu ra mô hình: số slide, bố cục, độ dài, emoji đều được ép ở đây.
 
 import { SLIDE_LAYOUTS, type SlideLayoutId } from "./limioLiveSlides";
+import { cellNumbersInSource, numbersInText } from "./limioLiveCharts";
 
 // Tên khớp bộ chọn loại slide trong trình sửa bài giảng. "draw_it" là Dán Note ở chế độ vẽ:
 // khi tạo slide nó thành collaborate_board với mode "drawing" (limioLiveGenerate).
@@ -331,10 +332,11 @@ function partsFromRaw(raw: unknown): { value: unknown; fromRoles: boolean } {
  * - quá nhiều slide thì giữ phần đầu và slide cuối;
  * - trả kèm cảnh báo để giao diện nói rõ với giảng viên những gì đã chỉnh hoặc còn lệch.
  */
-export function normalizeOutline(raw: unknown, minutes: number): { outline: Outline; warnings: string[] } {
+export function normalizeOutline(raw: unknown, minutes: number, sourceText?: string): { outline: Outline; warnings: string[] } {
   const warnings: string[] = [];
   const pre = partsFromRaw(raw);
   let outline = sanitizeOutline(pre.value);
+  if (sourceText !== undefined) warnings.push(...demoteUnbackedCharts(outline, sourceText));
   const { min, max } = slideRange(minutes);
 
   if (outline.slides.length > max) {
@@ -364,6 +366,24 @@ export function normalizeOutline(raw: unknown, minutes: number): { outline: Outl
 
   warnings.push(...outlineWarnings(outline, minutes).filter((w) => !warnings.includes(w)));
   return { outline, warnings };
+}
+
+/**
+ * Chống bịa số liệu ngay từ dàn ý: slide Biểu đồ cần ít nhất hai ý có số, và mọi số đó phải có trong
+ * tài liệu gốc. Không đạt thì đổi sang Chữ và hình (giữ nguyên các ý) và báo cho giảng viên.
+ * Sửa tại chỗ; trả về các câu cảnh báo.
+ */
+export function demoteUnbackedCharts(outline: Pick<Outline, "slides">, sourceText: string): string[] {
+  const found = numbersInText(sourceText);
+  const warnings: string[] = [];
+  for (const s of outline.slides) {
+    if (s.kind !== "content" || s.layout !== "chart") continue;
+    const withNum = s.points.filter((p) => /\d/.test(p));
+    if (withNum.length >= 2 && withNum.every((p) => cellNumbersInSource(p.replace(/^[^:]*:\s*/, ""), found))) continue;
+    s.layout = "image";
+    warnings.push(`Slide “${s.title || "không tên"}”: tài liệu không có đủ số liệu cho biểu đồ, đã đổi sang Chữ và hình.`);
+  }
+  return warnings;
 }
 
 export function outlineStats(outline: Pick<Outline, "slides"> & { title?: string }): { total: number; content: number; interactive: number } {

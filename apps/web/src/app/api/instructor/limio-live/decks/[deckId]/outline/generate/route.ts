@@ -94,6 +94,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           sectionNos: writeIdx.map((i) => sectionNos[i]!),
           structures: writeIdx.map((i) => structures[i] ?? null),
           concurrency: 2,
+          sourceText,
           isFatal: (e) => e instanceof AiTutorError,
           onProgress: (done, total) => send({ type: "progress", done, total }),
           generateBatch: async (batch) => {

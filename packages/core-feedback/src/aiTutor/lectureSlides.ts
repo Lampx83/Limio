@@ -49,6 +49,8 @@ export interface RawSlideDraft {
   options: Array<{ text: string; correct: boolean }>;
   prompt: string;
   notes: string;
+  table: { head: string[]; rows: string[][] };
+  chart: { type: string; labels: string[]; series: Array<{ name: string; values: number[] }>; unit: string };
 }
 
 const STR = { type: "string" };
@@ -103,10 +105,35 @@ export const DRAFTS_SCHEMA = {
           },
           prompt: STR,
           notes: STR,
+          table: {
+            type: "object",
+            additionalProperties: false,
+            properties: { head: STR_ARR, rows: { type: "array", items: STR_ARR } },
+            required: ["head", "rows"],
+          },
+          chart: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              type: { type: "string", enum: ["bar", "hbar", "line", "pie", "donut"] },
+              labels: STR_ARR,
+              series: {
+                type: "array",
+                items: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: { name: STR, values: { type: "array", items: { type: "number" } } },
+                  required: ["name", "values"],
+                },
+              },
+              unit: STR,
+            },
+            required: ["type", "labels", "series", "unit"],
+          },
         },
         required: [
           "index", "title", "subtitle", "byline", "sectionNumber", "bullets", "items", "columns",
-          "footnote", "quote", "source", "question", "options", "prompt", "notes",
+          "footnote", "quote", "source", "question", "options", "prompt", "notes", "table", "chart",
         ],
       },
     },
@@ -125,6 +152,8 @@ export const SLIDE_SPEC: Record<string, string> = {
   compare: `title, columns: ĐÚNG 2 phần tử; phần tử đầu tone "bad" (cách chưa tốt), phần tử sau tone "good" (cách tốt); heading tối đa 4 từ; points 1 đến 2 ví dụ ngắn đặt trong dấu ngoặc kép; note một câu hoàn chỉnh nêu hệ quả.`,
   steps: `title, items: từ 3 đến 5 phần tử; heading tối đa 4 từ (tên bước), body một câu hoàn chỉnh dưới 14 từ; footnote một câu hoàn chỉnh (có thể rỗng).`,
   stats: `title, items: từ 2 đến 4 phần tử; heading là một con số ngắn (tối đa 6 ký tự) CÓ TRONG tài liệu; body một câu hoàn chỉnh dưới 16 từ giải thích con số.`,
+  table: `title (một câu nêu điều bảng cho thấy), table: head là 2 đến 5 tên cột ngắn (hàng tiêu đề), rows là 1 đến 6 hàng, mỗi hàng ĐÚNG số phần tử như head, mỗi ô ngắn gọn (dưới 8 từ). Chữ và số trong ô phải lấy từ tài liệu; mọi con số chép ĐÚNG như tài liệu, không tính thêm, không làm tròn lại. source: tên tài liệu hoặc mục chứa thông tin nếu tài liệu nêu, nếu không để rỗng.`,
+  chart: `title (một câu hoàn chỉnh nêu điều biểu đồ cho thấy), chart: type chọn "bar" (so sánh các nhóm), "hbar" (nhãn dài), "line" (diễn biến theo thời gian) hoặc "pie" (các phần cộng lại thành một tổng thể); labels là 2 đến 8 nhãn ngắn (dưới 5 từ; "hbar" và "pie" tối đa 6); series là 1 hoặc 2 chuỗi ("pie" chỉ 1), name là tên chuỗi (để rỗng nếu chỉ có 1 chuỗi), values có ĐÚNG số phần tử như labels; unit là đơn vị ("%" nếu là phần trăm, để rỗng nếu không có). MỌI con số phải CÓ TRONG tài liệu và chép đúng; không tính thêm, không làm tròn lại, không ước lượng. source: tên tài liệu hoặc mục chứa số liệu nếu tài liệu nêu, nếu không để rỗng.`,
   quote: `quote (một câu hoàn chỉnh, thông điệp chính), source (nguồn hoặc "Thông điệp chính của bài học"; chỉ ghi tên người hoặc tác phẩm nếu có trong tài liệu).`,
   summary: `title, items: từ 3 đến 5 phần tử; chỉ dùng heading, là MỘT CÂU HOÀN CHỈNH dưới 16 từ nêu điều cần ghi nhớ; body để rỗng.`,
   quiz: `question (một câu hỏi hoàn chỉnh kiểm tra hiểu bài), options: ĐÚNG 4 phần tử, ĐÚNG 1 phần tử correct=true, các phương án sai phải hợp lý (phản ánh hiểu lầm thường gặp); mỗi phương án dưới 14 từ.`,
@@ -150,7 +179,7 @@ Quy tắc bắt buộc:
 4. Chỉ dùng thông tin có trong tài liệu. TUYỆT ĐỐI không bịa số liệu, tên người, trích dẫn hay nguồn nghiên cứu.
 5. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu tài liệu dùng).
 6. Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao.
-7. Mỗi bố cục chỉ điền các trường được yêu cầu; mọi trường khác để chuỗi rỗng hoặc mảng rỗng.
+7. Mỗi bố cục chỉ điền các trường được yêu cầu; mọi trường khác để chuỗi rỗng hoặc mảng rỗng (với "table" và "chart" không dùng: head, rows, labels, series là mảng rỗng, type là "bar").
 
 Trả về JSON đúng cấu trúc yêu cầu.`;
 

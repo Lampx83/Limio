@@ -125,7 +125,7 @@ export async function POST(req: Request) {
           return fail("generate_failed", 500);
         }
 
-        const { outline, warnings } = normalizeOutline(raw, minutes);
+        const { outline, warnings } = normalizeOutline(raw, minutes, text);
         if (outline.slides.length === 0) return fail("empty_outline", 502);
 
         const deck = await prisma.liveDeck.create({

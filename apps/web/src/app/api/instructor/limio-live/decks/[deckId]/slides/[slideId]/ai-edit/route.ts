@@ -77,7 +77,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
       },
       openai,
     );
-    const proposal = proposalFromDraft(action as SlideEditAction, { config }, draft as SlideDraft);
+    const proposal = proposalFromDraft(action as SlideEditAction, { config }, draft as SlideDraft, slide.deck.sourceText ?? "");
     if (!proposal) return json({ error: "ai_edit_failed" }, 502);
     await emitLiveEvent(userId, LearningEventType.LiveSlideAiEditProposed, { deckId: params.deckId, slideId: params.slideId, action });
     return json({ proposal }, 200);

@@ -25,6 +25,7 @@ import {
 } from "@/lib/limioLiveSlides";
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
 import { slideBgFor } from "../slideThemes";
+import { ChartSheet, TableSheet } from "./DataSheetEditor";
 import OutlineGlyph from "./outline/OutlineGlyph";
 import PickerButton from "./outline/PickerButton";
 
@@ -378,6 +379,12 @@ export default function LayoutEditor({
 
   const commit = (next: Cfg = d) => onSave({ config: { ...sanitizeLayoutConfig(layout, next), ...keepExtras(config) } });
   const set = (patch: Cfg) => setD((prev) => ({ ...prev, ...patch }));
+  // Lưới ô của Bảng và Biểu đồ: gõ thì chỉ cập nhật bản nháp (lưu khi rời ô); dán, thêm, xoá thì lưu ngay.
+  const dataChange = (patch: Cfg, commitNow?: boolean) => {
+    const next = { ...d, ...patch };
+    setD(next);
+    if (commitNow) commit(next);
+  };
   const blur = () => commit();
 
   // Xem trước đúng như sẽ lưu: mục còn trống không hiện.
@@ -809,6 +816,25 @@ export default function LayoutEditor({
                   </div>
                 ))}
               </div>
+            )}
+
+            {layout === "table" && <TableSheet d={d} onChange={dataChange} onBlur={blur} />}
+            {layout === "chart" && (
+              <>
+                <ChartSheet d={d} onChange={dataChange} onBlur={blur} />
+                <Field label="Đơn vị" plain value={d.unit ?? ""} max={MAX_LEN.unit} placeholder="%, điểm, học viên" onChange={(v) => set({ unit: v })} onBlur={blur} />
+              </>
+            )}
+            {(layout === "table" || layout === "chart") && (
+              <Field
+                label="Nguồn (để trống thì slide không hiện dòng nguồn)"
+                plain
+                value={d.source ?? ""}
+                max={MAX_LEN.source}
+                placeholder="Tên tài liệu, năm"
+                onChange={(v) => set({ source: v })}
+                onBlur={blur}
+              />
             )}
 
             {layout === "quote" && (

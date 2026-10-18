@@ -5,6 +5,24 @@
 // thức (cỡ chữ, màu, bố cục) do bố cục + giao diện tự vẽ. Nhờ vậy sửa chữ không
 // làm vỡ hình thức, và đổi bố cục không mất nội dung.
 
+import {
+  CHART_MAX_SERIES,
+  CHART_MAX_STORED_LABELS,
+  CHART_TYPES,
+  DATA_CONTENT_W,
+  DATA_SLIDE,
+  TABLE_LIMITS,
+  dataBoxHeight,
+  formatValue,
+  isNum,
+  numericColumns,
+  numToInput,
+  parseNum,
+  tableFontSize,
+  type ChartSeries,
+  type ChartType,
+} from "./limioLiveCharts";
+
 export const SLIDE_LAYOUTS = [
   "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
   "cover",
@@ -16,6 +34,8 @@ export const SLIDE_LAYOUTS = [
   "stats",
   "quote",
   "summary",
+  "table",
+  "chart",
 ] as const;
 export type SlideLayoutId = (typeof SLIDE_LAYOUTS)[number];
 
@@ -30,6 +50,8 @@ export const LAYOUT_META: Record<SlideLayoutId, { label: string; hint: string }>
   stats: { label: "Số liệu", hint: "Con số lớn kèm câu giải thích" },
   quote: { label: "Trích dẫn", hint: "Một ý chính cần nhấn mạnh" },
   summary: { label: "Tóm tắt", hint: "Slide cuối: các điều cần ghi nhớ" },
+  table: { label: "Bảng", hint: "Thông tin đối chiếu theo hàng và cột" },
+  chart: { label: "Biểu đồ", hint: "Cột, thanh ngang, đường hoặc tròn từ số liệu có thật" },
 };
 
 export const SLIDE_ICONS = ["target", "compass", "route", "chat", "book", "sparkle", "users", "chart"] as const;
@@ -79,6 +101,10 @@ export const MAX_LEN = {
   footnote: 80,
   quote: 200,
   source: 80,
+  tableCell: 60,
+  chartLabel: 40,
+  seriesName: 40,
+  unit: 20,
   notes: 2000,
 } as const;
 
@@ -133,6 +159,53 @@ function sanitizeColumns(raw: unknown): LayoutColumn[] {
 }
 
 /**
+ * Bảng: hàng tiêu đề + tối đa 6 dòng × 5 cột. Số cột = cột dài nhất (sau khi bỏ các cột trống ở cuối);
+ * dòng trống bị bỏ, dòng ngắn được bù ô rỗng. Hàng tiêu đề để trống thì slide không vẽ hàng đó.
+ */
+function sanitizeTable(rawHead: unknown, rawRows: unknown): { head: string[]; rows: string[][] } {
+  const cell = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? String(v) : clip(v, MAX_LEN.tableCell));
+  const head0 = (Array.isArray(rawHead) ? rawHead : []).slice(0, TABLE_LIMITS.maxCols).map(cell);
+  const rows0 = (Array.isArray(rawRows) ? rawRows : [])
+    .filter(Array.isArray)
+    .map((r) => (r as unknown[]).slice(0, TABLE_LIMITS.maxCols).map(cell))
+    .filter((r) => r.some(Boolean))
+    .slice(0, TABLE_LIMITS.maxRows);
+  let cols = Math.max(head0.length, ...rows0.map((r) => r.length), 0);
+  while (cols > 0 && !head0[cols - 1] && rows0.every((r) => !r[cols - 1])) cols -= 1;
+  const fit = (r: string[]) => Array.from({ length: cols }, (_, j) => r[j] ?? "");
+  return { head: fit(head0), rows: rows0.map(fit) };
+}
+
+/**
+ * Biểu đồ: loại, nhãn, 1–2 chuỗi số, đơn vị. Số được đọc cả khi là chữ kiểu Việt Nam ("3,5") vì trình
+ * sửa giữ chữ đang gõ; ô không đọc được thành null (không vẽ). Lưu tối đa 8 nhãn và giữ chuỗi thứ hai
+ * cả khi đang là biểu đồ tròn, để đổi qua lại giữa các loại không mất dữ liệu; bộ vẽ tự bớt theo loại.
+ */
+function sanitizeChart(raw: Record<string, unknown>): { chartType: ChartType; labels: string[]; series: ChartSeries[]; unit: string } {
+  const chartType: ChartType = (CHART_TYPES as readonly string[]).includes(raw.chartType as string) ? (raw.chartType as ChartType) : "bar";
+  const labels0 = (Array.isArray(raw.labels) ? raw.labels : []).slice(0, CHART_MAX_STORED_LABELS).map((l) => clip(l, MAX_LEN.chartLabel));
+  const series0 = (Array.isArray(raw.series) ? raw.series : [])
+    .filter((s): s is Record<string, unknown> => !!s && typeof s === "object")
+    .slice(0, CHART_MAX_SERIES)
+    .map((s) => ({
+      name: clip(s.name, MAX_LEN.seriesName),
+      values: (Array.isArray(s.values) ? s.values : []).slice(0, CHART_MAX_STORED_LABELS).map((v) => {
+        const n = parseNum(v);
+        return isNum(n) ? n : null;
+      }),
+    }));
+  // Bỏ dòng không có nhãn lẫn số; giữ thẳng hàng nhãn và số của mọi chuỗi.
+  const n = Math.max(labels0.length, ...series0.map((s) => s.values.length), 0);
+  const keep = Array.from({ length: n }, (_, i) => !!labels0[i] || series0.some((s) => isNum(s.values[i])));
+  const labels = labels0.concat(Array(Math.max(0, n - labels0.length)).fill("")).filter((_, i) => keep[i]);
+  let series = series0.map((s) => ({ name: s.name, values: Array.from({ length: n }, (_, i) => s.values[i] ?? null).filter((_, i) => keep[i]) }));
+  // Chuỗi thứ hai không tên, không số thì bỏ; luôn giữ ít nhất một chuỗi.
+  series = series.filter((s, k) => k === 0 || s.name || s.values.some(isNum));
+  if (!series.length) series = [{ name: "", values: labels.map(() => null) }];
+  return { chartType, labels, series, unit: clip(raw.unit, MAX_LEN.unit) };
+}
+
+/**
  * Chuẩn hoá config của slide có bố cục mới: chỉ giữ các trường bố cục dùng, cắt độ
  * dài, bỏ mục rỗng. Các khoá không thuộc bố cục (vd. ghi chú giảng `presenterNote`,
  * hẹn giờ) do nơi gọi giữ riêng. Bố cục "classic" không đi qua hàm này.
@@ -180,6 +253,12 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
     if (s) out.source = s;
     delete out.title;
   }
+  if (layout === "table") Object.assign(out, sanitizeTable(raw.head, raw.rows));
+  if (layout === "chart") Object.assign(out, sanitizeChart(raw));
+  if (layout === "table" || layout === "chart") {
+    const s = clip(raw.source, MAX_LEN.source);
+    if (s) out.source = s;
+  }
   return out;
 }
 
@@ -220,6 +299,10 @@ export function emptyLayoutConfig(layout: SlideLayoutId): Record<string, unknown
       return { layout, quote: "", source: "" };
     case "summary":
       return { layout, title: "", items: blank(3) };
+    case "table":
+      return { layout, title: "", head: ["", "", ""], rows: [["", "", ""], ["", "", ""]], source: "" };
+    case "chart":
+      return { layout, title: "", chartType: "bar", labels: ["", "", ""], series: [{ name: "", values: [null, null, null] }], unit: "", source: "" };
     default:
       return { title: "", subtitle: "", bullets: [] };
   }
@@ -289,11 +372,31 @@ export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>
         col.points.forEach((p) => check(`Cột ${i + 1}`, p, { maxPx: 32, widthPx: 480, maxLines: 3 })),
       );
       break;
+    case "table": {
+      const head: string[] = Array.isArray(c.head) ? c.head : [];
+      const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
+      if (tableFontSize(head, rows, DATA_CONTENT_W - 20, dataSlideMetrics(c).boxH).overflow) problems.push("Bảng");
+      break;
+    }
     default:
       break;
   }
-  check("Tiêu đề", c.title, { maxPx: 72, widthPx: 1088, maxLines: 2 });
+  if (layout === "table" || layout === "chart") check("Tiêu đề", c.title, { maxPx: DATA_SLIDE.titleMaxPx, widthPx: DATA_CONTENT_W, maxLines: 2 });
+  else check("Tiêu đề", c.title, { maxPx: 72, widthPx: 1088, maxLines: 2 });
   return Array.from(new Set(problems));
+}
+
+/**
+ * Kích thước chung của slide Bảng và Biểu đồ: cỡ chữ và số dòng của tiêu đề, chiều cao còn lại cho
+ * bảng hoặc biểu đồ. Bộ vẽ và cảnh báo "Slide dài" cùng dùng hàm này để không lệch nhau.
+ */
+export function dataSlideMetrics(c: Record<string, any>): { titlePx: number; titleLines: number; boxH: number } {
+  const title = stripInline(typeof c.title === "string" ? c.title : "").trim();
+  const { px } = fitFontSize(title, { maxPx: DATA_SLIDE.titleMaxPx, widthPx: DATA_CONTENT_W, maxLines: 2 });
+  const per = Math.max(1, Math.floor(DATA_CONTENT_W / (px * 0.56)));
+  const lines = title ? Math.min(3, Math.ceil(title.length / per)) : 0;
+  const hasSource = typeof c.source === "string" && c.source.trim().length > 0;
+  return { titlePx: px, titleLines: lines, boxH: dataBoxHeight(lines, px, hasSource) };
 }
 
 // ── Đổi bố cục mà không mất nội dung ───────────────────────────────────────
@@ -319,6 +422,27 @@ function toPieces(c: Record<string, any>): Pieces {
       const points: string[] = Array.isArray(col?.points) ? col.points : [];
       texts.push({ heading: String(col?.heading ?? ""), body: [...points, col?.note ?? ""].filter(Boolean).join(" ") });
     }
+  }
+  if (layout === "table" && Array.isArray(c.rows)) {
+    // Mỗi dòng thành một ý: ô đầu là tiêu đề, các ô sau ghép kèm tên cột.
+    const head: string[] = Array.isArray(c.head) ? c.head : [];
+    for (const r of c.rows as string[][]) {
+      const rest = r
+        .slice(1)
+        .map((cell, j) => (cell && head[j + 1] ? `${head[j + 1]}: ${cell}` : cell))
+        .filter(Boolean);
+      texts.push({ heading: String(r[0] ?? ""), body: rest.join("; ") });
+    }
+  }
+  if (layout === "chart" && Array.isArray(c.labels)) {
+    const series: ChartSeries[] = Array.isArray(c.series) ? c.series : [];
+    const unit = typeof c.unit === "string" ? c.unit : "";
+    (c.labels as string[]).forEach((l, i) => {
+      const vals = series
+        .filter((s) => isNum(s.values?.[i]))
+        .map((s) => `${series.length > 1 && s.name ? `${s.name}: ` : ""}${formatValue(s.values[i] as number, unit)}${unit && unit !== "%" ? ` ${unit}` : ""}`);
+      texts.push({ heading: String(l ?? ""), body: vals.join("; ") });
+    });
   }
   const title = String(c.title ?? c.quote ?? "");
   const subtitle = String(c.subtitle ?? (layout === "quote" ? c.source ?? "" : "") ?? "");
@@ -385,10 +509,86 @@ export function convertLayoutConfig(from: Record<string, any>, to: SlideLayoutId
       base.quote = p.title;
       base.source = p.subtitle;
       break;
+    case "table":
+      Object.assign(base, toTable(from, p));
+      break;
+    case "chart":
+      Object.assign(base, toChart(from, p));
+      break;
     default:
       break;
   }
+  if (to === "stats" && resolveLayout(from) === "chart") base.items = chartToStats(from);
+  if ((to === "table" || to === "chart") && typeof from.source === "string" && resolveLayout(from) !== "quote") base.source = from.source;
   return sanitizeLayoutConfig(to, base);
+}
+
+/** Sang Bảng: biểu đồ thành nhãn + từng chuỗi số; so sánh hai cột giữ hai cột; bố cục khác thành hai cột ý – giải thích. */
+function toTable(from: Record<string, any>, p: Pieces): { title: string; head: string[]; rows: string[][] } {
+  const layout = resolveLayout(from);
+  if (layout === "chart") {
+    const series: ChartSeries[] = Array.isArray(from.series) ? from.series : [];
+    const unit = typeof from.unit === "string" ? from.unit.trim() : "";
+    const unitHead = unit && unit !== "%" ? unit.charAt(0).toUpperCase() + unit.slice(1) : "";
+    const labels: string[] = Array.isArray(from.labels) ? from.labels : [];
+    return {
+      title: p.title,
+      head: ["", ...series.map((s, k) => s.name || unitHead || (series.length > 1 ? `Chuỗi ${k + 1}` : "Số liệu"))],
+      rows: labels.map((l, i) => [l, ...series.map((s) => (isNum(s.values?.[i]) ? numToInput(s.values[i]) + (unit === "%" ? "%" : "") : ""))]),
+    };
+  }
+  if (layout === "compare" && Array.isArray(from.columns)) {
+    const cols: LayoutColumn[] = from.columns;
+    const n = Math.max(...cols.map((c) => c.points?.length ?? 0), 0);
+    const rows = Array.from({ length: n }, (_, i) => cols.map((c) => c.points?.[i] ?? ""));
+    if (cols.some((c) => c.note)) rows.push(cols.map((c) => c.note ?? ""));
+    return { title: p.title, head: cols.map((c) => c.heading ?? ""), rows };
+  }
+  return { title: p.title, head: ["", ""], rows: p.texts.map((t) => [t.heading, t.body]) };
+}
+
+/** Sang Biểu đồ: bảng lấy cột đầu làm nhãn và tối đa hai cột toàn số; Số liệu lấy số làm cột; còn lại chỉ giữ nhãn. */
+function toChart(from: Record<string, any>, p: Pieces): Record<string, unknown> {
+  const layout = resolveLayout(from);
+  if (layout === "table") {
+    const head: string[] = Array.isArray(from.head) ? from.head : [];
+    const rows: string[][] = Array.isArray(from.rows) ? from.rows : [];
+    const cols = Math.max(head.length, ...rows.map((r) => r.length), 0);
+    const numeric = numericColumns(rows, cols)
+      .map((ok, j) => (ok && j > 0 ? j : -1))
+      .filter((j) => j > 0)
+      .slice(0, CHART_MAX_SERIES);
+    const pct = numeric.length > 0 && numeric.every((j) => rows.every((r) => !String(r[j] ?? "").trim() || /%\s*$/.test(String(r[j]))));
+    return {
+      title: p.title,
+      labels: rows.map((r) => r[0] ?? ""),
+      series: numeric.length ? numeric.map((j) => ({ name: head[j] ?? "", values: rows.map((r) => r[j] ?? null) })) : [{ name: "", values: rows.map(() => null) }],
+      unit: pct ? "%" : "",
+    };
+  }
+  if (layout === "stats" && Array.isArray(from.items)) {
+    const items: LayoutItem[] = from.items;
+    const nums = items.map((it) => /[-−]?\d[\d.,]*/.exec(it.heading ?? "")?.[0] ?? "");
+    return {
+      title: p.title,
+      labels: items.map((it) => it.body || it.heading),
+      series: [{ name: "", values: nums }],
+      unit: items.length > 0 && items.every((it) => /%/.test(it.heading ?? "")) ? "%" : "",
+    };
+  }
+  return { title: p.title, labels: p.texts.map((t) => t.heading), series: [{ name: "", values: p.texts.map(() => null) }] };
+}
+
+/** Biểu đồ sang Số liệu: tối đa 4 cặp nhãn – số đầu tiên của chuỗi đầu. */
+function chartToStats(from: Record<string, any>): LayoutItem[] {
+  const labels: string[] = Array.isArray(from.labels) ? from.labels : [];
+  const s: ChartSeries | undefined = Array.isArray(from.series) ? from.series[0] : undefined;
+  const unit = typeof from.unit === "string" ? from.unit : "";
+  return labels
+    .map((l, i) => ({ l, v: s?.values?.[i] }))
+    .filter((x): x is { l: string; v: number } => isNum(x.v))
+    .slice(0, ITEM_RANGE.stats!.max)
+    .map((x) => ({ heading: formatValue(x.v, unit).slice(0, MAX_LEN.statValue), body: x.l }));
 }
 
 /**
@@ -409,6 +609,25 @@ export function padForEditing(layout: SlideLayoutId, c: Record<string, any>): Re
     const seed = emptyLayoutConfig("compare").columns as LayoutColumn[];
     while (cols.length < 2) cols.push({ ...seed[cols.length]!, points: [""] });
     out.columns = cols.map((col) => ({ ...col, points: col.points?.length ? col.points : [""] }));
+  }
+  if (layout === "table") {
+    const head: string[] = Array.isArray(c.head) ? [...c.head] : [];
+    const rows: string[][] = Array.isArray(c.rows) ? c.rows.map((r: string[]) => [...r]) : [];
+    const cols = Math.max(TABLE_LIMITS.minCols, head.length, ...rows.map((r) => r.length));
+    if (!rows.length) rows.push([]);
+    const fit = (r: string[]) => Array.from({ length: cols }, (_, j) => r[j] ?? "");
+    out.head = fit(head);
+    out.rows = rows.map(fit);
+  }
+  if (layout === "chart") {
+    // Ô số được sửa dưới dạng chữ ("3,5") để gõ dở không bị mất; sanitizeLayoutConfig đọc lại thành số.
+    const labels: string[] = Array.isArray(c.labels) ? [...c.labels] : [];
+    while (labels.length < 2) labels.push("");
+    const series: ChartSeries[] = Array.isArray(c.series) && c.series.length ? c.series : [{ name: "", values: [] }];
+    out.labels = labels;
+    out.series = series.map((s) => ({ name: s.name ?? "", values: labels.map((_, i) => (typeof s.values?.[i] === "string" ? s.values[i] : numToInput(s.values?.[i]))) }));
+    out.chartType = (CHART_TYPES as readonly string[]).includes(c.chartType) ? c.chartType : "bar";
+    out.unit = c.unit ?? "";
   }
   if (layout === "image") {
     const b: string[] = Array.isArray(c.bullets) ? [...c.bullets] : [];
@@ -583,7 +802,8 @@ export function toggleInlineMarker(
 /**
  * Tách slide thành hai slide cùng bố cục, chia đều các mục. Chỉ tách được khi mỗi nửa vẫn đủ
  * số mục tối thiểu của bố cục: danh sách từ 4 mục trở lên (thẻ, bước, số liệu, tóm tắt) và
- * slide chữ và hình có từ 2 ý. Slide thứ hai giữ tiêu đề kèm "(tiếp)", không có ghi chú giảng
+ * slide chữ và hình có từ 2 ý; bảng có từ 2 dòng thì chia đôi các dòng, hai slide cùng hàng tiêu đề.
+ * Slide thứ hai giữ tiêu đề kèm "(tiếp)", không có ghi chú giảng
  * và không còn gắn với dòng dàn ý. Trả null khi không tách được.
  */
 export function splitSlideConfig(config: Record<string, any>): [Record<string, unknown>, Record<string, unknown>] | null {
@@ -606,6 +826,15 @@ export function splitSlideConfig(config: Record<string, any>): [Record<string, u
     return [
       { ...sanitizeLayoutConfig(layout, { ...config, items: a }), ...firstMeta },
       { ...sanitizeLayoutConfig(layout, { ...config, title: cont, items: b, footnote: "" }), ...secondMeta },
+    ];
+  }
+  if (layout === "table" && Array.isArray(config.rows) && config.rows.length >= 2) {
+    // Bảng dài: chia đôi các dòng, slide sau lặp lại hàng tiêu đề.
+    const rows: string[][] = config.rows;
+    const cut = Math.ceil(rows.length / 2);
+    return [
+      { ...sanitizeLayoutConfig(layout, { ...config, rows: rows.slice(0, cut) }), ...firstMeta },
+      { ...sanitizeLayoutConfig(layout, { ...config, title: cont, rows: rows.slice(cut) }), ...secondMeta },
     ];
   }
   if (layout === "image" && Array.isArray(config.bullets) && config.bullets.length >= 2) {

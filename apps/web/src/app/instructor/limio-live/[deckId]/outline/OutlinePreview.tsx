@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { OutlineSlide } from "@/lib/limioLiveOutline";
+import { formatValue, isNum, parseNum } from "@/lib/limioLiveCharts";
 import { OUTLINE_KIND_LABEL, splitPoint } from "@/lib/limioLiveOutlineUi";
 
 // Bản xem trước 16:9 chỉ để hình dung cách chữ sắp xếp trong từng bố cục; màu sắc, phông chữ và hình
@@ -134,6 +135,44 @@ export default function OutlinePreview({ slide }: { slide: Pick<OutlineSlide, "k
       case "summary":
         body = (<><h3 style={h3}>{t}</h3><ul style={ul}>{P.map((q, i) => <li key={i}>{q}</li>)}</ul></>);
         break;
+      case "table":
+        // Hàng và cột do AI dựng từ tài liệu ở bước tạo slide; ở đây chỉ phác khung bảng.
+        body = (
+          <>
+            <h3 style={h3}>{t}</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: pv(0.8) }}>
+              {Array.from({ length: 12 }, (_, i) => (
+                <i key={i} style={{ height: pv(4), borderRadius: pv(0.6), background: i < 3 ? "#d9e6b8" : "#f0f5e0" }} />
+              ))}
+            </div>
+            {P[0] && <p style={{ ...p, fontSize: pv(2.9) }}>{P[0]}</p>}
+          </>
+        );
+        break;
+      case "chart": {
+        // Mỗi ý "Nhãn: số"; ý không có số vẫn hiện nhãn nhưng không có cột.
+        const bars = P.map((q) => {
+          const [a, b] = splitPoint(q);
+          const v = parseNum(/[-−]?\d[\d.,]*%?/.exec(b || q)?.[0] ?? "");
+          return { label: a || q, v: isNum(v) ? v : null };
+        });
+        const hi = Math.max(1, ...bars.map((x) => Math.abs(x.v ?? 0)));
+        body = (
+          <>
+            <h3 style={h3}>{t}</h3>
+            <div style={{ display: "grid", gap: pv(2), gridTemplateColumns: `repeat(${Math.max(bars.length, 1)}, 1fr)`, alignItems: "end", height: pv(22) }}>
+              {bars.map((x, i) => (
+                <div key={i} style={{ display: "grid", gap: pv(0.8), alignContent: "end", height: "100%", fontSize: pv(2.5), textAlign: "center" }}>
+                  <b>{x.v === null ? "?" : formatValue(x.v)}</b>
+                  <i style={{ height: pv(Math.max(1, (Math.abs(x.v ?? 0) / hi) * 14)), background: "#65a30d", borderRadius: `${pv(0.6)} ${pv(0.6)} 0 0` }} />
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{x.label}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        );
+        break;
+      }
       default:
         body = (
           <div style={{ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: pv(3), alignItems: "center" }}>

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   accentTail,
+  dataSlideMetrics,
   fitFontSize,
   layoutRenderScale,
   resolveLayout,
@@ -27,11 +28,13 @@ import {
   type SlideIconId,
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
+import { DATA_CONTENT_W, sourceLine, tableFontSize } from "@/lib/limioLiveCharts";
 import { apiUrl } from "@/lib/apiUrl";
 import { fitScaleForBox, frameHeightForContent, measureContentBox } from "@/lib/limioLiveFit";
 import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
 import { useLiveBrand } from "./liveBrandContext";
 import { isDarkTheme, layoutThemeClass, slideBgFor } from "./slideThemes";
+import { ChartView, TableView } from "./SlideCharts";
 import "./slideLayouts.css";
 
 // Bộ vẽ slide Nội dung theo bố cục. Thiết kế ở khung 1280 × 720 rồi co theo khung chứa
@@ -595,6 +598,32 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
           </div>
         </div>
       );
+
+    case "table":
+    case "chart": {
+      // Tiêu đề, khung dữ liệu và dòng nguồn: chiều cao khung tính trước (dataSlideMetrics) để SVG vẽ đúng cỡ chữ thật.
+      const m = dataSlideMetrics(c);
+      const src = sourceLine(c.source);
+      const head: string[] = Array.isArray(c.head) ? c.head : [];
+      const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
+      return (
+        <div className={layout === "table" ? "ll-table" : "ll-chart"}>
+          <div className="pad">
+            {title && <Title text={title} maxPx={m.titlePx} widthPx={DATA_CONTENT_W} maxLines={2} />}
+            {layout === "table" ? (
+              <TableView head={head} rows={rows} px={tableFontSize(head, rows, DATA_CONTENT_W - 20, m.boxH).px} />
+            ) : (
+              <ChartView cfg={c} width={DATA_CONTENT_W} height={m.boxH} />
+            )}
+            {src && (
+              <p className="src a" style={delay(4)}>
+                {src}
+              </p>
+            )}
+          </div>
+        </div>
+      );
+    }
 
     default:
       return null;
