@@ -75,6 +75,14 @@ export const OUTLINE_LAYOUT_UI: Record<OutlineLayout, { label: string; hint: str
   stats: { label: LAYOUT_META.stats.label, hint: "Chỉ dùng khi con số có trong tài liệu gốc.", min: 2, max: 4, need: "2 đến 4 ý" },
   quote: { label: LAYOUT_META.quote.label, hint: "Một thông điệp hoặc câu trích có trong tài liệu.", min: 1, max: 1, need: "1 ý" },
   summary: { label: LAYOUT_META.summary.label, hint: "Slide nội dung cuối: những điều cần ghi nhớ.", min: 3, max: 5, need: "3 đến 5 ý" },
+  table: { label: LAYOUT_META.table.label, hint: "Thông tin đối chiếu theo hàng và cột. AI lấy đúng chữ và số trong tài liệu.", min: 1, max: 3, need: "1 đến 3 ý" },
+  chart: {
+    label: LAYOUT_META.chart.label,
+    hint: "Chỉ dùng khi các con số có trong tài liệu gốc. Mỗi ý một cặp “Nhãn: số”, ví dụ “Tuần 1: 62%”.",
+    min: 2,
+    max: 5,
+    need: "2 đến 5 ý",
+  },
 };
 
 export const OUTLINE_POINT_LABELS: Record<OutlineLayout, readonly string[]> = {
@@ -87,6 +95,8 @@ export const OUTLINE_POINT_LABELS: Record<OutlineLayout, readonly string[]> = {
   stats: ["Số liệu 1", "Số liệu 2", "Số liệu 3", "Số liệu 4"],
   quote: ["Thông điệp"],
   summary: ["Điều cần nhớ 1", "Điều cần nhớ 2", "Điều cần nhớ 3", "Điều cần nhớ 4", "Điều cần nhớ 5"],
+  table: ["Bảng cho thấy", "Ý bổ sung 1", "Ý bổ sung 2"],
+  chart: ["Số liệu 1", "Số liệu 2", "Số liệu 3", "Số liệu 4", "Số liệu 5"],
 };
 
 /** Bố cục mà mỗi ý gồm hai phần "Tiêu đề ngắn: câu giải thích" (dữ liệu vẫn là một chuỗi). */

@@ -16,7 +16,7 @@ import { AiGenerationError, callJsonModel } from "./generators";
 export const OUTLINE_MAX_SOURCE_CHARS = 24_000;
 export const OUTLINE_MIN_SOURCE_CHARS = 200;
 
-export const OUTLINE_CONTENT_LAYOUTS = ["cover", "section", "image", "cards", "compare", "steps", "stats", "quote", "summary"] as const;
+export const OUTLINE_CONTENT_LAYOUTS = ["cover", "section", "image", "cards", "compare", "steps", "stats", "quote", "summary", "table", "chart"] as const;
 /**
  * Loại slide trong dàn ý. "draw_it" là Dán Note ở chế độ vẽ; khi tạo slide nó thành collaborate_board
  * với mode "drawing" (xem limioLiveGenerate). Tên khớp với bộ chọn loại slide trong trình sửa bài giảng.
@@ -117,6 +117,8 @@ ${structureRule(full)}
    - "steps": một quy trình 3 đến 5 bước.
    - "stats": 2 đến 4 con số nổi bật. CHỈ dùng khi các con số CÓ TRONG TÀI LIỆU; nếu không thì chọn layout khác.
    - "quote": một thông điệp hoặc câu trích dẫn có trong tài liệu.
+   - "table": thông tin đối chiếu theo hàng và cột có trong tài liệu (ví dụ so sánh vài đối tượng theo cùng các tiêu chí), tối đa 5 cột và 6 dòng. "points" là 1 đến 3 câu nêu bảng đối chiếu điều gì.
+   - "chart": từ 2 đến 8 con số CÙNG LOẠI để so sánh giữa các nhóm, theo thời gian, hoặc các phần của một tổng thể. CHỈ dùng khi các con số CÓ TRONG TÀI LIỆU; "points" ghi các cặp "Nhãn: số" chép đúng từ tài liệu (ví dụ "Năm 2020: 35%"). Không tính thêm, không làm tròn lại, không ước lượng số; thiếu số thì chọn layout khác.
 4. "points": 1 đến 3 câu hoàn chỉnh (slide "objectives" 2 đến 4 câu; slide "agenda" mảng rỗng), có chủ ngữ và vị ngữ, ngắn gọn (mỗi câu dưới 20 từ). Văn phong khoa học, rõ ràng. KHÔNG viết cụt (không chỉ liệt kê cụm từ). Với "cards" và "steps": mỗi phần tử của "points" có dạng "Tiêu đề ngắn: một câu giải thích đầy đủ.".
 5. Chỉ dùng thông tin có trong tài liệu. TUYỆT ĐỐI không bịa số liệu, tên người, trích dẫn hay nguồn nghiên cứu.
 6. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu tài liệu dùng).

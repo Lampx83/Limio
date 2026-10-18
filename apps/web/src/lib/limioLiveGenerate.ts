@@ -13,6 +13,7 @@ import {
   type SlideLayoutId,
 } from "./limioLiveSlides";
 import { stripEmoji, type OutlineSlide, type SlideStructure } from "./limioLiveOutline";
+import { addNumbersOf, cellNumbersInSource, hasNumber, isNum, numbersInText, type ChartSeries } from "./limioLiveCharts";
 
 export const BATCH_SIZE = 5;
 
@@ -33,6 +34,8 @@ export interface SlideDraft {
   options?: Array<{ text?: string; correct?: boolean }>;
   prompt?: string;
   notes?: string;
+  table?: { head?: string[]; rows?: string[][] };
+  chart?: { type?: string; labels?: string[]; series?: Array<{ name?: string; values?: number[] }>; unit?: string };
 }
 
 export interface GeneratedSlide {
@@ -82,8 +85,11 @@ function metaFor(os: OutlineSlide, notes: string | undefined): Record<string, un
   return { outlineId: os.id, aiGenerated: true, ...(n ? { presenterNote: n } : {}) };
 }
 
-/** Nội dung dựng thẳng từ dàn ý — dùng khi bản nháp AI thiếu hoặc hỏng. */
-export function configFromOutline(os: OutlineSlide, sectionNo: string, notes?: string): GeneratedSlide {
+/**
+ * Nội dung dựng thẳng từ dàn ý — dùng khi bản nháp AI thiếu hoặc hỏng. Số liệu chỉ dựng khi mọi số lấy
+ * từ dàn ý đều có trong `sourceNumbers` (tập số của tài liệu gốc); không thì dựng Ba thẻ.
+ */
+export function configFromOutline(os: OutlineSlide, sectionNo: string, notes?: string, sourceNumbers: Set<string> = new Set()): GeneratedSlide {
   const meta = metaFor(os, notes);
   const pts = os.points;
   if (os.kind === "quiz" || os.kind === "poll") {
@@ -101,12 +107,24 @@ export function configFromOutline(os: OutlineSlide, sectionNo: string, notes?: s
   if (isCollab(os.kind)) return collabSlide(os, os.title, meta, true);
 
   let layout: SlideLayoutId = os.layout ?? "image";
+  // Bảng và biểu đồ cần số liệu đã đối chiếu với tài liệu, nên không dựng thẳng từ dàn ý:
+  // biểu đồ rơi về Số liệu (rồi Ba thẻ nếu thiếu số hoặc số không có trong tài liệu), bảng rơi về Chữ và hình.
+  if (layout === "chart") layout = "stats";
+  if (layout === "table") layout = "image";
   const raw: Record<string, unknown> = { title: os.title };
   const items = pts.map(splitHeading);
   if (layout === "stats") {
-    const withNum = items.map((it, i) => ({ num: /\d[\d.,%]*/.exec(pts[i] ?? "")?.[0] ?? "", it }));
-    if (withNum.filter((x) => x.num).length >= ITEM_RANGE.stats!.min) {
-      raw.items = withNum.filter((x) => x.num).map((x) => ({ heading: x.num, body: x.it.body || x.it.heading }));
+    // Ý dạng "Nhãn: số" (dàn ý của biểu đồ) lấy số sau dấu hai chấm và dùng nhãn làm câu giải thích.
+    const withNum = items.map((it, i) => {
+      const fromBody = it.body ? /\d[\d.,%]*/.exec(it.body)?.[0] : undefined;
+      const num = fromBody ?? /\d[\d.,%]*/.exec(pts[i] ?? "")?.[0] ?? "";
+      return { num, text: fromBody && it.body.trim() === fromBody ? it.heading : it.body || it.heading };
+    });
+    const numbered = withNum.filter((x) => x.num);
+    // Ý dàn ý cũng do AI viết: một số không có trong tài liệu là đủ để không dựng Số liệu.
+    const backed = numbered.every((x) => cellNumbersInSource(x.num, sourceNumbers));
+    if (backed && numbered.length >= ITEM_RANGE.stats!.min) {
+      raw.items = numbered.map((x) => ({ heading: x.num, body: x.text }));
     } else layout = "cards";
   }
   switch (layout) {
@@ -164,12 +182,57 @@ function contentComplete(layout: SlideLayoutId, c: Record<string, any>): boolean
   }
   if (layout === "image") return Array.isArray(c.bullets) && c.bullets.length >= 1;
   if (layout === "cover" || layout === "section") return nonEmpty(c.subtitle);
+  if (layout === "table") {
+    const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
+    return rows.length >= 1 && (rows[0]?.length ?? 0) >= 2;
+  }
+  if (layout === "chart") {
+    const labels: string[] = Array.isArray(c.labels) ? c.labels : [];
+    const first: ChartSeries | undefined = Array.isArray(c.series) ? c.series[0] : undefined;
+    return labels.filter(nonEmpty).length >= 2 && (first?.values ?? []).filter(isNum).length >= 2;
+  }
   return true;
 }
 
-/** Biến bản nháp AI của một dòng dàn ý thành slide; hỏng thì rơi về dàn ý. */
-export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, sectionNo: string): GeneratedSlide {
-  if (!draftIn || typeof draftIn !== "object") return configFromOutline(os, sectionNo);
+/**
+ * Chống bịa số liệu cho Bảng, Biểu đồ và Số liệu: mọi số của biểu đồ, mọi cụm số trong các ô của bảng
+ * và trong con số lớn (heading) của từng mục Số liệu phải có trong `found` (tập số trích từ tài liệu
+ * gốc, xem numbersInText). Nhãn biểu đồ ("Tuần 1"), hàng tiêu đề bảng và câu giải thích dưới con số
+ * không bị kiểm vì chúng là chữ, không phải số liệu trình bày. Bố cục khác luôn đạt.
+ */
+export function dataNumbersVerified(layout: SlideLayoutId, c: Record<string, any>, found: Set<string>): boolean {
+  if (layout === "chart") {
+    const series: ChartSeries[] = Array.isArray(c.series) ? c.series : [];
+    return series.every((s) => s.values.every((v) => v === null || hasNumber(found, v)));
+  }
+  if (layout === "table") {
+    const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
+    return rows.every((r) => r.every((cell) => cellNumbersInSource(cell, found)));
+  }
+  if (layout === "stats") {
+    const items: Array<{ heading: string }> = Array.isArray(c.items) ? c.items : [];
+    return items.every((i) => cellNumbersInSource(i.heading, found));
+  }
+  return true;
+}
+
+/** Đưa trường lồng nhau của bản nháp ("table", "chart") về các khoá phẳng mà bố cục lưu. */
+function flattenData(layout: SlideLayoutId, d: SlideDraft): Record<string, unknown> {
+  if (layout === "table") return { head: d.table?.head ?? [], rows: d.table?.rows ?? [] };
+  if (layout === "chart") {
+    return { chartType: d.chart?.type, labels: d.chart?.labels ?? [], series: d.chart?.series ?? [], unit: d.chart?.unit ?? "" };
+  }
+  return {};
+}
+
+/**
+ * Biến bản nháp AI của một dòng dàn ý thành slide; hỏng thì rơi về dàn ý. `sourceNumbers` là tập số
+ * có trong tài liệu (numbersInText): Bảng, Biểu đồ hoặc Số liệu có số không nằm trong tập này thì bị bỏ,
+ * rơi về bố cục khác. Không truyền thì coi như tài liệu không có số nào — biểu đồ và Số liệu luôn rơi về
+ * bố cục khác.
+ */
+export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, sectionNo: string, sourceNumbers: Set<string> = new Set()): GeneratedSlide {
+  if (!draftIn || typeof draftIn !== "object") return configFromOutline(os, sectionNo, undefined, sourceNumbers);
   const d = deepStripEmoji(draftIn);
   const meta = metaFor(os, d.notes);
 
@@ -180,27 +243,33 @@ export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, 
     const q = nonEmpty(d.question) ? d.question.trim().slice(0, 300) : "";
     if (os.kind === "quiz") {
       const correct = opts.filter((o) => o.correct).length;
-      if (!q || opts.length < 2 || opts.length > 6 || correct !== 1) return configFromOutline(os, sectionNo, d.notes);
+      if (!q || opts.length < 2 || opts.length > 6 || correct !== 1) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
       return { type: "quiz", config: { question: q, options: opts, ...meta }, usedFallback: false };
     }
-    if (!q || opts.length < 2 || opts.length > 6) return configFromOutline(os, sectionNo, d.notes);
+    if (!q || opts.length < 2 || opts.length > 6) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
     return { type: "poll", config: { question: q, options: opts.map((o) => ({ text: o.text })), ...meta }, usedFallback: false };
   }
   if (os.kind === "word_cloud") {
     const p = nonEmpty(d.prompt) ? d.prompt.trim().slice(0, 300) : "";
-    if (!p) return configFromOutline(os, sectionNo, d.notes);
+    if (!p) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
     return { type: "word_cloud", config: { prompt: p, ...meta }, usedFallback: false };
   }
   if (isCollab(os.kind)) {
     const p = nonEmpty(d.prompt) ? d.prompt.trim().slice(0, 300) : "";
-    if (!p) return configFromOutline(os, sectionNo, d.notes);
+    if (!p) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
     return collabSlide(os, p, meta, false);
   }
 
   const layout: SlideLayoutId = os.layout ?? "image";
-  const raw: Record<string, unknown> = { ...d, sectionNumber: layout === "section" ? sectionNo : d.sectionNumber, byline: "" /* tên giảng viên và lớp do giảng viên tự điền, AI không được bịa */ };
+  const raw: Record<string, unknown> = {
+    ...d,
+    ...flattenData(layout, d),
+    sectionNumber: layout === "section" ? sectionNo : d.sectionNumber,
+    byline: "" /* tên giảng viên và lớp do giảng viên tự điền, AI không được bịa */,
+  };
   const clean = sanitizeLayoutConfig(layout, raw) as Record<string, any>;
-  if (!contentComplete(layout, clean)) return configFromOutline(os, sectionNo, d.notes);
+  if (!contentComplete(layout, clean)) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
+  if (!dataNumbersVerified(layout, clean, sourceNumbers)) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
   return {
     type: "content",
     config: normalizeContentSlideConfig({ ...clean, ...meta }) as Record<string, unknown>,
@@ -253,6 +322,8 @@ export interface GenerateDeps {
   sectionNos?: string[];
   /** Thông tin mạch cấu trúc thẳng hàng với `outline` (slideStructures); thiếu thì bỏ qua. */
   structures?: Array<SlideStructure | null>;
+  /** Tài liệu gốc: số trên slide Bảng và Biểu đồ phải có trong đây (chống bịa số liệu). */
+  sourceText?: string;
 }
 
 export interface GenerateResult {
@@ -269,6 +340,7 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
   const { outline } = deps;
   const total = outline.length;
   const sections = deps.sectionNos ?? sectionNumbers(outline);
+  const sourceNumbers = numbersInText(deps.sourceText ?? "");
   const results: GeneratedSlide[] = new Array(total);
   const batches = makeBatches(total);
   let done = 0;
@@ -285,7 +357,7 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
       }
     }
     const byIndex = new Map((drafts ?? []).map((x) => [x.index, x]));
-    for (const i of indices) results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!), deps.structures?.[i]);
+    for (const i of indices) results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, sourceNumbers), deps.structures?.[i]);
     done += indices.length;
     deps.onProgress?.(done, total);
   };
@@ -321,11 +393,14 @@ const GENERATED_META = ["outlineId", "aiGenerated", "presenterNote"] as const;
  * slide (draftToSlide); nháp hỏng thì trả null — khác với lúc sinh, ở đây KHÔNG rơi về nội dung
  * dựng sẵn vì giảng viên đã có slide tốt hơn để giữ. Ghi chú giảng và dấu vết (ẩn, dòng dàn ý,
  * AI sinh, đã sửa tay) của slide cũ được giữ; chỉ "đổi thành quiz" lấy ghi chú mới khi slide cũ chưa có.
+ * Số trên Bảng, Biểu đồ và Số liệu đề xuất phải có trong tài liệu gốc hoặc trong chính slide hiện tại
+ * (số giảng viên đã nhập), để AI sửa câu chữ không bao giờ thêm số mới.
  */
 export function proposalFromDraft(
   action: SlideEditAction,
   current: { config: Record<string, unknown> },
   draft: SlideDraft | undefined,
+  sourceText = "",
 ): { type: "content" | "quiz"; config: Record<string, unknown> } | null {
   const cfg = current.config;
   const toQuiz = action === "to_quiz";
@@ -337,7 +412,8 @@ export function proposalFromDraft(
     points: [],
   };
   const sectionNo = typeof cfg.sectionNumber === "string" ? cfg.sectionNumber : "";
-  const g = draftToSlide(os, draft, sectionNo);
+  const allowed = addNumbersOf(numbersInText(sourceText), cfg);
+  const g = draftToSlide(os, draft, sectionNo, allowed);
   if (g.usedFallback) return null;
 
   const content: Record<string, unknown> = { ...g.config };

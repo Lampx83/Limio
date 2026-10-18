@@ -188,3 +188,30 @@
     @keyframes s-pop { from { opacity: 0; scale: .88; } to { opacity: 1; scale: 1; } }
     @keyframes s-line { to { transform: scaleX(1); } }
   }
+
+  /* 10. Bảng — chữ 26–34 px do tableFontSize chọn; cột toàn số căn phải. */
+  .ll-table .pad, .ll-chart .pad { gap: 28px; }
+  .lslide .src { margin: 0; font-size: 26px; line-height: 1.3; color: var(--smuted); }
+  /* flex: none — khung không được co lại (co thì cắt mất dòng cuối); quá cao thì cả slide tự thu như bố cục khác. */
+  .ll-table .tbl { flex: none; overflow: hidden; padding: 6px 10px; }
+  .ll-table table { width: 100%; border-collapse: collapse; line-height: 1.25; }
+  .ll-table th { text-align: left; font-family: var(--sfont-head); font-weight: 700; color: var(--stext); padding: 10px 20px; background: var(--ssoft); }
+  .ll-table th:first-child { border-radius: 18px 0 0 18px; } .ll-table th:last-child { border-radius: 0 18px 18px 0; }
+  .ll-table td { padding: 9px 20px; border-top: 2px solid var(--scardb); vertical-align: top; text-wrap: pretty; }
+  .ll-table tbody tr:first-child td { border-top: 0; }
+  .ll-table td:first-child { font-weight: 700; }
+  .ll-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* 11. Biểu đồ — SVG thuần (SlideCharts.tsx), màu theo biến của giao diện. */
+  .ll-chart svg { display: block; flex: none; overflow: visible; font-family: var(--sfont-body); }
+  .ll-chart svg text { font-variant-numeric: tabular-nums; }
+  .ll-chart .ch-grow { transform-box: fill-box; }
+  .ll-chart .ch-empty { flex: none; display: grid; place-items: center; color: var(--smuted); font-size: 30px; border: 3px dashed var(--scardb); border-radius: 28px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .lslide.anim .ch-grow { animation: s-grow .7s cubic-bezier(.2,.7,.2,1) calc(var(--i, 0) * 90ms + 200ms) backwards; }
+    .lslide.anim .ch-up { transform-origin: 50% 100%; } .lslide.anim .ch-down { transform-origin: 50% 0; } .lslide.anim .ch-right { transform-origin: 0 50%; }
+    .lslide.anim .ch-right.ch-grow { animation-name: s-growx; }
+    .lslide.anim .ch-fade { animation: s-fade .6s ease-out calc(var(--i, 0) * 120ms + 350ms) backwards; }
+    @keyframes s-grow { from { transform: scaleY(0); } }
+    @keyframes s-growx { from { transform: scaleX(0); } }
+    @keyframes s-fade { from { opacity: 0; } }
+  }

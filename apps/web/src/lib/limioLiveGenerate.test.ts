@@ -108,7 +108,12 @@ describe("draftToSlide — slide nội dung", () => {
   it("số liệu fallback: không có con số thì chuyển sang ba thẻ, không bịa số", () => {
     const g = configFromOutline(os("o4", "content", "stats", "Số liệu", ["Phản hồi giúp tiến bộ.", "Người học cần thời gian.", "Cần mục tiêu."]), "");
     expect(g.config.layout).toBe("cards");
-    const withNum = configFromOutline(os("o5", "content", "stats", "Số liệu", ["Ba câu hỏi 3 được trả lời.", "Hai nội dung 2 gồm điểm mạnh.", "Một việc 1 cụ thể."]), "");
+    const withNum = configFromOutline(
+      os("o5", "content", "stats", "Số liệu", ["Ba câu hỏi 3 được trả lời.", "Hai nội dung 2 gồm điểm mạnh.", "Một việc 1 cụ thể."]),
+      "",
+      undefined,
+      new Set(["1", "2", "3"]),
+    );
     expect(withNum.config.layout).toBe("stats");
     expect((withNum.config.items as any[])[0].heading).toBe("3");
   });
