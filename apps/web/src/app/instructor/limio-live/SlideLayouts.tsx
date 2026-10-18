@@ -20,6 +20,7 @@ import {
   dataSlideMetrics,
   fitFontSize,
   layoutRenderScale,
+  MIN_FONT_PX,
   resolveLayout,
   stripInline,
   type LayoutColumn,
@@ -29,8 +30,26 @@ import {
 } from "@/lib/limioLiveSlides";
 import { DATA_CONTENT_W, sourceLine, tableFontSize } from "@/lib/limioLiveCharts";
 import { apiUrl } from "@/lib/apiUrl";
-import { fitScaleForBox, frameHeightForContent, measureContentBox } from "@/lib/limioLiveFit";
-import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
+import {
+  betterFit,
+  boxFits,
+  cardHeadingPx,
+  CONTENT_W,
+  fitScaleForBox,
+  frameHeightForContent,
+  imageArtWidth,
+  keepHyphenated,
+  LOGO_SHIFT_MAX,
+  logoShiftFor,
+  logoShiftPx,
+  measureContentBox,
+  pickFontStep,
+  safeAreaFor,
+  titleFontPx,
+  type FontFit,
+  type LogoBand,
+} from "@/lib/limioLiveFit";
+import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, logoBand, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
 import { MOTIF_SLOT_SIZE, type MotifSlot, type SlideArtId } from "@/lib/limioLiveMotifs";
 import { motifSvgBody } from "@/lib/limioLiveMotifArt";
 import { useLiveBrand } from "./liveBrandContext";
@@ -90,39 +109,85 @@ export function LayoutSlideView({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0);
-  // Tự co: slide có chữ quá dài thì thu khối nội dung cho vừa khung 1280×720 thay vì để chữ tràn ra ngoài và bị cắt.
-  // Khi người xem phóng to thì thôi co: chữ giữ cỡ thật, khung cao thêm cho vừa nội dung và cuộn để đọc tiếp.
+  // Cho vừa khung 1280×720 mà không phí chỗ (limioLiveFit): chữ dài thì giảm cỡ chữ theo bậc (biến CSS --fs, sàn 26 px), khung,
+  // cột và thẻ giữ nguyên bề ngang nên chữ chảy lại thành ít dòng hơn. Chỉ khi chữ đã ở bậc cuối mà vẫn tràn mới thu cả khối
+  // (fitK) như trước. Khi người xem phóng to thì chữ giữ cỡ gốc: khung cao thêm cho vừa nội dung và cuộn để đọc tiếp.
   const zoomed = zoom > 1;
   const bodyRef = useRef<HTMLDivElement>(null);
   const [fitK, setFitK] = useState(1);
+  const [fs, setFs] = useState(1);
+  const [cols, setCols] = useState<1 | 2>(1);
+  const [shift, setShift] = useState(0);
   const [frameH, setFrameH] = useState(DESIGN_H);
   const configKey = JSON.stringify(config);
-  // Thương hiệu của bài giảng: màu thay màu nhấn của giao diện; logo vẽ trong khung thiết kế (co cùng slide)
-  // và nội dung thu nhỏ vừa đủ để chừa chỗ, không chồng chữ.
+  // Thương hiệu của bài giảng: màu thay màu nhấn của giao diện; logo vẽ trong khung thiết kế (co cùng slide). Logo chỉ chiếm
+  // phần đệm ở phía của nó: khung nội dung dịch vào khi chữ chạm logo, không thu nhỏ cả slide.
   const brand = useLiveBrand();
   const layout = resolveLayout(config);
   const showLogo = !!brand?.logoUrl && logoVisibleOn(brand.logoShow, slideRole(layout));
-  const k = showLogo && brand ? contentScaleForLogo(brand.logoSize) : 1;
-  const top = !!brand && brand.logoPos[0] === "t";
+  const band: LogoBand | null = showLogo && brand ? logoBand(brand.logoPos, brand.logoSize) : null;
+  const bandKey = band ? `${band.pos}${band.heightPx}` : "";
   useIsoLayoutEffect(() => {
     const root = bodyRef.current;
     if (!root) return;
     let alive = true;
+    const setVars = (f: number, sh: number) => {
+      root.style.setProperty("--fs", String(f));
+      root.style.setProperty("--lgt", band?.pos === "t" ? `${sh}px` : "0px");
+      root.style.setProperty("--lgb", band?.pos === "b" ? `${sh}px` : "0px");
+    };
     const run = () => {
       if (!alive) return;
-      const box = measureContentBox(root);
-      setFrameH(frameHeightForContent(box));
-      // Hệ số co chỉ đo được khi khung đang ở 720 (nội dung căn giữa theo khung); đang phóng to thì giữ giá trị cũ.
-      if (!zoomed) {
-        // Có logo thì nội dung đã bị thu k lần và dịch xuống: đổi hộp đo về toạ độ cuối cùng trên khung rồi mới tính độ co.
-        const dx = (DESIGN_W * (1 - k)) / 2;
-        const dy = top ? DESIGN_H * (1 - k) : 0;
-        setFitK(
-          fitScaleForBox(
-            box && k < 1 ? { top: box.top * k + dy, bottom: box.bottom * k + dy, left: box.left * k + dx, right: box.right * k + dx } : box,
-          ),
-        );
+      // Ở mỗi bậc cỡ chữ, dịch khung nội dung khỏi dải logo đúng phần bị lấn ở bậc đó (đo lại vì khối căn giữa chỉ dời nửa
+      // khoảng dịch, nên cộng dồn vài lần). Tính riêng từng bậc để phần tràn do chữ dài không bị nhầm thành chỗ phải nhường cho logo.
+      const shiftAt = (f: number) => {
+        let sh = 0;
+        setVars(f, 0);
+        let box = measureContentBox(root);
+        for (let i = 0; i < 6 && sh < LOGO_SHIFT_MAX; i++) {
+          const more = logoShiftFor(box, band);
+          if (!more) break;
+          sh = Math.min(LOGO_SHIFT_MAX, sh + more);
+          setVars(f, sh);
+          box = measureContentBox(root);
+        }
+        return { sh, box };
+      };
+      if (zoomed) {
+        // Đang phóng to: giữ chữ cỡ gốc, chỉ đo chiều cao khung; hệ số co giữ giá trị cũ.
+        const z = shiftAt(1);
+        setFrameH(frameHeightForContent(z.box));
+        setFs(1);
+        setShift(z.sh);
+        return;
       }
+      const safe = safeAreaFor(band);
+      // Tóm tắt nhiều dòng: thử một cột rồi hai cột, giữ cách cho chữ lớn hơn.
+      const list = root.querySelector<HTMLElement>(".ll-summary .list");
+      const variants: Array<1 | 2> = list && list.children.length >= 4 ? [1, 2] : [1];
+      let best: (FontFit & { sh: number; cols: 1 | 2 }) | null = null;
+      for (const n of variants) {
+        list?.classList.toggle("two", n === 2);
+        const shifts = new Map<number, number>();
+        const measureAt = (f: number) => {
+          const r = shiftAt(f);
+          shifts.set(f, r.sh);
+          return r.box;
+        };
+        // Bìa có cỡ chữ riêng từng kiểu, không theo --fs: chỉ đo một lần.
+        const r: FontFit =
+          layout === "cover" ? (() => { const box = measureAt(1); return { fs: 1, fits: boxFits(box, safe), box }; })() : pickFontStep(measureAt, safe);
+        if (!best || betterFit(best, r) !== best) best = { ...r, sh: shifts.get(r.fs) ?? 0, cols: n };
+      }
+      const b = best!;
+      list?.classList.toggle("two", b.cols === 2);
+      // Chiều cao khung khi phóng to (chữ cỡ gốc), rồi trả về bậc đã chọn.
+      setFrameH(frameHeightForContent(shiftAt(1).box));
+      setVars(b.fs, b.sh);
+      setFs(b.fs);
+      setCols(b.cols);
+      setShift(b.sh);
+      setFitK(b.fits ? 1 : fitScaleForBox(b.box, safe));
     };
     run();
     // Phông chữ tải xong có thể đổi số dòng của chữ: đo lại một lần.
@@ -130,7 +195,8 @@ export function LayoutSlideView({
     return () => {
       alive = false;
     };
-  }, [configKey, zoomed, k, top]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configKey, zoomed, bandKey, layout]);
 
   useEffect(() => {
     const el = ref.current;
@@ -162,9 +228,14 @@ export function LayoutSlideView({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [!!motif, effThemeId, frameBg, themeId, brandVarsKey],
   );
+  const bodyVars = {
+    "--fs": fs,
+    "--lgt": band?.pos === "t" ? `${shift}px` : "0px",
+    "--lgb": band?.pos === "b" ? `${shift}px` : "0px",
+  } as CSSProperties;
   const body = (
-    <div ref={bodyRef} style={{ position: "absolute", inset: 0 }}>
-      <LayoutBody layout={layout} c={config} motif={motif} />
+    <div ref={bodyRef} style={{ position: "absolute", inset: 0, ...bodyVars }}>
+      <LayoutBody layout={layout} c={config} motif={motif} cols={cols} dataReserve={band ? logoShiftPx(band) : 0} />
     </div>
   );
   const slideStyle: CSSProperties = zoomed
@@ -188,20 +259,7 @@ export function LayoutSlideView({
         }}
       >
         <div style={{ position: "absolute", inset: 0, transformOrigin: "50% 50%", ...(fitK < 1 && !zoomed ? { transform: `scale(${fitK})` } : null) }}>
-          {showLogo ? (
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                transformOrigin: "0 0",
-                transform: `translate(${(DESIGN_W * (1 - k)) / 2}px, ${top ? slideH * (1 - k) : 0}px) scale(${k})`,
-              }}
-            >
-              {body}
-            </div>
-          ) : (
-            body
-          )}
+          {body}
         </div>
         {typeof config.cite === "string" && config.cite && (
           // Dòng nguồn của bài soạn kèm trang tìm trên internet: góc dưới trái, chữ nhỏ nhất cho phép, không chồng nội dung.
@@ -281,12 +339,16 @@ export function LayoutSlideView({
   );
 }
 
+/** Cỡ chữ theo bậc --fs của slide, không dưới sàn (mặc định 26 px). */
+const scaled = (px: number, floor = MIN_FONT_PX) => `max(${floor}px, calc(${px}px * var(--fs, 1)))`;
+
 function Title({
   text,
   className,
   maxPx,
   widthPx,
   maxLines,
+  oneLine = true,
   style,
 }: {
   text: string;
@@ -294,11 +356,14 @@ function Title({
   maxPx: number;
   widthPx: number;
   maxLines: number;
+  /** Vừa một dòng ở cỡ ≥ 80% thì dùng một dòng (titleFontPx); slide dữ liệu tắt vì chiều cao khung đã tính theo cỡ cũ. */
+  oneLine?: boolean;
   style?: CSSProperties;
 }) {
-  const { px } = fitFontSize(stripInline(text), { maxPx, widthPx, maxLines });
+  const plain = stripInline(text);
+  const px = oneLine ? titleFontPx(plain, { maxPx, widthPx, maxLines }) : fitFontSize(plain, { maxPx, widthPx, maxLines }).px;
   return (
-    <h2 className={`h a ${className ?? ""}`} style={{ fontSize: px, ...style }}>
+    <h2 className={`h a ${className ?? ""}`} style={{ fontSize: scaled(px), ...style }}>
       <Inline text={text} />
     </h2>
   );
@@ -334,7 +399,21 @@ function Decor({ motif, a, b }: { motif: Motif; a: CSSProperties; b: CSSProperti
   return motif ? <SlideMotif motif={motif.motif} slot={motif.slot} /> : <Glows a={a} b={b} />;
 }
 
-function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif: Motif }) {
+function LayoutBody({
+  layout,
+  c,
+  motif,
+  cols = 1,
+  dataReserve = 0,
+}: {
+  layout: SlideLayoutId;
+  c: Cfg;
+  motif: Motif;
+  /** Tóm tắt: số cột bộ đo đã chọn. */
+  cols?: 1 | 2;
+  /** Slide dữ liệu: chỗ nhường cho logo, khung bảng/biểu đồ thấp đi chừng đó. */
+  dataReserve?: number;
+}) {
   const items: LayoutItem[] = Array.isArray(c.items) ? c.items : [];
   const title: string = c.title ?? "";
 
@@ -359,7 +438,7 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
             <div className="pad">
               <div className="left">
                 <div className="num a-pop">{no}</div>
-                <Title text={title} maxPx={64} widthPx={540} maxLines={3} style={{ ...delay(1), marginTop: 26 }} />
+                <Title text={title} maxPx={64} widthPx={540} maxLines={3} style={{ ...delay(1), marginTop: "calc(26px * var(--fs, 1))" }} />
                 {c.subtitle && (
                   <p className="lead a" style={{ ...delay(2), marginTop: 22 }}>
                     <Inline text={c.subtitle} />
@@ -403,11 +482,13 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
 
     case "image": {
       const bullets: string[] = Array.isArray(c.bullets) ? c.bullets : [];
+      // Chữ càng dài thì ô hình càng hẹp, cột chữ rộng ra (56 = khoảng cách giữa hai cột trong slideLayouts.css).
+      const artW = imageArtWidth(stripInline(title).length + bullets.reduce((n, b) => n + stripInline(b).length, 0));
       return (
-        <div className="ll-image">
+        <div className="ll-image" style={{ ["--artw" as string]: `${artW}px` }}>
           <div className="pad">
             <div className="tx">
-              <Title text={title} maxPx={60} widthPx={560} maxLines={3} />
+              <Title text={title} maxPx={60} widthPx={CONTENT_W - 56 - artW} maxLines={3} />
               <ul className="bul">
                 {bullets.map((b, i) => (
                   <li key={i} className="a" style={delay(i + 1)}>
@@ -431,7 +512,7 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
 
     case "cards":
       return (
-        <div className="ll-cards">
+        <div className="ll-cards" style={{ ["--hpx" as string]: `${cardHeadingPx(items.map((it) => stripInline(it.heading)), items.length)}px` }}>
           <div className="pad">
             <Title text={title} maxPx={72} widthPx={1088} maxLines={2} />
             <div className="row" style={{ gridTemplateColumns: `repeat(${Math.max(items.length, 1)}, 1fr)` }}>
@@ -444,7 +525,7 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
                       <Icon size={36} strokeWidth={2} />
                     </div>
                     <b>
-                      <Inline text={it.heading} />
+                      <Inline text={keepHyphenated(it.heading)} />
                     </b>
                     <p>
                       <Inline text={it.body} />
@@ -498,7 +579,7 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
                 <div key={i} className="st a-pop" style={delay(i * 2)}>
                   <div className="circ">{i + 1}</div>
                   <b>
-                    <Inline text={it.heading} />
+                    <Inline text={keepHyphenated(it.heading)} />
                   </b>
                   <p>
                     <Inline text={it.body} />
@@ -548,7 +629,7 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
           />
           <div className="pad">
             <div className="mark a-pop">“</div>
-            <div className="qt a" style={{ ...delay(1), fontSize: px }}>
+            <div className="qt a" style={{ ...delay(1), fontSize: scaled(px) }}>
               {head}
               {tail && (
                 <>
@@ -573,7 +654,7 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
         <div className="ll-summary">
           <div className="pad">
             <Title text={title} maxPx={72} widthPx={1088} maxLines={2} />
-            <div className="list">
+            <div className={`list${cols === 2 ? " two" : ""}`}>
               {items.map((it, i) => (
                 <div key={i} className="card rowi a" style={delay(i)}>
                   <div className="tick">
@@ -592,16 +673,17 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
     case "table":
     case "chart": {
       // Tiêu đề, khung dữ liệu và dòng nguồn: chiều cao khung tính trước (dataSlideMetrics) để SVG vẽ đúng cỡ chữ thật.
-      const m = dataSlideMetrics(c);
+      const m = dataSlideMetrics(c, dataReserve);
       const src = sourceLine(c.source);
       const head: string[] = Array.isArray(c.head) ? c.head : [];
       const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
+      const tf = tableFontSize(head, rows, DATA_CONTENT_W - 20, m.boxH);
       return (
         <div className={layout === "table" ? "ll-table" : "ll-chart"}>
           <div className="pad">
-            {title && <Title text={title} maxPx={m.titlePx} widthPx={DATA_CONTENT_W} maxLines={2} />}
+            {title && <Title text={title} maxPx={m.titlePx} widthPx={DATA_CONTENT_W} maxLines={2} oneLine={false} />}
             {layout === "table" ? (
-              <TableView head={head} rows={rows} px={tableFontSize(head, rows, DATA_CONTENT_W - 20, m.boxH).px} />
+              <TableView head={head} rows={rows} px={tf.px} padY={tf.padY} />
             ) : (
               <ChartView cfg={c} width={DATA_CONTENT_W} height={m.boxH} />
             )}

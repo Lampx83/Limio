@@ -215,6 +215,10 @@ export const DATA_SLIDE = {
   sourcePx: 26,
 } as const;
 export const DATA_CONTENT_W = DATA_SLIDE.width - 2 * DATA_SLIDE.padX;
+/** Cỡ chữ bảng trên khung 1280×720: bảng ít chữ được lớn tới 40 px, bảng dày giảm dần tới sàn 26 px. */
+export const TABLE_PX = { min: 26, max: 40 } as const;
+/** Đệm trên dưới mỗi ô (px): tối thiểu khi bảng dày, tăng dần khi còn chỗ. */
+export const TABLE_PAD_Y = { min: 9.5, max: 22 } as const;
 
 /** Dòng nguồn: tự thêm "Nguồn:" nếu giảng viên chưa ghi. */
 export function sourceLine(source: unknown): string {
@@ -242,19 +246,31 @@ export function numericColumns(rows: string[][], cols: number): boolean[] {
  * Cỡ chữ lớn nhất (34 → 26 px) để cả bảng vừa chiều cao `availH`. Ước lượng mỗi cột rộng bằng nhau.
  * `overflow` = true khi ở 26 px vẫn chưa vừa — trình sửa hiện cảnh báo "Slide dài".
  */
-export function tableFontSize(head: string[], rows: string[][], widthPx: number, availH: number): { px: number; overflow: boolean } {
+export function tableFontSize(
+  head: string[],
+  rows: string[][],
+  widthPx: number,
+  availH: number,
+): { px: number; padY: number; overflow: boolean } {
   const cols = Math.max(1, head.length, ...rows.map((r) => r.length));
   const colW = widthPx / cols - 40; // đệm trái phải 20 px mỗi bên (slideLayouts.css)
   const showHead = head.some((h) => h.trim());
   const all = showHead ? [head, ...rows] : rows;
-  const total = (px: number) =>
+  const total = (px: number, padY: number) =>
     all.reduce((sum, r) => {
       const per = Math.max(1, Math.floor(colW / (px * CHAR_EM)));
       const ln = Math.max(1, ...r.map((c) => Math.ceil(String(c ?? "").length / per) || 1));
-      return sum + ln * px * 1.25 + 21; // đệm trên dưới 9–10 px + viền 2 px
+      return sum + ln * px * 1.25 + 2 * padY + 2; // đệm trên dưới + viền 2 px
     }, 14);
-  for (let px = 34; px >= 26; px -= 2) if (total(px) <= availH) return { px, overflow: false };
-  return { px: 26, overflow: true };
+  for (let px = TABLE_PX.max; px >= TABLE_PX.min; px -= 2) {
+    const used = total(px, TABLE_PAD_Y.min);
+    if (used <= availH) {
+      // Bảng ít hàng: chỗ trống còn lại chia đều thành đệm trên dưới của từng ô, để bảng trải hết khung thay vì co ở trên.
+      const padY = Math.min(TABLE_PAD_Y.max, TABLE_PAD_Y.min + (availH - used) / (2 * Math.max(all.length, 1)));
+      return { px, padY: Math.floor(padY), overflow: false };
+    }
+  }
+  return { px: TABLE_PX.min, padY: TABLE_PAD_Y.min, overflow: true };
 }
 
 /** Tách vùng ô chép từ Excel hoặc Google Sheets (dòng theo xuống dòng, ô theo tab). Một ô đơn → null. */

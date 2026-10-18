@@ -2,6 +2,8 @@
 // Module thuần (không DB, không React): kiểm tra dữ liệu, sinh bảng màu từ một màu, luật hiện logo.
 // Không tin dữ liệu từ máy khách: mọi giá trị đi qua sanitizeBrand.
 
+import type { LogoBand } from "./limioLiveFit";
+
 export const BRAND_POSITIONS = ["tl", "tr", "bl", "br"] as const;
 export const BRAND_SIZES = ["s", "m", "l"] as const;
 export const BRAND_SHOWS = ["all", "nocover", "ends"] as const;
@@ -375,18 +377,15 @@ export function logoVisibleOn(show: BrandShow, role: SlideRole): boolean {
 }
 
 /** Chiều cao logo trên khung thiết kế 1280×720 (px). */
-export const LOGO_PX: Record<BrandSize, number> = { s: 44, m: 64, l: 92 };
+export const LOGO_PX: Record<BrandSize, number> = { s: 32, m: 44, l: 60 };
 export const LOGO_MARGIN_PX = 36;
-const DESIGN_H = 720;
 
-/** Dải đệm cho logo ở mép trên hoặc dưới; nội dung slide thu về phần còn lại để không chồng chữ. */
-export function logoRoomPx(size: BrandSize): number {
-  return LOGO_PX[size] + 24;
-}
-
-/** Hệ số thu nhỏ nội dung slide khi có logo (khung thiết kế cao 720px). */
-export function contentScaleForLogo(size: BrandSize): number {
-  return (DESIGN_H - logoRoomPx(size)) / DESIGN_H;
+/**
+ * Dải của logo ở mép trên hoặc dưới, để bộ vẽ slide chừa chỗ: khung nội dung chỉ dịch vào ở phía có logo khi chữ chạm logo
+ * (limioLiveFit: logoShiftPx, safeAreaFor), không thu nhỏ cả slide.
+ */
+export function logoBand(pos: BrandPosition, size: BrandSize): LogoBand {
+  return { pos: pos[0] === "t" ? "t" : "b", heightPx: LOGO_PX[size], marginPx: LOGO_MARGIN_PX };
 }
 
 /** Vị trí logo trên khung thiết kế: trả về style tuyệt đối. */
