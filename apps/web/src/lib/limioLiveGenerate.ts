@@ -62,12 +62,15 @@ export interface DraftContext {
   extraCorpus?: string;
   /** Tập số có trong nguồn (numbersInText): số trên Bảng, Biểu đồ, Số liệu phải nằm trong đây. Thiếu = rỗng. */
   sourceNumbers?: Set<string>;
+  /** Slide kết bài (SlideStructure.closing): câu khép lại buổi học, giữ bố cục Trích dẫn ở mọi nguồn. */
+  closing?: boolean;
 }
 
 const topicKind = (ctx?: DraftContext): DeckSourceKind => ctx?.sourceKind ?? "document";
 
 /** Dòng dàn ý với bố cục đã đổi theo nguồn (mức kiến thức chung không có Số liệu, Trích dẫn). */
 function forSource(os: OutlineSlide, ctx?: DraftContext): OutlineSlide {
+  if (ctx?.closing) return os;
   const layout = safeLayoutFor(topicKind(ctx), os.layout);
   return layout === os.layout ? os : { ...os, layout };
 }
@@ -429,7 +432,10 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
       }
     }
     const byIndex = new Map((drafts ?? []).map((x) => [x.index, x]));
-    for (const i of indices) results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, ctx), deps.structures?.[i]);
+    for (const i of indices) {
+      const st = deps.structures?.[i];
+      results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, st?.closing ? { ...ctx, closing: true } : ctx), st);
+    }
     done += indices.length;
     deps.onProgress?.(done, total);
   };
@@ -521,7 +527,9 @@ export function proposalFromDraft(
   const keepRest = KEEP_REST_ACTIONS.includes(action);
   const filled = keepRest ? fillFromCurrent(draft, cfg) : draft;
   const allowed = addNumbersOf(numbersInText(ctx?.sourceText ?? ""), cfg);
-  const g = draftToSlide(os, filled, sectionNo, { ...ctx, extraCorpus: allText(cfg), sourceNumbers: allowed });
+  // Slide đang là Trích dẫn ở bài không có tài liệu chỉ có thể là slide kết bài: sửa câu chữ không đổi bố cục của nó.
+  const keepQuote = os.layout === "quote";
+  const g = draftToSlide(os, filled, sectionNo, { ...ctx, extraCorpus: allText(cfg), sourceNumbers: allowed, ...(keepQuote ? { closing: true } : {}) });
   if (g.usedFallback) return null;
 
   const content: Record<string, unknown> = { ...g.config };

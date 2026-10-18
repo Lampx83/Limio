@@ -8,7 +8,7 @@ describe("Bảng và Biểu đồ trong lời nhắc AI", () => {
   it("dàn ý cho phép hai bố cục mới và nhắc chỉ dùng số có trong tài liệu", () => {
     expect(OUTLINE_CONTENT_LAYOUTS).toContain("table");
     expect(OUTLINE_CONTENT_LAYOUTS).toContain("chart");
-    const { system } = buildOutlinePrompt({ sourceText: "x".repeat(300), minutes: 30, minSlides: 14, maxSlides: 18, interactiveEvery: 4 });
+    const { system } = buildOutlinePrompt({ sourceText: "x".repeat(300), minutes: 30, minSlides: 14, maxSlides: 18 });
     expect(system).toMatch(/"chart".*CHỈ dùng khi các con số CÓ TRONG TÀI LIỆU/s);
     expect(system).toContain('"Nhãn: số"');
   });

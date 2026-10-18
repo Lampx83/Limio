@@ -9,6 +9,7 @@ import {
   OUTLINE_LAYOUTS,
   isFullStructure,
   isTopicSource,
+  isClosingSlide,
   layoutAllowedFor,
   outlineBlockingProblems,
   outlineStats,
@@ -394,7 +395,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           onRemove={() => remove(editing.id)}
           onGoto={(d) => setEditingId(outline.slides[editingIndex + d]?.id ?? editing.id)}
           onClose={() => setEditingId(null)}
-          layouts={OUTLINE_LAYOUTS.filter((l) => layoutAllowedFor(data.sourceKind, l))}
+          layouts={OUTLINE_LAYOUTS.filter((l) => layoutAllowedFor(data.sourceKind, l) || (l === "quote" && isClosingSlide(outline, editing)))}
         />
       )}
 

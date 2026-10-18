@@ -187,6 +187,8 @@ export const SLIDE_SPEC: Record<string, string> = {
   chart: `title (một câu hoàn chỉnh nêu điều biểu đồ cho thấy), chart: type chọn "bar" (so sánh các nhóm), "hbar" (nhãn dài), "line" (diễn biến theo thời gian) hoặc "pie" (các phần cộng lại thành một tổng thể); labels là 2 đến 8 nhãn ngắn (dưới 5 từ; "hbar" và "pie" tối đa 6); series là 1 hoặc 2 chuỗi ("pie" chỉ 1), name là tên chuỗi (để rỗng nếu chỉ có 1 chuỗi), values có ĐÚNG số phần tử như labels; unit là đơn vị ("%" nếu là phần trăm, để rỗng nếu không có). MỌI con số phải CÓ TRONG tài liệu và chép đúng; không tính thêm, không làm tròn lại, không ước lượng. source: tên tài liệu hoặc mục chứa số liệu nếu tài liệu nêu, nếu không để rỗng.`,
   quote: `quote (một câu hoàn chỉnh, thông điệp chính), source (nguồn hoặc "Thông điệp chính của bài học"; chỉ ghi tên người hoặc tác phẩm nếu có trong tài liệu).`,
   summary: `title, items: từ 3 đến 5 phần tử; chỉ dùng heading, là MỘT CÂU HOÀN CHỈNH dưới 16 từ nêu điều cần ghi nhớ; body để rỗng.`,
+  hook_quote: `quote (chính câu hỏi, nhận định hay câu đố mở bài của dàn ý, dưới 25 từ, giữ sức gợi tò mò), source (để rỗng; chỉ ghi người nói nếu câu đó có trong nguồn).`,
+  closing: `quote (câu kết của dàn ý: có thể chuốt cho gọn và đọng hơn nhưng giữ ý, dưới 25 từ, không sáo rỗng), source (câu trích có trong nguồn: ghi người nói đúng như nguồn; câu tự viết: "Thông điệp của buổi học"; không bao giờ gán câu tự viết cho ai).`,
   quiz: `question (một câu hỏi hoàn chỉnh kiểm tra hiểu bài), options: ĐÚNG 4 phần tử, ĐÚNG 1 phần tử correct=true, các phương án sai phải hợp lý (phản ánh hiểu lầm thường gặp); mỗi phương án dưới 14 từ.`,
   poll: `question (một câu hỏi lấy ý kiến), options: từ 2 đến 5 phần tử, mọi phần tử correct=false.`,
   word_cloud: `prompt (một câu gợi ý hoàn chỉnh, học viên trả lời bằng một từ hoặc cụm từ ngắn).`,
@@ -197,6 +199,9 @@ export const SLIDE_SPEC: Record<string, string> = {
 
 export function specKeyFor(s: OutlineSlideInput): string {
   if (s.kind === "content" && (s.role === "objectives" || s.role === "agenda") && s.layout === "summary") return s.role;
+  // Slide Trích dẫn trong phần Tổng kết là slide kết bài (closingIndex ở apps/web/src/lib/limioLiveOutline.ts).
+  if (s.kind === "content" && s.role === "summary" && s.layout === "quote") return "closing";
+  if (s.kind === "content" && s.role === "hook" && s.layout === "quote") return "hook_quote";
   return s.kind === "content" ? s.layout ?? "image" : s.kind;
 }
 
@@ -211,7 +216,7 @@ Quy tắc bắt buộc:
 3. Văn phong khoa học, rõ ràng. Mọi mô tả, ý chính, giải thích phải là CÂU HOÀN CHỈNH có chủ ngữ và vị ngữ, kết thúc bằng dấu chấm. KHÔNG viết cụt, không chỉ liệt kê cụm từ.
 4. ${sourceRule(kind, "slides")}
 5. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu ${kind === "document" ? "tài liệu dùng" : "ngành quen dùng"}).
-6. Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao.
+6. Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao. Slide thuộc phần "Dẫn dắt vào bài": chỉ cách dẫn để tạo tò mò (dừng một nhịp, mời cả lớp nghĩ hoặc trả lời, chưa giải đáp ngay và hẹn sẽ quay lại). Slide kết bài: gợi ý nói chậm, nối câu kết với câu hỏi mở đầu, rồi cảm ơn lớp.
 7. Mỗi bố cục chỉ điền các trường được yêu cầu; mọi trường khác để chuỗi rỗng hoặc mảng rỗng (với "table" và "chart" không dùng: head, rows, labels, series là mảng rỗng, type là "bar").
 
 Trả về JSON đúng cấu trúc yêu cầu.`;

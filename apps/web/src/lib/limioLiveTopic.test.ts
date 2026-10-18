@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { extractCites, figureKeys, formatCite, statFigures, unsupportedFigures } from "./limioLiveFigures";
 import {
   normalizeOutline,
+  slideRange,
   outlineWarnings,
   referencesOutlineSlide,
   resolveSourceKind,
@@ -111,9 +112,9 @@ describe("normalizeOutline — mô tả chủ đề", () => {
   });
 
   it("mức có nguồn thêm dòng cuối Nguồn tham khảo do hệ thống dựng, giữ trong mức slide (T14)", () => {
-    const many = { ...raw, slides: [...raw.slides.slice(0, 3), ...Array.from({ length: 12 }, (_, i) => ({ ...raw.slides[1], layout: "cards", title: `Ý ${i}`, points: [] })), raw.slides[3]] };
+    const many = { ...raw, slides: [...raw.slides.slice(0, 3), ...Array.from({ length: 16 }, (_, i) => ({ ...raw.slides[1], layout: "cards", title: `Ý ${i}`, points: [] })), raw.slides[3]] };
     const { outline } = normalizeOutline(many, 15, { sourceKind: "topic_web", sourceText: WEB_SOURCE, references: REFS });
-    expect(outline.slides.length).toBeLessThanOrEqual(10);
+    expect(outline.slides.length).toBeLessThanOrEqual(slideRange(15).max);
     const last = outline.slides[outline.slides.length - 1]!;
     expect(last).toMatchObject({ fixed: "references", layout: "summary", title: "Nguồn tham khảo" });
     expect(last.points).toEqual(["[1] vi.example.org: Thực tế tăng cường là gì", "[2] edu.example.com: AR in education"]);

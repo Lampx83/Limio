@@ -19,7 +19,7 @@ import {
  */
 
 const SOURCE = "Phản hồi là thông tin về khoảng cách giữa kết quả hiện tại và mục tiêu học tập. ".repeat(10);
-const base: LectureOutlineInput = { sourceText: SOURCE, minutes: 30, minSlides: 14, maxSlides: 18, interactiveEvery: 4 };
+const base: LectureOutlineInput = { sourceText: SOURCE, minutes: 30, minSlides: 14, maxSlides: 18 };
 
 function fakeOpenAI(content: unknown, inputTokens = 800, outputTokens = 900): { client: OpenAI; calls: unknown[] } {
   const calls: unknown[] = [];
@@ -54,9 +54,32 @@ describe("buildOutlinePrompt", () => {
     const { system } = buildOutlinePrompt(base);
     expect(system).toContain("từ 14 đến 18 slide");
     expect(system).toContain("30 phút");
-    expect(system).toContain("khoảng 4 slide nội dung");
+    expect(system).toContain("MỖI phần nội dung có 1 đến 2 slide tương tác");
     expect(system).toMatch(/emoji/i);
     expect(system).toContain("không bịa số liệu");
+  });
+
+  it("hook: chọn một kỹ thuật mở bài, slide trình bày rồi slide tương tác thu câu trả lời, không bịa", () => {
+    const { system } = buildOutlinePrompt(base);
+    for (const t of ["Câu hỏi khiêu khích", "Hãy hình dung", "Nhận định trái trực giác", "Câu đố mở", "Dự đoán nhanh", "Liên hệ trải nghiệm"]) expect(system).toContain(t);
+    expect(system).toContain("CHỈ khi con số hay câu nói đó có trong tài liệu");
+    expect(system).toContain(`"hook" (phần "Dẫn dắt vào bài"): ĐÚNG 2 slide`);
+    expect(system).toMatch(/KHÔNG đặt kiểu "Giới thiệu"/);
+    expect(system).toContain("Không bịa giai thoại");
+  });
+
+  it("tổng kết: slide Tóm tắt rồi slide kết bài bố cục quote, câu tự viết không gán cho ai", () => {
+    const { system } = buildOutlinePrompt(base);
+    expect(system).toContain(`"summary": ĐÚNG 2 slide cuối bài`);
+    expect(system).toMatch(/Slide kết bài, layout "quote": MỘT câu đáng nhớ/);
+    expect(system).toContain("Không bao giờ gán câu tự viết cho bất kỳ ai");
+    expect(system).toContain("khép lại vòng đó");
+  });
+
+  it("buổi ngắn: hook 1 đến 2 slide, vẫn có slide kết", () => {
+    const { system } = buildOutlinePrompt({ ...base, minutes: 15, minSlides: 9, maxSlides: 12 });
+    expect(system).toContain(`"hook" (phần "Dẫn dắt vào bài"): 1 đến 2 slide`);
+    expect(system).toContain("Slide kết bài");
   });
 
   it("cho phép ba loại slide cộng tác nhưng dặn dùng tiết kiệm, và không đặt ở đầu hoặc cuối bài", () => {
