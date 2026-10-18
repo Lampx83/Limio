@@ -5193,6 +5193,9 @@ model LiveDeck {
   // Mẫu thương hiệu giảng viên chọn cho bài này khi dùng thương hiệu của trường (mã trong limioLiveBrand.brandTemplates);
   // null = mẫu mặc định của trường.
   brandTemplate String?
+  // Hoa văn trang trí của cả bài (mã trong apps/web/src/lib/limioLiveMotifs.ts): null = tự động (suy từ mã bài),
+  // "none" = không dùng, hoặc một hoa văn chủ đạo. Slide có thể chọn riêng qua config.motif.
+  motif     String?
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
   groupId   String?

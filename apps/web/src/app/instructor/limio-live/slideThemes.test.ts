@@ -7,6 +7,8 @@ import {
   SLIDE_THEME_IDS,
   isDarkTheme,
   layoutThemeClass,
+  SLIDE_THEME_INK,
+  motifOpacityFor,
   slideBgFor,
   slideThemeBg,
 } from "./slideThemes";
@@ -48,5 +50,34 @@ describe("giao diện slide", () => {
     expect(layoutThemeClass("không có")).toBe("lt-brand");
     expect(isDarkTheme(undefined)).toBe(false);
     expect(slideThemeBg(null)).toBe(slideThemeBg("white"));
+  });
+});
+
+describe("hoa văn trên từng giao diện", () => {
+  const cssVar = (cls: string, name: string) => new RegExp(`\\.${cls}\\s*\\{[^}]*${name}:\\s*(#[0-9A-Fa-f]{6})`).exec(css)?.[1];
+
+  it("bảng màu chép trong slideThemes.ts khớp slideLayouts.css", () => {
+    for (const cls of new Set(SLIDE_THEMES.map((t) => t.cls))) {
+      const ink = SLIDE_THEME_INK[cls];
+      expect(ink, `thiếu ${cls} trong SLIDE_THEME_INK`).toBeDefined();
+      expect(cssVar(cls, "--stext")).toBe(ink!.text);
+      expect(cssVar(cls, "--smuted")).toBe(ink!.muted);
+      expect(cssVar(cls, "--sa")).toBe(ink!.sa);
+      expect(cssVar(cls, "--sa2")).toBe(ink!.sa2);
+    }
+  });
+
+  it("giao diện nào cũng có độ đậm an toàn đủ để thấy hoa văn ở góc (không bị tắt hẳn)", () => {
+    for (const t of SLIDE_THEMES) {
+      const cap = motifOpacityFor(t.id, slideBgFor(t.id, true));
+      expect(cap, t.id).toBeGreaterThanOrEqual(0.09);
+      expect(cap, t.id).toBeLessThan(0.4);
+    }
+  });
+
+  it("màu thương hiệu thay màu nhấn thì độ đậm tính lại theo màu đó", () => {
+    const own = motifOpacityFor("white", "#FFFFFF");
+    const pale = motifOpacityFor("white", "#FFFFFF", { "--sa": "#2B2B2B", "--sa2": "#2B2B2B" });
+    expect(pale).toBeLessThan(own);
   });
 });
