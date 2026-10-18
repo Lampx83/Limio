@@ -99,12 +99,12 @@ export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
 
 /**
  * Nguồn của một dòng dàn ý trong bài nhập từ file trình chiếu (xem limioLivePptx): "same" = từ một slide gốc,
- * "merge" = gộp nhiều slide gốc, "new" = mới (có `slides` thì là "dựa trên" các slide đó), "back" = giảng viên thêm
+ * "merge" = gộp nhiều slide gốc, "split" = một trong các slide tách từ một slide gốc dài (AI viết), "new" = mới (có `slides` thì là "dựa trên" các slide đó), "back" = giảng viên thêm
  * lại một slide gốc chưa dùng. `piece/pieces`: slide gốc dài chia thành nhiều slide. `sig`: dấu các ý lúc nhập,
  * để biết giảng viên đã sửa các ý của dòng hay chưa.
  */
-export type OriginHow = "same" | "merge" | "new" | "back";
-export const ORIGIN_HOWS: readonly OriginHow[] = ["same", "merge", "new", "back"];
+export type OriginHow = "same" | "merge" | "split" | "new" | "back";
+export const ORIGIN_HOWS: readonly OriginHow[] = ["same", "merge", "split", "new", "back"];
 export interface OutlineOrigin {
   slides: number[];
   how: OriginHow;
@@ -143,6 +143,7 @@ export function originLabel(o: OutlineOrigin | undefined): string {
   if (!o) return "";
   if (o.how === "back") return `thêm lại từ slide ${o.slides[0] ?? ""}`;
   if (o.how === "merge") return `gộp slide ${listVi(o.slides)}`;
+  if (o.how === "split") return `tách từ slide ${listVi(o.slides)}`;
   if (o.how === "new") return o.slides.length ? `mới, dựa trên slide ${listVi(o.slides)}` : "mới";
   const part = o.pieces && o.pieces > 1 ? `, phần ${o.piece}/${o.pieces}` : "";
   return `từ slide ${listVi(o.slides)}${part}`;

@@ -16,7 +16,7 @@ import {
   tableFontSize,
   type ChartType,
 } from "./limioLiveCharts";
-import { configFromOutline, type GeneratedSlide } from "./limioLiveGenerate";
+import { configFromOutline, estimateGenerationTokens, type GeneratedSlide } from "./limioLiveGenerate";
 import {
   OUTLINE_LIMITS,
   finalizeParts,
@@ -24,9 +24,11 @@ import {
   isImportedRow,
   listVi,
   newOutlineId,
+  normalizeOutline,
   stripEmoji,
   type Outline,
   type OutlineLayout,
+  type OutlineOrigin,
   type OutlineSlide,
 } from "./limioLiveOutline";
 import {
@@ -559,6 +561,140 @@ export function importedSlideFor(row: OutlineSlide, src: Pick<ImportSource, "sli
     config: normalizeContentSlideConfig({ ...config, ...meta }) as Record<string, unknown>,
     usedFallback: false,
   };
+}
+
+// ── Cách "Soạn lại mạch" (AI đề xuất dàn ý, mốc 2) ─────────────────────────
+
+const validNums = (v: unknown, max: number): number[] =>
+  [...new Set((Array.isArray(v) ? v : []).map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= max))].sort((a, b) => a - b);
+
+/**
+ * Đổi "from"/"basis" AI trả về thành nguồn của dòng (tiêu chí P25): số ngoài khoảng bị bỏ; một slide gốc → "same"
+ * (nếu cùng slide gốc đứng một mình ở nhiều dòng thì đó là tách slide: "split"); nhiều slide → "merge"; không có →
+ * "new" kèm các slide làm căn cứ. Slide tương tác lấy nội dung từ slide gốc vẫn là "new" (dựa trên).
+ */
+export function originsFromAi(raw: unknown, slideCount: number): unknown {
+  if (!raw || typeof raw !== "object" || !Array.isArray((raw as { slides?: unknown }).slides)) return raw;
+  const o = raw as { slides: unknown[] };
+  const rows = o.slides.map((r) => (r && typeof r === "object" ? (r as Record<string, unknown>) : null));
+  const froms = rows.map((r) => validNums(r?.from, slideCount));
+  const alone = new Map<number, number>();
+  rows.forEach((r, i) => {
+    if (r && (r.kind ?? "content") === "content" && froms[i]!.length === 1) alone.set(froms[i]![0]!, (alone.get(froms[i]![0]!) ?? 0) + 1);
+  });
+  const slides = rows.map((r, i) => {
+    if (!r) return r;
+    const from = froms[i]!;
+    const basis = validNums(r.basis, slideCount).filter((n) => !from.includes(n));
+    const interactive = (r.kind ?? "content") !== "content";
+    let origin: OutlineOrigin;
+    if (!from.length || interactive) origin = { slides: [...new Set([...from, ...basis])].sort((a, b) => a - b), how: "new" };
+    else if (from.length > 1) origin = { slides: from, how: "merge" };
+    else origin = { slides: from, how: (alone.get(from[0]!) ?? 0) > 1 ? "split" : "same" };
+    const { from: _f, basis: _b, ...rest } = r;
+    return { ...rest, origin };
+  });
+  return { ...o, slides };
+}
+
+/** Dòng "same": thay bằng (các) dòng dựng nguyên từ slide gốc như cách "Giữ ý" — chữ gốc, không để AI viết lại (P26). */
+export function expandVerbatim(o: Outline, src: Pick<ImportSource, "slides">): Outline {
+  const slides: OutlineSlide[] = [];
+  for (const row of o.slides) {
+    const n = row.origin?.how === "same" ? row.origin.slides[0] : undefined;
+    const idx = n === undefined ? -1 : src.slides.findIndex((s) => s.n === n);
+    if (idx < 0) {
+      slides.push(row);
+      continue;
+    }
+    const rows = rowsForSlide(src.slides[idx]!, { first: idx === 0 && slides.length === 0 });
+    rows.forEach((r, k) => slides.push({ ...r, id: k === 0 ? row.id : r.id, partId: row.partId }));
+  }
+  return finalizeParts({ ...o, slides });
+}
+
+/** Dàn ý "Soạn lại mạch" từ đầu ra thô của AI. */
+export function restructureOutline(raw: unknown, src: Pick<ImportSource, "slides">, minutes: number): { outline: Outline; warnings: string[] } {
+  const { outline, warnings } = normalizeOutline(originsFromAi(raw, src.slides.length), minutes, {
+    sourceKind: "document",
+    sourceText: importSourceText(src),
+  });
+  return { outline: expandVerbatim(outline, src), warnings };
+}
+
+/**
+ * Slide AI viết cho dòng gộp hoặc tách (P26): ghi chú giảng là ghi chú gốc nối theo thứ tự slide, AI không viết lại.
+ * Dòng tách: ghi chú gốc chỉ ở dòng tách đầu tiên (`firstOfSplit`), các dòng sau giữ ghi chú AI viết cho phần của mình.
+ * Slide Chữ và hình chưa có hình thì nhận hình của slide gốc đầu tiên có hình.
+ */
+export function withOriginalNotes(g: GeneratedSlide, row: OutlineSlide, src: Pick<ImportSource, "slides"> | null, firstOfSplit = true): GeneratedSlide {
+  const o = row.origin;
+  if (!src || !o || (o.how !== "merge" && o.how !== "split")) return g;
+  if (o.how === "split" && !firstOfSplit) return g;
+  const config: Record<string, unknown> = { ...g.config };
+  const notes = joinedNotes(src, o.slides);
+  if (notes) config.presenterNote = notes;
+  else delete config.presenterNote;
+  if (g.type === "content" && config.layout === "image" && !config.imageUrl) {
+    const img = o.slides.map((n) => src.slides.find((s) => s.n === n)?.imageUrl).find(Boolean);
+    if (img) Object.assign(config, { imageUrl: img, imageFit: "contain" });
+  }
+  return { ...g, config: g.type === "content" ? (normalizeContentSlideConfig(config) as Record<string, unknown>) : config };
+}
+
+/** Dòng tách đầu tiên của mỗi slide gốc (theo thứ tự dàn ý). */
+export function firstSplitRows(slides: OutlineSlide[]): Set<string> {
+  const seen = new Set<number>();
+  const out = new Set<string>();
+  for (const s of slides) {
+    if (s.origin?.how !== "split") continue;
+    const n = s.origin.slides[0]!;
+    if (!seen.has(n)) out.add(s.id);
+    seen.add(n);
+  }
+  return out;
+}
+
+/**
+ * Ước lượng token của cách "Soạn lại mạch" (hiện ở bước 2): một lần lập dàn ý (đọc cả bài) và viết các slide AI soạn
+ * (khoảng một nửa số slide của thời lượng; slide giữ nguyên không tốn token).
+ */
+export function estimateRestructureTokens(sourceChars: number, maxSlides: number): number {
+  const outline = 1500 + Math.round(Math.min(sourceChars, 24_000) / 2.4) + 2500;
+  return outline + estimateGenerationTokens({ sourceChars, slideCount: Math.ceil(maxSlides / 2) }).total;
+}
+
+// ── Màn đối chiếu (bước 3) ─────────────────────────────────────────────────
+
+/** Slide gốc nào đã có trong dàn ý (nguồn trực tiếp; "dựa trên" không tính là đã dùng). */
+export function coverage(o: Pick<Outline, "slides">, slideCount: number): { used: Set<number>; unused: number[] } {
+  const used = new Set<number>();
+  for (const s of o.slides) if (s.origin && s.origin.how !== "new") for (const n of s.origin.slides) used.add(n);
+  const unused = Array.from({ length: slideCount }, (_, i) => i + 1).filter((n) => !used.has(n));
+  return { used, unused };
+}
+
+/** Các dòng dàn ý dùng hoặc dựa trên slide gốc n. */
+export function rowsUsingSlide(o: Pick<Outline, "slides">, n: number): OutlineSlide[] {
+  return o.slides.filter((s) => s.origin?.slides.includes(n));
+}
+
+/** "Thêm lại vào dàn ý" (P30): slide gốc chưa dùng thành (các) dòng cuối phần cuối bài, dựng như cách "Giữ ý". */
+export function appendBack(o: Outline, src: Pick<ImportSource, "slides">, n: number): Outline {
+  const s = src.slides.find((x) => x.n === n);
+  if (!s) return o;
+  const last = o.parts[o.parts.length - 1]?.id;
+  const rows = rowsForSlide(s, { first: false, how: "back" }).map((r) => ({ ...r, partId: last }));
+  return finalizeParts({ ...o, slides: [...o.slides, ...rows] });
+}
+
+/** Ghi chú giảng của dòng sẽ ra sao, để màn đối chiếu nói rõ (P29). */
+export function notesPlan(row: OutlineSlide, src: Pick<ImportSource, "slides">): "kept" | "joined" | "ai" | "empty" {
+  const o = row.origin;
+  const withNotes = (o?.slides ?? []).filter((n) => src.slides.find((s) => s.n === n)?.notes.trim());
+  if (!o || o.how === "new") return "ai";
+  if (o.how === "merge") return withNotes.length > 1 ? "joined" : withNotes.length ? "kept" : "empty";
+  return withNotes.length ? "kept" : o.how === "split" ? "ai" : "empty";
 }
 
 // ── Báo cáo bước 1 ──────────────────────────────────────────────────────────

@@ -1,15 +1,17 @@
 "use client";
 
-// Nhập bài giảng PowerPoint: bước 1 (đọc file ngay trên trình duyệt, chưa tải lên), bước 2 (chọn cách chuyển),
-// rồi gửi file lên để máy chủ đọc lại, lưu hình và tạo dàn ý. Bản mẫu: docs/mockup/nhap-powerpoint.html.
+// Nhập bài giảng PowerPoint: bước 1 (đọc file ngay trên trình duyệt, chưa tải lên), bước 2 (chọn cách chuyển), gửi file lên
+// để máy chủ đọc lại, lưu hình và dựng dàn ý, bước 3 (đối chiếu slide gốc với dàn ý mới), rồi sang trang dàn ý.
+// Bản mẫu: docs/mockup/nhap-powerpoint.html.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, Sparkles, UploadCloud } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
-import { DURATIONS } from "@/lib/limioLiveOutline";
+import { DURATIONS, slideRange, type Outline } from "@/lib/limioLiveOutline";
 import type { PptxDeck } from "@/lib/pptxImport";
-import type { ImportReport } from "@/lib/limioLivePptx";
+import { appendBack, estimateRestructureTokens, importSourceText, toImportedSlide, type ImportReport } from "@/lib/limioLivePptx";
+import CompareView from "./CompareView";
 
 const MAX_MB = 50;
 
@@ -22,9 +24,18 @@ const ERROR_TEXT: Record<string, string> = {
   file_too_large: `File lớn hơn ${MAX_MB} MB. Trong PowerPoint, dùng chức năng Nén ảnh (Compress Pictures) rồi lưu lại.`,
   unsupported_file_type: "Chỉ nhận file PowerPoint dạng .pptx.",
   import_failed: "Không tạo được bài giảng. Vui lòng thử lại.",
+  deck_has_slides: "Bài giảng này đã có slide nên không đổi cách chuyển được nữa. Hãy sửa trong trang dàn ý.",
+  validation_failed: "Bài trình chiếu quá ít chữ để AI soạn lại mạch. Hãy dùng cách \u201cGiữ ý, làm đẹp lại\u201d.",
+  openai_not_configured: "Hệ thống AI chưa được cấu hình. Hãy dùng cách \u201cGiữ ý, làm đẹp lại\u201d hoặc báo quản trị viên.",
+  global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau, hoặc dùng cách \u201cGiữ ý, làm đẹp lại\u201d.",
+  daily_token_cap: "Bạn đã dùng hết hạn mức AI hôm nay. Cách \u201cGiữ ý, làm đẹp lại\u201d vẫn dùng được vì không cần AI.",
+  monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Cách \u201cGiữ ý, làm đẹp lại\u201d vẫn dùng được vì không cần AI.",
+  empty_outline: "AI chưa soạn được dàn ý. Hãy thử lại.",
+  openai_error: "AI đang bận hoặc gặp lỗi. Vui lòng thử lại sau ít phút.",
+  json_parse_failed: "AI trả lời chưa đúng định dạng. Vui lòng thử lại.",
 };
 
-type Step = 1 | 2;
+type Step = 1 | 2 | 3;
 type Mode = "keep" | "restructure";
 
 interface Read {
@@ -33,6 +44,26 @@ interface Read {
   report: ImportReport;
   /** Ảnh xem nhanh (hình lớn nhất) theo số slide. */
   thumbs: Record<number, string>;
+}
+
+type Ev = { type: string; deckId?: string; error?: string; done?: number; total?: number; images?: number | Record<number, string>; outline?: Outline; warnings?: string[] };
+
+/** Đọc luồng NDJSON (ping … done | error) của các route nhập. */
+async function readEvents(res: Response, on: (ev: Ev) => void): Promise<void> {
+  const reader = res.body!.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (line) on(JSON.parse(line) as Ev);
+    }
+  }
 }
 
 const mb = (n: number) => (n / 1024 / 1024).toLocaleString("vi-VN", { maximumFractionDigits: 1 });
@@ -48,10 +79,19 @@ export default function PptxImportFlow() {
   const [suggested, setSuggested] = useState<number | null>(null);
   const [mode, setMode] = useState<Mode>("keep");
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState<{ done: number; total: number } | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  // Bài nháp tạo ở lần gửi đầu; đổi cách chuyển sau đó dựng lại dàn ý trên chính bài này (không tải file lên lại).
+  const [deckId, setDeckId] = useState<string | null>(null);
+  const [images, setImages] = useState<Record<number, string>>({});
+  // Dàn ý đã dựng theo từng cách và thời lượng: đổi qua lại không gọi AI lần nữa.
+  const [cache, setCache] = useState<Record<string, { outline: Outline; warnings: string[] }>>({});
+  const [current, setCurrent] = useState<{ mode: Mode; outline: Outline; warnings: string[] } | null>(null);
 
   // Giải phóng ảnh xem nhanh khi đổi file hoặc rời trang.
   useEffect(() => () => Object.values(read?.thumbs ?? {}).forEach((u) => URL.revokeObjectURL(u)), [read]);
+
+  const srcSlides = useMemo(() => (read ? read.deck.slides.map((s) => toImportedSlide(s, images[s.n] ?? null)) : []), [read, images]);
+  const sourceChars = useMemo(() => (srcSlides.length ? importSourceText({ slides: srcSlides }).length : 0), [srcSlides]);
 
   const pick = async (file: File | null | undefined) => {
     setError(null);
@@ -84,49 +124,112 @@ export default function PptxImportFlow() {
       setMinutes(m);
       setSuggested(m);
       setRead({ file, deck: parsed.deck, report: importReport(parsed.deck), thumbs });
+      // File mới: bài nháp và các dàn ý cũ không còn đúng.
+      setDeckId(null);
+      setImages({});
+      setCache({});
+      setCurrent(null);
     } finally {
       setReading(false);
     }
   };
 
-  const submit = async () => {
+  /** Dàn ý theo cách `m`: lần đầu tải file lên và tạo bài; sau đó dựng lại trên bài đã tạo, hoặc lấy bản đã dựng. */
+  const showOutline = async (m: Mode) => {
     if (!read) return;
     setError(null);
-    setBusy({ done: 0, total: 0 });
+    setMode(m);
+    const key = `${m}:${minutes}`;
+    const aiText = "AI đang đọc cả bài và soạn lại mạch, thường mất từ 20 đến 60 giây.";
     try {
-      const fd = new FormData();
-      fd.set("file", read.file);
-      fd.set("minutes", String(minutes));
-      fd.set("mode", mode);
-      const res = await fetch(apiUrl("/api/instructor/limio-live/import-pptx"), { method: "POST", body: fd });
-      if (!res.ok || !res.body) {
-        const j = (await res.json().catch(() => null)) as { error?: string } | null;
-        setError(ERROR_TEXT[j?.error ?? ""] ?? ERROR_TEXT.import_failed!);
+      if (!deckId) {
+        setBusy("Đang tải file lên và đọc lại...");
+        const fd = new FormData();
+        fd.set("file", read.file);
+        fd.set("minutes", String(minutes));
+        fd.set("mode", m);
+        const res = await fetch(apiUrl("/api/instructor/limio-live/import-pptx"), { method: "POST", body: fd });
+        if (!res.ok || !res.body) {
+          const j = (await res.json().catch(() => null)) as { error?: string } | null;
+          return setError(ERROR_TEXT[j?.error ?? ""] ?? ERROR_TEXT.import_failed!);
+        }
+        let got: Ev | null = null;
+        let failed: string | null = null;
+        await readEvents(res, (ev) => {
+          if (ev.type === "start" && typeof ev.images === "number" && ev.images > 0) setBusy(`Đang lưu hình 0/${ev.images}...`);
+          else if (ev.type === "progress") setBusy(`Đang lưu hình ${ev.done}/${ev.total}...`);
+          else if (ev.type === "ai") setBusy(aiText);
+          else if (ev.type === "done") got = ev;
+          else if (ev.type === "error") failed = ev.error ?? "import_failed";
+        });
+        const done = got as Ev | null;
+        if (!done?.deckId || !done.outline) return setError(ERROR_TEXT[failed ?? ""] ?? ERROR_TEXT.import_failed!);
+        setDeckId(done.deckId);
+        setImages((done.images as Record<number, string>) ?? {});
+        const entry = { outline: done.outline, warnings: done.warnings ?? [] };
+        setCache((c) => ({ ...c, [key]: entry }));
+        setCurrent({ mode: m, ...entry });
+        setStep(3);
         return;
       }
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = "";
-      let deckId: string | null = null;
-      let failed: string | null = null;
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        let nl: number;
-        while ((nl = buf.indexOf("\n")) >= 0) {
-          const line = buf.slice(0, nl).trim();
-          buf = buf.slice(nl + 1);
-          if (!line) continue;
-          const ev = JSON.parse(line) as { type: string; deckId?: string; error?: string; done?: number; total?: number; images?: number };
-          if (ev.type === "start") setBusy({ done: 0, total: ev.images ?? 0 });
-          else if (ev.type === "progress") setBusy({ done: ev.done ?? 0, total: ev.total ?? 0 });
-          else if (ev.type === "done" && ev.deckId) deckId = ev.deckId;
-          else if (ev.type === "error") failed = ev.error ?? "import_failed";
-        }
+      const cached = cache[key];
+      if (cached) {
+        setBusy("Đang lưu dàn ý...");
+        const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/outline`), {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ outline: cached.outline, minutes }),
+        });
+        if (!res.ok) return setError(ERROR_TEXT.import_failed!);
+        setCurrent({ mode: m, ...cached });
+        setStep(3);
+        return;
       }
-      if (deckId) return router.push(`/instructor/limio-live/${deckId}/outline`);
-      setError(ERROR_TEXT[failed ?? ""] ?? ERROR_TEXT.import_failed!);
+      setBusy(m === "restructure" ? aiText : "Đang dựng dàn ý...");
+      const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/import-mode`), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ mode: m, minutes }),
+      });
+      if (!res.ok || !res.body) {
+        const j = (await res.json().catch(() => null)) as { error?: string } | null;
+        return setError(ERROR_TEXT[j?.error ?? ""] ?? ERROR_TEXT.import_failed!);
+      }
+      let got: Ev | null = null;
+      let failed: string | null = null;
+      await readEvents(res, (ev) => {
+        if (ev.type === "done") got = ev;
+        else if (ev.type === "error") failed = ev.error ?? "import_failed";
+      });
+      const done = got as Ev | null;
+      if (!done?.outline) return setError(ERROR_TEXT[failed ?? ""] ?? ERROR_TEXT.import_failed!);
+      const entry = { outline: done.outline, warnings: done.warnings ?? [] };
+      setCache((c) => ({ ...c, [key]: entry }));
+      setCurrent({ mode: m, ...entry });
+      setStep(3);
+    } catch {
+      setError("Mất kết nối. Vui lòng kiểm tra mạng rồi thử lại.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** "Thêm lại vào dàn ý" (P30): lưu ngay dàn ý mới của bài. */
+  const addBack = async (n: number) => {
+    if (!current || !deckId) return;
+    const outline = appendBack(current.outline, { slides: srcSlides }, n);
+    setBusy("Đang lưu dàn ý...");
+    setError(null);
+    try {
+      const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/outline`), {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ outline, minutes }),
+      });
+      if (!res.ok) return setError(ERROR_TEXT.import_failed!);
+      const entry = { outline, warnings: current.warnings };
+      setCache((c) => ({ ...c, [`${current.mode}:${minutes}`]: entry }));
+      setCurrent({ mode: current.mode, ...entry });
     } catch {
       setError("Mất kết nối. Vui lòng kiểm tra mạng rồi thử lại.");
     } finally {
@@ -135,11 +238,13 @@ export default function PptxImportFlow() {
   };
 
   const r = read?.report;
-  const steps: Array<[Step | 3, string]> = [
+  const steps: Array<[Step | 4, string]> = [
     [1, "Tải file"],
     [2, "Chọn cách chuyển"],
-    [3, "Sửa dàn ý và tạo slide"],
+    [3, "Đối chiếu"],
+    [4, "Sửa dàn ý và tạo slide"],
   ];
+  const tokens = r ? estimateRestructureTokens(sourceChars, slideRange(minutes).max) : 0;
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 pb-24">
@@ -154,20 +259,21 @@ export default function PptxImportFlow() {
         </p>
         <ol className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm" aria-label="Các bước">
           {steps.map(([n, label]) => {
-            const current = n === step;
+            const current_ = n === step;
             const done = n < step;
+            const enabled = n === 1 || (n === 2 && !!read) || (n === 3 && !!current) || (n === 4 && !!deckId);
             return (
               <li key={n}>
                 <button
                   type="button"
-                  disabled={n === 3 || (n === 2 && !read)}
-                  aria-current={current ? "step" : undefined}
-                  onClick={() => n !== 3 && setStep(n)}
-                  className={`inline-flex items-center gap-2 font-medium ${current ? "font-bold text-[rgb(var(--text))]" : "text-muted"}`}
+                  disabled={!enabled || !!busy}
+                  aria-current={current_ ? "step" : undefined}
+                  onClick={() => (n === 4 ? router.push(`/instructor/limio-live/${deckId}/outline`) : setStep(n))}
+                  className={`inline-flex items-center gap-2 font-medium ${current_ ? "font-bold text-[rgb(var(--text))]" : "text-muted"}`}
                 >
                   <span
                     className={`grid h-6 w-6 place-items-center rounded-full border-2 text-xs font-bold ${
-                      current ? "border-brand-600 bg-brand-600 text-white" : done ? "border-brand-600 text-brand-700" : "border-token"
+                      current_ ? "border-brand-600 bg-brand-600 text-white" : done ? "border-brand-600 text-brand-700" : "border-token"
                     }`}
                   >
                     {n}
@@ -349,7 +455,6 @@ export default function PptxImportFlow() {
             />
             <ModeCard
               active={mode === "restructure"}
-              disabled
               onClick={() => setMode("restructure")}
               title="Soạn lại mạch"
               points={[
@@ -357,7 +462,7 @@ export default function PptxImportFlow() {
                 "Được gộp các slide nói cùng một ý, tách slide quá dài, thêm slide tương tác (trắc nghiệm, bình chọn, đám mây từ).",
                 "Ghi chú giảng gốc vẫn giữ nguyên chữ; mỗi slide mới ghi rõ lấy từ slide gốc nào.",
               ]}
-              cost="Đang hoàn thiện ở mốc sau, chưa chọn được."
+              cost={`Dùng AI để đề xuất dàn ý và viết các slide mới, khoảng ${Math.max(1, Math.round(tokens / 1000)).toLocaleString("vi-VN")} nghìn token với file ${r!.slides} slide.`}
             />
           </div>
           {error && (
@@ -369,15 +474,72 @@ export default function PptxImportFlow() {
             {busy && (
               <p className="mr-auto flex items-center gap-2 text-sm text-muted">
                 <Loader2 size={14} className="animate-spin" />
-                {busy.total ? `Đang lưu hình ${busy.done}/${busy.total}...` : "Đang tải file lên và đọc lại..."} Vui lòng không đóng trang.
+                {busy} Vui lòng không đóng trang.
               </p>
             )}
             <button type="button" className="btn-secondary" disabled={!!busy} onClick={() => setStep(1)}>
               Quay lại
             </button>
-            <button type="button" className="btn-primary inline-flex items-center gap-2" disabled={!!busy} onClick={() => void submit()}>
-              {busy ? <Loader2 size={16} className="animate-spin" /> : mode === "restructure" ? <Sparkles size={16} aria-hidden /> : <ArrowRight size={16} aria-hidden />}
-              Tiếp: sửa dàn ý và tạo slide
+            <button type="button" className="btn-primary inline-flex items-center gap-2" disabled={!!busy} onClick={() => void showOutline(mode)}>
+              {busy ? <Loader2 size={16} className="animate-spin" /> : mode === "restructure" ? <Sparkles size={16} aria-hidden /> : null}
+              Tiếp: xem đối chiếu {!busy && <ArrowRight size={16} aria-hidden />}
+            </button>
+          </div>
+        </section>
+      )}
+
+      {step === 3 && read && current && (
+        <section className="space-y-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm sm:p-5" aria-labelledby="s3-h">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <h2 id="s3-h" className="text-lg font-semibold">
+              3. Đối chiếu slide gốc với dàn ý mới
+            </h2>
+            <span className="inline-flex overflow-hidden rounded-lg border border-token text-sm" role="group" aria-label="Cách chuyển">
+              {(["keep", "restructure"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  aria-pressed={current.mode === m}
+                  disabled={!!busy}
+                  onClick={() => current.mode !== m && void showOutline(m)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 ${current.mode === m ? "bg-brand-50 font-bold" : ""} ${m === "restructure" ? "border-l border-token" : ""}`}
+                >
+                  {m === "restructure" && !cache[`restructure:${minutes}`] && <Sparkles size={14} aria-hidden />}
+                  {m === "keep" ? "Giữ ý, làm đẹp lại" : "Soạn lại mạch"}
+                </button>
+              ))}
+            </span>
+          </div>
+          {busy && (
+            <p className="flex items-center gap-2 text-sm text-muted">
+              <Loader2 size={14} className="animate-spin" />
+              {busy}
+            </p>
+          )}
+          {error && (
+            <p role="alert" className="banner-danger text-sm font-medium">
+              {error}
+            </p>
+          )}
+          {current.warnings.length > 0 && (
+            <ul className="banner-info list-disc space-y-0.5 pl-8 text-sm">
+              {current.warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          )}
+          <CompareView slides={srcSlides} outline={current.outline} mode={current.mode} onAddBack={(n) => void addBack(n)} busy={!!busy} />
+          <div className="flex flex-wrap justify-end gap-3">
+            <button type="button" className="btn-secondary" disabled={!!busy} onClick={() => setStep(2)}>
+              Đổi cách chuyển
+            </button>
+            <button
+              type="button"
+              className="btn-primary inline-flex items-center gap-2"
+              disabled={!!busy}
+              onClick={() => router.push(`/instructor/limio-live/${deckId}/outline`)}
+            >
+              Tiếp: sửa dàn ý và tạo slide <ArrowRight size={16} aria-hidden />
             </button>
           </div>
         </section>

@@ -10,7 +10,7 @@ import { coverIdentityFor } from "@/lib/limioLiveCoverIdentity";
 import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
 import { motifAfterRegenerate } from "@/lib/limioLiveMotifs";
 import { partLabel, resolveSourceKind, sanitizeOutline, sanitizeRefs, slideStructures } from "@/lib/limioLiveOutline";
-import { importedSlideFor, sanitizeImportSource } from "@/lib/limioLivePptx";
+import { firstSplitRows, importedSlideFor, sanitizeImportSource, withOriginalNotes } from "@/lib/limioLivePptx";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -135,6 +135,14 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           },
         });
 
+        // Bài nhập từ PowerPoint: slide gộp/tách do AI viết nhận ghi chú giảng gốc nguyên chữ (AI không viết lại ghi chú).
+        if (importSource) {
+          const firstSplit = firstSplitRows(outline.slides);
+          result.slides = result.slides.map((g, k) => {
+            const row = outline.slides[writeIdx[k]!]!;
+            return withOriginalNotes(g, row, importSource, firstSplit.has(row.id));
+          });
+        }
         for (const s of result.slides) if (s.type === "content") s.config = fillCoverIdentity(s.config as Record<string, unknown>, who);
         const byOutlineId = new Map(writeIdx.map((i, k) => [outline.slides[i]!.id, result.slides[k]!]));
 

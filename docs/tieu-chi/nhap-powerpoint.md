@@ -16,7 +16,8 @@ Vì nhánh đã có bố cục Bảng và Biểu đồ, mốc 1 dựng luôn b�
   slideCount, slides: [...] }`, mỗi slide gốc có số thứ tự, tiêu đề, các đoạn có cấp, ghi chú giảng, hình đã lưu, bảng,
   biểu đồ, các cờ "chỉ lấy được chữ" và cờ ẩn. Việc tạo slide (kể cả tạo lại) dựng từ cột này, không đọc lại file.
 - **M3.** Mỗi dòng dàn ý có thể mang nguồn `origin = { slides: number[], how, piece?, pieces?, sig? }`:
-  `how = "same"` (từ một slide gốc), `"merge"` (gộp nhiều slide gốc), `"new"` (mới; `slides` không rỗng nghĩa là
+  `how = "same"` (từ một slide gốc), `"merge"` (gộp nhiều slide gốc), `"split"` (một trong các slide AI tách từ một slide
+  gốc dài), `"new"` (mới; `slides` không rỗng nghĩa là
   "dựa trên"), `"back"` (giảng viên thêm lại một slide gốc chưa dùng). `piece/pieces` khi một slide gốc dài phải chia
   thành nhiều slide Limio. `sig` là dấu của các ý lúc nhập, để biết giảng viên đã sửa các ý của dòng hay chưa.
   `sanitizeOutline` giữ nguyên trường này khi giảng viên lưu dàn ý.
@@ -83,10 +84,12 @@ Vì nhánh đã có bố cục Bảng và Biểu đồ, mốc 1 dựng luôn b�
 - **P24.** AI nhận chữ của mọi slide gốc (đánh số) và đề xuất dàn ý theo mạch cấu trúc (Bìa, Mục tiêu, Mục lục, Hook,
   các phần Nội dung có bìa phần, Tổng kết; buổi 15 phút theo mạch rút gọn), được gộp, tách slide và thêm slide tương tác.
   Mỗi dòng AI trả kèm `from` (các slide gốc dùng) và có thể `basis` (slide gốc làm căn cứ cho slide mới).
-- **P25.** Không tin AI: số slide gốc ngoài khoảng bị bỏ; dòng `from` một slide → "same"; nhiều slide → "merge"; không có →
-  "new" (kèm `basis` nếu có).
-- **P26.** Dòng "same" dựng như cách "Giữ ý" (chữ gốc). Dòng "merge" do AI viết từ các ý của các slide gốc, ghi chú giảng là ghi chú
-  gốc nối theo thứ tự slide (AI không viết lại). Dòng "new" do AI viết, kể cả ghi chú.
+- **P25.** Không tin AI: số slide gốc ngoài khoảng bị bỏ; dòng `from` một slide → "same" (cùng slide gốc đứng một mình ở nhiều
+  dòng → "split"); nhiều slide → "merge"; không có, hoặc slide tương tác → "new" (kèm `from`/`basis` làm căn cứ).
+- **P26.** Dòng "same" được thay bằng (các) dòng dựng như cách "Giữ ý" (tiêu đề và chữ gốc, AI không đặt lại). Dòng "merge" do AI
+  viết từ các ý của các slide gốc, ghi chú giảng là ghi chú gốc nối theo thứ tự slide (AI không viết lại). Dòng "split": ghi chú
+  gốc ở dòng tách đầu tiên, các dòng sau giữ ghi chú AI viết cho phần của mình. Dòng "new" do AI viết, kể cả ghi chú.
+  Slide Chữ và hình của dòng gộp/tách nhận hình của slide gốc đầu tiên có hình.
 - **P27.** Lỗi AI (hết hạn mức, quá tải, hỏng định dạng) báo như luồng tạo từ tài liệu, không tạo bài rỗng.
 
 ## Bước 3: đối chiếu — mốc 2
@@ -97,6 +100,8 @@ Vì nhánh đã có bố cục Bảng và Biểu đồ, mốc 1 dựng luôn b�
   dính đáy màn hình cho biết ghi chú giảng được giữ thế nào.
 - **P30.** Dòng độ phủ "22/24 slide gốc đã được dùng"; mỗi slide gốc chưa dùng có nút "Thêm lại vào dàn ý" (thêm cuối phần
   Tổng kết, nguồn "back", dựng như cách "Giữ ý").
+- **P30b.** Đổi cách chuyển ở đầu bước 3 dựng lại dàn ý trên chính bài đã tạo từ dữ liệu đã đọc (không tải file lại); dàn ý đã
+  dựng theo mỗi cách được giữ trong trang, nên đổi qua lại không gọi AI lần nữa.
 - **P31.** Màn hình hẹp (< 900 px): một cột, có nút chuyển "Slide gốc / Dàn ý mới".
 
 ## Ghi sự kiện, quyền, dung lượng

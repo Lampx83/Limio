@@ -71,6 +71,11 @@ export interface LectureOutlineInput {
   interactiveEvery: number;
   /** "full" (buổi từ 30 phút): có Mục tiêu, Mục lục, slide mở mỗi phần. "compact": buổi ngắn, không có ba thứ đó. */
   structure?: "full" | "compact";
+  /**
+   * Soạn lại mạch một bài trình chiếu có sẵn (nhập PowerPoint): số slide gốc. `sourceText` là chữ các slide, mỗi slide
+   * mở đầu bằng "Slide k:". Mỗi slide của dàn ý trả kèm "from" (slide gốc dùng) và "basis" (slide gốc làm căn cứ).
+   */
+  fromSlides?: number;
 }
 
 export interface RawOutlineSlide {
@@ -81,6 +86,10 @@ export interface RawOutlineSlide {
   layout: string | null;
   title: string;
   points: string[];
+  /** Chỉ khi soạn lại từ bài trình chiếu: các số slide gốc mà slide này lấy nội dung. */
+  from?: number[];
+  /** Chỉ khi soạn lại từ bài trình chiếu: slide mới dựa trên các slide gốc nào. */
+  basis?: number[];
 }
 
 export interface RawOutline {
@@ -88,7 +97,7 @@ export interface RawOutline {
   slides: RawOutlineSlide[];
 }
 
-const outlineSchema = (kind: LectureSourceKind) => ({
+const outlineSchema = (kind: LectureSourceKind, fromSlides = false) => ({
   type: "object",
   additionalProperties: false,
   properties: {
@@ -105,13 +114,23 @@ const outlineSchema = (kind: LectureSourceKind) => ({
           layout: { type: ["string", "null"], enum: [...outlineLayoutsFor(kind), null] },
           title: { type: "string" },
           points: { type: "array", items: { type: "string" } },
+          ...(fromSlides ? { from: { type: "array", items: { type: "integer" } }, basis: { type: "array", items: { type: "integer" } } } : {}),
         },
-        required: ["role", "section", "kind", "layout", "title", "points"],
+        required: ["role", "section", "kind", "layout", "title", "points", ...(fromSlides ? ["from", "basis"] : [])],
       },
     },
   },
   required: ["title", "slides"],
 });
+
+/** Luật riêng khi soạn lại mạch một bài trình chiếu có sẵn: ghi nguồn từng slide, không bỏ ý, giữ chữ gốc. */
+export function fromSlidesRule(count: number): string {
+  return `
+Tài liệu là bài trình chiếu có sẵn của giảng viên gồm ${count} slide; mỗi slide mở đầu bằng "Slide k:", dòng "Ghi chú giảng" là lời giảng viên định nói. Việc của bạn là sắp lại mạch bài cho mạch lạc, không phải viết bài mới.
+9. Mỗi slide ghi "from": các số slide gốc mà slide này lấy nội dung. Giữ nguyên một slide gốc thì ghi đúng một số; gộp các slide gốc nói cùng một ý thì ghi đủ các số đó; tách một slide gốc quá dài thành nhiều slide thì mỗi slide tách ra ghi cùng số đó. Slide mới (mục tiêu, mục lục, hook, slide mở phần, slide tương tác) có "from" là mảng rỗng và ghi vào "basis" các slide gốc làm căn cứ, ví dụ câu hỏi trắc nghiệm về nội dung slide 6 và 7 có "basis" [6, 7]; không có căn cứ thì "basis" rỗng.
+10. Dùng mọi slide gốc có nội dung, mỗi slide gốc ít nhất một lần. Chỉ bỏ slide không mang nội dung (lời cảm ơn, slide "Câu hỏi?", slide trống). Giữ trình tự kiến thức của bài gốc trừ khi đổi chỗ làm mạch rõ hơn.
+11. Slide giữ nguyên một slide gốc thì "title" chép đúng tiêu đề gốc. Slide gộp thì "points" giữ đủ các ý của các slide gốc, không bỏ ý nào. Không thêm kiến thức không có trong bài gốc.`;
+}
 
 /** Mạch bài theo thời lượng: mỗi slide ghi "role" (và "section" với phần nội dung). */
 function structureRule(full: boolean): string {
@@ -185,7 +204,9 @@ export function buildOutlinePrompt(input: LectureOutlineInput): { system: string
   const full = (input.structure ?? (input.minutes >= 30 ? "full" : "compact")) === "full";
   const from =
     kind === "document"
-      ? "từ một tài liệu"
+      ? input.fromSlides
+        ? "từ một bài trình chiếu PowerPoint có sẵn của giảng viên"
+        : "từ một tài liệu"
       : kind === "topic"
         ? "từ mô tả của giảng viên (chủ đề, người học, mục tiêu); bài không có tài liệu gốc"
         : "từ mô tả của giảng viên (chủ đề, người học, mục tiêu) và một số trang tìm trên internet, đánh số [1], [2]...";
@@ -213,7 +234,7 @@ ${layouts}
 4. "points": 1 đến 3 câu hoàn chỉnh (slide "objectives" 2 đến 4 câu; slide "agenda" mảng rỗng), có chủ ngữ và vị ngữ, ngắn gọn (mỗi câu dưới 20 từ). Văn phong khoa học, rõ ràng. KHÔNG viết cụt (không chỉ liệt kê cụm từ). Với "cards" và "steps": mỗi phần tử của "points" có dạng "Tiêu đề ngắn: một câu giải thích đầy đủ.".
 5. ${sourceRule(kind, "outline")}
 6. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu ${kind === "document" ? "tài liệu dùng" : "ngành quen dùng, kèm giải thích tiếng Việt"}).
-7. "title" của cả bài là một cụm danh từ ngắn nêu chủ đề.${audience}
+7. "title" của cả bài là một cụm danh từ ngắn nêu chủ đề.${audience}${input.fromSlides ? fromSlidesRule(input.fromSlides) : ""}
 
 Trả về JSON đúng cấu trúc yêu cầu.`;
   return { system, user: sourceBlock(kind, input.sourceText) };
@@ -244,7 +265,7 @@ export async function generateLectureOutline(
     system,
     user,
     "lecture_outline",
-    outlineSchema(kind),
+    outlineSchema(kind, !!input.fromSlides),
     3500,
   );
   await recordAiUsage(userId, model, inputTokens, outputTokens, db);
