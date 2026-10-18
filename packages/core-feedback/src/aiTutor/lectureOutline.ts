@@ -67,8 +67,6 @@ export interface LectureOutlineInput {
   minutes: number;
   minSlides: number;
   maxSlides: number;
-  /** Cứ bấy nhiêu slide nội dung thì có một slide tương tác. */
-  interactiveEvery: number;
   /** "full" (buổi từ 30 phút): có Mục tiêu, Mục lục, slide mở mỗi phần. "compact": buổi ngắn, không có ba thứ đó. */
   structure?: "full" | "compact";
 }
@@ -102,7 +100,9 @@ const outlineSchema = (kind: LectureSourceKind) => ({
           role: { type: "string", enum: [...OUTLINE_ROLES] },
           section: { type: ["string", "null"] },
           kind: { type: "string", enum: [...OUTLINE_KINDS] },
-          layout: { type: ["string", "null"], enum: [...outlineLayoutsFor(kind), null] },
+          // "quote" luôn có trong lược đồ vì slide kết bài dùng nó ở mọi nguồn (xem closingRule); bài không có tài liệu
+          // dùng nó cho slide nào khác thì normalizeOutline đổi sang bố cục chữ.
+          layout: { type: ["string", "null"], enum: [...new Set([...outlineLayoutsFor(kind), "quote"]), null] },
           title: { type: "string" },
           points: { type: "array", items: { type: "string" } },
         },
@@ -113,24 +113,82 @@ const outlineSchema = (kind: LectureSourceKind) => ({
   required: ["title", "slides"],
 });
 
+/**
+ * Dẫn dắt vào bài (vai trò "hook"): mở bài bằng một kỹ thuật thuyết trình có chủ đích, không phải slide "Giới thiệu". Mô hình chọn MỘT kỹ thuật
+ * hợp chủ đề; kỹ thuật dùng con số hay câu nói chỉ có khi nguồn có thứ đó để dựa vào.
+ */
+function hookRule(kind: LectureSourceKind, full: boolean): string {
+  const techniques = [
+    `Câu hỏi khiêu khích: một câu hỏi lật ngược điều người học vẫn tin là đúng, hoặc chạm vào vấn đề họ đang gặp.`,
+    `Tình huống "Hãy hình dung...": đặt người học vào một tình huống giả định cụ thể, gần với việc học hoặc nghề nghiệp của họ, buộc họ phải chọn cách làm.`,
+    `Nhận định trái trực giác: một khẳng định nghe như nghịch lý mà bài học sẽ giải thích.`,
+    `Câu đố mở: nêu một vấn đề chưa có lời giải ngay; bài học sẽ trả lời ở cuối buổi.`,
+    `Dự đoán nhanh: cho người học đoán kết quả của một hiện tượng hay một cách làm trước khi biết đáp án.`,
+    `Liên hệ trải nghiệm: hỏi về lần gần nhất người học gặp đúng vấn đề của bài.`,
+  ];
+  if (kind === "document") techniques.push(`Con số hoặc câu nói gây sửng sốt: CHỈ khi con số hay câu nói đó có trong tài liệu.`);
+  if (kind === "topic_web") techniques.push(`Con số hoặc câu nói gây sửng sốt: CHỈ khi con số hay câu nói đó có trong các nguồn đã cho, kèm số nguồn.`);
+  const statement = kind === "topic" ? `layout "image"` : `layout "quote" khi đó là một câu hỏi, nhận định hay câu đố đứng riêng ("title" là chính câu đó, "points" mảng rỗng), layout "image" khi đó là một tình huống`;
+  const count = full ? "ĐÚNG 2 slide" : "1 đến 2 slide";
+  return `   - "hook" (phần "Dẫn dắt vào bài"): ${count} mở bài thật ấn tượng, trước khi vào nội dung. Chọn MỘT kỹ thuật hợp nhất với chủ đề và người học:
+${techniques.map((t, i) => `     ${String.fromCharCode(97 + i)}) ${t}`).join("\n")}
+     Slide hook thứ nhất là slide nội dung trình bày kỹ thuật đã chọn (${statement}); tiêu đề ngắn, gợi tò mò, KHÔNG đặt kiểu "Giới thiệu" hay "Mở đầu". Slide hook thứ hai là slide tương tác ("poll", "word_cloud", hoặc "quiz" để dự đoán) thu câu trả lời của cả lớp cho chính câu hỏi hay tình huống đó; chưa giải đáp ngay mà để dành cho phần nội dung hoặc cuối bài.${full ? "" : ` Nếu chỉ dùng 1 slide, đó là slide tương tác mà câu hỏi đã chứa kỹ thuật.`}
+     Tình huống giả định phải rõ là giả định ("Hãy hình dung..."). Không bịa giai thoại có thật, nhân vật có thật hay số liệu.`;
+}
+
+/**
+ * Tổng kết: slide Tóm tắt rồi slide kết bài là một câu đáng nhớ (bố cục Trích dẫn). Câu kết tự viết không bao giờ được
+ * gán cho ai, nên nó dùng được cả ở bài không có tài liệu (nơi Trích dẫn bị loại khỏi các bố cục nội dung).
+ */
+function closingRule(kind: LectureSourceKind, full: boolean): string {
+  const recap = full
+    ? `nêu các điều cần ghi nhớ, đi lại lần lượt các mục tiêu ở slide "objectives"`
+    : `nêu các điều cần ghi nhớ`;
+  const origin =
+    kind === "document"
+      ? `Nếu tài liệu có một câu trích thật sự hợp thì dùng nguyên văn; nếu không, tự viết câu kết. Không bao giờ gán câu tự viết cho bất kỳ ai.`
+      : kind === "topic_web"
+        ? `Nếu các nguồn đã cho có một câu trích thật sự hợp thì dùng nguyên văn, kèm số nguồn; nếu không, tự viết câu kết. Không bao giờ gán câu tự viết cho bất kỳ ai.`
+        : `Tự viết câu kết; không trích lời và không gán câu cho bất kỳ ai. Đây là slide DUY NHẤT của bài được dùng layout "quote".`;
+  return `   - "summary": ĐÚNG 2 slide cuối bài, theo thứ tự:
+     a) Slide tóm tắt, layout "summary", ${recap}.
+     b) Slide kết bài, layout "quote": MỘT câu đáng nhớ để người học mang theo khi rời lớp, đọc lên là thấy đọng lại: một thông điệp có sức gợi, một lời nhắn chạm đến cảm xúc hoặc lời kêu gọi hành động. Nếu hook đặt câu hỏi hay câu đố mở thì câu kết khép lại vòng đó. "title" là chính câu kết, dưới 25 từ, không sáo rỗng; "points" mảng rỗng. ${origin}`;
+}
+
 /** Mạch bài theo thời lượng: mỗi slide ghi "role" (và "section" với phần nội dung). */
-function structureRule(full: boolean): string {
+function structureRule(kind: LectureSourceKind, full: boolean): string {
   const common = `Mỗi slide ghi "role" theo mạch bài. "section" là tên phần (cụm danh từ ngắn) với role "content", giống hệt nhau cho mọi slide của cùng phần; với role khác, "section" là null.`;
   if (full) {
     return `1. ${common} Mạch bài theo đúng thứ tự:
    - "cover": đúng 1 slide đầu, layout "cover"; "points" là một câu nêu giá trị của bài.
    - "objectives": đúng 1 slide, layout "summary", tiêu đề "Mục tiêu của buổi học"; "points" là 2 đến 4 mục tiêu học tập đo được, mỗi mục là câu hoàn chỉnh bắt đầu bằng "Người học" và một động từ quan sát được (giải thích, so sánh, áp dụng, thiết kế...).
    - "agenda": đúng 1 slide, layout "summary", tiêu đề "Nội dung buổi học"; "points" để mảng rỗng (hệ thống tự điền tên các phần).
-   - "hook": 1 đến 2 slide gây chú ý trước khi vào bài: một câu hỏi hoặc một tình huống gắn với trải nghiệm của người học, có thể là slide tương tác "poll" hoặc "word_cloud". Không bịa giai thoại, nhân vật hay số liệu.
+${hookRule(kind, true)}
    - "content": 2 đến 4 phần nội dung. Slide ĐẦU của mỗi phần có layout "section", "title" đúng bằng tên phần, "points" là MỘT câu nêu phần này trả lời câu hỏi gì. Không đặt slide tương tác ngay sau slide mở phần.
-   - "summary": 1 slide cuối, layout "summary", nêu các điều cần ghi nhớ, đi lại lần lượt các mục tiêu ở slide "objectives".`;
+${closingRule(kind, true)}`;
   }
   return `1. ${common} Buổi ngắn nên mạch gọn, theo đúng thứ tự:
    - "cover": đúng 1 slide đầu, layout "cover"; "points" là một câu nêu mục tiêu chính của buổi học, bắt đầu bằng "Sau buổi học, người học".
-   - "hook": 1 slide gây chú ý: một câu hỏi hoặc tình huống gắn với trải nghiệm của người học, có thể là "poll" hoặc "word_cloud". Không bịa giai thoại, nhân vật hay số liệu.
+${hookRule(kind, false)}
    - "content": 2 đến 3 phần nội dung. KHÔNG dùng layout "section" (buổi ngắn không có slide mở phần).
-   - "summary": 1 slide cuối, layout "summary", nêu các điều cần ghi nhớ.
+${closingRule(kind, false)}
    Không có slide "objectives" hay "agenda".`;
+}
+
+/**
+ * Tương tác trong từng phần nội dung (không chỉ ở hook): mỗi phần 1 đến 2 slide, mỗi slide một mục đích sư phạm rõ.
+ * Ba loại cộng tác tốn thời gian lớp học nên vẫn giới hạn mỗi loại một lần cho cả bài.
+ */
+function interactionRule(): string {
+  return `2. Tương tác trong từng phần: MỖI phần nội dung có 1 đến 2 slide tương tác, xen giữa các slide nội dung của phần đó (không ngay sau slide mở phần, không hai slide tương tác liền nhau). Mỗi slide tương tác có một mục đích rõ:
+   - Trước khi giảng một ý: "poll" hoặc "word_cloud" khơi điều người học đã biết, hoặc cho họ dự đoán.
+   - Sau khi giảng một ý: "quiz" kiểm tra hiểu bài bằng một tình huống áp dụng, không hỏi thuộc lòng định nghĩa.
+   - Khi người học cần tự tạo ra sản phẩm: một trong ba loại cộng tác bên dưới.
+   Đổi loại tương tác giữa các phần để bài không lặp một kiểu. Slide tương tác có layout null; "title" là câu hỏi hoặc câu gợi ý bằng một câu hoàn chỉnh; "points" để mảng rỗng. Không đặt slide tương tác ở slide đầu hoặc slide cuối của bài.
+   Ba loại cộng tác sau dùng tiết kiệm, tối đa một slide mỗi loại cho cả bài, và chỉ khi nội dung thật sự hợp (tính vào số slide tương tác của phần, không cộng thêm):
+   - "collaborate_board": cả lớp cùng dán ghi chú ngắn lên một bảng chung (thu ví dụ, vướng mắc, ý tưởng); "title" là lời mời học viên dán.
+   - "draw_it": mỗi học viên vẽ một hình hoặc sơ đồ rồi đăng lên bảng; chỉ dùng khi nội dung có hình dung (quy trình, cấu trúc, mối quan hệ); "title" là yêu cầu vẽ.
+   - "whiteboard": bảng trắng cho cả lớp cùng giải hoặc phác một bài toán, một tình huống; "title" là đề bài hoặc tình huống.`;
 }
 
 const LAYOUT_RULES: Record<string, (kind: LectureSourceKind) => string> = {
@@ -202,15 +260,11 @@ export function buildOutlinePrompt(input: LectureOutlineInput): { system: string
 Nhiệm vụ: đề xuất dàn ý từ ${input.minSlides} đến ${input.maxSlides} slide cho buổi giảng khoảng ${input.minutes} phút. Chỉ viết DÀN Ý (tiêu đề và ý chính), chưa viết nội dung chi tiết.
 
 Quy tắc bắt buộc:
-${structureRule(full)}
-2. Cứ khoảng ${input.interactiveEvery} slide nội dung thì chen một slide tương tác (kind "quiz", "poll" hoặc "word_cloud") để kiểm tra hiểu bài hoặc khơi gợi ý kiến. Slide tương tác có layout null; "title" là câu hỏi hoặc câu gợi ý bằng một câu hoàn chỉnh; "points" để mảng rỗng. Không đặt slide tương tác ở slide đầu hoặc slide cuối của bài.
-   Ba loại cộng tác sau dùng tiết kiệm, tối đa một slide mỗi loại cho cả bài, và chỉ khi nội dung thật sự hợp (thay cho một slide tương tác thường, không cộng thêm):
-   - "collaborate_board": cả lớp cùng dán ghi chú ngắn lên một bảng chung (thu ví dụ, vướng mắc, ý tưởng); "title" là lời mời học viên dán.
-   - "draw_it": mỗi học viên vẽ một hình hoặc sơ đồ rồi đăng lên bảng; chỉ dùng khi nội dung có hình dung (quy trình, cấu trúc, mối quan hệ); "title" là yêu cầu vẽ.
-   - "whiteboard": bảng trắng cho cả lớp cùng giải hoặc phác một bài toán, một tình huống; "title" là đề bài hoặc tình huống.
+${structureRule(kind, full)}
+${interactionRule()}
 3. Slide nội dung (kind "content") chọn layout phù hợp nhất với nội dung:
 ${layouts}
-4. "points": 1 đến 3 câu hoàn chỉnh (slide "objectives" 2 đến 4 câu; slide "agenda" mảng rỗng), có chủ ngữ và vị ngữ, ngắn gọn (mỗi câu dưới 20 từ). Văn phong khoa học, rõ ràng. KHÔNG viết cụt (không chỉ liệt kê cụm từ). Với "cards" và "steps": mỗi phần tử của "points" có dạng "Tiêu đề ngắn: một câu giải thích đầy đủ.".
+4. "points": 1 đến 3 câu hoàn chỉnh (slide "objectives" 2 đến 4 câu; slide "agenda", slide kết bài và slide hook bố cục "quote" để mảng rỗng), có chủ ngữ và vị ngữ, ngắn gọn (mỗi câu dưới 20 từ). Văn phong khoa học, rõ ràng. KHÔNG viết cụt (không chỉ liệt kê cụm từ). Với "cards" và "steps": mỗi phần tử của "points" có dạng "Tiêu đề ngắn: một câu giải thích đầy đủ.".
 5. ${sourceRule(kind, "outline")}
 6. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu ${kind === "document" ? "tài liệu dùng" : "ngành quen dùng, kèm giải thích tiếng Việt"}).
 7. "title" của cả bài là một cụm danh từ ngắn nêu chủ đề.${audience}

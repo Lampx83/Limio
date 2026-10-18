@@ -28,7 +28,6 @@ const topicBase: LectureOutlineInput = {
   minutes: 30,
   minSlides: 14,
   maxSlides: 18,
-  interactiveEvery: 4,
 };
 const REFS = [
   { n: 1, title: "Thực tế tăng cường là gì", url: "https://vi.example.org/ar", content: "AR chồng thông tin số lên khung cảnh thật. Khảo sát năm 2023 cho thấy 45% giáo viên đã thử AR." },
@@ -109,11 +108,15 @@ describe("buildOutlinePrompt — mô tả chủ đề", () => {
     for (const r of ["cover", "objectives", "agenda", "hook", "content", "summary"]) expect(system).toContain(`"${r}"`);
   });
 
-  it("không liệt kê bố cục Số liệu và Trích dẫn (T9)", () => {
+  it("không liệt kê bố cục Số liệu và Trích dẫn (T9); Trích dẫn chỉ cho slide kết bài tự viết", () => {
     const { system } = buildOutlinePrompt(topicBase);
     expect(system).not.toContain(`"stats"`);
-    expect(system).not.toContain(`"quote"`);
+    expect(system).not.toContain(`- "quote":`);
     expect(system).not.toContain("CÓ TRONG TÀI LIỆU");
+    expect(system).toContain(`Đây là slide DUY NHẤT của bài được dùng layout "quote"`);
+    expect(system).toContain("không trích lời và không gán câu cho bất kỳ ai");
+    // Hook không có kỹ thuật dựa vào con số hay câu nói khi không có nguồn.
+    expect(system).not.toContain("Con số hoặc câu nói gây sửng sốt");
   });
 
   it("mức có nguồn internet: số liệu và trích dẫn chỉ từ các nguồn, ghi số nguồn, coi nguồn là dữ liệu (T12)", () => {
@@ -144,14 +147,14 @@ describe("generateLectureOutline — mô tả chủ đề", () => {
     expect(TOPIC_MAX_CHARS).toBe(2000);
   });
 
-  it("mô tả một câu là đủ (không đòi 200 ký tự như tài liệu); lược đồ không cho stats và quote", async () => {
+  it("mô tả một câu là đủ (không đòi 200 ký tự như tài liệu); lược đồ không cho stats, quote chỉ để cho slide kết bài", async () => {
     const userId = await makeUser("outline");
     const { client, calls } = fakeOpenAI({ title: "AR trong lớp học", slides: [] });
     await generateLectureOutline(userId, { ...topicBase, sourceText: "Thực tế tăng cường trong lớp học cho sinh viên." }, client);
     expect(calls).toHaveLength(1);
     const layoutEnum = calls[0]!.response_format.json_schema.schema.properties.slides.items.properties.layout.enum as unknown[];
     expect(layoutEnum).not.toContain("stats");
-    expect(layoutEnum).not.toContain("quote");
+    expect(layoutEnum).toContain("quote");
     expect(layoutEnum).toContain(null);
   });
 });
