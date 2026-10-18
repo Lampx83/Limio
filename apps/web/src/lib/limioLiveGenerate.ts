@@ -194,6 +194,9 @@ export function configFromOutline(osIn: OutlineSlide, sectionNo: string, notes?:
     case "image":
       raw.bullets = pts;
       break;
+    case "list":
+      raw.lines = pts.map((text) => ({ text }));
+      break;
     case "cards":
     case "steps":
       raw.items = items;
@@ -237,6 +240,7 @@ function contentComplete(layout: SlideLayoutId, c: Record<string, any>): boolean
     return cols.length === 2 && cols.every((x) => nonEmpty(x.heading) && x.points.length >= 1);
   }
   if (layout === "image") return Array.isArray(c.bullets) && c.bullets.length >= 1;
+  if (layout === "list") return Array.isArray(c.lines) && c.lines.length >= 1;
   if (layout === "cover" || layout === "section") return nonEmpty(c.subtitle);
   if (layout === "table") {
     const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];

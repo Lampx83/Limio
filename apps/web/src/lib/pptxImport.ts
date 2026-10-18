@@ -21,6 +21,7 @@ import {
 } from "./xmlLite";
 import { Pkg, resolvePath, type Rel } from "./ooxmlPackage";
 import { openWorkbook, type Workbook } from "./xlsxLite";
+import { analyzeShapes, type Box, type LayoutShape, type ShapePara } from "./pptxLayout";
 
 export { resolvePath };
 
@@ -65,6 +66,10 @@ export interface PptxSlide {
   title: string;
   /** Có placeholder tiêu đề thật (không phải đoán từ khối chữ). */
   hasTitlePlaceholder: boolean;
+  /** Dòng dẫn phía trên tiêu đề ("NỘI DUNG 1", tên đơn vị trên bìa); rỗng nếu không có (tiêu chí P38). */
+  kicker: string;
+  /** Dòng ghi nguồn hình ("Nguồn ảnh minh hoạ: …"); rỗng nếu không có (tiêu chí P40). */
+  credit: string;
   subtitle: PptxParagraph[];
   paragraphs: PptxParagraph[];
   notes: string;
@@ -144,16 +149,48 @@ function paragraphText(p: XmlEl, flags: Set<PptxFlag>, raw = false): string {
   return raw ? out.replace(/[ \t\u00a0]+$/gm, "") : tidy(out);
 }
 
-function paragraphsOf(txBody: XmlEl | null, flags: Set<PptxFlag>): PptxParagraph[] {
-  const out: PptxParagraph[] = [];
+/**
+ * Các đoạn của một khối chữ, kèm cỡ chữ, đậm và ký hiệu đầu dòng để đọc bố cục (pptxLayout). `bulletDefault`: placeholder
+ * thân kế thừa gạch đầu dòng từ layout, nên coi là có trừ khi đoạn ghi buNone.
+ */
+function paragraphsOf(txBody: XmlEl | null, flags: Set<PptxFlag>, bulletDefault = false): ShapePara[] {
+  const out: ShapePara[] = [];
   for (const p of childrenNamed(txBody, "p")) {
     const text = paragraphText(p, flags);
     if (!text) continue;
     const pPr = child(p, "pPr");
     const level = Math.max(0, Math.min(8, Number(attr(pPr, "lvl") ?? 0) || 0));
-    out.push({ text, level, numbered: !!child(pPr, "buAutoNum") });
+    const runs = childrenNamed(p, "r").filter((r) => textOf(child(r, "t")).trim());
+    const sizes = runs.map((r) => Number(attr(child(r, "rPr"), "sz"))).filter((n) => Number.isFinite(n) && n > 0);
+    const numbered = !!child(pPr, "buAutoNum");
+    out.push({
+      text,
+      level,
+      numbered,
+      bullet: numbered || !!child(pPr, "buChar") || (bulletDefault && !child(pPr, "buNone")),
+      size: sizes.length ? Math.max(...sizes) : null,
+      bold: runs.length > 0 && runs.every((r) => attr(child(r, "rPr"), "b") === "1"),
+    });
   }
   return out;
+}
+
+const plainPara = (p: PptxParagraph): PptxParagraph => ({ text: p.text, level: p.level, numbered: p.numbered });
+
+/** Đổi toạ độ con của nhóm hình sang toạ độ của nhóm cha (tiêu chí P35). */
+type Tf = (b: Box) => Box;
+const IDENTITY: Tf = (b) => b;
+function groupTf(grp: XmlEl, parent: Tf): Tf {
+  const x = path(grp, "grpSpPr", "xfrm");
+  const n = (el: XmlEl | null, a: string) => Number(attr(el, a)) || 0;
+  const off = child(x, "off");
+  const ext = child(x, "ext");
+  const chOff = child(x, "chOff");
+  const chExt = child(x, "chExt");
+  if (!off || !ext || !chOff || !chExt) return parent;
+  const sx = n(chExt, "cx") ? n(ext, "cx") / n(chExt, "cx") : 1;
+  const sy = n(chExt, "cy") ? n(ext, "cy") / n(chExt, "cy") : 1;
+  return (b) => parent({ x: n(off, "x") + (b.x - n(chOff, "x")) * sx, y: n(off, "y") + (b.y - n(chOff, "y")) * sy, cx: b.cx * sx, cy: b.cy * sy });
 }
 
 /** Vị trí khối trên slide (EMU); null nếu file không ghi (placeholder kế thừa từ layout). */
@@ -165,15 +202,11 @@ function boxOf(el: XmlEl): { x: number; y: number; cx: number; cy: number } | nu
   return { x: Number(attr(off, "x")) || 0, y: Number(attr(off, "y")) || 0, cx: Number(attr(ext, "cx")) || 0, cy: Number(attr(ext, "cy")) || 0 };
 }
 
-interface TextShape {
+interface TextShape extends LayoutShape {
   kind: "title" | "subtitle" | "body";
-  paragraphs: PptxParagraph[];
   isPlaceholder: boolean;
   /** Hình khối vẽ (không phải placeholder hay hộp chữ) có chữ. */
   isDrawnShape: boolean;
-  y: number;
-  x: number;
-  order: number;
 }
 
 interface RawSlide {
@@ -183,9 +216,6 @@ interface RawSlide {
   /** Có hiệu ứng chuyển động hoặc chuyển slide. */
   animated: boolean;
 }
-
-/** Thứ tự đọc: trên xuống, trái sang; khối không ghi vị trí (placeholder) giữ thứ tự gốc và đứng trước. */
-const readingOrder = (a: TextShape, b: TextShape) => a.y - b.y || a.x - b.x || a.order - b.order;
 
 async function readTable(frame: XmlEl, flags: Set<PptxFlag>): Promise<string[][]> {
   const tbl = firstDescendant(frame, "tbl");
@@ -376,7 +406,7 @@ export function readSmartArtXml(root: XmlEl | null): PptxParagraph[] {
   return out;
 }
 
-async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): Promise<RawSlide> {
+async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number, slideH: number): Promise<RawSlide> {
   const root = await pkg.xml(part);
   if (!root) throw new PptxError("not_pptx");
   const rels = await pkg.rels(part);
@@ -390,35 +420,35 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
   let order = 0;
   let fromExcel = 0;
 
-  const areaOf = (el: XmlEl) => {
-    const b = boxOf(el);
+  const areaOf = (el: XmlEl, tf: Tf) => {
+    const raw = boxOf(el);
+    const b = raw ? tf(raw) : null;
     return b && slideArea > 0 ? (b.cx * b.cy) / slideArea : 0;
   };
 
-  const visit = async (el: XmlEl) => {
+  const visit = async (el: XmlEl, tf: Tf) => {
     for (const s of elements(el)) {
       const ln = localName(s.name);
-      if (ln === "grpSp") await visit(s);
+      if (ln === "grpSp") await visit(s, groupTf(s, tf));
       else if (ln === "AlternateContent") {
         const choice = child(s, "Choice");
-        if (choice) await visit(choice);
+        if (choice) await visit(choice, tf);
       } else if (ln === "cxnSp") connectors += 1;
       else if (ln === "sp") {
         const ph = path(s, "nvSpPr", "nvPr", "ph");
         const phType = ph ? (attr(ph, "type") ?? "body") : null;
         if (phType && SKIP_PH.has(phType)) continue;
-        const paragraphs = paragraphsOf(child(s, "txBody"), flags);
-        if (!paragraphs.length) continue;
+        const paras = paragraphsOf(child(s, "txBody"), flags, !!ph && (phType === "body" || phType === "obj"));
+        if (!paras.length) continue;
         const isTextBox = attr(path(s, "nvSpPr", "cNvSpPr"), "txBox") === "1";
         const geom = attr(path(s, "spPr", "prstGeom"), "prst");
-        const b = boxOf(s);
+        const raw = boxOf(s);
         shapes.push({
           kind: phType && TITLE_PH.has(phType) ? "title" : phType === "subTitle" ? "subtitle" : "body",
-          paragraphs,
+          paras,
           isPlaceholder: !!ph,
           isDrawnShape: !ph && !isTextBox && !!geom && geom !== "rect",
-          y: b ? b.y : -1,
-          x: b ? b.x : -1,
+          box: raw ? tf(raw) : null,
           order: order++,
         });
       } else if (ln === "pic") {
@@ -438,7 +468,7 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
           flags.add("image_unsupported");
           continue;
         }
-        imageRefs.push({ target: rel.target, ext: ext === "jpeg" ? "jpg" : ext, area: areaOf(s) });
+        imageRefs.push({ target: rel.target, ext: ext === "jpeg" ? "jpg" : ext, area: areaOf(s, tf) });
       } else if (ln === "graphicFrame") {
         const data = path(s, "graphic", "graphicData");
         const uri = attr(data, "uri") ?? "";
@@ -474,7 +504,7 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
       } else if (ln === "contentPart") flags.add("object");
     }
   };
-  await visit(path(root, "cSld", "spTree") ?? root);
+  await visit(path(root, "cSld", "spTree") ?? root, IDENTITY);
 
   if (shapes.filter((s) => s.isDrawnShape).length >= 3 || connectors > 0) flags.add("shapes");
 
@@ -504,6 +534,8 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
       layoutType,
       title: "",
       hasTitlePlaceholder: false,
+      kicker: "",
+      credit: "",
       subtitle: [],
       paragraphs: [],
       notes,
@@ -543,7 +575,8 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
   if (!pres) throw new PptxError("not_pptx");
   const presRels = await pkg.rels("ppt/presentation.xml");
   const sz = child(pres, "sldSz");
-  const slideArea = (Number(attr(sz, "cx")) || 12192000) * (Number(attr(sz, "cy")) || 6858000);
+  const slideH = Number(attr(sz, "cy")) || 6858000;
+  const slideArea = (Number(attr(sz, "cx")) || 12192000) * slideH;
   const parts = childrenNamed(child(pres, "sldIdLst"), "sldId")
     .map((s) => presRels.get(prefixedAttr(s, "id") ?? ""))
     .filter((r): r is Rel => !!r && !r.external && pkg.has(r.target))
@@ -551,7 +584,7 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
   if (!parts.length) throw new PptxError("no_slides");
 
   const raws: RawSlide[] = [];
-  for (const [i, part] of parts.entries()) raws.push(await readSlide(pkg, part, i + 1, slideArea));
+  for (const [i, part] of parts.entries()) raws.push(await readSlide(pkg, part, i + 1, slideArea, slideH));
 
   // Logo và chân trang tự gõ: lặp ở nhiều slide thì là thiết kế, không phải nội dung.
   const threshold = repeatThreshold(raws.length);
@@ -559,7 +592,7 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
   const textCount = new Map<string, number>();
   for (const r of raws) {
     for (const t of new Set(r.imageRefs.map((x) => x.target))) imgCount.set(t, (imgCount.get(t) ?? 0) + 1);
-    const texts = new Set(r.shapes.filter((s) => !s.isPlaceholder).map((s) => s.paragraphs.map((p) => p.text).join("\n")));
+    const texts = new Set(r.shapes.filter((s) => !s.isPlaceholder).map((s) => s.paras.map((p) => p.text).join("\n")));
     for (const t of texts) textCount.set(t, (textCount.get(t) ?? 0) + 1);
   }
   let droppedRepeatedImages = 0;
@@ -581,26 +614,25 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
 
     const shapes = r.shapes.filter((sh) => {
       if (sh.isPlaceholder || raws.length < 3) return true;
-      const rep = (textCount.get(sh.paragraphs.map((p) => p.text).join("\n")) ?? 0) >= threshold;
+      const rep = (textCount.get(sh.paras.map((p) => p.text).join("\n")) ?? 0) >= threshold;
       if (rep) droppedRepeatedText += 1;
       return !rep;
     });
     const title = shapes.find((sh) => sh.kind === "title");
-    let body = shapes.filter((sh) => sh.kind === "body").sort(readingOrder);
-    if (title) {
-      s.title = title.paragraphs.map((p) => p.text).join(" ");
-      s.hasTitlePlaceholder = true;
-    } else {
-      // Không có placeholder tiêu đề: dòng đầu của khối chữ trên cùng nếu ngắn.
-      const top = body[0];
-      if (top && top.paragraphs[0]!.text.length <= 120 && top.paragraphs.length <= 2) {
-        s.title = top.paragraphs[0]!.text;
-        const rest = top.paragraphs.slice(1);
-        body = rest.length ? [{ ...top, paragraphs: rest }, ...body.slice(1)] : body.slice(1);
-      }
-    }
-    s.subtitle = shapes.filter((sh) => sh.kind === "subtitle").flatMap((sh) => sh.paragraphs);
-    s.paragraphs = body.flatMap((sh) => normalizeLevels(sh.paragraphs));
+    // Không có placeholder tiêu đề: tiêu đề, dòng dẫn, dòng nguồn hình và nhãn đọc theo cỡ chữ và vị trí (pptxLayout).
+    const text = analyzeShapes(
+      shapes.filter((sh) => sh.kind === "body"),
+      { h: slideH },
+      title ? title.paras.map((p) => p.text).join(" ") : undefined,
+    );
+    s.title = text.title;
+    s.hasTitlePlaceholder = !!title;
+    s.kicker = text.kicker;
+    s.credit = text.credit;
+    s.subtitle = shapes.filter((sh) => sh.kind === "subtitle").flatMap((sh) => sh.paras.map(plainPara));
+    s.paragraphs = text.paragraphs;
+    // Bảng tự vẽ bằng hộp chữ giữ dạng bảng như bảng thật (đứng trước bảng thật nếu có cả hai).
+    s.tables = [...text.tables, ...s.tables];
     s.smartArt = normalizeLevels(s.smartArt);
     return s;
   });

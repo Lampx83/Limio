@@ -20,11 +20,15 @@ import {
   dataSlideMetrics,
   fitFontSize,
   layoutRenderScale,
+  LIST_BOX,
+  listFontSize,
+  listTitleFit,
   MIN_FONT_PX,
   resolveLayout,
   stripInline,
   type LayoutColumn,
   type LayoutItem,
+  type ListLine,
   type SlideIconId,
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
@@ -541,6 +545,40 @@ function LayoutBody({
             </div>
           </div>
           {c.imageUrl && c.imageCredit ? (
+            <p className="img-credit" title={`Nguồn ảnh: ${c.imageCredit}`}>
+              Nguồn ảnh: {c.imageCredit}
+            </p>
+          ) : null}
+        </div>
+      );
+    }
+
+    case "list": {
+      // Danh sách: mọi dòng cùng một cỡ chữ, tự co theo tổng độ dài (listFontSize, ≥ 26 px) để slide nhiều chữ vẫn vừa.
+      const lines: ListLine[] = Array.isArray(c.lines) ? c.lines : [];
+      const hasImg = typeof c.imageUrl === "string" && !!c.imageUrl;
+      const fs = listFontSize(lines, title, hasImg);
+      const tf = listTitleFit(title);
+      return (
+        <div className={`ll-list${hasImg ? " img" : ""}`}>
+          <div className="pad">
+            <div className="tx">
+              {title && <Title text={title} maxPx={tf.px} widthPx={LIST_BOX.width} maxLines={Math.max(tf.lines, 1)} />}
+              <ul className="lst" style={{ fontSize: fs.px }}>
+                {lines.map((l, i) => (
+                  <li key={i} className={`a${l.sub ? " sub" : ""}`} style={delay(Math.min(i, 8) + 1)}>
+                    <Inline text={l.text} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {hasImg && (
+              <div className="art a-pop" style={delay(1)}>
+                <SlideImage c={c} px={0} />
+              </div>
+            )}
+          </div>
+          {hasImg && c.imageCredit ? (
             <p className="img-credit" title={`Nguồn ảnh: ${c.imageCredit}`}>
               Nguồn ảnh: {c.imageCredit}
             </p>

@@ -21,6 +21,8 @@ const slide = (o: Partial<ImportedSlide> & { n: number }): ImportedSlide => ({
   hidden: false,
   layoutType: "obj",
   title: "",
+  kicker: "",
+  credit: "",
   subtitle: [],
   paragraphs: [],
   notes: "",
@@ -63,8 +65,9 @@ describe("piecesFor: chọn bố cục bằng quy tắc (P16)", () => {
   });
   it("Section Header → Mở phần; slide chỉ có tiêu đề → Bìa", () => {
     expect(piecesFor(slide({ n: 3, layoutType: "secHead", title: "Phần 2", paragraphs: [P("Bốn mức")] }), { first: false })[0]).toMatchObject({
+      // P38: "Phần 2" là dòng dẫn mở phần; tên phần là dòng nội dung, số phần lấy từ dòng dẫn.
       layout: "section",
-      config: { title: "Phần 2", subtitle: "Bốn mức" },
+      config: { title: "Bốn mức", sectionNumber: "02" },
     });
     expect(piecesFor(slide({ n: 9, title: "Cảm ơn" }), { first: false })[0]!.layout).toBe("cover");
   });
@@ -87,8 +90,10 @@ describe("piecesFor: chọn bố cục bằng quy tắc (P16)", () => {
   it("P15: nhiều ý dài hơn bố cục chứa → chia slide (tiếp), không mất chữ", () => {
     const paragraphs = Array.from({ length: 7 }, (_, i) => P(`Ý số ${i + 1} của slide này được viết thành một câu khá dài để không vừa bố cục Tóm tắt.`));
     const pieces = piecesFor(slide({ n: 8, title: "Nhiều ý", paragraphs }), { first: false });
-    expect(pieces.map((p) => p.layout)).toEqual(["image", "image", "image"]);
-    expect(pieces.map((p) => (p.config as { title: string }).title)).toEqual(["Nhiều ý", "Nhiều ý (tiếp)", "Nhiều ý (tiếp)"]);
+    // P47: nhiều chữ thì bố cục Danh sách; chỉ chia khi ở 26 px vẫn không vừa.
+    expect(pieces.every((p) => p.layout === "list")).toBe(true);
+    expect(pieces.length).toBeLessThanOrEqual(2);
+    expect((pieces[0]!.config as { title: string }).title).toBe("Nhiều ý");
     const text = allText(pieces);
     for (const p of paragraphs) expect(text).toContain(p.text);
   });
@@ -96,8 +101,9 @@ describe("piecesFor: chọn bố cục bằng quy tắc (P16)", () => {
     const long = "Phản hồi hiệu quả trả lời ba câu hỏi: đích đến là gì, em đang ở đâu và bước tiếp theo là gì. Mỗi câu hỏi tương ứng một chức năng riêng của phản hồi trong lớp học.";
     const title = "Tiêu đề ".repeat(20).trim();
     const pieces = piecesFor(slide({ n: 9, title, paragraphs: [P(long)] }), { first: false });
-    const bullets = pieces.flatMap((p) => (p.config as { bullets?: string[] }).bullets ?? []);
-    expect(bullets.every((b) => b.length <= MAX_LEN.bullet)).toBe(true);
+    // P47: không cắt đôi câu: ý dài nằm trọn trong một dòng Danh sách (≤ 200 ký tự), dài hơn nữa mới tách câu.
+    const bullets = pieces.flatMap((p) => ((p.config as { lines?: Array<{ text: string }> }).lines ?? []).map((l) => l.text));
+    expect(bullets.every((b) => b.length <= MAX_LEN.listLine)).toBe(true);
     expect(bullets.join(" ")).toContain("Mỗi câu hỏi tương ứng");
     expect(((pieces[0]!.config as { title: string }).title).length).toBeLessThanOrEqual(MAX_LEN.title);
     expect(allText(pieces).replace(/\s+/g, "")).toContain(title.replace(/\s+/g, "").slice(-30));
@@ -109,9 +115,11 @@ describe("piecesFor: chọn bố cục bằng quy tắc (P16)", () => {
     expect(pieces.length).toBeGreaterThanOrEqual(2);
     expect(pieces.every((p) => (p.config as { head: string[] }).head[0] === "Mức")).toBe(true);
     expect(pieces.flatMap((p) => (p.config as { rows: string[][] }).rows)).toEqual(rows);
+    // P46: bảng rộng hơn 5 cột vẫn giữ dạng bảng, chia theo nhóm cột và lặp cột đầu.
     const wide = piecesFor(slide({ n: 11, title: "Rộng", tables: [[["a", "b", "c", "d", "e", "f"], ["1", "2", "3", "4", "5", "6"]]] }), { first: false });
-    expect(wide[0]!.layout).toBe("image");
-    expect((wide[0]!.config as { bullets: string[] }).bullets).toEqual(["a: b · c · d · e · f", "1: 2 · 3 · 4 · 5 · 6"]);
+    expect(wide.map((p) => p.layout)).toEqual(["table", "table"]);
+    expect(wide.map((p) => (p.config as { head: string[] }).head)).toEqual([["a", "b", "c", "d"], ["a", "e", "f"]]);
+    expect(wide.map((p) => (p.config as { rows: string[][] }).rows)).toEqual([[["1", "2", "3", "4"]], [["1", "5", "6"]]]);
   });
   it("P20: biểu đồ vừa khung giữ số; không vừa → bảng số liệu; chữ thêm sang slide (tiếp)", () => {
     const chart = { type: "bar" as const, title: "", labels: ["Lớp A", "Lớp B"], series: [{ name: "Điểm", values: [7.5, 8] }], unit: "" };
@@ -250,5 +258,64 @@ describe("Excel nhúng dựng thành Biểu đồ/Bảng (E2, E4, E8)", () => {
     expect(report).toMatchObject({ charts: 1, tables: 1, fromExcel: 2 });
     expect(report.warnings.join(" ")).toContain("Slide 3 có đối tượng nhúng");
     expect(importSourceText({ slides: deck.slides.map((s) => toImportedSlide(s, null)) })).toContain("Lớp B 7.25");
+  });
+});
+
+describe("tối ưu theo file thật (P38, P40, P43, P44, P47, P48)", () => {
+  it("P38: bìa nhận dòng dẫn làm tên đơn vị; 'NỘI DUNG 1' → Mở phần số 01", () => {
+    const [cover] = piecesFor(slide({ n: 1, title: "NHẬP MÔN CNGD", kicker: "Nhóm chuyên môn: CNGD", paragraphs: [P("Định nghĩa và phạm vi")] }), { first: true });
+    expect(cover).toMatchObject({ layout: "cover", config: { title: "NHẬP MÔN CNGD", org: "Nhóm chuyên môn: CNGD", subtitle: "Định nghĩa và phạm vi" } });
+    const [sec] = piecesFor(slide({ n: 4, title: "ĐỊNH NGHĨA VỀ CNGD", kicker: "NỘI DUNG 1" }), { first: false });
+    expect(sec).toMatchObject({ layout: "section", config: { title: "ĐỊNH NGHĨA VỀ CNGD", sectionNumber: "01" } });
+  });
+  it("P48: tiêu đề đánh số chỉ có tiêu đề → Mở phần (số tách khỏi tên); slide '2.1 …' không bị coi là mở phần", () => {
+    expect(piecesFor(slide({ n: 9, title: "2. Phân tích chuẩn đầu ra" }), { first: false })[0]).toMatchObject({
+      layout: "section",
+      config: { title: "Phân tích chuẩn đầu ra", sectionNumber: "02" },
+    });
+    expect(piecesFor(slide({ n: 10, title: "2.1 Chi tiết", paragraphs: [P("Một."), P("Hai.")] }), { first: false })[0]!.layout).not.toBe("section");
+  });
+  it("P43: slide cảm ơn hoặc lặp tên bài với vài dòng ngắn → Bìa", () => {
+    expect(piecesFor(slide({ n: 26, title: "Thank you for listening!", paragraphs: [P("Contacts:"), P("Dr. A – Email: a@b.c")] }), { first: false })[0]!.layout).toBe("cover");
+    const closing = piecesFor(slide({ n: 21, title: "NHẬP MÔN CNGD", paragraphs: [P("Biên soạn: TS. A"), P("Trình bày: TS. A")] }), { first: false, deckTitle: "Nhập môn CNGD" });
+    expect(closing[0]!.layout).toBe("cover");
+  });
+  it("P47: slide nhiều ý thành một slide Danh sách (ý con giữ cấp), hình ở ô bên phải; không cắt đôi câu", () => {
+    const paragraphs = [P("Kiến thức chuyên môn"), P("PLO1. Áp dụng kiến thức.", 1), P("PLO2. Phát triển chương trình.", 1), P("Pros"), P("Nền tảng rộng", 1), P("Cons"), P("Chưa nói về AI", 1)];
+    const pieces = piecesFor(slide({ n: 10, title: "2.1 Phân tích", paragraphs, imageUrl: "/api/limio-live-media/u-10.jpg" }), { first: false });
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]).toMatchObject({ layout: "list", config: { imageUrl: "/api/limio-live-media/u-10.jpg" } });
+    const lines = (pieces[0]!.config as { lines: Array<{ text: string; sub?: boolean }> }).lines;
+    expect(lines.map((l) => `${l.sub ? "– " : ""}${l.text}`)).toEqual(paragraphs.map((p) => `${p.level ? "– " : ""}${p.text}`));
+    const long = "Công nghệ được hiểu là một hệ thống bao gồm phương tiện, phương pháp và kỹ năng, được sử dụng để vận dụng các quy luật khách quan, tác động vào đối tượng.";
+    const [one] = piecesFor(slide({ n: 6, title: "1.1", paragraphs: [P(long)] }), { first: false });
+    expect(one).toMatchObject({ layout: "list", config: { lines: [{ text: long }] } });
+  });
+  it("P40: nguồn hình hiện ở chân ô hình khi slide có hình; slide không hiện hình thì bỏ", () => {
+    const withImg = piecesFor(slide({ n: 5, title: "Ảnh", paragraphs: [P("Một.")], imageUrl: "/api/limio-live-media/u-5.jpg", credit: "Nguồn ảnh minh hoạ: Tạo bởi Claude (AI)" }), { first: false });
+    expect(withImg[0]!.config).toMatchObject({ imageCredit: "Tạo bởi Claude (AI)" });
+    const noImg = piecesFor(slide({ n: 4, title: "Mở phần", kicker: "NỘI DUNG 1", credit: "Nguồn ảnh minh hoạ: Tạo bởi Claude (AI)" }), { first: false });
+    expect(JSON.stringify(noImg)).not.toContain("Claude");
+  });
+  it("Mở đầu: slide giữa Bìa và slide Mở phần đầu tiên thành phần Mục tiêu, số phần khớp bài gốc", () => {
+    const src = {
+      slides: [
+        slide({ n: 1, title: "Bài" }),
+        slide({ n: 2, title: "Mục tiêu bài học", paragraphs: [P("Giải thích được A."), P("Phân biệt được B.")] }),
+        slide({ n: 3, title: "Định nghĩa", kicker: "NỘI DUNG 1" }),
+        slide({ n: 4, title: "Ý", paragraphs: [P("Một.")] }),
+      ],
+    };
+    const o = keepOutline(src, "Bài");
+    expect(o.parts.map((p) => p.role)).toEqual(["cover", "objectives", "content"]);
+  });
+  it("P44: Thêm lại chèn slide gốc vào đúng chỗ theo thứ tự gốc", async () => {
+    const { appendBack } = await import("./limioLivePptx");
+    const src = { slides: [slide({ n: 1, title: "Bìa" }), slide({ n: 2, title: "Hai", paragraphs: [P("a.")] }), slide({ n: 3, title: "Ba", paragraphs: [P("b.")] }), slide({ n: 4, title: "Bốn", paragraphs: [P("c.")] })] };
+    const full = keepOutline(src, "Bìa");
+    const without3 = { ...full, slides: full.slides.filter((r) => r.origin?.slides[0] !== 3) };
+    const back = appendBack(without3, src, 3);
+    expect(back.slides.map((r) => r.origin?.slides[0])).toEqual([1, 2, 3, 4]);
+    expect(back.slides[2]!.origin?.how).toBe("back");
   });
 });

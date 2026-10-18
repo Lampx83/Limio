@@ -281,6 +281,17 @@
   .ll-quote .who { display: flex; align-items: center; gap: 14px; font-size: max(26px, calc(30px * var(--fs))); color: var(--smuted); }
   .ll-quote .who i { width: 54px; height: 4px; border-radius: 4px; background: var(--sg); }
   /* 9. Tóm tắt — nhiều dòng thì bộ vẽ thử thêm hai cột (.two), giữ cách cho chữ lớn hơn. */
+  /* Danh sách: slide nhiều chữ nhập từ PowerPoint; cỡ chữ đặt bằng style (listFontSize, LIST_BOX). */
+  .ll-list .pad { padding: 56px 80px; }
+  .ll-list.img .pad { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 48px; }
+  .ll-list .tx { display: flex; flex-direction: column; gap: 28px; min-height: 0; }
+  .ll-list ul.lst { list-style: none; padding: 0; margin: 0; display: grid; gap: .35em; line-height: 1.25; align-content: start; }
+  .ll-list ul.lst li { display: flex; gap: .5em; align-items: flex-start; }
+  .ll-list ul.lst li::before { content: ""; flex: none; width: .4em; height: .4em; border-radius: 50%; background: var(--sgb); margin-top: .43em; }
+  .ll-list ul.lst li.sub { margin-left: 1.5em; color: var(--smuted); }
+  .ll-list ul.lst li.sub::before { width: .3em; height: .3em; margin-top: .48em; background: transparent; border: 2px solid var(--sgb); }
+  .ll-list .art { align-self: stretch; min-height: 0; border-radius: 28px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  .ll-list .img-credit { position: absolute; right: 80px; bottom: 18px; margin: 0; max-width: 560px; font-size: 26px; line-height: 1.2; color: var(--smuted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ll-summary .pad { gap: calc(30px * var(--fs)); }
   .ll-summary .list { display: grid; gap: calc(20px * var(--fs)) 24px; margin: auto 0; }
   .ll-summary .list.two { grid-template-columns: 1fr 1fr; }

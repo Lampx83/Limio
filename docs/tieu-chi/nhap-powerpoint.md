@@ -111,3 +111,47 @@ Vì nhánh đã có bố cục Bảng và Biểu đồ, mốc 1 dựng luôn b�
 - **P33.** Chỉ người có quyền `limio_live.access`; bài tạo ra thuộc người tải lên.
 - **P34.** Hình được xử lý như ảnh của bảng cộng tác (≤ 1.600 px, bỏ EXIF, thumbnail WebP 480/960), lưu ở kho ảnh slide
   Limio-Live (tên file bắt đầu bằng mã người dùng nên tính vào dung lượng của người đó). Chỉ lưu hình được dùng.
+
+## Tối ưu theo file thật (2026-10-18)
+
+File thử: BL_ED2000_0103_Dinh_nghia_Pham_vi_Ver4.pptx (22 slide). Mọi slide dùng layout trống, không có placeholder: chữ nằm
+trong hộp chữ, nhóm hình và hình khối. Các tiêu chí dưới đây áp cho slide không có placeholder tiêu đề (placeholder luôn thắng).
+
+- **P35.** Vị trí của khối nằm trong nhóm hình được đổi sang toạ độ của slide (theo `chOff/chExt` của từng nhóm, lồng nhau),
+  để thứ tự đọc và các quy tắc vị trí đúng với cái giảng viên nhìn thấy.
+- **P36.** Given slide không có placeholder tiêu đề, When đọc, Then tiêu đề là khối chữ ngắn có cỡ chữ lớn nhất (ưu tiên khối ở
+  phần trên slide và chữ đậm; khối có gạch đầu dòng không được chọn). Ví dụ: "NHẬP MÔN CÔNG NGHỆ GIÁO DỤC" (54 pt) chứ không
+  phải "Nhóm chuyên môn: …" (24 pt) nằm phía trên; "NỘI DUNG BÀI HỌC" (36 pt, đầu slide) chứ không phải các mục 40 pt ở giữa.
+- **P37.** Tiêu đề ngắt thành nhiều khối liền nhau ("ĐỊNH NGHĨA VỀ" + "CÔNG NGHỆ GIÁO DỤC") được ghép thành một khi các khối sát
+  nhau theo chiều dọc, chồng nhau theo chiều ngang, cùng kiểu chữ hoa hay thường và cỡ chữ không nhỏ hơn 55% khối lớn nhất.
+- **P38.** Khối chữ nhỏ hơn nằm phía trên tiêu đề là dòng dẫn (kicker): "NỘI DUNG 1", "Nhóm chuyên môn: Công nghệ giáo dục".
+  Slide đầu: dòng dẫn thành tên đơn vị của bìa. Dòng dẫn dạng "Nội dung 1", "Phần 2", "Chương III" làm slide thành slide Mở phần,
+  số phần lấy từ dòng dẫn, tên phần là tiêu đề. Dòng dẫn khác vẫn được giữ, đứng đầu nội dung slide.
+- **P39.** Bỏ chữ trang trí: khối chỉ có số (số trang, số thứ tự "01", "1") và khối chỉ có một ký tự không phải chữ số (ký tự
+  biểu tượng như "z").
+- **P40.** Dòng ghi nguồn hình ("Nguồn ảnh minh hoạ: …", "Nguồn: …", "Ảnh: …") không thành gạch đầu dòng: thành dòng nguồn ở
+  chân slide (`cite`). Dài quá 80 ký tự thì giữ làm một ý để không mất chữ.
+- **P41.** Trong cùng một khối, các đoạn là dòng ngắt của một câu được ghép lại: đoạn trên không có dấu kết câu, không có gạch
+  đầu dòng, và (cả hai viết hoa toàn bộ, hoặc đoạn dưới bắt đầu bằng chữ thường).
+- **P42.** Nhãn và nội dung của nhãn: nhãn là khối đậm, ngắn (≤ 40 ký tự, ≤ 5 từ, không dấu kết câu, không gạch đầu dòng).
+  Khối nội dung nằm cùng hàng bên phải nhãn, hoặc cùng cột bên dưới nhãn, thuộc nhãn gần nhất: nhãn thành ý cấp 1, nội dung
+  thành ý con ("Bản chất: Ứng dụng công nghệ như công cụ hỗ trợ giảng dạy"). Từ 3 nhãn cùng cỡ chữ không có nội dung riêng, nhãn
+  ngắn hẳn (≤ 12 ký tự, ≤ 60% độ dài trung vị của các nhãn còn lại) là nhãn chung, các nhãn còn lại là ý con của nó ("Ví dụ: …").
+- **P43.** Slide không phải slide đầu có tiêu đề trùng tiêu đề slide đầu và tối đa 3 dòng ngắn (≤ 80 ký tự) là slide kết: dựng
+  bằng bố cục Bìa.
+- **P44.** "Thêm lại vào dàn ý" chèn slide gốc vào đúng vị trí theo thứ tự gốc: ngay sau dòng cuối cùng lấy từ slide gốc có số nhỏ
+  hơn (thay cho P30 "cuối phần Tổng kết"), cùng phần với dòng đó.
+- **P45.** Chữ cho AI đọc (cách Soạn lại mạch) ghi cả dòng dẫn, không ghi dòng nguồn hình. Lời nhắc thêm: slide gốc có dòng dẫn
+  "Nội dung n" là slide mở phần, dùng tên của nó làm tên phần; giữ slide tài liệu tham khảo ở cuối bài; hoạt động yêu cầu người
+  học làm là slide tương tác, không phải slide nội dung hay trích dẫn.
+- **P46.** Bảng luôn giữ dạng bảng (thay cho P19 "bảng không vừa thì thành danh sách"): ô dài tới 200 ký tự (cỡ chữ tự co), bảng
+  rộng hơn 5 cột chia theo nhóm cột và lặp cột đầu, nhiều hàng thì chia slide và lặp hàng tiêu đề. Chỉ bảng một cột, hoặc có
+  ô dài hơn 200 ký tự, mới thành danh sách để không mất chữ. Hai hoặc nhiều hộp cao gần bằng nhau đặt cạnh nhau, mỗi hộp có
+  dòng đầu đậm và các gạch đầu dòng, cũng dựng thành bảng (hàng tiêu đề là dòng đầu của các hộp).
+- **P47.** Bố cục mới "Danh sách": tiêu đề và tối đa 12 dòng (ý và ý con) trên cả bề ngang, chữ tự co từ 36 px xuống 26 px, có thể
+  kèm ô hình bên phải. Cách "Giữ ý": danh sách phẳng tối đa 3 ý ngắn vẫn dùng "Chữ và hình"; nhiều ý hơn, có ý con, hoặc có ý dài
+  hơn 140 ký tự thì dùng Danh sách (không cắt đôi câu), nên mỗi slide gốc thường là đúng một slide. Chỉ khi ở 26 px vẫn không
+  vừa mới chia slide "(tiếp)". Giảng viên đổi được sang hoặc từ Danh sách như mọi bố cục, sửa từng dòng và đổi ý ↔ ý con.
+- **P48.** Slide giữa bài chỉ có tiêu đề (hoặc thêm một dòng nối tiêu đề, không phải câu đã kết) là slide Mở phần; tiêu đề đánh số
+  "2. …" cho số phần và tên phần là phần chữ sau số. Các slide giữa Bìa và slide Mở phần đầu tiên thuộc phần Mục tiêu (nếu có
+  slide mục tiêu) hoặc phần Bìa, để số phần khớp bài gốc.

@@ -15,7 +15,20 @@ export const TINY_PNG = Uint8Array.from(
   (c) => c.charCodeAt(0),
 );
 
-export type FxPara = string | { text: string; lvl?: number; num?: boolean };
+export type FxPara = string | { text: string; lvl?: number; num?: boolean; sz?: number; b?: boolean; bu?: boolean };
+
+/** Hộp chữ tự do: toạ độ EMU, cỡ chữ (pt) và đậm áp cho mọi đoạn nếu đặt ở hộp. */
+export interface FxBox {
+  text?: string;
+  paras?: FxPara[];
+  y: number;
+  x?: number;
+  cx?: number;
+  cy?: number;
+  sz?: number;
+  b?: boolean;
+  geom?: string;
+}
 
 export interface FxChart {
   type: "bar" | "hbar" | "line" | "pie" | "doughnut";
@@ -48,7 +61,9 @@ export interface FxSlide {
   titleType?: "title" | "ctrTitle";
   subtitle?: string[];
   body?: FxPara[];
-  textBoxes?: Array<{ text: string; y: number; x?: number }>;
+  textBoxes?: FxBox[];
+  /** Nhóm hình: toạ độ con tính theo chOff/chExt của nhóm. */
+  groups?: Array<{ off: [number, number]; ext: [number, number]; chOff: [number, number]; chExt: [number, number]; boxes: FxBox[] }>;
   notes?: string;
   hidden?: boolean;
   layout?: string;
@@ -69,13 +84,27 @@ const H = 6858000;
 
 const para = (p: FxPara) => {
   const o = typeof p === "string" ? { text: p } : p;
-  const pPr = o.lvl || o.num ? `<a:pPr${o.lvl ? ` lvl="${o.lvl}"` : ""}>${o.num ? '<a:buAutoNum type="arabicPeriod"/>' : ""}</a:pPr>` : "";
-  return `<a:p>${pPr}<a:r><a:rPr lang="vi-VN"/><a:t>${esc(o.text)}</a:t></a:r></a:p>`;
+  const bu = o.num ? '<a:buAutoNum type="arabicPeriod"/>' : o.bu ? '<a:buChar char="•"/>' : "";
+  const pPr = o.lvl || bu ? `<a:pPr${o.lvl ? ` lvl="${o.lvl}"` : ""}>${bu}</a:pPr>` : "";
+  const rPr = `<a:rPr lang="vi-VN"${o.sz ? ` sz="${Math.round(o.sz * 100)}"` : ""}${o.b ? ' b="1"' : ""}/>`;
+  return `<a:p>${pPr}<a:r>${rPr}<a:t>${esc(o.text)}</a:t></a:r></a:p>`;
 };
 
-const sp = (id: number, ph: string | null, paras: FxPara[], opts: { y?: number; x?: number; txBox?: boolean; geom?: string } = {}) => {
+const boxParas = (b: FxBox): FxPara[] =>
+  (b.paras ?? [b.text ?? ""]).map((p) => {
+    const o = typeof p === "string" ? { text: p } : p;
+    return { ...o, sz: o.sz ?? b.sz, b: o.b ?? b.b };
+  });
+
+const sp = (
+  id: number,
+  ph: string | null,
+  paras: FxPara[],
+  opts: { y?: number; x?: number; cx?: number; cy?: number; txBox?: boolean; geom?: string } = {},
+) => {
   const phXml = ph ? `<p:nvPr><p:ph${ph === "body" ? ' idx="1"' : ` type="${ph}"`}/></p:nvPr>` : "<p:nvPr/>";
-  const xfrm = opts.y !== undefined ? `<a:xfrm><a:off x="${opts.x ?? 457200}" y="${opts.y}"/><a:ext cx="8000000" cy="900000"/></a:xfrm>` : "";
+  const xfrm =
+    opts.y !== undefined ? `<a:xfrm><a:off x="${opts.x ?? 457200}" y="${opts.y}"/><a:ext cx="${opts.cx ?? 8000000}" cy="${opts.cy ?? 900000}"/></a:xfrm>` : "";
   const geom = opts.geom ? `<a:prstGeom prst="${opts.geom}"><a:avLst/></a:prstGeom>` : "";
   return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="S${id}"/><p:cNvSpPr${opts.txBox ? ' txBox="1"' : ""}/>${phXml}</p:nvSpPr><p:spPr>${xfrm}${geom}</p:spPr><p:txBody><a:bodyPr/>${paras.map(para).join("")}</p:txBody></p:sp>`;
 };
@@ -103,7 +132,12 @@ export async function buildPptx(slides: FxSlide[]): Promise<Uint8Array> {
     if (s.title !== undefined) tree.push(sp(id++, s.titleType ?? "title", [s.title]));
     if (s.subtitle?.length) tree.push(sp(id++, "subTitle", s.subtitle));
     if (s.body?.length) tree.push(sp(id++, "body", s.body));
-    for (const tb of s.textBoxes ?? []) tree.push(sp(id++, null, [tb.text], { y: tb.y, x: tb.x, txBox: true }));
+    const box = (b: FxBox) => sp(id++, null, boxParas(b), { y: b.y, x: b.x, cx: b.cx, cy: b.cy, txBox: !b.geom, geom: b.geom });
+    for (const tb of s.textBoxes ?? []) tree.push(box(tb));
+    for (const g of s.groups ?? []) {
+      const x = `<a:xfrm><a:off x="${g.off[0]}" y="${g.off[1]}"/><a:ext cx="${g.ext[0]}" cy="${g.ext[1]}"/><a:chOff x="${g.chOff[0]}" y="${g.chOff[1]}"/><a:chExt cx="${g.chExt[0]}" cy="${g.chExt[1]}"/></a:xfrm>`;
+      tree.push(`<p:grpSp><p:nvGrpSpPr><p:cNvPr id="${id++}" name="G"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr>${x}</p:grpSpPr>${g.boxes.map(box).join("")}</p:grpSp>`);
+    }
     for (const [k, t] of (s.shapes ?? []).entries()) tree.push(sp(id++, null, [t], { y: 2000000, x: 500000 + k * 2500000, geom: "roundRect" }));
     tree.push(`<p:sp><p:nvSpPr><p:cNvPr id="${id++}" name="Num"/><p:cNvSpPr/><p:nvPr><p:ph type="sldNum"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:p><a:fld id="{1}" type="slidenum"><a:t>${n}</a:t></a:fld></a:p></p:txBody></p:sp>`);
     if (s.equation) {

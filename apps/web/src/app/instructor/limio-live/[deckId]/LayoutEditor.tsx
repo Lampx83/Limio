@@ -7,6 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
   LAYOUT_META,
+  LIST_MAX_LINES,
   MAX_LEN,
   SLIDE_ICONS,
   SLIDE_LAYOUTS,
@@ -21,6 +22,7 @@ import {
   splitSlideConfig,
   type LayoutColumn,
   type LayoutItem,
+  type ListLine,
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
@@ -987,6 +989,43 @@ export default function LayoutEditor({
                   </div>
                 )}
               </>
+            )}
+
+            {layout === "list" && (
+              <div className="grid gap-2">
+                {((d.lines as ListLine[] | undefined) ?? []).map((l, i) => {
+                  const lines = d.lines as ListLine[];
+                  const patch = (p: Partial<ListLine>) => set({ lines: lines.map((x, k) => (k === i ? { ...x, ...p } : x)) });
+                  return (
+                    <div key={i} className={`grid gap-1.5 ${l.sub ? "ml-6" : ""}`}>
+                      <Field label={l.sub ? `Ý con (dòng ${i + 1})` : `Ý (dòng ${i + 1})`} value={l.text} max={MAX_LEN.listLine} multiline onChange={(v) => patch({ text: v })} onBlur={blur} />
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                        {i > 0 && (
+                          <button type="button" className="font-medium text-brand-700 hover:underline" onClick={() => set({ lines: lines.map((x, k) => (k === i ? { text: x.text, ...(x.sub ? {} : { sub: true }) } : x)) })}>
+                            {l.sub ? "Đổi thành ý chính" : "Đổi thành ý con"}
+                          </button>
+                        )}
+                        {lines.length > 1 && (
+                          <button type="button" className="font-medium text-muted hover:underline" onClick={() => set({ lines: lines.filter((_, k) => k !== i) })}>
+                            Xoá dòng
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {((d.lines as ListLine[] | undefined) ?? []).length < LIST_MAX_LINES ? (
+                  <button
+                    type="button"
+                    className="flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+                    onClick={() => set({ lines: [...((d.lines as ListLine[] | undefined) ?? []), { text: "" }] })}
+                  >
+                    <Plus size={14} /> Thêm ý
+                  </button>
+                ) : (
+                  <p className="text-sm text-faint">Đã đủ {LIST_MAX_LINES} dòng.</p>
+                )}
+              </div>
             )}
 
             {range && (

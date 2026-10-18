@@ -33,14 +33,19 @@ import {
 } from "./limioLiveOutline";
 import {
   ITEM_RANGE,
+  LIST_MAX_LINES,
+  MAX_BULLETS,
   MAX_LEN,
   SLIDE_ICONS,
   convertLayoutConfig,
   dataSlideMetrics,
+  listFontSize,
+  type ListLine,
   normalizeContentSlideConfig,
   sanitizeLayoutConfig,
 } from "./limioLiveSlides";
 import type { PptxChart, PptxDeck, PptxFlag, PptxParagraph, PptxSlide } from "./pptxImport";
+import { SECTION_KICKER } from "./pptxLayout";
 
 // ── Dữ liệu lưu kèm bài ─────────────────────────────────────────────────────
 
@@ -49,6 +54,10 @@ export interface ImportedSlide {
   hidden: boolean;
   layoutType: string | null;
   title: string;
+  /** Dòng dẫn phía trên tiêu đề ("NỘI DUNG 1", tên đơn vị trên bìa); rỗng nếu không có. */
+  kicker: string;
+  /** Dòng ghi nguồn hình; thành dòng nguồn ở chân slide. */
+  credit: string;
   subtitle: string[];
   paragraphs: PptxParagraph[];
   notes: string;
@@ -77,6 +86,8 @@ export function toImportedSlide(s: PptxSlide, imageUrl: string | null): Imported
     hidden: s.hidden,
     layoutType: s.layoutType,
     title: s.title,
+    kicker: s.kicker,
+    credit: s.credit,
     subtitle: s.subtitle.map((p) => p.text),
     paragraphs: s.paragraphs,
     notes: s.notes,
@@ -109,6 +120,8 @@ export function sanitizeImportSource(raw: unknown): ImportSource | null {
         hidden: s.hidden === true,
         layoutType: typeof s.layoutType === "string" ? s.layoutType : null,
         title: str(s.title, 1000),
+        kicker: str(s.kicker, 500),
+        credit: str(s.credit, 500),
         subtitle: (Array.isArray(s.subtitle) ? s.subtitle : []).map((x) => str(x, 2000)).filter(Boolean),
         paragraphs: paras(s.paragraphs),
         notes: str(s.notes),
@@ -130,7 +143,8 @@ export function sanitizeImportSource(raw: unknown): ImportSource | null {
 export function importSourceText(src: Pick<ImportSource, "slides">): string {
   return src.slides
     .map((s) => {
-      const lines = [`Slide ${s.n}: ${s.title}`];
+      // Dòng dẫn ("NỘI DUNG 1") cho AI biết slide mở phần; dòng nguồn hình không cần cho AI (tiêu chí P45).
+      const lines = [`Slide ${s.n}: ${s.kicker ? `${s.kicker} — ` : ""}${s.title}`];
       for (const t of s.subtitle) lines.push(t);
       for (const p of [...s.paragraphs, ...s.smartArt]) lines.push(`${"  ".repeat(p.level)}- ${p.text}`);
       for (const t of s.tables) for (const r of t) lines.push(`| ${r.join(" | ")} |`);
@@ -224,6 +238,8 @@ export function itemsOf(ps: PptxParagraph[]): Item[] {
 /** Một slide Limio dựng từ (một phần của) slide gốc. */
 export interface ImportPiece {
   layout: OutlineLayout;
+  /** Dòng nguồn ở chân slide (nguồn hình của slide gốc). */
+  cite?: string;
   /** Đã qua sanitizeLayoutConfig; chưa có meta (ghi chú, dòng dàn ý). */
   config: Record<string, unknown>;
 }
@@ -281,43 +297,85 @@ function itemPieces(title: string, items: Item[], imageUrl: string | null, opts:
     ];
   }
   const summaryMax = ITEM_RANGE.summary!.max;
-  if (!imageUrl && n >= 4 && items.every((it) => !it.children.length && fits(it.text, head))) {
-    return chunkBalanced(items, summaryMax).map((g, k) => ({
-      layout: "summary" as const,
-      config: sanitizeLayoutConfig("summary", { title: k === 0 ? t0 : contTitle(title), items: g.map((it) => ({ heading: it.text })) }),
-    }));
+  if (!imageUrl && n >= 4 && n <= summaryMax && items.every((it) => !it.children.length && fits(it.text, head))) {
+    return [{ layout: "summary", config: sanitizeLayoutConfig("summary", { title: t0, items: items.map((it) => ({ heading: it.text })) }) }];
   }
-  return bulletPieces(title, items.flatMap((it) => flattenItem(it, MAX_LEN.bullet)), imageUrl, opts.first);
+  // Vừa ô "Chữ và hình" (tối đa 3 ý) thì giữ bố cục có hình; nhiều chữ hơn thì Danh sách, mỗi slide gốc vẫn là một slide (P47).
+  // Không cắt đôi câu: chỉ dùng "Chữ và hình" khi các ý vừa sẵn trong giới hạn của nó.
+  const bullets = items.flatMap((it) => flattenItem(it, MAX_LEN.bullet));
+  const noSplit = items.every((it) => it.text.length <= MAX_LEN.bullet && it.children.every((c) => c.length <= MAX_LEN.bullet));
+  // Có ý con thì Danh sách để giữ cấp ý; "Chữ và hình" chỉ cho danh sách phẳng, ngắn.
+  if (bullets.length <= (MAX_BULLETS.image ?? 3) && noSplit && items.every((it) => !it.children.length))
+    return bulletPieces(title, bullets, imageUrl, opts.first);
+  return listPieces(title, items, imageUrl, opts.first);
+}
+
+/**
+ * Danh sách (P47): ý và ý con giữ nguyên chữ trên cả bề ngang, chữ tự co tới 26 px; hình của slide gốc ở ô bên phải.
+ * Chỉ khi vẫn không vừa mới chia slide "(tiếp)" (hình ở slide đầu).
+ */
+function listPieces(title: string, items: Item[], imageUrl: string | null, first: boolean): ImportPiece[] {
+  const lines: ListLine[] = items.flatMap((it) => [
+    ...splitText(it.text, MAX_LEN.listLine).map((text) => ({ text })),
+    ...it.children.flatMap((c) => splitText(c, MAX_LEN.listLine).map((text) => ({ text, sub: true }))),
+  ]);
+  const titleFor = (k: number) => (k === 0 && first ? title : contTitle(title));
+  const chunks: ListLine[][] = [];
+  let cur: ListLine[] = [];
+  for (const l of lines) {
+    const next = [...cur, l];
+    const k = chunks.length;
+    if (cur.length && (next.length > LIST_MAX_LINES || listFontSize(next, titleFor(k), k === 0 && !!imageUrl).overflow)) {
+      chunks.push(cur);
+      cur = [l];
+    } else cur = next;
+  }
+  if (cur.length) chunks.push(cur);
+  return chunks.map((g, k) => ({
+    layout: "list" as const,
+    config: sanitizeLayoutConfig("list", { title: titleFor(k), lines: g, ...(k === 0 && imageUrl ? { imageUrl, imageFit: "contain" } : {}) }),
+  }));
 }
 
 /** Số trên bảng dựng từ biểu đồ: kiểu Việt Nam, đơn vị % ghi liền. */
 const cellNum = (v: number | null, unit: string) => (isNum(v) ? formatValue(v, unit) : "");
 
-/** Bảng → các slide Bảng (lặp hàng tiêu đề, số hàng mỗi slide theo chỗ trống) hoặc danh sách nếu không vừa khung. */
+/**
+ * Bảng → các slide Bảng, giữ dạng bảng (tiêu chí P19, P46): mỗi slide số hàng vừa chỗ trống và lặp hàng tiêu đề; bảng rộng hơn
+ * 5 cột chia theo nhóm cột, lặp cột đầu. Chỉ bảng một cột hoặc có ô dài quá giới hạn mới thành danh sách (để không mất chữ).
+ */
 function tablePieces(title: string, table: string[][], first: boolean): ImportPiece[] {
   const [head0, ...rows0] = table;
-  const head = head0 ?? [];
-  const cols = Math.max(head.length, ...rows0.map((r) => r.length));
-  const fitsGrid =
-    cols >= TABLE_LIMITS.minCols && cols <= TABLE_LIMITS.maxCols && table.every((r) => r.every((c) => c.length <= MAX_LEN.tableCell));
-  if (!fitsGrid) {
+  const cols = Math.max((head0 ?? []).length, ...rows0.map((r) => r.length));
+  const pad = (r: string[]) => Array.from({ length: cols }, (_, j) => r[j] ?? "");
+  const head = pad(head0 ?? []);
+  const rows = rows0.map(pad);
+  if (cols < TABLE_LIMITS.minCols || table.some((r) => r.some((c) => c.length > MAX_LEN.tableCell))) {
     const line = (r: string[]) => {
       const cells = r.filter((c) => c.trim());
       return cells.length > 1 ? `${cells[0]}: ${cells.slice(1).join(" · ")}` : (cells[0] ?? "");
     };
     return bulletPieces(title, table.map(line).filter(Boolean).flatMap((l) => splitText(l, MAX_LEN.bullet)), null, first);
   }
-  const rows = rows0.length ? rows0 : [];
+  // Nhóm cột: cột đầu (nhãn hàng) lặp ở mọi nhóm khi phải chia.
+  const groups: number[][] =
+    cols <= TABLE_LIMITS.maxCols
+      ? [Array.from({ length: cols }, (_, j) => j)]
+      : chunkBalanced(Array.from({ length: cols - 1 }, (_, j) => j + 1), TABLE_LIMITS.maxCols - 1).map((g) => [0, ...g]);
   const out: ImportPiece[] = [];
-  let i = 0;
-  do {
-    const t = out.length === 0 && first ? title : contTitle(title);
-    const availH = dataSlideMetrics({ title: t }).boxH;
-    let take = Math.min(TABLE_LIMITS.maxRows, rows.length - i);
-    while (take > 1 && tableFontSize(head, rows.slice(i, i + take), DATA_CONTENT_W, availH).overflow) take -= 1;
-    out.push({ layout: "table", config: sanitizeLayoutConfig("table", { title: t, head, rows: rows.slice(i, i + Math.max(take, 0)) }) });
-    i += Math.max(take, 1);
-  } while (i < rows.length);
+  for (const g of groups) {
+    const h = g.map((j) => head[j]!);
+    const rs = rows.map((r) => g.map((j) => r[j]!)).filter((r) => r.some((c) => c.trim()));
+    let i = 0;
+    do {
+      const t = out.length === 0 && first ? title : contTitle(title);
+      const availH = dataSlideMetrics({ title: t }).boxH;
+      let take = Math.min(TABLE_LIMITS.maxRows, rs.length - i);
+      while (take > 1 && tableFontSize(h, rs.slice(i, i + take), DATA_CONTENT_W, availH).overflow) take -= 1;
+      out.push({ layout: "table", config: sanitizeLayoutConfig("table", { title: t, head: h, rows: rs.slice(i, i + Math.max(take, 0)) }) });
+      i += Math.max(take, 1);
+    } while (i < rs.length);
+  }
   return out;
 }
 
@@ -346,7 +404,12 @@ function chartPieces(title: string, c: PptxChart, first: boolean): ImportPiece[]
 }
 
 /** Bìa / Mở phần: dòng đầu (hoặc các dòng ghép bằng " · " nếu vừa) làm phụ đề, phần còn lại sang slide sau. */
-function headPiece(layout: "cover" | "section", title: string, lines: string[]): { piece: ImportPiece; rest: string[] } {
+function headPiece(
+  layout: "cover" | "section",
+  title: string,
+  lines: string[],
+  extra: Record<string, unknown> = {},
+): { piece: ImportPiece; rest: string[] } {
   let subtitle = "";
   let used = 0;
   for (const l of lines) {
@@ -355,23 +418,44 @@ function headPiece(layout: "cover" | "section", title: string, lines: string[]):
     subtitle = next;
     used += 1;
   }
-  return { piece: { layout, config: sanitizeLayoutConfig(layout, { title, subtitle }) }, rest: lines.slice(used) };
+  return { piece: { layout, config: sanitizeLayoutConfig(layout, { title, subtitle, ...extra }) }, rest: lines.slice(used) };
 }
 
 /**
  * Quy tắc chọn bố cục cho một slide gốc (tiêu chí P15–P20). `first`: slide đầu của bài.
  * Luôn trả ít nhất một slide; mọi chữ của slide gốc có mặt trong các slide trả về.
  */
-export function piecesFor(s: ImportedSlide, opts: { first: boolean }): ImportPiece[] {
+const norm = (t: string) => t.toLocaleLowerCase("vi").replace(/\s+/g, " ").trim();
+/** Lời kết: cảm ơn, hỏi đáp. */
+const CLOSING_RE = /(cảm ơn|cám ơn|thank|hỏi đáp|câu hỏi\s*\??$|q\s*&\s*a|questions?\s*\??$)/i;
+/** Tiêu đề đánh số mở phần: "2. Phân tích …", "III. …" (không khớp "2.1 …"). */
+const NUMBERED_TITLE = /^(\d{1,2}|[IVX]{1,4})[.)]\s+(?=\S)/;
+
+/** "1" → "01", "III" giữ nguyên. */
+const sectionNo = (v: string) => (/^\d+$/.test(v) ? v.padStart(2, "0") : v.toUpperCase());
+
+export function piecesFor(s: ImportedSlide, opts: { first: boolean; deckTitle?: string }): ImportPiece[] {
   let title = s.title.trim();
   const lead: PptxParagraph[] = [];
+  let paragraphs = s.paragraphs;
+  // Dòng dẫn "NỘI DUNG 1": slide mở phần, số phần lấy từ dòng dẫn (P38). Tiêu đề chính là "NỘI DUNG 1" mà tên phần nằm ở
+  // dòng đầu của thân thì tên phần là dòng đó.
+  let sectionMatch = SECTION_KICKER.exec(s.kicker.trim());
+  if (!sectionMatch && SECTION_KICKER.test(title) && paragraphs[0] && paragraphs[0].level === 0) {
+    sectionMatch = SECTION_KICKER.exec(title);
+    title = paragraphs[0].text;
+    paragraphs = paragraphs.slice(1);
+  }
+  // Dòng dẫn khác: giữ lại ở đầu nội dung (bìa dùng làm tên đơn vị).
+  const keepKicker = !!s.kicker.trim() && !sectionMatch && !opts.first;
+  if (keepKicker) lead.push({ text: s.kicker.trim(), level: 0, numbered: false });
   if (title.length > MAX_LEN.title) {
     const [head, ...rest] = splitText(title, MAX_LEN.title);
     title = head!;
     lead.push(...rest.map((text) => ({ text, level: 0, numbered: false })));
   }
   if (!title) title = s.charts[0]?.title || `Slide ${s.n}`;
-  const items = itemsOf([...lead, ...s.paragraphs]);
+  const items = itemsOf([...lead, ...paragraphs]);
   const hasData = s.tables.length > 0 || s.charts.length > 0;
   const titleOnly = !items.length && !s.subtitle.length && !hasData && !s.smartArt.length && !s.imageUrl;
   const out: ImportPiece[] = [];
@@ -380,16 +464,32 @@ export function piecesFor(s: ImportedSlide, opts: { first: boolean }): ImportPie
     out.push(...bulletPieces(title, lines.flatMap((l) => splitText(l, MAX_LEN.bullet)), img, false));
   };
 
-  // Slide "Section Header" luôn là slide mở phần, kể cả khi chỉ có tiêu đề.
-  const isSection = !opts.first && s.layoutType === "secHead" && !hasData;
-  if (!isSection && (opts.first || s.layoutType === "title" || titleOnly)) {
-    const lines = [...s.subtitle, ...items.flatMap((it) => [it.text, ...it.children])];
-    const { piece, rest } = headPiece("cover", title, lines);
+  // Slide "Section Header" hoặc có dòng dẫn "Nội dung n" luôn là slide mở phần, kể cả khi chỉ có tiêu đề.
+  const isSection = !opts.first && !hasData && (s.layoutType === "secHead" || !!sectionMatch);
+  const lines = [...s.subtitle, ...items.flatMap((it) => [it.text, ...it.children])];
+  // P43: slide kết (lặp lại tên bài, hoặc lời cảm ơn / hỏi đáp) với vài dòng ngắn dựng bằng bố cục Bìa.
+  const short = !hasData && !s.smartArt.length && lines.length <= 3 && lines.every((l) => l.length <= 80);
+  const closing = !opts.first && short && ((!!opts.deckTitle && norm(title) === norm(opts.deckTitle)) || CLOSING_RE.test(title));
+  // P48: slide giữa bài chỉ có tiêu đề (và tối đa một dòng ngắn, không hình) là slide mở phần; tiêu đề đánh số "2. …" cho số phần.
+  // Dòng duy nhất phải là phần nối của tiêu đề (không phải một câu đã kết), không thì đó là slide nội dung một ý.
+  const numbered = NUMBERED_TITLE.exec(title);
+  const tailOnly = lines.length === 1 && lines[0]!.length <= 60 && !/[.!?…:;]$/.test(lines[0]!.trim());
+  const opener =
+    !opts.first && !closing && !hasData && !s.smartArt.length && !s.imageUrl && (lines.length === 0 || tailOnly || (!!numbered && lines.length <= 1));
+  if (opener && !isSection) {
+    const name = numbered ? title.slice(numbered[0].length).trim() || title : title;
+    const { piece, rest } = headPiece("section", name, lines, numbered ? { sectionNumber: sectionNo(numbered[1]!) } : {});
+    out.push(piece);
+    restAsBullets(rest);
+  } else if (!isSection && (opts.first || s.layoutType === "title" || titleOnly || closing)) {
+    const org = opts.first && s.kicker.trim().length <= MAX_LEN.org ? s.kicker.trim() : "";
+    const coverLines = opts.first && !org && s.kicker.trim() ? [s.kicker.trim(), ...lines] : lines;
+    const { piece, rest } = headPiece("cover", title, coverLines, org ? { org } : {});
     out.push(piece);
     restAsBullets(rest);
   } else if (isSection) {
-    const lines = [...s.subtitle, ...items.flatMap((it) => [it.text, ...it.children])];
-    const { piece, rest } = headPiece("section", title, lines);
+    const no = sectionMatch?.[2];
+    const { piece, rest } = headPiece("section", title, lines, no ? { sectionNumber: sectionNo(no) } : {});
     out.push(piece);
     restAsBullets(rest, s.imageUrl);
   } else if (hasData) {
@@ -417,6 +517,15 @@ export function piecesFor(s: ImportedSlide, opts: { first: boolean }): ImportPie
       out.push(...itemPieces(title, all, s.imageUrl, { first: true, preferSteps: numbered }));
     }
   }
+  // P40: nguồn hình thành dòng nguồn ở chân slide có hình (hoặc slide đầu); dài quá thì giữ làm một ý để không mất chữ.
+  const credit = s.credit.trim();
+  if (credit) {
+    // Slide có hình: nguồn hình hiện ở chân ô hình ("Nguồn ảnh: …"), bỏ phần nhãn trùng lặp; không có hình: dòng nguồn ở chân slide.
+    const withImg = out.find((p) => (p.config as { imageUrl?: string }).imageUrl);
+    const bare = credit.replace(/^[^:：]{1,40}[:：]\s*/, "");
+    if (withImg && bare && bare.length <= MAX_LEN.imageCredit) (withImg.config as Record<string, unknown>).imageCredit = bare;
+    // Slide Limio không hiện hình nào: dòng nguồn hình không còn gì để ghi nguồn, bỏ đi (vẫn còn trong dữ liệu đã đọc).
+  }
   return out;
 }
 
@@ -433,6 +542,9 @@ export function pointsOf(p: ImportPiece): string[] {
       break;
     case "image":
       pts = c.bullets ?? [];
+      break;
+    case "list":
+      pts = (c.lines ?? []).map((l: ListLine) => (l.sub ? `– ${l.text}` : l.text));
       break;
     case "cards":
     case "steps":
@@ -471,7 +583,7 @@ export function pointsSig(points: string[]): string {
 }
 
 /** Các dòng dàn ý dựng từ một slide gốc (một dòng mỗi slide Limio). */
-export function rowsForSlide(s: ImportedSlide, opts: { first: boolean; how?: "same" | "back" }): OutlineSlide[] {
+export function rowsForSlide(s: ImportedSlide, opts: { first: boolean; how?: "same" | "back"; deckTitle?: string }): OutlineSlide[] {
   const pieces = piecesFor(s, opts);
   return pieces.map((p, k) => {
     const points = pointsOf(p);
@@ -494,8 +606,19 @@ export function rowsForSlide(s: ImportedSlide, opts: { first: boolean; how?: "sa
 
 /** Cách "Giữ ý": mỗi slide gốc thành (các) dòng dàn ý theo đúng thứ tự, chia phần như dàn ý cũ (P14, P21). */
 export function keepOutline(src: Pick<ImportSource, "slides">, title: string): Outline {
-  const slides = src.slides.flatMap((s, i) => rowsForSlide(s, { first: i === 0 }));
+  const deckTitle = src.slides[0]?.title;
+  const slides = src.slides.flatMap((s, i) => rowsForSlide(s, { first: i === 0, deckTitle }));
   const o = finalizeParts(inferParts({ title: stripEmoji(title).slice(0, OUTLINE_LIMITS.title), slides }));
+  // Các slide giữa Bìa và slide Mở phần đầu tiên (Nội dung bài học, Mục tiêu) không phải một phần Nội dung: thành phần Mục
+  // tiêu nếu có slide mục tiêu, không thì thuộc phần Bìa. Nhờ vậy số phần trên bìa phần khớp số trong bài gốc.
+  const firstContent = o.parts.find((p) => p.role === "content");
+  const hasOpeners = o.slides.some((x) => x.layout === "section");
+  if (firstContent && hasOpeners && o.slides.find((x) => x.partId === firstContent.id)?.layout !== "section") {
+    const rows = o.slides.filter((x) => x.partId === firstContent.id);
+    const cover = o.parts.find((p) => p.role === "cover");
+    if (rows.some((x) => /mục tiêu|objective|learning outcome/i.test(x.title))) Object.assign(firstContent, { role: "objectives", name: "" });
+    else if (cover) for (const x of rows) x.partId = cover.id;
+  }
   // Phần Nội dung không mở bằng slide Mở phần được đặt tên chung ("Phần 1"); tên đó sẽ hiện trên mục lục của bìa phần,
   // nên lấy tiêu đề slide đầu của phần (chữ của giảng viên) thay cho tên tự đặt.
   const content = o.parts.filter((p) => p.role === "content");
@@ -533,7 +656,7 @@ export function importedSlideFor(row: OutlineSlide, src: Pick<ImportSource, "sli
   const idx = src.slides.findIndex((s) => s.n === o.slides[0]);
   if (idx < 0) return null;
   const s = src.slides[idx]!;
-  const pieces = piecesFor(s, { first: idx === 0 && o.how === "same" });
+  const pieces = piecesFor(s, { first: idx === 0 && o.how === "same", deckTitle: src.slides[0]?.title });
   const k = Math.min(Math.max((o.piece ?? 1) - 1, 0), pieces.length - 1);
   const piece = pieces[k]!;
   const notes = k === 0 ? joinedNotes(src, [s.n]) : "";
@@ -542,6 +665,7 @@ export function importedSlideFor(row: OutlineSlide, src: Pick<ImportSource, "sli
     aiGenerated: true,
     ...(notes ? { presenterNote: notes } : {}),
     ...(s.hidden ? { hidden: true } : {}),
+    ...(piece.cite ? { cite: piece.cite } : {}),
   };
 
   let config: Record<string, unknown>;
@@ -607,7 +731,7 @@ export function expandVerbatim(o: Outline, src: Pick<ImportSource, "slides">): O
       slides.push(row);
       continue;
     }
-    const rows = rowsForSlide(src.slides[idx]!, { first: idx === 0 && slides.length === 0 });
+    const rows = rowsForSlide(src.slides[idx]!, { first: idx === 0 && slides.length === 0, deckTitle: src.slides[0]?.title });
     rows.forEach((r, k) => slides.push({ ...r, id: k === 0 ? row.id : r.id, partId: row.partId }));
   }
   return finalizeParts({ ...o, slides });
@@ -683,9 +807,15 @@ export function rowsUsingSlide(o: Pick<Outline, "slides">, n: number): OutlineSl
 export function appendBack(o: Outline, src: Pick<ImportSource, "slides">, n: number): Outline {
   const s = src.slides.find((x) => x.n === n);
   if (!s) return o;
-  const last = o.parts[o.parts.length - 1]?.id;
-  const rows = rowsForSlide(s, { first: false, how: "back" }).map((r) => ({ ...r, partId: last }));
-  return finalizeParts({ ...o, slides: [...o.slides, ...rows] });
+  // P44: chèn sau dòng cuối cùng lấy từ slide gốc có số nhỏ hơn, cùng phần với dòng đó; không có thì sau slide Bìa.
+  let at = -1;
+  o.slides.forEach((row, i) => {
+    if (row.origin && row.origin.how !== "new" && row.origin.slides.some((m) => m < n)) at = i;
+  });
+  if (at < 0) at = o.slides.findIndex((row) => o.parts.find((p) => p.id === row.partId)?.role === "cover");
+  const partId = (o.slides[at] ?? o.slides[0])?.partId;
+  const rows = rowsForSlide(s, { first: false, how: "back", deckTitle: src.slides[0]?.title }).map((r) => ({ ...r, partId }));
+  return finalizeParts({ ...o, slides: [...o.slides.slice(0, at + 1), ...rows, ...o.slides.slice(at + 1)] });
 }
 
 /** Ghi chú giảng của dòng sẽ ra sao, để màn đối chiếu nói rõ (P29). */
@@ -705,7 +835,7 @@ const PLACEHOLDER_URL = "/api/limio-live-media/__placeholder__";
 export function slidesNeedingImage(slides: PptxSlide[]): boolean[] {
   return slides.map((s, i) => {
     if (!s.images.length) return false;
-    return piecesFor(toImportedSlide(s, PLACEHOLDER_URL), { first: i === 0 }).some((p) => (p.config as { imageUrl?: string }).imageUrl === PLACEHOLDER_URL);
+    return piecesFor(toImportedSlide(s, PLACEHOLDER_URL), { first: i === 0, deckTitle: slides[0]?.title }).some((p) => (p.config as { imageUrl?: string }).imageUrl === PLACEHOLDER_URL);
   });
 }
 

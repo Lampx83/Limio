@@ -21,6 +21,8 @@ const slide = (n: number, title: string, o: Partial<ImportedSlide> = {}): Import
   hidden: false,
   layoutType: "obj",
   title,
+  kicker: "",
+  credit: "",
   subtitle: [],
   paragraphs: [],
   notes: "",
