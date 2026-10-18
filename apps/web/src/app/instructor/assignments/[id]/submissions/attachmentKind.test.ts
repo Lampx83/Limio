@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectAttachmentKind, googleEmbedUrl } from "./attachmentKind";
+import { detectAttachmentKind, googleEmbedUrl, internalMediaPath } from "./attachmentKind";
 
 // Acceptance criteria (xem hàm detectAttachmentKind):
 //  Given file nộp qua upload nội bộ (/api/assignment-media/...)
@@ -15,6 +15,16 @@ describe("detectAttachmentKind", () => {
   it("nhận PDF nội bộ có query/hash", () => {
     expect(detectAttachmentKind("/api/assignment-media/abc123.PDF?x=1")).toBe("pdf");
     expect(detectAttachmentKind("/api/assignment-media/abc123.pdf#page=2")).toBe("pdf");
+  });
+
+  it("nhận PDF nội bộ lưu dạng URL tuyệt đối", () => {
+    expect(
+      detectAttachmentKind("https://limio.hust.edu.vn/api/assignment-media/abc-123.pdf"),
+    ).toBe("pdf");
+    expect(internalMediaPath("https://limio.hust.edu.vn/api/assignment-media/a.pdf?x=1")).toBe(
+      "/api/assignment-media/a.pdf?x=1",
+    );
+    expect(internalMediaPath("https://example.com/other/a.pdf")).toBeNull();
   });
 
   it("PDF ở domain ngoài chỉ là link", () => {

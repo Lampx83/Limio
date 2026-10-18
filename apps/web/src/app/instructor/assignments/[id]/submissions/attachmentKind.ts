@@ -55,15 +55,38 @@ export function googleEmbedUrl(url: string): string | null {
   return null;
 }
 
+const INTERNAL_MEDIA_PREFIX = "/api/assignment-media/";
+
+/**
+ * File nộp qua upload nội bộ có thể được lưu dạng đường dẫn tương đối hoặc URL
+ * tuyệt đối (https://<domain>/api/assignment-media/...). Trả về đường dẫn
+ * tương đối (cùng origin với trang chấm) cho cả hai; null nếu không phải file
+ * nội bộ. Chỉ lấy pathname+query nên URL host lạ không bao giờ vào iframe.
+ */
+export function internalMediaPath(url: string): string | null {
+  if (url.startsWith(INTERNAL_MEDIA_PREFIX)) return url;
+  try {
+    const u = new URL(url);
+    if (
+      (u.protocol === "https:" || u.protocol === "http:") &&
+      u.pathname.startsWith(INTERNAL_MEDIA_PREFIX)
+    )
+      return u.pathname + u.search + u.hash;
+  } catch {
+    /* không phải URL tuyệt đối */
+  }
+  return null;
+}
+
 /**
  * Chọn cách hiện file đính kèm của bài nộp trong màn hình chấm.
  *
- * PDF chỉ nhúng khi là file nộp qua upload nội bộ (đường dẫn tương đối):
+ * PDF chỉ nhúng khi là file nộp qua upload nội bộ (/api/assignment-media/...):
  * site ngoài có thể chặn iframe hoặc ép tải về, và GV không nên bị dẫn tới
  * trang lạ ngay trong khung chấm bài.
  */
 export function detectAttachmentKind(url: string): AttachmentKind {
   if (googleEmbedUrl(url)) return "google";
-  if (PDF_EXT.test(url)) return url.startsWith("/") ? "pdf" : "link";
+  if (PDF_EXT.test(url)) return internalMediaPath(url) ? "pdf" : "link";
   return detectMediaKind(url);
 }
