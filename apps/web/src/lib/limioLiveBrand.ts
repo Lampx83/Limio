@@ -377,7 +377,7 @@ export function logoVisibleOn(show: BrandShow, role: SlideRole): boolean {
 }
 
 /** Chiều cao logo trên khung thiết kế 1280×720 (px). */
-export const LOGO_PX: Record<BrandSize, number> = { s: 44, m: 64, l: 92 };
+export const LOGO_PX: Record<BrandSize, number> = { s: 32, m: 44, l: 60 };
 export const LOGO_MARGIN_PX = 36;
 
 /**

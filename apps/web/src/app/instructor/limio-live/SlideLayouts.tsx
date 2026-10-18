@@ -39,7 +39,8 @@ import {
   frameHeightForContent,
   imageArtWidth,
   keepHyphenated,
-  logoShiftNeeded,
+  LOGO_SHIFT_MAX,
+  logoShiftFor,
   logoShiftPx,
   measureContentBox,
   pickFontStep,
@@ -137,43 +138,56 @@ export function LayoutSlideView({
     };
     const run = () => {
       if (!alive) return;
-      // Chỗ gốc (chữ cỡ gốc, chưa nhường logo): biết nội dung có chạm dải logo không.
-      setVars(1, 0);
-      const box0 = measureContentBox(root);
-      const sh = logoShiftNeeded(box0, band) ? logoShiftPx(band) : 0;
+      // Ở mỗi bậc cỡ chữ, dịch khung nội dung khỏi dải logo đúng phần bị lấn ở bậc đó (đo lại vì khối căn giữa chỉ dời nửa
+      // khoảng dịch, nên cộng dồn vài lần). Tính riêng từng bậc để phần tràn do chữ dài không bị nhầm thành chỗ phải nhường cho logo.
+      const shiftAt = (f: number) => {
+        let sh = 0;
+        setVars(f, 0);
+        let box = measureContentBox(root);
+        for (let i = 0; i < 6 && sh < LOGO_SHIFT_MAX; i++) {
+          const more = logoShiftFor(box, band);
+          if (!more) break;
+          sh = Math.min(LOGO_SHIFT_MAX, sh + more);
+          setVars(f, sh);
+          box = measureContentBox(root);
+        }
+        return { sh, box };
+      };
       if (zoomed) {
         // Đang phóng to: giữ chữ cỡ gốc, chỉ đo chiều cao khung; hệ số co giữ giá trị cũ.
-        setVars(1, sh);
-        setFrameH(frameHeightForContent(measureContentBox(root)));
+        const z = shiftAt(1);
+        setFrameH(frameHeightForContent(z.box));
         setFs(1);
-        setShift(sh);
+        setShift(z.sh);
         return;
       }
       const safe = safeAreaFor(band);
       // Tóm tắt nhiều dòng: thử một cột rồi hai cột, giữ cách cho chữ lớn hơn.
       const list = root.querySelector<HTMLElement>(".ll-summary .list");
       const variants: Array<1 | 2> = list && list.children.length >= 4 ? [1, 2] : [1];
-      let best: FontFit | null = null;
-      let bestCols: 1 | 2 = 1;
+      let best: (FontFit & { sh: number; cols: 1 | 2 }) | null = null;
       for (const n of variants) {
         list?.classList.toggle("two", n === 2);
+        const shifts = new Map<number, number>();
+        const measureAt = (f: number) => {
+          const r = shiftAt(f);
+          shifts.set(f, r.sh);
+          return r.box;
+        };
         // Bìa có cỡ chữ riêng từng kiểu, không theo --fs: chỉ đo một lần.
         const r: FontFit =
-          layout === "cover"
-            ? (setVars(1, sh), (() => { const box = measureContentBox(root); return { fs: 1, fits: boxFits(box, safe), box }; })())
-            : pickFontStep((f) => (setVars(f, sh), measureContentBox(root)), safe);
-        if (!best || betterFit(best, r) !== best) {
-          best = r;
-          bestCols = n;
-        }
+          layout === "cover" ? (() => { const box = measureAt(1); return { fs: 1, fits: boxFits(box, safe), box }; })() : pickFontStep(measureAt, safe);
+        if (!best || betterFit(best, r) !== best) best = { ...r, sh: shifts.get(r.fs) ?? 0, cols: n };
       }
-      list?.classList.toggle("two", bestCols === 2);
-      setVars(best!.fs, sh);
-      setFs(best!.fs);
-      setCols(bestCols);
-      setShift(sh);
-      setFrameH(frameHeightForContent(box0));
-      setFitK(best!.fits ? 1 : fitScaleForBox(best!.box, safe));
+      const b = best!;
+      list?.classList.toggle("two", b.cols === 2);
+      // Chiều cao khung khi phóng to (chữ cỡ gốc), rồi trả về bậc đã chọn.
+      setFrameH(frameHeightForContent(shiftAt(1).box));
+      setVars(b.fs, b.sh);
+      setFs(b.fs);
+      setCols(b.cols);
+      setShift(b.sh);
+      setFitK(b.fits ? 1 : fitScaleForBox(b.box, safe));
     };
     run();
     // Phông chữ tải xong có thể đổi số dòng của chữ: đo lại một lần.
@@ -663,12 +677,13 @@ function LayoutBody({
       const src = sourceLine(c.source);
       const head: string[] = Array.isArray(c.head) ? c.head : [];
       const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
+      const tf = tableFontSize(head, rows, DATA_CONTENT_W - 20, m.boxH);
       return (
         <div className={layout === "table" ? "ll-table" : "ll-chart"}>
           <div className="pad">
             {title && <Title text={title} maxPx={m.titlePx} widthPx={DATA_CONTENT_W} maxLines={2} oneLine={false} />}
             {layout === "table" ? (
-              <TableView head={head} rows={rows} px={tableFontSize(head, rows, DATA_CONTENT_W - 20, m.boxH).px} />
+              <TableView head={head} rows={rows} px={tf.px} padY={tf.padY} />
             ) : (
               <ChartView cfg={c} width={DATA_CONTENT_W} height={m.boxH} />
             )}

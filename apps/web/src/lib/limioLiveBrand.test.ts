@@ -188,12 +188,12 @@ describe("luật hiện logo", () => {
 
 describe("chỗ của logo trên khung 1280×720", () => {
   it("vị trí theo góc và chiều cao theo cỡ", () => {
-    expect(logoPlacement("tr", "m")).toEqual({ height: 64, top: 36, right: 36 });
-    expect(logoPlacement("bl", "l")).toEqual({ height: 92, bottom: 36, left: 36 });
+    expect(logoPlacement("tr", "m")).toEqual({ height: 44, top: 36, right: 36 });
+    expect(logoPlacement("bl", "l")).toEqual({ height: 60, bottom: 36, left: 36 });
   });
   it("dải logo theo mép và cỡ, không thu nhỏ slide", () => {
-    expect(logoBand("tr", "m")).toEqual({ pos: "t", heightPx: 64, marginPx: 36 });
-    expect(logoBand("bl", "l")).toEqual({ pos: "b", heightPx: 92, marginPx: 36 });
+    expect(logoBand("tr", "m")).toEqual({ pos: "t", heightPx: 44, marginPx: 36 });
+    expect(logoBand("bl", "l")).toEqual({ pos: "b", heightPx: 60, marginPx: 36 });
   });
 });
 

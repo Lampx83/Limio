@@ -10,7 +10,7 @@ import {
   frameHeightForContent,
   imageArtWidth,
   keepHyphenated,
-  logoShiftNeeded,
+  logoShiftFor,
   logoShiftPx,
   pickFontStep,
   safeAreaFor,
@@ -94,13 +94,15 @@ describe("chỗ cho logo (không thu nhỏ slide)", () => {
     expect(logoShiftPx({ ...LOGO_TOP, heightPx: 92 })).toBeGreaterThan(shift);
     expect(logoShiftPx({ ...LOGO_TOP, heightPx: 10 })).toBe(0);
   });
-  it("chỉ dịch khi nội dung chạm dải logo: tiêu đề sát mép trên thì dịch, khối căn giữa thì không", () => {
-    expect(logoShiftNeeded({ top: 72, bottom: 600, left: 96, right: 1184 }, LOGO_TOP)).toBe(true);
-    expect(logoShiftNeeded({ top: 200, bottom: 520, left: 120, right: 1100 }, LOGO_TOP)).toBe(false);
-    expect(logoShiftNeeded({ top: 72, bottom: 648, left: 96, right: 1184 }, LOGO_BOTTOM)).toBe(true);
-    expect(logoShiftNeeded({ top: 72, bottom: 560, left: 96, right: 1184 }, LOGO_BOTTOM)).toBe(false);
-    expect(logoShiftNeeded(null, LOGO_TOP)).toBe(false);
-    expect(logoShiftNeeded({ top: 0, bottom: 720, left: 0, right: 1280 }, null)).toBe(false);
+  it("dịch đúng phần nội dung lấn vào dải logo; khối không chạm thì không dịch", () => {
+    // tiêu đề sát mép trên (72) với logo trên: vùng an toàn bắt đầu ở 112 → dịch 40
+    expect(logoShiftFor({ top: 72, bottom: 600, left: 96, right: 1184 }, LOGO_TOP)).toBe(40);
+    expect(logoShiftFor({ top: 200, bottom: 520, left: 120, right: 1100 }, LOGO_TOP)).toBe(0);
+    // bìa có đệm 64: chữ người trình bày chạm 656 với logo dưới (vùng an toàn tới 608) → dịch 48
+    expect(logoShiftFor({ top: 64, bottom: 656, left: 140, right: 850 }, LOGO_BOTTOM)).toBe(48);
+    expect(logoShiftFor({ top: 72, bottom: 560, left: 96, right: 1184 }, LOGO_BOTTOM)).toBe(0);
+    expect(logoShiftFor(null, LOGO_TOP)).toBe(0);
+    expect(logoShiftFor({ top: 0, bottom: 720, left: 0, right: 1280 }, null)).toBe(0);
   });
 });
 

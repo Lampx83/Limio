@@ -49,14 +49,17 @@ export function logoShiftPx(logo: LogoBand | null): number {
 }
 
 /**
- * Có cần dịch khung nội dung vì logo không: chỉ khi nội dung ở chỗ gốc chạm dải của logo (tiêu đề nằm sát mép trên).
- * Khối căn giữa như trích dẫn, mở phần thường không chạm nên giữ nguyên chỗ, không bị đẩy lệch.
+ * Khung nội dung còn phải dịch thêm bao nhiêu px ở phía có logo để nội dung (đo ở chỗ hiện tại) thôi chạm dải của logo; 0 nếu
+ * không chạm. Đo theo nội dung thật nên đúng cho mọi bố cục, kể cả bìa có đệm riêng: khối căn giữa như trích dẫn, mở phần
+ * thường không chạm nên giữ nguyên chỗ. Khối căn giữa chỉ dời nửa khoảng dịch, nên bên gọi đo lại và cộng dồn vài lần.
  */
-export function logoShiftNeeded(box: ContentBox | null, logo: LogoBand | null): boolean {
-  if (!logo || !box) return false;
+export function logoShiftFor(box: ContentBox | null, logo: LogoBand | null): number {
+  if (!logo || !box) return 0;
   const safe = safeAreaFor(logo);
-  return logo.pos === "t" ? box.top < safe.top : box.bottom > safe.bottom;
+  return Math.max(0, Math.ceil(logo.pos === "t" ? safe.top - box.top : box.bottom - safe.bottom));
 }
+/** Khoảng dịch tối đa: không bao giờ nhường cho logo quá chừng này (phần còn lại do bậc cỡ chữ lo). */
+export const LOGO_SHIFT_MAX = 120;
 
 /** Nội dung có nằm trọn vùng an toàn không (hộp rỗng coi như vừa). */
 export function boxFits(box: ContentBox | null, safe: SafeArea = FIT_SAFE): boolean {
