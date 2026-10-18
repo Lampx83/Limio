@@ -1,4 +1,11 @@
-import { AiGenerationError, AiTutorError, generateSlideEdit, SLIDE_EDIT_ACTIONS } from "@feedbackme/core-feedback";
+import {
+  AiGenerationError,
+  AiTutorError,
+  generateSlideEdit,
+  SLIDE_EDIT_ACTIONS,
+  SLIDE_EDIT_INSTRUCTION_MAX,
+  SLIDE_EDIT_INSTRUCTION_MIN,
+} from "@feedbackme/core-feedback";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
@@ -15,7 +22,8 @@ const json = (body: unknown, status: number) => Response.json(body, { status });
 
 /**
  * POST /api/instructor/limio-live/decks/[deckId]/slides/[slideId]/ai-edit
- * Body: { action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" }
+ * Body: { action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom", instruction? }
+ * "custom": `instruction` là yêu cầu giảng viên gõ (3–500 ký tự).
  * Trả ĐỀ XUẤT thay thế cho slide ({type, config}); KHÔNG ghi gì vào slide. Giảng viên xem bản so
  * sánh rồi chấp nhận qua PATCH slide với source:"ai". Chỉ áp cho slide Nội dung có bố cục mới.
  */
@@ -23,10 +31,14 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
   const userId = await requireFeature("limio_live.access");
   if (!userId) return json({ error: "forbidden" }, 403);
 
-  const body = (await readJson(req)) as { action?: unknown } | null;
+  const body = (await readJson(req)) as { action?: unknown; instruction?: unknown } | null;
   const action = body?.action;
   if (typeof action !== "string" || !(SLIDE_EDIT_ACTIONS as readonly string[]).includes(action)) {
     return json({ error: "validation_failed", details: "action" }, 400);
+  }
+  const instruction = typeof body?.instruction === "string" ? body.instruction.trim() : "";
+  if (action === "custom" && (instruction.length < SLIDE_EDIT_INSTRUCTION_MIN || instruction.length > SLIDE_EDIT_INSTRUCTION_MAX)) {
+    return json({ error: "validation_failed", details: "instruction" }, 400);
   }
 
   const slide = await prisma.liveSlide.findFirst({
@@ -77,6 +89,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
         current,
         outlineTitle,
         outlinePoints,
+        ...(action === "custom" ? { instruction } : {}),
       },
       openai,
     );

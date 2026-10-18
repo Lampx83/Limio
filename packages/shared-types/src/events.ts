@@ -716,7 +716,8 @@ export interface LiveDeckSlidesGeneratedPayload {
 export interface LiveSlideAiEditProposedPayload {
   deckId: string;
   slideId: string;
-  action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite";
+  /** "custom" = yêu cầu riêng giảng viên gõ (nội dung yêu cầu không ghi vào sự kiện). */
+  action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
 }
 
 export interface LiveSlideAiEditAcceptedPayload {

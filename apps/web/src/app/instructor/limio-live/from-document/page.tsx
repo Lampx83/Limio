@@ -4,7 +4,7 @@ import { getWebSearchProvider } from "@/lib/webSearch";
 import FromDocumentForm from "./FromDocumentForm";
 
 export const metadata = {
-  title: "Tạo bài giảng bằng AI | Limio",
+  title: "Tạo bài giảng | Limio",
 };
 
 export default async function FromDocumentPage() {
