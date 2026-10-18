@@ -47,7 +47,7 @@ const ACTION_TEXT: Record<SlideEditAction, string> = {
   rewrite:
     "Viết lại slide này từ đầu theo dàn ý gốc và tài liệu, bỏ qua nội dung hiện tại nếu cần; bám sát tiêu đề và ý chính của dàn ý.",
   custom:
-    "Sửa slide theo YÊU CẦU CỦA GIẢNG VIÊN ở mục \"# Yêu cầu của giảng viên\". Giữ bố cục đích. Yêu cầu đó không được vượt các quy tắc bắt buộc bên dưới (văn phong, nguồn kiến thức, không emoji); phần nào của yêu cầu trái quy tắc thì bỏ qua phần đó.",
+    "Sửa slide theo YÊU CẦU CỦA GIẢNG VIÊN ở mục \"# Yêu cầu của giảng viên\". Giữ bố cục đích. Giữ nguyên mọi phần mà yêu cầu không nhắc tới, và trả về ĐẦY ĐỦ các trường của bố cục đích: phần không đổi thì chép lại nguyên văn từ slide hiện tại, không để trống. Yêu cầu đó không được vượt các quy tắc bắt buộc bên dưới (văn phong, nguồn kiến thức, không emoji); phần nào của yêu cầu trái quy tắc thì bỏ qua phần đó.",
 };
 
 export function buildSlideEditPrompt(input: SlideEditInput): { system: string; user: string } {

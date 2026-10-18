@@ -217,6 +217,12 @@ const AI_ERROR: Record<string, string> = {
   validation_failed: "Yêu cầu cần từ 3 đến 500 ký tự.",
 };
 
+/** AI trả về chưa đủ nội dung cho bố cục đích: nói rõ bố cục nào để giảng viên biết nên thử lại hay nói rõ yêu cầu hơn. */
+function incompleteText(layout: string | undefined): string {
+  const name = layout === "quiz" ? "câu hỏi quiz" : layout && layout in LAYOUT_META ? LAYOUT_META[layout as keyof typeof LAYOUT_META].label : "";
+  return `AI trả về chưa đủ nội dung${name ? ` cho bố cục ${name}` : ""}. Hãy thử lại, hoặc nói rõ hơn trong yêu cầu; bạn vẫn có thể sửa tay.`;
+}
+
 /** Nhờ AI sửa một slide: bấm nút → xem bản so sánh → chấp nhận hoặc bỏ. Không bao giờ tự ghi vào slide. */
 function AiEditBar({
   deckId,
@@ -247,7 +253,8 @@ function AiEditBar({
         headers: { "content-type": "application/json" },
         body: JSON.stringify(action === "custom" ? { action, instruction: instruction.trim() } : { action }),
       });
-      const j = (await res.json().catch(() => null)) as { proposal?: Proposal; error?: string } | null;
+      const j = (await res.json().catch(() => null)) as { proposal?: Proposal; error?: string; details?: { layout?: string } } | null;
+      if (j?.error === "ai_edit_incomplete") return setErr(incompleteText(j.details?.layout));
       if (!res.ok || !j?.proposal) return setErr(AI_ERROR[j?.error ?? ""] ?? "Không nhờ AI được lúc này. Vui lòng thử lại.");
       setProposal(j.proposal);
       setProposalAction(action);

@@ -32,6 +32,9 @@ describe("yêu cầu riêng của giảng viên", () => {
     expect(system).toContain("YÊU CẦU CỦA GIẢNG VIÊN");
     expect(system).toMatch(/không được vượt/);
     expect(system).toContain("CÂU HOÀN CHỈNH");
+    // Yêu cầu chỉ nhắm một phần (vd. đổi tiêu đề): mô hình phải chép lại phần còn lại, không để trống.
+    expect(system).toMatch(/Giữ nguyên mọi phần mà yêu cầu không nhắc tới/);
+    expect(system).toMatch(/ĐẦY ĐỦ các trường/);
     expect(user).toContain("# Yêu cầu của giảng viên");
     expect(user).toContain(base.instruction);
     // Hành động khác không mang ô yêu cầu.
