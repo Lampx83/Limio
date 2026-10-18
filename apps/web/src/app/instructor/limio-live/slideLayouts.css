@@ -179,10 +179,30 @@
   .ll-summary .tick { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
   .ll-summary .rowi span { font-size: 40px; line-height: 1.2; font-family: var(--sfont-head); font-weight: 700; }
 
+  /* ---------- Hoa văn trang trí (SlideMotif; chọn ở limioLiveMotifs.ts, hình ở limioLiveMotifArt.ts) ----------
+     Chỉ ở chỗ trống. --smo (đặt trên .lslide, tính theo nền và màu của chính slide) là độ đậm lớn nhất mà chữ đè lên
+     hoa văn vẫn đạt 4.5:1 (chữ nhấn 3:1): dùng cho các góc, nơi chữ dài có thể chạm tới. Bìa: chữ rộng tối đa 800 px
+     nên không qua x = 896; mặt nạ trong suốt hẳn tới đúng mốc đó nên hoa văn không bao giờ nằm dưới chữ, được đậm hơn.
+     Ô hình của bố cục Chữ và hình không có chữ. */
+  .lslide .motif { position: absolute; pointer-events: none; }
+  .lslide .motif svg { display: block; width: 100%; height: 100%; }
+  .lslide .motif.m-side { right: 0; top: 0; width: 480px; height: 720px; opacity: .5;
+    -webkit-mask-image: linear-gradient(to right, transparent 20%, #000 62%); mask-image: linear-gradient(to right, transparent 20%, #000 62%); }
+  .lt-dark .motif.m-side { opacity: .6; }
+  .lslide .motif.m-br, .lslide .motif.m-bl, .lslide .motif.m-tr { width: 600px; height: 440px; opacity: var(--smo, 0); }
+  .lslide .motif.m-br { right: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); }
+  .lslide .motif.m-bl { left: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); }
+  .lslide .motif.m-tr { right: 0; top: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); }
+  .lslide .motif.m-fill { inset: 0; }
+  /* Hình minh hoạ: đĩa nền tô --sglow1, ở giao diện tối màu này thường trùng --sa nên phải nhạt hơn để vật thể nổi lên. */
+  .lt-dark .ill-disc { fill-opacity: .1; }
+
   /* ---------- Hiệu ứng nhẹ (chỉ chạy ở chế độ toàn màn hình; tắt nếu máy bật "giảm chuyển động") ---------- */
   @media (prefers-reduced-motion: no-preference) {
     .lslide.anim .a { opacity: 0; animation: s-rise .6s cubic-bezier(.2,.7,.2,1) calc(var(--i, 0) * 130ms + 80ms) forwards; }
     .lslide.anim .a-pop { opacity: 0; animation: s-pop .55s cubic-bezier(.2,.8,.3,1.15) calc(var(--i, 0) * 110ms + 100ms) forwards; }
+    .lslide.anim .motif { animation: s-fade 1.4s ease-out both; }
+    @keyframes s-fade { from { opacity: 0; } }
     .lslide.anim .ll-steps .row::before { transform-origin: 0 50%; transform: scaleX(0); animation: s-line 1.1s ease-out .25s forwards; }
     @keyframes s-rise { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
     @keyframes s-pop { from { opacity: 0; scale: .88; } to { opacity: 1; scale: 1; } }

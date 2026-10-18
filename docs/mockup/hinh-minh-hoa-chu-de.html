@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hình minh hoạ chủ đề</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- khung trang mockup ---------- */
+  :root {
+    --bg: #fafaf7; --surface: #ffffff; --ink: #1c2410; --ink-2: #4b5640; --ink-3: #6b7560; --line: #e6e9dc;
+    --brand-50: #f7fee7; --brand-100: #ecfccb; --brand-600: #4d7c0f; --brand-700: #3f6212;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 8px 24px -12px rgb(28 36 16 / .14);
+    --font-bvp: "Be Vietnam Pro"; --font-lexend: "Lexend";
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --ink: #f1f5e6; --ink-2: #c3cdb0; --ink-3: #a3ad90; --line: #2c3620;
+      --brand-50: #1c2810; --brand-100: #25351a; --brand-600: #a3e635; --brand-700: #bef264;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --ink: #f1f5e6; --ink-2: #c3cdb0; --ink-3: #a3ad90; --line: #2c3620;
+    --brand-50: #1c2810; --brand-100: #25351a; --brand-600: #a3e635; --brand-700: #bef264;
+    --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.55;
+    font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, select { font: inherit; color: inherit; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+  header.top { border-bottom: 1px solid var(--line); background: var(--surface); }
+  header.top .wrap { padding: 20px 16px; }
+  header.top h1 { font-size: 24px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-2); font-size: 16px; max-width: 820px; }
+  main { padding: 8px 0 64px; }
+  section.blk { padding-top: 36px; }
+  h2.sec { font-size: 21px; margin: 0 0 6px; }
+  p.sub { margin: 0 0 18px; color: var(--ink-2); font-size: 16px; max-width: 860px; }
+  .rules { display: grid; gap: 10px; grid-template-columns: 1fr; margin: 20px 0 0; padding: 0; list-style: none; }
+  @media (min-width: 768px) { .rules { grid-template-columns: 1fr 1fr; } }
+  .rules li { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; font-size: 15px; color: var(--ink-2); }
+  .rules li b { color: var(--ink); }
+
+  /* bảng hoa văn × giao diện */
+  .mhead, .mrow { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  .mhead { display: none; }
+  @media (min-width: 900px) {
+    .mhead, .mrow { grid-template-columns: 200px repeat(3, 1fr); align-items: center; }
+    .mhead { display: grid; font-weight: 700; font-size: 15px; color: var(--ink-2); margin-bottom: 8px; }
+  }
+  .mrow { padding: 12px 0; border-top: 1px solid var(--line); }
+  .mrow .name b { display: block; font-size: 17px; }
+  .mrow .name span { color: var(--ink-3); font-size: 14px; }
+  .swrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (min-width: 900px) { .swrow { display: contents; } }
+  .sw { position: relative; aspect-ratio: 464 / 500; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); max-height: 260px; }
+  .sw .art { position: absolute; inset: 0; height: auto; border-radius: 0; border: 0; }
+  .sw .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* thumbnail slide */
+  .slides { display: grid; gap: 16px 14px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .slides { grid-template-columns: 140px repeat(3, 1fr); align-items: center; } }
+  .slides .rl b { display: block; font-size: 16px; }
+  .slides .rl span { display: block; color: var(--ink-3); font-size: 13px; }
+  .slides .ch { display: none; }
+  @media (min-width: 900px) { .slides .ch { display: block; font-weight: 700; font-size: 15px; color: var(--ink-2); } }
+  .thumb { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 12px; border: 1px solid var(--line);
+    box-shadow: var(--shadow); padding: 0; cursor: zoom-in; background: #ccc; }
+  .thumb:focus-visible { outline: 3px solid var(--brand-600); outline-offset: 2px; }
+  .thumb .lslide { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+  .thumb .cap { position: absolute; left: 8px; bottom: 8px; background: rgb(0 0 0 / .62); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 6px; }
+
+  /* dãy slide của bài giảng mẫu */
+  .deckbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 14px; }
+  .btn { border: 1px solid var(--line); background: var(--surface); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 15px; }
+  .btn:hover { background: var(--brand-50); }
+  .btn.pri { background: var(--brand-600); color: #fff; border-color: transparent; }
+  :root[data-theme="dark"] .btn.pri { color: #10200a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.pri { color: #10200a; } }
+  .deck { display: grid; gap: 12px; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 640px) { .deck { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1024px) { .deck { grid-template-columns: repeat(6, 1fr); } }
+  .deck figure { margin: 0; }
+  .deck figcaption { font-size: 13px; color: var(--ink-2); margin-top: 6px; line-height: 1.35; }
+  .deck figcaption b { display: block; color: var(--ink); font-size: 14px; }
+
+  /* mô phỏng trình sửa */
+  .ed { display: grid; gap: 18px; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ed { grid-template-columns: 1fr 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; box-shadow: var(--shadow); }
+  .panel h3 { margin: 0 0 4px; font-size: 17px; }
+  .panel .hint { margin: 0 0 14px; color: var(--ink-3); font-size: 14px; }
+  .seg { display: inline-flex; flex-wrap: wrap; background: var(--brand-50); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: none; padding: 8px 14px; border-radius: 9px; cursor: pointer; font-size: 15px; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+  .pick { display: grid; gap: 8px; grid-template-columns: repeat(4, 1fr); margin-top: 14px; }
+  @media (min-width: 640px) { .pick { grid-template-columns: repeat(6, 1fr); } }
+  .pick button { padding: 0; border: 2px solid var(--line); border-radius: 12px; background: none; cursor: pointer; overflow: hidden; text-align: left; }
+  .pick button[aria-pressed="true"] { border-color: var(--brand-600); box-shadow: 0 0 0 2px var(--brand-600); }
+  .pick .pv { position: relative; aspect-ratio: 1; }
+  .pick .pv .art { position: absolute; inset: 0; height: auto; border-radius: 0; border: 0; }
+  .pick .pv svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .pick .nm { display: block; font-size: 12.5px; padding: 4px 6px 5px; color: var(--ink-2); line-height: 1.25; }
+  .pick .none { display: grid; place-items: center; aspect-ratio: 1; font-size: 13px; color: var(--ink-3); background: repeating-linear-gradient(135deg, transparent 0 8px, var(--line) 8px 9px); }
+  .field { display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .field .mini { position: relative; width: 52px; height: 52px; border-radius: 10px; overflow: hidden; flex: none; border: 1px solid var(--line); }
+  .field .mini .art { position: absolute; inset: 0; border: 0; border-radius: 0; }
+  .field .mini svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .field .tx { flex: 1; min-width: 0; }
+  .field .tx b { display: block; font-size: 15px; }
+  .field .tx span { color: var(--ink-3); font-size: 13.5px; }
+  .edprev { margin-top: 14px; }
+
+  /* bảng tương phản */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 14.5px; background: var(--surface); border-radius: 12px; overflow: hidden; }
+  .tblwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+  .tbl th, .tbl td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .tbl th { font-weight: 700; color: var(--ink-2); background: var(--brand-50); }
+  .tbl td.ok { color: var(--ink); }
+  .tbl td.bad { color: #b91c1c; font-weight: 700; }
+  .tbl .swc { display: inline-block; width: 18px; height: 18px; border-radius: 5px; vertical-align: -4px; margin-right: 8px; border: 1px solid var(--line); }
+
+  /* xem lớn */
+  #stage { position: fixed; inset: 0; background: #0b0d09; z-index: 50; display: flex; flex-direction: column; }
+  #stage .viewport { flex: 1; position: relative; overflow: hidden; }
+  #stage .lslide { position: absolute; left: 50%; top: 50%; transform-origin: 0 0; }
+  #stage .bar { display: flex; gap: 10px; justify-content: space-between; align-items: center; padding: 10px 16px; color: #e5e7eb; font-size: 14px; }
+  #stage .bar button { background: #262b22; color: #fff; border: 0; padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+
+  /* ================= slide (chép từ slideLayouts.css, phần liên quan) ================= */
+  .lslide { text-align: left; width: 1280px; height: 720px; position: relative; overflow: hidden; color: var(--stext); font-family: var(--sfont-body); line-height: 1.35; }
+  .lslide *, .lslide *::before, .lslide *::after { box-sizing: border-box; }
+  .lt-brand { --stext: #20241F; --smuted: #5A6256; --sa: #4D7C0F; --sa2: #BE185D; --ssoft: #ECFCCB; --ssoft2: #FCE7F3; --scard: rgba(255,255,255,.82); --scardb: #E3E8D3; --son: #ffffff;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #BEF264; --sglow2: #F9A8D4;
+    --sg: linear-gradient(120deg, #4D7C0F 0%, #15803D 100%); --sgb: linear-gradient(135deg, #4D7C0F 0%, #15803D 100%); --smo: .12; }
+  .lt-night { --stext: #F1F5F9; --smuted: #C4CCE0; --sa: #38BDF8; --sa2: #C4B5FD; --ssoft: rgba(56,189,248,.16); --ssoft2: rgba(167,139,250,.16); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14); --son: #06202E;
+    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --shw: 800; --shls: -0.025em; --sglow1: #38BDF8; --sglow2: #A78BFA;
+    --sg: linear-gradient(120deg, #38BDF8 0%, #A78BFA 100%); --sgb: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%); --smo: .33; }
+  .lt-paper { --stext: #2B2118; --smuted: #6B5B4A; --sa: #A34A07; --sa2: #0B5F59; --ssoft: #FDE9C7; --ssoft2: #CDEBE6; --scard: rgba(255,253,247,.9); --scardb: #E8DCC0; --son: #ffffff;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --shw: 700; --shls: -0.01em; --sglow1: #FBBF24; --sglow2: #5EEAD4;
+    --sg: linear-gradient(120deg, #A34A07 0%, #B83A0C 100%); --sgb: linear-gradient(135deg, #B45309 0%, #92400E 100%); --smo: .10; }
+  .lt-lavender { --stext: #221B33; --smuted: #5B5273; --sa: #6D28D9; --sa2: #BE185D; --ssoft: #EDE9FE; --ssoft2: #FCE7F3; --scard: rgba(255,255,255,.85); --scardb: #E1D9F3; --son: #ffffff;
+    --sfont-head: var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #C4B5FD; --sglow2: #F9A8D4;
+    --sg: linear-gradient(120deg, #6D28D9 0%, #9333EA 100%); --sgb: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); --smo: .17; }
+  .lt-peach { --stext: #2B1A14; --smuted: #6B534A; --sa: #C2410C; --sa2: #BE123C; --ssoft: #FFE4D1; --ssoft2: #FFE1E6; --scard: rgba(255,255,255,.85); --scardb: #F3D9CC; --son: #ffffff;
+    --sfont-head: var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #FDBA74; --sglow2: #FDA4AF;
+    --sg: linear-gradient(120deg, #EA580C 0%, #E11D48 100%); --sgb: linear-gradient(135deg, #F97316 0%, #E11D48 100%); --smo: .16; }
+  .lt-ocean { --stext: #0F2A33; --smuted: #476068; --sa: #0E7490; --sa2: #4F46E5; --ssoft: #CFFAFE; --ssoft2: #E0E7FF; --scard: rgba(255,255,255,.85); --scardb: #CFE5EA; --son: #ffffff;
+    --sfont-head: var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #67E8F9; --sglow2: #A5B4FC;
+    --sg: linear-gradient(120deg, #0E7490 0%, #2563EB 100%); --sgb: linear-gradient(135deg, #0891B2 0%, #2563EB 100%); --smo: .16; }
+  .lt-monogray { --stext: #18181B; --smuted: #52525B; --sa: #27272A; --sa2: #52525B; --ssoft: #E4E4E7; --ssoft2: #F4F4F5; --scard: rgba(255,255,255,.88); --scardb: #D4D4D8; --son: #ffffff;
+    --sfont-head: var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #A1A1AA; --sglow2: #D4D4D8;
+    --sg: linear-gradient(120deg, #18181B 0%, #52525B 100%); --sgb: linear-gradient(135deg, #27272A 0%, #3F3F46 100%); --smo: .18; }
+  .lt-monoblue { --stext: #0F1B33; --smuted: #475A7A; --sa: #1D4ED8; --sa2: #3B82F6; --ssoft: #DBEAFE; --ssoft2: #EAF2FF; --scard: rgba(255,255,255,.88); --scardb: #C7D8F5; --son: #ffffff;
+    --sfont-head: var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #93C5FD; --sglow2: #BFDBFE;
+    --sg: linear-gradient(120deg, #1E40AF 0%, #3B82F6 100%); --sgb: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); --smo: .15; }
+  .lt-monogreen { --stext: #0F2418; --smuted: #44634F; --sa: #15803D; --sa2: #16A34A; --ssoft: #DCFCE7; --ssoft2: #ECFDF5; --scard: rgba(255,255,255,.88); --scardb: #C5E8D0; --son: #ffffff;
+    --sfont-head: var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #86EFAC; --sglow2: #BBF7D0;
+    --sg: linear-gradient(120deg, #166534 0%, #22C55E 100%); --sgb: linear-gradient(135deg, #16A34A 0%, #15803D 100%); --smo: .22; }
+  .lt-monoblack { --stext: #FAFAFA; --smuted: #B4B4B8; --sa: #FAFAFA; --sa2: #A1A1AA; --ssoft: rgba(255,255,255,.12); --ssoft2: rgba(255,255,255,.08); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.16); --son: #111113;
+    --sfont-head: var(--font-lexend), var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.025em; --sglow1: #FFFFFF; --sglow2: #71717A;
+    --sg: linear-gradient(120deg, #FFFFFF 0%, #A1A1AA 100%); --sgb: linear-gradient(135deg, #F4F4F5 0%, #A1A1AA 100%); --smo: .19; }
+  .lt-forest { --stext: #ECFDF5; --smuted: #B5D3C3; --sa: #4ADE80; --sa2: #FDE047; --ssoft: rgba(74,222,128,.16); --ssoft2: rgba(253,224,71,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14); --son: #052E16;
+    --sfont-head: var(--font-lexend), var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.025em; --sglow1: #4ADE80; --sglow2: #FDE047;
+    --sg: linear-gradient(120deg, #4ADE80 0%, #A3E635 100%); --sgb: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%); --smo: .26; }
+  .lt-plum { --stext: #FDF4FF; --smuted: #E3C7EC; --sa: #F0ABFC; --sa2: #FDA4AF; --ssoft: rgba(240,171,252,.16); --ssoft2: rgba(253,164,175,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14); --son: #2E0B3A;
+    --sfont-head: var(--font-lexend), var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.025em; --sglow1: #E879F9; --sglow2: #FB7185;
+    --sg: linear-gradient(120deg, #F0ABFC 0%, #FDA4AF 100%); --sgb: linear-gradient(135deg, #E879F9 0%, #C026D3 100%); --smo: .33; }
+  .lt-ink { --stext: #F5F6F8; --smuted: #C0C6D2; --sa: #FBBF24; --sa2: #60A5FA; --ssoft: rgba(251,191,36,.15); --ssoft2: rgba(96,165,250,.15); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14); --son: #1A1300;
+    --sfont-head: var(--font-lexend), var(--font-bvp), Arial, sans-serif; --sfont-body: var(--font-bvp), Arial, sans-serif; --shw: 800; --shls: -0.025em; --sglow1: #FBBF24; --sglow2: #60A5FA;
+    --sg: linear-gradient(120deg, #FBBF24 0%, #F59E0B 100%); --sgb: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); --smo: .29; }
+
+  .lslide .pad { position: absolute; inset: 0; padding: 72px 96px 72px; display: flex; flex-direction: column; }
+  .lslide .h { font-family: var(--sfont-head); font-weight: var(--shw); letter-spacing: var(--shls); line-height: 1.2; margin: 0; text-wrap: balance; }
+  .lslide .byline { margin: 38px 0 0; font-size: 30px; color: var(--smuted); }
+  .lslide .lead { font-size: 36px; color: var(--smuted); margin: 0; }
+  .lslide .grad { background: var(--sg); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lslide .glow { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; }
+  .lt-dark .glow { opacity: .34; }
+  .lslide .card { background: var(--scard); border: 1px solid var(--scardb); border-radius: 28px; }
+  .lslide ul.bul { list-style: none; padding: 0; margin: 0; display: grid; gap: 26px; font-size: 38px; line-height: 1.28; }
+  .lslide ul.bul li { display: flex; gap: 18px; align-items: flex-start; }
+  .lslide ul.bul li::before { content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--sgb); margin-top: 18px; }
+  .ll-cover .pad { justify-content: center; }
+  .ll-cover .stack { position: absolute; right: 96px; top: 50%; margin-top: -170px; width: 330px; height: 340px; }
+  .ll-cover .stack i { position: absolute; border-radius: 28px; border: 1px solid var(--scardb); }
+  .ll-cover .stack i:nth-child(1) { inset: 20px 40px 60px 0; background: var(--ssoft); transform: rotate(-7deg); }
+  .ll-cover .stack i:nth-child(2) { inset: 40px 10px 40px 30px; background: var(--ssoft2); transform: rotate(4deg); }
+  .ll-cover .stack i:nth-child(3) { inset: 60px 0 20px 50px; background: var(--sgb); box-shadow: 0 30px 60px -20px rgba(0,0,0,.35); }
+  .ll-section .pad { justify-content: center; padding-left: 120px; }
+  .ll-section .num { font-family: var(--sfont-head); font-weight: 800; font-size: 230px; line-height: .85; color: transparent; -webkit-text-stroke: 3px var(--sa); letter-spacing: -0.04em; }
+  .ll-section .h { margin-top: 18px; max-width: 980px; }
+  .ll-section-toc .pad { display: grid; grid-template-columns: 1fr 520px; gap: 64px; align-items: center; padding: 72px 88px; }
+  .ll-section-toc .num { font-size: 190px; }
+  .ll-section-toc .h { margin-top: 0; max-width: none; }
+  .ll-section-toc .lead { font-size: 30px; line-height: 1.35; }
+  .ll-section-toc .toc { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  .ll-section-toc .toc li { position: relative; display: flex; align-items: center; gap: 22px; padding: 16px 22px; border-radius: 22px; border: 2px solid transparent; font-size: 30px; line-height: 1.25; color: var(--smuted); }
+  .ll-section-toc .toc li + li::before { content: ""; position: absolute; left: 49px; top: -22px; height: 30px; width: 3px; border-radius: 3px; background: var(--scardb); }
+  .ll-section-toc .mk { width: 56px; height: 56px; flex: none; border-radius: 50%; display: grid; place-items: center; font-family: var(--sfont-head); font-weight: 800; font-size: 28px; border: 3px solid var(--scardb); color: var(--smuted); }
+  .ll-section-toc .done .mk { border-color: transparent; background: var(--ssoft); color: var(--sa); }
+  .ll-section-toc .now { background: var(--scard); border-color: var(--scardb); color: var(--stext); font-weight: 700; font-size: 34px; font-family: var(--sfont-head); box-shadow: 0 18px 40px -26px rgba(0,0,0,.45); }
+  .ll-section-toc .now .mk { border: 0; background: var(--sgb); color: var(--son); width: 64px; height: 64px; font-size: 32px; }
+  .ll-image .pad { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+  .ll-image .tx { display: grid; gap: 30px; }
+  .lslide .art, .art { height: 500px; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .ll-quote .pad { justify-content: center; padding-left: 120px; padding-right: 110px; gap: 30px; }
+  .ll-quote .mark { font-family: var(--font-bvp), Arial, sans-serif; font-size: 220px; line-height: .6; height: 100px; color: var(--sa); opacity: .85; }
+  .ll-quote .qt { font-family: var(--sfont-head); font-weight: var(--shw); font-size: 66px; line-height: 1.18; letter-spacing: var(--shls); max-width: 1000px; }
+  .ll-quote .who { display: flex; align-items: center; gap: 14px; font-size: 30px; color: var(--smuted); }
+  .ll-quote .who i { width: 54px; height: 4px; border-radius: 4px; background: var(--sg); }
+
+  /* ================= MỚI: hoa văn ================= */
+  /* Hoa văn chỉ nằm ở vùng an toàn của từng bố cục. --smo là độ đậm lớn nhất mà chữ (--stext, --smuted)
+     vẫn đạt 4.5:1 và chữ màu nhấn vẫn đạt 3:1 khi đè lên hoa văn — tính sẵn cho từng giao diện.
+     Góc: đậm đúng bằng --smo (chữ có chạm tới cũng an toàn). Bìa: chữ rộng tối đa 800 px nên không qua x = 896;
+     mặt nạ trong suốt hẳn tới đúng mốc đó, hoa văn không bao giờ nằm dưới chữ nên được đậm hơn. Ô hình: không có chữ. */
+  .motif { position: absolute; pointer-events: none; z-index: 0; }
+  .motif svg { display: block; width: 100%; height: 100%; }
+  .lslide .pad { z-index: 1; }
+  .motif.m-side { right: 0; top: 0; width: 480px; height: 720px; opacity: .5;
+    -webkit-mask-image: linear-gradient(to right, transparent 20%, #000 62%); mask-image: linear-gradient(to right, transparent 20%, #000 62%); }
+  .lt-dark .motif.m-side { opacity: .6; }
+  .motif.m-br, .motif.m-tr, .motif.m-bl { width: 600px; height: 440px; opacity: var(--smo); }
+  .motif.m-br { right: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); }
+  .motif.m-tr { right: 0; top: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); }
+  .motif.m-bl { left: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); }
+  .art .motif.m-fill { inset: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    .lslide.anim .motif { animation: m-in 1.4s ease-out both; }
+    @keyframes m-in { from { opacity: 0; } }
+  }
+
+  /* ================= MỚI: hình minh hoạ, trang mockup ================= */
+  .lt-dark .ill-disc { fill-opacity: .1; }
+  .pick-h { grid-column: 1 / -1; margin: 10px 0 0; font-size: 14px; font-weight: 700; color: var(--ink-2); }
+  .pick-h:first-child { margin-top: 0; }
+  .pick-h.big { font-size: 15.5px; color: var(--ink); margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); }
+  .pick-h.big:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+  h3.grp { font-size: 18px; margin: 26px 0 4px; }
+  h3.grp span { font-weight: 400; color: var(--ink-3); font-size: 15px; }
+  .pick-h span { font-weight: 400; color: var(--ink-3); }
+  .pick .pv svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .cases { display: grid; gap: 0; }
+  .case { display: grid; gap: 12px; grid-template-columns: 1fr; padding: 16px 0; border-top: 1px solid var(--line); align-items: center; }
+  @media (min-width: 900px) { .case { grid-template-columns: 1.1fr .9fr 1.3fr 1fr; gap: 18px; } }
+  .case .k { display: block; font-size: 13px; color: var(--ink-3); }
+  .case b { font-size: 16px; }
+  .case code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 15px; background: var(--brand-50); border: 1px solid var(--line); padding: 1px 7px; border-radius: 6px; }
+  .case p { margin: 0; font-size: 15px; color: var(--ink-2); }
+  .prompt { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; font-size: 15px; color: var(--ink-2); margin: 0 0 18px; }
+  .prompt p { margin: 0 0 8px; }
+  .prompt p:last-child { margin-bottom: 0; }
+  .prompt b { color: var(--ink); }
+  .notes { margin: 0; padding-left: 20px; font-size: 15.5px; color: var(--ink-2); display: grid; gap: 8px; max-width: 900px; }
+  .notes b { color: var(--ink); }
+  .notes code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; }
+  .qs { margin: 0; padding-left: 22px; display: grid; gap: 10px; font-size: 16px; max-width: 900px; }
+  .qs span { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Hình minh hoạ theo chủ đề cho ô hình</h1>
+    <p>Bản mẫu để duyệt. Hai mươi bốn hình tự vẽ bằng SVG ngay trong mã nguồn, chia năm nhóm chủ đề, nét phẳng, màu lấy từ giao diện của bài giảng. Hình chỉ đặt ở ô hình của bố cục Chữ và hình khi slide chưa có ảnh; mọi chỗ khác vẫn dùng hoa văn trừu tượng.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <ul class="rules">
+    <li><b>Chỉ ở ô hình.</b> Bố cục Chữ và hình, khi chưa có ảnh. Bìa, bìa phần, trích dẫn giữ hoa văn trừu tượng ở góc như đã duyệt, vì hình cụ thể đặt sau chữ sẽ tranh chỗ với chữ.</li>
+    <li><b>Chủ đề chung, hình đơn giản.</b> Mỗi hình nói đúng một ý, dùng được cho nhiều môn. Người là khối trừu tượng cùng một cỡ: không mặt, không tóc, không trang phục, nên không gợi giới tính, sắc tộc hay tuổi.</li>
+    <li><b>Chỉ hai đường chọn.</b> AI chọn một mã trong danh sách cố định khi sinh slide từ dàn ý, hoặc giảng viên chọn trong lưới. Hệ thống không tự đoán theo từ khoá trong tiêu đề.</li>
+    <li><b>Không chắc thì dùng hoa văn.</b> AI trả mã sai, mã ngoài danh sách hoặc báo không chắc, slide giữ hoa văn trừu tượng như hiện nay. Một hình lạc đề tệ hơn một hoa văn không mang nghĩa.</li>
+  </ul>
+
+  <section class="blk" id="gallery">
+    <h2 class="sec">1. Hai mươi bốn hình, năm nhóm, trên ba giao diện</h2>
+    <p class="sub">Mười hai hình đã duyệt cộng mười hai hình mới (ghi “hình mới” dưới mã). Nhóm chỉ để giảng viên tìm nhanh trong lưới; AI vẫn nhận cả danh sách kèm chủ đề của từng hình. Mỗi ô đúng cỡ ô hình của bố cục Chữ và hình. Hai giao diện sáng (Limio, Giấy ấm) và một giao diện tối (Đêm xanh). Có thể đổi cột thứ ba sang giao diện khác để xem thử:
+      <select id="col3" aria-label="Giao diện của cột thứ ba"></select></p>
+    <div class="mhead"><span>Hình</span><span data-colname="0"></span><span data-colname="1"></span><span data-colname="2"></span></div>
+    <div id="matrix"></div>
+  </section>
+
+  <section class="blk" id="inslide">
+    <h2 class="sec">2. Trên slide thật</h2>
+    <p class="sub">Bảy slide Chữ và hình, mỗi slide trên ba giao diện; hai slide dùng hình mới. Slide cuối AI báo không chắc nên giữ hoa văn trừu tượng. Bấm vào slide để xem lớn.</p>
+    <div class="slides" id="slides"></div>
+  </section>
+
+  <section class="blk" id="ai">
+    <h2 class="sec">3. Đường thứ nhất: AI chọn khi sinh slide từ dàn ý</h2>
+    <p class="sub">Khi viết slide Chữ và hình, AI được thêm một trường hình minh hoạ, chỉ nhận một trong hai mươi bốn mã hoặc “none”. Máy chủ kiểm lại mã; mọi thứ khác bị bỏ qua và slide giữ hoa văn. Không thêm lượt gọi AI nào, không tốn thêm token đáng kể.</p>
+    <div class="prompt">
+      <p><b>Đoạn thêm vào lời dặn AI (bản nháp):</b></p>
+      <p>Với slide bố cục Chữ và hình, có thể chọn một hình minh hoạ cho ô hình bằng trường <b>illustration</b>. Chỉ dùng một mã trong danh sách sau: <span id="codelist"></span>.</p>
+      <p>Chỉ chọn khi ý chính của slide rõ ràng thuộc đúng một chủ đề. Nếu slide nói về một thứ cụ thể mà danh sách không có, hoặc không chắc, ghi “none”. Không tạo mã mới.</p>
+    </div>
+    <div class="cases" id="cases"></div>
+  </section>
+
+  <section class="blk" id="editor">
+    <h2 class="sec">4. Đường thứ hai: giảng viên chọn trong lưới</h2>
+    <p class="sub">Dùng lại đúng ô “Hoa văn” trong khung sửa slide. Với slide Chữ và hình chưa có ảnh, lưới có thêm phần “Hình minh hoạ” ở trên cùng, chia theo năm nhóm. Các bố cục khác (bìa, bìa phần, trích dẫn) không hiện nhóm này. Hình minh hoạ chỉ đặt riêng từng slide, không có lựa chọn cho cả bài.</p>
+    <div class="ed">
+      <div class="panel">
+        <h3>Khung sửa slide: Chữ và hình</h3>
+        <p class="hint">Ngay dưới các ô chữ. Bấm Đổi để mở lưới.</p>
+        <div class="field">
+          <div class="mini" id="slidemini"></div>
+          <div class="tx"><b id="fieldname">Hoa văn</b><span id="slidelabel">Theo bài giảng</span></div>
+          <button class="btn" type="button" id="slidetoggle" aria-expanded="true">Xong</button>
+        </div>
+        <div class="pick" id="slidepick" role="group" aria-label="Hình cho ô hình của slide này"></div>
+      </div>
+      <div class="panel">
+        <h3>Slide đang sửa</h3>
+        <p class="hint">Cập nhật ngay khi bấm một ô trong lưới.</p>
+        <div class="edprev"><button class="thumb" type="button" id="slideprev" aria-label="Xem lớn slide đang sửa"></button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk" id="tech">
+    <h2 class="sec">5. Ghi chú kỹ thuật</h2>
+    <ul class="notes">
+      <li><b>Lưu chung ô với hoa văn.</b> <code>config.motif</code> của slide nhận thêm hai mươi bốn mã hình. Ô hình chỉ hiện một thứ, nên một trường là đủ; giảng viên chọn hình là thay luôn hoa văn của slide đó và ngược lại.</li>
+      <li><b>Chỉ có hiệu lực ở ô hình.</b> Nếu slide đổi sang bố cục khác hoặc được thêm ảnh, mã hình bị bỏ qua và chỗ trang trí quay về hoa văn của bài. Không xoá mã, đổi lại bố cục thì hình trở lại.</li>
+      <li><b>Thứ tự xoay vòng hoa văn không đổi.</b> Slide có hình vẫn giữ vị trí của nó trong vòng xoay, nên chọn hình cho một slide không làm hoa văn của các slide khác nhảy theo.</li>
+      <li><b>Màu.</b> Ngoài bốn biến của hoa văn (<code>--sa</code>, <code>--sa2</code>, <code>--ssoft</code>, <code>--sglow1</code>), hình dùng thêm hai biến sẵn có của giao diện: <code>--scard</code> cho mặt giấy và mặt đồng hồ, <code>--son</code> cho nét vẽ đè lên khối màu nhấn. Màu thương hiệu của trường đổi <code>--sa</code> thì hình đổi theo.</li>
+      <li><b>Kiểm thử.</b> Hàm thuần kiểm mã AI trả về (đúng danh sách, đúng bố cục), hàm chọn thứ hiển thị ở ô hình (hình riêng của slide, rồi hoa văn), và mọi hình đều vẽ ra SVG hợp lệ không chứa mã màu cứng.</li>
+    </ul>
+  </section>
+
+  <section class="blk" id="questions">
+    <h2 class="sec">6. Hai điểm cần thầy/cô chốt</h2>
+    <ol class="qs">
+      <li>Cách chia năm nhóm và tên nhóm. <span>(a) Giữ như bản mẫu. (b) Thầy/cô muốn chuyển hình nào sang nhóm khác hoặc đổi tên nhóm.</span></li>
+      <li>Hình nào cần vẽ lại hoặc bỏ. <span>Hai mươi bốn hình làm danh sách cho AI dài gấp đôi; đề xuất dừng ở con số này, nếu cần thêm thì thay hình ít dùng thay vì cộng dồn.</span></li>
+    </ol>
+  </section>
+</main>
+
+<div id="stage" hidden role="dialog" aria-modal="true" aria-label="Xem lớn slide">
+  <div class="viewport" id="stagevp"></div>
+  <div class="bar"><span id="stagecap"></span><span><button type="button" id="closestage">Đóng (Esc)</button></span></div>
+</div>
+<script>
+/* ======================= GIAO DIỆN ======================= */
+// Chép từ slideThemes.ts: id, tên, nền khung, lớp bảng màu.
+const THEMES = [
+  ["white","Trắng","#FFFFFF","lt-brand",0],["cream","Kem","#FBF6E9","lt-paper",0],["mint","Bạc hà","#EAF7EE","lt-brand",0],
+  ["sky","Trời","#EAF3FC","lt-brand",0],["blush","Hồng phấn","#FCEEF3","lt-brand",0],
+  ["brand","Limio","linear-gradient(135deg,#F3FADC 0%,#FDEBF3 100%)","lt-brand",0],
+  ["paper","Giấy ấm","linear-gradient(160deg,#FBF6E9 0%,#F4E8CB 100%)","lt-paper",0],
+  ["lavender","Oải hương","linear-gradient(135deg,#F5F0FF 0%,#EDE7FB 100%)","lt-lavender",0],
+  ["peach","Đào","linear-gradient(135deg,#FFF4EC 0%,#FFE8E0 100%)","lt-peach",0],
+  ["ocean","Biển","linear-gradient(135deg,#E8F8FA 0%,#E3F0FD 100%)","lt-ocean",0],
+  ["monogray","Mono xám","linear-gradient(135deg,#F7F7F8 0%,#ECEDEF 100%)","lt-monogray",0],
+  ["monoblue","Mono lam","linear-gradient(135deg,#EFF6FF 0%,#DBEAFE 100%)","lt-monoblue",0],
+  ["monogreen","Mono lục","linear-gradient(135deg,#F0FDF4 0%,#DCFCE7 100%)","lt-monogreen",0],
+  ["monoblack","Mono đen","linear-gradient(135deg,#050505 0%,#1A1A1A 100%)","lt-monoblack",1],
+  ["night","Đêm xanh","linear-gradient(135deg,#0B1020 0%,#1B1A4B 100%)","lt-night",1],
+  ["forest","Rừng đêm","linear-gradient(135deg,#06130D 0%,#0E2B1F 100%)","lt-forest",1],
+  ["plum","Mận","linear-gradient(135deg,#1A0B22 0%,#3A1346 100%)","lt-plum",1],
+  ["ink","Mực","linear-gradient(135deg,#0E1014 0%,#1C212B 100%)","lt-ink",1],
+].map(([id,label,bg,cls,dark]) => ({ id, label, bg, cls, dark: !!dark }));
+const T = id => THEMES.find(t => t.id === id);
+const COLS = ["brand", "paper", "night"];
+const themeCls = t => t.dark ? `${t.cls} lt-dark` : t.cls;
+
+/* ======================= HOA VĂN ======================= */
+const A = "var(--sa)", B = "var(--sa2)", S = "var(--ssoft)";
+const f = n => Math.round(n * 10) / 10;
+let UID = 0;
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+
+const MOTIFS = [
+  { id: "song", label: "Sóng", note: "Các đường lượn song song", gen(w, h) {
+    let s = ""; const n = 9, amp = Math.min(w, h) * 0.05, lam = Math.max(w, h) * 0.55;
+    for (let i = 0; i < n; i++) {
+      const y0 = h * 0.12 + i * h * 0.76 / (n - 1); let d = "";
+      for (let x = -20; x <= w + 20; x += 8) d += (x === -20 ? "M" : "L") + f(x) + " " + f(y0 + amp * Math.sin(x / lam * 2 * Math.PI + i * 0.45));
+      const acc = i % 4 === 3;
+      s += `<path d="${d}" fill="none" stroke="${acc ? B : A}" stroke-width="${acc ? 4 : 2.5}" stroke-opacity="${(0.35 + 0.6 * i / (n - 1)).toFixed(2)}" stroke-linecap="round"/>`;
+    }
+    return s; } },
+  { id: "khoi", label: "Khối hình học", note: "Tròn, vuông, tam giác xếp thoáng", gen(w, h) {
+    const m = Math.min(w, h);
+    const rx = w * 0.27, ry = h * 0.66, rs = m * 0.3;
+    return `<circle cx="${f(w * 0.68)}" cy="${f(h * 0.33)}" r="${f(m * 0.26)}" fill="${B}" fill-opacity=".3"/>`
+      + `<circle cx="${f(w * 0.22)}" cy="${f(h * 0.2)}" r="${f(m * 0.07)}" fill="none" stroke="${A}" stroke-width="7"/>`
+      + `<rect x="${f(rx - rs / 2)}" y="${f(ry - rs / 2)}" width="${f(rs)}" height="${f(rs)}" rx="${f(m * 0.04)}" transform="rotate(-12 ${f(rx)} ${f(ry)})" fill="none" stroke="${A}" stroke-width="6"/>`
+      + `<path d="M${f(w * 0.52)} ${f(h * 0.92)} L${f(w * 0.76)} ${f(h * 0.56)} L${f(w * 0.95)} ${f(h * 0.92)} Z" fill="${A}" fill-opacity=".55"/>`
+      + Array.from({ length: 9 }, (_, k) => `<circle cx="${f(w * 0.78 + (k % 3) * m * 0.05)}" cy="${f(h * 0.08 + Math.floor(k / 3) * m * 0.05)}" r="${f(m * 0.012)}" fill="${A}"/>`).join(""); } },
+  { id: "cham", label: "Lưới chấm", note: "Chấm đều, nhạt dần về một góc", gen(w, h) {
+    let s = ""; const st = 26, D = Math.hypot(w, h);
+    for (let y = st / 2; y < h; y += st) for (let x = st / 2; x < w; x += st) {
+      const t = 1 - Math.hypot(w - x, y) / D;
+      s += `<circle cx="${f(x)}" cy="${f(y)}" r="3.4" fill="${A}" fill-opacity="${(0.12 + 0.88 * t * t).toFixed(2)}"/>`;
+    }
+    return s; } },
+  { id: "dongmuc", label: "Đường đồng mức", note: "Như bản đồ địa hình", gen(w, h) {
+    let s = ""; const cx = w * 0.62, cy = h * 0.45, Rm = Math.hypot(w, h) * 0.62, n = 12;
+    for (let k = 1; k <= n; k++) {
+      const rk = Rm * k / n; let d = "";
+      for (let j = 0; j < 96; j++) {
+        const th = j / 96 * 2 * Math.PI;
+        const r = rk * (1 + 0.13 * Math.sin(3 * th + 0.9 + k * 0.18) + 0.06 * Math.sin(5 * th + 0.3 - k * 0.1) + 0.03 * Math.sin(8 * th + k * 0.4));
+        d += (j ? "L" : "M") + f(cx + r * Math.cos(th)) + " " + f(cy + r * Math.sin(th));
+      }
+      const acc = k % 4 === 0;
+      s += `<path d="${d}Z" fill="none" stroke="${acc ? B : A}" stroke-width="${acc ? 3.2 : 2}" stroke-opacity=".65"/>`;
+    }
+    return s; } },
+  { id: "cung", label: "Cung tròn", note: "Lưới ô vuông, mỗi ô một phần tư hình tròn", gen(w, h, R) {
+    let s = ""; const c = Math.round(Math.min(w, h) / 5.2);
+    for (let y = 0; y < h; y += c) for (let x = 0; x < w; x += c) {
+      const p = R(); if (p < 0.28) continue;
+      const fill = p < 0.55 ? `fill="${A}" fill-opacity=".55"` : p < 0.75 ? `fill="${B}" fill-opacity=".45"` : `fill="${S}"`;
+      const q = Math.floor(R() * 4), sx = q & 1 ? -1 : 1, sy = q & 2 ? -1 : 1;
+      const cx = sx > 0 ? x : x + c, cy = sy > 0 ? y : y + c, sw = sx * sy > 0 ? 1 : 0;
+      s += `<path d="M${cx} ${cy} L${cx + sx * c} ${cy} A${c} ${c} 0 0 ${sw} ${cx} ${cy + sy * c} Z" ${fill}/>`;
+    }
+    return s; } },
+  { id: "diemnoi", label: "Điểm nối", note: "Các điểm nối với điểm gần nhất", gen(w, h, R) {
+    const pts = [], cs = 96;
+    for (let y = 0; y < h; y += cs) for (let x = 0; x < w; x += cs) pts.push([x + 14 + R() * (cs - 28), y + 14 + R() * (cs - 28), R()]);
+    const seen = new Set(); let s = "";
+    pts.forEach((p, i) => {
+      pts.map((q, j) => [j, Math.hypot(p[0] - q[0], p[1] - q[1])]).filter(([j]) => j !== i).sort((a, b) => a[1] - b[1]).slice(0, 2).forEach(([j]) => {
+        const key = i < j ? i + "-" + j : j + "-" + i; if (seen.has(key)) return; seen.add(key);
+        s += `<line x1="${f(p[0])}" y1="${f(p[1])}" x2="${f(pts[j][0])}" y2="${f(pts[j][1])}" stroke="${A}" stroke-width="2" stroke-opacity=".45"/>`;
+      });
+    });
+    pts.forEach(p => { s += `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(3 + p[2] * 5)}" fill="${p[2] > 0.85 ? B : A}"/>`; });
+    return s; } },
+  { id: "soc", label: "Sọc chéo", note: "Sọc trong một hình tròn, kèm vòng lệch", gen(w, h) {
+    const m = Math.min(w, h), cx = w * 0.56, cy = h * 0.46, r = m * 0.4, id = "mc" + (++UID);
+    let lines = "";
+    for (let t = -2.2 * r; t <= 2.2 * r; t += 20) lines += `<line x1="${f(cx + t - 1.5 * r)}" y1="${f(cy + 1.5 * r)}" x2="${f(cx + t + 1.5 * r)}" y2="${f(cy - 1.5 * r)}"/>`;
+    return `<clipPath id="${id}"><circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}"/></clipPath>`
+      + `<g clip-path="url(#${id})" stroke="${A}" stroke-width="7" stroke-opacity=".55">${lines}</g>`
+      + `<circle cx="${f(cx + m * 0.16)}" cy="${f(cy + m * 0.12)}" r="${f(r)}" fill="none" stroke="${B}" stroke-width="3"/>`
+      + `<circle cx="${f(cx - m * 0.33)}" cy="${f(cy - m * 0.3)}" r="${f(m * 0.06)}" fill="${B}" fill-opacity=".6"/>`; } },
+  { id: "vet", label: "Vệt màu mềm", note: "Ba quầng màu loang", gen(w, h) {
+    const m = Math.min(w, h), u = ++UID;
+    const g = (k, col, op) => `<radialGradient id="mg${u}${k}"><stop offset="0" style="stop-color:${col};stop-opacity:${op}"/><stop offset="1" style="stop-color:${col};stop-opacity:0"/></radialGradient>`;
+    return g(1, "var(--sglow1)", 0.95) + g(2, "var(--sglow2)", 0.9) + g(3, A, 0.35)
+      + `<ellipse cx="${f(w * 0.7)}" cy="${f(h * 0.3)}" rx="${f(m * 0.55)}" ry="${f(m * 0.45)}" fill="url(#mg${u}1)"/>`
+      + `<ellipse cx="${f(w * 0.28)}" cy="${f(h * 0.74)}" rx="${f(m * 0.6)}" ry="${f(m * 0.5)}" fill="url(#mg${u}2)"/>`
+      + `<circle cx="${f(w * 0.82)}" cy="${f(h * 0.84)}" r="${f(m * 0.32)}" fill="url(#mg${u}3)"/>`; } },
+  { id: "lucgiac", label: "Lục giác", note: "Tổ ong, vài ô tô màu", gen(w, h, R) {
+    let s = ""; const r = 30, hw = Math.sqrt(3) * r;
+    for (let row = 0, y = 0; y < h + r; row++, y += 1.5 * r) for (let x = (row % 2) * hw / 2; x < w + hw; x += hw) {
+      const pts = Array.from({ length: 6 }, (_, k) => { const a = Math.PI / 180 * (60 * k - 90); return f(x + (r - 2) * Math.cos(a)) + "," + f(y + (r - 2) * Math.sin(a)); }).join(" ");
+      const p = R(); const fill = p < 0.12 ? `fill="${A}" fill-opacity=".5"` : p < 0.2 ? `fill="${B}" fill-opacity=".4"` : `fill="none"`;
+      s += `<polygon points="${pts}" ${fill} stroke="${A}" stroke-opacity=".4" stroke-width="2"/>`;
+    }
+    return s; } },
+  { id: "dongchay", label: "Dòng chảy", note: "Các đường cong cùng hướng", gen(w, h) {
+    let s = ""; const n = 16;
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1);
+      s += `<path d="M-10 ${f(h * (0.5 + 0.45 * t))} C${f(w * 0.4)} ${f(h * (0.15 + 0.9 * t))} ${f(w * 0.55)} ${f(h * (-0.1 + 0.6 * t))} ${f(w + 10)} ${f(h * (0.05 + 0.4 * t))}" fill="none" stroke="${i % 5 === 2 ? B : A}" stroke-width="${i % 5 === 2 ? 3.5 : 2.2}" stroke-opacity="${(0.3 + 0.55 * t).toFixed(2)}"/>`;
+    }
+    return s; } },
+  { id: "banchi", label: "Chấm loang", note: "Chấm to dần về một góc, kiểu in lưới", gen(w, h) {
+    let s = ""; const st = 22, D = Math.hypot(w, h) * 0.85;
+    for (let row = 0, y = st / 2; y < h; row++, y += st) for (let x = (row % 2) * st / 2; x < w + st; x += st) {
+      const r = 8.5 * Math.pow(Math.max(0, 1 - Math.hypot(x - w * 0.95, y - h * 0.08) / D), 1.3);
+      if (r > 0.7) s += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${A}" fill-opacity=".8"/>`;
+    }
+    return s; } },
+  { id: "tamgiac", label: "Khảm tam giác", note: "Mảnh tam giác nhiều sắc độ", gen(w, h, R) {
+    let s = ""; const c = 72;
+    for (let y = 0; y < h; y += c) for (let x = 0; x < w; x += c) {
+      const tris = R() < 0.5 ? [[x, y, x + c, y, x, y + c], [x + c, y, x + c, y + c, x, y + c]] : [[x, y, x + c, y, x + c, y + c], [x, y, x + c, y + c, x, y + c]];
+      tris.forEach(p => { const b = R() < 0.1; s += `<polygon points="${p.join(",")}" fill="${b ? B : A}" fill-opacity="${(b ? 0.22 + R() * 0.2 : 0.03 + R() * 0.26).toFixed(2)}"/>`; });
+    }
+    return s; } },
+  { id: "vong", label: "Vòng đồng tâm", note: "Gợn lan ra từ một điểm", gen(w, h) {
+    const m = Math.min(w, h), cx = w * 0.82, cy = h * 0.8, max = Math.hypot(w, h);
+    let s = `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(m * 0.09)}" fill="${B}" fill-opacity=".55"/>`;
+    for (let i = 0, r = m * 0.16; r < max; i++, r += m * 0.075) {
+      s += i % 3 === 2
+        ? `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="none" stroke="${B}" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round" stroke-opacity=".7"/>`
+        : `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="none" stroke="${A}" stroke-width="2.5" stroke-opacity="${Math.max(0.2, 0.75 - i * 0.05).toFixed(2)}"/>`;
+    }
+    return s; } },
+  { id: "gach", label: "Nét gạch", note: "Các vạch dài ngắn theo nhịp", gen(w, h, R) {
+    let s = "";
+    for (let y = 19; y < h; y += 38) for (let x = -R() * 60; x < w;) {
+      const len = 20 + R() * 100, b = R() < 0.14;
+      s += `<rect x="${f(x)}" y="${y - 5}" width="${f(len)}" height="10" rx="5" fill="${b ? B : A}" fill-opacity="${(b ? 0.6 : 0.2 + R() * 0.35).toFixed(2)}"/>`;
+      x += len + 16 + R() * 30;
+    }
+    return s; } },
+  { id: "oke", label: "Ô kẻ", note: "Giấy kẻ ô, vài ô tô đậm", gen(w, h, R) {
+    let minor = "", major = "", cells = ""; const st = 24, M = st * 4;
+    for (let x = 0; x <= w; x += st) (x % M ? (minor += `M${x} 0V${h}`) : (major += `M${x} 0V${h}`));
+    for (let y = 0; y <= h; y += st) (y % M ? (minor += `M0 ${y}H${w}`) : (major += `M0 ${y}H${w}`));
+    // Một cụm ô bậc thang bám theo lưới lớn, đặt lệch về góc trên phải.
+    const gx = Math.floor(w * 0.6 / M) * M, gy = Math.floor(h * 0.2 / M) * M;
+    [[0, 0, 4, 4, S, 1], [4, 0, 2, 2, A, 0.45], [4, 2, 2, 2, S, 1], [2, 4, 2, 2, B, 0.4], [0, 4, 2, 2, S, 1], [6, 0, 1, 1, A, 0.6], [4, 6, 1, 1, A, 0.6]]
+      .forEach(([x, y, cw, ch, col, op]) => { cells += `<rect x="${gx + x * st}" y="${gy + y * st}" width="${cw * st}" height="${ch * st}" fill="${col}" fill-opacity="${op}"/>`; });
+    return cells + `<path d="${minor}" stroke="${A}" stroke-opacity=".16" stroke-width="1"/><path d="${major}" stroke="${A}" stroke-opacity=".35" stroke-width="1.6"/>`; } },
+  { id: "tia", label: "Tia", note: "Các tia toả ra từ một góc", gen(w, h) {
+    const ox = w * 0.06, oy = h * 1.02, L = Math.hypot(w, h) * 1.1, m = Math.min(w, h);
+    let s = "";
+    for (let k = 0; k <= 22; k++) {
+      const a = (-88 + k * 86 / 22) * Math.PI / 180;
+      s += `<line x1="${f(ox)}" y1="${f(oy)}" x2="${f(ox + L * Math.cos(a))}" y2="${f(oy + L * Math.sin(a))}" stroke="${A}" stroke-width="2.5" stroke-opacity="${k % 2 ? 0.55 : 0.25}"/>`;
+    }
+    [0.35, 0.7, 1.05].forEach(q => { s += `<circle cx="${f(ox)}" cy="${f(oy)}" r="${f(m * q)}" fill="none" stroke="${B}" stroke-width="4" stroke-dasharray="2 14" stroke-linecap="round" stroke-opacity=".7"/>`; });
+    return s; } },
+];
+const MOTIF_IDS = MOTIFS.map(m => m.id);
+const M = id => MOTIFS.find(m => m.id === id);
+/* ======================= HÌNH MINH HOẠ (MỚI) ======================= */
+// Mười hai hình theo chủ đề, vẽ trong khung 464 × 500 (đúng cỡ ô hình). Cùng một ngữ pháp cho cả bộ:
+// một đĩa nền mờ màu --sglow1 ở giữa, vật thể chính tô --sa, điểm nhấn --sa2, mặt giấy/mặt đồng hồ --scard,
+// nét chữ đè lên khối màu --son (màu chữ trên nền nhấn, giao diện nào cũng tương phản với --sa và --sa2).
+// Nét 6–10 px, đầu nét tròn. Nội dung nằm trong vòng tròn bán kính ~180 quanh tâm (232, 250) nên ô vuông
+// thu nhỏ (cắt 18 px trên dưới) vẫn thấy trọn hình.
+const C = "var(--scard)", ON = "var(--son)", G1 = "var(--sglow1)";
+const CX = 232, CY = 250;
+// Giao diện tối: --sglow1 thường trùng --sa nên đĩa nền phải nhạt hơn (lớp .ill-disc, xem CSS) để vật thể nổi lên.
+const disc = (r = 178, o = 0.24) => `<circle class="ill-disc" cx="${CX}" cy="${CY}" r="${r}" fill="${G1}" fill-opacity="${o}"/>`;
+const ln = (x1, y1, x2, y2, col, w, o = 1) => `<line x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}" stroke="${col}" stroke-width="${w}" stroke-opacity="${o}" stroke-linecap="round"/>`;
+/** Đầu mũi tên tam giác tại `tip`, hướng theo vector (dx, dy). */
+function head(tip, dx, dy, size, col) {
+  const L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, px = -uy, py = ux;
+  const bx = tip[0] - ux * size, by = tip[1] - uy * size;
+  return `<polygon points="${f(tip[0])},${f(tip[1])} ${f(bx + px * size * 0.62)},${f(by + py * size * 0.62)} ${f(bx - px * size * 0.62)},${f(by - py * size * 0.62)}" fill="${col}" stroke="${col}" stroke-width="4" stroke-linejoin="round"/>`;
+}
+
+const ILLUS = [
+  { id: "ketnoi", label: "Kết nối", note: "Mạng, internet, liên kết, quan hệ", gen() {
+    const out = [[110, 142], [352, 124], [404, 282], [316, 404], [128, 384], [62, 258]];
+    let s = disc();
+    out.forEach((p, i) => { const q = out[(i + 1) % out.length]; s += ln(p[0], p[1], q[0], q[1], A, 4, 0.32); });
+    out.forEach(p => { s += ln(CX, CY, p[0], p[1], A, 7, 0.65); });
+    out.forEach((p, i) => { s += i % 2
+      ? `<circle cx="${p[0]}" cy="${p[1]}" r="17" fill="${B}"/>`
+      : `<circle cx="${p[0]}" cy="${p[1]}" r="24" fill="${C}" stroke="${A}" stroke-width="7"/>`; });
+    return s + `<circle cx="${CX}" cy="${CY}" r="42" fill="${A}"/><circle cx="${CX}" cy="${CY}" r="14" fill="${ON}"/>`;
+  } },
+  { id: "connguoi", label: "Con người", note: "Nhóm, cộng tác, cộng đồng, người học", gen() {
+    // Người là khối trừu tượng: đầu tròn và thân bán nguyệt, cùng một cỡ và cùng một chiều cao (không gợi tuổi);
+    // không mặt, không tóc, không trang phục. Người giữa vẽ sau cùng nên đứng trước hai người bên.
+    const fig = (x, y, col, o) => `<g fill="${col}" fill-opacity="${o}"><circle cx="${x}" cy="${y - 170}" r="36"/><path d="M${x - 64} ${y}V${y - 58}A64 64 0 0 1 ${x + 64} ${y - 58}V${y}Z"/></g>`;
+    return disc() + `<clipPath id="__ID__p"><rect x="0" y="0" width="464" height="372"/></clipPath>` +
+      `<g clip-path="url(#__ID__p)">${fig(116, 372, B, 0.85)}${fig(348, 372, A, 0.5)}${fig(CX, 372, A, 1)}</g>` +
+      `<rect x="40" y="370" width="384" height="12" rx="6" fill="${A}" fill-opacity=".4"/>`;
+  } },
+  { id: "tunhien", label: "Tự nhiên", note: "Môi trường, sinh thái, cảnh quan", gen() {
+    return `<clipPath id="__ID__n"><circle cx="${CX}" cy="${CY}" r="178"/></clipPath><g clip-path="url(#__ID__n)">` + disc(178, 0.24) +
+      `<circle cx="306" cy="156" r="44" fill="${B}" fill-opacity=".75"/>` +
+      `<path d="M30 370Q140 170 250 270Q330 200 440 310V480H30Z" fill="${A}" fill-opacity=".38"/>` +
+      `<path d="M30 430Q170 280 320 360Q390 322 440 350V480H30Z" fill="${A}"/>` +
+      `<path d="M150 430Q240 400 300 480H120Z" fill="${A}" fill-opacity=".55"/>` +
+      `<rect x="146" y="270" width="10" height="56" rx="5" fill="${A}"/><circle cx="151" cy="258" r="36" fill="${B}"/>` +
+      `<rect x="216" y="290" width="8" height="40" rx="4" fill="${A}"/><circle cx="220" cy="280" r="25" fill="${B}" fill-opacity=".8"/>` +
+      `</g>`;
+  } },
+  { id: "ytuong", label: "Ý tưởng", note: "Sáng tạo, phát hiện, giải pháp", gen() {
+    let s = disc();
+    for (let k = 0; k < 7; k++) {
+      const a = Math.PI * (1.05 + k * 0.15);
+      s += ln(CX + 132 * Math.cos(a), 206 + 132 * Math.sin(a), CX + 168 * Math.cos(a), 206 + 168 * Math.sin(a), B, 9);
+    }
+    return s +
+      `<path d="M186 314C186 280 134 262 134 206A98 98 0 1 1 330 206C330 262 278 280 278 314Z" fill="${G1}" fill-opacity=".55" stroke="${A}" stroke-width="9" stroke-linejoin="round"/>` +
+      `<path d="M196 238l18 26l18 -26l18 26l18 -26" fill="none" stroke="${B}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>` +
+      ln(214, 264, 214, 312, B, 6, 0.8) + ln(250, 264, 250, 312, B, 6, 0.8) +
+      `<rect x="180" y="326" width="104" height="22" rx="11" fill="${A}"/><rect x="186" y="356" width="92" height="22" rx="11" fill="${A}"/>` +
+      `<path d="M204 386h56a28 22 0 0 1 -56 0Z" fill="${A}"/>`;
+  } },
+  { id: "sachhoc", label: "Sách và học tập", note: "Đọc, nghiên cứu, kiến thức, bài học", gen() {
+    const L = "M232 166C186 138 112 132 58 148V376C112 360 186 366 232 394Z";
+    const R = "M232 166C278 138 352 132 406 148V376C352 360 278 366 232 394Z";
+    let s = disc() +
+      `<path d="M44 168V396C108 380 186 386 232 416C278 386 356 380 420 396V168" fill="none" stroke="${A}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
+      `<path d="${L}" fill="${C}" stroke="${A}" stroke-width="8" stroke-linejoin="round"/><path d="${R}" fill="${C}" stroke="${A}" stroke-width="8" stroke-linejoin="round"/>`;
+    [0, 1, 2, 3, 4].forEach(i => {
+      const y = 196 + i * 34;
+      s += ln(88, y - 4, 204, y + 8, A, 7, 0.35);
+      if (i < 4) s += ln(260, y + 8, i === 1 ? 336 : 376, y - 4, i === 1 ? B : A, 7, i === 1 ? 0.9 : 0.35);
+    });
+    return s + `<path d="M344 132V222L360 206L376 222V134" fill="${B}" stroke="${B}" stroke-width="4" stroke-linejoin="round"/>`;
+  } },
+  { id: "thoigian", label: "Thời gian", note: "Kế hoạch, tiến độ, lịch sử, hạn chót", gen() {
+    let s = disc(182, 0.2) + `<circle cx="${CX}" cy="${CY}" r="146" fill="${C}" stroke="${A}" stroke-width="12"/>`;
+    for (let k = 0; k < 12; k++) {
+      const a = k * Math.PI / 6, big = k % 3 === 0, r0 = big ? 104 : 114;
+      s += ln(CX + r0 * Math.sin(a), CY - r0 * Math.cos(a), CX + 128 * Math.sin(a), CY - 128 * Math.cos(a), A, big ? 9 : 6, big ? 1 : 0.5);
+    }
+    const hand = (deg, len, col, w) => { const a = deg * Math.PI / 180; return ln(CX, CY, CX + len * Math.sin(a), CY - len * Math.cos(a), col, w); };
+    s += hand(305, 66, A, 14) + hand(60, 98, B, 9) + `<circle cx="${CX}" cy="${CY}" r="14" fill="${A}"/>`;
+    const e = [CX + 182 * Math.sin(2.2), CY - 182 * Math.cos(2.2)];
+    return s + `<path d="M${CX} ${CY - 182}A182 182 0 0 1 ${f(e[0])} ${f(e[1])}" fill="none" stroke="${B}" stroke-width="8" stroke-linecap="round" stroke-opacity=".85"/>` +
+      head([e[0] + Math.cos(2.2) * 16, e[1] + Math.sin(2.2) * 16], Math.cos(2.2), Math.sin(2.2), 24, B);
+  } },
+  { id: "muctieu", label: "Mục tiêu", note: "Đích đến, chuẩn đầu ra, trọng tâm", gen() {
+    const x = 214, y = 270;
+    let s = disc() +
+      `<circle cx="${x}" cy="${y}" r="146" fill="none" stroke="${A}" stroke-width="24"/>` +
+      `<circle cx="${x}" cy="${y}" r="98" fill="none" stroke="${A}" stroke-width="24" stroke-opacity=".5"/>` +
+      `<circle cx="${x}" cy="${y}" r="50" fill="none" stroke="${A}" stroke-width="24"/>` +
+      `<circle cx="${x}" cy="${y}" r="20" fill="${B}"/>`;
+    const tx = 402, ty = 86, dx = tx - x, dy = ty - y, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, px = -uy, py = ux;
+    s += ln(x + ux * 18, y + uy * 18, tx, ty, B, 10);
+    for (const k of [0, 22]) {
+      const bx = tx - ux * k, by = ty - uy * k;
+      s += `<path d="M${f(bx)} ${f(by)}L${f(bx + ux * 30 + px * 22)} ${f(by + uy * 30 + py * 22)}M${f(bx)} ${f(by)}L${f(bx + ux * 30 - px * 22)} ${f(by + uy * 30 - py * 22)}" stroke="${B}" stroke-width="8" stroke-linecap="round"/>`;
+    }
+    return s;
+  } },
+  { id: "toancau", label: "Toàn cầu", note: "Thế giới, hội nhập, ngoại ngữ, văn hoá", gen() {
+    const r = 140;
+    let g = "";
+    for (const rx of [r * 0.42, r * 0.82]) g += `<ellipse cx="${CX}" cy="${CY}" rx="${f(rx)}" ry="${r}" fill="none" stroke="${A}" stroke-width="5" stroke-opacity=".7"/>`;
+    g += ln(CX, CY - r, CX, CY + r, A, 5, 0.7);
+    for (const dy of [-r * 0.55, 0, r * 0.55]) g += ln(CX - r, CY + dy, CX + r, CY + dy, A, 5, 0.7);
+    const t = -0.35;
+    return disc() + `<clipPath id="__ID__g"><circle cx="${CX}" cy="${CY}" r="${r}"/></clipPath>` +
+      `<circle cx="${CX}" cy="${CY}" r="${r}" fill="${A}" fill-opacity=".14"/>` +
+      `<g clip-path="url(#__ID__g)">${g}</g>` +
+      `<circle cx="${CX}" cy="${CY}" r="${r}" fill="none" stroke="${A}" stroke-width="9"/>` +
+      `<ellipse cx="${CX}" cy="${CY}" rx="206" ry="58" transform="rotate(-18 ${CX} ${CY})" fill="none" stroke="${B}" stroke-width="7" stroke-linecap="round"/>` +
+      `<circle cx="${f(CX + 206 * Math.cos(t) * Math.cos(-0.314) - 58 * Math.sin(t) * Math.sin(-0.314))}" cy="${f(CY + 206 * Math.cos(t) * Math.sin(-0.314) + 58 * Math.sin(t) * Math.cos(-0.314))}" r="17" fill="${B}"/>`;
+  } },
+  { id: "dulieu", label: "Dữ liệu", note: "Cơ sở dữ liệu, thống kê, lưu trữ", gen() {
+    const rx = 124, ry = 38, hgt = 62, gap = 16;
+    let s = disc();
+    for (let k = 2; k >= 0; k--) {
+      const t = 128 + k * (hgt + gap);
+      s += `<path d="M${CX - rx} ${t}V${t + hgt}A${rx} ${ry} 0 0 0 ${CX + rx} ${t + hgt}V${t}Z" fill="${A}" fill-opacity="${[1, 0.8, 0.6][k]}"/>`;
+      s += `<circle cx="${CX + 78}" cy="${t + hgt * 0.62 + 14}" r="8" fill="${ON}"/><circle cx="${CX + 50}" cy="${t + hgt * 0.62 + 18}" r="8" fill="${ON}" fill-opacity=".6"/>`;
+      s += `<ellipse cx="${CX}" cy="${t}" rx="${rx}" ry="${ry}" fill="${k ? A : B}" fill-opacity="${k ? 0.35 : 1}"/>`;
+    }
+    return s;
+  } },
+  { id: "antoan", label: "An toàn", note: "Bảo mật, quyền riêng tư, phòng tránh", gen() {
+    return disc() +
+      `<path d="M232 84L370 136V246C370 336 306 394 232 424C158 394 94 336 94 246V136Z" fill="${A}" stroke="${A}" stroke-width="10" stroke-linejoin="round"/>` +
+      `<path d="M168 256L214 302L302 204" fill="none" stroke="${ON}" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>`;
+  } },
+  { id: "tangtruong", label: "Tăng trưởng", note: "Tiến bộ, phát triển, kết quả đi lên", gen() {
+    let s = disc() + ln(70, 392, 400, 392, A, 7, 0.55);
+    [[96, 78], [168, 132], [240, 188], [312, 256]].forEach(([x, h], i) => {
+      s += `<path d="M${x} 386V${392 - h + 12}A12 12 0 0 1 ${x + 12} ${392 - h}H${x + 44}A12 12 0 0 1 ${x + 56} ${392 - h + 12}V386Z" fill="${A}" fill-opacity="${[0.4, 0.58, 0.78, 1][i]}"/>`;
+    });
+    const pts = [[84, 286], [160, 232], [222, 252], [300, 160], [376, 104]];
+    s += `<polyline points="${pts.map(p => p.join(",")).join(" ")}" fill="none" stroke="${B}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const [p, q] = [pts[3], pts[4]];
+    return s + head([q[0] + 14, q[1] - 10], q[0] - p[0], q[1] - p[1], 34, B);
+  } },
+  { id: "traodoi", label: "Trao đổi", note: "Thảo luận, hỏi đáp, phản hồi", gen() {
+    let s = disc() +
+      `<path d="M96 116H258A36 36 0 0 1 294 152V234A36 36 0 0 1 258 270H138L96 312V270A36 36 0 0 1 60 234V152A36 36 0 0 1 96 116Z" fill="${A}"/>`;
+    [[160, 254], [196, 230], [232, 190]].forEach(([y, x2]) => { s += ln(96, y, x2, y, ON, 11); });
+    s += `<path d="M212 236H368A36 36 0 0 1 404 272V346A36 36 0 0 1 368 382V420L330 382H212A36 36 0 0 1 176 346V272A36 36 0 0 1 212 236Z" fill="${B}"/>`;
+    [242, 290, 338].forEach(x => { s += `<circle cx="${x}" cy="309" r="14" fill="${ON}"/>`; });
+    return s;
+  } },
+];
+const ILLUS_IDS = ILLUS.map(x => x.id);
+const IL = id => ILLUS.find(x => x.id === id);
+const isIllus = id => ILLUS_IDS.includes(id);
+
+/* ---------- 12 hình mới (đợt 2) ---------- */
+const G2 = "var(--sglow2)";
+function gear(cx, cy, R, r, n, col, hole) {
+  const step = 2 * Math.PI / n; let d = "";
+  for (let k = 0; k < n; k++) {
+    const a = k * step - Math.PI / 2;
+    [[a - step * 0.5, r], [a - step * 0.22, r], [a - step * 0.14, R], [a + step * 0.14, R], [a + step * 0.22, r]].forEach(([t, rr], i) => {
+      d += (k === 0 && i === 0 ? "M" : "L") + f(cx + rr * Math.cos(t)) + " " + f(cy + rr * Math.sin(t));
+    });
+  }
+  return `<path d="${d}Z M${f(cx - hole)} ${cy}a${hole} ${hole} 0 1 0 ${2 * hole} 0a${hole} ${hole} 0 1 0 ${-2 * hole} 0Z" fill="${col}" fill-rule="evenodd"/>`;
+}
+function star(cx, cy, R, r, col) {
+  let d = "";
+  for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r : R; d += (k ? "L" : "M") + f(cx + rr * Math.cos(a)) + " " + f(cy + rr * Math.sin(a)); }
+  return `<path d="${d}Z" fill="${col}" stroke="${col}" stroke-width="4" stroke-linejoin="round"/>`;
+}
+const ILLUS2 = [
+  { id: "khoahoc", label: "Khoa học", note: "Thí nghiệm, hoá học, nghiên cứu", gen() {
+    const flask = "M200 196L122 374Q112 402 142 404H322Q352 402 342 374L264 196Z";
+    return disc() +
+      `<clipPath id="__ID__k"><path d="${flask}"/></clipPath>` +
+      `<path d="${flask}" fill="${C}"/>` +
+      `<g clip-path="url(#__ID__k)"><path d="M100 318Q166 294 232 318T364 318V420H100Z" fill="${A}"/>` +
+      `<circle cx="196" cy="366" r="11" fill="${ON}" fill-opacity=".8"/><circle cx="262" cy="350" r="8" fill="${ON}" fill-opacity=".8"/><circle cx="236" cy="384" r="6" fill="${ON}" fill-opacity=".8"/></g>` +
+      `<path d="${flask}" fill="none" stroke="${A}" stroke-width="9" stroke-linejoin="round"/>` +
+      `<rect x="200" y="122" width="64" height="80" fill="${C}"/>` + ln(200, 124, 200, 198, A, 9) + ln(264, 124, 264, 198, A, 9) +
+      `<rect x="182" y="106" width="100" height="22" rx="11" fill="${A}"/>` +
+      `<circle cx="252" cy="78" r="12" fill="${B}"/><circle cx="214" cy="58" r="8" fill="${B}" fill-opacity=".7"/>`;
+  } },
+  { id: "congnghe", label: "Công nghệ", note: "Máy tính, phần mềm, lập trình, số hoá", gen() {
+    return disc() +
+      `<rect x="92" y="116" width="280" height="196" rx="20" fill="${A}"/>` +
+      `<rect x="110" y="134" width="244" height="160" rx="8" fill="${ON}"/>` +
+      `<path d="M182 182L148 214L182 246M282 182L316 214L282 246" fill="none" stroke="${B}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>` +
+      ln(250, 172, 214, 256, A, 11) +
+      `<path d="M62 324H402L428 358Q430 370 418 370H46Q34 370 36 358Z" fill="${A}" fill-opacity=".8"/>` +
+      `<rect x="200" y="324" width="64" height="10" rx="5" fill="${ON}" fill-opacity=".7"/>`;
+  } },
+  { id: "quytrinh", label: "Quy trình", note: "Kỹ thuật, vận hành, cơ chế, hệ thống", gen() {
+    return disc() + gear(194, 292, 112, 88, 10, A, 34) + gear(330, 160, 76, 58, 8, B, 22);
+  } },
+  { id: "timkiem", label: "Tìm hiểu", note: "Phân tích, điều tra, tra cứu, khám phá", gen() {
+    return disc() +
+      ln(286, 298, 382, 394, A, 34) +
+      `<circle cx="206" cy="220" r="104" fill="${C}" stroke="${A}" stroke-width="18"/>` +
+      `<path d="M146 196A64 64 0 0 1 196 152" fill="none" stroke="${B}" stroke-width="10" stroke-linecap="round"/>` +
+      `<rect x="168" y="232" width="20" height="40" rx="5" fill="${A}" fill-opacity=".5"/><rect x="196" y="208" width="20" height="64" rx="5" fill="${A}" fill-opacity=".75"/><rect x="224" y="184" width="20" height="88" rx="5" fill="${B}"/>`;
+  } },
+  { id: "suckhoe", label: "Sức khoẻ", note: "Y tế, thể chất, tinh thần, chăm sóc", gen() {
+    return disc() +
+      `<path d="M232 404C122 334 70 274 70 202C70 142 114 104 164 104C196 104 220 122 232 148C244 122 268 104 300 104C350 104 394 142 394 202C394 274 342 334 232 404Z" fill="${A}"/>` +
+      `<path d="M96 240H168L194 194L226 298L256 214L274 240H368" fill="none" stroke="${ON}" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>`;
+  } },
+  { id: "taichinh", label: "Tài chính", note: "Tiền, kinh tế, chi phí, đầu tư", gen() {
+    let s = disc() +
+      `<g transform="rotate(-8 210 200)"><rect x="66" y="122" width="290" height="160" rx="18" fill="${A}" fill-opacity=".5"/>` +
+      `<rect x="82" y="138" width="258" height="128" rx="10" fill="none" stroke="${ON}" stroke-width="5" stroke-opacity=".8"/>` +
+      `<circle cx="211" cy="202" r="38" fill="none" stroke="${ON}" stroke-width="9"/><circle cx="116" cy="202" r="9" fill="${ON}"/><circle cx="306" cy="202" r="9" fill="${ON}"/></g>`;
+    const cx = 318, rx = 76, ry = 22, hh = 24;
+    for (let k = 0; k < 4; k++) {
+      const t = 382 - k * 34;
+      s += `<path d="M${cx - rx} ${t}V${t + hh}A${rx} ${ry} 0 0 0 ${cx + rx} ${t + hh}V${t}Z" fill="${A}"/><ellipse cx="${cx}" cy="${t}" rx="${rx}" ry="${ry}" fill="${B}"/>`;
+    }
+    return s + `<ellipse cx="${cx}" cy="280" rx="44" ry="11" fill="none" stroke="${ON}" stroke-width="5"/>`;
+  } },
+  { id: "canbang", label: "Cân bằng", note: "Công bằng, pháp luật, đạo đức, cân nhắc", gen() {
+    const pan = x => ln(x, 150, x - 48, 284, A, 5, 0.8) + ln(x, 150, x + 48, 284, A, 5, 0.8) + `<path d="M${x - 62} 284H${x + 62}A62 36 0 0 1 ${x - 62} 284Z" fill="${B}"/>`;
+    return disc() + ln(CX, 128, CX, 398, A, 12) + ln(100, 150, 364, 150, A, 12) +
+      pan(100) + pan(364) +
+      `<circle cx="${CX}" cy="122" r="18" fill="${B}"/>` +
+      `<path d="M168 398H296Q310 398 314 410L318 422H146L150 410Q154 398 168 398Z" fill="${A}"/>`;
+  } },
+  { id: "dothi", label: "Đô thị", note: "Thành phố, xã hội, cộng đồng, kinh tế", gen() {
+    let s = disc();
+    const bl = [[76, 84, 170, A, 0.5], [168, 94, 262, A, 1], [270, 76, 204, B, 0.9], [354, 50, 128, A, 0.4]];
+    for (const [x, w, h, col, o] of bl) s += `<rect x="${x}" y="${398 - h}" width="${w}" height="${h}" rx="6" fill="${col}" fill-opacity="${o}"/>`;
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 3; c++) s += `<rect x="${182 + c * 26}" y="${158 + r * 36}" width="14" height="20" rx="3" fill="${ON}" fill-opacity=".85"/>`;
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 2; c++) s += `<rect x="${290 + c * 28}" y="${218 + r * 36}" width="14" height="20" rx="3" fill="${ON}" fill-opacity=".85"/>`;
+    return s + `<rect x="44" y="396" width="376" height="12" rx="6" fill="${A}" fill-opacity=".45"/>`;
+  } },
+  { id: "lotrinh", label: "Lộ trình", note: "Các bước, hành trình, kế hoạch học tập", gen() {
+    const road = "M100 418C100 330 336 360 336 278S146 214 226 150";
+    return disc() +
+      `<path d="${road}" fill="none" stroke="${A}" stroke-width="44" stroke-linecap="round"/>` +
+      `<path d="${road}" fill="none" stroke="${ON}" stroke-width="6" stroke-dasharray="16 18" stroke-linecap="round"/>` +
+      ln(226, 150, 226, 66, A, 8) +
+      `<path d="M230 68L304 90L230 112Z" fill="${B}" stroke="${B}" stroke-width="4" stroke-linejoin="round"/>`;
+  } },
+  { id: "thanhtich", label: "Thành tích", note: "Đạt được, ghi nhận, cuộc thi, kết quả", gen() {
+    return disc() +
+      `<path d="M152 140H120C100 140 96 162 100 180C106 208 130 224 158 228M312 140H344C364 140 368 162 364 180C358 208 334 224 306 228" fill="none" stroke="${A}" stroke-width="13" stroke-linecap="round"/>` +
+      `<path d="M150 116H314V190C314 252 280 292 232 298C184 292 150 252 150 190Z" fill="${A}"/>` +
+      star(232, 196, 38, 16, ON) +
+      `<rect x="216" y="296" width="32" height="50" fill="${A}"/><rect x="170" y="342" width="124" height="22" rx="8" fill="${A}"/>` +
+      `<rect x="148" y="364" width="168" height="34" rx="10" fill="${B}"/>`;
+  } },
+  { id: "nangluong", label: "Năng lượng", note: "Điện, động lực, sức mạnh, vật lý", gen() {
+    let s = disc() + `<circle cx="${CX}" cy="${CY}" r="150" fill="none" stroke="${B}" stroke-width="8" stroke-dasharray="3 22" stroke-linecap="round"/>`;
+    s += `<path d="M266 86L146 272H226L196 414L322 214H240Z" fill="${A}" stroke="${A}" stroke-width="10" stroke-linejoin="round"/>`;
+    return s;
+  } },
+  { id: "nghethuat", label: "Nghệ thuật", note: "Sáng tạo, thiết kế, mỹ thuật, văn hoá", gen() {
+    return disc() +
+      `<path d="M232 100C332 100 400 160 400 238C400 300 360 322 320 312C288 304 268 324 280 354C294 392 262 410 222 408C128 404 64 338 64 248C64 160 138 100 232 100ZM166 322a26 26 0 1 0 52 0a26 26 0 1 0 -52 0Z" fill="${A}" fill-rule="evenodd"/>` +
+      `<circle cx="146" cy="214" r="24" fill="${B}"/><circle cx="214" cy="164" r="24" fill="${B}" fill-opacity=".5"/><circle cx="292" cy="172" r="24" fill="${ON}"/><circle cx="340" cy="236" r="22" fill="${G2}"/>`;
+  } },
+];
+ILLUS.push(...ILLUS2);
+ILLUS_IDS.push(...ILLUS2.map(x => x.id));
+
+/** Năm nhóm chủ đề: chỉ để lưới chọn và bảng duyệt dễ tìm; AI vẫn thấy cả 24 mã kèm chủ đề. */
+const ILLUS_GROUPS = [
+  { label: "Học tập và sáng tạo", ids: ["sachhoc", "ytuong", "nghethuat", "timkiem", "muctieu", "lotrinh"] },
+  { label: "Con người và xã hội", ids: ["connguoi", "traodoi", "dothi", "canbang", "suckhoe"] },
+  { label: "Khoa học và công nghệ", ids: ["khoahoc", "congnghe", "ketnoi", "dulieu", "quytrinh", "antoan"] },
+  { label: "Tự nhiên và Trái Đất", ids: ["tunhien", "toancau", "nangluong"] },
+  { label: "Kinh tế và phát triển", ids: ["taichinh", "tangtruong", "thanhtich", "thoigian"] },
+];
+const NEW_IDS = new Set(ILLUS2.map(x => x.id));
+
+/* ======================= VẼ ======================= */
+let UIDN = 0;
+const W = 464, H = 500;
+/** SVG của một hình minh hoạ hoặc một hoa văn, đúng cỡ ô hình. `fit`: "meet" cho ô hình, "slice" cho ô vuông nhỏ. */
+function artSvg(id, fit = "meet") {
+  const uid = "u" + (++UIDN);
+  const body = isIllus(id) ? IL(id).gen() : M(id).gen(W, H, rng(MOTIF_IDS.indexOf(id) * 7919 + 17));
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid ${fit}" aria-hidden="true">${body.replaceAll("__ID__", uid)}</svg>`;
+}
+const labelOf = id => isIllus(id) ? IL(id).label : M(id).label;
+
+const md = s => s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+function imageSlide(slide, art) {
+  return `<div class="ll-image"><div class="pad"><div class="tx"><h2 class="h" style="font-size:56px">${slide.title}</h2>
+    <ul class="bul">${slide.bullets.map(b => `<li><span>${md(b)}</span></li>`).join("")}</ul></div>
+    <div class="art">${art ? `<div class="motif m-fill">${artSvg(art)}</div>` : ""}</div></div></div>`;
+}
+function fitThumb(btn) { const sl = btn.querySelector(".lslide"); if (sl) sl.style.transform = `scale(${btn.clientWidth / 1280})`; }
+const ro = new ResizeObserver(es => es.forEach(e => fitThumb(e.target)));
+function thumb(btn, themeId, slide, art, cap) {
+  const t = T(themeId);
+  btn.innerHTML = `<div class="lslide ${themeCls(t)}" style="background:${t.bg}">${imageSlide(slide, art)}</div>${cap ? `<span class="cap">${cap}</span>` : ""}`;
+  btn._view = { themeId, slide, art };
+  fitThumb(btn); ro.observe(btn);
+}
+
+/* ======================= DỮ LIỆU MẪU ======================= */
+const SLIDES = [
+  { title: "Internet kết nối các mạng máy tính", bullets: ["Mỗi thiết bị có một địa chỉ riêng", "Dữ liệu đi qua nhiều **nút trung gian**", "Giao thức chung giúp các mạng hiểu nhau"], art: "ketnoi", by: "AI chọn" },
+  { title: "Làm việc nhóm hiệu quả", bullets: ["Chia vai rõ ràng ngay từ đầu", "Thống nhất **một** mục tiêu chung", "Họp ngắn, đều đặn mỗi tuần"], art: "connguoi", by: "AI chọn" },
+  { title: "Quản lý thời gian khi tự học", bullets: ["Chia việc lớn thành phiên **25 phút**", "Làm việc khó lúc tỉnh táo nhất", "Cuối ngày xem lại điều đã làm"], art: "thoigian", by: "Giảng viên chọn" },
+  { title: "Bảo vệ dữ liệu cá nhân của người học", bullets: ["Chỉ thu thập dữ liệu thật sự cần", "Người học được biết và đồng ý", "Xoá khi hết mục đích sử dụng"], art: "antoan", by: "AI chọn" },
+  { title: "Phản ứng hoá học tạo ra chất mới", bullets: ["Liên kết cũ bị phá vỡ", "Nguyên tử sắp xếp lại thành **chất mới**", "Tổng khối lượng được bảo toàn"], art: "khoahoc", by: "AI chọn (hình mới)" },
+  { title: "Thu nhập và chi tiêu của sinh viên", bullets: ["Lập ngân sách theo **tháng**", "Tách khoản cố định và khoản linh hoạt", "Để dành ít nhất một phần mười"], art: "taichinh", by: "Giảng viên chọn (hình mới)" },
+  { title: "Ba dấu hiệu của một hoạt động tốt", bullets: ["Gắn với **một** mục tiêu rõ ràng", "Mọi người học đều phải làm", "Có phản hồi ngay trên lớp"], art: "dongmuc", by: "AI ghi “none”, giữ hoa văn" },
+];
+
+/* ======================= 1. BẢNG HÌNH ======================= */
+const col3 = document.getElementById("col3");
+THEMES.filter(t => !COLS.slice(0, 2).includes(t.id)).forEach(t => col3.insertAdjacentHTML("beforeend", `<option value="${t.id}"${t.id === "night" ? " selected" : ""}>${t.label}</option>`));
+function swatch(themeId, id) {
+  const t = T(themeId);
+  return `<div class="sw ${themeCls(t)}" style="background:${t.bg}" title="${labelOf(id)} · ${t.label}"><div class="art"><div class="motif m-fill">${artSvg(id)}</div></div></div>`;
+}
+function renderMatrix() {
+  COLS.forEach((id, i) => document.querySelector(`[data-colname="${i}"]`).textContent = T(id).label + (T(id).dark ? " (tối)" : ""));
+  document.getElementById("matrix").innerHTML = ILLUS_GROUPS.map(g => `<h3 class="grp">${g.label} <span>· ${g.ids.length} hình</span></h3>` + g.ids.map(IL).map(m => `<div class="mrow"><div class="name"><b>${m.label}</b><span>${m.note}</span><span style="display:block;font-family:ui-monospace,Menlo,monospace;font-size:13px">${m.id}${NEW_IDS.has(m.id) ? " · hình mới" : ""}</span></div>
+    <div class="swrow">${COLS.map(c => swatch(c, m.id)).join("")}</div></div>`).join("")).join("");
+}
+col3.addEventListener("change", () => { COLS[2] = col3.value; renderMatrix(); renderSlides(); });
+
+/* ======================= 2. TRÊN SLIDE ======================= */
+function renderSlides() {
+  const box = document.getElementById("slides");
+  box.innerHTML = `<span></span>${COLS.map(c => `<span class="ch">${T(c).label}</span>`).join("")}`;
+  SLIDES.forEach(sl => {
+    box.insertAdjacentHTML("beforeend", `<div class="rl"><b>${labelOf(sl.art)}${isIllus(sl.art) ? "" : " (hoa văn)"}</b><span>${sl.by}</span></div>`);
+    COLS.forEach(c => { const b = document.createElement("button"); b.className = "thumb"; b.type = "button";
+      b.setAttribute("aria-label", `Xem lớn: ${sl.title}, ${T(c).label}`); box.appendChild(b); thumb(b, c, sl, sl.art); });
+  });
+}
+
+/* ======================= 3. AI CHỌN ======================= */
+document.getElementById("codelist").textContent = ILLUS.map(x => x.id).join(", ");
+const CASES = [
+  { line: "Internet kết nối các mạng máy tính", got: "ketnoi", what: "Có trong danh sách, slide là Chữ và hình chưa có ảnh: vẽ hình Kết nối.", art: "ketnoi", slide: SLIDES[0] },
+  { line: "Ba dấu hiệu của một hoạt động tốt", got: "none", what: "AI không chắc: không lưu gì, ô hình nhận hoa văn tự động như hiện nay.", art: "dongmuc", slide: SLIDES[6] },
+  { line: "Lịch sử máy tính cá nhân", got: "maytinh", what: "Mã không có trong danh sách: bỏ qua, dùng hoa văn. Máy chủ không tìm mã “gần giống” để thay.", art: "lucgiac",
+    slide: { title: "Lịch sử máy tính cá nhân", bullets: ["Thập niên 1970: máy tự lắp", "Thập niên 1980: vào văn phòng", "Từ 2007: thu nhỏ vào điện thoại"] } },
+  { line: "Ba nguyên tắc an toàn trong phòng thí nghiệm (bố cục Ba thẻ)", got: "antoan", what: "Bố cục không có ô hình: mã bị bỏ, không lưu vào slide.", art: null, slide: null },
+];
+document.getElementById("cases").innerHTML = CASES.map((c, i) => `<div class="case">
+  <div><span class="k">Dòng dàn ý</span><b>${c.line}</b></div>
+  <div><span class="k">AI trả về</span><code>${c.got}</code></div>
+  <div><span class="k">Hệ thống làm gì</span><p>${c.what}</p></div>
+  <div>${c.slide ? `<button class="thumb" type="button" data-case="${i}" aria-label="Xem lớn ví dụ ${i + 1}"></button>` : `<p style="color:var(--ink-3)">Slide Ba thẻ, không có ô hình nên không có gì để hiện.</p>`}</div></div>`).join("");
+document.querySelectorAll("[data-case]").forEach(b => { const c = CASES[+b.dataset.case]; thumb(b, "brand", c.slide, c.art); });
+
+/* ======================= 4. TRÌNH SỬA ======================= */
+// Bài mẫu: hoa văn ô hình mà slide này nhận nếu theo bài giảng.
+const INHERITED = "cung";
+const EDIT_SLIDE = SLIDES[0];
+let choice = "ketnoi"; // undefined = theo bài giảng, "none", mã hình hoặc mã hoa văn
+function cell(value, label, art) {
+  const on = value === (choice ?? "follow");
+  const pv = art ? `<div class="pv lt-brand" style="background:${T("brand").bg}"><div class="art" style="height:100%"><div class="motif m-fill">${artSvg(art, "slice")}</div></div></div>`
+    : `<div class="none">Trống</div>`;
+  return `<button type="button" data-v="${value}" aria-pressed="${on}">${pv}<span class="nm">${label}</span></button>`;
+}
+function renderEditor() {
+  const eff = choice === "none" ? null : choice ?? INHERITED;
+  document.getElementById("fieldname").textContent = "Hình ở ô hình";
+  document.getElementById("slidelabel").textContent = choice === "none" ? "Không dùng cho slide này"
+    : choice ? `${labelOf(choice)} (riêng slide này)` : `Theo bài giảng: hoa văn ${M(INHERITED).label}`;
+  document.getElementById("slidemini").innerHTML = `<div class="lt-brand" style="position:absolute;inset:0;background:${T("brand").bg}"><div class="art" style="height:100%;border-radius:0;border:0">${eff ? `<div class="motif m-fill">${artSvg(eff, "slice")}</div>` : ""}</div></div>`;
+  document.getElementById("slidepick").innerHTML =
+    `<p class="pick-h big">Hình minh hoạ <span>· chỉ ở ô hình</span></p>` +
+    ILLUS_GROUPS.map(g => `<p class="pick-h">${g.label}</p>` + g.ids.map(id => cell(id, IL(id).label, id)).join("")).join("") +
+    `<p class="pick-h big">Hoa văn</p>` + cell("follow", "Theo bài giảng", INHERITED) + MOTIFS.map(m => cell(m.id, m.label, m.id)).join("") + cell("none", "Không dùng", null);
+  thumb(document.getElementById("slideprev"), "brand", EDIT_SLIDE, eff, "Slide đang sửa");
+}
+document.getElementById("slidetoggle").addEventListener("click", e => {
+  const p = document.getElementById("slidepick"); p.hidden = !p.hidden;
+  e.target.setAttribute("aria-expanded", String(!p.hidden)); e.target.textContent = p.hidden ? "Đổi" : "Xong";
+});
+document.getElementById("slidepick").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  choice = b.dataset.v === "follow" ? undefined : b.dataset.v; renderEditor();
+});
+
+/* ======================= XEM LỚN ======================= */
+const stage = document.getElementById("stage"), vp = document.getElementById("stagevp");
+let last = null;
+function openStage(btn) {
+  last = btn; const { themeId, slide, art } = btn._view; const t = T(themeId);
+  vp.innerHTML = `<div class="lslide anim ${themeCls(t)}" style="background:${t.bg}">${imageSlide(slide, art)}</div>`;
+  document.getElementById("stagecap").textContent = `${t.label} · ${art ? labelOf(art) : "không có hình"}`;
+  stage.hidden = false; fitStage(); document.getElementById("closestage").focus();
+}
+function fitStage() { const sl = vp.querySelector(".lslide"); if (!sl) return; const k = Math.min(vp.clientWidth / 1280, vp.clientHeight / 720); sl.style.transform = `translate(${-640 * k}px, ${-360 * k}px) scale(${k})`; }
+function closeStage() { stage.hidden = true; vp.innerHTML = ""; last && last.focus(); }
+document.addEventListener("click", e => { const b = e.target.closest(".thumb"); if (b && b._view) openStage(b); });
+document.getElementById("closestage").addEventListener("click", closeStage);
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !stage.hidden) closeStage(); });
+addEventListener("resize", fitStage);
+
+renderMatrix(); renderSlides(); renderEditor();
+</script>
+</body>
+</html>

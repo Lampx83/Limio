@@ -23,6 +23,8 @@ import {
   type ChartType,
 } from "./limioLiveCharts";
 
+import { isSlideMotifChoice } from "./limioLiveMotifs";
+
 export const SLIDE_LAYOUTS = [
   "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
   "cover",
@@ -638,8 +640,9 @@ export function padForEditing(layout: SlideLayoutId, c: Record<string, any>): Re
 }
 
 /**
- * Khoá "meta" đi kèm mọi slide, không thuộc bố cục: ghi chú giảng, cờ ẩn khi trình chiếu,
- * và dấu vết sinh bằng AI (id dòng dàn ý, slide do AI sinh, đã được giảng viên sửa tay).
+ * Khoá "meta" đi kèm mọi slide, không thuộc bố cục: ghi chú giảng, cờ ẩn khi trình chiếu, hoa văn trang trí chọn
+ * riêng cho slide ("none", mã hoa văn hoặc mã hình minh hoạ, xem limioLiveMotifs), và dấu vết sinh bằng AI (id dòng dàn ý, slide do
+ * AI sinh, đã được giảng viên sửa tay). Hoa văn là meta để AI sửa slide hay đổi bố cục không làm mất lựa chọn.
  * Bộ lọc bố cục phải giữ chúng, nếu không việc ẩn slide hay ghi chú sẽ mất lặng lẽ.
  */
 export function pickMeta(config: Record<string, unknown> | null | undefined): Record<string, unknown> {
@@ -647,6 +650,7 @@ export function pickMeta(config: Record<string, unknown> | null | undefined): Re
   const out: Record<string, unknown> = {};
   if (typeof c.presenterNote === "string" && c.presenterNote.trim()) out.presenterNote = c.presenterNote.trim().slice(0, MAX_LEN.notes);
   if (c.hidden === true) out.hidden = true;
+  if (isSlideMotifChoice(c.motif)) out.motif = c.motif;
   if (typeof c.outlineId === "string" && c.outlineId) out.outlineId = c.outlineId.slice(0, 60);
   if (c.aiGenerated === true) out.aiGenerated = true;
   if (c.editedByUser === true) out.editedByUser = true;
@@ -667,7 +671,8 @@ export function normalizeContentSlideConfig(config: unknown): unknown {
 
 // ── Dấu vết sinh bằng AI và việc "đã sửa tay" ───────────────────────────────
 
-const IDENTITY_KEYS = ["outlineId", "aiGenerated", "hidden", "editedByUser"] as const;
+// Đổi hoa văn là đổi trang trí, không phải sửa nội dung: không tính là "đã sửa tay".
+const IDENTITY_KEYS = ["outlineId", "aiGenerated", "hidden", "editedByUser", "motif"] as const;
 
 function stable(v: unknown): string {
   if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;

@@ -8,6 +8,7 @@ import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limio
 import { pickMeta } from "@/lib/limioLiveSlides";
 import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
 import { partLabel, sanitizeOutline, slideStructures } from "@/lib/limioLiveOutline";
+import { motifAfterRegenerate } from "@/lib/limioLiveMotifs";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -129,11 +130,13 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             const gen = byOutlineId.get(r.outlineId)!;
             const old = oldBy.get(r.slideId)!;
             // Giữ cờ ẩn của slide cũ; ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
-            const keepHidden = pickMeta(old.config).hidden ? { hidden: true } : {};
+            const oldMeta = pickMeta(old.config);
+            const keepHidden = oldMeta.hidden ? { hidden: true } : {};
+            const keepMotif = motifAfterRegenerate(oldMeta.motif, gen.config.motif);
             await recordSlideVersion(tx, { id: r.slideId, type: old.type as never, config: old.config }, "before_sync");
             const row = await tx.liveSlide.update({
               where: { id: r.slideId },
-              data: { type: gen.type, config: { ...gen.config, ...keepHidden } as object },
+              data: { type: gen.type, config: { ...gen.config, ...keepHidden, ...(keepMotif ? { motif: keepMotif } : {}) } as object },
               select: { id: true, type: true, config: true },
             });
             await recordSlideVersion(tx, row, "generated");

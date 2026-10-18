@@ -336,3 +336,36 @@ describe("proposalFromDraft", () => {
     expect(r.config.title).toBe("Ba câu hỏi");
   });
 });
+
+describe("draftToSlide — hình minh hoạ do AI chọn", () => {
+  const img = os("i1", "content", "image", "Internet kết nối các mạng máy tính");
+  const draft = (illustration?: string): SlideDraft => ({
+    index: 0,
+    title: "Internet kết nối các mạng máy tính",
+    bullets: ["Mỗi thiết bị có một địa chỉ riêng.", "Dữ liệu đi qua nhiều nút trung gian.", "Giao thức chung giúp các mạng hiểu nhau."],
+    illustration,
+  });
+
+  it("mã có trong danh sách ở slide Chữ và hình: lưu vào ô hình của slide", () => {
+    expect(draftToSlide(img, draft("ketnoi"), "").config.motif).toBe("ketnoi");
+  });
+
+  it("“none”, bỏ trống, mã lạ hay mã hoa văn: không lưu gì, slide nhận hoa văn tự động", () => {
+    for (const v of [undefined, "", "none", "maytinh", "KetNoi", "song"]) expect(draftToSlide(img, draft(v), "").config.motif).toBeUndefined();
+  });
+
+  it("bố cục không có ô hình: mã bị bỏ", () => {
+    const cards = os("c1", "content", "cards", "Ba nguyên tắc an toàn");
+    const g = draftToSlide(
+      cards,
+      { index: 0, title: "Ba nguyên tắc an toàn", illustration: "antoan", items: [1, 2, 3].map((n) => ({ heading: `Ý ${n}`, body: "Một câu hoàn chỉnh.", icon: "target" })) },
+      "",
+    );
+    expect(g.usedFallback).toBe(false);
+    expect(g.config.motif).toBeUndefined();
+  });
+
+  it("bản nháp hỏng phải rơi về dàn ý thì cũng không có hình", () => {
+    expect(draftToSlide(img, { index: 0, illustration: "ketnoi" }, "").config.motif).toBeUndefined();
+  });
+});

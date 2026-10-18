@@ -16,6 +16,7 @@ import { contentKind } from "../../slideKind";
 import { slideBgFor } from "../../slideThemes";
 import { LayoutSlideView, isLayoutSlide } from "../../SlideLayouts";
 import { BrandLogoOverlay, BrandLogoSpacer, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
+import { LiveMotifProvider } from "../../liveMotifContext";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
 import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
@@ -49,6 +50,8 @@ interface Deck {
   brand?: unknown;
   brandOff?: boolean;
   brandTemplate?: string | null;
+  /** Hoa văn trang trí của cả bài (limioLiveMotifs): null = tự động. */
+  motif?: string | null;
   org?: DeckOrgBrand | null;
   slides: Slide[];
 }
@@ -653,6 +656,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
   return (
     <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
+    <LiveMotifProvider deckId={deck.id} motif={deck.motif} slides={slides}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {
@@ -981,6 +985,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
     </div>
+    </LiveMotifProvider>
     </LiveBrandProvider>
   );
 }
@@ -1088,6 +1093,7 @@ function SlideStage({
   if (slide.type === "content") {
     return (
       <ContentSlideView
+        slideId={slide.id}
         zoom={zoom}
         themeId={themeId}
         animate
@@ -1196,6 +1202,7 @@ function SlideTimer({
 }
 
 function ContentSlideView({
+  slideId,
   config,
   timerSeconds,
   timerStartedAt,
@@ -1206,6 +1213,8 @@ function ContentSlideView({
   themeId,
   animate,
 }: {
+  /** Để biết thứ tự ô hình khi tự chọn hoa văn (xem liveMotifContext). */
+  slideId?: string;
   themeId?: string | null;
   animate?: boolean;
   config: Record<string, any>;
@@ -1237,7 +1246,7 @@ function ContentSlideView({
   if (isLayoutSlide(config)) {
     return (
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <LayoutSlideView config={config} themeId={themeId} animate={animate} zoom={zoom} />
+        <LayoutSlideView config={config} themeId={themeId} slideId={slideId} animate={animate} zoom={zoom} />
         {timerSticker}
       </div>
     );
@@ -1423,7 +1432,7 @@ function Filmstrip({
                   </>
                 ) : plain ? (
                   <ThumbScaled width={FILM_ITEM_W - 22}>
-                    <ContentSlideView config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages themeId={theme} />
+                    <ContentSlideView slideId={sl.id} config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages themeId={theme} />
                   </ThumbScaled>
                 ) : (
                   <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 p-1.5 text-center text-[#20241F]">

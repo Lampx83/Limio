@@ -26,6 +26,9 @@ import {
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
 import { slideBgFor } from "../slideThemes";
 import { ChartSheet, TableSheet } from "./DataSheetEditor";
+import { motifSlot } from "@/lib/limioLiveMotifs";
+import { useSlideMotif } from "../liveMotifContext";
+import { SlideMotifField } from "./MotifPicker";
 import OutlineGlyph from "./outline/OutlineGlyph";
 import PickerButton from "./outline/PickerButton";
 
@@ -280,13 +283,13 @@ function AiEditBar({
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <p className="mb-1 text-xs font-semibold text-muted">Hiện tại</p>
-              <Thumb config={config} themeId={themeId} />
+              <Thumb config={config} themeId={themeId} slideId={slideId} />
             </div>
             <div>
               <p className="mb-1 text-xs font-semibold text-muted">
                 {proposal.type === "quiz" ? "Đề xuất: câu hỏi quiz" : "Đề xuất"}
               </p>
-              {proposal.type === "quiz" ? <QuizPreview config={proposal.config} /> : <Thumb config={proposal.config} themeId={themeId} />}
+              {proposal.type === "quiz" ? <QuizPreview config={proposal.config} /> : <Thumb config={proposal.config} themeId={themeId} slideId={slideId} />}
             </div>
           </div>
           <div className="flex gap-2">
@@ -310,11 +313,11 @@ function AiEditBar({
   );
 }
 
-function Thumb({ config, themeId }: { config: Cfg; themeId?: string | null }) {
+function Thumb({ config, themeId, slideId }: { config: Cfg; themeId?: string | null; slideId?: string }) {
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-black/10" style={{ background: slideBgFor(themeId, true) }}>
       <div className="absolute inset-0 flex">
-        <LayoutSlideView config={config} themeId={themeId} />
+        <LayoutSlideView config={config} themeId={themeId} slideId={slideId} />
       </div>
     </div>
   );
@@ -388,7 +391,21 @@ export default function LayoutEditor({
   const blur = () => commit();
 
   // Xem trước đúng như sẽ lưu: mục còn trống không hiện.
-  const preview = useMemo(() => sanitizeLayoutConfig(layout, d), [layout, d]);
+  // Hoa văn là khoá meta của slide (không nằm trong ô sửa): ghép vào bản xem trước để thấy đúng như khi chiếu.
+  const savedMotif = typeof config.motif === "string" ? config.motif : undefined;
+  const preview = useMemo(
+    () => ({ ...sanitizeLayoutConfig(layout, d), ...(savedMotif ? { motif: savedMotif } : {}) }),
+    [layout, d, savedMotif],
+  );
+  const effectiveMotif = useSlideMotif(preview, slideId);
+  const inheritedMotif = useSlideMotif({ ...preview, motif: undefined }, slideId);
+  /** Đổi hoa văn của slide: lưu ngay cùng chữ đang soạn; null = theo bài giảng. */
+  const setMotif = (v: string | null) => {
+    const next: Cfg = { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config) };
+    if (v) next.motif = v;
+    else delete next.motif;
+    onSave({ config: next });
+  };
   const problems = useMemo(() => layoutTextProblems(layout, preview), [layout, preview]);
   const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }) : null), [problems, preview, config]);
 
@@ -470,14 +487,14 @@ export default function LayoutEditor({
       style={{ background: slideBgFor(themeId, true) }}
     >
       <div className="absolute inset-0 flex">
-        <LayoutSlideView config={preview} themeId={themeId} />
+        <LayoutSlideView config={preview} themeId={themeId} slideId={slideId} />
       </div>
     </div>
   );
   // Khung xem trước lấp đầy vùng giữa; viền khung hình 16:9 do bộ vẽ slide tự vẽ.
   const previewBox = (
     <div className="absolute inset-0 flex">
-      <LayoutSlideView config={preview} themeId={themeId} zoom={zoom} frame />
+      <LayoutSlideView config={preview} themeId={themeId} slideId={slideId} zoom={zoom} frame />
     </div>
   );
 
@@ -842,6 +859,19 @@ export default function LayoutEditor({
                 <Field label="Câu trích dẫn" value={d.quote ?? ""} max={MAX_LEN.quote} multiline onChange={(v) => set({ quote: v })} onBlur={blur} />
                 <Field label="Nguồn hoặc thông điệp" value={d.source ?? ""} max={MAX_LEN.source} onChange={(v) => set({ source: v })} onBlur={blur} />
               </>
+            )}
+
+            {/* Chỉ bốn bố cục có chỗ trống cho hoa văn; Chữ và hình đã có ảnh thì không. Riêng ô hình (Chữ và hình
+                chưa có ảnh) chọn được thêm hình minh hoạ theo chủ đề. */}
+            {motifSlot(preview) && (
+              <SlideMotifField
+                value={savedMotif}
+                illustrations={motifSlot(preview) === "fill"}
+                effective={effectiveMotif?.motif ?? null}
+                inherited={inheritedMotif?.motif ?? null}
+                themeId={themeId}
+                onChange={setMotif}
+              />
             )}
           </div>
                       </div>

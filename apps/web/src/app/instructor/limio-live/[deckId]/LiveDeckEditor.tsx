@@ -62,6 +62,8 @@ import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
 import BrandDialog, { type BrandPatch } from "./BrandDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
+import { LiveMotifProvider } from "../liveMotifContext";
+import { deckAutoMotif } from "@/lib/limioLiveMotifs";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
 import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import { isLayoutSlide } from "../SlideLayouts";
@@ -90,6 +92,8 @@ interface Deck {
   brandOff?: boolean;
   /** Mẫu thương hiệu của trường giảng viên chọn cho bài; null = mẫu mặc định của trường. */
   brandTemplate?: string | null;
+  /** Hoa văn trang trí của cả bài: null = tự động, "none" = không dùng, hoặc mã hoa văn (limioLiveMotifs). */
+  motif?: string | null;
   /** Bộ thương hiệu của trường mà chủ bài thuộc về (null nếu không thuộc trường nào). */
   org?: DeckOrgBrand | null;
   slides: Slide[];
@@ -370,6 +374,25 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
+  const handleSetMotif = async (motif: string | null) => {
+    if (!deck || (deck.motif ?? null) === motif) return;
+    const prev = deck.motif ?? null;
+    setDeck({ ...deck, motif });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motif }),
+      })
+    );
+    if (!res.ok) {
+      toast.error("Lưu hoa văn thất bại");
+      setDeck((d) => (d ? { ...d, motif: prev } : d));
+      return;
+    }
+    setLastSavedAt(new Date());
+  };
+
   // 3 nút giống thanh Slide Show của PowerPoint:
   //  - Từ đầu / Từ slide hiện tại: vào fullscreen NGAY trong cú click rồi điều
   //    hướng SPA (fullscreen sống sót qua điều hướng client) — không ghi chú.
@@ -625,6 +648,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   return (
     <LiveBrandProvider brand={effBrand}>
+    <LiveMotifProvider deckId={deckId} motif={deck.motif} slides={deck.slides}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
       onInput={() => {
@@ -683,7 +707,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         >
           <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
         </Link>
-        <ThemePicker value={deck.theme ?? "white"} onChange={handleSetTheme} />
+        <ThemePicker
+          value={deck.theme ?? "white"}
+          onChange={handleSetTheme}
+          motif={{ value: deck.motif ?? null, auto: deckAutoMotif(deckId), onChange: handleSetMotif }}
+        />
         <button
           type="button"
           onClick={() => setBrandOpen(true)}
@@ -1054,6 +1082,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         />
       )}
     </div>
+    </LiveMotifProvider>
     </LiveBrandProvider>
   );
 }
