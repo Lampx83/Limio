@@ -299,9 +299,8 @@
   .lslide .motif.m-side { right: 0; top: 0; width: 480px; height: 720px; opacity: .5;
     -webkit-mask-image: linear-gradient(to right, transparent 20%, #000 62%); mask-image: linear-gradient(to right, transparent 20%, #000 62%); }
   .lt-dark .motif.m-side { opacity: .6; }
-  .lslide .motif.m-br, .lslide .motif.m-bl, .lslide .motif.m-tr { width: 600px; height: 440px; opacity: var(--smo, 0); }
+  .lslide .motif.m-br, .lslide .motif.m-tr { width: 600px; height: 440px; opacity: var(--smo, 0); }
   .lslide .motif.m-br { right: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); }
-  .lslide .motif.m-bl { left: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); }
   .lslide .motif.m-tr { right: 0; top: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); }
   .lslide .motif.m-fill { inset: 0; }
   /* Hình minh hoạ: đĩa nền tô --sglow1, ở giao diện tối màu này thường trùng --sa nên phải nhạt hơn để vật thể nổi lên. */
