@@ -186,20 +186,20 @@ const chartDraft = (values: number[]) => ({
 
 describe("draftToSlide — Biểu đồ", () => {
   it("mọi số có trong tài liệu: giữ biểu đồ", () => {
-    const g = draftToSlide(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), chartDraft([62, 75, 84]), "", found);
+    const g = draftToSlide(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), chartDraft([62, 75, 84]), "", { sourceNumbers: found });
     expect(g.usedFallback).toBe(false);
     expect(g.config.layout).toBe("chart");
     expect((g.config as any).series[0].values).toEqual([62, 75, 84]);
     expect(g.config.presenterNote).toBe("Nhấn mạnh xu hướng.");
   });
   it("một số bịa (70): bỏ biểu đồ, rơi về Số liệu từ dàn ý", () => {
-    const g = draftToSlide(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), chartDraft([62, 70, 84]), "", found);
+    const g = draftToSlide(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), chartDraft([62, 70, 84]), "", { sourceNumbers: found });
     expect(g.usedFallback).toBe(true);
     expect(g.config.layout).toBe("stats");
     expect((g.config as any).items.map((i: any) => i.heading)).toEqual(["62%", "84%"]);
   });
   it("dàn ý cũng thiếu số: rơi tiếp về Ba thẻ", () => {
-    const g = draftToSlide(os("chart", ["Tỉ lệ tăng đều.", "Lớp sau tốt hơn."]), chartDraft([62, 70, 84]), "", found);
+    const g = draftToSlide(os("chart", ["Tỉ lệ tăng đều.", "Lớp sau tốt hơn."]), chartDraft([62, 70, 84]), "", { sourceNumbers: found });
     expect(g.config.layout).toBe("cards");
   });
   it("không có tài liệu: biểu đồ luôn rơi về bố cục khác", () => {
@@ -207,10 +207,10 @@ describe("draftToSlide — Biểu đồ", () => {
   });
   it("biểu đồ thiếu số (dưới 2 số) coi như hỏng", () => {
     const d = chartDraft([62]);
-    expect(draftToSlide(os("chart"), d, "", found).usedFallback).toBe(true);
+    expect(draftToSlide(os("chart"), d, "", { sourceNumbers: found }).usedFallback).toBe(true);
   });
   it("không có bản nháp: dựng từ dàn ý bằng Số liệu, không bao giờ dựng biểu đồ chưa đối chiếu", () => {
-    expect(configFromOutline(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), "", undefined, found).config.layout).toBe("stats");
+    expect(configFromOutline(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), "", undefined, { sourceNumbers: found }).config.layout).toBe("stats");
     expect(configFromOutline(os("table", ["Bảng so sánh ba hình thức."]), "").config.layout).toBe("image");
   });
 });
@@ -222,7 +222,7 @@ describe("draftToSlide — Bảng", () => {
     table: { head: ["Lớp", "Tỉ lệ"], rows: [["Tuần đầu", "62%"], ["Tuần sáu", cell]] },
   });
   it("ô số có trong tài liệu, ô chữ tự do: giữ bảng", () => {
-    const g = draftToSlide(os("table"), table("84%"), "", found);
+    const g = draftToSlide(os("table"), table("84%"), "", { sourceNumbers: found });
     expect(g.config.layout).toBe("table");
     expect((g.config as any).rows[1]).toEqual(["Tuần sáu", "84%"]);
   });
@@ -231,7 +231,7 @@ describe("draftToSlide — Bảng", () => {
     expect(g.config.layout).toBe("table");
   });
   it("một ô có số bịa: bỏ bảng", () => {
-    const g = draftToSlide(os("table", ["Bảng so sánh tỉ lệ."]), table("90%"), "", found);
+    const g = draftToSlide(os("table", ["Bảng so sánh tỉ lệ."]), table("90%"), "", { sourceNumbers: found });
     expect(g.usedFallback).toBe(true);
     expect(g.config.layout).toBe("image");
   });
@@ -245,7 +245,7 @@ describe("generateDeckSlides truyền tài liệu xuống bước kiểm tra s�
   it("cùng bản nháp: có tài liệu thì giữ biểu đồ, không có thì rơi về Ba thẻ (dàn ý cũng không được đối chiếu)", async () => {
     const outline = [os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"])];
     const run = (sourceText?: string) =>
-      generateDeckSlides({ outline, sourceText, isFatal: () => false, generateBatch: async () => [chartDraft([62, 75, 84])] });
+      generateDeckSlides({ outline, context: { sourceText }, isFatal: () => false, generateBatch: async () => [chartDraft([62, 75, 84])] });
     expect((await run(SOURCE)).slides[0]!.config.layout).toBe("chart");
     expect((await run()).slides[0]!.config.layout).toBe("cards");
   });
@@ -259,22 +259,22 @@ describe("draftToSlide — Số liệu", () => {
     notes: "Đọc chậm từng số.",
   });
   it("mọi con số có trong tài liệu (kể cả 1.250 viết kiểu Việt Nam): giữ Số liệu", () => {
-    const g = draftToSlide(os("stats"), statsDraft("62%", "84%", "1.250"), "", found);
+    const g = draftToSlide(os("stats"), statsDraft("62%", "84%", "1.250"), "", { sourceNumbers: found });
     expect(g.usedFallback).toBe(false);
     expect(g.config.layout).toBe("stats");
     expect((g.config as any).items.map((i: any) => i.heading)).toEqual(["62%", "84%", "1.250"]);
   });
   it("con số không phải số (\"Gấp đôi\") thì không có gì để đối chiếu", () => {
-    expect(draftToSlide(os("stats"), statsDraft("62%", "Gấp đôi"), "", found).config.layout).toBe("stats");
+    expect(draftToSlide(os("stats"), statsDraft("62%", "Gấp đôi"), "", { sourceNumbers: found }).config.layout).toBe("stats");
   });
   it("một con số bịa (91%): bỏ bản nháp, dựng Số liệu từ dàn ý nếu số dàn ý có trong tài liệu", () => {
-    const g = draftToSlide(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 84%"]), statsDraft("62%", "91%"), "", found);
+    const g = draftToSlide(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 84%"]), statsDraft("62%", "91%"), "", { sourceNumbers: found });
     expect(g.usedFallback).toBe(true);
     expect(g.config.layout).toBe("stats");
     expect((g.config as any).items.map((i: any) => i.heading)).toEqual(["62%", "84%"]);
   });
   it("dàn ý cũng có số bịa: rơi về Ba thẻ", () => {
-    const g = draftToSlide(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 91%", "Tuần tám: 84%"]), statsDraft("62%", "91%"), "", found);
+    const g = draftToSlide(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 91%", "Tuần tám: 84%"]), statsDraft("62%", "91%"), "", { sourceNumbers: found });
     expect(g.usedFallback).toBe(true);
     expect(g.config.layout).toBe("cards");
   });
@@ -291,11 +291,11 @@ describe("draftToSlide — Số liệu", () => {
 describe("proposalFromDraft — Nhờ AI sửa slide biểu đồ", () => {
   const current = { config: { ...sanitizeLayoutConfig("chart", { title: "Điểm", labels: ["A", "B"], series: [{ name: "", values: [6.2, 7.4] }] }), outlineId: "o1", aiGenerated: true } };
   it("giữ số giảng viên đã nhập dù tài liệu không có", () => {
-    const p = proposalFromDraft("shorter", current, { index: 0, title: "Điểm tăng.", chart: { type: "bar", labels: ["A", "B"], series: [{ name: "", values: [6.2, 7.4] }], unit: "" } }, "");
+    const p = proposalFromDraft("shorter", current, { index: 0, title: "Điểm tăng.", chart: { type: "bar", labels: ["A", "B"], series: [{ name: "", values: [6.2, 7.4] }], unit: "" } }, { sourceText: "" });
     expect(p?.config.layout).toBe("chart");
   });
   it("AI thêm số mới thì không đề xuất", () => {
-    const p = proposalFromDraft("shorter", current, { index: 0, title: "Điểm tăng.", chart: { type: "bar", labels: ["A", "B"], series: [{ name: "", values: [6.2, 9.9] }], unit: "" } }, "");
+    const p = proposalFromDraft("shorter", current, { index: 0, title: "Điểm tăng.", chart: { type: "bar", labels: ["A", "B"], series: [{ name: "", values: [6.2, 9.9] }], unit: "" } }, { sourceText: "" });
     expect(p).toBeNull();
   });
 });
@@ -304,11 +304,11 @@ describe("proposalFromDraft — Nhờ AI sửa slide Số liệu", () => {
   const current = { config: { ...sanitizeLayoutConfig("stats", { title: "Điểm", items: [{ heading: "6,2", body: "Lớp A" }, { heading: "7,4", body: "Lớp B" }] }), outlineId: "o1", aiGenerated: true } };
   const draft = (b: string) => ({ index: 0, title: "Điểm tăng.", items: [{ heading: "6,2", body: "Lớp A" }, { heading: b, body: "Lớp B" }] });
   it("giữ số giảng viên đã nhập dù tài liệu không có", () => {
-    expect(proposalFromDraft("shorter", current, draft("7,4"), "")?.config.layout).toBe("stats");
+    expect(proposalFromDraft("shorter", current, draft("7,4"), { sourceText: "" })?.config.layout).toBe("stats");
   });
   it("AI thêm số mới thì không đề xuất; số có trong tài liệu thì được", () => {
-    expect(proposalFromDraft("shorter", current, draft("9,9"), "")).toBeNull();
-    expect(proposalFromDraft("shorter", current, draft("84%"), SOURCE)?.config.layout).toBe("stats");
+    expect(proposalFromDraft("shorter", current, draft("9,9"), { sourceText: "" })).toBeNull();
+    expect(proposalFromDraft("shorter", current, draft("84%"), { sourceText: SOURCE })?.config.layout).toBe("stats");
   });
 });
 

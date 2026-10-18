@@ -13,8 +13,9 @@ import {
   type SlideLayoutId,
 } from "./limioLiveSlides";
 import { isSlideIllustrationId } from "@feedbackme/shared-types";
-import { stripEmoji, type OutlineSlide, type SlideStructure } from "./limioLiveOutline";
 import { addNumbersOf, cellNumbersInSource, hasNumber, isNum, numbersInText, type ChartSeries } from "./limioLiveCharts";
+import { safeLayoutFor, stripEmoji, type DeckSourceKind, type OutlineSlide, type SlideStructure, type WebSourceRef } from "./limioLiveOutline";
+import { allText, formatCite, stripCitesDeep, unsupportedFigures } from "./limioLiveFigures";
 
 export const BATCH_SIZE = 5;
 
@@ -46,6 +47,50 @@ export interface GeneratedSlide {
   config: Record<string, unknown>;
   /** true = nội dung dựng từ dàn ý vì bản nháp của AI thiếu hoặc hỏng. */
   usedFallback: boolean;
+}
+
+/**
+ * Nguồn của bài khi tạo slide. Bỏ trống = tài liệu (hành vi cũ). Bài từ mô tả chủ đề: đổi bố cục bị cấm,
+ * loại con số kiểu thống kê không có trong dàn ý hoặc nguồn, và (mức có nguồn) gom số [n] thành dòng nguồn ở chân slide.
+ */
+export interface DraftContext {
+  sourceKind?: DeckSourceKind;
+  /** Văn bản nguồn của bài (mô tả, hoặc mô tả kèm các trang đã đọc). */
+  sourceText?: string;
+  refs?: WebSourceRef[];
+  /** Văn bản khác giảng viên đã thấy và chấp nhận (vd. nội dung slide hiện tại khi nhờ AI sửa). */
+  extraCorpus?: string;
+  /** Tập số có trong nguồn (numbersInText): số trên Bảng, Biểu đồ, Số liệu phải nằm trong đây. Thiếu = rỗng. */
+  sourceNumbers?: Set<string>;
+}
+
+const topicKind = (ctx?: DraftContext): DeckSourceKind => ctx?.sourceKind ?? "document";
+
+/** Dòng dàn ý với bố cục đã đổi theo nguồn (mức kiến thức chung không có Số liệu, Trích dẫn). */
+function forSource(os: OutlineSlide, ctx?: DraftContext): OutlineSlide {
+  const layout = safeLayoutFor(topicKind(ctx), os.layout);
+  return layout === os.layout ? os : { ...os, layout };
+}
+
+/** Gỡ số nguồn [n] khỏi chữ; mức có nguồn thì trả dòng chân slide tương ứng. */
+function takeCites<T>(v: T, ctx?: DraftContext): { value: T; cite: string } {
+  if (topicKind(ctx) === "document") return { value: v, cite: "" };
+  const nums: number[] = [];
+  const value = stripCitesDeep(v, nums);
+  return { value, cite: topicKind(ctx) === "topic_web" ? formatCite(nums, ctx?.refs?.length ?? 0) : "" };
+}
+
+/** Slide Nguồn tham khảo: đúng chữ của dàn ý; ghi chú giảng liệt kê địa chỉ đầy đủ để giảng viên mở kiểm tra. */
+function referencesSlide(os: OutlineSlide, ctx?: DraftContext): GeneratedSlide {
+  const refs = ctx?.refs ?? [];
+  const note = refs.length ? `Các trang AI đã đọc khi soạn bài:\n${refs.map((r) => `[${r.n}] ${r.title} — ${r.url}`).join("\n")}` : "";
+  const config = {
+    ...sanitizeLayoutConfig("summary", { title: os.title, items: os.points.map((p) => ({ heading: p })) }),
+    outlineId: os.id,
+    aiGenerated: true,
+    ...(note ? { presenterNote: note.slice(0, MAX_LEN.notes) } : {}),
+  };
+  return { type: "content", config: normalizeContentSlideConfig(config) as Record<string, unknown>, usedFallback: false };
 }
 
 export function makeBatches(total: number, size = BATCH_SIZE): number[][] {
@@ -90,10 +135,14 @@ function metaFor(os: OutlineSlide, notes: string | undefined): Record<string, un
 
 /**
  * Nội dung dựng thẳng từ dàn ý — dùng khi bản nháp AI thiếu hoặc hỏng. Số liệu chỉ dựng khi mọi số lấy
- * từ dàn ý đều có trong `sourceNumbers` (tập số của tài liệu gốc); không thì dựng Ba thẻ.
+ * từ dàn ý đều có trong `ctx.sourceNumbers` (tập số của nguồn); không thì dựng Ba thẻ.
  */
-export function configFromOutline(os: OutlineSlide, sectionNo: string, notes?: string, sourceNumbers: Set<string> = new Set()): GeneratedSlide {
-  const meta = metaFor(os, notes);
+export function configFromOutline(osIn: OutlineSlide, sectionNo: string, notes?: string, ctx?: DraftContext): GeneratedSlide {
+  if (osIn.fixed === "references") return referencesSlide(osIn, ctx);
+  const sourceNumbers = ctx?.sourceNumbers ?? new Set<string>();
+  const cited = takeCites({ title: osIn.title, points: osIn.points }, ctx);
+  const os = { ...forSource(osIn, ctx), ...cited.value };
+  const meta = { ...metaFor(os, notes), ...(cited.cite ? { cite: cited.cite } : {}) };
   const pts = os.points;
   if (os.kind === "quiz" || os.kind === "poll") {
     return {
@@ -229,15 +278,24 @@ function flattenData(layout: SlideLayoutId, d: SlideDraft): Record<string, unkno
 }
 
 /**
- * Biến bản nháp AI của một dòng dàn ý thành slide; hỏng thì rơi về dàn ý. `sourceNumbers` là tập số
- * có trong tài liệu (numbersInText): Bảng, Biểu đồ hoặc Số liệu có số không nằm trong tập này thì bị bỏ,
- * rơi về bố cục khác. Không truyền thì coi như tài liệu không có số nào — biểu đồ và Số liệu luôn rơi về
- * bố cục khác.
+ * Biến bản nháp AI của một dòng dàn ý thành slide; hỏng thì rơi về dàn ý. `ctx.sourceNumbers` là tập số
+ * có trong nguồn (numbersInText): Bảng, Biểu đồ hoặc Số liệu có số không nằm trong tập này thì bị bỏ,
+ * rơi về bố cục khác. Không có thì coi như nguồn không có số nào — biểu đồ và Số liệu luôn rơi về bố cục khác.
  */
-export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, sectionNo: string, sourceNumbers: Set<string> = new Set()): GeneratedSlide {
-  if (!draftIn || typeof draftIn !== "object") return configFromOutline(os, sectionNo, undefined, sourceNumbers);
-  const d = deepStripEmoji(draftIn);
-  const meta = metaFor(os, d.notes);
+export function draftToSlide(osIn: OutlineSlide, draftIn: SlideDraft | undefined, sectionNo: string, ctx?: DraftContext): GeneratedSlide {
+  if (osIn.fixed === "references") return referencesSlide(osIn, ctx);
+  if (!draftIn || typeof draftIn !== "object") return configFromOutline(osIn, sectionNo, undefined, ctx);
+  const os = forSource(osIn, ctx);
+  const sourceNumbers = ctx?.sourceNumbers ?? new Set<string>();
+  const fallback = (notes?: string) => configFromOutline(osIn, sectionNo, notes, ctx);
+  const cited = takeCites(deepStripEmoji(draftIn), ctx);
+  const d = cited.value;
+  // Bài không có tài liệu: con số kiểu thống kê phải có trong dàn ý đã chốt, văn bản nguồn hoặc nội dung giảng viên đã có.
+  if (topicKind(ctx) !== "document") {
+    const corpus = [osIn.title, ...osIn.points, ctx?.sourceText ?? "", ctx?.extraCorpus ?? ""].join("\n");
+    if (unsupportedFigures(allText({ ...d, notes: "" }), corpus).length) return fallback(d.notes);
+  }
+  const meta = { ...metaFor(os, d.notes), ...(cited.cite ? { cite: cited.cite } : {}) };
 
   if (os.kind === "quiz" || os.kind === "poll") {
     const opts = (Array.isArray(d.options) ? d.options : [])
@@ -246,20 +304,20 @@ export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, 
     const q = nonEmpty(d.question) ? d.question.trim().slice(0, 300) : "";
     if (os.kind === "quiz") {
       const correct = opts.filter((o) => o.correct).length;
-      if (!q || opts.length < 2 || opts.length > 6 || correct !== 1) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
+      if (!q || opts.length < 2 || opts.length > 6 || correct !== 1) return fallback(d.notes);
       return { type: "quiz", config: { question: q, options: opts, ...meta }, usedFallback: false };
     }
-    if (!q || opts.length < 2 || opts.length > 6) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
+    if (!q || opts.length < 2 || opts.length > 6) return fallback(d.notes);
     return { type: "poll", config: { question: q, options: opts.map((o) => ({ text: o.text })), ...meta }, usedFallback: false };
   }
   if (os.kind === "word_cloud") {
     const p = nonEmpty(d.prompt) ? d.prompt.trim().slice(0, 300) : "";
-    if (!p) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
+    if (!p) return fallback(d.notes);
     return { type: "word_cloud", config: { prompt: p, ...meta }, usedFallback: false };
   }
   if (isCollab(os.kind)) {
     const p = nonEmpty(d.prompt) ? d.prompt.trim().slice(0, 300) : "";
-    if (!p) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
+    if (!p) return fallback(d.notes);
     return collabSlide(os, p, meta, false);
   }
 
@@ -273,8 +331,8 @@ export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, 
     byline: "",
   };
   const clean = sanitizeLayoutConfig(layout, raw) as Record<string, any>;
-  if (!contentComplete(layout, clean)) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
-  if (!dataNumbersVerified(layout, clean, sourceNumbers)) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
+  if (!contentComplete(layout, clean)) return fallback(d.notes);
+  if (!dataNumbersVerified(layout, clean, sourceNumbers)) return fallback(d.notes);
   // Hình minh hoạ: chỉ nhận đúng một mã trong danh sách, chỉ ở Chữ và hình; mọi thứ khác bỏ qua để ô hình giữ hoa văn
   // tự động. Không đoán mã "gần giống" từ chữ của slide.
   const illustration = layout === "image" && isSlideIllustrationId(d.illustration) ? { motif: d.illustration } : {};
@@ -330,8 +388,9 @@ export interface GenerateDeps {
   sectionNos?: string[];
   /** Thông tin mạch cấu trúc thẳng hàng với `outline` (slideStructures); thiếu thì bỏ qua. */
   structures?: Array<SlideStructure | null>;
-  /** Tài liệu gốc: số trên slide Bảng và Biểu đồ phải có trong đây (chống bịa số liệu). */
-  sourceText?: string;
+  /** Nguồn của bài (tài liệu, mô tả chủ đề...); thiếu = tài liệu. Số trên slide Bảng, Biểu đồ, Số liệu phải có trong
+   *  context.sourceText (chống bịa số liệu). */
+  context?: DraftContext;
 }
 
 export interface GenerateResult {
@@ -348,10 +407,15 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
   const { outline } = deps;
   const total = outline.length;
   const sections = deps.sectionNos ?? sectionNumbers(outline);
-  const sourceNumbers = numbersInText(deps.sourceText ?? "");
+  const ctx: DraftContext = { ...deps.context, sourceNumbers: numbersInText(deps.context?.sourceText ?? "") };
   const results: GeneratedSlide[] = new Array(total);
-  const batches = makeBatches(total);
-  let done = 0;
+  // Dòng do hệ thống dựng (Nguồn tham khảo) không gửi cho AI.
+  const ai = outline.map((s, i) => (s.fixed ? -1 : i)).filter((i) => i >= 0);
+  outline.forEach((s, i) => {
+    if (s.fixed) results[i] = applyStructure(draftToSlide(s, undefined, sections[i]!, ctx), deps.structures?.[i]);
+  });
+  let done = total - ai.length;
+  const batches = makeBatches(ai.length).map((b) => b.map((k) => ai[k]!));
   let cursor = 0;
   let fatal: unknown = null;
 
@@ -365,7 +429,7 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
       }
     }
     const byIndex = new Map((drafts ?? []).map((x) => [x.index, x]));
-    for (const i of indices) results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, sourceNumbers), deps.structures?.[i]);
+    for (const i of indices) results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, ctx), deps.structures?.[i]);
     done += indices.length;
     deps.onProgress?.(done, total);
   };
@@ -408,7 +472,7 @@ export function proposalFromDraft(
   action: SlideEditAction,
   current: { config: Record<string, unknown> },
   draft: SlideDraft | undefined,
-  sourceText = "",
+  ctx?: DraftContext,
 ): { type: "content" | "quiz"; config: Record<string, unknown> } | null {
   const cfg = current.config;
   const toQuiz = action === "to_quiz";
@@ -420,14 +484,17 @@ export function proposalFromDraft(
     points: [],
   };
   const sectionNo = typeof cfg.sectionNumber === "string" ? cfg.sectionNumber : "";
-  const allowed = addNumbersOf(numbersInText(sourceText), cfg);
-  const g = draftToSlide(os, draft, sectionNo, allowed);
+  // Nội dung slide hiện tại là thứ giảng viên đã có: con số trong đó không bị coi là bịa, kể cả trên Bảng, Biểu đồ, Số liệu.
+  const allowed = addNumbersOf(numbersInText(ctx?.sourceText ?? ""), cfg);
+  const g = draftToSlide(os, draft, sectionNo, { ...ctx, extraCorpus: allText(cfg), sourceNumbers: allowed });
   if (g.usedFallback) return null;
 
   const content: Record<string, unknown> = { ...g.config };
   const aiNote = content.presenterNote;
   for (const k of GENERATED_META) delete content[k];
   const meta = pickMeta(cfg);
+  // Dòng nguồn theo nội dung mới: bản mới có nguồn thì thay, không có thì bỏ dòng cũ (bài mức có nguồn).
+  if (ctx?.sourceKind === "topic_web") delete meta.cite;
   const note = meta.presenterNote ?? aiNote;
   // Bìa: AI chỉ viết lại tên bài và phụ đề; tên đơn vị và người trình bày là thông tin thật do người điền, giữ nguyên.
   const keepCover =

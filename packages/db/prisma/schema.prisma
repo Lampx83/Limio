@@ -5209,6 +5209,12 @@ model LiveDeck {
   // Văn bản trích từ tài liệu gốc (giữ lại để sinh lại một phần); chỉ chủ bài giảng đọc được.
   sourceName String?
   sourceText String? @db.Text
+  // Nguồn của bài AI soạn: "document" (tài liệu tải lên/dán), "topic" (mô tả chủ đề, AI dùng kiến thức chung),
+  // "topic_web" (mô tả chủ đề kèm trang tìm trên internet). Null = bài cũ hoặc soạn tay; bài cũ có dàn ý coi như "document".
+  sourceKind String?
+  // Mức "topic_web": các trang đã đọc [{ n, title, url }] theo đúng số [n] trong sourceText. Mảng rỗng = có bật tìm
+  // nguồn nhưng không tìm được trang nào (bài rơi về "topic"); null = không tìm nguồn.
+  sourceRefs Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

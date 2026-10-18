@@ -203,6 +203,10 @@ export function LayoutSlideView({
             body
           )}
         </div>
+        {typeof config.cite === "string" && config.cite && (
+          // Dòng nguồn của bài soạn kèm trang tìm trên internet: góc dưới trái, chữ nhỏ nhất cho phép, không chồng nội dung.
+          <div className="ll-cite">{config.cite}</div>
+        )}
         {showLogo && brand?.logoUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img

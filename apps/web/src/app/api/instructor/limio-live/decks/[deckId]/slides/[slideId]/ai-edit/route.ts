@@ -6,7 +6,7 @@ import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { proposalFromDraft, type SlideDraft, type SlideEditAction } from "@/lib/limioLiveGenerate";
 import { pickMeta, resolveLayout } from "@/lib/limioLiveSlides";
-import { sanitizeOutline } from "@/lib/limioLiveOutline";
+import { resolveSourceKind, sanitizeOutline, sanitizeRefs } from "@/lib/limioLiveOutline";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
 
   const slide = await prisma.liveSlide.findFirst({
     where: { id: params.slideId, deckId: params.deckId, deck: { userId } },
-    select: { type: true, config: true, deck: { select: { title: true, sourceText: true, outline: true } } },
+    select: { type: true, config: true, deck: { select: { title: true, sourceText: true, sourceKind: true, sourceRefs: true, outline: true } } },
   });
   if (!slide) return json({ error: "not_found" }, 404);
 
@@ -63,12 +63,15 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
   const meta = pickMeta(config);
   const current = Object.fromEntries(Object.entries(config).filter(([k]) => !(k in meta) && k !== "presenterNote"));
 
+  const sourceKind = resolveSourceKind(slide.deck.sourceKind);
+  const sourceText = slide.deck.sourceText ?? "";
   try {
     const draft = await generateSlideEdit(
       userId,
       {
         action: action as SlideEditAction,
-        sourceText: slide.deck.sourceText ?? "",
+        sourceText,
+        sourceKind,
         deckTitle: slide.deck.title,
         targetKey: action === "to_quiz" ? "quiz" : layout,
         current,
@@ -77,7 +80,12 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
       },
       openai,
     );
-    const proposal = proposalFromDraft(action as SlideEditAction, { config }, draft as SlideDraft, slide.deck.sourceText ?? "");
+    // Bài từ mô tả chủ đề: cùng kiểm tra con số và số nguồn như lúc tạo slide.
+    const proposal = proposalFromDraft(action as SlideEditAction, { config }, draft as SlideDraft, {
+      sourceKind,
+      sourceText,
+      refs: sanitizeRefs(slide.deck.sourceRefs),
+    });
     if (!proposal) return json({ error: "ai_edit_failed" }, 502);
     await emitLiveEvent(userId, LearningEventType.LiveSlideAiEditProposed, { deckId: params.deckId, slideId: params.slideId, action });
     return json({ proposal }, 200);

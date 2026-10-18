@@ -4,6 +4,8 @@ import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { audienceUrl, openAudienceWindow, presenterUrl, startPresenterOnProjector, useProjectorReady } from "@/lib/limioLiveWindow";
+import { isTopicSource, resolveSourceKind } from "@/lib/limioLiveOutline";
+import { TopicSourceNotice } from "../TopicSourceNotice";
 import {
   DndContext,
   closestCenter,
@@ -96,6 +98,10 @@ interface Deck {
   motif?: string | null;
   /** Bộ thương hiệu của trường mà chủ bài thuộc về (null nếu không thuộc trường nào). */
   org?: DeckOrgBrand | null;
+  /** Nguồn của bài AI soạn (document | topic | topic_web); null với bài soạn tay. */
+  sourceKind?: string | null;
+  /** Các trang đã đọc khi soạn bài từ mô tả chủ đề có nguồn internet. */
+  sourceRefs?: unknown;
   slides: Slide[];
 }
 
@@ -767,6 +773,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </Tooltip>
         </div>
       </div>
+      {isTopicSource(resolveSourceKind(deck.sourceKind)) && (
+        <div className="flex-shrink-0 border-b border-token bg-[rgb(var(--surface))] px-3 py-1.5 sm:px-6">
+          <TopicSourceNotice
+            compact
+            sourceKind={resolveSourceKind(deck.sourceKind)}
+            webRefs={Array.isArray(deck.sourceRefs) ? deck.sourceRefs : deck.sourceRefs == null ? null : []}
+          />
+        </div>
+      )}
 
       <div className="relative flex min-h-0 flex-1">
         {/* Left rail — slide list */}

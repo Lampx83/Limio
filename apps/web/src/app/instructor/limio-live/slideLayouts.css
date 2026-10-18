@@ -353,3 +353,6 @@
     @keyframes s-growx { from { transform: scaleX(0); } }
     @keyframes s-fade { from { opacity: 0; } }
   }
+
+/* Dòng nguồn ở chân slide ("Nguồn: [1], [3]") của bài soạn kèm trang tìm trên internet. */
+.lslide .ll-cite { position: absolute; left: 64px; bottom: 18px; z-index: 4; font-size: 26px; line-height: 1.2; color: var(--smuted); pointer-events: none; }

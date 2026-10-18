@@ -46,6 +46,11 @@ const LABELS: Record<
     placeholder: "baotrang",
     help: "Một trong: baotrang, giahuy, hamy, huuduc, kimoanh, maichi, quangminh, tiendat. Bỏ trống = baotrang.",
   },
+  "websearch.tavily": {
+    name: "Tavily API key (tìm trên internet)",
+    placeholder: "tvly-...",
+    help: "Limio-Live dùng khi soạn bài giảng từ mô tả chủ đề có bật nguồn internet. Lấy ở app.tavily.com. Bỏ trống thì không hiện công tắc nguồn internet.",
+  },
   "ga4.property_id": {
     name: "GA4 Property ID",
     placeholder: "556146065",

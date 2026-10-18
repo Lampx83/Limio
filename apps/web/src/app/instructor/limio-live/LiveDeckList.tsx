@@ -462,7 +462,7 @@ export default function LiveDeckList() {
                 </span>
                 <b className="text-[15px]">AI hỗ trợ soạn</b>
                 <span className="text-sm text-muted">
-                  AI đề xuất dàn ý từ tài liệu Word hoặc PDF để bạn duyệt, sau đó soạn các slide tương tác.
+                  AI đề xuất dàn ý từ một đoạn mô tả chủ đề hoặc từ tài liệu Word, PDF để bạn duyệt, sau đó soạn các slide tương tác.
                 </span>
               </a>
               <button

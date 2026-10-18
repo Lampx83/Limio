@@ -3,7 +3,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
 import { DRAFTS_SCHEMA, SLIDE_SPEC, type RawSlideDraft } from "./lectureSlides";
-import { OUTLINE_MAX_SOURCE_CHARS } from "./lectureOutline";
+import { sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
 
 /**
  * Nhờ AI sửa MỘT slide đã có (tiêu chí H8). Chỉ trả đề xuất; giảng viên xem bản so sánh rồi
@@ -18,6 +18,8 @@ export interface SlideEditInput {
   action: SlideEditAction;
   /** Văn bản tài liệu gốc (có thể rỗng với bài soạn tay). */
   sourceText: string;
+  /** Nguồn của bài (mặc định "document"): đổi luật dùng số liệu, tên người, trích dẫn. */
+  sourceKind?: LectureSourceKind;
   deckTitle: string;
   /** Khoá đặc tả của slide đích: tên bố cục, hoặc "quiz". */
   targetKey: string;
@@ -42,6 +44,7 @@ const ACTION_TEXT: Record<SlideEditAction, string> = {
 };
 
 export function buildSlideEditPrompt(input: SlideEditInput): { system: string; user: string } {
+  const kind = input.sourceKind ?? "document";
   const system = `Bạn là giảng viên giàu kinh nghiệm, đang chỉnh sửa MỘT slide trong bài giảng tương tác.
 
 Yêu cầu chỉnh sửa: ${ACTION_TEXT[input.action]}
@@ -49,7 +52,7 @@ Yêu cầu chỉnh sửa: ${ACTION_TEXT[input.action]}
 Quy tắc bắt buộc:
 1. Chỉ trả về MỘT slide, "index" là 0.
 2. Văn phong khoa học, rõ ràng. Mọi mô tả, ý chính, giải thích phải là CÂU HOÀN CHỈNH có chủ ngữ và vị ngữ, kết thúc bằng dấu chấm. KHÔNG viết cụt.
-3. Chỉ dùng thông tin có trong slide hiện tại và tài liệu. TUYỆT ĐỐI không bịa số liệu, tên người, trích dẫn hay nguồn nghiên cứu.
+3. ${sourceRule(kind, "edit")}
 4. KHÔNG dùng emoji hay ký hiệu trang trí. Giữ nguyên thuật ngữ tiếng Anh nếu nội dung hiện tại dùng.
 5. Chỉ điền các trường được yêu cầu cho bố cục đích; mọi trường khác để chuỗi rỗng hoặc mảng rỗng. Trường "notes": 2 đến 4 câu lời giảng cho giảng viên.
 6. byline luôn để rỗng.
@@ -68,7 +71,7 @@ ${outline}
 Điền: ${SLIDE_SPEC[input.targetKey] ?? SLIDE_SPEC.image}
 ${
   input.sourceText.trim()
-    ? `\n# Tài liệu\n"""\n${input.sourceText.slice(0, OUTLINE_MAX_SOURCE_CHARS)}\n"""`
+    ? `\n${sourceBlock(kind, input.sourceText)}`
     : "\n(Không có tài liệu gốc; chỉ dùng nội dung slide hiện tại.)"
 }`;
   return { system, user };

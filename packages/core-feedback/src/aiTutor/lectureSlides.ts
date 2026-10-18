@@ -3,7 +3,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
 import { SLIDE_ILLUSTRATIONS, SLIDE_ILLUSTRATION_TOPICS } from "@feedbackme/shared-types";
-import { OUTLINE_KINDS, OUTLINE_MAX_SOURCE_CHARS } from "./lectureOutline";
+import { OUTLINE_KINDS, sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
 
 /**
  * Bước 3 của "tài liệu → bài giảng tương tác": viết NỘI DUNG từng slide theo dàn ý đã được
@@ -28,6 +28,8 @@ export interface OutlineSlideInput {
 
 export interface SlideDraftsInput {
   sourceText: string;
+  /** Mặc định "document"; bài từ mô tả chủ đề đổi luật nguồn (sourceRule) và không đòi tài liệu dài. */
+  sourceKind?: LectureSourceKind;
   deckTitle: string;
   /** Toàn bộ dàn ý (ngữ cảnh) và các chỉ số cần viết ở lô này. */
   outline: OutlineSlideInput[];
@@ -199,14 +201,16 @@ export function specKeyFor(s: OutlineSlideInput): string {
 }
 
 export function buildSlidesPrompt(input: SlideDraftsInput): { system: string; user: string } {
-  const system = `Bạn là giảng viên giàu kinh nghiệm, đang viết NỘI DUNG từng slide cho bài giảng tương tác dựa trên một tài liệu và một dàn ý đã được giảng viên chốt.
+  const kind = input.sourceKind ?? "document";
+  const basis = kind === "document" ? "một tài liệu" : kind === "topic" ? "mô tả của giảng viên (không có tài liệu gốc)" : "mô tả của giảng viên và các nguồn tìm trên internet";
+  const system = `Bạn là giảng viên giàu kinh nghiệm, đang viết NỘI DUNG từng slide cho bài giảng tương tác dựa trên ${basis}, theo một dàn ý đã được giảng viên chốt.
 
 Quy tắc bắt buộc:
 1. Chỉ viết các slide có chỉ số nêu trong "Slide cần viết"; trả về đúng các chỉ số đó, mỗi chỉ số một phần tử.
-2. Bám đúng tiêu đề, bố cục và ý chính của dàn ý; có thể diễn đạt lại cho rõ nhưng không đổi ý nghĩa, không thêm ý mới ngoài tài liệu.
+2. Bám đúng tiêu đề, bố cục và ý chính của dàn ý; có thể diễn đạt lại cho rõ nhưng không đổi ý nghĩa, không thêm ý mới ngoài ${kind === "document" ? "tài liệu" : "phạm vi của dàn ý"}.
 3. Văn phong khoa học, rõ ràng. Mọi mô tả, ý chính, giải thích phải là CÂU HOÀN CHỈNH có chủ ngữ và vị ngữ, kết thúc bằng dấu chấm. KHÔNG viết cụt, không chỉ liệt kê cụm từ.
-4. Chỉ dùng thông tin có trong tài liệu. TUYỆT ĐỐI không bịa số liệu, tên người, trích dẫn hay nguồn nghiên cứu.
-5. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu tài liệu dùng).
+4. ${sourceRule(kind, "slides")}
+5. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu ${kind === "document" ? "tài liệu dùng" : "ngành quen dùng"}).
 6. Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao.
 7. Mỗi bố cục chỉ điền các trường được yêu cầu; mọi trường khác để chuỗi rỗng hoặc mảng rỗng (với "table" và "chart" không dùng: head, rows, labels, series là mảng rỗng, type là "bar").
 
@@ -234,10 +238,7 @@ ${overview}
 # Slide cần viết
 ${wanted}
 
-# Tài liệu
-"""
-${input.sourceText.slice(0, OUTLINE_MAX_SOURCE_CHARS)}
-"""`;
+${sourceBlock(kind, input.sourceText)}`;
   return { system, user };
 }
 
@@ -249,7 +250,8 @@ export async function generateSlideDrafts(
   db: PrismaClient = prisma,
 ): Promise<RawSlideDraft[]> {
   if (input.batch.length === 0) return [];
-  if (input.sourceText.trim().length < 50) throw new AiGenerationError("validation_failed", "too_short");
+  // Bài từ mô tả chủ đề chỉ có một đoạn mô tả ngắn: dàn ý đã chốt là đủ để viết.
+  if ((input.sourceKind ?? "document") === "document" && input.sourceText.trim().length < 50) throw new AiGenerationError("validation_failed", "too_short");
   // Mỗi lô tốn token riêng, nên mỗi lô đều qua cửa hạn mức trước khi chạm mô hình.
   await assertWithinCaps(userId, db, "generator");
 

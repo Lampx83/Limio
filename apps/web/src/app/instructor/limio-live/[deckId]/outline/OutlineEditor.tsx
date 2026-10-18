@@ -1,12 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Check, ChevronLeft, FileText, Loader2, Plus } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, FileText, Loader2, PenLine, Plus } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
   DURATIONS,
+  OUTLINE_LAYOUTS,
   isFullStructure,
+  isTopicSource,
+  layoutAllowedFor,
   outlineBlockingProblems,
   outlineStats,
   outlineWarnings,
@@ -15,7 +18,10 @@ import {
   type Outline,
   type OutlineKind,
   type OutlineSlide,
+  type DeckSourceKind,
+  type WebSourceRef,
 } from "@/lib/limioLiveOutline";
+import { TopicSourceNotice } from "../../TopicSourceNotice";
 import {
   addContentPart,
   addSlideToPart,
@@ -33,6 +39,9 @@ import SlideDialog from "./SlideDialog";
 interface Loaded {
   title: string;
   sourceName: string | null;
+  sourceKind: DeckSourceKind;
+  webRefs: WebSourceRef[] | null;
+  sourceFigureKeys?: string[];
   minutes: number;
   outline: Outline;
   confirmedAt: string | null;
@@ -150,7 +159,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
 
   const stats = useMemo(() => outlineStats(outline), [outline]);
   const range = slideRange(minutes);
-  const warnings = useMemo(() => outlineWarnings(outline, minutes), [outline, minutes]);
+  const warnings = useMemo(
+    () => outlineWarnings(outline, minutes, { sourceKind: data?.sourceKind, sourceFigureKeys: data?.sourceFigureKeys }),
+    [outline, minutes, data?.sourceKind, data?.sourceFigureKeys],
+  );
   const blocking = useMemo(() => outlineBlockingProblems(outline), [outline]);
 
   const patch = (id: string, p: Partial<OutlineSlide>) => change(patchSlide(outline, id, p));
@@ -267,7 +279,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           <h1 className="text-2xl font-bold">Dàn ý bài giảng</h1>
           {data.sourceName && (
             <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[rgb(var(--surface-muted))] px-3 py-1 text-[13px] font-medium text-muted">
-              <FileText size={14} className="shrink-0" />
+              {isTopicSource(data.sourceKind) ? <PenLine size={14} className="shrink-0" /> : <FileText size={14} className="shrink-0" />}
               <span className="truncate">{data.sourceName}</span>
             </span>
           )}
@@ -277,6 +289,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           Bấm vào một slide để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn, xác nhận ở cuối
           trang để AI viết slide.
         </p>
+        <TopicSourceNotice sourceKind={data.sourceKind} webRefs={data.webRefs} />
       </header>
 
       <div className="grid items-center gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-0">
@@ -381,6 +394,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           onRemove={() => remove(editing.id)}
           onGoto={(d) => setEditingId(outline.slides[editingIndex + d]?.id ?? editing.id)}
           onClose={() => setEditingId(null)}
+          layouts={OUTLINE_LAYOUTS.filter((l) => layoutAllowedFor(data.sourceKind, l))}
         />
       )}
 

@@ -2,8 +2,9 @@
 // Module thuần: chuẩn hoá đầu ra của mô hình AI và kiểm tra dàn ý giảng viên sửa.
 // Không tin thẳng đầu ra mô hình: số slide, bố cục, độ dài, emoji đều được ép ở đây.
 
-import { SLIDE_LAYOUTS, type SlideLayoutId } from "./limioLiveSlides";
 import { cellNumbersInSource, numbersInText } from "./limioLiveCharts";
+import { SLIDE_LAYOUTS, MAX_LEN, type SlideLayoutId } from "./limioLiveSlides";
+import { extractCites, figureKeys, unsupportedFigures } from "./limioLiveFigures";
 
 // Tên khớp bộ chọn loại slide trong trình sửa bài giảng. "draw_it" là Dán Note ở chế độ vẽ:
 // khi tạo slide nó thành collaborate_board với mode "drawing" (limioLiveGenerate).
@@ -37,8 +38,69 @@ export interface OutlinePart {
   name: string;
 }
 
+/**
+ * Nguồn của bài (cột LiveDeck.sourceKind): tài liệu giảng viên đưa, mô tả chủ đề (AI dùng kiến thức chung),
+ * hoặc mô tả kèm các trang tìm trên internet. Bài cũ không ghi nguồn được coi như tài liệu.
+ */
+export type DeckSourceKind = "document" | "topic" | "topic_web";
+export const DECK_SOURCE_KINDS: readonly DeckSourceKind[] = ["document", "topic", "topic_web"];
+export function resolveSourceKind(v: unknown): DeckSourceKind {
+  return DECK_SOURCE_KINDS.includes(v as DeckSourceKind) ? (v as DeckSourceKind) : "document";
+}
+export const isTopicSource = (k: DeckSourceKind) => k !== "document";
+
+/** Mức kiến thức chung không có số liệu hay câu trích để dựa vào: các bố cục này đổi sang bố cục chữ. */
+const TOPIC_LAYOUT_SWAP: Partial<Record<OutlineLayout, OutlineLayout>> = { stats: "cards", chart: "cards", quote: "image" };
+export function safeLayoutFor<L extends OutlineLayout | null>(kind: DeckSourceKind, layout: L): L {
+  if (kind !== "topic" || !layout) return layout;
+  return (TOPIC_LAYOUT_SWAP[layout] ?? layout) as L;
+}
+export const layoutAllowedFor = (kind: DeckSourceKind, layout: OutlineLayout) => safeLayoutFor(kind, layout) === layout;
+
+/** Trang đã đọc khi soạn bài mức "topic_web" (cột LiveDeck.sourceRefs), số n khớp "[n]" trong sourceText. */
+export interface WebSourceRef {
+  n: number;
+  title: string;
+  url: string;
+}
+
+export function sanitizeRefs(raw: unknown): WebSourceRef[] {
+  return (Array.isArray(raw) ? raw : [])
+    .filter((r): r is Record<string, unknown> => !!r && typeof r === "object")
+    .map((r) => ({ n: Number(r.n), title: typeof r.title === "string" ? r.title.slice(0, 300) : "", url: typeof r.url === "string" ? r.url.slice(0, 2000) : "" }))
+    .filter((r) => Number.isInteger(r.n) && r.n > 0 && /^https?:\/\//.test(r.url));
+}
+
+export function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+export const REFERENCES_TITLE = "Nguồn tham khảo";
+
+/** Dòng dàn ý "Nguồn tham khảo": hệ thống dựng từ các trang đã đọc, không gửi cho AI viết lại. */
+export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
+  const line = (r: WebSourceRef) => {
+    const t = `[${r.n}] ${hostOf(r.url)}: ${r.title || hostOf(r.url)}`;
+    return t.length > MAX_LEN.itemHeading ? `${t.slice(0, MAX_LEN.itemHeading - 1).trimEnd()}…` : t;
+  };
+  return {
+    id: newOutlineId(),
+    kind: "content",
+    layout: "summary",
+    title: REFERENCES_TITLE,
+    points: refs.slice(0, OUTLINE_LIMITS.points).map(line),
+    fixed: "references",
+  };
+}
+
 export interface OutlineSlide {
   id: string;
+  /** "references" = dòng Nguồn tham khảo do hệ thống dựng (bài mức topic_web): tạo slide giữ nguyên chữ, không gọi AI. */
+  fixed?: "references";
   /** Phần chứa slide; sanitizeOutline luôn gán. */
   partId?: string;
   kind: OutlineKind;
@@ -126,7 +188,8 @@ function sanitizeSlide(raw: unknown, idFallback = newOutlineId): OutlineSlide | 
       .map((p) => clean(p, OUTLINE_LIMITS.point))
       .filter(Boolean)
       .slice(0, OUTLINE_LIMITS.points);
-    return { id: typeof o.id === "string" && o.id ? o.id.slice(0, 60) : idFallback(), ...part, kind, layout, title, points };
+    const fixed = o.fixed === "references" ? { fixed: "references" as const } : {};
+    return { id: typeof o.id === "string" && o.id ? o.id.slice(0, 60) : idFallback(), ...part, kind, layout, title, points, ...fixed };
   }
   return { id: typeof o.id === "string" && o.id ? o.id.slice(0, 60) : idFallback(), ...part, kind, layout: null, title, points: [] };
 }
@@ -332,12 +395,37 @@ function partsFromRaw(raw: unknown): { value: unknown; fromRoles: boolean } {
  * - quá nhiều slide thì giữ phần đầu và slide cuối;
  * - trả kèm cảnh báo để giao diện nói rõ với giảng viên những gì đã chỉnh hoặc còn lệch.
  */
-export function normalizeOutline(raw: unknown, minutes: number, sourceText?: string): { outline: Outline; warnings: string[] } {
+export interface OutlineSourceOptions {
+  /** Mặc định "document" (hành vi cũ). */
+  sourceKind?: DeckSourceKind;
+  /** Văn bản nguồn của bài (mô tả, hoặc mô tả kèm các trang đã đọc): con số có ở đây không bị cảnh báo. */
+  sourceText?: string;
+  /** Hoặc sẵn tập khoá số của văn bản nguồn (giao diện không tải cả văn bản nguồn). */
+  sourceFigureKeys?: string[];
+  /** Mức topic_web: các trang đã đọc; thêm dòng "Nguồn tham khảo" cuối dàn ý. */
+  references?: WebSourceRef[];
+}
+
+export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSourceOptions = {}): { outline: Outline; warnings: string[] } {
   const warnings: string[] = [];
+  const kind = opts.sourceKind ?? "document";
+  const refs = kind === "topic_web" ? (opts.references ?? []) : [];
   const pre = partsFromRaw(raw);
   let outline = sanitizeOutline(pre.value);
-  if (sourceText !== undefined) warnings.push(...demoteUnbackedCharts(outline, sourceText));
-  const { min, max } = slideRange(minutes);
+  // Bảng và Biểu đồ phải có số trong nguồn; không có thì đổi sang bố cục khác và báo.
+  if (opts.sourceText !== undefined) warnings.push(...demoteUnbackedCharts(outline, opts.sourceText));
+  const { min } = slideRange(minutes);
+  // Dòng Nguồn tham khảo chiếm một chỗ trong mức slide.
+  const max = slideRange(minutes).max - (refs.length ? 1 : 0);
+  // Không tin mô hình đã tuân lược đồ: bài không có tài liệu không được có Số liệu, Biểu đồ hay Trích dẫn.
+  for (const s of outline.slides) {
+    s.layout = safeLayoutFor(kind, s.layout);
+    // Mức kiến thức chung không có nguồn nào để dẫn: số [n] mô hình lỡ ghi là bịa.
+    if (kind === "topic") {
+      s.title = extractCites(s.title).text;
+      s.points = s.points.map((p) => extractCites(p).text).filter(Boolean);
+    }
+  }
 
   if (outline.slides.length > max) {
     const had = outline.slides.length;
@@ -364,7 +452,12 @@ export function normalizeOutline(raw: unknown, minutes: number, sourceText?: str
     outline = finalizeParts(outline);
   }
 
-  warnings.push(...outlineWarnings(outline, minutes).filter((w) => !warnings.includes(w)));
+  if (refs.length) {
+    outline.slides.push({ ...referencesOutlineSlide(refs), partId: outline.slides[outline.slides.length - 1]?.partId });
+    outline = finalizeParts(outline);
+  }
+
+  warnings.push(...outlineWarnings(outline, minutes, opts).filter((w) => !warnings.includes(w)));
   return { outline, warnings };
 }
 
@@ -392,7 +485,11 @@ export function outlineStats(outline: Pick<Outline, "slides"> & { title?: string
 }
 
 /** Điểm lệch so với khuyến nghị — chỉ nhắc, không chặn (giảng viên là người quyết). */
-export function outlineWarnings(outline: Pick<Outline, "slides"> & { title?: string }, minutes: number): string[] {
+export function outlineWarnings(
+  outline: Pick<Outline, "slides"> & { title?: string },
+  minutes: number,
+  opts: Pick<OutlineSourceOptions, "sourceKind" | "sourceText" | "sourceFigureKeys"> = {},
+): string[] {
   const w: string[] = [];
   const { min, max } = slideRange(minutes);
   const st = outlineStats(outline);
@@ -407,7 +504,30 @@ export function outlineWarnings(outline: Pick<Outline, "slides"> & { title?: str
   }
   const last = outline.slides[outline.slides.length - 1];
   if (last && last.kind !== "content") w.push("Slide cuối đang là slide tương tác; nên kết bài bằng slide tóm tắt.");
+  w.push(...figureWarnings(outline, opts));
   return w;
+}
+
+/**
+ * Bài từ mô tả chủ đề: con số kiểu thống kê trong dàn ý mà không có trong mô tả (hoặc các trang đã đọc) có thể do AI bịa.
+ * Chỉ nhắc, không chặn; khi tạo slide, con số AI thêm ngoài dàn ý đã chốt mới bị loại.
+ */
+export function figureWarnings(
+  outline: Pick<Outline, "slides">,
+  opts: Pick<OutlineSourceOptions, "sourceKind" | "sourceText" | "sourceFigureKeys">,
+): string[] {
+  const kind = opts.sourceKind ?? "document";
+  if (kind === "document") return [];
+  const keys = opts.sourceFigureKeys ? new Set(opts.sourceFigureKeys) : figureKeys(opts.sourceText ?? "");
+  const where = kind === "topic" ? "mô tả của bạn" : "các trang đã đọc";
+  const hits = outline.slides
+    .map((s, i) => ({ i, figs: s.fixed ? [] : unsupportedFigures([s.title, ...s.points].join("\n"), keys) }))
+    .filter((h) => h.figs.length);
+  const out = hits
+    .slice(0, 3)
+    .map((h) => `Slide ${h.i + 1} có con số ${h.figs.slice(0, 3).map((f) => `"${f}"`).join(", ")} không có trong ${where}; hãy kiểm tra trước khi dạy.`);
+  if (hits.length > 3) out.push(`Còn ${hits.length - 3} slide khác có con số cần kiểm tra.`);
+  return out;
 }
 
 /** Lỗi chặn việc tạo slide: dàn ý rỗng hoặc có slide chưa có tiêu đề. */

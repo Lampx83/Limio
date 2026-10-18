@@ -2,7 +2,8 @@
 
 import { useId, useMemo, type ReactNode } from "react";
 import { accentTail, fitFontSize, resolveCoverStyle, stripInline, type CoverStyleId } from "@/lib/limioLiveSlides";
-import type { SlideMotifId } from "@/lib/limioLiveMotifs";
+// Hoa văn của bài hoặc hình minh hoạ (slide đổi từ Chữ và hình sang bìa vẫn giữ hình đã chọn).
+import type { SlideArtId } from "@/lib/limioLiveMotifs";
 import { motifSvgBody } from "@/lib/limioLiveMotifArt";
 import { Inline, delay } from "./slideInline";
 
@@ -32,7 +33,7 @@ const TITLE_MIN_PX = 44;
 const useUid = (p: string) => `${p}${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
 /** Hoa văn phủ kín ô chứa. Thân SVG do mã của ta sinh từ một mã hoa văn cố định (không có chữ người dùng). */
-function MotifFill({ motif, w, h }: { motif: SlideMotifId | null; w: number; h: number }) {
+function MotifFill({ motif, w, h }: { motif: SlideArtId | null; w: number; h: number }) {
   const uid = useUid("cv");
   const html = useMemo(
     () => (motif ? `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${motifSvgBody(motif, w, h, uid)}</svg>` : ""),
@@ -44,7 +45,7 @@ function MotifFill({ motif, w, h }: { motif: SlideMotifId | null; w: number; h: 
 const ON_ACCENT = "--sa:var(--son);--sa2:var(--son);--sglow1:var(--son);--sglow2:var(--son);--ssoft:color-mix(in srgb, var(--son) 28%, transparent)";
 
 /** Dải sóng ở đáy kiểu Sóng: lớp nhạt, lớp đậm phủ hoa văn (cắt theo đường sóng), một đường sóng mảnh. */
-function Waves({ motif }: { motif: SlideMotifId | null }) {
+function Waves({ motif }: { motif: SlideArtId | null }) {
   const uid = useUid("wv");
   const html = useMemo(() => {
     const main = "M0 150 C 300 110, 540 190, 840 128 S 1190 32, 1280 52 L1280 230 L0 230 Z";
@@ -71,7 +72,7 @@ function Arcs() {
   );
 }
 
-export function CoverSlide({ c, motif }: { c: Cfg; motif: SlideMotifId | null }) {
+export function CoverSlide({ c, motif }: { c: Cfg; motif: SlideArtId | null }) {
   const style = resolveCoverStyle(c);
   const plain = stripInline(String(c.title ?? ""));
   const { px } = fitFontSize(plain, { ...TITLE_FIT[style], minPx: TITLE_MIN_PX });

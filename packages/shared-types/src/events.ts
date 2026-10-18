@@ -694,6 +694,10 @@ export interface LiveDeckOutlineGeneratedPayload {
   sourceChars: number;
   /** Số cảnh báo kèm theo dàn ý (lệch số slide, thiếu tương tác...). */
   warningCount: number;
+  /** Nguồn của bài: tài liệu, mô tả chủ đề (kiến thức chung), mô tả kèm trang tìm trên internet. Thiếu = bản ghi cũ (tài liệu). */
+  sourceKind?: "document" | "topic" | "topic_web";
+  /** Có bật tìm nguồn internet: số trang đã đọc (0 = không tìm được, bài rơi về "topic"). */
+  webSourceCount?: number;
 }
 
 export interface LiveDeckSlidesGeneratedPayload {

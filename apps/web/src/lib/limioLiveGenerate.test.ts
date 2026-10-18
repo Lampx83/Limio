@@ -112,7 +112,7 @@ describe("draftToSlide — slide nội dung", () => {
       os("o5", "content", "stats", "Số liệu", ["Ba câu hỏi 3 được trả lời.", "Hai nội dung 2 gồm điểm mạnh.", "Một việc 1 cụ thể."]),
       "",
       undefined,
-      new Set(["1", "2", "3"]),
+      { sourceNumbers: new Set(["1", "2", "3"]) },
     );
     expect(withNum.config.layout).toBe("stats");
     expect((withNum.config.items as any[])[0].heading).toBe("3");

@@ -670,10 +670,10 @@ export function padForEditing(layout: SlideLayoutId, c: Record<string, any>): Re
 }
 
 /**
- * Khoá "meta" đi kèm mọi slide, không thuộc bố cục: ghi chú giảng, cờ ẩn khi trình chiếu, hoa văn trang trí chọn
- * riêng cho slide ("none", mã hoa văn hoặc mã hình minh hoạ, xem limioLiveMotifs), kiểu bìa, và dấu vết sinh bằng AI
- * (id dòng dàn ý, slide do AI sinh, đã được giảng viên sửa tay). Hoa văn và kiểu bìa là meta để AI sửa slide hay đổi
- * bố cục không làm mất lựa chọn.
+ * Khoá "meta" đi kèm mọi slide, không thuộc bố cục: ghi chú giảng, cờ ẩn khi trình chiếu, dòng nguồn ở chân slide,
+ * hoa văn trang trí chọn riêng cho slide ("none", mã hoa văn hoặc mã hình minh hoạ, xem limioLiveMotifs), kiểu bìa,
+ * và dấu vết sinh bằng AI (id dòng dàn ý, slide do AI sinh, đã được giảng viên sửa tay). Hoa văn và kiểu bìa là meta
+ * để AI sửa slide hay đổi bố cục không làm mất lựa chọn.
  * Bộ lọc bố cục phải giữ chúng, nếu không việc ẩn slide hay ghi chú sẽ mất lặng lẽ.
  */
 export function pickMeta(config: Record<string, unknown> | null | undefined): Record<string, unknown> {
@@ -686,6 +686,8 @@ export function pickMeta(config: Record<string, unknown> | null | undefined): Re
   if (typeof c.outlineId === "string" && c.outlineId) out.outlineId = c.outlineId.slice(0, 60);
   if (c.aiGenerated === true) out.aiGenerated = true;
   if (c.editedByUser === true) out.editedByUser = true;
+  // Dòng nguồn ở chân slide ("Nguồn: [1], [3]") của bài soạn kèm trang tìm trên internet.
+  if (typeof c.cite === "string" && c.cite.trim()) out.cite = c.cite.trim().slice(0, MAX_LEN.source);
   return out;
 }
 
