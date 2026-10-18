@@ -222,6 +222,7 @@ export const LearningEventType = {
   LiveDeckOutlineGenerated: "live.deck.outline_generated",
   LiveDeckSlidesGenerated: "live.deck.slides_generated",
   LiveSlideAiEditProposed: "live.slide.ai_edit_proposed",
+  LiveSlideAiChatTurn: "live.slide.ai_chat_turn",
   LiveSlideAiEditAccepted: "live.slide.ai_edit_accepted",
   LiveSlideEditedByUser: "live.slide.edited_by_user",
   LiveSlideVersionRestored: "live.slide.version_restored",
@@ -711,6 +712,18 @@ export interface LiveDeckSlidesGeneratedPayload {
   created?: number;
   removed?: number;
   kept?: number;
+}
+
+/** Một lượt hỏi đáp với AI về slide (tab Nhờ AI). Không ghi nội dung câu hỏi hay câu trả lời. */
+export interface LiveSlideAiChatTurnPayload {
+  deckId: string;
+  slideId: string;
+  /** Kiểu trả lời sau khi chuẩn hoá: trả lời bằng lời, hỏi lại, đề xuất sửa. */
+  kind: "answer" | "clarify" | "propose";
+  /** Số lượt trước đó trong cuộc trò chuyện (0 = câu đầu tiên). */
+  historyTurns: number;
+  /** Câu trả lời bằng lời có kèm gợi ý sửa (hiện nút "Làm theo gợi ý này"). */
+  hasSuggestion: boolean;
 }
 
 export interface LiveSlideAiEditProposedPayload {

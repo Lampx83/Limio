@@ -458,6 +458,38 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
 export type SlideEditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
 export const SLIDE_EDIT_ACTIONS: readonly SlideEditAction[] = ["shorter", "example", "simpler", "to_quiz", "rewrite", "custom"];
 
+/**
+ * Hành động chỉ chỉnh một phần slide: mô hình hay chỉ trả trường được nhắc tới (vd. "sửa tiêu đề thành..."),
+ * nên trường nó để trống được lấp bằng nội dung hiện tại. Viết lại từ dàn ý và đổi thành quiz thay hẳn nội dung, không lấp.
+ */
+const KEEP_REST_ACTIONS: readonly SlideEditAction[] = ["custom", "shorter", "example", "simpler"];
+const FILLABLE_FIELDS = ["title", "subtitle", "bullets", "items", "columns", "footnote", "quote", "source"] as const;
+/** Trống: chuỗi chỉ có khoảng trắng, mảng toàn phần tử trống, đối tượng toàn trường trống (bỏ qua tone, icon). */
+const blank = (v: unknown): boolean =>
+  v == null ||
+  (typeof v === "string"
+    ? !v.trim()
+    : Array.isArray(v)
+      ? v.every(blank)
+      : typeof v === "object"
+        ? Object.entries(v as Record<string, unknown>).every(([k, x]) => k === "tone" || k === "icon" || blank(x))
+        : false);
+
+/** Lấp các trường bản nháp để trống bằng nội dung hiện tại; nháp trống hoàn toàn thì giữ nguyên (sẽ bị coi là hỏng). */
+function fillFromCurrent(draft: SlideDraft | undefined, cfg: Record<string, unknown>): SlideDraft | undefined {
+  if (!draft || typeof draft !== "object") return draft;
+  const d = draft as unknown as Record<string, unknown>;
+  if (FILLABLE_FIELDS.every((k) => blank(d[k])) && blank(d.table) && blank(d.chart)) return draft;
+  const out: Record<string, unknown> = { ...d };
+  for (const k of FILLABLE_FIELDS) if (blank(out[k]) && !blank(cfg[k])) out[k] = cfg[k];
+  // Bảng và Biểu đồ: bản nháp dùng trường lồng (table, chart), slide lưu khoá phẳng (xem flattenData).
+  if (blank(out.table) && !blank(cfg.rows)) out.table = { head: cfg.head, rows: cfg.rows };
+  if (blank(out.chart) && Array.isArray(cfg.series) && cfg.series.length) {
+    out.chart = { type: cfg.chartType, labels: cfg.labels, series: cfg.series, unit: cfg.unit };
+  }
+  return out as unknown as SlideDraft;
+}
+
 /** Các khoá meta của slide hiện tại không được AI đổi; phần còn lại là nội dung. */
 const GENERATED_META = ["outlineId", "aiGenerated", "presenterNote"] as const;
 
@@ -486,16 +518,19 @@ export function proposalFromDraft(
   };
   const sectionNo = typeof cfg.sectionNumber === "string" ? cfg.sectionNumber : "";
   // Nội dung slide hiện tại là thứ giảng viên đã có: con số trong đó không bị coi là bịa, kể cả trên Bảng, Biểu đồ, Số liệu.
+  const keepRest = KEEP_REST_ACTIONS.includes(action);
+  const filled = keepRest ? fillFromCurrent(draft, cfg) : draft;
   const allowed = addNumbersOf(numbersInText(ctx?.sourceText ?? ""), cfg);
-  const g = draftToSlide(os, draft, sectionNo, { ...ctx, extraCorpus: allText(cfg), sourceNumbers: allowed });
+  const g = draftToSlide(os, filled, sectionNo, { ...ctx, extraCorpus: allText(cfg), sourceNumbers: allowed });
   if (g.usedFallback) return null;
 
   const content: Record<string, unknown> = { ...g.config };
   const aiNote = content.presenterNote;
   for (const k of GENERATED_META) delete content[k];
   const meta = pickMeta(cfg);
-  // Dòng nguồn theo nội dung mới: bản mới có nguồn thì thay, không có thì bỏ dòng cũ (bài mức có nguồn).
-  if (ctx?.sourceKind === "topic_web") delete meta.cite;
+  // Dòng nguồn: bản mới có số nguồn thì thay. Không có thì giữ dòng cũ khi chỉ chỉnh một phần (phần giữ lại vẫn dẫn
+  // nguồn cũ), còn viết lại hẳn hay đổi thành quiz thì bỏ (bài mức có nguồn).
+  if (content.cite || (ctx?.sourceKind === "topic_web" && !keepRest)) delete meta.cite;
   const note = meta.presenterNote ?? aiNote;
   // Bìa: AI chỉ viết lại tên bài và phụ đề; tên đơn vị và người trình bày là thông tin thật do người điền, giữ nguyên.
   const keepCover =
