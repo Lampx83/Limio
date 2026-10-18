@@ -1,8 +1,11 @@
 import {
+  OUTLINE_AUTO_LAYOUTS,
   OUTLINE_BOX_KINDS,
   OUTLINE_LIMITS,
   isLessonLayoutKey,
+  isLessonTemplateKey,
   type LessonOutline,
+  type LessonTemplateKey,
   type OutlineBoxKind,
   type OutlineLesson,
   type OutlineSection,
@@ -96,15 +99,29 @@ function lessonsOf(raw: unknown, paraCount: number, taken: Set<number>, keepId: 
   return out;
 }
 
-/** Dàn ý AI đề xuất → dàn ý hợp lệ. Bài không còn mục nào bị bỏ. */
-export function normalizeLessonOutline(raw: RawOutlineInput, paraCount: number): LessonOutline {
+/**
+ * Dàn ý AI đề xuất → dàn ý hợp lệ. Bài không còn mục nào bị bỏ.
+ * Cách trình bày được chốt lại theo tài liệu chứ không tin hẳn mô hình: chỉ
+ * nhận 4 loại AI được tự chọn (loại khác về "Văn bản"); mục có ảnh luôn là
+ * "Chữ và ảnh", mục ghi "Chữ và ảnh" mà không có ảnh về "Văn bản".
+ */
+export function normalizeLessonOutline(
+  raw: RawOutlineInput,
+  paras: SourcePara[],
+  template: LessonTemplateKey = "theory",
+): LessonOutline {
   const taken = new Set<number>();
-  const lessons = lessonsOf(raw?.lessons, paraCount, taken, false);
+  const lessons = lessonsOf(raw?.lessons, paras.length, taken, false);
   for (const l of lessons) {
     if (!l.title) l.title = l.sections[0]?.title ?? "Bài học";
-    for (const s of l.sections) if (!s.title) s.title = "Mục chưa đặt tên";
+    for (const s of l.sections) {
+      if (!s.title) s.title = "Mục chưa đặt tên";
+      const hasImage = s.paras.some((i) => paras[i] && !("t" in paras[i]!));
+      if (hasImage) s.layout = "image";
+      else if (s.layout === "image" || !(OUTLINE_AUTO_LAYOUTS as readonly string[]).includes(s.layout)) s.layout = "text";
+    }
   }
-  return { lessons, ignoredParas: [] };
+  return { lessons, ignoredParas: [], template };
 }
 
 /**
@@ -120,7 +137,7 @@ export function sanitizeLessonOutline(input: unknown, paraCount: number): Lesson
   const lessons = lessonsOf(o.lessons, paraCount, taken, true);
   if (lessons.length === 0) return null;
   const ignoredParas = claimParas(o.ignoredParas, paraCount, taken);
-  return { lessons, ignoredParas };
+  return isLessonTemplateKey(o.template) ? { lessons, ignoredParas, template: o.template } : { lessons, ignoredParas };
 }
 
 /** Đoạn có nội dung mà chưa thuộc mục nào và chưa được bỏ qua (D4). */

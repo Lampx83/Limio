@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   DndContext,
   KeyboardSensor,
@@ -14,13 +14,7 @@ import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalList
 import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle, ChevronDown, GripVertical, Plus, Scissors, Trash2, X } from "lucide-react";
 import {
-  LESSON_BOX_LABELS,
-  LESSON_LAYOUT_HINTS,
-  LESSON_LAYOUT_KEYS,
-  LESSON_LAYOUT_LABELS,
-  OUTLINE_BOX_KINDS,
   OUTLINE_LIMITS,
-  type LessonLayoutKey,
   type LessonOutline,
   type OutlineSection,
   type SourcePara,
@@ -36,12 +30,13 @@ import {
   updateLesson,
   updateSection,
 } from "@/lib/lessonOutlineEdit";
-import LayoutIcon from "./LayoutIcon";
 
 /**
  * Cột trái của màn Dàn ý: tên bài, mục tiêu, các mục. Sửa tại chỗ, không có
- * hộp thoại; một mục mở rộng một lúc để xem ý chính và hộp. Sửa ở đây không gọi
- * AI và không tốn token (D6).
+ * hộp thoại; một mục mở rộng một lúc để xem ý chính. Cách trình bày từng mục
+ * (bố cục, hộp) do AI tự chọn theo mẫu bài, giảng viên không phải chọn ở đây —
+ * muốn đổi thì sửa trong trình soạn sau khi áp dụng. Sửa ở đây không gọi AI và
+ * không tốn token (D6).
  */
 export default function OutlinePane({
   outline,
@@ -317,8 +312,6 @@ function SectionRow({
   onShowSource: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
-  const [layoutAnchor, setLayoutAnchor] = useState<DOMRect | null>(null);
-  const layoutOpen = layoutAnchor !== null;
 
   return (
     <div
@@ -348,30 +341,6 @@ function SectionRow({
           inputProps={{ "data-title-input": s.id }}
           className={`py-1 text-sm font-semibold hover:bg-[rgb(var(--surface-muted))] ${s.title.trim() ? "" : "border-amber-300"}`}
         />
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={(e) => setLayoutAnchor(layoutOpen ? null : e.currentTarget.getBoundingClientRect())}
-            aria-haspopup="listbox"
-            aria-expanded={layoutOpen}
-            title={`Bố cục: ${LESSON_LAYOUT_LABELS[s.layout]}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-token px-1.5 py-1 text-xs text-muted hover:border-brand-300 hover:text-[rgb(var(--text))]"
-          >
-            <LayoutIcon layout={s.layout} className="h-4 w-6 text-brand-600" />
-            <span className="hidden xl:inline">{LESSON_LAYOUT_LABELS[s.layout]}</span>
-          </button>
-          {layoutAnchor && (
-            <LayoutMenu
-              anchor={layoutAnchor}
-              value={s.layout}
-              onPick={(layout) => {
-                onPatch({ layout });
-                setLayoutAnchor(null);
-              }}
-              onClose={() => setLayoutAnchor(null)}
-            />
-          )}
-        </div>
         <button
           type="button"
           onClick={onShowSource}
@@ -422,25 +391,7 @@ function SectionRow({
               + Thêm ý
             </button>
           )}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-xs text-faint">Hộp trong mục:</span>
-            {OUTLINE_BOX_KINDS.map((k) => {
-              const on = s.boxes.includes(k);
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => onPatch({ boxes: on ? s.boxes.filter((x) => x !== k) : [...s.boxes, k] })}
-                  className={`rounded-lg border px-2 py-0.5 text-xs transition-colors ${
-                    on ? "border-brand-300 bg-brand-soft text-brand-700" : "border-dashed border-token text-muted hover:border-solid"
-                  }`}
-                >
-                  {on ? "" : "+ "}
-                  {LESSON_BOX_LABELS[k]}
-                </button>
-              );
-            })}
+          <div className="flex items-center pt-1">
             {canDelete && (
               <button
                 type="button"
@@ -453,68 +404,6 @@ function SectionRow({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-const MENU_W = 288;
-const MENU_H = 268;
-
-function LayoutMenu({
-  anchor,
-  value,
-  onPick,
-  onClose,
-}: {
-  anchor: DOMRect;
-  value: LessonLayoutKey;
-  onPick: (l: LessonLayoutKey) => void;
-  onClose: () => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const down = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && onClose();
-    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    // Menu nổi theo vị trí nút: cột dàn ý tự cuộn nên menu đặt trong cột sẽ bị cắt.
-    // Cuộn hoặc đổi cỡ cửa sổ thì đóng, khỏi lệch khỏi nút.
-    document.addEventListener("mousedown", down);
-    document.addEventListener("keydown", key);
-    window.addEventListener("resize", onClose);
-    document.addEventListener("scroll", onClose, true);
-    return () => {
-      document.removeEventListener("mousedown", down);
-      document.removeEventListener("keydown", key);
-      window.removeEventListener("resize", onClose);
-      document.removeEventListener("scroll", onClose, true);
-    };
-  }, [onClose]);
-  const below = anchor.bottom + 6 + MENU_H <= window.innerHeight - 8;
-  const top = below ? anchor.bottom + 6 : Math.max(8, anchor.top - 6 - MENU_H);
-  const left = Math.max(8, Math.min(anchor.right - MENU_W, window.innerWidth - MENU_W - 8));
-  return (
-    <div
-      ref={ref}
-      role="listbox"
-      aria-label="Bố cục của mục"
-      style={{ position: "fixed", top, left, width: MENU_W }}
-      className="z-50 grid grid-cols-2 gap-1.5 rounded-xl border border-token bg-[rgb(var(--surface))] p-2 shadow-xl"
-    >
-      {LESSON_LAYOUT_KEYS.map((k) => (
-        <button
-          key={k}
-          type="button"
-          role="option"
-          aria-selected={k === value}
-          title={LESSON_LAYOUT_HINTS[k]}
-          onClick={() => onPick(k)}
-          className={`flex flex-col items-start gap-1 rounded-lg border p-2 text-left transition-colors ${
-            k === value ? "border-brand-500 bg-brand-soft" : "border-token hover:border-brand-300"
-          }`}
-        >
-          <LayoutIcon layout={k} className="h-5 w-8 text-brand-600" />
-          <span className="text-xs font-semibold">{LESSON_LAYOUT_LABELS[k]}</span>
-        </button>
-      ))}
     </div>
   );
 }

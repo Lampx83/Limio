@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BATCH_SIZE,
+  applyStructure,
   configFromOutline,
   deepStripEmoji,
   draftToSlide,
@@ -15,6 +16,29 @@ import type { OutlineSlide } from "./limioLiveOutline";
 
 const os = (id: string, kind: OutlineSlide["kind"], layout: OutlineSlide["layout"], title: string, points: string[] = []): OutlineSlide => ({ id, kind, layout, title, points });
 const empty: SlideDraft = { index: 0 };
+
+describe("applyStructure: chữ do mạch cấu trúc quyết định", () => {
+  it("slide mở phần nhận số phần, tên phần và mục lục, ghi đè bản AI viết", () => {
+    const g = draftToSlide(os("a", "content", "section", "Ứng dụng"), { index: 0, title: "Tên AI đổi", subtitle: "Phần này trả lời câu hỏi dùng AR thế nào." }, "07");
+    const out = applyStructure(g, { sectionNo: "02", toc: ["Khái niệm", "Ứng dụng", "Thiết kế"], tocCurrent: 2 });
+    expect(out.config).toMatchObject({ layout: "section", sectionNumber: "02", title: "Ứng dụng", toc: ["Khái niệm", "Ứng dụng", "Thiết kế"], tocCurrent: 2 });
+    expect(out.config.subtitle).toBe("Phần này trả lời câu hỏi dùng AR thế nào.");
+  });
+
+  it("slide Mục lục nhận đúng tên các phần", () => {
+    const g = draftToSlide(os("b", "content", "summary", "Nội dung buổi học"), { index: 0, title: "Nội dung buổi học", items: [{ heading: "AI viết khác." }, { heading: "Và khác nữa." }] }, "");
+    expect(applyStructure(g, { agenda: ["Khái niệm", "Ứng dụng"] }).config.items).toEqual([
+      { heading: "Khái niệm", body: "" },
+      { heading: "Ứng dụng", body: "" },
+    ]);
+  });
+
+  it("không có thông tin mạch hoặc slide tương tác thì giữ nguyên", () => {
+    const g = draftToSlide(os("c", "word_cloud", null, "Một từ?"), { index: 0, prompt: "Một từ về AR?" }, "");
+    expect(applyStructure(g, { agenda: ["x"] })).toBe(g);
+    expect(applyStructure(g, null)).toBe(g);
+  });
+});
 
 describe("makeBatches", () => {
   it("chia theo lô, lô cuối có thể ngắn hơn", () => {
@@ -84,7 +108,12 @@ describe("draftToSlide — slide nội dung", () => {
   it("số liệu fallback: không có con số thì chuyển sang ba thẻ, không bịa số", () => {
     const g = configFromOutline(os("o4", "content", "stats", "Số liệu", ["Phản hồi giúp tiến bộ.", "Người học cần thời gian.", "Cần mục tiêu."]), "");
     expect(g.config.layout).toBe("cards");
-    const withNum = configFromOutline(os("o5", "content", "stats", "Số liệu", ["Ba câu hỏi 3 được trả lời.", "Hai nội dung 2 gồm điểm mạnh.", "Một việc 1 cụ thể."]), "");
+    const withNum = configFromOutline(
+      os("o5", "content", "stats", "Số liệu", ["Ba câu hỏi 3 được trả lời.", "Hai nội dung 2 gồm điểm mạnh.", "Một việc 1 cụ thể."]),
+      "",
+      undefined,
+      { sourceNumbers: new Set(["1", "2", "3"]) },
+    );
     expect(withNum.config.layout).toBe("stats");
     expect((withNum.config.items as any[])[0].heading).toBe("3");
   });
@@ -305,5 +334,51 @@ describe("proposalFromDraft", () => {
   it("bỏ emoji trong đề xuất", () => {
     const r = proposalFromDraft("shorter", current, { ...cardsDraft, title: "Ba câu hỏi 🎯" })!;
     expect(r.config.title).toBe("Ba câu hỏi");
+  });
+});
+
+describe("draftToSlide — hình minh hoạ do AI chọn", () => {
+  const img = os("i1", "content", "image", "Internet kết nối các mạng máy tính");
+  const draft = (illustration?: string): SlideDraft => ({
+    index: 0,
+    title: "Internet kết nối các mạng máy tính",
+    bullets: ["Mỗi thiết bị có một địa chỉ riêng.", "Dữ liệu đi qua nhiều nút trung gian.", "Giao thức chung giúp các mạng hiểu nhau."],
+    illustration,
+  });
+
+  it("mã có trong danh sách ở slide Chữ và hình: lưu vào ô hình của slide", () => {
+    expect(draftToSlide(img, draft("ketnoi"), "").config.motif).toBe("ketnoi");
+  });
+
+  it("“none”, bỏ trống, mã lạ hay mã hoa văn: không lưu gì, slide nhận hoa văn tự động", () => {
+    for (const v of [undefined, "", "none", "maytinh", "KetNoi", "song"]) expect(draftToSlide(img, draft(v), "").config.motif).toBeUndefined();
+  });
+
+  it("bố cục không có ô hình: mã bị bỏ", () => {
+    const cards = os("c1", "content", "cards", "Ba nguyên tắc an toàn");
+    const g = draftToSlide(
+      cards,
+      { index: 0, title: "Ba nguyên tắc an toàn", illustration: "antoan", items: [1, 2, 3].map((n) => ({ heading: `Ý ${n}`, body: "Một câu hoàn chỉnh.", icon: "target" })) },
+      "",
+    );
+    expect(g.usedFallback).toBe(false);
+    expect(g.config.motif).toBeUndefined();
+  });
+
+  it("bản nháp hỏng phải rơi về dàn ý thì cũng không có hình", () => {
+    expect(draftToSlide(img, { index: 0, illustration: "ketnoi" }, "").config.motif).toBeUndefined();
+  });
+});
+
+describe("bìa: AI không viết và không xoá tên đơn vị, người trình bày", () => {
+  it("bản AI sinh không lấy tên đơn vị và người trình bày do AI viết", () => {
+    const g = draftToSlide(os("c1", "content", "cover", "Bài 1"), { index: 0, title: "Bài 1", subtitle: "Giới thiệu.", org: "Đại học AI bịa", byline: "GS. Bịa" } as SlideDraft, "");
+    expect(g.config.org).toBeUndefined();
+    expect(g.config.byline).toBeUndefined();
+  });
+  it("AI sửa bìa giữ nguyên tên đơn vị, người trình bày và kiểu bìa của bản đang có", () => {
+    const current = { config: { layout: "cover", title: "Bài cũ", org: "Khoa CNTT", byline: "TS. Trần Minh Anh", coverStyle: "arch", outlineId: "o1", aiGenerated: true } };
+    const r = proposalFromDraft("shorter", current, { index: 0, title: "Bài mới", subtitle: "Câu giới thiệu mới." })!;
+    expect(r.config).toMatchObject({ title: "Bài mới", org: "Khoa CNTT", byline: "TS. Trần Minh Anh", coverStyle: "arch" });
   });
 });

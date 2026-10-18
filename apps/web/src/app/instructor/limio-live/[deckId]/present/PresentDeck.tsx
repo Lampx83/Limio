@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
-import { openAudienceWindow } from "@/lib/limioLiveWindow";
+import { openAudienceWindow, reopenPresenterWindow } from "@/lib/limioLiveWindow";
 import EmptyState from "@/components/ui/EmptyState";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
@@ -16,6 +16,7 @@ import { contentKind } from "../../slideKind";
 import { slideBgFor } from "../../slideThemes";
 import { LayoutSlideView, isLayoutSlide } from "../../SlideLayouts";
 import { BrandLogoOverlay, BrandLogoSpacer, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
+import { LiveMotifProvider } from "../../liveMotifContext";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
 import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
@@ -49,6 +50,8 @@ interface Deck {
   brand?: unknown;
   brandOff?: boolean;
   brandTemplate?: string | null;
+  /** Hoa văn trang trí của cả bài (limioLiveMotifs): null = tự động. */
+  motif?: string | null;
   org?: DeckOrgBrand | null;
   slides: Slide[];
 }
@@ -90,6 +93,10 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   // ?mode=slideshow = "Trình chiếu" kiểu PowerPoint: fullscreen, KHÔNG ghi chú, không
   // cửa sổ phụ. Mặc định (không tham số) = Presenter view: có ghi chú, không fullscreen.
   const slideshow = mode === "presenter" && searchParams.get("mode") === "slideshow";
+  // ?swap=1 = Presenter view kiểu PowerPoint (editor đã đổi vai 2 cửa sổ): tab gốc là màn
+  // chiếu fullscreen trên máy chiếu, presenter view là popup trên laptop. Hai bên báo nhau
+  // qua BroadcastChannel: presenter còn sống / đã đóng / kết thúc trình chiếu.
+  const swapped = searchParams.get("swap") === "1";
 
   const [deck, setDeck] = useState<Deck | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -344,6 +351,18 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   };
 
   const handleOpenAudienceWindow = () => {
+    // Cửa sổ này là popup presenter mà tab gốc vẫn đang làm màn chiếu → không mở thêm màn chiếu thứ hai.
+    if (swapped) {
+      try {
+        const opener = window.opener as Window | null;
+        if (opener && !opener.closed && opener.location.pathname.endsWith(`/limio-live/${deckId}/present`)) {
+          toast.info("Màn chiếu đang mở ở màn hình thứ hai");
+          return;
+        }
+      } catch {
+        /* opener đã sang trang khác origin — mở màn chiếu mới như thường */
+      }
+    }
     openAudienceWindow(deckId);
   };
 
@@ -377,6 +396,20 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     chanRef.current = ch;
     if (mode === "audience") {
       ch.onmessage = (e) => {
+        if (swapped && e.data?.type === "presenter-alive") {
+          presenterSeenRef.current = Date.now();
+          setPresenterGone(false);
+          return;
+        }
+        if (swapped && e.data?.type === "presenter-closed") {
+          if (!leavingRef.current) setPresenterGone(true);
+          return;
+        }
+        if (swapped && e.data?.type === "presenter-exit") {
+          if (e.data.notice) toast.success(e.data.notice);
+          leaveToEditor();
+          return;
+        }
         if (e.data?.type === "qr") {
           setQrRemote(!!e.data.open);
           return;
@@ -392,6 +425,39 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, mode]);
+
+  // Presenter (popup) báo còn sống mỗi 2 giây và báo khi cửa sổ đóng.
+  useEffect(() => {
+    if (!swapped || mode !== "presenter" || !sessionId) return;
+    const ping = () => chanRef.current?.postMessage({ type: "presenter-alive" });
+    ping();
+    const t = setInterval(ping, 2000);
+    const onHide = () => chanRef.current?.postMessage({ type: "presenter-closed" });
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("pagehide", onHide);
+    };
+  }, [swapped, mode, sessionId]);
+
+  // Màn chiếu: quá 6 giây không nghe presenter (đóng nhầm, treo) → hiện nút mở lại.
+  const [presenterGone, setPresenterGone] = useState(false);
+  const presenterSeenRef = useRef(Date.now());
+  useEffect(() => {
+    if (!swapped || mode !== "audience" || !sessionId) return;
+    presenterSeenRef.current = Date.now();
+    const t = setInterval(() => {
+      if (Date.now() - presenterSeenRef.current > 6000) setPresenterGone(true);
+    }, 2000);
+    return () => clearInterval(t);
+  }, [swapped, mode, sessionId]);
+
+  const leavingRef = useRef(false);
+  const leaveToEditor = () => {
+    leavingRef.current = true;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    router.push(`/instructor/limio-live/${deckId}`);
+  };
 
   // Slide mới vừa hiện ở màn chiếu (poll trễ hơn tin nhắn cuộn) → áp lại vị trí đang chờ.
   useEffect(() => {
@@ -508,8 +574,19 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         body: JSON.stringify({ action }),
       });
       if (!res.ok) throw new Error();
-      if (action === "save") toast.success("Đã lưu phiên vào Lịch sử tương tác. Phiên mới dùng mã mới.");
-      if (action === "discard") toast.success("Đã xoá kết quả. Phiên mới dùng mã mới.");
+      const notice =
+        action === "save"
+          ? "Đã lưu phiên vào Lịch sử tương tác. Phiên mới dùng mã mới."
+          : action === "discard"
+            ? "Đã xoá kết quả. Phiên mới dùng mã mới."
+            : null;
+      // Đổi vai: tab gốc (đang là màn chiếu) tự thoát fullscreen về trang soạn, popup tự đóng.
+      if (swapped && window.opener) {
+        chanRef.current?.postMessage({ type: "presenter-exit", notice });
+        window.close();
+        if (window.closed) return;
+      }
+      if (notice) toast.success(notice);
       router.push(`/instructor/limio-live/${deckId}`);
     } catch {
       toast.error("Lỗi mạng");
@@ -579,6 +656,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
   return (
     <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
+    <LiveMotifProvider deckId={deck.id} motif={deck.motif} slides={slides}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {
@@ -869,12 +947,35 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             ) : (
               <>
                 <p className="text-[40px] font-bold leading-snug text-white">
-                  Hãy kéo màn hình này sang màn chiếu ở chế độ extended window, rồi bấm chuột vào bất cứ đâu trong màn hình này để tự động fullscreen.
+                  {swapped
+                    ? "Bấm chuột vào bất cứ đâu trong màn hình này để fullscreen."
+                    : "Hãy kéo màn hình này sang màn chiếu ở chế độ extended window, rồi bấm chuột vào bất cứ đâu trong màn hình này để tự động fullscreen."}
                 </p>
                 <p className="mt-6 text-xl text-white/60">Hoặc nhấn phím F.</p>
               </>
             )}
           </div>
+        </div>
+      )}
+      {swapped && mode === "audience" && presenterGone && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="fixed bottom-5 left-1/2 z-[140] flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/80 py-2 pl-5 pr-2 text-sm font-medium text-white shadow-lg"
+        >
+          <span>Cửa sổ presenter view đã đóng.</span>
+          <button
+            onClick={() => {
+              presenterSeenRef.current = Date.now();
+              setPresenterGone(false);
+              reopenPresenterWindow(deckId);
+            }}
+            className="rounded-full bg-white px-3.5 py-1.5 font-semibold text-[#20241F] hover:bg-white/90"
+          >
+            Mở lại
+          </button>
+          <button onClick={leaveToEditor} className="rounded-full px-3.5 py-1.5 font-semibold text-white/80 hover:bg-white/10">
+            Về trang soạn
+          </button>
         </div>
       )}
       {slideshow && !isFullscreen && (
@@ -884,6 +985,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
     </div>
+    </LiveMotifProvider>
     </LiveBrandProvider>
   );
 }
@@ -991,6 +1093,7 @@ function SlideStage({
   if (slide.type === "content") {
     return (
       <ContentSlideView
+        slideId={slide.id}
         zoom={zoom}
         themeId={themeId}
         animate
@@ -1099,6 +1202,7 @@ function SlideTimer({
 }
 
 function ContentSlideView({
+  slideId,
   config,
   timerSeconds,
   timerStartedAt,
@@ -1109,6 +1213,8 @@ function ContentSlideView({
   themeId,
   animate,
 }: {
+  /** Để biết thứ tự ô hình khi tự chọn hoa văn (xem liveMotifContext). */
+  slideId?: string;
   themeId?: string | null;
   animate?: boolean;
   config: Record<string, any>;
@@ -1140,7 +1246,7 @@ function ContentSlideView({
   if (isLayoutSlide(config)) {
     return (
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <LayoutSlideView config={config} themeId={themeId} animate={animate} zoom={zoom} />
+        <LayoutSlideView config={config} themeId={themeId} slideId={slideId} animate={animate} zoom={zoom} />
         {timerSticker}
       </div>
     );
@@ -1326,7 +1432,7 @@ function Filmstrip({
                   </>
                 ) : plain ? (
                   <ThumbScaled width={FILM_ITEM_W - 22}>
-                    <ContentSlideView config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages themeId={theme} />
+                    <ContentSlideView slideId={sl.id} config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages themeId={theme} />
                   </ThumbScaled>
                 ) : (
                   <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 p-1.5 text-center text-[#20241F]">

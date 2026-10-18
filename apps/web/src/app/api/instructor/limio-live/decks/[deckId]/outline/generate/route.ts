@@ -5,9 +5,11 @@ import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
-import { pickMeta } from "@/lib/limioLiveSlides";
+import { fillCoverIdentity, pickMeta } from "@/lib/limioLiveSlides";
+import { coverIdentityFor } from "@/lib/limioLiveCoverIdentity";
 import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
-import { sanitizeOutline } from "@/lib/limioLiveOutline";
+import { motifAfterRegenerate } from "@/lib/limioLiveMotifs";
+import { partLabel, resolveSourceKind, sanitizeOutline, sanitizeRefs, slideStructures } from "@/lib/limioLiveOutline";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -31,7 +33,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
 
   const deck = await prisma.liveDeck.findFirst({
     where: { id: params.deckId, userId },
-    select: { id: true, title: true, outline: true, outlineConfirmedAt: true, sourceText: true, _count: { select: { slides: true } } },
+    select: { id: true, title: true, outline: true, outlineConfirmedAt: true, sourceText: true, sourceKind: true, sourceRefs: true, _count: { select: { slides: true } } },
   });
   if (!deck || !deck.outline) return json({ error: "not_found" }, 404);
   if (!deck.outlineConfirmedAt) return json({ error: "outline_not_confirmed" }, 409);
@@ -57,11 +59,20 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
     layout: s.layout,
     title: s.title,
     points: s.points,
+    role: outline.parts.find((p) => p.id === s.partId)?.role,
+    part: s.partId ? partLabel(outline, s.partId) : undefined,
   }));
   const deckTitle = outline.title || deck.title;
+  // Bìa: tên đơn vị và người trình bày lấy từ tên trường và hồ sơ của giảng viên, AI không viết hai dòng này.
+  const who = await coverIdentityFor(userId);
   const sourceText = deck.sourceText ?? "";
+  // Nguồn của bài quyết định luật dùng số liệu, trích dẫn (câu lệnh) và cách kiểm bản nháp (draftToSlide).
+  const sourceKind = resolveSourceKind(deck.sourceKind);
+  const context = { sourceKind, sourceText, refs: sanitizeRefs(deck.sourceRefs) };
 
-  const sectionNos = sectionNumbers(outline.slides);
+  const structures = slideStructures(outline);
+  // Số mục theo thứ tự phần Nội dung (khớp mục lục của bìa phần); slide mở phần ngoài mạch thì đếm như cũ.
+  const sectionNos = sectionNumbers(outline.slides).map((n, i) => structures[i]?.sectionNo ?? n);
   const existing: ExistingSlide[] = sync
     ? (
         await prisma.liveSlide.findMany({
@@ -88,13 +99,15 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
         const result = await generateDeckSlides({
           outline: writeIdx.map((i) => outline.slides[i]!),
           sectionNos: writeIdx.map((i) => sectionNos[i]!),
+          structures: writeIdx.map((i) => structures[i] ?? null),
           concurrency: 2,
+          context,
           isFatal: (e) => e instanceof AiTutorError,
           onProgress: (done, total) => send({ type: "progress", done, total }),
           generateBatch: async (batch) => {
             const drafts = (await generateSlideDrafts(
               userId,
-              { sourceText, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
+              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
               openai,
             )) as SlideDraft[];
             // generateDeckSlides đánh chỉ số theo phần được viết; mô hình trả chỉ số theo cả dàn ý.
@@ -102,6 +115,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           },
         });
 
+        for (const s of result.slides) if (s.type === "content") s.config = fillCoverIdentity(s.config as Record<string, unknown>, who);
         const byOutlineId = new Map(writeIdx.map((i, k) => [outline.slides[i]!.id, result.slides[k]!]));
 
         await prisma.$transaction(async (tx) => {
@@ -122,12 +136,15 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           for (const r of plan.regenerate) {
             const gen = byOutlineId.get(r.outlineId)!;
             const old = oldBy.get(r.slideId)!;
-            // Giữ cờ ẩn của slide cũ; ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
-            const keepHidden = pickMeta(old.config).hidden ? { hidden: true } : {};
+            // Giữ cờ ẩn và kiểu bìa của slide cũ: đổi chúng không tính là sửa tay nên slide vẫn được viết lại. Hoa văn/hình
+            // minh hoạ theo motifAfterRegenerate. Ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
+            const oldMeta = pickMeta(old.config);
+            const keepHidden = { ...(oldMeta.hidden ? { hidden: true } : {}), ...(oldMeta.coverStyle ? { coverStyle: oldMeta.coverStyle } : {}) };
+            const keepMotif = motifAfterRegenerate(oldMeta.motif, gen.config.motif);
             await recordSlideVersion(tx, { id: r.slideId, type: old.type as never, config: old.config }, "before_sync");
             const row = await tx.liveSlide.update({
               where: { id: r.slideId },
-              data: { type: gen.type, config: { ...gen.config, ...keepHidden } as object },
+              data: { type: gen.type, config: { ...gen.config, ...keepHidden, ...(keepMotif ? { motif: keepMotif } : {}) } as object },
               select: { id: true, type: true, config: true },
             });
             await recordSlideVersion(tx, row, "generated");

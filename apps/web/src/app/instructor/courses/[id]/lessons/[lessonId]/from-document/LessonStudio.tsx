@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronLeft, Loader2 } from "lucide-react";
 import {
+  LESSON_TEMPLATE_LABELS,
   LESSON_WRITING_HINTS,
   LESSON_WRITING_LABELS,
   LESSON_WRITING_MODES,
   type LessonDraftResult,
   type LessonLook,
   type LessonOutline,
+  type LessonTemplateKey,
   type LessonWritingMode,
   type SourcePara,
 } from "@feedbackme/shared-types";
@@ -20,6 +22,7 @@ import { assignPara, ignoreParas } from "@/lib/lessonOutlineEdit";
 import LessonLookMenu from "@/components/lesson/LessonLookMenu";
 import SourceStep from "./SourceStep";
 import OutlinePane, { Objectives } from "./OutlinePane";
+import TemplatePicker from "./TemplatePicker";
 import { OutlinePreview, SourceView } from "./PreviewPane";
 import { GenerationView, ResultView, type GenStep } from "./ResultPane";
 
@@ -45,6 +48,12 @@ const GEN_ERRORS: Record<string, string> = {
   global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau.",
   openai_not_configured: "Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên.",
   outline_not_confirmed: "Dàn ý chưa được chốt.",
+};
+
+const REOUTLINE_ERRORS: Record<string, string> = {
+  no_token_budget: "Bạn đã dùng hết hạn mức AI. Dàn ý cũ vẫn được giữ.",
+  global_token_cap: "Hệ thống AI đang quá tải hôm nay. Dàn ý cũ vẫn được giữ.",
+  openai_not_configured: "Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên.",
 };
 
 type SaveState = "saved" | "dirty" | "saving" | "error";
@@ -408,6 +417,27 @@ function Studio({
               </p>
             </div>
 
+            <TemplateBar
+              template={outline.template ?? "theory"}
+              onReoutline={async (template) => {
+                // Lưu cách viết, giao diện đang chờ; phần dàn ý sắp bị thay nên không cần.
+                await flush();
+                const res = await fetch(`${url}/reoutline`, {
+                  method: "POST",
+                  headers: { "content-type": "application/json" },
+                  body: JSON.stringify({ template }),
+                });
+                await readNdjson(res);
+                const r = await fetch(url);
+                if (!r.ok) throw new Error("reload_failed");
+                const d = (await r.json()) as Draft;
+                setDraft(d);
+                setActiveId(null);
+                setReviewed(false);
+                setConfirmErr(null);
+              }}
+            />
+
             {warnings.length > 0 && (
               <ul className="banner-info space-y-0.5 text-xs">
                 {warnings.map((w, i) => (
@@ -594,5 +624,104 @@ function Studio({
         </section>
       </div>
     </>
+  );
+}
+
+/** Đọc luồng NDJSON tới sự kiện cuối; ném lỗi với mã lỗi của máy chủ. */
+async function readNdjson(res: Response): Promise<void> {
+  if (!res.ok || !res.body) {
+    const d = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(d.error ?? `http_${res.status}`);
+  }
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line) continue;
+      const ev = JSON.parse(line) as { type: string; error?: string };
+      if (ev.type === "error") throw new Error(ev.error ?? "generate_failed");
+      if (ev.type === "done") return;
+    }
+  }
+  throw new Error("generate_failed");
+}
+
+/**
+ * Mẫu bài đang dùng, và đổi mẫu: AI lập lại dàn ý từ chính tài liệu đã tải
+ * (không phải tải lại). Hỏi lại trước vì dàn ý đang sửa sẽ bị thay.
+ */
+function TemplateBar({
+  template,
+  onReoutline,
+}: {
+  template: LessonTemplateKey;
+  onReoutline: (t: LessonTemplateKey) => Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pick, setPick] = useState<LessonTemplateKey>(template);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  if (!open) {
+    return (
+      <p className="flex items-center gap-2 px-1.5 text-xs text-muted">
+        Mẫu bài: <b className="font-semibold text-[rgb(var(--text))]">{LESSON_TEMPLATE_LABELS[template]}</b>
+        <button
+          type="button"
+          onClick={() => {
+            setPick(template);
+            setErr(null);
+            setOpen(true);
+          }}
+          className="font-semibold text-brand-700 hover:underline"
+        >
+          Đổi mẫu
+        </button>
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-2.5 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3">
+      <TemplatePicker value={pick} onChange={setPick} disabled={busy} compact />
+      <p className="text-xs text-muted">
+        AI sẽ đọc lại tài liệu và lập dàn ý mới theo mẫu đã chọn. Những gì bạn đã sửa trên dàn ý hiện tại sẽ được thay
+        bằng dàn ý mới.
+      </p>
+      {err && <p className="text-xs text-danger-600">{err}</p>}
+      <div className="flex justify-end gap-2">
+        <button type="button" onClick={() => setOpen(false)} disabled={busy} className="btn-ghost text-sm">
+          Huỷ
+        </button>
+        <button
+          type="button"
+          disabled={busy || pick === template}
+          onClick={async () => {
+            setBusy(true);
+            setErr(null);
+            try {
+              await onReoutline(pick);
+              setOpen(false);
+            } catch (e) {
+              const code = e instanceof Error ? e.message : String(e);
+              setErr(REOUTLINE_ERRORS[code] ?? "AI chưa lập lại được dàn ý. Dàn ý cũ vẫn được giữ; vui lòng thử lại sau.");
+            } finally {
+              setBusy(false);
+            }
+          }}
+          className="btn-primary inline-flex items-center gap-2 text-sm"
+        >
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+          {busy ? "Đang lập lại dàn ý…" : "Lập lại dàn ý"}
+        </button>
+      </div>
+    </div>
   );
 }

@@ -3,7 +3,8 @@ import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
 import { AiTutorError } from "../aiTutor/errors";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
-import { SLIDE_SPEC, buildSlidesPrompt, generateSlideDrafts, specKeyFor, type OutlineSlideInput } from "../aiTutor/lectureSlides";
+import { SLIDE_ILLUSTRATIONS } from "@feedbackme/shared-types";
+import { LECTURE_DRAFTS_SCHEMA, DRAFTS_SCHEMA, SLIDE_SPEC, buildSlidesPrompt, generateSlideDrafts, specKeyFor, type OutlineSlideInput } from "../aiTutor/lectureSlides";
 
 const outline: OutlineSlideInput[] = [
   { index: 0, kind: "content", layout: "cover", title: "Phản hồi trong dạy học", points: ["Phản hồi giúp người học tiến bộ."] },
@@ -11,6 +12,26 @@ const outline: OutlineSlideInput[] = [
   { index: 2, kind: "quiz", layout: null, title: "Câu nào là phản hồi cụ thể?", points: [] },
   { index: 3, kind: "word_cloud", layout: null, title: "Một từ nói về cảm nhận", points: [] },
 ];
+describe("vai trò trong mạch bài", () => {
+  it("slide Mục tiêu và Mục lục có yêu cầu riêng; slide mở phần dặn lời chuyển ý trong ghi chú", () => {
+    expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Mục tiêu", points: [], role: "objectives" })).toBe("objectives");
+    expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Nội dung", points: [], role: "agenda" })).toBe("agenda");
+    expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Điều cần nhớ", points: [], role: "summary" })).toBe("summary");
+    expect(SLIDE_SPEC.section).toContain("chuyển ý");
+    expect(SLIDE_SPEC.agenda).toContain("giữ nguyên chữ");
+  });
+
+  it("dàn ý tổng quan ghi nhãn phần để mô hình giữ mạch", () => {
+    const { user } = buildSlidesPrompt({
+      sourceText: "x".repeat(60),
+      deckTitle: "T",
+      outline: [{ index: 0, kind: "content", layout: "section", title: "Ứng dụng", points: [], role: "content", part: "Nội dung 2: Ứng dụng" }],
+      batch: [0],
+    });
+    expect(user).toContain("0. (Nội dung 2: Ứng dụng) [section] Ứng dụng");
+  });
+});
+
 const base = { sourceText: "Phản hồi là thông tin về khoảng cách giữa kết quả và mục tiêu. ".repeat(5), deckTitle: "Phản hồi", outline };
 
 const fake = (content: unknown) => {
@@ -43,6 +64,25 @@ describe("buildSlidesPrompt", () => {
   it("specKeyFor: slide tương tác dùng kind, slide nội dung dùng layout", () => {
     expect(specKeyFor(outline[2]!)).toBe("quiz");
     expect(specKeyFor(outline[0]!)).toBe("cover");
+  });
+});
+
+describe("hình minh hoạ cho ô hình", () => {
+  const img: OutlineSlideInput = { index: 4, kind: "content", layout: "image", title: "Internet kết nối các mạng", points: [] };
+  it("chỉ slide Chữ và hình được mời chọn hình, kèm đủ danh sách mã và lối thoát “none”", () => {
+    const { user } = buildSlidesPrompt({ ...base, outline: [...outline, img], batch: [1, 4] });
+    const lines = user.split("- Chỉ số ");
+    const imgLine = lines.find((l) => l.startsWith("4,"))!;
+    const cardsLine = lines.find((l) => l.startsWith("1,"))!;
+    for (const id of SLIDE_ILLUSTRATIONS) expect(imgLine).toContain(id);
+    expect(imgLine).toContain('"none"');
+    expect(cardsLine).toContain('illustration để "none"');
+  });
+  it("lược đồ của bước sinh slide ép trường illustration vào danh sách; lược đồ của bước sửa slide không có trường này", () => {
+    const props = (LECTURE_DRAFTS_SCHEMA.properties.slides.items as { properties: Record<string, { enum?: string[] }>; required: string[] });
+    expect(props.properties.illustration!.enum).toEqual([...SLIDE_ILLUSTRATIONS, "none"]);
+    expect(props.required).toContain("illustration");
+    expect(JSON.stringify(DRAFTS_SCHEMA)).not.toContain("illustration");
   });
 });
 

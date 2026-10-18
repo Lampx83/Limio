@@ -2,7 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
-import { isValidMinutes, outlineBlockingProblems, outlineWarnings, sanitizeOutline, type Outline } from "@/lib/limioLiveOutline";
+import {
+  isTopicSource,
+  isValidMinutes,
+  outlineBlockingProblems,
+  outlineWarnings,
+  resolveSourceKind,
+  sanitizeOutline,
+  sanitizeRefs,
+  type Outline,
+} from "@/lib/limioLiveOutline";
+import { figureKeys } from "@/lib/limioLiveFigures";
 import { planSync, syncIsNoop, syncSummary } from "@/lib/limioLiveSync";
 
 export const runtime = "nodejs";
@@ -18,6 +28,8 @@ async function ownedDeck(deckId: string, userId: string) {
       outlineConfirmedAt: true,
       sourceName: true,
       sourceText: true,
+      sourceKind: true,
+      sourceRefs: true,
       slides: { orderBy: { orderIndex: "asc" as const }, select: { id: true, type: true, config: true } },
     },
   });
@@ -32,12 +44,21 @@ function syncState(outline: Outline, slides: Array<{ id: string; type: string; c
 }
 
 function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
-  const outline = (deck.outline ?? null) as Outline | null;
+  // Luôn qua sanitizeOutline: dàn ý tạo trước khi có mạch cấu trúc được tự chia phần khi mở.
+  const outline: Outline | null = deck.outline ? sanitizeOutline(deck.outline) : null;
   const minutes = deck.outlineMinutes ?? 30;
+  const sourceKind = resolveSourceKind(deck.sourceKind);
+  // Bài từ mô tả chủ đề: giao diện cần biết con số nào có trong mô tả hoặc các trang đã đọc để nhắc kiểm tra con số lạ,
+  // mà không phải tải cả văn bản nguồn về trình duyệt.
+  const sourceFigureKeys = isTopicSource(sourceKind) ? [...figureKeys(deck.sourceText ?? "")] : undefined;
   return {
     deckId: deck.id,
     title: deck.title,
     sourceName: deck.sourceName,
+    sourceKind,
+    // null = không tìm nguồn internet; [] = có bật nhưng không tìm được trang nào.
+    webRefs: deck.sourceRefs === null ? null : sanitizeRefs(deck.sourceRefs),
+    sourceFigureKeys,
     minutes,
     outline,
     confirmedAt: deck.outlineConfirmedAt,
@@ -45,7 +66,7 @@ function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
     slideCount: deck.slides.length,
     // Khi bài đã có slide: việc "cập nhật theo dàn ý" sẽ làm gì (slide đã sửa tay luôn được giữ).
     sync: outline && deck.slides.length ? syncState(outline, deck.slides) : null,
-    warnings: outline ? outlineWarnings(outline, minutes) : [],
+    warnings: outline ? outlineWarnings(outline, minutes, { sourceKind, sourceFigureKeys }) : [],
   };
 }
 
@@ -93,6 +114,8 @@ export async function PUT(req: Request, { params }: { params: { deckId: string }
       outlineConfirmedAt: true,
       sourceName: true,
       sourceText: true,
+      sourceKind: true,
+      sourceRefs: true,
       slides: { orderBy: { orderIndex: "asc" as const }, select: { id: true, type: true, config: true } },
     },
   });

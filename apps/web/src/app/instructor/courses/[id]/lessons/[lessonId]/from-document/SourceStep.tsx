@@ -2,7 +2,9 @@
 
 import { useRef, useState } from "react";
 import { Check, FileText, Loader2, Upload, X } from "lucide-react";
+import type { LessonTemplateKey } from "@feedbackme/shared-types";
 import { apiUrl } from "@/lib/apiUrl";
+import TemplatePicker from "./TemplatePicker";
 
 const ERRORS: Record<string, string> = {
   file_too_large: "Tệp lớn hơn 10 MB. Hãy chia nhỏ tài liệu hoặc dán phần cần dùng.",
@@ -32,6 +34,7 @@ export default function SourceStep({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
+  const [template, setTemplate] = useState<LessonTemplateKey>("theory");
   const [drag, setDrag] = useState(false);
   const [stage, setStage] = useState(-1);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +57,7 @@ export default function SourceStep({
       setError(ERRORS.validation_failed!);
       return;
     }
+    fd.append("template", template);
     setStage(0);
     try {
       const res = await fetch(apiUrl(`/api/lessons/${lessonId}/drafts`), { method: "POST", body: fd });
@@ -167,6 +171,9 @@ export default function SourceStep({
           />
         </>
       )}
+
+      <h2 className="text-h4 mt-6 mb-2">Mẫu bài</h2>
+      <TemplatePicker value={template} onChange={setTemplate} disabled={busy} />
 
       {error && <p className="banner-danger mt-4 text-sm">{error}</p>}
 

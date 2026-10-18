@@ -14,8 +14,16 @@ import {
   pointStatus,
   rowSubtitle,
   splitPoint,
+  addContentPart,
+  addSlideToPart,
+  moveSlide,
+  partRuns,
+  patchSlide,
+  removeSlide,
+  renamePart,
+  restoreSlide,
 } from "./limioLiveOutlineUi";
-import { OUTLINE_KINDS, OUTLINE_LAYOUTS, type OutlineSlide } from "./limioLiveOutline";
+import { OUTLINE_KINDS, OUTLINE_LAYOUTS, sanitizeOutline, type Outline, type OutlineSlide } from "./limioLiveOutline";
 
 const slide = (p: Partial<OutlineSlide>): OutlineSlide => ({ id: "a", kind: "content", layout: "image", title: "T", points: [], ...p });
 
@@ -96,5 +104,102 @@ describe("changeKind", () => {
   });
   it("chọn lại đúng loại đang có thì không đổi gì (không mất ý đã gõ)", () => {
     expect(changeKind(slide({ points: ["x"] }), "content")).toEqual({});
+  });
+});
+
+describe("thao tác trên phần của dàn ý", () => {
+  const c = (id: string, partId: string, title: string, layout: OutlineSlide["layout"] = "image"): OutlineSlide => ({ id, partId, kind: "content", layout, title, points: ["Một câu."] });
+  const base = (): Outline =>
+    sanitizeOutline({
+      title: "AR",
+      parts: [
+        { id: "cv", role: "cover", name: "" },
+        { id: "ag", role: "agenda", name: "" },
+        { id: "hk", role: "hook", name: "" },
+        { id: "c1", role: "content", name: "Khái niệm" },
+        { id: "c2", role: "content", name: "Ứng dụng" },
+        { id: "sm", role: "summary", name: "" },
+      ],
+      slides: [
+        c("1", "cv", "Bìa", "cover"),
+        c("2", "ag", "Nội dung buổi học", "summary"),
+        c("3", "hk", "Hook"),
+        c("4", "c1", "Khái niệm", "section"),
+        c("5", "c1", "AR là gì"),
+        c("6", "c2", "Ứng dụng", "section"),
+        c("7", "c2", "Ba nhóm"),
+        c("8", "sm", "Kết", "summary"),
+      ],
+    });
+  const ids = (o: Outline) => o.slides.map((s) => s.id).join("");
+  const partOf = (o: Outline, id: string) => o.slides.find((s) => s.id === id)!.partId;
+
+  it("partRuns: khoảng slide và số thứ tự phần Nội dung", () => {
+    expect(partRuns(base()).map((r) => [r.part.id, r.from, r.to, r.ordinal])).toEqual([
+      ["cv", 0, 0, 0],
+      ["ag", 1, 1, 0],
+      ["hk", 2, 2, 0],
+      ["c1", 3, 4, 1],
+      ["c2", 5, 6, 2],
+      ["sm", 7, 7, 0],
+    ]);
+  });
+
+  it("thả lên một slide: vào chỗ slide đó và thuộc phần của nó", () => {
+    const o = moveSlide(base(), "5", { over: "7" });
+    expect(ids(o)).toBe("12346758");
+    expect(partOf(o, "5")).toBe("c2");
+    const up = moveSlide(base(), "7", { over: "5" });
+    expect(ids(up)).toBe("12347568");
+    expect(partOf(up, "7")).toBe("c1");
+  });
+
+  it("thả lên tên phần thành slide đầu; thả lên cuối phần thành slide cuối", () => {
+    const a = moveSlide(base(), "3", { start: "c2" });
+    expect(ids(a)).toBe("12453678");
+    expect(partOf(a, "3")).toBe("c2");
+    expect(a.parts.some((p) => p.id === "hk")).toBe(false);
+    const b = moveSlide(base(), "7", { end: "c1" });
+    expect(ids(b)).toBe("12345768");
+    expect(partOf(b, "7")).toBe("c1");
+  });
+
+  it("xoá rồi hoàn tác: slide và phần trở lại đúng chỗ", () => {
+    const { outline, removed } = removeSlide(base(), "3");
+    expect(outline.parts.some((p) => p.id === "hk")).toBe(false);
+    const back = restoreSlide(outline, removed!);
+    expect(ids(back)).toBe("12345678");
+    expect(partRuns(back).map((r) => r.part.id)).toEqual(["cv", "ag", "hk", "c1", "c2", "sm"]);
+  });
+
+  it("không xoá được slide cuối cùng", () => {
+    const one = sanitizeOutline({ parts: [{ id: "x", role: "content", name: "X" }], slides: [c("1", "x", "Một")] });
+    expect(removeSlide(one, "1").removed).toBeNull();
+  });
+
+  it("thêm slide vào cuối một phần", () => {
+    const { outline, id } = addSlideToPart(base(), "c1");
+    expect(outline.slides[5]!.id).toBe(id);
+    expect(partOf(outline, id)).toBe("c1");
+  });
+
+  it("thêm phần Nội dung trước Tổng kết; buổi đủ mạch có slide Mở phần, Mục lục cập nhật", () => {
+    const { outline, partId } = addContentPart(base(), true, "Thiết kế");
+    const runs = partRuns(outline);
+    expect(runs.map((r) => r.part.id).slice(-2)).toEqual([partId, "sm"]);
+    expect(outline.slides.find((s) => s.partId === partId)).toMatchObject({ layout: "section", title: "Thiết kế" });
+    expect(outline.slides[1]!.points).toEqual(["Khái niệm", "Ứng dụng", "Thiết kế"]);
+    const short = addContentPart(base(), false).outline;
+    expect(short.slides.find((s) => s.partId === partRuns(short).at(-2)!.part.id)).toMatchObject({ layout: "image" });
+  });
+
+  it("đổi tên phần đổi tiêu đề slide mở phần và Mục lục; sửa tiêu đề slide mở phần đổi tên phần", () => {
+    const a = renamePart(base(), "c1", "Bản chất của AR");
+    expect(a.slides[3]!.title).toBe("Bản chất của AR");
+    expect(a.slides[1]!.points[0]).toBe("Bản chất của AR");
+    const b = patchSlide(base(), "6", { title: "Dùng AR trong lớp" });
+    expect(b.parts.find((p) => p.id === "c2")!.name).toBe("Dùng AR trong lớp");
+    expect(b.slides[1]!.points).toEqual(["Khái niệm", "Dùng AR trong lớp"]);
+    expect(renamePart(base(), "c1", "   ")).toEqual(base());
   });
 });

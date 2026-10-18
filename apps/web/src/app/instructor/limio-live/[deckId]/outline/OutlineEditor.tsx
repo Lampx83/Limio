@@ -1,44 +1,47 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, Check, ChevronLeft, FileText, GripVertical, Loader2, Plus } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, FileText, Loader2, PenLine, Plus, Sparkles } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
   DURATIONS,
-  newOutlineId,
+  OUTLINE_LAYOUTS,
+  isFullStructure,
+  isTopicSource,
+  layoutAllowedFor,
   outlineBlockingProblems,
   outlineStats,
   outlineWarnings,
   slideRange,
+  slideStructureRole,
   type Outline,
   type OutlineKind,
   type OutlineSlide,
+  type DeckSourceKind,
+  type WebSourceRef,
 } from "@/lib/limioLiveOutline";
-import { OUTLINE_KIND_LABEL, OUTLINE_KIND_ORDER, changeKind, glyphKey, kindGroupOf, rowSubtitle } from "@/lib/limioLiveOutlineUi";
-import OutlineGlyph from "./OutlineGlyph";
+import { TopicSourceNotice } from "../../TopicSourceNotice";
+import {
+  addContentPart,
+  addSlideToPart,
+  changeKind,
+  moveSlide,
+  patchSlide,
+  removeSlide,
+  renamePart,
+  restoreSlide,
+  type RemovedSlide,
+} from "@/lib/limioLiveOutlineUi";
+import OutlineFlow from "./OutlineFlow";
 import SlideDialog from "./SlideDialog";
 
 interface Loaded {
   title: string;
   sourceName: string | null;
+  sourceKind: DeckSourceKind;
+  webRefs: WebSourceRef[] | null;
+  sourceFigureKeys?: string[];
   minutes: number;
   outline: Outline;
   confirmedAt: string | null;
@@ -69,7 +72,7 @@ type SaveState = "saved" | "dirty" | "saving" | "error";
 export default function OutlineEditor({ deckId }: { deckId: string }) {
   const url = apiUrl(`/api/instructor/limio-live/decks/${deckId}/outline`);
   const [data, setData] = useState<Loaded | null>(null);
-  const [outline, setOutline] = useState<Outline>({ title: "", slides: [] });
+  const [outline, setOutline] = useState<Outline>({ title: "", slides: [], parts: [] });
   const [minutes, setMinutes] = useState(30);
   const [save, setSave] = useState<SaveState>("saved");
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
@@ -80,7 +83,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const [confirmErr, setConfirmErr] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  // Xoá không hỏi lại; thông báo có nút Hoàn tác trong vài giây.
+  const [undo, setUndo] = useState<RemovedSlide | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [gen, setGen] = useState<
     | { state: "idle" }
     | { state: "running"; done: number; total: number }
@@ -146,43 +152,47 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
+      if (undoTimer.current) clearTimeout(undoTimer.current);
     },
     [],
   );
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
   const stats = useMemo(() => outlineStats(outline), [outline]);
   const range = slideRange(minutes);
-  const warnings = useMemo(() => outlineWarnings(outline, minutes), [outline, minutes]);
+  const warnings = useMemo(
+    () => outlineWarnings(outline, minutes, { sourceKind: data?.sourceKind, sourceFigureKeys: data?.sourceFigureKeys }),
+    [outline, minutes, data?.sourceKind, data?.sourceFigureKeys],
+  );
   const blocking = useMemo(() => outlineBlockingProblems(outline), [outline]);
 
-  const patch = (id: string, p: Partial<OutlineSlide>) =>
-    change({ ...outline, slides: outline.slides.map((s) => (s.id === id ? { ...s, ...p } : s)) });
-  const remove = (id: string) => change({ ...outline, slides: outline.slides.filter((s) => s.id !== id) });
-  // Thêm sau slide đang sửa (hoặc cuối bài) rồi mở ngay cửa sổ sửa slide mới.
-  const add = (kind: OutlineKind) => {
-    const at = editingId ? outline.slides.findIndex((x) => x.id === editingId) : -1;
-    const ns: OutlineSlide = { id: newOutlineId(), kind, layout: kind === "content" ? "image" : null, title: "", points: kind === "content" ? [""] : [] };
-    const slides = [...outline.slides];
-    slides.splice(at >= 0 ? at + 1 : slides.length, 0, ns);
-    change({ ...outline, slides });
-    setAddOpen(false);
-    setEditingId(ns.id);
+  const patch = (id: string, p: Partial<OutlineSlide>) => change(patchSlide(outline, id, p));
+  const remove = (id: string) => {
+    const r = removeSlide(outline, id);
+    if (!r.removed) return;
+    change(r.outline);
+    setUndo(r.removed);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setUndo(null), 6000);
+  };
+  const restore = () => {
+    if (!undo) return;
+    change(restoreSlide(latest.current.outline, undo));
+    setUndo(null);
+  };
+  // Thêm vào cuối một phần rồi mở ngay cửa sổ sửa slide mới (loại slide và bố cục chọn trong đó).
+  const addToPart = (partId: string) => {
+    const r = addSlideToPart(outline, partId);
+    change(r.outline);
+    setEditingId(r.id);
+  };
+  const addPart = () => {
+    const r = addContentPart(outline, isFullStructure(minutes));
+    change(r.outline);
+    setRenamingId(r.partId);
   };
   const setKind = (s: OutlineSlide, kind: OutlineKind) => patch(s.id, changeKind(s, kind));
   const editingIndex = editingId ? outline.slides.findIndex((x) => x.id === editingId) : -1;
   const editing = editingIndex >= 0 ? outline.slides[editingIndex]! : null;
-
-  const onDragEnd = (e: DragEndEvent) => {
-    if (!e.over || e.active.id === e.over.id) return;
-    const from = outline.slides.findIndex((s) => s.id === e.active.id);
-    const to = outline.slides.findIndex((s) => s.id === e.over!.id);
-    if (from >= 0 && to >= 0) change({ ...outline, slides: arrayMove(outline.slides, from, to) });
-  };
 
   const confirm = async () => {
     setConfirming(true);
@@ -269,7 +279,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           <h1 className="text-2xl font-bold">Dàn ý bài giảng</h1>
           {data.sourceName && (
             <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[rgb(var(--surface-muted))] px-3 py-1 text-[13px] font-medium text-muted">
-              <FileText size={14} className="shrink-0" />
+              {isTopicSource(data.sourceKind) ? <PenLine size={14} className="shrink-0" /> : <FileText size={14} className="shrink-0" />}
               <span className="truncate">{data.sourceName}</span>
             </span>
           )}
@@ -279,6 +289,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           Bấm vào một slide để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn, xác nhận ở cuối
           trang để AI viết slide.
         </p>
+        <TopicSourceNotice sourceKind={data.sourceKind} webRefs={data.webRefs} />
       </header>
 
       <div className="grid items-center gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-0">
@@ -353,41 +364,22 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           <h2 id="outline-list-h" className="text-base font-semibold">
             Danh sách slide
           </h2>
-          <span className="text-[13px] text-faint">Bấm vào một slide để sửa · kéo ⋮⋮ để đổi thứ tự</span>
+          <span className="text-[13px] text-faint">Bấm vào một slide để sửa · kéo ⋮⋮ để đổi thứ tự hoặc chuyển phần</span>
         </div>
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={outline.slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-            <ol className="space-y-1.5">
-              {outline.slides.map((s, i) => (
-                <Row key={s.id} s={s} index={i} onOpen={() => setEditingId(s.id)} />
-              ))}
-            </ol>
-          </SortableContext>
-        </DndContext>
-
-        <div className="mt-3 px-1">
-          <button type="button" className="btn-secondary flex items-center gap-1.5 text-sm" aria-expanded={addOpen} onClick={() => setAddOpen((v) => !v)}>
-            <Plus size={14} /> Thêm slide
+        <OutlineFlow
+          outline={outline}
+          onOpen={setEditingId}
+          onRemove={remove}
+          onMove={(id, target) => change(moveSlide(outline, id, target))}
+          onAddSlide={addToPart}
+          onRename={(partId, name) => change(renamePart(outline, partId, name))}
+          renamingId={renamingId}
+          setRenamingId={setRenamingId}
+        />
+        <div className="mt-3 pl-8">
+          <button type="button" className="btn-secondary flex items-center gap-1.5 text-sm" onClick={addPart}>
+            <Plus size={14} /> Thêm phần nội dung
           </button>
-          {addOpen && (
-            <div className="mt-2 space-y-1.5 rounded-xl bg-[rgb(var(--surface-muted))] p-3">
-              <span className="block text-[13px] font-semibold text-muted">Chọn loại slide mới (thêm vào cuối bài)</span>
-              <div role="group" aria-label="Loại slide mới" className="grid gap-1.5 [grid-template-columns:repeat(auto-fill,minmax(88px,1fr))]">
-                {OUTLINE_KIND_ORDER.map((k) => (
-                  <button
-                    key={k}
-                    type="button"
-                    title={kindGroupOf(k)}
-                    className="grid justify-items-center gap-0.5 rounded-[10px] border border-token bg-[rgb(var(--surface))] px-1 pb-1 pt-1.5 text-[12.5px] leading-tight text-muted hover:bg-[rgb(var(--surface-muted))]"
-                    onClick={() => add(k)}
-                  >
-                    <OutlineGlyph k={k} className="h-[30px] w-full" />
-                    <span>{OUTLINE_KIND_LABEL[k]}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
@@ -396,11 +388,13 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           slide={editing}
           index={editingIndex}
           total={outline.slides.length}
+          auto={slideStructureRole(outline, editing)}
           onPatch={(p) => patch(editing.id, p)}
           onKind={(k) => setKind(editing, k)}
           onRemove={() => remove(editing.id)}
           onGoto={(d) => setEditingId(outline.slides[editingIndex + d]?.id ?? editing.id)}
           onClose={() => setEditingId(null)}
+          layouts={OUTLINE_LAYOUTS.filter((l) => layoutAllowedFor(data.sourceKind, l))}
         />
       )}
 
@@ -458,7 +452,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                   {!syncInfo.noop && (
                     <button
                       type="button"
-                      className="btn-primary"
+                      className="btn-primary flex items-center gap-2"
                       onClick={() => {
                         if (
                           window.confirm(
@@ -468,7 +462,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                           void generate("sync");
                       }}
                     >
-                      Cập nhật slide theo dàn ý
+                      <Sparkles size={16} aria-hidden /> Cập nhật slide theo dàn ý
                     </button>
                   )}
                   <a href={`/instructor/limio-live/${deckId}`} className="btn-secondary inline-flex">
@@ -498,7 +492,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                 </p>
                 {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
                 <button type="button" className="btn-primary flex items-center gap-2" onClick={() => void generate()}>
-                  Tạo slide từ dàn ý
+                  <Sparkles size={16} aria-hidden /> Tạo slide từ dàn ý
                 </button>
               </>
             )}
@@ -528,44 +522,18 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           </>
         )}
       </section>
+      {undo && (
+        <div role="status" aria-live="polite" className="fixed bottom-5 left-1/2 z-50 flex max-w-[calc(100%-32px)] -translate-x-1/2 items-center gap-3 rounded-xl bg-[rgb(var(--text))] px-4 py-2.5 text-sm text-[rgb(var(--surface))] shadow-lg">
+          <span>Đã xoá slide {undo.index + 1}.</span>
+          <button type="button" className="font-bold text-lime-400 hover:underline dark:text-lime-700" onClick={restore}>
+            Hoàn tác
+          </button>
+        </div>
+      )}
     </main>
   );
 }
 
 function formatTokens(n: number): string {
   return n >= 1000 ? `${Math.round(n / 100) / 10} nghìn`.replace(".", ",") : String(n);
-}
-
-function Row({ s, index, onOpen }: { s: OutlineSlide; index: number; onOpen: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
-  const interactive = s.kind !== "content";
-
-  return (
-    <li
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 }}
-      className={`flex items-center gap-1.5 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-[rgb(var(--surface-muted))] ${interactive ? "bg-indigo-50/60 dark:bg-indigo-950/20" : ""}`}
-    >
-      <button
-        type="button"
-        {...attributes}
-        {...listeners}
-        className="cursor-grab touch-none p-1 text-faint active:cursor-grabbing"
-        aria-label={`Kéo để đổi thứ tự slide ${index + 1}`}
-      >
-        <GripVertical size={18} />
-      </button>
-      <span className="w-6 text-sm font-bold tabular-nums text-muted">{index + 1}</span>
-      <button type="button" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg py-0.5 text-left" onClick={onOpen} aria-label={`Sửa slide ${index + 1}: ${s.title || "chưa có tiêu đề"}`}>
-        <OutlineGlyph k={glyphKey(s)} className="h-[30px] w-[46px] shrink-0 text-muted" />
-        <span className="grid min-w-0 flex-1 leading-snug">
-          <b className={`truncate text-[15px] ${s.title.trim() ? "" : "font-medium text-red-700"}`}>
-            {s.title.trim() || (interactive ? "Chưa có câu hỏi" : "Chưa có tiêu đề")}
-          </b>
-          <small className="truncate text-[13px] text-muted">{rowSubtitle(s)}</small>
-        </span>
-        <span className="hidden shrink-0 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1 text-[13px] font-semibold text-brand-700 sm:inline">Sửa</span>
-      </button>
-    </li>
-  );
 }

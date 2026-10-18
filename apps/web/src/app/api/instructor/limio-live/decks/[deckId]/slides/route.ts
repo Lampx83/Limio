@@ -3,7 +3,8 @@ import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import { addLiveSlide } from "@feedbackme/core-lms";
 import { validateContentSlideConfig } from "@/lib/limioLiveResource";
-import { normalizeContentSlideConfig } from "@/lib/limioLiveSlides";
+import { fillCoverIdentity, normalizeContentSlideConfig, resolveLayout } from "@/lib/limioLiveSlides";
+import { coverIdentityFor } from "@/lib/limioLiveCoverIdentity";
 import { z } from "zod";
 
 const CreateSlideSchema = z.object({
@@ -42,12 +43,18 @@ export async function POST(
       }
     }
 
+    let config = validation.data.config;
+    if (validation.data.type === "content") {
+      config = normalizeContentSlideConfig(config);
+      // Slide bìa mới: điền sẵn tên đơn vị và người trình bày vào ô còn trống.
+      if (resolveLayout(config) === "cover") config = fillCoverIdentity(config as Record<string, unknown>, await coverIdentityFor(userId));
+    }
     const slide = await addLiveSlide(
       params.deckId,
       userId,
       {
         type: validation.data.type,
-        config: validation.data.type === "content" ? normalizeContentSlideConfig(validation.data.config) : validation.data.config,
+        config,
         timerSeconds: validation.data.timerSeconds,
       },
       prisma

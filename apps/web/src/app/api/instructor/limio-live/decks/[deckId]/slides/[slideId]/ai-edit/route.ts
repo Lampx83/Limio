@@ -1,4 +1,11 @@
-import { AiGenerationError, AiTutorError, generateSlideEdit, SLIDE_EDIT_ACTIONS } from "@feedbackme/core-feedback";
+import {
+  AiGenerationError,
+  AiTutorError,
+  generateSlideEdit,
+  SLIDE_EDIT_ACTIONS,
+  SLIDE_EDIT_INSTRUCTION_MAX,
+  SLIDE_EDIT_INSTRUCTION_MIN,
+} from "@feedbackme/core-feedback";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
@@ -6,7 +13,7 @@ import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { proposalFromDraft, type SlideDraft, type SlideEditAction } from "@/lib/limioLiveGenerate";
 import { pickMeta, resolveLayout } from "@/lib/limioLiveSlides";
-import { sanitizeOutline } from "@/lib/limioLiveOutline";
+import { resolveSourceKind, sanitizeOutline, sanitizeRefs } from "@/lib/limioLiveOutline";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -15,7 +22,8 @@ const json = (body: unknown, status: number) => Response.json(body, { status });
 
 /**
  * POST /api/instructor/limio-live/decks/[deckId]/slides/[slideId]/ai-edit
- * Body: { action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" }
+ * Body: { action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom", instruction? }
+ * "custom": `instruction` là yêu cầu giảng viên gõ (3–500 ký tự).
  * Trả ĐỀ XUẤT thay thế cho slide ({type, config}); KHÔNG ghi gì vào slide. Giảng viên xem bản so
  * sánh rồi chấp nhận qua PATCH slide với source:"ai". Chỉ áp cho slide Nội dung có bố cục mới.
  */
@@ -23,15 +31,19 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
   const userId = await requireFeature("limio_live.access");
   if (!userId) return json({ error: "forbidden" }, 403);
 
-  const body = (await readJson(req)) as { action?: unknown } | null;
+  const body = (await readJson(req)) as { action?: unknown; instruction?: unknown } | null;
   const action = body?.action;
   if (typeof action !== "string" || !(SLIDE_EDIT_ACTIONS as readonly string[]).includes(action)) {
     return json({ error: "validation_failed", details: "action" }, 400);
   }
+  const instruction = typeof body?.instruction === "string" ? body.instruction.trim() : "";
+  if (action === "custom" && (instruction.length < SLIDE_EDIT_INSTRUCTION_MIN || instruction.length > SLIDE_EDIT_INSTRUCTION_MAX)) {
+    return json({ error: "validation_failed", details: "instruction" }, 400);
+  }
 
   const slide = await prisma.liveSlide.findFirst({
     where: { id: params.slideId, deckId: params.deckId, deck: { userId } },
-    select: { type: true, config: true, deck: { select: { title: true, sourceText: true, outline: true } } },
+    select: { type: true, config: true, deck: { select: { title: true, sourceText: true, sourceKind: true, sourceRefs: true, outline: true } } },
   });
   if (!slide) return json({ error: "not_found" }, 404);
 
@@ -63,21 +75,30 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
   const meta = pickMeta(config);
   const current = Object.fromEntries(Object.entries(config).filter(([k]) => !(k in meta) && k !== "presenterNote"));
 
+  const sourceKind = resolveSourceKind(slide.deck.sourceKind);
+  const sourceText = slide.deck.sourceText ?? "";
   try {
     const draft = await generateSlideEdit(
       userId,
       {
         action: action as SlideEditAction,
-        sourceText: slide.deck.sourceText ?? "",
+        sourceText,
+        sourceKind,
         deckTitle: slide.deck.title,
         targetKey: action === "to_quiz" ? "quiz" : layout,
         current,
         outlineTitle,
         outlinePoints,
+        ...(action === "custom" ? { instruction } : {}),
       },
       openai,
     );
-    const proposal = proposalFromDraft(action as SlideEditAction, { config }, draft as SlideDraft);
+    // Bài từ mô tả chủ đề: cùng kiểm tra con số và số nguồn như lúc tạo slide.
+    const proposal = proposalFromDraft(action as SlideEditAction, { config }, draft as SlideDraft, {
+      sourceKind,
+      sourceText,
+      refs: sanitizeRefs(slide.deck.sourceRefs),
+    });
     if (!proposal) return json({ error: "ai_edit_failed" }, 502);
     await emitLiveEvent(userId, LearningEventType.LiveSlideAiEditProposed, { deckId: params.deckId, slideId: params.slideId, action });
     return json({ proposal }, 200);

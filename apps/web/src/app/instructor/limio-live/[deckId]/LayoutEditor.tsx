@@ -25,6 +25,11 @@ import {
 } from "@/lib/limioLiveSlides";
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
 import { slideBgFor } from "../slideThemes";
+import { ChartSheet, TableSheet } from "./DataSheetEditor";
+import { motifSlot } from "@/lib/limioLiveMotifs";
+import { useSlideMotif } from "../liveMotifContext";
+import { SlideMotifField } from "./MotifPicker";
+import { CoverStylePicker } from "./CoverStylePicker";
 import OutlineGlyph from "./outline/OutlineGlyph";
 import PickerButton from "./outline/PickerButton";
 
@@ -44,6 +49,17 @@ const ICON_LABELS: Record<(typeof SLIDE_ICONS)[number], string> = {
 
 /** Giữ ghi chú giảng và các khoá không thuộc bố cục khi lưu. */
 const keepExtras = (config: Cfg): Cfg => pickMeta(config);
+/**
+ * Khoá meta khi lưu, riêng dòng nguồn ở chân slide (bài soạn kèm trang tìm trên internet) lấy theo bản đang sửa:
+ * giảng viên tự viết lại nội dung thì sửa hoặc xoá được dòng nguồn, không để nguồn cũ gắn vào chữ mới.
+ */
+const extrasFor = (config: Cfg, draft: Cfg): Cfg => {
+  const m = keepExtras(config);
+  if (!("cite" in m)) return m;
+  delete m.cite;
+  const c = typeof draft.cite === "string" ? draft.cite.trim().slice(0, MAX_LEN.source) : "";
+  return c ? { ...m, cite: c } : m;
+};
 
 const glyphOf = (l: SlideLayoutId) => (l === "classic" ? "content" : l);
 
@@ -180,7 +196,10 @@ function Field({
   );
 }
 
-type EditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite";
+type EditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
+// Khớp SLIDE_EDIT_INSTRUCTION_MIN / MAX của core-feedback (máy chủ kiểm lại).
+const INSTRUCTION_MIN = 3;
+const INSTRUCTION_MAX = 500;
 interface Proposal {
   type: "content" | "quiz";
   config: Cfg;
@@ -200,6 +219,7 @@ const AI_ERROR: Record<string, string> = {
   monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Bạn vẫn có thể sửa tay.",
   ai_edit_failed: "AI chưa viết lại được slide này. Hãy thử lại hoặc sửa tay.",
   no_outline_row: "Slide này không còn dòng dàn ý gốc để viết lại.",
+  validation_failed: "Yêu cầu cần từ 3 đến 500 ký tự.",
 };
 
 /** Nhờ AI sửa một slide: bấm nút → xem bản so sánh → chấp nhận hoặc bỏ. Không bao giờ tự ghi vào slide. */
@@ -220,6 +240,8 @@ function AiEditBar({
   const [err, setErr] = useState<string | null>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [proposalAction, setProposalAction] = useState<EditAction>("shorter");
+  const [instruction, setInstruction] = useState("");
+  const canAsk = instruction.trim().length >= INSTRUCTION_MIN && busy === null && proposal === null;
 
   const run = async (action: EditAction) => {
     setBusy(action);
@@ -228,7 +250,7 @@ function AiEditBar({
       const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}/ai-edit`), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify(action === "custom" ? { action, instruction: instruction.trim() } : { action }),
       });
       const j = (await res.json().catch(() => null)) as { proposal?: Proposal; error?: string } | null;
       if (!res.ok || !j?.proposal) return setErr(AI_ERROR[j?.error ?? ""] ?? "Không nhờ AI được lúc này. Vui lòng thử lại.");
@@ -254,6 +276,43 @@ function AiEditBar({
           AI chỉ đề xuất. Bạn xem bản so sánh rồi mới chấp nhận, không có gì tự ghi vào slide.
         </p>
       </div>
+      <div className="space-y-2">
+        <label htmlFor="ai-instruction" className="block text-sm font-semibold">
+          Yêu cầu riêng
+        </label>
+        <div className="rounded-xl border border-token bg-[rgb(var(--surface))] focus-within:border-brand-600">
+          <textarea
+            id="ai-instruction"
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            onKeyDown={(e) => {
+              // Ctrl/Cmd + Enter gửi; Enter thường xuống dòng.
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && canAsk) {
+                e.preventDefault();
+                void run("custom");
+              }
+            }}
+            rows={3}
+            maxLength={INSTRUCTION_MAX}
+            disabled={busy !== null || proposal !== null}
+            placeholder="Ví dụ: Thêm một câu hỏi gợi mở ở cuối; viết lại cho sinh viên năm nhất; đổi ví dụ sang ngành y."
+            className="block w-full resize-y rounded-xl border-0 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-0 disabled:opacity-60"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-token px-3 py-1.5">
+            <span className="text-xs text-muted">Ctrl hoặc Cmd + Enter để gửi</span>
+            <button
+              type="button"
+              disabled={!canAsk}
+              onClick={() => void run("custom")}
+              className="btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              {busy === "custom" ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} aria-hidden />}
+              {busy === "custom" ? "AI đang sửa..." : "Gửi cho AI"}
+            </button>
+          </div>
+        </div>
+      </div>
+      <p className="text-sm font-semibold">Hoặc chọn nhanh</p>
       <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Việc nhờ AI">
         {actions.map((a) => (
           <button
@@ -263,7 +322,11 @@ function AiEditBar({
             onClick={() => run(a.id)}
             className="flex items-start gap-2 rounded-xl border border-token px-3 py-2 text-left transition hover:border-brand-600 disabled:opacity-50"
           >
-            {busy === a.id ? <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" /> : null}
+            {busy === a.id ? (
+              <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" />
+            ) : (
+              <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-600" aria-hidden />
+            )}
             <span className="grid leading-tight">
               <b className="text-sm">{a.label}</b>
               <small className="text-xs text-muted">{a.hint}</small>
@@ -279,13 +342,13 @@ function AiEditBar({
           <div className="grid gap-3 md:grid-cols-2">
             <div>
               <p className="mb-1 text-xs font-semibold text-muted">Hiện tại</p>
-              <Thumb config={config} themeId={themeId} />
+              <Thumb config={config} themeId={themeId} slideId={slideId} />
             </div>
             <div>
               <p className="mb-1 text-xs font-semibold text-muted">
                 {proposal.type === "quiz" ? "Đề xuất: câu hỏi quiz" : "Đề xuất"}
               </p>
-              {proposal.type === "quiz" ? <QuizPreview config={proposal.config} /> : <Thumb config={proposal.config} themeId={themeId} />}
+              {proposal.type === "quiz" ? <QuizPreview config={proposal.config} /> : <Thumb config={proposal.config} themeId={themeId} slideId={slideId} />}
             </div>
           </div>
           <div className="flex gap-2">
@@ -309,11 +372,11 @@ function AiEditBar({
   );
 }
 
-function Thumb({ config, themeId }: { config: Cfg; themeId?: string | null }) {
+function Thumb({ config, themeId, slideId }: { config: Cfg; themeId?: string | null; slideId?: string }) {
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-black/10" style={{ background: slideBgFor(themeId, true) }}>
       <div className="absolute inset-0 flex">
-        <LayoutSlideView config={config} themeId={themeId} />
+        <LayoutSlideView config={config} themeId={themeId} slideId={slideId} />
       </div>
     </div>
   );
@@ -376,12 +439,42 @@ export default function LayoutEditor({
   const focused = useRef<FieldCtl | null>(null);
   const range = ITEM_RANGE[layout];
 
-  const commit = (next: Cfg = d) => onSave({ config: { ...sanitizeLayoutConfig(layout, next), ...keepExtras(config) } });
+  const commit = (next: Cfg = d) => onSave({ config: { ...sanitizeLayoutConfig(layout, next), ...extrasFor(config, next) } });
   const set = (patch: Cfg) => setD((prev) => ({ ...prev, ...patch }));
+  // Lưới ô của Bảng và Biểu đồ: gõ thì chỉ cập nhật bản nháp (lưu khi rời ô); dán, thêm, xoá thì lưu ngay.
+  const dataChange = (patch: Cfg, commitNow?: boolean) => {
+    const next = { ...d, ...patch };
+    setD(next);
+    if (commitNow) commit(next);
+  };
   const blur = () => commit();
 
   // Xem trước đúng như sẽ lưu: mục còn trống không hiện.
-  const preview = useMemo(() => sanitizeLayoutConfig(layout, d), [layout, d]);
+  // Hoa văn là khoá meta của slide (không nằm trong ô sửa): ghép vào bản xem trước để thấy đúng như khi chiếu.
+  // Kiểu bìa cũng là khoá meta, đổi bằng hàng chọn riêng và lưu ngay.
+  const savedMotif = typeof config.motif === "string" ? config.motif : undefined;
+  const savedCoverStyle = typeof config.coverStyle === "string" ? config.coverStyle : undefined;
+  const preview = useMemo(
+    () => ({
+      ...sanitizeLayoutConfig(layout, d),
+      ...(savedMotif ? { motif: savedMotif } : {}),
+      ...(savedCoverStyle ? { coverStyle: savedCoverStyle } : {}),
+    }),
+    [layout, d, savedMotif, savedCoverStyle],
+  );
+  // Bản vẽ: như sẽ lưu, kèm dòng nguồn ở chân slide (khoá meta, sanitizeLayoutConfig không giữ).
+  const shown = useMemo(() => (typeof d.cite === "string" && d.cite.trim() ? { ...preview, cite: d.cite.trim() } : preview), [preview, d.cite]);
+  const effectiveMotif = useSlideMotif(preview, slideId);
+  const inheritedMotif = useSlideMotif({ ...preview, motif: undefined }, slideId);
+  /** Đổi hoa văn của slide: lưu ngay cùng chữ đang soạn; null = theo bài giảng. */
+  const setMotif = (v: string | null) => {
+    const next: Cfg = { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config) };
+    if (v) next.motif = v;
+    else delete next.motif;
+    onSave({ config: next });
+  };
+  /** Đổi kiểu bìa: lưu ngay cùng chữ đang soạn. */
+  const setCoverStyle = (v: string) => onSave({ config: { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config), coverStyle: v } });
   const problems = useMemo(() => layoutTextProblems(layout, preview), [layout, preview]);
   const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }) : null), [problems, preview, config]);
 
@@ -427,7 +520,7 @@ export default function LayoutEditor({
 
   // Chốt nội dung khi đóng cửa sổ (Esc, bấm ra ngoài hoặc Xong), chỉ lưu khi có thay đổi.
   const finish = () => {
-    const next = { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config) };
+    const next = { ...sanitizeLayoutConfig(layout, d), ...extrasFor(config, d) };
     if (!slideConfigsEqual(next, config)) onSave({ config: next });
     onOpenChange(false);
   };
@@ -463,14 +556,14 @@ export default function LayoutEditor({
       style={{ background: slideBgFor(themeId, true) }}
     >
       <div className="absolute inset-0 flex">
-        <LayoutSlideView config={preview} themeId={themeId} />
+        <LayoutSlideView config={shown} themeId={themeId} slideId={slideId} />
       </div>
     </div>
   );
   // Khung xem trước lấp đầy vùng giữa; viền khung hình 16:9 do bộ vẽ slide tự vẽ.
   const previewBox = (
     <div className="absolute inset-0 flex">
-      <LayoutSlideView config={preview} themeId={themeId} zoom={zoom} frame />
+      <LayoutSlideView config={shown} themeId={themeId} slideId={slideId} zoom={zoom} frame />
     </div>
   );
 
@@ -528,10 +621,11 @@ export default function LayoutEditor({
                           role="tab"
                           aria-selected={tab === k}
                           onClick={() => setTab(k)}
-                          className={`-mb-px border-b-[3px] px-4 py-2 text-[15px] font-semibold ${
+                          className={`-mb-px flex items-center gap-1.5 border-b-[3px] px-4 py-2 text-[15px] font-semibold ${
                             tab === k ? "border-brand-600 text-[rgb(var(--text))]" : "border-transparent text-muted hover:text-[rgb(var(--text))]"
                           }`}
                         >
+                          {k === "ai" && <Sparkles size={15} aria-hidden />}
                           {label}
                         </button>
                       ))}
@@ -593,13 +687,30 @@ export default function LayoutEditor({
           )}
 
           <div className="grid gap-3">
+            {/* Bìa: bốn ô theo đúng thứ tự trên slide. Đơn vị và người trình bày được điền sẵn từ tên trường và hồ sơ. */}
+            {layout === "cover" && (
+              <Field
+                label="Tên đơn vị"
+                value={d.org ?? ""}
+                max={MAX_LEN.org}
+                placeholder="Khoa Công nghệ thông tin, Trường Công nghệ"
+                onChange={(v) => set({ org: v })}
+                onBlur={blur}
+              />
+            )}
             {layout !== "quote" && (
-              <Field label="Tiêu đề" value={d.title ?? ""} max={MAX_LEN.title} onChange={(v) => set({ title: v })} onBlur={blur} />
+              <Field
+                label={layout === "cover" ? "Tên bài học" : "Tiêu đề"}
+                value={d.title ?? ""}
+                max={MAX_LEN.title}
+                onChange={(v) => set({ title: v })}
+                onBlur={blur}
+              />
             )}
 
             {(layout === "cover" || layout === "section") && (
               <Field
-                label={layout === "cover" ? "Mô tả ngắn" : "Câu dẫn"}
+                label={layout === "cover" ? "Phụ đề" : "Câu dẫn"}
                 value={d.subtitle ?? ""}
                 max={MAX_LEN.subtitle}
                 multiline
@@ -609,10 +720,10 @@ export default function LayoutEditor({
             )}
             {layout === "cover" && (
               <Field
-                label="Giảng viên và lớp"
+                label="Người trình bày"
                 value={d.byline ?? ""}
                 max={MAX_LEN.byline}
-                placeholder="Giảng viên: Nguyễn Văn A · Lớp K66"
+                placeholder="TS. Nguyễn Văn A"
                 onChange={(v) => set({ byline: v })}
                 onBlur={blur}
               />
@@ -764,6 +875,17 @@ export default function LayoutEditor({
               />
             )}
 
+            {typeof config.cite === "string" && config.cite && (
+              <Field
+                label="Dòng nguồn ở chân slide"
+                value={typeof d.cite === "string" ? d.cite : ""}
+                max={MAX_LEN.source}
+                placeholder="Để trống nếu slide không dùng thông tin từ nguồn"
+                onChange={(v) => set({ cite: v })}
+                onBlur={blur}
+              />
+            )}
+
             {layout === "compare" && (
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-1">
                 {columns.map((col, i) => (
@@ -811,11 +933,45 @@ export default function LayoutEditor({
               </div>
             )}
 
+            {layout === "table" && <TableSheet d={d} onChange={dataChange} onBlur={blur} />}
+            {layout === "chart" && (
+              <>
+                <ChartSheet d={d} onChange={dataChange} onBlur={blur} />
+                <Field label="Đơn vị" plain value={d.unit ?? ""} max={MAX_LEN.unit} placeholder="%, điểm, học viên" onChange={(v) => set({ unit: v })} onBlur={blur} />
+              </>
+            )}
+            {(layout === "table" || layout === "chart") && (
+              <Field
+                label="Nguồn (để trống thì slide không hiện dòng nguồn)"
+                plain
+                value={d.source ?? ""}
+                max={MAX_LEN.source}
+                placeholder="Tên tài liệu, năm"
+                onChange={(v) => set({ source: v })}
+                onBlur={blur}
+              />
+            )}
+
             {layout === "quote" && (
               <>
                 <Field label="Câu trích dẫn" value={d.quote ?? ""} max={MAX_LEN.quote} multiline onChange={(v) => set({ quote: v })} onBlur={blur} />
                 <Field label="Nguồn hoặc thông điệp" value={d.source ?? ""} max={MAX_LEN.source} onChange={(v) => set({ source: v })} onBlur={blur} />
               </>
+            )}
+
+            {layout === "cover" && <CoverStylePicker config={preview} themeId={themeId} slideId={slideId} onChange={setCoverStyle} />}
+
+            {/* Chỉ bốn bố cục có chỗ trống cho hoa văn; Chữ và hình đã có ảnh thì không. Riêng ô hình (Chữ và hình
+                chưa có ảnh) chọn được thêm hình minh hoạ theo chủ đề. */}
+            {motifSlot(preview) && (
+              <SlideMotifField
+                value={savedMotif}
+                illustrations={motifSlot(preview) === "fill"}
+                effective={effectiveMotif?.motif ?? null}
+                inherited={inheritedMotif?.motif ?? null}
+                themeId={themeId}
+                onChange={setMotif}
+              />
             )}
           </div>
                       </div>
@@ -824,7 +980,8 @@ export default function LayoutEditor({
                         <AiEditBar
                           deckId={deckId}
                           slideId={slideId}
-                          config={preview}
+                          // Kèm khoá meta (outlineId, dòng nguồn): thiếu outlineId thì nút "Viết lại từ dàn ý" không hiện.
+                          config={{ ...shown, ...pickMeta(config) }}
                           themeId={themeId}
                           onApply={(p, action) => {
                             // Làm mới các ô nhập theo đề xuất (cùng bố cục); đổi loại slide thì trình soạn tự đổi theo.

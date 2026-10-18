@@ -3,7 +3,9 @@
 import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { openAudienceWindow } from "@/lib/limioLiveWindow";
+import { audienceUrl, openAudienceWindow, presenterUrl, startPresenterOnProjector, useProjectorReady } from "@/lib/limioLiveWindow";
+import { isTopicSource, resolveSourceKind } from "@/lib/limioLiveOutline";
+import { TopicSourceNotice } from "../TopicSourceNotice";
 import {
   DndContext,
   closestCenter,
@@ -62,6 +64,8 @@ import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
 import BrandDialog, { type BrandPatch } from "./BrandDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
+import { LiveMotifProvider } from "../liveMotifContext";
+import { deckAutoMotif } from "@/lib/limioLiveMotifs";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
 import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import { isLayoutSlide } from "../SlideLayouts";
@@ -90,8 +94,14 @@ interface Deck {
   brandOff?: boolean;
   /** Mẫu thương hiệu của trường giảng viên chọn cho bài; null = mẫu mặc định của trường. */
   brandTemplate?: string | null;
+  /** Hoa văn trang trí của cả bài: null = tự động, "none" = không dùng, hoặc mã hoa văn (limioLiveMotifs). */
+  motif?: string | null;
   /** Bộ thương hiệu của trường mà chủ bài thuộc về (null nếu không thuộc trường nào). */
   org?: DeckOrgBrand | null;
+  /** Nguồn của bài AI soạn (document | topic | topic_web); null với bài soạn tay. */
+  sourceKind?: string | null;
+  /** Các trang đã đọc khi soạn bài từ mô tả chủ đề có nguồn internet. */
+  sourceRefs?: unknown;
   slides: Slide[];
 }
 
@@ -370,6 +380,25 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
+  const handleSetMotif = async (motif: string | null) => {
+    if (!deck || (deck.motif ?? null) === motif) return;
+    const prev = deck.motif ?? null;
+    setDeck({ ...deck, motif });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motif }),
+      })
+    );
+    if (!res.ok) {
+      toast.error("Lưu hoa văn thất bại");
+      setDeck((d) => (d ? { ...d, motif: prev } : d));
+      return;
+    }
+    setLastSavedAt(new Date());
+  };
+
   // 3 nút giống thanh Slide Show của PowerPoint:
   //  - Từ đầu / Từ slide hiện tại: vào fullscreen NGAY trong cú click rồi điều
   //    hướng SPA (fullscreen sống sót qua điều hướng client) — không ghi chú.
@@ -386,7 +415,19 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     router.push(`/instructor/limio-live/${deckId}/present?mode=slideshow&from=${fromParam}`);
   };
 
+  // Có màn hình mở rộng + đã cho quyền "Quản lý cửa sổ" (Chrome/Edge): làm như PowerPoint —
+  // tab này lên fullscreen ở máy chiếu thành màn chiếu, presenter view mở cửa sổ mới ở
+  // màn hình laptop. Còn lại (Safari/Firefox, mirror, chưa cho quyền) giữ cách cũ.
+  const projectorReady = useProjectorReady();
   const handleStartPresenterView = async () => {
+    const presenterWin = startPresenterOnProjector();
+    if (presenterWin === "blocked") return;
+    if (presenterWin) {
+      await flushSaves();
+      presenterWin.location.replace(presenterUrl(deckId, "start"));
+      router.push(audienceUrl(deckId));
+      return;
+    }
     openAudienceWindow(deckId);
     await flushSaves();
     router.push(`/instructor/limio-live/${deckId}/present?from=start`);
@@ -613,6 +654,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   return (
     <LiveBrandProvider brand={effBrand}>
+    <LiveMotifProvider deckId={deckId} motif={deck.motif} slides={deck.slides}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
       onInput={() => {
@@ -671,7 +713,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         >
           <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
         </Link>
-        <ThemePicker value={deck.theme ?? "white"} onChange={handleSetTheme} />
+        <ThemePicker
+          value={deck.theme ?? "white"}
+          onChange={handleSetTheme}
+          motif={{ value: deck.motif ?? null, auto: deckAutoMotif(deckId), onChange: handleSetMotif }}
+        />
         <button
           type="button"
           onClick={() => setBrandOpen(true)}
@@ -708,7 +754,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               <Presentation size={15} className="text-brand-700 dark:text-brand-300" /> <span className="hidden xl:inline">Từ slide này</span>
             </button>
           </Tooltip>
-          <Tooltip label="Presenter view" description="Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này." align="end">
+          <Tooltip
+            label="Presenter view"
+            description={
+              projectorReady
+                ? "Màn chiếu tự lên màn hình thứ hai, toàn màn hình; Note mở ở cửa sổ mới trên màn hình này."
+                : "Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này."
+            }
+            align="end"
+          >
             <button
               onClick={handleStartPresenterView}
               className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 text-[rgb(var(--text))] hover:bg-[rgb(var(--surface))] hover:shadow-sm"
@@ -719,6 +773,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </Tooltip>
         </div>
       </div>
+      {isTopicSource(resolveSourceKind(deck.sourceKind)) && (
+        <div className="flex-shrink-0 border-b border-token bg-[rgb(var(--surface))] px-3 py-1.5 sm:px-6">
+          <TopicSourceNotice
+            compact
+            sourceKind={resolveSourceKind(deck.sourceKind)}
+            webRefs={Array.isArray(deck.sourceRefs) ? deck.sourceRefs : deck.sourceRefs == null ? null : []}
+          />
+        </div>
+      )}
 
       <div className="relative flex min-h-0 flex-1">
         {/* Left rail — slide list */}
@@ -1034,6 +1097,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         />
       )}
     </div>
+    </LiveMotifProvider>
     </LiveBrandProvider>
   );
 }

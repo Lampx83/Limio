@@ -2,10 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import type { SlideMotifId } from "@/lib/limioLiveMotifs";
 import { SLIDE_THEMES, SLIDE_THEME_GROUPS, type SlideThemeId } from "../slideThemes";
+import { DeckMotifPicker } from "./MotifPicker";
 
 /** Chọn giao diện màu của cả bài giảng: một nút gọn, bấm mở bảng các giao diện gom theo nhóm (Cơ bản, Màu pastel, Nền tối). */
-export default function ThemePicker({ value, onChange }: { value: string; onChange: (id: SlideThemeId) => void }) {
+export default function ThemePicker({
+  value,
+  onChange,
+  motif,
+}: {
+  value: string;
+  onChange: (id: SlideThemeId) => void;
+  /** Hoa văn trang trí của cả bài, chọn ngay dưới các giao diện (cùng là "trang phục" của bài giảng). */
+  motif?: { value: string | null; auto: SlideMotifId; onChange: (v: string | null) => void };
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const current = SLIDE_THEMES.find((t) => t.id === value) ?? SLIDE_THEMES[0];
@@ -75,6 +86,11 @@ export default function ThemePicker({ value, onChange }: { value: string; onChan
               </div>
             </div>
           ))}
+          {motif && (
+            <div className="border-t border-token pt-3">
+              <DeckMotifPicker value={motif.value} autoMotif={motif.auto} themeId={current.id} onChange={motif.onChange} />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -1,3 +1,5 @@
+import { hexColorsIn, motifOpacityCap } from "@/lib/limioLiveMotifs";
+
 // Giao diện slide cho cả bài giảng. Các giao diện sáng chỉ đổi nền + màu nhấn của khung slide,
 // chữ luôn tối nên mọi loại slide vẫn đọc được. Các giao diện tối (Đêm xanh, Rừng đêm, Mận, Mực):
 // chỉ slide Nội dung có bố cục mới dùng nền tối, các slide tương tác (quiz, poll, word cloud, bảng)
@@ -59,4 +61,41 @@ export function layoutThemeClass(id: string | undefined | null): string {
 export function slideBgFor(themeId: string | undefined | null, darkCapable: boolean): string {
   if (isDarkTheme(themeId) && !darkCapable) return slideThemeBg("brand");
   return slideThemeBg(themeId);
+}
+
+/**
+ * Màu chữ và màu nhấn của từng bảng màu (chép từ slideLayouts.css; test so khớp). Dùng để tính độ đậm an toàn của
+ * hoa văn trang trí: không thể đọc biến CSS khi vẽ ở máy chủ hay trong test.
+ */
+export const SLIDE_THEME_INK: Record<string, { text: string; muted: string; sa: string; sa2: string }> = {
+  "lt-brand": { text: "#20241F", muted: "#5A6256", sa: "#4D7C0F", sa2: "#BE185D" },
+  "lt-night": { text: "#F1F5F9", muted: "#C4CCE0", sa: "#38BDF8", sa2: "#C4B5FD" },
+  "lt-paper": { text: "#2B2118", muted: "#6B5B4A", sa: "#A34A07", sa2: "#0B5F59" },
+  "lt-lavender": { text: "#221B33", muted: "#5B5273", sa: "#6D28D9", sa2: "#BE185D" },
+  "lt-peach": { text: "#2B1A14", muted: "#6B534A", sa: "#C2410C", sa2: "#BE123C" },
+  "lt-ocean": { text: "#0F2A33", muted: "#476068", sa: "#0E7490", sa2: "#4F46E5" },
+  "lt-monogray": { text: "#18181B", muted: "#52525B", sa: "#27272A", sa2: "#52525B" },
+  "lt-monoblue": { text: "#0F1B33", muted: "#475A7A", sa: "#1D4ED8", sa2: "#3B82F6" },
+  "lt-monogreen": { text: "#0F2418", muted: "#44634F", sa: "#15803D", sa2: "#16A34A" },
+  "lt-monoblack": { text: "#FAFAFA", muted: "#B4B4B8", sa: "#FAFAFA", sa2: "#A1A1AA" },
+  "lt-forest": { text: "#ECFDF5", muted: "#B5D3C3", sa: "#4ADE80", sa2: "#FDE047" },
+  "lt-plum": { text: "#FDF4FF", muted: "#E3C7EC", sa: "#F0ABFC", sa2: "#FDA4AF" },
+  "lt-ink": { text: "#F5F6F8", muted: "#C0C6D2", sa: "#FBBF24", sa2: "#60A5FA" },
+};
+
+/**
+ * Độ đậm lớn nhất của hoa văn ở góc slide (biến --smo) để chữ đè lên vẫn đạt 4,5:1 (chữ nhấn 3:1).
+ * `bg` là nền thật của khung slide; `vars` là biến ghi đè của thương hiệu (màu nhấn, và màu chữ khi dùng nền xuyệt tông).
+ */
+export function motifOpacityFor(themeId: string | undefined | null, bg: string, vars: Record<string, string> = {}): number {
+  const cls = SLIDE_THEMES.find((t) => t.id === themeId)?.cls ?? "lt-brand";
+  const ink = SLIDE_THEME_INK[cls]!;
+  const sa = vars["--sa"] ?? ink.sa;
+  return motifOpacityCap({
+    inks: [sa, vars["--sa2"] ?? ink.sa2],
+    bgs: hexColorsIn(bg),
+    text: vars["--stext"] ?? ink.text,
+    muted: vars["--smuted"] ?? ink.muted,
+    accent: sa,
+  });
 }
