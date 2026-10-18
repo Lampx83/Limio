@@ -453,3 +453,69 @@ describe("bìa phần có mục lục", () => {
     expect(sanitizeLayoutConfig("summary", { toc: ["A", "B"], tocCurrent: 1 })).not.toHaveProperty("toc");
   });
 });
+
+// ── Bìa bốn dòng: tên đơn vị, tên bài, phụ đề, người trình bày; kiểu bìa ─────────────────
+import { COVER_STYLES, DEFAULT_COVER_STYLE, MAX_LEN as LEN, fillCoverIdentity, resolveCoverStyle } from "./limioLiveSlides";
+
+describe("bìa: tên đơn vị (org)", () => {
+  it("giữ tên đơn vị ở bìa, đã cắt khoảng trắng và độ dài", () => {
+    const out = sanitizeLayoutConfig("cover", { title: "Bài 1", org: "  Khoa Công nghệ thông tin  " });
+    expect(out.org).toBe("Khoa Công nghệ thông tin");
+    expect((sanitizeLayoutConfig("cover", { org: "x".repeat(500) }).org as string).length).toBe(LEN.org);
+  });
+  it("bỏ tên đơn vị rỗng và tên đơn vị ở bố cục không phải bìa", () => {
+    expect(sanitizeLayoutConfig("cover", { title: "A", org: "   " })).not.toHaveProperty("org");
+    expect(sanitizeLayoutConfig("section", { title: "A", org: "Khoa" })).not.toHaveProperty("org");
+  });
+  it("bìa trống có sẵn ô tên đơn vị", () => {
+    expect(emptyLayoutConfig("cover")).toMatchObject({ org: "", title: "", subtitle: "", byline: "" });
+  });
+});
+
+describe("bìa: kiểu bìa (coverStyle)", () => {
+  it("có mười kiểu, mặc định Khối màu", () => {
+    expect(COVER_STYLES).toHaveLength(10);
+    expect(DEFAULT_COVER_STYLE).toBe("block");
+  });
+  it("kiểu hợp lệ sống qua lọc bố cục, AI sửa và đổi bố cục (là khoá meta)", () => {
+    expect(normalizeContentSlideConfig({ layout: "cover", title: "A", coverStyle: "wave" })).toMatchObject({ coverStyle: "wave" });
+    expect(pickMeta({ coverStyle: "tiles" })).toEqual({ coverStyle: "tiles" });
+  });
+  it("kiểu lạ hoặc sai kiểu dữ liệu bị bỏ", () => {
+    expect(normalizeContentSlideConfig({ layout: "cover", title: "A", coverStyle: "split" })).not.toHaveProperty("coverStyle");
+    expect(pickMeta({ coverStyle: 3 })).toEqual({});
+  });
+  it("đọc kiểu: thiếu hoặc lạ thì về mặc định", () => {
+    expect(resolveCoverStyle({ coverStyle: "formal" })).toBe("formal");
+    expect(resolveCoverStyle({ coverStyle: "bold" })).toBe("block");
+    expect(resolveCoverStyle({})).toBe("block");
+    expect(resolveCoverStyle(null)).toBe("block");
+  });
+  it("đổi kiểu bìa là đổi trang trí, không tính là sửa tay slide AI sinh", () => {
+    const old = { layout: "cover", title: "A", aiGenerated: true };
+    expect(mergeSlideMeta(old, { ...old, coverStyle: "arch" })).not.toHaveProperty("editedByUser");
+  });
+});
+
+describe("fillCoverIdentity: điền sẵn tên đơn vị và người trình bày", () => {
+  const who = { org: "Trường Công nghệ", presenter: "Trần Minh Anh" };
+  it("điền vào ô còn trống của bìa", () => {
+    expect(fillCoverIdentity({ layout: "cover", title: "A", byline: "" }, who)).toMatchObject({ org: "Trường Công nghệ", byline: "Trần Minh Anh" });
+  });
+  it("không ghi đè chữ giảng viên đã điền", () => {
+    const c = fillCoverIdentity({ layout: "cover", title: "A", org: "Bộ môn Tin học", byline: "TS. Lê Hà" }, who);
+    expect(c).toMatchObject({ org: "Bộ môn Tin học", byline: "TS. Lê Hà" });
+  });
+  it("không có thông tin thì để trống, không bịa", () => {
+    expect(fillCoverIdentity({ layout: "cover", title: "A" }, { org: "", presenter: "  " })).toEqual({ layout: "cover", title: "A" });
+  });
+  it("bỏ qua slide không phải bìa", () => {
+    const c = { layout: "section", title: "A" };
+    expect(fillCoverIdentity(c, who)).toBe(c);
+  });
+  it("cắt theo độ dài tối đa của từng ô", () => {
+    const c = fillCoverIdentity<Record<string, unknown>>({ layout: "cover" }, { org: "o".repeat(300), presenter: "p".repeat(300) });
+    expect((c.org as string).length).toBe(LEN.org);
+    expect((c.byline as string).length).toBe(LEN.byline);
+  });
+});

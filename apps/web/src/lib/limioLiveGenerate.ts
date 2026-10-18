@@ -264,11 +264,13 @@ export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, 
   }
 
   const layout: SlideLayoutId = os.layout ?? "image";
+  // Tên đơn vị và người trình bày của bìa do hệ thống điền từ dữ liệu thật (fillCoverIdentity), AI không được bịa.
   const raw: Record<string, unknown> = {
     ...d,
     ...flattenData(layout, d),
     sectionNumber: layout === "section" ? sectionNo : d.sectionNumber,
-    byline: "" /* tên giảng viên và lớp do giảng viên tự điền, AI không được bịa */,
+    org: "",
+    byline: "",
   };
   const clean = sanitizeLayoutConfig(layout, raw) as Record<string, any>;
   if (!contentComplete(layout, clean)) return configFromOutline(os, sectionNo, d.notes, sourceNumbers);
@@ -427,8 +429,13 @@ export function proposalFromDraft(
   for (const k of GENERATED_META) delete content[k];
   const meta = pickMeta(cfg);
   const note = meta.presenterNote ?? aiNote;
+  // Bìa: AI chỉ viết lại tên bài và phụ đề; tên đơn vị và người trình bày là thông tin thật do người điền, giữ nguyên.
+  const keepCover =
+    !toQuiz && content.layout === "cover"
+      ? Object.fromEntries((["org", "byline"] as const).filter((k) => typeof cfg[k] === "string" && (cfg[k] as string).trim()).map((k) => [k, cfg[k]]))
+      : {};
   return {
     type: toQuiz ? "quiz" : "content",
-    config: { ...content, ...meta, ...(note ? { presenterNote: note } : {}) },
+    config: { ...content, ...keepCover, ...meta, ...(note ? { presenterNote: note } : {}) },
   };
 }

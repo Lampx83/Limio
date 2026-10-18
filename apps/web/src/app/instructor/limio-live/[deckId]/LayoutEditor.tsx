@@ -29,6 +29,7 @@ import { ChartSheet, TableSheet } from "./DataSheetEditor";
 import { motifSlot } from "@/lib/limioLiveMotifs";
 import { useSlideMotif } from "../liveMotifContext";
 import { SlideMotifField } from "./MotifPicker";
+import { CoverStylePicker } from "./CoverStylePicker";
 import OutlineGlyph from "./outline/OutlineGlyph";
 import PickerButton from "./outline/PickerButton";
 
@@ -392,10 +393,16 @@ export default function LayoutEditor({
 
   // Xem trước đúng như sẽ lưu: mục còn trống không hiện.
   // Hoa văn là khoá meta của slide (không nằm trong ô sửa): ghép vào bản xem trước để thấy đúng như khi chiếu.
+  // Kiểu bìa cũng là khoá meta, đổi bằng hàng chọn riêng và lưu ngay.
   const savedMotif = typeof config.motif === "string" ? config.motif : undefined;
+  const savedCoverStyle = typeof config.coverStyle === "string" ? config.coverStyle : undefined;
   const preview = useMemo(
-    () => ({ ...sanitizeLayoutConfig(layout, d), ...(savedMotif ? { motif: savedMotif } : {}) }),
-    [layout, d, savedMotif],
+    () => ({
+      ...sanitizeLayoutConfig(layout, d),
+      ...(savedMotif ? { motif: savedMotif } : {}),
+      ...(savedCoverStyle ? { coverStyle: savedCoverStyle } : {}),
+    }),
+    [layout, d, savedMotif, savedCoverStyle],
   );
   const effectiveMotif = useSlideMotif(preview, slideId);
   const inheritedMotif = useSlideMotif({ ...preview, motif: undefined }, slideId);
@@ -406,6 +413,8 @@ export default function LayoutEditor({
     else delete next.motif;
     onSave({ config: next });
   };
+  /** Đổi kiểu bìa: lưu ngay cùng chữ đang soạn. */
+  const setCoverStyle = (v: string) => onSave({ config: { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config), coverStyle: v } });
   const problems = useMemo(() => layoutTextProblems(layout, preview), [layout, preview]);
   const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }) : null), [problems, preview, config]);
 
@@ -617,13 +626,30 @@ export default function LayoutEditor({
           )}
 
           <div className="grid gap-3">
+            {/* Bìa: bốn ô theo đúng thứ tự trên slide. Đơn vị và người trình bày được điền sẵn từ tên trường và hồ sơ. */}
+            {layout === "cover" && (
+              <Field
+                label="Tên đơn vị"
+                value={d.org ?? ""}
+                max={MAX_LEN.org}
+                placeholder="Khoa Công nghệ thông tin, Trường Công nghệ"
+                onChange={(v) => set({ org: v })}
+                onBlur={blur}
+              />
+            )}
             {layout !== "quote" && (
-              <Field label="Tiêu đề" value={d.title ?? ""} max={MAX_LEN.title} onChange={(v) => set({ title: v })} onBlur={blur} />
+              <Field
+                label={layout === "cover" ? "Tên bài học" : "Tiêu đề"}
+                value={d.title ?? ""}
+                max={MAX_LEN.title}
+                onChange={(v) => set({ title: v })}
+                onBlur={blur}
+              />
             )}
 
             {(layout === "cover" || layout === "section") && (
               <Field
-                label={layout === "cover" ? "Mô tả ngắn" : "Câu dẫn"}
+                label={layout === "cover" ? "Phụ đề" : "Câu dẫn"}
                 value={d.subtitle ?? ""}
                 max={MAX_LEN.subtitle}
                 multiline
@@ -633,10 +659,10 @@ export default function LayoutEditor({
             )}
             {layout === "cover" && (
               <Field
-                label="Giảng viên và lớp"
+                label="Người trình bày"
                 value={d.byline ?? ""}
                 max={MAX_LEN.byline}
-                placeholder="Giảng viên: Nguyễn Văn A · Lớp K66"
+                placeholder="TS. Nguyễn Văn A"
                 onChange={(v) => set({ byline: v })}
                 onBlur={blur}
               />
@@ -860,6 +886,8 @@ export default function LayoutEditor({
                 <Field label="Nguồn hoặc thông điệp" value={d.source ?? ""} max={MAX_LEN.source} onChange={(v) => set({ source: v })} onBlur={blur} />
               </>
             )}
+
+            {layout === "cover" && <CoverStylePicker config={preview} themeId={themeId} slideId={slideId} onChange={setCoverStyle} />}
 
             {/* Chỉ bốn bố cục có chỗ trống cho hoa văn; Chữ và hình đã có ảnh thì không. Riêng ô hình (Chữ và hình
                 chưa có ảnh) chọn được thêm hình minh hoạ theo chủ đề. */}

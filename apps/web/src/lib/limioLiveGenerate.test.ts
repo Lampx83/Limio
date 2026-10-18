@@ -369,3 +369,16 @@ describe("draftToSlide — hình minh hoạ do AI chọn", () => {
     expect(draftToSlide(img, { index: 0, illustration: "ketnoi" }, "").config.motif).toBeUndefined();
   });
 });
+
+describe("bìa: AI không viết và không xoá tên đơn vị, người trình bày", () => {
+  it("bản AI sinh không lấy tên đơn vị và người trình bày do AI viết", () => {
+    const g = draftToSlide(os("c1", "content", "cover", "Bài 1"), { index: 0, title: "Bài 1", subtitle: "Giới thiệu.", org: "Đại học AI bịa", byline: "GS. Bịa" } as SlideDraft, "");
+    expect(g.config.org).toBeUndefined();
+    expect(g.config.byline).toBeUndefined();
+  });
+  it("AI sửa bìa giữ nguyên tên đơn vị, người trình bày và kiểu bìa của bản đang có", () => {
+    const current = { config: { layout: "cover", title: "Bài cũ", org: "Khoa CNTT", byline: "TS. Trần Minh Anh", coverStyle: "arch", outlineId: "o1", aiGenerated: true } };
+    const r = proposalFromDraft("shorter", current, { index: 0, title: "Bài mới", subtitle: "Câu giới thiệu mới." })!;
+    expect(r.config).toMatchObject({ title: "Bài mới", org: "Khoa CNTT", byline: "TS. Trần Minh Anh", coverStyle: "arch" });
+  });
+});

@@ -51,8 +51,10 @@ export function frameHeightForContent(box: ContentBox | null): number {
 export function measureContentBox(root: HTMLElement): ContentBox | null {
   let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
   root.querySelectorAll<HTMLElement>("*").forEach((el) => {
-    // Bỏ qua khung gốc của bố cục (con trực tiếp của root, luôn cao đủ cả khung), khung đệm phủ kín và vầng sáng trang trí.
-    if (el.parentElement === root || el.classList.contains("glow") || el.classList.contains("pad") || el.closest(".glow")) return;
+    // Bỏ qua khung gốc của bố cục (con trực tiếp của root, luôn cao đủ cả khung), khung đệm phủ kín và phần trang trí
+    // (vầng sáng, hoa văn, hình trang trí của bìa mang lớp .deco): chúng được phép chạm hoặc tràn mép khung, không phải
+    // nội dung tràn, nên không được làm slide co lại.
+    if (el.parentElement === root || el.classList.contains("pad") || el.closest(".glow, .motif, .deco")) return;
     const w = el.offsetWidth, h = el.offsetHeight;
     if (!w && !h) return; // phần tử SVG hoặc ẩn
     let x = 0, y = 0, n: HTMLElement | null = el, reached = false;
