@@ -23,7 +23,7 @@ export type SlideLayoutId = (typeof SLIDE_LAYOUTS)[number];
 
 export const LAYOUT_META: Record<SlideLayoutId, { label: string; hint: string }> = {
   classic: { label: "Chữ và ảnh (cũ)", hint: "Tiêu đề, ý chính và ảnh minh hoạ như trước" },
-  cover: { label: "Bìa", hint: "Slide đầu: tiêu đề lớn, mô tả ngắn, tên giảng viên" },
+  cover: { label: "Bìa", hint: "Slide đầu: tên đơn vị, tên bài, phụ đề, người trình bày" },
   section: { label: "Tiêu đề mục", hint: "Mở đầu mỗi phần lớn của bài" },
   image: { label: "Chữ và hình", hint: "Ba ý chính kèm hình minh hoạ" },
   cards: { label: "Ba thẻ", hint: "Các ý song song, mỗi ý một biểu tượng" },
@@ -58,6 +58,33 @@ export const ITEM_RANGE: Partial<Record<SlideLayoutId, { min: number; max: numbe
   summary: { min: 2, max: 5 },
 };
 
+/**
+ * Kiểu bìa: cùng bốn dòng chữ (đơn vị, tên bài, phụ đề, người trình bày), khác nhau ở bố cục và vùng trang trí.
+ * Mỗi kiểu dành riêng một vùng không có chữ cho hoa văn của bài giảng (limioLiveMotifs). Bản mẫu đã duyệt:
+ * docs/mockup/bia-bai-giang.html. Lưu ở `config.coverStyle` như một khoá meta (xem pickMeta).
+ */
+export const COVER_STYLES = ["block", "formal", "arch", "band", "arc", "tiles", "tape", "wave", "pillar", "bubbles"] as const;
+export type CoverStyleId = (typeof COVER_STYLES)[number];
+export const DEFAULT_COVER_STYLE: CoverStyleId = "block";
+export const COVER_STYLE_LABELS: Record<CoverStyleId, string> = {
+  block: "Khối màu",
+  formal: "Trang trọng",
+  arch: "Vòm",
+  band: "Dải màu",
+  arc: "Vòng cung",
+  tiles: "Ô ghép",
+  tape: "Dán giấy",
+  wave: "Sóng",
+  pillar: "Cột hoa văn",
+  bubbles: "Bong bóng",
+};
+export const isCoverStyle = (v: unknown): v is CoverStyleId => typeof v === "string" && (COVER_STYLES as readonly string[]).includes(v);
+/** Kiểu bìa của một slide; chưa chọn hoặc giá trị lạ thì dùng kiểu mặc định. */
+export const resolveCoverStyle = (config: unknown): CoverStyleId => {
+  const v = (config as { coverStyle?: unknown } | null | undefined)?.coverStyle;
+  return isCoverStyle(v) ? v : DEFAULT_COVER_STYLE;
+};
+
 /** Số phần tối đa trên mục lục của bìa phần (vừa khung 720 px với chữ ≥ 26 px). */
 export const MAX_TOC = 6;
 
@@ -68,6 +95,7 @@ export const MAX_BULLETS: Partial<Record<SlideLayoutId, number>> = { image: 3, c
 export const MAX_LEN = {
   title: 120,
   subtitle: 200,
+  org: 120,
   byline: 80,
   sectionNumber: 4,
   tocItem: 80,
@@ -146,6 +174,8 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
   const subtitle = clip(raw.subtitle, MAX_LEN.subtitle);
   if (subtitle && (layout === "cover" || layout === "section")) out.subtitle = subtitle;
   if (layout === "cover") {
+    const org = clip(raw.org, MAX_LEN.org);
+    if (org) out.org = org;
     const byline = clip(raw.byline, MAX_LEN.byline);
     if (byline) out.byline = byline;
   }
@@ -190,7 +220,7 @@ export function emptyLayoutConfig(layout: SlideLayoutId): Record<string, unknown
   const blank = (n: number): LayoutItem[] => Array.from({ length: n }, () => ({ heading: "", body: "" }));
   switch (layout) {
     case "cover":
-      return { layout, title: "", subtitle: "", byline: "" };
+      return { layout, org: "", title: "", subtitle: "", byline: "" };
     case "section":
       return { layout, sectionNumber: "01", title: "", subtitle: "" };
     case "image":
@@ -422,8 +452,9 @@ export function padForEditing(layout: SlideLayoutId, c: Record<string, any>): Re
 
 /**
  * Khoá "meta" đi kèm mọi slide, không thuộc bố cục: ghi chú giảng, cờ ẩn khi trình chiếu, hoa văn trang trí chọn
- * riêng cho slide ("none" hoặc mã hoa văn, xem limioLiveMotifs), và dấu vết sinh bằng AI (id dòng dàn ý, slide do
- * AI sinh, đã được giảng viên sửa tay). Hoa văn là meta để AI sửa slide hay đổi bố cục không làm mất lựa chọn.
+ * riêng cho slide ("none" hoặc mã hoa văn, xem limioLiveMotifs), kiểu bìa, và dấu vết sinh bằng AI (id dòng dàn ý,
+ * slide do AI sinh, đã được giảng viên sửa tay). Hoa văn và kiểu bìa là meta để AI sửa slide hay đổi bố cục không
+ * làm mất lựa chọn.
  * Bộ lọc bố cục phải giữ chúng, nếu không việc ẩn slide hay ghi chú sẽ mất lặng lẽ.
  */
 export function pickMeta(config: Record<string, unknown> | null | undefined): Record<string, unknown> {
@@ -432,6 +463,7 @@ export function pickMeta(config: Record<string, unknown> | null | undefined): Re
   if (typeof c.presenterNote === "string" && c.presenterNote.trim()) out.presenterNote = c.presenterNote.trim().slice(0, MAX_LEN.notes);
   if (c.hidden === true) out.hidden = true;
   if (isMotifChoice(c.motif)) out.motif = c.motif;
+  if (isCoverStyle(c.coverStyle)) out.coverStyle = c.coverStyle;
   if (typeof c.outlineId === "string" && c.outlineId) out.outlineId = c.outlineId.slice(0, 60);
   if (c.aiGenerated === true) out.aiGenerated = true;
   if (c.editedByUser === true) out.editedByUser = true;
@@ -450,10 +482,24 @@ export function normalizeContentSlideConfig(config: unknown): unknown {
   return { ...sanitizeLayoutConfig(layout, c), ...pickMeta(c) };
 }
 
+/**
+ * Điền sẵn tên đơn vị và người trình bày cho slide bìa từ dữ liệu có thật (tên trường của giảng viên, tên trong
+ * hồ sơ), chỉ vào ô còn trống. AI không bao giờ viết hai dòng này. Slide không phải bìa trả nguyên đối tượng.
+ */
+export function fillCoverIdentity<T extends Record<string, unknown>>(config: T, who: { org?: string | null; presenter?: string | null }): T {
+  if (resolveLayout(config) !== "cover" || config.resource) return config;
+  const out: Record<string, unknown> = { ...config };
+  const org = clip(who.org, MAX_LEN.org);
+  const presenter = clip(who.presenter, MAX_LEN.byline);
+  if (org && !clip(config.org, MAX_LEN.org)) out.org = org;
+  if (presenter && !clip(config.byline, MAX_LEN.byline)) out.byline = presenter;
+  return out as T;
+}
+
 // ── Dấu vết sinh bằng AI và việc "đã sửa tay" ───────────────────────────────
 
-// Đổi hoa văn là đổi trang trí, không phải sửa nội dung: không tính là "đã sửa tay".
-const IDENTITY_KEYS = ["outlineId", "aiGenerated", "hidden", "editedByUser", "motif"] as const;
+// Đổi hoa văn hay kiểu bìa là đổi trang trí, không phải sửa nội dung: không tính là "đã sửa tay".
+const IDENTITY_KEYS = ["outlineId", "aiGenerated", "hidden", "editedByUser", "motif", "coverStyle"] as const;
 
 function stable(v: unknown): string {
   if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;

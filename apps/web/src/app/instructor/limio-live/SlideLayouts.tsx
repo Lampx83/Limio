@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import {
   BarChart3,
   BookOpen,
@@ -20,7 +20,6 @@ import {
   fitFontSize,
   layoutRenderScale,
   resolveLayout,
-  parseInline,
   stripInline,
   type LayoutColumn,
   type LayoutItem,
@@ -35,6 +34,8 @@ import { motifSvgBody } from "@/lib/limioLiveMotifArt";
 import { useLiveBrand } from "./liveBrandContext";
 import { useSlideMotif } from "./liveMotifContext";
 import { isDarkTheme, layoutThemeClass, motifOpacityFor, slideBgFor } from "./slideThemes";
+import { CoverSlide } from "./CoverSlide";
+import { Inline, delay } from "./slideInline";
 import "./slideLayouts.css";
 
 // Bộ vẽ slide Nội dung theo bố cục. Thiết kế ở khung 1280 × 720 rồi co theo khung chứa
@@ -58,22 +59,8 @@ export const LAYOUT_ICONS: Record<SlideIconId, LucideIcon> = {
 
 type Cfg = Record<string, any>;
 
-/** Vẽ chữ có **in đậm** và *in nghiêng* (chỉ hai định dạng này, xem parseInline). */
-function Inline({ text }: { text: string }) {
-  return (
-    <>
-      {parseInline(text ?? "").map((r, i) => {
-        let node: ReactNode = r.text;
-        if (r.italic) node = <em key={`e${i}`}>{node}</em>;
-        if (r.bold) node = <strong key={`b${i}`}>{node}</strong>;
-        return <span key={i}>{node}</span>;
-      })}
-    </>
-  );
-}
 // Trên máy chủ useLayoutEffect không chạy và báo cảnh báo; dùng useEffect ở đó (ở trình duyệt vẫn chạy trước khi vẽ).
 const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
-const delay = (i: number): CSSProperties => ({ ["--i" as string]: i }) as CSSProperties;
 
 /** Slide có dùng bố cục mới (không phải "classic")? */
 export function isLayoutSlide(config: Cfg | undefined): boolean {
@@ -345,53 +332,9 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
   const title: string = c.title ?? "";
 
   switch (layout) {
-    case "cover": {
-      const plain = stripInline(title);
-      const { head, tail } = accentTail(plain);
-      const { px } = fitFontSize(plain, { maxPx: 96, widthPx: 800, maxLines: 3 });
-      return (
-        <div className="ll-cover">
-          <Decor
-            motif={motif}
-            a={{ width: 380, height: 380, left: -90, top: -100 }}
-            b={{ width: 420, height: 420, right: -80, bottom: -140 }}
-          />
-          <div className="pad">
-            <div style={{ maxWidth: 800 }}>
-              <h1 className="h a" style={{ fontSize: px }}>
-                {head}
-                {tail && (
-                  <>
-                    {head ? " " : ""}
-                    <span className="grad">{tail}</span>
-                  </>
-                )}
-              </h1>
-              {c.subtitle && (
-                <p className="lead a" style={{ ...delay(1), marginTop: 30, maxWidth: 720 }}>
-                  <Inline text={c.subtitle} />
-                </p>
-              )}
-              {c.byline && (
-                <p className="byline a" style={delay(2)}>
-                  <Inline text={c.byline} />
-                </p>
-              )}
-            </div>
-          </div>
-          {/* Hoa văn chiếm dải phải của bìa; không có hoa văn thì giữ chồng thẻ cũ. */}
-          {!motif && (
-            <div className="stack" aria-hidden="true">
-              <i className="a-pop" style={delay(1)} />
-              <i className="a-pop" style={delay(2)} />
-              <i className="a-pop" style={delay(3)}>
-                <MessageCircle size={120} strokeWidth={1.6} />
-              </i>
-            </div>
-          )}
-        </div>
-      );
-    }
+    case "cover":
+      // Mười kiểu bìa (CoverSlide); hoa văn của bài nằm trong vùng riêng của từng kiểu, không theo chỗ đặt "side".
+      return <CoverSlide c={c} motif={motif?.motif ?? null} />;
 
     case "section": {
       // Bìa phần có mục lục (dàn ý theo mạch cấu trúc): trái là số và tên phần, phải là các phần của bài.

@@ -5,7 +5,8 @@ import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
-import { pickMeta } from "@/lib/limioLiveSlides";
+import { fillCoverIdentity, pickMeta } from "@/lib/limioLiveSlides";
+import { coverIdentityFor } from "@/lib/limioLiveCoverIdentity";
 import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
 import { partLabel, sanitizeOutline, slideStructures } from "@/lib/limioLiveOutline";
 
@@ -61,6 +62,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
     part: s.partId ? partLabel(outline, s.partId) : undefined,
   }));
   const deckTitle = outline.title || deck.title;
+  // Bìa: tên đơn vị và người trình bày lấy từ tên trường và hồ sơ của giảng viên, AI không viết hai dòng này.
+  const who = await coverIdentityFor(userId);
   const sourceText = deck.sourceText ?? "";
 
   const structures = slideStructures(outline);
@@ -107,6 +110,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           },
         });
 
+        for (const s of result.slides) if (s.type === "content") s.config = fillCoverIdentity(s.config as Record<string, unknown>, who);
         const byOutlineId = new Map(writeIdx.map((i, k) => [outline.slides[i]!.id, result.slides[k]!]));
 
         await prisma.$transaction(async (tx) => {
@@ -127,8 +131,10 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           for (const r of plan.regenerate) {
             const gen = byOutlineId.get(r.outlineId)!;
             const old = oldBy.get(r.slideId)!;
-            // Giữ cờ ẩn của slide cũ; ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
-            const keepHidden = pickMeta(old.config).hidden ? { hidden: true } : {};
+            // Giữ cờ ẩn và lựa chọn trang trí (hoa văn, kiểu bìa) của slide cũ: đổi chúng không tính là sửa tay nên slide
+            // vẫn được viết lại. Ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
+            const { hidden, motif, coverStyle } = pickMeta(old.config);
+            const keepHidden = { ...(hidden ? { hidden: true } : {}), ...(motif ? { motif } : {}), ...(coverStyle ? { coverStyle } : {}) };
             await recordSlideVersion(tx, { id: r.slideId, type: old.type as never, config: old.config }, "before_sync");
             const row = await tx.liveSlide.update({
               where: { id: r.slideId },
