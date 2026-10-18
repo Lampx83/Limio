@@ -235,6 +235,8 @@
   .ll-image .tx { display: grid; gap: calc(30px * var(--fs)); }
   .ll-image .art { align-self: stretch; min-height: 0; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
   .ll-image .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* Nguồn ảnh riêng: dòng chữ thường dưới ô hình, cỡ tối thiểu của khung thiết kế; dài quá thì cắt, đủ chữ ở title. */
+  .ll-image .img-credit { position: absolute; right: 96px; bottom: 22px; margin: 0; max-width: 560px; font-size: 26px; line-height: 1.2; color: var(--smuted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* 4. Ba thẻ — các thẻ cao bằng nhau, cụm thẻ căn giữa phần còn lại. --hpx: cỡ tiêu đề thẻ để từ dài nhất vừa một dòng
      (limioLiveFit.cardHeadingPx; khoảng cách 24 và đệm ngang 26 khớp CARD_GAP, CARD_PAD_X). */
   .ll-cards .pad { gap: calc(34px * var(--fs)); }
@@ -304,6 +306,8 @@
   .lslide .motif.m-fill { inset: 0; }
   /* Hình minh hoạ: đĩa nền tô --sglow1, ở giao diện tối màu này thường trùng --sa nên phải nhạt hơn để vật thể nổi lên. */
   .lt-dark .ill-disc { fill-opacity: .1; }
+  /* Hình minh hoạ chỉ đậm hơn hoa văn một chút, để ô hình vẫn là phần phụ của chữ (người dùng duyệt 2026-10-18). */
+  .motif.m-illus { opacity: .8; }
 
   /* ---------- Hiệu ứng nhẹ (chỉ chạy ở chế độ toàn màn hình; tắt nếu máy bật "giảm chuyển động") ---------- */
   @media (prefers-reduced-motion: no-preference) {

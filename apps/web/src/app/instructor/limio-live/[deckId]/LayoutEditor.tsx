@@ -29,7 +29,7 @@ import ChartFromImagePanel from "./ChartFromImagePanel";
 import { canRedraw, restoreImage } from "@/lib/limioLiveChartFromImage";
 import { motifSlot } from "@/lib/limioLiveMotifs";
 import { useSlideMotif } from "../liveMotifContext";
-import { SlideMotifField } from "./MotifPicker";
+import { SlideMotifField, type SlotImage, type SlotImageChange } from "./MotifPicker";
 import { CoverStylePicker } from "./CoverStylePicker";
 import OutlineGlyph from "./outline/OutlineGlyph";
 import PickerButton from "./outline/PickerButton";
@@ -60,6 +60,14 @@ const extrasFor = (config: Cfg, draft: Cfg): Cfg => {
   delete m.cite;
   const c = typeof draft.cite === "string" ? draft.cite.trim().slice(0, MAX_LEN.source) : "";
   return c ? { ...m, cite: c } : m;
+};
+
+/** Các khoá của ảnh riêng ở ô hình (xem imageExtras trong limioLiveSlides). */
+const IMAGE_KEYS = ["imageUrl", "imageAlt", "imageFit", "imageCredit", "imageSourceUrl"] as const;
+const withoutImage = (c: Cfg): Cfg => {
+  const out = { ...c };
+  for (const k of IMAGE_KEYS) delete out[k];
+  return out;
 };
 
 const glyphOf = (l: SlideLayoutId) => (l === "classic" ? "content" : l);
@@ -588,15 +596,39 @@ export default function LayoutEditor({
   const shown = useMemo(() => (typeof d.cite === "string" && d.cite.trim() ? { ...preview, cite: d.cite.trim() } : preview), [preview, d.cite]);
   const effectiveMotif = useSlideMotif(preview, slideId);
   const inheritedMotif = useSlideMotif({ ...preview, motif: undefined }, slideId);
-  /** Đổi hoa văn của slide: lưu ngay cùng chữ đang soạn; null = theo bài giảng. */
+  /**
+   * Đổi hoa văn của slide: lưu ngay cùng chữ đang soạn; null = theo bài giảng. Ô hình chỉ hiện một thứ, nên chọn
+   * một hình hay hoa văn khi đang có ảnh riêng là thay ảnh: bỏ ảnh cùng mô tả, nguồn, cách đặt của nó.
+   */
   const setMotif = (v: string | null) => {
-    const next: Cfg = { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config) };
+    const base = withoutImage(d);
+    setD(base);
+    const next: Cfg = { ...sanitizeLayoutConfig(layout, base), ...keepExtras(config) };
     if (v) next.motif = v;
     else delete next.motif;
     onSave({ config: next });
   };
   /** Đổi kiểu bìa: lưu ngay cùng chữ đang soạn. */
   const setCoverStyle = (v: string) => onSave({ config: { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config), coverStyle: v } });
+  /** Ảnh riêng ở ô hình (Chữ và hình): lưu ngay. null = bỏ ảnh; hình minh hoạ hay hoa văn đã chọn vẫn giữ trong motif. */
+  const setImage = (c: SlotImageChange) => {
+    const base: Cfg = c === null ? withoutImage(d) : { ...d };
+    if (c) for (const [k, v] of Object.entries(c)) v === undefined ? delete base[k] : (base[k] = v);
+    setD(base);
+    commit(base);
+  };
+  const pv = preview as Cfg;
+  const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+  const slotImage: SlotImage | null =
+    layout === "image" && str(pv.imageUrl)
+      ? {
+          imageUrl: pv.imageUrl,
+          imageAlt: str(pv.imageAlt),
+          imageFit: pv.imageFit === "contain" ? "contain" : undefined,
+          imageCredit: str(pv.imageCredit),
+          imageSourceUrl: str(pv.imageSourceUrl),
+        }
+      : null;
   const problems = useMemo(() => layoutTextProblems(layout, preview), [layout, preview]);
   const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }) : null), [problems, preview, config]);
 
@@ -935,14 +967,6 @@ export default function LayoutEditor({
                     onBlur={blur}
                   />
                 ))}
-                <Field
-                  label="Địa chỉ ảnh (để trống thì dùng hình minh hoạ mặc định)"
-                  plain
-                  value={d.imageUrl ?? ""}
-                  max={2000}
-                  onChange={(v) => set({ imageUrl: v })}
-                  onBlur={blur}
-                />
                 {canRedraw(config) && d.imageUrl === config.imageUrl && (
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <button
@@ -1175,12 +1199,14 @@ export default function LayoutEditor({
 
             {layout === "cover" && <CoverStylePicker config={preview} themeId={themeId} slideId={slideId} onChange={setCoverStyle} />}
 
-            {/* Chỉ bốn bố cục có chỗ trống cho hoa văn; Chữ và hình đã có ảnh thì không. Riêng ô hình (Chữ và hình
-                chưa có ảnh) chọn được thêm hình minh hoạ theo chủ đề. */}
-            {motifSlot(preview) && (
+            {/* Bốn bố cục có chỗ trống cho hoa văn. Ô hình của Chữ và hình còn nhận ảnh riêng (tải lên, dán địa chỉ)
+                và hình minh hoạ theo chủ đề; có ảnh riêng thì ảnh thắng. */}
+            {(motifSlot(preview) || layout === "image") && (
               <SlideMotifField
                 value={savedMotif}
-                illustrations={motifSlot(preview) === "fill"}
+                illustrations={layout === "image"}
+                image={slotImage}
+                onImage={layout === "image" ? setImage : undefined}
                 effective={effectiveMotif?.motif ?? null}
                 inherited={inheritedMotif?.motif ?? null}
                 themeId={themeId}

@@ -46,6 +46,16 @@ describe("classifyStorageKey / uploaderFromStorageKey (thuần, không cần DB)
     // Khớp UUID chặt: chuỗi giống-mà-không-phải-UUID không được nhận.
     expect(uploaderFromStorageKey("x/not-a-uuid-1790000000000-ab.mp4")).toBeNull();
   });
+
+  it("ảnh đã xử lý (có kích thước trong tên) và hai bản nhỏ của nó cũng tính cho người tải lên", () => {
+    const dir = "limio-live-resources/2026/10";
+    expect(uploaderFromStorageKey(`${dir}/${uid}-1600x1000-1790000000000-ab12cd.jpg`)).toBe(uid);
+    expect(uploaderFromStorageKey(`${dir}/${uid}-1600x1000-1790000000000-ab12cd.w480.webp`)).toBe(uid);
+    expect(uploaderFromStorageKey(`${dir}/${uid}-1790000000000-ab12cd.w960.webp`)).toBe(uid);
+    // Hậu tố lạ hay cỡ không có thật thì vẫn không nhận.
+    expect(uploaderFromStorageKey(`${dir}/${uid}-1790000000000-ab12cd.w123.webp`)).toBeNull();
+    expect(uploaderFromStorageKey(`${dir}/${uid}-big-1790000000000-ab12cd.jpg`)).toBeNull();
+  });
 });
 
 describe("sổ ghi dung lượng (cần DB)", () => {

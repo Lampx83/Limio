@@ -138,6 +138,8 @@ export const MAX_LEN = {
   seriesName: 40,
   unit: 20,
   // Ghi chú giảng nhập từ PowerPoint giữ nguyên chữ, thường dài hơn ghi chú AI viết.
+  imageAlt: 200,
+  imageCredit: 120,
   notes: 6000,
 } as const;
 
@@ -163,6 +165,23 @@ export function clipText(v: unknown, max: number): string {
   return cut;
 }
 const clip = clipText;
+
+/**
+ * Thông tin đi kèm ảnh riêng ở ô hình (mockup docs/mockup/anh-rieng-o-hinh.html), chỉ giữ khi có imageUrl:
+ * mô tả ảnh (alt), "contain" = hiện trọn ảnh không cắt (mặc định lấp đầy), nguồn ảnh hiện ở chân ô hình, và địa chỉ
+ * gốc khi ảnh được lấy từ một trang ngoài (để ô Nguồn ảnh vẫn hiện sau khi máy chủ đã lưu bản sao).
+ */
+function imageExtras(raw: Record<string, any>): Record<string, string> {
+  const out: Record<string, string> = {};
+  const alt = clip(raw.imageAlt, MAX_LEN.imageAlt);
+  if (alt) out.imageAlt = alt;
+  if (raw.imageFit === "contain") out.imageFit = "contain";
+  const credit = clip(raw.imageCredit, MAX_LEN.imageCredit);
+  if (credit) out.imageCredit = credit;
+  const from = clip(raw.imageSourceUrl, 2000);
+  if (/^https?:\/\//i.test(from)) out.imageSourceUrl = from;
+  return out;
+}
 
 function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
   const range = ITEM_RANGE[layout];
@@ -286,9 +305,7 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
       .slice(0, MAX_BULLETS.image);
     if (bullets.length) out.bullets = bullets;
     const img = clip(raw.imageUrl, 2000);
-    if (img) out.imageUrl = img;
-    // Hình lấy từ file của giảng viên (sơ đồ, ảnh chụp màn hình) hiện trọn, không cắt cho đầy ô.
-    if (img && raw.imageFit === "contain") out.imageFit = "contain";
+    if (img) Object.assign(out, { imageUrl: img, ...imageExtras(raw) });
   }
   if (ITEM_RANGE[layout]) out.items = sanitizeItems(raw.items, layout);
   if (layout === "steps") {
@@ -460,7 +477,14 @@ const joinSentence = (a: string, b: string): string => {
   return /[.!?…:;]$/.test(h) ? `${h} ${t}` : `${h}. ${t}`;
 };
 
-type Pieces = { title: string; subtitle: string; texts: Array<{ heading: string; body: string }>; imageUrl: string };
+type Pieces = {
+  title: string;
+  subtitle: string;
+  texts: Array<{ heading: string; body: string }>;
+  imageUrl: string;
+  /** Mô tả, cách đặt, nguồn của ảnh: đi theo ảnh khi đổi bố cục. */
+  image: Record<string, string>;
+};
 
 /** Gom nội dung của mọi bố cục về các mảnh chung: tiêu đề, phụ đề, danh sách ý, ảnh. */
 function toPieces(c: Record<string, any>): Pieces {
@@ -497,7 +521,7 @@ function toPieces(c: Record<string, any>): Pieces {
   }
   const title = String(c.title ?? c.quote ?? "");
   const subtitle = String(c.subtitle ?? (layout === "quote" ? c.source ?? "" : "") ?? "");
-  return { title, subtitle, texts: texts.filter((t) => t.heading.trim() || t.body.trim()), imageUrl: String(c.imageUrl ?? "") };
+  return { title, subtitle, texts: texts.filter((t) => t.heading.trim() || t.body.trim()), imageUrl: String(c.imageUrl ?? ""), image: imageExtras(c) };
 }
 
 /**
@@ -512,7 +536,7 @@ export function convertLayoutConfig(from: Record<string, any>, to: SlideLayoutId
       title: p.title,
       subtitle: p.subtitle,
       bullets: p.texts.map((t) => joinSentence(t.heading, t.body)).slice(0, MAX_BULLETS.classic),
-      ...(p.imageUrl ? { imageUrl: p.imageUrl } : {}),
+      ...(p.imageUrl ? { imageUrl: p.imageUrl, ...p.image } : {}),
     };
   }
   const p = toPieces(from);
@@ -529,7 +553,7 @@ export function convertLayoutConfig(from: Record<string, any>, to: SlideLayoutId
     case "image":
       base.title = p.title;
       base.bullets = p.texts.map((t) => joinSentence(t.heading, t.body)).slice(0, MAX_BULLETS.image);
-      if (p.imageUrl) base.imageUrl = p.imageUrl;
+      if (p.imageUrl) Object.assign(base, { imageUrl: p.imageUrl, ...p.image });
       break;
     case "cards":
     case "steps":

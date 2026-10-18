@@ -10,6 +10,7 @@ import { toast } from "@/lib/toast";
 import { openAudienceWindow, reopenPresenterWindow } from "@/lib/limioLiveWindow";
 import EmptyState from "@/components/ui/EmptyState";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import { slideImageSources } from "@/lib/limioLiveImage";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
 import { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
@@ -486,6 +487,23 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const slides = deck?.slides ?? [];
   const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
   const currentSlide = currentIndex >= 0 ? slides[currentIndex] : null;
+
+  // Nạp trước ảnh ở ô hình của slide kế tiếp, đúng bản srcset mà màn này sẽ chọn (ô hình ≈ 36% bề rộng slide),
+  // để chuyển slide không phải chờ ảnh.
+  const nextImageUrl = (() => {
+    const c = slides[currentIndex + 1]?.config as { layout?: unknown; imageUrl?: unknown } | undefined;
+    return c?.layout === "image" && typeof c.imageUrl === "string" ? c.imageUrl : null;
+  })();
+  useEffect(() => {
+    if (!nextImageUrl) return;
+    const s = slideImageSources(nextImageUrl);
+    const img = new Image();
+    if (s.srcSet) {
+      img.sizes = `${Math.ceil(window.innerWidth * 0.37)}px`;
+      img.srcset = s.srcSet;
+    }
+    img.src = s.src;
+  }, [nextImageUrl]);
 
   // QR phóng to: presenter bấm nút/phím Q → màn chiếu (cửa sổ khác) hiện QR lớn toàn màn hình,
   // không cần chạm chuột vào màn chiếu. Reset khi đổi slide.

@@ -80,8 +80,12 @@ export function classifyStorageKey(layer: string, key: string): StoredFileKind {
 }
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
-// Tên file các route upload đặt: `<userId>-<unixMs>-<hex>.<ext>`.
-const FILENAME_UPLOADER = new RegExp(`^(${UUID})-\\d{10,}-[A-Za-z0-9]+\\.[A-Za-z0-9]+$`, "i");
+// Tên file các route upload đặt: `<userId>-<unixMs>-<hex>.<ext>`. Ảnh đã xử lý (apps/web imageVariants.ts) có thêm
+// kích thước `-<rộng>x<cao>` sau mã người dùng, và hai bản nhỏ đổi đuôi thành `.w480.webp` / `.w960.webp`.
+const FILENAME_UPLOADER = new RegExp(
+  `^(${UUID})(?:-\\d+x\\d+)?-\\d{10,}-[A-Za-z0-9]+(?:\\.w(?:480|960)\\.webp|\\.[A-Za-z0-9]+)$`,
+  "i",
+);
 const AVATAR_DIR = new RegExp(`^avatars/(${UUID})/`, "i");
 
 /** Người bấm upload, suy từ key. null = không suy được (không đoán bừa). */
