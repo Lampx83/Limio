@@ -878,6 +878,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                   slide={selectedSlide}
                   themeId={deck.theme}
                   deckId={deckId}
+                  sourceKind={deck.sourceKind ?? null}
                   onApplyProposal={(p, action) =>
                     handleSaveSlide(selectedSlide.id, { config: p.config, type: p.type, source: "ai", aiAction: action })
                   }
@@ -1165,7 +1166,10 @@ function SlideCenterEditor({
   onEditOpenChange,
   nav,
   zoom,
+  sourceKind,
 }: {
+  /** Nguồn của bài AI soạn (document | topic | topic_web). */
+  sourceKind: string | null;
   zoom: number;
   editOpen: boolean;
   onEditOpenChange: (open: boolean) => void;
@@ -1193,6 +1197,7 @@ function SlideCenterEditor({
         onOpenChange={onEditOpenChange}
         nav={nav}
         zoom={zoom}
+        sourceKind={sourceKind}
       />
     );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;
