@@ -221,7 +221,7 @@ export function applyStructure(g: GeneratedSlide, st: SlideStructure | null | un
     return { ...g, config: normalizeContentSlideConfig(config) as Record<string, unknown> };
   }
   if (c.layout === "summary" && st.agenda && st.agenda.length) {
-    return { ...g, config: { ...c, items: st.agenda.map((h) => ({ heading: h.slice(0, MAX_LEN.itemHeading), body: "" })) } };
+    return { ...g, config: { ...c, items: st.agenda.map((h) => ({ heading: h.slice(0, MAX_LEN.itemBody), body: "" })) } };
   }
   return g;
 }
