@@ -3,7 +3,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { openAudienceWindow } from "@/lib/limioLiveWindow";
+import { audienceUrl, openAudienceWindow, presenterUrl, startPresenterOnProjector, useProjectorReady } from "@/lib/limioLiveWindow";
 import {
   DndContext,
   closestCenter,
@@ -386,7 +386,19 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     router.push(`/instructor/limio-live/${deckId}/present?mode=slideshow&from=${fromParam}`);
   };
 
+  // Có màn hình mở rộng + đã cho quyền "Quản lý cửa sổ" (Chrome/Edge): làm như PowerPoint —
+  // tab này lên fullscreen ở máy chiếu thành màn chiếu, presenter view mở cửa sổ mới ở
+  // màn hình laptop. Còn lại (Safari/Firefox, mirror, chưa cho quyền) giữ cách cũ.
+  const projectorReady = useProjectorReady();
   const handleStartPresenterView = async () => {
+    const presenterWin = startPresenterOnProjector();
+    if (presenterWin === "blocked") return;
+    if (presenterWin) {
+      await flushSaves();
+      presenterWin.location.replace(presenterUrl(deckId, "start"));
+      router.push(audienceUrl(deckId));
+      return;
+    }
     openAudienceWindow(deckId);
     await flushSaves();
     router.push(`/instructor/limio-live/${deckId}/present?from=start`);
@@ -708,7 +720,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               <Presentation size={15} className="text-brand-700 dark:text-brand-300" /> <span className="hidden xl:inline">Từ slide này</span>
             </button>
           </Tooltip>
-          <Tooltip label="Presenter view" description="Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này." align="end">
+          <Tooltip
+            label="Presenter view"
+            description={
+              projectorReady
+                ? "Màn chiếu tự lên màn hình thứ hai, toàn màn hình; Note mở ở cửa sổ mới trên màn hình này."
+                : "Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này."
+            }
+            align="end"
+          >
             <button
               onClick={handleStartPresenterView}
               className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 text-[rgb(var(--text))] hover:bg-[rgb(var(--surface))] hover:shadow-sm"

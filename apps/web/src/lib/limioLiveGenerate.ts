@@ -12,7 +12,7 @@ import {
   sanitizeLayoutConfig,
   type SlideLayoutId,
 } from "./limioLiveSlides";
-import { stripEmoji, type OutlineSlide } from "./limioLiveOutline";
+import { stripEmoji, type OutlineSlide, type SlideStructure } from "./limioLiveOutline";
 
 export const BATCH_SIZE = 5;
 
@@ -208,6 +208,24 @@ export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, 
   };
 }
 
+/**
+ * Chữ do mạch cấu trúc quyết định, ghi đè bản AI viết: slide mở phần nhận số phần, tên phần và mục lục;
+ * slide Mục lục nhận đúng tên các phần. Nhờ vậy số và tên luôn khớp nhau giữa các slide.
+ */
+export function applyStructure(g: GeneratedSlide, st: SlideStructure | null | undefined): GeneratedSlide {
+  if (!st || g.type !== "content") return g;
+  const c = g.config;
+  if (c.layout === "section" && st.toc) {
+    const cur = st.tocCurrent ?? 0;
+    const config = { ...c, sectionNumber: st.sectionNo ?? c.sectionNumber, toc: st.toc, tocCurrent: cur, title: st.toc[cur - 1] || c.title };
+    return { ...g, config: normalizeContentSlideConfig(config) as Record<string, unknown> };
+  }
+  if (c.layout === "summary" && st.agenda && st.agenda.length) {
+    return { ...g, config: { ...c, items: st.agenda.map((h) => ({ heading: h.slice(0, MAX_LEN.itemHeading), body: "" })) } };
+  }
+  return g;
+}
+
 /** Số mục: "01", "02"... theo thứ tự các slide bố cục "section" trong dàn ý. */
 export function sectionNumbers(slides: OutlineSlide[]): string[] {
   let n = 0;
@@ -233,6 +251,8 @@ export interface GenerateDeps {
   concurrency?: number;
   /** Số mục theo toàn bộ dàn ý, thẳng hàng với `outline` (khi chỉ viết một phần dàn ý). */
   sectionNos?: string[];
+  /** Thông tin mạch cấu trúc thẳng hàng với `outline` (slideStructures); thiếu thì bỏ qua. */
+  structures?: Array<SlideStructure | null>;
 }
 
 export interface GenerateResult {
@@ -265,7 +285,7 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
       }
     }
     const byIndex = new Map((drafts ?? []).map((x) => [x.index, x]));
-    for (const i of indices) results[i] = draftToSlide(outline[i]!, byIndex.get(i), sections[i]!);
+    for (const i of indices) results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!), deps.structures?.[i]);
     done += indices.length;
     deps.onProgress?.(done, total);
   };

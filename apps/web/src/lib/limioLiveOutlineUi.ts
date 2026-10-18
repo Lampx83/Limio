@@ -2,7 +2,19 @@
 // Tách khỏi React để test được; tên loại slide khớp bộ chọn loại slide trong trình sửa bài giảng.
 
 import { LAYOUT_META } from "./limioLiveSlides";
-import type { OutlineKind, OutlineLayout, OutlineSlide } from "./limioLiveOutline";
+import {
+  OUTLINE_LIMITS,
+  finalizeParts,
+  newOutlineId,
+  newPartId,
+  slideStructureRole,
+  type Outline,
+  type OutlineKind,
+  type OutlineLayout,
+  type OutlinePart,
+  type OutlineSlide,
+  type PartRole,
+} from "./limioLiveOutline";
 
 export const OUTLINE_KIND_LABEL: Record<OutlineKind, string> = {
   content: "Nội dung",
@@ -123,4 +135,139 @@ export function changeKind(s: OutlineSlide, kind: OutlineKind): Partial<OutlineS
   if (kind === s.kind) return {};
   if (kind === "content") return { kind, layout: "image", points: [""] };
   return { kind, layout: null, points: [] };
+}
+
+// ── Mạch cấu trúc: thao tác trên phần (hàm thuần, mọi kết quả đã qua finalizeParts) ──
+
+/** Một đoạn liền nhau của danh sách slide thuộc cùng một phần, kèm số thứ tự nếu là phần Nội dung. */
+export interface PartRun {
+  part: OutlinePart;
+  from: number;
+  to: number;
+  /** 1, 2, 3… với phần Nội dung; 0 với vai trò khác. */
+  ordinal: number;
+}
+
+export function partRuns(o: Outline): PartRun[] {
+  const out: PartRun[] = [];
+  let n = 0;
+  o.slides.forEach((s, i) => {
+    const last = out[out.length - 1];
+    if (last && last.part.id === s.partId) {
+      last.to = i;
+      return;
+    }
+    const part = o.parts.find((p) => p.id === s.partId);
+    if (!part) return;
+    out.push({ part, from: i, to: i, ordinal: part.role === "content" ? ++n : 0 });
+  });
+  return out;
+}
+
+/** Phần chỉ gồm một slide theo mạch: không có nút "Thêm slide vào phần này". */
+export const SINGLE_SLIDE_ROLES: ReadonlySet<PartRole> = new Set<PartRole>(["cover", "objectives", "agenda"]);
+
+export type MoveTarget = { over: string } | { start: string } | { end: string };
+
+/**
+ * Kéo thả: thả lên một slide thì đứng vào chỗ slide đó (như arrayMove) và thuộc phần của nó;
+ * thả lên tên phần thì thành slide đầu của phần; thả lên cuối phần thì thành slide cuối của phần.
+ */
+export function moveSlide(o: Outline, id: string, target: MoveTarget): Outline {
+  const from = o.slides.findIndex((s) => s.id === id);
+  if (from < 0) return o;
+  const moving = { ...o.slides[from]! };
+  if ("over" in target) {
+    const to = o.slides.findIndex((s) => s.id === target.over);
+    if (to < 0 || to === from) return o;
+    moving.partId = o.slides[to]!.partId;
+    const slides = [...o.slides];
+    slides.splice(from, 1);
+    slides.splice(to, 0, moving);
+    return finalizeParts({ ...o, slides });
+  }
+  const partId = "start" in target ? target.start : target.end;
+  if (!o.parts.some((p) => p.id === partId)) return o;
+  const slides = o.slides.filter((s) => s.id !== id);
+  moving.partId = partId;
+  let at: number;
+  if ("start" in target) at = slides.findIndex((s) => s.partId === partId);
+  else {
+    at = -1;
+    slides.forEach((s, i) => {
+      if (s.partId === partId) at = i + 1;
+    });
+  }
+  slides.splice(at < 0 ? slides.length : at, 0, moving);
+  return finalizeParts({ ...o, slides });
+}
+
+export interface RemovedSlide {
+  slide: OutlineSlide;
+  index: number;
+  part: OutlinePart | undefined;
+}
+
+/** Xoá ngay (không hỏi lại); trả kèm dữ liệu để Hoàn tác. Không xoá slide cuối cùng. */
+export function removeSlide(o: Outline, id: string): { outline: Outline; removed: RemovedSlide | null } {
+  const index = o.slides.findIndex((s) => s.id === id);
+  if (index < 0 || o.slides.length <= 1) return { outline: o, removed: null };
+  const slide = o.slides[index]!;
+  return {
+    outline: finalizeParts({ ...o, slides: o.slides.filter((s) => s.id !== id) }),
+    removed: { slide, index, part: o.parts.find((p) => p.id === slide.partId) },
+  };
+}
+
+/** Hoàn tác xoá: đặt slide về chỗ cũ; phần đã biến mất vì hết slide thì có lại. */
+export function restoreSlide(o: Outline, r: RemovedSlide): Outline {
+  if (o.slides.some((s) => s.id === r.slide.id)) return o;
+  const slides = [...o.slides];
+  slides.splice(Math.min(r.index, slides.length), 0, r.slide);
+  const parts = r.part && !o.parts.some((p) => p.id === r.part!.id) ? [...o.parts, r.part] : o.parts;
+  return finalizeParts({ ...o, slides, parts });
+}
+
+/** Thêm một slide nội dung trống vào cuối một phần. */
+export function addSlideToPart(o: Outline, partId: string): { outline: Outline; id: string } {
+  const id = newOutlineId();
+  let at = -1;
+  o.slides.forEach((s, i) => {
+    if (s.partId === partId) at = i + 1;
+  });
+  const slides = [...o.slides];
+  slides.splice(at < 0 ? slides.length : at, 0, { id, partId, kind: "content", layout: "image", title: "", points: [""] });
+  return { outline: finalizeParts({ ...o, slides }), id };
+}
+
+/**
+ * Thêm một phần Nội dung đứng trước Tổng kết (hoặc cuối bài). Buổi đủ mạch thì phần mới mở bằng
+ * slide "Mở phần"; buổi ngắn thì bằng một slide nội dung trống.
+ */
+export function addContentPart(o: Outline, full: boolean, name = "Phần mới"): { outline: Outline; partId: string; slideId: string } {
+  const partId = newPartId();
+  const slideId = newOutlineId();
+  const summary = o.parts.find((p) => p.role === "summary");
+  const at = summary ? o.slides.findIndex((s) => s.partId === summary.id) : -1;
+  const slide: OutlineSlide = full
+    ? { id: slideId, partId, kind: "content", layout: "section", title: name, points: [] }
+    : { id: slideId, partId, kind: "content", layout: "image", title: "", points: [""] };
+  const slides = [...o.slides];
+  slides.splice(at < 0 ? slides.length : at, 0, slide);
+  return { outline: finalizeParts({ ...o, slides, parts: [...o.parts, { id: partId, role: "content", name }] }), partId, slideId };
+}
+
+export function renamePart(o: Outline, partId: string, name: string): Outline {
+  const clean = name.trim().slice(0, OUTLINE_LIMITS.partName);
+  if (!clean) return o;
+  return finalizeParts({ ...o, parts: o.parts.map((p) => (p.id === partId ? { ...p, name: clean } : p)) });
+}
+
+/** Sửa một slide; sửa tiêu đề slide mở phần là đổi tên phần (hai chỗ luôn khớp nhau). */
+export function patchSlide(o: Outline, id: string, p: Partial<OutlineSlide>): Outline {
+  const s = o.slides.find((x) => x.id === id);
+  if (!s) return o;
+  const opener = p.title !== undefined && slideStructureRole(o, s) === "opener";
+  const parts = opener ? o.parts.map((x) => (x.id === s.partId ? { ...x, name: p.title! } : x)) : o.parts;
+  return finalizeParts({ ...o, parts, slides: o.slides.map((x) => (x.id === id ? { ...x, ...p } : x)) });
 }

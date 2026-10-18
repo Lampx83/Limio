@@ -2,12 +2,16 @@ import { describe, expect, it } from "vitest";
 import {
   INTERACTIVE_EVERY,
   OUTLINE_KINDS,
+  inferParts,
   normalizeOutline,
   outlineBlockingProblems,
   outlineStats,
   outlineWarnings,
+  partLabel,
   sanitizeOutline,
   slideRange,
+  slideStructureRole,
+  slideStructures,
   stripEmoji,
 } from "./limioLiveOutline";
 
@@ -54,8 +58,8 @@ describe("sanitizeOutline", () => {
     expect(new Set(o.slides.map((s) => s.id)).size).toBe(2);
   });
   it("dữ liệu không phải đối tượng cho dàn ý rỗng", () => {
-    expect(sanitizeOutline(null)).toEqual({ title: "", slides: [] });
-    expect(sanitizeOutline("x")).toEqual({ title: "", slides: [] });
+    expect(sanitizeOutline(null)).toEqual({ title: "", slides: [], parts: [] });
+    expect(sanitizeOutline("x")).toEqual({ title: "", slides: [], parts: [] });
   });
 });
 
@@ -149,5 +153,154 @@ describe("outlineWarnings / outlineStats / outlineBlockingProblems", () => {
   it("hằng số xen tương tác khớp tiêu chí (3 đến 4)", () => {
     expect(INTERACTIVE_EVERY).toBeGreaterThanOrEqual(3);
     expect(INTERACTIVE_EVERY).toBeLessThanOrEqual(4);
+  });
+});
+
+describe("mạch cấu trúc: phần của dàn ý", () => {
+  const legacy = {
+    title: "AR",
+    slides: [
+      { id: "s1", ...content("Thực tế tăng cường", "cover") },
+      { id: "s2", ...content("Khái niệm", "section") },
+      { id: "s3", ...content("AR là gì") },
+      { id: "s4", ...inter("quiz", "Câu nào đúng?") },
+      { id: "s5", ...content("Ứng dụng", "section") },
+      { id: "s6", ...content("Ba nhóm ứng dụng", "cards") },
+      { id: "s7", ...content("Điều cần nhớ", "summary") },
+    ],
+  };
+
+  it("dàn ý cũ chưa có phần được tự chia: Bìa, mỗi slide Mở phần một phần Nội dung, Tổng kết", () => {
+    const o = sanitizeOutline(legacy);
+    expect(o.parts.map((p) => [p.role, p.name])).toEqual([
+      ["cover", ""],
+      ["content", "Khái niệm"],
+      ["content", "Ứng dụng"],
+      ["summary", ""],
+    ]);
+    expect(o.slides.map((s) => o.parts.findIndex((p) => p.id === s.partId))).toEqual([0, 1, 1, 1, 2, 2, 3]);
+  });
+
+  it("dàn ý không có slide Mở phần dồn phần giữa vào một phần Nội dung chính", () => {
+    const o = inferParts({ title: "T", slides: sanitizeOutline({ slides: [content("Bìa", "cover"), content("A"), content("B"), content("Kết", "summary")] }).slides });
+    expect(o.parts.map((p) => [p.role, p.name])).toEqual([["cover", ""], ["content", "Nội dung chính"], ["summary", ""]]);
+  });
+
+  it("slide thiếu phần lấy phần của slide trước; phần đứt đoạn được nối lại; phần rỗng bị bỏ", () => {
+    const o = sanitizeOutline({
+      title: "T",
+      parts: [
+        { id: "a", role: "hook", name: "bỏ tên" },
+        { id: "b", role: "content", name: "B" },
+        { id: "c", role: "content", name: "Rỗng" },
+      ],
+      slides: [
+        { id: "1", partId: "a", ...content("Hook") },
+        { id: "2", partId: "b", ...content("B1") },
+        { id: "3", ...content("B2") },
+        { id: "4", partId: "a", ...content("Lạc sang Hook") },
+      ],
+    });
+    expect(o.parts.map((p) => p.id)).toEqual(["a", "b"]);
+    expect(o.parts[0]!.name).toBe("");
+    expect(o.slides.map((s) => s.partId)).toEqual(["a", "b", "b", "b"]);
+  });
+
+  it("tên phần thắng tiêu đề slide mở phần; phần chưa có tên lấy tiêu đề slide", () => {
+    const o = sanitizeOutline({
+      parts: [{ id: "x", role: "content", name: "Tên mới" }, { id: "y", role: "content", name: "" }],
+      slides: [
+        { id: "1", partId: "x", ...content("Tên cũ", "section") },
+        { id: "2", partId: "y", ...content("Từ slide", "section") },
+      ],
+    });
+    expect(o.slides[0]!.title).toBe("Tên mới");
+    expect(o.parts[1]!.name).toBe("Từ slide");
+  });
+
+  it("slide Mục lục luôn mang tên các phần Nội dung, giảng viên không nhập tay", () => {
+    const o = sanitizeOutline({
+      parts: [
+        { id: "ag", role: "agenda", name: "" },
+        { id: "c1", role: "content", name: "Khái niệm" },
+        { id: "c2", role: "content", name: "Ứng dụng" },
+      ],
+      slides: [
+        { id: "1", partId: "ag", ...content("Nội dung buổi học", "summary", ["gõ tay"]) },
+        { id: "2", partId: "c1", ...content("x", "section") },
+        { id: "3", partId: "c2", ...content("y", "section") },
+      ],
+    });
+    expect(o.slides[0]!.points).toEqual(["Khái niệm", "Ứng dụng"]);
+    expect(slideStructureRole(o, o.slides[0]!)).toBe("agenda");
+    expect(slideStructureRole(o, o.slides[1]!)).toBe("opener");
+  });
+
+  it("slideStructures: số phần, mục lục và vị trí phần hiện tại cho slide mở phần", () => {
+    const o = sanitizeOutline(legacy);
+    const st = slideStructures(o);
+    expect(st[1]).toEqual({ sectionNo: "01", toc: ["Khái niệm", "Ứng dụng"], tocCurrent: 1 });
+    expect(st[4]).toEqual({ sectionNo: "02", toc: ["Khái niệm", "Ứng dụng"], tocCurrent: 2 });
+    expect(st[2]).toBeNull();
+  });
+
+  it("partLabel đánh số phần Nội dung", () => {
+    const o = sanitizeOutline(legacy);
+    expect(o.parts.map((p) => partLabel(o, p.id))).toEqual(["Bìa", "Nội dung 1: Khái niệm", "Nội dung 2: Ứng dụng", "Tổng kết"]);
+  });
+});
+
+describe("normalizeOutline với vai trò do AI gán", () => {
+  const r = (role: string, section: string | null, s: object) => ({ role, section, ...s });
+  const full = {
+    title: "AR",
+    slides: [
+      r("cover", null, content("AR trong giáo dục", "cover")),
+      r("objectives", null, content("Mục tiêu", "summary", ["Người học giải thích được AR."])),
+      r("agenda", null, content("Nội dung buổi học", "summary", [])),
+      r("hook", null, inter("poll", "Bạn đã dùng AR chưa?")),
+      r("content", "Khái niệm", content("Khái niệm", "section")),
+      r("content", "Khái niệm", content("AR là gì")),
+      r("content", "Ứng dụng", content("Ba nhóm ứng dụng", "cards")),
+      r("content", "Ứng dụng", inter("quiz", "Câu nào đúng?")),
+      r("summary", null, content("Điều cần nhớ", "summary")),
+    ],
+  };
+
+  it("gom slide liền nhau cùng vai trò thành phần; tên phần Nội dung lấy từ 'section'", () => {
+    const { outline } = normalizeOutline(full, 15);
+    expect(outline.parts.map((p) => [p.role, p.name])).toEqual([
+      ["cover", ""],
+      ["objectives", ""],
+      ["agenda", ""],
+      ["hook", ""],
+      ["content", "Khái niệm"],
+      ["content", "Ứng dụng"],
+      ["summary", ""],
+    ]);
+    expect(outline.slides[2]!.points).toEqual(["Khái niệm", "Ứng dụng"]);
+  });
+
+  it("buổi từ 30 phút: phần Nội dung thiếu slide Mở phần được thêm khi còn chỗ", () => {
+    const { outline } = normalizeOutline(full, 30);
+    const ung = outline.parts.find((p) => p.name === "Ứng dụng")!;
+    const first = outline.slides.find((s) => s.partId === ung.id)!;
+    expect(first).toMatchObject({ layout: "section", title: "Ứng dụng" });
+    expect(outline.slides).toHaveLength(10);
+  });
+
+  it("buổi 15 phút không thêm slide Mở phần", () => {
+    const { outline } = normalizeOutline(full, 15);
+    expect(outline.slides.filter((s) => s.layout === "section")).toHaveLength(1);
+  });
+
+  it("vai trò lạ tiếp tục phần trước", () => {
+    const { outline } = normalizeOutline({ slides: [r("cover", null, content("Bìa", "cover")), r("lạ", null, content("A")), r("summary", null, content("Kết", "summary"))] }, 15);
+    expect(outline.slides.map((s) => outline.parts.find((p) => p.id === s.partId)!.role)).toEqual(["cover", "cover", "summary"]);
+  });
+
+  it("mô hình không gán vai trò: chia lại sau khi ép bìa, nên slide đầu nằm trong phần Bìa", () => {
+    const { outline } = normalizeOutline({ title: "T", slides: [content("Bìa", "image"), content("A"), content("Kết", "image")] }, 15);
+    expect(outline.parts.map((p) => p.role)).toEqual(["cover", "content", "summary"]);
   });
 });

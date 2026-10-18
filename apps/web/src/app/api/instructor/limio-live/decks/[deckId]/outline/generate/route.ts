@@ -7,7 +7,7 @@ import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
 import { pickMeta } from "@/lib/limioLiveSlides";
 import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
-import { sanitizeOutline } from "@/lib/limioLiveOutline";
+import { partLabel, sanitizeOutline, slideStructures } from "@/lib/limioLiveOutline";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -57,11 +57,15 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
     layout: s.layout,
     title: s.title,
     points: s.points,
+    role: outline.parts.find((p) => p.id === s.partId)?.role,
+    part: s.partId ? partLabel(outline, s.partId) : undefined,
   }));
   const deckTitle = outline.title || deck.title;
   const sourceText = deck.sourceText ?? "";
 
-  const sectionNos = sectionNumbers(outline.slides);
+  const structures = slideStructures(outline);
+  // Số mục theo thứ tự phần Nội dung (khớp mục lục của bìa phần); slide mở phần ngoài mạch thì đếm như cũ.
+  const sectionNos = sectionNumbers(outline.slides).map((n, i) => structures[i]?.sectionNo ?? n);
   const existing: ExistingSlide[] = sync
     ? (
         await prisma.liveSlide.findMany({
@@ -88,6 +92,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
         const result = await generateDeckSlides({
           outline: writeIdx.map((i) => outline.slides[i]!),
           sectionNos: writeIdx.map((i) => sectionNos[i]!),
+          structures: writeIdx.map((i) => structures[i] ?? null),
           concurrency: 2,
           isFatal: (e) => e instanceof AiTutorError,
           onProgress: (done, total) => send({ type: "progress", done, total }),

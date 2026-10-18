@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu: dàn ý theo mạch cấu trúc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --talk: #1d4ed8; --talk-soft: #eef3ff; --info-bg: #e0f2fe; --info-ink: #0c4a6e;
+    --ok-bg: #e4f5dd; --ok-ink: #1f5a14; --warn-ink: #92400e; --bad: #b42318; --note-bg: #fffbea; --note-line: #e8d48a;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 10px 26px -14px rgb(28 36 16 / .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+      --brand: #a3e635; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16;
+      --talk: #9db8ff; --talk-soft: #1b2440; --info-bg: #0c3a56; --info-ink: #cfeaff;
+      --ok-bg: #1d3318; --ok-ink: #b7ecab; --warn-ink: #f6d58a; --bad: #ff9b8f; --note-bg: #2a2410; --note-line: #5a4c1c;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 16px;
+    font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: default; opacity: .45; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  main { max-width: 900px; margin: 0 auto; padding: 18px 16px 80px; }
+
+  .note { border: 1px dashed var(--note-line); background: var(--note-bg); border-radius: 14px; padding: 12px 16px; font-size: 14px; color: var(--ink-2); }
+  .note b { color: var(--ink); }
+  .note ul { margin: 6px 0 0; padding-left: 20px; }
+
+  .back { display: inline-block; margin-top: 18px; font-size: 14px; color: var(--ink-3); text-decoration: none; font-weight: 500; }
+  h1 { font-size: 24px; line-height: 1.25; margin: 8px 0 4px; }
+  .deck { margin: 0; font-weight: 600; font-size: 15px; }
+  .lead { margin: 4px 0 0; color: var(--ink-3); font-size: 14px; max-width: 640px; }
+
+  .bar { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); font-size: 14px; }
+  .bar .total b { font-size: 28px; line-height: 1; margin-right: 4px; font-variant-numeric: tabular-nums; }
+  .bar .muted { color: var(--ink-3); }
+  .bar label { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-3); }
+  .bar select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 8px; color: var(--ink); }
+  .bar .range { padding: 4px 10px; border-radius: 8px; background: var(--ok-bg); color: var(--ok-ink); font-weight: 600; }
+  .bar .saved { margin-left: auto; color: var(--ink-3); }
+
+  /* ---------- danh sách chia nhóm ---------- */
+  .panel { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 6px 8px 10px; }
+  .list-head { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; justify-content: space-between; padding: 10px 8px 4px; }
+  .list-head h2 { font-size: 16px; margin: 0; }
+  .list-head span { color: var(--ink-3); font-size: 13px; }
+
+  ol.flow { list-style: none; margin: 0; padding: 0; }
+  /* Mạch: một đường dọc nối các phần, mỗi phần một chấm. */
+  .grp { position: relative; padding-left: 26px; }
+  .grp::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+  .grp:first-child::before { top: 22px; }
+  .grp:last-child::before { bottom: auto; height: 22px; }
+  .ghead { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 12px 8px 4px; border-radius: 10px; border: 1px dashed transparent; }
+  .ghead::before { content: ""; position: absolute; left: -21px; top: 17px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 3px solid var(--brand-fill); }
+  .grp.edge .ghead::before { background: var(--brand-fill); }
+  .gname { font-weight: 700; font-size: 15px; }
+  .gname .ord { color: var(--ink-3); font-weight: 600; }
+  .grange { color: var(--ink-3); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .rename { border: 0; background: none; padding: 0 2px; font-size: 13px; color: var(--brand); font-weight: 600; }
+  .rename:hover { text-decoration: underline; }
+  .gname input { font-weight: 600; font-size: 15px; border: 1px solid var(--brand-fill); border-radius: 8px; padding: 2px 8px; background: var(--surface); width: min(420px, 70vw); }
+
+  ol.rows { list-style: none; margin: 0; padding: 0; }
+  .row { display: grid; grid-template-columns: 22px 28px 46px minmax(0, 1fr) auto auto; gap: 0 10px; align-items: center; padding: 8px; border-radius: 12px; border: 1px solid transparent; }
+  .row:hover { background: var(--surface-2); }
+  .row.talk { background: var(--talk-soft); }
+  .row.dragging { opacity: .4; }
+  .grip { color: var(--ink-3); cursor: grab; text-align: center; user-select: none; font-size: 15px; letter-spacing: -2px; border: 0; background: none; padding: 0; }
+  .num { font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; text-align: right; font-size: 14px; }
+  .glyph { width: 46px; height: 30px; color: var(--ink-3); flex-shrink: 0; }
+  .row.talk .glyph { color: var(--talk); }
+  .t { min-width: 0; cursor: pointer; }
+  .t b { display: block; font-weight: 600; font-size: 15px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .t b.empty { color: var(--bad); font-weight: 500; }
+  .t small { display: block; color: var(--ink-3); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row.talk .t small { color: var(--talk); font-weight: 500; }
+  .edit { font-size: 13px; font-weight: 600; color: var(--brand); padding: 5px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .row:hover .edit { border-color: var(--brand-fill); }
+  /* Nút xoá: chỉ hiện khi rê chuột hoặc dùng bàn phím, để danh sách không thêm một cột đỏ. */
+  .del { width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--ink-3); display: grid; place-items: center; opacity: 0; }
+  .row:hover .del, .del:focus-visible { opacity: 1; }
+  .del:hover { color: var(--bad); background: var(--surface); }
+  .del svg { width: 17px; height: 17px; }
+  @media (hover: none) { .del { opacity: 1; } }
+  .toast button { margin-left: 12px; border: 0; background: none; color: var(--brand-fill); font-weight: 700; padding: 0; }
+
+  .gadd { display: block; margin: 0 0 4px 74px; border: 1px dashed transparent; background: none; padding: 4px 10px; border-radius: 8px; font-size: 13px; color: var(--ink-3); }
+  .gadd:hover { color: var(--brand); }
+  /* Chỉ hiện khi rê chuột vào phần hoặc đang kéo, để danh sách không rối. */
+  .gadd { opacity: 0; transition: opacity .15s; }
+  .grp:hover .gadd, .gadd:focus-visible, body.dragging .gadd { opacity: 1; }
+  @media (hover: none) { .gadd { opacity: 1; } }
+  .over { border-color: var(--brand-fill) !important; background: var(--brand-soft) !important; }
+  .row.over { box-shadow: inset 0 3px 0 var(--brand-fill); }
+
+  .addpart { margin: 10px 8px 4px 34px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 14px; font-size: 14px; font-weight: 500; }
+  .addpart:hover { background: var(--surface-2); }
+
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; max-width: calc(100% - 32px); box-shadow: var(--shadow); z-index: 10; }
+
+  /* ---------- hộp sửa slide (giữ nguyên như SlideDialog thật) ---------- */
+  dialog { border: 1px solid var(--line); border-radius: 16px; padding: 0; width: min(1040px, 96vw); max-width: none; max-height: 94vh; background: var(--surface); color: var(--ink); overflow: hidden; }
+  dialog::backdrop { background: rgb(0 0 0 / .5); }
+  .dwrap { display: flex; flex-direction: column; max-height: 94vh; }
+  .dhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .dhead h2 { flex: 1; min-width: 7rem; margin: 0; font-size: 18px; }
+  .ibtn { width: 36px; height: 36px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; font-size: 18px; line-height: 1; }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 14px; font-size: 14px; font-weight: 500; }
+  .btn:hover:not(:disabled) { background: var(--surface-2); }
+  .btn.danger { color: var(--bad); }
+  .btn.primary { background: var(--brand-fill); border-color: var(--brand-fill); color: #fff; font-weight: 600; }
+  .dbody { display: grid; gap: 20px; padding: 18px; overflow: auto; min-height: 0; }
+  @media (min-width: 1024px) { .dbody { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; } .pvcol { position: sticky; top: 0; } }
+  .pvcol { display: grid; gap: 8px; }
+  .cap { font-size: 14px; font-weight: 600; color: var(--ink-3); }
+  .faint { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .form { display: grid; gap: 16px; }
+  .pickers { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .picker { display: flex; align-items: center; gap: 10px; min-width: 0; text-align: left; border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 6px 10px; }
+  .picker:hover, .picker[aria-expanded="true"] { border-color: var(--brand-fill); }
+  .picker[aria-expanded="true"] { background: var(--brand-soft); box-shadow: 0 0 0 1px var(--brand-fill); }
+  .picker .glyph { width: 42px; height: 28px; color: var(--brand); }
+  .picker span { display: grid; min-width: 0; flex: 1; line-height: 1.2; }
+  .picker small { font-size: 12px; font-weight: 600; color: var(--ink-3); }
+  .picker b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tiles { display: grid; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+  .tile { display: grid; justify-items: center; gap: 2px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 4px 4px; font-size: 12.5px; line-height: 1.2; color: var(--ink-3); }
+  .tile .glyph { width: 100%; height: 30px; }
+  .tile[aria-pressed="true"] { border-color: var(--brand-fill); background: var(--brand-soft); color: var(--ink); font-weight: 700; box-shadow: 0 0 0 1px var(--brand-fill); }
+  .fld { display: grid; gap: 4px; }
+  .fld .lab { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; font-weight: 600; color: var(--ink-3); }
+  .fld .lab small { font-weight: 400; font-size: 12px; }
+  .input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); font-size: 15px; color: var(--ink); }
+  textarea.input { resize: none; overflow: hidden; font-size: 14px; line-height: 1.45; }
+  .input:disabled { background: var(--surface-2); color: var(--ink-2); }
+  .pt { display: flex; gap: 8px; align-items: flex-start; }
+  .pt .n { margin-top: 22px; width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: var(--surface-2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--ink-3); }
+  .pt .col { display: grid; gap: 4px; flex: 1; min-width: 0; }
+  .pt .col small { font-size: 12px; color: var(--ink-3); }
+  .pt .x { margin-top: 24px; border: 0; background: none; color: var(--ink-3); font-size: 16px; }
+  .pt .x:hover { color: var(--bad); }
+  .addpt { justify-self: start; border: 0; background: none; padding: 0; color: var(--brand); font-weight: 600; font-size: 14px; }
+  .info { background: var(--info-bg); color: var(--info-ink); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+  .info p { margin: 0; }
+  .info p + p { margin-top: 4px; font-weight: 600; }
+  .ok { color: var(--ink-3); } .warnc { color: var(--warn-ink); }
+
+  /* Bản xem trước 16:9: chỉ để hình dung cách chữ sắp xếp, màu cố định như bản thật. */
+  .pv { container-type: inline-size; aspect-ratio: 16 / 9; width: 100%; border-radius: 12px; border: 1px solid var(--line); background: #fffdf7; color: #24301a; overflow: hidden; position: relative; }
+  .pv.talk { background: #eef2ff; }
+  .pv .in { position: absolute; inset: 0; padding: 6cqw 6.5cqw; display: flex; flex-direction: column; justify-content: safe center; gap: 2.4cqw; }
+  .pv h3 { margin: 0; font-size: 5.6cqw; line-height: 1.18; font-weight: 700; }
+  .pv h3.big { font-size: 7.6cqw; }
+  .pv p { margin: 0; font-size: 3.5cqw; line-height: 1.35; }
+  .pv ul { margin: 0; padding-left: 4.5cqw; display: grid; gap: 1.4cqw; font-size: 3.3cqw; line-height: 1.32; }
+  .pv .tag { font-size: 2.6cqw; color: #6b7660; font-weight: 600; }
+  .pv .cards { display: grid; gap: 2.6cqw; }
+  .pv .card { background: #f0f5e0; border-radius: 1.6cqw; padding: 2.2cqw; font-size: 2.7cqw; line-height: 1.3; }
+  .pv .card b { display: block; font-size: 3cqw; margin-bottom: .6cqw; }
+  .pv .dotn { width: 5cqw; height: 5cqw; border-radius: 50%; background: #65a30d; color: #fff; font-weight: 700; font-size: 2.8cqw; display: grid; place-items: center; margin-bottom: 1cqw; }
+  .pv .img { aspect-ratio: 4 / 3; border-radius: 1.6cqw; background: repeating-linear-gradient(135deg, #e3ebcf 0 1.6cqw, #edf3dc 1.6cqw 3.2cqw); }
+  .pv .two { display: grid; grid-template-columns: 1.25fr 1fr; gap: 3cqw; align-items: center; }
+  .pv .stack { display: grid; gap: 2cqw; }
+
+  /* ---------- khu xem slide bìa phần ---------- */
+  .sp-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; padding: 10px 8px 0; }
+  .sp-head h2 { font-size: 16px; margin: 0; }
+  .sp-lead { margin: 4px 8px 12px; font-size: 14px; color: var(--ink-3); max-width: 680px; }
+  .sp-ctrl { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 0 8px 12px; font-size: 14px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg button { border: 0; background: var(--surface); padding: 6px 12px; font-size: 14px; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--brand-soft); font-weight: 700; color: var(--ink); }
+  .sp-ctrl .cap2 { color: var(--ink-3); margin-right: 6px; }
+  .replay { border: 0; background: none; color: var(--brand); font-weight: 600; padding: 0; font-size: 14px; }
+  .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+  .stage > .lslide { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .sp-empty { margin: 0 8px 8px; padding: 14px; border-radius: 12px; background: var(--surface-2); color: var(--ink-3); font-size: 14px; }
+
+  /* Slide thật ở khung 1280 × 720 (giống slideLayouts.css): chữ không nhỏ hơn 26 px, không nhãn, không đầu/chân trang. */
+  .lslide { width: 1280px; height: 720px; overflow: hidden; color: var(--stext); background: var(--sbg); font-family: var(--sfont-body); line-height: 1.35; text-align: left; }
+  .lt-brand { --sbg: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); --stext: #20241F; --smuted: #5A6256; --sa: #4D7C0F; --ssoft: #ECFCCB;
+    --scard: rgba(255,255,255,.82); --scardb: #E3E8D3; --son: #ffffff; --sgb: linear-gradient(135deg, #4D7C0F 0%, #15803D 100%);
+    --sfont-head: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; --sfont-body: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; --sglow1: #BEF264; --sglow2: #F9A8D4; }
+  .lt-paper { --sbg: linear-gradient(160deg, #FBF6E9 0%, #F4E8CB 100%); --stext: #2B2118; --smuted: #6B5B4A; --sa: #A34A07; --ssoft: #FDE9C7;
+    --scard: rgba(255,253,247,.9); --scardb: #E8DCC0; --son: #ffffff; --sgb: linear-gradient(135deg, #B45309 0%, #92400E 100%);
+    --sfont-head: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; --sfont-body: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; --sglow1: #FBBF24; --sglow2: #5EEAD4; }
+  .lt-night { --sbg: linear-gradient(135deg, #0B1020 0%, #1B1A4B 100%); --stext: #F1F5F9; --smuted: #C4CCE0; --sa: #38BDF8; --ssoft: rgba(56,189,248,.16);
+    --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14); --son: #06202E; --sgb: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%);
+    --sfont-head: "Lexend", "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; --sfont-body: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif; --sglow1: #38BDF8; --sglow2: #A78BFA; }
+  .lslide .glow { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .45; pointer-events: none; }
+  .lslide .g1 { width: 460px; height: 460px; left: -160px; top: -160px; background: var(--sglow1); }
+  .lslide .g2 { width: 380px; height: 380px; right: -120px; bottom: -180px; background: var(--sglow2); }
+  .sc { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 520px; gap: 64px; align-items: center; padding: 72px 88px; }
+  .sc .snum { font-family: var(--sfont-head); font-weight: 800; font-size: 190px; line-height: .85; color: transparent; -webkit-text-stroke: 3px var(--sa); letter-spacing: -0.04em; }
+  .sc h2 { margin: 26px 0 0; font-family: var(--sfont-head); font-weight: 800; font-size: 64px; line-height: 1.2; letter-spacing: -0.02em; }
+  .sc .slead { margin: 22px 0 0; font-size: 30px; line-height: 1.35; color: var(--smuted); }
+  /* Mục lục bên phải: đường dọc nối các phần, giống mạch trong dàn ý. */
+  .toc { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+  .toc li { position: relative; display: flex; align-items: center; gap: 22px; padding: 16px 22px; border-radius: 22px; font-size: 30px; line-height: 1.25; color: var(--smuted); }
+  .toc li + li::before { content: ""; position: absolute; left: 49px; top: -22px; height: 30px; width: 3px; border-radius: 3px; background: var(--scardb); }
+  .toc .mk { width: 56px; height: 56px; flex: none; border-radius: 50%; display: grid; place-items: center; font-family: var(--sfont-head); font-weight: 800; font-size: 28px; border: 3px solid var(--scardb); color: var(--smuted); }
+  .toc .done .mk { border-color: transparent; background: var(--ssoft); color: var(--sa); }
+  .toc .done .mk svg { width: 28px; height: 28px; }
+  .toc .now { background: var(--scard); border: 2px solid var(--scardb); color: var(--stext); font-weight: 700; font-size: 34px; font-family: var(--sfont-head); box-shadow: 0 18px 40px -26px rgb(0 0 0 / .45); }
+  .toc .now .mk { border: 0; background: var(--sgb); color: var(--son); width: 64px; height: 64px; font-size: 32px; }
+  /* Hiệu ứng nhẹ: chữ trái hiện dần, mục lục hiện lần lượt, phần đang học nổi lên sau cùng. */
+  .lslide.anim .snum, .lslide.anim h2, .lslide.anim .slead { animation: s-up .6s ease-out both; }
+  .lslide.anim h2 { animation-delay: .12s; } .lslide.anim .slead { animation-delay: .24s; }
+  .lslide.anim .toc li { animation: s-in .5s ease-out both; animation-delay: calc(.35s + var(--i) * .12s); }
+  .lslide.anim .toc .now { animation: s-in .5s ease-out both, s-pop .5s ease-out both; animation-delay: calc(.35s + var(--i) * .12s), calc(.75s + var(--n) * .12s); }
+  @keyframes s-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  @keyframes s-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+  @keyframes s-pop { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .lslide.anim * { animation: none !important; } }
+
+  @media (max-width: 639px) {
+    .grp { padding-left: 20px; }
+    .grp::before { left: 6px; }
+    .ghead::before { left: -19px; }
+    .row { grid-template-columns: 18px 24px 40px minmax(0, 1fr) 32px; gap: 0 8px; padding: 8px 4px; }
+    .row .glyph { width: 40px; height: 26px; }
+    .edit { display: none; }
+    .gadd { margin-left: 54px; }
+    .bar .saved { margin-left: 0; }
+    dialog { width: 100vw; height: 100dvh; max-height: none; margin: 0; border-radius: 0; border: 0; }
+    .dwrap { height: 100%; max-height: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="note">
+    <b>Bản mẫu, không phải trang thật.</b> Danh sách dọc và hộp Sửa giữ nguyên như hiện nay. Có hai điểm mới: danh sách được chia nhóm theo mạch của bài (Bìa, Mục tiêu, Mục lục, Hook, các phần Nội dung, Tổng kết), và mỗi dòng có <b>nút xoá</b> hiện khi rê chuột. AI gán nhóm sẵn khi lập dàn ý; chuyển slide sang phần khác bằng kéo thả. Thầy/cô có thể thử:
+    <ul>
+      <li>bấm "Sửa" trên một slide: hộp Sửa giữ nguyên như trang thật (loại slide, bố cục, tiêu đề, các ý chính, bản xem trước);</li>
+      <li>bấm biểu tượng thùng rác ở cuối một dòng: slide bị xoá ngay, thông báo phía dưới có nút "Hoàn tác" trong 6 giây;</li>
+      <li>kéo một slide (nắm vào ⋮⋮) sang phần khác: thả lên một slide thì nó đứng trước slide đó; thả lên tên phần thì nó thành slide đầu của phần; thả lên dòng "Thêm slide vào phần này" thì nó thành slide cuối của phần;</li>
+      <li>bấm "Đổi tên" ở một phần Nội dung, rồi xem slide Mục lục, slide mở phần và khung "Slide bìa phần" ở cuối trang tự đổi theo;</li>
+      <li>cuộn xuống khung "Slide bìa phần" để xem bìa của từng phần ở ba giao diện Limio, Giấy ấm và Đêm xanh;</li>
+      <li>đổi thời lượng sang 15 phút để xem khung gọn: Mục tiêu gộp vào Bìa và không có Mục lục.</li>
+    </ul>
+  </div>
+
+  <a class="back" href="#">‹ Limio-Live</a>
+  <h1>Dàn ý bài giảng</h1>
+  <p class="deck">Thực tế tăng cường trong giáo dục</p>
+  <p class="lead">Bấm vào một slide để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn, xác nhận ở cuối trang để AI viết slide.</p>
+
+  <div class="bar">
+    <span class="total"><b id="st-total">0</b>slide</span>
+    <span class="muted" id="st-split"></span>
+    <label>Buổi giảng
+      <select id="minutes" aria-label="Thời lượng buổi giảng">
+        <option value="15">15 phút</option>
+        <option value="30" selected>30 phút</option>
+      </select>
+    </label>
+    <span class="range" id="st-range"></span>
+    <span class="saved">Đã lưu</span>
+  </div>
+
+  <section class="panel" aria-labelledby="list-h">
+    <div class="list-head">
+      <h2 id="list-h">Danh sách slide</h2>
+      <span>Bấm vào một slide để sửa · kéo ⋮⋮ để đổi thứ tự hoặc chuyển phần</span>
+    </div>
+    <ol class="flow" id="flow"></ol>
+    <button type="button" class="addpart" id="addpart">+ Thêm phần nội dung</button>
+  </section>
+
+  <section class="panel" aria-labelledby="sp-h">
+    <div class="sp-head"><h2 id="sp-h">Slide bìa phần (bản mẫu)</h2></div>
+    <p class="sp-lead">Đây là slide "Mở phần" mà AI tự sinh ở đầu mỗi phần Nội dung. Bên trái là tên phần và một câu nói phần này trả lời câu hỏi gì; bên phải là mục lục của bài với phần đã qua có dấu hoàn thành và phần sắp học được làm nổi bật. Chữ lấy thẳng từ dàn ý ở trên, nên đổi tên phần thì slide đổi theo.</p>
+    <div id="sp-body"></div>
+  </section>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlg-h">
+  <div class="dwrap">
+    <div class="dhead">
+      <button type="button" class="ibtn" data-act="prev" aria-label="Slide trước">‹</button>
+      <button type="button" class="ibtn" data-act="next" aria-label="Slide sau">›</button>
+      <h2 id="dlg-h">Slide</h2>
+      <button type="button" class="btn danger" data-act="remove">Xoá slide</button>
+      <button type="button" class="btn primary" data-act="close">Xong</button>
+    </div>
+    <div class="dbody" id="dbody"></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+const F = 'fill="currentColor"', O = 'fill="currentColor" opacity=".32"';
+const IMG = `<rect x="6" y="6" width="18" height="4" rx="1.5" ${F}/><rect x="6" y="14" width="20" height="2.5" rx="1" ${O}/><rect x="6" y="19" width="20" height="2.5" rx="1" ${O}/><rect x="6" y="24" width="14" height="2.5" rx="1" ${O}/><rect x="30" y="8" width="12" height="16" rx="2" ${O}/>`;
+const SH = {
+  cover: `<rect x="8" y="10" width="26" height="5" rx="1.5" ${F}/><rect x="8" y="19" width="16" height="3" rx="1.5" ${O}/>`,
+  section: `<rect x="8" y="13" width="22" height="5" rx="1.5" ${F}/><rect x="8" y="22" width="30" height="2.5" rx="1" ${O}/><rect x="8" y="7" width="8" height="2.5" rx="1" ${O}/>`,
+  image: IMG, content: IMG,
+  cards: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="13" width="11" height="14" rx="2" ${O}/><rect x="18.5" y="13" width="11" height="14" rx="2" ${O}/><rect x="31" y="13" width="11" height="14" rx="2" ${O}/>`,
+  compare: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="13" width="17" height="14" rx="2" ${O}/><rect x="25" y="13" width="17" height="14" rx="2" ${O}/>`,
+  steps: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><circle cx="10" cy="17" r="3" ${F}/><circle cx="24" cy="17" r="3" ${F}/><circle cx="38" cy="17" r="3" ${F}/><rect x="6" y="23" width="9" height="2.5" rx="1" ${O}/><rect x="20" y="23" width="9" height="2.5" rx="1" ${O}/><rect x="33" y="23" width="9" height="2.5" rx="1" ${O}/>`,
+  stats: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="14" width="10" height="8" rx="1.5" ${F}/><rect x="19" y="14" width="10" height="8" rx="1.5" ${F}/><rect x="32" y="14" width="10" height="8" rx="1.5" ${F}/><rect x="6" y="25" width="10" height="2" rx="1" ${O}/><rect x="19" y="25" width="10" height="2" rx="1" ${O}/><rect x="32" y="25" width="10" height="2" rx="1" ${O}/>`,
+  quote: `<rect x="8" y="8" width="3" height="16" rx="1.5" ${F}/><rect x="14" y="9" width="26" height="4" rx="1.5" ${F}/><rect x="14" y="16" width="20" height="4" rx="1.5" ${O}/>`,
+  summary: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="14" width="3" height="3" rx="1" ${F}/><rect x="12" y="14" width="26" height="3" rx="1" ${O}/><rect x="6" y="20" width="3" height="3" rx="1" ${F}/><rect x="12" y="20" width="22" height="3" rx="1" ${O}/><rect x="6" y="26" width="3" height="3" rx="1" ${F}/><rect x="12" y="26" width="18" height="3" rx="1" ${O}/>`,
+  quiz: `<rect x="8" y="6" width="26" height="4" rx="1.5" ${F}/><rect x="8" y="13" width="14" height="6" rx="2" ${O}/><rect x="25" y="13" width="14" height="6" rx="2" ${O}/><rect x="8" y="22" width="14" height="6" rx="2" ${O}/><rect x="25" y="22" width="14" height="6" rx="2" ${O}/>`,
+  poll: `<rect x="8" y="6" width="26" height="4" rx="1.5" ${F}/><rect x="8" y="14" width="30" height="3.5" rx="1.5" ${F}/><rect x="8" y="20" width="20" height="3.5" rx="1.5" ${O}/><rect x="8" y="26" width="12" height="3.5" rx="1.5" ${O}/>`,
+  word_cloud: `<rect x="8" y="8" width="16" height="6" rx="2" ${F}/><rect x="26" y="9" width="12" height="4" rx="1.5" ${O}/><rect x="10" y="17" width="9" height="4" rx="1.5" ${O}/><rect x="21" y="16" width="14" height="6" rx="2" ${F}/><rect x="14" y="24" width="12" height="4" rx="1.5" ${O}/>`,
+  collaborate_board: `<rect x="6" y="6" width="12" height="10" rx="1.5" ${O}/><rect x="20" y="8" width="12" height="10" rx="1.5" ${F}/><rect x="33" y="5" width="10" height="10" rx="1.5" ${O}/><rect x="10" y="19" width="12" height="9" rx="1.5" ${F}/><rect x="25" y="20" width="14" height="8" rx="1.5" ${O}/>`,
+  draw_it: `<path d="M8 22 C13 8, 18 8, 22 16 S32 26, 40 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="40" cy="10" r="2" ${F}/>`,
+  whiteboard: `<path d="M7 24 L16 9 L26 21 L33 11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="31" y="19" width="11" height="3" rx="1.5" ${O}/><path d="M33 24l5 4-1-5z" ${F}/>`,
+};
+const glyph = (k) => `<svg viewBox="0 0 48 32" class="glyph" aria-hidden="true"><rect x="1" y="1" width="46" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".7"/>${SH[k] || IMG}</svg>`;
+
+/* Lấy từ limioLiveOutlineUi.ts để hộp Sửa giống trang thật. */
+const KIND_LABEL = { content: "Nội dung", quiz: "Trắc nghiệm", poll: "Vote", word_cloud: "Word Cloud", collaborate_board: "Dán Note", draw_it: "Draw-it (vẽ)", whiteboard: "Whiteboard" };
+const KIND_ORDER = ["collaborate_board", "draw_it", "whiteboard", "content", "quiz", "poll", "word_cloud"];
+const KIND_TITLE = { content: "Tiêu đề", quiz: "Câu hỏi", poll: "Câu hỏi bình chọn", word_cloud: "Câu gợi ý cho học viên", collaborate_board: "Yêu cầu cho học viên", draw_it: "Yêu cầu vẽ", whiteboard: "Yêu cầu cho cả lớp" };
+const KIND_HINT = {
+  quiz: "Học viên trả lời trên điện thoại. Các lựa chọn đáp án sẽ do AI soạn ở bước tạo slide, bạn sửa được sau.",
+  poll: "Học viên bình chọn trên điện thoại. Các lựa chọn sẽ do AI soạn ở bước tạo slide, bạn sửa được sau.",
+  word_cloud: "Học viên gõ một từ hoặc cụm từ; kết quả hiện thành đám mây từ trên màn chiếu.",
+  collaborate_board: "Bảng cộng tác kiểu Padlet: học viên dán ghi chú lên một bảng chung, cả lớp cùng xem. Bảng được liên kết khi bạn trình chiếu.",
+  draw_it: "Mỗi học viên tự vẽ một hình rồi đăng lên bảng chung. Phù hợp khi muốn mỗi người có một sản phẩm riêng.",
+  whiteboard: "Cả lớp cùng vẽ lên một khung trắng chung; tên người vẽ hiện cạnh nét vẽ. Phù hợp khi cần phác một sơ đồ cùng nhau.",
+};
+const KIND_USE = {
+  collaborate_board: "Dùng khi cần thu nhiều ý ngắn từ cả lớp (ví dụ: mỗi bạn nêu một ví dụ).",
+  draw_it: "Dùng khi mỗi người cần tự thể hiện một hình dung bằng hình vẽ.",
+  whiteboard: "Dùng khi cả lớp cùng phác một sơ đồ hoặc giải một bài trên một khung.",
+};
+const BOARD_SUB = {
+  quiz: "Các lựa chọn sẽ do AI soạn ở bước tạo slide.", poll: "Các lựa chọn sẽ do AI soạn ở bước tạo slide.",
+  word_cloud: "Học viên gõ từ khoá, kết quả hiện thành đám mây.", collaborate_board: "Học viên dán ghi chú lên bảng chung.",
+  draw_it: "Mỗi học viên vẽ một hình rồi đăng lên bảng.", whiteboard: "Cả lớp cùng vẽ trên một khung.",
+};
+const LAYOUTS = ["cover", "section", "image", "cards", "compare", "steps", "stats", "quote", "summary"];
+const LAYOUT_UI = {
+  cover: { label: "Bìa", hint: "Slide đầu: tiêu đề lớn và một dòng mô tả ngắn.", min: 1, max: 1, need: "1 ý" },
+  section: { label: "Mở phần", hint: "Đánh dấu bắt đầu một phần lớn của bài.", min: 0, max: 1, need: "0 đến 1 ý" },
+  image: { label: "Chữ và hình", hint: "Một ý chính kèm tối đa ba ý hỗ trợ; bên phải là hình minh hoạ.", min: 1, max: 3, need: "1 đến 3 ý" },
+  cards: { label: "Ba thẻ", hint: "Ba ý song song; mỗi thẻ có tiêu đề ngắn và một câu giải thích.", min: 3, max: 3, need: "3 ý" },
+  compare: { label: "So sánh hai cột", hint: "Đối chiếu hai cách làm hoặc hai khái niệm.", min: 2, max: 2, need: "2 ý" },
+  steps: { label: "Các bước", hint: "Một quy trình; mỗi ý là một bước.", min: 3, max: 5, need: "3 đến 5 ý" },
+  stats: { label: "Số liệu", hint: "Chỉ dùng khi con số có trong tài liệu gốc.", min: 2, max: 4, need: "2 đến 4 ý" },
+  quote: { label: "Trích dẫn", hint: "Một thông điệp hoặc câu trích có trong tài liệu.", min: 1, max: 1, need: "1 ý" },
+  summary: { label: "Tóm tắt", hint: "Các điều cần ghi nhớ, hoặc danh sách mục tiêu.", min: 3, max: 5, need: "3 đến 5 ý" },
+};
+const POINT_LABELS = {
+  cover: ["Mô tả ngắn"], section: ["Mô tả ngắn"], image: ["Ý chính", "Ý hỗ trợ 1", "Ý hỗ trợ 2", "Ý hỗ trợ 3"],
+  cards: ["Thẻ 1", "Thẻ 2", "Thẻ 3"], compare: ["Cách làm A", "Cách làm B"], steps: ["Bước 1", "Bước 2", "Bước 3", "Bước 4", "Bước 5"],
+  stats: ["Số liệu 1", "Số liệu 2", "Số liệu 3", "Số liệu 4"], quote: ["Thông điệp"],
+  summary: ["Điều cần nhớ 1", "Điều cần nhớ 2", "Điều cần nhớ 3", "Điều cần nhớ 4", "Điều cần nhớ 5"],
+};
+const SPLIT = new Set(["cards", "steps"]);
+const MAX_POINTS = 5;
+const splitPoint = (p) => { const m = /^(.{1,80}?):(?:\s+|$)/.exec(p); return m ? [m[1].trim(), p.slice(m[0].length)] : ["", p]; };
+const joinPoint = (h, b) => (h.trim() ? `${h.trim()}: ${b}` : b);
+
+const ROLE = { cover: "Bìa", objectives: "Mục tiêu", agenda: "Mục lục", hook: "Hook", content: "Nội dung", summary: "Tổng kết" };
+// Phần chỉ có một slide: không cần nút thêm slide (thả lên tên phần vẫn được).
+const SINGLE = new Set(["cover", "objectives", "agenda"]);
+const RANGE = { 15: [8, 10], 30: [14, 18] };
+
+// slide: [phần, loại, bố cục, tiêu đề, ý chính, tự sinh]. Slide mở phần ("section") lấy tiêu đề từ tên phần;
+// slide Mục lục ("agenda") lấy các ý từ tên các phần Nội dung.
+const C1 = "Khái niệm và đặc điểm của AR", C2 = "Ứng dụng AR trong lớp học", C3 = "Thiết kế một trang sách AR";
+const OBJ = [
+  "Người học giải thích được thực tế tăng cường là gì và khác thực tế ảo ở điểm nào.",
+  "Người học nêu được ba nhóm ứng dụng AR phổ biến trong dạy học.",
+  "Người học phác thảo được một trang sách AR cho môn học của mình.",
+];
+const SLIDES = {
+  cover: ["g-cover", "content", "cover", "Thực tế tăng cường trong giáo dục", ["Bài giảng dành cho sinh viên năm cuối ngành Công nghệ giáo dục."]],
+  poll: ["g-hook", "poll", null, "Bạn đã từng dùng ứng dụng AR nào trong đời sống hằng ngày?", []],
+  heart: ["g-hook", "content", "image", "Một tiết sinh học có mô hình tim ba chiều đặt ngay trên bàn", ["Học viên xoay mô hình tim và quan sát các buồng tim từ nhiều phía.", "Tình huống này đặt ra câu hỏi về cách AR thay đổi trải nghiệm học."]],
+  ar: ["g-c1", "content", "image", "AR chồng thông tin số lên khung cảnh thật", ["AR bổ sung hình ảnh, chữ và âm thanh số vào môi trường thật.", "Người học vẫn nhìn thấy và tương tác với không gian xung quanh."]],
+  cmp: ["g-c1", "content", "compare", "AR và VR khác nhau ở mức độ tách khỏi thế giới thật", ["AR giữ nguyên thế giới thật và bổ sung lớp thông tin số lên trên.", "VR thay thế hoàn toàn thế giới thật bằng một môi trường mô phỏng."]],
+  traits: ["g-c1", "content", "cards", "Ba đặc điểm cốt lõi của AR", ["Kết hợp thật và ảo: Nội dung số xuất hiện cùng khung cảnh thật.", "Tương tác tức thời: Hệ thống phản hồi ngay khi người dùng đổi góc nhìn.", "Định vị không gian: Vật thể số được gắn đúng vị trí trong không gian thật."]],
+  quiz: ["g-c1", "quiz", null, "Đặc điểm nào sau đây không thuộc về thực tế tăng cường?", []],
+  uses: ["g-c2", "content", "cards", "Ba nhóm ứng dụng AR phổ biến trong dạy học", ["Mô phỏng: Người học quan sát hiện tượng khó thấy bằng mắt thường.", "Tham quan ảo: Người học khám phá địa điểm mà lớp học không đến được.", "Sách tương tác: Trang in mở ra nội dung số khi quét bằng điện thoại."]],
+  steps: ["g-c2", "content", "steps", "Quy trình đưa một hoạt động AR vào tiết học", ["Xác định mục tiêu: Chọn nội dung mà AR giúp người học hiểu rõ hơn.", "Chọn công cụ: Chọn ứng dụng phù hợp với thiết bị của lớp.", "Thiết kế hoạt động: Viết nhiệm vụ cụ thể cho người học.", "Đánh giá: Kiểm tra mức độ đạt mục tiêu sau hoạt động."]],
+  cloud: ["g-c2", "word_cloud", null, "Môn học nào của bạn có thể dùng AR hiệu quả nhất?", []],
+  page: ["g-c3", "content", "image", "Một trang sách AR gồm phần in và phần số gắn với nhau", ["Điểm đánh dấu trên trang in giúp ứng dụng nhận ra trang sách.", "Phần số có thể là mô hình ba chiều, video hoặc âm thanh."]],
+  board: ["g-c3", "collaborate_board", null, "Hãy dán một ý tưởng trang sách AR cho môn học của bạn.", []],
+  sum: ["g-sum", "content", "summary", "Những điều cần ghi nhớ về AR trong giáo dục", ["AR bổ sung thông tin số lên khung cảnh thật mà không thay thế nó.", "Ba đặc điểm cốt lõi là kết hợp thật và ảo, tương tác tức thời và định vị không gian.", "Mô phỏng, tham quan ảo và sách tương tác là ba nhóm ứng dụng phổ biến.", "Một hoạt động AR tốt bắt đầu từ mục tiêu học tập, không bắt đầu từ công cụ."]],
+};
+const sec = (g, desc) => [g, "content", "section", "", [desc], "section"];
+const DATA = {
+  30: {
+    groups: [
+      { id: "g-cover", role: "cover" }, { id: "g-obj", role: "objectives" }, { id: "g-agenda", role: "agenda" }, { id: "g-hook", role: "hook" },
+      { id: "g-c1", role: "content", name: C1 }, { id: "g-c2", role: "content", name: C2 }, { id: "g-c3", role: "content", name: C3 },
+      { id: "g-sum", role: "summary" },
+    ],
+    slides: [
+      SLIDES.cover,
+      ["g-obj", "content", "summary", "Mục tiêu của buổi học", OBJ],
+      ["g-agenda", "content", "summary", "Nội dung buổi học", [], "agenda"],
+      SLIDES.poll, SLIDES.heart,
+      sec("g-c1", "Phần này làm rõ khái niệm và các đặc điểm cốt lõi của AR."), SLIDES.ar, SLIDES.cmp, SLIDES.traits, SLIDES.quiz,
+      sec("g-c2", "Phần này giới thiệu các cách đưa AR vào hoạt động dạy học."), SLIDES.uses, SLIDES.steps, SLIDES.cloud,
+      sec("g-c3", "Phần này hướng dẫn phác thảo một trang sách AR."), SLIDES.page, SLIDES.board,
+      SLIDES.sum,
+    ],
+  },
+  15: {
+    groups: [
+      { id: "g-cover", role: "cover" }, { id: "g-hook", role: "hook" },
+      { id: "g-c1", role: "content", name: C1 }, { id: "g-c2", role: "content", name: C2 }, { id: "g-sum", role: "summary" },
+    ],
+    slides: [
+      ["g-cover", "content", "cover", "Thực tế tăng cường trong giáo dục", ["Sau buổi học, người học giải thích được AR là gì và nêu được ba nhóm ứng dụng trong dạy học."]],
+      SLIDES.poll, SLIDES.ar, SLIDES.cmp, SLIDES.quiz, SLIDES.uses, SLIDES.steps, SLIDES.cloud,
+      ["g-sum", "content", "summary", "Những điều cần ghi nhớ về AR trong giáo dục", SLIDES.sum[4].slice(0, 3)],
+    ],
+  },
+};
+
+let S, seq = 0, dragId = null;
+function load(min) {
+  const d = DATA[min];
+  S = {
+    min,
+    groups: d.groups.map((g) => ({ ...g })),
+    slides: d.slides.map(([g, kind, layout, title, points, auto]) => ({ id: "s" + ++seq, g, kind, layout, title, points: [...points], auto })),
+  };
+  render();
+}
+const G = (id) => S.groups.find((g) => g.id === id);
+const slideOf = (id) => S.slides.find((s) => s.id === id);
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+/** Các phần theo thứ tự xuất hiện trong danh sách slide, kèm số thứ tự của phần Nội dung. */
+function runs() {
+  const out = [];
+  let n = 0;
+  S.slides.forEach((s, i) => {
+    const last = out[out.length - 1];
+    if (last && last.g === s.g) { last.to = i; return; }
+    out.push({ g: s.g, from: i, to: i, ord: G(s.g).role === "content" ? ++n : 0 });
+  });
+  return out;
+}
+const groupLabel = (grp, ord) => (grp.role === "content" ? `Nội dung ${ord}: ${grp.name}` : ROLE[grp.role]);
+const labelOf = (gid) => { const r = runs().find((x) => x.g === gid); return groupLabel(G(gid), r ? r.ord : 0); };
+const contentNames = () => runs().filter((r) => G(r.g).role === "content").map((r) => G(r.g).name);
+
+/** Tiêu đề và ý chính thực tế của slide (slide tự sinh lấy từ tên phần). */
+const titleOf = (s) => (s.auto === "section" ? G(s.g).name : s.title);
+const pointsOf = (s) => (s.auto === "agenda" ? contentNames() : s.points);
+function rowSubtitle(s) {
+  if (s.kind !== "content") return KIND_LABEL[s.kind];
+  if (s.auto === "agenda") return `Tóm tắt · tự lấy tên ${contentNames().length} phần nội dung`;
+  if (s.auto === "section") return `Mở phần · tiêu đề là tên phần`;
+  return `${LAYOUT_UI[s.layout].label} · ${pointsOf(s).filter((p) => p.trim()).length} ý`;
+}
+
+const TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>`;
+
+/** Xoá ngay, không hỏi lại; thông báo có nút Hoàn tác trong vài giây (xoá nhầm sửa được, không chặn thao tác). */
+function removeSlide(id) {
+  if (S.slides.length <= 1) return;
+  const i = S.slides.findIndex((s) => s.id === id);
+  const [s] = S.slides.splice(i, 1);
+  render();
+  toast(`Đã xoá slide ${i + 1}.`, () => { S.slides.splice(i, 0, s); render(); toast("Đã khôi phục slide."); });
+}
+
+function rowHtml(s, i) {
+  const talk = s.kind !== "content";
+  const title = titleOf(s);
+  return `<li class="row${talk ? " talk" : ""}" data-id="${s.id}" draggable="true">
+    <button type="button" class="grip" aria-label="Kéo để đổi thứ tự slide ${i + 1}">⋮⋮</button>
+    <span class="num">${i + 1}</span>
+    ${glyph(talk ? s.kind : s.layout)}
+    <span class="t" data-open="${s.id}"><b class="${title.trim() ? "" : "empty"}">${esc(title.trim() || (talk ? "Chưa có câu hỏi" : "Chưa có tiêu đề"))}</b><small>${esc(rowSubtitle(s))}</small></span>
+    <button type="button" class="edit" data-open="${s.id}">Sửa</button>
+    <button type="button" class="del" data-del="${s.id}" aria-label="Xoá slide ${i + 1}" title="Xoá slide">${TRASH}</button>
+  </li>`;
+}
+
+function render() {
+  document.getElementById("flow").innerHTML = runs().map((r) => {
+    const grp = G(r.g);
+    const n = r.to - r.from + 1;
+    const range = n === 1 ? `slide ${r.from + 1}` : `slide ${r.from + 1}–${r.to + 1} · ${n} slide`;
+    const name = grp.role === "content"
+      ? `<span class="gname"><span class="ord">Nội dung ${r.ord}:</span> <span data-name="${grp.id}">${esc(grp.name)}</span></span> <button type="button" class="rename" data-rename="${grp.id}">Đổi tên</button>`
+      : `<span class="gname">${ROLE[grp.role]}</span>`;
+    return `<li class="grp ${grp.role === "content" ? "content" : "edge"}">
+      <div class="ghead" data-drop-start="${grp.id}">${name}<span class="grange">${range}</span></div>
+      <ol class="rows">${S.slides.slice(r.from, r.to + 1).map((s, j) => rowHtml(s, r.from + j)).join("")}</ol>
+      ${SINGLE.has(grp.role) ? "" : `<button type="button" class="gadd" data-drop-end="${grp.id}">+ Thêm slide vào phần này</button>`}
+    </li>`;
+  }).join("");
+
+  const total = S.slides.length, talk = S.slides.filter((s) => s.kind !== "content").length;
+  const [lo, hi] = RANGE[S.min];
+  document.getElementById("st-total").textContent = total;
+  document.getElementById("st-split").textContent = `${total - talk} nội dung · ${talk} tương tác`;
+  const r = document.getElementById("st-range");
+  r.textContent = `Gợi ý ${lo} đến ${hi} slide`;
+  r.style.background = total >= lo && total <= hi ? "" : "var(--note-bg)";
+  if (typeof renderSectionPanel === "function" && document.getElementById("sp-body")) renderSectionPanel();
+}
+
+function toast(t, undo) {
+  const el = document.getElementById("toast");
+  el.textContent = t; el.hidden = false;
+  if (undo) {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = "Hoàn tác";
+    b.onclick = () => { el.hidden = true; undo(); };
+    el.append(b);
+  }
+  clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), undo ? 6000 : 2600);
+}
+function lastIndexOf(gid) { let k = -1; S.slides.forEach((s, i) => { if (s.g === gid) k = i; }); return k; }
+const firstIndexOf = (gid) => S.slides.findIndex((s) => s.g === gid);
+
+function move(id, where) {
+  const from = S.slides.findIndex((s) => s.id === id);
+  const s = S.slides[from];
+  const before = s.g;
+  S.slides.splice(from, 1);
+  let at, g;
+  if (where.before) { at = S.slides.findIndex((x) => x.id === where.before); g = S.slides[at].g; }
+  else if (where.start) { g = where.start; at = firstIndexOf(g); }
+  else { g = where.end; at = lastIndexOf(g) + 1; }
+  if (at < 0) at = S.slides.length;
+  s.g = g;
+  S.slides.splice(at, 0, s);
+  render();
+  if (before !== g) toast(`Slide ${at + 1} đã chuyển sang phần ${labelOf(g)}.`);
+}
+
+/* ---------- kéo thả ---------- */
+const flow = document.getElementById("flow");
+flow.addEventListener("dragstart", (e) => {
+  const row = e.target.closest(".row"); if (!row) return;
+  dragId = row.dataset.id; row.classList.add("dragging"); document.body.classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", dragId);
+});
+flow.addEventListener("dragend", () => { dragId = null; document.querySelectorAll(".dragging,.over").forEach((x) => x.classList.remove("dragging", "over")); });
+const target = (e) => e.target.closest(".row, .ghead, .gadd");
+flow.addEventListener("dragover", (e) => {
+  if (!dragId) return;
+  const t = target(e); if (!t || t.dataset.id === dragId) return;
+  e.preventDefault();
+  document.querySelectorAll(".over").forEach((x) => x !== t && x.classList.remove("over"));
+  t.classList.add("over");
+});
+flow.addEventListener("dragleave", (e) => { const t = target(e); if (t && !t.contains(e.relatedTarget)) t.classList.remove("over"); });
+flow.addEventListener("drop", (e) => {
+  const t = target(e); if (!t || !dragId) return;
+  e.preventDefault();
+  const id = dragId; dragId = null;
+  if (t.classList.contains("row")) { if (t.dataset.id !== id) move(id, { before: t.dataset.id }); }
+  else if (t.dataset.dropStart) move(id, { start: t.dataset.dropStart });
+  else move(id, { end: t.dataset.dropEnd });
+});
+
+/* ---------- bấm trong danh sách ---------- */
+flow.addEventListener("click", (e) => {
+  const del = e.target.closest("[data-del]");
+  if (del) return removeSlide(del.dataset.del);
+  const open = e.target.closest("[data-open]");
+  if (open) return openDialog(open.dataset.open);
+  const add = e.target.closest(".gadd");
+  if (add) {
+    const g = add.dataset.dropEnd;
+    const s = { id: "s" + ++seq, g, kind: "content", layout: "image", title: "", points: [""] };
+    S.slides.splice(lastIndexOf(g) + 1, 0, s);
+    render(); openDialog(s.id); return;
+  }
+  const rn = e.target.closest("[data-rename]");
+  if (rn) startRename(rn.dataset.rename);
+});
+
+function startRename(gid) {
+  const span = flow.querySelector(`[data-name="${gid}"]`);
+  const btn = flow.querySelector(`[data-rename="${gid}"]`);
+  const input = document.createElement("input");
+  input.value = G(gid).name; input.setAttribute("aria-label", "Tên phần");
+  span.replaceWith(input); btn.hidden = true; input.focus(); input.select();
+  let done = false;
+  const finish = (save) => {
+    if (done) return; done = true;
+    if (save && input.value.trim() && input.value.trim() !== G(gid).name) { G(gid).name = input.value.trim(); toast("Đã đổi tên phần. Slide Mục lục và slide mở phần đã cập nhật theo."); }
+    render();
+  };
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); });
+  input.addEventListener("blur", () => finish(true));
+}
+
+document.getElementById("addpart").addEventListener("click", () => {
+  const id = "g" + ++seq;
+  const sumIdx = S.slides.findIndex((s) => G(s.g).role === "summary");
+  S.groups.push({ id, role: "content", name: "Phần mới" });
+  S.slides.splice(sumIdx < 0 ? S.slides.length : sumIdx, 0, { id: "s" + ++seq, g: id, kind: "content", layout: "section", title: "", points: [""], auto: "section" });
+  render(); startRename(id);
+});
+
+/* ---------- hộp Sửa: giữ nguyên như SlideDialog thật ---------- */
+const dlg = document.getElementById("dlg");
+const dbody = document.getElementById("dbody");
+let cur = null, openKind = false, openLay = false;
+
+function openDialog(id) {
+  cur = id; openKind = openLay = false;
+  if (!dlg.open) dlg.showModal();
+  renderDialog();
+  dbody.scrollTop = 0;
+}
+
+function preview(s) {
+  const t = esc(titleOf(s).trim() || "Tiêu đề slide");
+  const P = pointsOf(s).map((x) => x.trim()).filter(Boolean);
+  if (s.kind !== "content") {
+    return `<div class="pv talk"><div class="in"><span class="tag">${KIND_LABEL[s.kind]}</span><h3>${t}</h3><p style="color:#5b6b9a">${BOARD_SUB[s.kind]}</p></div></div>`;
+  }
+  const cards = (n) => `<div class="cards" style="grid-template-columns:repeat(${n},1fr)">${P.slice(0, n).map((q) => { const [a, b] = splitPoint(q); return `<div class="card"><b>${esc(a)}</b>${esc(b || (a ? "" : q))}</div>`; }).join("")}</div>`;
+  let body;
+  switch (s.layout) {
+    case "cover": body = `<h3 class="big">${t}</h3>${P[0] ? `<p>${esc(P[0])}</p>` : ""}`; break;
+    case "section": {
+      const parts = contentParts(), k = parts.findIndex((x) => x.g === s.g) + 1;
+      if (k > 0) return `<div class="pv" style="background:#f7fee7"><div class="in" style="display:grid;grid-template-columns:1fr 42%;gap:4cqw;align-items:center">
+        <div><div style="font-size:12cqw;font-weight:800;line-height:.85;color:transparent;-webkit-text-stroke:.25cqw #4d7c0f">${k}</div><h3 style="margin-top:1.6cqw">${t}</h3>${P[0] ? `<p style="margin-top:1.4cqw;color:#5a6256">${esc(P[0])}</p>` : ""}</div>
+        <ol style="list-style:none;margin:0;padding:0;display:grid;gap:1.2cqw">${parts.map((x, j) => `<li style="display:flex;gap:1.4cqw;align-items:center;font-size:2.6cqw;padding:1cqw 1.4cqw;border-radius:1.6cqw;${j + 1 === k ? "background:#fff;font-weight:700;color:#20241f;border:1px solid #e3e8d3" : "color:#5a6256"}"><span style="width:3.8cqw;height:3.8cqw;flex:none;border-radius:50%;display:grid;place-items:center;font-weight:800;${j + 1 < k ? "background:#ecfccb;color:#4d7c0f" : j + 1 === k ? "background:#4d7c0f;color:#fff" : "border:.25cqw solid #e3e8d3"}">${j + 1 < k ? "✓" : j + 1}</span>${esc(x.name)}</li>`).join("")}</ol>
+      </div></div>`;
+      body = `<h3 class="big">${t}</h3>${P[0] ? `<p>${esc(P[0])}</p>` : ""}`; break;
+    }
+    case "cards": body = `<h3>${t}</h3>${cards(3)}`; break;
+    case "compare": body = `<h3>${t}</h3>${cards(2)}`; break;
+    case "steps": body = `<h3>${t}</h3><div class="cards" style="grid-template-columns:repeat(${Math.max(P.length, 1)},1fr)">${P.map((q, i) => { const [a, b] = splitPoint(q); return `<div><div class="dotn">${i + 1}</div><div class="card" style="padding:1.6cqw"><b>${esc(a)}</b>${esc(b || (a ? "" : q))}</div></div>`; }).join("")}</div>`; break;
+    case "stats": body = `<h3>${t}</h3><div class="cards" style="grid-template-columns:repeat(${Math.max(P.length, 1)},1fr)">${P.map((q) => `<div><div style="font-size:7cqw;font-weight:700;color:#3f6212;line-height:1">${(/\d[\d.,%]*/.exec(q) || ["?"])[0]}</div><p style="font-size:2.7cqw">${esc(q)}</p></div>`).join("")}</div>`; break;
+    case "quote": body = `<span class="tag">${t}</span><div style="font-size:5cqw;line-height:1.3;font-weight:600;border-left:1cqw solid #65a30d;padding-left:3cqw">${esc(P[0] || "Câu trích dẫn")}</div>`; break;
+    case "summary": body = `<h3>${t}</h3><ul>${P.map((q) => `<li>${esc(q)}</li>`).join("")}</ul>`; break;
+    default: body = `<div class="two"><div class="stack"><h3>${t}</h3>${P[0] ? `<p>${esc(P[0])}</p>` : ""}${P.length > 1 ? `<ul>${P.slice(1).map((q) => `<li>${esc(q)}</li>`).join("")}</ul>` : ""}</div><div class="img"></div></div>`;
+  }
+  return `<div class="pv"><div class="in">${body}</div></div>`;
+}
+
+function pointsHtml(s) {
+  if (s.auto === "agenda") {
+    return `<div class="fld"><span class="lab">Ý chính</span>
+      <div class="info"><p>Slide Mục lục tự lấy tên các phần nội dung, nên không cần nhập. Muốn sửa, hãy đổi tên phần ở danh sách.</p></div>
+      ${contentNames().map((n, k) => `<div class="pt"><span class="n" style="margin-top:8px">${k + 1}</span><div class="col"><input class="input" value="${esc(n)}" disabled></div></div>`).join("")}</div>`;
+  }
+  const lay = s.layout, ui = LAYOUT_UI[lay], split = SPLIT.has(lay);
+  const n = s.points.filter((p) => p.trim()).length, ok = n >= ui.min && n <= ui.max;
+  const rows = s.points.map((p, k) => {
+    const lab = POINT_LABELS[lay][k] || `Ý ${k + 1}`;
+    const [h, b] = split ? splitPoint(p) : ["", p];
+    return `<div class="pt"><span class="n">${k + 1}</span><div class="col"><small>${lab}</small>
+      ${split ? `<input class="input" style="font-size:14px" data-pt-head="${k}" placeholder="Tiêu đề ngắn" maxlength="60" value="${esc(h)}" aria-label="${lab}, tiêu đề ngắn">` : ""}
+      <textarea class="input" rows="1" data-pt="${k}" maxlength="200" ${split ? 'placeholder="Một câu giải thích đầy đủ"' : ""} aria-label="${lab}">${esc(b)}</textarea></div>
+      <button type="button" class="x" data-act="delpt" data-k="${k}" aria-label="Xoá ý này">✕</button></div>`;
+  }).join("");
+  return `<div class="fld" style="gap:12px"><span class="lab"><span>Ý chính</span><small class="${ok ? "ok" : "warnc"}">Bố cục này nên có ${ui.need}${ok ? "" : ` (hiện có ${n})`}</small></span>
+    ${rows}
+    ${s.points.length < MAX_POINTS ? `<button type="button" class="addpt" data-act="addpt">+ Thêm ý</button>` : ""}</div>`;
+}
+
+function renderDialog() {
+  const s = slideOf(cur);
+  const i = S.slides.indexOf(s), total = S.slides.length;
+  document.getElementById("dlg-h").textContent = `Slide ${i + 1} / ${total}`;
+  dlg.querySelector('[data-act="prev"]').disabled = i === 0;
+  dlg.querySelector('[data-act="next"]').disabled = i === total - 1;
+  dlg.querySelector('[data-act="remove"]').disabled = total <= 1;
+  const isContent = s.kind === "content";
+  const titleLocked = s.auto === "agenda";
+  const titleLabel = s.auto === "section" ? "Tiêu đề (cũng là tên phần)" : KIND_TITLE[s.kind];
+  const title = titleOf(s);
+
+  dbody.innerHTML = `
+    <div class="pvcol">
+      <span class="cap">Bản xem trước bố cục</span>
+      <div id="pv">${preview(s)}</div>
+      <p class="faint">Ở đây chỉ dựng bố cục về mặt sắp xếp nội dung câu chữ cho bạn hình dung trước. Màu sắc, phông chữ và hình minh hoạ sẽ thể hiện ở bước sau.</p>
+    </div>
+    <div class="form">
+      <div class="pickers">
+        <button type="button" class="picker" data-act="kind" aria-expanded="${openKind}">${glyph(isContent ? s.layout : s.kind)}<span><small>Loại slide</small><b>${KIND_LABEL[s.kind]}</b></span>▾</button>
+        ${isContent ? `<button type="button" class="picker" data-act="lay" aria-expanded="${openLay}">${glyph(s.layout)}<span><small>Bố cục</small><b>${LAYOUT_UI[s.layout].label}</b></span>▾</button>` : ""}
+      </div>
+      ${openKind ? `<div class="tiles" role="group" aria-label="Loại slide">${KIND_ORDER.map((k) => `<button type="button" class="tile" data-kind="${k}" aria-pressed="${s.kind === k}">${glyph(k)}<span>${KIND_LABEL[k]}</span></button>`).join("")}</div>` : ""}
+      ${openLay && isContent ? `<p class="faint">${LAYOUT_UI[s.layout].hint}</p><div class="tiles" role="group" aria-label="Bố cục">${LAYOUTS.map((l) => `<button type="button" class="tile" data-lay="${l}" aria-pressed="${s.layout === l}">${glyph(l)}<span>${LAYOUT_UI[l].label}</span></button>`).join("")}</div>` : ""}
+      <label class="fld"><span class="lab"><span>${titleLabel}</span><small id="tcount">${title.length}/200</small></span>
+        <input class="input" data-act="title" maxlength="200" value="${esc(title)}" ${titleLocked ? "disabled" : ""}></label>
+      ${isContent ? pointsHtml(s) : `<div class="info"><p>${KIND_HINT[s.kind]}</p>${KIND_USE[s.kind] ? `<p>${KIND_USE[s.kind]}</p>` : ""}</div>`}
+    </div>`;
+  dbody.querySelectorAll("textarea").forEach(grow);
+}
+function grow(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; }
+
+/** Gõ chữ: cập nhật dữ liệu, bản xem trước và danh sách phía sau; không vẽ lại ô đang gõ. */
+dbody.addEventListener("input", (e) => {
+  const s = slideOf(cur), el = e.target;
+  if (el.dataset.act === "title") {
+    if (s.auto === "section") G(s.g).name = el.value; else s.title = el.value;
+    document.getElementById("tcount").textContent = `${el.value.length}/200`;
+  } else if (el.dataset.pt !== undefined || el.dataset.ptHead !== undefined) {
+    const k = Number(el.dataset.pt ?? el.dataset.ptHead);
+    if (SPLIT.has(s.layout)) {
+      const head = dbody.querySelector(`[data-pt-head="${k}"]`).value, body = dbody.querySelector(`[data-pt="${k}"]`).value;
+      s.points[k] = joinPoint(head, body);
+    } else s.points[k] = el.value;
+    if (el.tagName === "TEXTAREA") grow(el);
+  } else return;
+  document.getElementById("pv").innerHTML = preview(s);
+  render();
+});
+dbody.addEventListener("click", (e) => {
+  const s = slideOf(cur);
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.act === "kind") { openKind = !openKind; openLay = false; }
+  else if (b.dataset.act === "lay") { openLay = !openLay; openKind = false; }
+  else if (b.dataset.kind) {
+    const k = b.dataset.kind;
+    if (k !== s.kind) {
+      if (k === "content") Object.assign(s, { kind: k, layout: "image", points: [""] });
+      else Object.assign(s, { kind: k, layout: null, points: [] });
+      if (s.auto) { s.title = titleOf(s); delete s.auto; }
+    }
+    openKind = false;
+  } else if (b.dataset.lay) {
+    s.layout = b.dataset.lay;
+    if (s.auto && s.layout !== "summary" && s.layout !== "section") { s.points = [...pointsOf(s)]; s.title = titleOf(s); delete s.auto; }
+    openLay = false;
+  } else if (b.dataset.act === "addpt") s.points.push("");
+  else if (b.dataset.act === "delpt") s.points.splice(Number(b.dataset.k), 1);
+  else return;
+  render(); renderDialog();
+});
+dlg.addEventListener("click", (e) => {
+  if (e.target === dlg) return dlg.close();
+  const a = e.target.closest(".dhead button")?.dataset.act;
+  if (!a) return;
+  const i = S.slides.findIndex((s) => s.id === cur);
+  if (a === "close") dlg.close();
+  else if (a === "prev" && i > 0) openDialog(S.slides[i - 1].id);
+  else if (a === "next" && i < S.slides.length - 1) openDialog(S.slides[i + 1].id);
+  else if (a === "remove") { dlg.close(); removeSlide(cur); }
+});
+
+/* ---------- slide bìa phần ---------- */
+const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+const SP = { part: 1, theme: "lt-brand" };
+
+/** Các phần Nội dung theo thứ tự, kèm câu mô tả lấy từ slide mở phần của phần đó. */
+function contentParts() {
+  return runs().filter((r) => G(r.g).role === "content").map((r) => {
+    const opener = S.slides.slice(r.from, r.to + 1).find((s) => s.auto === "section");
+    return { g: r.g, name: G(r.g).name, desc: opener ? (opener.points[0] || "") : "", hasOpener: !!opener };
+  });
+}
+
+function sectionSlide(parts, k, theme) {
+  const p = parts[k - 1];
+  const toc = parts.map((x, j) => {
+    const st = j + 1 < k ? "done" : j + 1 === k ? "now" : "next";
+    return `<li class="${st}" style="--i:${j}"><span class="mk">${st === "done" ? CHECK : j + 1}</span><span>${esc(x.name)}</span></li>`;
+  }).join("");
+  return `<div class="lslide ${theme} anim" style="--n:${parts.length}" role="img" aria-label="Slide bìa phần ${k}: ${esc(p.name)}">
+    <i class="glow g1"></i><i class="glow g2"></i>
+    <div class="sc">
+      <div><div class="snum">${k}</div><h2>${esc(p.name)}</h2>${p.desc ? `<p class="slead">${esc(p.desc)}</p>` : ""}</div>
+      <ol class="toc">${toc}</ol>
+    </div>
+  </div>`;
+}
+
+function fitStage() {
+  const st = document.querySelector(".stage"); if (!st) return;
+  st.firstElementChild.style.transform = `scale(${st.clientWidth / 1280})`;
+}
+new ResizeObserver(fitStage).observe(document.body);
+
+function renderSectionPanel() {
+  const box = document.getElementById("sp-body");
+  const parts = contentParts();
+  if (!parts.some((p) => p.hasOpener)) {
+    box.innerHTML = `<p class="sp-empty">Buổi ${S.min} phút không có slide bìa phần, vì vài slide bìa sẽ chiếm khoảng một phần ba bài. Học viên nhận biết chỗ chuyển phần qua lời chuyển ý trong ghi chú giảng. Chọn 30 phút để xem bìa phần.</p>`;
+    return;
+  }
+  if (SP.part > parts.length) SP.part = 1;
+  const themes = [["lt-brand", "Limio"], ["lt-paper", "Giấy ấm"], ["lt-night", "Đêm xanh"]];
+  box.innerHTML = `<div class="sp-ctrl">
+      <span><span class="cap2">Phần</span><span class="seg" role="group" aria-label="Chọn phần">${parts.map((_, j) => `<button type="button" data-sp-part="${j + 1}" aria-pressed="${SP.part === j + 1}">${j + 1}</button>`).join("")}</span></span>
+      <span><span class="cap2">Giao diện</span><span class="seg" role="group" aria-label="Chọn giao diện">${themes.map(([c, l]) => `<button type="button" data-sp-theme="${c}" aria-pressed="${SP.theme === c}">${l}</button>`).join("")}</span></span>
+      <button type="button" class="replay" data-sp-replay>Chạy lại hiệu ứng</button>
+    </div>
+    <div class="stage">${sectionSlide(parts, SP.part, SP.theme)}</div>`;
+  fitStage();
+}
+document.getElementById("sp-body").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.spPart) SP.part = Number(b.dataset.spPart);
+  else if (b.dataset.spTheme) SP.theme = b.dataset.spTheme;
+  renderSectionPanel();
+});
+
+document.getElementById("minutes").addEventListener("change", (e) => load(Number(e.target.value)));
+load(30);
+</script>
+</body>
+</html>

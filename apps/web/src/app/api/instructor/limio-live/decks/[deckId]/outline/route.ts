@@ -32,7 +32,8 @@ function syncState(outline: Outline, slides: Array<{ id: string; type: string; c
 }
 
 function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
-  const outline = (deck.outline ?? null) as Outline | null;
+  // Luôn qua sanitizeOutline: dàn ý tạo trước khi có mạch cấu trúc được tự chia phần khi mở.
+  const outline: Outline | null = deck.outline ? sanitizeOutline(deck.outline) : null;
   const minutes = deck.outlineMinutes ?? 30;
   return {
     deckId: deck.id,
