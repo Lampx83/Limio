@@ -135,7 +135,8 @@ export const MAX_LEN = {
   chartLabel: 40,
   seriesName: 40,
   unit: 20,
-  notes: 2000,
+  // Ghi chú giảng nhập từ PowerPoint giữ nguyên chữ, thường dài hơn ghi chú AI viết.
+  notes: 6000,
 } as const;
 
 /** Cỡ chữ nhỏ nhất trên khung thiết kế 1280×720 (tương đương 39 px ở màn 1920×1080). */
@@ -271,6 +272,8 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
     if (bullets.length) out.bullets = bullets;
     const img = clip(raw.imageUrl, 2000);
     if (img) out.imageUrl = img;
+    // Hình lấy từ file của giảng viên (sơ đồ, ảnh chụp màn hình) hiện trọn, không cắt cho đầy ô.
+    if (img && raw.imageFit === "contain") out.imageFit = "contain";
   }
   if (ITEM_RANGE[layout]) out.items = sanitizeItems(raw.items, layout);
   if (layout === "steps") {

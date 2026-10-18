@@ -698,6 +698,14 @@ export interface LiveDeckOutlineGeneratedPayload {
   sourceKind?: "document" | "topic" | "topic_web";
   /** Có bật tìm nguồn internet: số trang đã đọc (0 = không tìm được, bài rơi về "topic"). */
   webSourceCount?: number;
+  /** Bài nhập từ file trình chiếu. */
+  sourceFormat?: "pptx";
+  /** Cách chuyển: giữ ý (không AI) hoặc soạn lại mạch (AI). */
+  importMode?: "keep" | "restructure";
+  /** Số slide trong file gốc. */
+  importedSlides?: number;
+  /** Số hình đã lưu. */
+  imageCount?: number;
 }
 
 export interface LiveDeckSlidesGeneratedPayload {

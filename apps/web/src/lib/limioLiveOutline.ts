@@ -97,6 +97,57 @@ export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
   };
 }
 
+/**
+ * Nguồn của một dòng dàn ý trong bài nhập từ file trình chiếu (xem limioLivePptx): "same" = từ một slide gốc,
+ * "merge" = gộp nhiều slide gốc, "new" = mới (có `slides` thì là "dựa trên" các slide đó), "back" = giảng viên thêm
+ * lại một slide gốc chưa dùng. `piece/pieces`: slide gốc dài chia thành nhiều slide. `sig`: dấu các ý lúc nhập,
+ * để biết giảng viên đã sửa các ý của dòng hay chưa.
+ */
+export type OriginHow = "same" | "merge" | "new" | "back";
+export const ORIGIN_HOWS: readonly OriginHow[] = ["same", "merge", "new", "back"];
+export interface OutlineOrigin {
+  slides: number[];
+  how: OriginHow;
+  piece?: number;
+  pieces?: number;
+  sig?: string;
+}
+
+export function sanitizeOrigin(raw: unknown): OutlineOrigin | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  if (!ORIGIN_HOWS.includes(o.how as OriginHow)) return undefined;
+  const slides = [...new Set((Array.isArray(o.slides) ? o.slides : []).map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 2000))].slice(0, 40);
+  const out: OutlineOrigin = { slides, how: o.how as OriginHow };
+  const piece = Number(o.piece);
+  const pieces = Number(o.pieces);
+  if (Number.isInteger(piece) && Number.isInteger(pieces) && piece >= 1 && pieces >= piece && pieces <= 50) Object.assign(out, { piece, pieces });
+  if (typeof o.sig === "string" && /^[0-9a-z]{1,16}$/.test(o.sig)) out.sig = o.sig;
+  return out;
+}
+
+/** Dòng lấy nguyên từ một slide gốc: khi tạo slide dựng thẳng từ dữ liệu đã đọc, không qua AI. */
+export function isImportedRow(s: Pick<OutlineSlide, "kind" | "origin">): boolean {
+  const o = s.origin;
+  return !!o && s.kind === "content" && (o.how === "same" || o.how === "back") && o.slides.length === 1;
+}
+
+/** "5", "5 và 6", "5, 6, 7 và 8". */
+export function listVi(ns: number[]): string {
+  const a = ns.map(String);
+  return a.length <= 2 ? a.join(" và ") : `${a.slice(0, -1).join(", ")} và ${a[a.length - 1]}`;
+}
+
+/** Nguồn của dòng như trong màn đối chiếu: "từ slide 4", "gộp slide 5, 6 và 7", "mới, dựa trên slide 6"… */
+export function originLabel(o: OutlineOrigin | undefined): string {
+  if (!o) return "";
+  if (o.how === "back") return `thêm lại từ slide ${o.slides[0] ?? ""}`;
+  if (o.how === "merge") return `gộp slide ${listVi(o.slides)}`;
+  if (o.how === "new") return o.slides.length ? `mới, dựa trên slide ${listVi(o.slides)}` : "mới";
+  const part = o.pieces && o.pieces > 1 ? `, phần ${o.piece}/${o.pieces}` : "";
+  return `từ slide ${listVi(o.slides)}${part}`;
+}
+
 export interface OutlineSlide {
   id: string;
   /** "references" = dòng Nguồn tham khảo do hệ thống dựng (bài mức topic_web): tạo slide giữ nguyên chữ, không gọi AI. */
@@ -110,6 +161,8 @@ export interface OutlineSlide {
   title: string;
   /** Ý chính: câu hoàn chỉnh. Rỗng với slide tương tác. */
   points: string[];
+  /** Bài nhập từ file trình chiếu: dòng này lấy từ slide gốc nào. */
+  origin?: OutlineOrigin;
 }
 
 export interface Outline {
@@ -142,7 +195,8 @@ export const OUTLINE_LIMITS = {
   slideTitle: 200,
   point: 200,
   points: 5,
-  maxSlides: 40,
+  // Bài nhập từ PowerPoint giữ mọi slide gốc (thường dài hơn bài AI soạn); AI vẫn bị ép theo mức slide của thời lượng.
+  maxSlides: 120,
   partName: 120,
   maxParts: 20,
 } as const;
@@ -181,7 +235,11 @@ function sanitizeSlide(raw: unknown, idFallback = newOutlineId): OutlineSlide | 
   const o = raw as Record<string, unknown>;
   const kind: OutlineKind = OUTLINE_KINDS.includes(o.kind as OutlineKind) ? (o.kind as OutlineKind) : "content";
   const title = clean(o.title, OUTLINE_LIMITS.slideTitle);
-  const part = typeof o.partId === "string" && o.partId ? { partId: o.partId.slice(0, 60) } : {};
+  const origin = sanitizeOrigin(o.origin);
+  const part = {
+    ...(typeof o.partId === "string" && o.partId ? { partId: o.partId.slice(0, 60) } : {}),
+    ...(origin ? { origin } : {}),
+  };
   if (kind === "content") {
     const layout: OutlineLayout = OUTLINE_LAYOUTS.includes(o.layout as OutlineLayout) ? (o.layout as OutlineLayout) : "image";
     const points = (Array.isArray(o.points) ? o.points : [])

@@ -5215,6 +5215,10 @@ model LiveDeck {
   // Mức "topic_web": các trang đã đọc [{ n, title, url }] theo đúng số [n] trong sourceText. Mảng rỗng = có bật tìm
   // nguồn nhưng không tìm được trang nào (bài rơi về "topic"); null = không tìm nguồn.
   sourceRefs Json?
+  // Bài nhập từ file trình chiếu (.pptx): { format: "pptx", fileName, slides: [...] } — chữ, ghi chú giảng, hình đã lưu,
+  // bảng, biểu đồ của từng slide gốc (apps/web/src/lib/limioLivePptx.ts). Tạo slide dựng từ cột này, không đọc lại file.
+  // Null = bài không nhập từ file trình chiếu.
+  importSource Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

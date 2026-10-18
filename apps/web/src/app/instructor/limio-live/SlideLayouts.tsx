@@ -419,7 +419,7 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
             <div className="art a-pop" style={delay(1)}>
               {c.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={c.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: c.imageFit === "contain" ? "contain" : "cover" }} />
               ) : (
                 motif && <SlideMotif motif={motif.motif} slot={motif.slot} />
               )}
