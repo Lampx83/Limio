@@ -10,7 +10,7 @@ import {
   splitSlideConfig,
 } from "./limioLiveSlides";
 import { configFromOutline, dataNumbersVerified, draftToSlide, generateDeckSlides, proposalFromDraft } from "./limioLiveGenerate";
-import { demoteUnbackedCharts, type OutlineSlide } from "./limioLiveOutline";
+import { demoteUnbackedCharts, normalizeOutline, type OutlineSlide } from "./limioLiveOutline";
 import { numbersInText } from "./limioLiveCharts";
 
 // Hai bố cục Bảng và Biểu đồ: lọc dữ liệu, đổi bố cục không mất nội dung, chống bịa số liệu
@@ -321,5 +321,58 @@ describe("demoteUnbackedCharts — kiểm ngay ở dàn ý", () => {
     expect([ok.layout, fake.layout, few.layout]).toEqual(["chart", "image", "image"]);
     expect(w).toHaveLength(2);
     expect(w[0]).toContain("Chữ và hình");
+  });
+
+  it("Số liệu: đủ hai ý có số trong tài liệu thì giữ, ý chữ đi kèm không làm hỏng", () => {
+    const ok = os("stats", ["Tuần đầu: 62%", "Tuần sáu: 84%", "Người học tiến bộ đều."]);
+    expect(demoteUnbackedCharts({ slides: [ok] }, SOURCE)).toEqual([]);
+    expect(ok.layout).toBe("stats");
+    // Dàn ý đã qua kiểm thì lúc sinh slide cũng dựng được Số liệu, không âm thầm rơi về Ba thẻ.
+    expect(configFromOutline(ok, "", undefined, { sourceNumbers: found }).config.layout).toBe("stats");
+  });
+
+  it("Số liệu có một số không có trong tài liệu, kể cả số nằm trong câu, thì đổi sang Ba thẻ và báo", () => {
+    const fake = os("stats", ["Tuần đầu: 62%", "Tuần sáu: 91%"]);
+    const inSentence = { ...os("stats", ["62% làm bài tuần đầu", "84% sau 3 tuần luyện"]), id: "o2" };
+    const w = demoteUnbackedCharts({ slides: [fake, inSentence] }, SOURCE);
+    expect([fake.layout, inSentence.layout]).toEqual(["cards", "cards"]);
+    expect(w).toHaveLength(2);
+    expect(w[0]).toBe("Slide “Tỉ lệ hoàn thành”: có con số không tìm thấy trong tài liệu, nên slide đã đổi từ Số liệu sang Ba thẻ.");
+  });
+
+  it("Số liệu có ít hơn hai ý có số thì đổi sang Ba thẻ, giữ nguyên các ý", () => {
+    const few = os("stats", ["Tỉ lệ đạt 84%.", "Người học tiến bộ đều."]);
+    const w = demoteUnbackedCharts({ slides: [few] }, SOURCE);
+    expect(few.layout).toBe("cards");
+    expect(few.points).toEqual(["Tỉ lệ đạt 84%.", "Người học tiến bộ đều."]);
+    expect(w).toEqual(["Slide “Tỉ lệ hoàn thành”: cần ít nhất 2 ý có con số lấy từ tài liệu để dựng Số liệu, nên slide đã đổi sang Ba thẻ."]);
+  });
+
+  it("không đụng slide tương tác hay bố cục khác dù có số", () => {
+    const cards = os("cards", ["Tuần sáu: 91%"]);
+    const quiz: OutlineSlide = { ...os("stats", ["91%"]), id: "o2", kind: "quiz" };
+    expect(demoteUnbackedCharts({ slides: [cards, quiz] }, SOURCE)).toEqual([]);
+    expect([cards.layout, quiz.layout]).toEqual(["cards", "stats"]);
+  });
+});
+
+describe("normalizeOutline — kiểm Số liệu theo loại nguồn", () => {
+  const raw = (pts: string[]) => ({
+    title: "T",
+    slides: [
+      { kind: "content", layout: "cover", title: "Bìa", points: [] },
+      { kind: "content", layout: "stats", title: "Con số", points: pts },
+      { kind: "content", layout: "summary", title: "Kết", points: ["Ý."] },
+    ],
+  });
+  it("tài liệu: Số liệu có số bịa thành Ba thẻ kèm cảnh báo", () => {
+    const { outline, warnings } = normalizeOutline(raw(["Tuần đầu: 62%", "Tuần sáu: 91%"]), 15, { sourceText: SOURCE });
+    expect(outline.slides[1]!.layout).toBe("cards");
+    expect(warnings.some((w) => w.includes("Con số") && w.includes("Ba thẻ"))).toBe(true);
+  });
+  it("kiến thức chung: Số liệu vốn bị đổi sang Ba thẻ, không báo thêm về số liệu", () => {
+    const { outline, warnings } = normalizeOutline(raw(["Tuần đầu: 62%", "Tuần sáu: 91%"]), 15, { sourceKind: "topic", sourceText: SOURCE });
+    expect(outline.slides[1]!.layout).toBe("cards");
+    expect(warnings.some((w) => w.includes("sang Ba thẻ"))).toBe(false);
   });
 });

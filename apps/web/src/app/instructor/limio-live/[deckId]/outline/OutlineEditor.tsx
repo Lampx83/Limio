@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Check, ChevronLeft, FileText, Loader2, PenLine, Plus, Sparkles } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, FileText, LayoutTemplate, Loader2, PenLine, Plus, Sparkles } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
   DURATIONS,
   OUTLINE_LAYOUTS,
   isFullStructure,
+  isImportedRow,
   isTopicSource,
+  isClosingSlide,
   layoutAllowedFor,
   outlineBlockingProblems,
   outlineStats,
@@ -269,6 +271,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const saveLabel =
     save === "saving" ? "Đang lưu..." : save === "dirty" ? "Chưa lưu" : save === "error" ? "Lưu lỗi, thử lại" : "Đã lưu";
 
+  // Bài nhập từ PowerPoint: dòng lấy nguyên từ slide gốc dựng không qua AI; AI chỉ viết các dòng còn lại.
+  const importedRows = outline.slides.filter(isImportedRow).length;
+  const aiRows = outline.slides.length - importedRows;
+
   return (
     <main className="mx-auto max-w-4xl space-y-6 pb-24">
       <header className="space-y-3">
@@ -286,8 +292,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
         </div>
         <p className="text-[15px] font-semibold leading-snug">{data.title}</p>
         <p className="max-w-2xl text-sm leading-relaxed text-muted">
-          Bấm vào một slide để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn, xác nhận ở cuối
-          trang để AI viết slide.
+          Bấm vào một slide để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI.{" "}
+          {importedRows > 0
+            ? "Slide lấy từ file gốc giữ nguyên chữ, hình và ghi chú giảng. Khi dàn ý ổn, xác nhận ở cuối trang để tạo slide."
+            : "Khi dàn ý ổn, xác nhận ở cuối trang để AI viết slide."}
         </p>
         <TopicSourceNotice sourceKind={data.sourceKind} webRefs={data.webRefs} />
       </header>
@@ -394,7 +402,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           onRemove={() => remove(editing.id)}
           onGoto={(d) => setEditingId(outline.slides[editingIndex + d]?.id ?? editing.id)}
           onClose={() => setEditingId(null)}
-          layouts={OUTLINE_LAYOUTS.filter((l) => layoutAllowedFor(data.sourceKind, l))}
+          layouts={OUTLINE_LAYOUTS.filter((l) => layoutAllowedFor(data.sourceKind, l) || (l === "quote" && isClosingSlide(outline, editing)))}
         />
       )}
 
@@ -486,13 +494,22 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
             ) : slideCount > 0 ? null : (
               <>
                 <p className="text-sm text-muted">
-                  AI sẽ viết nội dung và ghi chú giảng cho {outline.slides.length} slide theo đúng dàn ý. Dự kiến dùng khoảng{" "}
-                  <b>{formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: outline.slides.length }).total)}</b>{" "}
-                  token AI.
+                  {aiRows === 0 ? (
+                    <>
+                      {outline.slides.length} slide được dựng từ slide gốc của file, giữ nguyên chữ, hình và ghi chú giảng. Không dùng
+                      AI, không tốn token.
+                    </>
+                  ) : (
+                    <>
+                      AI sẽ viết nội dung và ghi chú giảng cho {aiRows} slide theo đúng dàn ý
+                      {importedRows > 0 ? `; ${importedRows} slide lấy nguyên từ file gốc` : ""}. Dự kiến dùng khoảng{" "}
+                      <b>{formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: aiRows }).total)}</b> token AI.
+                    </>
+                  )}
                 </p>
                 {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
                 <button type="button" className="btn-primary flex items-center gap-2" onClick={() => void generate()}>
-                  <Sparkles size={16} aria-hidden /> Tạo slide từ dàn ý
+                  {aiRows === 0 ? <LayoutTemplate size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />} Tạo slide từ dàn ý
                 </button>
               </>
             )}

@@ -56,12 +56,16 @@ describe("bộ hoa văn", () => {
 });
 
 describe("chỗ đặt hoa văn theo bố cục", () => {
-  it("bìa ở dải phải, bìa phần ở góc dưới phải, bìa phần có mục lục ở góc dưới trái, trích dẫn ở góc trên phải", () => {
+  it("bìa ở dải phải, bìa phần ở góc dưới phải, trích dẫn ở góc trên phải", () => {
     expect(motifSlot(cover)).toBe("side");
     expect(motifSlot(section)).toBe("br");
-    expect(motifSlot(sectionToc)).toBe("bl");
     expect(motifSlot(quote)).toBe("tr");
     expect(motifSlot(image)).toBe("fill");
+  });
+
+  it("bìa phần có mục lục không có hoa văn: không góc nào trống chữ", () => {
+    expect(motifSlot(sectionToc)).toBeNull();
+    expect(resolveSlideMotif({ deckId: "d", config: { ...sectionToc, motif: "song" } })).toBeNull();
   });
 
   it("bố cục nhiều chữ, slide có ảnh và slide chèn học liệu không có hoa văn", () => {
@@ -82,7 +86,7 @@ describe("tự chọn hoa văn", () => {
 
   it("bìa, bìa phần và trích dẫn cùng dùng hoa văn chủ đạo suy ra từ mã bài giảng", () => {
     const base = SLIDE_MOTIFS[hash32(deckId) % 16];
-    for (const config of [cover, section, sectionToc, quote]) expect(resolveSlideMotif({ deckId, config })?.motif).toBe(base);
+    for (const config of [cover, section, quote]) expect(resolveSlideMotif({ deckId, config })?.motif).toBe(base);
   });
 
   it("ổn định: cùng bài giảng luôn ra cùng hoa văn; bài khác nhau rải đều trên bộ hoa văn", () => {

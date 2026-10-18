@@ -10,6 +10,7 @@ import { coverIdentityFor } from "@/lib/limioLiveCoverIdentity";
 import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
 import { motifAfterRegenerate } from "@/lib/limioLiveMotifs";
 import { partLabel, resolveSourceKind, sanitizeOutline, sanitizeRefs, slideStructures } from "@/lib/limioLiveOutline";
+import { firstSplitRows, importedSlideFor, sanitizeImportSource, withOriginalNotes } from "@/lib/limioLivePptx";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -33,7 +34,17 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
 
   const deck = await prisma.liveDeck.findFirst({
     where: { id: params.deckId, userId },
-    select: { id: true, title: true, outline: true, outlineConfirmedAt: true, sourceText: true, sourceKind: true, sourceRefs: true, _count: { select: { slides: true } } },
+    select: {
+      id: true,
+      title: true,
+      outline: true,
+      outlineConfirmedAt: true,
+      sourceText: true,
+      sourceKind: true,
+      sourceRefs: true,
+      importSource: true,
+      _count: { select: { slides: true } },
+    },
   });
   if (!deck || !deck.outline) return json({ error: "not_found" }, 404);
   if (!deck.outlineConfirmedAt) return json({ error: "outline_not_confirmed" }, 409);
@@ -44,14 +55,6 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
 
   const outline = sanitizeOutline(deck.outline);
   if (outline.slides.length === 0) return json({ error: "empty_outline" }, 400);
-
-  let openai;
-  try {
-    openai = await getOpenaiClient();
-  } catch (e) {
-    if ((e as Error).message === "openai_not_configured") return json({ error: "openai_not_configured" }, 503);
-    throw e;
-  }
 
   const inputs: OutlineSlideInput[] = outline.slides.map((s, index) => ({
     index,
@@ -88,6 +91,21 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   const rowIdsToWrite = plan ? new Set([...plan.regenerate.map((r) => r.outlineId), ...plan.create]) : null;
   const writeIdx = outline.slides.map((_, i) => i).filter((i) => !rowIdsToWrite || rowIdsToWrite.has(outline.slides[i]!.id));
 
+  // Bài nhập từ PowerPoint: dòng lấy nguyên từ một slide gốc dựng thẳng từ dữ liệu đã đọc (không AI, giữ nguyên chữ).
+  const importSource = sanitizeImportSource(deck.importSource);
+  const imported = writeIdx.map((i) => importedSlideFor(outline.slides[i]!, importSource, sectionNos[i]));
+  const needsAi = writeIdx.some((i, k) => !imported[k] && !outline.slides[i]!.fixed);
+
+  let openai: Awaited<ReturnType<typeof getOpenaiClient>> | null = null;
+  if (needsAi) {
+    try {
+      openai = await getOpenaiClient();
+    } catch (e) {
+      if ((e as Error).message === "openai_not_configured") return json({ error: "openai_not_configured" }, 503);
+      throw e;
+    }
+  }
+
   const enc = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
@@ -102,9 +120,11 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           structures: writeIdx.map((i) => structures[i] ?? null),
           concurrency: 2,
           context,
+          fixedSlide: (_os, k) => imported[k] ?? null,
           isFatal: (e) => e instanceof AiTutorError,
           onProgress: (done, total) => send({ type: "progress", done, total }),
           generateBatch: async (batch) => {
+            if (!openai) throw new Error("openai_not_configured");
             const drafts = (await generateSlideDrafts(
               userId,
               { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
@@ -115,6 +135,14 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           },
         });
 
+        // Bài nhập từ PowerPoint: slide gộp/tách do AI viết nhận ghi chú giảng gốc nguyên chữ (AI không viết lại ghi chú).
+        if (importSource) {
+          const firstSplit = firstSplitRows(outline.slides);
+          result.slides = result.slides.map((g, k) => {
+            const row = outline.slides[writeIdx[k]!]!;
+            return withOriginalNotes(g, row, importSource, firstSplit.has(row.id));
+          });
+        }
         for (const s of result.slides) if (s.type === "content") s.config = fillCoverIdentity(s.config as Record<string, unknown>, who);
         const byOutlineId = new Map(writeIdx.map((i, k) => [outline.slides[i]!.id, result.slides[k]!]));
 

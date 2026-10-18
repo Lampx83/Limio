@@ -49,6 +49,7 @@ import {
   MonitorPlay,
   Play,
   History,
+  Share2,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
@@ -63,6 +64,7 @@ import Tooltip from "@/components/ui/Tooltip";
 import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
 import BrandDialog, { type BrandPatch } from "./BrandDialog";
+import ShareDialog from "./ShareDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
 import { LiveMotifProvider } from "../liveMotifContext";
 import { deckAutoMotif } from "@/lib/limioLiveMotifs";
@@ -102,6 +104,8 @@ interface Deck {
   sourceKind?: string | null;
   /** Các trang đã đọc khi soạn bài từ mô tả chủ đề có nguồn internet. */
   sourceRefs?: unknown;
+  /** Mã link xem chỉ đọc /bai-giang/<mã>; null = không chia sẻ. */
+  shareCode?: string | null;
   slides: Slide[];
 }
 
@@ -337,6 +341,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   };
 
   const [brandOpen, setBrandOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   // Các lần lưu thương hiệu chạy LẦN LƯỢT: hai lần sửa sát nhau mà đến máy chủ đảo thứ tự thì lần cũ sẽ ghi đè lần mới.
   const brandQueue = useRef<Promise<unknown>>(Promise.resolve());
   // Thương hiệu: cập nhật ngay trên màn hình rồi lưu; lỗi thì hoàn lại như đổi giao diện.
@@ -568,13 +573,19 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   };
 
   // Tách một slide quá dài thành hai: cập nhật slide hiện tại, thêm slide mới rồi đặt ngay sau nó.
-  const handleSplitSlide = async (slideId: string, first: Record<string, any>, second: Record<string, any>) => {
+  /**
+   * Thay slide bằng `first` và chèn `second` ngay sau. `aiAction`: slide đầu là đề xuất AI giảng viên đã chấp nhận
+   * (vẽ lại biểu đồ từ hình): ghi như chấp nhận đề xuất AI và giữ chọn slide đầu thay vì slide mới.
+   */
+  const handleSplitSlide = async (slideId: string, first: Record<string, any>, second: Record<string, any>, opts: { aiAction?: string } = {}) => {
     if (!deck) return;
     await flushSaves();
+    // Hiện ngay slide đầu đã đổi (vd biểu đồ thay hình), không để cửa sổ sửa còn nội dung cũ trong lúc chờ máy chủ.
+    setDeck((prev) => (prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, config: first } : s)) } : prev));
     const patchRes = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ config: first }),
+      body: JSON.stringify({ config: first, ...(opts.aiAction ? { source: "ai", aiAction: opts.aiAction } : {}) }),
     });
     const addRes = patchRes.ok
       ? await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
@@ -598,7 +609,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     });
     if (!orderRes.ok) toast.error("Đã tách nhưng chưa đặt đúng thứ tự — hãy kéo slide mới lên sau slide gốc");
     await load();
-    setSelectedSlideId(created.id);
+    setSelectedSlideId(opts.aiAction ? slideId : created.id);
   };
 
   const handleSaveSlide = async (
@@ -713,6 +724,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         >
           <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
         </Link>
+        <button
+          type="button"
+          onClick={() => setShareOpen(true)}
+          title="Link xem chỉ đọc cho người khác, kèm tải PDF"
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-token px-2.5 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
+        >
+          <Share2 size={13} className={deck.shareCode ? "text-brand-600" : undefined} />
+          <span className="hidden sm:inline">{deck.shareCode ? "Đang chia sẻ" : "Chia sẻ"}</span>
+        </button>
         <ThemePicker
           value={deck.theme ?? "white"}
           onChange={handleSetTheme}
@@ -926,10 +946,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                   slide={selectedSlide}
                   themeId={deck.theme}
                   deckId={deckId}
+                  sourceKind={deck.sourceKind ?? null}
                   onApplyProposal={(p, action) =>
                     handleSaveSlide(selectedSlide.id, { config: p.config, type: p.type, source: "ai", aiAction: action })
                   }
-                  onSplit={(a, b) => handleSplitSlide(selectedSlide.id, a, b)}
+                  onSplit={(a, b, opts) => handleSplitSlide(selectedSlide.id, a, b, opts)}
                   onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
                   editOpen={editOpen}
                   onEditOpenChange={setEditOpen}
@@ -1096,6 +1117,14 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           onClose={() => setBrandOpen(false)}
         />
       )}
+      {shareOpen && (
+        <ShareDialog
+          deckId={deckId}
+          shareCode={deck.shareCode ?? null}
+          onChange={(shareCode) => setDeck((d) => (d ? { ...d, shareCode } : d))}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </div>
     </LiveMotifProvider>
     </LiveBrandProvider>
@@ -1214,7 +1243,10 @@ function SlideCenterEditor({
   onEditOpenChange,
   nav,
   zoom,
+  sourceKind,
 }: {
+  /** Nguồn của bài AI soạn (document | topic | topic_web). */
+  sourceKind: string | null;
   zoom: number;
   editOpen: boolean;
   onEditOpenChange: (open: boolean) => void;
@@ -1222,7 +1254,7 @@ function SlideCenterEditor({
   themeId?: string | null;
   deckId: string;
   onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }, action: string) => void;
-  onSplit: (a: Record<string, any>, b: Record<string, any>) => void;
+  onSplit: (a: Record<string, any>, b: Record<string, any>, opts?: { aiAction?: string }) => void;
   slide: Slide;
   onSave: (patch: { config: Record<string, any> }) => void;
 }) {
@@ -1242,6 +1274,7 @@ function SlideCenterEditor({
         onOpenChange={onEditOpenChange}
         nav={nav}
         zoom={zoom}
+        sourceKind={sourceKind}
       />
     );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;

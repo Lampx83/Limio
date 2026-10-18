@@ -20,10 +20,9 @@ import {
   sanitizeOrgBrandSettings,
   validateOrgBrandInput,
   brandPalette,
-  contentScaleForLogo,
   contrastRatio,
+  logoBand,
   logoPlacement,
-  logoRoomPx,
   logoVisibleOn,
   sanitizeBrand,
   slideRole,
@@ -189,16 +188,12 @@ describe("luật hiện logo", () => {
 
 describe("chỗ của logo trên khung 1280×720", () => {
   it("vị trí theo góc và chiều cao theo cỡ", () => {
-    expect(logoPlacement("tr", "m")).toEqual({ height: 64, top: 36, right: 36 });
-    expect(logoPlacement("bl", "l")).toEqual({ height: 92, bottom: 36, left: 36 });
+    expect(logoPlacement("tr", "m")).toEqual({ height: 44, top: 36, right: 36 });
+    expect(logoPlacement("bl", "l")).toEqual({ height: 60, bottom: 36, left: 36 });
   });
-  it("nội dung thu nhỏ vừa đủ chừa chỗ, cỡ lớn thu nhiều hơn cỡ nhỏ và không thu quá 20%", () => {
-    const s = contentScaleForLogo("s"), m = contentScaleForLogo("m"), l = contentScaleForLogo("l");
-    expect(s).toBeGreaterThan(m);
-    expect(m).toBeGreaterThan(l);
-    expect(l).toBeGreaterThan(0.8);
-    expect(s).toBeLessThan(1);
-    expect(logoRoomPx("m")).toBe(88);
+  it("dải logo theo mép và cỡ, không thu nhỏ slide", () => {
+    expect(logoBand("tr", "m")).toEqual({ pos: "t", heightPx: 44, marginPx: 36 });
+    expect(logoBand("bl", "l")).toEqual({ pos: "b", heightPx: 60, marginPx: 36 });
   });
 });
 

@@ -3,8 +3,10 @@
 // Không tin thẳng đầu ra mô hình: số slide, bố cục, độ dài, emoji đều được ép ở đây.
 
 import { cellNumbersInSource, numbersInText } from "./limioLiveCharts";
-import { SLIDE_LAYOUTS, MAX_LEN, type SlideLayoutId } from "./limioLiveSlides";
+import { ITEM_RANGE, SLIDE_LAYOUTS, MAX_LEN, clipText, type SlideLayoutId } from "./limioLiveSlides";
 import { extractCites, figureKeys, unsupportedFigures } from "./limioLiveFigures";
+
+const STATS_MIN = ITEM_RANGE.stats!.min;
 
 // Tên khớp bộ chọn loại slide trong trình sửa bài giảng. "draw_it" là Dán Note ở chế độ vẽ:
 // khi tạo slide nó thành collaborate_board với mode "drawing" (limioLiveGenerate).
@@ -26,7 +28,7 @@ export const PART_ROLE_LABEL: Record<PartRole, string> = {
   cover: "Bìa",
   objectives: "Mục tiêu",
   agenda: "Mục lục",
-  hook: "Hook",
+  hook: "Dẫn dắt vào bài",
   content: "Nội dung",
   summary: "Tổng kết",
 };
@@ -85,7 +87,7 @@ export const REFERENCES_TITLE = "Nguồn tham khảo";
 export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
   const line = (r: WebSourceRef) => {
     const t = `[${r.n}] ${hostOf(r.url)}: ${r.title || hostOf(r.url)}`;
-    return t.length > MAX_LEN.itemHeading ? `${t.slice(0, MAX_LEN.itemHeading - 1).trimEnd()}…` : t;
+    return clipText(t, MAX_LEN.itemHeading);
   };
   return {
     id: newOutlineId(),
@@ -95,6 +97,58 @@ export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
     points: refs.slice(0, OUTLINE_LIMITS.points).map(line),
     fixed: "references",
   };
+}
+
+/**
+ * Nguồn của một dòng dàn ý trong bài nhập từ file trình chiếu (xem limioLivePptx): "same" = từ một slide gốc,
+ * "merge" = gộp nhiều slide gốc, "split" = một trong các slide tách từ một slide gốc dài (AI viết), "new" = mới (có `slides` thì là "dựa trên" các slide đó), "back" = giảng viên thêm
+ * lại một slide gốc chưa dùng. `piece/pieces`: slide gốc dài chia thành nhiều slide. `sig`: dấu các ý lúc nhập,
+ * để biết giảng viên đã sửa các ý của dòng hay chưa.
+ */
+export type OriginHow = "same" | "merge" | "split" | "new" | "back";
+export const ORIGIN_HOWS: readonly OriginHow[] = ["same", "merge", "split", "new", "back"];
+export interface OutlineOrigin {
+  slides: number[];
+  how: OriginHow;
+  piece?: number;
+  pieces?: number;
+  sig?: string;
+}
+
+export function sanitizeOrigin(raw: unknown): OutlineOrigin | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  if (!ORIGIN_HOWS.includes(o.how as OriginHow)) return undefined;
+  const slides = [...new Set((Array.isArray(o.slides) ? o.slides : []).map(Number).filter((n) => Number.isInteger(n) && n >= 1 && n <= 2000))].slice(0, 40);
+  const out: OutlineOrigin = { slides, how: o.how as OriginHow };
+  const piece = Number(o.piece);
+  const pieces = Number(o.pieces);
+  if (Number.isInteger(piece) && Number.isInteger(pieces) && piece >= 1 && pieces >= piece && pieces <= 50) Object.assign(out, { piece, pieces });
+  if (typeof o.sig === "string" && /^[0-9a-z]{1,16}$/.test(o.sig)) out.sig = o.sig;
+  return out;
+}
+
+/** Dòng lấy nguyên từ một slide gốc: khi tạo slide dựng thẳng từ dữ liệu đã đọc, không qua AI. */
+export function isImportedRow(s: Pick<OutlineSlide, "kind" | "origin">): boolean {
+  const o = s.origin;
+  return !!o && s.kind === "content" && (o.how === "same" || o.how === "back") && o.slides.length === 1;
+}
+
+/** "5", "5 và 6", "5, 6, 7 và 8". */
+export function listVi(ns: number[]): string {
+  const a = ns.map(String);
+  return a.length <= 2 ? a.join(" và ") : `${a.slice(0, -1).join(", ")} và ${a[a.length - 1]}`;
+}
+
+/** Nguồn của dòng như trong màn đối chiếu: "từ slide 4", "gộp slide 5, 6 và 7", "mới, dựa trên slide 6"… */
+export function originLabel(o: OutlineOrigin | undefined): string {
+  if (!o) return "";
+  if (o.how === "back") return `thêm lại từ slide ${o.slides[0] ?? ""}`;
+  if (o.how === "merge") return `gộp slide ${listVi(o.slides)}`;
+  if (o.how === "split") return `tách từ slide ${listVi(o.slides)}`;
+  if (o.how === "new") return o.slides.length ? `mới, dựa trên slide ${listVi(o.slides)}` : "mới";
+  const part = o.pieces && o.pieces > 1 ? `, phần ${o.piece}/${o.pieces}` : "";
+  return `từ slide ${listVi(o.slides)}${part}`;
 }
 
 export interface OutlineSlide {
@@ -110,6 +164,8 @@ export interface OutlineSlide {
   title: string;
   /** Ý chính: câu hoàn chỉnh. Rỗng với slide tương tác. */
   points: string[];
+  /** Bài nhập từ file trình chiếu: dòng này lấy từ slide gốc nào. */
+  origin?: OutlineOrigin;
 }
 
 export interface Outline {
@@ -119,18 +175,21 @@ export interface Outline {
   parts: OutlinePart[];
 }
 
-/** Thời lượng buổi giảng → khoảng số slide hợp lý (tiêu chí L3). */
+/**
+ * Thời lượng buổi giảng → khoảng số slide hợp lý (tiêu chí L3). Mỗi phần nội dung có 1 đến 2 slide tương tác
+ * và bài kết bằng một slide đáng nhớ sau slide Tóm tắt, nên mức slide rộng hơn bài chỉ có chữ.
+ */
 export const DURATIONS = [
-  { minutes: 15, min: 8, max: 10 },
-  { minutes: 30, min: 14, max: 18 },
-  { minutes: 45, min: 20, max: 25 },
+  { minutes: 15, min: 9, max: 12 },
+  { minutes: 30, min: 16, max: 20 },
+  { minutes: 45, min: 22, max: 28 },
 ] as const;
 
-/** Cứ bấy nhiêu slide nội dung thì có một slide tương tác. */
-export const INTERACTIVE_EVERY = 4;
+/** Số slide tương tác gợi ý cho mỗi phần nội dung. */
+export const INTERACTIVE_PER_PART = { min: 1, max: 2 } as const;
 
 /**
- * Buổi từ 30 phút có đủ mạch: Mục tiêu, Mục lục và slide mở mỗi phần. Buổi 15 phút chỉ có 8–10 slide,
+ * Buổi từ 30 phút có đủ mạch: Mục tiêu, Mục lục và slide mở mỗi phần. Buổi 15 phút chỉ có 9–12 slide,
  * mấy slide đó sẽ chiếm gần nửa bài, nên mục tiêu nằm trên Bìa và chuyển phần bằng lời trong ghi chú giảng.
  */
 export function isFullStructure(minutes: number): boolean {
@@ -142,7 +201,8 @@ export const OUTLINE_LIMITS = {
   slideTitle: 200,
   point: 200,
   points: 5,
-  maxSlides: 40,
+  // Bài nhập từ PowerPoint giữ mọi slide gốc (thường dài hơn bài AI soạn); AI vẫn bị ép theo mức slide của thời lượng.
+  maxSlides: 120,
   partName: 120,
   maxParts: 20,
 } as const;
@@ -181,7 +241,11 @@ function sanitizeSlide(raw: unknown, idFallback = newOutlineId): OutlineSlide | 
   const o = raw as Record<string, unknown>;
   const kind: OutlineKind = OUTLINE_KINDS.includes(o.kind as OutlineKind) ? (o.kind as OutlineKind) : "content";
   const title = clean(o.title, OUTLINE_LIMITS.slideTitle);
-  const part = typeof o.partId === "string" && o.partId ? { partId: o.partId.slice(0, 60) } : {};
+  const origin = sanitizeOrigin(o.origin);
+  const part = {
+    ...(typeof o.partId === "string" && o.partId ? { partId: o.partId.slice(0, 60) } : {}),
+    ...(origin ? { origin } : {}),
+  };
   if (kind === "content") {
     const layout: OutlineLayout = OUTLINE_LAYOUTS.includes(o.layout as OutlineLayout) ? (o.layout as OutlineLayout) : "image";
     const points = (Array.isArray(o.points) ? o.points : [])
@@ -212,17 +276,47 @@ function sanitizeParts(raw: unknown): OutlinePart[] {
 const isOpener = (s: OutlineSlide | undefined) => !!s && s.kind === "content" && s.layout === "section";
 
 /**
+ * Slide kết bài: slide nội dung cuối (không tính dòng hệ thống dựng) có bố cục Trích dẫn, đứng ngay sau
+ * slide Tóm tắt (bỏ qua slide tương tác ở giữa). Đó là câu đáng nhớ khép lại buổi học, nên nó không bị ép
+ * thành Tóm tắt và được giữ bố cục Trích dẫn cả ở bài không có tài liệu. Trả chỉ số của hai slide, hoặc null.
+ */
+export function closingIndex(slides: readonly OutlineSlide[]): { summary: number; closing: number } | null {
+  let closing = -1;
+  for (let i = slides.length - 1; i >= 0; i--) {
+    const s = slides[i]!;
+    if (s.kind !== "content" || s.fixed) continue;
+    closing = i;
+    break;
+  }
+  if (closing <= 0 || slides[closing]!.layout !== "quote") return null;
+  for (let i = closing - 1; i > 0; i--) {
+    const s = slides[i]!;
+    if (s.kind !== "content") continue;
+    return s.layout === "summary" ? { summary: i, closing } : null;
+  }
+  return null;
+}
+
+/** Slide kết bài của dàn ý đã chia phần: slide Trích dẫn cuối của phần Tổng kết, sau slide Tóm tắt. */
+export function isClosingSlide(o: Pick<Outline, "slides" | "parts">, s: OutlineSlide): boolean {
+  const c = closingIndex(o.slides);
+  if (!c || o.slides[c.closing] !== s) return false;
+  return o.parts.find((p) => p.id === s.partId)?.role === "summary";
+}
+
+/**
  * Chia dàn ý chưa có phần (dàn ý tạo trước khi có mạch cấu trúc, hoặc mô hình không gán vai trò):
- * Bìa đầu bài; mỗi slide "Mở phần" mở một phần Nội dung mang tên slide đó; slide Tóm tắt cuối và các
- * slide sau nó vào Tổng kết; phần còn lại vào phần Nội dung đang mở.
+ * Bìa đầu bài; mỗi slide "Mở phần" mở một phần Nội dung mang tên slide đó; slide Tóm tắt cuối (hoặc slide
+ * Tóm tắt đứng trước slide kết bài) và các slide sau nó vào Tổng kết; phần còn lại vào phần Nội dung đang mở.
  */
 export function inferParts(o: Pick<Outline, "title" | "slides">): Outline {
   const parts: OutlinePart[] = [];
   const slides = o.slides.map((s) => ({ ...s }));
   let lastContent = -1;
   slides.forEach((s, i) => {
-    if (s.kind === "content") lastContent = i;
+    if (s.kind === "content" && !s.fixed) lastContent = i;
   });
+  const summaryAt = closingIndex(slides)?.summary ?? lastContent;
   let cur: OutlinePart | null = null;
   const open = (role: PartRole, name = "") => {
     cur = { id: newPartId(), role, name };
@@ -231,7 +325,7 @@ export function inferParts(o: Pick<Outline, "title" | "slides">): Outline {
   slides.forEach((s, i) => {
     if (i === 0 && s.kind === "content" && s.layout === "cover") open("cover");
     else if (isOpener(s)) open("content", s.title);
-    else if (i === lastContent && i > 0 && s.layout === "summary") open("summary");
+    else if (i === summaryAt && i > 0 && s.layout === "summary") open("summary");
     else if (!cur || cur.role === "cover") open("content");
     s.partId = cur!.id;
   });
@@ -313,7 +407,7 @@ export function slideStructureRole(o: Outline, s: OutlineSlide): "opener" | "age
   return null;
 }
 
-/** Nhãn phần như trong dàn ý: "Hook", "Nội dung 2: Ứng dụng AR trong lớp học". */
+/** Nhãn phần như trong dàn ý: "Dẫn dắt vào bài", "Nội dung 2: Ứng dụng AR trong lớp học". */
 export function partLabel(o: Outline, partId: string): string {
   const p = o.parts.find((x) => x.id === partId);
   if (!p) return "";
@@ -328,6 +422,8 @@ export interface SlideStructure {
   toc?: string[];
   tocCurrent?: number;
   agenda?: string[];
+  /** Slide kết bài (isClosingSlide): giữ bố cục Trích dẫn kể cả ở bài không có tài liệu. */
+  closing?: true;
 }
 
 export function slideStructures(o: Outline): Array<SlideStructure | null> {
@@ -340,6 +436,7 @@ export function slideStructures(o: Outline): Array<SlideStructure | null> {
       return { sectionNo: String(k).padStart(2, "0"), toc: names, tocCurrent: k };
     }
     if (role === "agenda") return { agenda: names };
+    if (isClosingSlide(o, s)) return { closing: true };
     return null;
   });
 }
@@ -412,32 +509,40 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
   const refs = kind === "topic_web" ? (opts.references ?? []) : [];
   const pre = partsFromRaw(raw);
   let outline = sanitizeOutline(pre.value);
-  // Bảng và Biểu đồ phải có số trong nguồn; không có thì đổi sang bố cục khác và báo.
-  if (opts.sourceText !== undefined) warnings.push(...demoteUnbackedCharts(outline, opts.sourceText));
   const { min } = slideRange(minutes);
   // Dòng Nguồn tham khảo chiếm một chỗ trong mức slide.
   const max = slideRange(minutes).max - (refs.length ? 1 : 0);
   // Không tin mô hình đã tuân lược đồ: bài không có tài liệu không được có Số liệu, Biểu đồ hay Trích dẫn.
-  for (const s of outline.slides) {
-    s.layout = safeLayoutFor(kind, s.layout);
+  // Riêng slide kết bài giữ Trích dẫn: đó là câu khép lại buổi học do bài viết ra, không dẫn lời ai.
+  const closingAt = closingIndex(outline.slides)?.closing ?? -1;
+  outline.slides.forEach((s, i) => {
+    if (i !== closingAt) s.layout = safeLayoutFor(kind, s.layout);
     // Mức kiến thức chung không có nguồn nào để dẫn: số [n] mô hình lỡ ghi là bịa.
     if (kind === "topic") {
       s.title = extractCites(s.title).text;
       s.points = s.points.map((p) => extractCites(p).text).filter(Boolean);
     }
-  }
+  });
+  // Biểu đồ và Số liệu phải có số trong nguồn; không có thì đổi sang bố cục khác và báo. Chạy sau khi đã
+  // ép bố cục theo loại nguồn, để slide mức kiến thức chung (vốn không được có hai bố cục này) không bị báo thừa.
+  if (opts.sourceText !== undefined) warnings.push(...demoteUnbackedCharts(outline, opts.sourceText));
 
   if (outline.slides.length > max) {
     const had = outline.slides.length;
-    const last = outline.slides[had - 1]!;
-    outline.slides = [...outline.slides.slice(0, max - 1), last];
+    // Giữ nguyên đuôi bài: slide cuối, hoặc cả slide Tóm tắt lẫn slide kết bài khi có.
+    const c = closingIndex(outline.slides);
+    const tail = c ? Math.min(had - c.summary, 3) : 1;
+    outline.slides = [...outline.slides.slice(0, max - tail), ...outline.slides.slice(had - tail)];
     warnings.push(`AI đề xuất ${had} slide, đã giữ ${max} slide cho buổi ${minutes} phút. Bạn có thể thêm lại slide ở bước này.`);
   }
 
   const first = outline.slides[0];
   if (first && first.kind === "content" && first.layout !== "cover") first.layout = "cover";
-  const lastContent = [...outline.slides].reverse().find((s) => s.kind === "content");
-  if (lastContent && lastContent !== first && lastContent.layout !== "summary") lastContent.layout = "summary";
+  // Có slide kết bài thì slide Tóm tắt đứng trước nó; không có thì slide nội dung cuối thành Tóm tắt.
+  if (!closingIndex(outline.slides)) {
+    const lastContent = [...outline.slides].reverse().find((s) => s.kind === "content");
+    if (lastContent && lastContent !== first && lastContent.layout !== "summary") lastContent.layout = "summary";
+  }
   // Mô hình không gán vai trò: chia lại sau khi đã ép bìa/tóm tắt, để hai slide đó vào đúng phần.
   outline = finalizeParts(pre.fromRoles ? outline : inferParts(outline));
 
@@ -462,19 +567,33 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
 }
 
 /**
- * Chống bịa số liệu ngay từ dàn ý: slide Biểu đồ cần ít nhất hai ý có số, và mọi số đó phải có trong
- * tài liệu gốc. Không đạt thì đổi sang Chữ và hình (giữ nguyên các ý) và báo cho giảng viên.
- * Sửa tại chỗ; trả về các câu cảnh báo.
+ * Chống bịa số liệu ngay từ dàn ý, cùng luật với lúc sinh slide (configFromOutline):
+ * - Biểu đồ cần ít nhất hai ý có số, mọi số đó phải có trong tài liệu gốc; không đạt thì đổi sang Chữ và hình.
+ * - Số liệu: mọi số trong các ý phải có trong tài liệu gốc và cần ít nhất ITEM_RANGE.stats.min ý có số;
+ *   không đạt thì đổi sang Ba thẻ, để giảng viên thấy ngay thay vì đến lúc tạo slide mới âm thầm đổi.
+ * Giữ nguyên các ý. Sửa tại chỗ; trả về các câu cảnh báo.
  */
 export function demoteUnbackedCharts(outline: Pick<Outline, "slides">, sourceText: string): string[] {
   const found = numbersInText(sourceText);
   const warnings: string[] = [];
   for (const s of outline.slides) {
-    if (s.kind !== "content" || s.layout !== "chart") continue;
+    if (s.kind !== "content") continue;
+    const name = s.title || "không tên";
     const withNum = s.points.filter((p) => /\d/.test(p));
-    if (withNum.length >= 2 && withNum.every((p) => cellNumbersInSource(p.replace(/^[^:]*:\s*/, ""), found))) continue;
-    s.layout = "image";
-    warnings.push(`Slide “${s.title || "không tên"}”: tài liệu không có đủ số liệu cho biểu đồ, đã đổi sang Chữ và hình.`);
+    if (s.layout === "chart") {
+      if (withNum.length >= 2 && withNum.every((p) => cellNumbersInSource(p.replace(/^[^:]*:\s*/, ""), found))) continue;
+      s.layout = "image";
+      warnings.push(`Slide “${name}”: tài liệu không có đủ số liệu cho biểu đồ, đã đổi sang Chữ và hình.`);
+    } else if (s.layout === "stats") {
+      // Kiểm cả ý: lúc sinh slide, con số lớn có thể lấy từ bất cứ chỗ nào trong ý.
+      if (!withNum.every((p) => cellNumbersInSource(p, found))) {
+        s.layout = "cards";
+        warnings.push(`Slide “${name}”: có con số không tìm thấy trong tài liệu, nên slide đã đổi từ Số liệu sang Ba thẻ.`);
+      } else if (withNum.length < STATS_MIN) {
+        s.layout = "cards";
+        warnings.push(`Slide “${name}”: cần ít nhất ${STATS_MIN} ý có con số lấy từ tài liệu để dựng Số liệu, nên slide đã đổi sang Ba thẻ.`);
+      }
+    }
   }
   return warnings;
 }
@@ -486,7 +605,7 @@ export function outlineStats(outline: Pick<Outline, "slides"> & { title?: string
 
 /** Điểm lệch so với khuyến nghị — chỉ nhắc, không chặn (giảng viên là người quyết). */
 export function outlineWarnings(
-  outline: Pick<Outline, "slides"> & { title?: string },
+  outline: Pick<Outline, "slides"> & { title?: string; parts?: OutlinePart[] },
   minutes: number,
   opts: Pick<OutlineSourceOptions, "sourceKind" | "sourceText" | "sourceFigureKeys"> = {},
 ): string[] {
@@ -504,6 +623,14 @@ export function outlineWarnings(
   }
   const last = outline.slides[outline.slides.length - 1];
   if (last && last.kind !== "content") w.push("Slide cuối đang là slide tương tác; nên kết bài bằng slide tóm tắt.");
+  // Bài đã có tương tác nhưng dồn vào vài phần: nhắc riêng từng phần còn chỉ có chữ.
+  if (st.interactive > 0) {
+    const quiet = (outline.parts ?? [])
+      .filter((p) => p.role === "content" && outline.slides.some((s) => s.partId === p.id))
+      .filter((p) => !outline.slides.some((s) => s.partId === p.id && s.kind !== "content"))
+      .map((p) => `“${p.name || "không tên"}”`);
+    if (quiet.length) w.push(`Phần ${quiet.slice(0, 3).join(", ")} chưa có slide tương tác; nên thêm một câu hỏi nhanh, bình chọn hoặc đám mây từ.`);
+  }
   w.push(...figureWarnings(outline, opts));
   return w;
 }

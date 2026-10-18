@@ -5,7 +5,7 @@ import {
   extractVimeoId,
   extractYouTubeId,
 } from "@/app/instructor/classroom/boardNoteStyle";
-import { detectAttachmentKind, googleEmbedUrl } from "./attachmentKind";
+import { detectAttachmentKind, googleEmbedUrl, internalMediaPath } from "./attachmentKind";
 
 function hostOf(url: string): string {
   try {
@@ -42,7 +42,7 @@ export default function AttachmentPreview({ url }: { url: string }) {
     case "pdf":
       body = (
         <iframe
-          src={url}
+          src={internalMediaPath(url) ?? url}
           title="Xem trước PDF bài nộp"
           className="h-[60vh] w-full rounded-xl border border-token bg-white lg:h-[calc(75vh-5.5rem)]"
         />

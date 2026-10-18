@@ -129,6 +129,27 @@ describe("dọn file mồ côi — quyết định giữ/xoá", () => {
     expect(scan.eligible).toBe(1); // chỉ file anchor
   });
 
+  it("hai bản nhỏ (.w480/.w960.webp) đi theo ảnh gốc: gốc còn dùng thì giữ cả ba, gốc mồ côi thì chọn cả ba", async () => {
+    const u = await owner();
+    const c = await anchor(u.userId);
+    seq++;
+    const stem = (n: number) => `${u.userId}-1600x1000-${1790000000000 + n}-${n.toString(16).padStart(8, "b")}`;
+    const used = stem(seq);
+    const lost = stem(seq + 1);
+    seq++;
+    const dir = "limio-live-resources/2026/06";
+    for (const s of [used, lost]) {
+      await stored("public", `${dir}/${s}.jpg`);
+      await stored("public", `${dir}/${s}.w480.webp`);
+      await stored("public", `${dir}/${s}.w960.webp`);
+    }
+    await prisma.course.update({ where: { id: c.courseId }, data: { description: `/api/limio-live-resource/${used}.jpg` } });
+
+    const scan = await findOrphanedFiles();
+    expect(scan.orphans.map((o) => o.key).sort()).toEqual([`${dir}/${lost}.jpg`, `${dir}/${lost}.w480.webp`, `${dir}/${lost}.w960.webp`]);
+    expect(scan.unverifiable).toBe(0);
+  });
+
   it("tên file không nhận dạng được thì bỏ qua, không đoán", async () => {
     const u = await owner();
     await anchor(u.userId);

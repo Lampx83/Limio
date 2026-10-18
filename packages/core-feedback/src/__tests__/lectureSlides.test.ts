@@ -17,6 +17,9 @@ describe("vai trò trong mạch bài", () => {
     expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Mục tiêu", points: [], role: "objectives" })).toBe("objectives");
     expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Nội dung", points: [], role: "agenda" })).toBe("agenda");
     expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Điều cần nhớ", points: [], role: "summary" })).toBe("summary");
+    expect(specKeyFor({ index: 0, kind: "content", layout: "quote", title: "Câu kết.", points: [], role: "summary" })).toBe("closing");
+    expect(specKeyFor({ index: 0, kind: "content", layout: "quote", title: "Câu hỏi mở?", points: [], role: "hook" })).toBe("hook_quote");
+    expect(SLIDE_SPEC.closing).toContain("không bao giờ gán câu tự viết cho ai");
     expect(SLIDE_SPEC.section).toContain("chuyển ý");
     expect(SLIDE_SPEC.agenda).toContain("giữ nguyên chữ");
   });

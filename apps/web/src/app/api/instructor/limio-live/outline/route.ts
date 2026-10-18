@@ -14,7 +14,7 @@ import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
-import { INTERACTIVE_EVERY, isFullStructure, isValidMinutes, normalizeOutline, slideRange, type DeckSourceKind, type WebSourceRef } from "@/lib/limioLiveOutline";
+import { isFullStructure, isValidMinutes, normalizeOutline, slideRange, type DeckSourceKind, type WebSourceRef } from "@/lib/limioLiveOutline";
 import { WEB_MAX_PAGES, getWebSearchProvider, searchQueryFromTopic, toSourcePages, type WebSearchProvider } from "@/lib/webSearch";
 
 export const runtime = "nodejs";
@@ -150,7 +150,6 @@ export async function POST(req: Request) {
               minutes,
               minSlides: range.min,
               maxSlides: range.max,
-              interactiveEvery: INTERACTIVE_EVERY,
               structure: isFullStructure(minutes) ? "full" : "compact",
             },
             openai,

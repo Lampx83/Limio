@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, type CSSProperties, type ReactNode } from "react";
+import { keepHyphenated } from "@/lib/limioLiveFit";
 import {
   chartAltText,
   chartLabelLimit,
@@ -448,20 +449,20 @@ export function ChartView({ cfg, width, height }: { cfg: Record<string, any>; wi
   );
 }
 
-/** Bảng: cột toàn số căn phải; hàng tiêu đề để trống thì không vẽ. Cỡ chữ do nơi gọi tính (tableFontSize). */
-export function TableView({ head, rows, px }: { head: string[]; rows: string[][]; px: number }) {
+/** Bảng: cột toàn số căn phải; hàng tiêu đề để trống thì không vẽ. Cỡ chữ và đệm ô do nơi gọi tính (tableFontSize). */
+export function TableView({ head, rows, px, padY }: { head: string[]; rows: string[][]; px: number; padY?: number }) {
   const cols = Math.max(head.length, ...rows.map((r) => r.length), 1);
   const num = numericColumns(rows, cols);
   const showHead = head.some((h) => h.trim());
   return (
     <div className="tbl card a" style={delay(1)}>
-      <table style={{ fontSize: px }}>
+      <table style={{ fontSize: px, ...(padY ? { ["--tpy" as string]: `${padY}px` } : null) }}>
         {showHead && (
           <thead>
             <tr>
               {Array.from({ length: cols }, (_, j) => (
                 <th key={j} scope="col" className={num[j] ? "num" : undefined}>
-                  {head[j] ?? ""}
+                  {keepHyphenated(head[j] ?? "")}
                 </th>
               ))}
             </tr>
@@ -472,7 +473,7 @@ export function TableView({ head, rows, px }: { head: string[]; rows: string[][]
             <tr key={i} className="a" style={delay(i + 2)}>
               {Array.from({ length: cols }, (_, j) => (
                 <td key={j} className={num[j] ? "num" : undefined}>
-                  {r[j] ?? ""}
+                  {keepHyphenated(r[j] ?? "")}
                 </td>
               ))}
             </tr>

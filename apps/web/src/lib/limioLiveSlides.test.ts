@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ITEM_RANGE,
   MAX_LEN,
+  clipText,
   MAX_TOC,
   MIN_FONT_PX,
   accentTail,
@@ -121,6 +122,38 @@ describe("fitFontSize", () => {
   });
   it("minPx nhỏ hơn 26 vẫn bị nâng lên 26", () => {
     expect(fitFontSize("a".repeat(2000), { maxPx: 40, minPx: 12, widthPx: 300, maxLines: 3 }).px).toBe(MIN_FONT_PX);
+  });
+});
+
+describe("clipText (cắt chữ khi lưu không cắt giữa từ)", () => {
+  it("ngắn hơn giới hạn thì giữ nguyên (đã bỏ khoảng trắng hai đầu)", () => {
+    expect(clipText("  Học tập  ", 60)).toBe("Học tập");
+  });
+  it("dài hơn thì lùi về hết từ gần nhất và thêm dấu ba chấm", () => {
+    const t = "Phân biệt rõ ràng giữa trải nghiệm hấp dẫn và kết quả học tập thật sự của người học";
+    const out = clipText(t, 60);
+    expect(out.length).toBeLessThanOrEqual(60);
+    expect(out.endsWith("…")).toBe(true);
+    expect(t.startsWith(out.slice(0, -1))).toBe(true);
+    // ký tự ngay sau phần giữ lại là khoảng trắng: không cắt giữa từ
+    expect(t[out.length - 1]).toBe(" ");
+  });
+  it("bỏ dấu phẩy treo ở cuối trước dấu ba chấm", () => {
+    expect(clipText("Một hai ba bốn năm, sáu bảy tám", 22)).toBe("Một hai ba bốn năm…");
+  });
+  it("chuỗi liền không có khoảng trắng thì cắt cứng", () => {
+    expect(clipText("1234567890123", 10)).toBe("1234567890");
+  });
+  it("không phải chuỗi thì rỗng", () => {
+    expect(clipText(42, 10)).toBe("");
+  });
+  it("slide Tóm tắt giữ được cả câu dài hơn tiêu đề thẻ", () => {
+    const line = "Vai trò giáo viên chuyển dịch sang thiết kế, hướng dẫn và ra quyết định sư phạm";
+    const s = sanitizeLayoutConfig("summary", { items: [{ heading: line }, { heading: "Ý 2" }] });
+    expect((s.items as any[])[0].heading).toBe(line);
+    const cards = sanitizeLayoutConfig("cards", { items: [{ heading: line, body: "b" }, { heading: "c", body: "d" }] });
+    expect((cards.items as any[])[0].heading.length).toBeLessThanOrEqual(MAX_LEN.itemHeading);
+    expect((cards.items as any[])[0].heading.endsWith("…")).toBe(true);
   });
 });
 
@@ -517,5 +550,20 @@ describe("fillCoverIdentity: điền sẵn tên đơn vị và người trình b
     const c = fillCoverIdentity<Record<string, unknown>>({ layout: "cover" }, { org: "o".repeat(300), presenter: "p".repeat(300) });
     expect((c.org as string).length).toBe(LEN.org);
     expect((c.byline as string).length).toBe(LEN.byline);
+  });
+});
+
+describe("ý của slide Tóm tắt là cả một câu", () => {
+  it("không cắt câu dài hơn tiêu đề thẻ, chỉ cắt ở giới hạn câu giải thích", () => {
+    const cau = "Người học giải thích được khái niệm phân cấp thị giác và vai trò của nó trong thiết kế giao diện.";
+    expect(cau.length).toBeGreaterThan(MAX_LEN.itemHeading);
+    const c = sanitizeLayoutConfig("summary", { title: "Mục tiêu", items: [{ heading: cau }, { heading: "x".repeat(300) }] });
+    const items = c.items as Array<{ heading: string }>;
+    expect(items[0]!.heading).toBe(cau);
+    expect(items[1]!.heading).toHaveLength(MAX_LEN.summaryItem);
+  });
+  it("tiêu đề thẻ vẫn giữ giới hạn ngắn", () => {
+    const c = sanitizeLayoutConfig("cards", { items: [{ heading: "x".repeat(100), body: "Một câu." }, { heading: "B", body: "Hai." }] });
+    expect((c.items as Array<{ heading: string }>)[0]!.heading).toHaveLength(MAX_LEN.itemHeading);
   });
 });

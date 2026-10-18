@@ -16,6 +16,7 @@ export * from "./teaching-tools/timer-templates";
 export * from "./teaching-tools/activity-plans";
 export * from "./teaching-tools/quick-activity-trash";
 export * from "./live/decks";
+export * from "./live/share";
 export * from "./live/groups";
 export * from "./live/present";
 export * from "./live/history";

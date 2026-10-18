@@ -71,16 +71,15 @@ export const slideArtLabel = (id: SlideArtId): string => (isSlideIllustrationId(
 /**
  * Chỗ đặt hoa văn trên khung 1280×720:
  * - side: dải phải của bìa (chữ bìa rộng tối đa 800 px nên không qua x = 896, mặt nạ trong suốt tới đúng mốc đó);
- * - br / bl / tr: một góc của bìa phần, bìa phần có mục lục, trích dẫn (chữ dài có thể chạm tới, nên độ đậm bị chặn);
+ * - br / tr: một góc của bìa phần, trích dẫn (chữ dài có thể chạm tới, nên độ đậm bị chặn);
  * - fill: phủ ô hình của bố cục Chữ và hình khi chưa có ảnh (không có chữ).
  */
-export type MotifSlot = "side" | "br" | "bl" | "tr" | "fill";
+export type MotifSlot = "side" | "br" | "tr" | "fill";
 
 /** Kích thước vùng vẽ (px trên khung thiết kế) của từng chỗ đặt. */
 export const MOTIF_SLOT_SIZE: Record<MotifSlot, [number, number]> = {
   side: [480, 720],
   br: [600, 440],
-  bl: [600, 440],
   tr: [600, 440],
   fill: [464, 500],
 };
@@ -105,7 +104,9 @@ export function motifSlot(config: Cfg): MotifSlot | null {
     case "cover":
       return "side";
     case "section":
-      return hasToc(c) ? "bl" : "br";
+      // Bìa phần có mục lục không có chỗ trống: góc nào cũng nằm dưới số, tên phần hoặc mục lục, hoa văn đè lên chữ
+      // trông rối (giảng viên góp ý 2026-10-18). Giữ hai vệt sáng mờ như trước.
+      return hasToc(c) ? null : "br";
     case "quote":
       return "tr";
     case "image":

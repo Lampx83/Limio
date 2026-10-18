@@ -281,6 +281,25 @@ describe("generateDeckSlides", () => {
   });
 });
 
+describe("slide kết bài: giữ Trích dẫn ở bài không có tài liệu", () => {
+  const closing = os("c", "content", "quote", "Học là thay đổi cách nghĩ.");
+  const draft: SlideDraft = { index: 1, quote: "Học là thay đổi cách nghĩ, không chỉ thêm thông tin.", source: "Thông điệp của buổi học", notes: "Nói chậm." };
+
+  it("slide kết (structures.closing) giữ bố cục Trích dẫn; slide Trích dẫn khác đổi sang Chữ và hình", async () => {
+    const outline = [os("q", "content", "quote", "Một câu hỏi mở?"), closing];
+    const r = await generateDeckSlides({
+      outline,
+      context: { sourceKind: "topic", sourceText: "Mô tả chủ đề." },
+      structures: [null, { closing: true }],
+      isFatal: () => false,
+      generateBatch: async () => [{ index: 0, title: "Một câu hỏi mở?", bullets: ["Câu một.", "Câu hai.", "Câu ba."] }, draft],
+    });
+    expect(r.slides[0]!.config.layout).toBe("image");
+    expect(r.slides[1]!.config.layout).toBe("quote");
+    expect(r.slides[1]!.config.quote).toBe(draft.quote);
+  });
+});
+
 describe("proposalFromDraft", () => {
   const current = {
     config: {

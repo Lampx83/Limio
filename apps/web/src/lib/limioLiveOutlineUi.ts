@@ -7,6 +7,7 @@ import {
   finalizeParts,
   newOutlineId,
   newPartId,
+  originLabel,
   slideStructureRole,
   type Outline,
   type OutlineKind,
@@ -129,10 +130,12 @@ export function glyphKey(s: Pick<OutlineSlide, "kind" | "layout">): OutlineLayou
 }
 
 /** Dòng phụ dưới tiêu đề ở danh sách: "Chữ và hình · 3 ý" hoặc tên loại slide. */
-export function rowSubtitle(s: Pick<OutlineSlide, "kind" | "layout" | "points">): string {
-  if (s.kind !== "content") return OUTLINE_KIND_LABEL[s.kind];
+export function rowSubtitle(s: Pick<OutlineSlide, "kind" | "layout" | "points" | "origin">): string {
+  // Bài nhập từ PowerPoint: ghi nguồn của dòng ("từ slide 4", "gộp slide 5 và 6").
+  const from = s.origin ? ` · ${originLabel(s.origin)}` : "";
+  if (s.kind !== "content") return OUTLINE_KIND_LABEL[s.kind] + from;
   const n = s.points.filter((p) => p.trim()).length;
-  return `${OUTLINE_LAYOUT_UI[s.layout ?? "image"].label} · ${n} ý`;
+  return `${OUTLINE_LAYOUT_UI[s.layout ?? "image"].label} · ${n} ý${from}`;
 }
 
 // ── Đổi loại / bố cục ───────────────────────────────────────────────────────

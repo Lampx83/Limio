@@ -5,6 +5,7 @@
 
 import {
   ITEM_RANGE,
+  clipText,
   MAX_LEN,
   normalizeContentSlideConfig,
   pickMeta,
@@ -62,12 +63,15 @@ export interface DraftContext {
   extraCorpus?: string;
   /** Tập số có trong nguồn (numbersInText): số trên Bảng, Biểu đồ, Số liệu phải nằm trong đây. Thiếu = rỗng. */
   sourceNumbers?: Set<string>;
+  /** Slide kết bài (SlideStructure.closing): câu khép lại buổi học, giữ bố cục Trích dẫn ở mọi nguồn. */
+  closing?: boolean;
 }
 
 const topicKind = (ctx?: DraftContext): DeckSourceKind => ctx?.sourceKind ?? "document";
 
 /** Dòng dàn ý với bố cục đã đổi theo nguồn (mức kiến thức chung không có Số liệu, Trích dẫn). */
 function forSource(os: OutlineSlide, ctx?: DraftContext): OutlineSlide {
+  if (ctx?.closing) return os;
   const layout = safeLayoutFor(topicKind(ctx), os.layout);
   return layout === os.layout ? os : { ...os, layout };
 }
@@ -356,7 +360,7 @@ export function applyStructure(g: GeneratedSlide, st: SlideStructure | null | un
     return { ...g, config: normalizeContentSlideConfig(config) as Record<string, unknown> };
   }
   if (c.layout === "summary" && st.agenda && st.agenda.length) {
-    return { ...g, config: { ...c, items: st.agenda.map((h) => ({ heading: h.slice(0, MAX_LEN.itemHeading), body: "" })) } };
+    return { ...g, config: { ...c, items: st.agenda.map((h) => ({ heading: clipText(h, MAX_LEN.summaryItem), body: "" })) } };
   }
   return g;
 }
@@ -391,6 +395,8 @@ export interface GenerateDeps {
   /** Nguồn của bài (tài liệu, mô tả chủ đề...); thiếu = tài liệu. Số trên slide Bảng, Biểu đồ, Số liệu phải có trong
    *  context.sourceText (chống bịa số liệu). */
   context?: DraftContext;
+  /** Slide dựng sẵn không qua AI (vd. dòng lấy nguyên từ slide PowerPoint gốc); null = để AI viết. */
+  fixedSlide?: (os: OutlineSlide, index: number) => GeneratedSlide | null;
 }
 
 export interface GenerateResult {
@@ -409,10 +415,12 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
   const sections = deps.sectionNos ?? sectionNumbers(outline);
   const ctx: DraftContext = { ...deps.context, sourceNumbers: numbersInText(deps.context?.sourceText ?? "") };
   const results: GeneratedSlide[] = new Array(total);
-  // Dòng do hệ thống dựng (Nguồn tham khảo) không gửi cho AI.
-  const ai = outline.map((s, i) => (s.fixed ? -1 : i)).filter((i) => i >= 0);
+  // Dòng do hệ thống dựng (Nguồn tham khảo) và dòng dựng sẵn (slide gốc) không gửi cho AI.
+  const own = outline.map((s, i) => (s.fixed ? null : (deps.fixedSlide?.(s, i) ?? null)));
+  const ai = outline.map((s, i) => (s.fixed || own[i] ? -1 : i)).filter((i) => i >= 0);
   outline.forEach((s, i) => {
     if (s.fixed) results[i] = applyStructure(draftToSlide(s, undefined, sections[i]!, ctx), deps.structures?.[i]);
+    else if (own[i]) results[i] = applyStructure(own[i]!, deps.structures?.[i]);
   });
   let done = total - ai.length;
   const batches = makeBatches(ai.length).map((b) => b.map((k) => ai[k]!));
@@ -429,7 +437,10 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
       }
     }
     const byIndex = new Map((drafts ?? []).map((x) => [x.index, x]));
-    for (const i of indices) results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, ctx), deps.structures?.[i]);
+    for (const i of indices) {
+      const st = deps.structures?.[i];
+      results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, st?.closing ? { ...ctx, closing: true } : ctx), st);
+    }
     done += indices.length;
     deps.onProgress?.(done, total);
   };
@@ -457,6 +468,38 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
 /** "custom" = yêu cầu riêng giảng viên gõ ở tab Nhờ AI. */
 export type SlideEditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
 export const SLIDE_EDIT_ACTIONS: readonly SlideEditAction[] = ["shorter", "example", "simpler", "to_quiz", "rewrite", "custom"];
+
+/**
+ * Hành động chỉ chỉnh một phần slide: mô hình hay chỉ trả trường được nhắc tới (vd. "sửa tiêu đề thành..."),
+ * nên trường nó để trống được lấp bằng nội dung hiện tại. Viết lại từ dàn ý và đổi thành quiz thay hẳn nội dung, không lấp.
+ */
+const KEEP_REST_ACTIONS: readonly SlideEditAction[] = ["custom", "shorter", "example", "simpler"];
+const FILLABLE_FIELDS = ["title", "subtitle", "bullets", "items", "columns", "footnote", "quote", "source"] as const;
+/** Trống: chuỗi chỉ có khoảng trắng, mảng toàn phần tử trống, đối tượng toàn trường trống (bỏ qua tone, icon). */
+const blank = (v: unknown): boolean =>
+  v == null ||
+  (typeof v === "string"
+    ? !v.trim()
+    : Array.isArray(v)
+      ? v.every(blank)
+      : typeof v === "object"
+        ? Object.entries(v as Record<string, unknown>).every(([k, x]) => k === "tone" || k === "icon" || blank(x))
+        : false);
+
+/** Lấp các trường bản nháp để trống bằng nội dung hiện tại; nháp trống hoàn toàn thì giữ nguyên (sẽ bị coi là hỏng). */
+function fillFromCurrent(draft: SlideDraft | undefined, cfg: Record<string, unknown>): SlideDraft | undefined {
+  if (!draft || typeof draft !== "object") return draft;
+  const d = draft as unknown as Record<string, unknown>;
+  if (FILLABLE_FIELDS.every((k) => blank(d[k])) && blank(d.table) && blank(d.chart)) return draft;
+  const out: Record<string, unknown> = { ...d };
+  for (const k of FILLABLE_FIELDS) if (blank(out[k]) && !blank(cfg[k])) out[k] = cfg[k];
+  // Bảng và Biểu đồ: bản nháp dùng trường lồng (table, chart), slide lưu khoá phẳng (xem flattenData).
+  if (blank(out.table) && !blank(cfg.rows)) out.table = { head: cfg.head, rows: cfg.rows };
+  if (blank(out.chart) && Array.isArray(cfg.series) && cfg.series.length) {
+    out.chart = { type: cfg.chartType, labels: cfg.labels, series: cfg.series, unit: cfg.unit };
+  }
+  return out as unknown as SlideDraft;
+}
 
 /** Các khoá meta của slide hiện tại không được AI đổi; phần còn lại là nội dung. */
 const GENERATED_META = ["outlineId", "aiGenerated", "presenterNote"] as const;
@@ -486,16 +529,21 @@ export function proposalFromDraft(
   };
   const sectionNo = typeof cfg.sectionNumber === "string" ? cfg.sectionNumber : "";
   // Nội dung slide hiện tại là thứ giảng viên đã có: con số trong đó không bị coi là bịa, kể cả trên Bảng, Biểu đồ, Số liệu.
+  const keepRest = KEEP_REST_ACTIONS.includes(action);
+  const filled = keepRest ? fillFromCurrent(draft, cfg) : draft;
   const allowed = addNumbersOf(numbersInText(ctx?.sourceText ?? ""), cfg);
-  const g = draftToSlide(os, draft, sectionNo, { ...ctx, extraCorpus: allText(cfg), sourceNumbers: allowed });
+  // Slide đang là Trích dẫn ở bài không có tài liệu chỉ có thể là slide kết bài: sửa câu chữ không đổi bố cục của nó.
+  const keepQuote = os.layout === "quote";
+  const g = draftToSlide(os, filled, sectionNo, { ...ctx, extraCorpus: allText(cfg), sourceNumbers: allowed, ...(keepQuote ? { closing: true } : {}) });
   if (g.usedFallback) return null;
 
   const content: Record<string, unknown> = { ...g.config };
   const aiNote = content.presenterNote;
   for (const k of GENERATED_META) delete content[k];
   const meta = pickMeta(cfg);
-  // Dòng nguồn theo nội dung mới: bản mới có nguồn thì thay, không có thì bỏ dòng cũ (bài mức có nguồn).
-  if (ctx?.sourceKind === "topic_web") delete meta.cite;
+  // Dòng nguồn: bản mới có số nguồn thì thay. Không có thì giữ dòng cũ khi chỉ chỉnh một phần (phần giữ lại vẫn dẫn
+  // nguồn cũ), còn viết lại hẳn hay đổi thành quiz thì bỏ (bài mức có nguồn).
+  if (content.cite || (ctx?.sourceKind === "topic_web" && !keepRest)) delete meta.cite;
   const note = meta.presenterNote ?? aiNote;
   // Bìa: AI chỉ viết lại tên bài và phụ đề; tên đơn vị và người trình bày là thông tin thật do người điền, giữ nguyên.
   const keepCover =

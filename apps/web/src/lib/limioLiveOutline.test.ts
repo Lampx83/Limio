@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  INTERACTIVE_EVERY,
+  INTERACTIVE_PER_PART,
   OUTLINE_KINDS,
+  PART_ROLE_LABEL,
+  closingIndex,
   inferParts,
+  isClosingSlide,
   normalizeOutline,
   outlineBlockingProblems,
   outlineStats,
@@ -19,12 +22,12 @@ const content = (title: string, layout = "image", points: string[] = ["Một câ
 const inter = (kind: string, title: string) => ({ kind, layout: null, title, points: [] });
 
 describe("slideRange", () => {
-  it("khớp tiêu chí: 15 phút 8-10, 30 phút 14-18, 45 phút 20-25", () => {
-    expect(slideRange(15)).toEqual({ min: 8, max: 10 });
-    expect(slideRange(30)).toEqual({ min: 14, max: 18 });
-    expect(slideRange(45)).toEqual({ min: 20, max: 25 });
+  it("rộng hơn bài chỉ có chữ vì mỗi phần có tương tác và bài có slide kết: 15 phút 9-12, 30 phút 16-20, 45 phút 22-28", () => {
+    expect(slideRange(15)).toEqual({ min: 9, max: 12 });
+    expect(slideRange(30)).toEqual({ min: 16, max: 20 });
+    expect(slideRange(45)).toEqual({ min: 22, max: 28 });
   });
-  it("giá trị lạ rơi về 30 phút", () => expect(slideRange(7)).toEqual({ min: 14, max: 18 }));
+  it("giá trị lạ rơi về 30 phút", () => expect(slideRange(7)).toEqual({ min: 16, max: 20 }));
 });
 
 describe("stripEmoji", () => {
@@ -115,17 +118,84 @@ describe("normalizeOutline", () => {
   });
 
   it("quá nhiều slide: giữ phần đầu và slide cuối, kèm cảnh báo", () => {
-    const many = [...Array.from({ length: 14 }, (_, i) => content(`Ý ${i}`)), content("Kết", "summary")];
+    const many = [...Array.from({ length: 18 }, (_, i) => content(`Ý ${i}`)), content("Kết", "summary")];
     const { outline, warnings } = normalizeOutline({ title: "T", slides: many }, 15);
-    expect(outline.slides).toHaveLength(10);
-    expect(outline.slides[9]!.title).toBe("Kết");
-    expect(warnings.some((w) => w.includes("đã giữ 10"))).toBe(true);
+    expect(outline.slides).toHaveLength(12);
+    expect(outline.slides[11]!.title).toBe("Kết");
+    expect(warnings.some((w) => w.includes("đã giữ 12"))).toBe(true);
   });
 
   it("ít slide hơn mức gợi ý: chỉ cảnh báo, không chặn", () => {
     const { outline, warnings } = normalizeOutline({ title: "T", slides: nine.slice(0, 4) }, 45);
     expect(outline.slides).toHaveLength(4);
-    expect(warnings.join(" ")).toContain("ít hơn mức gợi ý 20 đến 25");
+    expect(warnings.join(" ")).toContain("ít hơn mức gợi ý 22 đến 28");
+  });
+
+  describe("slide kết bài (câu đáng nhớ sau slide Tóm tắt)", () => {
+    const withClosing = [
+      content("Bìa", "cover"),
+      content("Bạn có chắc mình đang học đúng cách?", "quote", []),
+      inter("poll", "Bạn thường ôn bài bằng cách nào?"),
+      content("A"),
+      inter("quiz", "Câu nào đúng?"),
+      content("B"),
+      content("Điều cần nhớ", "summary"),
+      content("Học là thay đổi cách nghĩ, không chỉ thêm thông tin.", "quote", []),
+    ];
+
+    it("giữ bố cục Trích dẫn ở slide cuối, không ép thành Tóm tắt", () => {
+      const { outline } = normalizeOutline({ title: "T", slides: withClosing }, 15);
+      const n = outline.slides.length;
+      expect(outline.slides[n - 1]!.layout).toBe("quote");
+      expect(outline.slides[n - 2]!.layout).toBe("summary");
+      expect(closingIndex(outline.slides)).toEqual({ summary: n - 2, closing: n - 1 });
+    });
+
+    it("slide Tóm tắt và slide kết cùng vào phần Tổng kết; slideStructures đánh dấu slide kết", () => {
+      const { outline } = normalizeOutline({ title: "T", slides: withClosing }, 15);
+      const n = outline.slides.length;
+      const sum = outline.parts.find((p) => p.id === outline.slides[n - 2]!.partId)!;
+      expect(sum.role).toBe("summary");
+      expect(outline.slides[n - 1]!.partId).toBe(sum.id);
+      expect(isClosingSlide(outline, outline.slides[n - 1]!)).toBe(true);
+      expect(isClosingSlide(outline, outline.slides[1]!)).toBe(false);
+      expect(slideStructures(outline)[n - 1]).toEqual({ closing: true });
+    });
+
+    it("bài không có tài liệu: chỉ slide kết giữ Trích dẫn, slide Trích dẫn khác đổi sang bố cục chữ", () => {
+      const { outline } = normalizeOutline({ title: "T", slides: withClosing }, 15, { sourceKind: "topic" });
+      expect(outline.slides[1]!.layout).toBe("image");
+      expect(outline.slides[outline.slides.length - 1]!.layout).toBe("quote");
+    });
+
+    it("Trích dẫn cuối không đứng sau slide Tóm tắt thì không phải slide kết: ép Tóm tắt như cũ", () => {
+      const { outline } = normalizeOutline({ title: "T", slides: [content("Bìa", "cover"), content("A"), content("B"), content("Câu", "quote")] }, 15);
+      expect(outline.slides[3]!.layout).toBe("summary");
+    });
+
+    it("quá nhiều slide: giữ cả slide Tóm tắt lẫn slide kết", () => {
+      const many = [content("Bìa", "cover"), ...Array.from({ length: 16 }, (_, i) => content(`Ý ${i}`)), content("Nhớ", "summary"), content("Câu kết.", "quote", [])];
+      const { outline } = normalizeOutline({ title: "T", slides: many }, 15);
+      expect(outline.slides).toHaveLength(12);
+      expect(outline.slides.slice(-2).map((s) => s.title)).toEqual(["Nhớ", "Câu kết."]);
+    });
+
+    it("mô hình ghi vai trò: summary gồm hai slide liền nhau thành một phần", () => {
+      const raw = {
+        title: "T",
+        slides: [
+          { role: "cover", section: null, ...content("Bìa", "cover") },
+          { role: "content", section: "Phần 1", ...content("A") },
+          { role: "content", section: "Phần 1", ...inter("quiz", "Hỏi?") },
+          { role: "content", section: "Phần 1", ...content("B") },
+          { role: "summary", section: null, ...content("Nhớ", "summary") },
+          { role: "summary", section: null, ...content("Câu kết.", "quote", []) },
+        ],
+      };
+      const { outline } = normalizeOutline(raw, 15);
+      expect(outline.parts.map((p) => p.role)).toEqual(["cover", "content", "summary"]);
+      expect(outline.slides[5]!.layout).toBe("quote");
+    });
   });
 
   it("đầu vào hỏng không làm hỏng chương trình", () => {
@@ -150,9 +220,31 @@ describe("outlineWarnings / outlineStats / outlineBlockingProblems", () => {
     const o = { title: "", slides: [{ id: "1", kind: "quiz" as const, layout: null, title: "", points: [] }] };
     expect(outlineBlockingProblems(o)[0]).toContain("câu hỏi");
   });
-  it("hằng số xen tương tác khớp tiêu chí (3 đến 4)", () => {
-    expect(INTERACTIVE_EVERY).toBeGreaterThanOrEqual(3);
-    expect(INTERACTIVE_EVERY).toBeLessThanOrEqual(4);
+  it("phần hook hiện tên Dẫn dắt vào bài", () => expect(PART_ROLE_LABEL.hook).toBe("Dẫn dắt vào bài"));
+  it("mỗi phần nội dung 1 đến 2 slide tương tác", () => expect(INTERACTIVE_PER_PART).toEqual({ min: 1, max: 2 }));
+  it("nhắc phần nội dung chưa có slide tương tác (khi bài đã có tương tác ở chỗ khác)", () => {
+    const o = normalizeOutline(
+      {
+        title: "T",
+        slides: [
+          content("Bìa", "cover"),
+          content("Phần một", "section"),
+          content("A"),
+          inter("quiz", "Hỏi?"),
+          content("B"),
+          content("Phần hai", "section"),
+          content("C"),
+          content("D"),
+          content("Nhớ", "summary"),
+        ],
+      },
+      30,
+    ).outline;
+    const w = outlineWarnings(o, 30).join(" ");
+    expect(w).toContain("Phần “Phần hai” chưa có slide tương tác");
+    expect(w).not.toContain("Phần một");
+    // Không có phần (dàn ý gọi không kèm parts) thì không nhắc.
+    expect(outlineWarnings({ slides: o.slides }, 30).join(" ")).not.toContain("chưa có slide tương tác");
   });
 });
 

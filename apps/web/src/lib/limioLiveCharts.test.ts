@@ -16,6 +16,8 @@ import {
   sourceLine,
   spreadLabels,
   tableFontSize,
+  TABLE_PAD_Y,
+  TABLE_PX,
   wrapLines,
 } from "./limioLiveCharts";
 
@@ -127,9 +129,24 @@ describe("giới hạn hiển thị", () => {
     expect(chartLabelLimit("pie", 1)).toBe(6);
     expect(chartLabelLimit("hbar", 1)).toBe(6);
   });
+  it("bảng: ít chữ thì chữ lớn tới 40 px và ô giãn ra cho hết khung", () => {
+    const head = ["A", "B", "C"];
+    const r = tableFontSize(head, [["x", "y", "z"]], 1068, 400);
+    expect(r).toMatchObject({ px: TABLE_PX.max, overflow: false });
+    expect(r.padY).toBe(TABLE_PAD_Y.max);
+  });
+  it("bảng: đệm ô chỉ giãn trong phần chỗ còn trống, không làm bảng cao quá khung", () => {
+    const head = ["Giải pháp", "Chi phí", "Thời gian", "Mức tương tác"];
+    const rows = Array.from({ length: 5 }, (_, i) => [`Giải pháp ${i}`, "Trung bình", "2 tháng", "Cao"]);
+    const availH = 360;
+    const r = tableFontSize(head, rows, 1068, availH);
+    expect(r.overflow).toBe(false);
+    // 6 hàng (kể cả hàng tiêu đề) một dòng: tổng chiều cao ≤ khung
+    expect(14 + 6 * (r.px * 1.25 + 2 * r.padY + 2)).toBeLessThanOrEqual(availH);
+    expect(r.padY).toBeGreaterThanOrEqual(Math.floor(TABLE_PAD_Y.min));
+  });
   it("bảng: cỡ chữ giảm dần đến 26 px rồi báo tràn", () => {
     const head = ["A", "B", "C"];
-    expect(tableFontSize(head, [["x", "y", "z"]], 1068, 400)).toEqual({ px: 34, overflow: false });
     const long = Array.from({ length: 6 }, () => ["một ô có khá nhiều chữ để chiếm hai dòng", "ô khác", "ô nữa cũng dài dài"]);
     const r = tableFontSize(head, long, 1068, 300);
     expect(r.px).toBe(26);

@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tận dụng không gian slide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f6f7f2; --surface: #fff; --ink: #1c2410; --ink-2: #47523a; --ink-3: #5d6852; --line: #dfe3d2; --brand: #4d7c0f; --brand-soft: #ecf6d2; --bad: #b42318; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #11160b; --surface: #1a2111; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #a5b094; --line: #323d24; --brand: #a3e635; --brand-soft: #27371a; --bad: #ff9b8f; }
+  }
+  :root[data-theme="dark"] { --bg: #11160b; --surface: #1a2111; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #a5b094; --line: #323d24; --brand: #a3e635; --brand-soft: #27371a; --bad: #ff9b8f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Be Vietnam Pro", system-ui, sans-serif; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 0 16px 80px; }
+  h1 { font-size: 24px; margin: 22px 0 4px; }
+  .lede { margin: 0 0 14px; color: var(--ink-2); max-width: 900px; }
+  .ctl { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; padding: 10px 14px; margin: 0 0 18px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .ctl fieldset { border: 0; padding: 0; margin: 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .ctl legend { float: left; margin-right: 6px; font-size: 14px; color: var(--ink-3); font-weight: 600; }
+  .ctl label { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; cursor: pointer; }
+  .ctl label:has(input:checked) { border-color: var(--brand); background: var(--brand-soft); font-weight: 600; }
+  .ctl input { accent-color: var(--brand); margin: 0; }
+  .case { margin: 0 0 34px; }
+  .case h2 { font-size: 18px; margin: 0 0 2px; }
+  .case .note { margin: 0 0 10px; color: var(--ink-3); font-size: 15px; max-width: 980px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .pair { grid-template-columns: 1fr; } }
+  .side .cap { font-size: 14px; font-weight: 700; margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; }
+  .side .cap .m { font-weight: 500; color: var(--ink-3); }
+  .side.after .cap b { color: var(--brand); }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); }
+  .frame > .lslide { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+
+  /* ===== Bộ vẽ slide: chép từ slideLayouts.css (phần dùng chung), thêm biến --fs cho bản "Sau" ===== */
+  .lslide { text-align: left; width: 1280px; height: 720px; position: relative; overflow: hidden; color: var(--stext); background: var(--sbg);
+    font-family: var(--sfont-body); line-height: 1.35; --fs: 1; }
+  .lslide *, .lslide *::before, .lslide *::after { box-sizing: border-box; }
+  .lt-brand { --sbg: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); --stext: #20241F; --smuted: #5A6256; --sa: #4D7C0F; --sa2: #BE185D; --ssoft: #ECFCCB; --ssoft2: #FCE7F3;
+    --scard: rgba(255,255,255,.82); --scardb: #E3E8D3; --son: #fff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: "Be Vietnam Pro", sans-serif; --sfont-body: "Be Vietnam Pro", sans-serif; --shw: 800; --shls: -0.02em; --sglow1: #BEF264; --sglow2: #F9A8D4;
+    --sg: linear-gradient(120deg, #4D7C0F 0%, #15803D 100%); --sgb: linear-gradient(135deg, #4D7C0F 0%, #15803D 100%); }
+  .lt-night { --sbg: linear-gradient(135deg, #0B1020 0%, #1B1A4B 100%); --stext: #F1F5F9; --smuted: #C4CCE0; --sa: #38BDF8; --sa2: #C4B5FD; --ssoft: rgba(56,189,248,.16); --ssoft2: rgba(167,139,250,.16);
+    --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14); --son: #06202E; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
+    --sfont-head: Lexend, "Be Vietnam Pro", sans-serif; --sfont-body: "Be Vietnam Pro", sans-serif; --shw: 800; --shls: -0.025em; --sglow1: #38BDF8; --sglow2: #A78BFA;
+    --sg: linear-gradient(120deg, #38BDF8 0%, #A78BFA 100%); --sgb: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%); }
+  .lt-paper { --sbg: linear-gradient(160deg, #FBF6E9 0%, #F4E8CB 100%); --stext: #2B2118; --smuted: #6B5B4A; --sa: #A34A07; --sa2: #0B5F59; --ssoft: #FDE9C7; --ssoft2: #CDEBE6;
+    --scard: rgba(255,253,247,.9); --scardb: #E8DCC0; --son: #fff; --sok: #166534; --sokbg: #DCFCE7; --sbad: #991B1B; --sbadbg: #FEE2E2;
+    --sfont-head: "Be Vietnam Pro", sans-serif; --sfont-body: "Be Vietnam Pro", sans-serif; --shw: 700; --shls: -0.01em; --sglow1: #FBBF24; --sglow2: #5EEAD4;
+    --sg: linear-gradient(120deg, #A34A07 0%, #B83A0C 100%); --sgb: linear-gradient(135deg, #B45309 0%, #92400E 100%); }
+  .lt-dark .glow { opacity: .34; }
+  .lslide .h { font-family: var(--sfont-head); font-weight: var(--shw); letter-spacing: var(--shls); line-height: 1.2; margin: 0; text-wrap: balance; }
+  .lslide p, .lslide li, .lslide b, .lslide .rowi span, .lslide .qt { text-wrap: pretty; }
+  .lslide .grad { background: var(--sg); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lslide .glow { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; }
+  .lslide .card { background: var(--scard); border: 1px solid var(--scardb); border-radius: 28px; }
+  .lslide svg.i { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+  .logo { position: absolute; z-index: 5; right: 36px; height: 64px; display: flex; align-items: center; font: 800 54px/1 "Be Vietnam Pro", sans-serif; letter-spacing: -.03em; color: #3F6212; }
+  .logo span { color: #DB2777; } .logo small { font-size: 34px; color: #65A30D; font-weight: 700; }
+  .lt-dark .logo { color: #BEF264; }
+  .logo.t { top: 36px; } .logo.b { bottom: 36px; }
+
+  /* ---------- TRƯỚC: đúng như main hiện tại ---------- */
+  .v-old .pad { position: absolute; inset: 0; padding: 72px 96px; display: flex; flex-direction: column; }
+  .v-old ul.bul { list-style: none; padding: 0; margin: 0; display: grid; gap: 26px; font-size: 38px; line-height: 1.28; }
+  .v-old ul.bul li { display: flex; gap: 18px; align-items: flex-start; }
+  .v-old ul.bul li::before { content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--sgb); margin-top: 18px; }
+  .v-old.ll-image .pad { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+  .v-old .tx { display: grid; gap: 30px; }
+  .v-old .art { height: 500px; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  .v-old.ll-cards .pad { gap: 34px; }
+  .v-old.ll-cards .row { display: grid; gap: 26px; flex: 1; align-items: center; }
+  .v-old .it { padding: 32px 30px; display: flex; flex-direction: column; gap: 16px; position: relative; }
+  .v-old .badge { width: 76px; height: 76px; border-radius: 20px; display: grid; place-items: center; color: var(--son); background: var(--sgb); }
+  .v-old .it b { font-size: 40px; font-family: var(--sfont-head); line-height: 1.15; }
+  .v-old .it p { margin: 0; font-size: 30px; line-height: 1.3; color: var(--smuted); }
+  .v-old .no { position: absolute; right: 28px; top: 20px; font-size: 64px; font-weight: 800; color: var(--sa); opacity: .3; font-family: var(--sfont-head); }
+  .v-old.ll-summary .pad { gap: 30px; }
+  .v-old .list { display: grid; gap: 22px; flex: 1; align-content: center; }
+  .v-old .rowi { display: flex; align-items: center; gap: 26px; padding: 26px 34px; }
+  .v-old .tick { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
+  .v-old .rowi span { font-size: 40px; line-height: 1.2; font-family: var(--sfont-head); font-weight: 700; }
+  .v-old.ll-compare .pad { gap: 30px; }
+  .v-old .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
+  .v-old .col { padding: 32px 34px; display: flex; flex-direction: column; gap: 20px; }
+  .ll-compare .col.bad { background: var(--sbadbg); border-color: transparent; }
+  .ll-compare .col.good { background: var(--sokbg); border: 2px solid var(--sok); }
+  .v-old .ttl { display: flex; align-items: center; gap: 14px; font-family: var(--sfont-head); font-weight: 800; font-size: 40px; }
+  .ll-compare .bad .ttl { color: var(--sbad); } .ll-compare .good .ttl { color: var(--sok); }
+  .v-old .q { font-size: 32px; line-height: 1.28; padding: 16px 22px; border-radius: 18px; background: rgba(255,255,255,.55); }
+  .lt-dark .ll-compare .q { background: rgba(255,255,255,.07); }
+  .v-old .why { font-size: 28px; color: var(--smuted); margin-top: auto; }
+  .v-old.ll-steps .pad { gap: 40px; }
+  .v-old.ll-steps .row { display: grid; gap: 20px; position: relative; margin: auto 0; }
+  .ll-steps .row::before { content: ""; position: absolute; left: 12%; right: 12%; height: 4px; border-radius: 4px; background: var(--sg); opacity: .5; }
+  .v-old.ll-steps .row::before { top: 45px; }
+  .v-old .stp { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+  .v-old .circ { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); font-weight: 800; font-size: 40px; font-family: var(--sfont-head); box-shadow: 0 0 0 10px var(--ssoft); }
+  .v-old .stp b { font-size: 36px; font-family: var(--sfont-head); line-height: 1.15; }
+  .v-old .stp p { margin: 0; font-size: 28px; line-height: 1.28; color: var(--smuted); }
+  .v-old.ll-stats .pad { gap: 36px; }
+  .v-old.ll-stats .row { display: grid; gap: 28px; flex: 1; align-items: stretch; }
+  .v-old .sti { padding: 34px 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .v-old .big { font-family: var(--sfont-head); font-weight: 800; font-size: 120px; line-height: 1; letter-spacing: -0.03em; }
+  .v-old .sti p { margin: 0; font-size: 32px; line-height: 1.28; color: var(--smuted); }
+  .v-old.ll-quote .pad { justify-content: center; padding-left: 120px; padding-right: 110px; gap: 30px; }
+  .ll-quote .mark { font-family: "Be Vietnam Pro", Arial, sans-serif; line-height: .6; color: var(--sa); opacity: .85; }
+  .v-old .mark { font-size: 220px; height: 100px; }
+  .ll-quote .qt { font-family: var(--sfont-head); font-weight: var(--shw); line-height: 1.18; letter-spacing: var(--shls); max-width: 1000px; }
+  .v-old .who { display: flex; align-items: center; gap: 14px; font-size: 30px; color: var(--smuted); }
+  .ll-quote .who i { width: 54px; height: 4px; border-radius: 4px; background: var(--sg); }
+  .v-old.ll-section-toc .pad { display: grid; grid-template-columns: 1fr 520px; gap: 64px; align-items: center; padding: 72px 88px; }
+  .ll-section-toc .num { font-family: var(--sfont-head); font-weight: 800; line-height: .85; color: transparent; -webkit-text-stroke: 3px var(--sa); letter-spacing: -0.04em; }
+  .v-old .num { font-size: 190px; }
+  .v-old .lead { font-size: 30px; line-height: 1.35; color: var(--smuted); margin: 22px 0 0; }
+  .ll-section-toc .toc { list-style: none; margin: 0; padding: 0; display: grid; }
+  .v-old .toc { gap: 14px; }
+  .ll-section-toc .toc li { position: relative; display: flex; align-items: center; border-radius: 22px; border: 2px solid transparent; line-height: 1.25; color: var(--smuted); }
+  .v-old .toc li { gap: 22px; padding: 16px 22px; font-size: 30px; }
+  .ll-section-toc .toc li + li::before { content: ""; position: absolute; left: 49px; height: 30px; width: 3px; border-radius: 3px; background: var(--scardb); }
+  .v-old .toc li + li::before { top: -22px; }
+  .ll-section-toc .mk { flex: none; border-radius: 50%; display: grid; place-items: center; font-family: var(--sfont-head); font-weight: 800; border: 3px solid var(--scardb); color: var(--smuted); }
+  .v-old .mk { width: 56px; height: 56px; font-size: 28px; }
+  .ll-section-toc .done .mk { border-color: transparent; background: var(--ssoft); color: var(--sa); }
+  .ll-section-toc .now { background: var(--scard); border-color: var(--scardb) !important; color: var(--stext) !important; font-weight: 700; font-family: var(--sfont-head); box-shadow: 0 18px 40px -26px rgba(0,0,0,.45); }
+  .v-old .toc .now { font-size: 34px; }
+  .ll-section-toc .now .mk { border: 0; background: var(--sgb); color: var(--son); }
+  .v-old .now .mk { width: 64px; height: 64px; font-size: 32px; }
+
+  /* ---------- SAU: cỡ chữ và khoảng cách theo --fs (1 → 0,62; chữ không dưới 26 px); logo chỉ đẩy đệm phía nó ---------- */
+  .v-new .pad { position: absolute; inset: var(--lgt, 0px) 0 var(--lgb, 0px); padding: 72px 96px; display: flex; flex-direction: column; }
+  .v-new ul.bul { list-style: none; padding: 0; margin: 0; display: grid; gap: calc(24px * var(--fs)); font-size: max(26px, calc(38px * var(--fs))); line-height: 1.28; }
+  .v-new ul.bul li { display: flex; gap: .45em; align-items: flex-start; }
+  .v-new ul.bul li::before { content: ""; flex: none; width: .42em; height: .42em; border-radius: 50%; background: var(--sgb); margin-top: .43em; }
+  /* Chữ và hình: ô hình cao hết vùng nội dung, hẹp lại khi chữ dài (--artw do bộ vẽ chọn theo độ dài chữ). */
+  .v-new.ll-image .pad { display: grid; grid-template-columns: minmax(0, 1fr) var(--artw, 440px); gap: 56px; align-items: center; }
+  .v-new .tx { display: grid; gap: calc(30px * var(--fs)); }
+  .v-new .art { align-self: stretch; min-height: 0; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  /* Ba thẻ: các thẻ cao bằng nhau (cao bằng thẻ dài nhất), cụm thẻ căn giữa phần còn lại. */
+  .v-new.ll-cards .pad { gap: calc(34px * var(--fs)); }
+  .v-new.ll-cards .row { display: grid; gap: 24px; margin: auto 0; align-items: stretch; }
+  .v-new .it { padding: calc(30px * var(--fs)) 26px calc(34px * var(--fs)); display: flex; flex-direction: column; gap: calc(14px * var(--fs)); position: relative; }
+  .v-new .badge { width: max(56px, calc(76px * var(--fs))); height: max(56px, calc(76px * var(--fs))); border-radius: 20px; display: grid; place-items: center; color: var(--son); background: var(--sgb); }
+  .v-new .badge svg { width: 47%; height: 47%; }
+  .v-new .it b { font-size: max(26px, calc(var(--hpx, 40px) * var(--fs))); font-family: var(--sfont-head); line-height: 1.2; }
+  .v-new .it p { margin: 0; font-size: max(26px, calc(30px * var(--fs))); line-height: 1.3; color: var(--smuted); }
+  .v-new .no { position: absolute; right: 26px; top: calc(18px * var(--fs)); font-size: max(44px, calc(64px * var(--fs))); font-weight: 800; color: var(--sa); opacity: .3; font-family: var(--sfont-head); line-height: 1.2; }
+  /* Tóm tắt: 5 dòng thì xếp hai cột. */
+  .v-new.ll-summary .pad { gap: calc(30px * var(--fs)); }
+  .v-new .list { display: grid; gap: calc(20px * var(--fs)) 24px; margin: auto 0; }
+  .v-new .list.two { grid-template-columns: 1fr 1fr; }
+  .v-new .rowi { display: flex; align-items: center; gap: calc(24px * var(--fs)); padding: calc(24px * var(--fs)) 30px; }
+  .v-new .tick { width: max(48px, calc(64px * var(--fs))); height: max(48px, calc(64px * var(--fs))); border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
+  .v-new .tick svg { width: 52%; height: 52%; }
+  .v-new .rowi span { font-size: max(26px, calc(40px * var(--fs))); line-height: 1.22; font-family: var(--sfont-head); font-weight: 700; }
+  .v-new.ll-compare .pad { gap: calc(30px * var(--fs)); }
+  .v-new .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
+  .v-new .col { padding: calc(30px * var(--fs)) 32px; display: flex; flex-direction: column; gap: calc(18px * var(--fs)); }
+  .v-new .ttl { display: flex; align-items: center; gap: 14px; font-family: var(--sfont-head); font-weight: 800; font-size: max(28px, calc(40px * var(--fs))); line-height: 1.2; }
+  .v-new .q { font-size: max(26px, calc(32px * var(--fs))); line-height: 1.28; padding: calc(14px * var(--fs)) 22px; border-radius: 18px; background: rgba(255,255,255,.55); }
+  .v-new .why { font-size: max(26px, calc(28px * var(--fs))); color: var(--smuted); margin-top: auto; }
+  .v-new.ll-steps .pad { gap: calc(40px * var(--fs)); }
+  .v-new.ll-steps .row { display: grid; gap: 20px; position: relative; margin: auto 0; }
+  .v-new.ll-steps .row::before { top: calc(max(64px, calc(92px * var(--fs))) / 2 - 2px); }
+  .v-new .stp { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: calc(16px * var(--fs)); }
+  .v-new .circ { width: max(64px, calc(92px * var(--fs))); height: max(64px, calc(92px * var(--fs))); border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); font-weight: 800; font-size: max(28px, calc(40px * var(--fs))); font-family: var(--sfont-head); box-shadow: 0 0 0 10px var(--ssoft); }
+  .v-new .stp b { font-size: max(28px, calc(36px * var(--fs))); font-family: var(--sfont-head); line-height: 1.2; }
+  .v-new .stp p { margin: 0; font-size: max(26px, calc(28px * var(--fs))); line-height: 1.28; color: var(--smuted); }
+  .v-new.ll-stats .pad { gap: calc(36px * var(--fs)); }
+  .v-new.ll-stats .row { display: grid; gap: 28px; flex: 1; align-items: stretch; }
+  .v-new .sti { padding: calc(34px * var(--fs)) 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .v-new .big { font-family: var(--sfont-head); font-weight: 800; font-size: max(64px, calc(120px * var(--fs))); line-height: 1; letter-spacing: -0.03em; }
+  .v-new .sti p { margin: 0; font-size: max(26px, calc(32px * var(--fs))); line-height: 1.28; color: var(--smuted); }
+  .v-new.ll-quote .pad { justify-content: center; padding-left: 120px; padding-right: 110px; gap: calc(30px * var(--fs)); }
+  .v-new .mark { font-size: calc(200px * var(--fs)); height: calc(64px * var(--fs)); margin-bottom: calc(6px * var(--fs)); }
+  .v-new .who { display: flex; align-items: center; gap: 14px; font-size: max(26px, calc(30px * var(--fs))); color: var(--smuted); }
+  .v-new.ll-section-toc .pad { display: grid; grid-template-columns: 1fr 520px; gap: 64px; align-items: center; padding: 72px 88px; }
+  .v-new .num { font-size: calc(190px * var(--fs)); }
+  .v-new .lead { font-size: max(26px, calc(30px * var(--fs))); line-height: 1.35; color: var(--smuted); margin: calc(22px * var(--fs)) 0 0; }
+  .v-new .toc { gap: calc(14px * var(--fs)); }
+  .v-new .toc li { gap: 22px; padding: calc(16px * var(--fs)) 22px; font-size: max(26px, calc(30px * var(--fs))); }
+  .v-new .toc li + li::before { top: calc(-22px * var(--fs)); height: calc(30px * var(--fs)); }
+  .v-new .mk { width: max(44px, calc(56px * var(--fs))); height: max(44px, calc(56px * var(--fs))); font-size: max(26px, calc(28px * var(--fs))); }
+  .v-new .toc .now { font-size: max(28px, calc(34px * var(--fs))); }
+  .v-new .now .mk { width: max(50px, calc(64px * var(--fs))); height: max(50px, calc(64px * var(--fs))); font-size: max(26px, calc(32px * var(--fs))); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Tận dụng không gian slide: trước và sau</h1>
+  <p class="lede">Bên trái là cách vẽ hiện tại trên main: slide chữ dài bị co đều cả khối, có logo thì cả slide lại co thêm một lần nữa, nên cột và thẻ hẹp theo. Bên phải là cách mới: khung, cột và thẻ giữ nguyên chiều ngang; chữ dài thì giảm cỡ chữ theo từng bậc, không dưới 26 px. Logo chỉ chiếm phần đệm ở phía của nó. Dòng ghi chú dưới mỗi khung cho biết bộ vẽ đã làm gì với slide.</p>
+
+  <div class="ctl" role="group" aria-label="Tuỳ chọn xem">
+    <fieldset><legend>Giao diện</legend>
+      <label><input type="radio" name="th" value="lt-brand" checked> Sáng</label>
+      <label><input type="radio" name="th" value="lt-night lt-dark"> Tối</label>
+      <label><input type="radio" name="th" value="lt-paper"> Giấy</label>
+    </fieldset>
+    <fieldset><legend>Logo</legend>
+      <label><input type="radio" name="lg" value="t" checked> Trên phải</label>
+      <label><input type="radio" name="lg" value="b"> Dưới phải</label>
+      <label><input type="radio" name="lg" value=""> Không có</label>
+    </fieldset>
+  </div>
+
+  <div id="cases"></div>
+</div>
+
+<script>
+const ICON = {
+  sparkle: '<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>',
+  compass: '<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>',
+  chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+  book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+};
+const svg = (id, size, sw = 2) => `<svg class="i" viewBox="0 0 24 24" width="${size}" height="${size}" stroke-width="${sw}" aria-hidden="true">${ICON[id]}</svg>`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+// Gạch nối trong từ ("STEM-Robotics") không được làm điểm xuống dòng: chèn ký tự nối từ (U+2060) sau dấu gạch.
+const keepHyphen = (s) => esc(s).replace(/(\p{L}|\d)-(?=\p{L}|\d)/gu, "$1-⁠");
+
+// fitFontSize như trong limioLiveSlides.ts
+function fitFontSize(text, { maxPx, widthPx, maxLines, minPx = 26 }) {
+  const len = text.trim().length;
+  for (let px = maxPx; px >= minPx; px -= 2) {
+    const per = Math.max(1, Math.floor(widthPx / (px * 0.56)));
+    if (Math.ceil(len / per) <= maxLines) return px;
+  }
+  return minPx;
+}
+// Mới: tiêu đề vừa một dòng ở cỡ ≥ 80% cỡ lớn nhất thì dùng một dòng (đỡ một dòng cao 86 px cho nội dung).
+const title = (t, maxPx, widthPx, maxLines, isNew, extra = "") => {
+  let px = fitFontSize(t, { maxPx, widthPx, maxLines });
+  if (isNew && maxLines > 1) { const one = fitFontSize(t, { maxPx, widthPx, maxLines: 1, minPx: Math.round(maxPx * 0.8) }); if (Math.ceil(t.length / Math.floor(widthPx / (one * 0.56))) <= 1) px = one; }
+  const fs = isNew ? `max(26px, calc(${px}px * var(--fs)))` : `${px}px`;
+  return `<h2 class="h" style="font-size:${fs};${extra}">${esc(t)}</h2>`;
+};
+// Cỡ tiêu đề thẻ: từ dài nhất phải nằm trọn một dòng trong thẻ.
+function cardHeadPx(items) {
+  const n = Math.max(items.length, 1);
+  const inner = (1088 - 24 * (n - 1)) / n - 52;
+  const longest = Math.max(...items.map((it) => Math.max(...it.heading.split(/\s+/).map((w) => w.length))));
+  return Math.max(28, Math.min(40, Math.floor(inner / (longest * 0.6))));
+}
+// Bề rộng ô hình theo độ dài chữ: chữ càng dài, ô hình càng hẹp.
+function artWidth(c) {
+  const chars = (c.title || "").length + c.bullets.join("").length;
+  return chars <= 160 ? 480 : chars <= 280 ? 400 : 340;
+}
+
+function body(c, isNew) {
+  const v = isNew ? "v-new" : "v-old";
+  switch (c.layout) {
+    case "image": {
+      const aw = artWidth(c);
+      const tw = isNew ? 1088 - 56 - aw : 560;
+      return `<div class="lslide-body ll-image ${v}" style="--artw:${aw}px"><div class="pad"><div class="tx">${title(c.title, 60, tw, 3, isNew)}
+        <ul class="bul">${c.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}</ul></div><div class="art"></div></div></div>`;
+    }
+    case "cards": {
+      const hp = cardHeadPx(c.items);
+      return `<div class="lslide-body ll-cards ${v}" style="--hpx:${hp}px"><div class="pad">${title(c.title, 72, 1088, 2, isNew)}
+        <div class="row" style="grid-template-columns:repeat(${c.items.length},1fr)">${c.items.map((it, i) => `<div class="card it"><span class="no">${i + 1}</span>
+        <div class="badge">${svg(it.icon || "target", 36)}</div><b>${isNew ? keepHyphen(it.heading) : esc(it.heading)}</b><p>${esc(it.body)}</p></div>`).join("")}</div></div></div>`;
+    }
+    case "summary":
+      return `<div class="lslide-body ll-summary ${v}"><div class="pad">${title(c.title, 72, 1088, 2, isNew)}
+        <div class="list ${isNew && c.cols === 2 ? "two" : ""}">${c.items.map((h) => `<div class="card rowi"><div class="tick">${svg("check", 34, 2.8)}</div><span>${esc(h)}</span></div>`).join("")}</div></div></div>`;
+    case "compare":
+      return `<div class="lslide-body ll-compare ${v}"><div class="pad">${title(c.title, 72, 1088, 2, isNew)}<div class="cols">${c.columns.map((col) => `
+        <div class="card col ${col.tone}"><div class="ttl">${svg(col.tone === "bad" ? "x" : "check", 38, 2.6)}${esc(col.heading)}</div>
+        ${col.points.map((p) => `<div class="q">${esc(p)}</div>`).join("")}${col.note ? `<div class="why">${esc(col.note)}</div>` : ""}</div>`).join("")}</div></div></div>`;
+    case "steps":
+      return `<div class="lslide-body ll-steps ${v}"><div class="pad">${title(c.title, 72, 1088, 2, isNew)}
+        <div class="row" style="grid-template-columns:repeat(${c.items.length},1fr)">${c.items.map((it, i) => `<div class="stp"><div class="circ">${i + 1}</div><b>${esc(it.heading)}</b><p>${esc(it.body)}</p></div>`).join("")}</div></div></div>`;
+    case "stats":
+      return `<div class="lslide-body ll-stats ${v}"><div class="pad">${title(c.title, 72, 1088, 2, isNew)}
+        <div class="row" style="grid-template-columns:repeat(${c.items.length},1fr)">${c.items.map((it) => `<div class="card sti"><div class="big grad">${esc(it.heading)}</div><p>${esc(it.body)}</p></div>`).join("")}</div></div></div>`;
+    case "quote": {
+      const px = fitFontSize(c.quote, { maxPx: 66, widthPx: 1000, maxLines: 4 });
+      return `<div class="lslide-body ll-quote ${v}"><div class="pad"><div class="mark">“</div>
+        <div class="qt" style="font-size:${isNew ? `max(26px, calc(${px}px * var(--fs)))` : px + "px"}">${esc(c.quote.slice(0, c.cut))} <span class="grad">${esc(c.quote.slice(c.cut))}</span></div><div class="who"><i></i>${esc(c.source)}</div></div></div>`;
+    }
+    case "section-toc":
+      return `<div class="lslide-body ll-section-toc ${v}"><div class="pad"><div><div class="num">${c.no}</div>
+        ${title(c.title, 64, 540, 3, isNew, `margin-top:${isNew ? "calc(26px * var(--fs))" : "26px"}`)}<p class="lead">${esc(c.subtitle)}</p></div>
+        <ol class="toc">${c.toc.map((t, i) => { const st = i + 1 < c.no ? "done" : i + 1 === c.no ? "now" : "next";
+          return `<li class="${st}"><span class="mk">${st === "done" ? svg("check", 28, 3) : i + 1}</span><span>${esc(t)}</span></li>`; }).join("")}</ol></div></div>`;
+  }
+}
+
+// ---- Đo và co: measureContentBox / fitScaleForBox như limioLiveFit.ts ----
+const W = 1280, H = 720, SAFE = { top: 40, bottom: 680, left: 48, right: 1232 }, MIN_SCALE = 0.55;
+const LOGO_PX = 64, LOGO_MARGIN = 36;
+function measure(root) {
+  let top = Infinity, bottom = -Infinity, left = Infinity, right = -Infinity;
+  root.querySelectorAll("*").forEach((el) => {
+    if (el.parentElement === root || el.classList.contains("pad") || el instanceof SVGElement || el.closest("svg")) return;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    if (!w && !h) return;
+    let x = 0, y = 0, n = el, reached = false;
+    while (n) { if (n === root) { reached = true; break; } x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+    if (!reached) return;
+    top = Math.min(top, y); left = Math.min(left, x); bottom = Math.max(bottom, y + h); right = Math.max(right, x + w);
+  });
+  return Number.isFinite(top) ? { top, bottom, left, right } : null;
+}
+function scaleFor(box, safe) {
+  if (!box) return 1;
+  const cx = W / 2, cy = H / 2;
+  let k = 1;
+  const s = (e, l) => { if (e > l && e > 0) k = Math.min(k, l / e); };
+  s(box.bottom - cy, safe.bottom - cy); s(cy - box.top, cy - safe.top); s(box.right - cx, safe.right - cx); s(cx - box.left, cx - safe.left);
+  return Math.max(MIN_SCALE, Math.min(1, k));
+}
+const fits = (b, s) => !b || (b.top >= s.top && b.bottom <= s.bottom && b.left >= s.left && b.right <= s.right);
+const FONT_STEPS = [1, 0.93, 0.86, 0.8, 0.74, 0.68, 0.62];
+
+function render(slot, c, isNew, theme, logo) {
+  slot.innerHTML = "";
+  const slide = document.createElement("div");
+  slide.className = `lslide ${theme}`;
+  const holder = document.createElement("div");
+  holder.style.cssText = "position:absolute;inset:0;transform-origin:50% 50%";
+  const inner = document.createElement("div");
+  inner.style.cssText = "position:absolute;inset:0";
+  inner.innerHTML = body(c, isNew);
+  const root = inner.firstElementChild; root.style.position = "absolute"; root.style.inset = "0";
+  holder.appendChild(inner); slide.appendChild(holder);
+  if (logo) slide.insertAdjacentHTML("beforeend", `<div class="logo ${logo}">Lim<span>io</span><small>.vn</small></div>`);
+  slot.appendChild(slide);
+  let note;
+  if (!isNew) {
+    // Cũ: có logo thì thu cả nội dung còn (720 − 88)/720 và dịch xuống; rồi co đều thêm nếu tràn.
+    const k = logo ? (H - (LOGO_PX + 24)) / H : 1;
+    if (logo) inner.style.cssText = `position:absolute;inset:0;transform-origin:0 0;transform:translate(${(W * (1 - k)) / 2}px,${logo === "t" ? H * (1 - k) : 0}px) scale(${k})`;
+    const b = measure(inner);
+    const dx = (W * (1 - k)) / 2, dy = logo === "t" ? H * (1 - k) : 0;
+    const fk = scaleFor(b && k < 1 ? { top: b.top * k + dy, bottom: b.bottom * k + dy, left: b.left * k + dx, right: b.right * k + dx } : b, SAFE);
+    if (fk < 1) holder.style.transform = `scale(${fk})`;
+    const total = k * fk;
+    note = total < 0.999 ? `cả khối co còn ${Math.round(total * 100)}% (bề ngang ${Math.round(1088 * total)} px)` : "giữ nguyên";
+  } else {
+    // Mới: logo đẩy đệm phía nó; tràn thì giảm cỡ chữ theo bậc; chỉ khi chữ đã ở bậc cuối mới co cả khối.
+    const lg = logo ? Math.max(0, LOGO_MARGIN + LOGO_PX + 16 - 72) : 0;
+    const safe = { ...SAFE };
+    if (logo === "t") safe.top = Math.max(safe.top, LOGO_MARGIN + LOGO_PX + 12);
+    if (logo === "b") safe.bottom = Math.min(safe.bottom, H - LOGO_MARGIN - LOGO_PX - 12);
+    // Chỉ đẩy đệm khi nội dung ở cỡ gốc chạm dải logo (tiêu đề ở đỉnh); khối căn giữa như trích dẫn, mở phần thì giữ nguyên chỗ.
+    const b0 = measure(inner);
+    const needShift = logo && b0 && (logo === "t" ? b0.top < safe.top : b0.bottom > safe.bottom);
+    slide.style.setProperty("--lgt", needShift && logo === "t" ? lg + "px" : "0px");
+    slide.style.setProperty("--lgb", needShift && logo === "b" ? lg + "px" : "0px");
+    let fs = 1, b = null;
+    const list = inner.querySelector(".list");
+    const variants = list && c.items.length >= 4 ? [false, true] : [false];
+    let best = null;
+    for (const two of variants) {
+      if (list) list.classList.toggle("two", two);
+      for (fs of FONT_STEPS) { slide.style.setProperty("--fs", fs); b = measure(inner); if (fits(b, safe)) break; }
+      if (!best || (fits(b, safe) && (!best.ok || fs > best.fs))) best = { two, fs, ok: fits(b, safe) };
+    }
+    if (list) list.classList.toggle("two", best.two);
+    fs = best.fs; slide.style.setProperty("--fs", fs); b = measure(inner);
+    const fk = fits(b, safe) ? 1 : scaleFor(b, safe);
+    if (fk < 1) holder.style.transform = `scale(${fk})`;
+    note = fk < 1 ? `chữ ở bậc cuối vẫn tràn: co cả khối còn ${Math.round(fk * 100)}% — nên tách slide`
+      : fs < 1 ? `cỡ chữ ×${fs.toFixed(2).replace(".", ",")}; bề ngang giữ 1088 px` : "giữ nguyên";
+  }
+  return note;
+}
+
+const CASES = [
+  { name: "Chữ và hình — ba câu hỏi dài (ảnh 1)", note: "Trước: cột chữ còn khoảng 400 px, mỗi ý 4 dòng. Sau: ô hình hẹp lại vì chữ dài, cột chữ rộng hơn, ô hình cao hết vùng nội dung.",
+    c: { layout: "image", title: "Câu Hỏi Cốt Lõi Của Giáo Dục", bullets: [
+      "Làm thế nào để công nghệ thực sự nâng cao kết quả học tập, chứ không chỉ tạo hứng thú nhất thời?",
+      "Người học cần những năng lực nào để làm chủ công nghệ thay vì bị công nghệ dẫn dắt?",
+      "Giáo viên đóng vai trò gì khi máy móc cung cấp kiến thức nhanh hơn con người?"] } },
+  { name: "Ba thẻ — giải pháp công nghệ (ảnh 2)", note: "Sau: thẻ cao bằng nhau; tiêu đề thẻ không ngắt ở dấu gạch nối (cỡ chữ tự nhỏ lại để từ dài nhất nằm trọn một dòng).",
+    c: { layout: "cards", title: "Ba Giải Pháp Công Nghệ Tiêu Biểu", items: [
+      { heading: "3D/XR (YooTek)", body: "Tạo trải nghiệm học tập trực quan, tương tác và giàu tính khám phá.", icon: "sparkle" },
+      { heading: "STEM-Robotics (HUNA)", body: "Học thông qua giải quyết vấn đề, thiết kế và chế tạo sản phẩm.", icon: "compass" },
+      { heading: "AI-Gamification (Zep Quiz)", body: "Tăng cường sự tham gia và phản hồi tức thì trong lớp học.", icon: "chat" }] } },
+  { name: "Tóm tắt — năm ý (ảnh 3)", note: "Bộ vẽ thử một cột và hai cột, chọn cách cho chữ lớn hơn (một cột ở đây chỉ còn 26 px, hai cột được 30 px). Lỗi chữ bị cắt giữa từ như “học tậ” là lỗi lưu dữ liệu, sửa riêng.",
+    c: { layout: "summary", title: "Tóm Tắt Các Điều Cần Ghi Nhớ", items: [
+      "Công nghệ chỉ là công cụ, tác động thực sự đến từ sự kết nối",
+      "Phân biệt rõ ràng giữa trải nghiệm hấp dẫn và kết quả học tập",
+      "Rào cản lớn nhất không nằm ở công nghệ mà ở năng lực con người",
+      "Vai trò giáo viên chuyển dịch sang thiết kế, hướng dẫn và ra quyết định",
+      "Hợp tác đa bên giữa doanh nghiệp, đại học và người học là chìa khoá"] } },
+  { name: "Chữ và hình — ý ngắn", note: "Chữ ngắn: ô hình rộng 480 px, chữ giữ cỡ gốc.",
+    c: { layout: "image", title: "Học qua dự án", bullets: ["Bắt đầu từ một vấn đề thật", "Làm theo nhóm, có vai trò rõ", "Trình bày sản phẩm cuối kỳ"] } },
+  { name: "Bốn thẻ — chữ vừa", note: "Bốn thẻ hẹp hơn: tiêu đề thẻ tự chọn cỡ theo từ dài nhất.",
+    c: { layout: "cards", title: "Bốn trụ cột của lớp học số", items: [
+      { heading: "Nội dung", body: "Học liệu ngắn, chia theo chủ đề, xem lại được.", icon: "book" },
+      { heading: "Tương tác", body: "Câu hỏi nhanh, thảo luận nhóm và bảng ý kiến.", icon: "chat" },
+      { heading: "Phản hồi", body: "Nhận xét cụ thể, kịp thời, chỉ ra bước tiếp theo.", icon: "target" },
+      { heading: "Tự điều chỉnh", body: "Người học theo dõi tiến độ và tự đặt mục tiêu.", icon: "compass" }] } },
+  { name: "So sánh — chữ dài", note: "",
+    c: { layout: "compare", title: "Phản hồi chung chung và phản hồi cụ thể", columns: [
+      { tone: "bad", heading: "Chung chung", points: ["“Bài làm tốt, cần cố gắng thêm.”", "Không chỉ ra chỗ sai nằm ở bước nào của lời giải.", "Người học không biết phải làm gì tiếp theo."], note: "Dễ viết nhưng gần như không đổi được kết quả học." },
+      { tone: "good", heading: "Cụ thể", points: ["“Bước 2 nhầm dấu khi chuyển vế; xem lại ví dụ 3.”", "Gắn với tiêu chí của bài và mục tiêu của buổi học.", "Có một việc cụ thể để làm ngay."], note: "Mất thêm thời gian nhưng người học dùng được." }] } },
+  { name: "Các bước — bốn bước", note: "",
+    c: { layout: "steps", title: "Quy trình thiết kế một bài học", items: [
+      { heading: "Mục tiêu", body: "Xác định người học làm được gì sau buổi học." },
+      { heading: "Đánh giá", body: "Chọn bằng chứng cho thấy mục tiêu đã đạt." },
+      { heading: "Hoạt động", body: "Thiết kế nhiệm vụ dẫn tới bằng chứng đó." },
+      { heading: "Điều chỉnh", body: "Dựa vào kết quả để sửa cho lần dạy sau." }] } },
+  { name: "Số liệu — ba con số", note: "",
+    c: { layout: "stats", title: "Phản hồi kịp thời thay đổi kết quả học", items: [
+      { heading: "0,73", body: "Hệ số ảnh hưởng của phản hồi lên kết quả học tập theo tổng hợp của Hattie." },
+      { heading: "48h", body: "Phản hồi sau 48 giờ giảm tác dụng rõ rệt." },
+      { heading: "3×", body: "Người học xem lại bài nhiều gấp ba khi có gợi ý cụ thể." }] } },
+  { name: "Trích dẫn — thông điệp chính (ảnh 4)", note: "Trước: khối chữ bị đẩy xuống để chừa logo dù câu không chạm logo, dấu ngoặc cách câu gần 100 px. Sau: khối căn giữa đúng khung, dấu ngoặc sát câu.",
+    c: { layout: "quote", quote: "Công nghệ tạo ra khả năng, thiết kế biến khả năng thành trải nghiệm, quản lý biến thử nghiệm thành thực tiễn và con người quyết định tác động.", cut: 93, source: "Thông điệp chính của bài học" } },
+  { name: "Bìa phần có mục lục — năm phần", note: "",
+    c: { layout: "section-toc", no: 3, title: "Ba giải pháp công nghệ tiêu biểu", subtitle: "Từ trải nghiệm hấp dẫn tới kết quả học tập thật", toc: [
+      "Bối cảnh giáo dục số", "Câu hỏi cốt lõi", "Ba giải pháp tiêu biểu", "Bài học từ thực tế triển khai", "Tóm tắt và thảo luận"] } },
+];
+
+const host = document.getElementById("cases");
+CASES.forEach((cs, i) => {
+  host.insertAdjacentHTML("beforeend", `<section class="case"><h2>${i + 1}. ${esc(cs.name)}</h2>${cs.note ? `<p class="note">${esc(cs.note)}</p>` : ""}
+    <div class="pair"><div class="side before"><p class="cap">Trước <span class="m" data-n></span></p><div class="frame"></div></div>
+    <div class="side after"><p class="cap"><b>Sau</b> <span class="m" data-n></span></p><div class="frame"></div></div></div></section>`);
+});
+function draw() {
+  const theme = document.querySelector('input[name="th"]:checked').value;
+  const logo = document.querySelector('input[name="lg"]:checked').value;
+  document.querySelectorAll(".case").forEach((sec, i) => {
+    sec.querySelectorAll(".side").forEach((side, j) => {
+      side.querySelector("[data-n]").textContent = render(side.querySelector(".frame"), CASES[i].c, j === 1, theme, logo);
+    });
+  });
+  fitFrames();
+}
+function fitFrames() {
+  document.querySelectorAll(".frame").forEach((f) => { const s = f.clientWidth / W; const sl = f.firstElementChild; if (sl) sl.style.transform = `scale(${s})`; });
+}
+document.querySelectorAll(".ctl input").forEach((el) => el.addEventListener("change", draw));
+addEventListener("resize", fitFrames);
+draw();
+document.fonts?.ready.then(draw);
+</script>
+</body>
+</html>
