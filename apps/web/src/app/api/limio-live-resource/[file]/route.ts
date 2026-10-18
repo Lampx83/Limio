@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { liveResourceKeyFromFilename } from "@/lib/storage-keys";
 import { isSafeFilename, resolveKey } from "@/lib/storage-serve";
+import { THUMB_WIDTHS, type ThumbWidth } from "@/lib/imageVariants";
+import { getSlideImageThumb } from "@/lib/slideImage";
 
 export const runtime = "nodejs";
 
@@ -17,6 +19,7 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
   jpg: "image/jpeg",
   jpeg: "image/jpeg",
   webp: "image/webp",
+  gif: "image/gif",
   pdf: "application/pdf",
   html: "text/html; charset=utf-8",
   mp4: "video/mp4",
@@ -31,10 +34,27 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
   txt: "text/plain; charset=utf-8",
 };
 
-export async function GET(_req: Request, { params }: { params: { file: string } }) {
+export async function GET(req: Request, { params }: { params: { file: string } }) {
   const file = params.file;
   if (!isSafeFilename(file)) {
     return new NextResponse("forbidden", { status: 403 });
+  }
+
+  // Ảnh ở ô hình (slideImage.ts): ?w=480|960 trả thumbnail WebP (sinh sẵn lúc tải lên; thiếu thì sinh rồi lưu).
+  // Chỉ nhận các cỡ cố định; không dùng được thumbnail (GIF, không phải ảnh) thì phục vụ bản gốc.
+  const w = Number(new URL(req.url).searchParams.get("w"));
+  if (THUMB_WIDTHS.includes(w as ThumbWidth) && /\.(jpe?g|png|webp)$/i.test(file)) {
+    const thumb = await getSlideImageThumb(file, w as ThumbWidth);
+    if (thumb) {
+      return new NextResponse(new Uint8Array(thumb), {
+        headers: {
+          "content-type": "image/webp",
+          "content-length": String(thumb.length),
+          "cache-control": "public, max-age=604800, immutable",
+          "x-content-type-options": "nosniff",
+        },
+      });
+    }
   }
 
   const resolved = await resolveKey(liveResourceKeyFromFilename(file));

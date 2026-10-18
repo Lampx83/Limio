@@ -32,6 +32,8 @@ import { fitScaleForBox, frameHeightForContent, measureContentBox } from "@/lib/
 import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
 import { MOTIF_SLOT_SIZE, type MotifSlot, type SlideArtId } from "@/lib/limioLiveMotifs";
 import { motifSvgBody } from "@/lib/limioLiveMotifArt";
+import { slideImageSources } from "@/lib/limioLiveImage";
+import { isSlideIllustrationId } from "@feedbackme/shared-types";
 import { useLiveBrand } from "./liveBrandContext";
 import { useSlideMotif } from "./liveMotifContext";
 import { isDarkTheme, layoutThemeClass, motifOpacityFor, slideBgFor } from "./slideThemes";
@@ -174,7 +176,7 @@ export function LayoutSlideView({
   );
   const body = (
     <div ref={bodyRef} style={{ position: "absolute", inset: 0 }}>
-      <LayoutBody layout={layout} c={config} motif={motif} />
+      <LayoutBody layout={layout} c={config} motif={motif} artPx={scale > 0 ? IMAGE_SLOT_W * scale * fitK * k : 0} />
     </div>
   );
   const slideStyle: CSSProperties = zoomed
@@ -330,17 +332,44 @@ function SlideMotif({ motif, slot }: { motif: SlideArtId; slot: MotifSlot }) {
     () => `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">${motifSvgBody(motif, w, h, uid)}</svg>`,
     [motif, w, h, uid],
   );
-  return <div className={`motif m-${slot}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: html }} />;
+  // Hình minh hoạ vẽ bằng khối đặc nên trông nặng hơn hoa văn (vốn là nét mảnh, nhạt): lớp m-illus hạ độ đậm cả hình.
+  const illus = isSlideIllustrationId(motif) ? " m-illus" : "";
+  return <div className={`motif m-${slot}${illus}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 type Motif = { motif: SlideArtId; slot: MotifSlot } | null;
+
+/** Bề rộng ô hình của bố cục Chữ và hình trên khung thiết kế (cùng số với MOTIF_SLOT_SIZE.fill). */
+const IMAGE_SLOT_W = MOTIF_SLOT_SIZE.fill[0];
+
+/**
+ * Ảnh riêng ở ô hình. Ảnh do máy chủ xử lý có srcset 480/960/bản hiển thị; `px` là bề rộng thật của ô trên màn
+ * hình (đã nhân tỉ lệ thu phóng), nên dải slide thu nhỏ chỉ tải bản 480 còn máy chiếu lớn mới tải bản lớn.
+ * Chưa đo được khung thì đoán theo bề rộng cửa sổ (ô hình chiếm khoảng 36% bề rộng slide).
+ */
+function SlideImage({ c, px }: { c: Cfg; px: number }) {
+  const s = slideImageSources(String(c.imageUrl));
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={s.src}
+      srcSet={s.srcSet}
+      sizes={s.srcSet ? (px > 0 ? `${Math.ceil(px)}px` : "37vw") : undefined}
+      width={s.width}
+      height={s.height}
+      alt={typeof c.imageAlt === "string" ? c.imageAlt : ""}
+      decoding="async"
+      style={{ width: "100%", height: "100%", objectFit: c.imageFit === "contain" ? "contain" : "cover" }}
+    />
+  );
+}
 
 /** Mỗi slide chỉ một lớp trang trí: có hoa văn thì bỏ hai vệt sáng mờ. */
 function Decor({ motif, a, b }: { motif: Motif; a: CSSProperties; b: CSSProperties }) {
   return motif ? <SlideMotif motif={motif.motif} slot={motif.slot} /> : <Glows a={a} b={b} />;
 }
 
-function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif: Motif }) {
+function LayoutBody({ layout, c, motif, artPx }: { layout: SlideLayoutId; c: Cfg; motif: Motif; artPx: number }) {
   const items: LayoutItem[] = Array.isArray(c.items) ? c.items : [];
   const title: string = c.title ?? "";
 
@@ -467,14 +496,14 @@ function LayoutBody({ layout, c, motif }: { layout: SlideLayoutId; c: Cfg; motif
               </ul>
             </div>
             <div className="art a-pop" style={delay(1)}>
-              {c.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.imageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                motif && <SlideMotif motif={motif.motif} slot={motif.slot} />
-              )}
+              {c.imageUrl ? <SlideImage c={c} px={artPx} /> : motif && <SlideMotif motif={motif.motif} slot={motif.slot} />}
             </div>
           </div>
+          {c.imageUrl && c.imageCredit ? (
+            <p className="img-credit" title={`Nguồn ảnh: ${c.imageCredit}`}>
+              Nguồn ảnh: {c.imageCredit}
+            </p>
+          ) : null}
         </div>
       );
     }
