@@ -1,17 +1,19 @@
 "use client";
 
 import { useId, useMemo, useState, type CSSProperties } from "react";
-import { MOTIF_LABELS, SLIDE_MOTIFS, isMotifId, type SlideMotifId } from "@/lib/limioLiveMotifs";
+import { SLIDE_ILLUSTRATION_GROUPS, SLIDE_ILLUSTRATION_LABELS, isSlideIllustrationId } from "@feedbackme/shared-types";
+import { MOTIF_LABELS, SLIDE_MOTIFS, isMotifId, slideArtLabel, type SlideArtId, type SlideMotifId } from "@/lib/limioLiveMotifs";
 import { motifSvgBody } from "@/lib/limioLiveMotifArt";
 import { brandCssVars, brandEffectiveThemeId } from "@/lib/limioLiveBrand";
 import { useLiveBrand } from "../liveBrandContext";
 import { isDarkTheme, layoutThemeClass, slideBgFor } from "../slideThemes";
 
 // Chọn hoa văn trang trí (limioLiveMotifs): cho cả bài trong bảng Giao diện, và riêng một slide trong khung sửa.
+// Slide Chữ và hình chưa có ảnh còn chọn được hình minh hoạ theo chủ đề (phần riêng đặt trên hoa văn, chia năm nhóm).
 // Mỗi ô là hình thật của hoa văn trên đúng giao diện (và màu thương hiệu) của bài, không phải tên suông.
 
-/** Ô xem trước một hoa văn trên giao diện của bài; null = ô trống (không dùng hoa văn). */
-export function MotifSwatch({ motif, themeId, className = "" }: { motif: SlideMotifId | null; themeId?: string | null; className?: string }) {
+/** Ô xem trước một hoa văn hoặc hình minh hoạ trên giao diện của bài; null = ô trống (không dùng). */
+export function MotifSwatch({ motif, themeId, className = "" }: { motif: SlideArtId | null; themeId?: string | null; className?: string }) {
   const brand = useLiveBrand();
   const eff = brandEffectiveThemeId(brand, themeId);
   const vars = brandCssVars(brand, isDarkTheme(themeId)) as CSSProperties;
@@ -39,7 +41,7 @@ export function MotifSwatch({ motif, themeId, className = "" }: { motif: SlideMo
   );
 }
 
-type Option = { value: string | null; label: string; motif: SlideMotifId | null };
+type Option = { value: string | null; label: string; motif: SlideArtId | null };
 
 function Grid({ options, value, themeId, onPick, label }: { options: Option[]; value: string | null; themeId?: string | null; onPick: (v: string | null) => void; label: string }) {
   return (
@@ -138,38 +140,60 @@ export function DeckMotifPicker({
 
 /**
  * Hoa văn của một slide trong khung sửa: dòng gọn (hình đang dùng + nút Đổi), bấm mới mở lưới.
- * `value`: undefined = theo bài giảng, "none", hoặc mã hoa văn; `effective` là hoa văn slide đang hiển thị,
- * `inherited` là hoa văn slide nhận nếu theo bài giảng.
+ * `value`: undefined = theo bài giảng, "none", mã hoa văn hoặc mã hình minh hoạ; `effective` là thứ slide đang
+ * hiển thị, `inherited` là hoa văn slide nhận nếu theo bài giảng. `illustrations`: slide là Chữ và hình chưa có
+ * ảnh, nên lưới có thêm nhóm "Hình minh hoạ" ở trên cùng. Hình do AI chọn hiện như giảng viên tự chọn.
  */
 export function SlideMotifField({
   value,
   effective,
   inherited,
+  illustrations = false,
   themeId,
   onChange,
 }: {
   value: string | undefined;
-  effective: SlideMotifId | null;
-  inherited: SlideMotifId | null;
+  effective: SlideArtId | null;
+  inherited: SlideArtId | null;
+  illustrations?: boolean;
   themeId?: string | null;
   onChange: (v: string | null) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const own = isMotifId(value) ? value : null;
+  // Hình minh hoạ chỉ có hiệu lực ở ô hình; ở bố cục khác coi như slide theo bài giảng (mã vẫn được giữ).
+  const own: SlideArtId | null = isMotifId(value) || (illustrations && isSlideIllustrationId(value)) ? value : null;
   const status =
-    value === "none" ? "Không dùng cho slide này" : own ? `${MOTIF_LABELS[own]} (riêng slide này)` : inherited ? `Theo bài giảng: ${MOTIF_LABELS[inherited]}` : "Theo bài giảng (bài đang tắt hoa văn)";
+    value === "none" ? "Không dùng cho slide này" : own ? `${slideArtLabel(own)} (riêng slide này)` : inherited ? `Theo bài giảng: ${slideArtLabel(inherited)}` : "Theo bài giảng (bài đang tắt hoa văn)";
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-3 rounded-xl border border-token p-2">
         <MotifSwatch motif={effective} themeId={themeId} className="h-11 w-11 shrink-0" />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-muted">Hoa văn</p>
+          <p className="text-xs font-semibold text-muted">{illustrations ? "Hình ở ô hình" : "Hoa văn"}</p>
           <p className="truncate text-sm">{status}</p>
         </div>
         <button type="button" className="btn-secondary text-sm" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           {open ? "Xong" : "Đổi"}
         </button>
       </div>
+      {open && illustrations && (
+        <>
+          <p className="text-sm font-semibold">Hình minh hoạ</p>
+          {SLIDE_ILLUSTRATION_GROUPS.map((g) => (
+            <div key={g.label} className="space-y-1">
+              <p className="text-xs font-semibold text-muted">{g.label}</p>
+              <Grid
+                label={`Hình minh hoạ: ${g.label}`}
+                options={g.ids.map((m) => ({ value: m as string | null, label: SLIDE_ILLUSTRATION_LABELS[m], motif: m }))}
+                value={own && isSlideIllustrationId(own) ? own : null}
+                themeId={themeId}
+                onPick={onChange}
+              />
+            </div>
+          ))}
+          <p className="border-t border-token pt-3 text-sm font-semibold">Hoa văn</p>
+        </>
+      )}
       {open && (
         <Grid
           label="Hoa văn của slide này"
@@ -178,7 +202,7 @@ export function SlideMotifField({
             ...SLIDE_MOTIFS.map((m) => ({ value: m as string | null, label: MOTIF_LABELS[m], motif: m })),
             { value: "none", label: "Không dùng", motif: null },
           ]}
-          value={value === "none" ? "none" : own}
+          value={value === "none" ? "none" : own && isSlideIllustrationId(own) ? "" : own}
           themeId={themeId}
           onPick={onChange}
         />

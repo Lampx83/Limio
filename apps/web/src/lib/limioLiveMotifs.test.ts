@@ -5,6 +5,9 @@ import {
   hash32,
   hexColorsIn,
   isMotifChoice,
+  isSlideMotifChoice,
+  motifAfterRegenerate,
+  slideArtLabel,
   motifImageOrdinals,
   motifOpacityCap,
   motifSlot,
@@ -13,6 +16,7 @@ import {
 import { motifSvgBody } from "./limioLiveMotifArt";
 import { mergeSlideMeta, normalizeContentSlideConfig, pickMeta, sanitizeLayoutConfig } from "./limioLiveSlides";
 import { contrastRatio, hexToRgb } from "./limioLiveBrand";
+import { SLIDE_ILLUSTRATIONS, SLIDE_ILLUSTRATION_GROUPS, SLIDE_ILLUSTRATION_LABELS, SLIDE_ILLUSTRATION_TOPICS } from "@feedbackme/shared-types";
 
 /** Màu của nền sau khi phủ `ink` với độ đậm a, dạng #RRGGBB (để kiểm tra độc lập với hàm đang test). */
 const mixHex = (ink: string, bg: string, a: number): string => {
@@ -179,5 +183,84 @@ describe("độ đậm an toàn cho chữ", () => {
   it("đọc được các màu của nền dải màu", () => {
     expect(hexColorsIn("linear-gradient(135deg,#F3FADC 0%,#FDEBF3 100%)")).toEqual(["#F3FADC", "#FDEBF3"]);
     expect(hexColorsIn("#FFFFFF")).toEqual(["#FFFFFF"]);
+  });
+});
+
+describe("hình minh hoạ theo chủ đề (chỉ ở ô hình)", () => {
+  const deckId = "deck_hinh";
+
+  it("24 hình, mã không trùng với nhau và không trùng mã hoa văn, đều có tên hiển thị và chủ đề cho AI", () => {
+    expect(SLIDE_ILLUSTRATIONS).toHaveLength(24);
+    expect(new Set([...SLIDE_ILLUSTRATIONS, ...SLIDE_MOTIFS]).size).toBe(40);
+    for (const id of SLIDE_ILLUSTRATIONS) {
+      expect(slideArtLabel(id)).toBe(SLIDE_ILLUSTRATION_LABELS[id]);
+      expect(SLIDE_ILLUSTRATION_TOPICS[id]).toBeTruthy();
+    }
+  });
+
+  it("năm nhóm chủ đề, mỗi hình nằm đúng một nhóm", () => {
+    expect(SLIDE_ILLUSTRATION_GROUPS.map((g) => g.label)).toEqual([
+      "Học tập và sáng tạo",
+      "Con người và xã hội",
+      "Khoa học và công nghệ",
+      "Tự nhiên và Trái Đất",
+      "Kinh tế và phát triển",
+    ]);
+    const all = SLIDE_ILLUSTRATION_GROUPS.flatMap((g) => g.ids);
+    expect(all).toHaveLength(SLIDE_ILLUSTRATIONS.length);
+    expect(new Set(all)).toEqual(new Set(SLIDE_ILLUSTRATIONS));
+  });
+
+  it("hình chỉ tô bằng biến giao diện, không có màu cứng hay ảnh ngoài; ô vuông nhỏ thì thu theo tỉ lệ", () => {
+    for (const id of SLIDE_ILLUSTRATIONS) {
+      const body = motifSvgBody(id, 464, 500, "x1");
+      expect(body.length).toBeGreaterThan(100);
+      expect(body).toContain("var(--sa)");
+      expect(body).not.toMatch(/(fill|stroke)="#|stop-color:#/i);
+      expect(body).not.toMatch(/<image|href=|https?:/);
+      expect(body).not.toContain("__ID__");
+      expect(motifSvgBody(id, 240, 240, "x2")).toMatch(/^<g transform="translate\([-\d.]+ [-\d.]+\) scale\([\d.]+\)">/);
+    }
+  });
+
+  it("Chữ và hình chưa có ảnh: hình chọn riêng cho slide được vẽ ở ô hình, kể cả khi bài tắt hoa văn", () => {
+    expect(resolveSlideMotif({ deckId, config: { ...image, motif: "ketnoi" } })).toEqual({ motif: "ketnoi", slot: "fill" });
+    expect(resolveSlideMotif({ deckId, deckChoice: "none", config: { ...image, motif: "antoan" } })).toEqual({ motif: "antoan", slot: "fill" });
+  });
+
+  it("bố cục khác hoặc slide đã có ảnh: mã hình bị bỏ qua, chỗ trang trí quay về hoa văn của bài", () => {
+    for (const c of [cover, section, quote]) {
+      expect(resolveSlideMotif({ deckId, config: { ...c, motif: "ketnoi" } })).toEqual(resolveSlideMotif({ deckId, config: c }));
+    }
+    expect(resolveSlideMotif({ deckId, config: { ...photo, motif: "ketnoi" } })).toBeNull();
+  });
+
+  it("slide có hình vẫn giữ chỗ trong vòng xoay hoa văn, nên các ô hình khác không đổi hoa văn", () => {
+    const slides = [
+      { id: "a", type: "content", config: image },
+      { id: "b", type: "content", config: { ...image, motif: "thoigian" } },
+      { id: "c", type: "content", config: image },
+    ];
+    expect(motifImageOrdinals(slides).get("c")).toBe(2);
+  });
+
+  it("lưu được ở slide (khoá meta) nhưng không phải lựa chọn cho cả bài", () => {
+    expect(isSlideMotifChoice("ketnoi")).toBe(true);
+    expect(isSlideMotifChoice("song")).toBe(true);
+    expect(isSlideMotifChoice("none")).toBe(true);
+    expect(isSlideMotifChoice("maytinh")).toBe(false);
+    expect(isMotifChoice("ketnoi")).toBe(false);
+    expect(pickMeta({ motif: "ketnoi" }).motif).toBe("ketnoi");
+    expect((normalizeContentSlideConfig({ layout: "cover", title: "x", motif: "ketnoi" }) as Record<string, unknown>).motif).toBe("ketnoi");
+  });
+
+  it("viết lại slide từ dàn ý: giữ hoa văn hay “Không dùng” của giảng viên; hình cũ nhường cho hình AI vừa chọn", () => {
+    expect(motifAfterRegenerate("song", "ketnoi")).toBe("song");
+    expect(motifAfterRegenerate("none", "ketnoi")).toBe("none");
+    expect(motifAfterRegenerate("thoigian", "ketnoi")).toBe("ketnoi");
+    expect(motifAfterRegenerate("thoigian", undefined)).toBe("thoigian");
+    expect(motifAfterRegenerate(undefined, "ketnoi")).toBe("ketnoi");
+    expect(motifAfterRegenerate(undefined, undefined)).toBeUndefined();
+    expect(motifAfterRegenerate("<svg>", "maytinh")).toBeUndefined();
   });
 });

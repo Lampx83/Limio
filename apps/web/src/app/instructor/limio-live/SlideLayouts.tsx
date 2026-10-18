@@ -30,7 +30,7 @@ import {
 import { apiUrl } from "@/lib/apiUrl";
 import { fitScaleForBox, frameHeightForContent, measureContentBox } from "@/lib/limioLiveFit";
 import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, contentScaleForLogo, logoPlacement, logoVisibleOn, slideRole } from "@/lib/limioLiveBrand";
-import { MOTIF_SLOT_SIZE, type MotifSlot, type SlideMotifId } from "@/lib/limioLiveMotifs";
+import { MOTIF_SLOT_SIZE, type MotifSlot, type SlideArtId } from "@/lib/limioLiveMotifs";
 import { motifSvgBody } from "@/lib/limioLiveMotifArt";
 import { useLiveBrand } from "./liveBrandContext";
 import { useSlideMotif } from "./liveMotifContext";
@@ -320,10 +320,10 @@ function Glows({ a, b }: { a: CSSProperties; b: CSSProperties }) {
 }
 
 /**
- * Hoa văn trang trí (limioLiveMotifs): SVG tự vẽ, màu theo biến giao diện. Thân SVG do mã của ta sinh ra từ
+ * Hoa văn trang trí hoặc hình minh hoạ ở ô hình (limioLiveMotifs): SVG tự vẽ, màu theo biến giao diện. Thân SVG do mã của ta sinh ra từ
  * một mã hoa văn trong danh sách cố định, không chứa chữ của người dùng, nên chèn thẳng được.
  */
-function SlideMotif({ motif, slot }: { motif: SlideMotifId; slot: MotifSlot }) {
+function SlideMotif({ motif, slot }: { motif: SlideArtId; slot: MotifSlot }) {
   const uid = `m${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const [w, h] = MOTIF_SLOT_SIZE[slot];
   const html = useMemo(
@@ -333,7 +333,7 @@ function SlideMotif({ motif, slot }: { motif: SlideMotifId; slot: MotifSlot }) {
   return <div className={`motif m-${slot}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-type Motif = { motif: SlideMotifId; slot: MotifSlot } | null;
+type Motif = { motif: SlideArtId; slot: MotifSlot } | null;
 
 /** Mỗi slide chỉ một lớp trang trí: có hoa văn thì bỏ hai vệt sáng mờ. */
 function Decor({ motif, a, b }: { motif: Motif; a: CSSProperties; b: CSSProperties }) {

@@ -5,6 +5,12 @@
 // trích dẫn), màu lấy hoàn toàn từ biến giao diện. Giảng viên không phải chọn: mỗi bài có một hoa văn chủ
 // đạo suy ra từ mã bài giảng; muốn đổi thì đổi một lần cho cả bài (LiveDeck.motif) hoặc riêng một slide
 // (config.motif).
+//
+// Riêng ô hình của Chữ và hình còn nhận được một trong 12 hình minh hoạ theo chủ đề (SLIDE_ILLUSTRATIONS, mockup
+// docs/mockup/hinh-minh-hoa-chu-de.html), lưu chung ở config.motif của slide. Hình chỉ do AI chọn lúc sinh slide
+// hoặc giảng viên chọn trong lưới; không bao giờ là lựa chọn của cả bài và không được đoán theo từ khoá.
+
+import { SLIDE_ILLUSTRATION_LABELS, isSlideIllustrationId, type SlideIllustrationId } from "@feedbackme/shared-types";
 
 /** Thứ tự này quyết định cách xoay vòng ở ô hình: hai hoa văn kề nhau trong danh sách trông khác hẳn nhau. */
 export const SLIDE_MOTIFS = [
@@ -27,9 +33,14 @@ export const SLIDE_MOTIFS = [
 ] as const;
 export type SlideMotifId = (typeof SLIDE_MOTIFS)[number];
 
-/** Lựa chọn lưu được: một hoa văn cụ thể, hoặc "none" = không dùng. Không lưu gì = tự động. */
+/** Lựa chọn của cả bài (LiveDeck.motif): một hoa văn cụ thể, hoặc "none" = không dùng. Không lưu gì = tự động. */
 export type MotifChoice = SlideMotifId | "none";
 export const MOTIF_CHOICES = [...SLIDE_MOTIFS, "none"] as const;
+
+/** Thứ vẽ được ở chỗ trang trí: hoa văn trừu tượng, hoặc hình minh hoạ (chỉ ở ô hình). */
+export type SlideArtId = SlideMotifId | SlideIllustrationId;
+/** Lựa chọn riêng của một slide (config.motif): như của cả bài, cộng thêm hình minh hoạ. */
+export type SlideMotifChoice = MotifChoice | SlideIllustrationId;
 
 export const MOTIF_LABELS: Record<SlideMotifId, string> = {
   song: "Sóng",
@@ -52,6 +63,10 @@ export const MOTIF_LABELS: Record<SlideMotifId, string> = {
 
 export const isMotifId = (v: unknown): v is SlideMotifId => typeof v === "string" && (SLIDE_MOTIFS as readonly string[]).includes(v);
 export const isMotifChoice = (v: unknown): v is MotifChoice => v === "none" || isMotifId(v);
+export const isSlideMotifChoice = (v: unknown): v is SlideMotifChoice => isMotifChoice(v) || isSlideIllustrationId(v);
+
+/** Tên hiển thị của một hoa văn hoặc hình minh hoạ. */
+export const slideArtLabel = (id: SlideArtId): string => (isSlideIllustrationId(id) ? SLIDE_ILLUSTRATION_LABELS[id] : MOTIF_LABELS[id]);
 
 /**
  * Chỗ đặt hoa văn trên khung 1280×720:
@@ -141,22 +156,36 @@ export interface ResolveMotifInput {
 /**
  * Hoa văn và chỗ đặt của một slide, hoặc null nếu slide không có hoa văn.
  * Ưu tiên: lựa chọn riêng của slide > lựa chọn của cả bài > tự động.
+ * Hình minh hoạ chọn riêng chỉ có hiệu lực ở ô hình; ở chỗ khác coi như slide không chọn gì (mã vẫn giữ trong config,
+ * đổi lại bố cục thì hình trở lại).
  * Tự động: hoa văn chủ đạo = hash(mã bài) cho bìa, bìa phần, trích dẫn (cả bài trông như một bộ); ô hình thứ k
  * lấy trong 15 hoa văn còn lại với bước 4 (nguyên tố cùng nhau với 15), nên không trùng hoa văn chủ đạo,
  * đi hết 15 mới lặp và hai ô liền nhau không bao giờ giống nhau.
  */
-export function resolveSlideMotif(input: ResolveMotifInput): { motif: SlideMotifId; slot: MotifSlot } | null {
+export function resolveSlideMotif(input: ResolveMotifInput): { motif: SlideArtId; slot: MotifSlot } | null {
   const slot = motifSlot(input.config);
   if (!slot) return null;
   const own = (input.config ?? {}).motif;
   if (own === "none") return null;
   if (isMotifId(own)) return { motif: own, slot };
+  if (slot === "fill" && isSlideIllustrationId(own)) return { motif: own, slot };
   if (input.deckChoice === "none") return null;
   const n = SLIDE_MOTIFS.length;
   const base = SLIDE_MOTIFS.indexOf(isMotifId(input.deckChoice) ? input.deckChoice : deckAutoMotif(input.deckId));
   if (slot !== "fill") return { motif: SLIDE_MOTIFS[base]!, slot };
   const k = Math.max(0, Math.floor(input.imageOrdinal ?? 0));
   return { motif: SLIDE_MOTIFS[(base + 1 + ((k * 4) % (n - 1))) % n]!, slot };
+}
+
+/**
+ * Lựa chọn hoa văn/hình của slide sau khi viết lại từ dàn ý (slide chưa sửa tay). Đổi hoa văn không tính là sửa
+ * tay nên phải giữ riêng: hoa văn hay "none" của slide cũ luôn giữ (AI không bao giờ chọn những thứ đó, nên chắc chắn
+ * do giảng viên chọn); hình minh hoạ cũ nhường cho hình AI vừa chọn lại, không có thì giữ.
+ */
+export function motifAfterRegenerate(oldChoice: unknown, generated: unknown): SlideMotifChoice | undefined {
+  const fresh = isSlideIllustrationId(generated) ? generated : undefined;
+  if (!isSlideMotifChoice(oldChoice)) return fresh;
+  return isSlideIllustrationId(oldChoice) && fresh ? fresh : oldChoice;
 }
 
 // ── Độ đậm an toàn cho chữ ────────────────────────────────────────────────

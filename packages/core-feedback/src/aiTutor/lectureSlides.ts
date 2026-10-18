@@ -2,6 +2,7 @@ import type OpenAI from "openai";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
+import { SLIDE_ILLUSTRATIONS, SLIDE_ILLUSTRATION_TOPICS } from "@feedbackme/shared-types";
 import { OUTLINE_KINDS, OUTLINE_MAX_SOURCE_CHARS } from "./lectureOutline";
 
 /**
@@ -49,6 +50,8 @@ export interface RawSlideDraft {
   options: Array<{ text: string; correct: boolean }>;
   prompt: string;
   notes: string;
+  /** Chỉ ở bước sinh slide (LECTURE_DRAFTS_SCHEMA): mã hình minh hoạ cho ô hình, hoặc "none". */
+  illustration?: string;
 }
 
 const STR = { type: "string" };
@@ -114,6 +117,32 @@ export const DRAFTS_SCHEMA = {
   required: ["slides"],
 };
 
+type DraftItemSchema = { type: string; additionalProperties: boolean; properties: Record<string, unknown>; required: string[] };
+const DRAFT_ITEM = DRAFTS_SCHEMA.properties.slides.items as DraftItemSchema;
+
+/**
+ * Lược đồ của bước sinh slide từ dàn ý: như DRAFTS_SCHEMA, thêm trường illustration chỉ nhận một mã hình minh hoạ
+ * hoặc "none". Bước sửa slide dùng DRAFTS_SCHEMA (không có trường này) để AI sửa chữ không đổi hình của slide.
+ */
+export const LECTURE_DRAFTS_SCHEMA = {
+  ...DRAFTS_SCHEMA,
+  properties: {
+    slides: {
+      type: "array",
+      items: {
+        ...DRAFT_ITEM,
+        properties: { ...DRAFT_ITEM.properties, illustration: { type: "string", enum: [...SLIDE_ILLUSTRATIONS, "none"] } },
+        required: [...DRAFT_ITEM.required, "illustration"],
+      },
+    },
+  },
+};
+
+/** Lời dặn chọn hình minh hoạ, chỉ gắn vào slide Chữ và hình. */
+const ILLUSTRATION_SPEC = `Thêm trường illustration: hình minh hoạ cho ô hình bên cạnh chữ. Chỉ dùng một mã trong danh sách: ${SLIDE_ILLUSTRATIONS.map(
+  (id) => `${id} (${SLIDE_ILLUSTRATION_TOPICS[id]})`,
+).join(", ")}. Chỉ chọn khi ý chính của slide rõ ràng thuộc đúng một chủ đề trên. Nếu slide nói về một thứ cụ thể mà danh sách không có, hoặc không chắc, ghi "none". Không tạo mã mới.`;
+
 /** Yêu cầu trường cho từng bố cục — các trường còn lại để rỗng. */
 export const SLIDE_SPEC: Record<string, string> = {
   cover: `title (tiêu đề bài, tối đa 12 từ), subtitle (một câu hoàn chỉnh nêu giá trị của bài), byline để rỗng.`,
@@ -164,7 +193,7 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
       const key = specKeyFor(s);
       return `- Chỉ số ${s.index}, bố cục "${key}", tiêu đề dàn ý: "${s.title}"${
         s.points.length ? `, ý chính dàn ý: ${s.points.map((p) => `"${p}"`).join("; ")}` : ""
-      }.\n  Điền: ${SLIDE_SPEC[key] ?? SLIDE_SPEC.image}`;
+      }.\n  Điền: ${SLIDE_SPEC[key] ?? SLIDE_SPEC.image} ${key === "image" ? ILLUSTRATION_SPEC : 'Trường illustration để "none".'}`;
     })
     .join("\n");
 
@@ -202,7 +231,7 @@ export async function generateSlideDrafts(
     system,
     user,
     "lecture_slides",
-    DRAFTS_SCHEMA,
+    LECTURE_DRAFTS_SCHEMA,
     4500,
   );
   await recordAiUsage(userId, model, inputTokens, outputTokens, db);

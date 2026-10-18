@@ -5,7 +5,7 @@
 // thức (cỡ chữ, màu, bố cục) do bố cục + giao diện tự vẽ. Nhờ vậy sửa chữ không
 // làm vỡ hình thức, và đổi bố cục không mất nội dung.
 
-import { isMotifChoice } from "./limioLiveMotifs";
+import { isSlideMotifChoice } from "./limioLiveMotifs";
 
 export const SLIDE_LAYOUTS = [
   "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
@@ -422,7 +422,7 @@ export function padForEditing(layout: SlideLayoutId, c: Record<string, any>): Re
 
 /**
  * Khoá "meta" đi kèm mọi slide, không thuộc bố cục: ghi chú giảng, cờ ẩn khi trình chiếu, hoa văn trang trí chọn
- * riêng cho slide ("none" hoặc mã hoa văn, xem limioLiveMotifs), và dấu vết sinh bằng AI (id dòng dàn ý, slide do
+ * riêng cho slide ("none", mã hoa văn hoặc mã hình minh hoạ, xem limioLiveMotifs), và dấu vết sinh bằng AI (id dòng dàn ý, slide do
  * AI sinh, đã được giảng viên sửa tay). Hoa văn là meta để AI sửa slide hay đổi bố cục không làm mất lựa chọn.
  * Bộ lọc bố cục phải giữ chúng, nếu không việc ẩn slide hay ghi chú sẽ mất lặng lẽ.
  */
@@ -431,7 +431,7 @@ export function pickMeta(config: Record<string, unknown> | null | undefined): Re
   const out: Record<string, unknown> = {};
   if (typeof c.presenterNote === "string" && c.presenterNote.trim()) out.presenterNote = c.presenterNote.trim().slice(0, MAX_LEN.notes);
   if (c.hidden === true) out.hidden = true;
-  if (isMotifChoice(c.motif)) out.motif = c.motif;
+  if (isSlideMotifChoice(c.motif)) out.motif = c.motif;
   if (typeof c.outlineId === "string" && c.outlineId) out.outlineId = c.outlineId.slice(0, 60);
   if (c.aiGenerated === true) out.aiGenerated = true;
   if (c.editedByUser === true) out.editedByUser = true;

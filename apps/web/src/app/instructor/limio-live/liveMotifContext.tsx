@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import { motifImageOrdinals, resolveSlideMotif, type MotifSlot, type SlideMotifId } from "@/lib/limioLiveMotifs";
+import { motifImageOrdinals, resolveSlideMotif, type MotifSlot, type SlideArtId } from "@/lib/limioLiveMotifs";
 
 // Hoa văn trang trí của bài giảng đang soạn hoặc chiếu: mã bài (suy ra hoa văn chủ đạo), lựa chọn của cả bài,
 // và thứ tự các ô hình (để hai ô liền nhau khác hoa văn). Đặt cạnh LiveBrandProvider ở gốc trình sửa và trình chiếu.
@@ -31,7 +31,7 @@ export function LiveMotifProvider({
 }
 
 /** Hoa văn của slide đang vẽ; `slideId` cho biết thứ tự ô hình (không có thì coi là ô đầu). */
-export function useSlideMotif(config: Record<string, unknown> | null | undefined, slideId?: string): { motif: SlideMotifId; slot: MotifSlot } | null {
+export function useSlideMotif(config: Record<string, unknown> | null | undefined, slideId?: string): { motif: SlideArtId; slot: MotifSlot } | null {
   const ctx = useContext(Ctx);
   return resolveSlideMotif({
     deckId: ctx?.deckId,

@@ -194,6 +194,8 @@
   .lslide .motif.m-bl { left: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 0% 100%, #000 30%, transparent 92%); }
   .lslide .motif.m-tr { right: 0; top: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); }
   .lslide .motif.m-fill { inset: 0; }
+  /* Hình minh hoạ: đĩa nền tô --sglow1, ở giao diện tối màu này thường trùng --sa nên phải nhạt hơn để vật thể nổi lên. */
+  .lt-dark .ill-disc { fill-opacity: .1; }
 
   /* ---------- Hiệu ứng nhẹ (chỉ chạy ở chế độ toàn màn hình; tắt nếu máy bật "giảm chuyển động") ---------- */
   @media (prefers-reduced-motion: no-preference) {

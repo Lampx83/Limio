@@ -12,6 +12,7 @@ import {
   sanitizeLayoutConfig,
   type SlideLayoutId,
 } from "./limioLiveSlides";
+import { isSlideIllustrationId } from "@feedbackme/shared-types";
 import { stripEmoji, type OutlineSlide, type SlideStructure } from "./limioLiveOutline";
 
 export const BATCH_SIZE = 5;
@@ -33,6 +34,8 @@ export interface SlideDraft {
   options?: Array<{ text?: string; correct?: boolean }>;
   prompt?: string;
   notes?: string;
+  /** Mã hình minh hoạ cho ô hình (SLIDE_ILLUSTRATIONS) hoặc "none"; chỉ có hiệu lực ở slide Chữ và hình. */
+  illustration?: string;
 }
 
 export interface GeneratedSlide {
@@ -201,9 +204,12 @@ export function draftToSlide(os: OutlineSlide, draftIn: SlideDraft | undefined, 
   const raw: Record<string, unknown> = { ...d, sectionNumber: layout === "section" ? sectionNo : d.sectionNumber, byline: "" /* tên giảng viên và lớp do giảng viên tự điền, AI không được bịa */ };
   const clean = sanitizeLayoutConfig(layout, raw) as Record<string, any>;
   if (!contentComplete(layout, clean)) return configFromOutline(os, sectionNo, d.notes);
+  // Hình minh hoạ: chỉ nhận đúng một mã trong danh sách, chỉ ở Chữ và hình; mọi thứ khác bỏ qua để ô hình giữ hoa văn
+  // tự động. Không đoán mã "gần giống" từ chữ của slide.
+  const illustration = layout === "image" && isSlideIllustrationId(d.illustration) ? { motif: d.illustration } : {};
   return {
     type: "content",
-    config: normalizeContentSlideConfig({ ...clean, ...meta }) as Record<string, unknown>,
+    config: normalizeContentSlideConfig({ ...clean, ...meta, ...illustration }) as Record<string, unknown>,
     usedFallback: false,
   };
 }

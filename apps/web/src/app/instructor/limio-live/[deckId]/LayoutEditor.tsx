@@ -835,10 +835,12 @@ export default function LayoutEditor({
               </>
             )}
 
-            {/* Chỉ bốn bố cục có chỗ trống cho hoa văn; Chữ và hình đã có ảnh thì không. */}
+            {/* Chỉ bốn bố cục có chỗ trống cho hoa văn; Chữ và hình đã có ảnh thì không. Riêng ô hình (Chữ và hình
+                chưa có ảnh) chọn được thêm hình minh hoạ theo chủ đề. */}
             {motifSlot(preview) && (
               <SlideMotifField
                 value={savedMotif}
+                illustrations={motifSlot(preview) === "fill"}
                 effective={effectiveMotif?.motif ?? null}
                 inherited={inheritedMotif?.motif ?? null}
                 themeId={themeId}
