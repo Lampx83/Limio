@@ -11,6 +11,26 @@ const outline: OutlineSlideInput[] = [
   { index: 2, kind: "quiz", layout: null, title: "Câu nào là phản hồi cụ thể?", points: [] },
   { index: 3, kind: "word_cloud", layout: null, title: "Một từ nói về cảm nhận", points: [] },
 ];
+describe("vai trò trong mạch bài", () => {
+  it("slide Mục tiêu và Mục lục có yêu cầu riêng; slide mở phần dặn lời chuyển ý trong ghi chú", () => {
+    expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Mục tiêu", points: [], role: "objectives" })).toBe("objectives");
+    expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Nội dung", points: [], role: "agenda" })).toBe("agenda");
+    expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Điều cần nhớ", points: [], role: "summary" })).toBe("summary");
+    expect(SLIDE_SPEC.section).toContain("chuyển ý");
+    expect(SLIDE_SPEC.agenda).toContain("giữ nguyên chữ");
+  });
+
+  it("dàn ý tổng quan ghi nhãn phần để mô hình giữ mạch", () => {
+    const { user } = buildSlidesPrompt({
+      sourceText: "x".repeat(60),
+      deckTitle: "T",
+      outline: [{ index: 0, kind: "content", layout: "section", title: "Ứng dụng", points: [], role: "content", part: "Nội dung 2: Ứng dụng" }],
+      batch: [0],
+    });
+    expect(user).toContain("0. (Nội dung 2: Ứng dụng) [section] Ứng dụng");
+  });
+});
+
 const base = { sourceText: "Phản hồi là thông tin về khoảng cách giữa kết quả và mục tiêu. ".repeat(5), deckTitle: "Phản hồi", outline };
 
 const fake = (content: unknown) => {

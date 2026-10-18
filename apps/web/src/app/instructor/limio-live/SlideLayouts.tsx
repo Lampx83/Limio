@@ -353,7 +353,43 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
       );
     }
 
-    case "section":
+    case "section": {
+      // Bìa phần có mục lục (dàn ý theo mạch cấu trúc): trái là số và tên phần, phải là các phần của bài.
+      const toc: string[] = Array.isArray(c.toc) ? c.toc.filter((t: unknown) => typeof t === "string") : [];
+      const cur = Number(c.tocCurrent);
+      if (toc.length >= 2 && cur >= 1 && cur <= toc.length) {
+        const no = /^\d+$/.test(String(c.sectionNumber ?? "")) ? String(Number(c.sectionNumber)) : String(c.sectionNumber ?? cur);
+        return (
+          <div className="ll-section ll-section-toc">
+            <Glows
+              a={{ width: 460, height: 460, left: -160, top: -160 }}
+              b={{ width: 380, height: 380, right: -120, bottom: -180 }}
+            />
+            <div className="pad">
+              <div className="left">
+                <div className="num a-pop">{no}</div>
+                <Title text={title} maxPx={64} widthPx={540} maxLines={3} style={{ ...delay(1), marginTop: 26 }} />
+                {c.subtitle && (
+                  <p className="lead a" style={{ ...delay(2), marginTop: 22 }}>
+                    <Inline text={c.subtitle} />
+                  </p>
+                )}
+              </div>
+              <ol className="toc">
+                {toc.map((t, i) => {
+                  const st = i + 1 < cur ? "done" : i + 1 === cur ? "now" : "next";
+                  return (
+                    <li key={i} className={`a ${st}`} style={delay(3 + i)} aria-current={st === "now" ? "step" : undefined}>
+                      <span className="mk">{st === "done" ? <Check size={28} strokeWidth={3} aria-label="Đã học" /> : i + 1}</span>
+                      <span>{t}</span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </div>
+        );
+      }
       return (
         <div className="ll-section">
           <Glows
@@ -371,6 +407,7 @@ function LayoutBody({ layout, c }: { layout: SlideLayoutId; c: Cfg }) {
           </div>
         </div>
       );
+    }
 
     case "image": {
       const bullets: string[] = Array.isArray(c.bullets) ? c.bullets : [];

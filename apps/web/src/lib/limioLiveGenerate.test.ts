@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   BATCH_SIZE,
+  applyStructure,
   configFromOutline,
   deepStripEmoji,
   draftToSlide,
@@ -15,6 +16,29 @@ import type { OutlineSlide } from "./limioLiveOutline";
 
 const os = (id: string, kind: OutlineSlide["kind"], layout: OutlineSlide["layout"], title: string, points: string[] = []): OutlineSlide => ({ id, kind, layout, title, points });
 const empty: SlideDraft = { index: 0 };
+
+describe("applyStructure: chữ do mạch cấu trúc quyết định", () => {
+  it("slide mở phần nhận số phần, tên phần và mục lục, ghi đè bản AI viết", () => {
+    const g = draftToSlide(os("a", "content", "section", "Ứng dụng"), { index: 0, title: "Tên AI đổi", subtitle: "Phần này trả lời câu hỏi dùng AR thế nào." }, "07");
+    const out = applyStructure(g, { sectionNo: "02", toc: ["Khái niệm", "Ứng dụng", "Thiết kế"], tocCurrent: 2 });
+    expect(out.config).toMatchObject({ layout: "section", sectionNumber: "02", title: "Ứng dụng", toc: ["Khái niệm", "Ứng dụng", "Thiết kế"], tocCurrent: 2 });
+    expect(out.config.subtitle).toBe("Phần này trả lời câu hỏi dùng AR thế nào.");
+  });
+
+  it("slide Mục lục nhận đúng tên các phần", () => {
+    const g = draftToSlide(os("b", "content", "summary", "Nội dung buổi học"), { index: 0, title: "Nội dung buổi học", items: [{ heading: "AI viết khác." }, { heading: "Và khác nữa." }] }, "");
+    expect(applyStructure(g, { agenda: ["Khái niệm", "Ứng dụng"] }).config.items).toEqual([
+      { heading: "Khái niệm", body: "" },
+      { heading: "Ứng dụng", body: "" },
+    ]);
+  });
+
+  it("không có thông tin mạch hoặc slide tương tác thì giữ nguyên", () => {
+    const g = draftToSlide(os("c", "word_cloud", null, "Một từ?"), { index: 0, prompt: "Một từ về AR?" }, "");
+    expect(applyStructure(g, { agenda: ["x"] })).toBe(g);
+    expect(applyStructure(g, null)).toBe(g);
+  });
+});
 
 describe("makeBatches", () => {
   it("chia theo lô, lô cuối có thể ngắn hơn", () => {

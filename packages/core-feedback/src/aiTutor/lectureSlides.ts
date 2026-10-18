@@ -20,6 +20,9 @@ export interface OutlineSlideInput {
   layout: string | null;
   title: string;
   points: string[];
+  /** Vai trò trong mạch bài (cover, objectives, agenda, hook, content, summary) và nhãn phần, để mô hình giữ mạch. */
+  role?: string;
+  part?: string;
 }
 
 export interface SlideDraftsInput {
@@ -114,7 +117,9 @@ export const DRAFTS_SCHEMA = {
 /** Yêu cầu trường cho từng bố cục — các trường còn lại để rỗng. */
 export const SLIDE_SPEC: Record<string, string> = {
   cover: `title (tiêu đề bài, tối đa 12 từ), subtitle (một câu hoàn chỉnh nêu giá trị của bài), byline để rỗng.`,
-  section: `sectionNumber (số thứ tự mục, dạng "01", "02" theo thứ tự các slide "section" trong dàn ý), title (tên mục), subtitle (một câu hoàn chỉnh dẫn vào mục).`,
+  section: `title (đúng tên phần như dàn ý), subtitle (một câu hoàn chỉnh nêu phần này trả lời câu hỏi gì), sectionNumber để rỗng (hệ thống tự đánh số). Trường "notes" là lời chuyển ý: một câu chốt lại phần trước (bỏ qua nếu đây là phần đầu), rồi một câu nêu câu hỏi mà phần này sẽ trả lời.`,
+  objectives: `title, items: từ 2 đến 4 phần tử; chỉ dùng heading, là MỘT CÂU HOÀN CHỈNH bắt đầu bằng "Người học" và một động từ quan sát được, dưới 18 từ; body để rỗng.`,
+  agenda: `title, items: ĐÚNG các tên phần nêu trong ý chính của dàn ý, cùng thứ tự, giữ nguyên chữ; chỉ dùng heading; body để rỗng.`,
   image: `title, bullets: ĐÚNG 3 câu hoàn chỉnh, mỗi câu dưới 18 từ.`,
   cards: `title, items: ĐÚNG 3 phần tử; heading tối đa 6 từ, body một câu hoàn chỉnh dưới 18 từ, icon chọn một trong: target, compass, route, chat, book, sparkle, users, chart.`,
   compare: `title, columns: ĐÚNG 2 phần tử; phần tử đầu tone "bad" (cách chưa tốt), phần tử sau tone "good" (cách tốt); heading tối đa 4 từ; points 1 đến 2 ví dụ ngắn đặt trong dấu ngoặc kép; note một câu hoàn chỉnh nêu hệ quả.`,
@@ -131,6 +136,7 @@ export const SLIDE_SPEC: Record<string, string> = {
 };
 
 export function specKeyFor(s: OutlineSlideInput): string {
+  if (s.kind === "content" && (s.role === "objectives" || s.role === "agenda") && s.layout === "summary") return s.role;
   return s.kind === "content" ? s.layout ?? "image" : s.kind;
 }
 
@@ -149,7 +155,7 @@ Quy tắc bắt buộc:
 Trả về JSON đúng cấu trúc yêu cầu.`;
 
   const overview = input.outline
-    .map((s) => `${s.index}. [${specKeyFor(s)}] ${s.title}${s.points.length ? " — " + s.points.join(" | ") : ""}`)
+    .map((s) => `${s.index}. ${s.part ? `(${s.part}) ` : ""}[${specKeyFor(s)}] ${s.title}${s.points.length ? " — " + s.points.join(" | ") : ""}`)
     .join("\n");
   const wanted = input.batch
     .map((i) => input.outline.find((s) => s.index === i))

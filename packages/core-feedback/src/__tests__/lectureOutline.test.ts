@@ -66,6 +66,21 @@ describe("buildOutlinePrompt", () => {
     expect(OUTLINE_KINDS).toEqual(["content", "quiz", "poll", "word_cloud", "collaborate_board", "draw_it", "whiteboard"]);
   });
 
+  it("buổi từ 30 phút: mạch đủ Bìa, Mục tiêu, Mục lục, Hook, phần Nội dung có slide mở phần, Tổng kết", () => {
+    const { system } = buildOutlinePrompt(base);
+    for (const r of ["cover", "objectives", "agenda", "hook", "content", "summary"]) expect(system).toContain(`"${r}"`);
+    expect(system).toContain("Người học");
+    expect(system).toMatch(/Slide ĐẦU của mỗi phần có layout "section"/);
+    expect(system).toMatch(/Không bịa giai thoại/);
+  });
+
+  it("buổi 15 phút: mạch gọn, không slide mở phần, không Mục tiêu và Mục lục riêng", () => {
+    const { system } = buildOutlinePrompt({ ...base, minutes: 15, minSlides: 8, maxSlides: 10 });
+    expect(system).toContain(`KHÔNG dùng layout "section"`);
+    expect(system).toContain(`Không có slide "objectives" hay "agenda"`);
+    expect(buildOutlinePrompt({ ...base, structure: "compact" }).system).toContain(`KHÔNG dùng layout "section"`);
+  });
+
   it("cắt tài liệu quá dài ở mức cho phép", () => {
     const { user } = buildOutlinePrompt({ ...base, sourceText: "a".repeat(OUTLINE_MAX_SOURCE_CHARS + 5000) });
     expect(user.length).toBeLessThan(OUTLINE_MAX_SOURCE_CHARS + 200);

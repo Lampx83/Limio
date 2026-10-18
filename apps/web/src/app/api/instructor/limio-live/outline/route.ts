@@ -5,7 +5,7 @@ import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
-import { INTERACTIVE_EVERY, isValidMinutes, normalizeOutline, slideRange } from "@/lib/limioLiveOutline";
+import { INTERACTIVE_EVERY, isFullStructure, isValidMinutes, normalizeOutline, slideRange } from "@/lib/limioLiveOutline";
 
 export const runtime = "nodejs";
 // Một lần gọi mô hình có thể mất vài chục giây.
@@ -108,7 +108,14 @@ export async function POST(req: Request) {
         try {
           raw = await generateLectureOutline(
             userId,
-            { sourceText: text, minutes, minSlides: range.min, maxSlides: range.max, interactiveEvery: INTERACTIVE_EVERY },
+            {
+              sourceText: text,
+              minutes,
+              minSlides: range.min,
+              maxSlides: range.max,
+              interactiveEvery: INTERACTIVE_EVERY,
+              structure: isFullStructure(minutes) ? "full" : "compact",
+            },
             openai,
           );
         } catch (e) {

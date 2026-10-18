@@ -30,6 +30,8 @@ import OutlinePreview from "./OutlinePreview";
 
 interface Props {
   slide: OutlineSlide;
+  /** Slide có chữ do mạch cấu trúc quyết định: Mục lục (ý = tên các phần) và slide mở phần (tiêu đề = tên phần). */
+  auto?: "agenda" | "opener" | null;
   index: number;
   total: number;
   onPatch: (p: Partial<OutlineSlide>) => void;
@@ -47,7 +49,7 @@ const tile = (on: boolean) =>
   }`;
 
 /** Cửa sổ sửa một slide: bản xem trước ở đầu, loại slide và bố cục thu gọn, nội dung bên dưới (hoặc bên phải trên màn rộng). */
-export default function SlideDialog({ slide: s, index, total, onPatch, onKind, onRemove, onGoto, onClose }: Props) {
+export default function SlideDialog({ slide: s, auto = null, index, total, onPatch, onKind, onRemove, onGoto, onClose }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [openKind, setOpenKind] = useState(false);
@@ -176,7 +178,7 @@ export default function SlideDialog({ slide: s, index, total, onPatch, onKind, o
 
             <label className="block">
               <span className="mb-1 flex items-baseline justify-between text-sm font-semibold text-muted">
-                <span>{OUTLINE_KIND_TITLE[s.kind]}</span>
+                <span>{auto === "opener" ? "Tiêu đề (cũng là tên phần)" : OUTLINE_KIND_TITLE[s.kind]}</span>
                 <span className={`text-xs font-normal ${s.title.length >= OUTLINE_LIMITS.slideTitle ? "text-red-700" : "text-faint"}`}>
                   {s.title.length}/{OUTLINE_LIMITS.slideTitle}
                 </span>
@@ -190,7 +192,20 @@ export default function SlideDialog({ slide: s, index, total, onPatch, onKind, o
               />
             </label>
 
-            {isContent ? (
+            {isContent && auto === "agenda" ? (
+              <div className="space-y-2">
+                <span className="block text-sm font-semibold text-muted">Ý chính</span>
+                <p className="banner-info text-sm">Slide Mục lục tự lấy tên các phần nội dung, nên không cần nhập. Muốn sửa, hãy đổi tên phần ở danh sách slide.</p>
+                <ol className="space-y-1.5">
+                  {s.points.map((p, k) => (
+                    <li key={k} className="flex items-center gap-2 text-sm">
+                      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[rgb(var(--surface-muted))] text-xs font-bold text-muted">{k + 1}</span>
+                      <span className="input w-full bg-[rgb(var(--surface-muted))]">{p}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : isContent ? (
               <div className="space-y-3">
                 <div className="flex items-baseline justify-between text-sm font-semibold text-muted">
                   <span>Ý chính</span>

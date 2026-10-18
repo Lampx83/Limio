@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ITEM_RANGE,
   MAX_LEN,
+  MAX_TOC,
   MIN_FONT_PX,
   accentTail,
   emptyLayoutConfig,
@@ -435,5 +436,20 @@ describe("layoutRenderScale (thu phóng khi trình chiếu)", () => {
   it("giới hạn trong khoảng cho phép của nút thu phóng", () => {
     expect(layoutRenderScale(1, 99)).toBe(SLIDE_ZOOM_MAX);
     expect(layoutRenderScale(1, 0.01)).toBe(SLIDE_ZOOM_MIN);
+  });
+});
+
+describe("bìa phần có mục lục", () => {
+  it("giữ mục lục và vị trí phần hiện tại khi hợp lệ, cắt độ dài và số mục", () => {
+    const toc = Array.from({ length: 9 }, (_, i) => `Phần ${i + 1} ${"x".repeat(100)}`);
+    const c = sanitizeLayoutConfig("section", { title: "Ứng dụng", sectionNumber: "02", toc, tocCurrent: 2 });
+    expect((c.toc as string[]).length).toBe(MAX_TOC);
+    expect((c.toc as string[])[0]!.length).toBe(MAX_LEN.tocItem);
+    expect(c.tocCurrent).toBe(2);
+  });
+  it("bỏ mục lục khi ít hơn 2 phần hoặc vị trí ngoài khoảng; bố cục khác không mang mục lục", () => {
+    expect(sanitizeLayoutConfig("section", { toc: ["Một"], tocCurrent: 1 })).not.toHaveProperty("toc");
+    expect(sanitizeLayoutConfig("section", { toc: ["A", "B"], tocCurrent: 3 })).not.toHaveProperty("toc");
+    expect(sanitizeLayoutConfig("summary", { toc: ["A", "B"], tocCurrent: 1 })).not.toHaveProperty("toc");
   });
 });

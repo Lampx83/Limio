@@ -56,6 +56,9 @@ export const ITEM_RANGE: Partial<Record<SlideLayoutId, { min: number; max: numbe
   summary: { min: 2, max: 5 },
 };
 
+/** Số phần tối đa trên mục lục của bìa phần (vừa khung 720 px với chữ ≥ 26 px). */
+export const MAX_TOC = 6;
+
 /** Số ý chính tối đa của slide chữ và hình. */
 export const MAX_BULLETS: Partial<Record<SlideLayoutId, number>> = { image: 3, classic: 3 };
 
@@ -65,6 +68,7 @@ export const MAX_LEN = {
   subtitle: 200,
   byline: 80,
   sectionNumber: 4,
+  tocItem: 80,
   bullet: 140,
   itemHeading: 60,
   itemBody: 140,
@@ -146,6 +150,13 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
   if (layout === "section") {
     const n = clip(raw.sectionNumber, MAX_LEN.sectionNumber);
     if (n) out.sectionNumber = n;
+    // Mục lục của bìa phần: tên các phần Nội dung, do hệ thống tính từ dàn ý (không do AI viết).
+    const toc = (Array.isArray(raw.toc) ? raw.toc : []).map((t) => clip(t, MAX_LEN.tocItem)).filter(Boolean).slice(0, MAX_TOC);
+    const cur = Number(raw.tocCurrent);
+    if (toc.length >= 2 && Number.isInteger(cur) && cur >= 1 && cur <= toc.length) {
+      out.toc = toc;
+      out.tocCurrent = cur;
+    }
   }
   if (layout === "image") {
     const bullets = (Array.isArray(raw.bullets) ? raw.bullets : [])
