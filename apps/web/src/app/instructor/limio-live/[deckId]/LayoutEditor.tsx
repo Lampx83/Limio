@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
@@ -24,7 +24,6 @@ import {
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
-import { slideBgFor } from "../slideThemes";
 import { ChartSheet, TableSheet } from "./DataSheetEditor";
 import { motifSlot } from "@/lib/limioLiveMotifs";
 import { useSlideMotif } from "../liveMotifContext";
@@ -197,20 +196,11 @@ function Field({
 }
 
 type EditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
-// Khớp SLIDE_EDIT_INSTRUCTION_MIN / MAX của core-feedback (máy chủ kiểm lại).
-const INSTRUCTION_MIN = 3;
-const INSTRUCTION_MAX = 500;
 interface Proposal {
   type: "content" | "quiz";
   config: Cfg;
 }
 
-const AI_ACTIONS: Array<{ id: EditAction; label: string; hint: string }> = [
-  { id: "shorter", label: "Viết ngắn hơn", hint: "Rút gọn câu chữ, giữ ý chính" },
-  { id: "example", label: "Thêm ví dụ", hint: "Bổ sung một ví dụ cụ thể" },
-  { id: "simpler", label: "Dễ hiểu hơn", hint: "Dùng từ giản dị hơn" },
-  { id: "to_quiz", label: "Đổi thành câu hỏi quiz", hint: "Biến nội dung thành một câu hỏi" },
-];
 
 const AI_ERROR: Record<string, string> = {
   openai_not_configured: "Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên.",
@@ -218,165 +208,292 @@ const AI_ERROR: Record<string, string> = {
   daily_token_cap: "Bạn đã dùng hết hạn mức AI hôm nay. Bạn vẫn có thể sửa tay.",
   monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Bạn vẫn có thể sửa tay.",
   ai_edit_failed: "AI chưa viết lại được slide này. Hãy thử lại hoặc sửa tay.",
+  ai_chat_failed: "AI chưa trả lời được lúc này. Hãy thử lại.",
+  unsupported_slide: "Slide này chưa dùng được Nhờ AI.",
   no_outline_row: "Slide này không còn dòng dàn ý gốc để viết lại.",
   validation_failed: "Yêu cầu cần từ 3 đến 500 ký tự.",
 };
 
-/** Nhờ AI sửa một slide: bấm nút → xem bản so sánh → chấp nhận hoặc bỏ. Không bao giờ tự ghi vào slide. */
-function AiEditBar({
-  deckId,
-  slideId,
-  config,
-  themeId,
-  onApply,
-}: {
-  deckId: string;
-  slideId: string;
-  config: Cfg;
-  themeId?: string | null;
-  onApply: (p: Proposal, action: EditAction) => void;
-}) {
-  const [busy, setBusy] = useState<EditAction | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  const [proposal, setProposal] = useState<Proposal | null>(null);
-  const [proposalAction, setProposalAction] = useState<EditAction>("shorter");
-  const [instruction, setInstruction] = useState("");
-  const canAsk = instruction.trim().length >= INSTRUCTION_MIN && busy === null && proposal === null;
+/** AI trả về chưa đủ nội dung cho bố cục đích: nói rõ bố cục nào để giảng viên biết nên thử lại hay nói rõ yêu cầu hơn. */
+function incompleteText(layout: string | undefined): string {
+  const name = layout === "quiz" ? "câu hỏi quiz" : layout && layout in LAYOUT_META ? LAYOUT_META[layout as keyof typeof LAYOUT_META].label : "";
+  return `AI trả về chưa đủ nội dung${name ? ` cho bố cục ${name}` : ""}. Hãy thử lại, hoặc nói rõ hơn trong yêu cầu; bạn vẫn có thể sửa tay.`;
+}
 
-  const run = async (action: EditAction) => {
-    setBusy(action);
+const QUICK_ACTIONS: Array<{ id: Exclude<EditAction, "custom">; label: string; hint: string }> = [
+  { id: "shorter", label: "Viết ngắn hơn", hint: "Rút gọn câu chữ, giữ ý chính" },
+  { id: "example", label: "Thêm ví dụ", hint: "Bổ sung một ví dụ cụ thể" },
+  { id: "simpler", label: "Dễ hiểu hơn", hint: "Dùng từ giản dị hơn" },
+  { id: "to_quiz", label: "Đổi thành quiz", hint: "Biến nội dung thành một câu hỏi trắc nghiệm" },
+  { id: "rewrite", label: "Viết lại từ dàn ý", hint: "Quay về ý trong dàn ý đã xác nhận" },
+];
+// Khớp CHAT_MESSAGE_MAX / CHAT_HISTORY_TURNS của lib/limioLiveChat (máy chủ kiểm lại).
+const CHAT_MAX = 500;
+const CHAT_HISTORY = 6;
+
+interface ChatMsg {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  kind?: "answer" | "clarify" | "propose";
+  options?: string[];
+  suggestion?: string;
+  /** Đề xuất của lượt này: đang chờ quyết định, đã áp dụng hay đã bỏ. */
+  proposal?: "pending" | "applied" | "discarded";
+  /** Đã bấm một hướng gợi ý hoặc "Làm theo gợi ý này". */
+  used?: boolean;
+}
+
+let chatSeq = 0;
+const newChatId = () => `m${++chatSeq}`;
+
+/**
+ * Hỏi đáp với AI về một slide. Cuộc trò chuyện chỉ sống trong trình sửa: chuyển slide hay đóng là mất (bản đầu không lưu).
+ * Câu hỏi tự do đi qua ai-chat (AI tự chọn trả lời, hỏi lại hay đề xuất); lựa chọn nhanh và "Làm theo gợi ý này" đi qua
+ * ai-edit (một đề xuất chắc chắn). Đề xuất đang chờ hiện trên bản xem trước lớn; không ghi gì vào slide khi chưa Áp dụng.
+ */
+function useSlideAiChat(deckId: string, slideId: string) {
+  const [msgs, setMsgs] = useState<ChatMsg[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [pending, setPending] = useState<{ msgId: string; proposal: Proposal; action: string } | null>(null);
+  const [view, setView] = useState<"before" | "after">("after");
+  const [remaining, setRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    setMsgs([]);
+    setPending(null);
     setErr(null);
+    setBusy(false);
+  }, [slideId]);
+
+  const mark = (id: string, patch: Partial<ChatMsg>) => setMsgs((ms) => ms.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  const base = `/api/instructor/limio-live/decks/${deckId}/slides/${slideId}`;
+  const post = async (path: string, body: unknown) => {
+    const res = await fetch(apiUrl(`${base}/${path}`), { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    const j = (await res.json().catch(() => null)) as Record<string, any> | null;
+    return { ok: res.ok, j };
+  };
+  /** Mở một lượt: lượt mới thay đề xuất còn đang chờ (giảng viên đã chuyển sang yêu cầu khác). */
+  const begin = (text: string) => {
+    if (pending) mark(pending.msgId, { proposal: "discarded" });
+    setPending(null);
+    setErr(null);
+    setBusy(true);
+    setMsgs((ms) => [...ms, { id: newChatId(), role: "user", text }]);
+  };
+  const showProposal = (proposal: Proposal, action: string, text: string) => {
+    const id = newChatId();
+    setMsgs((ms) => [...ms, { id, role: "assistant", kind: "propose", text, proposal: "pending" }]);
+    setPending({ msgId: id, proposal, action });
+    setView("after");
+  };
+
+  const ask = async (text: string) => {
+    const history = msgs.slice(-CHAT_HISTORY).map((m) => ({ role: m.role, text: m.text }));
+    begin(text);
     try {
-      const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}/ai-edit`), {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(action === "custom" ? { action, instruction: instruction.trim() } : { action }),
-      });
-      const j = (await res.json().catch(() => null)) as { proposal?: Proposal; error?: string } | null;
-      if (!res.ok || !j?.proposal) return setErr(AI_ERROR[j?.error ?? ""] ?? "Không nhờ AI được lúc này. Vui lòng thử lại.");
-      setProposal(j.proposal);
-      setProposalAction(action);
+      const { ok, j } = await post("ai-chat", { message: text, history });
+      if (!ok || !j?.result) return setErr(AI_ERROR[j?.error ?? ""] ?? "Không hỏi AI được lúc này. Vui lòng thử lại.");
+      if (typeof j.remainingTurns === "number") setRemaining(j.remainingTurns);
+      const r = j.result as { kind: ChatMsg["kind"]; reply: string; options?: string[]; suggestion?: string; proposal?: Proposal };
+      if (r.kind === "propose" && r.proposal) return showProposal(r.proposal, "chat", r.reply);
+      setMsgs((ms) => [...ms, { id: newChatId(), role: "assistant", kind: r.kind, text: r.reply, options: r.options, suggestion: r.suggestion }]);
     } catch {
       setErr("Mất kết nối. Vui lòng kiểm tra mạng rồi thử lại.");
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
   };
 
-  const actions = config.outlineId ? [...AI_ACTIONS, { id: "rewrite" as const, label: "Viết lại từ dàn ý", hint: "Quay về ý trong dàn ý đã xác nhận" }] : AI_ACTIONS;
+  const act = async (action: EditAction, text: string, instruction?: string) => {
+    begin(text);
+    try {
+      const { ok, j } = await post("ai-edit", action === "custom" ? { action, instruction } : { action });
+      if (j?.error === "ai_edit_incomplete") return setErr(incompleteText(j.details?.layout));
+      if (!ok || !j?.proposal) return setErr(AI_ERROR[j?.error ?? ""] ?? "Không nhờ AI được lúc này. Vui lòng thử lại.");
+      const p = j.proposal as Proposal;
+      showProposal(p, action, p.type === "quiz" ? "Đây là câu hỏi quiz đề xuất thay cho slide này." : "Đây là bản đề xuất sửa slide.");
+    } catch {
+      setErr("Mất kết nối. Vui lòng kiểm tra mạng rồi thử lại.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
+  /** Chốt đề xuất đang chờ; trả đề xuất đó để trình sửa ghi vào slide khi Áp dụng. */
+  const settle = (status: "applied" | "discarded") => {
+    if (!pending) return null;
+    mark(pending.msgId, { proposal: status });
+    setPending(null);
+    return pending;
+  };
+
+  return { msgs, busy, err, pending, view, setView, remaining, ask, act, mark, settle };
+}
+type SlideAiChat = ReturnType<typeof useSlideAiChat>;
+
+function AiChatPanel({
+  chat,
+  hasOutline,
+  generalKnowledge,
+  onDecide,
+}: {
+  chat: SlideAiChat;
+  hasOutline: boolean;
+  /** Bài soạn từ mô tả chủ đề: câu trả lời dựa trên kiến thức chung, cần nhắc kiểm tra. */
+  generalKnowledge: boolean;
+  onDecide: (kind: "apply" | "discard") => void;
+}) {
+  const [text, setText] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [chat.msgs, chat.busy]);
+  const submit = () => {
+    const t = text.trim();
+    if (!t || chat.busy) return;
+    setText("");
+    void chat.ask(t);
+  };
+  const quick = hasOutline ? QUICK_ACTIONS : QUICK_ACTIONS.filter((q) => q.id !== "rewrite");
 
   return (
-    <section className="space-y-3 rounded-2xl border border-token p-4" aria-label="Nhờ AI sửa slide">
-      <div>
-        <h3 className="flex items-center gap-1.5 text-sm font-bold">
-          <Sparkles size={14} /> Nhờ AI sửa slide này
-        </h3>
-        <p className="mt-0.5 text-[13px] text-muted">
-          AI chỉ đề xuất. Bạn xem bản so sánh rồi mới chấp nhận, không có gì tự ghi vào slide.
-        </p>
+    <div className="flex min-h-0 flex-1 flex-col" role="tabpanel" aria-label="Nhờ AI">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-3" aria-live="polite">
+        {chat.msgs.length === 0 ? (
+          <div className="space-y-2 text-sm text-muted">
+            <p>
+              Hỏi AI về slide này, hoặc nhờ AI sửa. AI có thể trả lời, hỏi lại cho rõ, hoặc đề xuất một bản sửa; không có gì
+              ghi vào slide khi thầy/cô chưa bấm Áp dụng.
+            </p>
+            <p>Ví dụ: &quot;Ý thứ hai có chính xác không?&quot;, &quot;Đổi tiêu đề thành Các khái niệm.&quot;</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {chat.msgs.map((m) =>
+              m.role === "user" ? (
+                <div key={m.id} className="max-w-[92%] self-end whitespace-pre-line rounded-2xl rounded-br-md bg-brand-soft px-3 py-2 text-sm">
+                  {m.text}
+                </div>
+              ) : (
+                <div key={m.id} className="max-w-[96%] self-start text-sm">
+                  <p className="mb-0.5 flex items-center gap-1 text-xs font-bold text-muted">
+                    <Sparkles size={12} aria-hidden /> AI
+                  </p>
+                  <p className="whitespace-pre-line">{m.text}</p>
+                  {generalKnowledge && m.kind === "answer" && (
+                    <p className="mt-1 text-xs text-muted">Câu trả lời dựa trên kiến thức chung, thầy/cô cần kiểm tra.</p>
+                  )}
+                  {m.kind === "clarify" && m.options?.length ? (
+                    <div className="mt-2 grid gap-1.5">
+                      {m.options.map((o) => (
+                        <button
+                          key={o}
+                          type="button"
+                          disabled={chat.busy || m.used}
+                          onClick={() => {
+                            chat.mark(m.id, { used: true });
+                            void chat.ask(o);
+                          }}
+                          className="rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-left transition hover:border-brand-600 disabled:opacity-50"
+                        >
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  {m.kind === "answer" && m.suggestion && (
+                    <button
+                      type="button"
+                      disabled={chat.busy || m.used}
+                      onClick={() => {
+                        chat.mark(m.id, { used: true });
+                        void chat.act("custom", "Làm theo gợi ý này.", m.suggestion);
+                      }}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-2.5 py-1 text-[13px] font-semibold text-brand-700 transition hover:bg-brand-soft disabled:opacity-50"
+                    >
+                      <Sparkles size={13} aria-hidden /> Làm theo gợi ý này
+                    </button>
+                  )}
+                  {m.kind === "propose" &&
+                    (m.proposal === "pending" ? (
+                      <div className="mt-2 rounded-xl border border-brand-500 p-2.5">
+                        <p className="text-[13px] font-semibold">Đề xuất đang hiện trên khung xem trước (chưa áp dụng)</p>
+                        <div className="mt-2 flex gap-2">
+                          <button type="button" className="btn-secondary px-3 py-1 text-[13px]" onClick={() => onDecide("discard")}>
+                            Bỏ
+                          </button>
+                          <button type="button" className="btn-primary flex items-center gap-1 px-3 py-1 text-[13px]" onClick={() => onDecide("apply")}>
+                            <Check size={13} /> Áp dụng
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-1 text-xs italic text-muted">{m.proposal === "applied" ? "Đã áp dụng vào slide." : "Đã bỏ đề xuất."}</p>
+                    ))}
+                </div>
+              ),
+            )}
+          </div>
+        )}
+        {chat.busy && (
+          <p className="mt-3 flex items-center gap-2 text-sm text-muted" role="status">
+            <Loader2 size={14} className="animate-spin" /> AI đang trả lời...
+          </p>
+        )}
       </div>
-      <div className="space-y-2">
-        <label htmlFor="ai-instruction" className="block text-sm font-semibold">
-          Yêu cầu riêng
-        </label>
-        <div className="rounded-xl border border-token bg-[rgb(var(--surface))] focus-within:border-brand-600">
+
+      <div className="shrink-0 space-y-2 border-t border-token px-3 py-3">
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Chọn nhanh">
+          {quick.map((q) => (
+            <button
+              key={q.id}
+              type="button"
+              title={q.hint}
+              disabled={chat.busy}
+              onClick={() => void chat.act(q.id, `${q.label}.`)}
+              className="rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 py-1 text-[13px] text-muted transition hover:border-brand-600 hover:text-[rgb(var(--text))] disabled:opacity-50"
+            >
+              {q.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative rounded-xl border-[1.5px] border-token bg-[rgb(var(--surface))] focus-within:border-brand-600">
           <textarea
-            id="ai-instruction"
-            value={instruction}
-            onChange={(e) => setInstruction(e.target.value)}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
-              // Ctrl/Cmd + Enter gửi; Enter thường xuống dòng.
-              if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && canAsk) {
+              // Enter gửi, Shift + Enter xuống dòng; không gửi khi đang gõ dấu tiếng Việt (IME).
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                void run("custom");
+                submit();
               }
             }}
-            rows={3}
-            maxLength={INSTRUCTION_MAX}
-            disabled={busy !== null || proposal !== null}
-            placeholder="Ví dụ: Thêm một câu hỏi gợi mở ở cuối; viết lại cho sinh viên năm nhất; đổi ví dụ sang ngành y."
-            className="block w-full resize-y rounded-xl border-0 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-0 disabled:opacity-60"
+            rows={2}
+            maxLength={CHAT_MAX}
+            aria-label="Hỏi hoặc nhờ AI sửa slide này"
+            placeholder="Hỏi về slide này, hoặc nhờ AI sửa. Ví dụ: Ý thứ hai có chính xác không?"
+            className="block w-full resize-none rounded-xl border-0 bg-transparent px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-0"
           />
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-token px-3 py-1.5">
-            <span className="text-xs text-muted">Ctrl hoặc Cmd + Enter để gửi</span>
-            <button
-              type="button"
-              disabled={!canAsk}
-              onClick={() => void run("custom")}
-              className="btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
-            >
-              {busy === "custom" ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} aria-hidden />}
-              {busy === "custom" ? "AI đang sửa..." : "Gửi cho AI"}
-            </button>
-          </div>
-        </div>
-      </div>
-      <p className="text-sm font-semibold">Hoặc chọn nhanh</p>
-      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Việc nhờ AI">
-        {actions.map((a) => (
           <button
-            key={a.id}
             type="button"
-            disabled={busy !== null || proposal !== null}
-            onClick={() => run(a.id)}
-            className="flex items-start gap-2 rounded-xl border border-token px-3 py-2 text-left transition hover:border-brand-600 disabled:opacity-50"
+            aria-label="Gửi"
+            disabled={!text.trim() || chat.busy}
+            onClick={submit}
+            className="absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white transition disabled:opacity-40"
           >
-            {busy === a.id ? (
-              <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" />
-            ) : (
-              <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-600" aria-hidden />
-            )}
-            <span className="grid leading-tight">
-              <b className="text-sm">{a.label}</b>
-              <small className="text-xs text-muted">{a.hint}</small>
-            </span>
+            <ArrowRight size={16} />
           </button>
-        ))}
-      </div>
-      {err && <p className="text-xs font-medium text-red-700">{err}</p>}
-
-      {proposal && (
-        <div className="space-y-3 rounded-xl border-2 border-brand-300 bg-brand-50/40 p-3" role="region" aria-label="Đề xuất của AI">
-          <p className="text-sm font-semibold">Đề xuất của AI (chưa áp dụng)</p>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div>
-              <p className="mb-1 text-xs font-semibold text-muted">Hiện tại</p>
-              <Thumb config={config} themeId={themeId} slideId={slideId} />
-            </div>
-            <div>
-              <p className="mb-1 text-xs font-semibold text-muted">
-                {proposal.type === "quiz" ? "Đề xuất: câu hỏi quiz" : "Đề xuất"}
-              </p>
-              {proposal.type === "quiz" ? <QuizPreview config={proposal.config} /> : <Thumb config={proposal.config} themeId={themeId} slideId={slideId} />}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              className="btn-primary flex items-center gap-1.5 text-sm"
-              onClick={() => {
-                onApply(proposal, proposalAction);
-                setProposal(null);
-              }}
-            >
-              <Check size={14} /> Dùng đề xuất
-            </button>
-            <button type="button" className="btn-secondary text-sm" onClick={() => setProposal(null)}>
-              Bỏ đề xuất
-            </button>
-          </div>
         </div>
-      )}
-    </section>
-  );
-}
-
-function Thumb({ config, themeId, slideId }: { config: Cfg; themeId?: string | null; slideId?: string }) {
-  return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-black/10" style={{ background: slideBgFor(themeId, true) }}>
-      <div className="absolute inset-0 flex">
-        <LayoutSlideView config={config} themeId={themeId} slideId={slideId} />
+        <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
+          <span role={chat.err ? "alert" : undefined} className={chat.err ? "font-medium text-red-700" : "text-muted"}>
+            {chat.err ?? "Enter để gửi, Shift + Enter xuống dòng."}
+          </span>
+          {chat.remaining !== null && <span className="text-muted">Còn khoảng {chat.remaining.toLocaleString("vi-VN")} lượt AI trong tháng</span>}
+        </div>
+        <p className="text-xs text-faint">Cuộc trò chuyện không được lưu khi đóng cửa sổ sửa hoặc chuyển slide.</p>
       </div>
     </div>
   );
@@ -414,7 +531,10 @@ export default function LayoutEditor({
   onOpenChange,
   nav,
   zoom = 1,
+  sourceKind = null,
 }: {
+  /** Nguồn của bài (document | topic | topic_web): bài từ mô tả chủ đề nhắc câu trả lời AI dựa trên kiến thức chung. */
+  sourceKind?: string | null;
   /** Mức thu phóng của khung xem trước (1 = vừa khung; lớn hơn thì chữ to thật và cuộn để xem tiếp). */
   zoom?: number;
   config: Cfg;
@@ -546,19 +666,66 @@ export default function LayoutEditor({
   };
 
   const noun = NOUN[layout] ?? "Dòng";
-  // Cột chỉ khi ô sửa đủ rộng: ở lg và 2xl cột phải hẹp nên xếp dọc.
-  const cols = layout === "cards" || layout === "stats" ? "md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 2xl:grid-cols-1" : "";
+  // Cột chỉ khi ô sửa đủ rộng: từ lg bảng sửa chỉ rộng 460 px nên xếp dọc.
+  const cols = layout === "cards" || layout === "stats" ? "md:grid-cols-3 lg:grid-cols-1" : "";
 
-  // Bản thu nhỏ trong cửa sổ sửa: khung 16:9 cố định, vừa chiều rộng cột.
-  const thumbBox = (
-    <div
-      className="relative aspect-video w-full overflow-hidden rounded-xl border border-black/10 shadow-sm"
-      style={{ background: slideBgFor(themeId, true) }}
-    >
-      <div className="absolute inset-0 flex">
-        <LayoutSlideView config={shown} themeId={themeId} slideId={slideId} />
+  // Hỏi đáp với AI: đề xuất đang chờ hiện trên bản xem trước lớn (Trước / Sau), chỉ ghi vào slide khi bấm Áp dụng.
+  const chat = useSlideAiChat(deckId, slideId);
+  const pend = chat.pending;
+  const showAfter = !!pend && chat.view === "after";
+  const decide = (kind: "apply" | "discard") => {
+    const p = chat.settle(kind === "apply" ? "applied" : "discarded");
+    if (!p || kind !== "apply") return;
+    // Làm mới các ô nhập theo đề xuất (cùng bố cục); đổi loại slide thì trình soạn tự đổi theo.
+    if (p.proposal.type === "content") setD(padForEditing(layout, p.proposal.config));
+    onApplyProposal(p.proposal, p.action);
+  };
+  // Bản xem trước là phần chính của cửa sổ sửa: lấp vùng trái, co vừa khung, cập nhật từng ký tự gõ.
+  const stage = (
+    <section className="flex min-h-0 flex-col gap-2 bg-[rgb(var(--surface-muted))] p-3 lg:p-5" aria-label="Xem trước">
+      <div className="flex items-center justify-between text-[13px] text-faint">
+        <span>Xem trước</span>
+        <span className={problems.length > 0 ? "font-semibold text-amber-800" : ""}>{problems.length > 0 ? "Slide dài" : "Độ dài vừa"}</span>
       </div>
-    </div>
+      {pend && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border-2 border-brand-500 bg-[rgb(var(--surface))] px-3 py-2" role="region" aria-label="Đề xuất của AI">
+          <b className="text-sm">{pend.proposal.type === "quiz" ? "Đề xuất: đổi thành câu hỏi quiz" : "Đề xuất của AI"}</b>
+          <span className="inline-flex rounded-full border border-token p-0.5 text-[13px]" role="group" aria-label="Xem bản">
+            {(["before", "after"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={chat.view === v}
+                onClick={() => chat.setView(v)}
+                className={`rounded-full px-3 py-0.5 font-medium ${chat.view === v ? "bg-brand-600 text-white" : "text-muted"}`}
+              >
+                {v === "before" ? "Trước" : "Sau"}
+              </button>
+            ))}
+          </span>
+          <span className="flex-1" />
+          <button type="button" className="btn-secondary px-3 py-1 text-sm" onClick={() => decide("discard")}>
+            Bỏ
+          </button>
+          <button type="button" className="btn-primary flex items-center gap-1 px-3 py-1 text-sm" onClick={() => decide("apply")}>
+            <Check size={14} /> Áp dụng
+          </button>
+        </div>
+      )}
+      <div className="relative min-h-0 flex-1 max-lg:h-[34vh] max-lg:min-h-[190px] max-lg:flex-none">
+        {showAfter && pend!.proposal.type === "quiz" ? (
+          <div className="absolute inset-0 grid place-items-center overflow-auto p-2">
+            <div className="w-full max-w-xl">
+              <QuizPreview config={pend!.proposal.config} />
+            </div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 flex">
+            <LayoutSlideView config={showAfter ? pend!.proposal.config : shown} themeId={themeId} slideId={slideId} frame />
+          </div>
+        )}
+      </div>
+    </section>
   );
   // Khung xem trước lấp đầy vùng giữa; viền khung hình 16:9 do bộ vẽ slide tự vẽ.
   const previewBox = (
@@ -578,7 +745,7 @@ export default function LayoutEditor({
               if (e.target === dlgRef.current) dlgRef.current?.close();
             }}
             onKeyDown={onKeyDown}
-            className="m-auto h-[min(780px,94vh)] w-[min(1120px,96vw)] max-w-none overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] p-0 text-[rgb(var(--text))] shadow-2xl backdrop:bg-black/50 max-sm:m-0 max-sm:h-[100dvh] max-sm:max-h-none max-sm:w-screen max-sm:rounded-none max-sm:border-0"
+            className="m-auto h-[min(920px,94vh)] w-[min(1600px,96vw)] max-w-none overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] p-0 text-[rgb(var(--text))] shadow-2xl backdrop:bg-black/50 max-sm:m-0 max-sm:h-[100dvh] max-sm:max-h-none max-sm:w-screen max-sm:rounded-none max-sm:border-0"
           >
             <FormatCtx.Provider value={ctx}>
               <div className="flex h-full flex-col">
@@ -597,18 +764,12 @@ export default function LayoutEditor({
                   </button>
                 </div>
 
-                <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_320px] md:grid-rows-1">
-                  {/* Xem trước thu nhỏ ở góc: vẫn cập nhật từng ký tự gõ. */}
-                  <aside className="mx-auto w-full max-w-[300px] px-4 pt-3 md:order-2 md:max-w-none md:self-start md:px-4 md:py-4 md:pl-0" aria-label="Xem trước">
-                    <div className="mb-1 flex items-center justify-between text-[13px] text-faint">
-                      <span>Xem trước</span>
-                      <span className={problems.length > 0 ? "font-semibold text-amber-800" : ""}>{problems.length > 0 ? "Slide dài" : "Độ dài vừa"}</span>
-                    </div>
-                    {thumbBox}
-                  </aside>
+                {/* Màn rộng: xem trước lớn bên trái, bảng sửa 460 px bên phải. Màn hẹp: xem trước ở trên, bảng sửa ở dưới. */}
+                <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_460px] lg:grid-rows-1">
+                  {stage}
 
-                  <div className="min-h-0 overflow-y-auto md:order-1">
-                    <div className="sticky top-0 z-10 flex gap-1 border-b border-token bg-[rgb(var(--surface))] px-4 pt-2" role="tablist" aria-label="Phần sửa">
+                  <div className="flex min-h-0 flex-col border-token max-lg:border-t lg:border-l">
+                    <div className="flex shrink-0 gap-1 border-b border-token bg-[rgb(var(--surface))] px-4 pt-2" role="tablist" aria-label="Phần sửa">
                       {(
                         [
                           ["edit", "Nội dung"],
@@ -632,7 +793,8 @@ export default function LayoutEditor({
                     </div>
 
                     {tab === "edit" ? (
-                      <div className="space-y-4 p-4 sm:p-5" role="tabpanel" aria-label="Nội dung slide">
+                      <div className="min-h-0 flex-1 overflow-y-auto">
+                      <div className="space-y-4 p-4" role="tabpanel" aria-label="Nội dung slide">
           <LayoutPicker config={config} onSave={onSave} draft={preview} />
 
           <div
@@ -887,7 +1049,7 @@ export default function LayoutEditor({
             )}
 
             {layout === "compare" && (
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 2xl:grid-cols-1">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1">
                 {columns.map((col, i) => (
                   <div key={i} className="grid content-start gap-2 rounded-xl border border-token p-3">
                     <div className="flex items-center justify-between text-xs font-semibold text-muted">
@@ -975,21 +1137,14 @@ export default function LayoutEditor({
             )}
           </div>
                       </div>
+                    </div>
                     ) : (
-                      <div className="max-w-[640px] p-4 sm:p-5" role="tabpanel" aria-label="Nhờ AI sửa slide">
-                        <AiEditBar
-                          deckId={deckId}
-                          slideId={slideId}
-                          // Kèm khoá meta (outlineId, dòng nguồn): thiếu outlineId thì nút "Viết lại từ dàn ý" không hiện.
-                          config={{ ...shown, ...pickMeta(config) }}
-                          themeId={themeId}
-                          onApply={(p, action) => {
-                            // Làm mới các ô nhập theo đề xuất (cùng bố cục); đổi loại slide thì trình soạn tự đổi theo.
-                            if (p.type === "content") setD(padForEditing(layout, p.config));
-                            onApplyProposal(p, action);
-                          }}
-                        />
-                      </div>
+                      <AiChatPanel
+                        chat={chat}
+                        hasOutline={typeof config.outlineId === "string" && !!config.outlineId}
+                        generalKnowledge={sourceKind === "topic" || sourceKind === "topic_web"}
+                        onDecide={decide}
+                      />
                     )}
                   </div>
                 </div>

@@ -99,7 +99,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
       sourceText,
       refs: sanitizeRefs(slide.deck.sourceRefs),
     });
-    if (!proposal) return json({ error: "ai_edit_failed" }, 502);
+    // Bản nháp không đủ cho bố cục đích (kể cả sau khi lấp phần giữ nguyên từ slide hiện tại): nói rõ bố cục nào.
+    if (!proposal) return json({ error: "ai_edit_incomplete", details: { layout: action === "to_quiz" ? "quiz" : layout } }, 502);
     await emitLiveEvent(userId, LearningEventType.LiveSlideAiEditProposed, { deckId: params.deckId, slideId: params.slideId, action });
     return json({ proposal }, 200);
   } catch (e) {

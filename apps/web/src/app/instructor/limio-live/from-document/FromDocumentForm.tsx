@@ -120,119 +120,63 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
     }
   };
 
+  // Một khối duy nhất: ô nhập, rồi hàng thời lượng và nút Soạn dàn ý ngay dưới, để nút luôn thấy mà không phải cuộn.
+  const range = DURATIONS.find((d) => d.minutes === minutes);
   return (
-    <main className="mx-auto max-w-3xl space-y-8">
-      <div className="border-b border-token pb-6">
-        <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
-          Limio-Live
-        </a>
-        <h1 className="mt-1 text-2xl font-bold">Tạo bài giảng</h1>
-        <p className="mt-2 text-muted">
-          Mô tả bài giảng bạn cần, hoặc đưa tài liệu Word, PDF, văn bản. AI sẽ đề xuất dàn ý slide; bạn xem và sửa dàn ý
-          trước, rồi mới tạo slide.
-        </p>
+    <main className="mx-auto max-w-3xl space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+        <div>
+          <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
+            Limio-Live
+          </a>
+          <h1 className="text-2xl font-bold">Tạo bài giảng</h1>
+        </div>
         <a
           href="/instructor/limio-live?new=1"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-[rgb(var(--text))] hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-[rgb(var(--text))] hover:underline"
         >
-          <Pencil size={14} /> Hoặc soạn thủ công từ bài trống
+          <Pencil size={14} /> Soạn thủ công từ bài trống
         </a>
       </div>
+      <p className="text-[15px] text-muted">AI đề xuất dàn ý từ mô tả hoặc tài liệu của bạn; bạn duyệt dàn ý rồi mới tạo slide.</p>
 
-      <section className="space-y-3" aria-labelledby="src-h">
-        <h2 id="src-h" className="text-lg font-semibold">
-          1. Nội dung bài giảng
-        </h2>
-        <div className="inline-flex flex-wrap rounded-full border border-token p-0.5 text-sm" role="group" aria-label="Cách nhập nội dung">
-          {(["topic", "file", "text"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              aria-pressed={mode === m}
-              onClick={() => setMode(m)}
-              className={`rounded-full px-4 py-1.5 font-medium ${mode === m ? "bg-brand-600 text-white" : "text-muted"}`}
-            >
-              {MODE_LABEL[m]}
-            </button>
-          ))}
-        </div>
+      <div className="inline-flex rounded-full border border-token p-0.5 text-sm max-sm:flex max-sm:w-full" role="group" aria-label="Cách nhập nội dung">
+        {(["topic", "file", "text"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            aria-pressed={mode === m}
+            onClick={() => setMode(m)}
+            className={`whitespace-nowrap rounded-full px-4 py-1.5 font-medium max-sm:flex-1 max-sm:px-1 ${mode === m ? "bg-brand-600 text-white" : "text-muted"}`}
+          >
+            {MODE_LABEL[m]}
+          </button>
+        ))}
+      </div>
 
+      <div className="overflow-hidden rounded-2xl border-2 border-token bg-[rgb(var(--surface))] focus-within:border-brand-500">
         {mode === "topic" ? (
-          <div className="space-y-4">
-            <div className="rounded-2xl border-2 border-token bg-[rgb(var(--surface))] focus-within:border-brand-500">
-              <textarea
-                ref={topicRef}
-                // "Tạo bài giảng" mở thẳng trang này: con trỏ đặt sẵn trong ô mô tả để gõ ngay.
-                autoFocus
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                rows={6}
-                maxLength={TOPIC_MAX}
-                placeholder="Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR."
-                className="block w-full resize-y rounded-2xl border-0 bg-transparent px-4 py-3 text-base leading-relaxed focus:outline-none focus:ring-0"
-                aria-label="Mô tả bài giảng"
-                aria-describedby="topic-hint"
-              />
-              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-token px-4 py-2 text-[13px] text-muted">
-                <span>
-                  {topic.length.toLocaleString("vi-VN")} / {TOPIC_MAX.toLocaleString("vi-VN")} ký tự
-                </span>
-                <span>Viết càng rõ, dàn ý càng sát ý bạn.</span>
-              </div>
+          <>
+            <textarea
+              ref={topicRef}
+              // "Tạo bài giảng" mở thẳng trang này: con trỏ đặt sẵn trong ô mô tả để gõ ngay.
+              autoFocus
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              rows={4}
+              maxLength={TOPIC_MAX}
+              placeholder="Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR."
+              className="block w-full resize-y border-0 bg-transparent px-4 py-3 text-base leading-relaxed focus:outline-none focus:ring-0"
+              aria-label="Mô tả bài giảng"
+              aria-describedby="topic-hint"
+            />
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 pb-2 text-[13px] text-muted">
+              <span id="topic-hint">Nêu chủ đề, người học và điều người học làm được sau buổi học.</span>
+              <span className="tabular-nums">
+                {topic.length.toLocaleString("vi-VN")} / {TOPIC_MAX.toLocaleString("vi-VN")}
+              </span>
             </div>
-            {topic.length >= TOPIC_MAX && (
-              <p className="banner-info text-sm">
-                Mô tả đã chạm giới hạn {TOPIC_MAX.toLocaleString("vi-VN")} ký tự. Nếu bạn có sẵn tài liệu, hãy dùng tab
-                &quot;Dán văn bản&quot; để AI bám sát tài liệu đó.
-              </p>
-            )}
-            <ul id="topic-hint" className="grid gap-1 text-sm text-muted">
-              <li>Chủ đề của bài giảng là gì, và phạm vi đến đâu.</li>
-              <li>Người học là ai: năm học, ngành, mức hiểu biết hiện có.</li>
-              <li>Sau buổi học, người học làm được điều gì.</li>
-            </ul>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted">Ví dụ mẫu, bấm để điền</p>
-              {TOPIC_EXAMPLES.map((ex) => (
-                <button
-                  key={ex.title}
-                  type="button"
-                  onClick={() => {
-                    setTopic(ex.text);
-                    topicRef.current?.focus();
-                  }}
-                  className="block w-full rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-left text-sm text-muted transition hover:border-brand-500 hover:text-[rgb(var(--text))]"
-                >
-                  <b className="font-semibold text-[rgb(var(--text))]">{ex.title}</b>, {ex.who}
-                </button>
-              ))}
-            </div>
-            {webAvailable && (
-              <div className="flex items-start gap-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={useWeb}
-                  aria-labelledby="web-l"
-                  aria-describedby="web-d"
-                  onClick={() => setUseWeb((v) => !v)}
-                  className={`relative mt-0.5 h-6 w-11 flex-none rounded-full transition ${useWeb ? "bg-brand-600" : "bg-[rgb(var(--text-faint))]"}`}
-                >
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${useWeb ? "left-[22px]" : "left-0.5"}`} />
-                </button>
-                <div>
-                  <p id="web-l" className="font-semibold">
-                    Tìm thêm nguồn trên internet
-                  </p>
-                  <p id="web-d" className="text-sm text-muted">
-                    {useWeb
-                      ? "Hệ thống tìm vài trang liên quan cho AI đọc. Số liệu và trích dẫn chỉ được dùng khi có trong các trang đó, kèm nguồn ở chân slide."
-                      : "AI viết từ kiến thức chung, không đưa số liệu, trích dẫn hay tên người vào slide."}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          </>
         ) : mode === "file" ? (
           <div
             onDragOver={(e) => {
@@ -246,19 +190,17 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
               const f = e.dataTransfer.files?.[0];
               if (f) setFile(f);
             }}
-            className={`flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center ${
-              drag ? "border-brand-500 bg-brand-50" : "border-token"
-            }`}
+            className={`m-3 flex flex-col items-center gap-2 rounded-xl border-2 border-dashed p-6 text-center ${drag ? "border-brand-500 bg-brand-50" : "border-token"}`}
           >
             {file ? (
               <>
-                <FileText size={32} className="text-brand-700" />
+                <FileText size={28} className="text-brand-700" />
                 <p className="font-medium">{file.name}</p>
                 <p className="text-sm text-muted">{(file.size / 1024 / 1024).toFixed(2).replace(".", ",")} MB</p>
               </>
             ) : (
               <>
-                <UploadCloud size={32} className="text-muted" />
+                <UploadCloud size={28} className="text-muted" />
                 <p className="font-medium">Kéo tệp vào đây hoặc bấm để chọn</p>
                 <p className="text-sm text-muted">Word (.docx), PDF, văn bản (.txt), Markdown (.md); tối đa {MAX_MB} MB.</p>
               </>
@@ -278,62 +220,107 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            rows={10}
+            rows={8}
             placeholder="Dán nội dung tài liệu vào đây..."
-            className="input w-full text-sm"
+            className="block w-full resize-y border-0 bg-transparent px-4 py-3 text-sm focus:outline-none focus:ring-0"
             aria-label="Nội dung tài liệu"
           />
         )}
-      </section>
 
-      <section className="space-y-3" aria-labelledby="dur-h">
-        <h2 id="dur-h" className="text-lg font-semibold">
-          2. Thời lượng buổi giảng
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {DURATIONS.map((d) => (
+        {/* Hàng thao tác: thời lượng, nguồn internet (khi có), nút Soạn dàn ý. */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="font-medium text-muted" id="dur-l">
+              Thời lượng
+            </span>
+            <div className="inline-flex rounded-full border border-token bg-[rgb(var(--surface))] p-0.5" role="radiogroup" aria-labelledby="dur-l">
+              {DURATIONS.map((d) => (
+                <button
+                  key={d.minutes}
+                  type="button"
+                  role="radio"
+                  aria-checked={minutes === d.minutes}
+                  title={`Khoảng ${d.min} đến ${d.max} slide`}
+                  onClick={() => setMinutes(d.minutes)}
+                  className={`rounded-full px-3 py-1 font-medium ${minutes === d.minutes ? "bg-brand-600 text-white" : "text-muted"}`}
+                >
+                  {d.minutes} phút
+                </button>
+              ))}
+            </div>
+            {range && <span className="text-[13px] text-faint">khoảng {range.min} đến {range.max} slide</span>}
+          </div>
+          {mode === "topic" && webAvailable && (
             <label
-              key={d.minutes}
-              className={`cursor-pointer rounded-2xl border-2 p-4 ${minutes === d.minutes ? "border-brand-500 bg-brand-50" : "border-token"}`}
+              className="flex cursor-pointer items-center gap-2 text-sm"
+              title={
+                useWeb
+                  ? "Hệ thống tìm vài trang liên quan cho AI đọc. Số liệu và trích dẫn chỉ được dùng khi có trong các trang đó, kèm nguồn ở chân slide."
+                  : "AI viết từ kiến thức chung, không đưa số liệu, trích dẫn hay tên người vào slide."
+              }
             >
-              <input
-                type="radio"
-                name="minutes"
-                className="sr-only"
-                checked={minutes === d.minutes}
-                onChange={() => setMinutes(d.minutes)}
-              />
-              <span className="block text-lg font-bold">{d.minutes} phút</span>
-              <span className="text-sm text-muted">
-                Khoảng {d.min} đến {d.max} slide
-              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={useWeb}
+                onClick={() => setUseWeb((v) => !v)}
+                className={`relative h-5 w-9 flex-none rounded-full transition ${useWeb ? "bg-brand-600" : "bg-[rgb(var(--text-faint))]"}`}
+              >
+                <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${useWeb ? "left-[18px]" : "left-0.5"}`} />
+              </button>
+              <span className="font-medium text-muted">Tìm thêm nguồn trên internet</span>
             </label>
-          ))}
+          )}
+          <button type="button" className="btn-primary ml-auto flex items-center gap-2 max-sm:w-full max-sm:justify-center" disabled={!ready || busy} onClick={submit}>
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} aria-hidden />}
+            {busy ? "Đang soạn dàn ý..." : "Soạn dàn ý"}
+          </button>
         </div>
-      </section>
+      </div>
 
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
           {error}
         </p>
       )}
+      {busy && (
+        <p className="text-sm text-muted" role="status">
+          {searching
+            ? "Hệ thống đang tìm nguồn và AI đang soạn dàn ý, thường mất từ 30 đến 90 giây."
+            : mode === "topic"
+              ? "AI đang soạn dàn ý, thường mất từ 20 đến 60 giây."
+              : "AI đang đọc tài liệu, thường mất từ 20 đến 60 giây."}{" "}
+          Vui lòng không đóng trang.
+        </p>
+      )}
 
-      <div className="flex items-center gap-4">
-        <button type="button" className="btn-primary flex items-center gap-2" disabled={!ready || busy} onClick={submit}>
-          {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} aria-hidden />}
-          {busy ? "Đang soạn dàn ý..." : "Soạn dàn ý"}
-        </button>
-        {busy && (
-          <p className="text-sm text-muted">
-            {searching
-              ? "Hệ thống đang tìm nguồn và AI đang soạn dàn ý, thường mất từ 30 đến 90 giây."
-              : mode === "topic"
-                ? "AI đang soạn dàn ý, thường mất từ 20 đến 60 giây."
-                : "AI đang đọc tài liệu, thường mất từ 20 đến 60 giây."}{" "}
-            Vui lòng không đóng trang.
-          </p>
-        )}
-      </div>
+      {mode === "topic" && (
+        <>
+          {topic.length >= TOPIC_MAX && (
+            <p className="banner-info text-sm">
+              Mô tả đã chạm giới hạn {TOPIC_MAX.toLocaleString("vi-VN")} ký tự. Nếu bạn có sẵn tài liệu, hãy dùng tab &quot;Dán văn
+              bản&quot; để AI bám sát tài liệu đó.
+            </p>
+          )}
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted">Ví dụ mẫu:</span>
+            {TOPIC_EXAMPLES.map((ex) => (
+              <button
+                key={ex.title}
+                type="button"
+                title={`${ex.title}, ${ex.who}. Bấm để điền vào ô mô tả.`}
+                onClick={() => {
+                  setTopic(ex.text);
+                  topicRef.current?.focus();
+                }}
+                className="rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 py-1 text-[13px] text-muted transition hover:border-brand-500 hover:text-[rgb(var(--text))]"
+              >
+                {ex.title}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </main>
   );
 }
