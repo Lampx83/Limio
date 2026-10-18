@@ -5207,6 +5207,10 @@ model LiveDeck {
   sourceName String?
   sourceText String? @db.Text
 
+  // Link xem chỉ đọc /bai-giang/<shareCode>: ai có link cũng xem được, không cần đăng nhập. Null = không chia sẻ.
+  // Tạo link mới = thay mã (link cũ chết ngay). Bản sao bài giảng không mang theo mã này.
+  shareCode String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
