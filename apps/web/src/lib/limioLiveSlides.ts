@@ -123,6 +123,8 @@ export const MAX_LEN = {
   tocItem: 80,
   bullet: 140,
   itemHeading: 60,
+  /** Một dòng của slide Tóm tắt là cả một câu, dài hơn tiêu đề thẻ (khớp ô nhập ở trình sửa). */
+  summaryItem: 140,
   itemBody: 140,
   statValue: 10,
   columnHeading: 40,
@@ -146,7 +148,20 @@ export function resolveLayout(config: unknown): SlideLayoutId {
   return typeof l === "string" && (SLIDE_LAYOUTS as readonly string[]).includes(l) ? (l as SlideLayoutId) : "classic";
 }
 
-const clip = (v: unknown, max: number): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
+/**
+ * Cắt chữ về tối đa `max` ký tự mà không cắt giữa từ: lùi về khoảng trắng gần nhất rồi thêm "…" để người xem biết câu bị rút.
+ * Chuỗi liền không có khoảng trắng (con số, mã) hoặc khoảng trắng quá xa đầu thì cắt cứng như trước.
+ */
+export function clipText(v: unknown, max: number): string {
+  if (typeof v !== "string") return "";
+  const t = v.trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.slice(0, max - 1).search(/\s\S*$/);
+  if (sp >= Math.floor(max * 0.6)) return `${cut.slice(0, sp).replace(/[\s,;:–—-]+$/, "")}…`;
+  return cut;
+}
+const clip = clipText;
 
 function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
   const range = ITEM_RANGE[layout];
@@ -156,7 +171,7 @@ function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
     if (!r || typeof r !== "object") continue;
     const o = r as Record<string, unknown>;
     const isStat = layout === "stats";
-    const heading = clip(o.heading, isStat ? MAX_LEN.statValue : MAX_LEN.itemHeading);
+    const heading = clip(o.heading, isStat ? MAX_LEN.statValue : layout === "summary" ? MAX_LEN.summaryItem : MAX_LEN.itemHeading);
     const body = layout === "summary" ? "" : clip(o.body, MAX_LEN.itemBody);
     if (!heading && !body) continue;
     const icon =
@@ -422,13 +437,14 @@ export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>
  * Kích thước chung của slide Bảng và Biểu đồ: cỡ chữ và số dòng của tiêu đề, chiều cao còn lại cho
  * bảng hoặc biểu đồ. Bộ vẽ và cảnh báo "Slide dài" cùng dùng hàm này để không lệch nhau.
  */
-export function dataSlideMetrics(c: Record<string, any>): { titlePx: number; titleLines: number; boxH: number } {
+export function dataSlideMetrics(c: Record<string, any>, reservePx = 0): { titlePx: number; titleLines: number; boxH: number } {
   const title = stripInline(typeof c.title === "string" ? c.title : "").trim();
   const { px } = fitFontSize(title, { maxPx: DATA_SLIDE.titleMaxPx, widthPx: DATA_CONTENT_W, maxLines: 2 });
   const per = Math.max(1, Math.floor(DATA_CONTENT_W / (px * 0.56)));
   const lines = title ? Math.min(3, Math.ceil(title.length / per)) : 0;
   const hasSource = typeof c.source === "string" && c.source.trim().length > 0;
-  return { titlePx: px, titleLines: lines, boxH: dataBoxHeight(lines, px, hasSource) };
+  // reservePx: chỗ khung nội dung nhường cho logo (limioLiveFit.logoShiftPx); khung dữ liệu thấp đi đúng chừng đó.
+  return { titlePx: px, titleLines: lines, boxH: Math.max(160, dataBoxHeight(lines, px, hasSource) - reservePx) };
 }
 
 // ── Đổi bố cục mà không mất nội dung ───────────────────────────────────────

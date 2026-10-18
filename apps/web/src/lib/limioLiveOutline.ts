@@ -3,7 +3,7 @@
 // Không tin thẳng đầu ra mô hình: số slide, bố cục, độ dài, emoji đều được ép ở đây.
 
 import { cellNumbersInSource, numbersInText } from "./limioLiveCharts";
-import { SLIDE_LAYOUTS, MAX_LEN, type SlideLayoutId } from "./limioLiveSlides";
+import { SLIDE_LAYOUTS, MAX_LEN, clipText, type SlideLayoutId } from "./limioLiveSlides";
 import { extractCites, figureKeys, unsupportedFigures } from "./limioLiveFigures";
 
 // Tên khớp bộ chọn loại slide trong trình sửa bài giảng. "draw_it" là Dán Note ở chế độ vẽ:
@@ -85,7 +85,7 @@ export const REFERENCES_TITLE = "Nguồn tham khảo";
 export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
   const line = (r: WebSourceRef) => {
     const t = `[${r.n}] ${hostOf(r.url)}: ${r.title || hostOf(r.url)}`;
-    return t.length > MAX_LEN.itemHeading ? `${t.slice(0, MAX_LEN.itemHeading - 1).trimEnd()}…` : t;
+    return clipText(t, MAX_LEN.itemHeading);
   };
   return {
     id: newOutlineId(),

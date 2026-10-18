@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, type CSSProperties, type ReactNode } from "react";
+import { keepHyphenated } from "@/lib/limioLiveFit";
 import {
   chartAltText,
   chartLabelLimit,
@@ -461,7 +462,7 @@ export function TableView({ head, rows, px }: { head: string[]; rows: string[][]
             <tr>
               {Array.from({ length: cols }, (_, j) => (
                 <th key={j} scope="col" className={num[j] ? "num" : undefined}>
-                  {head[j] ?? ""}
+                  {keepHyphenated(head[j] ?? "")}
                 </th>
               ))}
             </tr>
@@ -472,7 +473,7 @@ export function TableView({ head, rows, px }: { head: string[]; rows: string[][]
             <tr key={i} className="a" style={delay(i + 2)}>
               {Array.from({ length: cols }, (_, j) => (
                 <td key={j} className={num[j] ? "num" : undefined}>
-                  {r[j] ?? ""}
+                  {keepHyphenated(r[j] ?? "")}
                 </td>
               ))}
             </tr>

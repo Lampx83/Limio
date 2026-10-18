@@ -1,8 +1,11 @@
 /* Bố cục slide Limio-Live — thiết kế ở khung 1280 × 720 (xem SlideLayouts.tsx, co theo khung chứa).
    Cỡ chữ không nhỏ hơn 26 px trên khung này (≈ 39 px ở 1920 × 1080) để đọc được trên máy chiếu yếu.
+   --fs (1 → 0,62) là bậc cỡ chữ bộ vẽ chọn để chữ dài vừa khung (limioLiveFit.pickFontStep): cỡ chữ và khoảng cách dọc nhân
+   với nó, luôn có sàn bằng max(26px, …); bề ngang của khung, cột và thẻ không đổi. --lgt/--lgb: chỗ khung nội dung nhường
+   cho logo ở mép trên/dưới (chỉ khi chữ chạm logo).
    Nền do giao diện của bài giảng quyết định (slideThemes.ts); các lớp .lt-* chỉ khai báo màu chữ/nhấn. */
   .lslide { text-align: left; width: 1280px; height: 720px; position: relative; overflow: hidden; color: var(--stext);
-    font-family: var(--sfont-body); line-height: 1.35; }
+    font-family: var(--sfont-body); line-height: 1.35; --fs: 1; }
   .lslide *, .lslide *::before, .lslide *::after { box-sizing: border-box; }
 
   .lt-brand { --sbg: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); --stext: #20241F; --smuted: #5A6256;
@@ -86,22 +89,22 @@
     --shw: 800; --shls: -0.025em; --sglow1: #FBBF24; --sglow2: #60A5FA;
     --sg: linear-gradient(120deg, #FBBF24 0%, #F59E0B 100%); --sgb: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
 
-  .lslide .pad { position: absolute; inset: 0; padding: 72px 96px 72px; display: flex; flex-direction: column; }
+  .lslide .pad { position: absolute; inset: var(--lgt, 0px) 0 var(--lgb, 0px); padding: 72px 96px 72px; display: flex; flex-direction: column; }
   .lslide .h { font-family: var(--sfont-head); font-weight: var(--shw); letter-spacing: var(--shls); line-height: 1.2; margin: 0; }
   .lslide .count { font-size: 26px; color: var(--smuted); font-weight: 600; white-space: nowrap; }
   .lslide .h { text-wrap: balance; }
   .lslide p, .lslide li, .lslide b, .lslide .rowi span, .lslide .qt { text-wrap: pretty; }
   .lslide .h-xxl { font-size: 96px; } .lslide .h-xl { font-size: 84px; } .lslide .h-lg { font-size: 72px; } .lslide .h-md { font-size: 58px; }
-  .lslide .lead { font-size: 36px; color: var(--smuted); margin: 0; }
+  .lslide .lead { font-size: max(26px, calc(36px * var(--fs))); color: var(--smuted); margin: 0; }
   .lslide .grad { background: var(--sg); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .lslide .glow { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; }
   .lt-dark .glow { opacity: .34; }
   .lslide .card { background: var(--scard); border: 1px solid var(--scardb); border-radius: 28px; }
   
   .lslide .ic { display: block; flex: none; }
-  .lslide ul.bul { list-style: none; padding: 0; margin: 0; display: grid; gap: 26px; font-size: 38px; line-height: 1.28; }
-  .lslide ul.bul li { display: flex; gap: 18px; align-items: flex-start; }
-  .lslide ul.bul li::before { content: ""; flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--sgb); margin-top: 18px; }
+  .lslide ul.bul { list-style: none; padding: 0; margin: 0; display: grid; gap: calc(24px * var(--fs)); font-size: max(26px, calc(38px * var(--fs))); line-height: 1.28; }
+  .lslide ul.bul li { display: flex; gap: .45em; align-items: flex-start; }
+  .lslide ul.bul li::before { content: ""; flex: none; width: .42em; height: .42em; border-radius: 50%; background: var(--sgb); margin-top: .43em; }
 
   /* 1. Bìa — mười kiểu (COVER_STYLES, bản mẫu docs/mockup/bia-bai-giang.html), cùng bốn dòng chữ:
      tên đơn vị, tên bài, phụ đề, người trình bày. Nguyên lý chung: tên bài lớn nhất; ba nhóm chữ (đơn vị | tên bài +
@@ -181,7 +184,7 @@
   .cv-tape .zone { inset: 0; }
   .cv-tape .card { position: absolute; left: 86px; top: 48px; width: 980px; height: 624px; background: var(--sbg, var(--scard)); border-radius: 6px;
     transform: rotate(-2.2deg); box-shadow: 0 2px 0 var(--scardb), 0 34px 60px -28px rgba(0,0,0,.5); }
-  .cv-tape .card .pad { padding: 48px 64px 50px; }
+  .cv-tape .card .pad { padding: 48px 64px 50px; inset: 0; }
   .cv-tape .card .mid { padding: 40px 0; }
   .cv-tape .card .sub { font-size: 30px; margin-top: 22px; max-width: 760px; }
   .cv-tape .tp { position: absolute; width: 170px; height: 46px; background: var(--ssoft2); opacity: .92; border-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
@@ -213,71 +216,76 @@
   .cv-bubbles .pad { padding-right: 480px; }
     /* 2. Tiêu đề mục */
   .ll-section .pad { justify-content: center; padding-left: 120px; }
-  .ll-section .num { font-family: var(--sfont-head); font-weight: 800; font-size: 230px; line-height: .85; color: transparent; -webkit-text-stroke: 3px var(--sa); letter-spacing: -0.04em; }
-  .ll-section .h { margin-top: 18px; max-width: 980px; }
+  .ll-section .num { font-family: var(--sfont-head); font-weight: 800; font-size: calc(230px * var(--fs)); line-height: .85; color: transparent; -webkit-text-stroke: 3px var(--sa); letter-spacing: -0.04em; }
+  .ll-section .h { margin-top: calc(18px * var(--fs)); max-width: 980px; }
   /* 2b. Bìa phần có mục lục: đường dọc nối các phần, giống mạch trong dàn ý. Chữ mục lục ≥ 30 px. */
   .ll-section-toc .pad { display: grid; grid-template-columns: 1fr 520px; gap: 64px; align-items: center; padding: 72px 88px; }
-  .ll-section-toc .num { font-size: 190px; }
+  .ll-section-toc .num { font-size: calc(190px * var(--fs)); }
   .ll-section-toc .h { margin-top: 0; max-width: none; }
-  .ll-section-toc .lead { font-size: 30px; line-height: 1.35; }
-  .ll-section-toc .toc { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
-  .ll-section-toc .toc li { position: relative; display: flex; align-items: center; gap: 22px; padding: 16px 22px; border-radius: 22px; border: 2px solid transparent; font-size: 30px; line-height: 1.25; color: var(--smuted); }
-  .ll-section-toc .toc li + li::before { content: ""; position: absolute; left: 49px; top: -22px; height: 30px; width: 3px; border-radius: 3px; background: var(--scardb); }
+  .ll-section-toc .lead { font-size: max(26px, calc(30px * var(--fs))); line-height: 1.35; }
+  .ll-section-toc .toc { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(14px * var(--fs)); }
+  .ll-section-toc .toc li { position: relative; display: flex; align-items: center; gap: 22px; padding: calc(16px * var(--fs)) 22px; border-radius: 22px; border: 2px solid transparent; font-size: max(26px, calc(30px * var(--fs))); line-height: 1.25; color: var(--smuted); }
+  .ll-section-toc .toc li + li::before { content: ""; position: absolute; left: 49px; top: calc(-22px * var(--fs)); height: calc(30px * var(--fs)); width: 3px; border-radius: 3px; background: var(--scardb); }
   .ll-section-toc .mk { width: 56px; height: 56px; flex: none; border-radius: 50%; display: grid; place-items: center; font-family: var(--sfont-head); font-weight: 800; font-size: 28px; border: 3px solid var(--scardb); color: var(--smuted); }
   .ll-section-toc .done .mk { border-color: transparent; background: var(--ssoft); color: var(--sa); }
-  .ll-section-toc .now { background: var(--scard); border-color: var(--scardb); color: var(--stext); font-weight: 700; font-size: 34px; font-family: var(--sfont-head); box-shadow: 0 18px 40px -26px rgba(0,0,0,.45); }
+  .ll-section-toc .now { background: var(--scard); border-color: var(--scardb); color: var(--stext); font-weight: 700; font-size: max(28px, calc(34px * var(--fs))); font-family: var(--sfont-head); box-shadow: 0 18px 40px -26px rgba(0,0,0,.45); }
   .ll-section-toc .now .mk { border: 0; background: var(--sgb); color: var(--son); width: 64px; height: 64px; font-size: 32px; }
-  /* 3. Chữ + ảnh */
-  .ll-image .pad { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
-  .ll-image .tx { display: grid; gap: 30px; }
-  .ll-image .art { height: 500px; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  /* 3. Chữ + ảnh — ô hình cao hết vùng nội dung; bề rộng --artw do bộ vẽ chọn theo độ dài chữ (chữ dài thì ô hình hẹp lại). */
+  .ll-image .pad { display: grid; grid-template-columns: minmax(0, 1fr) var(--artw, 440px); gap: 56px; align-items: center; }
+  .ll-image .tx { display: grid; gap: calc(30px * var(--fs)); }
+  .ll-image .art { align-self: stretch; min-height: 0; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
   .ll-image .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  /* 4. Ba thẻ */
-  .ll-cards .pad { gap: 34px; }
-  .ll-cards .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; flex: 1; align-items: center; }
-  .ll-cards .it { padding: 32px 30px; display: flex; flex-direction: column; gap: 16px; position: relative; }
-  .ll-cards .badge { width: 76px; height: 76px; border-radius: 20px; display: grid; place-items: center; color: var(--son); background: var(--sgb); }
-  .ll-cards .it b { font-size: 40px; font-family: var(--sfont-head); line-height: 1.15; }
-  .ll-cards .it p { margin: 0; font-size: 30px; line-height: 1.3; color: var(--smuted); }
-  .ll-cards .no { position: absolute; right: 28px; top: 20px; font-size: 64px; font-weight: 800; color: var(--sa); opacity: .3; font-family: var(--sfont-head); }
+  /* 4. Ba thẻ — các thẻ cao bằng nhau, cụm thẻ căn giữa phần còn lại. --hpx: cỡ tiêu đề thẻ để từ dài nhất vừa một dòng
+     (limioLiveFit.cardHeadingPx; khoảng cách 24 và đệm ngang 26 khớp CARD_GAP, CARD_PAD_X). */
+  .ll-cards .pad { gap: calc(34px * var(--fs)); }
+  .ll-cards .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: auto 0; align-items: stretch; }
+  .ll-cards .it { padding: calc(30px * var(--fs)) 26px calc(34px * var(--fs)); display: flex; flex-direction: column; gap: calc(14px * var(--fs)); position: relative; }
+  .ll-cards .badge { width: max(56px, calc(76px * var(--fs))); height: max(56px, calc(76px * var(--fs))); border-radius: 20px; display: grid; place-items: center; color: var(--son); background: var(--sgb); }
+  .ll-cards .badge svg { width: 47%; height: 47%; }
+  .ll-cards .it b { font-size: max(26px, calc(var(--hpx, 40px) * var(--fs))); font-family: var(--sfont-head); line-height: 1.2; }
+  .ll-cards .it p { margin: 0; font-size: max(26px, calc(30px * var(--fs))); line-height: 1.3; color: var(--smuted); }
+  .ll-cards .no { position: absolute; right: 26px; top: calc(18px * var(--fs)); font-size: max(44px, calc(64px * var(--fs))); line-height: 1.2; font-weight: 800; color: var(--sa); opacity: .3; font-family: var(--sfont-head); }
   /* 5. So sánh */
-  .ll-compare .pad { gap: 30px; }
+  .ll-compare .pad { gap: calc(30px * var(--fs)); }
   .ll-compare .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
-  .ll-compare .col { padding: 32px 34px; display: flex; flex-direction: column; gap: 20px; }
+  .ll-compare .col { padding: calc(30px * var(--fs)) 32px; display: flex; flex-direction: column; gap: calc(18px * var(--fs)); }
   .ll-compare .col.bad { background: var(--sbadbg); border-color: transparent; }
   .ll-compare .col.good { background: var(--sokbg); border: 2px solid var(--sok); }
-  .ll-compare .ttl { display: flex; align-items: center; gap: 14px; font-family: var(--sfont-head); font-weight: 800; font-size: 40px; }
+  .ll-compare .ttl { display: flex; align-items: center; gap: 14px; font-family: var(--sfont-head); font-weight: 800; font-size: max(28px, calc(40px * var(--fs))); line-height: 1.2; }
   .ll-compare .bad .ttl { color: var(--sbad); } .ll-compare .good .ttl { color: var(--sok); }
-  .ll-compare .q { font-size: 32px; line-height: 1.28; padding: 16px 22px; border-radius: 18px; background: rgba(255,255,255,.55); }
+  .ll-compare .q { font-size: max(26px, calc(32px * var(--fs))); line-height: 1.28; padding: calc(14px * var(--fs)) 22px; border-radius: 18px; background: rgba(255,255,255,.55); }
   .lt-dark .ll-compare .q { background: rgba(255,255,255,.07); }
-  .ll-compare .why { font-size: 28px; color: var(--smuted); margin-top: auto; }
+  .ll-compare .why { font-size: max(26px, calc(28px * var(--fs))); color: var(--smuted); margin-top: auto; }
   /* 6. Các bước */
-  .ll-steps .pad { gap: 40px; }
+  .ll-steps .pad { gap: calc(40px * var(--fs)); }
   .ll-steps .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; margin: auto 0; }
-  .ll-steps .row::before { content: ""; position: absolute; left: 12%; right: 12%; top: 45px; height: 4px; border-radius: 4px; background: var(--sg); opacity: .5; }
-  .ll-steps .st { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
-  .ll-steps .circ { width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); font-weight: 800; font-size: 40px; font-family: var(--sfont-head); box-shadow: 0 0 0 10px var(--ssoft); }
-  .ll-steps .st b { font-size: 36px; font-family: var(--sfont-head); line-height: 1.15; }
-  .ll-steps .st p { margin: 0; font-size: 28px; line-height: 1.28; color: var(--smuted); }
-  .ll-steps .loop { align-self: center; display: inline-flex; align-items: center; gap: 12px; color: var(--sa); font-size: 30px; font-weight: 700; }
+  .ll-steps .row::before { content: ""; position: absolute; left: 12%; right: 12%; top: calc(max(64px, calc(92px * var(--fs))) / 2 - 2px); height: 4px; border-radius: 4px; background: var(--sg); opacity: .5; }
+  .ll-steps .st { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: calc(16px * var(--fs)); }
+  .ll-steps .circ { width: max(64px, calc(92px * var(--fs))); height: max(64px, calc(92px * var(--fs))); border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); font-weight: 800; font-size: max(28px, calc(40px * var(--fs))); font-family: var(--sfont-head); box-shadow: 0 0 0 10px var(--ssoft); }
+  .ll-steps .st b { font-size: max(28px, calc(36px * var(--fs))); font-family: var(--sfont-head); line-height: 1.2; }
+  .ll-steps .st p { margin: 0; font-size: max(26px, calc(28px * var(--fs))); line-height: 1.28; color: var(--smuted); }
+  .ll-steps .loop { align-self: center; display: inline-flex; align-items: center; gap: 12px; color: var(--sa); font-size: max(26px, calc(30px * var(--fs))); font-weight: 700; }
   /* 7. Số liệu */
-  .ll-stats .pad { gap: 36px; }
+  .ll-stats .pad { gap: calc(36px * var(--fs)); }
   .ll-stats .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; flex: 1; align-items: stretch; }
-  .ll-stats .st { padding: 34px 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
-  .ll-stats .big { font-family: var(--sfont-head); font-weight: 800; font-size: 120px; line-height: 1; letter-spacing: -0.03em; }
-  .ll-stats .st p { margin: 0; font-size: 32px; line-height: 1.28; color: var(--smuted); }
+  .ll-stats .st { padding: calc(34px * var(--fs)) 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .ll-stats .big { font-family: var(--sfont-head); font-weight: 800; font-size: max(64px, calc(120px * var(--fs))); line-height: 1; letter-spacing: -0.03em; }
+  .ll-stats .st p { margin: 0; font-size: max(26px, calc(32px * var(--fs))); line-height: 1.28; color: var(--smuted); }
     /* 8. Trích dẫn */
-  .ll-quote .pad { justify-content: center; padding-left: 120px; padding-right: 110px; gap: 30px; }
-  .ll-quote .mark { font-family: var(--font-bvp), Arial, sans-serif; font-size: 220px; line-height: .6; height: 100px; color: var(--sa); opacity: .85; }
+  .ll-quote .pad { justify-content: center; padding-left: 120px; padding-right: 110px; gap: calc(30px * var(--fs)); }
+  /* Dấu ngoặc sát câu: khung của dấu chỉ cao bằng phần nét nhìn thấy. */
+  .ll-quote .mark { font-family: var(--font-bvp), Arial, sans-serif; font-size: calc(200px * var(--fs)); line-height: .6; height: calc(64px * var(--fs)); margin-bottom: calc(6px * var(--fs)); color: var(--sa); opacity: .85; }
   .ll-quote .qt { font-family: var(--sfont-head); font-weight: var(--shw); font-size: 66px; line-height: 1.18; letter-spacing: var(--shls); max-width: 1000px; }
-  .ll-quote .who { display: flex; align-items: center; gap: 14px; font-size: 30px; color: var(--smuted); }
+  .ll-quote .who { display: flex; align-items: center; gap: 14px; font-size: max(26px, calc(30px * var(--fs))); color: var(--smuted); }
   .ll-quote .who i { width: 54px; height: 4px; border-radius: 4px; background: var(--sg); }
-  /* 9. Tóm tắt */
-  .ll-summary .pad { gap: 30px; }
-  .ll-summary .list { display: grid; gap: 22px; flex: 1; align-content: center; }
-  .ll-summary .rowi { display: flex; align-items: center; gap: 26px; padding: 26px 34px; }
-  .ll-summary .tick { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
-  .ll-summary .rowi span { font-size: 40px; line-height: 1.2; font-family: var(--sfont-head); font-weight: 700; }
+  /* 9. Tóm tắt — nhiều dòng thì bộ vẽ thử thêm hai cột (.two), giữ cách cho chữ lớn hơn. */
+  .ll-summary .pad { gap: calc(30px * var(--fs)); }
+  .ll-summary .list { display: grid; gap: calc(20px * var(--fs)) 24px; margin: auto 0; }
+  .ll-summary .list.two { grid-template-columns: 1fr 1fr; }
+  .ll-summary .rowi { display: flex; align-items: center; gap: calc(24px * var(--fs)); padding: calc(24px * var(--fs)) 30px; }
+  .ll-summary .tick svg { width: 52%; height: 52%; }
+  .ll-summary .tick { width: max(48px, calc(64px * var(--fs))); height: max(48px, calc(64px * var(--fs))); border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
+  .ll-summary .rowi span { font-size: max(26px, calc(40px * var(--fs))); line-height: 1.22; font-family: var(--sfont-head); font-weight: 700; }
 
   /* ---------- Hoa văn trang trí (SlideMotif; chọn ở limioLiveMotifs.ts, hình ở limioLiveMotifArt.ts) ----------
      Chỉ ở chỗ trống. --smo (đặt trên .lslide, tính theo nền và màu của chính slide) là độ đậm lớn nhất mà chữ đè lên
@@ -328,7 +336,7 @@
   }
 
   /* 10. Bảng — chữ 26–34 px do tableFontSize chọn; cột toàn số căn phải. */
-  .ll-table .pad, .ll-chart .pad { gap: 28px; }
+  .ll-table .pad, .ll-chart .pad { gap: calc(28px * var(--fs)); }
   .lslide .src { margin: 0; font-size: 26px; line-height: 1.3; color: var(--smuted); }
   /* flex: none — khung không được co lại (co thì cắt mất dòng cuối); quá cao thì cả slide tự thu như bố cục khác. */
   .ll-table .tbl { flex: none; overflow: hidden; padding: 6px 10px; }
