@@ -691,6 +691,8 @@ export function pickMeta(config: Record<string, unknown> | null | undefined): Re
   if (c.editedByUser === true) out.editedByUser = true;
   // Dòng nguồn ở chân slide ("Nguồn: [1], [3]") của bài soạn kèm trang tìm trên internet.
   if (typeof c.cite === "string" && c.cite.trim()) out.cite = c.cite.trim().slice(0, MAX_LEN.source);
+  // Biểu đồ vẽ lại từ hình chụp: địa chỉ hình gốc để "Trả lại hình" (docs/tieu-chi/bieu-do-kho-doc-pptx.md, V9, V11).
+  if (typeof c.fromImage === "string" && /^\/api\/limio-live-media\/[^/?#]+$/.test(c.fromImage)) out.fromImage = c.fromImage;
   return out;
 }
 

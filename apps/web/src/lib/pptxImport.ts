@@ -2,6 +2,7 @@
 // biểu đồ, và cờ cho phần chỉ lấy được chữ. Không đọc màu, phông, vị trí trang trí: Limio dựng lại theo giao diện
 // của mình (tiêu chí P3–P11, docs/tieu-chi/nhap-powerpoint.md).
 // Hàm thuần + jszip, chạy được trên trình duyệt (xem trước ở bước 1) và máy chủ (đọc lại khi tạo bài).
+// Biểu đồ dán từ Excel dạng đối tượng nhúng đọc số từ sổ Excel trong ppt/embeddings (docs/tieu-chi/bieu-do-kho-doc-pptx.md).
 
 import JSZip from "jszip";
 import {
@@ -18,6 +19,10 @@ import {
   textOf,
   type XmlEl,
 } from "./xmlLite";
+import { Pkg, resolvePath, type Rel } from "./ooxmlPackage";
+import { openWorkbook, type Workbook } from "./xlsxLite";
+
+export { resolvePath };
 
 export const PPTX_MAX_BYTES = 50 * 1024 * 1024;
 
@@ -70,6 +75,8 @@ export interface PptxSlide {
   /** Chữ các nút SmartArt theo cấp. */
   smartArt: PptxParagraph[];
   flags: PptxFlag[];
+  /** Số biểu đồ/bảng của slide có số đọc từ sổ Excel nhúng trong file (tiêu chí E8). */
+  fromExcel: number;
 }
 
 export interface PptxDeck {
@@ -105,72 +112,6 @@ export function pptxErrorCode(e: unknown, fileName: string): string {
 /** File OLE (.ppt đời cũ, hoặc .pptx có mật khẩu): bắt đầu bằng D0 CF 11 E0. */
 export function isOleContainer(b: Uint8Array): boolean {
   return b.length >= 4 && b[0] === 0xd0 && b[1] === 0xcf && b[2] === 0x11 && b[3] === 0xe0;
-}
-
-function dirOf(p: string) {
-  const i = p.lastIndexOf("/");
-  return i < 0 ? "" : p.slice(0, i + 1);
-}
-
-/** "../media/image1.png" tính từ "ppt/slides/" → "ppt/media/image1.png". */
-export function resolvePath(baseDir: string, target: string): string {
-  if (target.startsWith("/")) return target.slice(1);
-  const parts = (baseDir + target).split("/");
-  const out: string[] = [];
-  for (const p of parts) {
-    if (p === "..") out.pop();
-    else if (p !== "." && p !== "") out.push(p);
-  }
-  return out.join("/");
-}
-
-interface Rel {
-  type: string;
-  target: string;
-  external: boolean;
-}
-
-class Pkg {
-  private xmlCache = new Map<string, XmlEl | null>();
-  constructor(private zip: JSZip) {}
-
-  has(p: string) {
-    return !!this.zip.file(p);
-  }
-
-  async xml(p: string): Promise<XmlEl | null> {
-    if (this.xmlCache.has(p)) return this.xmlCache.get(p)!;
-    const f = this.zip.file(p);
-    let el: XmlEl | null = null;
-    if (f) {
-      try {
-        el = parseXml(await f.async("string"));
-      } catch {
-        el = null;
-      }
-    }
-    this.xmlCache.set(p, el);
-    return el;
-  }
-
-  async rels(part: string): Promise<Map<string, Rel>> {
-    const relPath = `${dirOf(part)}_rels/${part.slice(dirOf(part).length)}.rels`;
-    const root = await this.xml(relPath);
-    const out = new Map<string, Rel>();
-    for (const r of childrenNamed(root, "Relationship")) {
-      const id = attr(r, "Id");
-      const target = attr(r, "Target");
-      if (!id || !target) continue;
-      const external = attr(r, "TargetMode") === "External";
-      out.set(id, { type: attr(r, "Type") ?? "", target: external ? target : resolvePath(dirOf(part), target), external });
-    }
-    return out;
-  }
-
-  async bytes(p: string): Promise<Uint8Array | null> {
-    const f = this.zip.file(p);
-    return f ? f.async("uint8array") : null;
-  }
 }
 
 /** Khoảng trắng thừa bỏ đi; chữ giữ nguyên. */
@@ -275,10 +216,22 @@ const CHART_TYPES: Record<string, PptxChartType> = {
   doughnutChart: "donut",
 };
 
-function cacheValues(ref: XmlEl | null): { values: string[]; percent: boolean } {
-  const cache = firstDescendant(ref, "numCache") ?? firstDescendant(ref, "strCache") ?? firstDescendant(ref, "lvl") ?? ref;
+/** Giá trị các ô mà công thức của biểu đồ trỏ tới (đọc từ sổ Excel nhúng); null nếu không đọc được. */
+export type FormulaResolver = (formula: string) => { values: string[]; percent: boolean } | null;
+
+const cacheOf = (ref: XmlEl | null) => firstDescendant(ref, "numCache") ?? firstDescendant(ref, "strCache") ?? firstDescendant(ref, "lvl");
+const formulaOf = (ref: XmlEl | null) => tidy(textOf(firstDescendant(ref, "f")));
+
+/** Bộ đệm số/chữ của một tham chiếu; không có bộ đệm thì hỏi `resolve` theo công thức (tiêu chí E3, E6). */
+function cacheValues(ref: XmlEl | null, resolve?: FormulaResolver): { values: string[]; percent: boolean } {
+  const cache = cacheOf(ref) ?? ref;
   const count = Number(attr(child(cache, "ptCount"), "val") ?? 0);
   const pts = childrenNamed(cache, "pt");
+  if (!pts.length && resolve) {
+    const f = formulaOf(ref);
+    const got = f ? resolve(f) : null;
+    if (got) return { values: got.values.map(tidy), percent: got.percent };
+  }
   const n = Math.max(count, ...pts.map((p) => Number(attr(p, "idx") ?? 0) + 1), 0);
   const values: string[] = Array(n).fill("");
   for (const p of pts) values[Number(attr(p, "idx") ?? 0)] = tidy(textOf(child(p, "v")));
@@ -286,7 +239,20 @@ function cacheValues(ref: XmlEl | null): { values: string[]; percent: boolean } 
   return { values, percent: /%/.test(fmt) };
 }
 
-export function readChartXml(root: XmlEl | null): PptxChart | null {
+/** Công thức của các tham chiếu không có bộ đệm (tên chuỗi, nhãn, số) — cần sổ Excel nhúng để đọc. */
+export function unresolvedFormulas(root: XmlEl | null): string[] {
+  const out = new Set<string>();
+  for (const ser of descendants(child(child(root, "chart"), "plotArea"), "ser")) {
+    for (const ref of [child(ser, "tx"), child(ser, "cat"), child(ser, "xVal"), child(ser, "val"), child(ser, "yVal")]) {
+      if (!ref || childrenNamed(cacheOf(ref), "pt").length) continue;
+      const f = formulaOf(ref);
+      if (f) out.add(f);
+    }
+  }
+  return [...out];
+}
+
+export function readChartXml(root: XmlEl | null, resolve?: FormulaResolver): PptxChart | null {
   const chart = child(root, "chart");
   const plot = child(chart, "plotArea");
   if (!plot) return null;
@@ -301,10 +267,11 @@ export function readChartXml(root: XmlEl | null): PptxChart | null {
   for (const g of groups) {
     for (const ser of childrenNamed(g, "ser")) {
       const tx = child(ser, "tx");
-      const name = tidy(textOf(firstDescendant(tx, "v")) || textOf(tx));
-      const cat = cacheValues(child(ser, "cat"));
+      // Tên chuỗi: chữ trong bộ đệm hoặc chữ ghi thẳng; không bao giờ lấy chữ của công thức.
+      const name = tidy(textOf(firstDescendant(tx, "v"))) || (tx && formulaOf(tx) ? (cacheValues(tx, resolve).values[0] ?? "") : tidy(textOf(tx)));
+      const cat = cacheValues(child(ser, "cat") ?? child(ser, "xVal"), resolve);
       if (!labels.length) labels = cat.values;
-      const val = cacheValues(child(ser, "val") ?? child(ser, "yVal"));
+      const val = cacheValues(child(ser, "val") ?? child(ser, "yVal"), resolve);
       percent ||= val.percent;
       series.push({
         name,
@@ -319,6 +286,49 @@ export function readChartXml(root: XmlEl | null): PptxChart | null {
   if (percent) for (const s of series) s.values = s.values.map((v) => (v === null ? null : Math.round(v * 100 * 1e6) / 1e6));
   const title = tidy(descendants(child(chart, "title"), "t").map(textOf).join(""));
   return { type, title, labels, series, unit: percent ? "%" : "" };
+}
+
+/** Đọc biểu đồ, lấy số còn thiếu (không có bộ đệm) từ sổ Excel nhúng. `fromWorkbook` = có số lấy từ sổ. */
+async function readChartWithWorkbook(root: XmlEl, wb: Workbook | null): Promise<{ chart: PptxChart | null; fromWorkbook: boolean }> {
+  const formulas = wb ? unresolvedFormulas(root) : [];
+  if (!wb || !formulas.length) return { chart: readChartXml(root), fromWorkbook: false };
+  const got = new Map<string, { values: string[]; percent: boolean }>();
+  for (const f of formulas) {
+    const r = await wb.resolve(f);
+    if (r) got.set(f, r);
+  }
+  return { chart: readChartXml(root, (f) => got.get(f) ?? null), fromWorkbook: got.size > 0 };
+}
+
+const hasNumbers = (c: PptxChart | null): c is PptxChart => !!c && c.series.some((s) => s.values.some((v) => v !== null));
+const XLSX_EXT = /\.xls[xm]$/i;
+
+/** Sổ Excel trong gói trình chiếu (ppt/embeddings); null nếu không phải .xlsx/.xlsm hoặc không đọc được. */
+async function embeddedWorkbook(pkg: Pkg, rel: Rel | undefined): Promise<Workbook | null> {
+  if (!rel || rel.external || !XLSX_EXT.test(rel.target)) return null;
+  const bytes = await pkg.bytes(rel.target);
+  return bytes ? openWorkbook(bytes).catch(() => null) : null;
+}
+
+/**
+ * Khung đồ hoạ OLE (tiêu chí E1–E4, E7): biểu đồ hoặc vùng ô Excel dán dạng đối tượng nhúng. Biểu đồ của trang đang hiện
+ * nếu có, không thì vùng ô đang hiện thành bảng. null = không phải sổ Excel đọc được (giữ cờ "object").
+ */
+async function readOleFrame(pkg: Pkg, data: XmlEl | null, rels: Map<string, Rel>): Promise<{ chart: PptxChart } | { table: string[][] } | null> {
+  const ole = firstDescendant(data, "oleObj");
+  const wb = await embeddedWorkbook(pkg, rels.get(prefixedAttr(ole, "id") ?? ""));
+  if (!wb) return null;
+  try {
+    const root = await wb.activeChart();
+    if (root) {
+      const { chart } = await readChartWithWorkbook(root, wb);
+      return hasNumbers(chart) ? { chart } : null;
+    }
+    const table = await wb.activeTable();
+    return table?.length ? { table } : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Chữ các nút SmartArt theo cây cha–con của dataModel (bỏ nút trình bày và nút nối). */
@@ -378,6 +388,7 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
   const smartArt: PptxParagraph[] = [];
   let connectors = 0;
   let order = 0;
+  let fromExcel = 0;
 
   const areaOf = (el: XmlEl) => {
     const b = boxOf(el);
@@ -437,8 +448,23 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
         } else if (uri.endsWith("/chart")) {
           const rid = prefixedAttr(child(data, "chart"), "id");
           const rel = rid ? rels.get(rid) : undefined;
-          const c = rel && !rel.external ? readChartXml(await pkg.xml(rel.target)) : null;
-          if (c) charts.push(c);
+          const root = rel && !rel.external ? await pkg.xml(rel.target) : null;
+          if (root) {
+            // Biểu đồ mất bộ đệm số: lấy số từ sổ Excel nhúng của chính biểu đồ (c:externalData, tiêu chí E6).
+            const ext = prefixedAttr(child(root, "externalData"), "id");
+            const wb = ext && unresolvedFormulas(root).length ? await embeddedWorkbook(pkg, (await pkg.rels(rel!.target)).get(ext)) : null;
+            const { chart: c, fromWorkbook } = await readChartWithWorkbook(root, wb);
+            if (c) {
+              charts.push(c);
+              if (fromWorkbook && hasNumbers(c)) fromExcel += 1;
+            }
+          }
+        } else if (uri.endsWith("/ole")) {
+          const got = await readOleFrame(pkg, data, rels);
+          if (got && "chart" in got) charts.push(got.chart);
+          else if (got) tables.push(got.table);
+          else flags.add("object");
+          if (got) fromExcel += 1;
         } else if (uri.endsWith("/diagram")) {
           flags.add("smartart");
           const dm = prefixedAttr(child(data, "relIds"), "dm");
@@ -486,6 +512,7 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
       charts,
       smartArt,
       flags: [...flags],
+      fromExcel,
     },
     shapes,
     imageRefs,

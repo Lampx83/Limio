@@ -716,6 +716,8 @@ export interface ImportReport {
   droppedLogos: number;
   tables: number;
   charts: number;
+  /** Số bảng/biểu đồ có số đọc từ sổ Excel nhúng trong file (tiêu chí E8). */
+  fromExcel: number;
   /** Các dòng "chỉ lấy được chữ" và điều không chuyển được (tiêu chí P9, P10). */
   warnings: string[];
 }
@@ -757,6 +759,7 @@ export function importReport(deck: PptxDeck): ImportReport {
     droppedLogos: deck.droppedRepeatedImages,
     tables: deck.slides.reduce((n, s) => n + s.tables.length, 0),
     charts: deck.slides.reduce((n, s) => n + s.charts.length, 0),
+    fromExcel: deck.slides.reduce((n, s) => n + s.fromExcel, 0),
     warnings: w,
   };
 }

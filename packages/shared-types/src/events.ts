@@ -222,6 +222,9 @@ export const LearningEventType = {
   LiveDeckOutlineGenerated: "live.deck.outline_generated",
   LiveDeckSlidesGenerated: "live.deck.slides_generated",
   LiveSlideAiEditProposed: "live.slide.ai_edit_proposed",
+  // AI đọc số từ hình biểu đồ (docs/tieu-chi/bieu-do-kho-doc-pptx.md, V12). Khi giảng viên thay hình: ai_edit_accepted
+  // với action "chart_from_image".
+  LiveSlideChartFromImageProposed: "live.slide.chart_from_image_proposed",
   LiveSlideAiEditAccepted: "live.slide.ai_edit_accepted",
   LiveSlideEditedByUser: "live.slide.edited_by_user",
   LiveSlideVersionRestored: "live.slide.version_restored",
@@ -726,6 +729,16 @@ export interface LiveSlideAiEditProposedPayload {
   slideId: string;
   /** "custom" = yêu cầu riêng giảng viên gõ (nội dung yêu cầu không ghi vào sự kiện). */
   action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
+}
+
+export interface LiveSlideChartFromImageProposedPayload {
+  deckId: string;
+  slideId: string;
+  /** "ok" hoặc lý do không dùng được kết quả (not_chart, too_many_labels, too_many_series). Không ghi số liệu. */
+  outcome: "ok" | "not_chart" | "too_many_labels" | "too_many_series";
+  labels: number;
+  /** Số giá trị AI ước lượng theo trục (hình không ghi số). */
+  estimated: number;
 }
 
 export interface LiveSlideAiEditAcceptedPayload {

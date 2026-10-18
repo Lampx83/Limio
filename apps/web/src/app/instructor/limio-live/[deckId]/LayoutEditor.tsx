@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, X } from "lucide-react";
+import { AlertTriangle, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
@@ -26,6 +26,8 @@ import {
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
 import { slideBgFor } from "../slideThemes";
 import { ChartSheet, TableSheet } from "./DataSheetEditor";
+import ChartFromImagePanel from "./ChartFromImagePanel";
+import { canRedraw, restoreImage } from "@/lib/limioLiveChartFromImage";
 import { motifSlot } from "@/lib/limioLiveMotifs";
 import { useSlideMotif } from "../liveMotifContext";
 import { SlideMotifField } from "./MotifPicker";
@@ -429,8 +431,8 @@ export default function LayoutEditor({
   nav: { index: number; total: number; onPrev: (() => void) | null; onNext: (() => void) | null };
   /** Giảng viên chấp nhận đề xuất của AI (đổi nội dung, có thể đổi loại slide). */
   onApplyProposal: (p: Proposal, action: string) => void;
-  /** Tách slide quá dài thành hai: nhận cấu hình hai slide mới. */
-  onSplit: (a: Cfg, b: Cfg) => void;
+  /** Tách slide quá dài thành hai: nhận cấu hình hai slide mới. `aiAction`: slide đầu là đề xuất AI đã chấp nhận. */
+  onSplit: (a: Cfg, b: Cfg, opts?: { aiAction?: string }) => void;
 }) {
   const layout = resolveLayout(config);
   const [d, setD] = useState<Cfg>(() => padForEditing(layout, config));
@@ -486,6 +488,10 @@ export default function LayoutEditor({
     set({ columns: columns.map((c, k) => (k === i ? { ...c, ...patch } : c)) });
 
   const [tab, setTab] = useState<"edit" | "ai">("edit");
+  // Màn "Vẽ lại thành biểu đồ" (docs/tieu-chi/bieu-do-kho-doc-pptx.md, V2–V10). Số AI đọc chỉ nằm trong màn đó;
+  // đổi slide hay đóng cửa sổ là bỏ.
+  const [redraw, setRedraw] = useState(false);
+  useEffect(() => setRedraw(false), [slideId, open]);
   const [ready, setReady] = useState(false);
   const dlgRef = useRef<HTMLDialogElement>(null);
   const ctx = useMemo(
@@ -581,6 +587,20 @@ export default function LayoutEditor({
             className="m-auto h-[min(780px,94vh)] w-[min(1120px,96vw)] max-w-none overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] p-0 text-[rgb(var(--text))] shadow-2xl backdrop:bg-black/50 max-sm:m-0 max-sm:h-[100dvh] max-sm:max-h-none max-sm:w-screen max-sm:rounded-none max-sm:border-0"
           >
             <FormatCtx.Provider value={ctx}>
+              {redraw ? (
+                <ChartFromImagePanel
+                  deckId={deckId}
+                  slideId={slideId}
+                  config={{ ...sanitizeLayoutConfig(layout, d), ...extrasFor(config, d) }}
+                  themeId={themeId}
+                  onBack={() => setRedraw(false)}
+                  onApply={(chart, cont) => {
+                    setRedraw(false);
+                    if (cont) onSplit(chart, cont, { aiAction: "chart_from_image" });
+                    else onApplyProposal({ type: "content", config: chart }, "chart_from_image");
+                  }}
+                />
+              ) : (
               <div className="flex h-full flex-col">
                 <div className="flex shrink-0 items-center gap-2 border-b border-token px-4 py-2.5">
                   <button type="button" className="btn-secondary h-9 w-9 !p-0" disabled={!nav.onPrev} onClick={() => nav.onPrev?.()} aria-label="Slide trước">
@@ -741,7 +761,8 @@ export default function LayoutEditor({
 
             {layout === "image" && (
               <>
-                {(d.bullets as string[]).map((b, i) => (
+                {/* Vừa đổi bố cục (vd "Trả lại hình" từ Biểu đồ) thì bản nháp còn là của bố cục cũ một lượt vẽ, chưa có ô ý. */}
+                {((d.bullets as string[] | undefined) ?? []).map((b, i) => (
                   <Field
                     key={i}
                     label={`Ý ${i + 1}`}
@@ -760,6 +781,25 @@ export default function LayoutEditor({
                   onChange={(v) => set({ imageUrl: v })}
                   onBlur={blur}
                 />
+                {canRedraw(config) && d.imageUrl === config.imageUrl && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <button
+                      type="button"
+                      className="btn-secondary h-9"
+                      onClick={() => {
+                        // Chốt chữ đang gõ (nếu có) để slide "(tiếp)" mang đúng các ý hiện tại.
+                        const next = { ...sanitizeLayoutConfig(layout, d), ...extrasFor(config, d) };
+                        if (!slideConfigsEqual(next, config)) onSave({ config: next });
+                        setRedraw(true);
+                      }}
+                    >
+                      <BarChart3 size={16} aria-hidden /> Vẽ lại thành biểu đồ
+                    </button>
+                    <span className="min-w-[220px] flex-1 text-[13px] text-muted">
+                      Hình là biểu đồ? AI đọc số trong hình, thầy cô đối chiếu từng dòng rồi mới thay hình.
+                    </span>
+                  </div>
+                )}
               </>
             )}
 
@@ -933,6 +973,18 @@ export default function LayoutEditor({
               </div>
             )}
 
+            {layout === "chart" && restoreImage(config) && (
+              <p className="flex flex-wrap items-center gap-x-2 text-[13px] text-muted">
+                <span>Vẽ lại từ hình gốc ·</span>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:underline"
+                  onClick={() => onSave({ config: restoreImage({ ...config, title: d.title ?? config.title })! })}
+                >
+                  <Undo2 size={14} aria-hidden /> Trả lại hình
+                </button>
+              </p>
+            )}
             {layout === "table" && <TableSheet d={d} onChange={dataChange} onBlur={blur} />}
             {layout === "chart" && (
               <>
@@ -994,6 +1046,7 @@ export default function LayoutEditor({
                   </div>
                 </div>
               </div>
+              )}
             </FormatCtx.Provider>
           </dialog>,
           document.body,

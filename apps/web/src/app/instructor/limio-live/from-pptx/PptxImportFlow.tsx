@@ -351,7 +351,10 @@ export default function PptxImportFlow() {
                 <Fact n={r!.slides} label="slide" />
                 <Fact n={r!.withNotes} label="slide có ghi chú giảng, giữ nguyên chữ" />
                 <Fact n={r!.images} label={r!.droppedLogos ? "hình được giữ (đã bỏ logo lặp ở các slide)" : "hình được giữ"} />
-                <Fact n={r!.tables + r!.charts} label={`bảng và biểu đồ (${r!.tables} bảng, ${r!.charts} biểu đồ)`} />
+                <Fact
+                  n={r!.tables + r!.charts}
+                  label={`bảng và biểu đồ (${r!.tables} bảng, ${r!.charts} biểu đồ${r!.fromExcel ? `; ${r!.fromExcel} đọc số từ bảng Excel nhúng trong file` : ""})`}
+                />
               </div>
 
               {r!.warnings.length > 0 && (

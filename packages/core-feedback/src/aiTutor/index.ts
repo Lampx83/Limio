@@ -9,3 +9,4 @@ export * from "./lectureSlides";
 export * from "./lectureSlideEdit";
 export * from "./lessonOutline";
 export * from "./lessonWriter";
+export * from "./chartFromImage";

@@ -5,6 +5,7 @@ import {
   chunkBalanced,
   importSourceText,
   importedSlideFor,
+  importReport,
   keepOutline,
   piecesFor,
   pointsSig,
@@ -226,5 +227,28 @@ describe("generateDeckSlides + fixedSlide (P14: cách Giữ ý không gọi AI)"
     expect(res.fallbackCount).toBe(0);
     expect(res.slides.map((s) => s.config.layout)).toEqual(["cover", "image"]);
     expect(res.slides[1]!.config.presenterNote).toBe("Ghi chú.");
+  });
+});
+
+describe("Excel nhúng dựng thành Biểu đồ/Bảng (E2, E4, E8)", () => {
+  it("biểu đồ và bảng đọc từ Excel nhúng dựng như biểu đồ, bảng thường; báo cáo đếm riêng", async () => {
+    const file = await buildPptx([
+      {
+        title: "Điểm theo lớp",
+        ole: { kind: "xlsxChart", chart: { type: "bar", labels: ["Lớp A", "Lớp B", "Lớp C"], series: [{ name: "Điểm", values: [6.5, 7.25, 8] }] } },
+      },
+      { title: "Số sinh viên", ole: { kind: "xlsxSheet", rows: [["Năm", "Số SV"], [2024, 1234], [2025, 1500]] } },
+      { title: "Đối tượng cũ", ole: { kind: "bin" } },
+    ]);
+    const { deck } = await parsePptx(file);
+    const [chart] = piecesFor(toImportedSlide(deck.slides[0]!, null), { first: false });
+    expect(chart).toMatchObject({ layout: "chart", config: { chartType: "bar", labels: ["Lớp A", "Lớp B", "Lớp C"], series: [{ name: "Điểm", values: [6.5, 7.25, 8] }] } });
+    const [table] = piecesFor(toImportedSlide(deck.slides[1]!, null), { first: false });
+    expect(table).toMatchObject({ layout: "table", config: { head: ["Năm", "Số SV"], rows: [["2024", "1234"], ["2025", "1500"]] } });
+
+    const report = importReport(deck);
+    expect(report).toMatchObject({ charts: 1, tables: 1, fromExcel: 2 });
+    expect(report.warnings.join(" ")).toContain("Slide 3 có đối tượng nhúng");
+    expect(importSourceText({ slides: deck.slides.map((s) => toImportedSlide(s, null)) })).toContain("Lớp B 7.25");
   });
 });

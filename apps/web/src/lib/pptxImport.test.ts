@@ -138,6 +138,86 @@ describe("parsePptx", () => {
   });
 });
 
+describe("Excel nhúng (docs/tieu-chi/bieu-do-kho-doc-pptx.md, E1–E8)", () => {
+  const scores = { type: "bar" as const, title: "Điểm trung bình theo lớp", labels: ["Lớp A", "Lớp B", "Lớp C"], series: [{ name: "Giữa kỳ", values: [6.5, 7.25, 8] }, { name: "Cuối kỳ", values: [7, 7.5, 8.75] }] };
+
+  it("E1, E2: biểu đồ Excel dán dạng đối tượng nhúng (trang biểu đồ riêng) đọc ra đúng loại, nhãn, chuỗi, số", async () => {
+    const { deck } = await parsePptx(await buildPptx([{ title: "Kết quả", ole: { kind: "xlsxChart", chart: scores } }]));
+    const s = deck.slides[0]!;
+    expect(s.charts).toEqual([{ type: "bar", title: "Điểm trung bình theo lớp", labels: ["Lớp A", "Lớp B", "Lớp C"], series: scores.series, unit: "" }]);
+    expect(s.flags).not.toContain("object");
+    expect(s.fromExcel).toBe(1);
+  });
+
+  it("E2: biểu đồ đặt trong trang tính, oleObj không bọc AlternateContent, phần trăm", async () => {
+    const chart = { type: "pie" as const, labels: ["Đồng ý", "Phân vân", "Không"], series: [{ name: "Tỉ lệ", values: [0.6, 0.25, 0.15] }], percent: true };
+    const { deck } = await parsePptx(await buildPptx([{ title: "Khảo sát", ole: { kind: "xlsxChart", chart, inSheet: true, direct: true } }]));
+    expect(deck.slides[0]!.charts[0]).toEqual({ type: "pie", title: "", labels: ["Đồng ý", "Phân vân", "Không"], series: [{ name: "Tỉ lệ", values: [60, 25, 15] }], unit: "%" });
+  });
+
+  it("E3: biểu đồ không lưu bộ đệm số thì lấy số từ các ô mà công thức trỏ tới", async () => {
+    const { deck } = await parsePptx(await buildPptx([{ title: "Kết quả", ole: { kind: "xlsxChart", chart: scores, noCache: true } }]));
+    expect(deck.slides[0]!.charts[0]).toMatchObject({ labels: ["Lớp A", "Lớp B", "Lớp C"], series: scores.series, unit: "" });
+  });
+
+  it("E3: công thức phần trăm không có bộ đệm vẫn ra đơn vị %", async () => {
+    const chart = { type: "hbar" as const, labels: ["Có", "Không"], series: [{ name: "Tỉ lệ", values: [0.35, 0.65] }], percent: true };
+    const { deck } = await parsePptx(await buildPptx([{ title: "Tỉ lệ", ole: { kind: "xlsxChart", chart, noCache: true } }]));
+    expect(deck.slides[0]!.charts[0]).toMatchObject({ type: "hbar", unit: "%", series: [{ name: "Tỉ lệ", values: [35, 65] }] });
+  });
+
+  it("E4, E5: vùng ô Excel nhúng thành bảng theo oleSize; phần trăm, số thập phân, nhiễu dấu phẩy động, năm không chia nhóm", async () => {
+    const rows = [
+      ["Năm", "Số SV", "Tỉ lệ đạt", "Điểm TB"],
+      [2024, 1234, { v: 0.825, fmt: "pct" as const }, { v: 7, fmt: "0.0" as const }],
+      [2025, 1500, { v: 0.9, fmt: "pct" as const }, 0.1 + 0.2],
+      ["Ngoài vùng hiện", 1, 2, 3],
+    ];
+    const { deck } = await parsePptx(await buildPptx([{ title: "Số liệu", ole: { kind: "xlsxSheet", rows, oleSize: "A1:D3" } }]));
+    const s = deck.slides[0]!;
+    expect(s.tables).toEqual([
+      [
+        ["Năm", "Số SV", "Tỉ lệ đạt", "Điểm TB"],
+        ["2024", "1234", "83%", "7,0"],
+        ["2025", "1500", "90%", "0,3"],
+      ],
+    ]);
+    expect(s.flags).not.toContain("object");
+    expect(s.fromExcel).toBe(1);
+  });
+
+  it("E4: không có oleSize thì lấy vùng có dữ liệu của trang đang hiện, bỏ hàng và cột trống ở rìa", async () => {
+    const rows = [[null, null, null], [null, "Mức", "Mô tả"], [null, "Nhiệm vụ", "Đúng hay sai"], [null, null, null]];
+    const { deck } = await parsePptx(await buildPptx([{ title: "Bảng", ole: { kind: "xlsxSheet", rows, extraSheetFirst: true } }]));
+    expect(deck.slides[0]!.tables).toEqual([
+      [
+        ["Mức", "Mô tả"],
+        ["Nhiệm vụ", "Đúng hay sai"],
+      ],
+    ]);
+  });
+
+  it("E6: biểu đồ PowerPoint mất bộ đệm số lấy số từ gói Excel nhúng (externalData)", async () => {
+    const { deck } = await parsePptx(await buildPptx([{ title: "Kết quả", chart: { ...scores, embeddedOnly: true } }]));
+    expect(deck.slides[0]!.charts[0]).toMatchObject({ labels: ["Lớp A", "Lớp B", "Lớp C"], series: scores.series });
+    expect(deck.slides[0]!.fromExcel).toBe(1);
+  });
+
+  it("E7: đối tượng .bin (Excel đời cũ) hoặc gói Excel hỏng vẫn gắn cờ object, slide vẫn đọc được", async () => {
+    const { deck } = await parsePptx(
+      await buildPptx([
+        { title: "Cũ", body: ["Ý một"], ole: { kind: "bin" } },
+        { title: "Hỏng", ole: { kind: "broken" } },
+      ]),
+    );
+    expect(deck.slides.map((s) => [s.title, s.flags.includes("object"), s.charts.length, s.tables.length, s.fromExcel])).toEqual([
+      ["Cũ", true, 0, 0, 0],
+      ["Hỏng", true, 0, 0, 0],
+    ]);
+    expect(deck.slides[0]!.paragraphs.map((p) => p.text)).toEqual(["Ý một"]);
+  });
+});
+
 describe("suggestMinutes (P11)", () => {
   it("theo số slide", () => {
     expect([8, 12, 13, 19, 20, 24, 60].map(suggestMinutes)).toEqual([15, 15, 30, 30, 45, 45, 45]);
