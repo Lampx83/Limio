@@ -3,8 +3,10 @@
 // Không tin thẳng đầu ra mô hình: số slide, bố cục, độ dài, emoji đều được ép ở đây.
 
 import { cellNumbersInSource, numbersInText } from "./limioLiveCharts";
-import { SLIDE_LAYOUTS, MAX_LEN, clipText, type SlideLayoutId } from "./limioLiveSlides";
+import { ITEM_RANGE, SLIDE_LAYOUTS, MAX_LEN, clipText, type SlideLayoutId } from "./limioLiveSlides";
 import { extractCites, figureKeys, unsupportedFigures } from "./limioLiveFigures";
+
+const STATS_MIN = ITEM_RANGE.stats!.min;
 
 // Tên khớp bộ chọn loại slide trong trình sửa bài giảng. "draw_it" là Dán Note ở chế độ vẽ:
 // khi tạo slide nó thành collaborate_board với mode "drawing" (limioLiveGenerate).
@@ -507,8 +509,6 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
   const refs = kind === "topic_web" ? (opts.references ?? []) : [];
   const pre = partsFromRaw(raw);
   let outline = sanitizeOutline(pre.value);
-  // Bảng và Biểu đồ phải có số trong nguồn; không có thì đổi sang bố cục khác và báo.
-  if (opts.sourceText !== undefined) warnings.push(...demoteUnbackedCharts(outline, opts.sourceText));
   const { min } = slideRange(minutes);
   // Dòng Nguồn tham khảo chiếm một chỗ trong mức slide.
   const max = slideRange(minutes).max - (refs.length ? 1 : 0);
@@ -523,6 +523,9 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
       s.points = s.points.map((p) => extractCites(p).text).filter(Boolean);
     }
   });
+  // Biểu đồ và Số liệu phải có số trong nguồn; không có thì đổi sang bố cục khác và báo. Chạy sau khi đã
+  // ép bố cục theo loại nguồn, để slide mức kiến thức chung (vốn không được có hai bố cục này) không bị báo thừa.
+  if (opts.sourceText !== undefined) warnings.push(...demoteUnbackedCharts(outline, opts.sourceText));
 
   if (outline.slides.length > max) {
     const had = outline.slides.length;
@@ -564,19 +567,33 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
 }
 
 /**
- * Chống bịa số liệu ngay từ dàn ý: slide Biểu đồ cần ít nhất hai ý có số, và mọi số đó phải có trong
- * tài liệu gốc. Không đạt thì đổi sang Chữ và hình (giữ nguyên các ý) và báo cho giảng viên.
- * Sửa tại chỗ; trả về các câu cảnh báo.
+ * Chống bịa số liệu ngay từ dàn ý, cùng luật với lúc sinh slide (configFromOutline):
+ * - Biểu đồ cần ít nhất hai ý có số, mọi số đó phải có trong tài liệu gốc; không đạt thì đổi sang Chữ và hình.
+ * - Số liệu: mọi số trong các ý phải có trong tài liệu gốc và cần ít nhất ITEM_RANGE.stats.min ý có số;
+ *   không đạt thì đổi sang Ba thẻ, để giảng viên thấy ngay thay vì đến lúc tạo slide mới âm thầm đổi.
+ * Giữ nguyên các ý. Sửa tại chỗ; trả về các câu cảnh báo.
  */
 export function demoteUnbackedCharts(outline: Pick<Outline, "slides">, sourceText: string): string[] {
   const found = numbersInText(sourceText);
   const warnings: string[] = [];
   for (const s of outline.slides) {
-    if (s.kind !== "content" || s.layout !== "chart") continue;
+    if (s.kind !== "content") continue;
+    const name = s.title || "không tên";
     const withNum = s.points.filter((p) => /\d/.test(p));
-    if (withNum.length >= 2 && withNum.every((p) => cellNumbersInSource(p.replace(/^[^:]*:\s*/, ""), found))) continue;
-    s.layout = "image";
-    warnings.push(`Slide “${s.title || "không tên"}”: tài liệu không có đủ số liệu cho biểu đồ, đã đổi sang Chữ và hình.`);
+    if (s.layout === "chart") {
+      if (withNum.length >= 2 && withNum.every((p) => cellNumbersInSource(p.replace(/^[^:]*:\s*/, ""), found))) continue;
+      s.layout = "image";
+      warnings.push(`Slide “${name}”: tài liệu không có đủ số liệu cho biểu đồ, đã đổi sang Chữ và hình.`);
+    } else if (s.layout === "stats") {
+      // Kiểm cả ý: lúc sinh slide, con số lớn có thể lấy từ bất cứ chỗ nào trong ý.
+      if (!withNum.every((p) => cellNumbersInSource(p, found))) {
+        s.layout = "cards";
+        warnings.push(`Slide “${name}”: có con số không tìm thấy trong tài liệu, nên slide đã đổi từ Số liệu sang Ba thẻ.`);
+      } else if (withNum.length < STATS_MIN) {
+        s.layout = "cards";
+        warnings.push(`Slide “${name}”: cần ít nhất ${STATS_MIN} ý có con số lấy từ tài liệu để dựng Số liệu, nên slide đã đổi sang Ba thẻ.`);
+      }
+    }
   }
   return warnings;
 }
