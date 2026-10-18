@@ -6,7 +6,6 @@ import {
   ChevronDown,
   Copy,
   FolderInput,
-  FileUp,
   FolderPlus,
   Link2,
   MoreHorizontal,
@@ -85,7 +84,6 @@ export default function LiveDeckList() {
   const [isCreating, setIsCreating] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   // Bước chọn cách bắt đầu (tự soạn hay tạo bằng AI từ tài liệu), trước form nhập tên.
-  const [chooseOpen, setChooseOpen] = useState(false);
   const newTitleInputRef = useRef<HTMLInputElement>(null);
 
   // Hộp thoại nhóm (tạo mới / sửa)
@@ -94,19 +92,14 @@ export default function LiveDeckList() {
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [moveMenuFor, setMoveMenuFor] = useState<string | null>(null);
 
-  // Link cũ "?new=1" vẫn mở luôn form tạo.
+  // "?new=1" (từ đường "Soạn thủ công" ở trang tạo bài) mở luôn form tạo bài trống.
   useEffect(() => {
-    if (searchParams.get("new") === "1") setFormOpen(true);
+    if (searchParams.get("new") !== "1") return;
+    setNewTitle("");
+    // Đang xem một nhóm cụ thể thì bài mới mặc định vào nhóm đó.
+    setNewGroupId(filter && filter !== NO_GROUP ? filter : "");
+    setFormOpen(true);
   }, [searchParams]);
-
-  useEffect(() => {
-    if (!chooseOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setChooseOpen(false);
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [chooseOpen]);
 
   useEffect(() => {
     if (!formOpen) return;
@@ -181,12 +174,8 @@ export default function LiveDeckList() {
     }
   };
 
-  const openCreate = () => {
-    setNewTitle("");
-    // Đang xem một nhóm cụ thể thì bài mới mặc định vào nhóm đó.
-    setNewGroupId(filter && filter !== NO_GROUP ? filter : "");
-    setChooseOpen(true);
-  };
+  // "Tạo bài giảng" mở thẳng ô mô tả chủ đề (trang AI hỗ trợ soạn); soạn thủ công là đường phụ ở trang đó (?new=1).
+  const openCreate = () => router.push("/instructor/limio-live/from-document");
 
   const handleDuplicate = async (deckId: string) => {
     if (duplicatingId) return;
@@ -443,51 +432,6 @@ export default function LiveDeckList() {
           </button>
         </div>
       </div>
-
-      {chooseOpen && (
-        <Modal wide onClose={() => setChooseOpen(false)}>
-          <div role="dialog" aria-modal="true" aria-labelledby="choose-deck-title">
-            <h2 id="choose-deck-title" className="text-lg font-semibold">
-              Tạo bài giảng
-            </h2>
-            <p className="mt-1 text-sm text-muted">Bạn muốn bắt đầu theo cách nào?</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <a
-                href="/instructor/limio-live/from-document"
-                className="group relative grid content-start gap-2 rounded-2xl border-2 border-brand-600 bg-brand-soft p-4 transition hover:shadow-md"
-              >
-                <span className="absolute right-3 top-3 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white">Gợi ý</span>
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-[rgb(var(--surface))] text-brand-700">
-                  <FileUp size={20} />
-                </span>
-                <b className="text-[15px]">AI hỗ trợ soạn</b>
-                <span className="text-sm text-muted">
-                  AI đề xuất dàn ý từ một đoạn mô tả chủ đề hoặc từ tài liệu Word, PDF để bạn duyệt, sau đó soạn các slide tương tác.
-                </span>
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  setChooseOpen(false);
-                  setFormOpen(true);
-                }}
-                className="grid content-start gap-2 rounded-2xl border-2 border-token bg-[rgb(var(--surface))] p-4 text-left transition hover:border-brand-600 hover:shadow-md"
-              >
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-[rgb(var(--surface-muted))] text-muted">
-                  <Pencil size={20} />
-                </span>
-                <b className="text-[15px]">Soạn thủ công</b>
-                <span className="text-sm text-muted">Bắt đầu từ bài trống và thêm từng slide bằng tay.</span>
-              </button>
-            </div>
-            <div className="mt-4 flex justify-end">
-              <button type="button" onClick={() => setChooseOpen(false)} className="btn-ghost">
-                Đóng
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
 
       {formOpen && (
         <Modal onClose={() => !isCreating && setFormOpen(false)}>

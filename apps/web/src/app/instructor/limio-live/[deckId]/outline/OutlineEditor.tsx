@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Check, ChevronLeft, FileText, Loader2, PenLine, Plus } from "lucide-react";
+import { AlertTriangle, Check, ChevronLeft, FileText, Loader2, PenLine, Plus, Sparkles } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
@@ -452,7 +452,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                   {!syncInfo.noop && (
                     <button
                       type="button"
-                      className="btn-primary"
+                      className="btn-primary flex items-center gap-2"
                       onClick={() => {
                         if (
                           window.confirm(
@@ -462,7 +462,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                           void generate("sync");
                       }}
                     >
-                      Cập nhật slide theo dàn ý
+                      <Sparkles size={16} aria-hidden /> Cập nhật slide theo dàn ý
                     </button>
                   )}
                   <a href={`/instructor/limio-live/${deckId}`} className="btn-secondary inline-flex">
@@ -492,7 +492,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
                 </p>
                 {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
                 <button type="button" className="btn-primary flex items-center gap-2" onClick={() => void generate()}>
-                  Tạo slide từ dàn ý
+                  <Sparkles size={16} aria-hidden /> Tạo slide từ dàn ý
                 </button>
               </>
             )}

@@ -191,7 +191,10 @@ function Field({
   );
 }
 
-type EditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite";
+type EditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
+// Khớp SLIDE_EDIT_INSTRUCTION_MIN / MAX của core-feedback (máy chủ kiểm lại).
+const INSTRUCTION_MIN = 3;
+const INSTRUCTION_MAX = 500;
 interface Proposal {
   type: "content" | "quiz";
   config: Cfg;
@@ -211,6 +214,7 @@ const AI_ERROR: Record<string, string> = {
   monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Bạn vẫn có thể sửa tay.",
   ai_edit_failed: "AI chưa viết lại được slide này. Hãy thử lại hoặc sửa tay.",
   no_outline_row: "Slide này không còn dòng dàn ý gốc để viết lại.",
+  validation_failed: "Yêu cầu cần từ 3 đến 500 ký tự.",
 };
 
 /** Nhờ AI sửa một slide: bấm nút → xem bản so sánh → chấp nhận hoặc bỏ. Không bao giờ tự ghi vào slide. */
@@ -231,6 +235,8 @@ function AiEditBar({
   const [err, setErr] = useState<string | null>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [proposalAction, setProposalAction] = useState<EditAction>("shorter");
+  const [instruction, setInstruction] = useState("");
+  const canAsk = instruction.trim().length >= INSTRUCTION_MIN && busy === null && proposal === null;
 
   const run = async (action: EditAction) => {
     setBusy(action);
@@ -239,7 +245,7 @@ function AiEditBar({
       const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}/ai-edit`), {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify(action === "custom" ? { action, instruction: instruction.trim() } : { action }),
       });
       const j = (await res.json().catch(() => null)) as { proposal?: Proposal; error?: string } | null;
       if (!res.ok || !j?.proposal) return setErr(AI_ERROR[j?.error ?? ""] ?? "Không nhờ AI được lúc này. Vui lòng thử lại.");
@@ -265,6 +271,43 @@ function AiEditBar({
           AI chỉ đề xuất. Bạn xem bản so sánh rồi mới chấp nhận, không có gì tự ghi vào slide.
         </p>
       </div>
+      <div className="space-y-2">
+        <label htmlFor="ai-instruction" className="block text-sm font-semibold">
+          Yêu cầu riêng
+        </label>
+        <div className="rounded-xl border border-token bg-[rgb(var(--surface))] focus-within:border-brand-600">
+          <textarea
+            id="ai-instruction"
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            onKeyDown={(e) => {
+              // Ctrl/Cmd + Enter gửi; Enter thường xuống dòng.
+              if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && canAsk) {
+                e.preventDefault();
+                void run("custom");
+              }
+            }}
+            rows={3}
+            maxLength={INSTRUCTION_MAX}
+            disabled={busy !== null || proposal !== null}
+            placeholder="Ví dụ: Thêm một câu hỏi gợi mở ở cuối; viết lại cho sinh viên năm nhất; đổi ví dụ sang ngành y."
+            className="block w-full resize-y rounded-xl border-0 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-0 disabled:opacity-60"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-token px-3 py-1.5">
+            <span className="text-xs text-muted">Ctrl hoặc Cmd + Enter để gửi</span>
+            <button
+              type="button"
+              disabled={!canAsk}
+              onClick={() => void run("custom")}
+              className="btn-primary flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              {busy === "custom" ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} aria-hidden />}
+              {busy === "custom" ? "AI đang sửa..." : "Gửi cho AI"}
+            </button>
+          </div>
+        </div>
+      </div>
+      <p className="text-sm font-semibold">Hoặc chọn nhanh</p>
       <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Việc nhờ AI">
         {actions.map((a) => (
           <button
@@ -274,7 +317,11 @@ function AiEditBar({
             onClick={() => run(a.id)}
             className="flex items-start gap-2 rounded-xl border border-token px-3 py-2 text-left transition hover:border-brand-600 disabled:opacity-50"
           >
-            {busy === a.id ? <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" /> : null}
+            {busy === a.id ? (
+              <Loader2 size={14} className="mt-0.5 shrink-0 animate-spin" />
+            ) : (
+              <Sparkles size={14} className="mt-0.5 shrink-0 text-brand-600" aria-hidden />
+            )}
             <span className="grid leading-tight">
               <b className="text-sm">{a.label}</b>
               <small className="text-xs text-muted">{a.hint}</small>
@@ -541,10 +588,11 @@ export default function LayoutEditor({
                           role="tab"
                           aria-selected={tab === k}
                           onClick={() => setTab(k)}
-                          className={`-mb-px border-b-[3px] px-4 py-2 text-[15px] font-semibold ${
+                          className={`-mb-px flex items-center gap-1.5 border-b-[3px] px-4 py-2 text-[15px] font-semibold ${
                             tab === k ? "border-brand-600 text-[rgb(var(--text))]" : "border-transparent text-muted hover:text-[rgb(var(--text))]"
                           }`}
                         >
+                          {k === "ai" && <Sparkles size={15} aria-hidden />}
                           {label}
                         </button>
                       ))}
@@ -848,7 +896,8 @@ export default function LayoutEditor({
                         <AiEditBar
                           deckId={deckId}
                           slideId={slideId}
-                          config={preview}
+                          // Kèm khoá meta (outlineId, dòng nguồn): thiếu outlineId thì nút "Viết lại từ dàn ý" không hiện.
+                          config={{ ...shown, ...pickMeta(config) }}
                           themeId={themeId}
                           onApply={(p, action) => {
                             // Làm mới các ô nhập theo đề xuất (cùng bố cục); đổi loại slide thì trình soạn tự đổi theo.

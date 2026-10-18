@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2, UploadCloud } from "lucide-react";
+import { FileText, Loader2, Pencil, Sparkles, UploadCloud } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { DURATIONS } from "@/lib/limioLiveOutline";
 
@@ -126,11 +126,17 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
         <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
           Limio-Live
         </a>
-        <h1 className="mt-1 text-2xl font-bold">Tạo bài giảng bằng AI</h1>
+        <h1 className="mt-1 text-2xl font-bold">Tạo bài giảng</h1>
         <p className="mt-2 text-muted">
           Mô tả bài giảng bạn cần, hoặc đưa tài liệu Word, PDF, văn bản. AI sẽ đề xuất dàn ý slide; bạn xem và sửa dàn ý
           trước, rồi mới tạo slide.
         </p>
+        <a
+          href="/instructor/limio-live?new=1"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-[rgb(var(--text))] hover:underline"
+        >
+          <Pencil size={14} /> Hoặc soạn thủ công từ bài trống
+        </a>
       </div>
 
       <section className="space-y-3" aria-labelledby="src-h">
@@ -156,6 +162,8 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
             <div className="rounded-2xl border-2 border-token bg-[rgb(var(--surface))] focus-within:border-brand-500">
               <textarea
                 ref={topicRef}
+                // "Tạo bài giảng" mở thẳng trang này: con trỏ đặt sẵn trong ô mô tả để gõ ngay.
+                autoFocus
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 rows={6}
@@ -312,7 +320,7 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
 
       <div className="flex items-center gap-4">
         <button type="button" className="btn-primary flex items-center gap-2" disabled={!ready || busy} onClick={submit}>
-          {busy && <Loader2 size={16} className="animate-spin" />}
+          {busy ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} aria-hidden />}
           {busy ? "Đang soạn dàn ý..." : "Soạn dàn ý"}
         </button>
         {busy && (

@@ -372,8 +372,9 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
 
 // ── Đề xuất sửa MỘT slide bằng AI (tiêu chí H8–H10) ─────────────────────────
 
-export type SlideEditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite";
-export const SLIDE_EDIT_ACTIONS: readonly SlideEditAction[] = ["shorter", "example", "simpler", "to_quiz", "rewrite"];
+/** "custom" = yêu cầu riêng giảng viên gõ ở tab Nhờ AI. */
+export type SlideEditAction = "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
+export const SLIDE_EDIT_ACTIONS: readonly SlideEditAction[] = ["shorter", "example", "simpler", "to_quiz", "rewrite", "custom"];
 
 /** Các khoá meta của slide hiện tại không được AI đổi; phần còn lại là nội dung. */
 const GENERATED_META = ["outlineId", "aiGenerated", "presenterNote"] as const;
