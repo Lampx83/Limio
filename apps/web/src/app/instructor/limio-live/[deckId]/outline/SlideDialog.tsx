@@ -227,13 +227,14 @@ export default function SlideDialog({ slide: s, auto = null, index, total, onPat
                       <div className="grid min-w-0 flex-1 gap-1">
                         <span className="text-xs text-faint">{lab}</span>
                         {split && (
-                          <input
+                          <HeadInput
+                            key={s.id}
                             className="input w-full text-sm"
                             placeholder="Tiêu đề ngắn"
                             maxLength={60}
                             value={head}
                             aria-label={`${lab}, tiêu đề ngắn`}
-                            onChange={(e) => setPoint(k, joinPoint(e.target.value, body))}
+                            onChange={(v) => setPoint(k, joinPoint(v, body))}
                           />
                         )}
                         <AutoTextarea
@@ -273,6 +274,28 @@ export default function SlideDialog({ slide: s, auto = null, index, total, onPat
         </div>
       </div>
     </dialog>
+  );
+}
+
+/**
+ * Ô tiêu đề ngắn của thẻ hoặc bước. Ý được lưu thành một chuỗi "Tiêu đề: câu giải thích", và khi ghép
+ * rồi tách lại thì khoảng trắng cuối tiêu đề bị cắt; nếu ô đọc thẳng từ chuỗi đó thì dấu cách vừa gõ
+ * biến mất ngay. Vì vậy ô giữ chữ đang gõ ở riêng mình, chỉ lấy lại từ dữ liệu khi chữ thật sự khác.
+ */
+function HeadInput({ value, onChange, ...rest }: { value: string; onChange: (v: string) => void; className?: string; placeholder?: string; maxLength?: number; "aria-label"?: string }) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    setV((cur) => (cur.trim() === value.trim() ? cur : value));
+  }, [value]);
+  return (
+    <input
+      {...rest}
+      value={v}
+      onChange={(e) => {
+        setV(e.target.value);
+        onChange(e.target.value);
+      }}
+    />
   );
 }
 

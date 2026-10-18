@@ -49,6 +49,7 @@ import {
   MonitorPlay,
   Play,
   History,
+  Share2,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
@@ -63,6 +64,7 @@ import Tooltip from "@/components/ui/Tooltip";
 import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
 import BrandDialog, { type BrandPatch } from "./BrandDialog";
+import ShareDialog from "./ShareDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
 import { LiveMotifProvider } from "../liveMotifContext";
 import { deckAutoMotif } from "@/lib/limioLiveMotifs";
@@ -102,6 +104,8 @@ interface Deck {
   sourceKind?: string | null;
   /** Các trang đã đọc khi soạn bài từ mô tả chủ đề có nguồn internet. */
   sourceRefs?: unknown;
+  /** Mã link xem chỉ đọc /bai-giang/<mã>; null = không chia sẻ. */
+  shareCode?: string | null;
   slides: Slide[];
 }
 
@@ -337,6 +341,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   };
 
   const [brandOpen, setBrandOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   // Các lần lưu thương hiệu chạy LẦN LƯỢT: hai lần sửa sát nhau mà đến máy chủ đảo thứ tự thì lần cũ sẽ ghi đè lần mới.
   const brandQueue = useRef<Promise<unknown>>(Promise.resolve());
   // Thương hiệu: cập nhật ngay trên màn hình rồi lưu; lỗi thì hoàn lại như đổi giao diện.
@@ -713,6 +718,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         >
           <History size={13} /> <span className="hidden sm:inline">Lịch sử tương tác</span>
         </Link>
+        <button
+          type="button"
+          onClick={() => setShareOpen(true)}
+          title="Link xem chỉ đọc cho người khác, kèm tải PDF"
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-token px-2.5 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
+        >
+          <Share2 size={13} className={deck.shareCode ? "text-brand-600" : undefined} />
+          <span className="hidden sm:inline">{deck.shareCode ? "Đang chia sẻ" : "Chia sẻ"}</span>
+        </button>
         <ThemePicker
           value={deck.theme ?? "white"}
           onChange={handleSetTheme}
@@ -1094,6 +1108,14 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           themeId={deck.theme ?? "white"}
           onChange={handleSetBrand}
           onClose={() => setBrandOpen(false)}
+        />
+      )}
+      {shareOpen && (
+        <ShareDialog
+          deckId={deckId}
+          shareCode={deck.shareCode ?? null}
+          onChange={(shareCode) => setDeck((d) => (d ? { ...d, shareCode } : d))}
+          onClose={() => setShareOpen(false)}
         />
       )}
     </div>

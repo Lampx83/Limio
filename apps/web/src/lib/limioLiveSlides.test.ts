@@ -519,3 +519,18 @@ describe("fillCoverIdentity: điền sẵn tên đơn vị và người trình b
     expect((c.byline as string).length).toBe(LEN.byline);
   });
 });
+
+describe("ý của slide Tóm tắt là cả một câu", () => {
+  it("không cắt câu dài hơn tiêu đề thẻ, chỉ cắt ở giới hạn câu giải thích", () => {
+    const cau = "Người học giải thích được khái niệm phân cấp thị giác và vai trò của nó trong thiết kế giao diện.";
+    expect(cau.length).toBeGreaterThan(MAX_LEN.itemHeading);
+    const c = sanitizeLayoutConfig("summary", { title: "Mục tiêu", items: [{ heading: cau }, { heading: "x".repeat(300) }] });
+    const items = c.items as Array<{ heading: string }>;
+    expect(items[0]!.heading).toBe(cau);
+    expect(items[1]!.heading).toHaveLength(MAX_LEN.itemBody);
+  });
+  it("tiêu đề thẻ vẫn giữ giới hạn ngắn", () => {
+    const c = sanitizeLayoutConfig("cards", { items: [{ heading: "x".repeat(100), body: "Một câu." }, { heading: "B", body: "Hai." }] });
+    expect((c.items as Array<{ heading: string }>)[0]!.heading).toHaveLength(MAX_LEN.itemHeading);
+  });
+});

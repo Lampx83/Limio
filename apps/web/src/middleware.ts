@@ -36,6 +36,8 @@ const PRIVATE_PREFIXES = [
   "/verify",
   "/leaderboard",
   "/tournaments",
+  // Link xem bài giảng gửi tay (ai có link cũng xem), không phải trang cho công cụ tìm kiếm.
+  "/bai-giang",
 ];
 
 /**

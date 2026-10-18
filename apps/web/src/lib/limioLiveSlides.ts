@@ -156,7 +156,8 @@ function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
     if (!r || typeof r !== "object") continue;
     const o = r as Record<string, unknown>;
     const isStat = layout === "stats";
-    const heading = clip(o.heading, isStat ? MAX_LEN.statValue : MAX_LEN.itemHeading);
+    // Ý của slide Tóm tắt là cả một câu (chỉ dùng heading), nên giới hạn như câu giải thích chứ không như tiêu đề thẻ.
+    const heading = clip(o.heading, isStat ? MAX_LEN.statValue : layout === "summary" ? MAX_LEN.itemBody : MAX_LEN.itemHeading);
     const body = layout === "summary" ? "" : clip(o.body, MAX_LEN.itemBody);
     if (!heading && !body) continue;
     const icon =

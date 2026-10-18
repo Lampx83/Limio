@@ -46,6 +46,7 @@ const PRIVATE_PREFIXES = [
   "/verify",
   "/leaderboard",
   "/tournaments",
+  "/bai-giang",
   "/.well-known/",
 
   // Trong khu học tập chỉ nội dung bài học là công khai được (và chỉ khi khoá
