@@ -7,7 +7,7 @@ import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
 import { pickMeta } from "@/lib/limioLiveSlides";
 import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
-import { partLabel, sanitizeOutline, slideStructures } from "@/lib/limioLiveOutline";
+import { partLabel, resolveSourceKind, sanitizeOutline, sanitizeRefs, slideStructures } from "@/lib/limioLiveOutline";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
 
   const deck = await prisma.liveDeck.findFirst({
     where: { id: params.deckId, userId },
-    select: { id: true, title: true, outline: true, outlineConfirmedAt: true, sourceText: true, _count: { select: { slides: true } } },
+    select: { id: true, title: true, outline: true, outlineConfirmedAt: true, sourceText: true, sourceKind: true, sourceRefs: true, _count: { select: { slides: true } } },
   });
   if (!deck || !deck.outline) return json({ error: "not_found" }, 404);
   if (!deck.outlineConfirmedAt) return json({ error: "outline_not_confirmed" }, 409);
@@ -62,6 +62,9 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   }));
   const deckTitle = outline.title || deck.title;
   const sourceText = deck.sourceText ?? "";
+  // Nguồn của bài quyết định luật dùng số liệu, trích dẫn (câu lệnh) và cách kiểm bản nháp (draftToSlide).
+  const sourceKind = resolveSourceKind(deck.sourceKind);
+  const context = { sourceKind, sourceText, refs: sanitizeRefs(deck.sourceRefs) };
 
   const structures = slideStructures(outline);
   // Số mục theo thứ tự phần Nội dung (khớp mục lục của bìa phần); slide mở phần ngoài mạch thì đếm như cũ.
@@ -94,12 +97,13 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           sectionNos: writeIdx.map((i) => sectionNos[i]!),
           structures: writeIdx.map((i) => structures[i] ?? null),
           concurrency: 2,
+          context,
           isFatal: (e) => e instanceof AiTutorError,
           onProgress: (done, total) => send({ type: "progress", done, total }),
           generateBatch: async (batch) => {
             const drafts = (await generateSlideDrafts(
               userId,
-              { sourceText, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
+              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
               openai,
             )) as SlideDraft[];
             // generateDeckSlides đánh chỉ số theo phần được viết; mô hình trả chỉ số theo cả dàn ý.

@@ -7,6 +7,35 @@ import { apiUrl } from "@/lib/apiUrl";
 import { DURATIONS } from "@/lib/limioLiveOutline";
 
 const MAX_MB = 10;
+// Khớp TOPIC_MIN_CHARS / TOPIC_MAX_CHARS của core-feedback (máy chủ kiểm lại).
+const TOPIC_MIN = 15;
+const TOPIC_MAX = 2000;
+
+const TOPIC_EXAMPLES = [
+  {
+    title: "Thực tế tăng cường trong lớp học",
+    who: "cho sinh viên năm cuối Công nghệ giáo dục",
+    text: "Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sinh viên đã biết khái niệm đa phương tiện nhưng chưa từng làm sản phẩm AR. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học có dùng AR.",
+  },
+  {
+    title: "Phân cấp thị giác trong thiết kế giao diện",
+    who: "cho sinh viên năm hai học UI/UX",
+    text: "Bài về nguyên lý phân cấp thị giác trong thiết kế giao diện cho sinh viên năm hai học môn Thiết kế UI/UX. Sinh viên đã dùng Figma ở mức cơ bản. Sau buổi học, sinh viên nhận ra được lỗi phân cấp trong một màn hình và sửa được bằng cỡ chữ, độ đậm và khoảng trắng.",
+  },
+  {
+    title: "Ôn tập phương trình bậc hai",
+    who: "cho học sinh lớp 9",
+    text: "Bài ôn tập về phương trình bậc hai cho học sinh lớp 9 trước kỳ thi vào lớp 10. Học sinh đã học công thức nghiệm nhưng hay nhầm dấu của biệt thức. Sau buổi học, học sinh giải được phương trình bậc hai và biện luận được số nghiệm theo biệt thức.",
+  },
+  {
+    title: "Viết câu lệnh cho AI tạo sinh",
+    who: "tập huấn cho giảng viên",
+    text: "Buổi tập huấn về viết câu lệnh (prompt) hiệu quả cho giảng viên chưa quen dùng AI tạo sinh. Sau buổi tập huấn, giảng viên viết được câu lệnh có đủ vai trò, bối cảnh, yêu cầu và định dạng đầu ra, và biết kiểm tra lại câu trả lời của AI.",
+  },
+];
+
+type Mode = "topic" | "file" | "text";
+const MODE_LABEL: Record<Mode, string> = { topic: "Mô tả chủ đề", file: "Tải tệp lên", text: "Dán văn bản" };
 
 const ERROR_TEXT: Record<string, string> = {
   file_too_large: `Tệp lớn hơn ${MAX_MB} MB. Hãy chọn tệp nhỏ hơn hoặc dán phần văn bản cần dùng.`,
@@ -17,15 +46,21 @@ const ERROR_TEXT: Record<string, string> = {
   global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau.",
   daily_token_cap: "Bạn đã dùng hết hạn mức AI hôm nay. Vui lòng thử lại vào ngày mai.",
   monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này.",
-  empty_outline: "AI chưa soạn được dàn ý từ tài liệu này. Hãy thử lại hoặc dùng tài liệu khác.",
+  empty_outline: "AI chưa soạn được dàn ý. Hãy thử lại, hoặc viết mô tả rõ hơn hay dùng tài liệu khác.",
+  topic_too_short: `Mô tả quá ngắn. Hãy viết ít nhất một câu nêu chủ đề, người học và mục tiêu.`,
+  topic_too_long: `Mô tả dài hơn ${TOPIC_MAX.toLocaleString("vi-VN")} ký tự. Nếu bạn có sẵn tài liệu, hãy dùng tab "Dán văn bản".`,
   openai_error: "AI đang bận hoặc gặp lỗi. Vui lòng thử lại sau ít phút.",
   json_parse_failed: "AI trả lời chưa đúng định dạng. Vui lòng thử lại.",
 };
 
-export default function FromDocumentForm() {
+export default function FromDocumentForm({ webAvailable = false }: { webAvailable?: boolean }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [mode, setMode] = useState<"file" | "text">("file");
+  const topicRef = useRef<HTMLTextAreaElement>(null);
+  const [mode, setMode] = useState<Mode>("topic");
+  const [topic, setTopic] = useState("");
+  // Có dịch vụ tìm kiếm thì bật sẵn: giảng viên không phải nghĩ thêm, AI có nguồn để dẫn.
+  const [useWeb, setUseWeb] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [minutes, setMinutes] = useState<number>(30);
@@ -33,7 +68,8 @@ export default function FromDocumentForm() {
   const [error, setError] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
 
-  const ready = mode === "file" ? !!file : text.trim().length > 0;
+  const ready = mode === "topic" ? topic.trim().length >= TOPIC_MIN : mode === "file" ? !!file : text.trim().length > 0;
+  const searching = mode === "topic" && webAvailable && useWeb;
 
   const submit = async () => {
     setError(null);
@@ -42,7 +78,10 @@ export default function FromDocumentForm() {
     try {
       const fd = new FormData();
       fd.set("minutes", String(minutes));
-      if (mode === "file" && file) fd.set("file", file);
+      if (mode === "topic") {
+        fd.set("topic", topic);
+        if (searching) fd.set("web", "1");
+      } else if (mode === "file" && file) fd.set("file", file);
       else fd.set("text", text);
       const res = await fetch(apiUrl("/api/instructor/limio-live/outline"), { method: "POST", body: fd });
       if (!res.ok || !res.body) {
@@ -87,19 +126,19 @@ export default function FromDocumentForm() {
         <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
           Limio-Live
         </a>
-        <h1 className="mt-1 text-2xl font-bold">Tạo bài giảng từ tài liệu</h1>
+        <h1 className="mt-1 text-2xl font-bold">Tạo bài giảng bằng AI</h1>
         <p className="mt-2 text-muted">
-          Tải tài liệu Word, PDF hoặc văn bản lên. AI sẽ đề xuất dàn ý slide; bạn xem và sửa dàn ý trước, rồi mới tạo
-          slide.
+          Mô tả bài giảng bạn cần, hoặc đưa tài liệu Word, PDF, văn bản. AI sẽ đề xuất dàn ý slide; bạn xem và sửa dàn ý
+          trước, rồi mới tạo slide.
         </p>
       </div>
 
       <section className="space-y-3" aria-labelledby="src-h">
         <h2 id="src-h" className="text-lg font-semibold">
-          1. Tài liệu
+          1. Nội dung bài giảng
         </h2>
-        <div className="inline-flex rounded-full border border-token p-0.5 text-sm" role="group" aria-label="Cách nhập tài liệu">
-          {(["file", "text"] as const).map((m) => (
+        <div className="inline-flex flex-wrap rounded-full border border-token p-0.5 text-sm" role="group" aria-label="Cách nhập nội dung">
+          {(["topic", "file", "text"] as const).map((m) => (
             <button
               key={m}
               type="button"
@@ -107,12 +146,86 @@ export default function FromDocumentForm() {
               onClick={() => setMode(m)}
               className={`rounded-full px-4 py-1.5 font-medium ${mode === m ? "bg-brand-600 text-white" : "text-muted"}`}
             >
-              {m === "file" ? "Tải tệp lên" : "Dán văn bản"}
+              {MODE_LABEL[m]}
             </button>
           ))}
         </div>
 
-        {mode === "file" ? (
+        {mode === "topic" ? (
+          <div className="space-y-4">
+            <div className="rounded-2xl border-2 border-token bg-[rgb(var(--surface))] focus-within:border-brand-500">
+              <textarea
+                ref={topicRef}
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                rows={6}
+                maxLength={TOPIC_MAX}
+                placeholder="Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR."
+                className="block w-full resize-y rounded-2xl border-0 bg-transparent px-4 py-3 text-base leading-relaxed focus:outline-none focus:ring-0"
+                aria-label="Mô tả bài giảng"
+                aria-describedby="topic-hint"
+              />
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-token px-4 py-2 text-[13px] text-muted">
+                <span>
+                  {topic.length.toLocaleString("vi-VN")} / {TOPIC_MAX.toLocaleString("vi-VN")} ký tự
+                </span>
+                <span>Viết càng rõ, dàn ý càng sát ý bạn.</span>
+              </div>
+            </div>
+            {topic.length >= TOPIC_MAX && (
+              <p className="banner-info text-sm">
+                Mô tả đã chạm giới hạn {TOPIC_MAX.toLocaleString("vi-VN")} ký tự. Nếu bạn có sẵn tài liệu, hãy dùng tab
+                &quot;Dán văn bản&quot; để AI bám sát tài liệu đó.
+              </p>
+            )}
+            <ul id="topic-hint" className="grid gap-1 text-sm text-muted">
+              <li>Chủ đề của bài giảng là gì, và phạm vi đến đâu.</li>
+              <li>Người học là ai: năm học, ngành, mức hiểu biết hiện có.</li>
+              <li>Sau buổi học, người học làm được điều gì.</li>
+            </ul>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-muted">Ví dụ mẫu, bấm để điền</p>
+              {TOPIC_EXAMPLES.map((ex) => (
+                <button
+                  key={ex.title}
+                  type="button"
+                  onClick={() => {
+                    setTopic(ex.text);
+                    topicRef.current?.focus();
+                  }}
+                  className="block w-full rounded-xl border border-token bg-[rgb(var(--surface))] px-4 py-2.5 text-left text-sm text-muted transition hover:border-brand-500 hover:text-[rgb(var(--text))]"
+                >
+                  <b className="font-semibold text-[rgb(var(--text))]">{ex.title}</b>, {ex.who}
+                </button>
+              ))}
+            </div>
+            {webAvailable && (
+              <div className="flex items-start gap-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={useWeb}
+                  aria-labelledby="web-l"
+                  aria-describedby="web-d"
+                  onClick={() => setUseWeb((v) => !v)}
+                  className={`relative mt-0.5 h-6 w-11 flex-none rounded-full transition ${useWeb ? "bg-brand-600" : "bg-[rgb(var(--text-faint))]"}`}
+                >
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${useWeb ? "left-[22px]" : "left-0.5"}`} />
+                </button>
+                <div>
+                  <p id="web-l" className="font-semibold">
+                    Tìm thêm nguồn trên internet
+                  </p>
+                  <p id="web-d" className="text-sm text-muted">
+                    {useWeb
+                      ? "Hệ thống tìm vài trang liên quan cho AI đọc. Số liệu và trích dẫn chỉ được dùng khi có trong các trang đó, kèm nguồn ở chân slide."
+                      : "AI viết từ kiến thức chung, không đưa số liệu, trích dẫn hay tên người vào slide."}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : mode === "file" ? (
           <div
             onDragOver={(e) => {
               e.preventDefault();
@@ -202,7 +315,16 @@ export default function FromDocumentForm() {
           {busy && <Loader2 size={16} className="animate-spin" />}
           {busy ? "Đang soạn dàn ý..." : "Soạn dàn ý"}
         </button>
-        {busy && <p className="text-sm text-muted">AI đang đọc tài liệu, thường mất từ 20 đến 60 giây. Vui lòng không đóng trang.</p>}
+        {busy && (
+          <p className="text-sm text-muted">
+            {searching
+              ? "Hệ thống đang tìm nguồn và AI đang soạn dàn ý, thường mất từ 30 đến 90 giây."
+              : mode === "topic"
+                ? "AI đang soạn dàn ý, thường mất từ 20 đến 60 giây."
+                : "AI đang đọc tài liệu, thường mất từ 20 đến 60 giây."}{" "}
+            Vui lòng không đóng trang.
+          </p>
+        )}
       </div>
     </main>
   );

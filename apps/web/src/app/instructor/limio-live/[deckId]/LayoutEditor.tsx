@@ -44,6 +44,17 @@ const ICON_LABELS: Record<(typeof SLIDE_ICONS)[number], string> = {
 
 /** Giữ ghi chú giảng và các khoá không thuộc bố cục khi lưu. */
 const keepExtras = (config: Cfg): Cfg => pickMeta(config);
+/**
+ * Khoá meta khi lưu, riêng dòng nguồn ở chân slide (bài soạn kèm trang tìm trên internet) lấy theo bản đang sửa:
+ * giảng viên tự viết lại nội dung thì sửa hoặc xoá được dòng nguồn, không để nguồn cũ gắn vào chữ mới.
+ */
+const extrasFor = (config: Cfg, draft: Cfg): Cfg => {
+  const m = keepExtras(config);
+  if (!("cite" in m)) return m;
+  delete m.cite;
+  const c = typeof draft.cite === "string" ? draft.cite.trim().slice(0, MAX_LEN.source) : "";
+  return c ? { ...m, cite: c } : m;
+};
 
 const glyphOf = (l: SlideLayoutId) => (l === "classic" ? "content" : l);
 
@@ -376,12 +387,14 @@ export default function LayoutEditor({
   const focused = useRef<FieldCtl | null>(null);
   const range = ITEM_RANGE[layout];
 
-  const commit = (next: Cfg = d) => onSave({ config: { ...sanitizeLayoutConfig(layout, next), ...keepExtras(config) } });
+  const commit = (next: Cfg = d) => onSave({ config: { ...sanitizeLayoutConfig(layout, next), ...extrasFor(config, next) } });
   const set = (patch: Cfg) => setD((prev) => ({ ...prev, ...patch }));
   const blur = () => commit();
 
   // Xem trước đúng như sẽ lưu: mục còn trống không hiện.
   const preview = useMemo(() => sanitizeLayoutConfig(layout, d), [layout, d]);
+  // Bản vẽ: như sẽ lưu, kèm dòng nguồn ở chân slide (khoá meta, sanitizeLayoutConfig không giữ).
+  const shown = useMemo(() => (typeof d.cite === "string" && d.cite.trim() ? { ...preview, cite: d.cite.trim() } : preview), [preview, d.cite]);
   const problems = useMemo(() => layoutTextProblems(layout, preview), [layout, preview]);
   const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }) : null), [problems, preview, config]);
 
@@ -427,7 +440,7 @@ export default function LayoutEditor({
 
   // Chốt nội dung khi đóng cửa sổ (Esc, bấm ra ngoài hoặc Xong), chỉ lưu khi có thay đổi.
   const finish = () => {
-    const next = { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config) };
+    const next = { ...sanitizeLayoutConfig(layout, d), ...extrasFor(config, d) };
     if (!slideConfigsEqual(next, config)) onSave({ config: next });
     onOpenChange(false);
   };
@@ -463,14 +476,14 @@ export default function LayoutEditor({
       style={{ background: slideBgFor(themeId, true) }}
     >
       <div className="absolute inset-0 flex">
-        <LayoutSlideView config={preview} themeId={themeId} />
+        <LayoutSlideView config={shown} themeId={themeId} />
       </div>
     </div>
   );
   // Khung xem trước lấp đầy vùng giữa; viền khung hình 16:9 do bộ vẽ slide tự vẽ.
   const previewBox = (
     <div className="absolute inset-0 flex">
-      <LayoutSlideView config={preview} themeId={themeId} zoom={zoom} frame />
+      <LayoutSlideView config={shown} themeId={themeId} zoom={zoom} frame />
     </div>
   );
 
@@ -760,6 +773,17 @@ export default function LayoutEditor({
                 max={MAX_LEN.footnote}
                 placeholder="Vòng lặp được lặp lại sau mỗi bài tập."
                 onChange={(v) => set({ footnote: v })}
+                onBlur={blur}
+              />
+            )}
+
+            {typeof config.cite === "string" && config.cite && (
+              <Field
+                label="Dòng nguồn ở chân slide"
+                value={typeof d.cite === "string" ? d.cite : ""}
+                max={MAX_LEN.source}
+                placeholder="Để trống nếu slide không dùng thông tin từ nguồn"
+                onChange={(v) => set({ cite: v })}
                 onBlur={blur}
               />
             )}

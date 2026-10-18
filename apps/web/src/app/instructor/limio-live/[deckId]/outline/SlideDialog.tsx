@@ -39,6 +39,8 @@ interface Props {
   onRemove: () => void;
   onGoto: (d: -1 | 1) => void;
   onClose: () => void;
+  /** Bố cục được phép (bài từ mô tả chủ đề không có Số liệu và Trích dẫn); thiếu = mọi bố cục. */
+  layouts?: readonly OutlineLayout[];
 }
 
 const tile = (on: boolean) =>
@@ -49,7 +51,7 @@ const tile = (on: boolean) =>
   }`;
 
 /** Cửa sổ sửa một slide: bản xem trước ở đầu, loại slide và bố cục thu gọn, nội dung bên dưới (hoặc bên phải trên màn rộng). */
-export default function SlideDialog({ slide: s, auto = null, index, total, onPatch, onKind, onRemove, onGoto, onClose }: Props) {
+export default function SlideDialog({ slide: s, auto = null, index, total, onPatch, onKind, onRemove, onGoto, onClose, layouts = OUTLINE_LAYOUTS }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const [openKind, setOpenKind] = useState(false);
@@ -157,7 +159,7 @@ export default function SlideDialog({ slide: s, auto = null, index, total, onPat
               <div className="space-y-2">
                 <p className="text-[13px] text-muted">{ui.hint}</p>
                 <div role="group" aria-label="Bố cục" className="grid gap-1.5 [grid-template-columns:repeat(auto-fill,minmax(88px,1fr))]">
-                  {OUTLINE_LAYOUTS.map((l) => (
+                  {layouts.map((l) => (
                     <button
                       key={l}
                       type="button"

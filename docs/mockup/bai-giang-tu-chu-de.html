@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài giảng từ chủ đề</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf7; --surface: #ffffff; --muted-bg: #f3f4ee; --ink: #1c2410; --ink-2: #4b5640; --ink-3: #6b745e; --line: #e6e9dc;
+    --brand-50: #f7fee7; --brand-100: #ecfccb; --brand-600: #4d7c0f; --brand-700: #3f6212; --focus: #4d7c0f;
+    --warn-bg: #fffbeb; --warn-line: #fde68a; --warn-ink: #78350f;
+    --info-bg: #eff6ff; --info-line: #bfdbfe; --info-ink: #1e3a8a;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 8px 24px -12px rgb(28 36 16 / .16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --muted-bg: #222a18; --ink: #f1f5e6; --ink-2: #c3cdb0; --ink-3: #a3ad92; --line: #2c3620;
+      --brand-50: #1c2810; --brand-100: #24340f; --brand-600: #65a30d; --brand-700: #a3e635; --focus: #a3e635;
+      --warn-bg: #2a2110; --warn-line: #5b4613; --warn-ink: #fde68a;
+      --info-bg: #111c2e; --info-line: #1e3a5f; --info-ink: #bfdbfe; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --muted-bg: #222a18; --ink: #f1f5e6; --ink-2: #c3cdb0; --ink-3: #a3ad92; --line: #2c3620;
+    --brand-50: #1c2810; --brand-100: #24340f; --brand-600: #65a30d; --brand-700: #a3e635; --focus: #a3e635;
+    --warn-bg: #2a2110; --warn-line: #5b4613; --warn-ink: #fde68a;
+    --info-bg: #111c2e; --info-line: #1e3a5f; --info-ink: #bfdbfe; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+  header.top { border-bottom: 1px solid var(--line); background: var(--surface); }
+  header.top .wrap { padding: 18px 16px; }
+  header.top h1 { font-size: 20px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-3); font-size: 14px; max-width: 820px; }
+  main { padding: 10px 0 64px; }
+  h2.sec { font-size: 18px; margin: 40px 0 4px; }
+  p.sub { margin: 0 0 16px; color: var(--ink-2); font-size: 15px; max-width: 860px; }
+  .frame { border: 1px solid var(--line); border-radius: 16px; background: var(--bg); padding: 20px; box-shadow: var(--shadow); }
+  .frame-cap { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 10px; }
+  .seg { display: inline-flex; flex-wrap: wrap; background: var(--brand-50); border: 1px solid var(--line); border-radius: 999px; padding: 3px; margin-bottom: 14px; }
+  .seg button { border: 0; background: none; padding: 7px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--brand-600); color: #fff; }
+  .muted { color: var(--ink-3); }
+
+  /* hộp chọn cách tạo */
+  .modal { max-width: 860px; margin: 0 auto; background: var(--surface); border-radius: 18px; padding: 22px; border: 1px solid var(--line); }
+  .modal h3 { margin: 0; font-size: 18px; }
+  .cards3 { display: grid; gap: 12px; margin-top: 14px; }
+  @media (min-width: 720px) { .cards3 { grid-template-columns: repeat(3, 1fr); } }
+  .pick { position: relative; display: grid; align-content: start; gap: 6px; border: 2px solid var(--line); border-radius: 16px; padding: 16px; background: var(--surface); text-align: left; cursor: pointer; }
+  .pick:hover { border-color: var(--brand-600); }
+  .pick.primary { border-color: var(--brand-600); background: var(--brand-50); }
+  .pick .ic { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--muted-bg); color: var(--ink-2); }
+  .pick.primary .ic { background: var(--surface); color: var(--brand-700); }
+  .pick b { font-size: 15px; }
+  .pick span.d { font-size: 14px; color: var(--ink-3); }
+  .pick .tag { position: absolute; right: 12px; top: 12px; font-size: 11px; font-weight: 600; color: #fff; background: var(--brand-600); border-radius: 999px; padding: 2px 8px; }
+
+  /* trang nhập chủ đề */
+  .page { max-width: 760px; margin: 0 auto; }
+  .crumb { font-size: 14px; color: var(--ink-3); }
+  .page h3 { font-size: 24px; margin: 4px 0 6px; }
+  .lead { color: var(--ink-3); margin: 0 0 20px; }
+  .promptbox { border: 2px solid var(--line); border-radius: 18px; background: var(--surface); padding: 4px; }
+  .promptbox:focus-within { border-color: var(--brand-600); }
+  .promptbox textarea { width: 100%; min-height: 150px; resize: vertical; border: 0; outline: 0; background: transparent; padding: 14px 16px; font-size: 17px; line-height: 1.55; }
+  .promptbox .foot { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; padding: 6px 12px 10px 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-3); }
+  .hint { display: grid; gap: 4px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--ink-2); }
+  .hint li::before { content: "•"; color: var(--brand-600); margin-right: 8px; }
+  .examples { margin-top: 22px; }
+  .examples h4 { margin: 0 0 8px; font-size: 14px; color: var(--ink-2); }
+  .ex { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; cursor: pointer; font-size: 14px; color: var(--ink-2); }
+  .ex:hover { border-color: var(--brand-600); color: var(--ink); }
+  .ex b { color: var(--ink); font-weight: 600; }
+  .dur { display: grid; gap: 10px; grid-template-columns: repeat(3, 1fr); }
+  .dur label { cursor: pointer; border: 2px solid var(--line); border-radius: 14px; padding: 12px; background: var(--surface); }
+  .dur label.on { border-color: var(--brand-600); background: var(--brand-50); }
+  .dur b { display: block; font-size: 17px; }
+  .dur span { font-size: 13px; color: var(--ink-3); }
+  .dur input { position: absolute; opacity: 0; pointer-events: none; }
+  .step-h { font-size: 16px; font-weight: 700; margin: 26px 0 10px; }
+  .switchrow { display: flex; gap: 14px; align-items: flex-start; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px 16px; }
+  .switch { flex: none; width: 44px; height: 26px; border-radius: 999px; background: var(--line); border: 0; position: relative; cursor: pointer; margin-top: 2px; }
+  .switch::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .15s; box-shadow: 0 1px 2px rgb(0 0 0 / .3); }
+  .switch[aria-checked="true"] { background: var(--brand-600); }
+  .switch[aria-checked="true"]::after { left: 21px; }
+  .switchrow b { display: block; font-size: 15px; }
+  .switchrow p { margin: 2px 0 0; font-size: 14px; color: var(--ink-3); }
+  .cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 24px; }
+  .btn { border: 0; border-radius: 12px; padding: 11px 18px; font-weight: 600; cursor: pointer; }
+  .btn.primary { background: var(--brand-600); color: #fff; }
+  .btn.primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.sec { background: var(--surface); border: 1px solid var(--line); }
+
+  .banner { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+  .banner.info { border-color: var(--info-line); background: var(--info-bg); color: var(--info-ink); }
+  .banner svg { flex: none; margin-top: 1px; }
+  .banner b { font-weight: 700; }
+
+  /* trang dàn ý thu gọn */
+  .ol-head h4 { margin: 4px 0 2px; font-size: 22px; }
+  .srcline { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-3); background: var(--muted-bg); border-radius: 999px; padding: 4px 12px; }
+  .ol-row { display: grid; grid-template-columns: 34px 1fr; gap: 10px; border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 10px 12px; margin-top: 8px; font-size: 14px; }
+  .ol-row .n { font-weight: 700; color: var(--ink-3); }
+  .ol-row .t { font-weight: 600; }
+  .ol-row .p { color: var(--ink-3); }
+
+  /* thanh trình sửa slide */
+  .editor-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; }
+  .editor-bar .title { font-weight: 700; }
+  .editor-body { display: grid; gap: 14px; margin-top: 12px; }
+  @media (min-width: 760px) { .editor-body { grid-template-columns: 180px 1fr; } }
+  .thumbs { display: grid; gap: 8px; align-content: start; }
+  .thumb { aspect-ratio: 16/9; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+  .thumb.on { outline: 2px solid var(--brand-600); }
+
+  /* slide 16:9 thu nhỏ */
+  .slide { aspect-ratio: 16/9; background: #fff; color: #1c2410; border-radius: 12px; border: 1px solid var(--line); padding: 5% 6%; display: flex; flex-direction: column; font-family: "Be Vietnam Pro", sans-serif; overflow: hidden; }
+  .slide h5 { font-size: clamp(16px, 2.6vw, 30px); margin: 0 0 4%; font-weight: 800; letter-spacing: -.01em; }
+  .slide ol, .slide ul { margin: 0; padding-left: 1.1em; font-size: clamp(12px, 1.6vw, 19px); display: grid; gap: .5em; }
+  .slide .srcs { font-size: clamp(11px, 1.3vw, 16px); color: #4b5640; }
+  .slide .foot { margin-top: auto; font-size: clamp(10px, 1.1vw, 13px); color: #6b745e; }
+
+  .two { display: grid; gap: 16px; }
+  @media (min-width: 860px) { .two { grid-template-columns: 1fr 1fr; } }
+  .rule { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 16px 18px; }
+  .rule h4 { margin: 0 0 8px; font-size: 16px; }
+  .rule ul { margin: 0; padding-left: 20px; font-size: 14px; color: var(--ink-2); display: grid; gap: 4px; }
+  .rule.off { opacity: .55; }
+  .tblwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 640px; }
+  th, td { padding: 8px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  th { background: var(--brand-50); color: var(--ink-2); font-weight: 600; }
+  ol.q { font-size: 15px; color: var(--ink-2); max-width: 880px; padding-left: 22px; }
+  ol.q li { margin: 8px 0; }
+  ol.q b { color: var(--ink); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <h1>Bản mẫu: tạo bài giảng tương tác từ một ô mô tả</h1>
+  <p>Giảng viên viết một đoạn mô tả chủ đề, người học và mục tiêu; AI lập dàn ý như luồng tài liệu hiện có, giảng viên sửa dàn ý rồi mới tạo slide. Bản mẫu có hai phương án lối vào và hai mức nguồn kiến thức để thầy/cô chọn.</p>
+</div></header>
+
+<main class="wrap">
+
+<!-- 1. Lối vào -->
+<h2 class="sec">1. Lối vào</h2>
+<p class="sub">Phương án A thêm một thẻ thứ ba vào hộp "Tạo bài giảng" và mở trang riêng. Phương án B giữ một trang "AI hỗ trợ soạn" với ba cách nhập. Đề xuất phương án A, vì trang riêng để ô mô tả là thứ duy nhất trên màn hình, giống Gamma.</p>
+<div class="seg" role="group" aria-label="Phương án lối vào">
+  <button type="button" aria-pressed="true" data-entry="a">Phương án A: thẻ riêng (đề xuất)</button>
+  <button type="button" aria-pressed="false" data-entry="b">Phương án B: chung trang tài liệu</button>
+</div>
+
+<div class="frame" id="entry-a">
+  <p class="frame-cap">Hộp "Tạo bài giảng" ở trang Limio-Live</p>
+  <div class="modal">
+    <h3>Tạo bài giảng</h3>
+    <p class="muted" style="margin:4px 0 0;font-size:14px">Bạn muốn bắt đầu theo cách nào?</p>
+    <div class="cards3">
+      <button type="button" class="pick primary" data-goto="topic">
+        <span class="tag">Gợi ý</span>
+        <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+        <b>Mô tả chủ đề</b>
+        <span class="d">Viết vài câu về chủ đề, người học và mục tiêu. AI lập dàn ý để bạn duyệt rồi soạn slide.</span>
+      </button>
+      <button type="button" class="pick">
+        <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg></span>
+        <b>Từ tài liệu</b>
+        <span class="d">AI đề xuất dàn ý từ tệp Word, PDF hoặc văn bản dán vào. Nội dung bám sát tài liệu của bạn.</span>
+      </button>
+      <button type="button" class="pick">
+        <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M12 8v6M9 11h6"/></svg></span>
+        <b>Soạn thủ công</b>
+        <span class="d">Bắt đầu từ bài trống và thêm từng slide bằng tay.</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="frame hidden" id="entry-b">
+  <p class="frame-cap">Trang "AI hỗ trợ soạn" với ba cách nhập</p>
+  <div class="page">
+    <div class="seg" role="group" aria-label="Cách nhập" style="margin-bottom:10px">
+      <button type="button" aria-pressed="true">Mô tả chủ đề</button>
+      <button type="button" aria-pressed="false">Tải tệp lên</button>
+      <button type="button" aria-pressed="false">Dán văn bản</button>
+    </div>
+    <p class="muted" style="font-size:14px;margin:0">Ô mô tả và ô dán văn bản trông giống nhau, nên giảng viên dễ dán tài liệu vào ô mô tả (hoặc ngược lại). Đây là lý do bản mẫu đề xuất phương án A.</p>
+  </div>
+</div>
+
+<!-- 2. Trang nhập chủ đề -->
+<h2 class="sec">2. Trang "Tạo bài giảng từ chủ đề"</h2>
+<p class="sub">Chỉ có ô mô tả là bắt buộc. Bấm một ví dụ để điền sẵn vào ô. Thời lượng chọn như trang tài liệu hiện nay. Công tắc nguồn internet chỉ hiện khi quản trị viên đã cấu hình dịch vụ tìm kiếm (xem mục 4).</p>
+<div class="frame">
+  <div class="page">
+    <span class="crumb">Limio-Live</span>
+    <h3>Tạo bài giảng từ chủ đề</h3>
+    <p class="lead">Mô tả bài giảng bạn cần trong vài câu. AI sẽ đề xuất dàn ý slide; bạn xem và sửa dàn ý trước, rồi mới tạo slide.</p>
+
+    <div class="promptbox">
+      <textarea id="prompt" aria-label="Mô tả bài giảng" placeholder="Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR."></textarea>
+      <div class="foot"><span id="count">0 / 2.000 ký tự</span><span>Viết càng rõ, dàn ý càng sát ý bạn.</span></div>
+    </div>
+    <ul class="hint">
+      <li>Chủ đề của bài giảng là gì, và phạm vi đến đâu.</li>
+      <li>Người học là ai: năm học, ngành, mức hiểu biết hiện có.</li>
+      <li>Sau buổi học, người học làm được điều gì.</li>
+    </ul>
+
+    <div class="examples">
+      <h4>Ví dụ mẫu, bấm để điền</h4>
+      <button type="button" class="ex" data-ex="Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sinh viên đã biết khái niệm đa phương tiện nhưng chưa từng làm sản phẩm AR. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học có dùng AR."><b>Thực tế tăng cường trong lớp học</b>, cho sinh viên năm cuối Công nghệ giáo dục</button>
+      <button type="button" class="ex" data-ex="Bài về nguyên lý phân cấp thị giác trong thiết kế giao diện cho sinh viên năm hai học môn Thiết kế UI/UX. Sinh viên đã dùng Figma ở mức cơ bản. Sau buổi học, sinh viên nhận ra được lỗi phân cấp trong một màn hình và sửa được bằng cỡ chữ, độ đậm và khoảng trắng."><b>Phân cấp thị giác trong thiết kế giao diện</b>, cho sinh viên năm hai học UI/UX</button>
+      <button type="button" class="ex" data-ex="Bài ôn tập về phương trình bậc hai cho học sinh lớp 9 trước kỳ thi vào lớp 10. Học sinh đã học công thức nghiệm nhưng hay nhầm dấu của biệt thức. Sau buổi học, học sinh giải được phương trình bậc hai và biện luận được số nghiệm theo biệt thức."><b>Ôn tập phương trình bậc hai</b>, cho học sinh lớp 9</button>
+      <button type="button" class="ex" data-ex="Buổi tập huấn về viết câu lệnh (prompt) hiệu quả cho giảng viên chưa quen dùng AI tạo sinh. Sau buổi tập huấn, giảng viên viết được câu lệnh có đủ vai trò, bối cảnh, yêu cầu và định dạng đầu ra, và biết kiểm tra lại câu trả lời của AI."><b>Viết câu lệnh cho AI tạo sinh</b>, tập huấn cho giảng viên</button>
+    </div>
+
+    <p class="step-h">Thời lượng buổi giảng</p>
+    <div class="dur" id="dur">
+      <label><input type="radio" name="m"><b>15 phút</b><span>Khoảng 8 đến 10 slide</span></label>
+      <label class="on"><input type="radio" name="m" checked><b>30 phút</b><span>Khoảng 14 đến 18 slide</span></label>
+      <label><input type="radio" name="m"><b>45 phút</b><span>Khoảng 20 đến 25 slide</span></label>
+    </div>
+
+    <p class="step-h">Nguồn kiến thức</p>
+    <div class="switchrow">
+      <button type="button" class="switch" role="switch" aria-checked="false" id="web" aria-labelledby="web-l"></button>
+      <div>
+        <b id="web-l">Tìm thêm nguồn trên internet</b>
+        <p id="web-d">Đang tắt: AI viết từ kiến thức chung, không đưa số liệu, trích dẫn hay tên người vào slide.</p>
+      </div>
+    </div>
+
+    <div class="cta">
+      <button type="button" class="btn primary" id="go" disabled>Soạn dàn ý</button>
+      <span class="muted" style="font-size:14px">Thường mất từ 20 đến 60 giây.</span>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Nhãn cảnh báo -->
+<h2 class="sec">3. Nhãn nguồn và lời nhắc kiểm tra</h2>
+<p class="sub">Bài tạo từ chủ đề được đánh dấu nguồn riêng trong cơ sở dữ liệu. Trang dàn ý và trình sửa slide luôn hiện lời nhắc; lời nhắc không tắt được, vì nó ghi nhận nguồn gốc nội dung chứ không phải một lỗi cần sửa.</p>
+<div class="two">
+  <div class="frame">
+    <p class="frame-cap">Trang dàn ý</p>
+    <div class="ol-head">
+      <span class="crumb">Limio-Live</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center">
+        <h4>Dàn ý bài giảng</h4>
+        <span class="srcline"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Từ mô tả chủ đề</span>
+      </div>
+      <p style="margin:2px 0 10px;font-weight:600">Thực tế tăng cường trong lớp học</p>
+    </div>
+    <div class="banner" id="ban-ol">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <span class="ban-txt"><b>Nội dung do AI viết từ kiến thức chung, thầy/cô cần kiểm tra trước khi dạy.</b> Bài không có tài liệu gốc nên AI không đưa số liệu, trích dẫn hay tên người.</span>
+    </div>
+    <div class="ol-row"><span class="n">1</span><div><div class="t">Thực tế tăng cường trong lớp học</div><div class="p">Bìa</div></div></div>
+    <div class="ol-row"><span class="n">2</span><div><div class="t">Mục tiêu của buổi học</div><div class="p">Người học phân biệt được AR với VR.</div></div></div>
+    <div class="ol-row"><span class="n">3</span><div><div class="t">Bạn đã từng thấy AR ở đâu trong đời sống?</div><div class="p">Đám mây từ</div></div></div>
+  </div>
+  <div class="frame">
+    <p class="frame-cap">Trình sửa slide</p>
+    <div class="editor-bar">
+      <span class="title">Thực tế tăng cường trong lớp học</span>
+      <span class="srcline">Từ mô tả chủ đề</span>
+    </div>
+    <div class="banner" id="ban-ed" style="margin-top:10px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <span class="ban-txt"><b>Nội dung do AI viết từ kiến thức chung, thầy/cô cần kiểm tra trước khi dạy.</b></span>
+    </div>
+    <div class="editor-body">
+      <div class="thumbs"><div class="thumb on"></div><div class="thumb"></div><div class="thumb"></div></div>
+      <div class="slide" id="ed-slide">
+        <h5>AR khác VR ở điểm nào</h5>
+        <ul>
+          <li>AR chồng thông tin số lên khung cảnh thật mà người học đang nhìn thấy.</li>
+          <li>VR thay toàn bộ khung cảnh thật bằng một môi trường mô phỏng.</li>
+          <li>Vì vậy AR phù hợp với hoạt động học cần gắn với vật thật trong lớp.</li>
+        </ul>
+        <div class="foot hidden" id="ed-src">Nguồn: [1] [2]</div>
+      </div>
+    </div>
+    <p class="muted" style="font-size:13px;margin:10px 0 0">Lời nhắc chỉ hiện trong trình sửa của giảng viên, không hiện trên màn chiếu cho học viên.</p>
+  </div>
+</div>
+
+<!-- 4. Nguồn kiến thức -->
+<h2 class="sec">4. Hai mức nguồn kiến thức</h2>
+<p class="sub">Mức 1 làm ngay được với Qwen tự host. Mức 2 cần thêm một dịch vụ tìm kiếm web có khoá API (Qwen tự host không tự lên mạng được), nên đề xuất làm mức 1 trước rồi thêm mức 2 khi thầy/cô chọn được dịch vụ. Bấm công tắc ở mục 2 để xem khác biệt.</p>
+<div class="two">
+  <div class="rule" id="rule1">
+    <h4>Mức 1. Kiến thức chung (mặc định)</h4>
+    <ul>
+      <li>AI giải thích khái niệm, nguyên lý, ví dụ minh hoạ phổ biến.</li>
+      <li>Không có con số cụ thể, tên nghiên cứu, tên người, câu trích dẫn hay nguồn.</li>
+      <li>Bố cục Số liệu và Trích dẫn bị loại ngay ở bước chuẩn hoá dàn ý và bước tạo slide, không chỉ dặn trong câu lệnh; dòng dàn ý chọn hai bố cục đó được đổi sang Thẻ ý.</li>
+      <li>Nếu AI vẫn viết số có dạng thống kê (phần trăm, năm, số liệu lớn), slide đó rơi về nội dung dựng từ dàn ý và được đếm vào cảnh báo.</li>
+    </ul>
+  </div>
+  <div class="rule off" id="rule2">
+    <h4>Mức 2. Có nguồn từ internet</h4>
+    <ul>
+      <li>Hệ thống tìm 4 đến 6 trang liên quan, đọc phần chữ, ghép thành "tài liệu gốc" có đánh số [1], [2]...</li>
+      <li>Từ đó đi đúng luồng tài liệu hiện có: số liệu và trích dẫn chỉ được dùng khi có trong các trang đã đọc.</li>
+      <li>Slide có số liệu hoặc trích dẫn ghi "Nguồn: [n]" ở chân slide; slide cuối "Nguồn tham khảo" liệt kê tên trang và địa chỉ.</li>
+      <li>Phần ý chung vẫn có thể từ kiến thức chung, nên lời nhắc kiểm tra vẫn hiện.</li>
+    </ul>
+  </div>
+</div>
+<div class="frame hidden" id="refs" style="margin-top:16px">
+  <p class="frame-cap">Slide "Nguồn tham khảo" tự thêm ở cuối bài (mức 2)</p>
+  <div class="slide" style="max-width:640px">
+    <h5>Nguồn tham khảo</h5>
+    <ol class="srcs">
+      <li>Tên trang thứ nhất do hệ thống đọc được, tên miền nguồn.</li>
+      <li>Tên trang thứ hai do hệ thống đọc được, tên miền nguồn.</li>
+      <li>Tên trang thứ ba do hệ thống đọc được, tên miền nguồn.</li>
+    </ol>
+    <div class="foot">Danh sách do hệ thống ghi lại từ các trang AI đã đọc khi soạn bài.</div>
+  </div>
+</div>
+
+<!-- 5. Kiểm tra -->
+<h2 class="sec">5. Dữ liệu và kiểm tra</h2>
+<div class="tblwrap"><table>
+  <thead><tr><th>Phần</th><th>Thay đổi</th></tr></thead>
+  <tbody>
+    <tr><td>LiveDeck</td><td>Cột mới <b>sourceKind</b>: "document" hoặc "topic" (mức 2 thêm "topic_web"). Bài cũ để trống, coi như "document". sourceName = "Mô tả chủ đề", sourceText = chính đoạn mô tả.</td></tr>
+    <tr><td>Dàn ý</td><td>Câu lệnh riêng cho chế độ chủ đề; normalizeOutline nhận cờ nguồn và đổi Số liệu, Trích dẫn sang Thẻ ý.</td></tr>
+    <tr><td>Tạo slide</td><td>Chạy được khi không có tài liệu (bỏ điều kiện 50 ký tự với chế độ chủ đề); draftToSlide chặn hai bố cục cấm và số liệu kiểu thống kê. "Nhờ AI sửa slide" đi qua cùng kiểm tra.</td></tr>
+    <tr><td>Sự kiện</td><td>live.deck.outline_generated thêm trường sourceKind.</td></tr>
+    <tr><td>Thử nghiệm</td><td>Dev chưa có LLM thật: thử trọn luồng bằng mô hình giả trả JSON cố định, gồm cả trường hợp AI cố tình trả Số liệu và Trích dẫn.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec">Cần thầy/cô chọn</h2>
+<ol class="q">
+  <li><b>Lối vào</b>: phương án A (thẻ riêng, trang riêng) hay phương án B (chung trang tài liệu)?</li>
+  <li><b>Nguồn internet</b>: làm mức 1 ngay và để mức 2 thành bước sau, hay làm cả hai trong đợt này? Mức 2 cần chọn dịch vụ tìm kiếm, ví dụ Tavily hoặc Brave Search (trả phí theo lượt, có gói miễn phí nhỏ) hoặc SearXNG tự cài trên server 224 (miễn phí nhưng phải vận hành).</li>
+  <li><b>Khi bật mức 2</b>: công tắc mặc định tắt (giảng viên chủ động bật) hay mặc định bật (AI tự tìm nguồn, đúng tinh thần ít thao tác)?</li>
+</ol>
+
+</main>
+<script>
+  // Phương án lối vào
+  document.querySelectorAll("[data-entry]").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-entry]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    document.getElementById("entry-a").classList.toggle("hidden", b.dataset.entry !== "a");
+    document.getElementById("entry-b").classList.toggle("hidden", b.dataset.entry !== "b");
+  }));
+  // Ô mô tả
+  const ta = document.getElementById("prompt"), count = document.getElementById("count"), go = document.getElementById("go");
+  const upd = () => { const n = ta.value.length; count.textContent = n.toLocaleString("vi-VN") + " / 2.000 ký tự"; go.disabled = ta.value.trim().length < 15; };
+  ta.addEventListener("input", upd);
+  document.querySelectorAll(".ex").forEach((b) => b.addEventListener("click", () => { ta.value = b.dataset.ex; upd(); ta.focus(); }));
+  document.querySelector("[data-goto=topic]").addEventListener("click", () => ta.scrollIntoView({ behavior: "smooth", block: "center" }));
+  // Thời lượng
+  document.querySelectorAll("#dur label").forEach((l) => l.addEventListener("click", () => {
+    document.querySelectorAll("#dur label").forEach((x) => x.classList.toggle("on", x === l));
+  }));
+  // Công tắc nguồn internet
+  const web = document.getElementById("web");
+  web.addEventListener("click", () => {
+    const on = web.getAttribute("aria-checked") !== "true";
+    web.setAttribute("aria-checked", String(on));
+    document.getElementById("web-d").textContent = on
+      ? "Đang bật: hệ thống tìm vài trang liên quan cho AI đọc. Số liệu và trích dẫn chỉ được dùng khi có trong các trang đó, kèm nguồn ở chân slide."
+      : "Đang tắt: AI viết từ kiến thức chung, không đưa số liệu, trích dẫn hay tên người vào slide.";
+    document.getElementById("rule1").classList.toggle("off", on);
+    document.getElementById("rule2").classList.toggle("off", !on);
+    document.getElementById("refs").classList.toggle("hidden", !on);
+    document.getElementById("ed-src").classList.toggle("hidden", !on);
+    const t1 = "<b>Nội dung do AI viết từ kiến thức chung, thầy/cô cần kiểm tra trước khi dạy.</b> Bài không có tài liệu gốc nên AI không đưa số liệu, trích dẫn hay tên người.";
+    const t2 = "<b>Nội dung do AI viết từ kiến thức chung và 5 trang tìm trên internet, thầy/cô cần kiểm tra trước khi dạy.</b> Số liệu và trích dẫn có ghi nguồn ở chân slide.";
+    document.querySelector("#ban-ol .ban-txt").innerHTML = on ? t2 : t1;
+  });
+</script>
+</body>
+</html>

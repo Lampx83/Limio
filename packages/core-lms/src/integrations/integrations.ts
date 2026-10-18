@@ -96,6 +96,8 @@ export const INTEGRATION_KEYS = [
   "neutts.base_url",
   "neutts.api_key",
   "neutts.voice",
+  // Limio-Live: tìm trang trên internet khi soạn bài giảng từ mô tả chủ đề (apps/web/src/lib/webSearch.ts).
+  "websearch.tavily",
 ] as const;
 export type IntegrationKey = (typeof INTEGRATION_KEYS)[number];
 
@@ -178,6 +180,8 @@ function envFallbackName(key: string): string | null {
       return "NEUTTS_API_KEY";
     case "neutts.voice":
       return "NEUTTS_VOICE";
+    case "websearch.tavily":
+      return "TAVILY_API_KEY";
     default:
       return null;
   }

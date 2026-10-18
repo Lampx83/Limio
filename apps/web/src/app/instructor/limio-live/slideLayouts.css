@@ -188,3 +188,6 @@
     @keyframes s-pop { from { opacity: 0; scale: .88; } to { opacity: 1; scale: 1; } }
     @keyframes s-line { to { transform: scaleX(1); } }
   }
+
+/* Dòng nguồn ở chân slide ("Nguồn: [1], [3]") của bài soạn kèm trang tìm trên internet. */
+.lslide .ll-cite { position: absolute; left: 64px; bottom: 18px; z-index: 4; font-size: 26px; line-height: 1.2; color: var(--smuted); pointer-events: none; }

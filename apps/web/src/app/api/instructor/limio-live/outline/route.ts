@@ -1,11 +1,21 @@
 import { NextResponse } from "next/server";
-import { AiGenerationError, AiTutorError, OUTLINE_MAX_SOURCE_CHARS, OUTLINE_MIN_SOURCE_CHARS, generateLectureOutline } from "@feedbackme/core-feedback";
+import {
+  AiGenerationError,
+  AiTutorError,
+  OUTLINE_MAX_SOURCE_CHARS,
+  OUTLINE_MIN_SOURCE_CHARS,
+  TOPIC_MAX_CHARS,
+  TOPIC_MIN_CHARS,
+  composeTopicSource,
+  generateLectureOutline,
+} from "@feedbackme/core-feedback";
 import { extractMaterialText } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
-import { INTERACTIVE_EVERY, isFullStructure, isValidMinutes, normalizeOutline, slideRange } from "@/lib/limioLiveOutline";
+import { INTERACTIVE_EVERY, isFullStructure, isValidMinutes, normalizeOutline, slideRange, type DeckSourceKind, type WebSourceRef } from "@/lib/limioLiveOutline";
+import { WEB_MAX_PAGES, getWebSearchProvider, searchQueryFromTopic, toSourcePages, type WebSearchProvider } from "@/lib/webSearch";
 
 export const runtime = "nodejs";
 // Một lần gọi mô hình có thể mất vài chục giây.
@@ -31,7 +41,8 @@ function mimeOf(file: File): string | null {
 
 /**
  * POST /api/instructor/limio-live/outline
- * multipart: `file` (docx/pdf/txt/md ≤ 10 MB) HOẶC `text` (dán thẳng), `minutes` (15|30|45).
+ * multipart: `file` (docx/pdf/txt/md ≤ 10 MB) HOẶC `text` (dán thẳng) HOẶC `topic` (mô tả chủ đề, 15–2.000 ký tự,
+ * kèm `web=1` để tìm thêm trang trên internet nếu đã cấu hình dịch vụ tìm kiếm), `minutes` (15|30|45).
  * Đọc tài liệu → AI đề xuất dàn ý → tạo bài giảng NHÁP kèm dàn ý. Chưa sinh slide nào;
  * giảng viên sửa dàn ý rồi mới sinh slide (xem decks/[deckId]/outline).
  * Bài giảng chỉ được tạo SAU khi AI trả lời được, nên lỗi AI không để lại bài rỗng. Kiểm tra đầu vào trả JSON
@@ -55,9 +66,21 @@ export async function POST(req: Request) {
 
   let sourceText: string | null = null;
   let sourceName = "Văn bản dán";
+  let sourceKind: DeckSourceKind = "document";
+  let web: WebSearchProvider | null = null;
   const file = form.get("file");
   const pasted = form.get("text");
-  if (file instanceof File && file.size > 0) {
+  const topic = form.get("topic");
+  if (typeof topic === "string" && topic.trim()) {
+    // Không có tài liệu: AI soạn từ kiến thức chung (và các trang tìm được nếu bật nguồn internet).
+    const t = topic.replace(/\r\n/g, "\n").trim();
+    if (t.length < TOPIC_MIN_CHARS) return NextResponse.json({ error: "topic_too_short", details: { min: TOPIC_MIN_CHARS } }, { status: 422 });
+    if (t.length > TOPIC_MAX_CHARS) return NextResponse.json({ error: "topic_too_long", details: { max: TOPIC_MAX_CHARS } }, { status: 422 });
+    sourceText = t;
+    sourceName = "Mô tả chủ đề";
+    sourceKind = "topic";
+    if (form.get("web") === "1") web = await getWebSearchProvider();
+  } else if (file instanceof File && file.size > 0) {
     if (file.size > MAX_FILE_BYTES) {
       return NextResponse.json({ error: "file_too_large", details: { maxBytes: MAX_FILE_BYTES } }, { status: 413 });
     }
@@ -75,7 +98,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "validation_failed", details: "no_source" }, { status: 400 });
   }
 
-  if (sourceText.length < OUTLINE_MIN_SOURCE_CHARS) {
+  if (sourceKind === "document" && sourceText.length < OUTLINE_MIN_SOURCE_CHARS) {
     return NextResponse.json({ error: "source_too_short", details: { min: OUTLINE_MIN_SOURCE_CHARS } }, { status: 422 });
   }
 
@@ -91,7 +114,7 @@ export async function POST(req: Request) {
 
   const range = slideRange(minutes);
   const truncated = sourceText.length > OUTLINE_MAX_SOURCE_CHARS;
-  const text = sourceText;
+  const topicText = sourceText;
   const name = sourceName;
 
   // Từ đây trở đi là phần chậm (gọi mô hình, có thể hơn 60 giây). Trả luồng NDJSON có nhịp giữ kết nối để proxy
@@ -104,12 +127,26 @@ export async function POST(req: Request) {
       const fail = (error: string, status: number, details?: unknown) => send({ type: "error", error, status, details });
       try {
         send({ type: "start" });
+        // Bật nguồn internet: tìm và đọc trang trước khi gọi AI. Không tìm được trang nào thì vẫn soạn ở mức kiến thức chung.
+        let text = topicText;
+        let kind: DeckSourceKind = sourceKind;
+        let refs: WebSourceRef[] | null = null;
+        if (web) {
+          const pages = toSourcePages(await web.search(searchQueryFromTopic(topicText), WEB_MAX_PAGES + 3));
+          refs = pages.map(({ n, title, url }) => ({ n, title, url }));
+          if (pages.length) {
+            text = composeTopicSource(topicText, pages);
+            kind = "topic_web";
+          }
+          send({ type: "web", pages: pages.length });
+        }
         let raw;
         try {
           raw = await generateLectureOutline(
             userId,
             {
               sourceText: text,
+              sourceKind: kind,
               minutes,
               minSlides: range.min,
               maxSlides: range.max,
@@ -125,7 +162,7 @@ export async function POST(req: Request) {
           return fail("generate_failed", 500);
         }
 
-        const { outline, warnings } = normalizeOutline(raw, minutes);
+        const { outline, warnings } = normalizeOutline(raw, minutes, { sourceKind: kind, sourceText: text, references: refs ?? [] });
         if (outline.slides.length === 0) return fail("empty_outline", 502);
 
         const deck = await prisma.liveDeck.create({
@@ -137,6 +174,8 @@ export async function POST(req: Request) {
             outlineMinutes: minutes,
             sourceName: name,
             sourceText: text.slice(0, MAX_STORED_SOURCE_CHARS),
+            sourceKind: kind,
+            ...(refs ? { sourceRefs: refs as unknown as object } : {}),
           },
           select: { id: true },
         });
@@ -146,6 +185,8 @@ export async function POST(req: Request) {
           slideCount: outline.slides.length,
           sourceChars: text.length,
           warningCount: warnings.length,
+          sourceKind: kind,
+          ...(refs ? { webSourceCount: refs.length } : {}),
         });
         send({ type: "done", deckId: deck.id, outline, warnings, truncated });
       } catch (e) {
