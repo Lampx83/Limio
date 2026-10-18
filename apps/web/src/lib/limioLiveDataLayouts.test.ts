@@ -13,7 +13,8 @@ import { configFromOutline, dataNumbersVerified, draftToSlide, generateDeckSlide
 import { demoteUnbackedCharts, type OutlineSlide } from "./limioLiveOutline";
 import { numbersInText } from "./limioLiveCharts";
 
-// Hai bố cục Bảng và Biểu đồ: lọc dữ liệu, đổi bố cục không mất nội dung, chống bịa số liệu.
+// Hai bố cục Bảng và Biểu đồ: lọc dữ liệu, đổi bố cục không mất nội dung, chống bịa số liệu
+// (cả cho bố cục Số liệu, vốn cũng trình bày con số).
 
 describe("sanitizeLayoutConfig — bảng", () => {
   it("giữ tối đa 5 cột × 6 dòng, cắt ô dài, bù ô thiếu, bỏ dòng trống", () => {
@@ -209,7 +210,7 @@ describe("draftToSlide — Biểu đồ", () => {
     expect(draftToSlide(os("chart"), d, "", found).usedFallback).toBe(true);
   });
   it("không có bản nháp: dựng từ dàn ý bằng Số liệu, không bao giờ dựng biểu đồ chưa đối chiếu", () => {
-    expect(configFromOutline(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), "").config.layout).toBe("stats");
+    expect(configFromOutline(os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"]), "", undefined, found).config.layout).toBe("stats");
     expect(configFromOutline(os("table", ["Bảng so sánh ba hình thức."]), "").config.layout).toBe("image");
   });
 });
@@ -241,12 +242,49 @@ describe("draftToSlide — Bảng", () => {
 });
 
 describe("generateDeckSlides truyền tài liệu xuống bước kiểm tra số", () => {
-  it("cùng bản nháp: có tài liệu thì giữ biểu đồ, không có thì rơi về", async () => {
+  it("cùng bản nháp: có tài liệu thì giữ biểu đồ, không có thì rơi về Ba thẻ (dàn ý cũng không được đối chiếu)", async () => {
     const outline = [os("chart", ["Tuần 1: 62%", "Tuần 6: 84%"])];
     const run = (sourceText?: string) =>
       generateDeckSlides({ outline, sourceText, isFatal: () => false, generateBatch: async () => [chartDraft([62, 75, 84])] });
     expect((await run(SOURCE)).slides[0]!.config.layout).toBe("chart");
-    expect((await run()).slides[0]!.config.layout).toBe("stats");
+    expect((await run()).slides[0]!.config.layout).toBe("cards");
+  });
+});
+
+describe("draftToSlide — Số liệu", () => {
+  const statsDraft = (...headings: string[]) => ({
+    index: 0,
+    title: "Tỉ lệ hoàn thành tăng dần.",
+    items: headings.map((heading, i) => ({ heading, body: `Mốc ${i + 1}` })),
+    notes: "Đọc chậm từng số.",
+  });
+  it("mọi con số có trong tài liệu (kể cả 1.250 viết kiểu Việt Nam): giữ Số liệu", () => {
+    const g = draftToSlide(os("stats"), statsDraft("62%", "84%", "1.250"), "", found);
+    expect(g.usedFallback).toBe(false);
+    expect(g.config.layout).toBe("stats");
+    expect((g.config as any).items.map((i: any) => i.heading)).toEqual(["62%", "84%", "1.250"]);
+  });
+  it("con số không phải số (\"Gấp đôi\") thì không có gì để đối chiếu", () => {
+    expect(draftToSlide(os("stats"), statsDraft("62%", "Gấp đôi"), "", found).config.layout).toBe("stats");
+  });
+  it("một con số bịa (91%): bỏ bản nháp, dựng Số liệu từ dàn ý nếu số dàn ý có trong tài liệu", () => {
+    const g = draftToSlide(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 84%"]), statsDraft("62%", "91%"), "", found);
+    expect(g.usedFallback).toBe(true);
+    expect(g.config.layout).toBe("stats");
+    expect((g.config as any).items.map((i: any) => i.heading)).toEqual(["62%", "84%"]);
+  });
+  it("dàn ý cũng có số bịa: rơi về Ba thẻ", () => {
+    const g = draftToSlide(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 91%", "Tuần tám: 84%"]), statsDraft("62%", "91%"), "", found);
+    expect(g.usedFallback).toBe(true);
+    expect(g.config.layout).toBe("cards");
+  });
+  it("không có tài liệu: Số liệu luôn rơi về Ba thẻ", () => {
+    expect(draftToSlide(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 84%"]), statsDraft("62%", "84%"), "").config.layout).toBe("cards");
+    expect(configFromOutline(os("stats", ["Tuần đầu: 62%", "Tuần sáu: 84%"]), "").config.layout).toBe("cards");
+  });
+  it("dataNumbersVerified kiểm con số lớn, không kiểm câu giải thích bên dưới", () => {
+    expect(dataNumbersVerified("stats", { items: [{ heading: "84%", body: "Năm 2031 có 7 lớp" }] }, found)).toBe(true);
+    expect(dataNumbersVerified("stats", { items: [{ heading: "84%" }, { heading: "3/4" }] }, found)).toBe(false);
   });
 });
 
@@ -259,6 +297,18 @@ describe("proposalFromDraft — Nhờ AI sửa slide biểu đồ", () => {
   it("AI thêm số mới thì không đề xuất", () => {
     const p = proposalFromDraft("shorter", current, { index: 0, title: "Điểm tăng.", chart: { type: "bar", labels: ["A", "B"], series: [{ name: "", values: [6.2, 9.9] }], unit: "" } }, "");
     expect(p).toBeNull();
+  });
+});
+
+describe("proposalFromDraft — Nhờ AI sửa slide Số liệu", () => {
+  const current = { config: { ...sanitizeLayoutConfig("stats", { title: "Điểm", items: [{ heading: "6,2", body: "Lớp A" }, { heading: "7,4", body: "Lớp B" }] }), outlineId: "o1", aiGenerated: true } };
+  const draft = (b: string) => ({ index: 0, title: "Điểm tăng.", items: [{ heading: "6,2", body: "Lớp A" }, { heading: b, body: "Lớp B" }] });
+  it("giữ số giảng viên đã nhập dù tài liệu không có", () => {
+    expect(proposalFromDraft("shorter", current, draft("7,4"), "")?.config.layout).toBe("stats");
+  });
+  it("AI thêm số mới thì không đề xuất; số có trong tài liệu thì được", () => {
+    expect(proposalFromDraft("shorter", current, draft("9,9"), "")).toBeNull();
+    expect(proposalFromDraft("shorter", current, draft("84%"), SOURCE)?.config.layout).toBe("stats");
   });
 });
 
