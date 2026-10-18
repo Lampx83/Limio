@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vẽ lại biểu đồ từ hình</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafaf7; --surface: #ffffff; --muted: #f3f5ee; --ink: #1c2410; --ink-2: #4b5640; --ink-3: #6b755e; --line: #e6e9dc;
+    --brand-50: #f7fee7; --brand-100: #ecfccb; --brand-600: #65a30d; --brand-700: #4d7c0f; --brand-800: #3f6212;
+    --amber-50: #fffbeb; --amber-100: #fef3c7; --amber-400: #fbbf24; --amber-800: #92400e;
+    --bad: #b91c1c; --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 8px 24px -12px rgb(28 36 16 / .14);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --muted: #222b17; --ink: #f1f5e6; --ink-2: #c3cdb0; --ink-3: #a3ad91; --line: #2c3620;
+      --brand-50: #1c2810; --brand-100: #25351a; --brand-700: #a3e635; --brand-800: #bef264;
+      --amber-50: #2a2210; --amber-100: #3a2e12; --amber-800: #fcd34d; --bad: #fca5a5; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --muted: #222b17; --ink: #f1f5e6; --ink-2: #c3cdb0; --ink-3: #a3ad91; --line: #2c3620;
+    --brand-50: #1c2810; --brand-100: #25351a; --brand-700: #a3e635; --brand-800: #bef264;
+    --amber-50: #2a2210; --amber-100: #3a2e12; --amber-800: #fcd34d; --bad: #fca5a5; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+  header.top { border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: 0; z-index: 20; }
+  header.top .wrap { padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; }
+  header.top h1 { font-size: 20px; margin: 0; }
+  header.top p { margin: 2px 0 0; color: var(--ink-3); font-size: 14px; }
+  .seg { display: inline-flex; background: var(--brand-50); border: 1px solid var(--line); border-radius: 999px; padding: 3px; flex-wrap: wrap; }
+  .seg button { border: 0; background: none; padding: 7px 14px; border-radius: 999px; cursor: pointer; font-size: 14px; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--brand-700); color: #fff; }
+  main { padding: 20px 0 64px; }
+  h2.sec { font-size: 20px; margin: 36px 0 6px; }
+  p.sub { margin: 0 0 16px; color: var(--ink-2); font-size: 15px; max-width: 860px; }
+  .note { background: var(--brand-50); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; font-size: 14px; color: var(--ink-2); max-width: 860px; }
+  .note ol, .note ul { margin: 6px 0 0; padding-left: 20px; }
+
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+  .btn:hover { background: var(--muted); }
+  .btn-primary { background: var(--brand-700); color: #fff; border-color: transparent; }
+  .btn-primary:hover { background: var(--brand-800); }
+  .btn-primary:disabled { background: var(--line); color: var(--ink-3); cursor: not-allowed; }
+  :root[data-theme="dark"] .btn-primary:not(:disabled) { color: #11160b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn-primary:not(:disabled) { color: #11160b; } }
+  .link { background: none; border: 0; padding: 0; color: var(--brand-700); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: 14px; }
+
+  /* ---------- cửa sổ sửa slide ---------- */
+  .dlg { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+  .dlg-bar { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); padding: 10px 16px; }
+  .dlg-bar h3 { flex: 1; margin: 0; font-size: 17px; }
+  .iconbtn { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: grid; place-items: center; cursor: pointer; }
+  .dlg-body { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .dlg-body { grid-template-columns: minmax(0, 1fr) 320px; } }
+  .dlg-main { padding: 16px 20px 22px; display: grid; gap: 14px; align-content: start; }
+  .dlg-side { padding: 16px; font-size: 13px; color: var(--ink-3); }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: -16px -20px 0; padding: 8px 20px 0; }
+  .tabs span { padding: 8px 14px; font-weight: 600; font-size: 15px; color: var(--ink-3); border-bottom: 3px solid transparent; }
+  .tabs span.on { color: var(--ink); border-color: var(--brand-600); }
+  label.f { display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .input { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); font-size: 15px; font-weight: 400; color: var(--ink); width: 100%; }
+  .imgfield { border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+  .imgfield .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .imgfield .mini { width: 132px; aspect-ratio: 16/10; border-radius: 8px; border: 1px solid var(--line); overflow: hidden; background: #fff; flex: none; }
+  .imgfield .mini svg { width: 100%; height: 100%; display: block; }
+  .hint { font-size: 13px; color: var(--ink-3); margin: 0; }
+
+  /* slide thu nhỏ */
+  .slide { position: relative; aspect-ratio: 16/9; border-radius: 12px; border: 1px solid var(--line); overflow: hidden; background: #fbfdf6; color: #1c2410;
+    font-family: "Be Vietnam Pro", sans-serif; box-shadow: var(--shadow); }
+  .slide .s-title { position: absolute; left: 6%; top: 8%; right: 6%; font-family: "Lexend", sans-serif; font-weight: 700; font-size: clamp(11px, 2.1vw, 22px); line-height: 1.2; }
+  .slide .s-title em { font-style: normal; color: #4d7c0f; }
+  .slide .s-img { position: absolute; right: 5%; top: 26%; width: 52%; bottom: 9%; background: #fff; border-radius: 8px; border: 1px solid #e6e9dc; overflow: hidden; }
+  .slide .s-img svg { width: 100%; height: 100%; display: block; }
+  .slide .s-bul { position: absolute; left: 6%; top: 28%; width: 34%; font-size: clamp(8px, 1.15vw, 13px); line-height: 1.35; }
+  .slide .s-bul div { margin-bottom: .7em; padding-left: 1em; position: relative; }
+  .slide .s-bul div::before { content: ""; position: absolute; left: 0; top: .45em; width: .45em; height: .45em; border-radius: 50%; background: #65a30d; }
+  .slide .s-chart { position: absolute; left: 6%; right: 6%; top: 25%; bottom: 12%; }
+  .slide .s-chart svg { width: 100%; height: 100%; display: block; }
+  .slide .s-src { position: absolute; left: 6%; bottom: 4%; font-size: clamp(7px, .9vw, 11px); color: #6b755e; }
+  .slide .badge { position: absolute; right: 10px; top: 10px; background: rgba(255,255,255,.92); border: 1px solid #e6e9dc; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 600; font-family: -apple-system, sans-serif; }
+
+  /* ---------- màn đối chiếu ---------- */
+  .redraw { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .redraw { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); } }
+  .orig { position: relative; }
+  @media (min-width: 900px) { .orig .stick { position: sticky; top: 12px; } }
+  .orig .frame { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+  .orig .frame svg { width: 100%; display: block; }
+  .orig .cap { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--ink-3); margin: 0 0 6px; }
+  .orig .cap b { color: var(--ink-2); }
+  @media (max-width: 899px) { .orig .frame { max-height: 220px; } .orig .frame svg { height: 220px; } }
+
+  .banner { border-radius: 12px; padding: 10px 12px; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; }
+  .banner.warn { background: var(--amber-50); border: 1px solid var(--amber-400); color: var(--amber-800); }
+  .banner.info { background: var(--brand-50); border: 1px solid var(--line); color: var(--ink-2); }
+  .banner.err { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+  .banner svg { flex: none; margin-top: 2px; }
+
+  .meta { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .meta .full { grid-column: 1 / -1; }
+  .types { display: flex; gap: 6px; flex-wrap: wrap; }
+  .types button { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+  .types button[aria-pressed="true"] { border-color: var(--brand-600); background: var(--brand-50); font-weight: 700; }
+
+  table.sheet { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+  table.sheet th { text-align: left; font-size: 12px; color: var(--ink-3); font-weight: 600; padding: 0 6px 6px; }
+  table.sheet td { padding: 3px; vertical-align: middle; }
+  table.sheet input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; background: var(--surface); font-size: 15px; }
+  table.sheet input.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.sheet tr.pending input { background: var(--amber-50); border-color: var(--amber-400); }
+  table.sheet tr.ok input { background: var(--surface); }
+  table.sheet .est { font-size: 11px; font-weight: 700; color: var(--amber-800); display: block; text-align: right; margin-top: 1px; }
+  .okbtn { border: 1px solid var(--amber-400); background: var(--surface); color: var(--amber-800); border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; min-width: 82px; }
+  tr.ok .okbtn { border-color: var(--brand-600); background: var(--brand-50); color: var(--brand-800); }
+  .progress { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--ink-2); }
+  .bar { flex: 1; height: 8px; border-radius: 99px; background: var(--muted); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--brand-600); width: 0; transition: width .2s; }
+  .preview-cap { font-size: 13px; color: var(--ink-3); margin: 0 0 6px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: 12px; }
+  .actions .why { flex: 1 1 260px; font-size: 13px; color: var(--ink-3); }
+  .spinner { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--brand-600); border-radius: 50%; animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .skel { height: 34px; border-radius: 8px; background: linear-gradient(90deg, var(--muted), var(--line), var(--muted)); background-size: 200% 100%; animation: sh 1.4s infinite; }
+  @keyframes sh { to { background-position: -200% 0; } }
+
+  .pair { display: grid; gap: 18px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .pair { grid-template-columns: 1fr 1fr; } }
+  .pair figcaption { font-size: 14px; margin-top: 8px; }
+  .pair figcaption span { display: block; color: var(--ink-3); font-size: 13px; }
+  figure { margin: 0; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  code { background: var(--muted); border-radius: 6px; padding: 1px 5px; font-size: 13px; }
+  .report { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; max-width: 640px; font-size: 14px; }
+  .report li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>Biểu đồ khó đọc trong bài PowerPoint</h1>
+      <p>Bản mẫu để duyệt · hướng 2: vẽ lại biểu đồ là hình chụp (AI đọc số, giảng viên đối chiếu) · 18/10/2026</p>
+    </div>
+    <div class="seg" role="group" aria-label="Giao diện">
+      <button type="button" data-theme-btn="light" aria-pressed="true">Sáng</button>
+      <button type="button" data-theme-btn="dark" aria-pressed="false">Tối</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="note">
+    <b>Hai hướng, hai trường hợp khác nhau.</b>
+    <ul>
+      <li><b>Biểu đồ dán từ Excel dạng đối tượng nhúng:</b> file .pptx có sẵn bảng Excel gốc. Limio đọc số từ bảng đó lúc nhập,
+        không cần AI và không cần giảng viên làm gì. Bản mẫu này không có màn riêng cho trường hợp này; chỉ khác ở báo cáo sau khi đọc (cuối trang).</li>
+      <li><b>Biểu đồ là hình chụp:</b> file không có số, chỉ có ảnh. Limio giữ ảnh như cũ. Giảng viên muốn biểu đồ vẽ lại theo
+        giao diện Limio thì bấm một nút, AI đọc số từ ảnh, giảng viên đối chiếu từng dòng với hình gốc. <b>Số chỉ lên slide sau khi
+        mọi dòng đã được đối chiếu.</b></li>
+    </ul>
+  </div>
+
+  <!-- ============ 1. Nút trong cửa sổ sửa ============ -->
+  <h2 class="sec">1. Slide có hình: nút "Vẽ lại thành biểu đồ"</h2>
+  <p class="sub">Nút nằm ngay dưới ô hình của bố cục Chữ và hình, chỉ hiện khi slide có hình đã tải lên Limio (hình nhập từ PowerPoint
+    hoặc hình giảng viên tải). Hình minh hoạ mặc định và địa chỉ ảnh bên ngoài không có nút này. Limio không tự đoán hình nào là biểu đồ:
+    giảng viên nhìn là biết, và một lần bấm nhầm chỉ dẫn đến câu "Hình này không giống biểu đồ".</p>
+
+  <div class="dlg" aria-label="Cửa sổ sửa slide (mẫu)">
+    <div class="dlg-bar">
+      <span class="iconbtn" aria-hidden="true">‹</span><span class="iconbtn" aria-hidden="true">›</span>
+      <h3>Slide 7 / 22</h3>
+      <span class="btn btn-primary">Xong</span>
+    </div>
+    <div class="dlg-body">
+      <div class="dlg-main">
+        <div class="tabs"><span class="on">Nội dung</span><span>Nhờ AI</span></div>
+        <label class="f">Tiêu đề<input class="input" value="Tỉ lệ sinh viên hoàn thành học phần"></label>
+        <label class="f">Ý 1<input class="input" value="Tỉ lệ tăng đều qua năm năm."></label>
+        <label class="f">Ý 2<input class="input" value="Năm 2023 bắt đầu dùng học liệu có phản hồi."></label>
+        <div class="imgfield">
+          <div class="row">
+            <div class="mini" data-orig-mini></div>
+            <div style="flex:1;min-width:200px">
+              <b style="font-size:14px">Hình của slide</b>
+              <p class="hint">Nhập từ PowerPoint (slide 7 của file gốc).</p>
+            </div>
+          </div>
+          <div class="row">
+            <button type="button" class="btn" data-open-redraw>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16v-4M12 16V8M17 16v-6"/></svg>
+              Vẽ lại thành biểu đồ
+            </button>
+            <p class="hint" style="flex:1;min-width:220px">Hình là biểu đồ? AI đọc số trong hình, thầy cô đối chiếu từng dòng rồi mới thay hình.</p>
+          </div>
+        </div>
+      </div>
+      <aside class="dlg-side">
+        <div style="margin-bottom:4px">Xem trước</div>
+        <div class="slide" data-slide-image></div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ============ 2. Màn đối chiếu ============ -->
+  <h2 class="sec">2. Đối chiếu số với hình gốc</h2>
+  <p class="sub">Bấm nút thì phần Nội dung của cửa sổ sửa chuyển thành màn đối chiếu (vẫn trong cùng cửa sổ, nút ‹ › tạm ẩn).
+    Hình gốc bên trái, bảng số bên phải; trên điện thoại hình nằm trên, thu nhỏ, chạm để phóng to.
+    Thử các trạng thái và bấm "Khớp", sửa một số, hoặc nhấn Enter trong một ô.</p>
+
+  <div class="seg" role="group" aria-label="Trạng thái" style="margin-bottom:14px">
+    <button type="button" data-state="labels" aria-pressed="true">Hình có ghi số</button>
+    <button type="button" data-state="axis" aria-pressed="false">Hình không ghi số</button>
+    <button type="button" data-state="loading" aria-pressed="false">AI đang đọc</button>
+    <button type="button" data-state="notchart" aria-pressed="false">Không phải biểu đồ</button>
+  </div>
+
+  <div class="dlg" aria-label="Màn đối chiếu (mẫu)">
+    <div class="dlg-bar">
+      <button type="button" class="btn" data-back>← Quay lại nội dung</button>
+      <h3 style="text-align:center">Vẽ lại thành biểu đồ</h3>
+      <span style="width:150px" aria-hidden="true"></span>
+    </div>
+    <div style="padding:16px 20px 20px">
+      <div class="redraw">
+        <div class="orig">
+          <div class="stick">
+            <p class="cap"><b>Hình gốc</b><span>Chạm để phóng to</span></p>
+            <div class="frame" data-orig-big></div>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:14px;align-content:start" data-panel>
+          <!-- đang đọc -->
+          <div data-when="loading" hidden>
+            <div class="banner info"><span class="spinner" aria-hidden="true"></span><span>AI đang đọc số trong hình… thường mất 10–20 giây. Slide chưa thay đổi gì.</span></div>
+            <div style="display:grid;gap:8px;margin-top:14px"><div class="skel"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+          </div>
+          <!-- không phải biểu đồ -->
+          <div data-when="notchart" hidden>
+            <div class="banner err">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+              <span><b>Hình này không giống biểu đồ có số đọc được.</b> Slide giữ nguyên hình. Nếu đây đúng là biểu đồ, thầy cô có thể đổi
+                slide sang bố cục Biểu đồ và gõ số theo tài liệu gốc.</span>
+            </div>
+            <div class="actions" style="margin-top:14px"><button type="button" class="btn" data-back>Quay lại nội dung</button></div>
+          </div>
+          <!-- đã đọc -->
+          <div data-when="ready" style="display:grid;gap:14px">
+            <div class="banner info" data-banner-labels>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              <span>AI chép <b>5 số</b> ghi trên hình. Nhìn hình bên trái, kiểm từng dòng rồi bấm <b>Khớp</b>; sửa số nào thì dòng đó tính là đã kiểm.</span>
+            </div>
+            <div class="banner warn" data-banner-axis hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+              <span><b>Hình không ghi số trên cột.</b> AI ước lượng theo vạch chia của trục, nên các số có dấu ≈ có thể lệch vài đơn vị.
+                Nếu có tài liệu gốc, hãy gõ lại số đúng; chưa có thì giữ hình.</span>
+            </div>
+
+            <div class="meta">
+              <label class="f full">Tiêu đề slide<input class="input" value="Tỉ lệ sinh viên hoàn thành học phần"></label>
+              <div class="f full" style="display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--ink-2)">Loại biểu đồ (AI nhận ra: cột dọc)
+                <div class="types" role="group" aria-label="Loại biểu đồ">
+                  <button type="button" aria-pressed="true" data-type="bar">Cột dọc</button>
+                  <button type="button" aria-pressed="false" data-type="hbar">Thanh ngang</button>
+                  <button type="button" aria-pressed="false" data-type="line">Đường</button>
+                  <button type="button" aria-pressed="false" data-type="pie">Tròn</button>
+                </div>
+              </div>
+              <label class="f">Đơn vị<input class="input" value="%" data-unit></label>
+              <label class="f">Tên chuỗi số<input class="input" value="Hoàn thành"></label>
+            </div>
+
+            <table class="sheet" aria-label="Số liệu đọc từ hình">
+              <thead><tr><th style="width:42%">Nhãn</th><th>Giá trị</th><th style="width:96px"><span class="sr">Đối chiếu</span></th></tr></thead>
+              <tbody data-rows></tbody>
+            </table>
+
+            <div class="progress"><span data-progress-text>Đã đối chiếu 0/5 dòng</span><span class="bar"><i data-progress-bar></i></span></div>
+
+            <div>
+              <p class="preview-cap">Biểu đồ sẽ thay hình (chỉ vẽ dòng đã đối chiếu; dòng chưa kiểm là khung trống, không có số)</p>
+              <div class="slide" data-preview-chart></div>
+            </div>
+
+            <div class="actions">
+              <span class="why" data-why>Còn 5 dòng chưa đối chiếu. Đóng cửa sổ lúc này thì slide giữ nguyên hình và số AI đọc không được lưu.</span>
+              <button type="button" class="btn" data-back>Huỷ</button>
+              <button type="button" class="btn btn-primary" data-apply disabled>Thay hình bằng biểu đồ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:14px">
+    <b>Vì sao đối chiếu theo dòng mà không theo từng ô hay một nút "Đã kiểm" chung:</b> một nút chung dễ bấm qua; từng ô thì quá nhiều thao tác
+    với biểu đồ hai chuỗi. Theo dòng, mỗi lần bấm là một lần mắt nhìn sang một cột trên hình. Nhấn Enter trong ô cũng tính là Khớp và chuyển sang dòng sau,
+    nên biểu đồ năm cột chỉ cần năm lần Enter. Thêm, xoá dòng, đổi loại biểu đồ không làm mất các dòng đã kiểm.
+  </div>
+
+  <!-- ============ 3. Sau khi thay ============ -->
+  <h2 class="sec">3. Sau khi thay</h2>
+  <p class="sub">Slide đổi sang bố cục Biểu đồ với đúng các số đã đối chiếu. Hai ý của slide cũ không bị mất: chúng sang slide
+    "(tiếp)" chèn ngay sau, cùng bố cục Chữ và hình nhưng không có hình. Ghi chú giảng giữ ở slide biểu đồ. Trong cửa sổ sửa của slide biểu đồ có dòng
+    "Vẽ lại từ hình gốc · Trả lại hình" để quay về hình nếu cần (gộp lại các ý từ slide tiếp nếu giảng viên chưa sửa).</p>
+  <div class="pair">
+    <figure><div class="slide" data-slide-after></div>
+      <figcaption><b>Slide 7 · Biểu đồ</b><span>Dòng nguồn để trống như mọi biểu đồ mới; giảng viên tự điền nếu muốn.</span></figcaption></figure>
+    <figure><div class="slide" data-slide-cont></div>
+      <figcaption><b>Slide 8 · Tỉ lệ sinh viên hoàn thành học phần (tiếp)</b><span>Chỉ tạo khi slide cũ có chữ ngoài tiêu đề.</span></figcaption></figure>
+  </div>
+
+  <!-- ============ 4. Báo cáo nhập ============ -->
+  <h2 class="sec">4. Biểu đồ dán từ Excel (hướng 1): chỉ khác ở báo cáo sau khi đọc file</h2>
+  <p class="sub">Không có màn mới. Slide có biểu đồ Excel nhúng được dựng bằng bố cục Biểu đồ (hoặc Bảng nếu không vừa khung) như biểu đồ PowerPoint thường.
+    Báo cáo ở bước 1 ghi rõ số đến từ đâu; đối tượng nhúng không đọc được (Excel đời cũ, Word, PDF nhúng…) vẫn được báo như hiện nay.</p>
+  <div class="report">
+    <b>Đã đọc 22 slide</b>
+    <ul>
+      <li>14 slide có ghi chú giảng</li>
+      <li>9 hình được giữ (bỏ 21 logo lặp)</li>
+      <li>2 bảng, 3 biểu đồ — <b>1 biểu đồ đọc số từ bảng Excel nhúng trong file</b></li>
+      <li>Slide 12: đối tượng nhúng chỉ lấy được tên, không lấy được nội dung</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+(() => {
+  // ---- giao diện sáng/tối ----
+  document.querySelectorAll("[data-theme-btn]").forEach((b) => b.addEventListener("click", () => {
+    document.documentElement.dataset.theme = b.dataset.themeBtn;
+    document.querySelectorAll("[data-theme-btn]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  }));
+
+  const LABELS = ["2021", "2022", "2023", "2024", "2025"];
+  const TRUE_V = [62, 68, 71, 77, 83];
+  const AXIS_V = [60, 70, 70, 75, 85];
+  const fmt = (v) => (v === null || v === "" || isNaN(v) ? "" : String(v).replace(".", ","));
+
+  // Hình "chụp" từ PowerPoint: kiểu Excel mặc định, khác giao diện Limio.
+  function origSvg(withLabels) {
+    const W = 560, H = 340, L = 56, B = 290, T = 56, Wp = W - L - 24, max = 100;
+    let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hình biểu đồ gốc" style="font-family:Calibri,Arial,sans-serif">`;
+    s += `<rect width="${W}" height="${H}" fill="#fff"/>`;
+    s += `<text x="${W / 2}" y="30" text-anchor="middle" font-size="18" fill="#595959">Tỉ lệ SV hoàn thành học phần (%)</text>`;
+    for (let g = 0; g <= 100; g += 20) {
+      const y = B - (g / max) * (B - T);
+      s += `<line x1="${L}" x2="${W - 24}" y1="${y}" y2="${y}" stroke="#d9d9d9"/>`;
+      s += `<text x="${L - 8}" y="${y + 4}" text-anchor="end" font-size="13" fill="#595959">${g}</text>`;
+    }
+    const bw = Wp / LABELS.length;
+    TRUE_V.forEach((v, i) => {
+      const h = (v / max) * (B - T), x = L + i * bw + bw * 0.2, w = bw * 0.6;
+      s += `<rect x="${x}" y="${B - h}" width="${w}" height="${h}" fill="#4472c4"/>`;
+      if (withLabels) s += `<text x="${x + w / 2}" y="${B - h - 6}" text-anchor="middle" font-size="14" fill="#404040">${v}%</text>`;
+      s += `<text x="${x + w / 2}" y="${B + 20}" text-anchor="middle" font-size="14" fill="#595959">${LABELS[i]}</text>`;
+    });
+    return s + "</svg>";
+  }
+
+  // Biểu đồ kiểu Limio. vals[i] === null ⇒ khung trống (chưa đối chiếu), không có số.
+  function limioChart(vals, type, unit) {
+    const W = 800, H = 300, L = 30, B = 262, T = 24;
+    let s = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="font-family:'Be Vietnam Pro',sans-serif">`;
+    s += `<line x1="${L}" x2="${W - 10}" y1="${B}" y2="${B}" stroke="#c9cfbb" stroke-width="2"/>`;
+    const n = vals.length, bw = (W - L - 10) / Math.max(n, 1);
+    if (type === "pie") {
+      const done = vals.filter((v) => v !== null);
+      const sum = done.reduce((a, b) => a + b, 0) || 1;
+      if (done.length < n) {
+        s += `<circle cx="${W / 2}" cy="${H / 2}" r="110" fill="none" stroke="#c9cfbb" stroke-width="2" stroke-dasharray="6 6"/>`;
+        s += `<text x="${W / 2}" y="${H / 2 + 6}" text-anchor="middle" font-size="18" fill="#6b755e">Vẽ khi đã đối chiếu hết các dòng</text>`;
+      } else {
+        let a0 = -Math.PI / 2; const cols = ["#4d7c0f", "#65a30d", "#84cc16", "#a3e635", "#bef264"];
+        done.forEach((v, i) => {
+          const a1 = a0 + (v / sum) * Math.PI * 2, r = 110, cx = W / 2, cy = H / 2;
+          s += `<path d="M${cx},${cy} L${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} A${r},${r} 0 ${a1 - a0 > Math.PI ? 1 : 0} 1 ${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} Z" fill="${cols[i % 5]}"/>`;
+          a0 = a1;
+        });
+      }
+      return s + "</svg>";
+    }
+    const max = Math.max(100, ...vals.filter((v) => v !== null));
+    const pts = [];
+    vals.forEach((v, i) => {
+      const cx = L + i * bw + bw / 2, w = bw * 0.5;
+      if (v === null) {
+        s += `<rect x="${cx - w / 2}" y="${T + 40}" width="${w}" height="${B - T - 40}" rx="8" fill="none" stroke="#c9cfbb" stroke-width="2" stroke-dasharray="6 6"/>`;
+        s += `<text x="${cx}" y="${(T + B) / 2 + 26}" text-anchor="middle" font-size="16" fill="#9aa38c">chưa kiểm</text>`;
+      } else {
+        const h = (v / max) * (B - T - 30), y = B - h;
+        if (type === "line") pts.push([cx, y]);
+        else s += `<rect x="${cx - w / 2}" y="${y}" width="${w}" height="${h}" rx="8" fill="#65a30d"/>`;
+        s += `<text x="${cx}" y="${y - 10}" text-anchor="middle" font-size="22" font-weight="700" fill="#1c2410">${fmt(v)}${unit}</text>`;
+      }
+      s += `<text x="${cx}" y="${B + 28}" text-anchor="middle" font-size="18" fill="#4b5640">${LABELS[i] ?? ""}</text>`;
+    });
+    if (type === "line" && pts.length) {
+      s += `<polyline points="${pts.map((p) => p.join(",")).join(" ")}" fill="none" stroke="#65a30d" stroke-width="5" stroke-linejoin="round"/>`;
+      pts.forEach((p) => (s += `<circle cx="${p[0]}" cy="${p[1]}" r="8" fill="#fff" stroke="#4d7c0f" stroke-width="4"/>`));
+    }
+    return s + "</svg>";
+  }
+
+  // ---- phần 1: ảnh thu nhỏ + slide hình ----
+  document.querySelector("[data-orig-mini]").innerHTML = origSvg(true);
+  const titleHtml = `Tỉ lệ sinh viên hoàn thành <em>học phần</em>`;
+  document.querySelector("[data-slide-image]").innerHTML =
+    `<div class="s-title">${titleHtml}</div><div class="s-bul"><div>Tỉ lệ tăng đều qua năm năm.</div><div>Năm 2023 bắt đầu dùng học liệu có phản hồi.</div></div><div class="s-img">${origSvg(true)}</div>`;
+
+  // ---- phần 2: đối chiếu ----
+  let state = "labels";
+  let type = "bar";
+  let rows = [];
+  const tbody = document.querySelector("[data-rows]");
+  const unitIn = document.querySelector("[data-unit]");
+
+  function reset() {
+    const src = state === "axis" ? AXIS_V : TRUE_V;
+    rows = LABELS.map((l, i) => ({ label: l, value: src[i], ok: false, est: state === "axis" }));
+    render();
+  }
+
+  function render() {
+    document.querySelector("[data-orig-big]").innerHTML = origSvg(state !== "axis");
+    document.querySelectorAll("[data-when]").forEach((el) => {
+      const w = el.dataset.when;
+      el.hidden = !(w === state || (w === "ready" && (state === "labels" || state === "axis")));
+    });
+    document.querySelector("[data-banner-labels]").hidden = state !== "labels";
+    document.querySelector("[data-banner-axis]").hidden = state !== "axis";
+    tbody.innerHTML = "";
+    rows.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      tr.className = r.ok ? "ok" : "pending";
+      tr.innerHTML = `<td><input aria-label="Nhãn dòng ${i + 1}" value="${r.label}"></td>
+        <td><input class="num" inputmode="decimal" aria-label="Giá trị dòng ${i + 1}" value="${fmt(r.value)}">${r.est && !r.ok ? '<span class="est">≈ ước lượng</span>' : ""}</td>
+        <td><button type="button" class="okbtn" aria-pressed="${r.ok}">${r.ok ? "✓ Đã khớp" : "Khớp"}</button></td>`;
+      const [lab, val] = tr.querySelectorAll("input");
+      const confirm = () => { r.ok = true; r.est = false; };
+      lab.addEventListener("change", () => { r.label = lab.value; confirm(); render(); });
+      val.addEventListener("change", () => { const n = parseFloat(val.value.replace(",", ".")); r.value = isNaN(n) ? null : n; confirm(); render(); });
+      [lab, val].forEach((inp) => inp.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault(); confirm(); render();
+        tbody.querySelectorAll("tr")[i + 1]?.querySelector("input.num")?.focus();
+      }));
+      tr.querySelector(".okbtn").addEventListener("click", () => { r.ok = !r.ok; render(); });
+      tbody.appendChild(tr);
+    });
+    const done = rows.filter((r) => r.ok).length;
+    document.querySelector("[data-progress-text]").textContent = `Đã đối chiếu ${done}/${rows.length} dòng`;
+    document.querySelector("[data-progress-bar]").style.width = `${(done / rows.length) * 100}%`;
+    const left = rows.length - done;
+    document.querySelector("[data-why]").textContent = left
+      ? `Còn ${left} dòng chưa đối chiếu. Đóng cửa sổ lúc này thì slide giữ nguyên hình và số AI đọc không được lưu.`
+      : "Đã đối chiếu hết. Bấm để thay hình; hình gốc vẫn được giữ để trả lại khi cần.";
+    document.querySelector("[data-apply]").disabled = left > 0;
+    const unit = unitIn.value.trim();
+    document.querySelector("[data-preview-chart]").innerHTML =
+      `<div class="s-title">${titleHtml}</div><div class="s-chart">${limioChart(rows.map((r) => (r.ok ? r.value : null)), type, unit)}</div>`;
+  }
+
+  document.querySelectorAll("[data-state]").forEach((b) => b.addEventListener("click", () => {
+    state = b.dataset.state;
+    document.querySelectorAll("[data-state]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    reset();
+  }));
+  document.querySelectorAll("[data-type]").forEach((b) => b.addEventListener("click", () => {
+    type = b.dataset.type;
+    document.querySelectorAll("[data-type]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    render();
+  }));
+  unitIn.addEventListener("input", render);
+  document.querySelector("[data-open-redraw]").addEventListener("click", () => {
+    document.querySelector('[aria-label="Màn đối chiếu (mẫu)"]').scrollIntoView({ behavior: "smooth" });
+  });
+  document.querySelector("[data-apply]").addEventListener("click", () => {
+    document.querySelector("[data-slide-after]").scrollIntoView({ behavior: "smooth" });
+  });
+  reset();
+
+  // ---- phần 3 ----
+  document.querySelector("[data-slide-after]").innerHTML =
+    `<div class="s-title">${titleHtml}</div><div class="s-chart">${limioChart(TRUE_V, "bar", "%")}</div>`;
+  document.querySelector("[data-slide-cont]").innerHTML =
+    `<div class="s-title">Tỉ lệ sinh viên hoàn thành <em>học phần (tiếp)</em></div><div class="s-bul" style="width:80%"><div>Tỉ lệ tăng đều qua năm năm.</div><div>Năm 2023 bắt đầu dùng học liệu có phản hồi.</div></div>`;
+})();
+</script>
+</body>
+</html>

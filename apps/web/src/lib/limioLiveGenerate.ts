@@ -395,6 +395,8 @@ export interface GenerateDeps {
   /** Nguồn của bài (tài liệu, mô tả chủ đề...); thiếu = tài liệu. Số trên slide Bảng, Biểu đồ, Số liệu phải có trong
    *  context.sourceText (chống bịa số liệu). */
   context?: DraftContext;
+  /** Slide dựng sẵn không qua AI (vd. dòng lấy nguyên từ slide PowerPoint gốc); null = để AI viết. */
+  fixedSlide?: (os: OutlineSlide, index: number) => GeneratedSlide | null;
 }
 
 export interface GenerateResult {
@@ -413,10 +415,12 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
   const sections = deps.sectionNos ?? sectionNumbers(outline);
   const ctx: DraftContext = { ...deps.context, sourceNumbers: numbersInText(deps.context?.sourceText ?? "") };
   const results: GeneratedSlide[] = new Array(total);
-  // Dòng do hệ thống dựng (Nguồn tham khảo) không gửi cho AI.
-  const ai = outline.map((s, i) => (s.fixed ? -1 : i)).filter((i) => i >= 0);
+  // Dòng do hệ thống dựng (Nguồn tham khảo) và dòng dựng sẵn (slide gốc) không gửi cho AI.
+  const own = outline.map((s, i) => (s.fixed ? null : (deps.fixedSlide?.(s, i) ?? null)));
+  const ai = outline.map((s, i) => (s.fixed || own[i] ? -1 : i)).filter((i) => i >= 0);
   outline.forEach((s, i) => {
     if (s.fixed) results[i] = applyStructure(draftToSlide(s, undefined, sections[i]!, ctx), deps.structures?.[i]);
+    else if (own[i]) results[i] = applyStructure(own[i]!, deps.structures?.[i]);
   });
   let done = total - ai.length;
   const batches = makeBatches(ai.length).map((b) => b.map((k) => ai[k]!));

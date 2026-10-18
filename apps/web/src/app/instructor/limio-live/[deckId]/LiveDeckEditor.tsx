@@ -573,13 +573,19 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   };
 
   // Tách một slide quá dài thành hai: cập nhật slide hiện tại, thêm slide mới rồi đặt ngay sau nó.
-  const handleSplitSlide = async (slideId: string, first: Record<string, any>, second: Record<string, any>) => {
+  /**
+   * Thay slide bằng `first` và chèn `second` ngay sau. `aiAction`: slide đầu là đề xuất AI giảng viên đã chấp nhận
+   * (vẽ lại biểu đồ từ hình): ghi như chấp nhận đề xuất AI và giữ chọn slide đầu thay vì slide mới.
+   */
+  const handleSplitSlide = async (slideId: string, first: Record<string, any>, second: Record<string, any>, opts: { aiAction?: string } = {}) => {
     if (!deck) return;
     await flushSaves();
+    // Hiện ngay slide đầu đã đổi (vd biểu đồ thay hình), không để cửa sổ sửa còn nội dung cũ trong lúc chờ máy chủ.
+    setDeck((prev) => (prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, config: first } : s)) } : prev));
     const patchRes = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}`), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ config: first }),
+      body: JSON.stringify({ config: first, ...(opts.aiAction ? { source: "ai", aiAction: opts.aiAction } : {}) }),
     });
     const addRes = patchRes.ok
       ? await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
@@ -603,7 +609,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     });
     if (!orderRes.ok) toast.error("Đã tách nhưng chưa đặt đúng thứ tự — hãy kéo slide mới lên sau slide gốc");
     await load();
-    setSelectedSlideId(created.id);
+    setSelectedSlideId(opts.aiAction ? slideId : created.id);
   };
 
   const handleSaveSlide = async (
@@ -944,7 +950,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                   onApplyProposal={(p, action) =>
                     handleSaveSlide(selectedSlide.id, { config: p.config, type: p.type, source: "ai", aiAction: action })
                   }
-                  onSplit={(a, b) => handleSplitSlide(selectedSlide.id, a, b)}
+                  onSplit={(a, b, opts) => handleSplitSlide(selectedSlide.id, a, b, opts)}
                   onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
                   editOpen={editOpen}
                   onEditOpenChange={setEditOpen}
@@ -1248,7 +1254,7 @@ function SlideCenterEditor({
   themeId?: string | null;
   deckId: string;
   onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }, action: string) => void;
-  onSplit: (a: Record<string, any>, b: Record<string, any>) => void;
+  onSplit: (a: Record<string, any>, b: Record<string, any>, opts?: { aiAction?: string }) => void;
   slide: Slide;
   onSave: (patch: { config: Record<string, any> }) => void;
 }) {

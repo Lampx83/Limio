@@ -74,8 +74,14 @@ export interface SavedBoardImage {
 /**
  * Kiểm tra, chuẩn hoá và lưu 1 ảnh đính kèm cùng thumbnail.
  * Trả null nếu không phải ảnh hợp lệ (caller trả 415).
+ * `keyFor`: nơi lưu (mặc định kho đính kèm của board; Limio-Live nhập PowerPoint dùng kho ảnh slide). `boardId` đứng
+ * đầu tên file — truyền mã người dùng thì sổ dung lượng tính file cho người đó.
  */
-export async function saveBoardImage(boardId: string, input: Buffer): Promise<SavedBoardImage | null> {
+export async function saveBoardImage(
+  boardId: string,
+  input: Buffer,
+  keyFor: (date: Date, filename: string) => StorageKey = boardAttachmentKey,
+): Promise<SavedBoardImage | null> {
   const sniffed = sniffImageExt(input);
   if (!sniffed) return null;
 
@@ -86,7 +92,7 @@ export async function saveBoardImage(boardId: string, input: Buffer): Promise<Sa
   // Không có sharp: hành vi cũ.
   if (!sharp) {
     const filename = `${stem}.${sniffed}`;
-    const key = boardAttachmentKey(now, filename);
+    const key = keyFor(now, filename);
     await storageFor(key).put(key.key, input, MIME_BY_EXT[sniffed]);
     return { filename };
   }
@@ -103,7 +109,7 @@ export async function saveBoardImage(boardId: string, input: Buffer): Promise<Sa
   // GIF động giữ nguyên (xử lý lại sẽ mất hoạt ảnh); không tạo thumbnail — NoteAttachment dùng bản gốc.
   if (sniffed === "gif") {
     const filename = `${stem}.gif`;
-    const key = boardAttachmentKey(now, filename);
+    const key = keyFor(now, filename);
     await storageFor(key).put(key.key, input, "image/gif");
     return { filename };
   }
@@ -122,7 +128,7 @@ export async function saveBoardImage(boardId: string, input: Buffer): Promise<Sa
   // Nhúng kích thước vào tên file để client dựng khung đúng tỉ lệ trước khi ảnh tải xong (không giật bố cục).
   const info = await sharp(displayBuf).metadata();
   const filename = `${boardId}-${info.width}x${info.height}-${now.getTime()}-${randomBytes(6).toString("hex")}.${ext}`;
-  const key = boardAttachmentKey(now, filename);
+  const key = keyFor(now, filename);
   await storageFor(key).put(key.key, displayBuf, MIME_BY_EXT[ext]);
 
   // Thumbnail tạo sẵn để lần xem đầu của cả lớp không phải chờ (và không dồn N request cùng sinh 1 thumbnail).

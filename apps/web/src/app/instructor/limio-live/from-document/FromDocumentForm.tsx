@@ -68,6 +68,16 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
   const [error, setError] = useState<string | null>(null);
   const [drag, setDrag] = useState(false);
 
+  const chooseFile = (f: File | null) => {
+    if (f && /\.pptx?$/i.test(f.name)) {
+      setFile(null);
+      setError("Bài giảng PowerPoint dùng mục \"PowerPoint\" ở trên: Limio giữ được cả hình, ghi chú giảng, bảng và biểu đồ.");
+      return;
+    }
+    setError(null);
+    setFile(f);
+  };
+
   const ready = mode === "topic" ? topic.trim().length >= TOPIC_MIN : mode === "file" ? !!file : text.trim().length > 0;
   const searching = mode === "topic" && webAvailable && useWeb;
 
@@ -152,6 +162,13 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
             {MODE_LABEL[m]}
           </button>
         ))}
+        {/* Bài giảng PowerPoint có luồng riêng (giữ hình, ghi chú giảng, bảng, biểu đồ). */}
+        <a
+          href="/instructor/limio-live/from-pptx"
+          className="whitespace-nowrap rounded-full px-4 py-1.5 font-medium text-muted hover:text-[rgb(var(--text))] max-sm:flex-1 max-sm:px-1 max-sm:text-center"
+        >
+          PowerPoint
+        </a>
       </div>
 
       <div className="overflow-hidden rounded-2xl border-2 border-token bg-[rgb(var(--surface))] focus-within:border-brand-500">
@@ -188,7 +205,7 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
               e.preventDefault();
               setDrag(false);
               const f = e.dataTransfer.files?.[0];
-              if (f) setFile(f);
+              if (f) chooseFile(f);
             }}
             className={`m-3 flex flex-col items-center gap-2 rounded-xl border-2 border-dashed p-6 text-center ${drag ? "border-brand-500 bg-brand-50" : "border-token"}`}
           >
@@ -213,7 +230,7 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
               type="file"
               hidden
               accept=".docx,.pdf,.txt,.md,application/pdf,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => chooseFile(e.target.files?.[0] ?? null)}
             />
           </div>
         ) : (

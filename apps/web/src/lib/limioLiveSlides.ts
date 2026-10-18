@@ -137,7 +137,8 @@ export const MAX_LEN = {
   chartLabel: 40,
   seriesName: 40,
   unit: 20,
-  notes: 2000,
+  // Ghi chú giảng nhập từ PowerPoint giữ nguyên chữ, thường dài hơn ghi chú AI viết.
+  notes: 6000,
 } as const;
 
 /** Cỡ chữ nhỏ nhất trên khung thiết kế 1280×720 (tương đương 39 px ở màn 1920×1080). */
@@ -286,6 +287,8 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
     if (bullets.length) out.bullets = bullets;
     const img = clip(raw.imageUrl, 2000);
     if (img) out.imageUrl = img;
+    // Hình lấy từ file của giảng viên (sơ đồ, ảnh chụp màn hình) hiện trọn, không cắt cho đầy ô.
+    if (img && raw.imageFit === "contain") out.imageFit = "contain";
   }
   if (ITEM_RANGE[layout]) out.items = sanitizeItems(raw.items, layout);
   if (layout === "steps") {
@@ -704,6 +707,8 @@ export function pickMeta(config: Record<string, unknown> | null | undefined): Re
   if (c.editedByUser === true) out.editedByUser = true;
   // Dòng nguồn ở chân slide ("Nguồn: [1], [3]") của bài soạn kèm trang tìm trên internet.
   if (typeof c.cite === "string" && c.cite.trim()) out.cite = c.cite.trim().slice(0, MAX_LEN.source);
+  // Biểu đồ vẽ lại từ hình chụp: địa chỉ hình gốc để "Trả lại hình" (docs/tieu-chi/bieu-do-kho-doc-pptx.md, V9, V11).
+  if (typeof c.fromImage === "string" && /^\/api\/limio-live-media\/[^/?#]+$/.test(c.fromImage)) out.fromImage = c.fromImage;
   return out;
 }
 

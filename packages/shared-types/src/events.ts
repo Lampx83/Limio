@@ -223,6 +223,9 @@ export const LearningEventType = {
   LiveDeckSlidesGenerated: "live.deck.slides_generated",
   LiveSlideAiEditProposed: "live.slide.ai_edit_proposed",
   LiveSlideAiChatTurn: "live.slide.ai_chat_turn",
+  // AI đọc số từ hình biểu đồ (docs/tieu-chi/bieu-do-kho-doc-pptx.md, V12). Khi giảng viên thay hình: ai_edit_accepted
+  // với action "chart_from_image".
+  LiveSlideChartFromImageProposed: "live.slide.chart_from_image_proposed",
   LiveSlideAiEditAccepted: "live.slide.ai_edit_accepted",
   LiveSlideEditedByUser: "live.slide.edited_by_user",
   LiveSlideVersionRestored: "live.slide.version_restored",
@@ -699,6 +702,14 @@ export interface LiveDeckOutlineGeneratedPayload {
   sourceKind?: "document" | "topic" | "topic_web";
   /** Có bật tìm nguồn internet: số trang đã đọc (0 = không tìm được, bài rơi về "topic"). */
   webSourceCount?: number;
+  /** Bài nhập từ file trình chiếu. */
+  sourceFormat?: "pptx";
+  /** Cách chuyển: giữ ý (không AI) hoặc soạn lại mạch (AI). */
+  importMode?: "keep" | "restructure";
+  /** Số slide trong file gốc. */
+  importedSlides?: number;
+  /** Số hình đã lưu. */
+  imageCount?: number;
 }
 
 export interface LiveDeckSlidesGeneratedPayload {
@@ -731,6 +742,16 @@ export interface LiveSlideAiEditProposedPayload {
   slideId: string;
   /** "custom" = yêu cầu riêng giảng viên gõ (nội dung yêu cầu không ghi vào sự kiện). */
   action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
+}
+
+export interface LiveSlideChartFromImageProposedPayload {
+  deckId: string;
+  slideId: string;
+  /** "ok" hoặc lý do không dùng được kết quả (not_chart, too_many_labels, too_many_series). Không ghi số liệu. */
+  outcome: "ok" | "not_chart" | "too_many_labels" | "too_many_series";
+  labels: number;
+  /** Số giá trị AI ước lượng theo trục (hình không ghi số). */
+  estimated: number;
 }
 
 export interface LiveSlideAiEditAcceptedPayload {

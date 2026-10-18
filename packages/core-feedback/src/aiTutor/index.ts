@@ -10,3 +10,4 @@ export * from "./lectureSlideEdit";
 export * from "./lessonOutline";
 export * from "./lessonWriter";
 export * from "./lectureSlideChat";
+export * from "./chartFromImage";
