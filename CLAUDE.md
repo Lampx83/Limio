@@ -65,6 +65,7 @@ Một số namespace chuẩn:
 - LMS: `lesson.*`, `quiz.*`, `assignment.*`, `enrollment.*`, `course.*`, `forum.*`
 - Feedback: `skill.state.updated`, `misconception.*`, `feedback.*`, `adaptive.path.updated`
 - Gamification: `xp.awarded`, `level.up`, `badge.earned`, `quest.completed`, `streak.*`, `leaderboard.updated`
+- Lily (trợ lý ảo giảng viên): `assistant.drawer.opened`, `assistant.question.asked`, `assistant.link.clicked`, `assistant.conversation.reset`. Payload `question.asked` mang **câu hỏi** của giảng viên nhưng không mang câu trả lời của Lily (xem `AssistantQuestionAskedPayload`)
 - Tournament: `tournament.*` (created, registered, started, ended, mission.unlocked, mission.completed, ranking.updated, disqualified, prize.distributed)
 
 ### 4.3. Module boundary

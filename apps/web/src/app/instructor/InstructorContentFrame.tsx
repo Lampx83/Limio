@@ -9,8 +9,9 @@ const FULL_WIDTH_PREFIXES = ["/instructor/gameshow", "/instructor/teaching-tools
 export default function InstructorContentFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "";
   const full = FULL_WIDTH_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  // pb-24: chừa chỗ dưới cùng cho nút nổi "Hỏi Lily" (cao ~48px, cách đáy 20px) để cuộn hết trang thì không còn che nội dung.
   return (
-    <div className={`mx-auto w-full px-4 py-6 lg:px-6 ${full ? "" : "max-w-6xl"}`}>
+    <div className={`mx-auto w-full px-4 pb-24 pt-6 lg:px-6 ${full ? "" : "max-w-6xl"}`}>
       {children}
     </div>
   );
