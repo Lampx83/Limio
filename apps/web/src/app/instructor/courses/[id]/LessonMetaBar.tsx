@@ -116,8 +116,20 @@ export default function LessonMetaBar({
   return (
     <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
       {isHidden && (
-        <span className="chip-danger" title="Bài đang ẩn với học viên">
-          Đang ẩn
+        <span className="inline-flex items-center gap-1.5">
+          <span className="chip-danger" title="Bài đang ẩn với học viên">
+            Đang ẩn
+          </span>
+          {/* Bài AI tạo thêm từ dàn ý mặc định ẩn: chỗ bật phải nằm ngay cạnh nhãn,
+              không chỉ trong menu ⋮ nơi giảng viên không nghĩ tới. */}
+          <button
+            type="button"
+            onClick={() => void toggleHidden()}
+            className="btn-primary btn-sm"
+            title="Cho học viên thấy bài này"
+          >
+            Hiện bài này
+          </button>
         </span>
       )}
 

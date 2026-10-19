@@ -438,7 +438,8 @@ thanh bước **Tài liệu → Dàn ý → Bài học**).
 3. **Bước Bài học:** bấm **"Tạo bài"**, AI viết từng mục theo tiến độ; kết quả ở thẻ "Bài học" (xem trước, đối
    chiếu tài liệu gốc). Đổi ý: "Quay lại dàn ý", "Tạo lại" (hỏi xác nhận, tốn thêm token). Bấm **"Áp dụng vào bài
    học"** — bài thứ nhất thành một khối Văn bản mới ở cuối bài. Nếu dàn ý có nhiều bài thì nút ghi "Áp dụng N bài
-   học": các bài sau thành bài MỚI cùng chương, đang ẨN với học viên cho tới khi giảng viên bật "Hiện bài này".
+   học": các bài sau thành bài MỚI cùng chương, đang ẨN với học viên cho tới khi giảng viên bật "Hiện bài này" (nút xanh ngay cạnh nhãn "Đang ẩn" ở đầu bài,
+   hoặc công tắc cùng tên trong menu "⋮").
 4. **Giao diện của bài** (nút "Giao diện", "Bảng màu và kiểu chữ của cả bài"): 6 bảng màu (Xanh Limio, Giấy ấm,
    Rừng thông, Hoàng hôn, Sinh động, Trang nhã); 3 kiểu chữ (Hiện đại, Dễ đọc, Học thuật); 7 bố cục (Văn bản,
    Chữ và ảnh, Thẻ khái niệm, So sánh hai cột, Các bước, Hỏi và đáp, Số liệu nổi bật); 5 loại hộp (Mục tiêu
