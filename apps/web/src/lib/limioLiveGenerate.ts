@@ -18,6 +18,7 @@ import { isWebImageId } from "./limioLiveWebImages";
 import { addNumbersOf, cellNumbersInSource, hasNumber, isNum, numbersInText, type ChartSeries } from "./limioLiveCharts";
 import { safeLayoutFor, stripEmoji, type DeckSourceKind, type OutlineSlide, type SlideStructure, type WebSourceRef } from "./limioLiveOutline";
 import { allText, formatCite, stripCitesDeep, unsupportedFigures } from "./limioLiveFigures";
+import { slideText } from "./limioLiveLanguage";
 
 export const BATCH_SIZE = 5;
 
@@ -73,6 +74,8 @@ export interface DraftContext {
   sourceNumbers?: Set<string>;
   /** Slide kết bài (SlideStructure.closing): câu khép lại buổi học, giữ bố cục Trích dẫn ở mọi nguồn. */
   closing?: boolean;
+  /** Ngôn ngữ của bài: chữ hệ thống (dòng nguồn, ghi chú slide Nguồn tham khảo) theo ngôn ngữ này. */
+  lang?: string | null;
 }
 
 const topicKind = (ctx?: DraftContext): DeckSourceKind => ctx?.sourceKind ?? "document";
@@ -89,13 +92,13 @@ function takeCites<T>(v: T, ctx?: DraftContext): { value: T; cite: string } {
   if (topicKind(ctx) === "document") return { value: v, cite: "" };
   const nums: number[] = [];
   const value = stripCitesDeep(v, nums);
-  return { value, cite: topicKind(ctx) === "topic_web" ? formatCite(nums, ctx?.refs?.length ?? 0) : "" };
+  return { value, cite: topicKind(ctx) === "topic_web" ? formatCite(nums, ctx?.refs?.length ?? 0, slideText(ctx?.lang).source) : "" };
 }
 
 /** Slide Nguồn tham khảo: đúng chữ của dàn ý; ghi chú giảng liệt kê địa chỉ đầy đủ để giảng viên mở kiểm tra. */
 function referencesSlide(os: OutlineSlide, ctx?: DraftContext): GeneratedSlide {
   const refs = ctx?.refs ?? [];
-  const note = refs.length ? `Các trang AI đã đọc khi soạn bài:\n${refs.map((r) => `[${r.n}] ${r.title} — ${r.url}`).join("\n")}` : "";
+  const note = refs.length ? `${slideText(ctx?.lang).webNote}\n${refs.map((r) => `[${r.n}] ${r.title} — ${r.url}`).join("\n")}` : "";
   const config = {
     // Mỗi dòng "[n] ..." mang link tới trang thứ n (giảng viên sửa tên dòng thì link vẫn theo số).
     ...sanitizeLayoutConfig("summary", {

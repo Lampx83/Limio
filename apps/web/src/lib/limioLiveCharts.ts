@@ -220,11 +220,11 @@ export const TABLE_PX = { min: 26, max: 40 } as const;
 /** Đệm trên dưới mỗi ô (px): tối thiểu khi bảng dày, tăng dần khi còn chỗ. */
 export const TABLE_PAD_Y = { min: 9.5, max: 22 } as const;
 
-/** Dòng nguồn: tự thêm "Nguồn:" nếu giảng viên chưa ghi. */
-export function sourceLine(source: unknown): string {
+/** Dòng nguồn: tự thêm nhãn ("Nguồn:", hoặc "Source:" ở bài tiếng Anh) nếu giảng viên chưa ghi. */
+export function sourceLine(source: unknown, label = "Nguồn"): string {
   const s = typeof source === "string" ? source.trim() : "";
   if (!s) return "";
-  return /^nguồn\b/i.test(s) ? s : `Nguồn: ${s}`;
+  return /^(nguồn|source)(?![\p{L}])/iu.test(s) ? s : `${label}: ${s}`;
 }
 
 /** Chiều cao còn lại cho bảng hoặc biểu đồ sau tiêu đề (đã biết số dòng) và dòng nguồn. */

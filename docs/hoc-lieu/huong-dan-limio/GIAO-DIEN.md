@@ -570,8 +570,11 @@ trình sửa: chưa kiểm chứng.
 
 **Giao diện và thương hiệu:** nút **Giao diện** có 18 giao diện trong 4 nhóm — Cơ bản (Trắng, Kem, Limio, Giấy
 ấm), Màu pastel (Bạc hà, Trời, Hồng phấn, Oải hương, Đào, Biển), Đơn sắc (Mono xám, lam, lục, đen), Nền tối
-(Đêm xanh, Rừng đêm, Mận, Mực; nền tối chỉ áp cho slide bố cục) — và "Hoa văn của cả bài" (Tự động, Chọn một,
-Không dùng). Hộp **Thương hiệu của bài giảng**: "Của <tên trường>" (chỉ khi trường có bộ thương hiệu), "Riêng
+(Đêm xanh, Rừng đêm, Mận, Mực; nền tối chỉ áp cho slide bố cục) — "Hoa văn của cả bài" (Tự động, Chọn một,
+Không dùng) và **"Ngôn ngữ của slide"** (Tiếng Việt, Tiếng Anh, Tiếng Trung, Tiếng Nhật, Tiếng Hàn, Tiếng Pháp, Tiếng
+Đức, "Tự nhận lại theo nội dung"; bài mới tự nhận theo tài liệu hoặc mô tả, mô tả ghi rõ "bằng tiếng Anh" thì theo đó).
+AI viết slide mới và các chữ tự thêm trên slide ("(tiếp)", "Nguồn tham khảo", "Nguồn ảnh"…) theo ngôn ngữ này; đổi
+ngôn ngữ không dịch các slide đã có. Hỏi đáp "Nhờ AI" vẫn trả lời giảng viên bằng tiếng Việt. Hộp **Thương hiệu của bài giảng**: "Của <tên trường>" (chỉ khi trường có bộ thương hiệu), "Riêng
 cho bài này" (logo PNG/JPG/WebP ≤ 5 MB; vị trí 4 góc; cỡ Nhỏ/Vừa/Lớn; chỗ hiện Mọi slide/Trừ bìa/Bìa và tóm
 tắt; bảng màu 3 ô Màu chính/Màu phụ/Màu nhấn, "Gợi ý màu từ logo"; nền Theo giao diện/Sáng xuyệt tông/Tối xuyệt
 tông; "Gỡ toàn bộ thương hiệu"), hoặc "Không dùng". Cấp trường do quản trị trường đặt (mục 10).

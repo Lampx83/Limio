@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useDeckLang } from "../liveLangContext";
 import { createPortal } from "react-dom";
 import { GROUPS_MAX, GROUP_POINTS_MAX, type SlideGroup } from "@/lib/limioLiveGroups";
 import { ICON_LABELS, SLIDE_ICONS, autoGroupIcons } from "@/lib/limioLiveIcons";
@@ -675,7 +676,8 @@ export default function LayoutEditor({
         }
       : null;
   const problems = useMemo(() => layoutTextProblems(layout, preview), [layout, preview]);
-  const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }) : null), [problems, preview, config]);
+  const lang = useDeckLang();
+  const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }, lang) : null), [problems, preview, config, lang]);
 
   const items: LayoutItem[] = d.items ?? [];
   const setItem = (i: number, patch: Partial<LayoutItem>) =>

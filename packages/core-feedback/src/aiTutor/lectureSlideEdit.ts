@@ -4,6 +4,7 @@ import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
 import { DRAFTS_SCHEMA, SLIDE_SPEC, type RawSlideDraft } from "./lectureSlides";
 import { sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
+import { slideLanguageRule } from "./lectureLanguage";
 
 /**
  * Nhờ AI sửa MỘT slide đã có (tiêu chí H8). Chỉ trả đề xuất; giảng viên xem bản so sánh rồi
@@ -33,6 +34,8 @@ export interface SlideEditInput {
   outlinePoints?: string[];
   /** Hành động "custom": yêu cầu giảng viên gõ bằng lời. */
   instruction?: string;
+  /** Ngôn ngữ nội dung slide của bài (mã trong DECK_LANGUAGES); thiếu = theo ngôn ngữ của nguồn. */
+  language?: string | null;
 }
 
 const ACTION_TEXT: Record<SlideEditAction, string> = {
@@ -60,7 +63,7 @@ Quy tắc bắt buộc:
 1. Chỉ trả về MỘT slide, "index" là 0.
 2. Văn phong khoa học, rõ ràng. Mọi mô tả, ý chính, giải thích phải là CÂU HOÀN CHỈNH có chủ ngữ và vị ngữ, kết thúc bằng dấu chấm. KHÔNG viết cụt.
 3. ${sourceRule(kind, "edit")}
-4. KHÔNG dùng emoji hay ký hiệu trang trí. Giữ nguyên thuật ngữ tiếng Anh nếu nội dung hiện tại dùng.
+4. KHÔNG dùng emoji hay ký hiệu trang trí. ${slideLanguageRule(input.language, "nội dung hiện tại dùng")}
 5. Chỉ điền các trường được yêu cầu cho bố cục đích; mọi trường khác để chuỗi rỗng hoặc mảng rỗng. Trường "notes": 2 đến 4 câu lời giảng cho giảng viên.
 6. byline luôn để rỗng.
 

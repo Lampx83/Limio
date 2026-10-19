@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
+import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
+import { LiveLangProvider } from "../../liveLangContext";
 import OutlineEditor from "./OutlineEditor";
 
 export const metadata = {
@@ -15,5 +17,11 @@ export default async function OutlinePage({ params }: { params: { deckId: string
     select: { id: true, outline: true },
   });
   if (!deck || !deck.outline) notFound();
-  return <OutlineEditor deckId={deck.id} />;
+  // Ngôn ngữ của bài: tên phần mới và chữ hệ thống trên bản xem trước (docs/tieu-chi/ngon-ngu-slide.md).
+  const lang = await resolveDeckLanguage(deck.id);
+  return (
+    <LiveLangProvider lang={lang}>
+      <OutlineEditor deckId={deck.id} />
+    </LiveLangProvider>
+  );
 }

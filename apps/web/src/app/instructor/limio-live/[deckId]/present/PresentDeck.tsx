@@ -18,6 +18,7 @@ import { slideBgFor } from "../../slideThemes";
 import { isLayoutSlide } from "../../SlideLayouts";
 import { ContentSlideView, SlideTimer } from "../../ContentSlideView";
 import { BrandLogoOverlay, BrandLogoSpacer, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
+import { LiveLangProvider } from "../../liveLangContext";
 import { LiveMotifProvider } from "../../liveMotifContext";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
 import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
@@ -54,6 +55,8 @@ interface Deck {
   brandTemplate?: string | null;
   /** Hoa văn trang trí của cả bài (limioLiveMotifs): null = tự động. */
   motif?: string | null;
+  /** Ngôn ngữ của bài: chữ hệ thống trên slide (docs/tieu-chi/ngon-ngu-slide.md). */
+  language?: string | null;
   org?: DeckOrgBrand | null;
   slides: Slide[];
 }
@@ -675,6 +678,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
   return (
     <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
+    <LiveLangProvider lang={deck.language}>
     <LiveMotifProvider deckId={deck.id} motif={deck.motif} slides={slides}>
     <div
       onClick={() => {
@@ -1005,6 +1009,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
     </div>
     </LiveMotifProvider>
+    </LiveLangProvider>
     </LiveBrandProvider>
   );
 }

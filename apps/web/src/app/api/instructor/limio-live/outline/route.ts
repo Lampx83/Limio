@@ -15,6 +15,7 @@ import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { isFullStructure, isValidMinutes, normalizeOutline, slideRange, type DeckSourceKind, type WebSourceRef } from "@/lib/limioLiveOutline";
+import { detectLanguage, topicLanguage } from "@/lib/limioLiveLanguage";
 import { WEB_MAX_PAGES, getWebSearchProvider, searchQueryFromTopic, toSourcePages, type WebSearchProvider } from "@/lib/webSearch";
 
 export const runtime = "nodejs";
@@ -116,6 +117,9 @@ export async function POST(req: Request) {
   const truncated = sourceText.length > OUTLINE_MAX_SOURCE_CHARS;
   const topicText = sourceText;
   const name = sourceName;
+  // Ngôn ngữ của bài (docs/tieu-chi/ngon-ngu-slide.md, L3): mô tả ghi rõ ngôn ngữ thì theo đó, không thì theo chữ của nguồn.
+  // Không nhận được thì để trống: AI viết theo ngôn ngữ của nguồn.
+  const language = sourceKind === "topic" ? topicLanguage(topicText) : detectLanguage(topicText);
 
   // Từ đây trở đi là phần chậm (gọi mô hình, có thể hơn 60 giây). Trả luồng NDJSON có nhịp giữ kết nối để proxy
   // phía trước không cắt: ... {"type":"ping"}* rồi {"type":"done",...} hoặc {"type":"error","error","status"}.
@@ -151,6 +155,7 @@ export async function POST(req: Request) {
               minSlides: range.min,
               maxSlides: range.max,
               structure: isFullStructure(minutes) ? "full" : "compact",
+              language,
             },
             openai,
           );
@@ -161,7 +166,7 @@ export async function POST(req: Request) {
           return fail("generate_failed", 500);
         }
 
-        const { outline, warnings } = normalizeOutline(raw, minutes, { sourceKind: kind, sourceText: text, references: refs ?? [] });
+        const { outline, warnings } = normalizeOutline(raw, minutes, { sourceKind: kind, sourceText: text, references: refs ?? [], lang: language });
         if (outline.slides.length === 0) return fail("empty_outline", 502);
 
         const deck = await prisma.liveDeck.create({
@@ -174,6 +179,7 @@ export async function POST(req: Request) {
             sourceName: name,
             sourceText: text.slice(0, MAX_STORED_SOURCE_CHARS),
             sourceKind: kind,
+            language,
             ...(refs ? { sourceRefs: refs as unknown as object } : {}),
           },
           select: { id: true },
@@ -185,6 +191,7 @@ export async function POST(req: Request) {
           sourceChars: text.length,
           warningCount: warnings.length,
           sourceKind: kind,
+          language,
           ...(refs ? { webSourceCount: refs.length } : {}),
         });
         send({ type: "done", deckId: deck.id, outline, warnings, truncated });

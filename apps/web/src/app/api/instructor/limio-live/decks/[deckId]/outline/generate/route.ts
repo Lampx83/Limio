@@ -13,6 +13,7 @@ import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
 import { motifAfterRegenerate } from "@/lib/limioLiveMotifs";
 import { partLabel, resolveSourceKind, sanitizeOutline, sanitizeRefs, slideStructures } from "@/lib/limioLiveOutline";
 import { firstSplitRows, importedSlideFor, sanitizeImportSource, withOriginalNotes } from "@/lib/limioLivePptx";
+import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -73,7 +74,9 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   const sourceText = deck.sourceText ?? "";
   // Nguồn của bài quyết định luật dùng số liệu, trích dẫn (câu lệnh) và cách kiểm bản nháp (draftToSlide).
   const sourceKind = resolveSourceKind(deck.sourceKind);
-  const context = { sourceKind, sourceText, refs: sanitizeRefs(deck.sourceRefs) };
+  // Ngôn ngữ của bài: AI viết slide mới và chữ hệ thống theo ngôn ngữ này (docs/tieu-chi/ngon-ngu-slide.md, L6).
+  const language = await resolveDeckLanguage(deck.id);
+  const context = { sourceKind, sourceText, refs: sanitizeRefs(deck.sourceRefs), lang: language };
   // Ảnh nguồn internet làm ứng viên cho AI chọn ở slide Chữ và hình (W8). Mã A1, A2… tính lại được y hệt ở bước gắn ảnh.
   const webImages =
     sourceKind === "topic_web"
@@ -100,7 +103,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
 
   // Bài nhập từ PowerPoint: dòng lấy nguyên từ một slide gốc dựng thẳng từ dữ liệu đã đọc (không AI, giữ nguyên chữ).
   const importSource = sanitizeImportSource(deck.importSource);
-  const imported = writeIdx.map((i) => importedSlideFor(outline.slides[i]!, importSource, sectionNos[i]));
+  const imported = writeIdx.map((i) => importedSlideFor(outline.slides[i]!, importSource, sectionNos[i], language));
   const needsAi = writeIdx.some((i, k) => !imported[k] && !outline.slides[i]!.fixed);
 
   let openai: Awaited<ReturnType<typeof getOpenaiClient>> | null = null;
@@ -136,7 +139,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             if (!openai) throw new Error("openai_not_configured");
             const drafts = (await generateSlideDrafts(
               userId,
-              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!), webImages },
+              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!), webImages, language },
               openai,
             )) as SlideDraft[];
             // generateDeckSlides đánh chỉ số theo phần được viết; mô hình trả chỉ số theo cả dàn ý.
@@ -218,6 +221,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           slideCount: plan ? plan.order.length : result.slides.length,
           fallbackCount: result.fallbackCount,
           ...(sourceKind === "topic_web" ? { webImageCount } : {}),
+          language,
           ...(plan
             ? { regenerated: plan.regenerate.length, created: plan.create.length, removed: plan.remove.length, kept: plan.keep.length + plan.orphans.length }
             : {}),

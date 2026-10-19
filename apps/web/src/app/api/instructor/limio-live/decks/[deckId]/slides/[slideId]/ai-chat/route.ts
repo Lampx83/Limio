@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
+import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { CHAT_MESSAGE_MAX, normalizeChatReply, relevantExcerpt, sanitizeChatHistory } from "@/lib/limioLiveChat";
 import { LAYOUT_META, pickMeta, resolveLayout } from "@/lib/limioLiveSlides";
@@ -60,6 +61,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
   // Chỉ gửi các đoạn liên quan tới slide và câu hỏi, không gửi cả tài liệu mỗi lượt.
   const query = [row?.title, ...(row?.points ?? []), JSON.stringify(current), message].filter(Boolean).join(" ");
   const excerpt = relevantExcerpt(sourceText, query, sourceKind);
+  // Bản nháp slide theo ngôn ngữ của bài; lời trả lời giảng viên vẫn bằng tiếng Việt (docs/tieu-chi/ngon-ngu-slide.md, L8).
+  const language = await resolveDeckLanguage(params.deckId);
 
   try {
     const raw = await generateSlideChat(
@@ -74,13 +77,14 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
         outlinePoints: row?.points,
         history,
         message,
+        language,
       },
       openai,
     );
     const result = normalizeChatReply(raw, {
       current: { config },
       layoutLabel: LAYOUT_META[layout].label,
-      ctx: { sourceKind, sourceText, refs: sanitizeRefs(slide.deck.sourceRefs) },
+      ctx: { sourceKind, sourceText, refs: sanitizeRefs(slide.deck.sourceRefs), lang: language },
     });
     await emitLiveEvent(userId, LearningEventType.LiveSlideAiChatTurn, {
       deckId: params.deckId,

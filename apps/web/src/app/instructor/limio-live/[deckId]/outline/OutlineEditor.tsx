@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSlideText } from "../../liveLangContext";
 import { AlertTriangle, Check, ChevronLeft, FileText, LayoutTemplate, Loader2, PenLine, Plus, Sparkles } from "lucide-react";
 import { outlineStory, shouldAutoOpen } from "@/lib/limioLiveOutlineCard";
 import { apiUrl } from "@/lib/apiUrl";
@@ -76,6 +77,8 @@ const GEN_ERROR: Record<string, string> = {
 type SaveState = "saved" | "dirty" | "saving" | "error";
 
 export default function OutlineEditor({ deckId }: { deckId: string }) {
+  // Tên phần mới theo ngôn ngữ của bài (docs/tieu-chi/ngon-ngu-slide.md, L11).
+  const newPartName = useSlideText().newPart;
   const url = apiUrl(`/api/instructor/limio-live/decks/${deckId}/outline`);
   const [data, setData] = useState<Loaded | null>(null);
   const [outline, setOutline] = useState<Outline>({ title: "", slides: [], parts: [] });
@@ -213,7 +216,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
     setEditingId(r.id);
   };
   const addPart = () => {
-    const r = addContentPart(outline, isFullStructure(minutes));
+    const r = addContentPart(outline, isFullStructure(minutes), newPartName);
     change(r.outline);
     setRenamingId(r.partId);
   };

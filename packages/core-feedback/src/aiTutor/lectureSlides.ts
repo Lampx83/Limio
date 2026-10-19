@@ -4,6 +4,7 @@ import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
 import { SLIDE_ILLUSTRATIONS, SLIDE_ILLUSTRATION_TOPICS } from "@feedbackme/shared-types";
 import { OUTLINE_KINDS, sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
+import { slideLanguageRule } from "./lectureLanguage";
 
 /**
  * Bước 3 của "tài liệu → bài giảng tương tác": viết NỘI DUNG từng slide theo dàn ý đã được
@@ -39,6 +40,8 @@ export interface SlideDraftsInput {
    * mô tả, trang nguồn. Có thì AI chọn một mã hoặc "none" ở trường webImage (docs/tieu-chi/nguon-web-link-anh.md, W8).
    */
   webImages?: Array<{ id: string; description: string; page: string }>;
+  /** Ngôn ngữ nội dung slide của bài (mã trong DECK_LANGUAGES); thiếu = theo ngôn ngữ của nguồn. */
+  language?: string | null;
 }
 
 export interface RawSlideDraft {
@@ -252,7 +255,7 @@ Quy tắc bắt buộc:
 2. Bám đúng tiêu đề, bố cục và ý chính của dàn ý; có thể diễn đạt lại cho rõ nhưng không đổi ý nghĩa, không thêm ý mới ngoài ${kind === "document" ? "tài liệu" : "phạm vi của dàn ý"}.
 3. Văn phong khoa học, rõ ràng. Mọi mô tả, ý chính, giải thích phải là CÂU HOÀN CHỈNH có chủ ngữ và vị ngữ, kết thúc bằng dấu chấm. KHÔNG viết cụt, không chỉ liệt kê cụm từ.
 4. ${sourceRule(kind, "slides")}
-5. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu ${kind === "document" ? "tài liệu dùng" : "ngành quen dùng"}).
+5. KHÔNG dùng emoji hay ký hiệu trang trí. ${slideLanguageRule(input.language, kind === "document" ? "tài liệu dùng" : "ngành quen dùng")}
 6. Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao. Slide thuộc phần "Dẫn dắt vào bài": chỉ cách dẫn để tạo tò mò (dừng một nhịp, mời cả lớp nghĩ hoặc trả lời, chưa giải đáp ngay và hẹn sẽ quay lại). Slide kết bài: gợi ý nói chậm, nối câu kết với câu hỏi mở đầu, rồi cảm ơn lớp.
 7. Mỗi bố cục chỉ điền các trường được yêu cầu; mọi trường khác để chuỗi rỗng hoặc mảng rỗng (với "table" và "chart" không dùng: head, rows, labels, series là mảng rỗng, type là "bar").
 
