@@ -3,7 +3,15 @@
 import { Fragment, memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { audienceUrl, openAudienceWindow, presenterUrl, startPresenterOnProjector, useProjectorReady } from "@/lib/limioLiveWindow";
+import {
+  audienceUrl,
+  openAudienceWindow,
+  presenterUrl,
+  requestProjectorPermission,
+  startPresenterOnProjector,
+  useProjectorStatus,
+  type ProjectorStatus,
+} from "@/lib/limioLiveWindow";
 import { isTopicSource, resolveSourceKind } from "@/lib/limioLiveOutline";
 import { TopicSourceNotice } from "../TopicSourceNotice";
 import {
@@ -473,8 +481,13 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   // Có màn hình mở rộng + đã cho quyền "Quản lý cửa sổ" (Chrome/Edge): làm như PowerPoint —
   // tab này lên fullscreen ở máy chiếu thành màn chiếu, presenter view mở cửa sổ mới ở
-  // màn hình laptop. Còn lại (Safari/Firefox, mirror, chưa cho quyền) giữ cách cũ.
-  const projectorReady = useProjectorReady();
+  // màn hình laptop. Còn lại (Safari/Firefox, mirror, chưa cho quyền) giữ cách cũ. Chưa cho quyền thì menu
+  // Trình chiếu có dòng "Cho phép" xin quyền riêng (xem PlayMenu).
+  const projector = useProjectorStatus();
+  const handleAllowProjector = async () => {
+    const next = await requestProjectorPermission();
+    if (next === "ready") toast.success("Đã cho phép. Từ giờ Presenter view tự đưa màn chiếu sang màn hình thứ hai.");
+  };
   const handleStartPresenterView = async () => {
     const presenterWin = startPresenterOnProjector();
     if (presenterWin === "blocked") return;
@@ -832,7 +845,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           onStart={() => startSlideshow("start")}
           onCurrent={selectedSlideId ? () => startSlideshow("current") : null}
           onPresenter={handleStartPresenterView}
-          projectorReady={projectorReady}
+          projector={projector}
+          onAllowProjector={handleAllowProjector}
         />
       </div>
       {isTopicSource(resolveSourceKind(deck.sourceKind)) && (
@@ -1326,13 +1340,16 @@ function PlayMenu({
   onStart,
   onCurrent,
   onPresenter,
-  projectorReady,
+  projector,
+  onAllowProjector,
 }: {
   onStart: () => void;
   /** null = chưa chọn slide nào. */
   onCurrent: (() => void) | null;
   onPresenter: () => void;
-  projectorReady: boolean;
+  projector: ProjectorStatus;
+  /** Nút "Cho phép": xin quyền "Quản lý cửa sổ" riêng, trước khi trình chiếu. */
+  onAllowProjector: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -1358,7 +1375,7 @@ function PlayMenu({
       key: "presenter",
       icon: <MonitorPlay size={15} />,
       label: "Presenter view",
-      hint: projectorReady
+      hint: projector === "ready"
         ? "Màn chiếu tự lên màn hình thứ hai; Note mở ở cửa sổ mới trên màn hình này."
         : "Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này.",
       run: onPresenter,
@@ -1403,6 +1420,23 @@ function PlayMenu({
               <small className="col-start-2 text-xs leading-snug text-muted">{it.hint}</small>
             </button>
           ))}
+          {/* Xin quyền riêng, không chen lúc mở cửa sổ: cửa sổ màn chiếu bật lên sẽ che mất hộp hỏi quyền của
+              trình duyệt. Menu giữ mở để giảng viên thấy mô tả Presenter view đổi ngay sau khi cho phép. */}
+          {projector === "prompt" && (
+            <div className="mx-1 mb-1 mt-0.5 rounded-xl bg-[rgb(var(--surface-muted))] px-3 py-2.5 text-xs leading-snug">
+              <p>Máy đang nối màn hình thứ hai. Cho phép Limio quản lý cửa sổ để Presenter view tự đưa màn chiếu sang màn hình đó, toàn màn hình.</p>
+              <button type="button" onClick={onAllowProjector} className="btn-primary mt-2 px-3 py-1 text-xs">
+                Cho phép
+              </button>
+            </div>
+          )}
+          {projector === "denied" && (
+            <p className="mx-1 mb-1 mt-0.5 rounded-xl bg-[rgb(var(--surface-muted))] px-3 py-2.5 text-xs leading-snug">
+              Trình duyệt đang chặn quyền "Quản lý cửa sổ" nên màn chiếu chưa tự sang màn hình thứ hai. Bấm biểu tượng bên trái
+              thanh địa chỉ, mở cài đặt trang web, chọn Cho phép ở mục "Quản lý cửa sổ" rồi tải lại trang. Limio cài như ứng dụng
+              thì mở cài đặt ứng dụng, chọn "More settings and permissions".
+            </p>
+          )}
         </div>
       )}
     </div>
