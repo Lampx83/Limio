@@ -23,7 +23,7 @@ export function TopicSourceNotice({
       : "Nội dung do AI viết từ kiến thức chung, thầy/cô cần kiểm tra trước khi dạy.";
   const more =
     sourceKind === "topic_web"
-      ? "Số liệu và trích dẫn có ghi nguồn ở chân slide; slide cuối liệt kê các trang đã đọc."
+      ? "Số liệu và trích dẫn có ghi nguồn ở chân slide; slide cuối có link tới các trang đã đọc. Ảnh lấy từ các trang nguồn; thầy/cô kiểm tra quyền sử dụng trước khi chia sẻ công khai."
       : Array.isArray(webRefs)
         ? "Hệ thống không tìm được trang phù hợp trên internet nên bài chỉ dùng kiến thức chung, không có số liệu, trích dẫn hay tên người."
         : "Bài không có tài liệu gốc nên AI không đưa số liệu, trích dẫn hay tên người.";

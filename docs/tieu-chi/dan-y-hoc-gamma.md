@@ -18,7 +18,12 @@ Gamma làm vậy khó dùng); màn Đối chiếu hai cột của bài nhập t�
   dàn ý rồi tạo; bỏ ô tích "Tôi đã xem lại". Bên cạnh là một câu nói rõ điều sẽ xảy ra (dựng thẳng từ slide gốc không tốn token, hay AI viết n slide và
   dự kiến bao nhiêu token). Lỗi chặn hiện ngay trên thanh và khoá nút. Bài đã có slide: nút "Cập nhật slide theo dàn ý" (hỏi lại như trước) và "Mở
   bài giảng".
-- **O6.** Đang tạo: danh sách thẻ được thay bằng lưới slide theo đúng thứ tự dàn ý. Slide đã xong hiện tiêu đề và ký hiệu bố cục; slide đang viết (tối đa 2,
-  theo số lô chạy song song) có viền nhấn và vạch chạy; slide chờ mờ hơn. Máy chủ gửi sự kiện từng slide xong (`slide`), kèm danh sách slide sẽ viết ở
-  sự kiện `start` (cập nhật một phần thì slide không nằm trong danh sách hiện như đã xong). Thanh trạng thái ghi "Đang tạo slide k trên n". Không thể mở
-  slide trong lúc tạo vì slide chỉ được lưu khi cả bài xong (lưu một lần, không để bài dở dang).
+- **O6.** Đang tạo: danh sách thẻ được thay bằng lưới slide theo đúng thứ tự dàn ý, **sáng dần từ slide 1 đến hết, không nhảy cóc**. Máy chủ viết theo lô
+  chạy song song nên slide xong không theo thứ tự; lưới chỉ dùng SỐ slide đã xong (sự kiện `slide` của máy chủ đếm cả slide dựng sẵn không qua AI) và sáng
+  từng ô một (khoảng 160 ms mỗi ô) tới con số đó. Ô đã xong hiện tiêu đề và ký hiệu bố cục; tối đa 2 ô kế tiếp là "đang viết" (viền nhấn, vạch chạy); các ô sau
+  mờ hơn. Cập nhật một phần: slide không nằm trong danh sách sẽ viết (sự kiện `start` kèm `ids`) luôn hiện như đã xong và không tính vào số đếm. Thanh
+  trạng thái ghi "Đang tạo slide k trên n" theo đúng ô đang sáng. Slide chỉ được lưu một lần khi cả bài xong (không để bài dở dang) nên chưa mở được từng slide
+  trong lúc tạo.
+- **O7.** Tạo xong thì tự mở bài giảng để thầy/cô thấy ngay slide, không phải quay về dàn ý rồi bấm "Mở bài giảng": các ô còn lại sáng nhanh (90 ms mỗi ô),
+  dừng khoảng 0,9 giây trên lưới đã đủ rồi chuyển sang trang bài giảng. Ngoại lệ: có slide AI chưa viết được (`fallbackCount` > 0) thì ở lại dàn ý, hiện cảnh
+  báo "dựng thẳng từ dàn ý, hãy xem lại" kèm nút Mở bài giảng.

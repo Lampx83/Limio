@@ -240,6 +240,8 @@
   .ll-image .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
   /* Nguồn ảnh riêng: dòng chữ thường dưới ô hình, cỡ tối thiểu của khung thiết kế; dài quá thì cắt, đủ chữ ở title. */
   .ll-image .img-credit { position: absolute; right: 96px; bottom: 22px; margin: 0; max-width: 560px; font-size: 26px; line-height: 1.2; color: var(--smuted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .img-credit a { color: inherit; text-decoration: none; }
+  .img-credit a:hover, .img-credit a:focus-visible { text-decoration: underline; }
   /* 4. Ba thẻ — các thẻ cao bằng nhau, cụm thẻ căn giữa phần còn lại. --hpx: cỡ tiêu đề thẻ để từ dài nhất vừa một dòng
      (limioLiveFit.cardHeadingPx; khoảng cách 24 và đệm ngang 26 khớp CARD_GAP, CARD_PAD_X). */
   .ll-cards .pad { gap: calc(34px * var(--fs)); }
@@ -342,6 +344,12 @@
   .ll-summary .tick svg { width: 52%; height: 52%; }
   .ll-summary .tick { width: max(48px, calc(64px * var(--fs))); height: max(48px, calc(64px * var(--fs))); border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
   .ll-summary .rowi span { font-size: max(26px, calc(40px * var(--fs))); line-height: 1.22; font-family: var(--sfont-head); font-weight: 700; }
+  /* Dòng có link (slide Nguồn tham khảo): số [n] màu nhấn, tên trang đậm, địa chỉ rút gọn màu nhấn; chữ không dưới 26 px. */
+  .ll-summary .refl { display: grid; grid-template-columns: max(64px, calc(80px * var(--fs))) 1fr; gap: 0 calc(16px * var(--fs)); align-items: start; color: inherit; text-decoration: none; }
+  .ll-summary .refl .refn { font-family: var(--sfont-head); font-weight: 800; color: var(--sa); font-size: max(26px, calc(36px * var(--fs))); line-height: 1.22; }
+  .ll-summary .refl b { display: block; font-family: var(--sfont-head); font-weight: 700; font-size: max(26px, calc(36px * var(--fs))); line-height: 1.22; }
+  .ll-summary .refl small { display: block; font-size: 26px; line-height: 1.3; color: var(--sa); word-break: break-all; margin-top: 4px; }
+  .ll-summary .refl:hover b, .ll-summary .refl:focus-visible b { text-decoration: underline; }
 
   /* ---------- Hoa văn trang trí (SlideMotif; chọn ở limioLiveMotifs.ts, hình ở limioLiveMotifArt.ts) ----------
      Chỉ ở chỗ trống. --smo (đặt trên .lslide, tính theo nền và màu của chính slide) là độ đậm lớn nhất mà chữ đè lên

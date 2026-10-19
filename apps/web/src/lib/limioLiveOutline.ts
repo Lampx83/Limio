@@ -2,6 +2,7 @@
 // Module thuần: chuẩn hoá đầu ra của mô hình AI và kiểm tra dàn ý giảng viên sửa.
 // Không tin thẳng đầu ra mô hình: số slide, bố cục, độ dài, emoji đều được ép ở đây.
 
+import { sanitizeWebImages, type WebImage } from "./limioLiveWebImages";
 import { cellNumbersInSource, numbersInText } from "./limioLiveCharts";
 import { ITEM_RANGE, SLIDE_LAYOUTS, MAX_LEN, clipText, type SlideLayoutId } from "./limioLiveSlides";
 import { extractCites, figureKeys, unsupportedFigures } from "./limioLiveFigures";
@@ -64,12 +65,22 @@ export interface WebSourceRef {
   n: number;
   title: string;
   url: string;
+  /** Ảnh trong phần chữ của trang (kèm chữ thay thế), ứng viên cho slide Chữ và hình (docs/tieu-chi/nguon-web-link-anh.md). */
+  images?: WebImage[];
 }
 
 export function sanitizeRefs(raw: unknown): WebSourceRef[] {
   return (Array.isArray(raw) ? raw : [])
     .filter((r): r is Record<string, unknown> => !!r && typeof r === "object")
-    .map((r) => ({ n: Number(r.n), title: typeof r.title === "string" ? r.title.slice(0, 300) : "", url: typeof r.url === "string" ? r.url.slice(0, 2000) : "" }))
+    .map((r) => {
+      const images = sanitizeWebImages(r.images);
+      return {
+        n: Number(r.n),
+        title: typeof r.title === "string" ? r.title.slice(0, 300) : "",
+        url: typeof r.url === "string" ? r.url.slice(0, 2000) : "",
+        ...(images.length ? { images } : {}),
+      };
+    })
     .filter((r) => Number.isInteger(r.n) && r.n > 0 && /^https?:\/\//.test(r.url));
 }
 
@@ -83,12 +94,12 @@ export function hostOf(url: string): string {
 
 export const REFERENCES_TITLE = "Nguồn tham khảo";
 
-/** Dòng dàn ý "Nguồn tham khảo": hệ thống dựng từ các trang đã đọc, không gửi cho AI viết lại. */
+/**
+ * Dòng dàn ý "Nguồn tham khảo": hệ thống dựng từ các trang đã đọc, không gửi cho AI viết lại. Mỗi dòng "[n] Tên trang";
+ * số [n] nối dòng với trang (link và địa chỉ rút gọn do bước tạo slide gắn), nên giảng viên sửa tên vẫn giữ đúng link.
+ */
 export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
-  const line = (r: WebSourceRef) => {
-    const t = `[${r.n}] ${hostOf(r.url)}: ${r.title || hostOf(r.url)}`;
-    return clipText(t, MAX_LEN.itemHeading);
-  };
+  const line = (r: WebSourceRef) => clipText(`[${r.n}] ${r.title || hostOf(r.url)}`, MAX_LEN.summaryItem);
   return {
     id: newOutlineId(),
     kind: "content",
