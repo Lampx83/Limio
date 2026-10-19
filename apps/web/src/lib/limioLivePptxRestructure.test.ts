@@ -23,6 +23,7 @@ const slide = (n: number, title: string, o: Partial<ImportedSlide> = {}): Import
   title,
   kicker: "",
   credit: "",
+  caption: "",
   subtitle: [],
   paragraphs: [],
   notes: "",

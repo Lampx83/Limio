@@ -189,3 +189,199 @@ describe("P41: ghép dòng ngắt trong một khối", () => {
     expect(joinWrappedLines([P("Thực tế ảo (VR, AR)"), P("Công cụ đa phương tiện")]).length).toBe(2);
   });
 });
+
+describe("file Positive Thinking (P49–P50)", () => {
+  it("P49: tiêu đề là hộp 'Title 2' không ghi cỡ chữ; chú thích 'Figure 1b' không bao giờ là tiêu đề; 'Source:' là nguồn", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "1. POSITIVE THINKING", y: 0, cy: y(0.1), name: "Title 2" },
+          { paras: ["Is the glass half-full or half-empty?", "People say the glass is half-full."].map((t) => ({ text: t, bu: true })), y: y(0.18), cy: y(0.7), sz: 24 },
+          { text: "Figure 1b: Glass of water", x: x(0.71), y: y(0.79), cy: y(0.05), sz: 16 },
+          { text: "Source: https://www.freepik.com/free-vector/full-empty-glass.htm", x: x(0.63), y: y(0.92), cy: y(0.06), sz: 12 },
+        ],
+      },
+    ]);
+    expect(s!.title).toBe("1. POSITIVE THINKING");
+    expect(s!.caption).toBe("Figure 1b: Glass of water");
+    expect(s!.credit).toBe("Source: https://www.freepik.com/free-vector/full-empty-glass.htm");
+    expect(texts(s!.paragraphs)).toEqual(["Is the glass half-full or half-empty?", "People say the glass is half-full."]);
+  });
+
+  it("P49: bìa có nhiều hộp cùng tên 'Title 6' → tiêu đề là hộp chữ lớn nhất, hộp nhỏ phía trên là dòng dẫn", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "Faculty of Education", y: y(0.25), cy: y(0.06), sz: 20, name: "Title 6" },
+          { text: "SOFT SKILLS", y: y(0.32), cy: y(0.12), sz: 54, b: true, name: "Title 6" },
+          { text: "Positive Thinking", y: y(0.45), cy: y(0.12), sz: 26, name: "Title 6" },
+        ],
+      },
+    ]);
+    expect([s!.title, s!.kicker, texts(s!.paragraphs)]).toEqual(["SOFT SKILLS", "Faculty of Education", ["Positive Thinking"]]);
+  });
+
+  it("P50: dòng đậm không gạch đầu dòng là ý cha của các gạch đầu dòng ngay sau nó", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "1. POSITIVE THINKING", y: 0, cy: y(0.1), name: "Title 2" },
+          {
+            paras: [
+              { text: "Why positive thinking matter?", b: true },
+              { text: "Research findings:", b: true },
+              { text: "Lower stress hormones", bu: true },
+              { text: "Better problem solving", bu: true },
+            ],
+            y: y(0.15),
+            cy: y(0.7),
+            sz: 24,
+          },
+        ],
+      },
+    ]);
+    expect(texts(s!.paragraphs)).toEqual(["Why positive thinking matter?", "Research findings:", "  Lower stress hormones", "  Better problem solving"]);
+  });
+});
+
+describe("P52: chữ được nhấn trong slide gốc", () => {
+  it("chữ đổi màu giữa câu là tô màu, đậm hoặc nghiêng một phần câu cũng giữ; cả đoạn đậm thì không", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "3. THE SCIENCE OF HAPPINESS", y: 0, cy: y(0.1), name: "Title 1" },
+          {
+            paras: [
+              { text: "", runs: [{ text: "There are " }, { text: "chemicals", color: "accent2", b: true }, { text: " in our brains." }] },
+              { text: "", runs: [{ text: "Release these ‘" }, { text: "feel-good", color: "4A86E8" }, { text: "’ chemicals!" }] },
+              { text: "", runs: [{ text: "Học " }, { text: "chủ động", b: true }, { text: " và " }, { text: "có phản hồi", i: true }] },
+              { text: "Câu được tô nền vàng", runs: [{ text: "Câu được " }, { text: "tô nền vàng", hl: true }] },
+              { text: "Cả đoạn đậm là kiểu của đoạn", b: true },
+              { text: "Chữ đen cũng không phải chỗ nhấn", runs: [{ text: "Chữ " }, { text: "đen", color: "000000" }, { text: " cũng không phải chỗ nhấn" }] },
+            ],
+            y: y(0.2),
+            cy: y(0.6),
+            sz: 24,
+          },
+        ],
+      },
+    ]);
+    expect(s!.emphasis).toEqual([
+      { text: "chemicals", kind: "mark" },
+      { text: "feel-good", kind: "mark" },
+      { text: "chủ động", kind: "bold" },
+      { text: "có phản hồi", kind: "italic" },
+      { text: "tô nền vàng", kind: "mark" },
+    ]);
+  });
+
+  it("cả câu khác màu với phần còn lại của khối là tô màu (câu trích dẫn đỏ cuối danh sách)", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "2. A POSITIVE ATTITUDE", y: 0, cy: y(0.1), name: "Title 1" },
+          {
+            paras: [
+              { text: "“Every day may not be good, but there is good in every day.”", color: "tx1" },
+              { text: "“A positive attitude will lead to positive outcomes.”", color: "tx1" },
+              { text: "“Attitude is a little thing.” - Winston Churchill", color: "accent2" },
+            ],
+            y: y(0.2),
+            cy: y(0.6),
+            sz: 24,
+          },
+        ],
+      },
+    ]);
+    expect(s!.emphasis).toEqual([{ text: "“Attitude is a little thing.” - Winston Churchill", kind: "mark" }]);
+  });
+});
+
+describe("P53: cụm từ khoá rải trên slide, mỗi từ một màu", () => {
+  const WORDS: Array<[string, string]> = [
+    ["fantastic", "00B3BC"],
+    ["laugh", "00B050"],
+    ["love", "E17A2A"],
+    ["best", "FFC000"],
+    ["great", "FFC000"],
+    ["enjoy", "E17A2A"],
+  ];
+  it("nhiều hộp chữ một từ, mỗi hộp một màu, là cụm từ (theo thứ tự đọc), không phải gạch đầu dòng", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "4. REFLECTION", y: 0, cy: y(0.1), name: "Title 1" },
+          { paras: [{ text: "Using the words below, compose a positive statement to share with the class.", color: "tx1" }], y: y(0.22), cy: y(0.1), sz: 24 },
+          ...WORDS.map(([w, c], i) => ({ paras: [{ text: w, color: c }], x: x(0.2 + 0.2 * (i % 3)), y: y(0.4 + 0.15 * Math.floor(i / 3)), cx: x(0.12), cy: y(0.08), sz: 28 })),
+        ],
+      },
+    ]);
+    expect(s!.words).toEqual(["fantastic", "laugh", "love", "best", "great", "enjoy"]);
+    expect(texts(s!.paragraphs)).toEqual(["Using the words below, compose a positive statement to share with the class."]);
+  });
+
+  it("một khối có các dòng một từ khác màu cạnh gạch đầu dòng cũng là cụm từ", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "3. THE SCIENCE OF HAPPINESS", y: 0, cy: y(0.1), name: "Title 1" },
+          { paras: [{ text: "Our brains are in charge of our feelings.", bu: true }, { text: "There are chemicals in our brains.", bu: true }], x: x(0.05), y: y(0.2), cx: x(0.55), cy: y(0.6), sz: 24 },
+          { paras: [{ text: "dopamine", color: "00B3BC", i: true }, { text: "oxytocin", color: "75CD90", i: true }, { text: "serotonin", color: "E17A2A", i: true }, { text: "endorphins", color: "FFE36D", i: true }], x: x(0.7), y: y(0.55), cx: x(0.25), cy: y(0.3), sz: 32 },
+        ],
+      },
+    ]);
+    expect(s!.words).toEqual(["dopamine", "oxytocin", "serotonin", "endorphins"]);
+    expect(texts(s!.paragraphs)).toEqual(["Our brains are in charge of our feelings.", "There are chemicals in our brains."]);
+  });
+
+  it("các nhãn ngắn cùng một màu (sơ đồ) hoặc màu chữ thường không phải cụm từ", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "Quy trình", y: 0, cy: y(0.1), name: "Title 1" },
+          ...["Đầu vào", "Xử lý", "Đầu ra"].map((w, i) => ({ paras: [{ text: w, color: "1F4E79" }], x: x(0.1 + 0.3 * i), y: y(0.4), cx: x(0.2), cy: y(0.1), sz: 24 })),
+        ],
+      },
+    ]);
+    expect(s!.words).toEqual([]);
+  });
+});
+
+describe("P54: tên tác giả dòng riêng ghép vào câu trích dẫn", () => {
+  it("dòng '- Tác giả' ngay sau câu trong ngoặc kép ghép thành một dòng", async () => {
+    const [s] = await read([
+      {
+        layout: "blank",
+        textBoxes: [
+          { text: "2. A POSITIVE ATTITUDE", y: 0, cy: y(0.1), name: "Title 1" },
+          {
+            paras: [
+              "“Every day may not be good, but there is good in every day.”",
+              "- Alice Morse Earle",
+              "“We can complain because rose bushes have thorns,",
+              "or rejoice because thorn bushes have roses.”",
+              "– Abraham Lincoln",
+              "“Every cloud has a silver lining.” - John Milton",
+            ],
+            y: y(0.2),
+            cy: y(0.6),
+            sz: 24,
+          },
+        ],
+      },
+    ]);
+    expect(texts(s!.paragraphs)).toEqual([
+      "“Every day may not be good, but there is good in every day.” — Alice Morse Earle",
+      "“We can complain because rose bushes have thorns, or rejoice because thorn bushes have roses.” — Abraham Lincoln",
+      "“Every cloud has a silver lining.” - John Milton",
+    ]);
+  });
+});

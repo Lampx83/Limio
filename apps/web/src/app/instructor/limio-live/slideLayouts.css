@@ -7,6 +7,9 @@
   .lslide { text-align: left; width: 1280px; height: 720px; position: relative; overflow: hidden; color: var(--stext);
     font-family: var(--sfont-body); line-height: 1.35; --fs: 1; }
   .lslide *, .lslide *::before, .lslide *::after { box-sizing: border-box; }
+  /* Chữ tô màu (==chữ==): màu nhấn của giao diện cùng vệt bút dạ ở nửa dưới, để vẫn nổi trên các giao diện đơn sắc. */
+  .lslide mark.ll-mark { color: var(--sa); background: linear-gradient(transparent 60%, var(--ssoft) 60%);
+    padding: 0 .08em; border-radius: .08em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
   .lt-brand { --sbg: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); --stext: #20241F; --smuted: #5A6256;
     --sa: #4D7C0F; --sa2: #BE185D; --ssoft: #ECFCCB; --ssoft2: #FCE7F3; --scard: rgba(255,255,255,.82); --scardb: #E3E8D3;
@@ -289,7 +292,10 @@
   .ll-list ul.lst li { display: flex; gap: .5em; align-items: flex-start; }
   .ll-list ul.lst li::before { content: ""; flex: none; width: .4em; height: .4em; border-radius: 50%; background: var(--sgb); margin-top: .43em; }
   .ll-list ul.lst li.sub { margin-left: 1.5em; color: var(--smuted); }
-  .ll-list ul.lst li.sub::before { width: .3em; height: .3em; margin-top: .48em; background: transparent; border: 2px solid var(--sgb); }
+  .ll-list ul.lst li.sub::before { width: .32em; height: .32em; margin-top: .47em; background: transparent; border: 2.5px solid var(--sa); }
+  /* Cụm từ khoá (P53): từ to, đứng riêng, xen hai màu nhấn của giao diện; không khung, không nền. */
+  .ll-list p.words { margin: .2em 0 0; display: flex; flex-wrap: wrap; gap: .25em .9em; line-height: 1.3; font-weight: 600; color: var(--sa); }
+  .ll-list p.words span.alt { color: var(--sa2); }
   .ll-list .art { align-self: stretch; min-height: 0; border-radius: 28px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
   .ll-list .img-credit { position: absolute; right: 80px; bottom: 18px; margin: 0; max-width: 560px; font-size: 26px; line-height: 1.2; color: var(--smuted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ll-summary .pad { gap: calc(30px * var(--fs)); }

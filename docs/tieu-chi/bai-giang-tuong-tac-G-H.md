@@ -40,7 +40,7 @@ Bước chốt dàn ý là bắt buộc (đã nằm trong nhóm A và B), không
 |---|---|
 | H1 | Bài sinh xong mở ở trạng thái nháp trong trình soạn Limio-Live; học viên chưa thấy gì cho đến khi giảng viên trình chiếu. |
 | H2 | Slide lưu theo trường có cấu trúc (tiêu đề, ý chính, thẻ, đáp án, ghi chú). Sửa chữ không làm đổi hình thức. Đổi bố cục giữ nguyên nội dung; trường bố cục mới không dùng được thì giữ ẩn và hiện lại khi quay về bố cục cũ. |
-| H3 | Định dạng trong dòng chỉ có in đậm và in nghiêng. Chưa có màu nhấn. Không cho chọn tuỳ ý cỡ chữ, font, màu. |
+| H3 | Định dạng trong dòng có in đậm, in nghiêng và tô màu (màu nhấn của giao diện, xem P52 ở nhap-powerpoint.md). Không cho chọn tuỳ ý cỡ chữ, font, màu. |
 | H4 | Chữ dài quá khung thì tự thu nhỏ nhưng không dưới 26 px. Vẫn không vừa thì cảnh báo "Slide này dài" kèm nút "Tách thành hai slide"; slide thứ hai giữ tiêu đề kèm "(tiếp)". |
 | H5 | Thêm, xoá, đổi thứ tự, ẩn slide; thêm slide mới thì chọn bố cục. |
 | H6 | Slide tương tác sửa được câu hỏi, đáp án và đáp án đúng như trình soạn hiện nay. |

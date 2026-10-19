@@ -353,6 +353,14 @@ describe("parseInline", () => {
   it("stripInline bỏ dấu đã ghép cặp", () => {
     expect(stripInline("**Phản hồi** là *thông tin*.")).toBe("Phản hồi là thông tin.");
   });
+  it("tô màu bằng ==chữ==, lồng được với đậm và nghiêng", () => {
+    expect(parseInline("Học ==chủ động== nhé")).toEqual([{ text: "Học " }, { text: "chủ động", mark: true }, { text: " nhé" }]);
+    expect(parseInline("==**a** b==")).toEqual([{ text: "a", bold: true, mark: true }, { text: " b", mark: true }]);
+    expect(stripInline("==Phản hồi== kịp thời")).toBe("Phản hồi kịp thời");
+  });
+  it("dấu == không có cặp đóng giữ nguyên là chữ", () => {
+    expect(stripInline("a == b")).toBe("a == b");
+  });
 });
 
 describe("toggleInlineMarker", () => {
@@ -365,6 +373,11 @@ describe("toggleInlineMarker", () => {
   });
   it("không có đoạn chọn thì không đổi", () => {
     expect(toggleInlineMarker("abc", 1, 1, "*")).toEqual({ value: "abc", start: 1, end: 1 });
+  });
+  it("tô màu rồi bấm lần nữa thì gỡ", () => {
+    const a = toggleInlineMarker("Phản hồi tốt", 9, 12, "==");
+    expect(a).toEqual({ value: "Phản hồi ==tốt==", start: 11, end: 14 });
+    expect(toggleInlineMarker(a.value, a.start, a.end, "==")).toEqual({ value: "Phản hồi tốt", start: 9, end: 12 });
   });
   it("in nghiêng bên trong in đậm không bị coi là đã in nghiêng", () => {
     const r = toggleInlineMarker("**ab**", 2, 4, "*");

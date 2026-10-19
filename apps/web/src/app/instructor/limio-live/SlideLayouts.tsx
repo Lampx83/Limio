@@ -22,6 +22,7 @@ import {
   layoutRenderScale,
   LIST_BOX,
   listFontSize,
+  listWordPx,
   listTitleFit,
   MIN_FONT_PX,
   resolveLayout,
@@ -535,7 +536,9 @@ function LayoutBody({
               <ul className="bul">
                 {bullets.map((b, i) => (
                   <li key={i} className="a" style={delay(i + 1)}>
-                    <Inline text={b} />
+                    <span>
+                      <Inline text={b} />
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -557,20 +560,35 @@ function LayoutBody({
       // Danh sách: mọi dòng cùng một cỡ chữ, tự co theo tổng độ dài (listFontSize, ≥ 26 px) để slide nhiều chữ vẫn vừa.
       const lines: ListLine[] = Array.isArray(c.lines) ? c.lines : [];
       const hasImg = typeof c.imageUrl === "string" && !!c.imageUrl;
-      const fs = listFontSize(lines, title, hasImg);
+      const words: string[] = Array.isArray(c.words) ? c.words : [];
+      const fs = listFontSize(lines, title, hasImg, words);
       const tf = listTitleFit(title);
       return (
         <div className={`ll-list${hasImg ? " img" : ""}`}>
           <div className="pad">
             <div className="tx">
               {title && <Title text={title} maxPx={tf.px} widthPx={LIST_BOX.width} maxLines={Math.max(tf.lines, 1)} />}
-              <ul className="lst" style={{ fontSize: fs.px }}>
-                {lines.map((l, i) => (
-                  <li key={i} className={`a${l.sub ? " sub" : ""}`} style={delay(Math.min(i, 8) + 1)}>
-                    <Inline text={l.text} />
-                  </li>
-                ))}
-              </ul>
+              {lines.length > 0 && (
+                <ul className="lst" style={{ fontSize: fs.px }}>
+                  {lines.map((l, i) => (
+                    <li key={i} className={`a${l.sub ? " sub" : ""}`} style={delay(Math.min(i, 8) + 1)}>
+                      {/* Một khối chữ: dòng là flex (dấu đầu dòng + chữ), các đoạn đậm/tô màu không được thành cột riêng. */}
+                      <span>
+                        <Inline text={l.text} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {words.length > 0 && (
+                <p className="words" style={{ fontSize: listWordPx(fs.px) }}>
+                  {words.map((w, i) => (
+                    <span key={i} className={`a-pop${i % 2 ? " alt" : ""}`} style={delay(Math.min(lines.length, 8) + 1 + Math.min(i, 6))}>
+                      {w}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
             {hasImg && (
               <div className="art a-pop" style={delay(1)}>
@@ -626,7 +644,9 @@ function LayoutBody({
                 <div key={i} className={`card col ${col.tone === "bad" ? "bad" : "good"} a`} style={delay(i * 2)}>
                   <div className="ttl">
                     {col.tone === "bad" ? <X size={38} strokeWidth={2.6} /> : <Check size={38} strokeWidth={2.6} />}
-                    <Inline text={col.heading} />
+                    <span>
+                      <Inline text={col.heading} />
+                    </span>
                   </div>
                   {col.points.map((p, k) => (
                     <div key={k} className="q">
@@ -718,7 +738,9 @@ function LayoutBody({
             {c.source && (
               <div className="who a" style={delay(3)}>
                 <i />
-                <Inline text={c.source} />
+                <span>
+                  <Inline text={c.source} />
+                </span>
               </div>
             )}
           </div>

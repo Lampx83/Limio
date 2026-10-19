@@ -18,10 +18,14 @@ export interface ShapePara extends PptxParagraph {
   size: number | null;
   /** Mọi run có chữ đều đậm. */
   bold: boolean;
+  /** Màu nhấn chung của mọi run (không tính màu trung tính); không có nếu kế thừa, trung tính hoặc nhiều màu. */
+  color?: string;
 }
 
 export interface LayoutShape {
   paras: ShapePara[];
+  /** Tên khối trong file ("Title 2", "Tieu_de", "TextBox 7"). */
+  name?: string;
   /** Toạ độ trên slide (đã đổi khỏi toạ độ nhóm); null nếu không ghi (placeholder kế thừa layout). */
   box: Box | null;
   order: number;
@@ -31,15 +35,24 @@ export interface SlideLayoutText {
   title: string;
   /** Dòng dẫn phía trên tiêu đề ("NỘI DUNG 1", tên đơn vị trên bìa); rỗng nếu không có. */
   kicker: string;
-  /** Dòng ghi nguồn hình ("Nguồn ảnh minh hoạ: …"); rỗng nếu không có. */
+  /** Dòng ghi nguồn hình ("Nguồn ảnh minh hoạ: …", "Source: …"); rỗng nếu không có. */
   credit: string;
+  /** Chú thích hình ("Figure 1b: Glass of water", "Hình 2: …"); rỗng nếu không có. Không bao giờ là tiêu đề. */
+  caption: string;
   paragraphs: PptxParagraph[];
+  /** Cụm từ khoá rải trên slide, mỗi từ một màu (P53); rỗng nếu không có. */
+  words: string[];
   /** Bảng tự vẽ bằng hộp chữ (nhãn ở cột trái, hoặc tiêu đề cột): hàng đầu là hàng tiêu đề, rỗng nếu không có (P42). */
   tables: string[][][];
 }
 
 /** "Nguồn ảnh minh hoạ: …", "Nguồn: …", "Ảnh: …", "Source: …". */
 const CREDIT_RE = /^(nguồn(\s+(ảnh|hình))?(\s+minh\s+ho[ạa])?|ảnh(\s+minh\s+ho[ạa])?|hình(\s+ảnh)?(\s+minh\s+ho[ạa])?|sources?|photos?|images?(\s+sources?)?|credits?)\s*[:：]/i;
+/** Chú thích hình, bảng: "Figure 1b: …", "Fig. 2 …", "Hình 3. …", "Bảng 1: …". */
+const CAPTION_RE = /^(figure|fig\.?|hình|ảnh|image|picture|photo|bảng|table|biểu đồ|chart)\s*\d+[a-z]?\s*[.:)\-–—]/i;
+/** Khối tên "Title 2", "Tiêu đề 1", "Tieu_de": tiêu đề dán dạng hộp chữ, cỡ chữ lấy từ mẫu nên file không ghi. */
+const TITLE_NAME = /^(title|tiêu đề|tieu[_ ]?de)\b/i;
+
 /** Chỉ có số: số trang, số thứ tự trang trí ("01", "1.", "IV"). */
 const NUMBER_ONLY = /^(\d{1,3}|[ivxlc]{1,5})[.)]?$/i;
 /** Dòng dẫn mở một phần: "NỘI DUNG 1", "Phần 2", "Chương III", "Part 1". */
@@ -77,12 +90,37 @@ export function joinWrappedLines(paras: ShapePara[]): ShapePara[] {
       prev.level === p.level &&
       !endsSentence(prev.text) &&
       (prev.size ?? 0) === (p.size ?? 0) &&
+      prev.color === p.color &&
       ((isUpper(prev.text) && isUpper(p.text)) || /^\p{Ll}/u.test(p.text))
     ) {
       out[out.length - 1] = { ...prev, text: `${prev.text} ${p.text}` };
+    } else if (prev && QUOTE_END.test(prev.text) && AUTHOR_LINE.test(p.text)) {
+      // P54: "- Tác giả" ở dòng riêng ngay sau câu trích dẫn.
+      out[out.length - 1] = { ...prev, text: `${prev.text} — ${p.text.replace(/^[-–—]\s*/, "")}` };
     } else out.push({ ...p });
   }
   return out;
+}
+
+/** Câu trích dẫn kết thúc bằng ngoặc kép đóng. */
+const QUOTE_END = /["”»’]\s*$/;
+/** Dòng chỉ có tên tác giả: "- Alice Morse Earle", "— Abraham Lincoln". */
+const AUTHOR_LINE = /^[-–—]\s*\p{Lu}[\p{L}.'’\- ]{1,48}$/u;
+
+/** P53: một đoạn có thể là một từ của cụm từ khoá: ngắn, tối đa ba từ, không dấu câu cuối, có màu nhấn riêng. */
+const isWordPara = (p: ShapePara) =>
+  !!p.color && !p.bullet && !p.numbered && p.text.trim().length <= 24 && p.text.trim().split(/\s+/).length <= 3 && !/[.:;,]$/.test(p.text.trim());
+
+/**
+ * P53: cụm từ khoá rải trên slide (mỗi từ một hộp chữ, hoặc một hộp nhiều dòng một từ), mỗi từ một màu. Cần ít nhất ba
+ * từ và hai màu khác nhau: nhãn cùng màu của một sơ đồ không phải cụm từ.
+ */
+function pickWords<T extends LayoutShape>(shapes: T[]): { words: string[]; rest: T[] } {
+  const wordShapes = shapes.filter((s) => s.paras.length > 0 && s.paras.every(isWordPara)).sort(readingOrder);
+  const paras = wordShapes.flatMap((s) => s.paras);
+  if (paras.length < 3 || new Set(paras.map((p) => p.color)).size < 2) return { words: [], rest: shapes };
+  const used = new Set<LayoutShape>(wordShapes);
+  return { words: paras.map((p) => p.text.trim()), rest: shapes.filter((s) => !used.has(s)) };
 }
 
 const overlap = (a0: number, a1: number, b0: number, b1: number) => Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
@@ -100,6 +138,12 @@ interface Picked {
 
 /** P36–P37: khối tiêu đề theo cỡ chữ (ưu tiên phần trên slide, chữ đậm) cùng các khối nối tiếp của nó. */
 function pickTitle(shapes: LayoutShape[], slideH: number): Picked | null {
+  // Hộp chữ mang tên "Title…" (tiêu đề dán lại thành hộp chữ, không ghi cỡ chữ) thắng mọi phép so cỡ chữ.
+  // Nhiều khối cùng mang tên "Title…" (bìa dựng bằng nhiều hộp tiêu đề): khối chữ lớn nhất; khối không ghi cỡ chữ coi như lớn nhất.
+  const named = shapes
+    .filter((s) => s.name && TITLE_NAME.test(s.name) && !hasBullet(s) && textOfShape(s).length <= 150)
+    .sort((a, b) => (sizeOf(b) ?? Infinity) - (sizeOf(a) ?? Infinity) || readingOrder(a, b))[0];
+  if (named) return { shapes: [named], size: sizeOf(named) ?? Math.max(4400, ...shapes.map((s) => (sizeOf(s) ?? 0) + 1)) };
   const cands = shapes.filter((s) => !hasBullet(s) && sizeOf(s) && textOfShape(s).length <= 150 && textOfShape(s).length >= 2);
   if (!cands.length) return null;
   const score = (s: LayoutShape) => sizeOf(s)! * (s.box && s.box.y < 0.3 * slideH ? 1.3 : 1) * (allBold(s) ? 1.1 : 1);
@@ -146,10 +190,25 @@ function boxHeading(s: LayoutShape): string | null {
   return rest.every((p) => p.bullet || p.numbered || !p.bold) ? h.text : null;
 }
 
+/** Dòng tiêu đề nhóm trong một khối: đậm hoặc kết bằng ":", không gạch đầu dòng, ngắn. */
+const isGroupHeading = (p: ShapePara) => !p.bullet && !p.numbered && p.text.length <= 80 && (p.bold || /[:：]$/.test(p.text.trim()));
+
+/**
+ * Các đoạn của một khối, giữ hai cấp: dòng tiêu đề nhóm (isGroupHeading) làm cha của các gạch đầu dòng ngay sau nó
+ * ("Research findings:" → các kết quả); đoạn thường không gạch đầu dòng thì kết thúc nhóm.
+ */
 const plainParas = (s: LayoutShape, shift = 0): PptxParagraph[] => {
   const min = Math.min(...s.paras.map((p) => p.level));
-  const heading = boxHeading(s);
-  return s.paras.map((p, i) => ({ text: p.text, level: p.level - min + shift + (heading && i > 0 ? 1 : 0), numbered: p.numbered }));
+  let open = false;
+  return s.paras.map((p) => {
+    const base = p.level - min + shift;
+    if (isGroupHeading(p)) {
+      open = true;
+      return { text: p.text, level: base, numbered: false };
+    }
+    if (!p.bullet && !p.numbered) open = false;
+    return { text: p.text, level: base + (open && (p.bullet || p.numbered) && p.level === min ? 1 : 0), numbered: p.numbered };
+  });
 };
 
 /**
@@ -280,6 +339,7 @@ function associateLabels(all: LayoutShape[]): { units: Unit[]; tables: string[][
  */
 export function analyzeShapes(input: LayoutShape[], slide: { h: number }, fixedTitle?: string): SlideLayoutText {
   const credits: string[] = [];
+  const captions: string[] = [];
   let shapes = input
     .map((s) => ({
       ...s,
@@ -288,6 +348,10 @@ export function analyzeShapes(input: LayoutShape[], slide: { h: number }, fixedT
           if (!p.text.trim()) return false;
           if (CREDIT_RE.test(p.text) && p.text.length <= 200) {
             if (!credits.includes(p.text)) credits.push(p.text);
+            return false;
+          }
+          if (CAPTION_RE.test(p.text) && p.text.length <= 200) {
+            if (!captions.includes(p.text)) captions.push(p.text);
             return false;
           }
           return true;
@@ -303,7 +367,12 @@ export function analyzeShapes(input: LayoutShape[], slide: { h: number }, fixedT
 
   let title = fixedTitle ?? "";
   let kicker = "";
-  if (fixedTitle === undefined) {
+  if (fixedTitle !== undefined) {
+    // Đã có placeholder tiêu đề: hộp chữ tên "Title…" còn lại (nhãn phần lặp ở đầu slide) là dòng dẫn.
+    const extra = shapes.filter((s) => s.name && TITLE_NAME.test(s.name) && !hasBullet(s) && textOfShape(s).length <= 120);
+    kicker = extra.map(textOfShape).join(" · ");
+    shapes = shapes.filter((s) => !extra.includes(s));
+  } else {
     const picked = pickTitle(shapes, slide.h);
     if (picked) {
       title = picked.shapes.map(textOfShape).join(" ");
@@ -336,6 +405,15 @@ export function analyzeShapes(input: LayoutShape[], slide: { h: number }, fixedT
     }
   }
 
-  const { units, tables } = associateLabels(shapes);
-  return { title, kicker, credit: credits.join(" · "), paragraphs: units.flatMap((u) => u.paras), tables };
+  const picked = pickWords(shapes);
+  const { units, tables } = associateLabels(picked.rest);
+  return {
+    title,
+    kicker,
+    credit: credits.join(" · "),
+    caption: captions.join(" · "),
+    paragraphs: units.flatMap((u) => u.paras),
+    words: picked.words,
+    tables,
+  };
 }

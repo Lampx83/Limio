@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { parseInline } from "@/lib/limioLiveSlides";
 
-/** Vẽ chữ có **in đậm** và *in nghiêng* (chỉ hai định dạng này, xem parseInline). */
+/** Vẽ chữ có **in đậm**, *in nghiêng* và ==tô màu== (chỉ ba định dạng này, xem parseInline). */
 export function Inline({ text }: { text: string }) {
   return (
     <>
@@ -9,6 +9,7 @@ export function Inline({ text }: { text: string }) {
         let node: ReactNode = r.text;
         if (r.italic) node = <em key={`e${i}`}>{node}</em>;
         if (r.bold) node = <strong key={`b${i}`}>{node}</strong>;
+        if (r.mark) node = <mark key={`m${i}`} className="ll-mark">{node}</mark>;
         return <span key={i}>{node}</span>;
       })}
     </>

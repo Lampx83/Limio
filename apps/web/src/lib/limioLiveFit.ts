@@ -135,7 +135,9 @@ export function measureContentBox(root: HTMLElement): ContentBox | null {
     // Bỏ qua khung gốc của bố cục (con trực tiếp của root, luôn cao đủ cả khung), khung đệm phủ kín và phần trang trí
     // (vầng sáng, hoa văn, hình trang trí của bìa mang lớp .deco): chúng được phép chạm hoặc tràn mép khung, không phải
     // nội dung tràn, nên không được làm slide co lại.
-    if (el.parentElement === root || el.classList.contains("pad") || el.closest(".glow, .motif, .deco")) return;
+    // Dòng nguồn ảnh (.img-credit) và dòng nguồn chân slide (.ll-cite) được đặt cố ý ở lề dưới, ngoài vùng an toàn: tính chúng
+    // là nội dung thì slide nào có nguồn ảnh cũng "tràn" và chữ bị co về bậc nhỏ nhất dù còn nhiều chỗ.
+    if (el.parentElement === root || el.classList.contains("pad") || el.closest(".glow, .motif, .deco, .img-credit, .ll-cite")) return;
     const w = el.offsetWidth, h = el.offsetHeight;
     if (!w && !h) return; // phần tử SVG hoặc ẩn
     // Phần tử inline xuống nhiều dòng (đoạn chữ nhấn trong câu trích dẫn) có offsetLeft của dòng đầu nhưng offsetWidth của

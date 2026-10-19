@@ -2,12 +2,14 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Highlighter, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
   LAYOUT_META,
   LIST_MAX_LINES,
+  LIST_MAX_WORDS,
+  LIST_WORD_MAX_LEN,
   MAX_LEN,
   SLIDE_ICONS,
   SLIDE_LAYOUTS,
@@ -16,6 +18,7 @@ import {
   padForEditing,
   pickMeta,
   toggleInlineMarker,
+  type InlineMarker,
   resolveLayout,
   sanitizeLayoutConfig,
   slideConfigsEqual,
@@ -684,7 +687,7 @@ export default function LayoutEditor({
     if (!slideConfigsEqual(next, config)) onSave({ config: next });
     onOpenChange(false);
   };
-  const format = useCallback((marker: "**" | "*") => {
+  const format = useCallback((marker: InlineMarker) => {
     const c = focused.current;
     if (!c || !c.el.isConnected) return;
     const { value, max, onChange } = c.latest.current;
@@ -697,11 +700,13 @@ export default function LayoutEditor({
     });
   }, []);
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
     const k = e.key.toLowerCase();
-    if ((k === "b" || k === "i") && focused.current && e.target === focused.current.el) {
+    // Ctrl+B, Ctrl+I và Ctrl+Shift+H (tô màu, như phím bút dạ của Word).
+    const marker: InlineMarker | null = e.shiftKey ? (k === "h" ? "==" : null) : k === "b" ? "**" : k === "i" ? "*" : null;
+    if (marker && focused.current && e.target === focused.current.el) {
       e.preventDefault();
-      format(k === "b" ? "**" : "*");
+      format(marker);
     }
   };
 
@@ -879,6 +884,17 @@ export default function LayoutEditor({
               >
                 <Italic size={16} />
               </button>
+              <button
+                type="button"
+                disabled={!richOn}
+                title="Tô màu nhấn (Ctrl+Shift+H)"
+                aria-label="Tô màu"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => format("==")}
+                className="grid h-9 w-10 place-items-center border-l border-token bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+              >
+                <Highlighter size={16} />
+              </button>
             </span>
             <span className="text-[13px] text-muted">Bôi đen chữ trong một ô rồi bấm để định dạng</span>
           </div>
@@ -1025,6 +1041,18 @@ export default function LayoutEditor({
                 ) : (
                   <p className="text-sm text-faint">Đã đủ {LIST_MAX_LINES} dòng.</p>
                 )}
+                <div className="mt-2 grid gap-1">
+                  <Field
+                    label="Cụm từ khoá (không bắt buộc)"
+                    value={((d.words as string[] | undefined) ?? []).join(", ")}
+                    max={LIST_MAX_WORDS * (LIST_WORD_MAX_LEN + 2)}
+                    plain
+                    placeholder="Ví dụ: vui vẻ, biết ơn, kiên trì"
+                    onChange={(v) => set({ words: v.split(",").map((w) => w.replace(/^\s+/, "")) })}
+                    onBlur={blur}
+                  />
+                  <p className="text-[13px] text-muted">Các từ cách nhau bằng dấu phẩy, hiện thành một cụm chữ lớn bên dưới các dòng, tối đa {LIST_MAX_WORDS} từ.</p>
+                </div>
               </div>
             )}
 

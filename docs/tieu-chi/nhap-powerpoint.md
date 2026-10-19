@@ -148,10 +148,32 @@ trong hộp chữ, nhóm hình và hình khối. Các tiêu chí dưới đây �
   rộng hơn 5 cột chia theo nhóm cột và lặp cột đầu, nhiều hàng thì chia slide và lặp hàng tiêu đề. Chỉ bảng một cột, hoặc có
   ô dài hơn 200 ký tự, mới thành danh sách để không mất chữ. Hai hoặc nhiều hộp cao gần bằng nhau đặt cạnh nhau, mỗi hộp có
   dòng đầu đậm và các gạch đầu dòng, cũng dựng thành bảng (hàng tiêu đề là dòng đầu của các hộp).
-- **P47.** Bố cục mới "Danh sách": tiêu đề và tối đa 12 dòng (ý và ý con) trên cả bề ngang, chữ tự co từ 36 px xuống 26 px, có thể
+- **P47.** Bố cục mới "Danh sách": tiêu đề và tối đa 12 dòng (ý và ý con) trên cả bề ngang, chữ tự co từ 44 px xuống 26 px, có thể
   kèm ô hình bên phải. Cách "Giữ ý": danh sách phẳng tối đa 3 ý ngắn vẫn dùng "Chữ và hình"; nhiều ý hơn, có ý con, hoặc có ý dài
   hơn 140 ký tự thì dùng Danh sách (không cắt đôi câu), nên mỗi slide gốc thường là đúng một slide. Chỉ khi ở 26 px vẫn không
   vừa mới chia slide "(tiếp)". Giảng viên đổi được sang hoặc từ Danh sách như mọi bố cục, sửa từng dòng và đổi ý ↔ ý con.
 - **P48.** Slide giữa bài chỉ có tiêu đề (hoặc thêm một dòng nối tiêu đề, không phải câu đã kết) là slide Mở phần; tiêu đề đánh số
   "2. …" cho số phần và tên phần là phần chữ sau số. Các slide giữa Bìa và slide Mở phần đầu tiên thuộc phần Mục tiêu (nếu có
   slide mục tiêu) hoặc phần Bìa, để số phần khớp bài gốc.
+- **P49.** Chú thích hình ("Figure 1b: …", "Fig. 2 …", "Hình 3. …", "Bảng 1: …") không bao giờ là tiêu đề hay một ý: thành mô tả của ảnh
+  (`imageAlt`) khi slide Limio có ảnh. Hộp chữ mang tên "Title…" (tiêu đề dán lại thành hộp chữ, cỡ chữ lấy từ mẫu nên không ghi trong
+  file) là tiêu đề; nhiều hộp cùng tên thì lấy hộp chữ lớn nhất. Slide đã có placeholder tiêu đề thì hộp "Title…" còn lại là dòng dẫn.
+  "Source: https://…" hiện ở chân ô hình bằng tên trang (freepik.com), đường dẫn đầy đủ giữ ở `imageSourceUrl`.
+- **P50.** Hai cấp ý trong một khối: dòng đậm hoặc kết bằng dấu hai chấm, không gạch đầu dòng, là ý cha của các gạch đầu dòng ngay sau
+  nó ("Research findings:" → các kết quả); đoạn thường không gạch đầu dòng kết thúc nhóm. Bố cục Danh sách hiện ý con thụt vào.
+- **P51.** Dòng nguồn ảnh và dòng nguồn chân slide nằm ở lề dưới theo thiết kế, không tính vào phép đo tràn khung: trước đây slide
+  nào có nguồn ảnh cũng bị coi là tràn và chữ co về 26 px dù còn nhiều chỗ.
+- **P52.** Chữ được nhấn ở slide gốc được giữ lại. Cụm chữ có màu nổi khác màu chủ đạo của khối, hoặc có tô nền (highlight), thành chữ
+  **tô màu** (`==chữ==`, hiện bằng màu nhấn của giao diện slide và vệt bút dạ). Cụm chữ đậm hoặc nghiêng *một phần* đoạn thành in đậm
+  hoặc in nghiêng; cả đoạn đậm là kiểu của đoạn, không phải chỗ nhấn. Màu trung tính (đen, trắng, xám, màu chữ và màu nền của mẫu)
+  không phải chỗ nhấn. Một vài câu dài (không quá một phần tư số đoạn) mang màu riêng trong khi phần lớn slide là chữ thường, như câu
+  trích dẫn chốt tô đỏ, cũng thành tô màu. Dấu chỉ đặt lên chữ thân slide (dòng, ý, thẻ, cột, ô bảng), không lên tiêu đề, và không
+  có trong dàn ý; dấu làm chữ vượt giới hạn độ dài thì bỏ dấu, giữ chữ. Trình sửa slide có thêm nút **Tô màu** (Ctrl+Shift+H) cạnh
+  In đậm và In nghiêng; màu luôn là màu nhấn của giao diện, không chọn màu tuỳ ý (sửa tiêu chí H3).
+- **P53.** Cụm từ khoá rải trên slide (ít nhất 3 từ, mỗi từ tối đa 3 chữ và 24 ký tự, không dấu câu cuối, có ít nhất 2 màu nhấn khác
+  nhau; mỗi từ một hộp chữ hoặc một hộp nhiều dòng một từ) không thành gạch đầu dòng. Slide đó dùng Danh sách: các dòng rồi đến cụm
+  từ, chữ lớn hơn chữ dòng một bậc, xen hai màu nhấn của giao diện, không khung, không nền. Cụm từ không tính vào 12 dòng; không còn
+  chỗ thì sang slide "(tiếp)". Slide chỉ có tiêu đề và cụm từ không phải slide Mở phần. Nhãn ngắn cùng một màu (chữ trong sơ đồ)
+  không phải cụm từ. Giảng viên sửa cụm từ trong một ô, các từ cách nhau bằng dấu phẩy, tối đa 16 từ.
+- **P54.** Dòng chỉ có tên tác giả ("- Alice Morse Earle", "— Abraham Lincoln") ngay sau câu kết bằng ngoặc kép được ghép vào câu đó:
+  "“…” — Alice Morse Earle". Danh sách phải chia slide thì chia đều theo độ dài chữ, để slide sau không chỉ còn một hai dòng lẻ.

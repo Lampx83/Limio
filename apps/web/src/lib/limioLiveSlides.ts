@@ -114,9 +114,12 @@ export const MAX_TOC = 6;
 
 /**
  * Bố cục Danh sách: tối đa bấy nhiêu dòng (ý và ý con). Dùng cho slide nhiều chữ nhập từ PowerPoint, để mỗi slide gốc vẫn
- * là một slide (tiêu chí P47). Cỡ chữ tự co từ 36 px xuống 26 px theo chỗ trống (listFontSize).
+ * là một slide (tiêu chí P47). Cỡ chữ tự co từ 44 px xuống 26 px theo chỗ trống (listFontSize).
  */
 export const LIST_MAX_LINES = 12;
+/** Cụm từ khoá của Danh sách (tiêu chí P53): tối đa bấy nhiêu từ, mỗi từ tối đa bấy nhiêu ký tự. */
+export const LIST_MAX_WORDS = 16;
+export const LIST_WORD_MAX_LEN = 30;
 export interface ListLine {
   text: string;
   /** Ý con (thụt vào một bậc). */
@@ -135,8 +138,11 @@ export function listTitleFit(title: string): { px: number; lines: number } {
   return { px: two.px, lines: 2 };
 }
 
+/** Cỡ chữ lớn nhất của Danh sách: slide ít dòng dùng chữ lớn cho hết chỗ, không để trống nửa slide. */
+export const LIST_MAX_PX = 44;
+
 /** Cỡ chữ của Danh sách để mọi dòng vừa khung (dưới tiêu đề); overflow = ở 26 px vẫn không vừa. */
-export function listFontSize(lines: ListLine[], title = "", hasImage = false): { px: number; overflow: boolean } {
+export function listFontSize(lines: ListLine[], title = "", hasImage = false, words: string[] = []): { px: number; overflow: boolean } {
   const t = listTitleFit(title);
   const availH = LIST_BOX.height - t.lines * t.px * 1.15 - (t.lines ? 28 : 0);
   const width = LIST_BOX.width - (hasImage ? LIST_BOX.imageW + LIST_BOX.imageGap : 0);
@@ -144,10 +150,30 @@ export function listFontSize(lines: ListLine[], title = "", hasImage = false): {
     lines.reduce((sum, l) => {
       const w = width - (l.sub ? px * 2.4 : px * 0.9);
       const per = Math.max(1, Math.floor(w / (px * 0.56)));
-      return sum + Math.max(1, Math.ceil(l.text.length / per)) * px * 1.25 + px * 0.35;
-    }, 0);
-  for (let px = 36; px >= MIN_FONT_PX; px -= 2) if (height(px) <= availH) return { px, overflow: false };
+      return sum + Math.max(1, Math.ceil(stripInline(l.text).length / per)) * px * 1.25 + px * 0.35;
+    }, 0) + wordsHeight(words, px, width, lines.length > 0);
+  for (let px = LIST_MAX_PX; px >= MIN_FONT_PX; px -= 2) if (height(px) <= availH) return { px, overflow: false };
   return { px: MIN_FONT_PX, overflow: true };
+}
+
+/** Cỡ chữ của cụm từ: lớn hơn chữ dòng một bậc (từ đứng riêng, cần nổi). */
+export const listWordPx = (px: number) => Math.round(px * 1.15);
+
+/** Chiều cao cụm từ: các từ xếp thành hàng, xuống hàng khi hết chỗ, cách nhau 0,9 em (xem .ll-list p.words). */
+function wordsHeight(words: string[], px: number, width: number, afterLines: boolean): number {
+  if (!words.length) return 0;
+  const wpx = listWordPx(px);
+  let rows = 1;
+  let used = 0;
+  for (const w of words) {
+    const need = w.length * wpx * 0.56 + (used ? wpx * 0.9 : 0);
+    if (used && used + need > width) {
+      rows += 1;
+      used = w.length * wpx * 0.56;
+    } else used += need;
+  }
+  // Sau các dòng: khoảng cách 28 px của khối chữ và lề trên 0,2 em của cụm từ.
+  return rows * wpx * 1.3 + (afterLines ? 28 + wpx * 0.2 : 0);
 }
 
 function sanitizeListLines(raw: Record<string, unknown>): ListLine[] {
@@ -367,6 +393,11 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
     // Dòng đầu không thể là ý con (không có ý cha).
     if (lines[0]?.sub) delete lines[0].sub;
     out.lines = lines;
+    const words = (Array.isArray(raw.words) ? raw.words : [])
+      .map((w) => clip(w, LIST_WORD_MAX_LEN))
+      .filter(Boolean)
+      .slice(0, LIST_MAX_WORDS);
+    if (words.length) out.words = words;
     const img = clip(raw.imageUrl, 2000);
     if (img) Object.assign(out, { imageUrl: img, ...imageExtras(raw) });
   }
@@ -506,7 +537,7 @@ export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>
       break;
     case "list": {
       const lines: ListLine[] = Array.isArray(c.lines) ? c.lines : [];
-      if (listFontSize(lines, String(c.title ?? ""), !!c.imageUrl).overflow) problems.push("Danh sách");
+      if (listFontSize(lines, String(c.title ?? ""), !!c.imageUrl, Array.isArray(c.words) ? c.words : []).overflow) problems.push("Danh sách");
       break;
     }
     case "table": {
@@ -563,6 +594,7 @@ function toPieces(c: Record<string, any>): Pieces {
   if (Array.isArray(c.items)) for (const it of c.items) texts.push({ heading: String(it?.heading ?? ""), body: String(it?.body ?? "") });
   if (Array.isArray(c.bullets)) for (const b of c.bullets) texts.push({ heading: String(b ?? ""), body: "" });
   if (Array.isArray(c.lines)) for (const l of c.lines) texts.push({ heading: String(l?.text ?? ""), body: "" });
+  if (Array.isArray(c.words) && c.words.length) texts.push({ heading: c.words.map(String).join(", "), body: "" });
   if (Array.isArray(c.columns)) {
     for (const col of c.columns) {
       const points: string[] = Array.isArray(col?.points) ? col.points : [];
@@ -895,31 +927,42 @@ export function mergeSlideMeta(
   return out;
 }
 
-// ── In đậm và in nghiêng trong dòng (tiêu chí H3) ──────────────────────────
-// Chỉ hai dấu: **in đậm** và *in nghiêng*. Không có cỡ chữ, font, màu tuỳ chọn.
+// ── In đậm, in nghiêng và tô màu trong dòng (tiêu chí H3, P52) ─────────────
+// Ba dấu: **in đậm**, *in nghiêng* và ==tô màu== (màu nhấn của giao diện slide).
+// Không có cỡ chữ, font hay màu tuỳ chọn: tô màu luôn là màu nhấn để slide hài hoà.
 
 export interface InlineRun {
   text: string;
   bold?: boolean;
   italic?: boolean;
+  mark?: boolean;
 }
+
+export type InlineMarker = "**" | "*" | "==";
 
 /** Tách chuỗi thành các đoạn có định dạng. Dấu không có cặp đóng được giữ nguyên là chữ thường. */
 export function parseInline(text: string): InlineRun[] {
   const runs: InlineRun[] = [];
-  const push = (t: string, bold: boolean, italic: boolean) => {
+  const push = (t: string, bold: boolean, italic: boolean, mark: boolean) => {
     if (!t) return;
     const last = runs[runs.length - 1];
-    if (last && !!last.bold === bold && !!last.italic === italic) last.text += t;
-    else runs.push({ text: t, ...(bold ? { bold: true } : {}), ...(italic ? { italic: true } : {}) });
+    if (last && !!last.bold === bold && !!last.italic === italic && !!last.mark === mark) last.text += t;
+    else
+      runs.push({
+        text: t,
+        ...(bold ? { bold: true } : {}),
+        ...(italic ? { italic: true } : {}),
+        ...(mark ? { mark: true } : {}),
+      });
   };
   let i = 0;
   let bold = false;
   let italic = false;
+  let mark = false;
   let buf = "";
   // Có dấu đóng phía sau chưa? Với "*" chỉ tính dấu đơn (không thuộc một cặp "**").
-  const closes = (marker: string, from: number) => {
-    if (marker === "**") return text.indexOf("**", from) > -1;
+  const closes = (marker: InlineMarker, from: number) => {
+    if (marker !== "*") return text.indexOf(marker, from) > -1;
     for (let k = from; k < text.length; k++) {
       if (text[k] !== "*") continue;
       if (text[k + 1] === "*") {
@@ -931,13 +974,18 @@ export function parseInline(text: string): InlineRun[] {
     return false;
   };
   while (i < text.length) {
-    if (text.startsWith("**", i) && (bold || closes("**", i + 2))) {
-      push(buf, bold, italic);
+    if (text.startsWith("==", i) && (mark || closes("==", i + 2))) {
+      push(buf, bold, italic, mark);
+      buf = "";
+      mark = !mark;
+      i += 2;
+    } else if (text.startsWith("**", i) && (bold || closes("**", i + 2))) {
+      push(buf, bold, italic, mark);
       buf = "";
       bold = !bold;
       i += 2;
     } else if (text[i] === "*" && !text.startsWith("**", i) && (italic || closes("*", i + 1))) {
-      push(buf, bold, italic);
+      push(buf, bold, italic, mark);
       buf = "";
       italic = !italic;
       i += 1;
@@ -946,11 +994,9 @@ export function parseInline(text: string): InlineRun[] {
       i += 1;
     }
   }
-  push(buf, bold, italic);
+  push(buf, bold, italic, mark);
   return runs;
 }
-
-/** Chữ thuần (đã bỏ dấu định dạng) — dùng để ước lượng độ dài khi chọn cỡ chữ. */
 export function stripInline(text: string): string {
   return parseInline(text)
     .map((r) => r.text)
@@ -965,7 +1011,7 @@ export function toggleInlineMarker(
   value: string,
   start: number,
   end: number,
-  marker: "**" | "*",
+  marker: InlineMarker,
 ): { value: string; start: number; end: number } {
   if (start >= end) return { value, start, end };
   const m = marker.length;

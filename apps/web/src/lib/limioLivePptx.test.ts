@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildPptx } from "@/test/pptxFixture";
 import { parsePptx } from "./pptxImport";
 import {
+  applyEmphasis,
   chunkBalanced,
   importSourceText,
   importedSlideFor,
@@ -23,6 +24,7 @@ const slide = (o: Partial<ImportedSlide> & { n: number }): ImportedSlide => ({
   title: "",
   kicker: "",
   credit: "",
+  caption: "",
   subtitle: [],
   paragraphs: [],
   notes: "",
@@ -317,5 +319,85 @@ describe("tối ưu theo file thật (P38, P40, P43, P44, P47, P48)", () => {
     const back = appendBack(without3, src, 3);
     expect(back.slides.map((r) => r.origin?.slides[0])).toEqual([1, 2, 3, 4]);
     expect(back.slides[2]!.origin?.how).toBe("back");
+  });
+});
+
+describe("chú thích và nguồn ảnh (P49)", () => {
+  it("chú thích thành mô tả ảnh; 'Source: https://…' hiện tên trang và giữ đường dẫn", () => {
+    const [p] = piecesFor(
+      slide({
+        n: 5,
+        title: "1. POSITIVE THINKING",
+        paragraphs: [P("Is the glass half-full or half-empty?")],
+        imageUrl: "/api/limio-live-media/u-5.jpg",
+        caption: "Figure 1b: Glass of water",
+        credit: "Source: https://www.freepik.com/free-vector/glass.htm",
+      }),
+      { first: false },
+    );
+    expect(p!.config).toMatchObject({
+      imageAlt: "Figure 1b: Glass of water",
+      imageCredit: "freepik.com",
+      imageSourceUrl: "https://www.freepik.com/free-vector/glass.htm",
+    });
+    expect(JSON.stringify(p!.config.bullets)).not.toContain("Figure");
+  });
+});
+
+describe("chữ nhấn và cụm từ khoá (P52, P53)", () => {
+  it("applyEmphasis đánh dấu đúng cụm, trọn từ, không đè chữ đã có dấu", () => {
+    const marks = [
+      { text: "chemicals", kind: "mark" as const },
+      { text: "chủ động", kind: "bold" as const },
+      { text: "love", kind: "italic" as const },
+    ];
+    expect(applyEmphasis("There are chemicals in our brains.", marks)).toBe("There are ==chemicals== in our brains.");
+    expect(applyEmphasis("Học chủ động; lovely không phải love.", marks)).toBe("Học **chủ động**; lovely không phải *love*.");
+    expect(applyEmphasis("Đã có **dấu** chemicals", marks)).toBe("Đã có **dấu** chemicals");
+    expect(applyEmphasis("Không nhấn gì", [])).toBe("Không nhấn gì");
+  });
+
+  it("slide dựng ra mang dấu tô màu ở các dòng, không ở tiêu đề; dàn ý không có dấu", () => {
+    const src = {
+      slides: [
+        slide({ n: 1, title: "Bìa" }),
+        slide({
+          n: 2,
+          title: "Chemicals in the brain",
+          paragraphs: [P("There are chemicals in our brains."), P("Release these ‘feel-good’ chemicals!"), P("Third line of text."), P("Fourth line of text.")],
+          emphasis: [
+            { text: "chemicals", kind: "mark" },
+            { text: "feel-good", kind: "mark" },
+          ],
+        }),
+      ],
+    };
+    const rows = keepOutline(src, "Bìa").slides;
+    expect(JSON.stringify(rows[1]!.points)).not.toContain("==");
+    const c = importedSlideFor(rows[1]!, src)!.config as Record<string, any>;
+    expect(c.title).toBe("Chemicals in the brain");
+    expect(JSON.stringify(c)).toContain("There are ==chemicals== in our brains.");
+    expect(JSON.stringify(c)).toContain("‘==feel-good==’ ==chemicals==!");
+  });
+
+  it("slide có cụm từ là Danh sách: các dòng rồi đến cụm từ, không tách slide, không thành slide mở phần", () => {
+    const words = ["fantastic", "laugh", "love", "best", "great", "smile", "enjoy", "brilliant", "special", "nice", "good", "better", "amazing"];
+    const pieces = piecesFor(
+      slide({ n: 17, title: "4. REFLECTION", paragraphs: [P("Think Positive"), P("Using the words below, compose a positive statement to share with the class.")], words }),
+      { first: false },
+    );
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]!.layout).toBe("list");
+    expect(pieces[0]!.config).toMatchObject({ title: "4. REFLECTION", words });
+    expect((pieces[0]!.config as any).lines).toHaveLength(2);
+    const only = piecesFor(slide({ n: 9, title: "2. Từ khoá", words: ["một", "hai", "ba"] }), { first: false });
+    expect(only.map((p) => p.layout)).toEqual(["list"]);
+  });
+
+  it("dữ liệu nhập cũ không có words/emphasis vẫn đọc được; dữ liệu lạ bị lọc", () => {
+    const raw = { format: "pptx", fileName: "a.pptx", slides: [{ n: 1, title: "x", words: ["a", 3, ""], emphasis: [{ text: "a", kind: "lạ" }, null, { kind: "bold" }] }] };
+    const s = sanitizeImportSource(raw)!.slides[0]!;
+    expect(s.words).toEqual(["a"]);
+    expect(s.emphasis).toEqual([{ text: "a", kind: "mark" }]);
   });
 });
