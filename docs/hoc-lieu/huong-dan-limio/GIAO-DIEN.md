@@ -597,8 +597,10 @@ tông; "Gỡ toàn bộ thương hiệu"), hoặc "Không dùng". Cấp trườn
 **Tương tác và trình chiếu**
 - Nút **Trình chiếu** (toàn màn hình từ slide 1) có mũi tên mở "Từ đầu", "Từ slide này", **"Presenter view"**
   (xem trước, ghi chú Note, đồng hồ, thu phóng; máy có màn hình mở rộng và đã cấp quyền "Quản lý cửa sổ" thì màn
-  chiếu tự lên màn hình thứ hai, nếu không thì mở cửa sổ riêng — **chưa thử với máy chiếu thật**). Phím tắt F,
-  +, −, 0, Q.
+  chiếu tự lên màn hình thứ hai ở chế độ toàn màn hình, nếu không thì mở cửa sổ riêng). Phím tắt F, +, −, 0, Q.
+  - Máy đang nối màn hình mở rộng mà chưa cấp quyền: dưới mục Presenter view có dòng xin quyền với nút **"Cho phép"**
+    (bấm thì trình duyệt hỏi một lần). Quyền đã bị chặn thì dòng đó chỉ cách bật lại trong cài đặt trang web.
+    Chỉ Chrome và Edge có tính năng này; Safari, Firefox và chế độ nhân bản màn hình vẫn mở cửa sổ riêng.
 - **Mỗi trang tương tác có mã QR và mã tham gia riêng**; nút "Hiện QR trên màn chiếu" (phím Q); chuyển trang thì
   mã trang trước báo đã đóng. Học viên tham gia **Ẩn danh** (quét QR) hoặc **Đăng nhập** (mỗi tài khoản một
   lần mỗi câu). Trắc nghiệm có "Đóng câu hỏi" để lộ đáp án.
