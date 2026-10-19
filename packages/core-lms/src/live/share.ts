@@ -51,6 +51,8 @@ export interface SharedLiveDeck {
   motif: string | null;
   /** Ngôn ngữ nội dung slide (null = chưa xác định) — chữ hệ thống trên slide theo ngôn ngữ này. */
   language: string | null;
+  /** Khung hình của các ô hình (null = tự động theo hoa văn). */
+  imageFrame: string | null;
   updatedAt: Date;
   slides: Pick<LiveSlide, "id" | "type" | "config" | "orderIndex">[];
 }
@@ -73,6 +75,7 @@ export async function getLiveDeckByShareCode(code: string, db: PrismaClient): Pr
       brandTemplate: true,
       motif: true,
       language: true,
+      imageFrame: true,
       updatedAt: true,
       user: { select: { displayName: true } },
       slides: { orderBy: { orderIndex: "asc" }, select: { id: true, type: true, config: true, orderIndex: true } },

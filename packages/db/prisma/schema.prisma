@@ -5223,6 +5223,9 @@ model LiveDeck {
   // ngôn ngữ này. Ghi lúc tạo bài (nhận từ nguồn), giảng viên đổi ở menu Giao diện. Null = chưa xác định (bài cũ, hoặc nguồn
   // quá ngắn): lần đầu cần dùng sẽ nhận từ chữ của slide rồi ghi lại (docs/tieu-chi/ngon-ngu-slide.md).
   language String?
+  // Khung hình của các ô hình trong slide Chữ và hình ("round", "circle", "arch", "hex", "blob", "leaf", "offset" —
+  // IMAGE_FRAMES ở apps/web/src/lib/limioLiveImageStyle.ts). Null = tự động theo hoa văn chủ đạo của bài.
+  imageFrame String?
 
   // Link xem chỉ đọc /bai-giang/<shareCode>: ai có link cũng xem được, không cần đăng nhập. Null = không chia sẻ.
   // Tạo link mới = thay mã (link cũ chết ngay). Bản sao bài giảng không mang theo mã này.

@@ -189,7 +189,13 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             // Giữ cờ ẩn và kiểu bìa của slide cũ: đổi chúng không tính là sửa tay nên slide vẫn được viết lại. Hoa văn/hình
             // minh hoạ theo motifAfterRegenerate. Ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
             const oldMeta = pickMeta(old.config);
-            const keepHidden = { ...(oldMeta.hidden ? { hidden: true } : {}), ...(oldMeta.coverStyle ? { coverStyle: oldMeta.coverStyle } : {}) };
+            const keepHidden = {
+              ...(oldMeta.hidden ? { hidden: true } : {}),
+              ...(oldMeta.coverStyle ? { coverStyle: oldMeta.coverStyle } : {}),
+              // Kiểu trình bày và khung hình của Chữ và hình do giảng viên chọn (chu-va-hinh-kieu-khung.md, K2).
+              ...(oldMeta.imageStyle ? { imageStyle: oldMeta.imageStyle } : {}),
+              ...(oldMeta.imageFrame ? { imageFrame: oldMeta.imageFrame } : {}),
+            };
             const keepMotif = motifAfterRegenerate(oldMeta.motif, gen.config.motif);
             await recordSlideVersion(tx, { id: r.slideId, type: old.type as never, config: old.config }, "before_sync");
             const row = await tx.liveSlide.update({

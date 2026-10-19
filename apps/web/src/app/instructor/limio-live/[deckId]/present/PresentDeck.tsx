@@ -57,6 +57,8 @@ interface Deck {
   motif?: string | null;
   /** Ngôn ngữ của bài: chữ hệ thống trên slide (docs/tieu-chi/ngon-ngu-slide.md). */
   language?: string | null;
+  /** Khung hình của các ô hình; null = tự động theo hoa văn. */
+  imageFrame?: string | null;
   org?: DeckOrgBrand | null;
   slides: Slide[];
 }
@@ -679,7 +681,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   return (
     <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
     <LiveLangProvider lang={deck.language}>
-    <LiveMotifProvider deckId={deck.id} motif={deck.motif} slides={slides}>
+    <LiveMotifProvider deckId={deck.id} motif={deck.motif} imageFrame={deck.imageFrame} slides={slides}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {

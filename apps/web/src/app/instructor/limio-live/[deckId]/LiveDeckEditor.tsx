@@ -69,7 +69,8 @@ import ShareDialog from "./ShareDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
 import { LiveLangProvider } from "../liveLangContext";
 import { LiveMotifProvider } from "../liveMotifContext";
-import { deckAutoMotif } from "@/lib/limioLiveMotifs";
+import { deckAutoMotif, isMotifId } from "@/lib/limioLiveMotifs";
+import { autoImageFrame } from "@/lib/limioLiveImageStyle";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
 import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import { isLayoutSlide } from "../SlideLayouts";
@@ -102,6 +103,8 @@ interface Deck {
   motif?: string | null;
   /** Ngôn ngữ nội dung slide (docs/tieu-chi/ngon-ngu-slide.md); null = chưa xác định. */
   language?: string | null;
+  /** Khung hình của các ô hình (docs/tieu-chi/chu-va-hinh-kieu-khung.md); null = tự động theo hoa văn. */
+  imageFrame?: string | null;
   /** Bộ thương hiệu của trường mà chủ bài thuộc về (null nếu không thuộc trường nào). */
   org?: DeckOrgBrand | null;
   /** Nguồn của bài AI soạn (document | topic | topic_web); null với bài soạn tay. */
@@ -386,6 +389,26 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     if (!res.ok) {
       toast.error("Lưu giao diện thất bại");
       setDeck((d) => (d ? { ...d, theme: prev } : d));
+      return;
+    }
+    setLastSavedAt(new Date());
+  };
+
+  // Khung hình của cả bài (menu Giao diện): null = tự động theo hoa văn (docs/tieu-chi/chu-va-hinh-kieu-khung.md, K10).
+  const handleSetImageFrame = async (imageFrame: string | null) => {
+    if (!deck || (deck.imageFrame ?? null) === imageFrame) return;
+    const prev = deck.imageFrame ?? null;
+    setDeck({ ...deck, imageFrame });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageFrame }),
+      })
+    );
+    if (!res.ok) {
+      toast.error("Lưu khung hình thất bại");
+      setDeck((d) => (d ? { ...d, imageFrame: prev } : d));
       return;
     }
     setLastSavedAt(new Date());
@@ -700,7 +723,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   return (
     <LiveBrandProvider brand={effBrand}>
     <LiveLangProvider lang={deck.language}>
-    <LiveMotifProvider deckId={deckId} motif={deck.motif} slides={deck.slides}>
+    <LiveMotifProvider deckId={deckId} motif={deck.motif} imageFrame={deck.imageFrame} slides={deck.slides}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
       onInput={() => {
@@ -779,6 +802,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           onChange={handleSetTheme}
           motif={{ value: deck.motif ?? null, auto: deckAutoMotif(deckId), onChange: handleSetMotif }}
           language={{ value: deck.language ?? null, onChange: handleSetLanguage }}
+          imageFrame={{
+            value: deck.imageFrame ?? null,
+            auto: autoImageFrame(isMotifId(deck.motif) ? deck.motif : deckAutoMotif(deckId)),
+            onChange: handleSetImageFrame,
+          }}
           brand={{
             color: effBrand?.colors?.primary ?? null,
             logoUrl: effBrand?.logoUrl ?? null,

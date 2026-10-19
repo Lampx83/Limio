@@ -34,6 +34,7 @@ export default function SharedDeckView({
   deckId,
   motif,
   language,
+  imageFrame,
   title,
   ownerName,
   theme,
@@ -45,6 +46,8 @@ export default function SharedDeckView({
   motif: string | null;
   /** Ngôn ngữ của bài: chữ hệ thống trên slide (docs/tieu-chi/ngon-ngu-slide.md). */
   language: string | null;
+  /** Khung hình của các ô hình (null = tự động theo hoa văn). */
+  imageFrame: string | null;
   title: string;
   ownerName: string;
   theme: string;
@@ -80,7 +83,7 @@ export default function SharedDeckView({
   return (
     <LiveBrandProvider brand={brand}>
     <LiveLangProvider lang={language}>
-      <LiveMotifProvider deckId={deckId} motif={motif} slides={slides}>
+      <LiveMotifProvider deckId={deckId} motif={motif} imageFrame={imageFrame} slides={slides}>
       <main className="shared-deck mx-auto w-full max-w-5xl px-4 py-6 lg:px-6">
         <header data-print-hide className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
