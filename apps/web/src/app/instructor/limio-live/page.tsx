@@ -4,7 +4,7 @@ import LiveDeckList from "./LiveDeckList";
 
 export const metadata = {
   title: "Limio-Live | Limio",
-  description: "Soạn và trình chiếu bài giảng tương tác kiểu Nearpod",
+  description: "Soạn và trình chiếu slide tương tác kiểu Nearpod",
 };
 
 export default async function LimioLivePage() {
@@ -16,7 +16,7 @@ export default async function LimioLivePage() {
       <div className="border-b border-token pb-6">
         <h1 className="text-2xl font-bold">Limio-Live</h1>
         <p className="mt-2 text-muted">
-          Bộ công cụ dạy học trực tiếp trên lớp: soạn bài giảng tương tác, tạo hoạt động nhanh (vote, word cloud, Padlet,
+          Bộ công cụ dạy học trực tiếp trên lớp: soạn slide tương tác, tạo hoạt động nhanh (vote, word cloud, Padlet,
           whiteboard) và điều hành lớp học (đếm ngược, gọi tên, phân nhóm, gameshow). Sinh viên tham gia ngay bằng điện thoại.
         </p>
       </div>
