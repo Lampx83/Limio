@@ -96,7 +96,6 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [remaining, setRemaining] = useState<number | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const scrollToEnd = useCallback(() => endRef.current?.scrollIntoView({ block: "nearest" }), []);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -120,14 +119,13 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
         body: JSON.stringify({ message: text, history }),
       });
       const data = (await res.json().catch(() => null)) as
-        | { result?: AssistantReply; remainingTurns?: number | null; error?: string }
+        | { result?: AssistantReply; error?: string }
         | null;
       if (!res.ok || !data?.result) {
         setError(errorText(data?.error ?? "unknown"));
         return;
       }
       const r = data.result;
-      setRemaining(typeof data.remainingTurns === "number" ? data.remainingTurns : null);
       setMessages((prev) => [...prev, { role: "assistant", text: r.reply, actions: r.actions, followUps: r.followUps, fresh: true }]);
     } catch {
       setError(errorText("unknown"));
@@ -144,8 +142,15 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
   ) : null;
 
   const inputBox = (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-2.5 pl-4 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)]">
-      <Sparkles size={22} className="shrink-0 text-brand-600" aria-hidden />
+    <div
+      className={
+        chatting
+          ? // Đang chat: thanh nhập phẳng, dính ở đáy khung chat (không nổi bóng như lúc mới vào).
+            "flex items-center gap-2.5 rounded-xl border border-token bg-[rgb(var(--surface))] p-1.5 pl-3 transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_3px_rgb(var(--brand)/0.15)]"
+          : "flex items-center gap-3 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-2.5 pl-4 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)]"
+      }
+    >
+      <Sparkles size={chatting ? 20 : 22} className="shrink-0 text-brand-600" aria-hidden />
       <textarea
         ref={inputRef}
         value={input}
@@ -162,11 +167,11 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
             void send(input);
           }
         }}
-        className="max-h-36 min-h-[3rem] flex-1 resize-none bg-transparent py-3.5 text-base font-medium outline-none placeholder:font-normal placeholder:text-slate-500"
+        className={`max-h-36 flex-1 resize-none bg-transparent text-base outline-none placeholder:text-slate-500 ${chatting ? "min-h-[2.75rem] py-2.5" : "min-h-[3rem] py-3.5 font-medium placeholder:font-normal"}`}
       />
       <button
         type="button"
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-md transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+        className={`flex shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${chatting ? "h-10 w-10" : "h-12 w-12 shadow-md disabled:shadow-none"}`}
         disabled={busy || !input.trim()}
         onClick={() => void send(input)}
         aria-label="Gửi"
@@ -179,19 +184,21 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
   return (
     <section
       aria-labelledby="teacher-assistant-heading"
-      className="rounded-3xl border border-token bg-[rgb(var(--surface))] p-5 shadow-md sm:p-7"
+      className={`rounded-3xl border border-token bg-[rgb(var(--surface))] shadow-md ${chatting ? "overflow-hidden" : "p-5 sm:p-7"}`}
     >
-      <div className="flex items-start gap-3.5">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[rgb(var(--brand-soft))]" aria-hidden>
-          <LimeSliceIcon className="h-8 w-8" />
+      <div className={chatting ? "flex items-center gap-3 border-b border-token px-4 py-3 sm:px-5" : "flex items-start gap-3.5"}>
+        <span className={`flex shrink-0 items-center justify-center bg-[rgb(var(--brand-soft))] ${chatting ? "h-9 w-9 rounded-xl" : "h-12 w-12 rounded-2xl"}`} aria-hidden>
+          <LimeSliceIcon className={chatting ? "h-6 w-6" : "h-8 w-8"} />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 id="teacher-assistant-heading" className="text-h3">
+          <h1 id="teacher-assistant-heading" className={chatting ? "text-base font-bold leading-tight" : "text-h3"}>
             {greeting}, <span className="text-gradient">{name}</span>
           </h1>
-          <p className="mt-0.5 text-sm text-muted">
-            <span className="font-semibold text-[rgb(var(--text))]">Hôm nay thầy/cô muốn làm gì?</span> Chưa có ý tưởng cũng không sao, cứ hỏi Limio hoặc chọn một gợi ý bên dưới.
-          </p>
+          {!chatting && (
+            <p className="mt-0.5 text-sm text-muted">
+              <span className="font-semibold text-[rgb(var(--text))]">Hôm nay thầy/cô muốn làm gì?</span> Chưa có ý tưởng cũng không sao, cứ hỏi Limio hoặc chọn một gợi ý bên dưới.
+            </p>
+          )}
         </div>
         {chatting && (
           <button
@@ -232,7 +239,7 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
       ) : (
         <>
           {/* Đang trò chuyện: hội thoại ở trên, ô nhập ở cuối như mọi khung chat. */}
-          <div className="mt-5 max-h-[30rem] space-y-4 overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-3.5 sm:p-4" aria-live="polite">
+          <div className="max-h-[28rem] space-y-4 overflow-y-auto bg-[rgb(var(--surface-muted))] px-4 py-4 sm:px-5" aria-live="polite">
             {messages.map((m, i) =>
               m.role === "user" ? (
                 <div key={i} className="flex items-start justify-end gap-3">
@@ -289,11 +296,12 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
             {busy && <ThinkingRow />}
             <div ref={endRef} />
           </div>
-          {errorLine}
-          <div className="mt-4">{inputBox}</div>
+          <div className="border-t border-token p-3 sm:px-4">
+            {error && <p role="alert" className="banner-danger mb-2 text-sm font-medium">{error}</p>}
+            {inputBox}
+          </div>
         </>
       )}
-      {remaining !== null && <p className="mt-2 text-xs text-faint">Còn khoảng {remaining} lượt hỏi AI.</p>}
     </section>
   );
 }
