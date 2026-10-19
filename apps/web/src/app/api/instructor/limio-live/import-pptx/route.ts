@@ -57,14 +57,17 @@ export async function POST(req: Request) {
   }
   const { deck: pptx, media } = parsed;
 
+  // Mô tả của giảng viên mang từ trang Tạo bài giảng (tao-bai-giang-mot-o.md, M7, M10).
+  const intentRaw = form.get("intent");
+  const intent = typeof intentRaw === "string" && intentRaw.trim() ? intentRaw.trim().slice(0, 2000) : null;
+
+  // "Soạn lại mạch" cần AI. "Giữ ý" dùng AI chỉ để viết thêm slide tương tác: AI chưa cấu hình thì vẫn nhập được (M18).
   let openai: Awaited<ReturnType<typeof getOpenaiClient>> | null = null;
-  if (mode === "restructure") {
-    try {
-      openai = await getOpenaiClient();
-    } catch (e) {
-      if ((e as Error).message === "openai_not_configured") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
-      throw e;
-    }
+  try {
+    openai = await getOpenaiClient();
+  } catch (e) {
+    if ((e as Error).message !== "openai_not_configured") throw e;
+    if (mode === "restructure") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
   }
 
   // Chỉ lưu hình được dùng (hình lớn nhất của slide có bố cục chứa hình), để không tốn dung lượng cho hình không hiện.
@@ -101,7 +104,7 @@ export async function POST(req: Request) {
         if (mode === "restructure") send({ type: "ai" });
         let built;
         try {
-          built = await buildImportOutline(userId, source, title, minutes, mode, openai);
+          built = await buildImportOutline(userId, source, title, minutes, mode, openai, intent);
         } catch (e) {
           const f = aiFailure(e);
           if (f) return send({ type: "error", ...f });
@@ -122,6 +125,7 @@ export async function POST(req: Request) {
             sourceName: fileName,
             sourceText: text.slice(0, MAX_STORED_SOURCE_CHARS),
             sourceKind: "document",
+            ...(intent ? { sourceIntent: intent } : {}),
             importSource: source as unknown as object,
           },
           select: { id: true },
@@ -135,6 +139,8 @@ export async function POST(req: Request) {
           sourceKind: "document",
           sourceFormat: "pptx",
           importMode: mode,
+          hasIntent: !!intent,
+          interactionsAdded: built.interactionsAdded,
           importedSlides: slides.length,
           imageCount: Object.keys(images).length,
         });

@@ -41,6 +41,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
       outline: true,
       outlineConfirmedAt: true,
       sourceText: true,
+      sourceIntent: true,
       sourceKind: true,
       sourceRefs: true,
       importSource: true,
@@ -130,7 +131,15 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             if (!openai) throw new Error("openai_not_configured");
             const drafts = (await generateSlideDrafts(
               userId,
-              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
+              {
+                sourceText,
+                sourceKind,
+                deckTitle,
+                outline: inputs,
+                batch: batch.map((k) => writeIdx[k]!),
+                // Yêu cầu của giảng viên đi cùng tài liệu (tao-bai-giang-mot-o.md, M9).
+                ...(deck.sourceIntent ? { intent: deck.sourceIntent } : {}),
+              },
               openai,
             )) as SlideDraft[];
             // generateDeckSlides đánh chỉ số theo phần được viết; mô hình trả chỉ số theo cả dàn ý.

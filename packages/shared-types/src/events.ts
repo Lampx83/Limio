@@ -706,6 +706,10 @@ export interface LiveDeckOutlineGeneratedPayload {
   sourceFormat?: "pptx";
   /** Cách chuyển: giữ ý (không AI) hoặc soạn lại mạch (AI). */
   importMode?: "keep" | "restructure";
+  /** Có yêu cầu của giảng viên đi cùng tài liệu (trang Tạo bài giảng một ô). Thiếu = bản ghi cũ. */
+  hasIntent?: boolean;
+  /** Số slide tương tác hệ thống bổ sung để đủ mức tối thiểu. Thiếu = bản ghi cũ. */
+  interactionsAdded?: number;
   /** Số slide trong file gốc. */
   importedSlides?: number;
   /** Số hình đã lưu. */

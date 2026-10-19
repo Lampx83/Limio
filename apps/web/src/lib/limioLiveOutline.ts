@@ -194,6 +194,8 @@ export const DURATIONS = [
   { minutes: 15, min: 9, max: 12 },
   { minutes: 30, min: 16, max: 20 },
   { minutes: 45, min: 22, max: 28 },
+  // Buổi dài (docs/tieu-chi/tao-bai-giang-mot-o.md, M11): đủ mạch, 4 đến 6 phần nội dung.
+  { minutes: 90, min: 42, max: 50 },
 ] as const;
 
 /** Số slide tương tác gợi ý cho mỗi phần nội dung. */
@@ -223,7 +225,7 @@ export function slideRange(minutes: number): { min: number; max: number } {
   return { min: d.min, max: d.max };
 }
 
-export function isValidMinutes(m: unknown): m is 15 | 30 | 45 {
+export function isValidMinutes(m: unknown): m is (typeof DURATIONS)[number]["minutes"] {
   return DURATIONS.some((d) => d.minutes === m);
 }
 
@@ -626,6 +628,15 @@ export function outlineWarnings(
   if (st.total < min) w.push(`Dàn ý có ${st.total} slide, ít hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
   if (st.total > max && !w.length) w.push(`Dàn ý có ${st.total} slide, nhiều hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
   if (st.interactive === 0 && st.total >= 6) w.push("Dàn ý chưa có slide tương tác nào (trắc nghiệm, bình chọn, đám mây từ hoặc bảng cộng tác).");
+  // Mức tối thiểu theo thời lượng (tao-bai-giang-mot-o.md, M14, M19): nhắc, không chặn.
+  const minInteractive = minutes >= 90 ? 10 : 5;
+  if (st.interactive > 0 && st.interactive < minInteractive)
+    w.push(`Bài nên có ít nhất ${minInteractive} slide tương tác (hiện có ${st.interactive}).`);
+  // Bố cục phong phú (M24): quá nửa slide nội dung là Chữ và hình thì nhắc đổi bớt.
+  const body = outline.slides.filter((s) => s.kind === "content" && !s.fixed && !["cover", "section", "summary", "quote"].includes(s.layout ?? ""));
+  const images = body.filter((s) => (s.layout ?? "image") === "image").length;
+  if (images >= 4 && images * 2 > body.length)
+    w.push(`Nhiều slide Chữ và hình (${images} trên ${body.length} slide nội dung); nên đổi vài slide sang Ba thẻ, Các bước hoặc So sánh.`);
   for (let i = 1; i < outline.slides.length; i++) {
     if (outline.slides[i]!.kind !== "content" && outline.slides[i - 1]!.kind !== "content") {
       w.push("Có hai slide tương tác liền nhau; nên xen slide nội dung ở giữa.");

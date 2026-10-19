@@ -1,19 +1,14 @@
-// Trang Tạo bài giảng: ba thẻ chọn nguyên liệu (docs/tieu-chi/tao-bai-giang-ba-the.md).
+// Trang Tạo bài giảng một ô: mô tả ý muốn, kèm một tài liệu nếu có (docs/tieu-chi/tao-bai-giang-mot-o.md). Hàm thuần.
 
-export type CreateSource = "idea" | "doc" | "pptx";
-
-export const CREATE_SOURCES: ReadonlyArray<{ id: CreateSource; label: string; hint: string }> = [
-  { id: "idea", label: "Từ ý tưởng", hint: "AI soạn từ kiến thức chung theo mô tả của thầy/cô." },
-  { id: "doc", label: "Từ tài liệu", hint: "Word, PDF hoặc dán văn bản; AI bám sát tài liệu." },
-  { id: "pptx", label: "Từ bài PowerPoint", hint: "Giữ hình, ghi chú giảng, bảng và biểu đồ." },
-];
-
-// Khớp TOPIC_MIN_CHARS của core-feedback (máy chủ kiểm lại).
+// Khớp TOPIC_MIN_CHARS / TOPIC_MAX_CHARS của core-feedback (máy chủ kiểm lại).
 export const TOPIC_MIN = 15;
+export const TOPIC_MAX = 2000;
+/** Dán vào ô một đoạn dài hơn mức này (khi chưa có tệp) thì đoạn đó thành tài liệu "Văn bản dán" (M4). */
+export const PASTE_AS_DOC_CHARS = 2000;
 
 export type UploadKind = "pptx" | "legacy_ppt" | "doc" | "unsupported";
 
-/** Loại tệp theo đuôi: tệp PowerPoint đi sang trang nhập PowerPoint thay vì bị báo lỗi. */
+/** Loại tệp theo đuôi: tệp PowerPoint đi sang trang nhập PowerPoint (M7). */
 export function classifyUpload(name: string): UploadKind {
   const ext = /\.([a-z0-9]+)$/i.exec(name)?.[1]?.toLowerCase();
   if (ext === "pptx") return "pptx";
@@ -22,24 +17,29 @@ export function classifyUpload(name: string): UploadKind {
   return "unsupported";
 }
 
-/** Nút "Soạn dàn ý" chỉ xét dữ liệu của thẻ đang chọn; thẻ PowerPoint không có nút này. */
-export function canSubmitSource(source: CreateSource, input: { topic: string; text: string; hasFile: boolean }): boolean {
-  if (source === "idea") return input.topic.trim().length >= TOPIC_MIN;
-  if (source === "doc") return input.hasFile || input.text.trim().length > 0;
-  return false;
+/** Đoạn vừa dán có thành tài liệu không (M4): dài hơn 2.000 ký tự (không tính khoảng trắng hai đầu) và chưa có tệp. */
+export function pasteAsDocument(text: string, hasAttachment: boolean): boolean {
+  return !hasAttachment && text.trim().length > PASTE_AS_DOC_CHARS;
 }
 
-// Tệp PowerPoint chọn ở trang Tạo bài giảng được chuyển sang trang nhập qua biến trong bộ nhớ: chuyển trang bằng
-// router phía trình duyệt giữ nguyên module này, nên trang nhập đọc được tệp mà không phải tải lên hay chọn lại.
-let pendingPptx: File | null = null;
-
-export function handOffPptx(file: File): void {
-  pendingPptx = file;
+/** Nút "Soạn dàn ý" (M6): có tài liệu thì mô tả không bắt buộc; không có thì mô tả từ 15 ký tự. Mô tả luôn ≤ 2.000. */
+export function canSubmitCreate(input: { description: string; hasAttachment: boolean }): boolean {
+  const n = input.description.trim().length;
+  if (n > TOPIC_MAX) return false;
+  return input.hasAttachment || n >= TOPIC_MIN;
 }
 
-/** Lấy tệp đã chuyển sang (một lần duy nhất). */
-export function takeHandedOffPptx(): File | null {
-  const f = pendingPptx;
-  pendingPptx = null;
-  return f;
+// Tệp PowerPoint chọn ở trang Tạo bài giảng được chuyển sang trang nhập qua biến trong bộ nhớ, kèm mô tả của giảng viên:
+// chuyển trang bằng router phía trình duyệt giữ nguyên module này, nên trang nhập đọc được tệp mà không phải chọn lại.
+let pending: { file: File; intent: string } | null = null;
+
+export function handOffPptx(file: File, intent = ""): void {
+  pending = { file, intent: intent.trim() };
+}
+
+/** Lấy tệp (và mô tả) đã chuyển sang, một lần duy nhất. */
+export function takeHandedOffPptx(): { file: File; intent: string } | null {
+  const p = pending;
+  pending = null;
+  return p;
 }

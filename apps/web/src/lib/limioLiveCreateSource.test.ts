@@ -1,17 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CREATE_SOURCES, canSubmitSource, classifyUpload, handOffPptx, takeHandedOffPptx } from "./limioLiveCreateSource";
+import { PASTE_AS_DOC_CHARS, canSubmitCreate, classifyUpload, handOffPptx, pasteAsDocument, takeHandedOffPptx } from "./limioLiveCreateSource";
 
-/** Trang Tạo bài giảng chọn nguồn bằng ba thẻ — docs/tieu-chi/tao-bai-giang-ba-the.md (N1, N7, N9–N11, N14). */
+/** Trang Tạo bài giảng một ô — docs/tieu-chi/tao-bai-giang-mot-o.md (M3–M7, M21). */
 
-describe("ba thẻ nguồn (N1)", () => {
-  it("đúng thứ tự, đúng tên, thẻ đầu là ý tưởng", () => {
-    expect(CREATE_SOURCES.map((s) => s.id)).toEqual(["idea", "doc", "pptx"]);
-    expect(CREATE_SOURCES.map((s) => s.label)).toEqual(["Từ ý tưởng", "Từ tài liệu", "Từ bài PowerPoint"]);
-    for (const s of CREATE_SOURCES) expect(s.hint.length).toBeGreaterThan(10);
-  });
-});
-
-describe("classifyUpload (N10, N11)", () => {
+describe("classifyUpload (M3)", () => {
   it("nhận ra PowerPoint mới và cũ, không phân biệt hoa thường", () => {
     expect(classifyUpload("Bai-giang.pptx")).toBe("pptx");
     expect(classifyUpload("BAI GIANG.PPTX")).toBe("pptx");
@@ -25,35 +17,44 @@ describe("classifyUpload (N10, N11)", () => {
   });
 });
 
-describe("canSubmitSource (N7)", () => {
-  const empty = { topic: "", text: "", hasFile: false };
-  it("ý tưởng cần ít nhất 15 ký tự sau khi bỏ khoảng trắng", () => {
-    expect(canSubmitSource("idea", { ...empty, topic: "   ngắn    " })).toBe(false);
-    expect(canSubmitSource("idea", { ...empty, topic: "Bài về thực tế tăng cường" })).toBe(true);
+describe("dán văn bản dài thành tài liệu (M4)", () => {
+  it("đoạn dán trên 2.000 ký tự khi chưa có tệp thì thành tài liệu", () => {
+    expect(PASTE_AS_DOC_CHARS).toBe(2000);
+    expect(pasteAsDocument("x".repeat(2001), false)).toBe(true);
+    expect(pasteAsDocument("x".repeat(2000), false)).toBe(false);
   });
-  it("tài liệu cần tệp hoặc chữ dán vào", () => {
-    expect(canSubmitSource("doc", empty)).toBe(false);
-    expect(canSubmitSource("doc", { ...empty, text: "   " })).toBe(false);
-    expect(canSubmitSource("doc", { ...empty, text: "Chương 3" })).toBe(true);
-    expect(canSubmitSource("doc", { ...empty, hasFile: true })).toBe(true);
+  it("đã có tài liệu thì không chuyển", () => {
+    expect(pasteAsDocument("x".repeat(5000), true)).toBe(false);
   });
-  it("chữ ở thẻ khác không làm bật nút", () => {
-    expect(canSubmitSource("doc", { ...empty, topic: "Bài về thực tế tăng cường" })).toBe(false);
-    expect(canSubmitSource("idea", { ...empty, text: "Chương 3 rất dài", hasFile: true })).toBe(false);
-  });
-  it("thẻ PowerPoint không dùng nút Soạn dàn ý", () => {
-    expect(canSubmitSource("pptx", { topic: "Bài về thực tế tăng cường", text: "x", hasFile: true })).toBe(false);
+  it("khoảng trắng không tính", () => {
+    expect(pasteAsDocument(`  ${"x".repeat(1990)}\n\n\n\n\n\n\n\n\n\n\n\n  `, false)).toBe(false);
   });
 });
 
-describe("chuyển tệp PowerPoint sang trang nhập (N9)", () => {
-  it("lấy được đúng một lần", () => {
+describe("canSubmitCreate (M6)", () => {
+  it("không tài liệu: mô tả cần ít nhất 15 ký tự", () => {
+    expect(canSubmitCreate({ description: "  ngắn  ", hasAttachment: false })).toBe(false);
+    expect(canSubmitCreate({ description: "Bài về thực tế tăng cường", hasAttachment: false })).toBe(true);
+  });
+  it("có tài liệu: mô tả không bắt buộc", () => {
+    expect(canSubmitCreate({ description: "", hasAttachment: true })).toBe(true);
+  });
+  it("mô tả quá 2.000 ký tự thì không gửi", () => {
+    expect(canSubmitCreate({ description: "x".repeat(2001), hasAttachment: true })).toBe(false);
+  });
+});
+
+describe("chuyển tệp PowerPoint sang trang nhập, mang theo mô tả (M7)", () => {
+  it("lấy được đúng một lần, kèm mô tả", () => {
     const f = new File(["x"], "Bai.pptx");
-    handOffPptx(f);
-    expect(takeHandedOffPptx()).toBe(f);
+    handOffPptx(f, "Dạy cho sinh viên năm nhất.");
+    expect(takeHandedOffPptx()).toEqual({ file: f, intent: "Dạy cho sinh viên năm nhất." });
     expect(takeHandedOffPptx()).toBeNull();
   });
-  it("chưa chuyển gì thì trả null", () => {
+  it("không mô tả thì intent rỗng; chưa chuyển gì thì null", () => {
+    const f = new File(["x"], "Bai.pptx");
+    handOffPptx(f);
+    expect(takeHandedOffPptx()).toEqual({ file: f, intent: "" });
     expect(takeHandedOffPptx()).toBeNull();
   });
 });
