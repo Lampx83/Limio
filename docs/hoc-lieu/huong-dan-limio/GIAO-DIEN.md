@@ -62,7 +62,7 @@ trường" (ẩn khi đang ở trang thi), chuông thông báo và nút tên tà
 1. **Trang chủ** → `/instructor/dashboard` ("Tổng quan việc cần xử lý")
 2. **LMS** ("Bài giảng Elearning"): Khoá học của tôi · **Assignment** · **Forum Q&A** (nhãn menu nguyên văn,
    còn tiếng Anh)
-3. **Limio-Live** ("Dạy học trực tiếp"), chia 4 nhóm nhỏ: "Bài giảng tương tác" (Bài giảng của tôi) ·
+3. **Limio-Live** ("Dạy học trực tiếp"), chia 4 nhóm nhỏ: "Slide tương tác" (Slide của tôi) ·
    "Hoạt động nhanh" (Vote, Word Cloud, Padlet, Draw-it, Whiteboard) · "Điều hành lớp học" (Đếm ngược,
    Gọi tên, Phân nhóm, Gameshow). Cần quyền `limio_live.access`. Tài khoản miễn phí thấy nhãn nhỏ
    "Premium"/"Trial" (tooltip "Tài khoản miễn phí được dùng thử tính năng này") ở Limio-Live và Vấn đáp AI.
@@ -524,9 +524,9 @@ Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral
 7. Giọng nói: giảng viên chỉ chọn "Trả lời bằng: Giọng nói"; chọn giọng đọc (NEU TTS) thuộc phần quản trị, giảng
    viên không chỉnh. Giao diện học viên theo ngôn ngữ của đề (vi/en; tiếng Trung dùng giao diện tiếng Việt).
 
-## 14. Limio-Live — bài giảng tương tác (mới)
+## 14. Limio-Live — slide tương tác (mới)
 
-Menu Limio-Live → "Bài giảng của tôi" (`/instructor/limio-live`): nút **Tạo bài giảng** và **Nhóm mới**; xem
+Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo bài giảng** và **Nhóm mới**; xem
 "Theo nhóm" hoặc "Tất cả", lọc "Mọi nhóm"; mỗi thẻ bài có "Sao chép bài giảng", "Chuyển vào nhóm", "Xoá". Nút
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
