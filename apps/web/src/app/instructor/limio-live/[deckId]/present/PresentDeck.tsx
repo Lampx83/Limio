@@ -54,6 +54,8 @@ interface Deck {
   brandTemplate?: string | null;
   /** Hoa văn trang trí của cả bài (limioLiveMotifs): null = tự động. */
   motif?: string | null;
+  /** Khung hình của các ô hình; null = tự động theo hoa văn. */
+  imageFrame?: string | null;
   org?: DeckOrgBrand | null;
   slides: Slide[];
 }
@@ -675,7 +677,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
 
   return (
     <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
-    <LiveMotifProvider deckId={deck.id} motif={deck.motif} slides={slides}>
+    <LiveMotifProvider deckId={deck.id} motif={deck.motif} imageFrame={deck.imageFrame} slides={slides}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {

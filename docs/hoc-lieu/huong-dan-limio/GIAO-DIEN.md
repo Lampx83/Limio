@@ -568,8 +568,11 @@ trình sửa: chưa kiểm chứng.
 
 **Giao diện và thương hiệu:** nút **Giao diện** có 18 giao diện trong 4 nhóm — Cơ bản (Trắng, Kem, Limio, Giấy
 ấm), Màu pastel (Bạc hà, Trời, Hồng phấn, Oải hương, Đào, Biển), Đơn sắc (Mono xám, lam, lục, đen), Nền tối
-(Đêm xanh, Rừng đêm, Mận, Mực; nền tối chỉ áp cho slide bố cục) — và "Hoa văn của cả bài" (Tự động, Chọn một,
-Không dùng). Hộp **Thương hiệu của bài giảng**: "Của <tên trường>" (chỉ khi trường có bộ thương hiệu), "Riêng
+(Đêm xanh, Rừng đêm, Mận, Mực; nền tối chỉ áp cho slide bố cục) — "Hoa văn của cả bài" (Tự động, Chọn một,
+Không dùng) và **"Khung hình"** (Tự động theo hoa văn, Bo góc, Tròn, Vòm, Lục giác, Hình giọt, Lá, Khung lệch) cho ô hình
+của mọi slide Chữ và hình. Hộp Sửa slide của bố cục Chữ và hình có **"Kiểu trình bày"** ("Tự động" xen kẽ; "Hình bên
+phải", "Hình bên trái", "Hình tràn nửa slide", "Hình trên, ý dưới", "Hình nền, khối chữ phủ" — hai kiểu này cần ảnh
+thật —, "Hình nhỏ có chú thích") và **"Khung hình"** riêng của slide ("Theo bài" hoặc một khung). Hộp **Thương hiệu của bài giảng**: "Của <tên trường>" (chỉ khi trường có bộ thương hiệu), "Riêng
 cho bài này" (logo PNG/JPG/WebP ≤ 5 MB; vị trí 4 góc; cỡ Nhỏ/Vừa/Lớn; chỗ hiện Mọi slide/Trừ bìa/Bìa và tóm
 tắt; bảng màu 3 ô Màu chính/Màu phụ/Màu nhấn, "Gợi ý màu từ logo"; nền Theo giao diện/Sáng xuyệt tông/Tối xuyệt
 tông; "Gỡ toàn bộ thương hiệu"), hoặc "Không dùng". Cấp trường do quản trị trường đặt (mục 10).

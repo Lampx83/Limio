@@ -5,6 +5,7 @@ import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup } from "@
 import { z } from "zod";
 import { SLIDE_THEME_IDS } from "@/app/instructor/limio-live/slideThemes";
 import { MOTIF_CHOICES } from "@/lib/limioLiveMotifs";
+import { IMAGE_FRAMES } from "@/lib/limioLiveImageStyle";
 import { BRAND_TEMPLATE_IDS, brandLogoFilename, sanitizeBrand, validateBrandInput } from "@/lib/limioLiveBrand";
 import { withOrgBrand } from "@/lib/limioLiveBrandServer";
 import { storageFor } from "@/lib/storage";
@@ -23,6 +24,8 @@ const UpdateDeckSchema = z.object({
   brandTemplate: z.enum(BRAND_TEMPLATE_IDS).nullable().optional(),
   // Hoa văn trang trí của cả bài: null = tự động, "none" = không dùng, hoặc mã hoa văn chủ đạo.
   motif: z.enum(MOTIF_CHOICES).nullable().optional(),
+  // Khung hình của các ô hình trong slide Chữ và hình: null = tự động theo hoa văn (docs/tieu-chi/chu-va-hinh-kieu-khung.md).
+  imageFrame: z.enum(IMAGE_FRAMES).nullable().optional(),
 });
 
 /** Gỡ hoặc thay logo thì dọn tệp cũ (best-effort), trừ khi bài giảng khác (vd. bản sao) còn dùng chung tệp đó. */
@@ -84,7 +87,7 @@ export async function PATCH(
     }
 
     const { groupId, brand: brandRaw, ...restFields } = validation.data;
-    const rest: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null; motif?: string | null } = { ...restFields };
+    const rest: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null; motif?: string | null; imageFrame?: string | null } = { ...restFields };
     let previousLogo: unknown;
     if (brandRaw !== undefined) {
       const v = validateBrandInput(brandRaw);

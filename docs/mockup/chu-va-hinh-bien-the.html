@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kiểu Chữ và hình</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #fff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-soft: #ecf6d2;
+    /* màu slide (giao diện Limio sáng) */
+    --sbg: #fbfcf6; --stext: #1f2a12; --smuted: #5c6650; --sa: #65a30d; --sa2: #a16207; --ssoft: #eaf4d3; --ssoft2: #f6efd9; --scardb: #dde6c6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24; --brand: #84cc16; --brand-soft: #27371a; }
+  }
+  :root[data-theme="dark"] { --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24; --brand: #84cc16; --brand-soft: #27371a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; line-height: 1.5; font-size: 15px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px 80px; }
+  header { padding: 20px 0 6px; }
+  h1 { font-size: 22px; margin: 0; }
+  header p { color: var(--ink-2); margin: 6px 0 0; max-width: 900px; }
+  h2 { font-size: 18px; margin: 34px 0 6px; }
+  .note { color: var(--ink-2); max-width: 900px; margin: 0 0 14px; }
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--surface); margin: 12px 0 4px; }
+  .toggle button { border: 0; background: none; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; font-weight: 600; color: var(--ink-3); cursor: pointer; }
+  .toggle button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+  .grid { display: grid; gap: 20px; }
+  @media (min-width: 760px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; }
+  figcaption { padding: 10px 4px 2px; }
+  figcaption b { display: block; font-size: 15.5px; }
+  figcaption span { color: var(--ink-3); font-size: 14px; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px; border: 1px solid var(--line); }
+  .slide { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; transform-origin: 0 0; background: var(--sbg); color: var(--stext); font-family: "Be Vietnam Pro", sans-serif; overflow: hidden; }
+  .seq { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 760px) { .seq { grid-template-columns: repeat(5, 1fr); } }
+  .seq .frame { border-radius: 8px; }
+  .seq small { display: block; color: var(--ink-3); font-size: 12.5px; margin-top: 4px; }
+  .picker { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; max-width: 520px; }
+  .picker p.lbl { margin: 0 0 8px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+  .thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .thumbs button { border: 2px solid var(--line); border-radius: 10px; background: var(--surface); padding: 4px; cursor: pointer; font: inherit; font-size: 12.5px; color: var(--ink-2); }
+  .thumbs button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); color: var(--ink); font-weight: 600; }
+  .thumbs .frame { border-radius: 6px; margin-bottom: 4px; }
+  .picker .hint { color: var(--ink-3); font-size: 13px; margin: 10px 0 0; }
+
+  /* —— nội dung slide (khung 1280×720) —— */
+  .t { font-weight: 800; font-size: 56px; line-height: 1.12; letter-spacing: -0.01em; margin: 0; }
+  .t em { font-style: normal; color: var(--sa); }
+  .bul { list-style: none; margin: 0; padding: 0; display: grid; gap: 26px; }
+  .bul li { display: grid; grid-template-columns: 18px 1fr; gap: 20px; font-size: 32px; line-height: 1.3; color: var(--stext); }
+  .bul li::before { content: ""; width: 14px; height: 14px; border-radius: 50%; background: var(--sa); margin-top: 13px; }
+  .credit { position: absolute; font-size: 22px; color: var(--smuted); }
+  .photo { position: absolute; inset: 0; }
+  .photo svg, .motif svg { width: 100%; height: 100%; display: block; }
+  .motif { position: absolute; inset: 0; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); }
+
+  /* A. Hình bên phải (hiện có) */
+  .v-right .pad { position: absolute; inset: 72px 80px; display: grid; grid-template-columns: 1fr 440px; gap: 56px; align-items: center; }
+  .v-right .tx, .v-left .tx { display: grid; gap: 34px; }
+  .v-right .art, .v-left .art { position: relative; height: 100%; border-radius: 36px; overflow: hidden; border: 1px solid var(--scardb); }
+  /* B. Hình bên trái */
+  .v-left .pad { position: absolute; inset: 72px 80px; display: grid; grid-template-columns: 440px 1fr; gap: 56px; align-items: center; }
+  /* C. Hình tràn nửa slide */
+  .v-bleed .art { position: absolute; top: 0; right: 0; bottom: 0; width: 46%; }
+  .v-bleed .tx { position: absolute; left: 80px; top: 0; bottom: 0; width: calc(54% - 140px); display: grid; align-content: center; gap: 34px; }
+  .v-bleed .credit { right: 24px; bottom: 16px; color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / .5); }
+  /* D. Hình trên, ba ý dưới */
+  .v-top .art { position: absolute; left: 0; right: 0; top: 0; height: 300px; }
+  .v-top .t { position: absolute; left: 80px; right: 80px; top: 336px; font-size: 48px; }
+  .v-top .cols { position: absolute; left: 80px; right: 80px; top: 440px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+  .v-top .cols p { margin: 0; font-size: 28px; line-height: 1.32; padding-top: 18px; border-top: 6px solid var(--sa); }
+  .v-top .cols p:nth-child(2) { border-color: var(--sa2); }
+  .v-top .credit { right: 24px; top: 262px; color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / .5); }
+  /* E. Hình nền, khối chữ phủ */
+  .v-overlay .card { position: absolute; left: 64px; top: 64px; bottom: 64px; width: 640px; background: rgb(251 252 246 / .94); border-radius: 32px; padding: 56px; display: grid; align-content: center; gap: 32px; box-shadow: 0 20px 60px rgb(0 0 0 / .18); }
+  .v-overlay .t { font-size: 50px; }
+  .v-overlay .bul li { font-size: 30px; }
+  .v-overlay .credit { right: 24px; bottom: 16px; color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / .6); }
+  /* F. Hình nhỏ có chú thích */
+  .v-inset .tx { position: absolute; left: 80px; top: 72px; right: 470px; bottom: 72px; display: grid; align-content: center; gap: 34px; }
+  .v-inset .pol { position: absolute; right: 80px; top: 120px; width: 340px; background: #fff; padding: 16px 16px 0; border-radius: 12px; box-shadow: 0 14px 40px rgb(0 0 0 / .14); transform: rotate(2deg); }
+  .v-inset .pol .ph { position: relative; height: 300px; border-radius: 6px; overflow: hidden; }
+  .v-inset .pol p { margin: 0; padding: 14px 4px 18px; font-size: 24px; line-height: 1.3; color: var(--smuted); }
+  .v-inset .credit { right: 80px; bottom: 30px; }
+
+  /* —— khung hình: áp cho ô hình của kiểu A, B, F —— */
+  .shp { position: relative; }
+  .shp.s-round { border-radius: 36px; }
+  .shp.s-circle { border-radius: 50%; aspect-ratio: 1; height: auto !important; align-self: center; }
+  .shp.s-arch { border-radius: 260px 260px 32px 32px; }
+  .shp.s-hex { clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); border: 0 !important; border-radius: 0; aspect-ratio: 0.87; height: auto !important; align-self: center; }
+  .shp.s-blob { clip-path: url(#blobClip); border: 0 !important; border-radius: 0; }
+  .shp.s-leaf { border-radius: 220px 36px 220px 36px; }
+  .shp.s-offset { overflow: visible !important; border: 0 !important; border-radius: 28px; }
+  .shp.s-offset::before { content: ""; position: absolute; inset: 0; transform: translate(26px, 26px); border-radius: 28px; background: var(--sa); opacity: .35; }
+  .shp.s-offset > * { border-radius: 28px; overflow: hidden; }
+  .shapes { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 760px) { .shapes { grid-template-columns: repeat(4, 1fr); } }
+  .shapes figure { padding: 8px; }
+  .shapes figcaption { padding: 6px 2px 0; }
+  .shapes figcaption b { font-size: 14px; }
+  .shapes figcaption span { font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Bản mẫu: thêm kiểu trình bày cho bố cục Chữ và hình</h1>
+  <p>Cùng một nội dung (tiêu đề, ba ý, một hình), sáu cách đặt. Nội dung không đổi, chỉ đổi cách trình bày, nên AI không phải viết thêm gì và giảng viên không phải chọn: hệ thống tự xen kẽ để hai slide Chữ và hình liền nhau không giống nhau. Ai muốn thì đổi kiểu trong hộp Sửa slide.</p>
+  <div class="toggle" role="group" aria-label="Loại hình">
+    <button type="button" aria-pressed="true" data-img="photo">Có ảnh thật</button>
+    <button type="button" aria-pressed="false" data-img="motif">Chưa có ảnh (hoa văn)</button>
+  </div>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><clipPath id="blobClip" clipPathUnits="objectBoundingBox"><path d="M0.58,0.03 C0.8,0.06 0.99,0.2 0.97,0.42 C0.95,0.6 0.84,0.66 0.9,0.82 C0.96,0.98 0.72,1.02 0.52,0.97 C0.34,0.93 0.2,0.99 0.08,0.86 C-0.03,0.73 0.06,0.56 0.04,0.42 C0.02,0.24 0.12,0.08 0.3,0.04 C0.4,0.02 0.48,0.02 0.58,0.03 Z"/></clipPath></svg>
+<div class="toggle" role="group" aria-label="Khung hình" id="shapeToggle" style="flex-wrap:wrap"></div>
+<p class="note" style="margin-top:6px">Khung hình áp cho các kiểu có ô hình riêng (A, B, F). Kiểu tràn mép, hình trên và hình nền không cần khung.</p>
+<div class="grid" id="variants"></div>
+
+<h2>Khung hình: ảnh lồng trong các hình dạng khác nhau</h2>
+<p class="note">Cả bài dùng chung một khung để nhìn đồng bộ; hệ thống chọn sẵn theo giao diện và hoa văn của bài (ví dụ hoa văn lục giác thì khung lục giác). Thầy/cô đổi khung cho cả bài ở menu Giao diện, hoặc cho riêng một slide trong hộp Sửa slide. Ảnh luôn được cắt giữ phần giữa, không méo.</p>
+<div class="shapes" id="shapes"></div>
+
+<h2>Hệ thống tự xen kẽ trong một bài</h2>
+<p class="note">Năm slide Chữ và hình đứng gần nhau trong một bài. Mỗi slide nhận kiểu theo thứ tự xoay vòng, bỏ qua kiểu không hợp (ví dụ "Hình nền, khối chữ phủ" và "Hình trên, ba ý dưới" chỉ dùng khi có ảnh thật; "Hình nhỏ có chú thích" ưu tiên khi chữ dài).</p>
+<div class="seq" id="seq"></div>
+
+<h2>Đổi kiểu bằng tay (không bắt buộc)</h2>
+<p class="note">Trong hộp Sửa slide, mục "Kiểu trình bày" hiện sáu ô xem trước nhỏ. Mặc định là "Tự động".</p>
+<div class="picker">
+  <p class="lbl">Kiểu trình bày</p>
+  <div class="thumbs" id="thumbs"></div>
+  <p class="hint">Tự động: hệ thống chọn để các slide liền nhau không giống nhau.</p>
+</div>
+</div>
+
+<script>
+const D = {
+  title: 'Thực tế tăng cường <em>trong lớp học</em>',
+  bullets: [
+    'Người học xem mô hình ba chiều ngay trên bàn.',
+    'Giáo viên gắn thông tin vào đồ vật thật.',
+    'Bài học trở nên trực quan và dễ nhớ hơn.',
+  ],
+  credit: 'Nguồn ảnh: Edutopia (edutopia.org)',
+  caption: 'Học sinh quan sát mô hình AR trong giờ khoa học.',
+};
+const PHOTO = `<svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd3f2"/><stop offset="1" stop-color="#e8f4fb"/></linearGradient><linearGradient id="desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9935a"/><stop offset="1" stop-color="#8a5a2b"/></linearGradient></defs><rect width="600" height="400" fill="url(#sky)"/><rect y="250" width="600" height="150" fill="url(#desk)"/><rect x="60" y="60" width="200" height="140" rx="8" fill="#2f3b52"/><rect x="72" y="72" width="176" height="116" rx="4" fill="#4f9fd8"/><circle cx="160" cy="130" r="34" fill="#f7d36b"/><path d="M330 250 q60 -120 120 0z" fill="#2e7d4f" opacity=".9"/><circle cx="390" cy="175" r="44" fill="#64b56f" opacity=".95"/><g fill="#f0c9a0"><circle cx="470" cy="160" r="26"/><rect x="448" y="186" width="46" height="70" rx="20"/></g><g fill="#e8b48c"><circle cx="300" cy="170" r="24"/><rect x="280" y="194" width="42" height="64" rx="18"/></g><rect x="350" y="230" width="90" height="12" rx="6" fill="#ffffff" opacity=".7"/><path d="M360 120 l30 -30 l30 30" stroke="#fff" stroke-width="4" fill="none" stroke-dasharray="6 6"/></svg>`;
+const MOTIF = `<svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice"><defs><pattern id="hx" width="56" height="48" patternUnits="userSpaceOnUse"><path d="M14 0h28l14 24l-14 24h-28l-14-24z" fill="none" stroke="#9cbf5c" stroke-width="3" opacity=".6"/></pattern></defs><rect width="400" height="400" fill="url(#hx)"/><g opacity=".7"><path d="M70 24h28l14 24l-14 24h-28l-14-24z" fill="#b9d98a"/><path d="M182 168h28l14 24l-14 24h-28l-14-24z" fill="#d8a7a0"/><path d="M294 72h28l14 24l-14 24h-28l-14-24z" fill="#9cbf5c"/></g></svg>`;
+let IMG = "photo";
+let SHAPE = "round";
+const SHAPES = [
+  { id: "round", name: "Bo góc", when: "Kiểu hiện có, hợp mọi bài." },
+  { id: "circle", name: "Tròn", when: "Hợp ảnh chân dung, đồ vật đặt giữa." },
+  { id: "arch", name: "Vòm", when: "Mềm mại, hợp bài khoa học xã hội, nghệ thuật." },
+  { id: "hex", name: "Lục giác", when: "Đi cùng hoa văn lục giác, bài khoa học, công nghệ." },
+  { id: "blob", name: "Hình giọt", when: "Trẻ trung, hợp lớp nhỏ tuổi, hoạt động." },
+  { id: "leaf", name: "Lá", when: "Hai góc tròn đối nhau, nhẹ nhàng." },
+  { id: "offset", name: "Khung lệch", when: "Ảnh bo góc kèm mảng màu lệch phía sau." },
+];
+const pic = () => (IMG === "photo" ? `<div class="photo">${PHOTO}</div>` : `<div class="motif">${MOTIF}</div>`);
+const bul = () => `<ul class="bul">${D.bullets.map((b) => `<li>${b}</li>`).join("")}</ul>`;
+const credit = (pos) => (IMG === "photo" ? `<span class="credit" ${pos || ""}>${D.credit}</span>` : "");
+const V = [
+  { id: "right", name: "Hình bên phải", when: "Kiểu hiện có. Hợp mọi slide.", photoOnly: false,
+    html: () => `<div class="v-right"><div class="pad"><div class="tx"><h3 class="t">${D.title}</h3>${bul()}</div><div class="art shp s-${SHAPE}"><div class="photo-wrap" style="position:absolute;inset:0">${pic()}</div></div></div>${IMG === "photo" ? `<span class="credit" style="right:96px;bottom:22px">${D.credit}</span>` : ""}</div>` },
+  { id: "left", name: "Hình bên trái", when: "Đảo chiều để hai slide liền nhau không lặp.", photoOnly: false,
+    html: () => `<div class="v-left"><div class="pad"><div class="art shp s-${SHAPE}"><div style="position:absolute;inset:0">${pic()}</div></div><div class="tx"><h3 class="t">${D.title}</h3>${bul()}</div></div>${IMG === "photo" ? `<span class="credit" style="left:80px;bottom:22px">${D.credit}</span>` : ""}</div>` },
+  { id: "bleed", name: "Hình tràn nửa slide", when: "Hình sát mép, cao trọn slide; hợp ảnh phong cảnh, lớp học.", photoOnly: false,
+    html: () => `<div class="v-bleed"><div class="art">${pic()}</div><div class="tx"><h3 class="t">${D.title}</h3>${bul()}</div>${credit()}</div>` },
+  { id: "top", name: "Hình trên, ba ý dưới", when: "Dải ảnh ngang phía trên, ba ý thành ba cột. Chỉ khi có ảnh thật và đúng ba ý ngắn.", photoOnly: true,
+    html: () => `<div class="v-top"><div class="art">${pic()}</div>${credit()}<h3 class="t">${D.title}</h3><div class="cols">${D.bullets.map((b) => `<p>${b}</p>`).join("")}</div></div>` },
+  { id: "overlay", name: "Hình nền, khối chữ phủ", when: "Ảnh phủ cả slide, chữ trên khối sáng. Chỉ khi có ảnh thật; hợp slide mở đầu một ý lớn.", photoOnly: true,
+    html: () => `<div class="v-overlay">${pic()}<div class="card"><h3 class="t">${D.title}</h3>${bul()}</div>${credit()}</div>` },
+  { id: "inset", name: "Hình nhỏ có chú thích", when: "Chữ chiếm phần lớn, hình nhỏ kiểu ảnh rửa kèm một dòng chú thích. Ưu tiên khi chữ dài.", photoOnly: false,
+    html: () => `<div class="v-inset"><div class="tx"><h3 class="t">${D.title}</h3>${bul()}</div><div class="pol"><div class="ph shp s-${SHAPE}"><div style="position:absolute;inset:0">${pic()}</div></div><p>${IMG === "photo" ? D.caption : "Hình minh hoạ cho ý chính của slide."}</p></div>${credit()}</div>` },
+];
+
+function slide(v) {
+  return `<div class="frame"><div class="slide">${v.html()}</div></div>`;
+}
+function fit() {
+  document.querySelectorAll(".frame").forEach((f) => {
+    const s = f.querySelector(".slide");
+    s.style.transform = `scale(${f.clientWidth / 1280})`;
+  });
+}
+function shapeSlide(sh) {
+  const keep = SHAPE; SHAPE = sh.id;
+  const out = slide(V[0]);
+  SHAPE = keep;
+  return out;
+}
+function render() {
+  document.getElementById("shapeToggle").innerHTML = SHAPES.map((x) => `<button type="button" aria-pressed="${x.id === SHAPE}" data-shape="${x.id}">${x.name}</button>`).join("");
+  document.querySelectorAll("[data-shape]").forEach((b) => b.addEventListener("click", () => { SHAPE = b.dataset.shape; render(); }));
+  document.getElementById("shapes").innerHTML = SHAPES.map((x) => `<figure>${shapeSlide(x)}<figcaption><b>${x.name}</b><span>${x.when}</span></figcaption></figure>`).join("");
+  document.getElementById("variants").innerHTML = V.map(
+    (v, i) => `<figure>${v.photoOnly && IMG !== "photo" ? `<div class="frame" style="display:grid;place-items:center;background:var(--surface-2);color:var(--ink-3);font-size:14px;text-align:center;padding:12px">Kiểu này chỉ dùng khi slide có ảnh thật; slide chưa có ảnh sẽ dùng kiểu khác.</div>` : slide(v)}<figcaption><b>${String.fromCharCode(65 + i)}. ${v.name}</b><span>${v.when}</span></figcaption></figure>`
+  ).join("");
+  const order = IMG === "photo" ? ["right", "bleed", "left", "top", "overlay"] : ["right", "left", "bleed", "inset", "right"];
+  document.getElementById("seq").innerHTML = order
+    .map((id, k) => { const v = V.find((x) => x.id === id); return `<div>${slide(v)}<small>Slide ${k + 3}: ${v.name}</small></div>`; })
+    .join("");
+  document.getElementById("thumbs").innerHTML = V.map(
+    (v, i) => `<button type="button" aria-pressed="${i === 0}">${slide(v)}${v.name}</button>`
+  ).join("");
+  document.querySelectorAll("#thumbs button").forEach((b) => b.addEventListener("click", () => document.querySelectorAll("#thumbs button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)))));
+  requestAnimationFrame(fit);
+}
+document.querySelectorAll("[data-img]").forEach((b) => b.addEventListener("click", () => {
+  IMG = b.dataset.img;
+  document.querySelectorAll("[data-img]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+window.addEventListener("resize", fit);
+render();
+</script>
+</body>
+</html>

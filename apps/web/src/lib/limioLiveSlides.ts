@@ -23,6 +23,7 @@ import {
   type ChartType,
 } from "./limioLiveCharts";
 
+import { isImageFrame, isImageStyle } from "./limioLiveImageStyle";
 import { isSlideMotifChoice } from "./limioLiveMotifs";
 import { GROUPS_MAX, GROUP_POINTS_MAX, groupsFit, type SlideGroup } from "./limioLiveGroups";
 import { SLIDE_ICONS, isSlideIcon, type SlideIconId } from "./limioLiveIcons";
@@ -892,6 +893,9 @@ export function pickMeta(config: Record<string, unknown> | null | undefined): Re
   if (c.hidden === true) out.hidden = true;
   if (isSlideMotifChoice(c.motif)) out.motif = c.motif;
   if (isCoverStyle(c.coverStyle)) out.coverStyle = c.coverStyle;
+  // Kiểu trình bày và khung hình của slide Chữ và hình (docs/tieu-chi/chu-va-hinh-kieu-khung.md, K2, K10).
+  if (isImageStyle(c.imageStyle)) out.imageStyle = c.imageStyle;
+  if (isImageFrame(c.imageFrame)) out.imageFrame = c.imageFrame;
   if (typeof c.outlineId === "string" && c.outlineId) out.outlineId = c.outlineId.slice(0, 60);
   if (c.aiGenerated === true) out.aiGenerated = true;
   if (c.editedByUser === true) out.editedByUser = true;
@@ -930,8 +934,8 @@ export function fillCoverIdentity<T extends Record<string, unknown>>(config: T, 
 
 // ── Dấu vết sinh bằng AI và việc "đã sửa tay" ───────────────────────────────
 
-// Đổi hoa văn hay kiểu bìa là đổi trang trí, không phải sửa nội dung: không tính là "đã sửa tay".
-const IDENTITY_KEYS = ["outlineId", "aiGenerated", "hidden", "editedByUser", "motif", "coverStyle"] as const;
+// Đổi hoa văn, kiểu bìa, kiểu trình bày hay khung hình là đổi trang trí, không phải sửa nội dung: không tính là "đã sửa tay".
+const IDENTITY_KEYS = ["outlineId", "aiGenerated", "hidden", "editedByUser", "motif", "coverStyle", "imageStyle", "imageFrame"] as const;
 
 function stable(v: unknown): string {
   if (Array.isArray(v)) return `[${v.map(stable).join(",")}]`;
