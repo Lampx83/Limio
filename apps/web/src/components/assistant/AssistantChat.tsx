@@ -225,7 +225,7 @@ export function ThinkingRow() {
             <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-pink-500" style={{ animationDelay: `${d}ms` }} />
           ))}
         </span>
-        <span className="text-sm text-muted">Limio đang soạn câu trả lời…</span>
+        <span className="text-sm text-muted">Em đang soạn câu trả lời…</span>
       </div>
     </div>
   );

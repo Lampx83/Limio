@@ -89,9 +89,9 @@ const DEFAULT_FOLLOW_UPS = ["Hôm nay tôi nên làm gì trước?", "Cách tạ
 
 const DECLINE_TEXT: Record<DeclineKind, string> = {
   technical:
-    "Đây là thông tin kỹ thuật nội bộ của hệ thống nên Limio không thể chia sẻ. Limio có thể giúp thầy/cô cách dùng các tính năng, hoặc gợi ý việc nên làm hôm nay cho lớp của thầy/cô.",
+    "Em rất tiếc, đây là thông tin kỹ thuật nội bộ của hệ thống nên em không thể chia sẻ. Em có thể giúp thầy/cô cách dùng các tính năng, hoặc gợi ý việc nên làm hôm nay cho lớp của thầy/cô.",
   off_topic:
-    "Câu hỏi này nằm ngoài phạm vi của Limio, vì Limio chỉ hỗ trợ các việc dạy học và quản lý lớp trên hệ thống. Thầy/cô có thể hỏi Limio cách dùng một tính năng, hoặc nhờ gợi ý việc nên làm hôm nay.",
+    "Em rất tiếc, câu hỏi này nằm ngoài phạm vi của em, vì nhiệm vụ chính của em là hướng dẫn sử dụng các tính năng trên Limio. Thầy/cô có thể hỏi em cách dùng một tính năng, hoặc nhờ em gợi ý việc nên làm hôm nay.",
 };
 
 export function declineReply(kind: DeclineKind): AssistantReply {

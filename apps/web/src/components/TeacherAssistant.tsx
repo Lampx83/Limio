@@ -49,7 +49,7 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
                 {greeting}, <span className="text-gradient">{name}</span>!
               </h1>
               <p className="mt-0.5 text-sm text-muted">
-                Limio rất vui được giúp thầy/cô hôm nay. <span className="font-semibold text-[rgb(var(--text))]">Thầy/cô muốn làm gì?</span> Chưa có ý tưởng cũng không sao, cứ hỏi Limio hoặc chọn một gợi ý bên dưới.
+                Em rất vui được giúp thầy/cô hôm nay. <span className="font-semibold text-[rgb(var(--text))]">Thầy/cô muốn làm gì?</span> Chưa có ý tưởng cũng không sao, cứ hỏi em hoặc chọn một gợi ý bên dưới.
               </p>
             </>
           )}
@@ -70,7 +70,7 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
           <p className="mt-2.5 flex items-start gap-1.5 text-xs leading-relaxed text-muted">
             <Info size={14} className="mt-0.5 shrink-0 text-pink-600" aria-hidden />
             <span>
-              Nhiệm vụ chính của tôi là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...).
+              Nhiệm vụ chính của em là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...).
             </span>
           </p>
           <button
@@ -80,7 +80,7 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
             className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-[rgb(var(--text))] hover:underline disabled:opacity-60"
           >
             <Sparkles size={15} className="text-pink-600" aria-hidden />
-            Chưa có ý tưởng? Để Limio gợi ý cho thầy/cô
+            Chưa có ý tưởng? Để em gợi ý cho thầy/cô
           </button>
           {errorLine}
           <p className="mt-4 text-xs font-bold uppercase tracking-wide text-muted">Hoặc bắt đầu nhanh</p>

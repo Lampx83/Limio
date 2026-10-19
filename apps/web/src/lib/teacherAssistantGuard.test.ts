@@ -66,6 +66,13 @@ describe("câu từ chối cố định", () => {
       expect(containsTechLeak(r.reply)).toBe(false);
     }
     expect(declineReply("technical").reply).toMatch(/thông tin kỹ thuật nội bộ/);
+    // Cùng giọng với trợ lý: xưng "em", gọi giảng viên là "thầy/cô".
+    for (const kind of ["technical", "off_topic"] as const) {
+      const text = declineReply(kind).reply;
+      expect(text).toMatch(/^Em rất tiếc/);
+      expect(text).toMatch(/thầy\/cô/i);
+      expect(text).not.toMatch(/\btôi\b|\bmình\b/i);
+    }
     expect(declineReply("off_topic").reply).toMatch(/ngoài phạm vi/);
   });
 });

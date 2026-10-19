@@ -43,7 +43,7 @@ export default function AssistantLauncher() {
       <LimioAvatar />
       <div className="min-w-0 flex-1">
         <p className="whitespace-pre-wrap rounded-2xl rounded-tl-md border border-token bg-[rgb(var(--surface))] px-3.5 py-2.5 text-sm leading-relaxed shadow-sm">
-          Xin chào thầy/cô, tôi là Limio, trợ lý ảo của thầy/cô trên Limio. Nhiệm vụ chính của tôi là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...) và gợi ý việc nên làm. Thầy/cô cần gì ạ?
+          Xin chào thầy/cô, em là Limio, trợ lý ảo của thầy/cô trên Limio. Nhiệm vụ chính của em là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...) và gợi ý việc nên làm. Thầy/cô cần gì ạ?
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {QUICK_PROMPTS.map((q) => (
