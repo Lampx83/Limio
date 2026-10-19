@@ -1,5 +1,5 @@
 // Câu hỏi đề xuất hiện sẵn khi giảng viên mở Lily (ngăn kéo). Gợi ý theo trang đang đứng: ở "Tổ chức thi" thì gợi ý về
-// link thi nhanh và danh sách thí sinh, ở "Bài giảng của tôi" thì gợi ý về PowerPoint và mã QR... Hoàn toàn cố định,
+// link thi nhanh và danh sách thí sinh, ở "Slide của tôi" thì gợi ý về PowerPoint và mã QR... Hoàn toàn cố định,
 // không gọi mô hình. Mỗi câu phải có mục trong kho hướng dẫn để Lily trả lời được (test kiểm), và không chạm vào việc
 // dò hỏi kỹ thuật.
 
@@ -54,7 +54,7 @@ const GROUPS: readonly Group[] = [
 /** Gợi ý chung khi trang không có nhóm riêng (hoặc để bổ sung cho đủ số lượng). */
 const GENERAL: readonly string[] = [
   "Hôm nay tôi nên làm gì trước?",
-  "Tạo bài giảng tương tác từ tài liệu thế nào?",
+  "Tạo slide tương tác từ tài liệu thế nào?",
   "Cách tạo đề thi từ ngân hàng câu hỏi",
   "Làm sao tạo link thi nhanh cho lớp?",
   "Nhập rubric để AI gợi ý điểm ở đâu?",
