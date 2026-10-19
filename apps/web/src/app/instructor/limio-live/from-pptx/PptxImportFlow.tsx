@@ -265,9 +265,9 @@ export default function PptxImportFlow() {
     <main className="mx-auto max-w-5xl space-y-6 pb-24">
       <div>
         <a href="/instructor/limio-live/from-document" className="text-sm text-muted hover:underline">
-          Tạo bài giảng
+          Tạo slide
         </a>
-        <h1 className="mt-1 text-2xl font-bold">Tạo bài giảng từ PowerPoint</h1>
+        <h1 className="mt-1 text-2xl font-bold">Tạo slide từ PowerPoint</h1>
         <p className="mt-2 max-w-3xl text-muted">
           Limio đọc từng slide của file, giữ chữ, hình và ghi chú giảng, rồi dựng lại bài theo giao diện Limio. Thiết kế gốc
           (màu, phông, hiệu ứng) không được sao chép.

@@ -194,7 +194,7 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
           <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
             Limio-Live
           </a>
-          <h1 className="text-2xl font-bold">Tạo bài giảng</h1>
+          <h1 className="text-2xl font-bold">Tạo slide</h1>
         </div>
         <a
           href="/instructor/limio-live?new=1"
@@ -225,7 +225,7 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
       >
         <textarea
           ref={topicRef}
-          // "Tạo bài giảng" mở thẳng trang này: con trỏ đặt sẵn trong ô mô tả để gõ ngay.
+          // "Tạo slide" mở thẳng trang này: con trỏ đặt sẵn trong ô mô tả để gõ ngay.
           autoFocus
           value={topic}
           onChange={(e) => setTopic(e.target.value)}

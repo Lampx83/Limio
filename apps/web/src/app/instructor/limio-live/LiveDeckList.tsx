@@ -178,7 +178,7 @@ export default function LiveDeckList() {
     }
   };
 
-  // "Tạo bài giảng" mở thẳng ô mô tả chủ đề (trang AI hỗ trợ soạn); soạn thủ công là đường phụ ở trang đó (?new=1).
+  // "Tạo slide" mở thẳng ô mô tả chủ đề (trang AI hỗ trợ soạn); soạn thủ công là đường phụ ở trang đó (?new=1).
   const openCreate = () => router.push("/instructor/limio-live/from-document");
 
   const handleDuplicate = async (deckId: string) => {

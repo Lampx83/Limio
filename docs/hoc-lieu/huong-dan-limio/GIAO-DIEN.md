@@ -531,7 +531,7 @@ Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo 
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
+- **Trang "Tạo slide"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
   giảng tương tác chỉ từ một ý tưởng…" (có tài liệu tham khảo thì đính kèm; có sẵn PowerPoint thì Limio soạn lại kèm nội
   dung tương tác) và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
   người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** kèm chữ "(không bắt buộc)" (đã có tệp thì thành "Đổi tài liệu"; cạnh nút ghi giới hạn định dạng và dung lượng); kéo
@@ -551,7 +551,7 @@ Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia s
   loại); bảng trắng tối đa 1. AI soạn thiếu thì hệ thống tự gọi AI bổ sung; không bổ sung được thì dàn ý có cảnh
   báo "Chưa bổ sung được slide tương tác tự động…". Dưới dàn ý có nhắc "Bài nên có ít nhất 5 slide tương tác (hiện
   có n)" khi thầy/cô xoá bớt, và nhắc khi quá nửa slide nội dung là Chữ và hình.
-- **Từ PowerPoint** (`/instructor/limio-live/from-pptx`, "Tạo bài giảng từ PowerPoint"), 4 bước: "Tải file"
+- **Từ PowerPoint** (`/instructor/limio-live/from-pptx`, "Tạo slide từ PowerPoint"), 4 bước: "Tải file"
   (chỉ .pptx, tối đa 50 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
   tính vào dung lượng lưu trữ; trang báo số slide, ghi chú giảng, hình, bảng, biểu đồ và phần chỉ lấy được
   chữ; chọn "Thời lượng buổi giảng") → "Chọn cách chuyển" (thẻ **"Giữ ý, làm đẹp lại"** — mặc định, AI chỉ viết thêm các slide tương tác (tốn ít lượt), mỗi slide gốc
