@@ -4,12 +4,14 @@
 // không phải tự tải HTML). Khoá lưu ở Quản trị > Tích hợp ("websearch.tavily") hoặc biến môi trường TAVILY_API_KEY.
 
 import { hostOf, type WebSourceRef } from "./limioLiveOutline";
-import { WEB_IMAGES_TOTAL, extractPageImages, stripMarkdownMedia } from "./limioLiveWebImages";
+import { WEB_IMAGES_PER_PAGE, WEB_IMAGES_TOTAL, cleanWebImage, extractPageImages, stripMarkdownMedia, type WebImage } from "./limioLiveWebImages";
 
 export interface WebPage {
   title: string;
   url: string;
   content: string;
+  /** Ảnh dịch vụ tìm kiếm trả kèm trang, có mô tả (Tavily include_images + include_image_descriptions). */
+  images?: WebImage[];
 }
 
 export interface WebSearchProvider {
@@ -46,8 +48,9 @@ const urlKey = (u: string) => {
 };
 
 /**
- * Chuẩn hoá kết quả: bỏ trùng địa chỉ, bỏ trang ít chữ, gọn khoảng trắng, cắt độ dài, đánh số 1..n. Ảnh trong chữ markdown
- * của trang được tách riêng theo trang (ứng viên minh hoạ, tối đa 3 mỗi trang, 8 cả bài); chữ đưa cho AI không còn ảnh, link.
+ * Chuẩn hoá kết quả: bỏ trùng địa chỉ, bỏ trang ít chữ, gọn khoảng trắng, cắt độ dài, đánh số 1..n. Ảnh ứng viên tách riêng
+ * theo trang (tối đa 3 mỗi trang, 8 cả bài): ảnh dịch vụ tìm kiếm trả kèm mô tả trước, rồi ảnh trong chữ markdown của trang;
+ * lọc ảnh rác và ảnh không mô tả, bỏ trùng (W6, W7). Chữ đưa cho AI không còn ảnh, link.
  */
 export function toSourcePages(pages: WebPage[], max = WEB_MAX_PAGES): Array<WebSourceRef & { content: string }> {
   const seen = new Set<string>();
@@ -57,7 +60,13 @@ export function toSourcePages(pages: WebPage[], max = WEB_MAX_PAGES): Array<WebS
     if (!/^https?:\/\//.test(p.url)) continue;
     const key = urlKey(p.url);
     if (seen.has(key)) continue;
-    const images = /^https?:\/\//.test(p.url) ? extractPageImages(p.content, p.url).slice(0, Math.max(0, WEB_IMAGES_TOTAL - imageCount)) : [];
+    const seenImg = new Set<string>();
+    const images = [
+      ...(p.images ?? []).map((im) => cleanWebImage(im.url, im.alt, p.url)).filter((im): im is WebImage => !!im),
+      ...extractPageImages(p.content, p.url),
+    ]
+      .filter((im) => !seenImg.has(im.url) && !!seenImg.add(im.url))
+      .slice(0, Math.min(WEB_IMAGES_PER_PAGE, Math.max(0, WEB_IMAGES_TOTAL - imageCount)));
     const content = stripMarkdownMedia(p.content).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
     if (content.length < WEB_PAGE_MIN_CHARS) continue;
     seen.add(key);
@@ -82,20 +91,38 @@ export function tavilyProvider(apiKey: string, fetchImpl: typeof fetch = fetch, 
         const res = await fetchImpl(`${baseUrl}/search`, {
           method: "POST",
           headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-          body: JSON.stringify({ query, max_results: maxResults, search_depth: "basic", include_raw_content: "markdown", include_answer: false }),
+          // Ảnh kèm mô tả của từng kết quả nằm trong cùng lượt tìm (không tính thêm lượt): căn cứ để AI chọn ảnh cho slide.
+          body: JSON.stringify({
+            query,
+            max_results: maxResults,
+            search_depth: "basic",
+            include_raw_content: "markdown",
+            include_answer: false,
+            include_images: true,
+            include_image_descriptions: true,
+          }),
           signal: AbortSignal.timeout(TIMEOUT_MS),
         });
         if (!res.ok) {
           console.warn("[webSearch] tavily", res.status);
           return [];
         }
-        const j = (await res.json()) as { results?: Array<{ title?: unknown; url?: unknown; content?: unknown; raw_content?: unknown }> };
+        const j = (await res.json()) as {
+          results?: Array<{ title?: unknown; url?: unknown; content?: unknown; raw_content?: unknown; images?: unknown }>;
+        };
         return (j.results ?? [])
-          .map((r) => ({
-            title: typeof r.title === "string" ? r.title : "",
-            url: typeof r.url === "string" ? r.url : "",
-            content: typeof r.raw_content === "string" && r.raw_content.trim() ? r.raw_content : typeof r.content === "string" ? r.content : "",
-          }))
+          .map((r) => {
+            // Ảnh của từng kết quả: [{ url, description }]; phần tử sai dạng bỏ qua.
+            const images = (Array.isArray(r.images) ? r.images : [])
+              .filter((im): im is { url: string; description?: unknown } => !!im && typeof im === "object" && typeof (im as { url?: unknown }).url === "string")
+              .map((im) => ({ url: im.url, alt: typeof im.description === "string" ? im.description : "" }));
+            return {
+              title: typeof r.title === "string" ? r.title : "",
+              url: typeof r.url === "string" ? r.url : "",
+              content: typeof r.raw_content === "string" && r.raw_content.trim() ? r.raw_content : typeof r.content === "string" ? r.content : "",
+              ...(images.length ? { images } : {}),
+            };
+          })
           .filter((r) => r.url && r.content);
       } catch (e) {
         console.warn("[webSearch] tavily", (e as Error).message);

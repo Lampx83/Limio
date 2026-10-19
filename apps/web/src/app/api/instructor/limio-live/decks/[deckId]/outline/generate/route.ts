@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { recordSlideVersion } from "@feedbackme/core-lms";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { attachWebImages } from "@/lib/limioLiveWebImagesServer";
+import { webImageCandidates } from "@/lib/limioLiveWebImages";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
@@ -73,6 +74,11 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   // Nguồn của bài quyết định luật dùng số liệu, trích dẫn (câu lệnh) và cách kiểm bản nháp (draftToSlide).
   const sourceKind = resolveSourceKind(deck.sourceKind);
   const context = { sourceKind, sourceText, refs: sanitizeRefs(deck.sourceRefs) };
+  // Ảnh nguồn internet làm ứng viên cho AI chọn ở slide Chữ và hình (W8). Mã A1, A2… tính lại được y hệt ở bước gắn ảnh.
+  const webImages =
+    sourceKind === "topic_web"
+      ? webImageCandidates(context.refs).map((c) => ({ id: c.id, description: c.image.alt, page: `[${c.ref.n}] ${c.ref.title}` }))
+      : [];
 
   const structures = slideStructures(outline);
   // Số mục theo thứ tự phần Nội dung (khớp mục lục của bìa phần); slide mở phần ngoài mạch thì đếm như cũ.
@@ -130,7 +136,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             if (!openai) throw new Error("openai_not_configured");
             const drafts = (await generateSlideDrafts(
               userId,
-              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
+              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!), webImages },
               openai,
             )) as SlideDraft[];
             // generateDeckSlides đánh chỉ số theo phần được viết; mô hình trả chỉ số theo cả dàn ý.
@@ -147,7 +153,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           });
         }
         for (const s of result.slides) if (s.type === "content") s.config = fillCoverIdentity(s.config as Record<string, unknown>, who);
-        // Bài có nguồn internet: gắn ảnh lấy từ chính trang nguồn vào slide Chữ và hình (kèm dòng ghi nguồn). Ảnh nào lỗi thì
+        // Bài có nguồn internet: gắn ảnh AI đã chọn (lấy từ chính trang nguồn) vào slide Chữ và hình, kèm dòng ghi nguồn. Ảnh nào lỗi thì
         // slide đó giữ hình tự vẽ; không bao giờ làm hỏng việc tạo slide (docs/tieu-chi/nguon-web-link-anh.md, W8–W13).
         let webImageCount = 0;
         if (sourceKind === "topic_web" && context.refs.some((r) => r.images?.length)) {

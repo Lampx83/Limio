@@ -4,7 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { AiTutorError } from "../aiTutor/errors";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
 import { SLIDE_ILLUSTRATIONS } from "@feedbackme/shared-types";
-import { LECTURE_DRAFTS_SCHEMA, DRAFTS_SCHEMA, SLIDE_SPEC, buildSlidesPrompt, generateSlideDrafts, specKeyFor, type OutlineSlideInput } from "../aiTutor/lectureSlides";
+import { LECTURE_DRAFTS_SCHEMA, DRAFTS_SCHEMA, SLIDE_SPEC, buildSlidesPrompt, lectureDraftsSchema, generateSlideDrafts, specKeyFor, type OutlineSlideInput } from "../aiTutor/lectureSlides";
 
 const outline: OutlineSlideInput[] = [
   { index: 0, kind: "content", layout: "cover", title: "Phản hồi trong dạy học", points: ["Phản hồi giúp người học tiến bộ."] },
@@ -86,6 +86,36 @@ describe("hình minh hoạ cho ô hình", () => {
     expect(props.properties.illustration!.enum).toEqual([...SLIDE_ILLUSTRATIONS, "none"]);
     expect(props.required).toContain("illustration");
     expect(JSON.stringify(DRAFTS_SCHEMA)).not.toContain("illustration");
+  });
+});
+
+describe("ảnh từ nguồn internet: AI chọn mã ảnh cho slide Chữ và hình (W8)", () => {
+  const img: OutlineSlideInput = { index: 4, kind: "content", layout: "image", title: "Học sinh xem mô hình ba chiều", points: [] };
+  const webImages = [
+    { id: "A1", description: "Students using tablets to view a 3D model", page: "[1] Thực tế tăng cường" },
+    { id: "A2", description: "Sơ đồ ba lớp của hệ thống AR", page: "[2] AR trong giáo dục" },
+  ];
+  type Item = { properties: Record<string, { enum?: string[] }>; required: string[] };
+
+  it("có ảnh: slide Chữ và hình thấy danh sách mã kèm mô tả và trang; slide khác được dặn để none", () => {
+    const { user } = buildSlidesPrompt({ ...base, outline: [...outline, img], batch: [1, 4], webImages });
+    const lines = user.split("- Chỉ số ");
+    const imgLine = lines.find((l) => l.startsWith("4,"))!;
+    expect(imgLine).toContain("webImage");
+    expect(imgLine).toContain("A1 (Students using tablets to view a 3D model; trang [1] Thực tế tăng cường)");
+    expect(imgLine).toContain("A2 (");
+    expect(lines.find((l) => l.startsWith("1,"))!).toContain('webImage để "none"');
+  });
+
+  it("lược đồ chỉ nhận đúng các mã của lô hoặc none; không có ảnh thì không có trường webImage", () => {
+    const item = lectureDraftsSchema(["A1", "A2"]).properties.slides.items as Item;
+    expect(item.properties.webImage!.enum).toEqual(["none", "A1", "A2"]);
+    expect(item.required).toContain("webImage");
+    expect(item.properties.illustration).toBeDefined();
+    expect(JSON.stringify(lectureDraftsSchema([]))).not.toContain("webImage");
+    expect(JSON.stringify(LECTURE_DRAFTS_SCHEMA)).not.toContain("webImage");
+    const { user } = buildSlidesPrompt({ ...base, outline: [...outline, img], batch: [4] });
+    expect(user).not.toContain("webImage");
   });
 });
 
