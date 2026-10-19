@@ -30,7 +30,6 @@ import {
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { LimeSliceIcon } from "./BrandIcons";
-import UserAvatar from "./ui/UserAvatar";
 // Chỉ import kiểu: teacherAssistant.ts kéo theo cả chuỗi limioLiveChat (phía server), không để vào bundle trình duyệt.
 import type { AssistantAction, AssistantIcon, AssistantReply, AssistantStarter } from "@/lib/teacherAssistant";
 
@@ -238,8 +237,10 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
               m.role === "user" ? (
                 <div key={i} className="flex items-start justify-end gap-3">
                   <p className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-tr-md bg-brand-600 px-3.5 py-2 text-sm text-white shadow-sm">{m.text}</p>
-                  {/* Luôn là chữ "You" (không dùng ảnh): phân biệt lời của mình với lời của Limio ở mọi tài khoản. */}
-                  <UserAvatar name={name} initials="You" size="sm" className="mt-0.5 shrink-0" />
+                  {/* Luôn là chữ "You" (không dùng ảnh), cùng tông xanh với bong bóng tin nhắn của mình. */}
+                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-normal text-white shadow-sm" aria-label="Bạn" role="img">
+                    You
+                  </span>
                 </div>
               ) : (
                 <div key={i} className="flex items-start gap-3">
