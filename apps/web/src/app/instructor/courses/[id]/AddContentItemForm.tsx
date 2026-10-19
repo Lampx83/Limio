@@ -8,6 +8,7 @@ import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import { AUDIO_MAX_BYTES, AUDIO_UPLOAD_ACCEPT } from "@/lib/lessonAudio";
 import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import LessonFileUploadPanel from "./LessonFileUploadPanel";
 import {
   dialogueEditorFromPayload,
   dialoguePayloadFromEditor,
@@ -23,6 +24,7 @@ import SafeHtml from "@/components/SafeHtml";
 import AiFormatPanel from "@/components/AiFormatPanel";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 import { plainToRichHtml } from "@/lib/richText";
+import { DEFAULT_LESSON_LOOK, type LessonLook } from "@feedbackme/shared-types";
 
 const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
   ssr: false,
@@ -157,11 +159,16 @@ export default function AddContentItemForm({
   const [url, setUrl] = useState("");
   const [body, setBody] = useState("");
   const [html, setHtml] = useState("");
+  // Bảng màu + kiểu chữ cho bài văn bản soạn tay (ô "Richtext editor").
+  const [look, setLook] = useState<LessonLook>(DEFAULT_LESSON_LOOK);
   // AI mode: đã "Áp dụng và lưu" → ẩn ô nhập bản thô (bản đã format là bản duy nhất
   // hiển thị; bản thô chỉ còn trong mục thu gọn "Xem bản gốc").
   const [aiSaved, setAiSaved] = useState(false);
   const [htmlBlockBody, setHtmlBlockBody] = useState("");
   const [filename, setFilename] = useState("");
+  // File đính kèm tự upload: cỡ + kiểu để học viên thấy "… · 1,2 MB". Gõ tay
+  // URL khác thì bỏ (không còn đúng file đó nữa).
+  const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(null);
   const [linkTitle, setLinkTitle] = useState("");
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioShowTranscript, setAudioShowTranscript] = useState(true);
@@ -268,6 +275,7 @@ export default function AddContentItemForm({
     setHtml("");
     setAiSaved(false);
     setFilename("");
+    setFileMeta(null);
     setLinkTitle("");
     setScormPackageId("");
     setH5pPackageId("");
@@ -421,12 +429,15 @@ export default function AddContentItemForm({
         // đó thành <p>/<br> tối thiểu thay vì lưu 1 dòng chữ dính liền không
         // ngắt đoạn. HTML thật (từ RichTextEditor) đi qua hàm này không đổi.
         payload = { html: plainToRichHtml(html) };
+        // Chỉ bài soạn bằng trình soạn thảo mới mang bảng màu; bản AI định dạng
+        // kiểu cũ đã tự mang màu riêng.
+        if (type === "richtext" && richtextMode === "wysiwyg") payload.look = look;
         break;
       case "embed":
         payload = { url };
         break;
       case "file":
-        payload = { url, filename };
+        payload = { url, filename, ...(fileMeta ?? {}) };
         break;
       case "external_link":
         payload = { url, title: linkTitle.trim() || undefined };
@@ -579,7 +590,14 @@ export default function AddContentItemForm({
           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-faint">
             Nội dung
           </label>
-          <RichTextEditor value={html} onChange={setHtml} placeholder="Nhập nội dung văn bản..." />
+          <RichTextEditor
+            value={html}
+            onChange={setHtml}
+            placeholder="Nhập nội dung văn bản..."
+            lessonTools
+            look={look}
+            onLookChange={setLook}
+          />
         </div>
       )}
       {type === "richtext" && richtextMode === "ai" && (
@@ -711,7 +729,10 @@ export default function AddContentItemForm({
         <div className="space-y-2">
           <input
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setFileMeta(null);
+            }}
             required
             // For video / file / pdf the URL may be a same-origin path (e.g.
             // /api/lesson-media/videos/<file>) populated by the upload panel
@@ -726,7 +747,9 @@ export default function AddContentItemForm({
                 ? "Dán URL: YouTube · Vimeo · Loom · Wistia · Bunny · Mux — hoặc upload file bên dưới"
                 : type === "pdf"
                   ? "URL PDF (https://.../file.pdf) — hoặc upload file bên dưới"
-                  : "URL"
+                  : type === "file"
+                    ? "URL file (https://...) — hoặc tải file lên bên dưới"
+                    : "URL"
             }
             className="input"
           />
@@ -736,6 +759,17 @@ export default function AddContentItemForm({
               setUploading={setUploading}
               setError={setError}
               onUploaded={(uploadedUrl) => setUrl(uploadedUrl)}
+            />
+          )}
+          {type === "file" && (
+            <LessonFileUploadPanel
+              onUploaded={(f) => {
+                setUrl(f.url);
+                setFileMeta({ sizeBytes: f.sizeBytes, mimeType: f.mime });
+                // Tên hiển thị = tên gốc (server đặt tên ngẫu nhiên). Ghi đè cả
+                // khi đã có: upload file mới thì tên cũ không còn đúng.
+                setFilename(f.originalName.slice(0, 200));
+              }}
             />
           )}
           {type === "pdf" && (
@@ -1031,7 +1065,7 @@ export default function AddContentItemForm({
           onChange={(e) => setFilename(e.target.value)}
           required
           maxLength={200}
-          placeholder="Tên file (eg. handout.pdf)"
+          placeholder="Tên file học viên thấy (vd: handout.pdf)"
           className="input"
         />
       )}

@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { AiTutorError } from "./errors";
+import { getChatModel } from "./llm";
 import { assertHasTokenBudget, chargeTokens } from "./tokenWallet";
 
 export { AiTutorError } from "./errors";
@@ -80,8 +81,10 @@ async function resolveGlobalTokenCap(db: PrismaClient): Promise<number> {
   return DEFAULT_GLOBAL_TOKENS_PER_DAY;
 }
 
-// Default model. gpt-4o-mini = cheap + fast. Override per-conversation if needed.
-export const DEFAULT_MODEL = "gpt-4o-mini";
+// Default chat model — LLM tự host qua vLLM (xem llm.ts). Giá không có trong bảng
+// dưới ⇒ cost = 0 (tự host: tốn hạ tầng chứ không tính theo token); token vẫn
+// được đếm cho cap.
+export const DEFAULT_MODEL = getChatModel();
 
 /** Số ký tự tối đa của đoạn bôi đen gửi kèm câu hỏi. */
 export const MAX_QUOTE_CHARS = 800;
@@ -89,16 +92,10 @@ export const MAX_QUOTE_CHARS = 800;
 // Rough pricing per 1K tokens for cost log (USD). Update when models change.
 // Source: openai.com/api/pricing — values as of 2026-05.
 const PRICE_PER_1K_INPUT: Record<string, number> = {
-  "gpt-4o-mini": 0.00015,
-  "gpt-4o": 0.0025,
   // LANG G7 — Whisper tính theo phút (0,006 USD); 1 phút = 6.000 token ví nên ≈ 0,001 USD / 1K token ví.
   "whisper-1": 0.001,
-  // A6.2 — embeddings không có output token, giá tính hết vào input.
-  "text-embedding-3-small": 0.00002,
 };
 const PRICE_PER_1K_OUTPUT: Record<string, number> = {
-  "gpt-4o-mini": 0.0006,
-  "gpt-4o": 0.01,
 };
 
 function dayKeyUtc(now: Date = new Date()): string {
@@ -352,7 +349,9 @@ export async function runChatTurn(
 
   const ctx = await buildLessonContext(input.userId, conv.lessonId, db);
   const system = buildSystemPrompt(ctx);
-  const model = input.model ?? conv.model ?? DEFAULT_MODEL;
+  // KHÔNG dùng conv.model: đó là model lúc tạo hội thoại (các hội thoại cũ ghi
+  // "gpt-4o-mini"), gửi tên đó sang LLM tự host sẽ lỗi "model không tồn tại".
+  const model = input.model ?? DEFAULT_MODEL;
 
   // Persist the user message first so a crash mid-stream isn't lost.
   const userMsg = await db.aiMessage.create({

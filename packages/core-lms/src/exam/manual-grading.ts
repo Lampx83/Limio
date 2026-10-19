@@ -5,6 +5,7 @@ import { CourseAuthzError } from "../courses/authz";
 import { emitEvent } from "../learning/events";
 import { getRoomScope } from "./room-authz";
 import { ExamError } from "./types";
+import { loadScoringPlan, scorePctFor } from "./weighted-score";
 
 export interface PendingGradeItem {
   id: string;
@@ -204,6 +205,7 @@ export async function gradeManualExamAnswer(
     const rows = await tx.examAnswer.findMany({
       where: { attemptId: answer.attemptId },
       select: {
+        questionId: true,
         autoScore: true,
         manualScore: true,
         needsGrading: true,
@@ -214,12 +216,11 @@ export async function gradeManualExamAnswer(
       (s, r) => s + (r.manualScore ?? r.autoScore ?? 0),
       0,
     );
-    const questions = await tx.examQuestion.findMany({
-      where: { examId: answer.attempt.examId },
-      select: { points: true },
-    });
-    const totalPoints = questions.reduce((s, q) => s + q.points, 0);
-    const scorePct = totalPoints > 0 ? (totalScore / totalPoints) * 100 : 0;
+    const scorePct = scorePctFor(
+      await loadScoringPlan(answer.attempt.examId, tx),
+      new Map(rows.map((r) => [r.questionId, r.manualScore ?? r.autoScore ?? 0])),
+      totalScore,
+    );
 
     if (!stillPending) {
       await tx.examAttempt.update({
@@ -255,6 +256,8 @@ export async function gradeManualExamAnswer(
         },
         {
           courseId: answer.attempt.exam.courseId,
+          // Lượt thi của thí sinh vào bằng mã không có userId — event thuộc về candidate.
+          ...(answer.attempt.candidateId ? { candidateId: answer.attempt.candidateId } : {}),
           eventKey: `exam.graded:${answer.attemptId}`,
         },
         db,
@@ -275,6 +278,7 @@ export async function gradeManualExamAnswer(
       },
       {
         courseId: answer.attempt.exam.courseId,
+        ...(answer.attempt.candidateId ? { candidateId: answer.attempt.candidateId } : {}),
         // Reasons may be reused — include timestamp via the history row id to
         // make replays unique. Read back the freshest entry.
         eventKey: `exam.regraded:${answerId}:${now.getTime()}`,

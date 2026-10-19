@@ -43,6 +43,7 @@ Khi nghe thuyết trình, hai chỗ đáng hỏi lại:
 ## Thực hành 2 (120 phút)
 
 ### Trước buổi học ít nhất một tuần
+- [ ] Tạo bài tập trong Bài 2.5, chọn **"Cách nộp: Nộp theo nhóm"**, hạn nộp cuối buổi. Chỉ có **một** bài tập nộp, dùng đúng bộ nhóm đã lập cho bài giữa kỳ. Mô tả ghi: nộp link file Figma của nhóm (quyền xem), mỗi người tự ghi "Phần việc của tôi".
 - [ ] Nhắc sinh viên xác minh **Figma Education** bằng email trường (figma.com/education/apply). Duyệt không tức thì, có khi phải gửi thêm giấy tờ.
 - [ ] Nhóm đã đăng ký bài giữa kỳ (biết trang Limio và 3 quy luật) — để điền trang bìa ở Phần 3.
 
@@ -52,8 +53,12 @@ Khi nghe thuyết trình, hai chỗ đáng hỏi lại:
 |---|---|---|
 | 1 · Làm quen Figma | 30' | Chiếu Figma, làm mẫu 5 phút đầu (bốn vùng màn hình, phím F, T). Đi vòng kiểm: nhãn có phải **frame** không. |
 | 2 · Từ giấy lên Figma | 40' | Nhắc: **chép thẻ từ Phần 1** chứ đừng vẽ lại; nhìn bản giấy để hiểu ý, không đồ lại nét. |
-| 3 · Dựng file nhóm | 30' | Kiểm file nằm trong **project của team**, không nằm trong Drafts. Nhận lời mời quyền xem vào từng team. |
-| 4 · Soát chéo, nộp | 20' | Ghép cặp nhóm 1↔2, 3↔4… |
+| 3 · Dựng file nhóm | 30' | Kiểm file nằm trong **project của team**, không nằm trong Drafts. Nhận lời mời quyền xem vào từng team. Kiểm mỗi người đã **dán bài Phần 1, 2 vào page 03** thành frame "TH2 – Họ tên" — đây là chỗ bạn chấm Phần 1, 2, file nháp ở Drafts không nộp. |
+| 4 · Soát chéo, nộp | 20' | Ghép cặp nhóm 1↔2, 3↔4… Người giữ team nộp link một lần. |
 
 ### Sau buổi
 - [ ] Nhắc các nhóm: ngay sau buổi thuyết trình giữa kỳ, chép ảnh trang Limio, ảnh bản giấy, kết quả hỏi 5 bạn và góp ý nhận được vào **page 01** của file nhóm — đó là điểm xuất phát của bài cuối kỳ.
+
+### Chấm
+- [ ] Mở link file của nhóm, vào page 03: chấm Phần 1 (25) và Phần 2 (35) trên từng frame "TH2 – Họ tên", Phần 3 (20) theo danh sách soát, Phần 4 (20) theo bình luận **[Soát]** đã trả lời và Resolve.
+- [ ] Chấm nhóm một lần. Ai thiếu frame hoặc đủ ít hơn thì **chỉnh điểm riêng** cho bạn đó trên trang chấm; đối chiếu "Phần việc của tôi" với *Version history*.

@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
@@ -249,8 +250,31 @@ export async function submitAnswer(
 
   const prior = await db.answerResponse.findUnique({
     where: { attemptId_questionId: { attemptId, questionId: parsed.data.questionId } },
-    select: { revisionCount: true },
+    select: { revisionCount: true, response: true, confidence: true, latencyMs: true },
   });
+
+  // Gửi lại đúng đáp án đã có (cùng nội dung, cùng độ tự tin) không phải một lần sửa.
+  //
+  // Máy khách lưu ngay khi người học chọn, rồi lúc nộp bài gửi lại một lượt để chốt
+  // thời gian riêng của từng câu (`latencyMs`). Nếu lượt gửi lại đó cũng bị tính là
+  // một lần sửa thì cột "Số lần sửa đáp án" của dữ liệu nghiên cứu sai trên MỌI câu,
+  // và mỗi câu có thêm một sự kiện trả lời không ứng với việc nào người học làm.
+  // Nên: giữ nguyên đáp án, thời điểm trả lời, số lần sửa; không phát sự kiện; chỉ
+  // cập nhật thời gian riêng của câu, và chỉ khi số mới lớn hơn (nó cộng dồn nên
+  // không bao giờ giảm — số nhỏ hơn là gói tin đến muộn).
+  if (
+    prior &&
+    isDeepStrictEqual(prior.response, parsed.data.response) &&
+    (prior.confidence ?? null) === (parsed.data.confidence ?? null)
+  ) {
+    if (latencyMs !== null && (prior.latencyMs === null || latencyMs > prior.latencyMs)) {
+      await db.answerResponse.update({
+        where: { attemptId_questionId: { attemptId, questionId: parsed.data.questionId } },
+        data: { latencyMs },
+      });
+    }
+    return;
+  }
 
   // Grade now (so isCorrect is stored), but final score computed at submit-time.
   const fullQuestion = await db.quizQuestion.findUniqueOrThrow({

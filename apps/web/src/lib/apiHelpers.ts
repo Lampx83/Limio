@@ -203,6 +203,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "access_mode_mismatch" ||
               err.code === "candidate_has_attempts" ||
               err.code === "session_has_attempts" ||
+              err.code === "round_has_attempts" ||
               err.code === "student_code_in_use" ||
               err.code === "cohort_has_attempts" ||
               err.code === "cohort_name_taken" ||
@@ -262,7 +263,11 @@ export function mapKnownError(err: unknown): NextResponse | null {
   }
   if (err instanceof PortfolioError) {
     const status =
-      err.code === "submission_not_found" ? 404 : err.code === "slug_taken" ? 409 : 400;
+      err.code === "submission_not_found"
+        ? 404
+        : err.code === "slug_taken" || err.code === "group_full"
+          ? 409
+          : 400;
     return NextResponse.json({ error: err.code }, { status });
   }
   return null;

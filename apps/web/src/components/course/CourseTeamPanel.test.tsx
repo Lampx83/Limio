@@ -148,3 +148,17 @@ describe("LessonTasksTab — bài tập nhóm", () => {
     expect(t).toContain("Nộp bài / sửa bài đã nộp");
   });
 });
+
+describe("CourseTeamPanel — đổi tên nhóm", () => {
+  it("trưởng nhóm thấy nút Đổi tên khi danh sách chưa khoá", () => {
+    expect(text(panel({ settings: { teamMaxSize: 4, locked: false }, team: team() }, "u1"))).toContain("Đổi tên");
+  });
+
+  it("thành viên thường không thấy nút Đổi tên", () => {
+    expect(text(panel({ settings: { teamMaxSize: 4, locked: false }, team: team() }, "u2"))).not.toContain("Đổi tên");
+  });
+
+  it("danh sách đã khoá thì trưởng nhóm cũng không thấy nút Đổi tên", () => {
+    expect(text(panel({ settings: { teamMaxSize: 4, locked: true }, team: team() }, "u1"))).not.toContain("Đổi tên");
+  });
+});

@@ -91,6 +91,13 @@ export const INTEGRATION_KEYS = [
   // service_account (JSON key, secret thật sự).
   "ga4.property_id",
   "ga4.service_account",
+  // A6.6 — TTS tự host (NEU TTS API, đi qua Kong). Có base_url thì luồng
+  // vấn đáp đọc bằng dịch vụ này; không có thì rơi về OpenAI TTS.
+  "neutts.base_url",
+  "neutts.api_key",
+  "neutts.voice",
+  // Limio-Live: tìm trang trên internet khi soạn bài giảng từ mô tả chủ đề (apps/web/src/lib/webSearch.ts).
+  "websearch.tavily",
 ] as const;
 export type IntegrationKey = (typeof INTEGRATION_KEYS)[number];
 
@@ -167,6 +174,14 @@ function envFallbackName(key: string): string | null {
       return "VNPAY_SECRET";
     case "momo.secret":
       return "MOMO_SECRET";
+    case "neutts.base_url":
+      return "NEUTTS_BASE_URL";
+    case "neutts.api_key":
+      return "NEUTTS_API_KEY";
+    case "neutts.voice":
+      return "NEUTTS_VOICE";
+    case "websearch.tavily":
+      return "TAVILY_API_KEY";
     default:
       return null;
   }

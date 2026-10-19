@@ -20,6 +20,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
 import { ScoreBandsInput } from "./section-results";
+import { examHasSectionWeights } from "./weighted-score";
 
 // ============================================================================
 // Pool filter schema + sampler
@@ -271,6 +272,18 @@ async function assertExamEditable(
   return exam;
 }
 
+/**
+ * Đề đã đặt trọng số thì không thêm/xoá Phần: tổng trọng số sẽ lệch âm thầm và
+ * điểm các bài sau không cùng cách tính với bài trước. Bỏ trọng số rồi sửa.
+ */
+async function assertNoSectionWeights(examId: string, db: PrismaClient): Promise<void> {
+  if (await examHasSectionWeights(examId, db))
+    throw new ExamError("validation_failed", {
+      reason: "section_weights_set",
+      message: "Đề đang có trọng số theo phần. Bỏ trọng số trước khi thêm hoặc xoá phần.",
+    });
+}
+
 export async function createSection(
   actorUserId: string,
   examId: string,
@@ -278,6 +291,7 @@ export async function createSection(
   db: PrismaClient = prisma,
 ): Promise<{ id: string }> {
   await assertExamEditable(actorUserId, examId, db);
+  await assertNoSectionWeights(examId, db);
   const parsed = CreateSectionInput.safeParse(rawInput);
   if (!parsed.success)
     throw new ExamError("validation_failed", parsed.error.flatten());
@@ -317,6 +331,8 @@ export interface SectionListItem {
   durationMin: number | null;
   languageSkill: "listening" | "speaking" | "reading" | "writing" | null;
   scoreBands: { from: number; to: number; label: string }[] | null;
+  /** Trọng số (%) trong điểm của bài; null = chưa đặt. */
+  weight: number | null;
 }
 
 export async function listSections(
@@ -338,6 +354,7 @@ export async function listSections(
       durationMin: true,
       languageSkill: true,
       scoreBands: true,
+      weight: true,
       _count: { select: { items: true } },
     },
   });
@@ -352,6 +369,7 @@ export async function listSections(
     durationMin: r.durationMin,
     languageSkill: r.languageSkill,
     scoreBands: Array.isArray(r.scoreBands) ? (r.scoreBands as unknown as { from: number; to: number; label: string }[]) : null,
+    weight: r.weight,
   }));
 }
 
@@ -399,10 +417,11 @@ export async function deleteSection(
 ): Promise<void> {
   const s = await db.examSection.findUnique({
     where: { id: sectionId },
-    select: { id: true, orderIndex: true, exam: { select: { courseId: true, createdById: true } } },
+    select: { id: true, examId: true, orderIndex: true, exam: { select: { courseId: true, createdById: true } } },
   });
   if (!s) throw new ExamError("section_not_found");
   await assertCanEditExam(actorUserId, s.exam, db);
+  await assertNoSectionWeights(s.examId, db);
   if (s.orderIndex === 0) {
     // Default "Main" section. Allow but warn — UI should confirm.
   }

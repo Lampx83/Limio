@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { AiGenerationError } from "../aiTutor/generators";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
 import {
   getSpeakingFeedbackForLearner,
+  ensureTranscriptForGrading,
   listSpeakingFeedbackForReview,
   requestSpeakingFeedback,
   reviewSpeakingFeedback,
@@ -139,7 +141,7 @@ describe("requestSpeakingFeedback — happy path (G7a, G7b, G7d.1, G7d.2)", () =
       sourceKind: "llm", level: "self_regulation", elaboration: "elaborated", tokensIn: 400, tokensOut: 300,
     });
     expect(row.levels).toEqual(["task", "process", "self_regulation"]);
-    expect(row.generationContext).toMatchObject({ promptVersion: "g7.speaking.v1", sttModel: "whisper-1", model: "gpt-4o-mini", transcriptHash: tr.textHash });
+    expect(row.generationContext).toMatchObject({ promptVersion: "g7.speaking.v1", sttModel: "whisper-1", model: DEFAULT_MODEL, transcriptHash: tr.textHash });
     const body = row.body as { criteria: { key: string }[]; errors: unknown[] };
     expect(body.criteria.map((c) => c.key)).toEqual(["task", "language", "fluency", "coherence"]);
     expect(JSON.stringify(row.body)).not.toMatch(/pronunciation|score/i);
@@ -148,7 +150,7 @@ describe("requestSpeakingFeedback — happy path (G7a, G7b, G7d.1, G7d.2)", () =
     const after = await getTokenBudget(f.userId);
     expect(before.total - after.total).toBe(4000 + 700);
     const logs = await prisma.aiUsageLog.findMany({ where: { userId: f.userId } });
-    expect(logs.map((l) => l.model).sort()).toEqual(["gpt-4o-mini", "whisper-1"]);
+    expect(logs.map((l) => l.model).sort()).toEqual([DEFAULT_MODEL, "whisper-1"].sort());
     expect(await prisma.learningEvent.count({ where: { eventType: "speaking.feedback.generated", userId: f.userId } })).toBe(1);
   });
 
@@ -405,5 +407,58 @@ describe("hiển thị cho học viên và duyệt của giảng viên (G7c, G7d
     await reviewSpeakingFeedback(f.reviewerId, r.feedbackId, { action: "reject", note: "Sai nhiều" });
     expect(await prisma.learningEvent.count({ where: { eventType: "speaking.feedback.rejected", userId: f.reviewerId } })).toBe(1);
     await expect(reviewSpeakingFeedback(f.reviewerId, "00000000-0000-4000-8000-000000000000", { action: "approve" })).rejects.toMatchObject({ code: "feedback_not_found" });
+  });
+});
+
+describe("ensureTranscriptForGrading — bản chữ cho Gợi ý điểm bằng AI", () => {
+  async function grader() {
+    return (await prisma.user.create({ data: { email: `sf-g-${Date.now()}-${seq++}@e.com`, passwordHash: "x", displayName: "GV chấm" } })).id;
+  }
+  const audioOf = async (submissionId: string) =>
+    (await prisma.assignmentSubmission.findUniqueOrThrow({ where: { id: submissionId } })).attachmentUrl!;
+
+  it("đã có bản chữ của đúng file → dùng lại, không gọi Whisper, không trừ ví ai", async () => {
+    const f = await fx();
+    await requestSpeakingFeedback(f.userId, f.submissionId, { openai: fakeOpenAI().openai, loadAudio: loadOk, transcribe: fakeStt().transcribe });
+    const g = await grader();
+    const stt = fakeStt();
+    const r = await ensureTranscriptForGrading(g, f.submissionId, await audioOf(f.submissionId), { loadAudio: loadOk, transcribe: async () => stt.transcribe });
+    expect(r).toEqual({ text: TRANSCRIPT, created: false });
+    expect(stt.calls).toHaveLength(0);
+    expect(await prisma.aiUsageLog.count({ where: { userId: g } })).toBe(0);
+  });
+
+  it("chưa có → chuyển chữ ngay, trừ ví GIẢNG VIÊN, bản chữ lưu dưới tên học viên; không giới hạn 3 phút", async () => {
+    const f = await fx({ languageMode: false });
+    const g = await grader();
+    const stt = fakeStt({ durationSec: 600 }); // 10 phút: quá trần góp ý bài nói nhưng vẫn chấm được
+    const r = await ensureTranscriptForGrading(g, f.submissionId, await audioOf(f.submissionId), { loadAudio: loadOk, transcribe: async () => stt.transcribe });
+    expect(r).toEqual({ text: TRANSCRIPT, created: true });
+    expect(stt.calls).toHaveLength(1);
+    const row = await prisma.submissionTranscript.findFirstOrThrow({ where: { submissionId: f.submissionId } });
+    expect(row.userId).toBe(f.userId);
+    expect(row.courseId).toBe(f.courseId);
+    expect(await prisma.aiUsageLog.count({ where: { userId: g } })).toBe(1);
+    expect(await prisma.aiUsageLog.count({ where: { userId: f.userId } })).toBe(0);
+  });
+
+  it("nộp lại file khác thì không dùng bản chữ cũ; file không do hệ thống lưu → audio_not_hosted", async () => {
+    const f = await fx();
+    await requestSpeakingFeedback(f.userId, f.submissionId, { openai: fakeOpenAI().openai, loadAudio: loadOk, transcribe: fakeStt().transcribe });
+    const g = await grader();
+    const stt = fakeStt({ text: "Second take." });
+    const r = await ensureTranscriptForGrading(g, f.submissionId, "/api/assignment-media/khac.webm", { loadAudio: loadOk, transcribe: async () => stt.transcribe });
+    expect(r?.text).toBe("Second take.");
+    await expect(
+      ensureTranscriptForGrading(g, f.submissionId, "https://evil.example/a.mp3", { loadAudio: async () => null, transcribe: async () => stt.transcribe }),
+    ).rejects.toMatchObject({ code: "audio_not_hosted" });
+  });
+
+  it("file im lặng → null (không có gì để chấm), Whisper vẫn bị tính tiền", async () => {
+    const f = await fx();
+    const g = await grader();
+    const stt = fakeStt({ text: "  " });
+    expect(await ensureTranscriptForGrading(g, f.submissionId, await audioOf(f.submissionId), { loadAudio: loadOk, transcribe: async () => stt.transcribe })).toBeNull();
+    expect(await prisma.aiUsageLog.count({ where: { userId: g } })).toBe(1);
   });
 });

@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 // Client áp event vào local state (đã có snapshot từ GET /api/public/boards/[code]).
 export async function GET(req: Request, { params }: { params: { code: string } }) {
   const board = await prisma.interactiveBoard.findUnique({
-    where: { code: params.code.toUpperCase() },
+    where: { code: params.code.toUpperCase(), deletedAt: null },
     select: { id: true },
   });
   if (!board) {

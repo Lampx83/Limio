@@ -2,7 +2,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { awardXp } from "./xp";
 import { checkMissionCondition } from "./missionCondition";
-import { planTournamentEnd, prizeXpForPercent, sortRankEntries } from "./tournamentRules";
+import { normalizeTeamName, planTournamentEnd, prizeXpForPercent, sortRankEntries } from "./tournamentRules";
 
 /**
  * conditionType nào KHÔNG hợp lệ khi tournament là team-based (teamSize > 1).
@@ -296,6 +296,54 @@ export async function kickFromTeam(
   }
 
   await db.tournamentRegistration.delete({ where: { id: targetReg.id } });
+}
+
+/**
+ * Giảng viên (người tạo giải hoặc admin — route đã kiểm quyền) đổi tên đội. Khác đội trưởng:
+ * không bị khoá khi giải đã bắt đầu, vì GV sửa tên để bảng xếp hạng/showcase dễ đọc chứ không đổi thành viên.
+ * Ghi event để biết ai đổi tên gì, nhưng KHÔNG đổi joinCode hay thành viên.
+ */
+export async function renameTeamAsInstructor(
+  actorUserId: string,
+  tournamentId: string,
+  teamId: string,
+  rawName: string,
+  db: PrismaClient = prisma,
+): Promise<{ name: string; changed: boolean }> {
+  const name = normalizeTeamName(rawName);
+  if (!name) throw new TournamentError("validation_failed");
+
+  const team = await db.tournamentTeam.findUnique({
+    where: { id: teamId },
+    include: { tournament: { select: { courseId: true } } },
+  });
+  if (!team || team.tournamentId !== tournamentId) throw new TournamentError("team_not_found");
+  if (team.name === name) return { name, changed: false };
+
+  const clash = await db.tournamentTeam.findUnique({
+    where: { tournamentId_name: { tournamentId, name } },
+    select: { id: true },
+  });
+  if (clash && clash.id !== teamId) throw new TournamentError("team_name_taken");
+
+  try {
+    await db.$transaction([
+      db.tournamentTeam.update({ where: { id: teamId }, data: { name } }),
+      db.learningEvent.create({
+        data: {
+          userId: actorUserId,
+          eventType: LearningEventType.TournamentTeamRenamed,
+          payload: { tournamentId, teamId, from: team.name, to: name } as Prisma.InputJsonValue,
+          courseId: team.tournament.courseId ?? null,
+        },
+      }),
+    ]);
+  } catch (e) {
+    // Hai người đổi cùng lúc: unique (tournamentId, name) chặn ở DB.
+    if ((e as { code?: string }).code === "P2002") throw new TournamentError("team_name_taken");
+    throw e;
+  }
+  return { name, changed: true };
 }
 
 export async function regenerateJoinCode(

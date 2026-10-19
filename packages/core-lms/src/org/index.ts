@@ -5,3 +5,4 @@ export * from "./members";
 export * from "./academicTerms";
 export * from "./member-import";
 export * from "./email-settings";
+export * from "./exam-network";

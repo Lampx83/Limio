@@ -5,11 +5,14 @@ import { createCourse } from "../../courses/courses";
 import {
   createExam,
   createExamQuestion,
+  createExamRound,
+  createFormalSession,
   ensureDefaultSession,
   listExamRuns,
   publishExam,
   shareExamLink,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -79,13 +82,41 @@ describe("listExamRuns", () => {
     expect(mine!.accessMode).toBe("assigned_code");
   });
 
+  it("ghi tên đợt cho ca thuộc đợt; buổi đơn không có đợt thì null", async () => {
+    const s = await setup("roundtitle");
+    const quick = await shareExamLink(s.ownerId, s.examId, { durationMin: 12 });
+    const { id: roundId } = await createExamRound(s.ownerId, {
+      courseId: s.courseId,
+      code: "RT-2026",
+      title: "Giữa kỳ Lập trình",
+    });
+    // Ca thứ hai, gắn vào đợt (shareExamLink đã publish đề rồi).
+    const inRound = await prisma.examSession.create({
+      data: {
+        examId: s.examId,
+        roundId,
+        opensAt: new Date(Date.now() - 60_000),
+        closesAt: new Date(Date.now() + 3_600_000),
+        scale: "formal",
+      },
+      select: { id: true },
+    });
+    const sessionId = inRound.id;
+
+    const runs = await listExamRuns(s.ownerId);
+    expect(runs.find((r) => r.sessionId === sessionId)!.roundTitle).toBe("Giữa kỳ Lập trình");
+    expect(runs.find((r) => r.sessionId === quick.sessionId)!.roundTitle).toBeNull();
+  });
+
   it("liệt kê cả lần thi cho học viên đã ghi danh", async () => {
     const s = await setup("auth");
     await publishExam(s.ownerId, s.examId);
+    // Publish không tự mở thi — tổ chức một đợt chính thức cho học viên ghi danh.
+    const sessionId = await openForEnrolled(s.ownerId, s.examId);
 
     const runs = await listExamRuns(s.ownerId);
-    // publishExam dựng sẵn một ca mặc định, accessMode = authenticated.
-    expect(runs.some((r) => r.examId === s.examId)).toBe(true);
+    const mine = runs.find((r) => r.sessionId === sessionId);
+    expect(mine?.accessMode).toBe("authenticated");
   });
 
   it("giữ cả lần đã đóng, có cờ phân biệt", async () => {
@@ -130,13 +161,15 @@ describe("lọc lịch sử theo hình thức tổ chức", () => {
     expect(formal.some((r) => r.sessionId === shared.sessionId)).toBe(false);
   });
 
-  it("ca sinh ra từ đường đợt/ca mặc định là formal", async () => {
-    const s = await setup("scale-formal");
+  it("ca mặc định của đề là buổi đơn (simple), không lẫn vào kỳ thi chính thức", async () => {
+    const s = await setup("scale-default");
     await publishExam(s.ownerId, s.examId);
     const sessionId = await ensureDefaultSession(s.examId);
 
+    const simple = await listExamRuns(s.ownerId, { scale: "simple" });
+    expect(simple.some((r) => r.sessionId === sessionId)).toBe(true);
     const formal = await listExamRuns(s.ownerId, { scale: "formal" });
-    expect(formal.some((r) => r.sessionId === sessionId)).toBe(true);
+    expect(formal.some((r) => r.sessionId === sessionId)).toBe(false);
   });
 
   it("đề thử nghiệm không lẫn vào lịch sử link nhanh", async () => {
@@ -214,5 +247,71 @@ describe("đếm lượt thi theo TỪNG ca", () => {
     expect(b.submittedCount).toBe(1);
     // Bài đang làm dở tính vào startedCount nhưng KHÔNG tính là đã nộp.
     expect(b.startedCount).toBe(2);
+  });
+});
+
+describe("createFormalSession — ca chính thức không cần đợt", () => {
+  it("tạo ca formal, roundId=null, có phòng mặc định và hiện ở lịch sử chính thức", async () => {
+    const s = await setup("formal-noround");
+    await publishExam(s.ownerId, s.examId);
+    const { id } = await createFormalSession(s.ownerId, {
+      examId: s.examId,
+      title: "Ca sáng",
+      accessMode: "assigned_code",
+    });
+
+    const row = await prisma.examSession.findUniqueOrThrow({
+      where: { id },
+      select: { roundId: true, scale: true, accessMode: true, title: true, openCode: true },
+    });
+    expect(row.roundId).toBeNull();
+    expect(row.scale).toBe("formal");
+    expect(row.accessMode).toBe("assigned_code");
+    expect(row.openCode).toBeNull();
+    expect(await prisma.examRoom.count({ where: { sessionId: id } })).toBeGreaterThan(0);
+
+    const runs = await listExamRuns(s.ownerId, { scale: "formal" });
+    const mine = runs.find((r) => r.sessionId === id);
+    expect(mine).toBeTruthy();
+    expect(mine!.roundId).toBeNull();
+    expect(mine!.roundTitle).toBeNull();
+  });
+
+  it("chế độ Tự do (open_code) sinh mã chung cho ca", async () => {
+    const s = await setup("formal-open");
+    await publishExam(s.ownerId, s.examId);
+    const { id } = await createFormalSession(s.ownerId, {
+      examId: s.examId,
+      accessMode: "open_code",
+    });
+    const row = await prisma.examSession.findUniqueOrThrow({
+      where: { id },
+      select: { openCode: true },
+    });
+    expect(row.openCode).toMatch(/^[A-Z0-9]{6}$/);
+  });
+
+  it("người không phải giảng viên của đề thì bị chặn", async () => {
+    const s = await setup("formal-forbid");
+    const stranger = await registerUser(
+      { email: `stranger-formal-${Date.now()}@e.com`, password: "password1234", displayName: "S" },
+      BASE,
+    );
+    await expect(
+      createFormalSession(stranger.userId, { examId: s.examId, accessMode: "open_code" }),
+    ).rejects.toMatchObject({ code: "forbidden" });
+  });
+
+  it("giờ đóng không sau giờ mở thì từ chối", async () => {
+    const s = await setup("formal-window");
+    const t = new Date();
+    await expect(
+      createFormalSession(s.ownerId, {
+        examId: s.examId,
+        accessMode: "open_code",
+        opensAt: new Date(t.getTime() + 7_200_000),
+        closesAt: new Date(t.getTime() + 3_600_000),
+      }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
   });
 });

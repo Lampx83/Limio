@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu: thương hiệu cho bài giảng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --warn-bg: #fff4d6; --warn-ink: #7a4a00; --bad: #b42318;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 10px 26px -14px rgb(28 36 16 / .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+      --brand: #a3e635; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16;
+      --warn-bg: #3a2c0a; --warn-ink: #f6d58a; --bad: #ff9b8f; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 16px;
+    font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 60px; }
+  h1 { font-size: 22px; margin: 18px 0 2px; }
+  .sub { margin: 0 0 14px; color: var(--ink-3); font-size: 15px; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-size: 14px; font-weight: 500; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--brand-fill); border-color: var(--brand-fill); color: #10200a; font-weight: 700; }
+  .btn.small { padding: 5px 10px; font-size: 13px; }
+
+  /* ---------- thanh công cụ giả của trình sửa bài giảng ---------- */
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; }
+  .bar .title { font-weight: 700; margin-right: auto; }
+  .tb { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-3); }
+  .tb:hover { background: var(--surface-2); }
+  .tb.hot { border-color: var(--brand-fill); color: var(--ink); box-shadow: 0 0 0 2px var(--brand-soft); }
+  .dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--line); background: linear-gradient(135deg, #BEF264, #F9A8D4); }
+  .canvas { padding: 14px 16px 18px; }
+  .canvas .cap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 13px; color: var(--ink-3); margin-bottom: 8px; }
+
+  /* ---------- slide mẫu (đúng cách dựng của slideLayouts.css) ---------- */
+  .lslide { --sbg: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); --stext: #20241F; --smuted: #5A6256; --sa: #4D7C0F; --sa2: #BE185D;
+    --ssoft: #ECFCCB; --ssoft2: #FCE7F3; --scard: rgba(255,255,255,.82); --scardb: #E3E8D3; --son: #fff; --sg: linear-gradient(120deg, #4D7C0F, #15803D); --sgb: linear-gradient(135deg, #4D7C0F, #15803D);
+    container-type: inline-size; position: relative; aspect-ratio: 16 / 9; width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--line);
+    background: var(--sbg); color: var(--stext); }
+  .lslide.dark { --sbg: linear-gradient(135deg, #0B1020, #1B1A4B); --stext: #F1F5F9; --smuted: #C4CCE0; --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14); --son: #06202E; --ssoft: rgba(255,255,255,.14); --ssoft2: rgba(255,255,255,.08); }
+  .lslide .in { position: absolute; inset: 0; padding: 7cqw 7cqw 6cqw; display: flex; flex-direction: column; justify-content: center; gap: 2.4cqw; }
+  .lslide h3 { margin: 0; font-size: 5.6cqw; line-height: 1.15; font-weight: 800; letter-spacing: -.02em; }
+  .lslide .big { font-size: 7cqw; max-width: 58cqw; }
+  .lslide .big + p { max-width: 54cqw; }
+  .lslide .grad { background: var(--sg); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lslide p { margin: 0; font-size: 3.2cqw; color: var(--smuted); line-height: 1.35; }
+  .lslide .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.2cqw; }
+  .lslide .card { background: var(--scard); border: 1px solid var(--scardb); border-radius: 2cqw; padding: 2.2cqw; font-size: 2.5cqw; line-height: 1.3; color: var(--smuted); }
+  .lslide .card b { display: block; color: var(--stext); font-size: 2.9cqw; margin: 1cqw 0 .5cqw; }
+  .lslide .badge { width: 5cqw; height: 5cqw; border-radius: 1.4cqw; background: var(--sgb); }
+  .lslide .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.8cqw; }
+  .lslide .opt { display: flex; align-items: center; gap: 1.6cqw; background: var(--scard); border: 1px solid var(--scardb); border-radius: 1.8cqw; padding: 1.8cqw 2cqw; font-size: 2.8cqw; }
+  .lslide .opt i { font-style: normal; font-weight: 800; width: 4.4cqw; height: 4.4cqw; border-radius: 1.2cqw; display: grid; place-items: center; background: var(--ssoft); color: var(--sa); font-size: 2.6cqw; }
+  .lslide .opt.on { border: .35cqw solid var(--sa); }
+  .lslide .opt.on i { background: var(--sgb); color: var(--son); }
+  .lslide ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 1.6cqw; }
+  .lslide li { display: flex; align-items: center; gap: 1.8cqw; font-size: 3cqw; font-weight: 600; }
+  .lslide li::before { content: ""; width: 2.4cqw; height: 2.4cqw; border-radius: 50%; background: var(--sgb); flex: none; }
+  .lslide .stack { position: absolute; right: 8cqw; top: 50%; width: 26cqw; height: 26cqw; transform: translateY(-50%); }
+  .lslide .stack i { position: absolute; border-radius: 3cqw; border: 1px solid var(--scardb); }
+  .lslide .stack i:nth-child(1) { inset: 2cqw 5cqw 6cqw 0; background: var(--ssoft); transform: rotate(-7deg); }
+  .lslide .stack i:nth-child(2) { inset: 5cqw 1cqw 4cqw 4cqw; background: var(--ssoft2); transform: rotate(4deg); }
+  .lslide .stack i:nth-child(3) { inset: 7cqw 0 2cqw 6cqw; background: var(--sgb); }
+  .logo { position: absolute; z-index: 3; display: flex; align-items: center; justify-content: center; }
+  .logo img, .logo svg { display: block; height: 100%; width: auto; max-width: 28cqw; object-fit: contain; }
+
+  /* ---------- hộp thoại Thương hiệu ---------- */
+  dialog#dlg { width: min(1120px, 96vw); max-width: 96vw; height: min(760px, 94vh); padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--ink); box-shadow: 0 30px 80px -20px rgb(0 0 0 / .5); overflow: hidden; }
+  dialog#dlg[open] { display: flex; flex-direction: column; }
+  dialog#dlg::backdrop { background: rgb(20 26 12 / .55); }
+  .dhead { flex: none; display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+  .dhead h2 { margin: 0; font-size: 18px; flex: 1; }
+  .dbody { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .pvcol { padding: 12px 16px 0; }
+  .form { min-height: 0; overflow: auto; padding: 14px 18px 24px; display: grid; gap: 20px; align-content: start; }
+  @media (min-width: 900px) {
+    .dbody { grid-template-columns: 360px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+    .pvcol { order: 2; padding: 18px 20px 18px 6px; align-self: start; }
+    .form { order: 1; border-right: 1px solid var(--line); }
+  }
+  @media (max-width: 640px) { dialog#dlg { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; } }
+  .sec h3 { margin: 0 0 8px; font-size: 15px; }
+  .sec .help { margin: 0 0 8px; font-size: 13px; color: var(--ink-3); }
+  .drop { display: flex; align-items: center; gap: 12px; border: 2px dashed var(--line); border-radius: 14px; padding: 12px; background: var(--surface-2); }
+  .drop .thumb { width: 72px; height: 48px; border-radius: 10px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; flex: none; }
+  .drop .thumb img, .drop .thumb svg { max-width: 100%; max-height: 100%; }
+  .drop .txt { flex: 1; min-width: 0; font-size: 14px; }
+  .drop .txt small { display: block; color: var(--ink-3); font-size: 12.5px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .seg button { border: 0; background: var(--surface); padding: 7px 14px; font-size: 14px; font-weight: 500; }
+  .seg button + button { border-left: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: var(--brand-soft); color: var(--ink); font-weight: 700; box-shadow: inset 0 0 0 1px var(--brand-fill); }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  .corners { position: relative; width: 108px; height: 64px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); flex: none; }
+  .corners button { position: absolute; width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); }
+  .corners button[aria-pressed="true"] { background: var(--brand-fill); border-color: var(--brand-fill); }
+  .corners .tl { left: 5px; top: 5px; } .corners .tr { right: 5px; top: 5px; } .corners .bl { left: 5px; bottom: 5px; } .corners .br { right: 5px; bottom: 5px; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .swatches button { width: 32px; height: 32px; border-radius: 50%; border: 2px solid transparent; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12); }
+  .swatches button[aria-pressed="true"] { border-color: var(--ink); }
+  .swatches .none { background: repeating-linear-gradient(45deg, #fff 0 5px, #e5e7eb 5px 10px); }
+  .hex { display: flex; align-items: center; gap: 8px; }
+  .hex input[type=color] { width: 44px; height: 38px; padding: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  .hex input[type=text] { width: 120px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); font-variant-numeric: tabular-nums; text-transform: uppercase; }
+  .chips { display: flex; gap: 6px; }
+  .chips i { width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgb(0 0 0 / .12); display: block; }
+  .note { font-size: 13px; padding: 8px 12px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); }
+  .info { font-size: 13px; color: var(--ink-3); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
+  .tabs .sp { flex: 1; }
+  .tabs button { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 13px; font-size: 13.5px; font-weight: 600; color: var(--ink-3); }
+  .tabs button[aria-pressed="true"] { background: var(--brand-soft); color: var(--ink); border-color: var(--brand-fill); }
+  .changes { margin: 18px 0 0; padding: 14px 18px; background: var(--brand-soft); border-radius: 14px; font-size: 14px; color: var(--ink-2); }
+  .changes b { color: var(--ink); }
+  .changes ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 3px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Thương hiệu của bài giảng</h1>
+  <p class="sub">Đặt logo và màu thương hiệu một lần, áp cho mọi slide của bài giảng. Bấm nút “Thương hiệu” trên thanh công cụ để mở.</p>
+
+  <section class="panel">
+    <div class="bar" role="toolbar" aria-label="Thanh công cụ bài giảng (bản mẫu)">
+      <span class="title">Giới thiệu Limio</span>
+      <span class="tb"><span class="dot" aria-hidden="true"></span> Giao diện: Limio ▾</span>
+      <button type="button" class="tb hot" id="open"><span class="dot" id="tbdot" aria-hidden="true"></span> Thương hiệu <span id="tbstate" style="font-weight:400"></span></button>
+      <span class="tb" style="background:var(--brand-fill);color:#10200a;border-color:var(--brand-fill)">▶ Từ đầu</span>
+    </div>
+    <div class="canvas">
+      <div class="cap"><span>Xem trước (đúng như lúc chiếu)</span><span>Slide đang chọn: <b id="curname">Ba thẻ</b></span></div>
+      <div style="max-width:760px;margin:0 auto" id="canvas"></div>
+    </div>
+  </section>
+
+  <dialog id="dlg" aria-labelledby="dlgt">
+    <div class="dhead">
+      <h2 id="dlgt">Thương hiệu của bài giảng</h2>
+      <span class="info" id="saved" role="status">Đã lưu</span>
+      <button type="button" class="btn primary" data-close="1">Xong</button>
+    </div>
+    <div class="dbody">
+      <div class="pvcol">
+        <div class="tabs" role="group" aria-label="Xem thử trên các slide">
+          <button type="button" data-s="cover" aria-pressed="false">Bìa</button>
+          <button type="button" data-s="cards" aria-pressed="true">Ba thẻ</button>
+          <button type="button" data-s="quiz" aria-pressed="false">Trắc nghiệm</button>
+          <button type="button" data-s="summary" aria-pressed="false">Tóm tắt</button>
+          <span class="sp"></span>
+          <button type="button" data-dark="0" aria-pressed="true">Nền sáng</button>
+          <button type="button" data-dark="1" aria-pressed="false">Nền tối</button>
+        </div>
+        <div id="pv"></div>
+        <p class="info" style="margin:8px 2px 0">Xem thử trên nhiều slide để chắc logo và màu hợp ở mọi nơi. Logo chỉ hiện trên màn chiếu và bản xem trước, không hiện trên điện thoại học viên.</p>
+      </div>
+
+      <div class="form">
+        <section class="sec" aria-labelledby="h-logo">
+          <h3 id="h-logo">Logo</h3>
+          <div class="drop">
+            <div class="thumb" id="thumb"></div>
+            <div class="txt"><b id="logoname">Logo mẫu</b><small>PNG, JPG hoặc WebP, tối đa 5 MB. Nên dùng nền trong suốt.</small></div>
+            <label class="btn small" style="cursor:pointer">Tải lên<input type="file" id="file" accept="image/png,image/jpeg,image/webp" hidden></label>
+            <button type="button" class="btn small" id="rmlogo">Gỡ</button>
+          </div>
+        </section>
+
+        <section class="sec" id="logoopts" aria-labelledby="h-pos">
+          <h3 id="h-pos">Vị trí và cỡ</h3>
+          <div class="row">
+            <div class="corners" role="group" aria-label="Vị trí logo">
+              <button type="button" class="tl" data-pos="tl" aria-label="Góc trên trái" aria-pressed="false"></button>
+              <button type="button" class="tr" data-pos="tr" aria-label="Góc trên phải" aria-pressed="true"></button>
+              <button type="button" class="bl" data-pos="bl" aria-label="Góc dưới trái" aria-pressed="false"></button>
+              <button type="button" class="br" data-pos="br" aria-label="Góc dưới phải" aria-pressed="false"></button>
+            </div>
+            <div class="seg" role="group" aria-label="Cỡ logo">
+              <button type="button" data-size="s" aria-pressed="false">Nhỏ</button>
+              <button type="button" data-size="m" aria-pressed="true">Vừa</button>
+              <button type="button" data-size="l" aria-pressed="false">Lớn</button>
+            </div>
+          </div>
+          <h3 style="margin:16px 0 8px">Hiện ở</h3>
+          <div class="seg" role="group" aria-label="Hiện logo ở">
+            <button type="button" data-show="all" aria-pressed="true">Mọi slide</button>
+            <button type="button" data-show="nocover" aria-pressed="false">Trừ bìa</button>
+            <button type="button" data-show="ends" aria-pressed="false">Bìa và tóm tắt</button>
+          </div>
+        </section>
+
+        <section class="sec" aria-labelledby="h-color">
+          <h3 id="h-color">Màu thương hiệu</h3>
+          <p class="help">Thay màu nhấn (tiêu đề nổi, biểu tượng, nút, thanh tiến độ) trên giao diện đang dùng; nền slide giữ nguyên.</p>
+          <div class="swatches" role="group" aria-label="Màu gợi ý" id="sw"></div>
+          <div class="hex" style="margin-top:10px">
+            <input type="color" id="picker" aria-label="Chọn màu">
+            <input type="text" id="hexin" maxlength="7" aria-label="Mã màu" placeholder="#0A6EBD">
+            <button type="button" class="btn small" id="nocolor">Bỏ màu</button>
+          </div>
+          <div style="margin-top:10px" id="derived"></div>
+        </section>
+      </div>
+    </div>
+  </dialog>
+
+  <div class="changes">
+    <b>Cách hoạt động</b>
+    <ul>
+      <li>Một nút “Thương hiệu” cạnh nút “Giao diện”; mở ra hộp thoại có xem thử ngay, thay đổi tự lưu.</li>
+      <li>Logo đặt ở khung slide, không ở từng bố cục: nên hiện cả trên slide trắc nghiệm, bình chọn, bảng khi chiếu, và ở dải slide thu nhỏ. Nội dung slide tự chừa chỗ cho logo nên không bị chồng chữ.</li>
+      <li>Màu thương hiệu chỉ thay màu nhấn, cùng dùng được với mọi giao diện (kể cả nền tối). Hệ thống tự sinh các sắc phụ từ màu đã chọn và tự làm đậm hoặc sáng hơn nếu chữ khó đọc.</li>
+      <li>Phạm vi đợt này: theo từng bài giảng. Bước sau: “Lưu làm mặc định của đơn vị” để bài mới tự áp thương hiệu.</li>
+      <li>Chưa có trong đợt này: chân trang (tên đơn vị, số slide), phông chữ, tuỳ chọn riêng cho bìa, logo dạng SVG.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  var st = { logo: "sample", logoUrl: "", logoName: "Logo mẫu", pos: "tr", size: "m", show: "all", color: "#0A6EBD", slide: "cards", dark: false };
+  var COLORS = ["#0A6EBD", "#B91C1C", "#0F766E", "#7C3AED", "#C2410C", "#1D4ED8", "#047857", "#BE185D"];
+  var SIZES = { s: 6, m: 9, l: 13 };
+
+  /* ---- màu: HSL, độ tương phản ---- */
+  function hexToRgb(h) { var m = /^#?([0-9a-f]{6})$/i.exec(h); if (!m) return null; var n = parseInt(m[1], 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  function rgbToHex(r, g, b) { return "#" + [r, g, b].map(function (v) { return Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0"); }).join("").toUpperCase(); }
+  function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255; var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, h = 0, s = 0, d = mx - mn;
+    if (d) { s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; }
+    return [h, s, l];
+  }
+  function hslToHex(h, s, l) {
+    h = ((h % 360) + 360) % 360; var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2, r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; } else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
+    return rgbToHex((r + m) * 255, (g + m) * 255, (b + m) * 255);
+  }
+  function lum(hex) { var c = hexToRgb(hex).map(function (v) { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; }
+  function contrast(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
+  // Tạo bảng màu từ một màu: chỉnh độ sáng cho đủ tương phản (>= 4.5) với nền chữ.
+  function palette(hex, dark) {
+    var rgb = hexToRgb(hex); if (!rgb) return null;
+    var hsl = rgbToHsl(rgb[0], rgb[1], rgb[2]), h = hsl[0], s = Math.max(hsl[1], .35), l = hsl[2], bg = dark ? "#0B1020" : "#FFFFFF", adj = false;
+    var a = hslToHex(h, s, l);
+    while (contrast(a, bg) < 4.5 && l > .08 && l < .92) { l += dark ? .03 : -.03; a = hslToHex(h, s, l); adj = true; }
+    return {
+      adjusted: adj, sa: a, sa2: hslToHex(h + 24, s, Math.min(.5, Math.max(.32, l))),
+      soft: dark ? "rgba(255,255,255,.14)" : hslToHex(h, Math.min(s, .7), .92), soft2: dark ? "rgba(255,255,255,.08)" : hslToHex(h + 24, Math.min(s, .6), .95),
+      sg: "linear-gradient(120deg," + a + "," + hslToHex(h + 24, s, Math.min(.55, Math.max(.35, l))) + ")", sgb: "linear-gradient(135deg," + a + "," + hslToHex(h, s, dark ? l - .08 : l - .1) + ")",
+      on: contrast("#FFFFFF", a) >= 3 ? "#FFFFFF" : "#111111"
+    };
+  }
+
+  /* ---- logo ---- */
+  var SAMPLE = '<svg viewBox="0 0 120 40" aria-label="Logo mẫu"><rect x="1" y="2" width="36" height="36" rx="10" fill="#0A6EBD"/><path d="M10 28V12h8a6 6 0 0 1 0 12h-4" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round"/><text x="44" y="27" font-family="Be Vietnam Pro,Arial" font-weight="800" font-size="20" fill="currentColor">ĐƠN VỊ</text></svg>';
+  function logoHtml() { return st.logo === "sample" ? SAMPLE : st.logo === "file" ? '<img src="' + st.logoUrl + '" alt="Logo đơn vị">' : ""; }
+  function logoVisible(slide) {
+    if (st.logo === "none") return false;
+    if (st.show === "all") return true;
+    if (st.show === "nocover") return slide !== "cover";
+    return slide === "cover" || slide === "summary";
+  }
+  function logoBox(slide) {
+    if (!logoVisible(slide)) return "";
+    var h = SIZES[st.size], pad = 3.2, p = st.pos;
+    var css = "height:" + h + "cqw;" + (p[0] === "t" ? "top:" : "bottom:") + pad + "cqw;" + (p[1] === "l" ? "left:" : "right:") + pad + "cqw;";
+    return '<div class="logo" style="' + css + '">' + logoHtml() + "</div>";
+  }
+
+  /* ---- slide mẫu ---- */
+  function slideHtml(slide, dark) {
+    var h = "";
+    if (slide === "cover") h = '<h3 class="big"><span class="grad">Giới thiệu</span> nền tảng giảng dạy tương tác</h3><p>Một công cụ gom mọi hoạt động của buổi lên lớp.</p><div class="stack"><i></i><i></i><i></i></div>';
+    else if (slide === "cards") h = '<h3>Ba nhóm công cụ trong một nền tảng</h3><div class="cols">' + [["Dạy trực tiếp", "Trình chiếu và cho học viên tham gia ngay trên điện thoại."], ["Kiểm tra đánh giá", "Tổ chức ca thi, phòng thi và chấm điểm."], ["Theo dõi tiến bộ", "Xem kết quả từng học viên và gợi ý nội dung cần ôn."]].map(function (c) { return '<div class="card"><div class="badge"></div><b>' + c[0] + "</b>" + c[1] + "</div>"; }).join("") + "</div>";
+    else if (slide === "quiz") h = '<h3>Công cụ nào giúp thấy ngay học viên hiểu bài đến đâu?</h3><div class="opts">' + ["Bình chọn nhanh", "Chép lại bài", "Đám mây từ", "Giờ nghỉ dài"].map(function (o, i) { return '<div class="opt' + (i === 0 ? " on" : "") + '"><i>' + "ABCD"[i] + "</i>" + o + "</div>"; }).join("") + "</div>";
+    else h = '<h3>Những điều cần ghi nhớ</h3><ul><li>Limio gom mọi công cụ về một nơi.</li><li>AI giúp soạn bài từ tài liệu có sẵn.</li><li>Kết quả buổi học được lưu để xem lại.</li></ul>';
+    var p = st.color ? palette(st.color, dark) : null;
+    var style = p ? "--sa:" + p.sa + ";--sa2:" + p.sa2 + ";--ssoft:" + p.soft + ";--ssoft2:" + p.soft2 + ";--sg:" + p.sg + ";--sgb:" + p.sgb + ";--son:" + p.on + ";" : "";
+    // Chừa chỗ cho logo: nội dung dịch vào trong, không bị chồng chữ.
+    var room = "";
+    if (logoVisible(slide)) { var extra = SIZES[st.size] + 2.4; room = st.pos[0] === "t" ? "padding-top:" + (7 + extra) + "cqw;" : "padding-bottom:" + (6 + extra) + "cqw;"; }
+    return '<div class="lslide' + (dark ? " dark" : "") + '" style="' + style + '"><div class="in" style="' + room + '">' + h + "</div>" + logoBox(slide) + "</div>";
+  }
+
+  var NAMES = { cover: "Bìa", cards: "Ba thẻ", quiz: "Trắc nghiệm", summary: "Tóm tắt" };
+  function render() {
+    $("pv").innerHTML = slideHtml(st.slide, st.dark);
+    $("canvas").innerHTML = slideHtml("cards", false);
+    $("curname").textContent = "Ba thẻ";
+    $("thumb").innerHTML = st.logo === "none" ? '<span class="info">Chưa có</span>' : logoHtml();
+    $("logoname").textContent = st.logo === "none" ? "Chưa có logo" : st.logoName;
+    $("rmlogo").hidden = st.logo === "none";
+    $("logoopts").hidden = st.logo === "none";
+    document.querySelectorAll("[data-s]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.s === st.slide)); });
+    document.querySelectorAll("[data-dark]").forEach(function (b) { b.setAttribute("aria-pressed", String((b.dataset.dark === "1") === st.dark)); });
+    document.querySelectorAll("[data-pos]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.pos === st.pos)); });
+    document.querySelectorAll("[data-size]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.size === st.size)); });
+    document.querySelectorAll("[data-show]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.show === st.show)); });
+    $("sw").innerHTML = COLORS.map(function (c) { return '<button type="button" data-color="' + c + '" aria-pressed="' + (st.color === c) + '" aria-label="Màu ' + c + '" style="background:' + c + '"></button>'; }).join("") +
+      '<button type="button" class="none" data-color="" aria-pressed="' + (!st.color) + '" aria-label="Không dùng màu thương hiệu" title="Không dùng màu thương hiệu"></button>';
+    if (st.color) { $("picker").value = st.color.toLowerCase(); if (document.activeElement !== $("hexin")) $("hexin").value = st.color; } else if (document.activeElement !== $("hexin")) $("hexin").value = "";
+    var p = st.color ? palette(st.color, st.dark) : null;
+    $("derived").innerHTML = p ? '<div class="chips" aria-label="Bảng màu sinh từ màu đã chọn"><i style="background:' + p.sa + '"></i><i style="background:' + p.sa2 + '"></i><i style="background:' + p.soft + '"></i><i style="background:' + p.soft2 + '"></i></div>' +
+      (p.adjusted ? '<p class="note" style="margin:8px 0 0">Đã chỉnh màu ' + (st.dark ? "sáng" : "đậm") + " hơn một chút để chữ trên " + (st.dark ? "nền tối" : "nền sáng") + " vẫn dễ đọc.</p>" : '<p class="info" style="margin:8px 0 0">Màu này đủ độ tương phản trên giao diện đang xem thử.</p>') : '<p class="info" style="margin:0">Đang dùng màu nhấn của giao diện.</p>';
+    $("tbdot").style.background = st.color || "linear-gradient(135deg,#BEF264,#F9A8D4)";
+    $("tbstate").textContent = st.logo === "none" && !st.color ? "" : "· đã đặt";
+  }
+  function touch() { $("saved").textContent = "Đang lưu..."; clearTimeout(touch.t); touch.t = setTimeout(function () { $("saved").textContent = "Đã lưu"; }, 600); }
+
+  $("open").addEventListener("click", function () { $("dlg").showModal(); render(); });
+  $("dlg").addEventListener("click", function (e) { if (e.target === $("dlg")) $("dlg").close(); });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-close],[data-s],[data-dark],[data-pos],[data-size],[data-show],[data-color],#rmlogo,#nocolor");
+    if (!t) return;
+    if (t.dataset.close) { $("dlg").close(); return; }
+    if (t.dataset.s) st.slide = t.dataset.s;
+    else if (t.dataset.dark) st.dark = t.dataset.dark === "1";
+    else if (t.dataset.pos) { st.pos = t.dataset.pos; touch(); }
+    else if (t.dataset.size) { st.size = t.dataset.size; touch(); }
+    else if (t.dataset.show) { st.show = t.dataset.show; touch(); }
+    else if (t.dataset.color != null) { st.color = t.dataset.color; touch(); }
+    else if (t.id === "nocolor") { st.color = ""; touch(); }
+    else if (t.id === "rmlogo") { st.logo = "none"; touch(); }
+    render();
+  });
+  $("picker").addEventListener("input", function (e) { st.color = e.target.value.toUpperCase(); touch(); render(); });
+  $("hexin").addEventListener("input", function (e) { var v = e.target.value.trim(); if (v[0] !== "#") v = "#" + v; if (/^#[0-9a-f]{6}$/i.test(v)) { st.color = v.toUpperCase(); touch(); render(); } });
+  $("file").addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { $("saved").textContent = "Tệp quá lớn (tối đa 5 MB)"; return; }
+    if (st.logoUrl) URL.revokeObjectURL(st.logoUrl);
+    st.logo = "file"; st.logoUrl = URL.createObjectURL(f); st.logoName = f.name; touch(); render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

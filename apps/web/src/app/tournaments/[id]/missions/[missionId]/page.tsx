@@ -201,18 +201,23 @@ export default async function MissionDetailPage({
             {(() => {
               const beforeDeadline =
                 !mission.submissionDeadline || new Date() < mission.submissionDeadline;
-              if (!beforeDeadline) {
+              if (!beforeDeadline && !mission.allowLateSubmission) {
                 return submission ? null : (
                   <p className="text-sm text-muted">⏰ Đã hết hạn nộp bài.</p>
                 );
               }
               return (
                 <div className="space-y-2">
+                  {!beforeDeadline && (
+                    <p className="banner-warning text-sm">
+                      ⏰ Đã quá hạn nộp. Bạn vẫn nộp được, bài sẽ được đánh dấu <strong>Nộp muộn</strong>.
+                    </p>
+                  )}
                   {submission && (
                     <p className="text-sm font-semibold text-strong">
                       ✏️ Nộp lại bài
                       <span className="ml-1 font-normal text-muted">
-                        — bài mới sẽ thay bài cũ; được nộp lại đến hết hạn.
+                        — bài mới sẽ thay bài cũ; {mission.allowLateSubmission ? "nộp lại được cả sau hạn (đánh dấu Nộp muộn)." : "được nộp lại đến hết hạn."}
                       </span>
                     </p>
                   )}
@@ -222,6 +227,7 @@ export default async function MissionDetailPage({
                     quizId={mission.quiz?.id ?? null}
                     assignmentId={mission.assignment?.id ?? null}
                     submissionDeadlineIso={mission.submissionDeadline?.toISOString() ?? null}
+                    allowLate={mission.allowLateSubmission}
                     hackathonMode={isCollective}
                   />
                 </div>
@@ -247,6 +253,7 @@ function SubmissionStatusBlock({
     status: string;
     finalScore: number | null;
     submittedAt: Date;
+    isLate: boolean;
     reviewAssignments: { completedAt: Date | null }[];
   };
   verifyMode: string | null;
@@ -289,13 +296,18 @@ function SubmissionStatusBlock({
         )}
         {verifyMode === "PEER_REVIEW" && submission.status === "pending" && (
           <p className="mt-1 text-sm">
-            Review hoàn thành: {completed} / {peerReviewerCount ?? total}.
-            <span className="ml-1 text-faint">XP reviewer sẽ award khi window đóng.</span>
+            Số lượt chấm đã xong: {completed} / {peerReviewerCount ?? total}.
+            <span className="ml-1 text-faint">Điểm XP cho người chấm sẽ được cộng khi hết thời gian chấm.</span>
           </p>
         )}
       </div>
       <p className="text-xs text-faint">
         Nộp lúc: {formatDateTime(submission.submittedAt)}
+        {submission.isLate && (
+          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+            Nộp muộn
+          </span>
+        )}
       </p>
       {verifyMode === "PEER_REVIEW" && submission.status === "pending" && (
         <a
@@ -321,10 +333,10 @@ function SubmissionStatusBlock({
           <div className="rounded-xl border border-token">
             <div className="border-b border-token bg-[rgb(var(--surface-muted))] px-3 py-2">
               <p className="text-sm font-semibold">
-                💬 Nhận xét bạn nhận được ({feedback.length} reviewer)
+                💬 Nhận xét bạn nhận được ({feedback.length} người chấm)
               </p>
               <p className="text-[11px] text-faint">
-                Ẩn danh người chấm. Hiện ngay khi reviewer nộp; điểm cuối là trung
+                Người chấm được ẩn danh. Nhận xét hiện ngay khi người chấm nộp; điểm cuối là trung
                 vị các đánh giá (sau khi chốt).
               </p>
             </div>

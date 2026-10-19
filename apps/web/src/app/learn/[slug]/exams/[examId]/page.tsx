@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import {
@@ -9,6 +10,8 @@ import {
 import { auth } from "@/lib/auth";
 import ExamPreRoom from "@/components/exam/ExamPreRoom";
 import ExamRoomChrome from "@/components/exam/ExamRoomChrome";
+import NetworkBlocked from "@/components/exam/NetworkBlocked";
+import { checkExamNetwork } from "@/lib/exam-network";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +140,17 @@ export default async function ExamLandingPage({
       );
     }
   }
+
+  // Giới hạn mạng của trường (nếu có) — bước này bắt đầu lượt làm ngay trong
+  // server component nên không đi qua API /api/exams/[id]/attempts.
+  const net = await checkExamNetwork(params.examId, headers());
+  if (!net.allowed)
+    return (
+      <NetworkBlocked
+        displayName={session.user.name ?? session.user.email ?? ""}
+        examTitle={exam.title}
+      />
+    );
 
   try {
     const r = await startExamAttempt(session.user.id, params.examId);

@@ -3,6 +3,7 @@ import { NOINDEX } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import { isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import LanguageLeftMenu from "@/components/LanguageLeftMenu";
@@ -10,6 +11,8 @@ import { getAppMode } from "@/lib/appMode.server";
 import { getLanguageTeacherBadges } from "@/lib/languageBadges";
 import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 import InstructorContentFrame from "./InstructorContentFrame";
+import { AssistantProvider } from "@/components/assistant/AssistantProvider";
+import AssistantLauncher from "@/components/assistant/AssistantLauncher";
 
 // Khu vực cần đăng nhập → không bao giờ index. `middleware.ts` đã gắn
 // `X-Robots-Tag` cho cùng nhóm route; thẻ meta này là lớp thứ hai, phòng khi
@@ -39,6 +42,20 @@ const getInstructorRoles = unstable_cache(
   { revalidate: 60, tags: ["user-roles"] },
 );
 
+// Khoá giảng viên chỉnh gần nhất, cho câu gợi ý "Mở khoá học …" của Lily. Chỉ cần tên, cache 60s như role.
+const getRecentCourseTitle = unstable_cache(
+  async (userId: string) => {
+    const c = await prisma.course.findFirst({
+      where: { instructors: { some: { userId } } },
+      orderBy: { updatedAt: "desc" },
+      select: { title: true },
+    });
+    return c?.title ?? null;
+  },
+  ["instructor-layout-recent-course"],
+  { revalidate: 60 },
+);
+
 export default async function InstructorLayout({
   children,
 }: {
@@ -65,24 +82,30 @@ export default async function InstructorLayout({
     );
   }
 
+  const recentCourseTitle = hasInstructorRole ? await getRecentCourseTitle(session.user.id) : null;
   // LANG L2 — vỏ Limio Language: menu rút gọn thay cho menu giảng viên đầy đủ. Nội dung và quyền không đổi.
   const languageMode = getAppMode() === "language";
+
   return (
     <ActiveNavSectionProvider>
-      <div className="flex w-full">
-        {languageMode ? (
-          <LanguageLeftMenu role="teacher" badges={await getLanguageTeacherBadges(session.user.id)} />
-        ) : (
+      {/* Limio, trợ lý ảo của giảng viên: một cuộc trò chuyện dùng chung cho nút nổi ở mọi trang giảng viên. */}
+      <AssistantProvider userId={session.user.id} recentCourseTitle={recentCourseTitle}>
+        <div className="flex w-full">
+          {languageMode ? (
+            <LanguageLeftMenu role="teacher" badges={await getLanguageTeacherBadges(session.user.id)} />
+          ) : (
           <InstructorLeftMenu
             isInstructor={hasInstructorRole}
             isProctor={isProctor}
             isResearcher={hasResearcherRole}
           />
-        )}
-        <div className="min-w-0 flex-1">
-          <InstructorContentFrame>{children}</InstructorContentFrame>
+          )}
+          <div className="min-w-0 flex-1">
+            <InstructorContentFrame>{children}</InstructorContentFrame>
+          </div>
         </div>
-      </div>
+        <AssistantLauncher />
+      </AssistantProvider>
     </ActiveNavSectionProvider>
   );
 }

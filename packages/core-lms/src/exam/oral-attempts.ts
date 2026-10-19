@@ -4,7 +4,6 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 import { assertCanEditExam } from "../courses/authz";
 import { assertEligibleForExam } from "./cohorts";
-import { ensureDefaultRound } from "./exam-rooms";
 import { publishExam } from "./exams";
 import { isSessionOpen } from "./session-window";
 import { pickOralTopicForAttempt } from "./oral-topics";
@@ -224,7 +223,7 @@ export async function openOralExamSession(
     throw new ExamError("exam_not_draft");
   }
 
-  const roundId = await ensureDefaultRound(examId, db);
+  // Vấn đáp là buổi đơn: không có đợt (roundId null).
   const existing = await db.examSession.findFirst({
     where: { examId },
     orderBy: [{ opensAt: "asc" }, { createdAt: "asc" }],
@@ -244,7 +243,6 @@ export async function openOralExamSession(
         const s = await db.examSession.create({
           data: {
             examId,
-            roundId,
             accessMode: "authenticated",
             timingMode: "manual",
             status: "open",

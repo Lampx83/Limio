@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu: sửa dàn ý bài giảng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --talk: #1d4ed8; --talk-soft: #e3ecff;
+    --warn-bg: #fff4d6; --warn-ink: #7a4a00; --ok-bg: #e4f5dd; --ok-ink: #1f5a14; --bad: #b42318;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 10px 26px -14px rgb(28 36 16 / .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+      --brand: #a3e635; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16;
+      --talk: #9db8ff; --talk-soft: #1f2a4a;
+      --warn-bg: #3a2c0a; --warn-ink: #f6d58a; --ok-bg: #1d3318; --ok-ink: #b7ecab; --bad: #ff9b8f;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 16px;
+    font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
+
+  /* ---------- đầu trang ---------- */
+  .steps { display: flex; flex-wrap: wrap; gap: 6px 22px; padding: 14px 0 0; font-size: 14px; color: var(--ink-3); }
+  .steps b { color: var(--ink); }
+  .steps .done::before { content: "Xong · "; color: var(--ok-ink); font-weight: 600; }
+  .steps .now { color: var(--brand); font-weight: 700; border-bottom: 2px solid var(--brand-fill); padding-bottom: 2px; }
+  h1 { font-size: 26px; line-height: 1.25; margin: 14px 0 2px; }
+  .sub { margin: 0; color: var(--ink-3); font-size: 15px; }
+
+  .bar { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 12px 16px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; font-size: 15px; }
+  .bar select { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 4px 8px; }
+  .bar .saved { margin-left: auto; color: var(--ink-3); font-size: 14px; }
+  .warn { margin-top: 10px; padding: 10px 16px; background: var(--warn-bg); color: var(--warn-ink); border-radius: 12px; font-size: 15px; }
+
+  /* ---------- danh sách ---------- */
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+  .list-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
+  .list-head h2 { font-size: 16px; margin: 0; }
+  .list-head span { color: var(--ink-3); font-size: 14px; }
+  ol.rows { list-style: none; margin: 0; padding: 6px 8px 8px; }
+  .row { display: grid; grid-template-columns: 22px 28px 46px 1fr auto; gap: 0 10px; align-items: center; padding: 9px 8px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; }
+  .row:hover { background: var(--surface-2); }
+  .row .edit { font-size: 13px; font-weight: 600; color: var(--brand); padding: 5px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .row:hover .edit { border-color: var(--brand-fill); }
+  .row[aria-current="true"] { background: var(--brand-soft); border-color: var(--brand-fill); }
+  .row.dragging { opacity: .4; }
+  .row.over { border-color: var(--ink); }
+  .grip { color: var(--ink-3); cursor: grab; text-align: center; line-height: 1; user-select: none; font-size: 15px; letter-spacing: -2px; }
+  .num { font-weight: 700; color: var(--ink-3); font-variant-numeric: tabular-nums; text-align: right; }
+  .row[aria-current="true"] .num { color: var(--brand-strong); }
+  .glyph { width: 46px; height: 30px; color: var(--ink-3); }
+  .row[aria-current="true"] .glyph { color: var(--brand-strong); }
+  .row.talk .glyph { color: var(--talk); }
+  .row .t { min-width: 0; }
+  .row .t b { display: block; font-weight: 600; font-size: 15px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .t small { display: block; color: var(--ink-3); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row.talk .t small { color: var(--talk); font-weight: 500; }
+  .row.sec { background: var(--surface-2); }
+  .row.sec .t b { font-weight: 700; }
+  .add { display: grid; gap: 10px; padding: 10px 8px 16px; border-top: 1px dashed var(--line); margin: 0 8px; }
+  .add > .btn { justify-self: start; }
+  .addpanel { display: grid; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2); }
+  .kgrp { display: grid; gap: 6px; }
+  .kcap { font-size: 13px; font-weight: 700; color: var(--ink-3); }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-size: 14px; font-weight: 500; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--brand-fill); border-color: var(--brand-fill); color: #10200a; font-weight: 700; }
+  .btn.primary:hover { filter: brightness(1.05); background: var(--brand-fill); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn.danger { color: var(--bad); }
+
+  /* ---------- cửa sổ sửa một slide ---------- */
+  dialog#dlg { width: min(1040px, 96vw); max-width: 96vw; max-height: 94vh; padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--ink); box-shadow: 0 30px 80px -20px rgb(0 0 0 / .5); overflow: hidden; }
+  dialog#dlg[open] { display: flex; flex-direction: column; }
+  dialog#dlg::backdrop { background: rgb(20 26 12 / .55); }
+  #editor { display: flex; flex-direction: column; min-height: 0; max-height: 94vh; width: 100%; }
+  .ehead { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+  .ehead h2 { margin: 0; font-size: 18px; flex: 1; min-width: 120px; }
+  .ehead .ico { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; width: 38px; height: 38px; display: inline-grid; place-items: center; font-size: 17px; }
+  .ehead .ico:hover:not(:disabled) { background: var(--surface-2); }
+  .ehead .ico:disabled { opacity: .35; cursor: not-allowed; }
+  .ehead .sepv { width: 1px; height: 24px; background: var(--line); margin: 0 2px; }
+  .ebody { padding: 18px; display: grid; gap: 20px; overflow: auto; flex: 1; min-height: 0; }
+  .ebody .side { max-width: 560px; width: 100%; justify-self: center; }
+  @media (min-width: 900px) { .ebody { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; } .ebody .side { position: sticky; top: 0; max-width: none; justify-self: stretch; } }
+  @media (max-width: 640px) {
+    dialog#dlg { width: 100vw; max-width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; border: 0; }
+    #editor { max-height: 100dvh; height: 100%; }
+    .row .edit { display: none; }
+  }
+  .field { display: grid; gap: 6px; }
+  .field > label, .field > .lab { font-size: 14px; font-weight: 600; color: var(--ink-2); display: flex; justify-content: space-between; gap: 8px; }
+  .field .count { font-weight: 400; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .field .count.over { color: var(--bad); font-weight: 600; }
+  .input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px; font-size: 16px; line-height: 1.45; }
+  textarea.input { resize: none; overflow: hidden; display: block; }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: none; padding: 8px 14px; border-radius: 9px; font-size: 14px; font-weight: 500; color: var(--ink-2); }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 3px rgb(0 0 0 / .14); }
+  .pickers { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .pk { display: flex; align-items: center; gap: 10px; text-align: left; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px 7px 9px; background: var(--surface-2); color: var(--ink); min-width: 0; }
+  .pk:hover { border-color: var(--brand-fill); }
+  .pk[aria-expanded="true"] { border-color: var(--brand-fill); background: var(--brand-soft); box-shadow: inset 0 0 0 1px var(--brand-fill); }
+  .pk .glyph { flex: none; width: 42px; height: 28px; color: var(--brand-strong); }
+  .pk .ct { flex: 1; min-width: 0; display: grid; line-height: 1.2; }
+  .pk .ct small { font-size: 12px; color: var(--ink-3); font-weight: 600; }
+  .pk .ct b { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pk i { flex: none; font-style: normal; color: var(--ink-2); font-size: 20px; line-height: 1; transition: transform .15s; }
+  .pk[aria-expanded="true"] i { transform: rotate(180deg); }
+  .pick { margin-top: 0; display: grid; gap: 10px; }
+  .layouts { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+  .layouts button { border: 1px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 6px 7px; display: grid; justify-items: center; gap: 3px; font-size: 13px; line-height: 1.25; color: var(--ink-2); }
+  .layouts button:hover { background: var(--surface-2); }
+  .layouts button[aria-pressed="true"] { border-color: var(--brand-fill); background: var(--brand-soft); color: var(--ink); font-weight: 700; box-shadow: inset 0 0 0 1px var(--brand-fill); }
+  .layouts.compact { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
+  .layouts.compact button { padding: 6px 4px 5px; font-size: 12.5px; border-radius: 10px; }
+  .layouts.compact .glyph { height: 30px; }
+  .layouts .glyph { width: 100%; height: 40px; color: var(--ink-3); }
+  .layouts button[aria-pressed="true"] .glyph { color: var(--brand-strong); }
+  .layout-hint { margin: 0; color: var(--ink-3); font-size: 14px; }
+  .pt { display: grid; grid-template-columns: 26px 1fr 30px; gap: 8px; align-items: start; }
+  .pt .n { margin-top: 9px; width: 24px; height: 24px; border-radius: 50%; background: var(--surface-2); color: var(--ink-2); font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+  .pt .body { display: grid; gap: 6px; }
+  .pt .x { margin-top: 5px; border: 0; background: none; color: var(--ink-3); font-size: 20px; line-height: 1; width: 30px; height: 30px; border-radius: 8px; }
+  .pt .x:hover { color: var(--bad); background: var(--surface-2); }
+  .pt .sublab { font-size: 13px; color: var(--ink-3); margin-bottom: -2px; }
+  .need { font-size: 14px; color: var(--ink-3); }
+  .need.off { color: var(--warn-ink); background: var(--warn-bg); padding: 2px 8px; border-radius: 6px; }
+  .tip { padding: 10px 14px; border-radius: 12px; background: var(--talk-soft); color: var(--ink); font-size: 14px; }
+  .linkbtn { border: 0; background: none; color: var(--brand); font-weight: 600; padding: 4px 0; text-align: left; font-size: 15px; }
+  .linkbtn:hover { text-decoration: underline; }
+
+  /* bản xem trước 16:9 (chỉ để hình dung bố cục, không phải slide thật) */
+  .pv-wrap { display: grid; gap: 8px; }
+  .pv-wrap .cap { font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .pv-wrap .note { font-size: 13px; color: var(--ink-3); margin: 0; }
+  .pv { container-type: inline-size; aspect-ratio: 16 / 9; width: 100%; border-radius: 12px; border: 1px solid var(--line); background: #fffdf7; color: #24301a; overflow: hidden; position: relative; }
+  .pv .in { position: absolute; inset: 0; padding: 6cqw 6.5cqw; display: flex; flex-direction: column; justify-content: safe center; gap: 2.4cqw; }
+  .pv h3 { margin: 0; font-size: 5.6cqw; line-height: 1.18; font-weight: 700; }
+  .pv .big { font-size: 7.6cqw; }
+  .pv p { margin: 0; font-size: 3.5cqw; line-height: 1.35; }
+  .pv ul { margin: 0; padding-left: 4.5cqw; display: grid; gap: 1.4cqw; font-size: 3.3cqw; line-height: 1.32; }
+  .pv .cols { display: grid; gap: 2.6cqw; }
+  .pv .c3 { grid-template-columns: repeat(3, 1fr); }
+  .pv .c2 { grid-template-columns: repeat(2, 1fr); }
+  .pv .card { background: #f0f5e0; border-radius: 1.6cqw; padding: 2.2cqw; font-size: 2.7cqw; line-height: 1.3; }
+  .pv .card b { display: block; font-size: 3cqw; margin-bottom: .6cqw; }
+  .pv .split { display: grid; grid-template-columns: 1.25fr 1fr; gap: 3cqw; align-items: center; }
+  .pv .pic { aspect-ratio: 4 / 3; border-radius: 1.6cqw; background: repeating-linear-gradient(135deg, #e3ebcf 0 1.6cqw, #edf3dc 1.6cqw 3.2cqw); }
+  .pv .stepn { width: 5cqw; height: 5cqw; border-radius: 50%; background: #65a30d; color: #fff; font-weight: 700; font-size: 2.8cqw; display: grid; place-items: center; margin-bottom: 1cqw; }
+  .pv .quote { font-size: 5cqw; line-height: 1.3; font-weight: 600; border-left: 1cqw solid #65a30d; padding-left: 3cqw; }
+  .pv .stat { font-size: 7cqw; font-weight: 700; color: #3f6212; line-height: 1; }
+  .pv .tag { font-size: 2.6cqw; color: #6b7660; font-weight: 600; }
+  .pv.talkpv { background: #eef2ff; }
+  .pv.empty .in { color: #8a9479; }
+
+  /* ---------- khối xác nhận ---------- */
+  .confirm { margin-top: 16px; padding: 18px; display: grid; gap: 12px; border: 2px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .confirm h2 { margin: 0; font-size: 18px; }
+  .confirm .check { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; }
+  .confirm .check input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--brand-fill); }
+  .okmsg { padding: 10px 14px; border-radius: 12px; background: var(--ok-bg); color: var(--ok-ink); font-weight: 600; font-size: 15px; }
+  .muted { color: var(--ink-3); font-size: 15px; margin: 0; }
+  .intro { margin: 10px 0 0; max-width: 780px; color: var(--ink-2); font-size: 15px; }
+  .changes { margin: 18px 0 0; padding: 14px 18px; background: var(--brand-soft); border-radius: 14px; font-size: 14px; color: var(--ink-2); }
+  .changes b { color: var(--ink); }
+  .changes ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 3px; }
+  footer.gap { height: 56px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="steps" aria-label="Các bước">
+    <span class="done">Tài liệu gốc</span>
+    <span class="now" aria-current="step">Dàn ý</span>
+    <span>Slide cuối</span>
+  </nav>
+  <h1>Dàn ý bài giảng</h1>
+  <p class="sub">Giới thiệu Limio · từ tài liệu “limio-gioi-thieu.docx”</p>
+  <p class="intro">Bấm vào một slide trong danh sách để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI. Khi dàn ý ổn, xác nhận ở cuối trang để AI viết slide.</p>
+
+  <div class="bar" role="group" aria-label="Tổng quan dàn ý">
+    <span id="stat"></span>
+    <label>Buổi giảng
+      <select id="minutes" aria-label="Thời lượng buổi giảng">
+        <option value="15">15 phút</option><option value="30" selected>30 phút</option><option value="45">45 phút</option>
+      </select>
+    </label>
+    <span class="sub" id="range"></span>
+    <span class="saved" role="status" id="saved">Đã lưu</span>
+  </div>
+  <div class="warn" id="warn" hidden></div>
+
+  <section class="panel" aria-labelledby="lh" style="margin-top:16px">
+    <div class="list-head"><h2 id="lh">Danh sách slide</h2><span>Bấm vào một slide để sửa · kéo ⋮⋮ để đổi thứ tự</span></div>
+    <ol class="rows" id="rows"></ol>
+    <div class="add" id="add"></div>
+  </section>
+
+  <dialog id="dlg" aria-labelledby="dlgt"><div id="editor"></div></dialog>
+
+  <section class="confirm" aria-labelledby="ch">
+    <h2 id="ch">Xác nhận dàn ý</h2>
+    <div id="confirm"></div>
+  </section>
+
+  <div class="changes">
+    <b>Điểm khác so với bản hiện tại</b>
+    <ul>
+      <li>Danh sách chỉ giữ một dòng mỗi slide để thấy cả bài; bấm vào một slide mới mở cửa sổ sửa riêng (loại slide, bố cục, nội dung, xem trước). Loại slide và bố cục chỉ hiện lựa chọn hiện tại, bấm “Đổi” mới mở lưới hình để chọn lại. Nút ‹ › trong cửa sổ để sang slide kế bên mà không phải đóng.</li>
+      <li>Thêm ba loại tương tác đang có trong Limio-Live: Dán Note (kiểu Padlet), Draw-it và Whiteboard; loại slide chọn bằng một hàng hình gọn (sắp theo thứ tự: nội dung, hỏi và lấy ý kiến, cộng tác trên bảng), dùng đúng tên như bộ chọn loại slide hiện tại.</li>
+      <li>Bố cục chọn bằng hình thay cho ô thả xuống, kèm bản xem trước bố cục với đúng chữ vừa gõ.</li>
+      <li>Ô ý chính có nhãn theo bố cục (Thẻ 1, Bước 2, Cách làm A...) và tự giãn theo độ dài câu.</li>
+      <li>Trên điện thoại, cửa sổ sửa hiện toàn màn hình.</li>
+    </ul>
+  </div>
+  <footer class="gap"></footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var LAYOUTS = {
+    cover:   { label: "Bìa",              hint: "Slide đầu: tiêu đề lớn và một dòng mô tả ngắn.", need: "1 ý", min: 1, max: 1 },
+    section: { label: "Mở phần",          hint: "Đánh dấu bắt đầu một phần lớn của bài.", need: "0 đến 1 ý", min: 0, max: 1 },
+    image:   { label: "Chữ và hình",      hint: "Một ý chính kèm tối đa ba ý hỗ trợ; bên phải là hình minh hoạ.", need: "1 đến 3 ý", min: 1, max: 3 },
+    cards:   { label: "Ba thẻ",           hint: "Ba ý song song; mỗi thẻ có tiêu đề ngắn và một câu giải thích.", need: "3 ý", min: 3, max: 3 },
+    compare: { label: "So sánh hai cột",  hint: "Đối chiếu hai cách làm hoặc hai khái niệm.", need: "2 ý", min: 2, max: 2 },
+    steps:   { label: "Các bước",         hint: "Một quy trình; mỗi ý là một bước.", need: "3 đến 5 ý", min: 3, max: 5 },
+    stats:   { label: "Số liệu",          hint: "Chỉ dùng khi con số có trong tài liệu gốc.", need: "2 đến 4 ý", min: 2, max: 4 },
+    quote:   { label: "Trích dẫn",        hint: "Một thông điệp hoặc câu trích có trong tài liệu.", need: "1 ý", min: 1, max: 1 },
+    summary: { label: "Tóm tắt",          hint: "Slide nội dung cuối: những điều cần ghi nhớ.", need: "3 đến 5 ý", min: 3, max: 5 }
+  };
+  var POINT_LABEL = {
+    cover: ["Mô tả ngắn"], section: ["Mô tả ngắn"], image: ["Ý chính", "Ý hỗ trợ 1", "Ý hỗ trợ 2", "Ý hỗ trợ 3"],
+    cards: ["Thẻ 1", "Thẻ 2", "Thẻ 3"], compare: ["Cách làm A", "Cách làm B"],
+    steps: ["Bước 1", "Bước 2", "Bước 3", "Bước 4", "Bước 5"], stats: ["Số liệu 1", "Số liệu 2", "Số liệu 3", "Số liệu 4"],
+    quote: ["Thông điệp"], summary: ["Điều cần nhớ 1", "Điều cần nhớ 2", "Điều cần nhớ 3", "Điều cần nhớ 4", "Điều cần nhớ 5"]
+  };
+  var SPLIT = { cards: 1, steps: 1 };
+  var KINDS = { content: "Nội dung", quiz: "Trắc nghiệm", poll: "Vote", word_cloud: "Word Cloud", collaborate_board: "Dán Note", draw: "Draw-it (vẽ)", whiteboard: "Whiteboard" };
+  var KIND_GROUPS = [
+    ["Trình bày", ["content"]],
+    ["Hỏi và lấy ý kiến", ["quiz", "poll", "word_cloud"]],
+    ["Cộng tác trên bảng", ["collaborate_board", "draw", "whiteboard"]]
+  ];
+  var KIND_TITLE = { content: "Tiêu đề", quiz: "Câu hỏi", poll: "Câu hỏi bình chọn", word_cloud: "Câu gợi ý cho học viên", collaborate_board: "Yêu cầu cho học viên", draw: "Yêu cầu vẽ", whiteboard: "Yêu cầu cho cả lớp" };
+  var KIND_HINT = {
+    quiz: "Học viên trả lời trên điện thoại. Các lựa chọn đáp án sẽ do AI soạn ở bước tạo slide, bạn sửa được sau.",
+    poll: "Học viên bình chọn trên điện thoại. Các lựa chọn sẽ do AI soạn ở bước tạo slide, bạn sửa được sau.",
+    word_cloud: "Học viên gõ một từ hoặc cụm từ; kết quả hiện thành đám mây từ trên màn chiếu.",
+    collaborate_board: "Bảng cộng tác kiểu Padlet: học viên dán ghi chú lên một bảng chung, cả lớp cùng xem. Bảng sẽ được tạo sẵn ở bước tạo slide.",
+    draw: "Mỗi học viên tự vẽ một hình rồi đăng lên bảng chung. Phù hợp khi muốn mỗi người có một sản phẩm riêng.",
+    whiteboard: "Cả lớp cùng vẽ lên một khung trắng chung; tên người vẽ hiện cạnh nét vẽ. Phù hợp khi cần phác một sơ đồ cùng nhau."
+  };
+  var KIND_USE = {
+    collaborate_board: "Dùng khi cần thu nhiều ý ngắn từ cả lớp (ví dụ: mỗi bạn nêu một ví dụ).",
+    draw: "Dùng khi mỗi người cần tự thể hiện một hình dung bằng hình vẽ.",
+    whiteboard: "Dùng khi cả lớp cùng phác một sơ đồ hoặc giải một bài trên một khung."
+  };
+  var RANGE = { 15: [8, 10], 30: [14, 18], 45: [20, 25] };
+  var MAXPT = 5, MAXLEN = 200;
+
+  var slides = [
+    s("content", "cover", "Limio: nền tảng giảng dạy tương tác", ["Một công cụ gom mọi hoạt động của buổi lên lớp."]),
+    s("content", "image", "Những vướng mắc của một buổi lên lớp thông thường", [
+      "Giảng viên phải chuyển qua lại giữa nhiều phần mềm trong cùng một buổi.",
+      "Học viên khó tham gia khi mọi tương tác chỉ diễn ra bằng giơ tay.",
+      "Kết quả của buổi học thường không được lưu lại để xem sau."]),
+    s("content", "image", "Giải pháp All-in-one của Limio", [
+      "Limio gom mọi công cụ cần thiết cho một buổi lên lớp về một nơi duy nhất.",
+      "Nền tảng này tích hợp AI thế hệ mới để hỗ trợ cả hình thức trực tuyến và trực tiếp.",
+      "Limio được thiết kế để giải quyết hoàn toàn các nỗi đau trong quy trình giảng dạy truyền thống."]),
+    s("collaborate_board", null, "Mỗi thầy cô hãy dán một vướng mắc thường gặp khi lên lớp.", []),
+    s("word_cloud", null, "Thầy cô mong muốn điều gì nhất ở một buổi lên lớp?", []),
+    s("content", "section", "Các tính năng chính", ["Ba nhóm công cụ giảng viên dùng hằng ngày."]),
+    s("content", "cards", "Ba nhóm công cụ trong một nền tảng", [
+      "Dạy trực tiếp: Trình chiếu bài giảng và cho học viên tham gia ngay trên điện thoại.",
+      "Kiểm tra đánh giá: Tổ chức bài kiểm tra và thi có ca thi, phòng thi và chấm điểm.",
+      "Theo dõi tiến bộ: Xem kết quả từng học viên và gợi ý nội dung cần ôn lại."]),
+    s("content", "steps", "Từ tài liệu đến bài giảng tương tác", [
+      "Tải tài liệu: Chọn tệp Word hoặc PDF làm nguồn cho bài giảng.",
+      "Duyệt dàn ý: AI đề xuất dàn ý và giảng viên chỉnh lại cho đúng ý mình.",
+      "Tạo slide: AI viết nội dung và ghi chú giảng cho từng slide theo dàn ý.",
+      "Giảng và theo dõi: Chiếu bài, cho học viên tham gia và xem kết quả sau buổi."]),
+    s("whiteboard", null, "Cả lớp cùng phác sơ đồ các bước soạn một bài giảng.", []),
+    s("quiz", null, "Bước nào giảng viên cần tự duyệt trước khi AI viết slide?", []),
+    s("content", "compare", "Soạn bài thủ công và soạn bài với Limio", [
+      "Soạn thủ công: Giảng viên tự dựng từng slide, tự nghĩ câu hỏi tương tác.",
+      "Soạn với Limio: AI dựng bản đầu từ tài liệu, giảng viên chỉ cần rà soát và chỉnh."]),
+    s("draw", null, "Mỗi thầy cô hãy vẽ nhanh hình dung của mình về một buổi lên lớp lý tưởng.", []),
+    s("poll", null, "Thầy cô muốn thử Limio ở học phần nào trước tiên?", []),
+    s("content", "quote", "Thông điệp chốt", ["Mỗi buổi giảng đều có thể trở thành một cuộc đối thoại."]),
+    s("content", "summary", "Những điều cần ghi nhớ", [
+      "Limio gom công cụ giảng dạy về một nơi.",
+      "AI dựng bản đầu, giảng viên giữ quyền quyết định nội dung.",
+      "Học viên tham gia ngay trên điện thoại, không cần cài thêm gì."])
+  ];
+  function s(kind, layout, title, points) { return { id: "s" + Math.random().toString(36).slice(2, 8), kind: kind, layout: layout, title: title, points: points }; }
+
+  var sel = 3, confirmed = false, reviewed = false, addOpen = false, openKind = false, openLay = false;
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ---- hình bố cục thu nhỏ (khung dây) ---- */
+  function glyph(k) {
+    var f = 'fill="currentColor"', o = 'fill="currentColor" opacity=".32"';
+    var box = '<rect x="1" y="1" width="46" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".7"/>';
+    var g = {
+      cover: '<rect x="8" y="10" width="26" height="5" rx="1.5" ' + f + '/><rect x="8" y="19" width="16" height="3" rx="1.5" ' + o + '/>',
+      section: '<rect x="8" y="13" width="22" height="5" rx="1.5" ' + f + '/><rect x="8" y="22" width="30" height="2.5" rx="1" ' + o + '/><rect x="8" y="7" width="8" height="2.5" rx="1" ' + o + '/>',
+      image: '<rect x="6" y="6" width="18" height="4" rx="1.5" ' + f + '/><rect x="6" y="14" width="20" height="2.5" rx="1" ' + o + '/><rect x="6" y="19" width="20" height="2.5" rx="1" ' + o + '/><rect x="6" y="24" width="14" height="2.5" rx="1" ' + o + '/><rect x="30" y="8" width="12" height="16" rx="2" ' + o + '/>',
+      cards: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="13" width="11" height="14" rx="2" ' + o + '/><rect x="18.5" y="13" width="11" height="14" rx="2" ' + o + '/><rect x="31" y="13" width="11" height="14" rx="2" ' + o + '/>',
+      compare: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="13" width="17" height="14" rx="2" ' + o + '/><rect x="25" y="13" width="17" height="14" rx="2" ' + o + '/>',
+      steps: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><circle cx="10" cy="17" r="3" ' + f + '/><circle cx="24" cy="17" r="3" ' + f + '/><circle cx="38" cy="17" r="3" ' + f + '/><rect x="6" y="23" width="9" height="2.5" rx="1" ' + o + '/><rect x="20" y="23" width="9" height="2.5" rx="1" ' + o + '/><rect x="33" y="23" width="9" height="2.5" rx="1" ' + o + '/>',
+      stats: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="14" width="10" height="8" rx="1.5" ' + f + '/><rect x="19" y="14" width="10" height="8" rx="1.5" ' + f + '/><rect x="32" y="14" width="10" height="8" rx="1.5" ' + f + '/><rect x="6" y="25" width="10" height="2" rx="1" ' + o + '/><rect x="19" y="25" width="10" height="2" rx="1" ' + o + '/><rect x="32" y="25" width="10" height="2" rx="1" ' + o + '/>',
+      quote: '<rect x="8" y="8" width="3" height="16" rx="1.5" ' + f + '/><rect x="14" y="9" width="26" height="4" rx="1.5" ' + f + '/><rect x="14" y="16" width="20" height="4" rx="1.5" ' + o + '/>',
+      summary: '<rect x="6" y="5" width="22" height="4" rx="1.5" ' + f + '/><rect x="6" y="14" width="3" height="3" rx="1" ' + f + '/><rect x="12" y="14" width="26" height="3" rx="1" ' + o + '/><rect x="6" y="20" width="3" height="3" rx="1" ' + f + '/><rect x="12" y="20" width="22" height="3" rx="1" ' + o + '/><rect x="6" y="26" width="3" height="3" rx="1" ' + f + '/><rect x="12" y="26" width="18" height="3" rx="1" ' + o + '/>',
+      quiz: '<rect x="8" y="6" width="26" height="4" rx="1.5" ' + f + '/><rect x="8" y="13" width="14" height="6" rx="2" ' + o + '/><rect x="25" y="13" width="14" height="6" rx="2" ' + o + '/><rect x="8" y="22" width="14" height="6" rx="2" ' + o + '/><rect x="25" y="22" width="14" height="6" rx="2" ' + o + '/>',
+      poll: '<rect x="8" y="6" width="26" height="4" rx="1.5" ' + f + '/><rect x="8" y="14" width="30" height="3.5" rx="1.5" ' + f + '/><rect x="8" y="20" width="20" height="3.5" rx="1.5" ' + o + '/><rect x="8" y="26" width="12" height="3.5" rx="1.5" ' + o + '/>',
+      collaborate_board: '<rect x="6" y="6" width="12" height="10" rx="1.5" ' + o + '/><rect x="20" y="8" width="12" height="10" rx="1.5" ' + f + '/><rect x="33" y="5" width="10" height="10" rx="1.5" ' + o + '/><rect x="10" y="19" width="12" height="9" rx="1.5" ' + f + '/><rect x="25" y="20" width="14" height="8" rx="1.5" ' + o + '/>',
+      draw: '<path d="M8 22 C13 8, 18 8, 22 16 S32 26, 40 10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="40" cy="10" r="2" ' + f + '/>',
+      whiteboard: '<path d="M7 24 L16 9 L26 21 L33 11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="31" y="19" width="11" height="3" rx="1.5" ' + o + '/><path d="M33 24l5 4-1-5z" ' + f + '/>',
+      content: '<rect x="6" y="6" width="18" height="4" rx="1.5" ' + f + '/><rect x="6" y="14" width="20" height="2.5" rx="1" ' + o + '/><rect x="6" y="19" width="20" height="2.5" rx="1" ' + o + '/><rect x="6" y="24" width="14" height="2.5" rx="1" ' + o + '/><rect x="30" y="8" width="12" height="16" rx="2" ' + o + '/>',
+      word_cloud: '<rect x="8" y="8" width="16" height="6" rx="2" ' + f + '/><rect x="26" y="9" width="12" height="4" rx="1.5" ' + o + '/><rect x="10" y="17" width="9" height="4" rx="1.5" ' + o + '/><rect x="21" y="16" width="14" height="6" rx="2" ' + f + '/><rect x="14" y="24" width="12" height="4" rx="1.5" ' + o + '/>'
+    };
+    return '<svg class="glyph" viewBox="0 0 48 32" aria-hidden="true">' + box + g[k] + "</svg>";
+  }
+  function kindGrid(attr, current) {
+    var all = [];
+    KIND_GROUPS.forEach(function (g) { g[1].forEach(function (k) { all.push([k, g[0]]); }); });
+    return '<div class="layouts compact" role="group" aria-label="Loại slide">' + all.map(function (a) {
+      return '<button type="button" ' + attr + '="' + a[0] + '" aria-pressed="' + (current === a[0]) + '" title="' + a[1] + '">' + glyph(a[0]) + "<span>" + KINDS[a[0]] + "</span></button>";
+    }).join("") + "</div>";
+  }
+  function pk(cap, glyphKey, label, toggle, open) {
+    return '<button type="button" class="pk" data-' + toggle + '="1" aria-expanded="' + open + '">' + glyph(glyphKey) +
+      '<span class="ct"><small>' + cap + "</small><b>" + esc(label) + "</b></span><i>▾</i></button>";
+  }
+  function gk(x) { return x.kind === "content" ? x.layout : x.kind; }
+
+  /* ---- thanh tổng quan ---- */
+  function stats() {
+    var n = slides.length, inter = slides.filter(function (x) { return x.kind !== "content"; }).length;
+    $("stat").innerHTML = "<b>" + n + "</b> slide (" + (n - inter) + " nội dung, " + inter + " tương tác)";
+    var m = +$("minutes").value, r = RANGE[m];
+    $("range").textContent = "Gợi ý " + r[0] + " đến " + r[1] + " slide";
+    var w = $("warn");
+    if (n < r[0]) { w.hidden = false; w.textContent = "Dàn ý đang ít hơn gợi ý " + (r[0] - n) + " slide cho buổi " + m + " phút. Bạn vẫn có thể giữ nguyên nếu muốn buổi giảng ngắn gọn."; }
+    else if (n > r[1]) { w.hidden = false; w.textContent = "Dàn ý đang nhiều hơn gợi ý " + (n - r[1]) + " slide cho buổi " + m + " phút."; }
+    else w.hidden = true;
+  }
+  /* ---- danh sách ---- */
+  function sub(x) {
+    if (x.kind !== "content") return KINDS[x.kind];
+    var n = x.points.filter(Boolean).length;
+    return LAYOUTS[x.layout].label + " · " + n + " ý";
+  }
+  function list() {
+    $("rows").innerHTML = slides.map(function (x, i) {
+      var cls = "row" + (x.kind !== "content" ? " talk" : "") + (x.layout === "section" ? " sec" : "");
+      return '<li class="' + cls + '" data-i="' + i + '" tabindex="0" draggable="true"' + (i === sel ? ' aria-current="true"' : "") + ">" +
+        '<span class="grip" aria-hidden="true">⋮⋮</span><span class="num">' + (i + 1) + "</span>" + glyph(gk(x)) +
+        '<span class="t"><b>' + (esc(x.title) || "(chưa có tiêu đề)") + "</b><small>" + esc(sub(x)) + '</small></span><span class="edit" aria-hidden="true">Sửa</span></li>';
+    }).join("");
+    $("add").innerHTML = '<button type="button" class="btn primary" data-addtoggle="1" aria-expanded="' + addOpen + '">+ Thêm slide</button>' +
+      (addOpen ? '<div class="addpanel"><span class="kcap">Chọn loại slide mới (thêm sau slide đang chọn)</span>' + kindGrid("data-add", "") + "</div>" : "");
+  }
+
+  /* ---- bản xem trước ---- */
+  function split(p) { var i = p.indexOf(": "); return i > 0 ? [p.slice(0, i), p.slice(i + 2)] : ["", p]; }
+  function preview(x) {
+    var t = esc(x.title) || "Tiêu đề slide", P = x.points.filter(Boolean), h = "", c = "";
+    if (x.kind !== "content") {
+      var nm = KINDS[x.kind], sub = { quiz: "Các lựa chọn sẽ do AI soạn ở bước tạo slide.", poll: "Các lựa chọn sẽ do AI soạn ở bước tạo slide.", word_cloud: "Học viên gõ từ khoá, kết quả hiện thành đám mây.", collaborate_board: "Học viên dán ghi chú lên bảng chung.", draw: "Mỗi học viên vẽ một hình rồi đăng lên bảng.", whiteboard: "Cả lớp cùng vẽ trên một khung." }[x.kind];
+      var art = { collaborate_board: '<div style="display:flex;gap:1.6cqw"><i style="width:9cqw;height:7cqw;background:#fde68a;border-radius:1cqw"></i><i style="width:9cqw;height:7cqw;background:#bfdbfe;border-radius:1cqw"></i><i style="width:9cqw;height:7cqw;background:#bbf7d0;border-radius:1cqw"></i><i style="width:9cqw;height:7cqw;background:#fbcfe8;border-radius:1cqw"></i></div>',
+        draw: '<svg viewBox="0 0 120 30" style="width:30cqw;height:7cqw"><path d="M4 22 C20 2, 34 2, 48 16 S80 30, 116 6" fill="none" stroke="#5b6b9a" stroke-width="4" stroke-linecap="round"/></svg>',
+        whiteboard: '<svg viewBox="0 0 120 30" style="width:30cqw;height:7cqw"><path d="M4 26 L30 6 L58 22 L84 4 L116 18" fill="none" stroke="#5b6b9a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' }[x.kind] || "";
+      return '<div class="pv talkpv"><div class="in"><span class="tag">' + nm + '</span><h3>' + t + '</h3>' + art + '<p style="color:#5b6b9a">' + sub + "</p></div></div>";
+    }
+    switch (x.layout) {
+      case "cover": h = '<h3 class="big">' + t + "</h3>" + (P[0] ? "<p>" + esc(P[0]) + "</p>" : ""); break;
+      case "section": h = '<span class="tag">Phần mới</span><h3 class="big">' + t + "</h3>" + (P[0] ? "<p>" + esc(P[0]) + "</p>" : ""); break;
+      case "image":
+        h = '<div class="split"><div style="display:grid;gap:2cqw"><h3>' + t + "</h3>" + (P[0] ? "<p>" + esc(P[0]) + "</p>" : "") +
+          (P.length > 1 ? "<ul>" + P.slice(1).map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("") + "</ul>" : "") + '</div><div class="pic"></div></div>'; break;
+      case "cards":
+        h = "<h3>" + t + '</h3><div class="cols c3">' + P.slice(0, 3).map(function (q) { var a = split(q); return '<div class="card"><b>' + esc(a[0]) + "</b>" + esc(a[1]) + "</div>"; }).join("") + "</div>"; break;
+      case "compare":
+        h = "<h3>" + t + '</h3><div class="cols c2">' + P.slice(0, 2).map(function (q) { var a = split(q); return '<div class="card"><b>' + esc(a[0]) + "</b>" + esc(a[1]) + "</div>"; }).join("") + "</div>"; break;
+      case "steps":
+        h = "<h3>" + t + '</h3><div class="cols" style="grid-template-columns:repeat(' + Math.max(P.length, 1) + ',1fr)">' + P.map(function (q, i) { var a = split(q); return "<div><div class=\"stepn\">" + (i + 1) + '</div><div class="card" style="padding:1.6cqw"><b>' + esc(a[0]) + "</b>" + esc(a[1]) + "</div></div>"; }).join("") + "</div>"; break;
+      case "stats":
+        h = "<h3>" + t + '</h3><div class="cols" style="grid-template-columns:repeat(' + Math.max(P.length, 1) + ',1fr)">' + P.map(function (q) { var m = q.match(/\d[\d.,%]*/); return '<div><div class="stat">' + (m ? esc(m[0]) : "?") + '</div><p style="font-size:2.7cqw">' + esc(q) + "</p></div>"; }).join("") + "</div>"; break;
+      case "quote": h = '<span class="tag">' + t + '</span><div class="quote">' + (esc(P[0] || "") || "Câu trích dẫn") + "</div>"; break;
+      case "summary": h = "<h3>" + t + "</h3><ul>" + P.map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("") + "</ul>"; break;
+    }
+    return '<div class="pv"><div class="in">' + h + "</div></div>";
+  }
+
+  /* ---- trình sửa ---- */
+  function editor() {
+    var x = slides[sel], i = sel, isC = x.kind === "content", L = isC ? LAYOUTS[x.layout] : null, h = "";
+    h += '<div class="ehead">' +
+      '<button type="button" class="ico" data-nav="-1" aria-label="Slide trước"' + (i === 0 ? " disabled" : "") + ">‹</button>" +
+      '<button type="button" class="ico" data-nav="1" aria-label="Slide sau"' + (i === slides.length - 1 ? " disabled" : "") + ">›</button>" +
+      '<h2 id="dlgt">Slide ' + (i + 1) + " / " + slides.length + "</h2>" +
+      '<button type="button" class="btn danger" data-del="1">Xoá slide</button><span class="sepv" aria-hidden="true"></span>' +
+      '<button type="button" class="btn primary" data-close="1">Xong</button></div><div class="ebody">';
+    h += '<div class="side"><div class="pv-wrap"><span class="cap">Bản xem trước bố cục</span><div id="pvbox"></div>' +
+      '<p class="note">Ở đây chỉ dựng bố cục về mặt sắp xếp nội dung câu chữ cho bạn hình dung trước. Màu sắc, phông chữ và hình minh hoạ sẽ thể hiện ở bước sau.</p></div></div>';
+    h += '<div style="display:grid;gap:18px">';
+    h += '<div class="pickers">' + pk("Loại slide", x.kind, KINDS[x.kind], "kindopen", openKind) +
+      (isC ? pk("Bố cục", x.layout, L.label, "layopen", openLay) : "") + "</div>";
+    if (openKind) h += '<div class="pick">' + kindGrid("data-kind", x.kind) + "</div>";
+    if (openLay && isC) h += '<div class="pick"><p class="layout-hint">' + esc(L.hint) + '</p><div class="layouts" role="group" aria-label="Bố cục">' +
+      Object.keys(LAYOUTS).map(function (k) { return '<button type="button" data-layout="' + k + '" aria-pressed="' + (x.layout === k) + '">' + glyph(k) + "<span>" + LAYOUTS[k].label + "</span></button>"; }).join("") + "</div></div>";
+    var tl = KIND_TITLE[x.kind];
+    h += '<div class="field"><label for="f-title"><span>' + tl + '</span><span class="count" id="c-title"></span></label>' +
+      '<input class="input" id="f-title" maxlength="' + MAXLEN + '" value="' + esc(x.title) + '"></div>';
+    if (isC) {
+      h += '<div class="field"><div class="lab"><span>Ý chính</span><span id="need"></span></div><div id="pts" style="display:grid;gap:12px"></div>' +
+        '<button type="button" class="linkbtn" id="addpt">+ Thêm ý</button></div>';
+    } else {
+      h += '<div class="tip">' + esc(KIND_HINT[x.kind]) + (KIND_USE[x.kind] ? "<br><b>" + esc(KIND_USE[x.kind]) + "</b>" : "") + "</div>";
+    }
+    h += "</div></div>";
+    $("editor").innerHTML = h;
+    if (isC) points();
+    counters(); $("pvbox").innerHTML = preview(x);
+    $("editor").querySelectorAll("textarea").forEach(grow);
+  }
+  function points() {
+    var x = slides[sel], lab = POINT_LABEL[x.layout] || [], sp = SPLIT[x.layout];
+    $("pts").innerHTML = x.points.map(function (p, k) {
+      var l = lab[k] || "Ý " + (k + 1), body;
+      if (sp) {
+        var a = split(p);
+        body = '<span class="sublab">' + l + '</span><input class="input" data-pk="' + k + '" data-part="0" placeholder="Tiêu đề ngắn" maxlength="60" value="' + esc(a[0]) + '" aria-label="' + l + ', tiêu đề ngắn">' +
+          '<textarea class="input" rows="1" data-pk="' + k + '" data-part="1" placeholder="Một câu giải thích đầy đủ" aria-label="' + l + ', câu giải thích">' + esc(a[1]) + "</textarea>";
+      } else {
+        body = '<span class="sublab">' + l + '</span><textarea class="input" rows="1" data-pk="' + k + '" aria-label="' + l + '">' + esc(p) + "</textarea>";
+      }
+      return '<div class="pt"><span class="n">' + (k + 1) + '</span><div class="body">' + body + '</div><button type="button" class="x" data-rm="' + k + '" aria-label="Xoá ý này">×</button></div>';
+    }).join("");
+    needs(); $("addpt").hidden = x.points.length >= MAXPT;
+  }
+  function needs() {
+    var x = slides[sel], L = LAYOUTS[x.layout], n = x.points.filter(Boolean).length, ok = n >= L.min && n <= L.max;
+    var el = $("need"); if (!el) return;
+    el.className = "need" + (ok ? "" : " off"); el.textContent = "Bố cục này nên có " + L.need + (ok ? "" : " (hiện có " + n + ")");
+  }
+  function counters() { var c = $("c-title"); if (!c) return; var n = slides[sel].title.length; c.textContent = n + "/" + MAXLEN; c.className = "count" + (n >= MAXLEN ? " over" : ""); }
+  function grow(t) { t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+
+  /* ---- xác nhận ---- */
+  function confirmUI() {
+    var n = slides.length, tok = Math.round((9000 + n * 900) / 100) / 10;
+    var html = "";
+    if (confirmed) {
+      html += '<p class="okmsg">Bạn đã xác nhận dàn ý này. Sửa dàn ý sẽ huỷ xác nhận.</p>' +
+        '<p class="muted">AI sẽ viết nội dung và ghi chú giảng cho ' + n + " slide theo đúng dàn ý. Dự kiến dùng khoảng <b>" + String(tok).replace(".", ",") + " nghìn</b> token AI.</p>" +
+        '<div><button type="button" class="btn primary" id="gen">Tạo slide từ dàn ý</button></div>';
+    } else {
+      html += '<label class="check"><input type="checkbox" id="rv"' + (reviewed ? " checked" : "") + '><span>Tôi đã xem lại từng slide trong dàn ý và đồng ý với thứ tự, tiêu đề, ý chính, bố cục.</span></label>' +
+        '<div><button type="button" class="btn primary" id="cf"' + (reviewed ? "" : " disabled") + ">Xác nhận dàn ý</button></div>";
+    }
+    $("confirm").innerHTML = html;
+  }
+
+  function all() { stats(); list(); editor(); confirmUI(); }
+  function touch() { $("saved").textContent = "Đang lưu..."; clearTimeout(touch.t); touch.t = setTimeout(function () { $("saved").textContent = "Đã lưu"; }, 700); if (confirmed) { confirmed = false; reviewed = false; confirmUI(); } }
+  function quick() { stats(); list(); $("pvbox").innerHTML = preview(slides[sel]); touch(); }
+  function clamp(i) { return Math.max(0, Math.min(slides.length - 1, i)); }
+  function openEd(i) { openKind = openLay = false; sel = clamp(i); list(); var d = $("dlg"); if (!d.open) d.showModal(); editor(); }
+  function goto(i) { openKind = openLay = false; sel = clamp(i); list(); editor(); var b = $("editor").querySelector(".ebody"); if (b) b.scrollTop = 0; }
+  $("dlg").addEventListener("click", function (e) { if (e.target === this) this.close(); });
+  $("dlg").addEventListener("close", function () { var li = $("rows").querySelector('[data-i="' + sel + '"]'); if (li) li.focus(); });
+
+  /* ---- sự kiện ---- */
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-i],[data-nav],[data-close],[data-addtoggle],[data-kindopen],[data-layopen],[data-kind],[data-layout],[data-mv],[data-del],[data-rm],[data-add],#addpt,#cf,#gen");
+    if (!t) return;
+    if (t.dataset.addtoggle) { addOpen = !addOpen; list(); return; }
+    if (t.dataset.kindopen) { openKind = !openKind; openLay = false; editor(); }
+    else if (t.dataset.layopen) { openLay = !openLay; openKind = false; editor(); }
+    else if (t.dataset.close) $("dlg").close();
+    else if (t.dataset.nav) goto(sel + +t.dataset.nav);
+    else if (t.dataset.i != null && !e.target.closest(".grip")) openEd(+t.dataset.i);
+    else if (t.dataset.kind) {
+      var x = slides[sel];
+      if (t.dataset.kind === "content") { x.kind = "content"; x.layout = x.layout || "image"; } else { x.kind = t.dataset.kind; x.layout = null; x.points = []; }
+      openKind = false; touch(); all();
+    } else if (t.dataset.layout) { slides[sel].layout = t.dataset.layout; openLay = false; touch(); all(); }
+    else if (t.dataset.mv) { var d = +t.dataset.mv, j = sel + d; if (j < 0 || j >= slides.length) return; var a = slides.splice(sel, 1)[0]; slides.splice(j, 0, a); sel = j; touch(); all(); }
+    else if (t.dataset.del) { if (slides.length > 1) { slides.splice(sel, 1); sel = Math.min(sel, slides.length - 1); touch(); all(); $("dlg").close(); } }
+    else if (t.dataset.rm != null) { slides[sel].points.splice(+t.dataset.rm, 1); touch(); points(); quick(); }
+    else if (t.dataset.add) { addOpen = false; var k = t.dataset.add; slides.splice(sel + 1, 0, s(k, k === "content" ? "image" : null, "", k === "content" ? [""] : [])); sel = sel + 1; touch(); all(); openEd(sel); var f = $("f-title"); if (f) f.focus(); }
+    else if (t.id === "addpt") { slides[sel].points.push(""); points(); touch(); var ta = $("pts").querySelectorAll("textarea, input"); ta[ta.length - 1].focus(); }
+    else if (t.id === "cf") { confirmed = true; confirmUI(); $("saved").textContent = "Đã lưu"; }
+    else if (t.id === "gen") { t.disabled = true; t.textContent = "Đang viết slide... (mockup)"; }
+  });
+  document.addEventListener("input", function (e) {
+    var t = e.target, x = slides[sel];
+    if (t.id === "f-title") { x.title = t.value; counters(); quick(); }
+    else if (t.dataset && t.dataset.pk != null) {
+      var k = +t.dataset.pk;
+      if (t.dataset.part != null) {
+        var box = t.closest(".body"), head = box.querySelector('[data-part="0"]').value, bd = box.querySelector('[data-part="1"]').value;
+        x.points[k] = head ? head + ": " + bd : bd;
+      } else x.points[k] = t.value;
+      if (t.tagName === "TEXTAREA") grow(t);
+      needs(); quick();
+    } else if (t.id === "rv") { reviewed = t.checked; $("cf").disabled = !reviewed; }
+  });
+  document.addEventListener("keydown", function (e) {
+    var li = e.target.closest && e.target.closest(".row");
+    if (li && (e.key === "Enter" || e.key === " ") && e.target === li) { e.preventDefault(); openEd(+li.dataset.i); }
+    else if (li && e.target === li && e.key === "ArrowDown" && li.nextElementSibling) { e.preventDefault(); li.nextElementSibling.focus(); }
+    else if (li && e.target === li && e.key === "ArrowUp" && li.previousElementSibling) { e.preventDefault(); li.previousElementSibling.focus(); }
+  });
+  $("minutes").addEventListener("change", function () { stats(); touch(); });
+
+  /* kéo thả đổi thứ tự */
+  var dragFrom = null;
+  $("rows").addEventListener("dragstart", function (e) { var li = e.target.closest(".row"); if (!li) return; dragFrom = +li.dataset.i; li.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; });
+  $("rows").addEventListener("dragover", function (e) { var li = e.target.closest(".row"); if (!li || dragFrom == null) return; e.preventDefault(); document.querySelectorAll(".row.over").forEach(function (r) { r.classList.remove("over"); }); li.classList.add("over"); });
+  $("rows").addEventListener("drop", function (e) {
+    var li = e.target.closest(".row"); if (!li || dragFrom == null) return; e.preventDefault();
+    var to = +li.dataset.i, a = slides.splice(dragFrom, 1)[0]; slides.splice(to, 0, a); sel = to; dragFrom = null; touch(); all();
+  });
+  $("rows").addEventListener("dragend", function () { dragFrom = null; document.querySelectorAll(".row.dragging,.row.over").forEach(function (r) { r.classList.remove("dragging", "over"); }); });
+
+  all();
+})();
+</script>
+</body>
+</html>

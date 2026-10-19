@@ -21,6 +21,7 @@ import {
   userIsAnyProctor,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { hourVN } from "@/lib/datetime";
 import FeatureBlockedToast from "@/components/FeatureBlockedToast";
 import UserAvatar from "@/components/ui/UserAvatar";
 import HelpTour from "@/components/HelpTour";
@@ -30,6 +31,8 @@ import {
   INSTRUCTOR_MENU_PREVIEW_EVENT,
 } from "@/components/InstructorLeftMenu";
 import CalendarLoader from "@/components/calendar/CalendarLoader";
+import TeacherAssistant from "@/components/TeacherAssistant";
+import { buildStarters } from "@/lib/teacherAssistant";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +42,10 @@ const FORUM_STALE_HOURS = 48;
 const LEARNER_STALE_DAYS = 14;
 const ACTIVITY_FEED_HOURS = 72;
 const ACTIVITY_FEED_LIMIT = 12;
+/** Số việc hiện sẵn ở "Việc cần làm"; phần còn lại thu trong "Xem tất cả". */
+const TOP_TASKS = 3;
+const COURSES_SHOWN = 6;
+const ACTIVITY_SHOWN = 6;
 
 type Priority = "high" | "med" | "low";
 type Category = "essay" | "forum" | "assignment" | "learner" | "skill";
@@ -107,7 +114,7 @@ const CATEGORY_ICON: Record<Category, LucideIcon> = {
 };
 
 function greeting(): string {
-  const h = new Date().getHours();
+  const h = hourVN();
   if (h < 12) return "Chào buổi sáng";
   if (h < 18) return "Chào buổi chiều";
   return "Chào buổi tối";
@@ -171,7 +178,19 @@ export default async function InstructorDashboard({
     const sampleCourses = await listSampleCourses();
     return (
       <main>
-        <h1 className="text-2xl font-bold">{greeting()}</h1>
+        <div>
+          <TeacherAssistant
+          greeting={greeting()}
+            name={session.user.name ?? session.user.email ?? ""}
+              starters={buildStarters({
+              courseTitles: [],
+              pendingEssays: 0,
+              pendingAssignments: 0,
+              staleForumThreads: 0,
+              staleLearners: 0,
+            })}
+          />
+        </div>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
           <p className="text-sm font-semibold text-accent-700">
             Bạn chưa là instructor của khoá nào.
@@ -463,17 +482,7 @@ export default async function InstructorDashboard({
     }),
   );
 
-  // ── Context line for greeting ─────────────────────────────────────────
-  const highCount = items.filter((i) => i.priority === "high").length;
   const totalLearners = ownedCourses.reduce((s, c) => s + c._count.enrollments, 0);
-  let contextLine: string;
-  if (highCount > 0) {
-    contextLine = `Có ${highCount} việc gấp cần xử lý hôm nay.`;
-  } else if (items.length > 0) {
-    contextLine = `Có ${items.length} việc cần xem qua khi rảnh.`;
-  } else {
-    contextLine = `Mọi thứ đang ổn. ${totalLearners} học viên trên ${ownedCourses.length} khoá của bạn.`;
-  }
 
   // Activity feed deep links + course tag.
   const courseSlugById = new Map(
@@ -483,187 +492,185 @@ export default async function InstructorDashboard({
     ownedCourses.map((c) => [c.id, c.title] as const),
   );
 
+  const topItems = items.slice(0, TOP_TASKS);
+  const moreItems = items.slice(TOP_TASKS);
+  const shownCourses = ownedCourses.slice(0, COURSES_SHOWN);
+
   return (
     <main>
       <Suspense fallback={null}>
         <FeatureBlockedToast />
       </Suspense>
 
-      {/* Greeting */}
-      <header>
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-          Giảng viên
-        </span>
-        <h1 className="mt-3 text-2xl font-bold">
-          {greeting()},{" "}
-          <span className="text-gradient">
-            {session.user.name ?? session.user.email}
-          </span>
-        </h1>
-        <p className="mt-2 text-muted">{contextLine}</p>
-      </header>
+      {/* Hai cột từ lg: cột chính là việc của thầy/cô (Lily, số liệu, việc cần làm, khoá học); cột phải là thứ để
+          liếc qua (lịch, hoạt động). Dưới lg xếp một cột theo đúng thứ tự đó. */}
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
+          <TeacherAssistant
+            greeting={greeting()}
+            name={session.user.name ?? session.user.email ?? ""}
+            starters={buildStarters({
+              courseTitles: ownedCourses.map((c) => c.title),
+              courses: ownedCourses.map((c) => ({ id: c.id, title: c.title })),
+              pendingEssays: pendingEssaysTotal,
+              pendingAssignments: pendingAssignmentsTotal,
+              staleForumThreads,
+              staleLearners: staleLearnerCount,
+            })}
+          />
 
-      {/* Stat strip */}
-      <div className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-        <StatTile
-          icon={BookOpen}
-          iconBg="bg-[rgb(var(--brand-soft))]"
-          iconFg="text-brand-600"
-          value={ownedCourses.length}
-          label="Khoá học đang dạy"
-        />
-        <StatTile
-          icon={Users}
-          iconBg="bg-[rgb(var(--brand-soft))]"
-          iconFg="text-brand-600"
-          value={totalLearners}
-          label="Học viên"
-        />
-        <StatTile
-          icon={ListChecks}
-          iconBg="bg-accent-50"
-          iconFg="text-accent-600"
-          value={items.length}
-          label="Việc cần xử lý"
-        />
-        <StatTile
-          icon={UserX}
-          iconBg="bg-danger-50"
-          iconFg="text-danger-600"
-          value={staleLearnerCount}
-          label={`Học viên im ắng >${LEARNER_STALE_DAYS} ngày`}
-        />
-      </div>
+          {/* Dải số liệu mỏng: một khối, bốn con số, không bốn thẻ riêng. */}
+          <dl className="grid grid-cols-2 overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] sm:grid-cols-4 [&>div]:border-token [&>div:nth-child(even)]:border-l [&>div:nth-child(n+3)]:border-t sm:[&>div:not(:first-child)]:border-l sm:[&>div:nth-child(n+3)]:border-t-0">
+            <StatCell icon={BookOpen} tone="text-brand-600" value={ownedCourses.length} label="Khoá học" />
+            <StatCell icon={Users} tone="text-brand-600" value={totalLearners} label="Học viên" />
+            <StatCell icon={ListChecks} tone="text-accent-600" value={items.length} label="Việc cần làm" />
+            <StatCell icon={UserX} tone="text-danger-600" value={staleLearnerCount} label={`Im ắng >${LEARNER_STALE_DAYS} ngày`} />
+          </dl>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-3">
-        {/* Priority queue */}
-        <section className="lg:col-span-2">
-          <header className="flex items-baseline justify-between">
-            <h2 className="text-base font-semibold">
-              Cần xử lý gấp{" "}
-              <span className="text-xs font-normal text-faint">
-                ({items.length})
-              </span>
-            </h2>
-            <span className="text-xs text-faint">
-              Sắp theo độ ưu tiên
-            </span>
-          </header>
-
-          {tiers.length === 0 ? (
-            <div className="mt-3 rounded-2xl border border-success-200 bg-success-50 p-8 text-center text-sm text-success-700">
-              🎉 Bạn không có việc gì gấp. Tận hưởng nhé.
-            </div>
-          ) : (
-            <div className="mt-3 space-y-6">
-              {tiers.map((tier) => {
-                const style = PRIORITY_STYLES[tier.priority];
-                return (
-                  <div key={tier.priority}>
-                    <p
-                      className={`mb-2 text-[11px] font-extrabold uppercase tracking-[0.1em] ${style.tierLabelColor}`}
-                    >
-                      {TIER_LABEL[tier.priority]} · {tier.items.length}
-                    </p>
-                    <ul className="space-y-2">
-                      {tier.items.map((it) => {
-                        const Icon = CATEGORY_ICON[it.category];
-                        return (
-                          <li key={it.id}>
-                            <Link
-                              href={it.href}
-                              className={`card-hover relative flex items-start gap-3.5 overflow-hidden rounded-2xl border border-token py-4 pl-5 pr-4 transition-colors hover:border-brand-200 ${style.cardBg}`}
-                              prefetch={false}
-                            >
-                              <span
-                                className={`absolute inset-y-0 left-0 w-1 ${style.bar}`}
-                                aria-hidden
-                              />
-                              <span
-                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${style.iconBg} ${style.iconFg}`}
-                                aria-hidden
-                              >
-                                <Icon size={19} strokeWidth={2} />
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-baseline gap-2 flex-wrap">
-                                  <p className="font-semibold">{it.title}</p>
-                                  <span className={`${style.chip} text-[10px] font-bold`}>
-                                    {tier.priority === "high"
-                                      ? "GẤP"
-                                      : tier.priority === "med"
-                                        ? "MED"
-                                        : "LOW"}
-                                  </span>
-                                </div>
-                                <p className="mt-0.5 text-xs text-muted">{it.detail}</p>
-                              </div>
-                              <span className="shrink-0 self-center text-sm text-faint">
-                                →
-                              </span>
-                            </Link>
-                          </li>
-                        );
-                      })}
+          {/* Việc cần làm: chỉ ba việc đầu (đã sắp theo độ gấp), còn lại thu trong "Xem tất cả". */}
+          <section aria-labelledby="todo-heading">
+            <header className="flex items-baseline justify-between">
+              <h2 id="todo-heading" className="text-base font-semibold">
+                Việc cần làm hôm nay{" "}
+                <span className="text-xs font-normal text-faint">({items.length})</span>
+              </h2>
+              <span className="text-xs text-faint">Việc gấp xếp trước</span>
+            </header>
+            {items.length === 0 ? (
+              <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center text-sm text-muted">
+                Thầy/cô không có việc nào đang chờ. Tận hưởng nhé.
+              </div>
+            ) : (
+              <>
+                <ul className="mt-3 space-y-2">
+                  {topItems.map((it) => (
+                    <TaskRow key={it.id} item={it} />
+                  ))}
+                </ul>
+                {moreItems.length > 0 && (
+                  <details className="group mt-2">
+                    <summary className="inline-flex cursor-pointer items-center gap-1 py-1 text-sm font-medium text-sky-700 underline decoration-sky-300 underline-offset-4 hover:text-sky-900 dark:text-sky-400">
+                      <span className="group-open:hidden">Xem tất cả ({items.length})</span>
+                      <span className="hidden group-open:inline">Thu gọn</span>
+                    </summary>
+                    <ul className="mt-2 space-y-2">
+                      {moreItems.map((it) => (
+                        <TaskRow key={it.id} item={it} />
+                      ))}
                     </ul>
-                  </div>
+                  </details>
+                )}
+              </>
+            )}
+          </section>
+
+          {/* Khoá học của tôi */}
+          <section aria-labelledby="my-courses-heading">
+            <header className="flex items-baseline justify-between">
+              <h2 id="my-courses-heading" className="text-base font-semibold">Khoá học của tôi</h2>
+              <Link href="/instructor/courses" prefetch={false} className="text-sm font-medium text-sky-700 underline decoration-sky-300 underline-offset-4 hover:text-sky-900 dark:text-sky-400">
+                {ownedCourses.length > shownCourses.length ? `Xem tất cả (${ownedCourses.length})` : "Quản lý khoá học"}
+              </Link>
+            </header>
+            <ul className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {shownCourses.map((c) => {
+                const published = c.status !== "draft";
+                return (
+                  <li key={c.id} className="min-w-0">
+                    <Link
+                      href={`/instructor/courses/${c.id}`}
+                      prefetch={false}
+                      className="card-hover relative flex h-full items-center gap-3 overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] py-3 pl-4 pr-3 transition-colors hover:bg-[rgb(var(--surface-muted))]"
+                    >
+                      <span className={`absolute inset-y-0 left-0 w-1 ${published ? "bg-brand-500" : "bg-slate-300"}`} aria-hidden />
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[rgb(var(--brand-soft))] text-brand-600" aria-hidden>
+                        <BookOpen size={18} strokeWidth={2} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="line-clamp-2 block text-sm font-bold leading-snug">{c.title}</span>
+                        <span className="block text-xs text-muted">
+                          {published ? "Đang mở" : "Nháp"} · {c._count.enrollments} học viên
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-sm text-faint" aria-hidden>→</span>
+                    </Link>
+                  </li>
                 );
               })}
-            </div>
-          )}
-        </section>
+            </ul>
+          </section>
 
-        <div className="space-y-6 lg:col-span-1">
+          {gamiSummaries.length > 0 && (
+            <details className="group rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
+              <summary className="cursor-pointer text-sm font-semibold">Gamification theo khoá</summary>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {gamiSummaries.map((g) => (
+                  <Link
+                    key={g.course.id}
+                    href={`/instructor/courses/${g.course.id}?tab=gamification`}
+                    prefetch={false}
+                    className="card block p-4 transition-colors hover:border-brand-300"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Trophy className="h-4 w-4 shrink-0 text-accent-600" aria-hidden />
+                      <p className="truncate text-sm font-semibold">{g.course.title}</p>
+                    </div>
+                    {g.earners === 0 ? (
+                      <p className="mt-3 text-xs text-muted">Khoá này chưa có dữ liệu gamification.</p>
+                    ) : (
+                      <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <dd className="text-lg font-bold leading-none">{g.totalXp}</dd>
+                          <dt className="mt-1 text-xs text-muted">Tổng XP</dt>
+                        </div>
+                        <div>
+                          <dd className="text-lg font-bold leading-none">{g.badges}</dd>
+                          <dt className="mt-1 text-xs text-muted">Badge</dt>
+                        </div>
+                        <div>
+                          <dd className="text-lg font-bold leading-none">{g.active7d}</dd>
+                          <dt className="mt-1 text-xs text-muted">Có XP 7 ngày</dt>
+                        </div>
+                      </dl>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+
+        <aside className="min-w-0 space-y-6">
           {/* Lịch + nhãn tuần của kỳ học (chỉ tài khoản thuộc trường mới có nhãn) */}
           <CalendarLoader userId={userId} audience="instructor" />
 
-          {/* Activity feed */}
-          <section>
+          <section aria-labelledby="activity-heading">
             <header className="flex items-baseline justify-between">
-              <h2 className="text-base font-semibold">Hoạt động gần đây</h2>
+              <h2 id="activity-heading" className="text-base font-semibold">Hoạt động gần đây</h2>
               <span className="text-xs text-faint">{ACTIVITY_FEED_HOURS}h qua</span>
             </header>
-
             {recentActivityEvents.length === 0 ? (
               <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center text-sm text-muted">
                 Chưa có hoạt động.
               </div>
             ) : (
               <div className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
-                <ul className="space-y-4">
-                  {recentActivityEvents.map((ev) => {
-                    const label =
-                      EVENT_LABEL[ev.eventType]?.(
-                        ev.payload as Record<string, unknown>,
-                      ) ?? ev.eventType;
-                    const slug = ev.courseId
-                      ? courseSlugById.get(ev.courseId)
-                      : undefined;
-                    const courseTitle = ev.courseId
-                      ? courseTitleById.get(ev.courseId)
-                      : undefined;
+                <ul className="space-y-3.5">
+                  {recentActivityEvents.slice(0, ACTIVITY_SHOWN).map((ev) => {
+                    const label = EVENT_LABEL[ev.eventType]?.(ev.payload as Record<string, unknown>) ?? ev.eventType;
+                    const slug = ev.courseId ? courseSlugById.get(ev.courseId) : undefined;
+                    const courseTitle = ev.courseId ? courseTitleById.get(ev.courseId) : undefined;
                     const href = slug ? `/learn/${slug}` : "/instructor/enrollments";
                     return (
                       <li key={ev.id.toString()} className="flex gap-3">
-                        <UserAvatar
-                          name={ev.user?.displayName}
-                          size="sm"
-                          className="shrink-0"
-                        />
+                        <UserAvatar name={ev.user?.displayName} size="sm" className="shrink-0" />
                         <Link href={href} className="min-w-0 flex-1">
                           <p className="line-clamp-2 text-sm">
-                            <span className="font-medium">
-                              {ev.user?.displayName ?? "—"}
-                            </span>{" "}
+                            <span className="font-medium">{ev.user?.displayName ?? "—"}</span>{" "}
                             <span className="text-muted">{label}</span>
                           </p>
-                          {courseTitle && (
-                            <span className="chip-brand mt-1 inline-flex text-[11px]">
-                              {courseTitle}
-                            </span>
-                          )}
-                          <p className="mt-1 text-xs text-faint">
-                            {courseTitle ? "· " : ""}
+                          <p className="mt-0.5 truncate text-xs text-faint">
+                            {courseTitle ? `${courseTitle} · ` : ""}
                             {formatAgo(ev.occurredAt)}
                           </p>
                         </Link>
@@ -674,57 +681,8 @@ export default async function InstructorDashboard({
               </div>
             )}
           </section>
-        </div>
+        </aside>
       </div>
-
-      {/* Gamification theo khoá */}
-      {gamiSummaries.length > 0 && (
-        <section className="mt-8">
-          <header className="flex items-baseline justify-between">
-            <h2 className="text-base font-semibold">Gamification theo khoá</h2>
-            <span className="text-xs text-faint">XP, badge, streak của học viên</span>
-          </header>
-          <div className="mt-3 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
-            {gamiSummaries.map((g) => (
-              <Link
-                key={g.course.id}
-                href={`/instructor/courses/${g.course.id}?tab=gamification`}
-                prefetch={false}
-                className="card block p-4 transition-colors hover:border-brand-300"
-              >
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 shrink-0 text-accent-600" aria-hidden />
-                  <p className="truncate text-sm font-semibold">{g.course.title}</p>
-                </div>
-                {g.earners === 0 ? (
-                  <p className="mt-3 text-xs text-muted">
-                    Khoá này chưa có dữ liệu gamification.
-                  </p>
-                ) : (
-                  <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <dd className="text-lg font-bold leading-none">{g.totalXp}</dd>
-                      <dt className="mt-1 text-xs text-muted">Tổng XP</dt>
-                    </div>
-                    <div>
-                      <dd className="text-lg font-bold leading-none">{g.badges}</dd>
-                      <dt className="mt-1 text-xs text-muted">Badge</dt>
-                    </div>
-                    <div>
-                      <dd className="text-lg font-bold leading-none">
-                        {g.active7d}
-                      </dd>
-                      <dt className="mt-1 text-xs text-muted">
-                        Có XP 7 ngày
-                      </dt>
-                    </div>
-                  </dl>
-                )}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
       {shouldShowTour && (
         <HelpTour
           steps={INSTRUCTOR_TOUR_STEPS}
@@ -738,32 +696,51 @@ export default async function InstructorDashboard({
   );
 }
 
-function StatTile({
+function StatCell({
   icon: Icon,
-  iconBg,
-  iconFg,
+  tone,
   value,
   label,
 }: {
   icon: LucideIcon;
-  iconBg: string;
-  iconFg: string;
+  tone: string;
   value: number;
   label: string;
 }) {
   return (
-    <div className="card flex items-center gap-3 p-4">
-      <span
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] ${iconBg} ${iconFg}`}
-        aria-hidden
-      >
-        <Icon size={18} strokeWidth={2} />
-      </span>
+    <div className="flex min-w-0 items-center gap-2.5 px-4 py-3">
+      <Icon size={18} strokeWidth={2} className={`shrink-0 ${tone}`} aria-hidden />
       <div className="min-w-0">
-        <p className="text-xl font-bold leading-none">{value}</p>
-        <p className="mt-0.5 truncate text-xs text-muted">{label}</p>
+        <dd className="text-lg font-bold leading-none">{value}</dd>
+        <dt className="mt-0.5 truncate text-xs text-muted">{label}</dt>
       </div>
     </div>
+  );
+}
+
+function TaskRow({ item }: { item: PriorityItem }) {
+  const style = PRIORITY_STYLES[item.priority];
+  const Icon = CATEGORY_ICON[item.category];
+  return (
+    <li>
+      <Link
+        href={item.href}
+        prefetch={false}
+        className={`card-hover relative flex items-center gap-3 overflow-hidden rounded-xl border border-token py-3 pl-4 pr-3 transition-colors hover:border-brand-200 ${style.cardBg}`}
+      >
+        <span className={`absolute inset-y-0 left-0 w-1 ${style.bar}`} aria-hidden />
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${style.iconBg} ${style.iconFg}`} aria-hidden>
+          <Icon size={18} strokeWidth={2} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold leading-snug">{item.title}</p>
+          <p className="mt-0.5 text-xs text-muted">
+            <span className={`font-semibold ${style.tierLabelColor}`}>{TIER_LABEL[item.priority]}</span> · {item.detail}
+          </p>
+        </div>
+        <span className="shrink-0 text-sm text-faint" aria-hidden>→</span>
+      </Link>
+    </li>
   );
 }
 

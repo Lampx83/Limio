@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { oralUiText, type OralUiLang } from "@/lib/oralUiText";
 
 /**
  * Shows a warning overlay each time the learner returns to the tab after
@@ -16,9 +17,13 @@ import { useEffect, useRef, useState } from "react";
  */
 export default function TabBlurWarning({
   onBlur,
+  lang = "vi",
 }: {
   onBlur: () => void;
+  /** Ngôn ngữ giao diện; mặc định tiếng Việt. */
+  lang?: OralUiLang;
 }) {
+  const t = oralUiText(lang).tabBlur;
   const [count, setCount] = useState(0);
   const [show, setShow] = useState(false);
   // Giữ callback trong ref: phòng thi truyền một hàm MỚI mỗi lần dựng lại, mà phòng vấn đáp dựng lại rất
@@ -69,21 +74,14 @@ export default function TabBlurWarning({
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4">
       <div className="max-w-md rounded-lg border border-red-300 bg-white p-6 text-center shadow-xl">
-        <h2 className="mb-2 text-lg font-semibold text-red-700">
-          Cảnh báo: Bạn đã rời tab
-        </h2>
-        <p className="mb-4 text-sm">
-          Hệ thống đã ghi nhận{" "}
-          <span className="font-semibold">{count}</span> lần bạn chuyển sang
-          tab khác trong khi làm bài. Giảng viên có thể xem lại các sự kiện
-          này khi chấm bài.
-        </p>
+        <h2 className="mb-2 text-lg font-semibold text-red-700">{t.title}</h2>
+        <p className="mb-4 text-sm">{t.body(count)}</p>
         <button
           type="button"
           onClick={() => setShow(false)}
           className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
         >
-          Tôi đã hiểu, tiếp tục làm bài
+          {t.button}
         </button>
       </div>
     </div>

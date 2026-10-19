@@ -1,11 +1,11 @@
-import { createOpenaiClient } from "@/lib/openaiClient";
+import { createOpenaiClient, getChatOnlyApiKey } from "@/lib/openaiClient";
 import { NextResponse } from "next/server";
 import {
   AiTutorError,
   generateOralExamEvaluation,
   openAiChatCompute,
 } from "@feedbackme/core-feedback";
-import { IntegrationError, getIntegrationSecret, getOralEvaluation } from "@feedbackme/core-lms";
+import { IntegrationError, getOralEvaluation } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 
@@ -37,7 +37,7 @@ export async function POST(
 
   let openaiKey: string;
   try {
-    openaiKey = await getIntegrationSecret("openai");
+    openaiKey = await getChatOnlyApiKey();
   } catch (e) {
     if (e instanceof IntegrationError && e.code === "key_not_found") {
       return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });

@@ -1,22 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { copyText } from "@/lib/clipboard";
 import { RefreshCw, RotateCcw } from "lucide-react";
 import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import { toast } from "@/lib/toast";
-import dynamic from "next/dynamic";
+import JoinQrCard from "@/components/ui/JoinQrCard";
+import ToolHistory from "./ToolHistory";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
-
-const QRCode = dynamic(
-  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
-  {
-    ssr: false,
-    loading: () => <div className="tool-qr" style={{ width: 200, height: 200 }} />
-  }
-);
 
 interface WordCloud {
   id: string;
@@ -33,6 +25,7 @@ interface WordCloudHistoryItem {
   id: string;
   prompt: string;
   createdAt: string;
+  deletedAt?: string | null;
   _count: { submissions: number };
 }
 
@@ -51,8 +44,6 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [history, setHistory] = useState<WordCloudHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Stateless mode: student list supplied but no lesson → manual entry, no QR
   const [submissions, setSubmissions] = useState<string[]>([]);
@@ -201,18 +192,6 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
     }
   };
 
-  const loadHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const res = await fetch(apiUrl("/api/classroom/word-cloud/list"));
-      if (res.ok) setHistory(await res.json());
-    } catch {
-      toast.error("Lỗi tải lịch sử");
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
-
   const handleLoadCloud = async (item: WordCloudHistoryItem) => {
     setCurrentCloud({ id: item.id, prompt: item.prompt });
     setResults(null);
@@ -321,26 +300,14 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
 
         <div className="flex-1">
           {cloudUrl ? (
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-              <div className="flex flex-col items-center gap-3">
-                <div className="tool-qr">
-                  <QRCode value={cloudUrl} size={200} level="H" includeMargin />
-                </div>
-                <button
-                  onClick={async () => {
-                    // Báo theo kết quả THẬT. Bản cũ luôn hiện "Đã copy!" kể cả
-                    // khi clipboard không dùng được (http trần) — người dùng
-                    // tin là xong rồi đi dán ra thứ khác.
-                    const ok = await copyText(cloudUrl);
-                    if (ok) toast.success("Đã copy link!");
-                    else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
-                  }}
-                  className="text-xs text-brand-600 hover:text-brand-700 underline"
-                >
-                  Copy link
-                </button>
-              </div>
-              <div className="md:col-span-2">
+            <div className="mt-6">
+              {/* QR nhỏ ở góc, bấm để phóng popup — đám mây từ được rộng hết chỗ. */}
+              <JoinQrCard
+                url={cloudUrl}
+                title="Quét để gửi từ khoá"
+                className="fixed bottom-6 left-6 z-40"
+              />
+              <div>
                 <p className="text-4xl md:text-5xl font-bold text-center mb-8 leading-tight">{currentCloud.prompt}</p>
                 <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
               </div>
@@ -395,15 +362,15 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
           </div>
         </div>
 
-        {cloudUrl && (
-          <div className="mb-6 flex justify-center">
-            <div className="tool-qr">
-              <QRCode value={cloudUrl} size={150} level="H" includeMargin />
-            </div>
-          </div>
-        )}
-
-        <p className="text-lg font-semibold text-center mb-4">{currentCloud.prompt}</p>
+        {/* Câu hỏi ở giữa, QR nhỏ nép góc phải; bấm QR để phóng popup.
+            Cột đệm bên trái giữ câu hỏi nằm giữa thật. */}
+        <div className="mb-4 flex items-start gap-3">
+          {cloudUrl && <div aria-hidden className="hidden w-[7.5rem] shrink-0 sm:block" />}
+          <p className="min-w-0 flex-1 text-lg font-semibold text-center">{currentCloud.prompt}</p>
+          {cloudUrl && (
+            <JoinQrCard url={cloudUrl} title="Quét để gửi từ khoá" className="shrink-0" />
+          )}
+        </div>
         <WordCloudDisplay wordFrequency={wordFrequency} totalSubmissions={totalSubmissions} />
 
         {isStateless && (
@@ -456,36 +423,29 @@ export default function WordCloud({ lessonId, studentList, onExit, initialPrompt
       </div>
 
       {/* History */}
-      <div className="mt-6 border-t border-token pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-medium text-muted">Word cloud đã tạo trước đây</p>
-          <button
-            onClick={loadHistory}
-            disabled={isLoadingHistory}
-            className="tool-action"
-          >
-            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
-            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-          </button>
-        </div>
-        {history.length === 0 && !isLoadingHistory && (
-          <p className="text-xs text-muted text-center py-2">Bấm "Tải lịch sử" để xem các word cloud cũ</p>
+      <ToolHistory<WordCloudHistoryItem>
+        kind="word_cloud"
+        heading="Word cloud đã tạo trước đây"
+        noun="word cloud"
+        listUrl="/api/classroom/word-cloud/list"
+        toEntry={(item) => ({
+          id: item.id,
+          title: item.prompt,
+          responseCount: item._count.submissions,
+          createdAt: item.createdAt,
+          deletedAt: item.deletedAt,
+        })}
+        onOpen={handleLoadCloud}
+        containerClassName="space-y-2 max-h-80 overflow-y-auto"
+        renderItem={(item) => (
+          <>
+            <p className="text-sm font-medium truncate">{item.prompt}</p>
+            <p className="text-xs text-muted mt-0.5">
+              {item._count.submissions} gửi · {formatDateTime(item.createdAt)}
+            </p>
+          </>
         )}
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {history.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleLoadCloud(item)}
-              className="tool-list-item"
-            >
-              <p className="text-sm font-medium truncate">{item.prompt}</p>
-              <p className="text-xs text-muted mt-0.5">
-                {item._count.submissions} gửi · {formatDateTime(item.createdAt)}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
+      />
     </div>
   );
 }

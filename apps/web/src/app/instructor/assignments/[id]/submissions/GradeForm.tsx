@@ -4,12 +4,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
+import { AI_GRADE_CHAR_BUDGET_TEXT, AI_GRADE_PAGE_LIMIT, estimatePages } from "@feedbackme/shared-types";
+
+type Unread = { what: string; why: string };
 
 function describeAiGradeError(status: number, code: string | undefined): string {
   if (code === "unauthorized") return "Phiên đăng nhập đã hết hạn — tải lại trang.";
   if (code === "forbidden") return "Bạn không có quyền chấm bài này.";
   if (code === "submission_not_found") return "Không tìm thấy bài nộp (có thể đã bị xoá).";
   if (code === "empty_submission") return "Bài nộp đang trống — không có gì để AI đọc.";
+  if (code === "attachment_unreadable") return "AI không đọc được bài này.";
   if (code === "openai_not_configured") return "Chưa cấu hình AI cho hệ thống — báo admin.";
   if (code === "global_token_cap" || code === "daily_token_cap")
     return "Hệ thống đang vượt hạn mức dùng AI hôm nay — thử lại sau.";
@@ -25,6 +29,7 @@ export default function GradeForm({
   initialScore,
   initialFeedback,
   isGraded,
+  attachmentUrl = null,
   onDirtyChange,
   onSavedNext,
 }: {
@@ -33,6 +38,8 @@ export default function GradeForm({
   initialScore: number | null;
   initialFeedback: string | null;
   isGraded: boolean;
+  /** Có tệp/link đính kèm → nói trước cho GV biết AI đọc được tới đâu. */
+  attachmentUrl?: string | null;
   /** Báo khi điểm/nhận xét đang khác bản đã lưu — để modal hỏi trước khi chuyển bài. */
   onDirtyChange?: (dirty: boolean) => void;
   /** Có bài kế tiếp → hiện nút "Chấm & bài tiếp"; gọi sau khi lưu thành công. */
@@ -59,27 +66,50 @@ export default function GradeForm({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [aiNote, setAiNote] = useState<string | null>(null);
+  const [aiUnread, setAiUnread] = useState<Unread | null>(null);
+  const [aiTruncated, setAiTruncated] = useState<{ sentChars: number; totalChars: number } | null>(null);
 
   async function suggestWithAi() {
     setAiBusy(true);
     setAiError(null);
     setAiNote(null);
+    setAiUnread(null);
+    setAiTruncated(null);
     try {
       const res = await fetch(apiUrl(`/api/submissions/${submissionId}/suggest-grade`), {
         method: "POST",
       });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setAiError(describeAiGradeError(res.status, (d as { error?: string }).error));
+        const err = d as { error?: string; details?: Unread };
+        setAiError(describeAiGradeError(res.status, err.error));
+        if (err.error === "attachment_unreadable" && err.details) setAiUnread(err.details);
         return;
       }
-      const suggestion = d as { score: number; feedback: string; rationale: string; hadRubric: boolean };
+      const suggestion = d as {
+        score: number;
+        feedback: string;
+        rationale: string;
+        hadRubric: boolean;
+        criteria?: { name: string; maxPoints: number; points: number }[];
+        read?: string[];
+        unread?: Unread | null;
+        truncated?: { sentChars: number; totalChars: number };
+      };
       setScore(String(suggestion.score));
       setFeedback(suggestion.feedback);
       setScoreError(null);
+      setAiUnread(suggestion.unread ?? null);
+      setAiTruncated(suggestion.truncated ?? null);
       setAiNote(
+        (suggestion.read?.length ? `AI đã đọc: ${suggestion.read.join(", ")}. ` : "") +
         (suggestion.hadRubric ? "" : "⚠ Chưa có rubric — hãy nhập ở ô Rubric chấm điểm phía trên để AI chấm sát hơn. ") +
-          `AI: ${suggestion.rationale}`,
+          `AI: ${suggestion.rationale}` +
+          (suggestion.criteria?.length
+            ? ` — Theo tiêu chí: ${suggestion.criteria
+                .map((c) => `${c.name} ${c.points}/${c.maxPoints}`)
+                .join("; ")}.`
+            : ""),
       );
     } catch {
       setAiError("Mất kết nối tới máy chủ. Kiểm tra mạng rồi thử lại.");
@@ -156,10 +186,32 @@ export default function GradeForm({
         <p className="mt-1.5 text-[11px] text-faint">
           AI đọc đề bài, rubric (nếu có) và bài nộp rồi điền tạm điểm + nhận xét —
           bạn xem lại trước khi bấm &ldquo;Chấm điểm&rdquo;, AI không tự lưu gì cả.
+          {attachmentUrl && (
+            <>
+              {" "}
+              Tệp đính kèm: AI đọc được chữ trong PDF/Word, Google Docs/Trang tính/Trang trình bày đã mở quyền
+              xem, và nghe bài nói (chưa có bản chữ thì chuyển ngay, tính vào ví AI của bạn). AI không chấm ảnh
+              và video — phần đó bạn tự xem.
+            </>
+          )}{" "}
+          AI sẽ chấm tối đa được {AI_GRADE_CHAR_BUDGET_TEXT} ký tự (khoảng {AI_GRADE_PAGE_LIMIT} trang) mỗi bài;
+          muốn AI chấm đủ, hãy yêu cầu sinh viên nộp không quá {AI_GRADE_PAGE_LIMIT} trang.
         </p>
         {aiError && (
           <p role="alert" className="banner-danger mt-1.5 text-sm">
             {aiError}
+          </p>
+        )}
+        {aiTruncated && (
+          <p role="status" className="banner-warning mt-1.5 text-xs">
+            ⚠ Bài dài khoảng {estimatePages(aiTruncated.totalChars)} trang — AI sẽ chấm tối đa được{" "}
+            {AI_GRADE_CHAR_BUDGET_TEXT} ký tự (khoảng {AI_GRADE_PAGE_LIMIT} trang) nên điểm gợi ý chưa tính phần
+            sau. Muốn AI chấm đủ, hãy yêu cầu sinh viên nộp không quá {AI_GRADE_PAGE_LIMIT} trang.
+          </p>
+        )}
+        {aiUnread && (
+          <p role="status" className="banner-warning mt-1.5 text-xs">
+            ⚠ AI chưa đọc {aiUnread.what} học viên nộp kèm. {aiUnread.why}
           </p>
         )}
         {aiNote && <p className="mt-1.5 text-xs text-muted">{aiNote}</p>}

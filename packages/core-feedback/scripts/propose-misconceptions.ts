@@ -11,7 +11,7 @@
  *         --course=thiet-ke-ui-ux --out=./uiux.misconceptions.json
  *
  *   (b) Offline, đọc file đã trích sẵn — không cần nối tới DB production,
- *       không cần mật khẩu DB. Chỉ cần OPENAI_API_KEY:
+ *       không cần mật khẩu DB. Chỉ cần LLM_BASE_URL (+ LLM_SECKEY):
  *       pnpm --filter @feedbackme/core-feedback propose:misconceptions -- \
  *         --from-export=./tt3.export.json --out=./tt3.misconceptions.json
  */
@@ -23,6 +23,7 @@ import {
   type MisconceptionCatalogueEntry,
   type MisconceptionProposal,
 } from "../src/aiTutor/generators";
+import { createChatRoutingFetch, getChatModel, isSelfHostedChat } from "../src/aiTutor/llm";
 import fs from "node:fs";
 
 function arg(name: string): string | undefined {
@@ -33,7 +34,7 @@ function arg(name: string): string | undefined {
 const courseSlug = arg("course");
 const outPath = arg("out");
 const limit = Number(arg("limit") ?? "0");
-const model = arg("model") ?? "gpt-4o-mini";
+const model = arg("model") ?? getChatModel();
 /**
  * Chế độ offline: đọc câu hỏi từ file trích sẵn thay vì từ DB. Dùng khi dữ liệu
  * nằm ở production mà máy chạy script không nối tới được — không cần tunnel,
@@ -44,18 +45,12 @@ const fromExport = arg("from-export");
 /** Chỉ hai loại này khớp được misconception — xem AC nhóm 1. */
 const TAGGABLE = ["mcq", "true_false"] as const;
 
-async function resolveOpenAiKey(): Promise<string> {
-  if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
-  if (fromExport) {
-    // Offline thì không có DB prod để lấy khoá — phải có sẵn trong env.
-    throw new Error(
-      "Chế độ --from-export cần OPENAI_API_KEY trong môi trường (hoặc trong packages/db/.env).",
-    );
+/** Script chỉ chat → chạy trên LLM tự host, không cần OpenAI key (header Authorization bị bỏ khi định tuyến). */
+function resolveApiKey(): string {
+  if (!isSelfHostedChat()) {
+    throw new Error("Cần LLM_BASE_URL (+ LLM_SECKEY) trong môi trường — chat chạy trên LLM tự host.");
   }
-  // Khoá thật nằm trong IntegrationCredential (đã mã hoá). core-lms là
-  // devDependency của package này, dùng được trong script tooling.
-  const { getIntegrationSecret } = await import("@feedbackme/core-lms");
-  return getIntegrationSecret("openai");
+  return "self-hosted-llm";
 }
 
 interface SourceOption {
@@ -180,7 +175,7 @@ async function main() {
       "Thiếu tham số. Một trong hai:\n" +
         "  --course=<slug> --out=<file.json>            (đọc DB)\n" +
         "  --from-export=<file.json> --out=<file.json>  (offline)\n" +
-        "Tuỳ chọn: --limit=N --model=gpt-4o",
+        "Tuỳ chọn: --limit=N --model=<tên model>",
     );
     process.exitCode = 1;
     return;
@@ -210,7 +205,10 @@ async function main() {
     `Nguồn: ${source.label}\nCâu cần xử lý: ${questions.length} · model=${model}\n`,
   );
 
-  const openai = new OpenAI({ apiKey: await resolveOpenAiKey() });
+  const openai = new OpenAI({
+    apiKey: resolveApiKey(),
+    fetch: createChatRoutingFetch(),
+  });
 
   const items: Array<{
     questionId: string;

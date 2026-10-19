@@ -82,21 +82,21 @@ UPDATE "ExamRoom" r SET "orderIndex" = n.rn FROM numbered n WHERE r.id = n.id;
 
 // PR1c.3 siết NOT NULL trên ExamRoom.sessionId + ExamRoom.orderIndex. Để
 // simulate "PR1a state" (null sessionId/orderIndex), test phải tạm DROP
-// NOT NULL trước khi seed, rồi SET NOT NULL lại sau khi cleanup. PR1c.5 sẽ
-// siết tiếp ExamCandidate.sessionId + ExamSession.roundId — khi đó hook này
-// cần thêm 2 cột nữa.
+// NOT NULL trước khi seed, rồi SET NOT NULL lại sau khi cleanup.
+//
+// ExamSession.roundId KHÔNG nằm trong hook này nữa: buổi đơn (link nhanh,
+// thử nghiệm, vấn đáp) cố ý không có đợt, nên cột phải luôn nullable. Từng
+// khoá nó ở đây làm mọi lần chạy test khoá lại cột trên DB dùng chung.
 const RELAX_NOT_NULL_STATEMENTS = [
   `ALTER TABLE "ExamRoom" ALTER COLUMN "sessionId" DROP NOT NULL;`,
   `ALTER TABLE "ExamRoom" ALTER COLUMN "orderIndex" DROP NOT NULL;`,
   `ALTER TABLE "ExamCandidate" ALTER COLUMN "sessionId" DROP NOT NULL;`,
-  `ALTER TABLE "ExamSchedule" ALTER COLUMN "roundId" DROP NOT NULL;`,
 ];
 
 const RESTORE_NOT_NULL_STATEMENTS = [
   `ALTER TABLE "ExamRoom" ALTER COLUMN "sessionId" SET NOT NULL;`,
   `ALTER TABLE "ExamRoom" ALTER COLUMN "orderIndex" SET NOT NULL;`,
   `ALTER TABLE "ExamCandidate" ALTER COLUMN "sessionId" SET NOT NULL;`,
-  `ALTER TABLE "ExamSchedule" ALTER COLUMN "roundId" SET NOT NULL;`,
 ];
 
 async function runEach(stmts: readonly string[]) {
@@ -115,9 +115,6 @@ describe("A5.3 PR1b — backfill simulation", () => {
     );
     await prisma.$executeRawUnsafe(
       `DELETE FROM "ExamCandidate" WHERE "sessionId" IS NULL;`,
-    );
-    await prisma.$executeRawUnsafe(
-      `DELETE FROM "ExamSchedule" WHERE "roundId" IS NULL;`,
     );
     await runEach(RESTORE_NOT_NULL_STATEMENTS);
   });

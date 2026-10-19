@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { copyText } from "@/lib/clipboard";
 import {
-  StickyNote, RefreshCw, RotateCcw, EyeOff, Eye, Trash2, Pencil, Upload,
+  StickyNote, RotateCcw, EyeOff, Eye, Trash2, Pencil, Upload,
   Plus, X, QrCode, Link as LinkIcon, Image as ImageIcon, Video, Music,
   PanelLeftOpen, PanelLeftClose, LayoutGrid, Clipboard, ClipboardX,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
-import dynamic from "next/dynamic";
+import JoinQrCard from "@/components/ui/JoinQrCard";
+import ToolHistory from "./ToolHistory";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
+import { shrinkImageForUpload } from "@/lib/resizeImage";
 import { formatVN } from "@/lib/datetime";
 import {
   BOARD_NOTE_COLORS,
@@ -23,16 +24,6 @@ import {
 } from "./boardNoteStyle";
 import NoteAttachment from "./NoteAttachment";
 import { LimeSliceIcon, WatermelonSliceIcon } from "@/components/BrandIcons";
-
-const QRCode = dynamic(
-  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="bg-white p-3 rounded-lg border border-token" style={{ width: 200, height: 200 }} />
-    ),
-  },
-);
 
 interface BoardNote {
   id: string;
@@ -64,8 +55,11 @@ interface BoardHistoryItem {
   status: string;
   drawingMode?: boolean;
   createdAt: string;
+  deletedAt?: string | null;
   _count: { notes: number };
 }
+
+const BOARD_HISTORY_COLORS = ["#F7FEE7", "#ECFCCB", "#E0F2FE", "#D1FAE5", "#FEF9C3", "#EDE9FE"];
 
 interface InteractiveBoardProps {
   onExit?: () => void;
@@ -76,14 +70,9 @@ interface InteractiveBoardProps {
 export default function InteractiveBoard({ onExit, drawing = false }: InteractiveBoardProps) {
   const [current, setCurrent] = useState<Board | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  // Mặc định full-screen ngay khi vào phiên board — che luôn top nav +
-  // sidebar + "← Quay lại" của trang cha (xem TeachingToolsClient.tsx),
-  // tránh 2 nút exit cùng hiển thị. Nút "⛶ Thoát" vẫn cho phép thu nhỏ lại.
-  const [isFullscreen, setIsFullscreen] = useState(true);
-  const [showQrModal, setShowQrModal] = useState(false);
+  // Phiên board luôn full-screen — che luôn top nav + sidebar + "← Quay lại" của
+  // trang cha (xem TeachingToolsClient.tsx) nên chỉ có đúng 1 nút "Thoát" (onExit).
   const [qrPanelOpen, setQrPanelOpen] = useState(true);
-  const [history, setHistory] = useState<BoardHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [title, setTitle] = useState("");
   const [prompt, setPrompt] = useState("");
   // Grid theo nhóm — tùy chọn lúc tạo board, mặc định TẮT (masonry tự do như trước).
@@ -333,21 +322,6 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
     }
   };
 
-  const loadHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const res = await fetch(apiUrl("/api/instructor/teaching-tools/boards"));
-      if (res.ok) {
-        const all = (await res.json()) as BoardHistoryItem[];
-        setHistory(all.filter((b) => !!b.drawingMode === drawing));
-      }
-    } catch {
-      toast.error("Lỗi tải lịch sử");
-    } finally {
-      setIsLoadingHistory(false);
-    }
-  };
-
   const handleLoadBoard = async (item: BoardHistoryItem) => {
     try {
       const res = await fetch(apiUrl(`/api/instructor/teaching-tools/boards/${item.id}`));
@@ -439,8 +413,9 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
   // Trả về URL TUYỆT ĐỐI (qua shareUrl) để khớp isValidAttachmentUrl (http/https)
   // dùng chung ở cả note create/edit — dán URL ngoài hay upload nội bộ đều
   // đi qua cùng 1 validation.
-  const uploadAttachmentFile = async (file: File): Promise<string> => {
+  const uploadAttachmentFile = async (original: File): Promise<string> => {
     if (!current) throw new Error("Chưa mở board");
+    const file = await shrinkImageForUpload(original); // ảnh thu nhỏ; PDF giữ nguyên
     if (file.size > BOARD_ATTACHMENT_MAX_BYTES) {
       throw new Error(`File quá lớn — tối đa ${Math.round(BOARD_ATTACHMENT_MAX_BYTES / (1024 * 1024))}MB`);
     }
@@ -683,9 +658,8 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
   // ── Active board view — same layout as student /join page + moderation ──
   if (current) {
     const visibleCount = current.notes.filter((n) => !n.hidden).length;
-    const wrapper = isFullscreen
-      ? "fixed inset-0 z-50 isolate overflow-y-auto bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900"
-      : "relative isolate rounded-2xl overflow-hidden border border-brand-200/60 bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900 shadow-card pb-24";
+    const wrapper =
+      "fixed inset-0 z-50 isolate overflow-y-auto bg-brand-gradient-soft dark:bg-none dark:bg-zinc-900";
     const previewKind = noteAttachmentUrl.trim() && isValidAttachmentUrl(noteAttachmentUrl.trim())
       ? detectMediaKind(noteAttachmentUrl.trim())
       : null;
@@ -755,12 +729,6 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
               </button>
               )}
               <button
-                onClick={() => setIsFullscreen((v) => !v)}
-                className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
-              >
-                {isFullscreen ? "⛶ Thoát" : "⛶ Full"}
-              </button>
-              <button
                 onClick={handleReset}
                 disabled={isResetting}
                 className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors flex items-center gap-1.5"
@@ -774,7 +742,7 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
                   onClick={onExit}
                   className="rounded-lg bg-white/20 hover:bg-white/30 backdrop-blur px-3 py-2 text-xs font-semibold transition-colors"
                 >
-                  ✕ Exit
+                  ✕ Thoát
                 </button>
               )}
             </div>
@@ -798,7 +766,7 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
               setModalOpen(true);
               setPostInfo(null);
             }}
-            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-2xl hover:shadow-brand-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
+            className={`fixed bottom-6 right-6 z-40 w-16 h-16 rounded-full bg-brand-600 hover:bg-brand-700 text-white shadow-2xl hover:shadow-brand-300/50 flex items-center justify-center transition-all hover:scale-110 active:scale-95`}
             title="Thêm note"
             aria-label="Thêm note"
           >
@@ -806,66 +774,16 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
           </button>
         )}
 
-        {/* Khung QR nhỏ, đứng yên góc màn hình — luôn thấy được cùng lúc với các note đổ về,
-            khác với modal full-screen cũ vốn che mất NotesGrid. Bấm vào QR để phóng to khi cần
-            (vd. lớp đông, học viên ngồi xa). */}
+        {/* Khung QR nhỏ, đứng yên góc màn hình — luôn thấy được cùng lúc với các note đổ về.
+            Bấm vào QR để phóng to popup khi cần (vd. lớp đông, học viên ngồi xa). */}
         {qrPanelOpen && joinUrl && (
-          <div
-            className={`${isFullscreen ? "fixed" : "absolute"} bottom-6 left-6 z-40 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-brand-200 animate-fade-in-up`}
-          >
-            <button
-              onClick={() => setQrPanelOpen(false)}
-              className="absolute -top-2 -right-2 rounded-full bg-white p-1 shadow ring-1 ring-gray-200 hover:bg-gray-100"
-              aria-label="Ẩn khung QR"
-              title="Ẩn khung QR"
-            >
-              <X size={12} />
-            </button>
-            <button
-              onClick={() => setShowQrModal(true)}
-              title="Bấm để phóng to"
-              className="rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
-            >
-              <QRCode value={joinUrl} size={110} level="H" includeMargin />
-            </button>
-            <p className="text-sm font-extrabold font-mono tracking-[0.15em] text-brand-700">{current.code}</p>
-          </div>
-        )}
-
-        {/* QR Modal phóng to — bấm vào khung QR góc màn hình hoặc nút mã để hiện QR to hơn */}
-        {showQrModal && joinUrl && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in-up p-4"
-            onClick={(e) => { if (e.target === e.currentTarget) setShowQrModal(false); }}
-          >
-            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl max-w-md text-center">
-              <button
-                onClick={() => setShowQrModal(false)}
-                className="absolute top-3 right-3 p-2 rounded-lg hover:bg-gray-100"
-                aria-label="Đóng"
-              >
-                <X size={20} />
-              </button>
-              <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-2">Quét để tham gia</p>
-              <div className="inline-block bg-white p-4 rounded-xl ring-2 ring-brand-200">
-                <QRCode value={joinUrl} size={280} level="H" includeMargin />
-              </div>
-              <p className="mt-4 text-4xl font-extrabold font-mono tracking-[0.3em] text-brand-700">{current.code}</p>
-              <p className="mt-2 text-sm text-gray-600">
-                Hoặc truy cập: <code className="font-mono px-1.5 py-0.5 bg-brand-50 rounded">/join/{current.code}</code>
-              </p>
-              <button
-                onClick={async () => {
-                  const ok = await copyText(joinUrl);
-                  if (ok) toast.success("Đã copy link");
-                  else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
-                }}
-                className="mt-3 text-sm text-brand-600 hover:text-brand-700 font-medium underline"
-              >
-                Copy link tham gia
-              </button>
-            </div>
-          </div>
+          <JoinQrCard
+            url={joinUrl}
+            code={current.code}
+            title="Quét để tham gia"
+            onHide={() => setQrPanelOpen(false)}
+            className="fixed bottom-6 left-6 z-40 animate-fade-in-up"
+          />
         )}
 
         {/* Panel quản lý cột (grid theo nhóm) — bật/sửa/xoá cột ngay giữa buổi */}
@@ -1305,44 +1223,46 @@ export default function InteractiveBoard({ onExit, drawing = false }: Interactiv
       </div>
 
       {/* History — mỗi bảng cũ là một tờ note pastel (tông dịu, cùng họ với lime) */}
-      <div className="mt-6 border-t border-token pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-muted">Bảng đã tạo trước đây</p>
-          <button onClick={loadHistory} disabled={isLoadingHistory} className="tool-action">
-            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
-            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-          </button>
-        </div>
-        {history.length === 0 && !isLoadingHistory && (
-          <p className="py-2 text-center text-xs text-muted">Bấm "Tải lịch sử" để xem các bảng cũ</p>
+      <ToolHistory<BoardHistoryItem>
+        kind="board"
+        heading="Bảng đã tạo trước đây"
+        noun={drawing ? "bảng vẽ" : "bảng"}
+        listUrl="/api/instructor/teaching-tools/boards"
+        include={(b) => !!b.drawingMode === drawing}
+        toEntry={(item) => ({
+          id: item.id,
+          title: item.title,
+          code: item.code,
+          responseCount: item._count.notes,
+          createdAt: item.createdAt,
+          deletedAt: item.deletedAt,
+          isOpen: item.status === "open",
+        })}
+        onOpen={handleLoadBoard}
+        containerClassName="grid max-h-96 gap-3 overflow-y-auto p-1 sm:grid-cols-2"
+        itemStyle={(_item, idx) => ({
+          className:
+            "w-full rounded-xl p-3.5 text-left shadow-sm ring-1 ring-black/5 transition-all hover:scale-[1.02] hover:shadow-md",
+          style: {
+            backgroundColor: BOARD_HISTORY_COLORS[idx % BOARD_HISTORY_COLORS.length],
+            transform: `rotate(${idx % 2 === 0 ? -0.5 : 0.5}deg)`,
+          },
+        })}
+        renderItem={(item) => (
+          <>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="truncate text-sm font-semibold text-gray-900">{item.title}</p>
+              <span className="shrink-0 rounded-md bg-white/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-800">
+                {item.code}
+              </span>
+            </div>
+            <p className="text-xs text-gray-700">
+              {item._count.notes} note · {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              {item.status === "closed" && " · 🔒 Đã đóng"}
+            </p>
+          </>
         )}
-        <div className="grid max-h-72 gap-3 overflow-y-auto p-1 sm:grid-cols-2">
-          {history.map((item, idx) => {
-            const noteColors = ["#F7FEE7", "#ECFCCB", "#E0F2FE", "#D1FAE5", "#FEF9C3", "#EDE9FE"];
-            const bg = noteColors[idx % noteColors.length];
-            const tilt = idx % 2 === 0 ? -0.5 : 0.5;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleLoadBoard(item)}
-                className="rounded-xl p-3.5 text-left shadow-sm ring-1 ring-black/5 transition-all hover:scale-[1.02] hover:shadow-md"
-                style={{ backgroundColor: bg, transform: `rotate(${tilt}deg)` }}
-              >
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-gray-900">{item.title}</p>
-                  <span className="shrink-0 rounded-md bg-white/70 px-2 py-0.5 font-mono text-[11px] font-semibold text-gray-800">
-                    {item.code}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-700">
-                  {item._count.notes} note · {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                  {item.status === "closed" && " · 🔒 Đã đóng"}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      />
     </div>
   );
 }

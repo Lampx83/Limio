@@ -15,6 +15,7 @@ import {
   startExamAttempt,
   submitExamAttempt,
 } from "../";
+import { openForEnrolled } from "../../test/openForEnrolled";
 
 const BASE = "http://localhost:3000";
 
@@ -76,6 +77,7 @@ async function setup(slug: string) {
   });
 
   await publishExam(owner.userId, examId);
+  await openForEnrolled(owner.userId, examId);
 
   return {
     ownerId: owner.userId,

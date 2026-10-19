@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   getCourseTeamsOverview,
   instructorMoveTeamMember,
+  instructorRenameCourseTeam,
   instructorSetTeamCaptain,
   updateCourseTeamSettings,
 } from "@feedbackme/core-lms";
@@ -43,7 +44,8 @@ export async function PATCH(req: Request, { params }: { params: { courseId: stri
 
 type Body =
   | { action: "move"; userId?: string; toTeamId?: string | null }
-  | { action: "captain"; teamId?: string; userId?: string };
+  | { action: "captain"; teamId?: string; userId?: string }
+  | { action: "rename"; teamId?: string; name?: string };
 
 /** Chuyển / thêm / gỡ thành viên, đổi trưởng nhóm — được cả khi đã khoá. */
 export async function POST(req: Request, { params }: { params: { courseId: string } }) {
@@ -55,6 +57,8 @@ export async function POST(req: Request, { params }: { params: { courseId: strin
       await instructorMoveTeamMember(userId, params.courseId, body.userId, body.toTeamId ?? null);
     } else if (body?.action === "captain" && body.teamId && body.userId) {
       await instructorSetTeamCaptain(userId, params.courseId, body.teamId, body.userId);
+    } else if (body?.action === "rename" && body.teamId) {
+      await instructorRenameCourseTeam(userId, params.courseId, body.teamId, String(body.name ?? ""));
     } else {
       return NextResponse.json({ error: "validation_failed" }, { status: 400 });
     }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Crown, Lock, LockOpen } from "lucide-react";
+import { Crown, Lock, LockOpen, Pencil } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { toast } from "@/lib/toast";
@@ -25,6 +25,7 @@ const NO_SECTION = "__none__";
 function errorMessage(code: string | undefined, details: unknown, status: number): string {
   if (details === "team_max_size_out_of_range") return "Số người tối đa phải từ 1 đến 50.";
   if (code === "team_not_found") return "Không tìm thấy nhóm này — hãy tải lại trang.";
+  if (code === "team_name_taken") return "Tên này đã có nhóm khác dùng — chọn tên khác.";
   if (code === "not_enrolled") return "Sinh viên này không còn ghi danh khoá học.";
   if (code === "not_in_team") return "Sinh viên này không còn ở nhóm đó — hãy tải lại trang.";
   return lmsErrorMessage(code ?? "server_error", status);
@@ -36,6 +37,7 @@ export default function TeamsClient({ courseId, initial }: { courseId: string; i
   const [error, setError] = useState<string | null>(null);
   const [maxInput, setMaxInput] = useState(initial.settings.teamMaxSize?.toString() ?? "");
   const [section, setSection] = useState("all");
+  const [renaming, setRenaming] = useState<{ teamId: string; draft: string } | null>(null);
 
   const endpoint = apiUrl(`/api/instructor/courses/${courseId}/teams`);
 
@@ -99,6 +101,19 @@ export default function TeamsClient({ courseId, initial }: { courseId: string; i
       await call("POST", { action: "move", userId, toTeamId: null }, `Đã gỡ ${displayName} khỏi nhóm`);
     } else if (action.startsWith("move:")) {
       await call("POST", { action: "move", userId, toTeamId: action.slice(5) }, `Đã chuyển ${displayName}`);
+    }
+  }
+
+  async function saveRename(e: React.FormEvent) {
+    e.preventDefault();
+    if (!renaming) return;
+    const name = renaming.draft.trim().replace(/\s+/g, " ");
+    if (name.length === 0 || name.length > 60) {
+      setError("Tên nhóm cần từ 1 đến 60 ký tự.");
+      return;
+    }
+    if (await call("POST", { action: "rename", teamId: renaming.teamId, name }, `Đã đổi tên thành “${name}”`)) {
+      setRenaming(null);
     }
   }
 
@@ -224,8 +239,45 @@ export default function TeamsClient({ courseId, initial }: { courseId: string; i
               return (
                 <li key={t.id} className="card space-y-3">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-h4 truncate">{t.name}</p>
+                    <div className="min-w-0 flex-1">
+                      {renaming?.teamId === t.id ? (
+                        <form onSubmit={saveRename} className="space-y-2">
+                          <input
+                            aria-label="Tên nhóm mới"
+                            value={renaming.draft}
+                            onChange={(e) => setRenaming({ teamId: t.id, draft: e.target.value })}
+                            maxLength={60}
+                            className="input h-9 text-sm"
+                            autoFocus
+                          />
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="submit"
+                              disabled={busy || !renaming.draft.trim() || renaming.draft.trim() === t.name}
+                              className="btn-primary btn-sm"
+                            >
+                              Lưu tên
+                            </button>
+                            <button type="button" onClick={() => setRenaming(null)} className="btn-ghost btn-sm">
+                              Huỷ
+                            </button>
+                          </div>
+                        </form>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <p className="text-h4 truncate">{t.name}</p>
+                          <button
+                            type="button"
+                            onClick={() => setRenaming({ teamId: t.id, draft: t.name })}
+                            disabled={busy}
+                            aria-label={`Đổi tên nhóm ${t.name}`}
+                            title="Đổi tên nhóm"
+                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-50"
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden />
+                          </button>
+                        </div>
+                      )}
                       <p className="text-caption">
                         Mã nhóm <span className="font-mono font-semibold tracking-wider">{t.joinCode}</span>
                       </p>

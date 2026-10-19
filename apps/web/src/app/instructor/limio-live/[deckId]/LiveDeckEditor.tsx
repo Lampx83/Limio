@@ -1,9 +1,19 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { Fragment, memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { openAudienceWindow } from "@/lib/limioLiveWindow";
+import {
+  audienceUrl,
+  openAudienceWindow,
+  presenterUrl,
+  requestProjectorPermission,
+  startPresenterOnProjector,
+  useProjectorStatus,
+  type ProjectorStatus,
+} from "@/lib/limioLiveWindow";
+import { isTopicSource, resolveSourceKind } from "@/lib/limioLiveOutline";
+import { TopicSourceNotice } from "../TopicSourceNotice";
 import {
   DndContext,
   closestCenter,
@@ -39,22 +49,41 @@ import {
   ClipboardX,
   ZoomIn,
   ZoomOut,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Save,
   Check,
   MonitorPlay,
   Play,
+  History,
+  Share2,
+  ChevronDown,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
+import { formatDateTime } from "@/lib/datetime";
 import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 import BoardNotesView from "../BoardNotesView";
 import { contentKind } from "../slideKind";
 import ImportFromCourseDialog from "./ImportFromCourseDialog";
+import { insertGapLabel } from "@/lib/limioLiveInsert";
 import SlideTypePicker, { CollabBoardIcon, WordCloudIcon, type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
-import Tooltip from "@/components/ui/Tooltip";
-import { SLIDE_THEMES, slideThemeBg } from "../slideThemes";
+import { slideBgFor } from "../slideThemes";
+import ThemePicker from "./ThemePicker";
+import BrandDialog, { type BrandPatch } from "./BrandDialog";
+import ShareDialog from "./ShareDialog";
+import { LiveBrandProvider } from "../liveBrandContext";
+import { LiveLangProvider } from "../liveLangContext";
+import { LiveMotifProvider } from "../liveMotifContext";
+import { deckAutoMotif, isMotifId } from "@/lib/limioLiveMotifs";
+import { autoImageFrame } from "@/lib/limioLiveImageStyle";
+import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
+import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
+import { isLayoutSlide } from "../SlideLayouts";
+import { adjacentSlide, emptyLayoutConfig } from "@/lib/limioLiveSlides";
+import LayoutEditor, { LayoutPicker } from "./LayoutEditor";
 import { columnHeaderColor } from "../../classroom/boardNoteStyle";
 import { ResourceTypePicker, ResourceAuthorForm } from "../ResourceEditor";
 
@@ -72,6 +101,26 @@ interface Deck {
   id: string;
   title: string;
   theme?: string;
+  /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider / sanitizeBrand. */
+  brand?: unknown;
+  /** true = bài này không dùng thương hiệu nào (kể cả của trường). */
+  brandOff?: boolean;
+  /** Mẫu thương hiệu của trường giảng viên chọn cho bài; null = mẫu mặc định của trường. */
+  brandTemplate?: string | null;
+  /** Hoa văn trang trí của cả bài: null = tự động, "none" = không dùng, hoặc mã hoa văn (limioLiveMotifs). */
+  motif?: string | null;
+  /** Ngôn ngữ nội dung slide (docs/tieu-chi/ngon-ngu-slide.md); null = chưa xác định. */
+  language?: string | null;
+  /** Khung hình của các ô hình (docs/tieu-chi/chu-va-hinh-kieu-khung.md); null = tự động theo hoa văn. */
+  imageFrame?: string | null;
+  /** Bộ thương hiệu của trường mà chủ bài thuộc về (null nếu không thuộc trường nào). */
+  org?: DeckOrgBrand | null;
+  /** Nguồn của bài AI soạn (document | topic | topic_web); null với bài soạn tay. */
+  sourceKind?: string | null;
+  /** Các trang đã đọc khi soạn bài từ mô tả chủ đề có nguồn internet. */
+  sourceRefs?: unknown;
+  /** Mã link xem chỉ đọc /bai-giang/<mã>; null = không chia sẻ. */
+  shareCode?: string | null;
   slides: Slide[];
 }
 
@@ -114,6 +163,7 @@ function slideSummary(slide: Slide): string {
   switch (slide.type) {
     case "content":
       if (c.title) return c.title;
+      if (c.quote) return c.quote;
       if (c.resource) return `(${RESOURCE_TYPE_LABELS[c.resource.type as ResourceType]})`;
       if (c.resourceKind) return `(${RESOURCE_TYPE_LABELS[c.resourceKind as ResourceType]})`;
       if (c.imageUrl) return "(Trang nhập từ PDF)";
@@ -134,7 +184,9 @@ function slideSummary(slide: Slide): string {
 function defaultConfigFor(type: SlideType): Record<string, any> {
   switch (type) {
     case "content":
-      return { title: "", subtitle: "", bullets: [""] };
+      // Slide văn bản mới bắt đầu ở bố cục "Chữ và hình" để vào ngay trình sửa mới (xem trước, B/I, Nhờ AI);
+      // bố cục cũ (classic) chỉ còn cho slide đã có từ trước.
+      return emptyLayoutConfig("image");
     case "quiz":
       return { question: "", options: [{ text: "", correct: true }, { text: "" }] };
     case "poll":
@@ -254,7 +306,11 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dirty]);
   const [selectedSlideId, setSelectedSlideId] = useState<string | null>(initialDeck?.slides[0]?.id ?? null);
+  // Cửa sổ sửa slide (bố cục mới). Giữ ở đây để ‹ › sang slide khác mà cửa sổ không đóng mở lại.
+  const [editOpen, setEditOpen] = useState(false);
   const [pickingType, setPickingType] = useState(false);
+  // Vị trí chèn khi mở hộp chọn loại slide từ nút [+] giữa các slide; null = thêm vào cuối.
+  const [insertAt, setInsertAt] = useState<number | null>(null);
   const [importingCourse, setImportingCourse] = useState(false);
   const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -265,6 +321,9 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     document.body.classList.add("limio-live-immersive");
     return () => document.body.classList.remove("limio-live-immersive");
   }, []);
+
+  // Bộ đếm làm mới trình soạn sau khi khôi phục phiên bản (các ô nhập giữ state cục bộ nên phải dựng lại).
+  const [restoreRev, setRestoreRev] = useState(0);
 
   const load = async () => {
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`));
@@ -298,6 +357,32 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
+  const [brandOpen, setBrandOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  // Các lần lưu thương hiệu chạy LẦN LƯỢT: hai lần sửa sát nhau mà đến máy chủ đảo thứ tự thì lần cũ sẽ ghi đè lần mới.
+  const brandQueue = useRef<Promise<unknown>>(Promise.resolve());
+  // Thương hiệu: cập nhật ngay trên màn hình rồi lưu; lỗi thì hoàn lại như đổi giao diện.
+  const handleSetBrand = (patch: BrandPatch) => {
+    if (!deck) return;
+    const prev = { brand: deck.brand ?? null, brandOff: deck.brandOff ?? false, brandTemplate: deck.brandTemplate ?? null };
+    setDeck((d) => (d ? { ...d, ...patch } : d));
+    brandQueue.current = brandQueue.current.then(async () => {
+      const res = await trackSave(() =>
+        fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        })
+      ).catch(() => null);
+      if (!res || !res.ok) {
+        toast.error("Lưu thương hiệu thất bại");
+        setDeck((d) => (d ? { ...d, ...prev } : d));
+        return;
+      }
+      setLastSavedAt(new Date());
+    });
+  };
+
   const handleSetTheme = async (theme: string) => {
     if (!deck || deck.theme === theme) return;
     const prev = deck.theme;
@@ -317,6 +402,67 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
+  // Khung hình của cả bài (menu Giao diện): null = tự động theo hoa văn (docs/tieu-chi/chu-va-hinh-kieu-khung.md, K10).
+  const handleSetImageFrame = async (imageFrame: string | null) => {
+    if (!deck || (deck.imageFrame ?? null) === imageFrame) return;
+    const prev = deck.imageFrame ?? null;
+    setDeck({ ...deck, imageFrame });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageFrame }),
+      })
+    );
+    if (!res.ok) {
+      toast.error("Lưu khung hình thất bại");
+      setDeck((d) => (d ? { ...d, imageFrame: prev } : d));
+      return;
+    }
+    setLastSavedAt(new Date());
+  };
+
+  const handleSetMotif = async (motif: string | null) => {
+    if (!deck || (deck.motif ?? null) === motif) return;
+    const prev = deck.motif ?? null;
+    setDeck({ ...deck, motif });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ motif }),
+      })
+    );
+    if (!res.ok) {
+      toast.error("Lưu hoa văn thất bại");
+      setDeck((d) => (d ? { ...d, motif: prev } : d));
+      return;
+    }
+    setLastSavedAt(new Date());
+  };
+
+  // Ngôn ngữ của slide: null = nhận lại theo nội dung (máy chủ trả ngôn ngữ vừa nhận được).
+  const handleSetLanguage = async (language: string | null) => {
+    if (!deck || (deck.language ?? null) === language) return;
+    const prev = deck.language ?? null;
+    setDeck({ ...deck, language });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language }),
+      })
+    );
+    if (!res.ok) {
+      toast.error("Lưu ngôn ngữ của slide thất bại");
+      setDeck((d) => (d ? { ...d, language: prev } : d));
+      return;
+    }
+    const saved = (await res.json().catch(() => null)) as { language?: string | null } | null;
+    if (saved && "language" in saved) setDeck((d) => (d ? { ...d, language: saved.language ?? null } : d));
+    setLastSavedAt(new Date());
+  };
+
   // 3 nút giống thanh Slide Show của PowerPoint:
   //  - Từ đầu / Từ slide hiện tại: vào fullscreen NGAY trong cú click rồi điều
   //    hướng SPA (fullscreen sống sót qua điều hướng client) — không ghi chú.
@@ -333,7 +479,24 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     router.push(`/instructor/limio-live/${deckId}/present?mode=slideshow&from=${fromParam}`);
   };
 
+  // Có màn hình mở rộng + đã cho quyền "Quản lý cửa sổ" (Chrome/Edge): làm như PowerPoint —
+  // tab này lên fullscreen ở máy chiếu thành màn chiếu, presenter view mở cửa sổ mới ở
+  // màn hình laptop. Còn lại (Safari/Firefox, mirror, chưa cho quyền) giữ cách cũ. Chưa cho quyền thì menu
+  // Trình chiếu có dòng "Cho phép" xin quyền riêng (xem PlayMenu).
+  const projector = useProjectorStatus();
+  const handleAllowProjector = async () => {
+    const next = await requestProjectorPermission();
+    if (next === "ready") toast.success("Đã cho phép. Từ giờ Presenter view tự đưa màn chiếu sang màn hình thứ hai.");
+  };
   const handleStartPresenterView = async () => {
+    const presenterWin = startPresenterOnProjector();
+    if (presenterWin === "blocked") return;
+    if (presenterWin) {
+      await flushSaves();
+      presenterWin.location.replace(presenterUrl(deckId, "start"));
+      router.push(audienceUrl(deckId));
+      return;
+    }
     openAudienceWindow(deckId);
     await flushSaves();
     router.push(`/instructor/limio-live/${deckId}/present?from=start`);
@@ -365,6 +528,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   const handleAddSlide = async (choice: SlideChoice) => {
     setPickingType(false);
+    const at = insertAt;
+    setInsertAt(null);
     const type: SlideType = choice.type;
     // Slide nội dung theo tài nguyên: nhớ loại đã chọn ở `resourceKind` (chưa có payload hợp lệ nên
     // chưa thể ghi vào `resource` — server validate payload đầy đủ); editor mở đúng form nhập.
@@ -377,11 +542,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, config }),
+      body: JSON.stringify({ type, config, ...(at !== null ? { insertAt: at } : {}) }),
     });
     if (!res.ok) { toast.error("Thêm slide thất bại"); return; }
     const slide: Slide = await res.json();
-    setDeck((prev) => (prev ? { ...prev, slides: [...prev.slides, slide] } : prev));
+    setDeck((prev) => {
+      if (!prev) return prev;
+      const pos = at !== null && at < prev.slides.length ? at : prev.slides.length;
+      return { ...prev, slides: [...prev.slides.slice(0, pos), slide, ...prev.slides.slice(pos)] };
+    });
     setSelectedSlideId(slide.id);
     setLastSavedAt(new Date());
   };
@@ -473,11 +642,55 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
-  const handleSaveSlide = async (slideId: string, patch: { config?: Record<string, any>; timerSeconds?: number | null }) => {
+  // Tách một slide quá dài thành hai: cập nhật slide hiện tại, thêm slide mới rồi đặt ngay sau nó.
+  /**
+   * Thay slide bằng `first` và chèn `second` ngay sau. `aiAction`: slide đầu là đề xuất AI giảng viên đã chấp nhận
+   * (vẽ lại biểu đồ từ hình): ghi như chấp nhận đề xuất AI và giữ chọn slide đầu thay vì slide mới.
+   */
+  const handleSplitSlide = async (slideId: string, first: Record<string, any>, second: Record<string, any>, opts: { aiAction?: string } = {}) => {
+    if (!deck) return;
+    await flushSaves();
+    // Hiện ngay slide đầu đã đổi (vd biểu đồ thay hình), không để cửa sổ sửa còn nội dung cũ trong lúc chờ máy chủ.
+    setDeck((prev) => (prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, config: first } : s)) } : prev));
+    const patchRes = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slideId}`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ config: first, ...(opts.aiAction ? { source: "ai", aiAction: opts.aiAction } : {}) }),
+    });
+    const addRes = patchRes.ok
+      ? await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "content", config: second }),
+        })
+      : null;
+    if (!patchRes.ok || !addRes?.ok) {
+      toast.error("Tách slide thất bại");
+      load();
+      return;
+    }
+    const created: Slide = await addRes.json();
+    const ids = deck.slides.map((s) => s.id);
+    ids.splice(ids.indexOf(slideId) + 1, 0, created.id);
+    const orderRes = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/reorder`), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderedSlideIds: ids }),
+    });
+    if (!orderRes.ok) toast.error("Đã tách nhưng chưa đặt đúng thứ tự — hãy kéo slide mới lên sau slide gốc");
+    await load();
+    setSelectedSlideId(opts.aiAction ? slideId : created.id);
+  };
+
+  const handleSaveSlide = async (
+    slideId: string,
+    patch: { config?: Record<string, any>; timerSeconds?: number | null; type?: SlideType; source?: "ai" | "manual"; aiAction?: string },
+  ) => {
     // Lạc quan: cập nhật giao diện ngay (thanh thumb, preview), server xác nhận
     // sau; lỗi thì nạp lại từ server để không lệch dữ liệu.
+    const { source: _source, aiAction: _aiAction, ...local } = patch;
     setDeck((prev) =>
-      prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, ...patch } : s)) } : prev
+      prev ? { ...prev, slides: prev.slides.map((s) => (s.id === slideId ? { ...s, ...local } : s)) } : prev
     );
     const startedAt = Date.now();
     await trackSave(async () => {
@@ -497,8 +710,33 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   if (!deck) return <p className="text-sm text-muted">Đang tải...</p>;
 
   const selectedSlide = deck.slides.find((s) => s.id === selectedSlideId) ?? null;
+  // Thương hiệu thực sự áp cho bài: riêng của bài, của trường (theo mẫu đã chọn) hoặc không có.
+  const effBrand = deckEffectiveBrand(deck);
+  // ‹ › trong cửa sổ sửa: sang slide kế bên; nếu slide đó dùng trình sửa riêng (quiz, bảng...) thì đóng cửa sổ.
+  const goAdjacent = (delta: -1 | 1) => {
+    if (!selectedSlideId) return;
+    const t = adjacentSlide(deck.slides, selectedSlideId, delta);
+    if (!t) return;
+    setSelectedSlideId(t.id);
+    if (!t.layoutSlide) setEditOpen(false);
+  };
+  // Slide đang chọn không còn dùng trình sửa bố cục (đổi sang quiz, bị xoá...) thì đóng cửa sổ, kẻo mở lại ở slide sau.
+  useEffect(() => {
+    if (editOpen && !(selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config))) setEditOpen(false);
+  }, [editOpen, selectedSlide]);
+  const slideIndex = selectedSlideId ? deck.slides.findIndex((s) => s.id === selectedSlideId) : -1;
+  const stageLayout = !!selectedSlide && selectedSlide.type === "content" && isLayoutSlide(selectedSlide.config);
+  const slideNav = {
+    index: Math.max(0, slideIndex),
+    total: deck.slides.length,
+    onPrev: selectedSlideId && adjacentSlide(deck.slides, selectedSlideId, -1) ? () => goAdjacent(-1) : null,
+    onNext: selectedSlideId && adjacentSlide(deck.slides, selectedSlideId, 1) ? () => goAdjacent(1) : null,
+  };
 
   return (
+    <LiveBrandProvider brand={effBrand}>
+    <LiveLangProvider lang={deck.language}>
+    <LiveMotifProvider deckId={deckId} motif={deck.motif} imageFrame={deck.imageFrame} slides={deck.slides}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
       onInput={() => {
@@ -506,103 +744,120 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         setDirty(true);
       }}
     >
-      {/* Header */}
-      <div className="flex h-16 flex-shrink-0 items-center gap-2 border-b border-token bg-[rgb(var(--surface))] px-3 sm:gap-4 sm:px-6">
-        <Link href="/instructor/limio-live" className="hidden text-sm text-muted hover:text-brand-600 sm:inline">
-          Limio-Live
+      {/* Header: quay về, tên bài (chiếm phần còn lại), trạng thái lưu; nút phụ không viền cùng cao; Trình chiếu kèm menu. */}
+      <div className="flex h-16 flex-shrink-0 items-center gap-1.5 border-b border-token bg-[rgb(var(--surface))] px-2 sm:gap-2 sm:px-4">
+        <Link
+          href="/instructor/limio-live"
+          title="Về danh sách Limio-Live"
+          aria-label="Về danh sách Limio-Live"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+        >
+          <ChevronLeft size={20} />
         </Link>
-        <span className="hidden text-token sm:inline">/</span>
-        <input
-          value={titleDraft}
-          onChange={(e) => setTitleDraft(e.target.value)}
-          onBlur={handleSaveTitle}
-          onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-          className="min-w-0 max-w-[40vw] rounded-lg px-2 py-1.5 text-[15px] font-bold hover:bg-[rgb(var(--surface-muted))] focus:bg-[rgb(var(--surface-muted))] focus:outline-none sm:max-w-none"
-          style={{ width: `${Math.max(titleDraft.length, 8)}ch` }}
-        />
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+          <input
+            value={titleDraft}
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onBlur={handleSaveTitle}
+            onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+            aria-label="Tên bài giảng"
+            title={titleDraft}
+            className="w-full min-w-0 max-w-[560px] truncate rounded-lg border border-transparent bg-transparent px-2 py-1.5 text-base font-bold transition hover:border-token focus:border-brand-600 focus:bg-[rgb(var(--surface))] focus:outline-none"
+          />
+          <button
+            onClick={handleManualSave}
+            disabled={pending > 0}
+            title="Lưu ngay (Ctrl/Cmd + S); mọi thay đổi cũng tự lưu khi bạn rời ô nhập"
+            className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-1 text-xs transition ${
+              dirty && pending === 0
+                ? "font-semibold text-amber-800 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-900/20"
+                : "text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-muted"
+            }`}
+          >
+            {pending > 0 ? (
+              <>
+                <Loader2 size={13} className="animate-spin" /> <span className="hidden sm:inline">Đang lưu…</span>
+              </>
+            ) : dirty ? (
+              <>
+                <Save size={13} /> <span className="hidden sm:inline">Chưa lưu · Lưu ngay</span>
+              </>
+            ) : (
+              <>
+                <Check size={13} />
+                <span className="hidden sm:inline">
+                  {lastSavedAt ? `Đã lưu ${lastSavedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}` : "Đã lưu"}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+        <Link
+          href={`/instructor/limio-live/${deckId}/history`}
+          title="Lịch sử tương tác: kết quả vote, word cloud, Padlet và whiteboard của các lượt đã trình chiếu"
+          aria-label="Lịch sử tương tác"
+          className="hidden h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:flex"
+        >
+          <History size={17} /> <span className="hidden xl:inline">Lịch sử</span>
+        </Link>
         <button
-          onClick={handleManualSave}
-          disabled={pending > 0}
-          title="Lưu ngay (Ctrl/Cmd + S) — mọi thay đổi cũng tự lưu khi bạn rời ô nhập"
-          className={`flex h-8 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition ${
-            dirty && pending === 0
-              ? "border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
-              : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"
-          }`}
+          type="button"
+          onClick={() => setShareOpen(true)}
+          title="Link xem chỉ đọc cho người khác, kèm tải PDF"
+          aria-label={deck.shareCode ? "Đang chia sẻ" : "Chia sẻ"}
+          className="hidden h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:flex"
         >
-          {pending > 0 ? (
-            <>
-              <Loader2 size={13} className="animate-spin" /> <span className="hidden sm:inline">Đang lưu…</span>
-            </>
-          ) : dirty ? (
-            <>
-              <Save size={13} /> <span className="hidden sm:inline">Chưa lưu · Lưu ngay</span>
-            </>
-          ) : (
-            <>
-              <Check size={13} className="text-brand-600" />
-              <span className="hidden sm:inline">
-                {lastSavedAt
-                  ? `Đã lưu ${lastSavedAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
-                  : "Đã lưu"}
-              </span>
-            </>
-          )}
+          <Share2 size={17} className={deck.shareCode ? "text-brand-600" : undefined} />
+          <span className="hidden xl:inline">{deck.shareCode ? "Đang chia sẻ" : "Chia sẻ"}</span>
         </button>
-        <div className="flex-grow" />
-        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5" role="radiogroup" aria-label="Giao diện slide">
-          <span className="mr-1 hidden text-xs text-faint sm:inline">Giao diện</span>
-          {SLIDE_THEMES.map((t) => (
-            <button
-              key={t.id}
-              role="radio"
-              aria-checked={(deck.theme ?? "white") === t.id}
-              title={t.label}
-              onClick={() => handleSetTheme(t.id)}
-              className={`h-5 w-5 rounded-full border transition sm:h-6 sm:w-6 ${
-                (deck.theme ?? "white") === t.id ? "ring-2 ring-brand-500 ring-offset-2" : "border-token hover:scale-110"
-              }`}
-              style={{ background: t.swatch }}
-            />
-          ))}
-        </div>
-        {/* 3 lệnh trình chiếu gom 1 khối phân đoạn (giống thanh Slide Show của PowerPoint):
-            "Từ đầu" là lệnh chính (tô đặc), 2 lệnh còn lại nền trong, cùng cỡ. */}
-        <div
-          className="flex shrink-0 items-center gap-1 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-1"
-          role="group"
-          aria-label="Trình chiếu"
-        >
-          <Tooltip label="Trình chiếu từ đầu" description="Toàn màn hình, bắt đầu từ slide 1, không hiện Note.">
-            <button
-              onClick={() => startSlideshow("start")}
-              className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 bg-brand-600 text-white shadow-sm hover:bg-brand-700"
-              aria-label="Trình chiếu từ đầu"
-            >
-              <Play size={15} className="fill-current" /> <span className="hidden xl:inline">Từ đầu</span>
-            </button>
-          </Tooltip>
-          <Tooltip label="Trình chiếu từ slide này" description="Toàn màn hình, bắt đầu từ slide đang chọn, không hiện Note.">
-            <button
-              onClick={() => startSlideshow("current")}
-              disabled={!selectedSlideId}
-              className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 text-[rgb(var(--text))] hover:bg-[rgb(var(--surface))] hover:shadow-sm disabled:opacity-40"
-              aria-label="Trình chiếu từ slide này"
-            >
-              <Presentation size={15} className="text-brand-700 dark:text-brand-300" /> <span className="hidden xl:inline">Từ slide này</span>
-            </button>
-          </Tooltip>
-          <Tooltip label="Presenter view" description="Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này." align="end">
-            <button
-              onClick={handleStartPresenterView}
-              className="flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-semibold transition xl:px-3.5 text-[rgb(var(--text))] hover:bg-[rgb(var(--surface))] hover:shadow-sm"
-              aria-label="Presenter view"
-            >
-              <MonitorPlay size={15} className="text-brand-700 dark:text-brand-300" /> <span className="hidden xl:inline">Presenter view</span>
-            </button>
-          </Tooltip>
-        </div>
+        <ThemePicker
+          value={deck.theme ?? "white"}
+          onChange={handleSetTheme}
+          motif={{ value: deck.motif ?? null, auto: deckAutoMotif(deckId), onChange: handleSetMotif }}
+          language={{ value: deck.language ?? null, onChange: handleSetLanguage }}
+          imageFrame={{
+            value: deck.imageFrame ?? null,
+            auto: autoImageFrame(isMotifId(deck.motif) ? deck.motif : deckAutoMotif(deckId)),
+            onChange: handleSetImageFrame,
+          }}
+          brand={{
+            color: effBrand?.colors?.primary ?? null,
+            logoUrl: effBrand?.logoUrl ?? null,
+            title: deck.brandOff
+              ? "Không dùng logo và màu thương hiệu"
+              : deck.brand
+                ? "Thương hiệu riêng của bài giảng"
+                : deck.org
+                  ? deck.org.name
+                  : "Chưa đặt logo và màu thương hiệu",
+            detail: deck.brandOff
+              ? "Slide hiện đúng theo kiểu slide đã chọn."
+              : deck.brand
+                ? "Logo và màu chỉ áp cho bài giảng này."
+                : deck.org
+                  ? "Đang dùng logo và màu của trường."
+                  : "Thêm logo và màu nhấn cho slide.",
+            onEdit: () => setBrandOpen(true),
+          }}
+        />
+        <span className="mx-1 hidden h-6 w-px shrink-0 bg-[rgb(var(--border))] sm:block" aria-hidden />
+        <PlayMenu
+          onStart={() => startSlideshow("start")}
+          onCurrent={selectedSlideId ? () => startSlideshow("current") : null}
+          onPresenter={handleStartPresenterView}
+          projector={projector}
+          onAllowProjector={handleAllowProjector}
+        />
       </div>
+      {isTopicSource(resolveSourceKind(deck.sourceKind)) && (
+        <div className="flex-shrink-0 border-b border-token bg-[rgb(var(--surface))] px-3 py-1.5 sm:px-6">
+          <TopicSourceNotice
+            compact
+            sourceKind={resolveSourceKind(deck.sourceKind)}
+            webRefs={Array.isArray(deck.sourceRefs) ? deck.sourceRefs : deck.sourceRefs == null ? null : []}
+          />
+        </div>
+      )}
 
       <div className="relative flex min-h-0 flex-1">
         {/* Left rail — slide list */}
@@ -651,6 +906,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               <button
                 onClick={() => {
                   if (slidesCollapsed) toggleSlidesRail(false);
+                  setInsertAt(null);
                   setPickingType(true);
                 }}
                 title="Thêm slide"
@@ -675,8 +931,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={deck.slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
                 {deck.slides.map((slide, idx) => (
+                  <Fragment key={slide.id}>
+                  <InsertGap
+                    label={insertGapLabel(idx, deck.slides.length)}
+                    onInsert={() => {
+                      setInsertAt(idx);
+                      setPickingType(true);
+                    }}
+                  />
                   <SlideThumb
-                    key={slide.id}
                     slide={slide}
                     index={idx}
                     isActive={slide.id === selectedSlideId}
@@ -690,7 +953,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                     }
                     onDelete={() => handleDeleteSlide(slide.id)}
                   />
+                  </Fragment>
                 ))}
+                <InsertGap
+                  label={insertGapLabel(deck.slides.length, deck.slides.length)}
+                  onInsert={() => {
+                    setInsertAt(null);
+                    setPickingType(true);
+                  }}
+                />
               </SortableContext>
             </DndContext>
           )}
@@ -707,7 +978,10 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               setPickingType(false);
               setImportingCourse(true);
             }}
-            onClose={() => setPickingType(false)}
+            onClose={() => {
+              setPickingType(false);
+              setInsertAt(null);
+            }}
             pdfLimit={`Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB`}
             pdfNote={`Mỗi trang PDF → 1 slide riêng, nối vào cuối bài giảng. Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB.`}
           />
@@ -729,16 +1003,35 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
         {/* Center — live WYSIWYG preview */}
         <div className="relative flex min-w-0 flex-1 flex-col">
-          <div className="flex flex-1 overflow-y-auto p-8 pb-20">
+          <div className={stageLayout ? "flex min-h-0 flex-1 flex-col p-3 pb-20 lg:p-4 lg:pb-16" : "flex flex-1 overflow-y-auto p-8 pb-20"}>
             {selectedSlide ? (
+              // Slide bố cục: khung xem trước chiếm trọn vùng giữa (không thẻ bọc, không đệm), thu phóng do chính khung xử lý.
               <div
-                key={selectedSlide.id}
-                className={`relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
-                  selectedSlide.timerSeconds != null ? "pb-28" : ""
-                }`}
-                style={{ background: slideThemeBg(deck.theme), zoom: editorZoom }}
+                key={`${selectedSlide.id}:${restoreRev}`}
+                className={
+                  stageLayout
+                    ? "relative flex min-h-0 w-full flex-1 flex-col"
+                    : `relative m-auto box-border flex min-h-[518px] w-full max-w-[920px] flex-col rounded-[20px] p-12 text-[#20241F] shadow-[0_12px_32px_rgba(32,36,31,0.10)] ${
+                        selectedSlide.timerSeconds != null ? "pb-28" : ""
+                      }`
+                }
+                style={stageLayout ? undefined : { background: brandFrameBackground(effBrand, false) ?? slideBgFor(deck.theme, false), zoom: editorZoom }}
               >
-                <SlideCenterEditor slide={selectedSlide} onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)} />
+                <SlideCenterEditor
+                  slide={selectedSlide}
+                  themeId={deck.theme}
+                  deckId={deckId}
+                  sourceKind={deck.sourceKind ?? null}
+                  onApplyProposal={(p, action) =>
+                    handleSaveSlide(selectedSlide.id, { config: p.config, type: p.type, source: "ai", aiAction: action })
+                  }
+                  onSplit={(a, b, opts) => handleSplitSlide(selectedSlide.id, a, b, opts)}
+                  onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
+                  editOpen={editOpen}
+                  onEditOpenChange={setEditOpen}
+                  nav={slideNav}
+                  zoom={editorZoom}
+                />
                 {selectedSlide.timerSeconds != null && (
                   <TimerSticker seconds={selectedSlide.timerSeconds} />
                 )}
@@ -749,6 +1042,29 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </div>
           {selectedSlide && (
             <div className="absolute bottom-20 left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-1 shadow-lg lg:bottom-4">
+              {/* Xem nhanh slide trước / sau mà không phải quay sang dải slide bên trái. */}
+              <button
+                onClick={() => slideNav.onPrev?.()}
+                disabled={!slideNav.onPrev}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Slide trước"
+                title="Slide trước"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <span className="min-w-[3.5rem] text-center text-xs font-semibold tabular-nums" aria-live="polite">
+                {slideNav.index + 1} / {slideNav.total}
+              </span>
+              <button
+                onClick={() => slideNav.onNext?.()}
+                disabled={!slideNav.onNext}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[rgb(var(--surface-muted))] disabled:opacity-30"
+                aria-label="Slide sau"
+                title="Slide sau"
+              >
+                <ChevronRight size={18} />
+              </button>
+              <span className="mx-1 h-5 w-px bg-[rgb(var(--border))]" aria-hidden />
               <button
                 onClick={() => setZoomLevel(editorZoom - 0.1)}
                 disabled={editorZoom <= 0.5}
@@ -840,9 +1156,18 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               );
             })()}
             <SettingsPanel
-              key={selectedSlide.id}
+              key={`${selectedSlide.id}:${restoreRev}`}
               slide={selectedSlide}
               onSave={(patch) => handleSaveSlide(selectedSlide.id, patch)}
+            />
+            <SlideVersions
+              key={`v:${selectedSlide.id}`}
+              deckId={deckId}
+              slide={selectedSlide}
+              onRestored={async () => {
+                await load();
+                setRestoreRev((n) => n + 1);
+              }}
             />
 
             <button
@@ -856,11 +1181,59 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           </>
         )}
       </div>
+      {brandOpen && (
+        <BrandDialog
+          brand={deck.brand}
+          brandOff={deck.brandOff ?? false}
+          brandTemplate={deck.brandTemplate ?? null}
+          org={deck.org ?? null}
+          themeId={deck.theme ?? "white"}
+          onChange={handleSetBrand}
+          onClose={() => setBrandOpen(false)}
+        />
+      )}
+      {shareOpen && (
+        <ShareDialog
+          deckId={deckId}
+          shareCode={deck.shareCode ?? null}
+          onChange={(shareCode) => setDeck((d) => (d ? { ...d, shareCode } : d))}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
     </div>
+    </LiveMotifProvider>
+    </LiveLangProvider>
+    </LiveBrandProvider>
   );
 }
 
 // ── Left rail thumb ──────────────────────────────────────────────────────
+
+/**
+ * Khe giữa hai slide trong danh sách: rê chuột (hoặc Tab tới) thì hiện đường kẻ và nút [+] như PowerPoint, bấm để chèn slide mới
+ * vào đúng chỗ này. Vùng nhạy chuột nằm trong khoảng cách 6 px giữa hai hình thu nhỏ; màn cảm ứng luôn hiện nút (mờ).
+ */
+function InsertGap({ label, onInsert }: { label: string; onInsert: () => void }) {
+  return (
+    <div className="relative h-0">
+      <div className="group/gap absolute inset-x-0 -top-[9px] z-10 flex h-3 items-center">
+        <span aria-hidden className="h-0.5 w-full rounded-full bg-brand-500 opacity-0 transition-opacity group-focus-within/gap:opacity-100 group-hover/gap:opacity-100" />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onInsert();
+          }}
+          aria-label={label}
+          title={label}
+          className="absolute left-1/2 top-1/2 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-brand-600 text-white opacity-0 shadow ring-2 ring-[rgb(var(--surface))] transition-opacity focus-visible:opacity-100 group-hover/gap:opacity-100 [@media(hover:none)]:opacity-60"
+        >
+          <Plus size={13} strokeWidth={3} aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const SlideThumb = memo(function SlideThumb({
   slide,
@@ -959,17 +1332,164 @@ const SlideThumb = memo(function SlideThumb({
   );
 });
 
+/**
+ * Nút Trình chiếu kiểu Google Slides: bấm chính là trình chiếu từ đầu; mũi tên mở menu ba cách trình chiếu,
+ * mỗi cách một dòng giải thích. Thay khối ba nút cũ vốn cao hơn và chiếm nửa thanh công cụ.
+ */
+function PlayMenu({
+  onStart,
+  onCurrent,
+  onPresenter,
+  projector,
+  onAllowProjector,
+}: {
+  onStart: () => void;
+  /** null = chưa chọn slide nào. */
+  onCurrent: (() => void) | null;
+  onPresenter: () => void;
+  projector: ProjectorStatus;
+  /** Nút "Cho phép": xin quyền "Quản lý cửa sổ" riêng, trước khi trình chiếu. */
+  onAllowProjector: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  const items: Array<{ key: string; icon: React.ReactNode; label: string; hint: string; run: (() => void) | null }> = [
+    { key: "start", icon: <Play size={15} className="fill-current" />, label: "Từ đầu", hint: "Toàn màn hình, bắt đầu từ slide 1, không hiện Note.", run: onStart },
+    { key: "current", icon: <Presentation size={15} />, label: "Từ slide này", hint: "Toàn màn hình, bắt đầu từ slide đang chọn, không hiện Note.", run: onCurrent },
+    {
+      key: "presenter",
+      icon: <MonitorPlay size={15} />,
+      label: "Presenter view",
+      hint: projector === "ready"
+        ? "Màn chiếu tự lên màn hình thứ hai; Note mở ở cửa sổ mới trên màn hình này."
+        : "Màn chiếu ở cửa sổ riêng; bạn xem Note ở cửa sổ này.",
+      run: onPresenter,
+    },
+  ];
+  return (
+    <div ref={ref} className="relative flex shrink-0">
+      <button
+        type="button"
+        onClick={onStart}
+        title="Trình chiếu từ slide 1, toàn màn hình"
+        className="flex h-9 items-center gap-2 rounded-l-lg bg-brand-600 pl-3 pr-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 sm:pr-3.5"
+      >
+        <Play size={15} className="fill-current" /> <span className="hidden sm:inline">Trình chiếu</span>
+      </button>
+      <button
+        type="button"
+        aria-label="Cách trình chiếu khác"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="grid h-9 w-8 place-items-center rounded-r-lg border-l border-white/30 bg-brand-600 text-white shadow-sm transition hover:bg-brand-700"
+      >
+        <ChevronDown size={15} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div role="menu" aria-label="Trình chiếu" className="absolute right-0 top-full z-50 mt-2 w-[min(300px,92vw)] rounded-2xl border border-token bg-[rgb(var(--surface))] p-1.5 shadow-2xl">
+          {items.map((it) => (
+            <button
+              key={it.key}
+              type="button"
+              role="menuitem"
+              disabled={!it.run}
+              onClick={() => {
+                setOpen(false);
+                it.run?.();
+              }}
+              className="grid w-full grid-cols-[20px_1fr] gap-x-2.5 rounded-xl px-2.5 py-2 text-left transition hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+            >
+              <span className="mt-0.5 text-brand-700 dark:text-brand-300">{it.icon}</span>
+              <b className="text-sm font-semibold">{it.label}</b>
+              <small className="col-start-2 text-xs leading-snug text-muted">{it.hint}</small>
+            </button>
+          ))}
+          {/* Xin quyền riêng, không chen lúc mở cửa sổ: cửa sổ màn chiếu bật lên sẽ che mất hộp hỏi quyền của
+              trình duyệt. Menu giữ mở để giảng viên thấy mô tả Presenter view đổi ngay sau khi cho phép. */}
+          {projector === "prompt" && (
+            <div className="mx-1 mb-1 mt-0.5 rounded-xl bg-[rgb(var(--surface-muted))] px-3 py-2.5 text-xs leading-snug">
+              <p>Máy đang nối màn hình thứ hai. Cho phép Limio quản lý cửa sổ để Presenter view tự đưa màn chiếu sang màn hình đó, toàn màn hình.</p>
+              <button type="button" onClick={onAllowProjector} className="btn-primary mt-2 px-3 py-1 text-xs">
+                Cho phép
+              </button>
+            </div>
+          )}
+          {projector === "denied" && (
+            <p className="mx-1 mb-1 mt-0.5 rounded-xl bg-[rgb(var(--surface-muted))] px-3 py-2.5 text-xs leading-snug">
+              Trình duyệt đang chặn quyền "Quản lý cửa sổ" nên màn chiếu chưa tự sang màn hình thứ hai. Bấm biểu tượng bên trái
+              thanh địa chỉ, mở cài đặt trang web, chọn Cho phép ở mục "Quản lý cửa sổ" rồi tải lại trang. Limio cài như ứng dụng
+              thì mở cài đặt ứng dụng, chọn "More settings and permissions".
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Center WYSIWYG editor per type ──────────────────────────────────────
 
 function SlideCenterEditor({
   slide,
+  themeId,
+  deckId,
+  onApplyProposal,
+  onSplit,
   onSave,
+  editOpen,
+  onEditOpenChange,
+  nav,
+  zoom,
+  sourceKind,
 }: {
+  /** Nguồn của bài AI soạn (document | topic | topic_web). */
+  sourceKind: string | null;
+  zoom: number;
+  editOpen: boolean;
+  onEditOpenChange: (open: boolean) => void;
+  nav: { index: number; total: number; onPrev: (() => void) | null; onNext: (() => void) | null };
+  themeId?: string | null;
+  deckId: string;
+  onApplyProposal: (p: { type: "content" | "quiz"; config: Record<string, any> }, action: string) => void;
+  onSplit: (a: Record<string, any>, b: Record<string, any>, opts?: { aiAction?: string }) => void;
   slide: Slide;
   onSave: (patch: { config: Record<string, any> }) => void;
 }) {
   const config = slide.config ?? {};
 
+  if (slide.type === "content" && isLayoutSlide(config))
+    return (
+      <LayoutEditor
+        config={config}
+        themeId={themeId}
+        onSave={onSave}
+        deckId={deckId}
+        slideId={slide.id}
+        onApplyProposal={onApplyProposal}
+        onSplit={onSplit}
+        open={editOpen}
+        onOpenChange={onEditOpenChange}
+        nav={nav}
+        zoom={zoom}
+        sourceKind={sourceKind}
+      />
+    );
   if (slide.type === "content") return <ContentEditor config={config} onSave={onSave} />;
   if (slide.type === "quiz" || slide.type === "poll")
     return <QuestionEditor type={slide.type} config={config} onSave={onSave} />;
@@ -1071,6 +1591,8 @@ function ContentEditor({
   }
 
   return (
+    <div className="flex flex-grow flex-col gap-4">
+    <LayoutPicker config={config} onSave={onSave} draft={{ title, subtitle, bullets: bullets.filter((b) => b.trim()), ...(imageUrl.trim() ? { imageUrl: imageUrl.trim() } : {}) }} />
     <div className="flex flex-grow gap-7">
       <div className="flex flex-[1.1] flex-col justify-center gap-3">
         <input
@@ -1141,6 +1663,7 @@ function ContentEditor({
           className="w-full rounded-md border border-[#D8D4C4] bg-white/70 px-2 py-1 text-[11px] outline-none focus:ring-1 focus:ring-brand-400"
         />
       </div>
+    </div>
     </div>
   );
 }
@@ -1394,6 +1917,89 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 }
 
 // Thẻ cài đặt thống nhất: ô icon + tiêu đề (+ công tắc bên phải) + nội dung mở rộng.
+const VERSION_LABEL: Record<string, string> = {
+  generated: "Bản AI sinh ban đầu",
+  before_edit: "Trước khi sửa tay",
+  before_ai: "Trước khi dùng đề xuất của AI",
+  before_sync: "Trước khi cập nhật theo dàn ý",
+  before_restore: "Trước khi khôi phục",
+};
+
+interface SlideVersionRow {
+  id: string;
+  source: string;
+  type: string;
+  config: Record<string, any>;
+  createdAt: string;
+}
+
+/** Hoàn tác: danh sách phiên bản cũ của slide và nút khôi phục (H11). */
+function SlideVersions({ deckId, slide, onRestored }: { deckId: string; slide: Slide; onRestored: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [rows, setRows] = useState<SlideVersionRow[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const base = apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides/${slide.id}/versions`);
+
+  const fetchRows = async () => {
+    const res = await fetch(base);
+    if (!res.ok) return toast.error("Không tải được các phiên bản");
+    setRows(((await res.json()) as { versions: SlideVersionRow[] }).versions);
+  };
+  useEffect(() => {
+    if (open) void fetchRows();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, slide.id]);
+
+  const summary = (r: SlideVersionRow) => String(r.config.title ?? r.config.question ?? r.config.prompt ?? r.config.quote ?? "").slice(0, 60) || "(không có tiêu đề)";
+
+  const restore = async (r: SlideVersionRow) => {
+    if (!window.confirm(`Khôi phục slide về phiên bản "${VERSION_LABEL[r.source] ?? r.source}"?\n\nNội dung hiện tại được lưu lại thành một phiên bản nên bạn vẫn quay lại được.`)) return;
+    setBusy(r.id);
+    try {
+      const res = await fetch(`${base}/${r.id}/restore`, { method: "POST" });
+      if (!res.ok) return toast.error("Khôi phục thất bại");
+      await onRestored();
+      await fetchRows();
+      toast.success("Đã khôi phục slide");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <section className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-3.5">
+      <button type="button" className="flex w-full items-center justify-between text-left" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="flex items-center gap-2.5 text-[13px] font-semibold">
+          <History size={15} className="text-muted" /> Phiên bản
+        </span>
+        <span className="text-[11px] text-faint">{open ? "Ẩn" : "Xem và hoàn tác"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 space-y-2">
+          {rows === null ? (
+            <p className="text-xs text-faint">Đang tải...</p>
+          ) : rows.length === 0 ? (
+            <p className="text-xs text-faint">Slide này chưa có phiên bản cũ. Phiên bản được lưu mỗi khi slide sắp bị sửa hoặc thay.</p>
+          ) : (
+            rows.map((r) => (
+              <div key={r.id} className="rounded-xl border border-token p-2.5">
+                <p className="text-[12px] font-semibold">{VERSION_LABEL[r.source] ?? r.source}</p>
+                <p className="text-[11px] text-faint">{formatDateTime(r.createdAt)}</p>
+                <p className="mt-1 truncate text-[12px] text-muted" title={summary(r)}>
+                  {summary(r)}
+                </p>
+                <button type="button" className="mt-2 text-[12px] font-semibold text-brand-700 hover:underline disabled:opacity-50" disabled={busy !== null} onClick={() => restore(r)}>
+                  {busy === r.id ? "Đang khôi phục..." : "Khôi phục phiên bản này"}
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function SettingCard({
   icon,
   title,

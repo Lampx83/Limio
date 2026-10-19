@@ -1,0 +1,60 @@
+/* Trang xem bài giảng qua link (/bai-giang/<mã>). Trên màn hình: slide thu theo bề ngang (biến --slide-scale do
+ * SharedDeckView đo). Khi in: mỗi slide đúng một trang 1280×720 px (16:9), giữ nguyên màu nền. */
+
+.shared-slide-scale {
+  transform: scale(var(--slide-scale, 1));
+}
+
+@media print {
+  @page {
+    size: 1280px 720px;
+    margin: 0;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .shared-deck {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .shared-deck ol {
+    display: block !important;
+  }
+
+  .shared-slide-item {
+    width: 1280px;
+    height: 720px;
+    break-after: page;
+    break-inside: avoid;
+    overflow: hidden;
+    /* Bắt buộc: không có size containment thì phần trang trí của slide bố cục (vầng sáng, khối dịch bằng transform)
+     * làm bề rộng nội tại của trang vượt 1280px, Chrome tự thu cả bản in còn ~77% và để trắng mép phải/dưới.
+     * overflow: hidden/clip hay contain: paint đều không đủ; đã thử bằng bản in headless. */
+    contain: strict;
+  }
+
+  .shared-slide-item:last-child {
+    break-after: auto;
+  }
+
+  .shared-slide-box {
+    width: 1280px !important;
+    height: 720px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .shared-slide-scale {
+    transform: none;
+  }
+
+  .shared-deck * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

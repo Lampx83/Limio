@@ -1,4 +1,4 @@
-import { PrismaClient, LiveDeck, LiveSlide, LiveSlideType } from "@feedbackme/db";
+import { Prisma, PrismaClient, LiveDeck, LiveSlide, LiveSlideType } from "@feedbackme/db";
 
 export interface CreateDeckInput {
   userId: string;
@@ -14,6 +14,8 @@ export interface CreateSlideInput {
 export interface UpdateSlideInput {
   config?: unknown;
   timerSeconds?: number | null;
+  /** Đổi loại slide (vd. slide nội dung → câu hỏi quiz khi chấp nhận đề xuất của AI). */
+  type?: LiveSlideType;
 }
 
 export type DeckWithSlides = LiveDeck & { slides: LiveSlide[] };
@@ -71,7 +73,11 @@ export async function getLiveDeck(
 export async function updateLiveDeck(
   deckId: string,
   userId: string,
-  updates: { title?: string; theme?: string },
+  /** brand: thương hiệu đã được chuẩn hoá ở tầng web (limioLiveBrand); null = xoá. */
+  /** motif: hoa văn của cả bài, đã kiểm tra ở tầng web (limioLiveMotifs); null = tự động. */
+  /** language: ngôn ngữ nội dung slide, đã kiểm ở tầng web (DECK_LANGUAGES); null = tự nhận theo nội dung. */
+  /** imageFrame: khung hình của cả bài, đã kiểm ở tầng web (limioLiveImageStyle); null = tự động. */
+  updates: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null; motif?: string | null; language?: string | null; imageFrame?: string | null },
   db: PrismaClient
 ): Promise<LiveDeck> {
   const existing = await db.liveDeck.findUnique({ where: { id: deckId } });
@@ -82,17 +88,29 @@ export async function updateLiveDeck(
     throw new Error("Title is required");
   }
 
-  return db.liveDeck.update({
+  const updated = await db.liveDeck.update({
     where: { id: deckId },
     data: {
       ...(updates.title !== undefined ? { title: updates.title.trim() } : {}),
       ...(updates.theme !== undefined ? { theme: updates.theme } : {}),
+      ...(updates.brandOff !== undefined ? { brandOff: updates.brandOff } : {}),
+      ...(updates.brandTemplate !== undefined ? { brandTemplate: updates.brandTemplate } : {}),
+      ...(updates.motif !== undefined ? { motif: updates.motif } : {}),
+      ...(updates.language !== undefined ? { language: updates.language } : {}),
+      ...(updates.imageFrame !== undefined ? { imageFrame: updates.imageFrame } : {}),
+      // brand null (xoá) xử lý ở dưới bằng SQL: ký hiệu Prisma.DbNull so sánh theo danh tính nên không đáng tin khi mô-đun bị nạp hai bản (Next).
+      ...(updates.brand ? { brand: updates.brand as Prisma.InputJsonObject } : {}),
     },
   });
+  if (updates.brand === null) {
+    await db.$executeRaw`UPDATE "LiveDeck" SET "brand" = NULL WHERE "id" = ${deckId}`;
+    return { ...updated, brand: null };
+  }
+  return updated;
 }
 
 /**
- * Sao chép một bài giảng của chính người dùng: tạo deck mới (cùng giao diện, cùng
+ * Sao chép một bài giảng của chính người dùng: tạo deck mới (cùng giao diện, thương hiệu, cùng
  * nhóm) và chép toàn bộ slide theo đúng thứ tự trình chiếu. Không chép phiên trình chiếu
  * (LiveSession) — mỗi buổi dạy là dữ liệu riêng của bài gốc.
  */
@@ -114,7 +132,19 @@ export async function duplicateLiveDeck(
 
   return db.$transaction(async (tx) => {
     const copy = await tx.liveDeck.create({
-      data: { userId, title, theme: source.theme, groupId: source.groupId },
+      data: {
+        userId,
+        title,
+        theme: source.theme,
+        groupId: source.groupId,
+        // Bản sao mang theo thương hiệu (logo dùng chung tệp với bài gốc) và cờ tắt thương hiệu.
+        brandOff: source.brandOff,
+        brandTemplate: source.brandTemplate,
+        motif: source.motif,
+        language: source.language,
+        imageFrame: source.imageFrame,
+        ...(source.brand ? { brand: source.brand as Prisma.InputJsonObject } : {}),
+      },
     });
     if (source.slides.length > 0) {
       await tx.liveSlide.createMany({
@@ -240,6 +270,7 @@ export async function updateLiveSlide(
     where: { id: slideId },
     data: {
       ...(updates.config !== undefined ? { config: updates.config as any } : {}),
+      ...(updates.type !== undefined ? { type: updates.type } : {}),
       ...(updates.timerSeconds !== undefined ? { timerSeconds: updates.timerSeconds } : {}),
     },
   });

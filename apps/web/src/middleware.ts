@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { APP_MODE_COOKIE, languageEntryRouting } from "@/lib/appMode";
+import { applyAttributionCookie } from "@/lib/growth/edge";
 
 /**
  * Gắn `X-Robots-Tag: noindex, nofollow` cho mọi route riêng tư.
@@ -36,6 +37,8 @@ const PRIVATE_PREFIXES = [
   "/verify",
   "/leaderboard",
   "/tournaments",
+  // Link xem bài giảng gửi tay (ai có link cũng xem), không phải trang cho công cụ tìm kiếm.
+  "/bai-giang",
 ];
 
 /**
@@ -77,6 +80,12 @@ export function middleware(req: NextRequest) {
   // giống mọi nơi khác trong codebase (xem `lib/apiUrl.ts`).
   if (isPrivate(req.nextUrl.pathname)) {
     res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  // Growth attribution (first-touch cookie). Tắt mặc định: không có
+  // GROWTH_ATTRIBUTION_ENABLED=true thì nhánh này không làm gì cả. Xem
+  // lib/growth/attribution.ts và docs/growth-events.md.
+  if ((process.env.GROWTH_ATTRIBUTION_ENABLED ?? "").trim().toLowerCase() === "true") {
+    applyAttributionCookie(req, res);
   }
   return res;
 }

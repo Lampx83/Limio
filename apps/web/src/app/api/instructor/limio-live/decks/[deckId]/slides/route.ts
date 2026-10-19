@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
-import { addLiveSlide } from "@feedbackme/core-lms";
+import { addLiveSlide, reorderLiveSlides } from "@feedbackme/core-lms";
+import { moveIdTo } from "@/lib/limioLiveInsert";
 import { validateContentSlideConfig } from "@/lib/limioLiveResource";
+import { fillCoverIdentity, normalizeContentSlideConfig, resolveLayout } from "@/lib/limioLiveSlides";
+import { coverIdentityFor } from "@/lib/limioLiveCoverIdentity";
 import { z } from "zod";
 
 const CreateSlideSchema = z.object({
   type: z.enum(["content", "quiz", "poll", "word_cloud", "collaborate_board", "whiteboard"]),
   config: z.unknown().default({}),
   timerSeconds: z.number().int().positive().nullable().optional(),
+  /** Vị trí chèn (0 = đầu bài), từ nút [+] giữa các slide; bỏ trống = nối vào cuối. */
+  insertAt: z.number().int().min(0).optional(),
 });
 
 /**
  * POST /api/instructor/limio-live/decks/[deckId]/slides
- * Add a slide to a deck (appended at the end — real presentation order)
+ * Add a slide to a deck (appended at the end — real presentation order). `insertAt` chèn vào vị trí đó (nút [+] giữa các slide).
  */
 export async function POST(
   req: NextRequest,
@@ -41,16 +46,30 @@ export async function POST(
       }
     }
 
+    let config = validation.data.config;
+    if (validation.data.type === "content") {
+      config = normalizeContentSlideConfig(config);
+      // Slide bìa mới: điền sẵn tên đơn vị và người trình bày vào ô còn trống.
+      if (resolveLayout(config) === "cover") config = fillCoverIdentity(config as Record<string, unknown>, await coverIdentityFor(userId));
+    }
     const slide = await addLiveSlide(
       params.deckId,
       userId,
       {
         type: validation.data.type,
-        config: validation.data.config,
+        config,
         timerSeconds: validation.data.timerSeconds,
       },
       prisma
     );
+    const at = validation.data.insertAt;
+    if (at !== undefined) {
+      const ids = (
+        await prisma.liveSlide.findMany({ where: { deckId: params.deckId }, orderBy: { orderIndex: "asc" }, select: { id: true } })
+      ).map((x) => x.id);
+      const next = moveIdTo(ids, slide.id, at);
+      if (next.some((id, i) => id !== ids[i])) await reorderLiveSlides(params.deckId, userId, next, prisma);
+    }
     return NextResponse.json(slide, { status: 201 });
   } catch (error) {
     console.error("[Limio-Live Slides API - POST]", error);

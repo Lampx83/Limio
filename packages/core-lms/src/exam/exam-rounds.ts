@@ -17,11 +17,12 @@
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { isAdmin } from "../auth/roles";
-import { canEditCourse } from "../courses/authz";
+import { canEditCourse, canEditExam } from "../courses/authz";
 import { ensureDefaultRoomForSession } from "./exam-rooms";
 import { ExamError } from "./types";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { changedFields, courseIdOf, emitOrganizeEvent } from "./organize-events";
+import { sessionOpenState, type SessionOpenState } from "./session-window";
 
 // ============================================================================
 // Schemas
@@ -127,7 +128,7 @@ export async function canViewExamRound(
     select: {
       courseId: true,
       admins: { where: { userId }, select: { userId: true } },
-      // Đợt tự sinh (ensureDefaultRound) cho đề độc lập không có course —
+      // Đề độc lập không có course —
       // luôn đúng 1 exam/session, dùng để xác định người tạo đề làm chủ.
       sessions: { take: 1, select: { exam: { select: { createdById: true } } } },
     },
@@ -172,6 +173,65 @@ async function assertCanEdit(
 ): Promise<void> {
   if (!(await canEditExamRound(userId, roundId, db)))
     throw new ExamError("forbidden");
+}
+
+// ----------------------------------------------------------------------------
+// Quyền trên MỘT CA — mọi đường đi qua ca đều gọi các hàm này.
+//
+// Ca thuộc đợt (kỳ thi chính thức): quyền theo đợt — trưởng đợt sửa, giảng
+// viên khoá xem, như trước.
+// Ca buổi đơn (link thi nhanh, thử nghiệm, vấn đáp — không có đợt): quyền theo
+// đề chứa nó, cùng luật với việc sửa/xem đề đó (giảng viên khoá; đề không thuộc
+// khoá thì theo người tạo đề).
+// ----------------------------------------------------------------------------
+
+export type SessionScope = { roundId: string | null; examId: string };
+
+export async function canViewSession(
+  userId: string,
+  s: SessionScope,
+  db: PrismaClient = prisma,
+): Promise<boolean> {
+  if (s.roundId) return canViewExamRound(userId, s.roundId, db);
+  return canEditSessionExam(userId, s.examId, db);
+}
+
+export async function canEditSession(
+  userId: string,
+  s: SessionScope,
+  db: PrismaClient = prisma,
+): Promise<boolean> {
+  if (s.roundId) return canEditExamRound(userId, s.roundId, db);
+  return canEditSessionExam(userId, s.examId, db);
+}
+
+async function canEditSessionExam(
+  userId: string,
+  examId: string,
+  db: PrismaClient,
+): Promise<boolean> {
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: { courseId: true, createdById: true },
+  });
+  if (!exam) return false;
+  return canEditExam(userId, exam, db);
+}
+
+async function assertCanViewSession(
+  userId: string,
+  s: SessionScope,
+  db: PrismaClient,
+): Promise<void> {
+  if (!(await canViewSession(userId, s, db))) throw new ExamError("forbidden");
+}
+
+async function assertCanEditSession(
+  userId: string,
+  s: SessionScope,
+  db: PrismaClient,
+): Promise<void> {
+  if (!(await canEditSession(userId, s, db))) throw new ExamError("forbidden");
 }
 
 // ============================================================================
@@ -447,13 +507,20 @@ export interface ExamRoundSessionItem {
   courseId: string | null;
   courseTitle: string | null;
   roomCount: number;
+  timingMode: "scheduled" | "manual";
+  /**
+   * Thí sinh vào được lúc này không — tính theo đúng luật của đường vào thi
+   * (session-window.ts). `status` một mình không trả lời được: ca theo lịch
+   * vẫn để "draft" mà đang trong giờ thì thí sinh vẫn vào bình thường.
+   */
+  openState: SessionOpenState;
 }
 
 export interface ExamSessionDetail {
   id: string;
-  roundId: string;
-  roundCode: string;
-  roundTitle: string;
+  roundId: string | null;
+  roundCode: string | null;
+  roundTitle: string | null;
   examId: string;
   examTitle: string;
   examAccessMode: string;
@@ -469,6 +536,8 @@ export interface ExamSessionDetail {
   /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
   closesAt: string | null;
   durationOverrideMin: number | null;
+  /** Số thí sinh tối đa của ca (mã chung). Null = không giới hạn. */
+  maxCandidates: number | null;
   ipAllowlist: string[];
   createdAt: string;
   updatedAt: string;
@@ -652,21 +721,9 @@ async function bulkCreateExamSessionsInRoundImpl(
     existing.map((s) => s.title).filter((t): t is string => t !== null),
   );
 
-  // PR2.12 — per-session accessMode + openCode. Pre-load openCodes in use
-  // for this round to avoid collision.
+  // PR2.12 — per-session accessMode + openCode. Mã phải chưa dùng TOÀN HỆ THỐNG
+  // (xem pickFreeOpenCode), không chỉ trong đợt này.
   const mode = parsed.data.accessMode ?? "authenticated";
-  const usedOpenCodes = new Set<string>(
-    mode === "open_code"
-      ? (
-          await db.examSession.findMany({
-            where: { roundId, openCode: { not: null } },
-            select: { openCode: true },
-          })
-        )
-          .map((r) => r.openCode)
-          .filter((c): c is string => !!c)
-      : [],
-  );
 
   const created: string[] = [];
   let nextNum = 1;
@@ -674,10 +731,9 @@ async function bulkCreateExamSessionsInRoundImpl(
     while (taken.has(`${prefix} ${nextNum}`)) nextNum++;
     let openCode: string | null = null;
     if (mode === "open_code") {
-      do {
-        openCode = randomOpenCode(6);
-      } while (usedOpenCodes.has(openCode));
-      usedOpenCodes.add(openCode);
+      openCode = await pickFreeOpenCode(db);
+      if (!openCode)
+        throw new ExamError("validation_failed", { reason: "openCode_collision" });
     }
     const s = await db.examSession.create({
       data: {
@@ -728,6 +784,7 @@ export const UpdateExamSessionInput = z
       .max(24 * 60)
       .nullable()
       .optional(),
+    maxCandidates: z.number().int().min(1).max(100000).nullable().optional(),
     status: z.enum(["draft", "open", "closed", "archived"]).optional(),
     // PR2.12 — Per-session mode. Khi đổi sang open_code, service tự sinh
     // openCode mới nếu chưa có.
@@ -740,7 +797,26 @@ export const UpdateExamSessionInput = z
     { message: "opensAt must be before closesAt" },
   );
 
-/** Update session meta. Authz: must be able to edit the round. */
+/**
+ * Mã vào thi chưa dùng ở đâu trong hệ thống: không trùng ca nào (openCode của
+ * ca) và không trùng đề cũ (Exam.openCode). Xem @@unique([openCode]) ở schema.
+ */
+export async function pickFreeOpenCode(
+  db: PrismaClient = prisma,
+  attempts = 50,
+): Promise<string | null> {
+  for (let i = 0; i < attempts; i++) {
+    const code = randomOpenCode(6);
+    const [sess, legacy] = await Promise.all([
+      db.examSession.findUnique({ where: { openCode: code }, select: { id: true } }),
+      db.exam.findUnique({ where: { openCode: code }, select: { id: true } }),
+    ]);
+    if (!sess && !legacy) return code;
+  }
+  return null;
+}
+
+/** Update session meta. Authz: must be able to edit the session (xem assertCanEditSession). */
 async function updateExamSessionImpl(
   actorUserId: string,
   sessionId: string,
@@ -749,10 +825,10 @@ async function updateExamSessionImpl(
 ): Promise<void> {
   const s = await db.examSession.findUnique({
     where: { id: sessionId },
-    select: { roundId: true },
+    select: { roundId: true, examId: true },
   });
   if (!s) throw new ExamError("schedule_not_found");
-  await assertCanEdit(actorUserId, s.roundId, db);
+  await assertCanEditSession(actorUserId, s, db);
 
   const parsed = UpdateExamSessionInput.safeParse(rawInput);
   if (!parsed.success)
@@ -767,45 +843,47 @@ async function updateExamSessionImpl(
       select: { courseId: true },
     });
     if (!newExam) throw new ExamError("exam_not_found");
-    const round = await db.examRound.findUniqueOrThrow({
-      where: { id: s.roundId },
-      select: { courseId: true },
-    });
-    if (newExam.courseId !== round.courseId)
+    // Đổi đề chỉ trong cùng khoá: với đợt là khoá của đợt, với buổi đơn là khoá
+    // của đề hiện tại.
+    const scopeCourseId = s.roundId
+      ? (
+          await db.examRound.findUniqueOrThrow({
+            where: { id: s.roundId },
+            select: { courseId: true },
+          })
+        ).courseId
+      : (
+          await db.exam.findUniqueOrThrow({
+            where: { id: s.examId },
+            select: { courseId: true },
+          })
+        ).courseId;
+    if (newExam.courseId !== scopeCourseId)
       throw new ExamError("validation_failed", {
         reason: "exam_course_not_in_round",
       });
   }
 
-  // PR2.12 — Khi switching INTO open_code, đảm bảo có openCode duy nhất
-  // trong round. Khi switching OUT, clear openCode.
+  // PR2.12 — Khi switching INTO open_code, cấp openCode chưa dùng TOÀN HỆ THỐNG
+  // (người nhập mã không biết ca nào). Khi switching OUT, clear openCode.
   let openCodePatch: { openCode?: string | null } = {};
   if (d.accessMode !== undefined) {
-    if (d.accessMode === "open_code") {
-      const current = await db.examSession.findUniqueOrThrow({
-        where: { id: sessionId },
-        select: { openCode: true, roundId: true },
+    const current = await db.examSession.findUniqueOrThrow({
+      where: { id: sessionId },
+      select: { openCode: true, accessMode: true },
+    });
+    // Đổi chế độ giữa chừng làm bài đang mở mất đường vào lại (mã cũ hết
+    // hiệu lực) — cùng guard với updateExamAccess, nhưng chỉ trong ca này.
+    if (d.accessMode !== current.accessMode) {
+      const inFlight = await db.examAttempt.count({
+        where: { sessionId, status: "in_progress" },
       });
+      if (inFlight > 0) throw new ExamError("exam_has_attempts");
+    }
+    if (d.accessMode === "open_code") {
       if (!current.openCode) {
-        const usedRows = await db.examSession.findMany({
-          where: {
-            roundId: current.roundId,
-            openCode: { not: null },
-            NOT: { id: sessionId },
-          },
-          select: { openCode: true },
-        });
-        const used = new Set(
-          usedRows
-            .map((r) => r.openCode)
-            .filter((c): c is string => !!c),
-        );
-        let next = "";
-        for (let i = 0; i < 50; i++) {
-          next = randomOpenCode(6);
-          if (!used.has(next)) break;
-        }
-        if (!next || used.has(next))
+        const next = await pickFreeOpenCode(db);
+        if (!next)
           throw new ExamError("validation_failed", {
             reason: "openCode_collision",
           });
@@ -828,6 +906,7 @@ async function updateExamSessionImpl(
         ...(d.durationOverrideMin !== undefined
           ? { durationOverrideMin: d.durationOverrideMin }
           : {}),
+        ...(d.maxCandidates !== undefined ? { maxCandidates: d.maxCandidates } : {}),
         ...(d.status !== undefined ? { status: d.status } : {}),
         ...(d.accessMode !== undefined ? { accessMode: d.accessMode } : {}),
         ...openCodePatch,
@@ -859,6 +938,7 @@ export async function getExamSession(
       opensAt: true,
       closesAt: true,
       durationOverrideMin: true,
+      maxCandidates: true,
       ipAllowlist: true,
       accessMode: true,
       openCode: true,
@@ -880,12 +960,12 @@ export async function getExamSession(
     },
   });
   if (!s) throw new ExamError("schedule_not_found");
-  await assertCanView(actorUserId, s.roundId, db);
+  await assertCanViewSession(actorUserId, { roundId: s.roundId, examId: s.exam.id }, db);
   return {
     id: s.id,
     roundId: s.roundId,
-    roundCode: s.round.code,
-    roundTitle: s.round.title,
+    roundCode: s.round?.code ?? null,
+    roundTitle: s.round?.title ?? null,
     examId: s.exam.id,
     examTitle: s.exam.title,
     examAccessMode: s.accessMode,
@@ -901,6 +981,7 @@ export async function getExamSession(
     opensAt: s.opensAt.toISOString(),
     closesAt: s.closesAt?.toISOString() ?? null,
     durationOverrideMin: s.durationOverrideMin,
+    maxCandidates: s.maxCandidates,
     ipAllowlist: s.ipAllowlist,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
@@ -949,8 +1030,8 @@ export interface ExamRoomDetail {
   sessionOpensAt: string;
   /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
   sessionClosesAt: string | null;
-  roundId: string;
-  roundTitle: string;
+  roundId: string | null;
+  roundTitle: string | null;
   courseId: string | null;
   courseTitle: string | null;
   examId: string;
@@ -1000,7 +1081,7 @@ export async function getExamRoom(
     },
   });
   if (!r) throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanView(actorUserId, r.session.roundId, db);
+  await assertCanViewSession(actorUserId, { roundId: r.session.roundId, examId: r.examId }, db);
   return {
     id: r.id,
     name: r.name,
@@ -1014,7 +1095,7 @@ export async function getExamRoom(
     sessionOpensAt: r.session.opensAt.toISOString(),
     sessionClosesAt: r.session.closesAt?.toISOString() ?? null,
     roundId: r.session.roundId,
-    roundTitle: r.session.round.title,
+    roundTitle: r.session.round?.title ?? null,
     courseId: r.exam.course?.id ?? null,
     courseTitle: r.exam.course?.title ?? null,
     examId: r.examId,
@@ -1033,11 +1114,11 @@ export async function listExamCandidatesInRoom(
 ): Promise<ExamRoomCandidateItem[]> {
   const room = await db.examRoom.findUnique({
     where: { id: roomId },
-    select: { session: { select: { roundId: true } } },
+    select: { examId: true, session: { select: { roundId: true, examId: true } } },
   });
   if (!room)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanView(actorUserId, room.session.roundId, db);
+  await assertCanViewSession(actorUserId, { roundId: room.session.roundId, examId: room.examId }, db);
 
   const rows = await db.examCandidate.findMany({
     where: { roomId },
@@ -1088,13 +1169,13 @@ export async function canProctorRoom(
 ): Promise<boolean> {
   const r = await db.examRoom.findUnique({
     where: { id: roomId },
-    select: { proctorUserId: true, session: { select: { roundId: true } } },
+    select: { proctorUserId: true, examId: true, session: { select: { roundId: true, examId: true } } },
   });
   if (!r) return false;
   if (r.proctorUserId === userId) return true;
   // Round admins / platform admins also count as "can proctor" so the
   // attendance UI works for instructors who oversee the room.
-  return await canEditExamRound(userId, r.session.roundId, db);
+  return await canEditSession(userId, { roundId: r.session.roundId, examId: r.examId }, db);
 }
 
 async function setCandidateAttendanceImpl(
@@ -1137,8 +1218,10 @@ export interface ProctorRoomItem {
   opensAt: string;
   /** Null khi ca chạy chế độ thủ công — không có giờ đóng. */
   closesAt: string | null;
-  roundId: string;
-  roundTitle: string;
+  roundId: string | null;
+  roundTitle: string | null;
+  /** formal = có trang phòng riêng (kể cả ca không thuộc đợt); simple = buổi đơn. */
+  scale: "simple" | "formal";
   examTitle: string;
   courseTitle: string | null;
 }
@@ -1166,6 +1249,7 @@ export async function listMyProctorRooms(
           status: true,
           opensAt: true,
           closesAt: true,
+          scale: true,
           round: { select: { id: true, title: true } },
         },
       },
@@ -1191,8 +1275,9 @@ export async function listMyProctorRooms(
     sessionStatus: r.session.status,
     opensAt: r.session.opensAt.toISOString(),
     closesAt: r.session.closesAt?.toISOString() ?? null,
-    roundId: r.session.round.id,
-    roundTitle: r.session.round.title,
+    roundId: r.session.round?.id ?? null,
+    roundTitle: r.session.round?.title ?? null,
+    scale: r.session.scale,
     examTitle: r.exam.title,
     courseTitle: r.exam.course?.title ?? null,
   }));
@@ -1227,16 +1312,21 @@ async function inviteUserAsProctorImpl(
       session: {
         select: {
           roundId: true,
-          // For per-org email template lookup.
+          examId: true,
+          // For per-org email template lookup (đợt nếu có, không thì theo khoá của đề).
           round: { select: { course: { select: { organizationId: true } } } },
         },
       },
+      exam: { select: { course: { select: { organizationId: true } } } },
     },
   });
   if (!room)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanEdit(actorUserId, room.session.roundId, db);
-  const organizationId = room.session.round.course?.organizationId ?? null;
+  await assertCanEditSession(actorUserId, room.session, db);
+  const organizationId =
+    room.session.round?.course?.organizationId ??
+    room.exam.course?.organizationId ??
+    null;
 
   const normEmail = email.trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normEmail))
@@ -1345,7 +1435,7 @@ export const AddRoomCandidatesInput = z.object({
     .max(500),
 });
 
-function genAccessCode(): string {
+export function genAccessCode(): string {
   // 8-char alphanumeric (capital + digit, no ambiguous chars).
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
@@ -1365,13 +1455,13 @@ async function addCandidatesToRoomImpl(
     select: {
       examId: true,
       sessionId: true,
-      session: { select: { roundId: true } },
+      session: { select: { roundId: true, examId: true } },
       exam: { select: { assignedCodeSource: true, kind: true } },
     },
   });
   if (!room)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanEdit(actorUserId, room.session.roundId, db);
+  await assertCanEditSession(actorUserId, room.session, db);
   // A6.5 — cùng lý do với bulkCreateExamSessionsInRound: vấn đáp AI không có
   // mã dự thi/candidate — code-access.ts đã chặn claim, nhưng chặn sớm ở đây
   // để không sinh ra ExamCandidate "chết" (không ai claim được) trong DB.
@@ -1489,7 +1579,7 @@ export async function copyCandidatesFromRoom(
       select: {
         examId: true,
         sessionId: true,
-        session: { select: { roundId: true } },
+        session: { select: { roundId: true, examId: true } },
       },
     }),
     db.examRoom.findUnique({
@@ -1497,13 +1587,13 @@ export async function copyCandidatesFromRoom(
       select: {
         examId: true,
         sessionId: true,
-        session: { select: { roundId: true } },
+        session: { select: { roundId: true, examId: true } },
       },
     }),
   ]);
   if (!toRoom || !fromRoom)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanEdit(actorUserId, toRoom.session.roundId, db);
+  await assertCanEditSession(actorUserId, toRoom.session, db);
   // Soft restriction: must be same session. Cross-session copy could surprise
   // instructors by mixing exam contexts; require explicit re-import instead.
   if (toRoom.sessionId !== fromRoom.sessionId)
@@ -1598,12 +1688,12 @@ async function moveCandidatesToRoomImpl(
     where: { id: toRoomId },
     select: {
       sessionId: true,
-      session: { select: { roundId: true } },
+      session: { select: { roundId: true, examId: true } },
     },
   });
   if (!toRoom)
     throw new ExamError("validation_failed", { reason: "room_not_found" });
-  await assertCanEdit(actorUserId, toRoom.session.roundId, db);
+  await assertCanEditSession(actorUserId, toRoom.session, db);
 
   // All candidates must already be in the dest session — guards against
   // accidentally pulling in candidates from a different ca thi.
@@ -1635,13 +1725,13 @@ async function removeCandidateFromRoomImpl(
     select: {
       roomId: true,
       room: {
-        select: { session: { select: { roundId: true } } },
+        select: { session: { select: { roundId: true, examId: true } } },
       },
     },
   });
   if (!c || !c.roomId || !c.room)
     throw new ExamError("validation_failed", { reason: "candidate_not_found" });
-  await assertCanEdit(actorUserId, c.room.session.roundId, db);
+  await assertCanEditSession(actorUserId, c.room.session, db);
   // ExamAttempt → ExamCandidate là FK Cascade: xoá thí sinh đã có bài làm sẽ xoá
   // luôn bài làm và LearningEvent của họ. Chỉ được xoá khi chưa từng vào thi
   // (cùng guard với removeCandidate ở candidates.ts).
@@ -1659,10 +1749,10 @@ export async function listExamRoomsForSession(
 ): Promise<ExamSessionRoomItem[]> {
   const session = await db.examSession.findUnique({
     where: { id: sessionId },
-    select: { roundId: true },
+    select: { roundId: true, examId: true },
   });
   if (!session) throw new ExamError("schedule_not_found");
-  await assertCanView(actorUserId, session.roundId, db);
+  await assertCanViewSession(actorUserId, session, db);
 
   const rooms = await db.examRoom.findMany({
     where: { sessionId },
@@ -1704,10 +1794,10 @@ export async function reorderSessionRooms(
 ): Promise<void> {
   const sess = await db.examSession.findUnique({
     where: { id: sessionId },
-    select: { roundId: true },
+    select: { roundId: true, examId: true },
   });
   if (!sess) throw new ExamError("schedule_not_found");
-  await assertCanEdit(actorUserId, sess.roundId, db);
+  await assertCanEditSession(actorUserId, sess, db);
 
   // Validate all listed rooms actually belong to this session.
   if (orderedRoomIds.length > 0) {
@@ -1759,6 +1849,7 @@ export async function listExamSessionsForRound(
       closesAt: true,
       accessMode: true,
       openCode: true,
+      timingMode: true,
       exam: {
         select: {
           id: true,
@@ -1769,6 +1860,7 @@ export async function listExamSessionsForRound(
       _count: { select: { rooms: true } },
     },
   });
+  const now = new Date();
   return rows.map((r) => ({
     id: r.id,
     code: r.code,
@@ -1783,28 +1875,67 @@ export async function listExamSessionsForRound(
     courseId: r.exam.course?.id ?? null,
     courseTitle: r.exam.course?.title ?? null,
     roomCount: r._count.rooms,
+    timingMode: r.timingMode,
+    openState: sessionOpenState(r, now),
   }));
 }
 
-async function deleteExamRoundImpl(
+/**
+ * Xoá đợt thi cùng các ca thuộc đợt.
+ *
+ * Quy tắc giống xoá ca: chỉ xoá khi KHÔNG ca nào của đợt có bài làm. Có bài thì
+ * báo `round_has_attempts` kèm số bài để giao diện đề xuất lưu trữ. Ca chưa có
+ * bài làm được xoá cùng đợt, trong một transaction — hoặc xoá hết, hoặc không gì.
+ *
+ * Bắt gõ đúng tên đợt (`confirmTitle`), cùng cơ chế với xoá khoá học.
+ */
+export async function deleteExamRound(
   actorUserId: string,
   roundId: string,
+  confirmTitle: string,
   db: PrismaClient = prisma,
 ): Promise<void> {
   await assertCanEdit(actorUserId, roundId, db);
+  const round = await db.examRound.findUnique({
+    where: { id: roundId },
+    select: { title: true },
+  });
+  if (!round) throw new ExamError("round_not_found");
+  if (confirmTitle.trim() !== round.title.trim()) throw new ExamError("title_mismatch");
+
+  // Lấy khoá học và danh sách ca TRƯỚC khi xoá: sau đó dòng đã mất.
+  const courseId = await courseIdOf({ roundId }, db);
+  const sessionIds = (
+    await db.examSession.findMany({ where: { roundId }, select: { id: true } })
+  ).map((s) => s.id);
+
+  if (sessionIds.length > 0) {
+    const attempts = await db.examAttempt.count({
+      where: {
+        OR: [
+          { sessionId: { in: sessionIds } },
+          { candidate: { sessionId: { in: sessionIds } } },
+        ],
+      },
+    });
+    if (attempts > 0) throw new ExamError("round_has_attempts", { count: attempts });
+  }
+
   try {
-    await db.examRound.delete({ where: { id: roundId } });
+    await db.$transaction([
+      db.examSession.deleteMany({ where: { roundId } }),
+      db.examRound.delete({ where: { id: roundId } }),
+    ]);
   } catch (e) {
     if ((e as { code?: string }).code === "P2025")
       throw new ExamError("round_not_found");
-    // FK Restrict on ExamSession.roundId — round can't be deleted while it
-    // owns sessions. Surface as validation rather than crash.
-    if ((e as { code?: string }).code === "P2003")
-      throw new ExamError("validation_failed", {
-        reason: "round_has_sessions",
-      });
     throw e;
   }
+
+  for (const sessionId of sessionIds) {
+    await emitOrganizeEvent(actorUserId, LearningEventType.ExamSessionDeleted, { sessionId, roundId }, courseId, db);
+  }
+  await emitOrganizeEvent(actorUserId, LearningEventType.ExamRoundDeleted, { roundId }, courseId, db);
 }
 
 // ============================================================================
@@ -1945,16 +2076,6 @@ export async function updateExamRound(
   );
 }
 
-export async function deleteExamRound(
-  ...args: Parameters<typeof deleteExamRoundImpl>
-): ReturnType<typeof deleteExamRoundImpl> {
-  const [actorUserId, roundId] = args;
-  const db = args[2] ?? prisma;
-  // Lấy khoá học TRƯỚC: sau khi xoá thì dòng đã mất.
-  const courseId = await courseIdOf({ roundId }, db);
-  await deleteExamRoundImpl(...args);
-  await emitOrganizeEvent(actorUserId, LearningEventType.ExamRoundDeleted, { roundId }, courseId, db);
-}
 
 export async function addAdminToRound(
   ...args: Parameters<typeof addAdminToRoundImpl>
@@ -2002,6 +2123,115 @@ export async function createExamSessionInRound(
   return s;
 }
 
+// ----------------------------------------------------------------------------
+// Ca thi chính thức KHÔNG thuộc đợt.
+//
+// Kỳ thi chính thức từng bắt buộc đi qua "đợt thi → ca thi → phòng". Đợt chỉ
+// là nhãn gom nhóm (trạng thái chỉ để phân loại, giờ vào thi do từng ca quyết
+// định), nên giáo viên tạo ca thẳng từ đề. Ca vẫn là scale = formal: có phòng,
+// giám thị, mã cấp riêng — khác buổi đơn (link nhanh) ở đúng chỗ đó.
+//
+// Quyền theo ĐỀ chứa ca (canEditSessionExam), cùng luật với buổi đơn: giảng
+// viên khoá; đề không thuộc khoá thì theo người tạo đề.
+// ----------------------------------------------------------------------------
+
+export const CreateFormalSessionInput = z
+  .object({
+    examId: z.string().uuid(),
+    title: z.string().min(1).max(200).trim().optional().nullable(),
+    // Bỏ trống: mở sau 1 giờ, dài 1 giờ — sửa lại ở trang ca.
+    opensAt: z.coerce.date().optional(),
+    closesAt: z.coerce.date().optional(),
+    durationOverrideMin: z.number().int().min(1).max(24 * 60).optional().nullable(),
+    maxCandidates: z.number().int().min(1).max(100000).optional().nullable(),
+    accessMode: z.enum(["assigned_code", "open_code"]),
+    revealAnswers: z
+      .enum(["immediately", "never", "after_close", "score_only"])
+      .optional()
+      .nullable(),
+  })
+  .refine((d) => !(d.opensAt && d.closesAt) || d.opensAt < d.closesAt, {
+    message: "opensAt must be before closesAt",
+  });
+
+async function createFormalSessionImpl(
+  actorUserId: string,
+  rawInput: unknown,
+  db: PrismaClient = prisma,
+): Promise<{ id: string }> {
+  const parsed = CreateFormalSessionInput.safeParse(rawInput);
+  if (!parsed.success)
+    throw new ExamError("validation_failed", parsed.error.flatten());
+  const d = parsed.data;
+
+  const exam = await db.exam.findUnique({
+    where: { id: d.examId },
+    select: { id: true, kind: true },
+  });
+  if (!exam) throw new ExamError("exam_not_found");
+  if (!(await canEditSessionExam(actorUserId, exam.id, db)))
+    throw new ExamError("forbidden");
+  // Cùng lý do với bulkCreateExamSessionsInRound: vấn đáp AI chưa có khái niệm
+  // phòng/giám thị nhiều người — mở qua Link thi nhanh.
+  if (exam.kind === "oral")
+    throw new ExamError("exam_not_written", {
+      reason: "oral_uses_quick_share",
+      message:
+        'Đề vấn đáp AI chưa hỗ trợ tổ chức thi nhiều phòng — dùng "Tổ chức thi → Link thi nhanh" để mở ca.',
+    });
+
+  const now = new Date();
+  const opensAt = d.opensAt ?? new Date(now.getTime() + 60 * 60_000);
+  const closesAt = d.closesAt ?? new Date(opensAt.getTime() + 60 * 60_000);
+  if (opensAt >= closesAt)
+    throw new ExamError("validation_failed", { reason: "opensAt_after_closesAt" });
+
+  let openCode: string | null = null;
+  if (d.accessMode === "open_code") {
+    openCode = await pickFreeOpenCode(db);
+    if (!openCode)
+      throw new ExamError("validation_failed", { reason: "openCode_collision" });
+  }
+
+  const s = await db.examSession.create({
+    data: {
+      examId: exam.id,
+      roundId: null,
+      // Cột scale mặc định formal — ghi tường minh để không phụ thuộc mặc định.
+      scale: "formal",
+      title: d.title ?? null,
+      opensAt,
+      closesAt,
+      durationOverrideMin: d.durationOverrideMin ?? null,
+      maxCandidates: d.maxCandidates ?? null,
+      accessMode: d.accessMode,
+      openCode,
+      revealAnswers: d.revealAnswers ?? null,
+    },
+    select: { id: true },
+  });
+  // Phòng mặc định: thí sinh vào bằng mã chung mà không chọn phòng vẫn có chỗ
+  // để rơi vào, không bị mất khỏi bảng kết quả (xem ensureDefaultRoomForSession).
+  await ensureDefaultRoomForSession(actorUserId, s.id, db);
+  return s;
+}
+
+export async function createFormalSession(
+  ...args: Parameters<typeof createFormalSessionImpl>
+): ReturnType<typeof createFormalSessionImpl> {
+  const [actorUserId] = args;
+  const db = args[2] ?? prisma;
+  const s = await createFormalSessionImpl(...args);
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamSessionCreated,
+    { sessionId: s.id, roundId: null },
+    await courseIdOf({ sessionId: s.id }, db),
+    db,
+  );
+  return s;
+}
+
 export async function bulkCreateExamSessionsInRound(
   ...args: Parameters<typeof bulkCreateExamSessionsInRoundImpl>
 ): ReturnType<typeof bulkCreateExamSessionsInRoundImpl> {
@@ -2017,6 +2247,37 @@ export async function bulkCreateExamSessionsInRound(
       db,
     );
   return r;
+}
+
+/**
+ * Cấp mã chung mới cho một ca Tự do; mã cũ ngừng hoạt động ngay. Mã là của
+ * CA (PR2.12), không phải Exam.openCode legacy — trang ca thi hiển thị
+ * `session.openCode ?? exam.openCode`, nên xoay mã ở Exam sẽ không đổi gì.
+ */
+export async function rotateExamSessionOpenCode(
+  actorUserId: string,
+  sessionId: string,
+  db: PrismaClient = prisma,
+): Promise<{ openCode: string }> {
+  const s = await db.examSession.findUnique({
+    where: { id: sessionId },
+    select: { roundId: true, examId: true, accessMode: true },
+  });
+  if (!s) throw new ExamError("schedule_not_found");
+  await assertCanEditSession(actorUserId, s, db);
+  if (s.accessMode !== "open_code") throw new ExamError("access_mode_mismatch");
+  const openCode = await pickFreeOpenCode(db);
+  if (!openCode)
+    throw new ExamError("validation_failed", { reason: "openCode_collision" });
+  await db.examSession.update({ where: { id: sessionId }, data: { openCode } });
+  await emitOrganizeEvent(
+    actorUserId,
+    LearningEventType.ExamSessionUpdated,
+    { sessionId, fields: ["openCode"] },
+    await courseIdOf({ sessionId }, db),
+    db,
+  );
+  return { openCode };
 }
 
 export async function updateExamSession(

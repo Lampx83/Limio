@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { assertCanEditExam, CourseAuthzError, getRoomScope } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
+import EssayRubric, { essayRubricOf } from "./EssayRubric";
 import DeleteOralAttemptButton from "@/components/exam/DeleteOralAttemptButton";
 import OralRubricEditor from "./OralRubricEditor";
 import RegradeAllButton from "./RegradeAllButton";
@@ -287,7 +288,7 @@ const pendingShape = {
     },
   },
   question: {
-    select: { type: true, prompt: true, points: true },
+    select: { type: true, prompt: true, points: true, config: true },
   },
 } as const;
 
@@ -306,7 +307,7 @@ type AnswerItem = {
     user: { id: string; displayName: string; email: string } | null;
     candidate: { displayName: string; metadata: unknown } | null;
   };
-  question: { type: string; prompt: string; points: number };
+  question: { type: string; prompt: string; points: number; config: unknown };
 };
 
 /** Pull a string field out of the candidate's free-form metadata JSON. */
@@ -330,6 +331,7 @@ function AnswerCard({
     typeof item.answerJson === "object" && item.answerJson !== null && "text" in item.answerJson
       ? String((item.answerJson as { text: unknown }).text ?? "")
       : "";
+  const rubric = essayRubricOf(item.question.type, item.question.config);
   const meta = item.attempt.candidate?.metadata;
   const name =
     item.attempt.user?.displayName ??
@@ -369,6 +371,7 @@ function AnswerCard({
         html={plainToRichHtml(item.question.prompt)}
         className="prose prose-sm mb-3 max-w-none rounded bg-slate-50 px-3 py-2 dark:prose-invert"
       />
+      <EssayRubric rubric={rubric} />
       <p className="mb-1 text-sm font-medium">Bài làm:</p>
       <p className="mb-3 whitespace-pre-wrap rounded border border-default px-3 py-2 text-sm">
         {text || <em className="text-faint">(học viên không trả lời)</em>}

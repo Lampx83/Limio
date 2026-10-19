@@ -19,12 +19,14 @@ import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/datetime";
 import EmptyState from "@/components/ui/EmptyState";
+import ShareDialog from "./[deckId]/ShareDialog";
 
 interface DeckSummary {
   id: string;
   title: string;
   updatedAt: string;
   groupId: string | null;
+  shareCode: string | null;
   _count: { slides: number };
 }
 
@@ -83,6 +85,7 @@ export default function LiveDeckList() {
   const [newGroupId, setNewGroupId] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
+  // Bước chọn cách bắt đầu (tự soạn hay tạo bằng AI từ tài liệu), trước form nhập tên.
   const newTitleInputRef = useRef<HTMLInputElement>(null);
 
   // Hộp thoại nhóm (tạo mới / sửa)
@@ -90,10 +93,16 @@ export default function LiveDeckList() {
 
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [moveMenuFor, setMoveMenuFor] = useState<string | null>(null);
+  const [shareDeckId, setShareDeckId] = useState<string | null>(null);
+  const shareDeck = shareDeckId ? decks?.find((d) => d.id === shareDeckId) : undefined;
 
-  // Link cũ "?new=1" vẫn mở luôn form tạo.
+  // "?new=1" (từ đường "Soạn thủ công" ở trang tạo bài) mở luôn form tạo bài trống.
   useEffect(() => {
-    if (searchParams.get("new") === "1") setFormOpen(true);
+    if (searchParams.get("new") !== "1") return;
+    setNewTitle("");
+    // Đang xem một nhóm cụ thể thì bài mới mặc định vào nhóm đó.
+    setNewGroupId(filter && filter !== NO_GROUP ? filter : "");
+    setFormOpen(true);
   }, [searchParams]);
 
   useEffect(() => {
@@ -169,12 +178,8 @@ export default function LiveDeckList() {
     }
   };
 
-  const openCreate = () => {
-    setNewTitle("");
-    // Đang xem một nhóm cụ thể thì bài mới mặc định vào nhóm đó.
-    setNewGroupId(filter && filter !== NO_GROUP ? filter : "");
-    setFormOpen(true);
-  };
+  // "Tạo bài giảng" mở thẳng ô mô tả chủ đề (trang AI hỗ trợ soạn); soạn thủ công là đường phụ ở trang đó (?new=1).
+  const openCreate = () => router.push("/instructor/limio-live/from-document");
 
   const handleDuplicate = async (deckId: string) => {
     if (duplicatingId) return;
@@ -282,16 +287,12 @@ export default function LiveDeckList() {
         <div className="mt-2 flex items-center justify-end gap-0.5">
           <button
             type="button"
-            onClick={() =>
-              toast.info("Chia sẻ bài giảng sắp ra mắt", {
-                description: "Bạn sẽ chia sẻ được cho đồng nghiệp và đăng lên chợ bài giảng.",
-              })
-            }
+            onClick={() => setShareDeckId(deck.id)}
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-            title="Chia sẻ (sắp ra mắt)"
-            aria-label="Chia sẻ bài giảng"
+            title={deck.shareCode ? "Đang chia sẻ: link xem và tải PDF" : "Chia sẻ link xem và tải PDF"}
+            aria-label={deck.shareCode ? "Đang chia sẻ bài giảng" : "Chia sẻ bài giảng"}
           >
-            <Share2 size={14} />
+            <Share2 size={14} className={deck.shareCode ? "text-brand-600" : undefined} />
           </button>
           <button
             type="button"
@@ -498,6 +499,18 @@ export default function LiveDeckList() {
         />
       )}
 
+      {shareDeck && (
+        <ShareDialog
+          key={shareDeck.id}
+          deckId={shareDeck.id}
+          shareCode={shareDeck.shareCode ?? null}
+          onChange={(shareCode) =>
+            setDecks((list) => list?.map((d) => (d.id === shareDeck.id ? { ...d, shareCode } : d)) ?? list)
+          }
+          onClose={() => setShareDeckId(null)}
+        />
+      )}
+
       {decks === null ? (
         <p className="text-sm text-muted">Đang tải...</p>
       ) : decks.length === 0 && groups.length === 0 ? (
@@ -573,7 +586,7 @@ export default function LiveDeckList() {
   );
 }
 
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+function Modal({ children, onClose, wide }: { children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
@@ -581,7 +594,7 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-2xl">
+      <div className={`w-full ${wide ? "max-w-xl" : "max-w-md"} rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-2xl`}>
         {children}
       </div>
     </div>

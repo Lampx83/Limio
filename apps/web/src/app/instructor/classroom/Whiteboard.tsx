@@ -1,28 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { copyText } from "@/lib/clipboard";
 import {
-  PenTool, RefreshCw, RotateCcw, QrCode, X, Download,
+  PenTool, RotateCcw, QrCode, Download,
   PanelLeftOpen, PanelLeftClose, Lock, Unlock,
   FileImage, FileText, ChevronLeft, ChevronRight, Trash2,
 } from "lucide-react";
 import { toast } from "@/lib/toast";
-import dynamic from "next/dynamic";
+import JoinQrCard from "@/components/ui/JoinQrCard";
+import ToolHistory from "./ToolHistory";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { formatVN } from "@/lib/datetime";
 import WhiteboardCanvas from "./WhiteboardCanvas";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
-
-const QRCode = dynamic(
-  () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="bg-white p-3 rounded-lg border border-token" style={{ width: 200, height: 200 }} />
-    ),
-  },
-);
 
 interface WhiteboardMeta {
   id: string;
@@ -38,6 +28,7 @@ interface WhiteboardHistoryItem {
   title: string;
   status: string;
   createdAt: string;
+  deletedAt?: string | null;
   kioskMode?: boolean;
 }
 
@@ -49,11 +40,8 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
   const [current, setCurrent] = useState<WhiteboardMeta | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(true);
-  const [showQrModal, setShowQrModal] = useState(false);
   const [qrPanelOpen, setQrPanelOpen] = useState(true);
   const [menuHidden, setMenuHidden] = useState(true);
-  const [history, setHistory] = useState<WhiteboardHistoryItem[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [title, setTitle] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
@@ -212,18 +200,6 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
       toast.error("Lỗi mạng");
     } finally {
       setIsChangingPage(false);
-    }
-  };
-
-  const loadHistory = async () => {
-    setIsLoadingHistory(true);
-    try {
-      const res = await fetch(apiUrl("/api/instructor/teaching-tools/whiteboards"));
-      if (res.ok) setHistory(await res.json());
-    } catch {
-      toast.error("Lỗi tải lịch sử");
-    } finally {
-      setIsLoadingHistory(false);
     }
   };
 
@@ -425,61 +401,19 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
             }}
           />
 
+          {/* bottom-16: nằm trên thanh thu phóng/hoàn tác của Excalidraw ở góc dưới trái. */}
           {qrPanelOpen && joinUrl && (
-            <div className="absolute bottom-4 left-4 z-10 flex flex-col items-center gap-1 rounded-xl bg-white p-2.5 shadow-2xl ring-2 ring-pink-300 animate-fade-in-up">
-              <button
-                onClick={() => setQrPanelOpen(false)}
-                className="absolute -top-2 -right-2 rounded-full bg-white p-1 shadow ring-1 ring-gray-300 hover:bg-gray-100"
-                aria-label="Ẩn khung QR"
-              >
-                <X size={12} />
-              </button>
-              <button
-                onClick={() => setShowQrModal(true)}
-                title="Bấm để phóng to"
-                className="rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
-              >
-                <QRCode value={joinUrl} size={110} level="H" includeMargin />
-              </button>
-              <p className="text-sm font-extrabold font-mono tracking-[0.15em] text-pink-800">{current.code}</p>
-            </div>
+            <JoinQrCard
+              url={joinUrl}
+              code={current.code}
+              title="Quét để tham gia vẽ"
+              tone="pink"
+              onHide={() => setQrPanelOpen(false)}
+              className="absolute bottom-16 left-4 z-10 animate-fade-in-up"
+            />
           )}
         </div>
 
-        {showQrModal && joinUrl && (
-          <div
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in-up p-4"
-            onClick={(e) => { if (e.target === e.currentTarget) setShowQrModal(false); }}
-          >
-            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl max-w-md text-center relative">
-              <button
-                onClick={() => setShowQrModal(false)}
-                className="absolute top-3 right-3 p-2 rounded-lg hover:bg-gray-100"
-                aria-label="Đóng"
-              >
-                <X size={20} />
-              </button>
-              <p className="text-xs uppercase tracking-widest text-gray-600 font-semibold mb-2">Quét để tham gia vẽ</p>
-              <div className="inline-block bg-white p-4 rounded-xl ring-2 ring-pink-300">
-                <QRCode value={joinUrl} size={280} level="H" includeMargin />
-              </div>
-              <p className="mt-4 text-4xl font-extrabold font-mono tracking-[0.3em] text-pink-800">{current.code}</p>
-              <p className="mt-2 text-sm text-gray-700">
-                Hoặc truy cập: <code className="font-mono px-1.5 py-0.5 bg-pink-50 text-pink-900 rounded">/whiteboard/{current.code}</code>
-              </p>
-              <button
-                onClick={async () => {
-                  const ok = await copyText(joinUrl);
-                  if (ok) toast.success("Đã copy link");
-                  else toast.error("Không sao chép được — bạn chọn link rồi copy tay giúp");
-                }}
-                className="mt-3 text-sm text-pink-700 hover:text-pink-800 font-semibold underline"
-              >
-                Copy link tham gia
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -652,33 +586,36 @@ export default function Whiteboard({ onExit }: WhiteboardProps) {
       </div>
 
       {/* History */}
-      <div className="mt-6 border-t border-token pt-4">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-muted">Whiteboard đã tạo trước đây</p>
-          <button onClick={loadHistory} disabled={isLoadingHistory} className="tool-action">
-            <RefreshCw size={11} className={isLoadingHistory ? "animate-spin" : ""} />
-            {isLoadingHistory ? "Đang tải..." : "Tải lịch sử"}
-          </button>
-        </div>
-        {history.length === 0 && !isLoadingHistory && (
-          <p className="py-2 text-center text-xs text-muted">Bấm &quot;Tải lịch sử&quot; để xem các whiteboard cũ</p>
+      <ToolHistory<WhiteboardHistoryItem>
+        kind="whiteboard"
+        heading="Whiteboard đã tạo trước đây"
+        noun="whiteboard"
+        listUrl="/api/instructor/teaching-tools/whiteboards"
+        toEntry={(item) => ({
+          id: item.id,
+          title: item.title,
+          code: item.code,
+          responseCount: null,
+          createdAt: item.createdAt,
+          deletedAt: item.deletedAt,
+          isOpen: item.status === "open",
+        })}
+        onOpen={handleLoadBoard}
+        containerClassName="grid max-h-96 gap-2 overflow-y-auto sm:grid-cols-2"
+        renderItem={(item) => (
+          <>
+            <div className="mb-0.5 flex items-center justify-between gap-2">
+              <p className="truncate text-sm font-medium">{item.title}</p>
+              <span className="chip shrink-0 font-mono text-[11px]">{item.code}</span>
+            </div>
+            <p className="text-xs text-muted">
+              {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+              {item.kioskMode && " · 🖥 Kiosk"}
+              {item.status === "closed" && " · 🔒 Đã đóng"}
+            </p>
+          </>
         )}
-        <div className="grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
-          {history.map((item) => (
-            <button key={item.id} onClick={() => handleLoadBoard(item)} className="tool-list-item">
-              <div className="mb-0.5 flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-medium">{item.title}</p>
-                <span className="chip shrink-0 font-mono text-[11px]">{item.code}</span>
-              </div>
-              <p className="text-xs text-muted">
-                {formatVN(item.createdAt, { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                {item.kioskMode && " · 🖥 Kiosk"}
-                {item.status === "closed" && " · 🔒 Đã đóng"}
-              </p>
-            </button>
-          ))}
-        </div>
-      </div>
+      />
     </div>
   );
 }

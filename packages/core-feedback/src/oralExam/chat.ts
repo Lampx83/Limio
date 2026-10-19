@@ -1,7 +1,8 @@
 import type OpenAI from "openai";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 
-// A6.3 — model rẻ cho hội thoại giám khảo, cùng lựa chọn với AI Tutor.
-export const DEFAULT_EXAMINER_MODEL = "gpt-4o-mini";
+// A6.3 — hội thoại giám khảo dùng cùng model chat với AI Tutor.
+export const DEFAULT_EXAMINER_MODEL = DEFAULT_MODEL;
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";

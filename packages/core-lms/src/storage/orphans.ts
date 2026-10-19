@@ -25,6 +25,7 @@ export const SWEEPABLE_KINDS: StoredFileKind[] = [
   "lesson_image",
   "lesson_pdf",
   "lesson_html",
+  "lesson_file",
   "lesson_transcript",
   "submission",
   "exam_asset",
@@ -44,6 +45,9 @@ const HISTORY_TABLES = ["LearningEvent", "AuditLog"];
 // mọi kiểu tiền tố mà từng route đặt.
 const REF_TOKEN = String.raw`(\d{10,}-[A-Za-z0-9]+\.[A-Za-z0-9]+)`;
 const LEAF_TOKEN = new RegExp(String.raw`${REF_TOKEN}$`);
+// Hai bản nhỏ của ảnh đã xử lý (apps/web imageVariants.ts): `<…><unixMs>-<hex>.w480.webp`. DB chỉ nhắc tới ảnh gốc
+// (`<unixMs>-<hex>.jpg|png`), nên bản nhỏ được coi là "có người dùng" đúng khi ảnh gốc có — bị dọn cùng lúc với gốc.
+const THUMB_LEAF = /(\d{10,}-[A-Za-z0-9]+)\.w(?:480|960)\.webp$/;
 
 export class OrphanSweepError extends Error {
   constructor(public readonly code: "reference_scan_empty" | "reference_scan_failed") {
@@ -157,17 +161,21 @@ export async function findOrphanedFiles(
   const tokens = await collectReferencedTokens(db);
   if (rows.length > 0 && tokens.size === 0) throw new OrphanSweepError("reference_scan_empty");
 
+  // Phần trước đuôi của mọi token (`<unixMs>-<hex>`), để bản nhỏ tra theo ảnh gốc.
+  const stems = new Set([...tokens].map((t) => t.slice(0, t.lastIndexOf("."))));
+
   const orphans: OrphanCandidate[] = [];
   let referenced = 0;
   let unverifiable = 0;
   for (const r of rows) {
     const leaf = r.key.slice(r.key.lastIndexOf("/") + 1);
-    const token = LEAF_TOKEN.exec(leaf)?.[1]?.toLowerCase();
-    if (!token) {
+    const thumbStem = THUMB_LEAF.exec(leaf)?.[1]?.toLowerCase();
+    const token = thumbStem ? null : LEAF_TOKEN.exec(leaf)?.[1]?.toLowerCase();
+    if (!thumbStem && !token) {
       unverifiable++;
       continue;
     }
-    if (tokens.has(token)) {
+    if (thumbStem ? stems.has(thumbStem) : tokens.has(token!)) {
       referenced++;
       continue;
     }

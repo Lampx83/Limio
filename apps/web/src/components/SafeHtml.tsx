@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 /**
  * Render instructor-authored HTML (richtext content) after sanitizing
@@ -14,9 +14,20 @@ import { useEffect, useState } from "react";
 export default function SafeHtml({
   html,
   className,
+  style,
+  attrs,
+  transform,
 }: {
   html: string;
   className?: string;
+  style?: CSSProperties;
+  /** Thuộc tính data-* gắn lên khung (vd. data-palette của bài học). */
+  attrs?: Record<`data-${string}`, string>;
+  /**
+   * Biến đổi HTML SAU khi đã làm sạch (vd. dựng <details> cho bố cục Hỏi và
+   * đáp). Chỉ được thêm cấu trúc lành tính, không đưa thêm dữ liệu ngoài vào.
+   */
+  transform?: (sanitizedHtml: string) => string;
 }) {
   const [clean, setClean] = useState("");
 
@@ -31,16 +42,20 @@ export default function SafeHtml({
         ADD_ATTR: ["target", "rel", "style"],
         ADD_TAGS: ["mark"],
       });
-      setClean(sanitized);
+      setClean(transform ? transform(sanitized) : sanitized);
     });
     return () => {
       active = false;
     };
+    // transform là hàm thuần ở cấp module — không cần theo dõi.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [html]);
 
   return (
     <div
       className={className}
+      style={style}
+      {...attrs}
       // sanitized by DOMPurify in the effect above
       dangerouslySetInnerHTML={{ __html: clean }}
     />

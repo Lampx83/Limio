@@ -67,6 +67,7 @@ model User {
   verificationTokens             VerificationToken[]
   notes                          Note[]
   lessonAnnotations              LessonAnnotation[]
+  lessonDrafts                   LessonDraft[]
   lessonAnnotationReplies        LessonAnnotationReply[]
   courseProgress                 UserCourseProgress[]
   xpTransactions                 XpTransaction[]
@@ -190,7 +191,12 @@ model User {
   speakingFeedbacksReceived SpeakingFeedback[]     @relation("SpeakingFeedbackOwner")
   speakingFeedbacksReviewed SpeakingFeedback[]     @relation("SpeakingFeedbackReviewer")
 
+  // Growth attribution — điểm chạm đầu tiên (utm/click-id/referrer) lúc đăng ký.
+  acquisitionTouch AcquisitionTouch?
+
   @@index([createdAt])
+  // Luồng growth events phân trang theo mốc xác minh email (xem AcquisitionTouch).
+  @@index([emailVerifiedAt])
 }
 
 model AuthProvider {
@@ -603,9 +609,48 @@ model Lesson {
   annotations       LessonAnnotation[]
   skillTags         ContentSkillMapping[] @relation("LessonSkill")
   classroomSessions ClassroomSession[]
+  drafts            LessonDraft[]
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
+}
+
+/// Bài học tạo từ tài liệu bằng AI — BẢN NHÁP: tài liệu đã tách đoạn + dàn ý giảng viên
+/// đang sửa. Không phải nội dung bài: học viên không thấy gì cho tới khi giảng viên chốt
+/// dàn ý, AI viết bài và giảng viên bấm "Áp dụng" (khi đó mới ghi ContentItem/Lesson).
+/// Hình dạng các cột Json: SourcePara[] / LessonOutline / LessonLook trong
+/// packages/shared-types/src/lessonOutline.ts và lessonLook.ts.
+model LessonDraft {
+  id                   String    @id @default(uuid())
+  /// Bài học nơi giảng viên bấm "Văn bản — AI hỗ trợ"; bài thứ nhất của dàn ý ghi vào đây.
+  lessonId             String
+  userId               String
+  sourceName           String
+  /// docx | pdf | txt | md | paste
+  sourceKind           String
+  sourceParas          Json
+  outline              Json
+  look                 Json?
+  /// keep = giữ nguyên lời tài liệu · edit = biên tập cho mạch lạc
+  writing              String    @default("keep")
+  addObjectivesSummary Boolean   @default(true)
+  /// Sửa dàn ý sau khi chốt thì xoá mốc này — phải chốt lại mới được tạo bài.
+  confirmedAt          DateTime?
+  /// Bài AI đã viết từ dàn ý đã chốt (LessonDraftResult) — chờ giảng viên xem và Áp dụng.
+  /// Sửa dàn ý thì xoá, vì bài không còn khớp dàn ý.
+  result               Json?
+  /// "Làm lại từ dàn ý": khối Văn bản sẽ được THAY khi Áp dụng (thay vì thêm khối mới).
+  targetContentItemId  String?
+  /// outline | applied | discarded
+  status               String    @default("outline")
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, status])
+  @@index([userId])
 }
 
 /// LANG G3 — bốn kỹ năng ngôn ngữ. Khớp LANGUAGE_SKILLS trong
@@ -712,8 +757,26 @@ model ContentItem {
   annotations     LessonAnnotation[]
   flashcardStates FlashcardState[]
   lessonActivity  LessonActivity?
+  versions        ContentItemVersion[]
 
   @@index([lessonId])
+}
+
+/// Phiên bản của một khối Văn bản (richtext) để hoàn tác — chụp TRẠNG THÁI CŨ trước mỗi lần
+/// payload bị ghi đè. source: generated (AI tạo, luôn giữ) | before_edit (sửa tay, gộp trong 5
+/// phút) | before_ai | before_restore | before_convert | before_regenerate. Giữ tối đa 30 bản
+/// ngoài "generated" (core-lms courses/contentVersions.ts).
+model ContentItemVersion {
+  id            String   @id @default(uuid())
+  contentItemId String
+  source        String
+  payload       Json
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@index([contentItemId, createdAt])
 }
 
 // Unified ordering layer for lesson-attached activities (ContentItem + Quiz +
@@ -843,6 +906,8 @@ model Enrollment {
   @@index([sectionId])
   // Cron reaper (enrollment-access-expiry-check) quét theo cặp này mỗi ngày.
   @@index([status, accessExpiresAt])
+  // Growth events: phân trang "ghi danh đầu tiên" theo thời gian.
+  @@index([enrolledAt])
 }
 
 // A3 — Note attached to a lesson, optionally to a content item, optionally
@@ -964,6 +1029,8 @@ model Certificate {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  portfolioCourses PortfolioCourse[]
 
   @@unique([userId, courseId])
   @@index([courseId])
@@ -2033,6 +2100,9 @@ model TournamentMission {
   // Submission window — required when verifyMode is set; null means
   // "completion derived from behavior" (COURSE_LINKED).
   submissionDeadline DateTime?
+  // Cho nộp sau submissionDeadline (bài nộp lúc đó đánh dấu MissionSubmission.isLate).
+  // Vẫn bị chặn khi giải đã kết thúc. Mặc định tắt: quá hạn là đóng như cũ.
+  allowLateSubmission Boolean @default(false)
 
   // CUSTOM/EXTERNAL content payload.
   // Shape varies by missionType:
@@ -2104,6 +2174,8 @@ model MissionSubmission {
   // 0..1; set after verify.
   finalScore  Float?
   verifiedAt  DateTime?
+  // Lần nộp gần nhất diễn ra sau hạn (chỉ có khi mission cho nộp muộn). Nộp lại đúng hạn thì về false.
+  isLate      Boolean                 @default(false)
 
   mission           TournamentMission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
   user              User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -2410,7 +2482,7 @@ model AiConversation {
   userId    String
   lessonId  String
   title     String? // First user message snippet, set after first turn.
-  model     String   @default("gpt-4o-mini")
+  model     String   @default("qwen3.5-35b-a3b-int4")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -2634,6 +2706,9 @@ model Order {
   @@index([userId, createdAt])
   @@index([courseId, status])
   @@index([status, createdAt])
+  // Growth events: phân trang order.paid / order.refunded theo thời gian.
+  @@index([paidAt])
+  @@index([refundedAt])
 }
 
 // =====================================================================
@@ -2761,11 +2836,15 @@ model ClassroomPoll {
   createdBy   User?   @relation("PollCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   votes ClassroomPollVote[]
 
   @@index([sessionId, createdAt])
   @@index([createdById, createdAt])
+  @@index([deletedAt])
 }
 
 model ClassroomPollVote {
@@ -2798,9 +2877,13 @@ model WordCloud {
   submissions WordCloudSubmission[]
 
   createdAt DateTime @default(now())
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([sessionId])
   @@index([createdById, createdAt])
+  @@index([deletedAt])
 }
 
 model WordCloudSubmission {
@@ -2855,10 +2938,14 @@ model InteractiveBoard {
 
   createdAt DateTime  @default(now())
   closedAt  DateTime?
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([ownerId, createdAt])
   @@index([sessionId])
   @@index([status, createdAt])
+  @@index([deletedAt])
 }
 
 model BoardNote {
@@ -2920,10 +3007,14 @@ model Whiteboard {
 
   createdAt DateTime  @default(now())
   closedAt  DateTime?
+  // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
+  // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
+  deletedAt DateTime?
 
   @@index([ownerId, createdAt])
   @@index([sessionId])
   @@index([status, createdAt])
+  @@index([deletedAt])
 }
 
 // Quick Grouping
@@ -3585,7 +3676,7 @@ model OralExamMaterial {
 }
 
 // A6.2 — mảnh nhỏ cắt ra từ OralExamMaterial.extractedText, kèm vector ngữ
-// nghĩa (OpenAI text-embedding-3-small, 1536 chiều) để "giảng viên ảo" (A6.3)
+// nghĩa (Qwen3-Embedding cắt còn 1536 chiều; model cụ thể ghi ở `embeddingModel`) để "giảng viên ảo" (A6.3)
 // tìm đúng đoạn liên quan thay vì phải đọc nguyên tài liệu mỗi lượt hỏi.
 // `embedding` là Unsupported vì Prisma Client chưa có kiểu vector native —
 // đọc/ghi qua raw SQL (packages/core-feedback/src/oralExam/).
@@ -3595,6 +3686,9 @@ model OralExamMaterialChunk {
   chunkIndex Int
   chunkText  String                       @db.Text
   embedding  Unsupported("vector(1536)")?
+  // Model đã sinh `embedding`. Vector của hai model không so sánh được, nên tìm kiếm chỉ xét chunk cùng
+  // model với model hiện hành; NULL = chưa có vector (lưu khi chưa cấu hình embeddings).
+  embeddingModel String?
   createdAt  DateTime                     @default(now())
 
   material OralExamMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
@@ -4269,10 +4363,12 @@ model CohortMember {
 model ExamSession {
   id                  String                @id @default(uuid())
   examId              String
-  // A5.3 PR1c.5 — ca thi thuộc về 1 đợt thi. Required. createExamSession()
-  // tự ensure round mặc định cho legacy exam-scoped callers.
-  roundId             String
-  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Unique trong round.
+  // Đợt thi chứa ca — CHỈ kỳ thi chính thức có đợt (Đợt › Ca › Phòng). Link
+  // thi nhanh, thử nghiệm câu hỏi và vấn đáp là BUỔI ĐƠN: không có đợt, null.
+  // Trước đây mọi ca bắt buộc có đợt nên hệ thống tự dựng "Đợt thi tự động"
+  // làm thùng chứa — xem bước 2 của kế hoạch đợt/ca.
+  roundId             String?
+  // A5.3 PR1a additive — mã ca thi nội bộ (vd "CA-1-SANG-14-05"). Không unique.
   // KHÔNG phải mã access cho SV — xem `openCode` bên dưới.
   code                String?
   // A5.3 PR1a additive — tên hiển thị (vd "Ca 1 — Sáng 14/5").
@@ -4333,17 +4429,24 @@ model ExamSession {
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
   // Empty array = no allowlist; non-empty = only these IPs/CIDRs pass.
   ipAllowlist         String[]              @default([])
+  // Số thí sinh tối đa của RIÊNG ca này (chỉ áp cho ca mã chung, người vào mới).
+  // NULL = không giới hạn. Thí sinh đã có trong danh sách nhập và người vào lại
+  // không bị tính vào chặn. Thay Exam.openMaxAttempts (cộng dồn theo cả đề).
+  maxCandidates       Int?
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 
   exam       Exam            @relation(fields: [examId], references: [id], onDelete: Cascade)
-  round      ExamRound       @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  round      ExamRound?      @relation(fields: [roundId], references: [id], onDelete: Restrict)
   cohort     CourseSection?  @relation(fields: [cohortId], references: [id], onDelete: Cascade)
   rooms      ExamRoom[]
   candidates ExamCandidate[]
   attempts   ExamAttempt[]
 
-  @@unique([roundId, openCode])
+  // Mã vào thi phải duy nhất TOÀN HỆ THỐNG: người nhập mã không biết ca nào,
+  // nên hai ca trùng mã là thí sinh vào nhầm ca. NULL (ca không dùng mã chung)
+  // không xung đột — Postgres coi mỗi NULL là khác nhau.
+  @@unique([openCode])
   @@index([examId, opensAt])
   @@index([roundId, opensAt])
   @@index([cohortId])
@@ -4498,6 +4601,10 @@ model ExamSection {
   // LANG G5d — bảng quy đổi điểm thô của phần → nhãn ước lượng, do giảng viên nhập:
   // [{ from, to, label }] không chồng nhau. Hệ thống không mang sẵn số liệu chính thức.
   scoreBands              Json?
+  // Trọng số (%) của phần trong điểm chính thức của bài. Chỉ áp khi MỌI phần
+  // của đề đều có trọng số, tổng = 100 và không câu nào nằm ngoài phần — thiếu
+  // một điều kiện thì điểm tính theo tỉ lệ điểm như cũ (xem weighted-score.ts).
+  weight                  Float?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
 
@@ -4809,6 +4916,10 @@ model Organization {
   locale                     String   @default("vi")
   timezone                   String   @default("Asia/Ho_Chi_Minh")
   brandingLogoUrl            String?
+  // Cài đặt thương hiệu của trường cho slide Limio-Live (màu, nền, vị trí/cỡ/chỗ hiện logo): JSON chuẩn hoá bởi
+  // apps/web/src/lib/limioLiveBrand.ts (OrgBrandSettings). Logo lấy từ brandingLogoUrl. Mọi giảng viên của trường
+  // dùng bộ này cho bài giảng chưa có thương hiệu riêng.
+  slideBrand                 Json?
   // Ảnh chữ ký người đại diện trường — hiện trên chứng nhận hoàn thành khoá
   // học, cạnh chữ ký Limio (xem SiteSetting key branding.limio_signature_url).
   signatureImageUrl          String?
@@ -4825,6 +4936,10 @@ model Organization {
   // Mặc định BẬT (giữ hành vi cũ); trường không muốn phát mail thì tắt.
   inviteEmailOnInstructorAdd Boolean  @default(true)
   inviteEmailOnProctorAdd    Boolean  @default(true)
+  // Dải mạng được phép VÀO THI các đề thuộc trường này: mỗi phần tử là một IP đơn
+  // hoặc CIDR (IPv4/IPv6). Rỗng = không giới hạn. Chỉ áp ở bước vào thi (mã
+  // chung, mã cá nhân, phòng chờ, bắt đầu lượt làm); mọi tính năng khác không bị chặn.
+  examAllowedIps             String[] @default([])
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
@@ -5087,9 +5202,56 @@ model LiveDeck {
   title     String
   // Giao diện slide cho cả bài giảng — id trong limio-live/slideThemes.ts.
   theme     String   @default("white")
+  // Thương hiệu của bài giảng (logo + màu): { logoUrl?, logoPos, logoSize, logoShow, color? }, chuẩn hoá bởi
+  // apps/web/src/lib/limioLiveBrand.ts. Null = chưa đặt (slide hiển thị đúng theo giao diện).
+  brand     Json?
+  // true = bài giảng này KHÔNG dùng thương hiệu nào (kể cả của trường). false + brand null = dùng của trường.
+  brandOff  Boolean  @default(false)
+  // Mẫu thương hiệu giảng viên chọn cho bài này khi dùng thương hiệu của trường (mã trong limioLiveBrand.brandTemplates);
+  // null = mẫu mặc định của trường.
+  brandTemplate String?
+  // Hoa văn trang trí của cả bài (mã trong apps/web/src/lib/limioLiveMotifs.ts): null = tự động (suy từ mã bài),
+  // "none" = không dùng, hoặc một hoa văn chủ đạo. Slide có thể chọn riêng qua config.motif.
+  motif     String?
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
   groupId   String?
+
+  // Bài giảng sinh từ tài liệu (AI): dàn ý là bước giữa "tài liệu gốc" và "slide cuối".
+  // Cả bốn cột null với bài giảng soạn tay. outlineConfirmedAt = giảng viên đã xem và
+  // xác nhận dàn ý — chỉ khi đó mới được sinh slide.
+  outline            Json?
+  outlineMinutes     Int?
+  outlineConfirmedAt DateTime?
+  // Văn bản trích từ tài liệu gốc (giữ lại để sinh lại một phần); chỉ chủ bài giảng đọc được.
+  sourceName String?
+  sourceText String? @db.Text
+  // Nguồn của bài AI soạn: "document" (tài liệu tải lên/dán), "topic" (mô tả chủ đề, AI dùng kiến thức chung),
+  // "topic_web" (mô tả chủ đề kèm trang tìm trên internet). Null = bài cũ hoặc soạn tay; bài cũ có dàn ý coi như "document".
+  sourceKind String?
+  // Mức "topic_web": các trang đã đọc [{ n, title, url }] theo đúng số [n] trong sourceText. Mảng rỗng = có bật tìm
+  // nguồn nhưng không tìm được trang nào (bài rơi về "topic"); null = không tìm nguồn.
+  sourceRefs Json?
+  // Bài nhập từ file trình chiếu (.pptx): { format: "pptx", fileName, slides: [...] } — chữ, ghi chú giảng, hình đã lưu,
+  // bảng, biểu đồ của từng slide gốc (apps/web/src/lib/limioLivePptx.ts). Tạo slide dựng từ cột này, không đọc lại file.
+  // Null = bài không nhập từ file trình chiếu.
+  importSource Json?
+  // Ngôn ngữ nội dung slide ("vi", "en", "zh"... — DECK_LANGUAGES ở shared-types): AI viết và chữ hệ thống trên slide theo
+  // ngôn ngữ này. Ghi lúc tạo bài (nhận từ nguồn), giảng viên đổi ở menu Giao diện. Null = chưa xác định (bài cũ, hoặc nguồn
+  // quá ngắn): lần đầu cần dùng sẽ nhận từ chữ của slide rồi ghi lại (docs/tieu-chi/ngon-ngu-slide.md).
+  language String?
+  // Khung hình của các ô hình trong slide Chữ và hình ("round", "circle", "arch", "hex", "blob", "leaf", "offset" —
+  // IMAGE_FRAMES ở apps/web/src/lib/limioLiveImageStyle.ts). Null = tự động theo hoa văn chủ đạo của bài.
+  imageFrame String?
+  // Yêu cầu của giảng viên đi cùng tài liệu (mô tả trong ô "Tạo bài giảng"): người học, trọng tâm, cách dạy. AI làm theo
+  // khi soạn dàn ý, tạo slide, bổ sung tương tác; kiến thức vẫn chỉ lấy từ tài liệu. Null = không có
+  // (docs/tieu-chi/tao-bai-giang-mot-o.md, M9).
+  sourceIntent String? @db.Text
+
+  // Link xem chỉ đọc /bai-giang/<shareCode>: ai có link cũng xem được, không cần đăng nhập. Null = không chia sẻ.
+  // Tạo link mới = thay mã (link cũ chết ngay). Bản sao bài giảng không mang theo mã này.
+  shareCode String? @unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -5148,9 +5310,44 @@ model LiveSlide {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
-  deck LiveDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  deck     LiveDeck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  versions LiveSlideVersion[]
+  codes    LiveSlideCode[]
 
   @@index([deckId, orderIndex])
+}
+
+// Mã tham gia của MỘT slide tương tác trong MỘT phiên tương tác (LiveSession): mỗi slide có QR riêng,
+// slide không tương tác thì không có. Mã cố định suốt phiên (qua nhiều lần mở/đóng cửa sổ chiếu) và chỉ đổi
+// khi giảng viên bắt đầu phiên mới. Học viên quét mã là gắn với đúng slide này, không tự theo giảng viên sang slide khác.
+model LiveSlideCode {
+  code      String   @id
+  sessionId String
+  slideId   String
+  createdAt DateTime @default(now())
+
+  session LiveSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  slide   LiveSlide   @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, slideId])
+  @@index([slideId])
+}
+
+// Phiên bản cũ của một slide để hoàn tác. Chụp lại TRẠNG THÁI TRƯỚC khi bị ghi đè (sửa tay, nhận
+// đề xuất AI, cập nhật theo dàn ý, khôi phục), cộng thêm bản "generated" lúc AI sinh slide — bản
+// này luôn được giữ, không bị dọn. Xem core-lms/live/slideVersions.ts.
+model LiveSlideVersion {
+  id        String        @id @default(uuid())
+  slideId   String
+  // generated | before_edit | before_ai | before_sync | before_restore
+  source    String
+  type      LiveSlideType
+  config    Json
+  createdAt DateTime      @default(now())
+
+  slide LiveSlide @relation(fields: [slideId], references: [id], onDelete: Cascade)
+
+  @@index([slideId, createdAt])
 }
 
 // Một lượt trình chiếu (Present) của 1 LiveDeck. GV bấm "Trình chiếu" sẽ
@@ -5193,9 +5390,15 @@ model LiveSession {
   startedAt DateTime  @default(now())
   endedAt   DateTime?
 
+  // Giảng viên thoát màn chiếu nhưng giữ phiên (kết quả + mã) cho lần chiếu sau: học viên không trả lời được
+  // trong lúc tạm dừng. Mở lại màn chiếu thì xoá cờ này. Chỉ phiên tương tác kết thúc (endedAt) khi giảng viên
+  // chọn "Lưu phiên và reset mã mới" hoặc "Xoá kết quả phiên này và tạo phiên tương tác mới".
+  pausedAt DateTime?
+
   deck             LiveDeck          @relation(fields: [deckId], references: [id], onDelete: Cascade)
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   classroomSession ClassroomSession? @relation(fields: [classroomSessionId], references: [id], onDelete: SetNull)
+  slideCodes       LiveSlideCode[]
 
   @@index([deckId, userId, endedAt])
   @@index([userId])
@@ -5234,11 +5437,30 @@ model Portfolio {
   // false = trang /p/<slug> trả 404 cho mọi người.
   isPublic  Boolean  @default(false)
   headline  String?
+  // Đoạn giới thiệu ngắn (≤ PORTFOLIO_ABOUT_MAX ký tự), học viên tự viết.
+  about     String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items PortfolioItem[]
+  user    User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items   PortfolioItem[]
+  courses PortfolioCourse[]
+}
+
+// Khoá học học viên chọn khoe trên trang công khai. Trỏ vào Certificate chứ
+// không phải Course: chỉ khoá đã hoàn thành (đã có chứng nhận) mới khoe được,
+// và link xác thực /verify/<certNumber> đi kèm sẵn.
+model PortfolioCourse {
+  id            String   @id @default(uuid())
+  portfolioId   String
+  certificateId String
+  createdAt     DateTime @default(now())
+
+  portfolio   Portfolio   @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  certificate Certificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+
+  @@unique([portfolioId, certificateId])
+  @@index([certificateId])
 }
 
 model PortfolioItem {
@@ -5522,4 +5744,34 @@ model ExamCollection {
   exams  Exam[]
 
   @@index([courseId, orderIndex])
+}
+
+// =====================================================================
+// Growth attribution — "lần chạm đầu tiên" của mỗi user (first touch).
+//
+// Ghi lúc đăng ký từ cookie first-party `limio_attr` (middleware đặt khi khách
+// đến từ utm_* / click-id / referrer ngoài). Một dòng / user, xoá user ⇒ xoá
+// dòng. KHÔNG lưu giá trị click id (chỉ loại), không lưu query string, không
+// lưu IP / user agent. Đọc bởi GET /api/internal/growth/events (SIM) — id đã
+// được HMAC ẩn danh trước khi rời hệ thống. Xem docs/growth-events.md.
+// =====================================================================
+
+model AcquisitionTouch {
+  userId       String   @id
+  utmSource    String?
+  utmMedium    String?
+  utmCampaign  String?
+  utmContent   String?
+  utmTerm      String?
+  // "fbclid" | "gclid" | "ttclid" — chỉ loại, không bao giờ lưu giá trị.
+  clickIdKind  String?
+  // Đường dẫn trang đích: không query string, đã che đoạn giống mã/token.
+  landingPath  String?
+  // Chỉ host của Referer ngoài site.
+  referrerHost String?
+  // Lúc cookie được tạo (không phải lúc đăng ký).
+  firstSeenAt  DateTime
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

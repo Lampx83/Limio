@@ -7,10 +7,12 @@ import {
   createOralMaterialTopicList,
   enrollInCourse,
   publishExam,
+  openOralExamSession,
   registerUser,
   startOralExamAttempt,
 } from "@feedbackme/core-lms";
 import { AiTutorError } from "../aiTutor/errors";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { generateOralExamEvaluation } from "../oralExam/evaluation";
 import type { ChatComputeFn } from "../oralExam/chat";
 
@@ -50,6 +52,7 @@ async function setup(slug: string, opts: { withRubric?: boolean } = {}) {
     });
   }
   await publishExam(owner.userId, examId);
+  await openOralExamSession(owner.userId, examId);
 
   const learner = await registerUser(
     { email: `oe-l-${slug}@e.com`, password: "password1234", displayName: "L" },
@@ -162,7 +165,7 @@ describe("generateOralExamEvaluation (A6.4)", () => {
       scriptedChat(JSON.stringify({ score: 60, summary: "ok" })),
     );
     const usage = await prisma.aiUsageLog.findFirst({
-      where: { userId: s.ownerId, model: "gpt-4o-mini" },
+      where: { userId: s.ownerId, model: DEFAULT_MODEL },
     });
     expect(usage?.tokensInput).toBe(15);
     expect(usage?.tokensOutput).toBe(40);

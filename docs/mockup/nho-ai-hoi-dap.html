@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hỏi đáp với AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --info-bg: #eef4ff; --info-line: #c7d7fe; --info-ink: #1e3a8a; --bad: #b42318;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 10px 26px -14px rgb(28 36 16 / .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+      --brand: #a3e635; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16;
+      --info-bg: #14203a; --info-line: #24406e; --info-ink: #c7d7fe; --bad: #ff9b8f; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+    --brand: #a3e635; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16;
+    --info-bg: #14203a; --info-line: #24406e; --info-ink: #c7d7fe; --bad: #ff9b8f; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 15px;
+    font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 0 16px 60px; }
+  header.top { padding: 18px 0 8px; }
+  header.top h1 { font-size: 21px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-3); max-width: 900px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; margin: 12px 0 16px; font-size: 14px; color: var(--ink-3); }
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; margin-left: 6px; }
+  .seg button { border: 0; background: none; padding: 6px 13px; border-radius: 999px; color: var(--ink-2); font-size: 14px; }
+  .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+  :root[data-theme="dark"] .seg button[aria-pressed="true"] { color: #11160b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { color: #11160b; } }
+
+  /* ---------- hộp thoại sửa slide ---------- */
+  .dlg { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); overflow: hidden;
+    display: flex; flex-direction: column; height: 820px; margin: 0 auto; }
+  .dlg.narrow { width: min(390px, 100%); height: 860px; }
+  .bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex: none; }
+  .bar h2 { flex: 1; font-size: 17px; margin: 0; }
+  .ib { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 14px; font-weight: 600; font-size: 14px; }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  :root[data-theme="dark"] .btn.primary { color: #11160b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #11160b; } }
+  .body { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 460px; }
+  .dlg.narrow .body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .body > * { min-width: 0; }
+  /* Trang bản mẫu mở trên màn hẹp: khung luôn ở dạng hẹp. */
+  @media (max-width: 899px) {
+    .dlg { width: 100%; height: 860px; }
+    .dlg .body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+    .dlg .stage { padding: 10px; }
+    .dlg .panel { border-left: 0; border-top: 1px solid var(--line); }
+    .controls [data-frame] { display: none; }
+  }
+
+  /* bản xem trước lớn */
+  .stage { background: var(--surface-2); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  .dlg.narrow .stage { padding: 10px; }
+  .stage-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ink-3); }
+  .stage-top .grow { flex: 1; }
+  .proposal-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--surface); border: 2px solid var(--brand-fill);
+    border-radius: 12px; padding: 8px 10px; }
+  .proposal-bar b { font-size: 14px; }
+  .proposal-bar .grow { flex: 1; }
+  .slide-box { flex: 1; min-height: 0; display: grid; place-items: center; }
+  .slide { width: 100%; max-height: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); color: #20241F;
+    border-radius: 10px; box-shadow: 0 10px 30px rgba(32,36,31,.14); padding: 5.2% 5.6%; display: flex; flex-direction: column; overflow: hidden;
+    container-type: inline-size; }
+  .slide h3 { margin: 0 0 4.5cqw; font-size: 4.4cqw; font-weight: 800; letter-spacing: -.01em; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.2cqw; flex: 1; }
+  .card { background: rgba(255,255,255,.85); border-radius: 1.6cqw; padding: 2.4cqw; display: flex; flex-direction: column; gap: 1.2cqw; }
+  .card i { width: 4.6cqw; height: 4.6cqw; border-radius: 1.2cqw; background: #4D7C0F; display: block; }
+  .card b { font-size: 2.6cqw; }
+  .card span { font-size: 2.1cqw; color: #5A6256; line-height: 1.35; }
+  .slide.changed .chg { background: #fef08a; border-radius: .5cqw; }
+
+  /* bảng sửa bên phải */
+  .panel { border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+  .dlg.narrow .panel { border-left: 0; border-top: 1px solid var(--line); }
+  .tabs { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--line); flex: none; }
+  .tabs button { border: 0; background: none; padding: 9px 14px; font-weight: 600; color: var(--ink-3); border-bottom: 3px solid transparent; margin-bottom: -1px;
+    display: inline-flex; align-items: center; gap: 6px; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--brand); }
+  .pane { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; }
+
+  /* tab nội dung */
+  .field { display: grid; gap: 4px; margin-bottom: 12px; }
+  .field label, .lbl { font-size: 12px; font-weight: 700; color: var(--ink-3); }
+  .field input, .field textarea { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); width: 100%; }
+  .picker { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--surface); width: 100%; text-align: left; }
+  .picker small { color: var(--ink-3); display: block; font-size: 12px; }
+  .glyph { width: 40px; height: 26px; border-radius: 5px; background: var(--brand-soft); display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 4px; }
+  .glyph i { background: var(--brand-fill); border-radius: 2px; opacity: .6; }
+  .item { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+  .item .row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--ink-3); margin-bottom: 6px; }
+  .icons { display: flex; gap: 4px; }
+  .icons span { width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--line); }
+  .icons span.on { background: var(--brand-soft); border-color: var(--brand); }
+
+  /* tab nhờ AI: cuộc trò chuyện */
+  .chat { display: flex; flex-direction: column; gap: 12px; }
+  .msg { max-width: 92%; font-size: 14px; }
+  .msg.me { align-self: flex-end; background: var(--brand-soft); border-radius: 14px 14px 4px 14px; padding: 8px 12px; }
+  .msg.ai { align-self: flex-start; }
+  .msg.ai .who { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ink-3); margin-bottom: 3px; }
+  .msg.ai p { margin: 0; }
+  .note { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+  .opts { display: grid; gap: 6px; margin-top: 8px; }
+  .opts button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 10px; font-size: 14px; }
+  .opts button:hover { border-color: var(--brand); }
+  .follow { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--brand); color: var(--brand-strong);
+    background: var(--surface); border-radius: 10px; padding: 6px 11px; font-weight: 600; font-size: 13px; }
+  .prop { border: 1px solid var(--brand-fill); background: var(--surface); border-radius: 12px; padding: 9px 11px; margin-top: 6px; }
+  .prop .acts { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .prop .acts .btn { padding: 5px 11px; font-size: 13px; }
+  .done { font-size: 13px; color: var(--ink-3); font-style: italic; }
+  .dock { flex: none; border-top: 1px solid var(--line); padding: 10px 12px 12px; display: grid; gap: 8px; background: var(--surface); }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .quick button { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line); background: var(--surface); border-radius: 9px;
+    padding: 4px 9px; font-size: 13px; color: var(--ink-2); }
+  .quick button:hover { border-color: var(--brand); color: var(--ink); }
+  .composer { position: relative; border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .composer:focus-within { border-color: var(--brand); }
+  .composer textarea { display: block; width: 100%; border: 0; outline: 0; resize: none; background: transparent; padding: 9px 46px 9px 11px; font-size: 14px; min-height: 64px; }
+  .send { position: absolute; right: 7px; bottom: 7px; width: 32px; height: 32px; border-radius: 9px; border: 0; background: var(--brand); color: #fff; display: grid; place-items: center; }
+  .send:disabled { opacity: .4; cursor: not-allowed; }
+  .status { font-size: 12.5px; color: var(--ink-3); min-height: 18px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .status .busy { color: var(--brand-strong); font-weight: 600; }
+
+  .sec { font-size: 18px; margin: 34px 0 6px; }
+  .explain { color: var(--ink-2); max-width: 900px; margin: 0 0 12px; }
+  .tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface-2); color: var(--ink-2); }
+  ol.q { color: var(--ink-2); max-width: 900px; padding-left: 22px; } ol.q li { margin: 6px 0; } ol.q b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Bản mẫu: trình sửa slide gọn hơn và hỏi đáp với AI</h1>
+  <p>Bản xem trước thành phần chính bên trái; bảng sửa rộng 460 px bên phải có hai tab. Tab Nhờ AI là cuộc trò chuyện về slide đang mở: AI trả lời, hỏi lại, hoặc đề xuất sửa; đề xuất hiện trên bản xem trước lớn và chỉ ghi vào slide khi bấm Áp dụng. Bấm thử các nút trong bản mẫu.</p>
+</header>
+
+<div class="controls">
+  <span>Khung<span class="seg" role="group" aria-label="Khung">
+    <button type="button" aria-pressed="true" data-frame="wide">Màn rộng</button>
+    <button type="button" aria-pressed="false" data-frame="narrow">Màn hẹp</button>
+  </span></span>
+  <span>Nguồn của bài<span class="seg" role="group" aria-label="Nguồn">
+    <button type="button" aria-pressed="true" data-src="doc">Từ tài liệu</button>
+    <button type="button" aria-pressed="false" data-src="topic">Từ mô tả chủ đề</button>
+  </span></span>
+  <button type="button" class="btn" id="reset">Bắt đầu lại</button>
+</div>
+
+<div class="dlg" id="dlg" role="dialog" aria-label="Sửa slide (bản mẫu)">
+  <div class="bar">
+    <button type="button" class="ib" aria-label="Slide trước"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+    <button type="button" class="ib" aria-label="Slide sau"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></button>
+    <h2>Slide 7 / 14</h2>
+    <button type="button" class="btn primary">Xong</button>
+  </div>
+  <div class="body">
+    <section class="stage" aria-label="Xem trước">
+      <div class="stage-top"><span class="grow">Xem trước</span><span>Độ dài vừa</span></div>
+      <div class="proposal-bar" id="pbar" hidden>
+        <b>Đề xuất của AI</b>
+        <span class="seg" role="group" aria-label="Xem bản"><button type="button" aria-pressed="false" data-view="before">Trước</button><button type="button" aria-pressed="true" data-view="after">Sau</button></span>
+        <span class="grow"></span>
+        <button type="button" class="btn" data-act="discard">Bỏ</button>
+        <button type="button" class="btn primary" data-act="apply">Áp dụng</button>
+      </div>
+      <div class="slide-box"><div class="slide" id="slide"></div></div>
+    </section>
+
+    <section class="panel" aria-label="Bảng sửa">
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" aria-selected="false" data-tab="edit">Nội dung</button>
+        <button type="button" role="tab" aria-selected="true" data-tab="ai"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Nhờ AI</button>
+      </div>
+
+      <div class="pane" id="pane-edit" hidden>
+        <div class="scroll">
+          <div class="field"><span class="lbl">Bố cục</span>
+            <button type="button" class="picker"><span class="glyph"><i></i><i></i><i></i></span><span><b>Ba thẻ</b><small>Các ý song song, mỗi ý một biểu tượng</small></span></button>
+          </div>
+          <div class="field"><label for="f-title">Tiêu đề</label><input id="f-title" value="Thứ tự ưu tiên"></div>
+          <div id="items"></div>
+          <button type="button" class="btn">Thêm thẻ</button>
+          <p class="note" style="margin-top:14px">Mọi ô xếp một cột trong bảng 460 px; ô dài tự cao thêm khi gõ.</p>
+        </div>
+      </div>
+
+      <div class="pane" id="pane-ai">
+        <div class="scroll" id="scroll"><div class="chat" id="chat" aria-live="polite"></div></div>
+        <div class="dock">
+          <div class="quick" role="group" aria-label="Chọn nhanh">
+            <button type="button" data-q="Viết ngắn hơn" title="Rút gọn câu chữ, giữ ý chính">Viết ngắn hơn</button>
+            <button type="button" data-q="Thêm ví dụ" title="Bổ sung một ví dụ cụ thể">Thêm ví dụ</button>
+            <button type="button" data-q="Dễ hiểu hơn" title="Dùng từ giản dị hơn">Dễ hiểu hơn</button>
+            <button type="button" data-q="Đổi thành câu hỏi quiz" title="Biến nội dung thành một câu hỏi">Đổi thành quiz</button>
+            <button type="button" data-q="Viết lại từ dàn ý" title="Quay về ý trong dàn ý đã xác nhận">Viết lại từ dàn ý</button>
+          </div>
+          <div class="composer">
+            <textarea id="input" rows="2" aria-label="Hỏi hoặc nhờ AI sửa slide này" placeholder="Hỏi về slide này, hoặc nhờ AI sửa. Ví dụ: Ý thứ hai có chính xác không?"></textarea>
+            <button type="button" class="send" id="send" aria-label="Gửi" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+          <div class="status"><span id="st">Enter để gửi, Shift + Enter xuống dòng.</span><span>Còn khoảng 140 lượt AI trong tháng</span></div>
+          <p class="note" style="margin:0">Cuộc trò chuyện không được lưu khi đóng cửa sổ sửa hoặc chuyển slide.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<h2 class="sec">So với hiện tại</h2>
+<div class="tbl"><table>
+  <thead><tr><th>Hiện tại (ảnh chụp ở màn khoảng 2000 px)</th><th>Bản mẫu</th></tr></thead>
+  <tbody>
+    <tr><td>Bản xem trước chỉ rộng khoảng 550 px, bên dưới bỏ trống.</td><td>Bản xem trước chiếm phần còn lại của chiều ngang, co vừa chiều cao, đứng yên khi cuộn bảng sửa.</td></tr>
+    <tr><td>Cột sửa rộng khoảng 1080 px, có khung lồng và tiêu đề "Nhờ AI sửa slide này" trùng tên tab.</td><td>Bảng sửa cố định 460 px, không khung lồng, không tiêu đề trùng.</td></tr>
+    <tr><td>Ô Yêu cầu riêng cao, nút gửi ở một dòng riêng.</td><td>Ô nhập 2–3 dòng ở đáy bảng, nút gửi nằm trong ô.</td></tr>
+    <tr><td>Năm thẻ chọn nhanh to, hai cột, mỗi thẻ có dòng mô tả.</td><td>Một hàng nút một dòng; mô tả ở tooltip. Bấm là gửi câu đó vào cuộc trò chuyện.</td></tr>
+    <tr><td>Thông báo lỗi ở tận đáy, xa ô nhập.</td><td>Trạng thái và lỗi ngay dưới ô nhập.</td></tr>
+    <tr><td>Đề xuất so sánh trong cột hẹp, hai ảnh nhỏ.</td><td>Đề xuất hiện trên bản xem trước lớn, chuyển Trước / Sau, nút Áp dụng ở trên.</td></tr>
+  </tbody>
+</table></div>
+
+<h2 class="sec">Cần thầy/cô chọn</h2>
+<ol class="q">
+  <li><b>Một bước hay hai bước</b>: AI tự đề xuất sửa ngay trong câu trả lời (nhanh, nhưng Qwen có thể trả JSON kém ổn định), hay luôn trả lời bằng lời trước rồi mới viết bản nháp khi bấm "Làm theo gợi ý này" (chắc hơn, thêm một lần bấm)? Đề xuất: làm cả hai, câu yêu cầu sửa rõ ràng thì đề xuất ngay; còn lại dùng hai bước.</li>
+  <li><b>Lưu cuộc trò chuyện</b>: bản đầu không lưu. Có cần giữ lại khi chuyển qua slide khác rồi quay lại trong cùng lần mở trình sửa không?</li>
+</ol>
+</div>
+
+<script>
+const BASE = {
+  title: "Thứ tự ưu tiên",
+  items: [
+    ["Mục tiêu", "Người học biết cần đạt điều gì."],
+    ["Hiện trạng", "Bài làm cho thấy mức đạt hiện tại."],
+    ["Bước tiếp", "Một việc cụ thể để tiến gần mục tiêu."],
+  ],
+};
+let current = structuredClone(BASE);
+let proposal = null, view = "after", src = "doc";
+const $ = (s) => document.querySelector(s);
+const chat = $("#chat"), input = $("#input"), send = $("#send"), st = $("#st");
+
+function renderSlide() {
+  const showing = proposal && view === "after" ? proposal.slide : current;
+  const s = $("#slide");
+  s.classList.toggle("changed", !!(proposal && view === "after"));
+  const mark = (v, k) => (proposal && view === "after" && proposal.changed.includes(k) ? `<span class="chg">${v}</span>` : v);
+  s.innerHTML = `<h3>${mark(showing.title, "title")}</h3><div class="cards">${showing.items
+    .map(([h, b], i) => `<div class="card"><i></i><b>${mark(h, "h" + i)}</b><span>${mark(b, "b" + i)}</span></div>`)
+    .join("")}</div>`;
+  $("#pbar").hidden = !proposal;
+  document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+  $("#items").innerHTML = current.items
+    .map(([h, b], i) => `<div class="item"><div class="row"><span>Thẻ ${i + 1}</span><span class="icons"><span class="on"></span><span></span><span></span><span></span></span></div>
+      <div class="field"><label>Tên thẻ</label><input value="${h}"></div><div class="field" style="margin:0"><label>Câu giải thích</label><textarea rows="2">${b}</textarea></div></div>`)
+    .join("");
+}
+
+const AI_ICON = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>`;
+const topicNote = () => (src === "topic" ? `<div class="note">Câu trả lời dựa trên kiến thức chung, thầy/cô cần kiểm tra.</div>` : "");
+function me(text) { chat.insertAdjacentHTML("beforeend", `<div class="msg me">${text}</div>`); scrollEnd(); }
+function ai(html) { chat.insertAdjacentHTML("beforeend", `<div class="msg ai"><div class="who">${AI_ICON} AI</div>${html}</div>`); scrollEnd(); return chat.lastElementChild; }
+function scrollEnd() { const sc = $("#scroll"); sc.scrollTop = sc.scrollHeight; }
+
+function answerAccuracy() {
+  const body = src === "doc"
+    ? `<p>Ý thứ hai đúng với tài liệu: tài liệu viết rằng bài làm của người học cho biết mức đạt hiện tại. Tuy vậy, câu trên slide chưa nói mức đạt đó được so với cái gì; tài liệu nhấn mạnh việc so với mục tiêu.</p><p style="margin-top:6px">Có thể sửa thành: "Bài làm cho thấy mức đạt hiện tại so với mục tiêu."</p>`
+    : `<p>Ý thứ hai về cơ bản là chính xác: bài làm phản ánh mức đạt hiện tại của người học. Câu sẽ rõ hơn nếu nói mức đạt đó được so với mục tiêu.</p><p style="margin-top:6px">Có thể sửa thành: "Bài làm cho thấy mức đạt hiện tại so với mục tiêu."</p>`;
+  const el = ai(body + topicNote() + `<button type="button" class="follow">${AI_ICON} Làm theo gợi ý này</button>`);
+  el.querySelector(".follow").addEventListener("click", (e) => {
+    e.currentTarget.disabled = true;
+    think(() => propose("Sửa câu giải thích của thẻ Hiện trạng.", (s) => { s.items[1][1] = "Bài làm cho thấy mức đạt hiện tại so với mục tiêu."; return ["b1"]; }));
+  });
+}
+
+function askBack(topic) {
+  const el = ai(`<p>${topic}</p><div class="opts">
+    <button type="button" data-o="Viết cho sinh viên năm nhất, chưa học về phản hồi.">Viết cho sinh viên năm nhất, chưa học về phản hồi</button>
+    <button type="button" data-o="Giữ đối tượng hiện tại, chỉ dùng từ giản dị hơn.">Giữ đối tượng hiện tại, chỉ dùng từ giản dị hơn</button>
+    <button type="button" data-o="Thêm một ví dụ đời thường cho mỗi thẻ.">Thêm một ví dụ đời thường cho mỗi thẻ</button></div>`);
+  el.querySelectorAll("[data-o]").forEach((b) => b.addEventListener("click", () => {
+    el.querySelectorAll("[data-o]").forEach((x) => (x.disabled = true));
+    me(b.dataset.o);
+    think(() => propose("Viết lại ba câu giải thích bằng từ giản dị hơn; giữ tiêu đề và tên thẻ.", (s) => {
+      s.items = [["Mục tiêu", "Người học biết mình cần làm được gì."], ["Hiện trạng", "Bài làm cho thấy người học đang ở đâu."], ["Bước tiếp", "Người học biết việc nên làm ngay sau đó."]];
+      return ["b0", "b1", "b2"];
+    }));
+  }));
+}
+
+function propose(summary, mutate) {
+  const slide = structuredClone(current);
+  const changed = mutate(slide);
+  proposal = { slide, changed };
+  view = "after";
+  const el = ai(`<p>${summary} Bản đề xuất đang hiện trên khung xem trước.</p>${topicNote()}
+    <div class="prop"><b style="font-size:13px">Đề xuất sửa slide (chưa áp dụng)</b>
+    <div class="acts"><button type="button" class="btn" data-act="discard">Bỏ</button><button type="button" class="btn primary" data-act="apply">Áp dụng</button></div></div>`);
+  el.querySelectorAll("[data-act]").forEach((b) => b.addEventListener("click", () => act(b.dataset.act)));
+  renderSlide();
+}
+
+function act(kind) {
+  if (!proposal) return;
+  if (kind === "apply") current = proposal.slide;
+  proposal = null;
+  chat.querySelectorAll(".prop .acts").forEach((a) => (a.outerHTML = `<div class="done">${kind === "apply" ? "Đã áp dụng vào slide." : "Đã bỏ đề xuất."}</div>`));
+  renderSlide();
+}
+
+function think(fn) {
+  st.innerHTML = `<span class="busy">AI đang trả lời...</span>`;
+  send.disabled = true;
+  setTimeout(() => { st.textContent = "Enter để gửi, Shift + Enter xuống dòng."; fn(); send.disabled = !input.value.trim(); }, 650);
+}
+
+function handle(text) {
+  me(text);
+  const t = text.toLowerCase();
+  think(() => {
+    if (proposal) act("discard");
+    if (t.includes("chính xác") || t.includes("đúng không")) return answerAccuracy();
+    if (t.includes("dễ hiểu")) return askBack("Thầy/cô muốn dễ hiểu hơn theo hướng nào?");
+    if (t.includes("ngắn")) return propose("Rút gọn ba câu giải thích, giữ ý chính.", (s) => { s.items = [["Mục tiêu", "Biết cần đạt điều gì."], ["Hiện trạng", "Biết mình đang ở đâu."], ["Bước tiếp", "Biết làm gì tiếp theo."]]; return ["b0", "b1", "b2"]; });
+    if (t.includes("tiêu đề") || t.includes("title")) return propose('Đổi tiêu đề thành "Ba câu hỏi của phản hồi"; giữ nguyên ba thẻ.', (s) => { s.title = "Ba câu hỏi của phản hồi"; return ["title"]; });
+    if (t.includes("ví dụ")) return propose("Thêm một ví dụ ngắn vào thẻ Bước tiếp.", (s) => { s.items[2][1] = "Ví dụ: luyện thêm ba bài cùng dạng trước buổi sau."; return ["b2"]; });
+    if (t.includes("quiz")) return ai(`<p>Đổi thành quiz sẽ thay hẳn slide này bằng một câu hỏi trắc nghiệm. Trong bản thật, đề xuất quiz hiện trên khung xem trước như các đề xuất khác.</p>`);
+    if (t.includes("dàn ý")) return propose("Viết lại theo dòng dàn ý đã xác nhận.", (s) => { s.items[0][1] = "Người học biết rõ mục tiêu cần đạt."; return ["b0"]; });
+    ai(`<p>Trong bản thật, AI trả lời câu hỏi này dựa trên slide hiện tại${src === "doc" ? " và tài liệu; nếu tài liệu không đề cập, AI nói rõ điều đó" : ""}.</p>` + topicNote());
+  });
+}
+
+function seed() {
+  chat.innerHTML = "";
+  proposal = null;
+  current = structuredClone(BASE);
+  me("Ý thứ hai có chính xác không?");
+  answerAccuracy();
+  me("Viết lại cho dễ hiểu hơn.");
+  askBack("Thầy/cô muốn dễ hiểu hơn theo hướng nào?");
+  renderSlide();
+}
+
+input.addEventListener("input", () => (send.disabled = !input.value.trim()));
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && input.value.trim()) { e.preventDefault(); const v = input.value.trim(); input.value = ""; send.disabled = true; handle(v); }
+});
+send.addEventListener("click", () => { const v = input.value.trim(); if (!v) return; input.value = ""; send.disabled = true; handle(v); });
+document.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => handle(b.dataset.q)));
+document.querySelectorAll("#pbar [data-act]").forEach((b) => b.addEventListener("click", () => act(b.dataset.act)));
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { view = b.dataset.view; renderSlide(); }));
+document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+  $("#pane-edit").hidden = b.dataset.tab !== "edit";
+  $("#pane-ai").hidden = b.dataset.tab !== "ai";
+}));
+document.querySelectorAll("[data-frame]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-frame]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  $("#dlg").classList.toggle("narrow", b.dataset.frame === "narrow");
+}));
+document.querySelectorAll("[data-src]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-src]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  src = b.dataset.src;
+  seed();
+}));
+$("#reset").addEventListener("click", seed);
+seed();
+</script>
+</body>
+</html>

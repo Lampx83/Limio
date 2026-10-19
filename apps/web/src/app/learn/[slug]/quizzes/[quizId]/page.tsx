@@ -9,6 +9,8 @@ import {
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import QuizPlayer from "@/components/QuizPlayer";
+import QuizBackLink from "@/components/QuizBackLink";
+import ExamRoomChrome from "@/components/exam/ExamRoomChrome";
 
 export const dynamic = "force-dynamic";
 
@@ -81,12 +83,12 @@ export default async function QuizPage({
 
   return (
     <main className="mx-auto max-w-[1500px] px-4 py-6 lg:px-8">
-      <Link
-        href={`/learn/${params.slug}`}
-        className="link inline-flex items-center gap-1 text-sm"
-      >
-        ← Quay lại khóa học
-      </Link>
+      {/* Làm quiz là một trang riêng: ẩn thanh đầu trang (tài khoản, thông báo,
+          Đấu trường), chân trang và nút nổi, để người học chỉ thấy đề. Phản hồi
+          của sinh viên ở Thực hành 1: các nút đó nổi hơn cả câu hỏi và bấm nhầm là
+          bị đưa ra khỏi bài. Cùng cơ chế với phòng thi thử (ExamRoomChrome). */}
+      <ExamRoomChrome />
+      <QuizBackLink href={`/learn/${params.slug}`} />
       {instructorPreview && (
         <div className="mt-4 rounded-2xl border border-brand-200 bg-brand-soft px-5 py-3">
           <p className="text-sm font-semibold text-brand-700">

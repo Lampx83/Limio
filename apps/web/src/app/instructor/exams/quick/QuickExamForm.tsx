@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Check, Copy, QrCode } from "lucide-react";
 import dynamic from "next/dynamic";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
+import QrZoom from "@/components/ui/QrZoom";
 
 const QRCode = dynamic(
   () => import("qrcode.react").then((mod) => mod.QRCodeSVG),
@@ -14,7 +15,7 @@ const QRCode = dynamic(
     loading: () => (
       <div
         className="rounded-lg border border-emerald-300 bg-white"
-        style={{ width: 180, height: 180 }}
+        style={{ width: 112, height: 112 }}
       />
     ),
   },
@@ -208,11 +209,13 @@ export default function QuickExamForm({
           <div className="mt-3 flex flex-col items-start gap-2">
             {/* Nền trắng + viền quiet zone: QR trên nền màu hoặc sát mép thì
                 máy quét hay không bắt được. */}
-            <div className="rounded-lg border border-emerald-300 bg-white p-3">
-              <QRCode value={fullUrl} size={180} level="M" />
-            </div>
+            <QrZoom url={fullUrl} title="Quét để vào thi" code={result.code} copyable>
+              <div className="rounded-lg border border-emerald-300 bg-white p-2">
+                <QRCode value={fullUrl} size={112} level="M" />
+              </div>
+            </QrZoom>
             <p className="text-caption text-emerald-800">
-              Chiếu lên màn hình để cả lớp quét. Ai không quét được thì gõ mã{" "}
+              Bấm vào mã QR để phóng to và chiếu lên màn hình cho cả lớp quét. Ai không quét được thì gõ mã{" "}
               <span className="font-mono font-semibold">{result.code}</span>.
             </p>
           </div>

@@ -44,7 +44,7 @@ export default async function ReviewDetailPage({
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
-      <Link href="/me/reviews" className="link text-sm">← Hàng đợi review</Link>
+      <Link href="/me/reviews" className="link text-sm">← Hàng đợi chấm bài</Link>
       <h1 className="mt-3 h-display text-2xl font-bold">
         {ra.submission.mission.title}
       </h1>

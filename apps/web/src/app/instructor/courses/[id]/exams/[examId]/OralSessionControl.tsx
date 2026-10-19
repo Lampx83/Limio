@@ -159,6 +159,10 @@ export default function OralSessionControl({
             </button>
           )}
         </div>
+        <p className="mt-1 text-caption text-faint">
+          Chỉ áp dụng cho các lượt bắt đầu sau khi lưu; lần mở sau vẫn nhớ số này. Nếu phần mô tả
+          đề có ghi số phút, nhớ cho khớp.
+        </p>
         {!sessionOpen && attemptCount > 0 && (
           <p className="mt-1 text-caption text-faint">
             Mở lại nếu còn học viên chưa thi kịp — mã tham gia cũ vẫn dùng lại
@@ -189,7 +193,7 @@ export default function OralSessionControl({
             </button>
           </div>
           <div className="flex flex-col items-center gap-1">
-            <QrZoom url={joinUrl!} title="Quét mã để vào phiên vấn đáp">
+            <QrZoom url={joinUrl!} title="Quét mã để vào phiên vấn đáp" code={joinCode ?? undefined} copyable>
               <div className="rounded-lg border border-default bg-white p-1.5">
                 <QRCode value={joinUrl!} size={96} level="M" />
               </div>

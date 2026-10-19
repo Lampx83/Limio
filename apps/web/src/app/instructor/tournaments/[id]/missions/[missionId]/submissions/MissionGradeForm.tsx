@@ -12,10 +12,13 @@ export default function MissionGradeForm({
   tournamentId,
   submissionId,
   status,
+  onGraded,
 }: {
   tournamentId: string;
   submissionId: string;
   status: Status;
+  /** Gọi sau khi lưu thành công (khung xem dùng để nhảy sang bài kế). */
+  onGraded?: () => void;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<null | "pass" | "fail">(null);
@@ -38,6 +41,7 @@ export default function MissionGradeForm({
       }
       toast.success(passed ? "Đã chấm: Đạt" : "Đã chấm: Chưa đạt");
       router.refresh();
+      onGraded?.();
     } catch {
       toast.error("Chấm thất bại", { description: "Vui lòng thử lại." });
     } finally {

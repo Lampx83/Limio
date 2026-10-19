@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { oralUiText, type OralUiLang } from "@/lib/oralUiText";
 
 /**
  * A7.7.3 — Multi-tab detection.
@@ -16,10 +17,14 @@ import { useEffect, useRef, useState } from "react";
 export default function MultiTabDetector({
   attemptId,
   onConflict,
+  lang = "vi",
 }: {
   attemptId: string;
   onConflict: (peerTabId: string) => void;
+  /** Ngôn ngữ giao diện; mặc định tiếng Việt. */
+  lang?: OralUiLang;
 }) {
+  const t = oralUiText(lang).multiTab;
   const [show, setShow] = useState(false);
   // Giữ callback trong ref. ExamPlayer truyền một hàm MỚI mỗi lần dựng lại (mỗi
   // giây, do đồng hồ đếm ngược); để nó trong dependency thì mỗi giây effect bị
@@ -62,19 +67,14 @@ export default function MultiTabDetector({
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4">
       <div className="max-w-md rounded-lg border border-red-300 bg-white p-6 text-center shadow-xl">
-        <h2 className="mb-2 text-lg font-semibold text-red-700">
-          Cảnh báo: Phát hiện tab khác
-        </h2>
-        <p className="mb-4 text-sm">
-          Hệ thống phát hiện bạn đang mở bài thi này ở một tab khác trong cùng trình duyệt.
-          Vui lòng đóng tab kia ngay. Sự việc đã được ghi lại và gửi cho giảng viên.
-        </p>
+        <h2 className="mb-2 text-lg font-semibold text-red-700">{t.title}</h2>
+        <p className="mb-4 text-sm">{t.body}</p>
         <button
           type="button"
           onClick={() => setShow(false)}
           className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white"
         >
-          Tôi đã hiểu, tiếp tục
+          {t.button}
         </button>
       </div>
     </div>

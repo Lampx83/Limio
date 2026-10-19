@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bài học: bố cục và bảng màu (bản mẫu)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lexend:wght@400;500;600;700&family=Noto+Serif:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Khung trang mẫu (không phải giao diện bài) ---------- */
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9ebef; color: #1f2430;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, select { font: inherit; color: inherit; }
+  .bar { position: sticky; top: 0; z-index: 10; background: #fff; border-bottom: 1px solid #d6d9e0;
+    padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+  .bar h1 { font-size: 16px; margin: 0 8px 0 0; }
+  .bar .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .bar .lbl { font-size: 13px; color: #5b6272; margin-right: 2px; }
+  .chip { border: 1px solid #c9cdd6; background: #fff; border-radius: 8px; padding: 5px 10px; font-size: 13px;
+    cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+  .chip[aria-pressed="true"] { border-color: #1f2430; background: #1f2430; color: #fff; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .note { max-width: 860px; margin: 14px auto 0; padding: 0 16px; font-size: 13px; color: #5b6272; line-height: 1.5; }
+  .stage { padding: 16px; display: flex; justify-content: center; }
+  .page { width: 100%; max-width: 860px; border-radius: 14px; box-shadow: 0 2px 14px rgba(0,0,0,.08); overflow: hidden; }
+  .stage.phone .page { max-width: 390px; }
+
+  /* ---------- Giao diện bài: chỉ phụ thuộc biến màu + biến chữ ---------- */
+  .lesson { --bg:#fff; --text:#1f2937; --muted:#4b5563; --line:#e5e7eb; --accent:#1d4ed8; --soft:#eef3ff;
+    --font-body:"Be Vietnam Pro", sans-serif; --font-head:"Be Vietnam Pro", sans-serif;
+    background: var(--bg); color: var(--text); font-family: var(--font-body);
+    font-size: 17px; line-height: 1.7; padding: 36px 40px 44px; }
+  .stage.phone .lesson { padding: 22px 16px 30px; font-size: 16px; }
+  .lesson h1, .lesson h2, .lesson h3, .lesson .num { font-family: var(--font-head); line-height: 1.3; }
+  .lesson h1 { font-size: 1.9rem; margin: 0 0 .4rem; }
+  .lesson .lead { color: var(--muted); margin: 0 0 1.6rem; }
+  .lesson section { --a: var(--accent); --s: var(--soft); margin-top: 2.4rem; }
+  .lesson h2 { font-size: 1.45rem; margin: 0 0 .9rem; padding-bottom: .35rem; border-bottom: 3px solid var(--a); }
+  .lesson h3 { font-size: 1.12rem; margin: 1.1rem 0 .4rem; color: var(--a); }
+  .lesson p { margin: 0 0 .8rem; }
+  .lesson ul { margin: 0 0 .8rem; padding-left: 1.3rem; }
+
+  /* Khối */
+  .blk { border-radius: 12px; padding: 14px 18px; margin: 1.1rem 0; }
+  .blk .t { font-weight: 700; font-family: var(--font-head); margin-bottom: .3rem; }
+  .blk p:last-child, .blk ul:last-child { margin-bottom: 0; }
+  .objectives { background: var(--soft); border: 1px solid var(--line); }
+  .objectives .t, .summary .t { color: var(--accent); }
+  .summary { background: var(--soft); border-top: 4px solid var(--accent); margin-top: 2.6rem; }
+  .callout { border-left: 5px solid var(--a); background: var(--s); }
+  .callout.example { border-left-style: dashed; }
+  .callout.definition { background: transparent; border: 1px solid var(--a); border-left-width: 5px; }
+  blockquote { margin: 1.1rem 0; padding: .2rem 0 .2rem 1.1rem; border-left: 3px solid var(--line);
+    font-style: italic; color: var(--muted); }
+  blockquote cite { display: block; font-style: normal; font-size: .9em; margin-top: .3rem; }
+  figure { margin: 0; }
+  figure .img { aspect-ratio: 4 / 3; border-radius: 10px; background: var(--s); border: 1px solid var(--line);
+    display: grid; place-items: center; }
+  figcaption { font-size: .88em; color: var(--muted); margin-top: .45rem; line-height: 1.5; }
+
+  /* Bố cục */
+  .lay-image { display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+  .card { border: 1px solid var(--line); border-top: 4px solid var(--a); border-radius: 12px; padding: 14px 16px; }
+  .card .h { font-weight: 700; font-family: var(--font-head); margin-bottom: .3rem; color: var(--a); }
+  .card p { margin: 0; }
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .compare > div { padding: 14px 18px; }
+  .compare > div + div { border-left: 1px solid var(--line); }
+  .compare .h { font-weight: 700; font-family: var(--font-head); color: var(--a); margin-bottom: .3rem; }
+  .compare > div:first-child { background: var(--s); }
+  .steps { list-style: none; padding: 0; margin: 0; counter-reset: st; }
+  .steps li { position: relative; padding: 0 0 1.1rem 3.1rem; counter-increment: st; }
+  .steps li::before { content: counter(st); position: absolute; left: 0; top: 0; width: 2.1rem; height: 2.1rem;
+    border-radius: 50%; background: var(--a); color: var(--bg); display: grid; place-items: center; font-weight: 700; }
+  .steps li:not(:last-child)::after { content: ""; position: absolute; left: 1.02rem; top: 2.3rem; bottom: .2rem;
+    width: 2px; background: var(--line); }
+  .steps .h { font-weight: 700; font-family: var(--font-head); }
+  .steps p { margin: 0; }
+  .faq details { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; background: var(--bg); }
+  .faq summary { cursor: pointer; padding: 11px 16px; font-weight: 600; list-style: none; display: flex; gap: 10px; }
+  .faq summary::before { content: "+"; color: var(--a); font-weight: 700; width: 1em; }
+  .faq details[open] summary::before { content: "−"; }
+  .faq details p { padding: 0 16px 12px 42px; margin: 0; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+  .stat { background: var(--s); border-radius: 12px; padding: 16px; }
+  .stat .num { font-size: 2.2rem; font-weight: 800; color: var(--a); line-height: 1.1; }
+  .stat p { margin: .35rem 0 0; font-size: .95em; }
+  .stage.phone .lay-image, .stage.phone .compare { grid-template-columns: 1fr; }
+  .stage.phone .compare > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  @media (max-width: 640px) {
+    .lesson { padding: 22px 16px 30px; font-size: 16px; }
+    .lay-image, .compare { grid-template-columns: 1fr; }
+    .compare > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  }
+
+  /* Ô chọn bố cục của giảng viên (chỉ hiện trong trình soạn) */
+  .edit { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0 0 .5rem; font-family: -apple-system, "Segoe UI", sans-serif; }
+  .edit select { font-size: 13px; padding: 3px 6px; border-radius: 6px; border: 1px solid #c9cdd6; background: #fff; color: #1f2430; }
+  .edit .hidden-note { font-size: 12px; color: #92400e; background: #fef3c7; padding: 2px 8px; border-radius: 6px; }
+  .viewer .edit { display: none; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>Bản mẫu bài học</h1>
+  <div class="grp"><span class="lbl">Bảng màu</span><span id="pal"></span></div>
+  <div class="grp"><span class="lbl">Kiểu chữ</span><span id="fnt"></span></div>
+  <div class="grp"><span class="lbl">Xem</span>
+    <button class="chip" id="dark" aria-pressed="false">Chế độ tối</button>
+    <button class="chip" id="phone" aria-pressed="false">Điện thoại</button>
+    <button class="chip" id="viewer" aria-pressed="false">Như học viên thấy</button>
+  </div>
+</div>
+<p class="note">Mỗi mục lớn có ô "Bố cục" để đổi kiểu sắp xếp. Đổi bố cục không làm mất chữ: phần nào bố cục mới không chứa được thì được giữ ẩn và hiện lại khi quay về bố cục cũ. Bảng màu và kiểu chữ áp cho cả bài. Nội dung là ví dụ minh hoạ.</p>
+<div class="stage" id="stage"><div class="page"><article class="lesson" id="lesson"></article></div></div>
+
+<script>
+const PALETTES = {
+  limio:   { name: "Xanh Limio", sw: "#1d4ed8",
+    light: { bg:"#ffffff", text:"#1f2937", muted:"#4b5563", line:"#e5e7eb", accent:"#1d4ed8", soft:"#eef3ff" },
+    dark:  { bg:"#14171d", text:"#e7e9ee", muted:"#aab1bf", line:"#2c323d", accent:"#8fb0ff", soft:"#1b2436" } },
+  paper:   { name: "Giấy ấm", sw: "#a16207",
+    light: { bg:"#fbf7ef", text:"#33291e", muted:"#5f5141", line:"#e8dcc6", accent:"#9a4a0b", soft:"#f4ead6" },
+    dark:  { bg:"#1c1813", text:"#efe6d8", muted:"#bfb19c", line:"#3a3226", accent:"#f0b36c", soft:"#2a2219" } },
+  forest:  { name: "Rừng thông", sw: "#15803d",
+    light: { bg:"#ffffff", text:"#1c2a22", muted:"#46564c", line:"#dde8e1", accent:"#166534", soft:"#ecf7f0" },
+    dark:  { bg:"#121915", text:"#e2ece5", muted:"#a7b8ad", line:"#26332b", accent:"#7fd39d", soft:"#18251d" } },
+  sunset:  { name: "Hoàng hôn", sw: "#c2410c",
+    light: { bg:"#ffffff", text:"#2b1f1a", muted:"#5c4a42", line:"#f0dfd6", accent:"#b23a0a", soft:"#fff1e8" },
+    dark:  { bg:"#1b1513", text:"#f1e5df", muted:"#c3aea4", line:"#3a2a24", accent:"#ff9e6e", soft:"#2a1c16" } },
+  vibrant: { name: "Sinh động", sw: "linear-gradient(90deg,#1d4ed8,#15803d,#b45309,#be185d)",
+    light: { bg:"#ffffff", text:"#1f2937", muted:"#4b5563", line:"#e5e7eb", accent:"#1d4ed8", soft:"#eef3ff" },
+    dark:  { bg:"#14171d", text:"#e7e9ee", muted:"#aab1bf", line:"#2c323d", accent:"#8fb0ff", soft:"#1b2436" },
+    cycle: { light: [["#1d4ed8","#eef3ff"],["#15803d","#ecf7f0"],["#a14a06","#fff4e5"],["#be185d","#fdf0f6"],["#6d28d9","#f4effe"]],
+             dark:  [["#8fb0ff","#1b2436"],["#7fd39d","#18251d"],["#f5b46a","#2a2117"],["#f598c0","#2a1820"],["#c4a6ff","#221b33"]] } },
+  plain:   { name: "Trang nhã", sw: "#374151",
+    light: { bg:"#ffffff", text:"#111827", muted:"#4b5563", line:"#e5e7eb", accent:"#374151", soft:"#f3f4f6" },
+    dark:  { bg:"#151515", text:"#ececec", muted:"#a9a9a9", line:"#303030", accent:"#d4d4d4", soft:"#1f1f1f" } },
+};
+const FONTS = {
+  modern:   { name: "Hiện đại", body: '"Be Vietnam Pro", sans-serif', head: '"Be Vietnam Pro", sans-serif' },
+  readable: { name: "Dễ đọc",   body: '"Lexend", sans-serif',          head: '"Lexend", sans-serif' },
+  academic: { name: "Học thuật", body: '"Be Vietnam Pro", sans-serif', head: '"Noto Serif", serif' },
+};
+const LAYOUTS = { text:"Văn bản", image:"Chữ và ảnh", cards:"Thẻ khái niệm", compare:"So sánh hai cột",
+  steps:"Các bước", faq:"Hỏi và đáp", stats:"Số liệu nổi bật" };
+
+// Nội dung lưu theo phần (tiêu đề nhỏ + nội dung). Bố cục chỉ quyết định cách sắp xếp.
+const SECTIONS = [
+  { title: "1. Nguyên tắc gần nhau là gì", layout: "image",
+    intro: "Nguyên tắc gần nhau thuộc nhóm nguyên tắc Gestalt về tri giác thị giác. Mắt người có xu hướng xem các phần tử đặt gần nhau là thuộc cùng một nhóm, kể cả khi chúng không giống nhau về màu sắc hay hình dạng.",
+    parts: [
+      { h: "Khoảng cách tạo nhóm", b: "Khi hai nút bấm đặt sát nhau và cách xa phần còn lại, người dùng hiểu rằng hai nút đó liên quan với nhau." },
+      { h: "Khoảng trắng là công cụ", b: "Khoảng trắng không phải chỗ thừa. Nó cho người đọc biết đâu là ranh giới giữa các nhóm thông tin." },
+    ],
+    image: "Hình 1. Ba nhóm ô vuông được nhận ra chỉ nhờ khoảng cách. Nguồn: hình minh hoạ tự vẽ.",
+    after: [{ kind: "definition", t: "Định nghĩa", b: "Gestalt là trường phái tâm lý học nghiên cứu cách con người nhận thức một tổng thể thay vì từng phần riêng lẻ." }] },
+  { title: "2. Bốn nguyên tắc Gestalt thường dùng", layout: "cards",
+    intro: "Ngoài nguyên tắc gần nhau, thiết kế giao diện thường dựa vào ba nguyên tắc khác trong cùng nhóm.",
+    parts: [
+      { h: "Gần nhau", b: "Các phần tử đặt gần nhau được xem là một nhóm." },
+      { h: "Tương đồng", b: "Các phần tử giống nhau về màu hoặc hình được xem là cùng loại." },
+      { h: "Vùng chung", b: "Các phần tử nằm trong cùng một khung được xem là một nhóm." },
+      { h: "Liên tục", b: "Mắt người dõi theo đường thẳng hoặc đường cong liền mạch." },
+    ] },
+  { title: "3. Nhóm bằng khoảng cách và nhóm bằng khung viền", layout: "compare",
+    intro: "Có hai cách phổ biến để gom các phần tử thành nhóm trên giao diện.",
+    parts: [
+      { h: "Dùng khoảng cách", b: "Giao diện thoáng và nhẹ, nhưng cần khoảng cách giữa các nhóm đủ lớn hơn khoảng cách trong nhóm." },
+      { h: "Dùng khung viền", b: "Ranh giới rõ ràng, nhưng nhiều khung lồng nhau dễ làm giao diện nặng nề." },
+    ],
+    after: [{ kind: "note", t: "Lưu ý", b: "Hãy thử dùng khoảng cách trước. Chỉ thêm khung viền khi khoảng cách chưa đủ để người dùng nhận ra nhóm." }] },
+  { title: "4. Áp dụng vào một biểu mẫu đăng ký", layout: "steps",
+    intro: "Quy trình dưới đây giúp sắp xếp lại một biểu mẫu đang rời rạc.",
+    parts: [
+      { h: "Liệt kê các trường", b: "Ghi ra tất cả các ô nhập liệu đang có trên biểu mẫu." },
+      { h: "Gom theo ý nghĩa", b: "Xếp các trường cùng chủ đề vào một nhóm, chẳng hạn thông tin cá nhân và thông tin liên hệ." },
+      { h: "Đặt khoảng cách", b: "Khoảng cách giữa các nhóm lớn gấp đôi khoảng cách giữa các trường trong nhóm." },
+      { h: "Kiểm tra lại", b: "Nhờ một người chưa thấy biểu mẫu chỉ ra các nhóm. Nếu họ chỉ đúng thì bố cục đã rõ." },
+    ],
+    after: [{ kind: "example", t: "Ví dụ", b: "Trang đăng ký có tám ô nhập liệu được chia thành hai nhóm: Họ tên, Ngày sinh, Giới tính ở nhóm thứ nhất; Email, Số điện thoại, Địa chỉ ở nhóm thứ hai." }] },
+  { title: "5. Câu hỏi thường gặp", layout: "faq",
+    intro: "",
+    parts: [
+      { h: "Nguyên tắc gần nhau có áp dụng cho chữ không?", b: "Có. Khoảng cách giữa tiêu đề và đoạn văn bên dưới cần nhỏ hơn khoảng cách với đoạn văn phía trên, để tiêu đề gắn với đúng nội dung của nó." },
+      { h: "Khi nào nguyên tắc tương đồng mạnh hơn gần nhau?", b: "Khi các phần tử khác nhau rõ rệt về màu sắc, người dùng thường nhóm theo màu trước, kể cả khi chúng đặt gần nhau." },
+    ] },
+  { title: "6. Một vài con số cần nhớ", layout: "stats",
+    intro: "Các con số dưới đây thường được nhắc tới khi thiết kế giao diện dễ dùng.",
+    parts: [
+      { h: "4,5 : 1", b: "Tỉ lệ tương phản tối thiểu cho chữ thường theo WCAG 2.1, mức AA." },
+      { h: "44 pt", b: "Kích thước vùng chạm tối thiểu Apple khuyến nghị cho nút bấm." },
+      { h: "7 ± 2", b: "Số mục trí nhớ ngắn hạn giữ được, theo bài báo kinh điển của Miller (1956)." },
+    ],
+    after: [{ kind: "quote", b: "Tổng thể khác với tổng các bộ phận.", cite: "Kurt Koffka, nhà tâm lý học Gestalt" }] },
+];
+
+let state = { pal: "limio", font: "modern", dark: false };
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+function imgSvg() {
+  const sq = (x, y) => `<rect x="${x}" y="${y}" width="18" height="18" rx="3" fill="currentColor"/>`;
+  let g = "";
+  [[20,40],[44,40],[20,64],[44,64]].forEach(p => g += sq(...p));
+  [[110,40],[134,40],[110,64],[134,64]].forEach(p => g += sq(...p));
+  [[200,40],[224,40],[200,64],[224,64]].forEach(p => g += sq(...p));
+  return `<svg viewBox="0 0 262 122" width="80%" style="color:var(--a)" role="img" aria-label="Ba nhóm ô vuông">${g}</svg>`;
+}
+
+function render(sec, i) {
+  const L = sec.layout;
+  const parts = sec.parts;
+  let body = "", hidden = [];
+  const intro = sec.intro ? `<p>${esc(sec.intro)}</p>` : "";
+  const asText = ps => ps.map(p => `<h3>${esc(p.h)}</h3><p>${esc(p.b)}</p>`).join("");
+  if (L === "text") body = intro + asText(parts);
+  if (L === "image") body = `<div class="lay-image"><div>${intro}${asText(parts)}</div><figure><div class="img">${imgSvg()}</div><figcaption>${esc(sec.image || "Chưa có ảnh. Bấm để chèn ảnh và ghi nguồn.")}</figcaption></figure></div>`;
+  if (L === "cards") body = intro + `<div class="cards">${parts.map(p => `<div class="card"><div class="h">${esc(p.h)}</div><p>${esc(p.b)}</p></div>`).join("")}</div>`;
+  if (L === "compare") {
+    body = intro + `<div class="compare">${parts.slice(0, 2).map(p => `<div><div class="h">${esc(p.h)}</div><p>${esc(p.b)}</p></div>`).join("")}</div>`;
+    if (parts.length > 2) hidden.push(`${parts.length - 2} phần`);
+  }
+  if (L === "steps") body = intro + `<ol class="steps">${parts.map(p => `<li><div class="h">${esc(p.h)}</div><p>${esc(p.b)}</p></li>`).join("")}</ol>`;
+  if (L === "faq") body = intro + `<div class="faq">${parts.map((p, k) => `<details${k === 0 ? " open" : ""}><summary>${esc(p.h)}</summary><p>${esc(p.b)}</p></details>`).join("")}</div>`;
+  if (L === "stats") body = intro + `<div class="stats">${parts.map(p => `<div class="stat"><div class="num">${esc(p.h)}</div><p>${esc(p.b)}</p></div>`).join("")}</div>`;
+  if (sec.image && L !== "image") hidden.push("ảnh");
+  const after = (sec.after || []).map(b => b.kind === "quote"
+    ? `<blockquote>${esc(b.b)}<cite>— ${esc(b.cite)}</cite></blockquote>`
+    : `<div class="blk callout ${b.kind}"><div class="t">${esc(b.t)}</div><p>${esc(b.b)}</p></div>`).join("");
+  const opts = Object.entries(LAYOUTS).map(([k, v]) => `<option value="${k}"${k === L ? " selected" : ""}>${v}</option>`).join("");
+  const note = hidden.length ? `<span class="hidden-note">Đang giữ ẩn: ${hidden.join(", ")}</span>` : "";
+  return `<section data-i="${i}"><div class="edit"><label>Bố cục <select data-i="${i}">${opts}</select></label>${note}</div><h2>${esc(sec.title)}</h2>${body}${after}</section>`;
+}
+
+function paint() {
+  const p = PALETTES[state.pal], c = p[state.dark ? "dark" : "light"], f = FONTS[state.font];
+  const el = $("#lesson");
+  for (const [k, v] of Object.entries(c)) el.style.setProperty("--" + k, v);
+  el.style.setProperty("--font-body", f.body);
+  el.style.setProperty("--font-head", f.head);
+  el.innerHTML = `
+    <h1>Nguyên tắc gần nhau trong thiết kế giao diện</h1>
+    <p class="lead">Bài 2.3 · Thời gian đọc khoảng 12 phút</p>
+    <div class="blk objectives"><div class="t">Mục tiêu học tập</div><ul>
+      <li>Giải thích được nguyên tắc gần nhau và vai trò của khoảng trắng.</li>
+      <li>Phân biệt được cách nhóm bằng khoảng cách và nhóm bằng khung viền.</li>
+      <li>Áp dụng được nguyên tắc gần nhau để sắp xếp lại một biểu mẫu.</li></ul></div>
+    ${SECTIONS.map(render).join("")}
+    <div class="blk summary"><div class="t">Tổng kết</div><ul>
+      <li>Các phần tử đặt gần nhau được người dùng xem là một nhóm.</li>
+      <li>Khoảng cách nên được thử trước khung viền khi cần tạo nhóm.</li>
+      <li>Khoảng cách giữa các nhóm cần lớn hơn rõ rệt khoảng cách trong nhóm.</li></ul></div>`;
+  if (p.cycle) el.querySelectorAll("section").forEach((s, k) => {
+    const [a, so] = p.cycle[state.dark ? "dark" : "light"][k % 5];
+    s.style.setProperty("--a", a); s.style.setProperty("--s", so);
+  });
+  el.querySelectorAll("select").forEach(sel => sel.onchange = () => { SECTIONS[+sel.dataset.i].layout = sel.value; paint(); });
+}
+
+function chips(host, map, key, swatch) {
+  host.innerHTML = Object.entries(map).map(([k, v]) =>
+    `<button class="chip" data-k="${k}" aria-pressed="${state[key] === k}">${swatch ? `<span class="sw" style="background:${v.sw}"></span>` : ""}${v.name}</button>`).join(" ");
+  host.querySelectorAll("button").forEach(b => b.onclick = () => {
+    state[key] = b.dataset.k;
+    host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    paint();
+  });
+}
+function toggle(id, fn) {
+  const b = $("#" + id);
+  b.onclick = () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); fn(on); };
+}
+chips($("#pal"), PALETTES, "pal", true);
+chips($("#fnt"), FONTS, "font", false);
+toggle("dark", on => { state.dark = on; paint(); });
+toggle("phone", on => $("#stage").classList.toggle("phone", on));
+toggle("viewer", on => $("#lesson").classList.toggle("viewer", on));
+paint();
+</script>
+</body>
+</html>

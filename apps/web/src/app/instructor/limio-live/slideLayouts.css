@@ -1,0 +1,470 @@
+/* Bố cục slide Limio-Live — thiết kế ở khung 1280 × 720 (xem SlideLayouts.tsx, co theo khung chứa).
+   Cỡ chữ không nhỏ hơn 26 px trên khung này (≈ 39 px ở 1920 × 1080) để đọc được trên máy chiếu yếu.
+   --fs (1 → 0,62) là bậc cỡ chữ bộ vẽ chọn để chữ dài vừa khung (limioLiveFit.pickFontStep): cỡ chữ và khoảng cách dọc nhân
+   với nó, luôn có sàn bằng max(26px, …); bề ngang của khung, cột và thẻ không đổi. --lgt/--lgb: chỗ khung nội dung nhường
+   cho logo ở mép trên/dưới (chỉ khi chữ chạm logo).
+   Nền do giao diện của bài giảng quyết định (slideThemes.ts); các lớp .lt-* chỉ khai báo màu chữ/nhấn. */
+  .lslide { text-align: left; width: 1280px; height: 720px; position: relative; overflow: hidden; color: var(--stext);
+    font-family: var(--sfont-body); line-height: 1.35; --fs: 1; }
+  .lslide *, .lslide *::before, .lslide *::after { box-sizing: border-box; }
+  /* Chữ tô màu (==chữ==): màu nhấn của giao diện cùng vệt bút dạ ở nửa dưới, để vẫn nổi trên các giao diện đơn sắc. */
+  .lslide mark.ll-mark { color: var(--sa); background: linear-gradient(transparent 60%, var(--ssoft) 60%);
+    padding: 0 .08em; border-radius: .08em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+
+  .lt-brand { --sbg: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%); --stext: #20241F; --smuted: #5A6256;
+    --sa: #4D7C0F; --sa2: #BE185D; --ssoft: #ECFCCB; --ssoft2: #FCE7F3; --scard: rgba(255,255,255,.82); --scardb: #E3E8D3;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #BEF264; --sglow2: #F9A8D4;
+    --sg: linear-gradient(120deg, #4D7C0F 0%, #15803D 100%); --sgb: linear-gradient(135deg, #4D7C0F 0%, #15803D 100%); }
+  .lt-night { --sbg: linear-gradient(135deg, #0B1020 0%, #1B1A4B 100%); --stext: #F1F5F9; --smuted: #C4CCE0;
+    --sa: #38BDF8; --sa2: #C4B5FD; --ssoft: rgba(56,189,248,.16); --ssoft2: rgba(167,139,250,.16); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
+    --son: #06202E; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.025em; --sglow1: #38BDF8; --sglow2: #A78BFA;
+    --sg: linear-gradient(120deg, #38BDF8 0%, #A78BFA 100%); --sgb: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%); }
+  .lt-paper { --sbg: linear-gradient(160deg, #FBF6E9 0%, #F4E8CB 100%); --stext: #2B2118; --smuted: #6B5B4A;
+    --sa: #A34A07; --sa2: #0B5F59; --ssoft: #FDE9C7; --ssoft2: #CDEBE6; --scard: rgba(255,253,247,.9); --scardb: #E8DCC0;
+    --son: #ffffff; --sok: #166534; --sokbg: #DCFCE7; --sbad: #991B1B; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 700; --shls: -0.01em; --sglow1: #FBBF24; --sglow2: #5EEAD4;
+    --sg: linear-gradient(120deg, #A34A07 0%, #B83A0C 100%); --sgb: linear-gradient(135deg, #B45309 0%, #92400E 100%); }
+  /* Giao diện bổ sung: ba sáng (Oải hương, Đào, Biển) và ba tối (Rừng đêm, Mận, Mực). */
+  .lt-lavender { --sbg: linear-gradient(135deg, #F5F0FF 0%, #EDE7FB 100%); --stext: #221B33; --smuted: #5B5273;
+    --sa: #6D28D9; --sa2: #BE185D; --ssoft: #EDE9FE; --ssoft2: #FCE7F3; --scard: rgba(255,255,255,.85); --scardb: #E1D9F3;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #C4B5FD; --sglow2: #F9A8D4;
+    --sg: linear-gradient(120deg, #6D28D9 0%, #9333EA 100%); --sgb: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); }
+  .lt-peach { --sbg: linear-gradient(135deg, #FFF4EC 0%, #FFE8E0 100%); --stext: #2B1A14; --smuted: #6B534A;
+    --sa: #C2410C; --sa2: #BE123C; --ssoft: #FFE4D1; --ssoft2: #FFE1E6; --scard: rgba(255,255,255,.85); --scardb: #F3D9CC;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #FDBA74; --sglow2: #FDA4AF;
+    --sg: linear-gradient(120deg, #EA580C 0%, #E11D48 100%); --sgb: linear-gradient(135deg, #F97316 0%, #E11D48 100%); }
+  .lt-ocean { --sbg: linear-gradient(135deg, #E8F8FA 0%, #E3F0FD 100%); --stext: #0F2A33; --smuted: #476068;
+    --sa: #0E7490; --sa2: #4F46E5; --ssoft: #CFFAFE; --ssoft2: #E0E7FF; --scard: rgba(255,255,255,.85); --scardb: #CFE5EA;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #67E8F9; --sglow2: #A5B4FC;
+    --sg: linear-gradient(120deg, #0E7490 0%, #2563EB 100%); --sgb: linear-gradient(135deg, #0891B2 0%, #2563EB 100%); }
+  /* Đơn sắc: chữ, màu nhấn, thẻ và nền cùng một gam; chỉ màu đúng/sai của slide so sánh giữ nghĩa xanh/đỏ. */
+  .lt-monogray { --sbg: linear-gradient(135deg, #F7F7F8 0%, #ECEDEF 100%); --stext: #18181B; --smuted: #52525B;
+    --sa: #27272A; --sa2: #52525B; --ssoft: #E4E4E7; --ssoft2: #F4F4F5; --scard: rgba(255,255,255,.88); --scardb: #D4D4D8;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #A1A1AA; --sglow2: #D4D4D8;
+    --sg: linear-gradient(120deg, #18181B 0%, #52525B 100%); --sgb: linear-gradient(135deg, #27272A 0%, #3F3F46 100%); }
+  .lt-monoblue { --sbg: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); --stext: #0F1B33; --smuted: #475A7A;
+    --sa: #1D4ED8; --sa2: #3B82F6; --ssoft: #DBEAFE; --ssoft2: #EAF2FF; --scard: rgba(255,255,255,.88); --scardb: #C7D8F5;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #93C5FD; --sglow2: #BFDBFE;
+    --sg: linear-gradient(120deg, #1E40AF 0%, #3B82F6 100%); --sgb: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); }
+  .lt-monogreen { --sbg: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); --stext: #0F2418; --smuted: #44634F;
+    --sa: #15803D; --sa2: #16A34A; --ssoft: #DCFCE7; --ssoft2: #ECFDF5; --scard: rgba(255,255,255,.88); --scardb: #C5E8D0;
+    --son: #ffffff; --sok: #15803D; --sokbg: #DCFCE7; --sbad: #B91C1C; --sbadbg: #FEE2E2;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.02em; --sglow1: #86EFAC; --sglow2: #BBF7D0;
+    --sg: linear-gradient(120deg, #166534 0%, #22C55E 100%); --sgb: linear-gradient(135deg, #16A34A 0%, #15803D 100%); }
+  .lt-monoblack { --sbg: linear-gradient(135deg, #050505 0%, #1A1A1A 100%); --stext: #FAFAFA; --smuted: #B4B4B8;
+    --sa: #FAFAFA; --sa2: #A1A1AA; --ssoft: rgba(255,255,255,.12); --ssoft2: rgba(255,255,255,.08); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.16);
+    --son: #111113; --sok: #86EFAC; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.025em; --sglow1: #FFFFFF; --sglow2: #71717A;
+    --sg: linear-gradient(120deg, #FFFFFF 0%, #A1A1AA 100%); --sgb: linear-gradient(135deg, #F4F4F5 0%, #A1A1AA 100%); }
+  .lt-forest { --sbg: linear-gradient(135deg, #06130D 0%, #0E2B1F 100%); --stext: #ECFDF5; --smuted: #B5D3C3;
+    --sa: #4ADE80; --sa2: #FDE047; --ssoft: rgba(74,222,128,.16); --ssoft2: rgba(253,224,71,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
+    --son: #052E16; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.025em; --sglow1: #4ADE80; --sglow2: #FDE047;
+    --sg: linear-gradient(120deg, #4ADE80 0%, #A3E635 100%); --sgb: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%); }
+  .lt-plum { --sbg: linear-gradient(135deg, #1A0B22 0%, #3A1346 100%); --stext: #FDF4FF; --smuted: #E3C7EC;
+    --sa: #F0ABFC; --sa2: #FDA4AF; --ssoft: rgba(240,171,252,.16); --ssoft2: rgba(253,164,175,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
+    --son: #2E0B3A; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.025em; --sglow1: #E879F9; --sglow2: #FB7185;
+    --sg: linear-gradient(120deg, #F0ABFC 0%, #FDA4AF 100%); --sgb: linear-gradient(135deg, #E879F9 0%, #C026D3 100%); }
+  .lt-ink { --sbg: linear-gradient(135deg, #0E1014 0%, #1C212B 100%); --stext: #F5F6F8; --smuted: #C0C6D2;
+    --sa: #FBBF24; --sa2: #60A5FA; --ssoft: rgba(251,191,36,.15); --ssoft2: rgba(96,165,250,.15); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
+    --son: #1A1300; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --shw: 800; --shls: -0.025em; --sglow1: #FBBF24; --sglow2: #60A5FA;
+    --sg: linear-gradient(120deg, #FBBF24 0%, #F59E0B 100%); --sgb: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
+
+  .lslide .pad { position: absolute; inset: var(--lgt, 0px) 0 var(--lgb, 0px); padding: 72px 96px 72px; display: flex; flex-direction: column; }
+  .lslide .h { font-family: var(--sfont-head); font-weight: var(--shw); letter-spacing: var(--shls); line-height: 1.2; margin: 0; }
+  .lslide .count { font-size: 26px; color: var(--smuted); font-weight: 600; white-space: nowrap; }
+  .lslide .h { text-wrap: balance; }
+  .lslide p, .lslide li, .lslide b, .lslide .rowi span, .lslide .qt { text-wrap: pretty; }
+  .lslide .h-xxl { font-size: 96px; } .lslide .h-xl { font-size: 84px; } .lslide .h-lg { font-size: 72px; } .lslide .h-md { font-size: 58px; }
+  .lslide .lead { font-size: max(26px, calc(36px * var(--fs))); color: var(--smuted); margin: 0; }
+  .lslide .grad { background: var(--sg); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lslide .glow { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; }
+  .lt-dark .glow { opacity: .34; }
+  .lslide .card { background: var(--scard); border: 1px solid var(--scardb); border-radius: 28px; }
+  
+  .lslide .ic { display: block; flex: none; }
+  .lslide ul.bul { list-style: none; padding: 0; margin: 0; display: grid; gap: calc(24px * var(--fs)); font-size: max(26px, calc(38px * var(--fs))); line-height: 1.28; }
+  .lslide ul.bul li { display: flex; gap: .45em; align-items: flex-start; }
+  .lslide ul.bul li::before { content: ""; flex: none; width: .42em; height: .42em; border-radius: 50%; background: var(--sgb); margin-top: .43em; }
+
+  /* 1. Bìa — mười kiểu (COVER_STYLES, bản mẫu docs/mockup/bia-bai-giang.html), cùng bốn dòng chữ:
+     tên đơn vị, tên bài, phụ đề, người trình bày. Nguyên lý chung: tên bài lớn nhất; ba nhóm chữ (đơn vị | tên bài +
+     phụ đề | người trình bày) cách nhau rộng hơn khoảng cách trong nhóm; một trục căn; chữ cách mép ≥ 64 px.
+     Mỗi kiểu dành riêng một vùng KHÔNG CÓ CHỮ cho hoa văn của bài giảng, nên hoa văn vẽ đậm hết cỡ ở đó mà tương
+     phản chữ vẫn là của giao diện. Phần tử trang trí mang lớp .deco để bộ tự co (measureContentBox) bỏ qua. */
+  .ll-cover .pad { z-index: 1; padding: 64px 96px; }
+  .ll-cover .org { margin: 0; font-size: 28px; font-weight: 700; line-height: 1.3; color: var(--sa); }
+  .ll-cover .sub { margin: 28px 0 0; font-size: 34px; line-height: 1.32; color: var(--smuted); }
+  .ll-cover .by { margin: 0; font-size: 30px; font-weight: 600; line-height: 1.3; color: var(--stext); }
+  .ll-cover .mid { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 44px 0; }
+  .ll-cover .zone { position: absolute; overflow: hidden; pointer-events: none; }
+  .ll-cover .mf { position: absolute; inset: 0; }
+  .ll-cover .mf > svg { display: block; width: 100%; height: 100%; }
+  /* Hoa văn trên mảng màu đậm: nét đổi sang màu chữ-trên-nền-đậm của giao diện. */
+  .ll-cover .on-accent { background: var(--sgb); --sa: var(--son); --sa2: var(--son); --sglow1: var(--son); --sglow2: var(--son);
+    --ssoft: color-mix(in srgb, var(--son) 28%, transparent); }
+
+  /* Khối màu (mặc định): thanh màu cạnh trái, khối hoa văn bo góc tràn ra mép phải. */
+  .cv-block .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 44px; background: var(--sgb); }
+  .cv-block .zone { right: 0; top: 64px; bottom: 64px; width: 340px; border-radius: 56px 0 0 56px; background: var(--ssoft); }
+  .cv-block .dot { position: absolute; right: 290px; bottom: 34px; width: 96px; height: 96px; border-radius: 50%; background: var(--sgb); box-shadow: 0 0 0 14px var(--ssoft2); }
+  .cv-block .pad { padding-left: 140px; padding-right: 430px; }
+  .cv-block .by { display: flex; align-items: center; gap: 20px; }
+  .cv-block .by::before { content: ""; flex: none; width: 64px; height: 5px; border-radius: 5px; background: var(--sg); }
+
+  /* Trang trọng: hoa văn phủ cả slide, tấm nền chừa lại đường viền hoa văn, chữ căn giữa. */
+  /* Nền nhạt dưới hoa văn: hoa văn thưa (sóng, tia…) vẫn cho một đường viền đọc được thành khung. */
+  .cv-formal .zone { inset: 0; background: var(--ssoft); }
+  .cv-formal .sheet { position: absolute; inset: 44px; border-radius: 10px; background: var(--sbg, var(--scard)); box-shadow: 0 0 0 3px var(--sa), 0 24px 60px -30px rgba(0,0,0,.45); }
+  .cv-formal .pad { align-items: center; text-align: center; padding: 86px 150px; }
+  .cv-formal .mid { align-items: center; padding: 46px 0; }
+  .cv-formal .rule { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 14px auto 0; }
+  .cv-formal .rule i { width: 70px; height: 3px; border-radius: 3px; background: var(--sa); }
+  .cv-formal .rule b { width: 14px; height: 14px; background: var(--sa2); transform: rotate(45deg); border-radius: 2px; }
+  .cv-formal .sub { max-width: 860px; font-size: 32px; margin-top: 24px; }
+
+  /* Vòm: ô vòm cửa sổ phủ hoa văn bên phải, viền vòm lệch phía sau, một chấm tròn màu nhấn. */
+  .cv-arch .ring { position: absolute; right: 104px; top: 96px; width: 300px; height: 560px; border-radius: 150px 150px 24px 24px; border: 4px solid var(--sa); }
+  .cv-arch .zone { right: 80px; top: 70px; width: 300px; height: 560px; border-radius: 150px 150px 24px 24px; background: var(--ssoft); box-shadow: 0 30px 60px -34px rgba(0,0,0,.45); }
+  .cv-arch .sun { position: absolute; right: 326px; bottom: 56px; width: 104px; height: 104px; border-radius: 50%; background: var(--sgb); box-shadow: 0 0 0 12px var(--ssoft2); }
+  .cv-arch .pad { padding-right: 450px; }
+  .cv-arch .by { max-width: 560px; }
+
+  /* Dải màu: hoa văn phủ nền và mờ dần về bên trái chỗ có chữ; tên bài trên dải màu đậm chữ nhật ngang slide. */
+  .cv-band .zone { inset: 0; -webkit-mask-image: linear-gradient(to right, transparent 62%, #000 94%); mask-image: linear-gradient(to right, transparent 62%, #000 94%); }
+  .cv-band .pad { padding-top: 60px; padding-bottom: 60px; }
+  .cv-band .org, .cv-band .by { max-width: 690px; }
+  .cv-band .mid { padding: 20px 0; }
+  /* Nền dải tràn hết bề ngang vẽ bằng ::before, để khối chữ vẫn nằm trong lề (bộ tự co chỉ đo phần tử, không đo ::before). */
+  .cv-band .stripe { position: relative; z-index: 0; padding: 48px 0 54px; }
+  .cv-band .stripe::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: -96px; right: -96px; background: var(--sgb); box-shadow: 0 30px 60px -36px rgba(0,0,0,.5); }
+  .cv-band .stripe .h { color: var(--son); max-width: 1060px; }
+  .cv-band .stripe .sub { color: var(--son); font-weight: 500; max-width: 1000px; }
+
+  /* Vòng cung: phần tư hình tròn màu đậm phủ hoa văn ở góc dưới phải, các cung toả ra ngoài. */
+  .cv-arc .zone { right: -400px; bottom: -400px; width: 800px; height: 800px; border-radius: 50%; }
+  .cv-arc .zone > .mf { inset: 0 auto auto 0; width: 400px; height: 400px; }
+  .cv-arc svg.arcs { position: absolute; right: 0; bottom: 0; width: 560px; height: 560px; overflow: visible; pointer-events: none; }
+  .cv-arc .mid { max-width: 720px; }
+  .cv-arc .sub { max-width: 680px; }
+  .cv-arc .by { max-width: 640px; }
+
+  /* Ô ghép: sáu ô bên phải, mỗi ô một hình (hoa văn, tròn, lá, nửa tròn). */
+  .cv-tiles .grid { position: absolute; right: 80px; top: 117px; display: grid; grid-template-columns: repeat(2, 150px); grid-auto-rows: 150px; gap: 15px; }
+  .cv-tiles .t { position: relative; overflow: hidden; border-radius: 28px; }
+  .cv-tiles .t1 { background: var(--ssoft); }
+  .cv-tiles .t2 { background: var(--sgb); display: grid; place-items: center; }
+  .cv-tiles .t2 i { width: 92px; height: 92px; border-radius: 50%; background: var(--ssoft2); }
+  .cv-tiles .t3 { background: var(--sa2); border-radius: 50%; }
+  .cv-tiles .t5 { background: var(--sgb); border-radius: 75px 0 75px 0; }
+  .cv-tiles .t6 { background: var(--ssoft2); }
+  .cv-tiles .t6 i { position: absolute; left: 0; right: 0; bottom: -75px; height: 150px; border-radius: 50%; background: var(--sa); }
+  .cv-tiles .pad { padding-right: 450px; }
+
+  /* Dán giấy: tên bài trên tấm giấy nghiêng nhẹ, hai mẩu băng dính, một nhãn tròn phủ hoa văn; nền phủ hoa văn đậm. */
+  .cv-tape .zone { inset: 0; }
+  .cv-tape .card { position: absolute; left: 86px; top: 48px; width: 980px; height: 624px; background: var(--sbg, var(--scard)); border-radius: 6px;
+    transform: rotate(-2.2deg); box-shadow: 0 2px 0 var(--scardb), 0 34px 60px -28px rgba(0,0,0,.5); }
+  .cv-tape .card .pad { padding: 48px 64px 50px; inset: 0; }
+  .cv-tape .card .mid { padding: 40px 0; }
+  .cv-tape .card .sub { font-size: 30px; margin-top: 22px; max-width: 760px; }
+  .cv-tape .tp { position: absolute; width: 170px; height: 46px; background: var(--ssoft2); opacity: .92; border-radius: 3px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+  .cv-tape .tp1 { left: -44px; top: 18px; transform: rotate(-38deg); }
+  .cv-tape .tp2 { right: -48px; top: 14px; transform: rotate(32deg); }
+  .cv-tape .seal { position: absolute; right: 70px; bottom: 40px; width: 190px; height: 190px; border-radius: 50%; overflow: hidden; transform: rotate(8deg);
+    box-shadow: 0 0 0 10px var(--scard), 0 20px 40px -18px rgba(0,0,0,.5); }
+
+  /* Sóng: dải sóng màu đậm phủ hoa văn ở đáy, một đường sóng mảnh và một lớp sóng nhạt phía sau; chữ ở trên. */
+  .cv-wave svg.waves { position: absolute; left: 0; bottom: 0; width: 1280px; height: 230px; }
+  .cv-wave .pad { padding-top: 60px; padding-bottom: 200px; }
+  .cv-wave .mid .h { max-width: 1000px; }
+  .cv-wave .sub { max-width: 900px; }
+
+  /* Cột hoa văn: cột bo tròn mép phải chạy dọc cạnh trái, một chấm tròn và một vòng viền; chữ bên phải. */
+  .cv-pillar .zone { left: 0; top: 0; bottom: 0; width: 300px; border-radius: 0 150px 150px 0; background: var(--ssoft); }
+  .cv-pillar .medal { position: absolute; left: 236px; top: 72px; width: 120px; height: 120px; border-radius: 50%; background: var(--sgb); box-shadow: 0 0 0 12px var(--ssoft2); }
+  .cv-pillar .ring { position: absolute; left: 252px; bottom: 70px; width: 76px; height: 76px; border-radius: 50%; border: 5px solid var(--sa2); }
+  .cv-pillar .pad { padding-left: 400px; }
+
+  /* Bong bóng: các hình tròn to nhỏ rải bên phải. */
+  .cv-bubbles .b { position: absolute; border-radius: 50%; overflow: hidden; }
+  .cv-bubbles .b1 { width: 320px; height: 320px; right: -50px; top: -70px; background: var(--ssoft); }
+  .cv-bubbles .b2 { width: 150px; height: 150px; right: 236px; top: 186px; background: var(--sgb); }
+  .cv-bubbles .b3 { width: 116px; height: 116px; right: 64px; top: 300px; background: var(--ssoft2); }
+  .cv-bubbles .b4 { width: 224px; height: 224px; right: 120px; bottom: 36px; }
+  .cv-bubbles .b5 { width: 88px; height: 88px; right: 360px; bottom: 120px; border: 5px solid var(--sa); }
+  .cv-bubbles .b6 { width: 40px; height: 40px; right: 46px; bottom: 270px; background: var(--sa2); }
+  .cv-bubbles .pad { padding-right: 480px; }
+    /* 2. Tiêu đề mục */
+  .ll-section .pad { justify-content: center; padding-left: 120px; }
+  .ll-section .num { font-family: var(--sfont-head); font-weight: 800; font-size: calc(230px * var(--fs)); line-height: .85; color: transparent; -webkit-text-stroke: 3px var(--sa); letter-spacing: -0.04em; }
+  .ll-section .h { margin-top: calc(18px * var(--fs)); max-width: 980px; }
+  /* 2b. Bìa phần có mục lục: đường dọc nối các phần, giống mạch trong dàn ý. Chữ mục lục ≥ 30 px. */
+  .ll-section-toc .pad { display: grid; grid-template-columns: 1fr 520px; gap: 64px; align-items: center; padding: 72px 88px; }
+  .ll-section-toc .num { font-size: calc(190px * var(--fs)); }
+  .ll-section-toc .h { margin-top: 0; max-width: none; }
+  .ll-section-toc .lead { font-size: max(26px, calc(30px * var(--fs))); line-height: 1.35; }
+  .ll-section-toc .toc { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(14px * var(--fs)); }
+  .ll-section-toc .toc li { position: relative; display: flex; align-items: center; gap: 22px; padding: calc(16px * var(--fs)) 22px; border-radius: 22px; border: 2px solid transparent; font-size: max(26px, calc(30px * var(--fs))); line-height: 1.25; color: var(--smuted); }
+  .ll-section-toc .toc li + li::before { content: ""; position: absolute; left: 49px; top: calc(-22px * var(--fs)); height: calc(30px * var(--fs)); width: 3px; border-radius: 3px; background: var(--scardb); }
+  .ll-section-toc .mk { width: 56px; height: 56px; flex: none; border-radius: 50%; display: grid; place-items: center; font-family: var(--sfont-head); font-weight: 800; font-size: 28px; border: 3px solid var(--scardb); color: var(--smuted); }
+  .ll-section-toc .done .mk { border-color: transparent; background: var(--ssoft); color: var(--sa); }
+  .ll-section-toc .now { background: var(--scard); border-color: var(--scardb); color: var(--stext); font-weight: 700; font-size: max(28px, calc(34px * var(--fs))); font-family: var(--sfont-head); box-shadow: 0 18px 40px -26px rgba(0,0,0,.45); }
+  .ll-section-toc .now .mk { border: 0; background: var(--sgb); color: var(--son); width: 64px; height: 64px; font-size: 32px; }
+  /* 3. Chữ + ảnh — ô hình cao hết vùng nội dung; bề rộng --artw do bộ vẽ chọn theo độ dài chữ (chữ dài thì ô hình hẹp lại). */
+  .ll-image .pad { display: grid; grid-template-columns: minmax(0, 1fr) var(--artw, 440px); gap: 56px; align-items: center; }
+  .ll-image .tx { display: grid; gap: calc(30px * var(--fs)); }
+  .ll-image .art { align-self: stretch; min-height: 0; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  .ll-image .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Kiểu trình bày của Chữ và hình (docs/tieu-chi/chu-va-hinh-kieu-khung.md, K1). Cùng khung .pad/.tx/.art để bộ đo chữ không đổi. */
+  .ll-image.st-left .pad { grid-template-columns: var(--artw, 440px) minmax(0, 1fr); }
+  .ll-image.st-left .art { order: -1; }
+  .ll-image.st-left .img-credit { right: auto; left: 96px; text-align: left; }
+  .ll-image.st-bleed .pad { grid-template-columns: minmax(0, 1fr); padding-right: calc(46% + 56px); }
+  .ll-image.st-bleed .art,
+  .ll-image.st-top .art,
+  .ll-image.st-overlay .art { position: absolute; border: 0; border-radius: 0; align-self: auto; }
+  .ll-image.st-bleed .art { top: 0; right: 0; bottom: 0; width: 46%; }
+  .ll-image.st-top .pad { grid-template-columns: minmax(0, 1fr); align-items: start; padding-top: 336px; padding-bottom: 48px; }
+  .ll-image.st-top .art { left: 0; right: 0; top: 0; height: 300px; }
+  .ll-image.st-top .tx { gap: calc(24px * var(--fs)); }
+  .ll-image.st-top ul.bul { grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 40px; font-size: max(26px, calc(30px * var(--fs))); }
+  .ll-image.st-top ul.bul li { display: block; }
+  .ll-image.st-top ul.bul li::before { display: block; width: 72px; height: 6px; border-radius: 3px; margin: 0 0 14px; }
+  .ll-image.st-overlay .pad { grid-template-columns: minmax(0, 640px); }
+  .ll-image.st-overlay .art { inset: 0; }
+  .ll-image.st-overlay .tx { position: relative; z-index: 1; background: var(--sbg); border-radius: 32px; padding: 52px 56px; box-shadow: 0 20px 60px rgb(0 0 0 / .22); }
+  .ll-image.st-bleed .img-credit,
+  .ll-image.st-top .img-credit,
+  .ll-image.st-overlay .img-credit { color: #fff; text-shadow: 0 1px 4px rgb(0 0 0 / .65); right: 24px; bottom: 14px; }
+  .ll-image.st-top .img-credit { top: 258px; bottom: auto; }
+  .ll-image.st-inset .pad { grid-template-columns: minmax(0, 1fr) calc(var(--artw, 340px) + 32px); }
+  .ll-image.st-inset .pol-wrap { align-self: center; }
+  .ll-image.st-inset .pol { margin: 0; background: #fff; padding: 16px 16px 0; border-radius: 14px; box-shadow: 0 14px 40px rgb(0 0 0 / .16); transform: rotate(2deg); }
+  .ll-image.st-inset .pol.nocap { padding-bottom: 16px; }
+  .ll-image.st-inset .pol .art { height: 340px; border-radius: 8px; }
+  .ll-image.st-inset .pol figcaption { padding: 12px 4px 16px; font-size: 24px; line-height: 1.3; color: #5c6650; }
+
+  /* Khung hình (K7–K8): chỉ cho ô hình riêng (bên phải, bên trái, hình nhỏ). Ảnh luôn phủ kín khung, cắt giữ phần giữa. */
+  .ll-image .art.fr-circle { border-radius: 50%; aspect-ratio: 1; align-self: center; width: 100%; }
+  .ll-image .art.fr-arch { border-radius: 999px 999px 32px 32px; }
+  .ll-image .art.fr-hex { clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); border: 0; border-radius: 0; aspect-ratio: 0.87; align-self: center; width: 100%; }
+  .ll-image .art.fr-blob { border-radius: 62% 38% 46% 54% / 46% 52% 48% 54%; }
+  .ll-image .art.fr-leaf { border-radius: 200px 32px 200px 32px; }
+  .ll-image .art.fr-offset { border-radius: 28px; box-shadow: 24px 24px 0 0 color-mix(in srgb, var(--sa) 35%, transparent); }
+  .ll-image.st-inset .pol .art.fr-circle,
+  .ll-image.st-inset .pol .art.fr-hex { height: auto; }
+  /* Nguồn ảnh riêng: dòng chữ thường dưới ô hình, cỡ tối thiểu của khung thiết kế; dài quá thì cắt, đủ chữ ở title. */
+  .ll-image .img-credit { position: absolute; right: 96px; bottom: 22px; margin: 0; max-width: 560px; font-size: 26px; line-height: 1.2; color: var(--smuted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .img-credit a { color: inherit; text-decoration: none; }
+  .img-credit a:hover, .img-credit a:focus-visible { text-decoration: underline; }
+  /* 4. Ba thẻ — các thẻ cao bằng nhau, cụm thẻ căn giữa phần còn lại. --hpx: cỡ tiêu đề thẻ để từ dài nhất vừa một dòng
+     (limioLiveFit.cardHeadingPx; khoảng cách 24 và đệm ngang 26 khớp CARD_GAP, CARD_PAD_X). */
+  .ll-cards .pad { gap: calc(34px * var(--fs)); }
+  .ll-cards .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: auto 0; align-items: stretch; }
+  .ll-cards .it { padding: calc(30px * var(--fs)) 26px calc(34px * var(--fs)); display: flex; flex-direction: column; gap: calc(14px * var(--fs)); position: relative; }
+  .ll-cards .badge { width: max(56px, calc(76px * var(--fs))); height: max(56px, calc(76px * var(--fs))); border-radius: 20px; display: grid; place-items: center; color: var(--son); background: var(--sgb); }
+  .ll-cards .badge svg { width: 47%; height: 47%; }
+  .ll-cards .it b { font-size: max(26px, calc(var(--hpx, 40px) * var(--fs))); font-family: var(--sfont-head); line-height: 1.2; }
+  .ll-cards .it p { margin: 0; font-size: max(26px, calc(30px * var(--fs))); line-height: 1.3; color: var(--smuted); }
+  .ll-cards .no { position: absolute; right: 26px; top: calc(18px * var(--fs)); font-size: max(44px, calc(64px * var(--fs))); line-height: 1.2; font-weight: 800; color: var(--sa); opacity: .3; font-family: var(--sfont-head); }
+  /* 5. So sánh */
+  .ll-compare .pad { gap: calc(30px * var(--fs)); }
+  .ll-compare .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; flex: 1; }
+  .ll-compare .col { padding: calc(30px * var(--fs)) 32px; display: flex; flex-direction: column; gap: calc(18px * var(--fs)); }
+  .ll-compare .col.bad { background: var(--sbadbg); border-color: transparent; }
+  .ll-compare .col.good { background: var(--sokbg); border: 2px solid var(--sok); }
+  .ll-compare .ttl { display: flex; align-items: center; gap: 14px; font-family: var(--sfont-head); font-weight: 800; font-size: max(28px, calc(40px * var(--fs))); line-height: 1.2; }
+  .ll-compare .bad .ttl { color: var(--sbad); } .ll-compare .good .ttl { color: var(--sok); }
+  .ll-compare .q { font-size: max(26px, calc(32px * var(--fs))); line-height: 1.28; padding: calc(14px * var(--fs)) 22px; border-radius: 18px; background: rgba(255,255,255,.55); }
+  .lt-dark .ll-compare .q { background: rgba(255,255,255,.07); }
+  .ll-compare .why { font-size: max(26px, calc(28px * var(--fs))); color: var(--smuted); margin-top: auto; }
+  /* 6. Các bước */
+  .ll-steps .pad { gap: calc(40px * var(--fs)); }
+  .ll-steps .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; margin: auto 0; }
+  .ll-steps .row::before { content: ""; position: absolute; left: 12%; right: 12%; top: calc(max(64px, calc(92px * var(--fs))) / 2 - 2px); height: 4px; border-radius: 4px; background: var(--sg); opacity: .5; }
+  .ll-steps .st { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: calc(16px * var(--fs)); }
+  .ll-steps .circ { width: max(64px, calc(92px * var(--fs))); height: max(64px, calc(92px * var(--fs))); border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); font-weight: 800; font-size: max(28px, calc(40px * var(--fs))); font-family: var(--sfont-head); box-shadow: 0 0 0 10px var(--ssoft); }
+  .ll-steps .st b { font-size: max(28px, calc(36px * var(--fs))); font-family: var(--sfont-head); line-height: 1.2; }
+  .ll-steps .st p { margin: 0; font-size: max(26px, calc(28px * var(--fs))); line-height: 1.28; color: var(--smuted); }
+  .ll-steps .loop { align-self: center; display: inline-flex; align-items: center; gap: 12px; color: var(--sa); font-size: max(26px, calc(30px * var(--fs))); font-weight: 700; }
+  /* 7. Số liệu */
+  .ll-stats .pad { gap: calc(36px * var(--fs)); }
+  .ll-stats .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; flex: 1; align-items: stretch; }
+  .ll-stats .st { padding: calc(34px * var(--fs)) 30px; display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .ll-stats .big { font-family: var(--sfont-head); font-weight: 800; font-size: max(64px, calc(120px * var(--fs))); line-height: 1; letter-spacing: -0.03em; }
+  .ll-stats .st p { margin: 0; font-size: max(26px, calc(32px * var(--fs))); line-height: 1.28; color: var(--smuted); }
+    /* 8. Trích dẫn */
+  .ll-quote .pad { justify-content: center; padding-left: 120px; padding-right: 110px; gap: calc(30px * var(--fs)); }
+  /* Dấu ngoặc sát câu: khung của dấu chỉ cao bằng phần nét nhìn thấy. */
+  .ll-quote .mark { font-family: var(--font-bvp), Arial, sans-serif; font-size: calc(200px * var(--fs)); line-height: .6; height: calc(64px * var(--fs)); margin-bottom: calc(6px * var(--fs)); color: var(--sa); opacity: .85; }
+  .ll-quote .qt { font-family: var(--sfont-head); font-weight: var(--shw); font-size: 66px; line-height: 1.18; letter-spacing: var(--shls); max-width: 1000px; }
+  .ll-quote .who { display: flex; align-items: center; gap: 14px; font-size: max(26px, calc(30px * var(--fs))); color: var(--smuted); }
+  .ll-quote .who i { width: 54px; height: 4px; border-radius: 4px; background: var(--sg); }
+  /* 9. Tóm tắt — nhiều dòng thì bộ vẽ thử thêm hai cột (.two), giữ cách cho chữ lớn hơn. */
+  /* Danh sách: slide nhiều chữ nhập từ PowerPoint; cỡ chữ đặt bằng style (listFontSize, LIST_BOX). */
+  .ll-list .pad { padding: 56px 80px; }
+  .ll-list.img .pad { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 48px; }
+  .ll-list .tx { display: flex; flex-direction: column; gap: 28px; min-height: 0; }
+  .ll-list ul.lst { list-style: none; padding: 0; margin: 0; display: grid; gap: .35em; line-height: 1.25; align-content: start; }
+  .ll-list ul.lst li { display: flex; gap: .5em; align-items: flex-start; }
+  .ll-list ul.lst li::before { content: ""; flex: none; width: .4em; height: .4em; border-radius: 50%; background: var(--sgb); margin-top: .43em; }
+  .ll-list ul.lst li.sub { margin-left: 1.5em; color: var(--smuted); }
+  .ll-list ul.lst li.sub::before { width: .32em; height: .32em; margin-top: .47em; background: transparent; border: 2.5px solid var(--sa); }
+  /* Cụm từ khoá (P53): từ to, đứng riêng, xen hai màu nhấn của giao diện; không khung, không nền. */
+  .ll-list p.words { margin: .2em 0 0; display: flex; flex-wrap: wrap; gap: .25em .9em; line-height: 1.3; font-weight: 600; color: var(--sa); }
+  .ll-list p.words span.alt { color: var(--sa2); }
+  /* Nhóm (P55): ý cha đậm, màu nhấn, lớn hơn ý con; ý con thẳng trục với chữ ý cha, nối bằng vạch dọc mảnh, không dấu đầu dòng.
+     Bốn kiểu do nội dung quyết định (groupsFit): v-cards, v-list, v-ask, v-stats. Cỡ chữ không dưới 26 px. */
+  .ll-groups .pad { padding: 40px 64px; gap: 18px; }
+  .ll-groups .lab { margin: 0; font-size: 26px; line-height: 1.3; font-weight: 700; color: var(--sa); }
+  .ll-groups .ask { margin: 0; font-family: var(--sfont-head); font-weight: 800; line-height: 1.25; color: var(--stext); }
+  .ll-groups .glead { margin: 0; font-size: 30px; line-height: 1.3; color: var(--smuted); }
+  .ll-groups ul.gp { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; line-height: 1.3; color: var(--smuted); }
+  .ll-groups ul.gp li { padding-left: 20px; border-left: 4px solid var(--ssoft2); }
+  .ll-groups .gh { font-family: var(--sfont-head); font-weight: 800; line-height: 1.25; color: var(--stext); }
+  /* Ý cha cùng cỡ chữ với ý con: khác ở độ đậm (chữ đen đậm; ý con chữ thường nhạt hơn một bậc), không vệt nền và không chữ màu, nên chữ thân không phải thu nhỏ. */
+  .ll-groups .no { font-family: var(--sfont-head); font-weight: 800; color: var(--sa); }
+  .ll-groups .gcards { display: grid; gap: 20px; margin: 4px 0 0; align-items: stretch; }
+  .ll-groups .gcard { padding: 22px 24px; border-radius: 24px; background: var(--scard); border: 1px solid var(--scardb); display: flex; flex-direction: column; gap: 16px; }
+  .ll-groups .gcard .gh { display: flex; gap: 14px; align-items: baseline; }
+  /* Thẻ có biểu tượng (P62, cách A): huy hiệu phía trên như slide Ba thẻ, số thứ tự mờ lớn ở góc phải. */
+  .ll-groups .gcard.ic .gh { display: block; }
+  .ll-groups .gtop { display: flex; align-items: center; justify-content: space-between; }
+  .ll-groups .gcard.ic .gtop .no { font-size: 56px; line-height: 1; opacity: .3; }
+  .ll-groups .gbd { flex: none; display: grid; place-items: center; border-radius: 22%; color: var(--son); background: var(--sgb); }
+  .ll-groups .grp .gh .gbd { align-self: center; }
+  .ll-groups .gcard .gh .no { font-size: .8em; opacity: .55; flex: none; }
+  .ll-groups .glist { display: grid; gap: 18px 56px; align-content: start; }
+  .ll-groups .glist.c2 { grid-template-columns: 1fr 1fr; }
+  .ll-groups .grp { display: grid; gap: 6px; align-content: start; }
+  .ll-groups .grp .gh { display: flex; gap: 14px; align-items: baseline; }
+  .ll-groups .grp .gh .no { font-size: .8em; opacity: .55; flex: none; }
+  .ll-groups .grows { display: grid; gap: 22px; margin-top: 6px; line-height: 1.3; }
+  .ll-groups .grow { display: flex; gap: 22px; align-items: center; padding: 18px 26px; border-radius: 20px; background: var(--scard); border: 1px solid var(--scardb); }
+  .ll-groups .grow .k { flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--sgb); color: var(--son); font-family: var(--sfont-head); }
+  .ll-groups .grow.x .k { background: var(--sbadbg); color: var(--sbad); }
+  .ll-groups .gstats { display: grid; gap: 24px; margin-top: 8px; }
+  .ll-groups .gstat { padding: 24px; border-radius: 24px; background: var(--scard); border: 1px solid var(--scardb); display: flex; flex-direction: column; gap: 10px; }
+  .ll-groups .gstat .n { font-family: var(--sfont-head); font-weight: 800; font-size: 64px; line-height: 1.05; letter-spacing: -0.03em; color: var(--sa); }
+  .ll-groups .gstat .d { font-size: 28px; line-height: 1.3; color: var(--smuted); }
+  .ll-groups .gchips { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ll-groups .gchip { padding: 14px 24px; border-radius: 18px; background: var(--ssoft); font-size: 26px; line-height: 1.3; font-weight: 600; }
+
+  .ll-list .art { align-self: stretch; min-height: 0; border-radius: 28px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
+  .ll-list .img-credit { position: absolute; right: 80px; bottom: 18px; margin: 0; max-width: 560px; font-size: 26px; line-height: 1.2; color: var(--smuted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ll-summary .pad { gap: calc(30px * var(--fs)); }
+  .ll-summary .list { display: grid; gap: calc(20px * var(--fs)) 24px; margin: auto 0; }
+  .ll-summary .list.two { grid-template-columns: 1fr 1fr; }
+  .ll-summary .rowi { display: flex; align-items: center; gap: calc(24px * var(--fs)); padding: calc(24px * var(--fs)) 30px; }
+  .ll-summary .tick svg { width: 52%; height: 52%; }
+  .ll-summary .tick { width: max(48px, calc(64px * var(--fs))); height: max(48px, calc(64px * var(--fs))); border-radius: 50%; display: grid; place-items: center; background: var(--sgb); color: var(--son); flex: none; }
+  .ll-summary .rowi span { font-size: max(26px, calc(40px * var(--fs))); line-height: 1.22; font-family: var(--sfont-head); font-weight: 700; }
+  /* Dòng có link (slide Nguồn tham khảo): số [n] màu nhấn, tên trang đậm, địa chỉ rút gọn màu nhấn; chữ không dưới 26 px. */
+  .ll-summary .refl { display: grid; grid-template-columns: max(64px, calc(80px * var(--fs))) 1fr; gap: 0 calc(16px * var(--fs)); align-items: start; color: inherit; text-decoration: none; }
+  .ll-summary .refl .refn { font-family: var(--sfont-head); font-weight: 800; color: var(--sa); font-size: max(26px, calc(36px * var(--fs))); line-height: 1.22; }
+  .ll-summary .refl b { display: block; font-family: var(--sfont-head); font-weight: 700; font-size: max(26px, calc(36px * var(--fs))); line-height: 1.22; }
+  .ll-summary .refl small { display: block; font-size: 26px; line-height: 1.3; color: var(--sa); word-break: break-all; margin-top: 4px; }
+  .ll-summary .refl:hover b, .ll-summary .refl:focus-visible b { text-decoration: underline; }
+
+  /* ---------- Hoa văn trang trí (SlideMotif; chọn ở limioLiveMotifs.ts, hình ở limioLiveMotifArt.ts) ----------
+     Chỉ ở chỗ trống. --smo (đặt trên .lslide, tính theo nền và màu của chính slide) là độ đậm lớn nhất mà chữ đè lên
+     hoa văn vẫn đạt 4.5:1 (chữ nhấn 3:1): dùng cho các góc, nơi chữ dài có thể chạm tới. Bìa: chữ rộng tối đa 800 px
+     nên không qua x = 896; mặt nạ trong suốt hẳn tới đúng mốc đó nên hoa văn không bao giờ nằm dưới chữ, được đậm hơn.
+     Ô hình của bố cục Chữ và hình không có chữ. */
+  .lslide .motif { position: absolute; pointer-events: none; }
+  .lslide .motif svg { display: block; width: 100%; height: 100%; }
+  .lslide .motif.m-side { right: 0; top: 0; width: 480px; height: 720px; opacity: .5;
+    -webkit-mask-image: linear-gradient(to right, transparent 20%, #000 62%); mask-image: linear-gradient(to right, transparent 20%, #000 62%); }
+  .lt-dark .motif.m-side { opacity: .6; }
+  .lslide .motif.m-br, .lslide .motif.m-tr { width: 600px; height: 440px; opacity: var(--smo, 0); }
+  .lslide .motif.m-br { right: 0; bottom: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 100%, #000 30%, transparent 92%); }
+  .lslide .motif.m-tr { right: 0; top: 0; -webkit-mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); mask-image: radial-gradient(farthest-corner at 100% 0%, #000 30%, transparent 92%); }
+  .lslide .motif.m-fill { inset: 0; }
+  /* Hình minh hoạ: đĩa nền tô --sglow1, ở giao diện tối màu này thường trùng --sa nên phải nhạt hơn để vật thể nổi lên. */
+  .lt-dark .ill-disc { fill-opacity: .1; }
+  /* Hình minh hoạ chỉ đậm hơn hoa văn một chút, để ô hình vẫn là phần phụ của chữ (người dùng duyệt 2026-10-18). */
+  .motif.m-illus { opacity: .8; }
+
+  /* ---------- Hiệu ứng nhẹ (chỉ chạy ở chế độ toàn màn hình; tắt nếu máy bật "giảm chuyển động") ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .lslide.anim .a { opacity: 0; animation: s-rise .6s cubic-bezier(.2,.7,.2,1) calc(var(--i, 0) * 130ms + 80ms) forwards; }
+    .lslide.anim .a-pop { opacity: 0; animation: s-pop .55s cubic-bezier(.2,.8,.3,1.15) calc(var(--i, 0) * 110ms + 100ms) forwards; }
+    .lslide.anim .motif { animation: s-fade 1.4s ease-out both; }
+    @keyframes s-fade { from { opacity: 0; } }
+    .lslide.anim .ll-steps .row::before { transform-origin: 0 50%; transform: scaleX(0); animation: s-line 1.1s ease-out .25s forwards; }
+    @keyframes s-rise { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
+    @keyframes s-pop { from { opacity: 0; scale: .88; } to { opacity: 1; scale: 1; } }
+    @keyframes s-line { to { transform: scaleX(1); } }
+    /* Bìa: phần trang trí xuất hiện cùng chữ, nhẹ và ngắn. */
+    .lslide.anim .ll-cover .mf { animation: s-fade 1.4s ease-out .15s both; }
+    .lslide.anim .cv-block .bar { transform-origin: 50% 0; animation: cv-grow-y .8s cubic-bezier(.2,.7,.2,1) both; }
+    .lslide.anim .cv-band .stripe::before { animation: cv-wipe .8s cubic-bezier(.2,.7,.2,1) both; }
+    .lslide.anim .cv-arc .arcs .draw { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: cv-draw 1.4s ease-out calc(var(--i, 0) * 150ms + 200ms) forwards; }
+    .lslide.anim .cv-tiles .t, .lslide.anim .cv-bubbles .b { opacity: 0; animation: s-pop .55s cubic-bezier(.2,.8,.3,1.15) calc(var(--i, 0) * 100ms + 150ms) forwards; }
+    .lslide.anim .cv-arch .ring { opacity: 0; translate: 20px -20px; animation: cv-slide .9s cubic-bezier(.2,.7,.2,1) .35s forwards; }
+    .lslide.anim .cv-tape .card { animation: cv-drop .7s cubic-bezier(.2,.8,.3,1.15) both; }
+    .lslide.anim .cv-tape .seal, .lslide.anim .cv-pillar .medal, .lslide.anim .cv-pillar .ring { opacity: 0; animation: s-pop .5s cubic-bezier(.2,.8,.3,1.2) .55s forwards; }
+    .lslide.anim .cv-wave svg.waves { animation: cv-up .9s cubic-bezier(.2,.7,.2,1) both; }
+    .lslide.anim .cv-pillar .zone { transform-origin: 0 50%; animation: cv-grow-x .8s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes cv-grow-y { from { transform: scaleY(0); } }
+    @keyframes cv-grow-x { from { transform: scaleX(0); } }
+    @keyframes cv-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+    @keyframes cv-draw { to { stroke-dashoffset: 0; } }
+    @keyframes cv-slide { to { opacity: 1; translate: 0 0; } }
+    @keyframes cv-drop { from { transform: rotate(-7deg) translateY(-30px); opacity: 0; } }
+    @keyframes cv-up { from { translate: 0 120px; } }
+  }
+
+  /* 10. Bảng — chữ 26–40 px và đệm ô (--tpy) do tableFontSize chọn để bảng trải hết khung; cột toàn số căn phải. */
+  .ll-table .pad, .ll-chart .pad { gap: calc(28px * var(--fs)); }
+  .lslide .src { margin: 0; font-size: 26px; line-height: 1.3; color: var(--smuted); }
+  /* flex: none — khung không được co lại (co thì cắt mất dòng cuối); quá cao thì cả slide tự thu như bố cục khác. */
+  .ll-table .tbl { flex: none; overflow: hidden; padding: 6px 10px; }
+  .ll-table table { width: 100%; border-collapse: collapse; line-height: 1.25; }
+  .ll-table th { text-align: left; font-family: var(--sfont-head); font-weight: 700; color: var(--stext); padding: var(--tpy, 10px) 20px; background: var(--ssoft); }
+  .ll-table th:first-child { border-radius: 18px 0 0 18px; } .ll-table th:last-child { border-radius: 0 18px 18px 0; }
+  .ll-table td { padding: var(--tpy, 9px) 20px; border-top: 2px solid var(--scardb); vertical-align: top; text-wrap: pretty; }
+  .ll-table tbody tr:first-child td { border-top: 0; }
+  .ll-table td:first-child { font-weight: 700; }
+  .ll-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* 11. Biểu đồ — SVG thuần (SlideCharts.tsx), màu theo biến của giao diện. */
+  .ll-chart svg { display: block; flex: none; overflow: visible; font-family: var(--sfont-body); }
+  .ll-chart svg text { font-variant-numeric: tabular-nums; }
+  .ll-chart .ch-grow { transform-box: fill-box; }
+  .ll-chart .ch-empty { flex: none; display: grid; place-items: center; color: var(--smuted); font-size: 30px; border: 3px dashed var(--scardb); border-radius: 28px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .lslide.anim .ch-grow { animation: s-grow .7s cubic-bezier(.2,.7,.2,1) calc(var(--i, 0) * 90ms + 200ms) backwards; }
+    .lslide.anim .ch-up { transform-origin: 50% 100%; } .lslide.anim .ch-down { transform-origin: 50% 0; } .lslide.anim .ch-right { transform-origin: 0 50%; }
+    .lslide.anim .ch-right.ch-grow { animation-name: s-growx; }
+    .lslide.anim .ch-fade { animation: s-fade .6s ease-out calc(var(--i, 0) * 120ms + 350ms) backwards; }
+    @keyframes s-grow { from { transform: scaleY(0); } }
+    @keyframes s-growx { from { transform: scaleX(0); } }
+    @keyframes s-fade { from { opacity: 0; } }
+  }
+
+/* Dòng nguồn ở chân slide ("Nguồn: [1], [3]") của bài soạn kèm trang tìm trên internet. */
+.lslide .ll-cite { position: absolute; left: 64px; bottom: 18px; z-index: 4; font-size: 26px; line-height: 1.2; color: var(--smuted); pointer-events: none; }

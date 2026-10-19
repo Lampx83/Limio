@@ -3,23 +3,46 @@
 import React, { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, Globe, GraduationCap, Tag, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, CalendarClock, FileText, Globe, Hash, Tag, Users } from "lucide-react";
 import { formatDateTime } from "@/lib/datetime";
 
 type SessionStatus = "draft" | "open" | "closed" | "archived";
 
-const STATUS_LABEL: Record<SessionStatus, string> = {
-  draft: "Nháp",
-  open: "Đang mở",
-  closed: "Đã đóng",
-  archived: "Lưu trữ",
-};
-const STATUS_TONE: Record<SessionStatus, string> = {
-  draft: "bg-slate-100 text-slate-700",
-  open: "bg-emerald-100 text-emerald-800",
-  closed: "bg-slate-200 text-slate-700",
-  archived: "bg-amber-100 text-amber-800",
-};
+/**
+ * Trạng thái hiển thị của ca — theo đúng luật vào thi (openState, tính ở
+ * server bằng session-window.ts), không theo cột `status` thô. Ca theo lịch
+ * để "draft" mà đang trong giờ thì thí sinh vẫn vào được; ghi "Nháp" là nói
+ * sai với giáo viên.
+ */
+function displayState(s: Pick<SessionRow, "status" | "openState" | "timingMode">) {
+  if (s.status === "archived")
+    return { label: "Lưu trữ", pill: "bg-amber-50 text-amber-800", dot: "bg-amber-500", stripe: "bg-amber-300" };
+  if (s.openState === "open")
+    return { label: "Đang mở", pill: "bg-emerald-50 text-emerald-800 ring-1 ring-inset ring-emerald-200", dot: "bg-emerald-500", stripe: "bg-emerald-500" };
+  if (s.openState === "not_yet")
+    return {
+      label: s.timingMode === "manual" ? "Chưa mở" : "Chưa tới giờ",
+      pill: "bg-sky-50 text-sky-800",
+      dot: "bg-sky-500",
+      stripe: "bg-sky-400",
+    };
+  return { label: "Đã đóng", pill: "bg-slate-100 text-slate-600", dot: "bg-slate-400", stripe: "bg-slate-300" };
+}
+
+function Stat({ label, value, tone }: { label: string; value: number; tone?: "live" }) {
+  return (
+    <div className="px-2.5 first:pl-0 sm:px-3 sm:first:pl-3 sm:last:pr-0">
+      <div
+        className={`text-base font-bold leading-tight tabular-nums ${
+          tone === "live" ? "text-emerald-700" : value > 0 ? "text-slate-900" : "text-faint"
+        }`}
+      >
+        {value}
+      </div>
+      <div className="whitespace-nowrap text-[11px] text-faint">{label}</div>
+    </div>
+  );
+}
 
 export interface SessionRow {
   id: string;
@@ -39,6 +62,8 @@ export interface SessionRow {
   inProgress: number;
   /** Đã nộp, trong cả ca. */
   submitted: number;
+  timingMode: "scheduled" | "manual";
+  openState: "open" | "not_yet" | "closed";
 }
 
 export interface CourseInfo {
@@ -68,7 +93,6 @@ export default function SessionsPanel({
   canEdit: boolean;
 }) {
   const router = useRouter();
-  const [showBulk, setShowBulk] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   // PR2.11 — 1 round = 1 course. All sessions belong to the same course;
@@ -101,226 +125,149 @@ export default function SessionsPanel({
     return null;
   };
 
-  const noExams = availableExams.length === 0;
-
   return (
     <div className="space-y-5">
-      {canEdit && noExams && (
-        <div className="banner-warning flex flex-wrap items-center justify-between gap-3 rounded-lg border px-4 py-3 text-sm">
-          <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <span>
-              Khoá <strong>{course.courseTitle}</strong> chưa có đề thi nào. Cần tạo ít nhất 1 đề trước khi thêm ca thi.
-            </span>
-          </div>
-          <Link
-            href={`/instructor/exams/new?courseId=${course.courseId}`}
-            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-          >
-            Tạo đề thi →
-          </Link>
-        </div>
-      )}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-faint">
           {sessions.length} ca thi trong đợt · <Tag className="inline h-3.5 w-3.5 align-text-bottom text-slate-400" /> {course.courseTitle}.
-          {canEdit &&
-            " Click vào ô bất kỳ (mã / tên / đề / thời gian) để sửa nhanh."}
+          {canEdit && " Bấm vào tên, mã, đề hoặc giờ để sửa nhanh."}
         </p>
-        {canEdit && (
-          <button
-            onClick={() => setShowBulk(true)}
-            disabled={availableExams.length === 0}
-            title={
-              availableExams.length === 0
-                ? "Khoá học chưa có đề thi nào"
-                : ""
-            }
-            className="rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-          >
-            + Thêm ca thi
-          </button>
-        )}
       </div>
 
-      {/* overflow-x-auto (không phải hidden): bảng 12 cột phải cuộn ngang được dưới lg. */}
-      <section className="overflow-x-auto rounded-lg border border-default bg-white">
-          {sessions.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-faint">
-              Chưa có ca thi nào trong đợt này.{" "}
-              {canEdit && "Click \"+ Thêm ca thi\" để bắt đầu."}
-            </div>
-          ) : (
-            <table className="w-full min-w-[56rem] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-4 py-2">STT</th>
-                  <th className="px-3 py-2">Mã ca</th>
-                  <th className="px-3 py-2">Tên</th>
-                  <th className="px-3 py-2">Đề thi</th>
-                  <th className="px-3 py-2">Chế độ</th>
-                  <th className="px-3 py-2">Mở từ</th>
-                  <th className="px-3 py-2">Đóng lúc</th>
-                  <th className="px-4 py-2 text-right">Phòng</th>
-                  <th className="px-4 py-2 text-right">Đang làm</th>
-                  <th className="px-4 py-2 text-right">Đã nộp</th>
-                  <th className="px-4 py-2">Trạng thái</th>
-                  <th className="px-4 py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {sessions.map((s, idx) => {
-                  const href = `/instructor/exam-rounds/${roundId}/sessions/${s.id}`;
-                  return (
-                    <tr key={s.id} className="border-t border-default">
-                      <td className="px-4 py-2 text-xs text-faint">
-                        {idx + 1}
-                      </td>
-                      <td className="px-2 py-1">
+      {sessions.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-token bg-white px-4 py-8 text-center text-sm text-faint">
+          Chưa có ca thi nào trong đợt này. Ca thi mới tạo ở Tổ chức thi › Kỳ thi chính thức.
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {sessions.map((s, idx) => {
+            const href = `/instructor/exam-sessions/${s.id}`;
+            const state = displayState(s);
+            return (
+              <li
+                key={s.id}
+                className="relative overflow-hidden rounded-xl border border-token bg-white shadow-sm"
+              >
+                {/* Dải màu trạng thái — nhìn lướt cả đợt là biết ca nào đang chạy. */}
+                <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${state.stripe}`} />
+
+                <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-faint">
+                        Ca {idx + 1}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${state.pill}`}
+                      >
+                        <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${state.dot}`} />
+                        {state.label}
+                      </span>
+                      <AccessModeBadge
+                        examId={s.examId}
+                        accessMode={s.examAccessMode}
+                        canEdit={canEdit}
+                        onChange={(mode) => applyAccessMode(s.id, mode, router, setErr)}
+                      />
+                    </div>
+
+                    {/* Tên ca — thứ để nhận ra ca, nên to nhất thẻ. */}
+                    <div className="-ml-2 mt-0.5">
+                      {canEdit ? (
+                        <InlineTextCell
+                          value={s.title ?? ""}
+                          onSave={(v) => patchSession(s.id, { title: v.trim() || null })}
+                          ariaLabel="Đổi tên ca"
+                          placeholder="Đặt tên ca…"
+                          size="lg"
+                        />
+                      ) : (
+                        <Link href={href} className="px-2 text-base font-semibold hover:underline">
+                          {s.title ?? "(Chưa đặt tên)"}
+                        </Link>
+                      )}
+                    </div>
+
+                    {/* Mã ca · đề · giờ trên MỘT dòng (xuống dòng khi chật). Mỗi
+                        mẩu tự sửa được tại chỗ; icon thay cho nhãn chữ để đỡ tốn
+                        một cột. */}
+                    <div className="-ml-2 flex flex-wrap items-center gap-x-0.5 text-sm text-muted">
+                      <span className="inline-flex items-center" title="Mã ca">
+                        <Hash className="ml-2 h-3.5 w-3.5 shrink-0 text-faint" aria-label="Mã ca" />
                         {canEdit ? (
                           <InlineTextCell
                             value={s.code ?? ""}
                             mono
-                            onSave={(v) =>
-                              patchSession(s.id, { code: v.trim() || null })
-                            }
-                            ariaLabel={`Đổi mã ca`}
-                            placeholder="—"
+                            onSave={(v) => patchSession(s.id, { code: v.trim() || null })}
+                            ariaLabel="Đổi mã ca"
+                            placeholder="chưa có mã"
                           />
-                        ) : s.code ? (
-                          <span className="font-mono text-xs">{s.code}</span>
                         ) : (
-                          <span className="text-faint">—</span>
+                          <span className="px-2 font-mono">{s.code ?? "—"}</span>
                         )}
-                      </td>
-                      <td className="px-2 py-1">
-                        {canEdit ? (
-                          <div className="flex items-center gap-1">
-                            <InlineTextCell
-                              value={s.title ?? ""}
-                              onSave={(v) =>
-                                patchSession(s.id, {
-                                  title: v.trim() || null,
-                                })
-                              }
-                              ariaLabel={`Đổi tên ca`}
-                              placeholder="(Chưa đặt tên)"
-                            />
-                            <Link
-                              href={href}
-                              className="text-xs text-blue-600 hover:underline"
-                              title="Vào chi tiết ca"
-                            >
-                              ↗
-                            </Link>
-                          </div>
-                        ) : (
-                          <Link
-                            href={href}
-                            className="font-medium text-blue-600 hover:underline"
-                          >
-                            {s.title ?? "(Chưa đặt tên)"}
-                          </Link>
-                        )}
-                      </td>
-                      <td className="px-2 py-1">
+                      </span>
+                      <span className="inline-flex min-w-0 items-center" title="Đề thi">
+                        <FileText className="ml-2 h-3.5 w-3.5 shrink-0 text-faint" aria-label="Đề thi" />
                         {canEdit ? (
                           <InlineExamCell
                             currentExamId={s.examId}
                             currentExamTitle={s.examTitle}
                             options={availableExams}
-                            onPick={(examId) =>
-                              patchSession(s.id, { examId })
-                            }
+                            onPick={(examId) => patchSession(s.id, { examId })}
                           />
                         ) : (
-                          <span className="text-xs text-faint">
-                            {s.examTitle}
-                          </span>
+                          <span className="px-2">{s.examTitle}</span>
                         )}
-                      </td>
-                      <td className="px-3 py-2">
-                        <AccessModeBadge
-                          examId={s.examId}
-                          accessMode={s.examAccessMode}
-                          canEdit={canEdit}
-                          onChange={(mode) =>
-                            applyAccessMode(s.id, mode, router, setErr)
-                          }
-                        />
-                      </td>
-                      <td className="px-2 py-1">
+                      </span>
+                      <span className="inline-flex flex-wrap items-center" title="Giờ vào thi">
+                        <CalendarClock className="ml-2 h-3.5 w-3.5 shrink-0 text-faint" aria-label="Giờ vào thi" />
                         {canEdit ? (
                           <InlineDateTimeCell
                             value={s.opensAt}
-                            onSave={(iso) =>
-                              patchSession(s.id, { opensAt: iso })
-                            }
+                            onSave={(iso) => patchSession(s.id, { opensAt: iso })}
                             ariaLabel="Đổi thời gian mở"
                           />
                         ) : (
-                          <span className="text-xs text-faint">
-                            {formatDate(s.opensAt)}
-                          </span>
+                          <span className="px-2">{formatDate(s.opensAt)}</span>
                         )}
-                      </td>
-                      <td className="px-2 py-1">
+                        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-faint" aria-hidden />
                         {s.closesAt === null ? (
-                          <span className="text-xs text-faint">
-                            đóng thủ công
-                          </span>
+                          <span className="px-2 text-faint">đóng khi bấm Đóng</span>
                         ) : canEdit ? (
                           <InlineDateTimeCell
                             value={s.closesAt}
-                            onSave={(iso) =>
-                              patchSession(s.id, { closesAt: iso })
-                            }
+                            onSave={(iso) => patchSession(s.id, { closesAt: iso })}
                             ariaLabel="Đổi thời gian đóng"
                           />
                         ) : (
-                          <span className="text-xs text-faint">
-                            {s.closesAt ? formatDate(s.closesAt) : "đóng thủ công"}
-                          </span>
+                          <span className="px-2">{formatDate(s.closesAt)}</span>
                         )}
-                      </td>
-                      <td className="px-4 py-2 text-right">{s.roomCount}</td>
-                      {/* Cấp đợt chỉ cần con số mỗi ca. Muốn nhìn từng thí
-                          sinh thì vào ca → phòng — 1000 thẻ trên một màn hình
-                          không ai đọc, mà máy thì gánh đủ. */}
-                      <td className="px-4 py-2 text-right tabular-nums">
-                        {s.inProgress > 0 ? (
-                          <span className="font-semibold text-emerald-700">
-                            {s.inProgress}
-                          </span>
-                        ) : (
-                          <span className="text-faint">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2 text-right tabular-nums text-faint">
-                        {s.submitted || "—"}
-                      </td>
-                      <td className="px-4 py-2">
-                        <span
-                          className={`rounded px-2 py-0.5 text-xs ${STATUS_TONE[s.status]}`}
-                        >
-                          {STATUS_LABEL[s.status]}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        <Link
-                          href={href}
-                          className="whitespace-nowrap text-xs font-medium text-blue-600 hover:underline"
-                        >
-                          Xem chi tiết →
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </section>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Cấp đợt chỉ cần con số mỗi ca. Muốn nhìn từng thí sinh thì
+                      vào ca → phòng — 1000 thẻ trên một màn hình không ai đọc. */}
+                  <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-token pt-3 sm:flex-col sm:flex-nowrap sm:items-end sm:justify-center sm:gap-2 sm:border-0 sm:pt-0">
+                    <div className="flex divide-x divide-slate-200 text-center">
+                      <Stat label="Phòng" value={s.roomCount} />
+                      <Stat label="Đang làm" value={s.inProgress} tone={s.inProgress > 0 ? "live" : undefined} />
+                      <Stat label="Đã nộp" value={s.submitted} />
+                    </div>
+                    <Link
+                      href={href}
+                      className="inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-brand-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-brand-700"
+                    >
+                      Phòng &amp; thí sinh
+                      <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                    </Link>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {err && (
         <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -328,17 +275,6 @@ export default function SessionsPanel({
         </div>
       )}
 
-      {showBulk && (
-        <BulkCreateSessionsDialog
-          roundId={roundId}
-          availableExams={availableExams}
-          onClose={() => setShowBulk(false)}
-          onDone={() => {
-            setShowBulk(false);
-            router.refresh();
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -363,12 +299,15 @@ function InlineTextCell({
   ariaLabel,
   placeholder,
   mono,
+  size,
 }: {
   value: string;
   onSave: (next: string) => Promise<string | null>;
   ariaLabel: string;
   placeholder?: string;
   mono?: boolean;
+  /** "lg" cho tên ca — dòng to nhất thẻ. */
+  size?: "lg";
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -395,12 +334,14 @@ function InlineTextCell({
           setEditing(true);
         }}
         aria-label={ariaLabel}
-        className={`w-full rounded border border-transparent px-2 py-1 text-left text-sm hover:border-default hover:bg-slate-50 ${
-          mono ? "font-mono text-xs" : ""
+        className={`max-w-full rounded-md border border-transparent px-2 py-0.5 text-left hover:border-token hover:bg-slate-50 ${
+          mono ? "font-mono text-sm tracking-wide" : size === "lg" ? "text-base font-semibold" : "text-sm"
         }`}
       >
         {value || (
-          <span className="italic text-slate-300">{placeholder ?? "—"}</span>
+          <span className={`italic text-faint ${size === "lg" ? "font-normal" : ""}`}>
+            {placeholder ?? "—"}
+          </span>
         )}
       </button>
     );
@@ -423,8 +364,8 @@ function InlineTextCell({
       }}
       disabled={busy}
       placeholder={placeholder}
-      className={`w-full rounded border border-blue-400 bg-white px-2 py-1 text-sm focus:outline-none disabled:opacity-50 ${
-        mono ? "font-mono text-xs" : ""
+      className={`w-full min-w-[12rem] rounded-md border border-brand-400 bg-white px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-brand-200 disabled:opacity-50 ${
+        mono ? "font-mono text-sm" : size === "lg" ? "text-base font-semibold" : "text-sm"
       }`}
     />
   );
@@ -450,7 +391,8 @@ function InlineExamCell({
         type="button"
         onClick={() => setEditing(true)}
         aria-label={`Đổi đề thi (hiện: ${currentExamTitle})`}
-        className="w-full rounded border border-transparent px-2 py-1 text-left text-xs text-faint hover:border-default hover:bg-slate-50"
+        className="max-w-full truncate rounded-md border border-transparent px-2 py-0.5 text-left text-sm hover:border-token hover:bg-slate-50"
+        title={currentExamTitle}
       >
         {currentExamTitle}
       </button>
@@ -473,7 +415,7 @@ function InlineExamCell({
         if (!err) setEditing(false);
       }}
       onBlur={() => setEditing(false)}
-      className="w-full rounded border border-blue-400 bg-white px-2 py-1 text-xs focus:outline-none disabled:opacity-50"
+      className="w-full min-w-[14rem] rounded-md border border-brand-400 bg-white px-2 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 disabled:opacity-50"
     >
       {options.map((o) => (
         <option key={o.id} value={o.id}>
@@ -519,7 +461,7 @@ function InlineDateTimeCell({
           setEditing(true);
         }}
         aria-label={ariaLabel}
-        className="w-full rounded border border-transparent px-2 py-1 text-left text-xs text-faint hover:border-default hover:bg-slate-50"
+        className="whitespace-nowrap rounded-md border border-transparent px-2 py-0.5 text-left text-sm tabular-nums hover:border-token hover:bg-slate-50"
       >
         {formatDate(value)}
       </button>
@@ -542,7 +484,7 @@ function InlineDateTimeCell({
         }
       }}
       disabled={busy}
-      className="w-full rounded border border-blue-400 bg-white px-2 py-1 text-xs focus:outline-none disabled:opacity-50"
+      className="rounded-md border border-brand-400 bg-white px-2 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-200 disabled:opacity-50"
     />
   );
 }
@@ -562,9 +504,9 @@ const MODE_ICON: Record<string, React.ElementType> = {
   authenticated: AlertTriangle,
 };
 const MODE_TONE: Record<string, string> = {
-  assigned_code: "bg-blue-100 text-blue-800 border-blue-300",
-  open_code: "bg-purple-100 text-purple-800 border-purple-300",
-  authenticated: "bg-amber-100 text-amber-800 border-amber-300",
+  assigned_code: "bg-blue-50 text-blue-800 border-blue-200",
+  open_code: "bg-purple-50 text-purple-800 border-purple-200",
+  authenticated: "bg-amber-50 text-amber-800 border-amber-300",
 };
 
 async function applyAccessMode(
@@ -651,7 +593,7 @@ function AccessModeBadge({
   return (
     <div className="flex items-center gap-1">
       <span
-        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${tone}`}
+        className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-medium ${tone}`}
       >
         <ModeIcon className="h-3 w-3" />{label}
       </span>
@@ -659,267 +601,11 @@ function AccessModeBadge({
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="text-[10px] text-blue-600 hover:underline"
+          className="rounded px-1 text-xs text-brand-700 hover:underline"
         >
           Đổi
         </button>
       )}
-    </div>
-  );
-}
-
-// ============================================================================
-// Bulk create sessions dialog — N + prefix + Mode picker (Phase B).
-// ============================================================================
-
-function BulkCreateSessionsDialog({
-  roundId,
-  availableExams,
-  onClose,
-  onDone,
-}: {
-  roundId: string;
-  availableExams: ExamOption[];
-  onClose: () => void;
-  onDone: () => void;
-}) {
-  const [count, setCount] = useState(3);
-  const [prefix, setPrefix] = useState("Ca");
-  const [mode, setMode] = useState<"assigned_code" | "open_code" | null>(null);
-  // Kỳ thi chính thức mặc định "sau khi đóng ca": vẫn giữ kín trong lúc thi,
-  // nhưng cả lớp nộp xong thì cho xem lại — nhu cầu chữa đề của thi thật.
-  const [reveal, setReveal] = useState<
-    "immediately" | "never" | "after_close"
-  >("after_close");
-  // "" = tự động (đề đầu tiên của khoá); ngược lại = examId đã chọn.
-  const [examId, setExamId] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-
-  const submit = async () => {
-    setErr(null);
-    if (count < 1 || count > 50) {
-      setErr("Số ca phải từ 1 đến 50.");
-      return;
-    }
-    if (!mode) {
-      setErr("Chọn chế độ thi (Theo phòng / Tự do).");
-      return;
-    }
-    if (!examId) {
-      setErr("Chọn đề thi cho các ca.");
-      return;
-    }
-    setBusy(true);
-    try {
-      const r = await fetch(`/api/exam-rounds/${roundId}/sessions/bulk`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          count,
-          namePrefix: prefix.trim() || "Ca",
-          // Backend applies this mode to the round's exam after creating
-          // sessions. Mode is per-exam currently (not per-session).
-          accessMode: mode,
-          revealAnswers: reveal,
-          // examId chọn tay; bỏ trống → backend lấy đề đầu tiên của khoá.
-          ...(examId ? { examId } : {}),
-        }),
-      });
-      const j = (await r.json().catch(() => null)) as {
-        created?: number;
-        error?: string;
-        details?: { reason?: string };
-      } | null;
-      if (!r.ok) {
-        if (j?.details?.reason === "round_has_no_exam")
-          setErr(
-            "Đợt chưa có đề thi nào. Tạo đề thi trong khoá học trước.",
-          );
-        else setErr(j?.error ?? `HTTP ${r.status}`);
-        return;
-      }
-      onDone();
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !busy) onClose();
-      }}
-    >
-      <div className="flex w-full max-w-sm flex-col rounded-lg bg-white shadow-xl">
-        <header className="flex items-start justify-between border-b border-default px-5 py-3">
-          <h3 className="text-base font-semibold">Tạo nhiều ca thi</h3>
-          <button
-            onClick={onClose}
-            disabled={busy}
-            aria-label="Đóng"
-            className="rounded p-1 text-faint hover:bg-slate-100 disabled:opacity-50"
-          >
-            <X size={16} />
-          </button>
-        </header>
-        <div className="space-y-3 px-5 py-4">
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Số lượng ca <span className="text-red-600">*</span>
-            </span>
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={count}
-              onChange={(e) =>
-                setCount(Number.parseInt(e.target.value, 10) || 0)
-              }
-              className="mt-1 w-full rounded border border-default px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
-            <span className="mt-1 block text-[11px] text-faint">
-              Tối đa 50 ca/lần. Tên mặc định: "{prefix.trim() || "Ca"} 1",
-              "{prefix.trim() || "Ca"} 2"…
-            </span>
-          </label>
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Tiền tố tên (tuỳ chọn)
-            </span>
-            <input
-              type="text"
-              value={prefix}
-              onChange={(e) => setPrefix(e.target.value)}
-              maxLength={40}
-              placeholder="Ca"
-              className="mt-1 w-full rounded border border-default px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            />
-          </label>
-
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Đề thi cho các ca <span className="text-red-600">*</span>
-            </span>
-            <select
-              value={examId}
-              onChange={(e) => setExamId(e.target.value)}
-              className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            >
-              <option value="">— Chọn đề thi —</option>
-              {availableExams.map((ex) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.title}
-                </option>
-              ))}
-            </select>
-            <span className="mt-1 block text-[11px] text-faint">
-              {availableExams.length === 0
-                ? "Khoá chưa có đề thi nào — tạo đề trong khoá trước."
-                : `Áp dụng cho tất cả ${count} ca. Có thể đổi đề từng ca sau khi tạo.`}
-            </span>
-          </label>
-
-          <label className="block">
-            <span className="block text-xs font-medium text-slate-600">
-              Hiện đáp án và kết quả
-            </span>
-            <select
-              value={reveal}
-              onChange={(e) =>
-                setReveal(
-                  e.target.value as "immediately" | "never" | "after_close",
-                )
-              }
-              className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-            >
-              <option value="after_close">Hiện sau khi đóng ca</option>
-              <option value="immediately">Hiện ngay sau khi nộp</option>
-              <option value="never">Không hiện</option>
-            </select>
-            <span className="mt-1 block text-[11px] text-faint">
-              {reveal === "after_close"
-                ? "Cả ca nộp xong và bạn đóng ca thì học sinh mới xem được đáp án."
-                : reveal === "immediately"
-                  ? "Học sinh xem được đáp án ngay khi nộp — người thi sau có thể hỏi người thi trước."
-                  : "Học sinh không xem được đáp án hay điểm chi tiết."}
-            </span>
-          </label>
-
-          <div>
-            <span className="block text-xs font-medium text-slate-600">
-              Chế độ thi <span className="text-red-600">*</span>
-            </span>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setMode("assigned_code")}
-                className={`rounded-lg border-2 p-3 text-left transition-colors ${
-                  mode === "assigned_code"
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-sm"><Users className="h-3.5 w-3.5 shrink-0" /> Theo phòng</div>
-                <div className="mt-0.5 text-[11px] text-faint">
-                  Có danh sách thí sinh + mã cá nhân 8 ký tự cho từng người
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("open_code")}
-                className={`rounded-lg border-2 p-3 text-left transition-colors ${
-                  mode === "open_code"
-                    ? "border-purple-500 bg-purple-50"
-                    : "border-slate-200 hover:border-slate-300"
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-sm"><Globe className="h-3.5 w-3.5 shrink-0" /> Tự do</div>
-                <div className="mt-0.5 text-[11px] text-faint">
-                  1 mã chung 6 ký tự cho cả lớp, sinh viên tự nhập tên
-                </div>
-              </button>
-            </div>
-            <p className="mt-1 text-[11px] text-faint">
-              Lưu ý: cách vào thi được đặt ở cấp đề thi, ảnh hưởng tất cả ca khác dùng đề này
-              của cùng đề.
-            </p>
-          </div>
-
-          <p className="rounded border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-            Hệ thống tạo {count} ca với{" "}
-            {examId
-              ? `đề "${availableExams.find((e) => e.id === examId)?.title ?? "đã chọn"}"`
-              : "đề bạn chọn ở trên"}{" "}
-            + cửa sổ thời gian mặc định (1 giờ). Sau khi tạo, click vào ô trong
-            bảng để sửa nhanh tên / đề / thời gian / chế độ từng ca.
-          </p>
-          {err && (
-            <div className="rounded border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
-              {err}
-            </div>
-          )}
-        </div>
-        <footer className="flex justify-end gap-2 border-t border-default px-5 py-3">
-          <button
-            onClick={onClose}
-            disabled={busy}
-            className="rounded border border-default px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
-          >
-            Huỷ
-          </button>
-          <button
-            onClick={submit}
-            disabled={busy}
-            className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
-          >
-            {busy ? "Đang tạo..." : `Tạo ${count} ca thi`}
-          </button>
-        </footer>
-      </div>
     </div>
   );
 }

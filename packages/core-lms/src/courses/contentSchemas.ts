@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LESSON_FONT_KEYS, LESSON_PALETTE_KEYS } from "@feedbackme/shared-types";
 
 /**
  * URL or same-origin path. Accepts either:
@@ -68,6 +69,10 @@ export const MarkdownPayload = z.object({
  */
 export const RichTextPayload = z.object({
   html: z.string().min(1).max(200_000),
+  // Bảng màu + kiểu chữ của cả bài. Không có = hiển thị như trước khi có bảng màu.
+  look: z
+    .object({ palette: z.enum(LESSON_PALETTE_KEYS), font: z.enum(LESSON_FONT_KEYS) })
+    .optional(),
 });
 
 export const EmbedPayload = z.object({

@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BarChart2, Download, PenLine, Users } from "lucide-react";
+import { BarChart2, ChevronDown, Download, PenLine, Search, Users } from "lucide-react";
 import type { ExamResults, ExamResultRow } from "@feedbackme/core-lms";
 import { apiUrl } from "@/lib/apiUrl";
+import { formatDateTime } from "@/lib/datetime";
+import { formatPct, resultVerdict, TONE_CLASS } from "@/lib/examResultStatus";
 import AnalyticsPanel from "./AnalyticsPanel";
 
 type Slice = "students" | "items" | "grading";
@@ -61,30 +63,66 @@ export default function ResultsPanel({
     !lockedSessionId &&
     ((data?.sessions.length ?? 0) > 1 || (data?.rooms.length ?? 0) > 1);
 
+  // Cao nhất / thấp nhất chỉ tính trên bài đã chấm đủ — bài còn câu tự luận
+  // chưa có điểm cuối, đưa vào sẽ làm hai con số này sai.
+  const finished = useMemo(
+    () =>
+      (data?.rows ?? []).filter(
+        (r): r is ExamResultRow & { scorePct: number } =>
+          r.scorePct != null && !r.needsGrading,
+      ),
+    [data],
+  );
+  const hi = finished.length ? Math.max(...finished.map((r) => r.scorePct)) : null;
+  const lo = finished.length ? Math.min(...finished.map((r) => r.scorePct)) : null;
+
+  // Phạm vi ca/phòng đang chọn — dùng chung cho các nút xuất file để file và
+  // màn hình luôn nói về cùng một tập người.
+  const scope = new URLSearchParams();
+  if (sessionId) scope.set("sessionId", sessionId);
+  if (roomId) scope.set("roomId", roomId);
+  const scopeQs = scope.toString();
+
   return (
     <div>
       {/* Dải số tổng quan — trả lời ngay trước khi phải đọc bảng. */}
-      <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-default bg-default sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-default bg-default sm:grid-cols-4">
+        <Stat label="đã nộp" value={s ? `${s.submitted}/${s.expected}` : "—"} />
         <Stat
-          label="đã nộp"
-          value={s ? `${s.submitted}/${s.expected}` : "—"}
+          label={
+            s?.avgScorePct != null
+              ? `điểm trung bình · ${s.avgScoreCount} bài đã chấm`
+              : "điểm trung bình"
+          }
+          value={s?.avgScorePct != null ? formatPct(s.avgScorePct) : "—"}
+          hint={
+            hi != null && lo != null && finished.length > 1
+              ? `cao nhất ${formatPct(hi)} · thấp nhất ${formatPct(lo)}`
+              : undefined
+          }
         />
         <Stat
-          label="điểm trung bình"
-          value={s?.avgScorePct != null ? `${s.avgScorePct.toFixed(1)}%` : "—"}
-        />
-        <Stat
-          label="chờ chấm tay"
+          label="bài chờ chấm tay"
           value={s ? `${s.pendingGrading}` : "—"}
           alert={(s?.pendingGrading ?? 0) > 0}
         />
+        <Stat
+          label="chưa làm"
+          value={s ? `${s.notStarted}` : "—"}
+        />
       </div>
+
+      {data?.weightsNote && (
+        <p className="mb-3 text-xs text-slate-600">
+          Điểm tính theo trọng số: <b>{data.weightsNote}</b>. Điểm thô ({data.totalPoints} điểm tối đa) giữ nguyên.
+        </p>
+      )}
 
       {/* Ba lát cắt, đúng ba câu hỏi giáo viên hay hỏi. */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Seg on={slice === "students"} onClick={() => setSlice("students")}>
           <Users className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
-          Theo học sinh
+          Theo thí sinh/học viên
         </Seg>
         <Seg on={slice === "items"} onClick={() => setSlice("items")}>
           <BarChart2 className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
@@ -92,31 +130,12 @@ export default function ResultsPanel({
         </Seg>
         <Seg on={slice === "grading"} onClick={() => setSlice("grading")}>
           <PenLine className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
-          Cần chấm{s?.pendingGrading ? ` · ${s.pendingGrading}` : ""}
+          Chờ chấm tay{s?.pendingGrading ? ` · ${s.pendingGrading}` : ""}
         </Seg>
 
-        <a
-          // Kèm ca đang lọc. Thiếu nó thì nút này xuất TOÀN BỘ lượt thi của
-          // gói đề trong khi màn hình đang hiện đúng một đợt — cùng chức năng
-          // mà nút "Tải" ở danh sách buổi lại ra file khác.
-          href={apiUrl(
-            `/api/exams/${examId}/results${sessionId ? `?sessionId=${sessionId}` : ""}`,
-          )}
-          className="ml-auto rounded border border-default px-2.5 py-1 text-xs hover:bg-slate-50"
-        >
-          <Download className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
-          Bảng điểm
-        </a>
-        <a
-          href={apiUrl(
-            `/api/exams/${examId}/results?format=analysis${sessionId ? `&sessionId=${sessionId}` : ""}`,
-          )}
-          className="rounded border border-default px-2.5 py-1 text-xs hover:bg-slate-50"
-          title="Mỗi thí sinh × mỗi câu một dòng: phương án đã chọn, đáp án đúng, cột 0/1 — nạp thẳng vào R/jMetrik/mirt"
-        >
-          <Download className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
-          Dữ liệu phân tích
-        </a>
+        <div className="ml-auto">
+          <ExportMenu examId={examId} scopeQs={scopeQs} />
+        </div>
       </div>
 
       {/* Cấu trúc ca/phòng chỉ xuất hiện khi bài thực sự có nhiều hơn một. */}
@@ -155,7 +174,7 @@ export default function ResultsPanel({
       )}
 
       {slice === "students" && (
-        <StudentTable data={data} courseId={courseId} examId={examId} />
+        <StudentList data={data} courseId={courseId} examId={examId} />
       )}
       {slice === "items" && (
         // Đang xem một đợt thì chỉ số phải tính riêng đợt đó, không gộp mọi
@@ -173,13 +192,66 @@ export default function ResultsPanel({
   );
 }
 
+function ExportMenu({ examId, scopeQs }: { examId: string; scopeQs: string }) {
+  const [open, setOpen] = useState(false);
+  const xlsx = apiUrl(`/api/exams/${examId}/results${scopeQs ? `?${scopeQs}` : ""}`);
+  const analysisQs = `format=analysis${scopeQs ? `&${scopeQs}` : ""}`;
+  const analysis = apiUrl(`/api/exams/${examId}/results?${analysisQs}`);
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex items-center rounded border border-default px-2.5 py-1 text-xs hover:bg-slate-50"
+      >
+        <Download className="mr-1 inline h-3.5 w-3.5 align-text-bottom" />
+        Xuất file
+        <ChevronDown className="ml-1 inline h-3.5 w-3.5 align-text-bottom" />
+      </button>
+      {open && (
+        <div className="absolute right-0 z-10 mt-1 w-[min(20rem,calc(100vw-2rem))] rounded-lg border border-default bg-white p-1 shadow-lg">
+          <a
+            href={xlsx}
+            onClick={() => setOpen(false)}
+            className="block rounded px-3 py-2 hover:bg-slate-50"
+          >
+            <div className="text-sm font-medium">Bảng điểm (Excel)</div>
+            <div className="text-caption text-faint">
+              Mở bằng Excel. Điểm, tỉ lệ và trạng thái của từng người; sheet thứ
+              hai cho thấy đúng/sai từng câu. Dùng để lưu sổ hoặc gửi khoa.
+            </div>
+          </a>
+          <div className="mt-1 border-t border-default px-3 pb-1 pt-2 text-caption text-faint">
+            Dành cho chuyên gia đo lường
+          </div>
+          <a
+            href={analysis}
+            onClick={() => setOpen(false)}
+            className="block rounded px-3 py-2 hover:bg-slate-50"
+          >
+            <div className="text-sm font-medium">Dữ liệu phân tích (CSV)</div>
+            <div className="text-caption text-faint">
+              Mỗi người × mỗi câu một dòng. Nạp vào R, jMetrik hoặc mirt để phân
+              tích độ khó và độ phân biệt.
+            </div>
+          </a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Stat({
   label,
   value,
+  hint,
   alert,
 }: {
   label: string;
   value: string;
+  hint?: string;
   alert?: boolean;
 }) {
   return (
@@ -190,6 +262,7 @@ function Stat({
         {value}
       </div>
       <div className="text-caption text-faint">{label}</div>
+      {hint && <div className="text-caption text-faint tabular-nums">{hint}</div>}
     </div>
   );
 }
@@ -218,7 +291,9 @@ function Seg({
   );
 }
 
-function StudentTable({
+type SortKey = "name" | "score" | "time";
+
+function StudentList({
   data,
   courseId,
   examId,
@@ -227,6 +302,37 @@ function StudentTable({
   courseId: string;
   examId: string;
 }) {
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<SortKey>("name");
+
+  const rows = useMemo(() => {
+    if (!data) return [];
+    const needle = query.trim().toLocaleLowerCase("vi");
+    const filtered = needle
+      ? data.rows.filter(
+          (r) =>
+            r.displayName.toLocaleLowerCase("vi").includes(needle) ||
+            (r.identifier ?? "").toLocaleLowerCase("vi").includes(needle),
+        )
+      : data.rows;
+    const sorted = [...filtered];
+    if (sort === "name") {
+      sorted.sort((a, b) => a.displayName.localeCompare(b.displayName, "vi"));
+    } else if (sort === "score") {
+      // Chưa có điểm xuống cuối, không để chúng chen vào giữa bảng điểm.
+      sorted.sort((a, b) => (b.scorePct ?? -1) - (a.scorePct ?? -1));
+    } else {
+      // Nộp sớm nhất lên đầu; ai chưa nộp xuống cuối.
+      sorted.sort((a, b) => {
+        if (!a.submittedAt && !b.submittedAt) return 0;
+        if (!a.submittedAt) return 1;
+        if (!b.submittedAt) return -1;
+        return a.submittedAt.localeCompare(b.submittedAt);
+      });
+    }
+    return sorted;
+  }, [data, query, sort]);
+
   if (!data) return <p className="py-8 text-center text-sm text-faint">Đang tải…</p>;
   if (data.rows.length === 0)
     return (
@@ -236,30 +342,97 @@ function StudentTable({
     );
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-default">
-      <table className="w-full min-w-[560px] text-sm">
-        <thead className="bg-slate-50 text-left text-xs text-faint">
-          <tr>
-            <th className="px-3 py-2 font-medium">Học sinh</th>
-            <th className="px-3 py-2 font-medium">Nộp lúc</th>
-            <th className="px-3 py-2 text-right font-medium">Điểm</th>
-            <th className="px-3 py-2 font-medium">Trạng thái</th>
-            <th className="px-3 py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.rows.map((r, i) => (
-            <Row
-              key={r.attemptId ?? `ns-${i}`}
-              r={r}
-              totalPoints={data.totalPoints}
-              courseId={courseId}
-              examId={examId}
-            />
-          ))}
-        </tbody>
-      </table>
+    <div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <label className="relative min-w-[200px] flex-1">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm theo tên hoặc email/mã dự thi"
+            className="w-full rounded border border-default bg-white py-1.5 pl-8 pr-2 text-sm"
+          />
+        </label>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortKey)}
+          className="rounded border border-default bg-white px-2 py-1.5 text-sm"
+          aria-label="Sắp xếp"
+        >
+          <option value="name">Tên (A → Z)</option>
+          <option value="score">Điểm (cao → thấp)</option>
+          <option value="time">Nộp lúc (sớm → muộn)</option>
+        </select>
+      </div>
+
+      {rows.length === 0 && (
+        <p className="py-6 text-center text-sm text-faint">Không có ai khớp với từ khoá.</p>
+      )}
+
+      {/* Điện thoại: mỗi người một thẻ, không phải kéo ngang bảng. */}
+      <ul className="space-y-2 sm:hidden">
+        {rows.map((r, i) => (
+          <StudentCard key={r.attemptId ?? `ns-${i}`} r={r} totalPoints={data.totalPoints} courseId={courseId} examId={examId} />
+        ))}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-lg border border-default sm:block">
+        <table className="w-full min-w-[560px] text-sm">
+          <thead className="bg-slate-50 text-left text-xs text-faint">
+            <tr>
+              <th className="px-3 py-2 font-medium">Thí sinh / Học viên</th>
+              <th className="px-3 py-2 font-medium">Nộp lúc</th>
+              <th className="px-3 py-2 text-right font-medium">Điểm</th>
+              <th className="px-3 py-2 font-medium">Trạng thái</th>
+              <th className="px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <Row
+                key={r.attemptId ?? `ns-${i}`}
+                r={r}
+                totalPoints={data.totalPoints}
+                courseId={courseId}
+                examId={examId}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
+  );
+}
+
+function ScoreText({ r, totalPoints }: { r: ExamResultRow; totalPoints: number }) {
+  if (r.score == null) return <span className="text-faint">—</span>;
+  return (
+    <>
+      <div className="font-medium tabular-nums">
+        {r.score}/{totalPoints}
+        {r.scorePct != null && (
+          <span className="ml-1.5 font-normal text-faint">{formatPct(r.scorePct)}</span>
+        )}
+      </div>
+      {/* Còn câu chờ chấm: số này mới là phần tự chấm, chưa phải điểm cuối. */}
+      {r.needsGrading && (
+        <div className="text-[11px] text-amber-700">chưa gồm câu chờ chấm</div>
+      )}
+    </>
+  );
+}
+
+function ViewLink({ r, courseId, examId }: { r: ExamResultRow; courseId: string; examId: string }) {
+  // Chỉ bài đã nộp mới có đáp án để xem/chấm.
+  if (!r.attemptId || r.status === "in_progress" || r.status === "not_started") return null;
+  return (
+    <Link
+      href={`/instructor/courses/${courseId}/exams/${examId}/attempts/${r.attemptId}`}
+      className="text-xs font-medium text-blue-600 hover:underline"
+    >
+      Xem bài làm
+    </Link>
   );
 }
 
@@ -288,45 +461,60 @@ function Row({
           </div>
         )}
       </td>
-      <td className="px-3 py-2 text-xs text-faint">
-        {r.submittedAt
-          ? new Date(r.submittedAt).toLocaleString("vi-VN", {
-              timeZone: "Asia/Ho_Chi_Minh",
-              hour: "2-digit",
-              minute: "2-digit",
-              day: "2-digit",
-              month: "2-digit",
-            })
-          : "—"}
+      <td className="whitespace-nowrap px-3 py-2 text-xs text-faint tabular-nums">
+        {r.submittedAt ? formatDateTime(r.submittedAt) : "—"}
       </td>
       <td className="px-3 py-2 text-right tabular-nums">
-        {r.score != null ? `${r.score}/${totalPoints}` : "—"}
+        <ScoreText r={r} totalPoints={totalPoints} />
       </td>
       <td className="px-3 py-2">
         <Verdict r={r} />
       </td>
       <td className="px-3 py-2 text-right">
-        {r.attemptId && (
-          <Link
-            href={`/instructor/courses/${courseId}/exams/${examId}/live/${r.attemptId}`}
-            className="text-xs text-blue-600 hover:underline"
-          >
-            Xem bài
-          </Link>
-        )}
+        <ViewLink r={r} courseId={courseId} examId={examId} />
       </td>
     </tr>
   );
 }
 
+function StudentCard({
+  r,
+  totalPoints,
+  courseId,
+  examId,
+}: {
+  r: ExamResultRow;
+  totalPoints: number;
+  courseId: string;
+  examId: string;
+}) {
+  return (
+    <li className="rounded-lg border border-default bg-white p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate font-medium">{r.displayName}</div>
+          {r.identifier && (
+            <div className="truncate text-caption text-faint">{r.identifier}</div>
+          )}
+        </div>
+        <div className="shrink-0 text-right">
+          <ScoreText r={r} totalPoints={totalPoints} />
+        </div>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span className="text-faint">
+          <Verdict r={r} />
+          {r.submittedAt && <> · {formatDateTime(r.submittedAt)}</>}
+        </span>
+        <ViewLink r={r} courseId={courseId} examId={examId} />
+      </div>
+    </li>
+  );
+}
+
 function Verdict({ r }: { r: ExamResultRow }) {
-  if (r.status === "not_started")
-    return <span className="text-xs text-faint">Chưa làm</span>;
-  if (r.status === "in_progress")
-    return <span className="text-xs text-blue-700">Đang làm</span>;
-  if (r.needsGrading)
-    return <span className="text-xs text-amber-700">Chờ chấm</span>;
-  return <span className="text-xs text-faint">Đã nộp</span>;
+  const v = resultVerdict(r);
+  return <span className={`text-xs ${TONE_CLASS[v.tone]}`}>{v.label}</span>;
 }
 
 function GradingSlice({

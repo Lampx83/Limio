@@ -1,9 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
-import { sessionOpenState } from "@feedbackme/core-lms";
+import { LOBBY_LEAD_MIN, effectiveAccessMode, lobbyPhase, resolveLobbyTarget, sessionOpenState } from "@feedbackme/core-lms";
+import { auth } from "@/lib/auth";
+import NetworkBlocked from "@/components/exam/NetworkBlocked";
+import EntryShell, { EntryGreeting } from "@/components/exam/EntryShell";
+import { checkExamNetwork } from "@/lib/exam-network";
 import { Clock, Lock, AlertCircle, XCircle } from "lucide-react";
 import ClaimForm from "./ClaimForm";
+import AccountClaim from "./AccountClaim";
+import ExamLobby from "./ExamLobby";
 import SebBrowserPrompt from "@/components/exam/SebBrowserPrompt";
 import { detectSeb, requiresSeb } from "@/lib/seb";
 import { formatVN } from "@/lib/datetime";
@@ -25,6 +32,13 @@ interface ResolvedNotYet {
   examTitle: string;
   opensAt: Date;
 }
+/** Trong khoảng mở lobby trước giờ thi: đợi trong phòng chờ, chưa vào thi được. */
+interface ResolvedLobby {
+  state: "lobby";
+  examTitle: string;
+  opensAt: Date;
+  mode: "open" | "assigned";
+}
 interface ResolvedClosed {
   state: "closed";
   examTitle: string;
@@ -43,6 +57,7 @@ interface ResolvedNotReady {
 type Resolved =
   | ResolvedOk
   | ResolvedNotYet
+  | ResolvedLobby
   | ResolvedClosed
   | ResolvedNotReady;
 
@@ -89,8 +104,12 @@ async function resolveCode(code: string): Promise<Resolved | null> {
       // Cùng quy tắc với claimByOpenCode — nếu lệch nhau thì sinh ra cảnh
       // "landing báo mở nhưng vào lại báo đóng".
       const state = sessionOpenState(session, now);
-      if (state === "not_yet")
+      if (state === "not_yet") {
+        // Cùng quy tắc với resolveLobbyTarget: trong khoảng lobby thì vào phòng chờ.
+        if (lobbyPhase(session, now) === "lobby")
+          return { state: "lobby", examTitle: exam.title, opensAt: session.opensAt, mode: "open" };
         return { state: "not_yet", examTitle: exam.title, opensAt: session.opensAt };
+      }
       if (state === "closed")
         return { state: "closed", examTitle: exam.title, closesAt: session.closesAt };
       return {
@@ -137,7 +156,7 @@ async function resolveCode(code: string): Promise<Resolved | null> {
         displayName: true,
         disabledAt: true,
         session: {
-          select: { opensAt: true, closesAt: true, timingMode: true, status: true },
+          select: { opensAt: true, closesAt: true, timingMode: true, status: true, accessMode: true },
         },
         exam: {
           select: {
@@ -171,7 +190,7 @@ async function resolveCode(code: string): Promise<Resolved | null> {
         reason: "not_published",
         examTitle: candidate.exam.title,
       };
-    if (candidate.exam.accessMode !== "assigned_code")
+    if (effectiveAccessMode(candidate.session, candidate.exam) !== "assigned_code")
       return {
         state: "not_ready",
         reason: "wrong_mode",
@@ -184,12 +203,20 @@ async function resolveCode(code: string): Promise<Resolved | null> {
     if (!candidate.session)
       return { state: "not_ready", reason: "no_session", examTitle: candidate.exam.title };
     const st = sessionOpenState(candidate.session, now);
-    if (st === "not_yet")
+    if (st === "not_yet") {
+      if (lobbyPhase(candidate.session, now) === "lobby")
+        return {
+          state: "lobby",
+          examTitle: candidate.exam.title,
+          opensAt: candidate.session.opensAt,
+          mode: "assigned",
+        };
       return {
         state: "not_yet",
         examTitle: candidate.exam.title,
         opensAt: candidate.session.opensAt,
       };
+    }
     if (st === "closed")
       return {
         state: "closed",
@@ -218,8 +245,97 @@ export default async function ExamClaimPage({
   const r = await resolveCode(code);
   if (!r) return <NotFoundCode code={code} />;
 
+  // Mã chung (6 ký tự) phải đăng nhập: lobby cần biết học viên là ai. Mã cá nhân
+  // (8 ký tự) KHÔNG cần: chính mã đã xác định thí sinh. Ca đã đóng / chưa sẵn sàng
+  // không cần đăng nhập để xem thông báo.
+  const isAssigned = code.length === 8;
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  if (
+    !isAssigned &&
+    !userId &&
+    (r.state === "ok" || r.state === "lobby" || r.state === "not_yet")
+  )
+    redirect(`/signin?callbackUrl=${encodeURIComponent(`/exam/${code}`)}`);
+
+  const target =
+    r.state === "ok" || r.state === "lobby" || r.state === "not_yet"
+      ? await resolveLobbyTarget(code)
+      : null;
+
+  // Thông tin hiển thị ở phòng chờ / màn sẵn sàng vào thi.
+  const meta = target
+    ? await prisma.examSession.findUnique({
+        where: { id: target.sessionId },
+        select: {
+          title: true,
+          timingMode: true,
+          durationOverrideMin: true,
+          exam: {
+            select: {
+              title: true,
+              durationMin: true,
+              proctoringLevel: true,
+              _count: { select: { questions: true } },
+              course: { select: { title: true } },
+            },
+          },
+        },
+      })
+    : null;
+
+  // Tên hiển thị trong lời chào: tài khoản đang đăng nhập (mã chung) hoặc thí sinh
+  // sở hữu mã (mã cá nhân).
+  const greetName = isAssigned
+    ? (target?.candidateName ?? "")
+    : (session?.user?.name ?? session?.user?.email ?? "");
+
+  // Học viên nhận ra ca của mình trước: tên ca làm tiêu đề, tên đề + tên khoá ở
+  // dòng nhỏ. Ca chưa đặt tên thì tiêu đề là tên đề, dòng nhỏ chỉ còn tên khoá.
+  const sessionName = meta?.title?.trim() || null;
+  const examName = meta?.exam.title ?? r.examTitle;
+  const headline = sessionName ?? examName;
+  const subtitleParts = sessionName
+    ? [examName, meta?.exam.course?.title]
+    : [meta?.exam.course?.title];
+  const entryMeta = {
+    headline,
+    subtitle: subtitleParts.filter(Boolean).join(" · ") || null,
+    durationMin: meta?.durationOverrideMin ?? meta?.exam.durationMin ?? 0,
+    questionCount: meta?.exam._count.questions ?? 0,
+    manual: meta?.timingMode === "manual",
+    strict: meta ? requiresSeb(meta.exam.proctoringLevel) : false,
+  };
+
+  // Giới hạn mạng của trường (nếu có): chặn ngay từ trang vào ca, trước phòng chờ.
+  if (target) {
+    const net = await checkExamNetwork(target.examId, headers());
+    if (!net.allowed)
+      return (
+        <NetworkBlocked
+          displayName={greetName}
+          examTitle={entryMeta.headline}
+          subtitle={entryMeta.subtitle}
+        />
+      );
+  }
+
   if (r.state === "not_yet")
     return <NotYet examTitle={r.examTitle} opensAt={r.opensAt} />;
+  if (r.state === "lobby")
+    return (
+      <ExamLobby
+        code={code}
+        mode={isAssigned ? "assigned" : "open"}
+        examTitle={entryMeta.headline}
+        subtitle={entryMeta.subtitle}
+        opensAt={r.opensAt.toISOString()}
+        manual={entryMeta.manual}
+        leadMin={LOBBY_LEAD_MIN}
+        displayName={greetName}
+        strict={entryMeta.strict}
+      />
+    );
   if (r.state === "closed")
     return <Closed examTitle={r.examTitle} closesAt={r.closesAt} />;
   if (r.state === "not_ready")
@@ -242,21 +358,50 @@ export default async function ExamClaimPage({
     }
   }
 
+  // Ca mã chung: đã đăng nhập thì vào thẳng bằng tài khoản, không hỏi tên/MSSV.
+  if (r.mode === "open") {
+    // Đã có bài đang làm trong ca này: nút sẽ tiếp tục chứ không bắt đầu lại.
+    const last =
+      target && userId
+        ? await prisma.examAttempt.findFirst({
+            where: { sessionId: target.sessionId, candidate: { userId } },
+            orderBy: { startedAt: "desc" },
+            select: { status: true },
+          })
+        : null;
+    const resuming = last?.status === "in_progress";
+    const submitted = !!last && last.status !== "in_progress";
+    return (
+      <AccountClaim
+        code={code}
+        examTitle={entryMeta.headline}
+        subtitle={entryMeta.subtitle}
+        displayName={session?.user?.name ?? session?.user?.email ?? ""}
+        durationMin={entryMeta.durationMin}
+        questionCount={entryMeta.questionCount}
+        resuming={resuming}
+        submitted={submitted}
+      />
+    );
+  }
+
+  // Mã cá nhân: không cần tài khoản, chỉ xác nhận danh tính. Cùng khung với các
+  // màn khác để luồng vào thi liền mạch.
   return (
-    <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">{r.examTitle}</h1>
-      <p className="mt-1 text-sm text-faint">
-        {r.mode === "open"
-          ? "Nhập thông tin để vào ca thi"
-          : "Xác nhận danh tính để bắt đầu thi"}
-      </p>
+    <EntryShell step={3} firstStepLabel="Nhập mã">
+      <EntryGreeting name={r.candidateName ?? greetName} />
+      <div className="mt-4 text-center">
+        <h1 className="text-h2 text-[rgb(var(--text))]">{entryMeta.headline}</h1>
+        {entryMeta.subtitle && <p className="mt-1 text-sm text-muted">{entryMeta.subtitle}</p>}
+        <p className="mt-3 text-sm text-muted">Xác nhận danh tính để bắt đầu thi</p>
+      </div>
       <ClaimForm
         code={code}
         mode={r.mode}
         candidateName={r.candidateName}
         courseId={r.courseId}
       />
-    </main>
+    </EntryShell>
   );
 }
 

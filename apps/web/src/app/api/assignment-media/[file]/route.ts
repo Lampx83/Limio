@@ -4,6 +4,7 @@ import { submissionKeyFromFilename } from "@/lib/storage-keys";
 import {
   isSafeFilename,
   resolveKey,
+  streamStorageWithRange,
   streamWithRange,
 } from "@/lib/storage-serve";
 
@@ -36,6 +37,7 @@ const MIME_BY_EXT: Record<string, string> = {
   ".webm": "video/webm",
   ".mov": "video/quicktime",
   ".pdf": "application/pdf",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ".json": "application/json",
   ".zip": "application/zip",
   ".txt": "text/plain",
@@ -50,17 +52,21 @@ export async function GET(
     return new NextResponse("forbidden", { status: 403 });
   }
 
-  const resolved = await resolveKey(submissionKeyFromFilename(file));
+  const key = submissionKeyFromFilename(file);
+  const resolved = await resolveKey(key);
   if (!resolved) return new NextResponse("not_found", { status: 404 });
 
   const ext = path.extname(file).toLowerCase();
   const mime = MIME_BY_EXT[ext] ?? "application/octet-stream";
 
-  // Local FS → stream with Range. S3 → buffered fallback (signed-URL
-  // redirect coming when private layer moves off-app).
+  // Local FS → stream with Range. S3 → stream từng đoạn (Range) để trình xem
+  // PDF trong iframe của màn hình chấm mở được ngay, không đợi tải cả file.
   if (resolved.absPath) {
     return streamWithRange(resolved.absPath, mime, req);
   }
+  const streamed = await streamStorageWithRange(key!, mime, req);
+  if (streamed) return streamed;
+  // Còn lại (file chỉ ở fallback local): buffer.
   const buf = await resolved.get();
   return new NextResponse(new Uint8Array(buf), {
     headers: {

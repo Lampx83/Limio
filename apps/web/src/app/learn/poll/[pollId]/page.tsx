@@ -14,7 +14,7 @@ export default async function LearnerPollPage({
   try {
     // Get poll details without auth check - public page
     const poll = await prisma.classroomPoll.findUnique({
-      where: { id: params.pollId },
+      where: { id: params.pollId, deletedAt: null },
       include: {
         session: {
           select: {

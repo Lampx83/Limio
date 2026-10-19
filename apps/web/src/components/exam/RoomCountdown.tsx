@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Timer } from "lucide-react";
+import { oralUiText, type OralUiLang } from "@/lib/oralUiText";
 
 /** Các mốc báo còn bao lâu (giây). Chỉ báo mốc còn nhỏ hơn tổng thời lượng. */
 const WARN_AT_SEC = [300, 120, 60] as const;
@@ -20,13 +21,19 @@ export default function RoomCountdown({
   clockSkewMs,
   totalSec,
   onExpire,
+  lang = "vi",
 }: {
   deadlineEpoch: number;
   clockSkewMs: number;
   totalSec: number;
   /** Gọi ĐÚNG MỘT LẦN khi hết giờ. */
   onExpire: () => void;
+  /** Ngôn ngữ giao diện; mặc định tiếng Việt. */
+  lang?: OralUiLang;
 }) {
+  const t = oralUiText(lang).countdown;
+  const toastRef = useRef(t.toast);
+  toastRef.current = t.toast;
   const compute = () => Math.max(0, Math.floor((deadlineEpoch - (Date.now() + clockSkewMs)) / 1000));
   const [remainingSec, setRemainingSec] = useState(compute);
   const [toast, setToast] = useState<string | null>(null);
@@ -43,7 +50,7 @@ export default function RoomCountdown({
         if (r > 0 && r <= mark && mark < totalSec && !warned.current.has(mark)) {
           warned.current.add(mark);
           // Nhảy cóc qua mốc (tab bị treo) chỉ báo mốc nhỏ nhất vừa chạm.
-          setToast(`Còn ${mark / 60} phút`);
+          setToast(toastRef.current(mark / 60));
           if (toastTimer) clearTimeout(toastTimer);
           toastTimer = setTimeout(() => setToast(null), 6_000);
         }
@@ -70,7 +77,7 @@ export default function RoomCountdown({
     <>
       <span
         role="timer"
-        aria-label={`Còn ${minutes} phút ${seconds} giây`}
+        aria-label={t.aria(minutes, seconds)}
         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums ${
           urgent
             ? "animate-pulse bg-red-100 text-red-700"

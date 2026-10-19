@@ -307,6 +307,58 @@ export async function regenerateCourseTeamCode(
   throw new CourseTeamError("validation_failed");
 }
 
+/**
+ * Đổi tên nhóm trong transaction: tên mới không trùng nhóm khác của khoá, giữ
+ * nguyên tên (sau khi chuẩn hoá khoảng trắng) thì không ghi gì.
+ */
+async function applyRename(
+  db: PrismaClient,
+  courseId: string,
+  teamId: string,
+  rawName: string,
+  actorId: string,
+  subjectUserId: string,
+): Promise<{ name: string }> {
+  const name = normalizeName(rawName);
+  try {
+    return await db.$transaction(async (tx) => {
+      const team = await tx.courseTeam.findUnique({ where: { id: teamId }, select: { name: true, courseId: true } });
+      if (!team || team.courseId !== courseId) throw new CourseTeamError("team_not_found");
+      if (team.name === name) return { name };
+      const taken = await tx.courseTeam.findUnique({
+        where: { courseId_name: { courseId, name } },
+        select: { id: true },
+      });
+      if (taken && taken.id !== teamId) throw new CourseTeamError("team_name_taken");
+      await tx.courseTeam.update({ where: { id: teamId }, data: { name } });
+      await emitEvent(
+        subjectUserId,
+        LearningEventType.CourseTeamRenamed,
+        { teamId, from: team.name, to: name, actorId },
+        { courseId },
+        tx,
+      );
+      return { name };
+    });
+  } catch (e) {
+    // Chạy đua: một nhóm khác vừa lấy đúng tên này.
+    if (isUniqueViolation(e)) throw new CourseTeamError("team_name_taken");
+    throw e;
+  }
+}
+
+/** Trưởng nhóm đổi tên nhóm của mình — chỉ khi danh sách chưa khoá. */
+export async function renameCourseTeam(
+  userId: string,
+  courseId: string,
+  rawName: string,
+  db: PrismaClient = prisma,
+): Promise<{ name: string }> {
+  await assertLearnerCanChangeTeams(userId, courseId, db);
+  const team = await loadCaptainTeam(userId, courseId, db);
+  return applyRename(db, courseId, team.id, rawName, userId, userId);
+}
+
 /** Trưởng nhóm mời một thành viên ra khỏi nhóm (A5). */
 export async function removeCourseTeamMember(
   captainId: string,
@@ -508,6 +560,18 @@ export async function instructorSetTeamCaptain(
     await tx.courseTeam.update({ where: { id: teamId }, data: { captainId: newCaptainId } });
     await emitCaptainChanged(tx, courseId, teamId, newCaptainId, instructorId);
   });
+}
+
+/** GV đổi tên bất kỳ nhóm nào của khoá — kể cả khi danh sách đã khoá. */
+export async function instructorRenameCourseTeam(
+  instructorId: string,
+  courseId: string,
+  teamId: string,
+  rawName: string,
+  db: PrismaClient = prisma,
+): Promise<{ name: string }> {
+  await assertCanEditCourse(instructorId, courseId, db);
+  return applyRename(db, courseId, teamId, rawName, instructorId, instructorId);
 }
 
 /** Nhóm hiện tại của học viên trong khoá, kèm danh sách thành viên — dùng khi nộp bài nhóm. */

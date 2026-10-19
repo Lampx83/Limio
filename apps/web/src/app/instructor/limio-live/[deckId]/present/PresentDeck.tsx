@@ -3,17 +3,25 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { ChevronLeft, ChevronRight, Clock, Play, Presentation, Monitor, Maximize2, Minimize2, StickyNote, ZoomIn, ZoomOut, QrCode } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, Presentation, Monitor, Maximize2, Minimize2, StickyNote, ZoomIn, ZoomOut, QrCode } from "lucide-react";
 import { apiUrl, shareUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
 import { toast } from "@/lib/toast";
-import { openAudienceWindow } from "@/lib/limioLiveWindow";
+import { openAudienceWindow, reopenPresenterWindow } from "@/lib/limioLiveWindow";
 import EmptyState from "@/components/ui/EmptyState";
 import { parseVideoUrl } from "@/lib/videoUrl";
+import { slideImageSources } from "@/lib/limioLiveImage";
 import { WORD_GRADIENTS } from "@/lib/wordCloudColors";
-import ResourceContent, { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
+import { RESOURCE_TYPE_LABELS } from "../../ResourceContent";
 import { contentKind } from "../../slideKind";
-import { slideThemeBg } from "../../slideThemes";
+import { slideBgFor } from "../../slideThemes";
+import { isLayoutSlide } from "../../SlideLayouts";
+import { ContentSlideView, SlideTimer } from "../../ContentSlideView";
+import { BrandLogoOverlay, BrandLogoSpacer, LiveBrandProvider, useLiveBrand } from "../../liveBrandContext";
+import { LiveLangProvider } from "../../liveLangContext";
+import { LiveMotifProvider } from "../../liveMotifContext";
+import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
+import type { DeckOrgBrand } from "@/lib/limioLiveBrandServer";
 import BoardNotesView, { type BoardViewNote } from "../../BoardNotesView";
 
 const QRCode = dynamic(
@@ -41,6 +49,17 @@ interface Deck {
   id: string;
   title: string;
   theme?: string;
+  /** Thương hiệu (logo + màu) của bài giảng; chuẩn hoá bởi LiveBrandProvider. */
+  brand?: unknown;
+  brandOff?: boolean;
+  brandTemplate?: string | null;
+  /** Hoa văn trang trí của cả bài (limioLiveMotifs): null = tự động. */
+  motif?: string | null;
+  /** Ngôn ngữ của bài: chữ hệ thống trên slide (docs/tieu-chi/ngon-ngu-slide.md). */
+  language?: string | null;
+  /** Khung hình của các ô hình; null = tự động theo hoa văn. */
+  imageFrame?: string | null;
+  org?: DeckOrgBrand | null;
   slides: Slide[];
 }
 
@@ -81,13 +100,18 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   // ?mode=slideshow = "Trình chiếu" kiểu PowerPoint: fullscreen, KHÔNG ghi chú, không
   // cửa sổ phụ. Mặc định (không tham số) = Presenter view: có ghi chú, không fullscreen.
   const slideshow = mode === "presenter" && searchParams.get("mode") === "slideshow";
+  // ?swap=1 = Presenter view kiểu PowerPoint (editor đã đổi vai 2 cửa sổ): tab gốc là màn
+  // chiếu fullscreen trên máy chiếu, presenter view là popup trên laptop. Hai bên báo nhau
+  // qua BroadcastChannel: presenter còn sống / đã đóng / kết thúc trình chiếu.
+  const swapped = searchParams.get("swap") === "1";
 
   const [deck, setDeck] = useState<Deck | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [currentSlideId, setCurrentSlideId] = useState<string | null>(null);
   const [runtime, setRuntime] = useState<Runtime | null>(null);
   // Mã tham gia CẤP PHIÊN: học viên quét 1 QR cho cả buổi rồi tự theo slide đang chiếu.
-  const [joinCode, setJoinCode] = useState<string | null>(null);
+  // Mỗi slide tương tác một mã/QR riêng (slideId -> mã); slide nội dung không có nên không hiện QR.
+  const [slideJoinCodes, setSlideJoinCodes] = useState<Record<string, string>>({});
   const [identityMode, setIdentityMode] = useState<"anonymous" | "login">("anonymous");
   const [uiState, setUiState] = useState<UiState>({});
   const [endedAt, setEndedAt] = useState<string | null>(null);
@@ -212,7 +236,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         setSessionId(session.id);
         setUiState(session.uiState ?? {});
         setEndedAt(session.endedAt ?? null);
-        setJoinCode(session.joinCode ?? null);
+        setSlideJoinCodes(session.slideJoinCodes ?? {});
         setIdentityMode(session.identityMode === "login" ? "login" : "anonymous");
 
         if (mode === "presenter") {
@@ -260,7 +284,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
         setRuntime(data.runtime);
         setUiState(data.uiState ?? {});
         setEndedAt(data.endedAt ?? null);
-        setJoinCode(data.joinCode ?? null);
+        setSlideJoinCodes(data.slideJoinCodes ?? {});
       } catch {
         /* bỏ qua lỗi poll thoáng qua — lần poll sau sẽ tự sửa */
       }
@@ -334,6 +358,18 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   };
 
   const handleOpenAudienceWindow = () => {
+    // Cửa sổ này là popup presenter mà tab gốc vẫn đang làm màn chiếu → không mở thêm màn chiếu thứ hai.
+    if (swapped) {
+      try {
+        const opener = window.opener as Window | null;
+        if (opener && !opener.closed && opener.location.pathname.endsWith(`/limio-live/${deckId}/present`)) {
+          toast.info("Màn chiếu đang mở ở màn hình thứ hai");
+          return;
+        }
+      } catch {
+        /* opener đã sang trang khác origin — mở màn chiếu mới như thường */
+      }
+    }
     openAudienceWindow(deckId);
   };
 
@@ -367,6 +403,20 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     chanRef.current = ch;
     if (mode === "audience") {
       ch.onmessage = (e) => {
+        if (swapped && e.data?.type === "presenter-alive") {
+          presenterSeenRef.current = Date.now();
+          setPresenterGone(false);
+          return;
+        }
+        if (swapped && e.data?.type === "presenter-closed") {
+          if (!leavingRef.current) setPresenterGone(true);
+          return;
+        }
+        if (swapped && e.data?.type === "presenter-exit") {
+          if (e.data.notice) toast.success(e.data.notice);
+          leaveToEditor();
+          return;
+        }
         if (e.data?.type === "qr") {
           setQrRemote(!!e.data.open);
           return;
@@ -382,6 +432,39 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, mode]);
+
+  // Presenter (popup) báo còn sống mỗi 2 giây và báo khi cửa sổ đóng.
+  useEffect(() => {
+    if (!swapped || mode !== "presenter" || !sessionId) return;
+    const ping = () => chanRef.current?.postMessage({ type: "presenter-alive" });
+    ping();
+    const t = setInterval(ping, 2000);
+    const onHide = () => chanRef.current?.postMessage({ type: "presenter-closed" });
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("pagehide", onHide);
+    };
+  }, [swapped, mode, sessionId]);
+
+  // Màn chiếu: quá 6 giây không nghe presenter (đóng nhầm, treo) → hiện nút mở lại.
+  const [presenterGone, setPresenterGone] = useState(false);
+  const presenterSeenRef = useRef(Date.now());
+  useEffect(() => {
+    if (!swapped || mode !== "audience" || !sessionId) return;
+    presenterSeenRef.current = Date.now();
+    const t = setInterval(() => {
+      if (Date.now() - presenterSeenRef.current > 6000) setPresenterGone(true);
+    }, 2000);
+    return () => clearInterval(t);
+  }, [swapped, mode, sessionId]);
+
+  const leavingRef = useRef(false);
+  const leaveToEditor = () => {
+    leavingRef.current = true;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    router.push(`/instructor/limio-live/${deckId}`);
+  };
 
   // Slide mới vừa hiện ở màn chiếu (poll trễ hơn tin nhắn cuộn) → áp lại vị trí đang chờ.
   useEffect(() => {
@@ -410,11 +493,29 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
   const currentSlide = currentIndex >= 0 ? slides[currentIndex] : null;
 
+  // Nạp trước ảnh ở ô hình của slide kế tiếp, đúng bản srcset mà màn này sẽ chọn (ô hình ≈ 36% bề rộng slide),
+  // để chuyển slide không phải chờ ảnh.
+  const nextImageUrl = (() => {
+    const c = slides[currentIndex + 1]?.config as { layout?: unknown; imageUrl?: unknown } | undefined;
+    return c?.layout === "image" && typeof c.imageUrl === "string" ? c.imageUrl : null;
+  })();
+  useEffect(() => {
+    if (!nextImageUrl) return;
+    const s = slideImageSources(nextImageUrl);
+    const img = new Image();
+    if (s.srcSet) {
+      img.sizes = `${Math.ceil(window.innerWidth * 0.37)}px`;
+      img.srcset = s.srcSet;
+    }
+    img.src = s.src;
+  }, [nextImageUrl]);
+
   // QR phóng to: presenter bấm nút/phím Q → màn chiếu (cửa sổ khác) hiện QR lớn toàn màn hình,
   // không cần chạm chuột vào màn chiếu. Reset khi đổi slide.
   const [qrBig, setQrBig] = useState(false);
   const [qrRemote, setQrRemote] = useState(false);
   const runtimeJoin = runtime && runtime.kind !== "content" ? runtime : null;
+  const joinCode = currentSlide ? slideJoinCodes[currentSlide.id] ?? null : null;
   const joinUrl = joinCode ? shareUrl(`/learn/live/${joinCode}`) : runtimeJoin ? shareUrl(runtimeJoin.joinPath) : null;
   const joinLabel =
     joinCode ?? (runtimeJoin && (runtimeJoin.kind === "collaborate_board" || runtimeJoin.kind === "whiteboard") ? runtimeJoin.code : undefined);
@@ -485,14 +586,31 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const handleEnd = () => {
     if (sessionId) setConfirmEnd(true);
   };
-  const doEnd = async () => {
+  // leave: thoát và giữ phiên tương tác; save/discard: kết thúc phiên (lưu hoặc xoá kết quả) rồi mở phiên mới với mã mới.
+  const doEnd = async (action: "leave" | "save" | "discard" = "leave") => {
     if (!sessionId) return;
     setConfirmEnd(false);
     setEnding(true);
     try {
-      await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/present/${sessionId}/end`), {
+      const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/present/${sessionId}/end`), {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
       });
+      if (!res.ok) throw new Error();
+      const notice =
+        action === "save"
+          ? "Đã lưu phiên vào Lịch sử tương tác. Phiên mới dùng mã mới."
+          : action === "discard"
+            ? "Đã xoá kết quả. Phiên mới dùng mã mới."
+            : null;
+      // Đổi vai: tab gốc (đang là màn chiếu) tự thoát fullscreen về trang soạn, popup tự đóng.
+      if (swapped && window.opener) {
+        chanRef.current?.postMessage({ type: "presenter-exit", notice });
+        window.close();
+        if (window.closed) return;
+      }
+      if (notice) toast.success(notice);
       router.push(`/instructor/limio-live/${deckId}`);
     } catch {
       toast.error("Lỗi mạng");
@@ -561,6 +679,9 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
   const showSidebar = !focus && (hasSidebar || !!presenterNote || showPreview) && !!currentSlide;
 
   return (
+    <LiveBrandProvider brand={deckEffectiveBrand(deck)}>
+    <LiveLangProvider lang={deck.language}>
+    <LiveMotifProvider deckId={deck.id} motif={deck.motif} imageFrame={deck.imageFrame} slides={slides}>
     <div
       onClick={() => {
         if (mode === "audience" && fsBlocked) {
@@ -677,14 +798,16 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
               key={currentSlide.id}
               ref={cardRef}
               onScrollCapture={handleCardScroll}
-              style={{ background: slideThemeBg(deck.theme), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
-              className={`box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
+              style={{ background: brandFrameBackground(deckEffectiveBrand(deck), currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ?? slideBgFor(deck.theme, currentSlide.type === "content" && isLayoutSlide(currentSlide.config)), ...(fitSlide ? { width: FIT_W, height: FIT_H, flex: "none" } : null) }}
+              className={`relative box-border flex min-h-0 w-full flex-1 flex-col text-[#20241F] ${
                 focus ? "rounded-xl" : "rounded-[20px] shadow-[0_12px_32px_rgba(32,36,31,0.12)]"
               } ${currentSlide.type === "content" ? "p-0" : currentSlide.type === "whiteboard" ? "p-3" : "p-12"} ${
                 currentSlide.type === "word_cloud" || currentSlide.type === "collaborate_board" ? "overflow-y-auto" : "overflow-hidden"
               }`}
             >
-              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide ? 1 : zoom }}>
+              {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoSpacer role="other" edge="t" />}
+              {/* Slide bố cục tự co vừa khung nên nhận mức thu phóng trực tiếp (LayoutSlideView zoom); CSS zoom sẽ bị triệt tiêu. */}
+              <div className="flex min-h-0 flex-1 flex-col" style={{ zoom: fitSlide || (currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) ? 1 : zoom }}>
               <SlideStage
                 slide={currentSlide}
                 runtime={runtime}
@@ -694,8 +817,12 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
                 revealed={!!uiState.revealed?.[currentSlide.id]}
                 onToggleReveal={() => handleToggleReveal(currentSlide.id)}
                 zoom={fitSlide ? 1 : zoom}
+                themeId={deck.theme}
               />
               </div>
+              {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoSpacer role="other" edge="b" />}
+              {/* Slide bố cục tự vẽ logo; các loại khác (trắc nghiệm, bình chọn, bảng...) được phủ logo ở khung. */}
+              {!(currentSlide.type === "content" && isLayoutSlide(currentSlide.config)) && <BrandLogoOverlay role="other" />}
             </div>
             </SlideFit>
           )}
@@ -766,12 +893,6 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             <button onClick={() => setSideOpen(false)} className="mb-3 text-xs font-medium text-muted lg:hidden">
               ✕ Gấp gọn
             </button>
-            {showPreview && !hasSidebar && joinCode && (
-              <div className="mb-6">
-                <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">Tham gia cả buổi</div>
-                <JoinBox joinPath={`/learn/live/${joinCode}`} code={joinCode} qrOnScreen={qrBig} onToggleQr={toggleQr} />
-              </div>
-            )}
             {hasSidebar && (
               <FeedbackSidebar
                 key={currentSlide.id}
@@ -814,7 +935,7 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       {showPreview && <Filmstrip slides={slides} currentId={currentSlideId} theme={deck.theme} onPick={(id) => sessionId && visitSlide(sessionId, id)} />}
 
       {confirmEnd && (
-        <ConfirmEndDialog onCancel={() => setConfirmEnd(false)} onConfirm={doEnd} />
+        <ConfirmEndDialog onCancel={() => setConfirmEnd(false)} onLeave={() => doEnd("leave")} onSave={() => doEnd("save")} onDiscard={() => doEnd("discard")} />
       )}
 
       {slideshow && canQr && joinUrl && (
@@ -851,12 +972,35 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
             ) : (
               <>
                 <p className="text-[40px] font-bold leading-snug text-white">
-                  Hãy kéo màn hình này sang màn chiếu ở chế độ extended window, rồi bấm chuột vào bất cứ đâu trong màn hình này để tự động fullscreen.
+                  {swapped
+                    ? "Bấm chuột vào bất cứ đâu trong màn hình này để fullscreen."
+                    : "Hãy kéo màn hình này sang màn chiếu ở chế độ extended window, rồi bấm chuột vào bất cứ đâu trong màn hình này để tự động fullscreen."}
                 </p>
                 <p className="mt-6 text-xl text-white/60">Hoặc nhấn phím F.</p>
               </>
             )}
           </div>
+        </div>
+      )}
+      {swapped && mode === "audience" && presenterGone && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="fixed bottom-5 left-1/2 z-[140] flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/80 py-2 pl-5 pr-2 text-sm font-medium text-white shadow-lg"
+        >
+          <span>Cửa sổ presenter view đã đóng.</span>
+          <button
+            onClick={() => {
+              presenterSeenRef.current = Date.now();
+              setPresenterGone(false);
+              reopenPresenterWindow(deckId);
+            }}
+            className="rounded-full bg-white px-3.5 py-1.5 font-semibold text-[#20241F] hover:bg-white/90"
+          >
+            Mở lại
+          </button>
+          <button onClick={leaveToEditor} className="rounded-full px-3.5 py-1.5 font-semibold text-white/80 hover:bg-white/10">
+            Về trang soạn
+          </button>
         </div>
       )}
       {slideshow && !isFullscreen && (
@@ -866,6 +1010,9 @@ export default function PresentDeck({ deckId }: { deckId: string }) {
       )}
 
     </div>
+    </LiveMotifProvider>
+    </LiveLangProvider>
+    </LiveBrandProvider>
   );
 }
 
@@ -954,7 +1101,9 @@ function SlideStage({
   revealed,
   onToggleReveal,
   zoom,
+  themeId,
 }: {
+  themeId?: string | null;
   slide: Slide;
   runtime: Runtime | null;
   timerStartedAt?: number;
@@ -970,7 +1119,10 @@ function SlideStage({
   if (slide.type === "content") {
     return (
       <ContentSlideView
+        slideId={slide.id}
         zoom={zoom}
+        themeId={themeId}
+        animate
         config={config}
         timerSeconds={slide.timerSeconds}
         timerStartedAt={timerStartedAt}
@@ -1018,153 +1170,6 @@ function SlideStage({
           <WhiteboardCanvas code={runtime.code} authorName="Giáo viên" showAuthors />
         </div>
       )}
-    </div>
-  );
-}
-
-// Đồng bộ qua LiveSession.uiState thay vì state cục bộ — startedAt là epoch ms
-// do CỬA SỔ PRESENTER ghi lên server lúc bấm "Bắt đầu"; cửa sổ audience chỉ
-// đọc lại (editable=false) qua polling, nên cả 2 cửa sổ luôn cùng 1 "nguồn
-// thời gian thật" thay vì mỗi cửa sổ tự chạy setInterval riêng rồi lệch nhau.
-function SlideTimer({
-  seconds,
-  startedAt,
-  editable,
-  onStart,
-}: {
-  seconds: number;
-  startedAt?: number;
-  editable: boolean;
-  onStart: () => void;
-}) {
-  const [, forceTick] = useState(0);
-
-  useEffect(() => {
-    if (!startedAt) return;
-    const t = setInterval(() => forceTick((n) => n + 1), 1000);
-    return () => clearInterval(t);
-  }, [startedAt]);
-
-  const elapsed = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0;
-  const remaining = startedAt ? Math.max(0, seconds - elapsed) : seconds;
-  const state: "ready" | "running" | "finished" = !startedAt ? "ready" : remaining <= 0 ? "finished" : "running";
-
-  const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
-  const ss = String(remaining % 60).padStart(2, "0");
-  const style =
-    state === "finished"
-      ? "border-pink-400 bg-pink-50 text-pink-700 animate-pulse"
-      : state === "running"
-      ? "border-brand-400 bg-brand-50 text-brand-700"
-      : "border-[#E3E0D3] bg-[#FCFBF7] text-[#3A3F38]";
-  const label = state === "ready" ? "Sẵn sàng" : state === "running" ? "Đang chạy" : "Hết giờ";
-
-  return (
-    <div className={`inline-flex items-center gap-4 rounded-2xl border-2 px-6 py-3 ${style}`}>
-      <Clock size={28} />
-      <span className="text-base font-bold uppercase tracking-wide">{label}</span>
-      <span className="font-mono text-5xl font-bold leading-none">
-        {mm}:{ss}
-      </span>
-      {state === "ready" && editable && (
-        <button onClick={onStart} className="btn-primary flex items-center gap-1.5 text-base">
-          <Play size={16} /> Bắt đầu
-        </button>
-      )}
-    </div>
-  );
-}
-
-function ContentSlideView({
-  config,
-  timerSeconds,
-  timerStartedAt,
-  editable,
-  onStartTimer,
-  lazyImages,
-  zoom = 1,
-}: {
-  config: Record<string, any>;
-  timerSeconds: number | null;
-  timerStartedAt?: number;
-  editable: boolean;
-  onStartTimer: () => void;
-  lazyImages?: boolean;
-  zoom?: number;
-}) {
-  // CSS `zoom` của khung ngoài chỉ phóng chữ/kích thước cố định; ảnh/PDF vốn "vừa bề ngang"
-  // (w-full) nên vẫn chiếm đúng bề ngang cũ → không thấy phóng to. Với chúng, nới bề ngang
-  // thêm `zoom` lần (cuộn ngang khi vượt khung); chữ/markdown thì để reflow như thường.
-  const fitScale = { width: `${zoom * 100}%`, maxWidth: zoom > 1 ? "none" : undefined } as React.CSSProperties;
-  const bullets: string[] = config.bullets ?? [];
-
-  // Đồng hồ là sticker nổi ở chân slide (không chiếm chỗ của nội dung); vùng
-  // nội dung cuộn riêng nên học liệu dài vẫn giữ nguyên bề ngang, chỉ cuộn dọc.
-  const timerSticker =
-    timerSeconds != null ? (
-      <div className="pointer-events-none absolute inset-x-0 bottom-4 z-10 flex justify-center">
-        <div className="pointer-events-auto rounded-2xl bg-white/90 shadow-lg backdrop-blur">
-          <SlideTimer seconds={timerSeconds} startedAt={timerStartedAt} editable={editable} onStart={onStartTimer} />
-        </div>
-      </div>
-    ) : null;
-
-  // Slide "Nội dung" chèn 1 tài nguyên (video/pdf/markdown/...) — ưu tiên
-  // trước cả layout thường lẫn full-bleed ảnh PDF nhập (xem LiveDeckEditor).
-  if (config.resource) {
-    return (
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        <div className="min-h-0 flex-1 overflow-y-auto p-10 pb-28">
-          <div
-            className="mx-auto w-full max-w-6xl"
-            style={config.resource.type === "pdf" ? { ...fitScale, maxWidth: zoom > 1 ? "none" : "72rem" } : undefined}
-          >
-            <ResourceContent type={config.resource.type} payload={config.resource.payload} />
-          </div>
-        </div>
-        {timerSticker}
-      </div>
-    );
-  }
-
-  // Slide nhập từ PDF (chỉ có ảnh, không tiêu đề/ý) — chiếu full-bleed thay
-  // vì layout 2 cột sẽ để trống một nửa trơ trọi (xem LiveDeckEditor).
-  const isImportedPage = !config.title && !config.subtitle && !bullets.length && !!config.imageUrl;
-  if (isImportedPage) {
-    return (
-      <div className="relative flex min-h-0 flex-1 flex-col bg-[#F1EFE6]">
-        {/* Trang PDF dài: ưu tiên bề ngang (chữ đủ to để đọc), chiều dọc cuộn chuột. */}
-        <div className="min-h-0 flex-1 overflow-y-auto pb-24">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config.imageUrl} alt="" loading={lazyImages ? "lazy" : undefined} className="mx-auto block h-auto w-full max-w-[1600px]" style={fitScale} />
-        </div>
-        {timerSticker}
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative flex min-h-0 flex-1">
-      <div className="flex flex-[1.1] flex-col justify-center gap-7 overflow-y-auto p-16 pb-28">
-        <h1 className="text-[64px] font-extrabold leading-[1.1]">{config.title}</h1>
-        {config.subtitle && <p className="text-[32px] leading-snug text-[#6B7268]">{config.subtitle}</p>}
-        {bullets.length > 0 && (
-          <ul className="list-disc space-y-3 pl-8 text-[30px] leading-snug text-[#3A3F38]">
-            {bullets.map((b, idx) => (
-              <li key={idx}>{b}</li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <div className="flex flex-1 items-center justify-center bg-[#F1EFE6]">
-        {config.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={config.imageUrl} alt="" loading={lazyImages ? "lazy" : undefined} className="h-full w-full object-cover" />
-        ) : (
-          <span className="text-lg text-[#9AA090]">Ảnh/sơ đồ minh hoạ</span>
-        )}
-      </div>
-      {timerSticker}
     </div>
   );
 }
@@ -1227,6 +1232,7 @@ function Filmstrip({
   theme: string | undefined | null;
   onPick: (id: string) => void;
 }) {
+  const brandCfg = useLiveBrand();
   const curRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     curRef.current?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
@@ -1274,7 +1280,7 @@ function Filmstrip({
                 className={`relative block aspect-video min-w-0 flex-1 overflow-hidden rounded-md ${
                   active ? "ring-2 ring-brand-500" : "ring-1 ring-black/10 hover:ring-2 hover:ring-brand-300"
                 }`}
-                style={{ background: slideThemeBg(theme) }}
+                style={{ background: brandFrameBackground(brandCfg, sl.type === "content" && isLayoutSlide(cfg)) ?? slideBgFor(theme, sl.type === "content" && isLayoutSlide(cfg)) }}
               >
                 {pdfUrl ? (
                   <PdfFirstPage url={pdfUrl} />
@@ -1288,7 +1294,7 @@ function Filmstrip({
                   </>
                 ) : plain ? (
                   <ThumbScaled width={FILM_ITEM_W - 22}>
-                    <ContentSlideView config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages />
+                    <ContentSlideView slideId={sl.id} config={cfg} timerSeconds={null} editable={false} onStartTimer={() => {}} lazyImages themeId={theme} />
                   </ThumbScaled>
                 ) : (
                   <span className="flex h-full w-full flex-col items-center justify-center gap-0.5 p-1.5 text-center text-[#20241F]">
@@ -1411,7 +1417,7 @@ function FeedbackSidebar({
   return (
     <div>
       <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-faint">
-        {sessionCode ? "Tham gia cả buổi — quét 1 lần" : "Tham gia slide này"}
+        Tham gia slide này
       </div>
       <JoinBox
         joinPath={sessionCode ? `/learn/live/${sessionCode}` : runtime.joinPath}
@@ -1567,7 +1573,19 @@ function JoinBox({
   );
 }
 
-function ConfirmEndDialog({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+function ConfirmEndDialog({
+  onCancel,
+  onLeave,
+  onSave,
+  onDiscard,
+}: {
+  onCancel: () => void;
+  onLeave: () => void;
+  onSave: () => void;
+  onDiscard: () => void;
+}) {
+  // Xoá kết quả không khôi phục được: bấm lần đầu chỉ chuyển sang bước xác nhận.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCancel();
@@ -1586,14 +1604,15 @@ function ConfirmEndDialog({ onCancel, onConfirm }: { onCancel: () => void; onCon
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl bg-[rgb(var(--surface))] p-5 text-[rgb(var(--text))] shadow-xl">
+      <div className="w-full max-w-md rounded-2xl bg-[rgb(var(--surface))] p-5 text-[rgb(var(--text))] shadow-xl">
         <h2 id="end-session-title" className="text-base font-bold">
           Kết thúc buổi trình chiếu?
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-muted">
-          Học viên sẽ không trả lời thêm được nữa. Bạn vẫn có thể xem lại kết quả sau.
+          Phiên tương tác (kết quả và mã QR của từng trang) được giữ lại cho lần chiếu sau. Học viên tạm thời không trả lời được.
         </p>
-        <div className="mt-5 flex justify-end gap-2">
+        {/* Hai nút chia đều bề ngang để mép thẳng với các thẻ "phiên tương tác mới" bên dưới. */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             onClick={onCancel}
             className="rounded-full border border-token px-4 py-2 text-sm font-semibold hover:bg-[rgb(var(--surface-muted))]"
@@ -1601,12 +1620,44 @@ function ConfirmEndDialog({ onCancel, onConfirm }: { onCancel: () => void; onCon
             Tiếp tục trình chiếu
           </button>
           <button
-            onClick={onConfirm}
+            onClick={onLeave}
             autoFocus
             className="rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
           >
-            Kết thúc
+            Kết thúc, giữ phiên
           </button>
+        </div>
+
+        <div className="mt-5 border-t border-token pt-4">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-faint">Hoặc bắt đầu phiên tương tác mới</div>
+          <button
+            onClick={onSave}
+            className="mt-2 block w-full rounded-xl border border-token px-4 py-2.5 text-left hover:bg-[rgb(var(--surface-muted))]"
+          >
+            <span className="block text-sm font-semibold">Lưu phiên và reset mã mới</span>
+            <span className="block text-xs text-muted">Kết quả cất vào Lịch sử tương tác; mỗi trang tương tác nhận mã QR mới.</span>
+          </button>
+          {!confirmDiscard ? (
+            <button
+              onClick={() => setConfirmDiscard(true)}
+              className="mt-2 block w-full rounded-xl border border-token px-4 py-2.5 text-left hover:bg-[rgb(var(--surface-muted))]"
+            >
+              <span className="block text-sm font-semibold">Xoá kết quả phiên này và tạo phiên tương tác mới</span>
+              <span className="block text-xs text-muted">Kết quả của phiên hiện tại bị xoá hẳn; mỗi trang nhận mã QR mới.</span>
+            </button>
+          ) : (
+            <div className="mt-2 rounded-xl border border-red-300 bg-red-50 px-4 py-3">
+              <p className="text-sm font-semibold text-red-800">Xoá hẳn kết quả của phiên này? Không khôi phục được.</p>
+              <div className="mt-2 flex justify-end gap-2">
+                <button onClick={() => setConfirmDiscard(false)} className="rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-sm font-semibold">
+                  Không xoá
+                </button>
+                <button onClick={onDiscard} className="rounded-full bg-red-600 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-red-700">
+                  Xoá và tạo phiên mới
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

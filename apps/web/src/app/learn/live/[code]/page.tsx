@@ -6,7 +6,7 @@ import LiveJoinClient from "./LiveJoinClient";
 
 export const dynamic = "force-dynamic";
 
-// Học viên quét QR MỘT LẦN cho cả phiên trình chiếu; trang tự theo slide tương tác giảng viên chiếu.
+// Mã của một slide tương tác (mỗi slide một QR): trang gắn với đúng slide đó. Mã chung cả phiên (cũ) vẫn chạy ngầm và tự theo slide đang chiếu.
 export default async function LearnerLiveSessionPage({ params }: { params: { code: string } }) {
   const code = normalizeJoinCode(params.code);
   if (!code) notFound();
@@ -14,7 +14,8 @@ export default async function LearnerLiveSessionPage({ params }: { params: { cod
   const state = await getLiveJoinState(code);
   if (state.status === "not_found") notFound();
 
-  if (state.status !== "ended" && "identityMode" in state && state.identityMode === "login") {
+  const finished = state.status === "ended" || (state.status === "closed" && state.reason === "ended");
+  if (!finished && "identityMode" in state && state.identityMode === "login") {
     const session = await auth();
     if (!session?.user?.id) redirect(`/signin?callbackUrl=${encodeURIComponent(`/learn/live/${code}`)}`);
   }

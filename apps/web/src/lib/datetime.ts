@@ -77,6 +77,16 @@ export function formatVN(v: DateInput, opts: Intl.DateTimeFormatOptions): string
   }).format(toDate(v));
 }
 
+/** Giờ trong ngày (0–23) theo múi giờ ứng dụng — không phụ thuộc múi giờ của máy chủ/trình duyệt. */
+export function hourVN(v: DateInput = new Date()): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hourCycle: "h23",
+    timeZone: resolveTimeZone(),
+  }).formatToParts(toDate(v));
+  return Number(parts.find((p) => p.type === "hour")?.value ?? 0) % 24;
+}
+
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ["year", 1000 * 60 * 60 * 24 * 365],
   ["month", 1000 * 60 * 60 * 24 * 30],

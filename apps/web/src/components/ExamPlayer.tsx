@@ -91,6 +91,13 @@ interface Props {
   mock?: MockInfo;
   /** Đề thi thử: nơi quay về khi thí sinh chủ động rời phòng thi (đồng hồ vẫn chạy). */
   exitHref?: string;
+  /**
+   * Bản thử của giáo viên: đúng giao diện làm bài, nhưng KHÔNG gọi API nào —
+   * không lưu đáp án, không heartbeat, không báo sự cố, không nộp, nên không
+   * tạo lượt thi và không ảnh hưởng điểm, kết quả hay XP. Đáp án chỉ nằm trong
+   * localStorage của chính giáo viên và bị xoá khi nộp bản thử.
+   */
+  preview?: boolean;
   attemptId: string;
   sessionToken: string;
   startedAt: string;
@@ -193,6 +200,7 @@ export default function ExamPlayer(props: Props) {
   // Hỏi server hạn làm bài + trạng thái hiện tại (heartbeat). Trả null nếu không
   // liên lạc được.
   const syncFromServer = useCallback(async () => {
+    if (props.preview) return null;
     const t0 = Date.now();
     try {
       const res = await fetch(apiUrl(`/api/exam-attempts/${props.attemptId}/heartbeat`), {
@@ -228,7 +236,7 @@ export default function ExamPlayer(props: Props) {
     } catch {
       return null;
     }
-  }, [props.attemptId, props.resultUrl, props.mock, router, clearLocalState]);
+  }, [props.attemptId, props.resultUrl, props.mock, props.preview, router, clearLocalState]);
 
   // Hết giờ → tự nộp. Hỏi server một lần trước khi nộp: có thể vừa được gia hạn
   // mà heartbeat chưa kịp báo (tối đa 10s).
@@ -358,6 +366,11 @@ export default function ExamPlayer(props: Props) {
   /** Trả true khi server đã xác nhận đã lưu. */
   const sendSave = useCallback(
     async (questionId: string, answerJson: AnswerValue): Promise<boolean> => {
+      if (props.preview) {
+        // Bản thử: đáp án chỉ giữ ở localStorage (writeDraft), không đẩy lên máy chủ.
+        pendingSync.current.delete(questionId);
+        return true;
+      }
       setSaveState("saving");
       try {
         const res = await fetch(
@@ -420,7 +433,7 @@ export default function ExamPlayer(props: Props) {
         return false;
       }
     },
-    [props.attemptId, props.resultUrl, router, clearLocalState, scheduleRetry],
+    [props.attemptId, props.preview, props.resultUrl, router, clearLocalState, scheduleRetry],
   );
   useEffect(() => { sendSaveRef.current = sendSave; }, [sendSave]);
 
@@ -511,6 +524,7 @@ export default function ExamPlayer(props: Props) {
   // A7.7.3 — incident logging (tab blur, paste, fullscreen exit).
   const logIncident = useCallback(
     async (type: string, payload?: Record<string, unknown>) => {
+      if (props.preview) return;
       try {
         await fetch(apiUrl(`/api/exam-attempts/${props.attemptId}/incidents`), {
           method: "POST",
@@ -522,7 +536,7 @@ export default function ExamPlayer(props: Props) {
         // via the explicit `network_lost` channel.
       }
     },
-    [props.attemptId],
+    [props.attemptId, props.preview],
   );
 
   // tab_blur is logged by TabBlurWarning (uses visibilitychange — more reliable
@@ -647,6 +661,8 @@ export default function ExamPlayer(props: Props) {
   >([]);
   const lastFetchAtRef = useRef<number>(0);
   useEffect(() => {
+    // Bản thử không có thông báo từ giám thị — không hỏi máy chủ.
+    if (props.preview) return;
     let cancelled = false;
     const poll = async () => {
       const since = lastFetchAtRef.current;
@@ -684,7 +700,7 @@ export default function ExamPlayer(props: Props) {
       cancelled = true;
       clearInterval(t);
     };
-  }, [props.attemptId]);
+  }, [props.attemptId, props.preview]);
 
   const dismissMessage = useCallback(
     async (id: string) => {
@@ -702,6 +718,12 @@ export default function ExamPlayer(props: Props) {
 
   const submitAttempt = useCallback(
     async (auto = false) => {
+      if (props.preview) {
+        // Bản thử: không có lượt thi để nộp. Xoá nháp rồi sang trang báo đã nộp bản thử.
+        clearLocalState();
+        router.replace(props.resultUrl);
+        return;
+      }
       if (submittingRef.current) return;
       submittingRef.current = true;
       setSubmitting(true);
@@ -769,7 +791,7 @@ export default function ExamPlayer(props: Props) {
         fail(humanizeSubmitError("network_error"));
       }
     },
-    [props.attemptId, props.resultUrl, router, clearLocalState],
+    [props.attemptId, props.preview, props.resultUrl, router, clearLocalState],
   );
   submitAttemptRef.current = submitAttempt;
 

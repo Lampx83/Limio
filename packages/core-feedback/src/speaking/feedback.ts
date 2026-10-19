@@ -3,7 +3,7 @@ import { toFile } from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
+import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
 import { callJsonModel } from "../aiTutor/generators";
 import { resolveFeedbackVariant } from "../variant";
 import {
@@ -38,7 +38,6 @@ import type { OpenAiSource } from "../writing/feedback";
  */
 
 export const SPEAKING_STT_MODEL = "whisper-1";
-const DEFAULT_MODEL = "gpt-4o-mini";
 
 export interface AudioPayload {
   buffer: Buffer;
@@ -163,6 +162,66 @@ function assertUsable(t: TranscriptRow) {
   if ((t.metrics as unknown as SpeechMetrics).silent) throw new SpeakingFeedbackError("no_speech");
 }
 
+/**
+ * Chuyển chữ bản ghi của một bài nộp bằng Whisper rồi lưu SubmissionTranscript (của HỌC VIÊN — dữ liệu
+ * của họ, đi theo export/xoá dữ liệu). `chargeUserId` là người trả tiền: học viên khi tự nhờ góp ý bài
+ * nói, giảng viên khi bấm "Gợi ý điểm bằng AI". Không kiểm giới hạn độ dài bài nói — đó là luật của
+ * góp ý bài nói (assertUsable), caller nào cần thì tự áp.
+ */
+export async function createSubmissionTranscript(
+  args: {
+    submissionId: string;
+    learnerUserId: string;
+    chargeUserId: string;
+    courseId: string;
+    audioUrl: string;
+    language?: string;
+  },
+  /** `transcriber` được gọi SAU khi kiểm ví và NGOÀI khối bắt lỗi Whisper: thiếu cấu hình AI phải báo đúng là thiếu cấu hình. */
+  deps: { loadAudio: (url: string) => Promise<AudioPayload | null>; transcriber: () => Promise<Transcriber> },
+  db: PrismaClient = prisma,
+): Promise<TranscriptRow> {
+  const { submissionId, audioUrl, language } = args;
+  const audio = await deps.loadAudio(audioUrl);
+  if (!audio) throw new SpeakingFeedbackError("audio_not_hosted");
+  if (audio.buffer.length > MAX_AUDIO_BYTES) {
+    throw new SpeakingFeedbackError("audio_too_large", { bytes: audio.buffer.length, max: MAX_AUDIO_BYTES });
+  }
+  // Ví người trả tiền + trần hệ thống — kiểm TRƯỚC khi chạm Whisper.
+  await assertWithinCaps(args.chargeUserId, db, "generator");
+  const transcribe = await deps.transcriber();
+  let stt: TranscribeResult;
+  try {
+    stt = await transcribe(audio, { language });
+  } catch (e) {
+    throw new SpeakingFeedbackError("stt_failed", { message: (e as Error).message });
+  }
+  // Whisper đã chạy: ghi sổ + trừ ví theo thời lượng, KỂ CẢ khi sau đó không có tiếng nói/quá dài.
+  await recordAiUsage(args.chargeUserId, SPEAKING_STT_MODEL, whisperChargeTokens(stt.durationSec), 0, db);
+  const text = stt.text.trim();
+  const metrics = measureSpeech(text, stt.words, stt.durationSec);
+  try {
+    return await db.submissionTranscript.create({
+      data: {
+        submissionId,
+        userId: args.learnerUserId,
+        courseId: args.courseId,
+        audioUrl,
+        textHash: hashSpeakingText(text),
+        language: stt.language ?? language ?? null,
+        text,
+        metrics: metrics as unknown as Prisma.InputJsonValue,
+        durationSec: stt.durationSec,
+        model: SPEAKING_STT_MODEL,
+      },
+    });
+  } catch (e) {
+    // Hai lần bấm gần nhau: bản chữ đã được tạo bởi lần kia.
+    if ((e as { code?: string }).code !== "P2002") throw e;
+    return db.submissionTranscript.findUniqueOrThrow({ where: { submissionId_audioUrl: { submissionId, audioUrl } } });
+  }
+}
+
 export async function requestSpeakingFeedback(
   userId: string,
   submissionId: string,
@@ -233,45 +292,12 @@ export async function requestSpeakingFeedback(
   }
 
   if (!transcript) {
-    const audio = await deps.loadAudio(audioUrl);
-    if (!audio) throw new SpeakingFeedbackError("audio_not_hosted");
-    if (audio.buffer.length > MAX_AUDIO_BYTES) {
-      throw new SpeakingFeedbackError("audio_too_large", { bytes: audio.buffer.length, max: MAX_AUDIO_BYTES });
-    }
-    // Ví của HỌC VIÊN + trần hệ thống — kiểm TRƯỚC khi chạm Whisper.
-    await assertWithinCaps(userId, db, "generator");
-    const transcribe = deps.transcribe ?? openAiTranscriber(await getOpenai());
-    const language = whisperLanguage(mod.course.language);
-    let stt: TranscribeResult;
-    try {
-      stt = await transcribe(audio, { language });
-    } catch (e) {
-      throw new SpeakingFeedbackError("stt_failed", { message: (e as Error).message });
-    }
-    // Whisper đã chạy: ghi sổ + trừ ví theo thời lượng, KỂ CẢ khi sau đó không có tiếng nói/quá dài.
-    await recordAiUsage(userId, SPEAKING_STT_MODEL, whisperChargeTokens(stt.durationSec), 0, db);
-    const text = stt.text.trim();
-    const metrics = measureSpeech(text, stt.words, stt.durationSec);
-    try {
-      transcript = await db.submissionTranscript.create({
-        data: {
-          submissionId,
-          userId,
-          courseId,
-          audioUrl,
-          textHash: hashSpeakingText(text),
-          language: stt.language ?? language ?? null,
-          text,
-          metrics: metrics as unknown as Prisma.InputJsonValue,
-          durationSec: stt.durationSec,
-          model: SPEAKING_STT_MODEL,
-        },
-      });
-    } catch (e) {
-      // Hai lần bấm gần nhau: bản chữ đã được tạo bởi lần kia.
-      if ((e as { code?: string }).code !== "P2002") throw e;
-      transcript = await db.submissionTranscript.findUniqueOrThrow({ where: { submissionId_audioUrl: { submissionId, audioUrl } } });
-    }
+    // Ví của HỌC VIÊN — học viên tự nhờ góp ý.
+    transcript = await createSubmissionTranscript(
+      { submissionId, learnerUserId: userId, chargeUserId: userId, courseId, audioUrl, language: whisperLanguage(mod.course.language) },
+      { loadAudio: deps.loadAudio, transcriber: async () => deps.transcribe ?? openAiTranscriber(await getOpenai()) },
+      db,
+    );
     assertUsable(transcript);
     const r = await reuseCheck(transcript);
     if (r) return r;
@@ -366,6 +392,55 @@ export async function getSpeakingFeedbackForLearner(
     transcript: { text: row.transcript.text },
     generatedAt: row.generatedAt,
   };
+}
+
+/**
+ * Bản chữ cho "Gợi ý điểm bằng AI": dùng lại bản đã có của đúng file, chưa có thì chuyển chữ ngay và
+ * trừ ví của GIẢNG VIÊN đang chấm (người bấm). Không giới hạn 3 phút như góp ý bài nói — bài thuyết
+ * trình/video có thể dài hơn; trần thật là 25 MB của Whisper và ví token. Tầng gọi đã kiểm quyền chấm.
+ * Trả null khi file trống tiếng (không có gì để chấm).
+ */
+export async function ensureTranscriptForGrading(
+  graderUserId: string,
+  submissionId: string,
+  audioUrl: string,
+  deps: { loadAudio: (url: string) => Promise<AudioPayload | null>; transcribe: () => Promise<Transcriber> },
+  db: PrismaClient = prisma,
+): Promise<{ text: string; created: boolean } | null> {
+  const existing = await db.submissionTranscript.findUnique({
+    where: { submissionId_audioUrl: { submissionId, audioUrl } },
+    select: { text: true },
+  });
+  if (existing) return existing.text.trim() ? { text: existing.text.trim(), created: false } : null;
+
+  const sub = await db.assignmentSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      userId: true,
+      assignment: {
+        select: {
+          lesson: { select: { module: { select: { courseId: true, course: { select: { language: true } } } } } },
+          tournamentMission: { select: { tournament: { select: { courseId: true } } } },
+        },
+      },
+    },
+  });
+  if (!sub) throw new SpeakingFeedbackError("submission_not_found");
+  const mod = sub.assignment.lesson?.module;
+  const t = await createSubmissionTranscript(
+    {
+      submissionId,
+      learnerUserId: sub.userId,
+      chargeUserId: graderUserId,
+      // Bài của giải đấu không gắn khoá thì không có courseId — cột bắt buộc, để rỗng.
+      courseId: mod?.courseId ?? sub.assignment.tournamentMission?.tournament.courseId ?? "",
+      audioUrl,
+      language: whisperLanguage(mod?.course.language),
+    },
+    { loadAudio: deps.loadAudio, transcriber: deps.transcribe },
+    db,
+  );
+  return t.text.trim() ? { text: t.text.trim(), created: true } : null;
 }
 
 /** Bản chữ mới nhất + mọi bản góp ý của một bài nộp, cho giảng viên (tầng gọi đã kiểm quyền chấm khoá). */

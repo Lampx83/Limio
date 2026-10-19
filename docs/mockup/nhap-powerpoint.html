@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu: nhập bài giảng PowerPoint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --talk: #1d4ed8; --talk-soft: #eef3ff; --hi: #fff4c2; --hi-line: #d6a300;
+    --ok-bg: #e4f5dd; --ok-ink: #1f5a14; --warn-bg: #fff4d6; --warn-ink: #7a4a00; --bad: #b42318; --note-bg: #fffbea; --note-line: #e8d48a;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 10px 26px -14px rgb(28 36 16 / .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+      --brand: #a3e635; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16;
+      --talk: #9db8ff; --talk-soft: #1b2440; --hi: #3d3510; --hi-line: #e3b93a;
+      --ok-bg: #1d3318; --ok-ink: #b7ecab; --warn-bg: #3a2c0a; --warn-ink: #f6d58a; --bad: #ff9b8f; --note-bg: #2a2410; --note-line: #5a4c1c;
+      --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 16px;
+    font-family: "Be Vietnam Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  main { max-width: 1120px; margin: 0 auto; padding: 18px 16px 96px; }
+
+  .note { border: 1px dashed var(--note-line); background: var(--note-bg); border-radius: 14px; padding: 12px 16px; font-size: 14px; color: var(--ink-2); }
+  .note b { color: var(--ink); }
+  .note ul { margin: 6px 0 0; padding-left: 20px; }
+
+  .back { display: inline-block; margin-top: 18px; font-size: 14px; color: var(--ink-3); text-decoration: none; font-weight: 500; }
+  h1 { font-size: 24px; line-height: 1.25; margin: 6px 0 4px; }
+  .lead { margin: 0; color: var(--ink-3); font-size: 15px; max-width: 720px; }
+
+  /* các bước */
+  .stepper { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 16px 0 0; padding: 0; font-size: 14px; }
+  .stepper button { border: 0; background: none; padding: 2px 0; color: var(--ink-3); font-weight: 500; }
+  .stepper .n { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); font-size: 12px; font-weight: 700; margin-right: 6px; }
+  .stepper [aria-current="step"] { color: var(--ink); font-weight: 700; }
+  .stepper [aria-current="step"] .n { border-color: var(--brand-fill); background: var(--brand-fill); color: #fff; }
+  .stepper .done .n { border-color: var(--brand-fill); color: var(--brand); }
+
+  .panel { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 18px; }
+  .panel h2 { font-size: 17px; margin: 0 0 4px; }
+  .muted { color: var(--ink-3); }
+  .small { font-size: 14px; }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 14px; font-size: 14px; font-weight: 500; }
+  .btn:hover { background: var(--surface-2); }
+  .btn.primary { background: var(--brand-fill); border-color: var(--brand-fill); color: #fff; font-weight: 700; }
+  .btn.primary:hover { filter: brightness(1.05); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+
+  /* bước 1 */
+  .drop { margin-top: 12px; border: 2px dashed var(--line); border-radius: 16px; padding: 28px 18px; display: grid; justify-items: center; gap: 8px; text-align: center; background: var(--surface-2); }
+  .drop svg { width: 44px; height: 44px; color: var(--brand); }
+  .drop b { font-size: 16px; }
+  .file { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; }
+  .file .ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: #c2410c; color: #fff; font-weight: 800; font-size: 13px; }
+  .file .nm { font-weight: 600; }
+  .read { margin-top: 14px; display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+  .read > * { min-width: 0; }
+  .facts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .fact { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  .fact b { display: block; font-size: 24px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .fact span { font-size: 13px; color: var(--ink-3); }
+  .strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 10px; scroll-snap-type: x mandatory; }
+  .thumb { flex: none; width: 150px; scroll-snap-align: start; }
+  .thumb .box { aspect-ratio: 16 / 9; border-radius: 8px; border: 1px solid var(--line); background: #fbfaf6; color: #2b2f28; padding: 8px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; font-size: 9px; line-height: 1.25; }
+  .thumb .box b { font-size: 10.5px; }
+  .thumb .box i { display: block; height: 4px; border-radius: 2px; background: #d9dccd; }
+  .thumb small { display: block; margin-top: 4px; font-size: 12px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .durs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .durs label { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-size: 14px; cursor: pointer; }
+  .durs label:has(input:checked) { border-color: var(--brand-fill); background: var(--brand-soft); font-weight: 600; }
+  .warn { background: var(--warn-bg); color: var(--warn-ink); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+  .warn ul { margin: 4px 0 0; padding-left: 20px; }
+
+  /* bước 2 */
+  .modes { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-top: 14px; }
+  .mode { position: relative; display: grid; gap: 10px; text-align: left; border: 2px solid var(--line); background: var(--surface); border-radius: 16px; padding: 16px; }
+  .mode:hover { border-color: var(--brand-fill); }
+  .mode[aria-pressed="true"] { border-color: var(--brand-fill); background: var(--brand-soft); }
+  .mode h3 { margin: 0; font-size: 17px; }
+  .mode .def { font-size: 13px; color: var(--brand); font-weight: 700; }
+  .mode ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ink-2); display: grid; gap: 4px; }
+  .mode .cost { font-size: 13px; color: var(--ink-3); border-top: 1px solid var(--line); padding-top: 8px; }
+  .flowpic { display: flex; align-items: center; gap: 8px; }
+  .flowpic .col { display: grid; gap: 3px; }
+  .flowpic .col i { display: block; width: 34px; height: 9px; border-radius: 3px; background: var(--line); }
+  .flowpic .col i.n { background: var(--brand-fill); }
+  .flowpic .col i.t { background: var(--talk); opacity: .7; }
+  .flowpic .col i.gap { background: transparent; height: 4px; }
+  .flowpic svg { width: 30px; height: 20px; color: var(--ink-3); }
+
+  /* bước 3 */
+  .modetabs { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 14px; }
+  .modetabs button { border: 0; background: var(--surface); padding: 6px 12px; }
+  .modetabs button + button { border-left: 1px solid var(--line); }
+  .modetabs button[aria-pressed="true"] { background: var(--brand-soft); font-weight: 700; }
+  .cover { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--ok-bg); color: var(--ok-ink); font-size: 14px; }
+  .cover.partial { background: var(--warn-bg); color: var(--warn-ink); }
+  .cover b { font-size: 18px; }
+  .unused { margin-top: 10px; display: grid; gap: 6px; }
+  .unused .u { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; }
+  .unused .u span { flex: 1; min-width: 180px; }
+  .viewtabs { display: none; }
+  .cols { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 16px; align-items: start; }
+  .col-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; margin: 0 4px 8px; }
+  .col-h h3 { margin: 0; font-size: 15px; }
+  .col-h span { font-size: 13px; color: var(--ink-3); }
+  .box2 { border: 1px solid var(--line); border-radius: 14px; padding: 6px; background: var(--surface); }
+  ol.orig, ol.rows { list-style: none; margin: 0; padding: 0; }
+  .o { display: grid; grid-template-columns: 26px 58px minmax(0, 1fr); gap: 0 10px; align-items: center; padding: 7px 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; }
+  .o:hover { background: var(--surface-2); }
+  .o .num { font-weight: 700; color: var(--ink-3); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  .o .mini { aspect-ratio: 16 / 9; border-radius: 5px; border: 1px solid var(--line); background: #fbfaf6; padding: 4px; display: grid; gap: 2px; align-content: start; }
+  .o .mini i { display: block; height: 3px; border-radius: 2px; background: #d9dccd; }
+  .o .mini i:first-child { background: #8a907f; width: 70%; }
+  .o b { display: block; font-size: 14px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .o small { display: block; font-size: 12.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .o.unused-o b { color: var(--ink-3); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .o.unused-o small::before { content: "Chưa dùng · "; color: var(--warn-ink); font-weight: 600; text-decoration: none; }
+  .o.lit, .r.lit { background: var(--hi); border-color: var(--hi-line); }
+  .o.hasflag small em { font-style: normal; color: var(--warn-ink); font-weight: 600; }
+
+  .grp { position: relative; padding-left: 26px; }
+  .grp::before { content: ""; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+  .grp:first-child::before { top: 20px; }
+  .grp:last-child::before { bottom: auto; height: 20px; }
+  .ghead { position: relative; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 10px 8px 2px; }
+  .ghead::before { content: ""; position: absolute; left: -21px; top: 15px; width: 12px; height: 12px; border-radius: 50%; border: 3px solid var(--brand-fill); background: var(--brand-fill); }
+  .grp.content .ghead::before { background: var(--surface); }
+  .gname { font-weight: 700; font-size: 14.5px; }
+  .gname .ord { color: var(--ink-3); font-weight: 600; }
+  .grange { color: var(--ink-3); font-size: 12.5px; }
+  .r { display: grid; grid-template-columns: 26px 42px minmax(0, 1fr); gap: 0 10px; align-items: center; padding: 7px 8px; border-radius: 10px; border: 2px solid transparent; cursor: pointer; }
+  .r:hover { background: var(--surface-2); }
+  .r.talk { background: var(--talk-soft); }
+  .r.talk.lit { background: var(--hi); }
+  .r .num { font-weight: 700; color: var(--ink-3); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  .glyph { width: 42px; height: 28px; color: var(--ink-3); }
+  .r.talk .glyph { color: var(--talk); }
+  .r b { display: block; font-size: 14px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r small { display: block; font-size: 12.5px; color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .r small .src { color: var(--ink-2); font-weight: 600; }
+  .r small .new { color: var(--talk); font-weight: 600; }
+  .r small .nt { color: var(--ok-ink); }
+
+  /* Dính đáy màn hình để thấy ngay khi bấm một dòng ở giữa danh sách dài. */
+  .detail { position: sticky; bottom: 12px; z-index: 5; margin-top: 12px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: var(--surface-2); font-size: 14px; box-shadow: 0 -8px 30px -12px rgb(0 0 0 / .25); max-height: 45vh; overflow: auto; }
+  .detail h4 { margin: 0 0 6px; font-size: 15px; }
+  .detail .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .detail .pane { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .detail .pane small { display: block; font-weight: 700; color: var(--ink-3); font-size: 12px; margin-bottom: 4px; }
+  .detail .pane p { margin: 0 0 4px; }
+  .detail .notes { margin-top: 8px; font-size: 13px; color: var(--ink-2); }
+  .detail .notes b { color: var(--ok-ink); }
+
+  @media (max-width: 899px) {
+    .cols { grid-template-columns: minmax(0, 1fr); }
+    .viewtabs { display: inline-flex; margin-top: 12px; }
+    .cols[data-view="new"] .c-orig, .cols[data-view="orig"] .c-new { display: none; }
+    .detail .pair { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 639px) {
+    .panel { padding: 14px; }
+    .grp { padding-left: 20px; } .grp::before { left: 6px; } .ghead::before { left: -19px; }
+    .actions .btn { flex: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="note">
+    <b>Bản mẫu, không phải trang thật.</b> Luồng nhập bài giảng PowerPoint có ba bước; sau bước 3 là trang dàn ý hiện có (chia nhóm, kéo thả, xác nhận rồi tạo slide). Thầy/cô có thể thử:
+    <ul>
+      <li>bấm "Chọn file" ở bước 1 để giả lập đã tải file <i>Phan-hoi-trong-day-hoc.pptx</i> (24 slide) và xem hệ thống đọc được những gì;</li>
+      <li>ở bước 2, chọn một trong hai cách chuyển; đây là lựa chọn duy nhất, áp cho cả bài;</li>
+      <li>ở bước 3, bấm một slide bên phải để xem nó lấy từ slide gốc nào (tô vàng bên trái), hoặc bấm một slide gốc để xem nó đi đâu; đổi qua lại hai cách chuyển ở đầu bước 3 để so sánh;</li>
+      <li>bấm "Thêm lại vào dàn ý" ở một slide gốc chưa dùng.</li>
+    </ul>
+  </div>
+
+  <a class="back" href="#">‹ Limio-Live</a>
+  <h1>Tạo bài giảng từ PowerPoint</h1>
+  <p class="lead">Limio đọc từng slide của file, giữ chữ, hình và ghi chú giảng, rồi dựng lại bài theo giao diện Limio. Thiết kế gốc (màu, phông, hiệu ứng) không được sao chép.</p>
+
+  <ol class="stepper" aria-label="Các bước">
+    <li><button type="button" data-go="1"><span class="n">1</span>Tải file</button></li>
+    <li><button type="button" data-go="2"><span class="n">2</span>Chọn cách chuyển</button></li>
+    <li><button type="button" data-go="3"><span class="n">3</span>Đối chiếu</button></li>
+    <li><button type="button" disabled><span class="n">4</span>Sửa dàn ý và tạo slide</button></li>
+  </ol>
+
+  <!-- ===== Bước 1 ===== -->
+  <section class="panel" id="s1" aria-labelledby="s1-h">
+    <h2 id="s1-h">1. Tải file PowerPoint</h2>
+    <p class="muted small">Nhận file .pptx. File .ppt đời cũ cần mở bằng PowerPoint rồi lưu lại thành .pptx. Bài trên Google Slides hoặc Keynote: tải xuống dạng PowerPoint (.pptx) rồi tải lên đây.</p>
+
+    <div class="drop" id="drop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+      <b>Kéo file .pptx vào đây</b>
+      <span class="muted small">hoặc</span>
+      <button type="button" class="btn" id="pick">Chọn file</button>
+      <span class="muted small">Tối đa 50 MB. Hình trong file được tính vào dung lượng lưu trữ của thầy/cô.</span>
+    </div>
+
+    <div id="readout" hidden>
+      <div class="file">
+        <span class="ic">PPT</span>
+        <span><span class="nm">Phan-hoi-trong-day-hoc.pptx</span><br><span class="muted small">8,4 MB · đã đọc xong</span></span>
+        <button type="button" class="btn" id="repick" style="margin-left:auto">Chọn file khác</button>
+      </div>
+      <div class="read">
+        <div class="facts">
+          <div class="fact"><b>24</b><span>slide</span></div>
+          <div class="fact"><b>20</b><span>slide có ghi chú giảng, giữ nguyên chữ</span></div>
+          <div class="fact"><b>14</b><span>hình được giữ (đã bỏ logo lặp ở mọi slide)</span></div>
+          <div class="fact"><b>1</b><span>bảng và 1 biểu đồ</span></div>
+        </div>
+        <div class="warn">
+          <b>Một số phần chỉ lấy được chữ:</b>
+          <ul>
+            <li>Slide 5 và 18 có SmartArt: lấy được phần chữ, hình vẽ được dựng lại bằng bố cục Các bước.</li>
+            <li>Slide 9 có bảng và slide 14 có biểu đồ: tạm chuyển thành thẻ và số liệu; khi Limio có bố cục Bảng và Biểu đồ, hai slide này sẽ giữ được dạng gốc.</li>
+            <li>Hiệu ứng chuyển động và phông chữ riêng của file không được chuyển.</li>
+          </ul>
+        </div>
+        <div>
+          <div class="muted small" style="margin:4px 2px 6px">Các slide đã đọc (kéo ngang để xem hết)</div>
+          <div class="strip" id="strip"></div>
+        </div>
+        <div>
+          <b class="small">Thời lượng buổi giảng</b>
+          <div class="durs" role="radiogroup" aria-label="Thời lượng buổi giảng">
+            <label><input type="radio" name="dur" value="15"> 15 phút (8–10 slide)</label>
+            <label><input type="radio" name="dur" value="30"> 30 phút (14–18 slide)</label>
+            <label><input type="radio" name="dur" value="45" checked> 45 phút (20–25 slide)</label>
+          </div>
+          <p class="muted small" style="margin:6px 2px 0">Hệ thống gợi ý 45 phút vì file có 24 slide.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions"><button type="button" class="btn primary" id="to2" disabled>Tiếp: chọn cách chuyển</button></div>
+  </section>
+
+  <!-- ===== Bước 2 ===== -->
+  <section class="panel" id="s2" aria-labelledby="s2-h" hidden>
+    <h2 id="s2-h">2. Chọn cách chuyển bài giảng</h2>
+    <p class="muted small">Chọn một lần cho cả bài. Bước sau vẫn sửa được từng slide trong dàn ý, và có thể quay lại đây để đổi cách.</p>
+    <div class="modes">
+      <button type="button" class="mode" data-mode="keep" aria-pressed="true">
+        <span class="def">Mặc định</span>
+        <h3>Giữ ý, làm đẹp lại</h3>
+        <span class="flowpic" aria-hidden="true">
+          <span class="col"><i></i><i></i><i></i><i></i><i></i></span>
+          <svg viewBox="0 0 30 20"><path d="M2 10h24M20 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="col"><i class="n"></i><i class="n"></i><i class="n"></i><i class="n"></i><i class="n"></i></span>
+        </span>
+        <ul>
+          <li>Mỗi slide gốc thành đúng một slide Limio, giữ nguyên thứ tự.</li>
+          <li>Chữ, hình và ghi chú giảng giữ nguyên; hệ thống chỉ chọn bố cục phù hợp cho từng slide.</li>
+          <li>Hợp khi bài đã có mạch tốt và chỉ cần giao diện mới, chữ lớn hơn, dễ đọc hơn trên máy chiếu.</li>
+        </ul>
+        <span class="cost">Không dùng AI, không tốn lượt. Slide nào chưa có ghi chú giảng thì để trống; thầy/cô có thể nhờ AI viết sau.</span>
+      </button>
+      <button type="button" class="mode" data-mode="restructure" aria-pressed="false">
+        <span class="def" style="visibility:hidden">.</span>
+        <h3>Soạn lại mạch</h3>
+        <span class="flowpic" aria-hidden="true">
+          <span class="col"><i></i><i></i><i></i><i></i><i></i></span>
+          <svg viewBox="0 0 30 20"><path d="M2 10h24M20 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="col"><i class="n"></i><i class="gap"></i><i class="n"></i><i class="t"></i><i class="gap"></i><i class="n"></i><i class="n"></i><i class="t"></i></span>
+        </span>
+        <ul>
+          <li>AI đọc cả bài và đề xuất dàn ý theo mạch: Mục tiêu, Hook, các phần có bìa phần, Tổng kết.</li>
+          <li>Được gộp các slide nói cùng một ý, tách slide quá dài, thêm slide tương tác (trắc nghiệm, bình chọn, đám mây từ).</li>
+          <li>Ghi chú giảng gốc vẫn giữ nguyên chữ; mỗi slide mới ghi rõ lấy từ slide gốc nào.</li>
+        </ul>
+        <span class="cost">Dùng AI để đề xuất dàn ý và viết các slide mới, khoảng 12 nghìn token với file 24 slide.</span>
+      </button>
+    </div>
+    <div class="actions">
+      <button type="button" class="btn" data-go="1">Quay lại</button>
+      <button type="button" class="btn primary" id="to3">Tiếp: xem đối chiếu</button>
+    </div>
+  </section>
+
+  <!-- ===== Bước 3 ===== -->
+  <section class="panel" id="s3" aria-labelledby="s3-h" hidden>
+    <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between">
+      <h2 id="s3-h">3. Đối chiếu slide gốc với dàn ý mới</h2>
+      <span class="modetabs" role="group" aria-label="Cách chuyển">
+        <button type="button" data-mode="keep">Giữ ý, làm đẹp lại</button>
+        <button type="button" data-mode="restructure">Soạn lại mạch</button>
+      </span>
+    </div>
+    <p class="muted small" id="s3-lead"></p>
+
+    <div class="cover" id="coverage"></div>
+    <div class="unused" id="unused"></div>
+
+    <span class="modetabs viewtabs" role="group" aria-label="Xem cột">
+      <button type="button" data-view="orig">Slide gốc</button>
+      <button type="button" data-view="new" aria-pressed="true">Dàn ý mới</button>
+    </span>
+
+    <div class="cols" id="cols" data-view="new">
+      <div class="c-orig">
+        <div class="col-h"><h3>Slide gốc</h3><span>24 slide trong file</span></div>
+        <div class="box2"><ol class="orig" id="orig"></ol></div>
+      </div>
+      <div class="c-new">
+        <div class="col-h"><h3>Dàn ý mới</h3><span id="newcount"></span></div>
+        <div class="box2"><ol class="flowlist" id="flow" style="list-style:none;margin:0;padding:0"></ol></div>
+      </div>
+    </div>
+
+    <div class="detail" id="detail" hidden></div>
+
+    <div class="actions">
+      <button type="button" class="btn" data-go="2">Đổi cách chuyển</button>
+      <button type="button" class="btn primary" id="toOutline">Tiếp: sửa dàn ý và tạo slide</button>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ---------- dữ liệu mẫu: 24 slide gốc ---------- */
+const ORIG = [
+  { t: "Phản hồi trong dạy học", m: "Bìa: tên khoa, tên bài, người trình bày", notes: false, img: 1 },
+  { t: "Nội dung chính", m: "4 ý", notes: true },
+  { t: "Phản hồi là gì?", m: "3 ý", notes: true },
+  { t: "Vì sao phản hồi quan trọng", m: "2 ý", notes: true, img: 1 },
+  { t: "Ba câu hỏi của phản hồi", m: "SmartArt", notes: true, flag: "SmartArt" },
+  { t: "Đích đến là gì?", m: "2 ý", notes: true },
+  { t: "Em đang ở đâu?", m: "2 ý", notes: true },
+  { t: "Bước tiếp theo là gì?", m: "2 ý", notes: true },
+  { t: "Bốn mức của phản hồi", m: "bảng 4 hàng", notes: true, flag: "bảng" },
+  { t: "Phản hồi về nhiệm vụ", m: "3 ý", notes: true, img: 1 },
+  { t: "Phản hồi về quá trình", m: "3 ý", notes: true },
+  { t: "Phản hồi về tự điều chỉnh", m: "2 ý", notes: true },
+  { t: "Khen ngợi cá nhân", m: "1 ý", notes: true },
+  { t: "Kết quả khảo sát lớp học", m: "biểu đồ cột", notes: true, flag: "biểu đồ" },
+  { t: "Phản hồi tốt và chưa tốt", m: "2 cột", notes: true, img: 2 },
+  { t: "Ví dụ 1: bài luận", m: "1 hình", notes: false, img: 1 },
+  { t: "Ví dụ 2: bài thuyết trình", m: "1 hình", notes: false, img: 1 },
+  { t: "Quy trình đưa phản hồi", m: "SmartArt", notes: true, flag: "SmartArt" },
+  { t: "Phản hồi bằng công nghệ", m: "3 ý", notes: true, img: 2 },
+  { t: "Thảo luận nhóm", m: "1 câu hỏi", notes: true },
+  { t: "Tóm tắt", m: "4 ý", notes: true },
+  { t: "Câu hỏi?", m: "", notes: false },
+  { t: "Tài liệu tham khảo", m: "5 nguồn", notes: false },
+  { t: "Cảm ơn", m: "", notes: false, img: 1 },
+];
+
+/* ---------- dàn ý mới theo hai cách ----------
+   slide: [tiêu đề, loại (content|quiz|poll|word_cloud|collaborate_board), bố cục, nguồn (số slide gốc), ghi chú: true nếu giữ ghi chú gốc] */
+const PLANS = {
+  keep: {
+    parts: [
+      ["cover", "Bìa"], ["agenda", "Mục lục"], ["content", "Nội dung chính"], ["summary", "Tổng kết"],
+    ],
+    slides: [
+      [0, "Phản hồi trong dạy học", "content", "cover", [1]],
+      [1, "Nội dung chính", "content", "summary", [2]],
+      [2, "Phản hồi là gì?", "content", "image", [3]],
+      [2, "Vì sao phản hồi quan trọng", "content", "image", [4]],
+      [2, "Ba câu hỏi của phản hồi", "content", "steps", [5]],
+      [2, "Đích đến là gì?", "content", "image", [6]],
+      [2, "Em đang ở đâu?", "content", "image", [7]],
+      [2, "Bước tiếp theo là gì?", "content", "image", [8]],
+      [2, "Bốn mức của phản hồi", "content", "cards", [9]],
+      [2, "Phản hồi về nhiệm vụ", "content", "image", [10]],
+      [2, "Phản hồi về quá trình", "content", "image", [11]],
+      [2, "Phản hồi về tự điều chỉnh", "content", "image", [12]],
+      [2, "Khen ngợi cá nhân", "content", "quote", [13]],
+      [2, "Kết quả khảo sát lớp học", "content", "stats", [14]],
+      [2, "Phản hồi tốt và chưa tốt", "content", "compare", [15]],
+      [2, "Ví dụ 1: bài luận", "content", "image", [16]],
+      [2, "Ví dụ 2: bài thuyết trình", "content", "image", [17]],
+      [2, "Quy trình đưa phản hồi", "content", "steps", [18]],
+      [2, "Phản hồi bằng công nghệ", "content", "image", [19]],
+      [2, "Thảo luận nhóm", "content", "image", [20]],
+      [3, "Tóm tắt", "content", "summary", [21]],
+      [3, "Câu hỏi?", "content", "section", [22]],
+      [3, "Tài liệu tham khảo", "content", "summary", [23]],
+      [3, "Cảm ơn", "content", "cover", [24]],
+    ],
+  },
+  restructure: {
+    parts: [
+      ["cover", "Bìa"], ["objectives", "Mục tiêu"], ["agenda", "Mục lục"], ["hook", "Hook"],
+      ["content", "Phản hồi và ba câu hỏi"], ["content", "Bốn mức của phản hồi"], ["content", "Đưa phản hồi trong lớp học"], ["summary", "Tổng kết"],
+    ],
+    slides: [
+      [0, "Phản hồi trong dạy học", "content", "cover", [1]],
+      [1, "Mục tiêu của buổi học", "content", "summary", [21], "rút từ"],
+      [2, "Nội dung buổi học", "content", "summary", [2]],
+      [3, "Lần gần nhất bạn nhận được một nhận xét giúp mình tiến bộ là khi nào?", "poll", null, []],
+      [3, "Vì sao phản hồi quan trọng", "content", "image", [4]],
+      [4, "Phản hồi và ba câu hỏi", "content", "section", []],
+      [4, "Phản hồi là gì?", "content", "image", [3]],
+      [4, "Ba câu hỏi của phản hồi", "content", "steps", [5, 6, 7, 8], "gộp"],
+      [4, "Câu hỏi nào giúp người học biết bước tiếp theo?", "quiz", null, [], "dựa trên", [6, 7, 8]],
+      [5, "Bốn mức của phản hồi", "content", "section", []],
+      [5, "Bốn mức của phản hồi", "content", "cards", [9]],
+      [5, "Phản hồi về nhiệm vụ và về quá trình", "content", "compare", [10, 11], "gộp"],
+      [5, "Phản hồi về tự điều chỉnh", "content", "image", [12]],
+      [5, "Khen ngợi cá nhân ít giúp người học tiến bộ", "content", "quote", [13]],
+      [5, "Kết quả khảo sát lớp học", "content", "stats", [14]],
+      [5, "Một từ mô tả phản hồi tốt nhất bạn từng nhận là gì?", "word_cloud", null, []],
+      [6, "Đưa phản hồi trong lớp học", "content", "section", []],
+      [6, "Phản hồi tốt và chưa tốt qua hai ví dụ", "content", "compare", [15, 16, 17], "gộp"],
+      [6, "Quy trình đưa phản hồi", "content", "steps", [18]],
+      [6, "Phản hồi bằng công nghệ", "content", "image", [19]],
+      [6, "Hãy dán một câu phản hồi bạn sẽ viết cho bài tập tuần này.", "collaborate_board", null, [20]],
+      [7, "Những điều cần ghi nhớ", "content", "summary", [21]],
+      [7, "Câu hỏi và trao đổi", "content", "section", [22]],
+    ],
+  },
+};
+const LAYOUT_LABEL = { cover: "Bìa", section: "Mở phần", image: "Chữ và hình", cards: "Thẻ", compare: "So sánh hai cột", steps: "Các bước", stats: "Số liệu", quote: "Trích dẫn", summary: "Tóm tắt" };
+const KIND_LABEL = { quiz: "Trắc nghiệm", poll: "Vote", word_cloud: "Word Cloud", collaborate_board: "Dán Note" };
+
+const F = 'fill="currentColor"', O = 'fill="currentColor" opacity=".32"';
+const IMG = `<rect x="6" y="6" width="18" height="4" rx="1.5" ${F}/><rect x="6" y="14" width="20" height="2.5" rx="1" ${O}/><rect x="6" y="19" width="20" height="2.5" rx="1" ${O}/><rect x="6" y="24" width="14" height="2.5" rx="1" ${O}/><rect x="30" y="8" width="12" height="16" rx="2" ${O}/>`;
+const SH = {
+  cover: `<rect x="8" y="10" width="26" height="5" rx="1.5" ${F}/><rect x="8" y="19" width="16" height="3" rx="1.5" ${O}/>`,
+  section: `<rect x="8" y="13" width="22" height="5" rx="1.5" ${F}/><rect x="8" y="22" width="30" height="2.5" rx="1" ${O}/><rect x="8" y="7" width="8" height="2.5" rx="1" ${O}/>`,
+  image: IMG,
+  cards: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="13" width="11" height="14" rx="2" ${O}/><rect x="18.5" y="13" width="11" height="14" rx="2" ${O}/><rect x="31" y="13" width="11" height="14" rx="2" ${O}/>`,
+  compare: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="13" width="17" height="14" rx="2" ${O}/><rect x="25" y="13" width="17" height="14" rx="2" ${O}/>`,
+  steps: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><circle cx="10" cy="17" r="3" ${F}/><circle cx="24" cy="17" r="3" ${F}/><circle cx="38" cy="17" r="3" ${F}/><rect x="6" y="23" width="9" height="2.5" rx="1" ${O}/><rect x="20" y="23" width="9" height="2.5" rx="1" ${O}/><rect x="33" y="23" width="9" height="2.5" rx="1" ${O}/>`,
+  stats: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="14" width="10" height="8" rx="1.5" ${F}/><rect x="19" y="14" width="10" height="8" rx="1.5" ${F}/><rect x="32" y="14" width="10" height="8" rx="1.5" ${F}/>`,
+  quote: `<rect x="8" y="8" width="3" height="16" rx="1.5" ${F}/><rect x="14" y="9" width="26" height="4" rx="1.5" ${F}/><rect x="14" y="16" width="20" height="4" rx="1.5" ${O}/>`,
+  summary: `<rect x="6" y="5" width="22" height="4" rx="1.5" ${F}/><rect x="6" y="14" width="3" height="3" rx="1" ${F}/><rect x="12" y="14" width="26" height="3" rx="1" ${O}/><rect x="6" y="20" width="3" height="3" rx="1" ${F}/><rect x="12" y="20" width="22" height="3" rx="1" ${O}/><rect x="6" y="26" width="3" height="3" rx="1" ${F}/><rect x="12" y="26" width="18" height="3" rx="1" ${O}/>`,
+  quiz: `<rect x="8" y="6" width="26" height="4" rx="1.5" ${F}/><rect x="8" y="13" width="14" height="6" rx="2" ${O}/><rect x="25" y="13" width="14" height="6" rx="2" ${O}/><rect x="8" y="22" width="14" height="6" rx="2" ${O}/><rect x="25" y="22" width="14" height="6" rx="2" ${O}/>`,
+  poll: `<rect x="8" y="6" width="26" height="4" rx="1.5" ${F}/><rect x="8" y="14" width="30" height="3.5" rx="1.5" ${F}/><rect x="8" y="20" width="20" height="3.5" rx="1.5" ${O}/><rect x="8" y="26" width="12" height="3.5" rx="1.5" ${O}/>`,
+  word_cloud: `<rect x="8" y="8" width="16" height="6" rx="2" ${F}/><rect x="26" y="9" width="12" height="4" rx="1.5" ${O}/><rect x="10" y="17" width="9" height="4" rx="1.5" ${O}/><rect x="21" y="16" width="14" height="6" rx="2" ${F}/><rect x="14" y="24" width="12" height="4" rx="1.5" ${O}/>`,
+  collaborate_board: `<rect x="6" y="6" width="12" height="10" rx="1.5" ${O}/><rect x="20" y="8" width="12" height="10" rx="1.5" ${F}/><rect x="33" y="5" width="10" height="10" rx="1.5" ${O}/><rect x="10" y="19" width="12" height="9" rx="1.5" ${F}/><rect x="25" y="20" width="14" height="8" rx="1.5" ${O}/>`,
+};
+const glyph = (k) => `<svg viewBox="0 0 48 32" class="glyph" aria-hidden="true"><rect x="1" y="1" width="46" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".7"/>${SH[k] || IMG}</svg>`;
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const list = (a) => (a.length <= 2 ? a.join(" và ") : a.slice(0, -1).join(", ") + " và " + a[a.length - 1]);
+
+let mode = "keep", step = 1, selected = null, readDone = false;
+const extraBack = { keep: new Set(), restructure: new Set() };
+
+/* ---------- bước ---------- */
+function go(n) {
+  if (n > 1 && !readDone) return;
+  step = n;
+  [1, 2, 3].forEach((k) => (document.getElementById("s" + k).hidden = k !== n));
+  document.querySelectorAll(".stepper button[data-go]").forEach((b) => {
+    const k = Number(b.dataset.go);
+    if (k === n) b.setAttribute("aria-current", "step"); else b.removeAttribute("aria-current");
+    b.parentElement.classList.toggle("done", k < n);
+  });
+  if (n === 3) renderCompare();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+document.addEventListener("click", (e) => {
+  const g = e.target.closest("[data-go]");
+  if (g && !g.disabled) go(Number(g.dataset.go));
+});
+
+/* ---------- bước 1 ---------- */
+function showRead() {
+  readDone = true;
+  document.getElementById("drop").hidden = true;
+  document.getElementById("readout").hidden = false;
+  document.getElementById("to2").disabled = false;
+  document.getElementById("strip").innerHTML = ORIG.map((o, i) => `<div class="thumb"><div class="box"><b>${esc(o.t)}</b><i style="width:80%"></i><i style="width:65%"></i><i style="width:72%"></i></div><small>${i + 1}. ${esc(o.t)}</small></div>`).join("");
+}
+document.getElementById("pick").onclick = showRead;
+document.getElementById("repick").onclick = () => { readDone = false; document.getElementById("drop").hidden = false; document.getElementById("readout").hidden = true; document.getElementById("to2").disabled = true; };
+document.getElementById("to2").onclick = () => go(2);
+
+/* ---------- bước 2 ---------- */
+function setMode(m) {
+  mode = m; selected = null;
+  document.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+  if (step === 3) renderCompare();
+}
+document.querySelectorAll("[data-mode]").forEach((b) => (b.onclick = () => setMode(b.dataset.mode)));
+document.getElementById("to3").onclick = () => go(3);
+
+/* ---------- bước 3 ---------- */
+function plan() {
+  const p = PLANS[mode];
+  const slides = p.slides.map(([part, t, kind, layout, src, how, basis]) => ({ part, t, kind, layout, src, how, basis }));
+  // slide gốc chưa dùng mà thầy/cô bấm "Thêm lại": đứng cuối phần Tổng kết, bố cục Tóm tắt
+  for (const n of extraBack[mode]) slides.push({ part: p.parts.length - 1, t: ORIG[n - 1].t, kind: "content", layout: "summary", src: [n], back: true });
+  return { parts: p.parts, slides };
+}
+function usedSet(pl) { const u = new Set(); pl.slides.forEach((s) => s.src.forEach((n) => u.add(n))); return u; }
+
+function rowSub(s) {
+  const lay = s.kind === "content" ? LAYOUT_LABEL[s.layout] : KIND_LABEL[s.kind];
+  let from;
+  if (s.back) from = `<span class="src">thêm lại từ slide ${s.src[0]}</span>`;
+  else if (!s.src.length && s.basis) from = `<span class="new">mới, dựa trên slide ${list(s.basis)}</span>`;
+  else if (!s.src.length) from = `<span class="new">mới</span>`;
+  else if (s.how === "gộp") from = `<span class="src">gộp slide ${list(s.src)}</span>`;
+  else if (s.how === "rút từ") from = `<span class="new">mới, rút từ slide ${list(s.src)}</span>`;
+  else from = `<span class="src">từ slide ${list(s.src)}</span>`;
+  const nt = s.src.filter((n) => ORIG[n - 1].notes && s.how !== "rút từ");
+  const notes = nt.length ? ` · <span class="nt">giữ ghi chú</span>` : "";
+  return `${lay} · ${from}${notes}`;
+}
+
+function renderCompare() {
+  const pl = plan();
+  const used = usedSet(pl);
+  const unused = ORIG.map((_, i) => i + 1).filter((n) => !used.has(n));
+
+  document.getElementById("s3-lead").textContent = mode === "keep"
+    ? "Mỗi slide gốc thành một slide mới theo đúng thứ tự. Bấm một slide để xem nó lấy từ đâu."
+    : "AI đề xuất dàn ý theo mạch. Mỗi slide mới ghi rõ lấy từ slide gốc nào; slide ghi \"mới\" là do AI thêm. Bấm một slide để xem đối chiếu.";
+
+  const cov = document.getElementById("coverage");
+  cov.className = "cover" + (unused.length ? " partial" : "");
+  cov.innerHTML = unused.length
+    ? `<b>${used.size}/24</b><span>slide gốc đã được dùng. ${unused.length} slide gốc chưa có trong dàn ý mới; thầy/cô xem lại bên dưới, thêm lại nếu cần.</span>`
+    : `<b>24/24</b><span>slide gốc đều có trong dàn ý mới. Không có nội dung nào bị bỏ.</span>`;
+  document.getElementById("unused").innerHTML = unused.map((n) => `<div class="u"><span><b>Slide ${n}: ${esc(ORIG[n - 1].t)}</b>${ORIG[n - 1].m ? ` · <span class="muted">${esc(ORIG[n - 1].m)}</span>` : ""}</span><button type="button" class="btn" data-back="${n}">Thêm lại vào dàn ý</button></div>`).join("");
+
+  document.getElementById("orig").innerHTML = ORIG.map((o, i) => {
+    const n = i + 1;
+    const meta = [o.m, o.notes ? "có ghi chú" : "", o.img ? `${o.img} hình` : ""].filter(Boolean).join(" · ");
+    const flag = o.flag ? ` · <em>${o.flag}: chỉ lấy chữ</em>` : "";
+    return `<li class="o${used.has(n) ? "" : " unused-o"}${o.flag ? " hasflag" : ""}" data-o="${n}" tabindex="0">
+      <span class="num">${n}</span><span class="mini"><i></i><i></i><i></i><i></i></span>
+      <span style="min-width:0"><b>${esc(o.t)}</b><small>${meta}${flag}</small></span></li>`;
+  }).join("");
+
+  let html = "", idx = 0, ord = 0;
+  pl.parts.forEach(([role, name], pi) => {
+    const rows = pl.slides.filter((s) => s.part === pi);
+    if (!rows.length) return;
+    const from = idx + 1, to = idx + rows.length;
+    const label = role === "content" ? `<span class="ord">Nội dung ${++ord}:</span> ${esc(name)}` : esc(name);
+    html += `<li class="grp ${role === "content" ? "content" : ""}"><div class="ghead"><span class="gname">${label}</span><span class="grange">${from === to ? `slide ${from}` : `slide ${from}–${to}`}</span></div><ol class="rows">`;
+    rows.forEach((s) => {
+      idx++;
+      s.no = idx;
+      html += `<li class="r${s.kind !== "content" ? " talk" : ""}" data-r="${idx}" tabindex="0"><span class="num">${idx}</span>${glyph(s.kind === "content" ? s.layout : s.kind)}<span style="min-width:0"><b>${esc(s.t)}</b><small>${rowSub(s)}</small></span></li>`;
+    });
+    html += `</ol></li>`;
+  });
+  document.getElementById("flow").innerHTML = html;
+  document.getElementById("newcount").textContent = `${pl.slides.length} slide · ${pl.slides.filter((s) => s.kind !== "content").length} tương tác`;
+  window.__plan = pl;
+  highlight();
+}
+
+const CLOSE = `<button type="button" class="btn" data-close style="float:right;margin:-4px 0 6px 10px;padding:4px 10px">Đóng</button>`;
+function highlight() {
+  document.querySelectorAll(".lit").forEach((x) => x.classList.remove("lit"));
+  const d = document.getElementById("detail");
+  if (!selected) { d.hidden = true; return; }
+  const pl = window.__plan;
+  if (selected.type === "r") {
+    const s = pl.slides[selected.n - 1];
+    document.querySelector(`[data-r="${selected.n}"]`)?.classList.add("lit");
+    const srcs = s.src.length ? s.src : s.basis || [];
+    srcs.forEach((n) => document.querySelector(`[data-o="${n}"]`)?.classList.add("lit"));
+    const origTxt = srcs.length ? srcs.map((n) => `<p><b>${n}. ${esc(ORIG[n - 1].t)}</b>${ORIG[n - 1].m ? ` (${esc(ORIG[n - 1].m)})` : ""}</p>`).join("") : `<p class="muted">Không có, đây là slide AI thêm vào mạch bài.</p>`;
+    const keepNotes = s.src.filter((n) => ORIG[n - 1].notes && s.how !== "rút từ");
+    const notes = keepNotes.length
+      ? `<b>Ghi chú giảng:</b> giữ nguyên chữ ghi chú của slide ${list(keepNotes)}${keepNotes.length > 1 ? ", nối theo thứ tự" : ""}.`
+      : s.kind !== "content" || !s.src.length
+        ? `<b>Ghi chú giảng:</b> AI viết mới vì slide gốc không có, thầy/cô sửa được.`
+        : `Slide gốc không có ghi chú giảng; ghi chú để trống.`;
+    d.innerHTML = `${CLOSE}<h4>Slide mới ${s.no}: ${esc(s.t)}</h4><div class="pair">
+      <div class="pane"><small>Lấy từ slide gốc</small>${origTxt}</div>
+      <div class="pane"><small>Slide mới</small><p><b>${esc(s.t)}</b></p><p class="muted">${s.kind === "content" ? "Bố cục " + LAYOUT_LABEL[s.layout] : KIND_LABEL[s.kind]}${s.how === "gộp" ? ". Các ý của những slide gốc được gộp, không bỏ ý nào." : ""}</p></div>
+    </div><p class="notes">${notes}</p>`;
+    d.hidden = false;
+    document.querySelector(`[data-o="${srcs[0]}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  } else {
+    const n = selected.n;
+    document.querySelector(`[data-o="${n}"]`)?.classList.add("lit");
+    const targets = pl.slides.filter((s) => s.src.includes(n) || (s.basis || []).includes(n));
+    targets.forEach((s) => document.querySelector(`[data-r="${s.no}"]`)?.classList.add("lit"));
+    d.innerHTML = targets.length
+      ? `${CLOSE}<h4>Slide gốc ${n}: ${esc(ORIG[n - 1].t)}</h4><p style="margin:0">Có mặt trong slide mới ${list(targets.map((s) => s.no))}: ${targets.map((s) => `“${esc(s.t)}”`).join("; ")}.</p>`
+      : `${CLOSE}<h4>Slide gốc ${n}: ${esc(ORIG[n - 1].t)}</h4><p style="margin:0">Slide này chưa có trong dàn ý mới. Bấm "Thêm lại vào dàn ý" ở khung phía trên nếu cần giữ.</p>`;
+    d.hidden = false;
+    if (targets[0]) document.querySelector(`[data-r="${targets[0].no}"]`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+}
+
+document.getElementById("s3").addEventListener("click", (e) => {
+  if (e.target.closest("[data-close]")) { selected = null; highlight(); return; }
+  const back = e.target.closest("[data-back]");
+  if (back) { extraBack[mode].add(Number(back.dataset.back)); selected = null; renderCompare(); return; }
+  const r = e.target.closest("[data-r]"), o = e.target.closest("[data-o]");
+  if (r) selected = { type: "r", n: Number(r.dataset.r) };
+  else if (o) selected = { type: "o", n: Number(o.dataset.o) };
+  else return;
+  highlight();
+});
+document.getElementById("s3").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const t = e.target.closest("[data-r],[data-o]"); if (!t) return;
+  e.preventDefault(); t.click();
+});
+document.querySelectorAll("[data-view]").forEach((b) => (b.onclick = () => {
+  document.getElementById("cols").dataset.view = b.dataset.view;
+  document.querySelectorAll("[data-view]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+}));
+document.getElementById("toOutline").onclick = () => alert("Trang thật: sang trang dàn ý hiện có (chia nhóm, kéo thả, xác nhận rồi tạo slide).");
+
+go(1);
+</script>
+</body>
+</html>

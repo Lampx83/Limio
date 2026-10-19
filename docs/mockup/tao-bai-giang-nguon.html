@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chọn nguồn tạo bài giảng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --faint: #8f9884; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d; --warn: #9a3412;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 12px 28px -16px rgb(28 36 16 / .22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24;
+      --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --warn: #fdba74; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24;
+    --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --warn: #fdba74; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 15px; font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 80px; }
+  header.top { padding: 18px 0 4px; }
+  header.top h1 { font-size: 21px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-3); max-width: 880px; }
+  .switch-opt { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+  .switch-opt button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 12px; padding: 8px 14px; text-align: left; font-size: 14px; }
+  .switch-opt button b { display: block; font-size: 14.5px; }
+  .switch-opt button span { color: var(--ink-3); font-size: 13px; }
+  .switch-opt button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); }
+  .why { color: var(--ink-2); max-width: 880px; margin: 8px 0 16px; font-size: 14.5px; }
+
+  /* khung trang Tạo bài giảng (đã gọn từ đợt trước) */
+  .page { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 22px 24px; }
+  .page .crumb { font-size: 14px; color: var(--ink-3); }
+  .page h2 { margin: 0; font-size: 24px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px 16px; flex-wrap: wrap; }
+  .manual { font-size: 14px; color: var(--ink-3); }
+  .lead { color: var(--ink-3); margin: 8px 0 16px; font-size: 15px; }
+  .box { border: 2px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); }
+  .box:focus-within { border-color: var(--brand-fill); }
+  .box textarea { display: block; width: 100%; border: 0; outline: 0; resize: vertical; background: transparent; padding: 14px 16px; font-size: 16px; line-height: 1.55; min-height: 120px; }
+  .hint { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 0 16px 10px; font-size: 13px; color: var(--ink-3); }
+  .mode { display: block; flex: 1 1 260px; font-size: 13px; color: var(--ink-2); }
+  .mode b { color: var(--brand-strong); }
+  .mode button { border: 0; background: none; color: var(--brand-strong); text-decoration: underline; padding: 0; font-size: 13px; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 12px 16px; background: var(--surface-2); border-top: 1px solid var(--line); }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .seg button { border: 0; background: none; border-radius: 999px; padding: 5px 12px; font-size: 14px; color: var(--ink-3); font-weight: 600; }
+  .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+  .muted { color: var(--ink-3); font-size: 14px; }
+  .faint { color: var(--faint); font-size: 13px; }
+  .go { margin-left: auto; border: 0; border-radius: 12px; padding: 10px 18px; background: var(--brand); color: #fff; font-weight: 700; display: inline-flex; gap: 8px; align-items: center; }
+  .attach { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 11px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .attach:hover { border-color: var(--brand); color: var(--ink); }
+  .chip-file { display: inline-flex; align-items: center; gap: 8px; margin: 10px 16px 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); font-size: 14px; }
+  .chip-file small { color: var(--ink-3); }
+  .chip-file button { border: 0; background: none; color: var(--ink-3); font-size: 18px; line-height: 1; padding: 0 2px; }
+  .ex { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--ink-3); }
+  .ex button { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 3px 9px; font-size: 13px; color: var(--ink-2); }
+
+  /* phương án B: thẻ theo việc có trong tay */
+  .cards { display: grid; gap: 10px; margin-bottom: 14px; }
+  @media (min-width: 760px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+  .card { display: grid; grid-template-columns: 38px 1fr; gap: 2px 12px; align-items: start; text-align: left; border: 2px solid var(--line); background: var(--surface); border-radius: 16px; padding: 12px 14px; }
+  .card .ic { grid-row: span 2; width: 38px; height: 38px; border-radius: 10px; background: var(--surface-2); display: grid; place-items: center; color: var(--ink-2); }
+  .card b { font-size: 15px; }
+  .card span { font-size: 13px; color: var(--ink-3); }
+  .card[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); }
+  .card[aria-pressed="true"] .ic { background: var(--surface); color: var(--brand-strong); }
+  .drop { margin: 14px; border: 2px dashed var(--line); border-radius: 14px; padding: 22px; text-align: center; color: var(--ink-3); font-size: 14px; }
+  .drop b { color: var(--ink); display: block; font-size: 15px; margin-bottom: 4px; }
+
+  /* phương án C: tab với nhãn rõ */
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 0; flex-wrap: wrap; }
+  .tabs button { border: 0; background: none; padding: 10px 14px; font-weight: 600; color: var(--ink-3); border-bottom: 3px solid transparent; margin-bottom: -1px; display: inline-flex; gap: 7px; align-items: center; font-size: 14.5px; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-color: var(--brand); }
+  .tabnote { font-size: 13.5px; color: var(--ink-2); margin: 10px 0 12px; }
+
+  table.cmp { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-top: 26px; }
+  table.cmp th, table.cmp td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  table.cmp th { background: var(--surface-2); color: var(--ink-2); }
+  .tblwrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Bản mẫu: chọn nguồn khi tạo bài giảng</h1>
+  <p>Hiện có bốn tab "Mô tả chủ đề, Tải tệp lên, Dán văn bản, PowerPoint", trong đó "PowerPoint" thực ra chuyển sang trang khác, và kéo tệp PowerPoint vào "Tải tệp lên" thì bị báo lỗi. Ba phương án dưới đây đều bỏ sự lẫn lộn đó; bấm từng phương án để xem và thử.</p>
+</header>
+
+<div class="switch-opt" role="group" aria-label="Phương án">
+  <button type="button" aria-pressed="true" data-opt="a"><b>A. Một ô, đính kèm tệp (đề xuất)</b><span>Giống ô chat: gõ, dán hay đính kèm đều vào một chỗ</span></button>
+  <button type="button" aria-pressed="false" data-opt="b"><b>B. Ba thẻ theo việc thầy/cô có trong tay</b><span>Chọn trước: ý tưởng, tài liệu hay PowerPoint</span></button>
+  <button type="button" aria-pressed="false" data-opt="c"><b>C. Giữ tab, nhãn rõ nghĩa</b><span>Ba tab, mỗi tab một câu nói AI sẽ làm gì</span></button>
+</div>
+<p class="why" id="why"></p>
+
+<!-- A -->
+<div class="page" id="opt-a">
+  <span class="crumb">Limio-Live</span>
+  <div class="head"><h2>Tạo bài giảng</h2><span class="manual">Soạn thủ công từ bài trống</span></div>
+  <p class="lead">Mô tả bài giảng, dán văn bản, hoặc đính kèm tệp Word, PDF, PowerPoint. AI đề xuất dàn ý để thầy/cô duyệt rồi mới tạo slide.</p>
+  <div class="box">
+    <div id="a-file" hidden></div>
+    <textarea id="a-text" aria-label="Mô tả bài giảng hoặc dán văn bản" placeholder="Mô tả bài giảng: chủ đề, người học, mục tiêu. Hoặc dán nội dung tài liệu vào đây."></textarea>
+    <div class="hint"><span class="mode" id="a-mode">Gõ mô tả ngắn để AI soạn từ kiến thức chung, hoặc dán tài liệu để AI bám sát tài liệu.</span><span id="a-count">0 ký tự</span></div>
+    <div class="bar">
+      <button type="button" class="attach" id="a-attach"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 12-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l9.2-9.2a3.7 3.7 0 0 1 5.2 5.2l-9.2 9.2a1.8 1.8 0 0 1-2.6-2.6l8.5-8.5"/></svg>Đính kèm tệp</button>
+      <span class="faint">Word, PDF, PowerPoint, văn bản</span>
+      <span class="muted" id="a-dur">Thời lượng</span>
+      <span class="seg" id="a-seg"><button type="button" aria-pressed="false">15 phút</button><button type="button" aria-pressed="true">30 phút</button><button type="button" aria-pressed="false">45 phút</button></span>
+      <button type="button" class="go" id="a-go">Soạn dàn ý</button>
+    </div>
+  </div>
+  <div class="ex">Thử:
+    <button type="button" data-a="short">Gõ một câu mô tả</button>
+    <button type="button" data-a="long">Dán một tài liệu dài</button>
+    <button type="button" data-a="docx">Đính kèm tệp Word</button>
+    <button type="button" data-a="pptx">Đính kèm tệp PowerPoint</button>
+  </div>
+</div>
+
+<!-- B -->
+<div class="page" id="opt-b" hidden>
+  <span class="crumb">Limio-Live</span>
+  <div class="head"><h2>Tạo bài giảng</h2><span class="manual">Soạn thủ công từ bài trống</span></div>
+  <p class="lead">Thầy/cô đang có gì trong tay?</p>
+  <div class="cards" role="group" aria-label="Nguồn">
+    <button type="button" class="card" aria-pressed="true" data-b="idea"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg></span><b>Chỉ có ý tưởng</b><span>AI soạn từ kiến thức chung theo mô tả của thầy/cô.</span></button>
+    <button type="button" class="card" aria-pressed="false" data-b="doc"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><b>Có tài liệu</b><span>Word, PDF hoặc dán văn bản; AI bám sát tài liệu.</span></button>
+    <button type="button" class="card" aria-pressed="false" data-b="ppt"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span><b>Có bài giảng PowerPoint</b><span>Giữ hình, ghi chú giảng, bảng và biểu đồ.</span></button>
+  </div>
+  <div class="box" id="b-box"></div>
+</div>
+
+<!-- C -->
+<div class="page" id="opt-c" hidden>
+  <span class="crumb">Limio-Live</span>
+  <div class="head"><h2>Tạo bài giảng</h2><span class="manual">Soạn thủ công từ bài trống</span></div>
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" aria-selected="true" data-c="idea">Viết mô tả</button>
+    <button type="button" role="tab" aria-selected="false" data-c="doc">Từ tài liệu</button>
+    <button type="button" role="tab" aria-selected="false" data-c="ppt">Từ PowerPoint</button>
+  </div>
+  <p class="tabnote" id="c-note"></p>
+  <div class="box" id="c-box"></div>
+</div>
+
+<div class="tblwrap"><table class="cmp">
+  <thead><tr><th></th><th>A. Một ô, đính kèm tệp</th><th>B. Ba thẻ</th><th>C. Tab nhãn rõ</th></tr></thead>
+  <tbody>
+    <tr><td>Số lựa chọn trước khi bắt đầu</td><td>Không: gõ, dán hay đính kèm luôn</td><td>Một: chọn thẻ</td><td>Một: chọn tab</td></tr>
+    <tr><td>Dán văn bản</td><td>Dán vào cùng ô; hệ thống báo đang hiểu là tài liệu, có nút Đổi</td><td>Trong thẻ "Có tài liệu"</td><td>Trong tab "Từ tài liệu"</td></tr>
+    <tr><td>Tệp PowerPoint</td><td>Đính kèm như mọi tệp; hệ thống tự dùng cách nhập PowerPoint</td><td>Thẻ riêng</td><td>Tab riêng, ngay trên trang</td></tr>
+    <tr><td>Rủi ro</td><td>Đoán nhầm mô tả dài là tài liệu (có dòng báo và nút Đổi)</td><td>Thêm một bước bấm; trang dài hơn</td><td>Vẫn phải hiểu ba tab khác nhau thế nào</td></tr>
+  </tbody>
+</table></div>
+</div>
+
+<script>
+const WHY = {
+  a: "Một ô duy nhất như khung chat. Gõ mô tả ngắn thì AI soạn từ kiến thức chung; dán văn bản dài hoặc đính kèm tệp thì AI bám sát tài liệu. Dòng nhỏ dưới ô luôn nói hệ thống đang hiểu thế nào, kèm nút Đổi khi đoán sai. Tệp PowerPoint đính kèm như mọi tệp và tự đi qua cách nhập PowerPoint (giữ hình, ghi chú, bảng, biểu đồ), không còn tab chuyển trang.",
+  b: "Câu hỏi \"Thầy/cô đang có gì trong tay?\" với ba thẻ lớn, mỗi thẻ một dòng nói AI sẽ làm gì. Chọn thẻ thì ô nhập tương ứng hiện bên dưới. Rõ ràng cho người mới, nhưng thêm một lần bấm và trang dài hơn.",
+  c: "Giữ kiểu tab quen thuộc nhưng chỉ còn ba tab, nhãn nói rõ nguồn, và ngay dưới tab là một câu nói AI sẽ làm gì. \"Dán văn bản\" gộp vào \"Từ tài liệu\"; PowerPoint mở ngay trên trang thay vì chuyển trang.",
+};
+const SHORT = "Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR.";
+const LONG = ("Chương 3. Thực tế tăng cường trong giáo dục.\n\n3.1. Khái niệm. Thực tế tăng cường là công nghệ chồng thông tin số lên khung cảnh thật. " + "Nhiều nghiên cứu cho thấy AR hỗ trợ người học quan sát mô hình ba chiều. ".repeat(12) + "\n\n3.2. Ứng dụng trong lớp học.\n- Quan sát mô hình.\n- Khám phá vật thật.\n- Sáng tạo nội dung.").trim();
+const $ = (s) => document.querySelector(s);
+
+function show(o) {
+  document.querySelectorAll("[data-opt]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.opt === o)));
+  ["a", "b", "c"].forEach((k) => ($("#opt-" + k).hidden = k !== o));
+  $("#why").textContent = WHY[o];
+}
+document.querySelectorAll("[data-opt]").forEach((b) => b.addEventListener("click", () => show(b.dataset.opt)));
+
+/* ---------- A ---------- */
+const aText = $("#a-text"), aMode = $("#a-mode"), aFile = $("#a-file"), aGo = $("#a-go");
+let aForced = null, aAttached = null;
+function aDur(on) { $("#a-dur").hidden = !on; $("#a-seg").hidden = !on; }
+function aDetect() {
+  const t = aText.value.trim();
+  const n = t.length;
+  $("#a-count").textContent = n.toLocaleString("vi-VN") + " ký tự";
+  if (aAttached) {
+    aMode.innerHTML = aAttached === "pptx"
+      ? "AI sẽ <b>nhập bài giảng PowerPoint</b>: giữ hình, ghi chú giảng, bảng và biểu đồ. Chữ trong ô (nếu có) được dùng làm ghi chú cho AI."
+      : "AI sẽ <b>bám sát tệp đính kèm</b>. Chữ trong ô (nếu có) được dùng làm ghi chú cho AI, ví dụ đối tượng người học.";
+    aGo.textContent = aAttached === "pptx" ? "Nhập PowerPoint" : "Soạn dàn ý";
+    aDur(aAttached !== "pptx");
+    return;
+  }
+  aGo.textContent = "Soạn dàn ý";
+  aDur(true);
+  if (!n) { aMode.textContent = "Gõ mô tả ngắn để AI soạn từ kiến thức chung, hoặc dán tài liệu để AI bám sát tài liệu."; return; }
+  const isDoc = aForced ? aForced === "doc" : n > 600 || (t.match(/\n/g) || []).length >= 4;
+  aMode.innerHTML = (isDoc
+    ? "AI sẽ <b>bám sát văn bản thầy/cô dán vào</b>, chỉ dùng số liệu có trong văn bản. "
+    : "AI sẽ <b>soạn từ kiến thức chung</b> theo mô tả này, không đưa số liệu cụ thể. ") + `<button type="button" id="a-swap">Đổi: coi là ${isDoc ? "mô tả" : "tài liệu"}</button>`;
+  $("#a-swap").addEventListener("click", () => { aForced = isDoc ? "topic" : "doc"; aDetect(); });
+}
+aText.addEventListener("input", () => { aForced = null; aDetect(); });
+function aAttach(kind) {
+  aAttached = kind;
+  const name = kind === "pptx" ? "Bai-giang-AR.pptx" : "Chuong-3-Thuc-te-tang-cuong.docx";
+  aFile.hidden = false;
+  aFile.innerHTML = `<span class="chip-file">${kind === "pptx" ? "PowerPoint" : "Word"} · <b>${name}</b> <small>2,4 MB</small><button type="button" aria-label="Bỏ tệp">×</button></span>`;
+  aFile.querySelector("button").addEventListener("click", () => { aAttached = null; aFile.hidden = true; aFile.innerHTML = ""; aDetect(); });
+  aText.placeholder = "Ghi chú thêm cho AI (không bắt buộc), ví dụ: dạy cho sinh viên năm nhất, tập trung phần ứng dụng.";
+  aDetect();
+}
+$("#a-attach").addEventListener("click", () => aAttach("docx"));
+document.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", () => {
+  aAttached = null; aFile.hidden = true; aFile.innerHTML = ""; aForced = null;
+  aText.placeholder = "Mô tả bài giảng: chủ đề, người học, mục tiêu. Hoặc dán nội dung tài liệu vào đây.";
+  if (b.dataset.a === "short") aText.value = SHORT;
+  else if (b.dataset.a === "long") aText.value = LONG;
+  else { aText.value = ""; aAttach(b.dataset.a); return; }
+  aDetect();
+}));
+document.querySelectorAll("#a-seg button").forEach((b) => b.addEventListener("click", () => document.querySelectorAll("#a-seg button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)))));
+
+/* ---------- B, C: phần nhập theo nguồn ---------- */
+const DUR = `<span class="muted">Thời lượng</span><span class="seg"><button type="button">15 phút</button><button type="button" aria-pressed="true">30 phút</button><button type="button">45 phút</button></span>`;
+const BAR = (go) => `<div class="bar">${go === "Nhập PowerPoint" ? "" : DUR}<button type="button" class="go">${go}</button></div>`;
+const INPUT = {
+  idea: `<textarea placeholder="Mô tả bài giảng: chủ đề, người học, mục tiêu."></textarea><div class="hint"><span>AI soạn từ kiến thức chung, không đưa số liệu cụ thể.</span><span>0 ký tự</span></div>${BAR("Soạn dàn ý")}`,
+  doc: `<div class="drop"><b>Kéo tệp Word hoặc PDF vào đây, hoặc bấm để chọn</b>tối đa 10 MB</div><textarea placeholder="Hoặc dán nội dung tài liệu vào đây."></textarea>${BAR("Soạn dàn ý")}`,
+  ppt: `<div class="drop"><b>Kéo tệp PowerPoint (.pptx) vào đây, hoặc bấm để chọn</b>Limio giữ hình, ghi chú giảng, bảng và biểu đồ.</div>${BAR("Nhập PowerPoint")}`,
+};
+const NOTE = {
+  idea: "Chỉ cần mô tả: chủ đề, người học, mục tiêu. AI soạn từ kiến thức chung.",
+  doc: "Tải tệp Word, PDF hoặc dán văn bản. AI chỉ dùng thông tin có trong tài liệu.",
+  ppt: "Đưa bài giảng PowerPoint sẵn có vào Limio, giữ hình, ghi chú giảng, bảng và biểu đồ.",
+};
+function setB(k) {
+  document.querySelectorAll("[data-b]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.b === k)));
+  $("#b-box").innerHTML = INPUT[k];
+}
+function setC(k) {
+  document.querySelectorAll("[data-c]").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.c === k)));
+  $("#c-note").textContent = NOTE[k];
+  $("#c-box").innerHTML = INPUT[k];
+}
+document.querySelectorAll("[data-b]").forEach((b) => b.addEventListener("click", () => setB(b.dataset.b)));
+document.querySelectorAll("[data-c]").forEach((b) => b.addEventListener("click", () => setC(b.dataset.c)));
+
+setB("idea"); setC("idea"); show("a"); aDetect();
+</script>
+</body>
+</html>

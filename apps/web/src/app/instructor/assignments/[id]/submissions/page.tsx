@@ -227,7 +227,12 @@ export default async function SubmissionsPage({
             />
           </div>
         ) : (
-          <RosterTable roster={roster} maxScore={assignment.maxScore} />
+          <RosterTable
+            roster={roster}
+            maxScore={assignment.maxScore}
+            assignmentId={assignment.id}
+            rubricText={assignment.rubricText}
+          />
         )}
       </section>
     </main>

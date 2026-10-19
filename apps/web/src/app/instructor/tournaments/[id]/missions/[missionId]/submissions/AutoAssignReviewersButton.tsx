@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Shuffle, Loader2 } from "lucide-react";
 
 const ERROR_LABELS: Record<string, string> = {
-  submission_deadline_not_reached: "Chưa tới hạn nộp — chưa thể phân reviewer.",
+  submission_deadline_not_reached: "Chưa tới hạn nộp — chưa thể chia người chấm.",
   verify_mode_mismatch: "Mission này không dùng peer review.",
   forbidden: "Bạn không có quyền thao tác.",
   unauthorized: "Phiên đăng nhập đã hết hạn.",
@@ -38,7 +38,7 @@ export default function AutoAssignReviewersButton({
     if (
       rebalance &&
       !window.confirm(
-        "Phân lại cân bằng sẽ XÓA các lượt review CHƯA chấm rồi chia đều lại cho mọi thành viên (giữ nguyên lượt đã chấm). Tiếp tục?",
+        "Chia lại sẽ XÓA các lượt chấm CHƯA chấm rồi chia đều lại cho mọi người (giữ nguyên các lượt đã chấm). Tiếp tục?",
       )
     ) {
       return;
@@ -71,10 +71,10 @@ export default function AutoAssignReviewersButton({
       setMsg({
         kind: "ok",
         text: rebalance
-          ? `Đã chia đều lại: gỡ ${u}, phân ${n} lượt review.`
+          ? `Đã chia đều lại: gỡ ${u} lượt, chia mới ${n} lượt chấm.`
           : n > 0
-            ? `Đã phân thêm ${n} lượt review.`
-            : "Tất cả bài đã đủ reviewer.",
+            ? `Đã chia thêm ${n} lượt chấm.`
+            : "Mọi bài đã đủ người chấm.",
       });
       router.refresh();
     } catch {
@@ -105,7 +105,7 @@ export default function AutoAssignReviewersButton({
           ) : (
             <Shuffle size={14} />
           )}
-          Tự động phân reviewer
+          Tự động chia người chấm
         </button>
         <button
           type="button"
@@ -113,11 +113,11 @@ export default function AutoAssignReviewersButton({
           onClick={() => run(true)}
           title={
             disabledTip ??
-            "Xóa các lượt chưa chấm và chia đều lại cho mọi thành viên"
+            "Xóa các lượt chưa chấm và chia đều lại cho mọi người"
           }
           className="btn-ghost btn-sm text-xs underline-offset-2 hover:underline disabled:opacity-40"
         >
-          Phân lại cân bằng
+          Chia lại cho đều
         </button>
       </div>
       {disabledTip && !msg && (

@@ -2,7 +2,7 @@ import type OpenAI from "openai";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
+import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
 import { callJsonModel } from "../aiTutor/generators";
 import { resolveFeedbackVariant } from "../variant";
 import {
@@ -30,7 +30,6 @@ import {
 export const WRITING_FEEDBACK_MAX_PER_DAY = 3;
 export const WRITING_SUMMARY_WINDOW_DAYS = 56; // 8 tuần
 export const WRITING_FREQUENT_THRESHOLD = 3;
-const DEFAULT_MODEL = "gpt-4o-mini";
 
 const WRITING_SCHEMA = {
   type: "object",

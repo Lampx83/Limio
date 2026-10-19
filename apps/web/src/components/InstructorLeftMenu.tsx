@@ -30,6 +30,7 @@ import {
   Crown,
   Bot,
   Clock,
+  History,
   PenTool,
   Brush,
   Gamepad2,
@@ -245,6 +246,7 @@ const MODULES: ModuleDef[] = [
       "/instructor/exam-rounds",
       "/instructor/exam-runs",
       "/instructor/exam-sessions",
+      "/instructor/exam-history",
     ],
     items: [
       // Thứ tự bám theo trình tự làm việc thật: soạn câu → gom thành gói đề →
@@ -253,6 +255,7 @@ const MODULES: ModuleDef[] = [
       { label: "Ngân hàng câu hỏi", href: "/instructor/question-banks", icon: Library },
       { label: "Thiết kế đề thi", href: "/instructor/exams", icon: FlaskConical },
       { label: "Tổ chức thi", href: "/instructor/organize", icon: CalendarCheck },
+      { label: "Lịch sử thi", href: "/instructor/exam-history", icon: History },
     ],
   },
   {
@@ -466,7 +469,9 @@ function InstructorLeftMenuInner({
   // Trang trình chiếu Limio-Live — chiếu lên máy chiếu, sidebar chỉ tổ nội
   // dung. Cùng cơ chế "ẩn + nút floating để mở lại" như course editor.
   const isPresentMode = /^\/instructor\/limio-live\/[^/]+\/present(?:\/|\?|$)/.test(pathname);
-  const isImmersive = isCourseEditor || isPresentMode;
+  // Màn "Tạo bài từ tài liệu" — hai cột dàn ý | xem trước cần cả bề ngang.
+  const isLessonStudio = /^\/instructor\/courses\/[^/]+\/lessons\/[^/]+\/from-document(?:\/|\?|$)/.test(pathname);
+  const isImmersive = isCourseEditor || isPresentMode || isLessonStudio;
 
   const rail = (
     <ModuleRail modules={modules} activeModuleId={activeModuleId} onSelect={setPendingModuleId} onHover={(href) => router.prefetch(href)} />

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { prisma } from "@feedbackme/db";
-import { listExamRuns } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import OrganizeLayout from "../OrganizeLayout";
 import QuickExamForm from "../../exams/quick/QuickExamForm";
@@ -25,28 +24,25 @@ export default async function OrganizeQuickPage({
     orderBy: { updatedAt: "desc" },
   });
 
-  const [papers, runs] = await Promise.all([
-    prisma.exam.findMany({
-      where: {
-        courseId: { in: courses.map((c) => c.id) },
-        status: { not: "archived" },
-        purpose: "assessment",
-        // Vấn đáp AI không phát mã/QR — luồng "mở buổi" riêng nằm ngay trên
-        // trang quản lý đề (xem OralSessionControl), không qua đây nữa.
-        kind: "written",
-        questions: { some: {} },
-      },
-      select: {
-        id: true,
-        title: true,
-        courseId: true,
-        _count: { select: { questions: true } },
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 100,
-    }),
-    listExamRuns(userId, { purpose: "assessment", scale: "simple" }),
-  ]);
+  const papers = await prisma.exam.findMany({
+    where: {
+      courseId: { in: courses.map((c) => c.id) },
+      status: { not: "archived" },
+      purpose: "assessment",
+      // Vấn đáp AI không phát mã/QR — luồng "mở buổi" riêng nằm ngay trên
+      // trang quản lý đề (xem OralSessionControl), không qua đây nữa.
+      kind: "written",
+      questions: { some: {} },
+    },
+    select: {
+      id: true,
+      title: true,
+      courseId: true,
+      _count: { select: { questions: true } },
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 100,
+  });
 
   const courseTitleById = new Map(courses.map((c) => [c.id, c.title]));
 
@@ -54,9 +50,7 @@ export default async function OrganizeQuickPage({
     <OrganizeLayout
       title="Link thi nhanh"
       blurb="Khảo sát, điểm danh, kiểm tra nhanh trên lớp. Chọn đề thi, đặt thời lượng, bấm Mở."
-      runs={runs}
-      historyTitle="Các buổi đã mở"
-      emptyHint="Chưa mở buổi thi nào. Tạo ở phần trên."
+      historyType="quick"
     >
       {courses.length === 0 ? (
         <p className="text-sm">

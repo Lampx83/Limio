@@ -77,6 +77,8 @@ export class ExamError extends Error {
       | "section_pool_empty"
       | "section_pool_underfilled"
       | "round_not_found"
+      | "round_has_attempts"
+      | "title_mismatch"
       | "round_code_taken"
       | "round_invalid_window"
       | "round_requires_at_least_one_course"

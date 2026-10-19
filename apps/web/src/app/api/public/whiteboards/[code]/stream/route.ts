@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 // batch cần thiết).
 export async function GET(req: Request, { params }: { params: { code: string } }) {
   const board = await prisma.whiteboard.findUnique({
-    where: { code: params.code.toUpperCase() },
+    where: { code: params.code.toUpperCase(), deletedAt: null },
     select: { id: true },
   });
   if (!board) {

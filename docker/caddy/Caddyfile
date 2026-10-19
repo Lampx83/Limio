@@ -8,6 +8,22 @@
 	admin off
 	# Không tự lấy TLS — TLS termination do reverse proxy ngoài host xử lý.
 	auto_https off
+
+	# IP thật của người dùng. Proxy ngoài host (nginx) nằm trong dải riêng nên được
+	# tin; Caddy lấy IP cuối cùng KHÔNG thuộc dải tin cậy trong X-Forwarded-For của
+	# nó. Không cấu hình bước này thì {remote_host} luôn là IP của chính proxy ngoài,
+	# và ứng dụng không bao giờ thấy IP người dùng (giới hạn mạng vào thi theo
+	# trường dựa vào đây). Nếu proxy ngoài không gửi X-Forwarded-For thì {client_ip}
+	# rơi về địa chỉ kết nối — y như hành vi cũ, không tệ hơn.
+	#
+	# trusted_proxies_strict BẮT BUỘC: không có nó Caddy lấy IP ĐẦU chuỗi, mà đó là
+	# thứ người dùng tự gửi lên (nginx chỉ nối IP thật vào cuối) — ai cũng giả được IP
+	# mạng trường. Strict thì đọc từ phải sang trái, bỏ qua proxy tin cậy.
+	servers {
+		trusted_proxies static private_ranges
+		trusted_proxies_strict
+		client_ip_headers X-Forwarded-For X-Real-IP
+	}
 }
 
 :80 {
@@ -43,8 +59,8 @@
 		}
 
 		# Truyền X-Forwarded-* để Next.js NextAuth/rate-limit thấy IP gốc.
-		header_up X-Real-IP {remote_host}
-		header_up X-Forwarded-For {remote_host}
+		header_up X-Real-IP {client_ip}
+		header_up X-Forwarded-For {client_ip}
 		header_up X-Forwarded-Proto {scheme}
 		header_up X-Forwarded-Host {host}
 	}

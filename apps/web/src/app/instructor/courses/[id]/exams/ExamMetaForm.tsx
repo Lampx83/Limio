@@ -127,7 +127,10 @@ export default function ExamMetaForm({
     const body: Record<string, unknown> = {
       title: v.title,
       description: v.description || undefined,
-      durationMin: v.durationMin,
+      // Đề vấn đáp không còn ô giờ: số phút do GV chọn lúc "Mở buổi vấn đáp".
+      // Lúc tạo vẫn phải gửi một giá trị (API bắt buộc) — đó là số điền sẵn cho
+      // lần mở đầu tiên; lúc sửa thì không gửi để khỏi ghi đè số đã có.
+      ...(v.kind === "oral" && mode === "edit" ? {} : { durationMin: v.durationMin }),
       openAt: new Date(v.openAt).toISOString(),
       closeAt: new Date(v.closeAt).toISOString(),
       attemptPolicy: v.attemptPolicy,
@@ -290,10 +293,9 @@ export default function ExamMetaForm({
       {/* Thời lượng thật thuộc buổi thi, không thuộc gói đề: cùng một gói chạy
           15 phút ở lớp này và 30 phút ở lớp kia là chuyện bình thường, nên con
           số được chọn lúc mở buổi (Tổ chức thi → Link thi nhanh; với vấn đáp là
-          nút "Mở buổi vấn đáp"). Exam.durationMin chỉ là giá trị điền sẵn — nên
-          đề viết không hỏi ở đây; đề vấn đáp thì HIỆN nó ngay bên dưới, vì nút
-          "Mở buổi vấn đáp" lấy đúng số này làm mặc định và trước đây nó nằm ẩn
-          với giá trị 60 do form tạo mới điền ngầm. */}
+          nút "Mở buổi vấn đáp", xem OralSessionControl). Exam.durationMin chỉ là
+          giá trị điền sẵn cho lần mở đầu — nên cả đề viết lẫn đề vấn đáp đều
+          không hỏi ở đây. */}
       {v.kind === "oral" && (
         <label className="flex items-start gap-2.5 text-sm">
           <input
@@ -344,28 +346,6 @@ export default function ExamMetaForm({
               </span>
             </span>
           </label>
-        </div>
-      )}
-
-      {v.kind === "oral" && (
-        <div>
-          <label className="block text-sm font-medium" htmlFor="durationMin">
-            Thời lượng mặc định mỗi lượt (phút)
-          </label>
-          <input
-            id="durationMin"
-            type="number"
-            min={1}
-            max={24 * 60}
-            value={v.durationMin}
-            disabled={isLocked("durationMin")}
-            onChange={(e) => setV({ ...v, durationMin: Number(e.target.value) })}
-            className="mt-1 w-full rounded border border-default px-3 py-2 text-sm disabled:bg-slate-50 sm:w-40"
-          />
-          <p className="mt-1 text-caption text-faint">
-            Đây là số phút điền sẵn khi bạn bấm &quot;Mở buổi vấn đáp&quot; — mỗi buổi vẫn đổi
-            được lại lúc mở. Nếu phần mô tả bên dưới có ghi số phút, nhớ cho khớp.
-          </p>
         </div>
       )}
 

@@ -165,9 +165,8 @@ async function recordItemTrialStats(
   });
   if (fromBank.length === 0) return 0;
 
-  // Đợt thi của đề này. Một đề về lý thuyết chạy qua nhiều ca thuộc nhiều đợt;
-  // lấy đợt của ca đầu tiên là đủ cho hiện tại vì ensureDefaultRound() gom mọi
-  // ca của một đề vào cùng một đợt.
+  // Đợt của ca đầu tiên của đề, để ghi kèm lượt thử nghiệm. Ca buổi đơn không có
+  // đợt → null (cột này vốn cho phép null, không có FK).
   const session = await db.examSession.findFirst({
     where: { examId },
     select: { roundId: true },

@@ -130,7 +130,12 @@ function RoomCard({ r, now }: { r: ProctorRoom; now: number }) {
   const closesAt = r.closesAt ? new Date(r.closesAt).getTime() : Number.POSITIVE_INFINITY;
   const isFuture = opensAt > now;
   const isLive = opensAt <= now && now < closesAt;
-  const detailHref = `/instructor/exam-rounds/${r.roundId}/sessions/${r.sessionId}/rooms/${r.id}`;
+  // Ca chính thức (thuộc đợt hay không) có trang phòng riêng; buổi đơn (link
+  // nhanh, thử nghiệm, vấn đáp) xem ở trang lần thi.
+  const detailHref =
+    r.scale === "formal"
+      ? `/instructor/exam-sessions/${r.sessionId}/rooms/${r.id}`
+      : `/instructor/exam-runs/${r.sessionId}`;
   const projHref = `/proctor/rooms/${r.id}/projection`;
   return (
               <li
@@ -166,13 +171,20 @@ function RoomCard({ r, now }: { r: ProctorRoom; now: number }) {
                       <span className="text-slate-400">({r.courseTitle})</span>
                     </div>
                     <div className="mt-0.5 text-xs text-faint">
-                      <Target className="inline h-3 w-3 align-text-bottom text-slate-400" /> Đợt:{" "}
-                      <Link
-                        href={`/instructor/exam-rounds/${r.roundId}`}
-                        className="hover:underline"
-                      >
-                        {r.roundTitle}
-                      </Link>{" "}
+                      <Target className="inline h-3 w-3 align-text-bottom text-slate-400" />{" "}
+                      {r.roundId ? (
+                        <>
+                          Đợt:{" "}
+                          <Link
+                            href={`/instructor/exam-rounds/${r.roundId}`}
+                            className="hover:underline"
+                          >
+                            {r.roundTitle}
+                          </Link>
+                        </>
+                      ) : (
+                        "Buổi thi"
+                      )}{" "}
                       · <CalendarDays className="inline h-3 w-3 align-text-bottom text-slate-400" /> {r.sessionTitle ?? "Ca thi"}
                     </div>
                     <div className="mt-0.5 text-xs text-faint">

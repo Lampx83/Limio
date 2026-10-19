@@ -7,7 +7,7 @@
  * trạng thái nhóm mới nên khối tự cập nhật, không phải tải lại cả trang.
  */
 import { useState } from "react";
-import { Copy, Crown, LogOut, RefreshCw, UserX, Users } from "lucide-react";
+import { Copy, Crown, LogOut, Pencil, RefreshCw, UserX, Users } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { copyText } from "@/lib/clipboard";
 import { UserAvatar } from "@/components/ui";
@@ -30,7 +30,8 @@ type Action =
   | { action: "join"; code: string }
   | { action: "leave" }
   | { action: "regenerate" }
-  | { action: "remove"; userId: string };
+  | { action: "remove"; userId: string }
+  | { action: "rename"; name: string };
 
 function errorMessage(code: string | undefined, details: unknown, action: Action["action"]): string {
   switch (code) {
@@ -53,7 +54,9 @@ function errorMessage(code: string | undefined, details: unknown, action: Action
     case "not_enrolled":
       return "Bạn cần ghi danh khoá học trước.";
     case "validation_failed":
-      return action === "create" ? "Tên nhóm cần từ 1 đến 60 ký tự." : "Thông tin chưa hợp lệ. Bạn thử lại nhé.";
+      return action === "create" || action === "rename"
+        ? "Tên nhóm cần từ 1 đến 60 ký tự."
+        : "Thông tin chưa hợp lệ. Bạn thử lại nhé.";
     default:
       return "Có lỗi xảy ra. Bạn thử lại nhé.";
   }
@@ -149,6 +152,10 @@ export default function CourseTeamPanel({
     await run({ action: "remove", userId });
   }
 
+  async function onRename(newName: string): Promise<boolean> {
+    return run({ action: "rename", name: newName.trim() });
+  }
+
   async function onCopy(joinCode: string) {
     const ok = await copyText(joinCode);
     setCopied(ok ? "ok" : "fail");
@@ -179,6 +186,7 @@ export default function CourseTeamPanel({
           onRegenerate={() => void onRegenerate()}
           onRemove={(id, n) => void onRemove(id, n)}
           onLeave={(isCaptain, othersLeft) => void onLeave(isCaptain, othersLeft)}
+          onRename={onRename}
         />
       ) : locked ? (
         <p className="banner-info mt-3">Bạn chưa có nhóm. Danh sách nhóm đã khoá — liên hệ giảng viên.</p>
@@ -306,6 +314,7 @@ function TeamView({
   onRegenerate,
   onRemove,
   onLeave,
+  onRename,
 }: {
   team: NonNullable<CourseTeamState["team"]>;
   teamMaxSize: number | null;
@@ -317,18 +326,77 @@ function TeamView({
   onRegenerate: () => void;
   onRemove: (userId: string, displayName: string) => void;
   onLeave: (isCaptain: boolean, othersLeft: number) => void;
+  onRename: (name: string) => Promise<boolean>;
 }) {
   const isCaptain = team.captainId === currentUserId;
   const count = team.members.length;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(team.name);
+
+  async function submitRename(e: React.FormEvent) {
+    e.preventDefault();
+    if (await onRename(draft)) setEditing(false);
+  }
 
   return (
     <div className="mt-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <p className="text-body min-w-0 break-words font-semibold">{team.name}</p>
-        <span className="text-meta tabular-nums">
-          {teamMaxSize !== null ? `${count}/${teamMaxSize} người` : `${count} người`}
-        </span>
-      </div>
+      {editing ? (
+        <form onSubmit={submitRename} className="space-y-2">
+          <label className="block">
+            <span className="label">Tên nhóm mới</span>
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              required
+              maxLength={60}
+              className="input mt-1"
+              autoFocus
+            />
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              disabled={busy || !draft.trim() || draft.trim() === team.name}
+              className="btn-primary btn-sm"
+            >
+              {busy ? "Đang lưu…" : "Lưu tên"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setDraft(team.name);
+              }}
+              className="btn-ghost btn-sm"
+            >
+              Huỷ
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <p className="text-body min-w-0 break-words font-semibold">
+            {team.name}
+            {isCaptain && !locked && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDraft(team.name);
+                  setEditing(true);
+                }}
+                disabled={busy}
+                className="btn-ghost btn-sm ml-2 align-middle"
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+                Đổi tên
+              </button>
+            )}
+          </p>
+          <span className="text-meta tabular-nums">
+            {teamMaxSize !== null ? `${count}/${teamMaxSize} người` : `${count} người`}
+          </span>
+        </div>
+      )}
 
       {locked && (
         <p className="banner-info mt-3">Danh sách nhóm đã khoá — liên hệ giảng viên nếu cần đổi nhóm.</p>

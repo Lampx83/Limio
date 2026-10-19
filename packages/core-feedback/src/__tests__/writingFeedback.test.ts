@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
+import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { AiGenerationError } from "../aiTutor/generators";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
@@ -104,7 +105,7 @@ describe("requestWritingFeedback — happy path (G6a, G6b.1, G6c.1)", () => {
       userId: f.userId,
       courseId: f.courseId,
       status: "draft",
-      model: "gpt-4o-mini",
+      model: DEFAULT_MODEL,
       tokensIn: 400,
       tokensOut: 300,
       sourceKind: "llm",

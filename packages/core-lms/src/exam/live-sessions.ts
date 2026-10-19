@@ -15,8 +15,10 @@ import type { RevealPolicy } from "./reveal-policy";
  */
 export interface ExamRun {
   sessionId: string;
-  /** Đợt thi chứa ca này — để nối sang trang quản lý đợt. */
-  roundId: string;
+  /** Đợt thi chứa ca này — null với buổi đơn (link nhanh, thử nghiệm, vấn đáp). */
+  roundId: string | null;
+  /** Tên đợt chứa ca — để thẻ ở Lịch sử thi nói được "ca này của kỳ nào". */
+  roundTitle: string | null;
   /** Còn cho học sinh vào không. */
   isOpen: boolean;
   opensAt: string;
@@ -30,6 +32,8 @@ export interface ExamRun {
   /** open_code | assigned_code | authenticated — quyết định cách thí sinh vào. */
   accessMode: string;
   scale: "simple" | "formal";
+  /** Mục đích của buổi — buổi không tự khai thì theo gói đề. */
+  purpose: "assessment" | "field_test";
   timingMode: "scheduled" | "manual";
   /** Null với ca thủ công — nó đóng khi giáo viên bấm. */
   closesAt: string | null;
@@ -83,6 +87,7 @@ export async function listExamRuns(
     select: {
       id: true,
       roundId: true,
+      round: { select: { title: true } },
       openCode: true,
       opensAt: true,
       closesAt: true,
@@ -90,10 +95,17 @@ export async function listExamRuns(
       status: true,
       accessMode: true,
       scale: true,
+      purpose: true,
       revealAnswers: true,
       durationOverrideMin: true,
       exam: {
-        select: { id: true, title: true, courseId: true, durationMin: true },
+        select: {
+          id: true,
+          title: true,
+          courseId: true,
+          durationMin: true,
+          purpose: true,
+        },
       },
     },
     orderBy: { opensAt: "desc" },
@@ -151,6 +163,7 @@ export async function listExamRuns(
   return open.map((r) => ({
     sessionId: r.id,
     roundId: r.roundId,
+    roundTitle: r.round?.title ?? null,
     isOpen: isSessionOpen(r, now),
     opensAt: r.opensAt.toISOString(),
     examId: r.exam.id,
@@ -160,6 +173,7 @@ export async function listExamRuns(
     path: r.openCode ? `/exam/${r.openCode}` : null,
     accessMode: r.accessMode,
     scale: r.scale,
+    purpose: r.purpose ?? r.exam.purpose,
     timingMode: r.timingMode,
     closesAt: r.closesAt?.toISOString() ?? null,
     durationMin: r.durationOverrideMin ?? r.exam.durationMin,

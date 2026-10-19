@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Nunito } from "next/font/google";
+import { Be_Vietnam_Pro, Inter, Nunito } from "next/font/google";
 import "./globals.css";
 import AppHeader from "@/components/AppHeader";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
@@ -35,6 +35,17 @@ const nunito = Nunito({
   weight: ["400"],
   style: ["normal", "italic"],
   variable: "--font-script",
+});
+
+// Font của slide Limio-Live (không chân, thiết kế riêng cho dấu tiếng Việt). preload: false để
+// các trang khác không phải tải; trình duyệt chỉ nạp file font khi một slide dùng đến. Tiêu đề slide cũng dùng font này ở
+// mọi giao diện: Lexend (từng dùng cho tiêu đề nền tối) vẽ sai Đ, đ, ạ, ộ ở độ đậm 800.
+const slideBody = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-bvp",
+  preload: false,
 });
 
 // Root layout chứa Footer (gọi getSiteSettings → Prisma). Force-dynamic để
@@ -126,7 +137,7 @@ export default async function RootLayout({
   const aiTokensPageUnlocked = !(await getAiTokensPageLocked().catch(() => true));
 
   return (
-    <html lang="vi" data-app={getAppMode()} className={`${inter.variable} ${nunito.variable}`} suppressHydrationWarning>
+    <html lang="vi" data-app={getAppMode()} className={`${inter.variable} ${nunito.variable} ${slideBody.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>

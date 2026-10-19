@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
 import { toast } from "@/lib/toast";
+import { AI_GRADE_CHAR_BUDGET_TEXT, AI_GRADE_PAGE_LIMIT } from "@feedbackme/shared-types";
 
 /**
  * Rubric chấm điểm của cả bài tập — nhập ngay ở trang chấm bài, cạnh nút
@@ -14,9 +15,12 @@ import { toast } from "@/lib/toast";
 export default function RubricBox({
   assignmentId,
   initialRubric,
+  compact = false,
 }: {
   assignmentId: string;
   initialRubric: string | null;
+  /** Trong modal chấm bài: bỏ khung card + lề trên, vì đã nằm trong khối thu gọn. */
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(initialRubric ?? "");
@@ -24,6 +28,12 @@ export default function RubricBox({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dirty = text.trim() !== saved.trim();
+
+  // Rubric có thể vừa được lưu từ ô còn lại (trang vs modal) → router.refresh đổi prop → đồng bộ lại.
+  useEffect(() => {
+    setSaved(initialRubric ?? "");
+    setText(initialRubric ?? "");
+  }, [initialRubric]);
 
   async function save() {
     setBusy(true);
@@ -50,14 +60,16 @@ export default function RubricBox({
   }
 
   return (
-    <section className="card mt-6 space-y-2">
+    <section className={compact ? "space-y-2" : "card mt-6 space-y-2"}>
       <label htmlFor={`rubric-${assignmentId}`} className="text-sm font-semibold">
         Rubric chấm điểm{" "}
         <span className="text-xs font-normal text-faint">(không bắt buộc)</span>
       </label>
       <p className="text-xs text-faint">
         Tiêu chí và thang điểm bạn dùng để chấm. Khi bấm &ldquo;✨ Gợi ý điểm bằng
-        AI&rdquo; ở từng bài nộp, AI sẽ đọc rubric này cùng đề bài và bài làm.
+        AI&rdquo; ở từng bài nộp, AI sẽ đọc rubric này cùng đề bài và bài làm. AI sẽ chấm tối
+        đa được {AI_GRADE_CHAR_BUDGET_TEXT} ký tự (khoảng {AI_GRADE_PAGE_LIMIT} trang) mỗi bài — muốn AI
+        chấm đủ, hãy yêu cầu sinh viên nộp không quá {AI_GRADE_PAGE_LIMIT} trang.
       </p>
       <textarea
         id={`rubric-${assignmentId}`}

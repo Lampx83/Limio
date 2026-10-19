@@ -18,6 +18,12 @@ export const LearningEventType = {
   LessonAnnotationPublished: "lesson.annotation.published",
   LessonAnnotationReplied: "lesson.annotation.replied",
   LessonAnnotationRemoved: "lesson.annotation.removed",
+  // Bài học văn bản tạo/sửa bằng AI (tiêu chí S7 — đo tỉ lệ bài bị sửa tay sau khi AI tạo).
+  // Payload không mang chữ của bài; xem LessonContentGeneratedPayload.
+  LessonContentGenerated: "lesson.content.generated",
+  LessonContentAiEdited: "lesson.content.ai_edited",
+  LessonContentRestored: "lesson.content.restored",
+  LessonContentConverted: "lesson.content.converted",
   // LANG G4 — một lượt ôn flashcard. Payload: itemId, contentItemId, rating, mode,
   // intervalDays, reviewId. Idempotent qua eventKey `flashcard.reviewed:<userId>:<reviewId>`.
   FlashcardReviewed: "flashcard.reviewed",
@@ -41,6 +47,8 @@ export const LearningEventType = {
   CourseTeamJoined: "course.team.joined",
   CourseTeamLeft: "course.team.left",
   CourseTeamCodeRegenerated: "course.team.code_regenerated",
+  // Đổi tên nhóm (trưởng nhóm khi chưa khoá, hoặc GV). Payload: teamId, from, to, actorId.
+  CourseTeamRenamed: "course.team.renamed",
   CourseTeamCaptainChanged: "course.team.captain_changed",
   CourseTeamMemberMoved: "course.team.member_moved",
   // GV đổi số người tối đa / khoá-mở khoá danh sách nhóm. Subject là GV.
@@ -63,6 +71,8 @@ export const LearningEventType = {
   PortfolioItemAdded: "portfolio.item.added",
   PortfolioItemUpdated: "portfolio.item.updated",
   PortfolioItemRemoved: "portfolio.item.removed",
+  PortfolioCourseAdded: "portfolio.course.added",
+  PortfolioCourseRemoved: "portfolio.course.removed",
   PortfolioVisibilityChanged: "portfolio.visibility.changed",
   CourseInstructorAdded: "course.instructor.added",
   CourseInstructorRemoved: "course.instructor.removed",
@@ -135,6 +145,8 @@ export const LearningEventType = {
   ExamCandidatesAdded: "exam.candidates.added",
   ExamCandidatesMoved: "exam.candidates.moved",
   ExamCandidateRemoved: "exam.candidate.removed",
+  ExamCandidateUpdated: "exam.candidate.updated",
+  ExamWeightsUpdated: "exam.weights.updated",
   ExamCandidateAttendanceSet: "exam.candidate.attendance_set",
   ExamProctorInvited: "exam.proctor.invited",
   ExamShareLinkOpened: "exam.share_link.opened",
@@ -184,6 +196,7 @@ export const LearningEventType = {
   TournamentPublished: "tournament.published",
   TournamentRegistered: "tournament.registered",
   TournamentTeamFormed: "tournament.team.formed",
+  TournamentTeamRenamed: "tournament.team.renamed",
   TournamentStarted: "tournament.started",
   TournamentEnded: "tournament.ended",
   TournamentMissionUnlocked: "tournament.mission.unlocked",
@@ -203,6 +216,19 @@ export const LearningEventType = {
   TournamentMissionReviewWindowExtended: "tournament.mission.review.window_extended",
   TournamentMissionReviewFallbackManual: "tournament.mission.review.fallback_manual",
   TournamentMissionSpeedRunBlocked: "tournament.mission.speed_run_blocked",
+
+  // Limio-Live — bài giảng tương tác sinh từ tài liệu bằng AI (H15). Chỉ đo lường việc sinh, sửa
+  // bằng AI và tỉ lệ slide bị sửa tay; không đụng nội dung học viên.
+  LiveDeckOutlineGenerated: "live.deck.outline_generated",
+  LiveDeckSlidesGenerated: "live.deck.slides_generated",
+  LiveSlideAiEditProposed: "live.slide.ai_edit_proposed",
+  LiveSlideAiChatTurn: "live.slide.ai_chat_turn",
+  // AI đọc số từ hình biểu đồ (docs/tieu-chi/bieu-do-kho-doc-pptx.md, V12). Khi giảng viên thay hình: ai_edit_accepted
+  // với action "chart_from_image".
+  LiveSlideChartFromImageProposed: "live.slide.chart_from_image_proposed",
+  LiveSlideAiEditAccepted: "live.slide.ai_edit_accepted",
+  LiveSlideEditedByUser: "live.slide.edited_by_user",
+  LiveSlideVersionRestored: "live.slide.version_restored",
 } as const;
 
 export type LearningEventType =
@@ -312,6 +338,42 @@ export interface AiTutorAskedPayload {
   questionLength: number;
   /** Lượt thứ mấy trong hội thoại này. Lượt 5 khác hẳn lượt 1. */
   turnIndex: number;
+}
+
+/**
+ * "Tạo bài từ tài liệu" — giảng viên Áp dụng bài AI viết (Mốc 3). Không mang chữ:
+ * nội dung đã nằm ở ContentItem + ContentItemVersion ("generated"); so phiên bản
+ * về sau với bản này là đo được bài bị sửa tay bao nhiêu.
+ */
+export interface LessonContentGeneratedPayload {
+  draftId: string;
+  lessonIds: string[];
+  contentItemIds: string[];
+  writing: "keep" | "edit";
+  sectionCount: number;
+  fallbackCount: number;
+  missingParaCount: number;
+  /** true = "Làm lại từ dàn ý" thay nội dung khối cũ. */
+  replaced: boolean;
+}
+
+export interface LessonContentAiEditedPayload {
+  lessonId: string;
+  /** shorter | simpler | example | spelling */
+  action: string;
+  layout: string;
+}
+
+export interface LessonContentRestoredPayload {
+  contentItemId: string;
+  versionId: string;
+  versionSource: string;
+}
+
+export interface LessonContentConvertedPayload {
+  contentItemId: string;
+  /** script = chạy hàng loạt; editor = giảng viên bấm chuyển khi mở bài. */
+  via: "script" | "editor";
 }
 
 /**
@@ -625,4 +687,101 @@ export interface SessionStartedPayload {
   /** Tên họ trình duyệt thô — "Chrome" | "Safari" | "Firefox" | "Edge" | "Other" | "unknown". */
   browser: string;
   provider: "credentials" | "google" | "microsoft" | (string & {});
+}
+
+// ── Limio-Live (H15) ────────────────────────────────────────────────────────
+
+export interface LiveDeckOutlineGeneratedPayload {
+  deckId: string;
+  minutes: number;
+  slideCount: number;
+  sourceChars: number;
+  /** Số cảnh báo kèm theo dàn ý (lệch số slide, thiếu tương tác...). */
+  warningCount: number;
+  /** Nguồn của bài: tài liệu, mô tả chủ đề (kiến thức chung), mô tả kèm trang tìm trên internet. Thiếu = bản ghi cũ (tài liệu). */
+  sourceKind?: "document" | "topic" | "topic_web";
+  /** Có bật tìm nguồn internet: số trang đã đọc (0 = không tìm được, bài rơi về "topic"). */
+  webSourceCount?: number;
+  /** Bài nhập từ file trình chiếu. */
+  sourceFormat?: "pptx";
+  /** Cách chuyển: giữ ý (không AI) hoặc soạn lại mạch (AI). */
+  importMode?: "keep" | "restructure";
+  /** Ngôn ngữ nội dung slide ghi lúc tạo bài (DECK_LANGUAGES); null = chưa nhận được. Thiếu = bản ghi cũ. */
+  language?: string | null;
+  /** Có yêu cầu của giảng viên đi cùng tài liệu (trang Tạo bài giảng một ô). Thiếu = bản ghi cũ. */
+  hasIntent?: boolean;
+  /** Số slide tương tác hệ thống bổ sung để đủ mức tối thiểu. Thiếu = bản ghi cũ. */
+  interactionsAdded?: number;
+  /** Số slide trong file gốc. */
+  importedSlides?: number;
+  /** Số hình đã lưu. */
+  imageCount?: number;
+}
+
+export interface LiveDeckSlidesGeneratedPayload {
+  deckId: string;
+  /** "first" = tạo lần đầu; "sync" = cập nhật theo dàn ý đã sửa. */
+  mode: "first" | "sync";
+  slideCount: number;
+  /** Số slide AI viết hỏng nên dựng từ dàn ý. */
+  fallbackCount: number;
+  /** Bài có nguồn internet: số ảnh lấy từ trang nguồn đã gắn vào slide Chữ và hình. */
+  webImageCount?: number;
+  /** Ngôn ngữ AI được yêu cầu viết (ngôn ngữ của bài); null = theo ngôn ngữ của nguồn. Thiếu = bản ghi cũ. */
+  language?: string | null;
+  regenerated?: number;
+  created?: number;
+  removed?: number;
+  kept?: number;
+}
+
+/** Một lượt hỏi đáp với AI về slide (tab Nhờ AI). Không ghi nội dung câu hỏi hay câu trả lời. */
+export interface LiveSlideAiChatTurnPayload {
+  deckId: string;
+  slideId: string;
+  /** Kiểu trả lời sau khi chuẩn hoá: trả lời bằng lời, hỏi lại, đề xuất sửa. */
+  kind: "answer" | "clarify" | "propose";
+  /** Số lượt trước đó trong cuộc trò chuyện (0 = câu đầu tiên). */
+  historyTurns: number;
+  /** Câu trả lời bằng lời có kèm gợi ý sửa (hiện nút "Làm theo gợi ý này"). */
+  hasSuggestion: boolean;
+}
+
+export interface LiveSlideAiEditProposedPayload {
+  deckId: string;
+  slideId: string;
+  /** "custom" = yêu cầu riêng giảng viên gõ (nội dung yêu cầu không ghi vào sự kiện). */
+  action: "shorter" | "example" | "simpler" | "to_quiz" | "rewrite" | "custom";
+}
+
+export interface LiveSlideChartFromImageProposedPayload {
+  deckId: string;
+  slideId: string;
+  /** "ok" hoặc lý do không dùng được kết quả (not_chart, too_many_labels, too_many_series). Không ghi số liệu. */
+  outcome: "ok" | "not_chart" | "too_many_labels" | "too_many_series";
+  labels: number;
+  /** Số giá trị AI ước lượng theo trục (hình không ghi số). */
+  estimated: number;
+}
+
+export interface LiveSlideAiEditAcceptedPayload {
+  deckId: string;
+  slideId: string;
+  action: string | null;
+  slideType: string;
+}
+
+export interface LiveSlideEditedByUserPayload {
+  deckId: string;
+  slideId: string;
+  slideType: string;
+  /** Dòng dàn ý mà slide AI sinh này thuộc về. */
+  outlineId: string | null;
+}
+
+export interface LiveSlideVersionRestoredPayload {
+  deckId: string;
+  slideId: string;
+  versionId: string;
+  versionSource: string;
 }
