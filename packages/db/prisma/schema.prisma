@@ -5226,6 +5226,10 @@ model LiveDeck {
   // Khung hình của các ô hình trong slide Chữ và hình ("round", "circle", "arch", "hex", "blob", "leaf", "offset" —
   // IMAGE_FRAMES ở apps/web/src/lib/limioLiveImageStyle.ts). Null = tự động theo hoa văn chủ đạo của bài.
   imageFrame String?
+  // Yêu cầu của giảng viên đi cùng tài liệu (mô tả trong ô "Tạo bài giảng"): người học, trọng tâm, cách dạy. AI làm theo
+  // khi soạn dàn ý, tạo slide, bổ sung tương tác; kiến thức vẫn chỉ lấy từ tài liệu. Null = không có
+  // (docs/tieu-chi/tao-bai-giang-mot-o.md, M9).
+  sourceIntent String? @db.Text
 
   // Link xem chỉ đọc /bai-giang/<shareCode>: ai có link cũng xem được, không cần đăng nhập. Null = không chia sẻ.
   // Tạo link mới = thay mã (link cũ chết ngay). Bản sao bài giảng không mang theo mã này.

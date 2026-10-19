@@ -8,7 +8,7 @@ import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { isValidMinutes, outlineWarnings } from "@/lib/limioLiveOutline";
 import { PPTX_MAX_BYTES, parsePptx, pptxErrorCode } from "@/lib/pptxImport";
 import { importLanguageText, importSourceText, slidesNeedingImage, toImportedSlide, type ImportSource, type ImportedSlide } from "@/lib/limioLivePptx";
-import { detectLanguage } from "@/lib/limioLiveLanguage";
+import { detectLanguage, explicitLanguage } from "@/lib/limioLiveLanguage";
 import { aiFailure, buildImportOutline, isImportMode } from "@/lib/limioLivePptxServer";
 
 export const runtime = "nodejs";
@@ -58,14 +58,17 @@ export async function POST(req: Request) {
   }
   const { deck: pptx, media } = parsed;
 
+  // Mô tả của giảng viên mang từ trang Tạo bài giảng (tao-bai-giang-mot-o.md, M7, M10).
+  const intentRaw = form.get("intent");
+  const intent = typeof intentRaw === "string" && intentRaw.trim() ? intentRaw.trim().slice(0, 2000) : null;
+
+  // "Soạn lại mạch" cần AI. "Giữ ý" dùng AI chỉ để viết thêm slide tương tác: AI chưa cấu hình thì vẫn nhập được (M18).
   let openai: Awaited<ReturnType<typeof getOpenaiClient>> | null = null;
-  if (mode === "restructure") {
-    try {
-      openai = await getOpenaiClient();
-    } catch (e) {
-      if ((e as Error).message === "openai_not_configured") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
-      throw e;
-    }
+  try {
+    openai = await getOpenaiClient();
+  } catch (e) {
+    if ((e as Error).message !== "openai_not_configured") throw e;
+    if (mode === "restructure") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
   }
 
   // Chỉ lưu hình được dùng (hình lớn nhất của slide có bố cục chứa hình), để không tốn dung lượng cho hình không hiện.
@@ -100,11 +103,11 @@ export async function POST(req: Request) {
         const title = (pptx.slides[0]?.title || fileName.replace(/\.pptx$/i, "")).slice(0, 100) || "Bài giảng mới";
         const source: ImportSource = { format: "pptx", fileName, slides };
         // Ngôn ngữ của bài theo chữ của các slide gốc (docs/tieu-chi/ngon-ngu-slide.md, L3).
-        const language = detectLanguage(importLanguageText(source));
+        const language = (intent ? explicitLanguage(intent) : null) ?? detectLanguage(importLanguageText(source));
         if (mode === "restructure") send({ type: "ai" });
         let built;
         try {
-          built = await buildImportOutline(userId, source, title, minutes, mode, openai, language);
+          built = await buildImportOutline(userId, source, title, minutes, mode, openai, language, intent);
         } catch (e) {
           const f = aiFailure(e);
           if (f) return send({ type: "error", ...f });
@@ -126,6 +129,7 @@ export async function POST(req: Request) {
             sourceText: text.slice(0, MAX_STORED_SOURCE_CHARS),
             sourceKind: "document",
             language,
+            ...(intent ? { sourceIntent: intent } : {}),
             importSource: source as unknown as object,
           },
           select: { id: true },
@@ -140,6 +144,8 @@ export async function POST(req: Request) {
           sourceFormat: "pptx",
           importMode: mode,
           language,
+          hasIntent: !!intent,
+          interactionsAdded: built.interactionsAdded,
           importedSlides: slides.length,
           imageCount: Object.keys(images).length,
         });

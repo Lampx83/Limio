@@ -14,8 +14,10 @@ import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
-import { isFullStructure, isValidMinutes, normalizeOutline, slideRange, type DeckSourceKind, type WebSourceRef } from "@/lib/limioLiveOutline";
-import { detectLanguage, topicLanguage } from "@/lib/limioLiveLanguage";
+import { isFullStructure, isValidMinutes, normalizeOutline, outlineWarnings, slideRange, type DeckSourceKind, type WebSourceRef } from "@/lib/limioLiveOutline";
+import { detectLanguage, explicitLanguage, topicLanguage } from "@/lib/limioLiveLanguage";
+import { interactionTarget } from "@/lib/limioLiveInteractions";
+import { ensureInteractions } from "@/lib/limioLiveInteractionsServer";
 import { WEB_MAX_PAGES, getWebSearchProvider, searchQueryFromTopic, toSourcePages, type WebSearchProvider } from "@/lib/webSearch";
 
 export const runtime = "nodejs";
@@ -72,9 +74,18 @@ export async function POST(req: Request) {
   const file = form.get("file");
   const pasted = form.get("text");
   const topic = form.get("topic");
-  if (typeof topic === "string" && topic.trim()) {
+  // Trang "Tạo bài giảng" một ô (docs/tieu-chi/tao-bai-giang-mot-o.md, M8): mô tả luôn đi kèm; có tài liệu thì mô tả là yêu
+  // cầu của giảng viên (intent), không có thì mô tả là nguồn "topic" như trước.
+  const description = typeof topic === "string" ? topic.replace(/\r\n/g, "\n").trim() : "";
+  const hasDoc = (file instanceof File && file.size > 0) || (typeof pasted === "string" && !!pasted.trim());
+  let intent: string | null = null;
+  if (hasDoc && description) {
+    if (description.length > TOPIC_MAX_CHARS) return NextResponse.json({ error: "topic_too_long", details: { max: TOPIC_MAX_CHARS } }, { status: 422 });
+    intent = description;
+  }
+  if (!hasDoc && description) {
     // Không có tài liệu: AI soạn từ kiến thức chung (và các trang tìm được nếu bật nguồn internet).
-    const t = topic.replace(/\r\n/g, "\n").trim();
+    const t = description;
     if (t.length < TOPIC_MIN_CHARS) return NextResponse.json({ error: "topic_too_short", details: { min: TOPIC_MIN_CHARS } }, { status: 422 });
     if (t.length > TOPIC_MAX_CHARS) return NextResponse.json({ error: "topic_too_long", details: { max: TOPIC_MAX_CHARS } }, { status: 422 });
     sourceText = t;
@@ -114,12 +125,14 @@ export async function POST(req: Request) {
   }
 
   const range = slideRange(minutes);
+  const target = interactionTarget(minutes);
   const truncated = sourceText.length > OUTLINE_MAX_SOURCE_CHARS;
   const topicText = sourceText;
   const name = sourceName;
   // Ngôn ngữ của bài (docs/tieu-chi/ngon-ngu-slide.md, L3): mô tả ghi rõ ngôn ngữ thì theo đó, không thì theo chữ của nguồn.
   // Không nhận được thì để trống: AI viết theo ngôn ngữ của nguồn.
-  const language = sourceKind === "topic" ? topicLanguage(topicText) : detectLanguage(topicText);
+  // Có tài liệu thì yêu cầu của giảng viên ghi rõ ngôn ngữ ("bằng tiếng Anh") vẫn thắng ngôn ngữ của tài liệu (L2b + M9).
+  const language = sourceKind === "topic" ? topicLanguage(topicText) : (intent ? explicitLanguage(intent) : null) ?? detectLanguage(topicText);
 
   // Từ đây trở đi là phần chậm (gọi mô hình, có thể hơn 60 giây). Trả luồng NDJSON có nhịp giữ kết nối để proxy
   // phía trước không cắt: ... {"type":"ping"}* rồi {"type":"done",...} hoặc {"type":"error","error","status"}.
@@ -156,6 +169,11 @@ export async function POST(req: Request) {
               maxSlides: range.max,
               structure: isFullStructure(minutes) ? "full" : "compact",
               language,
+              // Mức tương tác tối thiểu, số phần của buổi 90 phút, yêu cầu của giảng viên (tao-bai-giang-mot-o.md).
+              minInteractions: target.min,
+              minInteractionKinds: target.kinds,
+              ...(minutes >= 90 ? { contentParts: [4, 6] as [number, number] } : {}),
+              ...(intent ? { intent } : {}),
             },
             openai,
           );
@@ -166,8 +184,17 @@ export async function POST(req: Request) {
           return fail("generate_failed", 500);
         }
 
-        const { outline, warnings } = normalizeOutline(raw, minutes, { sourceKind: kind, sourceText: text, references: refs ?? [], lang: language });
-        if (outline.slides.length === 0) return fail("empty_outline", 502);
+        const normalized = normalizeOutline(raw, minutes, { sourceKind: kind, sourceText: text, references: refs ?? [], lang: language });
+        if (normalized.outline.slides.length === 0) return fail("empty_outline", 502);
+        // Còn thiếu tương tác (số hoặc loại) thì AI bổ sung một lần nhỏ; lỗi thì giữ dàn ý, kèm cảnh báo (M17).
+        const top = await ensureInteractions(userId, normalized.outline, minutes, { sourceText: text, sourceKind: kind, intent }, openai);
+        const outline = top.outline;
+        const before = outlineWarnings(normalized.outline, minutes, { sourceKind: kind, sourceText: text });
+        const warnings = [
+          ...normalized.warnings.filter((w) => !before.includes(w)),
+          ...outlineWarnings(outline, minutes, { sourceKind: kind, sourceText: text }),
+          ...(top.warning ? [top.warning] : []),
+        ];
 
         const deck = await prisma.liveDeck.create({
           data: {
@@ -180,6 +207,7 @@ export async function POST(req: Request) {
             sourceText: text.slice(0, MAX_STORED_SOURCE_CHARS),
             sourceKind: kind,
             language,
+            ...(intent ? { sourceIntent: intent } : {}),
             ...(refs ? { sourceRefs: refs as unknown as object } : {}),
           },
           select: { id: true },
@@ -192,6 +220,8 @@ export async function POST(req: Request) {
           warningCount: warnings.length,
           sourceKind: kind,
           language,
+          hasIntent: !!intent,
+          interactionsAdded: top.added,
           ...(refs ? { webSourceCount: refs.length } : {}),
         });
         send({ type: "done", deckId: deck.id, outline, warnings, truncated });

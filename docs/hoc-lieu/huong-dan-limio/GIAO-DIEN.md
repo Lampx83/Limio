@@ -515,20 +515,30 @@ Menu Limio-Live → "Bài giảng của tôi" (`/instructor/limio-live`): nút *
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Từ mô tả chủ đề hoặc tài liệu** (`/instructor/limio-live/from-document`, tiêu đề "Tạo bài giảng"): chọn tab
-  **Mô tả chủ đề** (15–2.000 ký tự, có 4 nút "Ví dụ mẫu"; nêu chủ đề, người học và điều người học làm được),
-  **Tải tệp lên** (.docx, PDF, .txt, .md, tối đa 10 MB; PDF scan không đọc được chữ) hoặc **Dán văn bản**. Tab
-  Mô tả chủ đề có công tắc **"Tìm thêm nguồn trên internet"** (chỉ hiện khi quản trị đã cấu hình dịch vụ tìm
-  kiếm; bật thì số liệu và trích dẫn chỉ dùng khi có trong trang đã đọc, kèm nguồn ở chân slide và slide cuối
-  liệt kê trang đã đọc; tắt thì AI viết từ kiến thức chung, không đưa số liệu). Chọn **Thời lượng**: 15 phút
-  (9–12 slide), 30 phút (16–20), 45 phút (22–28). Bấm **"Soạn dàn ý"** (20–90 giây) → sang trang Dàn ý. Bài từ
-  mô tả luôn kèm lời nhắc "Nội dung do AI viết từ kiến thức chung… thầy/cô cần kiểm tra trước khi dạy". Dòng
-  phụ "Soạn thủ công từ bài trống" mở hộp "Tạo bài giảng" (ô "Tên bài giảng", "Nhóm (tuỳ chọn)").
+- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Thầy/cô muốn soạn bài giảng gì? Có
+  tài liệu thì đính kèm một tệp, AI sẽ bám sát tài liệu đó." và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
+  người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** (đã có tệp thì thành "Đổi tài liệu"); kéo
+  thả tệp vào ô cũng được. **Mỗi bài chỉ một tài liệu**: Word .docx, PDF, .txt, .md tối đa 10 MB, hoặc PowerPoint
+  .pptx tối đa 50 MB; tệp mới thay tệp cũ, kèm dòng báo. Dán đoạn dài hơn 2.000 ký tự vào ô (khi chưa có tệp) thì
+  đoạn đó thành tài liệu "Văn bản dán" (có nút "Đưa lại vào ô mô tả"). Dòng nhắc dưới ô nói AI sẽ làm gì:
+  - Không tài liệu: AI soạn từ kiến thức chung theo mô tả (cần ít nhất 15 ký tự); có công tắc **"Tìm thêm nguồn
+    trên internet"** (chỉ hiện khi quản trị đã cấu hình dịch vụ tìm kiếm; bật thì số liệu và trích dẫn chỉ dùng khi
+    có trong trang đã đọc, kèm nguồn ở chân slide và slide cuối liệt kê trang đã đọc). Có 4 nút "Ví dụ mẫu". Bài
+    từ mô tả luôn kèm lời nhắc "Nội dung do AI viết từ kiến thức chung… thầy/cô cần kiểm tra trước khi dạy".
+  - Có tài liệu: AI bám sát tài liệu và làm theo mô tả (mô tả lúc này là yêu cầu của thầy/cô, không bắt buộc).
+  - Tài liệu là PowerPoint: nút thành **"Nhập PowerPoint"**, mở trang nhập với tệp đã đọc sẵn, mô tả mang theo.
+  Chọn **Thời lượng** 15 phút (9–12 slide), 30 phút (16–20), 45 phút (22–28) hoặc **90 phút** (42–50), bấm
+  **"Soạn dàn ý"** (20–90 giây) → sang trang Dàn ý. Liên kết phụ "Soạn thủ công" mở hộp "Tạo bài giảng" (ô "Tên bài
+  giảng", "Nhóm (tuỳ chọn)").
+- **Tương tác ở mọi cách tạo:** bài có ít nhất 5 slide tương tác thuộc ít nhất 3 loại (90 phút: ít nhất 10, 4
+  loại); bảng trắng tối đa 1. AI soạn thiếu thì hệ thống tự gọi AI bổ sung; không bổ sung được thì dàn ý có cảnh
+  báo "Chưa bổ sung được slide tương tác tự động…". Dưới dàn ý có nhắc "Bài nên có ít nhất 5 slide tương tác (hiện
+  có n)" khi thầy/cô xoá bớt, và nhắc khi quá nửa slide nội dung là Chữ và hình.
 - **Từ PowerPoint** (`/instructor/limio-live/from-pptx`, "Tạo bài giảng từ PowerPoint"), 4 bước: "Tải file"
-  (chỉ .pptx, tối đa 10 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
+  (chỉ .pptx, tối đa 50 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
   tính vào dung lượng lưu trữ; trang báo số slide, ghi chú giảng, hình, bảng, biểu đồ và phần chỉ lấy được
-  chữ; chọn "Thời lượng buổi giảng") → "Chọn cách chuyển" (thẻ **"Giữ ý, làm đẹp lại"** — mặc định, mỗi slide gốc
-  thành một slide Limio, không dùng AI, không tốn lượt; hoặc **"Soạn lại mạch"** — AI dựng dàn ý theo mạch Mục
+  chữ; chọn "Thời lượng buổi giảng") → "Chọn cách chuyển" (thẻ **"Giữ ý, làm đẹp lại"** — mặc định, AI chỉ viết thêm các slide tương tác (tốn ít lượt), mỗi slide gốc
+  thành một slide Limio, giữ nguyên chữ và hình; hoặc **"Soạn lại mạch"** — AI dựng dàn ý theo mạch Mục
   tiêu, Hook, các phần có bìa phần, Tổng kết, ghi chú giảng gốc giữ nguyên chữ, tốn token) → "Đối chiếu"
   (hai cột "Slide gốc" / "Dàn ý mới", slide gốc chưa có trong dàn ý có nút "Thêm lại vào dàn ý") → "Sửa dàn
   ý và tạo slide".

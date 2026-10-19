@@ -146,6 +146,8 @@ export default function ThemePicker({
               <p className="mt-1.5 text-xs text-muted">
                 AI viết slide mới và các chữ tự thêm trên slide theo ngôn ngữ này. Đổi ngôn ngữ không dịch các slide đã có.
               </p>
+            </div>
+          )}
           {imageFrame && (
             <div className="border-t border-token pt-3">
               <p className="text-[11px] font-bold uppercase tracking-wide text-faint">Khung hình</p>

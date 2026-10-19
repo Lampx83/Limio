@@ -23,7 +23,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const deck = await prisma.liveDeck.findFirst({
     where: { id: params.deckId, userId },
-    select: { id: true, title: true, outlineMinutes: true, importSource: true, language: true, _count: { select: { slides: true } } },
+    select: { id: true, title: true, outlineMinutes: true, importSource: true, language: true, sourceIntent: true, _count: { select: { slides: true } } },
   });
   const src = deck ? sanitizeImportSource(deck.importSource) : null;
   if (!deck || !src) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -36,14 +36,13 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   // Ngôn ngữ đã ghi (hoặc giảng viên đã chọn); bài nhập trước khi có cột ngôn ngữ thì nhận từ chữ của slide gốc.
   const language = sanitizeDeckLanguage(deck.language) ?? detectLanguage(importLanguageText(src));
 
+  // "Giữ ý" dùng AI chỉ để viết thêm slide tương tác: AI chưa cấu hình thì vẫn đổi được (tao-bai-giang-mot-o.md, M18).
   let openai: Awaited<ReturnType<typeof getOpenaiClient>> | null = null;
-  if (mode === "restructure") {
-    try {
-      openai = await getOpenaiClient();
-    } catch (e) {
-      if ((e as Error).message === "openai_not_configured") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
-      throw e;
-    }
+  try {
+    openai = await getOpenaiClient();
+  } catch (e) {
+    if ((e as Error).message !== "openai_not_configured") throw e;
+    if (mode === "restructure") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
   }
 
   const enc = new TextEncoder();
@@ -54,7 +53,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
       try {
         let built;
         try {
-          built = await buildImportOutline(userId, src, deck.title, minutes, mode, openai, language);
+          built = await buildImportOutline(userId, src, deck.title, minutes, mode, openai, language, deck.sourceIntent);
         } catch (e) {
           const f = aiFailure(e);
           if (f) return send({ type: "error", ...f });
@@ -76,6 +75,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           sourceFormat: "pptx",
           importMode: mode,
           language,
+          hasIntent: !!deck.sourceIntent,
+          interactionsAdded: built.interactionsAdded,
           importedSlides: src.slides.length,
         });
         send({ type: "done", outline: built.outline, warnings });

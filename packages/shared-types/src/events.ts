@@ -708,6 +708,10 @@ export interface LiveDeckOutlineGeneratedPayload {
   importMode?: "keep" | "restructure";
   /** Ngôn ngữ nội dung slide ghi lúc tạo bài (DECK_LANGUAGES); null = chưa nhận được. Thiếu = bản ghi cũ. */
   language?: string | null;
+  /** Có yêu cầu của giảng viên đi cùng tài liệu (trang Tạo bài giảng một ô). Thiếu = bản ghi cũ. */
+  hasIntent?: boolean;
+  /** Số slide tương tác hệ thống bổ sung để đủ mức tối thiểu. Thiếu = bản ghi cũ. */
+  interactionsAdded?: number;
   /** Số slide trong file gốc. */
   importedSlides?: number;
   /** Số hình đã lưu. */

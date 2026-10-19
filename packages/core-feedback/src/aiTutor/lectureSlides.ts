@@ -3,7 +3,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
 import { SLIDE_ILLUSTRATIONS, SLIDE_ILLUSTRATION_TOPICS } from "@feedbackme/shared-types";
-import { OUTLINE_KINDS, sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
+import { OUTLINE_KINDS, intentBlock, intentRule, sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
 import { slideLanguageRule } from "./lectureLanguage";
 
 /**
@@ -42,6 +42,8 @@ export interface SlideDraftsInput {
   webImages?: Array<{ id: string; description: string; page: string }>;
   /** Ngôn ngữ nội dung slide của bài (mã trong DECK_LANGUAGES); thiếu = theo ngôn ngữ của nguồn. */
   language?: string | null;
+  /** Yêu cầu của giảng viên đi cùng tài liệu (M9). */
+  intent?: string;
 }
 
 export interface RawSlideDraft {
@@ -285,8 +287,8 @@ ${overview}
 # Slide cần viết
 ${wanted}
 
-${sourceBlock(kind, input.sourceText)}`;
-  return { system, user };
+${intentBlock(input.intent)}${sourceBlock(kind, input.sourceText)}`;
+  return { system: system + intentRule(input.intent), user };
 }
 
 export async function generateSlideDrafts(

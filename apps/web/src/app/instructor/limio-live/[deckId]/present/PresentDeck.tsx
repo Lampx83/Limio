@@ -1611,7 +1611,8 @@ function ConfirmEndDialog({
         <p className="mt-2 text-sm leading-relaxed text-muted">
           Phiên tương tác (kết quả và mã QR của từng trang) được giữ lại cho lần chiếu sau. Học viên tạm thời không trả lời được.
         </p>
-        <div className="mt-4 flex flex-wrap justify-end gap-2">
+        {/* Hai nút chia đều bề ngang để mép thẳng với các thẻ "phiên tương tác mới" bên dưới. */}
+        <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             onClick={onCancel}
             className="rounded-full border border-token px-4 py-2 text-sm font-semibold hover:bg-[rgb(var(--surface-muted))]"

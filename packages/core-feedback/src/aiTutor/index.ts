@@ -11,5 +11,6 @@ export * from "./lessonOutline";
 export * from "./lessonWriter";
 export * from "./lectureSlideChat";
 export * from "./lectureLanguage";
+export * from "./lectureInteractions";
 export * from "./teacherAssistant";
 export * from "./chartFromImage";
