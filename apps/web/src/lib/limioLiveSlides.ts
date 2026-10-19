@@ -68,6 +68,8 @@ export interface LayoutItem {
   heading: string; // tiêu đề thẻ / tên bước / con số / nội dung dòng tóm tắt
   body: string; // câu giải thích (không dùng ở slide tóm tắt)
   icon?: SlideIconId; // chỉ dùng ở slide ba thẻ
+  /** Chỉ slide Tóm tắt: dòng là link mở trang (slide Nguồn tham khảo của bài có nguồn internet). Chỉ http(s). */
+  href?: string;
 }
 
 export interface LayoutColumn {
@@ -285,7 +287,8 @@ function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
       layout === "cards" && typeof o.icon === "string" && (SLIDE_ICONS as readonly string[]).includes(o.icon)
         ? (o.icon as SlideIconId)
         : undefined;
-    items.push({ heading, body, ...(icon ? { icon } : {}) });
+    const href = layout === "summary" && typeof o.href === "string" && /^https?:\/\//i.test(o.href) && o.href.length <= 2000 ? o.href : "";
+    items.push({ heading, body, ...(icon ? { icon } : {}), ...(href ? { href } : {}) });
     if (items.length >= range.max) break;
   }
   return items;

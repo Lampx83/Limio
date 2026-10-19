@@ -2,6 +2,7 @@ import { AiTutorError, generateSlideDrafts, type OutlineSlideInput } from "@feed
 import { prisma } from "@feedbackme/db";
 import { recordSlideVersion } from "@feedbackme/core-lms";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
+import { attachWebImages } from "@/lib/limioLiveWebImagesServer";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
@@ -146,6 +147,16 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           });
         }
         for (const s of result.slides) if (s.type === "content") s.config = fillCoverIdentity(s.config as Record<string, unknown>, who);
+        // Bài có nguồn internet: gắn ảnh lấy từ chính trang nguồn vào slide Chữ và hình (kèm dòng ghi nguồn). Ảnh nào lỗi thì
+        // slide đó giữ hình tự vẽ; không bao giờ làm hỏng việc tạo slide (docs/tieu-chi/nguon-web-link-anh.md, W8–W13).
+        let webImageCount = 0;
+        if (sourceKind === "topic_web" && context.refs.some((r) => r.images?.length)) {
+          send({ type: "images" });
+          webImageCount = await attachWebImages(userId, result.slides, context.refs).catch((e) => {
+            console.error("[Limio-Live web images]", e);
+            return 0;
+          });
+        }
         const byOutlineId = new Map(writeIdx.map((i, k) => [outline.slides[i]!.id, result.slides[k]!]));
 
         await prisma.$transaction(async (tx) => {
@@ -200,6 +211,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           mode: plan ? "sync" : "first",
           slideCount: plan ? plan.order.length : result.slides.length,
           fallbackCount: result.fallbackCount,
+          ...(sourceKind === "topic_web" ? { webImageCount } : {}),
           ...(plan
             ? { regenerated: plan.regenerate.length, created: plan.create.length, removed: plan.remove.length, kept: plan.keep.length + plan.orphans.length }
             : {}),

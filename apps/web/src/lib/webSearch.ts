@@ -4,6 +4,7 @@
 // không phải tự tải HTML). Khoá lưu ở Quản trị > Tích hợp ("websearch.tavily") hoặc biến môi trường TAVILY_API_KEY.
 
 import { hostOf, type WebSourceRef } from "./limioLiveOutline";
+import { WEB_IMAGES_TOTAL, extractPageImages, stripMarkdownMedia } from "./limioLiveWebImages";
 
 export interface WebPage {
   title: string;
@@ -44,15 +45,20 @@ const urlKey = (u: string) => {
   }
 };
 
-/** Chuẩn hoá kết quả: bỏ trùng địa chỉ, bỏ trang ít chữ, gọn khoảng trắng, cắt độ dài, đánh số 1..n. */
+/**
+ * Chuẩn hoá kết quả: bỏ trùng địa chỉ, bỏ trang ít chữ, gọn khoảng trắng, cắt độ dài, đánh số 1..n. Ảnh trong chữ markdown
+ * của trang được tách riêng theo trang (ứng viên minh hoạ, tối đa 3 mỗi trang, 8 cả bài); chữ đưa cho AI không còn ảnh, link.
+ */
 export function toSourcePages(pages: WebPage[], max = WEB_MAX_PAGES): Array<WebSourceRef & { content: string }> {
   const seen = new Set<string>();
   const out: Array<WebSourceRef & { content: string }> = [];
+  let imageCount = 0;
   for (const p of pages) {
     if (!/^https?:\/\//.test(p.url)) continue;
     const key = urlKey(p.url);
     if (seen.has(key)) continue;
-    const content = p.content.replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+    const images = /^https?:\/\//.test(p.url) ? extractPageImages(p.content, p.url).slice(0, Math.max(0, WEB_IMAGES_TOTAL - imageCount)) : [];
+    const content = stripMarkdownMedia(p.content).replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
     if (content.length < WEB_PAGE_MIN_CHARS) continue;
     seen.add(key);
     out.push({
@@ -60,7 +66,9 @@ export function toSourcePages(pages: WebPage[], max = WEB_MAX_PAGES): Array<WebS
       title: p.title.replace(/\s+/g, " ").trim().slice(0, 200) || hostOf(p.url),
       url: p.url.slice(0, 2000),
       content: content.slice(0, WEB_PAGE_CHARS),
+      ...(images.length ? { images } : {}),
     });
+    imageCount += images.length;
     if (out.length >= max) break;
   }
   return out;
@@ -74,7 +82,7 @@ export function tavilyProvider(apiKey: string, fetchImpl: typeof fetch = fetch, 
         const res = await fetchImpl(`${baseUrl}/search`, {
           method: "POST",
           headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
-          body: JSON.stringify({ query, max_results: maxResults, search_depth: "basic", include_raw_content: true, include_answer: false }),
+          body: JSON.stringify({ query, max_results: maxResults, search_depth: "basic", include_raw_content: "markdown", include_answer: false }),
           signal: AbortSignal.timeout(TIMEOUT_MS),
         });
         if (!res.ok) {

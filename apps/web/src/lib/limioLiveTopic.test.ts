@@ -117,7 +117,7 @@ describe("normalizeOutline — mô tả chủ đề", () => {
     expect(outline.slides.length).toBeLessThanOrEqual(slideRange(15).max);
     const last = outline.slides[outline.slides.length - 1]!;
     expect(last).toMatchObject({ fixed: "references", layout: "summary", title: "Nguồn tham khảo" });
-    expect(last.points).toEqual(["[1] vi.example.org: Thực tế tăng cường là gì", "[2] edu.example.com: AR in education"]);
+    expect(last.points).toEqual(["[1] Thực tế tăng cường là gì", "[2] AR in education"]);
     expect(outline.slides[outline.slides.length - 2]!.title).toBe("Ghi nhớ");
   });
 
@@ -238,7 +238,7 @@ describe("tìm kiếm web", () => {
     expect(out).toEqual([{ title: "A", url: "https://a.org", content: "đầy đủ" }]);
     expect(calls[0]!.url).toBe("https://api.tavily.com/search");
     expect((calls[0]!.init.headers as Record<string, string>).authorization).toBe("Bearer tvly-test");
-    expect(JSON.parse(String(calls[0]!.init.body))).toMatchObject({ query: "AR trong lớp học", max_results: 8, include_raw_content: true });
+    expect(JSON.parse(String(calls[0]!.init.body))).toMatchObject({ query: "AR trong lớp học", max_results: 8, include_raw_content: "markdown" });
 
     const failing = tavilyProvider("k", (async () => new Response("no", { status: 500 })) as unknown as typeof fetch);
     await expect(failing.search("x", 5)).resolves.toEqual([]);
