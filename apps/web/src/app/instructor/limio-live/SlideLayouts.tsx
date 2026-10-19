@@ -34,6 +34,7 @@ import {
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { DATA_CONTENT_W, sourceLine, tableFontSize } from "@/lib/limioLiveCharts";
+import { groupHeadPx, groupsFit, isNegativeAsk, numberOf, type SlideGroup } from "@/lib/limioLiveGroups";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   betterFit,
@@ -601,6 +602,121 @@ function LayoutBody({
               Nguồn ảnh: {c.imageCredit}
             </p>
           ) : null}
+        </div>
+      );
+    }
+
+    case "groups": {
+      const groups: SlideGroup[] = Array.isArray(c.groups) ? c.groups : [];
+      const lead: string = typeof c.lead === "string" ? c.lead : "";
+      const gf = groupsFit({ title, lead, groups });
+      const pad2 = (n: number) => String(n + 1).padStart(2, "0");
+      const pts = (g: SlideGroup, px: number, from = 0) =>
+        g.points.length > 0 && (
+          <ul className="gp" style={{ fontSize: px }}>
+            {g.points.map((p, k) => (
+              <li key={k} className="a" style={delay(from + k + 1)}>
+                <span>
+                  <Inline text={p} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        );
+      // Một nhóm: câu dẫn (hoặc tên nhóm) to ở trên, tiêu đề slide thành dòng nhãn nhỏ.
+      if (gf.variant === "ask" || gf.variant === "stats") {
+        const g = groups[0] ?? { heading: "", points: [] };
+        const ask = lead || g.heading;
+        const label = lead && g.heading ? `${title} · ${g.heading.replace(/[:：]\s*$/, "")}` : title;
+                const negative = isNegativeAsk(ask);
+        const nums = g.points.filter((p) => numberOf(p));
+        const rest = g.points.filter((p) => !numberOf(p));
+        return (
+          <div className={`ll-groups v-${gf.variant}`}>
+            <div className="pad">
+              {label && <p className="lab a">{label}</p>}
+              <h2 className="ask a" style={{ fontSize: gf.px }}>
+                <span className="hl">
+                  <Inline text={ask} />
+                </span>
+              </h2>
+              {gf.variant === "stats" ? (
+                <>
+                  <div className="gstats" style={{ gridTemplateColumns: `repeat(${nums.length}, 1fr)` }}>
+                    {nums.map((p, i) => (
+                      <div key={i} className="gstat a-pop" style={delay(i + 1)}>
+                        <span className="n">{numberOf(p)}</span>
+                        <span className="d" style={{ fontSize: gf.px }}>
+                          <Inline text={p} />
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {rest.length > 0 && (
+                    <div className="gchips">
+                      {rest.map((p, i) => (
+                        <div key={i} className="gchip a" style={{ ...delay(nums.length + i + 1), fontSize: Math.max(26, gf.px - 4) }}>
+                          <Inline text={p} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="grows" style={{ fontSize: gf.px }}>
+                  {g.points.map((p, i) => (
+                    <div key={i} className={`grow a${negative ? " x" : ""}`} style={delay(i + 1)}>
+                      <span className="k">{negative ? "×" : i + 1}</span>
+                      <span>
+                        <Inline text={p} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className={`ll-groups v-${gf.variant}`}>
+          <div className="pad">
+            {title && <Title text={title} maxPx={52} widthPx={1152} maxLines={2} />}
+            {lead && (
+              <p className="glead a" style={delay(1)}>
+                <Inline text={lead} />
+              </p>
+            )}
+            {gf.variant === "cards" ? (
+              <div className="gcards" style={{ gridTemplateColumns: `repeat(${Math.max(groups.length, 1)}, 1fr)` }}>
+                {groups.map((g, i) => (
+                  <div key={i} className="gcard a" style={delay(i + 1)}>
+                    <b className="gh" style={{ fontSize: groupHeadPx(gf.px) }}>
+                      <span className="no">{pad2(i)}</span>
+                      <span className="hl">
+                        <Inline text={g.heading} />
+                      </span>
+                    </b>
+                    {pts(g, gf.px, i)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`glist${gf.cols === 2 ? " c2" : ""}`}>
+                {groups.map((g, i) => (
+                  <div key={i} className="grp a" style={delay(i + 1)}>
+                    <b className="gh" style={{ fontSize: groupHeadPx(gf.px) }}>
+                      <span className="no">{pad2(i)}</span>
+                      <span className="hl">
+                        <Inline text={g.heading} />
+                      </span>
+                    </b>
+                    {pts(g, gf.px, i)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       );
     }

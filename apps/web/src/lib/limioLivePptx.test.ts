@@ -16,6 +16,7 @@ import {
   type ImportedSlide,
 } from "./limioLivePptx";
 import { sanitizeOutline } from "./limioLiveOutline";
+import { groupsFit } from "./limioLiveGroups";
 import { MAX_LEN } from "./limioLiveSlides";
 
 const slide = (o: Partial<ImportedSlide> & { n: number }): ImportedSlide => ({
@@ -83,9 +84,9 @@ describe("piecesFor: chọn bố cục bằng quy tắc (P16)", () => {
     const smart = piecesFor(slide({ n: 5, title: "Ba câu hỏi", smartArt: [P("Đích đến"), P("Mục tiêu bài", 1), P("Hiện trạng"), P("Bước tiếp")] }), { first: false });
     expect(smart[0]).toMatchObject({ layout: "steps", config: { items: [{ heading: "Đích đến", body: "Mục tiêu bài" }, { heading: "Hiện trạng" }, { heading: "Bước tiếp" }] } });
   });
-  it("2–4 mục đều có ý con → Ba thẻ; 4–5 mục ngắn → Tóm tắt", () => {
+  it("2 mục trở lên đều có ý con → Nhóm (P56, thay Ba thẻ); 4–5 mục ngắn → Tóm tắt", () => {
     const cards = piecesFor(slide({ n: 6, title: "Bốn mức", paragraphs: [P("Nhiệm vụ"), P("Đúng hay sai", 1), P("Quá trình"), P("Cách làm", 1)] }), { first: false });
-    expect(cards[0]).toMatchObject({ layout: "cards", config: { items: [{ heading: "Nhiệm vụ", body: "Đúng hay sai" }, { heading: "Quá trình", body: "Cách làm" }] } });
+    expect(cards[0]).toMatchObject({ layout: "groups", config: { groups: [{ heading: "Nhiệm vụ", points: ["Đúng hay sai"] }, { heading: "Quá trình", points: ["Cách làm"] }] } });
     const sum = piecesFor(slide({ n: 7, title: "Tóm tắt", paragraphs: ["A", "B", "C", "D"].map((t) => P(t)) }), { first: false });
     expect(sum[0]!.layout).toBe("summary");
   });
@@ -399,5 +400,133 @@ describe("chữ nhấn và cụm từ khoá (P52, P53)", () => {
     const s = sanitizeImportSource(raw)!.slides[0]!;
     expect(s.words).toEqual(["a"]);
     expect(s.emphasis).toEqual([{ text: "a", kind: "mark" }]);
+  });
+});
+
+describe("slide hai cấp: chọn kiểu theo nội dung (P55–P59)", () => {
+  const P1 = (text: string) => P(text, 0);
+  const K = (text: string) => P(text, 1);
+  const one = (s: ImportedSlide) => {
+    const pieces = piecesFor(s, { first: false });
+    return pieces;
+  };
+
+  it("2 nhóm ngắn có ý con (2.1 TECHNOLOGY IN EDUCATION) → Nhóm, chữ nguyên văn", () => {
+    const pieces = one(
+      slide({
+        n: 5,
+        title: "2.1. TECHNOLOGY IN EDUCATION",
+        paragraphs: [P1("Bản chất"), K("Ứng dụng công nghệ như công cụ hỗ trợ giảng dạy"), P1("Đặc trưng"), K("Tập trung vào phương tiện"), K("Không thay đổi bản chất phương pháp dạy học"), K("Giáo viên vẫn là trung tâm điều khiển")],
+      }),
+    );
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]!.layout).toBe("groups");
+    expect(pieces[0]!.config).toMatchObject({
+      title: "2.1. TECHNOLOGY IN EDUCATION",
+      groups: [
+        { heading: "Bản chất", points: ["Ứng dụng công nghệ như công cụ hỗ trợ giảng dạy"] },
+        { heading: "Đặc trưng", points: ["Tập trung vào phương tiện", "Không thay đổi bản chất phương pháp dạy học", "Giáo viên vẫn là trung tâm điều khiển"] },
+      ],
+    });
+  });
+
+  it("đúng 2 nhóm đối lập (1.4 năng lực mất/gia tăng) → So sánh hai cột, nhóm đi xuống màu ấm", () => {
+    const pieces = one(
+      slide({
+        n: 6,
+        title: "1.4 AI thay đổi yêu cầu năng lực thị trường lao động Edtech",
+        paragraphs: [
+          P1("Năng lực đang mất lợi thế"),
+          K("Sản xuất nội dung thông thường"),
+          K("Thiết kế học liệu theo mẫu có sẵn"),
+          K("Thao tác công nghệ lặp lại, quy trình cố định"),
+          P1("Năng lực đang gia tăng nhu cầu"),
+          K("Sử dụng AI có kiểm soát và có phê phán"),
+        ],
+      }),
+    );
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]!.layout).toBe("compare");
+    expect((pieces[0]!.config as any).columns).toMatchObject([
+      { heading: "Năng lực đang mất lợi thế", tone: "bad", points: ["Sản xuất nội dung thông thường", "Thiết kế học liệu theo mẫu có sẵn", "Thao tác công nghệ lặp lại, quy trình cố định"] },
+      { heading: "Năng lực đang gia tăng nhu cầu", tone: "good", points: ["Sử dụng AI có kiểm soát và có phê phán"] },
+    ]);
+  });
+
+  it("một nhóm có ý con (What positive thinking is not?) → Nhóm một nhóm, tên nhóm là câu dẫn", () => {
+    const pieces = one(
+      slide({ n: 7, title: "1. POSITIVE THINKING", paragraphs: [P1("What positive thinking is not?"), K("Ignoring problems or reality"), K("Toxic positivity (forced optimism)"), K('Just "thinking happy thoughts"')] }),
+    );
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]!.layout).toBe("groups");
+    expect((pieces[0]!.config as any).groups).toHaveLength(1);
+    expect((pieces[0]!.config as any).groups[0].heading).toBe("What positive thinking is not?");
+  });
+
+  it("câu không có ý con đứng trước một nhóm là câu dẫn; dấu ':' cuối tên nhóm bỏ đi", () => {
+    const pieces = one(
+      slide({
+        n: 8,
+        title: "1. POSITIVE THINKING",
+        paragraphs: [P1("Why positive thinking matter?"), P1("Research findings:"), K("Positive thinkers have 23% lower levels of stress hormones"), K("Problem-solving ability improves by up to 20% in positive mental states"), K("Enhanced creativity and cognitive flexibility")],
+      }),
+    );
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]!.config).toMatchObject({
+      layout: "groups",
+      lead: "Why positive thinking matter?",
+      groups: [{ heading: "Research findings", points: ["Positive thinkers have 23% lower levels of stress hormones", "Problem-solving ability improves by up to 20% in positive mental states", "Enhanced creativity and cognitive flexibility"] }],
+    });
+  });
+
+  it("5 nhóm ý con dài (4.1 năm nhóm năng lực AI) → Nhóm; chữ thân giữ to nên nếu cần thì chia hai slide, không co dưới 26 px", () => {
+    const names = ["AI Literacy", "Đạo đức & Trách nhiệm số", "Sử dụng AI chuyên môn", "Đánh giá & kiểm chứng AI", "Thiết kế đánh giá trong bối cảnh AI"];
+    const para = names.flatMap((n) => [P1(n), K(`Hiểu nguyên lý, khả năng và giới hạn của AI để dùng hiệu quả và có trách nhiệm (${n.length}).`)]);
+    const pieces = one(slide({ n: 9, title: "4.1 Năm nhóm năng lực AI cần bổ sung vào chương trình ED2", paragraphs: para }));
+    expect(pieces.length).toBeLessThanOrEqual(2);
+    expect(pieces.every((p) => p.layout === "groups")).toBe(true);
+    expect(pieces.flatMap((p) => (p.config as any).groups.map((g: any) => g.heading))).toEqual(names);
+    for (const p of pieces) expect(groupsFit({ title: (p.config as any).title, groups: (p.config as any).groups }).overflow).toBe(false);
+  });
+
+  it("quá nhiều chữ thì chia slide (tiếp), không mất chữ", () => {
+    const long = "Một câu rất dài mô tả đầy đủ năng lực cần đạt, có nhiều vế và nhiều ý nhỏ cần được trình bày cho trọn nghĩa, kèm ví dụ cụ thể.";
+    const para = Array.from({ length: 6 }, (_, i) => [P1(`Nhóm số ${i + 1}`), K(`${long} ${i}a`), K(`${long} ${i}b`), K(`${long} ${i}c`), K(`${long} ${i}d`), K(`${long} ${i}e`)]).flat();
+    const pieces = one(slide({ n: 10, title: "Quá dài", paragraphs: para }));
+    expect(pieces.length).toBeGreaterThan(1);
+    expect(pieces.every((p) => p.layout === "groups")).toBe(true);
+    expect((pieces[1]!.config as any).title).toBe("Quá dài (tiếp)");
+    expect(pieces.flatMap((p) => (p.config as any).groups.map((g: any) => g.heading)).sort()).toEqual(Array.from({ length: 6 }, (_, i) => `Nhóm số ${i + 1}`).sort());
+  });
+
+  it("slide chỉ có một phần số mục có ý con hoặc chỉ một ý con vẫn đi theo luật cũ", () => {
+    const flat = one(slide({ n: 11, title: "Ý phẳng", paragraphs: [P1("Một ý."), P1("Hai ý."), P1("Ba ý.")] }));
+    expect(flat.every((p) => p.layout !== "groups")).toBe(true);
+    const mixed = one(slide({ n: 12, title: "Lẫn", paragraphs: [P1("Ý cha"), K("Ý con"), P1("Ý lẻ không con"), P1("Ý lẻ nữa")] }));
+    expect(mixed.every((p) => p.layout !== "groups")).toBe(true);
+    const single = one(slide({ n: 13, title: "Một con", paragraphs: [P1("Ý cha"), K("Chỉ một ý con")] }));
+    expect(single.every((p) => p.layout !== "groups")).toBe(true);
+  });
+
+  it("ý cha là vế đầu của câu, hoặc danh sách tài liệu tham khảo, giữ Danh sách", () => {
+    const sentence = one(slide({ n: 15, title: "Định hướng", paragraphs: [P1("Bổ sung các yêu cầu cụ thể về"), K("sử dụng AI"), K("đánh giá AI"), K("đạo đức AI")] }));
+    expect(sentence.every((p) => p.layout !== "groups")).toBe(true);
+    const refs = one(slide({ n: 16, title: "Tài liệu", paragraphs: [P1("The Seed Of Thoughts"), K("References:"), K("[1] Covey, S. R. (1989). The 7 habits."), K("[2] Seligman, M. (2011). Flourish.")] }));
+    expect(refs.every((p) => p.layout !== "groups")).toBe(true);
+  });
+
+  it("slide có hình giữ luật cũ (Nhóm không có ô hình)", () => {
+    const withImg = one(slide({ n: 14, title: "Có hình", imageUrl: "/api/limio-live-media/x.jpg", paragraphs: [P1("A"), K("a1"), P1("B"), K("b1")] }));
+    expect(withImg.every((p) => p.layout !== "groups")).toBe(true);
+  });
+
+  it("dàn ý của slide Nhóm: mỗi ý là một nhóm 'Tên: ý con; ý con'", () => {
+    const src = { slides: [slide({ n: 1, title: "Bìa" }), slide({ n: 2, title: "2.1. TECH", paragraphs: [P1("Bản chất"), K("Ý một"), P1("Đặc trưng"), K("Ý hai"), K("Ý ba")] })] };
+    const rows = keepOutline(src, "Bìa").slides;
+    expect(rows[1]!.layout).toBe("groups");
+    expect(rows[1]!.points).toEqual(["Bản chất: Ý một", "Đặc trưng: Ý hai; Ý ba"]);
+    const g = importedSlideFor(rows[1]!, src)!.config as any;
+    expect(g.layout).toBe("groups");
+    expect(g.groups[1]).toEqual({ heading: "Đặc trưng", points: ["Ý hai", "Ý ba"] });
   });
 });

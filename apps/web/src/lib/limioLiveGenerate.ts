@@ -197,6 +197,10 @@ export function configFromOutline(osIn: OutlineSlide, sectionNo: string, notes?:
     case "list":
       raw.lines = pts.map((text) => ({ text }));
       break;
+    case "groups":
+      // Mỗi ý dàn ý là một nhóm "Tên nhóm: ý con; ý con".
+      raw.groups = items.map((it) => ({ heading: it.heading || it.body, points: it.heading ? it.body.split(/;\s+/).filter(Boolean) : [] }));
+      break;
     case "cards":
     case "steps":
       raw.items = items;
@@ -241,6 +245,7 @@ function contentComplete(layout: SlideLayoutId, c: Record<string, any>): boolean
   }
   if (layout === "image") return Array.isArray(c.bullets) && c.bullets.length >= 1;
   if (layout === "list") return Array.isArray(c.lines) && c.lines.length >= 1;
+  if (layout === "groups") return Array.isArray(c.groups) && c.groups.length >= 1;
   if (layout === "cover" || layout === "section") return nonEmpty(c.subtitle);
   if (layout === "table") {
     const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];

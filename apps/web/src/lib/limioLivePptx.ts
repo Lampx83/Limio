@@ -47,6 +47,7 @@ import {
   sanitizeLayoutConfig,
   stripInline,
 } from "./limioLiveSlides";
+import { GROUPS_MAX, GROUP_POINTS_MAX, STATS_LIMITS, contrastTones, groupsFit, numericPoints, type SlideGroup } from "./limioLiveGroups";
 import type { PptxChart, PptxDeck, PptxEmphasis, PptxFlag, PptxParagraph, PptxSlide } from "./pptxImport";
 import { SECTION_KICKER } from "./pptxLayout";
 
@@ -391,6 +392,73 @@ function balanceLines(lines: ListLine[], k: number): ListLine[][] {
   return out;
 }
 
+// ── Slide hai cấp: ý cha và ý con (P55–P59) ─────────────────────────────────
+
+/**
+ * Nhận ra slide hai cấp và chọn kiểu theo quan hệ của nội dung (không hỏi giảng viên). Chỉ nhận khi MỌI mục có ý con, hoặc chỉ
+ * mục đầu là một câu dẫn đứng ngay trước đúng một nhóm; một nhóm phải có từ 2 ý con (một ý con thì Danh sách đủ rõ).
+ * Trả null nếu không phải (slide đi tiếp theo luật cũ) hoặc chữ vượt giới hạn (không được cắt chữ của giảng viên).
+ */
+function groupPieces(title: string, items: Item[], first: boolean): ImportPiece[] | null {
+  const kids = items.filter((it) => it.children.length);
+  let lead = "";
+  let src: Item[];
+  if (items.length >= 2 && kids.length === 1 && items.length - kids.length === 1 && !items[0]!.children.length) {
+    lead = items[0]!.text;
+    src = kids;
+  } else if (items.length && kids.length === items.length) src = items;
+  else return null;
+  if (src.length === 1 && src[0]!.children.length < 2) return null;
+  // Ý cha là vế đầu của một câu mà các ý con nối tiếp ("Bổ sung các yêu cầu cụ thể về" → "sử dụng AI", …): đó là một câu, không
+  // phải nhóm. Danh sách tài liệu tham khảo ("[1] …", "References:") cũng giữ Danh sách.
+  const continues = (it: Item) => !/[.!?…:：]$/.test(it.text.trim()) && /^\p{Ll}/u.test(it.children[0] ?? "");
+  if (src.some(continues) || src.some((it) => it.children.some((c) => /^\[\d+\]|^references?\s*:?$/i.test(c.trim())))) return null;
+  // Tên nhóm bỏ dấu ":" cuối (đó là dấu của ý cha). Ý con tối đa 5 mỗi nhóm: nhiều hơn thì nhóm lặp lại tên ở dòng sau.
+  const groups: SlideGroup[] = src.flatMap((it) => {
+    const heading = it.text.replace(/\s*[:：]\s*$/, "").trim();
+    return chunkBalanced(it.children, GROUP_POINTS_MAX).map((points) => ({ heading, points }));
+  });
+  if (lead.length > MAX_LEN.lead || groups.some((g) => g.heading.length > MAX_LEN.groupHeading || g.points.some((p) => p.length > MAX_LEN.groupPoint))) return null;
+
+  // So sánh hai cột: đúng 2 nhóm có tên đối lập, không câu dẫn (So sánh không có chỗ cho câu dẫn).
+  if (!lead && groups.length === 2) {
+    const tones = contrastTones(groups[0]!.heading, groups[1]!.heading);
+    if (tones && groups.every((g) => g.heading.length <= MAX_LEN.columnHeading && g.points.length <= 3 && g.points.every((p) => p.length <= MAX_LEN.columnPoint))) {
+      return [
+        {
+          layout: "compare",
+          config: sanitizeLayoutConfig("compare", { title, columns: groups.map((g, i) => ({ heading: g.heading, tone: tones[i], points: g.points, note: "" })) }),
+        },
+      ];
+    }
+  }
+
+  // Chia slide khi không vừa ở 26 px: nửa nhóm theo độ dài chữ; một nhóm dài thì chia ý con (tên nhóm lặp lại).
+  const size = (gs: SlideGroup[]) => gs.reduce((n, g) => n + g.heading.length + g.points.reduce((m, p) => m + p.length, 0), 0);
+  const titleFor = (k: number) => (k === 0 && first ? title : contTitle(title));
+  const split = (gs: SlideGroup[]): SlideGroup[][] => {
+    if (gs.length > 1) {
+      let acc = 0;
+      const total = size(gs);
+      const at = Math.max(1, gs.findIndex((g) => (acc += size([g])) >= total / 2));
+      return [gs.slice(0, at), gs.slice(at)];
+    }
+    const g = gs[0]!;
+    const h = Math.ceil(g.points.length / 2);
+    return g.points.length > 1 ? [[{ heading: g.heading, points: g.points.slice(0, h) }], [{ heading: g.heading, points: g.points.slice(h) }]] : [gs];
+  };
+  let chunks: SlideGroup[][] = chunkBalanced(groups, GROUPS_MAX);
+  for (let guard = 0; guard < 8; guard++) {
+    const next = chunks.flatMap((gs, k) => (groupsFit({ title: titleFor(k), lead: k === 0 ? lead : "", groups: gs }).overflow ? split(gs) : [gs]));
+    if (next.length === chunks.length) break;
+    chunks = next;
+  }
+  return chunks.map((gs, k) => ({
+    layout: "groups" as const,
+    config: sanitizeLayoutConfig("groups", { title: titleFor(k), ...(k === 0 && lead ? { lead } : {}), groups: gs }),
+  }));
+}
+
 /** Số trên bảng dựng từ biểu đồ: kiểu Việt Nam, đơn vị % ghi liền. */
 const cellNum = (v: number | null, unit: string) => (isNum(v) ? formatValue(v, unit) : "");
 
@@ -575,8 +643,11 @@ export function piecesFor(s: ImportedSlide, opts: { first: boolean; deckTitle?: 
     } else {
       const all = [...sub, ...items];
       const numbered = all.length > 0 && all.every((it) => it.numbered);
+      // P55–P56: slide hai cấp (ý cha có ý con) → Nhóm hoặc So sánh hai cột, trừ khi slide có cụm từ khoá hay hình.
+      const grouped = !words.length && !s.imageUrl && !sub.length ? groupPieces(title, items, true) : null;
+      if (grouped) out.push(...grouped);
       // P53: slide có cụm từ khoá luôn là Danh sách (các dòng rồi đến cụm từ), để cụm từ không thành gạch đầu dòng.
-      if (words.length) out.push(...listPieces(title, all, s.imageUrl, true, words));
+      else if (words.length) out.push(...listPieces(title, all, s.imageUrl, true, words));
       else out.push(...itemPieces(title, all, s.imageUrl, { first: true, preferSteps: numbered }));
     }
   }
@@ -619,6 +690,15 @@ export function pointsOf(p: ImportPiece): string[] {
     case "list":
       pts = (c.lines ?? []).map((l: ListLine) => (l.sub ? `– ${l.text}` : l.text));
       if (Array.isArray(c.words) && c.words.length) pts.push(c.words.join(", "));
+      break;
+    case "compare":
+      pts = (c.columns ?? []).map((col: { heading: string; points: string[] }) => (col.points.length ? `${col.heading}: ${col.points.join("; ")}` : col.heading));
+      break;
+    case "groups":
+      pts = [
+        ...(c.lead ? [c.lead] : []),
+        ...(c.groups ?? []).map((g: SlideGroup) => (g.points.length ? `${g.heading}: ${g.points.join("; ")}` : g.heading)),
+      ];
       break;
     case "cards":
     case "steps":

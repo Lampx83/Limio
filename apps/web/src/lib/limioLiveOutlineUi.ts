@@ -71,6 +71,7 @@ export const OUTLINE_LAYOUT_UI: Record<OutlineLayout, { label: string; hint: str
   section: { label: "Mở phần", hint: "Đánh dấu bắt đầu một phần lớn của bài.", min: 0, max: 1, need: "0 đến 1 ý" },
   image: { label: LAYOUT_META.image.label, hint: "Một ý chính kèm tối đa ba ý hỗ trợ; bên phải là hình minh hoạ.", min: 1, max: 3, need: "1 đến 3 ý" },
   list: { label: LAYOUT_META.list.label, hint: "Nhiều ý trên cả bề ngang slide, chữ tự co để vừa; hợp với slide nhiều chữ.", min: 1, max: 5, need: "1 đến 5 ý" },
+  groups: { label: LAYOUT_META.groups.label, hint: "Ý cha và ý con: tự chọn thẻ, danh sách nhóm, câu dẫn hoặc số liệu theo nội dung.", min: 1, max: 5, need: "1 đến 5 nhóm" },
   cards: { label: LAYOUT_META.cards.label, hint: "Ba ý song song; mỗi thẻ có tiêu đề ngắn và một câu giải thích.", min: 3, max: 3, need: "3 ý" },
   compare: { label: LAYOUT_META.compare.label, hint: "Đối chiếu hai cách làm hoặc hai khái niệm.", min: 2, max: 2, need: "2 ý" },
   steps: { label: LAYOUT_META.steps.label, hint: "Một quy trình; mỗi ý là một bước.", min: 3, max: 5, need: "3 đến 5 ý" },
@@ -92,6 +93,7 @@ export const OUTLINE_POINT_LABELS: Record<OutlineLayout, readonly string[]> = {
   section: ["Mô tả ngắn"],
   image: ["Ý chính", "Ý hỗ trợ 1", "Ý hỗ trợ 2", "Ý hỗ trợ 3"],
   list: ["Ý 1", "Ý 2", "Ý 3", "Ý 4", "Ý 5"],
+  groups: ["Nhóm 1", "Nhóm 2", "Nhóm 3", "Nhóm 4", "Nhóm 5"],
   cards: ["Thẻ 1", "Thẻ 2", "Thẻ 3"],
   compare: ["Cách làm A", "Cách làm B"],
   steps: ["Bước 1", "Bước 2", "Bước 3", "Bước 4", "Bước 5"],
@@ -103,7 +105,7 @@ export const OUTLINE_POINT_LABELS: Record<OutlineLayout, readonly string[]> = {
 };
 
 /** Bố cục mà mỗi ý gồm hai phần "Tiêu đề ngắn: câu giải thích" (dữ liệu vẫn là một chuỗi). */
-export const SPLIT_POINT_LAYOUTS: ReadonlySet<OutlineLayout> = new Set<OutlineLayout>(["cards", "steps"]);
+export const SPLIT_POINT_LAYOUTS: ReadonlySet<OutlineLayout> = new Set<OutlineLayout>(["cards", "steps", "groups"]);
 
 /** Tách "Tiêu đề: giải thích". Dấu hai chấm phải đứng trước khoảng trắng hoặc cuối chuỗi (không tách "tỷ lệ 3:1"). */
 export function splitPoint(p: string): [string, string] {

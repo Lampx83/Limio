@@ -177,3 +177,25 @@ trong hộp chữ, nhóm hình và hình khối. Các tiêu chí dưới đây �
   không phải cụm từ. Giảng viên sửa cụm từ trong một ô, các từ cách nhau bằng dấu phẩy, tối đa 16 từ.
 - **P54.** Dòng chỉ có tên tác giả ("- Alice Morse Earle", "— Abraham Lincoln") ngay sau câu kết bằng ngoặc kép được ghép vào câu đó:
   "“…” — Alice Morse Earle". Danh sách phải chia slide thì chia đều theo độ dài chữ, để slide sau không chỉ còn một hai dòng lẻ.
+- **P55.** Bố cục mới **Nhóm** cho slide hai cấp (ý cha và ý con), bản mẫu đã duyệt `docs/mockup/slide-hai-cap.html`. Dữ liệu: tiêu đề, câu dẫn
+  (không bắt buộc) và 1 đến 6 nhóm, mỗi nhóm có tên (≤ 80 ký tự) và tối đa 5 ý con (≤ 200 ký tự). Bốn kiểu trình bày do nội dung quyết định,
+  giảng viên không phải chọn: **Thẻ** (2 đến 4 nhóm ngắn: tên ≤ 40 ký tự, tối đa 4 ý con ≤ 90 ký tự), **Danh sách nhóm** (mặc định; hai cột khi
+  từ 4 nhóm và còn vừa ở cỡ chữ ≥ 26 px), **Câu dẫn và các dòng** (một nhóm: câu dẫn to màu nhấn, ý con mỗi ý một dòng; dấu đầu dòng là số thứ
+  tự, hoặc dấu × khi câu dẫn mang nghĩa phủ định như "is not", "không phải") và **Số liệu** (một nhóm có 2 đến 3 ý con chứa con số kèm %, "lần",
+  "times"; con số được nhấc lên to, ý không có số thành thanh ngắn bên dưới). Phân cấp bằng nhiều tín hiệu, không bằng cỡ chữ: ý cha đậm, màu nhấn, có vệt tô màu; ý con chữ thường, thẳng trục với chữ ý cha và nối với ý cha bằng một vạch dọc mảnh, không dấu đầu dòng; khoảng
+  cách giữa các nhóm gấp 2 đến 3 lần khoảng cách giữa các ý con; thẻ dùng số thứ tự nhóm (01, 02), không dùng hình biểu tượng; chữ hoa của file
+  gốc giữ nguyên. **Chữ thân luôn to**: ý cha, câu dẫn và ý con cùng một cỡ chữ (con số của kiểu Số liệu cố định 64 px, chữ giải thích bên dưới vẫn lấy cỡ lớn nhất còn vừa), lấy cỡ lớn nhất còn vừa khung, từ 40 px xuống tối thiểu 26 px. Ý cha khác ý con ở
+  màu nhấn, đậm và vệt tô màu nửa dưới dòng (không ở cỡ chữ); ý con dùng màu chữ chính (không xám nhạt) để rõ trên máy chiếu. Nhiều chữ thì chia
+  thành hai slide chữ to thay vì co chữ nhỏ.
+- **P56.** Cách "Giữ ý" chọn kiểu theo quan hệ của nội dung slide gốc, theo thứ tự: đúng 2 nhóm có tên mang nghĩa đối lập (mất/được, giảm/tăng,
+  trước/nay, pros/cons…, tối đa 3 ý con mỗi nhóm, mỗi ý ≤ 140 ký tự) → **So sánh hai cột** (nhóm đi xuống màu ấm, nhóm đi lên màu chủ đạo);
+  một nhóm → **Câu dẫn và các dòng** hoặc **Số liệu**; một câu không có ý con đứng ngay trước một nhóm là câu dẫn của nhóm đó, tên nhóm ("Research
+  findings:") nối vào dòng nhãn; từ 2 nhóm trở lên mà nhóm nào cũng có ý con → **Nhóm** (Thẻ hoặc Danh sách nhóm). Slide không có nhóm nào có ý con,
+  hoặc chỉ một phần số mục có ý con, vẫn đi theo luật cũ (Danh sách, Tóm tắt, Các bước).
+- **P57.** Không vừa ở cỡ chữ 26 px thì kiểu nhường cho kiểu kế tiếp (Thẻ → Danh sách nhóm hai cột → một cột; Số liệu → Câu dẫn và các dòng),
+  rồi mới chia slide "(tiếp)" theo nhóm (một nhóm dài thì theo ý con), chia đều theo độ dài chữ.
+- **P58.** Giảng viên sửa slide Nhóm trong trình sửa: tiêu đề, câu dẫn, tên nhóm, từng ý con (thêm, xoá, tối đa 6 nhóm và 5 ý con). Đổi sang hoặc
+  từ bố cục khác không mất chữ: tên nhóm thành ý chính, ý con ghép thành câu giải thích và ngược lại. Slide Nhóm có mặt trong dàn ý như mọi bố cục
+  (ký hiệu riêng, mỗi ý của dàn ý là một nhóm "Tên nhóm: ý con; ý con").
+- **P59.** Chữ không thêm, không bỏ: tên nhóm và ý con là nguyên văn slide gốc (chỉ bỏ dấu ":" cuối tên nhóm khi nó thành nhãn); con số ở kiểu
+  Số liệu cắt ra từ chính ý con (nguyên văn, không tính lại, không làm tròn), câu đầy đủ vẫn hiện bên dưới con số.

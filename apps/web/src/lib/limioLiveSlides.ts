@@ -24,6 +24,7 @@ import {
 } from "./limioLiveCharts";
 
 import { isSlideMotifChoice } from "./limioLiveMotifs";
+import { GROUPS_MAX, GROUP_POINTS_MAX, groupsFit, type SlideGroup } from "./limioLiveGroups";
 
 export const SLIDE_LAYOUTS = [
   "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
@@ -31,6 +32,7 @@ export const SLIDE_LAYOUTS = [
   "section",
   "image",
   "list",
+  "groups",
   "cards",
   "compare",
   "steps",
@@ -48,6 +50,7 @@ export const LAYOUT_META: Record<SlideLayoutId, { label: string; hint: string }>
   section: { label: "Tiêu đề mục", hint: "Mở đầu mỗi phần lớn của bài" },
   image: { label: "Chữ và hình", hint: "Ba ý chính kèm hình minh hoạ" },
   list: { label: "Danh sách", hint: "Nhiều ý và ý con trên cả bề ngang, chữ tự co để vừa slide" },
+  groups: { label: "Nhóm", hint: "Ý cha và ý con: thẻ, danh sách nhóm, câu dẫn hoặc số liệu, tự chọn theo nội dung" },
   cards: { label: "Ba thẻ", hint: "Các ý song song, mỗi ý một biểu tượng" },
   compare: { label: "So sánh hai cột", hint: "Đối chiếu hai cách làm" },
   steps: { label: "Các bước", hint: "Quy trình hoặc dòng thời gian" },
@@ -215,6 +218,9 @@ export const MAX_LEN = {
   // Bảng nhập từ PowerPoint giữ nguyên chữ của ô; cỡ chữ tự co theo chỗ trống (tableFontSize).
   tableCell: 200,
   listLine: 200,
+  groupHeading: 80,
+  groupPoint: 200,
+  lead: 200,
   chartLabel: 40,
   seriesName: 40,
   unit: 20,
@@ -283,6 +289,21 @@ function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
     if (items.length >= range.max) break;
   }
   return items;
+}
+
+/** Nhóm: bỏ nhóm không có chữ nào, nhóm chỉ có tên vẫn giữ (tên nhóm là chữ của giảng viên). */
+function sanitizeGroups(raw: unknown): SlideGroup[] {
+  if (!Array.isArray(raw)) return [];
+  const out: SlideGroup[] = [];
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const o = r as Record<string, unknown>;
+    const heading = clip(o.heading, MAX_LEN.groupHeading);
+    const points = (Array.isArray(o.points) ? o.points : []).map((p) => clip(p, MAX_LEN.groupPoint)).filter(Boolean).slice(0, GROUP_POINTS_MAX);
+    if (heading || points.length) out.push({ heading, points });
+    if (out.length >= GROUPS_MAX) break;
+  }
+  return out;
 }
 
 function sanitizeColumns(raw: unknown): LayoutColumn[] {
@@ -401,6 +422,11 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
     const img = clip(raw.imageUrl, 2000);
     if (img) Object.assign(out, { imageUrl: img, ...imageExtras(raw) });
   }
+  if (layout === "groups") {
+    const lead = clip(raw.lead, MAX_LEN.lead);
+    if (lead) out.lead = lead;
+    out.groups = sanitizeGroups(raw.groups);
+  }
   if (ITEM_RANGE[layout]) out.items = sanitizeItems(raw.items, layout);
   if (layout === "steps") {
     const f = clip(raw.footnote, MAX_LEN.footnote);
@@ -435,6 +461,8 @@ export function emptyLayoutConfig(layout: SlideLayoutId): Record<string, unknown
       return { layout, title: "", bullets: ["", "", ""] };
     case "list":
       return { layout, title: "", lines: [{ text: "" }, { text: "" }, { text: "" }] };
+    case "groups":
+      return { layout, title: "", groups: [{ heading: "", points: [""] }, { heading: "", points: [""] }] };
     case "cards":
       return {
         layout,
@@ -540,6 +568,11 @@ export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>
       if (listFontSize(lines, String(c.title ?? ""), !!c.imageUrl, Array.isArray(c.words) ? c.words : []).overflow) problems.push("Danh sách");
       break;
     }
+    case "groups": {
+      const groups: SlideGroup[] = Array.isArray(c.groups) ? c.groups : [];
+      if (groups.length && groupsFit({ title: String(c.title ?? ""), lead: typeof c.lead === "string" ? c.lead : "", groups }).overflow) problems.push("Nhóm");
+      break;
+    }
     case "table": {
       const head: string[] = Array.isArray(c.head) ? c.head : [];
       const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
@@ -595,6 +628,8 @@ function toPieces(c: Record<string, any>): Pieces {
   if (Array.isArray(c.bullets)) for (const b of c.bullets) texts.push({ heading: String(b ?? ""), body: "" });
   if (Array.isArray(c.lines)) for (const l of c.lines) texts.push({ heading: String(l?.text ?? ""), body: "" });
   if (Array.isArray(c.words) && c.words.length) texts.push({ heading: c.words.map(String).join(", "), body: "" });
+  if (typeof c.lead === "string" && c.lead.trim()) texts.push({ heading: c.lead, body: "" });
+  if (Array.isArray(c.groups)) for (const g of c.groups) texts.push({ heading: String(g?.heading ?? ""), body: (Array.isArray(g?.points) ? g.points : []).join(" ") });
   if (Array.isArray(c.columns)) {
     for (const col of c.columns) {
       const points: string[] = Array.isArray(col?.points) ? col.points : [];
@@ -668,6 +703,17 @@ export function convertLayoutConfig(from: Record<string, any>, to: SlideLayoutId
       }
       base.lines = lines.slice(0, LIST_MAX_LINES);
       if (p.imageUrl) Object.assign(base, { imageUrl: p.imageUrl, ...p.image });
+      break;
+    }
+    case "groups": {
+      base.title = p.title;
+      // Có chữ giải thích: mỗi ý là một nhóm (tên + ý con). Không có (danh sách phẳng): dòng đầu là tên nhóm, các dòng sau là ý con.
+      const hasBody = p.texts.some((t) => t.body.trim());
+      base.groups = hasBody
+        ? p.texts.map((t) => ({ heading: t.heading, points: t.body.trim() ? [t.body] : [] }))
+        : p.texts.length
+          ? [{ heading: p.texts[0]!.heading, points: p.texts.slice(1).map((t) => t.heading) }]
+          : [];
       break;
     }
     case "cards":

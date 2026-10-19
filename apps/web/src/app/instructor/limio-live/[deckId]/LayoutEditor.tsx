@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { GROUPS_MAX, GROUP_POINTS_MAX, type SlideGroup } from "@/lib/limioLiveGroups";
 import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Highlighter, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
@@ -1053,6 +1054,68 @@ export default function LayoutEditor({
                   />
                   <p className="text-[13px] text-muted">Các từ cách nhau bằng dấu phẩy, hiện thành một cụm chữ lớn bên dưới các dòng, tối đa {LIST_MAX_WORDS} từ.</p>
                 </div>
+              </div>
+            )}
+
+            {layout === "groups" && (
+              <div className="grid gap-3">
+                <Field
+                  label="Câu dẫn (không bắt buộc)"
+                  value={typeof d.lead === "string" ? d.lead : ""}
+                  max={MAX_LEN.lead}
+                  placeholder="Ví dụ: Vì sao tư duy tích cực quan trọng?"
+                  onChange={(v) => set({ lead: v })}
+                  onBlur={blur}
+                />
+                {((d.groups as SlideGroup[] | undefined) ?? []).map((g, i) => {
+                  const groups = d.groups as SlideGroup[];
+                  const patch = (p: Partial<SlideGroup>) => set({ groups: groups.map((x, k) => (k === i ? { ...x, ...p } : x)) });
+                  return (
+                    <div key={i} className="grid content-start gap-2 rounded-xl border border-token p-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-muted">
+                        <span>Nhóm {i + 1}</span>
+                        {groups.length > 1 && (
+                          <button type="button" className="ml-auto font-medium text-muted hover:underline" onClick={() => set({ groups: groups.filter((_, k) => k !== i) })}>
+                            Xoá nhóm
+                          </button>
+                        )}
+                      </div>
+                      <Field label="Tên nhóm" value={g.heading} max={MAX_LEN.groupHeading} onChange={(v) => patch({ heading: v })} onBlur={blur} />
+                      {g.points.map((p, k) => (
+                        <div key={k} className="ml-4 grid gap-1">
+                          <Field
+                            label={`Ý ${k + 1}`}
+                            value={p}
+                            max={MAX_LEN.groupPoint}
+                            multiline
+                            onChange={(v) => patch({ points: g.points.map((x, j) => (j === k ? v : x)) })}
+                            onBlur={blur}
+                          />
+                          <button type="button" className="w-fit text-[13px] font-medium text-muted hover:underline" onClick={() => patch({ points: g.points.filter((_, j) => j !== k) })}>
+                            Xoá ý
+                          </button>
+                        </div>
+                      ))}
+                      {g.points.length < GROUP_POINTS_MAX && (
+                        <button type="button" className="ml-4 flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline" onClick={() => patch({ points: [...g.points, ""] })}>
+                          <Plus size={14} /> Thêm ý
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                {((d.groups as SlideGroup[] | undefined) ?? []).length < GROUPS_MAX ? (
+                  <button
+                    type="button"
+                    className="flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+                    onClick={() => set({ groups: [...((d.groups as SlideGroup[] | undefined) ?? []), { heading: "", points: [""] }] })}
+                  >
+                    <Plus size={14} /> Thêm nhóm
+                  </button>
+                ) : (
+                  <p className="text-sm text-faint">Đã đủ {GROUPS_MAX} nhóm.</p>
+                )}
+                <p className="text-[13px] text-muted">Kiểu trình bày (thẻ, danh sách nhóm, câu dẫn, số liệu) tự chọn theo nội dung.</p>
               </div>
             )}
 
