@@ -90,7 +90,7 @@ function errorText(code: string): string {
  * đứng đầu); gõ hoặc bấm thẻ "chưa có ý tưởng" thì chuyển sang trò chuyện với Limio. Đường dẫn trong câu trả lời đều
  * do server ánh xạ từ danh mục, trình duyệt không tự dựng.
  */
-export default function TeacherAssistant({ starters, ideaPrompt }: { starters: AssistantStarter[]; ideaPrompt: string }) {
+export default function TeacherAssistant({ starters, ideaPrompt, greeting, name }: { starters: AssistantStarter[]; ideaPrompt: string; greeting: string; name: string }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -180,11 +180,11 @@ export default function TeacherAssistant({ starters, ideaPrompt }: { starters: A
           <LimeSliceIcon className="h-8 w-8" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 id="teacher-assistant-heading" className="text-h3">
-            Hôm nay thầy/cô muốn làm gì?
-          </h2>
+          <h1 id="teacher-assistant-heading" className="text-h3">
+            {greeting}, <span className="text-gradient">{name}</span>
+          </h1>
           <p className="mt-0.5 text-sm text-muted">
-            <span className="text-gradient font-bold">Limio</span> luôn sẵn sàng giúp. Chưa có ý tưởng cũng không sao, cứ hỏi hoặc chọn một gợi ý bên dưới.
+            <span className="font-semibold text-[rgb(var(--text))]">Hôm nay thầy/cô muốn làm gì?</span> Chưa có ý tưởng cũng không sao, cứ hỏi Limio hoặc chọn một gợi ý bên dưới.
           </p>
         </div>
         {chatting && (

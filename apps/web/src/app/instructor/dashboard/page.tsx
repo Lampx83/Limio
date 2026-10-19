@@ -174,9 +174,10 @@ export default async function InstructorDashboard({
     const sampleCourses = await listSampleCourses();
     return (
       <main>
-        <h1 className="text-2xl font-bold">{greeting()}</h1>
-        <div className="mt-6">
+        <div>
           <TeacherAssistant
+          greeting={greeting()}
+            name={session.user.name ?? session.user.email ?? ""}
             ideaPrompt={IDEA_PROMPT}
               starters={buildStarters({
               courseTitles: [],
@@ -478,17 +479,7 @@ export default async function InstructorDashboard({
     }),
   );
 
-  // ── Context line for greeting ─────────────────────────────────────────
-  const highCount = items.filter((i) => i.priority === "high").length;
   const totalLearners = ownedCourses.reduce((s, c) => s + c._count.enrollments, 0);
-  let contextLine: string;
-  if (highCount > 0) {
-    contextLine = `Có ${highCount} việc gấp cần xử lý hôm nay.`;
-  } else if (items.length > 0) {
-    contextLine = `Có ${items.length} việc cần xem qua khi rảnh.`;
-  } else {
-    contextLine = `Mọi thứ đang ổn. ${totalLearners} học viên trên ${ownedCourses.length} khoá của bạn.`;
-  }
 
   // Activity feed deep links + course tag.
   const courseSlugById = new Map(
@@ -504,24 +495,12 @@ export default async function InstructorDashboard({
         <FeatureBlockedToast />
       </Suspense>
 
-      {/* Greeting */}
-      <header>
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-          Giảng viên
-        </span>
-        <h1 className="mt-3 text-2xl font-bold">
-          {greeting()},{" "}
-          <span className="text-gradient">
-            {session.user.name ?? session.user.email}
-          </span>
-        </h1>
-        <p className="mt-2 text-muted">{contextLine}</p>
-      </header>
-
       {/* Hôm nay thầy/cô muốn làm gì: thẻ gợi ý nhìn thấy ngay + trò chuyện với Limio */}
       <div className="mt-6">
         <TeacherAssistant
-            ideaPrompt={IDEA_PROMPT}
+          greeting={greeting()}
+          name={session.user.name ?? session.user.email ?? ""}
+          ideaPrompt={IDEA_PROMPT}
           starters={buildStarters({
             courseTitles: ownedCourses.map((c) => c.title),
             courses: ownedCourses.map((c) => ({ id: c.id, title: c.title })),
