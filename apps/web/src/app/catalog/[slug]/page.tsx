@@ -252,6 +252,15 @@ export default async function CourseDetailPage({
             </p>
           )}
 
+          {course.kind === "practice_bank" && (
+            <Link
+              href={`/learn/${course.slug}/practice`}
+              className="mt-5 inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm transition-transform hover:scale-[1.02]"
+            >
+              Xem thư viện đề &amp; học thử →
+            </Link>
+          )}
+
           {/* Stats — price + enroll moved to sticky sidebar below */}
           <div className="mt-6 flex flex-wrap gap-3">
             <HeroStat label="Modules" value={course.modules.length} />

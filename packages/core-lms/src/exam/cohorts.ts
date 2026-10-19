@@ -13,6 +13,7 @@ import { z } from "zod";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditCourse, assertCanEditExam } from "../courses/authz";
 import { isUserEnrolled } from "../learning/enroll";
+import { canUseExamContent } from "./access";
 import { ensureDefaultRoomForSession } from "./exam-rooms";
 import type { RevealPolicy } from "./reveal-policy";
 import { capDurationToWindow, isSessionOpen, sessionOpenState } from "./session-window";
@@ -700,6 +701,7 @@ export async function assertEligibleForExam(
       id: true,
       courseId: true,
       status: true,
+      freePreview: true,
       openAt: true,
       closeAt: true,
       durationMin: true,
@@ -732,8 +734,8 @@ export async function assertEligibleForExam(
     });
   }
 
-  // Enrollment is always required for User-mode access.
-  const enrolled = await isUserEnrolled(userId, exam.courseId, db);
+  // Enrollment is always required for User-mode access — trừ đề HỌC THỬ MIỄN PHÍ của khoá luyện đề (LANG L6.1).
+  const enrolled = await canUseExamContent(userId, { courseId: exam.courseId, freePreview: exam.freePreview }, db);
   if (!enrolled) throw new ExamError("not_enrolled");
 
   // Đề luyện thi không phải lần thi có tổ chức: học viên ghi danh khoá là làm

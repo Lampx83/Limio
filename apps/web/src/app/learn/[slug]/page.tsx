@@ -88,6 +88,9 @@ export default async function LearnCoursePage({
     );
   }
 
+  // LANG L6 — khoá luyện đề: trang khoá LÀ thư viện đề (kể cả người chưa mua, để xem và học thử).
+  if (course.kind === "practice_bank" && searchParams?.paid !== "1") redirect(`/learn/${params.slug}/practice`);
+
   if (!(await isUserEnrolled(session.user.id, course.id))) {
     // Vừa quay về từ Stripe checkout — webhook checkout.session.completed
     // chạy song song với redirect, có thể chưa kịp tạo Enrollment. Đừng bounce

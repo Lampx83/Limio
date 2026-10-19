@@ -42,9 +42,9 @@ export interface AssistantDestination {
 }
 
 export const ASSISTANT_DESTINATIONS: readonly AssistantDestination[] = [
-  { id: "live_from_document", label: "Soạn bài giảng từ tài liệu", description: "Tải lên tài liệu, AI dựng dàn ý rồi tạo bài giảng tương tác để trình chiếu.", href: "/instructor/limio-live/from-document", icon: "slides" },
+  { id: "live_from_document", label: "Soạn bài giảng từ tài liệu", description: "Tải lên tài liệu, AI dựng dàn ý rồi tạo slide tương tác để trình chiếu.", href: "/instructor/limio-live/from-document", icon: "slides" },
   { id: "live_from_pptx", label: "Nhập bài giảng PowerPoint", description: "Đưa tệp PowerPoint có sẵn vào để trình chiếu và thêm tương tác.", href: "/instructor/limio-live/from-pptx", icon: "pptx" },
-  { id: "live_decks", label: "Bài giảng của tôi", description: "Mở các bài giảng tương tác đã soạn để chỉnh sửa hoặc trình chiếu.", href: "/instructor/limio-live", icon: "slides" },
+  { id: "live_decks", label: "Slide của tôi", description: "Mở các slide tương tác đã soạn để chỉnh sửa hoặc trình chiếu.", href: "/instructor/limio-live", icon: "slides" },
   { id: "teaching_tools", label: "Hoạt động trên lớp", description: "Bộ công cụ làm lớp sôi nổi: bình chọn, đám mây từ, bảng ý tưởng, chia nhóm, gọi tên, đếm ngược.", href: "/instructor/teaching-tools", icon: "poll" },
   { id: "poll", label: "Bình chọn nhanh", description: "Hỏi cả lớp một câu và xem kết quả ngay trên màn hình.", href: "/instructor/teaching-tools?tool=poll", icon: "poll" },
   { id: "wordcloud", label: "Đám mây từ", description: "Cả lớp nhập từ khoá, các từ được nhắc nhiều hiện to hơn.", href: "/instructor/teaching-tools?tool=wordcloud", icon: "wordcloud" },
@@ -121,7 +121,7 @@ export function buildStarters(ctx: AssistantContext): AssistantStarter[] {
   const latest = ctx.courses?.[0];
   return [
     { id: "new_course", title: "Soạn khoá học e-learning", subtitle: "Dựng khoá mới với chương và bài học.", icon: "course", href: destinationById("new_course")!.href },
-    { id: "new_live", title: "Soạn bài giảng tương tác", subtitle: "Dựng bài giảng để trình chiếu từ tài liệu.", icon: "slides", href: destinationById("live_from_document")!.href },
+    { id: "new_live", title: "Soạn slide tương tác", subtitle: "Dựng slide để trình chiếu từ tài liệu.", icon: "slides", href: destinationById("live_from_document")!.href },
     { id: "class_activity", title: "Làm lớp sôi nổi hơn", subtitle: "Bình chọn, đám mây từ, chia nhóm, gameshow.", icon: "poll", href: destinationById("teaching_tools")!.href },
     { id: "class_quiz", title: "Tạo bài kiểm tra trên lớp", subtitle: "Gửi link thi nhanh cho cả lớp làm ngay.", icon: "exam", href: destinationById("quick_exam")!.href },
     { id: "grade", title: "Chấm bài", subtitle: "Xem bài học viên đã nộp và chấm nhanh.", icon: "grading", href: destinationById("assignments")!.href },

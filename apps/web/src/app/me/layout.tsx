@@ -2,6 +2,10 @@ import { auth } from "@/lib/auth";
 import StudentLeftMenu from "@/components/StudentLeftMenu";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import AdminSidebar from "@/app/admin/_components/AdminSidebar";
+import LanguageLeftMenu from "@/components/LanguageLeftMenu";
+import { getAppMode } from "@/lib/appMode.server";
+import { languageShellRole } from "@/lib/languageMenu";
+import { getLanguageTeacherBadges } from "@/lib/languageBadges";
 import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
 import { getActiveRole } from "@/lib/active-role";
 import { isResearcher } from "@feedbackme/core-lms";
@@ -34,7 +38,15 @@ export default async function MeLayout({
       ? await isResearcher(session.user.id)
       : false;
 
-  const leftMenu =
+  // LANG L2 — vỏ Limio Language (trừ admin: giữ thanh quản trị).
+  const languageShell = getAppMode() === "language" && activeRole !== "admin";
+  const shellRole = languageShellRole(activeRole);
+  const leftMenu = languageShell ? (
+    <LanguageLeftMenu
+      role={shellRole}
+      badges={shellRole === "teacher" ? await getLanguageTeacherBadges(session?.user?.id) : {}}
+    />
+  ) :
     activeRole === "admin" ? (
       <AdminSidebar />
     ) : activeRole === "instructor" ? (

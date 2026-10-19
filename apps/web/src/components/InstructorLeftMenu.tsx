@@ -65,7 +65,7 @@ const GradeAPlus = createLucideIcon("GradeAPlus", [
   ],
 ]);
 
-/** Icon Word Cloud của bài giảng tương tác — bọc lại để nhận className (màu) như icon lucide. */
+/** Icon Word Cloud của slide tương tác — bọc lại để nhận className (màu) như icon lucide. */
 function WordCloudMenuIcon({ size = 14, className, strokeWidth }: LucideProps) {
   return (
     <span className={`inline-flex ${className ?? ""}`}>
@@ -181,8 +181,8 @@ const MODULES: ModuleDef[] = [
     },
     matchPrefixes: ["/instructor/limio-live", "/instructor/teaching-tools", "/instructor/gameshow"],
     items: [
-      { label: "Bài giảng của tôi", href: "/instructor/limio-live", icon: Presentation, section: "Bài giảng tương tác" },
-      { label: "Thư viện mẫu", icon: FolderOpen, note: "Chợ chia sẻ mẫu bài giảng — đang phát triển (P2)", section: "Bài giảng tương tác" },
+      { label: "Slide của tôi", href: "/instructor/limio-live", icon: Presentation, section: "Slide tương tác" },
+      { label: "Thư viện mẫu", icon: FolderOpen, note: "Chợ chia sẻ mẫu slide — đang phát triển (P2)", section: "Slide tương tác" },
       // Mỗi công cụ 1 dòng menu (mở thẳng qua ?tool=...), gom theo mục đích, ≤5 mục/nhóm.
       { label: "Vote", href: "/instructor/teaching-tools?tool=poll", icon: BarChart3, section: "Hoạt động nhanh" },
       { label: "Word Cloud", href: "/instructor/teaching-tools?tool=wordcloud", icon: WordCloudMenuIcon, section: "Hoạt động nhanh" },

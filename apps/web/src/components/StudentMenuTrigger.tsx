@@ -9,18 +9,24 @@ type Variant = "header" | "floating";
 
 const PATH_PREFIXES = ["/me", "/learn/"];
 
-function shouldShow(pathname: string): boolean {
-  return PATH_PREFIXES.some((p) => pathname === p || pathname.startsWith(p));
+// LANG L2 — ở vỏ Limio Language, khu giảng viên và /language cũng dùng ngăn kéo menu này.
+const LANGUAGE_PATH_PREFIXES = ["/language", "/instructor"];
+
+function shouldShow(pathname: string, languageMode: boolean): boolean {
+  const prefixes = languageMode ? [...PATH_PREFIXES, ...LANGUAGE_PATH_PREFIXES] : PATH_PREFIXES;
+  return prefixes.some((p) => pathname === p || pathname.startsWith(p));
 }
 
 export default function StudentMenuTrigger({
   variant = "header",
+  languageMode = false,
 }: {
   variant?: Variant;
+  languageMode?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  if (!shouldShow(pathname)) return null;
+  if (!shouldShow(pathname, languageMode)) return null;
   // Giảng viên xem thử bài (?preview=1): trang chỉ còn tên bài + nội dung.
   if (searchParams.get("preview") === "1") return null;
 

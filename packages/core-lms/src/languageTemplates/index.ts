@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LanguageTemplateError } from "./errors";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { isInstructor } from "../auth/roles";
 import { createCourse } from "../courses/courses";
@@ -19,6 +20,7 @@ import {
 } from "./samples";
 
 export type { TemplateId } from "./samples";
+export * from "./practiceBank";
 
 /**
  * LANG G8 — tạo khoá mẫu ngoại ngữ (Tiếng Trung · Tiếng Anh) cho giảng viên.
@@ -34,14 +36,7 @@ export const LANGUAGE_TEMPLATES: readonly { id: TemplateId; label: string; hint:
   Object.values(LANGUAGE_TEMPLATE_DEFS) as LanguageTemplateDef[]
 ).map(({ id, label, hint }) => ({ id, label, hint }));
 
-export class LanguageTemplateError extends Error {
-  constructor(
-    public readonly code: "forbidden" | "validation_failed",
-    public readonly details?: unknown,
-  ) {
-    super(code);
-  }
-}
+export { LanguageTemplateError } from "./errors";
 
 const Input = z.object({ template: z.enum(["zh", "en"]) });
 
