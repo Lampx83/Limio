@@ -91,6 +91,28 @@ describe("hướng dẫn cách dùng và trò chuyện thân thiện", () => {
   });
 });
 
+describe("giọng xưng hô: em và thầy/cô", () => {
+  const { system } = buildTeacherAssistantPrompt(base);
+
+  it("buộc tự xưng em, gọi giảng viên là thầy/cô, không xưng tôi/mình/Limio ngôi thứ ba", () => {
+    expect(system).toMatch(/xưng "thầy\/cô" với giảng viên và LUÔN tự xưng "em"/);
+    expect(system).toMatch(/không tự xưng "tôi", "mình" hay "Lily" ở ngôi thứ ba/);
+  });
+
+  it("giữ giọng lịch sự ấm áp, không nũng nịu", () => {
+    expect(system).toMatch(/không nũng nịu: không lặp "ạ" nhiều lần/);
+  });
+});
+
+describe("danh tính trợ lý", () => {
+  it("là Lily, trợ lý ảo của giảng viên; tự giới thiệu mà không nói về công nghệ", () => {
+    const { system } = buildTeacherAssistantPrompt(base);
+    expect(system).toMatch(/Bạn là Lily, trợ lý ảo của giảng viên/);
+    expect(system).toMatch(/Em là Lily, trợ lý ảo của thầy\/cô trên Limio/);
+    expect(system).toMatch(/không nói gì về công nghệ phía sau/);
+  });
+});
+
 describe("tình huống dùng tính năng", () => {
   it("đưa tình huống của từng mục hướng dẫn vào prompt", () => {
     const { system } = buildTeacherAssistantPrompt({

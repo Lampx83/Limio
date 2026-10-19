@@ -151,9 +151,9 @@ Mỗi `FeedbackDelivery` mang **toạ độ SSMMD của chính nó**, ghi lúc s
 - Cột toạ độ **nullable** có chủ ý: hàng trước B9 chưa từng được mã hoá, không được làm cho giống như đã. Backfill: `pnpm backfill:feedback-coding`, đánh dấu `generationContext.codedRetroactively = true`.
 - `feedback.remediation.clicked` đo uptake — biến trung gian quan trọng nhất khi đánh giá feedback. Ghi event **không bao giờ được chặn hay làm chậm điều hướng** của học viên (xem `RemediationLink`).
 
-### 4.9. Trợ lý Limio và tri thức hướng dẫn (giữ trợ lý theo kịp giao diện)
+### 4.9. Lily, trợ lý ảo của giảng viên, và tri thức hướng dẫn (giữ trợ lý theo kịp giao diện)
 
-Trợ lý Limio ở trang chủ giảng viên trả lời "làm sao…?" từ một **kho hướng dẫn trong mã** (`apps/web/src/lib/teacherAssistantGuide.ts`) và một **danh mục điểm đến** (`apps/web/src/lib/teacherAssistant.ts`), không đọc khoá học trên server. Nguồn sự thật của kho này là `docs/hoc-lieu/huong-dan-limio/GIAO-DIEN.md` (đã đối chiếu mã nguồn). Giao diện đổi mà trợ lý không đổi ⇒ trợ lý nói sai với giảng viên, nên đây là một phần của việc "xong" một tính năng.
+Lily (trợ lý ảo của giảng viên trên Limio, xưng "em", ở trang chủ và nút nổi các trang giảng viên) trả lời "làm sao…?" từ một **kho hướng dẫn trong mã** (`apps/web/src/lib/teacherAssistantGuide.ts`) và một **danh mục điểm đến** (`apps/web/src/lib/teacherAssistant.ts`), không đọc khoá học trên server. Nguồn sự thật của kho này là `docs/hoc-lieu/huong-dan-limio/GIAO-DIEN.md` (đã đối chiếu mã nguồn). Giao diện đổi mà trợ lý không đổi ⇒ trợ lý nói sai với giảng viên, nên đây là một phần của việc "xong" một tính năng.
 
 - **Đổi giao diện giảng viên** (thêm/đổi tên/xoá nút, trang, mục menu, luồng) ⇒ cập nhật `GIAO-DIEN.md` **trước**, rồi mục tương ứng trong `teacherAssistantGuide.ts` (và `ASSISTANT_DESTINATIONS` nếu có trang mới). Trong hướng dẫn, ghi **đúng tên nút như trên màn hình** (kể cả còn tiếng Anh) trong dấu ngoặc kép.
 - **Test `teacherAssistantFreshness.test.ts` chạy trong CI** và bắt ba loại lệch: (1) nhãn trong ngoặc kép của hướng dẫn không còn trong mã; (2) điểm đến của trợ lý không còn là trang thật; (3) mục menu giảng viên mới chưa được dạy trợ lý. Test đỏ thì sửa hướng dẫn, đừng nới test. Mục menu cố ý không dạy thì ghi lý do vào `MENU_NOT_IN_ASSISTANT` trong test.

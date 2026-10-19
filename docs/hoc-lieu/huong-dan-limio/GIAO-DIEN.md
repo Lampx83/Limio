@@ -195,7 +195,9 @@ gồm nhiều ca" — đã lỗi thời, đừng lặp lại.)
   diện hiện biểu ngữ "Bạn đã tạo nhiều đề. Bật chế độ Nâng cao để xem chỉ số chất lượng câu
   hỏi chi tiết?" với nút "Bật ngay" và "Bỏ qua". Không có công tắc quay lại mức Cơ bản.
 - **Câu tự luận** trong đề có ô **"Rubric (tuỳ chọn)"** (ô soạn thảo định dạng, gợi ý "Tiêu chí chấm bài…")
-  và "Số từ tối thiểu (0 = không yêu cầu)".
+  và "Số từ tối thiểu (0 = không yêu cầu)". Khi chấm, rubric hiện ngay trên bài làm trong khối thu gọn
+  **"Rubric chấm"** (bấm để mở), cả ở trang "Chấm bài" lẫn trang "Xem bài làm" của từng lượt thi; câu
+  không có rubric thì không hiện khối này.
 - Nút xuất bản vẫn ghi "Publish". **Publish chỉ làm đề sẵn sàng, không tự mở thi**; hộp thoại sau Publish
   dẫn sang "Tổ chức thi →". Đề luyện thi (đề thi thử, mục 12) cho học viên đã ghi danh làm ngay, không cần ca.
 - Mỗi thẻ đề có nút "Xoá"; đề đã có lượt thi thì nút khoá kèm lý do ("Đề đã có lượt thi nên không xoá được.").
@@ -620,15 +622,14 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   nộp của nhiệm vụ có "Xem bài" (khung xem trước có "Trước/Sau", phím ←/→); nhiệm vụ "bạn chấm" có "Chấm bài"
   với "Đạt" / "Chưa đạt", chấm xong tự sang bài kế.
 
-## 17. Trợ lý Limio ở trang chủ giảng viên (mới, `components/TeacherAssistant.tsx`)
+## 17. Lily, trợ lý ảo của giảng viên (mới, `components/TeacherAssistant.tsx`, `components/assistant/`)
 
-Khung đầu trang chủ: lời chào "{Chào buổi sáng/chiều/tối}, {tên}" và "Hôm nay thầy/cô muốn làm gì?", ô hỏi "Hỏi
-Limio, ví dụ: làm sao tạo đề thi?", dòng "Chưa có ý tưởng? Để Limio gợi ý cho thầy/cô", và "Hoặc bắt đầu nhanh"
-(các thẻ: Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp,
-Mở khoá "<khoá gần nhất>", Soạn đề vấn đáp). Khi trò chuyện, câu trả lời kèm liên kết dẫn thẳng vào tính năng
-(kể cả đúng khoá của giảng viên); "Xem lại gợi ý" để thoát chế độ trò chuyện; có chỉ báo "Limio đang soạn câu
-trả lời…". Mỗi câu hỏi trừ hạn mức Token AI. Trợ lý chỉ chọn điểm đến trong danh mục cố định, nên không dẫn
-tới trang không tồn tại; nó trả lời cách dùng theo kho hướng dẫn `teacherAssistantGuide.ts` (lấy từ tệp này).
+**Lily là trợ lý ảo của thầy/cô trên Limio, xưng "em" và gọi giảng viên là "thầy/cô"** (Limio là tên hệ thống, Lily là tên trợ lý), biểu tượng lát dưa hấu **màu hồng**. Khác với **Trợ giảng AI** (nút tròn nổi xanh, biểu tượng robot, chỉ ở trang bài học của học viên đã ghi danh, gợi ý từng bước không đưa thẳng đáp án; không hiện ở chế độ xem trước). Hai trợ lý không dùng chung cuộc trò chuyện.
+- **Trang chủ giảng viên:** khung đầu trang mở bằng lời chào của Lily: dòng "Lily · Trợ lý ảo của thầy/cô trên Limio", "{Chào buổi sáng/chiều/tối}, {tên}!", "Em rất vui được giúp thầy/cô hôm nay. Thầy/cô muốn làm gì?…". Có ô hỏi "Hỏi Lily, ví dụ: tạo đề thi" (một dòng, có "…" khi dài) và ngay dưới là dòng nêu phạm vi, do Lily nói ở ngôi thứ nhất, xưng "em": "Nhiệm vụ chính của em là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...)."; dòng "Chưa có ý tưởng? Để em gợi ý cho thầy/cô", và "Hoặc bắt đầu nhanh" (các thẻ: Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Mở khoá "<khoá gần nhất>", Soạn đề vấn đáp).
+- **Mọi trang khác của giảng viên:** nút nổi hình viên thuốc màu hồng "Hỏi Lily" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat (trên điện thoại là tấm trượt từ dưới lên). Nút nổi không hiện ở trang chủ vì trang chủ đã có khung lớn.
+- **Cuộc trò chuyện liền mạch:** khung ở trang chủ và ngăn kéo cùng một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Lily đưa mở trong cùng tab; sang trang khác thì ngăn kéo tự thu lại, thầy/cô thao tác xong bấm "Hỏi Lily" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
+- **Khi trò chuyện:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Em đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". Mỗi câu hỏi trừ hạn mức Token AI.
+- Lily chỉ chọn điểm đến trong danh mục cố định, chỉ trả lời nghiệp vụ Limio, không tiết lộ kỹ thuật, và trả lời cách dùng theo kho `teacherAssistantGuide.ts` (lấy từ tệp này).
 
 ## Không được viết (chưa có hoặc chưa tới tay giảng viên)
 
