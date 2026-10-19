@@ -15,7 +15,7 @@ const TILE: Record<TileState, string> = {
  * Lưới slide theo đúng thứ tự dàn ý khi đang tạo (O6): slide xong hiện tiêu đề và ký hiệu bố cục, slide đang viết có viền nhấn và vạch chạy,
  * slide chờ mờ hơn. Slide chỉ được lưu khi cả bài xong nên chưa mở được trong lúc tạo.
  */
-export default function GenerationGrid({ slides, done, writing }: { slides: OutlineSlide[]; done: Set<string>; writing: Set<string> | null }) {
+export default function GenerationGrid({ slides, done, writing }: { slides: OutlineSlide[]; done: number; writing: Set<string> | null }) {
   const states = generationTiles(slides.map((s) => s.id), done, writing);
   return (
     <ol className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4" aria-label="Tiến độ từng slide">

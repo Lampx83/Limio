@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Outline, OutlineSlide } from "./limioLiveOutline";
 import { isDarkTheme } from "@/app/instructor/limio-live/slideThemes";
-import { cardPoints, generationTiles, nextThemeSuggestion, outlineStory } from "./limioLiveOutlineCard";
+import { cardPoints, generationTiles, nextThemeSuggestion, outlineStory, shouldAutoOpen } from "./limioLiveOutlineCard";
 
 const slide = (o: Partial<OutlineSlide> & { id: string }): OutlineSlide =>
   ({ partId: "p1", kind: "content", layout: "list", title: "T", points: [], ...o }) as OutlineSlide;
@@ -61,14 +61,39 @@ describe("nextThemeSuggestion (O3)", () => {
   });
 });
 
-describe("generationTiles (O6)", () => {
-  it("slide xong là done, tối đa 2 slide đầu chưa xong là now, còn lại wait", () => {
-    expect(generationTiles(["a", "b", "c", "d", "e"], new Set(["a", "b"]), null)).toEqual(["done", "done", "now", "now", "wait"]);
-  });
-  it("cập nhật một phần: slide không nằm trong danh sách sẽ viết coi như xong", () => {
-    expect(generationTiles(["a", "b", "c"], new Set(), new Set(["b"]))).toEqual(["done", "now", "done"]);
+describe("generationTiles (O6): ô sáng dần từ slide 1, theo số lượng đã xong", () => {
+  const ids = ["a", "b", "c", "d", "e"];
+  it("k slide đã xong thì k ô đầu là done, tối đa 2 ô kế là now, còn lại wait", () => {
+    expect(generationTiles(ids, 0, null)).toEqual(["now", "now", "wait", "wait", "wait"]);
+    expect(generationTiles(ids, 2, null)).toEqual(["done", "done", "now", "now", "wait"]);
+    expect(generationTiles(ids, 4, null)).toEqual(["done", "done", "done", "done", "now"]);
   });
   it("xong hết thì không còn now", () => {
-    expect(generationTiles(["a", "b"], new Set(["a", "b"]), null)).toEqual(["done", "done"]);
+    expect(generationTiles(ids, 5, null)).toEqual(["done", "done", "done", "done", "done"]);
+    expect(generationTiles(ids, 9, null)).toEqual(["done", "done", "done", "done", "done"]);
+  });
+  it("cập nhật một phần: slide không nằm trong danh sách sẽ viết luôn là done, đếm trên các slide được viết", () => {
+    const w = new Set(["b", "d", "e"]);
+    expect(generationTiles(ids, 0, w)).toEqual(["done", "now", "done", "now", "wait"]);
+    expect(generationTiles(ids, 1, w)).toEqual(["done", "done", "done", "now", "now"]);
+    expect(generationTiles(ids, 3, w)).toEqual(["done", "done", "done", "done", "done"]);
+  });
+  it("kết quả luôn đơn điệu: thêm slide xong không làm ô nào lùi lại", () => {
+    const rank = { done: 2, now: 1, wait: 0 } as const;
+    let prev = generationTiles(ids, 0, null).map((t) => rank[t]);
+    for (let k = 1; k <= 5; k++) {
+      const cur = generationTiles(ids, k, null).map((t) => rank[t]);
+      cur.forEach((r, i) => expect(r).toBeGreaterThanOrEqual(prev[i]!));
+      prev = cur;
+    }
+  });
+});
+
+describe("shouldAutoOpen (O7)", () => {
+  it("tạo xong không có slide dựng thẳng từ dàn ý thì tự mở bài giảng", () => {
+    expect(shouldAutoOpen({ fallbackCount: 0 })).toBe(true);
+  });
+  it("có slide AI chưa viết được thì ở lại để thầy/cô đọc cảnh báo", () => {
+    expect(shouldAutoOpen({ fallbackCount: 2 })).toBe(false);
   });
 });

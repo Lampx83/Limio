@@ -42,17 +42,20 @@ export type TileState = "done" | "now" | "wait";
 export const GEN_CONCURRENCY = 2;
 
 /**
- * Trạng thái từng ô của lưới "đang tạo" (O6), theo thứ tự dàn ý. `writing` là tập slide sẽ viết (null = tất cả); slide ngoài tập đó
- * (cập nhật một phần) coi như xong. Tối đa GEN_CONCURRENCY slide chưa xong đầu tiên là "đang viết".
+ * Trạng thái từng ô của lưới "đang tạo" (O6), theo thứ tự dàn ý. Máy chủ viết theo lô song song nên slide xong không theo thứ tự; lưới chỉ
+ * dùng SỐ slide đã xong để sáng dần từ slide 1 đến hết (không nhảy cóc). `writing` là tập slide sẽ viết (null = tất cả); slide ngoài tập đó
+ * (cập nhật một phần) luôn là "xong" và không tính vào số đếm. `done` slide đầu của tập được viết là xong, tối đa GEN_CONCURRENCY slide
+ * kế là "đang viết".
  */
-export function generationTiles(ids: string[], done: Set<string>, writing: Set<string> | null): TileState[] {
-  let now = 0;
+export function generationTiles(ids: string[], done: number, writing: Set<string> | null): TileState[] {
+  let seen = 0;
   return ids.map((id) => {
-    if (done.has(id) || (writing && !writing.has(id))) return "done";
-    if (now < GEN_CONCURRENCY) {
-      now += 1;
-      return "now";
-    }
-    return "wait";
+    if (writing && !writing.has(id)) return "done";
+    const k = seen++;
+    if (k < done) return "done";
+    return k < done + GEN_CONCURRENCY ? "now" : "wait";
   });
 }
+
+/** O7: tạo xong thì tự mở bài giảng, trừ khi có slide AI chưa viết được (phải đọc cảnh báo trước). */
+export const shouldAutoOpen = (r: { fallbackCount: number }): boolean => r.fallbackCount === 0;
