@@ -19,12 +19,14 @@ import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
 import { formatDate } from "@/lib/datetime";
 import EmptyState from "@/components/ui/EmptyState";
+import ShareDialog from "./[deckId]/ShareDialog";
 
 interface DeckSummary {
   id: string;
   title: string;
   updatedAt: string;
   groupId: string | null;
+  shareCode: string | null;
   _count: { slides: number };
 }
 
@@ -91,6 +93,8 @@ export default function LiveDeckList() {
 
   const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [moveMenuFor, setMoveMenuFor] = useState<string | null>(null);
+  const [shareDeckId, setShareDeckId] = useState<string | null>(null);
+  const shareDeck = shareDeckId ? decks?.find((d) => d.id === shareDeckId) : undefined;
 
   // "?new=1" (từ đường "Soạn thủ công" ở trang tạo bài) mở luôn form tạo bài trống.
   useEffect(() => {
@@ -283,16 +287,12 @@ export default function LiveDeckList() {
         <div className="mt-2 flex items-center justify-end gap-0.5">
           <button
             type="button"
-            onClick={() =>
-              toast.info("Chia sẻ bài giảng sắp ra mắt", {
-                description: "Bạn sẽ chia sẻ được cho đồng nghiệp và đăng lên chợ bài giảng.",
-              })
-            }
+            onClick={() => setShareDeckId(deck.id)}
             className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-            title="Chia sẻ (sắp ra mắt)"
-            aria-label="Chia sẻ bài giảng"
+            title={deck.shareCode ? "Đang chia sẻ: link xem và tải PDF" : "Chia sẻ link xem và tải PDF"}
+            aria-label={deck.shareCode ? "Đang chia sẻ bài giảng" : "Chia sẻ bài giảng"}
           >
-            <Share2 size={14} />
+            <Share2 size={14} className={deck.shareCode ? "text-brand-600" : undefined} />
           </button>
           <button
             type="button"
@@ -496,6 +496,18 @@ export default function LiveDeckList() {
             if (moveId) await moveDeck(moveId, saved.id);
             else await reloadAll();
           }}
+        />
+      )}
+
+      {shareDeck && (
+        <ShareDialog
+          key={shareDeck.id}
+          deckId={shareDeck.id}
+          shareCode={shareDeck.shareCode ?? null}
+          onChange={(shareCode) =>
+            setDecks((list) => list?.map((d) => (d.id === shareDeck.id ? { ...d, shareCode } : d)) ?? list)
+          }
+          onClose={() => setShareDeckId(null)}
         />
       )}
 
