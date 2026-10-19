@@ -10,6 +10,16 @@
 
 name: feedbackme
 
+# Giới hạn log mỗi container: json-file mặc định không xoay vòng, log lớn dần
+# tới khi đầy đĩa — đĩa này dùng chung với uploads (~9 GB) và backup. 20m × 5
+# file = tối đa ~100 MB/container (nén file cũ). `docker compose logs` vẫn đọc được.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+    compress: "true"
+
 x-web-env: &web-env
   NODE_ENV: production
   # Web đi qua PgBouncer (transaction mode) — pgbouncer=true tắt prepared statement của Prisma.
@@ -103,6 +113,7 @@ services:
     # chỉ thêm binary, không đổi format dữ liệu. Xem docker-compose.yml.
     image: pgvector/pgvector:pg15
     restart: unless-stopped
+    logging: *default-logging
     environment:
       POSTGRES_USER: feedbackme
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
@@ -118,6 +129,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    logging: *default-logging
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
@@ -133,6 +145,7 @@ services:
   pgbouncer:
     image: edoburu/pgbouncer:v1.23.1-p2
     restart: unless-stopped
+    logging: *default-logging
     environment:
       DB_USER: feedbackme
       DB_PASSWORD: ${POSTGRES_PASSWORD}
@@ -185,6 +198,7 @@ services:
       postgres:
         condition: service_healthy
     restart: "no"
+    logging: *default-logging
 
   web:
     build:
@@ -195,8 +209,12 @@ services:
         # Empty basePath for root domain serving (e.g., fit.neu.edu.vn/)
         # Set to "/limio" only if serving at sub-path (e.g., domain.com/limio/)
         NEXT_PUBLIC_BASE_PATH: "${NEXT_PUBLIC_BASE_PATH}"
+        # Cùng DSN với server (SENTRY_DSN) cho Sentry phía trình duyệt. Inline
+        # lúc build → đổi DSN phải rebuild image (deploy.yml luôn rebuild).
+        NEXT_PUBLIC_SENTRY_DSN: "${SENTRY_DSN:-}"
     image: feedbackme/web:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    logging: *default-logging
     environment: *web-env
     # Tintin: ports bị bỏ — web replicas không expose ra host. Caddy LB
     # (web-proxy service) đứng trước và bind host:${WEB_PORT}. Scale qua
@@ -220,6 +238,7 @@ services:
   web-proxy:
     image: caddy:2-alpine
     restart: unless-stopped
+    logging: *default-logging
     ports:
       - "${WEB_PORT:-8004}:80"
     volumes:
@@ -241,6 +260,7 @@ services:
       target: worker
     image: feedbackme/worker:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    logging: *default-logging
     environment:
       <<: *web-env
       WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-50}
@@ -254,12 +274,20 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    # Worker không mở cổng HTTP; sống được khi nói chuyện được với Redis.
+    healthcheck:
+      test: ["CMD", "node", "scripts/worker-healthcheck.cjs"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   cron:
     build:
       context: ./docker/cron
     image: feedbackme/cron:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    logging: *default-logging
     environment:
       WEB_URL: http://web:3000
       CRON_SECRET: ${CRON_SECRET}
