@@ -515,9 +515,10 @@ Menu Limio-Live → "Bài giảng của tôi" (`/instructor/limio-live`): nút *
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Thầy/cô muốn soạn bài giảng gì? Có
-  tài liệu thì đính kèm một tệp, AI sẽ bám sát tài liệu đó." và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
-  người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** (đã có tệp thì thành "Đổi tài liệu"); kéo
+- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
+  giảng tương tác chỉ từ một ý tưởng…" (có tài liệu tham khảo thì đính kèm; có sẵn PowerPoint thì Limio soạn lại kèm nội
+  dung tương tác) và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
+  người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** kèm chữ "(không bắt buộc)" (đã có tệp thì thành "Đổi tài liệu"; cạnh nút ghi giới hạn định dạng và dung lượng); kéo
   thả tệp vào ô cũng được. **Mỗi bài chỉ một tài liệu**: Word .docx, PDF, .txt, .md tối đa 10 MB, hoặc PowerPoint
   .pptx tối đa 50 MB; tệp mới thay tệp cũ, kèm dòng báo. Dán đoạn dài hơn 2.000 ký tự vào ô (khi chưa có tệp) thì
   đoạn đó thành tài liệu "Văn bản dán" (có nút "Đưa lại vào ô mô tả"). Dòng nhắc dưới ô nói AI sẽ làm gì:
