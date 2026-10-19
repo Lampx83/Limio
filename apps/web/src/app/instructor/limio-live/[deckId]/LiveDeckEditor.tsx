@@ -67,6 +67,7 @@ import ThemePicker from "./ThemePicker";
 import BrandDialog, { type BrandPatch } from "./BrandDialog";
 import ShareDialog from "./ShareDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
+import { LiveLangProvider } from "../liveLangContext";
 import { LiveMotifProvider } from "../liveMotifContext";
 import { deckAutoMotif } from "@/lib/limioLiveMotifs";
 import { brandFrameBackground, deckEffectiveBrand } from "@/lib/limioLiveBrand";
@@ -99,6 +100,8 @@ interface Deck {
   brandTemplate?: string | null;
   /** Hoa văn trang trí của cả bài: null = tự động, "none" = không dùng, hoặc mã hoa văn (limioLiveMotifs). */
   motif?: string | null;
+  /** Ngôn ngữ nội dung slide (docs/tieu-chi/ngon-ngu-slide.md); null = chưa xác định. */
+  language?: string | null;
   /** Bộ thương hiệu của trường mà chủ bài thuộc về (null nếu không thuộc trường nào). */
   org?: DeckOrgBrand | null;
   /** Nguồn của bài AI soạn (document | topic | topic_web); null với bài soạn tay. */
@@ -407,6 +410,28 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     setLastSavedAt(new Date());
   };
 
+  // Ngôn ngữ của slide: null = nhận lại theo nội dung (máy chủ trả ngôn ngữ vừa nhận được).
+  const handleSetLanguage = async (language: string | null) => {
+    if (!deck || (deck.language ?? null) === language) return;
+    const prev = deck.language ?? null;
+    setDeck({ ...deck, language });
+    const res = await trackSave(() =>
+      fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language }),
+      })
+    );
+    if (!res.ok) {
+      toast.error("Lưu ngôn ngữ của slide thất bại");
+      setDeck((d) => (d ? { ...d, language: prev } : d));
+      return;
+    }
+    const saved = (await res.json().catch(() => null)) as { language?: string | null } | null;
+    if (saved && "language" in saved) setDeck((d) => (d ? { ...d, language: saved.language ?? null } : d));
+    setLastSavedAt(new Date());
+  };
+
   // 3 nút giống thanh Slide Show của PowerPoint:
   //  - Từ đầu / Từ slide hiện tại: vào fullscreen NGAY trong cú click rồi điều
   //    hướng SPA (fullscreen sống sót qua điều hướng client) — không ghi chú.
@@ -674,6 +699,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   return (
     <LiveBrandProvider brand={effBrand}>
+    <LiveLangProvider lang={deck.language}>
     <LiveMotifProvider deckId={deckId} motif={deck.motif} slides={deck.slides}>
     <div
       className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden"
@@ -752,6 +778,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           value={deck.theme ?? "white"}
           onChange={handleSetTheme}
           motif={{ value: deck.motif ?? null, auto: deckAutoMotif(deckId), onChange: handleSetMotif }}
+          language={{ value: deck.language ?? null, onChange: handleSetLanguage }}
           brand={{
             color: effBrand?.colors?.primary ?? null,
             logoUrl: effBrand?.logoUrl ?? null,
@@ -1133,6 +1160,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
       )}
     </div>
     </LiveMotifProvider>
+    </LiveLangProvider>
     </LiveBrandProvider>
   );
 }

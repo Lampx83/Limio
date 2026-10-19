@@ -6,6 +6,7 @@
 // được cấu hình slide.
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeckLang } from "../liveLangContext";
 import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Loader2, Plus, X, ZoomIn } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { CHART_MAX_STORED_LABELS, type ChartType } from "@/lib/limioLiveCharts";
@@ -95,13 +96,14 @@ export default function ChartFromImagePanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deckId, slideId]);
 
+  const lang = useDeckLang();
   const preview = useMemo(() => (draft ? previewChart(draft) : null), [draft]);
   const pending = draft ? pendingRows(draft) : 0;
   const ready = draft ? canApply(draft) : false;
 
   const apply = () => {
     if (!draft) return;
-    const out = applyRedraw(draft, config);
+    const out = applyRedraw(draft, config, lang);
     if (out) onApply(out.chart, out.cont);
   };
   const focusNext = (i: number) =>

@@ -2,6 +2,7 @@ import type OpenAI from "openai";
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
+import { slideLanguageRule } from "./lectureLanguage";
 
 /**
  * Bước 1 của "tài liệu → bài giảng tương tác": đọc tài liệu và đề xuất DÀN Ý slide.
@@ -74,6 +75,8 @@ export interface LectureOutlineInput {
    * mở đầu bằng "Slide k:". Mỗi slide của dàn ý trả kèm "from" (slide gốc dùng) và "basis" (slide gốc làm căn cứ).
    */
   fromSlides?: number;
+  /** Ngôn ngữ nội dung slide của bài (mã trong DECK_LANGUAGES); thiếu = theo ngôn ngữ của nguồn. */
+  language?: string | null;
 }
 
 export interface RawOutlineSlide {
@@ -289,7 +292,7 @@ ${interactionRule()}
 ${layouts}
 4. "points": 1 đến 3 câu hoàn chỉnh (slide "objectives" 2 đến 4 câu; slide "agenda", slide kết bài và slide hook bố cục "quote" để mảng rỗng), có chủ ngữ và vị ngữ, ngắn gọn (mỗi câu dưới 20 từ). Văn phong khoa học, rõ ràng. KHÔNG viết cụt (không chỉ liệt kê cụm từ). Với "cards" và "steps": mỗi phần tử của "points" có dạng "Tiêu đề ngắn: một câu giải thích đầy đủ.".
 5. ${sourceRule(kind, "outline")}
-6. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu ${kind === "document" ? "tài liệu dùng" : "ngành quen dùng, kèm giải thích tiếng Việt"}).
+6. KHÔNG dùng emoji hay ký hiệu trang trí. ${slideLanguageRule(input.language, kind === "document" ? "tài liệu dùng" : "ngành quen dùng, kèm giải thích tiếng Việt")}
 7. "title" của cả bài là một cụm danh từ ngắn nêu chủ đề.${audience}${input.fromSlides ? fromSlidesRule(input.fromSlides) : ""}
 
 Trả về JSON đúng cấu trúc yêu cầu.`;

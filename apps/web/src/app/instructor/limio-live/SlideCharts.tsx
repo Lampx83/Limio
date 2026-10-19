@@ -1,6 +1,8 @@
 "use client";
 
 import { useId, type CSSProperties, type ReactNode } from "react";
+import type { SlideText } from "@/lib/limioLiveLanguage";
+import { useSlideText } from "./liveLangContext";
 import { keepHyphenated } from "@/lib/limioLiveFit";
 import {
   chartAltText,
@@ -64,15 +66,15 @@ const seriesFill = (k: number, uid: string) => (k === 0 ? "var(--sa)" : `url(#${
 const seriesStroke = (k: number) => (k === 0 ? "none" : "var(--sa2)");
 
 /** Hàng trên cùng: chú giải có mẫu hoa văn (chỉ cột/thanh hai chuỗi) và "Đơn vị: …" (đơn vị khác %). */
-function TopRow({ c, uid, w }: { c: ChartConfig; uid: string; w: number }): { h: number; node: ReactNode } {
+function TopRow({ c, uid, w, t }: { c: ChartConfig; uid: string; w: number; t: SlideText }): { h: number; node: ReactNode } {
   const two = c.series.length === 2 && (c.chartType === "bar" || c.chartType === "hbar");
   const unit = c.unit.trim();
-  const cap = unit && unit !== "%" ? `Đơn vị: ${unit}` : "";
+  const cap = unit && unit !== "%" ? `${t.unit}: ${unit}` : "";
   if (!two && !cap) return { h: 0, node: null };
   let x = 0;
   const items = two
     ? c.series.map((s, k) => {
-        const name = s.name || `Chuỗi ${k + 1}`;
+        const name = s.name || t.series(k + 1);
         const node = (
           <g key={k}>
             <rect x={x} y={6} width={40} height={28} rx={6} fill={seriesFill(k, uid)} stroke={seriesStroke(k)} strokeWidth={3} />
@@ -115,10 +117,10 @@ function roundedHBar(y: number, x0: number, x1: number, h: number, r: number): s
 
 const allValues = (S: ChartSeries[]) => S.flatMap((s) => s.values).filter(isNum);
 
-function BarChart({ c, w, h, uid }: { c: ChartConfig; w: number; h: number; uid: string }) {
+function BarChart({ c, w, h, uid, t }: { c: ChartConfig; w: number; h: number; uid: string; t: SlideText }) {
   const n = c.labels.length;
   const S = c.series;
-  const top = TopRow({ c, uid, w });
+  const top = TopRow({ c, uid, w, t });
   const all = allValues(S);
   const lo = Math.min(0, ...all);
   const hi = Math.max(0, ...all);
@@ -169,10 +171,10 @@ function BarChart({ c, w, h, uid }: { c: ChartConfig; w: number; h: number; uid:
   );
 }
 
-function HBarChart({ c, w, h, uid }: { c: ChartConfig; w: number; h: number; uid: string }) {
+function HBarChart({ c, w, h, uid, t }: { c: ChartConfig; w: number; h: number; uid: string; t: SlideText }) {
   const n = c.labels.length;
   const S = c.series;
-  const top = TopRow({ c, uid, w });
+  const top = TopRow({ c, uid, w, t });
   const all = allValues(S);
   const lo = Math.min(0, ...all);
   const hi = Math.max(0, ...all);
@@ -217,10 +219,10 @@ function HBarChart({ c, w, h, uid }: { c: ChartConfig; w: number; h: number; uid
   );
 }
 
-function LineChart({ c, w, h, uid }: { c: ChartConfig; w: number; h: number; uid: string }) {
+function LineChart({ c, w, h, uid, t }: { c: ChartConfig; w: number; h: number; uid: string; t: SlideText }) {
   const n = c.labels.length;
   const S = c.series;
-  const top = TopRow({ c, uid, w });
+  const top = TopRow({ c, uid, w, t });
   const all = allValues(S);
   let lo = Math.min(...all);
   const hi = Math.max(...all);
@@ -234,7 +236,7 @@ function LineChart({ c, w, h, uid }: { c: ChartConfig; w: number; h: number; uid
   const ends = S.map((s, k) => {
     let j = s.values.length - 1;
     while (j >= 0 && !isNum(s.values[j])) j--;
-    return { j, v: j >= 0 ? (s.values[j] as number) : null, k, name: s.name || `Chuỗi ${k + 1}` };
+    return { j, v: j >= 0 ? (s.values[j] as number) : null, k, name: s.name || t.series(k + 1) };
   });
   const endW = Math.max(...ends.map((e) => Math.max(textWidth(isNum(e.v) ? formatValue(e.v, c.unit) : "", 30), two ? textWidth(e.name, LBL) : 0))) + 26;
   const left = tickW + 20;
@@ -426,6 +428,7 @@ export function chartForDrawing(cfg: Record<string, any>): ChartConfig {
 
 export function ChartView({ cfg, width, height }: { cfg: Record<string, any>; width: number; height: number }) {
   const uid = `ch${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const t = useSlideText();
   const c = chartForDrawing(cfg);
   const ok = c.labels.length >= 2 && c.series.some((s) => s.values.some(isNum));
   if (!ok) {
@@ -436,7 +439,7 @@ export function ChartView({ cfg, width, height }: { cfg: Record<string, any>; wi
     );
   }
   const H = Math.round(height);
-  const props = { c, w: width, h: H, uid };
+  const props = { c, w: width, h: H, uid, t };
   return (
     <svg width={width} height={H} viewBox={`0 0 ${width} ${H}`} role="img" aria-label={chartAltText(c)}>
       {c.chartType !== "line" && c.chartType !== "pie" && c.chartType !== "donut" && <Patterns uid={uid} />}

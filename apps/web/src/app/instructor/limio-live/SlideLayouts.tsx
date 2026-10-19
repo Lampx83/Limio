@@ -71,6 +71,7 @@ import { slideImageSources } from "@/lib/limioLiveImage";
 import { shortUrl } from "@/lib/limioLiveWebImages";
 import { isSlideIllustrationId } from "@feedbackme/shared-types";
 import { useLiveBrand } from "./liveBrandContext";
+import { useSlideText } from "./liveLangContext";
 import { ChartView, TableView } from "./SlideCharts";
 import { useSlideMotif } from "./liveMotifContext";
 import { isDarkTheme, layoutThemeClass, motifOpacityFor, slideBgFor } from "./slideThemes";
@@ -432,7 +433,7 @@ function SlideMotif({ motif, slot }: { motif: SlideArtId; slot: MotifSlot }) {
  * để bấm link trong trình sửa không mở hộp sửa slide.
  */
 function ImageCredit({ c }: { c: Cfg }) {
-  const text = `Nguồn ảnh: ${c.imageCredit}`;
+  const text = `${useSlideText().imageSource}: ${c.imageCredit}`;
   const href = typeof c.imageSourceUrl === "string" && /^https?:\/\//i.test(c.imageSourceUrl) ? c.imageSourceUrl : null;
   return (
     <p className="img-credit" title={href ? `${text}\n${href}` : text}>
@@ -497,6 +498,7 @@ function LayoutBody({
   /** Bề rộng thật (px màn hình) của ô hình, để chọn bản ảnh vừa đủ nét. */
   artPx: number;
 }) {
+  const t = useSlideText();
   const items: LayoutItem[] = Array.isArray(c.items) ? c.items : [];
   const title: string = c.title ?? "";
 
@@ -962,7 +964,7 @@ function LayoutBody({
     case "chart": {
       // Tiêu đề, khung dữ liệu và dòng nguồn: chiều cao khung tính trước (dataSlideMetrics) để SVG vẽ đúng cỡ chữ thật.
       const m = dataSlideMetrics(c, dataReserve);
-      const src = sourceLine(c.source);
+      const src = sourceLine(c.source, t.source);
       const head: string[] = Array.isArray(c.head) ? c.head : [];
       const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
       const tf = tableFontSize(head, rows, DATA_CONTENT_W - 20, m.boxH);

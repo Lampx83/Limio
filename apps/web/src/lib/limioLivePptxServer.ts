@@ -24,8 +24,10 @@ export async function buildImportOutline(
   minutes: number,
   mode: ImportMode,
   openai: OpenAI | null,
+  /** Ngôn ngữ của bài (docs/tieu-chi/ngon-ngu-slide.md): AI soạn lại mạch và chữ hệ thống theo ngôn ngữ này. */
+  lang: string | null = null,
 ): Promise<{ outline: Outline; warnings: string[] }> {
-  if (mode === "keep") return { outline: keepOutline(src, title), warnings: [] };
+  if (mode === "keep") return { outline: keepOutline(src, title, lang), warnings: [] };
   if (!openai) throw new Error("openai_not_configured");
   const range = slideRange(minutes);
   const raw = await generateLectureOutline(
@@ -38,10 +40,11 @@ export async function buildImportOutline(
       maxSlides: range.max,
       structure: isFullStructure(minutes) ? "full" : "compact",
       fromSlides: src.slides.length,
+      language: lang,
     },
     openai,
   );
-  const res = restructureOutline(raw, src, minutes);
+  const res = restructureOutline(raw, src, minutes, lang);
   if (!res.outline.title) res.outline.title = title;
   return res;
 }

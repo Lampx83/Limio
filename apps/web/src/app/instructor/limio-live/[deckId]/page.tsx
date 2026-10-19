@@ -3,6 +3,7 @@ import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
 import { getLiveDeck } from "@feedbackme/core-lms";
 import { withOrgBrand } from "@/lib/limioLiveBrandServer";
+import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
 import LiveDeckEditor from "./LiveDeckEditor";
 
 export const metadata = {
@@ -22,6 +23,8 @@ export default async function LiveDeckEditorPage({
   // <main>/space-y ở đây kẻo lệch layout.
   const deck = await getLiveDeck(params.deckId, userId, prisma);
   if (!deck) notFound();
+  // Bài cũ chưa có ngôn ngữ: nhận từ nội dung ngay khi mở (docs/tieu-chi/ngon-ngu-slide.md, L4).
+  if (!deck.language) deck.language = await resolveDeckLanguage(deck.id);
   // JSON round-trip: Date → chuỗi ISO, khớp đúng hình dạng API trả về.
   return <LiveDeckEditor deckId={params.deckId} initialDeck={JSON.parse(JSON.stringify(await withOrgBrand(deck, userId)))} />;
 }

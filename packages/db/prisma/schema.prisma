@@ -5219,6 +5219,10 @@ model LiveDeck {
   // bảng, biểu đồ của từng slide gốc (apps/web/src/lib/limioLivePptx.ts). Tạo slide dựng từ cột này, không đọc lại file.
   // Null = bài không nhập từ file trình chiếu.
   importSource Json?
+  // Ngôn ngữ nội dung slide ("vi", "en", "zh"... — DECK_LANGUAGES ở shared-types): AI viết và chữ hệ thống trên slide theo
+  // ngôn ngữ này. Ghi lúc tạo bài (nhận từ nguồn), giảng viên đổi ở menu Giao diện. Null = chưa xác định (bài cũ, hoặc nguồn
+  // quá ngắn): lần đầu cần dùng sẽ nhận từ chữ của slide rồi ghi lại (docs/tieu-chi/ngon-ngu-slide.md).
+  language String?
 
   // Link xem chỉ đọc /bai-giang/<shareCode>: ai có link cũng xem được, không cần đăng nhập. Null = không chia sẻ.
   // Tạo link mới = thay mã (link cũ chết ngay). Bản sao bài giảng không mang theo mã này.

@@ -42,10 +42,10 @@ export function extractCites(text: string): { text: string; nums: number[] } {
   return { text: out, nums: [...new Set(nums)] };
 }
 
-/** Dòng chân slide: "Nguồn: [1], [3]"; chỉ giữ số có trong danh sách nguồn (1..refCount). */
-export function formatCite(nums: number[], refCount: number): string {
+/** Dòng chân slide: "Nguồn: [1], [3]" (nhãn theo ngôn ngữ của bài); chỉ giữ số có trong danh sách nguồn (1..refCount). */
+export function formatCite(nums: number[], refCount: number, label = "Nguồn"): string {
   const ok = [...new Set(nums)].filter((n) => Number.isInteger(n) && n >= 1 && n <= refCount).sort((a, b) => a - b);
-  return ok.length ? `Nguồn: ${ok.map((n) => `[${n}]`).join(", ")}` : "";
+  return ok.length ? `${label}: ${ok.map((n) => `[${n}]`).join(", ")}` : "";
 }
 
 /** Gỡ số nguồn ở mọi chuỗi lồng nhau, gom số lại. */

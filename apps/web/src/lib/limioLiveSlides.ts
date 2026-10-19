@@ -26,6 +26,7 @@ import {
 import { isSlideMotifChoice } from "./limioLiveMotifs";
 import { GROUPS_MAX, GROUP_POINTS_MAX, groupsFit, type SlideGroup } from "./limioLiveGroups";
 import { SLIDE_ICONS, isSlideIcon, type SlideIconId } from "./limioLiveIcons";
+import { slideText } from "./limioLiveLanguage";
 
 export const SLIDE_LAYOUTS = [
   "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
@@ -1084,11 +1085,13 @@ export function toggleInlineMarker(
  * Slide thứ hai giữ tiêu đề kèm "(tiếp)", không có ghi chú giảng
  * và không còn gắn với dòng dàn ý. Trả null khi không tách được.
  */
-export function splitSlideConfig(config: Record<string, any>): [Record<string, unknown>, Record<string, unknown>] | null {
+export function splitSlideConfig(config: Record<string, any>, lang?: string | null): [Record<string, unknown>, Record<string, unknown>] | null {
   const layout = resolveLayout(config);
   const range = ITEM_RANGE[layout];
   const title: string = typeof config.title === "string" ? config.title : "";
-  const cont = title ? (/\(tiếp\)\s*$/.test(title) ? title : `${title} (tiếp)`.slice(0, MAX_LEN.title)) : "";
+  // Đuôi "(tiếp)" theo ngôn ngữ của bài (docs/tieu-chi/ngon-ngu-slide.md, L11).
+  const t = slideText(lang);
+  const cont = title ? (t.isCont(title) ? title : `${title}${t.cont}`.slice(0, MAX_LEN.title)) : "";
   const meta = pickMeta(config);
   const firstMeta = { ...meta, editedByUser: true };
   // Slide thứ hai là slide mới của giảng viên: không mang ghi chú, dàn ý hay dấu AI.

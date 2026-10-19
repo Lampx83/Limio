@@ -3,24 +3,28 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { DECK_LANGUAGES } from "@/lib/limioLiveLanguage";
 import type { SlideMotifId } from "@/lib/limioLiveMotifs";
 import { SLIDE_THEMES, SLIDE_THEME_GROUPS, type SlideThemeId } from "../slideThemes";
 import { DeckMotifPicker } from "./MotifPicker";
 
 /**
- * Nút "Giao diện" duy nhất của bài giảng: một bảng ba phần là kiểu slide (gom theo nhóm Cơ bản, Màu pastel, Nền tối),
- * hoa văn, logo và màu thương hiệu. Trước đây thương hiệu là một nút riêng cạnh đây nên giảng viên dễ nhầm hai chỗ.
+ * Nút "Giao diện" duy nhất của bài giảng: một bảng gồm kiểu slide (gom theo nhóm Cơ bản, Màu pastel, Nền tối),
+ * hoa văn, ngôn ngữ của slide, logo và màu thương hiệu. Trước đây thương hiệu là một nút riêng cạnh đây nên giảng viên dễ nhầm hai chỗ.
  */
 export default function ThemePicker({
   value,
   onChange,
   motif,
+  language,
   brand,
 }: {
   value: string;
   onChange: (id: SlideThemeId) => void;
   /** Hoa văn trang trí của cả bài, chọn ngay dưới các giao diện (cùng là "trang phục" của bài giảng). */
   motif?: { value: string | null; auto: SlideMotifId; onChange: (v: string | null) => void };
+  /** Ngôn ngữ của slide (docs/tieu-chi/ngon-ngu-slide.md, L5); null = chọn "Tự nhận lại theo nội dung". */
+  language?: { value: string | null; onChange: (v: string | null) => void };
   /** Logo và màu thương hiệu đang áp cho bài; "Chỉnh" mở hộp thương hiệu. */
   brand?: { color: string | null; logoUrl: string | null; title: string; detail: string; onEdit: () => void };
 }) {
@@ -103,6 +107,30 @@ export default function ThemePicker({
           {motif && (
             <div className="border-t border-token pt-3">
               <DeckMotifPicker value={motif.value} autoMotif={motif.auto} themeId={current.id} onChange={motif.onChange} />
+            </div>
+          )}
+          {language && (
+            <div className="border-t border-token pt-3">
+              <label htmlFor="deck-lang" className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-faint">
+                Ngôn ngữ của slide
+              </label>
+              <select
+                id="deck-lang"
+                value={language.value ?? ""}
+                onChange={(e) => language.onChange(e.target.value || null)}
+                className="input w-full text-sm"
+              >
+                {!language.value && <option value="">Chưa xác định</option>}
+                {DECK_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+                {language.value && <option value="">Tự nhận lại theo nội dung</option>}
+              </select>
+              <p className="mt-1.5 text-xs text-muted">
+                AI viết slide mới và các chữ tự thêm trên slide theo ngôn ngữ này. Đổi ngôn ngữ không dịch các slide đã có.
+              </p>
             </div>
           )}
           {brand && (

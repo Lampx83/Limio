@@ -7,7 +7,8 @@ import { liveSlideImageKey } from "@/lib/storage-keys";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { isValidMinutes, outlineWarnings } from "@/lib/limioLiveOutline";
 import { PPTX_MAX_BYTES, parsePptx, pptxErrorCode } from "@/lib/pptxImport";
-import { importSourceText, slidesNeedingImage, toImportedSlide, type ImportSource, type ImportedSlide } from "@/lib/limioLivePptx";
+import { importLanguageText, importSourceText, slidesNeedingImage, toImportedSlide, type ImportSource, type ImportedSlide } from "@/lib/limioLivePptx";
+import { detectLanguage } from "@/lib/limioLiveLanguage";
 import { aiFailure, buildImportOutline, isImportMode } from "@/lib/limioLivePptxServer";
 
 export const runtime = "nodejs";
@@ -98,10 +99,12 @@ export async function POST(req: Request) {
 
         const title = (pptx.slides[0]?.title || fileName.replace(/\.pptx$/i, "")).slice(0, 100) || "Bài giảng mới";
         const source: ImportSource = { format: "pptx", fileName, slides };
+        // Ngôn ngữ của bài theo chữ của các slide gốc (docs/tieu-chi/ngon-ngu-slide.md, L3).
+        const language = detectLanguage(importLanguageText(source));
         if (mode === "restructure") send({ type: "ai" });
         let built;
         try {
-          built = await buildImportOutline(userId, source, title, minutes, mode, openai);
+          built = await buildImportOutline(userId, source, title, minutes, mode, openai, language);
         } catch (e) {
           const f = aiFailure(e);
           if (f) return send({ type: "error", ...f });
@@ -122,6 +125,7 @@ export async function POST(req: Request) {
             sourceName: fileName,
             sourceText: text.slice(0, MAX_STORED_SOURCE_CHARS),
             sourceKind: "document",
+            language,
             importSource: source as unknown as object,
           },
           select: { id: true },
@@ -135,6 +139,7 @@ export async function POST(req: Request) {
           sourceKind: "document",
           sourceFormat: "pptx",
           importMode: mode,
+          language,
           importedSlides: slides.length,
           imageCount: Object.keys(images).length,
         });

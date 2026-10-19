@@ -10,5 +10,6 @@ export * from "./lectureSlideEdit";
 export * from "./lessonOutline";
 export * from "./lessonWriter";
 export * from "./lectureSlideChat";
+export * from "./lectureLanguage";
 export * from "./teacherAssistant";
 export * from "./chartFromImage";

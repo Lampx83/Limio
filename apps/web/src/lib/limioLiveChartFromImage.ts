@@ -7,6 +7,7 @@
 
 import { CHART_MAX_SERIES, CHART_MAX_STORED_LABELS, CHART_MIN_LABELS, CHART_TYPES, isNum, numToInput, parseNum, type ChartType } from "./limioLiveCharts";
 import { MAX_LEN, pickMeta, resolveLayout, sanitizeLayoutConfig } from "./limioLiveSlides";
+import { slideText } from "./limioLiveLanguage";
 
 type Cfg = Record<string, unknown>;
 
@@ -166,14 +167,17 @@ export function previewChart(d: RedrawDraft): Cfg | null {
   });
 }
 
-const CONT = " (tiếp)";
-const contTitle = (t: string) => (t.length + CONT.length <= MAX_LEN.title ? t + CONT : t);
+/** Tiêu đề slide nối tiếp, đuôi theo ngôn ngữ của bài. */
+const contTitle = (t: string, lang?: string | null) => {
+  const cont = slideText(lang).cont;
+  return t.length + cont.length <= MAX_LEN.title ? t + cont : t;
+};
 
 /**
  * V9: slide Biểu đồ với đúng số đã đối chiếu (dòng nguồn trống, ghi chú và meta giữ, `fromImage` = hình gốc), cùng
  * slide "(tiếp)" mang các ý của slide cũ nếu có. null khi chưa đối chiếu hết — không có cách nào khác dựng ra slide.
  */
-export function applyRedraw(d: RedrawDraft, old: Cfg): { chart: Cfg; cont: Cfg | null } | null {
+export function applyRedraw(d: RedrawDraft, old: Cfg, lang?: string | null): { chart: Cfg; cont: Cfg | null } | null {
   if (!canApply(d)) return null;
   const rows = usable(d);
   const chart: Cfg = {
@@ -190,7 +194,7 @@ export function applyRedraw(d: RedrawDraft, old: Cfg): { chart: Cfg; cont: Cfg |
   const img = liveImageFile(old.imageUrl) ? (old.imageUrl as string) : null;
   if (img) chart.fromImage = img;
   const bullets = (Array.isArray(old.bullets) ? old.bullets : []).filter((b): b is string => typeof b === "string" && !!b.trim());
-  const cont = bullets.length ? sanitizeLayoutConfig("image", { title: contTitle(d.title || str(old.title, MAX_LEN.title)), bullets }) : null;
+  const cont = bullets.length ? sanitizeLayoutConfig("image", { title: contTitle(d.title || str(old.title, MAX_LEN.title), lang), bullets }) : null;
   return { chart, cont };
 }
 
