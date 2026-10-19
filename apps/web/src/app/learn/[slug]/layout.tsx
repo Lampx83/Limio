@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { NOINDEX } from "@/lib/seo";
 import { auth } from "@/lib/auth";
 import StudentLeftMenu from "@/components/StudentLeftMenu";
+import LanguageLeftMenu from "@/components/LanguageLeftMenu";
+import { getAppMode } from "@/lib/appMode.server";
 import StudentMenuTrigger from "@/components/StudentMenuTrigger";
 import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
 
@@ -21,9 +23,15 @@ export default async function LearnLessonLayout({
     getStudentMenuBadges(session?.user?.id),
     getStudentMenuContinue(session?.user?.id),
   ]);
+  // LANG L2.3 — vỏ Limio Language: ngăn kéo menu ngoại ngữ thay cho menu học viên.
+  const languageMode = getAppMode() === "language";
   return (
     <>
-      <StudentLeftMenu desktopSidebar={false} badges={badges} continueTo={continueTo} />
+      {languageMode ? (
+        <LanguageLeftMenu role="student" desktopSidebar={false} />
+      ) : (
+        <StudentLeftMenu desktopSidebar={false} badges={badges} continueTo={continueTo} />
+      )}
       <StudentMenuTrigger variant="floating" />
       {children}
     </>

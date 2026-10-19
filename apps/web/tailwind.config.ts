@@ -1,24 +1,23 @@
 import type { Config } from "tailwindcss";
 import typography from "@tailwindcss/typography";
 
+const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+function brandScale(with950: boolean): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const n of with950 ? [...SHADES, 950] : SHADES) out[n] = `rgb(var(--brand-${n}) / <alpha-value>)`;
+  return out;
+}
+
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   darkMode: "class",
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: "#F7FEE7",
-          100: "#ECFCCB",
-          200: "#D9F99D",
-          300: "#BEF264",
-          400: "#A3E635",
-          500: "#84CC16",
-          600: "#65A30D",
-          700: "#4D7C0F",
-          800: "#3F6212",
-          900: "#365314",
-        },
+        // brand/lime đọc từ biến CSS (globals.css) để vỏ Limio Language đổi sang bảng màu
+        // riêng chỉ bằng `data-app="language"` — vỏ thường giữ nguyên giá trị lime.
+        brand: brandScale(false),
+        lime: brandScale(true),
         accent: {
           50: "#FFF8E6",
           100: "#FFEFC2",

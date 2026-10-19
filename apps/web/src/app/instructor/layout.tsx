@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
+import LanguageLeftMenu from "@/components/LanguageLeftMenu";
+import { getAppMode } from "@/lib/appMode.server";
+import { getLanguageTeacherBadges } from "@/lib/languageBadges";
 import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 import InstructorContentFrame from "./InstructorContentFrame";
 
@@ -62,14 +65,20 @@ export default async function InstructorLayout({
     );
   }
 
+  // LANG L2 — vỏ Limio Language: menu rút gọn thay cho menu giảng viên đầy đủ. Nội dung và quyền không đổi.
+  const languageMode = getAppMode() === "language";
   return (
     <ActiveNavSectionProvider>
       <div className="flex w-full">
-        <InstructorLeftMenu
-          isInstructor={hasInstructorRole}
-          isProctor={isProctor}
-          isResearcher={hasResearcherRole}
-        />
+        {languageMode ? (
+          <LanguageLeftMenu role="teacher" badges={await getLanguageTeacherBadges(session.user.id)} />
+        ) : (
+          <InstructorLeftMenu
+            isInstructor={hasInstructorRole}
+            isProctor={isProctor}
+            isResearcher={hasResearcherRole}
+          />
+        )}
         <div className="min-w-0 flex-1">
           <InstructorContentFrame>{children}</InstructorContentFrame>
         </div>

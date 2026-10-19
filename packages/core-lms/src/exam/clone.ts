@@ -72,6 +72,18 @@ export async function cloneExam(
         shuffleOptions: source.shuffleOptions,
         showResultsAfterSubmit: source.showResultsAfterSubmit,
         status: "draft",
+        // LANG: bản sao của đề ngoại ngữ vẫn là đề ngoại ngữ (trước đây mất mockMode → thành đề thường).
+        mockMode: source.mockMode,
+        allowMock: source.allowMock,
+        allowPractice: source.allowPractice,
+        // LANG L6: giữ phân loại; KHÔNG sao chép số thứ tự (tránh trùng) và cờ học thử miễn phí (chủ ý bật lại).
+        paperType: source.paperType,
+        sourceLabel: source.sourceLabel,
+        yearLabel: source.yearLabel,
+        difficulty: source.difficulty,
+        tags: source.tags,
+        // Bộ chỉ có nghĩa trong cùng khoá.
+        collectionId: targetCourseId === source.courseId ? source.collectionId : null,
         // Code-based access reset to authenticated — instructor wires fresh.
         accessMode: "authenticated",
       },
@@ -180,6 +192,10 @@ export async function cloneExam(
           poolFilter: s.poolFilter as Prisma.InputJsonValue | undefined,
           materializedQuestionIds:
             s.materializedQuestionIds as Prisma.InputJsonValue | undefined,
+          // LANG: giờ, kỹ năng và thang điểm của phần — thiếu thì bản sao của đề ngoại ngữ mất cấu trúc.
+          durationMin: s.durationMin,
+          languageSkill: s.languageSkill,
+          scoreBands: s.scoreBands === null ? Prisma.JsonNull : (s.scoreBands as Prisma.InputJsonValue),
         },
         select: { id: true },
       });

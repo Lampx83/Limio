@@ -26,6 +26,7 @@
     "storage:orphans": "pnpm --filter @feedbackme/core-lms storage:orphans",
     "backfill:feedback-coding": "pnpm --filter @feedbackme/core-feedback backfill:feedback-coding",
     "import:course": "pnpm --filter @feedbackme/core-lms import:course",
+    "import:exams": "pnpm --filter @feedbackme/core-lms import:exams",
     "import:course:prod": "pnpm --filter @feedbackme/core-lms import:course:prod",
     "update:lesson": "pnpm --filter @feedbackme/core-lms update:lesson",
     "update:lesson:prod": "pnpm --filter @feedbackme/core-lms update:lesson:prod",

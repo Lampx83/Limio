@@ -51,6 +51,7 @@ export default async function InstructorExamsPage({
       openAt: true,
       closeAt: true,
       publishedAt: true,
+      mockMode: true,
       _count: {
         select: { passages: true, questions: true, attempts: true },
       },
@@ -101,6 +102,10 @@ export default async function InstructorExamsPage({
                     >
                       {STATUS_LABEL[e.status] ?? e.status}
                     </span>
+                    {/* LANG L4.5 — phân loại rõ: đề ngoại ngữ (thi thử & luyện đề) khác đề thường. */}
+                    <span className={`rounded px-2 py-0.5 text-xs ${e.mockMode ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
+                      {e.mockMode ? "Ngoại ngữ" : "Thường"}
+                    </span>
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-faint sm:grid-cols-4">
                     <Stat label="Thời lượng" value={`${e.durationMin} phút`} />
@@ -123,7 +128,7 @@ export default async function InstructorExamsPage({
                   >
                     Chỉnh sửa
                   </Link>
-                  <OrganizeExamButton examId={e.id} courseId={course.id} isDraft={e.status === "draft"} />
+                  {!e.mockMode && <OrganizeExamButton examId={e.id} courseId={course.id} isDraft={e.status === "draft"} />}
                   <CloneButton examId={e.id} courseId={course.id} />
                   <DeleteExamButton examId={e.id} hasAttempts={e._count.attempts > 0} />
                 </div>

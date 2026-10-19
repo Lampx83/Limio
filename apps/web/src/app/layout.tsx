@@ -11,6 +11,7 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { AiTokensPageProvider } from "@/components/AiTokensPageContext";
 import { getAiTokensPageLocked } from "@/lib/site-settings";
 import { getEnv } from "@/lib/env";
+import { getAppMode } from "@/lib/appMode.server";
 import {
   DEFAULT_OG_IMAGE,
   SITE_DESCRIPTION,
@@ -125,7 +126,7 @@ export default async function RootLayout({
   const aiTokensPageUnlocked = !(await getAiTokensPageLocked().catch(() => true));
 
   return (
-    <html lang="vi" className={`${inter.variable} ${nunito.variable}`} suppressHydrationWarning>
+    <html lang="vi" data-app={getAppMode()} className={`${inter.variable} ${nunito.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>

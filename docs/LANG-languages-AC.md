@@ -580,14 +580,91 @@ Schema (chỉ thêm): `SubmissionTranscript(id, submissionId, userId, courseId, 
 
 ---
 
-## Quyết định còn treo
+## L · Limio Language — vỏ riêng cho ngoại ngữ (mức A) — **đã duyệt 5 quyết định (2026-10-05), đã làm**
 
-| # | Câu hỏi | Chặn |
-|---|---|---|
-| 1 | Định dạng audio, dung lượng tối đa, phụ đề đồng bộ | G1 |
-| 2 | Event nghe: dùng lại `videoRanges` hay mới | G1 |
-| 3 | Ngưỡng tối thiểu để hiện nhãn kỹ năng | G3 |
-| 4 | Thứ tự trục radar; có xem theo thời gian không | G3 |
-| 5 | Thuật toán lịch ôn thẻ và nơi lưu trạng thái | G4 |
-| 6 | Giới hạn lượt thi thử; có hiện đáp án ở chế độ luyện | G5 |
-| 7 | AI chấm sơ bộ hiện trước hay chờ giảng viên | G5, G6 |
+**Bối cảnh:** đề thi/khoá ngoại ngữ khác hẳn LMS thường (phần-kỹ năng-giờ, audio, thi thử + luyện đề, góp ý Viết/Nói bằng AI, thẻ ôn từ) nhưng đang nằm lẫn trong menu giảng viên (`InstructorLeftMenu`, 5 nhóm: LMS · Limio-Live · Vấn đáp AI · Kiểm tra đánh giá · Đấu trường…) và khu học viên `/me/*`. Mức A = **một vỏ giao diện riêng trong CÙNG ứng dụng**: chung tài khoản, khoá học, ví AI, kho file, DB, deploy; chỉ đổi thương hiệu, menu, trang chủ và luồng tạo đề. Thiết kế để sau này tách lên app riêng (mức B) mà không phải viết lại lõi.
+
+**Thiết kế đề xuất — "chế độ ứng dụng" (app mode), không nhân đôi route:**
+- Mọi URL hiện có giữ nguyên (`/learn/...`, `/instructor/...`, `/me/...`) nên link cũ, bookmark, email không gãy. Có thêm cửa vào `/language` (trang chủ riêng) và tên miền tuỳ chọn.
+- "Chế độ" được nhớ bằng cookie `limio_app=language`, đặt khi vào `/language` hoặc qua tên miền riêng — **chỉ khi người dùng chủ động**; mở một khoá ngoại ngữ KHÔNG tự đổi vỏ. Các layout khu giảng viên và khu học viên đọc chế độ này để chọn **vỏ** (header + menu) tương ứng; nội dung trang không đổi.
+- Giảng viên ngoại ngữ vào là thấy menu rút gọn đúng việc của họ; người không bao giờ vào chế độ này **không thấy khác gì**.
+
+### L1 · Cửa vào và chế độ
+- [x] **L1.1** Trang `/language` có hai biến thể theo vai: giảng viên (có role) và học viên; khách chưa đăng nhập thấy trang giới thiệu ngắn + nút đăng nhập. Vào trang này đặt cookie chế độ `language`.
+- [x] **L1.2** Hàm thuần `resolveAppMode({ cookie, host, languageHost })` → `"language" | "default"`: ưu tiên (1) tên miền riêng, (2) cookie; **không** suy từ khoá đang mở (đã chốt: chỉ chuyển khi người dùng chủ động). Có test bảng cho mọi tổ hợp.
+- [x] **L1.3** Nút **"Về Limio"** trên vỏ ngoại ngữ (và **"Sang Limio Language"** trên vỏ thường, chỉ hiện khi người dùng có khoá ngoại ngữ hoặc là giảng viên) đổi cookie rồi chuyển trang; đổi chế độ không làm mất trang đang xem nếu trang đó có ở cả hai vỏ.
+- [x] **L1.4** Tên miền riêng đọc từ biến môi trường `LANGUAGE_HOST` (vd `language.limio.vn`): trùng host thì `/` chuyển tới `/language` và đặt cookie. **Không đặt biến thì không có gì xảy ra** (không phải cấu hình DNS/Caddy mới mới chạy được).
+- [x] **L1.5** Chế độ không bao giờ cấp thêm quyền: mọi kiểm tra quyền/enroll/role giữ nguyên; cookie giả không mở được trang nào người dùng vốn không vào được.
+
+### L2 · Vỏ giao diện (header + menu)
+- [x] **L2.1** Header riêng: tên **Limio Language**, tagline riêng, dấu hiệu nhận biết (cùng bảng token màu và font với Limio; chỉ đổi tên/biểu tượng — không dựng hệ thiết kế thứ hai). Tài khoản, thông báo, ví AI giữ nguyên như header thường.
+- [x] **L2.2** Menu giảng viên (rút gọn): **Tổng quan · Khoá ngoại ngữ · Đề thi (thi thử & luyện đề) · Chờ duyệt/chấm (Viết · Nói) · Token AI**. Các nhóm không liên quan (Limio-Live, Vấn đáp AI, Đấu trường, Phân tích…) không hiện ở vỏ này nhưng vẫn truy cập được bằng URL.
+- [x] **L2.3** Menu học viên: **Tổng quan · Khoá của tôi · Luyện thi · Hồ sơ kỹ năng · Thẻ ôn từ**; trỏ tới đúng trang hiện có (`/learn/...`, `/me/skills`, `/me/reviews`).
+- [x] **L2.4** Trên điện thoại menu thu thành ngăn kéo như vỏ thường (quy ước §4.6: sidebar luôn collapse dưới `lg`); không cuộn ngang ở 375px.
+- [x] **L2.5** Trang nào vốn có ở vỏ thường vẫn hiển thị đúng bên trong vỏ ngoại ngữ (không vỡ bố cục, không mất breadcrumb).
+
+### L3 · Trang tổng quan theo vai
+- [x] **L3.1** Giảng viên: các khoá ngoại ngữ của tôi (kèm số học viên); **hàng đợi "Góp ý AI chờ duyệt"** (số bản nháp Viết + Nói của học viên trong khoá tôi dạy, bấm là tới đúng bài nộp); bài Viết/Nói chờ chấm tay; đề thi đang soạn/đã xuất bản; nút tạo khoá mẫu ngoại ngữ (G8) và tạo đề.
+- [x] **L3.2** Học viên: tiếp tục học (khoá/bài gần nhất); **thẻ tới hạn ôn hôm nay** (số thẻ); đề thi thử/luyện đề đang mở; bản tóm tắt hồ sơ kỹ năng theo nhãn **Cần ôn / Nên luyện / Vững** (không hiện số, đúng nguyên tắc G3).
+- [x] **L3.3** Số liệu chỉ lấy từ dữ liệu của chính người xem (học viên không thấy của ai khác; giảng viên chỉ thấy khoá mình có quyền); trang trống có hướng dẫn việc đầu tiên, không để trắng.
+
+### L4 · Tách luồng tạo đề thi (thường ↔ ngoại ngữ)
+- [x] **L4.1** Bước đầu của "Tạo đề mới" là **chọn loại**: *Đề thi thường* hoặc *Đề thi ngoại ngữ (thi thử & luyện đề)*. Vỏ ngoại ngữ vào thẳng luồng ngoại ngữ; khoá có `languageMode` thì thẻ ngoại ngữ nổi lên trước nhưng vẫn chọn tay được (khoá ngoại ngữ vẫn cần đề kiểm tra thường).
+- [x] **L4.2** Luồng ngoại ngữ mở bằng khung HSK / IELTS / TOEIC / Tuỳ chỉnh (có sẵn), tạo ra đề `mockMode = true` ngay từ đầu. **Loại đề cố định sau khi tạo**: bỏ công tắc bật/tắt thi thử ở trang sửa; đề thường không còn khung "Thi thử".
+- [x] **L4.3** Trang sửa đề ngoại ngữ có bộ tab riêng **Cấu trúc (phần · kỹ năng · giờ) · Nội dung · Thang điểm · Luyện đề · Xem trước**; không hiện Tổ chức thi, Tài liệu, SEB. Trang sửa đề thường giữ nguyên bộ tab hiện tại.
+- [x] **L4.4** Đề hiện có (đã có/không có `mockMode`) mở đúng loại của nó, không mất dữ liệu; đề thi thử cũ vẫn sửa được bằng bộ tab mới.
+- [x] **L4.5** Danh sách đề (`/instructor/exams`) phân loại rõ thường / ngoại ngữ (nhãn + lọc), dùng đúng thuật ngữ của CLAUDE §4.6.1 cho đề thường; từ vựng riêng (phần, kỹ năng, luyện đề) chỉ ở luồng ngoại ngữ.
+
+### L5 · Không ảnh hưởng hiện trạng
+- [x] **L5.1** L1–L4 không đổi schema, không đổi API công khai; chỉ thêm cookie hiển thị và trang `/language`. (L6 có migration CHỈ THÊM cột/bảng, xem dưới.)
+- [x] **L5.2** Người dùng không bao giờ vào chế độ ngoại ngữ: mọi trang giống hệt hiện nay (kiểm bằng test render của layout ở chế độ mặc định).
+- [x] **L5.3** `/language` công khai chỉ phần giới thiệu; phần theo vai là riêng tư (`noindex`, nằm trong danh sách tiền tố riêng tư của middleware).
+
+### L6 · Khoá luyện đề theo kỹ năng (vài trăm đề/khoá, bán theo khoá) — **đã duyệt "đồng ý hết" (2026-10-05), đã làm**
+
+**Hướng đã chốt (2026-10-05):** chia theo **khoá học**: ví dụ *"HSK 4 — Listening"*, *"IELTS — Reading"*; người dùng **mua khoá** là có vài trăm đề của kỹ năng đó, mỗi đề làm được theo **hai chế độ** — **Luyện đề** (không giới hạn thời gian, quay lại sửa, xem đáp án ngay) và **Phòng thi mô phỏng** (bấm giờ, áp lực như thi thật). Cả hai chế độ ĐÃ CÓ (G5a–G5e); phần mới là **đóng gói thành khoá luyện đề** và làm cho vài trăm đề dùng được.
+
+**Ánh xạ vào cái đã có**
+- Một "đề" của khoá Listening = một `Exam` (`mockMode`) có MỘT phần kỹ năng Nghe (hoặc vài Part của đề thật); `allowPractice` = chế độ luyện, `allowMock` = phòng thi mô phỏng. Quyền, ghi danh, giá (`priceCents`) dùng nguyên cơ chế **khoá học**.
+- Họ thi và cấp độ lấy từ **khoá** (không cần gán lại cho từng đề); từng đề chỉ cần: **bộ/Part/chủ đề** (thư mục), **số thứ tự**, **nguồn/năm**, **độ khó**, tag, và cờ **học thử miễn phí**.
+
+**Cột/bảng mới (chỉ thêm):** `Course.kind` (`standard` | `practice_bank`); trên `Exam`: `paperType` (đề thật · đề thi thử · bộ luyện), `sourceLabel`, `yearLabel`, `seq`, `difficulty`, `tags`, `freePreview`; bảng `ExamCollection` (bộ/Part/chủ đề có thứ tự, thuộc một khoá). Chỉ mục theo `(courseId, collectionId, seq)` và `(courseId, status, paperType)`.
+
+**Học viên (khoá `practice_bank` — trang khoá thay "danh sách module/bài" bằng thư viện đề)**
+- [x] **L6.1** Trang khoá cho người **chưa mua**: mô tả, số đề, các Part/bộ, hai chế độ, giá; một số đề đánh dấu **học thử miễn phí** làm được ngay không cần mua; còn lại khoá kèm nút Mua.
+- [x] **L6.2** Sau khi mua/ghi danh: thư viện theo **bộ/Part** (thư mục) → danh sách đề dạng **hàng gọn**; lọc theo bộ, loại (đề thật/thi thử), năm/nguồn, độ khó, **trạng thái của TÔI** (chưa làm · đang làm · đã làm · nên làm lại); tìm theo tên; sắp xếp (số thứ tự · chưa làm trước · mới nhất). Phân trang "Tải thêm" 30 đề/lần.
+- [x] **L6.3** Mỗi dòng đề có **hai nút rõ ràng**: **Luyện đề** (không giới hạn giờ) và **Phòng thi mô phỏng** (bấm giờ), theo đúng cờ của đề; kèm nhãn mức của lần gần nhất (ba mức, không hiện số) và số lần đã làm.
+- [x] **L6.4** Đầu trang: dải **Tiếp tục** (lượt đang làm dở), thanh **tiến độ khoá** ("đã làm 37/240 đề"), và gợi ý **"Luyện phần yếu"** (chỉ gợi ý, theo hồ sơ kỹ năng).
+- [x] **L6.5** Đề chưa mua và không phải học thử: không bao giờ lộ nội dung câu hỏi/audio (kiểm cả đường API), chỉ thấy tên/nguồn/độ khó.
+
+**Giảng viên (soạn vài trăm đề)**
+- [x] **L6.6** Trang quản lý đề của khoá dạng **BẢNG** phân trang phía máy chủ (50 dòng): tên · bộ · số thứ tự · loại · nguồn/năm · độ khó · số câu · trạng thái · lượt làm · cập nhật; tìm/lọc/sắp xếp theo cột. Chọn nhiều dòng → thao tác hàng loạt (gán bộ/loại/độ khó/tag/nguồn, đánh dấu học thử, bật-tắt Luyện đề và Phòng thi mô phỏng, xuất bản/ẩn, nhân bản, lưu trữ), kết quả báo **từng dòng**.
+- [x] **L6.7** Quản lý **bộ/Part**: tạo, đổi tên, sắp thứ tự, kéo-thả đề vào bộ; xoá bộ không xoá đề.
+- [x] **L6.8** **Nhập hàng loạt**: file manifest (JSON/CSV, một dòng một đề + phân loại + câu hỏi theo mẫu) và tuỳ chọn ZIP audio; xem trước báo lỗi theo dòng; tạo ở trạng thái **nháp**; chạy lại không tạo trùng (nhận biết theo nguồn + số thứ tự). Giai đoạn đầu có kịch bản dòng lệnh `pnpm import:exams` để mình nhập giúp từ file bạn có.
+- [x] **L6.9** **Khung tạo khoá luyện đề** ở vỏ Limio Language: chọn họ thi + kỹ năng + cấp độ → dựng sẵn khoá `practice_bank` với cấu trúc bộ/Part mẫu (HSK/IELTS/TOEIC) và khung đề một-phần-kỹ-năng; đề **loại thật** bắt buộc điền nguồn (nhắc một lần rằng người đăng chịu trách nhiệm bản quyền).
+
+**Phòng thi mô phỏng — độ "áp lực"** (đã có phần lớn; chốt thêm khi có ảnh đề thật, G5a.13): vào phòng đúng giờ, đồng hồ phần, audio giới hạn lần nghe, không tạm dừng, không quay lại phần đã nộp, cảnh báo còn 5 phút/1 phút, tự nộp khi hết giờ.
+
+**Khác khoá thường:** khoá `practice_bank` không cần module/bài học (có thể có thêm bài hướng dẫn); bỏ khỏi menu giảng viên các thao tác chỉ dành khoá bài giảng. Khoá thường không đổi.
+
+**Hiệu năng:** truy vấn phân trang theo con trỏ; tiến độ cá nhân tính theo lô cho đúng trang đang xem; chỉ đếm lượt làm cho các dòng đang hiển thị.
+
+### Hoãn lại
+- App riêng (mức B) và DB riêng (mức C); đổi màu chủ đạo/bộ hình ảnh riêng; bộ lọc theo ngôn ngữ (zh/en…) trên trang tổng quan; trình soạn đề theo bố cục đề thật (chờ ảnh HSK/IELTS/TOEIC — G5a.13).
+
+### Quyết định đã chốt (2026-10-05)
+1. **Đổi vỏ**, không chép route — URL cũ giữ nguyên.
+2. **Chỉ chuyển khi người dùng chủ động vào `/language`** (hoặc tên miền riêng); mở khoá ngoại ngữ không tự đổi vỏ.
+3. **Tên miền riêng**: làm sẵn cơ chế (`LANGUAGE_HOST`), không bật cho tới khi bạn đặt biến và trỏ DNS/Caddy.
+4. **Thương hiệu**: cùng màu, font của Limio; tên **Limio Language**, tagline **"Speak in Flow"**.
+5. **Menu giảng viên rút gọn** như L2.2 — đủ dùng.
+
+### Quyết định cần chốt cho L6 (2026-10-05)
+1. **Một đề = một bài nghe đơn lẻ, hay một đề có nhiều Part?** (Ví dụ HSK 4 Nghe có 3 phần 45 câu; TOEIC Listening có Part 1–4.) Đề xuất: đề nhỏ nhất làm được là **một Exam một kỹ năng**, "Part" là **bộ** (thư mục) để học viên chọn luyện theo Part.
+2. **Học thử miễn phí:** đồng ý đánh dấu một số đề học thử không cần mua?
+3. **Mô hình bán:** mua một lần theo khoá (có sẵn: giá + thanh toán), hay thuê bao theo tháng? Có bán **combo** (Listening + Reading + Writing + Speaking của một họ thi) không? — combo/thuê bao là việc riêng, không nằm trong L6.
+4. **Bạn có sẵn đề dưới dạng gì** (Word/PDF/ảnh/Excel/audio)? Quyết định độ khó của việc nhập hàng loạt.
+5. **Thứ tự làm:** vỏ L1–L3 (đang làm) → `practice_bank` + thư viện học viên có phân trang + học thử (L6.1–6.5) → bảng giảng viên và bộ (L6.6–6.7) → nhập hàng loạt (L6.8) → khung tạo khoá (L6.9). Đồng ý?
+
+**Trạng thái L1–L6 (2026-10-05, chưa commit; nhánh `feat/limio-language` từ `main`):** xong. Migration `20261006100000_practice_bank` (chỉ thêm: `Course.kind`, phân loại trên `Exam`, bảng `ExamCollection`) đã áp DB test và dev. Test mới: `appMode`(17) · `app-mode` route(6) · `languageMenu`(8) · `LanguageLeftMenu`(7) · `HeaderTagline`(2) · `examTabs`(7) · `examCreateType`(5) · `practiceLibraryQuery`(8) · `PracticeRow`(8) · `libraryTable`(10) · core-lms: `language/overview`(+13), `exam/library`(17), `library-access`(9), `library-admin`(14), `import-manifest`(8), `practiceBank`(9); core-feedback `aiReviewQueue`(3). Toàn bộ: core-lms 1485, core-feedback 441, web 752 xanh, typecheck sạch. **Đã chạy thật trên dev:** vỏ Limio Language cho giảng viên (menu rút gọn, số liệu thật, badge chờ duyệt) và vỏ thường KHÔNG đổi (menu Limio-Live, "Teach in Flow"); trang sửa đề thi thử có bộ tab Cấu trúc · Nội dung · Thang điểm · Luyện đề · Xem trước, bước chọn loại đề hiện đúng thứ tự; tạo khoá "HSK 4 — Nghe" từ khung, nhập 40 đề bằng API nhập hàng loạt (40 tạo, 0 lỗi), bảng quản lý 40 dòng, thao tác hàng loạt qua giao diện (2 đề đổi độ khó); phía học viên: chưa ghi danh thấy 40 đề, 3 học thử mở, 27/30 khoá, "Tải thêm" lên 40/40, đề khoá tự chuyển về thư viện, đề học thử vào được trang luyện; sau khi ghi danh không còn khoá, có tiến độ, dải "Tiếp tục … đang luyện", trạng thái "Đang làm". **CHƯA thử:** tên miền riêng `LANGUAGE_HOST` (mới thử phần logic thuần, chưa trỏ DNS/Caddy); bấm mua khoá luyện đề qua thanh toán thật; làm trọn một lượt Phòng thi mô phỏng ở đề học thử và nộp bài; `pnpm import:exams` với file thật (mới chạy hàm nhập qua API); ngăn kéo menu trên điện thoại (mới đo không cuộn ngang ở thư viện đề); giao diện giảng viên trên điện thoại; xem bằng mắt (pane không chụp màn hình khi ẩn). **Khác nháp:** đã sửa `cloneExam` (trước đây bản sao của đề ngoại ngữ MẤT `mockMode`, giờ phần/kỹ năng/thang điểm của phần); khoá còn nháp không lộ cho người ngoài kể cả đề học thử; "Luyện phần yếu" làm ở dạng gợi ý "đề nên làm lại" (khoá một kỹ năng nên chưa cần xét kỹ năng khác).
+
