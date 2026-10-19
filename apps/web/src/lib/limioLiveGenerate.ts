@@ -406,6 +406,8 @@ export interface GenerateDeps {
   context?: DraftContext;
   /** Slide dựng sẵn không qua AI (vd. dòng lấy nguyên từ slide PowerPoint gốc); null = để AI viết. */
   fixedSlide?: (os: OutlineSlide, index: number) => GeneratedSlide | null;
+  /** Báo từng slide vừa xong (chỉ số theo `outline`): slide dựng sẵn báo ngay từ đầu, slide AI báo khi cả lô xong. */
+  onSlide?: (index: number) => void;
 }
 
 export interface GenerateResult {
@@ -431,6 +433,9 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
     if (s.fixed) results[i] = applyStructure(draftToSlide(s, undefined, sections[i]!, ctx), deps.structures?.[i]);
     else if (own[i]) results[i] = applyStructure(own[i]!, deps.structures?.[i]);
   });
+  outline.forEach((_, i) => {
+    if (results[i]) deps.onSlide?.(i);
+  });
   let done = total - ai.length;
   const batches = makeBatches(ai.length).map((b) => b.map((k) => ai[k]!));
   let cursor = 0;
@@ -451,6 +456,7 @@ export async function generateDeckSlides(deps: GenerateDeps): Promise<GenerateRe
       results[i] = applyStructure(draftToSlide(outline[i]!, byIndex.get(i), sections[i]!, st?.closing ? { ...ctx, closing: true } : ctx), st);
     }
     done += indices.length;
+    for (const i of indices) deps.onSlide?.(i);
     deps.onProgress?.(done, total);
   };
 

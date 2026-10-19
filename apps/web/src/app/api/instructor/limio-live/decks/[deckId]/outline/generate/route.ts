@@ -113,7 +113,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
       // Một lô có thể mất hơn 60 giây; proxy phía trước cắt kết nối im lặng quá lâu, nên gửi nhịp giữ kết nối.
       const beat = setInterval(() => send({ type: "ping" }), 8000);
       try {
-        send({ type: "start", total: writeIdx.length });
+        // `ids`: các dòng dàn ý sẽ viết (O6): lưới "đang tạo" coi dòng ngoài danh sách là đã xong.
+        send({ type: "start", total: writeIdx.length, ids: writeIdx.map((i) => outline.slides[i]!.id) });
         const result = await generateDeckSlides({
           outline: writeIdx.map((i) => outline.slides[i]!),
           sectionNos: writeIdx.map((i) => sectionNos[i]!),
@@ -123,6 +124,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           fixedSlide: (_os, k) => imported[k] ?? null,
           isFatal: (e) => e instanceof AiTutorError,
           onProgress: (done, total) => send({ type: "progress", done, total }),
+          onSlide: (k) => send({ type: "slide", id: outline.slides[writeIdx[k]!]!.id }),
           generateBatch: async (batch) => {
             if (!openai) throw new Error("openai_not_configured");
             const drafts = (await generateSlideDrafts(

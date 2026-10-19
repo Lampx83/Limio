@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, ChevronLeft, FileText, LayoutTemplate, Loader2, PenLine, Plus, Sparkles } from "lucide-react";
+import { outlineStory } from "@/lib/limioLiveOutlineCard";
 import { apiUrl } from "@/lib/apiUrl";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
@@ -37,9 +38,12 @@ import {
 } from "@/lib/limioLiveOutlineUi";
 import OutlineFlow from "./OutlineFlow";
 import SlideDialog from "./SlideDialog";
+import GenerationGrid from "./GenerationGrid";
+import { ThemeBox } from "./OutlineSide";
 
 interface Loaded {
   title: string;
+  theme?: string;
   sourceName: string | null;
   sourceKind: DeckSourceKind;
   webRefs: WebSourceRef[] | null;
@@ -82,6 +86,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [syncInfo, setSyncInfo] = useState<SyncInfo | null>(null);
   const [slideCount, setSlideCount] = useState(0);
+  const [theme, setTheme] = useState("brand");
   const [confirmErr, setConfirmErr] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -91,7 +96,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [gen, setGen] = useState<
     | { state: "idle" }
-    | { state: "running"; done: number; total: number }
+    | { state: "running"; done: number; total: number; writing: string[] | null; doneIds: string[] }
     | { state: "done"; slideCount: number; fallbackCount: number; sync?: { regenerated: number; created: number; removed: number; kept: number } }
     | { state: "error"; message: string }
   >({ state: "idle" });
@@ -111,6 +116,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
       setReviewed(!!j.confirmedAt);
       setSyncInfo(j.sync);
       setSlideCount(j.slideCount);
+      setTheme(j.theme ?? "brand");
     })().catch(() => setLoadErr("Không tải được dàn ý."));
   }, [url]);
 
@@ -196,7 +202,8 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const editingIndex = editingId ? outline.slides.findIndex((x) => x.id === editingId) : -1;
   const editing = editingIndex >= 0 ? outline.slides[editingIndex]! : null;
 
-  const confirm = async () => {
+  // Một nút "Tạo n slide" gộp xác nhận dàn ý và tạo (O5): xác nhận trước, thành công mới tạo.
+  const confirm = async (): Promise<boolean> => {
     setConfirming(true);
     setConfirmErr(null);
     if (timer.current) clearTimeout(timer.current);
@@ -209,17 +216,22 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
       const j = (await r.json().catch(() => null)) as { confirmedAt?: string; details?: string[] } | null;
       if (!r.ok) {
         setConfirmErr(Array.isArray(j?.details) ? j!.details!.join(" ") : "Không xác nhận được dàn ý.");
-        return;
+        return false;
       }
       setConfirmedAt(j?.confirmedAt ?? new Date().toISOString());
       setSave("saved");
+      return true;
     } finally {
       setConfirming(false);
     }
   };
 
+  const createSlides = async (mode?: "sync") => {
+    if (await confirm()) await generate(mode);
+  };
+
   const generate = async (mode?: "sync") => {
-    setGen({ state: "running", done: 0, total: mode === "sync" && syncInfo ? syncInfo.rewrite + syncInfo.add : outline.slides.length });
+    setGen({ state: "running", done: 0, total: mode === "sync" && syncInfo ? syncInfo.rewrite + syncInfo.add : outline.slides.length, writing: null, doneIds: [] });
     try {
       const res = await fetch(`${url}/generate`, {
         method: "POST",
@@ -243,8 +255,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           const line = buf.slice(0, nl).trim();
           buf = buf.slice(nl + 1);
           if (!line) continue;
-          const ev = JSON.parse(line) as { type: string; done?: number; total?: number; slideCount?: number; fallbackCount?: number; error?: string; regenerated?: number; created?: number; removed?: number; kept?: number };
-          if (ev.type === "progress") setGen({ state: "running", done: ev.done ?? 0, total: ev.total ?? 0 });
+          const ev = JSON.parse(line) as { type: string; id?: string; ids?: string[]; done?: number; total?: number; slideCount?: number; fallbackCount?: number; error?: string; regenerated?: number; created?: number; removed?: number; kept?: number };
+          if (ev.type === "start") setGen((g) => (g.state === "running" ? { ...g, total: ev.total ?? g.total, writing: Array.isArray(ev.ids) ? ev.ids : null } : g));
+          else if (ev.type === "slide") setGen((g) => (g.state === "running" && ev.id ? { ...g, doneIds: [...g.doneIds, ev.id] } : g));
+          else if (ev.type === "progress") setGen((g) => (g.state === "running" ? { ...g, done: ev.done ?? 0, total: ev.total ?? 0 } : g));
           else if (ev.type === "done") {
             finished = true;
             setGen({
@@ -275,8 +289,13 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const importedRows = outline.slides.filter(isImportedRow).length;
   const aiRows = outline.slides.length - importedRows;
 
+  const inRange = stats.total >= range.min && stats.total <= range.max;
+  const story = outlineStory(outline, { imported: importedRows });
+  const running = gen.state === "running";
+  const aiTokens = formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: aiRows }).total);
+
   return (
-    <main className="mx-auto max-w-4xl space-y-6 pb-24">
+    <main className="mx-auto max-w-6xl space-y-6">
       <header className="space-y-3">
         <a href="/instructor/limio-live" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-[rgb(var(--text))]">
           <ChevronLeft size={16} /> Limio-Live
@@ -294,102 +313,107 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
         <p className="max-w-2xl text-sm leading-relaxed text-muted">
           Bấm vào một slide để sửa loại slide, bố cục và nội dung. Sửa dàn ý không tốn lượt AI.{" "}
           {importedRows > 0
-            ? "Slide lấy từ file gốc giữ nguyên chữ, hình và ghi chú giảng. Khi dàn ý ổn, xác nhận ở cuối trang để tạo slide."
-            : "Khi dàn ý ổn, xác nhận ở cuối trang để AI viết slide."}
+            ? "Slide lấy từ file gốc giữ nguyên chữ, hình và ghi chú giảng. Khi dàn ý ổn, bấm Tạo ở cuối trang."
+            : "Khi dàn ý ổn, bấm Tạo ở cuối trang để AI viết slide."}
         </p>
         <TopicSourceNotice sourceKind={data.sourceKind} webRefs={data.webRefs} />
       </header>
 
-      <div className="grid items-center gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:gap-0">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:pr-6">
-          <span className="flex items-baseline gap-1.5">
-            <b className="text-3xl font-bold leading-none tabular-nums">{stats.total}</b>
-            <span className="text-sm font-medium text-muted">slide</span>
-          </span>
-          <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-[13px] font-medium text-muted">{stats.content} nội dung</span>
-          <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[13px] font-medium text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200">
-            {stats.interactive} tương tác
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 sm:border-l sm:border-token sm:px-6">
-          <label className="grid gap-1">
-            <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-faint">Buổi giảng</span>
-            <select
-              className="input h-9 w-full py-1 text-sm font-medium"
-              value={minutes}
-              onChange={(e) => change(outline, Number(e.target.value))}
-              aria-label="Thời lượng buổi giảng"
-            >
-              {DURATIONS.map((d) => (
-                <option key={d.minutes} value={d.minutes}>
-                  {d.minutes} phút
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="grid gap-1">
-            <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-faint">Gợi ý</span>
-            {(() => {
-              const inRange = stats.total >= range.min && stats.total <= range.max;
-              return (
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <aside className="order-1 grid gap-4 lg:sticky lg:top-4 lg:order-2 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto" aria-label="Thông tin bài giảng">
+          <div className="grid gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-sm">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span className="flex items-baseline gap-1.5">
+                <b className="text-3xl font-bold leading-none tabular-nums">{stats.total}</b>
+                <span className="text-sm font-medium text-muted">slide</span>
+              </span>
+              <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-1 text-[13px] font-medium text-muted">{stats.content} nội dung</span>
+              <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[13px] font-medium text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200">{stats.interactive} tương tác</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="grid gap-1">
+                <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-faint">Buổi giảng</span>
+                <select className="input h-9 w-full py-1 text-sm font-medium" value={minutes} onChange={(e) => change(outline, Number(e.target.value))} aria-label="Thời lượng buổi giảng">
+                  {DURATIONS.map((d) => (
+                    <option key={d.minutes} value={d.minutes}>
+                      {d.minutes} phút
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid gap-1">
+                <span className="whitespace-nowrap text-[11px] font-bold uppercase tracking-wide text-faint">Gợi ý</span>
                 <span
                   className={`inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold ${
                     inRange ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200" : "bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
                   }`}
                   title={inRange ? "Số slide nằm trong mức gợi ý" : "Số slide ngoài mức gợi ý cho thời lượng này"}
                 >
-                  {inRange ? <Check size={14} /> : <AlertTriangle size={14} />} {range.min} đến {range.max} slide
+                  {inRange ? <Check size={14} /> : <AlertTriangle size={14} />} {range.min} đến {range.max}
                 </span>
-              );
-            })()}
+              </div>
+            </div>
+            <span className={`flex items-center gap-1.5 text-sm ${save === "error" ? "font-semibold text-red-700" : "text-muted"}`} role="status">
+              {save === "saving" && <Loader2 size={14} className="animate-spin" />}
+              {save === "saved" && <Check size={14} className="text-emerald-600" />}
+              {saveLabel}
+            </span>
           </div>
-        </div>
 
-        <span
-          className={`flex items-center justify-end gap-1.5 whitespace-nowrap text-sm sm:border-l sm:border-token sm:pl-6 ${save === "error" ? "font-semibold text-red-700" : "text-muted"}`}
-          role="status"
-        >
-          {save === "saving" && <Loader2 size={14} className="animate-spin" />}
-          {save === "saved" && <Check size={14} className="text-emerald-600" />}
-          {saveLabel}
-        </span>
+          <ThemeBox deckId={deckId} title={data.title} outline={outline} theme={theme} onTheme={setTheme} />
+
+          <section className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-4" aria-label="Mạch bài">
+            <h2 className="mb-1.5 text-base font-semibold">Mạch bài</h2>
+            <p className="text-[14.5px] leading-relaxed text-muted">{story}</p>
+          </section>
+
+          {warnings.length > 0 && (
+            <ul className="space-y-1.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {warnings.map((w) => (
+                <li key={w} className="flex items-start gap-2">
+                  <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                  {w}
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
+
+        <div className="order-2 min-w-0 lg:order-1">
+          {running ? (
+            <section aria-labelledby="gen-h" className="space-y-3">
+              <h2 id="gen-h" className="text-base font-semibold">
+                Đang tạo slide
+              </h2>
+              <GenerationGrid slides={outline.slides} done={new Set((gen as { doneIds: string[] }).doneIds)} writing={(gen as { writing: string[] | null }).writing ? new Set((gen as { writing: string[] }).writing) : null} />
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 sm:p-4" aria-labelledby="outline-list-h">
+              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 px-1">
+                <h2 id="outline-list-h" className="text-base font-semibold">
+                  Danh sách slide
+                </h2>
+                <span className="text-[13px] text-faint">Bấm vào một slide để sửa · kéo ⋮⋮ để đổi thứ tự hoặc chuyển phần</span>
+              </div>
+              <OutlineFlow
+                outline={outline}
+                onOpen={setEditingId}
+                onRemove={remove}
+                onMove={(id, target) => change(moveSlide(outline, id, target))}
+                onAddSlide={addToPart}
+                onRename={(partId, name) => change(renamePart(outline, partId, name))}
+                renamingId={renamingId}
+                setRenamingId={setRenamingId}
+              />
+              <div className="mt-3 pl-8">
+                <button type="button" className="btn-secondary flex items-center gap-1.5 text-sm" onClick={addPart}>
+                  <Plus size={14} /> Thêm phần nội dung
+                </button>
+              </div>
+            </section>
+          )}
+        </div>
       </div>
-
-      {warnings.length > 0 && (
-        <ul className="space-y-1.5 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          {warnings.map((w) => (
-            <li key={w} className="flex items-start gap-2">
-              <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-              {w}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <section className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 sm:p-4" aria-labelledby="outline-list-h">
-        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 px-1">
-          <h2 id="outline-list-h" className="text-base font-semibold">
-            Danh sách slide
-          </h2>
-          <span className="text-[13px] text-faint">Bấm vào một slide để sửa · kéo ⋮⋮ để đổi thứ tự hoặc chuyển phần</span>
-        </div>
-        <OutlineFlow
-          outline={outline}
-          onOpen={setEditingId}
-          onRemove={remove}
-          onMove={(id, target) => change(moveSlide(outline, id, target))}
-          onAddSlide={addToPart}
-          onRename={(partId, name) => change(renamePart(outline, partId, name))}
-          renamingId={renamingId}
-          setRenamingId={setRenamingId}
-        />
-        <div className="mt-3 pl-8">
-          <button type="button" className="btn-secondary flex items-center gap-1.5 text-sm" onClick={addPart}>
-            <Plus size={14} /> Thêm phần nội dung
-          </button>
-        </div>
-      </section>
 
       {editing && (
         <SlideDialog
@@ -402,145 +426,115 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           onRemove={() => remove(editing.id)}
           onGoto={(d) => setEditingId(outline.slides[editingIndex + d]?.id ?? editing.id)}
           onClose={() => setEditingId(null)}
-          layouts={OUTLINE_LAYOUTS.filter((l) => layoutAllowedFor(data.sourceKind, l) || (l === "quote" && isClosingSlide(outline, editing)))}
+          layouts={OUTLINE_LAYOUTS.filter(
+            // "Nhóm" chỉ dành cho slide lấy từ file PowerPoint (dựng thẳng, không qua AI); AI không viết bố cục này.
+            (l) => (l !== "groups" || editing.layout === "groups" || isImportedRow(editing)) && (layoutAllowedFor(data.sourceKind, l) || (l === "quote" && isClosingSlide(outline, editing))),
+          )}
         />
       )}
 
-      <section className="space-y-3 rounded-2xl border-2 border-token p-5" aria-labelledby="confirm-h">
-        <h2 id="confirm-h" className="text-lg font-semibold">
-          Xác nhận dàn ý
-        </h2>
-        {blocking.length > 0 && (
-          <ul className="space-y-1 text-sm text-red-800">
-            {blocking.map((b) => (
-              <li key={b}>{b}</li>
-            ))}
-          </ul>
-        )}
-        {gen.state === "done" ? (
-          <div className="space-y-3">
-            <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-              <Check size={16} />
-              {gen.sync
-                ? `Đã cập nhật: viết lại ${gen.sync.regenerated} slide, thêm ${gen.sync.created}, xoá ${gen.sync.removed}, giữ nguyên ${gen.sync.kept} slide bạn đã sửa hoặc tự thêm.`
-                : `Đã tạo ${gen.slideCount} slide từ dàn ý.`}
-            </p>
-            {gen.state === "done" && gen.fallbackCount > 0 && (
-              <p className="flex items-start gap-2 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                <AlertTriangle size={15} className="mt-0.5 shrink-0" />
-                {gen.fallbackCount} slide AI chưa viết được nên được dựng thẳng từ dàn ý (hoặc để khung trống với câu hỏi
-                quiz và bình chọn). Hãy xem lại các slide đó.
+      {/* Thanh dính đáy (O5): một nút duy nhất gộp Xác nhận dàn ý và Tạo slide, luôn trong tầm mắt. */}
+      <div className="sticky bottom-0 z-30 -mx-4 border-t border-token bg-[rgb(var(--surface))]/95 px-4 py-3 backdrop-blur" role="region" aria-label="Tạo slide">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-5 gap-y-2">
+          {running ? (
+            <div className="flex w-full max-w-xl items-center gap-3" role="status">
+              <Loader2 size={16} className="shrink-0 animate-spin" />
+              <b className="whitespace-nowrap text-[15px]">
+                Đang tạo slide {Math.min((gen as { done: number }).done + 1, (gen as { total: number }).total || 1)} trên {(gen as { total: number }).total}
+              </b>
+              <div className="h-2 min-w-[120px] flex-1 overflow-hidden rounded-full bg-black/10">
+                <div className="h-full rounded-full bg-brand-600 transition-all" style={{ width: `${(gen as { total: number }).total ? Math.round(((gen as { done: number }).done / (gen as { total: number }).total) * 100) : 0}%` }} />
+              </div>
+              <span className="hidden text-[13px] text-muted sm:inline">Vui lòng không đóng trang.</span>
+            </div>
+          ) : gen.state === "done" ? (
+            <>
+              <p className="flex items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-200">
+                <Check size={16} />
+                {gen.sync
+                  ? `Đã cập nhật: viết lại ${gen.sync.regenerated} slide, thêm ${gen.sync.created}, xoá ${gen.sync.removed}, giữ nguyên ${gen.sync.kept}.`
+                  : `Đã tạo ${gen.slideCount} slide từ dàn ý.`}
+                {gen.fallbackCount > 0 && ` ${gen.fallbackCount} slide AI chưa viết được nên được dựng thẳng từ dàn ý; hãy xem lại.`}
               </p>
-            )}
-            <a href={`/instructor/limio-live/${deckId}`} className="btn-primary inline-flex">
-              Mở bài giảng để xem và chỉnh slide
-            </a>
-          </div>
-        ) : confirmedAt ? (
-          <div className="space-y-3">
-            <p className="flex items-center gap-2 rounded-lg bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
-              <Check size={16} /> Bạn đã xác nhận dàn ý này. Sửa dàn ý sẽ huỷ xác nhận.
-            </p>
-            {slideCount > 0 && syncInfo && gen.state !== "running" && (
-              <div className="space-y-3">
-                <p className="text-sm text-muted">
-                  Bài giảng đã có {slideCount} slide.{" "}
-                  {syncInfo.noop ? (
-                    <b>Các slide đã khớp với dàn ý.</b>
-                  ) : (
-                    <>
-                      Cập nhật theo dàn ý sẽ viết lại <b>{syncInfo.rewrite}</b> slide AI đã tạo và bạn chưa sửa, thêm{" "}
-                      <b>{syncInfo.add}</b> slide cho dòng mới, xoá <b>{syncInfo.remove}</b> slide của dòng đã bỏ. Giữ nguyên{" "}
-                      <b>{syncInfo.keep}</b> slide bạn đã sửa hoặc tự thêm.
-                    </>
-                  )}
-                </p>
-                {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
-                <div className="flex flex-wrap gap-2">
-                  {!syncInfo.noop && (
-                    <button
-                      type="button"
-                      className="btn-primary flex items-center gap-2"
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `Cập nhật slide theo dàn ý?\n\n• Viết lại ${syncInfo.rewrite} slide chưa sửa (nội dung cũ của các slide này sẽ bị thay)\n• Thêm ${syncInfo.add} slide\n• Xoá ${syncInfo.remove} slide\n• Giữ nguyên ${syncInfo.keep} slide bạn đã sửa hoặc tự thêm\n\nDự kiến dùng khoảng ${formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: syncInfo.rewrite + syncInfo.add }).total)} token AI.`,
-                          )
+              <a href={`/instructor/limio-live/${deckId}`} className="btn-primary inline-flex">
+                Mở bài giảng để xem và chỉnh slide
+              </a>
+            </>
+          ) : slideCount > 0 && syncInfo ? (
+            <>
+              <p className="max-w-xl text-sm text-muted">
+                Bài giảng đã có {slideCount} slide.{" "}
+                {syncInfo.noop ? (
+                  <b>Các slide đã khớp với dàn ý.</b>
+                ) : (
+                  <>
+                    Cập nhật sẽ viết lại <b>{syncInfo.rewrite}</b> slide AI đã tạo và bạn chưa sửa, thêm <b>{syncInfo.add}</b>, xoá <b>{syncInfo.remove}</b>; giữ nguyên <b>{syncInfo.keep}</b> slide bạn đã sửa hoặc tự thêm.
+                  </>
+                )}
+              </p>
+              {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
+              {confirmErr && <p className="text-sm font-medium text-red-800">{confirmErr}</p>}
+              <div className="flex flex-wrap gap-2">
+                {!syncInfo.noop && (
+                  <button
+                    type="button"
+                    className="btn-primary flex items-center gap-2"
+                    disabled={blocking.length > 0 || confirming || save === "saving"}
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          `Cập nhật slide theo dàn ý?\n\n• Viết lại ${syncInfo.rewrite} slide chưa sửa (nội dung cũ của các slide này sẽ bị thay)\n• Thêm ${syncInfo.add} slide\n• Xoá ${syncInfo.remove} slide\n• Giữ nguyên ${syncInfo.keep} slide bạn đã sửa hoặc tự thêm\n\nDự kiến dùng khoảng ${formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: syncInfo.rewrite + syncInfo.add }).total)} token AI.`,
                         )
-                          void generate("sync");
-                      }}
-                    >
-                      <Sparkles size={16} aria-hidden /> Cập nhật slide theo dàn ý
-                    </button>
-                  )}
-                  <a href={`/instructor/limio-live/${deckId}`} className="btn-secondary inline-flex">
-                    Mở bài giảng
-                  </a>
-                </div>
+                      )
+                        void createSlides("sync");
+                    }}
+                  >
+                    {confirming ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} aria-hidden />} Cập nhật slide theo dàn ý
+                  </button>
+                )}
+                <a href={`/instructor/limio-live/${deckId}`} className="btn-secondary inline-flex">
+                  Mở bài giảng
+                </a>
               </div>
-            )}
-            {gen.state === "running" ? (
-              <div className="space-y-2" role="status">
-                <div className="h-2.5 overflow-hidden rounded-full bg-black/10">
-                  <div
-                    className="h-full rounded-full bg-brand-600 transition-all"
-                    style={{ width: `${gen.total ? Math.round((gen.done / gen.total) * 100) : 0}%` }}
-                  />
-                </div>
-                <p className="flex items-center gap-2 text-sm text-muted">
-                  <Loader2 size={14} className="animate-spin" /> Đã viết {gen.done}/{gen.total} slide. Vui lòng không đóng trang.
-                </p>
+            </>
+          ) : (
+            <>
+              <div className="grid gap-0.5 text-center text-sm text-muted sm:text-left">
+                {blocking.length > 0 ? (
+                  blocking.map((b) => (
+                    <span key={b} className="font-medium text-red-800">
+                      {b}
+                    </span>
+                  ))
+                ) : aiRows === 0 ? (
+                  <span>
+                    {outline.slides.length} slide được dựng từ slide gốc của file, giữ nguyên chữ, hình và ghi chú giảng. Không dùng AI, không tốn token.
+                  </span>
+                ) : (
+                  <span>
+                    AI viết nội dung và ghi chú giảng cho {aiRows} slide theo đúng dàn ý
+                    {importedRows > 0 ? `; ${importedRows} slide lấy nguyên từ file gốc` : ""}. Dự kiến dùng khoảng <b>{aiTokens}</b> token AI.
+                  </span>
+                )}
+                {gen.state === "error" && <span className="font-medium text-red-800">{gen.message}</span>}
+                {confirmErr && <span className="font-medium text-red-800">{confirmErr}</span>}
               </div>
-            ) : slideCount > 0 ? null : (
-              <>
-                <p className="text-sm text-muted">
-                  {aiRows === 0 ? (
-                    <>
-                      {outline.slides.length} slide được dựng từ slide gốc của file, giữ nguyên chữ, hình và ghi chú giảng. Không dùng
-                      AI, không tốn token.
-                    </>
-                  ) : (
-                    <>
-                      AI sẽ viết nội dung và ghi chú giảng cho {aiRows} slide theo đúng dàn ý
-                      {importedRows > 0 ? `; ${importedRows} slide lấy nguyên từ file gốc` : ""}. Dự kiến dùng khoảng{" "}
-                      <b>{formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: aiRows }).total)}</b> token AI.
-                    </>
-                  )}
-                </p>
-                {gen.state === "error" && <p className="text-sm font-medium text-red-800">{gen.message}</p>}
-                <button type="button" className="btn-primary flex items-center gap-2" onClick={() => void generate()}>
-                  {aiRows === 0 ? <LayoutTemplate size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />} Tạo slide từ dàn ý
-                </button>
-              </>
-            )}
-          </div>
-        ) : (
-          <>
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={reviewed}
-                onChange={(e) => setReviewed(e.target.checked)}
-                disabled={blocking.length > 0}
-              />
-              Tôi đã xem lại từng slide trong dàn ý và đồng ý với thứ tự, tiêu đề, ý chính, bố cục.
-            </label>
-            {confirmErr && <p className="text-sm font-medium text-red-800">{confirmErr}</p>}
-            <button
-              type="button"
-              className="btn-primary flex items-center gap-2"
-              disabled={!reviewed || blocking.length > 0 || confirming || save === "saving"}
-              onClick={confirm}
-            >
-              {confirming && <Loader2 size={16} className="animate-spin" />}
-              Xác nhận dàn ý
-            </button>
-          </>
-        )}
-      </section>
+              <button
+                type="button"
+                className="btn-primary flex items-center gap-2 px-8 text-base"
+                disabled={blocking.length > 0 || confirming || save === "saving"}
+                onClick={() => void createSlides()}
+              >
+                {confirming ? <Loader2 size={16} className="animate-spin" /> : aiRows === 0 ? <LayoutTemplate size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />}
+                Tạo {stats.total} slide
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
       {undo && (
-        <div role="status" aria-live="polite" className="fixed bottom-5 left-1/2 z-50 flex max-w-[calc(100%-32px)] -translate-x-1/2 items-center gap-3 rounded-xl bg-[rgb(var(--text))] px-4 py-2.5 text-sm text-[rgb(var(--surface))] shadow-lg">
+        <div role="status" aria-live="polite" className="fixed bottom-20 left-1/2 z-50 flex max-w-[calc(100%-32px)] -translate-x-1/2 items-center gap-3 rounded-xl bg-[rgb(var(--text))] px-4 py-2.5 text-sm text-[rgb(var(--surface))] shadow-lg">
           <span>Đã xoá slide {undo.index + 1}.</span>
           <button type="button" className="font-bold text-lime-400 hover:underline dark:text-lime-700" onClick={restore}>
             Hoàn tác
