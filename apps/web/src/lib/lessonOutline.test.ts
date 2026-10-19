@@ -7,7 +7,6 @@ import {
   outlineProblems,
   pruneEmptyLessons,
   sanitizeLessonOutline,
-  shouldSuggestSplit,
 } from "./lessonOutline";
 
 const PARAS: SourcePara[] = [
@@ -41,8 +40,10 @@ describe("normalizeLessonOutline — dàn ý từ AI", () => {
     expect(o.lessons[0]!.title).toBe("Bài gần nhau");
     expect(o.lessons[0]!.objectives).toEqual(["Trình bày được nguyên tắc."]);
     // Mục có ảnh (đoạn 2) luôn là "Chữ và ảnh", dù mô hình trả bố cục lạ.
-    expect(a).toMatchObject({ layout: "image", boxes: ["note"], paras: [1, 2] });
-    expect(b).toMatchObject({ title: "Mục chưa đặt tên", layout: "steps", paras: [3] });
+    // Đoạn 0 mô hình bỏ sót được nối vào mục đầu; các đoạn sau đoạn 3 nối vào mục cuối.
+    expect(a).toMatchObject({ layout: "image", boxes: ["note"], paras: [0, 1, 2] });
+    expect(b).toMatchObject({ title: "Mục chưa đặt tên", layout: "steps" });
+    expect(b!.paras[0]).toBe(3);
     expect(a!.id).not.toBe(b!.id);
     expect(o.template).toBe("theory");
   });
@@ -114,12 +115,10 @@ describe("kiểm tra trước khi chốt", () => {
     expect(outlineProblems({ ...BASE, ignoredParas: [0, 4] }, PARAS)).toEqual([]);
   });
 
-  it("thời gian đọc và gợi ý tách bài (D5)", () => {
+  it("thời gian đọc ước lượng", () => {
     const longParas: SourcePara[] = [{ t: "chữ ".repeat(4500) }];
     const lesson = { ...BASE.lessons[0]!, sections: [{ ...BASE.lessons[0]!.sections[0]!, paras: [0] }] };
     expect(lessonReadingMinutes(lesson, longParas)).toBe(23);
-    expect(shouldSuggestSplit(lesson, longParas)).toBe(true);
-    expect(shouldSuggestSplit(BASE.lessons[0]!, PARAS)).toBe(false);
   });
 
   it("bài không còn mục nào bị bỏ, nhưng luôn giữ ít nhất một bài", () => {

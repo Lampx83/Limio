@@ -166,6 +166,25 @@ describe("bản nháp tạo bài từ tài liệu", () => {
     await expect(applyLessonDraft(owner, d.id)).rejects.toMatchObject({ code: "invalid_state" });
   });
 
+  it("giữ nguyên định dạng: bản nháp có sẵn bài và đã chốt, Áp dụng được ngay không cần dàn ý hay AI", async () => {
+    const { owner, lessonId } = await setup();
+    const html = "<h2>Mục</h2><p>Nội dung.</p><table><tbody><tr><td>a</td></tr></tbody></table>";
+    const d = await createLessonDraft(owner, lessonId, {
+      ...input,
+      sourceParas: [],
+      outline: { ...OUTLINE, keepFormat: true },
+      readyResult: { ...RESULT(1), lessons: [{ title: "Tên", html }] },
+    });
+    expect(d.confirmedAt).not.toBeNull();
+    expect(d.result?.lessons[0]?.html).toBe(html);
+    expect(d.outline.keepFormat).toBe(true);
+
+    const r = await applyLessonDraft(owner, d.id);
+    expect(r.lessonIds).toEqual([lessonId]);
+    const item = await prisma.contentItem.findUnique({ where: { id: r.contentItemIds[0]! } });
+    expect((item?.payload as { html: string }).html).toContain("<table>");
+  });
+
   it("Áp dụng giữ bản AI tạo trong lịch sử và ghi sự kiện lesson.content.generated (S3, S7)", async () => {
     const { owner, lessonId } = await setup();
     const d = await createLessonDraft(owner, lessonId, input);

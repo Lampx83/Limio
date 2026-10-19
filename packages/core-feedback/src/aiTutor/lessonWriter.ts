@@ -280,3 +280,109 @@ Sửa theo yêu cầu. Trả JSON.`;
   }
   return draft;
 }
+
+// =====================================================================
+// Bài giữ nguyên định dạng (tệp Word/Markdown vào thẳng bài, 2026-10-19): AI KHÔNG
+// chạy khi nhập. Hai việc dưới đây chỉ chạy khi giảng viên bấm nút, và chỉ đụng
+// đúng thứ họ chọn: thêm Mục tiêu + Tổng kết, hoặc sửa MỘT đoạn.
+// =====================================================================
+
+const OBJ_SUMMARY_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    objectives: { type: "array", items: { type: "string" } },
+    summary: { type: "array", items: { type: "string" } },
+  },
+  required: ["objectives", "summary"],
+};
+
+/** Chữ của bài tối đa đưa vào lời nhắc (bài ≤ 4.000 từ, khoảng 24.000 ký tự). */
+const OBJ_SUMMARY_MAX_CHARS = 30_000;
+
+/** Mục tiêu học tập (3–5) và Tổng kết (3–5) rút từ chính chữ của bài, không thêm kiến thức. */
+export async function writeObjectivesSummary(
+  userId: string,
+  input: { lessonTitle: string; text: string },
+  openai: OpenAI,
+  model = DEFAULT_MODEL,
+  db: PrismaClient = prisma,
+): Promise<{ objectives: string[]; summary: string[] }> {
+  const text = input.text.trim();
+  if (!text) throw new AiGenerationError("validation_failed", "empty_lesson");
+  if (text.length > OBJ_SUMMARY_MAX_CHARS) throw new AiGenerationError("validation_failed", "too_long");
+  await assertWithinCaps(userId, db, "generator");
+  const { data, inputTokens, outputTokens } = await callJsonModel<{ objectives?: unknown; summary?: unknown }>(
+    openai,
+    model,
+    `Bạn là biên tập viên học liệu đại học. Từ nội dung bài học được đưa, viết:
+- objectives: 3 đến 5 mục tiêu học tập, mỗi mục bắt đầu bằng động từ hành động cụ thể theo thang Bloom như "Trình bày được", "Phân biệt được", "Áp dụng được"; KHÔNG dùng "hiểu", "biết".
+- summary: 3 đến 5 ý tổng kết, mỗi ý một câu đầy đủ chủ ngữ và vị ngữ, tóm các ý chính của bài.
+Chỉ rút từ nội dung bài, không thêm kiến thức, số liệu hay ví dụ mới. Văn phong khoa học, không emoji, không HTML, không Markdown. Trả JSON { objectives, summary }.`,
+    `Bài học: ${input.lessonTitle}\n\n${text}\n\nViết mục tiêu và tổng kết. Trả JSON.`,
+    "lesson_objectives_summary",
+    OBJ_SUMMARY_SCHEMA,
+    1200,
+  );
+  await recordAiUsage(userId, model, inputTokens, outputTokens, db);
+  const objectives = asStrings(data?.objectives).slice(0, 5);
+  const summary = asStrings(data?.summary).slice(0, 5);
+  if (!objectives.length && !summary.length) throw new AiGenerationError("openai_error", "empty_result");
+  return { objectives, summary };
+}
+
+const BLOCK_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: { text: { type: "string" }, example: { type: "string" } },
+  required: ["text", "example"],
+};
+
+const BLOCK_RULES: Record<SectionEditAction, string> = {
+  shorter: "Viết NGẮN HƠN khoảng một phần ba: gộp ý lặp, bỏ chữ thừa. Giữ mọi ý chính, số liệu, thuật ngữ, tên riêng. example để chuỗi rỗng.",
+  simpler: "Viết DỄ HIỂU HƠN cho sinh viên năm nhất: câu ngắn, mỗi câu một ý, giải thích thuật ngữ ngay lần đầu xuất hiện. Không đổi ý, số liệu, thuật ngữ. example để chuỗi rỗng.",
+  example: "Chép lại NGUYÊN VĂN đoạn vào text, và viết trong example MỘT ví dụ minh hoạ ngắn (2 đến 3 câu): cụ thể, đúng chuyên môn, phù hợp sinh viên Việt Nam, không mâu thuẫn với đoạn, không bịa số liệu thống kê.",
+  spelling: "Chỉ SỬA LỖI chính tả, dấu câu, ngữ pháp, lỗi gõ. Giữ nguyên mọi câu chữ khác. example để chuỗi rỗng.",
+};
+
+export interface BlockEditInput {
+  lessonTitle: string;
+  /** Tiêu đề gần nhất phía trên đoạn — để AI hiểu ngữ cảnh. */
+  heading: string;
+  /** Chữ của đoạn; đậm/nghiêng ghi bằng ** và *. */
+  text: string;
+  action: SectionEditAction;
+}
+
+/** "Nhờ AI" sửa MỘT đoạn của bài giữ nguyên định dạng. Chỉ trả đề xuất, không ghi gì. */
+export async function editLessonBlock(
+  userId: string,
+  input: BlockEditInput,
+  openai: OpenAI,
+  model = DEFAULT_MODEL,
+  db: PrismaClient = prisma,
+): Promise<{ text: string; example: string }> {
+  const text = input.text.trim();
+  if (!text) throw new AiGenerationError("validation_failed", "empty_block");
+  if (text.length > 6000) throw new AiGenerationError("validation_failed", "too_long");
+  await assertWithinCaps(userId, db, "generator");
+  const { data, inputTokens, outputTokens } = await callJsonModel<{ text?: unknown; example?: unknown }>(
+    openai,
+    model,
+    `Bạn là biên tập viên học liệu đại học. Sửa MỘT đoạn của bài học theo đúng yêu cầu, không làm gì khác.
+
+Yêu cầu: ${BLOCK_RULES[input.action]}
+
+Quy tắc chung: không thêm kiến thức, số liệu, khẳng định mới (trừ ví dụ khi được yêu cầu). Văn phong khoa học, câu đầy đủ, không emoji. Chữ thường, không HTML, không Markdown, trừ **đậm** và *nghiêng* giữ như đoạn gốc. Chỉ trả MỘT đoạn văn trong text (không xuống dòng, không đánh dấu đầu dòng). Trả JSON { text, example }.`,
+    `Bài học: ${input.lessonTitle}\nMục: ${input.heading || "(đầu bài)"}\n\nĐoạn cần sửa:\n${text}\n\nSửa theo yêu cầu. Trả JSON.`,
+    "lesson_block_edit",
+    BLOCK_SCHEMA,
+    1200,
+  );
+  await recordAiUsage(userId, model, inputTokens, outputTokens, db);
+  const out = typeof data?.text === "string" ? data.text.replace(/\s+/g, " ").trim() : "";
+  if (!out) throw new AiGenerationError("openai_error", "empty_block");
+  const example = typeof data?.example === "string" ? data.example.replace(/\s+/g, " ").trim() : "";
+  if (input.action === "example" && !example) throw new AiGenerationError("openai_error", "empty_example");
+  return { text: out, example: input.action === "example" ? example : "" };
+}
