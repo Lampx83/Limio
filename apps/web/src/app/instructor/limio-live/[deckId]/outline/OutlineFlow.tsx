@@ -16,6 +16,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Trash2 } from "lucide-react";
 import { PART_ROLE_LABEL, type Outline, type OutlineSlide } from "@/lib/limioLiveOutline";
 import { SINGLE_SLIDE_ROLES, glyphKey, partRuns, rowSubtitle, type MoveTarget, type PartRun } from "@/lib/limioLiveOutlineUi";
+import { cardPoints } from "@/lib/limioLiveOutlineCard";
 import OutlineGlyph from "./OutlineGlyph";
 
 interface Props {
@@ -154,7 +155,7 @@ function PartGroup({
         <span className="text-[13px] tabular-nums text-muted">{range}</span>
       </div>
 
-      <ol className="space-y-1.5">
+      <ol className="space-y-2">
         {slides.map((s, j) => (
           <Row key={s.id} s={s} index={from + j} canRemove={canRemove} onOpen={() => onOpen(s.id)} onRemove={() => onRemove(s.id)} />
         ))}
@@ -205,44 +206,63 @@ function RenameInput({ initial, onDone }: { initial: string; onDone: (name: stri
 function Row({ s, index, canRemove, onOpen, onRemove }: { s: OutlineSlide; index: number; canRemove: boolean; onOpen: () => void; onRemove: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: s.id });
   const interactive = s.kind !== "content";
+  const { shown, more } = cardPoints(s);
 
+  // Thẻ slide (O1): số thứ tự, tiêu đề, các ý hiện sẵn, chân thẻ ghi bố cục và nguồn. Bấm vào thẻ mở cửa sổ Sửa (không sửa trực tiếp trên thẻ).
   return (
-    <li
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 }}
-      className={`group/row flex items-center gap-1.5 rounded-xl border border-transparent px-1.5 py-1.5 hover:bg-[rgb(var(--surface-muted))] ${interactive ? "bg-indigo-50/60 dark:bg-indigo-950/20" : ""}`}
-    >
+    <li ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.6 : 1 }} className="group/row flex items-stretch gap-1">
       <button
         type="button"
         {...attributes}
         {...listeners}
-        className="cursor-grab touch-none p-1 text-faint active:cursor-grabbing"
+        className="cursor-grab touch-none self-center p-1 text-faint active:cursor-grabbing"
         aria-label={`Kéo để đổi thứ tự slide ${index + 1}`}
       >
         <GripVertical size={18} />
       </button>
-      <span className="w-6 text-sm font-bold tabular-nums text-muted">{index + 1}</span>
-      <button type="button" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg py-0.5 text-left" onClick={onOpen} aria-label={`Sửa slide ${index + 1}: ${s.title || "chưa có tiêu đề"}`}>
-        <OutlineGlyph k={glyphKey(s)} className="h-[30px] w-[46px] shrink-0 text-muted" />
-        <span className="grid min-w-0 flex-1 leading-snug">
-          <b className={`truncate text-[15px] ${s.title.trim() ? "" : "font-medium text-red-700"}`}>
-            {s.title.trim() || (interactive ? "Chưa có câu hỏi" : "Chưa có tiêu đề")}
-          </b>
-          <small className="truncate text-[13px] text-muted">{rowSubtitle(s)}</small>
-        </span>
-        <span className="hidden shrink-0 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1 text-[13px] font-semibold text-brand-700 sm:inline">Sửa</span>
-      </button>
-      {canRemove && (
+      <div
+        className={`relative grid min-w-0 flex-1 grid-cols-[48px_minmax(0,1fr)] overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] transition hover:border-brand-600 hover:shadow-sm sm:grid-cols-[56px_minmax(0,1fr)]`}
+      >
+        <div className={`grid content-center justify-items-center gap-1 border-r border-token py-2 ${interactive ? "bg-indigo-50 text-indigo-800 dark:bg-indigo-950/30 dark:text-indigo-200" : "bg-[rgb(var(--surface-muted))] text-brand-700"}`}>
+          <span className="text-lg font-bold tabular-nums">{index + 1}</span>
+          <OutlineGlyph k={glyphKey(s)} className="h-[22px] w-[34px] shrink-0 opacity-70" />
+        </div>
         <button
           type="button"
-          onClick={onRemove}
-          aria-label={`Xoá slide ${index + 1}`}
-          title="Xoá slide"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-faint opacity-0 transition-opacity hover:bg-[rgb(var(--surface))] hover:text-red-700 focus-visible:opacity-100 group-hover/row:opacity-100 [@media(hover:none)]:opacity-100"
+          onClick={onOpen}
+          className="min-w-0 py-3 pl-4 pr-24 text-left sm:pr-28"
+          aria-label={`Sửa slide ${index + 1}: ${s.title || "chưa có tiêu đề"}`}
         >
-          <Trash2 size={17} />
+          <b className={`block text-[17px] leading-snug ${s.title.trim() ? "" : "font-medium text-red-700"}`}>
+            {s.title.trim() || (interactive ? "Chưa có câu hỏi" : "Chưa có tiêu đề")}
+          </b>
+          {shown.length > 0 && (
+            <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-[14.5px] leading-snug text-[rgb(var(--text))]/80">
+              {shown.map((p, i) => (
+                <li key={i} className="line-clamp-2">
+                  {p}
+                </li>
+              ))}
+            </ul>
+          )}
+          {more > 0 && <p className="mt-0.5 pl-5 text-[13px] text-faint">và {more} ý nữa</p>}
+          <small className="mt-2 block text-[13px] text-faint">{rowSubtitle(s)}</small>
         </button>
-      )}
+        <div className="absolute right-2 top-2 flex items-center gap-1">
+          <span className="hidden rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1 text-[13px] font-semibold text-brand-700 sm:inline">Sửa</span>
+          {canRemove && (
+            <button
+              type="button"
+              onClick={onRemove}
+              aria-label={`Xoá slide ${index + 1}`}
+              title="Xoá slide"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-faint opacity-0 transition-opacity hover:bg-[rgb(var(--surface-muted))] hover:text-red-700 focus-visible:opacity-100 group-hover/row:opacity-100 [@media(hover:none)]:opacity-100"
+            >
+              <Trash2 size={17} />
+            </button>
+          )}
+        </div>
+      </div>
     </li>
   );
 }

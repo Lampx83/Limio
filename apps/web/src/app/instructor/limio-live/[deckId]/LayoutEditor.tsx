@@ -2,25 +2,31 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
+import { GROUPS_MAX, GROUP_POINTS_MAX, type SlideGroup } from "@/lib/limioLiveGroups";
+import { ICON_LABELS, SLIDE_ICONS, autoGroupIcons } from "@/lib/limioLiveIcons";
+import { AlertTriangle, ArrowRight, ArrowUp, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Highlighter, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
   LAYOUT_META,
+  LIST_MAX_LINES,
+  LIST_MAX_WORDS,
+  LIST_WORD_MAX_LEN,
   MAX_LEN,
-  SLIDE_ICONS,
   SLIDE_LAYOUTS,
   convertLayoutConfig,
   layoutTextProblems,
   padForEditing,
   pickMeta,
   toggleInlineMarker,
+  type InlineMarker,
   resolveLayout,
   sanitizeLayoutConfig,
   slideConfigsEqual,
   splitSlideConfig,
   type LayoutColumn,
   type LayoutItem,
+  type ListLine,
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
@@ -36,17 +42,6 @@ import PickerButton from "./outline/PickerButton";
 
 type Cfg = Record<string, any>;
 type Save = (patch: { config: Cfg }) => void;
-
-const ICON_LABELS: Record<(typeof SLIDE_ICONS)[number], string> = {
-  target: "Mục tiêu",
-  compass: "La bàn",
-  route: "Lộ trình",
-  chat: "Trao đổi",
-  book: "Sách",
-  sparkle: "Ý tưởng",
-  users: "Nhóm",
-  chart: "Biểu đồ",
-};
 
 /** Giữ ghi chú giảng và các khoá không thuộc bố cục khi lưu. */
 const keepExtras = (config: Cfg): Cfg => pickMeta(config);
@@ -343,6 +338,16 @@ function useSlideAiChat(deckId: string, slideId: string) {
 }
 type SlideAiChat = ReturnType<typeof useSlideAiChat>;
 
+/** Câu gợi ý ở trạng thái trống: bấm là hỏi ngay (chung cho mọi slide, không giả định số ý). */
+const CHAT_SUGGESTIONS = [
+  "Nội dung slide này có chính xác không?",
+  "Đổi tiêu đề thành một câu hỏi gợi mở.",
+  "Viết lại cho dễ hiểu hơn.",
+  "Gợi ý một câu hỏi để mở đầu slide này.",
+];
+const CHAT_INPUT_MAX_PX = 140;
+
+/** Tab Nhờ AI theo kiểu chatbot: tin nhắn cuộn ở giữa, ô nhập cố định ở đáy, lượt mới nhất ngay trên ô nhập. */
 function AiChatPanel({
   chat,
   hasOutline,
@@ -357,44 +362,71 @@ function AiChatPanel({
 }) {
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [chat.msgs, chat.busy]);
-  const submit = () => {
-    const t = text.trim();
-    if (!t || chat.busy) return;
+  // Ô nhập tự cao thêm theo nội dung, tới khoảng năm dòng thì cuộn trong ô.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, CHAT_INPUT_MAX_PX)}px`;
+  }, [text]);
+  const send = (t: string) => {
+    const v = t.trim();
+    if (!v || chat.busy) return;
     setText("");
-    void chat.ask(t);
+    void chat.ask(v);
   };
   const quick = hasOutline ? QUICK_ACTIONS : QUICK_ACTIONS.filter((q) => q.id !== "rewrite");
+  const canSend = !!text.trim() && !chat.busy;
+  const avatar = (
+    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-700" aria-hidden>
+      <Sparkles size={14} />
+    </span>
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" role="tabpanel" aria-label="Nhờ AI">
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-3" aria-live="polite">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-4" aria-live="polite">
         {chat.msgs.length === 0 ? (
-          <div className="space-y-2 text-sm text-muted">
-            <p>
-              Hỏi AI về slide này, hoặc nhờ AI sửa. AI có thể trả lời, hỏi lại cho rõ, hoặc đề xuất một bản sửa; không có gì
-              ghi vào slide khi thầy/cô chưa bấm Áp dụng.
+          <div className="my-auto grid justify-items-center gap-2.5 py-2 text-center">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand-700" aria-hidden>
+              <Sparkles size={18} />
+            </span>
+            <h3 className="text-base font-bold">Hỏi AI về slide này</h3>
+            <p className="max-w-[330px] text-[13.5px] text-muted">
+              AI có thể trả lời, hỏi lại cho rõ, hoặc đề xuất một bản sửa. Không có gì ghi vào slide khi thầy/cô chưa bấm Áp dụng.
             </p>
-            <p>Ví dụ: &quot;Ý thứ hai có chính xác không?&quot;, &quot;Đổi tiêu đề thành Các khái niệm.&quot;</p>
+            <div className="mt-1 grid w-full gap-2">
+              {CHAT_SUGGESTIONS.map((sg) => (
+                <button
+                  key={sg}
+                  type="button"
+                  onClick={() => send(sg)}
+                  className="flex items-center gap-2.5 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2.5 text-left text-sm text-muted transition hover:border-brand-600 hover:bg-brand-soft hover:text-[rgb(var(--text))]"
+                >
+                  <ArrowRight size={15} className="shrink-0 text-brand-600" aria-hidden />
+                  {sg}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {chat.msgs.map((m) =>
-              m.role === "user" ? (
-                <div key={m.id} className="max-w-[92%] self-end whitespace-pre-line rounded-2xl rounded-br-md bg-brand-soft px-3 py-2 text-sm">
-                  {m.text}
-                </div>
-              ) : (
-                <div key={m.id} className="max-w-[96%] self-start text-sm">
-                  <p className="mb-0.5 flex items-center gap-1 text-xs font-bold text-muted">
-                    <Sparkles size={12} aria-hidden /> AI
-                  </p>
+          chat.msgs.map((m) =>
+            m.role === "user" ? (
+              <div key={m.id} className="max-w-[85%] self-end whitespace-pre-line rounded-[18px] rounded-br-[4px] bg-brand-600 px-3.5 py-2 text-sm text-white">
+                {m.text}
+              </div>
+            ) : (
+              <div key={m.id} className="flex max-w-[96%] items-start gap-2.5 self-start text-sm">
+                {avatar}
+                <div className="min-w-0 rounded-[18px] rounded-tl-[4px] bg-[rgb(var(--surface-muted))] px-3.5 py-2.5">
                   <p className="whitespace-pre-line">{m.text}</p>
                   {generalKnowledge && m.kind === "answer" && (
-                    <p className="mt-1 text-xs text-muted">Câu trả lời dựa trên kiến thức chung, thầy/cô cần kiểm tra.</p>
+                    <p className="mt-1.5 text-xs text-muted">Câu trả lời dựa trên kiến thức chung, thầy/cô cần kiểm tra.</p>
                   )}
                   {m.kind === "clarify" && m.options?.length ? (
                     <div className="mt-2 grid gap-1.5">
@@ -422,15 +454,15 @@ function AiChatPanel({
                         chat.mark(m.id, { used: true });
                         void chat.act("custom", "Làm theo gợi ý này.", m.suggestion);
                       }}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-2.5 py-1 text-[13px] font-semibold text-brand-700 transition hover:bg-brand-soft disabled:opacity-50"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-brand-600 bg-[rgb(var(--surface))] px-2.5 py-1 text-[13px] font-semibold text-brand-700 transition hover:bg-brand-soft disabled:opacity-50"
                     >
                       <Sparkles size={13} aria-hidden /> Làm theo gợi ý này
                     </button>
                   )}
                   {m.kind === "propose" &&
                     (m.proposal === "pending" ? (
-                      <div className="mt-2 rounded-xl border border-brand-500 p-2.5">
-                        <p className="text-[13px] font-semibold">Đề xuất đang hiện trên khung xem trước (chưa áp dụng)</p>
+                      <div className="mt-2 rounded-xl border border-brand-500 bg-[rgb(var(--surface))] p-2.5">
+                        <p className="text-[13px] font-semibold">Đề xuất đang hiện trên khung xem trước</p>
                         <div className="mt-2 flex gap-2">
                           <button type="button" className="btn-secondary px-3 py-1 text-[13px]" onClick={() => onDecide("discard")}>
                             Bỏ
@@ -441,22 +473,28 @@ function AiChatPanel({
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-1 text-xs italic text-muted">{m.proposal === "applied" ? "Đã áp dụng vào slide." : "Đã bỏ đề xuất."}</p>
+                      <p className="mt-1.5 text-xs italic text-muted">{m.proposal === "applied" ? "Đã áp dụng vào slide." : "Đã bỏ đề xuất."}</p>
                     ))}
                 </div>
-              ),
-            )}
-          </div>
+              </div>
+            ),
+          )
         )}
         {chat.busy && (
-          <p className="mt-3 flex items-center gap-2 text-sm text-muted" role="status">
-            <Loader2 size={14} className="animate-spin" /> AI đang trả lời...
-          </p>
+          <div className="flex items-start gap-2.5 self-start" role="status" aria-label="AI đang trả lời">
+            {avatar}
+            <span className="flex gap-1 rounded-[18px] rounded-tl-[4px] bg-[rgb(var(--surface-muted))] px-3.5 py-3.5">
+              {[0, 1, 2].map((i) => (
+                <i key={i} className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--text-muted))] motion-safe:animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />
+              ))}
+            </span>
+          </div>
         )}
       </div>
 
-      <div className="shrink-0 space-y-2 border-t border-token px-3 py-3">
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Chọn nhanh">
+      {/* Thanh nhập cố định ở đáy: chọn nhanh một hàng, ô chat bo tròn, ghi chú một dòng. */}
+      <div className="grid shrink-0 gap-2 border-t border-token bg-[rgb(var(--surface))] px-3 pb-2.5 pt-2.5">
+        <div className="flex gap-1.5 overflow-x-auto pb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Chọn nhanh">
           {quick.map((q) => (
             <button
               key={q.id}
@@ -464,46 +502,52 @@ function AiChatPanel({
               title={q.hint}
               disabled={chat.busy}
               onClick={() => void chat.act(q.id, `${q.label}.`)}
-              className="rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 py-1 text-[13px] text-muted transition hover:border-brand-600 hover:text-[rgb(var(--text))] disabled:opacity-50"
+              className="shrink-0 rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1 text-[13px] text-muted transition hover:border-brand-600 hover:text-[rgb(var(--text))] disabled:opacity-50"
             >
               {q.label}
             </button>
           ))}
         </div>
-        <div className="relative rounded-xl border-[1.5px] border-token bg-[rgb(var(--surface))] focus-within:border-brand-600">
+        <div className="flex items-end gap-2 rounded-[22px] border-[1.5px] border-brand-500 bg-[rgb(var(--surface))] py-1.5 pl-3.5 pr-1.5 shadow-[0_2px_10px_-4px_rgba(77,124,15,0.35)] focus-within:border-brand-600 focus-within:ring-[3px] focus-within:ring-brand-500/20">
           <textarea
+            ref={inputRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               // Enter gửi, Shift + Enter xuống dòng; không gửi khi đang gõ dấu tiếng Việt (IME).
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                submit();
+                send(text);
               }
             }}
-            rows={2}
+            rows={1}
             maxLength={CHAT_MAX}
             aria-label="Hỏi hoặc nhờ AI sửa slide này"
-            placeholder="Hỏi về slide này, hoặc nhờ AI sửa. Ví dụ: Ý thứ hai có chính xác không?"
-            className="block w-full resize-none rounded-xl border-0 bg-transparent px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-0"
+            placeholder="Hỏi hoặc nhờ AI sửa slide này..."
+            className="block min-w-0 flex-1 resize-none border-0 bg-transparent px-0 py-1.5 text-[15px] leading-snug focus:outline-none focus:ring-0"
           />
           <button
             type="button"
             aria-label="Gửi"
-            disabled={!text.trim() || chat.busy}
-            onClick={submit}
-            className="absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white transition disabled:opacity-40"
+            disabled={!canSend}
+            onClick={() => send(text)}
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition ${
+              canSend ? "bg-brand-600 text-white hover:bg-brand-700" : "cursor-not-allowed bg-[rgb(var(--surface-muted))] text-faint"
+            }`}
           >
-            <ArrowRight size={16} />
+            <ArrowUp size={18} />
           </button>
         </div>
-        <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
-          <span role={chat.err ? "alert" : undefined} className={chat.err ? "font-medium text-red-700" : "text-muted"}>
-            {chat.err ?? "Enter để gửi, Shift + Enter xuống dòng."}
-          </span>
-          {chat.remaining !== null && <span className="text-muted">Còn khoảng {chat.remaining.toLocaleString("vi-VN")} lượt AI trong tháng</span>}
+        <div className="flex flex-wrap justify-between gap-x-3 px-1 text-[11.5px]">
+          {chat.err ? (
+            <span role="alert" className="font-medium text-red-700">
+              {chat.err}
+            </span>
+          ) : (
+            <span className="text-faint">Enter để gửi · Shift + Enter xuống dòng · Không lưu khi đóng cửa sổ</span>
+          )}
+          {chat.remaining !== null && <span className="text-faint">Còn khoảng {chat.remaining.toLocaleString("vi-VN")} lượt AI</span>}
         </div>
-        <p className="text-xs text-faint">Cuộc trò chuyện không được lưu khi đóng cửa sổ sửa hoặc chuyển slide.</p>
       </div>
     </div>
   );
@@ -565,6 +609,7 @@ export default function LayoutEditor({
   const layout = resolveLayout(config);
   const [d, setD] = useState<Cfg>(() => padForEditing(layout, config));
   const [palette, setPalette] = useState(-1);
+  const [gPalette, setGPalette] = useState(-1);
   const [richOn, setRichOn] = useState(false);
   const focused = useRef<FieldCtl | null>(null);
   const range = ITEM_RANGE[layout];
@@ -682,7 +727,7 @@ export default function LayoutEditor({
     if (!slideConfigsEqual(next, config)) onSave({ config: next });
     onOpenChange(false);
   };
-  const format = useCallback((marker: "**" | "*") => {
+  const format = useCallback((marker: InlineMarker) => {
     const c = focused.current;
     if (!c || !c.el.isConnected) return;
     const { value, max, onChange } = c.latest.current;
@@ -695,11 +740,13 @@ export default function LayoutEditor({
     });
   }, []);
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
     const k = e.key.toLowerCase();
-    if ((k === "b" || k === "i") && focused.current && e.target === focused.current.el) {
+    // Ctrl+B, Ctrl+I và Ctrl+Shift+H (tô màu, như phím bút dạ của Word).
+    const marker: InlineMarker | null = e.shiftKey ? (k === "h" ? "==" : null) : k === "b" ? "**" : k === "i" ? "*" : null;
+    if (marker && focused.current && e.target === focused.current.el) {
       e.preventDefault();
-      format(k === "b" ? "**" : "*");
+      format(marker);
     }
   };
 
@@ -877,6 +924,17 @@ export default function LayoutEditor({
               >
                 <Italic size={16} />
               </button>
+              <button
+                type="button"
+                disabled={!richOn}
+                title="Tô màu nhấn (Ctrl+Shift+H)"
+                aria-label="Tô màu"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => format("==")}
+                className="grid h-9 w-10 place-items-center border-l border-token bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+              >
+                <Highlighter size={16} />
+              </button>
             </span>
             <span className="text-[13px] text-muted">Bôi đen chữ trong một ô rồi bấm để định dạng</span>
           </div>
@@ -987,6 +1045,182 @@ export default function LayoutEditor({
                   </div>
                 )}
               </>
+            )}
+
+            {layout === "list" && (
+              <div className="grid gap-2">
+                {((d.lines as ListLine[] | undefined) ?? []).map((l, i) => {
+                  const lines = d.lines as ListLine[];
+                  const patch = (p: Partial<ListLine>) => set({ lines: lines.map((x, k) => (k === i ? { ...x, ...p } : x)) });
+                  return (
+                    <div key={i} className={`grid gap-1.5 ${l.sub ? "ml-6" : ""}`}>
+                      <Field label={l.sub ? `Ý con (dòng ${i + 1})` : `Ý (dòng ${i + 1})`} value={l.text} max={MAX_LEN.listLine} multiline onChange={(v) => patch({ text: v })} onBlur={blur} />
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                        {i > 0 && (
+                          <button type="button" className="font-medium text-brand-700 hover:underline" onClick={() => set({ lines: lines.map((x, k) => (k === i ? { text: x.text, ...(x.sub ? {} : { sub: true }) } : x)) })}>
+                            {l.sub ? "Đổi thành ý chính" : "Đổi thành ý con"}
+                          </button>
+                        )}
+                        {lines.length > 1 && (
+                          <button type="button" className="font-medium text-muted hover:underline" onClick={() => set({ lines: lines.filter((_, k) => k !== i) })}>
+                            Xoá dòng
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {((d.lines as ListLine[] | undefined) ?? []).length < LIST_MAX_LINES ? (
+                  <button
+                    type="button"
+                    className="flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+                    onClick={() => set({ lines: [...((d.lines as ListLine[] | undefined) ?? []), { text: "" }] })}
+                  >
+                    <Plus size={14} /> Thêm ý
+                  </button>
+                ) : (
+                  <p className="text-sm text-faint">Đã đủ {LIST_MAX_LINES} dòng.</p>
+                )}
+                <div className="mt-2 grid gap-1">
+                  <Field
+                    label="Cụm từ khoá (không bắt buộc)"
+                    value={((d.words as string[] | undefined) ?? []).join(", ")}
+                    max={LIST_MAX_WORDS * (LIST_WORD_MAX_LEN + 2)}
+                    plain
+                    placeholder="Ví dụ: vui vẻ, biết ơn, kiên trì"
+                    onChange={(v) => set({ words: v.split(",").map((w) => w.replace(/^\s+/, "")) })}
+                    onBlur={blur}
+                  />
+                  <p className="text-[13px] text-muted">Các từ cách nhau bằng dấu phẩy, hiện thành một cụm chữ lớn bên dưới các dòng, tối đa {LIST_MAX_WORDS} từ.</p>
+                </div>
+              </div>
+            )}
+
+            {layout === "groups" && (
+              <div className="grid gap-3">
+                <Field
+                  label="Câu dẫn (không bắt buộc)"
+                  value={typeof d.lead === "string" ? d.lead : ""}
+                  max={MAX_LEN.lead}
+                  placeholder="Ví dụ: Vì sao tư duy tích cực quan trọng?"
+                  onChange={(v) => set({ lead: v })}
+                  onBlur={blur}
+                />
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={d.icons !== false}
+                    onChange={(e) => {
+                      const next = { ...d, icons: e.target.checked ? undefined : false };
+                      setD(next);
+                      commit(next);
+                    }}
+                  />
+                  Dùng biểu tượng (nếu còn chỗ cho chữ to)
+                </label>
+                {((d.groups as SlideGroup[] | undefined) ?? []).map((g, i) => {
+                  const groups = d.groups as SlideGroup[];
+                  const patch = (p: Partial<SlideGroup>) => set({ groups: groups.map((x, k) => (k === i ? { ...x, ...p } : x)) });
+                  const shownIcon = autoGroupIcons(groups)[i]!;
+                  const Ic = LAYOUT_ICONS[shownIcon];
+                  return (
+                    <div key={i} className="grid content-start gap-2 rounded-xl border border-token p-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-muted">
+                        <span>Nhóm {i + 1}</span>
+                        <span className="flex-1" />
+                        {d.icons !== false && (
+                          <button
+                            type="button"
+                            aria-label={`Đổi biểu tượng nhóm ${i + 1}, đang là ${ICON_LABELS[shownIcon]}${g.icon ? "" : " (tự chọn)"}`}
+                            title={`Biểu tượng: ${ICON_LABELS[shownIcon]}${g.icon ? "" : " (tự chọn)"}`}
+                            aria-expanded={gPalette === i}
+                            onClick={() => setGPalette(gPalette === i ? -1 : i)}
+                            className="grid h-8 w-8 place-items-center rounded-lg border border-token text-brand-700 hover:bg-[rgb(var(--surface-muted))]"
+                          >
+                            <Ic size={16} />
+                          </button>
+                        )}
+                        {groups.length > 1 && (
+                          <button type="button" className="font-medium text-muted hover:underline" onClick={() => set({ groups: groups.filter((_, k) => k !== i) })}>
+                            Xoá nhóm
+                          </button>
+                        )}
+                      </div>
+                      {gPalette === i && d.icons !== false && (
+                        <div role="group" aria-label="Chọn biểu tượng" className="grid grid-cols-4 gap-1">
+                          <button
+                            type="button"
+                            aria-pressed={!g.icon}
+                            onClick={() => {
+                              const next = groups.map((x, k) => (k === i ? { heading: x.heading, points: x.points } : x));
+                              set({ groups: next });
+                              setGPalette(-1);
+                              commit({ ...d, groups: next });
+                            }}
+                            className={`col-span-4 h-8 rounded-lg border text-[13px] font-medium ${!g.icon ? "border-brand-600 bg-brand-soft text-brand-700" : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"}`}
+                          >
+                            Tự động theo nội dung
+                          </button>
+                          {SLIDE_ICONS.map((ic) => {
+                            const I2 = LAYOUT_ICONS[ic];
+                            return (
+                              <button
+                                key={ic}
+                                type="button"
+                                aria-pressed={g.icon === ic}
+                                aria-label={ICON_LABELS[ic]}
+                                title={ICON_LABELS[ic]}
+                                onClick={() => {
+                                  const next = groups.map((x, k) => (k === i ? { ...x, icon: ic } : x));
+                                  set({ groups: next });
+                                  setGPalette(-1);
+                                  commit({ ...d, groups: next });
+                                }}
+                                className={`grid h-9 place-items-center rounded-lg border ${g.icon === ic ? "border-brand-600 bg-brand-soft text-brand-700" : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"}`}
+                              >
+                                <I2 size={18} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <Field label="Tên nhóm" value={g.heading} max={MAX_LEN.groupHeading} onChange={(v) => patch({ heading: v })} onBlur={blur} />
+                      {g.points.map((p, k) => (
+                        <div key={k} className="ml-4 grid gap-1">
+                          <Field
+                            label={`Ý ${k + 1}`}
+                            value={p}
+                            max={MAX_LEN.groupPoint}
+                            multiline
+                            onChange={(v) => patch({ points: g.points.map((x, j) => (j === k ? v : x)) })}
+                            onBlur={blur}
+                          />
+                          <button type="button" className="w-fit text-[13px] font-medium text-muted hover:underline" onClick={() => patch({ points: g.points.filter((_, j) => j !== k) })}>
+                            Xoá ý
+                          </button>
+                        </div>
+                      ))}
+                      {g.points.length < GROUP_POINTS_MAX && (
+                        <button type="button" className="ml-4 flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline" onClick={() => patch({ points: [...g.points, ""] })}>
+                          <Plus size={14} /> Thêm ý
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                {((d.groups as SlideGroup[] | undefined) ?? []).length < GROUPS_MAX ? (
+                  <button
+                    type="button"
+                    className="flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+                    onClick={() => set({ groups: [...((d.groups as SlideGroup[] | undefined) ?? []), { heading: "", points: [""] }] })}
+                  >
+                    <Plus size={14} /> Thêm nhóm
+                  </button>
+                ) : (
+                  <p className="text-sm text-faint">Đã đủ {GROUPS_MAX} nhóm.</p>
+                )}
+                <p className="text-[13px] text-muted">Kiểu trình bày (thẻ, danh sách nhóm, câu dẫn, số liệu) tự chọn theo nội dung.</p>
+              </div>
             )}
 
             {range && (

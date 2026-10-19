@@ -225,6 +225,22 @@ describe("generateDeckSlides", () => {
     expect([...progress].sort((a, b) => a - b)).toEqual(progress);
   });
 
+  it("O6: báo từng slide xong (chỉ số theo dàn ý), kể cả slide dựng sẵn không qua AI", async () => {
+    const seen: number[] = [];
+    const prebuilt = (_o: unknown, i: number) =>
+      i === 0 ? { type: "content" as const, config: { layout: "list", title: "Dựng sẵn", lines: [{ text: "a" }] }, usedFallback: false } : null;
+    await generateDeckSlides({
+      outline,
+      concurrency: 2,
+      isFatal: never,
+      fixedSlide: prebuilt,
+      onSlide: (i) => seen.push(i),
+      generateBatch: async (idx) => idx.map(goodDraft),
+    });
+    expect(seen[0]).toBe(0);
+    expect([...seen].sort((a, b) => a - b)).toEqual(Array.from({ length: 12 }, (_, i) => i));
+  });
+
   it("một lô hỏng: thử lại một lần; vẫn hỏng thì dùng dàn ý, các lô khác không ảnh hưởng", async () => {
     let attemptsOnFirst = 0;
     const r = await generateDeckSlides({

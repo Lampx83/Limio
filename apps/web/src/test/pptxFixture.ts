@@ -15,7 +15,33 @@ export const TINY_PNG = Uint8Array.from(
   (c) => c.charCodeAt(0),
 );
 
-export type FxPara = string | { text: string; lvl?: number; num?: boolean };
+/** Một run có định dạng riêng: màu ("C00000" hoặc "accent2"), đậm, nghiêng, tô nền. */
+export interface FxRun {
+  text: string;
+  color?: string;
+  b?: boolean;
+  i?: boolean;
+  hl?: boolean;
+}
+/** `runs` (nếu có) thay cho `text` làm nội dung đoạn; `color`, `i` áp cho cả đoạn. */
+export type FxPara =
+  | string
+  | { text: string; lvl?: number; num?: boolean; sz?: number; b?: boolean; i?: boolean; bu?: boolean; color?: string; runs?: FxRun[] };
+
+/** Hộp chữ tự do: toạ độ EMU, cỡ chữ (pt) và đậm áp cho mọi đoạn nếu đặt ở hộp. */
+export interface FxBox {
+  text?: string;
+  paras?: FxPara[];
+  y: number;
+  x?: number;
+  cx?: number;
+  cy?: number;
+  sz?: number;
+  b?: boolean;
+  geom?: string;
+  /** Tên khối (cNvPr name), mặc định "S<id>". */
+  name?: string;
+}
 
 export interface FxChart {
   type: "bar" | "hbar" | "line" | "pie" | "doughnut";
@@ -48,7 +74,9 @@ export interface FxSlide {
   titleType?: "title" | "ctrTitle";
   subtitle?: string[];
   body?: FxPara[];
-  textBoxes?: Array<{ text: string; y: number; x?: number }>;
+  textBoxes?: FxBox[];
+  /** Nhóm hình: toạ độ con tính theo chOff/chExt của nhóm. */
+  groups?: Array<{ off: [number, number]; ext: [number, number]; chOff: [number, number]; chExt: [number, number]; boxes: FxBox[] }>;
   notes?: string;
   hidden?: boolean;
   layout?: string;
@@ -69,15 +97,35 @@ const H = 6858000;
 
 const para = (p: FxPara) => {
   const o = typeof p === "string" ? { text: p } : p;
-  const pPr = o.lvl || o.num ? `<a:pPr${o.lvl ? ` lvl="${o.lvl}"` : ""}>${o.num ? '<a:buAutoNum type="arabicPeriod"/>' : ""}</a:pPr>` : "";
-  return `<a:p>${pPr}<a:r><a:rPr lang="vi-VN"/><a:t>${esc(o.text)}</a:t></a:r></a:p>`;
+  const bu = o.num ? '<a:buAutoNum type="arabicPeriod"/>' : o.bu ? '<a:buChar char="•"/>' : "";
+  const pPr = o.lvl || bu ? `<a:pPr${o.lvl ? ` lvl="${o.lvl}"` : ""}>${bu}</a:pPr>` : "";
+  const run = (r: FxRun) => {
+    const fill = r.color ? `<a:solidFill>${/^[0-9A-F]{6}$/i.test(r.color) ? `<a:srgbClr val="${r.color}"/>` : `<a:schemeClr val="${r.color}"/>`}</a:solidFill>` : "";
+    const hl = r.hl ? '<a:highlight><a:srgbClr val="FFFF00"/></a:highlight>' : "";
+    const open = `<a:rPr lang="vi-VN"${"sz" in o && o.sz ? ` sz="${Math.round(o.sz * 100)}"` : ""}${r.b ? ' b="1"' : ""}${r.i ? ' i="1"' : ""}`;
+    return `<a:r>${fill || hl ? `${open}>${fill}${hl}</a:rPr>` : `${open}/>`}<a:t>${esc(r.text)}</a:t></a:r>`;
+  };
+  const runs = "runs" in o && o.runs ? o.runs : [{ text: o.text, color: "color" in o ? o.color : undefined, b: "b" in o ? o.b : undefined, i: "i" in o ? o.i : undefined }];
+  return `<a:p>${pPr}${runs.map((r) => run({ ...r, b: r.b ?? ("b" in o ? o.b : undefined), i: r.i ?? ("i" in o ? o.i : undefined) })).join("")}</a:p>`;
 };
 
-const sp = (id: number, ph: string | null, paras: FxPara[], opts: { y?: number; x?: number; txBox?: boolean; geom?: string } = {}) => {
+const boxParas = (b: FxBox): FxPara[] =>
+  (b.paras ?? [b.text ?? ""]).map((p) => {
+    const o = typeof p === "string" ? { text: p } : p;
+    return { ...o, sz: o.sz ?? b.sz, b: o.b ?? b.b };
+  });
+
+const sp = (
+  id: number,
+  ph: string | null,
+  paras: FxPara[],
+  opts: { y?: number; x?: number; cx?: number; cy?: number; txBox?: boolean; geom?: string; name?: string } = {},
+) => {
   const phXml = ph ? `<p:nvPr><p:ph${ph === "body" ? ' idx="1"' : ` type="${ph}"`}/></p:nvPr>` : "<p:nvPr/>";
-  const xfrm = opts.y !== undefined ? `<a:xfrm><a:off x="${opts.x ?? 457200}" y="${opts.y}"/><a:ext cx="8000000" cy="900000"/></a:xfrm>` : "";
+  const xfrm =
+    opts.y !== undefined ? `<a:xfrm><a:off x="${opts.x ?? 457200}" y="${opts.y}"/><a:ext cx="${opts.cx ?? 8000000}" cy="${opts.cy ?? 900000}"/></a:xfrm>` : "";
   const geom = opts.geom ? `<a:prstGeom prst="${opts.geom}"><a:avLst/></a:prstGeom>` : "";
-  return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="S${id}"/><p:cNvSpPr${opts.txBox ? ' txBox="1"' : ""}/>${phXml}</p:nvSpPr><p:spPr>${xfrm}${geom}</p:spPr><p:txBody><a:bodyPr/>${paras.map(para).join("")}</p:txBody></p:sp>`;
+  return `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${esc(opts.name ?? `S${id}`)}"/><p:cNvSpPr${opts.txBox ? ' txBox="1"' : ""}/>${phXml}</p:nvSpPr><p:spPr>${xfrm}${geom}</p:spPr><p:txBody><a:bodyPr/>${paras.map(para).join("")}</p:txBody></p:sp>`;
 };
 
 export async function buildPptx(slides: FxSlide[]): Promise<Uint8Array> {
@@ -103,7 +151,12 @@ export async function buildPptx(slides: FxSlide[]): Promise<Uint8Array> {
     if (s.title !== undefined) tree.push(sp(id++, s.titleType ?? "title", [s.title]));
     if (s.subtitle?.length) tree.push(sp(id++, "subTitle", s.subtitle));
     if (s.body?.length) tree.push(sp(id++, "body", s.body));
-    for (const tb of s.textBoxes ?? []) tree.push(sp(id++, null, [tb.text], { y: tb.y, x: tb.x, txBox: true }));
+    const box = (b: FxBox) => sp(id++, null, boxParas(b), { y: b.y, x: b.x, cx: b.cx, cy: b.cy, txBox: !b.geom, geom: b.geom, name: b.name });
+    for (const tb of s.textBoxes ?? []) tree.push(box(tb));
+    for (const g of s.groups ?? []) {
+      const x = `<a:xfrm><a:off x="${g.off[0]}" y="${g.off[1]}"/><a:ext cx="${g.ext[0]}" cy="${g.ext[1]}"/><a:chOff x="${g.chOff[0]}" y="${g.chOff[1]}"/><a:chExt cx="${g.chExt[0]}" cy="${g.chExt[1]}"/></a:xfrm>`;
+      tree.push(`<p:grpSp><p:nvGrpSpPr><p:cNvPr id="${id++}" name="G"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr>${x}</p:grpSpPr>${g.boxes.map(box).join("")}</p:grpSp>`);
+    }
     for (const [k, t] of (s.shapes ?? []).entries()) tree.push(sp(id++, null, [t], { y: 2000000, x: 500000 + k * 2500000, geom: "roundRect" }));
     tree.push(`<p:sp><p:nvSpPr><p:cNvPr id="${id++}" name="Num"/><p:cNvSpPr/><p:nvPr><p:ph type="sldNum"/></p:nvPr></p:nvSpPr><p:spPr/><p:txBody><a:p><a:fld id="{1}" type="slidenum"><a:t>${n}</a:t></a:fld></a:p></p:txBody></p:sp>`);
     if (s.equation) {

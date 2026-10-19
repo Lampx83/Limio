@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu: slide hai cấp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #fff; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-fill: #65a30d; --brand-soft: #ecf6d2; --note-bg: #fffbea; --note-line: #e8d48a;
+    /* Màu trong slide (giao diện Limio) */
+    --s-bg1: #f5f8ea; --s-bg2: #fbf1f4; --s-ink: #1f2a12; --s-muted: #4f5a43; --s-a: #4d7c0f; --s-a2: #65a30d;
+    --s-soft: #eef6dc; --s-card: #ffffff; --s-cardb: #e3e8d4; --s-warm: #fdeef0; --s-warmb: #f2cfd6; --s-warmink: #9d2b45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #11160b; --surface: #1a2111; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24; --brand: #a3e635; --brand-soft: #27371a; --note-bg: #2a2410; --note-line: #5a4c1c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Be Vietnam Pro", system-ui, sans-serif; line-height: 1.5; }
+  main { max-width: 1240px; margin: 0 auto; padding: 20px 16px 80px; }
+  .note { border: 1px dashed var(--note-line); background: var(--note-bg); border-radius: 14px; padding: 12px 16px; font-size: 14px; color: var(--ink-2); }
+  .note b { color: var(--ink); }
+  h1 { font-size: 24px; margin: 18px 0 4px; }
+  .lead { margin: 0 0 8px; color: var(--ink-3); max-width: 820px; }
+  .rules { margin: 14px 0 0; font-size: 14px; color: var(--ink-2); }
+  .rules li { margin: 4px 0; }
+
+  section.case { margin-top: 34px; }
+  .case h2 { font-size: 19px; margin: 0 0 2px; }
+  .case .when { margin: 0 0 12px; color: var(--ink-3); font-size: 14.5px; max-width: 900px; }
+  .pair { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
+  .pair figure { margin: 0; }
+  .pair figcaption { font-size: 13px; font-weight: 700; color: var(--ink-3); margin: 0 0 6px 2px; text-transform: uppercase; letter-spacing: .04em; }
+  .pair figure.new figcaption { color: var(--brand); }
+  @media (max-width: 860px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+
+  /* ── Khung slide 1280×720, mọi kích thước tính theo đơn vị u = 1/1280 bề ngang ── */
+  .slide { container-type: inline-size; aspect-ratio: 16 / 9; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 10px 26px -16px rgb(0 0 0 / .35); }
+  .in { --u: calc(100cqw / 1280); position: relative; width: 100%; height: 100%; padding: calc(64 * var(--u)) calc(88 * var(--u)); background: linear-gradient(135deg, var(--s-bg1), var(--s-bg2)); color: var(--s-ink); display: flex; flex-direction: column; gap: calc(30 * var(--u)); }
+  .t { margin: 0; font-weight: 800; font-size: calc(50 * var(--u)); line-height: 1.12; letter-spacing: -.01em; }
+  .t .acc { color: var(--s-a); }
+  .p { margin: 0; font-size: calc(30 * var(--u)); line-height: 1.32; color: var(--s-muted); }
+
+  /* Hiện tại: Danh sách hai cấp lồng gạch đầu dòng */
+  .old ul { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(10 * var(--u)); font-size: calc(30 * var(--u)); line-height: 1.25; }
+  .old li { display: flex; gap: .45em; }
+  .old li::before { content: ""; flex: none; width: .38em; height: .38em; border-radius: 50%; background: var(--s-a2); margin-top: .45em; }
+  .old li.sub { margin-left: 1.4em; color: var(--s-muted); }
+  .old li.sub::before { background: transparent; border: 2px solid var(--s-a); width: .3em; height: .3em; }
+
+  /* Nhãn nhóm: chữ hoa nhỏ có vạch màu (dùng chung) */
+  .lab { display: flex; align-items: center; gap: calc(12 * var(--u)); font-size: calc(24 * var(--u)); font-weight: 800; letter-spacing: .01em; color: var(--s-a); }
+  .lab::before { content: ""; width: calc(28 * var(--u)); height: calc(5 * var(--u)); border-radius: 3px; background: var(--s-a2); }
+  .lab .no { color: var(--s-muted); font-variant-numeric: tabular-nums; }
+
+  /* 1. Thẻ */
+  .cards { display: grid; gap: calc(22 * var(--u)); flex: 1; min-height: 0; }
+  .card { background: var(--s-card); border: 1px solid var(--s-cardb); border-radius: calc(24 * var(--u)); padding: calc(26 * var(--u)) calc(28 * var(--u)); display: flex; flex-direction: column; gap: calc(14 * var(--u)); }
+  .card h3 { margin: 0; font-size: calc(32 * var(--u)); line-height: 1.2; }
+  .card ul, .col ul, .grp ul { list-style: none; margin: 0; padding: 0 0 0 calc(18 * var(--u)); border-left: calc(3 * var(--u)) solid var(--s-cardb); display: grid; gap: calc(12 * var(--u)); font-size: calc(26 * var(--u)); line-height: 1.3; color: var(--s-muted); }
+  .bar { display: flex; gap: calc(16 * var(--u)); align-items: baseline; background: var(--s-soft); border-radius: calc(18 * var(--u)); padding: calc(18 * var(--u)) calc(26 * var(--u)); font-size: calc(28 * var(--u)); line-height: 1.3; }
+  .bar b { color: var(--s-a); white-space: nowrap; }
+
+  /* 2. So sánh hai cột */
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: calc(24 * var(--u)); flex: 1; min-height: 0; }
+  .col { border-radius: calc(24 * var(--u)); padding: calc(26 * var(--u)) calc(30 * var(--u)); display: flex; flex-direction: column; gap: calc(16 * var(--u)); border: 1px solid var(--s-cardb); background: var(--s-card); }
+  .col.warm { background: var(--s-warm); border-color: var(--s-warmb); }
+  .col.warm .lab { color: var(--s-warmink); } .col.warm .lab::before { background: var(--s-warmink); }
+  .col.cool { background: var(--s-soft); }
+  .col ul { font-size: calc(30 * var(--u)); color: var(--s-ink); border-left-color: rgb(0 0 0 / .08); }
+  .arrow { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); width: calc(64 * var(--u)); height: calc(64 * var(--u)); border-radius: 50%; background: var(--s-a); color: #fff; display: grid; place-items: center; font-size: calc(34 * var(--u)); font-weight: 800; box-shadow: 0 0 0 calc(8 * var(--u)) var(--s-bg1); }
+
+  /* 3. Câu dẫn + các dòng */
+  .ask { margin: 0; font-size: calc(40 * var(--u)); font-weight: 700; color: var(--s-a); line-height: 1.2; }
+  .rows { display: grid; gap: calc(16 * var(--u)); }
+  .row { display: grid; grid-template-columns: calc(64 * var(--u)) 1fr; align-items: center; gap: calc(22 * var(--u)); background: var(--s-card); border: 1px solid var(--s-cardb); border-radius: calc(20 * var(--u)); padding: calc(20 * var(--u)) calc(26 * var(--u)); font-size: calc(32 * var(--u)); line-height: 1.25; }
+  .row .k { width: calc(56 * var(--u)); height: calc(56 * var(--u)); border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: calc(24 * var(--u)); background: var(--s-soft); color: var(--s-a); }
+  .row.x .k { background: var(--s-warm); color: var(--s-warmink); }
+
+  /* 4. Số liệu */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: calc(22 * var(--u)); }
+  .stat { background: var(--s-card); border: 1px solid var(--s-cardb); border-radius: calc(24 * var(--u)); padding: calc(24 * var(--u)) calc(28 * var(--u)); display: grid; gap: calc(6 * var(--u)); }
+  .stat .n { font-size: calc(84 * var(--u)); font-weight: 800; line-height: 1; color: var(--s-a); letter-spacing: -.02em; }
+  .stat .d { font-size: calc(26 * var(--u)); line-height: 1.3; color: var(--s-muted); }
+  .chips { display: grid; grid-template-columns: 1fr 1fr; gap: calc(18 * var(--u)); }
+  .chip { border-left: calc(5 * var(--u)) solid var(--s-a2); padding: calc(6 * var(--u)) 0 calc(6 * var(--u)) calc(20 * var(--u)); font-size: calc(28 * var(--u)); line-height: 1.25; }
+
+  /* 5. Danh sách nhóm hai cột */
+  .groups { display: grid; grid-template-columns: 1fr 1fr; gap: calc(26 * var(--u)) calc(44 * var(--u)); align-content: start; }
+  .grp { display: grid; gap: calc(10 * var(--u)); }
+  .grp h3 { margin: 0; font-size: calc(30 * var(--u)); line-height: 1.2; }
+  .grp p { margin: 0; font-size: calc(24 * var(--u)); line-height: 1.32; color: var(--s-muted); padding-left: calc(18 * var(--u)); border-left: calc(3 * var(--u)) solid var(--s-cardb); }
+  .grp .no { color: var(--s-a); font-weight: 800; margin-right: calc(10 * var(--u)); font-variant-numeric: tabular-nums; }
+
+  .table-note { margin-top: 36px; }
+  table.rule { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  table.rule th, table.rule td { text-align: left; padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+  table.rule th { background: var(--brand-soft); border-top: 0; }
+</style>
+</head>
+<body>
+<main>
+  <div class="note">
+    <b>Bản mẫu, chưa phải trang thật.</b> Năm cách trình bày slide hai cấp (ý cha và ý con) khi nhập từ PowerPoint, dựng bằng chữ thật của
+    hai file thầy/cô đã thử. Mỗi mục đặt <b>bản hiện tại</b> (Danh sách lồng gạch đầu dòng) cạnh <b>bản đề xuất</b>. Hệ thống tự chọn cách
+    trình bày theo quan hệ của nội dung; giảng viên không phải chọn. Chữ giữ nguyên, không thêm, không bỏ.
+    Theo hai lựa chọn đã duyệt: thẻ không dùng hình biểu tượng (dùng số thứ tự nhóm), chữ hoa của bản gốc giữ nguyên.
+  </div>
+
+  <h1>Slide hai cấp: phân cấp bằng hình dạng, không chỉ bằng thụt lề</h1>
+  <p class="lead">Nguyên tắc áp cho cả năm kiểu:</p>
+  <ul class="rules">
+    <li><b>Phân cấp bằng nhiều tín hiệu:</b> ý cha đậm và có màu nhấn, lớn hơn ý con khoảng 1,2 lần; ý con chữ thường, màu nhạt hơn.</li>
+    <li><b>Gần nhau là một nhóm:</b> khoảng cách giữa các nhóm lớn gấp 2–3 lần khoảng cách giữa các ý con.</li>
+    <li><b>Một trục căn:</b> ý con thẳng hàng với chữ ý cha, không có dấu đầu dòng; một vạch dọc mảnh nối ý con với ý cha.</li>
+    <li><b>Chia khúc:</b> tối đa 3–4 nhóm, mỗi nhóm tối đa 4 ý con một slide. Chữ trên khung 1280 × 720 không nhỏ hơn 26 px.</li>
+  </ul>
+
+  <!-- 1. Thẻ -->
+  <section class="case">
+    <h2>1. Thẻ đặt cạnh nhau</h2>
+    <p class="when">Khi dùng: 2–4 nhóm song song, mỗi nhóm có tên ngắn và vài ý con ngắn. Ý con dài (như các PLO của báo cáo ED2) không vừa
+      thẻ ở cỡ chữ 26 px thì hệ thống chọn Danh sách nhóm (mục 5) thay vì thu nhỏ chữ.</p>
+    <div class="pair">
+      <figure>
+        <figcaption>Hiện tại</figcaption>
+        <div class="slide"><div class="in old">
+          <h2 class="t">2.1. TECHNOLOGY IN EDUCATION</h2>
+          <ul>
+            <li>Bản chất</li><li class="sub">Ứng dụng công nghệ như công cụ hỗ trợ giảng dạy</li>
+            <li>Đặc trưng</li><li class="sub">Tập trung vào phương tiện</li><li class="sub">Không thay đổi bản chất phương pháp dạy học</li><li class="sub">Giáo viên vẫn là trung tâm điều khiển</li>
+          </ul>
+        </div></div>
+      </figure>
+      <figure class="new">
+        <figcaption>Đề xuất</figcaption>
+        <div class="slide"><div class="in">
+          <h2 class="t">2.1. TECHNOLOGY <span class="acc">IN EDUCATION</span></h2>
+          <div class="cards" style="grid-template-columns: 1fr 1fr">
+            <div class="card">
+              <div class="lab"><span class="no">01</span></div>
+              <h3>Bản chất</h3>
+              <ul style="font-size:calc(30 * var(--u))"><li>Ứng dụng công nghệ như công cụ hỗ trợ giảng dạy</li></ul>
+            </div>
+            <div class="card">
+              <div class="lab"><span class="no">02</span></div>
+              <h3>Đặc trưng</h3>
+              <ul style="font-size:calc(30 * var(--u))"><li>Tập trung vào phương tiện</li><li>Không thay đổi bản chất phương pháp dạy học</li><li>Giáo viên vẫn là trung tâm điều khiển</li></ul>
+            </div>
+          </div>
+        </div></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 2. So sánh hai cột -->
+  <section class="case">
+    <h2>2. So sánh hai cột</h2>
+    <p class="when">Khi dùng: đúng 2 nhóm đối lập (mất / được, trước / nay, chưa tốt / tốt). Nhóm "đi xuống" màu ấm, nhóm "đi lên" màu chủ đạo, có mũi tên chuyển giữa hai cột. Câu nhận định chung đứng trên, dưới tiêu đề.</p>
+    <div class="pair">
+      <figure>
+        <figcaption>Hiện tại</figcaption>
+        <div class="slide"><div class="in old">
+          <h2 class="t">1.4 AI thay đổi yêu cầu năng lực thị trường lao động Edtech</h2>
+          <ul>
+            <li>Năng lực đang mất lợi thế</li><li class="sub">Sản xuất nội dung thông thường</li><li class="sub">Thiết kế học liệu theo mẫu có sẵn</li><li class="sub">Thao tác công nghệ lặp lại, quy trình cố định</li>
+            <li>Năng lực đang gia tăng nhu cầu</li><li class="sub">Sử dụng AI có kiểm soát và có phê phán</li>
+          </ul>
+        </div></div>
+      </figure>
+      <figure class="new">
+        <figcaption>Đề xuất</figcaption>
+        <div class="slide"><div class="in">
+          <h2 class="t">1.4 AI thay đổi yêu cầu năng lực <span class="acc">thị trường lao động Edtech</span></h2>
+          <p class="p">Thị trường lao động đang dịch chuyển rõ rệt: nhu cầu về kỹ năng thực thi cơ bản giảm đi, trong khi nhu cầu về tư duy thiết kế, kiểm soát AI và đánh giá chiến lược tăng mạnh.</p>
+          <div class="cols">
+            <div class="col warm"><div class="lab">Năng lực đang mất lợi thế</div><ul><li>Sản xuất nội dung thông thường</li><li>Thiết kế học liệu theo mẫu có sẵn</li><li>Thao tác công nghệ lặp lại, quy trình cố định</li></ul></div>
+            <div class="col cool"><div class="lab">Năng lực đang gia tăng nhu cầu</div><ul><li>Sử dụng AI có kiểm soát và có phê phán</li><li>Đánh giá chất lượng đầu ra của AI</li><li>Tích hợp AI vào sản phẩm và môi trường học tập</li></ul></div>
+          </div>
+          <div class="arrow" aria-hidden="true">→</div>
+        </div></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 3. Câu dẫn + các dòng -->
+  <section class="case">
+    <h2>3. Câu dẫn và các dòng</h2>
+    <p class="when">Khi dùng: một câu hỏi hoặc câu dẫn kèm 2–5 ý ngắn. Câu dẫn to, màu nhấn; mỗi ý là một dòng có khoảng thoáng. Câu dẫn mang nghĩa phủ định ("…is not?", "không phải") thì dấu đầu dòng là dấu × màu ấm, còn lại là số thứ tự.</p>
+    <div class="pair">
+      <figure>
+        <figcaption>Hiện tại</figcaption>
+        <div class="slide"><div class="in old">
+          <h2 class="t">1. POSITIVE THINKING</h2>
+          <ul><li>What positive thinking is not?</li><li class="sub">Ignoring problems or reality</li><li class="sub">Toxic positivity (forced optimism)</li><li class="sub">Just "thinking happy thoughts"</li></ul>
+        </div></div>
+      </figure>
+      <figure class="new">
+        <figcaption>Đề xuất</figcaption>
+        <div class="slide"><div class="in">
+          <div class="lab">1. POSITIVE THINKING</div>
+          <p class="ask">What positive thinking is not?</p>
+          <div class="rows">
+            <div class="row x"><span class="k">×</span><span>Ignoring problems or reality</span></div>
+            <div class="row x"><span class="k">×</span><span>Toxic positivity (forced optimism)</span></div>
+            <div class="row x"><span class="k">×</span><span>Just "thinking happy thoughts"</span></div>
+          </div>
+        </div></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 4. Số liệu -->
+  <section class="case">
+    <h2>4. Số liệu</h2>
+    <p class="when">Khi dùng: ý con có con số (phần trăm, số lần). Con số có sẵn trong slide gốc được nhấc lên to; ý không có số đứng thành dòng ngắn bên dưới. Không tính thêm, không làm tròn lại.</p>
+    <div class="pair">
+      <figure>
+        <figcaption>Hiện tại</figcaption>
+        <div class="slide"><div class="in old">
+          <h2 class="t">1. POSITIVE THINKING</h2>
+          <ul><li>Why positive thinking matter?</li><li>Research findings:</li><li class="sub">Positive thinkers have 23% lower levels of stress hormones</li><li class="sub">Problem-solving ability improves by up to 20% in positive mental states</li><li class="sub">Enhanced creativity and cognitive flexibility</li><li class="sub">Better team collaboration and communication</li></ul>
+        </div></div>
+      </figure>
+      <figure class="new">
+        <figcaption>Đề xuất</figcaption>
+        <div class="slide"><div class="in">
+          <div class="lab">1. POSITIVE THINKING · Research findings</div>
+          <p class="ask">Why positive thinking matter?</p>
+          <div class="stats">
+            <div class="stat"><span class="n">23%</span><span class="d">Positive thinkers have 23% lower levels of stress hormones</span></div>
+            <div class="stat"><span class="n">20%</span><span class="d">Problem-solving ability improves by up to 20% in positive mental states</span></div>
+          </div>
+          <div class="chips">
+            <div class="chip">Enhanced creativity and cognitive flexibility</div>
+            <div class="chip">Better team collaboration and communication</div>
+          </div>
+        </div></div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 5. Danh sách nhóm -->
+  <section class="case">
+    <h2>5. Danh sách nhóm (hai cột khi đủ chỗ)</h2>
+    <p class="when">Khi dùng: từ 4 nhóm trở lên, hoặc ý con dài không vừa thẻ. Tên nhóm đậm có số, ý con nối bằng vạch dọc, không dấu đầu dòng. Nhóm ngắn chia hai cột; nhóm dài giữ một cột.</p>
+    <div class="pair">
+      <figure>
+        <figcaption>Hiện tại</figcaption>
+        <div class="slide"><div class="in old">
+          <h2 class="t">4.1 Năm nhóm năng lực AI cần bổ sung vào chương trình ED2</h2>
+          <ul><li>AI Literacy</li><li class="sub">Hiểu nguyên lý hoạt động, khả năng và giới hạn của AI để sử dụng hiệu quả và có trách nhiệm.</li><li class="sub">Đạo đức &amp; Trách nhiệm số</li><li class="sub">Nhận thức rõ về quyền riêng tư, bản quyền và trách nhiệm khi triển khai AI trong giáo dục.</li><li>Sử dụng AI chuyên môn</li></ul>
+        </div></div>
+      </figure>
+      <figure class="new">
+        <figcaption>Đề xuất</figcaption>
+        <div class="slide"><div class="in">
+          <h2 class="t">4.1 Năm nhóm năng lực AI cần bổ sung <span class="acc">vào chương trình ED2</span></h2>
+          <div class="groups">
+            <div class="grp"><h3><span class="no">01</span>AI Literacy</h3><p>Hiểu nguyên lý hoạt động, khả năng và giới hạn của AI để sử dụng hiệu quả và có trách nhiệm.</p></div>
+            <div class="grp"><h3><span class="no">02</span>Đạo đức &amp; Trách nhiệm số</h3><p>Nhận thức rõ về quyền riêng tư, bản quyền và trách nhiệm khi triển khai AI trong giáo dục.</p></div>
+            <div class="grp"><h3><span class="no">03</span>Sử dụng AI chuyên môn</h3><p>Khai thác AI hỗ trợ thiết kế học tập, phát triển học liệu và xây dựng giải pháp EdTech.</p></div>
+            <div class="grp"><h3><span class="no">04</span>Đánh giá &amp; kiểm chứng AI</h3><p>Phát hiện sai lệch, đánh giá độ tin cậy và hiệu chỉnh đầu ra của AI trong bối cảnh giáo dục.</p></div>
+            <div class="grp"><h3><span class="no">05</span>Thiết kế đánh giá trong bối cảnh AI</h3><p>Xây dựng hình thức đánh giá đảm bảo đo lường đúng năng lực thực của người học khi AI phổ biến.</p></div>
+          </div>
+        </div></div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="table-note">
+    <h2 style="font-size:19px;margin:0 0 10px">Hệ thống tự chọn như thế nào</h2>
+    <table class="rule">
+      <tr><th>Nội dung của slide gốc</th><th>Cách trình bày</th></tr>
+      <tr><td>Đúng 2 nhóm, tên nhóm mang nghĩa đối lập (mất/được, trước/nay, chưa tốt/tốt, Pros/Cons khi chỉ có hai nhóm)</td><td>2. So sánh hai cột</td></tr>
+      <tr><td>Ý con có con số trong chữ (%, số lần) và có từ 2 con số</td><td>4. Số liệu</td></tr>
+      <tr><td>Một câu dẫn hoặc câu hỏi, kèm 2–5 ý ngắn không có ý con</td><td>3. Câu dẫn và các dòng</td></tr>
+      <tr><td>2–4 nhóm song song, mỗi nhóm có tên ngắn (≤ 40 ký tự) và tối đa 4 ý con</td><td>1. Thẻ đặt cạnh nhau</td></tr>
+      <tr><td>Từ 5 nhóm, hoặc ý con dài, hoặc không khớp các trường hợp trên</td><td>5. Danh sách nhóm (hai cột khi đủ chỗ ở cỡ chữ ≥ 26 px)</td></tr>
+    </table>
+    <p class="lead" style="margin-top:10px">Khi không vừa ở cỡ chữ 26 px, kiểu đang chọn nhường cho kiểu kế tiếp trong bảng (cuối cùng là Danh sách nhóm một cột), rồi mới chia slide "(tiếp)". Giảng viên vẫn đổi được bố cục cho từng slide trong trình sửa.</p>
+  </section>
+</main>
+</body>
+</html>

@@ -24,12 +24,16 @@ import {
 } from "./limioLiveCharts";
 
 import { isSlideMotifChoice } from "./limioLiveMotifs";
+import { GROUPS_MAX, GROUP_POINTS_MAX, groupsFit, type SlideGroup } from "./limioLiveGroups";
+import { SLIDE_ICONS, isSlideIcon, type SlideIconId } from "./limioLiveIcons";
 
 export const SLIDE_LAYOUTS = [
   "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
   "cover",
   "section",
   "image",
+  "list",
+  "groups",
   "cards",
   "compare",
   "steps",
@@ -46,6 +50,8 @@ export const LAYOUT_META: Record<SlideLayoutId, { label: string; hint: string }>
   cover: { label: "Bìa", hint: "Slide đầu: tên đơn vị, tên bài, phụ đề, người trình bày" },
   section: { label: "Tiêu đề mục", hint: "Mở đầu mỗi phần lớn của bài" },
   image: { label: "Chữ và hình", hint: "Ba ý chính kèm hình minh hoạ" },
+  list: { label: "Danh sách", hint: "Nhiều ý và ý con trên cả bề ngang, chữ tự co để vừa slide" },
+  groups: { label: "Nhóm", hint: "Ý cha và ý con: thẻ, danh sách nhóm, câu dẫn hoặc số liệu, tự chọn theo nội dung" },
   cards: { label: "Ba thẻ", hint: "Các ý song song, mỗi ý một biểu tượng" },
   compare: { label: "So sánh hai cột", hint: "Đối chiếu hai cách làm" },
   steps: { label: "Các bước", hint: "Quy trình hoặc dòng thời gian" },
@@ -56,8 +62,7 @@ export const LAYOUT_META: Record<SlideLayoutId, { label: string; hint: string }>
   chart: { label: "Biểu đồ", hint: "Cột, thanh ngang, đường hoặc tròn từ số liệu có thật" },
 };
 
-export const SLIDE_ICONS = ["target", "compass", "route", "chat", "book", "sparkle", "users", "chart"] as const;
-export type SlideIconId = (typeof SLIDE_ICONS)[number];
+export { SLIDE_ICONS, type SlideIconId };
 
 export interface LayoutItem {
   heading: string; // tiêu đề thẻ / tên bước / con số / nội dung dòng tóm tắt
@@ -110,6 +115,83 @@ export const resolveCoverStyle = (config: unknown): CoverStyleId => {
 /** Số phần tối đa trên mục lục của bìa phần (vừa khung 720 px với chữ ≥ 26 px). */
 export const MAX_TOC = 6;
 
+/**
+ * Bố cục Danh sách: tối đa bấy nhiêu dòng (ý và ý con). Dùng cho slide nhiều chữ nhập từ PowerPoint, để mỗi slide gốc vẫn
+ * là một slide (tiêu chí P47). Cỡ chữ tự co từ 44 px xuống 26 px theo chỗ trống (listFontSize).
+ */
+export const LIST_MAX_LINES = 12;
+/** Cụm từ khoá của Danh sách (tiêu chí P53): tối đa bấy nhiêu từ, mỗi từ tối đa bấy nhiêu ký tự. */
+export const LIST_MAX_WORDS = 16;
+export const LIST_WORD_MAX_LEN = 30;
+export interface ListLine {
+  text: string;
+  /** Ý con (thụt vào một bậc). */
+  sub?: boolean;
+}
+/** Khung của Danh sách trên khung thiết kế 1280×720 (lề 56/80 px); có hình thì ô hình 400 px bên phải, cách 48 px. */
+export const LIST_BOX = { width: 1120, height: 608, titleMax: 52, titleMin: 36, imageW: 400, imageGap: 48 } as const;
+
+/** Cỡ chữ tiêu đề của Danh sách: ưu tiên một dòng (thu tới 40 px), không thì hai dòng. */
+export function listTitleFit(title: string): { px: number; lines: number } {
+  const t = title.trim();
+  if (!t) return { px: LIST_BOX.titleMax, lines: 0 };
+  const one = fitFontSize(t, { maxPx: LIST_BOX.titleMax, minPx: 40, widthPx: LIST_BOX.width, maxLines: 1 });
+  if (!one.overflow) return { px: one.px, lines: 1 };
+  const two = fitFontSize(t, { maxPx: LIST_BOX.titleMax, minPx: LIST_BOX.titleMin, widthPx: LIST_BOX.width, maxLines: 2 });
+  return { px: two.px, lines: 2 };
+}
+
+/** Cỡ chữ lớn nhất của Danh sách: slide ít dòng dùng chữ lớn cho hết chỗ, không để trống nửa slide. */
+export const LIST_MAX_PX = 44;
+
+/** Cỡ chữ của Danh sách để mọi dòng vừa khung (dưới tiêu đề); overflow = ở 26 px vẫn không vừa. */
+export function listFontSize(lines: ListLine[], title = "", hasImage = false, words: string[] = []): { px: number; overflow: boolean } {
+  const t = listTitleFit(title);
+  const availH = LIST_BOX.height - t.lines * t.px * 1.15 - (t.lines ? 28 : 0);
+  const width = LIST_BOX.width - (hasImage ? LIST_BOX.imageW + LIST_BOX.imageGap : 0);
+  const height = (px: number) =>
+    lines.reduce((sum, l) => {
+      const w = width - (l.sub ? px * 2.4 : px * 0.9);
+      const per = Math.max(1, Math.floor(w / (px * 0.56)));
+      return sum + Math.max(1, Math.ceil(stripInline(l.text).length / per)) * px * 1.25 + px * 0.35;
+    }, 0) + wordsHeight(words, px, width, lines.length > 0);
+  for (let px = LIST_MAX_PX; px >= MIN_FONT_PX; px -= 2) if (height(px) <= availH) return { px, overflow: false };
+  return { px: MIN_FONT_PX, overflow: true };
+}
+
+/** Cỡ chữ của cụm từ: lớn hơn chữ dòng một bậc (từ đứng riêng, cần nổi). */
+export const listWordPx = (px: number) => Math.round(px * 1.15);
+
+/** Chiều cao cụm từ: các từ xếp thành hàng, xuống hàng khi hết chỗ, cách nhau 0,9 em (xem .ll-list p.words). */
+function wordsHeight(words: string[], px: number, width: number, afterLines: boolean): number {
+  if (!words.length) return 0;
+  const wpx = listWordPx(px);
+  let rows = 1;
+  let used = 0;
+  for (const w of words) {
+    const need = w.length * wpx * 0.56 + (used ? wpx * 0.9 : 0);
+    if (used && used + need > width) {
+      rows += 1;
+      used = w.length * wpx * 0.56;
+    } else used += need;
+  }
+  // Sau các dòng: khoảng cách 28 px của khối chữ và lề trên 0,2 em của cụm từ.
+  return rows * wpx * 1.3 + (afterLines ? 28 + wpx * 0.2 : 0);
+}
+
+function sanitizeListLines(raw: Record<string, unknown>): ListLine[] {
+  const src: unknown[] = Array.isArray(raw.lines) ? raw.lines : Array.isArray(raw.bullets) ? raw.bullets : [];
+  return src
+    .map((l): ListLine | null => {
+      if (typeof l === "string") return { text: clip(l, MAX_LEN.listLine) };
+      if (!l || typeof l !== "object") return null;
+      const o = l as Record<string, unknown>;
+      return { text: clip(o.text, MAX_LEN.listLine), ...(o.sub === true ? { sub: true } : {}) };
+    })
+    .filter((l): l is ListLine => !!l && !!l.text)
+    .slice(0, LIST_MAX_LINES);
+}
+
 /** Số ý chính tối đa của slide chữ và hình. */
 export const MAX_BULLETS: Partial<Record<SlideLayoutId, number>> = { image: 3, classic: 3 };
 
@@ -133,7 +215,12 @@ export const MAX_LEN = {
   footnote: 80,
   quote: 200,
   source: 80,
-  tableCell: 60,
+  // Bảng nhập từ PowerPoint giữ nguyên chữ của ô; cỡ chữ tự co theo chỗ trống (tableFontSize).
+  tableCell: 200,
+  listLine: 200,
+  groupHeading: 80,
+  groupPoint: 200,
+  lead: 200,
   chartLabel: 40,
   seriesName: 40,
   unit: 20,
@@ -202,6 +289,21 @@ function sanitizeItems(raw: unknown, layout: SlideLayoutId): LayoutItem[] {
     if (items.length >= range.max) break;
   }
   return items;
+}
+
+/** Nhóm: bỏ nhóm không có chữ nào, nhóm chỉ có tên vẫn giữ (tên nhóm là chữ của giảng viên). */
+function sanitizeGroups(raw: unknown): SlideGroup[] {
+  if (!Array.isArray(raw)) return [];
+  const out: SlideGroup[] = [];
+  for (const r of raw) {
+    if (!r || typeof r !== "object") continue;
+    const o = r as Record<string, unknown>;
+    const heading = clip(o.heading, MAX_LEN.groupHeading);
+    const points = (Array.isArray(o.points) ? o.points : []).map((p) => clip(p, MAX_LEN.groupPoint)).filter(Boolean).slice(0, GROUP_POINTS_MAX);
+    if (heading || points.length) out.push({ heading, points, ...(isSlideIcon(o.icon) ? { icon: o.icon } : {}) });
+    if (out.length >= GROUPS_MAX) break;
+  }
+  return out;
 }
 
 function sanitizeColumns(raw: unknown): LayoutColumn[] {
@@ -307,6 +409,26 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
     const img = clip(raw.imageUrl, 2000);
     if (img) Object.assign(out, { imageUrl: img, ...imageExtras(raw) });
   }
+  if (layout === "list") {
+    const lines = sanitizeListLines(raw);
+    // Dòng đầu không thể là ý con (không có ý cha).
+    if (lines[0]?.sub) delete lines[0].sub;
+    out.lines = lines;
+    const words = (Array.isArray(raw.words) ? raw.words : [])
+      .map((w) => clip(w, LIST_WORD_MAX_LEN))
+      .filter(Boolean)
+      .slice(0, LIST_MAX_WORDS);
+    if (words.length) out.words = words;
+    const img = clip(raw.imageUrl, 2000);
+    if (img) Object.assign(out, { imageUrl: img, ...imageExtras(raw) });
+  }
+  if (layout === "groups") {
+    const lead = clip(raw.lead, MAX_LEN.lead);
+    if (lead) out.lead = lead;
+    out.groups = sanitizeGroups(raw.groups);
+    // false = giảng viên tắt biểu tượng cho cả slide (P63); mặc định bật nên không ghi.
+    if (raw.icons === false) out.icons = false;
+  }
   if (ITEM_RANGE[layout]) out.items = sanitizeItems(raw.items, layout);
   if (layout === "steps") {
     const f = clip(raw.footnote, MAX_LEN.footnote);
@@ -339,6 +461,10 @@ export function emptyLayoutConfig(layout: SlideLayoutId): Record<string, unknown
       return { layout, sectionNumber: "01", title: "", subtitle: "" };
     case "image":
       return { layout, title: "", bullets: ["", "", ""] };
+    case "list":
+      return { layout, title: "", lines: [{ text: "" }, { text: "" }, { text: "" }] };
+    case "groups":
+      return { layout, title: "", groups: [{ heading: "", points: [""] }, { heading: "", points: [""] }] };
     case "cards":
       return {
         layout,
@@ -439,6 +565,16 @@ export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>
         col.points.forEach((p) => check(`Cột ${i + 1}`, p, { maxPx: 32, widthPx: 480, maxLines: 3 })),
       );
       break;
+    case "list": {
+      const lines: ListLine[] = Array.isArray(c.lines) ? c.lines : [];
+      if (listFontSize(lines, String(c.title ?? ""), !!c.imageUrl, Array.isArray(c.words) ? c.words : []).overflow) problems.push("Danh sách");
+      break;
+    }
+    case "groups": {
+      const groups: SlideGroup[] = Array.isArray(c.groups) ? c.groups : [];
+      if (groups.length && groupsFit({ title: String(c.title ?? ""), lead: typeof c.lead === "string" ? c.lead : "", icons: c.icons !== false, groups }).overflow) problems.push("Nhóm");
+      break;
+    }
     case "table": {
       const head: string[] = Array.isArray(c.head) ? c.head : [];
       const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
@@ -492,6 +628,10 @@ function toPieces(c: Record<string, any>): Pieces {
   const texts: Pieces["texts"] = [];
   if (Array.isArray(c.items)) for (const it of c.items) texts.push({ heading: String(it?.heading ?? ""), body: String(it?.body ?? "") });
   if (Array.isArray(c.bullets)) for (const b of c.bullets) texts.push({ heading: String(b ?? ""), body: "" });
+  if (Array.isArray(c.lines)) for (const l of c.lines) texts.push({ heading: String(l?.text ?? ""), body: "" });
+  if (Array.isArray(c.words) && c.words.length) texts.push({ heading: c.words.map(String).join(", "), body: "" });
+  if (typeof c.lead === "string" && c.lead.trim()) texts.push({ heading: c.lead, body: "" });
+  if (Array.isArray(c.groups)) for (const g of c.groups) texts.push({ heading: String(g?.heading ?? ""), body: (Array.isArray(g?.points) ? g.points : []).join(" ") });
   if (Array.isArray(c.columns)) {
     for (const col of c.columns) {
       const points: string[] = Array.isArray(col?.points) ? col.points : [];
@@ -555,6 +695,29 @@ export function convertLayoutConfig(from: Record<string, any>, to: SlideLayoutId
       base.bullets = p.texts.map((t) => joinSentence(t.heading, t.body)).slice(0, MAX_BULLETS.image);
       if (p.imageUrl) Object.assign(base, { imageUrl: p.imageUrl, ...p.image });
       break;
+    case "list": {
+      base.title = p.title;
+      // Thẻ, bước, cột: tiêu đề thành ý, câu giải thích thành ý con, để không mất chữ.
+      const lines: ListLine[] = [];
+      for (const t of p.texts) {
+        if (t.heading.trim()) lines.push({ text: t.heading });
+        if (t.body.trim()) lines.push(t.heading.trim() ? { text: t.body, sub: true } : { text: t.body });
+      }
+      base.lines = lines.slice(0, LIST_MAX_LINES);
+      if (p.imageUrl) Object.assign(base, { imageUrl: p.imageUrl, ...p.image });
+      break;
+    }
+    case "groups": {
+      base.title = p.title;
+      // Có chữ giải thích: mỗi ý là một nhóm (tên + ý con). Không có (danh sách phẳng): dòng đầu là tên nhóm, các dòng sau là ý con.
+      const hasBody = p.texts.some((t) => t.body.trim());
+      base.groups = hasBody
+        ? p.texts.map((t) => ({ heading: t.heading, points: t.body.trim() ? [t.body] : [] }))
+        : p.texts.length
+          ? [{ heading: p.texts[0]!.heading, points: p.texts.slice(1).map((t) => t.heading) }]
+          : [];
+      break;
+    }
     case "cards":
     case "steps":
     case "stats":
@@ -812,31 +975,42 @@ export function mergeSlideMeta(
   return out;
 }
 
-// ── In đậm và in nghiêng trong dòng (tiêu chí H3) ──────────────────────────
-// Chỉ hai dấu: **in đậm** và *in nghiêng*. Không có cỡ chữ, font, màu tuỳ chọn.
+// ── In đậm, in nghiêng và tô màu trong dòng (tiêu chí H3, P52) ─────────────
+// Ba dấu: **in đậm**, *in nghiêng* và ==tô màu== (màu nhấn của giao diện slide).
+// Không có cỡ chữ, font hay màu tuỳ chọn: tô màu luôn là màu nhấn để slide hài hoà.
 
 export interface InlineRun {
   text: string;
   bold?: boolean;
   italic?: boolean;
+  mark?: boolean;
 }
+
+export type InlineMarker = "**" | "*" | "==";
 
 /** Tách chuỗi thành các đoạn có định dạng. Dấu không có cặp đóng được giữ nguyên là chữ thường. */
 export function parseInline(text: string): InlineRun[] {
   const runs: InlineRun[] = [];
-  const push = (t: string, bold: boolean, italic: boolean) => {
+  const push = (t: string, bold: boolean, italic: boolean, mark: boolean) => {
     if (!t) return;
     const last = runs[runs.length - 1];
-    if (last && !!last.bold === bold && !!last.italic === italic) last.text += t;
-    else runs.push({ text: t, ...(bold ? { bold: true } : {}), ...(italic ? { italic: true } : {}) });
+    if (last && !!last.bold === bold && !!last.italic === italic && !!last.mark === mark) last.text += t;
+    else
+      runs.push({
+        text: t,
+        ...(bold ? { bold: true } : {}),
+        ...(italic ? { italic: true } : {}),
+        ...(mark ? { mark: true } : {}),
+      });
   };
   let i = 0;
   let bold = false;
   let italic = false;
+  let mark = false;
   let buf = "";
   // Có dấu đóng phía sau chưa? Với "*" chỉ tính dấu đơn (không thuộc một cặp "**").
-  const closes = (marker: string, from: number) => {
-    if (marker === "**") return text.indexOf("**", from) > -1;
+  const closes = (marker: InlineMarker, from: number) => {
+    if (marker !== "*") return text.indexOf(marker, from) > -1;
     for (let k = from; k < text.length; k++) {
       if (text[k] !== "*") continue;
       if (text[k + 1] === "*") {
@@ -848,13 +1022,18 @@ export function parseInline(text: string): InlineRun[] {
     return false;
   };
   while (i < text.length) {
-    if (text.startsWith("**", i) && (bold || closes("**", i + 2))) {
-      push(buf, bold, italic);
+    if (text.startsWith("==", i) && (mark || closes("==", i + 2))) {
+      push(buf, bold, italic, mark);
+      buf = "";
+      mark = !mark;
+      i += 2;
+    } else if (text.startsWith("**", i) && (bold || closes("**", i + 2))) {
+      push(buf, bold, italic, mark);
       buf = "";
       bold = !bold;
       i += 2;
     } else if (text[i] === "*" && !text.startsWith("**", i) && (italic || closes("*", i + 1))) {
-      push(buf, bold, italic);
+      push(buf, bold, italic, mark);
       buf = "";
       italic = !italic;
       i += 1;
@@ -863,11 +1042,9 @@ export function parseInline(text: string): InlineRun[] {
       i += 1;
     }
   }
-  push(buf, bold, italic);
+  push(buf, bold, italic, mark);
   return runs;
 }
-
-/** Chữ thuần (đã bỏ dấu định dạng) — dùng để ước lượng độ dài khi chọn cỡ chữ. */
 export function stripInline(text: string): string {
   return parseInline(text)
     .map((r) => r.text)
@@ -882,7 +1059,7 @@ export function toggleInlineMarker(
   value: string,
   start: number,
   end: number,
-  marker: "**" | "*",
+  marker: InlineMarker,
 ): { value: string; start: number; end: number } {
   if (start >= end) return { value, start, end };
   const m = marker.length;
