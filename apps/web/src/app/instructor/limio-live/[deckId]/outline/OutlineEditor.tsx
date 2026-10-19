@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Check, ChevronLeft, FileText, LayoutTemplate, Loader2, PenLine, Plus, Sparkles } from "lucide-react";
-import { outlineStory } from "@/lib/limioLiveOutlineCard";
+import { outlineStory, shouldAutoOpen } from "@/lib/limioLiveOutlineCard";
 import { apiUrl } from "@/lib/apiUrl";
 import { estimateGenerationTokens } from "@/lib/limioLiveGenerate";
 import {
@@ -87,6 +87,11 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const [syncInfo, setSyncInfo] = useState<SyncInfo | null>(null);
   const [slideCount, setSlideCount] = useState(0);
   const [theme, setTheme] = useState("brand");
+  // Lưới "đang tạo" (O6, O7): slide sáng dần từ slide 1 theo số slide đã xong; xong thì tự mở bài giảng.
+  const [genWriting, setGenWriting] = useState<string[] | null>(null);
+  const [genDone, setGenDone] = useState(0);
+  const [shown, setShown] = useState(0);
+  const [opening, setOpening] = useState(false);
   const [confirmErr, setConfirmErr] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -96,7 +101,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [gen, setGen] = useState<
     | { state: "idle" }
-    | { state: "running"; done: number; total: number; writing: string[] | null; doneIds: string[] }
+    | { state: "running"; done: number; total: number }
     | { state: "done"; slideCount: number; fallbackCount: number; sync?: { regenerated: number; created: number; removed: number; kept: number } }
     | { state: "error"; message: string }
   >({ state: "idle" });
@@ -165,6 +170,20 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
     [],
   );
 
+  const gridTotal = genWriting ? genWriting.length : outline.slides.length;
+  useEffect(() => {
+    if (gen.state !== "running" && !opening) return;
+    const target = opening ? gridTotal : Math.min(genDone, gridTotal);
+    if (shown >= target) return;
+    const t = setTimeout(() => setShown((n) => n + 1), opening ? 90 : 160);
+    return () => clearTimeout(t);
+  }, [gen.state, opening, genDone, shown, gridTotal]);
+  useEffect(() => {
+    if (!opening || shown < gridTotal) return;
+    const t = setTimeout(() => window.location.assign(`/instructor/limio-live/${deckId}`), 900);
+    return () => clearTimeout(t);
+  }, [opening, shown, gridTotal, deckId]);
+
   const stats = useMemo(() => outlineStats(outline), [outline]);
   const range = slideRange(minutes);
   const warnings = useMemo(
@@ -231,7 +250,11 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   };
 
   const generate = async (mode?: "sync") => {
-    setGen({ state: "running", done: 0, total: mode === "sync" && syncInfo ? syncInfo.rewrite + syncInfo.add : outline.slides.length, writing: null, doneIds: [] });
+    setGenWriting(null);
+    setGenDone(0);
+    setShown(0);
+    setOpening(false);
+    setGen({ state: "running", done: 0, total: mode === "sync" && syncInfo ? syncInfo.rewrite + syncInfo.add : outline.slides.length });
     try {
       const res = await fetch(`${url}/generate`, {
         method: "POST",
@@ -256,8 +279,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
           buf = buf.slice(nl + 1);
           if (!line) continue;
           const ev = JSON.parse(line) as { type: string; id?: string; ids?: string[]; done?: number; total?: number; slideCount?: number; fallbackCount?: number; error?: string; regenerated?: number; created?: number; removed?: number; kept?: number };
-          if (ev.type === "start") setGen((g) => (g.state === "running" ? { ...g, total: ev.total ?? g.total, writing: Array.isArray(ev.ids) ? ev.ids : null } : g));
-          else if (ev.type === "slide") setGen((g) => (g.state === "running" && ev.id ? { ...g, doneIds: [...g.doneIds, ev.id] } : g));
+          if (ev.type === "start") {
+            setGenWriting(Array.isArray(ev.ids) ? ev.ids : null);
+            setGen((g) => (g.state === "running" ? { ...g, total: ev.total ?? g.total } : g));
+          } else if (ev.type === "slide") setGenDone((n) => n + 1);
           else if (ev.type === "progress") setGen((g) => (g.state === "running" ? { ...g, done: ev.done ?? 0, total: ev.total ?? 0 } : g));
           else if (ev.type === "done") {
             finished = true;
@@ -267,6 +292,8 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
               fallbackCount: ev.fallbackCount ?? 0,
               ...(ev.regenerated !== undefined ? { sync: { regenerated: ev.regenerated, created: ev.created ?? 0, removed: ev.removed ?? 0, kept: ev.kept ?? 0 } } : {}),
             });
+            // O7: tạo xong thì sáng nốt các ô còn lại rồi mở thẳng bài giảng (trừ khi có slide AI chưa viết được).
+            if (shouldAutoOpen({ fallbackCount: ev.fallbackCount ?? 0 })) setOpening(true);
           } else if (ev.type === "error") {
             finished = true;
             setGen({ state: "error", message: GEN_ERROR[ev.error ?? ""] ?? "Không tạo được slide. Vui lòng thử lại." });
@@ -292,6 +319,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   const inRange = stats.total >= range.min && stats.total <= range.max;
   const story = outlineStory(outline, { imported: importedRows });
   const running = gen.state === "running";
+  const showGrid = running || opening;
   const aiTokens = formatTokens(estimateGenerationTokens({ sourceChars: data.sourceChars, slideCount: aiRows }).total);
 
   return (
@@ -380,12 +408,12 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
         </aside>
 
         <div className="order-2 min-w-0 lg:order-1">
-          {running ? (
+          {showGrid ? (
             <section aria-labelledby="gen-h" className="space-y-3">
               <h2 id="gen-h" className="text-base font-semibold">
-                Đang tạo slide
+                {opening ? "Đã tạo xong, đang mở bài giảng" : "Đang tạo slide"}
               </h2>
-              <GenerationGrid slides={outline.slides} done={new Set((gen as { doneIds: string[] }).doneIds)} writing={(gen as { writing: string[] | null }).writing ? new Set((gen as { writing: string[] }).writing) : null} />
+              <GenerationGrid slides={outline.slides} done={shown} writing={genWriting ? new Set(genWriting) : null} />
             </section>
           ) : (
             <section className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 sm:p-4" aria-labelledby="outline-list-h">
@@ -440,13 +468,17 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
             <div className="flex w-full max-w-xl items-center gap-3" role="status">
               <Loader2 size={16} className="shrink-0 animate-spin" />
               <b className="whitespace-nowrap text-[15px]">
-                Đang tạo slide {Math.min((gen as { done: number }).done + 1, (gen as { total: number }).total || 1)} trên {(gen as { total: number }).total}
+                Đang tạo slide {Math.min(shown + 1, gridTotal || 1)} trên {gridTotal}
               </b>
               <div className="h-2 min-w-[120px] flex-1 overflow-hidden rounded-full bg-black/10">
-                <div className="h-full rounded-full bg-brand-600 transition-all" style={{ width: `${(gen as { total: number }).total ? Math.round(((gen as { done: number }).done / (gen as { total: number }).total) * 100) : 0}%` }} />
+                <div className="h-full rounded-full bg-brand-600 transition-all" style={{ width: `${gridTotal ? Math.round((shown / gridTotal) * 100) : 0}%` }} />
               </div>
               <span className="hidden text-[13px] text-muted sm:inline">Vui lòng không đóng trang.</span>
             </div>
+          ) : opening ? (
+            <p className="flex items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-200" role="status">
+              <Loader2 size={16} className="animate-spin" /> Đã tạo {gen.state === "done" ? gen.slideCount : stats.total} slide, đang mở bài giảng...
+            </p>
           ) : gen.state === "done" ? (
             <>
               <p className="flex items-center gap-2 text-sm font-medium text-emerald-900 dark:text-emerald-200">
