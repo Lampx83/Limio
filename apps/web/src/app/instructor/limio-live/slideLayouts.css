@@ -20,7 +20,7 @@
   .lt-night { --sbg: linear-gradient(135deg, #0B1020 0%, #1B1A4B 100%); --stext: #F1F5F9; --smuted: #C4CCE0;
     --sa: #38BDF8; --sa2: #C4B5FD; --ssoft: rgba(56,189,248,.16); --ssoft2: rgba(167,139,250,.16); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #06202E; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #38BDF8; --sglow2: #A78BFA;
     --sg: linear-gradient(120deg, #38BDF8 0%, #A78BFA 100%); --sgb: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%); }
   .lt-paper { --sbg: linear-gradient(160deg, #FBF6E9 0%, #F4E8CB 100%); --stext: #2B2118; --smuted: #6B5B4A;
@@ -70,25 +70,25 @@
   .lt-monoblack { --sbg: linear-gradient(135deg, #050505 0%, #1A1A1A 100%); --stext: #FAFAFA; --smuted: #B4B4B8;
     --sa: #FAFAFA; --sa2: #A1A1AA; --ssoft: rgba(255,255,255,.12); --ssoft2: rgba(255,255,255,.08); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.16);
     --son: #111113; --sok: #86EFAC; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #FFFFFF; --sglow2: #71717A;
     --sg: linear-gradient(120deg, #FFFFFF 0%, #A1A1AA 100%); --sgb: linear-gradient(135deg, #F4F4F5 0%, #A1A1AA 100%); }
   .lt-forest { --sbg: linear-gradient(135deg, #06130D 0%, #0E2B1F 100%); --stext: #ECFDF5; --smuted: #B5D3C3;
     --sa: #4ADE80; --sa2: #FDE047; --ssoft: rgba(74,222,128,.16); --ssoft2: rgba(253,224,71,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #052E16; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #4ADE80; --sglow2: #FDE047;
     --sg: linear-gradient(120deg, #4ADE80 0%, #A3E635 100%); --sgb: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%); }
   .lt-plum { --sbg: linear-gradient(135deg, #1A0B22 0%, #3A1346 100%); --stext: #FDF4FF; --smuted: #E3C7EC;
     --sa: #F0ABFC; --sa2: #FDA4AF; --ssoft: rgba(240,171,252,.16); --ssoft2: rgba(253,164,175,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #2E0B3A; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #E879F9; --sglow2: #FB7185;
     --sg: linear-gradient(120deg, #F0ABFC 0%, #FDA4AF 100%); --sgb: linear-gradient(135deg, #E879F9 0%, #C026D3 100%); }
   .lt-ink { --sbg: linear-gradient(135deg, #0E1014 0%, #1C212B 100%); --stext: #F5F6F8; --smuted: #C0C6D2;
     --sa: #FBBF24; --sa2: #60A5FA; --ssoft: rgba(251,191,36,.15); --ssoft2: rgba(96,165,250,.15); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #1A1300; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #FBBF24; --sglow2: #60A5FA;
     --sg: linear-gradient(120deg, #FBBF24 0%, #F59E0B 100%); --sgb: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
 
