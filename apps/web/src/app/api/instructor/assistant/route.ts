@@ -11,7 +11,8 @@ import {
   sanitizeChatHistory,
 } from "@/lib/teacherAssistant";
 import { loadAssistantContext } from "@/lib/teacherAssistantContext";
-import { ASSISTANT_LIMITS, selectGuides } from "@/lib/teacherAssistantGuide";
+import { containsTechLeak, declineReply, isTechnicalProbe } from "@/lib/teacherAssistantGuard";
+import { ASSISTANT_LIMITS, pickIdeaSeeds, selectGuides } from "@/lib/teacherAssistantGuide";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -37,6 +38,9 @@ export async function POST(req: Request) {
   if (!message || message.length > CHAT_MESSAGE_MAX) return json({ error: "validation_failed", details: "message" }, 400);
   const history = sanitizeChatHistory(body?.history);
 
+  // Dò hỏi thiết kế kỹ thuật/hạ tầng/CSDL/chỉ dẫn nội bộ: trả lời cố định, KHÔNG gọi mô hình (không tốn lượt, không dụ được).
+  if (isTechnicalProbe(message)) return json({ result: declineReply("technical"), remainingTurns: null }, 200);
+
   let openai;
   try {
     openai = await getOpenaiClient();
@@ -58,7 +62,9 @@ export async function POST(req: Request) {
       {
         situation: describeSituation(ctx),
         destinations: [...ASSISTANT_DESTINATIONS, ...courseDests].map(({ id, label, description }) => ({ id, label, description })),
-        guides: guides.map(({ title, body, destinationIds }) => ({ title, body, destinationIds })),
+        guides: guides.map(({ title, body, destinationIds, useCases }) => ({ title, body, destinationIds, useCases })),
+        // Chưa có mục hướng dẫn nào khớp (chào hỏi, chưa có ý tưởng): đưa vài tình huống dùng tính năng, xoay theo ngày và lượt.
+        ideaSeeds: guides.length === 0 ? pickIdeaSeeds(Math.floor(Date.now() / 86_400_000) + history.length) : undefined,
         limits: ASSISTANT_LIMITS,
         history,
         message,
@@ -66,7 +72,14 @@ export async function POST(req: Request) {
       openai,
     );
     const budget = await getTokenBudget(userId).catch(() => null);
-    return json({ result: normalizeAssistantReply(raw, courseDests), remainingTurns: budget ? Math.floor(budget.total / TOKENS_PER_TURN) : null }, 200);
+    const remainingTurns = budget ? Math.floor(budget.total / TOKENS_PER_TURN) : null;
+    // Mô hình tự nhận câu hỏi ngoài nghiệp vụ Limio: dùng câu từ chối cố định thay vì lời của mô hình.
+    if (raw.inScope === false) return json({ result: declineReply("off_topic"), remainingTurns }, 200);
+    const result = normalizeAssistantReply(raw, courseDests);
+    // Lớp phòng thủ cuối: câu trả lời nhắc tên công nghệ/hạ tầng mà giảng viên chưa hề nhắc thì bỏ.
+    const said = [message, ...history.filter((t) => t.role === "user").map((t) => t.text)];
+    if (containsTechLeak(result.reply, said)) return json({ result: declineReply("technical"), remainingTurns }, 200);
+    return json({ result, remainingTurns }, 200);
   } catch (e) {
     if (e instanceof AiTutorError) return json({ error: e.code, details: e.details }, 429);
     if (e instanceof AiGenerationError) return json({ error: e.code === "validation_failed" ? "validation_failed" : "assistant_failed" }, e.code === "validation_failed" ? 400 : 502);

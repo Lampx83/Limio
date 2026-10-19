@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ASSISTANT_DESTINATIONS } from "./teacherAssistant";
-import { ASSISTANT_LIMITS, GUIDES, MAX_GUIDES_PER_TURN, selectGuides } from "./teacherAssistantGuide";
+import { ASSISTANT_LIMITS, GUIDES, MAX_GUIDES_PER_TURN, pickIdeaSeeds, selectGuides } from "./teacherAssistantGuide";
 
 describe("kho hướng dẫn", () => {
   it("mã mục không trùng, mỗi mục có từ khoá và nội dung gọn", () => {
@@ -106,5 +106,35 @@ describe("selectGuides", () => {
   it("từ khoá ngắn chỉ khớp nguyên từ, không khớp giữa từ khác", () => {
     // "xp" không được khớp trong "expert"; "vote" không khớp trong "devoted".
     expect(selectGuides("an expert and devoted teacher")).toEqual([]);
+  });
+});
+
+describe("tình huống dùng tính năng (ngữ cảnh áp dụng)", () => {
+  it("mỗi mục có ít nhất hai tình huống, là câu đầy đủ xưng thầy/cô", () => {
+    for (const g of GUIDES) {
+      expect(g.useCases.length, g.id).toBeGreaterThanOrEqual(2);
+      for (const u of g.useCases) {
+        expect(u, `${g.id}: ${u}`).toMatch(/thầy\/cô/i);
+        expect(u.length, `${g.id}: ${u}`).toBeGreaterThan(40);
+        expect(u.length, `${g.id}: ${u}`).toBeLessThan(260);
+      }
+    }
+  });
+
+  it("pickIdeaSeeds: đủ số lượng, mỗi tình huống từ một mục khác nhau, ổn định theo seed", () => {
+    const a = pickIdeaSeeds(10, 5);
+    expect(a).toHaveLength(5);
+    expect(new Set(a.map((x) => x.split(":")[0])).size).toBe(5);
+    expect(pickIdeaSeeds(10, 5)).toEqual(a);
+  });
+
+  it("pickIdeaSeeds: các ngày khác nhau cho nhóm gợi ý khác nhau", () => {
+    const days = Array.from({ length: 6 }, (_, d) => pickIdeaSeeds(20_000 + d, 5).join("|"));
+    expect(new Set(days).size).toBe(6);
+  });
+
+  it("pickIdeaSeeds: seed âm hoặc rất lớn vẫn không lỗi", () => {
+    expect(pickIdeaSeeds(-7, 3)).toHaveLength(3);
+    expect(pickIdeaSeeds(10 ** 9, 3)).toHaveLength(3);
   });
 });

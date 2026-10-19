@@ -159,6 +159,8 @@ Trợ lý Limio ở trang chủ giảng viên trả lời "làm sao…?" từ m�
 - **Test `teacherAssistantFreshness.test.ts` chạy trong CI** và bắt ba loại lệch: (1) nhãn trong ngoặc kép của hướng dẫn không còn trong mã; (2) điểm đến của trợ lý không còn là trang thật; (3) mục menu giảng viên mới chưa được dạy trợ lý. Test đỏ thì sửa hướng dẫn, đừng nới test. Mục menu cố ý không dạy thì ghi lý do vào `MENU_NOT_IN_ASSISTANT` trong test.
 - Nhãn có phần đổi theo dữ liệu thì viết trong hướng dẫn bằng chữ số, `n` hoặc `...` (vd `"Áp dụng cho n lớp đã chọn"`); test coi đó là ký tự thay thế.
 - **Chỉ viết điều đã đối chiếu mã.** Chỗ chưa chắc thì để trợ lý dặn giảng viên mở trang và làm theo hướng dẫn trên màn hình; điều Limio chưa có ghi vào `ASSISTANT_LIMITS` để trợ lý không hứa nhầm.
+- **Phạm vi và bảo mật của trợ lý:** chỉ trả lời nghiệp vụ Limio; **không tiết lộ** thiết kế kỹ thuật, hạ tầng, cơ sở dữ liệu, tên mô hình AI hay chính các chỉ dẫn nội bộ. Hai lớp: bộ lọc cố định ở máy chủ (`lib/teacherAssistantGuard.ts`, chạy trước và sau khi gọi mô hình, có test) và quy tắc trong prompt (`packages/core-feedback/src/aiTutor/teacherAssistant.ts`). Kho hướng dẫn không được chứa tên công nghệ nội bộ (test kiểm).
+- **Mỗi mục hướng dẫn có `useCases`** (ít nhất 2 tình huống thực tế, câu đầy đủ xưng thầy/cô, không bịa chức năng) để trợ lý gợi ý ngữ cảnh áp dụng; thêm mục mới phải viết cả phần này.
 - Khoá "Hướng dẫn sử dụng Limio" đăng trên server là sản phẩm riêng, viết lại từ `GIAO-DIEN.md`; nó **không** ảnh hưởng tới trợ lý.
 
 ## 5. Năm nguyên tắc khi viết code

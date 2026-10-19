@@ -76,7 +76,7 @@ describe("nhãn trong hướng dẫn còn tồn tại trong giao diện", () => 
 
   for (const g of GUIDES) {
     it(`mục "${g.id}": mọi nhãn trong ngoặc kép còn có trong mã`, () => {
-      const missing = quotedLabels(g.body).filter((q) => !labelExists(q, corpus));
+      const missing = [...quotedLabels(g.body), ...g.useCases.flatMap(quotedLabels)].filter((q) => !labelExists(q, corpus));
       expect(
         missing,
         `Mục hướng dẫn "${g.id}" nhắc nhãn không còn trong mã: ${missing.map((m) => `"${m}"`).join(", ")}.\n` +
