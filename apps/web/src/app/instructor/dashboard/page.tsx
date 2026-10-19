@@ -31,6 +31,8 @@ import {
   INSTRUCTOR_MENU_PREVIEW_EVENT,
 } from "@/components/InstructorLeftMenu";
 import CalendarLoader from "@/components/calendar/CalendarLoader";
+import TeacherAssistant from "@/components/TeacherAssistant";
+import { IDEA_PROMPT, buildStarters } from "@/lib/teacherAssistant";
 
 export const dynamic = "force-dynamic";
 
@@ -172,7 +174,20 @@ export default async function InstructorDashboard({
     const sampleCourses = await listSampleCourses();
     return (
       <main>
-        <h1 className="text-2xl font-bold">{greeting()}</h1>
+        <div>
+          <TeacherAssistant
+          greeting={greeting()}
+            name={session.user.name ?? session.user.email ?? ""}
+            ideaPrompt={IDEA_PROMPT}
+              starters={buildStarters({
+              courseTitles: [],
+              pendingEssays: 0,
+              pendingAssignments: 0,
+              staleForumThreads: 0,
+              staleLearners: 0,
+            })}
+          />
+        </div>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-5">
           <p className="text-sm font-semibold text-accent-700">
             Bạn chưa là instructor của khoá nào.
@@ -464,17 +479,7 @@ export default async function InstructorDashboard({
     }),
   );
 
-  // ── Context line for greeting ─────────────────────────────────────────
-  const highCount = items.filter((i) => i.priority === "high").length;
   const totalLearners = ownedCourses.reduce((s, c) => s + c._count.enrollments, 0);
-  let contextLine: string;
-  if (highCount > 0) {
-    contextLine = `Có ${highCount} việc gấp cần xử lý hôm nay.`;
-  } else if (items.length > 0) {
-    contextLine = `Có ${items.length} việc cần xem qua khi rảnh.`;
-  } else {
-    contextLine = `Mọi thứ đang ổn. ${totalLearners} học viên trên ${ownedCourses.length} khoá của bạn.`;
-  }
 
   // Activity feed deep links + course tag.
   const courseSlugById = new Map(
@@ -490,49 +495,20 @@ export default async function InstructorDashboard({
         <FeatureBlockedToast />
       </Suspense>
 
-      {/* Greeting */}
-      <header>
-        <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-          Giảng viên
-        </span>
-        <h1 className="mt-3 text-2xl font-bold">
-          {greeting()},{" "}
-          <span className="text-gradient">
-            {session.user.name ?? session.user.email}
-          </span>
-        </h1>
-        <p className="mt-2 text-muted">{contextLine}</p>
-      </header>
-
-      {/* Stat strip */}
-      <div className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-        <StatTile
-          icon={BookOpen}
-          iconBg="bg-[rgb(var(--brand-soft))]"
-          iconFg="text-brand-600"
-          value={ownedCourses.length}
-          label="Khoá học đang dạy"
-        />
-        <StatTile
-          icon={Users}
-          iconBg="bg-[rgb(var(--brand-soft))]"
-          iconFg="text-brand-600"
-          value={totalLearners}
-          label="Học viên"
-        />
-        <StatTile
-          icon={ListChecks}
-          iconBg="bg-accent-50"
-          iconFg="text-accent-600"
-          value={items.length}
-          label="Việc cần xử lý"
-        />
-        <StatTile
-          icon={UserX}
-          iconBg="bg-danger-50"
-          iconFg="text-danger-600"
-          value={staleLearnerCount}
-          label={`Học viên im ắng >${LEARNER_STALE_DAYS} ngày`}
+      {/* Hôm nay thầy/cô muốn làm gì: thẻ gợi ý nhìn thấy ngay + trò chuyện với Limio */}
+      <div className="mt-6">
+        <TeacherAssistant
+          greeting={greeting()}
+          name={session.user.name ?? session.user.email ?? ""}
+          ideaPrompt={IDEA_PROMPT}
+          starters={buildStarters({
+            courseTitles: ownedCourses.map((c) => c.title),
+            courses: ownedCourses.map((c) => ({ id: c.id, title: c.title })),
+            pendingEssays: pendingEssaysTotal,
+            pendingAssignments: pendingAssignmentsTotal,
+            staleForumThreads,
+            staleLearners: staleLearnerCount,
+          })}
         />
       </div>
 
@@ -618,6 +594,47 @@ export default async function InstructorDashboard({
           {/* Lịch + nhãn tuần của kỳ học (chỉ tài khoản thuộc trường mới có nhãn) */}
           <CalendarLoader userId={userId} audience="instructor" />
 
+        </div>
+      </div>
+
+      {/* Số liệu và hoạt động: đã có trợ lý + danh sách việc gấp ở trên, nên gom vào đây cho trang đỡ rối. */}
+      <details className="group mt-8 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4">
+        <summary className="cursor-pointer text-sm font-semibold">
+          Xem thêm: số liệu, hoạt động gần đây, gamification
+        </summary>
+        <div className="mt-2">
+      {/* Stat strip */}
+      <div className="mt-7 grid grid-cols-2 gap-3.5 sm:grid-cols-4">
+        <StatTile
+          icon={BookOpen}
+          iconBg="bg-[rgb(var(--brand-soft))]"
+          iconFg="text-brand-600"
+          value={ownedCourses.length}
+          label="Khoá học đang dạy"
+        />
+        <StatTile
+          icon={Users}
+          iconBg="bg-[rgb(var(--brand-soft))]"
+          iconFg="text-brand-600"
+          value={totalLearners}
+          label="Học viên"
+        />
+        <StatTile
+          icon={ListChecks}
+          iconBg="bg-accent-50"
+          iconFg="text-accent-600"
+          value={items.length}
+          label="Việc cần xử lý"
+        />
+        <StatTile
+          icon={UserX}
+          iconBg="bg-danger-50"
+          iconFg="text-danger-600"
+          value={staleLearnerCount}
+          label={`Học viên im ắng >${LEARNER_STALE_DAYS} ngày`}
+        />
+      </div>
+        <div className="mt-8">
           {/* Activity feed */}
           <section>
             <header className="flex items-baseline justify-between">
@@ -676,8 +693,7 @@ export default async function InstructorDashboard({
             )}
           </section>
         </div>
-      </div>
-
+        <div>
       {/* Gamification theo khoá */}
       {gamiSummaries.length > 0 && (
         <section className="mt-8">
@@ -726,6 +742,9 @@ export default async function InstructorDashboard({
           </div>
         </section>
       )}
+        </div>
+        </div>
+      </details>
       {shouldShowTour && (
         <HelpTour
           steps={INSTRUCTOR_TOUR_STEPS}

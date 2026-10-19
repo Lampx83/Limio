@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thanh công cụ trình sửa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --faint: #8f9884; --line: #e2e5d8;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 14px 32px -16px rgb(28 36 16 / .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24;
+      --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24;
+    --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 15px; font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 0 16px 80px; }
+  header.top { padding: 18px 0 4px; }
+  header.top h1 { font-size: 21px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-3); max-width: 900px; }
+  h2 { font-size: 16px; margin: 28px 0 8px; }
+  .cap { font-size: 13px; color: var(--ink-3); margin: 0 0 6px; }
+  .frame { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: visible; box-shadow: var(--shadow); }
+  .controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; color: var(--ink-3); margin: 12px 0 0; }
+  .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .seg button { border: 0; background: none; padding: 5px 12px; border-radius: 999px; color: var(--ink-2); font-size: 13.5px; }
+  .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+
+  /* ---------- hiện tại (theo ảnh chụp) ---------- */
+  .old { display: flex; align-items: center; gap: 22px; height: 64px; padding: 0 24px; font-size: 14px; overflow: hidden; }
+  .old .crumb { color: var(--ink-3); width: 54px; line-height: 1.3; }
+  .old .ttl { font-weight: 700; width: 70px; overflow: hidden; white-space: nowrap; }
+  .old .b { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; color: var(--ink-2); font-weight: 600; white-space: nowrap; flex: none; }
+  .old .grp { display: flex; gap: 4px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 4px; flex: none; }
+  .old .grp span { padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .old .grp span:first-child { background: var(--brand-fill); color: #fff; }
+
+  /* ---------- đề xuất ---------- */
+  .bar { display: flex; align-items: center; gap: 6px; height: 56px; padding: 0 12px 0 8px; position: relative; }
+  .ib { width: 36px; height: 36px; border-radius: 10px; border: 0; background: none; display: grid; place-items: center; color: var(--ink-3); flex: none; }
+  .ib:hover { background: var(--surface-2); color: var(--ink); }
+  .title { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+  .title input { min-width: 0; flex: 0 1 auto; width: 100%; max-width: 560px; border: 1px solid transparent; border-radius: 8px; background: none; padding: 5px 8px;
+    font-size: 16px; font-weight: 700; text-overflow: ellipsis; }
+  .title input:hover { border-color: var(--line); }
+  .title input:focus { border-color: var(--brand); outline: none; background: var(--surface); }
+  .saved { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: var(--faint); white-space: nowrap; border: 0; background: none; padding: 4px 6px; border-radius: 6px; }
+  .saved:hover { background: var(--surface-2); color: var(--ink-2); }
+  .tools { display: flex; align-items: center; gap: 2px; flex: none; }
+  .tb { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 11px; border-radius: 10px; border: 0; background: none; color: var(--ink-2); font-weight: 600; font-size: 14px; white-space: nowrap; }
+  .tb:hover, .tb[aria-expanded="true"] { background: var(--surface-2); color: var(--ink); }
+  .tb .swatch { display: inline-flex; }
+  .tb .swatch i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--surface); margin-left: -5px; box-shadow: 0 0 0 1px var(--line); }
+  .tb .swatch i:first-child { margin-left: 0; }
+  .sep { width: 1px; height: 24px; background: var(--line); margin: 0 6px; flex: none; }
+  .play { display: inline-flex; flex: none; border-radius: 10px; overflow: visible; position: relative; }
+  .play .main { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px 0 14px; border: 0; border-radius: 10px 0 0 10px; background: var(--brand); color: #fff; font-weight: 700; font-size: 14.5px; white-space: nowrap; }
+  .play .more { height: 38px; width: 34px; border: 0; border-left: 1px solid rgb(255 255 255 / .3); border-radius: 0 10px 10px 0; background: var(--brand); color: #fff; display: grid; place-items: center; }
+  .play .main:hover, .play .more:hover { background: var(--brand-strong); }
+  .menu { position: absolute; right: 0; top: calc(100% + 6px); width: 300px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 6px; z-index: 5; }
+  .menu button { display: grid; grid-template-columns: 22px 1fr; gap: 2px 10px; width: 100%; text-align: left; border: 0; background: none; border-radius: 10px; padding: 9px 10px; }
+  .menu button:hover { background: var(--surface-2); }
+  .menu b { font-size: 14px; } .menu small { grid-column: 2; color: var(--ink-3); font-size: 12.5px; line-height: 1.4; }
+  .menu svg { color: var(--brand-strong); margin-top: 2px; }
+
+  /* ô Giao diện gộp */
+  .pop { position: absolute; top: calc(100% + 6px); width: 380px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 14px; z-index: 5; }
+  .pop h4 { margin: 0 0 8px; font-size: 13px; color: var(--ink-3); font-weight: 700; display: flex; justify-content: space-between; }
+  .pop h4 small { font-weight: 500; }
+  .pop .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .pop .th { aspect-ratio: 16/10; border-radius: 8px; border: 2px solid var(--line); position: relative; overflow: hidden; }
+  .pop .th.on { border-color: var(--brand); }
+  .pop .th span { position: absolute; left: 6px; bottom: 4px; font-size: 10.5px; font-weight: 700; }
+  .pop .motifs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .pop .motifs span { width: 34px; height: 34px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface-2); }
+  .pop .motifs span.on { border-color: var(--brand); }
+  .pop .brandrow { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+  .pop .logo { width: 38px; height: 38px; border-radius: 10px; background: var(--brand-soft); display: grid; place-items: center; font-weight: 800; color: var(--brand-strong); font-size: 13px; }
+  .pop .brandrow div { flex: 1; font-size: 13.5px; } .pop .brandrow small { color: var(--ink-3); display: block; }
+  .pop .brandrow button { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 5px 10px; font-weight: 600; font-size: 13px; }
+
+  .narrow-1024 { width: 1024px; max-width: 100%; }
+  .phone { width: 375px; max-width: 100%; }
+  @media (max-width: 700px) { .hide-sm { display: none !important; } }
+  .phone .lbl, .narrow-1024 .lbl-md { display: none; }
+  .phone .title input { font-size: 15px; }
+  ul.notes { color: var(--ink-2); max-width: 900px; padding-left: 20px; } ul.notes li { margin: 6px 0; } ul.notes b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Bản mẫu: thanh công cụ của trình sửa bài giảng</h1>
+  <p>Gọn một hàng, tên bài giảng không bị cắt, các nút cùng một kiểu và cùng chiều cao. "Giao diện" và "Thương hiệu" gộp làm một nút "Giao diện" để không còn hai chỗ cùng chỉnh vẻ ngoài của slide. Ba lệnh trình chiếu thành một nút chính kèm menu. Bấm thử "Giao diện" và mũi tên cạnh "Trình chiếu".</p>
+</header>
+
+<h2>Hiện tại (theo ảnh chụp)</h2>
+<div class="frame">
+  <div class="old" aria-hidden="true">
+    <span class="crumb">Limio-Live</span><span style="color:var(--faint)">/</span><span class="ttl">AI tạo sinh trong giáo dục</span>
+    <span class="b">✓ Đã lưu</span><span class="b">Lịch sử tương tác</span><span class="b">Chia sẻ</span><span class="b">Giao diện: Trắng ⌄</span><span class="b">● Thương hiệu</span>
+    <span class="grp"><span>▶ Từ đầu</span><span>Từ slide này</span><span>Presenter view</span></span>
+  </div>
+</div>
+
+<h2>Đề xuất</h2>
+<div class="controls">Khung rộng
+  <span class="seg" role="group" aria-label="Khung">
+    <button type="button" aria-pressed="true" data-w="full">Màn rộng</button>
+    <button type="button" aria-pressed="false" data-w="1024">Laptop nhỏ (1024 px)</button>
+    <button type="button" aria-pressed="false" data-w="phone">Điện thoại</button>
+  </span>
+</div>
+<div class="frame" id="frame" style="margin-top:10px">
+  <div class="bar">
+    <button type="button" class="ib" title="Về danh sách Limio-Live" aria-label="Về danh sách Limio-Live">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="title">
+      <input value="AI tạo sinh trong giáo dục: cơ hội và thách thức" aria-label="Tên bài giảng">
+      <button type="button" class="saved" title="Lưu ngay (Ctrl/Cmd + S)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span class="lbl">Đã lưu 14:05</span></button>
+    </div>
+    <div class="tools">
+      <button type="button" class="tb hide-sm" title="Kết quả vote, word cloud, Padlet và whiteboard của các lượt đã trình chiếu"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg><span class="lbl lbl-md">Lịch sử</span></button>
+      <button type="button" class="tb hide-sm" title="Link xem chỉ đọc kèm tải PDF"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span class="lbl lbl-md">Chia sẻ</span></button>
+      <div style="position:relative">
+        <button type="button" class="tb" id="look" aria-expanded="false" title="Màu nền, hoa văn, logo và màu của trường">
+          <span class="swatch"><i style="background:#fff"></i><i style="background:#4d7c0f"></i></span><span class="lbl">Giao diện</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="pop" id="pop" hidden style="right:0">
+          <h4>Kiểu slide <small>Trắng</small></h4>
+          <div class="grid">
+            <div class="th on" style="background:#fff"><span style="color:#20241f">Trắng</span></div>
+            <div class="th" style="background:linear-gradient(135deg,#F7FEE7,#FFF1F7)"><span style="color:#20241f">Limio</span></div>
+            <div class="th" style="background:linear-gradient(160deg,#FBF6E9,#F4E8CB)"><span style="color:#2b2118">Giấy ấm</span></div>
+            <div class="th" style="background:linear-gradient(135deg,#0B1020,#1B1A4B)"><span style="color:#f1f5f9">Đêm xanh</span></div>
+          </div>
+          <h4>Hoa văn <small>Tự chọn</small></h4>
+          <div class="motifs"><span class="on"></span><span></span><span></span><span></span><span></span><span></span></div>
+          <h4>Logo và màu của trường <small>Đang dùng của trường</small></h4>
+          <div class="brandrow"><span class="logo">NEU</span><div><b>Đại học Kinh tế Quốc dân</b><small>Logo góc trên phải, màu nhấn xanh lá</small></div><button type="button">Chỉnh</button></div>
+        </div>
+      </div>
+      <span class="sep hide-sm"></span>
+      <div class="play">
+        <button type="button" class="main" title="Trình chiếu từ slide 1, toàn màn hình"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg><span class="lbl">Trình chiếu</span></button>
+        <button type="button" class="more" id="more" aria-expanded="false" aria-label="Cách trình chiếu khác"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="menu" id="menu" hidden>
+          <button type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8z"/></svg><b>Từ đầu</b><small>Toàn màn hình, bắt đầu từ slide 1.</small></button>
+          <button type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><b>Từ slide này</b><small>Toàn màn hình, bắt đầu từ slide đang chọn.</small></button>
+          <button type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="14" height="10" rx="2"/><path d="M18 8h4v10H8v-2"/></svg><b>Presenter view</b><small>Màn chiếu lên màn hình thứ hai; Note ở màn hình của thầy/cô.</small></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>Điểm thay đổi</h2>
+<ul class="notes">
+  <li><b>Tên bài giảng không bị cắt</b>: "Limio-Live /" thay bằng nút mũi tên quay về; tên bài giảng chiếm phần còn lại của hàng, dài quá thì có dấu ba chấm, bấm vào để sửa.</li>
+  <li><b>Trạng thái lưu</b>: thành dòng chữ nhỏ "Đã lưu 14:05" cạnh tên, không còn khung viền như một nút; khi chưa lưu thì đổi thành "Chưa lưu · Lưu ngay" màu cam như hiện nay.</li>
+  <li><b>Nút phụ cùng một kiểu</b>: Lịch sử, Chia sẻ, Giao diện là nút chữ không viền, cùng cao 36 px; ở laptop nhỏ chỉ còn biểu tượng, rê chuột thì hiện tên.</li>
+  <li><b>Giao diện gộp với Thương hiệu</b>: một nút "Giao diện" mở một bảng ba phần: kiểu slide (màu nền và chữ), hoa văn, logo và màu của trường. Chấm màu trên nút cho thấy kiểu slide và màu nhấn đang dùng.</li>
+  <li><b>Trình chiếu</b>: một nút chính "Trình chiếu" (từ đầu) và mũi tên mở menu "Từ đầu, Từ slide này, Presenter view" kèm một dòng giải thích, giống Google Slides. Hàng hết chênh chiều cao như khối ba nút hiện tại.</li>
+</ul>
+</div>
+<script>
+const frame = document.getElementById("frame");
+document.querySelectorAll("[data-w]").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("[data-w]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  frame.className = "frame" + (b.dataset.w === "1024" ? " narrow-1024" : b.dataset.w === "phone" ? " phone" : "");
+}));
+const toggle = (btn, el) => btn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const open = el.hidden;
+  document.querySelectorAll(".pop, .menu").forEach((x) => (x.hidden = true));
+  document.querySelectorAll("[aria-expanded]").forEach((x) => x.setAttribute("aria-expanded", "false"));
+  el.hidden = !open;
+  btn.setAttribute("aria-expanded", String(open));
+});
+toggle(document.getElementById("look"), document.getElementById("pop"));
+toggle(document.getElementById("more"), document.getElementById("menu"));
+document.addEventListener("click", (e) => {
+  if (e.target.closest(".pop, .menu")) return;
+  document.querySelectorAll(".pop, .menu").forEach((x) => (x.hidden = true));
+  document.querySelectorAll("[aria-expanded]").forEach((x) => x.setAttribute("aria-expanded", "false"));
+});
+</script>
+</body>
+</html>

@@ -2,20 +2,27 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { apiUrl } from "@/lib/apiUrl";
 import type { SlideMotifId } from "@/lib/limioLiveMotifs";
 import { SLIDE_THEMES, SLIDE_THEME_GROUPS, type SlideThemeId } from "../slideThemes";
 import { DeckMotifPicker } from "./MotifPicker";
 
-/** Chọn giao diện màu của cả bài giảng: một nút gọn, bấm mở bảng các giao diện gom theo nhóm (Cơ bản, Màu pastel, Nền tối). */
+/**
+ * Nút "Giao diện" duy nhất của bài giảng: một bảng ba phần là kiểu slide (gom theo nhóm Cơ bản, Màu pastel, Nền tối),
+ * hoa văn, logo và màu thương hiệu. Trước đây thương hiệu là một nút riêng cạnh đây nên giảng viên dễ nhầm hai chỗ.
+ */
 export default function ThemePicker({
   value,
   onChange,
   motif,
+  brand,
 }: {
   value: string;
   onChange: (id: SlideThemeId) => void;
   /** Hoa văn trang trí của cả bài, chọn ngay dưới các giao diện (cùng là "trang phục" của bài giảng). */
   motif?: { value: string | null; auto: SlideMotifId; onChange: (v: string | null) => void };
+  /** Logo và màu thương hiệu đang áp cho bài; "Chỉnh" mở hộp thương hiệu. */
+  brand?: { color: string | null; logoUrl: string | null; title: string; detail: string; onEdit: () => void };
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -44,18 +51,25 @@ export default function ThemePicker({
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 items-center gap-2 rounded-lg border border-token px-2 text-xs font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))]"
-        title="Giao diện màu của bài giảng"
+        className={`flex h-9 items-center gap-2 rounded-lg px-2.5 text-sm font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] ${
+          open ? "bg-[rgb(var(--surface-muted))] text-[rgb(var(--text))]" : ""
+        }`}
+        title={`Giao diện: ${current.label}. Màu nền, hoa văn, logo và màu thương hiệu.`}
       >
-        <span className="h-5 w-5 rounded-full border border-token" style={{ background: current.swatch }} aria-hidden />
-        <span className="hidden sm:inline">Giao diện: {current.label}</span>
+        <span className="flex" aria-hidden>
+          <span className="h-4 w-4 rounded-full border-2 border-[rgb(var(--surface))] ring-1 ring-[rgb(var(--border))]" style={{ background: current.swatch }} />
+          {brand?.color && (
+            <span className="-ml-1.5 h-4 w-4 rounded-full border-2 border-[rgb(var(--surface))] ring-1 ring-[rgb(var(--border))]" style={{ background: brand.color }} />
+          )}
+        </span>
+        <span className="hidden sm:inline">Giao diện</span>
         <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
       {open && (
         <div
           role="dialog"
           aria-label="Chọn giao diện slide"
-          className="absolute right-0 top-full z-50 mt-2 max-h-[min(70vh,560px)] w-[min(340px,92vw)] space-y-4 overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 shadow-2xl"
+          className="absolute right-0 top-full z-50 mt-2 max-h-[min(75vh,620px)] w-[min(360px,92vw)] space-y-4 overflow-y-auto rounded-2xl border border-token bg-[rgb(var(--surface))] p-3 shadow-2xl"
         >
           {SLIDE_THEME_GROUPS.map((g) => (
             <div key={g.label} role="radiogroup" aria-label={g.label}>
@@ -89,6 +103,37 @@ export default function ThemePicker({
           {motif && (
             <div className="border-t border-token pt-3">
               <DeckMotifPicker value={motif.value} autoMotif={motif.auto} themeId={current.id} onChange={motif.onChange} />
+            </div>
+          )}
+          {brand && (
+            <div className="border-t border-token pt-3">
+              <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-faint">Logo và màu thương hiệu</p>
+              <div className="flex items-center gap-3 rounded-xl border border-token p-2.5">
+                {brand.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={apiUrl(brand.logoUrl)} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-token object-contain p-0.5" />
+                ) : (
+                  <span
+                    className="h-9 w-9 shrink-0 rounded-lg border border-token"
+                    style={{ background: brand.color ?? "rgb(var(--surface-muted))" }}
+                    aria-hidden
+                  />
+                )}
+                <span className="min-w-0 flex-1 text-sm">
+                  <b className="block truncate font-semibold">{brand.title}</b>
+                  <span className="block text-xs text-muted">{brand.detail}</span>
+                </span>
+                <button
+                  type="button"
+                  className="btn-secondary shrink-0 px-3 py-1 text-[13px]"
+                  onClick={() => {
+                    setOpen(false);
+                    brand.onEdit();
+                  }}
+                >
+                  Chỉnh
+                </button>
+              </div>
             </div>
           )}
         </div>

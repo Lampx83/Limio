@@ -68,6 +68,7 @@ import { brandCssVars, brandEffectiveThemeId, brandFrameBackground, logoBand, lo
 import { MOTIF_SLOT_SIZE, type MotifSlot, type SlideArtId } from "@/lib/limioLiveMotifs";
 import { motifSvgBody } from "@/lib/limioLiveMotifArt";
 import { slideImageSources } from "@/lib/limioLiveImage";
+import { shortUrl } from "@/lib/limioLiveWebImages";
 import { isSlideIllustrationId } from "@feedbackme/shared-types";
 import { useLiveBrand } from "./liveBrandContext";
 import { ChartView, TableView } from "./SlideCharts";
@@ -426,6 +427,26 @@ function SlideMotif({ motif, slot }: { motif: SlideArtId; slot: MotifSlot }) {
   return <div className={`motif m-${slot}${illus}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
+/**
+ * Dòng nguồn ảnh dưới ô hình. Có trang nguồn (imageSourceUrl, http/https) thì là link mở trang đó ở thẻ mới; chặn lan sự kiện
+ * để bấm link trong trình sửa không mở hộp sửa slide.
+ */
+function ImageCredit({ c }: { c: Cfg }) {
+  const text = `Nguồn ảnh: ${c.imageCredit}`;
+  const href = typeof c.imageSourceUrl === "string" && /^https?:\/\//i.test(c.imageSourceUrl) ? c.imageSourceUrl : null;
+  return (
+    <p className="img-credit" title={href ? `${text}\n${href}` : text}>
+      {href ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+          {text}
+        </a>
+      ) : (
+        text
+      )}
+    </p>
+  );
+}
+
 type Motif = { motif: SlideArtId; slot: MotifSlot } | null;
 
 /** Bề rộng ô hình của bố cục Chữ và hình trên khung thiết kế (cùng số với MOTIF_SLOT_SIZE.fill). */
@@ -565,11 +586,7 @@ function LayoutBody({
               {c.imageUrl ? <SlideImage c={c} px={artPx} /> : motif && <SlideMotif motif={motif.motif} slot={motif.slot} />}
             </div>
           </div>
-          {c.imageUrl && c.imageCredit ? (
-            <p className="img-credit" title={`Nguồn ảnh: ${c.imageCredit}`}>
-              Nguồn ảnh: {c.imageCredit}
-            </p>
-          ) : null}
+          {c.imageUrl && c.imageCredit ? <ImageCredit c={c} /> : null}
         </div>
       );
     }
@@ -614,11 +631,7 @@ function LayoutBody({
               </div>
             )}
           </div>
-          {hasImg && c.imageCredit ? (
-            <p className="img-credit" title={`Nguồn ảnh: ${c.imageCredit}`}>
-              Nguồn ảnh: {c.imageCredit}
-            </p>
-          ) : null}
+          {hasImg && c.imageCredit ? <ImageCredit c={c} /> : null}
         </div>
       );
     }
@@ -903,16 +916,43 @@ function LayoutBody({
           <div className="pad">
             <Title text={title} maxPx={72} widthPx={1088} maxLines={2} />
             <div className={`list${cols === 2 ? " two" : ""}`}>
-              {items.map((it, i) => (
-                <div key={i} className="card rowi a" style={delay(i)}>
-                  <div className="tick">
-                    <Check size={34} strokeWidth={2.8} />
+              {items.map((it, i) => {
+                // Dòng có link (slide Nguồn tham khảo của bài có nguồn internet): số [n], tên trang, địa chỉ rút gọn; bấm mở
+                // trang nguồn ở thẻ mới. Chặn lan sự kiện để bấm link trong trình sửa không mở hộp sửa slide.
+                if (typeof it.href === "string" && it.href) {
+                  const m = /^\s*\[(\d+)\]\s*/.exec(it.heading);
+                  return (
+                    <a
+                      key={i}
+                      href={it.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="refl a"
+                      style={delay(i)}
+                      title={it.href}
+                    >
+                      <span className="refn">{m ? `[${m[1]}]` : ""}</span>
+                      <span className="reft">
+                        <b>
+                          <Inline text={m ? it.heading.slice(m[0].length) : it.heading} />
+                        </b>
+                        <small>{shortUrl(it.href)}</small>
+                      </span>
+                    </a>
+                  );
+                }
+                return (
+                  <div key={i} className="card rowi a" style={delay(i)}>
+                    <div className="tick">
+                      <Check size={34} strokeWidth={2.8} />
+                    </div>
+                    <span>
+                      <Inline text={it.heading} />
+                    </span>
                   </div>
-                  <span>
-                    <Inline text={it.heading} />
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

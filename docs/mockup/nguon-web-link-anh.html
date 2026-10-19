@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Link nguồn và ảnh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --line: #e2e5d8;
+    --brand: #4d7c0f; --brand-soft: #ecf6d2; --info-bg: #eef4ff; --info-line: #c7d7fe; --info-ink: #1e3a8a;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 14px 32px -16px rgb(28 36 16 / .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+      --brand: #84cc16; --brand-soft: #27371a; --info-bg: #14203a; --info-line: #24406e; --info-ink: #c7d7fe; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --line: #323d24;
+    --brand: #84cc16; --brand-soft: #27371a; --info-bg: #14203a; --info-line: #24406e; --info-ink: #c7d7fe; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 15px; font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 80px; }
+  header.top { padding: 18px 0 4px; }
+  header.top h1 { font-size: 21px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-3); max-width: 900px; }
+  h2 { font-size: 17px; margin: 30px 0 6px; }
+  p.sub { margin: 0 0 12px; color: var(--ink-2); max-width: 900px; }
+  .two { display: grid; gap: 20px; }
+  @media (min-width: 980px) { .two { grid-template-columns: 1fr 1fr; } }
+  .cap { font-size: 13px; color: var(--ink-3); margin: 0 0 6px; font-weight: 600; }
+
+  /* slide 16:9 theo giao diện Limio, vẽ theo khung 1280 × 720 rồi thu nhỏ */
+  .stage { container-type: inline-size; }
+  .slide { aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: linear-gradient(135deg, #F7FEE7 0%, #FFF1F7 100%);
+    color: #20241F; position: relative; font-size: calc(100cqw / 1280 * 30); }
+  .u { font-size: calc(100cqw / 1280); }
+  .pad { position: absolute; inset: 0; padding: calc(100cqw / 1280 * 64) calc(100cqw / 1280 * 72); display: grid; }
+  .img-lay { grid-template-columns: 1fr calc(100cqw / 1280 * 470); gap: calc(100cqw / 1280 * 56); align-items: center; }
+  .slide h3 { margin: 0 0 0.6em; font-size: calc(100cqw / 1280 * 56); line-height: 1.12; font-weight: 800; letter-spacing: -.01em; }
+  .slide ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .55em; }
+  .slide li { display: flex; gap: .6em; font-size: calc(100cqw / 1280 * 30); line-height: 1.35; }
+  .slide li::before { content: ""; flex: none; width: .45em; height: .45em; border-radius: 50%; background: #4D7C0F; margin-top: .45em; }
+  .art { display: grid; gap: calc(100cqw / 1280 * 10); }
+  .photo { aspect-ratio: 4/3; border-radius: calc(100cqw / 1280 * 24); overflow: hidden; position: relative;
+    background: linear-gradient(160deg, #cfe3f5 0%, #9cc3e3 45%, #6f9e6a 46%, #557f4f 100%); }
+  .photo svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .credit { font-size: calc(100cqw / 1280 * 22); color: #5A6256; text-decoration: none; }
+  .credit:hover { text-decoration: underline; }
+  .refs { align-content: start; }
+  .refs ol { margin: 0; padding: 0; list-style: none; display: grid; gap: calc(100cqw / 1280 * 20); }
+  .refs li { display: grid; grid-template-columns: calc(100cqw / 1280 * 56) 1fr; gap: 0 calc(100cqw / 1280 * 14); }
+  .refs li::before { content: none; display: none; }
+  .refs .n { font-weight: 800; color: #4D7C0F; font-size: calc(100cqw / 1280 * 30); }
+  .refs a { color: inherit; text-decoration: none; display: block; }
+  .refs a b { font-size: calc(100cqw / 1280 * 30); font-weight: 700; display: block; }
+  .refs a span { font-size: calc(100cqw / 1280 * 24); color: #4D7C0F; display: block; word-break: break-all; }
+  .refs a:hover b { text-decoration: underline; }
+
+  .old .refs a span { display: none; }
+  .old .refs a { pointer-events: none; }
+
+  .banner { display: flex; gap: 10px; border: 1px solid var(--info-line); background: var(--info-bg); color: var(--info-ink); border-radius: 12px; padding: 10px 14px; font-size: 14px; max-width: 900px; }
+  .banner svg { flex: none; margin-top: 2px; }
+  ul.notes, ol.q { color: var(--ink-2); max-width: 900px; padding-left: 22px; } ul.notes li, ol.q li { margin: 6px 0; } ul.notes b, ol.q b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Bản mẫu: link nguồn và ảnh minh hoạ từ nguồn internet</h1>
+  <p>Áp cho bài giảng tạo từ mô tả chủ đề có bật "Tìm thêm nguồn trên internet". Slide Nguồn tham khảo có link bấm được tới từng trang. Slide Chữ và hình dùng ảnh lấy từ chính trang nguồn khi ảnh hợp với nội dung, kèm dòng ghi nguồn dưới ảnh. Các link trong bản mẫu dẫn tới địa chỉ ví dụ.</p>
+</header>
+
+<h2>1. Slide Nguồn tham khảo</h2>
+<p class="sub">Mỗi nguồn hai dòng: tên trang (đậm) và địa chỉ rút gọn (màu nhấn). Cả hai là một link mở trang nguồn trong thẻ mới, ở trình sửa, khi trình chiếu, ở màn học viên và trang chia sẻ.</p>
+<div class="two">
+  <div>
+    <p class="cap">Hiện tại</p>
+    <div class="stage old"><div class="slide"><div class="pad refs">
+      <h3>Nguồn tham khảo</h3>
+      <ol>
+        <li><span class="n">[1]</span><a><b>vi.wikipedia.org: Thực tế tăng cường</b></a></li>
+        <li><span class="n">[2]</span><a><b>edu.example.com: AR in education</b></a></li>
+        <li><span class="n">[3]</span><a><b>teachonline.example.org: Using AR in…</b></a></li>
+      </ol>
+    </div></div></div>
+  </div>
+  <div>
+    <p class="cap">Đề xuất</p>
+    <div class="stage"><div class="slide"><div class="pad refs">
+      <h3>Nguồn tham khảo</h3>
+      <ol>
+        <li><span class="n">[1]</span><a href="https://vi.wikipedia.org/wiki/Th%E1%BB%B1c_t%E1%BA%BF_t%C4%83ng_c%C6%B0%E1%BB%9Dng" target="_blank" rel="noopener noreferrer"><b>Thực tế tăng cường</b><span>vi.wikipedia.org/wiki/Thực_tế_tăng_cường</span></a></li>
+        <li><span class="n">[2]</span><a href="https://example.com/ar-in-education" target="_blank" rel="noopener noreferrer"><b>Augmented reality in education</b><span>edu.example.com/ar-in-education</span></a></li>
+        <li><span class="n">[3]</span><a href="https://example.org/using-ar-in-the-classroom" target="_blank" rel="noopener noreferrer"><b>Using AR in the classroom: a practical guide</b><span>teachonline.example.org/using-ar-in-the-cla…</span></a></li>
+      </ol>
+    </div></div></div>
+  </div>
+</div>
+
+<h2>2. Slide Chữ và hình dùng ảnh từ nguồn</h2>
+<p class="sub">Ảnh được chọn theo mức trùng giữa chữ thay thế của ảnh và nội dung slide; slide không có ảnh hợp thì giữ hình tự vẽ như hiện nay. Ảnh được tải về lưu trên Limio nên không hỏng khi trang gốc đổi. Dưới ảnh là dòng ghi nguồn, bấm vào mở trang nguồn.</p>
+<div class="two">
+  <div>
+    <p class="cap">Hiện tại (hình tự vẽ)</p>
+    <div class="stage"><div class="slide"><div class="pad img-lay">
+      <div><h3>AR khác VR ở điểm nào</h3><ul><li>AR chồng thông tin số lên khung cảnh thật.</li><li>VR thay toàn bộ khung cảnh thật bằng mô phỏng.</li><li>AR hợp với hoạt động học gắn với vật thật.</li></ul></div>
+      <div class="art"><div class="photo" style="background:linear-gradient(135deg,#ecf6d2,#fde7f1)"><svg viewBox="0 0 400 300" aria-hidden="true"><circle cx="140" cy="140" r="70" fill="#a3d36b" opacity=".7"/><rect x="190" y="110" width="140" height="100" rx="16" fill="#4d7c0f" opacity=".55"/><circle cx="300" cy="90" r="26" fill="#f9a8d4" opacity=".8"/></svg></div></div>
+    </div></div></div>
+  </div>
+  <div>
+    <p class="cap">Đề xuất (ảnh từ nguồn [1])</p>
+    <div class="stage"><div class="slide"><div class="pad img-lay">
+      <div><h3>AR khác VR ở điểm nào</h3><ul><li>AR chồng thông tin số lên khung cảnh thật.</li><li>VR thay toàn bộ khung cảnh thật bằng mô phỏng.</li><li>AR hợp với hoạt động học gắn với vật thật.</li></ul></div>
+      <div class="art">
+        <div class="photo" role="img" aria-label="Học sinh dùng máy tính bảng xem mô hình ba chiều trên bàn (ảnh minh hoạ trong bản mẫu)">
+          <svg viewBox="0 0 400 300" aria-hidden="true"><rect x="110" y="120" width="180" height="120" rx="12" fill="#1f2937"/><rect x="120" y="130" width="160" height="100" rx="6" fill="#bfdbfe"/><path d="M175 205 l25-45 25 45z" fill="#4d7c0f"/><circle cx="235" cy="165" r="14" fill="#f59e0b"/><rect x="0" y="240" width="400" height="60" fill="#8b6b4a"/></svg>
+        </div>
+        <a class="credit" href="https://vi.wikipedia.org/wiki/Th%E1%BB%B1c_t%E1%BA%BF_t%C4%83ng_c%C6%B0%E1%BB%9Dng" target="_blank" rel="noopener noreferrer">Nguồn ảnh: Thực tế tăng cường (vi.wikipedia.org)</a>
+      </div>
+    </div></div></div>
+  </div>
+</div>
+
+<h2>3. Lời nhắc trên trang dàn ý và trình sửa</h2>
+<div class="banner" role="note">
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+  <span><b>Nội dung do AI viết từ kiến thức chung và 3 trang tìm trên internet, thầy/cô cần kiểm tra trước khi dạy.</b> Số liệu và trích dẫn có ghi nguồn ở chân slide; slide cuối có link tới các trang đã đọc. Ảnh lấy từ các trang nguồn; thầy/cô kiểm tra quyền sử dụng trước khi chia sẻ công khai.</span>
+</div>
+
+<h2>Quy tắc chọn ảnh</h2>
+<ul class="notes">
+  <li><b>Ảnh gắn với trang</b>: chỉ lấy ảnh nằm trong phần chữ của trang nguồn (kèm chữ thay thế), để biết chắc ảnh của trang nào và ghi nguồn đúng.</li>
+  <li><b>Loại bỏ</b>: SVG, GIF, biểu tượng, logo, ảnh đại diện, quảng cáo, ảnh hẹp hơn 400 px, ảnh không tải được. Mỗi trang tối đa 3 ảnh, cả bài tối đa 8 ảnh ứng viên.</li>
+  <li><b>Chỗ đặt ảnh</b>: chỉ slide Chữ và hình; mỗi ảnh dùng một lần; không đặt ảnh lên bìa và bìa phần (vẫn dùng hoa văn).</li>
+  <li><b>Lưu trữ</b>: tải về qua đường lấy ảnh an toàn đã có (chặn địa chỉ nội bộ, giới hạn dung lượng), bỏ EXIF, tạo bản nhỏ; tính vào dung lượng của giảng viên.</li>
+</ul>
+
+<h2>Cần thầy/cô chọn</h2>
+<ol class="q">
+  <li><b>Lưu ảnh</b>: tải ảnh về lưu trên Limio (đề xuất: bài giảng không hỏng khi trang gốc đổi, nhưng là một bản sao của ảnh), hay chỉ dẫn thẳng tới ảnh gốc (không sao chép, nhưng ảnh có thể mất hoặc bị trang gốc chặn)?</li>
+  <li><b>Mặc định</b>: tự gắn ảnh nguồn khi bật nguồn internet (đề xuất, đúng tinh thần ít thao tác), hay chỉ gợi ý ảnh trong bộ chọn hình để giảng viên tự bấm chọn?</li>
+</ol>
+</div>
+</body>
+</html>

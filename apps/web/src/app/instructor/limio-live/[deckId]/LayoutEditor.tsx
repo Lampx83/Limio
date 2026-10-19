@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { createPortal } from "react-dom";
 import { GROUPS_MAX, GROUP_POINTS_MAX, type SlideGroup } from "@/lib/limioLiveGroups";
 import { ICON_LABELS, SLIDE_ICONS, autoGroupIcons } from "@/lib/limioLiveIcons";
-import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Highlighter, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, ArrowUp, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Highlighter, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
@@ -338,6 +338,16 @@ function useSlideAiChat(deckId: string, slideId: string) {
 }
 type SlideAiChat = ReturnType<typeof useSlideAiChat>;
 
+/** Câu gợi ý ở trạng thái trống: bấm là hỏi ngay (chung cho mọi slide, không giả định số ý). */
+const CHAT_SUGGESTIONS = [
+  "Nội dung slide này có chính xác không?",
+  "Đổi tiêu đề thành một câu hỏi gợi mở.",
+  "Viết lại cho dễ hiểu hơn.",
+  "Gợi ý một câu hỏi để mở đầu slide này.",
+];
+const CHAT_INPUT_MAX_PX = 140;
+
+/** Tab Nhờ AI theo kiểu chatbot: tin nhắn cuộn ở giữa, ô nhập cố định ở đáy, lượt mới nhất ngay trên ô nhập. */
 function AiChatPanel({
   chat,
   hasOutline,
@@ -352,44 +362,71 @@ function AiChatPanel({
 }) {
   const [text, setText] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [chat.msgs, chat.busy]);
-  const submit = () => {
-    const t = text.trim();
-    if (!t || chat.busy) return;
+  // Ô nhập tự cao thêm theo nội dung, tới khoảng năm dòng thì cuộn trong ô.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, CHAT_INPUT_MAX_PX)}px`;
+  }, [text]);
+  const send = (t: string) => {
+    const v = t.trim();
+    if (!v || chat.busy) return;
     setText("");
-    void chat.ask(t);
+    void chat.ask(v);
   };
   const quick = hasOutline ? QUICK_ACTIONS : QUICK_ACTIONS.filter((q) => q.id !== "rewrite");
+  const canSend = !!text.trim() && !chat.busy;
+  const avatar = (
+    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-brand-700" aria-hidden>
+      <Sparkles size={14} />
+    </span>
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col" role="tabpanel" aria-label="Nhờ AI">
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-3" aria-live="polite">
+      <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-4" aria-live="polite">
         {chat.msgs.length === 0 ? (
-          <div className="space-y-2 text-sm text-muted">
-            <p>
-              Hỏi AI về slide này, hoặc nhờ AI sửa. AI có thể trả lời, hỏi lại cho rõ, hoặc đề xuất một bản sửa; không có gì
-              ghi vào slide khi thầy/cô chưa bấm Áp dụng.
+          <div className="my-auto grid justify-items-center gap-2.5 py-2 text-center">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-brand-soft text-brand-700" aria-hidden>
+              <Sparkles size={18} />
+            </span>
+            <h3 className="text-base font-bold">Hỏi AI về slide này</h3>
+            <p className="max-w-[330px] text-[13.5px] text-muted">
+              AI có thể trả lời, hỏi lại cho rõ, hoặc đề xuất một bản sửa. Không có gì ghi vào slide khi thầy/cô chưa bấm Áp dụng.
             </p>
-            <p>Ví dụ: &quot;Ý thứ hai có chính xác không?&quot;, &quot;Đổi tiêu đề thành Các khái niệm.&quot;</p>
+            <div className="mt-1 grid w-full gap-2">
+              {CHAT_SUGGESTIONS.map((sg) => (
+                <button
+                  key={sg}
+                  type="button"
+                  onClick={() => send(sg)}
+                  className="flex items-center gap-2.5 rounded-xl border border-token bg-[rgb(var(--surface))] px-3 py-2.5 text-left text-sm text-muted transition hover:border-brand-600 hover:bg-brand-soft hover:text-[rgb(var(--text))]"
+                >
+                  <ArrowRight size={15} className="shrink-0 text-brand-600" aria-hidden />
+                  {sg}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {chat.msgs.map((m) =>
-              m.role === "user" ? (
-                <div key={m.id} className="max-w-[92%] self-end whitespace-pre-line rounded-2xl rounded-br-md bg-brand-soft px-3 py-2 text-sm">
-                  {m.text}
-                </div>
-              ) : (
-                <div key={m.id} className="max-w-[96%] self-start text-sm">
-                  <p className="mb-0.5 flex items-center gap-1 text-xs font-bold text-muted">
-                    <Sparkles size={12} aria-hidden /> AI
-                  </p>
+          chat.msgs.map((m) =>
+            m.role === "user" ? (
+              <div key={m.id} className="max-w-[85%] self-end whitespace-pre-line rounded-[18px] rounded-br-[4px] bg-brand-600 px-3.5 py-2 text-sm text-white">
+                {m.text}
+              </div>
+            ) : (
+              <div key={m.id} className="flex max-w-[96%] items-start gap-2.5 self-start text-sm">
+                {avatar}
+                <div className="min-w-0 rounded-[18px] rounded-tl-[4px] bg-[rgb(var(--surface-muted))] px-3.5 py-2.5">
                   <p className="whitespace-pre-line">{m.text}</p>
                   {generalKnowledge && m.kind === "answer" && (
-                    <p className="mt-1 text-xs text-muted">Câu trả lời dựa trên kiến thức chung, thầy/cô cần kiểm tra.</p>
+                    <p className="mt-1.5 text-xs text-muted">Câu trả lời dựa trên kiến thức chung, thầy/cô cần kiểm tra.</p>
                   )}
                   {m.kind === "clarify" && m.options?.length ? (
                     <div className="mt-2 grid gap-1.5">
@@ -417,15 +454,15 @@ function AiChatPanel({
                         chat.mark(m.id, { used: true });
                         void chat.act("custom", "Làm theo gợi ý này.", m.suggestion);
                       }}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-brand-600 px-2.5 py-1 text-[13px] font-semibold text-brand-700 transition hover:bg-brand-soft disabled:opacity-50"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-brand-600 bg-[rgb(var(--surface))] px-2.5 py-1 text-[13px] font-semibold text-brand-700 transition hover:bg-brand-soft disabled:opacity-50"
                     >
                       <Sparkles size={13} aria-hidden /> Làm theo gợi ý này
                     </button>
                   )}
                   {m.kind === "propose" &&
                     (m.proposal === "pending" ? (
-                      <div className="mt-2 rounded-xl border border-brand-500 p-2.5">
-                        <p className="text-[13px] font-semibold">Đề xuất đang hiện trên khung xem trước (chưa áp dụng)</p>
+                      <div className="mt-2 rounded-xl border border-brand-500 bg-[rgb(var(--surface))] p-2.5">
+                        <p className="text-[13px] font-semibold">Đề xuất đang hiện trên khung xem trước</p>
                         <div className="mt-2 flex gap-2">
                           <button type="button" className="btn-secondary px-3 py-1 text-[13px]" onClick={() => onDecide("discard")}>
                             Bỏ
@@ -436,22 +473,28 @@ function AiChatPanel({
                         </div>
                       </div>
                     ) : (
-                      <p className="mt-1 text-xs italic text-muted">{m.proposal === "applied" ? "Đã áp dụng vào slide." : "Đã bỏ đề xuất."}</p>
+                      <p className="mt-1.5 text-xs italic text-muted">{m.proposal === "applied" ? "Đã áp dụng vào slide." : "Đã bỏ đề xuất."}</p>
                     ))}
                 </div>
-              ),
-            )}
-          </div>
+              </div>
+            ),
+          )
         )}
         {chat.busy && (
-          <p className="mt-3 flex items-center gap-2 text-sm text-muted" role="status">
-            <Loader2 size={14} className="animate-spin" /> AI đang trả lời...
-          </p>
+          <div className="flex items-start gap-2.5 self-start" role="status" aria-label="AI đang trả lời">
+            {avatar}
+            <span className="flex gap-1 rounded-[18px] rounded-tl-[4px] bg-[rgb(var(--surface-muted))] px-3.5 py-3.5">
+              {[0, 1, 2].map((i) => (
+                <i key={i} className="h-1.5 w-1.5 rounded-full bg-[rgb(var(--text-muted))] motion-safe:animate-pulse" style={{ animationDelay: `${i * 0.2}s` }} />
+              ))}
+            </span>
+          </div>
         )}
       </div>
 
-      <div className="shrink-0 space-y-2 border-t border-token px-3 py-3">
-        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Chọn nhanh">
+      {/* Thanh nhập cố định ở đáy: chọn nhanh một hàng, ô chat bo tròn, ghi chú một dòng. */}
+      <div className="grid shrink-0 gap-2 border-t border-token bg-[rgb(var(--surface))] px-3 pb-2.5 pt-2.5">
+        <div className="flex gap-1.5 overflow-x-auto pb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="group" aria-label="Chọn nhanh">
           {quick.map((q) => (
             <button
               key={q.id}
@@ -459,46 +502,52 @@ function AiChatPanel({
               title={q.hint}
               disabled={chat.busy}
               onClick={() => void chat.act(q.id, `${q.label}.`)}
-              className="rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 py-1 text-[13px] text-muted transition hover:border-brand-600 hover:text-[rgb(var(--text))] disabled:opacity-50"
+              className="shrink-0 rounded-full border border-token bg-[rgb(var(--surface))] px-3 py-1 text-[13px] text-muted transition hover:border-brand-600 hover:text-[rgb(var(--text))] disabled:opacity-50"
             >
               {q.label}
             </button>
           ))}
         </div>
-        <div className="relative rounded-xl border-[1.5px] border-token bg-[rgb(var(--surface))] focus-within:border-brand-600">
+        <div className="flex items-end gap-2 rounded-[22px] border-[1.5px] border-brand-500 bg-[rgb(var(--surface))] py-1.5 pl-3.5 pr-1.5 shadow-[0_2px_10px_-4px_rgba(77,124,15,0.35)] focus-within:border-brand-600 focus-within:ring-[3px] focus-within:ring-brand-500/20">
           <textarea
+            ref={inputRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
               // Enter gửi, Shift + Enter xuống dòng; không gửi khi đang gõ dấu tiếng Việt (IME).
               if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                submit();
+                send(text);
               }
             }}
-            rows={2}
+            rows={1}
             maxLength={CHAT_MAX}
             aria-label="Hỏi hoặc nhờ AI sửa slide này"
-            placeholder="Hỏi về slide này, hoặc nhờ AI sửa. Ví dụ: Ý thứ hai có chính xác không?"
-            className="block w-full resize-none rounded-xl border-0 bg-transparent px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-0"
+            placeholder="Hỏi hoặc nhờ AI sửa slide này..."
+            className="block min-w-0 flex-1 resize-none border-0 bg-transparent px-0 py-1.5 text-[15px] leading-snug focus:outline-none focus:ring-0"
           />
           <button
             type="button"
             aria-label="Gửi"
-            disabled={!text.trim() || chat.busy}
-            onClick={submit}
-            className="absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white transition disabled:opacity-40"
+            disabled={!canSend}
+            onClick={() => send(text)}
+            className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition ${
+              canSend ? "bg-brand-600 text-white hover:bg-brand-700" : "cursor-not-allowed bg-[rgb(var(--surface-muted))] text-faint"
+            }`}
           >
-            <ArrowRight size={16} />
+            <ArrowUp size={18} />
           </button>
         </div>
-        <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
-          <span role={chat.err ? "alert" : undefined} className={chat.err ? "font-medium text-red-700" : "text-muted"}>
-            {chat.err ?? "Enter để gửi, Shift + Enter xuống dòng."}
-          </span>
-          {chat.remaining !== null && <span className="text-muted">Còn khoảng {chat.remaining.toLocaleString("vi-VN")} lượt AI trong tháng</span>}
+        <div className="flex flex-wrap justify-between gap-x-3 px-1 text-[11.5px]">
+          {chat.err ? (
+            <span role="alert" className="font-medium text-red-700">
+              {chat.err}
+            </span>
+          ) : (
+            <span className="text-faint">Enter để gửi · Shift + Enter xuống dòng · Không lưu khi đóng cửa sổ</span>
+          )}
+          {chat.remaining !== null && <span className="text-faint">Còn khoảng {chat.remaining.toLocaleString("vi-VN")} lượt AI</span>}
         </div>
-        <p className="text-xs text-faint">Cuộc trò chuyện không được lưu khi đóng cửa sổ sửa hoặc chuyển slide.</p>
       </div>
     </div>
   );
