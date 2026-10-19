@@ -11,8 +11,8 @@ import type { AssistantIcon } from "@/lib/teacherAssistant";
 /** Giới hạn gõ ở ô nhập; máy chủ là nơi chặn thật (CHAT_MESSAGE_MAX = 500). */
 const MESSAGE_MAX = 500;
 
-/** Avatar của Limio (lát dưa hấu, màu hồng) cạnh mỗi lời của trợ lý; khác trợ giảng AI ở trang bài học của học viên. */
-export function LimioAvatar({ size = "md" }: { size?: "md" | "lg" }) {
+/** Avatar của Lily (lát dưa hấu, màu hồng) cạnh mỗi lời của trợ lý; khác trợ giảng AI ở trang bài học của học viên. */
+export function LilyAvatar({ size = "md" }: { size?: "md" | "lg" }) {
   return (
     <span
       className={`mt-0.5 flex shrink-0 items-center justify-center rounded-full border border-pink-200 bg-pink-50 shadow-sm ${size === "lg" ? "h-10 w-10" : "h-8 w-8"}`}
@@ -25,7 +25,7 @@ export function LimioAvatar({ size = "md" }: { size?: "md" | "lg" }) {
 
 /**
  * Danh sách tin trong cuộc trò chuyện (dùng chung cho khung ở trang chủ và ngăn kéo). Tự cuộn xuống tin mới nhất.
- * `intro`: một lời của Limio hiện ở đầu khi chưa có tin nào (ngăn kéo vừa mở).
+ * `intro`: một lời của Lily hiện ở đầu khi chưa có tin nào (ngăn kéo vừa mở).
  */
 export function AssistantThread({ className = "", intro }: { className?: string; intro?: React.ReactNode }) {
   const { messages, busy, send, markDone } = useAssistant();
@@ -50,11 +50,11 @@ export function AssistantThread({ className = "", intro }: { className?: string;
           </div>
         ) : (
           <div key={i} className="flex items-start gap-3">
-            <LimioAvatar />
+            <LilyAvatar />
             <div className="min-w-0 flex-1">
               <TypedBubble text={m.text} animate={!!m.fresh} onTick={scrollToEnd} onDone={() => markDone(i)} />
               {!m.fresh && m.actions.length > 0 && (
-                // Liên kết chữ gọn, không nút: việc đầu tiên là việc Limio khuyên làm trước. Bấm vào thì trang mở trong cùng tab;
+                // Liên kết chữ gọn, không nút: việc đầu tiên là việc Lily khuyên làm trước. Bấm vào thì trang mở trong cùng tab;
                 // cuộc trò chuyện vẫn còn ở nút nổi (hoặc khung ở trang chủ).
                 <ul className="mt-2.5 space-y-1.5 px-1">
                   {m.actions.map((a) => {
@@ -107,7 +107,7 @@ export function AssistantInput({ variant, autoFocus = false }: { variant: "hero"
   const wasBusy = useRef(false);
   const docked = variant === "docked";
 
-  // Trả con trỏ về ô sau khi Limio trả lời xong.
+  // Trả con trỏ về ô sau khi Lily trả lời xong.
   useEffect(() => {
     if (wasBusy.current && !busy) inputRef.current?.focus();
     wasBusy.current = busy;
@@ -141,8 +141,8 @@ export function AssistantInput({ variant, autoFocus = false }: { variant: "hero"
         disabled={busy}
         enterKeyHint="send"
         autoComplete="off"
-        aria-label="Nói với Limio, trợ lý ảo của thầy/cô"
-        placeholder="Hỏi Limio, ví dụ: tạo đề thi"
+        aria-label="Nói với Lily, trợ lý ảo của thầy/cô"
+        placeholder="Hỏi Lily, ví dụ: tạo đề thi"
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
           // isComposing: Enter chốt chữ khi gõ tiếng Việt bằng bộ gõ không được tính là gửi.
@@ -214,11 +214,11 @@ export function TypedBubble({ text, animate, onTick, onDone }: { text: string; a
   );
 }
 
-/** Limio đang nghĩ: bong bóng ba chấm nhấp nháy kèm dòng chữ, để người dùng biết hệ thống vẫn đang làm việc. */
+/** Lily đang nghĩ: bong bóng ba chấm nhấp nháy kèm dòng chữ, để người dùng biết hệ thống vẫn đang làm việc. */
 export function ThinkingRow() {
   return (
     <div className="flex items-start gap-3" role="status" aria-live="polite">
-      <LimioAvatar />
+      <LilyAvatar />
       <div className="flex items-center gap-2.5 rounded-2xl rounded-tl-md border border-token bg-[rgb(var(--surface))] px-3.5 py-2.5 shadow-sm">
         <span className="flex items-center gap-1" aria-hidden>
           {[0, 150, 300].map((d) => (

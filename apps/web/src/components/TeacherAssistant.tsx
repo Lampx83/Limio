@@ -11,9 +11,9 @@ import { ASSISTANT_ICONS } from "./assistant/icons";
 import type { AssistantStarter } from "@/lib/teacherAssistant";
 
 /**
- * Khung của Limio, trợ lý ảo của thầy/cô, ở trang chủ giảng viên. Lúc đầu là lời chào của Limio kèm ô hỏi và các thẻ
+ * Khung của Lily, trợ lý ảo của thầy/cô trên Limio, ở trang chủ giảng viên. Lúc đầu là lời chào của Lily kèm ô hỏi và các thẻ
  * gợi ý; gõ hoặc bấm "Chưa có ý tưởng?" thì chuyển sang trò chuyện. Cuộc trò chuyện dùng chung với nút nổi ở các trang
- * khác (AssistantProvider), nên bấm liên kết Limio đưa rồi quay lại vẫn thấy tiếp. Đường dẫn trong câu trả lời đều do
+ * khác (AssistantProvider), nên bấm liên kết Lily đưa rồi quay lại vẫn thấy tiếp. Đường dẫn trong câu trả lời đều do
  * máy chủ ánh xạ từ danh mục, trình duyệt không tự dựng.
  */
 export default function TeacherAssistant({ starters, ideaPrompt, greeting, name }: { starters: AssistantStarter[]; ideaPrompt: string; greeting: string; name: string }) {
@@ -36,14 +36,14 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
         <div className="min-w-0 flex-1">
           {chatting ? (
             <>
-              <h1 id="teacher-assistant-heading" className="text-base font-bold leading-tight">Limio</h1>
+              <h1 id="teacher-assistant-heading" className="text-base font-bold leading-tight">Lily</h1>
               <p className="truncate text-xs text-muted">Trợ lý ảo của thầy/cô · chỉ hỗ trợ cách dùng Limio</p>
             </>
           ) : (
             <>
-              {/* Lời chào là lời của Limio nói với giảng viên: nêu rõ ai đang nói. */}
+              {/* Lời chào là lời của Lily nói với giảng viên: nêu rõ ai đang nói. */}
               <p className="text-xs font-semibold text-muted">
-                <span className="font-bold text-pink-600">Limio</span> · Trợ lý ảo của thầy/cô trên Limio
+                <span className="font-bold text-pink-600">Lily</span> · Trợ lý ảo của thầy/cô trên Limio
               </p>
               <h1 id="teacher-assistant-heading" className="text-h3">
                 {greeting}, <span className="text-gradient">{name}</span>!
@@ -66,7 +66,7 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
           <div className="mt-5">
             <AssistantInput variant="hero" />
           </div>
-          {/* Nói rõ phạm vi ngay trước khi gõ: Limio chỉ hỗ trợ cách dùng và các tính năng của Limio. */}
+          {/* Nói rõ phạm vi ngay trước khi gõ: Lily chỉ hỗ trợ cách dùng và các tính năng của Limio. */}
           <p className="mt-2.5 flex items-start gap-1.5 text-xs leading-relaxed text-muted">
             <Info size={14} className="mt-0.5 shrink-0 text-pink-600" aria-hidden />
             <span>

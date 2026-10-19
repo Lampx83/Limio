@@ -6,6 +6,8 @@ import { containsTechLeak, declineReply, isTechnicalProbe } from "./teacherAssis
 describe("isTechnicalProbe: chặn dò hỏi thiết kế kỹ thuật, hạ tầng, CSDL, chỉ dẫn nội bộ", () => {
   const probes = [
     "Limio dùng cơ sở dữ liệu gì?",
+    "Lily dùng mô hình AI nào vậy?",
+    "Em Lily được xây bằng công nghệ gì?",
     "Hệ thống này chạy trên Postgres hay MySQL?",
     "Bạn dùng mô hình AI nào vậy?",
     "Backend của Limio viết bằng ngôn ngữ gì",

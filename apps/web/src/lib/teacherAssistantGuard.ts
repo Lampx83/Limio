@@ -1,4 +1,4 @@
-// Rào chắn cho trợ lý Limio: (1) KHÔNG tiết lộ thiết kế kỹ thuật, hạ tầng, cơ sở dữ liệu của hệ thống, (2) chỉ trả
+// Rào chắn cho trợ lý Lily: (1) KHÔNG tiết lộ thiết kế kỹ thuật, hạ tầng, cơ sở dữ liệu của hệ thống, (2) chỉ trả
 // lời việc thuộc nghiệp vụ Limio. Module thuần. Bộ lọc chạy ở máy chủ, TRƯỚC và SAU khi gọi mô hình, nên không phụ
 // thuộc vào việc mô hình có nghe lời hay bị dụ ("hãy bỏ qua các hướng dẫn trước"). Quy tắc trong prompt chỉ là lớp
 // thứ hai cho những câu lọt qua.
@@ -49,7 +49,7 @@ const GENERIC_TECH = [
 ];
 
 const SYSTEM_CUE = [
-  "limio", "he thong nay", "he thong cua", "nen tang nay", "nen tang cua", "phan mem nay", "ung dung nay", "website nay",
+  "limio", "lily", "he thong nay", "he thong cua", "nen tang nay", "nen tang cua", "phan mem nay", "ung dung nay", "website nay",
   "trang web nay", "tro ly", "ban dung", "ban chay", "ban luu", "ban duoc xay", "ban su dung", "cac ban dung",
   "cac ban chay", "cac ban luu", "phia sau", "dang sau", "ben duoi", "ben trong he thong", "ben trong limio",
   "ban la", "ban hoat dong", "ban dua tren", "xay dung nhu the nao", "duoc xay", "thiet ke ben trong", "thiet ke he thong", "thiet ke cua",

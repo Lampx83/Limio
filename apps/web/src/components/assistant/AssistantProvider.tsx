@@ -54,7 +54,7 @@ export function useAssistant(): AssistantContextValue {
 }
 
 /**
- * Một cuộc trò chuyện duy nhất với trợ lý Limio cho cả khu vực giảng viên: khung lớn ở trang chủ và ngăn kéo ở mọi
+ * Một cuộc trò chuyện duy nhất với trợ lý Lily cho cả khu vực giảng viên: khung lớn ở trang chủ và ngăn kéo ở mọi
  * trang khác cùng đọc một trạng thái. Provider nằm ở layout nên không bị huỷ khi chuyển trang trong khu vực; lịch sử
  * còn được lưu trong sessionStorage (theo tài khoản) để sống sót qua tải lại trang. Đóng tab thì mất, cố ý.
  */

@@ -96,7 +96,7 @@ describe("giọng xưng hô: em và thầy/cô", () => {
 
   it("buộc tự xưng em, gọi giảng viên là thầy/cô, không xưng tôi/mình/Limio ngôi thứ ba", () => {
     expect(system).toMatch(/xưng "thầy\/cô" với giảng viên và LUÔN tự xưng "em"/);
-    expect(system).toMatch(/không tự xưng "tôi", "mình" hay "Limio" ở ngôi thứ ba/);
+    expect(system).toMatch(/không tự xưng "tôi", "mình" hay "Lily" ở ngôi thứ ba/);
   });
 
   it("giữ giọng lịch sự ấm áp, không nũng nịu", () => {
@@ -105,10 +105,10 @@ describe("giọng xưng hô: em và thầy/cô", () => {
 });
 
 describe("danh tính trợ lý", () => {
-  it("là Limio, trợ lý ảo của giảng viên; tự giới thiệu mà không nói về công nghệ", () => {
+  it("là Lily, trợ lý ảo của giảng viên; tự giới thiệu mà không nói về công nghệ", () => {
     const { system } = buildTeacherAssistantPrompt(base);
-    expect(system).toMatch(/Bạn là Limio, trợ lý ảo của giảng viên/);
-    expect(system).toMatch(/Em là Limio, trợ lý ảo của thầy\/cô trên Limio/);
+    expect(system).toMatch(/Bạn là Lily, trợ lý ảo của giảng viên/);
+    expect(system).toMatch(/Em là Lily, trợ lý ảo của thầy\/cô trên Limio/);
     expect(system).toMatch(/không nói gì về công nghệ phía sau/);
   });
 });
