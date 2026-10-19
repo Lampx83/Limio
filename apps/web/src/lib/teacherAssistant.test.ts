@@ -51,7 +51,7 @@ describe("buildStarters", () => {
   it("chỉ vài thẻ soạn, không lặp việc đang chờ (đã có danh sách Cần xử lý gấp)", () => {
     const s = buildStarters(withCourses);
     expect(s.length).toBeLessThanOrEqual(6);
-    expect(s.map((x) => x.id)).toEqual(["new_course", "new_live", "class_activity", "class_quiz", "open_course", "oral_new"]);
+    expect(s.map((x) => x.id)).toEqual(["new_course", "new_live", "class_activity", "class_quiz", "grade", "open_course"]);
     expect(s.some((x) => /chờ chấm|chưa được trả lời/.test(x.title))).toBe(false);
   });
 
@@ -62,7 +62,7 @@ describe("buildStarters", () => {
   });
 
   it("giảng viên mới chưa có khoá thì không có thẻ mở khoá", () => {
-    expect(buildStarters(empty).map((x) => x.id)).toEqual(["new_course", "new_live", "class_activity", "class_quiz", "oral_new"]);
+    expect(buildStarters(empty).map((x) => x.id)).toEqual(["new_course", "new_live", "class_activity", "class_quiz", "grade"]);
   });
 
   it("mọi thẻ dẫn tới điểm đến có thật", () => {

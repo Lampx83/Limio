@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SendHorizontal, Sparkles } from "lucide-react";
 import { WatermelonSliceIcon } from "../BrandIcons";
 import { ASSISTANT_ICONS } from "./icons";
 import { useAssistant } from "./AssistantProvider";
 import type { AssistantIcon } from "@/lib/teacherAssistant";
+import { suggestionsFor } from "@/lib/assistantSuggestions";
 
 /** Giới hạn gõ ở ô nhập; máy chủ là nơi chặn thật (CHAT_MESSAGE_MAX = 500). */
 const MESSAGE_MAX = 500;
@@ -24,7 +26,40 @@ export function LilyAvatar({ size = "md" }: { size?: "md" | "lg" }) {
 }
 
 /**
- * Danh sách tin trong cuộc trò chuyện (dùng chung cho khung ở trang chủ và ngăn kéo). Tự cuộn xuống tin mới nhất.
+ * Lời chào đầu tiên của Lily kèm vài câu hỏi đề xuất theo trang đang đứng (bấm là hỏi ngay). `onPick`: việc làm khi bấm
+ * một câu (gửi câu đó).
+ */
+export function LilyIntro({ onPick }: { onPick: (question: string) => void }) {
+  const pathname = usePathname();
+  const { busy, recentCourseTitle } = useAssistant();
+  return (
+    <div className="flex items-start gap-3">
+      <LilyAvatar />
+      <div className="min-w-0 flex-1">
+        <p className="whitespace-pre-wrap rounded-2xl rounded-tl-md border border-token bg-[rgb(var(--surface))] px-3.5 py-2.5 text-sm leading-relaxed shadow-sm">
+          Xin chào thầy/cô, em là Lily, trợ lý ảo của thầy/cô trên Limio. Nhiệm vụ chính của em là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...) và gợi ý việc nên làm. Thầy/cô cần gì ạ?
+        </p>
+        <p className="mt-3 text-xs font-semibold text-muted">Thầy/cô có thể hỏi em, ví dụ:</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {suggestionsFor(pathname, recentCourseTitle).map((q) => (
+            <button
+              key={q}
+              type="button"
+              disabled={busy}
+              onClick={() => onPick(q)}
+              className="rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-left text-sm shadow-sm transition hover:border-slate-300 hover:shadow disabled:opacity-60"
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Danh sách tin trong cuộc trò chuyện (trong ngăn kéo). Tự cuộn xuống tin mới nhất.
  * `intro`: một lời của Lily hiện ở đầu khi chưa có tin nào (ngăn kéo vừa mở).
  */
 export function AssistantThread({ className = "", intro }: { className?: string; intro?: React.ReactNode }) {
@@ -55,7 +90,7 @@ export function AssistantThread({ className = "", intro }: { className?: string;
               <TypedBubble text={m.text} animate={!!m.fresh} onTick={scrollToEnd} onDone={() => markDone(i)} />
               {!m.fresh && m.actions.length > 0 && (
                 // Liên kết chữ gọn, không nút: việc đầu tiên là việc Lily khuyên làm trước. Bấm vào thì trang mở trong cùng tab;
-                // cuộc trò chuyện vẫn còn ở nút nổi (hoặc khung ở trang chủ).
+                // cuộc trò chuyện vẫn còn ở nút nổi .
                 <ul className="mt-2.5 space-y-1.5 px-1">
                   {m.actions.map((a) => {
                     const Icon = ASSISTANT_ICONS[a.icon as AssistantIcon] ?? Sparkles;
@@ -98,9 +133,21 @@ export function AssistantThread({ className = "", intro }: { className?: string;
 
 /**
  * Ô nhập một dòng (không phải textarea): chữ hoặc gợi ý dài hơn ô thì hiện "…" thay vì bị cắt giữa chừng, nhất là
- * trên điện thoại. `variant="hero"`: nổi bật ở khung trang chủ lúc mới vào; `"docked"`: phẳng, dính đáy khung chat.
+ * trên điện thoại. `variant="docked"`: phẳng, dính đáy khung chat; `"hero"`: dạng nổi bật, hiện chưa trang nào dùng.
  */
-export function AssistantInput({ variant, autoFocus = false }: { variant: "hero" | "docked"; autoFocus?: boolean }) {
+export function AssistantInput({
+  variant,
+  autoFocus = false,
+  refocusAfterReply = true,
+  onSent,
+}: {
+  variant: "hero" | "docked";
+  autoFocus?: boolean;
+  /** Trả con trỏ về ô sau khi Lily trả lời xong. Tắt ở khung trang chủ: lúc đó cuộc trò chuyện đã chuyển xuống ngăn kéo. */
+  refocusAfterReply?: boolean;
+  /** Gọi ngay sau khi gửi (vd mở ngăn kéo để thấy cuộc trò chuyện). */
+  onSent?: () => void;
+}) {
   const { busy, send } = useAssistant();
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,9 +156,9 @@ export function AssistantInput({ variant, autoFocus = false }: { variant: "hero"
 
   // Trả con trỏ về ô sau khi Lily trả lời xong.
   useEffect(() => {
-    if (wasBusy.current && !busy) inputRef.current?.focus();
+    if (refocusAfterReply && wasBusy.current && !busy) inputRef.current?.focus();
     wasBusy.current = busy;
-  }, [busy]);
+  }, [busy, refocusAfterReply]);
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
@@ -122,6 +169,7 @@ export function AssistantInput({ variant, autoFocus = false }: { variant: "hero"
     if (!text || busy) return;
     setInput("");
     void send(text);
+    onSent?.();
   };
 
   return (
