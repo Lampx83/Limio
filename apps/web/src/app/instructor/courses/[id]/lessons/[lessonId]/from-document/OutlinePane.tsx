@@ -12,21 +12,20 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, ChevronDown, GripVertical, Plus, Scissors, Trash2, X } from "lucide-react";
+import { AlertTriangle, ChevronDown, GripVertical, Plus, Trash2, X } from "lucide-react";
 import {
   OUTLINE_LIMITS,
   type LessonOutline,
   type OutlineSection,
   type SourcePara,
 } from "@feedbackme/shared-types";
-import { lessonReadingMinutes, shouldSuggestSplit } from "@/lib/lessonOutline";
+import { lessonReadingMinutes } from "@/lib/lessonOutline";
 import {
   addSection,
   mergeLessonUp,
   moveSection,
   paraRangeLabel,
   removeSection,
-  splitLessonAt,
   updateLesson,
   updateSection,
 } from "@/lib/lessonOutlineEdit";
@@ -123,21 +122,11 @@ export default function OutlinePane({
                 />
               )}
 
-              {shouldSuggestSplit(lesson, paras) && (
-                <p className="text-caption rounded-md bg-[rgb(var(--surface-muted))] px-2.5 py-1.5 text-muted">
-                  Bài này khá dài ({lesson.sections.length} mục, khoảng {lessonReadingMinutes(lesson, paras)} phút đọc). Có thể
-                  tách thành hai bài bằng nút <Scissors className="inline h-3 w-3" aria-hidden /> giữa hai mục.
-                </p>
-              )}
-
               <ol className="space-y-1.5">
                 {lesson.sections.map((s, si) => {
                   n += 1;
                   return (
                     <li key={s.id}>
-                      {si > 0 && (
-                        <SplitGap onSplit={() => onChange(splitLessonAt(outline, li, si))} />
-                      )}
                       <SectionRow
                         num={n}
                         s={s}
@@ -273,20 +262,6 @@ function AutoText({
       className={`min-w-0 flex-1 resize-none overflow-hidden rounded border border-transparent bg-transparent px-1 py-0.5 leading-snug focus:border-brand-300 focus:bg-[rgb(var(--surface))] focus:outline-none ${className}`}
       {...inputProps}
     />
-  );
-}
-
-function SplitGap({ onSplit }: { onSplit: () => void }) {
-  return (
-    <div className="group relative h-1.5">
-      <button
-        type="button"
-        onClick={onSplit}
-        className="absolute left-1/2 top-1/2 z-[1] inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface))] px-2 py-0.5 text-[11px] text-muted opacity-0 shadow-sm transition-opacity hover:text-brand-700 focus:opacity-100 group-hover:opacity-100"
-      >
-        <Scissors className="h-3 w-3" aria-hidden /> Tách thành bài mới từ đây
-      </button>
-    </div>
   );
 }
 

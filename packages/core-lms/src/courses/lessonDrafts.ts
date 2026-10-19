@@ -118,6 +118,11 @@ export interface CreateLessonDraftInput {
   look?: LessonLook | null;
   /** Thay nội dung khối này khi Áp dụng — phải là khối Văn bản của chính bài học. */
   targetContentItemId?: string | null;
+  /**
+   * Bản nháp "giữ nguyên định dạng" (tệp Word/Markdown vào thẳng một bài): bài đã
+   * có sẵn và coi như đã chốt, không qua bước dàn ý và AI.
+   */
+  readyResult?: LessonDraftResult | null;
 }
 
 export async function createLessonDraft(
@@ -147,6 +152,9 @@ export async function createLessonDraft(
         outline: input.outline as unknown as Prisma.InputJsonValue,
         look: (input.look ?? undefined) as unknown as Prisma.InputJsonValue | undefined,
         targetContentItemId: input.targetContentItemId ?? null,
+        ...(input.readyResult
+          ? { result: input.readyResult as unknown as Prisma.InputJsonValue, confirmedAt: new Date(), writing: "keep" }
+          : {}),
       },
       select: SELECT,
     });
@@ -230,6 +238,22 @@ export async function updateLessonDraft(
 
   const updated = await db.lessonDraft.update({ where: { id: draftId }, data, select: SELECT });
   return toView(updated, info);
+}
+
+/**
+ * Bản nháp "giữ nguyên định dạng": thay HTML của bài (giảng viên chấp nhận một đoạn
+ * AI sửa, hoặc thêm Mục tiêu và Tổng kết). Chỉ nhận khi bản nháp thật sự là loại này
+ * — dàn ý thường đi đường riêng, không được ghi đè kết quả bằng tay.
+ */
+export async function setKeepFormatHtml(userId: string, draftId: string, html: string, db: DbClient = prisma): Promise<void> {
+  const { row } = await loadOwned(userId, draftId, db);
+  if (row.status !== "outline") throw new LessonDraftError("invalid_state");
+  const outline = row.outline as unknown as LessonOutline;
+  if (!outline.keepFormat) throw new LessonDraftError("invalid_state");
+  const result = row.result as unknown as LessonDraftResult | null;
+  if (!result || result.lessons.length === 0) throw new LessonDraftError("no_result");
+  const next: LessonDraftResult = { ...result, lessons: [{ ...result.lessons[0]!, html }, ...result.lessons.slice(1)] };
+  await db.lessonDraft.update({ where: { id: draftId }, data: { result: next as unknown as Prisma.InputJsonValue } });
 }
 
 export async function discardLessonDraft(userId: string, draftId: string, db: DbClient = prisma): Promise<void> {

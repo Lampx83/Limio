@@ -422,7 +422,19 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
 
 Chọn "Văn bản — AI hỗ trợ" trong "+ Thêm hoạt động/tài nguyên" **không mở form dán chữ trong hộp thoại nữa**
 mà chuyển sang trang riêng `/instructor/courses/{id}/lessons/{lessonId}/from-document` ("Tạo bài từ tài liệu",
-thanh bước **Tài liệu → Dàn ý → Bài học**).
+thanh bước **Tài liệu → Dàn ý → Bài học**). Mỗi tài liệu chỉ ra **một bài học**, không gợi ý cắt bài; tài liệu
+tối đa **4.000 từ** (dài hơn thì báo lỗi, giảng viên tự chia tệp).
+
+**Tệp Word (.docx) và Markdown (.md) đi đường riêng, không qua AI và không có bước Dàn ý:** nút ở bước một
+ghi **"Đưa vào bài học"**; tệp vào thẳng một bài, giữ nguyên tiêu đề, bảng, ảnh, danh sách như trong tệp (tên
+tài liệu ở dòng đầu được bỏ vì bài đã có tên). Thanh bước chỉ còn **Tài liệu → Xem trước**; màn xem trước có tên
+tệp, số từ, số ảnh, nút bảng màu và **"Áp dụng vào bài học"**, "Dùng tài liệu khác". **AI chỉ chạy khi giảng viên bấm**
+(mỗi lần tốn một lượt hỏi AI): nút **"Thêm Mục tiêu và Tổng kết"** (AI rút từ chính chữ của bài; hộp Mục tiêu ở
+đầu bài, hộp Tổng kết ở cuối; bấm lại ghi "Tạo lại Mục tiêu và Tổng kết", còn có "Bỏ Mục tiêu và Tổng kết"); và
+**bấm vào một đoạn** trong bài (đoạn được viền xanh) để hiện thanh **"Nhờ AI sửa đoạn đã chọn"** với bốn việc:
+"Viết ngắn hơn", "Dễ hiểu hơn", "Thêm ví dụ", "Sửa chính tả". AI trả bản đề xuất cạnh "Bản hiện tại"; giảng
+viên bấm **"Dùng bản này"** hoặc "Bỏ", không có gì tự thay đổi. Đoạn có liên kết, ảnh hay ký hiệu đặc biệt thì
+chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và văn bản dán.
 1. **Bước Tài liệu** ("Biến tài liệu thành bài học"): kéo thả hoặc chọn tệp (Word .docx, PDF, .txt, .md, tối
    đa 10 MB; ảnh trong Word được giữ) hoặc dán vào ô "Dán nội dung bài vào đây...". Cần ít nhất 200 ký tự. PDF
    chụp ảnh không đọc được chữ, phải dán văn bản. Chọn **"Mẫu bài"** (một lần cho cả bài): "Bài lý thuyết"
@@ -430,7 +442,8 @@ thanh bước **Tài liệu → Dàn ý → Bài học**).
    → Tổng kết), "Bài ôn tập" (Ý chính cần nhớ → Câu hỏi thường gặp → Tự kiểm tra). Bấm **"Đọc tài liệu và lập
    dàn ý"** (tài liệu dài mất khoảng một phút).
 2. **Bước Dàn ý** (hai cột). Trái: sửa "Tên bài học", "Mục tiêu học tập" ("+ Thêm"), từng mục (kéo thả đổi
-   thứ tự, "Tiêu đề mục", "Ý chính của mục", "+ Thêm ý", "Xoá mục", "Thêm mục"), "Tách thành bài mới từ đây".
+   thứ tự, "Tiêu đề mục", "Ý chính của mục", "+ Thêm ý", "Xoá mục", "Thêm mục"). Đoạn tài liệu AI bỏ sót được
+   tự nối vào mục đứng trước, giảng viên không phải gán từng đoạn.
    Phải: thẻ "Xem trước" và "Tài liệu gốc" (đoạn chưa thuộc mục nào có "Gán vào mục…"). "Đổi mẫu" → "Lập lại
    dàn ý"; "Dùng tài liệu khác" để làm lại. Bản nháp tự lưu ("Đã lưu"), mở lại trang làm tiếp được. Chọn **"Cách
    viết"**: "Giữ nguyên lời" hoặc "Biên tập cho mạch lạc"; tick "Thêm Mục tiêu và Tổng kết"; màn hiện "Dự kiến

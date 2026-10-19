@@ -25,6 +25,7 @@ import OutlinePane, { Objectives } from "./OutlinePane";
 import TemplatePicker from "./TemplatePicker";
 import { OutlinePreview, SourceView } from "./PreviewPane";
 import { GenerationView, ResultView, type GenStep } from "./ResultPane";
+import DirectPane from "./DirectPane";
 
 interface Draft {
   id: string;
@@ -79,6 +80,7 @@ export default function LessonStudio({
   const [warnings, setWarnings] = useState<string[]>([]);
   const [save, setSave] = useState<SaveState>("saved");
   const [step, setStep] = useState<2 | 3>(2);
+  const [direct, setDirect] = useState(false);
   const backHref = `/instructor/courses/${courseId}?tab=content&lesson=${lessonId}`;
 
   return (
@@ -91,7 +93,7 @@ export default function LessonStudio({
           <span className="max-w-[12rem] truncate">{lessonTitle}</span>
         </Link>
         <span className="hidden font-semibold md:inline">Tạo bài từ tài liệu</span>
-        <Steps step={draftId ? step : 1} />
+        <Steps step={draftId ? step : 1} direct={direct} />
         <span className="ml-auto w-24 text-right text-xs text-faint">
           {draftId && (save === "saving" ? "Đang lưu…" : save === "error" ? <span className="text-danger-600">Chưa lưu được</span> : save === "dirty" ? "" : "Đã lưu")}
         </span>
@@ -103,11 +105,13 @@ export default function LessonStudio({
           warnings={warnings}
           onSave={setSave}
           onStep={setStep}
+          onDirect={setDirect}
           onApplied={() => router.push(backHref)}
           onRestart={async () => {
             if (!window.confirm("Bỏ dàn ý này và bắt đầu lại với tài liệu khác?")) return;
             await fetch(apiUrl(`/api/lesson-drafts/${draftId}`), { method: "DELETE" });
             setDraftId(null);
+            setDirect(false);
             setWarnings([]);
             router.refresh();
           }}
@@ -127,12 +131,13 @@ export default function LessonStudio({
   );
 }
 
-function Steps({ step }: { step: 1 | 2 | 3 }) {
-  const items = ["Tài liệu", "Dàn ý", "Bài học"];
+function Steps({ step, direct }: { step: 1 | 2 | 3; direct: boolean }) {
+  // Tệp giữ nguyên định dạng không có bước dàn ý: Tài liệu → Xem trước.
+  const items = direct ? ["Tài liệu", "Xem trước"] : ["Tài liệu", "Dàn ý", "Bài học"];
   return (
     <ol className="mx-auto hidden items-center gap-1.5 sm:flex" aria-label="Các bước">
       {items.map((label, i) => {
-        const n = (i + 1) as 1 | 2 | 3;
+        const n = (direct && i === 1 ? 3 : i + 1) as 1 | 2 | 3;
         const done = n < step;
         const on = n === step;
         return (
@@ -165,6 +170,7 @@ function Studio({
   warnings,
   onSave,
   onStep,
+  onDirect,
   onApplied,
   onRestart,
 }: {
@@ -172,6 +178,7 @@ function Studio({
   warnings: string[];
   onSave: (s: SaveState) => void;
   onStep: (s: 2 | 3) => void;
+  onDirect: (b: boolean) => void;
   onApplied: () => void;
   onRestart: () => void;
 }) {
@@ -202,12 +209,14 @@ function Studio({
       .then((d) => {
         if (!alive) return;
         setDraft(d);
+        onDirect(!!d.outline.keepFormat);
         if (d.confirmedAt && d.result) setPhase("result");
       })
       .catch(() => alive && setLoadErr("Không mở được bản nháp. Hãy tải lại trang."));
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   const flush = useCallback(async () => {
@@ -269,6 +278,27 @@ function Studio({
       <div className="grid flex-1 place-items-center text-sm text-muted">
         <Loader2 className="h-5 w-5 animate-spin" aria-label="Đang tải dàn ý" />
       </div>
+    );
+  }
+
+  if (draft.outline.keepFormat && draft.result) {
+    return (
+      <DirectPane
+        draftId={draftId}
+        sourceName={draft.sourceName}
+        result={draft.result}
+        look={draft.look}
+        onLook={(look) => patch({ look })}
+        onHtml={(html) =>
+          setDraft((x) =>
+            x && x.result ? { ...x, result: { ...x.result, lessons: [{ ...x.result.lessons[0]!, html }, ...x.result.lessons.slice(1)] } } : x,
+          )
+        }
+        onApply={apply}
+        applying={applying}
+        error={genErr}
+        onRestart={onRestart}
+      />
     );
   }
 

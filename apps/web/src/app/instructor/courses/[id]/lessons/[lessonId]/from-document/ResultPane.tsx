@@ -65,10 +65,13 @@ export function ResultView({
   result,
   look,
   onShowParas,
+  hideCompare = false,
 }: {
   result: LessonDraftResult;
   look: LessonLook | null;
   onShowParas: () => void;
+  /** Bản giữ nguyên định dạng không có đoạn nào để đối chiếu. */
+  hideCompare?: boolean;
 }) {
   const multi = result.lessons.length > 1;
   return (
@@ -80,6 +83,7 @@ export function ResultView({
         </p>
       )}
       {result.writing === "keep" &&
+        !hideCompare &&
         (result.missingParas.length > 0 ? (
           <div className="banner-warning flex flex-wrap items-center gap-2 text-sm">
             <span className="flex-1">

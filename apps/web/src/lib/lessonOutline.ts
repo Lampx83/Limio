@@ -111,7 +111,7 @@ export function normalizeLessonOutline(
   template: LessonTemplateKey = "theory",
 ): LessonOutline {
   const taken = new Set<number>();
-  const lessons = lessonsOf(raw?.lessons, paras.length, taken, false);
+  const lessons = lessonsOf(mergeIntoOneLesson(raw?.lessons), paras.length, taken, false);
   for (const l of lessons) {
     if (!l.title) l.title = l.sections[0]?.title ?? "Bài học";
     for (const s of l.sections) {
@@ -121,7 +121,43 @@ export function normalizeLessonOutline(
       else if (s.layout === "image" || !(OUTLINE_AUTO_LAYOUTS as readonly string[]).includes(s.layout)) s.layout = "text";
     }
   }
+  attachOrphans(lessons[0], paras);
   return { lessons, ignoredParas: [], template };
+}
+
+/**
+ * Mỗi tài liệu chỉ ra MỘT bài (quyết định 2026-10-19: không gợi ý cắt bài). Mô hình
+ * lỡ đề xuất nhiều bài thì gộp các mục lại vào bài đầu, giữ nguyên thứ tự.
+ */
+function mergeIntoOneLesson(raw: unknown): unknown {
+  if (!Array.isArray(raw) || raw.length <= 1) return raw;
+  const lessons = raw.filter((l): l is Record<string, unknown> => !!l && typeof l === "object");
+  if (lessons.length <= 1) return lessons;
+  const sections = lessons.flatMap((l) => (Array.isArray(l.sections) ? l.sections : []));
+  return [{ ...lessons[0], sections }];
+}
+
+/**
+ * Đoạn tài liệu mô hình bỏ sót thì nối vào mục của đoạn gần nhất đứng trước nó
+ * (đầu tài liệu thì vào mục đầu), thay vì bắt giảng viên đi gán từng đoạn — họ
+ * chưa hiểu dàn ý thì không có căn cứ để gán. Đoạn trắng được bỏ qua.
+ */
+function attachOrphans(lesson: OutlineLesson | undefined, paras: SourcePara[]): void {
+  if (!lesson || lesson.sections.length === 0) return;
+  const owner = new Map<number, OutlineSection>();
+  for (const s of lesson.sections) for (const n of s.paras) owner.set(n, s);
+  let current = lesson.sections[0]!;
+  for (let i = 0; i < paras.length; i++) {
+    const own = owner.get(i);
+    if (own) {
+      current = own;
+      continue;
+    }
+    const p = paras[i]!;
+    if ("t" in p && !p.t.trim()) continue;
+    current.paras.push(i);
+  }
+  for (const s of lesson.sections) s.paras.sort((a, b) => a - b);
 }
 
 /**
@@ -137,7 +173,9 @@ export function sanitizeLessonOutline(input: unknown, paraCount: number): Lesson
   const lessons = lessonsOf(o.lessons, paraCount, taken, true);
   if (lessons.length === 0) return null;
   const ignoredParas = claimParas(o.ignoredParas, paraCount, taken);
-  return isLessonTemplateKey(o.template) ? { lessons, ignoredParas, template: o.template } : { lessons, ignoredParas };
+  const out: LessonOutline = isLessonTemplateKey(o.template) ? { lessons, ignoredParas, template: o.template } : { lessons, ignoredParas };
+  if (o.keepFormat === true) out.keepFormat = true;
+  return out;
 }
 
 /** Đoạn có nội dung mà chưa thuộc mục nào và chưa được bỏ qua (D4). */
@@ -162,14 +200,6 @@ export function lessonReadingMinutes(lesson: OutlineLesson, paras: SourcePara[])
   let w = 0;
   for (const s of lesson.sections) for (const n of s.paras) w += words(paras[n]);
   return Math.max(1, Math.round(w / 200));
-}
-
-/** Bài quá dài so với ngưỡng gợi ý tách (D5) — chỉ để nhắc, không chặn. */
-export function shouldSuggestSplit(lesson: OutlineLesson, paras: SourcePara[]): boolean {
-  return (
-    lesson.sections.length > OUTLINE_LIMITS.splitSuggestSections ||
-    lessonReadingMinutes(lesson, paras) > OUTLINE_LIMITS.splitSuggestMinutes
-  );
 }
 
 /** Lỗi phải sửa trước khi chốt dàn ý (D7). Rỗng = chốt được. */
