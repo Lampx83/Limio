@@ -719,6 +719,8 @@ export interface LiveDeckSlidesGeneratedPayload {
   slideCount: number;
   /** Số slide AI viết hỏng nên dựng từ dàn ý. */
   fallbackCount: number;
+  /** Bài có nguồn internet: số ảnh lấy từ trang nguồn đã gắn vào slide Chữ và hình. */
+  webImageCount?: number;
   regenerated?: number;
   created?: number;
   removed?: number;

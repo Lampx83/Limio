@@ -133,7 +133,7 @@ export async function POST(req: Request) {
         let refs: WebSourceRef[] | null = null;
         if (web) {
           const pages = toSourcePages(await web.search(searchQueryFromTopic(topicText), WEB_MAX_PAGES + 3));
-          refs = pages.map(({ n, title, url }) => ({ n, title, url }));
+          refs = pages.map(({ n, title, url, images }) => ({ n, title, url, ...(images?.length ? { images } : {}) }));
           if (pages.length) {
             text = composeTopicSource(topicText, pages);
             kind = "topic_web";

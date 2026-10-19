@@ -89,7 +89,15 @@ function referencesSlide(os: OutlineSlide, ctx?: DraftContext): GeneratedSlide {
   const refs = ctx?.refs ?? [];
   const note = refs.length ? `Các trang AI đã đọc khi soạn bài:\n${refs.map((r) => `[${r.n}] ${r.title} — ${r.url}`).join("\n")}` : "";
   const config = {
-    ...sanitizeLayoutConfig("summary", { title: os.title, items: os.points.map((p) => ({ heading: p })) }),
+    // Mỗi dòng "[n] ..." mang link tới trang thứ n (giảng viên sửa tên dòng thì link vẫn theo số).
+    ...sanitizeLayoutConfig("summary", {
+      title: os.title,
+      items: os.points.map((p) => {
+        const n = Number(/^\s*\[(\d+)\]/.exec(p)?.[1]);
+        const href = refs.find((r) => r.n === n)?.url;
+        return { heading: p, ...(href ? { href } : {}) };
+      }),
+    }),
     outlineId: os.id,
     aiGenerated: true,
     ...(note ? { presenterNote: note.slice(0, MAX_LEN.notes) } : {}),
