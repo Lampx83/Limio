@@ -62,7 +62,7 @@ trường" (ẩn khi đang ở trang thi), chuông thông báo và nút tên tà
 1. **Trang chủ** → `/instructor/dashboard` ("Tổng quan việc cần xử lý")
 2. **LMS** ("Bài giảng Elearning"): Khoá học của tôi · **Assignment** · **Forum Q&A** (nhãn menu nguyên văn,
    còn tiếng Anh)
-3. **Limio-Live** ("Dạy học trực tiếp"), chia 4 nhóm nhỏ: "Bài giảng tương tác" (Bài giảng của tôi) ·
+3. **Limio-Live** ("Dạy học trực tiếp"), chia 4 nhóm nhỏ: "Slide tương tác" (Slide của tôi) ·
    "Hoạt động nhanh" (Vote, Word Cloud, Padlet, Draw-it, Whiteboard) · "Điều hành lớp học" (Đếm ngược,
    Gọi tên, Phân nhóm, Gameshow). Cần quyền `limio_live.access`. Tài khoản miễn phí thấy nhãn nhỏ
    "Premium"/"Trial" (tooltip "Tài khoản miễn phí được dùng thử tính năng này") ở Limio-Live và Vấn đáp AI.
@@ -524,9 +524,9 @@ Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral
 7. Giọng nói: giảng viên chỉ chọn "Trả lời bằng: Giọng nói"; chọn giọng đọc (NEU TTS) thuộc phần quản trị, giảng
    viên không chỉnh. Giao diện học viên theo ngôn ngữ của đề (vi/en; tiếng Trung dùng giao diện tiếng Việt).
 
-## 14. Limio-Live — bài giảng tương tác (mới)
+## 14. Limio-Live — slide tương tác (mới)
 
-Menu Limio-Live → "Bài giảng của tôi" (`/instructor/limio-live`): nút **Tạo bài giảng** và **Nhóm mới**; xem
+Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo bài giảng** và **Nhóm mới**; xem
 "Theo nhóm" hoặc "Tất cả", lọc "Mọi nhóm"; mỗi thẻ bài có "Sao chép bài giảng", "Chuyển vào nhóm", "Xoá". Nút
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
@@ -660,7 +660,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
 ## 17. Lily, trợ lý ảo của giảng viên (mới, `components/TeacherAssistant.tsx`, `components/assistant/`)
 
 **Lily là trợ lý ảo của thầy/cô trên Limio, xưng "em" và gọi giảng viên là "thầy/cô"** (Limio là tên hệ thống, Lily là tên trợ lý), biểu tượng lát dưa hấu **màu hồng**. Khác với **Trợ giảng AI** (nút tròn nổi xanh, biểu tượng robot, chỉ ở trang bài học của học viên đã ghi danh, gợi ý từng bước không đưa thẳng đáp án; không hiện ở chế độ xem trước). Hai trợ lý không dùng chung cuộc trò chuyện.
-- **Trang chủ giảng viên:** không có ô chat riêng; đầu trang chỉ có lời chào theo giờ ("{Chào buổi sáng/chiều/tối}, {tên}!"), câu "Thầy/cô muốn làm gì hôm nay?" kèm nhắc bấm "Hỏi Lily" ở góc phải, và các thẻ gợi việc (Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Chấm bài, Mở khoá "<khoá gần nhất>"). Hỏi Lily thì dùng nút nổi như ở mọi trang.
+- **Trang chủ giảng viên:** không có ô chat riêng; đầu trang chỉ có lời chào theo giờ ("{Chào buổi sáng/chiều/tối}, {tên}!"), câu "Thầy/cô muốn làm gì hôm nay?" kèm nhắc bấm "Hỏi Lily" ở góc phải, và các thẻ gợi việc (Soạn khoá học e-learning, Soạn slide tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Chấm bài, Mở khoá "<khoá gần nhất>"). Hỏi Lily thì dùng nút nổi như ở mọi trang.
 - **Nút nổi ở mọi trang giảng viên (kể cả trang chủ):** hình viên thuốc màu hồng "Hỏi Lily" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat.
 - **Cuộc trò chuyện liền mạch:** nút nổi ở mọi trang dùng chung một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Lily đưa mở trong cùng tab; sang trang khác thì ngăn kéo tự thu lại thành nút nổi, thầy/cô thao tác xong bấm "Hỏi Lily" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
 - **Câu hỏi đề xuất khi mở Lily:** ngăn kéo mới mở (chưa có tin nào) hiện lời chào của Lily và "Thầy/cô có thể hỏi em, ví dụ:" kèm tối đa 4 câu bấm là hỏi ngay. Câu đổi theo trang đang đứng (vd ở "Tổ chức thi" gợi ý về link thi nhanh), ở trang chung có thêm câu mở khoá giảng viên vừa chỉnh gần nhất (dạng `Mở khoá học "<tên khoá>"`), và câu cuối luôn là "Hôm nay tôi nên làm gì trước?".
