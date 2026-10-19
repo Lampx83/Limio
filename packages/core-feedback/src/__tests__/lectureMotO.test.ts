@@ -81,3 +81,12 @@ describe("đa dạng bố cục (M23)", () => {
     expect(system).toContain('"image" chiếm không quá 40%');
   });
 });
+
+describe("slide tương tác ghi đúng loại (người dùng báo 2026-10-19)", () => {
+  it("câu lệnh dàn ý cấm ghi tên loại vào tiêu đề", () => {
+    const { system } = buildOutlinePrompt(base);
+    expect(system).toContain('không bao giờ là "content"');
+    expect(system).toContain('KHÔNG mở đầu bằng tên loại');
+    expect(system).toContain("Không viết thêm slide nội dung để báo trước");
+  });
+});
