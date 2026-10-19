@@ -229,6 +229,13 @@ export const LearningEventType = {
   LiveSlideAiEditAccepted: "live.slide.ai_edit_accepted",
   LiveSlideEditedByUser: "live.slide.edited_by_user",
   LiveSlideVersionRestored: "live.slide.version_restored",
+
+  // Lily, trợ lý ảo của giảng viên. Chỉ đo cách giảng viên dùng Lily để cải thiện kho hướng dẫn và câu hỏi đề xuất.
+  // Payload mang CÂU HỎI của giảng viên (tối đa 500 ký tự) nhưng KHÔNG mang câu trả lời của Lily; xem AssistantQuestionAskedPayload.
+  AssistantDrawerOpened: "assistant.drawer.opened",
+  AssistantQuestionAsked: "assistant.question.asked",
+  AssistantLinkClicked: "assistant.link.clicked",
+  AssistantConversationReset: "assistant.conversation.reset",
 } as const;
 
 export type LearningEventType =
@@ -784,4 +791,54 @@ export interface LiveSlideVersionRestoredPayload {
   slideId: string;
   versionId: string;
   versionSource: string;
+}
+
+/** Giảng viên nhập câu hỏi, bấm câu đề xuất ở lời chào, hay bấm câu gợi ý tiếp theo dưới câu trả lời. */
+export type AssistantQuestionSource = "typed" | "suggestion" | "followup";
+
+/**
+ * Kết cục của một lượt hỏi. `declined_*`: câu trả lời cố định của bộ lọc (không tốn lượt AI hoặc bị thay sau khi gọi
+ * mô hình); `error`: không có câu trả lời (xem `errorCode`).
+ */
+export type AssistantQuestionOutcome = "answered" | "declined_technical" | "declined_off_topic" | "declined_leak" | "error";
+
+/** Mọi sự kiện Lily đều mang `conversationId` (do trình duyệt sinh, đổi khi bấm "Cuộc trò chuyện mới") và trang đang đứng. */
+export interface AssistantEventBase {
+  conversationId: string | null;
+  /** Đường dẫn trang giảng viên đang đứng (không kèm query), vd "/instructor/courses". */
+  page: string | null;
+}
+
+export interface AssistantDrawerOpenedPayload extends AssistantEventBase {
+  /** Đã có tin nào trong cuộc trò chuyện chưa (mở lại đoạn dở hay mở mới). */
+  hasHistory: boolean;
+}
+
+export interface AssistantQuestionAskedPayload extends AssistantEventBase {
+  source: AssistantQuestionSource;
+  /** Câu hỏi của giảng viên, tối đa 500 ký tự. */
+  text: string;
+  /** Số lượt trước đó trong cuộc trò chuyện (0 = câu đầu tiên). */
+  historyTurns: number;
+  outcome: AssistantQuestionOutcome;
+  /** Chỉ khi outcome = "error": mã lỗi trả về trình duyệt. */
+  errorCode?: string;
+  /** Tiêu đề các mục hướng dẫn được chọn đưa cho mô hình (rỗng = chưa khớp mục nào). */
+  guideTitles: string[];
+  /** Mã điểm đến Lily gợi ý bấm vào (đã qua danh mục, nên là mã thật). */
+  actionIds: string[];
+  followUpCount: number;
+  /** Từ lúc nhận câu hỏi đến lúc có kết quả, mili giây. */
+  latencyMs: number;
+}
+
+export interface AssistantLinkClickedPayload extends AssistantEventBase {
+  /** Mã điểm đến trong danh mục của Lily. */
+  destinationId: string;
+  href: string;
+}
+
+export interface AssistantConversationResetPayload extends AssistantEventBase {
+  /** Số tin đã có khi bấm "Cuộc trò chuyện mới". */
+  messageCount: number;
 }

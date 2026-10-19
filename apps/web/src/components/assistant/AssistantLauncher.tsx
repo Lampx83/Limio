@@ -114,7 +114,7 @@ export default function AssistantLauncher() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, requestClose]);
 
-  const intro = <LilyIntro onPick={(q) => void send(q)} />;
+  const intro = <LilyIntro onPick={(q) => void send(q, "suggestion")} />;
 
   return (
     <>
