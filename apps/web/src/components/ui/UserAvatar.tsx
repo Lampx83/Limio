@@ -37,6 +37,8 @@ interface UserAvatarProps {
   size?: Size;
   className?: string;
   title?: string;
+  /** Chữ hiện trong avatar khi không có ảnh; mặc định là ký tự đầu của chuỗi `name`; truyền để hiện chữ khác (vd "You"). Có `imageUrl` thì hiện ảnh, không dùng chữ này. */
+  initials?: string;
 }
 
 function hashColor(seed: string): string {
@@ -61,9 +63,10 @@ export default function UserAvatar({
   size = "md",
   className = "",
   title,
+  initials,
 }: UserAvatarProps) {
   const safeName = (name ?? "").toString();
-  const initial = getInitial(safeName);
+  const initial = initials?.trim() || getInitial(safeName);
   const color = safeName ? hashColor(safeName) : "bg-gray-500";
   const sizeCls = SIZE_MAP[size];
   const label = title || safeName || "Người dùng";

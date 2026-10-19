@@ -11,12 +11,13 @@ import {
   sanitizeChatHistory,
 } from "@/lib/teacherAssistant";
 import { loadAssistantContext } from "@/lib/teacherAssistantContext";
+import { ASSISTANT_LIMITS, selectGuides } from "@/lib/teacherAssistantGuide";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/** Ước lượng token một lượt (danh mục điểm đến + tình hình + lịch sử + trả lời) để hiện số lượt còn lại. */
-const TOKENS_PER_TURN = 2500;
+/** Ước lượng token một lượt (danh mục điểm đến + hướng dẫn + tình hình + lịch sử + trả lời) để hiện số lượt còn lại. */
+const TOKENS_PER_TURN = 4000;
 
 const json = (body: unknown, status: number) => Response.json(body, { status });
 
@@ -46,12 +47,19 @@ export async function POST(req: Request) {
 
   const ctx = await loadAssistantContext(userId);
   const courseDests = courseDestinations(ctx.courses);
+  // Chỉ mang theo vài mục hướng dẫn liên quan tới câu hỏi (và các câu trước của giảng viên), không gửi cả kho mỗi lượt.
+  const guides = selectGuides(
+    message,
+    history.filter((t) => t.role === "user").map((t) => t.text),
+  );
   try {
     const raw = await generateTeacherAssistantReply(
       userId,
       {
         situation: describeSituation(ctx),
         destinations: [...ASSISTANT_DESTINATIONS, ...courseDests].map(({ id, label, description }) => ({ id, label, description })),
+        guides: guides.map(({ title, body }) => ({ title, body })),
+        limits: ASSISTANT_LIMITS,
         history,
         message,
       },

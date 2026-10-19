@@ -50,6 +50,35 @@ describe("buildTeacherAssistantPrompt", () => {
   });
 });
 
+describe("hướng dẫn cách dùng và trò chuyện thân thiện", () => {
+  it("có hướng dẫn thì đưa vào prompt cùng mục 'điều Limio chưa có'", () => {
+    const { system } = buildTeacherAssistantPrompt({
+      ...base,
+      guides: [{ title: "Tổ chức thi", body: 'Bấm "Mở" để nhận đường dẫn và mã QR.' }],
+      limits: "Limio chưa có: gửi thông báo cho cả lớp.",
+    });
+    expect(system).toContain("# TÀI LIỆU HƯỚNG DẪN");
+    expect(system).toContain("## Tổ chức thi");
+    expect(system).toContain('Bấm "Mở" để nhận đường dẫn và mã QR.');
+    expect(system).toContain("# ĐIỀU LIMIO CHƯA CÓ");
+    expect(system).toContain("gửi thông báo cho cả lớp");
+  });
+
+  it("không có hướng dẫn thì không có khối tài liệu (câu chào, trò chuyện)", () => {
+    const { system } = buildTeacherAssistantPrompt(base);
+    expect(system).not.toContain("# TÀI LIỆU HƯỚNG DẪN");
+    expect(system).not.toContain("# ĐIỀU LIMIO CHƯA CÓ");
+  });
+
+  it("buộc trả lời theo tài liệu, không bịa bước, và cho phép trò chuyện thân thiện", () => {
+    const { system } = buildTeacherAssistantPrompt(base);
+    expect(system).toMatch(/theo đúng tài liệu/);
+    expect(system).toMatch(/Không bịa tính năng, nút hay bước làm/);
+    expect(system).toMatch(/Trò chuyện thân thiện/);
+    expect(system).toMatch(/không tư vấn y tế, pháp lý, tài chính, chính trị/);
+  });
+});
+
 describe("generateTeacherAssistantReply", () => {
   it("tin nhắn rỗng bị từ chối trước khi chạm mô hình", async () => {
     await expect(generateTeacherAssistantReply("u1", { ...base, message: "   " }, never())).rejects.toMatchObject({ code: "validation_failed" });
