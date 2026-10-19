@@ -64,6 +64,16 @@ describe("hướng dẫn cách dùng và trò chuyện thân thiện", () => {
     expect(system).toContain("gửi thông báo cho cả lớp");
   });
 
+  it("gắn điểm đến của từng mục hướng dẫn và buộc kiểm tài liệu trước khi nói 'chưa có'", () => {
+    const { system } = buildTeacherAssistantPrompt({
+      ...base,
+      guides: [{ title: "Bài tập, rubric và chấm bài", body: "Limio CÓ hỗ trợ nhập rubric.", destinationIds: ["assignments", "grade_essays"] }],
+    });
+    expect(system).toContain('Điểm đến nên dùng ở "actions": assignments, grade_essays.');
+    expect(system).toMatch(/ĐỌC TÀI LIỆU HƯỚNG DẪN trước/);
+    expect(system).toMatch(/đừng lái sang việc đang chờ chấm/);
+  });
+
   it("không có hướng dẫn thì không có khối tài liệu (câu chào, trò chuyện)", () => {
     const { system } = buildTeacherAssistantPrompt(base);
     expect(system).not.toContain("# TÀI LIỆU HƯỚNG DẪN");

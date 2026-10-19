@@ -58,7 +58,7 @@ export async function POST(req: Request) {
       {
         situation: describeSituation(ctx),
         destinations: [...ASSISTANT_DESTINATIONS, ...courseDests].map(({ id, label, description }) => ({ id, label, description })),
-        guides: guides.map(({ title, body }) => ({ title, body })),
+        guides: guides.map(({ title, body, destinationIds }) => ({ title, body, destinationIds })),
         limits: ASSISTANT_LIMITS,
         history,
         message,

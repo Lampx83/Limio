@@ -22,8 +22,57 @@ describe("kho hướng dẫn", () => {
   it("không hứa tính năng Limio chưa có (nhập Markdown, thông báo lớp, kéo thả chương)", () => {
     const all = GUIDES.map((g) => g.body).join(" ");
     expect(all).not.toMatch(/nhập bài từ markdown bằng|gửi thông báo cho cả lớp bằng/i);
-    expect(ASSISTANT_LIMITS).toMatch(/Markdown/);
     expect(ASSISTANT_LIMITS).toMatch(/thông báo/);
+    // Nhập tệp .md đã có trong luồng "Văn bản — AI hỗ trợ", nên không còn nằm trong mục "chưa có".
+    expect(ASSISTANT_LIMITS).not.toMatch(/nhập bài từ Markdown/);
+  });
+});
+
+describe("rubric (lỗi trả lời sai: nói Limio chưa hỗ trợ rubric)", () => {
+  it("câu hỏi về nhập rubric kéo mục rubric lên đầu, và mục đó khẳng định CÓ hỗ trợ ở cả bốn nơi", () => {
+    const ids = selectGuides("Trên limio có hỗ trợ nhập rubric để AI chấm mà").map((g) => g.id);
+    expect(ids[0]).toBe("rubric");
+    const g = GUIDES.find((x) => x.id === "rubric")!;
+    expect(g.body).toMatch(/Limio CÓ hỗ trợ nhập rubric/);
+    for (const part of ["Lưu rubric", "Rubric (tuỳ chọn)", "Nhập rubric", "Đấu trường"]) expect(g.body).toContain(part);
+    expect(g.destinationIds).toEqual(expect.arrayContaining(["assignments", "grade_essays", "oral_exams", "tournaments"]));
+  });
+
+  it("không mục nào nói là chưa có rubric", () => {
+    for (const g of GUIDES) expect(g.body, g.id).not.toMatch(/chưa (có|hỗ trợ)[^.]*rubric/i);
+  });
+
+  it("mục 'điều Limio chưa có' không được nói như thể chưa có rubric", () => {
+    expect(ASSISTANT_LIMITS).toMatch(/AI có đọc nó khi gợi ý điểm/);
+    expect(ASSISTANT_LIMITS).not.toMatch(/chưa có:[^.]*;\s*bảng tiêu chí chấm có cấu trúc \(rubric là/);
+  });
+});
+
+describe("tri thức đã cập nhật theo giao diện 2026-10-19", () => {
+  const all = GUIDES.map((g) => g.body).join("\n");
+
+  it("không còn hướng dẫn tạo đợt thi hay Trưởng đợt (đã gỡ khỏi luồng tổ chức thi)", () => {
+    expect(all).not.toMatch(/\+ Tạo đợt thi|Trưởng đợt|tab Đợt thi/);
+    const g = GUIDES.find((x) => x.id === "to-chuc-thi")!;
+    expect(g.body).toMatch(/Ca thi/);
+    expect(g.body).toMatch(/không còn khái niệm đợt thi/);
+  });
+
+  it("giữ các nhãn giao diện thật còn tiếng Anh để giảng viên tìm được", () => {
+    expect(all).toContain('"Assignment"');
+    expect(all).toContain("Forum Q&A");
+    expect(all).toContain("Learner Insights");
+    expect(all).toContain('"Publish"');
+  });
+
+  it("câu hỏi các tính năng mới kéo đúng mục", () => {
+    const first = (q: string) => selectGuides(q)[0]?.id;
+    expect(first("Làm sao tạo bài học từ tài liệu Word bằng AI?")).toBe("bai-hoc-tu-tai-lieu");
+    expect(first("Cách tạo ca thi chính thức và nhập danh sách thí sinh")).toBe("to-chuc-thi");
+    expect(first("Nộp bài theo nhóm thì giảng viên chỉnh nhóm ở đâu?")).toBe("bai-tap-nhom");
+    expect(first("Tôi muốn tạo bài giảng từ file PowerPoint")).toBe("bai-giang-tao");
+    expect(first("Thêm từ vựng và audio cho bài tiếng Trung")).toBe("ngoai-ngu");
+    expect(first("Chia sẻ bài giảng bằng link và tải PDF")).toBe("bai-giang-trinh-chieu");
   });
 });
 
