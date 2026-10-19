@@ -42,7 +42,7 @@ nhãn trong giao diện cho khớp** (việc riêng, chưa làm).
 | Assignment | Bài tập |
 | Forum Q&A | Diễn đàn hỏi đáp |
 | Rubric chấm điểm | Tiêu chí chấm |
-| Learner Insights (BKT mastery) | Nắm kiến thức |
+| Learner Insights | Nắm kiến thức |
 | Level / Category | Trình độ / Lĩnh vực |
 | skill (trong ô tìm; "Skill tracked", "Coverage theo skill") | chủ đề |
 | Vote (menu, trình sửa) · "Bình chọn" (trang chia sẻ) · Poll (Hoạt động nhanh) | Bình chọn |
@@ -341,7 +341,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   niệm sai" và "+ Tạo quan niệm sai mới". Gắn vào *phương án sai* để hệ thống nói
   đúng học viên hiểu nhầm chỗ nào.
 - **Nắm kiến thức** (`/instructor/learner-insights`): **nhãn thật trong giao diện còn tiếng Anh** — tiêu đề
-  "Learner Insights (BKT mastery)"; thẻ số "Học viên tracked", "Skill tracked", "Mastery TB", "HV có skill
+  "Learner Insights"; thẻ số "Học viên tracked", "Skill tracked", "Mastery TB", "HV có skill
   yếu"; "Ma trận học viên × skill"; "Coverage theo skill". Có hộp chọn **"Tất cả khoá"** để lọc theo khoá
   (mới). Khi hướng dẫn, nói "chủ đề" và nêu kèm nhãn thật để giảng viên tìm. Giảng viên thấy phần trăm.
 - **Học viên cần hỗ trợ** (`/instructor/courses/{id}/struggling-students`): cột
