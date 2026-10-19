@@ -14,6 +14,7 @@ import {
   type SlideLayoutId,
 } from "./limioLiveSlides";
 import { isSlideIllustrationId } from "@feedbackme/shared-types";
+import { isWebImageId } from "./limioLiveWebImages";
 import { addNumbersOf, cellNumbersInSource, hasNumber, isNum, numbersInText, type ChartSeries } from "./limioLiveCharts";
 import { safeLayoutFor, stripEmoji, type DeckSourceKind, type OutlineSlide, type SlideStructure, type WebSourceRef } from "./limioLiveOutline";
 import { allText, formatCite, stripCitesDeep, unsupportedFigures } from "./limioLiveFigures";
@@ -41,6 +42,8 @@ export interface SlideDraft {
   chart?: { type?: string; labels?: string[]; series?: Array<{ name?: string; values?: number[] }>; unit?: string };
   /** Mã hình minh hoạ cho ô hình (SLIDE_ILLUSTRATIONS) hoặc "none"; chỉ có hiệu lực ở slide Chữ và hình. */
   illustration?: string;
+  /** Mã ảnh nguồn internet AI chọn cho ô hình (A1, A2…) hoặc "none"; chỉ có khi bài có ảnh ứng viên (W8). */
+  webImage?: string;
 }
 
 export interface GeneratedSlide {
@@ -48,6 +51,11 @@ export interface GeneratedSlide {
   config: Record<string, unknown>;
   /** true = nội dung dựng từ dàn ý vì bản nháp của AI thiếu hoặc hỏng. */
   usedFallback: boolean;
+  /**
+   * Mã ảnh nguồn internet AI chọn cho ô hình (chỉ slide Chữ và hình, đúng dạng A1…). Không lưu vào config: bước gắn ảnh
+   * (attachWebImages) tra mã trong danh sách ứng viên, tải ảnh rồi mới ghi imageUrl.
+   */
+  webImage?: string;
 }
 
 /**
@@ -361,6 +369,7 @@ export function draftToSlide(osIn: OutlineSlide, draftIn: SlideDraft | undefined
     type: "content",
     config: normalizeContentSlideConfig({ ...clean, ...meta, ...illustration }) as Record<string, unknown>,
     usedFallback: false,
+    ...(layout === "image" && isWebImageId(d.webImage) ? { webImage: d.webImage } : {}),
   };
 }
 

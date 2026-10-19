@@ -5,7 +5,7 @@
 
 import { fetchRemoteImage } from "./safeFetchImage";
 import { saveSlideImage } from "./slideImage";
-import { imageCredit, pickSlideImages } from "./limioLiveWebImages";
+import { imageCredit, webImageCandidates } from "./limioLiveWebImages";
 import type { WebSourceRef } from "./limioLiveOutline";
 
 /** Ảnh hẹp hơn mức này thường là biểu tượng hay ảnh nhỏ, nhìn vỡ trên máy chiếu (W7). */
@@ -36,25 +36,25 @@ const defaultDeps: WebImageDeps = {
   save: saveSlideImage,
 };
 
-type SlideLike = { type: string; config: Record<string, unknown> };
-
-const slideText = (c: Record<string, unknown>) =>
-  [typeof c.title === "string" ? c.title : "", ...(Array.isArray(c.bullets) ? c.bullets.filter((b): b is string => typeof b === "string") : [])].join(" ");
+/** Slide vừa tạo; `webImage` là mã ảnh AI chọn cho ô hình (GeneratedSlide.webImage). */
+type SlideLike = { type: string; config: Record<string, unknown>; webImage?: string };
 
 /**
- * Chọn ảnh nguồn cho các slide Chữ và hình chưa có ảnh rồi tải, lưu, gắn vào config (sửa trực tiếp các slide được truyền vào).
- * Trả số ảnh đã gắn.
+ * Gắn ảnh nguồn theo lựa chọn của AI (W8): chỉ slide Chữ và hình chưa có ảnh, chỉ mã có trong danh sách ứng viên
+ * (webImageCandidates, cùng thứ tự với lời dặn AI), mỗi ảnh cho slide chọn nó trước. Tải, lưu, rồi ghi vào config (sửa trực
+ * tiếp các slide được truyền vào). Trả số ảnh đã gắn.
  */
 export async function attachWebImages(userId: string, slides: SlideLike[], refs: WebSourceRef[], deps: WebImageDeps = defaultDeps): Promise<number> {
-  const picks = pickSlideImages(
-    slides.map((s, index) => ({
-      index,
-      layout: s.type === "content" && typeof s.config.layout === "string" ? s.config.layout : "",
-      text: slideText(s.config),
-      hasImage: typeof s.config.imageUrl === "string" && !!s.config.imageUrl,
-    })),
-    refs,
-  );
+  const byId = new Map(webImageCandidates(refs).map((c) => [c.id, c]));
+  const used = new Set<string>();
+  const picks: Array<{ index: number; image: { url: string; alt: string }; ref: WebSourceRef }> = [];
+  slides.forEach((s, index) => {
+    const c = s.webImage ? byId.get(s.webImage) : undefined;
+    const hasImage = typeof s.config.imageUrl === "string" && !!s.config.imageUrl;
+    if (!c || used.has(c.id) || s.type !== "content" || s.config.layout !== "image" || hasImage) return;
+    used.add(c.id);
+    picks.push({ index, image: c.image, ref: c.ref });
+  });
   let attached = 0;
   let cursor = 0;
   const worker = async () => {

@@ -34,6 +34,11 @@ export interface SlideDraftsInput {
   /** Toàn bộ dàn ý (ngữ cảnh) và các chỉ số cần viết ở lô này. */
   outline: OutlineSlideInput[];
   batch: number[];
+  /**
+   * Ảnh lấy từ các trang nguồn internet (bài "topic_web"), ứng viên cho ô hình của slide Chữ và hình: mã (A1, A2…),
+   * mô tả, trang nguồn. Có thì AI chọn một mã hoặc "none" ở trường webImage (docs/tieu-chi/nguon-web-link-anh.md, W8).
+   */
+  webImages?: Array<{ id: string; description: string; page: string }>;
 }
 
 export interface RawSlideDraft {
@@ -56,6 +61,8 @@ export interface RawSlideDraft {
   chart: { type: string; labels: string[]; series: Array<{ name: string; values: number[] }>; unit: string };
   /** Chỉ ở bước sinh slide (LECTURE_DRAFTS_SCHEMA): mã hình minh hoạ cho ô hình, hoặc "none". */
   illustration?: string;
+  /** Chỉ khi có ảnh nguồn internet (lectureDraftsSchema): mã ảnh cho ô hình, hoặc "none". */
+  webImage?: string;
 }
 
 const STR = { type: "string" };
@@ -167,6 +174,35 @@ export const LECTURE_DRAFTS_SCHEMA = {
   },
 };
 
+/**
+ * Lược đồ của bước sinh slide khi có ảnh nguồn internet: thêm trường webImage chỉ nhận đúng các mã ảnh của lô này hoặc
+ * "none". Không có ảnh thì đúng bằng LECTURE_DRAFTS_SCHEMA (không có trường này).
+ */
+export function lectureDraftsSchema(webImageIds: readonly string[]) {
+  if (!webImageIds.length) return LECTURE_DRAFTS_SCHEMA;
+  const item = LECTURE_DRAFTS_SCHEMA.properties.slides.items as DraftItemSchema;
+  return {
+    ...LECTURE_DRAFTS_SCHEMA,
+    properties: {
+      slides: {
+        type: "array",
+        items: {
+          ...item,
+          properties: { ...item.properties, webImage: { type: "string", enum: ["none", ...webImageIds] } },
+          required: [...item.required, "webImage"],
+        },
+      },
+    },
+  };
+}
+
+/** Lời dặn chọn ảnh nguồn cho slide Chữ và hình: AI đọc mô tả (có thể bằng tiếng Anh) và đối chiếu với nội dung slide. */
+function webImageSpec(list: NonNullable<SlideDraftsInput["webImages"]>): string {
+  return `Thêm trường webImage: ảnh thật lấy từ các trang nguồn cho ô hình, ưu tiên hơn hình minh hoạ. Chỉ dùng một mã trong danh sách: ${list
+    .map((w) => `${w.id} (${w.description}; trang ${w.page})`)
+    .join(", ")}. Chỉ chọn khi mô tả ảnh nói đúng điều slide này trình bày; ảnh chung chung hoặc lạc đề thì ghi "none". Mỗi ảnh chỉ dùng cho một slide. Trường illustration vẫn chọn như thường (dùng khi ảnh không tải được).`;
+}
+
 /** Lời dặn chọn hình minh hoạ, chỉ gắn vào slide Chữ và hình. */
 const ILLUSTRATION_SPEC = `Thêm trường illustration: hình minh hoạ cho ô hình bên cạnh chữ. Chỉ dùng một mã trong danh sách: ${SLIDE_ILLUSTRATIONS.map(
   (id) => `${id} (${SLIDE_ILLUSTRATION_TOPICS[id]})`,
@@ -232,7 +268,9 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
       const key = specKeyFor(s);
       return `- Chỉ số ${s.index}, bố cục "${key}", tiêu đề dàn ý: "${s.title}"${
         s.points.length ? `, ý chính dàn ý: ${s.points.map((p) => `"${p}"`).join("; ")}` : ""
-      }.\n  Điền: ${SLIDE_SPEC[key] ?? SLIDE_SPEC.image} ${key === "image" ? ILLUSTRATION_SPEC : 'Trường illustration để "none".'}`;
+      }.\n  Điền: ${SLIDE_SPEC[key] ?? SLIDE_SPEC.image} ${key === "image" ? ILLUSTRATION_SPEC : 'Trường illustration để "none".'}${
+        input.webImages?.length ? ` ${key === "image" ? webImageSpec(input.webImages) : 'Trường webImage để "none".'}` : ""
+      }`;
     })
     .join("\n");
 
@@ -268,7 +306,7 @@ export async function generateSlideDrafts(
     system,
     user,
     "lecture_slides",
-    LECTURE_DRAFTS_SCHEMA,
+    lectureDraftsSchema((input.webImages ?? []).map((w) => w.id)),
     4500,
   );
   await recordAiUsage(userId, model, inputTokens, outputTokens, db);
