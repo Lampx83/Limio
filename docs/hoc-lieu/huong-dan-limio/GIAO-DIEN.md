@@ -484,11 +484,30 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   (Không gán, Nghe, Nói, Đọc, Viết) và học viên có trang "Hồ sơ 4 kỹ năng" (chỉ nhãn Cần ôn / Nên luyện thêm /
   Vững, không hiện %), khối "Luyện hôm nay". Flashcard "Ôn từ vựng" (lịch ôn cách quãng) không phụ thuộc chế
   độ này.
-- **Thi thử** (HSK, IELTS, TOEIC, Tuỳ chỉnh): trang đề thi của khoá (`/instructor/courses/{id}/exams/new`) có
-  "Tạo đề thi thử từ khung" — chọn khung, nhập "Tiêu đề đề thi", "Tạo đề". Tab Nội dung của đề có khối "Đề thi
-  thử (HSK · IELTS · TOEIC…)" (giờ riêng từng phần, không quay lại phần đã nộp), hai công tắc "Cho thi thử" và
-  "Cho luyện đề", bảng Phần / Kỹ năng / Giờ (phút) / Số câu, "Bảng quy đổi điểm (tuỳ chọn)", và "Phát audio"
-  ("Nghe tự do", "Giới hạn số lần", "Nghe 1 lần"). Học viên thấy mục "Luyện thi" ở trang khoá.
+- **Tạo đề: chọn loại trước** (`/instructor/courses/{id}/exams/new`): bước đầu là trang "Tạo đề thi mới" với hai
+  thẻ "Đề thi ngoại ngữ" và "Đề thi thường" (thẻ phù hợp hơn có nhãn "Gợi ý"; khoá bật chế độ ngoại ngữ hoặc
+  đang ở vỏ Limio Language thì "Đề thi ngoại ngữ" được gợi ý). Dòng nhắc: loại đề không đổi được sau khi tạo.
+  Có nút "← Chọn loại đề" để quay lại. Đề ngoại ngữ bắt đầu từ khung HSK, IELTS, TOEIC, Tuỳ chỉnh ("Tạo đề thi
+  thử từ khung": chọn khung, nhập "Tiêu đề đề thi", "Tạo đề") hoặc đề trống.
+- **Đề ngoại ngữ có bộ tab riêng:** "Cấu trúc" · "Nội dung" · "Thang điểm" · "Luyện đề" · "Xem trước"; đề thường
+  giữ "Tổng quan" · "Nội dung" · "Tài liệu" · "Tổ chức thi". Phần thi thử không còn nằm trong tab Nội dung của đề
+  thường. Tab "Cấu trúc": bảng Phần / Kỹ năng / Giờ (phút) / Số câu và "Phát audio" ("Nghe tự do", "Giới hạn số
+  lần", "Nghe 1 lần"; giờ riêng từng phần, không quay lại phần đã nộp). Tab "Thang điểm": "Bảng quy đổi điểm
+  (tuỳ chọn)". Tab "Luyện đề": hai công tắc "Cho thi thử (phòng thi mô phỏng)" và "Cho luyện đề". Học viên thấy
+  mục "Luyện thi" ở trang khoá. Danh sách đề của khoá gắn nhãn "Ngoại ngữ" hoặc "Thường" cho từng đề.
+- **Vỏ Limio Language** (mới): giảng viên và học viên có thể vào `/language` (nút "Limio Language" ở đầu trang,
+  cho giảng viên, quản trị hoặc người đã có khoá ngoại ngữ; về lại bằng "Về Limio"). Vỏ này chỉ đổi giao diện
+  (màu teal, dòng "Speak in Flow", menu rút gọn), không đổi quyền. Menu giảng viên: "Tổng quan", "Khoá ngoại
+  ngữ", "Đề thi (thi thử & luyện đề)", "Chờ duyệt / chấm", "Token AI". Menu học viên: "Tổng quan", "Khoá của
+  tôi", "Luyện thi", "Hồ sơ kỹ năng", "Thẻ ôn từ", "Token AI". Trang "Khoá ngoại ngữ" có nút "Tạo khoá luyện
+  đề" và "Tạo khoá / khoá mẫu".
+- **Khoá luyện đề** (mới; "Tạo khoá luyện đề", chọn "Họ thi", "Cấp độ", "Kỹ năng"): khoá chứa hàng trăm đề của
+  một kỹ năng. Giảng viên mở khoá rồi bấm "Thư viện đề" (`/instructor/courses/{id}/library`): bảng đề có lọc và
+  chọn nhiều dòng để thao tác hàng loạt ("Bật/tắt Luyện đề…", "Bật/tắt Phòng thi mô phỏng…", "Xuất bản",
+  "Lưu trữ", "Nhân bản"), nút "Thêm đề", "Bộ / Part" (nhóm đề có thứ tự) và "Nhập hàng loạt" (file JSON, có
+  bước kiểm tra trước). Học viên vào khoá là thấy "Thư viện đề" (`/learn/{slug}/practice`): mỗi đề có hai
+  nút Luyện đề (không giới hạn giờ) và Phòng thi mô phỏng (có giờ); chưa mua thì đề khoá chỉ hiện tên, đề "Học
+  thử" làm được ngay; có "Tiếp tục" và nút "Tải thêm".
 - **Góp ý bài viết / bài nói bằng AI:** học viên bấm "Nhận góp ý bài viết" / "Nhận góp ý bài nói" (khoá phải bật
   chế độ ngoại ngữ; điều kiện đầy đủ chưa kiểm chứng). Ở cửa sổ chấm bài nộp, giảng viên thấy "Góp ý bài viết
   do AI tạo" / "Góp ý bài nói do AI tạo", sửa từng mục, ghi "Ghi chú cho học viên (không bắt buộc)", rồi
