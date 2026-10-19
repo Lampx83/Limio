@@ -138,8 +138,8 @@ export default function TeacherAssistant({ starters, ideaPrompt }: { starters: A
   const chatting = messages.length > 0;
 
   const inputBox = (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-3 pl-5 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)]">
-      <Sparkles size={26} className="shrink-0 text-brand-600" aria-hidden />
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-2.5 pl-4 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)]">
+      <Sparkles size={22} className="shrink-0 text-brand-600" aria-hidden />
       <textarea
         ref={inputRef}
         value={input}
@@ -156,16 +156,16 @@ export default function TeacherAssistant({ starters, ideaPrompt }: { starters: A
             void send(input);
           }
         }}
-        className="max-h-36 min-h-[3.5rem] flex-1 resize-none bg-transparent py-4 text-base font-medium sm:text-lg outline-none placeholder:font-normal placeholder:text-slate-500"
+        className="max-h-36 min-h-[3rem] flex-1 resize-none bg-transparent py-3.5 text-[15px] font-medium outline-none placeholder:font-normal placeholder:text-slate-500"
       />
       <button
         type="button"
-        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-md transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-md transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         disabled={busy || !input.trim()}
         onClick={() => void send(input)}
         aria-label="Gửi"
       >
-        <SendHorizontal size={22} aria-hidden />
+        <SendHorizontal size={20} aria-hidden />
       </button>
     </div>
   );
