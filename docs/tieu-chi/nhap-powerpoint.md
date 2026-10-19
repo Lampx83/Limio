@@ -180,12 +180,12 @@ trong hộp chữ, nhóm hình và hình khối. Các tiêu chí dưới đây �
 - **P55.** Bố cục mới **Nhóm** cho slide hai cấp (ý cha và ý con), bản mẫu đã duyệt `docs/mockup/slide-hai-cap.html`. Dữ liệu: tiêu đề, câu dẫn
   (không bắt buộc) và 1 đến 6 nhóm, mỗi nhóm có tên (≤ 80 ký tự) và tối đa 5 ý con (≤ 200 ký tự). Bốn kiểu trình bày do nội dung quyết định,
   giảng viên không phải chọn: **Thẻ** (2 đến 4 nhóm ngắn: tên ≤ 40 ký tự, tối đa 4 ý con ≤ 90 ký tự), **Danh sách nhóm** (mặc định; hai cột khi
-  từ 4 nhóm và còn vừa ở cỡ chữ ≥ 26 px), **Câu dẫn và các dòng** (một nhóm: câu dẫn to màu nhấn, ý con mỗi ý một dòng; dấu đầu dòng là số thứ
+  từ 4 nhóm và còn vừa ở cỡ chữ ≥ 26 px), **Câu dẫn và các dòng** (một nhóm: câu dẫn chữ đen đậm cùng cỡ với các dòng, ý con mỗi ý một dòng; dấu đầu dòng là số thứ
   tự, hoặc dấu × khi câu dẫn mang nghĩa phủ định như "is not", "không phải") và **Số liệu** (một nhóm có 2 đến 3 ý con chứa con số kèm %, "lần",
-  "times"; con số được nhấc lên to, ý không có số thành thanh ngắn bên dưới). Phân cấp bằng nhiều tín hiệu, không bằng cỡ chữ: ý cha đậm, màu nhấn, có vệt tô màu; ý con chữ thường, thẳng trục với chữ ý cha và nối với ý cha bằng một vạch dọc mảnh, không dấu đầu dòng; khoảng
-  cách giữa các nhóm gấp 2 đến 3 lần khoảng cách giữa các ý con; thẻ dùng số thứ tự nhóm (01, 02), không dùng hình biểu tượng; chữ hoa của file
+  "times"; con số được nhấc lên to, ý không có số thành thanh ngắn bên dưới). Phân cấp bằng độ đậm và độ đậm nhạt của chữ, không bằng cỡ chữ hay chữ màu: ý cha chữ đen đậm; ý con chữ thường màu xám, thẳng trục với chữ ý cha và nối với ý cha bằng một vạch dọc mảnh, không dấu đầu dòng; khoảng
+  cách giữa các nhóm gấp 2 đến 3 lần khoảng cách giữa các ý con; thẻ đánh số nhóm (01, 02) hoặc có biểu tượng (P62); chữ hoa của file
   gốc giữ nguyên. **Chữ thân luôn to**: ý cha, câu dẫn và ý con cùng một cỡ chữ (con số của kiểu Số liệu cố định 64 px, chữ giải thích bên dưới vẫn lấy cỡ lớn nhất còn vừa), lấy cỡ lớn nhất còn vừa khung, từ 40 px xuống tối thiểu 26 px. Ý cha khác ý con ở
-  màu nhấn, đậm và vệt tô màu nửa dưới dòng (không ở cỡ chữ); ý con dùng màu chữ chính (không xám nhạt) để rõ trên máy chiếu. Nhiều chữ thì chia
+  độ đậm: tên nhóm chữ đen đậm, ý con chữ thường (không ở cỡ chữ, không chữ màu, không vệt nền: chữ màu trên nền màu kém tương phản); ý con dùng chữ xám đậm của giao diện (màu "muted", đủ tương phản trên máy chiếu), số thứ tự xanh mờ như slide Ba thẻ. Nhiều chữ thì chia
   thành hai slide chữ to thay vì co chữ nhỏ.
 - **P56.** Cách "Giữ ý" chọn kiểu theo quan hệ của nội dung slide gốc, theo thứ tự: đúng 2 nhóm có tên mang nghĩa đối lập (mất/được, giảm/tăng,
   trước/nay, pros/cons…, tối đa 3 ý con mỗi nhóm, mỗi ý ≤ 140 ký tự) → **So sánh hai cột** (nhóm đi xuống màu ấm, nhóm đi lên màu chủ đạo);
@@ -199,3 +199,18 @@ trong hộp chữ, nhóm hình và hình khối. Các tiêu chí dưới đây �
   (ký hiệu riêng, mỗi ý của dàn ý là một nhóm "Tên nhóm: ý con; ý con").
 - **P59.** Chữ không thêm, không bỏ: tên nhóm và ý con là nguyên văn slide gốc (chỉ bỏ dấu ":" cuối tên nhóm khi nó thành nhãn); con số ở kiểu
   Số liệu cắt ra từ chính ý con (nguyên văn, không tính lại, không làm tròn), câu đầy đủ vẫn hiện bên dưới con số.
+- **P60.** Bộ biểu tượng của slide mở rộng từ 8 lên 16, cùng nét vẽ, dùng chung cho slide Ba thẻ và slide Nhóm: mục tiêu, la bàn, lộ trình, trao đổi,
+  sách, ngôi sao (AI, sáng tạo), nhóm người, biểu đồ, bóng đèn (ý tưởng, giải pháp), khiên (đạo đức, an toàn), kính lúp (nghiên cứu, kiểm chứng),
+  bánh răng (công cụ, kỹ thuật), mũ tốt nghiệp (giáo dục), trái tim (tích cực), tên lửa (triển khai), đồng hồ (thời gian). Slide cũ không đổi.
+- **P61.** Slide Nhóm tự chọn biểu tượng cho từng nhóm (giảng viên không phải chọn, không gọi AI, không tốn token): theo từ khoá tiếng Việt và tiếng
+  Anh trong tên nhóm, không có thì trong các ý con, theo thứ tự ưu tiên khiên, kính lúp, biểu đồ, sách, ngôi sao, bóng đèn, đích, nhóm người, la bàn,
+  lộ trình, trao đổi, bánh răng, tên lửa, trái tim, đồng hồ, mũ tốt nghiệp. Hai nhóm cùng slide không dùng chung một biểu tượng: nhóm sau lấy biểu tượng
+  khớp kế tiếp của chính nó, hết thì lấy biểu tượng trung tính chưa dùng (la bàn, ngôi sao, đích, biểu đồ, sách, nhóm người). Biểu tượng giảng viên đã chọn
+  tay luôn thắng.
+- **P62.** Biểu tượng chỉ là trang trí và không bao giờ làm chữ thân nhỏ đi. **Thẻ**: huy hiệu vuông bo góc phía trên như slide Ba thẻ, số thứ tự mờ lớn ở góc
+  phải; dùng biểu tượng khi chữ thân vẫn từ 34 px trở lên và không nhỏ hơn quá 6 px so với bản không biểu tượng, nếu không thì bỏ biểu tượng (về số thứ tự
+  cùng hàng tên nhóm như trước). **Danh sách nhóm**: huy hiệu nhỏ (46 px) thay số thứ tự, dùng khi chữ thân không nhỏ hơn quá 2 px so với bản không biểu
+  tượng. **Câu dẫn và các dòng**, **Số liệu**: không dùng biểu tượng (dấu × hoặc số, con số lớn đã là điểm nhấn).
+- **P63.** Trình sửa slide Nhóm có ô "Dùng biểu tượng" (mặc định bật; tắt thì lưu `icons: false`) và ở mỗi nhóm một nút biểu tượng mở bảng 16 biểu
+  tượng cùng kiểu với slide Ba thẻ, có lựa chọn "Tự động". Mỗi nhóm lưu `icon` tuỳ chọn; thiếu thì tự chọn lúc vẽ nên slide Nhóm đã tạo tự có biểu
+  tượng mà không cần chạy lại.

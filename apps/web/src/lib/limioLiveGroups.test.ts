@@ -106,7 +106,7 @@ describe("groupsFit: kiểu trình bày theo nội dung (P55, P57)", () => {
 });
 
 describe("chữ thân không bao giờ bé khi còn chỗ (P55)", () => {
-  it("slide ít chữ: ý con lấy cỡ lớn, ý cha cùng cỡ (phân cấp bằng màu, không bằng cỡ chữ)", () => {
+  it("slide ít chữ: ý con lấy cỡ lớn, ý cha cùng cỡ (phân cấp bằng độ đậm, không bằng cỡ chữ)", () => {
     const cards = groupsFit({ title: "2.1. TECHNOLOGY IN EDUCATION", groups: [g("Bản chất", "Ứng dụng công nghệ như công cụ hỗ trợ giảng dạy"), g("Đặc trưng", "Tập trung vào phương tiện", "Không thay đổi bản chất phương pháp dạy học", "Giáo viên vẫn là trung tâm điều khiển")] });
     expect(cards.variant).toBe("cards");
     expect(cards.px).toBeGreaterThanOrEqual(32);
@@ -119,5 +119,39 @@ describe("chữ thân không bao giờ bé khi còn chỗ (P55)", () => {
     const many = groupsFit({ title: "Năm nhóm", groups: Array.from({ length: 5 }, (_, i) => g(`Nhóm ${i + 1}`, "Một câu mô tả vừa phải về năng lực cần đạt của nhóm này trong chương trình học.")) });
     expect(many.px).toBeGreaterThanOrEqual(26);
     expect(many.px).toBeLessThan(40);
+  });
+});
+
+describe("biểu tượng và cỡ chữ (P62)", () => {
+  const cards = { title: "Các chuẩn đầu ra chính của học phần", groups: [g("Phân tích nguyên lý", "Hiểu rõ nguyên lý phát triển bền vững và vai trò của giáo dục."), g("Thiết kế giải pháp", "Áp dụng khung năng lực để đề xuất giải pháp phù hợp Việt Nam."), g("Quản lý thực tiễn", "Xây dựng mô hình trường học bền vững và kế hoạch triển khai.")] };
+  it("Thẻ có biểu tượng khi chữ thân vẫn to (không dưới 34 px và không nhỏ hơn quá 6 px so với bản không biểu tượng)", () => {
+    const r = groupsFit(cards);
+    expect(r.variant).toBe("cards");
+    expect(r.icons).toBe(true);
+    const plain = groupsFit({ ...cards, icons: false });
+    expect(plain.icons).toBe(false);
+    expect(r.px).toBeGreaterThanOrEqual(34);
+    expect(r.px).toBeGreaterThanOrEqual(plain.px - 6);
+  });
+  it("giảng viên tắt biểu tượng thì không có", () => {
+    expect(groupsFit({ ...cards, icons: false }).icons).toBe(false);
+  });
+  it("hết chỗ thì bỏ biểu tượng chứ không giảm chữ thân", () => {
+    const many = { title: "t", groups: Array.from({ length: 4 }, (_, i) => g(`Nhóm ${i + 1}`, "Một câu mô tả vừa phải về nhóm này.", "Một ý nữa khá dài để chiếm thêm chỗ trong thẻ.", "Ý thứ ba cũng khá dài để chiếm chỗ.", "Ý thứ tư.")) };
+    const r = groupsFit(many);
+    const plain = groupsFit({ ...many, icons: false });
+    if (!r.icons) expect(r.px).toBe(plain.px);
+    else expect(r.px).toBeGreaterThanOrEqual(Math.max(34, plain.px - 6));
+  });
+  it("Câu dẫn và Số liệu không dùng biểu tượng", () => {
+    expect(groupsFit({ title: "t", groups: [g("Câu hỏi?", "Một", "Hai")] }).icons).toBe(false);
+    expect(groupsFit({ title: "t", groups: [g("Số liệu", "Giảm 20% chi phí", "Tăng 30% hiệu quả")] }).icons).toBe(false);
+  });
+  it("Danh sách nhóm dùng huy hiệu nhỏ khi chữ thân không nhỏ hơn quá 2 px", () => {
+    const list = groupsFit({ title: "Năm nhóm", groups: Array.from({ length: 5 }, (_, i) => g(`Nhóm ${i + 1}`, "Một câu mô tả vừa phải về năng lực cần đạt.")) });
+    expect(list.variant).toBe("list");
+    const plain = groupsFit({ title: "Năm nhóm", icons: false, groups: Array.from({ length: 5 }, (_, i) => g(`Nhóm ${i + 1}`, "Một câu mô tả vừa phải về năng lực cần đạt.")) });
+    if (list.icons) expect(list.px).toBeGreaterThanOrEqual(plain.px - 2);
+    else expect(list.px).toBe(plain.px);
   });
 });

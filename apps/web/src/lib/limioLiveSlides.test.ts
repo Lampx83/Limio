@@ -580,3 +580,19 @@ describe("ý của slide Tóm tắt là cả một câu", () => {
     expect((c.items as Array<{ heading: string }>)[0]!.heading).toHaveLength(MAX_LEN.itemHeading);
   });
 });
+
+describe("slide Nhóm: biểu tượng (P63)", () => {
+  it("giữ biểu tượng hợp lệ của từng nhóm, bỏ biểu tượng lạ; icons:false chỉ ghi khi tắt", async () => {
+    const { sanitizeLayoutConfig } = await import("./limioLiveSlides");
+    const c = sanitizeLayoutConfig("groups", {
+      title: "t",
+      groups: [
+        { heading: "A", points: ["a"], icon: "shield" },
+        { heading: "B", points: ["b"], icon: "khong-co" },
+      ],
+    });
+    expect((c.groups as any[]).map((g) => g.icon)).toEqual(["shield", undefined]);
+    expect("icons" in c).toBe(false);
+    expect(sanitizeLayoutConfig("groups", { title: "t", icons: false, groups: [{ heading: "A", points: ["a"] }] }).icons).toBe(false);
+  });
+});

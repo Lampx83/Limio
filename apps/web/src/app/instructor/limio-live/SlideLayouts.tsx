@@ -5,10 +5,18 @@ import {
   BarChart3,
   BookOpen,
   Check,
+  Clock,
   Compass,
+  GraduationCap,
+  Heart,
+  Lightbulb,
   MessageCircle,
   Repeat,
+  Rocket,
   Route,
+  Search,
+  Settings,
+  ShieldCheck,
   Sparkles,
   Target,
   Users,
@@ -35,6 +43,7 @@ import {
 } from "@/lib/limioLiveSlides";
 import { DATA_CONTENT_W, sourceLine, tableFontSize } from "@/lib/limioLiveCharts";
 import { groupHeadPx, groupsFit, isNegativeAsk, numberOf, type SlideGroup } from "@/lib/limioLiveGroups";
+import { autoGroupIcons } from "@/lib/limioLiveIcons";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   betterFit,
@@ -85,6 +94,14 @@ export const LAYOUT_ICONS: Record<SlideIconId, LucideIcon> = {
   sparkle: Sparkles,
   users: Users,
   chart: BarChart3,
+  bulb: Lightbulb,
+  shield: ShieldCheck,
+  search: Search,
+  gear: Settings,
+  cap: GraduationCap,
+  heart: Heart,
+  rocket: Rocket,
+  clock: Clock,
 };
 
 type Cfg = Record<string, any>;
@@ -609,8 +626,18 @@ function LayoutBody({
     case "groups": {
       const groups: SlideGroup[] = Array.isArray(c.groups) ? c.groups : [];
       const lead: string = typeof c.lead === "string" ? c.lead : "";
-      const gf = groupsFit({ title, lead, groups });
+      const gf = groupsFit({ title, lead, groups, icons: c.icons !== false });
       const pad2 = (n: number) => String(n + 1).padStart(2, "0");
+      // Biểu tượng của từng nhóm: giảng viên chọn tay thì giữ, còn lại tự chọn theo từ khoá (P61).
+      const icons = gf.icons ? autoGroupIcons(groups) : [];
+      const badge = (i: number, size: number) => {
+        const Ic = LAYOUT_ICONS[icons[i] ?? "compass"];
+        return (
+          <span className="gbd" style={{ width: size, height: size }} aria-hidden>
+            <Ic size={Math.round(size * 0.5)} strokeWidth={2} />
+          </span>
+        );
+      };
       const pts = (g: SlideGroup, px: number, from = 0) =>
         g.points.length > 0 && (
           <ul className="gp" style={{ fontSize: px }}>
@@ -690,9 +717,15 @@ function LayoutBody({
             {gf.variant === "cards" ? (
               <div className="gcards" style={{ gridTemplateColumns: `repeat(${Math.max(groups.length, 1)}, 1fr)` }}>
                 {groups.map((g, i) => (
-                  <div key={i} className="gcard a" style={delay(i + 1)}>
+                  <div key={i} className={`gcard a${gf.icons ? " ic" : ""}`} style={delay(i + 1)}>
+                    {gf.icons && (
+                      <div className="gtop">
+                        {badge(i, 76)}
+                        <span className="no">{i + 1}</span>
+                      </div>
+                    )}
                     <b className="gh" style={{ fontSize: groupHeadPx(gf.px) }}>
-                      <span className="no">{pad2(i)}</span>
+                      {!gf.icons && <span className="no">{pad2(i)}</span>}
                       <span className="hl">
                         <Inline text={g.heading} />
                       </span>
@@ -706,7 +739,7 @@ function LayoutBody({
                 {groups.map((g, i) => (
                   <div key={i} className="grp a" style={delay(i + 1)}>
                     <b className="gh" style={{ fontSize: groupHeadPx(gf.px) }}>
-                      <span className="no">{pad2(i)}</span>
+                      {gf.icons ? badge(i, 46) : <span className="no">{pad2(i)}</span>}
                       <span className="hl">
                         <Inline text={g.heading} />
                       </span>

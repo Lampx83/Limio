@@ -25,6 +25,7 @@ import {
 
 import { isSlideMotifChoice } from "./limioLiveMotifs";
 import { GROUPS_MAX, GROUP_POINTS_MAX, groupsFit, type SlideGroup } from "./limioLiveGroups";
+import { SLIDE_ICONS, isSlideIcon, type SlideIconId } from "./limioLiveIcons";
 
 export const SLIDE_LAYOUTS = [
   "classic", // slide cũ: tiêu đề + phụ đề + ý chính + ảnh (mọi bài giảng có sẵn)
@@ -61,8 +62,7 @@ export const LAYOUT_META: Record<SlideLayoutId, { label: string; hint: string }>
   chart: { label: "Biểu đồ", hint: "Cột, thanh ngang, đường hoặc tròn từ số liệu có thật" },
 };
 
-export const SLIDE_ICONS = ["target", "compass", "route", "chat", "book", "sparkle", "users", "chart"] as const;
-export type SlideIconId = (typeof SLIDE_ICONS)[number];
+export { SLIDE_ICONS, type SlideIconId };
 
 export interface LayoutItem {
   heading: string; // tiêu đề thẻ / tên bước / con số / nội dung dòng tóm tắt
@@ -300,7 +300,7 @@ function sanitizeGroups(raw: unknown): SlideGroup[] {
     const o = r as Record<string, unknown>;
     const heading = clip(o.heading, MAX_LEN.groupHeading);
     const points = (Array.isArray(o.points) ? o.points : []).map((p) => clip(p, MAX_LEN.groupPoint)).filter(Boolean).slice(0, GROUP_POINTS_MAX);
-    if (heading || points.length) out.push({ heading, points });
+    if (heading || points.length) out.push({ heading, points, ...(isSlideIcon(o.icon) ? { icon: o.icon } : {}) });
     if (out.length >= GROUPS_MAX) break;
   }
   return out;
@@ -426,6 +426,8 @@ export function sanitizeLayoutConfig(layout: SlideLayoutId, raw: Record<string, 
     const lead = clip(raw.lead, MAX_LEN.lead);
     if (lead) out.lead = lead;
     out.groups = sanitizeGroups(raw.groups);
+    // false = giảng viên tắt biểu tượng cho cả slide (P63); mặc định bật nên không ghi.
+    if (raw.icons === false) out.icons = false;
   }
   if (ITEM_RANGE[layout]) out.items = sanitizeItems(raw.items, layout);
   if (layout === "steps") {
@@ -570,7 +572,7 @@ export function layoutTextProblems(layout: SlideLayoutId, c: Record<string, any>
     }
     case "groups": {
       const groups: SlideGroup[] = Array.isArray(c.groups) ? c.groups : [];
-      if (groups.length && groupsFit({ title: String(c.title ?? ""), lead: typeof c.lead === "string" ? c.lead : "", groups }).overflow) problems.push("Nhóm");
+      if (groups.length && groupsFit({ title: String(c.title ?? ""), lead: typeof c.lead === "string" ? c.lead : "", icons: c.icons !== false, groups }).overflow) problems.push("Nhóm");
       break;
     }
     case "table": {

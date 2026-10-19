@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { GROUPS_MAX, GROUP_POINTS_MAX, type SlideGroup } from "@/lib/limioLiveGroups";
+import { ICON_LABELS, SLIDE_ICONS, autoGroupIcons } from "@/lib/limioLiveIcons";
 import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Highlighter, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
@@ -12,7 +13,6 @@ import {
   LIST_MAX_WORDS,
   LIST_WORD_MAX_LEN,
   MAX_LEN,
-  SLIDE_ICONS,
   SLIDE_LAYOUTS,
   convertLayoutConfig,
   layoutTextProblems,
@@ -42,17 +42,6 @@ import PickerButton from "./outline/PickerButton";
 
 type Cfg = Record<string, any>;
 type Save = (patch: { config: Cfg }) => void;
-
-const ICON_LABELS: Record<(typeof SLIDE_ICONS)[number], string> = {
-  target: "Mục tiêu",
-  compass: "La bàn",
-  route: "Lộ trình",
-  chat: "Trao đổi",
-  book: "Sách",
-  sparkle: "Ý tưởng",
-  users: "Nhóm",
-  chart: "Biểu đồ",
-};
 
 /** Giữ ghi chú giảng và các khoá không thuộc bố cục khi lưu. */
 const keepExtras = (config: Cfg): Cfg => pickMeta(config);
@@ -571,6 +560,7 @@ export default function LayoutEditor({
   const layout = resolveLayout(config);
   const [d, setD] = useState<Cfg>(() => padForEditing(layout, config));
   const [palette, setPalette] = useState(-1);
+  const [gPalette, setGPalette] = useState(-1);
   const [richOn, setRichOn] = useState(false);
   const focused = useRef<FieldCtl | null>(null);
   const range = ITEM_RANGE[layout];
@@ -1067,19 +1057,84 @@ export default function LayoutEditor({
                   onChange={(v) => set({ lead: v })}
                   onBlur={blur}
                 />
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={d.icons !== false}
+                    onChange={(e) => {
+                      const next = { ...d, icons: e.target.checked ? undefined : false };
+                      setD(next);
+                      commit(next);
+                    }}
+                  />
+                  Dùng biểu tượng (nếu còn chỗ cho chữ to)
+                </label>
                 {((d.groups as SlideGroup[] | undefined) ?? []).map((g, i) => {
                   const groups = d.groups as SlideGroup[];
                   const patch = (p: Partial<SlideGroup>) => set({ groups: groups.map((x, k) => (k === i ? { ...x, ...p } : x)) });
+                  const shownIcon = autoGroupIcons(groups)[i]!;
+                  const Ic = LAYOUT_ICONS[shownIcon];
                   return (
                     <div key={i} className="grid content-start gap-2 rounded-xl border border-token p-3">
                       <div className="flex items-center gap-2 text-xs font-semibold text-muted">
                         <span>Nhóm {i + 1}</span>
+                        <span className="flex-1" />
+                        {d.icons !== false && (
+                          <button
+                            type="button"
+                            aria-label={`Đổi biểu tượng nhóm ${i + 1}, đang là ${ICON_LABELS[shownIcon]}${g.icon ? "" : " (tự chọn)"}`}
+                            title={`Biểu tượng: ${ICON_LABELS[shownIcon]}${g.icon ? "" : " (tự chọn)"}`}
+                            aria-expanded={gPalette === i}
+                            onClick={() => setGPalette(gPalette === i ? -1 : i)}
+                            className="grid h-8 w-8 place-items-center rounded-lg border border-token text-brand-700 hover:bg-[rgb(var(--surface-muted))]"
+                          >
+                            <Ic size={16} />
+                          </button>
+                        )}
                         {groups.length > 1 && (
-                          <button type="button" className="ml-auto font-medium text-muted hover:underline" onClick={() => set({ groups: groups.filter((_, k) => k !== i) })}>
+                          <button type="button" className="font-medium text-muted hover:underline" onClick={() => set({ groups: groups.filter((_, k) => k !== i) })}>
                             Xoá nhóm
                           </button>
                         )}
                       </div>
+                      {gPalette === i && d.icons !== false && (
+                        <div role="group" aria-label="Chọn biểu tượng" className="grid grid-cols-4 gap-1">
+                          <button
+                            type="button"
+                            aria-pressed={!g.icon}
+                            onClick={() => {
+                              const next = groups.map((x, k) => (k === i ? { heading: x.heading, points: x.points } : x));
+                              set({ groups: next });
+                              setGPalette(-1);
+                              commit({ ...d, groups: next });
+                            }}
+                            className={`col-span-4 h-8 rounded-lg border text-[13px] font-medium ${!g.icon ? "border-brand-600 bg-brand-soft text-brand-700" : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"}`}
+                          >
+                            Tự động theo nội dung
+                          </button>
+                          {SLIDE_ICONS.map((ic) => {
+                            const I2 = LAYOUT_ICONS[ic];
+                            return (
+                              <button
+                                key={ic}
+                                type="button"
+                                aria-pressed={g.icon === ic}
+                                aria-label={ICON_LABELS[ic]}
+                                title={ICON_LABELS[ic]}
+                                onClick={() => {
+                                  const next = groups.map((x, k) => (k === i ? { ...x, icon: ic } : x));
+                                  set({ groups: next });
+                                  setGPalette(-1);
+                                  commit({ ...d, groups: next });
+                                }}
+                                className={`grid h-9 place-items-center rounded-lg border ${g.icon === ic ? "border-brand-600 bg-brand-soft text-brand-700" : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"}`}
+                              >
+                                <I2 size={18} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       <Field label="Tên nhóm" value={g.heading} max={MAX_LEN.groupHeading} onChange={(v) => patch({ heading: v })} onBlur={blur} />
                       {g.points.map((p, k) => (
                         <div key={k} className="ml-4 grid gap-1">
