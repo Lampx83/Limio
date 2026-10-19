@@ -41,8 +41,8 @@ interface AssistantContextValue {
   setOpen: (open: boolean) => void;
   /** Câu trả lời ở vị trí `index` đã hiện dần xong. */
   markDone: (index: number) => void;
-  /** Một khung chat đang hiển thị trên trang (vd khung lớn ở trang chủ): câu trả lời về lúc này không tính là "chưa đọc". Trả về hàm huỷ. */
-  registerSurface: () => () => void;
+  /** Tên khoá giảng viên vừa chỉnh gần nhất, để gợi ý "Mở khoá học …"; null nếu chưa có khoá. */
+  recentCourseTitle: string | null;
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
@@ -58,7 +58,7 @@ export function useAssistant(): AssistantContextValue {
  * trang khác cùng đọc một trạng thái. Provider nằm ở layout nên không bị huỷ khi chuyển trang trong khu vực; lịch sử
  * còn được lưu trong sessionStorage (theo tài khoản) để sống sót qua tải lại trang. Đóng tab thì mất, cố ý.
  */
-export function AssistantProvider({ userId, children }: { userId: string; children: ReactNode }) {
+export function AssistantProvider({ userId, recentCourseTitle = null, children }: { userId: string; recentCourseTitle?: string | null; children: ReactNode }) {
   const [messages, setMessages] = useState<AssistantMsg[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +66,6 @@ export function AssistantProvider({ userId, children }: { userId: string; childr
   const [unread, setUnread] = useState(false);
   const hydrated = useRef(false);
   const openRef = useRef(false);
-  const surfaces = useRef(0);
   const messagesRef = useRef<AssistantMsg[]>([]);
   messagesRef.current = messages;
 
@@ -109,7 +108,7 @@ export function AssistantProvider({ userId, children }: { userId: string; childr
         }
         const r = data.result;
         setMessages((prev) => [...prev, { role: "assistant", text: r.reply, actions: r.actions, followUps: r.followUps, fresh: true }]);
-        if (!openRef.current && surfaces.current === 0) setUnread(true);
+        if (!openRef.current) setUnread(true);
       } catch {
         setError(errorText("unknown"));
       } finally {
@@ -129,16 +128,9 @@ export function AssistantProvider({ userId, children }: { userId: string; childr
     setMessages((prev) => prev.map((x, j) => (j === index && x.role === "assistant" && x.fresh ? { ...x, fresh: false } : x)));
   }, []);
 
-  const registerSurface = useCallback(() => {
-    surfaces.current += 1;
-    return () => {
-      surfaces.current -= 1;
-    };
-  }, []);
-
   const value = useMemo<AssistantContextValue>(
-    () => ({ messages, busy, error, open, unread, send, reset, setOpen, markDone, registerSurface }),
-    [messages, busy, error, open, unread, send, reset, setOpen, markDone, registerSurface],
+    () => ({ messages, busy, error, open, unread, send, reset, setOpen, markDone, recentCourseTitle }),
+    [messages, busy, error, open, unread, send, reset, setOpen, markDone, recentCourseTitle],
   );
 
   return <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>;

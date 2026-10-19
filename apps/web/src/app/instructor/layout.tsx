@@ -3,6 +3,7 @@ import { NOINDEX } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import { isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
@@ -38,6 +39,20 @@ const getInstructorRoles = unstable_cache(
   { revalidate: 60, tags: ["user-roles"] },
 );
 
+// Khoá giảng viên chỉnh gần nhất, cho câu gợi ý "Mở khoá học …" của Lily. Chỉ cần tên, cache 60s như role.
+const getRecentCourseTitle = unstable_cache(
+  async (userId: string) => {
+    const c = await prisma.course.findFirst({
+      where: { instructors: { some: { userId } } },
+      orderBy: { updatedAt: "desc" },
+      select: { title: true },
+    });
+    return c?.title ?? null;
+  },
+  ["instructor-layout-recent-course"],
+  { revalidate: 60 },
+);
+
 export default async function InstructorLayout({
   children,
 }: {
@@ -64,10 +79,12 @@ export default async function InstructorLayout({
     );
   }
 
+  const recentCourseTitle = hasInstructorRole ? await getRecentCourseTitle(session.user.id) : null;
+
   return (
     <ActiveNavSectionProvider>
-      {/* Limio, trợ lý ảo của giảng viên: một cuộc trò chuyện dùng chung cho khung ở trang chủ và nút nổi ở mọi trang khác. */}
-      <AssistantProvider userId={session.user.id}>
+      {/* Limio, trợ lý ảo của giảng viên: một cuộc trò chuyện dùng chung cho nút nổi ở mọi trang giảng viên. */}
+      <AssistantProvider userId={session.user.id} recentCourseTitle={recentCourseTitle}>
         <div className="flex w-full">
           <InstructorLeftMenu
             isInstructor={hasInstructorRole}
