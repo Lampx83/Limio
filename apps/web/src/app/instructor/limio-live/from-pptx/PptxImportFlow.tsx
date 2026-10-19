@@ -11,6 +11,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { DURATIONS, slideRange, type Outline } from "@/lib/limioLiveOutline";
 import type { PptxDeck } from "@/lib/pptxImport";
 import { appendBack, estimateRestructureTokens, importSourceText, toImportedSlide, type ImportReport } from "@/lib/limioLivePptx";
+import { takeHandedOffPptx } from "@/lib/limioLiveCreateSource";
 import CompareView from "./CompareView";
 
 const MAX_MB = 50;
@@ -133,6 +134,14 @@ export default function PptxImportFlow() {
       setReading(false);
     }
   };
+
+  // Tệp chọn ở thẻ "Từ bài PowerPoint" của trang Tạo bài giảng: đọc ngay, không bắt chọn lại.
+  useEffect(() => {
+    const f = takeHandedOffPptx();
+    if (f) void pick(f);
+    // Chỉ chạy một lần khi mở trang.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** Dàn ý theo cách `m`: lần đầu tải file lên và tạo bài; sau đó dựng lại trên bài đã tạo, hoặc lấy bản đã dựng. */
   const showOutline = async (m: Mode) => {

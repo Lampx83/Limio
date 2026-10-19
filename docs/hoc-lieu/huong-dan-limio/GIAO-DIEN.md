@@ -513,17 +513,23 @@ Menu Limio-Live → "Bài giảng của tôi" (`/instructor/limio-live`): nút *
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Từ mô tả chủ đề hoặc tài liệu** (`/instructor/limio-live/from-document`, tiêu đề "Tạo bài giảng"): chọn tab
-  **Mô tả chủ đề** (15–2.000 ký tự, có 4 nút "Ví dụ mẫu"; nêu chủ đề, người học và điều người học làm được),
-  **Tải tệp lên** (.docx, PDF, .txt, .md, tối đa 10 MB; PDF scan không đọc được chữ) hoặc **Dán văn bản**. Tab
-  Mô tả chủ đề có công tắc **"Tìm thêm nguồn trên internet"** (chỉ hiện khi quản trị đã cấu hình dịch vụ tìm
-  kiếm; bật thì số liệu và trích dẫn chỉ dùng khi có trong trang đã đọc, kèm nguồn ở chân slide và slide cuối
-  liệt kê trang đã đọc; tắt thì AI viết từ kiến thức chung, không đưa số liệu). Chọn **Thời lượng**: 15 phút
-  (9–12 slide), 30 phút (16–20), 45 phút (22–28). Bấm **"Soạn dàn ý"** (20–90 giây) → sang trang Dàn ý. Bài từ
-  mô tả luôn kèm lời nhắc "Nội dung do AI viết từ kiến thức chung… thầy/cô cần kiểm tra trước khi dạy". Dòng
-  phụ "Soạn thủ công từ bài trống" mở hộp "Tạo bài giảng" (ô "Tên bài giảng", "Nhóm (tuỳ chọn)").
+- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu hỏi "Thầy/cô đang muốn tạo bài giảng
+  tương tác từ nguyên liệu nào?" và ba thẻ (khổ điện thoại chỉ hiện tên thẻ):
+  - **"Từ ý tưởng"** (chọn sẵn): ô mô tả 15–2.000 ký tự, có 4 nút "Ví dụ mẫu"; nêu chủ đề, người học và điều
+    người học làm được. Có công tắc **"Tìm thêm nguồn trên internet"** (chỉ hiện khi quản trị đã cấu hình dịch vụ
+    tìm kiếm; bật thì số liệu và trích dẫn chỉ dùng khi có trong trang đã đọc, kèm nguồn ở chân slide và slide
+    cuối liệt kê trang đã đọc; tắt thì AI viết từ kiến thức chung, không đưa số liệu). Bài từ mô tả luôn kèm lời
+    nhắc "Nội dung do AI viết từ kiến thức chung… thầy/cô cần kiểm tra trước khi dạy".
+  - **"Từ tài liệu"**: kéo tệp vào hoặc bấm "Chọn tệp" (.docx, PDF, .txt, .md, tối đa 10 MB; PDF scan không đọc
+    được chữ), hoặc dán văn bản vào ô bên dưới. Đã chọn tệp thì ô dán ẩn, có nút "Bỏ tệp". Lỡ chọn tệp .pptx ở
+    đây thì Limio tự mở trang nhập PowerPoint với tệp đó.
+  - **"Từ bài PowerPoint"**: kéo tệp .pptx vào hoặc bấm "Chọn file" → mở trang "Tạo bài giảng từ PowerPoint"
+    với tệp đã đọc sẵn (xem dưới).
+  Với hai thẻ đầu: chọn **Thời lượng** 15 phút (9–12 slide), 30 phút (16–20), 45 phút (22–28), bấm **"Soạn dàn
+  ý"** (20–90 giây) → sang trang Dàn ý. Liên kết phụ "Soạn thủ công" mở hộp "Tạo bài giảng" (ô "Tên bài
+  giảng", "Nhóm (tuỳ chọn)").
 - **Từ PowerPoint** (`/instructor/limio-live/from-pptx`, "Tạo bài giảng từ PowerPoint"), 4 bước: "Tải file"
-  (chỉ .pptx, tối đa 10 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
+  (chỉ .pptx, tối đa 50 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
   tính vào dung lượng lưu trữ; trang báo số slide, ghi chú giảng, hình, bảng, biểu đồ và phần chỉ lấy được
   chữ; chọn "Thời lượng buổi giảng") → "Chọn cách chuyển" (thẻ **"Giữ ý, làm đẹp lại"** — mặc định, mỗi slide gốc
   thành một slide Limio, không dùng AI, không tốn lượt; hoặc **"Soạn lại mạch"** — AI dựng dàn ý theo mạch Mục
