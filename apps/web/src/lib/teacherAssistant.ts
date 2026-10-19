@@ -45,6 +45,7 @@ export const ASSISTANT_DESTINATIONS: readonly AssistantDestination[] = [
   { id: "live_from_document", label: "Soạn bài giảng từ tài liệu", description: "Tải lên tài liệu, AI dựng dàn ý rồi tạo bài giảng tương tác để trình chiếu.", href: "/instructor/limio-live/from-document", icon: "slides" },
   { id: "live_from_pptx", label: "Nhập bài giảng PowerPoint", description: "Đưa tệp PowerPoint có sẵn vào để trình chiếu và thêm tương tác.", href: "/instructor/limio-live/from-pptx", icon: "pptx" },
   { id: "live_decks", label: "Bài giảng của tôi", description: "Mở các bài giảng tương tác đã soạn để chỉnh sửa hoặc trình chiếu.", href: "/instructor/limio-live", icon: "slides" },
+  { id: "teaching_tools", label: "Hoạt động trên lớp", description: "Bộ công cụ làm lớp sôi nổi: bình chọn, đám mây từ, bảng ý tưởng, chia nhóm, gọi tên, đếm ngược.", href: "/instructor/teaching-tools", icon: "poll" },
   { id: "poll", label: "Bình chọn nhanh", description: "Hỏi cả lớp một câu và xem kết quả ngay trên màn hình.", href: "/instructor/teaching-tools?tool=poll", icon: "poll" },
   { id: "wordcloud", label: "Đám mây từ", description: "Cả lớp nhập từ khoá, các từ được nhắc nhiều hiện to hơn.", href: "/instructor/teaching-tools?tool=wordcloud", icon: "wordcloud" },
   { id: "board", label: "Bảng ý tưởng (Padlet)", description: "Mỗi người ghim một ý lên bảng chung để cùng thu thập và thảo luận.", href: "/instructor/teaching-tools?tool=board", icon: "board" },
@@ -63,7 +64,9 @@ export const ASSISTANT_DESTINATIONS: readonly AssistantDestination[] = [
   { id: "learner_insights", label: "Học viên đang vướng ở đâu", description: "Xem chủ đề nào cả lớp còn yếu để ôn lại đúng chỗ.", href: "/instructor/learner-insights", icon: "insight" },
   { id: "question_banks", label: "Ngân hàng câu hỏi", description: "Soạn và quản lý câu hỏi dùng cho đề thi và bài kiểm tra.", href: "/instructor/question-banks", icon: "bank" },
   { id: "exams", label: "Thiết kế đề thi", description: "Lập đề thi từ ngân hàng câu hỏi.", href: "/instructor/exams", icon: "exam" },
+  { id: "quick_exam", label: "Link thi nhanh", description: "Tạo nhanh một buổi kiểm tra trên lớp: chọn đề, gửi link cho cả lớp làm ngay.", href: "/instructor/organize/quick", icon: "exam" },
   { id: "organize", label: "Tổ chức thi", description: "Lập đợt thi, ca thi và phòng thi cho thí sinh.", href: "/instructor/organize", icon: "organize" },
+  { id: "oral_exam_new", label: "Soạn đề vấn đáp", description: "Soạn đề cho phòng vấn đáp AI: câu hỏi, tiêu chí và thời gian.", href: "/instructor/oral-exams/new", icon: "oral" },
   { id: "oral_exams", label: "Vấn đáp AI", description: "Mở phòng vấn đáp để AI hỏi đáp trực tiếp với học viên.", href: "/instructor/oral-exams", icon: "oral" },
   { id: "tournaments", label: "Đấu trường", description: "Tổ chức cuộc thi nhiều vòng có xếp hạng để tạo động lực học.", href: "/instructor/tournaments", icon: "tournament" },
 ];
@@ -103,47 +106,28 @@ export interface AssistantStarter {
   title: string;
   subtitle: string;
   icon: AssistantIcon;
-  /** Có `href` thì thẻ là đường dẫn thẳng; ngược lại bấm vào là hỏi AI bằng `prompt`. */
-  href?: string;
-  prompt?: string;
-  /** Việc đang chờ giảng viên (hiện dấu nhấn và đưa lên đầu). */
-  urgent?: boolean;
+  href: string;
 }
 
-const MAX_STARTERS = 6;
+/** Câu gửi cho Limio khi giảng viên bấm "Chưa có ý tưởng?". Nút này nằm dưới ô nhập, không phải một thẻ. */
+export const IDEA_PROMPT = "Hôm nay tôi chưa có ý tưởng. Hãy xem tình hình của tôi và gợi ý những việc nên làm.";
 
 /**
- * Các thẻ "hôm nay làm gì". Việc đang chờ (bài chưa chấm, câu hỏi chưa trả lời) đứng đầu vì đó là thứ giảng viên
- * phải làm dù có ý tưởng hay không; phần còn lại là việc thường làm, và thẻ cuối luôn là "chưa có ý tưởng" để hỏi AI.
+ * Các thẻ "hôm nay làm gì": chỉ vài việc soạn thường làm, để giảng viên không bị ngợp. Việc đang chờ (bài chưa chấm,
+ * câu hỏi chưa trả lời) KHÔNG nằm ở đây vì danh sách "Cần xử lý gấp" ngay bên dưới đã nêu, kể cả sắp theo độ ưu tiên.
  */
 export function buildStarters(ctx: AssistantContext): AssistantStarter[] {
-  const out: AssistantStarter[] = [];
-  const pending = (id: string, count: number, title: string, subtitle: string) => {
-    const d = destinationById(id)!;
-    out.push({ id, title: `${count} ${title}`, subtitle, icon: d.icon, href: d.href, urgent: true });
-  };
-  if (ctx.pendingEssays > 0) pending("grade_essays", ctx.pendingEssays, "bài tự luận chờ chấm", "Chấm xong để học viên nhận được phản hồi.");
-  if (ctx.pendingAssignments > 0) pending("assignments", ctx.pendingAssignments, "bài tập chờ chấm", "Học viên đã nộp và đang đợi nhận xét.");
-  if (ctx.staleForumThreads > 0) pending("forum", ctx.staleForumThreads, "câu hỏi chưa được trả lời", "Đã quá hai ngày trên diễn đàn.");
-
-  const evergreen: AssistantStarter[] = [
-    { id: "lesson_prep", title: "Chuẩn bị bài giảng", subtitle: "Dựng bài giảng tương tác từ tài liệu có sẵn.", icon: "slides", href: destinationById("live_from_document")!.href },
-    { id: "class_activity", title: "Làm lớp sôi nổi hơn", subtitle: "Bình chọn, đám mây từ, chia nhóm, gameshow.", icon: "poll", prompt: "Tôi sắp lên lớp. Gợi ý cho tôi vài hoạt động ngắn để cả lớp tham gia." },
-    { id: "assess", title: "Ra đề, kiểm tra", subtitle: "Soạn ngân hàng câu hỏi và tổ chức thi.", icon: "exam", href: destinationById("question_banks")!.href },
-    ctx.courseTitles.length === 0
-      ? { id: "first_course", title: "Tạo khoá học đầu tiên", subtitle: "Bắt đầu từ một khoá trống rồi thêm bài học.", icon: "course", href: destinationById("new_course")!.href }
-      : { id: "insight", title: "Xem lớp đang vướng ở đâu", subtitle: "Biết chủ đề nào cần ôn lại trước buổi tới.", icon: "insight", href: destinationById("learner_insights")!.href },
+  const latest = ctx.courses?.[0];
+  return [
+    { id: "new_course", title: "Soạn khoá học e-learning", subtitle: "Dựng khoá mới với chương và bài học.", icon: "course", href: destinationById("new_course")!.href },
+    { id: "new_live", title: "Soạn bài giảng tương tác", subtitle: "Dựng bài giảng để trình chiếu từ tài liệu.", icon: "slides", href: destinationById("live_from_document")!.href },
+    { id: "class_activity", title: "Làm lớp sôi nổi hơn", subtitle: "Bình chọn, đám mây từ, chia nhóm, gameshow.", icon: "poll", href: destinationById("teaching_tools")!.href },
+    { id: "class_quiz", title: "Tạo bài kiểm tra trên lớp", subtitle: "Gửi link thi nhanh cho cả lớp làm ngay.", icon: "exam", href: destinationById("quick_exam")!.href },
+    ...(latest
+      ? [{ id: "open_course", title: `Mở khoá "${latest.title.replace(/\s+/g, " ").trim().slice(0, 40)}"`, subtitle: "Khoá bạn vừa chỉnh sửa gần đây.", icon: "course" as const, href: `/instructor/courses/${encodeURIComponent(latest.id)}` }]
+      : []),
+    { id: "oral_new", title: "Soạn đề vấn đáp", subtitle: "Để AI hỏi đáp trực tiếp với học viên.", icon: "oral", href: destinationById("oral_exam_new")!.href },
   ];
-  const idea: AssistantStarter = {
-    id: "no_idea",
-    title: "Chưa có ý tưởng? Limio gợi ý",
-    subtitle: "Để Limio xem tình hình các khoá rồi đề xuất việc nên làm.",
-    icon: "wordcloud",
-    prompt: "Hôm nay tôi chưa có ý tưởng. Hãy xem tình hình của tôi và gợi ý những việc nên làm.",
-  };
-
-  const room = MAX_STARTERS - 1 - out.length;
-  return [...out, ...evergreen.slice(0, Math.max(room, 0)), idea].slice(0, MAX_STARTERS);
 }
 
 // ── Chuẩn hoá câu trả lời của mô hình ───────────────────────────────────────

@@ -32,7 +32,7 @@ import {
 } from "@/components/InstructorLeftMenu";
 import CalendarLoader from "@/components/calendar/CalendarLoader";
 import TeacherAssistant from "@/components/TeacherAssistant";
-import { buildStarters } from "@/lib/teacherAssistant";
+import { IDEA_PROMPT, buildStarters } from "@/lib/teacherAssistant";
 
 export const dynamic = "force-dynamic";
 
@@ -177,6 +177,7 @@ export default async function InstructorDashboard({
         <h1 className="text-2xl font-bold">{greeting()}</h1>
         <div className="mt-6">
           <TeacherAssistant
+            ideaPrompt={IDEA_PROMPT}
               starters={buildStarters({
               courseTitles: [],
               pendingEssays: 0,
@@ -520,8 +521,10 @@ export default async function InstructorDashboard({
       {/* Hôm nay thầy/cô muốn làm gì: thẻ gợi ý nhìn thấy ngay + trò chuyện với Limio */}
       <div className="mt-6">
         <TeacherAssistant
+            ideaPrompt={IDEA_PROMPT}
           starters={buildStarters({
             courseTitles: ownedCourses.map((c) => c.title),
+            courses: ownedCourses.map((c) => ({ id: c.id, title: c.title })),
             pendingEssays: pendingEssaysTotal,
             pendingAssignments: pendingAssignmentsTotal,
             staleForumThreads,

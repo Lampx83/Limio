@@ -90,7 +90,7 @@ function errorText(code: string): string {
  * đứng đầu); gõ hoặc bấm thẻ "chưa có ý tưởng" thì chuyển sang trò chuyện với Limio. Đường dẫn trong câu trả lời đều
  * do server ánh xạ từ danh mục, trình duyệt không tự dựng.
  */
-export default function TeacherAssistant({ starters }: { starters: AssistantStarter[] }) {
+export default function TeacherAssistant({ starters, ideaPrompt }: { starters: AssistantStarter[]; ideaPrompt: string }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -138,8 +138,8 @@ export default function TeacherAssistant({ starters }: { starters: AssistantStar
   const chatting = messages.length > 0;
 
   const inputBox = (
-    <div className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-2.5 pl-4 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)]">
-      <Sparkles size={22} className="shrink-0 text-brand-600" aria-hidden />
+    <div className="flex items-center gap-3 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-3 pl-5 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)]">
+      <Sparkles size={26} className="shrink-0 text-brand-600" aria-hidden />
       <textarea
         ref={inputRef}
         value={input}
@@ -147,7 +147,7 @@ export default function TeacherAssistant({ starters }: { starters: AssistantStar
         maxLength={MESSAGE_MAX}
         disabled={busy}
         aria-label="Nói với Limio thầy/cô muốn làm gì"
-        placeholder="Hỏi Limio, ví dụ: chuẩn bị bài đầu tiên"
+        placeholder="Hỏi Limio, ví dụ: soạn bài đầu tiên"
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
           // isComposing: Enter chốt chữ khi gõ tiếng Việt bằng bộ gõ không được tính là gửi.
@@ -156,16 +156,16 @@ export default function TeacherAssistant({ starters }: { starters: AssistantStar
             void send(input);
           }
         }}
-        className="max-h-32 min-h-[3rem] flex-1 resize-none bg-transparent py-3 text-base font-medium outline-none placeholder:font-normal placeholder:text-slate-500"
+        className="max-h-36 min-h-[3.5rem] flex-1 resize-none bg-transparent py-4 text-base font-medium sm:text-lg outline-none placeholder:font-normal placeholder:text-slate-500"
       />
       <button
         type="button"
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-md transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white shadow-md transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
         disabled={busy || !input.trim()}
         onClick={() => void send(input)}
         aria-label="Gửi"
       >
-        <SendHorizontal size={20} aria-hidden />
+        <SendHorizontal size={22} aria-hidden />
       </button>
     </div>
   );
@@ -202,16 +202,27 @@ export default function TeacherAssistant({ starters }: { starters: AssistantStar
       </div>
 
       <div className="mt-5">{inputBox}</div>
+      {!chatting && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void send(ideaPrompt)}
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-[rgb(var(--text))] hover:underline disabled:opacity-60"
+        >
+          <Sparkles size={15} className="text-pink-600" aria-hidden />
+          Chưa có ý tưởng? Để Limio gợi ý cho thầy/cô
+        </button>
+      )}
       {error && <p role="alert" className="banner-danger mt-3 text-sm font-medium">{error}</p>}
       {remaining !== null && <p className="mt-2 text-xs text-faint">Còn khoảng {remaining} lượt hỏi AI.</p>}
 
       {!chatting ? (
         <>
-          <p className="mt-5 text-xs font-bold uppercase tracking-wide text-muted">Hoặc chọn nhanh một việc</p>
-          <ul className="mt-2.5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <p className="mt-4 text-xs font-bold uppercase tracking-wide text-muted">Hoặc bắt đầu nhanh</p>
+          <ul className="mt-2.5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {starters.map((s, i) => (
               <li key={s.id}>
-                <StarterTile starter={s} tone={s.urgent ? URGENT_TONE : TONES[i % TONES.length]!} disabled={busy} onAsk={(p) => void send(p)} />
+                <StarterTile starter={s} tone={TONES[i % TONES.length]!} />
               </li>
             ))}
           </ul>
@@ -299,34 +310,23 @@ const TONES: readonly Tone[] = [
   { chip: "bg-teal-50 text-teal-600", bar: "bg-teal-500" },
   { chip: "bg-[rgb(var(--brand-soft))] text-brand-700", bar: "bg-brand-600" },
 ];
-const URGENT_TONE: Tone = { chip: "bg-accent-50 text-accent-600", bar: "bg-accent-500" };
-
-function StarterTile({ starter, tone, disabled, onAsk }: { starter: AssistantStarter; tone: Tone; disabled: boolean; onAsk: (prompt: string) => void }) {
+function StarterTile({ starter, tone }: { starter: AssistantStarter; tone: Tone }) {
   const Icon = ICONS[starter.icon];
-  const body = (
-    <>
+  return (
+    <Link
+      href={starter.href}
+      prefetch={false}
+      className="card-hover relative flex h-full w-full items-center gap-3 overflow-hidden rounded-xl border border-token bg-[rgb(var(--surface))] py-2.5 pl-4 pr-3 text-left transition-colors hover:bg-[rgb(var(--surface-muted))]"
+    >
       <span className={`absolute inset-y-0 left-0 w-1 ${tone.bar}`} aria-hidden />
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone.chip}`} aria-hidden>
-        <Icon size={20} strokeWidth={2} />
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${tone.chip}`} aria-hidden>
+        <Icon size={18} strokeWidth={2} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-bold leading-snug">{starter.title}</span>
-        <span className="mt-0.5 block text-xs text-muted">{starter.subtitle}</span>
+        <span className="block truncate text-sm font-bold leading-snug">{starter.title}</span>
+        <span className="block truncate text-xs text-muted">{starter.subtitle}</span>
       </span>
-      <span className="shrink-0 self-center text-sm text-faint" aria-hidden>→</span>
-    </>
-  );
-  const cls = "card-hover relative flex h-full w-full items-start gap-3.5 overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] py-4 pl-5 pr-4 text-left transition-colors hover:bg-[rgb(var(--surface-muted))]";
-  if (starter.href) {
-    return (
-      <Link href={starter.href} prefetch={false} className={cls}>
-        {body}
-      </Link>
-    );
-  }
-  return (
-    <button type="button" disabled={disabled} onClick={() => starter.prompt && onAsk(starter.prompt)} className={cls}>
-      {body}
-    </button>
+      <span className="shrink-0 text-sm text-faint" aria-hidden>→</span>
+    </Link>
   );
 }

@@ -46,28 +46,28 @@ describe("normalizeAssistantReply", () => {
 });
 
 describe("buildStarters", () => {
-  it("việc đang chờ đứng đầu, thẻ 'chưa có ý tưởng' luôn có và đứng cuối, tối đa 6", () => {
-    const s = buildStarters({ courseTitles: ["A"], pendingEssays: 5, pendingAssignments: 2, staleForumThreads: 1, staleLearners: 0 });
+  const withCourses: AssistantContext = { ...empty, courseTitles: ["Toán 1", "Lý 1"], courses: [{ id: "c9", title: "Toán 1" }, { id: "c8", title: "Lý 1" }], pendingEssays: 5, pendingAssignments: 2, staleForumThreads: 1 };
+
+  it("chỉ vài thẻ soạn, không lặp việc đang chờ (đã có danh sách Cần xử lý gấp)", () => {
+    const s = buildStarters(withCourses);
     expect(s.length).toBeLessThanOrEqual(6);
-    expect(s.slice(0, 3).every((x) => x.urgent)).toBe(true);
-    expect(s[0]!.title).toBe("5 bài tự luận chờ chấm");
-    expect(s[s.length - 1]!.id).toBe("no_idea");
-    expect(s[s.length - 1]!.prompt).toBeTruthy();
+    expect(s.map((x) => x.id)).toEqual(["new_course", "new_live", "class_activity", "class_quiz", "open_course", "oral_new"]);
+    expect(s.some((x) => /chờ chấm|chưa được trả lời/.test(x.title))).toBe(false);
   });
 
-  it("không có việc chờ thì không có thẻ khẩn; giảng viên mới được gợi ý tạo khoá đầu tiên", () => {
-    const s = buildStarters(empty);
-    expect(s.some((x) => x.urgent)).toBe(false);
-    expect(s.some((x) => x.id === "first_course")).toBe(true);
-    expect(s.some((x) => x.id === "insight")).toBe(false);
+  it("có khoá đang dạy thì có thẻ mở khoá gần nhất, dẫn thẳng vào khoá đó", () => {
+    const open = buildStarters(withCourses).find((x) => x.id === "open_course")!;
+    expect(open.title).toBe('Mở khoá "Toán 1"');
+    expect(open.href).toBe("/instructor/courses/c9");
   });
 
-  it("mỗi thẻ hoặc có href hoặc có prompt, và href là điểm đến có thật", () => {
+  it("giảng viên mới chưa có khoá thì không có thẻ mở khoá", () => {
+    expect(buildStarters(empty).map((x) => x.id)).toEqual(["new_course", "new_live", "class_activity", "class_quiz", "oral_new"]);
+  });
+
+  it("mọi thẻ dẫn tới điểm đến có thật", () => {
     const hrefs = new Set(ASSISTANT_DESTINATIONS.map((d) => d.href));
-    for (const x of buildStarters({ courseTitles: ["A"], pendingEssays: 1, pendingAssignments: 1, staleForumThreads: 1, staleLearners: 1 })) {
-      expect(Boolean(x.href) !== Boolean(x.prompt)).toBe(true);
-      if (x.href) expect(hrefs.has(x.href)).toBe(true);
-    }
+    for (const x of buildStarters(withCourses)) expect(hrefs.has(x.href) || x.href.startsWith("/instructor/courses/")).toBe(true);
   });
 });
 
