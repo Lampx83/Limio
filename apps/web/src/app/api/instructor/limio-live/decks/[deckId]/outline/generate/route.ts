@@ -3,6 +3,7 @@ import { prisma } from "@feedbackme/db";
 import { recordSlideVersion } from "@feedbackme/core-lms";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { attachWebImages } from "@/lib/limioLiveWebImagesServer";
+import { webImageCandidates } from "@/lib/limioLiveWebImages";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { generateDeckSlides, sectionNumbers, type SlideDraft } from "@/lib/limioLiveGenerate";
@@ -12,6 +13,7 @@ import { planSync, type ExistingSlide } from "@/lib/limioLiveSync";
 import { motifAfterRegenerate } from "@/lib/limioLiveMotifs";
 import { partLabel, resolveSourceKind, sanitizeOutline, sanitizeRefs, slideStructures } from "@/lib/limioLiveOutline";
 import { firstSplitRows, importedSlideFor, sanitizeImportSource, withOriginalNotes } from "@/lib/limioLivePptx";
+import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
 
 export const runtime = "nodejs";
 // Bài dài có thể cần vài lô nối tiếp, mỗi lô vài chục giây.
@@ -41,6 +43,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
       outline: true,
       outlineConfirmedAt: true,
       sourceText: true,
+      sourceIntent: true,
       sourceKind: true,
       sourceRefs: true,
       importSource: true,
@@ -72,7 +75,14 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   const sourceText = deck.sourceText ?? "";
   // Nguồn của bài quyết định luật dùng số liệu, trích dẫn (câu lệnh) và cách kiểm bản nháp (draftToSlide).
   const sourceKind = resolveSourceKind(deck.sourceKind);
-  const context = { sourceKind, sourceText, refs: sanitizeRefs(deck.sourceRefs) };
+  // Ngôn ngữ của bài: AI viết slide mới và chữ hệ thống theo ngôn ngữ này (docs/tieu-chi/ngon-ngu-slide.md, L6).
+  const language = await resolveDeckLanguage(deck.id);
+  const context = { sourceKind, sourceText, refs: sanitizeRefs(deck.sourceRefs), lang: language };
+  // Ảnh nguồn internet làm ứng viên cho AI chọn ở slide Chữ và hình (W8). Mã A1, A2… tính lại được y hệt ở bước gắn ảnh.
+  const webImages =
+    sourceKind === "topic_web"
+      ? webImageCandidates(context.refs).map((c) => ({ id: c.id, description: c.image.alt, page: `[${c.ref.n}] ${c.ref.title}` }))
+      : [];
 
   const structures = slideStructures(outline);
   // Số mục theo thứ tự phần Nội dung (khớp mục lục của bìa phần); slide mở phần ngoài mạch thì đếm như cũ.
@@ -94,7 +104,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
 
   // Bài nhập từ PowerPoint: dòng lấy nguyên từ một slide gốc dựng thẳng từ dữ liệu đã đọc (không AI, giữ nguyên chữ).
   const importSource = sanitizeImportSource(deck.importSource);
-  const imported = writeIdx.map((i) => importedSlideFor(outline.slides[i]!, importSource, sectionNos[i]));
+  const imported = writeIdx.map((i) => importedSlideFor(outline.slides[i]!, importSource, sectionNos[i], language));
   const needsAi = writeIdx.some((i, k) => !imported[k] && !outline.slides[i]!.fixed);
 
   let openai: Awaited<ReturnType<typeof getOpenaiClient>> | null = null;
@@ -130,7 +140,17 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             if (!openai) throw new Error("openai_not_configured");
             const drafts = (await generateSlideDrafts(
               userId,
-              { sourceText, sourceKind, deckTitle, outline: inputs, batch: batch.map((k) => writeIdx[k]!) },
+              {
+                sourceText,
+                sourceKind,
+                deckTitle,
+                outline: inputs,
+                batch: batch.map((k) => writeIdx[k]!),
+                webImages,
+                language,
+                // Yêu cầu của giảng viên đi cùng tài liệu (tao-bai-giang-mot-o.md, M9).
+                ...(deck.sourceIntent ? { intent: deck.sourceIntent } : {}),
+              },
               openai,
             )) as SlideDraft[];
             // generateDeckSlides đánh chỉ số theo phần được viết; mô hình trả chỉ số theo cả dàn ý.
@@ -147,7 +167,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           });
         }
         for (const s of result.slides) if (s.type === "content") s.config = fillCoverIdentity(s.config as Record<string, unknown>, who);
-        // Bài có nguồn internet: gắn ảnh lấy từ chính trang nguồn vào slide Chữ và hình (kèm dòng ghi nguồn). Ảnh nào lỗi thì
+        // Bài có nguồn internet: gắn ảnh AI đã chọn (lấy từ chính trang nguồn) vào slide Chữ và hình, kèm dòng ghi nguồn. Ảnh nào lỗi thì
         // slide đó giữ hình tự vẽ; không bao giờ làm hỏng việc tạo slide (docs/tieu-chi/nguon-web-link-anh.md, W8–W13).
         let webImageCount = 0;
         if (sourceKind === "topic_web" && context.refs.some((r) => r.images?.length)) {
@@ -180,7 +200,13 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
             // Giữ cờ ẩn và kiểu bìa của slide cũ: đổi chúng không tính là sửa tay nên slide vẫn được viết lại. Hoa văn/hình
             // minh hoạ theo motifAfterRegenerate. Ghi chú và nội dung lấy từ bản mới (slide này chưa được sửa tay).
             const oldMeta = pickMeta(old.config);
-            const keepHidden = { ...(oldMeta.hidden ? { hidden: true } : {}), ...(oldMeta.coverStyle ? { coverStyle: oldMeta.coverStyle } : {}) };
+            const keepHidden = {
+              ...(oldMeta.hidden ? { hidden: true } : {}),
+              ...(oldMeta.coverStyle ? { coverStyle: oldMeta.coverStyle } : {}),
+              // Kiểu trình bày và khung hình của Chữ và hình do giảng viên chọn (chu-va-hinh-kieu-khung.md, K2).
+              ...(oldMeta.imageStyle ? { imageStyle: oldMeta.imageStyle } : {}),
+              ...(oldMeta.imageFrame ? { imageFrame: oldMeta.imageFrame } : {}),
+            };
             const keepMotif = motifAfterRegenerate(oldMeta.motif, gen.config.motif);
             await recordSlideVersion(tx, { id: r.slideId, type: old.type as never, config: old.config }, "before_sync");
             const row = await tx.liveSlide.update({
@@ -212,6 +238,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           slideCount: plan ? plan.order.length : result.slides.length,
           fallbackCount: result.fallbackCount,
           ...(sourceKind === "topic_web" ? { webImageCount } : {}),
+          language,
           ...(plan
             ? { regenerated: plan.regenerate.length, created: plan.create.length, removed: plan.remove.length, kept: plan.keep.length + plan.orphans.length }
             : {}),

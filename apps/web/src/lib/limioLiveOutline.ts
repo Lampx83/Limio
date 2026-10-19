@@ -6,6 +6,7 @@ import { sanitizeWebImages, type WebImage } from "./limioLiveWebImages";
 import { cellNumbersInSource, numbersInText } from "./limioLiveCharts";
 import { ITEM_RANGE, SLIDE_LAYOUTS, MAX_LEN, clipText, type SlideLayoutId } from "./limioLiveSlides";
 import { extractCites, figureKeys, unsupportedFigures } from "./limioLiveFigures";
+import { slideText } from "./limioLiveLanguage";
 
 const STATS_MIN = ITEM_RANGE.stats!.min;
 
@@ -92,19 +93,18 @@ export function hostOf(url: string): string {
   }
 }
 
-export const REFERENCES_TITLE = "Nguồn tham khảo";
 
 /**
  * Dòng dàn ý "Nguồn tham khảo": hệ thống dựng từ các trang đã đọc, không gửi cho AI viết lại. Mỗi dòng "[n] Tên trang";
  * số [n] nối dòng với trang (link và địa chỉ rút gọn do bước tạo slide gắn), nên giảng viên sửa tên vẫn giữ đúng link.
  */
-export function referencesOutlineSlide(refs: WebSourceRef[]): OutlineSlide {
+export function referencesOutlineSlide(refs: WebSourceRef[], lang?: string | null): OutlineSlide {
   const line = (r: WebSourceRef) => clipText(`[${r.n}] ${r.title || hostOf(r.url)}`, MAX_LEN.summaryItem);
   return {
     id: newOutlineId(),
     kind: "content",
     layout: "summary",
-    title: REFERENCES_TITLE,
+    title: slideText(lang).references,
     points: refs.slice(0, OUTLINE_LIMITS.points).map(line),
     fixed: "references",
   };
@@ -194,6 +194,8 @@ export const DURATIONS = [
   { minutes: 15, min: 9, max: 12 },
   { minutes: 30, min: 16, max: 20 },
   { minutes: 45, min: 22, max: 28 },
+  // Buổi dài (docs/tieu-chi/tao-bai-giang-mot-o.md, M11): đủ mạch, 4 đến 6 phần nội dung.
+  { minutes: 90, min: 42, max: 50 },
 ] as const;
 
 /** Số slide tương tác gợi ý cho mỗi phần nội dung. */
@@ -223,7 +225,7 @@ export function slideRange(minutes: number): { min: number; max: number } {
   return { min: d.min, max: d.max };
 }
 
-export function isValidMinutes(m: unknown): m is 15 | 30 | 45 {
+export function isValidMinutes(m: unknown): m is (typeof DURATIONS)[number]["minutes"] {
   return DURATIONS.some((d) => d.minutes === m);
 }
 
@@ -320,7 +322,7 @@ export function isClosingSlide(o: Pick<Outline, "slides" | "parts">, s: OutlineS
  * Bìa đầu bài; mỗi slide "Mở phần" mở một phần Nội dung mang tên slide đó; slide Tóm tắt cuối (hoặc slide
  * Tóm tắt đứng trước slide kết bài) và các slide sau nó vào Tổng kết; phần còn lại vào phần Nội dung đang mở.
  */
-export function inferParts(o: Pick<Outline, "title" | "slides">): Outline {
+export function inferParts(o: Pick<Outline, "title" | "slides">, lang?: string | null): Outline {
   const parts: OutlinePart[] = [];
   const slides = o.slides.map((s) => ({ ...s }));
   let lastContent = -1;
@@ -343,7 +345,7 @@ export function inferParts(o: Pick<Outline, "title" | "slides">): Outline {
   const unnamed = parts.filter((p) => p.role === "content" && !p.name);
   const contentCount = parts.filter((p) => p.role === "content").length;
   unnamed.forEach((p, k) => {
-    p.name = contentCount === 1 ? "Nội dung chính" : `Phần ${k + 1}`;
+    p.name = contentCount === 1 ? slideText(lang).mainContent : slideText(lang).part(k + 1);
   });
   return { title: o.title, slides, parts };
 }
@@ -512,6 +514,8 @@ export interface OutlineSourceOptions {
   sourceFigureKeys?: string[];
   /** Mức topic_web: các trang đã đọc; thêm dòng "Nguồn tham khảo" cuối dàn ý. */
   references?: WebSourceRef[];
+  /** Ngôn ngữ của bài: tên phần tự đặt và tiêu đề "Nguồn tham khảo" theo ngôn ngữ này (docs/tieu-chi/ngon-ngu-slide.md). */
+  lang?: string | null;
 }
 
 export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSourceOptions = {}): { outline: Outline; warnings: string[] } {
@@ -555,7 +559,7 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
     if (lastContent && lastContent !== first && lastContent.layout !== "summary") lastContent.layout = "summary";
   }
   // Mô hình không gán vai trò: chia lại sau khi đã ép bìa/tóm tắt, để hai slide đó vào đúng phần.
-  outline = finalizeParts(pre.fromRoles ? outline : inferParts(outline));
+  outline = finalizeParts(pre.fromRoles ? outline : inferParts(outline, opts.lang));
 
   // Buổi đủ mạch: phần Nội dung nào chưa mở bằng slide "Mở phần" thì thêm, nếu còn chỗ trong mức slide.
   if (isFullStructure(minutes)) {
@@ -569,7 +573,7 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
   }
 
   if (refs.length) {
-    outline.slides.push({ ...referencesOutlineSlide(refs), partId: outline.slides[outline.slides.length - 1]?.partId });
+    outline.slides.push({ ...referencesOutlineSlide(refs, opts.lang), partId: outline.slides[outline.slides.length - 1]?.partId });
     outline = finalizeParts(outline);
   }
 
@@ -626,6 +630,15 @@ export function outlineWarnings(
   if (st.total < min) w.push(`Dàn ý có ${st.total} slide, ít hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
   if (st.total > max && !w.length) w.push(`Dàn ý có ${st.total} slide, nhiều hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
   if (st.interactive === 0 && st.total >= 6) w.push("Dàn ý chưa có slide tương tác nào (trắc nghiệm, bình chọn, đám mây từ hoặc bảng cộng tác).");
+  // Mức tối thiểu theo thời lượng (tao-bai-giang-mot-o.md, M14, M19): nhắc, không chặn.
+  const minInteractive = minutes >= 90 ? 10 : 5;
+  if (st.interactive > 0 && st.interactive < minInteractive)
+    w.push(`Bài nên có ít nhất ${minInteractive} slide tương tác (hiện có ${st.interactive}).`);
+  // Bố cục phong phú (M24): quá nửa slide nội dung là Chữ và hình thì nhắc đổi bớt.
+  const body = outline.slides.filter((s) => s.kind === "content" && !s.fixed && !["cover", "section", "summary", "quote"].includes(s.layout ?? ""));
+  const images = body.filter((s) => (s.layout ?? "image") === "image").length;
+  if (images >= 4 && images * 2 > body.length)
+    w.push(`Nhiều slide Chữ và hình (${images} trên ${body.length} slide nội dung); nên đổi vài slide sang Ba thẻ, Các bước hoặc So sánh.`);
   for (let i = 1; i < outline.slides.length; i++) {
     if (outline.slides[i]!.kind !== "content" && outline.slides[i - 1]!.kind !== "content") {
       w.push("Có hai slide tương tác liền nhau; nên xen slide nội dung ở giữa.");

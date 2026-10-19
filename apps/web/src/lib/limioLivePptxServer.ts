@@ -2,6 +2,8 @@ import type OpenAI from "openai";
 import { AiGenerationError, AiTutorError, generateLectureOutline } from "@feedbackme/core-feedback";
 import { isFullStructure, slideRange, type Outline } from "./limioLiveOutline";
 import { importSourceText, keepOutline, restructureOutline, type ImportSource } from "./limioLivePptx";
+import { interactionTarget } from "./limioLiveInteractions";
+import { ensureInteractions } from "./limioLiveInteractionsServer";
 
 export type ImportMode = "keep" | "restructure";
 export const isImportMode = (v: unknown): v is ImportMode => v === "keep" || v === "restructure";
@@ -24,24 +26,41 @@ export async function buildImportOutline(
   minutes: number,
   mode: ImportMode,
   openai: OpenAI | null,
-): Promise<{ outline: Outline; warnings: string[] }> {
-  if (mode === "keep") return { outline: keepOutline(src, title), warnings: [] };
+  /** Ngôn ngữ của bài (docs/tieu-chi/ngon-ngu-slide.md): AI soạn lại mạch và chữ hệ thống theo ngôn ngữ này. */
+  lang: string | null = null,
+  /** Mô tả của giảng viên mang từ trang Tạo bài giảng (tao-bai-giang-mot-o.md, M7, M10). */
+  intent: string | null = null,
+): Promise<{ outline: Outline; warnings: string[]; interactionsAdded: number }> {
+  const sourceText = importSourceText(src);
+  // Mọi cách nhập đều có đủ slide tương tác (M17–M18): "Giữ ý" giữ nguyên slide gốc, AI chỉ viết thêm các slide tương tác;
+  // AI chưa cấu hình hay hết hạn mức thì vẫn nhập được, kèm cảnh báo.
+  const topUp = async (o: Outline, warnings: string[]) => {
+    const t = await ensureInteractions(userId, o, minutes, { sourceText, sourceKind: "document", intent }, openai);
+    return { outline: t.outline, warnings: [...warnings, ...(t.warning ? [t.warning] : [])], interactionsAdded: t.added };
+  };
+  if (mode === "keep") return topUp(keepOutline(src, title, lang), []);
   if (!openai) throw new Error("openai_not_configured");
   const range = slideRange(minutes);
+  const target = interactionTarget(minutes);
   const raw = await generateLectureOutline(
     userId,
     {
-      sourceText: importSourceText(src),
+      sourceText,
       sourceKind: "document",
       minutes,
       minSlides: range.min,
       maxSlides: range.max,
       structure: isFullStructure(minutes) ? "full" : "compact",
       fromSlides: src.slides.length,
+      language: lang,
+      minInteractions: target.min,
+      minInteractionKinds: target.kinds,
+      ...(minutes >= 90 ? { contentParts: [4, 6] as [number, number] } : {}),
+      ...(intent ? { intent } : {}),
     },
     openai,
   );
-  const res = restructureOutline(raw, src, minutes);
+  const res = restructureOutline(raw, src, minutes, lang);
   if (!res.outline.title) res.outline.title = title;
-  return res;
+  return topUp(res.outline, res.warnings);
 }

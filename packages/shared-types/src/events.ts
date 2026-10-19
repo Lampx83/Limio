@@ -706,6 +706,12 @@ export interface LiveDeckOutlineGeneratedPayload {
   sourceFormat?: "pptx";
   /** Cách chuyển: giữ ý (không AI) hoặc soạn lại mạch (AI). */
   importMode?: "keep" | "restructure";
+  /** Ngôn ngữ nội dung slide ghi lúc tạo bài (DECK_LANGUAGES); null = chưa nhận được. Thiếu = bản ghi cũ. */
+  language?: string | null;
+  /** Có yêu cầu của giảng viên đi cùng tài liệu (trang Tạo bài giảng một ô). Thiếu = bản ghi cũ. */
+  hasIntent?: boolean;
+  /** Số slide tương tác hệ thống bổ sung để đủ mức tối thiểu. Thiếu = bản ghi cũ. */
+  interactionsAdded?: number;
   /** Số slide trong file gốc. */
   importedSlides?: number;
   /** Số hình đã lưu. */
@@ -721,6 +727,8 @@ export interface LiveDeckSlidesGeneratedPayload {
   fallbackCount: number;
   /** Bài có nguồn internet: số ảnh lấy từ trang nguồn đã gắn vào slide Chữ và hình. */
   webImageCount?: number;
+  /** Ngôn ngữ AI được yêu cầu viết (ngôn ngữ của bài); null = theo ngôn ngữ của nguồn. Thiếu = bản ghi cũ. */
+  language?: string | null;
   regenerated?: number;
   created?: number;
   removed?: number;

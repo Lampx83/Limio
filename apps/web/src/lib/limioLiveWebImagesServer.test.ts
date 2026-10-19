@@ -7,10 +7,11 @@ const refs = [
   { n: 1, title: "Thực tế tăng cường", url: "https://vi.wikipedia.org/wiki/AR", images: [{ url: "https://a.org/tablet.jpg", alt: "Học sinh dùng máy tính bảng xem mô hình ba chiều" }] },
   { n: 2, title: "Kính VR", url: "https://b.org/vr", images: [{ url: "https://b.org/kinh.jpg", alt: "Kính thực tế ảo đeo trên đầu" }] },
 ];
-const mk = (): Array<{ type: string; config: Record<string, unknown> }> => [
-  { type: "content", config: { layout: "cover", title: "Thực tế tăng cường" } },
-  { type: "content", config: { layout: "image", title: "Mô hình ba chiều", bullets: ["Học sinh xem trên máy tính bảng."] } },
-  { type: "content", config: { layout: "image", title: "Kính thực tế ảo", bullets: ["Kính thay khung cảnh thật."] } },
+// Ảnh ứng viên: A1 = tablet.jpg (trang 1), A2 = kinh.jpg (trang 2). Mã ảnh là lựa chọn của AI ở từng slide.
+const mk = (): Array<{ type: string; config: Record<string, unknown>; webImage?: string }> => [
+  { type: "content", config: { layout: "cover", title: "Thực tế tăng cường" }, webImage: "A1" },
+  { type: "content", config: { layout: "image", title: "Mô hình ba chiều", bullets: ["Học sinh xem trên máy tính bảng."] }, webImage: "A1" },
+  { type: "content", config: { layout: "image", title: "Kính thực tế ảo", bullets: ["Kính thay khung cảnh thật."] }, webImage: "A2" },
   { type: "quiz", config: { question: "Mô hình ba chiều trên máy tính bảng?" } },
 ];
 
@@ -53,6 +54,19 @@ describe("attachWebImages", () => {
     expect(n).toBe(0);
     expect(slides[1]!.config.imageUrl).toBeUndefined();
     expect(await attachWebImages("u", mk(), refs, deps({ save: async () => null }))).toBe(0);
+  });
+
+  it("chỉ gắn ảnh AI đã chọn: slide không chọn hay chọn mã không có thì giữ hình tự vẽ; một ảnh chỉ cho slide chọn trước", async () => {
+    const slides = mk();
+    slides[2]!.webImage = "A1"; // trùng ảnh với slide 1
+    slides.push({ type: "content", config: { layout: "image", title: "Khác", bullets: ["x."] }, webImage: "A9" });
+    slides.push({ type: "content", config: { layout: "image", title: "Không chọn", bullets: ["x."] } });
+    expect(await attachWebImages("u", slides, refs, deps())).toBe(1);
+    expect(slides[1]!.config.imageUrl).toBe("/api/limio-live-resource/u_tablet.jpg");
+    expect(slides[2]!.config.imageUrl).toBeUndefined();
+    expect(slides[4]!.config.imageUrl).toBeUndefined();
+    expect(slides[5]!.config.imageUrl).toBeUndefined();
+    expect(slides.every((s) => !("webImage" in s.config))).toBe(true);
   });
 
   it("slide đã có ảnh riêng thì giữ nguyên", async () => {

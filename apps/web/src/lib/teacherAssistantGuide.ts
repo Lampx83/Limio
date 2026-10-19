@@ -134,7 +134,7 @@ export const GUIDES: readonly GuideEntry[] = [
     title: "Rubric chấm điểm (nhập rubric để AI tham khảo khi chấm)",
     keywords: ["rubric", "nhập rubric", "tiêu chí chấm", "thang điểm", "ai chấm", "gợi ý chấm", "gợi ý điểm", "chấm tự luận", "chấm vấn đáp", "chấm chéo"],
     destinationIds: ["assignments", "grade_essays", "oral_exams", "tournaments"],
-    body: `Limio CÓ hỗ trợ nhập rubric, ở bốn nơi, và AI đọc rubric đó khi gợi ý điểm; gợi ý chỉ là bản nháp, AI không tự lưu, thầy/cô xem lại rồi mới chấm. Một là bài tập: mở trang bài nộp của bài tập (bấm "Xem bài nộp"), ở khung "Rubric chấm điểm" (không bắt buộc) phía trên bảng danh sách, gõ tiêu chí và điểm từng ý (ví dụ "3đ nêu đúng khái niệm. 4đ có ví dụ. 3đ trình bày rõ ràng.") rồi bấm "Lưu rubric"; trong cửa sổ chấm cũng có khối "Rubric chấm điểm" để xem và sửa; khi chấm từng bài, bấm "Gợi ý điểm bằng AI". Hai là câu tự luận trong đề thi: khi soạn câu tự luận có ô "Rubric (tuỳ chọn)"; lúc chấm, nút "Gợi ý chấm" dùng rubric này cùng nội dung câu hỏi. Ba là vấn đáp AI: ở trang chấm vấn đáp có dòng "Rubric chấm điểm" với nút "Nhập rubric" hoặc "Sửa rubric"; nhập xong bấm "Chấm lại bằng AI" ở từng lượt để lấy đề xuất mới. Bốn là Đấu trường: nhiệm vụ chấm chéo có bảng "Tiêu chí chấm" (tên tiêu chí, thang điểm, mức quan trọng) và bắt buộc phải có. Rubric ở bài tập và câu tự luận là ô văn bản tự do, không phải bảng nhiều cột và hàng.`,
+    body: `Limio CÓ hỗ trợ nhập rubric, ở bốn nơi, và AI đọc rubric đó khi gợi ý điểm; gợi ý chỉ là bản nháp, AI không tự lưu, thầy/cô xem lại rồi mới chấm. Một là bài tập: mở trang bài nộp của bài tập (bấm "Xem bài nộp"), ở khung "Rubric chấm điểm" (không bắt buộc) phía trên bảng danh sách, gõ tiêu chí và điểm từng ý (ví dụ "3đ nêu đúng khái niệm. 4đ có ví dụ. 3đ trình bày rõ ràng.") rồi bấm "Lưu rubric"; trong cửa sổ chấm cũng có khối "Rubric chấm điểm" để xem và sửa; khi chấm từng bài, bấm "Gợi ý điểm bằng AI". Hai là câu tự luận trong đề thi: khi soạn câu tự luận có ô "Rubric (tuỳ chọn)"; lúc chấm, rubric hiện sẵn trên bài làm trong khối thu gọn "Rubric chấm" (bấm để mở) để thầy/cô đối chiếu, và nút "Gợi ý chấm" dùng rubric này cùng nội dung câu hỏi. Ba là vấn đáp AI: ở trang chấm vấn đáp có dòng "Rubric chấm điểm" với nút "Nhập rubric" hoặc "Sửa rubric"; nhập xong bấm "Chấm lại bằng AI" ở từng lượt để lấy đề xuất mới. Bốn là Đấu trường: nhiệm vụ chấm chéo có bảng "Tiêu chí chấm" (tên tiêu chí, thang điểm, mức quan trọng) và bắt buộc phải có. Rubric ở bài tập và câu tự luận là ô văn bản tự do, không phải bảng nhiều cột và hàng.`,
     useCases: [
       `Giao bài tiểu luận, thầy/cô nhập rubric trước khi chấm để điểm AI gợi ý nhất quán giữa các bài.`,
       `Với buổi vấn đáp, thầy/cô nhập rubric để AI đề xuất điểm theo đúng tiêu chí của bộ môn.`,
@@ -211,10 +211,11 @@ export const GUIDES: readonly GuideEntry[] = [
     title: "Tạo bài giảng tương tác (Limio-Live)",
     keywords: ["bài giảng", "slide", "powerpoint", "pptx", "limio-live", "dàn ý", "tài liệu", "bài giảng tương tác", "mô tả chủ đề", "soạn bài giảng", "tạo bài giảng", "nhập powerpoint"],
     destinationIds: ["live_from_document", "live_from_pptx", "live_decks"],
-    body: `Vào "Bài giảng của tôi" rồi bấm "Tạo bài giảng". Có ba đường. Từ mô tả chủ đề: chọn tab "Mô tả chủ đề", nêu chủ đề, người học và điều người học làm được (15 đến 2.000 ký tự); có công tắc "Tìm thêm nguồn trên internet" nếu quản trị đã bật. Từ tài liệu: tab "Tải tệp lên" (Word, PDF, .txt, .md, tối đa 10 MB) hoặc "Dán văn bản". Chọn thời lượng 15, 30 hoặc 45 phút rồi bấm "Soạn dàn ý". Từ PowerPoint: liên kết "PowerPoint" dẫn tới "Tạo bài giảng từ PowerPoint" (chỉ nhận .pptx tối đa 10 MB), chọn "Giữ ý, làm đẹp lại" (không dùng AI, giữ nguyên thứ tự) hoặc "Soạn lại mạch" (AI dựng lại dàn ý, tốn token), xem màn đối chiếu rồi sang dàn ý. Ở trang "Dàn ý bài giảng" thầy/cô sửa, thêm, xoá, kéo đổi thứ tự các slide, chọn loại slide và bố cục; mọi sửa tự lưu và không tốn lượt AI. Cuối cùng bấm "Tạo N slide" ở thanh dưới cùng; bài đã có slide thì nút thành "Cập nhật slide theo dàn ý". Nội dung AI viết từ kiến thức chung luôn cần thầy/cô kiểm tra trước khi dạy.`,
+    body: `Vào "Bài giảng của tôi" rồi bấm "Tạo bài giảng". Trang chỉ có một ô: thầy/cô mô tả bài giảng muốn soạn (chủ đề, người học, mục tiêu, điều cần nhấn mạnh; tối đa 2.000 ký tự). Có tài liệu thì bấm "Đính kèm tài liệu" hoặc kéo tệp vào ô; mỗi bài chỉ một tệp (Word, PDF, .txt, .md tối đa 10 MB, hoặc PowerPoint .pptx tối đa 50 MB), AI bám sát tài liệu và làm theo mô tả. Dán đoạn văn dài vào ô thì đoạn đó tự thành tài liệu. Không có tài liệu thì AI soạn từ kiến thức chung, có công tắc "Tìm thêm nguồn trên internet" nếu quản trị đã bật. Chọn thời lượng 15, 30, 45 hoặc 90 phút rồi bấm "Soạn dàn ý". Tài liệu là PowerPoint thì nút thành "Nhập PowerPoint", mở trang "Tạo bài giảng từ PowerPoint" với tệp đã đọc sẵn; ở đó chọn "Giữ ý, làm đẹp lại" (giữ nguyên slide gốc, AI chỉ viết thêm các slide tương tác) hoặc "Soạn lại mạch" (AI dựng lại dàn ý, tốn token), xem màn đối chiếu rồi sang dàn ý. Mọi cách tạo đều có ít nhất 5 slide tương tác (90 phút: 10), nhiều loại khác nhau. Ở trang "Dàn ý bài giảng" thầy/cô sửa, thêm, xoá, kéo đổi thứ tự các slide, chọn loại slide và bố cục; mọi sửa tự lưu và không tốn lượt AI. Cuối cùng bấm "Tạo N slide" ở thanh dưới cùng; bài đã có slide thì nút thành "Cập nhật slide theo dàn ý". Nội dung AI viết từ kiến thức chung luôn cần thầy/cô kiểm tra trước khi dạy.`,
     useCases: [
       `Sáng nay sắp lên lớp mà chưa có slide, thầy/cô chỉ cần mô tả chủ đề và chọn thời lượng 30 phút để Limio dựng dàn ý rồi slide.`,
-      `Đã có bài PowerPoint cũ, thầy/cô chọn Giữ ý, làm đẹp lại để dùng lại và thêm các trang tương tác.`,
+      `Đã có bài PowerPoint cũ, thầy/cô đính kèm tệp rồi chọn Giữ ý, làm đẹp lại để dùng lại slide cũ và có thêm các slide tương tác.`,
+      `Có sẵn giáo trình dạng Word, thầy/cô đính kèm tệp và ghi trong ô mô tả rằng muốn dạy cho sinh viên năm nhất, AI soạn dàn ý bám sát giáo trình theo đúng ý đó.`,
     ],
   },
   {
@@ -222,10 +223,11 @@ export const GUIDES: readonly GuideEntry[] = [
     title: "Chỉnh slide, nhờ AI, giao diện và thương hiệu bài giảng",
     keywords: ["chỉnh slide", "sửa slide", "bố cục slide", "nhờ ai", "giao diện slide", "thương hiệu", "logo", "bìa", "ảnh slide", "hoàn tác slide", "phiên bản slide", "thêm slide", "biểu đồ", "bảng slide"],
     destinationIds: ["live_decks"],
-    body: `Mở một bài giảng từ "Bài giảng của tôi" để vào trình sửa. Cột trái là danh sách slide kéo thả; nút "Thêm slide" mở hộp chọn loại (tương tác, trình bày, nhập PDF hoặc từ khoá học), và rê chuột vào khe giữa hai slide thì hiện nút [+] để chèn đúng chỗ. Bấm một slide hoặc nút "Sửa" để mở cửa sổ có hai tab: "Nội dung" (sửa chữ, thẻ, bảng, biểu đồ, bìa 10 kiểu) và "Nhờ AI" (chat theo từng slide, có nút nhanh như "Viết ngắn hơn", "Thêm ví dụ"; AI đề xuất thì bấm "Áp dụng" hoặc "Bỏ"). Bố cục có Bìa, Chữ và hình, Danh sách, Ba thẻ, So sánh hai cột, Các bước, Số liệu, Trích dẫn, Tóm tắt, Bảng, Biểu đồ. Ở ô hình, bấm "Đổi" để tải ảnh riêng hoặc chọn hình minh hoạ. Mục "Phiên bản" cho khôi phục bản trước khi sửa. Nút "Giao diện" có 18 giao diện màu và hoa văn; hộp "Thương hiệu của bài giảng" cho đặt logo, bảng màu 3 ô, hoặc dùng bộ thương hiệu của trường nếu quản trị trường đã đặt. Ô "Note" ở cột phải là ghi chú giảng, chỉ diễn giả thấy.`,
+    body: `Mở một bài giảng từ "Bài giảng của tôi" để vào trình sửa. Cột trái là danh sách slide kéo thả; nút "Thêm slide" mở hộp chọn loại (tương tác, trình bày, nhập PDF hoặc từ khoá học), và rê chuột vào khe giữa hai slide thì hiện nút [+] để chèn đúng chỗ. Bấm một slide hoặc nút "Sửa" để mở cửa sổ có hai tab: "Nội dung" (sửa chữ, thẻ, bảng, biểu đồ, bìa 10 kiểu) và "Nhờ AI" (chat theo từng slide, có nút nhanh như "Viết ngắn hơn", "Thêm ví dụ"; AI đề xuất thì bấm "Áp dụng" hoặc "Bỏ"). Bố cục có Bìa, Chữ và hình, Danh sách, Ba thẻ, So sánh hai cột, Các bước, Số liệu, Trích dẫn, Tóm tắt, Bảng, Biểu đồ. Ở ô hình, bấm "Đổi" để tải ảnh riêng hoặc chọn hình minh hoạ. Slide Chữ và hình có mục "Kiểu trình bày" (mặc định "Tự động": hệ thống xen kẽ hình bên phải, hình bên trái, hình tràn nửa slide, hình trên ý dưới, hình nền khối chữ phủ, hình nhỏ có chú thích để các slide liền nhau không giống nhau) và mục "Khung hình" (bo góc, tròn, vòm, lục giác, hình giọt, lá, khung lệch; mặc định theo bài). Mục "Phiên bản" cho khôi phục bản trước khi sửa. Nút "Giao diện" có 18 giao diện màu, hoa văn, mục "Khung hình" (khung ô hình của cả bài) và mục "Ngôn ngữ của slide" (AI viết slide mới theo ngôn ngữ này, không dịch slide đã có); hộp "Thương hiệu của bài giảng" cho đặt logo, bảng màu 3 ô, hoặc dùng bộ thương hiệu của trường nếu quản trị trường đã đặt. Ô "Note" ở cột phải là ghi chú giảng, chỉ diễn giả thấy.`,
     useCases: [
       `Một slide có quá nhiều chữ, thầy/cô mở Nhờ AI và chọn Viết ngắn hơn.`,
       `Muốn bài giảng có nhận diện của trường hay của khoa, thầy/cô đặt logo và màu thương hiệu một lần cho cả bài.`,
+      `Bài có nhiều slide Chữ và hình trông giống nhau, thầy/cô chọn một khung hình khác cho cả bài ở menu Giao diện, hoặc đổi kiểu trình bày của từng slide.`,
     ],
   },
   {
@@ -270,6 +272,17 @@ export const GUIDES: readonly GuideEntry[] = [
     useCases: [
       `Đầu một chương mới, thầy/cô tổ chức Đấu trường kéo dài một tuần với vài nhiệm vụ nộp bài để tạo động lực.`,
       `Muốn học viên học hỏi lẫn nhau, thầy/cô đặt nhiệm vụ chấm chéo kèm bảng Tiêu chí chấm.`,
+    ],
+  },
+  {
+    id: "tro-giang-ai",
+    title: "Trợ giảng AI của học viên (khác với Limio)",
+    keywords: ["trợ giảng ai", "trợ giảng", "hỏi ai về đoạn này", "ai trong bài học", "ai của học viên", "học viên hỏi ai", "khác nhau", "phân biệt", "nút tròn", "lily"],
+    destinationIds: ["my_courses"],
+    body: `Trợ giảng AI là nút tròn nổi ở trang bài học của học viên đã ghi danh, dành cho học viên: các em hỏi bài và được gợi ý từng bước để tự hiểu, không được đưa thẳng đáp án bài tập. Học viên cũng có thể bôi đen một đoạn trong bài, bấm chuột phải rồi chọn "Hỏi AI về đoạn này". Trợ giảng AI không hiện ở chế độ xem trước của giảng viên, và các lượt hỏi được tính vào Token AI. Lily thì khác: Lily là trợ lý ảo của riêng thầy/cô trên Limio, có biểu tượng màu hồng, ở khu vực giảng viên, giúp thầy/cô dùng các tính năng và gợi ý việc nên làm; còn Trợ giảng AI là của học viên trong bài học.`,
+    useCases: [
+      `Học viên đang vướng một bài tập, thầy/cô nhắc các em dùng Trợ giảng AI để được gợi ý từng bước trước khi hỏi thầy/cô.`,
+      `Thầy/cô khuyến khích học viên bôi đen đoạn khó trong bài và hỏi AI để hiểu ngay tại chỗ.`,
     ],
   },
 ];

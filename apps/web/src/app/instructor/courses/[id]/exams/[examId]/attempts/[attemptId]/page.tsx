@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatDateTime } from "@/lib/datetime";
 import GradeForm from "../../grading/GradeForm";
+import EssayRubric, { essayRubricOf } from "../../grading/EssayRubric";
 
 export const dynamic = "force-dynamic";
 
@@ -225,6 +226,9 @@ export default async function ExamAttemptReviewPage({
                 html={plainToRichHtml(q.prompt)}
                 className="prose prose-sm mb-3 max-w-none rounded bg-slate-50 px-3 py-2 dark:prose-invert"
               />
+              {manual && canGrade && (
+                <EssayRubric rubric={essayRubricOf(q.type, q.config)} />
+              )}
               <AnswerView type={q.type} config={q.config} answerJson={ans?.answerJson ?? null} />
               {manual && ans && canGrade && (
                 <div className="mt-3">

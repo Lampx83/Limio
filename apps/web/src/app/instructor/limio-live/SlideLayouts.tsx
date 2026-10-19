@@ -71,8 +71,10 @@ import { slideImageSources } from "@/lib/limioLiveImage";
 import { shortUrl } from "@/lib/limioLiveWebImages";
 import { isSlideIllustrationId } from "@feedbackme/shared-types";
 import { useLiveBrand } from "./liveBrandContext";
+import { useSlideText } from "./liveLangContext";
 import { ChartView, TableView } from "./SlideCharts";
-import { useSlideMotif } from "./liveMotifContext";
+import { useImageLook, useSlideMotif } from "./liveMotifContext";
+import { frameApplies, type ImageFrame, type ImageStyle } from "@/lib/limioLiveImageStyle";
 import { isDarkTheme, layoutThemeClass, motifOpacityFor, slideBgFor } from "./slideThemes";
 import { CoverSlide } from "./CoverSlide";
 import { Inline, delay } from "./slideInline";
@@ -247,6 +249,8 @@ export function LayoutSlideView({
   const effThemeId = brandEffectiveThemeId(brand, themeId);
   const frameBg = brandFrameBackground(brand, true);
   const motif = useSlideMotif(config, slideId);
+  // Kiểu trình bày và khung hình của slide Chữ và hình (docs/tieu-chi/chu-va-hinh-kieu-khung.md).
+  const look = useImageLook(config, slideId);
   // Độ đậm an toàn của hoa văn ở góc, tính theo đúng nền và màu (kể cả màu thương hiệu) của slide này.
   const brandVarsKey = JSON.stringify(brandVars);
   const motifOpacity = useMemo(
@@ -265,6 +269,7 @@ export function LayoutSlideView({
         layout={layout}
         c={config}
         motif={motif}
+        look={look}
         cols={cols}
         dataReserve={band ? logoShiftPx(band) : 0}
         artPx={scale > 0 ? IMAGE_SLOT_W * scale * fitK : 0}
@@ -427,12 +432,33 @@ function SlideMotif({ motif, slot }: { motif: SlideArtId; slot: MotifSlot }) {
   return <div className={`motif m-${slot}${illus}`} aria-hidden="true" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
+/** Bề ngang ô hình của kiểu "Hình nhỏ có chú thích" (khung ảnh rửa, không tính viền). */
+const INSET_ART_W = 340;
+
+/** Khung chữ của từng kiểu Chữ và hình: bề ngang để Title tự co, cỡ và số dòng tối đa của tiêu đề. */
+function imageTextBox(style: ImageStyle, artW: number): { width: number; titlePx: number; titleLines: number } {
+  switch (style) {
+    case "bleed":
+      // Hình chiếm 46% bề ngang slide, chữ nằm phần còn lại trừ lề trái và khoảng cách 56.
+      return { width: Math.round(1280 * 0.54) - 96 - 56, titlePx: 56, titleLines: 3 };
+    case "top":
+      return { width: CONTENT_W, titlePx: 52, titleLines: 2 };
+    case "overlay":
+      // Khối chữ rộng 640, đệm hai bên 56.
+      return { width: 640 - 2 * 56, titlePx: 52, titleLines: 3 };
+    case "inset":
+      return { width: CONTENT_W - 56 - (artW + 32), titlePx: 60, titleLines: 3 };
+    default:
+      return { width: CONTENT_W - 56 - artW, titlePx: 60, titleLines: 3 };
+  }
+}
+
 /**
  * Dòng nguồn ảnh dưới ô hình. Có trang nguồn (imageSourceUrl, http/https) thì là link mở trang đó ở thẻ mới; chặn lan sự kiện
  * để bấm link trong trình sửa không mở hộp sửa slide.
  */
 function ImageCredit({ c }: { c: Cfg }) {
-  const text = `Nguồn ảnh: ${c.imageCredit}`;
+  const text = `${useSlideText().imageSource}: ${c.imageCredit}`;
   const href = typeof c.imageSourceUrl === "string" && /^https?:\/\//i.test(c.imageSourceUrl) ? c.imageSourceUrl : null;
   return (
     <p className="img-credit" title={href ? `${text}\n${href}` : text}>
@@ -483,6 +509,7 @@ function LayoutBody({
   layout,
   c,
   motif,
+  look = { style: "right", frame: "round" },
   cols = 1,
   dataReserve = 0,
   artPx,
@@ -490,6 +517,8 @@ function LayoutBody({
   layout: SlideLayoutId;
   c: Cfg;
   motif: Motif;
+  /** Chữ và hình: kiểu trình bày và khung hình (useImageLook). */
+  look?: { style: ImageStyle; frame: ImageFrame };
   /** Tóm tắt: số cột bộ đo đã chọn. */
   cols?: 1 | 2;
   /** Slide dữ liệu: chỗ nhường cho logo, khung bảng/biểu đồ thấp đi chừng đó. */
@@ -497,6 +526,7 @@ function LayoutBody({
   /** Bề rộng thật (px màn hình) của ô hình, để chọn bản ảnh vừa đủ nét. */
   artPx: number;
 }) {
+  const t = useSlideText();
   const items: LayoutItem[] = Array.isArray(c.items) ? c.items : [];
   const title: string = c.title ?? "";
 
@@ -565,13 +595,20 @@ function LayoutBody({
 
     case "image": {
       const bullets: string[] = Array.isArray(c.bullets) ? c.bullets : [];
+      const { style, frame } = look;
       // Chữ càng dài thì ô hình càng hẹp, cột chữ rộng ra (56 = khoảng cách giữa hai cột trong slideLayouts.css).
-      const artW = imageArtWidth(stripInline(title).length + bullets.reduce((n, b) => n + stripInline(b).length, 0));
+      const artW = style === "inset" ? INSET_ART_W : imageArtWidth(stripInline(title).length + bullets.reduce((n, b) => n + stripInline(b).length, 0));
+      const tx = imageTextBox(style, artW);
+      const art = c.imageUrl ? <SlideImage c={c} px={artPx} /> : motif && <SlideMotif motif={motif.motif} slot={motif.slot} />;
+      // Ô hình tràn mép (.edge) không tính vào phần tràn khi co chữ (measureContentBox).
+      const artCls = `art${frameApplies(style) ? ` fr-${frame}` : " edge"}`;
+      // Hình nhỏ có chú thích: chú thích là chữ thay thế của hình (nếu giảng viên hoặc hệ thống đã ghi).
+      const caption = style === "inset" && typeof c.imageAlt === "string" ? c.imageAlt.trim() : "";
       return (
-        <div className="ll-image" style={{ ["--artw" as string]: `${artW}px` }}>
+        <div className={`ll-image st-${style}`} style={{ ["--artw" as string]: `${artW}px`, ["--cols" as string]: String(Math.max(1, bullets.length)) }}>
           <div className="pad">
             <div className="tx">
-              <Title text={title} maxPx={60} widthPx={CONTENT_W - 56 - artW} maxLines={3} />
+              <Title text={title} maxPx={tx.titlePx} widthPx={tx.width} maxLines={tx.titleLines} />
               <ul className="bul">
                 {bullets.map((b, i) => (
                   <li key={i} className="a" style={delay(i + 1)}>
@@ -582,9 +619,18 @@ function LayoutBody({
                 ))}
               </ul>
             </div>
-            <div className="art a-pop" style={delay(1)}>
-              {c.imageUrl ? <SlideImage c={c} px={artPx} /> : motif && <SlideMotif motif={motif.motif} slot={motif.slot} />}
-            </div>
+            {style === "inset" ? (
+              <div className="pol-wrap a-pop" style={delay(1)}>
+                <figure className={`pol${caption ? "" : " nocap"}`}>
+                  <div className={artCls}>{art}</div>
+                  {caption && <figcaption>{caption}</figcaption>}
+                </figure>
+              </div>
+            ) : (
+              <div className={`${artCls} a-pop`} style={delay(1)}>
+                {art}
+              </div>
+            )}
           </div>
           {c.imageUrl && c.imageCredit ? <ImageCredit c={c} /> : null}
         </div>
@@ -962,7 +1008,7 @@ function LayoutBody({
     case "chart": {
       // Tiêu đề, khung dữ liệu và dòng nguồn: chiều cao khung tính trước (dataSlideMetrics) để SVG vẽ đúng cỡ chữ thật.
       const m = dataSlideMetrics(c, dataReserve);
-      const src = sourceLine(c.source);
+      const src = sourceLine(c.source, t.source);
       const head: string[] = Array.isArray(c.head) ? c.head : [];
       const rows: string[][] = Array.isArray(c.rows) ? c.rows : [];
       const tf = tableFontSize(head, rows, DATA_CONTENT_W - 20, m.boxH);

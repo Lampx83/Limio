@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tạo bài giảng một ô</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #fff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --faint: #8f9884; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d; --warn-bg: #fff7e6; --warn: #8a5a00;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 12px 28px -16px rgb(28 36 16 / .22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24; --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --warn-bg: #2e2510; --warn: #f5c56b; --shadow: 0 1px 2px rgb(0 0 0 / .4); }
+  }
+  :root[data-theme="dark"] { --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24; --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --warn-bg: #2e2510; --warn: #f5c56b; --shadow: 0 1px 2px rgb(0 0 0 / .4); }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 15px; font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 80px; }
+  header.top { padding: 18px 0 6px; }
+  header.top h1 { font-size: 21px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-2); max-width: 880px; }
+  .states { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 16px; align-items: center; }
+  .states span { color: var(--ink-3); font-size: 14px; margin-right: 4px; }
+  .states button { border: 1.5px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+  .states button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-soft); color: var(--ink); }
+
+  .page { max-width: 780px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow); padding: 22px 24px; }
+  .crumb { font-size: 14px; color: var(--ink-3); }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px 16px; flex-wrap: wrap; }
+  .head h2 { margin: 0; font-size: 24px; }
+  .manual { font-size: 14px; color: var(--ink-3); }
+  .lead { color: var(--ink-2); margin: 8px 0 14px; font-size: 15px; }
+
+  .box { border: 2px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--surface); transition: border-color .15s; }
+  .box:focus-within { border-color: var(--brand-fill); }
+  .box.drag { border-color: var(--brand-fill); border-style: dashed; background: var(--brand-soft); }
+  .box textarea { display: block; width: 100%; border: 0; outline: 0; resize: vertical; background: transparent; padding: 14px 16px 6px; font-size: 16px; line-height: 1.55; min-height: 112px; }
+  .files { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 16px 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 8px 6px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); font-size: 13.5px; max-width: 100%; }
+  .chip .ic { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; color: #fff; font-size: 10px; font-weight: 800; flex: none; }
+  .chip .ic.w { background: #2b579a; } .chip .ic.p { background: #c43e1c; } .chip .ic.t { background: #6b7660; } .chip .ic.f { background: #b7472a; }
+  .chip b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+  .chip small { color: var(--ink-3); white-space: nowrap; }
+  .chip button { border: 0; background: none; color: var(--ink-3); font-size: 18px; line-height: 1; padding: 0 2px; }
+  .hint { display: flex; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; padding: 2px 16px 10px; font-size: 13px; color: var(--ink-3); }
+  .hint .mode b { color: var(--brand-strong); }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px; background: var(--surface-2); border-top: 1px solid var(--line); }
+  .attach { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 11px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+  .attach:hover { border-color: var(--brand); color: var(--ink); }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+  .seg button { border: 0; background: none; border-radius: 999px; padding: 4px 11px; font-size: 13.5px; color: var(--ink-3); font-weight: 600; }
+  .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
+  .muted { color: var(--ink-3); font-size: 14px; }
+  .sw { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-3); font-weight: 600; }
+  .sw i { position: relative; width: 36px; height: 20px; border-radius: 999px; background: var(--brand); flex: none; }
+  .sw i::after { content: ""; position: absolute; top: 2px; left: 18px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+  .go { margin-left: auto; border: 0; border-radius: 12px; padding: 9px 16px; background: var(--brand); color: #fff; font-weight: 700; display: inline-flex; gap: 7px; align-items: center; }
+  .go[disabled] { opacity: .45; cursor: not-allowed; }
+  @media (max-width: 560px) { .go { width: 100%; justify-content: center; margin-left: 0; } }
+  .ex { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; font-size: 13px; color: var(--ink-3); }
+  .ex button { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 3px 9px; font-size: 13px; color: var(--ink-2); }
+  .ppt-note { margin-top: 12px; font-size: 13.5px; color: var(--ink-3); }
+  .ppt-note a { color: var(--brand-strong); }
+  .notes { max-width: 780px; margin: 22px auto 0; color: var(--ink-2); font-size: 14.5px; }
+  .notes h3 { font-size: 16px; margin: 0 0 6px; color: var(--ink); }
+  .notes ul { margin: 0; padding-left: 20px; }
+  .notes li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Bản mẫu: tạo bài giảng từ một ô mô tả, kèm tài liệu nếu có</h1>
+  <p>Thầy/cô luôn bắt đầu bằng việc nói mình muốn bài giảng thế nào. Có tài liệu thì đính kèm vào cùng ô; AI bám sát tài liệu và làm theo mô tả. Không còn phải chọn "ý tưởng" hay "tài liệu" trước.</p>
+</header>
+<div class="states" role="group" aria-label="Thử các trường hợp">
+  <span>Thử:</span>
+  <button type="button" data-s="empty" aria-pressed="true">Trang mới mở</button>
+  <button type="button" data-s="topic" aria-pressed="false">Chỉ mô tả</button>
+  <button type="button" data-s="docs" aria-pressed="false">Mô tả + tài liệu</button>
+  <button type="button" data-s="second" aria-pressed="false">Đính kèm tệp thứ hai</button>
+  <button type="button" data-s="paste" aria-pressed="false">Dán văn bản dài vào ô</button>
+  <button type="button" data-s="pptx" aria-pressed="false">Đính kèm PowerPoint</button>
+  <button type="button" data-s="drag" aria-pressed="false">Đang kéo tệp vào</button>
+</div>
+
+<div class="page">
+  <span class="crumb">Limio-Live</span>
+  <div class="head"><h2>Tạo bài giảng</h2><span class="manual">✎ Soạn thủ công</span></div>
+  <p class="lead">Thầy/cô muốn soạn bài giảng gì? Có tài liệu thì đính kèm một tệp, AI sẽ bám sát tài liệu đó.</p>
+  <div class="box" id="box">
+    <textarea id="desc" aria-label="Mô tả bài giảng" placeholder="Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR."></textarea>
+    <div class="files" id="files" hidden></div>
+    <p id="replaced" hidden style="margin:0 16px 6px;padding:7px 10px;border-radius:10px;background:var(--warn-bg);color:var(--warn);font-size:13px">Mỗi bài chỉ dùng một tài liệu: tệp mới đã thay cho "Chuong-3-Thuc-te-tang-cuong.docx".</p>
+    <div class="hint"><span class="mode" id="mode"></span><span id="count"></span></div>
+    <div class="bar">
+      <button type="button" class="attach" id="attachBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m21 12-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l9.2-9.2a3.7 3.7 0 0 1 5.2 5.2l-9.2 9.2a1.8 1.8 0 0 1-2.6-2.6l8.5-8.5"/></svg>Đính kèm tài liệu</button>
+      <span id="dur"><span class="muted">Thời lượng </span><span class="seg"><button type="button">15 phút</button><button type="button" aria-pressed="true">30 phút</button><button type="button">45 phút</button><button type="button">90 phút</button></span></span>
+      <span class="sw" id="web"><i aria-hidden="true"></i>Tìm thêm nguồn trên internet</span>
+      <button type="button" class="go" id="go">✦ Soạn dàn ý</button>
+    </div>
+  </div>
+  <div class="ex" id="ex">Ví dụ mẫu: <button type="button">Thực tế tăng cường trong lớp học</button><button type="button">Phân cấp thị giác</button><button type="button">Ôn tập phương trình bậc hai</button><button type="button">Viết câu lệnh cho AI tạo sinh</button></div>
+  <p class="ppt-note">Có sẵn bài giảng PowerPoint? Đính kèm tệp .pptx vào ô trên, Limio giữ hình, ghi chú giảng, bảng và biểu đồ.</p>
+</div>
+
+<div class="notes">
+  <h3>Cách hệ thống hiểu</h3>
+  <ul>
+    <li>Ô mô tả luôn là ý muốn của thầy/cô: chủ đề, người học, mục tiêu, điều cần nhấn mạnh. AI đọc mô tả này trong mọi trường hợp.</li>
+    <li>Không đính kèm gì: AI soạn từ kiến thức chung (có thể bật tìm thêm nguồn trên internet), như hiện nay.</li>
+    <li>Có tài liệu: <b>mỗi bài chỉ một tệp</b> (Word, PDF, .txt, .md tối đa 10 MB; hoặc PowerPoint .pptx tối đa 50 MB). Đính kèm tệp khác thì tệp mới thay tệp cũ, kèm dòng báo. AI bám sát tài liệu, chỉ dùng số liệu có trong tài liệu, và soạn theo đúng ý trong mô tả. Mô tả lúc này không bắt buộc. Công tắc internet ẩn đi.</li>
+    <li>Dán một đoạn văn bản dài (trên 2.000 ký tự) vào ô khi chưa có tệp: đoạn đó tự thành tài liệu "Văn bản dán" (tính là một tài liệu), ô mô tả trống lại để thầy/cô ghi ý muốn. Bấm "Đưa lại vào ô mô tả" nếu hệ thống hiểu nhầm. Đã có tệp đính kèm thì ô mô tả giữ giới hạn 2.000 ký tự như thường.</li>
+    <li>Tài liệu là PowerPoint: dùng cách nhập PowerPoint (giữ hình, ghi chú giảng, bảng, biểu đồ); nút đổi thành "Nhập PowerPoint", thời lượng do trang nhập gợi ý.</li>
+    <li>Kéo thả tệp vào bất cứ đâu trên ô cũng được.</li>
+  </ul>
+  <h3 style="margin-top:18px">Tương tác: mọi cách tạo đều có ít nhất 5 slide tương tác</h3>
+  <ul>
+    <li>Áp cho cả bốn đường: từ mô tả, từ tài liệu, PowerPoint "Soạn lại mạch" và PowerPoint "Giữ ý, làm đẹp lại".</li>
+    <li>Ít nhất 3 loại khác nhau trong số trắc nghiệm, bình chọn, đám mây từ, bảng cộng tác (dán ghi chú), vẽ hình. Không hai slide tương tác liền nhau, không ở slide đầu hay slide cuối.</li>
+    <li>Bảng trắng (whiteboard) hạn chế: tối đa 1 cho cả bài, chỉ khi có bài toán hoặc tình huống cần cả lớp cùng giải.</li>
+    <li>AI trả về chưa đủ 5 hoặc chưa đủ 3 loại: hệ thống tự gọi AI thêm một lần nhỏ để bổ sung, giảng viên không phải làm gì.</li>
+    <li>"Giữ ý, làm đẹp lại" (hiện không dùng AI): slide gốc giữ nguyên, AI chỉ viết riêng 5 slide tương tác dựa trên nội dung bài và chèn xen giữa các phần (tốn ít lượt AI). <i>Đề xuất, chờ thầy/cô chốt.</i></li>
+    <li>Bài 15 phút giữ 9 đến 12 slide, trong đó 5 slide tương tác. <i>Đề xuất, chờ thầy/cô chốt.</i></li>
+    <li>Thời lượng mới <b>90 phút</b>: khoảng 42 đến 50 slide, đủ mạch Mục tiêu, Mục lục, bìa mỗi phần, Tổng kết; ít nhất 10 slide tương tác (tối thiểu 4 loại khác nhau, mỗi phần nội dung 1 đến 2). AI viết slide theo lô như hiện nay nên bài dài vẫn tạo được, chỉ lâu hơn (khoảng 3 đến 5 phút). <i>Đề xuất, chờ thầy/cô chốt.</i></li>
+  </ul>
+  <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;font-size:12.5px" aria-label="Ví dụ dàn ý 30 phút">
+    <span style="padding:4px 8px;border-radius:8px;background:var(--surface-2)">Bìa</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--brand-soft)">Bình chọn: dự đoán</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--surface-2)">Nội dung</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--surface-2)">Nội dung</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--brand-soft)">Trắc nghiệm</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--surface-2)">Nội dung</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--brand-soft)">Đám mây từ</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--surface-2)">Nội dung</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--brand-soft)">Bảng cộng tác</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--surface-2)">Nội dung</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--brand-soft)">Trắc nghiệm</span>
+    <span style="padding:4px 8px;border-radius:8px;background:var(--surface-2)">Tổng kết</span>
+  </div>
+</div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const SAMPLE = "Bài giới thiệu về thực tế tăng cường (AR) cho sinh viên năm cuối ngành Công nghệ giáo dục, nhấn mạnh cách dùng AR trong giờ thực hành. Sau buổi học, sinh viên phân biệt được AR với VR.";
+const DOCS = [
+  { kind: "w", name: "Chuong-3-Thuc-te-tang-cuong.docx", size: "1,2 MB" },
+  { kind: "f", name: "Bai-bao-AR-trong-giao-duc.pdf", size: "3,4 MB" },
+];
+let replaced = false;
+let state = "empty";
+let files = [];
+const icon = { w: "DOC", f: "PDF", t: "TXT", p: "PPT" };
+
+function render() {
+  document.querySelectorAll("[data-s]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.s === state)));
+  const desc = $("#desc");
+  const hasDocs = files.some((f) => f.kind !== "p");
+  const hasPpt = files.some((f) => f.kind === "p");
+  $("#files").hidden = !files.length;
+  $("#files").innerHTML = files
+    .map((f, i) => `<span class="chip"><span class="ic ${f.kind}">${icon[f.kind]}</span><b>${f.name}</b><small>${f.size}</small>${f.pasted ? `<button type="button" data-back="${i}" style="font-size:12.5px;color:var(--brand-strong);text-decoration:underline">Đưa lại vào ô mô tả</button>` : ""}<button type="button" aria-label="Bỏ tệp" data-rm="${i}">×</button></span>`)
+    .join("");
+  $("#files").querySelectorAll("[data-rm]").forEach((b) => b.addEventListener("click", () => { files.splice(Number(b.dataset.rm), 1); render(); }));
+  $("#files").querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", () => { files = []; desc.value = "Chương 3. Thực tế tăng cường trong giáo dục. …(văn bản dài)…"; render(); }));
+  const n = desc.value.trim().length;
+  $("#count").textContent = n ? `${n.toLocaleString("vi-VN")} / 2.000` : "";
+  let mode;
+  if (hasPpt) mode = "AI sẽ <b>nhập bài giảng PowerPoint</b>: giữ hình, ghi chú giảng, bảng và biểu đồ. Mô tả (nếu có) được dùng làm ghi chú cho AI.";
+  else if (hasDocs) mode = `AI sẽ <b>bám sát tài liệu đính kèm</b> và soạn theo mô tả của thầy/cô${n ? "" : " (mô tả không bắt buộc)"}.`;
+  else mode = n ? "AI sẽ <b>soạn từ kiến thức chung</b> theo mô tả này." : "Nêu chủ đề, người học và điều người học làm được sau buổi học.";
+  $("#mode").innerHTML = mode;
+  $("#web").hidden = hasDocs || hasPpt;
+  $("#dur").hidden = hasPpt;
+  $("#ex").hidden = hasDocs || hasPpt;
+  $("#go").innerHTML = hasPpt ? "Nhập PowerPoint" : "✦ Soạn dàn ý";
+  $("#go").disabled = !(hasPpt || hasDocs || n >= 15);
+  $("#box").classList.toggle("drag", state === "drag");
+  $("#replaced").hidden = !replaced;
+  $("#attachBtn").lastChild.textContent = files.length ? "Đổi tài liệu" : "Đính kèm tài liệu";
+  desc.placeholder = hasDocs
+    ? "Thầy/cô muốn bài giảng thế nào? Ví dụ: dạy cho sinh viên năm nhất, tập trung phần ứng dụng, thêm một câu hỏi thảo luận."
+    : "Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR.";
+}
+function set(s) {
+  state = s;
+  const desc = $("#desc");
+  replaced = false;
+  if (s === "empty" || s === "drag") { desc.value = ""; files = []; }
+  if (s === "second") { desc.value = "Dạy cho sinh viên năm cuối, tập trung phần ứng dụng."; files = [DOCS[1]]; replaced = true; }
+  if (s === "topic") { desc.value = SAMPLE; files = []; }
+  if (s === "docs") { desc.value = "Dạy cho sinh viên năm cuối, tập trung phần ứng dụng trong giờ thực hành, thêm một câu hỏi thảo luận ở cuối."; files = [DOCS[0]]; }
+  if (s === "paste") { desc.value = ""; files = [{ kind: "t", name: "Văn bản dán", size: "8.420 ký tự", pasted: true }]; }
+  if (s === "pptx") { desc.value = ""; files = [{ kind: "p", name: "Bai-giang-AR.pptx", size: "12,6 MB" }]; }
+  render();
+}
+document.querySelectorAll("[data-s]").forEach((b) => b.addEventListener("click", () => set(b.dataset.s)));
+$("#desc").addEventListener("input", render);
+$("#attachBtn").addEventListener("click", () => { const had = files.length > 0; files = [had && files[0] === DOCS[0] ? DOCS[1] : DOCS[0]]; replaced = had; state = had ? "second" : "docs"; render(); });
+set("empty");
+</script>
+</body>
+</html>

@@ -220,6 +220,7 @@ describe("Excel nhúng (docs/tieu-chi/bieu-do-kho-doc-pptx.md, E1–E8)", () => 
 
 describe("suggestMinutes (P11)", () => {
   it("theo số slide", () => {
+    // 90 phút chỉ là một lựa chọn, không tự gợi ý (docs/tieu-chi/tao-bai-giang-mot-o.md, M12).
     expect([8, 12, 13, 19, 20, 24, 60].map(suggestMinutes)).toEqual([15, 15, 30, 30, 45, 45, 45]);
   });
 });

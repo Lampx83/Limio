@@ -10,6 +10,7 @@ import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
+import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { proposalFromDraft, type SlideDraft, type SlideEditAction } from "@/lib/limioLiveGenerate";
 import { pickMeta, resolveLayout } from "@/lib/limioLiveSlides";
@@ -77,6 +78,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
 
   const sourceKind = resolveSourceKind(slide.deck.sourceKind);
   const sourceText = slide.deck.sourceText ?? "";
+  // Slide trống vẫn viết theo ngôn ngữ của bài (docs/tieu-chi/ngon-ngu-slide.md, L9).
+  const language = await resolveDeckLanguage(params.deckId);
   try {
     const draft = await generateSlideEdit(
       userId,
@@ -90,6 +93,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
         outlineTitle,
         outlinePoints,
         ...(action === "custom" ? { instruction } : {}),
+        language,
       },
       openai,
     );
@@ -98,6 +102,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
       sourceKind,
       sourceText,
       refs: sanitizeRefs(slide.deck.sourceRefs),
+      lang: language,
     });
     // Bản nháp không đủ cho bố cục đích (kể cả sau khi lấp phần giữ nguyên từ slide hiện tại): nói rõ bố cục nào.
     if (!proposal) return json({ error: "ai_edit_incomplete", details: { layout: action === "to_quiz" ? "quiz" : layout } }, 502);

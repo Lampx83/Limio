@@ -20,7 +20,7 @@
   .lt-night { --sbg: linear-gradient(135deg, #0B1020 0%, #1B1A4B 100%); --stext: #F1F5F9; --smuted: #C4CCE0;
     --sa: #38BDF8; --sa2: #C4B5FD; --ssoft: rgba(56,189,248,.16); --ssoft2: rgba(167,139,250,.16); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #06202E; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #38BDF8; --sglow2: #A78BFA;
     --sg: linear-gradient(120deg, #38BDF8 0%, #A78BFA 100%); --sgb: linear-gradient(135deg, #38BDF8 0%, #818CF8 100%); }
   .lt-paper { --sbg: linear-gradient(160deg, #FBF6E9 0%, #F4E8CB 100%); --stext: #2B2118; --smuted: #6B5B4A;
@@ -70,25 +70,25 @@
   .lt-monoblack { --sbg: linear-gradient(135deg, #050505 0%, #1A1A1A 100%); --stext: #FAFAFA; --smuted: #B4B4B8;
     --sa: #FAFAFA; --sa2: #A1A1AA; --ssoft: rgba(255,255,255,.12); --ssoft2: rgba(255,255,255,.08); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.16);
     --son: #111113; --sok: #86EFAC; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #FFFFFF; --sglow2: #71717A;
     --sg: linear-gradient(120deg, #FFFFFF 0%, #A1A1AA 100%); --sgb: linear-gradient(135deg, #F4F4F5 0%, #A1A1AA 100%); }
   .lt-forest { --sbg: linear-gradient(135deg, #06130D 0%, #0E2B1F 100%); --stext: #ECFDF5; --smuted: #B5D3C3;
     --sa: #4ADE80; --sa2: #FDE047; --ssoft: rgba(74,222,128,.16); --ssoft2: rgba(253,224,71,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #052E16; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #4ADE80; --sglow2: #FDE047;
     --sg: linear-gradient(120deg, #4ADE80 0%, #A3E635 100%); --sgb: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%); }
   .lt-plum { --sbg: linear-gradient(135deg, #1A0B22 0%, #3A1346 100%); --stext: #FDF4FF; --smuted: #E3C7EC;
     --sa: #F0ABFC; --sa2: #FDA4AF; --ssoft: rgba(240,171,252,.16); --ssoft2: rgba(253,164,175,.14); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #2E0B3A; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #E879F9; --sglow2: #FB7185;
     --sg: linear-gradient(120deg, #F0ABFC 0%, #FDA4AF 100%); --sgb: linear-gradient(135deg, #E879F9 0%, #C026D3 100%); }
   .lt-ink { --sbg: linear-gradient(135deg, #0E1014 0%, #1C212B 100%); --stext: #F5F6F8; --smuted: #C0C6D2;
     --sa: #FBBF24; --sa2: #60A5FA; --ssoft: rgba(251,191,36,.15); --ssoft2: rgba(96,165,250,.15); --scard: rgba(255,255,255,.07); --scardb: rgba(255,255,255,.14);
     --son: #1A1300; --sok: #4ADE80; --sokbg: rgba(74,222,128,.16); --sbad: #FCA5A5; --sbadbg: rgba(248,113,113,.14);
-    --sfont-head: var(--font-lexend), var(--font-bvp), "Segoe UI", Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
+    --sfont-head: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif; --sfont-body: var(--font-bvp), "Segoe UI", Roboto, Arial, sans-serif;
     --shw: 800; --shls: -0.025em; --sglow1: #FBBF24; --sglow2: #60A5FA;
     --sg: linear-gradient(120deg, #FBBF24 0%, #F59E0B 100%); --sgb: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%); }
 
@@ -238,6 +238,45 @@
   .ll-image .tx { display: grid; gap: calc(30px * var(--fs)); }
   .ll-image .art { align-self: stretch; min-height: 0; border-radius: 36px; background: linear-gradient(145deg, var(--ssoft), var(--ssoft2)); border: 1px solid var(--scardb); position: relative; overflow: hidden; }
   .ll-image .art svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Kiểu trình bày của Chữ và hình (docs/tieu-chi/chu-va-hinh-kieu-khung.md, K1). Cùng khung .pad/.tx/.art để bộ đo chữ không đổi. */
+  .ll-image.st-left .pad { grid-template-columns: var(--artw, 440px) minmax(0, 1fr); }
+  .ll-image.st-left .art { order: -1; }
+  .ll-image.st-left .img-credit { right: auto; left: 96px; text-align: left; }
+  .ll-image.st-bleed .pad { grid-template-columns: minmax(0, 1fr); padding-right: calc(46% + 56px); }
+  .ll-image.st-bleed .art,
+  .ll-image.st-top .art,
+  .ll-image.st-overlay .art { position: absolute; border: 0; border-radius: 0; align-self: auto; }
+  .ll-image.st-bleed .art { top: 0; right: 0; bottom: 0; width: 46%; }
+  .ll-image.st-top .pad { grid-template-columns: minmax(0, 1fr); align-items: start; padding-top: 336px; padding-bottom: 48px; }
+  .ll-image.st-top .art { left: 0; right: 0; top: 0; height: 300px; }
+  .ll-image.st-top .tx { gap: calc(24px * var(--fs)); }
+  .ll-image.st-top ul.bul { grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: 40px; font-size: max(26px, calc(30px * var(--fs))); }
+  .ll-image.st-top ul.bul li { display: block; }
+  .ll-image.st-top ul.bul li::before { display: block; width: 72px; height: 6px; border-radius: 3px; margin: 0 0 14px; }
+  .ll-image.st-overlay .pad { grid-template-columns: minmax(0, 640px); }
+  .ll-image.st-overlay .art { inset: 0; }
+  .ll-image.st-overlay .tx { position: relative; z-index: 1; background: var(--sbg); border-radius: 32px; padding: 52px 56px; box-shadow: 0 20px 60px rgb(0 0 0 / .22); }
+  .ll-image.st-bleed .img-credit,
+  .ll-image.st-top .img-credit,
+  .ll-image.st-overlay .img-credit { color: #fff; text-shadow: 0 1px 4px rgb(0 0 0 / .65); right: 24px; bottom: 14px; }
+  .ll-image.st-top .img-credit { top: 258px; bottom: auto; }
+  .ll-image.st-inset .pad { grid-template-columns: minmax(0, 1fr) calc(var(--artw, 340px) + 32px); }
+  .ll-image.st-inset .pol-wrap { align-self: center; }
+  .ll-image.st-inset .pol { margin: 0; background: #fff; padding: 16px 16px 0; border-radius: 14px; box-shadow: 0 14px 40px rgb(0 0 0 / .16); transform: rotate(2deg); }
+  .ll-image.st-inset .pol.nocap { padding-bottom: 16px; }
+  .ll-image.st-inset .pol .art { height: 340px; border-radius: 8px; }
+  .ll-image.st-inset .pol figcaption { padding: 12px 4px 16px; font-size: 24px; line-height: 1.3; color: #5c6650; }
+
+  /* Khung hình (K7–K8): chỉ cho ô hình riêng (bên phải, bên trái, hình nhỏ). Ảnh luôn phủ kín khung, cắt giữ phần giữa. */
+  .ll-image .art.fr-circle { border-radius: 50%; aspect-ratio: 1; align-self: center; width: 100%; }
+  .ll-image .art.fr-arch { border-radius: 999px 999px 32px 32px; }
+  .ll-image .art.fr-hex { clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); border: 0; border-radius: 0; aspect-ratio: 0.87; align-self: center; width: 100%; }
+  .ll-image .art.fr-blob { border-radius: 62% 38% 46% 54% / 46% 52% 48% 54%; }
+  .ll-image .art.fr-leaf { border-radius: 200px 32px 200px 32px; }
+  .ll-image .art.fr-offset { border-radius: 28px; box-shadow: 24px 24px 0 0 color-mix(in srgb, var(--sa) 35%, transparent); }
+  .ll-image.st-inset .pol .art.fr-circle,
+  .ll-image.st-inset .pol .art.fr-hex { height: auto; }
   /* Nguồn ảnh riêng: dòng chữ thường dưới ô hình, cỡ tối thiểu của khung thiết kế; dài quá thì cắt, đủ chữ ở title. */
   .ll-image .img-credit { position: absolute; right: 96px; bottom: 22px; margin: 0; max-width: 560px; font-size: 26px; line-height: 1.2; color: var(--smuted); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .img-credit a { color: inherit; text-decoration: none; }

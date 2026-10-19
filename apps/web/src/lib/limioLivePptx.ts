@@ -50,6 +50,7 @@ import {
 import { GROUPS_MAX, GROUP_POINTS_MAX, STATS_LIMITS, contrastTones, groupsFit, numericPoints, type SlideGroup } from "./limioLiveGroups";
 import type { PptxChart, PptxDeck, PptxEmphasis, PptxFlag, PptxParagraph, PptxSlide } from "./pptxImport";
 import { SECTION_KICKER } from "./pptxLayout";
+import { localizeCont } from "./limioLiveLanguage";
 
 // ── Dữ liệu lưu kèm bài ─────────────────────────────────────────────────────
 
@@ -160,6 +161,13 @@ export function sanitizeImportSource(raw: unknown): ImportSource | null {
 }
 
 /** Chữ của cả bài cho AI đọc và để đối chiếu số liệu (LiveDeck.sourceText). */
+/** Chữ của các slide gốc để nhận ngôn ngữ của bài: tiêu đề, phụ đề, ý, bảng; không tính ghi chú giảng (ngon-ngu-slide L3). */
+export function importLanguageText(src: Pick<ImportSource, "slides">): string {
+  return src.slides
+    .flatMap((s) => [s.title, ...s.subtitle, ...[...s.paragraphs, ...s.smartArt].map((p) => p.text), ...s.tables.flat(2)])
+    .join("\n");
+}
+
 export function importSourceText(src: Pick<ImportSource, "slides">): string {
   return src.slides
     .map((s) => {
@@ -759,10 +767,11 @@ export function rowsForSlide(s: ImportedSlide, opts: { first: boolean; how?: "sa
 }
 
 /** Cách "Giữ ý": mỗi slide gốc thành (các) dòng dàn ý theo đúng thứ tự, chia phần như dàn ý cũ (P14, P21). */
-export function keepOutline(src: Pick<ImportSource, "slides">, title: string): Outline {
+export function keepOutline(src: Pick<ImportSource, "slides">, title: string, lang?: string | null): Outline {
   const deckTitle = src.slides[0]?.title;
-  const slides = src.slides.flatMap((s, i) => rowsForSlide(s, { first: i === 0, deckTitle }));
-  const o = finalizeParts(inferParts({ title: stripEmoji(title).slice(0, OUTLINE_LIMITS.title), slides }));
+  // Dòng tách ra mang đuôi "(tiếp)" theo ngôn ngữ của bài.
+  const slides = src.slides.flatMap((s, i) => rowsForSlide(s, { first: i === 0, deckTitle })).map((r) => ({ ...r, title: localizeCont(r.title, lang) }));
+  const o = finalizeParts(inferParts({ title: stripEmoji(title).slice(0, OUTLINE_LIMITS.title), slides }, lang));
   // Các slide giữa Bìa và slide Mở phần đầu tiên (Nội dung bài học, Mục tiêu) không phải một phần Nội dung: thành phần Mục
   // tiêu nếu có slide mục tiêu, không thì thuộc phần Bìa. Nhờ vậy số phần trên bìa phần khớp số trong bài gốc.
   const firstContent = o.parts.find((p) => p.role === "content");
@@ -865,7 +874,7 @@ function withEmphasis(config: Record<string, unknown>, marks: PptxEmphasis[]): R
   return same ? marked : plain;
 }
 
-export function importedSlideFor(row: OutlineSlide, src: Pick<ImportSource, "slides"> | null, sectionNo = ""): GeneratedSlide | null {
+export function importedSlideFor(row: OutlineSlide, src: Pick<ImportSource, "slides"> | null, sectionNo = "", lang?: string | null): GeneratedSlide | null {
   const o = row.origin;
   if (!src || !o || !isImportedRow(row)) return null;
   const idx = src.slides.findIndex((s) => s.n === o.slides[0]);
@@ -894,6 +903,7 @@ export function importedSlideFor(row: OutlineSlide, src: Pick<ImportSource, "sli
     if (layout === "section" && sectionNo) config.sectionNumber = sectionNo;
     if (row.title.trim() && layout !== "quote") config.title = row.title.trim();
   }
+  if (typeof config.title === "string") config.title = localizeCont(config.title, lang);
   for (const key of ["outlineId", "aiGenerated", "presenterNote"]) delete config[key];
   return {
     type: "content",
@@ -953,10 +963,11 @@ export function expandVerbatim(o: Outline, src: Pick<ImportSource, "slides">): O
 }
 
 /** Dàn ý "Soạn lại mạch" từ đầu ra thô của AI. */
-export function restructureOutline(raw: unknown, src: Pick<ImportSource, "slides">, minutes: number): { outline: Outline; warnings: string[] } {
+export function restructureOutline(raw: unknown, src: Pick<ImportSource, "slides">, minutes: number, lang?: string | null): { outline: Outline; warnings: string[] } {
   const { outline, warnings } = normalizeOutline(originsFromAi(raw, src.slides.length), minutes, {
     sourceKind: "document",
     sourceText: importSourceText(src),
+    lang,
   });
   return { outline: expandVerbatim(outline, src), warnings };
 }

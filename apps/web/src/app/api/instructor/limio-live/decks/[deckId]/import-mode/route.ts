@@ -5,8 +5,9 @@ import { readJson } from "@/lib/apiHelpers";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { isValidMinutes, outlineWarnings } from "@/lib/limioLiveOutline";
-import { sanitizeImportSource } from "@/lib/limioLivePptx";
+import { importLanguageText, sanitizeImportSource } from "@/lib/limioLivePptx";
 import { aiFailure, buildImportOutline, isImportMode } from "@/lib/limioLivePptxServer";
+import { detectLanguage, sanitizeDeckLanguage } from "@/lib/limioLiveLanguage";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -22,7 +23,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const deck = await prisma.liveDeck.findFirst({
     where: { id: params.deckId, userId },
-    select: { id: true, title: true, outlineMinutes: true, importSource: true, _count: { select: { slides: true } } },
+    select: { id: true, title: true, outlineMinutes: true, importSource: true, language: true, sourceIntent: true, _count: { select: { slides: true } } },
   });
   const src = deck ? sanitizeImportSource(deck.importSource) : null;
   if (!deck || !src) return NextResponse.json({ error: "not_found" }, { status: 404 });
@@ -32,15 +33,16 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   if (!isImportMode(body?.mode)) return NextResponse.json({ error: "validation_failed", details: "mode" }, { status: 400 });
   const mode = body.mode;
   const minutes = isValidMinutes(body.minutes) ? body.minutes : (deck.outlineMinutes ?? 30);
+  // Ngôn ngữ đã ghi (hoặc giảng viên đã chọn); bài nhập trước khi có cột ngôn ngữ thì nhận từ chữ của slide gốc.
+  const language = sanitizeDeckLanguage(deck.language) ?? detectLanguage(importLanguageText(src));
 
+  // "Giữ ý" dùng AI chỉ để viết thêm slide tương tác: AI chưa cấu hình thì vẫn đổi được (tao-bai-giang-mot-o.md, M18).
   let openai: Awaited<ReturnType<typeof getOpenaiClient>> | null = null;
-  if (mode === "restructure") {
-    try {
-      openai = await getOpenaiClient();
-    } catch (e) {
-      if ((e as Error).message === "openai_not_configured") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
-      throw e;
-    }
+  try {
+    openai = await getOpenaiClient();
+  } catch (e) {
+    if ((e as Error).message !== "openai_not_configured") throw e;
+    if (mode === "restructure") return NextResponse.json({ error: "openai_not_configured" }, { status: 503 });
   }
 
   const enc = new TextEncoder();
@@ -51,7 +53,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
       try {
         let built;
         try {
-          built = await buildImportOutline(userId, src, deck.title, minutes, mode, openai);
+          built = await buildImportOutline(userId, src, deck.title, minutes, mode, openai, language, deck.sourceIntent);
         } catch (e) {
           const f = aiFailure(e);
           if (f) return send({ type: "error", ...f });
@@ -61,7 +63,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
         const warnings = [...built.warnings, ...outlineWarnings(built.outline, minutes).filter((w) => !built.warnings.includes(w))];
         await prisma.liveDeck.update({
           where: { id: deck.id },
-          data: { outline: built.outline as unknown as object, outlineMinutes: minutes, outlineConfirmedAt: null },
+          data: { outline: built.outline as unknown as object, outlineMinutes: minutes, outlineConfirmedAt: null, ...(deck.language ? {} : { language }) },
         });
         await emitLiveEvent(userId, LearningEventType.LiveDeckOutlineGenerated, {
           deckId: deck.id,
@@ -72,6 +74,9 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           sourceKind: "document",
           sourceFormat: "pptx",
           importMode: mode,
+          language,
+          hasIntent: !!deck.sourceIntent,
+          interactionsAdded: built.interactionsAdded,
           importedSlides: src.slides.length,
         });
         send({ type: "done", outline: built.outline, warnings });

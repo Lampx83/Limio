@@ -11,6 +11,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { DURATIONS, slideRange, type Outline } from "@/lib/limioLiveOutline";
 import type { PptxDeck } from "@/lib/pptxImport";
 import { appendBack, estimateRestructureTokens, importSourceText, toImportedSlide, type ImportReport } from "@/lib/limioLivePptx";
+import { takeHandedOffPptx } from "@/lib/limioLiveCreateSource";
 import CompareView from "./CompareView";
 
 const MAX_MB = 50;
@@ -28,8 +29,8 @@ const ERROR_TEXT: Record<string, string> = {
   validation_failed: "Bài trình chiếu quá ít chữ để AI soạn lại mạch. Hãy dùng cách \u201cGiữ ý, làm đẹp lại\u201d.",
   openai_not_configured: "Hệ thống AI chưa được cấu hình. Hãy dùng cách \u201cGiữ ý, làm đẹp lại\u201d hoặc báo quản trị viên.",
   global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau, hoặc dùng cách \u201cGiữ ý, làm đẹp lại\u201d.",
-  daily_token_cap: "Bạn đã dùng hết hạn mức AI hôm nay. Cách \u201cGiữ ý, làm đẹp lại\u201d vẫn dùng được vì không cần AI.",
-  monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Cách \u201cGiữ ý, làm đẹp lại\u201d vẫn dùng được vì không cần AI.",
+  daily_token_cap: "Bạn đã dùng hết hạn mức AI hôm nay. Cách \u201cGiữ ý, làm đẹp lại\u201d vẫn nhập được, chỉ chưa có slide tương tác do AI viết thêm.",
+  monthly_token_cap: "Bạn đã dùng hết hạn mức AI của tháng này. Cách \u201cGiữ ý, làm đẹp lại\u201d vẫn nhập được, chỉ chưa có slide tương tác do AI viết thêm.",
   empty_outline: "AI chưa soạn được dàn ý. Hãy thử lại.",
   openai_error: "AI đang bận hoặc gặp lỗi. Vui lòng thử lại sau ít phút.",
   json_parse_failed: "AI trả lời chưa đúng định dạng. Vui lòng thử lại.",
@@ -78,6 +79,7 @@ export default function PptxImportFlow() {
   const [minutes, setMinutes] = useState<number>(30);
   const [suggested, setSuggested] = useState<number | null>(null);
   const [mode, setMode] = useState<Mode>("keep");
+  const [intent, setIntent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   // Bài nháp tạo ở lần gửi đầu; đổi cách chuyển sau đó dựng lại dàn ý trên chính bài này (không tải file lên lại).
@@ -134,6 +136,18 @@ export default function PptxImportFlow() {
     }
   };
 
+  // Tệp đính kèm ở trang Tạo bài giảng: đọc ngay, không bắt chọn lại; mô tả của giảng viên đi cùng lên máy chủ
+  // (docs/tieu-chi/tao-bai-giang-mot-o.md, M7).
+  useEffect(() => {
+    const h = takeHandedOffPptx();
+    if (h) {
+      setIntent(h.intent);
+      void pick(h.file);
+    }
+    // Chỉ chạy một lần khi mở trang.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /** Dàn ý theo cách `m`: lần đầu tải file lên và tạo bài; sau đó dựng lại trên bài đã tạo, hoặc lấy bản đã dựng. */
   const showOutline = async (m: Mode) => {
     if (!read) return;
@@ -148,6 +162,7 @@ export default function PptxImportFlow() {
         fd.set("file", read.file);
         fd.set("minutes", String(minutes));
         fd.set("mode", m);
+        if (intent) fd.set("intent", intent);
         const res = await fetch(apiUrl("/api/instructor/limio-live/import-pptx"), { method: "POST", body: fd });
         if (!res.ok || !res.body) {
           const j = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -454,7 +469,7 @@ export default function PptxImportFlow() {
                 "Chữ, hình và ghi chú giảng giữ nguyên; hệ thống chỉ chọn bố cục phù hợp cho từng slide.",
                 "Hợp khi bài đã có mạch tốt và chỉ cần giao diện mới, chữ lớn hơn, dễ đọc hơn trên máy chiếu.",
               ]}
-              cost="Không dùng AI, không tốn lượt. Slide nào chưa có ghi chú giảng thì để trống; thầy/cô có thể nhờ AI viết sau."
+              cost="Giữ nguyên slide gốc; AI chỉ viết thêm các slide tương tác (tốn ít lượt). Slide nào chưa có ghi chú giảng thì để trống; thầy/cô có thể nhờ AI viết sau."
             />
             <ModeCard
               active={mode === "restructure"}

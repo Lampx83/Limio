@@ -40,6 +40,8 @@ export default async function SharedLiveDeckPage({ params }: Props) {
     <SharedDeckView
       deckId={deck.id}
       motif={deck.motif}
+      language={deck.language}
+      imageFrame={deck.imageFrame}
       title={deck.title}
       ownerName={deck.ownerName}
       theme={deck.theme}

@@ -195,7 +195,9 @@ gồm nhiều ca" — đã lỗi thời, đừng lặp lại.)
   diện hiện biểu ngữ "Bạn đã tạo nhiều đề. Bật chế độ Nâng cao để xem chỉ số chất lượng câu
   hỏi chi tiết?" với nút "Bật ngay" và "Bỏ qua". Không có công tắc quay lại mức Cơ bản.
 - **Câu tự luận** trong đề có ô **"Rubric (tuỳ chọn)"** (ô soạn thảo định dạng, gợi ý "Tiêu chí chấm bài…")
-  và "Số từ tối thiểu (0 = không yêu cầu)".
+  và "Số từ tối thiểu (0 = không yêu cầu)". Khi chấm, rubric hiện ngay trên bài làm trong khối thu gọn
+  **"Rubric chấm"** (bấm để mở), cả ở trang "Chấm bài" lẫn trang "Xem bài làm" của từng lượt thi; câu
+  không có rubric thì không hiện khối này.
 - Nút xuất bản vẫn ghi "Publish". **Publish chỉ làm đề sẵn sàng, không tự mở thi**; hộp thoại sau Publish
   dẫn sang "Tổ chức thi →". Đề luyện thi (đề thi thử, mục 12) cho học viên đã ghi danh làm ngay, không cần ca.
 - Mỗi thẻ đề có nút "Xoá"; đề đã có lượt thi thì nút khoá kèm lý do ("Đề đã có lượt thi nên không xoá được.").
@@ -513,20 +515,30 @@ Menu Limio-Live → "Bài giảng của tôi" (`/instructor/limio-live`): nút *
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Từ mô tả chủ đề hoặc tài liệu** (`/instructor/limio-live/from-document`, tiêu đề "Tạo bài giảng"): chọn tab
-  **Mô tả chủ đề** (15–2.000 ký tự, có 4 nút "Ví dụ mẫu"; nêu chủ đề, người học và điều người học làm được),
-  **Tải tệp lên** (.docx, PDF, .txt, .md, tối đa 10 MB; PDF scan không đọc được chữ) hoặc **Dán văn bản**. Tab
-  Mô tả chủ đề có công tắc **"Tìm thêm nguồn trên internet"** (chỉ hiện khi quản trị đã cấu hình dịch vụ tìm
-  kiếm; bật thì số liệu và trích dẫn chỉ dùng khi có trong trang đã đọc, kèm nguồn ở chân slide và slide cuối
-  liệt kê trang đã đọc; tắt thì AI viết từ kiến thức chung, không đưa số liệu). Chọn **Thời lượng**: 15 phút
-  (9–12 slide), 30 phút (16–20), 45 phút (22–28). Bấm **"Soạn dàn ý"** (20–90 giây) → sang trang Dàn ý. Bài từ
-  mô tả luôn kèm lời nhắc "Nội dung do AI viết từ kiến thức chung… thầy/cô cần kiểm tra trước khi dạy". Dòng
-  phụ "Soạn thủ công từ bài trống" mở hộp "Tạo bài giảng" (ô "Tên bài giảng", "Nhóm (tuỳ chọn)").
+- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Thầy/cô muốn soạn bài giảng gì? Có
+  tài liệu thì đính kèm một tệp, AI sẽ bám sát tài liệu đó." và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
+  người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** (đã có tệp thì thành "Đổi tài liệu"); kéo
+  thả tệp vào ô cũng được. **Mỗi bài chỉ một tài liệu**: Word .docx, PDF, .txt, .md tối đa 10 MB, hoặc PowerPoint
+  .pptx tối đa 50 MB; tệp mới thay tệp cũ, kèm dòng báo. Dán đoạn dài hơn 2.000 ký tự vào ô (khi chưa có tệp) thì
+  đoạn đó thành tài liệu "Văn bản dán" (có nút "Đưa lại vào ô mô tả"). Dòng nhắc dưới ô nói AI sẽ làm gì:
+  - Không tài liệu: AI soạn từ kiến thức chung theo mô tả (cần ít nhất 15 ký tự); có công tắc **"Tìm thêm nguồn
+    trên internet"** (chỉ hiện khi quản trị đã cấu hình dịch vụ tìm kiếm; bật thì số liệu và trích dẫn chỉ dùng khi
+    có trong trang đã đọc, kèm nguồn ở chân slide và slide cuối liệt kê trang đã đọc). Có 4 nút "Ví dụ mẫu". Bài
+    từ mô tả luôn kèm lời nhắc "Nội dung do AI viết từ kiến thức chung… thầy/cô cần kiểm tra trước khi dạy".
+  - Có tài liệu: AI bám sát tài liệu và làm theo mô tả (mô tả lúc này là yêu cầu của thầy/cô, không bắt buộc).
+  - Tài liệu là PowerPoint: nút thành **"Nhập PowerPoint"**, mở trang nhập với tệp đã đọc sẵn, mô tả mang theo.
+  Chọn **Thời lượng** 15 phút (9–12 slide), 30 phút (16–20), 45 phút (22–28) hoặc **90 phút** (42–50), bấm
+  **"Soạn dàn ý"** (20–90 giây) → sang trang Dàn ý. Liên kết phụ "Soạn thủ công" mở hộp "Tạo bài giảng" (ô "Tên bài
+  giảng", "Nhóm (tuỳ chọn)").
+- **Tương tác ở mọi cách tạo:** bài có ít nhất 5 slide tương tác thuộc ít nhất 3 loại (90 phút: ít nhất 10, 4
+  loại); bảng trắng tối đa 1. AI soạn thiếu thì hệ thống tự gọi AI bổ sung; không bổ sung được thì dàn ý có cảnh
+  báo "Chưa bổ sung được slide tương tác tự động…". Dưới dàn ý có nhắc "Bài nên có ít nhất 5 slide tương tác (hiện
+  có n)" khi thầy/cô xoá bớt, và nhắc khi quá nửa slide nội dung là Chữ và hình.
 - **Từ PowerPoint** (`/instructor/limio-live/from-pptx`, "Tạo bài giảng từ PowerPoint"), 4 bước: "Tải file"
-  (chỉ .pptx, tối đa 10 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
+  (chỉ .pptx, tối đa 50 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
   tính vào dung lượng lưu trữ; trang báo số slide, ghi chú giảng, hình, bảng, biểu đồ và phần chỉ lấy được
-  chữ; chọn "Thời lượng buổi giảng") → "Chọn cách chuyển" (thẻ **"Giữ ý, làm đẹp lại"** — mặc định, mỗi slide gốc
-  thành một slide Limio, không dùng AI, không tốn lượt; hoặc **"Soạn lại mạch"** — AI dựng dàn ý theo mạch Mục
+  chữ; chọn "Thời lượng buổi giảng") → "Chọn cách chuyển" (thẻ **"Giữ ý, làm đẹp lại"** — mặc định, AI chỉ viết thêm các slide tương tác (tốn ít lượt), mỗi slide gốc
+  thành một slide Limio, giữ nguyên chữ và hình; hoặc **"Soạn lại mạch"** — AI dựng dàn ý theo mạch Mục
   tiêu, Hook, các phần có bìa phần, Tổng kết, ghi chú giảng gốc giữ nguyên chữ, tốn token) → "Đối chiếu"
   (hai cột "Slide gốc" / "Dàn ý mới", slide gốc chưa có trong dàn ý có nút "Thêm lại vào dàn ý") → "Sửa dàn
   ý và tạo slide".
@@ -568,8 +580,14 @@ trình sửa: chưa kiểm chứng.
 
 **Giao diện và thương hiệu:** nút **Giao diện** có 18 giao diện trong 4 nhóm — Cơ bản (Trắng, Kem, Limio, Giấy
 ấm), Màu pastel (Bạc hà, Trời, Hồng phấn, Oải hương, Đào, Biển), Đơn sắc (Mono xám, lam, lục, đen), Nền tối
-(Đêm xanh, Rừng đêm, Mận, Mực; nền tối chỉ áp cho slide bố cục) — và "Hoa văn của cả bài" (Tự động, Chọn một,
-Không dùng). Hộp **Thương hiệu của bài giảng**: "Của <tên trường>" (chỉ khi trường có bộ thương hiệu), "Riêng
+(Đêm xanh, Rừng đêm, Mận, Mực; nền tối chỉ áp cho slide bố cục) — "Hoa văn của cả bài" (Tự động, Chọn một,
+Không dùng), **"Khung hình"** (Tự động theo hoa văn, Bo góc, Tròn, Vòm, Lục giác, Hình giọt, Lá, Khung lệch) cho ô hình
+của mọi slide Chữ và hình. Hộp Sửa slide của bố cục Chữ và hình có **"Kiểu trình bày"** ("Tự động" xen kẽ; "Hình bên
+phải", "Hình bên trái", "Hình tràn nửa slide", "Hình trên, ý dưới", "Hình nền, khối chữ phủ" — hai kiểu này cần ảnh
+thật —, "Hình nhỏ có chú thích") và **"Khung hình"** riêng của slide ("Theo bài" hoặc một khung). Menu Giao diện còn có **"Ngôn ngữ của slide"** (Tiếng Việt, Tiếng Anh, Tiếng Trung, Tiếng Nhật, Tiếng Hàn, Tiếng Pháp, Tiếng
+Đức, "Tự nhận lại theo nội dung"; bài mới tự nhận theo tài liệu hoặc mô tả, mô tả ghi rõ "bằng tiếng Anh" thì theo đó).
+AI viết slide mới và các chữ tự thêm trên slide ("(tiếp)", "Nguồn tham khảo", "Nguồn ảnh"…) theo ngôn ngữ này; đổi
+ngôn ngữ không dịch các slide đã có. Hỏi đáp "Nhờ AI" vẫn trả lời giảng viên bằng tiếng Việt. Hộp **Thương hiệu của bài giảng**: "Của <tên trường>" (chỉ khi trường có bộ thương hiệu), "Riêng
 cho bài này" (logo PNG/JPG/WebP ≤ 5 MB; vị trí 4 góc; cỡ Nhỏ/Vừa/Lớn; chỗ hiện Mọi slide/Trừ bìa/Bìa và tóm
 tắt; bảng màu 3 ô Màu chính/Màu phụ/Màu nhấn, "Gợi ý màu từ logo"; nền Theo giao diện/Sáng xuyệt tông/Tối xuyệt
 tông; "Gỡ toàn bộ thương hiệu"), hoặc "Không dùng". Cấp trường do quản trị trường đặt (mục 10).
@@ -620,15 +638,14 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   nộp của nhiệm vụ có "Xem bài" (khung xem trước có "Trước/Sau", phím ←/→); nhiệm vụ "bạn chấm" có "Chấm bài"
   với "Đạt" / "Chưa đạt", chấm xong tự sang bài kế.
 
-## 17. Trợ lý Limio ở trang chủ giảng viên (mới, `components/TeacherAssistant.tsx`)
+## 17. Lily, trợ lý ảo của giảng viên (mới, `components/TeacherAssistant.tsx`, `components/assistant/`)
 
-Khung đầu trang chủ: lời chào "{Chào buổi sáng/chiều/tối}, {tên}" và "Hôm nay thầy/cô muốn làm gì?", ô hỏi "Hỏi
-Limio, ví dụ: làm sao tạo đề thi?", dòng "Chưa có ý tưởng? Để Limio gợi ý cho thầy/cô", và "Hoặc bắt đầu nhanh"
-(các thẻ: Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp,
-Mở khoá "<khoá gần nhất>", Soạn đề vấn đáp). Khi trò chuyện, câu trả lời kèm liên kết dẫn thẳng vào tính năng
-(kể cả đúng khoá của giảng viên); "Xem lại gợi ý" để thoát chế độ trò chuyện; có chỉ báo "Limio đang soạn câu
-trả lời…". Mỗi câu hỏi trừ hạn mức Token AI. Trợ lý chỉ chọn điểm đến trong danh mục cố định, nên không dẫn
-tới trang không tồn tại; nó trả lời cách dùng theo kho hướng dẫn `teacherAssistantGuide.ts` (lấy từ tệp này).
+**Lily là trợ lý ảo của thầy/cô trên Limio, xưng "em" và gọi giảng viên là "thầy/cô"** (Limio là tên hệ thống, Lily là tên trợ lý), biểu tượng lát dưa hấu **màu hồng**. Khác với **Trợ giảng AI** (nút tròn nổi xanh, biểu tượng robot, chỉ ở trang bài học của học viên đã ghi danh, gợi ý từng bước không đưa thẳng đáp án; không hiện ở chế độ xem trước). Hai trợ lý không dùng chung cuộc trò chuyện.
+- **Trang chủ giảng viên:** khung đầu trang mở bằng lời chào của Lily: dòng "Lily · Trợ lý ảo của thầy/cô trên Limio", "{Chào buổi sáng/chiều/tối}, {tên}!", "Em rất vui được giúp thầy/cô hôm nay. Thầy/cô muốn làm gì?…". Có ô hỏi "Hỏi Lily, ví dụ: tạo đề thi" (một dòng, có "…" khi dài) và ngay dưới là dòng nêu phạm vi, do Lily nói ở ngôi thứ nhất, xưng "em": "Nhiệm vụ chính của em là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...)."; dòng "Chưa có ý tưởng? Để em gợi ý cho thầy/cô", và "Hoặc bắt đầu nhanh" (các thẻ: Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Mở khoá "<khoá gần nhất>", Soạn đề vấn đáp).
+- **Mọi trang khác của giảng viên:** nút nổi hình viên thuốc màu hồng "Hỏi Lily" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat (trên điện thoại là tấm trượt từ dưới lên). Nút nổi không hiện ở trang chủ vì trang chủ đã có khung lớn.
+- **Cuộc trò chuyện liền mạch:** khung ở trang chủ và ngăn kéo cùng một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Lily đưa mở trong cùng tab; sang trang khác thì ngăn kéo tự thu lại, thầy/cô thao tác xong bấm "Hỏi Lily" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
+- **Khi trò chuyện:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Em đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". Mỗi câu hỏi trừ hạn mức Token AI.
+- Lily chỉ chọn điểm đến trong danh mục cố định, chỉ trả lời nghiệp vụ Limio, không tiết lộ kỹ thuật, và trả lời cách dùng theo kho `teacherAssistantGuide.ts` (lấy từ tệp này).
 
 ## Không được viết (chưa có hoặc chưa tới tay giảng viên)
 

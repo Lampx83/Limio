@@ -1,26 +1,45 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ChevronDown } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { DECK_LANGUAGES } from "@/lib/limioLiveLanguage";
 import type { SlideMotifId } from "@/lib/limioLiveMotifs";
 import { SLIDE_THEMES, SLIDE_THEME_GROUPS, type SlideThemeId } from "../slideThemes";
 import { DeckMotifPicker } from "./MotifPicker";
+import { IMAGE_FRAMES, IMAGE_FRAME_LABEL, type ImageFrame } from "@/lib/limioLiveImageStyle";
+
+/** Mẫu nhỏ của từng khung hình (cùng cách cắt như slideLayouts.css). */
+const FRAME_SWATCH: Record<ImageFrame, CSSProperties> = {
+  round: { borderRadius: 7 },
+  circle: { borderRadius: "50%" },
+  arch: { borderRadius: "999px 999px 5px 5px" },
+  hex: { clipPath: "polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)" },
+  blob: { borderRadius: "62% 38% 46% 54% / 46% 52% 48% 54%" },
+  leaf: { borderRadius: "16px 4px 16px 4px" },
+  offset: { borderRadius: 6, boxShadow: "4px 4px 0 0 rgb(101 163 13 / .4)" },
+};
 
 /**
- * Nút "Giao diện" duy nhất của bài giảng: một bảng ba phần là kiểu slide (gom theo nhóm Cơ bản, Màu pastel, Nền tối),
- * hoa văn, logo và màu thương hiệu. Trước đây thương hiệu là một nút riêng cạnh đây nên giảng viên dễ nhầm hai chỗ.
+ * Nút "Giao diện" duy nhất của bài giảng: một bảng gồm kiểu slide (gom theo nhóm Cơ bản, Màu pastel, Nền tối),
+ * hoa văn, ngôn ngữ của slide, logo và màu thương hiệu. Trước đây thương hiệu là một nút riêng cạnh đây nên giảng viên dễ nhầm hai chỗ.
  */
 export default function ThemePicker({
   value,
   onChange,
   motif,
+  language,
+  imageFrame,
   brand,
 }: {
   value: string;
   onChange: (id: SlideThemeId) => void;
   /** Hoa văn trang trí của cả bài, chọn ngay dưới các giao diện (cùng là "trang phục" của bài giảng). */
   motif?: { value: string | null; auto: SlideMotifId; onChange: (v: string | null) => void };
+  /** Ngôn ngữ của slide (docs/tieu-chi/ngon-ngu-slide.md, L5); null = chọn "Tự nhận lại theo nội dung". */
+  language?: { value: string | null; onChange: (v: string | null) => void };
+  /** Khung hình của các ô hình trong slide Chữ và hình (docs/tieu-chi/chu-va-hinh-kieu-khung.md, K10); null = tự động. */
+  imageFrame?: { value: string | null; auto: ImageFrame; onChange: (v: ImageFrame | null) => void };
   /** Logo và màu thương hiệu đang áp cho bài; "Chỉnh" mở hộp thương hiệu. */
   brand?: { color: string | null; logoUrl: string | null; title: string; detail: string; onEdit: () => void };
 }) {
@@ -103,6 +122,55 @@ export default function ThemePicker({
           {motif && (
             <div className="border-t border-token pt-3">
               <DeckMotifPicker value={motif.value} autoMotif={motif.auto} themeId={current.id} onChange={motif.onChange} />
+            </div>
+          )}
+          {language && (
+            <div className="border-t border-token pt-3">
+              <label htmlFor="deck-lang" className="mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-faint">
+                Ngôn ngữ của slide
+              </label>
+              <select
+                id="deck-lang"
+                value={language.value ?? ""}
+                onChange={(e) => language.onChange(e.target.value || null)}
+                className="input w-full text-sm"
+              >
+                {!language.value && <option value="">Chưa xác định</option>}
+                {DECK_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+                {language.value && <option value="">Tự nhận lại theo nội dung</option>}
+              </select>
+              <p className="mt-1.5 text-xs text-muted">
+                AI viết slide mới và các chữ tự thêm trên slide theo ngôn ngữ này. Đổi ngôn ngữ không dịch các slide đã có.
+              </p>
+            </div>
+          )}
+          {imageFrame && (
+            <div className="border-t border-token pt-3">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-faint">Khung hình</p>
+              <p className="mb-1.5 text-xs text-muted">Hình dạng ô hình ở các slide Chữ và hình của cả bài. Tự động theo hoa văn của bài.</p>
+              <div role="radiogroup" aria-label="Khung hình" className="grid grid-cols-4 gap-1.5">
+                {([null, ...IMAGE_FRAMES] as (ImageFrame | null)[]).map((f) => {
+                  const on = (imageFrame.value ?? null) === f;
+                  const shape = f ?? imageFrame.auto;
+                  return (
+                    <button
+                      key={f ?? "auto"}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      onClick={() => imageFrame.onChange(f)}
+                      className={`grid justify-items-center gap-1 rounded-lg border px-1 py-1.5 text-[11px] font-medium ${on ? "border-brand-600 ring-1 ring-brand-600" : "border-token hover:border-brand-600"}`}
+                    >
+                      <span aria-hidden className="block h-7 w-7" style={{ background: "linear-gradient(145deg, #bfe08a, #f2c6dc)", ...FRAME_SWATCH[shape] }} />
+                      <span className="leading-tight">{f ? IMAGE_FRAME_LABEL[f] : "Tự động"}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
           {brand && (

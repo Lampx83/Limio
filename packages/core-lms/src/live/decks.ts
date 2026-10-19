@@ -75,7 +75,9 @@ export async function updateLiveDeck(
   userId: string,
   /** brand: thương hiệu đã được chuẩn hoá ở tầng web (limioLiveBrand); null = xoá. */
   /** motif: hoa văn của cả bài, đã kiểm tra ở tầng web (limioLiveMotifs); null = tự động. */
-  updates: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null; motif?: string | null },
+  /** language: ngôn ngữ nội dung slide, đã kiểm ở tầng web (DECK_LANGUAGES); null = tự nhận theo nội dung. */
+  /** imageFrame: khung hình của cả bài, đã kiểm ở tầng web (limioLiveImageStyle); null = tự động. */
+  updates: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null; motif?: string | null; language?: string | null; imageFrame?: string | null },
   db: PrismaClient
 ): Promise<LiveDeck> {
   const existing = await db.liveDeck.findUnique({ where: { id: deckId } });
@@ -94,6 +96,8 @@ export async function updateLiveDeck(
       ...(updates.brandOff !== undefined ? { brandOff: updates.brandOff } : {}),
       ...(updates.brandTemplate !== undefined ? { brandTemplate: updates.brandTemplate } : {}),
       ...(updates.motif !== undefined ? { motif: updates.motif } : {}),
+      ...(updates.language !== undefined ? { language: updates.language } : {}),
+      ...(updates.imageFrame !== undefined ? { imageFrame: updates.imageFrame } : {}),
       // brand null (xoá) xử lý ở dưới bằng SQL: ký hiệu Prisma.DbNull so sánh theo danh tính nên không đáng tin khi mô-đun bị nạp hai bản (Next).
       ...(updates.brand ? { brand: updates.brand as Prisma.InputJsonObject } : {}),
     },
@@ -137,6 +141,8 @@ export async function duplicateLiveDeck(
         brandOff: source.brandOff,
         brandTemplate: source.brandTemplate,
         motif: source.motif,
+        language: source.language,
+        imageFrame: source.imageFrame,
         ...(source.brand ? { brand: source.brand as Prisma.InputJsonObject } : {}),
       },
     });

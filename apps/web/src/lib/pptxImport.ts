@@ -773,6 +773,7 @@ function normalizeLevels(ps: PptxParagraph[]): PptxParagraph[] {
 }
 
 /** Thời lượng gợi ý theo số slide (tiêu chí P11). */
+// 90 phút chỉ là một lựa chọn để giảng viên tự chọn, không tự gợi ý (người dùng chốt 2026-10-19).
 export function suggestMinutes(slideCount: number): 15 | 30 | 45 {
   if (slideCount <= 12) return 15;
   if (slideCount <= 19) return 30;

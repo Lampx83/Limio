@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { imageCredit, extractPageImages, pickSlideImages, shortUrl, stripMarkdownMedia, WEB_IMAGES_PER_PAGE, WEB_IMAGES_TOTAL } from "./limioLiveWebImages";
+import { imageCredit, extractPageImages, shortUrl, stripMarkdownMedia, webImageCandidates, WEB_IMAGES_PER_PAGE, WEB_IMAGES_TOTAL } from "./limioLiveWebImages";
 import { referencesOutlineSlide, sanitizeRefs } from "./limioLiveOutline";
 import { draftToSlide } from "./limioLiveGenerate";
 import { sanitizeLayoutConfig } from "./limioLiveSlides";
@@ -15,6 +15,22 @@ describe("extractPageImages (W6, W7)", () => {
     expect(extractPageImages(md, PAGE)).toEqual([
       { url: "https://vi.wikipedia.org/images/ar-lop-hoc.jpg", alt: "Học sinh dùng máy tính bảng xem mô hình ba chiều" },
       { url: "https://cdn.example.org/vr.png", alt: "Kính thực tế ảo" },
+    ]);
+  });
+
+  it("ảnh thiếu chữ thay thế lấy dòng chú thích ngay dưới; không có mô tả nào thì bỏ (W6)", () => {
+    const md = [
+      "![](https://a.org/so-do.jpg)",
+      "*Hình 2. Sơ đồ ba lớp của một hệ thống thực tế tăng cường*",
+      "",
+      "![](https://a.org/khong-chu-thich.jpg)",
+      "",
+      "![](https://a.org/ke-anh-khac.jpg)",
+      "![Ảnh có chữ thay thế](https://a.org/co-alt.jpg)",
+    ].join("\n");
+    expect(extractPageImages(md, "https://a.org/bai")).toEqual([
+      { url: "https://a.org/so-do.jpg", alt: "Hình 2. Sơ đồ ba lớp của một hệ thống thực tế tăng cường" },
+      { url: "https://a.org/co-alt.jpg", alt: "Ảnh có chữ thay thế" },
     ]);
   });
 
@@ -57,41 +73,75 @@ describe("toSourcePages + sanitizeRefs giữ ảnh theo trang", () => {
     expect(refs[0]!.images).toEqual([{ url: "https://a.org/m.jpg", alt: "x" }]);
   });
 
-  it("Tavily: xin chữ dạng markdown để có ảnh", async () => {
+  it("Tavily: xin chữ dạng markdown và ảnh kèm mô tả của từng kết quả, trong cùng một lượt tìm (W6)", async () => {
     let body: Record<string, unknown> = {};
     const fakeFetch = (async (_u: string, init: RequestInit) => {
       body = JSON.parse(String(init.body));
-      return new Response(JSON.stringify({ results: [] }), { status: 200 });
+      return new Response(
+        JSON.stringify({
+          images: [{ url: "https://x.org/khong-gan-trang.jpg", description: "ảnh chung của câu tìm" }],
+          results: [
+            {
+              title: "AR",
+              url: "https://a.org/ar",
+              raw_content: "Nội dung",
+              images: [{ url: "https://a.org/hs.jpg", description: "Students using tablets to view a 3D model" }, { url: 42 }, "x"],
+            },
+          ],
+        }),
+        { status: 200 },
+      );
     }) as unknown as typeof fetch;
-    await tavilyProvider("k", fakeFetch).search("AR", 5);
-    expect(body.include_raw_content).toBe("markdown");
+    const pages = await tavilyProvider("k", fakeFetch).search("AR", 5);
+    expect(body).toMatchObject({ include_raw_content: "markdown", include_images: true, include_image_descriptions: true, search_depth: "basic" });
+    expect(pages[0]!.images).toEqual([{ url: "https://a.org/hs.jpg", alt: "Students using tablets to view a 3D model" }]);
+  });
+
+  it("toSourcePages: ảnh Tavily (có mô tả) đứng trước ảnh trong markdown, bỏ trùng, lọc ảnh rác và ảnh không mô tả (W6, W7)", () => {
+    const long = "Thực tế tăng cường chồng thông tin số lên khung cảnh thật. ".repeat(10);
+    const pages = toSourcePages([
+      {
+        title: "AR",
+        url: "https://a.org/ar",
+        content: `${long}\n![Mô hình trên bàn](https://a.org/m.jpg)\n![Ảnh trùng](https://a.org/hs.jpg)`,
+        images: [
+          { url: "https://a.org/hs.jpg", alt: "Students using tablets" },
+          { url: "https://a.org/logo.png", alt: "Company logo" },
+          { url: "https://a.org/khong-mo-ta.jpg", alt: "" },
+        ],
+      },
+    ]);
+    expect(pages[0]!.images).toEqual([
+      { url: "https://a.org/hs.jpg", alt: "Students using tablets" },
+      { url: "https://a.org/m.jpg", alt: "Mô hình trên bàn" },
+    ]);
   });
 });
 
-describe("pickSlideImages (W8)", () => {
-  const refs = [
-    { n: 1, title: "Thực tế tăng cường", url: "https://vi.wikipedia.org/wiki/AR", images: [{ url: "https://a.org/tablet.jpg", alt: "Học sinh dùng máy tính bảng xem mô hình ba chiều" }] },
-    { n: 2, title: "VR headset", url: "https://b.org/vr", images: [{ url: "https://b.org/kinh.jpg", alt: "Kính thực tế ảo đeo trên đầu" }] },
-  ];
-  const slides = [
-    { index: 0, layout: "cover", text: "Thực tế tăng cường trong lớp học", hasImage: false },
-    { index: 1, layout: "image", text: "Mô hình ba chiều trên máy tính bảng giúp học sinh quan sát", hasImage: false },
-    { index: 2, layout: "image", text: "Kính thực tế ảo thay khung cảnh thật", hasImage: false },
-    { index: 3, layout: "image", text: "Thiết kế hoạt động học", hasImage: false },
-    { index: 4, layout: "image", text: "Mô hình ba chiều", hasImage: true },
-  ];
-
-  it("mỗi slide Chữ và hình nhận ảnh trùng từ nhiều nhất; mỗi ảnh một lần; không đặt lên bìa; slide không hợp hoặc đã có ảnh thì bỏ qua", () => {
-    const picks = pickSlideImages(slides, refs);
-    expect(picks.map((p) => [p.index, p.image.url])).toEqual([
-      [1, "https://a.org/tablet.jpg"],
-      [2, "https://b.org/kinh.jpg"],
-    ]);
-    expect(picks[0]!.ref.n).toBe(1);
+describe("webImageCandidates (W8)", () => {
+  it("đánh mã A1, A2… theo thứ tự trang rồi ảnh, tối đa 8; mỗi mã nhớ trang nguồn", () => {
+    const img = (k: number) => ({ url: `https://a.org/${k}.jpg`, alt: `Ảnh ${k}` });
+    const refs = [
+      { n: 1, title: "Một", url: "https://a.org/1", images: [img(1), img(2), img(3)] },
+      { n: 2, title: "Hai", url: "https://b.org/2" },
+      { n: 3, title: "Ba", url: "https://c.org/3", images: [img(4), img(5), img(6)] },
+      { n: 4, title: "Bốn", url: "https://d.org/4", images: [img(7), img(8), img(9)] },
+    ];
+    const c = webImageCandidates(refs);
+    expect(c.map((x) => x.id)).toEqual(["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8"]);
+    expect(c[3]).toMatchObject({ id: "A4", image: img(4), ref: { n: 3 } });
+    expect(webImageCandidates([{ n: 1, title: "x", url: "https://x.org" }])).toEqual([]);
   });
+});
 
-  it("không có ảnh ứng viên thì không chọn gì", () => {
-    expect(pickSlideImages(slides, [{ n: 1, title: "x", url: "https://x.org" }])).toEqual([]);
+describe("draftToSlide nhận mã ảnh AI chọn (W8)", () => {
+  const os = (layout: "image" | "cards") => ({ id: "o1", kind: "content" as const, layout, title: "AR trong lớp", points: [] });
+  const bullets = ["Một câu đủ ý.", "Hai câu đủ ý.", "Ba câu đủ ý."];
+  it("chỉ slide Chữ và hình giữ mã đúng dạng; none, rỗng, mã lạ thì bỏ", () => {
+    expect(draftToSlide(os("image"), { index: 0, title: "AR", bullets, webImage: "A3" }, "").webImage).toBe("A3");
+    for (const v of ["none", "", "B1", "A", "A123", "<x>"]) expect(draftToSlide(os("image"), { index: 0, title: "AR", bullets, webImage: v }, "").webImage).toBeUndefined();
+    const items = [1, 2, 3].map((n) => ({ heading: `Ý ${n}`, body: "Một câu.", icon: "target" }));
+    expect(draftToSlide(os("cards"), { index: 0, title: "AR", items, webImage: "A1" }, "").webImage).toBeUndefined();
   });
 });
 

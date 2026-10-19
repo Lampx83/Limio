@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useDeckLang } from "../liveLangContext";
 import { createPortal } from "react-dom";
 import { GROUPS_MAX, GROUP_POINTS_MAX, type SlideGroup } from "@/lib/limioLiveGroups";
 import { ICON_LABELS, SLIDE_ICONS, autoGroupIcons } from "@/lib/limioLiveIcons";
@@ -37,6 +38,8 @@ import { motifSlot } from "@/lib/limioLiveMotifs";
 import { useSlideMotif } from "../liveMotifContext";
 import { SlideMotifField, type SlotImage, type SlotImageChange } from "./MotifPicker";
 import { CoverStylePicker } from "./CoverStylePicker";
+import { ImageLookPicker } from "./ImageLookPicker";
+import type { ImageFrame, ImageStyle } from "@/lib/limioLiveImageStyle";
 import OutlineGlyph from "./outline/OutlineGlyph";
 import PickerButton from "./outline/PickerButton";
 
@@ -629,13 +632,18 @@ export default function LayoutEditor({
   // Kiểu bìa cũng là khoá meta, đổi bằng hàng chọn riêng và lưu ngay.
   const savedMotif = typeof config.motif === "string" ? config.motif : undefined;
   const savedCoverStyle = typeof config.coverStyle === "string" ? config.coverStyle : undefined;
+  // Kiểu trình bày và khung hình của Chữ và hình cũng là khoá meta (docs/tieu-chi/chu-va-hinh-kieu-khung.md).
+  const savedImageStyle = typeof config.imageStyle === "string" ? config.imageStyle : undefined;
+  const savedImageFrame = typeof config.imageFrame === "string" ? config.imageFrame : undefined;
   const preview = useMemo(
     () => ({
       ...sanitizeLayoutConfig(layout, d),
       ...(savedMotif ? { motif: savedMotif } : {}),
       ...(savedCoverStyle ? { coverStyle: savedCoverStyle } : {}),
+      ...(savedImageStyle ? { imageStyle: savedImageStyle } : {}),
+      ...(savedImageFrame ? { imageFrame: savedImageFrame } : {}),
     }),
-    [layout, d, savedMotif, savedCoverStyle],
+    [layout, d, savedMotif, savedCoverStyle, savedImageStyle, savedImageFrame],
   );
   // Bản vẽ: như sẽ lưu, kèm dòng nguồn ở chân slide (khoá meta, sanitizeLayoutConfig không giữ).
   const shown = useMemo(() => (typeof d.cite === "string" && d.cite.trim() ? { ...preview, cite: d.cite.trim() } : preview), [preview, d.cite]);
@@ -655,6 +663,13 @@ export default function LayoutEditor({
   };
   /** Đổi kiểu bìa: lưu ngay cùng chữ đang soạn. */
   const setCoverStyle = (v: string) => onSave({ config: { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config), coverStyle: v } });
+  /** Đổi kiểu trình bày hoặc khung hình của Chữ và hình: lưu ngay; null = Tự động / Theo bài. */
+  const setImageLook = (key: "imageStyle" | "imageFrame", v: ImageStyle | ImageFrame | null) => {
+    const next: Cfg = { ...sanitizeLayoutConfig(layout, d), ...keepExtras(config) };
+    if (v) next[key] = v;
+    else delete next[key];
+    onSave({ config: next });
+  };
   /** Ảnh riêng ở ô hình (Chữ và hình): lưu ngay. null = bỏ ảnh; hình minh hoạ hay hoa văn đã chọn vẫn giữ trong motif. */
   const setImage = (c: SlotImageChange) => {
     const base: Cfg = c === null ? withoutImage(d) : { ...d };
@@ -675,7 +690,8 @@ export default function LayoutEditor({
         }
       : null;
   const problems = useMemo(() => layoutTextProblems(layout, preview), [layout, preview]);
-  const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }) : null), [problems, preview, config]);
+  const lang = useDeckLang();
+  const split = useMemo(() => (problems.length ? splitSlideConfig({ ...preview, ...pickMeta(config) }, lang) : null), [problems, preview, config, lang]);
 
   const items: LayoutItem[] = d.items ?? [];
   const setItem = (i: number, patch: Partial<LayoutItem>) =>
@@ -1432,6 +1448,16 @@ export default function LayoutEditor({
             )}
 
             {layout === "cover" && <CoverStylePicker config={preview} themeId={themeId} slideId={slideId} onChange={setCoverStyle} />}
+
+            {layout === "image" && (
+              <ImageLookPicker
+                config={preview}
+                themeId={themeId}
+                slideId={slideId}
+                onStyle={(v) => setImageLook("imageStyle", v)}
+                onFrame={(v) => setImageLook("imageFrame", v)}
+              />
+            )}
 
             {/* Bốn bố cục có chỗ trống cho hoa văn. Ô hình của Chữ và hình còn nhận ảnh riêng (tải lên, dán địa chỉ)
                 và hình minh hoạ theo chủ đề; có ảnh riêng thì ảnh thắng. */}

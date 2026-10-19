@@ -5,6 +5,9 @@ import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup } from "@
 import { z } from "zod";
 import { SLIDE_THEME_IDS } from "@/app/instructor/limio-live/slideThemes";
 import { MOTIF_CHOICES } from "@/lib/limioLiveMotifs";
+import { DECK_LANGUAGES } from "@/lib/limioLiveLanguage";
+import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
+import { IMAGE_FRAMES } from "@/lib/limioLiveImageStyle";
 import { BRAND_TEMPLATE_IDS, brandLogoFilename, sanitizeBrand, validateBrandInput } from "@/lib/limioLiveBrand";
 import { withOrgBrand } from "@/lib/limioLiveBrandServer";
 import { storageFor } from "@/lib/storage";
@@ -23,6 +26,10 @@ const UpdateDeckSchema = z.object({
   brandTemplate: z.enum(BRAND_TEMPLATE_IDS).nullable().optional(),
   // Hoa văn trang trí của cả bài: null = tự động, "none" = không dùng, hoặc mã hoa văn chủ đạo.
   motif: z.enum(MOTIF_CHOICES).nullable().optional(),
+  // Ngôn ngữ nội dung slide (menu Giao diện): null = tự nhận theo nội dung (docs/tieu-chi/ngon-ngu-slide.md, L5).
+  language: z.enum(DECK_LANGUAGES.map((l) => l.code) as [string, ...string[]]).nullable().optional(),
+  // Khung hình của các ô hình trong slide Chữ và hình: null = tự động theo hoa văn (docs/tieu-chi/chu-va-hinh-kieu-khung.md).
+  imageFrame: z.enum(IMAGE_FRAMES).nullable().optional(),
 });
 
 /** Gỡ hoặc thay logo thì dọn tệp cũ (best-effort), trừ khi bài giảng khác (vd. bản sao) còn dùng chung tệp đó. */
@@ -55,6 +62,8 @@ export async function GET(
     if (!deck) {
       return NextResponse.json({ error: "not_found" }, { status: 404 });
     }
+    // Bài cũ chưa có ngôn ngữ: nhận từ nội dung (docs/tieu-chi/ngon-ngu-slide.md, L4).
+    if (!deck.language) deck.language = await resolveDeckLanguage(deck.id);
 
     return NextResponse.json(await withOrgBrand(deck, userId));
   } catch (error) {
@@ -84,7 +93,7 @@ export async function PATCH(
     }
 
     const { groupId, brand: brandRaw, ...restFields } = validation.data;
-    const rest: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null; motif?: string | null } = { ...restFields };
+    const rest: { title?: string; theme?: string; brand?: Record<string, unknown> | null; brandOff?: boolean; brandTemplate?: string | null; motif?: string | null; language?: string | null; imageFrame?: string | null } = { ...restFields };
     let previousLogo: unknown;
     if (brandRaw !== undefined) {
       const v = validateBrandInput(brandRaw);
@@ -101,6 +110,8 @@ export async function PATCH(
     if (groupId !== undefined) {
       deck = await setLiveDeckGroup(params.deckId, userId, groupId, prisma);
     }
+    // "Tự nhận lại theo nội dung": xoá ngôn ngữ đã chọn rồi nhận lại ngay, để trả về ngôn ngữ đang áp dụng.
+    if (deck && rest.language === null) deck = { ...deck, language: await resolveDeckLanguage(params.deckId) };
     if (!deck) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }

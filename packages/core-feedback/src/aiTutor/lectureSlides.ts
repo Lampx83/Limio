@@ -3,7 +3,8 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { AiGenerationError, callJsonModel } from "./generators";
 import { SLIDE_ILLUSTRATIONS, SLIDE_ILLUSTRATION_TOPICS } from "@feedbackme/shared-types";
-import { OUTLINE_KINDS, sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
+import { OUTLINE_KINDS, intentBlock, intentRule, sourceBlock, sourceRule, type LectureSourceKind } from "./lectureOutline";
+import { slideLanguageRule } from "./lectureLanguage";
 
 /**
  * Bước 3 của "tài liệu → bài giảng tương tác": viết NỘI DUNG từng slide theo dàn ý đã được
@@ -34,6 +35,15 @@ export interface SlideDraftsInput {
   /** Toàn bộ dàn ý (ngữ cảnh) và các chỉ số cần viết ở lô này. */
   outline: OutlineSlideInput[];
   batch: number[];
+  /**
+   * Ảnh lấy từ các trang nguồn internet (bài "topic_web"), ứng viên cho ô hình của slide Chữ và hình: mã (A1, A2…),
+   * mô tả, trang nguồn. Có thì AI chọn một mã hoặc "none" ở trường webImage (docs/tieu-chi/nguon-web-link-anh.md, W8).
+   */
+  webImages?: Array<{ id: string; description: string; page: string }>;
+  /** Ngôn ngữ nội dung slide của bài (mã trong DECK_LANGUAGES); thiếu = theo ngôn ngữ của nguồn. */
+  language?: string | null;
+  /** Yêu cầu của giảng viên đi cùng tài liệu (M9). */
+  intent?: string;
 }
 
 export interface RawSlideDraft {
@@ -56,6 +66,8 @@ export interface RawSlideDraft {
   chart: { type: string; labels: string[]; series: Array<{ name: string; values: number[] }>; unit: string };
   /** Chỉ ở bước sinh slide (LECTURE_DRAFTS_SCHEMA): mã hình minh hoạ cho ô hình, hoặc "none". */
   illustration?: string;
+  /** Chỉ khi có ảnh nguồn internet (lectureDraftsSchema): mã ảnh cho ô hình, hoặc "none". */
+  webImage?: string;
 }
 
 const STR = { type: "string" };
@@ -167,6 +179,35 @@ export const LECTURE_DRAFTS_SCHEMA = {
   },
 };
 
+/**
+ * Lược đồ của bước sinh slide khi có ảnh nguồn internet: thêm trường webImage chỉ nhận đúng các mã ảnh của lô này hoặc
+ * "none". Không có ảnh thì đúng bằng LECTURE_DRAFTS_SCHEMA (không có trường này).
+ */
+export function lectureDraftsSchema(webImageIds: readonly string[]) {
+  if (!webImageIds.length) return LECTURE_DRAFTS_SCHEMA;
+  const item = LECTURE_DRAFTS_SCHEMA.properties.slides.items as DraftItemSchema;
+  return {
+    ...LECTURE_DRAFTS_SCHEMA,
+    properties: {
+      slides: {
+        type: "array",
+        items: {
+          ...item,
+          properties: { ...item.properties, webImage: { type: "string", enum: ["none", ...webImageIds] } },
+          required: [...item.required, "webImage"],
+        },
+      },
+    },
+  };
+}
+
+/** Lời dặn chọn ảnh nguồn cho slide Chữ và hình: AI đọc mô tả (có thể bằng tiếng Anh) và đối chiếu với nội dung slide. */
+function webImageSpec(list: NonNullable<SlideDraftsInput["webImages"]>): string {
+  return `Thêm trường webImage: ảnh thật lấy từ các trang nguồn cho ô hình, ưu tiên hơn hình minh hoạ. Chỉ dùng một mã trong danh sách: ${list
+    .map((w) => `${w.id} (${w.description}; trang ${w.page})`)
+    .join(", ")}. Chỉ chọn khi mô tả ảnh nói đúng điều slide này trình bày; ảnh chung chung hoặc lạc đề thì ghi "none". Mỗi ảnh chỉ dùng cho một slide. Trường illustration vẫn chọn như thường (dùng khi ảnh không tải được).`;
+}
+
 /** Lời dặn chọn hình minh hoạ, chỉ gắn vào slide Chữ và hình. */
 const ILLUSTRATION_SPEC = `Thêm trường illustration: hình minh hoạ cho ô hình bên cạnh chữ. Chỉ dùng một mã trong danh sách: ${SLIDE_ILLUSTRATIONS.map(
   (id) => `${id} (${SLIDE_ILLUSTRATION_TOPICS[id]})`,
@@ -216,7 +257,7 @@ Quy tắc bắt buộc:
 2. Bám đúng tiêu đề, bố cục và ý chính của dàn ý; có thể diễn đạt lại cho rõ nhưng không đổi ý nghĩa, không thêm ý mới ngoài ${kind === "document" ? "tài liệu" : "phạm vi của dàn ý"}.
 3. Văn phong khoa học, rõ ràng. Mọi mô tả, ý chính, giải thích phải là CÂU HOÀN CHỈNH có chủ ngữ và vị ngữ, kết thúc bằng dấu chấm. KHÔNG viết cụt, không chỉ liệt kê cụm từ.
 4. ${sourceRule(kind, "slides")}
-5. KHÔNG dùng emoji hay ký hiệu trang trí. Viết bằng tiếng Việt (giữ nguyên thuật ngữ tiếng Anh nếu ${kind === "document" ? "tài liệu dùng" : "ngành quen dùng"}).
+5. KHÔNG dùng emoji hay ký hiệu trang trí. ${slideLanguageRule(input.language, kind === "document" ? "tài liệu dùng" : "ngành quen dùng")}
 6. Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao. Slide thuộc phần "Dẫn dắt vào bài": chỉ cách dẫn để tạo tò mò (dừng một nhịp, mời cả lớp nghĩ hoặc trả lời, chưa giải đáp ngay và hẹn sẽ quay lại). Slide kết bài: gợi ý nói chậm, nối câu kết với câu hỏi mở đầu, rồi cảm ơn lớp.
 7. Mỗi bố cục chỉ điền các trường được yêu cầu; mọi trường khác để chuỗi rỗng hoặc mảng rỗng (với "table" và "chart" không dùng: head, rows, labels, series là mảng rỗng, type là "bar").
 
@@ -232,7 +273,9 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
       const key = specKeyFor(s);
       return `- Chỉ số ${s.index}, bố cục "${key}", tiêu đề dàn ý: "${s.title}"${
         s.points.length ? `, ý chính dàn ý: ${s.points.map((p) => `"${p}"`).join("; ")}` : ""
-      }.\n  Điền: ${SLIDE_SPEC[key] ?? SLIDE_SPEC.image} ${key === "image" ? ILLUSTRATION_SPEC : 'Trường illustration để "none".'}`;
+      }.\n  Điền: ${SLIDE_SPEC[key] ?? SLIDE_SPEC.image} ${key === "image" ? ILLUSTRATION_SPEC : 'Trường illustration để "none".'}${
+        input.webImages?.length ? ` ${key === "image" ? webImageSpec(input.webImages) : 'Trường webImage để "none".'}` : ""
+      }`;
     })
     .join("\n");
 
@@ -244,8 +287,8 @@ ${overview}
 # Slide cần viết
 ${wanted}
 
-${sourceBlock(kind, input.sourceText)}`;
-  return { system, user };
+${intentBlock(input.intent)}${sourceBlock(kind, input.sourceText)}`;
+  return { system: system + intentRule(input.intent), user };
 }
 
 export async function generateSlideDrafts(
@@ -268,7 +311,7 @@ export async function generateSlideDrafts(
     system,
     user,
     "lecture_slides",
-    LECTURE_DRAFTS_SCHEMA,
+    lectureDraftsSchema((input.webImages ?? []).map((w) => w.id)),
     4500,
   );
   await recordAiUsage(userId, model, inputTokens, outputTokens, db);
