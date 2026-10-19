@@ -353,6 +353,14 @@ describe("parseInline", () => {
   it("stripInline bỏ dấu đã ghép cặp", () => {
     expect(stripInline("**Phản hồi** là *thông tin*.")).toBe("Phản hồi là thông tin.");
   });
+  it("tô màu bằng ==chữ==, lồng được với đậm và nghiêng", () => {
+    expect(parseInline("Học ==chủ động== nhé")).toEqual([{ text: "Học " }, { text: "chủ động", mark: true }, { text: " nhé" }]);
+    expect(parseInline("==**a** b==")).toEqual([{ text: "a", bold: true, mark: true }, { text: " b", mark: true }]);
+    expect(stripInline("==Phản hồi== kịp thời")).toBe("Phản hồi kịp thời");
+  });
+  it("dấu == không có cặp đóng giữ nguyên là chữ", () => {
+    expect(stripInline("a == b")).toBe("a == b");
+  });
 });
 
 describe("toggleInlineMarker", () => {
@@ -365,6 +373,11 @@ describe("toggleInlineMarker", () => {
   });
   it("không có đoạn chọn thì không đổi", () => {
     expect(toggleInlineMarker("abc", 1, 1, "*")).toEqual({ value: "abc", start: 1, end: 1 });
+  });
+  it("tô màu rồi bấm lần nữa thì gỡ", () => {
+    const a = toggleInlineMarker("Phản hồi tốt", 9, 12, "==");
+    expect(a).toEqual({ value: "Phản hồi ==tốt==", start: 11, end: 14 });
+    expect(toggleInlineMarker(a.value, a.start, a.end, "==")).toEqual({ value: "Phản hồi tốt", start: 9, end: 12 });
   });
   it("in nghiêng bên trong in đậm không bị coi là đã in nghiêng", () => {
     const r = toggleInlineMarker("**ab**", 2, 4, "*");
@@ -565,5 +578,21 @@ describe("ý của slide Tóm tắt là cả một câu", () => {
   it("tiêu đề thẻ vẫn giữ giới hạn ngắn", () => {
     const c = sanitizeLayoutConfig("cards", { items: [{ heading: "x".repeat(100), body: "Một câu." }, { heading: "B", body: "Hai." }] });
     expect((c.items as Array<{ heading: string }>)[0]!.heading).toHaveLength(MAX_LEN.itemHeading);
+  });
+});
+
+describe("slide Nhóm: biểu tượng (P63)", () => {
+  it("giữ biểu tượng hợp lệ của từng nhóm, bỏ biểu tượng lạ; icons:false chỉ ghi khi tắt", async () => {
+    const { sanitizeLayoutConfig } = await import("./limioLiveSlides");
+    const c = sanitizeLayoutConfig("groups", {
+      title: "t",
+      groups: [
+        { heading: "A", points: ["a"], icon: "shield" },
+        { heading: "B", points: ["b"], icon: "khong-co" },
+      ],
+    });
+    expect((c.groups as any[]).map((g) => g.icon)).toEqual(["shield", undefined]);
+    expect("icons" in c).toBe(false);
+    expect(sanitizeLayoutConfig("groups", { title: "t", icons: false, groups: [{ heading: "A", points: ["a"] }] }).icons).toBe(false);
   });
 });

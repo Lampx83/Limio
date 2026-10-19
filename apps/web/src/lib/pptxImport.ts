@@ -21,6 +21,7 @@ import {
 } from "./xmlLite";
 import { Pkg, resolvePath, type Rel } from "./ooxmlPackage";
 import { openWorkbook, type Workbook } from "./xlsxLite";
+import { analyzeShapes, type Box, type LayoutShape, type ShapePara } from "./pptxLayout";
 
 export { resolvePath };
 
@@ -35,6 +36,12 @@ export interface PptxParagraph {
   level: number;
   /** Đoạn đánh số tự động (buAutoNum). */
   numbered: boolean;
+}
+
+/** Cụm chữ được nhấn trong slide gốc (tiêu chí P52): tô màu ("mark"), đậm hoặc nghiêng một phần đoạn. */
+export interface PptxEmphasis {
+  text: string;
+  kind: "mark" | "bold" | "italic";
 }
 
 export interface PptxImage {
@@ -65,6 +72,16 @@ export interface PptxSlide {
   title: string;
   /** Có placeholder tiêu đề thật (không phải đoán từ khối chữ). */
   hasTitlePlaceholder: boolean;
+  /** Dòng dẫn phía trên tiêu đề ("NỘI DUNG 1", tên đơn vị trên bìa); rỗng nếu không có (tiêu chí P38). */
+  kicker: string;
+  /** Dòng ghi nguồn hình ("Nguồn ảnh minh hoạ: …"); rỗng nếu không có (tiêu chí P40). */
+  credit: string;
+  /** Chú thích hình ("Figure 1b: …"); rỗng nếu không có (tiêu chí P49). */
+  caption: string;
+  /** Cụm từ khoá rải trên slide, mỗi từ một màu (tiêu chí P53); rỗng nếu không có. */
+  words: string[];
+  /** Cụm chữ được nhấn (tiêu chí P52). */
+  emphasis: PptxEmphasis[];
   subtitle: PptxParagraph[];
   paragraphs: PptxParagraph[];
   notes: string;
@@ -144,16 +161,150 @@ function paragraphText(p: XmlEl, flags: Set<PptxFlag>, raw = false): string {
   return raw ? out.replace(/[ \t\u00a0]+$/gm, "") : tidy(out);
 }
 
-function paragraphsOf(txBody: XmlEl | null, flags: Set<PptxFlag>): PptxParagraph[] {
-  const out: PptxParagraph[] = [];
-  for (const p of childrenNamed(txBody, "p")) {
+/**
+ * Các đoạn của một khối chữ, kèm cỡ chữ, đậm và ký hiệu đầu dòng để đọc bố cục (pptxLayout). `bulletDefault`: placeholder
+ * thân kế thừa gạch đầu dòng từ layout, nên coi là có trừ khi đoạn ghi buNone. `emphasis`: nơi gom các cụm chữ nhấn của khối.
+ */
+function paragraphsOf(txBody: XmlEl | null, flags: Set<PptxFlag>, bulletDefault = false, emphasis?: PptxEmphasis[]): ShapePara[] {
+  const out: ShapePara[] = [];
+  const paras = childrenNamed(txBody, "p");
+  if (emphasis) emphasis.push(...emphasisOf(paras));
+  for (const p of paras) {
     const text = paragraphText(p, flags);
     if (!text) continue;
     const pPr = child(p, "pPr");
     const level = Math.max(0, Math.min(8, Number(attr(pPr, "lvl") ?? 0) || 0));
-    out.push({ text, level, numbered: !!child(pPr, "buAutoNum") });
+    const runs = childrenNamed(p, "r").filter((r) => textOf(child(r, "t")).trim());
+    const sizes = runs.map((r) => Number(attr(child(r, "rPr"), "sz"))).filter((n) => Number.isFinite(n) && n > 0);
+    const numbered = !!child(pPr, "buAutoNum");
+    const colors = new Set(runs.map((r) => accentColorOf(child(r, "rPr"))));
+    const color = colors.size === 1 ? [...colors][0]! : null;
+    out.push({
+      text,
+      level,
+      numbered,
+      bullet: numbered || !!child(pPr, "buChar") || (bulletDefault && !child(pPr, "buNone")),
+      size: sizes.length ? Math.max(...sizes) : null,
+      bold: runs.length > 0 && runs.every((r) => attr(child(r, "rPr"), "b") === "1"),
+      ...(color ? { color } : {}),
+    });
   }
   return out;
+}
+
+// ── Chữ nhấn trong đoạn (tiêu chí P52) ──────────────────────────────────────
+
+/** Màu chữ ghi trực tiếp trên run, dạng khoá so sánh được ("srgbClr:C00000", "schemeClr:accent2"); null nếu kế thừa. */
+function colorKeyOf(rPr: XmlEl | null): string | null {
+  const fill = child(rPr, "solidFill");
+  const c = fill ? elements(fill)[0] : null;
+  if (!c) return null;
+  const mods = elements(c)
+    .map((m) => `${localName(m.name)}=${attr(m, "val") ?? ""}`)
+    .join(",");
+  return `${localName(c.name)}:${attr(c, "val") ?? attr(c, "lastClr") ?? ""}${mods ? `/${mods}` : ""}`;
+}
+
+/** Màu trung tính (màu chữ thường, màu nền, đen, trắng, xám) không phải chỗ nhấn. */
+function isNeutralColor(key: string): boolean {
+  const [kind, rest = ""] = key.split(":");
+  const val = rest.split("/")[0]!;
+  if (kind === "schemeClr") return /^(tx|dk|bg|lt)\d$/.test(val) || val === "phClr";
+  if (kind === "prstClr") return /^(black|white|gray|grey|dkGray|ltGray)$/i.test(val);
+  if (kind === "srgbClr" && /^[0-9a-f]{6}$/i.test(val)) {
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(val.slice(i, i + 2), 16) / 255) as [number, number, number];
+    const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    const sat = Math.max(r, g, b) - Math.min(r, g, b);
+    return lum < 0.2 || lum > 0.92 || sat < 0.12;
+  }
+  return kind !== "srgbClr" && kind !== "schemeClr";
+}
+
+/** Màu nhấn của run (không trung tính); null nếu kế thừa hoặc trung tính. */
+function accentColorOf(rPr: XmlEl | null): string | null {
+  const k = colorKeyOf(rPr);
+  return k && !isNeutralColor(k) ? k : null;
+}
+
+/**
+ * Câu nổi bật của cả slide (P52): vài đoạn (không quá một phần tư) mang màu nhấn riêng trong khi phần lớn các đoạn là màu
+ * chữ thường, như câu trích dẫn chốt tô đỏ cuối slide. Đoạn ngắn (nhãn, từ khoá) không tính.
+ */
+function standoutParagraphs(shapes: LayoutShape[]): PptxEmphasis[] {
+  const ps = shapes.flatMap((sh) => sh.paras).filter((p) => p.text.length > 24);
+  if (ps.length < 4 || ps.filter((p) => !p.color).length < ps.length / 2) return [];
+  const count = new Map<string, number>();
+  for (const p of ps) if (p.color) count.set(p.color, (count.get(p.color) ?? 0) + 1);
+  const limit = Math.max(1, Math.floor(ps.length / 4));
+  return ps.filter((p) => p.color && count.get(p.color)! <= limit).map((p) => ({ text: p.text, kind: "mark" as const }));
+}
+
+/**
+ * Các cụm chữ được nhấn trong một khối chữ: tô màu nổi (a:highlight) hoặc màu khác màu chủ đạo của khối → "mark";
+ * đậm hoặc nghiêng một phần đoạn → "bold"/"italic". Cả đoạn đậm hay nghiêng là kiểu của đoạn, không phải chỗ nhấn.
+ */
+function emphasisOf(paras: XmlEl[]): PptxEmphasis[] {
+  const runsOf = (p: XmlEl) => childrenNamed(p, "r").map((r) => ({ text: textOf(child(r, "t")), rPr: child(r, "rPr") }));
+  const weight = new Map<string, number>();
+  for (const p of paras)
+    for (const r of runsOf(p)) {
+      const k = colorKeyOf(r.rPr) ?? "";
+      weight.set(k, (weight.get(k) ?? 0) + r.text.trim().length);
+    }
+  const dominant = [...weight.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "";
+  const out: PptxEmphasis[] = [];
+  for (const p of paras) {
+    const runs = runsOf(p);
+    const solid = runs.filter((r) => r.text.trim());
+    const allB = solid.every((r) => attr(r.rPr, "b") === "1");
+    const allI = solid.every((r) => attr(r.rPr, "i") === "1");
+    let cur: { text: string; kind: PptxEmphasis["kind"] } | null = null;
+    const flush = () => {
+      const t = cur?.text.replace(/\s+/g, " ").trim();
+      if (cur && t && t.replace(/[^\p{L}\p{N}]/gu, "").length >= 2 && !out.some((e) => e.text === t)) out.push({ text: t, kind: cur.kind });
+      cur = null;
+    };
+    for (const r of runs) {
+      if (!r.text.trim()) {
+        if (cur) cur.text += r.text;
+        continue;
+      }
+      const key = colorKeyOf(r.rPr);
+      const kind: PptxEmphasis["kind"] | null =
+        child(r.rPr, "highlight") || (key && key !== dominant && !isNeutralColor(key))
+          ? "mark"
+          : attr(r.rPr, "b") === "1" && !allB
+            ? "bold"
+            : attr(r.rPr, "i") === "1" && !allI
+              ? "italic"
+              : null;
+      if (cur && kind === cur.kind) cur.text += r.text;
+      else {
+        flush();
+        if (kind) cur = { text: r.text, kind };
+      }
+    }
+    flush();
+  }
+  return out;
+}
+
+const plainPara = (p: PptxParagraph): PptxParagraph => ({ text: p.text, level: p.level, numbered: p.numbered });
+
+/** Đổi toạ độ con của nhóm hình sang toạ độ của nhóm cha (tiêu chí P35). */
+type Tf = (b: Box) => Box;
+const IDENTITY: Tf = (b) => b;
+function groupTf(grp: XmlEl, parent: Tf): Tf {
+  const x = path(grp, "grpSpPr", "xfrm");
+  const n = (el: XmlEl | null, a: string) => Number(attr(el, a)) || 0;
+  const off = child(x, "off");
+  const ext = child(x, "ext");
+  const chOff = child(x, "chOff");
+  const chExt = child(x, "chExt");
+  if (!off || !ext || !chOff || !chExt) return parent;
+  const sx = n(chExt, "cx") ? n(ext, "cx") / n(chExt, "cx") : 1;
+  const sy = n(chExt, "cy") ? n(ext, "cy") / n(chExt, "cy") : 1;
+  return (b) => parent({ x: n(off, "x") + (b.x - n(chOff, "x")) * sx, y: n(off, "y") + (b.y - n(chOff, "y")) * sy, cx: b.cx * sx, cy: b.cy * sy });
 }
 
 /** Vị trí khối trên slide (EMU); null nếu file không ghi (placeholder kế thừa từ layout). */
@@ -165,15 +316,11 @@ function boxOf(el: XmlEl): { x: number; y: number; cx: number; cy: number } | nu
   return { x: Number(attr(off, "x")) || 0, y: Number(attr(off, "y")) || 0, cx: Number(attr(ext, "cx")) || 0, cy: Number(attr(ext, "cy")) || 0 };
 }
 
-interface TextShape {
+interface TextShape extends LayoutShape {
   kind: "title" | "subtitle" | "body";
-  paragraphs: PptxParagraph[];
   isPlaceholder: boolean;
   /** Hình khối vẽ (không phải placeholder hay hộp chữ) có chữ. */
   isDrawnShape: boolean;
-  y: number;
-  x: number;
-  order: number;
 }
 
 interface RawSlide {
@@ -184,17 +331,14 @@ interface RawSlide {
   animated: boolean;
 }
 
-/** Thứ tự đọc: trên xuống, trái sang; khối không ghi vị trí (placeholder) giữ thứ tự gốc và đứng trước. */
-const readingOrder = (a: TextShape, b: TextShape) => a.y - b.y || a.x - b.x || a.order - b.order;
-
-async function readTable(frame: XmlEl, flags: Set<PptxFlag>): Promise<string[][]> {
+async function readTable(frame: XmlEl, flags: Set<PptxFlag>, emphasis?: PptxEmphasis[]): Promise<string[][]> {
   const tbl = firstDescendant(frame, "tbl");
   const rows: string[][] = [];
   for (const tr of childrenNamed(tbl, "tr")) {
     rows.push(
       childrenNamed(tr, "tc").map((tc) => {
         if (attr(tc, "hMerge") === "1" || attr(tc, "vMerge") === "1") return "";
-        return paragraphsOf(child(tc, "txBody"), flags)
+        return paragraphsOf(child(tc, "txBody"), flags, false, emphasis)
           .map((p) => p.text)
           .join(" ");
       }),
@@ -376,7 +520,7 @@ export function readSmartArtXml(root: XmlEl | null): PptxParagraph[] {
   return out;
 }
 
-async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): Promise<RawSlide> {
+async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number, slideH: number): Promise<RawSlide> {
   const root = await pkg.xml(part);
   if (!root) throw new PptxError("not_pptx");
   const rels = await pkg.rels(part);
@@ -386,39 +530,41 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
   const tables: string[][][] = [];
   const charts: PptxChart[] = [];
   const smartArt: PptxParagraph[] = [];
+  const emphasis: PptxEmphasis[] = [];
   let connectors = 0;
   let order = 0;
   let fromExcel = 0;
 
-  const areaOf = (el: XmlEl) => {
-    const b = boxOf(el);
+  const areaOf = (el: XmlEl, tf: Tf) => {
+    const raw = boxOf(el);
+    const b = raw ? tf(raw) : null;
     return b && slideArea > 0 ? (b.cx * b.cy) / slideArea : 0;
   };
 
-  const visit = async (el: XmlEl) => {
+  const visit = async (el: XmlEl, tf: Tf) => {
     for (const s of elements(el)) {
       const ln = localName(s.name);
-      if (ln === "grpSp") await visit(s);
+      if (ln === "grpSp") await visit(s, groupTf(s, tf));
       else if (ln === "AlternateContent") {
         const choice = child(s, "Choice");
-        if (choice) await visit(choice);
+        if (choice) await visit(choice, tf);
       } else if (ln === "cxnSp") connectors += 1;
       else if (ln === "sp") {
         const ph = path(s, "nvSpPr", "nvPr", "ph");
         const phType = ph ? (attr(ph, "type") ?? "body") : null;
         if (phType && SKIP_PH.has(phType)) continue;
-        const paragraphs = paragraphsOf(child(s, "txBody"), flags);
-        if (!paragraphs.length) continue;
+        const paras = paragraphsOf(child(s, "txBody"), flags, !!ph && (phType === "body" || phType === "obj"), emphasis);
+        if (!paras.length) continue;
         const isTextBox = attr(path(s, "nvSpPr", "cNvSpPr"), "txBox") === "1";
         const geom = attr(path(s, "spPr", "prstGeom"), "prst");
-        const b = boxOf(s);
+        const raw = boxOf(s);
         shapes.push({
           kind: phType && TITLE_PH.has(phType) ? "title" : phType === "subTitle" ? "subtitle" : "body",
-          paragraphs,
+          paras,
+          name: attr(path(s, "nvSpPr", "cNvPr"), "name") ?? "",
           isPlaceholder: !!ph,
           isDrawnShape: !ph && !isTextBox && !!geom && geom !== "rect",
-          y: b ? b.y : -1,
-          x: b ? b.x : -1,
+          box: raw ? tf(raw) : null,
           order: order++,
         });
       } else if (ln === "pic") {
@@ -438,12 +584,12 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
           flags.add("image_unsupported");
           continue;
         }
-        imageRefs.push({ target: rel.target, ext: ext === "jpeg" ? "jpg" : ext, area: areaOf(s) });
+        imageRefs.push({ target: rel.target, ext: ext === "jpeg" ? "jpg" : ext, area: areaOf(s, tf) });
       } else if (ln === "graphicFrame") {
         const data = path(s, "graphic", "graphicData");
         const uri = attr(data, "uri") ?? "";
         if (uri.endsWith("/table")) {
-          const t = await readTable(s, flags);
+          const t = await readTable(s, flags, emphasis);
           if (t.length) tables.push(t);
         } else if (uri.endsWith("/chart")) {
           const rid = prefixedAttr(child(data, "chart"), "id");
@@ -474,7 +620,7 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
       } else if (ln === "contentPart") flags.add("object");
     }
   };
-  await visit(path(root, "cSld", "spTree") ?? root);
+  await visit(path(root, "cSld", "spTree") ?? root, IDENTITY);
 
   if (shapes.filter((s) => s.isDrawnShape).length >= 3 || connectors > 0) flags.add("shapes");
 
@@ -504,6 +650,11 @@ async function readSlide(pkg: Pkg, part: string, n: number, slideArea: number): 
       layoutType,
       title: "",
       hasTitlePlaceholder: false,
+      kicker: "",
+      credit: "",
+      caption: "",
+      words: [],
+      emphasis,
       subtitle: [],
       paragraphs: [],
       notes,
@@ -543,7 +694,8 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
   if (!pres) throw new PptxError("not_pptx");
   const presRels = await pkg.rels("ppt/presentation.xml");
   const sz = child(pres, "sldSz");
-  const slideArea = (Number(attr(sz, "cx")) || 12192000) * (Number(attr(sz, "cy")) || 6858000);
+  const slideH = Number(attr(sz, "cy")) || 6858000;
+  const slideArea = (Number(attr(sz, "cx")) || 12192000) * slideH;
   const parts = childrenNamed(child(pres, "sldIdLst"), "sldId")
     .map((s) => presRels.get(prefixedAttr(s, "id") ?? ""))
     .filter((r): r is Rel => !!r && !r.external && pkg.has(r.target))
@@ -551,7 +703,7 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
   if (!parts.length) throw new PptxError("no_slides");
 
   const raws: RawSlide[] = [];
-  for (const [i, part] of parts.entries()) raws.push(await readSlide(pkg, part, i + 1, slideArea));
+  for (const [i, part] of parts.entries()) raws.push(await readSlide(pkg, part, i + 1, slideArea, slideH));
 
   // Logo và chân trang tự gõ: lặp ở nhiều slide thì là thiết kế, không phải nội dung.
   const threshold = repeatThreshold(raws.length);
@@ -559,7 +711,7 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
   const textCount = new Map<string, number>();
   for (const r of raws) {
     for (const t of new Set(r.imageRefs.map((x) => x.target))) imgCount.set(t, (imgCount.get(t) ?? 0) + 1);
-    const texts = new Set(r.shapes.filter((s) => !s.isPlaceholder).map((s) => s.paragraphs.map((p) => p.text).join("\n")));
+    const texts = new Set(r.shapes.filter((s) => !s.isPlaceholder).map((s) => s.paras.map((p) => p.text).join("\n")));
     for (const t of texts) textCount.set(t, (textCount.get(t) ?? 0) + 1);
   }
   let droppedRepeatedImages = 0;
@@ -581,26 +733,28 @@ export async function parsePptx(data: ArrayBuffer | Uint8Array): Promise<{ deck:
 
     const shapes = r.shapes.filter((sh) => {
       if (sh.isPlaceholder || raws.length < 3) return true;
-      const rep = (textCount.get(sh.paragraphs.map((p) => p.text).join("\n")) ?? 0) >= threshold;
+      const rep = (textCount.get(sh.paras.map((p) => p.text).join("\n")) ?? 0) >= threshold;
       if (rep) droppedRepeatedText += 1;
       return !rep;
     });
     const title = shapes.find((sh) => sh.kind === "title");
-    let body = shapes.filter((sh) => sh.kind === "body").sort(readingOrder);
-    if (title) {
-      s.title = title.paragraphs.map((p) => p.text).join(" ");
-      s.hasTitlePlaceholder = true;
-    } else {
-      // Không có placeholder tiêu đề: dòng đầu của khối chữ trên cùng nếu ngắn.
-      const top = body[0];
-      if (top && top.paragraphs[0]!.text.length <= 120 && top.paragraphs.length <= 2) {
-        s.title = top.paragraphs[0]!.text;
-        const rest = top.paragraphs.slice(1);
-        body = rest.length ? [{ ...top, paragraphs: rest }, ...body.slice(1)] : body.slice(1);
-      }
-    }
-    s.subtitle = shapes.filter((sh) => sh.kind === "subtitle").flatMap((sh) => sh.paragraphs);
-    s.paragraphs = body.flatMap((sh) => normalizeLevels(sh.paragraphs));
+    // Không có placeholder tiêu đề: tiêu đề, dòng dẫn, dòng nguồn hình và nhãn đọc theo cỡ chữ và vị trí (pptxLayout).
+    const text = analyzeShapes(
+      shapes.filter((sh) => sh.kind === "body"),
+      { h: slideH },
+      title ? title.paras.map((p) => p.text).join(" ") : undefined,
+    );
+    s.title = text.title;
+    s.hasTitlePlaceholder = !!title;
+    s.kicker = text.kicker;
+    s.credit = text.credit;
+    s.caption = text.caption;
+    s.words = text.words;
+    for (const e of standoutParagraphs(shapes.filter((sh) => sh.kind === "body"))) if (!s.emphasis.some((x) => x.text === e.text)) s.emphasis.push(e);
+    s.subtitle = shapes.filter((sh) => sh.kind === "subtitle").flatMap((sh) => sh.paras.map(plainPara));
+    s.paragraphs = text.paragraphs;
+    // Bảng tự vẽ bằng hộp chữ giữ dạng bảng như bảng thật (đứng trước bảng thật nếu có cả hai).
+    s.tables = [...text.tables, ...s.tables];
     s.smartArt = normalizeLevels(s.smartArt);
     return s;
   });

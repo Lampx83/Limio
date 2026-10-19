@@ -171,7 +171,9 @@ export function fromSlidesRule(count: number): string {
 Tài liệu là bài trình chiếu có sẵn của giảng viên gồm ${count} slide; mỗi slide mở đầu bằng "Slide k:", dòng "Ghi chú giảng" là lời giảng viên định nói. Việc của bạn là sắp lại mạch bài cho mạch lạc, không phải viết bài mới.
 9. Mỗi slide ghi "from": các số slide gốc mà slide này lấy nội dung. Giữ nguyên một slide gốc thì ghi đúng một số; gộp các slide gốc nói cùng một ý thì ghi đủ các số đó; tách một slide gốc quá dài thành nhiều slide thì mỗi slide tách ra ghi cùng số đó. Slide mới (mục tiêu, mục lục, hook, slide mở phần, slide tương tác) có "from" là mảng rỗng và ghi vào "basis" các slide gốc làm căn cứ, ví dụ câu hỏi trắc nghiệm về nội dung slide 6 và 7 có "basis" [6, 7]; không có căn cứ thì "basis" rỗng.
 10. Dùng mọi slide gốc có nội dung, mỗi slide gốc ít nhất một lần. Chỉ bỏ slide không mang nội dung (lời cảm ơn, slide "Câu hỏi?", slide trống). Giữ trình tự kiến thức của bài gốc trừ khi đổi chỗ làm mạch rõ hơn.
-11. Slide giữ nguyên một slide gốc thì "title" chép đúng tiêu đề gốc. Slide gộp thì "points" giữ đủ các ý của các slide gốc, không bỏ ý nào. Không thêm kiến thức không có trong bài gốc.`;
+11. Slide giữ nguyên một slide gốc thì "title" chép đúng tiêu đề gốc. Slide gộp thì "points" giữ đủ các ý của các slide gốc, không bỏ ý nào. Không thêm kiến thức không có trong bài gốc.
+12. Slide gốc có dòng dẫn kiểu "NỘI DUNG 1 — …", "Phần 2 — …" hoặc tiêu đề đánh số "2. …" là slide mở phần: dùng đúng tên của nó làm "section" cho phần đó. Slide tài liệu tham khảo (nếu có) giữ nguyên ở cuối bài, sau Tổng kết, ghi "from" đúng số slide.
+13. Hoạt động yêu cầu người học làm (trả lời câu hỏi, phân loại ví dụ, chia sẻ ý kiến) là slide tương tác (kind "quiz", "poll", "word_cloud" hoặc "collaborate_board"), không phải slide nội dung hay trích dẫn.`;
 }
 
 /** Mạch bài theo thời lượng: mỗi slide ghi "role" (và "section" với phần nội dung). */

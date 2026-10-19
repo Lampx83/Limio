@@ -5,10 +5,18 @@ import {
   BarChart3,
   BookOpen,
   Check,
+  Clock,
   Compass,
+  GraduationCap,
+  Heart,
+  Lightbulb,
   MessageCircle,
   Repeat,
+  Rocket,
   Route,
+  Search,
+  Settings,
+  ShieldCheck,
   Sparkles,
   Target,
   Users,
@@ -20,15 +28,22 @@ import {
   dataSlideMetrics,
   fitFontSize,
   layoutRenderScale,
+  LIST_BOX,
+  listFontSize,
+  listWordPx,
+  listTitleFit,
   MIN_FONT_PX,
   resolveLayout,
   stripInline,
   type LayoutColumn,
   type LayoutItem,
+  type ListLine,
   type SlideIconId,
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { DATA_CONTENT_W, sourceLine, tableFontSize } from "@/lib/limioLiveCharts";
+import { groupHeadPx, groupsFit, isNegativeAsk, numberOf, type SlideGroup } from "@/lib/limioLiveGroups";
+import { autoGroupIcons } from "@/lib/limioLiveIcons";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   betterFit,
@@ -79,6 +94,14 @@ export const LAYOUT_ICONS: Record<SlideIconId, LucideIcon> = {
   sparkle: Sparkles,
   users: Users,
   chart: BarChart3,
+  bulb: Lightbulb,
+  shield: ShieldCheck,
+  search: Search,
+  gear: Settings,
+  cap: GraduationCap,
+  heart: Heart,
+  rocket: Rocket,
+  clock: Clock,
 };
 
 type Cfg = Record<string, any>;
@@ -531,7 +554,9 @@ function LayoutBody({
               <ul className="bul">
                 {bullets.map((b, i) => (
                   <li key={i} className="a" style={delay(i + 1)}>
-                    <Inline text={b} />
+                    <span>
+                      <Inline text={b} />
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -545,6 +570,186 @@ function LayoutBody({
               Nguồn ảnh: {c.imageCredit}
             </p>
           ) : null}
+        </div>
+      );
+    }
+
+    case "list": {
+      // Danh sách: mọi dòng cùng một cỡ chữ, tự co theo tổng độ dài (listFontSize, ≥ 26 px) để slide nhiều chữ vẫn vừa.
+      const lines: ListLine[] = Array.isArray(c.lines) ? c.lines : [];
+      const hasImg = typeof c.imageUrl === "string" && !!c.imageUrl;
+      const words: string[] = Array.isArray(c.words) ? c.words : [];
+      const fs = listFontSize(lines, title, hasImg, words);
+      const tf = listTitleFit(title);
+      return (
+        <div className={`ll-list${hasImg ? " img" : ""}`}>
+          <div className="pad">
+            <div className="tx">
+              {title && <Title text={title} maxPx={tf.px} widthPx={LIST_BOX.width} maxLines={Math.max(tf.lines, 1)} />}
+              {lines.length > 0 && (
+                <ul className="lst" style={{ fontSize: fs.px }}>
+                  {lines.map((l, i) => (
+                    <li key={i} className={`a${l.sub ? " sub" : ""}`} style={delay(Math.min(i, 8) + 1)}>
+                      {/* Một khối chữ: dòng là flex (dấu đầu dòng + chữ), các đoạn đậm/tô màu không được thành cột riêng. */}
+                      <span>
+                        <Inline text={l.text} />
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {words.length > 0 && (
+                <p className="words" style={{ fontSize: listWordPx(fs.px) }}>
+                  {words.map((w, i) => (
+                    <span key={i} className={`a-pop${i % 2 ? " alt" : ""}`} style={delay(Math.min(lines.length, 8) + 1 + Math.min(i, 6))}>
+                      {w}
+                    </span>
+                  ))}
+                </p>
+              )}
+            </div>
+            {hasImg && (
+              <div className="art a-pop" style={delay(1)}>
+                <SlideImage c={c} px={0} />
+              </div>
+            )}
+          </div>
+          {hasImg && c.imageCredit ? (
+            <p className="img-credit" title={`Nguồn ảnh: ${c.imageCredit}`}>
+              Nguồn ảnh: {c.imageCredit}
+            </p>
+          ) : null}
+        </div>
+      );
+    }
+
+    case "groups": {
+      const groups: SlideGroup[] = Array.isArray(c.groups) ? c.groups : [];
+      const lead: string = typeof c.lead === "string" ? c.lead : "";
+      const gf = groupsFit({ title, lead, groups, icons: c.icons !== false });
+      const pad2 = (n: number) => String(n + 1).padStart(2, "0");
+      // Biểu tượng của từng nhóm: giảng viên chọn tay thì giữ, còn lại tự chọn theo từ khoá (P61).
+      const icons = gf.icons ? autoGroupIcons(groups) : [];
+      const badge = (i: number, size: number) => {
+        const Ic = LAYOUT_ICONS[icons[i] ?? "compass"];
+        return (
+          <span className="gbd" style={{ width: size, height: size }} aria-hidden>
+            <Ic size={Math.round(size * 0.5)} strokeWidth={2} />
+          </span>
+        );
+      };
+      const pts = (g: SlideGroup, px: number, from = 0) =>
+        g.points.length > 0 && (
+          <ul className="gp" style={{ fontSize: px }}>
+            {g.points.map((p, k) => (
+              <li key={k} className="a" style={delay(from + k + 1)}>
+                <span>
+                  <Inline text={p} />
+                </span>
+              </li>
+            ))}
+          </ul>
+        );
+      // Một nhóm: câu dẫn (hoặc tên nhóm) to ở trên, tiêu đề slide thành dòng nhãn nhỏ.
+      if (gf.variant === "ask" || gf.variant === "stats") {
+        const g = groups[0] ?? { heading: "", points: [] };
+        const ask = lead || g.heading;
+        const label = lead && g.heading ? `${title} · ${g.heading.replace(/[:：]\s*$/, "")}` : title;
+                const negative = isNegativeAsk(ask);
+        const nums = g.points.filter((p) => numberOf(p));
+        const rest = g.points.filter((p) => !numberOf(p));
+        return (
+          <div className={`ll-groups v-${gf.variant}`}>
+            <div className="pad">
+              {label && <p className="lab a">{label}</p>}
+              <h2 className="ask a" style={{ fontSize: gf.px }}>
+                <span className="hl">
+                  <Inline text={ask} />
+                </span>
+              </h2>
+              {gf.variant === "stats" ? (
+                <>
+                  <div className="gstats" style={{ gridTemplateColumns: `repeat(${nums.length}, 1fr)` }}>
+                    {nums.map((p, i) => (
+                      <div key={i} className="gstat a-pop" style={delay(i + 1)}>
+                        <span className="n">{numberOf(p)}</span>
+                        <span className="d" style={{ fontSize: gf.px }}>
+                          <Inline text={p} />
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {rest.length > 0 && (
+                    <div className="gchips">
+                      {rest.map((p, i) => (
+                        <div key={i} className="gchip a" style={{ ...delay(nums.length + i + 1), fontSize: Math.max(26, gf.px - 4) }}>
+                          <Inline text={p} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="grows" style={{ fontSize: gf.px }}>
+                  {g.points.map((p, i) => (
+                    <div key={i} className={`grow a${negative ? " x" : ""}`} style={delay(i + 1)}>
+                      <span className="k">{negative ? "×" : i + 1}</span>
+                      <span>
+                        <Inline text={p} />
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className={`ll-groups v-${gf.variant}`}>
+          <div className="pad">
+            {title && <Title text={title} maxPx={52} widthPx={1152} maxLines={2} />}
+            {lead && (
+              <p className="glead a" style={delay(1)}>
+                <Inline text={lead} />
+              </p>
+            )}
+            {gf.variant === "cards" ? (
+              <div className="gcards" style={{ gridTemplateColumns: `repeat(${Math.max(groups.length, 1)}, 1fr)` }}>
+                {groups.map((g, i) => (
+                  <div key={i} className={`gcard a${gf.icons ? " ic" : ""}`} style={delay(i + 1)}>
+                    {gf.icons && (
+                      <div className="gtop">
+                        {badge(i, 76)}
+                        <span className="no">{i + 1}</span>
+                      </div>
+                    )}
+                    <b className="gh" style={{ fontSize: groupHeadPx(gf.px) }}>
+                      {!gf.icons && <span className="no">{pad2(i)}</span>}
+                      <span className="hl">
+                        <Inline text={g.heading} />
+                      </span>
+                    </b>
+                    {pts(g, gf.px, i)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className={`glist${gf.cols === 2 ? " c2" : ""}`}>
+                {groups.map((g, i) => (
+                  <div key={i} className="grp a" style={delay(i + 1)}>
+                    <b className="gh" style={{ fontSize: groupHeadPx(gf.px) }}>
+                      {gf.icons ? badge(i, 46) : <span className="no">{pad2(i)}</span>}
+                      <span className="hl">
+                        <Inline text={g.heading} />
+                      </span>
+                    </b>
+                    {pts(g, gf.px, i)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       );
     }
@@ -588,7 +793,9 @@ function LayoutBody({
                 <div key={i} className={`card col ${col.tone === "bad" ? "bad" : "good"} a`} style={delay(i * 2)}>
                   <div className="ttl">
                     {col.tone === "bad" ? <X size={38} strokeWidth={2.6} /> : <Check size={38} strokeWidth={2.6} />}
-                    <Inline text={col.heading} />
+                    <span>
+                      <Inline text={col.heading} />
+                    </span>
                   </div>
                   {col.points.map((p, k) => (
                     <div key={k} className="q">
@@ -680,7 +887,9 @@ function LayoutBody({
             {c.source && (
               <div className="who a" style={delay(3)}>
                 <i />
-                <Inline text={c.source} />
+                <span>
+                  <Inline text={c.source} />
+                </span>
               </div>
             )}
           </div>

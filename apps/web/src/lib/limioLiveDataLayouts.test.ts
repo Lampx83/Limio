@@ -18,13 +18,14 @@ import { numbersInText } from "./limioLiveCharts";
 
 describe("sanitizeLayoutConfig — bảng", () => {
   it("giữ tối đa 5 cột × 6 dòng, cắt ô dài, bù ô thiếu, bỏ dòng trống", () => {
-    const rows = Array.from({ length: 8 }, (_, i) => [`r${i}`, "x".repeat(90), "", "", "", "thừa"]);
+    const rows = Array.from({ length: 8 }, (_, i) => [`r${i}`, "x".repeat(250), "", "", "", "thừa"]);
     rows.splice(1, 0, ["", "", ""]);
     const c = sanitizeLayoutConfig("table", { title: "Bảng", head: ["A", "B"], rows, source: " Tài liệu " }) as any;
     // Cột 3–5 trống ở mọi dòng (cột "thừa" là cột thứ 6, bị cắt) nên bị bỏ.
     expect(c.head).toEqual(["A", "B"]);
     expect(c.rows).toHaveLength(6);
-    expect(c.rows[0]).toEqual(["r0", "x".repeat(60)]);
+    // Ô dài tới 200 ký tự (bảng nhập từ PowerPoint giữ nguyên chữ); dài hơn mới cắt.
+    expect(c.rows[0]).toEqual(["r0", "x".repeat(200)]);
     expect(c.rows[1][0]).toBe("r1");
     expect(c.source).toBe("Tài liệu");
   });

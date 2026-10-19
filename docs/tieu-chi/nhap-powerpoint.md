@@ -111,3 +111,106 @@ Vì nhánh đã có bố cục Bảng và Biểu đồ, mốc 1 dựng luôn b�
 - **P33.** Chỉ người có quyền `limio_live.access`; bài tạo ra thuộc người tải lên.
 - **P34.** Hình được xử lý như ảnh của bảng cộng tác (≤ 1.600 px, bỏ EXIF, thumbnail WebP 480/960), lưu ở kho ảnh slide
   Limio-Live (tên file bắt đầu bằng mã người dùng nên tính vào dung lượng của người đó). Chỉ lưu hình được dùng.
+
+## Tối ưu theo file thật (2026-10-18)
+
+File thử: BL_ED2000_0103_Dinh_nghia_Pham_vi_Ver4.pptx (22 slide). Mọi slide dùng layout trống, không có placeholder: chữ nằm
+trong hộp chữ, nhóm hình và hình khối. Các tiêu chí dưới đây áp cho slide không có placeholder tiêu đề (placeholder luôn thắng).
+
+- **P35.** Vị trí của khối nằm trong nhóm hình được đổi sang toạ độ của slide (theo `chOff/chExt` của từng nhóm, lồng nhau),
+  để thứ tự đọc và các quy tắc vị trí đúng với cái giảng viên nhìn thấy.
+- **P36.** Given slide không có placeholder tiêu đề, When đọc, Then tiêu đề là khối chữ ngắn có cỡ chữ lớn nhất (ưu tiên khối ở
+  phần trên slide và chữ đậm; khối có gạch đầu dòng không được chọn). Ví dụ: "NHẬP MÔN CÔNG NGHỆ GIÁO DỤC" (54 pt) chứ không
+  phải "Nhóm chuyên môn: …" (24 pt) nằm phía trên; "NỘI DUNG BÀI HỌC" (36 pt, đầu slide) chứ không phải các mục 40 pt ở giữa.
+- **P37.** Tiêu đề ngắt thành nhiều khối liền nhau ("ĐỊNH NGHĨA VỀ" + "CÔNG NGHỆ GIÁO DỤC") được ghép thành một khi các khối sát
+  nhau theo chiều dọc, chồng nhau theo chiều ngang, cùng kiểu chữ hoa hay thường và cỡ chữ không nhỏ hơn 55% khối lớn nhất.
+- **P38.** Khối chữ nhỏ hơn nằm phía trên tiêu đề là dòng dẫn (kicker): "NỘI DUNG 1", "Nhóm chuyên môn: Công nghệ giáo dục".
+  Slide đầu: dòng dẫn thành tên đơn vị của bìa. Dòng dẫn dạng "Nội dung 1", "Phần 2", "Chương III" làm slide thành slide Mở phần,
+  số phần lấy từ dòng dẫn, tên phần là tiêu đề. Dòng dẫn khác vẫn được giữ, đứng đầu nội dung slide.
+- **P39.** Bỏ chữ trang trí: khối chỉ có số (số trang, số thứ tự "01", "1") và khối chỉ có một ký tự không phải chữ số (ký tự
+  biểu tượng như "z").
+- **P40.** Dòng ghi nguồn hình ("Nguồn ảnh minh hoạ: …", "Nguồn: …", "Ảnh: …") không thành gạch đầu dòng: thành dòng nguồn ở
+  chân slide (`cite`). Dài quá 80 ký tự thì giữ làm một ý để không mất chữ.
+- **P41.** Trong cùng một khối, các đoạn là dòng ngắt của một câu được ghép lại: đoạn trên không có dấu kết câu, không có gạch
+  đầu dòng, và (cả hai viết hoa toàn bộ, hoặc đoạn dưới bắt đầu bằng chữ thường).
+- **P42.** Nhãn và nội dung của nhãn: nhãn là khối đậm, ngắn (≤ 40 ký tự, ≤ 5 từ, không dấu kết câu, không gạch đầu dòng).
+  Khối nội dung nằm cùng hàng bên phải nhãn, hoặc cùng cột bên dưới nhãn, thuộc nhãn gần nhất: nhãn thành ý cấp 1, nội dung
+  thành ý con ("Bản chất: Ứng dụng công nghệ như công cụ hỗ trợ giảng dạy"). Từ 3 nhãn cùng cỡ chữ không có nội dung riêng, nhãn
+  ngắn hẳn (≤ 12 ký tự, ≤ 60% độ dài trung vị của các nhãn còn lại) là nhãn chung, các nhãn còn lại là ý con của nó ("Ví dụ: …").
+- **P43.** Slide không phải slide đầu có tiêu đề trùng tiêu đề slide đầu và tối đa 3 dòng ngắn (≤ 80 ký tự) là slide kết: dựng
+  bằng bố cục Bìa.
+- **P44.** "Thêm lại vào dàn ý" chèn slide gốc vào đúng vị trí theo thứ tự gốc: ngay sau dòng cuối cùng lấy từ slide gốc có số nhỏ
+  hơn (thay cho P30 "cuối phần Tổng kết"), cùng phần với dòng đó.
+- **P45.** Chữ cho AI đọc (cách Soạn lại mạch) ghi cả dòng dẫn, không ghi dòng nguồn hình. Lời nhắc thêm: slide gốc có dòng dẫn
+  "Nội dung n" là slide mở phần, dùng tên của nó làm tên phần; giữ slide tài liệu tham khảo ở cuối bài; hoạt động yêu cầu người
+  học làm là slide tương tác, không phải slide nội dung hay trích dẫn.
+- **P46.** Bảng luôn giữ dạng bảng (thay cho P19 "bảng không vừa thì thành danh sách"): ô dài tới 200 ký tự (cỡ chữ tự co), bảng
+  rộng hơn 5 cột chia theo nhóm cột và lặp cột đầu, nhiều hàng thì chia slide và lặp hàng tiêu đề. Chỉ bảng một cột, hoặc có
+  ô dài hơn 200 ký tự, mới thành danh sách để không mất chữ. Hai hoặc nhiều hộp cao gần bằng nhau đặt cạnh nhau, mỗi hộp có
+  dòng đầu đậm và các gạch đầu dòng, cũng dựng thành bảng (hàng tiêu đề là dòng đầu của các hộp).
+- **P47.** Bố cục mới "Danh sách": tiêu đề và tối đa 12 dòng (ý và ý con) trên cả bề ngang, chữ tự co từ 44 px xuống 26 px, có thể
+  kèm ô hình bên phải. Cách "Giữ ý": danh sách phẳng tối đa 3 ý ngắn vẫn dùng "Chữ và hình"; nhiều ý hơn, có ý con, hoặc có ý dài
+  hơn 140 ký tự thì dùng Danh sách (không cắt đôi câu), nên mỗi slide gốc thường là đúng một slide. Chỉ khi ở 26 px vẫn không
+  vừa mới chia slide "(tiếp)". Giảng viên đổi được sang hoặc từ Danh sách như mọi bố cục, sửa từng dòng và đổi ý ↔ ý con.
+- **P48.** Slide giữa bài chỉ có tiêu đề (hoặc thêm một dòng nối tiêu đề, không phải câu đã kết) là slide Mở phần; tiêu đề đánh số
+  "2. …" cho số phần và tên phần là phần chữ sau số. Các slide giữa Bìa và slide Mở phần đầu tiên thuộc phần Mục tiêu (nếu có
+  slide mục tiêu) hoặc phần Bìa, để số phần khớp bài gốc.
+- **P49.** Chú thích hình ("Figure 1b: …", "Fig. 2 …", "Hình 3. …", "Bảng 1: …") không bao giờ là tiêu đề hay một ý: thành mô tả của ảnh
+  (`imageAlt`) khi slide Limio có ảnh. Hộp chữ mang tên "Title…" (tiêu đề dán lại thành hộp chữ, cỡ chữ lấy từ mẫu nên không ghi trong
+  file) là tiêu đề; nhiều hộp cùng tên thì lấy hộp chữ lớn nhất. Slide đã có placeholder tiêu đề thì hộp "Title…" còn lại là dòng dẫn.
+  "Source: https://…" hiện ở chân ô hình bằng tên trang (freepik.com), đường dẫn đầy đủ giữ ở `imageSourceUrl`.
+- **P50.** Hai cấp ý trong một khối: dòng đậm hoặc kết bằng dấu hai chấm, không gạch đầu dòng, là ý cha của các gạch đầu dòng ngay sau
+  nó ("Research findings:" → các kết quả); đoạn thường không gạch đầu dòng kết thúc nhóm. Bố cục Danh sách hiện ý con thụt vào.
+- **P51.** Dòng nguồn ảnh và dòng nguồn chân slide nằm ở lề dưới theo thiết kế, không tính vào phép đo tràn khung: trước đây slide
+  nào có nguồn ảnh cũng bị coi là tràn và chữ co về 26 px dù còn nhiều chỗ.
+- **P52.** Chữ được nhấn ở slide gốc được giữ lại. Cụm chữ có màu nổi khác màu chủ đạo của khối, hoặc có tô nền (highlight), thành chữ
+  **tô màu** (`==chữ==`, hiện bằng màu nhấn của giao diện slide và vệt bút dạ). Cụm chữ đậm hoặc nghiêng *một phần* đoạn thành in đậm
+  hoặc in nghiêng; cả đoạn đậm là kiểu của đoạn, không phải chỗ nhấn. Màu trung tính (đen, trắng, xám, màu chữ và màu nền của mẫu)
+  không phải chỗ nhấn. Một vài câu dài (không quá một phần tư số đoạn) mang màu riêng trong khi phần lớn slide là chữ thường, như câu
+  trích dẫn chốt tô đỏ, cũng thành tô màu. Dấu chỉ đặt lên chữ thân slide (dòng, ý, thẻ, cột, ô bảng), không lên tiêu đề, và không
+  có trong dàn ý; dấu làm chữ vượt giới hạn độ dài thì bỏ dấu, giữ chữ. Trình sửa slide có thêm nút **Tô màu** (Ctrl+Shift+H) cạnh
+  In đậm và In nghiêng; màu luôn là màu nhấn của giao diện, không chọn màu tuỳ ý (sửa tiêu chí H3).
+- **P53.** Cụm từ khoá rải trên slide (ít nhất 3 từ, mỗi từ tối đa 3 chữ và 24 ký tự, không dấu câu cuối, có ít nhất 2 màu nhấn khác
+  nhau; mỗi từ một hộp chữ hoặc một hộp nhiều dòng một từ) không thành gạch đầu dòng. Slide đó dùng Danh sách: các dòng rồi đến cụm
+  từ, chữ lớn hơn chữ dòng một bậc, xen hai màu nhấn của giao diện, không khung, không nền. Cụm từ không tính vào 12 dòng; không còn
+  chỗ thì sang slide "(tiếp)". Slide chỉ có tiêu đề và cụm từ không phải slide Mở phần. Nhãn ngắn cùng một màu (chữ trong sơ đồ)
+  không phải cụm từ. Giảng viên sửa cụm từ trong một ô, các từ cách nhau bằng dấu phẩy, tối đa 16 từ.
+- **P54.** Dòng chỉ có tên tác giả ("- Alice Morse Earle", "— Abraham Lincoln") ngay sau câu kết bằng ngoặc kép được ghép vào câu đó:
+  "“…” — Alice Morse Earle". Danh sách phải chia slide thì chia đều theo độ dài chữ, để slide sau không chỉ còn một hai dòng lẻ.
+- **P55.** Bố cục mới **Nhóm** cho slide hai cấp (ý cha và ý con), bản mẫu đã duyệt `docs/mockup/slide-hai-cap.html`. Dữ liệu: tiêu đề, câu dẫn
+  (không bắt buộc) và 1 đến 6 nhóm, mỗi nhóm có tên (≤ 80 ký tự) và tối đa 5 ý con (≤ 200 ký tự). Bốn kiểu trình bày do nội dung quyết định,
+  giảng viên không phải chọn: **Thẻ** (2 đến 4 nhóm ngắn: tên ≤ 40 ký tự, tối đa 4 ý con ≤ 90 ký tự), **Danh sách nhóm** (mặc định; hai cột khi
+  từ 4 nhóm và còn vừa ở cỡ chữ ≥ 26 px), **Câu dẫn và các dòng** (một nhóm: câu dẫn chữ đen đậm cùng cỡ với các dòng, ý con mỗi ý một dòng; dấu đầu dòng là số thứ
+  tự, hoặc dấu × khi câu dẫn mang nghĩa phủ định như "is not", "không phải") và **Số liệu** (một nhóm có 2 đến 3 ý con chứa con số kèm %, "lần",
+  "times"; con số được nhấc lên to, ý không có số thành thanh ngắn bên dưới). Phân cấp bằng độ đậm và độ đậm nhạt của chữ, không bằng cỡ chữ hay chữ màu: ý cha chữ đen đậm; ý con chữ thường màu xám, thẳng trục với chữ ý cha và nối với ý cha bằng một vạch dọc mảnh, không dấu đầu dòng; khoảng
+  cách giữa các nhóm gấp 2 đến 3 lần khoảng cách giữa các ý con; thẻ đánh số nhóm (01, 02) hoặc có biểu tượng (P62); chữ hoa của file
+  gốc giữ nguyên. **Chữ thân luôn to**: ý cha, câu dẫn và ý con cùng một cỡ chữ (con số của kiểu Số liệu cố định 64 px, chữ giải thích bên dưới vẫn lấy cỡ lớn nhất còn vừa), lấy cỡ lớn nhất còn vừa khung, từ 40 px xuống tối thiểu 26 px. Ý cha khác ý con ở
+  độ đậm: tên nhóm chữ đen đậm, ý con chữ thường (không ở cỡ chữ, không chữ màu, không vệt nền: chữ màu trên nền màu kém tương phản); ý con dùng chữ xám đậm của giao diện (màu "muted", đủ tương phản trên máy chiếu), số thứ tự xanh mờ như slide Ba thẻ. Nhiều chữ thì chia
+  thành hai slide chữ to thay vì co chữ nhỏ.
+- **P56.** Cách "Giữ ý" chọn kiểu theo quan hệ của nội dung slide gốc, theo thứ tự: đúng 2 nhóm có tên mang nghĩa đối lập (mất/được, giảm/tăng,
+  trước/nay, pros/cons…, tối đa 3 ý con mỗi nhóm, mỗi ý ≤ 140 ký tự) → **So sánh hai cột** (nhóm đi xuống màu ấm, nhóm đi lên màu chủ đạo);
+  một nhóm → **Câu dẫn và các dòng** hoặc **Số liệu**; một câu không có ý con đứng ngay trước một nhóm là câu dẫn của nhóm đó, tên nhóm ("Research
+  findings:") nối vào dòng nhãn; từ 2 nhóm trở lên mà nhóm nào cũng có ý con → **Nhóm** (Thẻ hoặc Danh sách nhóm). Slide không có nhóm nào có ý con,
+  hoặc chỉ một phần số mục có ý con, vẫn đi theo luật cũ (Danh sách, Tóm tắt, Các bước).
+- **P57.** Không vừa ở cỡ chữ 26 px thì kiểu nhường cho kiểu kế tiếp (Thẻ → Danh sách nhóm hai cột → một cột; Số liệu → Câu dẫn và các dòng),
+  rồi mới chia slide "(tiếp)" theo nhóm (một nhóm dài thì theo ý con), chia đều theo độ dài chữ.
+- **P58.** Giảng viên sửa slide Nhóm trong trình sửa: tiêu đề, câu dẫn, tên nhóm, từng ý con (thêm, xoá, tối đa 6 nhóm và 5 ý con). Đổi sang hoặc
+  từ bố cục khác không mất chữ: tên nhóm thành ý chính, ý con ghép thành câu giải thích và ngược lại. Slide Nhóm có mặt trong dàn ý như mọi bố cục
+  (ký hiệu riêng, mỗi ý của dàn ý là một nhóm "Tên nhóm: ý con; ý con").
+- **P59.** Chữ không thêm, không bỏ: tên nhóm và ý con là nguyên văn slide gốc (chỉ bỏ dấu ":" cuối tên nhóm khi nó thành nhãn); con số ở kiểu
+  Số liệu cắt ra từ chính ý con (nguyên văn, không tính lại, không làm tròn), câu đầy đủ vẫn hiện bên dưới con số.
+- **P60.** Bộ biểu tượng của slide mở rộng từ 8 lên 16, cùng nét vẽ, dùng chung cho slide Ba thẻ và slide Nhóm: mục tiêu, la bàn, lộ trình, trao đổi,
+  sách, ngôi sao (AI, sáng tạo), nhóm người, biểu đồ, bóng đèn (ý tưởng, giải pháp), khiên (đạo đức, an toàn), kính lúp (nghiên cứu, kiểm chứng),
+  bánh răng (công cụ, kỹ thuật), mũ tốt nghiệp (giáo dục), trái tim (tích cực), tên lửa (triển khai), đồng hồ (thời gian). Slide cũ không đổi.
+- **P61.** Slide Nhóm tự chọn biểu tượng cho từng nhóm (giảng viên không phải chọn, không gọi AI, không tốn token): theo từ khoá tiếng Việt và tiếng
+  Anh trong tên nhóm, không có thì trong các ý con, theo thứ tự ưu tiên khiên, kính lúp, biểu đồ, sách, ngôi sao, bóng đèn, đích, nhóm người, la bàn,
+  lộ trình, trao đổi, bánh răng, tên lửa, trái tim, đồng hồ, mũ tốt nghiệp. Hai nhóm cùng slide không dùng chung một biểu tượng: nhóm sau lấy biểu tượng
+  khớp kế tiếp của chính nó, hết thì lấy biểu tượng trung tính chưa dùng (la bàn, ngôi sao, đích, biểu đồ, sách, nhóm người). Biểu tượng giảng viên đã chọn
+  tay luôn thắng.
+- **P62.** Biểu tượng chỉ là trang trí và không bao giờ làm chữ thân nhỏ đi. **Thẻ**: huy hiệu vuông bo góc phía trên như slide Ba thẻ, số thứ tự mờ lớn ở góc
+  phải; dùng biểu tượng khi chữ thân vẫn từ 34 px trở lên và không nhỏ hơn quá 6 px so với bản không biểu tượng, nếu không thì bỏ biểu tượng (về số thứ tự
+  cùng hàng tên nhóm như trước). **Danh sách nhóm**: huy hiệu nhỏ (46 px) thay số thứ tự, dùng khi chữ thân không nhỏ hơn quá 2 px so với bản không biểu
+  tượng. **Câu dẫn và các dòng**, **Số liệu**: không dùng biểu tượng (dấu × hoặc số, con số lớn đã là điểm nhấn).
+- **P63.** Trình sửa slide Nhóm có ô "Dùng biểu tượng" (mặc định bật; tắt thì lưu `icons: false`) và ở mỗi nhóm một nút biểu tượng mở bảng 16 biểu
+  tượng cùng kiểu với slide Ba thẻ, có lựa chọn "Tự động". Mỗi nhóm lưu `icon` tuỳ chọn; thiếu thì tự chọn lúc vẽ nên slide Nhóm đã tạo tự có biểu
+  tượng mà không cần chạy lại.

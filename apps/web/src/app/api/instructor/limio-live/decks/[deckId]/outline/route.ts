@@ -23,6 +23,7 @@ async function ownedDeck(deckId: string, userId: string) {
     select: {
       id: true,
       title: true,
+      theme: true,
       outline: true,
       outlineMinutes: true,
       outlineConfirmedAt: true,
@@ -54,6 +55,7 @@ function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
   return {
     deckId: deck.id,
     title: deck.title,
+    theme: deck.theme,
     sourceName: deck.sourceName,
     sourceKind,
     // null = không tìm nguồn internet; [] = có bật nhưng không tìm được trang nào.
@@ -109,6 +111,7 @@ export async function PUT(req: Request, { params }: { params: { deckId: string }
     select: {
       id: true,
       title: true,
+      theme: true,
       outline: true,
       outlineMinutes: true,
       outlineConfirmedAt: true,

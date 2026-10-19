@@ -18,6 +18,10 @@ describe("buildOutlinePrompt với fromSlides", () => {
     expect(system).toContain('"basis"');
     expect(system).toContain("không bỏ ý nào");
     expect(system).toContain("chép đúng tiêu đề gốc");
+    // P45: dòng dẫn mở phần, tài liệu tham khảo, hoạt động là slide tương tác.
+    expect(system).toContain("slide mở phần");
+    expect(system).toContain("tài liệu tham khảo");
+    expect(system).toContain("là slide tương tác");
   });
   it("bài từ tài liệu thường không có luật này", () => {
     expect(buildOutlinePrompt(base).system).not.toContain('"from"');

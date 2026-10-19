@@ -2,25 +2,31 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
+import { GROUPS_MAX, GROUP_POINTS_MAX, type SlideGroup } from "@/lib/limioLiveGroups";
+import { ICON_LABELS, SLIDE_ICONS, autoGroupIcons } from "@/lib/limioLiveIcons";
+import { AlertTriangle, ArrowRight, BarChart3, Bold, Check, ChevronLeft, ChevronRight, Highlighter, Italic, Loader2, Pencil, Plus, Sparkles, Undo2, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import {
   ITEM_RANGE,
   LAYOUT_META,
+  LIST_MAX_LINES,
+  LIST_MAX_WORDS,
+  LIST_WORD_MAX_LEN,
   MAX_LEN,
-  SLIDE_ICONS,
   SLIDE_LAYOUTS,
   convertLayoutConfig,
   layoutTextProblems,
   padForEditing,
   pickMeta,
   toggleInlineMarker,
+  type InlineMarker,
   resolveLayout,
   sanitizeLayoutConfig,
   slideConfigsEqual,
   splitSlideConfig,
   type LayoutColumn,
   type LayoutItem,
+  type ListLine,
   type SlideLayoutId,
 } from "@/lib/limioLiveSlides";
 import { LAYOUT_ICONS, LayoutSlideView } from "../SlideLayouts";
@@ -36,17 +42,6 @@ import PickerButton from "./outline/PickerButton";
 
 type Cfg = Record<string, any>;
 type Save = (patch: { config: Cfg }) => void;
-
-const ICON_LABELS: Record<(typeof SLIDE_ICONS)[number], string> = {
-  target: "Mục tiêu",
-  compass: "La bàn",
-  route: "Lộ trình",
-  chat: "Trao đổi",
-  book: "Sách",
-  sparkle: "Ý tưởng",
-  users: "Nhóm",
-  chart: "Biểu đồ",
-};
 
 /** Giữ ghi chú giảng và các khoá không thuộc bố cục khi lưu. */
 const keepExtras = (config: Cfg): Cfg => pickMeta(config);
@@ -565,6 +560,7 @@ export default function LayoutEditor({
   const layout = resolveLayout(config);
   const [d, setD] = useState<Cfg>(() => padForEditing(layout, config));
   const [palette, setPalette] = useState(-1);
+  const [gPalette, setGPalette] = useState(-1);
   const [richOn, setRichOn] = useState(false);
   const focused = useRef<FieldCtl | null>(null);
   const range = ITEM_RANGE[layout];
@@ -682,7 +678,7 @@ export default function LayoutEditor({
     if (!slideConfigsEqual(next, config)) onSave({ config: next });
     onOpenChange(false);
   };
-  const format = useCallback((marker: "**" | "*") => {
+  const format = useCallback((marker: InlineMarker) => {
     const c = focused.current;
     if (!c || !c.el.isConnected) return;
     const { value, max, onChange } = c.latest.current;
@@ -695,11 +691,13 @@ export default function LayoutEditor({
     });
   }, []);
   const onKeyDown = (e: React.KeyboardEvent) => {
-    if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
     const k = e.key.toLowerCase();
-    if ((k === "b" || k === "i") && focused.current && e.target === focused.current.el) {
+    // Ctrl+B, Ctrl+I và Ctrl+Shift+H (tô màu, như phím bút dạ của Word).
+    const marker: InlineMarker | null = e.shiftKey ? (k === "h" ? "==" : null) : k === "b" ? "**" : k === "i" ? "*" : null;
+    if (marker && focused.current && e.target === focused.current.el) {
       e.preventDefault();
-      format(k === "b" ? "**" : "*");
+      format(marker);
     }
   };
 
@@ -877,6 +875,17 @@ export default function LayoutEditor({
               >
                 <Italic size={16} />
               </button>
+              <button
+                type="button"
+                disabled={!richOn}
+                title="Tô màu nhấn (Ctrl+Shift+H)"
+                aria-label="Tô màu"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => format("==")}
+                className="grid h-9 w-10 place-items-center border-l border-token bg-[rgb(var(--surface))] hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
+              >
+                <Highlighter size={16} />
+              </button>
             </span>
             <span className="text-[13px] text-muted">Bôi đen chữ trong một ô rồi bấm để định dạng</span>
           </div>
@@ -987,6 +996,182 @@ export default function LayoutEditor({
                   </div>
                 )}
               </>
+            )}
+
+            {layout === "list" && (
+              <div className="grid gap-2">
+                {((d.lines as ListLine[] | undefined) ?? []).map((l, i) => {
+                  const lines = d.lines as ListLine[];
+                  const patch = (p: Partial<ListLine>) => set({ lines: lines.map((x, k) => (k === i ? { ...x, ...p } : x)) });
+                  return (
+                    <div key={i} className={`grid gap-1.5 ${l.sub ? "ml-6" : ""}`}>
+                      <Field label={l.sub ? `Ý con (dòng ${i + 1})` : `Ý (dòng ${i + 1})`} value={l.text} max={MAX_LEN.listLine} multiline onChange={(v) => patch({ text: v })} onBlur={blur} />
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px]">
+                        {i > 0 && (
+                          <button type="button" className="font-medium text-brand-700 hover:underline" onClick={() => set({ lines: lines.map((x, k) => (k === i ? { text: x.text, ...(x.sub ? {} : { sub: true }) } : x)) })}>
+                            {l.sub ? "Đổi thành ý chính" : "Đổi thành ý con"}
+                          </button>
+                        )}
+                        {lines.length > 1 && (
+                          <button type="button" className="font-medium text-muted hover:underline" onClick={() => set({ lines: lines.filter((_, k) => k !== i) })}>
+                            Xoá dòng
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {((d.lines as ListLine[] | undefined) ?? []).length < LIST_MAX_LINES ? (
+                  <button
+                    type="button"
+                    className="flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+                    onClick={() => set({ lines: [...((d.lines as ListLine[] | undefined) ?? []), { text: "" }] })}
+                  >
+                    <Plus size={14} /> Thêm ý
+                  </button>
+                ) : (
+                  <p className="text-sm text-faint">Đã đủ {LIST_MAX_LINES} dòng.</p>
+                )}
+                <div className="mt-2 grid gap-1">
+                  <Field
+                    label="Cụm từ khoá (không bắt buộc)"
+                    value={((d.words as string[] | undefined) ?? []).join(", ")}
+                    max={LIST_MAX_WORDS * (LIST_WORD_MAX_LEN + 2)}
+                    plain
+                    placeholder="Ví dụ: vui vẻ, biết ơn, kiên trì"
+                    onChange={(v) => set({ words: v.split(",").map((w) => w.replace(/^\s+/, "")) })}
+                    onBlur={blur}
+                  />
+                  <p className="text-[13px] text-muted">Các từ cách nhau bằng dấu phẩy, hiện thành một cụm chữ lớn bên dưới các dòng, tối đa {LIST_MAX_WORDS} từ.</p>
+                </div>
+              </div>
+            )}
+
+            {layout === "groups" && (
+              <div className="grid gap-3">
+                <Field
+                  label="Câu dẫn (không bắt buộc)"
+                  value={typeof d.lead === "string" ? d.lead : ""}
+                  max={MAX_LEN.lead}
+                  placeholder="Ví dụ: Vì sao tư duy tích cực quan trọng?"
+                  onChange={(v) => set({ lead: v })}
+                  onBlur={blur}
+                />
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={d.icons !== false}
+                    onChange={(e) => {
+                      const next = { ...d, icons: e.target.checked ? undefined : false };
+                      setD(next);
+                      commit(next);
+                    }}
+                  />
+                  Dùng biểu tượng (nếu còn chỗ cho chữ to)
+                </label>
+                {((d.groups as SlideGroup[] | undefined) ?? []).map((g, i) => {
+                  const groups = d.groups as SlideGroup[];
+                  const patch = (p: Partial<SlideGroup>) => set({ groups: groups.map((x, k) => (k === i ? { ...x, ...p } : x)) });
+                  const shownIcon = autoGroupIcons(groups)[i]!;
+                  const Ic = LAYOUT_ICONS[shownIcon];
+                  return (
+                    <div key={i} className="grid content-start gap-2 rounded-xl border border-token p-3">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-muted">
+                        <span>Nhóm {i + 1}</span>
+                        <span className="flex-1" />
+                        {d.icons !== false && (
+                          <button
+                            type="button"
+                            aria-label={`Đổi biểu tượng nhóm ${i + 1}, đang là ${ICON_LABELS[shownIcon]}${g.icon ? "" : " (tự chọn)"}`}
+                            title={`Biểu tượng: ${ICON_LABELS[shownIcon]}${g.icon ? "" : " (tự chọn)"}`}
+                            aria-expanded={gPalette === i}
+                            onClick={() => setGPalette(gPalette === i ? -1 : i)}
+                            className="grid h-8 w-8 place-items-center rounded-lg border border-token text-brand-700 hover:bg-[rgb(var(--surface-muted))]"
+                          >
+                            <Ic size={16} />
+                          </button>
+                        )}
+                        {groups.length > 1 && (
+                          <button type="button" className="font-medium text-muted hover:underline" onClick={() => set({ groups: groups.filter((_, k) => k !== i) })}>
+                            Xoá nhóm
+                          </button>
+                        )}
+                      </div>
+                      {gPalette === i && d.icons !== false && (
+                        <div role="group" aria-label="Chọn biểu tượng" className="grid grid-cols-4 gap-1">
+                          <button
+                            type="button"
+                            aria-pressed={!g.icon}
+                            onClick={() => {
+                              const next = groups.map((x, k) => (k === i ? { heading: x.heading, points: x.points } : x));
+                              set({ groups: next });
+                              setGPalette(-1);
+                              commit({ ...d, groups: next });
+                            }}
+                            className={`col-span-4 h-8 rounded-lg border text-[13px] font-medium ${!g.icon ? "border-brand-600 bg-brand-soft text-brand-700" : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"}`}
+                          >
+                            Tự động theo nội dung
+                          </button>
+                          {SLIDE_ICONS.map((ic) => {
+                            const I2 = LAYOUT_ICONS[ic];
+                            return (
+                              <button
+                                key={ic}
+                                type="button"
+                                aria-pressed={g.icon === ic}
+                                aria-label={ICON_LABELS[ic]}
+                                title={ICON_LABELS[ic]}
+                                onClick={() => {
+                                  const next = groups.map((x, k) => (k === i ? { ...x, icon: ic } : x));
+                                  set({ groups: next });
+                                  setGPalette(-1);
+                                  commit({ ...d, groups: next });
+                                }}
+                                className={`grid h-9 place-items-center rounded-lg border ${g.icon === ic ? "border-brand-600 bg-brand-soft text-brand-700" : "border-token text-muted hover:bg-[rgb(var(--surface-muted))]"}`}
+                              >
+                                <I2 size={18} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <Field label="Tên nhóm" value={g.heading} max={MAX_LEN.groupHeading} onChange={(v) => patch({ heading: v })} onBlur={blur} />
+                      {g.points.map((p, k) => (
+                        <div key={k} className="ml-4 grid gap-1">
+                          <Field
+                            label={`Ý ${k + 1}`}
+                            value={p}
+                            max={MAX_LEN.groupPoint}
+                            multiline
+                            onChange={(v) => patch({ points: g.points.map((x, j) => (j === k ? v : x)) })}
+                            onBlur={blur}
+                          />
+                          <button type="button" className="w-fit text-[13px] font-medium text-muted hover:underline" onClick={() => patch({ points: g.points.filter((_, j) => j !== k) })}>
+                            Xoá ý
+                          </button>
+                        </div>
+                      ))}
+                      {g.points.length < GROUP_POINTS_MAX && (
+                        <button type="button" className="ml-4 flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline" onClick={() => patch({ points: [...g.points, ""] })}>
+                          <Plus size={14} /> Thêm ý
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                {((d.groups as SlideGroup[] | undefined) ?? []).length < GROUPS_MAX ? (
+                  <button
+                    type="button"
+                    className="flex w-fit items-center gap-1 text-sm font-medium text-brand-700 hover:underline"
+                    onClick={() => set({ groups: [...((d.groups as SlideGroup[] | undefined) ?? []), { heading: "", points: [""] }] })}
+                  >
+                    <Plus size={14} /> Thêm nhóm
+                  </button>
+                ) : (
+                  <p className="text-sm text-faint">Đã đủ {GROUPS_MAX} nhóm.</p>
+                )}
+                <p className="text-[13px] text-muted">Kiểu trình bày (thẻ, danh sách nhóm, câu dẫn, số liệu) tự chọn theo nội dung.</p>
+              </div>
             )}
 
             {range && (

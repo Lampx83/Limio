@@ -179,6 +179,7 @@ export const SLIDE_SPEC: Record<string, string> = {
   objectives: `title, items: từ 2 đến 4 phần tử; chỉ dùng heading, là MỘT CÂU HOÀN CHỈNH bắt đầu bằng "Người học" và một động từ quan sát được, dưới 18 từ; body để rỗng.`,
   agenda: `title, items: ĐÚNG các tên phần nêu trong ý chính của dàn ý, cùng thứ tự, giữ nguyên chữ; chỉ dùng heading; body để rỗng.`,
   image: `title, bullets: ĐÚNG 3 câu hoàn chỉnh, mỗi câu dưới 18 từ.`,
+  list: `title, bullets: từ 3 đến 8 câu hoàn chỉnh, mỗi câu dưới 25 từ (bố cục Danh sách, dùng cho slide nhiều ý).`,
   cards: `title, items: ĐÚNG 3 phần tử; heading tối đa 6 từ, body một câu hoàn chỉnh dưới 18 từ, icon chọn một trong: target, compass, route, chat, book, sparkle, users, chart.`,
   compare: `title, columns: ĐÚNG 2 phần tử; phần tử đầu tone "bad" (cách chưa tốt), phần tử sau tone "good" (cách tốt); heading tối đa 4 từ; points 1 đến 2 ví dụ ngắn đặt trong dấu ngoặc kép; note một câu hoàn chỉnh nêu hệ quả.`,
   steps: `title, items: từ 3 đến 5 phần tử; heading tối đa 4 từ (tên bước), body một câu hoàn chỉnh dưới 14 từ; footnote một câu hoàn chỉnh (có thể rỗng).`,
