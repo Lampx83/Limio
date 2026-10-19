@@ -43,7 +43,7 @@ export default function AssistantLauncher() {
       <LimioAvatar />
       <div className="min-w-0 flex-1">
         <p className="whitespace-pre-wrap rounded-2xl rounded-tl-md border border-token bg-[rgb(var(--surface))] px-3.5 py-2.5 text-sm leading-relaxed shadow-sm">
-          Xin chào thầy/cô, Limio đây, trợ lý ảo của thầy/cô trên Limio. Limio có thể hướng dẫn cách dùng các tính năng hoặc gợi ý việc nên làm. Thầy/cô cần gì ạ?
+          Xin chào thầy/cô, tôi là Limio, trợ lý ảo của thầy/cô trên Limio. Nhiệm vụ chính của tôi là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...) và gợi ý việc nên làm. Thầy/cô cần gì ạ?
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {QUICK_PROMPTS.map((q) => (
@@ -78,7 +78,7 @@ export default function AssistantLauncher() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold leading-tight">Limio</p>
-              <p className="truncate text-xs text-muted">Trợ lý ảo của thầy/cô trên Limio</p>
+              <p className="truncate text-xs text-muted">Trợ lý ảo của thầy/cô · chỉ hỗ trợ cách dùng Limio</p>
             </div>
             {messages.length > 0 && (
               <button type="button" onClick={reset} className="btn-ghost btn-sm shrink-0" aria-label="Cuộc trò chuyện mới" title="Cuộc trò chuyện mới">

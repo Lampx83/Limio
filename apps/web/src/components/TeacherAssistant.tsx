@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { Sparkles } from "lucide-react";
+import { Info, Sparkles } from "lucide-react";
 import { WatermelonSliceIcon } from "./BrandIcons";
 import { AssistantInput, AssistantThread } from "./assistant/AssistantChat";
 import { useAssistant } from "./assistant/AssistantProvider";
@@ -37,7 +37,7 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
           {chatting ? (
             <>
               <h1 id="teacher-assistant-heading" className="text-base font-bold leading-tight">Limio</h1>
-              <p className="text-xs text-muted">Trợ lý ảo của thầy/cô trên Limio</p>
+              <p className="truncate text-xs text-muted">Trợ lý ảo của thầy/cô · chỉ hỗ trợ cách dùng Limio</p>
             </>
           ) : (
             <>
@@ -66,6 +66,13 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
           <div className="mt-5">
             <AssistantInput variant="hero" />
           </div>
+          {/* Nói rõ phạm vi ngay trước khi gõ: Limio chỉ hỗ trợ cách dùng và các tính năng của Limio. */}
+          <p className="mt-2.5 flex items-start gap-1.5 text-xs leading-relaxed text-muted">
+            <Info size={14} className="mt-0.5 shrink-0 text-pink-600" aria-hidden />
+            <span>
+              Nhiệm vụ chính của tôi là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...).
+            </span>
+          </p>
           <button
             type="button"
             disabled={busy}
