@@ -428,7 +428,7 @@ export default function LiveDeckList() {
             <FolderPlus size={16} /> Nhóm mới
           </button>
           <button type="button" onClick={openCreate} className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Tạo bài giảng
+            <Plus size={16} /> Tạo slide
           </button>
         </div>
       </div>
@@ -517,7 +517,7 @@ export default function LiveDeckList() {
         <EmptyState
           icon={<Presentation size={40} className="mx-auto" />}
           title="Chưa có bài giảng nào"
-          description="Bấm “Tạo bài giảng” để bắt đầu."
+          description="Bấm “Tạo slide” để bắt đầu."
         />
       ) : view === "flat" || !hasGroups ? (
         visibleFlat.length === 0 ? (

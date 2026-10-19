@@ -526,7 +526,7 @@ Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral
 
 ## 14. Limio-Live — slide tương tác (mới)
 
-Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo bài giảng** và **Nhóm mới**; xem
+Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo slide** và **Nhóm mới**; xem
 "Theo nhóm" hoặc "Tất cả", lọc "Mọi nhóm"; mỗi thẻ bài có "Sao chép bài giảng", "Chuyển vào nhóm", "Xoá". Nút
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
