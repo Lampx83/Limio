@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { Fragment, memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { audienceUrl, openAudienceWindow, presenterUrl, startPresenterOnProjector, useProjectorReady } from "@/lib/limioLiveWindow";
@@ -58,6 +58,7 @@ import { RESOURCE_TYPE_LABELS, type ResourceType } from "../ResourceContent";
 import BoardNotesView from "../BoardNotesView";
 import { contentKind } from "../slideKind";
 import ImportFromCourseDialog from "./ImportFromCourseDialog";
+import { insertGapLabel } from "@/lib/limioLiveInsert";
 import SlideTypePicker, { CollabBoardIcon, WordCloudIcon, type SlideChoice } from "./SlideTypePicker";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
@@ -294,6 +295,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
   // Cửa sổ sửa slide (bố cục mới). Giữ ở đây để ‹ › sang slide khác mà cửa sổ không đóng mở lại.
   const [editOpen, setEditOpen] = useState(false);
   const [pickingType, setPickingType] = useState(false);
+  // Vị trí chèn khi mở hộp chọn loại slide từ nút [+] giữa các slide; null = thêm vào cuối.
+  const [insertAt, setInsertAt] = useState<number | null>(null);
   const [importingCourse, setImportingCourse] = useState(false);
   const [pdfProgress, setPdfProgress] = useState<{ current: number; total: number } | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -464,6 +467,8 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   const handleAddSlide = async (choice: SlideChoice) => {
     setPickingType(false);
+    const at = insertAt;
+    setInsertAt(null);
     const type: SlideType = choice.type;
     // Slide nội dung theo tài nguyên: nhớ loại đã chọn ở `resourceKind` (chưa có payload hợp lệ nên
     // chưa thể ghi vào `resource` — server validate payload đầy đủ); editor mở đúng form nhập.
@@ -476,11 +481,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
     const res = await fetch(apiUrl(`/api/instructor/limio-live/decks/${deckId}/slides`), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type, config }),
+      body: JSON.stringify({ type, config, ...(at !== null ? { insertAt: at } : {}) }),
     });
     if (!res.ok) { toast.error("Thêm slide thất bại"); return; }
     const slide: Slide = await res.json();
-    setDeck((prev) => (prev ? { ...prev, slides: [...prev.slides, slide] } : prev));
+    setDeck((prev) => {
+      if (!prev) return prev;
+      const pos = at !== null && at < prev.slides.length ? at : prev.slides.length;
+      return { ...prev, slides: [...prev.slides.slice(0, pos), slide, ...prev.slides.slice(pos)] };
+    });
     setSelectedSlideId(slide.id);
     setLastSavedAt(new Date());
   };
@@ -850,6 +859,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               <button
                 onClick={() => {
                   if (slidesCollapsed) toggleSlidesRail(false);
+                  setInsertAt(null);
                   setPickingType(true);
                 }}
                 title="Thêm slide"
@@ -874,8 +884,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={deck.slides.map((s) => s.id)} strategy={verticalListSortingStrategy}>
                 {deck.slides.map((slide, idx) => (
+                  <Fragment key={slide.id}>
+                  <InsertGap
+                    label={insertGapLabel(idx, deck.slides.length)}
+                    onInsert={() => {
+                      setInsertAt(idx);
+                      setPickingType(true);
+                    }}
+                  />
                   <SlideThumb
-                    key={slide.id}
                     slide={slide}
                     index={idx}
                     isActive={slide.id === selectedSlideId}
@@ -889,7 +906,15 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
                     }
                     onDelete={() => handleDeleteSlide(slide.id)}
                   />
+                  </Fragment>
                 ))}
+                <InsertGap
+                  label={insertGapLabel(deck.slides.length, deck.slides.length)}
+                  onInsert={() => {
+                    setInsertAt(null);
+                    setPickingType(true);
+                  }}
+                />
               </SortableContext>
             </DndContext>
           )}
@@ -906,7 +931,10 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
               setPickingType(false);
               setImportingCourse(true);
             }}
-            onClose={() => setPickingType(false)}
+            onClose={() => {
+              setPickingType(false);
+              setInsertAt(null);
+            }}
             pdfLimit={`Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB`}
             pdfNote={`Mỗi trang PDF → 1 slide riêng, nối vào cuối bài giảng. Tối đa ${MAX_PDF_PAGES} trang, ${MAX_PDF_MB}MB.`}
           />
@@ -1132,6 +1160,32 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 }
 
 // ── Left rail thumb ──────────────────────────────────────────────────────
+
+/**
+ * Khe giữa hai slide trong danh sách: rê chuột (hoặc Tab tới) thì hiện đường kẻ và nút [+] như PowerPoint, bấm để chèn slide mới
+ * vào đúng chỗ này. Vùng nhạy chuột nằm trong khoảng cách 6 px giữa hai hình thu nhỏ; màn cảm ứng luôn hiện nút (mờ).
+ */
+function InsertGap({ label, onInsert }: { label: string; onInsert: () => void }) {
+  return (
+    <div className="relative h-0">
+      <div className="group/gap absolute inset-x-0 -top-[9px] z-10 flex h-3 items-center">
+        <span aria-hidden className="h-0.5 w-full rounded-full bg-brand-500 opacity-0 transition-opacity group-focus-within/gap:opacity-100 group-hover/gap:opacity-100" />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onInsert();
+          }}
+          aria-label={label}
+          title={label}
+          className="absolute left-1/2 top-1/2 flex h-5 w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-brand-600 text-white opacity-0 shadow ring-2 ring-[rgb(var(--surface))] transition-opacity focus-visible:opacity-100 group-hover/gap:opacity-100 [@media(hover:none)]:opacity-60"
+        >
+          <Plus size={13} strokeWidth={3} aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 const SlideThumb = memo(function SlideThumb({
   slide,
