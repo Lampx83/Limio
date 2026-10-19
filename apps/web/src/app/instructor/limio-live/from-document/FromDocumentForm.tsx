@@ -235,9 +235,10 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
           placeholder={
             hasDoc
               ? "Thầy/cô muốn bài giảng thế nào? Ví dụ: dạy cho sinh viên năm nhất, tập trung phần ứng dụng, thêm một câu hỏi thảo luận."
-              : "Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR."
+              : "Ví dụ: Giới thiệu thực tế tăng cường (AR) cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR."
           }
-          className="block w-full resize-y border-0 bg-transparent px-4 pb-1.5 pt-3 text-base leading-relaxed focus:outline-none focus:ring-0"
+          // 15px như chữ quanh ô; điện thoại giữ 16px để iPhone không tự phóng to trang khi chạm vào ô.
+          className="block w-full resize-y border-0 bg-transparent px-4 pb-1.5 pt-3 text-[15px] leading-normal focus:outline-none focus:ring-0 max-sm:text-base"
           aria-label="Mô tả bài giảng"
           aria-describedby="topic-hint"
         />
