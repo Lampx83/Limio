@@ -272,6 +272,17 @@ export const GUIDES: readonly GuideEntry[] = [
       `Muốn học viên học hỏi lẫn nhau, thầy/cô đặt nhiệm vụ chấm chéo kèm bảng Tiêu chí chấm.`,
     ],
   },
+  {
+    id: "tro-giang-ai",
+    title: "Trợ giảng AI của học viên (khác với Limio)",
+    keywords: ["trợ giảng ai", "trợ giảng", "hỏi ai về đoạn này", "ai trong bài học", "ai của học viên", "học viên hỏi ai", "khác nhau", "phân biệt", "nút tròn"],
+    destinationIds: ["my_courses"],
+    body: `Trợ giảng AI là nút tròn nổi ở trang bài học của học viên đã ghi danh, dành cho học viên: các em hỏi bài và được gợi ý từng bước để tự hiểu, không được đưa thẳng đáp án bài tập. Học viên cũng có thể bôi đen một đoạn trong bài, bấm chuột phải rồi chọn "Hỏi AI về đoạn này". Trợ giảng AI không hiện ở chế độ xem trước của giảng viên, và các lượt hỏi được tính vào Token AI. Limio thì khác: Limio là trợ lý ảo của riêng thầy/cô, có biểu tượng màu hồng, ở khu vực giảng viên, giúp thầy/cô dùng các tính năng và gợi ý việc nên làm; còn Trợ giảng AI là của học viên trong bài học.`,
+    useCases: [
+      `Học viên đang vướng một bài tập, thầy/cô nhắc các em dùng Trợ giảng AI để được gợi ý từng bước trước khi hỏi thầy/cô.`,
+      `Thầy/cô khuyến khích học viên bôi đen đoạn khó trong bài và hỏi AI để hiểu ngay tại chỗ.`,
+    ],
+  },
 ];
 
 /** Những điều Limio CHƯA có, để trợ lý không hứa nhầm. Luôn đưa vào prompt (ngắn). */

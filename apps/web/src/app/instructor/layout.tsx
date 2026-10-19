@@ -7,6 +7,8 @@ import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 import InstructorContentFrame from "./InstructorContentFrame";
+import { AssistantProvider } from "@/components/assistant/AssistantProvider";
+import AssistantLauncher from "@/components/assistant/AssistantLauncher";
 
 // Khu vực cần đăng nhập → không bao giờ index. `middleware.ts` đã gắn
 // `X-Robots-Tag` cho cùng nhóm route; thẻ meta này là lớp thứ hai, phòng khi
@@ -64,16 +66,20 @@ export default async function InstructorLayout({
 
   return (
     <ActiveNavSectionProvider>
-      <div className="flex w-full">
-        <InstructorLeftMenu
-          isInstructor={hasInstructorRole}
-          isProctor={isProctor}
-          isResearcher={hasResearcherRole}
-        />
-        <div className="min-w-0 flex-1">
-          <InstructorContentFrame>{children}</InstructorContentFrame>
+      {/* Limio, trợ lý ảo của giảng viên: một cuộc trò chuyện dùng chung cho khung ở trang chủ và nút nổi ở mọi trang khác. */}
+      <AssistantProvider userId={session.user.id}>
+        <div className="flex w-full">
+          <InstructorLeftMenu
+            isInstructor={hasInstructorRole}
+            isProctor={isProctor}
+            isResearcher={hasResearcherRole}
+          />
+          <div className="min-w-0 flex-1">
+            <InstructorContentFrame>{children}</InstructorContentFrame>
+          </div>
         </div>
-      </div>
+        <AssistantLauncher />
+      </AssistantProvider>
     </ActiveNavSectionProvider>
   );
 }

@@ -91,6 +91,15 @@ describe("hướng dẫn cách dùng và trò chuyện thân thiện", () => {
   });
 });
 
+describe("danh tính trợ lý", () => {
+  it("là Limio, trợ lý ảo của giảng viên; tự giới thiệu mà không nói về công nghệ", () => {
+    const { system } = buildTeacherAssistantPrompt(base);
+    expect(system).toMatch(/Bạn là Limio, trợ lý ảo của giảng viên/);
+    expect(system).toMatch(/Limio là trợ lý ảo của thầy\/cô trên Limio/);
+    expect(system).toMatch(/không nói gì về công nghệ phía sau/);
+  });
+});
+
 describe("tình huống dùng tính năng", () => {
   it("đưa tình huống của từng mục hướng dẫn vào prompt", () => {
     const { system } = buildTeacherAssistantPrompt({

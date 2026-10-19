@@ -622,15 +622,14 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   nộp của nhiệm vụ có "Xem bài" (khung xem trước có "Trước/Sau", phím ←/→); nhiệm vụ "bạn chấm" có "Chấm bài"
   với "Đạt" / "Chưa đạt", chấm xong tự sang bài kế.
 
-## 17. Trợ lý Limio ở trang chủ giảng viên (mới, `components/TeacherAssistant.tsx`)
+## 17. Trợ lý Limio của giảng viên (mới, `components/TeacherAssistant.tsx`, `components/assistant/`)
 
-Khung đầu trang chủ: lời chào "{Chào buổi sáng/chiều/tối}, {tên}" và "Hôm nay thầy/cô muốn làm gì?", ô hỏi "Hỏi
-Limio, ví dụ: làm sao tạo đề thi?", dòng "Chưa có ý tưởng? Để Limio gợi ý cho thầy/cô", và "Hoặc bắt đầu nhanh"
-(các thẻ: Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp,
-Mở khoá "<khoá gần nhất>", Soạn đề vấn đáp). Khi trò chuyện, câu trả lời kèm liên kết dẫn thẳng vào tính năng
-(kể cả đúng khoá của giảng viên); "Xem lại gợi ý" để thoát chế độ trò chuyện; có chỉ báo "Limio đang soạn câu
-trả lời…". Mỗi câu hỏi trừ hạn mức Token AI. Trợ lý chỉ chọn điểm đến trong danh mục cố định, nên không dẫn
-tới trang không tồn tại; nó trả lời cách dùng theo kho hướng dẫn `teacherAssistantGuide.ts` (lấy từ tệp này).
+**Limio là trợ lý ảo của thầy/cô trên Limio**, biểu tượng lát dưa hấu **màu hồng**. Khác với **Trợ giảng AI** (nút tròn nổi xanh, biểu tượng robot, chỉ ở trang bài học của học viên đã ghi danh, gợi ý từng bước không đưa thẳng đáp án; không hiện ở chế độ xem trước). Hai trợ lý không dùng chung cuộc trò chuyện.
+- **Trang chủ giảng viên:** khung đầu trang mở bằng lời chào của Limio: dòng "Limio · Trợ lý ảo của thầy/cô trên Limio", "{Chào buổi sáng/chiều/tối}, {tên}!", "Limio rất vui được giúp thầy/cô hôm nay. Thầy/cô muốn làm gì?…". Có ô hỏi "Hỏi Limio, ví dụ: tạo đề thi" (một dòng, có "…" khi dài), dòng "Chưa có ý tưởng? Để Limio gợi ý cho thầy/cô", và "Hoặc bắt đầu nhanh" (các thẻ: Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Mở khoá "<khoá gần nhất>", Soạn đề vấn đáp).
+- **Mọi trang khác của giảng viên:** nút nổi hình viên thuốc màu hồng "Hỏi Limio" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat (trên điện thoại là tấm trượt từ dưới lên). Nút nổi không hiện ở trang chủ vì trang chủ đã có khung lớn.
+- **Cuộc trò chuyện liền mạch:** khung ở trang chủ và ngăn kéo cùng một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Limio đưa mở trong cùng tab; sang trang khác thì ngăn kéo tự thu lại, thầy/cô thao tác xong bấm "Hỏi Limio" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
+- **Khi trò chuyện:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Limio đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". Mỗi câu hỏi trừ hạn mức Token AI.
+- Trợ lý chỉ chọn điểm đến trong danh mục cố định, chỉ trả lời nghiệp vụ Limio, không tiết lộ kỹ thuật, và trả lời cách dùng theo kho `teacherAssistantGuide.ts` (lấy từ tệp này).
 
 ## Không được viết (chưa có hoặc chưa tới tay giảng viên)
 
