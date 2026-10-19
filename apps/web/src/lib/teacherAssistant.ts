@@ -124,10 +124,10 @@ export function buildStarters(ctx: AssistantContext): AssistantStarter[] {
     { id: "new_live", title: "Soạn bài giảng tương tác", subtitle: "Dựng bài giảng để trình chiếu từ tài liệu.", icon: "slides", href: destinationById("live_from_document")!.href },
     { id: "class_activity", title: "Làm lớp sôi nổi hơn", subtitle: "Bình chọn, đám mây từ, chia nhóm, gameshow.", icon: "poll", href: destinationById("teaching_tools")!.href },
     { id: "class_quiz", title: "Tạo bài kiểm tra trên lớp", subtitle: "Gửi link thi nhanh cho cả lớp làm ngay.", icon: "exam", href: destinationById("quick_exam")!.href },
+    { id: "grade", title: "Chấm bài", subtitle: "Xem bài học viên đã nộp và chấm nhanh.", icon: "grading", href: destinationById("assignments")!.href },
     ...(latest
       ? [{ id: "open_course", title: `Mở khoá "${latest.title.replace(/\s+/g, " ").trim().slice(0, 40)}"`, subtitle: "Khoá bạn vừa chỉnh sửa gần đây.", icon: "course" as const, href: `/instructor/courses/${encodeURIComponent(latest.id)}` }]
       : []),
-    { id: "oral_new", title: "Soạn đề vấn đáp", subtitle: "Để AI hỏi đáp trực tiếp với học viên.", icon: "oral", href: destinationById("oral_exam_new")!.href },
   ];
 }
 

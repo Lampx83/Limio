@@ -382,11 +382,13 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
 
 ## 10. Theo dõi, gamification, chứng nhận, e-portfolio, trang chủ
 
-- **Trang chủ giảng viên** (`/instructor/dashboard`): đầu trang là **trợ lý Limio** (mục 17); bên dưới là
-  "Cần xử lý gấp (n)" chia "Gấp / Trung bình / Có thể chờ", lịch bên phải (Tuần / Tháng, "Hôm nay", chỉ hiện
-  hạn bài tập và bài kiểm tra; tài khoản thuộc trường thấy nhãn "Tuần N"), và khối thu gọn **"Xem thêm: số
-  liệu, hoạt động gần đây, gamification"** (chứa thẻ số, "Hoạt động gần đây", "Gamification theo khoá"). Lời
-  chào theo giờ Việt Nam.
+- **Trang chủ giảng viên** (`/instructor/dashboard`): hai cột từ màn hình rộng, một cột trên điện thoại. **Cột chính:**
+  lời chào theo giờ Việt Nam và các thẻ "Bắt đầu nhanh" (Lily là nút nổi "Hỏi Lily" ở góc phải; mục 17), dải bốn số ("Khoá học",
+  "Học viên", "Việc cần làm", "Im ắng >14 ngày"), **"Việc cần làm hôm nay (n)"** (ba việc đầu, xếp "Gấp / Trung bình
+  / Có thể chờ"; còn nữa thì có "Xem tất cả (n)" và "Thu gọn"), **"Khoá học của tôi"** (tối đa 6 khoá, có "Xem tất
+  cả (n)" dẫn tới danh sách khoá), và khối thu gọn **"Gamification theo khoá"**. **Cột phải:** lịch (Tuần / Tháng,
+  "Hôm nay", chỉ hiện hạn bài tập và bài kiểm tra; tài khoản thuộc trường thấy nhãn "Tuần N") và **"Hoạt động gần
+  đây"** (6 hoạt động mới nhất của học viên trong 72 giờ qua).
 - **Tiến độ:** tab Học viên, danh sách lớp (cột "Tiến độ"), tab Grade (có "Tải bảng
   điểm quiz" và "Tải bảng điểm bài tập"), trang chủ giảng viên.
 - **Gamification — giảng viên chỉ xem, không cấu hình** (không chỉnh XP, huy hiệu hay
@@ -610,8 +612,10 @@ tông; "Gỡ toàn bộ thương hiệu"), hoặc "Không dùng". Cấp trườn
 **Tương tác và trình chiếu**
 - Nút **Trình chiếu** (toàn màn hình từ slide 1) có mũi tên mở "Từ đầu", "Từ slide này", **"Presenter view"**
   (xem trước, ghi chú Note, đồng hồ, thu phóng; máy có màn hình mở rộng và đã cấp quyền "Quản lý cửa sổ" thì màn
-  chiếu tự lên màn hình thứ hai, nếu không thì mở cửa sổ riêng — **chưa thử với máy chiếu thật**). Phím tắt F,
-  +, −, 0, Q.
+  chiếu tự lên màn hình thứ hai ở chế độ toàn màn hình, nếu không thì mở cửa sổ riêng). Phím tắt F, +, −, 0, Q.
+  - Máy đang nối màn hình mở rộng mà chưa cấp quyền: dưới mục Presenter view có dòng xin quyền với nút **"Cho phép"**
+    (bấm thì trình duyệt hỏi một lần). Quyền đã bị chặn thì dòng đó chỉ cách bật lại trong cài đặt trang web.
+    Chỉ Chrome và Edge có tính năng này; Safari, Firefox và chế độ nhân bản màn hình vẫn mở cửa sổ riêng.
 - **Mỗi trang tương tác có mã QR và mã tham gia riêng**; nút "Hiện QR trên màn chiếu" (phím Q); chuyển trang thì
   mã trang trước báo đã đóng. Học viên tham gia **Ẩn danh** (quét QR) hoặc **Đăng nhập** (mỗi tài khoản một
   lần mỗi câu). Trắc nghiệm có "Đóng câu hỏi" để lộ đáp án.
@@ -656,10 +660,11 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
 ## 17. Lily, trợ lý ảo của giảng viên (mới, `components/TeacherAssistant.tsx`, `components/assistant/`)
 
 **Lily là trợ lý ảo của thầy/cô trên Limio, xưng "em" và gọi giảng viên là "thầy/cô"** (Limio là tên hệ thống, Lily là tên trợ lý), biểu tượng lát dưa hấu **màu hồng**. Khác với **Trợ giảng AI** (nút tròn nổi xanh, biểu tượng robot, chỉ ở trang bài học của học viên đã ghi danh, gợi ý từng bước không đưa thẳng đáp án; không hiện ở chế độ xem trước). Hai trợ lý không dùng chung cuộc trò chuyện.
-- **Trang chủ giảng viên:** khung đầu trang mở bằng lời chào của Lily: dòng "Lily · Trợ lý ảo của thầy/cô trên Limio", "{Chào buổi sáng/chiều/tối}, {tên}!", "Em rất vui được giúp thầy/cô hôm nay. Thầy/cô muốn làm gì?…". Có ô hỏi "Hỏi Lily, ví dụ: tạo đề thi" (một dòng, có "…" khi dài) và ngay dưới là dòng nêu phạm vi, do Lily nói ở ngôi thứ nhất, xưng "em": "Nhiệm vụ chính của em là hướng dẫn sử dụng các tính năng trên Limio (soạn khoá học, bài giảng, kiểm tra, chấm bài, quản lý lớp...)."; dòng "Chưa có ý tưởng? Để em gợi ý cho thầy/cô", và "Hoặc bắt đầu nhanh" (các thẻ: Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Mở khoá "<khoá gần nhất>", Soạn đề vấn đáp).
-- **Mọi trang khác của giảng viên:** nút nổi hình viên thuốc màu hồng "Hỏi Lily" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat (trên điện thoại là tấm trượt từ dưới lên). Nút nổi không hiện ở trang chủ vì trang chủ đã có khung lớn.
-- **Cuộc trò chuyện liền mạch:** khung ở trang chủ và ngăn kéo cùng một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Lily đưa mở trong cùng tab; sang trang khác thì ngăn kéo tự thu lại, thầy/cô thao tác xong bấm "Hỏi Lily" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
-- **Khi trò chuyện:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Em đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". Mỗi câu hỏi trừ hạn mức Token AI.
+- **Trang chủ giảng viên:** không có ô chat riêng; đầu trang chỉ có lời chào theo giờ ("{Chào buổi sáng/chiều/tối}, {tên}!"), câu "Thầy/cô muốn làm gì hôm nay?" kèm nhắc bấm "Hỏi Lily" ở góc phải, và các thẻ gợi việc (Soạn khoá học e-learning, Soạn bài giảng tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Chấm bài, Mở khoá "<khoá gần nhất>"). Hỏi Lily thì dùng nút nổi như ở mọi trang.
+- **Nút nổi ở mọi trang giảng viên (kể cả trang chủ):** hình viên thuốc màu hồng "Hỏi Lily" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat.
+- **Cuộc trò chuyện liền mạch:** nút nổi ở mọi trang dùng chung một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Lily đưa mở trong cùng tab; sang trang khác thì ngăn kéo tự thu lại thành nút nổi, thầy/cô thao tác xong bấm "Hỏi Lily" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
+- **Câu hỏi đề xuất khi mở Lily:** ngăn kéo mới mở (chưa có tin nào) hiện lời chào của Lily và "Thầy/cô có thể hỏi em, ví dụ:" kèm tối đa 4 câu bấm là hỏi ngay. Câu đổi theo trang đang đứng (vd ở "Tổ chức thi" gợi ý về link thi nhanh), ở trang chung có thêm câu mở khoá giảng viên vừa chỉnh gần nhất (dạng `Mở khoá học "<tên khoá>"`), và câu cuối luôn là "Hôm nay tôi nên làm gì trước?".
+- **Trong ngăn kéo:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Em đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". Mỗi câu hỏi trừ hạn mức Token AI.
 - Lily chỉ chọn điểm đến trong danh mục cố định, chỉ trả lời nghiệp vụ Limio, không tiết lộ kỹ thuật, và trả lời cách dùng theo kho `teacherAssistantGuide.ts` (lấy từ tệp này).
 
 ## Không được viết (chưa có hoặc chưa tới tay giảng viên)
@@ -682,7 +687,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
 - Chưa kiểm chứng: hiển thị thật của nhãn "Premium/Trial" từng loại tài khoản; trạng thái tab "teams" trong
   trình soạn khoá; đường quay lại trang Dàn ý từ trình sửa Limio-Live; cơ chế học viên xem slide đồng bộ theo
   giảng viên; Thử nghiệm câu hỏi có thật sự mặc định "Không hiện" đáp án; khi nào dòng "N lesson live chưa tag
-  skill" hiện ở "Cần xử lý gấp" với khoá không bật cá nhân hoá.
+  skill" hiện ở "Việc cần làm hôm nay" với khoá không bật cá nhân hoá.
 
 ## Tài khoản mẫu để chụp ảnh
 
