@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nhờ AI kiểu chatbot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f2; --surface: #ffffff; --surface-2: #f1f3ea; --ink: #1c2410; --ink-2: #47523a; --ink-3: #6b7660; --faint: #8f9884; --line: #dfe3d2;
+    --brand: #4d7c0f; --brand-strong: #3f6212; --brand-soft: #ecf6d2; --brand-fill: #65a30d;
+    --shadow: 0 1px 2px rgb(28 36 16 / .05), 0 10px 26px -14px rgb(28 36 16 / .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24;
+      --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11160b; --surface: #1a2111; --surface-2: #222b17; --ink: #f1f5e6; --ink-2: #c8d1b6; --ink-3: #98a387; --faint: #7d876f; --line: #323d24;
+    --brand: #84cc16; --brand-strong: #bef264; --brand-soft: #27371a; --brand-fill: #84cc16; --shadow: 0 1px 2px rgb(0 0 0 / .4);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; font-size: 15px;
+    font-family: "Be Vietnam Pro", -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  button, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--brand-fill); outline-offset: 2px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px 60px; }
+  header.top { padding: 18px 0 6px; }
+  header.top h1 { font-size: 21px; margin: 0; }
+  header.top p { margin: 4px 0 0; color: var(--ink-3); max-width: 880px; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-top: 18px; }
+  .col { flex: 0 0 auto; }
+  .cap { font-size: 13px; font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .03em; margin: 0 0 8px; }
+  .cap small { text-transform: none; font-weight: 500; letter-spacing: 0; }
+
+  /* bảng phải của hộp Sửa slide, rộng 460 px */
+  .panel { width: min(460px, calc(100vw - 32px)); height: 720px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+  .tabs { display: flex; gap: 2px; padding: 6px 12px 0; border-bottom: 1px solid var(--line); flex: none; }
+  .tabs span { padding: 9px 14px; font-weight: 600; color: var(--ink-3); border-bottom: 3px solid transparent; margin-bottom: -1px; display: inline-flex; gap: 6px; align-items: center; }
+  .tabs span.on { color: var(--ink); border-color: var(--brand); }
+
+  /* vùng tin nhắn cuộn */
+  .msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .empty { margin: auto 0; display: grid; gap: 10px; justify-items: center; text-align: center; padding: 8px 4px; }
+  .empty .logo { width: 40px; height: 40px; border-radius: 12px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; }
+  .empty h3 { margin: 0; font-size: 16px; }
+  .empty p { margin: 0; color: var(--ink-3); font-size: 13.5px; max-width: 330px; }
+  .sugg { display: grid; gap: 8px; width: 100%; margin-top: 6px; }
+  .sugg button { display: flex; align-items: center; gap: 10px; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 12px;
+    padding: 10px 12px; font-size: 14px; color: var(--ink-2); transition: border-color .15s, background .15s; }
+  .sugg button:hover { border-color: var(--brand); background: var(--brand-soft); color: var(--ink); }
+  .sugg svg { flex: none; color: var(--brand); }
+
+  .me { align-self: flex-end; max-width: 85%; background: var(--brand); color: #fff; border-radius: 18px 18px 4px 18px; padding: 8px 13px; font-size: 14px; }
+  :root[data-theme="dark"] .me { color: #11160b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .me { color: #11160b; } }
+  .ai { display: grid; grid-template-columns: 28px 1fr; gap: 9px; align-items: start; max-width: 96%; font-size: 14px; }
+  .av { width: 28px; height: 28px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; }
+  .bubble { background: var(--surface-2); border-radius: 4px 18px 18px 18px; padding: 9px 13px; }
+  .bubble p { margin: 0; }
+  .note { font-size: 12px; color: var(--ink-3); margin-top: 5px; }
+  .opts { display: grid; gap: 6px; margin-top: 8px; }
+  .opts button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 6px 10px; font-size: 13.5px; }
+  .opts button:hover { border-color: var(--brand); }
+  .follow { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--brand); color: var(--brand-strong); background: var(--surface);
+    border-radius: 10px; padding: 5px 10px; font-weight: 600; font-size: 13px; }
+  .prop { margin-top: 8px; border: 1px solid var(--brand-fill); background: var(--surface); border-radius: 12px; padding: 8px 10px; font-size: 13px; }
+  .prop .acts { display: flex; gap: 6px; margin-top: 6px; }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 4px 11px; font-weight: 600; font-size: 13px; }
+  .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .typing { display: inline-flex; gap: 4px; padding: 12px 14px; }
+  .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); animation: blink 1.2s infinite; }
+  .typing i:nth-child(2) { animation-delay: .2s; } .typing i:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
+
+  /* thanh nhập cố định ở đáy */
+  .dock { flex: none; padding: 10px 12px 10px; border-top: 1px solid var(--line); background: var(--surface); display: grid; gap: 8px; }
+  .quick { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 1px; }
+  .quick::-webkit-scrollbar { display: none; }
+  .quick button { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; font-size: 13px; color: var(--ink-2); }
+  .quick button:hover { border-color: var(--brand); color: var(--ink); }
+  .composer { display: flex; align-items: flex-end; gap: 8px; border: 1.5px solid var(--brand-fill); border-radius: 22px; padding: 6px 6px 6px 14px;
+    background: var(--surface); box-shadow: 0 2px 10px -4px rgb(77 124 15 / .35); }
+  .composer:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px rgb(101 163 13 / .2); }
+  .composer textarea { flex: 1; border: 0; outline: 0; resize: none; background: transparent; padding: 7px 0; font-size: 15px; line-height: 1.45; max-height: 140px; }
+  .send { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; display: grid; place-items: center; background: var(--brand); color: #fff; transition: background .15s; }
+  .send:disabled { background: var(--surface-2); color: var(--faint); cursor: not-allowed; }
+  .foot { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 11.5px; color: var(--faint); padding: 0 4px; }
+
+  /* bản hiện tại (ảnh chụp của người dùng), để so sánh */
+  .old .msgs { gap: 10px; }
+  .old .bigtext { color: var(--ink); font-size: 15px; line-height: 1.55; }
+  .old .gap { flex: 1; }
+  .old .oldquick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .old .oldquick span { border: 1px solid var(--line); border-radius: 9px; padding: 4px 9px; font-size: 13px; color: var(--ink-2); }
+  .old .oldbox { position: relative; border: 1.5px solid var(--line); border-radius: 12px; min-height: 64px; padding: 9px 11px; color: var(--faint); font-size: 14px; }
+  .old .oldsend { position: absolute; right: 7px; bottom: 7px; width: 32px; height: 32px; border-radius: 9px; background: #b9d48f; }
+  .old .tiny { font-size: 12px; color: var(--ink-3); }
+
+  ul.diff { margin: 22px 0 0; padding-left: 20px; max-width: 880px; color: var(--ink-2); }
+  ul.diff li { margin: 6px 0; } ul.diff b { color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <h1>Bản mẫu: tab Nhờ AI theo kiểu chatbot</h1>
+  <p>Ô nhập cố định ở đáy bảng, nổi bật như ô chat; tin nhắn cuộn ở giữa, lượt mới nhất nằm ngay trên ô nhập. Khi chưa hỏi gì, giữa bảng là vài câu gợi ý bấm được thay cho đoạn mô tả dễ nhầm là ô nhập. Bấm thử câu gợi ý, nút chọn nhanh, hoặc gõ rồi nhấn Enter.</p>
+</header>
+
+<div class="row">
+  <div class="col">
+    <p class="cap">Hiện tại <small>(theo ảnh chụp)</small></p>
+    <div class="panel old" aria-hidden="true">
+      <div class="tabs"><span>Nội dung</span><span class="on">Nhờ AI</span></div>
+      <div class="msgs">
+        <p class="bigtext">Hỏi AI về slide này, hoặc nhờ AI sửa. AI có thể trả lời, hỏi lại cho rõ, hoặc đề xuất một bản sửa; không có gì ghi vào slide khi thầy/cô chưa bấm Áp dụng.</p>
+        <p class="bigtext">Ví dụ: "Ý thứ hai có chính xác không?", "Đổi tiêu đề thành Các khái niệm."</p>
+        <div class="gap"></div>
+      </div>
+      <div class="dock">
+        <div class="oldquick"><span>Viết ngắn hơn</span><span>Thêm ví dụ</span><span>Dễ hiểu hơn</span><span>Đổi thành quiz</span><span>Viết lại từ dàn ý</span></div>
+        <div class="oldbox">Hỏi về slide này, hoặc nhờ AI sửa...<span class="oldsend"></span></div>
+        <div class="tiny">Enter để gửi, Shift + Enter xuống dòng.</div>
+        <div class="tiny">Cuộc trò chuyện không được lưu khi đóng cửa sổ sửa hoặc chuyển slide.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <p class="cap">Đề xuất <small>(dùng thử được)</small></p>
+    <div class="panel" id="panel">
+      <div class="tabs"><span>Nội dung</span><span class="on"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>Nhờ AI</span></div>
+      <div class="msgs" id="msgs" aria-live="polite"></div>
+      <div class="dock">
+        <div class="quick" role="group" aria-label="Chọn nhanh">
+          <button type="button" data-q="Viết ngắn hơn." title="Rút gọn câu chữ, giữ ý chính">Viết ngắn hơn</button>
+          <button type="button" data-q="Thêm ví dụ." title="Bổ sung một ví dụ cụ thể">Thêm ví dụ</button>
+          <button type="button" data-q="Dễ hiểu hơn." title="Dùng từ giản dị hơn">Dễ hiểu hơn</button>
+          <button type="button" data-q="Đổi thành quiz." title="Biến nội dung thành câu hỏi trắc nghiệm">Đổi thành quiz</button>
+          <button type="button" data-q="Viết lại từ dàn ý." title="Quay về ý trong dàn ý đã xác nhận">Viết lại từ dàn ý</button>
+        </div>
+        <div class="composer">
+          <textarea id="input" rows="1" aria-label="Hỏi hoặc nhờ AI sửa slide này" placeholder="Hỏi hoặc nhờ AI sửa slide này..."></textarea>
+          <button type="button" class="send" id="send" aria-label="Gửi" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        </div>
+        <div class="foot"><span>Enter để gửi · Shift + Enter xuống dòng · Không lưu khi đóng cửa sổ</span><span>Còn khoảng 140 lượt AI</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ul class="diff">
+  <li><b>Ô nhập kiểu chat</b>: bo tròn, viền xanh, bóng nhẹ, cố định ở đáy bảng; tự cao thêm khi gõ nhiều dòng (tối đa khoảng 5 dòng). Nút gửi tròn, xanh đậm khi đã có chữ, xám khi ô trống.</li>
+  <li><b>Trạng thái trống</b>: bỏ đoạn chữ to dễ nhầm là ô nhập. Giữa bảng là biểu tượng, một câu ngắn và bốn câu gợi ý dạng nút; bấm là hỏi ngay.</li>
+  <li><b>Tin nhắn</b>: giảng viên bên phải (bong bóng xanh), AI bên trái (biểu tượng và bong bóng xám); lượt mới nhất ngay trên ô nhập, tự cuộn xuống; đang chờ thì hiện ba chấm.</li>
+  <li><b>Chọn nhanh</b>: một hàng nút nhỏ ngay trên ô nhập, vuốt ngang khi không đủ chỗ, không chiếm nhiều dòng.</li>
+  <li><b>Ghi chú</b>: "Enter để gửi", "không lưu khi đóng cửa sổ" và số lượt còn lại gộp thành một dòng chữ nhỏ dưới ô nhập.</li>
+</ul>
+</div>
+
+<script>
+const msgs = document.getElementById("msgs"), input = document.getElementById("input"), send = document.getElementById("send");
+const AI = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>`;
+const ARROW = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+const SUGG = ["Ý thứ hai có chính xác không?", "Đổi tiêu đề thành Các khái niệm.", "Viết lại cho dễ hiểu hơn.", "Gợi ý một câu hỏi để mở đầu slide này."];
+
+function empty() {
+  msgs.innerHTML = `<div class="empty"><div class="logo">${AI}</div><h3>Hỏi AI về slide này</h3>
+    <p>AI có thể trả lời, hỏi lại cho rõ, hoặc đề xuất một bản sửa. Không có gì ghi vào slide khi thầy/cô chưa bấm Áp dụng.</p>
+    <div class="sugg">${SUGG.map((s) => `<button type="button" data-s="${s}">${ARROW}<span>${s}</span></button>`).join("")}</div></div>`;
+  msgs.querySelectorAll("[data-s]").forEach((b) => b.addEventListener("click", () => ask(b.dataset.s)));
+}
+const end = () => (msgs.scrollTop = msgs.scrollHeight);
+function me(t) { if (msgs.querySelector(".empty")) msgs.innerHTML = ""; msgs.insertAdjacentHTML("beforeend", `<div class="me">${t}</div>`); end(); }
+function ai(html) { msgs.insertAdjacentHTML("beforeend", `<div class="ai"><div class="av">${AI}</div><div class="bubble">${html}</div></div>`); end(); return msgs.lastElementChild; }
+function think(fn) {
+  const t = ai(`<span class="typing" aria-label="AI đang trả lời"><i></i><i></i><i></i></span>`);
+  t.querySelector(".bubble").style.padding = "0";
+  send.disabled = true;
+  setTimeout(() => { t.remove(); fn(); send.disabled = !input.value.trim(); }, 700);
+}
+function proposal(text) {
+  const el = ai(`<p>${text}</p><div class="prop"><b>Đề xuất đang hiện trên khung xem trước</b><div class="acts"><button class="btn" data-a="0">Bỏ</button><button class="btn primary" data-a="1">Áp dụng</button></div></div>`);
+  el.querySelectorAll("[data-a]").forEach((b) => b.addEventListener("click", () => {
+    el.querySelector(".prop").outerHTML = `<p class="note">${b.dataset.a === "1" ? "Đã áp dụng vào slide." : "Đã bỏ đề xuất."}</p>`;
+  }));
+}
+function ask(t) {
+  me(t);
+  const s = t.toLowerCase();
+  think(() => {
+    if (s.includes("chính xác")) {
+      const el = ai(`<p>Ý thứ hai đúng về cơ bản: bài làm cho thấy mức đạt hiện tại. Câu sẽ rõ hơn nếu nói mức đạt đó được so với mục tiêu.</p><button class="follow">${AI} Làm theo gợi ý này</button>`);
+      el.querySelector(".follow").addEventListener("click", (e) => { e.currentTarget.disabled = true; me("Làm theo gợi ý này."); think(() => proposal("Đã sửa câu giải thích của thẻ thứ hai.")); });
+    } else if (s.includes("dễ hiểu")) {
+      const el = ai(`<p>Thầy/cô muốn dễ hiểu hơn theo hướng nào?</p><div class="opts"><button>Viết cho sinh viên năm nhất.</button><button>Giữ đối tượng, chỉ dùng từ giản dị hơn.</button><button>Thêm một ví dụ đời thường cho mỗi thẻ.</button></div>`);
+      el.querySelectorAll(".opts button").forEach((b) => b.addEventListener("click", () => { el.querySelectorAll(".opts button").forEach((x) => (x.disabled = true)); ask(b.textContent); }));
+    } else if (s.includes("tiêu đề") || s.includes("ngắn") || s.includes("ví dụ") || s.includes("giản dị") || s.includes("năm nhất") || s.includes("dàn ý") || s.includes("quiz")) {
+      proposal(s.includes("tiêu đề") ? "Đã đổi tiêu đề, giữ nguyên ba thẻ." : "Đây là bản đề xuất sửa slide.");
+    } else {
+      ai(`<p>Có thể mở đầu bằng câu hỏi: "Lần gần nhất bạn biết mình đã đạt mục tiêu học tập là khi nào?"</p><p class="note">Câu trả lời dựa trên kiến thức chung, thầy/cô cần kiểm tra.</p>`);
+    }
+  });
+}
+function grow() { input.style.height = "auto"; input.style.height = Math.min(input.scrollHeight, 140) + "px"; }
+input.addEventListener("input", () => { send.disabled = !input.value.trim(); grow(); });
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && !e.isComposing && input.value.trim()) { e.preventDefault(); const v = input.value.trim(); input.value = ""; grow(); send.disabled = true; ask(v); }
+});
+send.addEventListener("click", () => { const v = input.value.trim(); if (!v) return; input.value = ""; grow(); send.disabled = true; ask(v); });
+document.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => ask(b.dataset.q)));
+empty();
+</script>
+</body>
+</html>
