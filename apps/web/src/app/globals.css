@@ -15,6 +15,20 @@
 
   --brand: 101 163 13;          /* lime-600 */
   --brand-soft: 247 254 231;    /* lime-50 tint */
+  /* Thang màu thương hiệu (lime). Vỏ Limio Language ghi đè ở khối [data-app="language"] bên dưới. */
+  --brand-50: 247 254 231;
+  --brand-100: 236 252 203;
+  --brand-200: 217 249 157;
+  --brand-300: 190 242 100;
+  --brand-400: 163 230 53;
+  --brand-500: 132 204 22;
+  --brand-600: 101 163 13;
+  --brand-700: 77 124 15;
+  --brand-800: 63 98 18;
+  --brand-900: 54 83 20;
+  --brand-950: 26 46 5;
+  --brand-grad-a: #65a30d;
+  --brand-grad-b: #84cc16;
   --accent: 245 158 11;         /* amber-500 */
   --success: 16 185 129;        /* emerald-500 */
   --warning: 234 179 8;         /* amber-500 */
@@ -26,6 +40,25 @@
   --surface-warning: 254 249 195; /* yellow-100 */
   --surface-info:    224 242 254; /* sky-100 */
   --surface-danger:  254 226 226; /* red-100 */
+}
+
+/* Limio Language — cùng họ màu, sắc độ riêng (teal) để nhìn là biết đang ở vỏ nào. */
+[data-app="language"] {
+  --brand: 13 148 136;          /* teal-600 */
+  --brand-soft: 240 253 250;    /* teal-50 */
+  --brand-50: 240 253 250;
+  --brand-100: 204 251 241;
+  --brand-200: 153 246 228;
+  --brand-300: 94 234 212;
+  --brand-400: 45 212 191;
+  --brand-500: 20 184 166;
+  --brand-600: 13 148 136;
+  --brand-700: 15 118 110;
+  --brand-800: 17 94 89;
+  --brand-900: 19 78 74;
+  --brand-950: 4 47 46;
+  --brand-grad-a: #0d9488;
+  --brand-grad-b: #14b8a6;
 }
 
 .dark, :root.dark {
@@ -307,8 +340,8 @@
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(
       120deg,
-      #65a30d 0%,
-      #84cc16 30%,
+      var(--brand-grad-a) 0%,
+      var(--brand-grad-b) 30%,
       #ec4899 100%
     );
   }

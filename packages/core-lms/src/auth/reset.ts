@@ -56,7 +56,10 @@ export class ResetError extends Error {
   }
 }
 
-export async function resetPassword(rawInput: unknown, db: DbClient = prisma): Promise<void> {
+export async function resetPassword(
+  rawInput: unknown,
+  db: DbClient = prisma,
+): Promise<{ userId: string; email: string }> {
   const parsed = ResetInput.safeParse(rawInput);
   if (!parsed.success) throw new ResetError("validation_failed");
 
@@ -83,4 +86,5 @@ export async function resetPassword(rawInput: unknown, db: DbClient = prisma): P
   });
   // Burn any other outstanding reset tokens for this user.
   await invalidateOutstandingTokens(token.userId, "password_reset", db);
+  return { userId: user.id, email: user.email };
 }

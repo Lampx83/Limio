@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Timer } from "lucide-react";
 import { formatScoreBands, parseScoreBandsText, type Band } from "@/lib/scoreBandsText";
 
@@ -29,28 +28,29 @@ const ERR_TEXT: Record<string, string> = {
   exam_not_draft: "Chỉ đổi được khi đề còn ở trạng thái nháp.",
 };
 
+export type MockPart = "structure" | "scoring" | "practice";
+
 /**
- * LANG G5a — bật chế độ "Thi thử" và đặt giờ/kỹ năng cho từng phần.
- * Thêm phần và xếp câu hỏi vào phần vẫn làm ở khu "Nội dung bài thi" bên dưới.
+ * LANG G5a / L4.3 — các tab của ĐỀ NGOẠI NGỮ (thi thử): `structure` (phần · kỹ năng · giờ), `scoring` (bảng quy đổi
+ * điểm), `practice` (cho thi thử / cho luyện đề). Loại đề cố định từ lúc tạo nên không còn công tắc bật/tắt thi thử.
+ * Thêm phần và xếp câu hỏi vào phần: tab "Cấu trúc" (SectionsPanel) và "Nội dung".
  */
 export default function MockExamPanel({
   examId,
-  initialMockMode,
+  part,
   initialAllowMock,
   initialAllowPractice,
   locked,
   lockedReason,
 }: {
   examId: string;
-  initialMockMode: boolean;
+  part: MockPart;
   initialAllowMock: boolean;
   initialAllowPractice: boolean;
   /** true = không sửa được (đã xuất bản / đã có lượt thi / lưu trữ). */
   locked: boolean;
   lockedReason?: string;
 }) {
-  const router = useRouter();
-  const [mock, setMock] = useState(initialMockMode);
   const [allowMock, setAllowMock] = useState(initialAllowMock);
   const [allowPractice, setAllowPractice] = useState(initialAllowPractice);
   const [sections, setSections] = useState<Section[] | null>(null);
@@ -63,12 +63,12 @@ export default function MockExamPanel({
   }, [examId]);
 
   useEffect(() => {
-    if (!mock) return;
+    if (part === "practice") return;
     void refresh();
     const on = () => void refresh();
     window.addEventListener("fbm:exam-sections-changed", on);
     return () => window.removeEventListener("fbm:exam-sections-changed", on);
-  }, [mock, refresh]);
+  }, [part, refresh]);
 
   async function call(url: string, body: unknown): Promise<boolean> {
     setErr(null);
@@ -90,13 +90,6 @@ export default function MockExamPanel({
     }
   }
 
-  async function toggle(next: boolean) {
-    if (await call(`/api/exams/${examId}`, { mockMode: next })) {
-      setMock(next);
-      router.refresh();
-    }
-  }
-
   async function toggleAllowMock(next: boolean) {
     if (await call(`/api/exams/${examId}`, { allowMock: next })) setAllowMock(next);
   }
@@ -106,86 +99,80 @@ export default function MockExamPanel({
   }
 
   async function patchSection(id: string, body: { durationMin?: number | null; languageSkill?: Skill | null }) {
-    if (await call(`/api/exam-sections/${id}`, body)) await refresh();
-    else await refresh();
+    await call(`/api/exam-sections/${id}`, body);
+    await refresh();
   }
 
   const total = (sections ?? []).reduce((a, s) => a + (s.durationMin ?? 0), 0);
   const missing = (sections ?? []).filter((s) => !s.durationMin).length;
 
   return (
-    <section className="mt-6 rounded border border-default bg-white p-5" data-testid="mock-exam-panel">
-      <label className="flex items-start gap-3">
-        <input
-          type="checkbox"
-          className="mt-1 h-4 w-4"
-          checked={mock}
-          disabled={locked || busy}
-          onChange={(e) => void toggle(e.target.checked)}
-        />
-        <span>
-          <span className="flex items-center gap-1.5 text-base font-semibold">
-            <Timer className="h-4 w-4 shrink-0 text-slate-400" /> Đề thi thử (HSK · IELTS · TOEIC…)
-          </span>
-          <span className="block text-sm text-faint">
-            Mỗi phần có giờ riêng, học viên làm lần lượt từng phần và <b>không quay lại</b> phần đã nộp.
-            Hết giờ phần thì tự sang phần kế. Đề thi thật (không bật mục này) giữ nguyên cách làm bài tự do.
-          </span>
-        </span>
-      </label>
-      {locked && lockedReason && <p className="mt-2 text-sm text-amber-700">{lockedReason}</p>}
+    <section className="mt-6 rounded border border-default bg-white p-5" data-testid="mock-exam-panel" data-part={part}>
+      {part === "structure" && (
+        <>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold">
+            <Timer className="h-4 w-4 shrink-0 text-slate-400" /> Cấu trúc đề thi
+          </h2>
+          <p className="mt-1 text-sm text-faint">
+            Mỗi phần có kỹ năng và giờ riêng. Học viên làm lần lượt từng phần và <b>không quay lại</b> phần đã nộp; hết giờ
+            phần thì tự sang phần kế.
+          </p>
+        </>
+      )}
+      {part === "scoring" && (
+        <>
+          <h2 className="text-base font-semibold">Thang điểm</h2>
+          <p className="mt-1 text-sm text-faint">Quy đổi số câu đúng của từng phần ra khoảng điểm ước lượng (tuỳ chọn).</p>
+        </>
+      )}
+      {part === "practice" && (
+        <>
+          <h2 className="flex items-center gap-1.5 text-base font-semibold">Chế độ cho học viên</h2>
+          <p className="mt-1 text-sm text-faint">Mỗi đề làm được theo hai chế độ — bật hoặc tắt từng chế độ ở đây.</p>
+        </>
+      )}
+      {locked && lockedReason && part === "structure" && <p className="mt-2 text-sm text-amber-700">{lockedReason}</p>}
       {err && <p role="alert" className="mt-2 text-sm text-red-700">{err}</p>}
 
-      {mock && (
-        <label className="mt-4 flex items-start gap-3 rounded border border-default p-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4"
-            checked={allowMock}
-            disabled={busy}
-            onChange={(e) => void toggleAllowMock(e.target.checked)}
-          />
-          <span>
-            <span className="font-medium">Cho thi thử</span>
-            <span className="block text-faint">
-              Tắt thì học viên không bắt đầu được lượt thi mới và đề biến mất khỏi mục “Luyện thi” (lượt đang làm dở vẫn
-              tiếp tục được). Đổi được bất cứ lúc nào, kể cả sau khi xuất bản.
+      {part === "practice" && (
+        <div className="mt-4 space-y-3">
+          <label className="flex items-start gap-3 rounded border border-default p-3 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4" checked={allowMock} disabled={busy} onChange={(e) => void toggleAllowMock(e.target.checked)} />
+            <span>
+              <span className="font-medium">Cho thi thử (phòng thi mô phỏng)</span>
+              <span className="block text-faint">
+                Bấm giờ từng phần, không tạm dừng, không quay lại phần đã nộp. Tắt thì học viên không bắt đầu được lượt thi mới
+                và đề biến mất khỏi mục “Luyện thi” (lượt đang làm dở vẫn tiếp tục được). Đổi được bất cứ lúc nào, kể cả sau khi
+                xuất bản.
+              </span>
             </span>
-          </span>
-        </label>
+          </label>
+          <label className="flex items-start gap-3 rounded border border-default p-3 text-sm">
+            <input type="checkbox" className="mt-0.5 h-4 w-4" checked={allowPractice} disabled={busy} onChange={(e) => void toggleAllowPractice(e.target.checked)} />
+            <span>
+              <span className="font-medium">Cho luyện đề</span>
+              <span className="block text-faint">
+                Cho học viên luyện đề này theo kỹ năng hoặc từng phần: không bấm giờ, quay lại sửa tự do, xem đáp án ngay sau
+                từng câu. Kỹ năng lấy từ nhãn kỹ năng của từng phần. Tắt thì học viên không bắt đầu được buổi luyện mới. Luyện
+                đề không cộng XP và không ảnh hưởng điểm thi thử.
+              </span>
+            </span>
+          </label>
+        </div>
       )}
 
-      {mock && (
-        <label className="mt-3 flex items-start gap-3 rounded border border-default p-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4"
-            checked={allowPractice}
-            disabled={busy}
-            onChange={(e) => void toggleAllowPractice(e.target.checked)}
-          />
-          <span>
-            <span className="font-medium">Cho luyện đề</span>
-            <span className="block text-faint">
-              Cho học viên luyện đề này theo kỹ năng hoặc từng phần: không bấm giờ, quay lại sửa tự do, xem đáp án ngay sau
-              từng câu. Kỹ năng lấy từ nhãn kỹ năng của từng phần. Tắt thì học viên không bắt đầu được buổi luyện mới.
-              Luyện đề không cộng XP và không ảnh hưởng điểm thi thử.
-            </span>
-          </span>
-        </label>
-      )}
-
-      {mock && (
+      {part !== "practice" && (
         <div className="mt-4">
           {sections === null ? (
             <p className="text-sm text-faint">Đang tải…</p>
           ) : sections.length === 0 ? (
             <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-              Chưa có phần nào. Vào mục <b>Nội dung bài thi</b> bên dưới, bấm <b>+ Section mới</b> để thêm
-              (ví dụ Nghe, Đọc, Viết), rồi quay lại đây đặt giờ cho từng phần.
+              Chưa có phần nào. {part === "structure" ? <>Bấm <b>+ Section mới</b> ở khu “Các phần” bên dưới để thêm (ví dụ Nghe, Đọc, Viết), rồi đặt giờ cho từng phần tại đây.</> : <>Thêm phần ở tab <b>Cấu trúc</b> trước.</>}
             </p>
           ) : (
             <>
+              {part === "structure" && (
+                <>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead className="text-left text-caption">
@@ -234,11 +221,14 @@ export default function MockExamPanel({
                   </tbody>
                 </table>
               </div>
-              <p className="mt-3 text-sm">
-                Tổng thời gian:{" "}
-                <b>{total} phút</b>
-                {missing > 0 && <span className="ml-2 text-amber-700">· {missing} phần chưa có giờ — chưa xuất bản được</span>}
-              </p>
+                  <p className="mt-3 text-sm">
+                    Tổng thời gian:{" "}
+                    <b>{total} phút</b>
+                    {missing > 0 && <span className="ml-2 text-amber-700">· {missing} phần chưa có giờ — chưa xuất bản được</span>}
+                  </p>
+                </>
+              )}
+              {part === "scoring" && (
               <div className="mt-4 space-y-2" data-testid="score-bands">
                 <h3 className="text-sm font-semibold">Bảng quy đổi điểm (tuỳ chọn)</h3>
                 <p className="text-xs text-faint">
@@ -259,6 +249,7 @@ export default function MockExamPanel({
                   />
                 ))}
               </div>
+              )}
             </>
           )}
         </div>

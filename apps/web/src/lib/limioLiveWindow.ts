@@ -40,24 +40,42 @@ const remember = (details: ScreenDetailsLike) => {
   notify();
 };
 
+// Trạng thái quyền "Quản lý cửa sổ" (null = chưa đọc được). Theo dõi sự kiện đổi quyền để giảng viên bật
+// lại trong cài đặt trang web thì trang tự nhận, không cần tải lại.
+let permState: PermissionState | null = null;
+let permWatched = false;
+
+async function readPermission(): Promise<PermissionState | null> {
+  // Tên quyền cũ là "window-placement" (Chrome < 111).
+  for (const name of ["window-management", "window-placement"]) {
+    try {
+      const st = await navigator.permissions.query({ name: name as PermissionName });
+      if (!permWatched) {
+        permWatched = true;
+        st.addEventListener?.("change", () => {
+          permState = st.state;
+          notify();
+          primeScreenDetails();
+        });
+      }
+      return st.state;
+    } catch {
+      /* trình duyệt không biết tên này — thử tên kế */
+    }
+  }
+  return null;
+}
+
 async function primeScreenDetails(): Promise<void> {
   const getDetails = getScreenDetailsFn();
-  if (!getDetails || cachedDetails || !isExtended()) return;
+  if (!getDetails || !isExtended()) return;
+  permState = await readPermission();
+  notify();
+  if (cachedDetails || permState !== "granted") return;
   try {
-    // Tên quyền cũ là "window-placement" (Chrome < 111).
-    let state: PermissionState | null = null;
-    for (const name of ["window-management", "window-placement"]) {
-      try {
-        state = (await navigator.permissions.query({ name: name as PermissionName })).state;
-        break;
-      } catch {
-        /* trình duyệt không biết tên này — thử tên kế */
-      }
-    }
-    if (state !== "granted") return;
     remember(await getDetails.call(window));
   } catch {
-    /* không có quyền / API lỗi — giữ cách cũ */
+    /* API lỗi — giữ cách cũ */
   }
 }
 
@@ -75,11 +93,46 @@ const projectorPair = () => {
   return projector ? { here, projector } : null;
 };
 
-// Editor dùng để biết bấm Presenter view sẽ chạy kiểu PowerPoint hay kiểu cũ (đổi mô tả nút).
-export function useProjectorReady(): boolean {
-  const [ready, setReady] = useState(false);
+/**
+ * Presenter view sẽ chạy thế nào:
+ *   "ready"       = có màn hình mở rộng và đã có quyền → màn chiếu tự lên màn hình thứ hai, toàn màn hình;
+ *   "prompt"      = có màn hình mở rộng nhưng chưa xin quyền → cần nút "Cho phép" (xin riêng, không chen lúc mở cửa sổ:
+ *                   cửa sổ màn chiếu bật lên sẽ che mất hộp hỏi quyền của trình duyệt);
+ *   "denied"      = quyền bị chặn → chỉ cách bật lại trong cài đặt trang web;
+ *   "unavailable" = một màn hình, chế độ nhân bản, hoặc trình duyệt không hỗ trợ (Safari, Firefox) → cách cũ.
+ */
+export type ProjectorStatus = "ready" | "prompt" | "denied" | "unavailable";
+
+export function projectorStatus(): ProjectorStatus {
+  if (!getScreenDetailsFn() || !isExtended()) return "unavailable";
+  if (projectorPair()) return "ready";
+  if (permState === "denied") return "denied";
+  // Đã có quyền nhưng đang đọc danh sách màn hình: chưa hiện gì để khỏi nháy nút "Cho phép".
+  if (permState === "granted") return "unavailable";
+  return "prompt";
+}
+
+/** Gọi trong cú click của nút "Cho phép": trình duyệt hiện hộp hỏi quyền (lần đầu), rồi đọc danh sách màn hình. */
+export async function requestProjectorPermission(): Promise<ProjectorStatus> {
+  const getDetails = getScreenDetailsFn();
+  if (!getDetails) return "unavailable";
+  try {
+    const details = await getDetails.call(window);
+    permState = "granted";
+    remember(details);
+  } catch {
+    // Bị từ chối hoặc đóng hộp hỏi: đọc lại để phân biệt "chặn" với "chưa trả lời".
+    permState = (await readPermission()) ?? "prompt";
+  }
+  notify();
+  return projectorStatus();
+}
+
+// Editor dùng để chọn cách chạy Presenter view và hiện dòng xin quyền khi cần.
+export function useProjectorStatus(): ProjectorStatus {
+  const [status, setStatus] = useState<ProjectorStatus>("unavailable");
   useEffect(() => {
-    const update = () => setReady(!!projectorPair());
+    const update = () => setStatus(projectorStatus());
     listeners.add(update);
     update();
     primeScreenDetails();
@@ -94,7 +147,7 @@ export function useProjectorReady(): boolean {
       (window.screen as any).removeEventListener?.("change", onScreenChange);
     };
   }, []);
-  return ready;
+  return status;
 }
 
 const popupFeatures = (sc: ScreenLike) =>

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import {
   ExamError,
-  isUserEnrolled,
+  canUseExamContent,
   startExamAttempt,
   startOralExamAttempt,
 } from "@feedbackme/core-lms";
@@ -36,19 +36,20 @@ export default async function ExamLandingPage({
   }
   const course = await prisma.course.findUnique({
     where: { slug: params.slug },
-    select: { id: true },
+    select: { id: true, kind: true },
   });
   if (!course) notFound();
-  if (!(await isUserEnrolled(session.user.id, course.id))) {
-    redirect(`/catalog/${params.slug}`);
-  }
 
   // Server-side validation: exam must exist and belong to this course.
   const exam = await prisma.exam.findUnique({
     where: { id: params.examId },
-    select: { id: true, courseId: true, title: true, status: true, kind: true, mockMode: true, allowMock: true },
+    select: { id: true, courseId: true, title: true, status: true, kind: true, mockMode: true, allowMock: true, freePreview: true },
   });
   if (!exam || exam.courseId !== course.id) notFound();
+  // Đã ghi danh, hoặc đề HỌC THỬ MIỄN PHÍ của khoá luyện đề (LANG L6.1). Khoá luyện đề chưa mua → về thư viện.
+  if (!(await canUseExamContent(session.user.id, { courseId: course.id, freePreview: exam.freePreview }, prisma))) {
+    redirect(course.kind === "practice_bank" ? `/learn/${params.slug}/practice` : `/catalog/${params.slug}`);
+  }
 
   // A6.3 — Vấn đáp AI không có ExamQuestion/shuffle/sessionToken query-param
   // như thi viết, nên đi luồng bắt đầu riêng và runtime URL riêng (/oral/...).

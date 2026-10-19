@@ -10,9 +10,9 @@ Trang này thay ba thẻ trong `tao-bai-giang-ba-the.md`. Giữ lại từ đó:
 ## Một ô
 
 - **M1.** Trang "Tạo bài giảng" gồm:
-  - Câu dẫn "Thầy/cô muốn soạn bài giảng gì? Có tài liệu thì đính kèm một tệp, AI sẽ bám sát tài liệu đó."
+  - Câu dẫn (người dùng chốt 2026-10-19): "Limio có thể hỗ trợ thầy/cô soạn bài giảng tương tác chỉ từ một ý tưởng. Nếu có tài liệu tham khảo, thầy/cô đính kèm tệp. Nếu đã có bài giảng PowerPoint, Limio hỗ trợ soạn lại kèm các nội dung tương tác." Không còn dòng ghi chú dài ở cuối trang.
   - Một ô mô tả (tối đa 2.000 ký tự).
-  - Nút "Đính kèm tài liệu".
+  - Nút "Đính kèm tài liệu" kèm chữ nhạt "(không bắt buộc)", cạnh nút có dòng giới hạn "Một tệp: Word, PDF, .txt, .md tối đa 10 MB; PowerPoint (.pptx) tối đa 50 MB".
   - Hàng thời lượng, công tắc internet, nút "Soạn dàn ý".
   - Ví dụ mẫu.
 - **M2.** Mô tả luôn là ý muốn của giảng viên: chủ đề, người học, mục tiêu, điều cần nhấn mạnh. AI đọc mô tả trong mọi trường hợp.

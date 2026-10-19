@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { APP_MODE_COOKIE, languageEntryRouting } from "@/lib/appMode";
 import { applyAttributionCookie } from "@/lib/growth/edge";
 
 /**
@@ -57,7 +58,24 @@ function isPrivate(pathname: string): boolean {
 }
 
 export function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+  // LANG L1 — vào /language hoặc tên miền riêng (LANGUAGE_HOST) thì đặt chế độ Limio Language; "/" của tên miền
+  // riêng được viết lại thành /language. Không đặt LANGUAGE_HOST thì chỉ còn nhánh /language.
+  const entry = languageEntryRouting({
+    host: req.headers.get("host"),
+    languageHost: process.env.LANGUAGE_HOST,
+    pathname: req.nextUrl.pathname,
+  });
+  let res: NextResponse;
+  if (entry?.rewriteTo) {
+    const url = req.nextUrl.clone();
+    url.pathname = entry.rewriteTo;
+    res = NextResponse.rewrite(url);
+  } else {
+    res = NextResponse.next();
+  }
+  if (entry && req.cookies.get(APP_MODE_COOKIE)?.value !== entry.setMode) {
+    res.cookies.set(APP_MODE_COOKIE, entry.setMode, { path: "/", sameSite: "lax", maxAge: 60 * 60 * 24 * 365 });
+  }
   // `pathname` đã bỏ basePath, nên danh sách trên viết theo đường dẫn app —
   // giống mọi nơi khác trong codebase (xem `lib/apiUrl.ts`).
   if (isPrivate(req.nextUrl.pathname)) {
