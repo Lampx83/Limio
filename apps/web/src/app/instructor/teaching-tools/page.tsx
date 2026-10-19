@@ -42,7 +42,7 @@ export default async function TeachingToolsPage() {
 
   return (
     <main>
-      {/* Trang mở công cụ dùng ngay tại lớp, khác "Slide tương tác" (soạn sẵn rồi trình chiếu). */}
+      {/* Trang mở công cụ dùng ngay tại lớp, khác "Bài giảng tương tác" (soạn sẵn rồi trình chiếu). */}
       <header className="mb-8">
         <h1 className="text-2xl font-bold">Hoạt động nhanh</h1>
         <p className="mt-1 text-sm text-faint">

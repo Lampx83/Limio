@@ -268,12 +268,6 @@ export default async function InstructorCourseEditPage({
             ← Khóa của tôi
           </Link>
           <div className="flex flex-wrap items-center gap-2">
-            {/* LANG L6 — khoá luyện đề: lối vào thư viện đề (quản lý vài trăm đề). */}
-            {course.kind === "practice_bank" && (
-              <Link href={`/instructor/courses/${course.id}/library`} className="btn-primary btn-sm">
-                Thư viện đề
-              </Link>
-            )}
             <PublishControls
               courseId={course.id}
               status={course.status}

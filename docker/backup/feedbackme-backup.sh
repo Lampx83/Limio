@@ -25,11 +25,6 @@
 #     local copy still has value. It is recorded in the manifest and surfaced in
 #     the exit summary, because the neighbouring ScoreUp backup silently failed
 #     its NAS step for five weeks and nobody noticed.
-#   * Log alone is not enough — nobody reads it until it is too late. When
-#     ALERT_WEBHOOK_URL is set (env, or the line in /etc/feedbackme/.env.prod
-#     if readable), every run that is not fully ok POSTs ONE short message:
-#     hard failures (dump/verify) immediately, the rest (uploads, missing
-#     videos, offsite) summed up at the end. Same body as docker/cron/alert.sh.
 set -euo pipefail
 
 MODE="${1:-daily}"
@@ -75,45 +70,8 @@ mkdir -p "$LOCAL_ROOT" "$LOCAL_DIR" "$MIRROR_DIR"
 # once from tee's direct file write, once from tee's stdout passthrough being
 # re-captured by cron's redirect into the same file.
 log()  { printf '[%s] [%s] %s\n' "$(date '+%F %T')" "$MODE" "$*"; }
-
-# ── Alerting ────────────────────────────────────────────────────────────
-# Cron runs this with a bare env, so fall back to the prod env file. Only the
-# two ALERT_* lines are read from it — never sourced (it holds DB secrets).
-ENV_FILE="${FEEDBACKME_ENV_FILE:-/etc/feedbackme/.env.prod}"
-env_from_file() {
-  [[ -r "$ENV_FILE" ]] || return 0
-  sed -n "s/^$1=//p" "$ENV_FILE" | tail -1 | sed -e "s/^[\"']//" -e "s/[\"']\$//"
-}
-ALERT_WEBHOOK_URL="${ALERT_WEBHOOK_URL:-$(env_from_file ALERT_WEBHOOK_URL)}"
-ALERT_HOST_LABEL="${ALERT_HOST_LABEL:-$(env_from_file ALERT_HOST_LABEL)}"
-ALERT_HOST_LABEL="${ALERT_HOST_LABEL:-$(hostname)}"
-ALERT_STATE="${LOCAL_ROOT}/.alert-${MODE}.last"
-
-# alert <message> — at most once per 30 min per mode (a manual re-run right
-# after a failure must not double-post). Never fails: a broken webhook must not
-# break the backup.
-alert() {
-  [[ -n "$ALERT_WEBHOOK_URL" ]] || return 0
-  local now last text
-  now=$(date +%s)
-  last=$(cat "$ALERT_STATE" 2>/dev/null || echo 0)
-  [[ "$last" =~ ^[0-9]+$ ]] || last=0
-  if (( now - last < 1800 )); then log "alert throttled: $*"; return 0; fi
-  text="🚨 [${ALERT_HOST_LABEL}] backup ${MODE} ${NAME}: $*"
-  text=${text//\\/\\\\}; text=${text//\"/\\\"}; text=${text//$'\t'/ }; text=${text//$'\n'/\\n}
-  if curl --fail --silent --show-error --max-time 10 -o /dev/null \
-       -H 'Content-Type: application/json' -d "{\"text\":\"${text}\"}" \
-       "$ALERT_WEBHOOK_URL" 2>&1; then
-    echo "$now" > "$ALERT_STATE"
-    log "alert sent"
-  else
-    log "alert webhook FAILED"
-  fi
-  return 0
-}
-
-fail() { log "FAIL: $*"; alert "THẤT BẠI — $*. Bản backup lần này KHÔNG dùng được."; exit 1; }
-trap 'log "ABORT line $LINENO"; alert "ABORT ở dòng $LINENO — xem ${LOG}"' ERR
+fail() { log "FAIL: $*"; exit 1; }
+trap 'log "ABORT line $LINENO"' ERR
 
 log "START $NAME"
 
@@ -191,11 +149,8 @@ if [[ "$MODE" != "daily" && "$UPLOADS_OK" -eq 1 ]]; then
     }
   done < <(docker exec "$PG_CTR" psql -U "$PGUSER_IN" -d "$PGDB_IN" -At -c \
       "SELECT payload->>'url' FROM \"ContentItem\" WHERE type='video' AND payload->>'url' LIKE '/api/%'" 2>/dev/null || true)
-  if [[ "$MISSING" -eq 0 ]]; then
-    log "mirror khớp DB — không thiếu video nào"
-  else
-    log "CẢNH BÁO: $MISSING video có trong DB nhưng không có trong mirror"
-  fi
+  [[ "$MISSING" -eq 0 ]] && log "mirror khớp DB — không thiếu video nào" \
+                         || log "CẢNH BÁO: $MISSING video có trong DB nhưng không có trong mirror"
   echo "missing_videos=$MISSING" >> "${LOCAL_DIR}/MANIFEST.txt.pre" 2>/dev/null || true
 fi
 
@@ -256,16 +211,6 @@ for d in "${old[@]:-}"; do
 done
 
 # ── 6. Summary ──────────────────────────────────────────────────────────
-# One message for everything that is not ok, so a bad night is one ping.
-ISSUES=()
-[[ "$UPLOADS_OK" -ne 1 ]] && ISSUES+=("uploads THẤT BẠI — mirror là bản cũ (dump DB vẫn ok)")
-[[ "${MISSING:-0}" -gt 0 ]] && ISSUES+=("${MISSING} video có trong DB nhưng thiếu trong mirror")
-[[ "$OFFSITE" != "ok" ]] && ISSUES+=("offsite=${OFFSITE} — backup chỉ nằm trên chính máy này")
-if (( ${#ISSUES[@]} > 0 )); then
-  msg=$(printf '\n- %s' "${ISSUES[@]}")
-  alert "chưa ổn:${msg}"
-fi
-
 if [[ "$UPLOADS_OK" -ne 1 ]]; then
   log "DONE $NAME — LỖI: sao lưu uploads thất bại, mirror là bản cũ. Dump DB thì ĐÃ xong và kiểm chứng."
   exit 1

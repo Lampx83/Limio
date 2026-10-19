@@ -118,11 +118,7 @@ export default function SignInForm({
     });
     if (result?.error) {
       setStatus("error");
-      setError(
-        result.code === "rate_limited"
-          ? "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 15 phút, hoặc dùng “Quên mật khẩu”."
-          : "Email hoặc mật khẩu không đúng.",
-      );
+      setError("Email hoặc mật khẩu không đúng.");
     } else {
       // Use a hard navigation so the browser re-fetches the root layout from
       // the server. router.push() is a soft navigation that keeps the cached

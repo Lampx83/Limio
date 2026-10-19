@@ -40,10 +40,6 @@ ENV SKIP_ENV_VALIDATION=1
 # Override at build time: docker compose build --build-arg NEXT_PUBLIC_BASE_PATH=/limio
 ARG NEXT_PUBLIC_BASE_PATH=""
 ENV NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
-# DSN cho Sentry phía trình duyệt (src/instrumentation-client.ts) — inline lúc
-# build. compose truyền từ SENTRY_DSN; rỗng = client không gửi lỗi.
-ARG NEXT_PUBLIC_SENTRY_DSN=""
-ENV NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN}
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
@@ -160,17 +156,14 @@ VOLUME ["/app/apps/web/uploads"]
 USER nextjs
 EXPOSE 3000
 
-# /api/health kiểm Postgres (SELECT 1) + Redis (PING), trả 200/503 — khác GET /
-# cũ chỉ render landing nên DB/Redis chết vẫn báo healthy.
 # NEXT_PUBLIC_BASE_PATH is "" or "/limio" — include it so the healthcheck
-# hits an actual route.  With basePath=/limio, /api/health returns 404; only
+# hits an actual route.  With basePath=/limio, GET / returns 404; only
 # /limio/... routes exist.  Shell form (no brackets) expands the env var.
 # start-period=30s: Next.js standalone starts in <1 s; 30 s gives generous
 # headroom for Prisma's first lazy connection without eating into the retry
 # budget.  Previously 60 s — halved to cut ~30 s from every deploy.
-# --max-time 4 < --timeout 5: mỗi check trong route tự cắt ở 2 s.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -fsS --max-time 4 "http://127.0.0.1:3000${NEXT_PUBLIC_BASE_PATH}/api/health" >/dev/null || exit 1
+  CMD curl -fsS "http://127.0.0.1:3000${NEXT_PUBLIC_BASE_PATH}/" >/dev/null || exit 1
 
 CMD ["node", "apps/web/server.js"]
 
@@ -215,6 +208,6 @@ RUN addgroup --system --gid 1001 nodejs && \
 USER worker
 
 WORKDIR /app/apps/web
-# Healthcheck: worker không expose HTTP → healthcheck nằm ở docker-compose.prod.yml
-# (node + ioredis ping Redis, xem scripts/worker-healthcheck.cjs).
+# Healthcheck: worker không expose HTTP. Dùng node script kiểm Redis ping nếu cần,
+# hoặc dựa vào compose restart policy. Giữ tối giản cho Phase 1.3.
 CMD ["pnpm", "exec", "tsx", "src/worker/index.ts"]

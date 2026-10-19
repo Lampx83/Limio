@@ -74,8 +74,3 @@ export async function rateLimit(
 
   return { ok: true, remaining: Math.max(0, limit - count), resetMs: windowMs };
 }
-
-/** Xoá sạch cửa sổ của một bucket — vd đăng nhập đúng thì xoá lượt sai trước đó. */
-export async function clearRateLimit(bucket: string): Promise<void> {
-  await getRedis().del(`rl:${bucket}`);
-}

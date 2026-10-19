@@ -8,7 +8,7 @@
  * horizontal scale of the web container.
  */
 
-import { clearRateLimit, peekRateLimit, rateLimit as redisRateLimit } from "./realtime/rateLimit";
+import { peekRateLimit, rateLimit as redisRateLimit } from "./realtime/rateLimit";
 
 export type AllowResult =
   | { ok: true; remaining: number }
@@ -36,11 +36,6 @@ export async function isBlocked(
   return r.blocked
     ? { ok: false, retryAfterSec: Math.max(1, Math.ceil(r.resetMs / 1000)) }
     : { ok: true, remaining: limit };
-}
-
-/** Xoá các lượt đã đếm của (scope, subject). */
-export async function reset(scope: string, subject: string): Promise<void> {
-  await clearRateLimit(`${scope}:${subject}`);
 }
 
 /** Best-effort IP extraction for rate-limit keys.

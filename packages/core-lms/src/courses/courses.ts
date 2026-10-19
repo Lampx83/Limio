@@ -28,8 +28,6 @@ export const CreateCourseInput = z.object({
   coverUrl: z.string().url().max(500).optional(),
   personalizationEnabled: z.boolean().optional(),
   languageMode: z.boolean().optional(),
-  // LANG L6 — khoá luyện đề theo kỹ năng. Chỉ chọn lúc tạo (không có trong UpdateCourseInput).
-  kind: z.enum(["standard", "practice_bank"]).optional(),
   enrollMode: z.enum(["open", "invite_only"]).optional(),
 });
 
@@ -125,7 +123,6 @@ export async function createCourse(
         coverUrl: parsed.data.coverUrl ?? null,
         personalizationEnabled,
         languageMode: parsed.data.languageMode ?? false,
-        kind: parsed.data.kind ?? "standard",
         enrollMode: parsed.data.enrollMode ?? "open",
         status: "draft",
         version: 1,

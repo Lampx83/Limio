@@ -73,15 +73,6 @@ export const UpdateExamInput = z
     allowMock: z.boolean().optional(),
     // LANG G5e — công tắc "Cho luyện đề".
     allowPractice: z.boolean().optional(),
-    // LANG L6 — phân loại đề trong khoá luyện đề: chỉ là siêu dữ liệu nên sửa được cả sau khi có lượt thi.
-    paperType: z.enum(["official", "mock", "practice_set"]).nullable().optional(),
-    sourceLabel: z.string().trim().max(120).nullable().optional(),
-    yearLabel: z.string().trim().max(40).nullable().optional(),
-    seq: z.number().int().min(0).max(100_000).nullable().optional(),
-    difficulty: z.number().int().min(1).max(5).nullable().optional(),
-    tags: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
-    freePreview: z.boolean().optional(),
-    collectionId: z.string().uuid().nullable().optional(),
     attemptPolicy: examAttemptPolicy.optional(),
     maxAttempts: MAX_ATTEMPTS.optional(),
     gradingMode: examGradingMode.optional(),
@@ -330,14 +321,6 @@ export async function updateExam(
   );
   if (Object.keys(data).length === 0) return;
 
-  // LANG L6 — bộ phải thuộc CHÍNH khoá của đề.
-  if (typeof data.collectionId === "string") {
-    const ok = exam.courseId
-      ? await db.examCollection.findFirst({ where: { id: data.collectionId, courseId: exam.courseId }, select: { id: true } })
-      : null;
-    if (!ok) throw new ExamError("validation_failed", { reason: "collection_not_in_course" });
-  }
-
   if (exam.kind !== "oral" && data.attemptPolicy === "multi") {
     throw new ExamError("validation_failed", "attemptPolicy=multi chỉ áp dụng cho đề vấn đáp");
   }
@@ -364,11 +347,7 @@ export async function updateExam(
       // Only title/description/closeAt allowed once attempts exist.
       // oralRubricText cũng được: chỉ ảnh hưởng cách CHẤM sau thi, không ảnh
       // hưởng câu hỏi SV nhận lúc thi nên không cần khoá theo tính công bằng.
-      const allowed = new Set([
-        "title", "description", "closeAt", "oralRubricText", "allowMock", "allowPractice",
-        // LANG L6 — siêu dữ liệu phân loại, không ảnh hưởng câu hỏi học viên nhận.
-        "paperType", "sourceLabel", "yearLabel", "seq", "difficulty", "tags", "freePreview", "collectionId",
-      ]);
+      const allowed = new Set(["title", "description", "closeAt", "oralRubricText", "allowMock", "allowPractice"]);
       const rejected = Object.keys(data).filter((k) => !allowed.has(k));
       if (rejected.length > 0) {
         throw new ExamError("exam_has_attempts", { fields: rejected });

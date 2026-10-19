@@ -13,13 +13,10 @@ import { useAssistant } from "./AssistantProvider";
  * trò chuyện nằm ở AssistantProvider (layout), nên giảng viên bấm liên kết Lily đưa, thử thao tác ở trang đó, rồi mở
  * lại ngăn kéo là thấy đúng đoạn chat đang dở. Chuyển trang thì ngăn kéo tự thu lại để không che trang đang làm.
  */
-const NUDGE_KEY = "limio.assistant.nudged";
-
 export default function AssistantLauncher() {
   const pathname = usePathname();
   const { open, setOpen, unread, messages, busy, error, reset, send } = useAssistant();
   const dialogRef = useRef<HTMLDivElement>(null);
-  const fabRef = useRef<HTMLButtonElement>(null);
 
   const reducedMotion = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const isDesktop = () => typeof window !== "undefined" && !!window.matchMedia?.("(min-width: 640px)").matches;
@@ -67,38 +64,6 @@ export default function AssistantLauncher() {
       setOpen(false);
     });
   }, [setOpen]);
-
-  // Lần đầu trong một phiên: sau ~3 giây nút rung nhẹ đúng một lần để người chưa biết Lily nhìn thấy nó. Có ghi nhớ trong
-  // sessionStorage nên sang trang khác không rung lại; người chọn giảm chuyển động thì bỏ qua.
-  useEffect(() => {
-    if (reducedMotion()) return;
-    try {
-      if (window.sessionStorage.getItem(NUDGE_KEY)) return;
-    } catch {
-      return;
-    }
-    const id = window.setTimeout(() => {
-      const el = fabRef.current;
-      if (!el) return;
-      try {
-        window.sessionStorage.setItem(NUDGE_KEY, "1");
-      } catch {
-        // không ghi được thì lần sau có thể rung lại, không sao
-      }
-      el.animate(
-        [
-          { transform: "translateY(0) rotate(0deg)" },
-          { transform: "translateY(-6px) rotate(-5deg)", offset: 0.25 },
-          { transform: "translateY(0) rotate(4deg)", offset: 0.5 },
-          { transform: "translateY(-3px) rotate(-2deg)", offset: 0.75 },
-          { transform: "translateY(0) rotate(0deg)" },
-        ],
-        { duration: 900, easing: "ease-in-out" },
-      );
-    }, 3000);
-    return () => window.clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Chuyển trang: thu ngăn kéo, giữ nguyên lịch sử.
   useEffect(() => {
@@ -154,31 +119,16 @@ export default function AssistantLauncher() {
 
       {!open && (
         <button
-          ref={fabRef}
           type="button"
           onClick={() => setOpen(true)}
-          aria-label={busy ? "Mở Lily, em đang soạn câu trả lời" : unread ? "Mở Lily, có câu trả lời mới" : "Mở Lily, trợ lý ảo của thầy/cô"}
-          className="group animate-fade-in-up fixed bottom-5 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-pink-200 bg-pink-50 px-3 text-pink-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-pink-100 hover:shadow-xl active:scale-95 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:px-4"
+          aria-label={unread ? "Mở Lily, có câu trả lời mới" : "Mở Lily, trợ lý ảo của thầy/cô"}
+          className="animate-fade-in-up fixed bottom-4 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-pink-200 bg-pink-50 px-3 text-pink-700 shadow-lg transition hover:bg-pink-100 hover:shadow-xl active:scale-95 sm:px-4"
         >
-          {/* Đuôi bong bóng thoại ở góc dưới bên phải: ô vuông xoay 45 độ, chỉ viền hai cạnh dưới/phải, nền cùng màu nút nên
-              nửa trên của nó che đường viền của nút và liền thành một khối. */}
-          <span
-            className="absolute -bottom-1.5 right-6 h-3 w-3 rotate-45 border-b border-r border-pink-200 bg-pink-50 transition-colors group-hover:bg-pink-100"
-            aria-hidden
-          />
-          {/* Rê chuột thì lát dưa nghiêng nhẹ. */}
-          <WatermelonSliceIcon className="h-7 w-7 transition-transform duration-200 group-hover:-rotate-12 motion-reduce:transition-none motion-reduce:group-hover:rotate-0" />
-          {busy ? (
-            // Lily đang soạn câu trả lời mà ngăn kéo đóng: ba chấm nhấp nháy như đang gõ, thay cho nhãn.
-            <span className="flex items-center gap-1 px-1" aria-hidden>
-              {[0, 150, 300].map((d) => (
-                <span key={d} className="h-1.5 w-1.5 animate-bounce rounded-full bg-pink-500 motion-reduce:animate-none" style={{ animationDelay: `${d}ms` }} />
-              ))}
-            </span>
-          ) : (
-            <span className="hidden text-sm font-bold sm:inline">Hỏi Lily</span>
+          <WatermelonSliceIcon className="h-7 w-7" />
+          <span className="hidden text-sm font-bold sm:inline">Hỏi Lily</span>
+          {(unread || busy) && (
+            <span className={`absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-pink-500 ${busy ? "animate-pulse" : ""}`} aria-hidden />
           )}
-          {unread && !busy && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-pink-500" aria-hidden />}
         </button>
       )}
     </>

@@ -8,8 +8,7 @@
  * Mỗi worker subscribe 1 queue. Concurrency điều chỉnh qua env WORKER_CONCURRENCY.
  * Graceful shutdown: SIGTERM/SIGINT → close worker → flush in-flight jobs.
  */
-import * as Sentry from "@sentry/node";
-import { Worker, type Job } from "bullmq";
+import { Worker } from "bullmq";
 import { getBullmqConnection, QUEUE_NAMES } from "../lib/queue";
 import {
   processRealtimePublishJob,
@@ -21,32 +20,6 @@ import {
   type AutoGradeJobData,
   type AutoGradeJobResult,
 } from "../lib/queue/autoGradeJob";
-
-// Worker chạy ngoài Next nên không đi qua instrumentation.ts — init Sentry riêng.
-// Thiếu SENTRY_DSN ⇒ không init, captureException thành no-op.
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV,
-    sendDefaultPii: false,
-    initialScope: { tags: { process: "worker" } },
-  });
-}
-
-// 'failed' bắn ở MỌI lần thử; job còn lượt retry thì chưa phải lỗi cần xử lý
-// (blip DB lúc nộp bài dồn dập) — chỉ báo khi hết lượt, hoặc job không đọc được.
-function reportJobFailure(queue: string, job: Job | undefined, err: Error) {
-  if (job && job.attemptsMade < (job.opts.attempts ?? 1)) return;
-  Sentry.captureException(err, {
-    tags: { queue },
-    extra: {
-      jobId: job?.id,
-      jobName: job?.name,
-      attemptsMade: job?.attemptsMade,
-      maxAttempts: job?.opts.attempts,
-    },
-  });
-}
 
 const concurrency = Number(process.env.WORKER_CONCURRENCY ?? "50");
 
@@ -66,7 +39,6 @@ realtimeWorker.on("ready", () => {
 });
 realtimeWorker.on("failed", (job, err) => {
   console.error(`[worker:${QUEUE_NAMES.realtimePublish}] job ${job?.id} failed:`, err.message);
-  reportJobFailure(QUEUE_NAMES.realtimePublish, job, err);
 });
 
 workers.push(realtimeWorker);
@@ -94,7 +66,6 @@ autoGradeWorker.on("failed", (job, err) => {
     `[worker:${QUEUE_NAMES.autoGrade}] job ${job?.id} failed:`,
     err.message,
   );
-  reportJobFailure(QUEUE_NAMES.autoGrade, job, err);
 });
 workers.push(autoGradeWorker);
 
@@ -102,8 +73,6 @@ async function shutdown(signal: string) {
   console.log(`[worker] received ${signal}, shutting down...`);
   await Promise.allSettled(workers.map((w) => w.close()));
   await getBullmqConnection().quit().catch(() => {});
-  // Gửi nốt event Sentry còn trong buffer trước khi thoát.
-  await Sentry.close(2000).catch(() => {});
   process.exit(0);
 }
 

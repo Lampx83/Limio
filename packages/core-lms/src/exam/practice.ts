@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
-import { canUseExamContent } from "./access";
+import { isUserEnrolled } from "../learning/enroll";
 import { emitEvent } from "../learning/events";
 import { gradeExamAnswer } from "./grading";
 import { toPublicQuestionConfig } from "./public-config";
@@ -59,10 +59,10 @@ const isManualType = (t: string) => t === "essay" || t === "short_answer";
 async function loadPracticeExam(userId: string, examId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, title: true, status: true, kind: true, mockMode: true, allowPractice: true, freePreview: true },
+    select: { id: true, courseId: true, title: true, status: true, kind: true, mockMode: true, allowPractice: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  if (!(await canUseExamContent(userId, exam, db))) throw new ExamError("not_enrolled");
+  if (!exam.courseId || !(await isUserEnrolled(userId, exam.courseId, db))) throw new ExamError("not_enrolled");
   if (exam.status !== "published" || exam.kind !== "written" || !exam.mockMode || !exam.allowPractice) {
     throw new ExamError("practice_disabled");
   }
