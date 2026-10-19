@@ -195,7 +195,9 @@ gồm nhiều ca" — đã lỗi thời, đừng lặp lại.)
   diện hiện biểu ngữ "Bạn đã tạo nhiều đề. Bật chế độ Nâng cao để xem chỉ số chất lượng câu
   hỏi chi tiết?" với nút "Bật ngay" và "Bỏ qua". Không có công tắc quay lại mức Cơ bản.
 - **Câu tự luận** trong đề có ô **"Rubric (tuỳ chọn)"** (ô soạn thảo định dạng, gợi ý "Tiêu chí chấm bài…")
-  và "Số từ tối thiểu (0 = không yêu cầu)".
+  và "Số từ tối thiểu (0 = không yêu cầu)". Khi chấm, rubric hiện ngay trên bài làm trong khối thu gọn
+  **"Rubric chấm"** (bấm để mở), cả ở trang "Chấm bài" lẫn trang "Xem bài làm" của từng lượt thi; câu
+  không có rubric thì không hiện khối này.
 - Nút xuất bản vẫn ghi "Publish". **Publish chỉ làm đề sẵn sàng, không tự mở thi**; hộp thoại sau Publish
   dẫn sang "Tổ chức thi →". Đề luyện thi (đề thi thử, mục 12) cho học viên đã ghi danh làm ngay, không cần ca.
 - Mỗi thẻ đề có nút "Xoá"; đề đã có lượt thi thì nút khoá kèm lý do ("Đề đã có lượt thi nên không xoá được.").
