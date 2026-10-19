@@ -3,6 +3,7 @@ import {
   LessonDraftError,
   discardLessonDraft,
   getLessonDraft,
+  setKeepFormatHtml,
   updateLessonDraft,
   type UpdateLessonDraftInput,
 } from "@feedbackme/core-lms";
@@ -12,6 +13,9 @@ import { readJson } from "@/lib/apiHelpers";
 import { outlineProblems, sanitizeLessonOutline } from "@/lib/lessonOutline";
 
 export const runtime = "nodejs";
+
+/** Trần HTML một bài giữ nguyên định dạng (bài ≤ 4.000 từ cộng thẻ và ảnh). */
+const MAX_HTML_CHARS = 1_500_000;
 
 function draftError(e: unknown): NextResponse | null {
   if (!(e instanceof LessonDraftError)) return null;
@@ -72,6 +76,14 @@ export async function PUT(req: Request, { params }: { params: { draftId: string 
       const problems = outlineProblems(patch.outline ?? draft.outline, draft.sourceParas);
       if (problems.length) return NextResponse.json({ error: "outline_has_problems", problems }, { status: 422 });
       patch.confirm = true;
+    }
+
+    // Bài giữ nguyên định dạng: giảng viên chấp nhận một đoạn AI sửa → lưu HTML mới.
+    if (body.resultHtml !== undefined) {
+      if (typeof body.resultHtml !== "string" || body.resultHtml.length > MAX_HTML_CHARS) {
+        return NextResponse.json({ error: "validation_failed", details: "resultHtml" }, { status: 400 });
+      }
+      await setKeepFormatHtml(userId, params.draftId, body.resultHtml);
     }
 
     const saved = await updateLessonDraft(userId, params.draftId, patch);

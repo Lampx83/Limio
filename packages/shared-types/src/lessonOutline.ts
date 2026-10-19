@@ -71,7 +71,18 @@ export interface LessonOutline {
   ignoredParas: number[];
   /** Mẫu bài đã dùng để lập dàn ý. Thiếu = "theory" (bản nháp trước khi có mẫu). */
   template?: LessonTemplateKey;
+  /**
+   * true = tệp Word/Markdown được đưa thẳng vào MỘT bài, giữ nguyên định dạng của tệp
+   * (tiêu đề, bảng, ảnh, danh sách), không qua AI và không có bước dàn ý.
+   */
+  keepFormat?: boolean;
 }
+
+/**
+ * Số từ tối đa của MỘT bài học tạo từ tài liệu (khoảng 20 phút đọc). Vượt thì
+ * không tự cắt thành nhiều bài: báo giảng viên để họ tự chia tệp theo ý mình.
+ */
+export const LESSON_MAX_WORDS = 4000;
 
 export const LESSON_WRITING_MODES = ["keep", "edit"] as const;
 export type LessonWritingMode = (typeof LESSON_WRITING_MODES)[number];
@@ -92,12 +103,10 @@ export function isLessonWritingMode(v: unknown): v is LessonWritingMode {
 
 /** Giới hạn của dàn ý — dùng chung cho lời nhắc AI và bước làm sạch. */
 export const OUTLINE_LIMITS = {
-  maxLessons: 6,
-  maxSectionsPerLesson: 8,
-  /** Quá số mục này trong một bài thì gợi ý tách bài (D5). */
-  splitSuggestSections: 5,
-  /** Hoặc quá số phút đọc này. */
-  splitSuggestMinutes: 20,
+  maxLessons: 1,
+  maxSectionsPerLesson: 12,
+  /** Số mục gợi ý mỗi bài cho AI (không phải trần cứng). */
+  suggestSections: 5,
   maxObjectives: 5,
   maxPoints: 6,
   titleMax: 160,

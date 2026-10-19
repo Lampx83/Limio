@@ -249,6 +249,46 @@ export function newPartId(): string {
   return `p${Date.now().toString(36)}${seq.toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
 
+// Tên hoạt động AI hay ghi vào đầu tiêu đề thay vì đặt đúng "kind" ("Quiz: …", "Word Cloud: …", "Bình chọn: …").
+const KIND_PREFIXES: Array<[RegExp, Exclude<OutlineKind, "content">]> = [
+  [/^(quiz|trắc nghiệm|câu hỏi nhanh)$/i, "quiz"],
+  [/^(poll|vote|bình chọn|thăm dò)$/i, "poll"],
+  [/^(word[ _-]?cloud|đám mây từ( khoá)?)$/i, "word_cloud"],
+  [/^(collaborate[ _-]?board|padlet|bảng cộng tác|bảng ghi chú)$/i, "collaborate_board"],
+  [/^(draw[ _-]?it|vẽ hình|cùng vẽ)$/i, "draw_it"],
+  [/^(white[ _-]?board|bảng trắng)$/i, "whiteboard"],
+];
+
+/**
+ * Dòng nội dung mà tiêu đề mở đầu bằng tên một hoạt động tương tác ("Quiz: …", "Draw It: …") là slide tương tác AI quên
+ * đặt đúng loại: trả loại đó cùng tiêu đề đã bỏ tiền tố; tiêu đề thường thì null (người dùng báo 2026-10-19).
+ */
+export function interactiveFromTitle(title: string): { kind: Exclude<OutlineKind, "content">; title: string } | null {
+  const m = /^\s*([^:\-–]{2,24}?)\s*[:\-–]\s*(.+)$/u.exec(title);
+  if (!m) return null;
+  const hit = KIND_PREFIXES.find(([re]) => re.test(m[1]!.trim()));
+  const rest = m[2]!.trim();
+  return hit && rest ? { kind: hit[1], title: rest } : null;
+}
+
+/**
+ * Dòng nội dung mang tên hoạt động trong dàn ý AI vừa soạn (người dùng báo 2026-10-19). Thường AI viết một slide "giới thiệu
+ * trước" ("Quiz: …") rồi ngay sau đó mới là slide tương tác thật cùng loại: dòng giới thiệu đó thừa, bỏ đi. Không có slide
+ * thật đi kèm (trong 2 dòng kế tiếp, cùng phần) thì đổi chính dòng đó thành slide tương tác. Chỉ dùng cho dàn ý AI trả về,
+ * không tự xoá gì trong bài đã có.
+ */
+export function fixNamedInteractions(slides: OutlineSlide[]): OutlineSlide[] {
+  const out: OutlineSlide[] = [];
+  slides.forEach((s, i) => {
+    const named = s.kind === "content" && !s.fixed ? interactiveFromTitle(s.title) : null;
+    if (!named) return void out.push(s);
+    const real = slides.slice(i + 1, i + 3).some((n) => n.kind === named.kind && n.partId === s.partId);
+    if (real) return;
+    out.push({ id: s.id, ...(s.partId ? { partId: s.partId } : {}), ...(s.origin ? { origin: s.origin } : {}), kind: named.kind, layout: null, title: named.title, points: [] });
+  });
+  return out;
+}
+
 function sanitizeSlide(raw: unknown, idFallback = newOutlineId): OutlineSlide | null {
   if (!raw || typeof raw !== "object") return null;
   const o = raw as Record<string, unknown>;
@@ -524,6 +564,8 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
   const refs = kind === "topic_web" ? (opts.references ?? []) : [];
   const pre = partsFromRaw(raw);
   let outline = sanitizeOutline(pre.value);
+  // Slide "Quiz: …" dạng nội dung: bỏ nếu ngay sau đã có slide tương tác thật, không thì đổi thành slide tương tác.
+  outline = { ...outline, slides: fixNamedInteractions(outline.slides) };
   const { min } = slideRange(minutes);
   // Dòng Nguồn tham khảo chiếm một chỗ trong mức slide.
   const max = slideRange(minutes).max - (refs.length ? 1 : 0);

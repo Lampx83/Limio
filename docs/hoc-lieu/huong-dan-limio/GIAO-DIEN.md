@@ -420,7 +420,19 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
 
 Chọn "Văn bản — AI hỗ trợ" trong "+ Thêm hoạt động/tài nguyên" **không mở form dán chữ trong hộp thoại nữa**
 mà chuyển sang trang riêng `/instructor/courses/{id}/lessons/{lessonId}/from-document` ("Tạo bài từ tài liệu",
-thanh bước **Tài liệu → Dàn ý → Bài học**).
+thanh bước **Tài liệu → Dàn ý → Bài học**). Mỗi tài liệu chỉ ra **một bài học**, không gợi ý cắt bài; tài liệu
+tối đa **4.000 từ** (dài hơn thì báo lỗi, giảng viên tự chia tệp).
+
+**Tệp Word (.docx) và Markdown (.md) đi đường riêng, không qua AI và không có bước Dàn ý:** nút ở bước một
+ghi **"Đưa vào bài học"**; tệp vào thẳng một bài, giữ nguyên tiêu đề, bảng, ảnh, danh sách như trong tệp (tên
+tài liệu ở dòng đầu được bỏ vì bài đã có tên). Thanh bước chỉ còn **Tài liệu → Xem trước**; màn xem trước có tên
+tệp, số từ, số ảnh, nút bảng màu và **"Áp dụng vào bài học"**, "Dùng tài liệu khác". **AI chỉ chạy khi giảng viên bấm**
+(mỗi lần tốn một lượt hỏi AI): nút **"Thêm Mục tiêu và Tổng kết"** (AI rút từ chính chữ của bài; hộp Mục tiêu ở
+đầu bài, hộp Tổng kết ở cuối; bấm lại ghi "Tạo lại Mục tiêu và Tổng kết", còn có "Bỏ Mục tiêu và Tổng kết"); và
+**bấm vào một đoạn** trong bài (đoạn được viền xanh) để hiện thanh **"Nhờ AI sửa đoạn đã chọn"** với bốn việc:
+"Viết ngắn hơn", "Dễ hiểu hơn", "Thêm ví dụ", "Sửa chính tả". AI trả bản đề xuất cạnh "Bản hiện tại"; giảng
+viên bấm **"Dùng bản này"** hoặc "Bỏ", không có gì tự thay đổi. Đoạn có liên kết, ảnh hay ký hiệu đặc biệt thì
+chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và văn bản dán.
 1. **Bước Tài liệu** ("Biến tài liệu thành bài học"): kéo thả hoặc chọn tệp (Word .docx, PDF, .txt, .md, tối
    đa 10 MB; ảnh trong Word được giữ) hoặc dán vào ô "Dán nội dung bài vào đây...". Cần ít nhất 200 ký tự. PDF
    chụp ảnh không đọc được chữ, phải dán văn bản. Chọn **"Mẫu bài"** (một lần cho cả bài): "Bài lý thuyết"
@@ -428,7 +440,8 @@ thanh bước **Tài liệu → Dàn ý → Bài học**).
    → Tổng kết), "Bài ôn tập" (Ý chính cần nhớ → Câu hỏi thường gặp → Tự kiểm tra). Bấm **"Đọc tài liệu và lập
    dàn ý"** (tài liệu dài mất khoảng một phút).
 2. **Bước Dàn ý** (hai cột). Trái: sửa "Tên bài học", "Mục tiêu học tập" ("+ Thêm"), từng mục (kéo thả đổi
-   thứ tự, "Tiêu đề mục", "Ý chính của mục", "+ Thêm ý", "Xoá mục", "Thêm mục"), "Tách thành bài mới từ đây".
+   thứ tự, "Tiêu đề mục", "Ý chính của mục", "+ Thêm ý", "Xoá mục", "Thêm mục"). Đoạn tài liệu AI bỏ sót được
+   tự nối vào mục đứng trước, giảng viên không phải gán từng đoạn.
    Phải: thẻ "Xem trước" và "Tài liệu gốc" (đoạn chưa thuộc mục nào có "Gán vào mục…"). "Đổi mẫu" → "Lập lại
    dàn ý"; "Dùng tài liệu khác" để làm lại. Bản nháp tự lưu ("Đã lưu"), mở lại trang làm tiếp được. Chọn **"Cách
    viết"**: "Giữ nguyên lời" hoặc "Biên tập cho mạch lạc"; tick "Thêm Mục tiêu và Tổng kết"; màn hiện "Dự kiến
@@ -436,7 +449,8 @@ thanh bước **Tài liệu → Dàn ý → Bài học**).
 3. **Bước Bài học:** bấm **"Tạo bài"**, AI viết từng mục theo tiến độ; kết quả ở thẻ "Bài học" (xem trước, đối
    chiếu tài liệu gốc). Đổi ý: "Quay lại dàn ý", "Tạo lại" (hỏi xác nhận, tốn thêm token). Bấm **"Áp dụng vào bài
    học"** — bài thứ nhất thành một khối Văn bản mới ở cuối bài. Nếu dàn ý có nhiều bài thì nút ghi "Áp dụng N bài
-   học": các bài sau thành bài MỚI cùng chương, đang ẨN với học viên cho tới khi giảng viên bật "Hiện bài này".
+   học": các bài sau thành bài MỚI cùng chương, đang ẨN với học viên cho tới khi giảng viên bật "Hiện bài này" (nút xanh ngay cạnh nhãn "Đang ẩn" ở đầu bài,
+   hoặc công tắc cùng tên trong menu "⋮").
 4. **Giao diện của bài** (nút "Giao diện", "Bảng màu và kiểu chữ của cả bài"): 6 bảng màu (Xanh Limio, Giấy ấm,
    Rừng thông, Hoàng hôn, Sinh động, Trang nhã); 3 kiểu chữ (Hiện đại, Dễ đọc, Học thuật); 7 bố cục (Văn bản,
    Chữ và ảnh, Thẻ khái niệm, So sánh hai cột, Các bước, Hỏi và đáp, Số liệu nổi bật); 5 loại hộp (Mục tiêu
@@ -515,9 +529,10 @@ Menu Limio-Live → "Bài giảng của tôi" (`/instructor/limio-live`): nút *
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Thầy/cô muốn soạn bài giảng gì? Có
-  tài liệu thì đính kèm một tệp, AI sẽ bám sát tài liệu đó." và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
-  người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** (đã có tệp thì thành "Đổi tài liệu"); kéo
+- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
+  giảng tương tác chỉ từ một ý tưởng…" (có tài liệu tham khảo thì đính kèm; có sẵn PowerPoint thì Limio soạn lại kèm nội
+  dung tương tác) và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
+  người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** kèm chữ "(không bắt buộc)" (đã có tệp thì thành "Đổi tài liệu"; cạnh nút ghi giới hạn định dạng và dung lượng); kéo
   thả tệp vào ô cũng được. **Mỗi bài chỉ một tài liệu**: Word .docx, PDF, .txt, .md tối đa 10 MB, hoặc PowerPoint
   .pptx tối đa 50 MB; tệp mới thay tệp cũ, kèm dòng báo. Dán đoạn dài hơn 2.000 ký tự vào ô (khi chưa có tệp) thì
   đoạn đó thành tài liệu "Văn bản dán" (có nút "Đưa lại vào ô mô tả"). Dòng nhắc dưới ô nói AI sẽ làm gì:

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type OpenAI from "openai";
 import { prisma } from "@feedbackme/db";
 import type { OutlineSection, SourcePara } from "@feedbackme/shared-types";
-import { AI_EXAMPLE_BOX_TITLE, buildSectionPrompt, cleanSectionDraft, editLessonSection, writeLessonSection } from "../aiTutor/lessonWriter";
+import { AI_EXAMPLE_BOX_TITLE, buildSectionPrompt, cleanSectionDraft, editLessonBlock, editLessonSection, writeLessonSection, writeObjectivesSummary } from "../aiTutor/lessonWriter";
 
 /** Mốc 3 — AI viết một mục từ dàn ý đã chốt (T1, T3). */
 
@@ -106,5 +106,35 @@ describe("lessonWriter", () => {
       editLessonSection("u", { lessonTitle: "", title: "x", layout: "text", intro: [], parts: [], boxes: [], action: "shorter" }, openai),
     ).rejects.toMatchObject({ code: "validation_failed" });
     expect(called).toBe(false);
+  });
+});
+
+describe("bài giữ nguyên định dạng — AI theo yêu cầu", () => {
+  it("mục tiêu và tổng kết: tối đa 5 mỗi loại, rỗng cả hai thì lỗi, bài trống thì không gọi", async () => {
+    const u = await prisma.user.create({ data: { email: `lo-${Date.now()}@e.com`, passwordHash: "x", displayName: "GV" } });
+    const seen: { user?: string } = {};
+    const out = await writeObjectivesSummary(
+      u.id,
+      { lessonTitle: "Bài", text: "Nội dung bài." },
+      fake({ objectives: ["a", "b", "c", "d", "e", "f"], summary: ["x", ""] }, seen),
+    );
+    expect(out.objectives).toHaveLength(5);
+    expect(out.summary).toEqual(["x"]);
+    expect(seen.user).toContain("Nội dung bài.");
+    await expect(writeObjectivesSummary(u.id, { lessonTitle: "Bài", text: "Nội dung." }, fake({ objectives: [], summary: [] }))).rejects.toThrow();
+    await expect(writeObjectivesSummary(u.id, { lessonTitle: "Bài", text: "  " }, fake({}))).rejects.toThrow();
+  });
+
+  it("sửa một đoạn: chính tả không kèm ví dụ; thêm ví dụ thì phải có ví dụ", async () => {
+    const u = await prisma.user.create({ data: { email: `lb-${Date.now()}@e.com`, passwordHash: "x", displayName: "GV" } });
+    const base = { lessonTitle: "Bài", heading: "Mục", text: "Câu **gốc**." };
+    const sp: { system?: string } = {};
+    const a = await editLessonBlock(u.id, { ...base, action: "spelling" }, fake({ text: "Câu  **gốc**.\n", example: "bỏ qua" }, sp));
+    expect(a).toEqual({ text: "Câu **gốc**.", example: "" });
+    expect(sp.system).toContain("SỬA LỖI chính tả");
+    const b = await editLessonBlock(u.id, { ...base, action: "example" }, fake({ text: "Câu **gốc**.", example: "Ví dụ." }));
+    expect(b.example).toBe("Ví dụ.");
+    await expect(editLessonBlock(u.id, { ...base, action: "example" }, fake({ text: "Câu.", example: "" }))).rejects.toThrow();
+    await expect(editLessonBlock(u.id, { ...base, text: "" , action: "shorter" }, fake({}))).rejects.toThrow();
   });
 });

@@ -84,7 +84,7 @@ const SCHEMA = {
 
 const TEMPLATE_RULES: Record<LessonTemplateKey, string> = {
   theory: `Mẫu bài: BÀI LÝ THUYẾT.
-- Khung: các mục nội dung đi theo mạch của tài liệu (2 đến ${OUTLINE_LIMITS.splitSuggestSections} mục mỗi bài). Mục tiêu và Tổng kết do hệ thống tự thêm, KHÔNG tạo mục riêng cho chúng.`,
+- Khung: các mục nội dung đi theo mạch của tài liệu (khoảng 2 đến ${OUTLINE_LIMITS.suggestSections} mục). Mục tiêu và Tổng kết do hệ thống tự thêm, KHÔNG tạo mục riêng cho chúng.`,
   practice: `Mẫu bài: BÀI HƯỚNG DẪN THỰC HÀNH.
 - Khung, theo đúng thứ tự, chỉ giữ mục nào tài liệu có nội dung:
   1. "Chuẩn bị": dụng cụ, phần mềm, kiến thức hay điều kiện cần có trước khi làm.
@@ -109,7 +109,7 @@ ${TEMPLATE_RULES[template]}
 
 Cấu trúc:
 - Mỗi bài học có: title (tên bài, tối đa 12 từ), objectives (3 đến ${OUTLINE_LIMITS.maxObjectives} mục tiêu, mỗi mục bắt đầu bằng động từ hành động cụ thể theo thang Bloom như "Trình bày được", "Phân biệt được", "Áp dụng được"; KHÔNG dùng "hiểu", "biết"; chỉ rút từ nội dung tài liệu), sections (các mục).
-- Nếu tài liệu cần nhiều hơn ${OUTLINE_LIMITS.splitSuggestSections} mục, hoặc đọc mất hơn ${OUTLINE_LIMITS.splitSuggestMinutes} phút, hãy TÁCH thành nhiều bài học liền mạch (tối đa ${OUTLINE_LIMITS.maxLessons} bài), mỗi bài trọn một chủ đề và theo cùng mẫu.
+- Luôn chỉ tạo MỘT bài học, dù tài liệu dài hay ngắn: không tách thành nhiều bài. Tài liệu dài thì thêm mục, không thêm bài. Gán MỌI đoạn của tài liệu vào một mục (trừ lời chào, mục lục, tài liệu tham khảo).
 - Mỗi mục có:
   - title: tiêu đề ngắn (tối đa 12 từ). Tài liệu đã có tiêu đề thì giữ ý và số thứ tự của tiêu đề đó.
   - layout: TỰ CHỌN theo đúng quy tắc sau, không có lựa chọn nào khác:

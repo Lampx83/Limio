@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Check, FileText, Loader2, Upload, X } from "lucide-react";
-import type { LessonTemplateKey } from "@feedbackme/shared-types";
+import { LESSON_MAX_WORDS, type LessonTemplateKey } from "@feedbackme/shared-types";
 import { apiUrl } from "@/lib/apiUrl";
 import TemplatePicker from "./TemplatePicker";
 
@@ -12,6 +12,7 @@ const ERRORS: Record<string, string> = {
   no_text_in_file: "Không đọc được chữ trong tệp (có thể là PDF chụp ảnh). Hãy dán văn bản vào ô bên dưới.",
   convert_failed: "Không mở được tệp Word này. Hãy lưu lại bằng Word rồi thử lần nữa, hoặc dán văn bản.",
   source_too_short: "Tài liệu quá ngắn để lập dàn ý (cần ít nhất 200 ký tự).",
+  source_too_long: `Tài liệu dài hơn ${LESSON_MAX_WORDS.toLocaleString("vi-VN")} từ, quá dài cho một bài học. Hãy chia tệp thành các phần nhỏ hơn rồi tải từng phần lên từng bài.`,
   openai_not_configured: "Hệ thống AI chưa được cấu hình. Vui lòng báo quản trị viên.",
   global_token_cap: "Hệ thống AI đang quá tải hôm nay. Vui lòng thử lại sau.",
   no_token_budget: "Bạn đã dùng hết hạn mức AI. Dàn ý chưa được lập; bạn vẫn soạn tay được bằng ô Richtext editor.",
@@ -40,6 +41,8 @@ export default function SourceStep({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const busy = stage >= 0;
+  // Word và Markdown giữ nguyên định dạng, đi thẳng vào bài: không có mẫu bài, không có dàn ý.
+  const keepFormat = !!file && /\.(docx|md)$/i.test(file.name);
 
   function pickFile(f: File | undefined | null) {
     if (!f) return;
@@ -64,6 +67,14 @@ export default function SourceStep({
       if (!res.ok || !res.body) {
         const d = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(d.error ?? `http_${res.status}`);
+      }
+      // Tệp Word/Markdown vào thẳng bài (không qua AI): trả một JSON thay vì luồng tiến độ.
+      if (res.headers.get("content-type")?.includes("application/json")) {
+        const d = (await res.json()) as { draftId?: string; warnings?: string[] };
+        if (!d.draftId) throw new Error("generate_failed");
+        setStage(2);
+        onDone(d.draftId, d.warnings ?? []);
+        return;
       }
       const reader = res.body.getReader();
       const dec = new TextDecoder();
@@ -99,8 +110,8 @@ export default function SourceStep({
     <div className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-14">
       <h1 className="text-h1">Biến tài liệu thành bài học</h1>
       <p className="mt-2 text-muted">
-        AI đọc tài liệu và đề xuất dàn ý trước. Bạn sửa dàn ý, chốt lại, rồi AI mới viết bài — không có gì được đưa
-        tới học viên cho tới khi bạn bấm Áp dụng.
+        Tệp Word hoặc Markdown được đưa nguyên định dạng vào một bài. PDF hoặc văn bản dán thì AI đề xuất dàn ý để bạn
+        chốt trước khi viết. Không có gì tới học viên cho tới khi bạn bấm Áp dụng.
       </p>
 
       <label
@@ -133,7 +144,7 @@ export default function SourceStep({
         </span>
         <span className="block font-semibold">Kéo thả tệp vào đây hoặc bấm để chọn</span>
         <span className="text-caption mt-1 block text-faint">
-          Word, PDF, .txt, .md · tối đa 10 MB · ảnh trong Word được giữ lại
+          Word, PDF, .txt, .md · tối đa 10 MB và {LESSON_MAX_WORDS.toLocaleString("vi-VN")} từ mỗi bài · ảnh trong Word được giữ lại
         </span>
       </label>
 
@@ -172,15 +183,24 @@ export default function SourceStep({
         </>
       )}
 
-      <h2 className="text-h4 mt-6 mb-2">Mẫu bài</h2>
-      <TemplatePicker value={template} onChange={setTemplate} disabled={busy} />
+      {keepFormat ? (
+        <p className="banner-info mt-6 text-sm">
+          Tệp này được đưa thẳng vào một bài, giữ nguyên tiêu đề, bảng, ảnh và danh sách như trong tệp. Không dùng AI nên không
+          tốn hạn mức. Bạn xem trước rồi bấm Áp dụng.
+        </p>
+      ) : (
+        <>
+          <h2 className="text-h4 mt-6 mb-2">Mẫu bài</h2>
+          <TemplatePicker value={template} onChange={setTemplate} disabled={busy} />
+        </>
+      )}
 
       {error && <p className="banner-danger mt-4 text-sm">{error}</p>}
 
       <div className="mt-5 flex justify-end">
         <button type="button" onClick={submit} disabled={busy} className="btn-primary inline-flex items-center gap-2">
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-          Đọc tài liệu và lập dàn ý
+          {keepFormat ? "Đưa vào bài học" : "Đọc tài liệu và lập dàn ý"}
         </button>
       </div>
 

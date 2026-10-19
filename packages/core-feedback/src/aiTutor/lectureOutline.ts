@@ -220,7 +220,7 @@ function interactionRule(min = 5, kinds = 3): string {
    - Trước khi giảng một ý: "poll" hoặc "word_cloud" khơi điều người học đã biết, hoặc cho họ dự đoán.
    - Sau khi giảng một ý: "quiz" kiểm tra hiểu bài bằng một tình huống áp dụng, không hỏi thuộc lòng định nghĩa.
    - Khi người học cần tự tạo ra sản phẩm: một trong ba loại cộng tác bên dưới.
-   Đổi loại tương tác giữa các phần để bài không lặp một kiểu. Slide tương tác có layout null; "title" là câu hỏi hoặc câu gợi ý bằng một câu hoàn chỉnh; "points" để mảng rỗng. Không đặt slide tương tác ở slide đầu hoặc slide cuối của bài.
+   Đổi loại tương tác giữa các phần để bài không lặp một kiểu. Slide tương tác ghi đúng loại ở "kind" (không bao giờ là "content"), layout null; "title" là chính câu hỏi hoặc câu gợi ý bằng một câu hoàn chỉnh, KHÔNG mở đầu bằng tên loại (không viết "Quiz:", "Word Cloud:", "Draw It:"...); "points" để mảng rỗng. Không viết thêm slide nội dung để báo trước hay nhắc lại một slide tương tác. Không đặt slide tương tác ở slide đầu hoặc slide cuối của bài.
    Ba loại cộng tác sau dùng tiết kiệm ("collaborate_board" và "draw_it" mỗi loại tối đa ${perPart - 1} slide cho cả bài, "whiteboard" tối đa 1) và chỉ khi nội dung thật sự hợp (tính vào số slide tương tác của phần, không cộng thêm):
    - "collaborate_board": cả lớp cùng dán ghi chú ngắn lên một bảng chung (thu ví dụ, vướng mắc, ý tưởng); "title" là lời mời học viên dán.
    - "draw_it": mỗi học viên vẽ một hình hoặc sơ đồ rồi đăng lên bảng; chỉ dùng khi nội dung có hình dung (quy trình, cấu trúc, mối quan hệ); "title" là yêu cầu vẽ.

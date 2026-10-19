@@ -108,6 +108,19 @@ export function renderLesson(input: RenderLessonInput): string {
   return out;
 }
 
+/** Hộp Mục tiêu / Tổng kết của bài (dùng cả khi giảng viên bấm thêm cho bài giữ nguyên định dạng). */
+export function renderObjectivesBox(items: string[]): string {
+  return items.length ? box("objectives", "", ul(items)) : "";
+}
+export function renderSummaryBox(items: string[]): string {
+  return items.length ? box("summary", "", ul(items)) : "";
+}
+
+/** Gỡ hộp Mục tiêu / Tổng kết khỏi HTML bài (để thêm lại bản mới không bị lặp). */
+export function stripObjectivesSummary(html: string): string {
+  return html.replace(/<div class="lesson-box" data-kind="(?:objectives|summary)"[^>]*>[\s\S]*?<\/div>/g, "");
+}
+
 /** Chữ của một đoạn HTML (bỏ thẻ, giải thực thể cơ bản) — dùng để đối chiếu. */
 function textOfHtml(html: string): string {
   return html

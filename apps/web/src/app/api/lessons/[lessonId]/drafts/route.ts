@@ -7,18 +7,47 @@ import {
   extractMaterialText,
   getActiveLessonDraftId,
 } from "@feedbackme/core-lms";
-import { DEFAULT_LESSON_LOOK, isLessonTemplateKey, type SourcePara } from "@feedbackme/shared-types";
+import { DEFAULT_LESSON_LOOK, LESSON_MAX_WORDS, isLessonTemplateKey, type SourcePara } from "@feedbackme/shared-types";
 import { requireUserId } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { convertDocxToHtml } from "@/lib/docxToHtml";
-import { htmlToParas, textToParas, wordCount } from "@/lib/lessonSource";
+import { textToParas, wordCount } from "@/lib/lessonSource";
 import { normalizeLessonOutline } from "@/lib/lessonOutline";
+import { cleanImportedHtml, htmlWordCount, keepFormatDraftParts, markdownToHtml } from "@/lib/lessonKeepFormat";
 
 export const runtime = "nodejs";
 // Một lần gọi mô hình có thể mất vài chục giây.
 export const maxDuration = 120;
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
+/** Đường giữ nguyên định dạng: HTML của tệp → bản nháp đã chốt, không gọi AI. */
+async function keepFormatResponse(
+  userId: string,
+  lessonId: string,
+  rawHtml: string,
+  fileName: string,
+  kind: string,
+  warnings: string[],
+): Promise<NextResponse> {
+  const baseName = fileName.replace(/\.[^.]+$/, "").slice(0, 160) || "Bài học";
+  const { html, title } = cleanImportedHtml(rawHtml, baseName);
+  const words = htmlWordCount(html);
+  if (words === 0) return NextResponse.json({ error: "no_text_in_file" }, { status: 422 });
+  if (words > LESSON_MAX_WORDS) {
+    return NextResponse.json({ error: "source_too_long", details: { words, max: LESSON_MAX_WORDS } }, { status: 422 });
+  }
+  const parts = keepFormatDraftParts(html, title);
+  const draft = await createLessonDraft(userId, lessonId, {
+    sourceName: fileName,
+    sourceKind: kind,
+    sourceParas: [],
+    outline: parts.outline,
+    look: DEFAULT_LESSON_LOOK,
+    readyResult: parts.result,
+  });
+  return NextResponse.json({ type: "direct", draftId: draft.id, warnings, words });
+}
 
 const KIND_BY_EXT: Record<string, { kind: "docx" | "pdf" | "txt" | "md"; mime: string }> = {
   docx: { kind: "docx", mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
@@ -52,6 +81,9 @@ export async function GET(_req: Request, { params }: { params: { lessonId: strin
  * `template` (theory | practice | review — mẫu bài, mặc định theory).
  * Tách tài liệu thành đoạn (ảnh trong Word được giữ, tải lên kho ảnh bài học),
  * AI đề xuất dàn ý, rồi mới tạo bản nháp — lỗi AI không để lại bản nháp rỗng.
+ * Tệp .docx và .md đi đường "giữ nguyên định dạng": vào thẳng MỘT bài với tiêu đề,
+ * bảng, ảnh như trong tệp, không qua AI (nên không tốn hạn mức) và không có dàn ý.
+ * Mọi nguồn đều bị chặn nếu quá LESSON_MAX_WORDS từ — không tự cắt thành nhiều bài.
  * Kiểm tra đầu vào trả JSON 4xx; phần gọi AI trả luồng NDJSON có nhịp giữ kết nối:
  * {"type":"start"} {"type":"stage","stage":"reading"|"outlining"} {"type":"ping"}* rồi
  * {"type":"done","draftId","warnings"} hoặc {"type":"error","error","status"}.
@@ -95,12 +127,14 @@ export async function POST(req: Request, { params }: { params: { lessonId: strin
     if (kind.kind === "docx") {
       try {
         const converted = await convertDocxToHtml(buf, userId);
-        paras = htmlToParas(converted.html);
         warnings.push(...converted.warnings);
+        return await keepFormatResponse(userId, params.lessonId, converted.html, file.name, "docx", warnings);
       } catch (e) {
         console.error("[lesson-draft] docx convert failed", e);
         return NextResponse.json({ error: "convert_failed" }, { status: 400 });
       }
+    } else if (kind.kind === "md") {
+      return keepFormatResponse(userId, params.lessonId, markdownToHtml(buf.toString("utf8")), file.name, "md", warnings);
     } else {
       const text = await extractMaterialText(buf, kind.mime);
       // PDF chụp ảnh (không có lớp chữ) hoặc tệp hỏng: nói rõ, không đoán thay.
@@ -114,6 +148,10 @@ export async function POST(req: Request, { params }: { params: { lessonId: strin
     return NextResponse.json({ error: "validation_failed", details: "no_source" }, { status: 400 });
   }
 
+  const sourceWords = wordCount(paras);
+  if (sourceWords > LESSON_MAX_WORDS) {
+    return NextResponse.json({ error: "source_too_long", details: { words: sourceWords, max: LESSON_MAX_WORDS } }, { status: 422 });
+  }
   const textChars = paras.reduce((n, p) => n + ("t" in p ? p.t.length : 0), 0);
   if (textChars < LESSON_OUTLINE_MIN_CHARS) {
     return NextResponse.json({ error: "source_too_short", details: { min: LESSON_OUTLINE_MIN_CHARS } }, { status: 422 });

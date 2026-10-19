@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { FileText, Loader2, Paperclip, Pencil, Presentation, Sparkles, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { DURATIONS } from "@/lib/limioLiveOutline";
-import { PASTE_AS_DOC_CHARS, TOPIC_MAX, canSubmitCreate, classifyUpload, handOffPptx, pasteAsDocument } from "@/lib/limioLiveCreateSource";
+import { TOPIC_MAX, canSubmitCreate, classifyUpload, handOffPptx, pasteAsDocument } from "@/lib/limioLiveCreateSource";
 
 const MAX_MB = 10;
 const PPTX_MAX_MB = 50;
@@ -203,7 +203,10 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
           <Pencil size={14} /> Soạn thủ công
         </a>
       </div>
-      <p className="text-[15px] text-muted">Thầy/cô muốn soạn bài giảng gì? Có tài liệu thì đính kèm một tệp, AI sẽ bám sát tài liệu đó.</p>
+      <p className="text-[15px] text-muted">
+        Limio có thể hỗ trợ thầy/cô soạn bài giảng tương tác chỉ từ một ý tưởng. Nếu có tài liệu tham khảo, thầy/cô đính kèm tệp. Nếu đã có
+        bài giảng PowerPoint, Limio hỗ trợ soạn lại kèm các nội dung tương tác.
+      </p>
 
       <div
         onDragOver={(e) => {
@@ -232,9 +235,10 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
           placeholder={
             hasDoc
               ? "Thầy/cô muốn bài giảng thế nào? Ví dụ: dạy cho sinh viên năm nhất, tập trung phần ứng dụng, thêm một câu hỏi thảo luận."
-              : "Ví dụ: Bài giới thiệu về thực tế tăng cường (AR) trong lớp học cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR và đề xuất được một hoạt động học dùng AR."
+              : "Ví dụ: Giới thiệu thực tế tăng cường (AR) cho sinh viên năm cuối ngành Công nghệ giáo dục. Sau buổi học, sinh viên phân biệt được AR với VR."
           }
-          className="block w-full resize-y border-0 bg-transparent px-4 pb-1.5 pt-3 text-base leading-relaxed focus:outline-none focus:ring-0"
+          // 15px như chữ quanh ô; điện thoại giữ 16px để iPhone không tự phóng to trang khi chạm vào ô.
+          className="block w-full resize-y border-0 bg-transparent px-4 pb-1.5 pt-3 text-[15px] leading-normal focus:outline-none focus:ring-0 max-sm:text-base"
           aria-label="Mô tả bài giảng"
           aria-describedby="topic-hint"
         />
@@ -277,9 +281,17 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
 
         {/* Hàng thao tác: đính kèm, thời lượng, nguồn internet (khi không có tài liệu), nút Soạn dàn ý. */}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-token bg-[rgb(var(--surface-muted))] px-4 py-3">
-          <button type="button" className="btn-secondary flex items-center gap-1.5" onClick={() => fileRef.current?.click()}>
-            <Paperclip size={15} aria-hidden /> {att ? "Đổi tài liệu" : "Đính kèm tài liệu"}
-          </button>
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <button type="button" className="btn-secondary flex items-center gap-1.5 whitespace-nowrap" onClick={() => fileRef.current?.click()} aria-describedby="att-limit">
+              <Paperclip size={15} aria-hidden /> {att ? "Đổi tài liệu" : "Đính kèm tài liệu"}
+              {/* Tài liệu không bắt buộc: chỉ cần mô tả là đủ để soạn bài. */}
+              {!att && <span className="font-normal text-muted">(không bắt buộc)</span>}
+            </button>
+            {/* Giới hạn định dạng và dung lượng, khớp kiểm tra ở chooseFile và máy chủ. */}
+            <span id="att-limit" className="text-[12.5px] leading-snug text-faint">
+              Một tệp: Word, PDF, .txt, .md tối đa {MAX_MB} MB; PowerPoint (.pptx) tối đa {PPTX_MAX_MB} MB
+            </span>
+          </div>
           <input
             ref={fileRef}
             type="file"
@@ -304,7 +316,7 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
                     aria-checked={minutes === d.minutes}
                     title={`Khoảng ${d.min} đến ${d.max} slide`}
                     onClick={() => setMinutes(d.minutes)}
-                    className={`rounded-full px-3 py-1 font-medium ${minutes === d.minutes ? "bg-brand-600 text-white" : "text-muted"}`}
+                    className={`whitespace-nowrap rounded-full px-3 py-1 font-medium max-sm:px-2.5 ${minutes === d.minutes ? "bg-brand-600 text-white" : "text-muted"}`}
                   >
                     {d.minutes} phút
                   </button>
@@ -376,10 +388,6 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
           ))}
         </div>
       )}
-      <p className="text-[13px] text-muted">
-        Có sẵn bài giảng PowerPoint? Đính kèm tệp .pptx vào ô trên, Limio giữ hình, ghi chú giảng, bảng và biểu đồ. Dán đoạn văn dài hơn{" "}
-        {PASTE_AS_DOC_CHARS.toLocaleString("vi-VN")} ký tự vào ô thì đoạn đó tự thành tài liệu.
-      </p>
     </main>
   );
 }
