@@ -98,7 +98,7 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const scrollToEnd = useCallback(() => endRef.current?.scrollIntoView({ block: "nearest" }), []);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (messages.length > 0) endRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -146,32 +146,35 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
       className={
         chatting
           ? // Đang chat: thanh nhập phẳng, dính ở đáy khung chat (không nổi bóng như lúc mới vào).
-            "flex items-center gap-2.5 rounded-xl border border-token bg-[rgb(var(--surface))] p-1.5 pl-3 transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_3px_rgb(var(--brand)/0.15)]"
-          : "flex items-center gap-3 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-2.5 pl-4 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)]"
+            "flex items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-1.5 pl-3 transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_3px_rgb(var(--brand)/0.15)] sm:gap-2.5"
+          : "flex items-center gap-2 rounded-2xl border border-slate-300 bg-[rgb(var(--surface))] p-2 pl-3 shadow-[0_10px_28px_-10px_rgb(var(--brand)/0.5)] transition-shadow focus-within:border-brand-500 focus-within:shadow-[0_0_0_4px_rgb(var(--brand)/0.18),0_10px_28px_-10px_rgb(var(--brand)/0.5)] sm:gap-3 sm:p-2.5 sm:pl-4"
       }
     >
-      <Sparkles size={chatting ? 20 : 22} className="shrink-0 text-brand-600" aria-hidden />
-      <textarea
+      <Sparkles size={20} className="hidden shrink-0 text-brand-600 min-[400px]:block" aria-hidden />
+      {/* Ô một dòng (không phải textarea): chữ hoặc gợi ý dài hơn ô thì hiện "…" thay vì bị cắt giữa chừng, nhất là trên điện thoại. */}
+      <input
         ref={inputRef}
+        type="text"
         value={input}
-        rows={1}
         maxLength={MESSAGE_MAX}
         disabled={busy}
+        enterKeyHint="send"
+        autoComplete="off"
         aria-label="Nói với Limio thầy/cô muốn làm gì"
-        placeholder="Hỏi Limio, ví dụ: làm sao tạo đề thi?"
+        placeholder="Hỏi Limio, ví dụ: tạo đề thi"
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
           // isComposing: Enter chốt chữ khi gõ tiếng Việt bằng bộ gõ không được tính là gửi.
-          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
             e.preventDefault();
             void send(input);
           }
         }}
-        className={`max-h-36 flex-1 resize-none bg-transparent text-base outline-none placeholder:text-slate-500 ${chatting ? "min-h-[2.75rem] py-2.5" : "min-h-[3rem] py-3.5 font-medium placeholder:font-normal"}`}
+        className={`h-11 min-w-0 flex-1 text-ellipsis bg-transparent text-[15px] outline-none placeholder:text-slate-500 sm:text-base ${chatting ? "" : "sm:h-12 sm:font-medium sm:placeholder:font-normal"}`}
       />
       <button
         type="button"
-        className={`flex shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${chatting ? "h-10 w-10" : "h-12 w-12 shadow-md disabled:shadow-none"}`}
+        className={`flex shrink-0 items-center justify-center rounded-xl bg-pink-600 text-white transition hover:bg-pink-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${chatting ? "h-10 w-10" : "h-11 w-11 shadow-md disabled:shadow-none sm:h-12 sm:w-12"}`}
         disabled={busy || !input.trim()}
         onClick={() => void send(input)}
         aria-label="Gửi"
@@ -228,9 +231,10 @@ export default function TeacherAssistant({ starters, ideaPrompt, greeting, name 
           </button>
           {errorLine}
           <p className="mt-4 text-xs font-bold uppercase tracking-wide text-muted">Hoặc bắt đầu nhanh</p>
-          <ul className="mt-2.5 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {/* grid-cols-1 = minmax(0,1fr): cột được phép co lại, nếu không chữ không xuống dòng (truncate) sẽ làm cột phình ra và tràn khỏi khung trên màn hẹp. */}
+          <ul className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
             {starters.map((s, i) => (
-              <li key={s.id}>
+              <li key={s.id} className="min-w-0">
                 <StarterTile starter={s} tone={TONES[i % TONES.length]!} />
               </li>
             ))}
@@ -335,8 +339,8 @@ function StarterTile({ starter, tone }: { starter: AssistantStarter; tone: Tone 
         <Icon size={18} strokeWidth={2} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-bold leading-snug">{starter.title}</span>
-        <span className="block truncate text-xs text-muted">{starter.subtitle}</span>
+        <span className="block text-sm font-bold leading-snug sm:truncate">{starter.title}</span>
+        <span className="block text-xs text-muted sm:truncate">{starter.subtitle}</span>
       </span>
       <span className="shrink-0 text-sm text-faint" aria-hidden>→</span>
     </Link>
