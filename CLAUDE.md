@@ -291,6 +291,7 @@ docker exec feedbackme-postgres-1 psql -U feedbackme -d postgres -c "CREATE DATA
 docker cp <dir>/postgres.dump feedbackme-postgres-1:/tmp/rt.dump
 docker exec feedbackme-postgres-1 pg_restore -U feedbackme -d restore_test /tmp/rt.dump
 ```
+- **Cảnh báo chủ động**: đặt `ALERT_WEBHOOK_URL` (Slack / Telegram `.../sendMessage?chat_id=…` / Discord `.../slack`) trong `.env.prod` rồi `$COMPOSE up -d cron`. Cron sidecar (`docker/cron/alert.sh`) báo khi job lỗi (tối đa 1 tin/job/30 phút, ✅ một lần khi chạy lại được); `feedbackme-backup.sh` đọc cùng dòng đó từ `/etc/feedbackme/.env.prod` (nếu user chạy backup đọc được, không thì đặt biến ngay trong dòng crontab) và báo khi verify lỗi, uploads lỗi hoặc `offsite≠ok`. Trống = chỉ ghi log như trước.
 - **Cron secret rotation**: đổi `CRON_SECRET` trong `.env.prod` rồi `$COMPOSE up -d web cron` (cả hai cần cùng giá trị).
 - **Healthcheck web** dùng `GET /` — nếu đổi sang đường health riêng (vd. `/api/health`), nhớ sửa cả `Dockerfile` và workflow `Wait for web to become healthy`.
 

@@ -1,5 +1,5 @@
 import { cookies, headers } from "next/headers";
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
@@ -11,11 +11,17 @@ import {
   decodeImpersonationCookie,
   emitEvent,
   getRolesForUser,
-  loginCredentials,
   loginOrLinkSso,
 } from "@feedbackme/core-lms";
 import { ATTRIBUTION_COOKIE } from "@/lib/growth/attribution";
 import { recordAcquisitionTouch } from "@/lib/growth/touchStore";
+import { throttledLogin } from "@/lib/loginThrottle";
+import { clientIp } from "@/lib/rate-limit";
+
+/** Sai mật khẩu quá nhiều lần — `code` tới client qua kết quả `signIn()`. */
+class LoginRateLimited extends CredentialsSignin {
+  code = "rate_limited";
+}
 
 /**
  * Auth providers — Credentials (email+password) plus optional SSO via Google
@@ -106,12 +112,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        const result = await loginCredentials({
-          email: credentials?.email,
-          password: credentials?.password,
-        });
-        if (!result) return null;
+      async authorize(credentials, request) {
+        const outcome = await throttledLogin(
+          { email: credentials?.email, password: credentials?.password },
+          clientIp(request),
+        );
+        if (outcome.status === "locked") throw new LoginRateLimited();
+        if (outcome.status !== "ok") return null;
+        const result = outcome.user;
         return {
           id: result.id,
           email: result.email,
