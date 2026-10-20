@@ -1,6 +1,7 @@
 import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { getTournamentNotifications } from "./tournamentNotifications";
+import { formatTime, toDayKey } from "./datetime";
 
 export type Role = "learner" | "instructor" | "admin" | "mentor";
 
@@ -26,7 +27,9 @@ export type NotificationType =
   | "instructor.assignment.submitted"
   | "instructor.essay.pending"
   | "instructor.mission.review_needed"
-  | "instructor.forum.new_thread";
+  | "instructor.forum.new_thread"
+  | "instructor.exam.session_soon"
+  | "instructor.learners.stale";
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   "peer_review.assigned": "Chấm bài",
@@ -49,6 +52,8 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   "instructor.essay.pending": "Essay cần chấm",
   "instructor.mission.review_needed": "Nhiệm vụ cần chấm",
   "instructor.forum.new_thread": "Câu hỏi mới",
+  "instructor.exam.session_soon": "Ca thi sắp tới",
+  "instructor.learners.stale": "Học viên im ắng",
 };
 
 const PERIOD_LABEL: Record<string, string> = {
@@ -69,6 +74,12 @@ export type Notification = {
 };
 
 const FETCH_LIMIT_PER_TYPE = 10;
+
+/** Ca thi bắt đầu trong khoảng này (kể từ lúc ca đã mở tới 24 giờ sau) được nhắc ở chuông giảng viên. */
+const SESSION_LOOKBACK_HOURS = 3;
+const SESSION_LOOKAHEAD_HOURS = 24;
+/** Học viên ghi danh đang hoạt động mà không có sự kiện học nào quá số ngày này thì tính là im ắng. */
+const LEARNER_STALE_DAYS = 14;
 
 // ─── Per-role last-seen map ──────────────────────────────────────────────
 
@@ -394,11 +405,52 @@ function courseAsMineFilter(userId: string) {
   return { instructors: { some: { userId } } };
 }
 
+/** Ca thi sắp diễn ra hoặc đang mở của đề thuộc khoá mình dạy (cùng phạm vi với trang Đề thi), kèm thời điểm ca lọt vào cửa sổ nhắc. */
+async function getUpcomingExamSessions(userId: string, limit?: number) {
+  const now = Date.now();
+  return prisma.examSession.findMany({
+    where: {
+      status: { in: ["open", "draft"] },
+      opensAt: {
+        gte: new Date(now - SESSION_LOOKBACK_HOURS * 3600 * 1000),
+        lt: new Date(now + SESSION_LOOKAHEAD_HOURS * 3600 * 1000),
+      },
+      exam: { OR: [{ course: courseAsMineFilter(userId) }, { courseId: null, createdById: userId }] },
+    },
+    orderBy: { opensAt: "asc" },
+    ...(limit ? { take: limit } : {}),
+    select: { id: true, title: true, opensAt: true, exam: { select: { title: true } } },
+  });
+}
+
+/** Số ghi danh đang hoạt động ở khoá mình dạy mà LEARNER_STALE_DAYS ngày qua không có sự kiện học nào. */
+async function countStaleLearners(userId: string): Promise<number> {
+  const courses = await prisma.course.findMany({ where: courseAsMineFilter(userId), select: { id: true } });
+  const courseIds = courses.map((c) => c.id);
+  if (courseIds.length === 0) return 0;
+  const enrollments = await prisma.enrollment.findMany({
+    where: { courseId: { in: courseIds }, status: "active" },
+    select: { userId: true, courseId: true },
+  });
+  if (enrollments.length === 0) return 0;
+  const recent = await prisma.learningEvent.groupBy({
+    by: ["userId", "courseId"],
+    where: {
+      userId: { in: enrollments.map((e) => e.userId) },
+      courseId: { in: courseIds },
+      occurredAt: { gte: new Date(Date.now() - LEARNER_STALE_DAYS * 24 * 3600 * 1000) },
+    },
+    _max: { occurredAt: true },
+  });
+  const recentSet = new Set(recent.map((e) => `${e.userId}:${e.courseId}`));
+  return enrollments.filter((e) => !recentSet.has(`${e.userId}:${e.courseId}`)).length;
+}
+
 async function getInstructorNotifications(
   userId: string,
   limit: number,
 ): Promise<Notification[]> {
-  const [pendingAssignments, pendingEssays, manualMissions, newThreads] =
+  const [pendingAssignments, pendingEssays, manualMissions, newThreads, upcomingSessions, staleLearners] =
     await Promise.all([
       // Submitted but not graded — instructor needs to grade.
       prisma.assignmentSubmission.findMany({
@@ -477,6 +529,8 @@ async function getInstructorNotifications(
           },
         },
       }),
+      getUpcomingExamSessions(userId, 3),
+      countStaleLearners(userId),
     ]);
 
   const items: Notification[] = [];
@@ -535,15 +589,71 @@ async function getInstructorNotifications(
     });
   }
 
+  // Ca thi sắp tới: "mới" kể từ lúc ca lọt vào cửa sổ nhắc (24 giờ trước giờ mở). Được ghim lên đầu danh sách.
+  const pinnedTop: Notification[] = [];
+  const pinnedBottom: Notification[] = [];
+  const todayKey = toDayKey(new Date());
+  for (const ses of upcomingSessions) {
+    const opensAt = ses.opensAt!;
+    const day = toDayKey(opensAt) === todayKey ? "hôm nay" : "ngày mai";
+    pinnedTop.push({
+      id: `ise:${ses.id}`,
+      type: "instructor.exam.session_soon",
+      title: `Ca thi ${formatTime(opensAt)} ${day}${ses.title ? ` · ${ses.title}` : ""}`,
+      body: ses.exam.title,
+      link: `/instructor/exam-sessions/${ses.id}`,
+      iconKey: "deadline",
+      createdAt: new Date(opensAt.getTime() - SESSION_LOOKAHEAD_HOURS * 3600 * 1000),
+    });
+  }
+
+  // Học viên im ắng: một dòng gộp, là tình trạng đang kéo dài nên không tính vào số chưa đọc; mốc thời gian là ngày bắt đầu im ắng.
+  if (staleLearners > 0) {
+    pinnedBottom.push({
+      id: "isl:stale",
+      type: "instructor.learners.stale",
+      title: `${staleLearners} học viên không hoạt động quá ${LEARNER_STALE_DAYS} ngày`,
+      body: "Cân nhắc nhắn nhủ hoặc hỏi thăm",
+      link: "/instructor/enrollments?status=stale",
+      iconKey: "team",
+      createdAt: new Date(Date.now() - LEARNER_STALE_DAYS * 24 * 3600 * 1000),
+    });
+  }
+
+  // Hai loại này là việc đang chờ chứ không phải sự kiện: ca thi đứng đầu (gấp theo giờ), dòng học viên im ắng đứng cuối
+  // nhưng luôn có mặt, không bị các bài nộp mới hơn đẩy ra khỏi `limit`.
   items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  return items.slice(0, limit);
+  return [...pinnedTop, ...items.slice(0, Math.max(0, limit - pinnedTop.length - pinnedBottom.length)), ...pinnedBottom];
+}
+
+/**
+ * Tóm tắt việc đang chờ cho dòng trạng thái ở trang chủ giảng viên: số bài chờ chấm (bài tập, tự luận trong đề thi,
+ * nhiệm vụ Đấu trường duyệt tay), số ca thi sắp diễn ra và số học viên im ắng. Cùng phạm vi với danh sách trong chuông.
+ */
+export async function getInstructorPendingSummary(
+  userId: string,
+): Promise<{ grading: number; sessions: number; staleLearners: number }> {
+  const [assignments, essays, missions, sessions, staleLearners] = await Promise.all([
+    prisma.assignmentSubmission.count({
+      where: { status: "submitted", assignment: { lesson: { module: { course: courseAsMineFilter(userId) } } } },
+    }),
+    prisma.examAnswer.count({
+      where: { needsGrading: true, gradedAt: null, attempt: { exam: { course: courseAsMineFilter(userId) } } },
+    }),
+    prisma.missionSubmission.count({
+      where: { status: "pending", verifiedAt: null, mission: { verifyMode: "MANUAL_REVIEW", tournament: { creatorId: userId } } },
+    }),
+    getUpcomingExamSessions(userId).then((list) => list.length),
+    countStaleLearners(userId),
+  ]);
+  return { grading: assignments + essays + missions, sessions, staleLearners };
 }
 
 async function getInstructorUnreadCount(
   userId: string,
   since: Date,
 ): Promise<number> {
-  const [a, b, c, d] = await Promise.all([
+  const [a, b, c, d, e] = await Promise.all([
     prisma.assignmentSubmission.count({
       where: {
         status: "submitted",
@@ -579,7 +689,11 @@ async function getInstructorUnreadCount(
         lesson: { module: { course: courseAsMineFilter(userId) } },
       },
     }),
+    // Ca thi mới lọt vào cửa sổ nhắc kể từ lần mở chuông cuối.
+    getUpcomingExamSessions(userId).then(
+      (list) => list.filter((x) => x.opensAt!.getTime() - SESSION_LOOKAHEAD_HOURS * 3600 * 1000 > since.getTime()).length,
+    ),
   ]);
 
-  return a + b + c + d;
+  return a + b + c + d + e;
 }

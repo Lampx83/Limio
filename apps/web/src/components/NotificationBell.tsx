@@ -23,6 +23,9 @@ import {
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
 
+/** Sự kiện cửa sổ để nơi khác (vd. trang chủ giảng viên) mở chuông thông báo. */
+export const OPEN_NOTIFICATIONS_EVENT = "limio:open-notifications";
+
 type Noti = {
   id: string;
   type: string;
@@ -129,6 +132,19 @@ export default function NotificationBell({
       if (unread > 0) markSeen();
     }
   }
+
+  // Trang chủ giảng viên có dòng "Đang chờ thầy/cô" bấm vào là mở chuông (sự kiện này); mở giống như bấm nút chuông.
+  useEffect(() => {
+    const onOpen = () => {
+      if (open) return;
+      setOpen(true);
+      load();
+      if (unread > 0) markSeen();
+    };
+    window.addEventListener(OPEN_NOTIFICATIONS_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_NOTIFICATIONS_EVENT, onOpen);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, unread]);
 
   const lastSeenMs = lastSeen ? new Date(lastSeen).getTime() : 0;
 

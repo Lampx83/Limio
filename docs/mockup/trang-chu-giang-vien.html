@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trang chủ giảng viên</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Inter:wght@400;500;600&family=Nunito:ital,wght@1,400&display=swap" rel="stylesheet">
+<style>
+  /* Bảng màu dịu: nền trung tính hơi ấm, lime chỉ dùng làm điểm nhấn, hồng chỉ dành cho Lily. */
+  :root {
+    --bg: #f8f8f5; --surface: #ffffff; --soft: #f1f2ec;
+    --ink: #1d2417; --ink-2: #4d5646; --ink-3: #868f7c; --line: #e9ebe2;
+    --brand-50: #f6fbe9; --brand-100: #e9f6c8; --brand-300: #c1e279; --brand-500: #84cc16; --brand-600: #65a30d; --brand-700: #4d7c0f;
+    --pink-50: #fdf2f8; --pink-100: #fce7f3; --pink-200: #fbcfe8; --pink-500: #ec4899; --pink-700: #be185d;
+    --amber: #eeb04a;
+    --ring: 0 0 0 1px rgb(29 36 23 / .06);
+    --lift: 0 1px 1px rgb(29 36 23 / .03), 0 6px 20px -8px rgb(29 36 23 / .10), 0 24px 48px -24px rgb(29 36 23 / .12);
+    --lift-lg: 0 1px 1px rgb(29 36 23 / .04), 0 10px 28px -10px rgb(29 36 23 / .16), 0 36px 64px -28px rgb(29 36 23 / .22);
+    --glow: 0 0 0 4px rgb(132 204 22 / .16);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #10150b; --surface: #181f10; --soft: #1f281a; --ink: #f0f4e6; --ink-2: #c3cdb0; --ink-3: #8f9a80; --line: #2a3420; --brand-50: #1b270f; --brand-100: #25351a; --brand-700: #a3e635; --pink-50: #3a1a2c; --pink-100: #4a2038; --pink-200: #6b2d50; --pink-700: #f9a8d4; --ring: 0 0 0 1px rgb(255 255 255 / .06); --lift: 0 8px 24px rgb(0 0 0 / .4); --lift-lg: 0 14px 40px rgb(0 0 0 / .55); }
+  }
+  :root[data-theme="dark"] { --bg: #10150b; --surface: #181f10; --soft: #1f281a; --ink: #f0f4e6; --ink-2: #c3cdb0; --ink-3: #8f9a80; --line: #2a3420; --brand-50: #1b270f; --brand-100: #25351a; --brand-700: #a3e635; --pink-50: #3a1a2c; --pink-100: #4a2038; --pink-200: #6b2d50; --pink-700: #f9a8d4; --ring: 0 0 0 1px rgb(255 255 255 / .06); --lift: 0 8px 24px rgb(0 0 0 / .4); --lift-lg: 0 14px 40px rgb(0 0 0 / .55); }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; }
+  .display { font-family: "Be Vietnam Pro", Inter, system-ui, sans-serif; }
+
+  /* ── Thanh đầu trang (đã có sẵn; mockup chỉ thêm 2 nút: Việc đang chờ, Lịch) ── */
+  .top { position: relative; z-index: 30; display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: color-mix(in srgb, var(--surface) 72%, transparent); backdrop-filter: saturate(1.4) blur(12px); box-shadow: 0 1px 0 var(--line); }
+  .logo { font-family: "Be Vietnam Pro", Inter, sans-serif; font-size: 1.65rem; font-weight: 700; letter-spacing: -.03em; }
+  .logo b { color: var(--pink-500); font-weight: 700; }
+  .tools { display: flex; align-items: center; gap: 4px; }
+  .ico { position: relative; width: 38px; height: 38px; border: 0; border-radius: 50%; background: transparent; color: var(--ink-2); display: grid; place-items: center; cursor: pointer; transition: background .18s, color .18s; }
+  .ico:hover, .ico[aria-expanded="true"] { background: var(--soft); color: var(--ink); }
+  .badge { position: absolute; top: 0; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: var(--amber); color: #fff; font-size: 10px; font-weight: 600; display: grid; place-items: center; box-shadow: 0 0 0 2px var(--surface); }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #84cc16, #ec4899); color: #fff; font-size: .78rem; font-weight: 600; display: grid; place-items: center; margin-left: 6px; }
+  .wrap { position: relative; }
+  .pop { display: none; position: absolute; right: 0; top: calc(100% + 10px); width: 380px; max-width: calc(100vw - 32px); background: var(--surface); border-radius: 20px; box-shadow: var(--ring), var(--lift-lg); overflow: hidden; transform-origin: top right; }
+  .wrap.open .pop { display: block; animation: pop .18s ease-out; }
+  @keyframes pop { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+  .pop h4 { margin: 0; padding: 18px 20px 8px; font-size: .78rem; font-weight: 600; color: var(--ink-3); }
+  .todo a { display: flex; align-items: center; gap: 14px; padding: 13px 20px; transition: background .15s; }
+  .todo a:hover { background: var(--soft); }
+  .todo a + a { box-shadow: inset 0 1px 0 var(--line); }
+  .todo .d { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); flex: none; }
+  .todo .d.calm { background: var(--line); }
+  .todo span.t { flex: 1; font-size: .92rem; line-height: 1.4; }
+  .todo small { display: block; color: var(--ink-3); font-size: .8rem; }
+  .todo .go { color: var(--ink-3); }
+  .cal { padding: 16px 18px 18px; }
+  .cal .row { display: flex; justify-content: space-between; align-items: center; }
+  .seg { display: inline-flex; padding: 2px; background: var(--soft); border-radius: 99px; font-size: .78rem; }
+  .seg i { font-style: normal; padding: 3px 12px; border-radius: 99px; color: var(--ink-3); }
+  .seg i.on { background: var(--surface); color: var(--ink); box-shadow: var(--ring); }
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; margin-top: 14px; gap: 2px; font-size: .75rem; color: var(--ink-3); }
+  .week b { display: grid; place-items: center; width: 32px; height: 32px; margin: 4px auto 0; border-radius: 50%; color: var(--ink); font-weight: 500; font-size: .9rem; }
+  .week b.today { background: var(--brand-600); color: #fff; }
+  .cal .none { margin: 16px 0 0; padding-top: 14px; box-shadow: inset 0 1px 0 var(--line); color: var(--ink-3); font-size: .86rem; }
+
+  /* ── Trang chủ ── */
+  /* Một quầng sáng lime rất nhạt phía trên, tan dần vào nền. Không đường kẻ, không vệt màu thứ hai. */
+  .stage { background: radial-gradient(900px 420px at 50% -80px, rgb(190 230 110 / .28), transparent 70%); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .stage { background: radial-gradient(900px 420px at 50% -80px, rgb(132 204 22 / .10), transparent 70%); } }
+  :root[data-theme="dark"] .stage { background: radial-gradient(900px 420px at 50% -80px, rgb(132 204 22 / .10), transparent 70%); }
+  .page { max-width: 700px; margin: 0 auto; padding: 0 20px 120px; }
+
+  .hero { padding-top: clamp(64px, 15vh, 136px); text-align: center; }
+  .hello { margin: 0; font-family: "Be Vietnam Pro", Inter, system-ui, sans-serif; font-size: clamp(2rem, 5vw, 2.85rem); font-weight: 600; letter-spacing: -.03em; line-height: 1.18; color: var(--ink); }
+  .hello span { font-weight: 700; background: linear-gradient(110deg, #5f9a0c 0%, #84cc16 40%, #e0529a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { margin: 12px 0 0; font-family: Nunito, Inter, sans-serif; font-style: italic; color: var(--ink-3); font-size: 1.12rem; }
+
+  .search { position: relative; margin-top: 36px; text-align: left; }
+  .box { display: flex; align-items: center; gap: 14px; height: 64px; padding: 0 9px 0 26px; background: var(--surface); border-radius: 999px; box-shadow: var(--ring), var(--lift); transition: box-shadow .2s; cursor: text; }
+  .box:hover { box-shadow: var(--ring), var(--lift-lg); }
+  .search.open .box { box-shadow: 0 0 0 1px var(--brand-500), var(--glow), var(--lift-lg); }
+  .box svg.s { flex: none; color: var(--ink-3); }
+  .box input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 1.04rem; }
+  .box input::placeholder { color: var(--ink-3); }
+
+  /* Nút Hỏi Lily: cùng kiểu với nút nổi "Hỏi Lily" ở góc phải màn hình (viền hồng, nền hồng nhạt, chữ hồng đậm, lát dưa
+     hấu, đuôi bong bóng thoại; rê chuột thì lát dưa nghiêng nhẹ). */
+  .lily { position: relative; flex: none; display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 18px 0 13px; border-radius: 999px; border: 1px solid var(--pink-200); background: var(--pink-50); color: var(--pink-700); font-family: "Be Vietnam Pro", Inter, sans-serif; font-size: .9rem; font-weight: 600; cursor: pointer; transition: background .15s, transform .15s; }
+  .lily:hover { background: var(--pink-100); transform: translateY(-1px); }
+  .lily:active { transform: scale(.96); }
+  .lily .tail { position: absolute; right: 24px; bottom: -6px; width: 11px; height: 11px; background: var(--pink-50); border-right: 1px solid var(--pink-200); border-bottom: 1px solid var(--pink-200); transform: rotate(45deg); transition: background .15s; }
+  .lily:hover .tail { background: var(--pink-100); }
+  .lily svg { width: 26px; height: 26px; transition: transform .2s; }
+  .lily:hover svg { transform: rotate(-12deg); }
+
+  .menu { display: none; position: absolute; left: 0; right: 0; top: calc(100% + 10px); z-index: 5; padding: 8px 0 12px; background: var(--surface); border-radius: 28px; box-shadow: var(--ring), var(--lift-lg); }
+  .search.open .menu { display: block; animation: pop .16s ease-out; }
+  .menu h5 { margin: 12px 26px 4px; font-size: .76rem; font-weight: 600; color: var(--ink-3); }
+  .menu a { display: flex; align-items: baseline; gap: 12px; margin: 0 8px; padding: 10px 18px; border-radius: 14px; font-size: .96rem; }
+  .menu a:hover { background: var(--soft); }
+  .menu .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .menu .m { flex: none; color: var(--ink-3); font-size: .8rem; }
+  .menu mark { background: none; color: var(--brand-700); font-weight: 600; }
+  .menu .ask { color: var(--pink-700); font-weight: 600; }
+
+  .make { margin-top: 26px; display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 28px; font-size: .94rem; color: var(--ink-2); }
+  .make a { padding: 4px 0; transition: color .15s; }
+  .make a::before { content: "+"; margin-right: 7px; color: var(--brand-500); font-weight: 600; }
+  .make a:hover { color: var(--brand-700); }
+
+  section { margin-top: 96px; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 4px 14px; }
+  .head h2 { margin: 0; font-family: "Be Vietnam Pro", Inter, sans-serif; font-size: .95rem; font-weight: 600; color: var(--ink); }
+  .head a { font-size: .85rem; color: var(--ink-3); transition: color .15s; }
+  .head a:hover { color: var(--brand-700); }
+
+  .courses { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 640px) { .courses { grid-template-columns: repeat(3, 1fr); } }
+  .course { display: block; padding: 18px; background: var(--surface); border-radius: 22px; box-shadow: var(--ring), var(--lift); transition: transform .2s, box-shadow .2s; }
+  .course:hover { transform: translateY(-3px); box-shadow: var(--ring), var(--lift-lg); }
+  .tile { width: 38px; height: 38px; border-radius: 13px; display: grid; place-items: center; margin-bottom: 16px; font-family: "Be Vietnam Pro", Inter, sans-serif; font-size: .76rem; font-weight: 700; }
+  .tile.g { background: linear-gradient(140deg, var(--brand-100), var(--brand-50)); color: var(--brand-700); }
+  .tile.p { background: linear-gradient(140deg, var(--pink-100), var(--pink-50)); color: var(--pink-700); }
+  .tile.n { background: var(--soft); color: var(--ink-3); }
+  .course b { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-family: "Be Vietnam Pro", Inter, sans-serif; font-size: .98rem; font-weight: 600; letter-spacing: -.01em; line-height: 1.4; }
+  .course .m { display: flex; align-items: center; gap: 7px; margin-top: 10px; color: var(--ink-3); font-size: .8rem; font-variant-numeric: tabular-nums; }
+  .course .m i { width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); flex: none; }
+  .course .m i.off { background: var(--line); box-shadow: inset 0 0 0 1px var(--ink-3); opacity: .6; }
+
+  /* Hiện dần từ dưới lên, lần lượt; tắt khi người dùng chọn giảm chuyển động. */
+  .rise { animation: rise .6s cubic-bezier(.22, 1, .36, 1) both; animation-delay: var(--d, 0s); }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+  @media (prefers-reduced-motion: reduce) { .rise, .wrap.open .pop, .search.open .menu { animation: none; } }
+
+  /* Ở trang chủ KHÔNG hiện nút nổi "Hỏi Lily" ở góc phải: nút trong ô tìm kiếm chính là lối vào Lily, cùng một kiểu
+     với nút nổi. Mọi trang giảng viên khác vẫn có nút nổi. Tránh hai nút trùng tên trên cùng một màn hình. */
+
+  .note { margin-top: 64px; color: var(--ink-3); font-size: .78rem; text-align: center; }
+  .toggle { position: fixed; left: 12px; bottom: 12px; font-size: .75rem; padding: 6px 12px; border: 0; border-radius: 99px; background: var(--surface); box-shadow: var(--ring); color: var(--ink-3); cursor: pointer; }
+  @media (max-width: 640px) { .top { padding: 10px 14px; } .logo { font-size: 1.4rem; } .box { height: 58px; padding-left: 20px; } .lily { padding: 0 14px 0 10px; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="melon" viewBox="0 0 64 64">
+    <path d="M 2 50 A 30 30 0 0 1 62 50 L 60 50 A 28 28 0 0 0 4 50 Z" fill="#3F6212"/>
+    <path d="M 4 50 A 28 28 0 0 1 60 50 L 58 50 A 26 26 0 0 0 6 50 Z" fill="#65A30D"/>
+    <path d="M 6 50 A 26 26 0 0 1 58 50 L 55 50 A 23 23 0 0 0 9 50 Z" fill="#F7FEE7"/>
+    <path d="M 9 50 A 23 23 0 0 1 55 50 Z" fill="#EC4899"/>
+    <path d="M 14 47 A 18 18 0 0 1 50 47 L 48 49 A 16 16 0 0 0 16 49 Z" fill="#F472B6" opacity="0.6"/>
+    <g fill="#0F172A"><ellipse cx="20" cy="42" rx="1.2" ry="2" transform="rotate(-15 20 42)"/><ellipse cx="32" cy="40" rx="1.2" ry="2"/><ellipse cx="44" cy="42" rx="1.2" ry="2" transform="rotate(15 44 42)"/><ellipse cx="26" cy="46" rx="1.2" ry="2" transform="rotate(-8 26 46)"/><ellipse cx="38" cy="46" rx="1.2" ry="2" transform="rotate(8 38 46)"/><ellipse cx="32" cy="48" rx="1.2" ry="2"/></g>
+  </symbol>
+</svg>
+
+<header class="top">
+  <div class="logo">Lim<b>io</b></div>
+  <div class="tools">
+    <div class="wrap" id="w-cal">
+      <button class="ico" aria-label="Lịch" aria-expanded="false" data-pop="w-cal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </button>
+      <div class="pop cal">
+        <div class="row"><b class="display" style="font-size:.95rem;font-weight:600">Tuần 19/10 – 25/10/2026</b><span class="seg"><i class="on">Tuần</i><i>Tháng</i></span></div>
+        <div class="week"><div>T2<b>19</b></div><div>T3<b class="today">20</b></div><div>T4<b>21</b></div><div>T5<b>22</b></div><div>T6<b>23</b></div><div>T7<b>24</b></div><div>CN<b>25</b></div></div>
+        <p class="none">Không có hạn nộp ngày này.</p>
+      </div>
+    </div>
+    <span class="ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+    <span class="avatar">GV</span>
+  </div>
+</header>
+
+<div class="stage">
+  <main class="page">
+    <header class="hero">
+      <h1 class="hello rise" style="--d:.05s">Chào buổi sáng, <span>thầy Lâm</span></h1>
+      <p class="sub rise" style="--d:.1s">Thầy/cô muốn tìm gì, hoặc làm gì hôm nay?</p>
+
+      <div class="search rise" id="search" style="--d:.16s">
+        <label class="box">
+          <svg class="s" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" type="text" autocomplete="off" placeholder="Tìm khoá học, bài, đề thi… hoặc hỏi Lily cách làm" aria-label="Tìm kiếm hoặc hỏi Lily">
+          <button class="lily" type="button" aria-label="Hỏi Lily"><span class="tail"></span><svg><use href="#melon"/></svg>Hỏi Lily</button>
+        </label>
+        <div class="menu" id="menu"></div>
+      </div>
+
+      <nav class="make rise" style="--d:.22s" aria-label="Tạo mới">
+        <a href="#">Tạo slide</a><a href="#">Tạo đề thi</a><a href="#">Tạo khoá học</a><a href="#">Hoạt động trên lớp</a>
+      </nav>
+    </header>
+
+    <section class="rise" style="--d:.3s" aria-labelledby="co">
+      <div class="head"><h2 id="co">Khoá học gần đây</h2><a href="#">Tất cả khoá học (7)</a></div>
+      <div class="courses">
+        <a class="course" href="#"><div class="tile g">UX</div><b>Thiết kế UI/UX</b><span class="m"><i></i>Đang mở · 86 học viên</span></a>
+        <a class="course" href="#"><div class="tile p">CN</div><b>Các công nghệ giáo dục tiên tiến</b><span class="m"><i></i>Đang mở · 54 học viên</span></a>
+        <a class="course" href="#"><div class="tile n">TT</div><b>Tiếng Trung III</b><span class="m"><i class="off"></i>Nháp · 0 học viên</span></a>
+      </div>
+    </section>
+
+    <p class="note">Bản mô phỏng. Ở trang chủ chỉ có một nút Hỏi Lily (trong ô tìm kiếm); nút nổi góc phải được ẩn ở trang này và vẫn có ở các trang khác.</p>
+  </main>
+</div>
+
+<button class="toggle" type="button" onclick="var r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">Sáng / tối</button>
+
+<script>
+  document.querySelectorAll("[data-pop]").forEach(function(b){
+    b.addEventListener("click", function(e){
+      e.stopPropagation();
+      var w = document.getElementById(b.dataset.pop), was = w.classList.contains("open");
+      document.querySelectorAll(".wrap").forEach(function(x){ x.classList.remove("open"); x.querySelector("button").setAttribute("aria-expanded","false"); });
+      if (!was) { w.classList.add("open"); b.setAttribute("aria-expanded","true"); }
+    });
+  });
+  document.addEventListener("click", function(e){
+    if (!e.target.closest(".wrap")) document.querySelectorAll(".wrap").forEach(function(x){ x.classList.remove("open"); });
+  });
+
+  var DATA = [
+    { g: "Khoá học", t: "Thiết kế UI/UX", m: "Đang mở · 86 học viên" },
+    { g: "Khoá học", t: "Các công nghệ giáo dục tiên tiến", m: "Đang mở · 54 học viên" },
+    { g: "Khoá học", t: "Tiếng Trung III", m: "Nháp · 0 học viên" },
+    { g: "Bài học", t: "Bài 2.3 · Nghiên cứu người dùng", m: "Thiết kế UI/UX" },
+    { g: "Đề thi", t: "Đề giữa kỳ UI/UX", m: "Đã publish" },
+    { g: "Slide", t: "AI tạo sinh trong giáo dục", m: "Slide" }
+  ];
+  var DEFAULTS = [ { g: "Hay làm", t: "Tạo slide mới", m: "" }, { g: "Hay làm", t: "Mở lại Thiết kế UI/UX", m: "Khoá gần nhất" } ];
+  var s = document.getElementById("search"), q = document.getElementById("q"), menu = document.getElementById("menu");
+  function esc(x){ return x.replace(/[&<>]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }); }
+  function fold(x){ return x.normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/đ/g,"d").replace(/Đ/g,"D").toLowerCase(); }
+  function render() {
+    var v = q.value.trim(), list = DEFAULTS, html = "", last = "";
+    if (v) list = DATA.filter(function(d){ return fold(d.t).indexOf(fold(v)) >= 0; });
+    list.forEach(function(d){
+      if (d.g !== last) { html += "<h5>" + d.g + "</h5>"; last = d.g; }
+      var t = esc(d.t);
+      if (v) { var i = fold(d.t).indexOf(fold(v)); t = esc(d.t.slice(0,i)) + "<mark>" + esc(d.t.slice(i, i+v.length)) + "</mark>" + esc(d.t.slice(i+v.length)); }
+      html += '<a href="#"><span class="t">' + t + '</span><span class="m">' + d.m + "</span></a>";
+    });
+    if (v) html += '<h5>Không thấy đúng ý?</h5><a href="#" class="ask"><span class="t">Hỏi Lily: “' + esc(v) + '”</span><span class="m">Enter</span></a>';
+    menu.innerHTML = html;
+  }
+  q.addEventListener("focus", function(){ s.classList.add("open"); render(); });
+  q.addEventListener("input", render);
+  document.addEventListener("click", function(e){ if (!s.contains(e.target)) s.classList.remove("open"); });
+  q.addEventListener("keydown", function(e){ if (e.key === "Escape") { s.classList.remove("open"); q.blur(); } });
+</script>
+</body>
+</html>

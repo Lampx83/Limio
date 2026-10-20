@@ -10,9 +10,14 @@ export default function InstructorContentFrame({ children }: { children: React.R
   const pathname = usePathname() ?? "";
   const full = FULL_WIDTH_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   // pb-24: chừa chỗ dưới cùng cho nút nổi "Hỏi Lily" (cao ~48px, cách đáy 20px) để cuộn hết trang thì không còn che nội dung.
+  // Trang chủ giảng viên không có nút nổi (Lily nằm trong ô tìm kiếm) nên chỉ cần đệm nhỏ: trang vừa một màn hình, không phải cuộn.
+  const home = pathname === "/instructor/dashboard";
   return (
-    <div className={`mx-auto w-full px-4 pb-24 pt-6 lg:px-6 ${full ? "" : "max-w-6xl"}`}>
-      {children}
+    <div className={`mx-auto w-full px-4 lg:px-6 pt-6 ${home ? "pb-3" : "pb-24"} ${full ? "" : "max-w-6xl"}`}>
+      {/* key theo đường dẫn: mỗi lần đổi trang nội dung mới hiện dần (chỉ độ trong suốt, không dịch chuyển) thay vì bật ra đột ngột. */}
+      <div key={pathname} className="animate-overlay-in motion-reduce:animate-none">
+        {children}
+      </div>
     </div>
   );
 }

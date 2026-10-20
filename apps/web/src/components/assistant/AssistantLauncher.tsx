@@ -17,6 +17,8 @@ const NUDGE_KEY = "limio.assistant.nudged";
 
 export default function AssistantLauncher() {
   const pathname = usePathname();
+  // Trang chủ giảng viên có nút "Hỏi Lily" ngay trong ô tìm kiếm (cùng kiểu); ẩn nút nổi để không có hai nút trùng tên trên một màn hình.
+  const onHome = pathname === "/instructor/dashboard";
   const { open, setOpen, unread, messages, busy, error, reset, send } = useAssistant();
   const dialogRef = useRef<HTMLDivElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
@@ -133,7 +135,7 @@ export default function AssistantLauncher() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold leading-tight">Trợ lý Lily</p>
-              <p className="truncate text-xs text-muted">Hướng dẫn sử dụng Limio</p>
+              <p className="truncate text-xs text-muted">Hỏi em cách làm mọi việc trên Limio</p>
             </div>
             {messages.length > 0 && (
               <button type="button" onClick={reset} className="btn-ghost btn-sm shrink-0" aria-label="Cuộc trò chuyện mới" title="Cuộc trò chuyện mới">
@@ -152,7 +154,7 @@ export default function AssistantLauncher() {
         </div>
       )}
 
-      {!open && (
+      {!open && !onHome && (
         <button
           ref={fabRef}
           type="button"
