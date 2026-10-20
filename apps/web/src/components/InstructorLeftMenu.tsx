@@ -581,10 +581,11 @@ function InstructorLeftMenuInner({
         <aside className="sticky top-[4.6rem] hidden h-[calc(100vh-4.6rem)] shrink-0 lg:flex">
           {railDesktop}
           {/* Cột tên mục thu/mở bằng chuyển động bề ngang (không gỡ khỏi DOM → mượt). */}
-          {/* Luôn có mặt trong DOM (co về 0 ở Trang chủ): nhờ vậy lần đầu mở một module cũng chạy chuyển động bề ngang
+          {/* Có nền đặc (màu nền trang): nền chuyển sắc của trang chủ phủ hết cửa sổ nên nếu cột trong suốt sẽ bị nhuộm xanh.
+              Luôn có mặt trong DOM (co về 0 ở Trang chủ): nhờ vậy lần đầu mở một module cũng chạy chuyển động bề ngang
               từ 0 chứ không xuất hiện sẵn ở bề rộng đầy đủ rồi đẩy nội dung sang ngang một phát. */}
           <div
-            className={`shrink-0 overflow-hidden transition-[width,opacity,visibility] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none ${
+            className={`shrink-0 overflow-hidden bg-[rgb(var(--bg))] transition-[width,opacity,visibility] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none ${
               panelOpen ? "w-56 opacity-100" : "invisible w-0 opacity-0"
             }`}
             aria-hidden={!panelOpen}

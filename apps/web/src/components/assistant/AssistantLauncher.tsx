@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { usePathname } from "next/navigation";
-import { RotateCcw, X } from "lucide-react";
+import { GripHorizontal, RotateCcw, X } from "lucide-react";
 import { WatermelonSliceIcon } from "../BrandIcons";
 import { AssistantInput, AssistantThread, LilyIntro } from "./AssistantChat";
 import { useAssistant } from "./AssistantProvider";
@@ -11,9 +11,41 @@ import { useAssistant } from "./AssistantProvider";
 /**
  * Lily (màu hồng, khác trợ giảng AI xanh ở trang bài học của học viên) đi theo giảng viên: nút nổi ở góc dưới bên phải mọi trang trong khu vực giảng viên (kể cả trang chủ), bấm mở ngăn kéo chat. Cuộc
  * trò chuyện nằm ở AssistantProvider (layout), nên giảng viên bấm liên kết Lily đưa, thử thao tác ở trang đó, rồi mở
- * lại ngăn kéo là thấy đúng đoạn chat đang dở. Chuyển trang thì ngăn kéo tự thu lại để không che trang đang làm.
+ * lại ngăn kéo là thấy đúng đoạn chat đang dở.
+ *
+ * Trên máy tính, khung chat kéo thả được tới bất cứ đâu bằng thanh tiêu đề, vị trí được nhớ trong phiên; khung ở yên khi
+ * chuyển trang hoặc bấm ra ngoài khung. Khung thu về nút nổi khi bấm nút thu nhỏ (X) hoặc bấm vào chỗ trống của khung
+ * (không phải nút, ô nhập, chữ hay liên kết: xem `isEmptyClick`). Trên điện thoại khung là một tấm trượt từ đáy có lớp
+ * mờ phía sau, nên ở đó vẫn tự thu khi chuyển trang, bấm lớp mờ hoặc nhấn Esc.
  */
 const NUDGE_KEY = "limio.assistant.nudged";
+const POS_KEY = "limio.assistant.pos";
+/** Phần thanh tiêu đề luôn phải còn nằm trong màn hình để còn nắm kéo lại được. */
+const GRAB_MIN = 64;
+
+type Pos = { left: number; top: number };
+
+/**
+ * Cú bấm có phải rơi vào chỗ trống của khung chat không: không phải nút, ô nhập, liên kết hay nhãn, không rơi vào một phần
+ * tử có chữ trực tiếp (bong bóng tin nhắn, tiêu đề, câu gợi ý), và không phải đang bôi đen chữ.
+ */
+function isEmptyClick(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || el.nodeType !== 1) return false;
+  if (el.closest("button, a, input, textarea, select, label, [role=button]")) return false;
+  if (el.closest("svg, img")) return false;
+  // Thanh tiêu đề là chỗ nắm kéo: bấm (không kéo) vào đó không được làm khung thu lại.
+  if (el.closest("[data-lily-drag]")) return false;
+  if (window.getSelection()?.toString()) return false;
+  return !Array.from(el.childNodes).some((n) => n.nodeType === 3 && (n.textContent ?? "").trim() !== "");
+}
+
+function clampPos(p: Pos, w: number, h: number): Pos {
+  return {
+    left: Math.min(Math.max(0, p.left), Math.max(0, window.innerWidth - w)),
+    top: Math.min(Math.max(0, p.top), Math.max(0, window.innerHeight - Math.min(h, GRAB_MIN))),
+  };
+}
 
 export default function AssistantLauncher() {
   const pathname = usePathname();
@@ -22,6 +54,11 @@ export default function AssistantLauncher() {
   const { open, setOpen, unread, messages, busy, error, reset, send } = useAssistant();
   const dialogRef = useRef<HTMLDivElement>(null);
   const fabRef = useRef<HTMLButtonElement>(null);
+  // Vị trí khung chat khi đã bị kéo đi (null = góc dưới phải mặc định). Chỉ dùng trên máy tính.
+  const [pos, setPos] = useState<Pos | null>(null);
+  const drag = useRef<{ dx: number; dy: number; w: number; h: number; x0: number; y0: number; moved: boolean } | null>(null);
+  // Vừa kéo xong: cú "click" ngay sau khi nhả chuột không được tính là bấm vào chỗ trống (nếu không kéo xong là khung thu lại).
+  const justDragged = useRef(false);
 
   const reducedMotion = () => typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   const isDesktop = () => typeof window !== "undefined" && !!window.matchMedia?.("(min-width: 640px)").matches;
@@ -33,10 +70,11 @@ export default function AssistantLauncher() {
     if (!open || reducedMotion()) return;
     const el = dialogRef.current;
     if (!el) return;
+    const origin = pos ? "center" : "bottom right";
     const frames: Keyframe[] = isDesktop()
       ? [
-          { transform: "scale(0.2)", opacity: 0, transformOrigin: "bottom right" },
-          { transform: "scale(1)", opacity: 1, transformOrigin: "bottom right" },
+          { transform: "scale(0.2)", opacity: 0, transformOrigin: origin },
+          { transform: "scale(1)", opacity: 1, transformOrigin: origin },
         ]
       : [
           { transform: "translateY(100%)", opacity: 0.6 },
@@ -54,10 +92,11 @@ export default function AssistantLauncher() {
       return;
     }
     closing.current = true;
+    const origin = pos ? "center" : "bottom right";
     const frames: Keyframe[] = isDesktop()
       ? [
-          { transform: "scale(1)", opacity: 1, transformOrigin: "bottom right" },
-          { transform: "scale(0.15)", opacity: 0, transformOrigin: "bottom right" },
+          { transform: "scale(1)", opacity: 1, transformOrigin: origin },
+          { transform: "scale(0.15)", opacity: 0, transformOrigin: origin },
         ]
       : [
           { transform: "translateY(0)", opacity: 1 },
@@ -68,7 +107,7 @@ export default function AssistantLauncher() {
       closing.current = false;
       setOpen(false);
     });
-  }, [setOpen]);
+  }, [setOpen, pos]);
 
   // Lần đầu trong một phiên: sau ~3 giây nút rung nhẹ đúng một lần để người chưa biết Lily nhìn thấy nó. Có ghi nhớ trong
   // sessionStorage nên sang trang khác không rung lại; người chọn giảm chuyển động thì bỏ qua.
@@ -102,19 +141,102 @@ export default function AssistantLauncher() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Chuyển trang: thu ngăn kéo, giữ nguyên lịch sử.
+  // Chuyển trang: trên điện thoại (tấm trượt có lớp mờ che trang) thu lại, giữ nguyên lịch sử; trên máy tính khung ở yên.
   useEffect(() => {
-    setOpen(false);
+    if (!isDesktop()) setOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, setOpen]);
 
+  // Esc chỉ đóng ở điện thoại; trên máy tính chỉ nút thu nhỏ đóng khung (Esc khi đang gõ dễ bấm nhầm).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose();
+      if (e.key === "Escape" && !isDesktop()) requestClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, requestClose]);
+
+  // Nhớ vị trí đã kéo trong phiên; đọc sau khi gắn vào trình duyệt để không lệch với HTML từ máy chủ.
+  useEffect(() => {
+    try {
+      const raw = window.sessionStorage.getItem(POS_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw) as Partial<Pos>;
+      if (typeof p.left === "number" && typeof p.top === "number") setPos({ left: p.left, top: p.top });
+    } catch {
+      // không đọc được thì dùng vị trí mặc định
+    }
+  }, []);
+
+  // Cửa sổ trình duyệt đổi cỡ: kéo khung trở lại trong màn hình.
+  useEffect(() => {
+    const onResize = () => {
+      const el = dialogRef.current;
+      if (!el) return;
+      setPos((cur) => (cur ? clampPos(cur, el.offsetWidth, el.offsetHeight) : cur));
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const onDragStart = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!isDesktop() || e.button !== 0) return;
+    // Bấm vào nút trong thanh tiêu đề (Cuộc trò chuyện mới, thu nhỏ) thì không phải kéo.
+    if ((e.target as HTMLElement).closest("button")) return;
+    const el = dialogRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    drag.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height, x0: e.clientX, y0: e.clientY, moved: false };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // không giữ được con trỏ (vd. con trỏ không còn hoạt động) thì vẫn kéo được trong thanh tiêu đề
+    }
+    e.preventDefault();
+  };
+  const onDragMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.x0, e.clientY - d.y0) < 4) return;
+    d.moved = true;
+    setPos(clampPos({ left: e.clientX - d.dx, top: e.clientY - d.dy }, d.w, d.h));
+  };
+  const onDragEnd = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!drag.current) return;
+    if (drag.current.moved) {
+      justDragged.current = true;
+      window.setTimeout(() => {
+        justDragged.current = false;
+      }, 0);
+    }
+    drag.current = null;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // đã nhả rồi
+    }
+    setPos((cur) => {
+      if (cur) {
+        try {
+          window.sessionStorage.setItem(POS_KEY, JSON.stringify(cur));
+        } catch {
+          // không ghi được thì lần sau về góc mặc định
+        }
+      }
+      return cur;
+    });
+  };
+  // Nhấp đúp thanh tiêu đề: đưa khung về góc dưới phải.
+  const resetPos = () => {
+    setPos(null);
+    try {
+      window.sessionStorage.removeItem(POS_KEY);
+    } catch {
+      // bỏ qua
+    }
+  };
 
   const intro = <LilyIntro onPick={(q) => void send(q, "suggestion")} />;
 
@@ -127,9 +249,26 @@ export default function AssistantLauncher() {
           ref={dialogRef}
           role="dialog"
           aria-label="Lily, trợ lý ảo của thầy/cô trên Limio"
+          // Đã kéo đi thì định vị theo left/top (ghi đè right/bottom của lớp CSS); chưa kéo thì ở góc dưới phải như cũ.
+          style={pos ? { left: pos.left, top: pos.top, right: "auto", bottom: "auto" } : undefined}
+          onClick={(e) => {
+            // Bấm chỗ trống của khung thì thu về nút nổi (máy tính). Ở điện thoại khung đóng bằng nút X hoặc lớp mờ.
+            if (isDesktop() && !justDragged.current && isEmptyClick(e.target)) requestClose();
+          }}
           className="fixed inset-x-0 bottom-0 z-50 flex h-[80vh] flex-col overflow-hidden rounded-t-3xl border border-token bg-[rgb(var(--surface))] shadow-2xl sm:inset-x-auto sm:bottom-4 sm:right-4 sm:h-[34rem] sm:max-h-[calc(100vh-2rem)] sm:w-[26rem] sm:rounded-3xl"
         >
-          <div className="flex items-center gap-3 border-b border-token px-4 py-3">
+          <div
+            data-lily-drag
+            className="flex touch-none select-none items-center gap-3 border-b border-token px-4 py-3 sm:cursor-grab sm:active:cursor-grabbing"
+            onPointerDown={onDragStart}
+            onPointerMove={onDragMove}
+            onPointerUp={onDragEnd}
+            onPointerCancel={onDragEnd}
+            onDoubleClick={(e) => {
+              if (!(e.target as HTMLElement).closest("button")) resetPos();
+            }}
+            title="Kéo để di chuyển, nhấp đúp để đưa về góc dưới phải"
+          >
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-pink-50" aria-hidden>
               <WatermelonSliceIcon className="h-6 w-6" />
             </span>
@@ -137,6 +276,7 @@ export default function AssistantLauncher() {
               <p className="text-base font-bold leading-tight">Trợ lý Lily</p>
               <p className="truncate text-xs text-muted">Hỏi em cách làm mọi việc trên Limio</p>
             </div>
+            <GripHorizontal size={18} className="hidden shrink-0 text-faint sm:block" aria-hidden />
             {messages.length > 0 && (
               <button type="button" onClick={reset} className="btn-ghost btn-sm shrink-0" aria-label="Cuộc trò chuyện mới" title="Cuộc trò chuyện mới">
                 <RotateCcw size={16} aria-hidden />
