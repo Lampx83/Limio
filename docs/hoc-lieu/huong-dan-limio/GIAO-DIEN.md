@@ -654,6 +654,12 @@ Whiteboard), nút **Chọn** → "Chọn tất cả"/"Bỏ chọn", **Xoá** nhi
 viễn", "Dọn sạch thùng rác", "← Danh sách"; sau khi xoá có "Hoàn tác" khoảng 6 giây. Phiên đang mở khi xoá có
 cảnh báo học viên bị ngắt.
 
+**Gameshow — nhạc trên màn chiếu.** Màn host có nút loa tròn cạnh "Kết thúc sớm" (nhãn "Tắt nhạc" / "Bật nhạc").
+Nhạc chỉ phát ở màn host, không phát trên máy học viên: sảnh chờ nhạc vui kèm tiếng bong khi có người vào; đang
+trả lời nhạc căng, 5 giây cuối nhịp dồn gấp; lộ đáp án có tiếng chuông; kết thúc có kèn mừng. Trình duyệt chặn tự
+phát tiếng nên lần đầu có thể phải bấm một lần vào trang (nút loa nhấp nháy khi đang chờ). Lựa chọn tắt/bật được
+nhớ trên máy đó. Chưa có chọn bài nhạc hay chỉnh âm lượng riêng — dùng nút âm lượng của máy chiếu/loa.
+
 ## 16. Đấu trường (phía giảng viên, mới)
 
 Menu "Đấu trường của tôi". Tab: Thông tin cơ bản · Nhiệm vụ · Đăng ký · Giám khảo · Giải thưởng · Bảng xếp
