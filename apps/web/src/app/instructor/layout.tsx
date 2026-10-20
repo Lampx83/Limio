@@ -6,9 +6,6 @@ import { isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-l
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
-import LanguageLeftMenu from "@/components/LanguageLeftMenu";
-import { getAppMode } from "@/lib/appMode.server";
-import { getLanguageTeacherBadges } from "@/lib/languageBadges";
 import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 import InstructorContentFrame from "./InstructorContentFrame";
 import { AssistantProvider } from "@/components/assistant/AssistantProvider";
@@ -83,23 +80,17 @@ export default async function InstructorLayout({
   }
 
   const recentCourseTitle = hasInstructorRole ? await getRecentCourseTitle(session.user.id) : null;
-  // LANG L2 — vỏ Limio Language: menu rút gọn thay cho menu giảng viên đầy đủ. Nội dung và quyền không đổi.
-  const languageMode = getAppMode() === "language";
 
   return (
     <ActiveNavSectionProvider>
       {/* Limio, trợ lý ảo của giảng viên: một cuộc trò chuyện dùng chung cho nút nổi ở mọi trang giảng viên. */}
       <AssistantProvider userId={session.user.id} recentCourseTitle={recentCourseTitle}>
         <div className="flex w-full">
-          {languageMode ? (
-            <LanguageLeftMenu role="teacher" badges={await getLanguageTeacherBadges(session.user.id)} />
-          ) : (
           <InstructorLeftMenu
             isInstructor={hasInstructorRole}
             isProctor={isProctor}
             isResearcher={hasResearcherRole}
           />
-          )}
           <div className="min-w-0 flex-1">
             <InstructorContentFrame>{children}</InstructorContentFrame>
           </div>

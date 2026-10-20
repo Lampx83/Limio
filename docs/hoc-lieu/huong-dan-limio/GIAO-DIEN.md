@@ -59,7 +59,7 @@ trường" (ẩn khi đang ở trang thi), chuông thông báo và nút tên tà
 (Trang chủ), mũ cử nhân (LMS), bảng trình chiếu (Limio-Live), người máy (Vấn đáp AI), chữ A+ (Kiểm tra
 đánh giá), cúp (Đấu trường), biểu đồ cột (Phân tích và Báo cáo).
 
-1. **Trang chủ** → `/instructor/dashboard` ("Tổng quan việc cần xử lý")
+1. **Trang chủ** → `/instructor/dashboard` (chú giải khi rê chuột: "Tìm kiếm nhanh, hỏi Lily và khoá học gần đây")
 2. **LMS** ("Bài giảng Elearning"): Khoá học của tôi · **Assignment** · **Forum Q&A** (nhãn menu nguyên văn,
    còn tiếng Anh)
 3. **Limio-Live** ("Dạy học trực tiếp"), chia 4 nhóm nhỏ: "Slide tương tác" (Slide của tôi) ·
@@ -382,13 +382,24 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
 
 ## 10. Theo dõi, gamification, chứng nhận, e-portfolio, trang chủ
 
-- **Trang chủ giảng viên** (`/instructor/dashboard`): hai cột từ màn hình rộng, một cột trên điện thoại. **Cột chính:**
-  lời chào theo giờ Việt Nam và các thẻ "Bắt đầu nhanh" (Lily là nút nổi "Hỏi Lily" ở góc phải; mục 17), dải bốn số ("Khoá học",
-  "Học viên", "Việc cần làm", "Im ắng >14 ngày"), **"Việc cần làm hôm nay (n)"** (ba việc đầu, xếp "Gấp / Trung bình
-  / Có thể chờ"; còn nữa thì có "Xem tất cả (n)" và "Thu gọn"), **"Khoá học của tôi"** (tối đa 6 khoá, có "Xem tất
-  cả (n)" dẫn tới danh sách khoá), và khối thu gọn **"Gamification theo khoá"**. **Cột phải:** lịch (Tuần / Tháng,
-  "Hôm nay", chỉ hiện hạn bài tập và bài kiểm tra; tài khoản thuộc trường thấy nhãn "Tuần N") và **"Hoạt động gần
-  đây"** (6 hoạt động mới nhất của học viên trong 72 giờ qua).
+- **Trang chủ giảng viên** (`/instructor/dashboard`): một cột hẹp ở giữa, nhiều khoảng trắng. Từ trên xuống:
+  lời chào theo giờ Việt Nam ("{Chào buổi sáng/chiều/tối}, {tên}") và câu "Thầy/cô muốn tìm gì, hoặc làm gì hôm nay?";
+  **ô tìm kiếm lớn** (ô nhập "Tìm khoá học, bài, đề thi… hoặc hỏi Lily cách làm", nút "Hỏi Lily" bên phải); dòng lối
+  tắt "Tạo slide", "Tạo đề thi", "Tạo khoá học", "Hoạt động trên lớp"; và **"Khoá học gần đây"** (3 khoá vừa sửa, có "Tất
+  cả khoá học (n)" hoặc "Quản lý khoá học").
+  - **Ô tìm kiếm** tìm trong khoá học, bài học, đề thi và slide của chính giảng viên; gõ không dấu vẫn ra ("thiet ke"
+    ra "Thiết kế"). Bấm vào ô khi còn trống thì hiện gợi ý "Hay làm". Dùng mũi tên lên/xuống rồi Enter để mở một dòng.
+    Dòng cuối "Hỏi Lily: “…”" (hoặc Enter khi chưa chọn dòng nào, hoặc nút "Hỏi Lily") chuyển câu đang gõ cho Lily
+    và mở ngăn kéo chat.
+  - **Hai nút trên thanh đầu trang** (ở mọi trang giảng viên): **chuông thông báo** và nút **"Lịch"**. Chuông của giảng
+    viên liệt kê các việc đang chờ, mới nhất trước: bài tập chờ chấm ("{tên} đã nộp bài tập"), tự luận trong đề thi chờ
+    chấm ("{tên} cần chấm tự luận"), bài nộp nhiệm vụ Đấu trường cần duyệt tay, câu hỏi diễn đàn mới, **ca thi sắp
+    diễn ra trong 24 giờ** ("Ca thi {giờ} hôm nay") và một dòng gộp **"{n} học viên không hoạt động quá 14 ngày"**.
+    Số trên chuông là số mục mới kể từ lần mở chuông gần nhất (dòng học viên im ắng không tính vào số này). Nút
+    **"Lịch"** mở lịch tuần (đổi được sang Tháng; "Hôm nay"; chỉ hiện hạn bài tập và bài kiểm tra; tài khoản thuộc
+    trường thấy nhãn "Tuần N").
+  - Trang chủ **không còn** dải số liệu, khối "Gamification theo khoá", "Hoạt động gần đây" và lịch nằm sẵn trên trang
+    (xem gamification ở tab Gamification của từng khoá; xem học viên ở trang "Enrollments").
 - **Tiến độ:** tab Học viên, danh sách lớp (cột "Tiến độ"), tab Grade (có "Tải bảng
   điểm quiz" và "Tải bảng điểm bài tập"), trang chủ giảng viên.
 - **Gamification — giảng viên chỉ xem, không cấu hình** (không chỉnh XP, huy hiệu hay
@@ -484,30 +495,11 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   (Không gán, Nghe, Nói, Đọc, Viết) và học viên có trang "Hồ sơ 4 kỹ năng" (chỉ nhãn Cần ôn / Nên luyện thêm /
   Vững, không hiện %), khối "Luyện hôm nay". Flashcard "Ôn từ vựng" (lịch ôn cách quãng) không phụ thuộc chế
   độ này.
-- **Tạo đề: chọn loại trước** (`/instructor/courses/{id}/exams/new`): bước đầu là trang "Tạo đề thi mới" với hai
-  thẻ "Đề thi ngoại ngữ" và "Đề thi thường" (thẻ phù hợp hơn có nhãn "Gợi ý"; khoá bật chế độ ngoại ngữ hoặc
-  đang ở vỏ Limio Language thì "Đề thi ngoại ngữ" được gợi ý). Dòng nhắc: loại đề không đổi được sau khi tạo.
-  Có nút "← Chọn loại đề" để quay lại. Đề ngoại ngữ bắt đầu từ khung HSK, IELTS, TOEIC, Tuỳ chỉnh ("Tạo đề thi
-  thử từ khung": chọn khung, nhập "Tiêu đề đề thi", "Tạo đề") hoặc đề trống.
-- **Đề ngoại ngữ có bộ tab riêng:** "Cấu trúc" · "Nội dung" · "Thang điểm" · "Luyện đề" · "Xem trước"; đề thường
-  giữ "Tổng quan" · "Nội dung" · "Tài liệu" · "Tổ chức thi". Phần thi thử không còn nằm trong tab Nội dung của đề
-  thường. Tab "Cấu trúc": bảng Phần / Kỹ năng / Giờ (phút) / Số câu và "Phát audio" ("Nghe tự do", "Giới hạn số
-  lần", "Nghe 1 lần"; giờ riêng từng phần, không quay lại phần đã nộp). Tab "Thang điểm": "Bảng quy đổi điểm
-  (tuỳ chọn)". Tab "Luyện đề": hai công tắc "Cho thi thử (phòng thi mô phỏng)" và "Cho luyện đề". Học viên thấy
-  mục "Luyện thi" ở trang khoá. Danh sách đề của khoá gắn nhãn "Ngoại ngữ" hoặc "Thường" cho từng đề.
-- **Vỏ Limio Language** (mới): giảng viên và học viên có thể vào `/language` (nút "Limio Language" ở đầu trang,
-  cho giảng viên, quản trị hoặc người đã có khoá ngoại ngữ; về lại bằng "Về Limio"). Vỏ này chỉ đổi giao diện
-  (màu teal, dòng "Speak in Flow", menu rút gọn), không đổi quyền. Menu giảng viên: "Tổng quan", "Khoá ngoại
-  ngữ", "Đề thi (thi thử & luyện đề)", "Chờ duyệt / chấm", "Token AI". Menu học viên: "Tổng quan", "Khoá của
-  tôi", "Luyện thi", "Hồ sơ kỹ năng", "Thẻ ôn từ", "Token AI". Trang "Khoá ngoại ngữ" có nút "Tạo khoá luyện
-  đề" và "Tạo khoá / khoá mẫu".
-- **Khoá luyện đề** (mới; "Tạo khoá luyện đề", chọn "Họ thi", "Cấp độ", "Kỹ năng"): khoá chứa hàng trăm đề của
-  một kỹ năng. Giảng viên mở khoá rồi bấm "Thư viện đề" (`/instructor/courses/{id}/library`): bảng đề có lọc và
-  chọn nhiều dòng để thao tác hàng loạt ("Bật/tắt Luyện đề…", "Bật/tắt Phòng thi mô phỏng…", "Xuất bản",
-  "Lưu trữ", "Nhân bản"), nút "Thêm đề", "Bộ / Part" (nhóm đề có thứ tự) và "Nhập hàng loạt" (file JSON, có
-  bước kiểm tra trước). Học viên vào khoá là thấy "Thư viện đề" (`/learn/{slug}/practice`): mỗi đề có hai
-  nút Luyện đề (không giới hạn giờ) và Phòng thi mô phỏng (có giờ); chưa mua thì đề khoá chỉ hiện tên, đề "Học
-  thử" làm được ngay; có "Tiếp tục" và nút "Tải thêm".
+- **Thi thử** (HSK, IELTS, TOEIC, Tuỳ chỉnh): trang đề thi của khoá (`/instructor/courses/{id}/exams/new`) có
+  "Tạo đề thi thử từ khung" — chọn khung, nhập "Tiêu đề đề thi", "Tạo đề". Tab Nội dung của đề có khối "Đề thi
+  thử (HSK · IELTS · TOEIC…)" (giờ riêng từng phần, không quay lại phần đã nộp), hai công tắc "Cho thi thử" và
+  "Cho luyện đề", bảng Phần / Kỹ năng / Giờ (phút) / Số câu, "Bảng quy đổi điểm (tuỳ chọn)", và "Phát audio"
+  ("Nghe tự do", "Giới hạn số lần", "Nghe 1 lần"). Học viên thấy mục "Luyện thi" ở trang khoá.
 - **Góp ý bài viết / bài nói bằng AI:** học viên bấm "Nhận góp ý bài viết" / "Nhận góp ý bài nói" (khoá phải bật
   chế độ ngoại ngữ; điều kiện đầy đủ chưa kiểm chứng). Ở cửa sổ chấm bài nộp, giảng viên thấy "Góp ý bài viết
   do AI tạo" / "Góp ý bài nói do AI tạo", sửa từng mục, ghi "Ghi chú cho học viên (không bắt buộc)", rồi
@@ -545,12 +537,12 @@ Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral
 
 ## 14. Limio-Live — slide tương tác (mới)
 
-Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo bài giảng** và **Nhóm mới**; xem
+Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo slide** và **Nhóm mới**; xem
 "Theo nhóm" hoặc "Tất cả", lọc "Mọi nhóm"; mỗi thẻ bài có "Sao chép bài giảng", "Chuyển vào nhóm", "Xoá". Nút
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Trang "Tạo bài giảng"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
+- **Trang "Tạo slide"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
   giảng tương tác chỉ từ một ý tưởng…" (có tài liệu tham khảo thì đính kèm; có sẵn PowerPoint thì Limio soạn lại kèm nội
   dung tương tác) và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
   người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** kèm chữ "(không bắt buộc)" (đã có tệp thì thành "Đổi tài liệu"; cạnh nút ghi giới hạn định dạng và dung lượng); kéo
@@ -570,7 +562,7 @@ Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia s
   loại); bảng trắng tối đa 1. AI soạn thiếu thì hệ thống tự gọi AI bổ sung; không bổ sung được thì dàn ý có cảnh
   báo "Chưa bổ sung được slide tương tác tự động…". Dưới dàn ý có nhắc "Bài nên có ít nhất 5 slide tương tác (hiện
   có n)" khi thầy/cô xoá bớt, và nhắc khi quá nửa slide nội dung là Chữ và hình.
-- **Từ PowerPoint** (`/instructor/limio-live/from-pptx`, "Tạo bài giảng từ PowerPoint"), 4 bước: "Tải file"
+- **Từ PowerPoint** (`/instructor/limio-live/from-pptx`, "Tạo slide từ PowerPoint"), 4 bước: "Tải file"
   (chỉ .pptx, tối đa 50 MB; .ppt cũ hoặc file có mật khẩu báo lỗi; Google Slides/Keynote tải về .pptx; hình
   tính vào dung lượng lưu trữ; trang báo số slide, ghi chú giảng, hình, bảng, biểu đồ và phần chỉ lấy được
   chữ; chọn "Thời lượng buổi giảng") → "Chọn cách chuyển" (thẻ **"Giữ ý, làm đẹp lại"** — mặc định, AI chỉ viết thêm các slide tương tác (tốn ít lượt), mỗi slide gốc
@@ -679,11 +671,11 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
 ## 17. Lily, trợ lý ảo của giảng viên (mới, `components/TeacherAssistant.tsx`, `components/assistant/`)
 
 **Lily là trợ lý ảo của thầy/cô trên Limio, xưng "em" và gọi giảng viên là "thầy/cô"** (Limio là tên hệ thống, Lily là tên trợ lý), biểu tượng lát dưa hấu **màu hồng**. Khác với **Trợ giảng AI** (nút tròn nổi xanh, biểu tượng robot, chỉ ở trang bài học của học viên đã ghi danh, gợi ý từng bước không đưa thẳng đáp án; không hiện ở chế độ xem trước). Hai trợ lý không dùng chung cuộc trò chuyện.
-- **Trang chủ giảng viên:** không có ô chat riêng; đầu trang chỉ có lời chào theo giờ ("{Chào buổi sáng/chiều/tối}, {tên}!"), câu "Thầy/cô muốn làm gì hôm nay?" kèm nhắc bấm "Hỏi Lily" ở góc phải, và các thẻ gợi việc (Soạn khoá học e-learning, Soạn slide tương tác, Làm lớp sôi nổi hơn, Tạo bài kiểm tra trên lớp, Chấm bài, Mở khoá "<khoá gần nhất>"). Hỏi Lily thì dùng nút nổi như ở mọi trang.
-- **Nút nổi ở mọi trang giảng viên (kể cả trang chủ):** hình viên thuốc màu hồng "Hỏi Lily" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat.
-- **Cuộc trò chuyện liền mạch:** nút nổi ở mọi trang dùng chung một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Lily đưa mở trong cùng tab; sang trang khác thì ngăn kéo tự thu lại thành nút nổi, thầy/cô thao tác xong bấm "Hỏi Lily" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
+- **Trang chủ giảng viên:** không có ô chat riêng; ô tìm kiếm lớn ở giữa trang có nút "Hỏi Lily" và dòng "Hỏi Lily: “…”" cuối danh sách gợi ý để chuyển câu đang gõ cho Lily (mở ngăn kéo chat). Hỏi Lily cũng dùng được bằng nút nổi như ở mọi trang.
+- **Nút nổi ở mọi trang giảng viên (trừ trang chủ):** hình viên thuốc màu hồng "Hỏi Lily" ở góc dưới bên phải (trên điện thoại chỉ có biểu tượng); bấm mở ngăn kéo chat. **Ở trang chủ nút nổi được ẩn**: lối vào Lily là nút "Hỏi Lily" cùng kiểu (viên thuốc hồng, lát dưa hấu) nằm trong ô tìm kiếm; bấm nút, hoặc gõ câu rồi Enter, thì ngăn kéo chat mở ra và câu hỏi nằm trong đó (lịch sử chat vẫn chung một cuộc trò chuyện với các trang khác).
+- **Cuộc trò chuyện liền mạch:** nút nổi ở mọi trang dùng chung một cuộc trò chuyện, được giữ trong phiên làm việc của trình duyệt (theo tài khoản; đóng tab hoặc "Cuộc trò chuyện mới" thì xoá). Liên kết Lily đưa mở trong cùng tab; trên máy tính khung chat ở yên khi sang trang khác (thầy/cô vừa làm theo hướng dẫn vừa xem chat); trên điện thoại khung là tấm trượt từ đáy nên tự thu lại khi sang trang khác, thầy/cô bấm "Hỏi Lily" là thấy lại đúng đoạn chat (nút có chấm hồng khi có câu trả lời mới).
 - **Câu hỏi đề xuất khi mở Lily:** ngăn kéo mới mở (chưa có tin nào) hiện lời chào của Lily và "Thầy/cô có thể hỏi em, ví dụ:" kèm tối đa 4 câu bấm là hỏi ngay. Câu đổi theo trang đang đứng (vd ở "Tổ chức thi" gợi ý về link thi nhanh), ở trang chung có thêm câu mở khoá giảng viên vừa chỉnh gần nhất (dạng `Mở khoá học "<tên khoá>"`), và câu cuối luôn là "Hôm nay tôi nên làm gì trước?".
-- **Trong ngăn kéo:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Em đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". Mỗi câu hỏi trừ hạn mức Token AI.
+- **Trong ngăn kéo:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Em đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". **Trên máy tính khung chat kéo thả được**: nắm thanh tiêu đề ("Trợ lý Lily") kéo tới bất cứ đâu trên màn hình (vị trí được nhớ trong phiên; nhấp đúp thanh tiêu đề để đưa về góc dưới phải). Khung thu về nút nổi khi bấm nút X ("Thu nhỏ trợ lý") hoặc bấm vào **chỗ trống** của khung (không phải nút, ô nhập, chữ hay liên kết; bấm lên thanh tiêu đề không thu); bấm ra ngoài khung hay nhấn Esc thì khung không thu (trên điện thoại thì có). Mỗi câu hỏi trừ hạn mức Token AI.
 - Lily chỉ chọn điểm đến trong danh mục cố định, chỉ trả lời nghiệp vụ Limio, không tiết lộ kỹ thuật, và trả lời cách dùng theo kho `teacherAssistantGuide.ts` (lấy từ tệp này).
 
 ## Không được viết (chưa có hoặc chưa tới tay giảng viên)
@@ -706,7 +698,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
 - Chưa kiểm chứng: hiển thị thật của nhãn "Premium/Trial" từng loại tài khoản; trạng thái tab "teams" trong
   trình soạn khoá; đường quay lại trang Dàn ý từ trình sửa Limio-Live; cơ chế học viên xem slide đồng bộ theo
   giảng viên; Thử nghiệm câu hỏi có thật sự mặc định "Không hiện" đáp án; khi nào dòng "N lesson live chưa tag
-  skill" hiện ở "Việc cần làm hôm nay" với khoá không bật cá nhân hoá.
+  skill" hiện ở trang chủ với khoá không bật cá nhân hoá (trang chủ mới không còn dòng này).
 
 ## Tài khoản mẫu để chụp ảnh
 

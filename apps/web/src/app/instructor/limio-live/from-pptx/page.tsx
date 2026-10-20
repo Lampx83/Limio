@@ -3,7 +3,7 @@ import { requireFeature } from "@/lib/session";
 import PptxImportFlow from "./PptxImportFlow";
 
 export const metadata = {
-  title: "Tạo bài giảng từ PowerPoint | Limio",
+  title: "Tạo slide từ PowerPoint | Limio",
 };
 
 export default async function FromPptxPage() {

@@ -39,7 +39,7 @@ export default function MockTemplatePicker({ courseId }: { courseId: string }) {
         setBusy(false);
         return;
       }
-      router.replace(`/instructor/courses/${courseId}/exams/${j.examId}?created=1&tab=structure`);
+      router.replace(`/instructor/courses/${courseId}/exams/${j.examId}?created=1&tab=content`);
     } catch {
       setError("Không tạo được đề. Kiểm tra mạng rồi thử lại.");
       setBusy(false);

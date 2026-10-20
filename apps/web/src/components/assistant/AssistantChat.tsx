@@ -63,7 +63,7 @@ export function LilyIntro({ onPick }: { onPick: (question: string) => void }) {
  * `intro`: một lời của Lily hiện ở đầu khi chưa có tin nào (ngăn kéo vừa mở).
  */
 export function AssistantThread({ className = "", intro }: { className?: string; intro?: React.ReactNode }) {
-  const { messages, busy, send, markDone } = useAssistant();
+  const { messages, busy, send, markDone, logLinkClick } = useAssistant();
   const endRef = useRef<HTMLDivElement>(null);
   const scrollToEnd = useCallback(() => endRef.current?.scrollIntoView({ block: "nearest" }), []);
 
@@ -96,7 +96,7 @@ export function AssistantThread({ className = "", intro }: { className?: string;
                     const Icon = ASSISTANT_ICONS[a.icon as AssistantIcon] ?? Sparkles;
                     return (
                       <li key={a.id}>
-                        <Link href={a.href} prefetch={false} className="inline-flex items-center gap-1.5 text-sm font-medium text-sky-700 underline decoration-sky-300 underline-offset-4 transition-colors hover:text-sky-900 hover:decoration-sky-700 dark:text-sky-400">
+                        <Link href={a.href} prefetch={false} onClick={() => logLinkClick(a.id, a.href)} className="inline-flex items-center gap-1.5 text-sm font-medium text-sky-700 underline decoration-sky-300 underline-offset-4 transition-colors hover:text-sky-900 hover:decoration-sky-700 dark:text-sky-400">
                           <Icon size={15} aria-hidden className="shrink-0" />
                           {a.label}
                           <span aria-hidden>→</span>
@@ -113,7 +113,7 @@ export function AssistantThread({ className = "", intro }: { className?: string;
                       key={f}
                       type="button"
                       disabled={busy}
-                      onClick={() => void send(f)}
+                      onClick={() => void send(f, "followup")}
                       className="rounded-full border border-token bg-[rgb(var(--surface))] px-3.5 py-1.5 text-left text-sm shadow-sm transition hover:border-slate-300 hover:shadow disabled:opacity-60"
                     >
                       {f}

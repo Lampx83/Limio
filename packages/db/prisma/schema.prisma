@@ -419,25 +419,21 @@ enum EnrollMode {
 }
 
 model Course {
-  id                     String           @id @default(uuid())
-  examCollections        ExamCollection[]
+  id                     String       @id @default(uuid())
   // PR2.17 — Multi-tenancy: course thuộc về 1 Organization. Nullable trong
   // backfill phase, sẽ siết NOT NULL sau.
   organizationId         String?
-  slug                   String           @unique
+  slug                   String       @unique
   title                  String
-  description            String           @db.Text
-  // LANG L6 — loại khoá: "practice_bank" = khoá luyện đề theo kỹ năng (thư viện vài trăm đề, bán theo khoá);
-  // trang khoá của học viên hiện thư viện đề thay cho danh sách module/bài. standard = như trước.
-  kind                   CourseKind       @default(standard)
-  language               String           @default("vi")
-  level                  String           @default("beginner") // beginner | intermediate | advanced
+  description            String       @db.Text
+  language               String       @default("vi")
+  level                  String       @default("beginner") // beginner | intermediate | advanced
   category               String?
   coverUrl               String?
-  status                 CourseStatus     @default(draft)
+  status                 CourseStatus @default(draft)
   // Course versioning (A2 acceptance: "học viên đang học bản cũ không bị break").
   // Bump this when publishing a breaking change; new enrollments take the new version.
-  version                Int              @default(1)
+  version                Int          @default(1)
   publishedAt            DateTime?
   // Personalization toggle: when true, course uses Feedback Engine (BKT, diagnostic,
   // adaptive path, skill badge) and publish requires every lesson to have ≥1 skill tag.
@@ -445,34 +441,34 @@ model Course {
   // Default false — see project_personalization_toggle memory.
   /// B16 — mở tự do hay chỉ vào bằng link mời lớp. Mặc định `open` để mọi khoá
   /// đang có giữ nguyên hành vi sau khi migrate.
-  enrollMode             EnrollMode       @default(open)
-  personalizationEnabled Boolean          @default(false)
+  enrollMode             EnrollMode   @default(open)
+  personalizationEnabled Boolean      @default(false)
   /// LANG G3 — chế độ ngoại ngữ: bật trang "Hồ sơ 4 kỹ năng" và ô chọn kỹ năng ở
   /// form sửa bài. Bất biến (ép ở core-lms/courses.ts): languageMode ⇒
   /// personalizationEnabled, vì nhãn kỹ năng chỉ đi vào Skill khi cá nhân hoá bật.
-  languageMode           Boolean          @default(false)
+  languageMode           Boolean      @default(false)
   // Public access: when true, anyone — including logged-out visitors — may read the
   // course's lessons (content + video) without enrolling, in the same read-only
   // preview mode a non-enrolled learner gets. Account-only features (progress,
   // completion, notes, AI tutor, forum, quizzes) stay hidden.
   // Only takes effect while `status = published`; a draft course is never public.
   // Default false — existing courses keep login-gated behaviour.
-  publicAccess           Boolean          @default(false)
+  publicAccess           Boolean      @default(false)
   /// Khoá mẫu: admin đánh dấu để giảng viên chưa có khoá nào bấm vào xem một khoá
   /// "dựng xong trông thế nào". Chỉ có tác dụng khi khoá đang published + publicAccess
   /// (giảng viên mới không ghi danh nên cần đọc công khai mới xem được) — điều kiện
   /// này được ép ở setCourseSample và lọc lại ở listSampleCourses.
-  isSample               Boolean          @default(false)
+  isSample               Boolean      @default(false)
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents             Int?
-  currency               String           @default("USD")
+  currency               String       @default("USD")
   /// Nộp bài theo nhóm — số người tối đa mỗi nhóm (null = không giới hạn).
   teamMaxSize            Int?
   /// Nộp bài theo nhóm — khi khác null, sinh viên không tự tạo/vào/rời nhóm
   /// được nữa; chỉ giảng viên chuyển người. Xem docs/group-submission-AC.md.
   teamsLockedAt          DateTime?
-  createdAt              DateTime         @default(now())
-  updatedAt              DateTime         @updatedAt
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
 
   modules               Module[]
   teams                 CourseTeam[]
@@ -3505,17 +3501,6 @@ model Exam {
   // LANG G5 — đề thi thử (HSK/IELTS/TOEIC...): bật giờ riêng từng phần, làm lần
   // lượt không quay lại. false = đề thi thật, mọi hành vi giữ nguyên.
   mockMode               Boolean             @default(false)
-  // LANG L6 — phân loại đề trong khoá luyện đề (đều tuỳ chọn; đề cũ để trống = "chưa phân loại").
-  paperType              ExamPaperType?
-  sourceLabel            String?
-  yearLabel              String?
-  seq                    Int?
-  difficulty             Int?
-  tags                   String[]            @default([])
-  // Học thử miễn phí: người CHƯA ghi danh khoá luyện đề vẫn làm được đề này.
-  freePreview            Boolean             @default(false)
-  collectionId           String?
-  collection             ExamCollection?     @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   // LANG G5c — giảng viên tắt = học viên không tự bắt đầu thi thử mới được (lượt đang làm dở vẫn tiếp tục).
   allowMock              Boolean             @default(true)
   // LANG G5e — công tắc "Cho luyện đề": tắt thì học viên không bắt đầu được buổi luyện mới.
@@ -3601,8 +3586,6 @@ model Exam {
   practiceSessions ExamPracticeSession[]
 
   @@index([courseId, status])
-  @@index([courseId, collectionId, seq])
-  @@index([courseId, status, paperType])
   @@index([status, openAt, closeAt])
   @@index([createdById])
 }
@@ -5717,33 +5700,6 @@ model SpeakingFeedback {
 
   @@index([submissionId, generatedAt])
   @@index([userId, courseId, status])
-}
-
-// LANG L6 — loại khoá và phân loại đề trong khoá luyện đề.
-enum CourseKind {
-  standard
-  practice_bank
-}
-
-enum ExamPaperType {
-  official // đề thật
-  mock // đề thi thử
-  practice_set // bộ luyện
-}
-
-// Bộ / Part / chủ đề trong một khoá luyện đề — thư mục có thứ tự. Xoá bộ KHÔNG xoá đề (collectionId về null).
-model ExamCollection {
-  id          String   @id @default(uuid())
-  courseId    String
-  title       String
-  description String?  @db.Text
-  orderIndex  Int      @default(0)
-  createdAt   DateTime @default(now())
-
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  exams  Exam[]
-
-  @@index([courseId, orderIndex])
 }
 
 // =====================================================================

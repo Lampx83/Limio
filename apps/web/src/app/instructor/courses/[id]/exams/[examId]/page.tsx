@@ -11,8 +11,7 @@ import ContentManager from "./ContentManager";
 import SectionsPanel from "./SectionsPanel";
 import MockExamPanel from "./MockExamPanel";
 import OralMaterialsPanel from "./OralMaterialsPanel";
-import ExamTabs from "./ExamTabs";
-import { resolveExamTab } from "@/lib/examTabs";
+import ExamTabs, { parseExamTab } from "./ExamTabs";
 import CreatedBanner from "./CreatedBanner";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +39,7 @@ export default async function EditExamPage({
   params: { id: string; examId: string };
   searchParams: { tab?: string; created?: string; fallback?: string };
 }) {
+  const requestedTab = parseExamTab(searchParams?.tab);
   const justCreated = searchParams?.created === "1";
   const fallbackUsed = searchParams?.fallback === "1";
   const session = await auth();
@@ -102,9 +102,18 @@ export default async function EditExamPage({
       ? exam._count.oralMaterials > 0
       : exam._count.passages > 0 || exam._count.questions > 0;
 
-  // A6.1 / L4.3 — loại đề (kind, mockMode) bất biến sau khi tạo; mỗi loại có bộ tab riêng. Link cũ có tab không
-  // hợp lệ với loại đề rơi về tab tương ứng (xem lib/examTabs.ts), không lỗi.
-  const activeTab = resolveExamTab(searchParams?.tab, exam.kind, exam.mockMode);
+  // A6.1 — exam.kind bất biến sau khi tạo: mỗi đề chỉ dùng MỘT trong hai tab
+  // content/materials. Tab không hợp lệ với kind hiện tại (vd link cũ còn
+  // ?tab=content trên một đề đã là oral) rơi về tab tương ứng, không lỗi.
+  // "organize" chỉ tồn tại cho oral — thi viết rơi về overview thay vì lỗi.
+  const activeTab =
+    exam.kind === "oral" && requestedTab === "content"
+      ? "materials"
+      : exam.kind === "written" && requestedTab === "materials"
+        ? "content"
+        : exam.kind === "written" && requestedTab === "organize"
+          ? "overview"
+          : requestedTab;
 
   const attemptCount = exam._count.attempts;
   const hasAttempts = attemptCount > 0;
@@ -229,7 +238,6 @@ export default async function EditExamPage({
           examId={exam.id}
           active={activeTab}
           kind={exam.kind}
-          mockMode={exam.mockMode}
           badges={{
             content: exam.questions.filter((q) => q.skillTags.length === 0)
               .length,
@@ -269,88 +277,6 @@ export default async function EditExamPage({
             }}
           />
         </div>
-      )}
-
-      {/* L4.3 — đề ngoại ngữ: tab Cấu trúc gồm giờ/kỹ năng từng phần, quản lý các phần, và thông tin chung. */}
-      {activeTab === "structure" && (
-        <>
-          <MockExamPanel
-            examId={exam.id}
-            part="structure"
-            initialAllowMock={exam.allowMock}
-            initialAllowPractice={exam.allowPractice}
-            locked={exam.status !== "draft" || hasAttempts}
-            lockedReason={exam.status !== "draft" ? "Đề đã xuất bản nên không đổi giờ phần được." : undefined}
-          />
-          <SectionsPanel examId={exam.id} />
-          <details className="mt-6 rounded border border-default bg-white p-5">
-            <summary className="cursor-pointer text-base font-semibold">Thông tin chung (tên, mô tả, hạn)</summary>
-            <div className="mt-4">
-              <ExamMetaForm
-                mode="edit"
-                courseId={exam.courseId}
-                examId={exam.id}
-                courseLabel={exam.course?.title ?? null}
-                lockedFields={lockedFields}
-                initial={{
-                  title: exam.title,
-                  description: exam.description ?? "",
-                  durationMin: exam.durationMin,
-                  openAt: toLocalInput(exam.openAt),
-                  closeAt: toLocalInput(exam.closeAt),
-                  attemptPolicy: exam.attemptPolicy,
-                  maxAttempts: exam.maxAttempts,
-                  gradingMode: exam.gradingMode,
-                  proctoringLevel: exam.proctoringLevel,
-                  shuffleQuestions: exam.shuffleQuestions,
-                  shuffleOptions: exam.shuffleOptions,
-                  showResultsAfterSubmit: exam.showResultsAfterSubmit,
-                  purpose: exam.purpose,
-                  kind: exam.kind,
-                  answerMode: exam.answerMode,
-                  language: exam.language,
-                  examinerInstructions: exam.examinerInstructions ?? "",
-                  oralWarmup: exam.oralWarmup,
-                  oralFeedbackMode: exam.oralFeedbackMode,
-                  oralClosingSummary: exam.oralClosingSummary,
-                }}
-              />
-            </div>
-          </details>
-        </>
-      )}
-
-      {activeTab === "scoring" && (
-        <MockExamPanel
-          examId={exam.id}
-          part="scoring"
-          initialAllowMock={exam.allowMock}
-          initialAllowPractice={exam.allowPractice}
-          locked={false}
-        />
-      )}
-
-      {activeTab === "practice" && (
-        <MockExamPanel
-          examId={exam.id}
-          part="practice"
-          initialAllowMock={exam.allowMock}
-          initialAllowPractice={exam.allowPractice}
-          locked={false}
-        />
-      )}
-
-      {activeTab === "preview" && (
-        <section className="mt-6 rounded border border-default bg-white p-5">
-          <h2 className="text-base font-semibold">Xem trước như học viên</h2>
-          <p className="mt-1 text-sm text-faint">Mở đề đúng như học viên thấy (không tạo lượt thi, không ảnh hưởng số liệu).</p>
-          <Link
-            href={`/instructor/courses/${courseSegment}/exams/${exam.id}/preview`}
-            className="btn-primary btn-sm mt-3 inline-block"
-          >
-            Mở bản xem trước
-          </Link>
-        </section>
       )}
 
       {activeTab === "materials" && (
@@ -393,6 +319,20 @@ export default async function EditExamPage({
 
       {activeTab === "content" && (
         <>
+          {exam.kind !== "oral" && (
+            <MockExamPanel
+              examId={exam.id}
+              initialMockMode={exam.mockMode}
+              initialAllowMock={exam.allowMock}
+              initialAllowPractice={exam.allowPractice}
+              locked={exam.status !== "draft" || hasAttempts}
+              lockedReason={
+                exam.status !== "draft"
+                  ? "Đề đã xuất bản nên không đổi chế độ hay giờ phần được."
+                  : undefined
+              }
+            />
+          )}
           <section className="mt-6 rounded border border-default bg-white p-5">
             <h2 className="mb-1 text-base font-semibold">Nội dung bài thi</h2>
             <p className="mb-4 text-sm text-faint">
@@ -445,7 +385,7 @@ export default async function EditExamPage({
             />
           </section>
 
-          {!exam.mockMode && <SectionsPanel examId={exam.id} />}
+          <SectionsPanel examId={exam.id} />
         </>
       )}
     </main>

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type ComponentType } from "react";
+import { Suspense, useEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { useActiveNavSectionOverride } from "@/lib/activeNavSection";
 import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import {
-  LayoutDashboard,
+  House,
   GraduationCap,
   BookOpen,
   Eye,
@@ -137,7 +137,7 @@ const MODULES: ModuleDef[] = [
     iconSize: 27,
     tourId: "help-tour-rail-lms",
     colors: {
-      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
+      rail: "bg-lime-600",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -172,7 +172,7 @@ const MODULES: ModuleDef[] = [
     premium: true,
     tourId: "help-tour-rail-limio-live",
     colors: {
-      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
+      rail: "bg-lime-600",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -210,7 +210,7 @@ const MODULES: ModuleDef[] = [
     premium: true,
     tourId: "help-tour-rail-oral",
     colors: {
-      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
+      rail: "bg-lime-600",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -227,7 +227,7 @@ const MODULES: ModuleDef[] = [
     iconSize: 28,
     tourId: "help-tour-rail-exam",
     colors: {
-      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
+      rail: "bg-lime-600",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -264,7 +264,7 @@ const MODULES: ModuleDef[] = [
     icon: Trophy,
     tourId: "help-tour-rail-tournament",
     colors: {
-      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
+      rail: "bg-lime-600",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -280,7 +280,7 @@ const MODULES: ModuleDef[] = [
     icon: BarChart3,
     tourId: "help-tour-rail-analytics",
     colors: {
-      rail: "bg-gradient-to-br from-lime-500 to-pink-500",
+      rail: "bg-lime-600",
       itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
       itemActiveText: "text-lime-700 dark:text-lime-200",
       itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -389,6 +389,8 @@ function InstructorLeftMenuInner({
     /^\/instructor\/limio-live\/[^/]+(?:\?|$)/.test(pathname) && !/^\/instructor\/limio-live\/[^/]+\/present/.test(pathname);
   const collapseKey = isLiveEditor ? "nav.sidebar.collapsed.editor" : "nav.sidebar.collapsed";
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isLiveEditor);
+  // Nội dung cột tên mục của module vừa rời: giữ lại để cột thu gọn êm khi về Trang chủ thay vì biến mất ngay.
+  const lastPanel = useRef<{ id: string; node: ReactNode } | null>(null);
   useEffect(() => {
     try {
       const v = localStorage.getItem(collapseKey);
@@ -447,7 +449,7 @@ function InstructorLeftMenuInner({
             </aside>
           </div>
         )}
-        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] w-64 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] p-3 lg:block">
+        <aside className="sticky top-[4.6rem] hidden h-[calc(100vh-4.6rem)] w-64 shrink-0 overflow-y-auto border-r border-token bg-[rgb(var(--surface))] p-3 lg:block">
           <ItemList items={PROCTOR_ONLY_ITEMS} isActive={isActive} colors={NEUTRAL_COLORS} pendingHref={pendingHref} onNavigate={setPendingHref} />
         </aside>
       </>
@@ -535,6 +537,12 @@ function InstructorLeftMenuInner({
     </div>
   ) : null;
 
+  if (activeModule && sidebarContent) lastPanel.current = { id: activeModuleId, node: sidebarContent };
+  const desktopPanel = activeModule && sidebarContent ? { id: activeModuleId, node: sidebarContent } : lastPanel.current;
+  // Cột có mặt (rộng) khi đang ở một module và chưa thu gọn; ở Trang chủ nó co về 0 bằng chuyển động bề ngang, nên nội dung
+  // không bị bật sang ngang một lần khi chuyển giữa Trang chủ và module.
+  const panelOpen = !!activeModule && !sidebarCollapsed;
+
   return (
     <>
       {/* Floating menu toggle — mobile mặc định; trên course editor/present
@@ -570,19 +578,24 @@ function InstructorLeftMenuInner({
           64px; cột module chỉ hiện khi KHÔNG ở "home" (trang chủ không cần
           sub-nav riêng, nhường chỗ cho nội dung). */}
       {!isImmersive && (
-        <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] shrink-0 lg:flex">
+        <aside className="sticky top-[4.6rem] hidden h-[calc(100vh-4.6rem)] shrink-0 lg:flex">
           {railDesktop}
           {/* Cột tên mục thu/mở bằng chuyển động bề ngang (không gỡ khỏi DOM → mượt). */}
-          {activeModule && (
-            <div
-              className={`shrink-0 overflow-hidden transition-[width,opacity,visibility] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
-                sidebarCollapsed ? "invisible w-0 opacity-0" : "w-56 opacity-100"
-              }`}
-              aria-hidden={sidebarCollapsed}
-            >
-              <div key={activeModuleId} className="flex h-full w-56 animate-nav-swap-in">{sidebarContent}</div>
-            </div>
-          )}
+          {/* Có nền đặc (màu nền trang): nền chuyển sắc của trang chủ phủ hết cửa sổ nên nếu cột trong suốt sẽ bị nhuộm xanh.
+              Luôn có mặt trong DOM (co về 0 ở Trang chủ): nhờ vậy lần đầu mở một module cũng chạy chuyển động bề ngang
+              từ 0 chứ không xuất hiện sẵn ở bề rộng đầy đủ rồi đẩy nội dung sang ngang một phát. */}
+          <div
+            className={`shrink-0 overflow-hidden bg-[rgb(var(--bg))] transition-[width,opacity,visibility] duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)] motion-reduce:transition-none ${
+              panelOpen ? "w-56 opacity-100" : "invisible w-0 opacity-0"
+            }`}
+            aria-hidden={!panelOpen}
+          >
+            {desktopPanel && (
+              <div key={desktopPanel.id} className="flex h-full w-56 animate-nav-swap-in">
+                {desktopPanel.node}
+              </div>
+            )}
+          </div>
         </aside>
       )}
     </>
@@ -590,7 +603,7 @@ function InstructorLeftMenuInner({
 }
 
 const NEUTRAL_COLORS: ModuleColors = {
-  rail: "bg-gradient-to-br from-lime-500 to-pink-500",
+  rail: "bg-lime-600",
   itemActiveBg: "bg-lime-50 dark:bg-lime-950/40",
   itemActiveText: "text-lime-700 dark:text-lime-200",
   itemIconBg: "bg-lime-100 dark:bg-lime-950/40",
@@ -619,12 +632,12 @@ function ModuleRail({
       <RailButton
         href="/instructor/dashboard"
         label="Trang chủ"
-        icon={LayoutDashboard}
+        icon={House}
         iconSize={28}
         hero
         isActive={activeModuleId === "home"}
         railClass="bg-gradient-to-br from-lime-500 to-pink-500"
-        description="Tổng quan việc cần xử lý"
+        description="Tìm kiếm nhanh, hỏi Lily và khoá học gần đây"
         onSelect={() => onSelect("home")}
         onHover={onHover}
         tourId="help-tour-rail-home"

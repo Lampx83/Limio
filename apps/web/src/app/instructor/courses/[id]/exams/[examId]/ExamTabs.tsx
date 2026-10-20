@@ -1,23 +1,38 @@
 import Link from "next/link";
-import { BarChart3, BookOpen, Dumbbell, Eye, FileText, Info, Layers, UserCheck, type LucideIcon } from "lucide-react";
-import { examTabsFor, type ExamTab } from "@/lib/examTabs";
+import { BookOpen, FileText, Info, UserCheck, type LucideIcon } from "lucide-react";
 
-// A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề: Tổng quan / Nội dung. Mọi setup logistics (quyền
-// truy cập, lịch thi, thí sinh, phòng thi) chuyển sang "Tổ chức thi" (/instructor/exam-rounds/...).
-// A6.1 — Vấn đáp AI không có ExamQuestion nên dùng "Tài liệu" thay cho "Nội dung"; "organize" chỉ dành cho oral.
-// LANG L4.3 — đề NGOẠI NGỮ (thi thử) có bộ tab riêng: Cấu trúc · Nội dung · Thang điểm · Luyện đề · Xem trước.
-// Logic chọn tab ở lib/examTabs.ts (thuần, có test); file này chỉ vẽ.
-export type { ExamTab } from "@/lib/examTabs";
+// A5.3 PR2.9 — Exam editor giờ chỉ phụ trách CONTENT của đề: Tổng quan / Nội
+// dung. Mọi setup logistics (quyền truy cập, lịch thi, thí sinh, phòng thi)
+// chuyển sang "Tổ chức thi" (/instructor/exam-rounds/...).
+//
+// Tab "Blueprint" cũ (2026-09) đã gộp vào modal "Từ ngân hàng" trong tab Nội
+// dung — thành lựa chọn nâng cao thứ 3 ("Thiết kế đề theo ma trận đề thi"),
+// không còn là tab riêng để đỡ một khái niệm mọc lên không giải thích.
+//
+// A6.1 — Vấn đáp AI không có ExamQuestion nên không dùng tab "Nội dung"; thay
+// bằng "Tài liệu" (materials) để GV nộp đề cương/danh sách chủ đề cho AI.
+// Một exam chỉ hiện MỘT trong hai tab content/materials tuỳ exam.kind.
+//
+// A6.5 (UI) — "organize" chỉ dành cho oral: gộp mở/đóng buổi + thời lượng +
+// mã tham gia (trước đây nằm rải trong header đề, xem OralSessionControl)
+// vào một tab riêng, là điểm đến của nút "Tiếp tục" ở cuối tab Tài liệu. Thi
+// viết KHÔNG có tab này — logistics của thi viết vẫn ở /exam-rounds riêng.
+export type ExamTab = "overview" | "content" | "materials" | "organize";
+
+// Không còn tab "Kết quả": kết quả nói về AI ĐÃ LÀM, mà "ai" thuộc buổi thi
+// chứ không thuộc gói đề. Xem ở nút "Chấm bài" trên đầu trang.
+export const EXAM_TABS: ExamTab[] = ["overview", "content", "materials", "organize"];
+
+export function parseExamTab(raw: string | string[] | undefined): ExamTab {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return (EXAM_TABS as string[]).includes(v ?? "") ? (v as ExamTab) : "overview";
+}
 
 const META: Record<ExamTab, { label: string; Icon: LucideIcon }> = {
   overview: { label: "Tổng quan", Icon: Info },
   content: { label: "Nội dung", Icon: BookOpen },
   materials: { label: "Tài liệu", Icon: FileText },
   organize: { label: "Tổ chức thi", Icon: UserCheck },
-  structure: { label: "Cấu trúc", Icon: Layers },
-  scoring: { label: "Thang điểm", Icon: BarChart3 },
-  practice: { label: "Luyện đề", Icon: Dumbbell },
-  preview: { label: "Xem trước", Icon: Eye },
 };
 
 export default function ExamTabs({
@@ -25,18 +40,16 @@ export default function ExamTabs({
   examId,
   active,
   kind = "written",
-  mockMode = false,
   badges,
 }: {
   courseId: string;
   examId: string;
   active: ExamTab;
   kind?: "written" | "oral";
-  /** LANG L4 — đề ngoại ngữ (thi thử): bộ tab riêng. */
-  mockMode?: boolean;
   badges?: Partial<Record<ExamTab, number>>;
 }) {
-  const tabs = examTabsFor(kind, mockMode);
+  const tabs: ExamTab[] =
+    kind === "oral" ? ["overview", "materials", "organize"] : ["overview", "content"];
   return (
     <nav
       role="tablist"
