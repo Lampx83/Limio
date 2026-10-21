@@ -120,6 +120,10 @@ không sửa** (hệ thống không kiểm tra khoá rỗng) — nên nhắc th�
 
 - Tab **Nội dung**: tiêu đề "Modules"; nút "Xem trước"; "Gập hết" / "Mở hết"; ô
   tìm "Tìm bài học…".
+- **Xem như học viên**: nút "Xem trước" cạnh tiêu đề "Modules" mở trang khoá đúng như học viên thấy, ở tab mới.
+  Khi đang mở một bài học, cạnh tên bài có nút **"Xem như học viên"** mở riêng bài đó (chỉ tên bài và nội dung)
+  ở tab mới; trang soạn giữ nguyên. Bài đang ẩn thì nút này mờ đi (học viên cũng không thấy bài), bật lại ở menu
+  "⋮" → "Hiện bài này". Trang bài nộp và trang chấm không có nút này.
 - **Thêm chương**: ô nhập (gợi ý "Ví dụ: Phương trình bậc 1") + nút "Tạo". Sửa
   chương: "Sửa module" có ô tên và ô **Order** (số thứ tự). **Chương không kéo thả
   được** — đổi thứ tự bằng ô số. Ngoài ra có: ẩn/hiện, khoá, xoá chương.
@@ -284,9 +288,16 @@ hiện "Đạt / Chưa đạt" và "Điểm %" cũ — đừng lặp lại.
   thì không đổi được). Có mục thu gọn "Gợi ý dạng bài làm (không bắt buộc)" với nút
   **"Gợi ý bằng AI"** và các dạng: Tóm tắt, Tự giải thích, Hình dung tình huống,
   Vẽ sơ đồ, Vẽ minh hoạ, Dạy lại, Thực hành minh hoạ. Form tạo/sửa bài tập **không còn** ô rubric.
+- **Thẻ bài tập trong bài học** có nút "Xem bài nộp" và ba nút biểu tượng không chữ (rê chuột mới hiện tên):
+  con mắt (ẩn/hiện với học viên), bút chì "Sửa assignment" (mở lại form: tiêu đề, mô tả, điểm tối đa, cách nộp,
+  hạn nộp), thùng rác "Xóa assignment" (hỏi "Xóa assignment này?"; **xoá luôn mọi bài nộp và điểm** của bài tập,
+  không khôi phục được, kể cả khi đã có học viên nộp). **Chưa có chuyển bài tập sang bài học khác**: đặt nhầm
+  chỗ thì tạo bài tập mới ở bài đúng rồi xoá bài cũ, tốt nhất trước khi học viên nộp. Bài tập chỉ quản lý (sửa,
+  xoá) ở trang bài học; trang `/instructor/assignments` chỉ để xem bài nộp và chấm.
 - **Tiêu chí chấm (rubric)** của bài tập: khung **"Rubric chấm điểm (không bắt buộc)"** nằm TRÊN bảng "Danh
   sách" ở trang bài nộp, gợi ý "Ví dụ: 3đ nêu đúng khái niệm. 4đ có ví dụ. 3đ trình bày rõ ràng.", nút
-  "Lưu rubric", tối đa 5.000 ký tự. Trong cửa sổ chấm có khối thu gọn "Rubric chấm điểm (bấm để xem / sửa)"
+  "Lưu rubric", tối đa 5.000 ký tự. **Chỉ nhập bằng chữ, không đính kèm tệp**: rubric có sẵn trong Word/PDF
+  thì sao chép phần chữ rồi dán vào khung. Trong cửa sổ chấm có khối thu gọn "Rubric chấm điểm (bấm để xem / sửa)"
   (tự mở khi chưa có rubric). **Không phải bảng tiêu chí có cấu trúc**; AI đọc đúng đoạn chữ này khi gợi ý
   điểm. Các chỗ nhập rubric khác của Limio: câu tự luận trong đề thi ("Rubric (tuỳ chọn)", mục 5), vấn đáp AI
   (mục 13), nhiệm vụ Đấu trường kiểu chấm chéo (mục 16, đây mới là bảng có cấu trúc).
