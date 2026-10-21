@@ -220,6 +220,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "bai-giang-chinh-dan-y",
+    title: "Chỉnh dàn ý slide bằng AI hoặc soạn lại từ đầu",
+    keywords: ["chỉnh dàn ý", "sửa dàn ý", "soạn lại dàn ý", "làm lại dàn ý", "dàn ý chưa ưng", "rút ngắn dàn ý", "bớt slide", "thêm ví dụ", "đổi hướng bài giảng", "quay lại bản trước", "soạn lại từ đầu"],
+    destinationIds: ["live_decks"],
+    body: `Ở trang "Dàn ý bài giảng", cột phải có hộp "Chỉnh dàn ý bằng AI". Thầy/cô gõ lời dặn (từ 5 đến 1.000 ký tự, ví dụ rút còn 12 slide, thêm ví dụ cho sinh viên năm nhất) hoặc bấm một gợi ý có sẵn: "Rút ngắn lại", "Thêm ví dụ thực tế", "Bớt lý thuyết, thêm hoạt động", "Dễ hiểu hơn cho người mới"; gợi ý chỉ điền vào ô, thầy/cô sửa được rồi mới bấm "Chỉnh dàn ý" (hoặc Ctrl/Cmd+Enter). AI sửa đúng dàn ý đang hiện, kể cả phần thầy/cô vừa sửa tay, giữ nguyên các slide không liên quan và không tự thêm slide tương tác. Muốn làm lại hẳn thì bấm dòng chữ "Soạn lại từ đầu": AI soạn lại từ tài liệu hoặc mô tả ban đầu, có hỏi xác nhận vì phần sửa tay sẽ mất. Chưa ưng thì bấm "Quay lại bản trước" ngay trong thanh hiện ra sau khi chỉnh (thanh này không tự biến mất). Mỗi lần chỉnh tốn token AI, có ghi ước tính dưới nút. Slide đã tạo không tự đổi: sau khi chỉnh dàn ý, thầy/cô bấm "Cập nhật slide theo dàn ý" để slide theo kịp. Hộp này không có ở bài nhập từ PowerPoint giữ nguyên slide gốc.`,
+    useCases: [
+      `AI soạn dàn ý 20 slide nhưng buổi chỉ có 30 phút thực dạy, thầy/cô gõ lời dặn rút còn 14 slide, bớt lý thuyết rồi bấm Chỉnh dàn ý thay vì xoá từng slide.`,
+      `Thấy dàn ý đi sai hướng ngay từ đầu, thầy/cô bấm Soạn lại từ đầu kèm lời dặn mới về người học; không ưng bản mới thì bấm Quay lại bản trước.`,
+    ],
+  },
+  {
     id: "bai-giang-trinh-sua",
     title: "Chỉnh slide, nhờ AI, giao diện và thương hiệu bài giảng",
     keywords: ["chỉnh slide", "sửa slide", "bố cục slide", "nhờ ai", "giao diện slide", "thương hiệu", "logo", "bìa", "ảnh slide", "hoàn tác slide", "phiên bản slide", "thêm slide", "biểu đồ", "bảng slide"],

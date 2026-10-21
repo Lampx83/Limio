@@ -586,8 +586,13 @@ Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia s
 dắt vào bài, Nội dung, Tổng kết; mỗi slide là một thẻ có "Sửa" và nút xoá (xoá xong có "Hoàn tác"); kéo ⋮⋮ đổi
 thứ tự; "Đổi tên", "+ Thêm slide vào phần này", "Thêm phần nội dung". Cửa sổ sửa slide chọn **Loại slide** (Dán
 Note, Draw-it, Whiteboard / Nội dung / Trắc nghiệm, Vote, Word Cloud), **Bố cục**, tiêu đề và Ý chính. Cột phải:
-số slide, "Buổi giảng", "Giao diện" (+ "Gợi ý giao diện khác"), "Mạch bài", các cảnh báo (chỉ nhắc, không chặn).
-Mọi sửa tự lưu, không tốn lượt AI. Thanh dính đáy: nút **"Tạo N slide"** (kèm "Dự kiến dùng khoảng X token AI",
+số slide, "Buổi giảng", hộp **"Chỉnh dàn ý bằng AI"** (chỉ có ở bài do AI soạn, không có ở bài PowerPoint giữ nguyên slide
+gốc), "Giao diện" (+ "Gợi ý giao diện khác"), "Mạch bài", các cảnh báo (chỉ nhắc, không chặn). Hộp "Chỉnh dàn ý bằng AI": ô
+nhập lời dặn (5–1.000 ký tự), bốn gợi ý điền sẵn ("Rút ngắn lại", "Thêm ví dụ thực tế", "Bớt lý thuyết, thêm hoạt động",
+"Dễ hiểu hơn cho người mới"), nút **"Chỉnh dàn ý"** (hoặc Ctrl/Cmd+Enter) và dòng chữ **"Soạn lại từ đầu"** (hỏi xác nhận,
+bỏ dàn ý hiện tại, soạn lại từ tài liệu nguồn). Xong có thanh "Đã chỉnh theo: …" với **"Quay lại bản trước"** (không tự
+biến mất). AI chỉnh dàn ý không tự thêm slide tương tác và không viết lại slide đã tạo; bài đã có slide thì bấm "Cập nhật slide
+theo dàn ý". Mỗi lần dùng tốn token AI (có ghi ước tính dưới nút). Sửa tay vẫn tự lưu, không tốn lượt AI. Thanh dính đáy: nút **"Tạo N slide"** (kèm "Dự kiến dùng khoảng X token AI",
 "Đang tạo slide k trên N", xong có "Mở bài giảng để xem và chỉnh slide"; bài PowerPoint ở cách "Giữ ý" dựng
 thẳng không dùng AI). Bài đã có slide thì nút thành **"Cập nhật slide theo dàn ý"** (viết lại slide chưa sửa,
 thêm slide mới, xoá slide thừa, giữ slide giảng viên đã sửa; có hộp xác nhận). Đường quay lại trang Dàn ý từ

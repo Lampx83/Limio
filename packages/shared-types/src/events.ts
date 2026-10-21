@@ -220,6 +220,8 @@ export const LearningEventType = {
   // Limio-Live — bài giảng tương tác sinh từ tài liệu bằng AI (H15). Chỉ đo lường việc sinh, sửa
   // bằng AI và tỉ lệ slide bị sửa tay; không đụng nội dung học viên.
   LiveDeckOutlineGenerated: "live.deck.outline_generated",
+  // Chỉnh dàn ý bằng AI hoặc soạn lại từ đầu ngay trên trang dàn ý (docs/tieu-chi/dan-y-chinh-bang-ai.md, R11). Không ghi nội dung lời dặn.
+  LiveDeckOutlineRevised: "live.deck.outline_revised",
   LiveDeckSlidesGenerated: "live.deck.slides_generated",
   LiveSlideAiEditProposed: "live.slide.ai_edit_proposed",
   LiveSlideAiChatTurn: "live.slide.ai_chat_turn",
@@ -740,6 +742,17 @@ export interface LiveDeckSlidesGeneratedPayload {
   created?: number;
   removed?: number;
   kept?: number;
+}
+
+export interface LiveDeckOutlineRevisedPayload {
+  deckId: string;
+  /** "revise": chỉnh dàn ý hiện tại theo lời dặn; "restart": soạn lại từ văn bản nguồn. */
+  mode: "revise" | "restart";
+  slideCountBefore: number;
+  slideCountAfter: number;
+  /** Số ký tự lời dặn (0 = soạn lại không kèm lời dặn mới). Không ghi nội dung. */
+  instructionChars: number;
+  warningCount: number;
 }
 
 /** Một lượt hỏi đáp với AI về slide (tab Nhờ AI). Không ghi nội dung câu hỏi hay câu trả lời. */
