@@ -9,6 +9,7 @@ import { htmlToPlainText } from "@/lib/richText";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { EmptyState } from "@/components/ui";
 import JsonLd from "@/components/JsonLd";
+import { courseLanguageLabel, courseLevelLabel } from "@/lib/courseLabels";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -54,17 +55,6 @@ async function getDistinctCategories(): Promise<string[]> {
     .filter((c): c is string => !!c)
     .sort();
 }
-
-const LEVEL_LABEL: Record<string, string> = {
-  beginner: "Cơ bản",
-  intermediate: "Trung cấp",
-  advanced: "Nâng cao",
-};
-
-const LANG_LABEL: Record<string, string> = {
-  vi: "Tiếng Việt",
-  en: "English",
-};
 
 export default async function CatalogPage({
   searchParams,
@@ -125,9 +115,9 @@ export default async function CatalogPage({
   };
   if (searchParams.q) activeChips.push({ label: `"${searchParams.q}"`, clearHref: baseParams("q") });
   if (searchParams.level)
-    activeChips.push({ label: LEVEL_LABEL[searchParams.level] ?? searchParams.level, clearHref: baseParams("level") });
+    activeChips.push({ label: courseLevelLabel(searchParams.level), clearHref: baseParams("level") });
   if (searchParams.language)
-    activeChips.push({ label: LANG_LABEL[searchParams.language] ?? searchParams.language, clearHref: baseParams("language") });
+    activeChips.push({ label: courseLanguageLabel(searchParams.language), clearHref: baseParams("language") });
   if (searchParams.category)
     activeChips.push({ label: searchParams.category, clearHref: baseParams("category") });
 
@@ -218,7 +208,7 @@ export default async function CatalogPage({
             className="select max-w-[160px]"
             aria-label="Cấp độ"
           >
-            <option value="">Mọi level</option>
+            <option value="">Mọi trình độ</option>
             <option value="beginner">Cơ bản</option>
             <option value="intermediate">Trung cấp</option>
             <option value="advanced">Nâng cao</option>
@@ -231,7 +221,7 @@ export default async function CatalogPage({
           >
             <option value="">Mọi ngôn ngữ</option>
             <option value="vi">Tiếng Việt</option>
-            <option value="en">English</option>
+            <option value="en">Tiếng Anh</option>
           </select>
           {categories.length > 0 && (
             <select
@@ -377,7 +367,7 @@ function CourseGrid({
               <div className="absolute bottom-3 left-4 right-4 flex flex-wrap gap-1.5">
                 {c.level && (
                   <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-bold text-brand-700 shadow">
-                    {LEVEL_LABEL[c.level] ?? c.level}
+                    {courseLevelLabel(c.level)}
                   </span>
                 )}
                 {c.category && (
@@ -393,23 +383,16 @@ function CourseGrid({
             </h3>
             <p className="mt-2 line-clamp-3 text-sm text-muted">{htmlToPlainText(c.description)}</p>
 
-            <div className="mt-3 flex items-center gap-1.5">
-              {c.personalizationEnabled ? (
+            {c.personalizationEnabled && (
+              <div className="mt-3 flex items-center gap-1.5">
                 <span
                   className="rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700"
-                  title="AI feedback theo skill"
+                  title="Sau mỗi bài, Limio chỉ ra chủ đề bạn còn yếu và gợi ý phần nên ôn lại."
                 >
-                  🤖 AI Feedback
+                  🤖 Phản hồi cá nhân hoá
                 </span>
-              ) : (
-                <span
-                  className="rounded-md bg-[rgb(var(--surface-muted))] px-1.5 py-0.5 text-[10px] font-semibold text-muted"
-                  title="LMS truyền thống"
-                >
-                  📚 Standard LMS
-                </span>
-              )}
-            </div>
+              </div>
+            )}
 
             <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
               {enrolled ? (

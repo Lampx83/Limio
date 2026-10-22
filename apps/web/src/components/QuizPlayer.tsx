@@ -266,7 +266,7 @@ export default function QuizPlayer({
   if (!data) {
     return (
       <div className="card text-center text-sm text-faint">
-        <span className="inline-block animate-pulse">Đang tải quiz…</span>
+        <span className="inline-block animate-pulse">Đang tải bài kiểm tra…</span>
       </div>
     );
   }
@@ -624,7 +624,7 @@ export default function QuizPlayer({
               </div>
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
                 Bạn chọn số sao theo mức chắc chắn với đáp án vừa chọn. Số sao không làm tăng hay giảm điểm của
-                câu, nhưng quiz này cần có số sao thì câu mới được ghi nhận.
+                câu, nhưng bài này cần có số sao thì câu mới được ghi nhận.
               </p>
               {statusOf(currentQ) === "needs-confidence" && (
                 <p

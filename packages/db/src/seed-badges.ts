@@ -6,13 +6,13 @@ import { PrismaClient } from "./generated/client";
 const prisma = new PrismaClient();
 
 const MILESTONES = [
-  { code: "first_step", name: "First Step", emoji: "🎯", description: "Hoàn thành bài học đầu tiên trên FeedBackMe." },
-  { code: "quiz_starter", name: "Quiz Starter", emoji: "✍️", description: "Bắt đầu bài kiểm tra đầu tiên." },
-  { code: "first_win", name: "First Win", emoji: "✅", description: "Vượt qua bài kiểm tra đầu tiên." },
-  { code: "perfect_score", name: "Perfect Score", emoji: "💯", description: "Đạt 100% trong một bài kiểm tra." },
-  { code: "course_complete", name: "Course Complete", emoji: "🎓", description: "Hoàn thành toàn bộ một khóa học." },
-  { code: "cleared_5", name: "Self-Corrector", emoji: "🪄", description: "Khắc phục 5 lỗi tư duy (misconception) qua việc trả lời đúng sau khi sai." },
-  { code: "cleared_25", name: "Misconception Slayer", emoji: "🛡️", description: "Khắc phục 25 lỗi tư duy — bằng chứng bạn thực sự học từ sai lầm." },
+  { code: "first_step", name: "Bước chân đầu tiên", emoji: "🎯", description: "Hoàn thành bài học đầu tiên." },
+  { code: "quiz_starter", name: "Khởi động", emoji: "✍️", description: "Bắt đầu bài kiểm tra đầu tiên." },
+  { code: "first_win", name: "Lần đầu vượt qua", emoji: "✅", description: "Vượt qua bài kiểm tra đầu tiên." },
+  { code: "perfect_score", name: "Điểm tuyệt đối", emoji: "💯", description: "Đạt 100% trong một bài kiểm tra." },
+  { code: "course_complete", name: "Về đích", emoji: "🎓", description: "Hoàn thành toàn bộ một khoá học." },
+  { code: "cleared_5", name: "Tự sửa sai", emoji: "🪄", description: "Khắc phục 5 lỗi hiểu sai bằng cách trả lời đúng sau khi đã sai." },
+  { code: "cleared_25", name: "Học từ sai lầm", emoji: "🛡️", description: "Khắc phục 25 lỗi hiểu sai — bằng chứng bạn thực sự học từ sai lầm." },
 ];
 
 async function main() {

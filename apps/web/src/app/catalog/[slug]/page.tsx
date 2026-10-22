@@ -16,14 +16,9 @@ import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
+import { courseLanguageLabel, courseLevelLabel, modulePrefix } from "@/lib/courseLabels";
 
 export const dynamic = "force-dynamic";
-
-const LEVEL_LABEL: Record<string, string> = {
-  beginner: "Cơ bản",
-  intermediate: "Trung cấp",
-  advanced: "Nâng cao",
-};
 
 /**
  * Đây là trang đích cho truy vấn kiểu "khoá học <chủ đề>" nên phải tự khai
@@ -167,7 +162,7 @@ export default async function CourseDetailPage({
         />
       )}
       <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
-        ← Catalog
+        ← Danh mục khoá học
       </Link>
 
       {/* Paywall notice */}
@@ -200,7 +195,7 @@ export default async function CourseDetailPage({
           <div className="flex flex-wrap items-center gap-2">
             {course.level && (
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
-                {LEVEL_LABEL[course.level] ?? course.level}
+                {courseLevelLabel(course.level)}
               </span>
             )}
             {course.category && (
@@ -208,27 +203,24 @@ export default async function CourseDetailPage({
                 {course.category}
               </span>
             )}
-            <span className="inline-flex items-center rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium uppercase tracking-wide backdrop-blur">
-              {course.language}
-            </span>
+            {course.language !== "vi" && (
+              <span className="inline-flex items-center rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
+                {courseLanguageLabel(course.language)}
+              </span>
+            )}
             {course.status !== "published" && (
               <span className="inline-flex items-center rounded-full bg-accent-400/90 px-2.5 py-0.5 text-xs font-semibold text-accent-900">
                 {course.status}
               </span>
             )}
-            {course.personalizationEnabled ? (
+            {/* Học viên chỉ cần biết khi khoá CÓ phản hồi cá nhân hoá; nhãn
+                "khoá thường" không giúp họ quyết định gì. */}
+            {course.personalizationEnabled && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700"
-                title="Course có AI feedback theo skill: BKT, diagnostic, adaptive path, skill badge"
+                title="Sau mỗi bài, Limio chỉ ra chủ đề bạn còn yếu và gợi ý phần nên ôn lại."
               >
-                🤖 AI Feedback
-              </span>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur"
-                title="LMS truyền thống — không AI feedback"
-              >
-                📚 Standard LMS
+                🤖 Phản hồi cá nhân hoá
               </span>
             )}
             {publiclyReadable && (
@@ -254,7 +246,7 @@ export default async function CourseDetailPage({
 
           {/* Stats — price + enroll moved to sticky sidebar below */}
           <div className="mt-6 flex flex-wrap gap-3">
-            <HeroStat label="Modules" value={course.modules.length} />
+            <HeroStat label="Module" value={course.modules.length} />
             <HeroStat label="Bài học" value={totalLessons} />
             {paymentEnabled && (
               <div className="rounded-xl bg-white/15 px-4 py-2 backdrop-blur">
@@ -288,7 +280,7 @@ export default async function CourseDetailPage({
           secondary={
             enrolled
               ? "Bạn đã đăng ký"
-              : `${course.modules.length} modules · ${totalLessons} bài`
+              : `${course.modules.length} module · ${totalLessons} bài`
           }
           action={
             course.enrollMode === "invite_only" && !enrolled ? (
@@ -314,7 +306,7 @@ export default async function CourseDetailPage({
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-semibold">Nội dung khóa học</h2>
             <span className="text-xs text-faint">
-              {course.modules.length} modules · {totalLessons} bài
+              {course.modules.length} module · {totalLessons} bài
             </span>
           </div>
 
@@ -367,11 +359,13 @@ export default async function CourseDetailPage({
             </div>
           ) : (
             <ol className="mt-4 space-y-4">
-              {course.modules.map((m) => (
+              {course.modules.map((m, mi) => {
+                const prefix = modulePrefix(m.title, mi);
+                return (
                 <li key={m.id} id={`module-${m.id}`} className="card">
                 <header className="flex items-baseline justify-between gap-3 border-b border-token pb-3">
                   <h3 className="text-base font-semibold">
-                    <span className="mr-2 text-faint">Module</span>
+                    {prefix && <span className="mr-2 text-faint">{prefix}</span>}
                     {m.title}
                   </h3>
                   <span className="text-xs text-faint">
@@ -456,7 +450,8 @@ export default async function CourseDetailPage({
                   ))}
                 </ol>
                 </li>
-              ))}
+                );
+              })}
             </ol>
           )}
         </section>

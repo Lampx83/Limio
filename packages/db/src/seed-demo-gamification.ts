@@ -22,11 +22,11 @@ const SLUG = "demo-gamification";
 const PASSWORD = "password1234";
 
 const BADGES = [
-  { code: "first_step", name: "First Step", emoji: "🎯", description: "Hoàn thành bài học đầu tiên." },
-  { code: "quiz_starter", name: "Quiz Starter", emoji: "✍️", description: "Bắt đầu bài kiểm tra đầu tiên." },
-  { code: "first_win", name: "First Win", emoji: "✅", description: "Vượt qua bài kiểm tra đầu tiên." },
-  { code: "perfect_score", name: "Perfect Score", emoji: "💯", description: "Đạt 100% trong một bài kiểm tra." },
-  { code: "course_complete", name: "Course Complete", emoji: "🎓", description: "Hoàn thành toàn bộ một khoá học." },
+  { code: "first_step", name: "Bước chân đầu tiên", emoji: "🎯", description: "Hoàn thành bài học đầu tiên." },
+  { code: "quiz_starter", name: "Khởi động", emoji: "✍️", description: "Bắt đầu bài kiểm tra đầu tiên." },
+  { code: "first_win", name: "Lần đầu vượt qua", emoji: "✅", description: "Vượt qua bài kiểm tra đầu tiên." },
+  { code: "perfect_score", name: "Điểm tuyệt đối", emoji: "💯", description: "Đạt 100% trong một bài kiểm tra." },
+  { code: "course_complete", name: "Về đích", emoji: "🎓", description: "Hoàn thành toàn bộ một khoá học." },
 ];
 
 // section: "A" | "B" | "default"; badges = chỉ số vào BADGES (gắn khoá này)

@@ -1114,7 +1114,7 @@ async function seedGamification(
     update: {},
     create: {
       code: "demo-eng-first-lesson",
-      name: "First Step",
+      name: "Bước chân đầu tiên",
       description: "Hoàn thành bài học đầu tiên",
       emoji: "🌱",
       category: "milestone",
@@ -1126,7 +1126,7 @@ async function seedGamification(
     update: {},
     create: {
       code: "demo-eng-speaking-streak-7",
-      name: "Speaking 7-day streak",
+      name: "Chuỗi 7 ngày luyện nói",
       description: "Luyện nói 7 ngày liên tục",
       emoji: "🔥",
       category: "milestone",

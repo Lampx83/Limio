@@ -27,6 +27,7 @@ import { StickyMobileCTA } from "@/components/ui";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
 import SmartBackLink from "@/components/SmartBackLink";
 import { continueButtonText, describeLevel, pickContinueLesson, streakLabel } from "@/lib/courseHomeView";
+import { courseMetaLine, modulePrefix } from "@/lib/courseLabels";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 import LearningPathList from "@/components/LearningPathList";
 import CourseTeamPanel, { type CourseTeamState } from "@/components/course/CourseTeamPanel";
@@ -70,7 +71,7 @@ export default async function LearnCoursePage({
           <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
           <div className="relative">
             <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
-              {course.level} · {course.language}
+              {courseMetaLine(course.level, course.language)}
             </span>
             <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">{course.title}</h1>
           </div>
@@ -195,7 +196,7 @@ export default async function LearnCoursePage({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
-                {course.level} · {course.language}
+                {courseMetaLine(course.level, course.language)}
               </span>
               <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
                 {course.title}
@@ -638,7 +639,8 @@ function ModuleList({
   return (
     <ol className="mt-4 space-y-4">
               {visibleModules
-                .map((m) => {
+                .map((m, mi) => {
+                  const prefix = modulePrefix(m.title, mi);
                   const visibleLessons = m.lessons.filter((l) => !l.isHidden);
                   const done = visibleLessons.filter((l) =>
                     completedSet.has(l.id)
@@ -658,7 +660,7 @@ function ModuleList({
                             aria-hidden
                             className="mr-1 inline h-4 w-4 text-faint transition-transform group-open:rotate-90"
                           />
-                          <span className="mr-2 text-faint">Module</span>
+                          {prefix && <span className="mr-2 text-faint">{prefix}</span>}
                           {m.title}
                         </h3>
                         <span className="text-xs text-faint tabular-nums">
