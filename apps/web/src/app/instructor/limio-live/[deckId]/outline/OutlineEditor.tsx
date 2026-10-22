@@ -41,6 +41,8 @@ import OutlineFlow from "./OutlineFlow";
 import SlideDialog from "./SlideDialog";
 import GenerationGrid from "./GenerationGrid";
 import { ThemeBox } from "./OutlineSide";
+import OutlineReviseBox, { type RevisedState } from "./OutlineReviseBox";
+import { canRevise, carryOutlineIds } from "@/lib/limioLiveOutlineRevise";
 
 interface Loaded {
   title: string;
@@ -102,6 +104,8 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   // Xoá không hỏi lại; thông báo có nút Hoàn tác trong vài giây.
   const [undo, setUndo] = useState<RemovedSlide | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Chỉnh bằng AI / soạn lại từ đầu (docs/tieu-chi/dan-y-chinh-bang-ai.md, R7): giữ MỘT bản trước để quay lại, không tự hết giờ.
+  const [revised, setRevised] = useState<(RevisedState & { prev: { outline: Outline; minutes: number } }) | null>(null);
   const [gen, setGen] = useState<
     | { state: "idle" }
     | { state: "running"; done: number; total: number }
@@ -158,6 +162,7 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
       setConfirmedAt(null);
       setReviewed(false);
       setConfirmErr(null);
+      setRevised(null);
       setSave("dirty");
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => void flush(), 800);
@@ -208,6 +213,16 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
     if (!undo) return;
     change(restoreSlide(latest.current.outline, undo));
     setUndo(null);
+  };
+  const applyRevision = (next: Outline, info: RevisedState) => {
+    const prev = { outline: latest.current.outline, minutes: latest.current.minutes };
+    // Giữ id slide trùng slide cũ phía trình duyệt nữa: máy chủ đã làm với bản gửi đi, nhưng người dùng có thể đã sửa tay trong lúc chờ.
+    change(carryOutlineIds(prev.outline, next));
+    setRevised({ ...info, prev });
+  };
+  const undoRevision = () => {
+    if (!revised) return;
+    change(revised.prev.outline, revised.prev.minutes);
   };
   // Thêm vào cuối một phần rồi mở ngay cửa sổ sửa slide mới (loại slide và bố cục chọn trong đó).
   const addToPart = (partId: string) => {
@@ -390,6 +405,20 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
               {saveLabel}
             </span>
           </div>
+
+          {canRevise({ importedRows, sourceChars: data.sourceChars }) && (
+            <OutlineReviseBox
+              deckId={deckId}
+              outline={outline}
+              minutes={minutes}
+              sourceChars={data.sourceChars}
+              hasSlides={slideCount > 0}
+              disabled={showGrid || confirming}
+              revised={revised}
+              onApply={applyRevision}
+              onUndo={undoRevision}
+            />
+          )}
 
           <ThemeBox deckId={deckId} title={data.title} outline={outline} theme={theme} onTheme={setTheme} />
 

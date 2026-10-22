@@ -194,7 +194,7 @@ export default function FromDocumentForm({ webAvailable = false }: { webAvailabl
           <a href="/instructor/limio-live" className="text-sm text-muted hover:underline">
             Limio-Live
           </a>
-          <h1 className="text-2xl font-bold">Tạo slide</h1>
+          <h1 className="text-2xl font-bold">Tạo slide tương tác</h1>
         </div>
         <a
           href="/instructor/limio-live?new=1"
