@@ -67,8 +67,12 @@ RUN set -eux; \
 # The id is stable so every deploy shares the same cache volume.
 # On ephemeral GitHub-hosted CI runners the mount exists but starts empty —
 # the build is a cold build, same as before.
+#
+# Trần heap Node: mặc định ~2 GB không đủ nữa — `next build` của Limio dùng đỉnh ~3,4 GB RSS và
+# chết "JavaScript heap out of memory" trên runner AWS (2026-10-19, deploy PR #94). Đo trên máy
+# dev: heap 2048 MB → OOM, 6144 MB → xong. 3072 MB là mức có dư mà không đòi nhiều RAM hơn thực dùng.
 RUN --mount=type=cache,id=nextjs-build-cache,target=/app/apps/web/.next/cache \
-    pnpm --filter @feedbackme/web build
+    NODE_OPTIONS=--max-old-space-size=3072 pnpm --filter @feedbackme/web build
 
 # ---------- prisma-engine (extracts native binary for the runner) ----------
 # Next.js standalone file tracing skips native .node binaries.  We locate the
