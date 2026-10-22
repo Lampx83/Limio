@@ -1064,3 +1064,39 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
     padding-right: 11rem;
   }
 }
+
+/* Lưới tiến độ tạo slide: ô đang viết có quầng sáng nhịp thở và vệt sáng quét ngang. */
+@keyframes gen-tile-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgb(var(--brand) / 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgb(var(--brand) / 0);
+  }
+}
+@keyframes gen-tile-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+.gen-tile-now {
+  animation: gen-tile-breathe 1.8s ease-out infinite;
+}
+.gen-tile-now::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, rgb(var(--brand) / 0.14) 50%, transparent 70%);
+  animation: gen-tile-sweep 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gen-tile-now,
+  .gen-tile-now::after {
+    animation: none;
+  }
+}
