@@ -130,7 +130,7 @@ export default async function NotificationsPage({
           <p className="text-sm text-muted">
             {role === "instructor"
               ? "Việc cần xử lý trong khoá bạn dạy — chấm bài, review, câu hỏi mới."
-              : "Cập nhật học tập — bài chấm, phản hồi forum, mission, huy hiệu."}
+              : "Cập nhật học tập — bài được chấm, trả lời thảo luận, nhiệm vụ đấu trường, huy hiệu."}
           </p>
         </div>
       </header>

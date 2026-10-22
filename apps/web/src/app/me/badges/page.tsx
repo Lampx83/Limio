@@ -27,7 +27,7 @@ export default async function BadgesPage() {
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <div>
-        <span className="chip-accent">Gamification</span>
+        <span className="chip-accent">Thành tích</span>
         <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
           Huy hiệu của bạn
         </h1>

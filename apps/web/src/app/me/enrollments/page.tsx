@@ -55,11 +55,11 @@ export default async function MyEnrollmentsPage() {
           <p className="mt-2 text-muted">
             {withProgress.length > 0
               ? `Bạn đang học ${withProgress.length} khóa`
-              : "Bạn chưa enroll khóa học nào."}
+              : "Bạn chưa ghi danh khoá học nào."}
           </p>
         </div>
         <Link href="/catalog" className="btn-secondary btn-sm">
-          + Thêm khóa từ catalog
+          + Tìm thêm khoá học
         </Link>
       </div>
 
@@ -81,10 +81,11 @@ export default async function MyEnrollmentsPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-2xl">
                       </div>
           <p className="mt-4 text-muted">
-            Bạn chưa enroll khóa học nào. Khám phá catalog để bắt đầu.
+            Bạn chưa ghi danh khoá học nào. Nếu thầy cô đã gửi link mời, hãy mở link đó để
+            vào lớp; hoặc xem Danh mục khoá học để tự chọn khoá.
           </p>
           <Link href="/catalog" className="btn-primary mt-5 inline-flex">
-            Đến catalog →
+            Xem Danh mục khoá học →
           </Link>
         </div>
       ) : (

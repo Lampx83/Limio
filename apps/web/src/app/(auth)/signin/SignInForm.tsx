@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 import InAppBrowserNotice from "@/components/InAppBrowserNotice";
+import { sanitizeCallbackUrl, withCallbackUrl } from "@/lib/callbackUrl";
 import { detectInAppBrowser } from "@/lib/inAppBrowser";
 import { landingPathForRoles } from "@/lib/landing";
 
@@ -54,14 +55,6 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 
 const DEMO_PASSWORD = "password1234";
 const SHOW_DEMO = process.env.NODE_ENV !== "production";
-
-// Chỉ chấp nhận path nội bộ ("/a/b") — chặn open-redirect qua "//evil.com"
-// hay "https://evil.com" lẻn vào query string callbackUrl.
-function sanitizeCallbackUrl(raw: string | null): string {
-  if (!raw) return "/";
-  if (!raw.startsWith("/") || raw.startsWith("//") || raw.includes("://")) return "/";
-  return raw;
-}
 
 export default function SignInForm({
   ssoProviders,
@@ -169,19 +162,19 @@ export default function SignInForm({
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_minmax(380px,420px)] lg:py-20">
         {/* Left — pitch */}
         <div className="hidden flex-col justify-center lg:flex">
-          <span className="chip-brand w-max">Welcome back</span>
+          <span className="chip-brand w-max">Chào mừng trở lại</span>
           <h1 className="mt-4 h-display text-4xl font-bold leading-tight">
             Quay lại nhịp học cùng <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
-            Tiếp tục từ chỗ bạn dừng lại — tracking BKT, streak, và XP của bạn
-            vẫn ở đó chờ bạn.
+            Tiếp tục từ chỗ bạn dừng lại — tiến độ, chuỗi ngày học và điểm thưởng
+            của bạn vẫn được giữ nguyên.
           </p>
           <ul className="mt-8 space-y-3 text-sm">
             {[
-              "Adaptive learning path theo skill mastery",
-              "AI tutor luôn sẵn sàng giải thích lại bài",
-              "XP, badge, leaderboard — học là cuộc chơi",
+              "Biết mình đúng, sai ở đâu ngay sau mỗi bài kiểm tra",
+              "Nhờ AI giải thích lại ngay trong bài học",
+              "Điểm thưởng, huy hiệu và bảng xếp hạng giữ nhịp học đều",
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-success-100 text-success-700">
@@ -335,7 +328,7 @@ export default function SignInForm({
             {registerEnabled && (
               <p className="mt-6 text-center text-sm text-muted">
                 Chưa có tài khoản?{" "}
-                <Link href="/register" className="link font-medium">
+                <Link href={withCallbackUrl("/register", callbackPath)} className="link font-medium">
                   Đăng ký
                 </Link>
               </p>

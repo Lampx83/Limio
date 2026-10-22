@@ -14,11 +14,12 @@ import { useScoreDeltas } from "@/lib/gameshow/useScoreDeltas";
 import type { ScoreDelta } from "@/lib/gameshow/useScoreDeltas";
 import { useFlipList } from "@/lib/gameshow/useFlipList";
 import { useCountUp } from "@/lib/gameshow/useCountUp";
+import { SOUND_TOGGLE_ATTR, useGameshowSound } from "@/lib/gameshow/useGameshowSound";
 import { CircularTimer } from "@/components/gameshow/CircularTimer";
 import { Podium } from "@/components/gameshow/Podium";
 import { OptionCard, OPTION_LETTERS } from "@/components/gameshow/OptionCard";
 import { RankBadge, initials, avatarGradient } from "@/components/gameshow/RankBadge";
-import { BarChart3, ChevronUp, ChevronDown, Minus, Flame, Check, Trophy, Play, Users } from "lucide-react";
+import { BarChart3, ChevronUp, ChevronDown, Minus, Flame, Check, Trophy, Play, Users, Volume2, VolumeX } from "lucide-react";
 
 // Font bo tròn, vui mắt, có subset tiếng Việt — chỉ dùng cho tên người chơi
 // trên màn host (chiếu lên máy chiếu nên cần to, dễ nhận, có cá tính).
@@ -56,6 +57,8 @@ const REVEAL_PAUSE_MS = 4000;
 // Splash "Câu N" chớp qua trước khi hiện nội dung câu hỏi — thuần cosmetic,
 // timer thật (currentQuestionStartedAt) vẫn chạy phía dưới song song.
 const QUESTION_SPLASH_MS = 700;
+// Còn từng này ms thì nhạc chuyển sang nhịp gấp.
+const URGENT_MS = 5000;
 
 export default function HostGameClient({ sessionId, theme }: { sessionId: string; theme?: string }) {
   const [snap, setSnap] = useState<Snapshot | null>(null);
@@ -76,6 +79,11 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
   const [showSplash, setShowSplash] = useState(false);
   const splashForIndex = useRef<number | null>(null);
   const esRef = useRef<EventSource | null>(null);
+  const sound = useGameshowSound();
+  // Còn ≤ 5 giây của câu đang chạy — PlayView giữ đồng hồ nên báo lên đây để
+  // nhạc nền chuyển sang nhịp gấp.
+  const [urgent, setUrgent] = useState(false);
+  const prevStep = useRef<{ status: Status; index: number } | null>(null);
 
   // Full-screen "arena" — ẩn sidebar giảng viên trong lúc host gameshow.
   useEffect(() => {
@@ -126,6 +134,7 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
       const type = data.type as string;
       if (type === "participant.joined") {
         const p = data.participant as LiveParticipant;
+        sound.sfx("join");
         setParticipants((prev) =>
           prev.some((x) => x.participantId === p.participantId) ? prev : [...prev, p],
         );
@@ -153,7 +162,32 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
       }
     };
     return () => es.close();
-  }, [sessionId]);
+  }, [sessionId, sound.sfx]);
+
+  // Nhạc nền theo trạng thái: sảnh chờ vui, đang trả lời căng, những giây cuối
+  // gấp; lúc lộ đáp án và khi kết thúc chỉ còn hiệu ứng.
+  useEffect(() => {
+    if (!snap) return;
+    sound.setMood(
+      snap.status === "lobby" ? "lobby" : snap.status === "running" ? (urgent ? "urgent" : "question") : "off",
+    );
+  }, [snap?.status, urgent, sound.setMood]);
+
+  // Hiệu ứng ở mỗi lần chuyển bước. Lần nạp đầu không phát: giảng viên tải lại
+  // trang giữa chừng thì không nên bị "tang" bất ngờ.
+  useEffect(() => {
+    if (!snap) return;
+    const prev = prevStep.current;
+    prevStep.current = { status: snap.status, index: snap.currentQuestionIndex };
+    if (!prev) return;
+    if (snap.status === "running" && (prev.status !== "running" || prev.index !== snap.currentQuestionIndex)) {
+      sound.sfx("question");
+    } else if (snap.status === "reveal" && prev.status !== "reveal") {
+      sound.sfx("reveal");
+    } else if (snap.status === "ended" && prev.status !== "ended") {
+      sound.sfx("fanfare");
+    }
+  }, [snap?.status, snap?.currentQuestionIndex, sound.sfx]);
 
   // Splash "Câu N" — chớp mỗi khi bước sang 1 câu mới (running + index mới).
   useEffect(() => {
@@ -310,6 +344,22 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
                 BẮT ĐẦU ({sorted.length})
               </button>
             )}
+            <button
+              {...{ [SOUND_TOGGLE_ATTR]: "" }}
+              onClick={sound.toggle}
+              aria-pressed={!sound.muted}
+              aria-label={sound.muted ? "Bật nhạc" : "Tắt nhạc"}
+              title={sound.muted ? "Bật nhạc" : sound.blocked ? "Bấm để bật nhạc" : "Tắt nhạc"}
+              className={`gs-glass flex h-11 w-11 flex-none items-center justify-center rounded-full text-white transition-colors hover:bg-white/30 ${
+                sound.blocked && !sound.muted ? "gs-glow-pulse" : ""
+              }`}
+            >
+              {sound.muted ? (
+                <VolumeX className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <Volume2 className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
             {snap.status !== "ended" && (
               <button
                 onClick={() => {
@@ -363,6 +413,7 @@ export default function HostGameClient({ sessionId, theme }: { sessionId: string
               busy={busy}
               onReveal={onReveal}
               onNext={onNext}
+              onUrgentChange={setUrgent}
             />
           </div>
         )}
@@ -578,6 +629,7 @@ function PlayView({
   busy,
   onReveal,
   onNext,
+  onUrgentChange,
 }: {
   snap: Snapshot;
   currentQuestion: Question;
@@ -588,6 +640,7 @@ function PlayView({
   busy: boolean;
   onReveal: () => void;
   onNext: () => void;
+  onUrgentChange: (urgent: boolean) => void;
 }) {
   const isRevealed = snap.status === "reveal";
   const [remainingMs, setRemainingMs] = useState(snap.timeLimitMs);
@@ -612,6 +665,14 @@ function PlayView({
     const t = setInterval(tick, 250);
     return () => clearInterval(t);
   }, [snap.status, snap.currentQuestionIndex, snap.currentQuestionStartedAt, snap.timeLimitMs, onReveal]);
+
+  // remainingMs > 0: sau câu trước nó còn nằm ở 0 đến khi nhịp đầu của câu mới
+  // cập nhật — không coi đó là "những giây cuối".
+  const urgent = snap.status === "running" && remainingMs > 0 && remainingMs <= URGENT_MS;
+  useEffect(() => {
+    onUrgentChange(urgent);
+    return () => onUrgentChange(false);
+  }, [urgent, onUrgentChange]);
 
   // Tự động sang câu kế (hoặc kết thúc) sau khi hiện đáp án được 1 lúc.
   useEffect(() => {

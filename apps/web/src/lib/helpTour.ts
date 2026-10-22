@@ -111,7 +111,7 @@ export const LEARNER_TOUR_STEPS: HelpTourStep[] = [
   {
     id: "catalog",
     title: "Khám phá thêm khoá học",
-    body: "Chưa có link mời từ giảng viên? Ghé catalog để tìm khoá phù hợp và ghi danh.",
+    body: "Chưa có link mời từ giảng viên? Ghé Danh mục khoá học để tìm khoá phù hợp và ghi danh.",
     target: "help-tour-nav-catalog",
     placement: "right",
   },

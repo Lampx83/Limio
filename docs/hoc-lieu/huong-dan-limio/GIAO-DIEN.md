@@ -120,6 +120,10 @@ không sửa** (hệ thống không kiểm tra khoá rỗng) — nên nhắc th�
 
 - Tab **Nội dung**: tiêu đề "Modules"; nút "Xem trước"; "Gập hết" / "Mở hết"; ô
   tìm "Tìm bài học…".
+- **Xem như học viên**: nút "Xem trước" cạnh tiêu đề "Modules" mở trang khoá đúng như học viên thấy, ở tab mới.
+  Khi đang mở một bài học, cạnh tên bài có nút **"Xem như học viên"** mở riêng bài đó (chỉ tên bài và nội dung)
+  ở tab mới; trang soạn giữ nguyên. Bài đang ẩn thì nút này mờ đi (học viên cũng không thấy bài), bật lại ở menu
+  "⋮" → "Hiện bài này". Trang bài nộp và trang chấm không có nút này.
 - **Thêm chương**: ô nhập (gợi ý "Ví dụ: Phương trình bậc 1") + nút "Tạo". Sửa
   chương: "Sửa module" có ô tên và ô **Order** (số thứ tự). **Chương không kéo thả
   được** — đổi thứ tự bằng ô số. Ngoài ra có: ẩn/hiện, khoá, xoá chương.
@@ -284,9 +288,16 @@ hiện "Đạt / Chưa đạt" và "Điểm %" cũ — đừng lặp lại.
   thì không đổi được). Có mục thu gọn "Gợi ý dạng bài làm (không bắt buộc)" với nút
   **"Gợi ý bằng AI"** và các dạng: Tóm tắt, Tự giải thích, Hình dung tình huống,
   Vẽ sơ đồ, Vẽ minh hoạ, Dạy lại, Thực hành minh hoạ. Form tạo/sửa bài tập **không còn** ô rubric.
+- **Thẻ bài tập trong bài học** có nút "Xem bài nộp" và ba nút biểu tượng không chữ (rê chuột mới hiện tên):
+  con mắt (ẩn/hiện với học viên), bút chì "Sửa assignment" (mở lại form: tiêu đề, mô tả, điểm tối đa, cách nộp,
+  hạn nộp), thùng rác "Xóa assignment" (hỏi "Xóa assignment này?"; **xoá luôn mọi bài nộp và điểm** của bài tập,
+  không khôi phục được, kể cả khi đã có học viên nộp). **Chưa có chuyển bài tập sang bài học khác**: đặt nhầm
+  chỗ thì tạo bài tập mới ở bài đúng rồi xoá bài cũ, tốt nhất trước khi học viên nộp. Bài tập chỉ quản lý (sửa,
+  xoá) ở trang bài học; trang `/instructor/assignments` chỉ để xem bài nộp và chấm.
 - **Tiêu chí chấm (rubric)** của bài tập: khung **"Rubric chấm điểm (không bắt buộc)"** nằm TRÊN bảng "Danh
   sách" ở trang bài nộp, gợi ý "Ví dụ: 3đ nêu đúng khái niệm. 4đ có ví dụ. 3đ trình bày rõ ràng.", nút
-  "Lưu rubric", tối đa 5.000 ký tự. Trong cửa sổ chấm có khối thu gọn "Rubric chấm điểm (bấm để xem / sửa)"
+  "Lưu rubric", tối đa 5.000 ký tự. **Chỉ nhập bằng chữ, không đính kèm tệp**: rubric có sẵn trong Word/PDF
+  thì sao chép phần chữ rồi dán vào khung. Trong cửa sổ chấm có khối thu gọn "Rubric chấm điểm (bấm để xem / sửa)"
   (tự mở khi chưa có rubric). **Không phải bảng tiêu chí có cấu trúc**; AI đọc đúng đoạn chữ này khi gợi ý
   điểm. Các chỗ nhập rubric khác của Limio: câu tự luận trong đề thi ("Rubric (tuỳ chọn)", mục 5), vấn đáp AI
   (mục 13), nhiệm vụ Đấu trường kiểu chấm chéo (mục 16, đây mới là bảng có cấu trúc).
@@ -542,7 +553,7 @@ Menu Limio-Live → "Slide của tôi" (`/instructor/limio-live`): nút **Tạo 
 Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia sẻ thật nằm trong trình sửa).
 
 **Ba đường tạo bài giảng**
-- **Trang "Tạo slide"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
+- **Trang "Tạo slide tương tác"** (`/instructor/limio-live/from-document`): câu dẫn "Limio có thể hỗ trợ thầy/cô soạn bài
   giảng tương tác chỉ từ một ý tưởng…" (có tài liệu tham khảo thì đính kèm; có sẵn PowerPoint thì Limio soạn lại kèm nội
   dung tương tác) và **một ô mô tả** (tối đa 2.000 ký tự): nêu chủ đề,
   người học, mục tiêu, điều cần nhấn mạnh. Nút **"Đính kèm tài liệu"** kèm chữ "(không bắt buộc)" (đã có tệp thì thành "Đổi tài liệu"; cạnh nút ghi giới hạn định dạng và dung lượng); kéo
@@ -575,8 +586,13 @@ Chia sẻ trên thẻ chỉ báo "Chia sẻ bài giảng sắp ra mắt" (chia s
 dắt vào bài, Nội dung, Tổng kết; mỗi slide là một thẻ có "Sửa" và nút xoá (xoá xong có "Hoàn tác"); kéo ⋮⋮ đổi
 thứ tự; "Đổi tên", "+ Thêm slide vào phần này", "Thêm phần nội dung". Cửa sổ sửa slide chọn **Loại slide** (Dán
 Note, Draw-it, Whiteboard / Nội dung / Trắc nghiệm, Vote, Word Cloud), **Bố cục**, tiêu đề và Ý chính. Cột phải:
-số slide, "Buổi giảng", "Giao diện" (+ "Gợi ý giao diện khác"), "Mạch bài", các cảnh báo (chỉ nhắc, không chặn).
-Mọi sửa tự lưu, không tốn lượt AI. Thanh dính đáy: nút **"Tạo N slide"** (kèm "Dự kiến dùng khoảng X token AI",
+số slide, "Buổi giảng", hộp **"Chỉnh dàn ý bằng AI"** (chỉ có ở bài do AI soạn, không có ở bài PowerPoint giữ nguyên slide
+gốc), "Giao diện" (+ "Gợi ý giao diện khác"), "Mạch bài", các cảnh báo (chỉ nhắc, không chặn). Hộp "Chỉnh dàn ý bằng AI": ô
+nhập lời dặn (5–1.000 ký tự), bốn gợi ý điền sẵn ("Rút ngắn lại", "Thêm ví dụ thực tế", "Bớt lý thuyết, thêm hoạt động",
+"Dễ hiểu hơn cho người mới"), nút **"Chỉnh dàn ý"** (hoặc Ctrl/Cmd+Enter) và dòng chữ **"Soạn lại từ đầu"** (hỏi xác nhận,
+bỏ dàn ý hiện tại, soạn lại từ tài liệu nguồn). Xong có thanh "Đã chỉnh theo: …" với **"Quay lại bản trước"** (không tự
+biến mất). AI chỉnh dàn ý không tự thêm slide tương tác và không viết lại slide đã tạo; bài đã có slide thì bấm "Cập nhật slide
+theo dàn ý". Mỗi lần dùng tốn token AI (có ghi ước tính dưới nút). Sửa tay vẫn tự lưu, không tốn lượt AI. Thanh dính đáy: nút **"Tạo N slide"** (kèm "Dự kiến dùng khoảng X token AI",
 "Đang tạo slide k trên N", xong có "Mở bài giảng để xem và chỉnh slide"; bài PowerPoint ở cách "Giữ ý" dựng
 thẳng không dùng AI). Bài đã có slide thì nút thành **"Cập nhật slide theo dàn ý"** (viết lại slide chưa sửa,
 thêm slide mới, xoá slide thừa, giữ slide giảng viên đã sửa; có hộp xác nhận). Đường quay lại trang Dàn ý từ
@@ -653,6 +669,12 @@ Whiteboard), nút **Chọn** → "Chọn tất cả"/"Bỏ chọn", **Xoá** nhi
 ("Thùng rác (N)"): xoá chỉ chuyển vào thùng rác, giữ 30 ngày rồi tự xoá vĩnh viễn; có "Khôi phục", "Xoá vĩnh
 viễn", "Dọn sạch thùng rác", "← Danh sách"; sau khi xoá có "Hoàn tác" khoảng 6 giây. Phiên đang mở khi xoá có
 cảnh báo học viên bị ngắt.
+
+**Gameshow — nhạc trên màn chiếu.** Màn host có nút loa tròn cạnh "Kết thúc sớm" (nhãn "Tắt nhạc" / "Bật nhạc").
+Nhạc chỉ phát ở màn host, không phát trên máy học viên: sảnh chờ nhạc vui kèm tiếng bong khi có người vào; đang
+trả lời nhạc căng, 5 giây cuối nhịp dồn gấp; lộ đáp án có tiếng chuông; kết thúc có kèn mừng. Trình duyệt chặn tự
+phát tiếng nên lần đầu có thể phải bấm một lần vào trang (nút loa nhấp nháy khi đang chờ). Lựa chọn tắt/bật được
+nhớ trên máy đó. Chưa có chọn bài nhạc hay chỉnh âm lượng riêng — dùng nút âm lượng của máy chiếu/loa.
 
 ## 16. Đấu trường (phía giảng viên, mới)
 

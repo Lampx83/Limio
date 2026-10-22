@@ -103,6 +103,21 @@ describe("selectGuides", () => {
     expect(selectGuides("còn bước tiếp theo thì sao?", ["Cách tạo link thi nhanh cho lớp"]).map((g) => g.id)).toContain("to-chuc-thi");
   });
 
+  // Câu hỏi thật của giảng viên (nhật ký Lily trên AWS, 20/10/2026).
+  it("câu hỏi về bài tập không kéo mục Trợ giảng AI chỉ vì gọi tên Lily", () => {
+    const history = ["Lily, khoa học Hành vi tổ chức của tớ có 2 assignment nhưng tớ chỉ nhìn thấy có 1 thôi. Hãy đưa tớ đến 2 bài tập đó"];
+    expect(selectGuides(history[0]!).map((g) => g.id)).not.toContain("tro-giang-ai");
+    expect(selectGuides("Làm thế nào để xóa bài tập ở mục 1.1 đi?", history).map((g) => g.id)).not.toContain("tro-giang-ai");
+    expect(selectGuides("Lily và Trợ giảng AI khác nhau thế nào?").map((g) => g.id)).toContain("tro-giang-ai");
+  });
+
+  it("xoá, chuyển bài tập, xem như học viên và rubric bằng tệp kéo đúng mục", () => {
+    const first = (q: string) => selectGuides(q)[0]?.id;
+    expect(first("Làm thế nào để cô xóa được bài tập cô đã tạo ở mục 1.1? Cô đang đặt nhầm chỗ")).toBe("bai-tap-cham-bai");
+    expect(first("Làm thế nào để xem được ở chế độ của người học?")).toBe("noi-dung-khoa");
+    expect(first("Tớ có thể gửi Rubric bằng cách kèm file không?")).toBe("rubric");
+  });
+
   it("từ khoá ngắn chỉ khớp nguyên từ, không khớp giữa từ khác", () => {
     // "xp" không được khớp trong "expert"; "vote" không khớp trong "devoted".
     expect(selectGuides("an expert and devoted teacher")).toEqual([]);

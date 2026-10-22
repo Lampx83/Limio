@@ -15,6 +15,9 @@ export const RegisterInput = z.object({
   timezone: z.string().min(1).max(64).optional(),
   // Có mặt = người đăng ký xin làm giáo viên; vẫn tạo tài khoản học viên, đơn chờ admin duyệt.
   instructorApplication: InstructorApplicationInput.optional(),
+  // Trang cần quay về sau khi xác minh email (vd link mời vào lớp). Gắn vào link
+  // trong email; phía web tự lọc open-redirect khi đọc lại.
+  callbackUrl: z.string().max(500).optional(),
 });
 export type RegisterInput = z.infer<typeof RegisterInput>;
 
@@ -87,7 +90,7 @@ export async function registerUser(
     return { userId: user.id, raw: issued.raw };
   });
 
-  const verificationUrl = buildVerificationUrl(baseUrl, raw);
+  const verificationUrl = buildVerificationUrl(baseUrl, raw, input.callbackUrl);
   // Self-registration: user not tied to an org yet → use global template.
   const mail = await sendTemplatedEmail({
     key: "auth.verify_email",
