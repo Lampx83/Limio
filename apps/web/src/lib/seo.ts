@@ -26,7 +26,7 @@ export const SITE_LOCALE = "vi_VN";
  * học trực tuyến", "khoá học online" — nên từ khoá nằm ở title, tagline ở header.
  * ≤ 60 ký tự để không bị cắt trên SERP.
  */
-export const SITE_TITLE = `${SITE_NAME} — Nền tảng học trực tuyến có phản hồi cá nhân hoá`;
+export const SITE_TITLE = `${SITE_NAME} - Nền tảng dạy và học AI cá nhân hoá`;
 
 export const SITE_DESCRIPTION =
   "Limio là nền tảng học trực tuyến (LMS) với phản hồi cá nhân hoá bằng AI: khoá học, " +
