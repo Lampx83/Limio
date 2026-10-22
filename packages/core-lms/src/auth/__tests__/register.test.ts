@@ -35,6 +35,21 @@ describe("registerUser", () => {
     expect(ttlMs).toBeLessThan(25 * 60 * 60 * 1000);
   });
 
+  it("gắn callbackUrl vào link xác minh để học viên quay lại đúng lớp được mời", async () => {
+    const result = await registerUser(
+      {
+        email: "invitee@example.com",
+        password: "password1234",
+        displayName: "Invitee",
+        callbackUrl: "/enroll/ABC123",
+      },
+      BASE_URL,
+    );
+    expect(result.verificationUrl).toMatch(
+      /\/verify\?token=[a-f0-9]{64}&callbackUrl=%2Fenroll%2FABC123$/,
+    );
+  });
+
   it("normalizes email to lowercase + trim", async () => {
     const result = await registerUser(
       { email: "  Bob@Example.COM  ", password: "password1234", displayName: "Bob" },

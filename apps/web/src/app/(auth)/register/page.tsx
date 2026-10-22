@@ -1,11 +1,30 @@
 "use client";
 
+import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 import { apiUrl } from "@/lib/apiUrl";
+import { sanitizeCallbackUrl, withCallbackUrl } from "@/lib/callbackUrl";
 
+// Build-time base path (e.g. "/limio"). Empty string when served from root.
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+// RegisterForm đọc ?callbackUrl= qua useSearchParams — App Router bắt buộc bọc
+// Suspense cho client component dùng hook này.
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
+  // Đích quay về (vd link mời vào lớp /enroll/<mã>) — đi theo học viên qua
+  // đăng ký, đăng nhập tự động và cả link xác minh trong email.
+  const callbackPath = sanitizeCallbackUrl(useSearchParams().get("callbackUrl"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,10 +39,18 @@ export default function RegisterPage() {
     const res = await fetch(apiUrl("/api/auth/register"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, displayName }),
+      body: JSON.stringify({ email, password, displayName, callbackUrl: callbackPath }),
     });
     const data = await res.json();
     if (res.ok) {
+      // Đăng nhập chưa đòi xác minh email ⇒ vào thẳng, không bắt học viên mở
+      // hộp thư rồi đăng nhập lại mới tới được lớp. Email xác minh vẫn được gửi.
+      const login = await signIn("credentials", { email, password, redirect: false });
+      if (!login?.error) {
+        // Điều hướng cứng để root layout đọc lại cookie phiên (xem SignInForm).
+        window.location.href = `${BASE}${callbackPath === "/" ? "/me/dashboard" : callbackPath}`;
+        return;
+      }
       setStatus("ok");
       setMessage(
         data.emailSent === false
@@ -37,7 +64,7 @@ export default function RegisterPage() {
           <>
             <p>Email này đã có tài khoản trên hệ thống.</p>
             <p className="mt-1">
-              <Link href="/signin" className="link font-medium">
+              <Link href={withCallbackUrl("/signin", callbackPath)} className="link font-medium">
                 Đăng nhập
               </Link>
               {" · Chưa từng đặt mật khẩu? "}
@@ -67,15 +94,15 @@ export default function RegisterPage() {
             <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
-            Tạo tài khoản học viên trong 30 giây. Nhận feedback cá nhân hóa, lộ trình học
-            adaptive, và cộng đồng learners năng động.
+            Tạo tài khoản học viên trong 30 giây. Vào lớp của thầy cô, làm bài và
+            biết ngay mình đúng, sai ở đâu.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {[
-              { i: "", t: "Adaptive path", d: "Học đúng thứ bạn cần, đúng lúc" },
-              { i: "", t: "AI tutor 24/7", d: "Hỏi gì cũng có người trả lời" },
-              { i: "", t: "XP & badge", d: "Gamification giữ động lực" },
-              { i: "", t: "Skill profile", d: "Thấy rõ điểm mạnh, điểm yếu" },
+              { i: "", t: "Vào lớp bằng link mời", d: "Bấm link hoặc nhập mã thầy cô gửi là vào học" },
+              { i: "", t: "Phản hồi sau mỗi bài", d: "Biết mình sai ở đâu để sửa kịp" },
+              { i: "", t: "Hỏi AI trong bài học", d: "Nhờ giải thích lại hoặc tóm tắt bài đang học" },
+              { i: "", t: "Điểm thưởng & huy hiệu", d: "Giữ nhịp học đều mỗi ngày" },
             ].map((f) => (
               <div key={f.t} className="rounded-xl border border-token bg-[rgb(var(--surface))/0.6] p-3 backdrop-blur">
                 <div className="text-xl">{f.i}</div>
@@ -170,7 +197,7 @@ export default function RegisterPage() {
 
             <p className="mt-6 text-center text-sm text-muted">
               Đã có tài khoản?{" "}
-              <Link href="/signin" className="link font-medium">
+              <Link href={withCallbackUrl("/signin", callbackPath)} className="link font-medium">
                 Đăng nhập
               </Link>
             </p>

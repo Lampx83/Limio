@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { registerUser, RegisterError } from "@feedbackme/core-lms";
+import { sanitizeCallbackUrl } from "@/lib/callbackUrl";
 import { readAttributionCookie, recordAcquisitionTouch } from "@/lib/growth/touchStore";
 
 export async function POST(req: Request) {
@@ -11,6 +12,13 @@ export async function POST(req: Request) {
   }
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  // Đích quay về đi vào link xác minh trong email ⇒ lọc ngay tại cửa, path
+  // ngoài hoặc mặc định "/" thì bỏ hẳn cho link gọn.
+  if (body && typeof body === "object" && "callbackUrl" in body) {
+    const raw = (body as { callbackUrl?: unknown }).callbackUrl;
+    const safe = sanitizeCallbackUrl(typeof raw === "string" ? raw : null);
+    body = { ...body, callbackUrl: safe === "/" ? undefined : safe };
+  }
   try {
     const result = await registerUser(body, baseUrl);
     // Growth attribution: lưu điểm chạm đầu tiên của user mới. Best-effort —
