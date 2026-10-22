@@ -23,14 +23,16 @@ export const SITE_LOCALE = "vi_VN";
 /**
  * Title mặc định (trang chủ + mọi trang không tự khai). "Learn in Flow" là
  * tagline thương hiệu nhưng không ai gõ nó vào Google; người Việt tìm "nền tảng
- * học trực tuyến", "khoá học online" — nên từ khoá nằm ở title, tagline ở header.
- * ≤ 60 ký tự để không bị cắt trên SERP.
+ * học trực tuyến", "dạy học trực tuyến" — nên từ khoá nằm ở title, tagline ở header.
+ * Nói cả "dạy" lẫn "học" vì Limio phục vụ cả giảng viên; "cá nhân hoá bằng AI"
+ * là điểm khác biệt. ≤ 60 ký tự để không bị cắt trên SERP.
  */
-export const SITE_TITLE = `${SITE_NAME} - Nền tảng dạy và học AI cá nhân hoá`;
+export const SITE_TITLE = `${SITE_NAME} – Nền tảng dạy và học trực tuyến cá nhân hoá bằng AI`;
 
+/** ≤ 160 ký tự (Google cắt phần dư); cùng thông điệp hai phía với ảnh chia sẻ `og-default-v2.png`. */
 export const SITE_DESCRIPTION =
-  "Limio là nền tảng học trực tuyến (LMS) với phản hồi cá nhân hoá bằng AI: khoá học, " +
-  "bài kiểm tra, trợ giảng AI và điểm thưởng giúp bạn học đúng chỗ còn yếu, theo nhịp của riêng bạn.";
+  "Nền tảng dạy và học trực tuyến có AI: giảng viên soạn slide tương tác, chấm bài với gợi ý của AI; " +
+  "học viên nhận phản hồi cá nhân hoá, biết cần ôn gì tiếp.";
 
 const RAW_SITE_URL = (
   process.env.SITE_URL ||
