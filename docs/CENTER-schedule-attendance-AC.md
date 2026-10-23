@@ -1,0 +1,175 @@
+# CENTER — Trung tâm ngoại ngữ: lịch buổi, điểm danh, nhận xét sau buổi, gói học liệu, mục tiêu
+
+> Acceptance criteria, viết trước khi code theo CLAUDE.md §6.
+> Feature ID `CENTER.*` là **tạm** — chưa có trong SPEC.docx; đổi khi spec được cập nhật.
+> **Trạng thái: bản nháp chờ chủ dự án duyệt (2026-10-23). Chưa có dòng mã nào.**
+>
+> **Mục tiêu:** để một trung tâm ngoại ngữ nhỏ (chủ trung tâm vừa dạy vừa quản lý) mở Limio và có ngay:
+> lịch dạy cụ thể, điểm danh học viên và giáo viên, giáo án dựng sẵn theo từng buổi, nhận xét gửi tới học
+> viên ngay sau buổi học, và mục tiêu học tập đo được. **Không** làm ERP trung tâm (học phí, lương, CRM tuyển sinh).
+
+## Quyết định đã chốt (2026-10-23)
+
+1. **Người mua đầu tiên:** trung tâm nhỏ (1–3 cơ sở). Hệ quả: một người thường kiêm chủ trung tâm, quản lý và giáo viên; không làm phân quyền nhiều tầng, không làm báo cáo chuỗi.
+2. **Gói học liệu đầu tiên:** Tiếng Trung (tận dụng khoá Tiếng Trung cơ bản/III, deck Limio-Live, flashcard sẵn có).
+3. **Giáo viên check-in:** **tự bấm** ở bản đầu. QR tại phòng để sau; thiết kế để thêm phương thức mà không đổi dữ liệu (`method`).
+4. **Nhận xét sau buổi:** gửi **email cho học viên** (học viên nhỏ tuổi thường dùng email của phụ huynh). Không thêm trường phụ huynh ở bản đầu.
+5. **Kênh gửi:** email + thông báo trong app. Zalo để sau; chừa chỗ cắm kênh mới.
+
+## Vị trí trong sản phẩm
+
+- **Lõi chung** (dùng được cho mọi khoá, không gắn ngôn ngữ): lịch, buổi, điểm danh, đối chiếu giáo viên, tổng kết và nhận xét sau buổi.
+- **Riêng ngoại ngữ:** mục tiêu theo cấp độ (HSK/IELTS/CEFR…) và gói học liệu dựng sẵn.
+- **Limio Language** là nơi hiện ra: các mục này nằm đầu menu giảng viên của vỏ Language; ở vỏ thường vẫn có nhưng không nổi bật.
+- Ba module (LMS / Feedback / Gamification) vẫn không import nhau. Lịch/điểm danh thuộc `core-lms`; nhận xét và mục tiêu thuộc `core-feedback`, đọc dữ liệu buổi học qua bảng và event.
+
+## Tiêu chí chung cho mọi giai đoạn
+
+- [ ] Viết test từ checklist rồi mới code.
+- [ ] Hành vi có ý nghĩa nghiệp vụ emit `LearningEvent` trong cùng transaction; tên `<domain>.<entity>.<verb_past>`, payload có schema. Namespace mới (`class.*`, `attendance.*`, `goal.*`, `meeting.*`) phải thêm vào danh sách ở CLAUDE.md §4.2.
+- [ ] Bảng điểm danh là trạng thái **hiện tại** (sửa được); lịch sử sửa nằm ở event, không UPDATE/DELETE `LearningEvent`.
+- [ ] Mọi giờ tính theo `Asia/Ho_Chi_Minh` qua `lib/datetime.ts` (buổi tối thứ 7 không bị lệch sang chủ nhật).
+- [ ] Đổi schema bằng `prisma migrate`; index khai trong `schema.prisma`; cascade xoá theo lớp rõ ràng.
+- [ ] Quyền: chỉ giảng viên phụ trách lớp (hoặc quản trị của tổ chức) ghi được; học viên chỉ đọc của chính mình. Endpoint dữ liệu học viên có xác thực và phân quyền.
+- [ ] Export/xoá dữ liệu cá nhân của học viên bao gồm điểm danh, nhận xét và mục tiêu (CLAUDE.md §5.4).
+- [ ] Chuỗi giao diện đúng thuật ngữ §4.6.1; responsive theo §4.6; điểm danh dùng được một tay trên điện thoại.
+- [ ] Mục menu/trang giảng viên mới ⇒ cập nhật `GIAO-DIEN.md`, `teacherAssistantGuide.ts` (có `useCases`), `ASSISTANT_DESTINATIONS`; test `teacherAssistantFreshness` xanh (§4.9).
+- [ ] Xem bằng mắt trên mobile và desktop trước khi báo xong.
+- [ ] Mỗi giai đoạn kết thúc bằng một điểm dừng để review.
+
+Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 của giai đoạn sau trước khi xong P0 giai đoạn đang làm.
+
+---
+
+## C1 · Lịch lớp và buổi học (nền tảng)
+
+**Thiết kế đề xuất:** `ClassSchedule` là quy tắc lặp gắn `CourseSection` (thứ trong tuần, giờ bắt đầu, thời lượng, phòng, giáo viên dự kiến, hiệu lực từ–đến). `ClassMeeting` là từng buổi cụ thể sinh ra từ quy tắc, có số thứ tự `seq` (buổi 1..N), `startsAt/endsAt`, `room`, `plannedTeacherId`, `actualTeacherId?`, `status` (`planned | held | cancelled`), `makeupOfMeetingId?` cho buổi dạy bù.
+
+**Trạng thái (2026-10-23, nhánh `feat/center-c1-lich-buoi`, chưa commit):** service + 51 test xanh (`classSchedule.test.ts`, `classScheduleCalc.test.ts`); API, trang "Lịch dạy" (`/instructor/lich-day`), khối lịch trong trang lớp, trang "Lịch học" (`/me/lich-hoc`) đã viết, typecheck sạch, Lily + `GIAO-DIEN.md` đã cập nhật (test freshness xanh). **Chưa làm:** xem bằng mắt trên mobile/desktop (C1.9, C1.10 mới kiểm ở tầng dữ liệu); migration `20261023120000_class_schedule_meetings` mới áp lên DB test, **chưa áp lên DB dev**.
+
+- [x] **C1.1** Given lớp chưa có lịch, when giảng viên thêm quy tắc "T3, T5 · 18:30–20:30 · phòng B2 · từ 03/11 · 24 buổi", then hệ thống sinh đúng 24 `ClassMeeting` theo thứ tự thời gian, đánh `seq` 1..24.
+- [x] **C1.2** Given quy tắc có nhiều dòng (T3 và T5 khác giờ), then mỗi dòng sinh buổi riêng và `seq` vẫn tăng theo thời gian thực chứ không theo dòng.
+- [x] **C1.3** Given sửa quy tắc, when áp dụng, then chỉ các buổi **chưa diễn ra và chưa đóng** bị sinh lại; buổi đã `held` không đổi.
+- [x] **C1.4** Given một buổi, when giảng viên huỷ kèm lý do, then `status = cancelled`, `seq = null` (không tính vào số thứ tự), các buổi sau tự lùi số, buổi vẫn hiện trong lịch (gạch ngang, kèm lý do) và phát `class.meeting.cancelled` (payload chỉ mang độ dài lý do).
+- [x] **C1.5** Given buổi bị huỷ, when giảng viên thêm buổi dạy bù, then buổi mới có `makeupOfId` và chen vào đúng vị trí **theo thời gian**; `seq` luôn là thứ tự trong các buổi không huỷ, nên giáo án đi theo thứ tự dạy thật. *(Sửa so với bản nháp: không còn "nhận `seq` của buổi bị huỷ" vì hai buổi sẽ trùng số.)* Áp lại kế hoạch sau khi huỷ tự thêm một buổi thay thế ở cuối để đủ tổng số buổi.
+- [x] **C1.6** Given đổi phòng hoặc đổi giờ một buổi lẻ, then chỉ buổi đó đổi và bị khoá khỏi việc áp lại kế hoạch. **Thông báo cho học viên trong app dời sang C4** (cùng hạ tầng kênh gửi); trước mắt học viên thấy thay đổi ở trang "Lịch học".
+- [x] **C1.7** Given hai buổi cùng giáo viên trùng giờ (kể cả giữa hai lớp), when lưu, then cảnh báo rõ nhưng không chặn cứng (trung tâm nhỏ có thể dạy ghép). Trùng **phòng** cùng giờ cũng cảnh báo.
+- [x] **C1.8** Given đổi giáo viên dự kiến của một buổi, then `plannedTeacherId` đổi; `actualTeacherId` chỉ do C5 ghi.
+- [x] **C1.9** Giảng viên có trang "Lịch dạy": xem tuần/tháng, lọc theo lớp, mỗi buổi hiện lớp · giờ · phòng · buổi số mấy.
+- [x] **C1.10** Học viên thấy lịch của các lớp mình ghi danh ở trang cá nhân; không thấy lớp khác.
+- [x] **C1.11** Sinh buổi **idempotent**: bấm áp dụng hai lần không tạo trùng buổi.
+- [x] **C1.12** Index: `ClassMeeting (sectionId, startsAt)` và `(plannedTeacherId, startsAt)` cho lịch của giảng viên.
+
+**P1:** nhập lịch từ Excel; xuất lịch ra iCal/Google Calendar; ngày nghỉ lễ tự loại; nhắc buổi học trước 1 giờ.
+
+## C2 · Điểm danh học viên
+
+**Thiết kế đề xuất:** `StudentAttendance (meetingId, userId, status, note?, markedById, markedAt)`, unique `(meetingId, userId)`; `status ∈ present | late | absent | excused`. Danh sách lấy từ học viên ghi danh vào lớp (`CohortMember`/`Enrollment.sectionId`) tại thời điểm mở buổi.
+
+- [ ] **C2.1** Given buổi trong khoảng từ 30 phút trước giờ bắt đầu đến hết ngày, when giảng viên phụ trách mở "Điểm danh", then thấy toàn bộ học viên của lớp, mặc định **chưa đánh dấu**.
+- [ ] **C2.2** Given nút "Có mặt cả lớp", when bấm, then mọi học viên chưa đánh dấu thành `present`; học viên đã đánh dấu khác (vắng, muộn) giữ nguyên.
+- [ ] **C2.3** Given một học viên, when chạm vào tên, then luân phiên hoặc chọn nhanh Có mặt / Muộn / Vắng / Có phép; có ô ghi chú ngắn tuỳ chọn.
+- [ ] **C2.4** Given đã lưu, when sửa lại sau (trong 7 ngày), then cập nhật dòng hiện tại và phát event mới có giá trị cũ → mới; không làm mất lịch sử.
+- [ ] **C2.5** Given buổi `cancelled`, then không cho điểm danh.
+- [ ] **C2.6** Given học viên ghi danh sau khi buổi đã mở, then xuất hiện ở danh sách khi tải lại, chưa đánh dấu.
+- [ ] **C2.7** Given học viên rời lớp, then vẫn giữ điểm danh các buổi đã qua; không xuất hiện ở buổi sau.
+- [ ] **C2.8** Phát `attendance.student.marked` mỗi lần đánh dấu/sửa, trong cùng transaction với ghi bảng; payload: meetingId, userId, status, trạng thái cũ.
+- [ ] **C2.9** Quyền: giảng viên **không** phụ trách lớp → 403; học viên chỉ xem được điểm danh của chính mình.
+- [ ] **C2.10** Tổng hợp theo lớp: tỉ lệ có mặt từng học viên, số buổi vắng liên tiếp; học viên vắng ≥ 2 buổi liên tiếp được đánh dấu để giảng viên chú ý (chỉ gợi ý, không tự nhắn).
+- [ ] **C2.11** Giao diện điện thoại: danh sách một cột, hàng đủ cao để chạm, nút lưu cố định đáy (`StickyMobileCTA`); lưu được khi mạng yếu và báo rõ lúc lưu xong.
+- [ ] **C2.12** Học viên xem được lịch sử điểm danh của mình trong từng lớp.
+
+**P1:** học viên tự điểm danh bằng mã 4 số hiển thị trên bảng; xuất bảng điểm danh ra Excel.
+
+## C3 · Gói học liệu dựng sẵn theo buổi (Tiếng Trung đầu tiên)
+
+**Thiết kế đề xuất:** một khoá mẫu có khung buổi: mỗi buổi gắn với một hoặc nhiều bài (`Lesson`) và có phần "dành cho giáo viên" (mục tiêu buổi, gợi ý trình tự 90 phút, đáp án). Trung tâm **sao chép** khoá mẫu về lớp của mình. Cơ chế phiên bản để cập nhật gói gốc không làm đổi nội dung lớp đang dạy.
+
+- [ ] **C3.1** Given thư viện gói, when giảng viên chọn "Giáo trình dựng sẵn → Tiếng Trung sơ cấp 1", then thấy mô tả, số buổi, trình độ đầu ra, xem trước được từng buổi.
+- [ ] **C3.2** Given chọn gói và lớp, when áp dụng, then hệ thống sao chép khoá về tổ chức của giảng viên, chủ khoá là giảng viên, gắn buổi 1..N của gói vào `seq` 1..N của lịch lớp.
+- [ ] **C3.3** Given lớp có lịch và gói đã gắn, then mỗi `ClassMeeting` hiện "Hôm nay dạy: Bài X" kèm nút mở bài/slide Limio-Live/flashcard/bài tập của buổi đó.
+- [ ] **C3.4** Given số buổi của lịch nhiều hơn số buổi của gói, then các buổi dư hiện "chưa có giáo án" (không lỗi); ít hơn thì cảnh báo còn bài chưa dạy.
+- [ ] **C3.5** Given buổi dạy bù hoặc huỷ, then giáo án đi theo `seq`, không theo ngày (C1.5).
+- [ ] **C3.6** Given bản sao, when giảng viên sửa bài, then sửa trên **bản sao**; gói gốc không đổi.
+- [ ] **C3.7** Given gói gốc có phiên bản mới, then lớp đang dùng bản cũ **không** bị đổi; hiện thông báo "có bản mới" và cho chọn áp dụng cho các buổi **chưa dạy**.
+- [ ] **C3.8** Phần "dành cho giáo viên" (đáp án, gợi ý trình tự) **không bao giờ** lộ cho học viên: kiểm bằng test ở route trả nội dung học viên (cùng tinh thần guard rò nội dung của annotation).
+- [ ] **C3.9** Bản sao đi qua lesson-as-tag (§4.4) khi khoá bật personalization; khoá tắt thì không sinh `Skill` thừa.
+- [ ] **C3.10** Dung lượng media của bản sao được sổ đúng chủ khoá (ledger lưu trữ); sao chép không nhân đôi file khi có thể dùng chung tham chiếu.
+- [ ] **C3.11** Gói **Tiếng Trung sơ cấp** đầu tiên: ít nhất 24 buổi, mỗi buổi gồm bài từ vựng/hội thoại (G2), audio, quiz cuối buổi, bài tập về nhà; nội dung do chủ dự án soạn hoặc có nguồn/giấy phép ghi rõ.
+
+**P1:** gói tiếng Anh/Hàn/Nhật; trung tâm đóng gói giáo án riêng của họ thành mẫu dùng lại.
+
+## C4 · Tổng kết buổi và nhận xét gửi sau buổi
+
+**Hai lớp:** (a) **Tổng kết chung** — tự động, gửi cả lớp; (b) **Nhận xét cá nhân** — AI soạn nháp từ dữ liệu thật, giáo viên duyệt rồi mới gửi.
+
+### C4a · Tổng kết chung
+- [ ] **C4.1** Given giáo viên bấm "Kết thúc buổi", then buổi `status = held`, `closedAt` ghi lại, phát `class.meeting.closed`.
+- [ ] **C4.2** Given buổi đã đóng, then tổng kết chung được dựng từ giáo án của buổi: học gì hôm nay, từ vựng cần ôn, bài tập về nhà + hạn, buổi sau học gì (và giờ buổi sau theo lịch C1).
+- [ ] **C4.3** Given chưa gắn giáo án, then tổng kết chỉ gồm giờ buổi sau và bài tập (nếu có); không bịa nội dung.
+- [ ] **C4.4** Given lớp bật "tự gửi tổng kết chung" (mặc định **bật**), then gửi email + thông báo trong app tới mọi học viên của lớp, kể cả người vắng (người vắng nhận thêm dòng "Em vắng buổi này, bài cần học bù: …").
+- [ ] **C4.5** Gửi **idempotent**: mỗi `(meetingId, userId)` nhiều nhất một email tổng kết; đóng lại/bấm lại không gửi trùng.
+
+### C4b · Nhận xét cá nhân
+- [ ] **C4.6** Given buổi đã đóng, when giáo viên mở "Nhận xét sau buổi", then thấy danh sách học viên có mặt/muộn, mỗi em một bản nháp, trạng thái `nháp | đã duyệt | đã gửi`.
+- [ ] **C4.7** Given nháp AI, then chỉ dùng dữ liệu của **chính học viên đó** trong buổi: điểm danh, hoạt động trên lớp (bình chọn, gọi ngẫu nhiên, quiz cuối buổi), kết quả bài tập liên quan, thay đổi mức thành thạo theo nhãn (Cần ôn / Nên luyện / Vững; **không hiện %**). Không nhắc tên hay kết quả học viên khác, không xếp hạng.
+- [ ] **C4.8** Given chỗ nào không có dữ liệu (ví dụ em chưa phát biểu), then nháp **bỏ trống** hoặc để giáo viên điền; không suy đoán.
+- [ ] **C4.9** Given giáo viên thêm một dòng ghi chú nhanh hoặc chọn chip có sẵn, then AI viết lại nháp có kèm ghi chú đó; ghi chú của giáo viên được giữ nguyên ý.
+- [ ] **C4.10** Given nút "Gửi tất cả đã duyệt", then gửi mọi bản `đã duyệt`; bản `nháp` **không bao giờ** tự gửi. Không có chế độ tự gửi cho nhận xét cá nhân.
+- [ ] **C4.11** Given bản đã gửi, then không sửa được; muốn đính chính thì gửi bản mới đánh dấu "đính chính".
+- [ ] **C4.12** Given học viên vắng, then không dùng AI; nhận email chung C4.4. Giáo viên có thể thêm lời nhắn tay.
+- [ ] **C4.13** Given hết hạn mức token AI hoặc AI lỗi, then tạo nháp **theo mẫu có sẵn** (rule-based) từ cùng dữ liệu; luồng không bị chặn. Chi phí AI trừ ví token (`chargeTokens`) và ghi `AiUsageLog` như các đường sinh khác.
+- [ ] **C4.14** Nội dung ở mức **nhiệm vụ và quá trình** ("em làm đúng phần so sánh, cần ôn lại bổ ngữ kết quả"). Khen cá nhân chung chung không nằm ở đây (kênh gamification).
+- [ ] **C4.15** Mỗi bản nhận xét tạo `FeedbackDelivery` **mang toạ độ SSMMD** (`codeFeedback`: `level`, `levels`, `elaboration`, `sourceKind`, `generationContext`); `self` không được emit ở tầng meso (CLAUDE.md §4.8). `masteryAtGeneration` snapshot trước khi chấm.
+- [ ] **C4.16** Học viên đọc lại được nhận xét của mình trong app; chỉ của mình.
+- [ ] **C4.17** Email dùng template qua `sendTemplatedEmail` (key `class_meeting_summary`, `class_student_note`), gửi qua BullMQ với retry; một email lỗi không chặn các email khác; thất bại hiện lại cho giáo viên để gửi lại.
+- [ ] **C4.18** Phát `meeting.summary.sent`, `meeting.note.drafted`, `meeting.note.sent`; payload nhận xét **không** chứa nguyên văn nội dung nhận xét nếu thuộc dữ liệu nhạy cảm — chỉ id và độ dài (theo mẫu `assistant.question.asked`).
+- [ ] **C4.19** Email có liên kết huỷ nhận email (chỉ tắt thư tự động, vẫn xem được trong app).
+
+**P1:** kênh Zalo (OA/ZNS) qua cùng giao diện kênh gửi; trường email phụ huynh riêng; nhận xét bằng giọng nói của giáo viên.
+
+## C5 · Giáo viên check-in và đối chiếu lịch
+
+**Thiết kế đề xuất:** `TeacherCheckIn (meetingId, teacherId, checkedInAt, checkedOutAt?, method)`; `method = self` ở bản đầu, thêm `room_qr` sau mà không đổi bảng. Độ lệch **tính khi đọc**, không lưu cứng, để đổi quy tắc không phải sửa dữ liệu.
+
+- [ ] **C5.1** Given giáo viên dự kiến của buổi, when bấm "Bắt đầu buổi" trong khoảng từ 30 phút trước giờ bắt đầu đến giờ kết thúc, then ghi `checkedInAt`; bấm lần hai không ghi đè.
+- [ ] **C5.2** Given giáo viên **khác** giáo viên dự kiến bấm bắt đầu, then ghi `actualTeacherId` và hiển thị là "dạy thay"; chỉ giáo viên có quyền trong tổ chức mới làm được.
+- [ ] **C5.3** Given "Kết thúc buổi" (C4.1), then ghi `checkedOutAt` nếu chưa có.
+- [ ] **C5.4** Phân loại tính khi đọc, ngưỡng mặc định 15 phút (cấu hình theo tổ chức): **Đúng giờ** (vào trong ≤ ngưỡng sau giờ bắt đầu), **Trễ**, **Kết thúc sớm** (ra trước giờ kết thúc quá ngưỡng), **Dạy thay**, **Không check-in** (buổi qua giờ mà không ai bấm).
+- [ ] **C5.5** Given buổi `held` mà không có điểm danh học viên, then đánh dấu "chưa điểm danh" để chủ trung tâm nhắc.
+- [ ] **C5.6** Chủ trung tâm (quản trị của tổ chức) có báo cáo tuần: mỗi giáo viên bao nhiêu buổi đúng giờ/trễ/dạy thay/không check-in; bấm vào một buổi xem chi tiết.
+- [ ] **C5.7** Giáo viên chỉ xem **của mình**; chỉ quản trị tổ chức xem của tất cả.
+- [ ] **C5.8** Phát `attendance.teacher.checked_in`, `attendance.teacher.checked_out`.
+- [ ] **C5.9** Cách trình bày là "đối chiếu lịch để xếp dạy bù", không phải chấm công: tên trang, nút, email đều theo ngôn ngữ đó.
+- [ ] **C5.10** Giáo viên quên bấm: quản trị sửa được sau, có ghi lý do; sửa ghi event.
+
+**P1:** `room_qr`; nhắc giáo viên trước buổi dạy 15 phút; xuất báo cáo Excel.
+
+## C6 · Mục tiêu học tập
+
+**Thiết kế đề xuất:** `LearnerGoal (userId, courseId?, framework, targetLevel, targetDate, hoursPerWeek?, status)`; `framework ∈ HSK | IELTS | TOEIC | CEFR | custom`. Hằng số cấp độ đặt ở `packages/shared-types`. Tiến độ đọc `LearnerSkillState` và kết quả thi thử; **chỉ gợi ý**, không phán xét.
+
+- [ ] **C6.1** Given học viên hoặc giáo viên đặt mục tiêu "HSK 3 trước 30/06/2027, 4 giờ/tuần", then lưu và phát `goal.set`.
+- [ ] **C6.2** Given mục tiêu theo khung có cấp độ chuẩn, then chọn từ danh sách; `custom` cho nhập nhãn tự do.
+- [ ] **C6.3** Given học viên có mục tiêu, then trang hồ sơ hiện tiến độ theo từng kỹ năng bằng nhãn (**Cần ôn / Nên luyện / Vững**, không hiện %) và nhận định "đang đúng kế hoạch / chậm / vượt" dựa trên số tuần còn lại và số giờ học thực tế.
+- [ ] **C6.4** Given mục tiêu của **lớp** (kết quả cuối khoá), then giáo viên đặt một lần; học viên mới vào lớp kế thừa làm gợi ý, có thể đặt mục tiêu riêng.
+- [ ] **C6.5** Given nhận xét sau buổi (C4), then nháp AI có thể nhắc mục tiêu nếu học viên có đặt; không nhắc nếu không.
+- [ ] **C6.6** Mục tiêu và tiến độ là dữ liệu nhạy cảm của học viên: chỉ chính học viên và giảng viên của lớp xem được; có trong export/xoá dữ liệu cá nhân.
+- [ ] **C6.7** Đổi mục tiêu giữ lịch sử (event); không ghi đè âm thầm.
+
+**P1:** cảnh báo cho giáo viên khi học viên lệch kế hoạch hai tuần liền; mục tiêu gợi ý bài luyện hôm nay.
+
+---
+
+## Ngoài phạm vi (cố ý)
+
+- Học phí, hoá đơn, công nợ, lương giáo viên, CRM tuyển sinh, quản lý nhiều cơ sở theo chuỗi.
+- Zalo, SMS, trường email phụ huynh riêng, xác thực vị trí/wifi cho check-in giáo viên.
+- Tự động gửi nhận xét cá nhân không qua giáo viên duyệt.
+
+## Việc cần xác minh khi bắt đầu code C1
+
+- [ ] Vai trò "chủ trung tâm" ánh xạ vào `OrganizationAdmin` hay cần vai trò mới; trung tâm nhỏ có thể chưa có `Organization`.
+- [ ] `CohortMember` và `Enrollment.sectionId` độc lập nhau (xem ghi chú course sections): danh sách điểm danh lấy từ nguồn nào, hay hợp cả hai.
+- [ ] Cách vỏ Limio Language nối vào menu (cookie `limio_app`) — mã nằm ở nhánh khác, cần đọc lại trước khi gắn menu.
+- [ ] Có dùng lại `AcademicTerm` cho "tuần thứ mấy của kỳ" hay để `termLabel` tự gõ như hiện nay.

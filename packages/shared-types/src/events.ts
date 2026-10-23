@@ -243,6 +243,12 @@ export const LearningEventType = {
   // có tìm được việc để làm không: nhập mã gì, bấm vào đâu. KHÔNG ghi chính mã (mã là chìa khoá vào lớp/thi).
   OnboardingCodeSubmitted: "onboarding.code.submitted",
   OnboardingStartClicked: "onboarding.start.clicked",
+  // CENTER C1 — lịch dạy của lớp (docs/CENTER-schedule-attendance-AC.md). Subject là người
+  // thao tác (giảng viên); payload mang id và số liệu, không mang tên học viên.
+  ClassScheduleSet: "class.schedule.set",
+  ClassMeetingCancelled: "class.meeting.cancelled",
+  ClassMeetingUpdated: "class.meeting.updated",
+  ClassMeetingMakeupAdded: "class.meeting.makeup_added",
 } as const;
 
 export type LearningEventType =
@@ -886,4 +892,40 @@ export interface OnboardingCodeSubmittedPayload {
 export interface OnboardingStartClickedPayload {
   target: "sample" | "catalog_course" | "catalog_all";
   courseId?: string;
+}
+
+// ── CENTER C1 — lịch dạy của lớp ──────────────────────────────────────────
+
+export interface ClassScheduleSetPayload {
+  sectionId: string;
+  courseId: string;
+  totalMeetings: number;
+  slotCount: number;
+  /** Số buổi tạo mới / cập nhật tại chỗ / xoá trong lần áp dụng này. */
+  created: number;
+  updated: number;
+  removed: number;
+}
+
+export interface ClassMeetingCancelledPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Độ dài lý do, không mang chữ. */
+  reasonLength: number;
+}
+
+export interface ClassMeetingUpdatedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Tên các trường đã đổi: startsAt | endsAt | room | plannedTeacherId. */
+  changed: string[];
+}
+
+export interface ClassMeetingMakeupAddedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  makeupOfId: string | null;
 }

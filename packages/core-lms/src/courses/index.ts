@@ -16,3 +16,5 @@ export * from "./catalogSections";
 export * from "./sectionDeadlines";
 export * from "./lessonDrafts";
 export * from "./contentVersions";
+export * from "./classScheduleCalc";
+export * from "./classSchedule";

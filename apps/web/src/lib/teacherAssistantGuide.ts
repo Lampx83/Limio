@@ -53,6 +53,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "lich-day-lop",
+    title: "Lịch dạy của lớp: đặt lịch, huỷ buổi, dạy bù",
+    keywords: ["lịch dạy", "lịch học", "thời khoá biểu", "thời khóa biểu", "buổi học", "đặt lịch", "huỷ buổi", "hủy buổi", "nghỉ buổi", "dạy bù", "đổi phòng", "đổi giờ", "xếp lịch", "lịch lớp"],
+    destinationIds: ["teaching_schedule", "my_courses"],
+    body: `Vào menu LMS rồi bấm "Lịch dạy" để xem các buổi của mọi lớp thuộc khoá thầy/cô đang dạy, theo từng tuần (nút "Tuần trước", "Tuần này", "Tuần sau"); bấm một buổi để mở trang lớp. Đặt lịch cho một lớp: trong khoá, vào tab "Lớp học", mở "Danh sách học viên" của lớp, đầu trang có khối "Lịch dạy". Điền "Ngày bắt đầu", "Tổng số buổi" và các khung giờ lặp hằng tuần (thứ, giờ bắt đầu, số phút, phòng, giáo viên dự kiến), thêm khung bằng "+ Thêm khung giờ" hoặc bỏ bằng "Bỏ khung này", rồi bấm "Áp dụng lịch" để hệ thống sinh các buổi. Áp dụng lại chỉ sinh lại những buổi chưa diễn ra; buổi đã dạy, đã huỷ, dạy bù hay đã sửa riêng thì giữ nguyên. Mỗi buổi có nút "Sửa" (đổi giờ, thời lượng, phòng, giáo viên dự kiến) và "Huỷ buổi" (hỏi lý do); huỷ một buổi thì các buổi sau tự đánh lại số thứ tự. "+ Thêm buổi dạy bù" thêm một buổi ngoài kế hoạch, có thể gắn với một buổi đã huỷ. Nếu cùng một giáo viên hoặc cùng một phòng bị trùng giờ giữa các lớp, Limio chỉ cảnh báo chứ vẫn lưu. Học viên xem lịch ở mục "Lịch học" trong menu của họ, buổi đã huỷ vẫn hiện kèm lý do. Limio chưa có điểm danh học viên, giáo viên check-in và nhận xét gửi học viên sau buổi.`,
+    useCases: [
+      `Thầy/cô mở lớp mới học thứ ba và thứ năm 18:30, đặt lịch một lần để có đủ 24 buổi thay vì tạo từng buổi.`,
+      `Buổi thứ năm tuần này nghỉ vì mưa bão, thầy/cô huỷ buổi kèm lý do rồi thêm một buổi dạy bù vào chiều thứ bảy.`,
+    ],
+  },
+  {
     id: "quiz-trong-bai",
     title: "Bài kiểm tra (quiz) trong bài học",
     keywords: ["quiz", "bài kiểm tra", "câu hỏi", "trắc nghiệm", "tự luận", "excel", "nhập câu hỏi", "thời gian làm bài", "số lần làm"],
@@ -301,7 +312,7 @@ export const GUIDES: readonly GuideEntry[] = [
 
 /** Những điều Limio CHƯA có, để trợ lý không hứa nhầm. Luôn đưa vào prompt (ngắn). */
 export const ASSISTANT_LIMITS =
-  "Limio chưa có: gửi thông báo cho cả lớp; chuyển bài tập sang bài học khác (tạo lại ở bài đúng rồi xoá bài cũ); đính kèm tệp làm rubric (chỉ dán chữ); kéo thả để đổi thứ tự chương (đổi bằng ô Order); bảng tiêu chí chấm nhiều cột và hàng cho bài tập, đề thi hay vấn đáp (rubric ở đó chỉ là một ô văn bản tự do, nhưng AI có đọc nó khi gợi ý điểm; riêng nhiệm vụ Đấu trường chấm chéo có bảng tiêu chí); cài đặt XP hoặc huy hiệu cho giảng viên (chỉ có điểm XP trong Đấu trường); chia sẻ bài giảng cho đồng nghiệp cùng soạn (chỉ có link xem chỉ đọc); Thư viện mẫu, Template và Soạn kịch bản của Limio-Live (đang phát triển); chức năng đợt thi (chỉ có ca thi và phòng thi); báo cáo sau buổi dạy theo từng học viên; AI chấm ảnh, video hoặc PDF scan.";
+  "Limio chưa có: gửi thông báo cho cả lớp; chuyển bài tập sang bài học khác (tạo lại ở bài đúng rồi xoá bài cũ); đính kèm tệp làm rubric (chỉ dán chữ); kéo thả để đổi thứ tự chương (đổi bằng ô Order); bảng tiêu chí chấm nhiều cột và hàng cho bài tập, đề thi hay vấn đáp (rubric ở đó chỉ là một ô văn bản tự do, nhưng AI có đọc nó khi gợi ý điểm; riêng nhiệm vụ Đấu trường chấm chéo có bảng tiêu chí); cài đặt XP hoặc huy hiệu cho giảng viên (chỉ có điểm XP trong Đấu trường); chia sẻ bài giảng cho đồng nghiệp cùng soạn (chỉ có link xem chỉ đọc); Thư viện mẫu, Template và Soạn kịch bản của Limio-Live (đang phát triển); chức năng đợt thi (chỉ có ca thi và phòng thi); điểm danh học viên, giáo viên check-in và nhận xét gửi học viên sau buổi học; báo cáo sau buổi dạy theo từng học viên; AI chấm ảnh, video hoặc PDF scan.";
 
 // ── Chọn mục liên quan ───────────────────────────────────────────────────────
 

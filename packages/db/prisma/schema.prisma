@@ -123,6 +123,9 @@ model User {
   examMessagesSent          ExamMessage[]            @relation("ExamMessageSender")
   // A7.7.5 — Instructors mark proctor snapshots they've reviewed.
   proctorSnapshotsReviewed  AttemptProctorSnapshot[] @relation("ProctorSnapshotReviewer")
+  // CENTER C1 — buổi / khung giờ mà người này là giáo viên dự kiến.
+  classMeetingsPlanned      ClassMeeting[]           @relation("ClassMeetingPlannedTeacher")
+  classScheduleSlots        ClassScheduleSlot[]      @relation("ClassSlotPlannedTeacher")
   // P0 phòng thi — rooms this user is assigned to as proctor / grader.
   examRoomsAsProctor        ExamRoom[]               @relation("ExamRoomProctor")
   examRoomsAsGrader         ExamRoomGrader[]         @relation("ExamRoomGrader")
@@ -4302,6 +4305,10 @@ model CourseSection {
   assignmentDues AssignmentSectionDue[]
   quizSchedules  QuizSectionSchedule[]
 
+  // CENTER C1 — lịch dạy của lớp (một kế hoạch) và các buổi cụ thể sinh ra từ đó.
+  classSchedule ClassSchedule?
+  classMeetings ClassMeeting[]
+
   // Kỳ học của lớp — nhãn tự gõ (vd "HK1 2026-27"), chỉ để hiển thị/sắp xếp; không liên kết với AcademicTerm.
   termLabel String?
 
@@ -4310,6 +4317,86 @@ model CourseSection {
   @@index([courseId])
   @@index([instructorId])
   @@map("Cohort")
+}
+
+// CENTER C1 — Lịch dạy của một lớp (docs/CENTER-schedule-attendance-AC.md).
+//
+// Một lớp có tối đa MỘT kế hoạch: ngày bắt đầu + tổng số buổi + các khung giờ lặp hằng tuần
+// (ClassScheduleSlot). Từ kế hoạch này hệ thống sinh ra các ClassMeeting. Kế hoạch là nguồn để
+// sinh buổi; buổi mới là thứ được điểm danh, huỷ, dạy bù — nên đổi kế hoạch không bao giờ đụng
+// buổi đã dạy.
+model ClassSchedule {
+  id            String   @id @default(uuid())
+  sectionId     String   @unique
+  // Ngày (lịch Việt Nam) của buổi sớm nhất có thể rơi vào. Chỉ là ngày, không có giờ.
+  startDate     DateTime @db.Date
+  // Tổng số buổi học (không tính buổi đã huỷ) mà kế hoạch muốn có.
+  totalMeetings Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  section CourseSection       @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  slots   ClassScheduleSlot[]
+
+  @@map("ClassSchedule")
+}
+
+// Một dòng lặp hằng tuần: "Thứ 3 · 18:30 · 120 phút · phòng B2 · thầy A".
+model ClassScheduleSlot {
+  id               String  @id @default(uuid())
+  scheduleId       String
+  // ISO: 1 = thứ hai … 7 = chủ nhật.
+  weekday          Int
+  // "HH:mm" theo giờ Việt Nam.
+  startTime        String
+  durationMin      Int
+  room             String?
+  plannedTeacherId String?
+
+  schedule       ClassSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  plannedTeacher User?         @relation("ClassSlotPlannedTeacher", fields: [plannedTeacherId], references: [id], onDelete: SetNull)
+
+  @@index([scheduleId])
+  @@map("ClassScheduleSlot")
+}
+
+enum ClassMeetingStatus {
+  // Dự kiến — chưa dạy.
+  planned
+  // Đã dạy (đặt khi giáo viên kết thúc buổi — CENTER C4).
+  held
+  // Đã huỷ; không tính vào số thứ tự buổi.
+  cancelled
+}
+
+// Một buổi học cụ thể. `seq` là số thứ tự buổi trong giáo án: chỉ buổi KHÔNG huỷ mới có,
+// đánh theo thời gian từ 1. Huỷ một buổi thì các buổi sau tự lùi số, buổi dạy bù chen vào đúng
+// vị trí theo thời gian — giáo án luôn đi theo thứ tự dạy thật.
+model ClassMeeting {
+  id               String             @id @default(uuid())
+  sectionId        String
+  seq              Int?
+  startsAt         DateTime
+  endsAt           DateTime
+  room             String?
+  plannedTeacherId String?
+  status           ClassMeetingStatus @default(planned)
+  cancelReason     String?
+  // Buổi dạy bù cho buổi nào (chỉ để tra cứu; không ảnh hưởng số thứ tự).
+  makeupOfId       String?
+  // true = tạo tay (dạy bù) hoặc đã sửa lẻ: áp lại kế hoạch không được sinh lại hay xoá buổi này.
+  locked           Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  section        CourseSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  plannedTeacher User?          @relation("ClassMeetingPlannedTeacher", fields: [plannedTeacherId], references: [id], onDelete: SetNull)
+  makeupOf       ClassMeeting?  @relation("ClassMeetingMakeup", fields: [makeupOfId], references: [id], onDelete: SetNull)
+  makeups        ClassMeeting[] @relation("ClassMeetingMakeup")
+
+  @@index([sectionId, startsAt])
+  @@index([plannedTeacherId, startsAt])
+  @@map("ClassMeeting")
 }
 
 // PR2.15 — Mỗi cohort có 2-4 "mã lớp thi" (exam class) ứng với 1 phòng vật

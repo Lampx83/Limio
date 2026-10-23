@@ -67,6 +67,7 @@ Một số namespace chuẩn:
 - Gamification: `xp.awarded`, `level.up`, `badge.earned`, `quest.completed`, `streak.*`, `leaderboard.updated`
 - Lily (trợ lý ảo giảng viên): `assistant.drawer.opened`, `assistant.question.asked`, `assistant.link.clicked`, `assistant.conversation.reset`. Payload `question.asked` mang **câu hỏi** của giảng viên nhưng không mang câu trả lời của Lily (xem `AssistantQuestionAskedPayload`)
 - Tournament: `tournament.*` (created, registered, started, ended, mission.unlocked, mission.completed, ranking.updated, disqualified, prize.distributed)
+- Lịch lớp (CENTER, xem `docs/CENTER-schedule-attendance-AC.md`): `class.schedule.set`, `class.meeting.cancelled`, `class.meeting.updated`, `class.meeting.makeup_added`. Subject là giảng viên thao tác; payload chỉ mang id và số liệu, không mang lý do huỷ hay tên học viên. Các giai đoạn sau thêm `attendance.*`, `meeting.*`, `goal.*`
 
 ### 4.3. Module boundary
 

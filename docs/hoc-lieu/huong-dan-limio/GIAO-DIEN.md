@@ -60,8 +60,8 @@ trường" (ẩn khi đang ở trang thi), chuông thông báo và nút tên tà
 đánh giá), cúp (Đấu trường), biểu đồ cột (Phân tích và Báo cáo).
 
 1. **Trang chủ** → `/instructor/dashboard` (chú giải khi rê chuột: "Tìm kiếm nhanh, hỏi Lily và khoá học gần đây")
-2. **LMS** ("Bài giảng Elearning"): Khoá học của tôi · **Assignment** · **Forum Q&A** (nhãn menu nguyên văn,
-   còn tiếng Anh)
+2. **LMS** ("Bài giảng Elearning"): Khoá học của tôi · **Assignment** · **Lịch dạy** (mới, `/instructor/lich-day`) ·
+   **Forum Q&A** (nhãn menu nguyên văn, còn tiếng Anh)
 3. **Limio-Live** ("Dạy học trực tiếp"), chia 4 nhóm nhỏ: "Slide tương tác" (Slide của tôi) ·
    "Hoạt động nhanh" (Vote, Word Cloud, Padlet, Draw-it, Whiteboard) · "Điều hành lớp học" (Đếm ngược,
    Gọi tên, Phân nhóm, Gameshow). Cần quyền `limio_live.access`. Tài khoản miễn phí thấy nhãn nhỏ
@@ -377,6 +377,15 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   `name,email`. Danh sách lớp có cột Học viên / Trạng thái / Vào lớp / Tiến độ / Điểm quiz gần nhất /
   "Chuyển lớp". Khoá "Chỉ vào bằng link mời lớp" chỉ vào được bằng các link này. Trang đón: "Lời mời tham gia
   lớp học" → "Vào học". Từ tab này còn mở được trang "Nhóm làm bài tập" (mục 6).
+- **Lịch dạy của lớp** (mới, CENTER C1): trang "Lịch dạy" trong menu LMS (`/instructor/lich-day`) xem các buổi
+  của mọi lớp thuộc khoá mình dạy theo từng tuần (nút "Tuần trước" / "Tuần này" / "Tuần sau"); bấm một buổi
+  mở trang lớp. Đặt lịch ở đầu trang "Danh sách học viên" của lớp (khối **"Lịch dạy"**): "Ngày bắt đầu",
+  "Tổng số buổi", các khung giờ lặp hằng tuần (thứ, giờ bắt đầu, thời lượng phút, phòng, giáo viên dự kiến),
+  "+ Thêm khung giờ", "Bỏ khung này", rồi **"Áp dụng lịch"**. Áp lại chỉ sinh lại buổi chưa diễn ra. Mỗi buổi
+  có "Sửa" và **"Huỷ buổi"** (hỏi lý do; huỷ thì các buổi sau tự lùi số thứ tự); **"+ Thêm buổi dạy bù"** có thể
+  gắn với một buổi đã huỷ. Trùng giáo viên hoặc phòng giữa các lớp chỉ hiện cảnh báo, vẫn lưu. Học viên xem
+  ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`). Chưa có: điểm danh học viên, giáo viên check-in,
+  nhận xét gửi học viên sau buổi (đang làm tiếp ở các giai đoạn sau).
 - **Học viên** (tab "Học viên"): trạng thái Đang học / Đã hoàn thành / Bỏ học / Đã hoàn
   tiền / Hết hạn truy cập; tìm theo tên hoặc email; "Gán lớp", "Xoá khỏi khoá học",
   "Tải danh sách học viên".
@@ -707,7 +716,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   (chỉ nhà nghiên cứu) · trang `/instructor/feedback-generator`, `/feedback-templates`, `/item-analytics`
   (không có lối vào) · "Thư viện mẫu", "Template", "Soạn kịch bản" của Limio-Live (đang phát triển) ·
   khối "Slide bài giảng" trong hộp thêm hoạt động · chia sẻ bài giảng cho đồng nghiệp hoặc đồng soạn (chỉ có
-  link xem chỉ đọc) · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
+  link xem chỉ đọc) · điểm danh học viên · giáo viên check-in · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
   trống/Ghép cặp/Memory/Open-ended (chỉ trong kế hoạch).
 - **Đợt thi**, "+ Tạo đợt thi", "Trưởng đợt", tạo nhiều ca trong một đợt — đã gỡ khỏi luồng tổ chức. Giới hạn
   mạng khi vào thi (cài đặt của quản trị trường). Khoá mẫu ngoại ngữ ở trang tạo khoá (đã gỡ). Rubric vấn đáp như

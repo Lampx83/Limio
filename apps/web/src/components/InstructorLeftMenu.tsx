@@ -23,6 +23,7 @@ import {
   X,
   Loader2,
   CalendarCheck,
+  CalendarDays,
   Library,
   Coins,
   Presentation,
@@ -148,6 +149,7 @@ const MODULES: ModuleDef[] = [
       "/instructor/courses",
       "/catalog",
       "/instructor/assignments",
+      "/instructor/lich-day",
       "/instructor/skill-tagging",
       "/instructor/forum",
       "/instructor/enrollments",
@@ -157,6 +159,7 @@ const MODULES: ModuleDef[] = [
     items: [
       { label: "Khoá học của tôi", href: "/instructor/courses", icon: BookOpen },
       { label: "Assignment", href: "/instructor/assignments", icon: ClipboardList },
+      { label: "Lịch dạy", href: "/instructor/lich-day", icon: CalendarDays },
       { label: "Forum Q&A", href: "/instructor/forum", icon: MessageSquare },
     ],
   },

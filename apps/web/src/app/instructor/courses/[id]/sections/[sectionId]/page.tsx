@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getSectionRoster, CourseAuthzError, CourseError } from "@feedbackme/core-lms";
+import {
+  getSectionRoster,
+  getClassSchedule,
+  listCourseInstructors,
+  CourseAuthzError,
+  CourseError,
+} from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import SectionRosterClient from "./SectionRosterClient";
+import SectionScheduleClient from "./SectionScheduleClient";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +40,12 @@ export default async function SectionRosterPage({
 
   if (roster.section.courseId !== params.id) notFound();
 
+  const [schedule, instructors] = await Promise.all([
+    getClassSchedule(userId, params.sectionId),
+    listCourseInstructors(params.id),
+  ]);
+  const teachers = instructors.map((i) => ({ id: i.userId, name: i.displayName }));
+
   return (
     <main>
       <Link
@@ -45,6 +58,7 @@ export default async function SectionRosterPage({
       {roster.section.description && (
         <p className="mt-1 text-sm text-faint">{roster.section.description}</p>
       )}
+      <SectionScheduleClient sectionId={params.sectionId} initial={schedule} teachers={teachers} />
       <SectionRosterClient
         courseId={params.id}
         sectionId={params.sectionId}

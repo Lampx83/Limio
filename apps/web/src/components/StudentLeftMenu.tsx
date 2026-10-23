@@ -6,6 +6,7 @@ import { useSidebarNav } from "./useSidebarNav";
 import {
   LayoutDashboard,
   BookOpen,
+  CalendarDays,
   Brain,
   Award,
   Star,
@@ -45,6 +46,7 @@ const GROUPS: Group[] = [
     label: "Học tập",
     items: [
       { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen, tourId: "help-tour-nav-courses" },
+      { label: "Lịch học", href: "/me/lich-hoc", icon: CalendarDays },
       { label: "Ghi chú", href: "/me/notes", icon: Pencil, tourId: "help-tour-nav-notes" },
       { label: "Kỹ năng", href: "/me/skills", icon: Brain, tourId: "help-tour-nav-skills" },
       { label: "Huy hiệu", href: "/me/badges", icon: Award, tourId: "help-tour-nav-badges" },
