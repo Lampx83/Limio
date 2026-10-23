@@ -379,13 +379,24 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   lớp học" → "Vào học". Từ tab này còn mở được trang "Nhóm làm bài tập" (mục 6).
 - **Lịch dạy của lớp** (mới, CENTER C1): trang "Lịch dạy" trong menu LMS (`/instructor/lich-day`) xem các buổi
   của mọi lớp thuộc khoá mình dạy theo từng tuần (nút "Tuần trước" / "Tuần này" / "Tuần sau"); bấm một buổi
-  mở trang lớp. Đặt lịch ở đầu trang "Danh sách học viên" của lớp (khối **"Lịch dạy"**): "Ngày bắt đầu",
+  mở trang điểm danh của buổi đó (buổi đã huỷ thì mở trang lớp). Đặt lịch ở đầu trang "Danh sách học viên" của lớp (khối **"Lịch dạy"**): "Ngày bắt đầu",
   "Tổng số buổi", các khung giờ lặp hằng tuần (thứ, giờ bắt đầu, thời lượng phút, phòng, giáo viên dự kiến),
   "+ Thêm khung giờ", "Bỏ khung này", rồi **"Áp dụng lịch"**. Áp lại chỉ sinh lại buổi chưa diễn ra. Mỗi buổi
   có "Sửa" và **"Huỷ buổi"** (hỏi lý do; huỷ thì các buổi sau tự lùi số thứ tự); **"+ Thêm buổi dạy bù"** có thể
   gắn với một buổi đã huỷ. Trùng giáo viên hoặc phòng giữa các lớp chỉ hiện cảnh báo, vẫn lưu. Học viên xem
-  ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`). Chưa có: điểm danh học viên, giáo viên check-in,
-  nhận xét gửi học viên sau buổi (đang làm tiếp ở các giai đoạn sau).
+  ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`).
+- **Điểm danh học viên** (mới, CENTER C2): mỗi buổi chưa huỷ trong khối "Lịch dạy" của trang lớp có nút
+  **"Điểm danh"** (cũng là đích khi bấm một buổi ở trang "Lịch dạy"), mở
+  `/instructor/courses/[id]/sections/[sectionId]/meetings/[meetingId]`. Trang liệt kê học viên của lớp, mặc định
+  chưa ai được đánh dấu; nút **"Có mặt cả lớp"** chỉ đánh dấu những người chưa có trạng thái; mỗi học viên có
+  bốn nút **"Có mặt" / "Muộn" / "Vắng" / "Có phép"** và **"+ Thêm ghi chú"** (tối đa 200 ký tự, chỉ giáo viên thấy);
+  các lựa chọn chỉ được ghi khi bấm **"Lưu điểm danh"**. Trên điện thoại hai nút này nằm ở thanh cố định cuối màn
+  hình. Điểm danh mở từ 30 phút trước giờ học, sửa được đến 7 ngày sau khi buổi kết thúc; buổi đã huỷ thì không
+  điểm danh được. Trang lớp có thêm phần **"Chuyên cần"**: bảng Học viên / Có mặt / Muộn / Vắng / Có phép /
+  Chuyên cần (tỉ lệ = (có mặt + muộn) / (có mặt + muộn + vắng), vắng có phép không tính) và khối cảnh báo
+  khi có học viên vắng từ 2 buổi liên tiếp (chỉ gợi ý, không tự nhắn). Học viên thấy trạng thái của chính mình
+  ở "Lịch học" (nhãn "Có mặt", "Đi muộn", "Vắng", "Vắng có phép" và mục "Chuyên cần của bạn"), không thấy ghi chú.
+  Chưa có: giáo viên check-in, nhận xét gửi học viên sau buổi (đang làm tiếp ở các giai đoạn sau).
 - **Học viên** (tab "Học viên"): trạng thái Đang học / Đã hoàn thành / Bỏ học / Đã hoàn
   tiền / Hết hạn truy cập; tìm theo tên hoặc email; "Gán lớp", "Xoá khỏi khoá học",
   "Tải danh sách học viên".
@@ -716,7 +727,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   (chỉ nhà nghiên cứu) · trang `/instructor/feedback-generator`, `/feedback-templates`, `/item-analytics`
   (không có lối vào) · "Thư viện mẫu", "Template", "Soạn kịch bản" của Limio-Live (đang phát triển) ·
   khối "Slide bài giảng" trong hộp thêm hoạt động · chia sẻ bài giảng cho đồng nghiệp hoặc đồng soạn (chỉ có
-  link xem chỉ đọc) · điểm danh học viên · giáo viên check-in · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
+  link xem chỉ đọc) · giáo viên check-in · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
   trống/Ghép cặp/Memory/Open-ended (chỉ trong kế hoạch).
 - **Đợt thi**, "+ Tạo đợt thi", "Trưởng đợt", tạo nhiều ca trong một đợt — đã gỡ khỏi luồng tổ chức. Giới hạn
   mạng khi vào thi (cài đặt của quản trị trường). Khoá mẫu ngoại ngữ ở trang tạo khoá (đã gỡ). Rubric vấn đáp như

@@ -141,6 +141,16 @@ const EXPORT_SELECT = {
           courses: { select: { certificateId: true, createdAt: true } },
         },
       },
+      // CENTER C2 — điểm danh các buổi học của chính người này (kèm ghi chú của giáo viên).
+      studentAttendances: {
+        select: {
+          status: true,
+          note: true,
+          markedAt: true,
+          meeting: { select: { startsAt: true, seq: true, section: { select: { name: true, course: { select: { slug: true, title: true } } } } } },
+        },
+        orderBy: { markedAt: "asc" },
+      },
       // Nộp theo nhóm — nhóm đang tham gia trong từng khoá. Lịch sử vào/rời nằm
       // trong LearningEvent (course.team.*), đã có ở bản xuất hoạt động.
       courseTeamMemberships: {

@@ -6,7 +6,7 @@
  *   - ClassMeeting là từng buổi sinh ra từ kế hoạch; là thứ được điểm danh, huỷ, dạy bù.
  *
  * Luật chính:
- *   - Áp (lại) kế hoạch chỉ đụng buổi `planned`, còn ở tương lai và chưa bị khoá. Buổi đã dạy, đã huỷ,
+ *   - Áp (lại) kế hoạch chỉ đụng buổi `planned`, còn ở tương lai, chưa bị khoá và chưa có điểm danh. Buổi đã dạy, đã huỷ,
  *     đã qua, buổi dạy bù và buổi sửa lẻ đều giữ nguyên.
  *   - `seq` là số thứ tự trong giáo án: chỉ buổi không huỷ có, đánh theo thời gian từ 1. Huỷ hay chèn
  *     dạy bù thì đánh số lại, nên giáo án luôn đi theo thứ tự dạy thật.
@@ -339,9 +339,16 @@ export async function setClassSchedule(
         data: input.slots.map((s) => ({ scheduleId: schedule.id, ...s })),
       });
 
-      const existing = await tx.classMeeting.findMany({ where: { sectionId } });
+      const existing = await tx.classMeeting.findMany({
+        where: { sectionId },
+        include: { _count: { select: { attendance: true } } },
+      });
+      // Buổi đã có điểm danh không bao giờ bị thay: xoá buổi sẽ kéo theo mất điểm danh.
       const isReplaceable = (m: (typeof existing)[number]) =>
-        m.status === "planned" && !m.locked && m.startsAt.getTime() > now.getTime();
+        m.status === "planned" &&
+        !m.locked &&
+        m._count.attendance === 0 &&
+        m.startsAt.getTime() > now.getTime();
       const replaceable = existing.filter(isReplaceable);
       const kept = existing.filter((m) => !isReplaceable(m));
       const keptCounted = kept.filter((m) => m.status !== "cancelled").length;
@@ -600,7 +607,7 @@ export async function getClassSchedule(
   };
 }
 
-function rangeBounds(from: string, to: string) {
+export function rangeBounds(from: string, to: string) {
   const start = vnDateTime(from, "00:00");
   const end = vnDateTime(addDays(to, 1), "00:00");
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {

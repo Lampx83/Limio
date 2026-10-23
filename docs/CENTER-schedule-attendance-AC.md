@@ -64,20 +64,24 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 ## C2 · Điểm danh học viên
 
+**Trạng thái (2026-10-23, nhánh `feat/center-c1-lich-buoi`, chưa commit):** service `attendance.ts` + 29 test xanh; API, trang điểm danh `/instructor/courses/[id]/sections/[sectionId]/meetings/[meetingId]`, nút "Điểm danh" ở từng buổi, bảng "Chuyên cần" ở trang lớp, trạng thái của học viên ở "Lịch học"; Lily + `GIAO-DIEN.md` đã cập nhật; điểm danh có trong bản xuất dữ liệu cá nhân. Migration `20261023150000_student_attendance` đã áp lên DB dev; đã xem bằng mắt desktop + mobile + phía học viên (2026-10-23). Sửa sau khi xem: nút trạng thái một dòng trên mobile, nâng nút "Hỏi Lily" lên trên thanh CTA cố định (CSS `.assistant-launcher`). Chưa thấy bằng mắt khối cảnh báo "vắng từ 2 buổi liên tiếp" vì lớp mẫu mới có một buổi đã diễn ra (logic đã có test).
+
+**Cửa sổ ghi (chốt khi code, gộp C2.1 và C2.4):** từ 30 phút trước giờ bắt đầu đến 7 ngày sau giờ kết thúc, cả lần đầu lẫn sửa. Ngoài cửa sổ vẫn xem được. Buổi đã có điểm danh không bao giờ bị áp lại kế hoạch lịch xoá hay thay.
+
 **Thiết kế đề xuất:** `StudentAttendance (meetingId, userId, status, note?, markedById, markedAt)`, unique `(meetingId, userId)`; `status ∈ present | late | absent | excused`. Danh sách lấy từ học viên ghi danh vào lớp (`CohortMember`/`Enrollment.sectionId`) tại thời điểm mở buổi.
 
-- [ ] **C2.1** Given buổi trong khoảng từ 30 phút trước giờ bắt đầu đến hết ngày, when giảng viên phụ trách mở "Điểm danh", then thấy toàn bộ học viên của lớp, mặc định **chưa đánh dấu**.
-- [ ] **C2.2** Given nút "Có mặt cả lớp", when bấm, then mọi học viên chưa đánh dấu thành `present`; học viên đã đánh dấu khác (vắng, muộn) giữ nguyên.
-- [ ] **C2.3** Given một học viên, when chạm vào tên, then luân phiên hoặc chọn nhanh Có mặt / Muộn / Vắng / Có phép; có ô ghi chú ngắn tuỳ chọn.
-- [ ] **C2.4** Given đã lưu, when sửa lại sau (trong 7 ngày), then cập nhật dòng hiện tại và phát event mới có giá trị cũ → mới; không làm mất lịch sử.
-- [ ] **C2.5** Given buổi `cancelled`, then không cho điểm danh.
-- [ ] **C2.6** Given học viên ghi danh sau khi buổi đã mở, then xuất hiện ở danh sách khi tải lại, chưa đánh dấu.
-- [ ] **C2.7** Given học viên rời lớp, then vẫn giữ điểm danh các buổi đã qua; không xuất hiện ở buổi sau.
-- [ ] **C2.8** Phát `attendance.student.marked` mỗi lần đánh dấu/sửa, trong cùng transaction với ghi bảng; payload: meetingId, userId, status, trạng thái cũ.
-- [ ] **C2.9** Quyền: giảng viên **không** phụ trách lớp → 403; học viên chỉ xem được điểm danh của chính mình.
-- [ ] **C2.10** Tổng hợp theo lớp: tỉ lệ có mặt từng học viên, số buổi vắng liên tiếp; học viên vắng ≥ 2 buổi liên tiếp được đánh dấu để giảng viên chú ý (chỉ gợi ý, không tự nhắn).
-- [ ] **C2.11** Giao diện điện thoại: danh sách một cột, hàng đủ cao để chạm, nút lưu cố định đáy (`StickyMobileCTA`); lưu được khi mạng yếu và báo rõ lúc lưu xong.
-- [ ] **C2.12** Học viên xem được lịch sử điểm danh của mình trong từng lớp.
+- [x] **C2.1** Given buổi trong khoảng từ 30 phút trước giờ bắt đầu đến hết ngày, when giảng viên phụ trách mở "Điểm danh", then thấy toàn bộ học viên của lớp, mặc định **chưa đánh dấu**.
+- [x] **C2.2** Given nút "Có mặt cả lớp", when bấm, then mọi học viên chưa đánh dấu thành `present`; học viên đã đánh dấu khác (vắng, muộn) giữ nguyên.
+- [x] **C2.3** Given một học viên, when chạm vào tên, then luân phiên hoặc chọn nhanh Có mặt / Muộn / Vắng / Có phép; có ô ghi chú ngắn tuỳ chọn.
+- [x] **C2.4** Given đã lưu, when sửa lại sau (trong 7 ngày), then cập nhật dòng hiện tại và phát event mới có giá trị cũ → mới; không làm mất lịch sử.
+- [x] **C2.5** Given buổi `cancelled`, then không cho điểm danh.
+- [x] **C2.6** Given học viên ghi danh sau khi buổi đã mở, then xuất hiện ở danh sách khi tải lại, chưa đánh dấu.
+- [x] **C2.7** Given học viên rời lớp, then vẫn giữ điểm danh các buổi đã qua; không xuất hiện ở buổi sau.
+- [x] **C2.8** Phát `attendance.student.marked` mỗi lần đánh dấu/sửa, trong cùng transaction với ghi bảng; payload: meetingId, userId, status, trạng thái cũ.
+- [x] **C2.9** Quyền: giảng viên **không** phụ trách lớp → 403; học viên chỉ xem được điểm danh của chính mình.
+- [x] **C2.10** Tổng hợp theo lớp: tỉ lệ có mặt từng học viên, số buổi vắng liên tiếp; học viên vắng ≥ 2 buổi liên tiếp được đánh dấu để giảng viên chú ý (chỉ gợi ý, không tự nhắn).
+- [x] **C2.11** Giao diện điện thoại: danh sách một cột, hàng đủ cao để chạm, nút lưu cố định đáy (`StickyMobileCTA`); lưu được khi mạng yếu và báo rõ lúc lưu xong.
+- [x] **C2.12** Học viên xem được lịch sử điểm danh của mình trong từng lớp.
 
 **P1:** học viên tự điểm danh bằng mã 4 số hiển thị trên bảng; xuất bảng điểm danh ra Excel.
 

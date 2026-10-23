@@ -126,6 +126,9 @@ model User {
   // CENTER C1 — buổi / khung giờ mà người này là giáo viên dự kiến.
   classMeetingsPlanned      ClassMeeting[]           @relation("ClassMeetingPlannedTeacher")
   classScheduleSlots        ClassScheduleSlot[]      @relation("ClassSlotPlannedTeacher")
+  // CENTER C2 — điểm danh của chính học viên, và các dòng điểm danh người này đã ghi.
+  studentAttendances        StudentAttendance[]      @relation("StudentAttendanceUser")
+  attendanceMarked          StudentAttendance[]      @relation("StudentAttendanceMarker")
   // P0 phòng thi — rooms this user is assigned to as proctor / grader.
   examRoomsAsProctor        ExamRoom[]               @relation("ExamRoomProctor")
   examRoomsAsGrader         ExamRoomGrader[]         @relation("ExamRoomGrader")
@@ -4393,10 +4396,43 @@ model ClassMeeting {
   plannedTeacher User?          @relation("ClassMeetingPlannedTeacher", fields: [plannedTeacherId], references: [id], onDelete: SetNull)
   makeupOf       ClassMeeting?  @relation("ClassMeetingMakeup", fields: [makeupOfId], references: [id], onDelete: SetNull)
   makeups        ClassMeeting[] @relation("ClassMeetingMakeup")
+  attendance     StudentAttendance[]
 
   @@index([sectionId, startsAt])
   @@index([plannedTeacherId, startsAt])
   @@map("ClassMeeting")
+}
+
+enum AttendanceStatus {
+  present
+  late
+  absent
+  // Vắng có phép: không tính vào mẫu số của tỉ lệ chuyên cần.
+  excused
+}
+
+// CENTER C2 — Điểm danh học viên theo buổi. Bảng là trạng thái HIỆN TẠI (sửa được trong cửa sổ
+// cho phép); lịch sử sửa nằm ở LearningEvent `attendance.student.marked` (có trạng thái cũ).
+// Không có dòng = chưa đánh dấu (khác với vắng).
+model StudentAttendance {
+  id         String           @id @default(uuid())
+  meetingId  String
+  userId     String
+  status     AttendanceStatus
+  // Ghi chú của giáo viên, học viên không thấy trên giao diện (vẫn có trong bản xuất dữ liệu cá nhân).
+  note       String?
+  markedById String?
+  markedAt   DateTime         @default(now())
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  meeting  ClassMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user     User         @relation("StudentAttendanceUser", fields: [userId], references: [id], onDelete: Cascade)
+  markedBy User?        @relation("StudentAttendanceMarker", fields: [markedById], references: [id], onDelete: SetNull)
+
+  @@unique([meetingId, userId])
+  @@index([userId, markedAt])
+  @@map("StudentAttendance")
 }
 
 // PR2.15 — Mỗi cohort có 2-4 "mã lớp thi" (exam class) ứng với 1 phòng vật

@@ -120,9 +120,20 @@ async function main() {
     log("Đã huỷ 1 buổi và thêm 1 buổi dạy bù ở lớp A.");
   }
 
+  // Thêm vài học viên nữa để danh sách điểm danh đủ dài mà thử.
+  const extra = [
+    ["sv.trungtam.02@feedbackme.dev", "Nguyễn Minh Anh"],
+    ["sv.trungtam.03@feedbackme.dev", "Trần Quốc Bảo"],
+    ["sv.trungtam.04@feedbackme.dev", "Lê Thuỳ Chi"],
+    ["sv.trungtam.05@feedbackme.dev", "Phạm Gia Hân"],
+  ] as const;
+  const learnerIds = [learnerId];
+  for (const [email, name] of extra) learnerIds.push(await ensureUser(email, name, ["learner"], password));
   if (classA.inviteCode) {
-    const enrolled = await prisma.enrollment.findFirst({ where: { userId: learnerId, courseId }, select: { id: true } });
-    if (!enrolled) await enrollBySectionCode(learnerId, classA.inviteCode, prisma, { skipPaymentCheck: true });
+    for (const userId of learnerIds) {
+      const enrolled = await prisma.enrollment.findFirst({ where: { userId, courseId }, select: { id: true } });
+      if (!enrolled) await enrollBySectionCode(userId, classA.inviteCode, prisma, { skipPaymentCheck: true });
+    }
   }
 
   log(`Xong. Giảng viên: ${TEACHER_EMAIL} · học viên: ${LEARNER_EMAIL}`);

@@ -18,3 +18,4 @@ export * from "./lessonDrafts";
 export * from "./contentVersions";
 export * from "./classScheduleCalc";
 export * from "./classSchedule";
+export * from "./attendance";

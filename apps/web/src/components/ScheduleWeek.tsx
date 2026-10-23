@@ -15,7 +15,16 @@ export interface WeekMeeting {
   status: "planned" | "held" | "cancelled";
   cancelReason: string | null;
   makeupOfId: string | null;
+  /** Điểm danh của chính người xem (chỉ trang học viên). Không bao giờ chứa ghi chú của giáo viên. */
+  myStatus?: "present" | "late" | "absent" | "excused" | null;
 }
+
+const MY_STATUS: Record<string, { label: string; chip: string }> = {
+  present: { label: "Có mặt", chip: "chip-success" },
+  late: { label: "Đi muộn", chip: "chip-warning" },
+  absent: { label: "Vắng", chip: "chip-danger" },
+  excused: { label: "Vắng có phép", chip: "chip-accent" },
+};
 
 const DAY_NAMES = ["", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy", "Chủ nhật"];
 
@@ -108,6 +117,9 @@ export default function ScheduleWeek({
                         {cancelled && <span className="chip-danger text-xs">Đã huỷ</span>}
                         {m.status === "held" && <span className="chip-success text-xs">Đã dạy</span>}
                         {m.makeupOfId && <span className="chip-accent text-xs">Dạy bù</span>}
+                        {m.myStatus && (
+                          <span className={`${MY_STATUS[m.myStatus]!.chip} text-xs`}>{MY_STATUS[m.myStatus]!.label}</span>
+                        )}
                         {cancelled && m.cancelReason && (
                           <span className="basis-full text-caption text-muted">Lý do: {m.cancelReason}</span>
                         )}

@@ -3,6 +3,7 @@ import {
   AccessCodeError,
   AnnotationError,
   AssignmentError,
+  AttendanceError,
   ClassScheduleError,
   CourseAuthzError,
   CourseError,
@@ -47,6 +48,15 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
     );
+  }
+  if (err instanceof AttendanceError) {
+    const status =
+      err.code === "meeting_not_found" || err.code === "section_not_found"
+        ? 404
+        : err.code === "meeting_cancelled" || err.code === "attendance_not_open" || err.code === "attendance_closed"
+          ? 409
+          : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
   }
   if (err instanceof ClassScheduleError) {
     const status =

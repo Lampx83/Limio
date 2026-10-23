@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import {
   getSectionRoster,
   getClassSchedule,
+  getSectionAttendanceSummary,
   listCourseInstructors,
   CourseAuthzError,
   CourseError,
@@ -10,6 +11,7 @@ import {
 import { auth } from "@/lib/auth";
 import SectionRosterClient from "./SectionRosterClient";
 import SectionScheduleClient from "./SectionScheduleClient";
+import SectionAttendanceSummary from "./SectionAttendanceSummary";
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +42,10 @@ export default async function SectionRosterPage({
 
   if (roster.section.courseId !== params.id) notFound();
 
-  const [schedule, instructors] = await Promise.all([
+  const [schedule, instructors, attendance] = await Promise.all([
     getClassSchedule(userId, params.sectionId),
     listCourseInstructors(params.id),
+    getSectionAttendanceSummary(userId, params.sectionId),
   ]);
   const teachers = instructors.map((i) => ({ id: i.userId, name: i.displayName }));
 
@@ -58,7 +61,8 @@ export default async function SectionRosterPage({
       {roster.section.description && (
         <p className="mt-1 text-sm text-faint">{roster.section.description}</p>
       )}
-      <SectionScheduleClient sectionId={params.sectionId} initial={schedule} teachers={teachers} />
+      <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} />
+      <SectionAttendanceSummary summary={attendance} />
       <SectionRosterClient
         courseId={params.id}
         sectionId={params.sectionId}

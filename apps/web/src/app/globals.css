@@ -1100,3 +1100,11 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
     animation: none;
   }
 }
+
+/* Trang có thanh CTA cố định ở đáy (StickyMobileCTA, chỉ dưới lg): nâng nút "Hỏi Lily" lên trên thanh đó
+   để không đè lên nút hành động. Đặt ngoài @layer để thắng tiện ích bottom-5. */
+@media (max-width: 1023.98px) {
+  body:has([role="region"][aria-label="Hành động chính"]) .assistant-launcher {
+    bottom: 5.5rem;
+  }
+}

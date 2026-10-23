@@ -249,6 +249,9 @@ export const LearningEventType = {
   ClassMeetingCancelled: "class.meeting.cancelled",
   ClassMeetingUpdated: "class.meeting.updated",
   ClassMeetingMakeupAdded: "class.meeting.makeup_added",
+  // CENTER C2 — điểm danh học viên. Subject là HỌC VIÊN được điểm danh (để Feedback Engine và
+  // Gamification đọc theo người); giáo viên thao tác nằm trong payload.
+  AttendanceStudentMarked: "attendance.student.marked",
 } as const;
 
 export type LearningEventType =
@@ -928,4 +931,19 @@ export interface ClassMeetingMakeupAddedPayload {
   sectionId: string;
   courseId: string;
   makeupOfId: string | null;
+}
+
+// ── CENTER C2 — điểm danh học viên ───────────────────────────────────────
+
+export type AttendanceStatusValue = "present" | "late" | "absent" | "excused";
+
+export interface AttendanceStudentMarkedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  status: AttendanceStatusValue;
+  /** Trạng thái trước đó; null khi đây là lần đánh dấu đầu tiên. */
+  previousStatus: AttendanceStatusValue | null;
+  /** Giáo viên thao tác. */
+  markedById: string;
 }

@@ -17,14 +17,18 @@ export default async function LichDayPage({ searchParams }: { searchParams: { tu
     <main>
       <h1 className="text-h1">Lịch dạy</h1>
       <p className="mt-1 text-sm text-muted">
-        Các buổi của mọi lớp thuộc khoá thầy/cô đang dạy. Đặt lịch cho từng lớp ở trang lớp trong khoá học.
+        Các buổi của mọi lớp thuộc khoá thầy/cô đang dạy. Bấm một buổi để điểm danh. Đặt lịch cho từng lớp ở trang lớp trong khoá học.
       </p>
       <div className="mt-6">
         <ScheduleWeek
           weekStart={weekStart}
           meetings={meetings}
           basePath="/instructor/lich-day"
-          hrefFor={(m) => `/instructor/courses/${m.courseId}/sections/${m.sectionId}`}
+          hrefFor={(m) =>
+            m.status === "cancelled"
+              ? `/instructor/courses/${m.courseId}/sections/${m.sectionId}`
+              : `/instructor/courses/${m.courseId}/sections/${m.sectionId}/meetings/${m.id}`
+          }
         />
       </div>
     </main>

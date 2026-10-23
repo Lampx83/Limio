@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatTime, formatVN, fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
@@ -92,10 +93,12 @@ function toForm(d: ScheduleDetail) {
 }
 
 export default function SectionScheduleClient({
+  courseId,
   sectionId,
   initial,
   teachers,
 }: {
+  courseId: string;
   sectionId: string;
   initial: ScheduleDetail;
   teachers: Array<{ id: string; name: string }>;
@@ -420,26 +423,36 @@ export default function SectionScheduleClient({
                   {m.status === "cancelled" && <span className="chip-danger text-xs">Đã huỷ</span>}
                   {m.status === "held" && <span className="chip-success text-xs">Đã dạy</span>}
                   {m.makeupOfId && <span className="chip-accent text-xs">Dạy bù</span>}
-                  {m.status === "planned" && (
+                  {m.status !== "cancelled" && (
                     <span className="ml-auto flex gap-2">
-                      <button
-                        type="button"
-                        className="btn-ghost btn-sm"
-                        onClick={() =>
-                          setEditing({
-                            id: m.id,
-                            startsAt: toDateTimeInputValue(m.startsAt),
-                            durationMin: String(Math.round((Date.parse(m.endsAt) - Date.parse(m.startsAt)) / 60000)),
-                            room: m.room ?? "",
-                            teacher: m.plannedTeacherId ?? "",
-                          })
-                        }
+                      <Link
+                        href={`/instructor/courses/${courseId}/sections/${sectionId}/meetings/${m.id}`}
+                        className="btn-secondary btn-sm"
                       >
-                        Sửa
-                      </button>
-                      <button type="button" className="btn-ghost btn-sm" disabled={busy} onClick={() => cancel(m)}>
-                        Huỷ buổi
-                      </button>
+                        Điểm danh
+                      </Link>
+                      {m.status === "planned" && (
+                        <>
+                          <button
+                            type="button"
+                            className="btn-ghost btn-sm"
+                            onClick={() =>
+                              setEditing({
+                                id: m.id,
+                                startsAt: toDateTimeInputValue(m.startsAt),
+                                durationMin: String(Math.round((Date.parse(m.endsAt) - Date.parse(m.startsAt)) / 60000)),
+                                room: m.room ?? "",
+                                teacher: m.plannedTeacherId ?? "",
+                              })
+                            }
+                          >
+                            Sửa
+                          </button>
+                          <button type="button" className="btn-ghost btn-sm" disabled={busy} onClick={() => cancel(m)}>
+                            Huỷ buổi
+                          </button>
+                        </>
+                      )}
                     </span>
                   )}
                 </div>
