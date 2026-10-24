@@ -1,5 +1,6 @@
 import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
+import { learnerActivityWhere } from "@feedbackme/core-lms";
 import { getTournamentNotifications } from "./tournamentNotifications";
 import { formatTime, toDayKey } from "./datetime";
 
@@ -439,6 +440,7 @@ async function countStaleLearners(userId: string): Promise<number> {
       userId: { in: enrollments.map((e) => e.userId) },
       courseId: { in: courseIds },
       occurredAt: { gte: new Date(Date.now() - LEARNER_STALE_DAYS * 24 * 3600 * 1000) },
+      ...learnerActivityWhere(),
     },
     _max: { occurredAt: true },
   });

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { learnerActivityWhere } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatDate } from "@/lib/datetime";
 
@@ -117,6 +118,7 @@ export default async function InstructorEnrollmentsPage({
       where: {
         userId: { in: [...new Set(userCoursePairs.map((p) => p.userId))] },
         courseId: { in: [...new Set(userCoursePairs.map((p) => p.courseId))] },
+        ...learnerActivityWhere(),
       },
       orderBy: { occurredAt: "desc" },
       select: { userId: true, courseId: true, occurredAt: true },
@@ -145,6 +147,7 @@ export default async function InstructorEnrollmentsPage({
         userId: { in: allStats.filter((e) => e.status === "active").map((e) => e.userId) },
         courseId: { in: courseIds },
         occurredAt: { gte: staleCutoff },
+        ...learnerActivityWhere(),
       },
       _max: { occurredAt: true },
     });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { canEditCourse } from "@feedbackme/core-lms";
+import { canEditCourse, learnerActivityWhere } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/datetime";
 
@@ -123,7 +123,7 @@ export default async function StrugglingStudentsPage({
 
   const lastEventRows = await prisma.learningEvent.groupBy({
     by: ["userId"],
-    where: { userId: { in: userIds }, courseId: course.id },
+    where: { userId: { in: userIds }, courseId: course.id, ...learnerActivityWhere() },
     _max: { occurredAt: true },
   });
   const lastActivityByUser = new Map(

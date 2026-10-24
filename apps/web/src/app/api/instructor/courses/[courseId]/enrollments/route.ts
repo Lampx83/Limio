@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@feedbackme/db";
-import { assertCanEditCourse, CourseAuthzError } from "@feedbackme/core-lms";
+import { assertCanEditCourse, CourseAuthzError, learnerActivityWhere } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 
 export const runtime = "nodejs";
@@ -102,6 +102,7 @@ export async function GET(
       where: {
         userId: { in: enrollments.map((e) => e.userId) },
         courseId: params.courseId,
+        ...learnerActivityWhere(),
       },
       _max: { occurredAt: true },
     });
