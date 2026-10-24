@@ -104,6 +104,26 @@ export default function OrgMembersClient({
     }
   }
 
+  /** Bật/tắt vai trò giảng viên trung tâm (chỉ dạy, không soạn) cho một thành viên. */
+  async function toggleCenterTeacher(userId: string, enabled: boolean) {
+    setError(null);
+    try {
+      const res = await fetch(apiUrl(`/api/orgs/${organizationId}/members/${userId}/center-teacher`), {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(errorMessage(body.error));
+        return;
+      }
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      setError(`Lỗi mạng: ${(err as Error).message}`);
+    }
+  }
+
   async function removeMember(userId: string, name: string) {
     if (!confirm(`Gỡ ${name} khỏi trường? User sẽ quay về nhóm chung của nền tảng.`)) return;
     setError(null);
@@ -225,6 +245,15 @@ export default function OrgMembersClient({
                   ) : (
                     m.roles.join(", ")
                   )}
+                  <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-xs text-muted">
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5"
+                      checked={m.roles.includes("center_teacher")}
+                      onChange={(e) => toggleCenterTeacher(m.id, e.target.checked)}
+                    />
+                    Giảng viên trung tâm (chỉ dạy)
+                  </label>
                 </td>
                 <td className="px-4 py-2.5 text-xs text-muted tabular-nums">
                   {formatDate(m.createdAt)}

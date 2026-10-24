@@ -3,7 +3,7 @@ import StudentLeftMenu from "@/components/StudentLeftMenu";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import AdminSidebar from "@/app/admin/_components/AdminSidebar";
 import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
-import { getActiveRole } from "@/lib/active-role";
+import { getActiveRole, isTeachingOnly } from "@/lib/active-role";
 import { isResearcher } from "@feedbackme/core-lms";
 import { getInstructorCenterAccess, getLearnerCenterAccess } from "@/lib/centerAccess";
 
@@ -43,7 +43,7 @@ export default async function MeLayout({
     activeRole === "admin" ? (
       <AdminSidebar />
     ) : activeRole === "instructor" ? (
-      <InstructorLeftMenu isResearcher={hasResearcherRole} centerEnabled={centerEnabled} />
+      <InstructorLeftMenu isResearcher={hasResearcherRole} centerEnabled={centerEnabled} teachingOnly={isTeachingOnly(roles)} />
     ) : (
       <StudentLeftMenu badges={badges} continueTo={continueTo} showSchedule={showSchedule} />
     );

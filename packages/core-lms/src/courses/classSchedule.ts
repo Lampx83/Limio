@@ -18,7 +18,8 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 import { emitEvent } from "../learning/events";
-import { assertCanGradeCourse } from "./authz";
+import { assertCanManageCourse, assertCanViewSection } from "./teachingScope";
+import { EDIT_ROLES } from "./authz";
 import { loadSessionPlans, type MeetingPlan, type PlanAudience } from "./sessionPlan";
 import {
   addDays,
@@ -190,7 +191,8 @@ async function loadSection(sectionId: string, db: DbClient) {
 
 async function loadManageableSection(actorUserId: string, sectionId: string, db: DbClient) {
   const section = await loadSection(sectionId, db);
-  await assertCanGradeCourse(actorUserId, section.courseId, db);
+  // Đặt/sửa lịch là việc của người SOẠN/QUẢN (chủ khoá, đồng giảng viên, Platform Admin), không phải người chỉ dạy.
+  await assertCanManageCourse(actorUserId, section.courseId, db);
   if (section.isDefault) throw new ClassScheduleError("default_section");
   return section;
 }
@@ -201,7 +203,7 @@ async function loadManageableMeeting(actorUserId: string, meetingId: string, db:
     include: { section: { select: { id: true, name: true, courseId: true } } },
   });
   if (!meeting) throw new ClassScheduleError("meeting_not_found");
-  await assertCanGradeCourse(actorUserId, meeting.section.courseId, db);
+  await assertCanManageCourse(actorUserId, meeting.section.courseId, db);
   return meeting;
 }
 
@@ -594,7 +596,8 @@ export async function getClassSchedule(
   db: PrismaClient = prisma,
 ): Promise<ClassScheduleDetail> {
   const section = await loadSection(sectionId, db);
-  await assertCanGradeCourse(actorUserId, section.courseId, db);
+  // Xem: người quản luôn được; người chỉ dạy chỉ lớp được xếp cho mình.
+  await assertCanViewSection(actorUserId, section, db);
 
   const [schedule, meetings] = await Promise.all([
     db.classSchedule.findUnique({ where: { sectionId }, include: { slots: true } }),
@@ -660,7 +663,15 @@ export async function listTeacherMeetings(
     where: {
       startsAt: { gte: start, lt: end },
       ...(range.sectionId ? { sectionId: range.sectionId } : {}),
-      section: { course: { instructors: { some: { userId } } } },
+      // Người quản (chủ khoá, đồng giảng viên) thấy mọi buổi của khoá; người chỉ dạy chỉ thấy buổi được xếp cho mình
+      // (giáo viên dự kiến, hoặc buổi chưa gán của lớp mình phụ trách).
+      OR: [
+        { section: { course: { instructors: { some: { userId, role: { in: [...EDIT_ROLES] } } } } } },
+        {
+          section: { course: { instructors: { some: { userId, role: { notIn: [...EDIT_ROLES] } } } } },
+          OR: [{ plannedTeacherId: userId }, { plannedTeacherId: null, section: { instructorId: userId } }],
+        },
+      ],
     },
     orderBy: [{ startsAt: "asc" }, { createdAt: "asc" }],
     include: MEETING_INCLUDE,

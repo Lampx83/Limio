@@ -15,7 +15,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType, type AttendanceStatusValue } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 import { emitEvent } from "../learning/events";
-import { assertCanGradeCourse } from "./authz";
+import { assertCanTeachMeeting, assertCanViewSection } from "./teachingScope";
 import { rangeBounds } from "./classSchedule";
 
 export class AttendanceError extends Error {
@@ -153,10 +153,11 @@ function parse<T extends z.ZodTypeAny>(schema: T, raw: unknown): z.infer<T> {
 async function loadMeeting(actorUserId: string, meetingId: string, db: DbClient) {
   const meeting = await db.classMeeting.findUnique({
     where: { id: meetingId },
-    include: { section: { select: { id: true, name: true, courseId: true } } },
+    include: { section: { select: { id: true, name: true, courseId: true, instructorId: true } } },
   });
   if (!meeting) throw new AttendanceError("meeting_not_found");
-  await assertCanGradeCourse(actorUserId, meeting.section.courseId, db);
+  // Người quản luôn được; người chỉ dạy chỉ buổi được xếp cho mình.
+  await assertCanTeachMeeting(actorUserId, meeting, db);
   return meeting;
 }
 
@@ -367,9 +368,12 @@ export async function getSectionAttendanceSummary(
   db: PrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<SectionAttendanceSummary> {
-  const section = await db.courseSection.findUnique({ where: { id: sectionId }, select: { courseId: true } });
+  const section = await db.courseSection.findUnique({
+    where: { id: sectionId },
+    select: { id: true, courseId: true, instructorId: true },
+  });
   if (!section) throw new AttendanceError("section_not_found");
-  await assertCanGradeCourse(actorUserId, section.courseId, db);
+  await assertCanViewSection(actorUserId, section, db);
 
   const [meetings, enrolled] = await Promise.all([
     db.classMeeting.findMany({

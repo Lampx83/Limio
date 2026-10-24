@@ -7,3 +7,4 @@ export * from "./member-import";
 export * from "./email-settings";
 export * from "./exam-network";
 export * from "./centerAccess";
+export * from "./centerTeacher";

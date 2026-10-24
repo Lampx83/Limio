@@ -15,6 +15,8 @@ import {
 import InstructorHomeSearch, { type SearchSuggestion } from "@/components/InstructorHomeSearch";
 import HomeStatusLine from "@/components/HomeStatusLine";
 import { getInstructorPendingSummary } from "@/lib/notifications";
+import { isTeachingOnly } from "@/lib/roleWorkspace";
+import CenterTeacherHome from "@/components/CenterTeacherHome";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,11 @@ export default async function InstructorDashboard({
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/dashboard");
   const userId = session.user.id;
+
+  // Giảng viên trung tâm (chỉ dạy): trang chủ riêng "Hôm nay tôi dạy", không có lối tắt soạn.
+  if (isTeachingOnly(session.user.roles ?? [])) {
+    return <CenterTeacherHome userId={userId} displayName={session.user.name ?? null} />;
+  }
 
   const meTour = await prisma.user.findUniqueOrThrow({
     where: { id: userId },

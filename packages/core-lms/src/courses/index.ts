@@ -21,3 +21,4 @@ export * from "./classSchedule";
 export * from "./attendance";
 export * from "./sessionPlan";
 export * from "./coursePacks";
+export * from "./teachingScope";

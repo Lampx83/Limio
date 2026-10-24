@@ -23,7 +23,8 @@ export default async function MeetingAttendancePage({
     if (e instanceof AttendanceError && e.code === "meeting_not_found") notFound();
     if (e instanceof CourseAuthzError) {
       if (e.code === "not_found") notFound();
-      redirect(`/instructor/courses/${params.id}?tab=sections`);
+      // Không được điểm danh buổi này (vd. buổi của giảng viên khác): về trang lớp, nơi họ vẫn xem được lịch.
+      redirect(`/instructor/courses/${params.id}/sections/${params.sectionId}`);
     }
     throw e;
   }

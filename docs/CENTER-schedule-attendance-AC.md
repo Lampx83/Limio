@@ -47,6 +47,8 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 **Trạng thái (2026-10-23, nhánh `feat/center-c1-lich-buoi`, chưa commit):** service + 51 test xanh (`classSchedule.test.ts`, `classScheduleCalc.test.ts`); API, trang "Lịch dạy" (`/instructor/lich-day`), khối lịch trong trang lớp, trang "Lịch học" (`/me/lich-hoc`) đã viết, typecheck sạch, Lily + `GIAO-DIEN.md` đã cập nhật (test freshness xanh). **Chưa làm:** xem bằng mắt trên mobile/desktop (C1.9, C1.10 mới kiểm ở tầng dữ liệu); migration `20261023120000_class_schedule_meetings` mới áp lên DB test, **chưa áp lên DB dev**.
 
+**Bổ sung sau khi thử (2026-10-24):** buổi học cũng được đưa vào widget "Lịch" ở trang chủ của giảng viên và học viên (cùng chỗ với hạn nộp bài tập), và học viên có thẻ "Chuyên cần của bạn" ở trang tổng quan, vì trang "Lịch học" riêng khó thấy (nằm sau menu).
+
 - [x] **C1.1** Given lớp chưa có lịch, when giảng viên thêm quy tắc "T3, T5 · 18:30–20:30 · phòng B2 · từ 03/11 · 24 buổi", then hệ thống sinh đúng 24 `ClassMeeting` theo thứ tự thời gian, đánh `seq` 1..24.
 - [x] **C1.2** Given quy tắc có nhiều dòng (T3 và T5 khác giờ), then mỗi dòng sinh buổi riêng và `seq` vẫn tăng theo thời gian thực chứ không theo dòng.
 - [x] **C1.3** Given sửa quy tắc, when áp dụng, then chỉ các buổi **chưa diễn ra và chưa đóng** bị sinh lại; buổi đã `held` không đổi.
@@ -166,6 +168,52 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 **P1:** cảnh báo cho giáo viên khi học viên lệch kế hoạch hai tuần liền; mục tiêu gợi ý bài luyện hôm nay.
 
 ---
+
+## G · Bật tính năng trung tâm theo tổ chức, và trang lịch dạng lịch
+
+**Trạng thái (2026-10-24, chưa commit):** service `org/centerAccess.ts` + 10 test; `Organization.centerEnabled` + cờ `center.access` + migration `20261024100000_org_center_enabled` (đã áp DB dev); menu, trang và trang lớp ẩn theo quy tắc; công tắc ở cài đặt trường và trang quản trị trường; `/instructor/lich-day` và `/me/lich-hoc` dạng lịch. Đã xem bằng mắt: trường tắt thì menu ẩn và truy cập thẳng bị đưa về trang chủ; bật bằng công tắc thì hiện ngay; lịch có dữ liệu. Dev: tài khoản `giangvien.mau@` đã được xếp vào trường `TT-DEMO` (mặc định đã bật sau khi thử). Ghi chú: sau `prisma generate` phải khởi động lại máy chủ dev. **Chưa làm:** vai trò "giảng viên trung tâm" (chỉ dạy, không soạn) — xem thảo luận 2026-10-24.
+
+**Quyết định (2026-10-24):** tính năng trung tâm (lịch dạy, giáo trình dựng sẵn, điểm danh, chuyên cần) không hiện cho mọi người. Ẩn ở tầng giao diện (menu, trang, khối trên trang lớp); API và dữ liệu không đổi. Người đã có sẵn dữ liệu (lớp có lịch) không bị mất lối vào.
+
+- [x] **G1** `Organization.centerEnabled` (mặc định tắt). Platform Admin hoặc OrgAdmin của chính trường đó bật/tắt được; người khác bị từ chối; mỗi lần đổi ghi `AuditLog` (`org.center_setting_changed`).
+- [x] **G2** `isCenterEnabledForUser(userId)` đúng khi: (a) trường của người đó bật, hoặc (b) cờ `center.access` của người đó đúng (cấp riêng qua cơ chế cờ tính năng có sẵn, cho tài khoản chưa thuộc trường nào), hoặc (c) người đó đang dạy một khoá có lớp đã đặt lịch (không bị mất lối vào). Còn lại sai. Thiếu dòng cờ trong DB thì coi là sai, không báo lỗi.
+- [x] **G3** `hasClassSchedule(userId)` (học viên) đúng khi đang học (đang học/đã hoàn thành) ở một lớp có ít nhất một buổi.
+- [x] **G4** Menu giảng viên ẩn "Lịch dạy" và "Giáo trình" khi G2 sai; menu học viên ẩn "Lịch học" khi G3 sai. Áp cho cả menu giảng viên hiện ở các trang `/me/*`.
+- [x] **G5** `/instructor/lich-day`, `/instructor/giao-trinh` (và xem trước) chuyển về trang chủ giảng viên khi G2 sai; `/me/lich-hoc` chuyển về tổng quan khi G3 sai. Trang lớp ẩn khối "Lịch dạy", bảng "Chuyên cần" và thông báo giáo trình có bản mới khi G2 sai.
+- [x] **G6** Công tắc "Tính năng trung tâm" trong cài đặt trường (OrgAdmin) và trang quản trị trường (Platform Admin).
+- [x] **G7** Trang "Lịch dạy" (giảng viên) và "Lịch học" (học viên) là **lịch** giống widget ở trang chủ: nút Tuần/Tháng, Trước/Sau, bấm ngày thấy các buổi trong ngày kèm giáo án; học viên thấy trạng thái điểm danh của mình; bấm buổi mở trang điểm danh (giảng viên). Câu trống nói "buổi học", không nói "hạn nộp".
+
+## H · Vai trò giảng viên trung tâm (chỉ dạy, không soạn)
+
+**Trạng thái (2026-10-24, chưa commit):** `RoleName.CenterTeacher`, `isCenterTeacher`, `setOrgMemberCenterTeacher`, `courses/teachingScope.ts` (13 + 8 + 1 test mới; toàn bộ test cũ vẫn xanh); các dịch vụ lịch, điểm danh, giáo án đã tách quyền quản và dạy; menu, trang chủ "Hôm nay tôi dạy", trang lớp chỉ xem, chặn trang soạn, công tắc cấp vai trò đã làm. Đã xem bằng mắt (H10–H14) với tài khoản chỉ có `center_teacher` trên dev: menu, trang chủ, chuyển hướng khỏi trang soạn, trang lớp chỉ xem. Sửa thêm sau khi xem: buổi của giảng viên khác không còn nút "Điểm danh" và mở thẳng link thì về trang lớp; nút quay lại của người chỉ dạy là "← Lịch dạy".
+
+**Quyết định (2026-10-24, chủ dự án chốt):** thêm vai trò toàn cục `center_teacher`, riêng với `instructor`. Giảng viên trung tâm chỉ dạy theo lộ trình chủ trung tâm đã dựng sẵn (lịch, bài học, thi cử); họ không soạn nội dung và không đặt lịch. Bốn điểm đi kèm: (1) họ chỉ thấy lớp và buổi được xếp cho mình; (2) ghi chú riêng vào giáo án để P1; (3) chủ trung tâm là quản trị trường kiêm giảng viên thường, và được xếp dạy như mọi giáo viên khác; (4) đề nghị nghỉ/đổi buổi để P1, ở bản đầu họ báo qua chủ trung tâm.
+
+**Khái niệm**
+- **Quyền trên một khoá** (`getTeachingScope`): `manage` = Platform Admin, hoặc chủ khoá, hoặc đồng giảng viên (hai vai trò được sửa nội dung); `teach` = có tên trong khoá với vai trò khác (không sửa nội dung, trợ giảng); `null` = không liên quan. Giảng viên trung tâm được thêm vào khoá bằng vai trò có sẵn "non-editing-teacher".
+- **Được xếp vào một buổi:** là giáo viên dự kiến của buổi đó; hoặc buổi chưa gán giáo viên mà người đó là giáo viên phụ trách lớp. **Được xếp vào một lớp:** là giáo viên phụ trách lớp, hoặc là giáo viên dự kiến của ít nhất một buổi hay một khung giờ của lớp.
+
+**Vai trò và cấp quyền**
+- [x] **H1** `RoleName.CenterTeacher = "center_teacher"`; Platform Admin cấp được qua cơ chế cấp vai trò có sẵn. Người chỉ có vai trò này **không** được coi là giảng viên thường (`isInstructor` sai), nên không tạo được khoá.
+- [x] **H2** Quản trị trường cấp/thu hồi vai trò cho **thành viên của chính trường mình** (`setOrgMemberCenterTeacher`); Platform Admin cho trường bất kỳ; người khác, và quản trị trường khác, bị từ chối; người không thuộc trường → `not_member`; mỗi lần đổi ghi `AuditLog` (`org.center_teacher_changed`); cấp lại khi đã có hoặc thu hồi khi chưa có thì không ghi.
+
+**Tách quyền quản lịch khỏi quyền dạy** (sửa lỗ hổng: trước đây mọi dịch vụ lịch và điểm danh kiểm bằng quyền "chấm bài", gồm cả người chỉ được dạy)
+- [x] **H3** `getTeachingScope` trả đúng theo ma trận: chủ khoá → `manage`; đồng giảng viên → `manage`; Platform Admin → `manage`; non-editing-teacher và trợ giảng → `teach`; người ngoài → `null`.
+- [x] **H4** Đặt/áp lịch, huỷ buổi, thêm buổi dạy bù, sửa buổi lẻ chỉ cho `manage`; người `teach` bị từ chối (`forbidden`) và không có gì thay đổi.
+- [x] **H5** Xem lịch của một lớp (`getClassSchedule`) và chuyên cần toàn lớp: `manage` luôn được; `teach` chỉ khi được xếp vào lớp đó; lớp khác → `forbidden`.
+- [x] **H6** Mở danh sách điểm danh, đánh dấu, "Có mặt cả lớp" của một buổi: `manage` luôn được; `teach` chỉ khi được xếp vào **buổi** đó; buổi của giáo viên khác → `forbidden` và không ghi gì.
+- [x] **H7** `listTeacherMeetings`: người `manage` thấy mọi buổi của khoá; người `teach` chỉ thấy buổi được xếp cho mình (gồm cả buổi chưa gán giáo viên của lớp mình phụ trách). Hai giảng viên cùng khoá không thấy buổi của nhau.
+- [x] **H8** Giáo án của khoá (`getCoursePlan`) đọc được bởi `manage` và `teach`; cập nhật theo bản mới của giáo trình vẫn chỉ `manage`.
+- [x] **H9** Giảng viên thường (chủ khoá, đồng giảng viên) và Platform Admin không bị ảnh hưởng: mọi hành vi C1–C3 giữ nguyên (các test cũ vẫn xanh).
+
+**Giao diện: không gian chỉ dạy**
+- [x] **H10** Người có `center_teacher` mà không có `instructor`/`admin` vào được khu giảng viên (`/instructor`) và được coi là đang ở không gian "Giảng viên" (không có chế độ riêng để chuyển). Menu của họ chỉ còn: Trang chủ, Lịch dạy, Assignment (chấm bài lớp mình), Forum Q&A, và Giám sát phòng thi nếu được xếp. Không có "Khoá học của tôi", "Giáo trình", Limio-Live, Vấn đáp AI, Kiểm tra đánh giá, Đấu trường, Phân tích.
+- [x] **H11** Trang chủ của họ là **"Hôm nay tôi dạy"**: các buổi được xếp cho họ hôm nay và 7 ngày tới, mỗi buổi kèm giáo án, liên kết mở bài và nút "Điểm danh"; không có lối tắt "Tạo slide / Tạo đề thi / Tạo khoá học".
+- [x] **H12** Ở trang lớp, người `teach` thấy lịch và chuyên cần của lớp mình **chỉ để xem**: không có form đặt lịch, "Sửa", "Huỷ buổi", "+ Thêm buổi dạy bù"; vẫn có "Điểm danh" ở buổi được xếp cho mình.
+- [x] **H13** Người `teach` vào thẳng các trang chỉ dành cho người soạn (`/instructor/giao-trinh`, `/instructor/courses/new`) thì được đưa về trang chủ của họ.
+- [x] **H14** Trang quản lý thành viên của quản trị trường có công tắc "Giảng viên trung tâm" cho từng thành viên (G2 ở trên).
+
+**P1 (chưa làm ở giai đoạn này):** đề nghị nghỉ/đổi buổi; ghi chú riêng của giáo viên vào giáo án; check-in (C5) và nhận xét sau buổi (C4) dùng đúng quyền "teach" ở trên; Lily trả lời theo vai trò (hiện vẫn nói cả các mục họ không có).
 
 ## Ngoài phạm vi (cố ý)
 

@@ -106,11 +106,17 @@ export default function SectionScheduleClient({
   sectionId,
   initial,
   teachers,
+  canManage = true,
+  viewerId,
 }: {
   courseId: string;
   sectionId: string;
   initial: ScheduleDetail;
   teachers: Array<{ id: string; name: string }>;
+  /** false = người chỉ dạy (giảng viên trung tâm): xem lịch và điểm danh, không đặt/sửa/huỷ/dạy bù. */
+  canManage?: boolean;
+  /** Người đang xem: người chỉ dạy không có nút điểm danh ở buổi đã xếp cho giảng viên khác. */
+  viewerId?: string;
 }) {
   const [detail, setDetail] = useState(initial);
   const [form, setForm] = useState(() => toForm(initial));
@@ -256,6 +262,7 @@ export default function SectionScheduleClient({
         </div>
       )}
 
+      {canManage && (
       <div className="card space-y-4 p-4">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block text-sm">
@@ -361,9 +368,11 @@ export default function SectionScheduleClient({
           </p>
         </div>
       </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-h4">Các buổi học ({detail.countedMeetings})</h3>
+        {canManage && (
         <button
           type="button"
           className="btn-secondary btn-sm"
@@ -371,6 +380,7 @@ export default function SectionScheduleClient({
         >
           + Thêm buổi dạy bù
         </button>
+        )}
       </div>
 
       {makeup && (
@@ -445,13 +455,15 @@ export default function SectionScheduleClient({
                   {m.makeupOfId && <span className="chip-accent text-xs">Dạy bù</span>}
                   {m.status !== "cancelled" && (
                     <span className="ml-auto flex gap-2">
-                      <Link
-                        href={`/instructor/courses/${courseId}/sections/${sectionId}/meetings/${m.id}`}
-                        className="btn-secondary btn-sm"
-                      >
-                        Điểm danh
-                      </Link>
-                      {m.status === "planned" && (
+                      {(canManage || !m.plannedTeacherId || m.plannedTeacherId === viewerId) && (
+                        <Link
+                          href={`/instructor/courses/${courseId}/sections/${sectionId}/meetings/${m.id}`}
+                          className="btn-secondary btn-sm"
+                        >
+                          Điểm danh
+                        </Link>
+                      )}
+                      {canManage && m.status === "planned" && (
                         <>
                           <button
                             type="button"

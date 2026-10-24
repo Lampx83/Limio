@@ -17,7 +17,8 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 import { getUserOrgId, isAdmin, isInstructor } from "../auth/roles";
 import { emitEvent } from "../learning/events";
-import { assertCanEditCourse, assertCanGradeCourse } from "./authz";
+import { assertCanEditCourse, CourseAuthzError } from "./authz";
+import { getTeachingScope } from "./teachingScope";
 import { cloneCourseUnchecked, cloneModuleTree, MODULE_TREE_INCLUDE } from "./courses";
 
 export class CoursePackError extends Error {
@@ -289,7 +290,11 @@ export async function usePack(actorUserId: string, packId: string, db: PrismaCli
 // ── Giáo án của khoá và cập nhật theo bản mới ────────────────────────────
 
 export async function getCoursePlan(actorUserId: string, courseId: string, db: PrismaClient = prisma): Promise<CoursePlan> {
-  await assertCanGradeCourse(actorUserId, courseId, db);
+  // Đọc giáo án: người quản và người chỉ dạy đều được (để mở bài của buổi mình dạy).
+  if ((await getTeachingScope(actorUserId, courseId, db)) === null) {
+    const exists = await db.course.findUnique({ where: { id: courseId }, select: { id: true } });
+    throw new CourseAuthzError(exists ? "forbidden" : "not_found");
+  }
   const [modules, course] = await Promise.all([
     db.module.findMany({
       where: { courseId, sessionNo: { not: null } },

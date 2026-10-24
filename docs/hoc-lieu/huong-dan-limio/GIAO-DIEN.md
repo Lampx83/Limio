@@ -377,14 +377,30 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   `name,email`. Danh sách lớp có cột Học viên / Trạng thái / Vào lớp / Tiến độ / Điểm quiz gần nhất /
   "Chuyển lớp". Khoá "Chỉ vào bằng link mời lớp" chỉ vào được bằng các link này. Trang đón: "Lời mời tham gia
   lớp học" → "Vào học". Từ tab này còn mở được trang "Nhóm làm bài tập" (mục 6).
-- **Lịch dạy của lớp** (mới, CENTER C1): trang "Lịch dạy" trong menu LMS (`/instructor/lich-day`) xem các buổi
-  của mọi lớp thuộc khoá mình dạy theo từng tuần (nút "Tuần trước" / "Tuần này" / "Tuần sau"); bấm một buổi
-  mở trang điểm danh của buổi đó (buổi đã huỷ thì mở trang lớp). Đặt lịch ở đầu trang "Danh sách học viên" của lớp (khối **"Lịch dạy"**): "Ngày bắt đầu",
+- **Bật tính năng trung tâm** (mới, CENTER mục G): các mục **"Lịch dạy"** và **"Giáo trình"** trong menu LMS (và khối
+  "Lịch dạy", bảng "Chuyên cần", thông báo giáo trình có bản mới ở trang lớp) **chỉ hiện khi tính năng trung tâm được bật** cho
+  tài khoản: trường của giảng viên bật công tắc **"Tính năng trung tâm"** (cài đặt trường của quản trị trường, hoặc trang quản trị
+  trường của Platform Admin), hoặc Platform Admin cấp cờ `center.access` riêng cho một tài khoản chưa thuộc trường, hoặc giảng viên
+  đang dạy khoá có lớp đã đặt lịch (không bị mất lối vào). Học viên thấy mục **"Lịch học"** khi đang học ở lớp có buổi. Tắt chỉ ẩn,
+  không xoá dữ liệu.
+- **Giảng viên trung tâm** (mới, CENTER mục H): vai trò **chỉ dạy, không soạn**, do Platform Admin hoặc quản trị trường cấp cho
+  thành viên của trường (trang quản lý thành viên của quản trị trường, công tắc **"Giảng viên trung tâm (chỉ dạy)"** ở cột vai
+  trò). Giảng viên trung tâm làm việc ở không gian "Giảng viên" nhưng menu chỉ còn **"Lịch dạy"**, **"Assignment"**, **"Forum Q&A"**
+  (và "Giám sát phòng thi" nếu được xếp coi thi): không có "Khoá học của tôi", "Giáo trình", Limio-Live, Vấn đáp AI, Kiểm tra đánh
+  giá, Đấu trường, Phân tích; không tạo được khoá. Trang chủ của họ là **"Hôm nay tôi dạy"**: các buổi được xếp cho họ hôm nay và
+  7 ngày tới, mỗi buổi có tên giáo án, liên kết "Bài của buổi" và nút **"Điểm danh"**, cùng "Lịch dạy của tôi" dạng lịch. Họ chỉ
+  thấy lớp và buổi được xếp cho mình (giáo viên dự kiến của buổi, hoặc giáo viên phụ trách lớp). Ở trang lớp họ chỉ xem: không có
+  form đặt lịch, "Sửa", "Huỷ buổi", "+ Thêm buổi dạy bù"; vẫn có "Điểm danh" ở buổi của mình. Đặt lịch, huỷ buổi, dạy bù, cập nhật
+  giáo trình chỉ chủ khoá, đồng giảng viên và Platform Admin làm được. Chủ trung tâm thêm giảng viên trung tâm vào khoá bằng vai
+  trò khoá "non-editing-teacher" rồi xếp họ vào khung giờ hoặc buổi. Chưa có: đề nghị nghỉ/đổi buổi, ghi chú riêng vào giáo án.
+- **Lịch dạy của lớp** (mới, CENTER C1): trang "Lịch dạy" trong menu LMS (`/instructor/lich-day`) là **lịch** giống widget "Lịch" ở
+  trang chủ: nút **"Tuần"** / **"Tháng"**, **"Trước"** / **"Sau"**, bấm một ngày để xem các buổi trong ngày (kèm giáo án), bấm một
+  buổi mở trang điểm danh của buổi đó (buổi đã huỷ thì mở trang lớp). Đặt lịch ở đầu trang "Danh sách học viên" của lớp (khối **"Lịch dạy"**): "Ngày bắt đầu",
   "Tổng số buổi", các khung giờ lặp hằng tuần (thứ, giờ bắt đầu, thời lượng phút, phòng, giáo viên dự kiến),
   "+ Thêm khung giờ", "Bỏ khung này", rồi **"Áp dụng lịch"**. Áp lại chỉ sinh lại buổi chưa diễn ra. Mỗi buổi
   có "Sửa" và **"Huỷ buổi"** (hỏi lý do; huỷ thì các buổi sau tự lùi số thứ tự); **"+ Thêm buổi dạy bù"** có thể
-  gắn với một buổi đã huỷ. Trùng giáo viên hoặc phòng giữa các lớp chỉ hiện cảnh báo, vẫn lưu. Học viên xem
-  ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`).
+  gắn với một buổi đã huỷ. Trùng giáo viên hoặc phòng giữa các lớp chỉ hiện cảnh báo, vẫn lưu. Buổi học cũng hiện (chấm xanh, nhãn "Buổi học") trong widget **"Lịch"** ở trang chủ của giảng viên, bấm vào mở trang điểm danh; buổi huỷ hiện
+  "Đã huỷ". Học viên xem ở widget "Lịch" và thẻ **"Chuyên cần của bạn"** trên trang tổng quan, hoặc ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`).
 - **Giáo trình dựng sẵn** (mới, CENTER C3): mục **"Giáo trình"** trong menu LMS mở trang **"Giáo trình dựng sẵn"** (`/instructor/giao-trinh`)
   liệt kê các giáo trình quản trị đã phát hành (tên, ngôn ngữ, "đầu ra", số buổi, số bài). **"Xem trước"** mở
   `/instructor/giao-trinh/[packId]`: mô tả và danh sách buổi, bấm một buổi để xổ các bài kèm loại nội dung (từ vựng,

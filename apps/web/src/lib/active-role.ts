@@ -1,17 +1,12 @@
 import { cookies } from "next/headers";
+import { CAPABILITY_ROLES, switchableRoles, isTeachingOnly } from "./roleWorkspace";
 
 export const ACTIVE_ROLE_COOKIE = "fbm-active-role";
 
 // Priority order when no saved preference exists
 const ROLE_PRIORITY = ["admin", "instructor", "mentor", "learner"];
 
-// Vai "năng lực cộng thêm" — không phải một chế độ làm việc để chuyển sang, nên
-// không bao giờ là active role và không hiện trong bộ chuyển vai trò.
-export const CAPABILITY_ROLES = ["researcher"];
-
-export function switchableRoles(roles: string[]): string[] {
-  return roles.filter((r) => !CAPABILITY_ROLES.includes(r));
-}
+export { CAPABILITY_ROLES, switchableRoles, isTeachingOnly };
 
 export function getActiveRole(allRoles: string[]): string {
   const roles = switchableRoles(allRoles);

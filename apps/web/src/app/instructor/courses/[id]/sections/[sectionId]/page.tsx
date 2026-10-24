@@ -4,11 +4,14 @@ import {
   getSectionRoster,
   getClassSchedule,
   getCoursePlan,
+  getTeachingScope,
+  assertCanViewSection,
   getSectionAttendanceSummary,
   listCourseInstructors,
   CourseAuthzError,
   CourseError,
 } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import SectionRosterClient from "./SectionRosterClient";
 import SectionScheduleClient from "./SectionScheduleClient";
@@ -45,6 +48,19 @@ export default async function SectionRosterPage({
 
   if (roster.section.courseId !== params.id) notFound();
 
+  // Người chỉ dạy (giảng viên trung tâm) chỉ vào lớp được xếp cho mình, và ở đây chỉ để xem.
+  const scope = await getTeachingScope(userId, params.id);
+  const canManage = scope === "manage";
+  if (!canManage) {
+    const sectionRow = await prisma.courseSection.findUnique({ where: { id: params.sectionId }, select: { instructorId: true } });
+    try {
+      await assertCanViewSection(userId, { id: params.sectionId, courseId: params.id, instructorId: sectionRow?.instructorId ?? null });
+    } catch (e) {
+      if (e instanceof CourseAuthzError) redirect("/instructor/dashboard");
+      throw e;
+    }
+  }
+
   // Tính năng trung tâm (lịch dạy, chuyên cần, giáo trình) chỉ hiện khi tài khoản được bật; không thì trang lớp
   // chỉ còn danh sách học viên như trước và không tốn thêm truy vấn.
   const centerEnabled = await getInstructorCenterAccess(userId);
@@ -61,16 +77,16 @@ export default async function SectionRosterPage({
   return (
     <main>
       <Link
-        href={`/instructor/courses/${params.id}?tab=sections`}
+        href={canManage ? `/instructor/courses/${params.id}?tab=sections` : "/instructor/lich-day"}
         className="text-sm font-medium text-lime-700 hover:text-lime-800 hover:underline dark:text-lime-400 dark:hover:text-lime-300"
       >
-        ← {roster.section.courseTitle}
+        ← {canManage ? roster.section.courseTitle : "Lịch dạy"}
       </Link>
       <h1 className="mt-3 text-2xl font-bold">{roster.section.name}</h1>
       {roster.section.description && (
         <p className="mt-1 text-sm text-faint">{roster.section.description}</p>
       )}
-      {coursePlan?.pack?.hasUpdate && (
+      {canManage && coursePlan?.pack?.hasUpdate && (
         <PackUpdateBanner
           courseId={params.id}
           packTitle={coursePlan.pack.title}
@@ -78,7 +94,7 @@ export default async function SectionRosterPage({
           currentVersion={coursePlan.pack.currentVersion}
         />
       )}
-      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} />}
+      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} />}
       {attendance && <SectionAttendanceSummary summary={attendance} />}
       <SectionRosterClient
         courseId={params.id}
