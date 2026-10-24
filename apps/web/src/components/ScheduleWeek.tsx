@@ -16,6 +16,8 @@ export interface WeekMeeting {
   cancelReason: string | null;
   makeupOfId: string | null;
   /** Điểm danh của chính người xem (chỉ trang học viên). Không bao giờ chứa ghi chú của giáo viên. */
+  /** Giáo án của buổi (CENTER C3): chương của khoá có sessionNo = số thứ tự buổi. */
+  plan?: { courseSlug: string; title: string; lessons: Array<{ id: string; title: string }> } | null;
   myStatus?: "present" | "late" | "absent" | "excused" | null;
 }
 
@@ -122,6 +124,12 @@ export default function ScheduleWeek({
                         )}
                         {cancelled && m.cancelReason && (
                           <span className="basis-full text-caption text-muted">Lý do: {m.cancelReason}</span>
+                        )}
+                        {!cancelled && m.plan && (
+                          <span className="basis-full text-caption text-muted">
+                            <span className="font-medium text-[rgb(var(--text))]">{day === today ? "Hôm nay dạy:" : "Giáo án:"}</span> {m.plan.title}
+                            {m.plan.lessons.length > 0 && ` · ${m.plan.lessons.length} bài`}
+                          </span>
                         )}
                       </div>
                     );

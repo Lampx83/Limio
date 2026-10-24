@@ -252,6 +252,9 @@ export const LearningEventType = {
   // CENTER C2 — điểm danh học viên. Subject là HỌC VIÊN được điểm danh (để Feedback Engine và
   // Gamification đọc theo người); giáo viên thao tác nằm trong payload.
   AttendanceStudentMarked: "attendance.student.marked",
+  // CENTER C3 — giáo trình dựng sẵn. Subject là giảng viên thao tác.
+  CoursePackUsed: "course.pack.used",
+  CoursePackUpdated: "course.pack.updated",
 } as const;
 
 export type LearningEventType =
@@ -946,4 +949,23 @@ export interface AttendanceStudentMarkedPayload {
   previousStatus: AttendanceStatusValue | null;
   /** Giáo viên thao tác. */
   markedById: string;
+}
+
+// ── CENTER C3 — giáo trình dựng sẵn ──────────────────────────────────────
+
+export interface CoursePackUsedPayload {
+  packId: string;
+  packVersion: number;
+  /** Khoá mới được sao ra. */
+  courseId: string;
+}
+
+export interface CoursePackUpdatedPayload {
+  packId: string;
+  fromVersion: number | null;
+  toVersion: number;
+  courseId: string;
+  updatedSessions: number[];
+  /** Buổi không cập nhật vì đã dạy hoặc đã có hoạt động của học viên. */
+  skippedSessions: number[];
 }

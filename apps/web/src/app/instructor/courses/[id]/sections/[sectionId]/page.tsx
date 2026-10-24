@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import {
   getSectionRoster,
   getClassSchedule,
+  getCoursePlan,
   getSectionAttendanceSummary,
   listCourseInstructors,
   CourseAuthzError,
@@ -12,6 +13,7 @@ import { auth } from "@/lib/auth";
 import SectionRosterClient from "./SectionRosterClient";
 import SectionScheduleClient from "./SectionScheduleClient";
 import SectionAttendanceSummary from "./SectionAttendanceSummary";
+import PackUpdateBanner from "./PackUpdateBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -42,10 +44,11 @@ export default async function SectionRosterPage({
 
   if (roster.section.courseId !== params.id) notFound();
 
-  const [schedule, instructors, attendance] = await Promise.all([
+  const [schedule, instructors, attendance, coursePlan] = await Promise.all([
     getClassSchedule(userId, params.sectionId),
     listCourseInstructors(params.id),
     getSectionAttendanceSummary(userId, params.sectionId),
+    getCoursePlan(userId, params.id),
   ]);
   const teachers = instructors.map((i) => ({ id: i.userId, name: i.displayName }));
 
@@ -60,6 +63,14 @@ export default async function SectionRosterPage({
       <h1 className="mt-3 text-2xl font-bold">{roster.section.name}</h1>
       {roster.section.description && (
         <p className="mt-1 text-sm text-faint">{roster.section.description}</p>
+      )}
+      {coursePlan.pack?.hasUpdate && (
+        <PackUpdateBanner
+          courseId={params.id}
+          packTitle={coursePlan.pack.title}
+          copiedVersion={coursePlan.pack.copiedVersion}
+          currentVersion={coursePlan.pack.currentVersion}
+        />
       )}
       <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} />
       <SectionAttendanceSummary summary={attendance} />

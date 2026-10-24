@@ -64,6 +64,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "giao-trinh-dung-san",
+    title: "Giáo trình dựng sẵn và giáo án theo từng buổi",
+    keywords: ["giáo trình", "giáo trình dựng sẵn", "giáo án", "giáo án từng buổi", "soạn sẵn", "dạy ngay", "tiếng trung sơ cấp", "bản mới", "cập nhật giáo trình", "hôm nay dạy gì", "mẫu khoá học"],
+    destinationIds: ["pack_library", "teaching_schedule"],
+    body: `Vào menu LMS, mục "Giáo trình" (trang "Giáo trình dựng sẵn") để xem các giáo trình đã soạn sẵn giáo án từng buổi (từ vựng, hội thoại, quiz, bài tập về nhà và ghi chú dành cho giáo viên). Bấm "Xem trước" để xem từng buổi gồm những bài nào, rồi bấm "Dùng giáo trình này": Limio sao cả giáo trình về thành một khoá nháp của thầy/cô, bản gốc không bị ảnh hưởng và thầy/cô sửa bản sao thoải mái. Khoá sao về còn là bản nháp: thầy/cô xem lại nội dung, bấm "Publish", rồi vào tab "Lớp học" để tạo lớp và đặt "Lịch dạy" cho lớp; buổi học số N sẽ tự hiện giáo án của buổi N kèm các bài để mở nhanh, và giáo án đi theo số thứ tự buổi nên huỷ hay dạy bù không làm lệch. Nếu lịch ít buổi hơn giáo án hoặc nhiều buổi hơn giáo án, trang lớp báo rõ. Ghi chú giảng viên trong giáo trình chỉ thầy/cô thấy, học viên không bao giờ thấy. Khi giáo trình gốc ra bản mới, lớp đang dạy không bị đổi; trang lớp hiện thông báo kèm nút "Cập nhật các buổi chưa dạy", và chỉ những buổi chưa dạy, chưa có học viên làm bài mới được thay bằng bản mới. Việc soạn và phát hành giáo trình do quản trị Limio làm; Limio chưa có chức năng để trung tâm tự đóng gói giáo án của mình thành giáo trình dùng lại.`,
+    useCases: [
+      `Trung tâm mở lớp Tiếng Trung sơ cấp mới, thầy/cô chọn giáo trình dựng sẵn thay vì soạn từng buổi từ đầu, rồi chỉ chỉnh vài bài cho hợp học viên.`,
+      `Trước buổi học, thầy/cô mở lịch dạy để xem hôm nay dạy bài nào và bấm vào bài để mở ngay.`,
+    ],
+  },
+  {
     id: "diem-danh-hoc-vien",
     title: "Điểm danh học viên theo buổi và theo dõi chuyên cần",
     keywords: ["điểm danh", "có mặt", "vắng", "đi muộn", "vắng có phép", "chuyên cần", "bỏ học", "ai nghỉ", "sĩ số buổi", "danh sách lớp buổi"],
@@ -323,7 +334,7 @@ export const GUIDES: readonly GuideEntry[] = [
 
 /** Những điều Limio CHƯA có, để trợ lý không hứa nhầm. Luôn đưa vào prompt (ngắn). */
 export const ASSISTANT_LIMITS =
-  "Limio chưa có: gửi thông báo cho cả lớp; chuyển bài tập sang bài học khác (tạo lại ở bài đúng rồi xoá bài cũ); đính kèm tệp làm rubric (chỉ dán chữ); kéo thả để đổi thứ tự chương (đổi bằng ô Order); bảng tiêu chí chấm nhiều cột và hàng cho bài tập, đề thi hay vấn đáp (rubric ở đó chỉ là một ô văn bản tự do, nhưng AI có đọc nó khi gợi ý điểm; riêng nhiệm vụ Đấu trường chấm chéo có bảng tiêu chí); cài đặt XP hoặc huy hiệu cho giảng viên (chỉ có điểm XP trong Đấu trường); chia sẻ bài giảng cho đồng nghiệp cùng soạn (chỉ có link xem chỉ đọc); Thư viện mẫu, Template và Soạn kịch bản của Limio-Live (đang phát triển); chức năng đợt thi (chỉ có ca thi và phòng thi); giáo viên check-in và nhận xét gửi học viên sau buổi học; báo cáo sau buổi dạy theo từng học viên; AI chấm ảnh, video hoặc PDF scan.";
+  "Limio chưa có: gửi thông báo cho cả lớp; chuyển bài tập sang bài học khác (tạo lại ở bài đúng rồi xoá bài cũ); đính kèm tệp làm rubric (chỉ dán chữ); kéo thả để đổi thứ tự chương (đổi bằng ô Order); bảng tiêu chí chấm nhiều cột và hàng cho bài tập, đề thi hay vấn đáp (rubric ở đó chỉ là một ô văn bản tự do, nhưng AI có đọc nó khi gợi ý điểm; riêng nhiệm vụ Đấu trường chấm chéo có bảng tiêu chí); cài đặt XP hoặc huy hiệu cho giảng viên (chỉ có điểm XP trong Đấu trường); chia sẻ bài giảng cho đồng nghiệp cùng soạn (chỉ có link xem chỉ đọc); Thư viện mẫu, Template và Soạn kịch bản của Limio-Live (đang phát triển); chức năng đợt thi (chỉ có ca thi và phòng thi); giáo viên check-in và nhận xét gửi học viên sau buổi học; trung tâm tự đóng gói giáo án của mình thành giáo trình dùng lại (giáo trình dựng sẵn do quản trị Limio phát hành); báo cáo sau buổi dạy theo từng học viên; AI chấm ảnh, video hoặc PDF scan.";
 
 // ── Chọn mục liên quan ───────────────────────────────────────────────────────
 

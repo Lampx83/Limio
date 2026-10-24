@@ -429,6 +429,10 @@ model Course {
   // PR2.17 — Multi-tenancy: course thuộc về 1 Organization. Nullable trong
   // backfill phase, sẽ siết NOT NULL sau.
   organizationId         String?
+  // CENTER C3 — khoá này là BẢN SAO của một giáo trình dựng sẵn; ghi phiên bản gói lúc sao chép
+  // để biết khi gói có bản mới. Gói bị xoá thì bản sao vẫn sống (sourcePackId về null).
+  sourcePackId           String?
+  sourcePackVersion      Int?
   slug                   String       @unique
   title                  String
   description            String       @db.Text
@@ -485,6 +489,9 @@ model Course {
   teams                 CourseTeam[]
   enrollments           Enrollment[]
   instructors           CourseInstructor[]
+  // CENTER C3 — khoá này là nơi soạn của một gói (tối đa một), và gói mà khoá này được sao ra.
+  packAuthored          CoursePack?        @relation("PackSource")
+  fromPack              CoursePack?        @relation("CourseFromPack", fields: [sourcePackId], references: [id], onDelete: SetNull)
   liveDeckGroups        LiveDeckGroup[]
   userRoles             UserRole[]
   userProgress          UserCourseProgress[]
@@ -564,6 +571,9 @@ model Module {
   courseId   String
   title      String
   orderIndex Int
+  /// CENTER C3 — chương này là giáo án của buổi học số mấy (1..N); null = không gắn buổi nào.
+  /// Buổi học `seq` của lớp trong khoá tra chương có `sessionNo = seq` để biết hôm nay dạy gì.
+  sessionNo  Int?
   // Instructor-controlled visibility (false = hidden from all learners)
   isHidden   Boolean  @default(false)
   /// B14 — khoá KHÁC ẩn. Ẩn thì học viên không biết là có; khoá thì thấy tên
@@ -574,6 +584,8 @@ model Module {
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons Lesson[]
+
+  @@index([courseId, sessionNo])
 
   @@unique([courseId, orderIndex])
   @@index([courseId])
@@ -4401,6 +4413,35 @@ model ClassMeeting {
   @@index([sectionId, startsAt])
   @@index([plannedTeacherId, startsAt])
   @@map("ClassMeeting")
+}
+
+// CENTER C3 — Giáo trình dựng sẵn. Một gói là một khoá do quản trị soạn, mỗi chương = giáo án của một
+// buổi học (Module.sessionNo). Trung tâm "dùng giáo trình" = sao chép cả khoá về tài khoản mình
+// (duplicate, độc lập hoàn toàn); sửa bản sao không đụng gói gốc, và gói ra bản mới không làm đổi
+// bản sao đang dạy — chỉ báo "có bản mới" và cho cập nhật các buổi chưa dạy.
+model CoursePack {
+  id           String    @id @default(uuid())
+  // Khoá nguồn (nơi soạn); mỗi khoá chỉ làm nguồn cho một gói.
+  courseId     String    @unique
+  slug         String    @unique
+  title        String
+  summary      String    @db.Text
+  language     String
+  // Trình độ đầu ra, hiển thị cho giảng viên chọn (vd "HSK 1").
+  outcomeLevel String?
+  // Tăng khi quản trị bấm phát hành bản mới; bản sao ghi lại số này lúc sao chép.
+  version      Int       @default(1)
+  isPublished  Boolean   @default(false)
+  publishedAt  DateTime?
+  createdById  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  course Course   @relation("PackSource", fields: [courseId], references: [id], onDelete: Cascade)
+  copies Course[] @relation("CourseFromPack")
+
+  @@index([isPublished, language])
+  @@map("CoursePack")
 }
 
 enum AttendanceStatus {

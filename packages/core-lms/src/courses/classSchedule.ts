@@ -19,6 +19,7 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 import { emitEvent } from "../learning/events";
 import { assertCanGradeCourse } from "./authz";
+import { loadSessionPlans, type MeetingPlan, type PlanAudience } from "./sessionPlan";
 import {
   addDays,
   generateMeetings,
@@ -71,6 +72,8 @@ export interface MeetingItem {
   cancelReason: string | null;
   makeupOfId: string | null;
   locked: boolean;
+  /** Giáo án của buổi (CENTER C3): chương `sessionNo = seq` của khoá; null khi buổi huỷ, khoá không có giáo án theo buổi, hoặc buổi vượt quá số buổi giáo án. */
+  plan: MeetingPlan | null;
 }
 
 export interface ClassScheduleView {
@@ -99,6 +102,12 @@ export interface ClassScheduleDetail {
   countedMeetings: number;
   /** Còn thiếu bao nhiêu buổi so với kế hoạch (0 nếu đủ hoặc dư). */
   shortBy: number;
+  /** Số buổi trong giáo án của khoá (0 = khoá không có giáo án theo buổi). */
+  planSessions: number;
+  /** Buổi giáo án chưa có buổi học nào trong lịch (lịch ít buổi hơn giáo án). */
+  unscheduledSessions: number;
+  /** Buổi học không huỷ vượt quá giáo án, chưa có gì để dạy. */
+  meetingsWithoutPlan: number;
 }
 
 // ── Kiểm tra đầu vào ─────────────────────────────────────────────────────
@@ -248,6 +257,7 @@ function toItem(m: MeetingRow, sectionName?: string): MeetingItem {
     cancelReason: m.cancelReason,
     makeupOfId: m.makeupOfId,
     locked: m.locked,
+    plan: null,
   };
 }
 
@@ -255,6 +265,16 @@ const MEETING_INCLUDE = {
   section: { select: { name: true, courseId: true } },
   plannedTeacher: { select: { displayName: true } },
 } as const;
+
+/** Gắn giáo án vào các buổi (theo `seq`, bỏ buổi huỷ). Học viên không thấy chương/bài ẩn. */
+async function attachPlans(items: MeetingItem[], audience: PlanAudience, db: DbClient): Promise<MeetingItem[]> {
+  const plans = await loadSessionPlans(items.map((i) => i.courseId), audience, db);
+  if (plans.size === 0) return items;
+  return items.map((i) => {
+    if (i.status === "cancelled" || i.seq === null) return i;
+    return { ...i, plan: plans.get(i.courseId)?.get(i.seq) ?? null };
+  });
+}
 
 const normRoom = (r: string | null) => (r && r.trim() ? r.trim().toLowerCase() : null);
 
@@ -505,7 +525,7 @@ export async function addMakeupMeeting(
         tx,
       );
       const fresh = await tx.classMeeting.findUniqueOrThrow({ where: { id: row.id }, include: MEETING_INCLUDE });
-      return { meeting: toItem(fresh), conflicts };
+      return { meeting: (await attachPlans([toItem(fresh)], "teacher", tx))[0]!, conflicts };
     },
     { timeout: 30_000 },
   );
@@ -560,7 +580,7 @@ export async function updateMeeting(
         tx,
       );
       const fresh = await tx.classMeeting.findUniqueOrThrow({ where: { id: meetingId }, include: MEETING_INCLUDE });
-      return { meeting: toItem(fresh), conflicts };
+      return { meeting: (await attachPlans([toItem(fresh)], "teacher", tx))[0]!, conflicts };
     },
     { timeout: 30_000 },
   );
@@ -585,6 +605,11 @@ export async function getClassSchedule(
     }),
   ]);
   const countedMeetings = meetings.filter((m) => m.status !== "cancelled").length;
+  const items = await attachPlans(meetings.map((m) => toItem(m)), "teacher", db);
+  // Giáo án theo buổi (nếu khoá có): so số buổi giáo án với số buổi học thật.
+  const sessionNos = [...((await loadSessionPlans([section.courseId], "teacher", db)).get(section.courseId)?.keys() ?? [])];
+  const planSessions = sessionNos.length;
+  const countedSeqs = new Set(items.filter((m) => m.status !== "cancelled" && m.seq !== null).map((m) => m.seq!));
   return {
     schedule: schedule
       ? {
@@ -601,9 +626,12 @@ export async function getClassSchedule(
             })),
         }
       : null,
-    meetings: meetings.map((m) => toItem(m)),
+    meetings: items,
     countedMeetings,
     shortBy: schedule ? Math.max(0, schedule.totalMeetings - countedMeetings) : 0,
+    planSessions,
+    unscheduledSessions: sessionNos.filter((n) => !countedSeqs.has(n)).length,
+    meetingsWithoutPlan: planSessions === 0 ? 0 : [...countedSeqs].filter((n) => !sessionNos.includes(n)).length,
   };
 }
 
@@ -637,7 +665,7 @@ export async function listTeacherMeetings(
     orderBy: [{ startsAt: "asc" }, { createdAt: "asc" }],
     include: MEETING_INCLUDE,
   });
-  return rows.map((m) => toItem(m));
+  return attachPlans(rows.map((m) => toItem(m)), "teacher", db);
 }
 
 /** Lịch của học viên: các buổi của lớp mình đang học (buổi huỷ vẫn hiện để biết là đã huỷ). */
@@ -656,5 +684,5 @@ export async function listLearnerMeetings(
     orderBy: [{ startsAt: "asc" }, { createdAt: "asc" }],
     include: MEETING_INCLUDE,
   });
-  return rows.map((m) => toItem(m));
+  return attachPlans(rows.map((m) => toItem(m)), "learner", db);
 }

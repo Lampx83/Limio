@@ -385,6 +385,18 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   có "Sửa" và **"Huỷ buổi"** (hỏi lý do; huỷ thì các buổi sau tự lùi số thứ tự); **"+ Thêm buổi dạy bù"** có thể
   gắn với một buổi đã huỷ. Trùng giáo viên hoặc phòng giữa các lớp chỉ hiện cảnh báo, vẫn lưu. Học viên xem
   ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`).
+- **Giáo trình dựng sẵn** (mới, CENTER C3): mục **"Giáo trình"** trong menu LMS mở trang **"Giáo trình dựng sẵn"** (`/instructor/giao-trinh`)
+  liệt kê các giáo trình quản trị đã phát hành (tên, ngôn ngữ, "đầu ra", số buổi, số bài). **"Xem trước"** mở
+  `/instructor/giao-trinh/[packId]`: mô tả và danh sách buổi, bấm một buổi để xổ các bài kèm loại nội dung (từ vựng,
+  hội thoại, audio, quiz, bài tập về nhà, ghi chú cho giáo viên). **"Dùng giáo trình này"** sao cả giáo trình về
+  thành một khoá nháp của giảng viên rồi mở trang khoá đó; khoá còn nháp nên giảng viên bấm **"Publish"** thì mới có tab "Lớp học" để tạo lớp. Sửa bản sao không đụng bản gốc. Mỗi chương
+  của giáo trình là giáo án của một buổi: buổi học số N của lớp (số thứ tự theo thời gian, không tính buổi huỷ) tự hiện
+  dòng **"Giáo án:"** kèm các bài để mở ở khối "Lịch dạy" của trang lớp, và dòng **"Giáo án:"** (đổi thành **"Hôm nay dạy:"** đúng ngày hôm nay) ở trang "Lịch dạy"
+  và "Lịch học"; buổi vượt quá giáo án hiện "Chưa có giáo án cho buổi này", và trang lớp có thông báo khi giáo án nhiều
+  hoặc ít buổi hơn lịch. Học viên chỉ thấy tên bài, không thấy bài ẩn, không thấy ghi chú giảng viên. Khi quản trị phát
+  hành bản mới, trang lớp hiện thông báo "có bản mới" kèm nút **"Cập nhật các buổi chưa dạy"** (hỏi xác nhận; buổi đã dạy
+  hoặc đã có học viên xem/làm bài được giữ nguyên và báo lại). Quản trị phát hành qua API
+  `/api/admin/packs` (chưa có giao diện). Chưa có: trung tâm tự đóng gói giáo án của mình thành giáo trình.
 - **Điểm danh học viên** (mới, CENTER C2): mỗi buổi chưa huỷ trong khối "Lịch dạy" của trang lớp có nút
   **"Điểm danh"** (cũng là đích khi bấm một buổi ở trang "Lịch dạy"), mở
   `/instructor/courses/[id]/sections/[sectionId]/meetings/[meetingId]`. Trang liệt kê học viên của lớp, mặc định

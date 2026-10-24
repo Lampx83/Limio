@@ -87,18 +87,20 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 ## C3 · Gói học liệu dựng sẵn theo buổi (Tiếng Trung đầu tiên)
 
+**Trạng thái (2026-10-23, nhánh `feat/center-c1-lich-buoi`, chưa commit):** service `coursePacks.ts` + `sessionPlan.ts` + 24 test xanh; `duplicateCourse` tách ra `cloneCourseUnchecked`/`cloneModuleTree` (24 test cũ vẫn xanh); thư viện `/instructor/giao-trinh` (xem trước, "Dùng giáo trình này"), giáo án hiện ở khối "Lịch dạy" của trang lớp và ở "Lịch dạy"/"Lịch học", banner "có bản mới" + nút cập nhật; API công khai và API quản trị `/api/admin/packs`. Lily + `GIAO-DIEN.md` đã cập nhật. Script `scripts/build-pack-zh-so-cap-1.ts` dựng gói mẫu **6 buổi** (chạy thử trên DB test). Migration `20261023180000_course_pack` đã áp lên DB dev; gói mẫu đã dựng trên dev; đã xem bằng mắt desktop + mobile + phía học viên (2026-10-24). Sửa sau khi xem: khoá sao về là bản nháp nên chuyển hướng về trang khoá và dặn bấm Publish trước khi tạo lớp; mục menu rút gọn thành "Giáo trình" (cột menu cắt chữ); nhãn "Giáo án:" (chỉ đúng ngày hôm nay mới ghi "Hôm nay dạy:"). **Chưa làm:** giao diện quản trị phát hành gói (hiện chỉ có API), audio, 18 buổi còn lại của gói Tiếng Trung (C3.11 chưa đạt: cần chủ dự án soạn/duyệt), thử nút "Cập nhật các buổi chưa dạy" bằng mắt (đã có test). Ghi chú thiết kế: gói = một khoá, chương = buổi (`Module.sessionNo`); buổi `seq` N dạy chương N; bản sao độc lập hoàn toàn. Slide Limio-Live và flashcard chưa được sao theo gói (flashcard sinh từ khối từ vựng trong bài nên đi theo bài).
+
 **Thiết kế đề xuất:** một khoá mẫu có khung buổi: mỗi buổi gắn với một hoặc nhiều bài (`Lesson`) và có phần "dành cho giáo viên" (mục tiêu buổi, gợi ý trình tự 90 phút, đáp án). Trung tâm **sao chép** khoá mẫu về lớp của mình. Cơ chế phiên bản để cập nhật gói gốc không làm đổi nội dung lớp đang dạy.
 
-- [ ] **C3.1** Given thư viện gói, when giảng viên chọn "Giáo trình dựng sẵn → Tiếng Trung sơ cấp 1", then thấy mô tả, số buổi, trình độ đầu ra, xem trước được từng buổi.
-- [ ] **C3.2** Given chọn gói và lớp, when áp dụng, then hệ thống sao chép khoá về tổ chức của giảng viên, chủ khoá là giảng viên, gắn buổi 1..N của gói vào `seq` 1..N của lịch lớp.
-- [ ] **C3.3** Given lớp có lịch và gói đã gắn, then mỗi `ClassMeeting` hiện "Hôm nay dạy: Bài X" kèm nút mở bài/slide Limio-Live/flashcard/bài tập của buổi đó.
-- [ ] **C3.4** Given số buổi của lịch nhiều hơn số buổi của gói, then các buổi dư hiện "chưa có giáo án" (không lỗi); ít hơn thì cảnh báo còn bài chưa dạy.
-- [ ] **C3.5** Given buổi dạy bù hoặc huỷ, then giáo án đi theo `seq`, không theo ngày (C1.5).
-- [ ] **C3.6** Given bản sao, when giảng viên sửa bài, then sửa trên **bản sao**; gói gốc không đổi.
-- [ ] **C3.7** Given gói gốc có phiên bản mới, then lớp đang dùng bản cũ **không** bị đổi; hiện thông báo "có bản mới" và cho chọn áp dụng cho các buổi **chưa dạy**.
-- [ ] **C3.8** Phần "dành cho giáo viên" (đáp án, gợi ý trình tự) **không bao giờ** lộ cho học viên: kiểm bằng test ở route trả nội dung học viên (cùng tinh thần guard rò nội dung của annotation).
-- [ ] **C3.9** Bản sao đi qua lesson-as-tag (§4.4) khi khoá bật personalization; khoá tắt thì không sinh `Skill` thừa.
-- [ ] **C3.10** Dung lượng media của bản sao được sổ đúng chủ khoá (ledger lưu trữ); sao chép không nhân đôi file khi có thể dùng chung tham chiếu.
+- [x] **C3.1** Given thư viện gói, when giảng viên chọn "Giáo trình dựng sẵn → Tiếng Trung sơ cấp 1", then thấy mô tả, số buổi, trình độ đầu ra, xem trước được từng buổi.
+- [x] **C3.2** Given chọn gói và lớp, when áp dụng, then hệ thống sao chép khoá về tổ chức của giảng viên, chủ khoá là giảng viên, gắn buổi 1..N của gói vào `seq` 1..N của lịch lớp.
+- [x] **C3.3** Given lớp có lịch và gói đã gắn, then mỗi `ClassMeeting` hiện "Hôm nay dạy: Bài X" kèm nút mở bài/slide Limio-Live/flashcard/bài tập của buổi đó.
+- [x] **C3.4** Given số buổi của lịch nhiều hơn số buổi của gói, then các buổi dư hiện "chưa có giáo án" (không lỗi); ít hơn thì cảnh báo còn bài chưa dạy.
+- [x] **C3.5** Given buổi dạy bù hoặc huỷ, then giáo án đi theo `seq`, không theo ngày (C1.5).
+- [x] **C3.6** Given bản sao, when giảng viên sửa bài, then sửa trên **bản sao**; gói gốc không đổi.
+- [x] **C3.7** Given gói gốc có phiên bản mới, then lớp đang dùng bản cũ **không** bị đổi; hiện thông báo "có bản mới" và cho chọn áp dụng cho các buổi **chưa dạy**.
+- [x] **C3.8** Phần "dành cho giáo viên" (đáp án, gợi ý trình tự) **không bao giờ** lộ cho học viên: kiểm bằng test ở route trả nội dung học viên (cùng tinh thần guard rò nội dung của annotation).
+- [x] **C3.9** Bản sao đi qua lesson-as-tag (§4.4) khi khoá bật personalization; khoá tắt thì không sinh `Skill` thừa.
+- [x] **C3.10** Dung lượng media của bản sao được sổ đúng chủ khoá (ledger lưu trữ); sao chép không nhân đôi file khi có thể dùng chung tham chiếu.
 - [ ] **C3.11** Gói **Tiếng Trung sơ cấp** đầu tiên: ít nhất 24 buổi, mỗi buổi gồm bài từ vựng/hội thoại (G2), audio, quiz cuối buổi, bài tập về nhà; nội dung do chủ dự án soạn hoặc có nguồn/giấy phép ghi rõ.
 
 **P1:** gói tiếng Anh/Hàn/Nhật; trung tâm đóng gói giáo án riêng của họ thành mẫu dùng lại.

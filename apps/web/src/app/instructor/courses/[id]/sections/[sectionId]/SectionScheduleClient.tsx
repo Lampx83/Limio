@@ -19,6 +19,12 @@ export interface ScheduleMeeting {
   cancelReason: string | null;
   makeupOfId: string | null;
   locked: boolean;
+  plan: {
+    courseSlug: string;
+    sessionNo: number;
+    title: string;
+    lessons: Array<{ id: string; title: string }>;
+  } | null;
 }
 
 interface SlotForm {
@@ -44,6 +50,9 @@ export interface ScheduleDetail {
   meetings: ScheduleMeeting[];
   countedMeetings: number;
   shortBy: number;
+  planSessions: number;
+  unscheduledSessions: number;
+  meetingsWithoutPlan: number;
 }
 
 interface Conflict {
@@ -227,6 +236,17 @@ export default function SectionScheduleClient({
             ))}
             {conflicts.length > 6 && <li>và {conflicts.length - 6} chỗ khác</li>}
           </ul>
+        </div>
+      )}
+      {detail.planSessions > 0 && detail.unscheduledSessions > 0 && (
+        <div className="banner-info text-sm">
+          Giáo án có {detail.planSessions} buổi nhưng lịch mới có {detail.countedMeetings} buổi, còn {detail.unscheduledSessions} buổi giáo án
+          chưa có lịch dạy. Tăng “Tổng số buổi” rồi bấm “Áp dụng lịch”.
+        </div>
+      )}
+      {detail.planSessions > 0 && detail.meetingsWithoutPlan > 0 && (
+        <div className="banner-info text-sm">
+          Có {detail.meetingsWithoutPlan} buổi học nằm ngoài giáo án ({detail.planSessions} buổi): các buổi này chưa có giáo án.
         </div>
       )}
       {detail.schedule && detail.shortBy > 0 && (
@@ -456,6 +476,23 @@ export default function SectionScheduleClient({
                     </span>
                   )}
                 </div>
+                {m.status !== "cancelled" && m.plan && (
+                  <p className="mt-1 text-caption text-muted">
+                    <span className="font-medium text-[rgb(var(--text))]">Giáo án:</span> {m.plan.title}
+                    {m.plan.lessons.length > 0 && " — "}
+                    {m.plan.lessons.map((l, i) => (
+                      <span key={l.id}>
+                        {i > 0 && ", "}
+                        <Link href={`/learn/${m.plan!.courseSlug}/lessons/${l.id}`} className="underline underline-offset-2 hover:text-[rgb(var(--text))]">
+                          {l.title}
+                        </Link>
+                      </span>
+                    ))}
+                  </p>
+                )}
+                {m.status !== "cancelled" && !m.plan && detail.planSessions > 0 && (
+                  <p className="mt-1 text-caption text-muted">Chưa có giáo án cho buổi này.</p>
+                )}
                 {m.status === "cancelled" && m.cancelReason && (
                   <p className="mt-1 text-caption text-muted">Lý do: {m.cancelReason}</p>
                 )}

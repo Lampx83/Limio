@@ -7,6 +7,7 @@ import {
   ClassScheduleError,
   CourseAuthzError,
   CourseError,
+  CoursePackError,
   CourseTeamError,
   EnrollError,
   ExamError,
@@ -48,6 +49,17 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
     );
+  }
+  if (err instanceof CoursePackError) {
+    const status =
+      err.code === "forbidden"
+        ? 403
+        : err.code === "pack_not_found" || err.code === "course_not_found"
+          ? 404
+          : err.code === "not_published" || err.code === "slug_taken" || err.code === "nothing_to_update"
+            ? 409
+            : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
   }
   if (err instanceof AttendanceError) {
     const status =

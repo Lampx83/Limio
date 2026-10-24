@@ -9,7 +9,7 @@ import { recordContentVersion } from "./contentVersions";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 
-const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p", "html_block", "audio", "vocab_list", "dialogue"]);
+const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p", "html_block", "audio", "vocab_list", "dialogue", "teacher_note"]);
 
 export const CreateContentInput = z.object({
   type: TypeEnum,
