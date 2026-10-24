@@ -352,3 +352,65 @@ describe("recordMeetingNoteDelivery — toạ độ SSMMD (C4.15)", () => {
     expect(await prisma.feedbackDelivery.findUniqueOrThrow({ where: { id: id! } })).toMatchObject({ level: "task", elaboration: "kr", sourceKind: "rule_template" });
   });
 });
+
+describe("nhắc mục tiêu của học viên trong nháp (C6.5)", () => {
+  const NOW = new Date("2026-11-04T03:00:00.000Z");
+  const goalOf = (userId: string, courseId: string, over: Record<string, unknown> = {}) =>
+    prisma.learnerGoal.create({
+      data: { userId, courseId, framework: "HSK", targetLevel: "HSK 3", targetDate: new Date("2027-01-13T00:00:00.000Z"), hoursPerWeek: 4, setById: userId, ...over },
+    });
+
+  it("có mục tiêu riêng đang theo đuổi: dữ kiện có mục tiêu kèm số tuần còn lại; không có thì null", async () => {
+    const f = await fx();
+    await goalOf(f.a, f.courseId); // 4/11/2026 → 13/1/2027 = 70 ngày = 10 tuần
+    const withGoal = await gatherMeetingNoteFacts(f.meetingId, f.a, prisma, NOW);
+    expect(withGoal.goal).toEqual({ framework: "HSK", targetLevel: "HSK 3", targetDate: "2027-01-13", weeksLeft: 10 });
+    expect((await gatherMeetingNoteFacts(f.meetingId, f.b, prisma, NOW)).goal).toBeNull();
+  });
+
+  it("không nhắc mục tiêu đã lưu trữ, đã đạt, đã qua hạn, mục tiêu của lớp, hay mục tiêu chung không gắn khoá", async () => {
+    const f = await fx();
+    await prisma.sectionGoal.create({ data: { sectionId: f.sectionId, framework: "HSK", targetLevel: "HSK 1", setById: f.teacher } });
+    await goalOf(f.a, f.courseId, { status: "archived" });
+    await goalOf(f.a, f.courseId, { status: "achieved" });
+    await goalOf(f.b, f.courseId, { targetDate: new Date("2026-10-01T00:00:00.000Z") }); // đã qua hạn
+    await goalOf(f.c, f.courseId, { courseId: null });
+    for (const u of [f.a, f.b, f.c]) expect((await gatherMeetingNoteFacts(f.meetingId, u, prisma, NOW)).goal).toBeNull();
+  });
+
+  it("mẫu có sẵn nhắc mục tiêu cuối nháp khi đã có nội dung khác; chỉ có mục tiêu thì vẫn để trống", () => {
+    const base: MeetingNoteFacts = {
+      version: 1, meetingId: "m", seq: 1, planTitle: "Buổi 1: Xin chào", attendance: "present", learnerName: "An",
+      lessons: [{ id: "l", title: "Từ vựng", label: "needs_review" }], homework: [],
+      goal: { framework: "HSK", targetLevel: "HSK 3", targetDate: "2027-01-13", weeksLeft: 10 },
+    };
+    const r = composeRuleNote(base);
+    expect(r.body).toContain("Mục tiêu của em: HSK 3, còn 10 tuần.");
+    expect(r.body.indexOf("Mục tiêu của em")).toBeGreaterThan(r.body.indexOf("Từ vựng"));
+    expect(composeRuleNote({ ...base, goal: null }).body).not.toContain("Mục tiêu");
+    expect(composeRuleNote({ ...base, lessons: [] }).body).toBe("");
+  });
+
+  it("lời nhắc gửi mô hình có mục tiêu của chính em đó; không có mục tiêu thì không có dòng đó", async () => {
+    const f = await fx();
+    await setMastery(f.a, f.lessons[1]!.id, 0.3);
+    await goalOf(f.a, f.courseId, { targetDate: new Date(Date.now() + 70 * 86_400_000) });
+    const { client, calls } = fakeOpenAI({ body: "Em cần ôn lại hội thoại." });
+    await draftMeetingNote({ actorUserId: f.teacher, meetingId: f.meetingId, userId: f.a, openai: client });
+    expect(calls[0]!.messages.map((m) => m.content).join("\n")).toMatch(/Mục tiêu của em: HSK 3/);
+
+    const g = await fx();
+    await setMastery(g.a, g.lessons[1]!.id, 0.3);
+    const second = fakeOpenAI({ body: "Em cần ôn lại hội thoại." });
+    await draftMeetingNote({ actorUserId: g.teacher, meetingId: g.meetingId, userId: g.a, openai: second.client });
+    expect(second.calls[0]!.messages.map((m) => m.content).join("\n")).not.toContain("Mục tiêu");
+  });
+
+  it("bản nháp theo mẫu của người có mục tiêu nhắc mục tiêu; nhắc đúng một lần", async () => {
+    const f = await fx();
+    await setMastery(f.a, f.lessons[1]!.id, 0.3);
+    await goalOf(f.a, f.courseId, { targetDate: new Date(Date.now() + 70 * 86_400_000) });
+    const r = await draftMeetingNote({ actorUserId: f.teacher, meetingId: f.meetingId, userId: f.a });
+    expect(r.body.match(/Mục tiêu của em/g)).toHaveLength(1);
+  });
+});

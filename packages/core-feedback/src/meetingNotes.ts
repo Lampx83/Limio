@@ -55,6 +55,11 @@ export interface MeetingNoteFacts {
   learnerName: string;
   lessons: NoteLesson[];
   homework: NoteHomework[];
+  /**
+   * C6.5 — mục tiêu RIÊNG đang theo đuổi của học viên trong khoá này (null nếu không có, đã đạt/lưu trữ, đã qua hạn,
+   * hoặc chỉ có mục tiêu của lớp). Chỉ để nhắc trong nhận xét, không dùng để đánh giá.
+   */
+  goal?: { framework: string; targetLevel: string; targetDate: string; weeksLeft: number } | null;
   /** Mastery thô theo mã skill, chỉ để ghi `generationContext` phục vụ phân tích; KHÔNG đi vào lời nhắc hay giao diện. */
   masteryAtGeneration?: Record<string, number>;
 }
@@ -65,6 +70,7 @@ export async function gatherMeetingNoteFacts(
   meetingId: string,
   userId: string,
   db: PrismaClient = prisma,
+  now: Date = new Date(),
 ): Promise<MeetingNoteFacts> {
   const meeting = await db.classMeeting.findUnique({
     where: { id: meetingId },
@@ -89,7 +95,7 @@ export async function gatherMeetingNoteFacts(
   const lessonIds = lessonRows.map((l) => l.id);
   const codes = lessonIds.map(lessonSkillCode);
 
-  const [skills, assignments] = await Promise.all([
+  const [skills, assignments, goalRow] = await Promise.all([
     codes.length
       ? db.skill.findMany({
           where: { code: { in: codes } },
@@ -110,7 +116,17 @@ export async function gatherMeetingNoteFacts(
           },
         })
       : Promise.resolve([]),
+    db.learnerGoal.findFirst({ where: { userId, courseId: meeting.section.courseId, status: "active" }, orderBy: { createdAt: "desc" } }),
   ]);
+
+  const goal = (() => {
+    if (!goalRow) return null;
+    const today = new Date(now.getTime() + 7 * 3600_000).toISOString().slice(0, 10);
+    const target = goalRow.targetDate.toISOString().slice(0, 10);
+    const daysLeft = Math.round((Date.parse(`${target}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
+    if (daysLeft < 0) return null; // đã qua hạn: không nhắc
+    return { framework: goalRow.framework, targetLevel: goalRow.targetLevel, targetDate: target, weeksLeft: Math.ceil(daysLeft / 7) };
+  })();
 
   const masterySnapshot: Record<string, number> = {};
   const byCode = new Map(skills.map((s) => [s.code, s]));
@@ -143,6 +159,7 @@ export async function gatherMeetingNoteFacts(
     learnerName: user.displayName,
     lessons,
     homework,
+    goal,
     masteryAtGeneration: masterySnapshot,
   };
 }
@@ -183,6 +200,11 @@ export function composeRuleNote(facts: MeetingNoteFacts, hint?: string | null): 
     if (h.state === "graded" && h.score != null) bullets.push(`Bài tập "${h.title}": em được ${h.score}/${h.maxScore} điểm.`);
     else if (h.state === "submitted") bullets.push(`Em đã nộp bài tập "${h.title}", thầy/cô sẽ chấm sớm.`);
     else if (h.state === "not_submitted") bullets.push(`Em chưa nộp bài tập "${h.title}"${h.dueAt ? `, hạn nộp ${vnDayMonth(h.dueAt)}` : ""}.`);
+  }
+
+  // C6.5 — nhắc mục tiêu khi đã có nội dung khác; một dòng mục tiêu đơn lẻ không làm nên một nhận xét.
+  if (bullets.length && facts.goal) {
+    bullets.push(`Mục tiêu của em: ${facts.goal.targetLevel}${facts.goal.weeksLeft > 0 ? `, còn ${facts.goal.weeksLeft} tuần` : ", hạn trong tuần này"}.`);
   }
 
   const parts: string[] = [];
@@ -248,6 +270,9 @@ export function buildNotePrompt(facts: MeetingNoteFacts, hint?: string | null): 
             : `chưa nộp${h.dueAt ? `, hạn ${vnDayMonth(h.dueAt)}` : ""}`;
       lines.push(`- ${h.title}: ${st}`);
     }
+  }
+  if (facts.goal) {
+    lines.push(`Mục tiêu của em: ${facts.goal.targetLevel}${facts.goal.weeksLeft > 0 ? `, còn ${facts.goal.weeksLeft} tuần` : ", hạn trong tuần này"} (nhắc ngắn gọn một lần, không đánh giá em có đạt hay không).`);
   }
   const trimmed = hint?.trim();
   if (trimmed) lines.push(`Ghi chú của giáo viên: ${trimmed}`);
