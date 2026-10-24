@@ -14,6 +14,7 @@ const globalForQueue = globalThis as unknown as {
   bullmqConnection: Redis | undefined;
   realtimePublishQueue: Queue | undefined;
   autoGradeQueue: Queue | undefined;
+  classMailQueue: Queue | undefined;
 };
 
 export function getBullmqConnection(): Redis {
@@ -30,6 +31,7 @@ export function getBullmqConnection(): Redis {
 export const QUEUE_NAMES = {
   realtimePublish: "realtime-publish",
   autoGrade: "auto-grade",
+  classMail: "class-mail",
 } as const;
 
 export function getRealtimePublishQueue(): Queue {
@@ -62,5 +64,25 @@ export function getAutoGradeQueue(): Queue {
     },
   });
   globalForQueue.autoGradeQueue = q;
+  return q;
+}
+
+/**
+ * CENTER C4.17 — gửi tổng kết và nhận xét sau buổi. Hai việc đều idempotent (mỗi học viên/bản chỉ gửi một lần),
+ * nên retry an toàn: lần sau chỉ gửi lại phần còn lỗi. Backoff dài hơn các hàng khác vì lỗi thường là nhà cung cấp
+ * email quá tải hoặc rate limit.
+ */
+export function getClassMailQueue(): Queue {
+  if (globalForQueue.classMailQueue) return globalForQueue.classMailQueue;
+  const q = new Queue(QUEUE_NAMES.classMail, {
+    connection: getBullmqConnection(),
+    defaultJobOptions: {
+      removeOnComplete: { count: 1000, age: 24 * 3600 },
+      removeOnFail: { count: 2000, age: 7 * 24 * 3600 },
+      attempts: 5,
+      backoff: { type: "exponential", delay: 15_000 },
+    },
+  });
+  globalForQueue.classMailQueue = q;
   return q;
 }

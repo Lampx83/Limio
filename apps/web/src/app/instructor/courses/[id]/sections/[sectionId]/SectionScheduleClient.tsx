@@ -108,6 +108,7 @@ export default function SectionScheduleClient({
   teachers,
   canManage = true,
   viewerId,
+  autoSendSummary = true,
 }: {
   courseId: string;
   sectionId: string;
@@ -117,8 +118,11 @@ export default function SectionScheduleClient({
   canManage?: boolean;
   /** Người đang xem: người chỉ dạy không có nút điểm danh ở buổi đã xếp cho giảng viên khác. */
   viewerId?: string;
+  /** Lớp có tự gửi tổng kết chung khi giáo viên kết thúc buổi không (mặc định bật). */
+  autoSendSummary?: boolean;
 }) {
   const [detail, setDetail] = useState(initial);
+  const [autoSend, setAutoSend] = useState(autoSendSummary);
   const [form, setForm] = useState(() => toForm(initial));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -260,6 +264,30 @@ export default function SectionScheduleClient({
           Kế hoạch có {detail.schedule.totalMeetings} buổi, hiện mới có {detail.countedMeetings}. Bấm “Áp dụng lịch” để thêm
           buổi thay cho buổi đã huỷ, hoặc thêm buổi dạy bù.
         </div>
+      )}
+
+      {canManage && (
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            className="mt-1"
+            checked={autoSend}
+            onChange={async (e) => {
+              const enabled = e.target.checked;
+              setAutoSend(enabled);
+              const r = await fetch(apiUrl(`/api/sections/${sectionId}/summary-setting`), {
+                method: "PUT",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({ enabled }),
+              });
+              if (!r.ok) setAutoSend(!enabled);
+            }}
+          />
+          <span>
+            Tự gửi tổng kết cho cả lớp khi kết thúc buổi
+            <span className="block text-meta text-muted">Tổng kết gồm bài đã học, từ vựng, bài tập về nhà và buổi sau. Tắt thì thầy/cô gửi bằng nút riêng.</span>
+          </span>
+        </label>
       )}
 
       {canManage && (

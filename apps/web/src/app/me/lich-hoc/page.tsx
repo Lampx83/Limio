@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getLearnerCenterAccess } from "@/lib/centerAccess";
 import MeetingsCalendar from "@/components/calendar/MeetingsCalendar";
 import MyAttendanceCard from "@/components/MyAttendanceCard";
+import MyClassFeed from "@/components/MyClassFeed";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function LichHocPage() {
       </p>
       <div className="mt-6 space-y-6">
         <MeetingsCalendar userId={userId} audience="learner" />
+        <MyClassFeed userId={userId} />
         <MyAttendanceCard userId={userId} />
       </div>
     </main>

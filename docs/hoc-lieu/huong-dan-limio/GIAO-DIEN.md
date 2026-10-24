@@ -423,7 +423,24 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   Chuyên cần (tỉ lệ = (có mặt + muộn) / (có mặt + muộn + vắng), vắng có phép không tính) và khối cảnh báo
   khi có học viên vắng từ 2 buổi liên tiếp (chỉ gợi ý, không tự nhắn). Học viên thấy trạng thái của chính mình
   ở "Lịch học" (nhãn "Có mặt", "Đi muộn", "Vắng", "Vắng có phép" và mục "Chuyên cần của bạn"), không thấy ghi chú.
-  Chưa có: giáo viên check-in, nhận xét gửi học viên sau buổi (đang làm tiếp ở các giai đoạn sau).
+  Chưa có: giáo viên check-in (giai đoạn sau).
+- **Kết thúc buổi, tổng kết và nhận xét sau buổi** (mới, CENTER C4): trên trang điểm danh của buổi có khối
+  **"Kết thúc buổi"** (dùng được từ lúc buổi bắt đầu; hỏi xác nhận). Bấm xong buổi thành "Đã dạy", hệ thống chụp
+  **tổng kết** từ giáo án (bài đã học, từ vựng cần ôn, bài tập về nhà kèm hạn riêng của lớp, giờ và nội dung buổi sau)
+  và, nếu lớp bật công tắc **"Tự gửi tổng kết cho cả lớp khi kết thúc buổi"** (ở đầu khối lịch của trang lớp, mặc
+  định bật, chỉ người quản khoá thấy), gửi email cho mọi học viên của lớp qua hàng đợi có retry; học viên vắng nhận thêm
+  dòng "Em vắng buổi này, bài cần học bù: …". Mỗi học viên nhận tối đa một email tổng kết cho mỗi buổi; khối hiện
+  "đã gửi / bỏ qua (đã tắt email) / lỗi" và nút **"Gửi tổng kết cả lớp"** hoặc **"Gửi lại phần lỗi"** (chỉ gửi người
+  chưa nhận). Nút **"Nhận xét sau buổi"** mở `…/meetings/[meetingId]/notes`: danh sách học viên, nút
+  **"Soạn nháp cho cả lớp"** tạo bản nháp riêng cho từng học viên có mặt hoặc đến muộn từ điểm danh, bài tập và nhãn
+  nắm bài (Cần ôn lại / Nên luyện thêm / Nắm chắc) của chính em đó; không số liệu, không nhắc em khác, chỗ thiếu dữ
+  liệu để trống; dùng AI khi còn hạn mức token của giảng viên và có cấu hình, không thì soạn theo mẫu. Mỗi học viên có ô
+  ghi chú nhanh (kèm bốn gợi ý bấm sẵn) và nút **"Soạn lại"**, sửa chữ trực tiếp, **"Duyệt"** / **"Bỏ duyệt"**; nút
+  **"Gửi tất cả đã duyệt"** chỉ gửi bản đã duyệt, bản nháp không bao giờ tự gửi. Học viên vắng không có bản tự động;
+  thầy/cô có thể viết lời nhắn rồi **"Lưu lời nhắn"**. Bản đã gửi không sửa được: nút **"Đính chính"** tạo bản mới gửi
+  kèm nhãn "Đính chính". Học viên đọc lại ở "Lịch học" (khối "Nhận xét của giáo viên" và "Tổng kết các buổi gần đây")
+  và ở chuông thông báo; email có liên kết "Không nhận email này nữa" (chỉ tắt thư tự động, vẫn đọc trong ứng dụng).
+  Người chỉ dạy (giảng viên trung tâm) kết thúc buổi và soạn nhận xét được cho buổi được xếp cho mình.
 - **Học viên** (tab "Học viên"): trạng thái Đang học / Đã hoàn thành / Bỏ học / Đã hoàn
   tiền / Hết hạn truy cập; tìm theo tên hoặc email; "Gán lớp", "Xoá khỏi khoá học",
   "Tải danh sách học viên".

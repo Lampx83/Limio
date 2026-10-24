@@ -73,6 +73,8 @@ export default async function SectionRosterPage({
       ])
     : [null, [], null, null];
   const teachers = instructors.map((i) => ({ id: i.userId, name: i.displayName }));
+  const autoSendSummary =
+    (await prisma.courseSection.findUnique({ where: { id: params.sectionId }, select: { autoSendSummary: true } }))?.autoSendSummary ?? true;
 
   return (
     <main>
@@ -94,7 +96,7 @@ export default async function SectionRosterPage({
           currentVersion={coursePlan.pack.currentVersion}
         />
       )}
-      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} />}
+      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} autoSendSummary={autoSendSummary} />}
       {attendance && <SectionAttendanceSummary summary={attendance} />}
       <SectionRosterClient
         courseId={params.id}

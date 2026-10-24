@@ -4,6 +4,8 @@ import {
   AnnotationError,
   AssignmentError,
   AttendanceError,
+  MeetingNoteError,
+  MeetingSummaryError,
   ClassScheduleError,
   CourseAuthzError,
   CourseError,
@@ -20,6 +22,7 @@ import {
   SectionDeadlineError,
   SkillError,
 } from "@feedbackme/core-lms";
+import { MeetingNoteDraftError } from "@feedbackme/core-feedback";
 
 /**
  * Map a known core-lms error to a NextResponse with appropriate status.
@@ -69,6 +72,19 @@ export function mapKnownError(err: unknown): NextResponse | null {
           ? 409
           : 400;
     return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
+  if (err instanceof MeetingNoteDraftError) {
+    const status = err.code === "meeting_not_found" ? 404 : err.code === "not_closed" || err.code === "already_sent" ? 409 : 400;
+    return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof MeetingSummaryError || err instanceof MeetingNoteError) {
+    const status =
+      err.code === "meeting_not_found" || err.code === "section_not_found" || err.code === "note_not_found"
+        ? 404
+        : err.code === "meeting_cancelled" || err.code === "meeting_not_started" || err.code === "not_closed" || err.code === "already_sent" || err.code === "not_sent"
+          ? 409
+          : 400;
+    return NextResponse.json({ error: err.code }, { status });
   }
   if (err instanceof ClassScheduleError) {
     const status =

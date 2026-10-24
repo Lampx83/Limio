@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { AttendanceError, CourseAuthzError, getMeetingAttendance } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { formatTime, formatVN } from "@/lib/datetime";
 import AttendanceClient from "./AttendanceClient";
+import MeetingCloseCard from "./MeetingCloseCard";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +33,14 @@ export default async function MeetingAttendancePage({
   if (view.meeting.courseId !== params.id || view.meeting.sectionId !== params.sectionId) notFound();
 
   const m = view.meeting;
+  const [row, deliveries] = await Promise.all([
+    prisma.classMeeting.findUnique({
+      where: { id: m.id },
+      select: { startsAt: true, closedAt: true, section: { select: { autoSendSummary: true } } },
+    }),
+    prisma.meetingSummaryDelivery.groupBy({ by: ["status"], where: { meetingId: m.id }, _count: true }),
+  ]);
+  const count = (...st: string[]) => deliveries.filter((d) => st.includes(d.status)).reduce((n, d) => n + d._count, 0);
   return (
     <main>
       <Link
@@ -45,6 +55,20 @@ export default async function MeetingAttendancePage({
         {formatTime(m.endsAt)}
         {m.room ? ` · Phòng ${m.room}` : ""}
       </p>
+      {row && (
+        <MeetingCloseCard
+          meetingId={m.id}
+          sectionId={params.sectionId}
+          courseId={params.id}
+          initial={{
+            startsAt: row.startsAt.toISOString(),
+            closedAt: row.closedAt ? row.closedAt.toISOString() : null,
+            cancelled: m.status === "cancelled",
+            autoSend: row.section.autoSendSummary,
+            summary: { sent: count("sent"), failed: count("failed"), skipped: count("skipped_optout", "skipped_no_email") },
+          }}
+        />
+      )}
       <AttendanceClient meetingId={m.id} initial={view} />
     </main>
   );

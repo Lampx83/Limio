@@ -109,30 +109,39 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 ## C4 · Tổng kết buổi và nhận xét gửi sau buổi
 
+**Trạng thái (2026-10-24, chưa commit):** C4a và C4b đã làm đủ, có test (core-lms 31, core-feedback 22 mới) và đã xem bằng mắt trên dev (kết thúc buổi, gửi tổng kết, soạn–duyệt–gửi nhận xét, học viên đọc lại). Ghi chú thực hiện:
+- Khoá template dùng dấu chấm cho khớp các khoá sẵn có: `class.meeting_summary`, `class.student_note` (AC ghi gạch dưới). Có bản dự phòng trong mã và dòng seed để quản trị sửa.
+- Nguồn dữ liệu của C4.7 hiện là **điểm danh, bài tập của buổi và nhãn nắm bài theo bài của buổi** (mức nắm hiện tại, chưa có "thay đổi so với đầu buổi"). Bình chọn, gọi ngẫu nhiên, quiz cuối buổi của Limio-Live **chưa được ghi theo từng học viên** nên chưa đưa vào; sẽ thêm khi có dữ liệu.
+- C4.13: nháp theo mẫu khi không cấu hình mô hình, hết hạn mức token hoặc mô hình lỗi/trả sai (rỗng, có dấu %); token trừ ví giảng viên qua `recordAiUsage`.
+- C4.15: `FeedbackDelivery` được ghi khi bản **đã gửi** (idempotent), `masteryAtGeneration` là ảnh chụp lúc soạn nháp; bản AI soạn mang `sourceKind = hybrid` vì giáo viên luôn duyệt.
+- C4.17: hàng đợi BullMQ `class-mail` (5 lần thử, backoff 15 giây); ngoài production gửi thẳng trong tiến trình (đặt `CLASS_MAIL_MODE=queue` để thử hàng đợi thật).
+- C4.18: `meeting.*` và `class.*` được loại khỏi "hoạt động của học viên" cùng `attendance.*`.
+- Học viên tắt email: nhận xét vẫn ghi là đã gửi và đọc được trong ứng dụng (`sendError = email_optout`).
+
 **Hai lớp:** (a) **Tổng kết chung** — tự động, gửi cả lớp; (b) **Nhận xét cá nhân** — AI soạn nháp từ dữ liệu thật, giáo viên duyệt rồi mới gửi.
 
 ### C4a · Tổng kết chung
-- [ ] **C4.1** Given giáo viên bấm "Kết thúc buổi", then buổi `status = held`, `closedAt` ghi lại, phát `class.meeting.closed`.
-- [ ] **C4.2** Given buổi đã đóng, then tổng kết chung được dựng từ giáo án của buổi: học gì hôm nay, từ vựng cần ôn, bài tập về nhà + hạn, buổi sau học gì (và giờ buổi sau theo lịch C1).
-- [ ] **C4.3** Given chưa gắn giáo án, then tổng kết chỉ gồm giờ buổi sau và bài tập (nếu có); không bịa nội dung.
-- [ ] **C4.4** Given lớp bật "tự gửi tổng kết chung" (mặc định **bật**), then gửi email + thông báo trong app tới mọi học viên của lớp, kể cả người vắng (người vắng nhận thêm dòng "Em vắng buổi này, bài cần học bù: …").
-- [ ] **C4.5** Gửi **idempotent**: mỗi `(meetingId, userId)` nhiều nhất một email tổng kết; đóng lại/bấm lại không gửi trùng.
+- [x] **C4.1** Given giáo viên bấm "Kết thúc buổi", then buổi `status = held`, `closedAt` ghi lại, phát `class.meeting.closed`.
+- [x] **C4.2** Given buổi đã đóng, then tổng kết chung được dựng từ giáo án của buổi: học gì hôm nay, từ vựng cần ôn, bài tập về nhà + hạn, buổi sau học gì (và giờ buổi sau theo lịch C1).
+- [x] **C4.3** Given chưa gắn giáo án, then tổng kết chỉ gồm giờ buổi sau và bài tập (nếu có); không bịa nội dung.
+- [x] **C4.4** Given lớp bật "tự gửi tổng kết chung" (mặc định **bật**), then gửi email + thông báo trong app tới mọi học viên của lớp, kể cả người vắng (người vắng nhận thêm dòng "Em vắng buổi này, bài cần học bù: …").
+- [x] **C4.5** Gửi **idempotent**: mỗi `(meetingId, userId)` nhiều nhất một email tổng kết; đóng lại/bấm lại không gửi trùng.
 
 ### C4b · Nhận xét cá nhân
-- [ ] **C4.6** Given buổi đã đóng, when giáo viên mở "Nhận xét sau buổi", then thấy danh sách học viên có mặt/muộn, mỗi em một bản nháp, trạng thái `nháp | đã duyệt | đã gửi`.
-- [ ] **C4.7** Given nháp AI, then chỉ dùng dữ liệu của **chính học viên đó** trong buổi: điểm danh, hoạt động trên lớp (bình chọn, gọi ngẫu nhiên, quiz cuối buổi), kết quả bài tập liên quan, thay đổi mức thành thạo theo nhãn (Cần ôn / Nên luyện / Vững; **không hiện %**). Không nhắc tên hay kết quả học viên khác, không xếp hạng.
-- [ ] **C4.8** Given chỗ nào không có dữ liệu (ví dụ em chưa phát biểu), then nháp **bỏ trống** hoặc để giáo viên điền; không suy đoán.
-- [ ] **C4.9** Given giáo viên thêm một dòng ghi chú nhanh hoặc chọn chip có sẵn, then AI viết lại nháp có kèm ghi chú đó; ghi chú của giáo viên được giữ nguyên ý.
-- [ ] **C4.10** Given nút "Gửi tất cả đã duyệt", then gửi mọi bản `đã duyệt`; bản `nháp` **không bao giờ** tự gửi. Không có chế độ tự gửi cho nhận xét cá nhân.
-- [ ] **C4.11** Given bản đã gửi, then không sửa được; muốn đính chính thì gửi bản mới đánh dấu "đính chính".
-- [ ] **C4.12** Given học viên vắng, then không dùng AI; nhận email chung C4.4. Giáo viên có thể thêm lời nhắn tay.
-- [ ] **C4.13** Given hết hạn mức token AI hoặc AI lỗi, then tạo nháp **theo mẫu có sẵn** (rule-based) từ cùng dữ liệu; luồng không bị chặn. Chi phí AI trừ ví token (`chargeTokens`) và ghi `AiUsageLog` như các đường sinh khác.
-- [ ] **C4.14** Nội dung ở mức **nhiệm vụ và quá trình** ("em làm đúng phần so sánh, cần ôn lại bổ ngữ kết quả"). Khen cá nhân chung chung không nằm ở đây (kênh gamification).
-- [ ] **C4.15** Mỗi bản nhận xét tạo `FeedbackDelivery` **mang toạ độ SSMMD** (`codeFeedback`: `level`, `levels`, `elaboration`, `sourceKind`, `generationContext`); `self` không được emit ở tầng meso (CLAUDE.md §4.8). `masteryAtGeneration` snapshot trước khi chấm.
-- [ ] **C4.16** Học viên đọc lại được nhận xét của mình trong app; chỉ của mình.
-- [ ] **C4.17** Email dùng template qua `sendTemplatedEmail` (key `class_meeting_summary`, `class_student_note`), gửi qua BullMQ với retry; một email lỗi không chặn các email khác; thất bại hiện lại cho giáo viên để gửi lại.
-- [ ] **C4.18** Phát `meeting.summary.sent`, `meeting.note.drafted`, `meeting.note.sent`; payload nhận xét **không** chứa nguyên văn nội dung nhận xét nếu thuộc dữ liệu nhạy cảm — chỉ id và độ dài (theo mẫu `assistant.question.asked`).
-- [ ] **C4.19** Email có liên kết huỷ nhận email (chỉ tắt thư tự động, vẫn xem được trong app).
+- [x] **C4.6** Given buổi đã đóng, when giáo viên mở "Nhận xét sau buổi", then thấy danh sách học viên có mặt/muộn, mỗi em một bản nháp, trạng thái `nháp | đã duyệt | đã gửi`.
+- [x] **C4.7** Given nháp AI, then chỉ dùng dữ liệu của **chính học viên đó** trong buổi: điểm danh, hoạt động trên lớp (bình chọn, gọi ngẫu nhiên, quiz cuối buổi), kết quả bài tập liên quan, thay đổi mức thành thạo theo nhãn (Cần ôn / Nên luyện / Vững; **không hiện %**). Không nhắc tên hay kết quả học viên khác, không xếp hạng.
+- [x] **C4.8** Given chỗ nào không có dữ liệu (ví dụ em chưa phát biểu), then nháp **bỏ trống** hoặc để giáo viên điền; không suy đoán.
+- [x] **C4.9** Given giáo viên thêm một dòng ghi chú nhanh hoặc chọn chip có sẵn, then AI viết lại nháp có kèm ghi chú đó; ghi chú của giáo viên được giữ nguyên ý.
+- [x] **C4.10** Given nút "Gửi tất cả đã duyệt", then gửi mọi bản `đã duyệt`; bản `nháp` **không bao giờ** tự gửi. Không có chế độ tự gửi cho nhận xét cá nhân.
+- [x] **C4.11** Given bản đã gửi, then không sửa được; muốn đính chính thì gửi bản mới đánh dấu "đính chính".
+- [x] **C4.12** Given học viên vắng, then không dùng AI; nhận email chung C4.4. Giáo viên có thể thêm lời nhắn tay.
+- [x] **C4.13** Given hết hạn mức token AI hoặc AI lỗi, then tạo nháp **theo mẫu có sẵn** (rule-based) từ cùng dữ liệu; luồng không bị chặn. Chi phí AI trừ ví token (`chargeTokens`) và ghi `AiUsageLog` như các đường sinh khác.
+- [x] **C4.14** Nội dung ở mức **nhiệm vụ và quá trình** ("em làm đúng phần so sánh, cần ôn lại bổ ngữ kết quả"). Khen cá nhân chung chung không nằm ở đây (kênh gamification).
+- [x] **C4.15** Mỗi bản nhận xét tạo `FeedbackDelivery` **mang toạ độ SSMMD** (`codeFeedback`: `level`, `levels`, `elaboration`, `sourceKind`, `generationContext`); `self` không được emit ở tầng meso (CLAUDE.md §4.8). `masteryAtGeneration` snapshot trước khi chấm.
+- [x] **C4.16** Học viên đọc lại được nhận xét của mình trong app; chỉ của mình.
+- [x] **C4.17** Email dùng template qua `sendTemplatedEmail` (key `class_meeting_summary`, `class_student_note`), gửi qua BullMQ với retry; một email lỗi không chặn các email khác; thất bại hiện lại cho giáo viên để gửi lại.
+- [x] **C4.18** Phát `meeting.summary.sent`, `meeting.note.drafted`, `meeting.note.sent`; payload nhận xét **không** chứa nguyên văn nội dung nhận xét nếu thuộc dữ liệu nhạy cảm — chỉ id và độ dài (theo mẫu `assistant.question.asked`).
+- [x] **C4.19** Email có liên kết huỷ nhận email (chỉ tắt thư tự động, vẫn xem được trong app).
 
 **P1:** kênh Zalo (OA/ZNS) qua cùng giao diện kênh gửi; trường email phụ huynh riêng; nhận xét bằng giọng nói của giáo viên.
 

@@ -17,6 +17,11 @@ import {
   type RealtimePublishJobResult,
 } from "../lib/queue/realtimePublishJob";
 import {
+  processClassMailJob,
+  type ClassMailJobData,
+  type ClassMailJobResult,
+} from "../lib/queue/classMailJob";
+import {
   processAutoGradeJob,
   type AutoGradeJobData,
   type AutoGradeJobResult,
@@ -97,6 +102,19 @@ autoGradeWorker.on("failed", (job, err) => {
   reportJobFailure(QUEUE_NAMES.autoGrade, job, err);
 });
 workers.push(autoGradeWorker);
+
+// CENTER C4.17 — email tổng kết/nhận xét sau buổi. Concurrency thấp: mỗi job tự gửi lần lượt cả lớp và nhà cung cấp
+// email có rate limit; job nào còn email lỗi thì ném lỗi để BullMQ retry (chỉ gửi lại phần lỗi).
+const classMailWorker = new Worker<ClassMailJobData, ClassMailJobResult>(QUEUE_NAMES.classMail, processClassMailJob, {
+  connection: getBullmqConnection(),
+  concurrency: Number(process.env.CLASS_MAIL_CONCURRENCY ?? "3"),
+});
+classMailWorker.on("ready", () => console.log(`[worker:${QUEUE_NAMES.classMail}] ready`));
+classMailWorker.on("failed", (job, err) => {
+  console.error(`[worker:${QUEUE_NAMES.classMail}] job ${job?.id} failed:`, err.message);
+  reportJobFailure(QUEUE_NAMES.classMail, job, err);
+});
+workers.push(classMailWorker);
 
 async function shutdown(signal: string) {
   console.log(`[worker] received ${signal}, shutting down...`);
