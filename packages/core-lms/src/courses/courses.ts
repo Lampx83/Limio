@@ -654,24 +654,8 @@ async function canEditCourseInline(
   return admin !== null || ci !== null;
 }
 
-/**
- * Deep-clone a course (modules, lessons, content items, quizzes, questions,
- * options, skill tags). NEW course is `draft` and version=1; the actor becomes
- * the owner instructor. Does NOT clone enrollments, attempts, or learning
- * events — those belong to learners on the original.
- */
-export async function duplicateCourse(
-  actorUserId: string,
-  sourceCourseId: string,
-  db: PrismaClient = prisma,
-): Promise<{ courseId: string }> {
-  await assertCanEditCourse(actorUserId, sourceCourseId, db);
-  const src = await db.course.findUniqueOrThrow({
-    where: { id: sourceCourseId },
-    include: {
-      modules: {
-        orderBy: { orderIndex: "asc" },
-        include: {
+/** Cây con của một chương (bài, nội dung, bài tập, quiz, câu hỏi, nhãn kỹ năng) khi sao chép. */
+export const MODULE_TREE_INCLUDE = {
           lessons: {
             orderBy: { orderIndex: "asc" },
             include: {
@@ -691,18 +675,191 @@ export async function duplicateCourse(
               assignments: true,
             },
           },
-        },
-      },
+} as const satisfies Prisma.ModuleInclude;
+
+export type ModuleTree = Prisma.ModuleGetPayload<{ include: typeof MODULE_TREE_INCLUDE }>;
+
+/**
+ * Sao chép MỘT chương cùng toàn bộ cây con vào khoá `newCourseId` ở vị trí `orderIndex`. Không kiểm quyền:
+ * người gọi phải tự kiểm. `sessionNo` (giáo án theo buổi) được giữ nguyên. Dùng bởi duplicateCourse và
+ * giáo trình dựng sẵn (CENTER C3).
+ */
+export async function cloneModuleTree(
+  tx: Prisma.TransactionClient,
+  m: ModuleTree,
+  newCourseId: string,
+  orderIndex: number,
+): Promise<{ moduleId: string }> {
+  const newModule = await tx.module.create({
+    data: {
+      courseId: newCourseId,
+      title: m.title,
+      orderIndex,
+        sessionNo: m.sessionNo,
     },
   });
+  for (const l of m.lessons) {
+    const newLesson = await tx.lesson.create({
+      data: {
+        moduleId: newModule.id,
+        title: l.title,
+        description: l.description,
+        orderIndex: l.orderIndex,
+        completionThresholdPct: l.completionThresholdPct,
+        durationSec: l.durationSec,
+        languageSkill: l.languageSkill,
+      },
+    });
+    for (const c of l.contentItems) {
+      const newContent = await tx.contentItem.create({
+        data: {
+          lessonId: newLesson.id,
+          type: c.type,
+          payload: c.payload === null ? Prisma.JsonNull : (c.payload as Prisma.InputJsonValue),
+          orderIndex: c.orderIndex,
+        },
+      });
+      await attachLessonActivity(tx, newLesson.id, "content", newContent.id);
+    }
+    for (const t of l.skillTags) {
+      if (isAutoLessonSkillCode(t.skill.code)) continue;
+      await tx.contentSkillMapping.create({
+        data: {
+          contentType: "lesson",
+          contentId: newLesson.id,
+          skillId: t.skillId,
+          coverageWeight: t.coverageWeight,
+        },
+      });
+    }
+    await ensureLessonTag(newLesson.id, tx);
+    for (const a of l.assignments) {
+      const newAssignment = await tx.assignment.create({
+        data: {
+          lessonId: newLesson.id,
+          title: a.title,
+          description: a.description,
+          dueAt: a.dueAt,
+          maxScore: a.maxScore,
+          // Cấu hình chấm: trước đây rơi về mặc định ⇒ bản sao mất rubric.
+          rubricText: a.rubricText,
+          pedagogicalIntent: a.pedagogicalIntent,
+          responseFormat: a.responseFormat,
+          assessmentModes: a.assessmentModes,
+          requireSelfRating: a.requireSelfRating,
+          requireReflection: a.requireReflection,
+          countsTowardGrade: a.countsTowardGrade,
+          // Nhóm KHÔNG được chép sang khoá mới — chỉ chế độ nộp.
+          submissionMode: a.submissionMode,
+        },
+      });
+      await attachLessonActivity(tx, newLesson.id, "assignment", newAssignment.id);
+    }
+    for (const q of l.quizzes) {
+      const newQuiz = await tx.quiz.create({
+        data: {
+          lessonId: newLesson.id,
+          courseId: newCourseId,
+          title: q.title,
+          description: q.description,
+          difficulty: q.difficulty,
+          timeLimitSec: q.timeLimitSec,
+          maxAttempts: q.maxAttempts,
+          randomizeOrder: q.randomizeOrder,
+          requireConfidence: q.requireConfidence,
+          // cuepointOnly + tournamentMissionId default false/null on copy,
+          // so the clone goes into the lesson timeline (not as cuepoint).
+        },
+      });
+      // Only regular quizzes (not cuepoint, not tournament-bound) get a
+      // LessonActivity row. Duplicate doesn't carry tournament bindings.
+      await attachLessonActivity(tx, newLesson.id, "quiz", newQuiz.id);
+      for (const qq of q.questions) {
+        const newQuestion = await tx.quizQuestion.create({
+          data: {
+            quizId: newQuiz.id,
+            type: qq.type,
+            prompt: qq.prompt,
+            explanation: qq.explanation,
+            points: qq.points,
+            orderIndex: qq.orderIndex,
+            extra: qq.extra === null ? Prisma.JsonNull : (qq.extra as Prisma.InputJsonValue),
+            options: {
+              create: qq.options.map((o) => ({
+                label: o.label,
+                isCorrect: o.isCorrect,
+                orderIndex: o.orderIndex,
+                misconceptionId: o.misconceptionId,
+                extra: o.extra === null ? Prisma.JsonNull : (o.extra as Prisma.InputJsonValue),
+              })),
+            },
+          },
+        });
+        for (const t of qq.skillTags) {
+          if (isAutoLessonSkillCode(t.skill.code)) continue;
+          await tx.questionSkillTag.create({
+            data: { questionId: newQuestion.id, skillId: t.skillId },
+          });
+        }
+        await ensureQuestionTag(newQuestion.id, tx);
+      }
+    }
+  }
 
-  const newSlug = await uniqueCourseSlug(`${src.slug}-copy`, db);
+  return { moduleId: newModule.id };
+}
+
+/**
+ * Deep-clone a course (modules, lessons, content items, quizzes, questions,
+ * options, skill tags). NEW course is `draft` and version=1; the actor becomes
+ * the owner instructor. Does NOT clone enrollments, attempts, or learning
+ * events — those belong to learners on the original.
+ */
+export async function duplicateCourse(
+  actorUserId: string,
+  sourceCourseId: string,
+  db: PrismaClient = prisma,
+): Promise<{ courseId: string }> {
+  await assertCanEditCourse(actorUserId, sourceCourseId, db);
+  return cloneCourseUnchecked(actorUserId, sourceCourseId, db);
+}
+
+export interface CloneCourseOptions {
+  /** Tên khoá mới; mặc định "<tên gốc> (copy)". */
+  title?: string;
+  /** Gốc của slug khoá mới; mặc định "<slug gốc>-copy". */
+  slugBase?: string;
+  /** Khoá mới là bản sao của giáo trình dựng sẵn (CENTER C3). */
+  sourcePack?: { id: string; version: number };
+  /**
+   * Khoá mới thuộc tổ chức này thay vì tổ chức của khoá gốc, và KHÔNG thừa hưởng giá hay chế độ công khai
+   * của khoá gốc (dùng khi sao một khoá của người khác về tài khoản mình).
+   */
+  asOwnCopyOfOrg?: { organizationId: string | null };
+}
+
+/**
+ * Như duplicateCourse nhưng KHÔNG kiểm quyền sửa khoá gốc: người gọi phải tự kiểm (vd giáo trình dựng sẵn
+ * đã xuất bản thì giảng viên nào cũng được sao). Không export ra ngoài core-lms cho giao diện dùng trực tiếp.
+ */
+export async function cloneCourseUnchecked(
+  actorUserId: string,
+  sourceCourseId: string,
+  db: PrismaClient = prisma,
+  opts: CloneCourseOptions = {},
+): Promise<{ courseId: string }> {
+  const src = await db.course.findUniqueOrThrow({
+    where: { id: sourceCourseId },
+    include: { modules: { orderBy: { orderIndex: "asc" }, include: MODULE_TREE_INCLUDE } },
+  });
+
+  const newSlug = await uniqueCourseSlug(opts.slugBase ?? `${src.slug}-copy`, db);
 
   return db.$transaction(async (tx) => {
     const newCourse = await tx.course.create({
       data: {
         slug: newSlug,
-        title: `${src.title} (copy)`,
+        title: opts.title ?? `${src.title} (copy)`,
         description: src.description,
         language: src.language,
         level: src.level,
@@ -715,10 +872,12 @@ export async function duplicateCourse(
         personalizationEnabled: src.personalizationEnabled,
         // LANG G8 — chế độ ngoại ngữ (kéo theo nhãn kỹ năng của bài, bên dưới).
         languageMode: src.languageMode,
-        publicAccess: src.publicAccess,
-        priceCents: src.priceCents,
+        publicAccess: opts.asOwnCopyOfOrg ? false : src.publicAccess,
+        priceCents: opts.asOwnCopyOfOrg ? null : src.priceCents,
         currency: src.currency,
-        organizationId: src.organizationId,
+        organizationId: opts.asOwnCopyOfOrg ? opts.asOwnCopyOfOrg.organizationId : src.organizationId,
+        sourcePackId: opts.sourcePack?.id ?? null,
+        sourcePackVersion: opts.sourcePack?.version ?? null,
         status: "draft",
         version: 1,
       },
@@ -728,120 +887,7 @@ export async function duplicateCourse(
     });
 
     for (const m of src.modules) {
-      const newModule = await tx.module.create({
-        data: {
-          courseId: newCourse.id,
-          title: m.title,
-          orderIndex: m.orderIndex,
-        },
-      });
-      for (const l of m.lessons) {
-        const newLesson = await tx.lesson.create({
-          data: {
-            moduleId: newModule.id,
-            title: l.title,
-            description: l.description,
-            orderIndex: l.orderIndex,
-            completionThresholdPct: l.completionThresholdPct,
-            durationSec: l.durationSec,
-            languageSkill: l.languageSkill,
-          },
-        });
-        for (const c of l.contentItems) {
-          const newContent = await tx.contentItem.create({
-            data: {
-              lessonId: newLesson.id,
-              type: c.type,
-              payload: c.payload === null ? Prisma.JsonNull : (c.payload as Prisma.InputJsonValue),
-              orderIndex: c.orderIndex,
-            },
-          });
-          await attachLessonActivity(tx, newLesson.id, "content", newContent.id);
-        }
-        for (const t of l.skillTags) {
-          if (isAutoLessonSkillCode(t.skill.code)) continue;
-          await tx.contentSkillMapping.create({
-            data: {
-              contentType: "lesson",
-              contentId: newLesson.id,
-              skillId: t.skillId,
-              coverageWeight: t.coverageWeight,
-            },
-          });
-        }
-        await ensureLessonTag(newLesson.id, tx);
-        for (const a of l.assignments) {
-          const newAssignment = await tx.assignment.create({
-            data: {
-              lessonId: newLesson.id,
-              title: a.title,
-              description: a.description,
-              dueAt: a.dueAt,
-              maxScore: a.maxScore,
-              // Cấu hình chấm: trước đây rơi về mặc định ⇒ bản sao mất rubric.
-              rubricText: a.rubricText,
-              pedagogicalIntent: a.pedagogicalIntent,
-              responseFormat: a.responseFormat,
-              assessmentModes: a.assessmentModes,
-              requireSelfRating: a.requireSelfRating,
-              requireReflection: a.requireReflection,
-              countsTowardGrade: a.countsTowardGrade,
-              // Nhóm KHÔNG được chép sang khoá mới — chỉ chế độ nộp.
-              submissionMode: a.submissionMode,
-            },
-          });
-          await attachLessonActivity(tx, newLesson.id, "assignment", newAssignment.id);
-        }
-        for (const q of l.quizzes) {
-          const newQuiz = await tx.quiz.create({
-            data: {
-              lessonId: newLesson.id,
-              courseId: newCourse.id,
-              title: q.title,
-              description: q.description,
-              difficulty: q.difficulty,
-              timeLimitSec: q.timeLimitSec,
-              maxAttempts: q.maxAttempts,
-              randomizeOrder: q.randomizeOrder,
-              requireConfidence: q.requireConfidence,
-              // cuepointOnly + tournamentMissionId default false/null on copy,
-              // so the clone goes into the lesson timeline (not as cuepoint).
-            },
-          });
-          // Only regular quizzes (not cuepoint, not tournament-bound) get a
-          // LessonActivity row. Duplicate doesn't carry tournament bindings.
-          await attachLessonActivity(tx, newLesson.id, "quiz", newQuiz.id);
-          for (const qq of q.questions) {
-            const newQuestion = await tx.quizQuestion.create({
-              data: {
-                quizId: newQuiz.id,
-                type: qq.type,
-                prompt: qq.prompt,
-                explanation: qq.explanation,
-                points: qq.points,
-                orderIndex: qq.orderIndex,
-                extra: qq.extra === null ? Prisma.JsonNull : (qq.extra as Prisma.InputJsonValue),
-                options: {
-                  create: qq.options.map((o) => ({
-                    label: o.label,
-                    isCorrect: o.isCorrect,
-                    orderIndex: o.orderIndex,
-                    misconceptionId: o.misconceptionId,
-                    extra: o.extra === null ? Prisma.JsonNull : (o.extra as Prisma.InputJsonValue),
-                  })),
-                },
-              },
-            });
-            for (const t of qq.skillTags) {
-              if (isAutoLessonSkillCode(t.skill.code)) continue;
-              await tx.questionSkillTag.create({
-                data: { questionId: newQuestion.id, skillId: t.skillId },
-              });
-            }
-            await ensureQuestionTag(newQuestion.id, tx);
-          }
-        }
-      }
+      await cloneModuleTree(tx, m, newCourse.id, m.orderIndex);
     }
 
     await logAudit(

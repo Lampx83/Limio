@@ -1,5 +1,6 @@
 import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
+import { learnerActivityWhere } from "@feedbackme/core-lms";
 import { getTournamentNotifications } from "./tournamentNotifications";
 import { formatTime, toDayKey } from "./datetime";
 
@@ -9,6 +10,8 @@ export type NotificationType =
   // Learner
   | "peer_review.assigned"
   | "assignment.graded"
+  | "class.summary"
+  | "class.note"
   | "forum.reply"
   | "mission.passed"
   | "mission.failed"
@@ -34,6 +37,8 @@ export type NotificationType =
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   "peer_review.assigned": "Chấm bài",
   "assignment.graded": "Bài tập",
+  "class.summary": "Tổng kết buổi học",
+  "class.note": "Nhận xét buổi học",
   "forum.reply": "Trả lời forum",
   "mission.passed": "Nhiệm vụ",
   "mission.failed": "Nhiệm vụ",
@@ -251,6 +256,44 @@ async function getLearnerNotifications(
 
   const items: Notification[] = [...tournamentItems];
 
+  // CENTER C4.4/C4.16 — tổng kết buổi và nhận xét của giáo viên, xem lại trong ứng dụng.
+  const [classSummaries, classNotes] = await Promise.all([
+    prisma.meetingSummaryDelivery.findMany({
+      where: { userId, status: { in: ["sent", "skipped_optout"] } },
+      orderBy: { updatedAt: "desc" },
+      take: FETCH_LIMIT_PER_TYPE,
+      include: { meeting: { select: { seq: true, closedAt: true, section: { select: { name: true } } } } },
+    }),
+    prisma.meetingStudentNote.findMany({
+      where: { userId, status: "sent" },
+      orderBy: { sentAt: "desc" },
+      take: FETCH_LIMIT_PER_TYPE,
+      include: { meeting: { select: { seq: true, section: { select: { name: true } } } } },
+    }),
+  ]);
+  for (const s of classSummaries) {
+    items.push({
+      id: `cs:${s.meetingId}`,
+      type: "class.summary",
+      title: `Tổng kết buổi ${s.meeting.seq ?? "học"}`,
+      body: s.meeting.section.name,
+      link: "/me/lich-hoc",
+      iconKey: "class",
+      createdAt: s.sentAt ?? s.meeting.closedAt ?? s.updatedAt,
+    });
+  }
+  for (const n of classNotes) {
+    items.push({
+      id: `cn:${n.id}`,
+      type: "class.note",
+      title: n.correctionOfId ? "Nhận xét đính chính của giáo viên" : "Giáo viên có nhận xét về buổi học",
+      body: `${n.meeting.section.name} · Buổi ${n.meeting.seq ?? "dạy bù"}`,
+      link: "/me/lich-hoc",
+      iconKey: "class",
+      createdAt: n.sentAt!,
+    });
+  }
+
   for (const r of peerReviews) {
     items.push({
       id: `pr:${r.id}`,
@@ -439,6 +482,7 @@ async function countStaleLearners(userId: string): Promise<number> {
       userId: { in: enrollments.map((e) => e.userId) },
       courseId: { in: courseIds },
       occurredAt: { gte: new Date(Date.now() - LEARNER_STALE_DAYS * 24 * 3600 * 1000) },
+      ...learnerActivityWhere(),
     },
     _max: { occurredAt: true },
   });

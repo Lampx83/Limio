@@ -33,6 +33,7 @@
     "import:oral:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-oral-exam.ts"
   },
   "dependencies": {
+    "@breezystack/lamejs": "1.2.7",
     "@feedbackme/db": "workspace:*",
     "@feedbackme/shared-types": "workspace:*",
     "adm-zip": "^0.5.17",

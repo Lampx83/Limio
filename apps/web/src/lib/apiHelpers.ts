@@ -3,8 +3,14 @@ import {
   AccessCodeError,
   AnnotationError,
   AssignmentError,
+  AttendanceError,
+  GoalError,
+  MeetingNoteError,
+  MeetingSummaryError,
+  ClassScheduleError,
   CourseAuthzError,
   CourseError,
+  CoursePackError,
   CourseTeamError,
   EnrollError,
   ExamError,
@@ -17,6 +23,7 @@ import {
   SectionDeadlineError,
   SkillError,
 } from "@feedbackme/core-lms";
+import { MeetingNoteDraftError } from "@feedbackme/core-feedback";
 
 /**
  * Map a known core-lms error to a NextResponse with appropriate status.
@@ -46,6 +53,57 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.details ? { error: err.code, details: err.details } : { error: err.code },
       { status },
     );
+  }
+  if (err instanceof CoursePackError) {
+    const status =
+      err.code === "forbidden"
+        ? 403
+        : err.code === "pack_not_found" || err.code === "course_not_found"
+          ? 404
+          : err.code === "not_published" || err.code === "slug_taken" || err.code === "nothing_to_update"
+            ? 409
+            : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
+  if (err instanceof AttendanceError) {
+    const status =
+      err.code === "meeting_not_found" || err.code === "section_not_found"
+        ? 404
+        : err.code === "meeting_cancelled" || err.code === "attendance_not_open" || err.code === "attendance_closed"
+          ? 409
+          : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
+  if (err instanceof GoalError) {
+    const status =
+      err.code === "goal_not_found" || err.code === "section_not_found" || err.code === "no_section_goal"
+        ? 404
+        : err.code === "goal_exists" || err.code === "goal_not_active"
+          ? 409
+          : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
+  if (err instanceof MeetingNoteDraftError) {
+    const status = err.code === "meeting_not_found" ? 404 : err.code === "not_closed" || err.code === "already_sent" ? 409 : 400;
+    return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof MeetingSummaryError || err instanceof MeetingNoteError) {
+    const status =
+      err.code === "meeting_not_found" || err.code === "section_not_found" || err.code === "note_not_found"
+        ? 404
+        : err.code === "meeting_cancelled" || err.code === "meeting_not_started" || err.code === "not_closed" || err.code === "already_sent" || err.code === "not_sent"
+          ? 409
+          : 400;
+    return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof ClassScheduleError) {
+    const status =
+      err.code === "section_not_found" || err.code === "meeting_not_found"
+        ? 404
+        : err.code === "already_cancelled" || err.code === "meeting_not_editable"
+          ? 409
+          : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
   }
   if (err instanceof SectionDeadlineError) {
     const status = err.code === "not_found" ? 404 : 400;

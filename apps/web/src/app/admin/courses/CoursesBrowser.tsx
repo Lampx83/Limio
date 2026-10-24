@@ -245,13 +245,22 @@ export default function CoursesBrowser() {
                   })()}
                 </td>
                 <td className="px-4 py-2.5 text-right">
-                  <Link
-                    href={`/admin/courses/${c.id}/access-plans`}
-                    className="btn-secondary btn-sm"
-                    prefetch={false}
-                  >
-                    Quản lý gói bán
-                  </Link>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Link
+                      href={`/admin/courses/${c.id}/narrations`}
+                      className="btn-secondary btn-sm"
+                      prefetch={false}
+                    >
+                      Giọng đọc
+                    </Link>
+                    <Link
+                      href={`/admin/courses/${c.id}/access-plans`}
+                      className="btn-secondary btn-sm"
+                      prefetch={false}
+                    >
+                      Quản lý gói bán
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}

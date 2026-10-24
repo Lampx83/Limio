@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NOINDEX } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
-import { isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
+import { isCenterTeacher, isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
@@ -10,6 +10,8 @@ import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 import InstructorContentFrame from "./InstructorContentFrame";
 import { AssistantProvider } from "@/components/assistant/AssistantProvider";
 import AssistantLauncher from "@/components/assistant/AssistantLauncher";
+import { getInstructorCenterAccess } from "@/lib/centerAccess";
+import { isTeachingOnly } from "@/lib/roleWorkspace";
 
 // Khu vực cần đăng nhập → không bao giờ index. `middleware.ts` đã gắn
 // `X-Robots-Tag` cho cùng nhóm route; thẻ meta này là lớp thứ hai, phòng khi
@@ -28,12 +30,13 @@ export const metadata: Metadata = NOINDEX;
 // tạo khoá đầu tiên, tự khoá luôn lối vào hợp lệ duy nhất.
 const getInstructorRoles = unstable_cache(
   async (userId: string) => {
-    const [instructor, proctor, researcher] = await Promise.all([
+    const [instructor, proctor, researcher, centerTeacher] = await Promise.all([
       isInstructor(userId),
       userIsAnyProctor(userId),
       isResearcher(userId),
+      isCenterTeacher(userId),
     ]);
-    return { isInstructor: instructor, isProctor: proctor, isResearcher: researcher };
+    return { isInstructor: instructor, isProctor: proctor, isResearcher: researcher, isCenterTeacher: centerTeacher };
   },
   ["instructor-layout-roles"],
   { revalidate: 60, tags: ["user-roles"] },
@@ -61,14 +64,17 @@ export default async function InstructorLayout({
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/courses");
 
-  const { isInstructor: hasInstructorRole, isProctor, isResearcher: hasResearcherRole } = await getInstructorRoles(
-    session.user.id,
-  );
+  const {
+    isInstructor: hasInstructorRole,
+    isProctor,
+    isResearcher: hasResearcherRole,
+    isCenterTeacher: hasCenterTeacherRole,
+  } = await getInstructorRoles(session.user.id);
 
   // Instructor status is admin-granted (xem packages/core-lms/src/courses/courses.ts
   // createCourse — không còn tự cấp khi tạo khoá) — không có lối "tự đăng ký"
   // nào ở đây để phải chừa cửa, nên chặn cứng toàn bộ khu vực /instructor/*.
-  if (!hasInstructorRole && !isProctor) {
+  if (!hasInstructorRole && !isProctor && !hasCenterTeacherRole) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="rounded-2xl border border-danger-100 bg-danger-50 p-5 text-sm text-danger-700">
@@ -79,7 +85,9 @@ export default async function InstructorLayout({
     );
   }
 
+  const teachingOnly = isTeachingOnly(session.user.roles ?? []);
   const recentCourseTitle = hasInstructorRole ? await getRecentCourseTitle(session.user.id) : null;
+  const centerEnabled = hasInstructorRole || hasCenterTeacherRole ? await getInstructorCenterAccess(session.user.id) : false;
 
   return (
     <ActiveNavSectionProvider>
@@ -87,9 +95,11 @@ export default async function InstructorLayout({
       <AssistantProvider userId={session.user.id} recentCourseTitle={recentCourseTitle}>
         <div className="flex w-full">
           <InstructorLeftMenu
-            isInstructor={hasInstructorRole}
+            isInstructor={hasInstructorRole || hasCenterTeacherRole}
+            teachingOnly={teachingOnly}
             isProctor={isProctor}
             isResearcher={hasResearcherRole}
+            centerEnabled={centerEnabled}
           />
           <div className="min-w-0 flex-1">
             <InstructorContentFrame>{children}</InstructorContentFrame>

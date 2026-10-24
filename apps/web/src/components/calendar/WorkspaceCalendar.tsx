@@ -18,7 +18,7 @@ import { formatDayKey } from "@/lib/datetime";
  * Học viên: overdue/todo/submitted/graded (theo bài nộp của chính họ).
  * Giáo viên: upcoming/closed (theo hạn nộp; số bài nộp/chờ chấm nằm ở `detail`).
  */
-export type CalendarItemState = "overdue" | "todo" | "submitted" | "graded" | "upcoming" | "closed";
+export type CalendarItemState = "overdue" | "todo" | "submitted" | "graded" | "upcoming" | "closed" | "class";
 
 /** Một bài tập có hạn nộp. `dueDay`/`dueTime` do server tính theo giờ VN. */
 export interface CalendarAssignment {
@@ -35,9 +35,11 @@ export interface CalendarAssignment {
   /** Dòng phụ dưới tên khoá, ví dụ "12 bài nộp · 3 chờ chấm" (giáo viên). */
   detail?: string;
   /** Loại việc cần làm; mặc định bài tập. Quiz hiện thêm nhãn "Quiz". */
-  kind?: "assignment" | "quiz";
+  kind?: "assignment" | "quiz" | "meeting";
   /** Ghi đè nhãn trạng thái mặc định, ví dụ "Chưa làm" / "Đang làm" cho quiz. */
   stateLabel?: string;
+  /** Buổi học có giáo án: các bài của buổi, mỗi bài một liên kết riêng dưới thẻ. */
+  lessons?: Array<{ id: string; title: string; href: string }>;
   href: string;
 }
 
@@ -54,6 +56,8 @@ const STATE_META: Record<CalendarItemState, { label: string; chip: string; dot: 
   graded: { label: "Đã chấm", chip: "chip-success", dot: "bg-success-500", rank: 3 },
   upcoming: { label: "Sắp đến hạn", chip: "chip-accent", dot: "bg-accent-600", rank: 1 },
   closed: { label: "Đã hết hạn", chip: "chip", dot: "bg-slate-400", rank: 4 },
+  // CENTER: buổi học của lớp có lịch. Thấp nhất để chấm dưới ngày vẫn ưu tiên màu của hạn nộp gấp.
+  class: { label: "Buổi học", chip: "chip-brand", dot: "bg-sky-500", rank: 5 },
 };
 
 function dayNumber(key: string): number {
@@ -88,6 +92,7 @@ export default function WorkspaceCalendar({
   assignments,
   defaultView = "month",
   initialDay,
+  labels,
 }: {
   todayKey: string;
   organizationName: string | null;
@@ -97,6 +102,8 @@ export default function WorkspaceCalendar({
   defaultView?: View;
   /** Ngày chọn sẵn (mặc định hôm nay). Chủ yếu để test lịch ở tuần không phải tuần hiện tại. */
   initialDay?: string;
+  /** Đổi chữ cho lịch không phải hạn nộp (vd lịch buổi học). Mặc định là chữ của hạn nộp bài. */
+  labels?: { empty?: string; next?: string };
 }) {
   const [view, setView] = useState<View>(defaultView);
   // Hai thứ tách bạch:
@@ -371,14 +378,14 @@ export default function WorkspaceCalendar({
 
               {dayItems.length === 0 ? (
                 <div className="mt-1.5 text-xs text-muted">
-                  <p>Không có hạn nộp ngày này.</p>
+                  <p>{labels?.empty ?? "Không có hạn nộp ngày này."}</p>
                   {nextDueDay && (
                     <button
                       type="button"
                       onClick={() => pickDay(nextDueDay)}
                       className="link mt-0.5 text-left text-xs"
                     >
-                      Hạn nộp tiếp theo: {WEEKDAY_LONG[weekdayIndexMon0(nextDueDay)]} {shortDay(nextDueDay)} →
+                      {labels?.next ?? "Hạn nộp tiếp theo:"} {WEEKDAY_LONG[weekdayIndexMon0(nextDueDay)]} {shortDay(nextDueDay)} →
                     </button>
                   )}
                 </div>
@@ -387,18 +394,15 @@ export default function WorkspaceCalendar({
                   {dayItems.map((a) => {
                     const meta = STATE_META[a.state];
                     return (
-                      <li key={a.id}>
-                        <Link
-                          href={a.href}
-                          prefetch={false}
-                          className="flex items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] px-2 py-1.5 transition-colors hover:border-brand-300"
-                        >
+                      <li key={a.id} className="rounded-lg border border-token bg-[rgb(var(--surface))] transition-colors hover:border-brand-300">
+                        <Link href={a.href} prefetch={false} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
                           <span className="w-10 shrink-0 text-center text-xs font-bold tabular-nums">{a.dueTime}</span>
                           <span className={`w-0.5 shrink-0 self-stretch rounded-full ${meta.dot}`} aria-hidden />
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold leading-snug">{a.title}</span>
                             <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted">
-                              {a.kind === "quiz" && <span className="font-semibold text-brand-700">Quiz</span>}{" "}
+                              {a.kind === "quiz" && <span className="font-semibold text-brand-700">Quiz</span>}
+                              {a.kind === "meeting" && <span className="font-semibold text-brand-700">Buổi học</span>}{" "}
                               {/* Tên môn học (= khoá học) dạng chip để nhìn ra ngay việc thuộc môn nào. */}
                               <span className="chip-brand max-w-full truncate text-[10px]" title={a.courseTitle}>
                                 {a.courseTitle}
@@ -410,6 +414,20 @@ export default function WorkspaceCalendar({
                             {a.state === "graded" && a.scoreLabel ? `✓ ${a.scoreLabel}` : (a.stateLabel ?? meta.label)}
                           </span>
                         </Link>
+                        {a.lessons && (
+                          <div className="border-t border-token px-2 py-1.5 pl-12 text-xs">
+                            <span className="font-semibold text-muted">Bài của buổi</span>
+                            <ul className="mt-0.5 flex flex-col gap-0.5">
+                              {a.lessons.map((l) => (
+                                <li key={l.id}>
+                                  <Link href={l.href} prefetch={false} className="text-brand-700 underline underline-offset-2 hover:text-brand-800">
+                                    {l.title}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </li>
                     );
                   })}
@@ -464,7 +482,7 @@ function Row({
         const isToday = day === todayKey;
         const isSelected = day === selected;
         const label = `${dayNumber(day)}/${day.slice(5, 7)}${
-          items.length ? `, ${items.length} việc đến hạn` : ""
+          items.length ? `, ${items.length} ${items.every((a) => a.kind === "meeting") ? "buổi học" : "việc đến hạn"}` : ""
         }${isToday ? ", hôm nay" : ""}`;
         // Ngày đang chọn: tô đặc. Hôm nay (chưa chọn): viền tròn. Ngoài tháng: mờ.
         const circle = isSelected

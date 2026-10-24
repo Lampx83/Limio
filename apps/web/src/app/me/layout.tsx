@@ -3,8 +3,9 @@ import StudentLeftMenu from "@/components/StudentLeftMenu";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import AdminSidebar from "@/app/admin/_components/AdminSidebar";
 import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
-import { getActiveRole } from "@/lib/active-role";
+import { getActiveRole, isTeachingOnly } from "@/lib/active-role";
 import { isResearcher } from "@feedbackme/core-lms";
+import { getInstructorCenterAccess, getLearnerCenterAccess } from "@/lib/centerAccess";
 
 // /me/* là các trang dùng chung mọi role (ví dụ Token AI, Cài đặt tài khoản)
 // — cả StudentLeftMenu lẫn InstructorLeftMenu đều trỏ "Token AI" về đây.
@@ -34,13 +35,17 @@ export default async function MeLayout({
       ? await isResearcher(session.user.id)
       : false;
 
+  const userId = session?.user?.id;
+  const centerEnabled = activeRole === "instructor" && userId ? await getInstructorCenterAccess(userId) : false;
+  const showSchedule = isStudentWorkspace && userId ? await getLearnerCenterAccess(userId) : false;
+
   const leftMenu =
     activeRole === "admin" ? (
       <AdminSidebar />
     ) : activeRole === "instructor" ? (
-      <InstructorLeftMenu isResearcher={hasResearcherRole} />
+      <InstructorLeftMenu isResearcher={hasResearcherRole} centerEnabled={centerEnabled} teachingOnly={isTeachingOnly(roles)} />
     ) : (
-      <StudentLeftMenu badges={badges} continueTo={continueTo} />
+      <StudentLeftMenu badges={badges} continueTo={continueTo} showSchedule={showSchedule} />
     );
 
   return (

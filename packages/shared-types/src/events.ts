@@ -243,6 +243,35 @@ export const LearningEventType = {
   // có tìm được việc để làm không: nhập mã gì, bấm vào đâu. KHÔNG ghi chính mã (mã là chìa khoá vào lớp/thi).
   OnboardingCodeSubmitted: "onboarding.code.submitted",
   OnboardingStartClicked: "onboarding.start.clicked",
+  // CENTER C1 — lịch dạy của lớp (docs/CENTER-schedule-attendance-AC.md). Subject là người
+  // thao tác (giảng viên); payload mang id và số liệu, không mang tên học viên.
+  ClassScheduleSet: "class.schedule.set",
+  ClassMeetingCancelled: "class.meeting.cancelled",
+  ClassMeetingUpdated: "class.meeting.updated",
+  ClassMeetingMakeupAdded: "class.meeting.makeup_added",
+  // CENTER C2 — điểm danh học viên. Subject là HỌC VIÊN được điểm danh (để Feedback Engine và
+  // Gamification đọc theo người); giáo viên thao tác nằm trong payload.
+  AttendanceStudentMarked: "attendance.student.marked",
+  // CENTER C3 — giáo trình dựng sẵn. Subject là giảng viên thao tác.
+  CoursePackUsed: "course.pack.used",
+  CoursePackUpdated: "course.pack.updated",
+  // CENTER C4 — kết thúc buổi, tổng kết gửi lớp, nhận xét cá nhân. Subject là giảng viên thao tác;
+  // payload chỉ mang id và số liệu, KHÔNG mang chữ của nhận xét (theo mẫu assistant.question.asked).
+  ClassMeetingClosed: "class.meeting.closed",
+  MeetingSummarySent: "meeting.summary.sent",
+  MeetingNoteDrafted: "meeting.note.drafted",
+  MeetingNoteSent: "meeting.note.sent",
+  // CENTER C6 — mục tiêu học tập. Chủ thể là HỌC VIÊN có mục tiêu (người đặt hộ nằm trong payload).
+  GoalSet: "goal.set",
+  GoalChanged: "goal.changed",
+  GoalStatusChanged: "goal.status_changed",
+  GoalSectionSet: "goal.section_set",
+
+  // Nghe giảng / Podcast của bài học (docs/tieu-chi/nghe-giang-podcast.md, AC6). Chỉ đo cách học viên nghe:
+  // KHÔNG ghi nội dung lời giảng. Ghi sự kiện không bao giờ được chặn hay làm chậm việc phát.
+  NarrationStarted: "narration.started",
+  NarrationCompleted: "narration.completed",
+  NarrationStopped: "narration.stopped",
 } as const;
 
 export type LearningEventType =
@@ -886,4 +915,172 @@ export interface OnboardingCodeSubmittedPayload {
 export interface OnboardingStartClickedPayload {
   target: "sample" | "catalog_course" | "catalog_all";
   courseId?: string;
+}
+
+// ── CENTER C1 — lịch dạy của lớp ──────────────────────────────────────────
+
+export interface ClassScheduleSetPayload {
+  sectionId: string;
+  courseId: string;
+  totalMeetings: number;
+  slotCount: number;
+  /** Số buổi tạo mới / cập nhật tại chỗ / xoá trong lần áp dụng này. */
+  created: number;
+  updated: number;
+  removed: number;
+}
+
+export interface ClassMeetingCancelledPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Độ dài lý do, không mang chữ. */
+  reasonLength: number;
+}
+
+export interface ClassMeetingUpdatedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Tên các trường đã đổi: startsAt | endsAt | room | plannedTeacherId. */
+  changed: string[];
+}
+
+export interface ClassMeetingMakeupAddedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  makeupOfId: string | null;
+}
+
+// ── CENTER C2 — điểm danh học viên ───────────────────────────────────────
+
+export type AttendanceStatusValue = "present" | "late" | "absent" | "excused";
+
+export interface AttendanceStudentMarkedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  status: AttendanceStatusValue;
+  /** Trạng thái trước đó; null khi đây là lần đánh dấu đầu tiên. */
+  previousStatus: AttendanceStatusValue | null;
+  /** Giáo viên thao tác. */
+  markedById: string;
+}
+
+// ── CENTER C4 — tổng kết buổi và nhận xét ────────────────────────────────
+
+export interface ClassMeetingClosedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Buổi có giáo án khi đóng hay không (tổng kết chỉ có giờ buổi sau và bài tập khi false). */
+  hasPlan: boolean;
+}
+
+export interface MeetingSummarySentPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Kết quả của lần gửi này (không tính người đã nhận ở lần trước). */
+  sent: number;
+  failed: number;
+  skipped: number;
+}
+
+export interface MeetingNoteDraftedPayload {
+  meetingId: string;
+  noteId: string;
+  /** rule_template | llm — nguồn của bản nháp. */
+  source: string;
+  /** Chỉ độ dài, không mang chữ nhận xét. */
+  bodyLength: number;
+}
+
+export interface MeetingNoteSentPayload {
+  meetingId: string;
+  noteId: string;
+  /** Học viên nhận (người nhận nhận xét, không phải chủ thể event). */
+  learnerId: string;
+  bodyLength: number;
+  correction: boolean;
+}
+
+// ── CENTER C6 — mục tiêu học tập ─────────────────────────────────────────
+
+export interface GoalSetPayload {
+  goalId: string;
+  courseId: string | null;
+  framework: string;
+  targetLevel: string;
+  targetDate: string;
+  hoursPerWeek: number | null;
+  /** Người đặt: chính học viên hay giáo viên đặt hộ. */
+  setById: string;
+  /** Mục tiêu này chép từ mục tiêu của lớp (học viên bấm "Dùng mục tiêu này"). */
+  fromSection: boolean;
+}
+
+export interface GoalChangedPayload {
+  goalId: string;
+  changedById: string;
+  /** Từng trường đã đổi: giá trị cũ và mới. */
+  changes: Record<string, { from: string | number | null; to: string | number | null }>;
+}
+
+export interface GoalStatusChangedPayload {
+  goalId: string;
+  changedById: string;
+  from: string;
+  to: string;
+}
+
+export interface GoalSectionSetPayload {
+  sectionId: string;
+  courseId: string;
+  /** null = đã bỏ mục tiêu của lớp. */
+  framework: string | null;
+  targetLevel: string | null;
+  targetDate: string | null;
+}
+
+// ── CENTER C3 — giáo trình dựng sẵn ──────────────────────────────────────
+
+export interface CoursePackUsedPayload {
+  packId: string;
+  packVersion: number;
+  /** Khoá mới được sao ra. */
+  courseId: string;
+}
+
+export interface CoursePackUpdatedPayload {
+  packId: string;
+  fromVersion: number | null;
+  toVersion: number;
+  courseId: string;
+  updatedSessions: number[];
+  /** Buổi không cập nhật vì đã dạy hoặc đã có hoạt động của học viên. */
+  skippedSessions: number[];
+}
+
+export type NarrationEventKind = "lecture" | "podcast";
+
+export interface NarrationStartedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+  /** true = nghe tiếp từ vị trí đã nhớ, false = nghe từ đầu. */
+  resumed: boolean;
+}
+
+export interface NarrationCompletedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+}
+
+export interface NarrationStoppedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+  /** Phần trăm xa nhất đã nghe tới (0–100) trong lần nghe này. */
+  percent: number;
+  speed: number;
 }

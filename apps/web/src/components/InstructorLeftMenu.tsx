@@ -23,6 +23,7 @@ import {
   X,
   Loader2,
   CalendarCheck,
+  CalendarDays,
   Library,
   Coins,
   Presentation,
@@ -42,6 +43,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
+import { CENTER_INSTRUCTOR_HREFS, TEACHING_ONLY_HREFS } from "@/lib/centerAccess.constants";
 
 export const INSTRUCTOR_MENU_TOGGLE_EVENT = "fbm:instructor-menu:toggle";
 // HelpTour (components/HelpTour.tsx) dùng để tự mở cột item của 1 module mà
@@ -148,6 +150,8 @@ const MODULES: ModuleDef[] = [
       "/instructor/courses",
       "/catalog",
       "/instructor/assignments",
+      "/instructor/lich-day",
+      "/instructor/giao-trinh",
       "/instructor/skill-tagging",
       "/instructor/forum",
       "/instructor/enrollments",
@@ -157,6 +161,8 @@ const MODULES: ModuleDef[] = [
     items: [
       { label: "Khoá học của tôi", href: "/instructor/courses", icon: BookOpen },
       { label: "Assignment", href: "/instructor/assignments", icon: ClipboardList },
+      { label: "Lịch dạy", href: "/instructor/lich-day", icon: CalendarDays },
+      { label: "Giáo trình", href: "/instructor/giao-trinh", icon: Library },
       { label: "Forum Q&A", href: "/instructor/forum", icon: MessageSquare },
     ],
   },
@@ -323,6 +329,10 @@ export default function InstructorLeftMenu(props: {
   isInstructor?: boolean;
   isProctor?: boolean;
   isResearcher?: boolean;
+  /** Tính năng trung tâm (Lịch dạy, Giáo trình) có được bật cho tài khoản này không. */
+  centerEnabled?: boolean;
+  /** Giảng viên trung tâm: chỉ dạy, không soạn — menu rút gọn còn Lịch dạy, Assignment, Forum Q&A. */
+  teachingOnly?: boolean;
 }) {
   return (
     <Suspense fallback={null}>
@@ -335,15 +345,27 @@ function InstructorLeftMenuInner({
   isInstructor = true,
   isProctor = false,
   isResearcher = false,
+  centerEnabled = false,
+  teachingOnly = false,
 }: {
   isInstructor?: boolean;
   isProctor?: boolean;
   isResearcher?: boolean;
+  centerEnabled?: boolean;
+  teachingOnly?: boolean;
 }) {
   const modules = MODULES.map((m) => ({
     ...m,
-    items: m.items.filter((it) => !it.researcherOnly || isResearcher),
-  }));
+    items: m.items.filter((it) => {
+      // Giảng viên trung tâm chỉ dạy: bỏ mọi thứ để soạn (khoá, giáo trình, slide, đề thi, đấu trường, phân tích).
+      if (teachingOnly) return !!it.href && TEACHING_ONLY_HREFS.has(it.href);
+      return (!it.researcherOnly || isResearcher) && (centerEnabled || !it.href || !CENTER_INSTRUCTOR_HREFS.has(it.href));
+    }),
+  })).filter((m) => !teachingOnly || m.items.length > 0);
+  // Giảng viên trung tâm được xếp coi thi thì có thêm lối vào phòng thi của mình (giám thị thuần tuý đã có menu riêng bên dưới).
+  if (teachingOnly && isProctor && modules[0]) {
+    modules[0] = { ...modules[0], items: [...modules[0].items, PROCTOR_ITEM] };
+  }
   const tokensUnlocked = useAiTokensPageUnlocked();
   const pathname = usePathname();
   const searchParams = useSearchParams();

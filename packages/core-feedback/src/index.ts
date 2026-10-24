@@ -15,3 +15,5 @@ export * from "./flashcardSrs";
 export * from "./flashcards";
 export * from "./writing/index";
 export * from "./speaking/index";
+export * from "./meetingNotes";
+export * from "./goalProgress";

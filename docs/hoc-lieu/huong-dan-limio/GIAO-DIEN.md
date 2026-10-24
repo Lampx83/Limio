@@ -60,8 +60,8 @@ trường" (ẩn khi đang ở trang thi), chuông thông báo và nút tên tà
 đánh giá), cúp (Đấu trường), biểu đồ cột (Phân tích và Báo cáo).
 
 1. **Trang chủ** → `/instructor/dashboard` (chú giải khi rê chuột: "Tìm kiếm nhanh, hỏi Lily và khoá học gần đây")
-2. **LMS** ("Bài giảng Elearning"): Khoá học của tôi · **Assignment** · **Forum Q&A** (nhãn menu nguyên văn,
-   còn tiếng Anh)
+2. **LMS** ("Bài giảng Elearning"): Khoá học của tôi · **Assignment** · **Lịch dạy** (mới, `/instructor/lich-day`) ·
+   **Forum Q&A** (nhãn menu nguyên văn, còn tiếng Anh)
 3. **Limio-Live** ("Dạy học trực tiếp"), chia 4 nhóm nhỏ: "Slide tương tác" (Slide của tôi) ·
    "Hoạt động nhanh" (Vote, Word Cloud, Padlet, Draw-it, Whiteboard) · "Điều hành lớp học" (Đếm ngược,
    Gọi tên, Phân nhóm, Gameshow). Cần quyền `limio_live.access`. Tài khoản miễn phí thấy nhãn nhỏ
@@ -377,6 +377,84 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   `name,email`. Danh sách lớp có cột Học viên / Trạng thái / Vào lớp / Tiến độ / Điểm quiz gần nhất /
   "Chuyển lớp". Khoá "Chỉ vào bằng link mời lớp" chỉ vào được bằng các link này. Trang đón: "Lời mời tham gia
   lớp học" → "Vào học". Từ tab này còn mở được trang "Nhóm làm bài tập" (mục 6).
+- **Bật tính năng trung tâm** (mới, CENTER mục G): các mục **"Lịch dạy"** và **"Giáo trình"** trong menu LMS (và khối
+  "Lịch dạy", bảng "Chuyên cần", thông báo giáo trình có bản mới ở trang lớp) **chỉ hiện khi tính năng trung tâm được bật** cho
+  tài khoản: trường của giảng viên bật công tắc **"Tính năng trung tâm"** (cài đặt trường của quản trị trường, hoặc trang quản trị
+  trường của Platform Admin), hoặc Platform Admin cấp cờ `center.access` riêng cho một tài khoản chưa thuộc trường, hoặc giảng viên
+  đang dạy khoá có lớp đã đặt lịch (không bị mất lối vào). Học viên thấy mục **"Lịch học"** khi đang học ở lớp có buổi. Tắt chỉ ẩn,
+  không xoá dữ liệu.
+- **Giảng viên trung tâm** (mới, CENTER mục H): vai trò **chỉ dạy, không soạn**, do Platform Admin hoặc quản trị trường cấp cho
+  thành viên của trường (trang quản lý thành viên của quản trị trường, công tắc **"Giảng viên trung tâm (chỉ dạy)"** ở cột vai
+  trò). Giảng viên trung tâm làm việc ở không gian "Giảng viên" nhưng menu chỉ còn **"Lịch dạy"**, **"Assignment"**, **"Forum Q&A"**
+  (và "Giám sát phòng thi" nếu được xếp coi thi): không có "Khoá học của tôi", "Giáo trình", Limio-Live, Vấn đáp AI, Kiểm tra đánh
+  giá, Đấu trường, Phân tích; không tạo được khoá. Trang chủ của họ là **"Hôm nay tôi dạy"**: các buổi được xếp cho họ hôm nay và
+  7 ngày tới, mỗi buổi có tên giáo án, liên kết "Bài của buổi" và nút **"Điểm danh"**, cùng "Lịch dạy của tôi" dạng lịch. Họ chỉ
+  thấy lớp và buổi được xếp cho mình (giáo viên dự kiến của buổi, hoặc giáo viên phụ trách lớp). Ở trang lớp họ chỉ xem: không có
+  form đặt lịch, "Sửa", "Huỷ buổi", "+ Thêm buổi dạy bù"; vẫn có "Điểm danh" ở buổi của mình. Đặt lịch, huỷ buổi, dạy bù, cập nhật
+  giáo trình chỉ chủ khoá, đồng giảng viên và Platform Admin làm được. Chủ trung tâm thêm giảng viên trung tâm vào khoá bằng vai
+  trò khoá "non-editing-teacher" rồi xếp họ vào khung giờ hoặc buổi. Chưa có: đề nghị nghỉ/đổi buổi, ghi chú riêng vào giáo án.
+- **Lịch dạy của lớp** (mới, CENTER C1): trang "Lịch dạy" trong menu LMS (`/instructor/lich-day`) là **lịch** giống widget "Lịch" ở
+  trang chủ: nút **"Tuần"** / **"Tháng"**, **"Trước"** / **"Sau"**, bấm một ngày để xem các buổi trong ngày (kèm giáo án), bấm một
+  buổi mở trang điểm danh của buổi đó (buổi đã huỷ thì mở trang lớp). Đặt lịch ở đầu trang "Danh sách học viên" của lớp (khối **"Lịch dạy"**): "Ngày bắt đầu",
+  "Tổng số buổi", các khung giờ lặp hằng tuần (thứ, giờ bắt đầu, thời lượng phút, phòng, giáo viên dự kiến),
+  "+ Thêm khung giờ", "Bỏ khung này", rồi **"Áp dụng lịch"**. Áp lại chỉ sinh lại buổi chưa diễn ra. Mỗi buổi
+  có "Sửa" và **"Huỷ buổi"** (hỏi lý do; huỷ thì các buổi sau tự lùi số thứ tự); **"+ Thêm buổi dạy bù"** có thể
+  gắn với một buổi đã huỷ. Trùng giáo viên hoặc phòng giữa các lớp chỉ hiện cảnh báo, vẫn lưu. Buổi học cũng hiện (chấm xanh, nhãn "Buổi học") trong widget **"Lịch"** ở trang chủ của giảng viên, bấm vào mở trang điểm danh; buổi huỷ hiện
+  "Đã huỷ". Học viên xem ở widget "Lịch" và thẻ **"Chuyên cần của bạn"** trên trang tổng quan, hoặc ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`).
+- **Giáo trình dựng sẵn** (mới, CENTER C3): mục **"Giáo trình"** trong menu LMS mở trang **"Giáo trình dựng sẵn"** (`/instructor/giao-trinh`)
+  liệt kê các giáo trình quản trị đã phát hành (tên, ngôn ngữ, "đầu ra", số buổi, số bài). **"Xem trước"** mở
+  `/instructor/giao-trinh/[packId]`: mô tả và danh sách buổi, bấm một buổi để xổ các bài kèm loại nội dung (từ vựng,
+  hội thoại, audio, quiz, bài tập về nhà, ghi chú cho giáo viên). **"Dùng giáo trình này"** sao cả giáo trình về
+  thành một khoá nháp của giảng viên rồi mở trang khoá đó; khoá còn nháp nên giảng viên bấm **"Publish"** thì mới có tab "Lớp học" để tạo lớp. Sửa bản sao không đụng bản gốc. Mỗi chương
+  của giáo trình là giáo án của một buổi: buổi học số N của lớp (số thứ tự theo thời gian, không tính buổi huỷ) tự hiện
+  dòng **"Giáo án:"** kèm các bài để mở ở khối "Lịch dạy" của trang lớp, và khối **"Bài của buổi"** (mỗi bài là một liên kết mở thẳng bài đó) khi bấm một ngày ở lịch trên trang "Lịch dạy" và "Lịch học" (cả học viên lẫn giảng viên; buổi đã huỷ thì không hiện); buổi vượt quá giáo án hiện "Chưa có giáo án cho buổi này", và trang lớp có thông báo khi giáo án nhiều
+  hoặc ít buổi hơn lịch. Học viên chỉ thấy tên bài, không thấy bài ẩn, không thấy ghi chú giảng viên. Khi quản trị phát
+  hành bản mới, trang lớp hiện thông báo "có bản mới" kèm nút **"Cập nhật các buổi chưa dạy"** (hỏi xác nhận; buổi đã dạy
+  hoặc đã có học viên xem/làm bài được giữ nguyên và báo lại). Quản trị phát hành qua API
+  `/api/admin/packs` (chưa có giao diện). Chưa có: trung tâm tự đóng gói giáo án của mình thành giáo trình.
+- **Điểm danh học viên** (mới, CENTER C2): mỗi buổi chưa huỷ trong khối "Lịch dạy" của trang lớp có nút
+  **"Điểm danh"** (cũng là đích khi bấm một buổi ở trang "Lịch dạy"), mở
+  `/instructor/courses/[id]/sections/[sectionId]/meetings/[meetingId]`. Trang liệt kê học viên của lớp, mặc định
+  chưa ai được đánh dấu; nút **"Có mặt cả lớp"** chỉ đánh dấu những người chưa có trạng thái; mỗi học viên có
+  bốn nút **"Có mặt" / "Muộn" / "Vắng" / "Có phép"** và **"+ Thêm ghi chú"** (tối đa 200 ký tự, chỉ giáo viên thấy);
+  các lựa chọn chỉ được ghi khi bấm **"Lưu điểm danh"**. Trên điện thoại hai nút này nằm ở thanh cố định cuối màn
+  hình. Điểm danh mở từ 30 phút trước giờ học, sửa được đến 7 ngày sau khi buổi kết thúc; buổi đã huỷ thì không
+  điểm danh được. Trang lớp có thêm phần **"Chuyên cần"**: bảng Học viên / Có mặt / Muộn / Vắng / Có phép /
+  Chuyên cần (tỉ lệ = (có mặt + muộn) / (có mặt + muộn + vắng), vắng có phép không tính) và khối cảnh báo
+  khi có học viên vắng từ 2 buổi liên tiếp (chỉ gợi ý, không tự nhắn). Học viên thấy trạng thái của chính mình
+  ở "Lịch học" (nhãn "Có mặt", "Đi muộn", "Vắng", "Vắng có phép" và mục "Chuyên cần của bạn"), không thấy ghi chú.
+  Chưa có: giáo viên check-in (giai đoạn sau).
+- **Kết thúc buổi, tổng kết và nhận xét sau buổi** (mới, CENTER C4): trên trang điểm danh của buổi có khối
+  **"Kết thúc buổi"** (dùng được từ lúc buổi bắt đầu; hỏi xác nhận). Bấm xong buổi thành "Đã dạy", hệ thống chụp
+  **tổng kết** từ giáo án (bài đã học, từ vựng cần ôn, bài tập về nhà kèm hạn riêng của lớp, giờ và nội dung buổi sau)
+  và, nếu lớp bật công tắc **"Tự gửi tổng kết cho cả lớp khi kết thúc buổi"** (ở đầu khối lịch của trang lớp, mặc
+  định bật, chỉ người quản khoá thấy), gửi email cho mọi học viên của lớp qua hàng đợi có retry; học viên vắng nhận thêm
+  dòng "Em vắng buổi này, bài cần học bù: …". Mỗi học viên nhận tối đa một email tổng kết cho mỗi buổi; khối hiện
+  "đã gửi / bỏ qua (đã tắt email) / lỗi" và nút **"Gửi tổng kết cả lớp"** hoặc **"Gửi lại phần lỗi"** (chỉ gửi người
+  chưa nhận). Nút **"Nhận xét sau buổi"** mở `…/meetings/[meetingId]/notes`: danh sách học viên, nút
+  **"Soạn nháp cho cả lớp"** tạo bản nháp riêng cho từng học viên có mặt hoặc đến muộn từ điểm danh, bài tập và nhãn
+  nắm bài (Cần ôn lại / Nên luyện thêm / Nắm chắc) của chính em đó; không số liệu, không nhắc em khác, chỗ thiếu dữ
+  liệu để trống; dùng AI khi còn hạn mức token của giảng viên và có cấu hình, không thì soạn theo mẫu. Mỗi học viên có ô
+  ghi chú nhanh (kèm bốn gợi ý bấm sẵn) và nút **"Soạn lại"**, sửa chữ trực tiếp, **"Duyệt"** / **"Bỏ duyệt"**; nút
+  **"Gửi tất cả đã duyệt"** chỉ gửi bản đã duyệt, bản nháp không bao giờ tự gửi. Học viên vắng không có bản tự động;
+  thầy/cô có thể viết lời nhắn rồi **"Lưu lời nhắn"**. Bản đã gửi không sửa được: nút **"Đính chính"** tạo bản mới gửi
+  kèm nhãn "Đính chính". Học viên đọc lại ở "Lịch học" (khối "Nhận xét của giáo viên" và "Tổng kết các buổi gần đây")
+  và ở chuông thông báo; email có liên kết "Không nhận email này nữa" (chỉ tắt thư tự động, vẫn đọc trong ứng dụng).
+  Người chỉ dạy (giảng viên trung tâm) kết thúc buổi và soạn nhận xét được cho buổi được xếp cho mình.
+- **Mục tiêu học tập** (mới, CENTER C6): ở trang lớp, dưới khối "Chuyên cần", có khối **"Mục tiêu học tập"**. Phần
+  **"Mục tiêu của lớp"**: người quản khoá bấm **"Đặt mục tiêu của lớp"** (sau đó **"Đổi mục tiêu của lớp"** / **"Bỏ mục tiêu của lớp"**)
+  để chọn khung (HSK 1–6, IELTS 4.0–9.0, TOEIC 400–900, CEFR A1–C2 hoặc tự đặt), cấp độ, hạn (không bắt buộc) và số giờ mỗi
+  tuần; mục tiêu lớp chỉ là gợi ý. Bảng bên dưới liệt kê từng học viên: mục tiêu (nhãn "theo lớp" nếu chưa đặt riêng), **nhận định**
+  ("Đang vượt kế hoạch" / "Đang đúng kế hoạch" / "Đang chậm so với kế hoạch" / chưa đủ dữ liệu / đã qua hạn) và nhãn từng kỹ năng
+  (Cần ôn, Nên luyện thêm, Vững; không có phần trăm); học viên chưa có mục tiêu riêng có nút **"Đặt mục tiêu"** để giáo viên đặt hộ
+  (người chỉ dạy làm được cho lớp mình được xếp). Nhận định so số giờ học thật (từ `lesson.engaged`, kể từ lúc đặt mục tiêu) với
+  `số giờ mỗi tuần × số tuần đã trôi`: từ 1,15 lần là vượt, từ 0,8 là đúng kế hoạch, dưới đó là chậm; chưa đủ 1 tuần hoặc không đặt giờ
+  thì không nhận định. Phía học viên có mục **"Mục tiêu"** trong menu (`/me/muc-tieu`, chỉ hiện khi học ở lớp
+  có lịch): với mỗi khoá hiện mục tiêu hiệu lực (riêng, hoặc gợi ý của lớp kèm nút **"Dùng mục tiêu này"** và **"Tự đặt mục tiêu riêng"**),
+  số tuần còn lại, số giờ đã học, nhận định và nhãn từng kỹ năng; nút **"Đổi mục tiêu"**, **"Đã đạt"**, **"Lưu trữ"**, **"Xem lịch sử"**
+  (mọi lần đặt và đổi, kèm giá trị cũ và mới); mục tiêu đã đóng có **"Theo đuổi lại"**; **"Mục tiêu chung"** không gắn khoá chỉ chính học
+  viên xem. Mục tiêu bị xoá hẳn khi xoá tài khoản và có trong bản xuất dữ liệu cá nhân. Chưa có: cảnh báo học viên lệch kế hoạch hai tuần
+  liền, gợi ý bài luyện theo mục tiêu, kết quả thi thử trong tiến độ.
 - **Học viên** (tab "Học viên"): trạng thái Đang học / Đã hoàn thành / Bỏ học / Đã hoàn
   tiền / Hết hạn truy cập; tìm theo tên hoặc email; "Gán lớp", "Xoá khỏi khoá học",
   "Tải danh sách học viên".
@@ -707,7 +785,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   (chỉ nhà nghiên cứu) · trang `/instructor/feedback-generator`, `/feedback-templates`, `/item-analytics`
   (không có lối vào) · "Thư viện mẫu", "Template", "Soạn kịch bản" của Limio-Live (đang phát triển) ·
   khối "Slide bài giảng" trong hộp thêm hoạt động · chia sẻ bài giảng cho đồng nghiệp hoặc đồng soạn (chỉ có
-  link xem chỉ đọc) · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
+  link xem chỉ đọc) · giáo viên check-in · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
   trống/Ghép cặp/Memory/Open-ended (chỉ trong kế hoạch).
 - **Đợt thi**, "+ Tạo đợt thi", "Trưởng đợt", tạo nhiều ca trong một đợt — đã gỡ khỏi luồng tổ chức. Giới hạn
   mạng khi vào thi (cài đặt của quản trị trường). Khoá mẫu ngoại ngữ ở trang tạo khoá (đã gỡ). Rubric vấn đáp như

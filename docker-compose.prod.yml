@@ -108,11 +108,16 @@ x-web-env: &web-env
 
 services:
   postgres:
-    # A6.2 — pgvector/pgvector:pg15 = ảnh chính thức của postgres:15 gốc +
-    # extension "vector" cài sẵn. Tương thích ngược 100% với volume hiện có —
-    # chỉ thêm binary, không đổi format dữ liệu. Xem docker-compose.yml.
-    image: pgvector/pgvector:pg15
+    # A6.2 — pgvector = postgres:15 + extension "vector" cài sẵn.
+    # Ghim cả bản pgvector lẫn hệ điều hành. Tag trôi `pg15` là Debian bookworm
+    # (glibc 2.36) trong khi postgres:15 cũ là trixie (glibc 2.41): đổi image
+    # đã làm lệch collation, phải REINDEX cả DB (docs/van-hanh/collation-postgres-2026-10.md).
+    # Đổi codename OS (bookworm/trixie) ở đây = bảo trì có chủ đích, bắt buộc REINDEX.
+    image: pgvector/pgvector:0.8.7-pg15-bookworm
     restart: unless-stopped
+    labels:
+      # Watchtower không được tự kéo image mới và khởi động lại DB prod.
+      com.centurylinklabs.watchtower.enable: "false"
     logging: *default-logging
     environment:
       POSTGRES_USER: feedbackme

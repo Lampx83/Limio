@@ -16,6 +16,7 @@ import { LEARNER_TOUR_STEPS, hasSeenHelpTour, type HelpTourCompletionMap } from 
 import { STUDENT_MENU_TOGGLE_EVENT } from "@/components/StudentLeftMenu";
 import { getActiveRole } from "@/lib/active-role";
 import CalendarLoader from "@/components/calendar/CalendarLoader";
+import MyAttendanceCard from "@/components/MyAttendanceCard";
 import LearnerTodoPanel from "@/components/todo/LearnerTodoPanel";
 import { loadLearnerTodo } from "@/lib/learnerTodo";
 import { hasAnyCourse, loadStartPage } from "@/lib/learnerStart";
@@ -405,6 +406,7 @@ export default async function LearnerDashboard({
               self-start để thẻ co theo nội dung, không kéo dãn bằng ô Khoá đã đăng ký. */}
           <div className="order-2 space-y-8 lg:order-none">
             <CalendarLoader userId={userId} audience="learner" />
+            <MyAttendanceCard userId={userId} />
             {/* Việc cần làm (top 5 việc có hạn, thống kê, khu không hạn, xem đủ + phân trang): ngay dưới lịch để
                 việc cần hành động nhất nằm trong tầm mắt, không chôn ở hàng dưới. */}
             <LearnerTodoPanel todayKey={toDayKey(now)} items={todoItems} />

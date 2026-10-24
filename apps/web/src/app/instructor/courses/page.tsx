@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { isTeachingOnly } from "@/lib/roleWorkspace";
 import { EmptyState } from "@/components/ui";
 import { formatDate } from "@/lib/datetime";
 
@@ -41,6 +42,8 @@ const STATUS_META: Record<
 export default async function InstructorCoursesPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/courses");
+  // Giảng viên trung tâm chỉ dạy: không có danh sách khoá để soạn (CENTER mục H).
+  if (isTeachingOnly(session.user.roles ?? [])) redirect("/instructor/dashboard");
 
   const courses = await prisma.course.findMany({
     where: {

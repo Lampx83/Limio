@@ -15,6 +15,8 @@ import {
 import InstructorHomeSearch, { type SearchSuggestion } from "@/components/InstructorHomeSearch";
 import HomeStatusLine from "@/components/HomeStatusLine";
 import { getInstructorPendingSummary } from "@/lib/notifications";
+import { isTeachingOnly } from "@/lib/roleWorkspace";
+import CenterTeacherHome from "@/components/CenterTeacherHome";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,11 @@ export default async function InstructorDashboard({
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/dashboard");
   const userId = session.user.id;
+
+  // Giảng viên trung tâm (chỉ dạy): trang chủ riêng "Hôm nay tôi dạy", không có lối tắt soạn.
+  if (isTeachingOnly(session.user.roles ?? [])) {
+    return <CenterTeacherHome userId={userId} displayName={session.user.name ?? null} />;
+  }
 
   const meTour = await prisma.user.findUniqueOrThrow({
     where: { id: userId },
@@ -90,34 +97,57 @@ export default async function InstructorDashboard({
         <Glow />
         <div className="mx-auto max-w-3xl">
           <Hero greeting={greeting()} name={name} suggestions={[makeSuggestion]} />
-          <div className="mt-12 rounded-2xl border border-accent-200 bg-accent-50 p-5">
-            <p className="text-sm font-semibold text-accent-700">
-              Bạn chưa là instructor của khoá nào.
+          {/* Cùng ngôn ngữ với thẻ khoá học khi đã có khoá: góc bo 22px, viền và bóng nhẹ, ô biểu tượng chuyển màu lime → hồng
+              như tên trong lời chào, nút bo tròn cao bằng ô tìm kiếm. */}
+          <section
+            aria-labelledby="first-course-heading"
+            className="mx-auto mt-12 max-w-xl rounded-[22px] border border-token bg-[rgb(var(--surface))] px-6 py-8 text-center shadow-[0_6px_20px_-10px_rgb(29_36_23/0.14)] sm:px-10 sm:py-10"
+          >
+            <span
+              aria-hidden
+              className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-100 to-pink-100 text-brand-700 dark:from-brand-900/50 dark:to-pink-900/40 dark:text-brand-300"
+            >
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5v-15Z" />
+                <path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5v-15Z" />
+              </svg>
+            </span>
+            <h2 id="first-course-heading" className="mt-4 text-[1.15rem] font-semibold tracking-[-0.015em]">
+              Thầy/cô chưa có khoá học nào
+            </h2>
+            <p className="mx-auto mt-1.5 max-w-sm text-[0.95rem] leading-relaxed text-muted">
+              Tạo khoá đầu tiên để thêm bài học, giao bài và mời học viên vào lớp.
             </p>
-            <Link href="/instructor/courses/new" className="btn-primary mt-4 inline-flex">
+            <Link
+              href="/instructor/courses/new"
+              prefetch={false}
+              className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-brand-600 px-7 text-[0.95rem] font-semibold text-white shadow-sm transition hover:-translate-y-px hover:bg-brand-700 hover:shadow-brand-glow active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            >
               + Tạo khoá đầu tiên
             </Link>
-          </div>
+          </section>
           {sampleCourses.length > 0 && (
-            <section className="mt-10" aria-labelledby="sample-courses-heading">
-              <h2 id="sample-courses-heading" className="text-sm font-semibold text-muted">
-                Xem khoá mẫu
-              </h2>
-              <p className="mt-0.5 text-sm text-faint">
-                Xem một khoá đã dựng xong trông thế nào trước khi tạo khoá của bạn.
-              </p>
-              <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+            <section className="mx-auto mt-12 max-w-2xl" aria-labelledby="sample-courses-heading">
+              <header className="mx-1">
+                <h2 id="sample-courses-heading" className="text-base font-semibold">
+                  Xem khoá mẫu
+                </h2>
+                <p className="mt-0.5 text-sm text-muted">
+                  Xem một khoá đã dựng xong trông thế nào trước khi tạo khoá của thầy/cô.
+                </p>
+              </header>
+              <ul className="mt-3.5 grid gap-3.5 sm:grid-cols-2">
                 {sampleCourses.map((c) => (
-                  <li key={c.id}>
+                  <li key={c.id} className="min-w-0">
                     <Link
                       href={`/catalog/${c.slug}`}
-                      className="card block h-full p-4 transition-colors hover:border-brand-300"
+                      className="block h-full rounded-[22px] border border-token bg-[rgb(var(--surface))] p-4 shadow-[0_6px_20px_-10px_rgb(29_36_23/0.14)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_32px_-12px_rgb(29_36_23/0.24)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
                     >
-                      <p className="font-semibold leading-snug">{c.title}</p>
-                      <p className="mt-1 line-clamp-2 text-sm text-muted">
+                      <span className="line-clamp-2 block text-[0.95rem] font-semibold leading-snug tracking-[-0.01em]">{c.title}</span>
+                      <span className="mt-1.5 line-clamp-2 block text-sm text-muted">
                         {c.description.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}
-                      </p>
-                      <p className="mt-3 text-xs font-medium text-brand-700">Xem khoá →</p>
+                      </span>
+                      <span className="mt-3 block text-[0.8125rem] font-medium text-brand-700">Xem khoá →</span>
                     </Link>
                   </li>
                 ))}

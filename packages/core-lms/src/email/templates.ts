@@ -41,7 +41,9 @@ export type TemplateKey =
   | "exam.deadline_reminder"
   | "gamification.level_up"
   | "gamification.badge_earned"
-  | "notification.weekly_digest";
+  | "notification.weekly_digest"
+  | "class.meeting_summary"
+  | "class.student_note";
 
 export type RenderedTemplate = {
   subject: string;
@@ -234,6 +236,16 @@ const FALLBACKS: Record<string, { subject: string; bodyHtml: string; bodyText: s
     subject: "🏆 Bạn vừa nhận huy hiệu: {{badgeName}}",
     bodyHtml: `<p>Xin chào {{learnerName}},</p><p>Bạn vừa nhận được huy hiệu <strong>{{badgeName}}</strong>!</p><p>{{badgeDescription}}</p><p>Xem huy hiệu: <a href="{{badgesUrl}}">{{badgesUrl}}</a></p>`,
     bodyText: `Xin chào {{learnerName}},\n\nBạn vừa nhận huy hiệu: {{badgeName}}\n{{badgeDescription}}\n\nXem tại: {{badgesUrl}}`,
+  },
+  "class.meeting_summary": {
+    subject: "Tổng kết buổi học: {{meetingLabel}} — {{courseTitle}}",
+    bodyHtml: `<p>Chào {{learnerName}},</p><p>Tổng kết buổi <strong>{{meetingLabel}}</strong> ({{meetingDate}}), lớp {{sectionName}}.</p>{{{makeupHtml}}}{{#if learnedHtml}}<p><strong>Hôm nay học</strong></p>{{{learnedHtml}}}{{/if}}{{#if vocabHtml}}<p><strong>Từ vựng cần ôn</strong></p>{{{vocabHtml}}}{{/if}}{{#if homeworkHtml}}<p><strong>Bài tập về nhà</strong></p>{{{homeworkHtml}}}{{/if}}<p>{{nextText}}</p><p><a href="{{appUrl}}">Xem lại trong Limio</a></p><p><small><a href="{{unsubscribeUrl}}">Không nhận email này nữa</a> (vẫn xem được trong ứng dụng)</small></p>`,
+    bodyText: `Chào {{learnerName}},\n\nTổng kết buổi {{meetingLabel}} ({{meetingDate}}), lớp {{sectionName}}.\n{{makeupText}}\n{{#if learnedText}}\nHôm nay học:\n{{learnedText}}\n{{/if}}{{#if vocabText}}\nTừ vựng cần ôn:\n{{vocabText}}\n{{/if}}{{#if homeworkText}}\nBài tập về nhà:\n{{homeworkText}}\n{{/if}}\n{{nextText}}\n\nXem lại: {{appUrl}}\nKhông nhận email này nữa: {{unsubscribeUrl}}`,
+  },
+  "class.student_note": {
+    subject: "{{correctionLabel}}Nhận xét buổi học: {{meetingLabel}} — {{courseTitle}}",
+    bodyHtml: `<p>Chào {{learnerName}},</p><p>Nhận xét của thầy/cô sau buổi <strong>{{meetingLabel}}</strong> ({{meetingDate}}), lớp {{sectionName}}:</p>{{{noteHtml}}}<p><a href="{{appUrl}}">Xem lại trong Limio</a></p><p><small><a href="{{unsubscribeUrl}}">Không nhận email này nữa</a> (vẫn xem được trong ứng dụng)</small></p>`,
+    bodyText: `Chào {{learnerName}},\n\nNhận xét của thầy/cô sau buổi {{meetingLabel}} ({{meetingDate}}), lớp {{sectionName}}:\n\n{{noteText}}\n\nXem lại: {{appUrl}}\nKhông nhận email này nữa: {{unsubscribeUrl}}`,
   },
   "notification.weekly_digest": {
     subject: "Tóm tắt tuần qua trên Limio.vn",

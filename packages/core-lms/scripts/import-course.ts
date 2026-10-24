@@ -57,6 +57,14 @@ import { createContentItem } from "../src/courses/contents";
 import { createQuiz } from "../src/quizzes/quizzes";
 import { CreateQuestionInput, createQuestion } from "../src/quizzes/questions";
 import { lessonSkillCode } from "../src/courses/autoTags";
+import {
+  LECTURE_INTRO_ANCHOR,
+  LECTURE_OUTRO_ANCHOR,
+  LectureScript,
+  PodcastScript,
+  saveNarrationScript,
+} from "../src/narration";
+import { LESSON_FONT_KEYS, LESSON_LAYOUT_KEYS, LESSON_PALETTE_KEYS } from "@feedbackme/shared-types";
 
 // ── Định dạng file học liệu ───────────────────────────────────────────────────
 // Giữ cho người soạn bài đọc và sửa được: `pairs`, `sequence`, `answers` là
@@ -87,6 +95,7 @@ const QuestionSpec = z.object({
     "ordering",
     "matching",
     "essay",
+    "drag_drop_fill",
   ]),
   prompt: z.string().min(1),
   explanation: z.string().optional(),
@@ -107,6 +116,11 @@ const QuestionSpec = z.object({
   sequence: z.array(z.string().min(1)).optional(),
   /** matching — từng cặp trái/phải */
   pairs: z.array(z.object({ left: z.string().min(1), right: z.string().min(1) })).optional(),
+  /**
+   * drag_drop_fill — các thẻ chữ để kéo vào ô trống. Đề bài đánh dấu ô bằng `[[1]]`, `[[2]]`…;
+   * thẻ có `blank` là đáp án của ô đó, thẻ không có `blank` là thẻ gây nhiễu.
+   */
+  tokens: z.array(z.object({ label: z.string().min(1), blank: z.number().int().min(1).optional() })).optional(),
 });
 
 const DialogueTurn = z.object({
@@ -183,6 +197,58 @@ export const LessonSpec = z.object({
    * dối.
    */
   durationMin: z.number().int().min(1).max(600).optional(),
+  /**
+   * Bảng màu + phông chữ của bài (giống nút "Giao diện" khi giảng viên sửa khối văn bản). Áp cho mọi khối
+   * văn bản của bài, để cả bài một giọng.
+   */
+  look: z
+    .object({ palette: z.enum(LESSON_PALETTE_KEYS), font: z.enum(LESSON_FONT_KEYS).optional() })
+    .optional(),
+  /**
+   * Thân bài theo BỐ CỤC — mỗi mục một khối `<section class="lesson-section" data-layout>`, cùng bộ bố cục
+   * với "Bài học từ tài liệu": `text`, `cards` (thẻ xếp lưới), `compare` (hai cột đối chiếu), `steps` (các
+   * bước nối nhau), `faq` (hỏi đáp gập mở), `stats` (con số nổi bật), `image`. Mỗi `part` là một thẻ / cột /
+   * bước / câu hỏi: `title` thành tiêu đề nhỏ, `md` viết markdown như `body`. `intro` là đoạn dẫn trên lưới.
+   * Đứng SAU `body` nếu có cả hai.
+   */
+  sections: z
+    .array(
+      z.object({
+        layout: z.enum(LESSON_LAYOUT_KEYS),
+        title: z.string().min(1).max(200),
+        intro: z.string().optional(),
+        parts: z.array(z.object({ title: z.string().max(200).optional(), md: z.string().default("") })).min(1),
+        /** Markdown đứng sau lưới (ghi nhớ, ví dụ, mẹo…), cùng khối với mục. */
+        outro: z.string().optional(),
+      }),
+    )
+    .optional(),
+  /**
+   * Thẻ ghi nhớ — tạo một khối danh sách từ (`vocab_list`) để học viên lật thẻ ôn ngắt quãng ở trang
+   * "Thẻ ghi nhớ" của khoá. Đứng ngay trước tổng kết.
+   */
+  flashcards: z
+    .object({
+      title: z.string().max(200).optional(),
+      items: z
+        .array(
+          z.object({
+            term: z.string().min(1).max(200),
+            meaning: z.string().min(1).max(1_000),
+            example: z.string().max(1_000).optional(),
+            note: z.string().max(1_000).optional(),
+          }),
+        )
+        .min(1),
+    })
+    .optional(),
+  /**
+   * Lời giảng cho nút "Nghe giảng": mỗi đoạn có `anchor` là `mo-dau`, `tong-ket` hoặc đúng tiêu đề một mục của bài để
+   * trang tô sáng và tự cuộn theo. Chỉ lưu CHỮ (trạng thái "chưa có giọng"); tạo giọng là việc của quản trị sau đó.
+   */
+  lecture: LectureScript.optional(),
+  /** Kịch bản podcast hai người dẫn, lưu cùng cách với `lecture`. */
+  podcast: PodcastScript.optional(),
   quiz: z
     .object({
       title: z.string().min(1).max(200),
@@ -300,14 +366,25 @@ export function expandQuestion(
         options: (q.sequence ?? []).map((label) => ({ label, isCorrect: false })),
       };
 
-    case "matching":
+    case "drag_drop_fill":
       return {
         ...base,
-        options: (q.pairs ?? []).flatMap((p, i) => [
-          { label: p.left, isCorrect: false, extra: { side: "left", pairKey: `p${i + 1}` } },
-          { label: p.right, isCorrect: false, extra: { side: "right", pairKey: `p${i + 1}` } },
-        ]),
+        options: (q.tokens ?? []).map((t) => ({
+          label: t.label,
+          isCorrect: false,
+          ...(t.blank ? { extra: { blankIndex: t.blank } } : {}),
+        })),
       };
+
+    case "matching": {
+      // Trang làm bài hiện cột phải theo đúng thứ tự tạo, không đảo — để y như `pairs` thì cột phải xếp
+      // thẳng hàng với cột trái và lộ đáp án. Xoay cột phải lệch một nấc: chấm theo `pairKey` nên không đổi
+      // kết quả, mà không cặp nào còn nằm ngang hàng nhau.
+      const pairs = q.pairs ?? [];
+      const lefts = pairs.map((p, i) => ({ label: p.left, isCorrect: false, extra: { side: "left", pairKey: `p${i + 1}` } }));
+      const rights = pairs.map((p, i) => ({ label: p.right, isCorrect: false, extra: { side: "right", pairKey: `p${i + 1}` } }));
+      return { ...base, options: [...lefts, ...rights.slice(1), ...rights.slice(0, 1)] };
+    }
 
     default:
       return {
@@ -953,6 +1030,23 @@ export function countSections(body: string | undefined): number {
  * cùng họ nhìn thấy. Trước đây hai khối này bị gói chung vào khối thân bài
  * nên rơi xuống giữa trang ở những bài mở đầu bằng bảng từ vựng.
  */
+/** Chữ thuần của một tiêu đề markdown (bỏ ** * `), để so với `anchor` của lời giảng. */
+function plainHeading(raw: string): string {
+  return raw.replace(/[*_`]/g, "").trim();
+}
+
+/**
+ * Các `anchor` của lời giảng không trỏ tới mục nào của bài. Phải bắt ở bước kiểm tra, vì anchor lệch thì lúc nghe không
+ * tô sáng được mục nào mà cũng không có lỗi gì hiện ra.
+ */
+export function lectureAnchorProblems(l: z.infer<typeof LessonSpec>): string[] {
+  if (!l.lecture) return [];
+  const known = new Set<string>([LECTURE_INTRO_ANCHOR, LECTURE_OUTRO_ANCHOR]);
+  for (const sec of l.sections ?? []) known.add(plainHeading(sec.title));
+  for (const m of (l.body ?? "").matchAll(/^##\s+(.+?)\s*$/gm)) known.add(plainHeading(m[1]!));
+  return l.lecture.filter((seg) => !known.has(seg.anchor)).map((seg) => `anchor "${seg.anchor}" không trùng mục nào của bài`);
+}
+
 export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   const blocks: string[] = [];
 
@@ -962,7 +1056,7 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   const chips: string[] = [];
   if (l.durationMin) chips.push(`${l.durationMin} phút`);
   else if (words > 0) chips.push(`~${Math.max(1, Math.round(words / 200))} phút đọc`);
-  const sectionCount = countSections(l.body);
+  const sectionCount = countSections(l.body) + (l.sections?.length ?? 0);
   if (sectionCount > 0) chips.push(`${sectionCount} phần`);
   if (l.quiz?.questions.length) chips.push(`${l.quiz.questions.length} câu ôn tập`);
 
@@ -992,8 +1086,64 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
     }
   }
 
+  // Mọi mục bố cục chung MỘT khối: bảng màu "vibrant" đổi màu theo thứ tự `.lesson-section` trong khối, tách
+  // mỗi mục một khối thì mục nào cũng là mục đầu tiên và cùng một màu.
+  if (l.sections?.length) blocks.push(l.sections.map(renderSection).join(""));
+
   if (l.summary?.length) blocks.push(summaryBox(l.summary));
   return blocks;
+}
+
+type SectionSpec = NonNullable<z.infer<typeof LessonSpec>["sections"]>[number];
+
+/**
+ * Một mục theo bố cục. Đánh dấu giống hệt `lessonRender.ts` của "Bài học từ tài liệu" để dùng chung CSS
+ * `lessonLook.css` (lưới thẻ, hai cột, các bước có số, hỏi đáp gập mở — trang học viên tự đổi `faq` thành
+ * `<details>`). Markdown trong từng phần đi qua đúng `markdownToHtml` của `body`, nên hộp ghi nhớ / ví dụ /
+ * bảng vẫn dùng được bên trong thẻ.
+ */
+export function renderSection(sec: SectionSpec): string {
+  let out = `<section class="lesson-section" data-layout="${sec.layout}"><h2>${inline(sec.title)}</h2>`;
+  if (sec.intro) out += markdownToHtml(sec.intro, { toc: false });
+  for (const part of sec.parts) {
+    const head = part.title ? `<h3>${inline(part.title)}</h3>` : "";
+    const body = part.md.trim() ? markdownToHtml(part.md, { toc: false }) : "";
+    out += `<div class="lesson-part">${head}${body || (head ? "" : "<p></p>")}</div>`;
+  }
+  if (sec.outro) out += markdownToHtml(sec.outro, { toc: false });
+  return out + "</section>";
+}
+
+/**
+ * Mọi khối nội dung của bài theo đúng thứ tự tạo: các khối văn bản (gắn `look` nếu bài có), rồi thẻ ghi nhớ
+ * chen ngay trước khối tổng kết.
+ */
+export function lessonContentItems(
+  l: z.infer<typeof LessonSpec>,
+): Array<{ type: "richtext"; payload: Record<string, unknown> } | { type: "vocab_list"; payload: Record<string, unknown> }> {
+  const items: Array<
+    { type: "richtext"; payload: Record<string, unknown> } | { type: "vocab_list"; payload: Record<string, unknown> }
+  > = renderLessonBlocks(l).map((html) => ({
+    type: "richtext" as const,
+    payload: l.look ? { html, look: { palette: l.look.palette, font: l.look.font ?? "modern" } } : { html },
+  }));
+  if (l.flashcards) {
+    const cards = {
+      type: "vocab_list" as const,
+      payload: {
+        title: l.flashcards.title ?? "Thẻ ghi nhớ",
+        items: l.flashcards.items.map((c) => ({
+          term: c.term,
+          meaning: c.meaning,
+          ...(c.example ? { example: c.example } : {}),
+          ...(c.note ? { note: c.note } : {}),
+        })),
+      },
+    };
+    // Tổng kết (nếu có) luôn là khối cuối của renderLessonBlocks.
+    items.splice(l.summary?.length ? items.length - 1 : items.length, 0, cards);
+  }
+  return items;
 }
 
 // ── Chạy ──────────────────────────────────────────────────────────────────────
@@ -1063,6 +1213,9 @@ async function main() {
     for (const [li, l] of m.lessons.entries()) {
       if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": rỗng — không có nội dung lẫn quiz`);
+      }
+      for (const msg of lectureAnchorProblems(l)) {
+        problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": lời giảng: ${msg}`);
       }
       const sections = countSections(l.body);
       if (sections > MAX_TOC_ITEMS) {
@@ -1271,16 +1424,14 @@ async function main() {
         title: l.title,
         description: l.description,
         orderIndex: li,
+        // Thời lượng thật để trang Bắt đầu và trang khoá ghi "Khoảng N phút".
+        ...(l.durationMin ? { durationSec: l.durationMin * 60 } : {}),
       });
 
       // Soạn bằng markdown nhưng lưu thành richtext: markdown render ở cỡ chữ
       // nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
-      for (const [ci, html] of renderLessonBlocks(l).entries()) {
-        await createContentItem(actor, lessonId, {
-          type: "richtext",
-          orderIndex: ci,
-          payload: { html },
-        });
+      for (const [ci, item] of lessonContentItems(l).entries()) {
+        await createContentItem(actor, lessonId, { ...item, orderIndex: ci });
       }
 
       if (l.quiz) {
@@ -1299,6 +1450,10 @@ async function main() {
           await createQuestion(actor, quizId, expandQuestion(q, qi, mcIds));
         }
       }
+
+      // Lời giảng / podcast: lưu chữ; giọng tạo sau ở trang quản lý khoá.
+      if (l.lecture) await saveNarrationScript(lessonId, "lecture", l.lecture);
+      if (l.podcast) await saveNarrationScript(lessonId, "podcast", l.podcast);
 
       console.log(`  ✔ ${m.title} / ${l.title}`);
     }

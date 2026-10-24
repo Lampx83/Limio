@@ -53,6 +53,61 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "lich-day-lop",
+    title: "Lịch dạy của lớp: đặt lịch, huỷ buổi, dạy bù",
+    keywords: ["lịch dạy", "lịch học", "thời khoá biểu", "thời khóa biểu", "buổi học", "đặt lịch", "huỷ buổi", "hủy buổi", "nghỉ buổi", "dạy bù", "đổi phòng", "đổi giờ", "xếp lịch", "lịch lớp"],
+    destinationIds: ["teaching_schedule", "my_courses"],
+    body: `Mục "Lịch dạy" trong menu LMS (và "Giáo trình") chỉ hiện khi tính năng trung tâm được bật cho tài khoản; chưa thấy thì nhờ quản trị trường bật "Tính năng trung tâm". Bấm "Lịch dạy" để xem các buổi của mọi lớp thuộc khoá thầy/cô đang dạy dưới dạng lịch như ở trang chủ: đổi giữa "Tuần" và "Tháng", lật bằng "Trước" và "Sau", bấm một ngày để xem các buổi trong ngày, rồi bấm một buổi để mở trang điểm danh của buổi đó. Đặt lịch cho một lớp: trong khoá, vào tab "Lớp học", mở "Danh sách học viên" của lớp, đầu trang có khối "Lịch dạy". Điền "Ngày bắt đầu", "Tổng số buổi" và các khung giờ lặp hằng tuần (thứ, giờ bắt đầu, số phút, phòng, giáo viên dự kiến), thêm khung bằng "+ Thêm khung giờ" hoặc bỏ bằng "Bỏ khung này", rồi bấm "Áp dụng lịch" để hệ thống sinh các buổi. Áp dụng lại chỉ sinh lại những buổi chưa diễn ra; buổi đã dạy, đã huỷ, dạy bù hay đã sửa riêng thì giữ nguyên. Mỗi buổi có nút "Sửa" (đổi giờ, thời lượng, phòng, giáo viên dự kiến) và "Huỷ buổi" (hỏi lý do); huỷ một buổi thì các buổi sau tự đánh lại số thứ tự. "+ Thêm buổi dạy bù" thêm một buổi ngoài kế hoạch, có thể gắn với một buổi đã huỷ. Nếu cùng một giáo viên hoặc cùng một phòng bị trùng giờ giữa các lớp, Limio chỉ cảnh báo chứ vẫn lưu. Học viên xem lịch ở mục "Lịch học" trong menu của họ, buổi đã huỷ vẫn hiện kèm lý do; bấm một ngày thì buổi có giáo án hiện khối "Bài của buổi" để học viên mở thẳng bài (không có bài ẩn hay ghi chú giảng viên). Limio chưa có giáo viên check-in.`,
+    useCases: [
+      `Thầy/cô mở lớp mới học thứ ba và thứ năm 18:30, đặt lịch một lần để có đủ 24 buổi thay vì tạo từng buổi.`,
+      `Buổi thứ năm tuần này nghỉ vì mưa bão, thầy/cô huỷ buổi kèm lý do rồi thêm một buổi dạy bù vào chiều thứ bảy.`,
+    ],
+  },
+  {
+    id: "giao-trinh-dung-san",
+    title: "Giáo trình dựng sẵn và giáo án theo từng buổi",
+    keywords: ["giáo trình", "giáo trình dựng sẵn", "giáo án", "giáo án từng buổi", "soạn sẵn", "dạy ngay", "tiếng trung sơ cấp", "bản mới", "cập nhật giáo trình", "hôm nay dạy gì", "mẫu khoá học"],
+    destinationIds: ["pack_library", "teaching_schedule"],
+    body: `Vào menu LMS, mục "Giáo trình" (trang "Giáo trình dựng sẵn"; chỉ hiện khi tính năng trung tâm được bật) để xem các giáo trình đã soạn sẵn giáo án từng buổi (từ vựng, hội thoại, quiz, bài tập về nhà và ghi chú dành cho giáo viên). Bấm "Xem trước" để xem từng buổi gồm những bài nào, rồi bấm "Dùng giáo trình này": Limio sao cả giáo trình về thành một khoá nháp của thầy/cô, bản gốc không bị ảnh hưởng và thầy/cô sửa bản sao thoải mái. Khoá sao về còn là bản nháp: thầy/cô xem lại nội dung, bấm "Publish", rồi vào tab "Lớp học" để tạo lớp và đặt "Lịch dạy" cho lớp; buổi học số N sẽ tự hiện giáo án của buổi N kèm các bài để mở nhanh, và giáo án đi theo số thứ tự buổi nên huỷ hay dạy bù không làm lệch. Nếu lịch ít buổi hơn giáo án hoặc nhiều buổi hơn giáo án, trang lớp báo rõ. Ghi chú giảng viên trong giáo trình chỉ thầy/cô thấy, học viên không bao giờ thấy. Khi giáo trình gốc ra bản mới, lớp đang dạy không bị đổi; trang lớp hiện thông báo kèm nút "Cập nhật các buổi chưa dạy", và chỉ những buổi chưa dạy, chưa có học viên làm bài mới được thay bằng bản mới. Việc soạn và phát hành giáo trình do quản trị Limio làm; Limio chưa có chức năng để trung tâm tự đóng gói giáo án của mình thành giáo trình dùng lại.`,
+    useCases: [
+      `Trung tâm mở lớp Tiếng Trung sơ cấp mới, thầy/cô chọn giáo trình dựng sẵn thay vì soạn từng buổi từ đầu, rồi chỉ chỉnh vài bài cho hợp học viên.`,
+      `Trước buổi học, thầy/cô mở lịch dạy để xem hôm nay dạy bài nào và bấm vào bài để mở ngay.`,
+    ],
+  },
+  {
+    id: "diem-danh-hoc-vien",
+    title: "Điểm danh học viên theo buổi và theo dõi chuyên cần",
+    keywords: ["điểm danh", "có mặt", "vắng", "đi muộn", "vắng có phép", "chuyên cần", "bỏ học", "ai nghỉ", "sĩ số buổi", "danh sách lớp buổi"],
+    destinationIds: ["teaching_schedule", "my_courses"],
+    body: `Mở menu LMS, mục "Lịch dạy", bấm vào buổi cần điểm danh; hoặc trong trang lớp (tab "Lớp học", "Danh sách học viên") bấm nút "Điểm danh" ở dòng của buổi. Trang điểm danh liệt kê học viên của lớp, mặc định chưa ai được đánh dấu. Bấm "Có mặt cả lớp" để đánh dấu những người chưa có trạng thái là có mặt, rồi chỉnh riêng từng người bằng bốn nút "Có mặt", "Muộn", "Vắng", "Có phép"; "+ Thêm ghi chú" cho một dòng ghi chú ngắn chỉ giáo viên thấy. Các lựa chọn riêng lẻ chỉ được ghi khi bấm "Lưu điểm danh". Điểm danh mở từ 30 phút trước giờ học và còn sửa được đến 7 ngày sau khi buổi kết thúc; buổi đã huỷ thì không điểm danh được. Ở trang lớp, phần "Chuyên cần" cho mỗi học viên số buổi có mặt, muộn, vắng, có phép cùng tỉ lệ chuyên cần (buổi vắng có phép không tính vào tỉ lệ); học viên vắng từ hai buổi liên tiếp được nhắc ở khối cần chú ý, Limio không tự nhắn ai. Học viên chỉ thấy trạng thái của chính mình ở mục "Lịch học", không thấy ghi chú của giáo viên. Học viên đã rời lớp vẫn giữ điểm danh các buổi cũ nhưng không hiện ở các buổi sau.`,
+    useCases: [
+      `Đầu mỗi buổi, thầy/cô mở điện thoại, bấm "Có mặt cả lớp" rồi chỉ chỉnh vài bạn đi muộn hoặc vắng, mất chưa đến một phút.`,
+      `Cuối tháng, thầy/cô xem phần "Chuyên cần" để nhắn riêng những học viên vắng liên tiếp trước khi các bạn bỏ lớp.`,
+    ],
+  },
+  {
+    id: "nhan-xet-sau-buoi",
+    title: "Kết thúc buổi, tổng kết gửi cả lớp và nhận xét từng học viên",
+    keywords: ["kết thúc buổi", "tổng kết buổi", "nhận xét", "nhận xét học viên", "gửi email phụ huynh", "bài về nhà", "sau buổi học", "đính chính", "học bù"],
+    destinationIds: ["teaching_schedule", "my_courses"],
+    body: `Cuối buổi, mở trang điểm danh của buổi (từ "Lịch dạy") và bấm "Kết thúc buổi". Hệ thống dựng tổng kết từ giáo án (bài đã học, từ vựng, bài tập về nhà kèm hạn, giờ và nội dung buổi sau) rồi email cho cả lớp; học viên vắng nhận thêm dòng bài cần học bù. Lớp có công tắc "Tự gửi tổng kết cho cả lớp khi kết thúc buổi" ở trang lớp (mặc định bật); tắt thì gửi bằng "Gửi tổng kết cả lớp", email lỗi thì "Gửi lại phần lỗi". Mỗi học viên chỉ nhận một email tổng kết cho mỗi buổi. Sau khi kết thúc buổi, bấm "Nhận xét sau buổi": "Soạn nháp cho cả lớp" tạo bản nháp riêng cho từng học viên có mặt hoặc đến muộn, chỉ từ điểm danh, bài tập và mức nắm bài của chính em đó (không số liệu, không nhắc em khác); chỗ nào chưa có dữ liệu thì để trống. Thầy/cô gõ ghi chú nhanh rồi bấm "Soạn lại", sửa chữ, bấm "Duyệt", cuối cùng "Gửi tất cả đã duyệt". Bản chưa duyệt không bao giờ được gửi. Học viên vắng không có bản tự động, thầy/cô có thể viết lời nhắn rồi "Lưu lời nhắn". Bản đã gửi không sửa được, muốn đính chính thì bấm "Đính chính" rồi duyệt và gửi lại. Học viên đọc lại ở mục "Lịch học"; email có liên kết để tắt thư tự động.`,
+    useCases: [
+      `Cuối buổi tối, thầy/cô bấm "Kết thúc buổi" để học viên và phụ huynh nhận ngay tóm tắt bài học và bài tập về nhà, khỏi phải nhắn từng nhóm.`,
+      `Cuối tuần, thầy/cô bấm "Soạn nháp cho cả lớp", đọc lướt từng bản, thêm một dòng ghi chú cho vài em rồi duyệt và gửi trong chưa đến mười phút.`,
+    ],
+  },
+  {
+    id: "muc-tieu-hoc-tap",
+    title: "Mục tiêu học tập của lớp và của từng học viên",
+    keywords: ["mục tiêu", "mục tiêu học tập", "HSK", "IELTS", "TOEIC", "CEFR", "tiến độ", "kế hoạch học", "giờ học mỗi tuần", "đúng kế hoạch"],
+    destinationIds: ["my_courses"],
+    body: `Ở trang lớp (tab "Lớp học", "Danh sách học viên"), kéo xuống khối "Mục tiêu học tập". "Đặt mục tiêu của lớp" (chỉ người quản khoá) chọn khung HSK, IELTS, TOEIC, CEFR hoặc tự đặt, cấp độ, hạn và số giờ học mỗi tuần; học viên thấy đó là gợi ý và bấm "Dùng mục tiêu này" để thành mục tiêu của riêng mình, hoặc tự đặt mục tiêu khác. Dùng "Đổi mục tiêu của lớp" hay "Bỏ mục tiêu của lớp" khi cần; việc này không đổi mục tiêu riêng đã có. Bảng bên dưới liệt kê từng học viên với mục tiêu, nhận định và nhãn từng kỹ năng; học viên chưa có mục tiêu riêng thì có nút "Đặt mục tiêu" để thầy/cô đặt hộ. Nhận định chỉ là gợi ý: so số giờ học thật với kế hoạch giờ mỗi tuần, cho ra đang vượt, đúng kế hoạch hoặc chậm, và chỉ có khi học viên đã đặt số giờ và mục tiêu đủ một tuần; Limio không hiện phần trăm. Học viên xem tiến độ ở mục "Mục tiêu" trong menu, đổi mục tiêu, đánh dấu "Đã đạt" hoặc "Lưu trữ" và xem lịch sử các lần đổi. Mục tiêu chung không gắn khoá chỉ học viên xem được. Bản nháp nhận xét sau buổi tự nhắc mục tiêu riêng của học viên nếu có.`,
+    useCases: [
+      `Đầu khoá, thầy/cô đặt mục tiêu của lớp là HSK 2 trước cuối năm để các bạn mới vào lớp có sẵn một mốc, bạn nào muốn khác thì tự đặt.`,
+      `Giữa khoá, thầy/cô xem bảng và nhắn riêng những bạn đang chậm so với kế hoạch giờ học mỗi tuần mà các bạn tự đặt.`,
+    ],
+  },
+  {
     id: "quiz-trong-bai",
     title: "Bài kiểm tra (quiz) trong bài học",
     keywords: ["quiz", "bài kiểm tra", "câu hỏi", "trắc nghiệm", "tự luận", "excel", "nhập câu hỏi", "thời gian làm bài", "số lần làm"],
@@ -301,7 +356,7 @@ export const GUIDES: readonly GuideEntry[] = [
 
 /** Những điều Limio CHƯA có, để trợ lý không hứa nhầm. Luôn đưa vào prompt (ngắn). */
 export const ASSISTANT_LIMITS =
-  "Limio chưa có: gửi thông báo cho cả lớp; chuyển bài tập sang bài học khác (tạo lại ở bài đúng rồi xoá bài cũ); đính kèm tệp làm rubric (chỉ dán chữ); kéo thả để đổi thứ tự chương (đổi bằng ô Order); bảng tiêu chí chấm nhiều cột và hàng cho bài tập, đề thi hay vấn đáp (rubric ở đó chỉ là một ô văn bản tự do, nhưng AI có đọc nó khi gợi ý điểm; riêng nhiệm vụ Đấu trường chấm chéo có bảng tiêu chí); cài đặt XP hoặc huy hiệu cho giảng viên (chỉ có điểm XP trong Đấu trường); chia sẻ bài giảng cho đồng nghiệp cùng soạn (chỉ có link xem chỉ đọc); Thư viện mẫu, Template và Soạn kịch bản của Limio-Live (đang phát triển); chức năng đợt thi (chỉ có ca thi và phòng thi); báo cáo sau buổi dạy theo từng học viên; AI chấm ảnh, video hoặc PDF scan.";
+  "Limio chưa có: gửi thông báo cho cả lớp; chuyển bài tập sang bài học khác (tạo lại ở bài đúng rồi xoá bài cũ); đính kèm tệp làm rubric (chỉ dán chữ); kéo thả để đổi thứ tự chương (đổi bằng ô Order); bảng tiêu chí chấm nhiều cột và hàng cho bài tập, đề thi hay vấn đáp (rubric ở đó chỉ là một ô văn bản tự do, nhưng AI có đọc nó khi gợi ý điểm; riêng nhiệm vụ Đấu trường chấm chéo có bảng tiêu chí); cài đặt XP hoặc huy hiệu cho giảng viên (chỉ có điểm XP trong Đấu trường); chia sẻ bài giảng cho đồng nghiệp cùng soạn (chỉ có link xem chỉ đọc); Thư viện mẫu, Template và Soạn kịch bản của Limio-Live (đang phát triển); chức năng đợt thi (chỉ có ca thi và phòng thi); giáo viên check-in; trung tâm tự đóng gói giáo án của mình thành giáo trình dùng lại (giáo trình dựng sẵn do quản trị Limio phát hành); giảng viên trung tâm đề nghị nghỉ hoặc đổi buổi, hay ghi chú riêng vào giáo án; báo cáo sau buổi dạy theo từng học viên; AI chấm ảnh, video hoặc PDF scan.";
 
 // ── Chọn mục liên quan ───────────────────────────────────────────────────────
 

@@ -6,11 +6,13 @@ import { useSidebarNav } from "./useSidebarNav";
 import {
   LayoutDashboard,
   BookOpen,
+  CalendarDays,
   Brain,
   Award,
   Star,
   Settings,
   Pencil,
+  Target,
   Compass,
   Trophy,
   BarChart3,
@@ -22,6 +24,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
+import { CENTER_LEARNER_HREFS } from "@/lib/centerAccess.constants";
 
 export const STUDENT_MENU_TOGGLE_EVENT = "fbm:student-menu:toggle";
 
@@ -45,6 +48,8 @@ const GROUPS: Group[] = [
     label: "Học tập",
     items: [
       { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen, tourId: "help-tour-nav-courses" },
+      { label: "Lịch học", href: "/me/lich-hoc", icon: CalendarDays },
+      { label: "Mục tiêu", href: "/me/muc-tieu", icon: Target },
       { label: "Ghi chú", href: "/me/notes", icon: Pencil, tourId: "help-tour-nav-notes" },
       { label: "Kỹ năng", href: "/me/skills", icon: Brain, tourId: "help-tour-nav-skills" },
       { label: "Huy hiệu", href: "/me/badges", icon: Award, tourId: "help-tour-nav-badges" },
@@ -83,10 +88,13 @@ export default function StudentLeftMenu({
   desktopSidebar = true,
   badges = {},
   continueTo,
+  showSchedule = false,
 }: {
   desktopSidebar?: boolean;
   badges?: Record<string, { count: number; tone?: "warn" | "danger" }>;
   continueTo?: { href: string; title: string } | null;
+  /** Học viên đang học ở lớp có lịch → hiện mục "Lịch học". */
+  showSchedule?: boolean;
 }) {
   const tokensUnlocked = useAiTokensPageUnlocked();
   const { pathname, collapsed, toggle, pendingHref, linkProps } = useSidebarNav(LS_KEY);
@@ -154,9 +162,12 @@ export default function StudentLeftMenu({
       )}
 
       {GROUPS.map((group, idx) => {
-        const g = tokensUnlocked
-          ? group
-          : { ...group, items: group.items.filter((it) => it.href !== AI_TOKENS_HREF) };
+        const g = {
+          ...group,
+          items: group.items.filter(
+            (it) => (tokensUnlocked || it.href !== AI_TOKENS_HREF) && (showSchedule || !CENTER_LEARNER_HREFS.has(it.href)),
+          ),
+        };
         const isCollapsed = !!collapsed[g.id];
         return (
           <div key={g.id} className="px-3">

@@ -1,5 +1,12 @@
 import { prisma } from "@feedbackme/db";
-import { effectiveAssignmentDues, effectiveQuizSchedules } from "@feedbackme/core-lms";
+import {
+  effectiveAssignmentDues,
+  effectiveQuizSchedules,
+  listLearnerMeetings,
+  listMyAttendance,
+  listTeacherMeetings,
+  type MeetingItem,
+} from "@feedbackme/core-lms";
 import { toDayKey, formatTime } from "@/lib/datetime";
 import type { CalendarAssignment } from "@/components/calendar/WorkspaceCalendar";
 
@@ -342,4 +349,90 @@ export async function loadInstructorCalendarAssignments(
     }
   }
   return items;
+}
+
+// ── Buổi học của lớp có lịch (CENTER) ─────────────────────────────────────
+
+const MEETING_PAST_DAYS = 30;
+const MEETING_FUTURE_DAYS = 150;
+
+type AttendanceValue = "present" | "late" | "absent" | "excused";
+
+// Trạng thái điểm danh của chính học viên mượn màu chip có sẵn của lịch: có mặt = xanh, vắng = đỏ.
+const ATTENDANCE_CHIP: Record<AttendanceValue, { state: CalendarAssignment["state"]; label: string }> = {
+  present: { state: "graded", label: "Có mặt" },
+  late: { state: "todo", label: "Đi muộn" },
+  absent: { state: "overdue", label: "Vắng" },
+  excused: { state: "submitted", label: "Vắng có phép" },
+};
+
+/** Một buổi học thành một mục của lịch. `attendance` chỉ truyền cho học viên (điểm danh của chính họ). */
+export function meetingToItem(m: MeetingItem, href: string, attendance?: AttendanceValue | null): CalendarAssignment {
+  const cancelled = m.status === "cancelled";
+  const chip = !cancelled && attendance ? ATTENDANCE_CHIP[attendance] : null;
+  // Bài của buổi (giáo án): chỉ id và tên bài; học viên đã được lọc bài ẩn và ghi chú giảng viên ở lớp dịch vụ.
+  const lessons =
+    !cancelled && m.plan && m.plan.lessons.length > 0
+      ? m.plan.lessons.map((l) => ({ id: l.id, title: l.title, href: `/learn/${m.plan!.courseSlug}/lessons/${l.id}` }))
+      : undefined;
+  return {
+    id: `meeting:${m.id}`,
+    title: m.plan?.title ?? (m.seq ? `Buổi ${m.seq}` : "Buổi dạy bù"),
+    courseTitle: m.sectionName,
+    dueDay: toDayKey(m.startsAt),
+    dueTime: formatTime(m.startsAt),
+    state: cancelled ? "closed" : (chip?.state ?? "class"),
+    stateLabel: cancelled ? "Đã huỷ" : (chip?.label ?? "Buổi học"),
+    kind: "meeting",
+    detail: [
+      m.plan && m.seq ? `Buổi ${m.seq}` : null,
+      `${formatTime(m.startsAt)}–${formatTime(m.endsAt)}`,
+      m.room ? `Phòng ${m.room}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    href,
+    ...(lessons ? { lessons } : {}),
+  };
+}
+
+export interface MeetingWindow {
+  pastDays?: number;
+  futureDays?: number;
+}
+
+function meetingRange(now: Date, w: MeetingWindow = {}) {
+  return {
+    from: toDayKey(new Date(now.getTime() - (w.pastDays ?? MEETING_PAST_DAYS) * 86_400_000)),
+    to: toDayKey(new Date(now.getTime() + (w.futureDays ?? MEETING_FUTURE_DAYS) * 86_400_000)),
+  };
+}
+
+/** Buổi học của các lớp học viên đang học (kèm điểm danh của chính họ). Không có lớp nào có lịch thì rỗng. */
+export async function loadLearnerCalendarMeetings(
+  userId: string,
+  now: Date = new Date(),
+  window?: MeetingWindow,
+): Promise<CalendarAssignment[]> {
+  const range = meetingRange(now, window);
+  const [meetings, mine] = await Promise.all([listLearnerMeetings(userId, range), listMyAttendance(userId, range)]);
+  const byMeeting = new Map(mine.map((r) => [r.meetingId, r.status]));
+  return meetings.map((m) => meetingToItem(m, "/me/lich-hoc", byMeeting.get(m.id) ?? null));
+}
+
+/** Buổi học của các lớp thuộc khoá giáo viên đang dạy; bấm vào mở trang điểm danh (buổi huỷ thì mở trang lớp). */
+export async function loadInstructorCalendarMeetings(
+  userId: string,
+  now: Date = new Date(),
+  window?: MeetingWindow,
+): Promise<CalendarAssignment[]> {
+  const meetings = await listTeacherMeetings(userId, meetingRange(now, window));
+  return meetings.map((m) =>
+    meetingToItem(
+      m,
+      m.status === "cancelled"
+        ? `/instructor/courses/${m.courseId}/sections/${m.sectionId}`
+        : `/instructor/courses/${m.courseId}/sections/${m.sectionId}/meetings/${m.id}`,
+    ),
+  );
 }

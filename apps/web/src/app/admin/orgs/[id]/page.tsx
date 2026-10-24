@@ -1,3 +1,4 @@
+import OrgCenterToggle from "@/components/OrgCenterToggle";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -30,6 +31,7 @@ export default async function AdminOrgDetailPage({
       inviteEmailOnInstructorAdd: true,
       inviteEmailOnProctorAdd: true,
       examAllowedIps: true,
+      centerEnabled: true,
     },
   });
   if (!org) notFound();
@@ -70,6 +72,10 @@ export default async function AdminOrgDetailPage({
             inviteEmailOnProctorAdd: org.inviteEmailOnProctorAdd,
           }}
         />
+      </section>
+
+      <section className="mt-6">
+        <OrgCenterToggle organizationId={org.id} initialEnabled={org.centerEnabled} />
       </section>
 
       <section className="mt-6">

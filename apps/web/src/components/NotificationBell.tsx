@@ -37,6 +37,7 @@ type Noti = {
 };
 
 const ICON: Record<string, { Icon: typeof Bell; cls: string }> = {
+  class:        { Icon: Users,        cls: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
   review:       { Icon: Star,         cls: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" },
   graded:       { Icon: CheckCircle2, cls: "bg-success-50 text-success-700 dark:bg-success-950/40 dark:text-success-300" },
   reply:        { Icon: MessageSquare,cls: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
