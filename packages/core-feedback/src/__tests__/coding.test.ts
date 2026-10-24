@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { codeFeedback } from "../coding";
+import { codeFeedback, codeMeetingNote } from "../coding";
 
 /**
  * B9.1 nhóm 2 — classifier thuần, không chạm DB.
@@ -119,5 +119,37 @@ describe("codeFeedback — instructor declarations (AC-2.8)", () => {
     // Declared self-regulation, but nothing routed the learner anywhere.
     expect(c.levels).toEqual(["task"]);
     expect(c.level).toBe("self_regulation");
+  });
+});
+
+describe("codeMeetingNote — nhận xét sau buổi (C4.15)", () => {
+  it("chỉ có kết quả bài tập hoặc ghi chú tay: tầng nhiệm vụ, kr, rule_template", () => {
+    expect(codeMeetingNote({ source: "manual", hasMasteryStatements: false, remediationCount: 0 })).toEqual({
+      level: "task", levels: ["task"], elaboration: "kr", sourceKind: "rule_template",
+    });
+  });
+
+  it("nói được mức nắm từng phần: thêm tầng quá trình, km, nguồn bkt_state", () => {
+    expect(codeMeetingNote({ source: "rule_template", hasMasteryStatements: true, remediationCount: 0 })).toEqual({
+      level: "process", levels: ["task", "process"], elaboration: "km", sourceKind: "bkt_state",
+    });
+  });
+
+  it("chỉ ra bài cần ôn: lên tự điều chỉnh; cả hai thì elaborated", () => {
+    expect(codeMeetingNote({ source: "rule_template", hasMasteryStatements: false, remediationCount: 2 })).toMatchObject({ level: "self_regulation", elaboration: "kh" });
+    expect(codeMeetingNote({ source: "rule_template", hasMasteryStatements: true, remediationCount: 2 })).toMatchObject({
+      level: "self_regulation", levels: ["task", "process", "self_regulation"], elaboration: "elaborated",
+    });
+  });
+
+  it("AI soạn và giáo viên duyệt là hybrid; không bao giờ phát tầng 'self'", () => {
+    for (const source of ["llm", "rule_template", "manual"]) {
+      for (const m of [true, false]) for (const r of [0, 1]) {
+        const c = codeMeetingNote({ source, hasMasteryStatements: m, remediationCount: r });
+        expect(c.levels).not.toContain("self");
+        expect(c.level).not.toBe("self");
+      }
+    }
+    expect(codeMeetingNote({ source: "llm", hasMasteryStatements: false, remediationCount: 0 }).sourceKind).toBe("hybrid");
   });
 });

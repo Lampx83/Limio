@@ -162,3 +162,37 @@ export interface GenerationContext {
   /** True only for rows coded by the backfill script rather than at delivery. */
   codedRetroactively?: boolean;
 }
+
+// ── CENTER C4 — nhận xét cá nhân sau buổi học ──────────────────────────────
+
+export interface MeetingNoteCodingInput {
+  /** Nguồn bản nháp: `llm` (AI soạn), `rule_template` (mẫu), `manual` (giáo viên tự viết). */
+  source: string;
+  /** Có câu nhận xét về mức thành thạo theo bài (nói về QUÁ TRÌNH) hay không. */
+  hasMasteryStatements: boolean;
+  /** Số bài được gợi ý ôn lại (nói về BƯỚC TIẾP THEO). */
+  remediationCount: number;
+}
+
+/**
+ * C4.15 — toạ độ SSMMD của một nhận xét sau buổi. Mọi nhận xét đều ở tầng nhiệm vụ (nói bài tập, điểm danh);
+ * lên tầng quá trình khi nói được mức nắm từng phần; lên tự điều chỉnh khi chỉ ra bài cần ôn. `self` không bao giờ
+ * được phát (khen cá nhân thuộc kênh gamification, CLAUDE.md §4.8). Giáo viên luôn duyệt nên bản AI là `hybrid`.
+ */
+export function codeMeetingNote(input: MeetingNoteCodingInput): FeedbackCoding {
+  const hasRemediation = input.remediationCount > 0;
+  const levels: FeedbackLevel[] = ["task"];
+  if (input.hasMasteryStatements) levels.push("process");
+  if (hasRemediation) levels.push("self_regulation");
+  const level = LEVEL_ORDER.reduce<FeedbackLevel>((best, c) => (levels.includes(c) ? c : best), "task");
+
+  let elaboration: FeedbackElaboration;
+  if (input.hasMasteryStatements && hasRemediation) elaboration = "elaborated";
+  else if (input.hasMasteryStatements) elaboration = "km";
+  else if (hasRemediation) elaboration = "kh";
+  else elaboration = "kr";
+
+  const sourceKind: FeedbackSourceKind =
+    input.source === "llm" ? "hybrid" : input.hasMasteryStatements ? "bkt_state" : "rule_template";
+  return { level, levels, elaboration, sourceKind };
+}
