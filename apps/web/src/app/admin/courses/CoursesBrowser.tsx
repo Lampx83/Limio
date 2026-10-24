@@ -14,6 +14,8 @@ interface CourseRow {
   currency: string;
   publicAccess: boolean;
   isSample: boolean;
+  isLearnerSample: boolean;
+  enrollMode: string;
   activeAccessPlanCount: number;
 }
 
@@ -59,6 +61,33 @@ export default function CoursesBrowser() {
       }
       setData((d) =>
         d ? { ...d, courses: d.courses.map((x) => (x.id === c.id ? { ...x, isSample: next } : x)) } : d,
+      );
+    } finally {
+      setSavingSample(null);
+    }
+  }
+
+  // Khoá mẫu cho học viên: "Học thử" ghi danh thật nên khoá phải published + tự ghi danh + miễn phí.
+  async function toggleLearnerSample(c: CourseRow, next: boolean) {
+    setSampleError(null);
+    setSavingSample(c.id);
+    try {
+      const r = await fetch(apiUrl(`/api/admin/courses/${c.id}/learner-sample`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ on: next }),
+      });
+      if (!r.ok) {
+        const d = (await r.json().catch(() => ({}))) as { error?: string };
+        setSampleError(
+          d.error === "learner_sample_requires_open_free"
+            ? `"${c.title}" cần đã publish, cho học viên tự ghi danh và miễn phí thì mới làm khoá mẫu cho học viên được.`
+            : "Không lưu được, thử lại sau.",
+        );
+        return;
+      }
+      setData((d) =>
+        d ? { ...d, courses: d.courses.map((x) => (x.id === c.id ? { ...x, isLearnerSample: next } : x)) } : d,
       );
     } finally {
       setSavingSample(null);
@@ -119,7 +148,13 @@ export default function CoursesBrowser() {
               <th className="px-4 py-2 text-left font-medium">Giá vĩnh viễn</th>
               <th className="px-4 py-2 text-left font-medium">Gói bán</th>
               <th className="px-4 py-2 text-left font-medium" title="Hiện cho giảng viên chưa có khoá nào xem thử">
-                Khoá mẫu
+                Mẫu cho giảng viên
+              </th>
+              <th
+                className="px-4 py-2 text-left font-medium"
+                title="Thẻ “Thử học ngay” cho học viên chưa có khoá nào; nhiều khoá bật thì hiện khoá bật gần nhất"
+              >
+                Mẫu cho học viên
               </th>
               <th className="px-4 py-2 text-right font-medium">Thao tác</th>
             </tr>
@@ -127,14 +162,14 @@ export default function CoursesBrowser() {
           <tbody className="divide-y divide-token">
             {loading && !data && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted">
+                <td colSpan={7} className="px-4 py-6 text-center text-muted">
                   Đang tải…
                 </td>
               </tr>
             )}
             {data?.courses.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-muted">
+                <td colSpan={7} className="px-4 py-6 text-center text-muted">
                   Không có khoá học nào khớp.
                 </td>
               </tr>
@@ -182,6 +217,32 @@ export default function CoursesBrowser() {
                     />
                     <span className="text-muted">{c.isSample ? "Đang là mẫu" : "Không"}</span>
                   </label>
+                </td>
+                <td className="px-4 py-2.5">
+                  {/* Đang là mẫu thì luôn cho tắt, dù khoá đã đổi sang có phí hay chỉ-link-mời. */}
+                  {(() => {
+                    const eligible = c.status === "published" && c.enrollMode === "open" && isFree(c.priceCents);
+                    return (
+                      <label
+                        className="inline-flex items-center gap-2 text-xs"
+                        title={
+                          c.isLearnerSample || eligible
+                            ? "Hiện ở thẻ “Thử học ngay” cho học viên chưa có khoá nào"
+                            : "Cần publish, cho tự ghi danh và miễn phí trước"
+                        }
+                      >
+                        <input
+                          type="checkbox"
+                          checked={c.isLearnerSample}
+                          disabled={savingSample === c.id || (!c.isLearnerSample && !eligible)}
+                          onChange={(e) => void toggleLearnerSample(c, e.target.checked)}
+                          className="h-4 w-4 rounded border-token"
+                          aria-label={`Khoá mẫu cho học viên: ${c.title}`}
+                        />
+                        <span className="text-muted">{c.isLearnerSample ? "Đang là mẫu" : "Không"}</span>
+                      </label>
+                    );
+                  })()}
                 </td>
                 <td className="px-4 py-2.5 text-right">
                   <Link

@@ -41,6 +41,8 @@ export async function GET(req: Request) {
         currency: true,
         publicAccess: true,
         isSample: true,
+        learnerSampleAt: true,
+        enrollMode: true,
         _count: { select: { accessPlans: { where: { isActive: true } } } },
       },
     }),
@@ -55,6 +57,8 @@ export async function GET(req: Request) {
     currency: c.currency,
     publicAccess: c.publicAccess,
     isSample: c.isSample,
+    isLearnerSample: c.learnerSampleAt !== null,
+    enrollMode: c.enrollMode,
     activeAccessPlanCount: c._count.accessPlans,
   }));
 

@@ -238,6 +238,11 @@ export const LearningEventType = {
   AssistantQuestionAsked: "assistant.question.asked",
   AssistantLinkClicked: "assistant.link.clicked",
   AssistantConversationReset: "assistant.conversation.reset",
+
+  // Trang Bắt đầu của học viên chưa có khoá (docs/hoc-vien/trang-dau-hoc-vien-AC.md, AC6). Đo xem học viên tự vào
+  // có tìm được việc để làm không: nhập mã gì, bấm vào đâu. KHÔNG ghi chính mã (mã là chìa khoá vào lớp/thi).
+  OnboardingCodeSubmitted: "onboarding.code.submitted",
+  OnboardingStartClicked: "onboarding.start.clicked",
 } as const;
 
 export type LearningEventType =
@@ -854,4 +859,31 @@ export interface AssistantLinkClickedPayload extends AssistantEventBase {
 export interface AssistantConversationResetPayload extends AssistantEventBase {
   /** Số tin đã có khi bấm "Cuộc trò chuyện mới". */
   messageCount: number;
+}
+
+/** Loại mã ô "Nhập mã" trên trang Bắt đầu nhận ra (`none` = không khớp, `ambiguous` = khớp nhiều loại). */
+export type OnboardingCodeKind =
+  | "section"
+  | "exam"
+  | "exam_assigned"
+  | "oral"
+  | "gameshow"
+  | "live"
+  | "board"
+  | "whiteboard"
+  | "access_code"
+  | "none"
+  | "ambiguous";
+
+export interface OnboardingCodeSubmittedPayload {
+  /** Độ dài mã sau khi chuẩn hoá — đủ để biết học viên gõ sai kiểu gì mà không lộ mã. */
+  length: number;
+  kind: OnboardingCodeKind;
+  /** Khớp đúng loại nhưng phiên đã kết thúc / ca thi đã đóng. */
+  ended: boolean;
+}
+
+export interface OnboardingStartClickedPayload {
+  target: "sample" | "catalog_course" | "catalog_all";
+  courseId?: string;
 }

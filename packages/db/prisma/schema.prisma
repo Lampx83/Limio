@@ -459,6 +459,11 @@ model Course {
   /// (giảng viên mới không ghi danh nên cần đọc công khai mới xem được) — điều kiện
   /// này được ép ở setCourseSample và lọc lại ở listSampleCourses.
   isSample               Boolean      @default(false)
+  /// Khoá mẫu cho HỌC VIÊN (khác isSample — mẫu cho giảng viên): thẻ "Thử học ngay" trên trang Bắt đầu của
+  /// học viên chưa có khoá nào (docs/hoc-vien/trang-dau-hoc-vien-AC.md, AC3). null = không phải mẫu; có giá
+  /// trị = lúc admin bật, trang Bắt đầu lấy khoá bật gần nhất. Chỉ bật được khi khoá published + tự ghi danh
+  /// + miễn phí (setCourseLearnerSample), vì "Học thử" ghi danh thật để học viên làm được bài kiểm tra.
+  learnerSampleAt        DateTime?
   // Pricing — null = free; positive = paid (cents of `currency`).
   priceCents             Int?
   currency               String       @default("USD")
