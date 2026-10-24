@@ -164,19 +164,23 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 ## C6 · Mục tiêu học tập
 
-**Thiết kế đề xuất:** `LearnerGoal (userId, courseId?, framework, targetLevel, targetDate, hoursPerWeek?, status)`; `framework ∈ HSK | IELTS | TOEIC | CEFR | custom`. Hằng số cấp độ đặt ở `packages/shared-types`. Tiến độ đọc `LearnerSkillState` và kết quả thi thử; **chỉ gợi ý**, không phán xét.
+**Trạng thái (2026-10-24, chưa commit):** C6.1–C6.9 đã làm, có test (core-lms: 22 mục tiêu + 4 xuất/xoá; core-feedback: 17 tiến độ + 5 nhắc mục tiêu trong nhận xét) và đã xem bằng mắt trên dev (học viên dùng mục tiêu lớp, đổi mục tiêu, xem lịch sử; giáo viên xem bảng). Ghi chú thực hiện: (1) giờ thực tế chỉ tính từ lúc đặt mục tiêu (hoặc từ lúc vào lớp / lúc lớp cập nhật mục tiêu nếu dùng mục tiêu lớp), nên học viên mới đặt chưa có nhận định; (2) mục tiêu chung không gắn khoá chỉ chủ nhân xem, giáo viên chỉ thấy mục tiêu gắn khoá của học viên mình dạy; (3) event `goal.*` còn lại sau khi xoá tài khoản (ẩn danh), còn bản ghi mục tiêu thì xoá hẳn; (4) nhãn kỹ năng của khoá có `languageMode` lấy từ hồ sơ 4 kỹ năng, khoá thường có một nhãn tổng và cần ít nhất 5 lượt trả lời; (5) vá thêm C6.9 cho C2 và C4 vì lần trước bỏ sót xuất/xoá dữ liệu cá nhân.
 
-- [ ] **C6.1** Given học viên hoặc giáo viên đặt mục tiêu "HSK 3 trước 30/06/2027, 4 giờ/tuần", then lưu và phát `goal.set`.
-- [ ] **C6.2** Given mục tiêu theo khung có cấp độ chuẩn, then chọn từ danh sách; `custom` cho nhập nhãn tự do.
-- [ ] **C6.3** Given học viên có mục tiêu, then trang hồ sơ hiện tiến độ theo từng kỹ năng bằng nhãn (**Cần ôn / Nên luyện / Vững**, không hiện %) và nhận định "đang đúng kế hoạch / chậm / vượt" dựa trên số tuần còn lại và số giờ học thực tế.
-- [ ] **C6.4** Given mục tiêu của **lớp** (kết quả cuối khoá), then giáo viên đặt một lần; học viên mới vào lớp kế thừa làm gợi ý, có thể đặt mục tiêu riêng.
-- [ ] **C6.5** Given nhận xét sau buổi (C4), then nháp AI có thể nhắc mục tiêu nếu học viên có đặt; không nhắc nếu không.
-- [ ] **C6.6** Mục tiêu và tiến độ là dữ liệu nhạy cảm của học viên: chỉ chính học viên và giảng viên của lớp xem được; có trong export/xoá dữ liệu cá nhân.
-- [ ] **C6.7** Đổi mục tiêu giữ lịch sử (event); không ghi đè âm thầm.
+**Thiết kế (2026-10-24):** `LearnerGoal (userId, courseId?, framework, targetLevel, targetDate, hoursPerWeek?, status, setById)` cho mục tiêu của từng học viên và `SectionGoal (sectionId, ...)` cho mục tiêu của lớp; `framework ∈ HSK | IELTS | TOEIC | CEFR | custom`. Danh sách cấp độ chuẩn đặt ở `packages/shared-types/src/goals.ts`. Mục tiêu (CRUD, quyền, lịch sử, xuất/xoá dữ liệu) ở core-lms; tiến độ và nhận định ở core-feedback (đọc `LearnerSkillState` và `lesson.engaged`); apps/web ghép. **Chỉ gợi ý**, không phán xét, không hiện %.
 
-**P1:** cảnh báo cho giáo viên khi học viên lệch kế hoạch hai tuần liền; mục tiêu gợi ý bài luyện hôm nay.
+**Quy tắc nhận định "đúng kế hoạch / chậm / vượt" (C6.3), tính khi đọc:** cần có `hoursPerWeek`. Số giờ kỳ vọng = `hoursPerWeek` × số tuần đã trôi (tính từ lúc đặt mục tiêu, tối thiểu 1 tuần). Giờ thực tế = tổng `activeSec` của các `lesson.engaged` của học viên (trong khoá của mục tiêu, hoặc mọi khoá nếu mục tiêu chung) từ lúc đặt. Tỉ lệ ≥ 1,15 là **vượt**; từ 0,8 đến dưới 1,15 là **đúng kế hoạch**; dưới 0,8 là **chậm**. Chưa đủ 1 tuần kể từ lúc đặt, hoặc không đặt số giờ/tuần: **chưa đủ dữ liệu** (vẫn hiện số tuần còn lại). Quá hạn mà chưa đánh dấu đạt: **đã qua hạn**.
 
----
+- [x] **C6.1** Given học viên hoặc giáo viên đặt mục tiêu "HSK 3 trước 30/06/2027, 4 giờ/tuần", then lưu và phát `goal.set` (chủ thể là học viên, payload ghi ai đặt). Hạn phải sau hôm nay (giờ VN) và trong 10 năm; số giờ/tuần từ 0,5 đến 60; mỗi học viên có tối đa một mục tiêu đang theo đuổi cho mỗi khoá (và một mục tiêu chung không gắn khoá).
+- [x] **C6.2** Given khung có cấp độ chuẩn (HSK 1–6, IELTS 4.0–9.0 bước 0,5, TOEIC 400–900 bước 100, CEFR A1–C2), then cấp độ phải thuộc danh sách; `custom` cho nhập nhãn tự do (1–60 ký tự).
+- [x] **C6.3** Given học viên có mục tiêu, then trang **"Mục tiêu học tập"** (`/me/muc-tieu`) hiện số tuần còn lại, tiến độ theo từng kỹ năng bằng nhãn **Cần ôn / Nên luyện / Vững** (không hiện %; khoá không dùng 4 kỹ năng thì một nhãn tổng và số bài đã luyện), số giờ đã học (làm tròn 0,5 giờ) và nhận định theo quy tắc trên.
+- [x] **C6.4** Given giáo viên quản khoá đặt **mục tiêu của lớp**, then học viên của lớp (kể cả người vào sau) thấy đó là gợi ý và bấm "Dùng mục tiêu này" để thành mục tiêu riêng (người đặt = học viên); học viên chưa có mục tiêu riêng thì tiến độ tính theo mục tiêu lớp, đánh dấu "mục tiêu của lớp". Đặt lại mục tiêu lớp không đổi mục tiêu riêng đã có.
+- [x] **C6.5** Given nhận xét sau buổi (C4), then bản nháp (mẫu và AI) nhắc mục tiêu **riêng** của học viên kèm số tuần còn lại nếu có; không nhắc mục tiêu lớp, không nhắc nếu không có.
+- [x] **C6.6** Mục tiêu và tiến độ chỉ chính học viên, giảng viên quản khoá và giáo viên được xếp vào lớp của học viên xem được; người khác (kể cả học viên khác cùng lớp) bị từ chối. Có trong bản xuất dữ liệu cá nhân (`exportProfile`) và **bị xoá hẳn** khi xoá tài khoản (`deleteUser` ẩn danh hoá nên phải xoá tường minh).
+- [x] **C6.7** Đổi mục tiêu phát `goal.changed` mang giá trị cũ và mới từng trường; đổi trạng thái (đã đạt, lưu trữ, theo đuổi lại) phát `goal.status_changed`; xem lại được lịch sử từ các event. Không ghi đè âm thầm.
+- [x] **C6.8** `goal.*` không tính là hoạt động học của học viên (giáo viên có thể đặt hộ).
+- [x] **C6.9 (vá C2 và C4)** Bản xuất dữ liệu cá nhân có nhận xét sau buổi **đã gửi** cho học viên đó và tình trạng gửi tổng kết; `deleteUser` xoá hẳn nhận xét (kể cả nháp) và xoá ghi chú của giáo viên trong điểm danh của người đó (giữ trạng thái có mặt/vắng ở dạng ẩn danh).
+
+**Chưa làm (P1):** cảnh báo giáo viên khi học viên lệch kế hoạch hai tuần liền; gợi ý bài luyện hôm nay theo mục tiêu; đưa kết quả thi thử vào tiến độ (Limio chưa có mốc thi thử theo khung này).
 
 ## G · Bật tính năng trung tâm theo tổ chức, và trang lịch dạng lịch
 

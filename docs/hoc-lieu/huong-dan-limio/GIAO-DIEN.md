@@ -441,6 +441,20 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   kèm nhãn "Đính chính". Học viên đọc lại ở "Lịch học" (khối "Nhận xét của giáo viên" và "Tổng kết các buổi gần đây")
   và ở chuông thông báo; email có liên kết "Không nhận email này nữa" (chỉ tắt thư tự động, vẫn đọc trong ứng dụng).
   Người chỉ dạy (giảng viên trung tâm) kết thúc buổi và soạn nhận xét được cho buổi được xếp cho mình.
+- **Mục tiêu học tập** (mới, CENTER C6): ở trang lớp, dưới khối "Chuyên cần", có khối **"Mục tiêu học tập"**. Phần
+  **"Mục tiêu của lớp"**: người quản khoá bấm **"Đặt mục tiêu của lớp"** (sau đó **"Đổi mục tiêu của lớp"** / **"Bỏ mục tiêu của lớp"**)
+  để chọn khung (HSK 1–6, IELTS 4.0–9.0, TOEIC 400–900, CEFR A1–C2 hoặc tự đặt), cấp độ, hạn (không bắt buộc) và số giờ mỗi
+  tuần; mục tiêu lớp chỉ là gợi ý. Bảng bên dưới liệt kê từng học viên: mục tiêu (nhãn "theo lớp" nếu chưa đặt riêng), **nhận định**
+  ("Đang vượt kế hoạch" / "Đang đúng kế hoạch" / "Đang chậm so với kế hoạch" / chưa đủ dữ liệu / đã qua hạn) và nhãn từng kỹ năng
+  (Cần ôn, Nên luyện thêm, Vững; không có phần trăm); học viên chưa có mục tiêu riêng có nút **"Đặt mục tiêu"** để giáo viên đặt hộ
+  (người chỉ dạy làm được cho lớp mình được xếp). Nhận định so số giờ học thật (từ `lesson.engaged`, kể từ lúc đặt mục tiêu) với
+  `số giờ mỗi tuần × số tuần đã trôi`: từ 1,15 lần là vượt, từ 0,8 là đúng kế hoạch, dưới đó là chậm; chưa đủ 1 tuần hoặc không đặt giờ
+  thì không nhận định. Phía học viên có mục **"Mục tiêu"** trong menu (`/me/muc-tieu`, chỉ hiện khi học ở lớp
+  có lịch): với mỗi khoá hiện mục tiêu hiệu lực (riêng, hoặc gợi ý của lớp kèm nút **"Dùng mục tiêu này"** và **"Tự đặt mục tiêu riêng"**),
+  số tuần còn lại, số giờ đã học, nhận định và nhãn từng kỹ năng; nút **"Đổi mục tiêu"**, **"Đã đạt"**, **"Lưu trữ"**, **"Xem lịch sử"**
+  (mọi lần đặt và đổi, kèm giá trị cũ và mới); mục tiêu đã đóng có **"Theo đuổi lại"**; **"Mục tiêu chung"** không gắn khoá chỉ chính học
+  viên xem. Mục tiêu bị xoá hẳn khi xoá tài khoản và có trong bản xuất dữ liệu cá nhân. Chưa có: cảnh báo học viên lệch kế hoạch hai tuần
+  liền, gợi ý bài luyện theo mục tiêu, kết quả thi thử trong tiến độ.
 - **Học viên** (tab "Học viên"): trạng thái Đang học / Đã hoàn thành / Bỏ học / Đã hoàn
   tiền / Hết hạn truy cập; tìm theo tên hoặc email; "Gán lớp", "Xoá khỏi khoá học",
   "Tải danh sách học viên".

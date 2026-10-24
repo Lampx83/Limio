@@ -97,6 +97,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "muc-tieu-hoc-tap",
+    title: "Mục tiêu học tập của lớp và của từng học viên",
+    keywords: ["mục tiêu", "mục tiêu học tập", "HSK", "IELTS", "TOEIC", "CEFR", "tiến độ", "kế hoạch học", "giờ học mỗi tuần", "đúng kế hoạch"],
+    destinationIds: ["my_courses"],
+    body: `Ở trang lớp (tab "Lớp học", "Danh sách học viên"), kéo xuống khối "Mục tiêu học tập". "Đặt mục tiêu của lớp" (chỉ người quản khoá) chọn khung HSK, IELTS, TOEIC, CEFR hoặc tự đặt, cấp độ, hạn và số giờ học mỗi tuần; học viên thấy đó là gợi ý và bấm "Dùng mục tiêu này" để thành mục tiêu của riêng mình, hoặc tự đặt mục tiêu khác. Dùng "Đổi mục tiêu của lớp" hay "Bỏ mục tiêu của lớp" khi cần; việc này không đổi mục tiêu riêng đã có. Bảng bên dưới liệt kê từng học viên với mục tiêu, nhận định và nhãn từng kỹ năng; học viên chưa có mục tiêu riêng thì có nút "Đặt mục tiêu" để thầy/cô đặt hộ. Nhận định chỉ là gợi ý: so số giờ học thật với kế hoạch giờ mỗi tuần, cho ra đang vượt, đúng kế hoạch hoặc chậm, và chỉ có khi học viên đã đặt số giờ và mục tiêu đủ một tuần; Limio không hiện phần trăm. Học viên xem tiến độ ở mục "Mục tiêu" trong menu, đổi mục tiêu, đánh dấu "Đã đạt" hoặc "Lưu trữ" và xem lịch sử các lần đổi. Mục tiêu chung không gắn khoá chỉ học viên xem được. Bản nháp nhận xét sau buổi tự nhắc mục tiêu riêng của học viên nếu có.`,
+    useCases: [
+      `Đầu khoá, thầy/cô đặt mục tiêu của lớp là HSK 2 trước cuối năm để các bạn mới vào lớp có sẵn một mốc, bạn nào muốn khác thì tự đặt.`,
+      `Giữa khoá, thầy/cô xem bảng và nhắn riêng những bạn đang chậm so với kế hoạch giờ học mỗi tuần mà các bạn tự đặt.`,
+    ],
+  },
+  {
     id: "quiz-trong-bai",
     title: "Bài kiểm tra (quiz) trong bài học",
     keywords: ["quiz", "bài kiểm tra", "câu hỏi", "trắc nghiệm", "tự luận", "excel", "nhập câu hỏi", "thời gian làm bài", "số lần làm"],

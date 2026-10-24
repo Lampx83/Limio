@@ -12,6 +12,7 @@ import {
   Star,
   Settings,
   Pencil,
+  Target,
   Compass,
   Trophy,
   BarChart3,
@@ -23,7 +24,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
-import { CENTER_LEARNER_HREF } from "@/lib/centerAccess.constants";
+import { CENTER_LEARNER_HREFS } from "@/lib/centerAccess.constants";
 
 export const STUDENT_MENU_TOGGLE_EVENT = "fbm:student-menu:toggle";
 
@@ -48,6 +49,7 @@ const GROUPS: Group[] = [
     items: [
       { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen, tourId: "help-tour-nav-courses" },
       { label: "Lịch học", href: "/me/lich-hoc", icon: CalendarDays },
+      { label: "Mục tiêu", href: "/me/muc-tieu", icon: Target },
       { label: "Ghi chú", href: "/me/notes", icon: Pencil, tourId: "help-tour-nav-notes" },
       { label: "Kỹ năng", href: "/me/skills", icon: Brain, tourId: "help-tour-nav-skills" },
       { label: "Huy hiệu", href: "/me/badges", icon: Award, tourId: "help-tour-nav-badges" },
@@ -163,7 +165,7 @@ export default function StudentLeftMenu({
         const g = {
           ...group,
           items: group.items.filter(
-            (it) => (tokensUnlocked || it.href !== AI_TOKENS_HREF) && (showSchedule || it.href !== CENTER_LEARNER_HREF),
+            (it) => (tokensUnlocked || it.href !== AI_TOKENS_HREF) && (showSchedule || !CENTER_LEARNER_HREFS.has(it.href)),
           ),
         };
         const isCollapsed = !!collapsed[g.id];

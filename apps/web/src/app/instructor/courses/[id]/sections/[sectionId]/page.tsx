@@ -7,6 +7,7 @@ import {
   getTeachingScope,
   assertCanViewSection,
   getSectionAttendanceSummary,
+  getSectionGoal,
   listCourseInstructors,
   CourseAuthzError,
   CourseError,
@@ -17,6 +18,8 @@ import SectionRosterClient from "./SectionRosterClient";
 import SectionScheduleClient from "./SectionScheduleClient";
 import SectionAttendanceSummary from "./SectionAttendanceSummary";
 import PackUpdateBanner from "./PackUpdateBanner";
+import SectionGoalsCard from "./SectionGoalsCard";
+import { loadLearnerGoalProgress } from "@/lib/goalProgress";
 import { getInstructorCenterAccess } from "@/lib/centerAccess";
 
 export const dynamic = "force-dynamic";
@@ -72,6 +75,9 @@ export default async function SectionRosterPage({
         getCoursePlan(userId, params.id),
       ])
     : [null, [], null, null];
+  const [sectionGoal, goalRows] = centerEnabled
+    ? await Promise.all([getSectionGoal(userId, params.sectionId), loadLearnerGoalProgress(userId, params.sectionId)])
+    : [null, []];
   const teachers = instructors.map((i) => ({ id: i.userId, name: i.displayName }));
   const autoSendSummary =
     (await prisma.courseSection.findUnique({ where: { id: params.sectionId }, select: { autoSendSummary: true } }))?.autoSendSummary ?? true;
@@ -98,6 +104,15 @@ export default async function SectionRosterPage({
       )}
       {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} autoSendSummary={autoSendSummary} />}
       {attendance && <SectionAttendanceSummary summary={attendance} />}
+      {centerEnabled && (
+        <SectionGoalsCard
+          sectionId={params.sectionId}
+          courseId={params.id}
+          canManage={canManage}
+          sectionGoal={sectionGoal}
+          rows={JSON.parse(JSON.stringify(goalRows))}
+        />
+      )}
       <SectionRosterClient
         courseId={params.id}
         sectionId={params.sectionId}

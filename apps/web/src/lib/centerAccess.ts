@@ -1,7 +1,7 @@
 import { unstable_cache, revalidateTag } from "next/cache";
 import { hasClassSchedule, isCenterEnabledForUser } from "@feedbackme/core-lms";
 
-export { CENTER_INSTRUCTOR_HREFS, CENTER_LEARNER_HREF, TEACHING_ONLY_HREFS } from "./centerAccess.constants";
+export { CENTER_INSTRUCTOR_HREFS, CENTER_LEARNER_HREF, CENTER_LEARNER_HREFS, TEACHING_ONLY_HREFS } from "./centerAccess.constants";
 
 const TAG = "center-access";
 

@@ -4,6 +4,7 @@ import {
   AnnotationError,
   AssignmentError,
   AttendanceError,
+  GoalError,
   MeetingNoteError,
   MeetingSummaryError,
   ClassScheduleError,
@@ -69,6 +70,15 @@ export function mapKnownError(err: unknown): NextResponse | null {
       err.code === "meeting_not_found" || err.code === "section_not_found"
         ? 404
         : err.code === "meeting_cancelled" || err.code === "attendance_not_open" || err.code === "attendance_closed"
+          ? 409
+          : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
+  if (err instanceof GoalError) {
+    const status =
+      err.code === "goal_not_found" || err.code === "section_not_found" || err.code === "no_section_goal"
+        ? 404
+        : err.code === "goal_exists" || err.code === "goal_not_active"
           ? 409
           : 400;
     return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
