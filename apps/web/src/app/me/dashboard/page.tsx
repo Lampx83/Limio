@@ -18,6 +18,8 @@ import { getActiveRole } from "@/lib/active-role";
 import CalendarLoader from "@/components/calendar/CalendarLoader";
 import LearnerTodoPanel from "@/components/todo/LearnerTodoPanel";
 import { loadLearnerTodo } from "@/lib/learnerTodo";
+import { hasAnyCourse, loadStartPage } from "@/lib/learnerStart";
+import LearnerStartPage from "./LearnerStartPage";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +38,26 @@ export default async function LearnerDashboard({
   const activeRole = getActiveRole(session.user.roles ?? []);
   const isLearnerWorkspace = activeRole === "learner";
   const now = new Date();
+
+  // Học viên chưa có khoá nào: trang Bắt đầu thay cho trang tổng quan toàn ô số 0 và thẻ trống
+  // (docs/hoc-vien/trang-dau-hoc-vien-AC.md). Trả sớm để khỏi chạy cả loạt truy vấn bên dưới.
+  // Phần hướng dẫn 15 bước chỉ tự mở khi đã có khoá (AC5); `?tour=1` từ Cài đặt vẫn mở được.
+  if (isLearnerWorkspace && !(await hasAnyCourse(userId))) {
+    const { sample, courses } = await loadStartPage();
+    return (
+      <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
+        <LearnerStartPage name={session.user.name ?? session.user.email ?? ""} sample={sample} courses={courses} />
+        {searchParams?.tour === "1" && (
+          <HelpTour
+            steps={LEARNER_TOUR_STEPS}
+            role="learner"
+            initiallyOpen
+            mobileMenuToggleEvent={STUDENT_MENU_TOGGLE_EVENT}
+          />
+        )}
+      </main>
+    );
+  }
 
   // Các truy vấn dưới đây độc lập nhau → chạy song song. Trước đây ~10 await
   // nối tiếp nên thời gian vào trang = tổng độ trễ DB của từng truy vấn, và đây

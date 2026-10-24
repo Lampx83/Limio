@@ -75,6 +75,7 @@ export class CourseError extends Error {
       | "section_has_enrollments"
       | "researcher_only"
       | "sample_requires_public"
+      | "learner_sample_requires_open_free"
       | "language_mode_requires_personalization",
     public readonly details?: unknown,
   ) {
@@ -280,6 +281,94 @@ export async function listSampleCourses(db: PrismaClient = prisma) {
       level: true,
     },
   });
+}
+
+/**
+ * Admin bật/tắt "khoá mẫu cho học viên" — thẻ "Thử học ngay" trên trang Bắt đầu của học viên chưa có khoá
+ * (docs/hoc-vien/trang-dau-hoc-vien-AC.md, AC3). Tách khỏi `setCourseSample` (mẫu cho giảng viên): hai nhóm
+ * cần hai loại khoá khác nhau.
+ *
+ * "Học thử" ghi danh thật để học viên làm được bài kiểm tra và nhận phản hồi, nên chỉ bật được khi khoá
+ * published + tự ghi danh (`enrollMode = open`) + miễn phí; bật cho khoá có phí hay chỉ-link-mời sẽ ra một
+ * nút bấm vào là bị chặn. Bật lại khoá đang là mẫu thì đẩy nó lên làm khoá hiện ở trang Bắt đầu.
+ */
+export async function setCourseLearnerSample(
+  actorUserId: string,
+  courseId: string,
+  on: boolean,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  if (!(await isAdmin(actorUserId, db))) throw new CourseAuthzError("forbidden");
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: { status: true, enrollMode: true, priceCents: true, learnerSampleAt: true },
+  });
+  if (!course) throw new CourseAuthzError("not_found");
+  if (on && !isLearnerSampleEligible(course)) {
+    throw new CourseError("learner_sample_requires_open_free");
+  }
+  if (!on && course.learnerSampleAt === null) return;
+  await db.course.update({ where: { id: courseId }, data: { learnerSampleAt: on ? new Date() : null } });
+  await logAudit(
+    {
+      action: "course.learner_sample.toggled",
+      actorUserId,
+      payload: { courseId, from: course.learnerSampleAt !== null, to: on },
+    },
+    db,
+  );
+}
+
+function isLearnerSampleEligible(c: {
+  status: string;
+  enrollMode: string;
+  priceCents: number | null;
+}): boolean {
+  return c.status === "published" && c.enrollMode === "open" && (c.priceCents === null || c.priceCents <= 0);
+}
+
+/**
+ * Khoá mẫu cho học viên đang dùng được (bật gần nhất), kèm bài đầu tiên học viên sẽ mở khi bấm "Học thử".
+ * Lọc lại điều kiện ở đây chứ không tin mỗi cờ: khoá từng là mẫu rồi bị gỡ publish, đổi sang có phí hay
+ * chỉ-link-mời thì phải biến khỏi trang Bắt đầu. Không có bài nào hiện được thì cũng coi như không có mẫu.
+ */
+export async function getLearnerSampleCourse(db: PrismaClient = prisma) {
+  const candidates = await db.course.findMany({
+    where: {
+      learnerSampleAt: { not: null },
+      status: "published",
+      enrollMode: "open",
+      OR: [{ priceCents: null }, { priceCents: { lte: 0 } }],
+    },
+    orderBy: { learnerSampleAt: "desc" },
+    take: 3,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      level: true,
+      // Bài bị khoá thì học viên bấm vào là bị chặn — "Học thử" phải mở ngay được.
+      modules: {
+        where: { isHidden: false, isLocked: false },
+        orderBy: { orderIndex: "asc" },
+        select: {
+          lessons: {
+            where: { isHidden: false, isLocked: false },
+            orderBy: { orderIndex: "asc" },
+            take: 1,
+            select: { id: true, title: true, durationSec: true },
+          },
+        },
+      },
+    },
+  });
+  for (const c of candidates) {
+    const firstLesson = c.modules.flatMap((m) => m.lessons)[0];
+    if (firstLesson) {
+      return { id: c.id, slug: c.slug, title: c.title, level: c.level, firstLesson };
+    }
+  }
+  return null;
 }
 
 /**
