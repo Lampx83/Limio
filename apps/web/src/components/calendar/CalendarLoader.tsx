@@ -1,7 +1,12 @@
 import { Suspense } from "react";
 import { getOrgCalendarContext } from "@feedbackme/core-lms";
 import { toDayKey } from "@/lib/datetime";
-import { loadInstructorCalendarAssignments, loadLearnerCalendarAssignments } from "@/lib/calendarData";
+import {
+  loadInstructorCalendarAssignments,
+  loadInstructorCalendarMeetings,
+  loadLearnerCalendarAssignments,
+  loadLearnerCalendarMeetings,
+} from "@/lib/calendarData";
 import WorkspaceCalendar from "./WorkspaceCalendar";
 
 async function CalendarInner({
@@ -15,18 +20,20 @@ async function CalendarInner({
   defaultView?: "week" | "month";
 }) {
   const now = new Date();
-  const [ctx, assignments] = await Promise.all([
+  const [ctx, assignments, meetings] = await Promise.all([
     getOrgCalendarContext(userId),
     audience === "learner"
       ? loadLearnerCalendarAssignments(userId, now)
       : loadInstructorCalendarAssignments(userId, now),
+    // Buổi học của lớp có lịch (CENTER). Lỗi ở đây không được làm hỏng cả lịch hạn nộp.
+    (audience === "learner" ? loadLearnerCalendarMeetings(userId, now) : loadInstructorCalendarMeetings(userId, now)).catch(() => []),
   ]);
   return (
     <WorkspaceCalendar
       todayKey={toDayKey(now)}
       organizationName={ctx.organization?.name ?? null}
       terms={ctx.terms}
-      assignments={assignments}
+      assignments={[...assignments, ...meetings]}
       defaultView={defaultView}
     />
   );

@@ -10,6 +10,7 @@ import { ActiveNavSectionProvider } from "@/lib/activeNavSection";
 import InstructorContentFrame from "./InstructorContentFrame";
 import { AssistantProvider } from "@/components/assistant/AssistantProvider";
 import AssistantLauncher from "@/components/assistant/AssistantLauncher";
+import { getInstructorCenterAccess } from "@/lib/centerAccess";
 
 // Khu vực cần đăng nhập → không bao giờ index. `middleware.ts` đã gắn
 // `X-Robots-Tag` cho cùng nhóm route; thẻ meta này là lớp thứ hai, phòng khi
@@ -80,6 +81,7 @@ export default async function InstructorLayout({
   }
 
   const recentCourseTitle = hasInstructorRole ? await getRecentCourseTitle(session.user.id) : null;
+  const centerEnabled = hasInstructorRole ? await getInstructorCenterAccess(session.user.id) : false;
 
   return (
     <ActiveNavSectionProvider>
@@ -90,6 +92,7 @@ export default async function InstructorLayout({
             isInstructor={hasInstructorRole}
             isProctor={isProctor}
             isResearcher={hasResearcherRole}
+            centerEnabled={centerEnabled}
           />
           <div className="min-w-0 flex-1">
             <InstructorContentFrame>{children}</InstructorContentFrame>

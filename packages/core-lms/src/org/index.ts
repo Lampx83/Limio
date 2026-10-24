@@ -6,3 +6,4 @@ export * from "./academicTerms";
 export * from "./member-import";
 export * from "./email-settings";
 export * from "./exam-network";
+export * from "./centerAccess";

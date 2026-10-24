@@ -43,6 +43,7 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
+import { CENTER_INSTRUCTOR_HREFS } from "@/lib/centerAccess.constants";
 
 export const INSTRUCTOR_MENU_TOGGLE_EVENT = "fbm:instructor-menu:toggle";
 // HelpTour (components/HelpTour.tsx) dùng để tự mở cột item của 1 module mà
@@ -328,6 +329,8 @@ export default function InstructorLeftMenu(props: {
   isInstructor?: boolean;
   isProctor?: boolean;
   isResearcher?: boolean;
+  /** Tính năng trung tâm (Lịch dạy, Giáo trình) có được bật cho tài khoản này không. */
+  centerEnabled?: boolean;
 }) {
   return (
     <Suspense fallback={null}>
@@ -340,14 +343,18 @@ function InstructorLeftMenuInner({
   isInstructor = true,
   isProctor = false,
   isResearcher = false,
+  centerEnabled = false,
 }: {
   isInstructor?: boolean;
   isProctor?: boolean;
   isResearcher?: boolean;
+  centerEnabled?: boolean;
 }) {
   const modules = MODULES.map((m) => ({
     ...m,
-    items: m.items.filter((it) => !it.researcherOnly || isResearcher),
+    items: m.items.filter(
+      (it) => (!it.researcherOnly || isResearcher) && (centerEnabled || !it.href || !CENTER_INSTRUCTOR_HREFS.has(it.href)),
+    ),
   }));
   const tokensUnlocked = useAiTokensPageUnlocked();
   const pathname = usePathname();

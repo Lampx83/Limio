@@ -12,6 +12,7 @@ export const GrantRoleInput = z.object({
     RoleName.Admin,
     RoleName.Mentor,
     RoleName.Researcher,
+    RoleName.CenterTeacher,
   ]),
   // null/undefined = platform-wide grant. Set for course-scoped roles.
   courseId: z.string().uuid().optional().nullable(),
@@ -167,6 +168,12 @@ export async function isResearcher(
       role: { name: { in: [RoleName.Researcher, RoleName.Admin] } },
     },
   });
+  return count > 0;
+}
+
+/** Có vai trò giảng viên trung tâm (chỉ dạy, không soạn). Không kéo theo quyền giảng viên thường. */
+export async function isCenterTeacher(userId: string, db: DbClient = prisma): Promise<boolean> {
+  const count = await db.userRole.count({ where: { userId, role: { name: RoleName.CenterTeacher } } });
   return count > 0;
 }
 

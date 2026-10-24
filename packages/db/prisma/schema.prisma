@@ -5092,6 +5092,9 @@ model Organization {
   // hoặc CIDR (IPv4/IPv6). Rỗng = không giới hạn. Chỉ áp ở bước vào thi (mã
   // chung, mã cá nhân, phòng chờ, bắt đầu lượt làm); mọi tính năng khác không bị chặn.
   examAllowedIps             String[] @default([])
+  // CENTER: bật các tính năng trung tâm (lịch dạy, giáo trình dựng sẵn, điểm danh, chuyên cần) cho thành viên của
+  // trường. Chỉ ẩn/hiện ở giao diện; dữ liệu và API không đổi. Mặc định TẮT. Platform Admin hoặc OrgAdmin đổi được.
+  centerEnabled              Boolean  @default(false)
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 

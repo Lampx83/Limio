@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CoursePackError, listPublishedPacks } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getInstructorCenterAccess } from "@/lib/centerAccess";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,9 @@ const LANGUAGE_LABEL: Record<string, string> = { zh: "Tiếng Trung", en: "Tiế
 export default async function PackLibraryPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/instructor/giao-trinh");
+
+  // Tính năng trung tâm chưa bật cho tài khoản này: không có trang để xem.
+  if (!(await getInstructorCenterAccess(session.user.id))) redirect("/instructor/dashboard");
 
   let packs;
   try {

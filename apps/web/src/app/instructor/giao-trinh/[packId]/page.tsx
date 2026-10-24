@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { CoursePackError, getPackPreview, type PackLessonKinds } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getInstructorCenterAccess } from "@/lib/centerAccess";
 import UsePackButton from "./UsePackButton";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +21,9 @@ function kindsText(k: PackLessonKinds): string {
 export default async function PackPreviewPage({ params }: { params: { packId: string } }) {
   const session = await auth();
   if (!session?.user?.id) redirect(`/signin?callbackUrl=/instructor/giao-trinh/${params.packId}`);
+
+  // Tính năng trung tâm chưa bật cho tài khoản này: không có trang để xem.
+  if (!(await getInstructorCenterAccess(session.user.id))) redirect("/instructor/dashboard");
 
   let pack;
   try {

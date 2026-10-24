@@ -18,7 +18,7 @@ import { formatDayKey } from "@/lib/datetime";
  * Học viên: overdue/todo/submitted/graded (theo bài nộp của chính họ).
  * Giáo viên: upcoming/closed (theo hạn nộp; số bài nộp/chờ chấm nằm ở `detail`).
  */
-export type CalendarItemState = "overdue" | "todo" | "submitted" | "graded" | "upcoming" | "closed";
+export type CalendarItemState = "overdue" | "todo" | "submitted" | "graded" | "upcoming" | "closed" | "class";
 
 /** Một bài tập có hạn nộp. `dueDay`/`dueTime` do server tính theo giờ VN. */
 export interface CalendarAssignment {
@@ -35,7 +35,7 @@ export interface CalendarAssignment {
   /** Dòng phụ dưới tên khoá, ví dụ "12 bài nộp · 3 chờ chấm" (giáo viên). */
   detail?: string;
   /** Loại việc cần làm; mặc định bài tập. Quiz hiện thêm nhãn "Quiz". */
-  kind?: "assignment" | "quiz";
+  kind?: "assignment" | "quiz" | "meeting";
   /** Ghi đè nhãn trạng thái mặc định, ví dụ "Chưa làm" / "Đang làm" cho quiz. */
   stateLabel?: string;
   href: string;
@@ -54,6 +54,8 @@ const STATE_META: Record<CalendarItemState, { label: string; chip: string; dot: 
   graded: { label: "Đã chấm", chip: "chip-success", dot: "bg-success-500", rank: 3 },
   upcoming: { label: "Sắp đến hạn", chip: "chip-accent", dot: "bg-accent-600", rank: 1 },
   closed: { label: "Đã hết hạn", chip: "chip", dot: "bg-slate-400", rank: 4 },
+  // CENTER: buổi học của lớp có lịch. Thấp nhất để chấm dưới ngày vẫn ưu tiên màu của hạn nộp gấp.
+  class: { label: "Buổi học", chip: "chip-brand", dot: "bg-sky-500", rank: 5 },
 };
 
 function dayNumber(key: string): number {
@@ -88,6 +90,7 @@ export default function WorkspaceCalendar({
   assignments,
   defaultView = "month",
   initialDay,
+  labels,
 }: {
   todayKey: string;
   organizationName: string | null;
@@ -97,6 +100,8 @@ export default function WorkspaceCalendar({
   defaultView?: View;
   /** Ngày chọn sẵn (mặc định hôm nay). Chủ yếu để test lịch ở tuần không phải tuần hiện tại. */
   initialDay?: string;
+  /** Đổi chữ cho lịch không phải hạn nộp (vd lịch buổi học). Mặc định là chữ của hạn nộp bài. */
+  labels?: { empty?: string; next?: string };
 }) {
   const [view, setView] = useState<View>(defaultView);
   // Hai thứ tách bạch:
@@ -371,14 +376,14 @@ export default function WorkspaceCalendar({
 
               {dayItems.length === 0 ? (
                 <div className="mt-1.5 text-xs text-muted">
-                  <p>Không có hạn nộp ngày này.</p>
+                  <p>{labels?.empty ?? "Không có hạn nộp ngày này."}</p>
                   {nextDueDay && (
                     <button
                       type="button"
                       onClick={() => pickDay(nextDueDay)}
                       className="link mt-0.5 text-left text-xs"
                     >
-                      Hạn nộp tiếp theo: {WEEKDAY_LONG[weekdayIndexMon0(nextDueDay)]} {shortDay(nextDueDay)} →
+                      {labels?.next ?? "Hạn nộp tiếp theo:"} {WEEKDAY_LONG[weekdayIndexMon0(nextDueDay)]} {shortDay(nextDueDay)} →
                     </button>
                   )}
                 </div>
@@ -398,7 +403,8 @@ export default function WorkspaceCalendar({
                           <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-semibold leading-snug">{a.title}</span>
                             <span className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-muted">
-                              {a.kind === "quiz" && <span className="font-semibold text-brand-700">Quiz</span>}{" "}
+                              {a.kind === "quiz" && <span className="font-semibold text-brand-700">Quiz</span>}
+                              {a.kind === "meeting" && <span className="font-semibold text-brand-700">Buổi học</span>}{" "}
                               {/* Tên môn học (= khoá học) dạng chip để nhìn ra ngay việc thuộc môn nào. */}
                               <span className="chip-brand max-w-full truncate text-[10px]" title={a.courseTitle}>
                                 {a.courseTitle}
@@ -464,7 +470,7 @@ function Row({
         const isToday = day === todayKey;
         const isSelected = day === selected;
         const label = `${dayNumber(day)}/${day.slice(5, 7)}${
-          items.length ? `, ${items.length} việc đến hạn` : ""
+          items.length ? `, ${items.length} ${items.every((a) => a.kind === "meeting") ? "buổi học" : "việc đến hạn"}` : ""
         }${isToday ? ", hôm nay" : ""}`;
         // Ngày đang chọn: tô đặc. Hôm nay (chưa chọn): viền tròn. Ngoài tháng: mờ.
         const circle = isSelected

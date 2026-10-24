@@ -23,6 +23,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
+import { CENTER_LEARNER_HREF } from "@/lib/centerAccess.constants";
 
 export const STUDENT_MENU_TOGGLE_EVENT = "fbm:student-menu:toggle";
 
@@ -85,10 +86,13 @@ export default function StudentLeftMenu({
   desktopSidebar = true,
   badges = {},
   continueTo,
+  showSchedule = false,
 }: {
   desktopSidebar?: boolean;
   badges?: Record<string, { count: number; tone?: "warn" | "danger" }>;
   continueTo?: { href: string; title: string } | null;
+  /** Học viên đang học ở lớp có lịch → hiện mục "Lịch học". */
+  showSchedule?: boolean;
 }) {
   const tokensUnlocked = useAiTokensPageUnlocked();
   const { pathname, collapsed, toggle, pendingHref, linkProps } = useSidebarNav(LS_KEY);
@@ -156,9 +160,12 @@ export default function StudentLeftMenu({
       )}
 
       {GROUPS.map((group, idx) => {
-        const g = tokensUnlocked
-          ? group
-          : { ...group, items: group.items.filter((it) => it.href !== AI_TOKENS_HREF) };
+        const g = {
+          ...group,
+          items: group.items.filter(
+            (it) => (tokensUnlocked || it.href !== AI_TOKENS_HREF) && (showSchedule || it.href !== CENTER_LEARNER_HREF),
+          ),
+        };
         const isCollapsed = !!collapsed[g.id];
         return (
           <div key={g.id} className="px-3">

@@ -14,6 +14,7 @@ import SectionRosterClient from "./SectionRosterClient";
 import SectionScheduleClient from "./SectionScheduleClient";
 import SectionAttendanceSummary from "./SectionAttendanceSummary";
 import PackUpdateBanner from "./PackUpdateBanner";
+import { getInstructorCenterAccess } from "@/lib/centerAccess";
 
 export const dynamic = "force-dynamic";
 
@@ -44,12 +45,17 @@ export default async function SectionRosterPage({
 
   if (roster.section.courseId !== params.id) notFound();
 
-  const [schedule, instructors, attendance, coursePlan] = await Promise.all([
-    getClassSchedule(userId, params.sectionId),
-    listCourseInstructors(params.id),
-    getSectionAttendanceSummary(userId, params.sectionId),
-    getCoursePlan(userId, params.id),
-  ]);
+  // Tính năng trung tâm (lịch dạy, chuyên cần, giáo trình) chỉ hiện khi tài khoản được bật; không thì trang lớp
+  // chỉ còn danh sách học viên như trước và không tốn thêm truy vấn.
+  const centerEnabled = await getInstructorCenterAccess(userId);
+  const [schedule, instructors, attendance, coursePlan] = centerEnabled
+    ? await Promise.all([
+        getClassSchedule(userId, params.sectionId),
+        listCourseInstructors(params.id),
+        getSectionAttendanceSummary(userId, params.sectionId),
+        getCoursePlan(userId, params.id),
+      ])
+    : [null, [], null, null];
   const teachers = instructors.map((i) => ({ id: i.userId, name: i.displayName }));
 
   return (
@@ -64,7 +70,7 @@ export default async function SectionRosterPage({
       {roster.section.description && (
         <p className="mt-1 text-sm text-faint">{roster.section.description}</p>
       )}
-      {coursePlan.pack?.hasUpdate && (
+      {coursePlan?.pack?.hasUpdate && (
         <PackUpdateBanner
           courseId={params.id}
           packTitle={coursePlan.pack.title}
@@ -72,8 +78,8 @@ export default async function SectionRosterPage({
           currentVersion={coursePlan.pack.currentVersion}
         />
       )}
-      <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} />
-      <SectionAttendanceSummary summary={attendance} />
+      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} />}
+      {attendance && <SectionAttendanceSummary summary={attendance} />}
       <SectionRosterClient
         courseId={params.id}
         sectionId={params.sectionId}

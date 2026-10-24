@@ -37,6 +37,17 @@ const FLAGS: FlagSeed[] = [
     defaultValue: true,
     sellable: true,
   },
+  // --- Trung tâm (CENTER) ---
+  {
+    key: "center.access",
+    group: "lms",
+    name: "Tính năng trung tâm",
+    description:
+      "Hiện lịch dạy, giáo trình dựng sẵn, điểm danh và chuyên cần trong menu giảng viên. Mặc định tắt; thường bật theo trường (Organization.centerEnabled). Cờ này dùng để cấp riêng cho một tài khoản chưa thuộc trường nào.",
+    valueType: "boolean",
+    defaultValue: false,
+    sellable: true,
+  },
   // --- Công cụ giảng dạy ---
   {
     key: "teaching_tools.access",
