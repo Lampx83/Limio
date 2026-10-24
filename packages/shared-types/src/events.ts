@@ -243,6 +243,12 @@ export const LearningEventType = {
   // có tìm được việc để làm không: nhập mã gì, bấm vào đâu. KHÔNG ghi chính mã (mã là chìa khoá vào lớp/thi).
   OnboardingCodeSubmitted: "onboarding.code.submitted",
   OnboardingStartClicked: "onboarding.start.clicked",
+
+  // Nghe giảng / Podcast của bài học (docs/tieu-chi/nghe-giang-podcast.md, AC6). Chỉ đo cách học viên nghe:
+  // KHÔNG ghi nội dung lời giảng. Ghi sự kiện không bao giờ được chặn hay làm chậm việc phát.
+  NarrationStarted: "narration.started",
+  NarrationCompleted: "narration.completed",
+  NarrationStopped: "narration.stopped",
 } as const;
 
 export type LearningEventType =
@@ -886,4 +892,26 @@ export interface OnboardingCodeSubmittedPayload {
 export interface OnboardingStartClickedPayload {
   target: "sample" | "catalog_course" | "catalog_all";
   courseId?: string;
+}
+
+export type NarrationEventKind = "lecture" | "podcast";
+
+export interface NarrationStartedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+  /** true = nghe tiếp từ vị trí đã nhớ, false = nghe từ đầu. */
+  resumed: boolean;
+}
+
+export interface NarrationCompletedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+}
+
+export interface NarrationStoppedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+  /** Phần trăm xa nhất đã nghe tới (0–100) trong lần nghe này. */
+  percent: number;
+  speed: number;
 }

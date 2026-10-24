@@ -1,0 +1,113 @@
+/*
+ * Nghe giảng / Podcast (docs/tieu-chi/nghe-giang-podcast.md).
+ *
+ * Ba nhóm quy tắc: (1) tô sáng mục đang được giảng trong thân bài, (2) con trỏ báo tiêu đề bấm được để nghe từ đó,
+ * (3) đẩy các nút nổi sẵn có của trang lên khỏi thanh phát. Màu lấy theo biến chủ đề (--brand) để sáng/tối đều đúng.
+ */
+
+/* Mục đang giảng. Dùng outline + bóng thay vì đổi nền: nền mỗi mục do bảng màu của bài quyết định (lessonLook.css). */
+.narration-active {
+  position: relative;
+  border-radius: 0.75rem;
+  outline: 3px solid rgb(var(--brand) / 0.55);
+  outline-offset: 6px;
+  box-shadow: 0 0 0 10px rgb(var(--brand) / 0.1);
+  transition: outline-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Khi trình nghe đang mở, tiêu đề mục bấm được để nghe từ đó. */
+[data-narration-on="1"] .lesson-section > h2,
+[data-narration-on="1"] [data-item-id] h2 {
+  cursor: pointer;
+}
+[data-narration-on="1"] .lesson-section > h2:hover::after,
+[data-narration-on="1"] [data-item-id] h2:hover::after {
+  content: " ▶ nghe từ đây";
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgb(var(--text-muted));
+  white-space: nowrap;
+}
+
+/* Nút nổi của trang đi lên khi thanh phát hiện. `translate` (không phải `transform`) để không đè hiệu ứng hover:scale. */
+.narration-lift {
+  translate: 0 calc(-1 * var(--narration-bar-h, 0px));
+  transition: translate 0.2s ease;
+}
+
+/* Sóng âm: bốn thanh nhún theo nhịp khi đang nói; đứng yên khi tạm dừng hoặc khi hệ điều hành xin giảm chuyển động. */
+.narration-wave {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 18px;
+}
+.narration-wave > i {
+  display: block;
+  width: 3px;
+  height: 5px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.85;
+}
+.narration-wave[data-playing="1"] > i {
+  animation: narration-bounce 0.9s ease-in-out infinite;
+}
+.narration-wave > i:nth-child(2) { animation-delay: 0.15s; }
+.narration-wave > i:nth-child(3) { animation-delay: 0.3s; }
+.narration-wave > i:nth-child(4) { animation-delay: 0.45s; }
+@keyframes narration-bounce {
+  0%, 100% { height: 4px; }
+  50% { height: 18px; }
+}
+
+/* Vòng sáng quanh ảnh đại diện của người đang nói. */
+.narration-speaking {
+  box-shadow: 0 0 0 3px rgb(var(--surface)), 0 0 0 5px rgb(var(--brand));
+}
+
+/* Thanh tua: phần đã phát đậm, phần còn lại xám (đặt --p bằng style). */
+.narration-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, rgb(var(--brand)) var(--p, 0%), rgb(var(--border)) var(--p, 0%));
+  cursor: pointer;
+}
+.narration-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(var(--brand));
+  border: 2px solid rgb(var(--surface));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+.narration-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgb(var(--brand));
+  border: 2px solid rgb(var(--surface));
+}
+.narration-range:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .narration-wave[data-playing="1"] > i { animation: none; height: 10px; }
+  .narration-active, .narration-lift { transition: none; }
+}
+
+@media print {
+  .narration-bar, .narration-card { display: none !important; }
+  .narration-active { outline: none; box-shadow: none; }
+}
+
+/* Chừa chỗ ở cuối trang để thanh phát không che phần cuối bài (biến chỉ có khi thanh đang mở). */
+body {
+  padding-bottom: var(--narration-bar-h, 0px);
+}

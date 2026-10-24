@@ -41,7 +41,7 @@ export default function StudentMenuTrigger({
         data-app-chrome
         href={teaching ? "/instructor/dashboard" : "/me/dashboard"}
         aria-label={teaching ? "Về dashboard giảng viên" : "Về trang chủ học viên"}
-        className={`fixed bottom-24 left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 ${
+        className={`narration-lift fixed bottom-24 left-4 z-30 flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 ${
           // Cùng tông với left menu tương ứng: giảng viên hổ phách (xem
           // InstructorLeftMenu), học viên xanh ngọc (xem StudentLeftMenu).
           teaching ? "bg-amber-500" : "bg-emerald-500"

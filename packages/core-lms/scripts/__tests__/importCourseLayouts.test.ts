@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CreateQuestionInput } from "../../src/quizzes/questions";
-import { LessonSpec, expandQuestion, lessonContentItems, renderSection } from "../import-course";
+import { LessonSpec, expandQuestion, lectureAnchorProblems, lessonContentItems, renderSection } from "../import-course";
 
 describe("renderSection — bố cục như Bài học từ tài liệu", () => {
   it("dựng section/lesson-part đúng đánh dấu mà lessonLook.css dùng", () => {
@@ -86,5 +86,32 @@ describe("expandQuestion — ghép cặp", () => {
     const keyOf = (label: string) => (opts.find((o) => o.label === label)!.extra as { pairKey: string }).pairKey;
     expect(keyOf("A")).toBe(keyOf("1"));
     expect(keyOf("C")).toBe(keyOf("3"));
+  });
+});
+
+describe("lectureAnchorProblems — mốc lời giảng phải khớp mục của bài", () => {
+  const base = {
+    title: "Bài 1",
+    body: "Mở đầu.\n\n## Mục **một**\n\nNội dung.\n",
+    sections: [{ layout: "steps", title: "Quy trình", parts: [{ title: "Bước 1", md: "x" }] }],
+  };
+
+  it("chấp nhận mo-dau, tong-ket, tiêu đề mục bố cục và tiêu đề ## của thân bài", () => {
+    const l = LessonSpec.parse({
+      ...base,
+      lecture: [
+        { anchor: "mo-dau", text: "a" },
+        { anchor: "Mục một", text: "b" },
+        { anchor: "Quy trình", text: "c" },
+        { anchor: "tong-ket", text: "d" },
+      ],
+    });
+    expect(lectureAnchorProblems(l)).toEqual([]);
+  });
+
+  it("báo mốc không trùng mục nào, và bài không có lời giảng thì không báo gì", () => {
+    const l = LessonSpec.parse({ ...base, lecture: [{ anchor: "Quy trinh", text: "c" }] });
+    expect(lectureAnchorProblems(l)).toEqual(['anchor "Quy trinh" không trùng mục nào của bài']);
+    expect(lectureAnchorProblems(LessonSpec.parse(base))).toEqual([]);
   });
 });

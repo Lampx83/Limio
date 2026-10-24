@@ -6,6 +6,7 @@ import {
   canEditCourse,
   effectiveAssignmentDues,
   getCourseProgress,
+  getLearnerNarrations,
   isUserEnrolled,
   listThreadsForLesson,
   resolveQuizScore,
@@ -38,6 +39,9 @@ import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
+import NarrationButton from "@/components/narration/NarrationButton";
+import NarrationPlayer from "@/components/narration/NarrationPlayer";
+import PodcastCard from "@/components/narration/PodcastCard";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
 import { Download, Lock, PenLine } from "lucide-react";
@@ -198,6 +202,12 @@ export default async function LessonPage({
   const teacherMode = canEdit && searchParams?.gv === "1";
   const stageMode = searchParams?.stage === "1";
   const previewMode = canEdit && searchParams?.preview === "1";
+  // Nghe giảng / Podcast (docs/tieu-chi/nghe-giang-podcast.md): chỉ bản giọng đã tạo xong và khớp kịch bản mới tới
+  // được đây. Không có thì không hiện gì. Bắt lỗi để một sự cố ở phần nghe không bao giờ làm hỏng trang bài.
+  const narrations =
+    stageMode || previewMode
+      ? { lecture: null, podcast: null }
+      : await getLearnerNarrations(params.lessonId).catch(() => ({ lecture: null, podcast: null }));
 
   // B14 — khoá thì học viên vẫn biết bài này tồn tại (mục lục hiện tên kèm ổ
   // khoá), nhưng nội dung không được gửi xuống trình duyệt. Chặn ngay ở đây,
@@ -707,6 +717,7 @@ export default async function LessonPage({
                 teacherMode ? "?gv=1" : ""
               }`}
             />
+            {narrations.lecture && <NarrationButton durationSec={narrations.lecture.durationSec} />}
           </div>
         )}
         {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
@@ -755,7 +766,15 @@ export default async function LessonPage({
 
       {/* Bài học là trang dài nhất hệ thống có. Xếp tiếp vào cột nút nổi bên
           phải; ẩn khi đang chiếu, vì lúc đó cả lớp nhìn vào màn hình. */}
-      {!stageMode && <ScrollEnds className="fixed bottom-[17rem] right-4 z-30" />}
+      {!stageMode && <ScrollEnds className="narration-lift fixed bottom-[17rem] right-4 z-30" />}
+      {(narrations.lecture || narrations.podcast) && (
+        <NarrationPlayer
+          lessonId={lesson.id}
+          lessonTitle={lesson.title}
+          lecture={narrations.lecture}
+          podcast={narrations.podcast}
+        />
+      )}
 
       {canEdit && !stageMode && !previewMode && (
         <TeacherBar
@@ -772,6 +791,8 @@ export default async function LessonPage({
           Khối phóng toàn màn hình là #lesson-stage chứ không phải riêng phần
           nội dung: phóng to mà bỏ mục lục lại phía sau thì bài dài mất luôn
           cách nhảy giữa các mục — đúng lúc cần nhất. */}
+      {narrations.podcast && <PodcastCard podcast={narrations.podcast} />}
+
       <div
         id="lesson-stage"
         className={`mt-8 ${hasSectionNav ? "xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8" : ""}`}
