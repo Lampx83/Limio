@@ -266,6 +266,12 @@ export const LearningEventType = {
   GoalChanged: "goal.changed",
   GoalStatusChanged: "goal.status_changed",
   GoalSectionSet: "goal.section_set",
+
+  // Nghe giảng / Podcast của bài học (docs/tieu-chi/nghe-giang-podcast.md, AC6). Chỉ đo cách học viên nghe:
+  // KHÔNG ghi nội dung lời giảng. Ghi sự kiện không bao giờ được chặn hay làm chậm việc phát.
+  NarrationStarted: "narration.started",
+  NarrationCompleted: "narration.completed",
+  NarrationStopped: "narration.stopped",
 } as const;
 
 export type LearningEventType =
@@ -1055,4 +1061,26 @@ export interface CoursePackUpdatedPayload {
   updatedSessions: number[];
   /** Buổi không cập nhật vì đã dạy hoặc đã có hoạt động của học viên. */
   skippedSessions: number[];
+}
+
+export type NarrationEventKind = "lecture" | "podcast";
+
+export interface NarrationStartedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+  /** true = nghe tiếp từ vị trí đã nhớ, false = nghe từ đầu. */
+  resumed: boolean;
+}
+
+export interface NarrationCompletedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+}
+
+export interface NarrationStoppedPayload {
+  lessonId: string;
+  kind: NarrationEventKind;
+  /** Phần trăm xa nhất đã nghe tới (0–100) trong lần nghe này. */
+  percent: number;
+  speed: number;
 }

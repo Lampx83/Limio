@@ -300,7 +300,7 @@ export default function AssistantLauncher() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label={busy ? "Mở Lily, em đang soạn câu trả lời" : unread ? "Mở Lily, có câu trả lời mới" : "Mở Lily, trợ lý ảo của thầy/cô"}
-          className="assistant-launcher group animate-fade-in-up fixed bottom-5 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-pink-200 bg-pink-50 px-3 text-pink-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-pink-100 hover:shadow-xl active:scale-95 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:px-4"
+          className="assistant-launcher narration-lift group animate-fade-in-up fixed bottom-5 right-4 z-40 flex h-12 items-center gap-2 rounded-full border border-pink-200 bg-pink-50 px-3 text-pink-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-pink-100 hover:shadow-xl active:scale-95 motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:px-4"
         >
           {/* Đuôi bong bóng thoại ở góc dưới bên phải: ô vuông xoay 45 độ, chỉ viền hai cạnh dưới/phải, nền cùng màu nút nên
               nửa trên của nó che đường viền của nút và liền thành một khối. */}

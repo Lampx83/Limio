@@ -44,6 +44,19 @@ async function findReference(
         ? { courseId: rows[0].courseId, billedUserId: null, source: "content_item" }
         : null;
     }
+    case "lesson_narration": {
+      // Tệp giọng đọc do hệ thống tạo (không có người upload): khoá nằm ở bài học mà bản ghi lời giảng / podcast gắn vào.
+      const rows = await db.$queryRaw<Array<{ courseId: string }>>`
+        SELECT m."courseId" AS "courseId"
+        FROM "LessonNarration" n
+        JOIN "Lesson" l ON l.id = n."lessonId"
+        JOIN "Module" m ON m.id = l."moduleId"
+        WHERE position(${leaf} in coalesce(n."audioKey", '')) > 0
+        LIMIT 1`;
+      return rows[0]
+        ? { courseId: rows[0].courseId, billedUserId: null, source: "lesson_narration" }
+        : null;
+    }
     case "scorm_package":
     case "h5p_package": {
       // `leaf` của key `scorm/<id>` chính là packageId; bài học tham chiếu nó trong payload.
@@ -103,6 +116,7 @@ const REFERABLE: StoredFileKind[] = [
   "lesson_html",
   "lesson_file",
   "lesson_transcript",
+  "lesson_narration",
   "submission",
   "exam_asset",
   "oral_material",

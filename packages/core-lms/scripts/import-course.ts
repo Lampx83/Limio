@@ -57,6 +57,13 @@ import { createContentItem } from "../src/courses/contents";
 import { createQuiz } from "../src/quizzes/quizzes";
 import { CreateQuestionInput, createQuestion } from "../src/quizzes/questions";
 import { lessonSkillCode } from "../src/courses/autoTags";
+import {
+  LECTURE_INTRO_ANCHOR,
+  LECTURE_OUTRO_ANCHOR,
+  LectureScript,
+  PodcastScript,
+  saveNarrationScript,
+} from "../src/narration";
 import { LESSON_FONT_KEYS, LESSON_LAYOUT_KEYS, LESSON_PALETTE_KEYS } from "@feedbackme/shared-types";
 
 // ── Định dạng file học liệu ───────────────────────────────────────────────────
@@ -235,6 +242,13 @@ export const LessonSpec = z.object({
         .min(1),
     })
     .optional(),
+  /**
+   * Lời giảng cho nút "Nghe giảng": mỗi đoạn có `anchor` là `mo-dau`, `tong-ket` hoặc đúng tiêu đề một mục của bài để
+   * trang tô sáng và tự cuộn theo. Chỉ lưu CHỮ (trạng thái "chưa có giọng"); tạo giọng là việc của quản trị sau đó.
+   */
+  lecture: LectureScript.optional(),
+  /** Kịch bản podcast hai người dẫn, lưu cùng cách với `lecture`. */
+  podcast: PodcastScript.optional(),
   quiz: z
     .object({
       title: z.string().min(1).max(200),
@@ -1016,6 +1030,23 @@ export function countSections(body: string | undefined): number {
  * cùng họ nhìn thấy. Trước đây hai khối này bị gói chung vào khối thân bài
  * nên rơi xuống giữa trang ở những bài mở đầu bằng bảng từ vựng.
  */
+/** Chữ thuần của một tiêu đề markdown (bỏ ** * `), để so với `anchor` của lời giảng. */
+function plainHeading(raw: string): string {
+  return raw.replace(/[*_`]/g, "").trim();
+}
+
+/**
+ * Các `anchor` của lời giảng không trỏ tới mục nào của bài. Phải bắt ở bước kiểm tra, vì anchor lệch thì lúc nghe không
+ * tô sáng được mục nào mà cũng không có lỗi gì hiện ra.
+ */
+export function lectureAnchorProblems(l: z.infer<typeof LessonSpec>): string[] {
+  if (!l.lecture) return [];
+  const known = new Set<string>([LECTURE_INTRO_ANCHOR, LECTURE_OUTRO_ANCHOR]);
+  for (const sec of l.sections ?? []) known.add(plainHeading(sec.title));
+  for (const m of (l.body ?? "").matchAll(/^##\s+(.+?)\s*$/gm)) known.add(plainHeading(m[1]!));
+  return l.lecture.filter((seg) => !known.has(seg.anchor)).map((seg) => `anchor "${seg.anchor}" không trùng mục nào của bài`);
+}
+
 export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   const blocks: string[] = [];
 
@@ -1182,6 +1213,9 @@ async function main() {
     for (const [li, l] of m.lessons.entries()) {
       if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": rỗng — không có nội dung lẫn quiz`);
+      }
+      for (const msg of lectureAnchorProblems(l)) {
+        problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": lời giảng: ${msg}`);
       }
       const sections = countSections(l.body);
       if (sections > MAX_TOC_ITEMS) {
@@ -1416,6 +1450,10 @@ async function main() {
           await createQuestion(actor, quizId, expandQuestion(q, qi, mcIds));
         }
       }
+
+      // Lời giảng / podcast: lưu chữ; giọng tạo sau ở trang quản lý khoá.
+      if (l.lecture) await saveNarrationScript(lessonId, "lecture", l.lecture);
+      if (l.podcast) await saveNarrationScript(lessonId, "podcast", l.podcast);
 
       console.log(`  ✔ ${m.title} / ${l.title}`);
     }

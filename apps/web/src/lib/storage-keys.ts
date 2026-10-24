@@ -132,6 +132,17 @@ export function lessonFileKey(date: Date, filename: string): StorageKey {
 export function lessonTranscriptKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "lesson-media/transcripts", date, filename);
 }
+/**
+ * Giọng đọc của lời giảng / podcast (docs/tieu-chi/nghe-giang-podcast.md). Lớp `private`: không có đường dẫn công khai, chỉ
+ * phục vụ qua tuyến kiểm quyền theo bài (`/api/lessons/[lessonId]/narration/[kind]`).
+ */
+export function lessonNarrationKey(lessonId: string, filename: string): StorageKey {
+  return { layer: "private", key: `lesson-narration/${lessonId}/${filename}` };
+}
+/** Bộ nhớ đệm từng đoạn WAV khi tạo giọng: lỗi giữa chừng thì làm lại chỉ đọc phần còn thiếu; xoá sau khi tạo xong. */
+export function narrationChunkKey(narrationId: string, hash: string): StorageKey {
+  return { layer: "tmp", key: `narration-cache/${narrationId}/${hash}.wav` };
+}
 export function examAssetKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "exam-assets", date, filename);
 }

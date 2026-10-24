@@ -633,9 +633,46 @@ model Lesson {
   skillTags         ContentSkillMapping[] @relation("LessonSkill")
   classroomSessions ClassroomSession[]
   drafts            LessonDraft[]
+  narrations        LessonNarration[]
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
+}
+
+/// Lời giảng ("Nghe giảng") hoặc kịch bản podcast của một bài, cùng tệp âm thanh đã tạo từ nó
+/// (docs/tieu-chi/nghe-giang-podcast.md). Giọng tạo MỘT lần rồi mọi học viên nghe chung tệp.
+model LessonNarration {
+  id            String   @id @default(uuid())
+  lessonId      String
+  /// "lecture" (một giảng viên ảo, bám theo mục của bài) | "podcast" (hai người dẫn, theo lượt thoại).
+  kind          String
+  /// lecture: [{ anchor, text }]; podcast: { title, durationMin, hosts: { A, B }, turns: [{ speaker, text }] }.
+  script        Json
+  /// Băm của `script`. Khác `generatedHash` = giọng đã cũ, học viên không thấy nút nghe cho tới khi tạo lại.
+  scriptHash    String
+  /// "script" (mới có chữ) | "generating" | "ready" | "failed".
+  status        String   @default("script")
+  /// 0–100 khi đang tạo giọng.
+  progress      Int      @default(0)
+  error         String?  @db.Text
+  /// Khoá lưu tệp trong lớp `private` (chỉ phục vụ qua tuyến kiểm quyền theo bài, không có đường dẫn công khai).
+  audioKey      String?
+  contentType   String?
+  sizeBytes     Int?
+  durationSec   Float?
+  /// Mốc thời gian từng đoạn: lecture [{ anchor, startSec, endSec }]; podcast [{ index, startSec, endSec }].
+  segments      Json?
+  /// Giọng đã dùng: { lecturer } hoặc { A, B }.
+  voices        Json?
+  generatedHash String?
+  generatedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, kind])
+  @@index([status])
 }
 
 /// Bài học tạo từ tài liệu bằng AI — BẢN NHÁP: tài liệu đã tách đoạn + dàn ý giảng viên
