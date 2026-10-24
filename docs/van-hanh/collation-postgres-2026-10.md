@@ -1,6 +1,6 @@
 # Lệch collation Postgres trên server 224 (2026-10-23)
 
-> Trạng thái (2026-10-24): **đã REINDEX xong trên server 224** (bước 4–6, xem "Kết quả thực hiện" cuối mục 3). Bước 3 (ghim `0.8.7-pg15-bookworm` + tắt watchtower) đã sửa trong compose prod/dev và CI, **chưa push**; có hiệu lực ở lần deploy kế tiếp (Postgres khởi động lại 10–30 giây trên cả 224 và AWS). **Còn lại:** push vào giờ vắng, kiểm server AWS, sửa các DB dev bị lệch.
+> Trạng thái (2026-10-24): **đã REINDEX xong trên server 224** (bước 4–6, xem "Kết quả thực hiện" cuối mục 3). Bước 3 (ghim `0.8.7-pg15-bookworm` + tắt watchtower) đã sửa trong compose prod/dev và CI, **chưa push**; có hiệu lực ở lần deploy kế tiếp (Postgres khởi động lại 10–30 giây trên cả 224 và AWS). Server AWS đã kiểm (2026-10-24): **không lệch**. **Còn lại:** push vào giờ vắng, sửa các DB dev bị lệch.
 > File kiểm tra chỉ đọc: [`kiem-tra-collation-prod.sql`](kiem-tra-collation-prod.sql).
 
 ## 1. Triệu chứng
@@ -61,6 +61,15 @@ Thầy/cô yêu cầu làm ngay; Claude chạy qua kết nối SSH thầy/cô đ
 3. **Kiểm lại:** kết nối không còn cảnh báo; lúc tạo = hệ điều hành = 2.36; 0/298 index unique có giá trị trùng; `/api/health` trả 200, cả 3 replica web vẫn healthy. Tổng cỡ index giảm từ 72 MB xuống 49 MB và DB từ 173 MB xuống 149 MB, vì REINDEX cũng dọn phần index phình.
 
 Bước 3 (ghim image) đã có trong mã nhưng chỉ có hiệu lực sau khi push và deploy. Tới lúc đó watchtower vẫn có thể kéo bản `pg15` mới; việc này không gây lệch lại chừng nào tag `pg15` còn là bookworm.
+
+### Server AWS (limio.hust.edu.vn), kiểm ngày 2026-10-24
+
+Chạy cùng file kiểm tra chỉ đọc, không ghi gì:
+- Image `pgvector/pgvector:pg15`, Debian bookworm, glibc 2.36; PostgreSQL 15.19; DB 110 MB.
+- **Lúc tạo = hệ điều hành = 2.36: không lệch, không cần REINDEX.** Điều này xác nhận DB bên AWS được tạo trên bookworm, nên việc ghim bookworm (không quay về trixie) là đúng.
+- 527 index (297 unique) dùng collation của hệ điều hành; 0/297 index unique có giá trị trùng.
+- AWS cũng có watchtower đang chạy (`containrrr/watchtower`), nên nhãn tắt watchtower trong compose cũng có tác dụng ở đây.
+- Giờ vắng nhất bên AWS là 02:00–05:59 (dưới 6 sự kiện/giờ).
 
 ## 4. Các bước
 
