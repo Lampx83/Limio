@@ -141,6 +141,28 @@ const EXPORT_SELECT = {
           courses: { select: { certificateId: true, createdAt: true } },
         },
       },
+      // CENTER C6 — mục tiêu học tập (mọi trạng thái, kèm người đặt). Lịch sử thay đổi có trong bản xuất hoạt động (goal.*).
+      learnerGoals: {
+        select: { courseId: true, framework: true, targetLevel: true, targetDate: true, hoursPerWeek: true, status: true, setById: true, createdAt: true, updatedAt: true },
+        orderBy: { createdAt: "asc" },
+      },
+      // CENTER C4 — nhận xét giáo viên đã GỬI cho chính người này (nháp nội bộ chưa tới học viên thì không có) và tình trạng
+      // gửi email tổng kết.
+      meetingNotes: {
+        where: { status: "sent" },
+        select: {
+          body: true,
+          status: true,
+          sentAt: true,
+          correctionOfId: true,
+          meeting: { select: { startsAt: true, seq: true, section: { select: { name: true, course: { select: { slug: true, title: true } } } } } },
+        },
+        orderBy: { sentAt: "asc" },
+      },
+      meetingSummaryDeliveries: {
+        select: { status: true, sentAt: true, meeting: { select: { startsAt: true, seq: true, section: { select: { name: true } } } } },
+        orderBy: { updatedAt: "asc" },
+      },
       // CENTER C2 — điểm danh các buổi học của chính người này (kèm ghi chú của giáo viên).
       studentAttendances: {
         select: {

@@ -261,6 +261,11 @@ export const LearningEventType = {
   MeetingSummarySent: "meeting.summary.sent",
   MeetingNoteDrafted: "meeting.note.drafted",
   MeetingNoteSent: "meeting.note.sent",
+  // CENTER C6 — mục tiêu học tập. Chủ thể là HỌC VIÊN có mục tiêu (người đặt hộ nằm trong payload).
+  GoalSet: "goal.set",
+  GoalChanged: "goal.changed",
+  GoalStatusChanged: "goal.status_changed",
+  GoalSectionSet: "goal.section_set",
 } as const;
 
 export type LearningEventType =
@@ -993,6 +998,44 @@ export interface MeetingNoteSentPayload {
   learnerId: string;
   bodyLength: number;
   correction: boolean;
+}
+
+// ── CENTER C6 — mục tiêu học tập ─────────────────────────────────────────
+
+export interface GoalSetPayload {
+  goalId: string;
+  courseId: string | null;
+  framework: string;
+  targetLevel: string;
+  targetDate: string;
+  hoursPerWeek: number | null;
+  /** Người đặt: chính học viên hay giáo viên đặt hộ. */
+  setById: string;
+  /** Mục tiêu này chép từ mục tiêu của lớp (học viên bấm "Dùng mục tiêu này"). */
+  fromSection: boolean;
+}
+
+export interface GoalChangedPayload {
+  goalId: string;
+  changedById: string;
+  /** Từng trường đã đổi: giá trị cũ và mới. */
+  changes: Record<string, { from: string | number | null; to: string | number | null }>;
+}
+
+export interface GoalStatusChangedPayload {
+  goalId: string;
+  changedById: string;
+  from: string;
+  to: string;
+}
+
+export interface GoalSectionSetPayload {
+  sectionId: string;
+  courseId: string;
+  /** null = đã bỏ mục tiêu của lớp. */
+  framework: string | null;
+  targetLevel: string | null;
+  targetDate: string | null;
 }
 
 // ── CENTER C3 — giáo trình dựng sẵn ──────────────────────────────────────

@@ -13,6 +13,8 @@ describe("isLearnerActivityType — điểm danh không phải hoạt động h�
     expect(isLearnerActivityType(LearningEventType.ClassMeetingCancelled)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.CoursePackUsed)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.MeetingNoteSent)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.GoalSet)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.GoalChanged)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.ClassMeetingClosed)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.LessonViewed)).toBe(true);
     expect(isLearnerActivityType(LearningEventType.QuizQuestionAnswered)).toBe(true);
@@ -37,7 +39,7 @@ describe("learnerActivityWhere — dùng cho truy vấn 'lần hoạt động g�
       where: { userId: learner, courseId, ...learnerActivityWhere() },
       _max: { occurredAt: true },
     });
-    expect(last[0]._max.occurredAt).toEqual(old);
+    expect(last[0]!._max.occurredAt).toEqual(old);
 
     // không có bộ lọc thì đúng là bị tính (chứng minh lỗi cũ)
     const raw = await prisma.learningEvent.groupBy({
@@ -45,7 +47,7 @@ describe("learnerActivityWhere — dùng cho truy vấn 'lần hoạt động g�
       where: { userId: learner, courseId },
       _max: { occurredAt: true },
     });
-    expect(raw[0]._max.occurredAt).toEqual(recent);
+    expect(raw[0]!._max.occurredAt).toEqual(recent);
   });
 
   it("học viên chỉ có dòng điểm danh → không có lần hoạt động nào", async () => {

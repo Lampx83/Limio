@@ -12,3 +12,4 @@ export * from "./flashcards";
 export * from "./aiGrading";
 export * from "./liveIllustrations";
 export * from "./deckLanguage";
+export * from "./goals";

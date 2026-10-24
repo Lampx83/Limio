@@ -13,7 +13,7 @@
  */
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
-import type { MeetingStudentNote } from "@feedbackme/db";
+import type { MeetingStudentNote, Prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 import { emitEvent } from "../learning/events";
@@ -50,7 +50,12 @@ export type NoteView = MeetingStudentNote;
 
 // ── Tải & kiểm quyền ─────────────────────────────────────────────────────
 
-async function loadClosedMeeting(meetingId: string, db: DbClient) {
+/** Buổi kèm lớp và khoá — kiểu viết tường minh vì kiểu suy ra của Prisma không xuất được ra .d.ts. */
+export type MeetingForNotes = Prisma.ClassMeetingGetPayload<{
+  include: { section: { select: { id: true; name: true; courseId: true; instructorId: true; course: { select: { organizationId: true; title: true } } } } };
+}>;
+
+async function loadClosedMeeting(meetingId: string, db: DbClient): Promise<MeetingForNotes> {
   const meeting = await db.classMeeting.findUnique({
     where: { id: meetingId },
     include: { section: { select: { id: true, name: true, courseId: true, instructorId: true, course: { select: { organizationId: true, title: true } } } } },
@@ -63,7 +68,7 @@ async function loadClosedMeeting(meetingId: string, db: DbClient) {
  * Cổng cho mọi thao tác nhận xét của một buổi: người gọi phải được xếp dạy buổi này (hoặc là người quản khoá),
  * và buổi phải đã đóng. Apps/web gọi trước khi gọi core-feedback soạn nháp.
  */
-export async function authorizeMeetingNotes(actorUserId: string | null, meetingId: string, db: DbClient = prisma) {
+export async function authorizeMeetingNotes(actorUserId: string | null, meetingId: string, db: DbClient = prisma): Promise<MeetingForNotes> {
   const meeting = await loadClosedMeeting(meetingId, db);
   if (actorUserId) await assertCanTeachMeeting(actorUserId, meeting, db);
   if (!meeting.closedAt) throw new MeetingNoteError("not_closed");

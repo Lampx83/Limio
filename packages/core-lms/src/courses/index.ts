@@ -21,6 +21,7 @@ export * from "./classSchedule";
 export * from "./attendance";
 export * from "./meetingSummary";
 export * from "./meetingNotes";
+export * from "./learnerGoals";
 export * from "./sessionPlan";
 export * from "./coursePacks";
 export * from "./teachingScope";

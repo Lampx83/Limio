@@ -131,6 +131,7 @@ model User {
   attendanceMarked          StudentAttendance[]      @relation("StudentAttendanceMarker")
   meetingSummaryDeliveries  MeetingSummaryDelivery[] @relation("MeetingSummaryUser")
   meetingNotes              MeetingStudentNote[]     @relation("MeetingNoteStudent")
+  learnerGoals              LearnerGoal[]            @relation("LearnerGoalOwner")
   /// CENTER C4 — tắt email tổng kết/nhận xét sau buổi học (vẫn đọc được trong app).
   classEmailOptOut          Boolean                  @default(false)
   // P0 phòng thi — rooms this user is assigned to as proctor / grader.
@@ -4311,6 +4312,7 @@ model CourseSection {
   feedbackVariant FeedbackVariant @default(personalized)
   // CENTER C4 — tự gửi tổng kết chung cho cả lớp khi giáo viên kết thúc buổi. Mặc định bật.
   autoSendSummary Boolean         @default(true)
+  goal            SectionGoal?    @relation("SectionGoalOwner")
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -4425,6 +4427,59 @@ model ClassMeeting {
   @@index([sectionId, startsAt])
   @@index([plannedTeacherId, startsAt])
   @@map("ClassMeeting")
+}
+
+enum GoalFramework {
+  HSK
+  IELTS
+  TOEIC
+  CEFR
+  custom
+}
+
+enum GoalStatus {
+  active
+  achieved
+  archived
+}
+
+// CENTER C6 — mục tiêu học tập của một học viên (HSK 3 trước 30/06/2027, 4 giờ/tuần...). Dữ liệu nhạy cảm:
+// chỉ chính học viên và giáo viên của lớp xem; có trong bản xuất dữ liệu cá nhân và bị xoá hẳn khi xoá tài khoản.
+// Mọi thay đổi đi kèm event goal.* (lịch sử), không ghi đè âm thầm.
+model LearnerGoal {
+  id           String        @id @default(uuid())
+  userId       String
+  // null = mục tiêu chung, không gắn khoá. Mỗi học viên có tối đa một mục tiêu `active` cho mỗi khoá (và một chung).
+  courseId     String?
+  framework    GoalFramework
+  targetLevel  String
+  // Ngày (giờ VN) — chỉ lưu phần ngày.
+  targetDate   DateTime      @db.Date
+  hoursPerWeek Float?
+  status       GoalStatus    @default(active)
+  // Người đặt: chính học viên hoặc giáo viên đặt hộ.
+  setById      String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  user User @relation("LearnerGoalOwner", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([courseId])
+}
+
+// CENTER C6.4 — mục tiêu của lớp (kết quả cuối khoá), giáo viên đặt một lần. Học viên thấy làm gợi ý và có thể
+// chép thành mục tiêu riêng; đặt lại mục tiêu lớp không đổi mục tiêu riêng.
+model SectionGoal {
+  sectionId    String        @id
+  framework    GoalFramework
+  targetLevel  String
+  targetDate   DateTime?     @db.Date
+  hoursPerWeek Float?
+  setById      String
+  updatedAt    DateTime      @updatedAt
+
+  section CourseSection @relation("SectionGoalOwner", fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 enum MeetingMailStatus {

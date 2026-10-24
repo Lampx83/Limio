@@ -120,6 +120,13 @@ export async function deleteUser(
       if (m && !sharedWithOthers) removedFiles.push(m[1]!);
       await tx.assignmentSubmission.update({ where: { id: s.id }, data: { attachmentUrl: null } });
     }
+    // CENTER C4/C6 — mục tiêu học tập, nhận xét sau buổi (kể cả nháp) và tình trạng gửi email: nội dung chữ riêng tư về
+    // học viên, không có giá trị thống kê sau khi ẩn danh nên xoá hẳn. Ghi chú của giáo viên trong điểm danh (C2) cũng
+    // vậy; trạng thái có mặt/vắng được giữ lại ở dạng ẩn danh cho thống kê chuyên cần.
+    await tx.learnerGoal.deleteMany({ where: { userId: targetUserId } });
+    await tx.meetingStudentNote.deleteMany({ where: { userId: targetUserId } });
+    await tx.meetingSummaryDelivery.deleteMany({ where: { userId: targetUserId } });
+    await tx.studentAttendance.updateMany({ where: { userId: targetUserId, note: { not: null } }, data: { note: null } });
     // A8 — e-portfolio là trang trưng bày gắn danh tính; ẩn danh hoá mà giữ
     // lại thì /p/<slug> vẫn sống. Item cascade theo Portfolio.
     await tx.portfolio.deleteMany({ where: { userId: targetUserId } });
