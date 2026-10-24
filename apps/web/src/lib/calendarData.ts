@@ -370,6 +370,11 @@ const ATTENDANCE_CHIP: Record<AttendanceValue, { state: CalendarAssignment["stat
 export function meetingToItem(m: MeetingItem, href: string, attendance?: AttendanceValue | null): CalendarAssignment {
   const cancelled = m.status === "cancelled";
   const chip = !cancelled && attendance ? ATTENDANCE_CHIP[attendance] : null;
+  // Bài của buổi (giáo án): chỉ id và tên bài; học viên đã được lọc bài ẩn và ghi chú giảng viên ở lớp dịch vụ.
+  const lessons =
+    !cancelled && m.plan && m.plan.lessons.length > 0
+      ? m.plan.lessons.map((l) => ({ id: l.id, title: l.title, href: `/learn/${m.plan!.courseSlug}/lessons/${l.id}` }))
+      : undefined;
   return {
     id: `meeting:${m.id}`,
     title: m.plan?.title ?? (m.seq ? `Buổi ${m.seq}` : "Buổi dạy bù"),
@@ -387,6 +392,7 @@ export function meetingToItem(m: MeetingItem, href: string, attendance?: Attenda
       .filter(Boolean)
       .join(" · "),
     href,
+    ...(lessons ? { lessons } : {}),
   };
 }
 

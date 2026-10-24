@@ -38,6 +38,8 @@ export interface CalendarAssignment {
   kind?: "assignment" | "quiz" | "meeting";
   /** Ghi đè nhãn trạng thái mặc định, ví dụ "Chưa làm" / "Đang làm" cho quiz. */
   stateLabel?: string;
+  /** Buổi học có giáo án: các bài của buổi, mỗi bài một liên kết riêng dưới thẻ. */
+  lessons?: Array<{ id: string; title: string; href: string }>;
   href: string;
 }
 
@@ -392,12 +394,8 @@ export default function WorkspaceCalendar({
                   {dayItems.map((a) => {
                     const meta = STATE_META[a.state];
                     return (
-                      <li key={a.id}>
-                        <Link
-                          href={a.href}
-                          prefetch={false}
-                          className="flex items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] px-2 py-1.5 transition-colors hover:border-brand-300"
-                        >
+                      <li key={a.id} className="rounded-lg border border-token bg-[rgb(var(--surface))] transition-colors hover:border-brand-300">
+                        <Link href={a.href} prefetch={false} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
                           <span className="w-10 shrink-0 text-center text-xs font-bold tabular-nums">{a.dueTime}</span>
                           <span className={`w-0.5 shrink-0 self-stretch rounded-full ${meta.dot}`} aria-hidden />
                           <span className="min-w-0 flex-1">
@@ -416,6 +414,20 @@ export default function WorkspaceCalendar({
                             {a.state === "graded" && a.scoreLabel ? `✓ ${a.scoreLabel}` : (a.stateLabel ?? meta.label)}
                           </span>
                         </Link>
+                        {a.lessons && (
+                          <div className="border-t border-token px-2 py-1.5 pl-12 text-xs">
+                            <span className="font-semibold text-muted">Bài của buổi</span>
+                            <ul className="mt-0.5 flex flex-col gap-0.5">
+                              {a.lessons.map((l) => (
+                                <li key={l.id}>
+                                  <Link href={l.href} prefetch={false} className="text-brand-700 underline underline-offset-2 hover:text-brand-800">
+                                    {l.title}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                       </li>
                     );
                   })}

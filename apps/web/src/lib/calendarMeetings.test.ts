@@ -67,3 +67,29 @@ describe("meetingToItem — buổi học thành mục của lịch", () => {
     expect(meetingToItem(base, "/x", null)).toMatchObject({ state: "class", stateLabel: "Buổi học" });
   });
 });
+
+describe("meetingToItem — bài của buổi (I1–I2)", () => {
+  const plan = {
+    courseSlug: "tieng-trung",
+    sessionNo: 3,
+    moduleId: "mo",
+    title: "Buổi 3: Các con số",
+    lessons: [
+      { id: "l1", title: "Từ vựng — Các con số" },
+      { id: "l2", title: "Hội thoại — Hỏi tuổi" },
+    ],
+  };
+
+  it("có giáo án: mỗi bài thành một liên kết mở trang học của bài", () => {
+    expect(meetingToItem({ ...base, plan }, "/x").lessons).toEqual([
+      { id: "l1", title: "Từ vựng — Các con số", href: "/learn/tieng-trung/lessons/l1" },
+      { id: "l2", title: "Hội thoại — Hỏi tuổi", href: "/learn/tieng-trung/lessons/l2" },
+    ]);
+  });
+
+  it("không có giáo án, giáo án rỗng hoặc buổi đã huỷ: không có danh sách bài", () => {
+    expect(meetingToItem(base, "/x").lessons).toBeUndefined();
+    expect(meetingToItem({ ...base, plan: { ...plan, lessons: [] } }, "/x").lessons).toBeUndefined();
+    expect(meetingToItem({ ...base, status: "cancelled", plan }, "/x").lessons).toBeUndefined();
+  });
+});

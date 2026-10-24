@@ -215,6 +215,16 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 **P1 (chưa làm ở giai đoạn này):** đề nghị nghỉ/đổi buổi; ghi chú riêng của giáo viên vào giáo án; check-in (C5) và nhận xét sau buổi (C4) dùng đúng quyền "teach" ở trên; Lily trả lời theo vai trò (hiện vẫn nói cả các mục họ không có).
 
+## I · Học viên xem được bài của từng buổi
+
+**Quyết định (2026-10-24, chủ dự án chốt):** học liệu từng buổi (giáo án C3) hiện cho học viên ngay trên lịch học, không chỉ giảng viên. Dữ liệu đã đúng từ C3 (học viên chỉ nhận id và tên bài, bài và chương ẩn bị lọc, không có ghi chú giảng viên); phần còn thiếu là giao diện.
+
+- [x] **I1** Trên lịch (trang Lịch học và lịch ở trang chủ học viên), bấm một ngày: mỗi buổi có giáo án hiện thêm dòng "Bài của buổi" với từng bài là một liên kết mở thẳng `/learn/<slug>/lessons/<id>`. Bấm vào tên buổi vẫn mở như cũ; hai liên kết không lồng nhau.
+- [x] **I2** Buổi đã huỷ, buổi không có giáo án và buổi dạy bù không hiện dòng "Bài của buổi".
+- [x] **I3** Học viên chỉ thấy bài của lớp mình đang học; bài và chương ẩn không hiện; không có nội dung hay ghi chú giảng viên đi theo (đã kiểm ở C3.6, giữ nguyên).
+- [x] **I4** Giảng viên cũng thấy dòng này trên lịch dạy (bấm bài mở trang học của bài đó); trang chủ giảng viên trung tâm giữ nguyên.
+- [x] **I5** Cập nhật `GIAO-DIEN.md`, hướng dẫn Lily (học viên xem bài của buổi ở đâu) và bỏ câu "chưa có" nếu có.
+
 ## Ngoài phạm vi (cố ý)
 
 - Học phí, hoá đơn, công nợ, lương giáo viên, CRM tuyển sinh, quản lý nhiều cơ sở theo chuỗi.

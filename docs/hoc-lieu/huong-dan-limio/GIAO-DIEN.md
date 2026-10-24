@@ -407,8 +407,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   hội thoại, audio, quiz, bài tập về nhà, ghi chú cho giáo viên). **"Dùng giáo trình này"** sao cả giáo trình về
   thành một khoá nháp của giảng viên rồi mở trang khoá đó; khoá còn nháp nên giảng viên bấm **"Publish"** thì mới có tab "Lớp học" để tạo lớp. Sửa bản sao không đụng bản gốc. Mỗi chương
   của giáo trình là giáo án của một buổi: buổi học số N của lớp (số thứ tự theo thời gian, không tính buổi huỷ) tự hiện
-  dòng **"Giáo án:"** kèm các bài để mở ở khối "Lịch dạy" của trang lớp, và dòng **"Giáo án:"** (đổi thành **"Hôm nay dạy:"** đúng ngày hôm nay) ở trang "Lịch dạy"
-  và "Lịch học"; buổi vượt quá giáo án hiện "Chưa có giáo án cho buổi này", và trang lớp có thông báo khi giáo án nhiều
+  dòng **"Giáo án:"** kèm các bài để mở ở khối "Lịch dạy" của trang lớp, và khối **"Bài của buổi"** (mỗi bài là một liên kết mở thẳng bài đó) khi bấm một ngày ở lịch trên trang "Lịch dạy" và "Lịch học" (cả học viên lẫn giảng viên; buổi đã huỷ thì không hiện); buổi vượt quá giáo án hiện "Chưa có giáo án cho buổi này", và trang lớp có thông báo khi giáo án nhiều
   hoặc ít buổi hơn lịch. Học viên chỉ thấy tên bài, không thấy bài ẩn, không thấy ghi chú giảng viên. Khi quản trị phát
   hành bản mới, trang lớp hiện thông báo "có bản mới" kèm nút **"Cập nhật các buổi chưa dạy"** (hỏi xác nhận; buổi đã dạy
   hoặc đã có học viên xem/làm bài được giữ nguyên và báo lại). Quản trị phát hành qua API
