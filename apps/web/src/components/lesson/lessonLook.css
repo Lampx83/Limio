@@ -147,11 +147,20 @@
   margin: 0.3em 0 1em 1.5em;
 }
 
-/* Thẻ khái niệm và Số liệu nổi bật: các phần thành lưới. */
+/* Thẻ khái niệm và Số liệu nổi bật: các phần xếp hàng, tự xuống dòng, giãn đều hết chiều ngang.
+   Dùng flex chứ không dùng grid auto-fit: tiêu đề / đoạn dẫn trải ngang `1 / -1` chiếm mọi cột ảo, nên
+   auto-fit không bỏ được cột thừa và ba thẻ chỉ đứng ở 3/4 bề ngang, bỏ trống một khoảng bên phải. */
 .lesson-section:is([data-layout="cards"], [data-layout="stats"]) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.9rem;
+}
+.lesson-section:is([data-layout="cards"], [data-layout="stats"]) > .lesson-part {
+  flex: 1 1 12.5rem;
+  min-width: 0;
+}
+.lesson-section:is([data-layout="cards"], [data-layout="stats"]) > :not(.lesson-part) {
+  flex-basis: 100%;
 }
 .lesson-section:is([data-layout="cards"], [data-layout="stats"], [data-layout="compare"]) > :not(.lesson-part) {
   grid-column: 1 / -1;
