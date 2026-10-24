@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Bài 2 · Tách một lập luận thành ba mảnh.
+"""Bài 2 · Cấu trúc của một lập luận.
 
 Khung khái niệm: mô hình lập luận Toulmin (khẳng định, bằng chứng, lý lẽ nối, cùng ba thành phần mở rộng) và thang
 suy luận của Chris Argyris; áp lên câu trả lời của AI, bài đăng trên mạng và ý kiến của chính người học.
@@ -156,7 +156,7 @@ FEEDBACK_TEMPLATES = [
 ]
 
 LESSON = {
-    "title": "Bài 2 · Tách một lập luận thành ba mảnh",
+    "title": "Bài 2 · Cấu trúc của một lập luận",
     "durationMin": 20,
     "description": (
         "Bài học giới thiệu mô hình lập luận Toulmin để tách một phát biểu thành khẳng định, bằng chứng và lý lẽ "
@@ -725,7 +725,7 @@ Bạn hãy thử tự trả lời ba câu hỏi. Thứ nhất, AI muốn bạn t
         },
     ],
     "podcast": {
-        "title": "Podcast · Bài 2: Lời khuyên nghe có lý, nhưng giả định nằm ở đâu?",
+        "title": "Tập 2 · Lời khuyên nghe có lý, nhưng giả định nằm ở đâu?",
         "durationMin": 6,
         "hosts": {"A": "Khoa", "B": "Linh"},
         "turns": [

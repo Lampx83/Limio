@@ -47,7 +47,7 @@ BASTANI_CHART = r"""
 """
 
 LESSON = {
-    "title": "Bài 6 · Dùng AI mà vẫn tự nghĩ",
+    "title": "Bài 6 · Học cùng AI mà vẫn tự suy nghĩ",
     "durationMin": 20,
     "description": (
         "Bài cuối khoá giải thích vì sao việc giao cho AI phần suy nghĩ có thể làm bạn hoàn thành bài nhanh hơn nhưng "
@@ -653,7 +653,7 @@ Minh không lười và cũng không kém. Bài tuần trước đã được ho
         },
     ],
     "podcast": {
-        "title": "Podcast Bài 6 · Dùng AI mà vẫn tự nghĩ",
+        "title": "Tập 6 · Học cùng AI mà vẫn tự suy nghĩ",
         "durationMin": 6,
         "hosts": {"A": "Khoa", "B": "Linh"},
         "turns": [

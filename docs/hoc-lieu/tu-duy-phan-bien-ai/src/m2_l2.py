@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Bài 5 · Thiên kiến của AI và của chính mình.
+"""Bài 5 · Thiên kiến khi dùng AI.
 
 Bài nối hai phía của một vấn đề: thiên kiến nhận thức của người hỏi (thiên kiến xác nhận, thiên kiến tin máy) và
 xu hướng của mô hình AI (chiều theo người hỏi, thiên kiến trong dữ liệu huấn luyện). Khi hai phía gặp nhau, chúng
@@ -58,7 +58,7 @@ LOOP_DIAGRAM = r"""
 """
 
 LESSON = {
-    "title": "Bài 5 · Thiên kiến của AI và của chính mình",
+    "title": "Bài 5 · Thiên kiến khi dùng AI",
     "durationMin": 20,
     "description": (
         "Bài học giải thích thiên kiến xác nhận và thiên kiến tin máy ở người dùng, xu hướng chiều theo người hỏi và "
@@ -599,7 +599,7 @@ Hãy dừng lại và tự viết một câu hỏi khác về cùng chủ đề,
         },
     ],
     "podcast": {
-        "title": "Khi AI chỉ nói điều bạn muốn nghe",
+        "title": "Tập 5 · Khi AI chỉ nói điều bạn muốn nghe",
         "durationMin": 6,
         "hosts": {"A": "Khoa", "B": "Linh"},
         "turns": [
