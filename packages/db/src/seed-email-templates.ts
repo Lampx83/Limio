@@ -498,6 +498,91 @@ Xem tại: {{badgesUrl}}`,
   },
 
   // ============ NOTIFICATION ============
+  // ============ CENTER (lớp học có lịch) ============
+  {
+    key: "class.meeting_summary",
+    name: "Tổng kết buổi học (cả lớp)",
+    description: "Gửi cả lớp sau khi giáo viên kết thúc buổi: học gì, từ vựng, bài tập về nhà, buổi sau. Người vắng nhận thêm dòng bài cần học bù.",
+    category: "class",
+    subject: "Tổng kết buổi học: {{meetingLabel}} — {{courseTitle}}",
+    bodyHtml: [
+      hello("learnerName"),
+      h.p("Tổng kết buổi <strong>{{meetingLabel}}</strong> ({{meetingDate}}), lớp {{sectionName}}."),
+      "{{{makeupHtml}}}",
+      "{{#if learnedHtml}}<p><strong>Hôm nay học</strong></p>{{{learnedHtml}}}{{/if}}",
+      "{{#if vocabHtml}}<p><strong>Từ vựng cần ôn</strong></p>{{{vocabHtml}}}{{/if}}",
+      "{{#if homeworkHtml}}<p><strong>Bài tập về nhà</strong></p>{{{homeworkHtml}}}{{/if}}",
+      h.p("{{nextText}}"),
+      h.button("appUrl", "Xem lại trong Limio"),
+      h.small(`<a href="{{unsubscribeUrl}}">Không nhận email này nữa</a> (vẫn xem được trong ứng dụng).`),
+    ].join("\n"),
+    bodyText: `Chào {{learnerName}},
+
+Tổng kết buổi {{meetingLabel}} ({{meetingDate}}), lớp {{sectionName}}.
+{{makeupText}}
+{{#if learnedText}}
+Hôm nay học:
+{{learnedText}}
+{{/if}}{{#if vocabText}}
+Từ vựng cần ôn:
+{{vocabText}}
+{{/if}}{{#if homeworkText}}
+Bài tập về nhà:
+{{homeworkText}}
+{{/if}}
+{{nextText}}
+
+Xem lại: {{appUrl}}
+Không nhận email này nữa: {{unsubscribeUrl}}`,
+    variables: [
+      V.learnerName,
+      V.courseTitle,
+      { name: "sectionName", label: "Tên lớp", example: "HSK1 tối T3 T5", required: true },
+      { name: "meetingLabel", label: "Tên buổi", example: "Buổi 3: Các con số", required: true },
+      { name: "meetingDate", label: "Giờ buổi học", example: "Thứ Ba 03/11/2026 18:30", required: true },
+      { name: "learnedHtml", label: "Danh sách bài đã học (HTML)", example: "<ul><li>Từ vựng — Các con số</li></ul>" },
+      { name: "vocabHtml", label: "Từ vựng cần ôn (HTML)", example: "<ul><li>你好 (nǐ hǎo) — xin chào</li></ul>" },
+      { name: "homeworkHtml", label: "Bài tập về nhà (HTML)", example: "<ul><li>Viết 5 câu — hạn Chủ Nhật 08/11</li></ul>" },
+      { name: "nextText", label: "Buổi tiếp theo", example: "Buổi tiếp theo: Thứ Ba 10/11/2026 18:30, phòng B2.", required: true },
+      { name: "makeupHtml", label: "Dòng bài cần học bù (HTML, chỉ người vắng)", example: "" },
+      { name: "appUrl", label: "Link vào Lịch học", example: "https://limio.vn/me/lich-hoc", required: true },
+      { name: "unsubscribeUrl", label: "Link huỷ nhận email", example: "https://limio.vn/api/class-email/unsubscribe?token=abc", required: true },
+    ],
+  },
+  {
+    key: "class.student_note",
+    name: "Nhận xét sau buổi học (cá nhân)",
+    description: "Gửi riêng từng học viên sau khi giáo viên duyệt nhận xét. Bản nháp chưa duyệt không bao giờ được gửi.",
+    category: "class",
+    subject: "{{correctionLabel}}Nhận xét buổi học: {{meetingLabel}} — {{courseTitle}}",
+    bodyHtml: [
+      hello("learnerName"),
+      h.p("Nhận xét của thầy/cô sau buổi <strong>{{meetingLabel}}</strong> ({{meetingDate}}), lớp {{sectionName}}:"),
+      "{{{noteHtml}}}",
+      h.button("appUrl", "Xem lại trong Limio"),
+      h.small(`<a href="{{unsubscribeUrl}}">Không nhận email này nữa</a> (vẫn xem được trong ứng dụng).`),
+    ].join("\n"),
+    bodyText: `Chào {{learnerName}},
+
+Nhận xét của thầy/cô sau buổi {{meetingLabel}} ({{meetingDate}}), lớp {{sectionName}}:
+
+{{noteText}}
+
+Xem lại: {{appUrl}}
+Không nhận email này nữa: {{unsubscribeUrl}}`,
+    variables: [
+      V.learnerName,
+      V.courseTitle,
+      { name: "sectionName", label: "Tên lớp", example: "HSK1 tối T3 T5", required: true },
+      { name: "meetingLabel", label: "Tên buổi", example: "Buổi 3: Các con số", required: true },
+      { name: "meetingDate", label: "Giờ buổi học", example: "Thứ Ba 03/11/2026 18:30", required: true },
+      { name: "noteHtml", label: "Nội dung nhận xét (HTML)", example: "<p>Em làm tốt phần so sánh.</p>", required: true },
+      { name: "noteText", label: "Nội dung nhận xét (chữ)", example: "Em làm tốt phần so sánh.", required: true },
+      { name: "correctionLabel", label: "Nhãn đính chính (để trống nếu không phải đính chính)", example: "Đính chính: " },
+      { name: "appUrl", label: "Link vào Lịch học", example: "https://limio.vn/me/lich-hoc", required: true },
+      { name: "unsubscribeUrl", label: "Link huỷ nhận email", example: "https://limio.vn/api/class-email/unsubscribe?token=abc", required: true },
+    ],
+  },
   {
     key: "notification.weekly_digest",
     name: "Tóm tắt tuần",

@@ -19,6 +19,8 @@ export * from "./contentVersions";
 export * from "./classScheduleCalc";
 export * from "./classSchedule";
 export * from "./attendance";
+export * from "./meetingSummary";
+export * from "./meetingNotes";
 export * from "./sessionPlan";
 export * from "./coursePacks";
 export * from "./teachingScope";

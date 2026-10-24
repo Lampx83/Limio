@@ -129,6 +129,10 @@ model User {
   // CENTER C2 — điểm danh của chính học viên, và các dòng điểm danh người này đã ghi.
   studentAttendances        StudentAttendance[]      @relation("StudentAttendanceUser")
   attendanceMarked          StudentAttendance[]      @relation("StudentAttendanceMarker")
+  meetingSummaryDeliveries  MeetingSummaryDelivery[] @relation("MeetingSummaryUser")
+  meetingNotes              MeetingStudentNote[]     @relation("MeetingNoteStudent")
+  /// CENTER C4 — tắt email tổng kết/nhận xét sau buổi học (vẫn đọc được trong app).
+  classEmailOptOut          Boolean                  @default(false)
   // P0 phòng thi — rooms this user is assigned to as proctor / grader.
   examRoomsAsProctor        ExamRoom[]               @relation("ExamRoomProctor")
   examRoomsAsGrader         ExamRoomGrader[]         @relation("ExamRoomGrader")
@@ -490,8 +494,8 @@ model Course {
   enrollments           Enrollment[]
   instructors           CourseInstructor[]
   // CENTER C3 — khoá này là nơi soạn của một gói (tối đa một), và gói mà khoá này được sao ra.
-  packAuthored          CoursePack?        @relation("PackSource")
-  fromPack              CoursePack?        @relation("CourseFromPack", fields: [sourcePackId], references: [id], onDelete: SetNull)
+  packAuthored          CoursePack?            @relation("PackSource")
+  fromPack              CoursePack?            @relation("CourseFromPack", fields: [sourcePackId], references: [id], onDelete: SetNull)
   liveDeckGroups        LiveDeckGroup[]
   userRoles             UserRole[]
   userProgress          UserCourseProgress[]
@@ -585,9 +589,8 @@ model Module {
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   lessons Lesson[]
 
-  @@index([courseId, sessionNo])
-
   @@unique([courseId, orderIndex])
+  @@index([courseId, sessionNo])
   @@index([courseId])
 }
 
@@ -771,7 +774,7 @@ model ContentItem {
   isHidden   Boolean     @default(false)
   createdAt  DateTime    @default(now())
 
-  lesson          Lesson             @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  lesson          Lesson               @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   notes           Note[]
   annotations     LessonAnnotation[]
   flashcardStates FlashcardState[]
@@ -2118,10 +2121,10 @@ model TournamentMission {
 
   // Submission window — required when verifyMode is set; null means
   // "completion derived from behavior" (COURSE_LINKED).
-  submissionDeadline DateTime?
+  submissionDeadline  DateTime?
   // Cho nộp sau submissionDeadline (bài nộp lúc đó đánh dấu MissionSubmission.isLate).
   // Vẫn bị chặn khi giải đã kết thúc. Mặc định tắt: quá hạn là đóng như cũ.
-  allowLateSubmission Boolean @default(false)
+  allowLateSubmission Boolean   @default(false)
 
   // CUSTOM/EXTERNAL content payload.
   // Shape varies by missionType:
@@ -2854,7 +2857,7 @@ model ClassroomPoll {
   createdById String?
   createdBy   User?   @relation("PollCreator", fields: [createdById], references: [id], onDelete: SetNull)
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
   // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
   deletedAt DateTime?
@@ -2895,7 +2898,7 @@ model WordCloud {
 
   submissions WordCloudSubmission[]
 
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   // Thùng rác của Hoạt động nhanh: GV xoá thì chỉ đặt mốc này (ẩn khỏi lịch sử, học viên
   // không vào được nữa); cron dọn vĩnh viễn sau 30 ngày. Xem core-lms teaching-tools/quick-activity-trash.ts.
   deletedAt DateTime?
@@ -3687,15 +3690,15 @@ model OralExamMaterial {
 // `embedding` là Unsupported vì Prisma Client chưa có kiểu vector native —
 // đọc/ghi qua raw SQL (packages/core-feedback/src/oralExam/).
 model OralExamMaterialChunk {
-  id         String                       @id @default(uuid())
-  materialId String
-  chunkIndex Int
-  chunkText  String                       @db.Text
-  embedding  Unsupported("vector(1536)")?
+  id             String                       @id @default(uuid())
+  materialId     String
+  chunkIndex     Int
+  chunkText      String                       @db.Text
+  embedding      Unsupported("vector(1536)")?
   // Model đã sinh `embedding`. Vector của hai model không so sánh được, nên tìm kiếm chỉ xét chunk cùng
   // model với model hiện hành; NULL = chưa có vector (lưu khi chưa cấu hình embeddings).
   embeddingModel String?
-  createdAt  DateTime                     @default(now())
+  createdAt      DateTime                     @default(now())
 
   material OralExamMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
@@ -4306,6 +4309,8 @@ model CourseSection {
   // FeedbackDelivery.generationContext lúc sinh, nên chuyển lớp giữa kỳ không
   // viết lại lịch sử.
   feedbackVariant FeedbackVariant @default(personalized)
+  // CENTER C4 — tự gửi tổng kết chung cho cả lớp khi giáo viên kết thúc buổi. Mặc định bật.
+  autoSendSummary Boolean         @default(true)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
@@ -4401,18 +4406,88 @@ model ClassMeeting {
   makeupOfId       String?
   // true = tạo tay (dạy bù) hoặc đã sửa lẻ: áp lại kế hoạch không được sinh lại hay xoá buổi này.
   locked           Boolean            @default(false)
+  // CENTER C4 — kết thúc buổi: status = held, ghi ai đóng và khi nào; `summary` là bản chụp tổng kết
+  // lúc đóng (email và trong app dùng chung một nội dung).
+  closedAt         DateTime?
+  closedById       String?
+  summary          Json?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
-  section        CourseSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  plannedTeacher User?          @relation("ClassMeetingPlannedTeacher", fields: [plannedTeacherId], references: [id], onDelete: SetNull)
-  makeupOf       ClassMeeting?  @relation("ClassMeetingMakeup", fields: [makeupOfId], references: [id], onDelete: SetNull)
-  makeups        ClassMeeting[] @relation("ClassMeetingMakeup")
-  attendance     StudentAttendance[]
+  section           CourseSection            @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  plannedTeacher    User?                    @relation("ClassMeetingPlannedTeacher", fields: [plannedTeacherId], references: [id], onDelete: SetNull)
+  makeupOf          ClassMeeting?            @relation("ClassMeetingMakeup", fields: [makeupOfId], references: [id], onDelete: SetNull)
+  makeups           ClassMeeting[]           @relation("ClassMeetingMakeup")
+  attendance        StudentAttendance[]
+  summaryDeliveries MeetingSummaryDelivery[]
+  notes             MeetingStudentNote[]
 
   @@index([sectionId, startsAt])
   @@index([plannedTeacherId, startsAt])
   @@map("ClassMeeting")
+}
+
+enum MeetingMailStatus {
+  sent
+  failed
+  skipped_optout
+  skipped_no_email
+}
+
+// CENTER C4 — mỗi (buổi, học viên) nhiều nhất một email tổng kết; chỗ này là khoá idempotent.
+model MeetingSummaryDelivery {
+  meetingId String
+  userId    String
+  status    MeetingMailStatus
+  error     String?
+  attempts  Int               @default(1)
+  sentAt    DateTime?
+  updatedAt DateTime          @updatedAt
+
+  meeting ClassMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User         @relation("MeetingSummaryUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, userId])
+  @@index([userId])
+}
+
+enum MeetingNoteStatus {
+  draft
+  approved
+  sent
+}
+
+// CENTER C4 — nhận xét cá nhân sau buổi. Bản nháp do AI hoặc mẫu soạn, giáo viên duyệt rồi mới gửi;
+// bản đã gửi không sửa (muốn đính chính thì tạo bản mới, correctionOfId trỏ về bản cũ).
+model MeetingStudentNote {
+  id                 String            @id @default(uuid())
+  meetingId          String
+  userId             String
+  status             MeetingNoteStatus @default(draft)
+  body               String            @db.Text
+  // Ghi chú nhanh của giáo viên, đã đưa vào lời nhắc và được giữ nguyên ý trong body.
+  teacherHint        String?           @db.Text
+  // rule_template | llm | manual (giáo viên tự viết hoặc sửa tay hoàn toàn).
+  source             String
+  // Dữ kiện thật dùng để soạn (không mang nhận xét của học viên khác); phục vụ kiểm tra lại.
+  facts              Json?
+  correctionOfId     String?
+  draftedById        String?
+  draftedAt          DateTime          @default(now())
+  approvedAt         DateTime?
+  approvedById       String?
+  sentAt             DateTime?
+  sendAttempts       Int               @default(0)
+  sendError          String?
+  // FeedbackDelivery sinh ra khi gửi (mang toạ độ SSMMD).
+  feedbackDeliveryId String?           @unique
+  updatedAt          DateTime          @updatedAt
+
+  meeting ClassMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User         @relation("MeetingNoteStudent", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([meetingId, userId])
+  @@index([userId, sentAt])
 }
 
 // CENTER C3 — Giáo trình dựng sẵn. Một gói là một khoá do quản trị soạn, mỗi chương = giáo án của một
@@ -5352,25 +5427,25 @@ enum LiveSlideType {
 }
 
 model LiveDeck {
-  id        String   @id @default(uuid())
-  userId    String
-  title     String
+  id            String  @id @default(uuid())
+  userId        String
+  title         String
   // Giao diện slide cho cả bài giảng — id trong limio-live/slideThemes.ts.
-  theme     String   @default("white")
+  theme         String  @default("white")
   // Thương hiệu của bài giảng (logo + màu): { logoUrl?, logoPos, logoSize, logoShow, color? }, chuẩn hoá bởi
   // apps/web/src/lib/limioLiveBrand.ts. Null = chưa đặt (slide hiển thị đúng theo giao diện).
-  brand     Json?
+  brand         Json?
   // true = bài giảng này KHÔNG dùng thương hiệu nào (kể cả của trường). false + brand null = dùng của trường.
-  brandOff  Boolean  @default(false)
+  brandOff      Boolean @default(false)
   // Mẫu thương hiệu giảng viên chọn cho bài này khi dùng thương hiệu của trường (mã trong limioLiveBrand.brandTemplates);
   // null = mẫu mặc định của trường.
   brandTemplate String?
   // Hoa văn trang trí của cả bài (mã trong apps/web/src/lib/limioLiveMotifs.ts): null = tự động (suy từ mã bài),
   // "none" = không dùng, hoặc một hoa văn chủ đạo. Slide có thể chọn riêng qua config.motif.
-  motif     String?
+  motif         String?
   // Nhóm chứa bài giảng (tuỳ chọn, tối đa 1 nhóm). Xoá nhóm thì bài giảng chỉ
   // mất nhóm, không mất bài.
-  groupId   String?
+  groupId       String?
 
   // Bài giảng sinh từ tài liệu (AI): dàn ý là bước giữa "tài liệu gốc" và "slide cuối".
   // Cả bốn cột null với bài giảng soạn tay. outlineConfirmedAt = giảng viên đã xem và
@@ -5379,29 +5454,29 @@ model LiveDeck {
   outlineMinutes     Int?
   outlineConfirmedAt DateTime?
   // Văn bản trích từ tài liệu gốc (giữ lại để sinh lại một phần); chỉ chủ bài giảng đọc được.
-  sourceName String?
-  sourceText String? @db.Text
+  sourceName         String?
+  sourceText         String?   @db.Text
   // Nguồn của bài AI soạn: "document" (tài liệu tải lên/dán), "topic" (mô tả chủ đề, AI dùng kiến thức chung),
   // "topic_web" (mô tả chủ đề kèm trang tìm trên internet). Null = bài cũ hoặc soạn tay; bài cũ có dàn ý coi như "document".
-  sourceKind String?
+  sourceKind         String?
   // Mức "topic_web": các trang đã đọc [{ n, title, url }] theo đúng số [n] trong sourceText. Mảng rỗng = có bật tìm
   // nguồn nhưng không tìm được trang nào (bài rơi về "topic"); null = không tìm nguồn.
-  sourceRefs Json?
+  sourceRefs         Json?
   // Bài nhập từ file trình chiếu (.pptx): { format: "pptx", fileName, slides: [...] } — chữ, ghi chú giảng, hình đã lưu,
   // bảng, biểu đồ của từng slide gốc (apps/web/src/lib/limioLivePptx.ts). Tạo slide dựng từ cột này, không đọc lại file.
   // Null = bài không nhập từ file trình chiếu.
-  importSource Json?
+  importSource       Json?
   // Ngôn ngữ nội dung slide ("vi", "en", "zh"... — DECK_LANGUAGES ở shared-types): AI viết và chữ hệ thống trên slide theo
   // ngôn ngữ này. Ghi lúc tạo bài (nhận từ nguồn), giảng viên đổi ở menu Giao diện. Null = chưa xác định (bài cũ, hoặc nguồn
   // quá ngắn): lần đầu cần dùng sẽ nhận từ chữ của slide rồi ghi lại (docs/tieu-chi/ngon-ngu-slide.md).
-  language String?
+  language           String?
   // Khung hình của các ô hình trong slide Chữ và hình ("round", "circle", "arch", "hex", "blob", "leaf", "offset" —
   // IMAGE_FRAMES ở apps/web/src/lib/limioLiveImageStyle.ts). Null = tự động theo hoa văn chủ đạo của bài.
-  imageFrame String?
+  imageFrame         String?
   // Yêu cầu của giảng viên đi cùng tài liệu (mô tả trong ô "Tạo bài giảng"): người học, trọng tâm, cách dạy. AI làm theo
   // khi soạn dàn ý, tạo slide, bổ sung tương tác; kiến thức vẫn chỉ lấy từ tài liệu. Null = không có
   // (docs/tieu-chi/tao-bai-giang-mot-o.md, M9).
-  sourceIntent String? @db.Text
+  sourceIntent       String?   @db.Text
 
   // Link xem chỉ đọc /bai-giang/<shareCode>: ai có link cũng xem được, không cần đăng nhập. Null = không chia sẻ.
   // Tạo link mới = thay mã (link cũ chết ngay). Bản sao bài giảng không mang theo mã này.

@@ -255,6 +255,12 @@ export const LearningEventType = {
   // CENTER C3 — giáo trình dựng sẵn. Subject là giảng viên thao tác.
   CoursePackUsed: "course.pack.used",
   CoursePackUpdated: "course.pack.updated",
+  // CENTER C4 — kết thúc buổi, tổng kết gửi lớp, nhận xét cá nhân. Subject là giảng viên thao tác;
+  // payload chỉ mang id và số liệu, KHÔNG mang chữ của nhận xét (theo mẫu assistant.question.asked).
+  ClassMeetingClosed: "class.meeting.closed",
+  MeetingSummarySent: "meeting.summary.sent",
+  MeetingNoteDrafted: "meeting.note.drafted",
+  MeetingNoteSent: "meeting.note.sent",
 } as const;
 
 export type LearningEventType =
@@ -949,6 +955,44 @@ export interface AttendanceStudentMarkedPayload {
   previousStatus: AttendanceStatusValue | null;
   /** Giáo viên thao tác. */
   markedById: string;
+}
+
+// ── CENTER C4 — tổng kết buổi và nhận xét ────────────────────────────────
+
+export interface ClassMeetingClosedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Buổi có giáo án khi đóng hay không (tổng kết chỉ có giờ buổi sau và bài tập khi false). */
+  hasPlan: boolean;
+}
+
+export interface MeetingSummarySentPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Kết quả của lần gửi này (không tính người đã nhận ở lần trước). */
+  sent: number;
+  failed: number;
+  skipped: number;
+}
+
+export interface MeetingNoteDraftedPayload {
+  meetingId: string;
+  noteId: string;
+  /** rule_template | llm — nguồn của bản nháp. */
+  source: string;
+  /** Chỉ độ dài, không mang chữ nhận xét. */
+  bodyLength: number;
+}
+
+export interface MeetingNoteSentPayload {
+  meetingId: string;
+  noteId: string;
+  /** Học viên nhận (người nhận nhận xét, không phải chủ thể event). */
+  learnerId: string;
+  bodyLength: number;
+  correction: boolean;
 }
 
 // ── CENTER C3 — giáo trình dựng sẵn ──────────────────────────────────────
