@@ -52,7 +52,7 @@ COURTHOUSE_IMG = (
 )
 
 LESSON = {
-    "title": "Bài 1 · AI trả lời trôi chảy không có nghĩa là đúng",
+    "title": "Bài 1 · Ảo giác AI: trôi chảy chưa chắc đúng",
     "durationMin": 15,
     "description": (
         "Bài học giải thích vì sao công cụ AI trò chuyện có thể tạo ra số liệu và nguồn không có thật mà vẫn nghe "

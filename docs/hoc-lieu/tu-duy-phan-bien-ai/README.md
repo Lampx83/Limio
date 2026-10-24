@@ -43,18 +43,18 @@ Hai module, mỗi module ba bài. Bài nào cũng theo một khuôn:
 
 ## Module 1 · Đọc thông tin trong thời AI
 
-**Bài 1 · AI trả lời trôi chảy không có nghĩa là đúng** (khoảng 15 phút — bài học thử)
+**Bài 1 · Ảo giác AI: trôi chảy chưa chắc đúng** (khoảng 15 phút — bài học thử)
 - Tình huống: hỏi AI một số liệu, nhận câu trả lời tự tin kèm một nguồn không tồn tại.
 - Vì sao AI có thể "bịa": nó sinh chữ nghe hợp lý, không tra sự thật; độ trôi chảy không đo độ chính xác.
 - Ba loại câu trả lời cần kiểm trước khi dùng: số liệu cụ thể, trích dẫn và nguồn, chuyện mới xảy ra.
 - Thói quen một phút: hỏi nguồn → tự mở nguồn → đối chiếu đúng câu được trích.
 
-**Bài 2 · Tách một lập luận thành ba mảnh**
+**Bài 2 · Cấu trúc của một lập luận**
 - Khẳng định, bằng chứng, suy luận ngầm — mảnh thứ ba là chỗ hay hỏng nhất.
 - Áp lên câu trả lời của AI, lên một bài đăng trên mạng, lên ý kiến của chính mình.
 - Năm câu hỏi kiểm tra dùng hằng ngày (dựa trên Module 3 khoá Kỹ năng mềm).
 
-**Bài 3 · Ảnh, video, tin lan truyền: kiểm trong vài phút**
+**Bài 3 · Kiểm chứng ảnh, video và tin lan truyền**
 - Ảnh và giọng nói giả giờ rẻ và nhanh; dấu hiệu bằng mắt ngày càng ít đáng tin.
 - Đọc ngang (lateral reading) theo nghiên cứu của nhóm Stanford History Education Group: rời trang để hỏi
   người khác nói gì về nguồn này.
@@ -62,18 +62,18 @@ Hai module, mỗi module ba bài. Bài nào cũng theo một khuôn:
 
 ## Module 2 · Làm việc cùng AI
 
-**Bài 4 · Hỏi AI để nhận câu trả lời kiểm chứng được**
+**Bài 4 · Đặt câu hỏi cho AI hiệu quả**
 - Đưa bối cảnh, nói rõ mục đích, yêu cầu nêu giả định và mức độ chắc chắn.
 - Bắt AI phản biện chính câu trả lời của nó; hỏi cách giải thích khác.
 - Biết khi nào nên tra nguồn gốc thay vì hỏi AI.
 
-**Bài 5 · Thiên kiến của AI và của chính mình**
+**Bài 5 · Thiên kiến khi dùng AI**
 - Thiên kiến xác nhận: ta tìm thứ ủng hộ điều đã tin.
 - AI có xu hướng chiều theo người hỏi: câu hỏi dẫn dắt nhận câu trả lời dẫn dắt.
 - Thiên kiến tin máy (automation bias): tin kết quả vì nó do máy đưa ra.
 - Cách hỏi trung lập và cách tự kiểm mình.
 
-**Bài 6 · Dùng AI mà vẫn tự nghĩ**
+**Bài 6 · Học cùng AI mà vẫn tự suy nghĩ**
 - Giao việc cho AI giúp gì và làm mất gì: phần ta không tự làm thì ta không học được.
 - Việc nên và không nên giao: tóm tắt để đọc nhanh khác với nhờ viết hộ bài phải tự viết.
 - Quy tắc "nghĩ trước, hỏi sau, kiểm cuối"; trung thực về việc đã dùng AI.

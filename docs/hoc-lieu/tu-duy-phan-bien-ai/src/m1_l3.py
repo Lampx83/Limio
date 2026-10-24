@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Bài 3: Ảnh, video và tin lan truyền, kiểm chứng trong vài phút.
+"""Bài 3 · Kiểm chứng ảnh, video và tin lan truyền.
 
 Bài học chuyển trọng tâm từ câu trả lời của AI sang nội dung lan truyền trên mạng: ảnh, giọng nói và video do AI
 tạo ra, ảnh thật bị gắn sai ngữ cảnh, cách đọc ngang của người kiểm chứng chuyên nghiệp và bốn bước SIFT.
@@ -54,7 +54,7 @@ PHOTO_PAIR = (
 )
 
 LESSON = {
-    "title": "Bài 3 · Ảnh, video và tin lan truyền: kiểm chứng trong vài phút",
+    "title": "Bài 3 · Kiểm chứng ảnh, video và tin lan truyền",
     "durationMin": 20,
     "description": (
         "Bài học giải thích vì sao mắt thường không còn đủ để nhận ra ảnh, giọng nói và video giả, giới thiệu cách "
@@ -621,7 +621,7 @@ Hãy nghĩ trong mười giây xem bạn sẽ làm gì đầu tiên. Nhiều ng�
         },
     ],
     "podcast": {
-        "title": "Ảnh này có thật không? Chuyện kiểm chứng tin lan truyền",
+        "title": "Tập 3 · Ảnh này có thật không? Chuyện kiểm chứng tin lan truyền",
         "durationMin": 6,
         "hosts": {"A": "Khoa", "B": "Linh"},
         "turns": [

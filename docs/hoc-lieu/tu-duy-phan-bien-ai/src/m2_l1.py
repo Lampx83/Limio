@@ -162,7 +162,7 @@ FEEDBACK_TEMPLATES = [
 ]
 
 LESSON = {
-    "title": "Bài 4 · Hỏi AI để nhận câu trả lời kiểm chứng được",
+    "title": "Bài 4 · Đặt câu hỏi cho AI hiệu quả",
     "durationMin": 20,
     "description": (
         "Bài học hướng dẫn cách viết câu lệnh cho AI sao cho câu trả lời vừa sát với nhu cầu vừa dễ kiểm chứng: đưa bối "
@@ -702,7 +702,7 @@ Hãy thử liệt kê những điều AI cần biết để trả lời tốt h�
         },
     ],
     "podcast": {
-        "title": "Podcast · Hỏi sao cho AI trả lời được việc",
+        "title": "Tập 4 · Hỏi sao cho AI trả lời được việc",
         "durationMin": 6,
         "hosts": {"A": "Khoa", "B": "Linh"},
         "turns": [

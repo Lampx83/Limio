@@ -228,7 +228,7 @@
       "description": "Module đầu tiên giúp bạn kiểm chứng một câu trả lời của AI trước khi dùng, tách một lập luận thành các phần để thấy chỗ yếu, và kiểm chứng một bức ảnh hay một tin lan truyền trong vài phút.",
       "lessons": [
         {
-          "title": "Bài 1 · AI trả lời trôi chảy không có nghĩa là đúng",
+          "title": "Bài 1 · Ảo giác AI: trôi chảy chưa chắc đúng",
           "durationMin": 15,
           "description": "Bài học giải thích vì sao công cụ AI trò chuyện có thể tạo ra số liệu và nguồn không có thật mà vẫn nghe rất đáng tin, chỉ ra ba loại câu trả lời cần kiểm chứng trước khi dùng, và giới thiệu một quy trình kiểm chứng ngắn có thể thực hiện trong khoảng một phút.",
           "look": {
@@ -712,7 +712,7 @@
           }
         },
         {
-          "title": "Bài 2 · Tách một lập luận thành ba mảnh",
+          "title": "Bài 2 · Cấu trúc của một lập luận",
           "durationMin": 20,
           "description": "Bài học giới thiệu mô hình lập luận Toulmin để tách một phát biểu thành khẳng định, bằng chứng và lý lẽ nối, dùng thang suy luận của Chris Argyris để giải thích vì sao con người thường nhảy tới kết luận, và áp dụng năm câu hỏi kiểm tra lên câu trả lời của AI, bài đăng trên mạng và ý kiến của chính người học.",
           "look": {
@@ -1090,7 +1090,7 @@
             }
           ],
           "podcast": {
-            "title": "Podcast · Bài 2: Lời khuyên nghe có lý, nhưng giả định nằm ở đâu?",
+            "title": "Tập 2 · Lời khuyên nghe có lý, nhưng giả định nằm ở đâu?",
             "durationMin": 6,
             "hosts": {
               "A": "Khoa",
@@ -1217,7 +1217,7 @@
           }
         },
         {
-          "title": "Bài 3 · Ảnh, video và tin lan truyền: kiểm chứng trong vài phút",
+          "title": "Bài 3 · Kiểm chứng ảnh, video và tin lan truyền",
           "durationMin": 20,
           "description": "Bài học giải thích vì sao mắt thường không còn đủ để nhận ra ảnh, giọng nói và video giả, giới thiệu cách đọc ngang mà người kiểm chứng chuyên nghiệp sử dụng, và hướng dẫn bốn bước SIFT cùng kỹ thuật tìm ảnh ngược để kiểm chứng một tin lan truyền trong vài phút.",
           "look": {
@@ -1603,7 +1603,7 @@
             }
           ],
           "podcast": {
-            "title": "Ảnh này có thật không? Chuyện kiểm chứng tin lan truyền",
+            "title": "Tập 3 · Ảnh này có thật không? Chuyện kiểm chứng tin lan truyền",
             "durationMin": 6,
             "hosts": {
               "A": "Khoa",
@@ -1724,7 +1724,7 @@
       "description": "Module thứ hai giúp bạn đặt câu hỏi cho AI để nhận về câu trả lời kiểm chứng được, nhận ra thiên kiến của AI và của chính mình, và dùng AI để học nhanh hơn mà vẫn giữ được phần tự suy nghĩ.",
       "lessons": [
         {
-          "title": "Bài 4 · Hỏi AI để nhận câu trả lời kiểm chứng được",
+          "title": "Bài 4 · Đặt câu hỏi cho AI hiệu quả",
           "durationMin": 20,
           "description": "Bài học hướng dẫn cách viết câu lệnh cho AI sao cho câu trả lời vừa sát với nhu cầu vừa dễ kiểm chứng: đưa bối cảnh, nói rõ mục đích và người đọc, yêu cầu AI nêu giả định, mức độ chắc chắn và nguồn, bắt AI tự phản biện, và nhận biết khi nào nên tra nguồn gốc thay vì hỏi AI.",
           "look": {
@@ -2083,7 +2083,7 @@
             }
           ],
           "podcast": {
-            "title": "Podcast · Hỏi sao cho AI trả lời được việc",
+            "title": "Tập 4 · Hỏi sao cho AI trả lời được việc",
             "durationMin": 6,
             "hosts": {
               "A": "Khoa",
@@ -2198,7 +2198,7 @@
           }
         },
         {
-          "title": "Bài 5 · Thiên kiến của AI và của chính mình",
+          "title": "Bài 5 · Thiên kiến khi dùng AI",
           "durationMin": 20,
           "description": "Bài học giải thích thiên kiến xác nhận và thiên kiến tin máy ở người dùng, xu hướng chiều theo người hỏi và thiên kiến trong dữ liệu huấn luyện ở mô hình AI, cách hai phía khuếch đại lẫn nhau, và giới thiệu cách đặt câu hỏi trung lập cùng năm bước tự kiểm mình.",
           "look": {
@@ -2550,7 +2550,7 @@
             }
           ],
           "podcast": {
-            "title": "Khi AI chỉ nói điều bạn muốn nghe",
+            "title": "Tập 5 · Khi AI chỉ nói điều bạn muốn nghe",
             "durationMin": 6,
             "hosts": {
               "A": "Khoa",
@@ -2673,7 +2673,7 @@
           }
         },
         {
-          "title": "Bài 6 · Dùng AI mà vẫn tự nghĩ",
+          "title": "Bài 6 · Học cùng AI mà vẫn tự suy nghĩ",
           "durationMin": 20,
           "description": "Bài cuối khoá giải thích vì sao việc giao cho AI phần suy nghĩ có thể làm bạn hoàn thành bài nhanh hơn nhưng học được ít hơn, phân biệt việc nên và không nên giao cho AI, giới thiệu quy tắc “nghĩ trước, hỏi sau, kiểm cuối” và cách trung thực về việc đã dùng AI, rồi nhìn lại những gì cả khoá học đã trang bị.",
           "look": {
@@ -3088,7 +3088,7 @@
             }
           ],
           "podcast": {
-            "title": "Podcast Bài 6 · Dùng AI mà vẫn tự nghĩ",
+            "title": "Tập 6 · Học cùng AI mà vẫn tự suy nghĩ",
             "durationMin": 6,
             "hosts": {
               "A": "Khoa",
