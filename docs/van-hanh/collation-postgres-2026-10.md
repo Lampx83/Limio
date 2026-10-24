@@ -1,6 +1,6 @@
 # Lệch collation Postgres trên server 224 (2026-10-23)
 
-> Trạng thái: **chờ duyệt**. Chưa có lệnh ghi nào được chạy trên prod. Mọi lệnh dưới đây do thầy/cô tự chạy trong Terminal qua SSH.
+> Trạng thái (2026-10-24): **đã REINDEX xong trên server 224** (bước 4–6, xem "Kết quả thực hiện" cuối mục 3). Bước 3 (ghim `0.8.7-pg15-bookworm` + tắt watchtower) đã sửa trong compose prod/dev và CI, **chưa push**; có hiệu lực ở lần deploy kế tiếp (Postgres khởi động lại 10–30 giây trên cả 224 và AWS). **Còn lại:** push vào giờ vắng, kiểm server AWS, sửa các DB dev bị lệch.
 > File kiểm tra chỉ đọc: [`kiem-tra-collation-prod.sql`](kiem-tra-collation-prod.sql).
 
 ## 1. Triệu chứng
@@ -34,10 +34,33 @@ Quay về `pg15-trixie` thì glibc khớp lại 2.41 với lúc tạo DB, nghe c
 
 ## 3. Rủi ro
 
-- Trên dev có **538 index** dùng collation của hệ điều hành (303 index unique), vì gần như mọi khoá chính và khoá ngoại là chuỗi (id dạng cuid), cộng với `User.email`, `slug`, mã thi, `LearningEvent.eventKey`… Prod có cùng schema nên con số tương đương.
+- Trên prod có **531 index** dùng collation của hệ điều hành (298 index unique, 180 bảng, tổng 72 MB), vì gần như mọi khoá chính và khoá ngoại là chuỗi (id dạng cuid), cộng với `User.email`, `slug`, mã thi, `LearningEvent.eventKey`…
 - Khi index lệch thứ tự, hậu quả **âm thầm**: tìm theo khoá có thể trượt (ví dụ không tìm thấy user theo email ⇒ có thể tạo tài khoản trùng), ràng buộc unique có thể để lọt bản ghi trùng, kết quả sắp xếp sai vị trí.
 - Mức thật có thể thấp: thay đổi lớn về collation của glibc là ở bản 2.28; dữ liệu khoá của Limio phần lớn là chữ thường ASCII, chữ số và vài dấu câu. Nhưng chưa có bằng chứng giữa 2.36 và 2.41 không đổi gì, nên phải đo (mục 4 và 5 của file SQL) và sửa bằng REINDEX bất kể kết quả.
 - Bản backup `pg_dump` hằng đêm là bản **logic** (dữ liệu dạng SQL), không chứa index, nên **không bị ảnh hưởng** và là đường lui an toàn.
+
+### Kết quả kiểm prod (2026-10-24, bước 1)
+
+| Mục | Kết quả |
+|---|---|
+| 1. Phiên bản | Lúc tạo **2.41**, hệ điều hành **2.36**; PostgreSQL 15.19 trên Debian 12 (`pgdg12`); DB 173 MB |
+| 2. Extension | `pgcrypto`, `plpgsql`, `vector 0.8.6`; **chưa có amcheck** |
+| 3. Index bị ảnh hưởng | 531 index (298 unique) trên 180 bảng, tổng 72 MB. `LearningEvent` chiếm 47 MB (116 nghìn dòng) |
+| 4. Trùng trong index unique | **0/298**: chưa có bản ghi trùng lọt qua ràng buộc unique |
+| 5. amcheck | Bỏ qua (chưa cài) |
+| 7. Giờ thấp điểm | 01:00–05:59 khoảng 40–57 sự kiện/giờ; thấp nhất 03:00–05:59 (khoảng 40/giờ). Đông nhất 12:00 (367/giờ) và 00:00 (210/giờ) |
+
+Không có dữ liệu trùng nên REINDEX sẽ không vấp lỗi unique, và chưa cần dọn dữ liệu trước. Cấu trúc index chưa được soát (chưa cài amcheck), nên vẫn chưa biết index đã lệch thật hay chưa; REINDEX vẫn cần làm.
+
+### Kết quả thực hiện (2026-10-24, khoảng 19:38 giờ Việt Nam, lúc không có người dùng)
+
+Thầy/cô yêu cầu làm ngay; Claude chạy qua kết nối SSH thầy/cô đã đăng nhập.
+
+1. **Sao lưu:** `feedbackme_manual_20261024_123802_truoc-reindex-collation` (`/home/codelab/feedbackme-backup-data/manual/`): dump 12 MB đã qua `pg_restore --list`, 180 bảng, `User=854 Course=46 Lesson=587 LearningEvent=125865`, đã chép ra NAS (`offsite=ok`).
+2. **REINDEX + REFRESH:** chạy file [`reindex-collation-prod.sql`](reindex-collation-prod.sql). `REINDEX DATABASE feedbackme` mất **4,1 giây** cho cả DB; `REFRESH COLLATION VERSION` báo `changing version from 2.41 to 2.36`.
+3. **Kiểm lại:** kết nối không còn cảnh báo; lúc tạo = hệ điều hành = 2.36; 0/298 index unique có giá trị trùng; `/api/health` trả 200, cả 3 replica web vẫn healthy. Tổng cỡ index giảm từ 72 MB xuống 49 MB và DB từ 173 MB xuống 149 MB, vì REINDEX cũng dọn phần index phình.
+
+Bước 3 (ghim image) đã có trong mã nhưng chỉ có hiệu lực sau khi push và deploy. Tới lúc đó watchtower vẫn có thể kéo bản `pg15` mới; việc này không gây lệch lại chừng nào tag `pg15` còn là bookworm.
 
 ## 4. Các bước
 
@@ -113,7 +136,7 @@ Lưu ý khi đẩy commit này lên `main`:
 
 ### Bước 4 — Backup ngay trước khi REINDEX (giờ thấp điểm)
 
-Chọn giờ theo mục 7 của file SQL, tránh 02:30 (backup hằng đêm) và các ca thi đã lên lịch.
+Chọn giờ theo mục 7 của file SQL, tránh 02:30 (backup hằng đêm) và các ca thi đã lên lịch. Theo số đo ngày 2026-10-24, khung **03:00–05:59** vắng nhất. Vì REINDEX chỉ mất vài giây đến dưới 1 phút, khung 18:00–19:59 (khoảng 65–80 sự kiện/giờ, tức hơn 1 sự kiện/phút) cũng chấp nhận được nếu không tiện thức khuya.
 
 ```bash
 ssh -p 8901 codelab@101.96.66.224 '/home/codelab/services/backup/feedbackme-backup.sh manual truoc-reindex-collation; tail -20 /home/codelab/feedbackme-backup-data/backup.log'
@@ -167,13 +190,13 @@ Rồi chạy chính file đó trên server AWS (bằng khoá `.pem`, user `ubunt
 
 `REINDEX` (bản thường, không CONCURRENTLY) xử lý **từng bảng một**. Trong lúc dựng index của một bảng: ghi vào bảng đó (INSERT/UPDATE/DELETE) phải chờ, và truy vấn cần dùng đúng index đang dựng cũng chờ. Các bảng khác vẫn chạy bình thường. Với catalog hệ thống, mọi truy vấn mới có thể khựng trong tích tắc.
 
-Số đo tham chiếu từ DB dev (cùng schema): DB 37 MB, 538 index bị ảnh hưởng, tổng cỡ index 12 MB, bảng lớn nhất `LearningEvent` có 1,7 MB index. Dựng lại B-tree cỡ này mất cỡ mili-giây đến dưới 1 giây mỗi bảng. Bản dump prod khoảng vài MB nên DB prod cũng ở cỡ hàng chục MB.
+Số đo prod (2026-10-24): DB 173 MB, 531 index bị ảnh hưởng, tổng cỡ index 72 MB. Bảng lớn nhất là `LearningEvent`: 116 nghìn dòng, bảng 45 MB, index 47 MB. Mọi bảng khác có index dưới 4 MB, nên dựng lại mất cỡ mili-giây mỗi bảng.
 
 | Việc | Ước lượng | Ai bị ảnh hưởng |
 |---|---|---|
 | Bước 3: tạo lại container Postgres | 10–30 giây | Mọi request cần DB, trên cả 224 và AWS |
-| Bước 5a: `REINDEX TABLE "LearningEvent"` | dưới 1–2 giây | Ghi sự kiện học phải chờ |
-| Bước 5b: `REINDEX DATABASE` | **dưới 1 phút** tổng cộng; mỗi bảng khoá dưới 1 giây | Ghi vào bảng đang được dựng |
+| Bước 5a: `REINDEX TABLE "LearningEvent"` | vài giây (47 MB index) | Ghi sự kiện học phải chờ |
+| Bước 5b: `REINDEX DATABASE` | **dưới 1 phút** tổng cộng; `LearningEvent` vài giây, mỗi bảng còn lại dưới 1 giây | Ghi vào bảng đang được dựng |
 | Bước 5c: `REFRESH COLLATION VERSION` | tức thì | Không ai |
 
 Số này là **ước lượng** (chưa đo REINDEX trên bản sao prod). Bước 5a chính là phép đo thật: nếu `LearningEvent` mất hơn 10 giây thì dừng, đối chiếu mục 6 của file SQL, và cân nhắc `REINDEX … CONCURRENTLY` (không chặn ghi, nhưng chậm hơn và phải chạy theo từng bảng). Cả cửa sổ bảo trì bước 4–6, kể cả backup và kiểm lại, nên dành **15 phút**.

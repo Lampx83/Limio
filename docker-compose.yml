@@ -11,10 +11,10 @@
 # không tự `docker compose up`/`pnpm db:up` riêng. Xem CLAUDE.md §6.
 services:
   postgres:
-    # A6.2 — pgvector/pgvector:pg15 = ảnh chính thức của postgres:15 gốc +
-    # extension "vector" cài sẵn. Tương thích ngược 100% — chỉ thêm binary,
-    # không đổi format dữ liệu, volume cũ mount lại bình thường.
-    image: pgvector/pgvector:pg15
+    # A6.2 — pgvector = postgres:15 + extension "vector" cài sẵn. Ghim cùng tag
+    # với docker-compose.prod.yml: đổi codename OS (bookworm/trixie) làm lệch
+    # collation glibc, phải REINDEX (docs/van-hanh/collation-postgres-2026-10.md).
+    image: pgvector/pgvector:0.8.7-pg15-bookworm
     restart: unless-stopped
     environment:
       POSTGRES_USER: feedbackme
