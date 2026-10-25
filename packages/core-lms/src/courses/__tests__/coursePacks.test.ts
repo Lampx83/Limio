@@ -13,6 +13,7 @@ import {
 } from "../coursePacks";
 import { cancelMeeting, getClassSchedule, listLearnerMeetings, listTeacherMeetings, setClassSchedule } from "../classSchedule";
 import { CourseAuthzError } from "../authz";
+import { getMeetingPlan, setMeetingPlan } from "../meetingPlan";
 import { createCourse } from "../courses";
 import { createCourseSection } from "../sections";
 import { createModule } from "../modules";
@@ -394,5 +395,29 @@ describe("getCoursePlan và cập nhật khi gói ra bản mới (C3.7)", () => 
 describe("lỗi", () => {
   it("CoursePackError mang mã", () => {
     expect(new CoursePackError("forbidden").code).toBe("forbidden");
+  });
+});
+
+describe("cập nhật giáo trình không làm mất kế hoạch tuỳ chỉnh của buổi (CENTER J9)", () => {
+  it("chương có bài đang nằm trong kế hoạch tuỳ chỉnh được bỏ qua và báo lý do; các chương khác vẫn cập nhật", async () => {
+    const { admin, src, packId } = await publishedPack("upd-plan");
+    const teacher = await makeTeacher("upd-plan");
+    const { courseId } = await usePack(teacher, packId);
+    const section = await createCourseSection(teacher, courseId, { name: "Lớp A" });
+    await setClassSchedule(teacher, section.id, { startDate: "2026-11-03", totalMeetings: 3, slots: [{ weekday: 2, startTime: "18:30", durationMin: 120 }] }, prisma, NOW);
+    const meetings = await prisma.classMeeting.findMany({ where: { sectionId: section.id }, orderBy: { startsAt: "asc" } });
+
+    // Buổi 1 được giáo viên chọn bài của chương 3.
+    const lesson3 = await prisma.lesson.findFirstOrThrow({ where: { module: { courseId, sessionNo: 3 } }, orderBy: { orderIndex: "asc" } });
+    await setMeetingPlan(teacher, meetings[0]!.id, { lessonIds: [lesson3.id] });
+
+    for (const i of [0, 1, 2]) await updateLesson(admin, src.lessonIds[i]![0]!, { title: `Từ vựng ${i + 1} (bản mới)` });
+    await releasePackVersion(admin, packId);
+    const res = await updateCourseFromPack(teacher, courseId, prisma, NOW);
+
+    expect(res.updatedSessions).toEqual([1, 2]);
+    expect(res.skipped).toEqual([{ sessionNo: 3, reason: "in_custom_plan" }]);
+    // Kế hoạch của buổi 1 vẫn còn đúng bài đã chọn.
+    expect((await getMeetingPlan(teacher, meetings[0]!.id)).lessons.map((l) => l.id)).toEqual([lesson3.id]);
   });
 });

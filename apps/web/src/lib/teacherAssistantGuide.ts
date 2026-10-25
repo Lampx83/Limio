@@ -64,6 +64,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "ke-hoach-giang-day",
+    title: "Kế hoạch giảng dạy: thêm bài vào từng buổi",
+    keywords: ["kế hoạch giảng dạy", "kế hoạch buổi", "thêm bài vào buổi", "giáo án buổi", "bài của buổi", "chủ đề buổi", "soạn giáo án", "gắn bài", "buổi dạy bù", "khoá tự tạo"],
+    destinationIds: ["teaching_schedule", "my_courses"],
+    body: `Sau khi lớp có lịch, ở trang lớp (tab "Lớp học", bấm "Lịch dạy" của lớp) mỗi buổi chưa huỷ có nút "Kế hoạch". Bấm vào thì soạn ngay dưới dòng buổi: "Thêm bài" mở cây chương và bài của khoá (có ô tìm, chọn nhiều bài một lần, bài đã có hiện "đã có"), mũi tên lên xuống đổi thứ tự, dấu X bỏ một bài, ô "Chủ đề buổi (không bắt buộc)" đặt tên cho buổi; xong bấm "Lưu kế hoạch". Khoá sao từ giáo trình thì mỗi buổi đã có sẵn bài của chương cùng số buổi (nhãn "Theo giáo trình"); lần đầu sửa, Limio chép danh sách đó thành danh sách riêng của buổi (nhãn "Đã tuỳ chỉnh") rồi mới thêm hoặc bớt, và bỏ hết bài thì buổi trống chứ không quay về giáo trình. Muốn quay về thì bấm "Đặt lại theo giáo trình". Khoá tự tạo (không có chương đánh số buổi) cũng gắn bài vào buổi được, kể cả buổi dạy bù. Danh sách gắn theo buổi nên huỷ hay thêm buổi không làm lệch. Một bài chỉ một lần trong một buổi nhưng được ở nhiều buổi, tối đa 30 bài mỗi buổi. Chỉ chủ khoá và đồng giảng viên sửa được; người chỉ dạy chỉ xem. Buổi đã kết thúc hoặc đã huỷ thì khoá. Tổng kết gửi lớp, nhận xét và lịch của học viên đều lấy từ kế hoạch này.`,
+    useCases: [
+      `Trung tâm tự soạn khoá, thầy/cô lập lịch xong rồi mở "Kế hoạch" của từng buổi để chọn đúng các bài sẽ dạy tuần đó.`,
+      `Tuần này lớp học chậm, thầy/cô thêm bài ôn tập vào buổi sau và bỏ bớt bài mới để giữ nhịp cho cả lớp.`,
+    ],
+  },
+  {
     id: "giao-trinh-dung-san",
     title: "Giáo trình dựng sẵn và giáo án theo từng buổi",
     keywords: ["giáo trình", "giáo trình dựng sẵn", "giáo án", "giáo án từng buổi", "soạn sẵn", "dạy ngay", "tiếng trung sơ cấp", "bản mới", "cập nhật giáo trình", "hôm nay dạy gì", "mẫu khoá học"],

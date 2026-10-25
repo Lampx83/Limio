@@ -14,7 +14,7 @@ import type { DbClient } from "../auth/tokens";
 import { emitEvent } from "../learning/events";
 import { sendTemplatedEmail, type SendTemplatedEmailInput } from "../email/templates";
 import { assertCanManageCourse, assertCanTeachMeeting } from "./teachingScope";
-import { loadSessionPlans } from "./sessionPlan";
+import { resolveMeetingPlans } from "./sessionPlan";
 
 export class MeetingSummaryError extends Error {
   constructor(
@@ -52,12 +52,18 @@ async function buildSummary(meetingId: string, db: DbClient): Promise<MeetingSum
   if (!m) throw new MeetingSummaryError("meeting_not_found");
   const courseId = m.section.courseId;
 
-  const plans = await loadSessionPlans([courseId], "learner", db);
-  const byNo = plans.get(courseId);
-  const plan = m.seq != null ? byNo?.get(m.seq) : undefined;
+  const nextMeeting = await db.classMeeting.findFirst({
+    where: { sectionId: m.sectionId, status: { not: "cancelled" }, startsAt: { gt: m.startsAt } },
+    orderBy: { startsAt: "asc" },
+  });
+  // Kế hoạch hiệu lực của buổi này và buổi sau: danh sách riêng nếu giáo viên đã tuỳ chỉnh (CENTER J), không thì chương
+  // giáo trình cùng số buổi (CENTER C3). Học viên chỉ nhận tên bài, đã lọc bài và chương ẩn.
+  const ref = (x: typeof m) => ({ id: x.id, seq: x.seq, status: x.status, courseId, planCustomized: x.planCustomized, planTopic: x.planTopic });
+  const plans = await resolveMeetingPlans([ref(m), ...(nextMeeting ? [ref(nextMeeting as typeof m)] : [])], "learner", db);
+  const plan = plans.get(m.id);
   const lessonIds = plan?.lessons.map((l) => l.id) ?? [];
 
-  const [vocabItems, assignments, nextMeeting, dueOverrides] = await Promise.all([
+  const [vocabItems, assignments, dueOverrides] = await Promise.all([
     lessonIds.length
       ? db.contentItem.findMany({
           where: { lessonId: { in: lessonIds }, type: "vocab_list", isHidden: false },
@@ -72,10 +78,6 @@ async function buildSummary(meetingId: string, db: DbClient): Promise<MeetingSum
           select: { id: true, title: true, dueAt: true },
         })
       : Promise.resolve([]),
-    db.classMeeting.findFirst({
-      where: { sectionId: m.sectionId, status: { not: "cancelled" }, startsAt: { gt: m.startsAt } },
-      orderBy: { startsAt: "asc" },
-    }),
     lessonIds.length
       ? db.assignmentSectionDue.findMany({ where: { sectionId: m.sectionId }, select: { assignmentId: true, dueAt: true } })
       : Promise.resolve([]),
@@ -113,7 +115,7 @@ async function buildSummary(meetingId: string, db: DbClient): Promise<MeetingSum
           startsAt: nextMeeting.startsAt.toISOString(),
           endsAt: nextMeeting.endsAt.toISOString(),
           room: nextMeeting.room,
-          planTitle: nextMeeting.seq != null ? (byNo?.get(nextMeeting.seq)?.title ?? null) : null,
+          planTitle: plans.get(nextMeeting.id)?.title ?? null,
         }
       : null,
   };

@@ -634,6 +634,7 @@ model Lesson {
   classroomSessions ClassroomSession[]
   drafts            LessonDraft[]
   narrations        LessonNarration[]
+  classMeetings     ClassMeetingLesson[]  @relation("LessonClassMeetings")
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
@@ -642,7 +643,7 @@ model Lesson {
 /// Lời giảng ("Nghe giảng") hoặc kịch bản podcast của một bài, cùng tệp âm thanh đã tạo từ nó
 /// (docs/tieu-chi/nghe-giang-podcast.md). Giọng tạo MỘT lần rồi mọi học viên nghe chung tệp.
 model LessonNarration {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   lessonId      String
   /// "lecture" (một giảng viên ảo, bám theo mục của bài) | "podcast" (hai người dẫn, theo lượt thoại).
   kind          String
@@ -651,10 +652,10 @@ model LessonNarration {
   /// Băm của `script`. Khác `generatedHash` = giọng đã cũ, học viên không thấy nút nghe cho tới khi tạo lại.
   scriptHash    String
   /// "script" (mới có chữ) | "generating" | "ready" | "failed".
-  status        String   @default("script")
+  status        String    @default("script")
   /// 0–100 khi đang tạo giọng.
-  progress      Int      @default(0)
-  error         String?  @db.Text
+  progress      Int       @default(0)
+  error         String?   @db.Text
   /// Khoá lưu tệp trong lớp `private` (chỉ phục vụ qua tuyến kiểm quyền theo bài, không có đường dẫn công khai).
   audioKey      String?
   contentType   String?
@@ -666,8 +667,8 @@ model LessonNarration {
   voices        Json?
   generatedHash String?
   generatedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
@@ -4431,6 +4432,22 @@ enum ClassMeetingStatus {
 // Một buổi học cụ thể. `seq` là số thứ tự buổi trong giáo án: chỉ buổi KHÔNG huỷ mới có,
 // đánh theo thời gian từ 1. Huỷ một buổi thì các buổi sau tự lùi số, buổi dạy bù chen vào đúng
 // vị trí theo thời gian — giáo án luôn đi theo thứ tự dạy thật.
+// CENTER J — bài (lesson) nằm trong kế hoạch giảng dạy của một buổi, có thứ tự. Gắn theo BUỔI chứ không theo số buổi,
+// nên huỷ hay thêm buổi không làm lệch. Xoá bài khỏi khoá thì dòng này tự biến theo.
+model ClassMeetingLesson {
+  meetingId  String
+  lessonId   String
+  orderIndex Int
+  addedById  String?
+  createdAt  DateTime @default(now())
+
+  meeting ClassMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  lesson  Lesson       @relation("LessonClassMeetings", fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([meetingId, lessonId])
+  @@index([lessonId])
+}
+
 model ClassMeeting {
   id               String             @id @default(uuid())
   sectionId        String
@@ -4450,6 +4467,10 @@ model ClassMeeting {
   closedAt         DateTime?
   closedById       String?
   summary          Json?
+  // CENTER J — kế hoạch giảng dạy của buổi. false = theo giáo trình (chương sessionNo = seq); true = dùng danh sách
+  // riêng ở `planLessons` (kể cả rỗng) cho tới khi giáo viên "Đặt lại theo giáo trình". `planTopic` là chủ đề buổi.
+  planCustomized   Boolean            @default(false)
+  planTopic        String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
@@ -4458,6 +4479,7 @@ model ClassMeeting {
   makeupOf          ClassMeeting?            @relation("ClassMeetingMakeup", fields: [makeupOfId], references: [id], onDelete: SetNull)
   makeups           ClassMeeting[]           @relation("ClassMeetingMakeup")
   attendance        StudentAttendance[]
+  planLessons       ClassMeetingLesson[]
   summaryDeliveries MeetingSummaryDelivery[]
   notes             MeetingStudentNote[]
 

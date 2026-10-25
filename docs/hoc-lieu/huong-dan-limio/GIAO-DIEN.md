@@ -457,6 +457,16 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   (mọi lần đặt và đổi, kèm giá trị cũ và mới); mục tiêu đã đóng có **"Theo đuổi lại"**; **"Mục tiêu chung"** không gắn khoá chỉ chính học
   viên xem. Mục tiêu bị xoá hẳn khi xoá tài khoản và có trong bản xuất dữ liệu cá nhân. Chưa có: cảnh báo học viên lệch kế hoạch hai tuần
   liền, gợi ý bài luyện theo mục tiêu, kết quả thi thử trong tiến độ.
+- **Kế hoạch giảng dạy của từng buổi** (mới, CENTER J): ở tab **"Lịch dạy"** của trang lớp, mỗi buổi chưa huỷ có nút **"Kế hoạch"** mở phần
+  soạn ngay dưới dòng buổi: danh sách bài theo thứ tự (kèm tên chương, nhãn "Đang ẩn với học viên"), ô **"Chủ đề buổi (không bắt buộc)"**,
+  **"Thêm bài"** (cây chương và bài của khoá, ô tìm, chọn nhiều bài; bài đã có hiện "đã có"), mũi tên đổi thứ tự, dấu X bỏ bài, **"Lưu kế hoạch"**
+  và **"Đặt lại theo giáo trình"**. Nhãn **"Theo giáo trình"** (chương cùng số buổi, như trước) hoặc **"Đã tuỳ chỉnh"** (danh sách riêng của buổi):
+  lần đầu sửa, danh sách theo giáo trình được chép thành danh sách riêng, và bỏ hết bài thì buổi trống chứ không quay về giáo trình. Danh sách gắn
+  theo buổi (không theo số buổi) nên huỷ hay thêm buổi không làm lệch; một bài một lần trong một buổi nhưng được ở nhiều buổi; tối đa 30 bài; chủ đề
+  tối đa 120 ký tự. Khoá tự tạo (không có chương đánh số buổi) và buổi dạy bù cũng có kế hoạch được. Chỉ người quản khoá (chủ khoá, đồng giảng
+  viên, Platform Admin) sửa; người chỉ dạy xem buổi được xếp cho mình. Buổi đã kết thúc hoặc đã huỷ bị khoá. Dòng "Giáo án:" dưới buổi, calendar
+  ("Bài của buổi"), tổng kết gửi lớp và nhận xét sau buổi đều đọc kế hoạch này. Cập nhật giáo trình có bản mới bỏ qua chương có bài đang nằm
+  trong kế hoạch tuỳ chỉnh của một buổi (báo "có bài đang nằm trong kế hoạch giảng dạy của một buổi").
 - **Học viên** (tab "Học viên"): trạng thái Đang học / Đã hoàn thành / Bỏ học / Đã hoàn
   tiền / Hết hạn truy cập; tìm theo tên hoặc email; "Gán lớp", "Xoá khỏi khoá học",
   "Tải danh sách học viên".

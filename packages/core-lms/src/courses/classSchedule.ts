@@ -20,7 +20,7 @@ import type { DbClient } from "../auth/tokens";
 import { emitEvent } from "../learning/events";
 import { assertCanManageCourse, assertCanViewSection } from "./teachingScope";
 import { EDIT_ROLES } from "./authz";
-import { loadSessionPlans, type MeetingPlan, type PlanAudience } from "./sessionPlan";
+import { loadSessionPlans, resolveMeetingPlans, type MeetingPlan, type PlanAudience } from "./sessionPlan";
 import {
   addDays,
   generateMeetings,
@@ -75,6 +75,10 @@ export interface MeetingItem {
   locked: boolean;
   /** Giáo án của buổi (CENTER C3): chương `sessionNo = seq` của khoá; null khi buổi huỷ, khoá không có giáo án theo buổi, hoặc buổi vượt quá số buổi giáo án. */
   plan: MeetingPlan | null;
+  /** CENTER J — buổi đã được giáo viên tuỳ chỉnh kế hoạch (danh sách bài riêng). */
+  planCustomized: boolean;
+  /** Chủ đề buổi do giáo viên đặt (chỉ có khi đã tuỳ chỉnh). */
+  planTopic: string | null;
 }
 
 export interface ClassScheduleView {
@@ -239,6 +243,8 @@ type MeetingRow = {
   cancelReason: string | null;
   makeupOfId: string | null;
   locked: boolean;
+  planCustomized: boolean;
+  planTopic: string | null;
   section?: { name: string; courseId: string };
   plannedTeacher?: { displayName: string } | null;
 };
@@ -260,6 +266,8 @@ function toItem(m: MeetingRow, sectionName?: string): MeetingItem {
     makeupOfId: m.makeupOfId,
     locked: m.locked,
     plan: null,
+    planCustomized: m.planCustomized,
+    planTopic: m.planCustomized ? m.planTopic : null,
   };
 }
 
@@ -268,14 +276,25 @@ const MEETING_INCLUDE = {
   plannedTeacher: { select: { displayName: true } },
 } as const;
 
-/** Gắn giáo án vào các buổi (theo `seq`, bỏ buổi huỷ). Học viên không thấy chương/bài ẩn. */
+/**
+ * Gắn kế hoạch hiệu lực vào các buổi: danh sách riêng nếu giáo viên đã tuỳ chỉnh (CENTER J), nếu không thì chương giáo
+ * trình cùng số buổi `seq` (CENTER C3). Buổi huỷ không có kế hoạch. Học viên không thấy chương/bài ẩn.
+ */
 async function attachPlans(items: MeetingItem[], audience: PlanAudience, db: DbClient): Promise<MeetingItem[]> {
-  const plans = await loadSessionPlans(items.map((i) => i.courseId), audience, db);
+  const plans = await resolveMeetingPlans(
+    items.map((i) => ({
+      id: i.id,
+      seq: i.seq,
+      status: i.status,
+      courseId: i.courseId,
+      planCustomized: i.planCustomized,
+      planTopic: i.planTopic,
+    })),
+    audience,
+    db,
+  );
   if (plans.size === 0) return items;
-  return items.map((i) => {
-    if (i.status === "cancelled" || i.seq === null) return i;
-    return { ...i, plan: plans.get(i.courseId)?.get(i.seq) ?? null };
-  });
+  return items.map((i) => ({ ...i, plan: plans.get(i.id) ?? null }));
 }
 
 const normRoom = (r: string | null) => (r && r.trim() ? r.trim().toLowerCase() : null);

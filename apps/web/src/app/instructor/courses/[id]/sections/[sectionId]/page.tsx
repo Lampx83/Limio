@@ -79,6 +79,17 @@ export default async function SectionRosterPage({
   const [schedule, instructors, coursePlan] = showSchedule
     ? await Promise.all([getClassSchedule(userId, params.sectionId), listCourseInstructors(params.id), getCoursePlan(userId, params.id)])
     : [null, [], null];
+  // CENTER J — cây chương và bài của khoá để chọn bài đưa vào kế hoạch từng buổi (chỉ người quản khoá soạn kế hoạch).
+  const courseTree =
+    showSchedule && canManage
+      ? (
+          await prisma.module.findMany({
+            where: { courseId: params.id },
+            orderBy: { orderIndex: "asc" },
+            select: { id: true, title: true, isHidden: true, lessons: { orderBy: { orderIndex: "asc" }, select: { id: true, title: true, isHidden: true } } },
+          })
+        ).map((m) => ({ id: m.id, title: m.title, lessons: m.lessons.map((l) => ({ id: l.id, title: l.title, hidden: l.isHidden || m.isHidden })) }))
+      : [];
   const [attendance, sectionGoal, goalRows] =
     centerEnabled && showStudents
       ? await Promise.all([
@@ -113,7 +124,7 @@ export default async function SectionRosterPage({
           currentVersion={coursePlan.pack.currentVersion}
         />
       )}
-      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} autoSendSummary={autoSendSummary} />}
+      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} autoSendSummary={autoSendSummary} courseTree={courseTree} />}
       {attendance && <SectionAttendanceSummary summary={attendance} />}
       {centerEnabled && showStudents && (
         <SectionGoalsCard
