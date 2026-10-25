@@ -27,3 +27,5 @@ export * from "./coursePacks";
 export * from "./teachingScope";
 export * from "./scheduleSummary";
 export * from "./meetingPlan";
+export * from "./teacherCheckInCalc";
+export * from "./teacherCheckIn";

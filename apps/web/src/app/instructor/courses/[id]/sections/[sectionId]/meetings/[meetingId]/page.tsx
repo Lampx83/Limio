@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { AttendanceError, CourseAuthzError, getMeetingAttendance } from "@feedbackme/core-lms";
+import { AttendanceError, CourseAuthzError, getMeetingAttendance, getMeetingCheckIn } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { formatTime, formatVN } from "@/lib/datetime";
 import AttendanceClient from "./AttendanceClient";
 import MeetingCloseCard from "./MeetingCloseCard";
+import TeacherCheckInCard from "./TeacherCheckInCard";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +34,13 @@ export default async function MeetingAttendancePage({
   if (view.meeting.courseId !== params.id || view.meeting.sectionId !== params.sectionId) notFound();
 
   const m = view.meeting;
-  const [row, deliveries] = await Promise.all([
+  const [row, deliveries, checkIn] = await Promise.all([
     prisma.classMeeting.findUnique({
       where: { id: m.id },
       select: { startsAt: true, closedAt: true, section: { select: { autoSendSummary: true } } },
     }),
     prisma.meetingSummaryDelivery.groupBy({ by: ["status"], where: { meetingId: m.id }, _count: true }),
+    getMeetingCheckIn(session.user.id, m.id).catch(() => null),
   ]);
   const count = (...st: string[]) => deliveries.filter((d) => st.includes(d.status)).reduce((n, d) => n + d._count, 0);
   return (
@@ -55,6 +57,7 @@ export default async function MeetingAttendancePage({
         {formatTime(m.endsAt)}
         {m.room ? ` · Phòng ${m.room}` : ""}
       </p>
+      {checkIn && <TeacherCheckInCard initial={checkIn} />}
       {row && (
         <MeetingCloseCard
           meetingId={m.id}

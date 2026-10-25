@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Calendar, Palette, Menu, X, Building2, Users, Mail, type LucideIcon } from "lucide-react";
+import { Calendar, ClipboardCheck, Palette, Menu, X, Building2, Users, Mail, type LucideIcon } from "lucide-react";
 
 type Item = {
   label: string;
@@ -16,6 +16,7 @@ const ITEMS: Item[] = [
   { label: "Thành viên trường", href: "/org-admin/members", icon: Users },
   { label: "Danh mục ca thi", href: "/org-admin/session-templates", icon: Calendar },
   { label: "Mẫu email", href: "/org-admin/emails", icon: Mail },
+  { label: "Đối chiếu lịch dạy", href: "/org-admin/doi-chieu", icon: ClipboardCheck },
   { label: "Thương hiệu & kỳ học", href: "/org-admin/settings", icon: Palette },
 ];
 

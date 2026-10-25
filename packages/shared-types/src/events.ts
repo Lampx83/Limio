@@ -251,6 +251,10 @@ export const LearningEventType = {
   ClassMeetingMakeupAdded: "class.meeting.makeup_added",
   // CENTER J — kế hoạch giảng dạy của buổi (bài gắn vào buổi). Subject là giảng viên thao tác; payload chỉ mang id và số lượng.
   ClassPlanChanged: "class.plan.changed",
+  // CENTER C5 — giáo viên bắt đầu/kết thúc buổi để đối chiếu lịch dạy; quản trị sửa sau thì ghi "edited". Subject là giáo viên.
+  TeacherCheckedIn: "attendance.teacher.checked_in",
+  TeacherCheckedOut: "attendance.teacher.checked_out",
+  TeacherCheckInEdited: "attendance.teacher.edited",
   // CENTER C2 — điểm danh học viên. Subject là HỌC VIÊN được điểm danh (để Feedback Engine và
   // Gamification đọc theo người); giáo viên thao tác nằm trong payload.
   AttendanceStudentMarked: "attendance.student.marked",
@@ -949,6 +953,31 @@ export interface ClassMeetingUpdatedPayload {
   courseId: string;
   /** Tên các trường đã đổi: startsAt | endsAt | room | plannedTeacherId. */
   changed: string[];
+}
+
+export interface TeacherCheckedInPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Người bấm khác giáo viên dự kiến của buổi (dạy thay). */
+  substitute: boolean;
+  plannedTeacherId: string | null;
+}
+
+export interface TeacherCheckedOutPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+}
+
+export interface TeacherCheckInEditedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  editedById: string;
+  /** Trường đã đổi: teacherId | checkedInAt | checkedOutAt. Không mang lý do, chỉ độ dài. */
+  changed: string[];
+  reasonLength: number;
 }
 
 export interface ClassPlanChangedPayload {

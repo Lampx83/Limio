@@ -161,6 +161,20 @@ export async function closeMeeting(
     const row = await db.classMeeting.findUniqueOrThrow({ where: { id: meetingId } });
     return { meetingId, alreadyClosed: true, autoSend, summary: row.summary as unknown as MeetingSummaryContent };
   }
+  // CENTER C5.3 — đóng buổi ghi giờ ra cho giáo viên đã bắt đầu buổi (chưa ai bấm thì không tự tạo: quên bấm thì quản trị sửa).
+  const checkIn = await db.teacherCheckIn.findUnique({ where: { meetingId }, select: { teacherId: true, checkedOutAt: true } });
+  if (checkIn && !checkIn.checkedOutAt) {
+    const done = await db.teacherCheckIn.updateMany({ where: { meetingId, checkedOutAt: null }, data: { checkedOutAt: now } });
+    if (done.count > 0) {
+      await emitEvent(
+        checkIn.teacherId,
+        LearningEventType.TeacherCheckedOut,
+        { meetingId, sectionId: meeting.sectionId, courseId: meeting.section.courseId },
+        { courseId: meeting.section.courseId, eventKey: `attendance.teacher.checked_out:${meetingId}` },
+        db,
+      );
+    }
+  }
   await emitEvent(
     actorUserId,
     LearningEventType.ClassMeetingClosed,
