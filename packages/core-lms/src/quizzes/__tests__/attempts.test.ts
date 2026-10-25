@@ -219,6 +219,40 @@ describe("getAttemptForLearner — isSingleAnswer + không lộ đáp án đúng
   });
 });
 
+describe("submitAnswer — câu kéo thả (drag_drop_fill)", () => {
+  it("nhận đáp án { tokens } và chấm đúng/sai theo từng chỗ trống", async () => {
+    const { ownerId, learnerId, quizId } = await setup("sa-ddf");
+    const q = await createQuestion(ownerId, quizId, {
+      type: "drag_drop_fill",
+      prompt: "Thủ đô của Pháp là [[1]], của Anh là [[2]].",
+      orderIndex: 9,
+      options: [
+        { label: "Paris", isCorrect: false, extra: { blankIndex: 1 } },
+        { label: "London", isCorrect: false, extra: { blankIndex: 2 } },
+        { label: "Rome", isCorrect: false, extra: { blankIndex: null } },
+      ],
+    });
+    const opts = await prisma.questionOption.findMany({ where: { questionId: q.questionId } });
+    const id = (label: string) => opts.find((o) => o.label === label)!.id;
+    const att = await startAttempt(learnerId, quizId);
+
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: q.questionId,
+      response: { tokens: { "1": id("Paris"), "2": id("London") } },
+    });
+    let row = await prisma.answerResponse.findFirstOrThrow({ where: { attemptId: att.attemptId, questionId: q.questionId } });
+    expect(row.isCorrect).toBe(true);
+
+    // Đổi lại: chỗ trống 2 để trống (null) thì sai, và vẫn được lưu.
+    await submitAnswer(learnerId, att.attemptId, {
+      questionId: q.questionId,
+      response: { tokens: { "1": id("Paris"), "2": null } },
+    });
+    row = await prisma.answerResponse.findFirstOrThrow({ where: { attemptId: att.attemptId, questionId: q.questionId } });
+    expect(row.isCorrect).toBe(false);
+  });
+});
+
 describe("submitAnswer + submitAttempt", () => {
   it("grades all 3 question types end-to-end", async () => {
     const { learnerId, quizId, questionIds } = await setup("a5");

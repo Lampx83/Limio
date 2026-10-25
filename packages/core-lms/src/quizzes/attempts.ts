@@ -70,6 +70,8 @@ export const SubmitAnswerInput = z.object({
     z.string(),
     z.number(),
     z.array(MatchPair),
+    // drag_drop_fill: { tokens: { [blankIndex]: optionId | null } } — xem DragDropFillRenderer ở QuizPlayer và grading.ts.
+    z.object({ tokens: z.record(z.string(), z.string().nullable()) }),
   ]),
   confidence: z.number().int().min(1).max(5).optional(),
   /**
