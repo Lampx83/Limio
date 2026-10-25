@@ -36,6 +36,21 @@ export interface LessonDeckForEditor {
   isOwner: boolean;
 }
 
+/**
+ * Nhóm bài giảng của khoá trong Limio-Live (kind "course"): dùng nhóm chủ khoá đã liên kết với khoá nếu có, không thì tạo
+ * nhóm mới mang tên khoá. Bài giảng gắn vào bài học vì thế nằm cùng nhóm với khoá, không rơi vào "Chưa phân nhóm".
+ */
+export async function ensureCourseDeckGroup(ownerId: string, courseId: string, db: PrismaClient = prisma): Promise<string> {
+  const existing = await db.liveDeckGroup.findFirst({ where: { userId: ownerId, courseId }, orderBy: { createdAt: "asc" }, select: { id: true } });
+  if (existing) return existing.id;
+  const course = await db.course.findUnique({ where: { id: courseId }, select: { title: true } });
+  const group = await db.liveDeckGroup.create({
+    data: { userId: ownerId, courseId, kind: "course", name: (course?.title ?? "Khoá học").trim().slice(0, 100) || "Khoá học" },
+    select: { id: true },
+  });
+  return group.id;
+}
+
 async function loadLesson(lessonId: string, db: PrismaClient) {
   const lesson = await db.lesson.findUnique({
     where: { id: lessonId },
@@ -83,7 +98,7 @@ export async function attachLessonDeck(
 ): Promise<{ replacedDeckId: string | null }> {
   const lesson = await loadLesson(lessonId, db);
   await requireEditor(actorId, lesson.courseId, db);
-  const deck = await db.liveDeck.findUnique({ where: { id: deckId }, select: { id: true, userId: true, lesson: { select: { id: true } } } });
+  const deck = await db.liveDeck.findUnique({ where: { id: deckId }, select: { id: true, userId: true, groupId: true, lesson: { select: { id: true } } } });
   if (!deck) throw new LessonDeckError("not_found");
   if (deck.userId !== (await resolveCourseOwner(lesson.courseId, db))) throw new LessonDeckError("deck_not_owned_by_course_owner");
   if (lesson.liveDeckId === deck.id) return { replacedDeckId: null }; // gắn lại đúng bài giảng đang gắn: không làm gì
@@ -91,8 +106,11 @@ export async function attachLessonDeck(
   if (lesson.liveDeckId && !opts.replace) throw new LessonDeckError("lesson_has_deck");
 
   const replacedDeckId = lesson.liveDeckId;
+  // Bài giảng chưa thuộc nhóm nào thì đưa vào nhóm của khoá; bài giảng giảng viên đã tự xếp nhóm thì giữ nguyên.
+  const groupId = deck.groupId ?? (await ensureCourseDeckGroup(deck.userId, lesson.courseId, db));
   await db.$transaction(async (tx) => {
     await tx.lesson.update({ where: { id: lesson.id }, data: { liveDeckId: deck.id } });
+    if (!deck.groupId) await tx.liveDeck.update({ where: { id: deck.id }, data: { groupId } });
     await emitEvent(actorId, LearningEventType.LessonDeckAttached, { lessonId: lesson.id, deckId: deck.id, replacedDeckId }, { courseId: lesson.courseId }, tx);
   });
   return { replacedDeckId };

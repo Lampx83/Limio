@@ -4,7 +4,9 @@ import { registerUser } from "../../auth/register";
 import { createCourse } from "../../courses/courses";
 import { createModule } from "../../courses/modules";
 import { createLesson } from "../../courses/lessons";
-import { getLessonSource, lessonHtmlToText, lessonMarkdownToText } from "../lessonSource";
+import { getLessonSlideState, getLessonSource, lessonHtmlToText, lessonMarkdownToText } from "../lessonSource";
+import { attachLessonDeck } from "../lessonDeck";
+import { createLiveDeck } from "../decks";
 import { LessonDeckError } from "../lessonDeck";
 
 const BASE = "http://localhost:3000";
@@ -70,5 +72,29 @@ describe("getLessonSource", () => {
 
     await expect(getLessonSource(other.userId, l.lessonId)).rejects.toMatchObject({ code: "forbidden" });
     await expect(getLessonSource(owner.userId, "00000000-0000-0000-0000-000000000000")).rejects.toBeInstanceOf(LessonDeckError);
+  });
+});
+
+describe("getLessonSlideState", () => {
+  it("báo chưa có bài giảng, đã có dàn ý (0 slide), đã có slide; chỉ chủ khoá có isOwner", async () => {
+    const owner = await registerUser({ email: "o-lss@e.com", password: "password1234", displayName: "Cô Lan" }, BASE);
+    const other = await registerUser({ email: "x-lss@e.com", password: "password1234", displayName: "Khác" }, BASE);
+    const c = await createCourse(owner.userId, { title: "lss", description: "x", slug: "lss-course" });
+    const m = await createModule(owner.userId, c.courseId, { title: "M", orderIndex: 0 });
+    const l = await createLesson(owner.userId, m.moduleId, { title: "Bài", orderIndex: 0 });
+    await prisma.contentItem.create({ data: { lessonId: l.lessonId, type: "richtext", orderIndex: 0, payload: { html: "<p>một hai ba bốn năm</p>" } } });
+
+    const none = await getLessonSlideState(owner.userId, l.lessonId);
+    expect(none).toMatchObject({ deck: null, isOwner: true, ownerName: "Cô Lan", textWords: 5 });
+    expect(none.textChars).toBeGreaterThan(0);
+
+    const deck = await createLiveDeck({ userId: owner.userId, title: "Bài giảng" }, prisma);
+    await attachLessonDeck(owner.userId, l.lessonId, deck.id);
+    expect((await getLessonSlideState(owner.userId, l.lessonId)).deck).toEqual({ id: deck.id, slideCount: 0 });
+
+    await prisma.liveSlide.create({ data: { deckId: deck.id, type: "content", orderIndex: 0, config: { title: "S" } } });
+    expect((await getLessonSlideState(owner.userId, l.lessonId)).deck).toEqual({ id: deck.id, slideCount: 1 });
+
+    await expect(getLessonSlideState(other.userId, l.lessonId)).rejects.toMatchObject({ code: "forbidden" });
   });
 });

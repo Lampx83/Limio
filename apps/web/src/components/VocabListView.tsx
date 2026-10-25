@@ -1,9 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, Pause, Volume2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Eye, Layers, List, Pause, Volume2 } from "lucide-react";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
 import { useExclusiveAudio } from "./useExclusiveAudio";
+import VocabFlashcards from "./VocabFlashcards";
+
+const VIEW_KEY = "limio:vocab-view";
+type View = "list" | "cards";
 
 export interface VocabViewItem {
   id: string;
@@ -44,7 +48,25 @@ export default function VocabListView({
 }) {
   const [showReading, setShowReading] = useState(initialShowReading);
   const [showMeaning, setShowMeaning] = useState(initialShowMeaning);
+  const [view, setView] = useState<View>("list");
   const { playingId, toggle } = useExclusiveAudio();
+
+  // Nhớ kiểu xem của học viên (danh sách / thẻ lật) cho lần sau. Lần vẽ đầu luôn là danh sách để khớp với máy chủ.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(VIEW_KEY) === "cards") setView("cards");
+    } catch {
+      /* trình duyệt chặn lưu trữ: dùng mặc định */
+    }
+  }, []);
+  const chooseView = (v: View) => {
+    setView(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* bỏ qua */
+    }
+  };
   const hasReading = items.some((i) => !!i.reading);
   const label = readingLabel?.trim() || "Phiên âm";
   const anyAudio = items.some((i) => i.audioUrl);
@@ -66,34 +88,62 @@ export default function VocabListView({
   const blur = (hidden: boolean) => (hidden ? "select-none blur-sm" : "");
 
   return (
-    <section className="space-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
+    <section className="space-y-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        {title ? <p className="text-body font-semibold">{title}</p> : <span />}
-        <div
-          role="group"
-          aria-label="Hiển thị"
-          className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5 pl-3"
-        >
-          <Eye size={15} aria-hidden className="mr-1.5 text-muted" />
-          {hasReading && (
-            <ToggleChip pressed={showReading} onClick={() => setShowReading((v) => !v)}>
-              {label}
-            </ToggleChip>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-700" aria-hidden>
+            <Layers size={16} />
+          </span>
+          {title && <p className="text-body font-semibold">{title}</p>}
+          <span className="chip shrink-0">{items.length} từ</span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            role="group"
+            aria-label="Kiểu xem"
+            className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface-muted))] p-0.5"
+          >
+            <ViewChip pressed={view === "list"} onClick={() => chooseView("list")} icon={<List size={14} aria-hidden />}>
+              Danh sách
+            </ViewChip>
+            <ViewChip pressed={view === "cards"} onClick={() => chooseView("cards")} icon={<Layers size={14} aria-hidden />}>
+              Thẻ lật
+            </ViewChip>
+          </div>
+          {(view === "list" || hasReading) && (
+            <div
+              role="group"
+              aria-label="Hiển thị"
+              className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5 pl-3"
+            >
+              <Eye size={15} aria-hidden className="mr-1.5 text-muted" />
+              {hasReading && (
+                <ToggleChip pressed={showReading} onClick={() => setShowReading((v) => !v)}>
+                  {label}
+                </ToggleChip>
+              )}
+              {view === "list" && (
+                <ToggleChip pressed={showMeaning} onClick={() => setShowMeaning((v) => !v)}>
+                  Nghĩa
+                </ToggleChip>
+              )}
+            </div>
           )}
-          <ToggleChip pressed={showMeaning} onClick={() => setShowMeaning((v) => !v)}>
-            Nghĩa
-          </ToggleChip>
         </div>
       </div>
 
-      <div className={`hidden gap-x-4 border-b border-token px-2 pb-1.5 text-caption font-medium uppercase tracking-wide sm:grid ${cols}`}>
+      {view === "cards" ? (
+        <VocabFlashcards items={items} showReading={showReading} playingId={playingId} onToggleAudio={toggle} />
+      ) : (
+      <>
+      <div className={`hidden gap-x-4 border-b border-token px-3 pb-1.5 text-caption font-medium uppercase tracking-wide sm:grid ${cols}`}>
         <span className={anyAudio ? "pl-9" : undefined}>Từ</span>
         {hasReading && <span>{label}</span>}
         <span>Nghĩa</span>
         {anyExample && <span className="hidden lg:inline">Ví dụ</span>}
       </div>
 
-      <ul className="divide-y divide-[rgb(var(--border))]">
+      <ul className="space-y-1">
         {items.map((it) => {
           const playing = playingId === it.id;
           return (
@@ -109,7 +159,7 @@ export default function VocabListView({
                     }
                   : undefined
               }
-              className={`grid grid-cols-1 gap-x-4 gap-y-0.5 rounded-lg px-2 py-1.5 transition-colors sm:items-start ${cols} ${
+              className={`grid grid-cols-1 gap-x-4 gap-y-0.5 rounded-xl px-3 py-2.5 transition-colors odd:bg-[rgb(var(--surface-muted))/0.45] sm:items-start ${cols} ${
                 playing ? "bg-brand-soft ring-2 ring-brand-300" : ""
               } ${it.audioUrl ? "cursor-pointer hover:bg-[rgb(var(--surface-muted))/0.5]" : ""}`}
             >
@@ -144,14 +194,14 @@ export default function VocabListView({
                 </span>
               )}
               <div className={`space-y-1 sm:pt-0.5 ${meaningColStart} ${!it.example && anyExample ? "lg:col-span-2" : ""}`}>
-                <p data-masked={mask(!showMeaning)} className={`text-body font-medium text-muted ${blur(!showMeaning)}`}>
+                <p data-masked={mask(!showMeaning)} className={`text-body font-medium text-[rgb(var(--text))] ${blur(!showMeaning)}`}>
                   {it.meaning}
                 </p>
                 {it.note && <p className="text-caption italic">{it.note}</p>}
               </div>
               {it.example && (
                 // Ví dụ: câu gốc + phiên âm trên một dòng, bản dịch dòng dưới, vạch lime bên trái.
-                <div className={`border-l-2 border-brand-200 pl-2.5 sm:pt-0.5 ${exampleCls}`}>
+                <div className={`rounded-r-lg border-l-2 border-brand-300 bg-brand-soft/60 py-1 pl-3 pr-2 sm:pt-0.5 ${exampleCls}`}>
                   <p className="text-meta text-muted">
                     <span className={`text-body ${SOURCE_TEXT_COLOR}`}>{it.example}</span>
                     {it.exampleReading && (
@@ -174,7 +224,35 @@ export default function VocabListView({
           );
         })}
       </ul>
+      </>
+      )}
     </section>
+  );
+}
+
+function ViewChip({
+  pressed,
+  onClick,
+  icon,
+  children,
+}: {
+  pressed: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={`inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm transition-colors ${
+        pressed ? "bg-[rgb(var(--surface))] font-semibold text-[rgb(var(--text))] shadow-sm" : "text-muted hover:text-[rgb(var(--text))]"
+      }`}
+    >
+      {icon}
+      {children}
+    </button>
   );
 }
 

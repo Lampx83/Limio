@@ -7,7 +7,7 @@ import { createModule } from "../../courses/modules";
 import { createLesson } from "../../courses/lessons";
 import { addCoInstructorByEmail } from "../../courses/instructors";
 import { createLiveDeck } from "../decks";
-import { attachLessonDeck, detachLessonDeck, getLessonDeckForEditor, LessonDeckError } from "../lessonDeck";
+import { attachLessonDeck, detachLessonDeck, ensureCourseDeckGroup, getLessonDeckForEditor, LessonDeckError } from "../lessonDeck";
 import { getLiveDeckByLesson } from "../share";
 import { learnerActivityWhere } from "../../learning/activity";
 
@@ -88,5 +88,32 @@ describe("bài giảng slide của bài học", () => {
     await prisma.liveDeck.delete({ where: { id: t.d1 } });
     expect((await getLessonDeckForEditor(t.ownerId, t.l1)).attached).toBeNull();
     expect(await getLiveDeckByLesson(t.l1, prisma)).toBeNull();
+  });
+
+  it("bài giảng chưa có nhóm được đưa vào nhóm của khoá; nhóm đã liên kết với khoá thì dùng lại; nhóm tự xếp thì giữ nguyên", async () => {
+    const t = await setup("ld-group");
+    await attachLessonDeck(t.ownerId, t.l1, t.d1);
+    const d1 = await prisma.liveDeck.findUniqueOrThrow({ where: { id: t.d1 }, include: { group: true } });
+    expect(d1.group).toMatchObject({ name: "ld-group", kind: "course", courseId: t.courseId, userId: t.ownerId });
+
+    // Bài giảng thứ hai vào cùng nhóm đó, không tạo nhóm mới.
+    await attachLessonDeck(t.ownerId, t.l2, t.d2);
+    const d2 = await prisma.liveDeck.findUniqueOrThrow({ where: { id: t.d2 } });
+    expect(d2.groupId).toBe(d1.groupId);
+    expect(await prisma.liveDeckGroup.count({ where: { userId: t.ownerId, courseId: t.courseId } })).toBe(1);
+
+    // Bài giảng đã được xếp nhóm khác thì không bị chuyển.
+    const mine = await prisma.liveDeckGroup.create({ data: { userId: t.ownerId, name: "Nhóm riêng", kind: "other" } });
+    const d3 = await createLiveDeck({ userId: t.ownerId, title: "Bài giảng 3" }, prisma);
+    await prisma.liveDeck.update({ where: { id: d3.id }, data: { groupId: mine.id } });
+    await detachLessonDeck(t.ownerId, t.l2);
+    await attachLessonDeck(t.ownerId, t.l2, d3.id);
+    expect((await prisma.liveDeck.findUniqueOrThrow({ where: { id: d3.id } })).groupId).toBe(mine.id);
+  });
+
+  it("ensureCourseDeckGroup dùng nhóm chủ khoá đã liên kết với khoá", async () => {
+    const t = await setup("ld-group2");
+    const linked = await prisma.liveDeckGroup.create({ data: { userId: t.ownerId, courseId: t.courseId, name: "Tên tự đặt", kind: "course" } });
+    expect(await ensureCourseDeckGroup(t.ownerId, t.courseId)).toBe(linked.id);
   });
 });

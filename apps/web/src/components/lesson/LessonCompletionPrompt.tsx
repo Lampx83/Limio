@@ -195,12 +195,12 @@ export default function LessonCompletionPrompt({
       : 0;
 
   const progressBar = (
-    <div className="mb-4">
-      <p className="mb-1.5 text-sm text-muted">
+    <div className="mb-2 flex items-center gap-3">
+      <p className="shrink-0 text-sm text-muted">
         <span className="tabular-nums">{lessonProgressPct}%</span> hoàn thành bài học
       </p>
       <div
-        className="h-1.5 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
+        className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
         role="progressbar"
         aria-label="Tiến độ bài học"
         aria-valuenow={lessonProgressPct}
@@ -298,7 +298,7 @@ export default function LessonCompletionPrompt({
   return (
     <>
       {progressBar}
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-sm">
+      <div className="flex flex-wrap items-center gap-2 text-sm">
       <span className="shrink-0 text-xs font-medium text-[rgb(var(--text-muted))]">
         {allDone ? "Đang lưu…" : "Để hoàn thành bài:"}
       </span>
