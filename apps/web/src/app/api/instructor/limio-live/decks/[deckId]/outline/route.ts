@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { deckAccessWhere } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
@@ -19,7 +20,7 @@ export const runtime = "nodejs";
 
 async function ownedDeck(deckId: string, userId: string) {
   return prisma.liveDeck.findFirst({
-    where: { id: deckId, userId },
+    where: { id: deckId, ...deckAccessWhere(userId) },
     select: {
       id: true,
       title: true,

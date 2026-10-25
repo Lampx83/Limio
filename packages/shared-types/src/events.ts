@@ -275,6 +275,9 @@ export const LearningEventType = {
   // Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md). Subject là người sửa khoá; payload chỉ mang id.
   LessonDeckAttached: "lesson.deck.attached",
   LessonDeckDetached: "lesson.deck.detached",
+  // Đồng giảng viên của bài giảng Limio-Live (docs/tieu-chi/dong-giang-vien-bai-giang.md). Subject là chủ bài (hoặc người tự rời); payload chỉ mang id.
+  LiveDeckCollaboratorAdded: "live.deck.collaborator_added",
+  LiveDeckCollaboratorRemoved: "live.deck.collaborator_removed",
 
   // Nghe giảng / Podcast của bài học (docs/tieu-chi/nghe-giang-podcast.md, AC6). Chỉ đo cách học viên nghe:
   // KHÔNG ghi nội dung lời giảng. Ghi sự kiện không bao giờ được chặn hay làm chậm việc phát.
@@ -1140,4 +1143,16 @@ export interface LessonDeckAttachedPayload {
 export interface LessonDeckDetachedPayload {
   lessonId: string;
   deckId: string;
+}
+
+export interface LiveDeckCollaboratorAddedPayload {
+  deckId: string;
+  collaboratorId: string;
+}
+
+export interface LiveDeckCollaboratorRemovedPayload {
+  deckId: string;
+  collaboratorId: string;
+  /** true = người đó tự rời, false = chủ bài gỡ. */
+  left: boolean;
 }

@@ -59,6 +59,7 @@ import {
   History,
   Share2,
   ChevronDown,
+  Users,
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
@@ -74,6 +75,7 @@ import { slideBgFor } from "../slideThemes";
 import ThemePicker from "./ThemePicker";
 import BrandDialog, { type BrandPatch } from "./BrandDialog";
 import ShareDialog from "./ShareDialog";
+import DeckCollaboratorsDialog from "./DeckCollaboratorsDialog";
 import { LiveBrandProvider } from "../liveBrandContext";
 import { LiveLangProvider } from "../liveLangContext";
 import { LiveMotifProvider } from "../liveMotifContext";
@@ -121,6 +123,8 @@ interface Deck {
   sourceRefs?: unknown;
   /** Mã link xem chỉ đọc /bai-giang/<mã>; null = không chia sẻ. */
   shareCode?: string | null;
+  /** Vai của người đang mở: chủ bài, hoặc đồng giảng viên (không xoá, không chia sẻ link, không thêm người). */
+  role?: "owner" | "collaborator";
   slides: Slide[];
 }
 
@@ -359,6 +363,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
 
   const [brandOpen, setBrandOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [collabOpen, setCollabOpen] = useState(false);
   // Các lần lưu thương hiệu chạy LẦN LƯỢT: hai lần sửa sát nhau mà đến máy chủ đảo thứ tự thì lần cũ sẽ ghi đè lần mới.
   const brandQueue = useRef<Promise<unknown>>(Promise.resolve());
   // Thương hiệu: cập nhật ngay trên màn hình rồi lưu; lỗi thì hoàn lại như đổi giao diện.
@@ -802,6 +807,17 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
         </Link>
         <button
           type="button"
+          onClick={() => setCollabOpen(true)}
+          title={deck.role === "collaborator" ? "Bạn là đồng giảng viên của bài giảng này" : "Thêm đồng giảng viên cùng soạn và chiếu bài giảng này"}
+          aria-label="Đồng giảng viên"
+          className="hidden h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-muted transition hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:flex"
+        >
+          <Users size={17} />
+          <span className="hidden xl:inline">Đồng giảng viên</span>
+        </button>
+        {deck.role !== "collaborator" && (
+        <button
+          type="button"
           onClick={() => setShareOpen(true)}
           title="Link xem chỉ đọc cho người khác, kèm tải PDF"
           aria-label={deck.shareCode ? "Đang chia sẻ" : "Chia sẻ"}
@@ -810,6 +826,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           <Share2 size={17} className={deck.shareCode ? "text-brand-600" : undefined} />
           <span className="hidden xl:inline">{deck.shareCode ? "Đang chia sẻ" : "Chia sẻ"}</span>
         </button>
+        )}
         <ThemePicker
           value={deck.theme ?? "white"}
           onChange={handleSetTheme}
@@ -1192,6 +1209,7 @@ export default function LiveDeckEditor({ deckId, initialDeck }: { deckId: string
           onClose={() => setBrandOpen(false)}
         />
       )}
+      {collabOpen && <DeckCollaboratorsDialog deckId={deckId} onClose={() => setCollabOpen(false)} onLeft={() => router.push("/instructor/limio-live")} />}
       {shareOpen && (
         <ShareDialog
           deckId={deckId}

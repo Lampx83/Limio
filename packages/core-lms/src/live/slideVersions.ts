@@ -1,4 +1,5 @@
 import { Prisma, type LiveSlide, type LiveSlideType, type PrismaClient } from "@feedbackme/db";
+import { hasDeckAccess } from "./deckAccess";
 
 /**
  * Phiên bản slide để hoàn tác (tiêu chí H11).
@@ -85,8 +86,8 @@ export interface SlideVersionView {
 }
 
 async function assertOwnsSlide(db: PrismaClient, slideId: string, userId: string): Promise<LiveSlide> {
-  const slide = await db.liveSlide.findUnique({ where: { id: slideId }, include: { deck: { select: { userId: true } } } });
-  if (!slide || slide.deck.userId !== userId) throw new Error("Not authorized to edit this slide");
+  const slide = await db.liveSlide.findUnique({ where: { id: slideId }, include: { deck: { select: { id: true, userId: true } } } });
+  if (!slide || !(await hasDeckAccess(slide.deck, userId, db))) throw new Error("Not authorized to edit this slide");
   return slide;
 }
 

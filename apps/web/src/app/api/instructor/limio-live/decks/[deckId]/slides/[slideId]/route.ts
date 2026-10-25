@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
-import { updateLiveSlide, deleteLiveSlide, recordSlideVersion } from "@feedbackme/core-lms";
+import { updateLiveSlide, deleteLiveSlide, recordSlideVersion, deckAccessWhere } from "@feedbackme/core-lms";
 import { validateContentSlideConfig } from "@/lib/limioLiveResource";
 import { mergeSlideMeta, normalizeContentSlideConfig, slideConfigsEqual } from "@/lib/limioLiveSlides";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
@@ -49,7 +49,7 @@ export async function PATCH(
     let existing: { type: "content" | "quiz" | "poll" | "word_cloud" | "collaborate_board" | "whiteboard"; config: unknown } | null = null;
     let flippedEdited = false;
     if (rest.config !== undefined && rest.config !== null && typeof rest.config === "object") {
-      existing = await prisma.liveSlide.findFirst({ where: { id: params.slideId, deck: { userId } }, select: { type: true, config: true } });
+      existing = await prisma.liveSlide.findFirst({ where: { id: params.slideId, deck: deckAccessWhere(userId) }, select: { type: true, config: true } });
       if (existing) {
         const normalized = (rest.type ?? existing.type) === "content" ? normalizeContentSlideConfig(rest.config) : rest.config;
         const merged = mergeSlideMeta(existing.config as Record<string, unknown> | null, normalized as Record<string, unknown>, {

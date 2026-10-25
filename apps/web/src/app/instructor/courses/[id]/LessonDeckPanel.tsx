@@ -11,18 +11,19 @@ interface DeckSummary {
   title: string;
   slideCount: number;
   updatedAt: string;
+  canOpen: boolean;
+  ownerName: string | null;
 }
 
 interface Data {
   attached: DeckSummary | null;
   candidates: DeckSummary[];
-  isOwner: boolean;
 }
 
 const ERRORS = LESSON_DECK_ERRORS;
 
 /**
- * Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md, AC1): chọn một bài giảng của chủ khoá để học viên xem
+ * Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md, AC1): chọn một bài giảng của chính bạn để học viên xem
  * slide ngay trong bài. Chưa có giọng đọc ở bước này; tạo giọng sẽ làm ở trang quản trị "Giọng đọc".
  */
 export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: string; courseSlug: string }) {
@@ -32,10 +33,12 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   const load = useCallback(async () => {
     const r = await fetch(apiUrl(`/api/lessons/${lessonId}/deck`), { cache: "no-store" });
-    if (r.ok) setData((await r.json()) as Data);
+    if (r.status === 403) setHidden(true); // chỉ chủ khoá dùng phần này: người khác không thấy mục
+    else if (r.ok) setData((await r.json()) as Data);
     else setError(ERRORS[((await r.json().catch(() => ({}))) as { error?: string }).error ?? ""] ?? "Không tải được bài giảng của bài học.");
   }, [lessonId]);
 
@@ -101,6 +104,7 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
     }
   }
 
+  if (hidden) return null;
   if (!data) return <p className="text-sm text-muted">{error ?? "Đang tải…"}</p>;
 
   return (
@@ -110,9 +114,11 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
           <span className="font-medium">{data.attached.title}</span>
           <span className="text-muted">{data.attached.slideCount} slide</span>
           <span className="ml-auto flex flex-wrap gap-2">
-            <Link href={`/instructor/limio-live/${data.attached.id}`} className="btn-secondary btn-sm" prefetch={false}>
-              Mở trình soạn
-            </Link>
+            {data.attached.canOpen && (
+              <Link href={`/instructor/limio-live/${data.attached.id}`} className="btn-secondary btn-sm" prefetch={false}>
+                Mở trình soạn
+              </Link>
+            )}
             <Link href={`/learn/${courseSlug}/lessons/${lessonId}/slides`} className="btn-secondary btn-sm" prefetch={false}>
               Xem slideshow
             </Link>
@@ -120,6 +126,11 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
               Gỡ
             </button>
           </span>
+          {!data.attached.canOpen && (
+            <p className="w-full text-muted">
+              Bài giảng của {data.attached.ownerName ?? "người khác"}; nhờ họ thêm thầy/cô làm đồng giảng viên của bài giảng để mở trình soạn. Thầy/cô vẫn gỡ hoặc thay được.
+            </p>
+          )}
         </div>
       ) : (
         <p className="text-muted">Bài học chưa có bài giảng slide. Học viên vẫn nghe giảng theo bài viết.</p>
@@ -127,8 +138,8 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
 
       {data.candidates.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2">
-          <select className="input max-w-xs" value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Chọn bài giảng của chủ khoá">
-            <option value="">{data.attached ? "Đổi sang bài giảng khác…" : "Chọn bài giảng của chủ khoá…"}</option>
+          <select className="input max-w-xs" value={pick} onChange={(e) => setPick(e.target.value)} aria-label="Chọn bài giảng của bạn">
+            <option value="">{data.attached ? "Đổi sang bài giảng khác…" : "Chọn bài giảng của bạn hoặc được chia sẻ…"}</option>
             {data.candidates.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.title} ({d.slideCount} slide)
@@ -142,7 +153,7 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
       ) : (
         !data.attached && (
           <p className="text-muted">
-            Chủ khoá chưa có bài giảng nào chưa gắn. Tạo ở{" "}
+            Bạn chưa có bài giảng nào chưa gắn. Tạo ở{" "}
             <Link href="/instructor/limio-live" className="link" prefetch={false}>
               Limio-Live
             </Link>
@@ -150,18 +161,16 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
           </p>
         )
       )}
-      {data.isOwner && (
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" className="btn-secondary btn-sm" onClick={() => void generate()} disabled={busy}>
-            {generating ? "Đang soạn dàn ý…" : "Tạo bài giảng từ bài viết"}
-          </button>
-          <span className="text-muted">
-            {generating
-              ? "AI đọc bài viết và đề xuất dàn ý, khoảng một phút. Đừng đóng trang."
-              : "AI soạn từ chữ của bài; thầy/cô xem và xác nhận dàn ý trước khi tạo slide."}
-          </span>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" className="btn-secondary btn-sm" onClick={() => void generate()} disabled={busy}>
+          {generating ? "Đang soạn dàn ý…" : "Tạo bài giảng từ bài viết"}
+        </button>
+        <span className="text-muted">
+          {generating
+            ? "AI đọc bài viết và đề xuất dàn ý, khoảng một phút. Đừng đóng trang."
+            : "AI soạn từ chữ của bài; thầy/cô xem và xác nhận dàn ý trước khi tạo slide."}
+        </span>
+      </div>
       {error && <p role="alert" className="text-danger-700">{error}</p>}
     </div>
   );

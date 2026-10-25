@@ -1,6 +1,7 @@
 import type { LiveSlide, PrismaClient } from "@feedbackme/db";
 import { canEditCourse } from "../courses/authz";
 import { addLiveSlidesBulk, type CreateSlideInput } from "./decks";
+import { hasDeckAccess } from "./deckAccess";
 
 /**
  * Nhập bài giảng có sẵn từ khoá học vào một LiveDeck (dạy trực tiếp).
@@ -142,7 +143,7 @@ export async function importCourseLessonsIntoDeck(
     throw new Error("Not authorized to read this course");
   }
   const deck = await db.liveDeck.findUnique({ where: { id: deckId } });
-  if (!deck || deck.userId !== userId) {
+  if (!deck || !(await hasDeckAccess(deck, userId, db))) {
     throw new Error("Not authorized to edit this deck");
   }
   const wanted = Array.from(new Set(input.lessonIds)).slice(0, MAX_IMPORT_LESSONS);

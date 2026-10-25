@@ -1,6 +1,6 @@
 import { AiTutorError, generateSlideDrafts, type OutlineSlideInput } from "@feedbackme/core-feedback";
 import { prisma } from "@feedbackme/db";
-import { recordSlideVersion } from "@feedbackme/core-lms";
+import { recordSlideVersion, deckAccessWhere } from "@feedbackme/core-lms";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { attachWebImages } from "@/lib/limioLiveWebImagesServer";
 import { webImageCandidates } from "@/lib/limioLiveWebImages";
@@ -36,7 +36,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   if (!userId) return json({ error: "forbidden" }, 403);
 
   const deck = await prisma.liveDeck.findFirst({
-    where: { id: params.deckId, userId },
+    where: { id: params.deckId, ...deckAccessWhere(userId) },
     select: {
       id: true,
       title: true,

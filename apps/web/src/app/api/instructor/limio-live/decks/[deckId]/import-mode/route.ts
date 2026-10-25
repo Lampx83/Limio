@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { deckAccessWhere } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
@@ -22,7 +23,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   const userId = await requireFeature("limio_live.access");
   if (!userId) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const deck = await prisma.liveDeck.findFirst({
-    where: { id: params.deckId, userId },
+    where: { id: params.deckId, ...deckAccessWhere(userId) },
     select: { id: true, title: true, outlineMinutes: true, importSource: true, language: true, sourceIntent: true, _count: { select: { slides: true } } },
   });
   const src = deck ? sanitizeImportSource(deck.importSource) : null;

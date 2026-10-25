@@ -64,13 +64,12 @@ export async function POST(req: Request) {
   }
 
   // Bài giảng cho BÀI HỌC (docs/tieu-chi/nghe-giang-slide.md, AC2–AC3): nguồn là chữ của bài học (lấy ở máy chủ, không tin chữ
-  // máy khách gửi), yêu cầu đi kèm do máy chủ dựng, và bài giảng thuộc chủ khoá nên chỉ chủ khoá bấm được.
+  // máy khách gửi) và yêu cầu đi kèm do máy chủ dựng. Chủ khoá và đồng giảng viên đều tạo được; bài giảng thuộc người tạo.
   const lessonIdRaw = form.get("lessonId");
   let lessonCtx: { id: string; title: string; text: string; replace: boolean } | null = null;
   if (typeof lessonIdRaw === "string" && lessonIdRaw) {
     try {
       const src = await getLessonSource(userId, lessonIdRaw);
-      if (src.ownerId !== userId) return NextResponse.json({ error: "only_course_owner" }, { status: 403 });
       const replace = form.get("replace") === "1";
       if (src.hasDeck && !replace) return NextResponse.json({ error: "lesson_has_deck" }, { status: 409 });
       lessonCtx = { id: src.lessonId, title: src.title, text: src.text, replace };

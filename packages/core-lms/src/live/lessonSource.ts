@@ -104,11 +104,8 @@ export async function getLessonSource(actorId: string, lessonId: string, db: Pri
 }
 
 export interface LessonSlideState {
-  /** Bài giảng đang gắn với bài học (null = chưa có) và số slide của nó (0 = mới có dàn ý, chưa tạo slide). */
-  deck: { id: string; slideCount: number } | null;
-  /** Người hỏi là chủ khoá: chỉ chủ khoá tạo được bài giảng từ bài viết. */
-  isOwner: boolean;
-  ownerName: string | null;
+  /** Bài giảng đang gắn với bài học (null = chưa có); slideCount 0 = mới có dàn ý, chưa tạo slide; canOpen = người hỏi là chủ hoặc đồng giảng viên của bài giảng. */
+  deck: { id: string; slideCount: number; canOpen: boolean; ownerName: string | null } | null;
   /** Cỡ chữ của bài: để hộp xác nhận nói bài đủ dài hay không và ước lượng chi phí. */
   textChars: number;
   textWords: number;
@@ -120,16 +117,22 @@ export interface LessonSlideState {
 export async function getLessonSlideState(actorId: string, lessonId: string, db: PrismaClient = prisma): Promise<LessonSlideState> {
   const src = await getLessonSource(actorId, lessonId, db); // kiểm quyền sửa khoá
   const lesson = await db.lesson.findUniqueOrThrow({ where: { id: lessonId }, select: { liveDeckId: true } });
-  const [deck, owner] = await Promise.all([
-    lesson.liveDeckId
-      ? db.liveDeck.findUnique({ where: { id: lesson.liveDeckId }, select: { id: true, _count: { select: { slides: true } } } })
-      : null,
-    src.ownerId ? db.user.findUnique({ where: { id: src.ownerId }, select: { displayName: true } }) : null,
-  ]);
+  const deck = lesson.liveDeckId
+    ? await db.liveDeck.findUnique({
+        where: { id: lesson.liveDeckId },
+        select: {
+          id: true,
+          userId: true,
+          user: { select: { displayName: true } },
+          collaborators: { where: { userId: actorId }, select: { userId: true } },
+          _count: { select: { slides: true } },
+        },
+      })
+    : null;
   return {
-    deck: deck ? { id: deck.id, slideCount: deck._count.slides } : null,
-    isOwner: src.ownerId === actorId,
-    ownerName: owner?.displayName ?? null,
+    deck: deck
+      ? { id: deck.id, slideCount: deck._count.slides, canOpen: deck.userId === actorId || deck.collaborators.length > 0, ownerName: deck.user.displayName }
+      : null,
     textChars: src.text.length,
     textWords: (src.text.match(/\S+/g) ?? []).length,
   };

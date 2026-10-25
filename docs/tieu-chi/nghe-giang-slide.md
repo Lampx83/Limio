@@ -34,8 +34,7 @@ và tạo lại được từng slide.
 
 ## AC1 — Gắn bài giảng slide với bài học
 
-- **Given** một bài học và một bài giảng (LiveDeck) của chủ khoá, **when** quản trị hoặc giảng viên sửa được khoá gắn chúng,
-  **then** bài học có đúng một bài giảng slide; gắn lần nữa thì thay bài giảng cũ (sau khi hỏi lại), không tạo hai bài.
+- **Given** một bài học và một bài giảng (LiveDeck) do chính người thao tác tạo, **when** chủ khoá hoặc đồng giảng viên (và admin) gắn chúng, **then** bài học có đúng một bài giảng slide; gắn lần nữa thì thay bài giảng cũ (sau khi hỏi lại), không tạo hai bài. Mỗi người chỉ gắn bài giảng của chính mình; gỡ thì ai sửa được khoá cũng gỡ được.
 - **Given** bài học có bài giảng slide, **when** bài giảng bị xoá, **then** bài học tự về cách nghe cũ, không lỗi, không để lại
   tham chiếu chết.
 - **Given** một học viên ghi danh (hoặc người xem thử, hoặc khoá cho đọc công khai) được xem bài học và bài đã có giọng slide, **when**
@@ -57,7 +56,7 @@ và tạo lại được từng slide.
   *Chưa làm ở giai đoạn 2:* slide dùng hình minh hoạ có sẵn của Limio-Live (bài viết đi vào AI dưới dạng chữ, không kèm ảnh). Dùng lại ảnh
   có giấy phép của bài là việc sau.
 - Số slide theo thời lượng bài: **12–16 slide cho bài 15 phút** (+3/+4 so với bài giảng dạy trực tiếp; dàn ý và trang chỉnh dàn ý đều dùng mức này); luôn có slide bìa và slide tổng kết.
-- **Chỉ chủ khoá** tạo được bài giảng từ bài viết (bài giảng thuộc chủ khoá); người khác thấy nút bị từ chối với lời giải thích.
+- **Chủ khoá và đồng giảng viên** đều tạo được bài giảng từ bài viết (quyết định 25/10/2026). Bài giảng thuộc người tạo, nên chỉ người đó mở được trình soạn và trình chiếu Limio-Live; người khác trong khoá xem được qua "Xem slide để nghe giảng", gỡ hoặc thay được, và thấy dòng ghi rõ bài giảng của ai.
 - Mỗi lần sinh lưu lại **chữ của bài viết** lúc đó (`sourceText` của bài giảng; chủ bài giảng mới đọc được). Bài viết sửa sau này thì trang quản trị báo (*làm ở giai đoạn sau*, so chữ đã lưu với chữ hiện tại) "Bài viết đã đổi
   sau khi tạo bài giảng" và đề nghị sinh lại; **không tự sinh lại** và không ghi đè chỉnh sửa của giảng viên.
 - Chạy được khi chưa có khoá NEU (chỉ cần mô hình chat đã cấu hình). Lỗi mô hình → báo lỗi, không để bài giảng nửa vời.
@@ -111,7 +110,7 @@ và tạo lại được từng slide.
 
 ## AC6 — Trình phát tự học
 
-- **Nút ở đầu bài.** Người sửa được khoá thấy "Xem slide ▾" (khi bài có bài giảng) với hai mục: "Xem slide để dạy" → trang trình chiếu
+- **Nút ở đầu bài.** **Chủ khoá và đồng giảng viên** thấy nút "Slide" ở đầu bài, và khi bài đã có slide nó mở menu với hai mục: "Xem slide để dạy" → trang trình chiếu
   của Limio-Live (dạy trực tiếp, có tương tác thật); "Xem slide để nghe giảng" → trình phát slideshow như học viên. Học viên **không**
   thấy "Xem slide"; họ thấy nút nghe giảng slide chỉ khi bài đã có giọng (AC5), và không thấy gì khi chưa có.
 - **Given** bài có giọng slide, **when** học viên (hoặc giảng viên qua "Xem slide để nghe giảng") bấm nghe giảng slide, **then** mở trình phát slide toàn
@@ -153,7 +152,7 @@ và tạo lại được từng slide.
 
 ## Điểm cần bạn xác nhận
 
-1. Bài giảng của bài học thuộc **tài khoản chủ khoá** và nằm trong nhóm bài giảng tự tạo theo tên khoá — có ổn không?
+1. Bài giảng của bài học thuộc **người tạo** (chủ khoá hoặc đồng giảng viên) và nằm trong nhóm bài giảng tự tạo theo tên khoá của người đó — đã chốt.
 2. Khoảng 12–16 slide cho bài 15 phút; lời mỗi slide ≤ 120 từ (khoảng 40 giây): đúng nhịp bạn muốn chưa?
 3. Giọng slide dùng **chung giọng giảng viên** đã chọn ở trang "Giọng đọc" (không thêm vai mới): đồng ý?
 4. Tự kiểm tra **không điểm** và không vào hồ sơ năng lực: đúng ý bạn?

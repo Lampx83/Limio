@@ -759,6 +759,12 @@ tông; "Gỡ toàn bộ thương hiệu"), hoặc "Không dùng". Cấp trườn
   "Tạo link mới" (link cũ chết ngay), "Tắt chia sẻ". Link `/bai-giang/<mã>` ai có link cũng xem được, không cần
   đăng nhập, có **"Tải PDF"** (mỗi slide một trang 16:9); không hiện ghi chú giảng, đáp án trắc nghiệm và slide
   đã ẩn; không cho công cụ tìm kiếm lập chỉ mục.
+- **Đồng giảng viên** (nút trên trình sửa, cạnh "Chia sẻ"): hộp liệt kê chủ bài và các đồng giảng viên. Chủ bài nhập
+  **email** của người đã có tài khoản Limio và được dùng Limio-Live rồi bấm "Thêm" (không gửi thư mời; email chưa có
+  tài khoản thì báo lỗi), bấm "Gỡ" để bỏ một người. Đồng giảng viên soạn slide, nhờ AI chỉnh, trình chiếu và xem kết
+  quả các lượt chiếu do chính mình điều hành; không xoá bài, không bật link chia sẻ, không đổi nhóm, không thêm người
+  khác (nút "Chia sẻ" không hiện với họ) và có nút "Rời bài giảng này". Bài được chia sẻ nằm ở mục **"Được chia sẻ
+  với tôi"** dưới danh sách trong "Slide của tôi", kèm tên chủ bài.
 
 ## 15. Hoạt động nhanh (`/instructor/teaching-tools`, mới nhãn "Hoạt động nhanh")
 
@@ -809,8 +815,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   vấn đáp (chỉ nhiệm vụ Đấu trường chấm chéo có bảng) · cài đặt XP/huy hiệu · "Phân tích" và "Analytics"
   (chỉ nhà nghiên cứu) · trang `/instructor/feedback-generator`, `/feedback-templates`, `/item-analytics`
   (không có lối vào) · "Thư viện mẫu", "Template", "Soạn kịch bản" của Limio-Live (đang phát triển) ·
-  khối "Slide bài giảng" trong hộp thêm hoạt động · chia sẻ bài giảng cho đồng nghiệp hoặc đồng soạn (chỉ có
-  link xem chỉ đọc) · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
+  khối "Slide bài giảng" trong hộp thêm hoạt động · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
   trống/Ghép cặp/Memory/Open-ended (chỉ trong kế hoạch).
 - **Đợt thi**, "+ Tạo đợt thi", "Trưởng đợt", tạo nhiều ca trong một đợt — đã gỡ khỏi luồng tổ chức. Giới hạn
   mạng khi vào thi (cài đặt của quản trị trường). Khoá mẫu ngoại ngữ ở trang tạo khoá (đã gỡ). Rubric vấn đáp như

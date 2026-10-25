@@ -1,4 +1,5 @@
 import { AiGenerationError, AiTutorError, readChartFromImage } from "@feedbackme/core-feedback";
+import { deckAccessWhere } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
@@ -24,7 +25,7 @@ export async function POST(_req: Request, { params }: { params: { deckId: string
   if (!userId) return json({ error: "forbidden" }, 403);
 
   const slide = await prisma.liveSlide.findFirst({
-    where: { id: params.slideId, deckId: params.deckId, deck: { userId } },
+    where: { id: params.slideId, deckId: params.deckId, deck: deckAccessWhere(userId) },
     select: { type: true, config: true },
   });
   if (!slide) return json({ error: "not_found" }, 404);

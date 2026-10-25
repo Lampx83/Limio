@@ -1,15 +1,16 @@
 import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { canEditCourse } from "../courses/authz";
-import { resolveCourseOwner } from "../storage/ledger";
 import { emitEvent } from "../learning/events";
+import { deckAccessWhere, hasDeckAccess } from "./deckAccess";
 
 /**
- * Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md, AC1). Một bài học một bài giảng và ngược lại; bài giảng
- * phải thuộc CHỦ KHOÁ (quyết định 25/10/2026) — người sửa khoá khác chọn được bài giảng của chủ khoá chứ không của chính họ.
+ * Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md, AC1). Một bài học một bài giảng và ngược lại. Chủ khoá và đồng
+ * giảng viên đều gắn, gỡ, tạo được (quyết định 25/10/2026); bài giảng thuộc người TẠO ra nó, và mỗi người chỉ gắn được bài giảng mình
+ * có quyền soạn (của chính mình hoặc mình là đồng giảng viên: dong-giang-vien-bai-giang.md), vì các trang Limio-Live chỉ mở cho họ.
  */
 
-export type LessonDeckErrorCode = "not_found" | "forbidden" | "deck_not_owned_by_course_owner" | "deck_in_use" | "lesson_has_deck";
+export type LessonDeckErrorCode = "not_found" | "forbidden" | "deck_not_yours" | "deck_in_use" | "lesson_has_deck";
 
 export class LessonDeckError extends Error {
   constructor(
@@ -25,15 +26,15 @@ export interface LessonDeckSummary {
   title: string;
   slideCount: number;
   updatedAt: Date;
+  /** Người hỏi mở được trình soạn và trình chiếu (là chủ hoặc đồng giảng viên của bài giảng). */
+  canOpen: boolean;
+  ownerName: string | null;
 }
 
 export interface LessonDeckForEditor {
   attached: LessonDeckSummary | null;
-  /** Bài giảng của chủ khoá còn chọn được (chưa gắn với bài học nào), mới sửa nhất trước. */
+  /** Bài giảng người hỏi có quyền soạn (của mình hoặc mình là đồng giảng viên) còn chọn được (chưa gắn với bài học nào), mới sửa nhất trước. */
   candidates: LessonDeckSummary[];
-  ownerId: string | null;
-  /** Người hỏi là chủ khoá: chỉ chủ khoá tạo được bài giảng mới từ bài viết (bài giảng thuộc chủ khoá). */
-  isOwner: boolean;
 }
 
 /**
@@ -60,29 +61,48 @@ async function loadLesson(lessonId: string, db: PrismaClient) {
   return { id: lesson.id, liveDeckId: lesson.liveDeckId, courseId: lesson.module.courseId };
 }
 
+/** Người sửa được khoá (chủ khoá, đồng giảng viên, admin) mới dùng phần bài giảng slide của bài học. */
 async function requireEditor(actorId: string, courseId: string, db: PrismaClient) {
   if (!(await canEditCourse(actorId, courseId, db))) throw new LessonDeckError("forbidden");
 }
 
-const summarySelect = { id: true, title: true, updatedAt: true, _count: { select: { slides: true } } } as const;
-const toSummary = (d: { id: string; title: string; updatedAt: Date; _count: { slides: number } }): LessonDeckSummary => ({
+const summarySelect = {
+  id: true,
+  title: true,
+  updatedAt: true,
+  userId: true,
+  user: { select: { displayName: true } },
+  collaborators: { select: { userId: true } },
+  _count: { select: { slides: true } },
+} as const;
+const toSummary = (
+  d: {
+    id: string;
+    title: string;
+    updatedAt: Date;
+    userId: string;
+    user: { displayName: string };
+    collaborators: { userId: string }[];
+    _count: { slides: number };
+  },
+  actorId: string,
+): LessonDeckSummary => ({
   id: d.id,
   title: d.title,
   slideCount: d._count.slides,
   updatedAt: d.updatedAt,
+  canOpen: d.userId === actorId || d.collaborators.some((c) => c.userId === actorId),
+  ownerName: d.user.displayName,
 });
 
 export async function getLessonDeckForEditor(actorId: string, lessonId: string, db: PrismaClient = prisma): Promise<LessonDeckForEditor> {
   const lesson = await loadLesson(lessonId, db);
   await requireEditor(actorId, lesson.courseId, db);
-  const ownerId = await resolveCourseOwner(lesson.courseId, db);
   const [attached, candidates] = await Promise.all([
     lesson.liveDeckId ? db.liveDeck.findUnique({ where: { id: lesson.liveDeckId }, select: summarySelect }) : null,
-    ownerId
-      ? db.liveDeck.findMany({ where: { userId: ownerId, lesson: { is: null } }, orderBy: { updatedAt: "desc" }, take: 200, select: summarySelect })
-      : [],
+    db.liveDeck.findMany({ where: { AND: [deckAccessWhere(actorId), { lesson: { is: null } }] }, orderBy: { updatedAt: "desc" }, take: 200, select: summarySelect }),
   ]);
-  return { attached: attached ? toSummary(attached) : null, candidates: candidates.map(toSummary), ownerId, isOwner: ownerId === actorId };
+  return { attached: attached ? toSummary(attached, actorId) : null, candidates: candidates.map((d) => toSummary(d, actorId)) };
 }
 
 /**
@@ -100,7 +120,7 @@ export async function attachLessonDeck(
   await requireEditor(actorId, lesson.courseId, db);
   const deck = await db.liveDeck.findUnique({ where: { id: deckId }, select: { id: true, userId: true, groupId: true, lesson: { select: { id: true } } } });
   if (!deck) throw new LessonDeckError("not_found");
-  if (deck.userId !== (await resolveCourseOwner(lesson.courseId, db))) throw new LessonDeckError("deck_not_owned_by_course_owner");
+  if (!(await hasDeckAccess(deck, actorId, db))) throw new LessonDeckError("deck_not_yours");
   if (lesson.liveDeckId === deck.id) return { replacedDeckId: null }; // gắn lại đúng bài giảng đang gắn: không làm gì
   if (deck.lesson && deck.lesson.id !== lesson.id) throw new LessonDeckError("deck_in_use");
   if (lesson.liveDeckId && !opts.replace) throw new LessonDeckError("lesson_has_deck");

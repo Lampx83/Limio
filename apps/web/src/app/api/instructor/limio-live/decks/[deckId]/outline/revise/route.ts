@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { deckAccessWhere } from "@feedbackme/core-lms";
 import { AiGenerationError, AiTutorError, generateLectureOutline } from "@feedbackme/core-feedback";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
@@ -43,7 +44,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   if (mode !== "revise" && mode !== "restart") return NextResponse.json({ error: "validation_failed", details: "mode" }, { status: 400 });
 
   const deck = await prisma.liveDeck.findFirst({
-    where: { id: params.deckId, userId },
+    where: { id: params.deckId, ...deckAccessWhere(userId) },
     select: { id: true, outline: true, outlineMinutes: true, sourceText: true, sourceKind: true, sourceRefs: true, sourceIntent: true, lesson: { select: { id: true } } },
   });
   if (!deck || !deck.outline) return NextResponse.json({ error: "not_found" }, { status: 404 });

@@ -18,6 +18,8 @@ export interface UpdateSlideInput {
   type?: LiveSlideType;
 }
 
+import { hasDeckAccess } from "./deckAccess";
+
 export type DeckWithSlides = LiveDeck & { slides: LiveSlide[] };
 
 /**
@@ -63,7 +65,7 @@ export async function getLiveDeck(
     include: { slides: { orderBy: { orderIndex: "asc" } } },
   });
 
-  if (deck && deck.userId !== userId) {
+  if (deck && !(await hasDeckAccess(deck, userId, db))) {
     return null;
   }
 
@@ -81,7 +83,7 @@ export async function updateLiveDeck(
   db: PrismaClient
 ): Promise<LiveDeck> {
   const existing = await db.liveDeck.findUnique({ where: { id: deckId } });
-  if (!existing || existing.userId !== userId) {
+  if (!existing || !(await hasDeckAccess(existing, userId, db))) {
     throw new Error("Not authorized to update this deck");
   }
   if (updates.title !== undefined && !updates.title.trim()) {
@@ -123,7 +125,7 @@ export async function duplicateLiveDeck(
     where: { id: deckId },
     include: { slides: { orderBy: { orderIndex: "asc" } } },
   });
-  if (!source || source.userId !== userId) {
+  if (!source || !(await hasDeckAccess(source, userId, db))) {
     throw new Error("Not authorized to duplicate this deck");
   }
 
@@ -136,7 +138,8 @@ export async function duplicateLiveDeck(
         userId,
         title,
         theme: source.theme,
-        groupId: source.groupId,
+        // Nhóm là của chủ bài: đồng giảng viên nhân bản về tài khoản mình thì để chưa phân nhóm.
+        groupId: source.userId === userId ? source.groupId : null,
         // Bản sao mang theo thương hiệu (logo dùng chung tệp với bài gốc) và cờ tắt thương hiệu.
         brandOff: source.brandOff,
         brandTemplate: source.brandTemplate,
@@ -186,7 +189,7 @@ export async function addLiveSlide(
   db: PrismaClient
 ): Promise<LiveSlide> {
   const deck = await db.liveDeck.findUnique({ where: { id: deckId } });
-  if (!deck || deck.userId !== userId) {
+  if (!deck || !(await hasDeckAccess(deck, userId, db))) {
     throw new Error("Not authorized to edit this deck");
   }
 
@@ -217,7 +220,7 @@ export async function addLiveSlidesBulk(
   db: PrismaClient
 ): Promise<LiveSlide[]> {
   const deck = await db.liveDeck.findUnique({ where: { id: deckId } });
-  if (!deck || deck.userId !== userId) {
+  if (!deck || !(await hasDeckAccess(deck, userId, db))) {
     throw new Error("Not authorized to edit this deck");
   }
   if (inputs.length === 0) return [];
@@ -252,7 +255,7 @@ async function getSlideWithOwnerCheck(
     where: { id: slideId },
     include: { deck: true },
   });
-  if (!slide || slide.deck.userId !== userId) {
+  if (!slide || !(await hasDeckAccess(slide.deck, userId, db))) {
     throw new Error("Not authorized to edit this slide");
   }
   return slide;
@@ -296,7 +299,7 @@ export async function reorderLiveSlides(
   db: PrismaClient
 ): Promise<void> {
   const deck = await db.liveDeck.findUnique({ where: { id: deckId } });
-  if (!deck || deck.userId !== userId) {
+  if (!deck || !(await hasDeckAccess(deck, userId, db))) {
     throw new Error("Not authorized to edit this deck");
   }
 

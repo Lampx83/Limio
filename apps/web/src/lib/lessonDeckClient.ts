@@ -4,9 +4,8 @@ import { apiUrl } from "@/lib/apiUrl";
 export const LESSON_DECK_ERRORS: Record<string, string> = {
   forbidden: "Bạn không có quyền sửa khoá này.",
   deck_in_use: "Bài giảng này đang gắn với một bài học khác. Gỡ ở bài kia trước.",
-  deck_not_owned_by_course_owner: "Chỉ gắn được bài giảng của chủ khoá.",
+  deck_not_yours: "Chỉ gắn được bài giảng do chính bạn tạo.",
   lesson_has_deck: "Bài học đã có bài giảng. Tải lại trang rồi thử lại.",
-  only_course_owner: "Chỉ chủ khoá tạo được bài giảng từ bài viết (bài giảng thuộc chủ khoá).",
   source_too_short: "Bài viết còn quá ngắn để soạn bài giảng.",
   openai_not_configured: "Chưa cấu hình mô hình AI trên máy chủ này.",
   empty_outline: "AI chưa soạn được dàn ý. Thử lại sau.",

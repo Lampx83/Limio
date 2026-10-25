@@ -1,5 +1,6 @@
 import { PrismaClient } from "@feedbackme/db";
 import { getOwnedSession } from "./present";
+import { hasDeckAccess } from "./deckAccess";
 
 // Map slideId -> id bản ghi runtime (xem LiveSession.slideRuntimeRefs trong schema).
 type RefMap = Record<string, string>;
@@ -59,8 +60,8 @@ export async function listLiveSessionHistory(
   userId: string,
   db: PrismaClient
 ): Promise<LiveSessionSummary[]> {
-  const deck = await db.liveDeck.findUnique({ where: { id: deckId }, select: { userId: true } });
-  if (!deck || deck.userId !== userId) {
+  const deck = await db.liveDeck.findUnique({ where: { id: deckId }, select: { id: true, userId: true } });
+  if (!deck || !(await hasDeckAccess(deck, userId, db))) {
     throw new Error("Not authorized to view this deck");
   }
 

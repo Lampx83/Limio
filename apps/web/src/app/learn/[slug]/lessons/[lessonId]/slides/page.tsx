@@ -33,7 +33,7 @@ export default async function LessonSlidesPage({ params }: Props) {
 
   const back = `/learn/${params.slug}/lessons/${params.lessonId}`;
   // Học viên chỉ nghe giảng slide khi bài đã có giọng (giai đoạn 3–4); đến lúc đó trang này mở cho họ qua cùng luật xem bài.
-  // Hiện chỉ người sửa được khoá mới vào (nút "Xem slide để nghe giảng" của giảng viên).
+  // Hiện chỉ người sửa được khoá mới vào (nút "Slide" ở đầu bài của chủ khoá và đồng giảng viên).
   if (!userId) redirect(`/signin?callbackUrl=${encodeURIComponent(`${back}/slides`)}`);
   if (!(await canEditCourse(userId, lesson.module.course.id))) notFound();
 
