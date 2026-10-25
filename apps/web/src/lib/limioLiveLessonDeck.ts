@@ -1,4 +1,5 @@
 // Bài giảng slide sinh từ BÀI VIẾT của bài học (docs/tieu-chi/nghe-giang-slide.md, AC2–AC4). Hàm thuần.
+import { estimateGenerationTokens } from "./limioLiveGenerate";
 
 /** Thời lượng dàn ý theo thời lượng bài học: các mức Limio-Live hỗ trợ là 15, 30, 45 phút (isValidMinutes). */
 export function minutesForLesson(wordCount: number): 15 | 30 | 45 {
@@ -23,4 +24,18 @@ export function lessonDeckIntent(lessonTitle: string): string {
     "4. Chỉ dùng kiến thức, số liệu, tên người, trích dẫn có trong bài viết. Không bịa thêm.",
     "5. Slide đầu là bìa, slide cuối là tổng kết; lời đọc của hai slide này là lời chào và lời tóm ý ngắn.",
   ].join("\n");
+}
+
+/**
+ * Ước lượng token cho cả việc tạo bài giảng từ bài viết, để hộp xác nhận nói trước chi phí: bước dàn ý (nguồn vào, dàn ý ra) cộng
+ * bước viết slide. `slideCount` mặc định là mức giữa của bài 15 phút (12–16).
+ */
+export function estimateLessonDeckTokens(sourceChars: number, slideCount = 14): number {
+  const outline = 1800 + Math.round(Math.min(sourceChars, 24_000) / 2.4) + slideCount * 60;
+  return outline + estimateGenerationTokens({ sourceChars, slideCount }).total;
+}
+
+/** 15300 → "15,3 nghìn"; dưới 1000 giữ nguyên số. */
+export function formatTokenCount(n: number): string {
+  return n >= 1000 ? `${Math.round(n / 100) / 10} nghìn`.replace(".", ",") : String(n);
 }

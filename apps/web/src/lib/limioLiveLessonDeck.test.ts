@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countWords, lessonDeckIntent, minutesForLesson } from "./limioLiveLessonDeck";
+import { countWords, estimateLessonDeckTokens, formatTokenCount, lessonDeckIntent, minutesForLesson } from "./limioLiveLessonDeck";
 import { SELF_CHECK_TARGET, interactionGap, quizOnly } from "./limioLiveInteractions";
 import { outlineWarnings, slideRange, type Outline } from "./limioLiveOutline";
 import { reviseRange } from "./limioLiveOutlineRevise";
@@ -59,5 +59,16 @@ describe("bài giảng của bài học", () => {
   it("dàn ý ít hơn mức thì nhắc theo mức của bài học", () => {
     const w = outlineWarnings(outline(["content", "content", "quiz", "content", "quiz", "quiz", "content", "content"]), 15, { selfCheck: true });
     expect(w.join("\n")).toMatch(/ít hơn mức gợi ý 12 đến 16 slide/);
+  });
+
+  it("ước lượng token tăng theo độ dài bài (có trần 24.000 ký tự) và định dạng số dễ đọc", () => {
+    const short = estimateLessonDeckTokens(3000);
+    const long = estimateLessonDeckTokens(20000);
+    const capped = estimateLessonDeckTokens(90000);
+    expect(long).toBeGreaterThan(short);
+    expect(capped).toBe(estimateLessonDeckTokens(24000));
+    expect(short).toBeGreaterThan(5000);
+    expect(formatTokenCount(15300)).toBe("15,3 nghìn");
+    expect(formatTokenCount(850)).toBe("850");
   });
 });

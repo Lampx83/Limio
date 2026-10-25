@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { LESSON_DECK_ERRORS, LessonDeckClientError, createLessonDeckFromArticle } from "@/lib/lessonDeckClient";
 
 interface DeckSummary {
   id: string;
@@ -18,19 +19,7 @@ interface Data {
   isOwner: boolean;
 }
 
-const ERRORS: Record<string, string> = {
-  forbidden: "Bạn không có quyền sửa khoá này.",
-  deck_in_use: "Bài giảng này đang gắn với một bài học khác. Gỡ ở bài kia trước.",
-  deck_not_owned_by_course_owner: "Chỉ gắn được bài giảng của chủ khoá.",
-  lesson_has_deck: "Bài học đã có bài giảng. Tải lại trang rồi chọn lại.",
-  only_course_owner: "Chỉ chủ khoá tạo được bài giảng từ bài viết (bài giảng thuộc chủ khoá).",
-  source_too_short: "Bài viết còn quá ngắn để soạn bài giảng.",
-  openai_not_configured: "Chưa cấu hình mô hình AI trên máy chủ này.",
-  empty_outline: "AI chưa soạn được dàn ý. Thử lại sau.",
-  generate_failed: "AI chưa soạn được dàn ý. Thử lại sau.",
-  validation_failed: "AI trả về dàn ý chưa hợp lệ. Thử lại sau.",
-  ai_quota_exceeded: "Đã hết hạn mức AI. Thử lại sau.",
-};
+const ERRORS = LESSON_DECK_ERRORS;
 
 /**
  * Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md, AC1): chọn một bài giảng của chủ khoá để học viên xem
@@ -89,38 +78,10 @@ export default function LessonDeckPanel({ lessonId, courseSlug }: { lessonId: st
     setGenerating(true);
     setError(null);
     try {
-      const form = new FormData();
-      form.set("lessonId", lessonId);
-      if (replacing) form.set("replace", "1");
-      const r = await fetch(apiUrl("/api/instructor/limio-live/outline"), { method: "POST", body: form });
-      if (!r.ok || !r.body) {
-        const j = (await r.json().catch(() => ({}))) as { error?: string };
-        setError(ERRORS[j.error ?? ""] ?? "Chưa tạo được bài giảng từ bài viết.");
-        return;
-      }
-      // Luồng NDJSON: nhịp giữ kết nối rồi {type:"done",deckId} hoặc {type:"error",error}.
-      const reader = r.body.getReader();
-      const dec = new TextDecoder();
-      let buf = "";
-      let deckId: string | null = null;
-      let failure: string | null = null;
-      for (;;) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split("\n");
-        buf = lines.pop() ?? "";
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const ev = JSON.parse(line) as { type: string; deckId?: string; error?: string };
-          if (ev.type === "done" && ev.deckId) deckId = ev.deckId;
-          if (ev.type === "error") failure = ev.error ?? "generate_failed";
-        }
-      }
-      if (failure || !deckId) setError(ERRORS[failure ?? ""] ?? "Chưa tạo được bài giảng từ bài viết.");
-      else router.push(`/instructor/limio-live/${deckId}/outline`);
-    } catch {
-      setError("Mất kết nối khi soạn dàn ý. Thử lại.");
+      const { deckId } = await createLessonDeckFromArticle(lessonId, { replace: replacing });
+      router.push(`/instructor/limio-live/${deckId}/outline`);
+    } catch (e) {
+      setError(e instanceof LessonDeckClientError ? e.message : "Mất kết nối khi soạn dàn ý. Thử lại.");
     } finally {
       setGenerating(false);
       setBusy(false);

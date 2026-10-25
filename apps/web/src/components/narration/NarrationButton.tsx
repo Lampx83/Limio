@@ -1,6 +1,8 @@
 "use client";
 
 import { Headphones } from "lucide-react";
+import { NarrationWave } from "./NarrationAvatar";
+import "./narration.css";
 import { minutesLabel } from "@/lib/narration/learner";
 import { narrationCommands, useNarration } from "@/lib/narration/store";
 
@@ -14,7 +16,7 @@ export default function NarrationButton({ durationSec }: { durationSec: number }
   return (
     <button
       type="button"
-      className={`btn-pill print:hidden ${active ? "ring-2 ring-[rgb(var(--brand))]" : ""}`}
+      className="btn-listen print:hidden"
       aria-pressed={active}
       onClick={() => {
         const c = narrationCommands();
@@ -22,8 +24,11 @@ export default function NarrationButton({ durationSec }: { durationSec: number }
         else c?.open("lecture");
       }}
     >
-      <Headphones size={16} />
-      Nghe giảng · {minutesLabel(durationSec)}
+      <span className="listen-icon">{active && ui.playing ? <NarrationWave playing /> : <Headphones size={18} />}</span>
+      <span className="listen-label">
+        <span>Nghe giảng</span>
+        <small>{minutesLabel(durationSec)}</small>
+      </span>
     </button>
   );
 }

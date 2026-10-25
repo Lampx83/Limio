@@ -40,6 +40,7 @@ export default function SharedDeckView({
   theme,
   brand,
   slides,
+  allowPdf = true,
 }: {
   /** Chỉ để chọn hoa văn tự động giống lúc trình chiếu (limioLiveMotifs). */
   deckId: string;
@@ -53,6 +54,8 @@ export default function SharedDeckView({
   theme: string;
   brand: BrandConfig | null;
   slides: PublicSlide[];
+  /** Hiện nút "Tải PDF". Link chia sẻ công khai có; trang slide trong bài học thì không. */
+  allowPdf?: boolean;
 }) {
   const [preparing, setPreparing] = useState(false);
 
@@ -84,35 +87,43 @@ export default function SharedDeckView({
     <LiveBrandProvider brand={brand}>
     <LiveLangProvider lang={language}>
       <LiveMotifProvider deckId={deckId} motif={motif} imageFrame={imageFrame} slides={slides}>
-      <main className="shared-deck mx-auto w-full max-w-5xl px-4 py-6 lg:px-6">
-        <header data-print-hide className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <main className="shared-deck mx-auto w-full max-w-5xl px-4 py-3 lg:px-6">
+        <header data-print-hide className="mb-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-h1 break-words">{title}</h1>
-            <p className="mt-1 text-meta">
+            <h1 className="text-h3 break-words">{title}</h1>
+            <p className="text-meta">
               Bài giảng của {ownerName} · {slides.length} slide
             </p>
           </div>
-          <div className="flex shrink-0 flex-col items-start gap-1 sm:items-end">
-            <button onClick={handleDownloadPdf} disabled={preparing || slides.length === 0} className="btn-primary flex items-center gap-2">
+          {allowPdf && (
+            <button
+              onClick={handleDownloadPdf}
+              disabled={preparing || slides.length === 0}
+              title="Trong hộp in, chọn “Lưu thành PDF”"
+              className="btn-secondary btn-sm flex shrink-0 items-center gap-2"
+            >
               {preparing ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
               {preparing ? "Đang chuẩn bị…" : "Tải PDF"}
             </button>
-            <p className="text-caption text-muted">Trong hộp in, chọn “Lưu thành PDF”.</p>
-          </div>
+          )}
         </header>
 
         {slides.length === 0 ? (
           <p className="text-body text-muted">Bài giảng này chưa có slide nào.</p>
         ) : (
-          <ol className="flex flex-col gap-6">
+          <ol className="flex flex-col gap-3">
             {slides.map((slide, i) => (
-              <li key={slide.id} className="shared-slide-item">
+              <li key={slide.id} className="shared-slide-item relative">
                 <ScaledSlide>
                   <SlideFrame slide={slide} theme={theme} brand={brand} />
                 </ScaledSlide>
-                <p data-print-hide className="mt-1.5 text-right text-caption text-muted">
+                {/* Số slide nằm trong khung slide (không tốn thêm một dòng giữa hai slide). */}
+                <span
+                  data-print-hide
+                  className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black/50 px-2 py-0.5 text-caption font-medium tabular-nums text-white"
+                >
                   {i + 1}/{slides.length}
-                </p>
+                </span>
               </li>
             ))}
           </ol>

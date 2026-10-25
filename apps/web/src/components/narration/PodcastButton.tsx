@@ -1,6 +1,8 @@
 "use client";
 
-import { Mic } from "lucide-react";
+import { Podcast } from "lucide-react";
+import { NarrationWave } from "./NarrationAvatar";
+import "./narration.css";
 import { minutesLabel } from "@/lib/narration/learner";
 import { narrationCommands, useNarration } from "@/lib/narration/store";
 
@@ -14,7 +16,7 @@ export default function PodcastButton({ durationSec, title }: { durationSec: num
   return (
     <button
       type="button"
-      className={`btn-pill print:hidden ${active ? "ring-2 ring-[rgb(var(--brand))]" : ""}`}
+      className="btn-listen btn-listen-podcast print:hidden"
       aria-pressed={active}
       title={title}
       onClick={() => {
@@ -23,8 +25,11 @@ export default function PodcastButton({ durationSec, title }: { durationSec: num
         else c?.open("podcast");
       }}
     >
-      <Mic size={16} />
-      Podcast · {minutesLabel(durationSec)}
+      <span className="listen-icon">{active && ui.playing ? <NarrationWave playing /> : <Podcast size={18} />}</span>
+      <span className="listen-label">
+        <span>Podcast</span>
+        <small>{minutesLabel(durationSec)}</small>
+      </span>
     </button>
   );
 }

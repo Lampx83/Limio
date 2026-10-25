@@ -7,17 +7,20 @@ import {
   effectiveAssignmentDues,
   getCourseProgress,
   getLearnerNarrations,
+  getLessonSlideState,
   isUserEnrolled,
   listThreadsForLesson,
   resolveQuizScore,
 } from "@feedbackme/core-lms";
 import {
+  OUTLINE_MIN_SOURCE_CHARS,
   getSpeakingFeedbackForLearner,
   getWritingFeedbackForLearner,
   resolveFeedbackVariant,
   shouldSkipLesson,
 } from "@feedbackme/core-feedback";
 import { LearningEventType } from "@feedbackme/shared-types";
+import { estimateLessonDeckTokens, formatTokenCount } from "@/lib/limioLiveLessonDeck";
 import { auth } from "@/lib/auth";
 import LessonContent from "@/components/LessonContent";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
@@ -42,7 +45,7 @@ import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import NarrationButton from "@/components/narration/NarrationButton";
 import NarrationPlayer from "@/components/narration/NarrationPlayer";
 import PodcastButton from "@/components/narration/PodcastButton";
-import LessonSlidesMenu from "@/components/lesson/LessonSlidesMenu";
+import LessonSlideButton, { type LessonSlideInfo } from "@/components/lesson/LessonSlideButton";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
 import { Download, Lock, PenLine } from "lucide-react";
@@ -203,6 +206,22 @@ export default async function LessonPage({
   const teacherMode = canEdit && searchParams?.gv === "1";
   const stageMode = searchParams?.stage === "1";
   const previewMode = canEdit && searchParams?.preview === "1";
+  // Nút "Slide" của giảng viên (docs/tieu-chi/nghe-giang-slide.md): trạng thái bài giảng slide của bài. Lỗi thì không hiện nút,
+  // không làm hỏng trang bài.
+  let slideInfo: LessonSlideInfo | null = null;
+  if (canEdit && userId && !stageMode && !previewMode) {
+    const st = await getLessonSlideState(userId, params.lessonId).catch(() => null);
+    if (st) {
+      slideInfo = {
+        deck: st.deck,
+        isOwner: st.isOwner,
+        ownerName: st.ownerName,
+        textWords: st.textWords,
+        longEnough: st.textChars >= OUTLINE_MIN_SOURCE_CHARS,
+        tokenLabel: formatTokenCount(estimateLessonDeckTokens(st.textChars)),
+      };
+    }
+  }
   // Nghe giảng / Podcast (docs/tieu-chi/nghe-giang-podcast.md): chỉ bản giọng đã tạo xong và khớp kịch bản mới tới
   // được đây. Không có thì không hiện gì. Bắt lỗi để một sự cố ở phần nghe không bao giờ làm hỏng trang bài.
   const narrations =
@@ -699,30 +718,38 @@ export default async function LessonPage({
         chúng thao tác lên chính bài này, nên đặt cạnh tên bài thì rõ phạm vi
         hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
       */}
-      <header className="mt-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
+      <header className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
         <span className="chip">{lesson.module.title}</span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-2 h-display text-3xl font-bold sm:text-4xl">
           {lesson.title}
         </h1>
         {lesson.description && (
           <SafeHtml
             html={plainToRichHtml(lesson.description)}
-            className="prose mt-3 max-w-none text-base text-muted dark:prose-invert"
+            className="prose mt-2 max-w-none text-base text-muted dark:prose-invert"
           />
         )}
         {!previewMode && (
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
-            <LessonContentToolbar
-              printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
-                teacherMode ? "?gv=1" : ""
-              }`}
-            />
-            {narrations.lecture && <NarrationButton durationSec={narrations.lecture.durationSec} />}
-            {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
-            {canEdit && lesson.liveDeckId && (
-              <LessonSlidesMenu deckId={lesson.liveDeckId} courseSlug={params.slug} lessonId={params.lessonId} />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {/* Các nút nghe nổi bật (Nghe giảng, Podcast, Slide) đứng bên trái; nút công cụ (in) dồn sang phải cùng hàng để đỡ tốn thêm một hàng. */}
+            {/* Màn hẹp: các nút nghe chia đều cột, nằm riêng một hàng; từ sm: xếp ngang theo bề rộng cố định của nút. */}
+            {(narrations.lecture || narrations.podcast || slideInfo) && (
+              <div className="grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto">
+                {narrations.lecture && <NarrationButton durationSec={narrations.lecture.durationSec} />}
+                {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
+                {slideInfo && (
+                  <LessonSlideButton lessonId={params.lessonId} lessonTitle={lesson.title} courseSlug={params.slug} info={slideInfo} />
+                )}
+              </div>
             )}
+            <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:ml-auto">
+              {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
+              <LessonContentToolbar
+                printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
+                  teacherMode ? "?gv=1" : ""
+                }`}
+              />
+            </div>
           </div>
         )}
         {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
@@ -731,7 +758,7 @@ export default async function LessonPage({
             là client component; xem LessonCompletionPrompt để biết công
             thức gộp. */}
         {!previewMode && (
-          <div className="mt-5">
+          <div className="mt-3">
             <LessonCompletionPrompt
               lessonId={lesson.id}
               courseSlug={params.slug}
