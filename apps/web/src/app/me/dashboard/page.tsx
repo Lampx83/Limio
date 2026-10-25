@@ -3,7 +3,7 @@ import { Award, BookOpen, CheckCircle2, Target } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getCourseProgress } from "@feedbackme/core-lms";
+import { getCourseProgress, getLearnerSampleCourse } from "@feedbackme/core-lms";
 import { getLearnerSkillStates } from "@feedbackme/core-feedback";
 import { getLeaderboard } from "@feedbackme/core-gamification";
 import { LearningEventType, masteryLabel } from "@feedbackme/shared-types";
@@ -19,8 +19,7 @@ import CalendarLoader from "@/components/calendar/CalendarLoader";
 import MyAttendanceCard from "@/components/MyAttendanceCard";
 import LearnerTodoPanel from "@/components/todo/LearnerTodoPanel";
 import { loadLearnerTodo } from "@/lib/learnerTodo";
-import { hasAnyCourse, loadStartPage } from "@/lib/learnerStart";
-import LearnerStartPage from "./LearnerStartPage";
+import StartSampleCard from "@/components/learnerStart/StartSampleCard";
 
 export const dynamic = "force-dynamic";
 
@@ -39,26 +38,6 @@ export default async function LearnerDashboard({
   const activeRole = getActiveRole(session.user.roles ?? []);
   const isLearnerWorkspace = activeRole === "learner";
   const now = new Date();
-
-  // Học viên chưa có khoá nào: trang Bắt đầu thay cho trang tổng quan toàn ô số 0 và thẻ trống
-  // (docs/hoc-vien/trang-dau-hoc-vien-AC.md). Trả sớm để khỏi chạy cả loạt truy vấn bên dưới.
-  // Phần hướng dẫn 15 bước chỉ tự mở khi đã có khoá (AC5); `?tour=1` từ Cài đặt vẫn mở được.
-  if (isLearnerWorkspace && !(await hasAnyCourse(userId))) {
-    const { sample, courses } = await loadStartPage();
-    return (
-      <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
-        <LearnerStartPage name={session.user.name ?? session.user.email ?? ""} sample={sample} courses={courses} />
-        {searchParams?.tour === "1" && (
-          <HelpTour
-            steps={LEARNER_TOUR_STEPS}
-            role="learner"
-            initiallyOpen
-            mobileMenuToggleEvent={STUDENT_MENU_TOGGLE_EVENT}
-          />
-        )}
-      </main>
-    );
-  }
 
   // Các truy vấn dưới đây độc lập nhau → chạy song song. Trước đây ~10 await
   // nối tiếp nên thời gian vào trang = tổng độ trễ DB của từng truy vấn, và đây
@@ -115,10 +94,16 @@ export default async function LearnerDashboard({
     }),
   ]);
 
+  // Chưa có khoá nào: hiện thẻ "Thử học ngay" (docs/hoc-vien/trang-dau-hoc-vien-AC.md, AC3) và KHÔNG tự mở
+  // hướng dẫn 15 bước (AC5) — hầu hết mục nó giới thiệu đang trống, và hộp thoại sẽ che mất thẻ học thử.
+  // `?tour=1` từ Cài đặt vẫn mở được.
+  const sample = isLearnerWorkspace && enrollments.length === 0 ? await getLearnerSampleCourse() : null;
+
   const shouldShowTour =
     meTour != null &&
     (searchParams?.tour === "1" ||
-      !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "learner"));
+      (enrollments.length > 0 &&
+        !hasSeenHelpTour(meTour.helpTourCompletedByRole as HelpTourCompletionMap | null, "learner")));
 
   const xpMap = new Map(xpByCourse.map((x) => [x.courseId, x]));
   const weakSkills = allSkillStates
@@ -155,12 +140,15 @@ export default async function LearnerDashboard({
         <p className="mt-2 text-muted">Tổng quan tiến độ học của bạn.</p>
       </header>
 
+      {sample && <StartSampleCard sample={sample} />}
+
       {/*
         Chưa ghi danh khoá nào thì nói thẳng ngay ở đây, đừng để người học bấm
         vào một bài rồi bị đá về trang giới thiệu mà không hiểu vì sao. Trang
         này là nơi họ hạ cánh ngay sau khi đăng nhập, nên là chỗ đúng để nói.
+        Có khoá mẫu thì lời nhắn này đã nằm trong StartSampleCard ở trên.
       */}
-      {enrollments.length === 0 && (
+      {enrollments.length === 0 && !sample && (
         <div className="banner-brand mt-6 block rounded-2xl px-5 py-4">
           <p className="font-semibold">Bạn chưa ghi danh khoá học nào</p>
           <p className="mt-1 text-sm">
