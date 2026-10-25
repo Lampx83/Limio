@@ -67,6 +67,33 @@ export function nextStart(items: readonly TimedItem[], t: number): number | null
   return items[segmentIndexAt(items, t) + 1]?.startSec ?? null;
 }
 
+// ── Theo dõi trong một mục ────────────────────────────────────────────────────
+
+/**
+ * Khối con nào của mục đang được giảng, khi đã đi được `fraction` (0–1) thời lượng của mục. Chia theo độ dài chữ
+ * của từng khối: lời giảng không trùng từng chữ với bài viết nên đây chỉ là ước lượng, nhưng đủ để tô sáng và trang
+ * cuộn theo thay vì đứng ở đầu một mục dài. Không có khối nào thì trả -1.
+ */
+export function weightedIndexAt(weights: readonly number[], fraction: number): number {
+  if (weights.length === 0) return -1;
+  const w = weights.map((x) => (Number.isFinite(x) && x > 0 ? x : 1));
+  const total = w.reduce((a, b) => a + b, 0);
+  const f = Math.min(1, Math.max(0, Number.isFinite(fraction) ? fraction : 0)) * total;
+  let acc = 0;
+  for (let i = 0; i < w.length; i++) {
+    acc += w[i]!;
+    if (f < acc) return i;
+  }
+  return w.length - 1;
+}
+
+/** Phần thời lượng đã đi của một đoạn tại thời điểm `t`, kẹp 0–1 (trong khoảng lặng cuối đoạn vẫn là 1). */
+export function fractionWithin(item: TimedItem, t: number): number {
+  const span = item.endSec - item.startSec;
+  if (!(span > 0)) return 0;
+  return Math.min(1, Math.max(0, (t - item.startSec) / span));
+}
+
 // ── Ánh xạ anchor ↔ tiêu đề mục ───────────────────────────────────────────────
 
 /** Hai neo đặc biệt của lời giảng; khớp `LECTURE_INTRO_ANCHOR` / `LECTURE_OUTRO_ANCHOR` ở core-lms. */
