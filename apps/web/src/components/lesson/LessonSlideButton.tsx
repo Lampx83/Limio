@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, Headphones, Info, Loader2, Presentation, Users, X } from "lucide-react";
+import { ChevronDown, Headphones, Info, Loader2, Pencil, Presentation, Users, X } from "lucide-react";
 import { LessonDeckClientError, createLessonDeckFromArticle, lessonDeckErrorText } from "@/lib/lessonDeckClient";
 
 export interface LessonSlideInfo {
@@ -59,12 +59,14 @@ export default function LessonSlideButton({
 
   const item = "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-[rgb(var(--surface-muted))]";
   const hasMenu = !!deck;
+  // Lối tắt sửa slide: chỉ người mở được trình soạn (chủ bài giảng, đồng giảng viên của bài giảng) mới thấy.
+  const editHref = deck?.canOpen ? (deck.slideCount === 0 ? `/instructor/limio-live/${deck.id}/outline` : `/instructor/limio-live/${deck.id}`) : null;
 
   return (
     <div ref={rootRef} className="relative print:hidden max-sm:min-w-0 max-sm:flex-1">
       <button
         type="button"
-        className="btn-listen btn-listen-slide"
+        className={`btn-listen btn-listen-slide${editHref ? " btn-listen-has-edit" : ""}`}
         aria-haspopup={hasMenu ? "menu" : "dialog"}
         aria-expanded={hasMenu ? menuOpen : dialogOpen}
         onClick={() => (hasMenu ? setMenuOpen((v) => !v) : setDialogOpen(true))}
@@ -77,6 +79,11 @@ export default function LessonSlideButton({
         </span>
         {hasMenu && <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${menuOpen ? "rotate-180" : ""}`} />}
       </button>
+      {editHref && (
+        <Link href={editHref} prefetch={false} className="listen-edit" aria-label="Sửa slide trong Limio-Live" title="Sửa slide trong Limio-Live">
+          <Pencil size={14} aria-hidden="true" />
+        </Link>
+      )}
 
       {menuOpen && deck && (
         <div role="menu" className="absolute left-0 z-30 mt-2 w-64 rounded-xl border border-token bg-[rgb(var(--surface))] p-1 shadow-card">
