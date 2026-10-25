@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Headphones, Presentation, Users } from "lucide-react";
 
 /**
- * Nút "Xem slide" của người sửa được khoá (docs/tieu-chi/nghe-giang-slide.md, AC6): hai việc khác nhau với cùng một bài giảng.
+ * Nút "Slide" của người sửa được khoá, đứng cạnh Nghe giảng và Podcast (docs/tieu-chi/nghe-giang-slide.md, AC6): hai việc khác nhau với cùng một bài giảng.
  * - "Xem slide để dạy": mở bài giảng tương tác (Limio-Live) để dạy trực tiếp.
  * - "Xem slide để nghe giảng": chạy như học viên sẽ thấy, dạng slideshow.
  * Học viên không có nút này; nút nghe giảng slide của họ chỉ hiện khi bài đã có giọng.
@@ -34,10 +34,15 @@ export default function LessonSlidesMenu({ deckId, courseSlug, lessonId }: { dec
 
   return (
     <div ref={rootRef} className="relative print:hidden">
-      <button type="button" className="btn-pill" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-        <Presentation size={16} />
-        Xem slide
-        <ChevronDown size={14} aria-hidden="true" />
+      <button type="button" className="btn-listen-soft" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <span className="listen-icon">
+          <Presentation size={18} />
+        </span>
+        <span className="listen-label">
+          <span>Slide</span>
+          <small>dạy · nghe</small>
+        </span>
+        <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
         <div role="menu" className="absolute left-0 z-30 mt-2 w-64 rounded-xl border border-token bg-[rgb(var(--surface))] p-1 shadow-card">

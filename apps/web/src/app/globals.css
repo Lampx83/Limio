@@ -207,6 +207,100 @@
     background-color: rgb(var(--surface-muted));
     color: rgb(var(--text));
   }
+  /* Thẻ lật của từ vựng (VocabFlashcards): hai mặt xếp chồng, xoay quanh trục dọc khi data-flipped="true". */
+  .flip-card {
+    position: relative;
+    perspective: 1200px;
+  }
+  .flip-card-inner {
+    transform-style: preserve-3d;
+    transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1);
+  }
+  .flip-card[data-flipped="true"] .flip-card-inner {
+    transform: rotateY(180deg);
+  }
+  .flip-face {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .flip-back {
+    transform: rotateY(180deg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flip-card-inner {
+      transition: none;
+    }
+  }
+  /*
+   * Hai nút nghe ở đầu bài học (Nghe giảng, Podcast): việc chính của học viên nên nổi hẳn so với các nút công cụ (In, Xem slide).
+   * Cùng một sắc xanh thương hiệu cho cả hai (không pha sang hồng: dải chuyển lime → hồng ra màu nâu đục ở giữa). "main" tô đặc
+   * xanh đậm đủ tương phản với chữ trắng; "soft" nền sáng viền xanh. Biểu tượng nằm trong vòng tròn; đang phát (aria-pressed) thì
+   * thay bằng sóng âm và nút soft đổi sang tô đặc.
+   */
+  .btn-listen-main,
+  .btn-listen-soft {
+    @apply relative inline-flex items-center gap-2 whitespace-nowrap rounded-full py-1.5 pl-2 pr-4 text-[15px] font-bold transition duration-200 max-sm:flex-1 max-sm:justify-center;
+  }
+  .btn-listen-main:hover,
+  .btn-listen-soft:hover {
+    @apply -translate-y-0.5;
+  }
+  .btn-listen-main:active,
+  .btn-listen-soft:active {
+    @apply translate-y-0 scale-[0.98];
+  }
+  .btn-listen-main,
+  .btn-listen-soft[aria-pressed="true"] {
+    color: #fff;
+    background-image: linear-gradient(180deg, #5f9d0b 0%, #4d7c0f 100%);
+    box-shadow: 0 6px 16px -6px rgb(77 124 15 / 0.6), 0 1px 2px rgb(15 23 42 / 0.12);
+  }
+  .btn-listen-main:hover,
+  .btn-listen-soft[aria-pressed="true"]:hover {
+    background-image: linear-gradient(180deg, #67a80d 0%, #548a10 100%);
+    box-shadow: 0 10px 20px -6px rgb(77 124 15 / 0.7), 0 1px 2px rgb(15 23 42 / 0.12);
+  }
+  .btn-listen-soft {
+    color: rgb(var(--text));
+    background-color: rgb(var(--surface));
+    border: 2px solid #65a30d;
+  }
+  .btn-listen-soft:not([aria-pressed="true"]):hover {
+    background-color: rgb(var(--brand-soft));
+  }
+  /* Vòng tròn chứa biểu tượng. */
+  .listen-icon {
+    @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full;
+  }
+  /* Tên nút ở dòng trên, thời lượng chữ nhỏ ở dòng dưới. */
+  .listen-label {
+    @apply flex flex-col items-start text-left leading-tight;
+  }
+  .listen-label > small {
+    @apply text-[11px] font-medium opacity-80;
+  }
+  .btn-listen-main .listen-icon,
+  .btn-listen-soft[aria-pressed="true"] .listen-icon {
+    background-color: rgb(255 255 255 / 0.2);
+  }
+  .btn-listen-soft:not([aria-pressed="true"]) .listen-icon {
+    background-color: #ecfccb;
+    color: #4d7c0f;
+  }
+  /* Nút đang phát: viền ngoài để thấy nút nào đang chạy. */
+  .btn-listen-main[aria-pressed="true"],
+  .btn-listen-soft[aria-pressed="true"] {
+    outline: 3px solid rgb(var(--brand) / 0.3);
+    outline-offset: 2px;
+  }
+  .btn-listen-main .narration-wave,
+  .btn-listen-soft[aria-pressed="true"] .narration-wave {
+    height: 16px;
+    color: #fff;
+  }
+  .btn-listen-soft:not([aria-pressed="true"]) .narration-wave {
+    color: #4d7c0f;
+  }
   .chip-brand {
     @apply chip;
     background-color: rgb(var(--brand-soft));

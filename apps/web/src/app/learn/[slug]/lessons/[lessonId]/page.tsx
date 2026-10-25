@@ -699,30 +699,33 @@ export default async function LessonPage({
         chúng thao tác lên chính bài này, nên đặt cạnh tên bài thì rõ phạm vi
         hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
       */}
-      <header className="mt-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
+      <header className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
         <span className="chip">{lesson.module.title}</span>
-        <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-2 h-display text-3xl font-bold sm:text-4xl">
           {lesson.title}
         </h1>
         {lesson.description && (
           <SafeHtml
             html={plainToRichHtml(lesson.description)}
-            className="prose mt-3 max-w-none text-base text-muted dark:prose-invert"
+            className="prose mt-2 max-w-none text-base text-muted dark:prose-invert"
           />
         )}
         {!previewMode && (
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
-            <LessonContentToolbar
-              printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
-                teacherMode ? "?gv=1" : ""
-              }`}
-            />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {/* Các nút nghe nổi bật (Nghe giảng, Podcast, Slide) đứng bên trái; nút công cụ (in) dồn sang phải cùng hàng để đỡ tốn thêm một hàng. */}
             {narrations.lecture && <NarrationButton durationSec={narrations.lecture.durationSec} />}
             {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
             {canEdit && lesson.liveDeckId && (
               <LessonSlidesMenu deckId={lesson.liveDeckId} courseSlug={params.slug} lessonId={params.lessonId} />
             )}
+            <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+              {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
+              <LessonContentToolbar
+                printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
+                  teacherMode ? "?gv=1" : ""
+                }`}
+              />
+            </div>
           </div>
         )}
         {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
@@ -731,7 +734,7 @@ export default async function LessonPage({
             là client component; xem LessonCompletionPrompt để biết công
             thức gộp. */}
         {!previewMode && (
-          <div className="mt-5">
+          <div className="mt-3">
             <LessonCompletionPrompt
               lessonId={lesson.id}
               courseSlug={params.slug}

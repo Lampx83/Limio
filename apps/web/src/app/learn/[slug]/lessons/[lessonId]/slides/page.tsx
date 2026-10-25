@@ -51,7 +51,7 @@ export default async function LessonSlidesPage({ params }: Props) {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-6xl px-4 pt-4 lg:px-6">
+      <div className="mx-auto w-full max-w-5xl px-4 pt-3 lg:px-6">
         <Link href={back} className="link inline-flex items-center gap-1 text-sm print:hidden">
           ← Quay lại bài học
         </Link>
@@ -66,6 +66,7 @@ export default async function LessonSlidesPage({ params }: Props) {
         theme={deck.theme}
         brand={brand}
         slides={toPublicSlides(deck.slides)}
+        allowPdf={false}
       />
     </>
   );
