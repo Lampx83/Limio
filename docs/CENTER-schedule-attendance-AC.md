@@ -195,6 +195,7 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 - [x] **G5** `/instructor/lich-day`, `/instructor/giao-trinh` (và xem trước) chuyển về trang chủ giảng viên khi G2 sai; `/me/lich-hoc` chuyển về tổng quan khi G3 sai. Trang lớp ẩn khối "Lịch dạy", bảng "Chuyên cần" và thông báo giáo trình có bản mới khi G2 sai.
 - [x] **G6** Công tắc "Tính năng trung tâm" trong cài đặt trường (OrgAdmin) và trang quản trị trường (Platform Admin).
 - [x] **G7** Trang "Lịch dạy" (giảng viên) và "Lịch học" (học viên) là **lịch** giống widget ở trang chủ: nút Tuần/Tháng, Trước/Sau, bấm ngày thấy các buổi trong ngày kèm giáo án; học viên thấy trạng thái điểm danh của mình; bấm buổi mở trang điểm danh (giảng viên). Câu trống nói "buổi học", không nói "hạn nộp".
+- [x] **G8** (2026-10-25, sau khi chủ dự án thử trên production) Dễ tìm chỗ đặt lịch: thẻ lớp ở tab "Lớp học" có dòng tóm tắt lịch ("Chưa có lịch, đặt lịch ngay" hoặc "24 buổi, thứ ba và thứ năm 18:30, buổi tới 27/10") và nút chính **"Lịch dạy"** ngay đầu phần mở rộng của lớp. Trang lớp có hai tab, mỗi tab một đường dẫn (`?tab=lich-day`, `?tab=hoc-vien`): **"Lịch dạy"** (đặt lịch, các buổi, tự gửi tổng kết) và **"Học viên"** (chuyên cần, mục tiêu học tập, danh sách). Mặc định mở "Lịch dạy". Khoá chưa bật tính năng trung tâm giữ nguyên: không tab, chỉ danh sách học viên.
 
 ## H · Vai trò giảng viên trung tâm (chỉ dạy, không soạn)
 
