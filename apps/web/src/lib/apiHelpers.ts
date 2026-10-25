@@ -16,6 +16,7 @@ import {
   ExamError,
   LanguageTemplateError,
   LearningError,
+  LessonDeckError,
   MisconceptionError,
   NoteError,
   PortfolioError,
@@ -73,6 +74,10 @@ export function mapKnownError(err: unknown): NextResponse | null {
           ? 409
           : 400;
     return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
+  if (err instanceof LessonDeckError) {
+    const status = err.code === "not_found" ? 404 : err.code === "forbidden" ? 403 : err.code === "deck_in_use" || err.code === "lesson_has_deck" ? 409 : 400;
+    return NextResponse.json({ error: err.code }, { status });
   }
   if (err instanceof GoalError) {
     const status =

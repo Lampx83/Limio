@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import type { NarrationKind } from "./learner";
 
 /**
- * Trạng thái chung của trình nghe giảng / podcast trong một trang bài học. Nút "Nghe giảng" ở đầu bài, thẻ Podcast,
+ * Trạng thái chung của trình nghe giảng / podcast trong một trang bài học. Nút "Nghe giảng" ở đầu bài, nút Podcast,
  * thanh phát ở cuối màn hình nằm ở ba chỗ khác nhau của cây React (trang bài là server component) nên không dùng
  * context được; một kho nhỏ ở mức module là đủ, vì một trang chỉ có một trình phát.
  */

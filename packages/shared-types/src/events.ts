@@ -266,6 +266,9 @@ export const LearningEventType = {
   GoalChanged: "goal.changed",
   GoalStatusChanged: "goal.status_changed",
   GoalSectionSet: "goal.section_set",
+  // Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md). Subject là người sửa khoá; payload chỉ mang id.
+  LessonDeckAttached: "lesson.deck.attached",
+  LessonDeckDetached: "lesson.deck.detached",
 
   // Nghe giảng / Podcast của bài học (docs/tieu-chi/nghe-giang-podcast.md, AC6). Chỉ đo cách học viên nghe:
   // KHÔNG ghi nội dung lời giảng. Ghi sự kiện không bao giờ được chặn hay làm chậm việc phát.
@@ -1083,4 +1086,16 @@ export interface NarrationStoppedPayload {
   /** Phần trăm xa nhất đã nghe tới (0–100) trong lần nghe này. */
   percent: number;
   speed: number;
+}
+
+export interface LessonDeckAttachedPayload {
+  lessonId: string;
+  deckId: string;
+  /** Bài giảng cũ bị thay (null = bài học chưa có bài giảng). */
+  replacedDeckId: string | null;
+}
+
+export interface LessonDeckDetachedPayload {
+  lessonId: string;
+  deckId: string;
 }

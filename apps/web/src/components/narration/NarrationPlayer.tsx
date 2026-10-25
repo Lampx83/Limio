@@ -33,6 +33,7 @@ import {
   type NarrationCommands,
 } from "@/lib/narration/store";
 import { LECTURER_NAME, NarrationAvatar, NarrationWave } from "./NarrationAvatar";
+import PodcastTranscript from "./PodcastTranscript";
 import "./narration.css";
 
 const EVENTS_URL = "/api/me/narration-events";
@@ -117,7 +118,7 @@ interface Props {
 }
 
 /**
- * Trình phát Nghe giảng / Podcast của trang bài học: giữ thẻ <audio>, đăng ký các lệnh cho nút & thẻ Podcast,
+ * Trình phát Nghe giảng / Podcast của trang bài học: giữ thẻ <audio>, đăng ký các lệnh cho nút Nghe giảng / Podcast,
  * tô sáng + tự cuộn theo mục đang giảng, nhớ vị trí nghe dở, ghi sự kiện đo lường, và vẽ thanh phát cố định ở cuối màn hình.
  * Xem docs/tieu-chi/nghe-giang-podcast.md (AC3–AC6).
  */
@@ -680,6 +681,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
               </button>
             </div>
           )}
+
+          {kind === "podcast" && podcast && <PodcastTranscript podcast={podcast} />}
 
           <div className={`${ui.expanded ? "block" : "hidden"} border-t border-token px-3 pb-3 pt-2 sm:block sm:px-4`}>
             <div className="flex items-center gap-2">
