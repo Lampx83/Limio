@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { VOICE_REGION_LABEL, VOICE_REGION_UNKNOWN_LABEL, type VoiceRegion } from "@/lib/narration/voiceCatalog";
 
 type State = "script" | "generating" | "ready" | "stale" | "failed";
 
@@ -30,9 +31,22 @@ interface ListResponse {
 interface VoicesResponse {
   ok: boolean;
   mode?: "neu" | "fake" | "none";
-  voices?: Array<{ voice: string; language: string }>;
+  voices?: VoiceOption[];
   default?: string | null;
 }
+
+interface VoiceOption {
+  voice: string;
+  language: string;
+  region: VoiceRegion | null;
+}
+
+/** Thứ tự nhóm trong hộp chọn giọng; nhóm trống không hiện. */
+const REGION_GROUPS: Array<{ region: VoiceRegion | null; label: string }> = [
+  { region: "bac", label: VOICE_REGION_LABEL.bac },
+  { region: "nam", label: VOICE_REGION_LABEL.nam },
+  { region: null, label: VOICE_REGION_UNKNOWN_LABEL },
+];
 
 interface Voices {
   lecturer: string;
@@ -121,6 +135,53 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
   };
 
   const pending = useMemo(() => (data?.rows ?? []).filter((r) => r.state === "script" || r.state === "stale" || r.state === "failed"), [data]);
+  // Một bộ phát dùng chung cho cả ba ô chọn giọng, để bấm giọng khác thì giọng đang phát dừng.
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [sample, setSample] = useState<{ voice: string | null; status: "idle" | "loading" | "playing" | "error" }>({
+    voice: null,
+    status: "idle",
+  });
+
+  useEffect(() => () => audioRef.current?.pause(), []);
+
+  const toggleSample = (voice: string) => {
+    audioRef.current?.pause();
+    if (sample.voice === voice && sample.status !== "idle" && sample.status !== "error") {
+      setSample({ voice: null, status: "idle" });
+      return;
+    }
+    const audio = new Audio(apiUrl(`/api/admin/narration/voices/sample?voice=${encodeURIComponent(voice)}`));
+    audioRef.current = audio;
+    setSample({ voice, status: "loading" });
+    audio.onplaying = () => setSample({ voice, status: "playing" });
+    audio.onended = () => setSample({ voice: null, status: "idle" });
+    audio.onerror = () => setSample({ voice, status: "error" });
+    void audio.play().catch(() => setSample({ voice, status: "error" }));
+  };
+
+  const [savingLabel, setSavingLabel] = useState(false);
+
+  /** Dán (hoặc gỡ) nhãn vùng miền cho một giọng; lưu trên server nên mọi admin thấy cùng nhóm. */
+  const setRegion = async (voice: string, region: VoiceRegion | null) => {
+    setSavingLabel(true);
+    try {
+      const r = await fetch(apiUrl("/api/admin/narration/voices/label"), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voice, region }),
+      });
+      if (!r.ok) {
+        setMessage({ tone: "error", text: "Không lưu được nhãn của giọng. Thử lại sau." });
+        return;
+      }
+      setVoiceList((prev) =>
+        prev ? { ...prev, voices: prev.voices?.map((v) => (v.voice === voice ? { ...v, region } : v)) } : prev,
+      );
+    } finally {
+      setSavingLabel(false);
+    }
+  };
+
   const voicesReady = voices.lecturer && voices.A && voices.B;
 
   async function generate(ids?: string[]) {
@@ -170,7 +231,10 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
 
       <section className="card">
         <h2 className="text-h3">Chọn giọng</h2>
-        <p className="mt-1 text-sm text-muted">Nghe thử từng giọng ở Quản trị › Tích hợp. Lựa chọn được nhớ cho lần sau.</p>
+        <p className="mt-1 text-sm text-muted">
+          Bấm “Nghe thử” để nghe giọng đang chọn. Lần đầu hệ thống tạo bản thử rồi lưu lại, các lần sau nghe ngay. Nghe
+          xong, thầy/cô bấm “Miền Bắc” hoặc “Miền Nam” để gắn nhãn; giọng được xếp nhóm theo nhãn cho mọi khoá học.
+        </p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {(
             [
@@ -179,21 +243,74 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
               ["B", "Người dẫn 2 (Podcast)"],
             ] as const
           ).map(([role, label]) => (
-            <label key={role} className="block text-sm">
-              <span className="label">{label}</span>
-              <select
-                className="input mt-1.5"
-                value={voices[role]}
-                onChange={(e) => setVoice(role, e.target.value)}
-                disabled={!voiceList.voices?.length}
-              >
-                {(voiceList.voices ?? []).map((v) => (
-                  <option key={v.voice} value={v.voice}>
-                    {v.voice} ({v.language})
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div key={role} className="text-sm">
+              <label htmlFor={`voice-${role}`} className="label">
+                {label}
+              </label>
+              <div className="mt-1.5 flex gap-2">
+                <select
+                  id={`voice-${role}`}
+                  className="input min-w-0 flex-1"
+                  value={voices[role]}
+                  onChange={(e) => setVoice(role, e.target.value)}
+                  disabled={!voiceList.voices?.length}
+                >
+                  {REGION_GROUPS.map(({ region, label: groupLabel }) => {
+                    const group = (voiceList.voices ?? []).filter((v) => v.region === region);
+                    if (group.length === 0) return null;
+                    return (
+                      <optgroup key={groupLabel} label={groupLabel}>
+                        {group.map((v) => (
+                          <option key={v.voice} value={v.voice}>
+                            {v.voice} ({v.language})
+                          </option>
+                        ))}
+                      </optgroup>
+                    );
+                  })}
+                </select>
+                <button
+                  type="button"
+                  className="btn-secondary btn-sm shrink-0"
+                  disabled={!voices[role] || (sample.voice !== null && sample.voice !== voices[role] && sample.status === "loading")}
+                  onClick={() => toggleSample(voices[role])}
+                  aria-label={`Nghe thử giọng ${voices[role]}`}
+                >
+                  {sample.voice === voices[role] && sample.status === "loading"
+                    ? "Đang tạo…"
+                    : sample.voice === voices[role] && sample.status === "playing"
+                      ? "Dừng"
+                      : "Nghe thử"}
+                </button>
+              </div>
+              {sample.voice === voices[role] && sample.status === "error" && (
+                <p role="alert" className="mt-1 text-xs text-danger-700">
+                  Không phát được bản thử, thử lại sau.
+                </p>
+              )}
+              {voices[role] && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                  <span className="text-muted">Giọng này là:</span>
+                  {(["bac", "nam"] as const).map((region) => {
+                    const current = voiceList.voices?.find((v) => v.voice === voices[role])?.region ?? null;
+                    const on = current === region;
+                    return (
+                      <button
+                        key={region}
+                        type="button"
+                        aria-pressed={on}
+                        disabled={savingLabel}
+                        onClick={() => void setRegion(voices[role], on ? null : region)}
+                        className={on ? "chip-brand" : "chip hover:bg-[rgb(var(--border))]"}
+                        title={on ? "Bấm lần nữa để bỏ nhãn" : undefined}
+                      >
+                        {region === "bac" ? "Miền Bắc" : "Miền Nam"}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           ))}
         </div>
         {sameHost && (

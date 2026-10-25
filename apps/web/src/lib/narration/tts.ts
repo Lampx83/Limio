@@ -1,5 +1,7 @@
 import { fakeSynthesize } from "@feedbackme/core-lms";
 import { getNeuGateway, NeuApiNotConfiguredError } from "@/lib/neuApi";
+import { isVoiceRegion, type VoiceRegion } from "./voiceCatalog";
+import { getVoiceLabels } from "./voiceLabels";
 
 /**
  * Bộ đọc cho việc tạo giọng lời giảng / podcast. Dùng NEU TTS (giọng Việt tự host qua Kong). Máy dev không có khoá NEU nên
@@ -17,6 +19,8 @@ export const isFakeTts = (): boolean => process.env.NARRATION_FAKE_TTS === "1" &
 export interface NarrationVoice {
   voice: string;
   language: string;
+  /** Null khi giọng chưa được phân loại vùng miền. */
+  region: VoiceRegion | null;
 }
 
 export interface Synthesizer {
@@ -53,11 +57,28 @@ export async function getSynthesizer(): Promise<Synthesizer> {
 }
 
 /** Danh sách giọng cho hộp "Tạo giọng". NEU từng trả `string[]`, nay trả `[{ voice, language }]` — gộp về một dạng. */
-export async function listNarrationVoices(): Promise<{ mode: "neu" | "fake" | "none"; voices: NarrationVoice[]; default: string | null }> {
+export async function listNarrationVoices(): Promise<NarrationVoiceList> {
+  const list = await fetchNarrationVoices();
+  const labels = await getVoiceLabels();
+  // Nhãn admin dán thắng nhãn mặc định (cổng NEU trả sẵn, hoặc giọng giả ở máy dev).
+  return { ...list, voices: list.voices.map((v) => ({ ...v, region: labels.get(v.voice) ?? v.region })) };
+}
+
+export interface NarrationVoiceList {
+  mode: "neu" | "fake" | "none";
+  voices: NarrationVoice[];
+  default: string | null;
+}
+
+async function fetchNarrationVoices(): Promise<NarrationVoiceList> {
   if (isFakeTts()) {
     return {
       mode: "fake",
-      voices: ["gia-giang-vien", "gia-nguoi-dan-1", "gia-nguoi-dan-2"].map((voice) => ({ voice, language: "vi" })),
+      voices: [
+        { voice: "gia-giang-vien", language: "vi", region: "bac" },
+        { voice: "gia-nguoi-dan-1", language: "vi", region: "nam" },
+        { voice: "gia-nguoi-dan-2", language: "vi", region: null },
+      ],
       default: "gia-giang-vien",
     };
   }
@@ -77,10 +98,10 @@ export async function listNarrationVoices(): Promise<{ mode: "neu" | "fake" | "n
   const j = (await res.json()) as { voices?: unknown; default?: unknown };
   const raw = Array.isArray(j.voices) ? j.voices : [];
   const voices = raw.flatMap((v): NarrationVoice[] => {
-    if (typeof v === "string") return [{ voice: v, language: "vi" }];
+    if (typeof v === "string") return [{ voice: v, language: "vi", region: null }];
     if (v && typeof v === "object" && typeof (v as { voice?: unknown }).voice === "string") {
-      const lang = (v as { language?: unknown }).language;
-      return [{ voice: (v as { voice: string }).voice, language: typeof lang === "string" ? lang : "vi" }];
+      const { voice, language, region } = v as { voice: string; language?: unknown; region?: unknown };
+      return [{ voice, language: typeof language === "string" ? language : "vi", region: isVoiceRegion(region) ? region : null }];
     }
     return [];
   });
