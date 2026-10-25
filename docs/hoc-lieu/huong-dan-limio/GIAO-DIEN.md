@@ -425,7 +425,20 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   Chuyên cần (tỉ lệ = (có mặt + muộn) / (có mặt + muộn + vắng), vắng có phép không tính) và khối cảnh báo
   khi có học viên vắng từ 2 buổi liên tiếp (chỉ gợi ý, không tự nhắn). Học viên thấy trạng thái của chính mình
   ở "Lịch học" (nhãn "Có mặt", "Đi muộn", "Vắng", "Vắng có phép" và mục "Chuyên cần của bạn"), không thấy ghi chú.
-  Chưa có: giáo viên check-in (giai đoạn sau).
+  Giáo viên bắt đầu buổi và đối chiếu lịch dạy: xem mục dưới.
+- **Bắt đầu buổi và đối chiếu lịch dạy** (mới, CENTER C5): trên trang điểm danh của buổi có khối **"Bắt đầu buổi"** (ngay dưới tiêu đề,
+  trước khối kết thúc buổi). Người có tên trong khoá (chủ khoá, đồng giảng viên, người chỉ dạy) bấm nút **"Bắt đầu buổi"** từ 30 phút
+  trước giờ học đến hết giờ học; trước đó khối ghi "Nút mở từ ...", sau giờ học mà chưa ai bấm thì ghi "Chưa có ai bắt đầu buổi này".
+  Người bấm đầu tiên thắng, bấm lại không ghi đè. Sau khi bấm, khối hiện tên người dạy, giờ bắt đầu và các nhãn **"Đúng giờ"**, **"Trễ"**
+  (vào sau giờ bắt đầu quá ngưỡng), **"Kết thúc sớm"** (ra trước giờ kết thúc quá ngưỡng), **"Dạy thay"** (người bấm khác giáo viên dự
+  kiến, kèm "thay cho ..."), **"Không check-in"** (buổi qua giờ mà không ai bấm). Bấm **"Kết thúc buổi"** thì ghi luôn giờ ra. Ngưỡng
+  mặc định 15 phút, quản trị trường đổi trong khoảng 5–120. Giáo viên xem của mình ở trang **"Đối chiếu lịch dạy của tôi"**
+  (`/instructor/doi-chieu`, liên kết ở đầu trang "Lịch dạy", đổi tuần bằng "Tuần trước", "Tuần sau", "Tuần này"). Quản trị trường (và Platform
+  Admin) có mục **"Đối chiếu lịch dạy"** (`/org-admin/doi-chieu`) trong menu quản trị trường, chỉ hiện khi trường bật tính năng trung tâm:
+  ô **"Ngưỡng lệch giờ"**, bảng **"Theo giáo viên"** (số buổi, đúng giờ, trễ, kết thúc sớm, dạy thay, không check-in, chưa điểm danh) và
+  danh sách **"Từng buổi"**; bấm một buổi để xem chi tiết và, khi giáo viên quên bấm, bổ sung người dạy, giờ bắt đầu, giờ kết thúc kèm
+  **"Lý do bổ sung (bắt buộc)"** rồi bấm **"Lưu giờ dạy"** (buổi đó có nhãn "Quản trị bổ sung"). Buổi đã kết thúc mà chưa điểm danh học
+  viên nào có nhãn **"Chưa điểm danh"**. Mục đích là đối chiếu với lịch để xếp dạy bù, không chấm công, không xếp hạng.
 - **Kết thúc buổi, tổng kết và nhận xét sau buổi** (mới, CENTER C4): trên trang điểm danh của buổi có khối
   **"Kết thúc buổi"** (dùng được từ lúc buổi bắt đầu; hỏi xác nhận). Bấm xong buổi thành "Đã dạy", hệ thống chụp
   **tổng kết** từ giáo án (bài đã học, từ vựng cần ôn, bài tập về nhà kèm hạn riêng của lớp, giờ và nội dung buổi sau)
@@ -797,7 +810,7 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
   (chỉ nhà nghiên cứu) · trang `/instructor/feedback-generator`, `/feedback-templates`, `/item-analytics`
   (không có lối vào) · "Thư viện mẫu", "Template", "Soạn kịch bản" của Limio-Live (đang phát triển) ·
   khối "Slide bài giảng" trong hộp thêm hoạt động · chia sẻ bài giảng cho đồng nghiệp hoặc đồng soạn (chỉ có
-  link xem chỉ đọc) · giáo viên check-in · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
+  link xem chỉ đọc) · nhận xét gửi học viên sau buổi · báo cáo sau buổi theo từng học viên (kết quả chỉ ở Lịch sử tương tác) · slide Điền chỗ
   trống/Ghép cặp/Memory/Open-ended (chỉ trong kế hoạch).
 - **Đợt thi**, "+ Tạo đợt thi", "Trưởng đợt", tạo nhiều ca trong một đợt — đã gỡ khỏi luồng tổ chức. Giới hạn
   mạng khi vào thi (cài đặt của quản trị trường). Khoá mẫu ngoại ngữ ở trang tạo khoá (đã gỡ). Rubric vấn đáp như

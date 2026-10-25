@@ -57,6 +57,7 @@ export const ASSISTANT_DESTINATIONS: readonly AssistantDestination[] = [
   { id: "gameshow", label: "Gameshow", description: "Trò chơi hỏi đáp có tính điểm để ôn tập sôi nổi trong lớp.", href: "/instructor/gameshow/new", icon: "gameshow" },
   { id: "new_course", label: "Tạo khoá học mới", description: "Dựng một khoá học mới với các chương và bài học.", href: "/instructor/courses/new", icon: "course" },
   { id: "my_courses", label: "Khoá học của tôi", description: "Xem và chỉnh sửa các khoá học đang dạy.", href: "/instructor/courses", icon: "course" },
+  { id: "teaching_reconcile", label: "Đối chiếu lịch dạy của tôi", description: "Xem các buổi mình được xếp trong tuần, giờ bắt đầu và kết thúc thực tế, buổi nào dạy thay hoặc chưa ai bắt đầu.", href: "/instructor/doi-chieu", icon: "organize" },
   { id: "teaching_schedule", label: "Lịch dạy", description: "Xem các buổi dạy trong tuần của mọi lớp; đặt lịch từng lớp ở trang lớp trong khoá học.", href: "/instructor/lich-day", icon: "organize" },
   { id: "pack_library", label: "Giáo trình dựng sẵn", description: "Chọn giáo trình đã soạn sẵn giáo án từng buổi, sao về khoá của thầy/cô rồi chỉ việc dạy.", href: "/instructor/giao-trinh", icon: "course" },
   { id: "grade_essays", label: "Chấm bài tự luận", description: "Chấm các câu trả lời tự luận đang chờ.", href: "/instructor/grade-essays", icon: "grading" },

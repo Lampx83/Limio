@@ -1,10 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
 import { getEmailUsageStats, utcDayStart } from "../stats";
 
-// Dùng DB test thật (như các test khác trong package). Đo chênh lệch trước/sau thay vì
-// xoá dữ liệu, để không phụ thuộc trạng thái bảng.
+// Dùng DB test thật (như các test khác trong package). Đo chênh lệch trước/sau để không phụ thuộc
+// các dòng khác trong bảng. Bảng theo template chỉ lấy vài khoá nhiều nhất, nên dòng test để lại
+// sẽ dồn lại và đẩy chính khoá của test ra ngoài: phải dọn dòng `test.stats.*` trước và sau.
 const KEY = `test.stats.${Date.now()}`;
+const purge = () => prisma.emailSendLog.deleteMany({ where: { templateKey: { startsWith: "test.stats." } } });
+
+beforeAll(purge);
+afterAll(purge);
 
 describe("getEmailUsageStats", () => {
   it("đếm đúng sent/failed hôm nay, theo template; bỏ qua dòng của ngày hôm qua", async () => {
