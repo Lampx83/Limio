@@ -57,31 +57,40 @@ export interface SharedLiveDeck {
   slides: Pick<LiveSlide, "id" | "type" | "config" | "orderIndex">[];
 }
 
+// Chỉ các cột cần để dựng slide — cố ý không có outline, sourceText, email chủ bài.
+const SHARED_DECK_SELECT = {
+  id: true,
+  userId: true,
+  title: true,
+  theme: true,
+  brand: true,
+  brandOff: true,
+  brandTemplate: true,
+  motif: true,
+  language: true,
+  imageFrame: true,
+  updatedAt: true,
+  user: { select: { displayName: true } },
+  slides: { orderBy: { orderIndex: "asc" as const }, select: { id: true, type: true, config: true, orderIndex: true } },
+} as const;
+
+export function toSharedLiveDeck<T extends { user: { displayName: string } }>(deck: T): Omit<T, "user"> & { ownerName: string } {
+  const { user, ...rest } = deck;
+  return { ...rest, ownerName: user.displayName };
+}
+
 /**
  * Bài giảng theo mã chia sẻ, chỉ gồm các cột cần để dựng slide. Cố ý KHÔNG đọc outline, sourceText,
  * email chủ bài; còn lọc nội dung từng slide (ghi chú giảng, đáp án) là việc của tầng web (limioLiveShare).
  */
 export async function getLiveDeckByShareCode(code: string, db: PrismaClient): Promise<SharedLiveDeck | null> {
   if (!SHARE_CODE_RE.test(code)) return null;
-  const deck = await db.liveDeck.findUnique({
-    where: { shareCode: code },
-    select: {
-      id: true,
-      userId: true,
-      title: true,
-      theme: true,
-      brand: true,
-      brandOff: true,
-      brandTemplate: true,
-      motif: true,
-      language: true,
-      imageFrame: true,
-      updatedAt: true,
-      user: { select: { displayName: true } },
-      slides: { orderBy: { orderIndex: "asc" }, select: { id: true, type: true, config: true, orderIndex: true } },
-    },
-  });
-  if (!deck) return null;
-  const { user, ...rest } = deck;
-  return { ...rest, ownerName: user.displayName };
+  const deck = await db.liveDeck.findUnique({ where: { shareCode: code }, select: SHARED_DECK_SELECT });
+  return deck ? toSharedLiveDeck(deck) : null;
+}
+
+/** Bài giảng slide của một bài học, cùng dạng với bài giảng chia sẻ; tầng web phải lọc ghi chú giảng (toPublicSlides). */
+export async function getLiveDeckByLesson(lessonId: string, db: PrismaClient): Promise<SharedLiveDeck | null> {
+  const deck = await db.liveDeck.findFirst({ where: { lesson: { id: lessonId } }, select: SHARED_DECK_SELECT });
+  return deck ? toSharedLiveDeck(deck) : null;
 }

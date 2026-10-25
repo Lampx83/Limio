@@ -1,6 +1,7 @@
 import LessonHeader from "./LessonHeader";
 import SkillTagsEditor from "./SkillTagsEditor";
 import ActivitySection from "./ActivitySection";
+import LessonDeckPanel from "./LessonDeckPanel";
 
 interface Lesson {
   id: string;
@@ -160,6 +161,10 @@ export default function LessonSection({
             />
           </SubSection>
         )}
+
+        <SubSection label="Bài giảng slide">
+          <LessonDeckPanel lessonId={lesson.id} courseSlug={courseSlug} />
+        </SubSection>
 
         <ActivitySection
           lessonId={lesson.id}

@@ -47,6 +47,8 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
       sourceKind: true,
       sourceRefs: true,
       importSource: true,
+      // Bài giảng gắn với bài học: ghi chú viết thành lời đọc cho học viên tự nghe (nghe-giang-slide.md, AC4).
+      lesson: { select: { id: true } },
       _count: { select: { slides: true } },
     },
   });
@@ -150,6 +152,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
                 language,
                 // Yêu cầu của giảng viên đi cùng tài liệu (tao-bai-giang-mot-o.md, M9).
                 ...(deck.sourceIntent ? { intent: deck.sourceIntent } : {}),
+                ...(deck.lesson ? { notesStyle: "narration" as const } : {}),
               },
               openai,
             )) as SlideDraft[];

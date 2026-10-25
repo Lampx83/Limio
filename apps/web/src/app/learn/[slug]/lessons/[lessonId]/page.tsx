@@ -41,7 +41,8 @@ import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import NarrationButton from "@/components/narration/NarrationButton";
 import NarrationPlayer from "@/components/narration/NarrationPlayer";
-import PodcastCard from "@/components/narration/PodcastCard";
+import PodcastButton from "@/components/narration/PodcastButton";
+import LessonSlidesMenu from "@/components/lesson/LessonSlidesMenu";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
 import { Download, Lock, PenLine } from "lucide-react";
@@ -718,6 +719,10 @@ export default async function LessonPage({
               }`}
             />
             {narrations.lecture && <NarrationButton durationSec={narrations.lecture.durationSec} />}
+            {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
+            {canEdit && lesson.liveDeckId && (
+              <LessonSlidesMenu deckId={lesson.liveDeckId} courseSlug={params.slug} lessonId={params.lessonId} />
+            )}
           </div>
         )}
         {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
@@ -791,8 +796,6 @@ export default async function LessonPage({
           Khối phóng toàn màn hình là #lesson-stage chứ không phải riêng phần
           nội dung: phóng to mà bỏ mục lục lại phía sau thì bài dài mất luôn
           cách nhảy giữa các mục — đúng lúc cần nhất. */}
-      {narrations.podcast && <PodcastCard podcast={narrations.podcast} />}
-
       <div
         id="lesson-stage"
         className={`mt-8 ${hasSectionNav ? "xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8" : ""}`}

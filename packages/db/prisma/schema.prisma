@@ -634,6 +634,10 @@ model Lesson {
   classroomSessions ClassroomSession[]
   drafts            LessonDraft[]
   narrations        LessonNarration[]
+  // Bài giảng slide gắn với bài học (docs/tieu-chi/nghe-giang-slide.md, AC1): một bài học một bài giảng, một bài giảng một
+  // bài học. Bài giảng phải thuộc chủ khoá. Xoá bài giảng chỉ làm bài học về cách nghe theo bài viết.
+  liveDeckId        String?               @unique
+  liveDeck          LiveDeck?             @relation("LessonLiveDeck", fields: [liveDeckId], references: [id], onDelete: SetNull)
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
@@ -5581,6 +5585,7 @@ model LiveDeck {
   group    LiveDeckGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   slides   LiveSlide[]
   sessions LiveSession[]
+  lesson   Lesson?        @relation("LessonLiveDeck")
 
   @@index([userId])
   @@index([groupId])
