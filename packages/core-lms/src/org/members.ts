@@ -20,7 +20,8 @@ export class OrgMemberError extends Error {
       | "already_member"
       | "belongs_to_other_org"
       | "not_member"
-      | "user_not_found",
+      | "user_not_found"
+      | "validation_failed",
   ) {
     super(code);
   }

@@ -24,6 +24,7 @@ import {
   QuizError,
   SectionDeadlineError,
   SkillError,
+  TeacherCheckInError,
 } from "@feedbackme/core-lms";
 import { MeetingNoteDraftError } from "@feedbackme/core-feedback";
 
@@ -95,6 +96,10 @@ export function mapKnownError(err: unknown): NextResponse | null {
   }
   if (err instanceof MeetingPlanError) {
     const status = err.code === "meeting_not_found" ? 404 : err.code === "meeting_locked" ? 409 : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
+  }
+  if (err instanceof TeacherCheckInError) {
+    const status = err.code === "meeting_not_found" ? 404 : err.code === "validation_failed" ? 400 : 409;
     return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
   }
   if (err instanceof MeetingSummaryError || err instanceof MeetingNoteError) {

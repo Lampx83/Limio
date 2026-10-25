@@ -141,6 +141,17 @@ const EXPORT_SELECT = {
           courses: { select: { certificateId: true, createdAt: true } },
         },
       },
+      // CENTER C5 — các buổi chính người này đã bắt đầu để đối chiếu lịch dạy (kèm lý do nếu quản trị sửa sau).
+      teacherCheckIns: {
+        select: {
+          checkedInAt: true,
+          checkedOutAt: true,
+          method: true,
+          editReason: true,
+          meeting: { select: { startsAt: true, seq: true, section: { select: { name: true, course: { select: { slug: true, title: true } } } } } },
+        },
+        orderBy: { checkedInAt: "asc" },
+      },
       // CENTER C6 — mục tiêu học tập (mọi trạng thái, kèm người đặt). Lịch sử thay đổi có trong bản xuất hoạt động (goal.*).
       learnerGoals: {
         select: { courseId: true, framework: true, targetLevel: true, targetDate: true, hoursPerWeek: true, status: true, setById: true, createdAt: true, updatedAt: true },
