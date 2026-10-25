@@ -198,7 +198,7 @@ COPY --from=deps /app/packages/shared-types/node_modules ./packages/shared-types
 # Source files. Copy nguyên repo cho gọn — image vẫn nhỏ vì không có .next build.
 # Nếu sau này muốn tối ưu, chỉ copy: apps/web/{src,tsconfig.json,package.json},
 # packages/{db,shared-types,...} cần để workspace symlink resolve được.
-COPY package.json pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml tsconfig.base.json ./
 COPY apps/web ./apps/web
 COPY packages ./packages
 

@@ -1,7 +1,7 @@
 import type { Job } from "bullmq";
 import { sendApprovedNotes, sendMeetingSummary } from "@feedbackme/core-lms";
 import { recordMeetingNoteDelivery } from "@feedbackme/core-feedback";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL } from "../seo";
 import { getClassMailQueue, QUEUE_NAMES } from "./index";
 
 /**
