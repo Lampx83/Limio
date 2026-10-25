@@ -16,7 +16,7 @@ export default function NarrationButton({ durationSec }: { durationSec: number }
   return (
     <button
       type="button"
-      className="btn-listen-main print:hidden"
+      className="btn-listen print:hidden"
       aria-pressed={active}
       onClick={() => {
         const c = narrationCommands();

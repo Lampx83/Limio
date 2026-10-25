@@ -16,7 +16,7 @@ export default function PodcastButton({ durationSec, title }: { durationSec: num
   return (
     <button
       type="button"
-      className="btn-listen-soft print:hidden"
+      className="btn-listen btn-listen-podcast print:hidden"
       aria-pressed={active}
       title={title}
       onClick={() => {

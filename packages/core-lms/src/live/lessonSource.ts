@@ -102,3 +102,35 @@ export async function getLessonSource(actorId: string, lessonId: string, db: Pri
     text: parts.filter(Boolean).join("\n\n"),
   };
 }
+
+export interface LessonSlideState {
+  /** Bài giảng đang gắn với bài học (null = chưa có) và số slide của nó (0 = mới có dàn ý, chưa tạo slide). */
+  deck: { id: string; slideCount: number } | null;
+  /** Người hỏi là chủ khoá: chỉ chủ khoá tạo được bài giảng từ bài viết. */
+  isOwner: boolean;
+  ownerName: string | null;
+  /** Cỡ chữ của bài: để hộp xác nhận nói bài đủ dài hay không và ước lượng chi phí. */
+  textChars: number;
+  textWords: number;
+}
+
+/**
+ * Trạng thái nút "Slide" ở trang bài học của giảng viên (docs/tieu-chi/nghe-giang-slide.md, AC6). Chỉ trả số liệu, không trả chữ của bài.
+ */
+export async function getLessonSlideState(actorId: string, lessonId: string, db: PrismaClient = prisma): Promise<LessonSlideState> {
+  const src = await getLessonSource(actorId, lessonId, db); // kiểm quyền sửa khoá
+  const lesson = await db.lesson.findUniqueOrThrow({ where: { id: lessonId }, select: { liveDeckId: true } });
+  const [deck, owner] = await Promise.all([
+    lesson.liveDeckId
+      ? db.liveDeck.findUnique({ where: { id: lesson.liveDeckId }, select: { id: true, _count: { select: { slides: true } } } })
+      : null,
+    src.ownerId ? db.user.findUnique({ where: { id: src.ownerId }, select: { displayName: true } }) : null,
+  ]);
+  return {
+    deck: deck ? { id: deck.id, slideCount: deck._count.slides } : null,
+    isOwner: src.ownerId === actorId,
+    ownerName: owner?.displayName ?? null,
+    textChars: src.text.length,
+    textWords: (src.text.match(/\S+/g) ?? []).length,
+  };
+}
