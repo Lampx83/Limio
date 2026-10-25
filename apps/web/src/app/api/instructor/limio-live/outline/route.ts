@@ -9,14 +9,15 @@ import {
   composeTopicSource,
   generateLectureOutline,
 } from "@feedbackme/core-feedback";
-import { extractMaterialText } from "@feedbackme/core-lms";
+import { LessonDeckError, attachLessonDeck, extractMaterialText, getLessonSource } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { isFullStructure, isValidMinutes, normalizeOutline, outlineWarnings, slideRange, type DeckSourceKind, type WebSourceRef } from "@/lib/limioLiveOutline";
 import { detectLanguage, explicitLanguage, topicLanguage } from "@/lib/limioLiveLanguage";
-import { interactionTarget } from "@/lib/limioLiveInteractions";
+import { SELF_CHECK_TARGET, interactionTarget } from "@/lib/limioLiveInteractions";
+import { countWords, lessonDeckIntent, minutesForLesson } from "@/lib/limioLiveLessonDeck";
 import { ensureInteractions } from "@/lib/limioLiveInteractionsServer";
 import { WEB_MAX_PAGES, getWebSearchProvider, searchQueryFromTopic, toSourcePages, type WebSearchProvider } from "@/lib/webSearch";
 
@@ -62,7 +63,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_form_data" }, { status: 400 });
   }
 
-  const minutes = Number(form.get("minutes"));
+  // Bài giảng cho BÀI HỌC (docs/tieu-chi/nghe-giang-slide.md, AC2–AC3): nguồn là chữ của bài học (lấy ở máy chủ, không tin chữ
+  // máy khách gửi), yêu cầu đi kèm do máy chủ dựng, và bài giảng thuộc chủ khoá nên chỉ chủ khoá bấm được.
+  const lessonIdRaw = form.get("lessonId");
+  let lessonCtx: { id: string; title: string; text: string; replace: boolean } | null = null;
+  if (typeof lessonIdRaw === "string" && lessonIdRaw) {
+    try {
+      const src = await getLessonSource(userId, lessonIdRaw);
+      if (src.ownerId !== userId) return NextResponse.json({ error: "only_course_owner" }, { status: 403 });
+      const replace = form.get("replace") === "1";
+      if (src.hasDeck && !replace) return NextResponse.json({ error: "lesson_has_deck" }, { status: 409 });
+      lessonCtx = { id: src.lessonId, title: src.title, text: src.text, replace };
+    } catch (e) {
+      if (e instanceof LessonDeckError) return NextResponse.json({ error: e.code }, { status: e.code === "not_found" ? 404 : 403 });
+      throw e;
+    }
+  }
+
+  const askedMinutes = Number(form.get("minutes"));
+  const minutes = lessonCtx && !isValidMinutes(askedMinutes) ? minutesForLesson(countWords(lessonCtx.text)) : askedMinutes;
   if (!isValidMinutes(minutes)) {
     return NextResponse.json({ error: "validation_failed", details: "minutes" }, { status: 400 });
   }
@@ -83,7 +102,11 @@ export async function POST(req: Request) {
     if (description.length > TOPIC_MAX_CHARS) return NextResponse.json({ error: "topic_too_long", details: { max: TOPIC_MAX_CHARS } }, { status: 422 });
     intent = description;
   }
-  if (!hasDoc && description) {
+  if (lessonCtx) {
+    sourceText = lessonCtx.text;
+    sourceName = lessonCtx.title.slice(0, 200);
+    intent = lessonDeckIntent(lessonCtx.title);
+  } else if (!hasDoc && description) {
     // Không có tài liệu: AI soạn từ kiến thức chung (và các trang tìm được nếu bật nguồn internet).
     const t = description;
     if (t.length < TOPIC_MIN_CHARS) return NextResponse.json({ error: "topic_too_short", details: { min: TOPIC_MIN_CHARS } }, { status: 422 });
@@ -124,8 +147,9 @@ export async function POST(req: Request) {
     throw e;
   }
 
-  const range = slideRange(minutes);
-  const target = interactionTarget(minutes);
+  const selfCheck = !!lessonCtx;
+  const range = slideRange(minutes, selfCheck);
+  const target = selfCheck ? SELF_CHECK_TARGET : interactionTarget(minutes);
   const truncated = sourceText.length > OUTLINE_MAX_SOURCE_CHARS;
   const topicText = sourceText;
   const name = sourceName;
@@ -184,15 +208,15 @@ export async function POST(req: Request) {
           return fail("generate_failed", 500);
         }
 
-        const normalized = normalizeOutline(raw, minutes, { sourceKind: kind, sourceText: text, references: refs ?? [], lang: language });
+        const normalized = normalizeOutline(raw, minutes, { sourceKind: kind, sourceText: text, references: refs ?? [], lang: language, selfCheck });
         if (normalized.outline.slides.length === 0) return fail("empty_outline", 502);
         // Còn thiếu tương tác (số hoặc loại) thì AI bổ sung một lần nhỏ; lỗi thì giữ dàn ý, kèm cảnh báo (M17).
-        const top = await ensureInteractions(userId, normalized.outline, minutes, { sourceText: text, sourceKind: kind, intent }, openai);
+        const top = await ensureInteractions(userId, normalized.outline, minutes, { sourceText: text, sourceKind: kind, intent }, openai, { selfCheck });
         const outline = top.outline;
-        const before = outlineWarnings(normalized.outline, minutes, { sourceKind: kind, sourceText: text });
+        const before = outlineWarnings(normalized.outline, minutes, { sourceKind: kind, sourceText: text, selfCheck });
         const warnings = [
           ...normalized.warnings.filter((w) => !before.includes(w)),
-          ...outlineWarnings(outline, minutes, { sourceKind: kind, sourceText: text }),
+          ...outlineWarnings(outline, minutes, { sourceKind: kind, sourceText: text, selfCheck }),
           ...(top.warning ? [top.warning] : []),
         ];
 
@@ -212,6 +236,15 @@ export async function POST(req: Request) {
           },
           select: { id: true },
         });
+        // Bài giảng của bài học: gắn ngay vào bài học (đã kiểm chủ khoá và hỏi thay thế ở trên). Gắn lỗi thì giữ bài giảng, báo trong cảnh báo.
+        if (lessonCtx) {
+          try {
+            await attachLessonDeck(userId, lessonCtx.id, deck.id, { replace: lessonCtx.replace });
+          } catch (e) {
+            console.error("[Limio-Live outline] attach lesson deck", e);
+            warnings.push("Chưa gắn được bài giảng vào bài học; thầy/cô gắn lại ở mục Bài giảng slide của bài.");
+          }
+        }
         await emitLiveEvent(userId, LearningEventType.LiveDeckOutlineGenerated, {
           deckId: deck.id,
           minutes,

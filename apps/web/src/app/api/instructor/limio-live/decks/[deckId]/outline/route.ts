@@ -31,6 +31,8 @@ async function ownedDeck(deckId: string, userId: string) {
       sourceText: true,
       sourceKind: true,
       sourceRefs: true,
+      // Bài giảng gắn với bài học: mức slide và mức tương tác khác bài giảng dạy trực tiếp (nghe-giang-slide.md).
+      lesson: { select: { id: true } },
       slides: { orderBy: { orderIndex: "asc" as const }, select: { id: true, type: true, config: true } },
     },
   });
@@ -66,6 +68,7 @@ function view(deck: NonNullable<Awaited<ReturnType<typeof ownedDeck>>>) {
     confirmedAt: deck.outlineConfirmedAt,
     sourceChars: deck.sourceText?.length ?? 0,
     slideCount: deck.slides.length,
+    selfCheck: !!deck.lesson,
     // Khi bài đã có slide: việc "cập nhật theo dàn ý" sẽ làm gì (slide đã sửa tay luôn được giữ).
     sync: outline && deck.slides.length ? syncState(outline, deck.slides) : null,
     warnings: outline ? outlineWarnings(outline, minutes, { sourceKind, sourceFigureKeys }) : [],
@@ -119,6 +122,8 @@ export async function PUT(req: Request, { params }: { params: { deckId: string }
       sourceText: true,
       sourceKind: true,
       sourceRefs: true,
+      // Bài giảng gắn với bài học: mức slide và mức tương tác khác bài giảng dạy trực tiếp (nghe-giang-slide.md).
+      lesson: { select: { id: true } },
       slides: { orderBy: { orderIndex: "asc" as const }, select: { id: true, type: true, config: true } },
     },
   });

@@ -11,12 +11,24 @@ export function interactionTarget(minutes: number): { min: number; kinds: number
   return minutes >= 90 ? { min: 10, kinds: 4, whiteboardMax: 1 } : { min: 5, kinds: 3, whiteboardMax: 1 };
 }
 
+/**
+ * Bài giảng sinh cho BÀI HỌC (docs/tieu-chi/nghe-giang-slide.md, AC3): học viên tự nghe nên chỉ có câu trắc nghiệm tự kiểm tra
+ * (có đáp án ngay), không bình chọn, đám mây từ, bảng cộng tác hay bảng trắng. Mức tối thiểu 3 câu, 1 loại.
+ */
+export const SELF_CHECK_TARGET = { min: 3, kinds: 1, whiteboardMax: 0 } as const;
+
+/** Mọi slide tương tác khác trắc nghiệm đổi thành trắc nghiệm (giữ vị trí và tiêu đề); AI viết lại thành câu có đáp án đúng. */
+export function quizOnly<T extends Pick<Outline, "slides">>(outline: T): T {
+  return { ...outline, slides: outline.slides.map((s) => (s.kind === "content" || s.kind === "quiz" ? s : { ...s, kind: "quiz" as OutlineKind })) };
+}
+
 /** Số slide tương tác đang có, các loại đã dùng và phần còn thiếu. `need` đủ để vừa đủ số vừa đủ loại. */
 export function interactionGap(
   outline: Pick<Outline, "slides">,
   minutes: number,
+  override?: { min: number; kinds: number },
 ): { count: number; kinds: string[]; need: number; needKinds: number } {
-  const t = interactionTarget(minutes);
+  const t = override ?? interactionTarget(minutes);
   const inter = outline.slides.filter((s) => s.kind !== "content");
   const kinds = [...new Set(inter.map((s) => s.kind))];
   const needKinds = Math.max(0, t.kinds - kinds.length);

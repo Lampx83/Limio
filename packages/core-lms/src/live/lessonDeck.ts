@@ -32,6 +32,8 @@ export interface LessonDeckForEditor {
   /** Bài giảng của chủ khoá còn chọn được (chưa gắn với bài học nào), mới sửa nhất trước. */
   candidates: LessonDeckSummary[];
   ownerId: string | null;
+  /** Người hỏi là chủ khoá: chỉ chủ khoá tạo được bài giảng mới từ bài viết (bài giảng thuộc chủ khoá). */
+  isOwner: boolean;
 }
 
 async function loadLesson(lessonId: string, db: PrismaClient) {
@@ -65,7 +67,7 @@ export async function getLessonDeckForEditor(actorId: string, lessonId: string, 
       ? db.liveDeck.findMany({ where: { userId: ownerId, lesson: { is: null } }, orderBy: { updatedAt: "desc" }, take: 200, select: summarySelect })
       : [],
   ]);
-  return { attached: attached ? toSummary(attached) : null, candidates: candidates.map(toSummary), ownerId };
+  return { attached: attached ? toSummary(attached) : null, candidates: candidates.map(toSummary), ownerId, isOwner: ownerId === actorId };
 }
 
 /**

@@ -53,10 +53,12 @@ và tạo lại được từng slide.
 - Dàn ý hiện cho giảng viên xem và xác nhận **trước** khi sinh slide (giống `tao-bai-giang-mot-o.md`); không tự sinh slide.
 - AI **chỉ dùng kiến thức có trong bài viết**; số liệu, tên người, trích dẫn phải có trong bài. Slide có trích dẫn nêu nguồn
   như bài viết.
-- Hình trong bài viết (ảnh Wikimedia kèm giấy phép) được **dùng lại** trên slide kèm chú thích giấy phép; không tự tải hình
-  mới từ nguồn khác.
-- Số slide theo thời lượng bài (khoảng 12–16 slide cho bài 15 phút); luôn có slide bìa và slide tổng kết.
-- Mỗi lần sinh ghi lại **dấu vân của bài viết** tại thời điểm đó. Bài viết sửa sau này thì trang quản trị báo "Bài viết đã đổi
+- Hình trong bài viết (ảnh Wikimedia kèm giấy phép) **dùng lại** trên slide kèm chú thích giấy phép; không tự tải hình mới từ nguồn khác.
+  *Chưa làm ở giai đoạn 2:* slide dùng hình minh hoạ có sẵn của Limio-Live (bài viết đi vào AI dưới dạng chữ, không kèm ảnh). Dùng lại ảnh
+  có giấy phép của bài là việc sau.
+- Số slide theo thời lượng bài: **12–16 slide cho bài 15 phút** (+3/+4 so với bài giảng dạy trực tiếp; dàn ý và trang chỉnh dàn ý đều dùng mức này); luôn có slide bìa và slide tổng kết.
+- **Chỉ chủ khoá** tạo được bài giảng từ bài viết (bài giảng thuộc chủ khoá); người khác thấy nút bị từ chối với lời giải thích.
+- Mỗi lần sinh lưu lại **chữ của bài viết** lúc đó (`sourceText` của bài giảng; chủ bài giảng mới đọc được). Bài viết sửa sau này thì trang quản trị báo (*làm ở giai đoạn sau*, so chữ đã lưu với chữ hiện tại) "Bài viết đã đổi
   sau khi tạo bài giảng" và đề nghị sinh lại; **không tự sinh lại** và không ghi đè chỉnh sửa của giảng viên.
 - Chạy được khi chưa có khoá NEU (chỉ cần mô hình chat đã cấu hình). Lỗi mô hình → báo lỗi, không để bài giảng nửa vời.
 

@@ -12,6 +12,26 @@ const outline: OutlineSlideInput[] = [
   { index: 2, kind: "quiz", layout: null, title: "Câu nào là phản hồi cụ thể?", points: [] },
   { index: 3, kind: "word_cloud", layout: null, title: "Một từ nói về cảm nhận", points: [] },
 ];
+describe("kiểu ghi chú của slide", () => {
+  const args = { sourceText: "x".repeat(60), deckTitle: "T", outline: [{ index: 0, kind: "content" as const, layout: "cover", title: "Bìa", points: [] }], batch: [0] };
+
+  it("mặc định là ghi chú cho giảng viên và nêu đáp án của slide quiz", () => {
+    const { system } = buildSlidesPrompt(args);
+    expect(system).toContain("lời giảng cho giảng viên");
+    expect(system).toContain("nêu đáp án đúng và vì sao");
+    expect(system).not.toContain("LỜI ĐỌC thành tiếng");
+  });
+
+  it("kiểu narration là lời đọc cho học viên nghe và cấm nói đáp án của slide quiz", () => {
+    const { system } = buildSlidesPrompt({ ...args, notesStyle: "narration" });
+    expect(system).toContain("LỜI ĐỌC thành tiếng cho học viên tự nghe");
+    expect(system).toContain("xưng \"mình – bạn\"");
+    expect(system).toContain("TUYỆT ĐỐI không nói đáp án");
+    expect(system).not.toContain("lời giảng cho giảng viên");
+    expect(system).not.toContain("nêu đáp án đúng và vì sao");
+  });
+});
+
 describe("vai trò trong mạch bài", () => {
   it("slide Mục tiêu và Mục lục có yêu cầu riêng; slide mở phần dặn lời chuyển ý trong ghi chú", () => {
     expect(specKeyFor({ index: 0, kind: "content", layout: "summary", title: "Mục tiêu", points: [], role: "objectives" })).toBe("objectives");

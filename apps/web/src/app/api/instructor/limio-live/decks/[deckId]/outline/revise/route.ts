@@ -6,7 +6,7 @@ import { readJson } from "@/lib/apiHelpers";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { emitLiveEvent, LearningEventType } from "@/lib/limioLiveEvents";
 import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
-import { interactionTarget } from "@/lib/limioLiveInteractions";
+import { SELF_CHECK_TARGET, interactionTarget, quizOnly } from "@/lib/limioLiveInteractions";
 import { ensureInteractions } from "@/lib/limioLiveInteractionsServer";
 import {
   isFullStructure,
@@ -44,7 +44,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
 
   const deck = await prisma.liveDeck.findFirst({
     where: { id: params.deckId, userId },
-    select: { id: true, outline: true, outlineMinutes: true, sourceText: true, sourceKind: true, sourceRefs: true, sourceIntent: true },
+    select: { id: true, outline: true, outlineMinutes: true, sourceText: true, sourceKind: true, sourceRefs: true, sourceIntent: true, lesson: { select: { id: true } } },
   });
   if (!deck || !deck.outline) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
@@ -78,8 +78,10 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
   const refs = deck.sourceRefs === null ? [] : sanitizeRefs(deck.sourceRefs);
   const language = await resolveDeckLanguage(deck.id);
   const intent = instruction ?? deck.sourceIntent ?? null;
-  const range = mode === "revise" ? reviseRange(minutes) : slideRange(minutes);
-  const target = interactionTarget(minutes);
+  // Bài giảng gắn với bài học: mức slide riêng, chỉ trắc nghiệm tự kiểm tra (nghe-giang-slide.md, AC3).
+  const selfCheck = !!deck.lesson;
+  const range = mode === "revise" ? reviseRange(minutes, selfCheck) : slideRange(minutes, selfCheck);
+  const target = selfCheck ? SELF_CHECK_TARGET : interactionTarget(minutes);
 
   const enc = new TextEncoder();
   const stream = new ReadableStream({
@@ -115,16 +117,17 @@ export async function POST(req: Request, { params }: { params: { deckId: string 
           return fail("generate_failed", 500);
         }
 
-        const normalized = normalizeOutline(rawOutline, minutes, { sourceKind: kind, sourceText, references: refs, lang: language });
+        const normalized = normalizeOutline(rawOutline, minutes, { sourceKind: kind, sourceText, references: refs, lang: language, selfCheck });
         if (normalized.outline.slides.length === 0) return fail("empty_outline", 502);
 
-        let outline = normalized.outline;
+        // Lời dặn có thể kéo lại bình chọn hay đám mây từ: bài của bài học luôn đổi chúng về trắc nghiệm.
+        let outline = selfCheck ? quizOnly(normalized.outline) : normalized.outline;
         let warnings = normalized.warnings;
         // Soạn lại từ đầu đi đúng đường tạo ban đầu, kể cả bổ sung tương tác. Chỉnh theo lời dặn thì KHÔNG: lời dặn có thể chủ ý bớt tương tác.
         if (mode === "restart") {
-          const top = await ensureInteractions(userId, outline, minutes, { sourceText, sourceKind: kind, intent }, openai);
+          const top = await ensureInteractions(userId, outline, minutes, { sourceText, sourceKind: kind, intent }, openai, { selfCheck });
           outline = top.outline;
-          warnings = [...warnings, ...outlineWarnings(outline, minutes, { sourceKind: kind, sourceText }).filter((w) => !warnings.includes(w)), ...(top.warning ? [top.warning] : [])];
+          warnings = [...warnings, ...outlineWarnings(outline, minutes, { sourceKind: kind, sourceText, selfCheck }).filter((w) => !warnings.includes(w)), ...(top.warning ? [top.warning] : [])];
         }
         // Giữ id slide trùng slide cũ để "Cập nhật slide theo dàn ý" không xoá-tạo lại cả bài (R6).
         outline = carryOutlineIds(current, outline);

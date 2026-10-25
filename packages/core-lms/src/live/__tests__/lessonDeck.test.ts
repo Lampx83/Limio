@@ -32,6 +32,7 @@ describe("bài giảng slide của bài học", () => {
     const t = await setup("ld-basic");
     const before = await getLessonDeckForEditor(t.ownerId, t.l1);
     expect(before.attached).toBeNull();
+    expect(before.isOwner).toBe(true);
     expect(before.candidates.map((c) => c.id).sort()).toEqual([t.d1, t.d2].sort());
 
     await attachLessonDeck(t.ownerId, t.l1, t.d1);
@@ -72,6 +73,7 @@ describe("bài giảng slide của bài học", () => {
     const mine = await createLiveDeck({ userId: t.otherId, title: "Của người cộng tác" }, prisma);
     expect(await code(attachLessonDeck(t.otherId, t.l1, mine.id))).toBe("deck_not_owned_by_course_owner");
     expect(await code(attachLessonDeck(t.otherId, t.l1, t.d1))).toBe("ok"); // người cộng tác chọn bài giảng của chủ khoá
+    expect((await getLessonDeckForEditor(t.otherId, t.l1)).isOwner).toBe(false);
   });
 
   it("không tìm thấy bài học hoặc bài giảng", async () => {
