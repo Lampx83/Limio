@@ -18,6 +18,8 @@ const base: MeetingItem = {
   makeupOfId: null,
   locked: false,
   plan: null,
+  planCustomized: false,
+  planTopic: null,
 };
 
 describe("meetingToItem — buổi học thành mục của lịch", () => {
@@ -38,9 +40,20 @@ describe("meetingToItem — buổi học thành mục của lịch", () => {
   });
 
   it("có giáo án: tên là tên giáo án, số buổi chuyển xuống chi tiết", () => {
-    const it = meetingToItem({ ...base, plan: { courseSlug: "k", sessionNo: 3, moduleId: "mo", title: "Buổi 3: Các con số", lessons: [] } }, "/x");
+    const it = meetingToItem({ ...base, plan: { courseSlug: "k", sessionNo: 3, moduleId: "mo", customized: false, title: "Buổi 3: Các con số", lessons: [] } }, "/x");
     expect(it.title).toBe("Buổi 3: Các con số");
     expect(it.detail).toBe("Buổi 3 · 18:30–20:30 · Phòng B2");
+  });
+
+  it("kế hoạch riêng của buổi (CENTER J): chủ đề là tên buổi; chưa có chủ đề thì 'Buổi N' và không lặp ở dòng chi tiết", () => {
+    const own = { courseSlug: "k", sessionNo: null, moduleId: null, lessons: [{ id: "l1", title: "Bài 1" }], customized: true };
+    const withTopic = meetingToItem({ ...base, planCustomized: true, plan: { ...own, title: "Ôn tập số đếm" } }, "/x");
+    expect(withTopic.title).toBe("Ôn tập số đếm");
+    expect(withTopic.lessons).toEqual([{ id: "l1", title: "Bài 1", href: "/learn/k/lessons/l1" }]);
+    const noTopic = meetingToItem({ ...base, planCustomized: true, plan: { ...own, title: null } }, "/x");
+    expect(noTopic.title).toBe("Buổi 3");
+    expect(noTopic.detail).toBe("18:30–20:30 · Phòng B2");
+    expect(noTopic.lessons).toHaveLength(1);
   });
 
   it("buổi dạy bù chưa có số thì gọi là 'Buổi dạy bù'; không phòng thì bỏ ô phòng", () => {
@@ -72,7 +85,7 @@ describe("meetingToItem — bài của buổi (I1–I2)", () => {
   const plan = {
     courseSlug: "tieng-trung",
     sessionNo: 3,
-    moduleId: "mo",
+    moduleId: "mo", customized: false,
     title: "Buổi 3: Các con số",
     lessons: [
       { id: "l1", title: "Từ vựng — Các con số" },

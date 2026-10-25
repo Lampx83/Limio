@@ -6,12 +6,13 @@ import { apiUrl } from "@/lib/apiUrl";
 
 interface Result {
   updatedSessions: number[];
-  skipped: Array<{ sessionNo: number; reason: "taught" | "has_activity" }>;
+  skipped: Array<{ sessionNo: number; reason: "taught" | "has_activity" | "in_custom_plan" }>;
 }
 
 const REASON: Record<string, string> = {
   taught: "đã dạy",
   has_activity: "đã có học viên xem hoặc làm bài",
+  in_custom_plan: "có bài đang nằm trong kế hoạch giảng dạy của một buổi",
 };
 
 /** Báo "giáo trình có bản mới" và cho cập nhật các buổi chưa dạy (CENTER C3.7). */

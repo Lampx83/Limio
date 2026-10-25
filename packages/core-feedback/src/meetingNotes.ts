@@ -81,15 +81,26 @@ export async function gatherMeetingNoteFacts(
   const [user, attendance, mod] = await Promise.all([
     db.user.findUniqueOrThrow({ where: { id: userId }, select: { displayName: true } }),
     db.studentAttendance.findUnique({ where: { meetingId_userId: { meetingId, userId } }, select: { status: true } }),
-    meeting.seq != null
-      ? db.module.findFirst({
-          where: { courseId: meeting.section.courseId, sessionNo: meeting.seq, isHidden: false },
-          select: {
-            title: true,
-            lessons: { where: { isHidden: false }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true } },
-          },
-        })
-      : Promise.resolve(null),
+    // Kế hoạch hiệu lực của buổi (CENTER J): danh sách riêng nếu giáo viên đã tuỳ chỉnh (kể cả rỗng — không rơi về giáo
+    // trình), nếu không thì chương giáo trình cùng số buổi. Cùng quy tắc với core-lms/sessionPlan.resolveMeetingPlans;
+    // viết lại ở đây vì core-feedback không import core-lms (CLAUDE.md §4.3). Bài và chương ẩn không vào nhận xét.
+    meeting.planCustomized
+      ? db.classMeetingLesson
+          .findMany({
+            where: { meetingId, lesson: { isHidden: false, module: { isHidden: false } } },
+            orderBy: { orderIndex: "asc" },
+            select: { lesson: { select: { id: true, title: true } } },
+          })
+          .then((rows) => ({ title: meeting.planTopic, lessons: rows.map((r) => r.lesson) }))
+      : meeting.seq != null
+        ? db.module.findFirst({
+            where: { courseId: meeting.section.courseId, sessionNo: meeting.seq, isHidden: false },
+            select: {
+              title: true,
+              lessons: { where: { isHidden: false }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true } },
+            },
+          })
+        : Promise.resolve(null),
   ]);
   const lessonRows = mod?.lessons ?? [];
   const lessonIds = lessonRows.map((l) => l.id);

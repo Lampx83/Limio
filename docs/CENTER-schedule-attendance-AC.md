@@ -195,6 +195,7 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 - [x] **G5** `/instructor/lich-day`, `/instructor/giao-trinh` (và xem trước) chuyển về trang chủ giảng viên khi G2 sai; `/me/lich-hoc` chuyển về tổng quan khi G3 sai. Trang lớp ẩn khối "Lịch dạy", bảng "Chuyên cần" và thông báo giáo trình có bản mới khi G2 sai.
 - [x] **G6** Công tắc "Tính năng trung tâm" trong cài đặt trường (OrgAdmin) và trang quản trị trường (Platform Admin).
 - [x] **G7** Trang "Lịch dạy" (giảng viên) và "Lịch học" (học viên) là **lịch** giống widget ở trang chủ: nút Tuần/Tháng, Trước/Sau, bấm ngày thấy các buổi trong ngày kèm giáo án; học viên thấy trạng thái điểm danh của mình; bấm buổi mở trang điểm danh (giảng viên). Câu trống nói "buổi học", không nói "hạn nộp".
+- [x] **G8** (2026-10-25, sau khi chủ dự án thử trên production) Dễ tìm chỗ đặt lịch: thẻ lớp ở tab "Lớp học" có dòng tóm tắt lịch ("Chưa có lịch, đặt lịch ngay" hoặc "24 buổi, thứ ba và thứ năm 18:30, buổi tới 27/10") và nút chính **"Lịch dạy"** ngay đầu phần mở rộng của lớp. Trang lớp có hai tab, mỗi tab một đường dẫn (`?tab=lich-day`, `?tab=hoc-vien`): **"Lịch dạy"** (đặt lịch, các buổi, tự gửi tổng kết) và **"Học viên"** (chuyên cần, mục tiêu học tập, danh sách). Mặc định mở "Lịch dạy". Khoá chưa bật tính năng trung tâm giữ nguyên: không tab, chỉ danh sách học viên.
 
 ## H · Vai trò giảng viên trung tâm (chỉ dạy, không soạn)
 
@@ -237,6 +238,35 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 - [x] **I3** Học viên chỉ thấy bài của lớp mình đang học; bài và chương ẩn không hiện; không có nội dung hay ghi chú giảng viên đi theo (đã kiểm ở C3.6, giữ nguyên).
 - [x] **I4** Giảng viên cũng thấy dòng này trên lịch dạy (bấm bài mở trang học của bài đó); trang chủ giảng viên trung tâm giữ nguyên.
 - [x] **I5** Cập nhật `GIAO-DIEN.md`, hướng dẫn Lily (học viên xem bài của buổi ở đâu) và bỏ câu "chưa có" nếu có.
+
+## J · Kế hoạch giảng dạy (giáo án từng buổi do giáo viên soạn)
+
+**Trạng thái (2026-10-25, chưa commit):** J1–J13 đã làm. Bảng `ClassMeetingLesson` và cột `ClassMeeting.planCustomized`, `planTopic` (migration `20261025100000_class_meeting_plan`); `core-lms/courses/meetingPlan.ts` (`getMeetingPlan`, `setMeetingPlan`, `addMeetingPlanLessons`, `resetMeetingPlan`) và `sessionPlan.resolveMeetingPlans` (kế hoạch hiệu lực cho mọi nơi dùng); `core-feedback` nhận xét đọc cùng quy tắc; API `/api/meetings/[id]/plan`; giao diện nút "Kế hoạch". Ghi chú: (1) tên giáo án của buổi tuỳ chỉnh là chủ đề giáo viên đặt, không mượn tên chương (chưa có chủ đề thì để trống, hiện "Buổi N"); (2) "Thêm bài" nằm trong form lưu một lần ("Lưu kế hoạch"), giao diện chưa gọi API thêm từng bài; (3) quản trị trường chưa tự có quyền sửa kế hoạch.
+
+**Lý do (2026-10-25):** giáo án theo buổi hiện chỉ có khi khoá sao từ giáo trình dựng sẵn (chương số N ↔ buổi số N). Khoá do giảng viên tự tạo không có cách nào gắn nội dung vào buổi. Chức năng này cho giáo viên hoặc quản trị khoá **thêm bài (lesson) trực tiếp vào từng buổi** sau khi đã có lịch.
+
+**Khái niệm**
+- **Kế hoạch của một buổi** = danh sách bài của khoá, có thứ tự, gắn vào đúng buổi đó (không gắn theo số buổi).
+- **Theo giáo trình** (mặc định, như C3): chưa tuỳ chỉnh thì buổi lấy bài của chương `sessionNo = số buổi`. Khoá tự tạo không có chương đánh số thì kế hoạch mặc định là trống.
+- **Đã tuỳ chỉnh**: lần đầu giáo viên sửa kế hoạch một buổi, hệ thống **chép danh sách mặc định** thành danh sách riêng của buổi, từ đó buổi dùng danh sách riêng (kể cả rỗng) cho tới khi bấm "Đặt lại theo giáo trình". Sửa là **thay thế**, không cộng dồn với giáo trình, để bỏ được bài không dạy.
+
+**Quyết định cần chủ dự án duyệt (mặc định em đề xuất):** (1) sửa = thay thế như trên; (2) chỉ người **quản khoá** (chủ khoá, đồng giảng viên, Platform Admin) sửa; người chỉ dạy chỉ xem; (3) buổi **đã kết thúc hoặc đã huỷ** thì khoá, không sửa (tổng kết đã chụp lúc kết thúc).
+
+- [x] **J1 Quyền.** Người quản khoá sửa được kế hoạch mọi buổi của lớp. Người chỉ dạy (giảng viên trung tâm, trợ giảng) xem được kế hoạch buổi được xếp cho mình nhưng không sửa. Học viên và người lạ không sửa; quản trị trường không tự có quyền (như đặt lịch).
+- [x] **J2 Giao diện.** Ở tab "Lịch dạy" của trang lớp, mỗi buổi chưa huỷ có nút **"Kế hoạch"** mở phần soạn ngay tại dòng buổi: danh sách bài (tên bài kèm tên chương), **"+ Thêm bài"** (chọn từ cây chương và bài của khoá, tìm theo tên, chọn được nhiều bài một lần), bỏ một bài, đổi thứ tự lên/xuống, ô **"Chủ đề buổi"** (không bắt buộc, tối đa 120 ký tự), nhãn "Theo giáo trình" hoặc "Đã tuỳ chỉnh" và nút **"Đặt lại theo giáo trình"** khi đã tuỳ chỉnh. Dòng "Giáo án:" của buổi hiện kế hoạch hiệu lực.
+- [x] **J3 Ràng buộc dữ liệu.** Bài phải thuộc đúng khoá của lớp; một bài chỉ xuất hiện một lần trong một buổi; cùng một bài được ở nhiều buổi (học lại, ôn tập); tối đa 30 bài mỗi buổi. Bài đang ẩn thêm được (giáo viên xem được) nhưng học viên không thấy.
+- [x] **J4 Tuỳ chỉnh lần đầu chép mặc định.** Buổi theo giáo trình có 2 bài, thêm 1 bài thì thành 3 bài (2 bài cũ + 1 bài mới) và chuyển sang "Đã tuỳ chỉnh". Bỏ hết bài thì buổi có kế hoạch rỗng và **không** quay về giáo trình; chỉ "Đặt lại theo giáo trình" mới quay về.
+- [x] **J5 Buổi dạy bù** (chưa có số thứ tự) cũng có kế hoạch riêng được.
+- [x] **J6 Khoá sau khi kết thúc.** Buổi đã kết thúc (C4.1) hoặc đã huỷ không sửa được (báo rõ lý do); buổi đã qua giờ nhưng chưa kết thúc vẫn sửa được.
+- [x] **J7 Mọi nơi dùng kế hoạch hiệu lực.** Danh sách buổi, calendar ("Bài của buổi"), trang chủ giảng viên trung tâm, tổng kết gửi lớp (bài đã học, từ vựng, bài tập về nhà), bản nháp nhận xét từng học viên (bài của buổi, nhãn nắm bài, bài tập). Học viên chỉ nhận id và tên bài, đã lọc bài và chương ẩn; không nội dung, không ghi chú giảng viên.
+- [x] **J8 Huỷ buổi không làm lệch.** Huỷ hoặc thêm buổi làm số thứ tự đổi: buổi **theo giáo trình** dịch theo số như C3; buổi **đã tuỳ chỉnh giữ nguyên** bài đã chọn vì gắn theo buổi, không theo số.
+- [x] **J9 Cập nhật giáo trình có bản mới.** `updateCourseFromPack` thay cả chương (xoá và tạo lại bài). Chương nào có bài đang nằm trong kế hoạch tuỳ chỉnh của một buổi thì **bỏ qua** (báo "đang dùng trong kế hoạch của buổi N") để không làm mất kế hoạch; các chương khác cập nhật như cũ.
+- [x] **J10 Xoá bài khỏi khoá.** Bài bị xoá khỏi khoá thì tự biến khỏi mọi kế hoạch (liên kết xoá theo); không để lại bài "ma".
+- [x] **J11 Sự kiện.** Phát `class.plan.changed` khi kế hoạch của buổi đổi (id buổi, số bài thêm và bỏ, có đặt lại hay không); không mang tên bài hay chủ đề. `class.*` đã được loại khỏi "hoạt động của học viên".
+- [x] **J12 Không ảnh hưởng người dùng cũ.** Khoá chưa bật tính năng trung tâm không đổi gì; buổi chưa tuỳ chỉnh hiển thị đúng như trước (theo giáo trình). Migration chỉ thêm bảng và cột có mặc định.
+- [x] **J13 Tài liệu.** Cập nhật `GIAO-DIEN.md`, hướng dẫn của Lily (kể cả việc khoá tự tạo gắn bài vào buổi thế nào) và danh mục điểm đến nếu có.
+
+**Chưa làm (P1):** kéo thả đổi thứ tự; chép kế hoạch buổi này sang buổi khác hoặc sang lớp khác; gắn bài tập hoặc quiz riêng lẻ (hiện chỉ gắn bài, và bài mang theo quiz/bài tập của nó); xem trước kế hoạch cả khoá dạng bảng.
 
 ## Ngoài phạm vi (cố ý)
 
