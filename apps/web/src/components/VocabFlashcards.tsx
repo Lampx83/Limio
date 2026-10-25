@@ -126,8 +126,14 @@ export default function VocabFlashcards({
         <div
           role="button"
           tabIndex={-1}
-          onClick={() => {
-            if (window.getSelection()?.toString()) return;
+          // Bấm liên tiếp để lật qua lật lại: lần bấm thứ 2 trở đi trình duyệt sẽ bôi đen cả từ (double-click),
+          // nên chặn bôi đen ở mousedown và không coi đó là "đang chọn chữ để copy". Chỉ lần bấm đơn mới nhường
+          // cho việc bôi đen có chủ ý (kéo chuột chọn chữ).
+          onMouseDown={(e) => {
+            if (e.detail > 1) e.preventDefault();
+          }}
+          onClick={(e) => {
+            if (e.detail <= 1 && window.getSelection()?.toString()) return;
             setFlipped((v) => !v);
           }}
           aria-label={flipped ? "Lật về mặt trước" : "Lật thẻ"}
