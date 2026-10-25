@@ -151,6 +151,7 @@ const MODULES: ModuleDef[] = [
       "/catalog",
       "/instructor/assignments",
       "/instructor/lich-day",
+      "/instructor/doi-chieu",
       "/instructor/giao-trinh",
       "/instructor/skill-tagging",
       "/instructor/forum",

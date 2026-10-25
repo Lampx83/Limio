@@ -80,3 +80,30 @@ export async function hasClassSchedule(userId: string, db: DbClient = prisma): P
   });
   return m !== null;
 }
+
+/**
+ * CENTER C5.4 — ngưỡng (phút) coi là "đúng giờ" khi giáo viên bắt đầu buổi và "không kết thúc sớm" khi đóng buổi.
+ * Mặc định 15; quản trị trường đặt trong khoảng 5–120.
+ */
+export async function setOrgCheckinThreshold(
+  actorUserId: string,
+  organizationId: string,
+  minutes: number,
+  db: PrismaClient = prisma,
+): Promise<{ checkinThresholdMin: number }> {
+  const org = await db.organization.findUnique({ where: { id: organizationId }, select: { checkinThresholdMin: true } });
+  if (!(await isAdmin(actorUserId, db)) && !(await isOrgAdminOf(actorUserId, organizationId, db))) {
+    throw new OrgMemberError("forbidden");
+  }
+  if (!org) throw new OrgMemberError("org_not_found");
+  if (!Number.isInteger(minutes) || minutes < 5 || minutes > 120) throw new OrgMemberError("validation_failed");
+  if (org.checkinThresholdMin === minutes) return { checkinThresholdMin: minutes };
+  await db.$transaction(async (tx) => {
+    await tx.organization.update({ where: { id: organizationId }, data: { checkinThresholdMin: minutes } });
+    await logAudit(
+      { action: "org.checkin_threshold_changed", actorUserId, payload: { organizationId, from: org.checkinThresholdMin, to: minutes } },
+      tx,
+    );
+  });
+  return { checkinThresholdMin: minutes };
+}

@@ -149,16 +149,18 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 **Thiết kế đề xuất:** `TeacherCheckIn (meetingId, teacherId, checkedInAt, checkedOutAt?, method)`; `method = self` ở bản đầu, thêm `room_qr` sau mà không đổi bảng. Độ lệch **tính khi đọc**, không lưu cứng, để đổi quy tắc không phải sửa dữ liệu.
 
-- [ ] **C5.1** Given giáo viên dự kiến của buổi, when bấm "Bắt đầu buổi" trong khoảng từ 30 phút trước giờ bắt đầu đến giờ kết thúc, then ghi `checkedInAt`; bấm lần hai không ghi đè.
-- [ ] **C5.2** Given giáo viên **khác** giáo viên dự kiến bấm bắt đầu, then ghi `actualTeacherId` và hiển thị là "dạy thay"; chỉ giáo viên có quyền trong tổ chức mới làm được.
-- [ ] **C5.3** Given "Kết thúc buổi" (C4.1), then ghi `checkedOutAt` nếu chưa có.
-- [ ] **C5.4** Phân loại tính khi đọc, ngưỡng mặc định 15 phút (cấu hình theo tổ chức): **Đúng giờ** (vào trong ≤ ngưỡng sau giờ bắt đầu), **Trễ**, **Kết thúc sớm** (ra trước giờ kết thúc quá ngưỡng), **Dạy thay**, **Không check-in** (buổi qua giờ mà không ai bấm).
-- [ ] **C5.5** Given buổi `held` mà không có điểm danh học viên, then đánh dấu "chưa điểm danh" để chủ trung tâm nhắc.
-- [ ] **C5.6** Chủ trung tâm (quản trị của tổ chức) có báo cáo tuần: mỗi giáo viên bao nhiêu buổi đúng giờ/trễ/dạy thay/không check-in; bấm vào một buổi xem chi tiết.
-- [ ] **C5.7** Giáo viên chỉ xem **của mình**; chỉ quản trị tổ chức xem của tất cả.
-- [ ] **C5.8** Phát `attendance.teacher.checked_in`, `attendance.teacher.checked_out`.
-- [ ] **C5.9** Cách trình bày là "đối chiếu lịch để xếp dạy bù", không phải chấm công: tên trang, nút, email đều theo ngôn ngữ đó.
-- [ ] **C5.10** Giáo viên quên bấm: quản trị sửa được sau, có ghi lý do; sửa ghi event.
+- [x] **C5.1** Given giáo viên dự kiến của buổi, when bấm "Bắt đầu buổi" trong khoảng từ 30 phút trước giờ bắt đầu đến giờ kết thúc, then ghi `checkedInAt`; bấm lần hai không ghi đè.
+- [x] **C5.2** Given giáo viên **khác** giáo viên dự kiến bấm bắt đầu, then ghi `actualTeacherId` và hiển thị là "dạy thay"; chỉ giáo viên có quyền trong tổ chức mới làm được.
+- [x] **C5.3** Given "Kết thúc buổi" (C4.1), then ghi `checkedOutAt` nếu chưa có.
+- [x] **C5.4** Phân loại tính khi đọc, ngưỡng mặc định 15 phút (cấu hình theo tổ chức): **Đúng giờ** (vào trong ≤ ngưỡng sau giờ bắt đầu), **Trễ**, **Kết thúc sớm** (ra trước giờ kết thúc quá ngưỡng), **Dạy thay**, **Không check-in** (buổi qua giờ mà không ai bấm).
+- [x] **C5.5** Given buổi `held` mà không có điểm danh học viên, then đánh dấu "chưa điểm danh" để chủ trung tâm nhắc.
+- [x] **C5.6** Chủ trung tâm (quản trị của tổ chức) có báo cáo tuần: mỗi giáo viên bao nhiêu buổi đúng giờ/trễ/dạy thay/không check-in; bấm vào một buổi xem chi tiết.
+- [x] **C5.7** Giáo viên chỉ xem **của mình**; chỉ quản trị tổ chức xem của tất cả.
+- [x] **C5.8** Phát `attendance.teacher.checked_in`, `attendance.teacher.checked_out`.
+- [x] **C5.9** Cách trình bày là "đối chiếu lịch để xếp dạy bù", không phải chấm công: tên trang, nút, email đều theo ngôn ngữ đó.
+- [x] **C5.10** Giáo viên quên bấm: quản trị sửa được sau, có ghi lý do; sửa ghi event.
+
+**Ghi chú triển khai (C5):** người dạy thực tế là `TeacherCheckIn.teacherId` (không có cột `actualTeacherId` riêng); phân loại tính khi đọc nên đổi ngưỡng áp dụng cho cả buổi cũ. Giáo viên dự kiến = giáo viên của buổi, không có thì giáo viên phụ trách lớp. Ngưỡng nằm ở `Organization.checkinThresholdMin` (5–120, ghi audit khi đổi). Giáo viên xem ở `/instructor/doi-chieu`, quản trị trường ở `/org-admin/doi-chieu`; sửa của quản trị đánh dấu `method = admin` kèm người sửa và lý do. Sự kiện `attendance.teacher.edited` chỉ mang tên trường đã đổi và độ dài lý do. Chưa có email hay thông báo cho C5.
 
 **P1:** `room_qr`; nhắc giáo viên trước buổi dạy 15 phút; xuất báo cáo Excel.
 

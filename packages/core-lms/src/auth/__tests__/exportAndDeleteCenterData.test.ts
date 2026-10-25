@@ -68,6 +68,19 @@ describe("exportProfile — mục tiêu và dữ liệu sau buổi học (C6.6, 
   });
 });
 
+describe("exportProfile — giáo viên (CENTER C5)", () => {
+  it("có các buổi mình đã bắt đầu để đối chiếu lịch dạy; không lẫn của giáo viên khác", async () => {
+    const s = await setup("exp-teacher");
+    const other = await makeUser("exp-teacher-other@e.com", ["center_teacher"]);
+    await prisma.courseInstructor.create({ data: { courseId: s.courseId, userId: other, role: "non-editing-teacher" } });
+    await prisma.teacherCheckIn.create({ data: { meetingId: s.meetings[0]!.id, teacherId: s.teacher, checkedInAt: AFTER_M1, method: "admin", editedById: other, editReason: "Quên bấm" } });
+    await prisma.teacherCheckIn.create({ data: { meetingId: s.meetings[1]!.id, teacherId: other, checkedInAt: AFTER_M1 } });
+    const out = (await exportProfile(s.teacher)) as unknown as { teacherCheckIns: Array<Record<string, unknown>> };
+    expect(out.teacherCheckIns).toHaveLength(1);
+    expect(out.teacherCheckIns[0]).toMatchObject({ method: "admin", editReason: "Quên bấm" });
+  });
+});
+
 describe("deleteUser — xoá hẳn nội dung chữ về học viên (C6.6, C6.9)", () => {
   it("xoá mục tiêu, mọi nhận xét (kể cả nháp), tình trạng gửi email và ghi chú điểm danh; giữ trạng thái điểm danh ẩn danh; không đụng người khác", async () => {
     const { s, me, other } = await fixture("del-center");

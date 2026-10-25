@@ -143,6 +143,14 @@ export function lessonNarrationKey(lessonId: string, filename: string): StorageK
 export function narrationChunkKey(narrationId: string, hash: string): StorageKey {
   return { layer: "tmp", key: `narration-cache/${narrationId}/${hash}.wav` };
 }
+
+/**
+ * Bản đọc thử một giọng. Nằm ở private (không phải tmp) vì tmp bị dọn sau 24 giờ, mà bản thử chỉ có ý nghĩa khi
+ * giữ lâu. `hash` gắn với câu mẫu nên đổi câu mẫu thì tự tạo lại, không phục vụ bản cũ.
+ */
+export function voiceSampleKey(mode: string, voice: string, hash: string): StorageKey {
+  return { layer: "private", key: `tts-voice-samples/${mode}/${voice}-${hash}.wav` };
+}
 export function examAssetKey(date: Date, filename: string): StorageKey {
   return dateSharded("public", "exam-assets", date, filename);
 }

@@ -23,8 +23,8 @@ Như vậy học viên tự vào không thiếu ý muốn học. Họ thiếu **
 
 - **Given** học viên chưa có ghi danh nào, **When** mở `/me/dashboard`, **Then** thấy trang "Bắt đầu" gồm theo thứ tự:
   1. Lời chào theo tên.
-  2. Ô nhập mã (AC2).
-  3. Phần "Thử học ngay" (AC3).
+  2. Phần "Thử học ngay" (AC3) — đứng đầu, là thẻ nhấn mạnh duy nhất (nền lime đậm). Đổi ý 25/10/2026: trước đây ô nhập mã đứng trước.
+  3. Ô nhập mã (AC2). Chưa chọn khoá mẫu nào thì ô nhập mã lên vị trí 2 và đứng một mình.
   4. Phần "Khoá đang mở" (AC4).
 - **Given** như trên, **Then** **không** hiện:
   - bốn ô số liệu (Khoá đã đăng ký, Bài đã hoàn thành, Chủ đề vững, Huy hiệu);
@@ -34,7 +34,7 @@ Như vậy học viên tự vào không thiếu ý muốn học. Họ thiếu **
 - **Given** học viên ghi danh xong khoá đầu tiên, **When** quay lại `/me/dashboard`, **Then** thấy trang tổng quan đầy đủ như hiện nay.
 - **Given** màn hình điện thoại (< 640 px), **Then**:
   - các phần xếp thành một cột;
-  - ô nhập mã nằm ngay dưới lời chào, không phải cuộn mới thấy;
+  - thẻ "Thử học ngay" nằm ngay dưới lời chào, nút "Học thử" thấy được mà không phải cuộn; ô nhập mã đứng ngay sau thẻ đó;
   - không có thanh cuộn ngang.
 
 ## AC2 — Một ô nhập mã cho mọi loại mã (đã chốt: nhận mọi loại)

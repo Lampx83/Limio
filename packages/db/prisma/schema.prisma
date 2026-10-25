@@ -132,6 +132,7 @@ model User {
   meetingSummaryDeliveries  MeetingSummaryDelivery[] @relation("MeetingSummaryUser")
   meetingNotes              MeetingStudentNote[]     @relation("MeetingNoteStudent")
   learnerGoals              LearnerGoal[]            @relation("LearnerGoalOwner")
+  teacherCheckIns           TeacherCheckIn[]         @relation("TeacherCheckInTeacher")
   /// CENTER C4 — tắt email tổng kết/nhận xét sau buổi học (vẫn đọc được trong app).
   classEmailOptOut          Boolean                  @default(false)
   // P0 phòng thi — rooms this user is assigned to as proctor / grader.
@@ -2538,6 +2539,15 @@ model IntegrationCredential {
   createdAt      DateTime @default(now())
 }
 
+// Nhãn vùng miền ("bac" | "nam") do admin tự dán cho giọng đọc NEU TTS sau khi nghe thử.
+// NEU chỉ trả tên giọng + ngôn ngữ nên nhãn nằm ở đây. Không có hàng = chưa phân loại.
+model NarrationVoiceLabel {
+  voice       String   @id
+  region      String
+  updatedById String
+  updatedAt   DateTime @updatedAt
+}
+
 // =====================================================================
 // AI Tutor — Phase 4. Per-lesson conversations + cost tracking.
 // =====================================================================
@@ -4436,6 +4446,28 @@ enum ClassMeetingStatus {
 // Một buổi học cụ thể. `seq` là số thứ tự buổi trong giáo án: chỉ buổi KHÔNG huỷ mới có,
 // đánh theo thời gian từ 1. Huỷ một buổi thì các buổi sau tự lùi số, buổi dạy bù chen vào đúng
 // vị trí theo thời gian — giáo án luôn đi theo thứ tự dạy thật.
+// CENTER C5 — giáo viên bắt đầu buổi, để đối chiếu lịch dạy (xếp dạy bù khi thiếu), KHÔNG phải chấm công. Một dòng cho mỗi
+// buổi: người bấm đầu tiên thắng, bấm lại không ghi đè. Độ lệch (đúng giờ, trễ, kết thúc sớm, dạy thay) tính khi đọc nên
+// đổi quy tắc không phải sửa dữ liệu. `method`: self (giáo viên tự bấm), admin (quản trị sửa sau, kèm lý do); room_qr để sau.
+model TeacherCheckIn {
+  id           String    @id @default(uuid())
+  meetingId    String    @unique
+  /// Người thực sự dạy (có thể khác giáo viên dự kiến: dạy thay).
+  teacherId    String
+  checkedInAt  DateTime
+  checkedOutAt DateTime?
+  method       String    @default("self")
+  editedById   String?
+  editReason   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  meeting ClassMeeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  teacher User         @relation("TeacherCheckInTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([teacherId, checkedInAt])
+}
+
 // CENTER J — bài (lesson) nằm trong kế hoạch giảng dạy của một buổi, có thứ tự. Gắn theo BUỔI chứ không theo số buổi,
 // nên huỷ hay thêm buổi không làm lệch. Xoá bài khỏi khoá thì dòng này tự biến theo.
 model ClassMeetingLesson {
@@ -4475,6 +4507,8 @@ model ClassMeeting {
   // riêng ở `planLessons` (kể cả rỗng) cho tới khi giáo viên "Đặt lại theo giáo trình". `planTopic` là chủ đề buổi.
   planCustomized   Boolean            @default(false)
   planTopic        String?
+  // CENTER C5 — giáo viên bắt đầu buổi (đối chiếu lịch). Tối đa một dòng cho mỗi buổi.
+  checkIn          TeacherCheckIn?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
@@ -5291,13 +5325,15 @@ model Organization {
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
-  users            User[]
-  courses          Course[]
-  admins           OrganizationAdmin[]
-  sessionTemplates ExamSessionTemplate[]
-  emailTemplates   EmailTemplate[]
-  emailBatches     EmailDispatchBatch[]
-  academicTerms    AcademicTerm[]
+  users               User[]
+  courses             Course[]
+  admins              OrganizationAdmin[]
+  sessionTemplates    ExamSessionTemplate[]
+  emailTemplates      EmailTemplate[]
+  emailBatches        EmailDispatchBatch[]
+  academicTerms       AcademicTerm[]
+  /// CENTER C5 — ngưỡng (phút) để coi là "đúng giờ" hay "trễ"/"kết thúc sớm" khi đối chiếu lịch dạy.
+  checkinThresholdMin Int                   @default(15)
 
   @@index([code])
 }
