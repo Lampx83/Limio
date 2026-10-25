@@ -60,7 +60,7 @@ export default function ResetRequestPage() {
             </button>
             {status === "ok" && (
               <div className="rounded-lg border border-success-100 bg-success-50 px-3 py-2 text-sm text-success-700">
-                ✓ Nếu email tồn tại, link sẽ được gửi (dev: log ra console server).
+                ✓ Nếu email này đã đăng ký, chúng tôi vừa gửi link đặt lại mật khẩu. Bạn kiểm tra hộp thư (cả mục thư rác) nhé.
               </div>
             )}
           </form>
