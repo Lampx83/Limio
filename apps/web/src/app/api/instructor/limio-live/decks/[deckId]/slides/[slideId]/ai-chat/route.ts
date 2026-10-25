@@ -1,4 +1,5 @@
 import { AiGenerationError, AiTutorError, generateSlideChat, getTokenBudget } from "@feedbackme/core-feedback";
+import { deckAccessWhere } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { readJson } from "@/lib/apiHelpers";
@@ -34,7 +35,7 @@ export async function POST(req: Request, { params }: { params: { deckId: string;
   const history = sanitizeChatHistory(body?.history);
 
   const slide = await prisma.liveSlide.findFirst({
-    where: { id: params.slideId, deckId: params.deckId, deck: { userId } },
+    where: { id: params.slideId, deckId: params.deckId, deck: deckAccessWhere(userId) },
     select: { type: true, config: true, deck: { select: { title: true, sourceText: true, sourceKind: true, sourceRefs: true, outline: true } } },
   });
   if (!slide) return json({ error: "not_found" }, 404);

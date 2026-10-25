@@ -211,11 +211,10 @@ export default async function LessonPage({
   let slideInfo: LessonSlideInfo | null = null;
   if (canEdit && userId && !stageMode && !previewMode) {
     const st = await getLessonSlideState(userId, params.lessonId).catch(() => null);
+    // Chủ khoá và đồng giảng viên đều thấy nút; bài giảng thuộc người tạo nên chỉ họ mở được trình soạn và trình chiếu.
     if (st) {
       slideInfo = {
         deck: st.deck,
-        isOwner: st.isOwner,
-        ownerName: st.ownerName,
         textWords: st.textWords,
         longEnough: st.textChars >= OUTLINE_MIN_SOURCE_CHARS,
         tokenLabel: formatTokenCount(estimateLessonDeckTokens(st.textChars)),

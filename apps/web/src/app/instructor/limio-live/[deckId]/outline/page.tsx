@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { deckAccessWhere } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireFeature } from "@/lib/session";
 import { resolveDeckLanguage } from "@/lib/limioLiveLanguageServer";
@@ -13,7 +14,7 @@ export default async function OutlinePage({ params }: { params: { deckId: string
   const userId = await requireFeature("limio_live.access");
   if (!userId) redirect("/instructor/dashboard?blocked=limio_live");
   const deck = await prisma.liveDeck.findFirst({
-    where: { id: params.deckId, userId },
+    where: { id: params.deckId, ...deckAccessWhere(userId) },
     select: { id: true, outline: true },
   });
   if (!deck || !deck.outline) notFound();

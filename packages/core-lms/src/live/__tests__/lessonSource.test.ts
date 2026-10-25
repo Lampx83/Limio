@@ -7,6 +7,7 @@ import { createLesson } from "../../courses/lessons";
 import { getLessonSlideState, getLessonSource, lessonHtmlToText, lessonMarkdownToText } from "../lessonSource";
 import { attachLessonDeck } from "../lessonDeck";
 import { createLiveDeck } from "../decks";
+import { addCoInstructorByEmail } from "../../courses/instructors";
 import { LessonDeckError } from "../lessonDeck";
 
 const BASE = "http://localhost:3000";
@@ -85,16 +86,18 @@ describe("getLessonSlideState", () => {
     await prisma.contentItem.create({ data: { lessonId: l.lessonId, type: "richtext", orderIndex: 0, payload: { html: "<p>một hai ba bốn năm</p>" } } });
 
     const none = await getLessonSlideState(owner.userId, l.lessonId);
-    expect(none).toMatchObject({ deck: null, isOwner: true, ownerName: "Cô Lan", textWords: 5 });
+    expect(none).toMatchObject({ deck: null, textWords: 5 });
     expect(none.textChars).toBeGreaterThan(0);
 
     const deck = await createLiveDeck({ userId: owner.userId, title: "Bài giảng" }, prisma);
     await attachLessonDeck(owner.userId, l.lessonId, deck.id);
-    expect((await getLessonSlideState(owner.userId, l.lessonId)).deck).toEqual({ id: deck.id, slideCount: 0 });
+    expect((await getLessonSlideState(owner.userId, l.lessonId)).deck).toEqual({ id: deck.id, slideCount: 0, canOpen: true, ownerName: "Cô Lan" });
 
     await prisma.liveSlide.create({ data: { deckId: deck.id, type: "content", orderIndex: 0, config: { title: "S" } } });
-    expect((await getLessonSlideState(owner.userId, l.lessonId)).deck).toEqual({ id: deck.id, slideCount: 1 });
+    expect((await getLessonSlideState(owner.userId, l.lessonId)).deck).toEqual({ id: deck.id, slideCount: 1, canOpen: true, ownerName: "Cô Lan" });
+    // Người cộng tác cùng khoá thấy bài giảng là của người khác (canOpen = false).
+    await addCoInstructorByEmail(owner.userId, c.courseId, "x-lss@e.com", "co-instructor", BASE);
+    expect((await getLessonSlideState(other.userId, l.lessonId)).deck).toMatchObject({ canOpen: false, ownerName: "Cô Lan" });
 
-    await expect(getLessonSlideState(other.userId, l.lessonId)).rejects.toMatchObject({ code: "forbidden" });
   });
 });

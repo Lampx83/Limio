@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireFeature } from "@/lib/session";
 import { prisma } from "@feedbackme/db";
-import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup } from "@feedbackme/core-lms";
+import { getLiveDeck, updateLiveDeck, deleteLiveDeck, setLiveDeckGroup, deckAccessWhere } from "@feedbackme/core-lms";
 import { z } from "zod";
 import { SLIDE_THEME_IDS } from "@/app/instructor/limio-live/slideThemes";
 import { MOTIF_CHOICES } from "@/lib/limioLiveMotifs";
@@ -65,7 +65,8 @@ export async function GET(
     // Bài cũ chưa có ngôn ngữ: nhận từ nội dung (docs/tieu-chi/ngon-ngu-slide.md, L4).
     if (!deck.language) deck.language = await resolveDeckLanguage(deck.id);
 
-    return NextResponse.json(await withOrgBrand(deck, userId));
+    // Thương hiệu của trường là của CHỦ bài; vai của người hỏi để giao diện ẩn nút chỉ chủ bài dùng (xoá, chia sẻ, thêm người).
+    return NextResponse.json({ ...(await withOrgBrand(deck, deck.userId)), role: deck.userId === userId ? "owner" : "collaborator" });
   } catch (error) {
     console.error("[Limio-Live Deck API - GET]", error);
     const message = error instanceof Error ? error.message : "Unknown error";
@@ -98,7 +99,7 @@ export async function PATCH(
     if (brandRaw !== undefined) {
       const v = validateBrandInput(brandRaw);
       if (!v.ok) return NextResponse.json({ error: "Invalid input", details: { brand: v.error } }, { status: 400 });
-      const before = await prisma.liveDeck.findFirst({ where: { id: params.deckId, userId }, select: { brand: true } });
+      const before = await prisma.liveDeck.findFirst({ where: { id: params.deckId, ...deckAccessWhere(userId) }, select: { brand: true } });
       previousLogo = sanitizeBrand(before?.brand)?.logoUrl;
       rest.brand = v.brand as Record<string, unknown> | null;
     }

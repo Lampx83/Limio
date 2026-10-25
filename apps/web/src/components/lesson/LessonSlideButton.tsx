@@ -9,10 +9,7 @@ import { LessonDeckClientError, createLessonDeckFromArticle, lessonDeckErrorText
 
 export interface LessonSlideInfo {
   /** Bài giảng đang gắn với bài học (null = chưa có); slideCount 0 = mới có dàn ý, chưa tạo slide. */
-  deck: { id: string; slideCount: number } | null;
-  /** Người xem là chủ khoá: chỉ chủ khoá tạo được bài giảng từ bài viết. */
-  isOwner: boolean;
-  ownerName: string | null;
+  deck: { id: string; slideCount: number; canOpen: boolean; ownerName: string | null } | null;
   /** Số từ của bài (0 = bài không có chữ) và đã đủ dài để soạn dàn ý chưa. */
   textWords: number;
   longEnough: boolean;
@@ -22,10 +19,11 @@ export interface LessonSlideInfo {
 
 /**
  * Nút "Slide" của người sửa được khoá, đứng cạnh Nghe giảng và Podcast (docs/tieu-chi/nghe-giang-slide.md, AC6).
- * - Chưa có bài giảng: bấm ra hộp hỏi "tạo slide từ nội dung bài?" (kèm lời khuyên, chi phí); chủ khoá bấm tạo, người khác chỉ đọc lời giải thích.
+ * - Chưa có bài giảng: bấm ra hộp hỏi "tạo slide từ nội dung bài?" (kèm lời khuyên và chi phí).
  * - Mới có dàn ý chưa tạo slide: menu một mục "Tiếp tục" tới trang dàn ý.
  * - Đã có slide: menu "Xem slide để dạy" (trình chiếu Limio-Live) / "Xem slide để nghe giảng" (slideshow như học viên).
- * Học viên không có nút này; nút nghe giảng slide của họ chỉ hiện khi bài đã có giọng.
+ * Chủ khoá và đồng giảng viên của khoá đều thấy nút. Bài giảng thuộc người tạo; chỉ chủ bài và đồng giảng viên của bài giảng (Limio-Live)
+ * mở được trình soạn và trình chiếu, người khác chỉ có "Xem slide để nghe giảng". Học viên không có nút này; nút nghe giảng slide của họ chỉ hiện khi bài đã có giọng.
  */
 export default function LessonSlideButton({
   lessonId,
@@ -83,23 +81,36 @@ export default function LessonSlideButton({
       {menuOpen && deck && (
         <div role="menu" className="absolute left-0 z-30 mt-2 w-64 rounded-xl border border-token bg-[rgb(var(--surface))] p-1 shadow-card">
           {deck.slideCount === 0 ? (
-            <>
-              <Link role="menuitem" href={`/instructor/limio-live/${deck.id}/outline`} className={item} prefetch={false} onClick={() => setMenuOpen(false)}>
-                <Presentation size={16} aria-hidden="true" />
-                Tiếp tục: xem và xác nhận dàn ý
-              </Link>
-              <p className="px-3 pb-2 pt-1 text-caption text-muted">Bài giảng mới có dàn ý, chưa tạo slide.</p>
-            </>
+            deck.canOpen ? (
+              <>
+                <Link role="menuitem" href={`/instructor/limio-live/${deck.id}/outline`} className={item} prefetch={false} onClick={() => setMenuOpen(false)}>
+                  <Presentation size={16} aria-hidden="true" />
+                  Tiếp tục: xem và xác nhận dàn ý
+                </Link>
+                <p className="px-3 pb-2 pt-1 text-caption text-muted">Bài giảng mới có dàn ý, chưa tạo slide.</p>
+              </>
+            ) : (
+              <p className="px-3 py-2 text-caption text-muted">
+                Bài giảng của {deck.ownerName ?? "người khác"} mới có dàn ý, chưa tạo slide; chỉ chủ bài giảng và đồng giảng viên của bài giảng mở được để xác nhận dàn ý.
+              </p>
+            )
           ) : (
             <>
-              <Link role="menuitem" href={`/instructor/limio-live/${deck.id}/present?from=start`} className={item} prefetch={false} onClick={() => setMenuOpen(false)}>
-                <Users size={16} aria-hidden="true" />
-                Xem slide để dạy
-              </Link>
+              {deck.canOpen && (
+                <Link role="menuitem" href={`/instructor/limio-live/${deck.id}/present?from=start`} className={item} prefetch={false} onClick={() => setMenuOpen(false)}>
+                  <Users size={16} aria-hidden="true" />
+                  Xem slide để dạy
+                </Link>
+              )}
               <Link role="menuitem" href={`/learn/${courseSlug}/lessons/${lessonId}/slides`} className={item} prefetch={false} onClick={() => setMenuOpen(false)}>
                 <Headphones size={16} aria-hidden="true" />
                 Xem slide để nghe giảng
               </Link>
+              {!deck.canOpen && (
+                <p className="px-3 pb-2 pt-1 text-caption text-muted">
+                  Bài giảng của {deck.ownerName ?? "người khác"}; nhờ họ thêm thầy/cô làm đồng giảng viên của bài giảng để mở trình soạn và trình chiếu.
+                </p>
+              )}
             </>
           )}
         </div>
@@ -137,7 +148,7 @@ function CreateSlideDialog({ lessonId, lessonTitle, info, onClose }: { lessonId:
     }
   }
 
-  const canCreate = info.isOwner && info.longEnough;
+  const canCreate = info.longEnough;
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center" onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}>
       <div role="dialog" aria-modal="true" aria-labelledby="slide-dialog-title" className="w-full max-w-md rounded-2xl bg-[rgb(var(--surface))] p-5 shadow-card">
@@ -168,11 +179,6 @@ function CreateSlideDialog({ lessonId, lessonTitle, info, onClose }: { lessonId:
           </div>
         )}
 
-        {!info.isOwner && (
-          <p className="mt-3 text-body text-muted">
-            Chỉ chủ khoá{info.ownerName ? ` (${info.ownerName})` : ""} tạo được slide cho bài này, vì bài giảng thuộc tài khoản chủ khoá.
-          </p>
-        )}
         {canCreate && <p className="mt-3 text-meta text-muted">Dự kiến dùng khoảng {info.tokenLabel} token AI.</p>}
         {busy && (
           <p role="status" className="mt-3 flex items-center gap-2 text-body">

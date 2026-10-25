@@ -32,7 +32,6 @@ describe("bài giảng slide của bài học", () => {
     const t = await setup("ld-basic");
     const before = await getLessonDeckForEditor(t.ownerId, t.l1);
     expect(before.attached).toBeNull();
-    expect(before.isOwner).toBe(true);
     expect(before.candidates.map((c) => c.id).sort()).toEqual([t.d1, t.d2].sort());
 
     await attachLessonDeck(t.ownerId, t.l1, t.d1);
@@ -64,16 +63,37 @@ describe("bài giảng slide của bài học", () => {
     expect(await code(attachLessonDeck(t.ownerId, t.l2, t.d1))).toBe("ok"); // d1 đã được nhả
   });
 
-  it("chỉ người sửa được khoá mới gắn; bài giảng phải của chủ khoá", async () => {
+  it("chủ khoá và đồng giảng viên đều dùng được, mỗi người chỉ gắn bài giảng của chính mình; người ngoài khoá bị từ chối", async () => {
     const t = await setup("ld-authz");
+    // Người ngoài khoá.
     expect(await code(attachLessonDeck(t.otherId, t.l1, t.d1))).toBe("forbidden");
     expect(await code(getLessonDeckForEditor(t.otherId, t.l1))).toBe("forbidden");
+    expect(await code(detachLessonDeck(t.otherId, t.l1))).toBe("forbidden");
 
+    // Đồng giảng viên: dùng được, nhưng chỉ gắn bài giảng của chính họ.
     await addCoInstructorByEmail(t.ownerId, t.courseId, "x-ld-authz@e.com", "co-instructor", BASE);
-    const mine = await createLiveDeck({ userId: t.otherId, title: "Của người cộng tác" }, prisma);
-    expect(await code(attachLessonDeck(t.otherId, t.l1, mine.id))).toBe("deck_not_owned_by_course_owner");
-    expect(await code(attachLessonDeck(t.otherId, t.l1, t.d1))).toBe("ok"); // người cộng tác chọn bài giảng của chủ khoá
-    expect((await getLessonDeckForEditor(t.otherId, t.l1)).isOwner).toBe(false);
+    expect(await code(attachLessonDeck(t.otherId, t.l1, t.d1))).toBe("deck_not_yours"); // bài giảng của chủ khoá
+    // Được chủ bài giảng thêm làm đồng giảng viên của bài giảng thì gắn được và mở được (dong-giang-vien-bai-giang.md).
+    await prisma.liveDeckCollaborator.create({ data: { deckId: t.d2, userId: t.otherId, addedById: t.ownerId } });
+    expect((await getLessonDeckForEditor(t.otherId, t.l1)).candidates.map((c) => c.id)).toEqual([t.d2]);
+    expect(await code(attachLessonDeck(t.otherId, t.l2, t.d2))).toBe("ok");
+    expect((await getLessonDeckForEditor(t.otherId, t.l2)).attached).toMatchObject({ id: t.d2, canOpen: true, ownerName: "Chủ khoá" });
+    await detachLessonDeck(t.otherId, t.l2);
+    const theirs = await createLiveDeck({ userId: t.otherId, title: "Của đồng giảng viên" }, prisma);
+    expect(await code(attachLessonDeck(t.otherId, t.l1, theirs.id))).toBe("ok");
+    const asCo = await getLessonDeckForEditor(t.otherId, t.l1);
+    expect(asCo.attached).toMatchObject({ id: theirs.id, canOpen: true });
+    expect(asCo.candidates.every((c) => c.canOpen)).toBe(true);
+
+    // Chủ khoá thấy đó là bài giảng của người khác, không gắn được bài giảng đó cho bài khác và vẫn thay/gỡ được.
+    const asOwner = await getLessonDeckForEditor(t.ownerId, t.l1);
+    expect(asOwner.attached).toMatchObject({ id: theirs.id, canOpen: false, ownerName: "Người ngoài" });
+    expect(asOwner.candidates.map((c) => c.id).sort()).toEqual([t.d1, t.d2].sort()); // chỉ bài giảng của chính chủ khoá
+    expect(await code(attachLessonDeck(t.ownerId, t.l2, theirs.id))).toBe("deck_not_yours");
+    expect(await code(attachLessonDeck(t.ownerId, t.l1, t.d1))).toBe("lesson_has_deck");
+    expect((await attachLessonDeck(t.ownerId, t.l1, t.d1, { replace: true })).replacedDeckId).toBe(theirs.id);
+    await detachLessonDeck(t.otherId, t.l1); // đồng giảng viên gỡ được bài giảng đang gắn
+    expect((await getLessonDeckForEditor(t.ownerId, t.l1)).attached).toBeNull();
   });
 
   it("không tìm thấy bài học hoặc bài giảng", async () => {

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireFeature } from "@/lib/session";
 import LiveDeckList from "./LiveDeckList";
+import SharedDeckList from "./SharedDeckList";
 
 export const metadata = {
   title: "Limio-Live | Limio",
@@ -22,6 +23,7 @@ export default async function LimioLivePage() {
       </div>
 
       <LiveDeckList />
+      <SharedDeckList />
     </main>
   );
 }

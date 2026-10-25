@@ -171,6 +171,7 @@ model User {
   teachingActivityPlanSaves          TeachingActivityPlanSave[]
   teachingActivityPlanLikes          TeachingActivityPlanLike[]
   liveDecks                          LiveDeck[]
+  liveDeckCollaborations             LiveDeckCollaborator[]
   liveDeckGroups                     LiveDeckGroup[]
   liveSessionsHosted                 LiveSession[]
 
@@ -5608,9 +5609,26 @@ model LiveDeck {
   slides   LiveSlide[]
   sessions LiveSession[]
   lesson   Lesson?        @relation("LessonLiveDeck")
+  // Đồng giảng viên của bài giảng (docs/tieu-chi/dong-giang-vien-bai-giang.md): cùng soạn và cùng chiếu; chủ bài (userId) vẫn là người duy nhất xoá, chia sẻ, đổi nhóm, thêm/gỡ người.
+  collaborators LiveDeckCollaborator[]
 
   @@index([userId])
   @@index([groupId])
+}
+
+/// Đồng giảng viên của một bài giảng Limio-Live. Một người chỉ xuất hiện một lần trong một bài; chủ bài không nằm trong bảng này.
+model LiveDeckCollaborator {
+  deckId    String
+  userId    String
+  /// Người đã thêm (chủ bài). Chỉ để truy vết, không ràng buộc khoá ngoại để xoá tài khoản không vướng.
+  addedById String
+  createdAt DateTime @default(now())
+
+  deck LiveDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([deckId, userId])
+  @@index([userId])
 }
 
 enum LiveDeckGroupKind {

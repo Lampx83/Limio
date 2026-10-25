@@ -1,4 +1,5 @@
 import { PrismaClient, LiveSession, LiveIdentityMode, Prisma } from "@feedbackme/db";
+import { hasDeckAccess } from "./deckAccess";
 
 // Bỏ ký tự dễ nhầm (0/O, 1/I/L) vì học viên gõ tay mã trên màn chiếu.
 const JOIN_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -43,7 +44,7 @@ export async function startOrResumeLiveSession(
   db: PrismaClient
 ): Promise<LiveSession> {
   const deck = await db.liveDeck.findUnique({ where: { id: deckId } });
-  if (!deck || deck.userId !== userId) {
+  if (!deck || !(await hasDeckAccess(deck, userId, db))) {
     throw new Error("Not authorized to present this deck");
   }
 

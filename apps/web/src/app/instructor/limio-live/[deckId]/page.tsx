@@ -26,5 +26,5 @@ export default async function LiveDeckEditorPage({
   // Bài cũ chưa có ngôn ngữ: nhận từ nội dung ngay khi mở (docs/tieu-chi/ngon-ngu-slide.md, L4).
   if (!deck.language) deck.language = await resolveDeckLanguage(deck.id);
   // JSON round-trip: Date → chuỗi ISO, khớp đúng hình dạng API trả về.
-  return <LiveDeckEditor deckId={params.deckId} initialDeck={JSON.parse(JSON.stringify(await withOrgBrand(deck, userId)))} />;
+  return <LiveDeckEditor deckId={params.deckId} initialDeck={JSON.parse(JSON.stringify({ ...(await withOrgBrand(deck, deck.userId)), role: deck.userId === userId ? "owner" : "collaborator" }))} />;
 }

@@ -19,6 +19,8 @@ export * from "./live/decks";
 export * from "./live/share";
 export * from "./live/lessonDeck";
 export * from "./live/lessonSource";
+export * from "./live/deckAccess";
+export * from "./live/deckCollaborators";
 export * from "./live/groups";
 export * from "./live/present";
 export * from "./live/history";
