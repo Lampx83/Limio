@@ -2533,6 +2533,15 @@ model IntegrationCredential {
   createdAt      DateTime @default(now())
 }
 
+// Nhãn vùng miền ("bac" | "nam") do admin tự dán cho giọng đọc NEU TTS sau khi nghe thử.
+// NEU chỉ trả tên giọng + ngôn ngữ nên nhãn nằm ở đây. Không có hàng = chưa phân loại.
+model NarrationVoiceLabel {
+  voice       String   @id
+  region      String
+  updatedById String
+  updatedAt   DateTime @updatedAt
+}
+
 // =====================================================================
 // AI Tutor — Phase 4. Per-lesson conversations + cost tracking.
 // =====================================================================
