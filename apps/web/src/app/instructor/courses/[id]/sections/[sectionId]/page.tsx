@@ -19,6 +19,8 @@ import SectionScheduleClient from "./SectionScheduleClient";
 import SectionAttendanceSummary from "./SectionAttendanceSummary";
 import PackUpdateBanner from "./PackUpdateBanner";
 import SectionGoalsCard from "./SectionGoalsCard";
+import SectionTabs from "./SectionTabs";
+import { resolveSectionTab } from "@/lib/sectionTabs";
 import { loadLearnerGoalProgress } from "@/lib/goalProgress";
 import { getInstructorCenterAccess } from "@/lib/centerAccess";
 
@@ -26,8 +28,10 @@ export const dynamic = "force-dynamic";
 
 export default async function SectionRosterPage({
   params,
+  searchParams,
 }: {
   params: { id: string; sectionId: string };
+  searchParams: { tab?: string };
 }) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -67,20 +71,37 @@ export default async function SectionRosterPage({
   // Tính năng trung tâm (lịch dạy, chuyên cần, giáo trình) chỉ hiện khi tài khoản được bật; không thì trang lớp
   // chỉ còn danh sách học viên như trước và không tốn thêm truy vấn.
   const centerEnabled = await getInstructorCenterAccess(userId);
-  const [schedule, instructors, attendance, coursePlan] = centerEnabled
-    ? await Promise.all([
-        getClassSchedule(userId, params.sectionId),
-        listCourseInstructors(params.id),
-        getSectionAttendanceSummary(userId, params.sectionId),
-        getCoursePlan(userId, params.id),
-      ])
-    : [null, [], null, null];
-  const [sectionGoal, goalRows] = centerEnabled
-    ? await Promise.all([getSectionGoal(userId, params.sectionId), loadLearnerGoalProgress(userId, params.sectionId)])
-    : [null, []];
+  // Hai tab khi dùng tính năng trung tâm: "Lịch dạy" (đặt lịch, các buổi) và "Học viên" (chuyên cần, mục tiêu, danh sách).
+  // Mỗi tab chỉ tải dữ liệu của chính nó. Không dùng trung tâm: chỉ có danh sách học viên như trước.
+  const tab = resolveSectionTab(searchParams.tab, centerEnabled);
+  const showSchedule = centerEnabled && tab === "lich-day";
+  const showStudents = tab === "hoc-vien";
+  const [schedule, instructors, coursePlan] = showSchedule
+    ? await Promise.all([getClassSchedule(userId, params.sectionId), listCourseInstructors(params.id), getCoursePlan(userId, params.id)])
+    : [null, [], null];
+  // CENTER J — cây chương và bài của khoá để chọn bài đưa vào kế hoạch từng buổi (chỉ người quản khoá soạn kế hoạch).
+  const courseTree =
+    showSchedule && canManage
+      ? (
+          await prisma.module.findMany({
+            where: { courseId: params.id },
+            orderBy: { orderIndex: "asc" },
+            select: { id: true, title: true, isHidden: true, lessons: { orderBy: { orderIndex: "asc" }, select: { id: true, title: true, isHidden: true } } },
+          })
+        ).map((m) => ({ id: m.id, title: m.title, lessons: m.lessons.map((l) => ({ id: l.id, title: l.title, hidden: l.isHidden || m.isHidden })) }))
+      : [];
+  const [attendance, sectionGoal, goalRows] =
+    centerEnabled && showStudents
+      ? await Promise.all([
+          getSectionAttendanceSummary(userId, params.sectionId),
+          getSectionGoal(userId, params.sectionId),
+          loadLearnerGoalProgress(userId, params.sectionId),
+        ])
+      : [null, null, []];
   const teachers = instructors.map((i) => ({ id: i.userId, name: i.displayName }));
-  const autoSendSummary =
-    (await prisma.courseSection.findUnique({ where: { id: params.sectionId }, select: { autoSendSummary: true } }))?.autoSendSummary ?? true;
+  const autoSendSummary = showSchedule
+    ? ((await prisma.courseSection.findUnique({ where: { id: params.sectionId }, select: { autoSendSummary: true } }))?.autoSendSummary ?? true)
+    : true;
 
   return (
     <main>
@@ -94,6 +115,7 @@ export default async function SectionRosterPage({
       {roster.section.description && (
         <p className="mt-1 text-sm text-faint">{roster.section.description}</p>
       )}
+      {centerEnabled && <SectionTabs courseId={params.id} sectionId={params.sectionId} active={tab} />}
       {canManage && coursePlan?.pack?.hasUpdate && (
         <PackUpdateBanner
           courseId={params.id}
@@ -102,9 +124,9 @@ export default async function SectionRosterPage({
           currentVersion={coursePlan.pack.currentVersion}
         />
       )}
-      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} autoSendSummary={autoSendSummary} />}
+      {schedule && <SectionScheduleClient courseId={params.id} sectionId={params.sectionId} initial={schedule} teachers={teachers} canManage={canManage} viewerId={userId} autoSendSummary={autoSendSummary} courseTree={courseTree} />}
       {attendance && <SectionAttendanceSummary summary={attendance} />}
-      {centerEnabled && (
+      {centerEnabled && showStudents && (
         <SectionGoalsCard
           sectionId={params.sectionId}
           courseId={params.id}
@@ -113,11 +135,13 @@ export default async function SectionRosterPage({
           rows={JSON.parse(JSON.stringify(goalRows))}
         />
       )}
-      <SectionRosterClient
-        courseId={params.id}
-        sectionId={params.sectionId}
-        initial={roster}
-      />
+      {showStudents && (
+        <SectionRosterClient
+          courseId={params.id}
+          sectionId={params.sectionId}
+          initial={roster}
+        />
+      )}
     </main>
   );
 }

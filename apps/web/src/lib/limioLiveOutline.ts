@@ -220,9 +220,11 @@ export const OUTLINE_LIMITS = {
   maxParts: 20,
 } as const;
 
-export function slideRange(minutes: number): { min: number; max: number } {
+export function slideRange(minutes: number, selfCheck = false): { min: number; max: number } {
   const d = DURATIONS.find((x) => x.minutes === minutes) ?? DURATIONS[1];
-  return { min: d.min, max: d.max };
+  // Bài giảng của bài học (học viên tự nghe, mỗi slide ~40 giây): nhiều slide hơn buổi giảng trực tiếp cùng thời lượng
+  // (docs/tieu-chi/nghe-giang-slide.md: khoảng 12–16 slide cho bài 15 phút).
+  return selfCheck ? { min: d.min + 3, max: d.max + 4 } : { min: d.min, max: d.max };
 }
 
 export function isValidMinutes(m: unknown): m is (typeof DURATIONS)[number]["minutes"] {
@@ -556,6 +558,8 @@ export interface OutlineSourceOptions {
   references?: WebSourceRef[];
   /** Ngôn ngữ của bài: tên phần tự đặt và tiêu đề "Nguồn tham khảo" theo ngôn ngữ này (docs/tieu-chi/ngon-ngu-slide.md). */
   lang?: string | null;
+  /** Bài giảng của bài học: chỉ có câu trắc nghiệm tự kiểm tra, nên nhắc theo mức 3 câu và không nhắc bình chọn/đám mây từ. */
+  selfCheck?: boolean;
 }
 
 export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSourceOptions = {}): { outline: Outline; warnings: string[] } {
@@ -566,9 +570,9 @@ export function normalizeOutline(raw: unknown, minutes: number, opts: OutlineSou
   let outline = sanitizeOutline(pre.value);
   // Slide "Quiz: …" dạng nội dung: bỏ nếu ngay sau đã có slide tương tác thật, không thì đổi thành slide tương tác.
   outline = { ...outline, slides: fixNamedInteractions(outline.slides) };
-  const { min } = slideRange(minutes);
+  const { min } = slideRange(minutes, opts.selfCheck);
   // Dòng Nguồn tham khảo chiếm một chỗ trong mức slide.
-  const max = slideRange(minutes).max - (refs.length ? 1 : 0);
+  const max = slideRange(minutes, opts.selfCheck).max - (refs.length ? 1 : 0);
   // Không tin mô hình đã tuân lược đồ: bài không có tài liệu không được có Số liệu, Biểu đồ hay Trích dẫn.
   // Riêng slide kết bài giữ Trích dẫn: đó là câu khép lại buổi học do bài viết ra, không dẫn lời ai.
   const closingAt = closingIndex(outline.slides)?.closing ?? -1;
@@ -664,16 +668,17 @@ export function outlineStats(outline: Pick<Outline, "slides"> & { title?: string
 export function outlineWarnings(
   outline: Pick<Outline, "slides"> & { title?: string; parts?: OutlinePart[] },
   minutes: number,
-  opts: Pick<OutlineSourceOptions, "sourceKind" | "sourceText" | "sourceFigureKeys"> = {},
+  opts: Pick<OutlineSourceOptions, "sourceKind" | "sourceText" | "sourceFigureKeys" | "selfCheck"> = {},
 ): string[] {
   const w: string[] = [];
-  const { min, max } = slideRange(minutes);
+  const { min, max } = slideRange(minutes, opts.selfCheck);
   const st = outlineStats(outline);
   if (st.total < min) w.push(`Dàn ý có ${st.total} slide, ít hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
   if (st.total > max && !w.length) w.push(`Dàn ý có ${st.total} slide, nhiều hơn mức gợi ý ${min} đến ${max} slide cho buổi ${minutes} phút.`);
-  if (st.interactive === 0 && st.total >= 6) w.push("Dàn ý chưa có slide tương tác nào (trắc nghiệm, bình chọn, đám mây từ hoặc bảng cộng tác).");
-  // Mức tối thiểu theo thời lượng (tao-bai-giang-mot-o.md, M14, M19): nhắc, không chặn.
-  const minInteractive = minutes >= 90 ? 10 : 5;
+  const kindsText = opts.selfCheck ? "trắc nghiệm tự kiểm tra" : "trắc nghiệm, bình chọn, đám mây từ hoặc bảng cộng tác";
+  if (st.interactive === 0 && st.total >= 6) w.push(`Dàn ý chưa có slide tương tác nào (${kindsText}).`);
+  // Mức tối thiểu theo thời lượng (tao-bai-giang-mot-o.md, M14, M19): nhắc, không chặn. Bài của bài học: 3 câu tự kiểm tra.
+  const minInteractive = opts.selfCheck ? 3 : minutes >= 90 ? 10 : 5;
   if (st.interactive > 0 && st.interactive < minInteractive)
     w.push(`Bài nên có ít nhất ${minInteractive} slide tương tác (hiện có ${st.interactive}).`);
   // Bố cục phong phú (M24): quá nửa slide nội dung là Chữ và hình thì nhắc đổi bớt.
@@ -695,7 +700,8 @@ export function outlineWarnings(
       .filter((p) => p.role === "content" && outline.slides.some((s) => s.partId === p.id))
       .filter((p) => !outline.slides.some((s) => s.partId === p.id && s.kind !== "content"))
       .map((p) => `“${p.name || "không tên"}”`);
-    if (quiet.length) w.push(`Phần ${quiet.slice(0, 3).join(", ")} chưa có slide tương tác; nên thêm một câu hỏi nhanh, bình chọn hoặc đám mây từ.`);
+    // Bài của bài học chỉ cần vài câu tự kiểm tra, không đòi phần nào cũng có.
+    if (quiet.length && !opts.selfCheck) w.push(`Phần ${quiet.slice(0, 3).join(", ")} chưa có slide tương tác; nên thêm một câu hỏi nhanh, bình chọn hoặc đám mây từ.`);
   }
   w.push(...figureWarnings(outline, opts));
   return w;

@@ -372,7 +372,9 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   "Tên lớp" (gợi ý "Vd: Lớp K65-CS1"), **"Kỳ học"** (ví dụ "HK1 2026-27") và **"Ghi chú"**; có thêm
   **"Nhập từ Excel"** để tạo nhiều lớp (Tên lớp / Kỳ học / Ghi chú, tối đa 200 lớp). Danh sách lớp là bảng
   "Tên lớp / Kỳ học / Ghi chú / Sĩ số / Ngày tạo" với ô "Tìm lớp học"; bấm một dòng để mở rộng, có các nút
-  "Sửa", "Tạo lại mã mời" (link cũ chết ngay), "Xoá" (chỉ khi lớp rỗng) và **"Danh sách học viên (n)"**. Mỗi
+  "Sửa", "Tạo lại mã mời" (link cũ chết ngay), "Xoá" (chỉ khi lớp rỗng), **"Danh sách học viên (n)"** và, khi đã bật tính năng
+  trung tâm (xem dưới), nút chính **"Lịch dạy"** kèm một dòng tóm tắt lịch của lớp ("Chưa có lịch, đặt lịch ngay" hoặc
+  "24 buổi, thứ ba và thứ năm 18:30, buổi tới 27/10"). Mỗi
   lớp có hộp **"Link mời vào lớp"** kèm "Sao chép" và "Mã QR". **"Nhập học viên"** nhận tệp CSV có dòng đầu
   `name,email`. Danh sách lớp có cột Học viên / Trạng thái / Vào lớp / Tiến độ / Điểm quiz gần nhất /
   "Chuyển lớp". Khoá "Chỉ vào bằng link mời lớp" chỉ vào được bằng các link này. Trang đón: "Lời mời tham gia
@@ -395,7 +397,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   trò khoá "non-editing-teacher" rồi xếp họ vào khung giờ hoặc buổi. Chưa có: đề nghị nghỉ/đổi buổi, ghi chú riêng vào giáo án.
 - **Lịch dạy của lớp** (mới, CENTER C1): trang "Lịch dạy" trong menu LMS (`/instructor/lich-day`) là **lịch** giống widget "Lịch" ở
   trang chủ: nút **"Tuần"** / **"Tháng"**, **"Trước"** / **"Sau"**, bấm một ngày để xem các buổi trong ngày (kèm giáo án), bấm một
-  buổi mở trang điểm danh của buổi đó (buổi đã huỷ thì mở trang lớp). Đặt lịch ở đầu trang "Danh sách học viên" của lớp (khối **"Lịch dạy"**): "Ngày bắt đầu",
+  buổi mở trang điểm danh của buổi đó (buổi đã huỷ thì mở trang lớp). Đặt lịch ở tab **"Lịch dạy"** của trang lớp (bấm nút **"Lịch dạy"** ở thẻ lớp; trang lớp có hai tab **"Lịch dạy"** và **"Học viên"**, chỉ hiện khi đã bật tính năng trung tâm, còn không thì trang lớp chỉ là danh sách học viên như cũ): "Ngày bắt đầu",
   "Tổng số buổi", các khung giờ lặp hằng tuần (thứ, giờ bắt đầu, thời lượng phút, phòng, giáo viên dự kiến),
   "+ Thêm khung giờ", "Bỏ khung này", rồi **"Áp dụng lịch"**. Áp lại chỉ sinh lại buổi chưa diễn ra. Mỗi buổi
   có "Sửa" và **"Huỷ buổi"** (hỏi lý do; huỷ thì các buổi sau tự lùi số thứ tự); **"+ Thêm buổi dạy bù"** có thể
@@ -419,7 +421,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   bốn nút **"Có mặt" / "Muộn" / "Vắng" / "Có phép"** và **"+ Thêm ghi chú"** (tối đa 200 ký tự, chỉ giáo viên thấy);
   các lựa chọn chỉ được ghi khi bấm **"Lưu điểm danh"**. Trên điện thoại hai nút này nằm ở thanh cố định cuối màn
   hình. Điểm danh mở từ 30 phút trước giờ học, sửa được đến 7 ngày sau khi buổi kết thúc; buổi đã huỷ thì không
-  điểm danh được. Trang lớp có thêm phần **"Chuyên cần"**: bảng Học viên / Có mặt / Muộn / Vắng / Có phép /
+  điểm danh được. Tab **"Học viên"** của trang lớp có thêm phần **"Chuyên cần"**: bảng Học viên / Có mặt / Muộn / Vắng / Có phép /
   Chuyên cần (tỉ lệ = (có mặt + muộn) / (có mặt + muộn + vắng), vắng có phép không tính) và khối cảnh báo
   khi có học viên vắng từ 2 buổi liên tiếp (chỉ gợi ý, không tự nhắn). Học viên thấy trạng thái của chính mình
   ở "Lịch học" (nhãn "Có mặt", "Đi muộn", "Vắng", "Vắng có phép" và mục "Chuyên cần của bạn"), không thấy ghi chú.
@@ -427,7 +429,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
 - **Kết thúc buổi, tổng kết và nhận xét sau buổi** (mới, CENTER C4): trên trang điểm danh của buổi có khối
   **"Kết thúc buổi"** (dùng được từ lúc buổi bắt đầu; hỏi xác nhận). Bấm xong buổi thành "Đã dạy", hệ thống chụp
   **tổng kết** từ giáo án (bài đã học, từ vựng cần ôn, bài tập về nhà kèm hạn riêng của lớp, giờ và nội dung buổi sau)
-  và, nếu lớp bật công tắc **"Tự gửi tổng kết cho cả lớp khi kết thúc buổi"** (ở đầu khối lịch của trang lớp, mặc
+  và, nếu lớp bật công tắc **"Tự gửi tổng kết cho cả lớp khi kết thúc buổi"** (ở đầu tab "Lịch dạy" của trang lớp, mặc
   định bật, chỉ người quản khoá thấy), gửi email cho mọi học viên của lớp qua hàng đợi có retry; học viên vắng nhận thêm
   dòng "Em vắng buổi này, bài cần học bù: …". Mỗi học viên nhận tối đa một email tổng kết cho mỗi buổi; khối hiện
   "đã gửi / bỏ qua (đã tắt email) / lỗi" và nút **"Gửi tổng kết cả lớp"** hoặc **"Gửi lại phần lỗi"** (chỉ gửi người
@@ -441,7 +443,7 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   kèm nhãn "Đính chính". Học viên đọc lại ở "Lịch học" (khối "Nhận xét của giáo viên" và "Tổng kết các buổi gần đây")
   và ở chuông thông báo; email có liên kết "Không nhận email này nữa" (chỉ tắt thư tự động, vẫn đọc trong ứng dụng).
   Người chỉ dạy (giảng viên trung tâm) kết thúc buổi và soạn nhận xét được cho buổi được xếp cho mình.
-- **Mục tiêu học tập** (mới, CENTER C6): ở trang lớp, dưới khối "Chuyên cần", có khối **"Mục tiêu học tập"**. Phần
+- **Mục tiêu học tập** (mới, CENTER C6): ở tab "Học viên" của trang lớp, dưới phần "Chuyên cần", có khối **"Mục tiêu học tập"**. Phần
   **"Mục tiêu của lớp"**: người quản khoá bấm **"Đặt mục tiêu của lớp"** (sau đó **"Đổi mục tiêu của lớp"** / **"Bỏ mục tiêu của lớp"**)
   để chọn khung (HSK 1–6, IELTS 4.0–9.0, TOEIC 400–900, CEFR A1–C2 hoặc tự đặt), cấp độ, hạn (không bắt buộc) và số giờ mỗi
   tuần; mục tiêu lớp chỉ là gợi ý. Bảng bên dưới liệt kê từng học viên: mục tiêu (nhãn "theo lớp" nếu chưa đặt riêng), **nhận định**
@@ -455,6 +457,16 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   (mọi lần đặt và đổi, kèm giá trị cũ và mới); mục tiêu đã đóng có **"Theo đuổi lại"**; **"Mục tiêu chung"** không gắn khoá chỉ chính học
   viên xem. Mục tiêu bị xoá hẳn khi xoá tài khoản và có trong bản xuất dữ liệu cá nhân. Chưa có: cảnh báo học viên lệch kế hoạch hai tuần
   liền, gợi ý bài luyện theo mục tiêu, kết quả thi thử trong tiến độ.
+- **Kế hoạch giảng dạy của từng buổi** (mới, CENTER J): ở tab **"Lịch dạy"** của trang lớp, mỗi buổi chưa huỷ có nút **"Kế hoạch"** mở phần
+  soạn ngay dưới dòng buổi: danh sách bài theo thứ tự (kèm tên chương, nhãn "Đang ẩn với học viên"), ô **"Chủ đề buổi (không bắt buộc)"**,
+  **"Thêm bài"** (cây chương và bài của khoá, ô tìm, chọn nhiều bài; bài đã có hiện "đã có"), mũi tên đổi thứ tự, dấu X bỏ bài, **"Lưu kế hoạch"**
+  và **"Đặt lại theo giáo trình"**. Nhãn **"Theo giáo trình"** (chương cùng số buổi, như trước) hoặc **"Đã tuỳ chỉnh"** (danh sách riêng của buổi):
+  lần đầu sửa, danh sách theo giáo trình được chép thành danh sách riêng, và bỏ hết bài thì buổi trống chứ không quay về giáo trình. Danh sách gắn
+  theo buổi (không theo số buổi) nên huỷ hay thêm buổi không làm lệch; một bài một lần trong một buổi nhưng được ở nhiều buổi; tối đa 30 bài; chủ đề
+  tối đa 120 ký tự. Khoá tự tạo (không có chương đánh số buổi) và buổi dạy bù cũng có kế hoạch được. Chỉ người quản khoá (chủ khoá, đồng giảng
+  viên, Platform Admin) sửa; người chỉ dạy xem buổi được xếp cho mình. Buổi đã kết thúc hoặc đã huỷ bị khoá. Dòng "Giáo án:" dưới buổi, calendar
+  ("Bài của buổi"), tổng kết gửi lớp và nhận xét sau buổi đều đọc kế hoạch này. Cập nhật giáo trình có bản mới bỏ qua chương có bài đang nằm
+  trong kế hoạch tuỳ chỉnh của một buổi (báo "có bài đang nằm trong kế hoạch giảng dạy của một buổi").
 - **Học viên** (tab "Học viên"): trạng thái Đang học / Đã hoàn thành / Bỏ học / Đã hoàn
   tiền / Hết hạn truy cập; tìm theo tên hoặc email; "Gán lớp", "Xoá khỏi khoá học",
   "Tải danh sách học viên".

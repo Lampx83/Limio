@@ -6,6 +6,7 @@ import {
   AttendanceError,
   GoalError,
   MeetingNoteError,
+  MeetingPlanError,
   MeetingSummaryError,
   ClassScheduleError,
   CourseAuthzError,
@@ -16,6 +17,7 @@ import {
   ExamError,
   LanguageTemplateError,
   LearningError,
+  LessonDeckError,
   MisconceptionError,
   NoteError,
   PortfolioError,
@@ -74,6 +76,10 @@ export function mapKnownError(err: unknown): NextResponse | null {
           : 400;
     return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
   }
+  if (err instanceof LessonDeckError) {
+    const status = err.code === "not_found" ? 404 : err.code === "forbidden" ? 403 : err.code === "deck_in_use" || err.code === "lesson_has_deck" ? 409 : 400;
+    return NextResponse.json({ error: err.code }, { status });
+  }
   if (err instanceof GoalError) {
     const status =
       err.code === "goal_not_found" || err.code === "section_not_found" || err.code === "no_section_goal"
@@ -86,6 +92,10 @@ export function mapKnownError(err: unknown): NextResponse | null {
   if (err instanceof MeetingNoteDraftError) {
     const status = err.code === "meeting_not_found" ? 404 : err.code === "not_closed" || err.code === "already_sent" ? 409 : 400;
     return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof MeetingPlanError) {
+    const status = err.code === "meeting_not_found" ? 404 : err.code === "meeting_locked" ? 409 : 400;
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status });
   }
   if (err instanceof MeetingSummaryError || err instanceof MeetingNoteError) {
     const status =

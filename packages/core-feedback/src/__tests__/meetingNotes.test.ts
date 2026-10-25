@@ -414,3 +414,54 @@ describe("nhắc mục tiêu của học viên trong nháp (C6.5)", () => {
     expect(r.body.match(/Mục tiêu của em/g)).toHaveLength(1);
   });
 });
+
+describe("nhận xét dùng kế hoạch riêng của buổi (CENTER J7)", () => {
+  async function extraLesson(f: Fx, title: string, opts: { hidden?: boolean; moduleHidden?: boolean } = {}) {
+    const mod = await prisma.module.create({ data: { courseId: f.courseId, title: `Chương ${title}`, orderIndex: 100 + (++seq), isHidden: opts.moduleHidden ?? false } });
+    const l = await prisma.lesson.create({ data: { moduleId: mod.id, title, orderIndex: 0, isHidden: opts.hidden ?? false } });
+    await prisma.skill.create({ data: { code: lessonSkillCode(l.id), name: title } });
+    return l;
+  }
+  const customize = async (f: Fx, lessonIds: string[], topic: string | null = null) => {
+    await prisma.classMeeting.update({ where: { id: f.meetingId }, data: { planCustomized: true, planTopic: topic } });
+    await prisma.classMeetingLesson.createMany({ data: lessonIds.map((lessonId, i) => ({ meetingId: f.meetingId, lessonId, orderIndex: i })) });
+  };
+
+  it("buổi đã tuỳ chỉnh: bài và tên giáo án lấy từ kế hoạch riêng, không phải chương cùng số buổi", async () => {
+    const f = await fx();
+    const own = await extraLesson(f, "Ôn tập số đếm");
+    await customize(f, [own.id, f.lessons[0]!.id], "Ôn tập giữa kỳ");
+    const facts = await gatherMeetingNoteFacts(f.meetingId, f.a);
+    expect(facts.planTitle).toBe("Ôn tập giữa kỳ");
+    expect(facts.lessons.map((l) => l.title)).toEqual(["Ôn tập số đếm", "Từ vựng — Xin chào"]); // đúng thứ tự giáo viên chọn
+    // bài tập gắn với bài trong kế hoạch được tính; bài của chương không nằm trong kế hoạch thì không
+    expect(facts.homework.map((h) => h.title)).toEqual(["Viết 5 câu chào hỏi"]);
+  });
+
+  it("kế hoạch riêng rỗng thì không rơi về chương giáo trình; không có chủ đề thì tên giáo án là null", async () => {
+    const f = await fx();
+    await customize(f, []);
+    const facts = await gatherMeetingNoteFacts(f.meetingId, f.a);
+    expect(facts).toMatchObject({ planTitle: null, lessons: [], homework: [] });
+    expect(composeRuleNote(facts).body).toBe("");
+  });
+
+  it("bài ẩn và chương ẩn trong kế hoạch riêng không vào nhận xét của học viên", async () => {
+    const f = await fx();
+    const hidden = await extraLesson(f, "Bài ẩn", { hidden: true });
+    const inHiddenModule = await extraLesson(f, "Bài trong chương ẩn", { moduleHidden: true });
+    const visible = await extraLesson(f, "Bài hiện");
+    await customize(f, [hidden.id, inHiddenModule.id, visible.id]);
+    expect((await gatherMeetingNoteFacts(f.meetingId, f.a)).lessons.map((l) => l.title)).toEqual(["Bài hiện"]);
+  });
+
+  it("nháp theo mẫu nhắc đúng bài của kế hoạch riêng (nhãn nắm bài theo bài đó)", async () => {
+    const f = await fx();
+    const own = await extraLesson(f, "Ôn tập số đếm");
+    await setMastery(f.a, own.id, 0.3);
+    await customize(f, [own.id]);
+    const r = await draftMeetingNote({ actorUserId: f.teacher, meetingId: f.meetingId, userId: f.a });
+    expect(r.body).toContain("Ôn tập số đếm");
+    expect(r.body).not.toContain("Hội thoại — Làm quen");
+  });
+});

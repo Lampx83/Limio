@@ -11,6 +11,7 @@ import {
   clearResume,
   clockText,
   formatClock,
+  fractionWithin,
   isNarrationSpeed,
   listenedPercent,
   nextStart,
@@ -20,6 +21,7 @@ import {
   safeStorage,
   segmentIndexAt,
   speedLabel,
+  weightedIndexAt,
   writeResume,
   type NarrationKind,
 } from "@/lib/narration/learner";
@@ -33,6 +35,7 @@ import {
   type NarrationCommands,
 } from "@/lib/narration/store";
 import { LECTURER_NAME, NarrationAvatar, NarrationWave } from "./NarrationAvatar";
+import PodcastTranscript from "./PodcastTranscript";
 import "./narration.css";
 
 const EVENTS_URL = "/api/me/narration-events";
@@ -67,7 +70,31 @@ interface Resolved {
   targets: (HTMLElement | null)[];
   /** Thẻ h2 của từng đoạn — để bấm tiêu đề thì nghe từ đó. */
   headings: (HTMLElement | null)[];
+  /** Các khối con (đoạn văn, hình, hộp…) của từng đoạn, theo thứ tự đọc — để tô sáng và cuộn theo trong một mục dài. */
+  subs: HTMLElement[][];
 }
+
+const NOT_A_BLOCK = /^(H1|H2|HR|SCRIPT|STYLE)$/;
+const ATOMIC = /^(P|FIGURE|LI|ASIDE|DETAILS|TABLE|BLOCKQUOTE|PRE)$/;
+const hasContent = (e: HTMLElement): boolean => !!e.textContent?.trim() || !!e.querySelector("img,svg,video,iframe");
+
+/**
+ * Các khối con để theo dõi bên trong `el`: con trực tiếp (bỏ tiêu đề mục), danh sách trải thành từng mục, và đi xuyên qua
+ * lớp vỏ chỉ có một con. Đoạn văn, hình, hộp, bảng… là một khối nguyên, không xẻ nhỏ thêm.
+ */
+function leafBlocks(el: HTMLElement, depth = 0): HTMLElement[] {
+  const kids = [...el.children]
+    .filter((c): c is HTMLElement => c instanceof HTMLElement && !NOT_A_BLOCK.test(c.tagName) && hasContent(c))
+    .flatMap((k) => (k.tagName === "UL" || k.tagName === "OL" ? ([...k.children].filter((c) => c instanceof HTMLElement && hasContent(c)) as HTMLElement[]) : [k]));
+  if (kids.length === 1 && depth < 3 && !ATOMIC.test(kids[0]!.tagName)) {
+    const inner = leafBlocks(kids[0]!, depth + 1);
+    if (inner.length > 1) return inner;
+  }
+  return kids;
+}
+
+/** Hàng huy hiệu "15 phút · 6 phần · 7 câu" và khung "Mục tiêu bài học": lời mở đầu không nói về chúng nên không tô sáng. */
+const isMetaOrObjectives = (e: HTMLElement): boolean => /^\s*(\d+\s*phút|mục tiêu bài học)/i.test(e.textContent ?? "");
 
 /**
  * Tìm trong DOM thật khối ứng với từng đoạn lời giảng. Làm lúc cần chứ không lưu: nội dung bài được làm sạch trong
@@ -80,13 +107,26 @@ function resolveTargets(root: HTMLElement, anchors: string[]): Resolved {
   const summary = root.querySelector<HTMLElement>('section[aria-label="Tổng kết bài học"]');
   const targets: (HTMLElement | null)[] = [];
   const headings: (HTMLElement | null)[] = [];
+  const subs: HTMLElement[][] = [];
   for (const r of resolved) {
     if (r.type === "intro") {
-      targets.push(items[0] ?? null);
+      // Phần mở đầu nói về những gì đứng trước mục đầu tiên (vd khung trò chuyện minh hoạ), không nói về mục tiêu bài học.
+      const firstWithHeading = items.findIndex((it) => it.querySelector("h2"));
+      const before = firstWithHeading < 0 ? items.slice(0, 1) : items.slice(0, firstWithHeading);
+      let blocks = before.flatMap((it) => leafBlocks(it)).filter((b) => !isMetaOrObjectives(b));
+      if (blocks.length === 0) {
+        // Bài không có gì ngoài mục tiêu ở đầu: tô tiêu đề bài thay vì khung mục tiêu.
+        const header = document.querySelector<HTMLElement>("main header");
+        blocks = header ? [header] : [];
+      }
+      targets.push(null);
       headings.push(null);
+      subs.push(blocks);
     } else if (r.type === "outro") {
-      targets.push(summary ?? items[items.length - 1] ?? null);
+      const box = summary ?? items[items.length - 1] ?? null;
+      targets.push(box);
       headings.push(null);
+      subs.push(box ? leafBlocks(box) : []);
     } else if (r.type === "heading") {
       const h = h2s[r.index]!;
       const item = h.closest<HTMLElement>("[data-item-id]");
@@ -94,12 +134,14 @@ function resolveTargets(root: HTMLElement, anchors: string[]): Resolved {
       const block = h.closest<HTMLElement>(".lesson-section") ?? (item && item.querySelectorAll("h2").length === 1 ? item : null) ?? h;
       targets.push(block);
       headings.push(h);
+      subs.push(block === h ? [] : leafBlocks(block));
     } else {
       targets.push(null);
       headings.push(null);
+      subs.push([]);
     }
   }
-  return { targets, headings };
+  return { targets, headings, subs };
 }
 
 function scrollIntoComfort(el: HTMLElement): void {
@@ -117,7 +159,7 @@ interface Props {
 }
 
 /**
- * Trình phát Nghe giảng / Podcast của trang bài học: giữ thẻ <audio>, đăng ký các lệnh cho nút & thẻ Podcast,
+ * Trình phát Nghe giảng / Podcast của trang bài học: giữ thẻ <audio>, đăng ký các lệnh cho nút Nghe giảng / Podcast,
  * tô sáng + tự cuộn theo mục đang giảng, nhớ vị trí nghe dở, ghi sự kiện đo lường, và vẽ thanh phát cố định ở cuối màn hình.
  * Xem docs/tieu-chi/nghe-giang-podcast.md (AC3–AC6).
  */
@@ -421,6 +463,42 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   const prevIdx = useRef(-1);
   const prevFollow = useRef(true);
   const needScroll = useRef(false);
+  // Theo dõi khối con bên trong mục đang giảng (xem leafBlocks): giá trị mới nhất để hàm vẽ không phụ thuộc lần dựng nào.
+  const subsRef = useRef<HTMLElement[]>([]);
+  const subIdxRef = useRef(-1);
+  const subOwnerRef = useRef(-2);
+  const liveRef = useRef<{ time: number; seg: LectureForLearner["segments"][number] | null; follow: boolean; offer: number | null; hasTarget: boolean }>({
+    time: 0,
+    seg: null,
+    follow: true,
+    offer: null,
+    hasTarget: false,
+  });
+  liveRef.current = {
+    ...liveRef.current,
+    time: ui.time,
+    seg: lectureIdx >= 0 ? lecture?.segments[lectureIdx] ?? null : null,
+    follow: ui.follow,
+    offer: ui.offerSec,
+  };
+
+  const paintSub = () => {
+    const { time, seg, follow, offer, hasTarget } = liveRef.current;
+    const blocks = subsRef.current;
+    const want = seg && blocks.length > 0 ? weightedIndexAt(blocks.map((b) => (b.textContent ?? "").trim().length), fractionWithin(seg, time)) : -1;
+    if (want === subIdxRef.current) return;
+    const prev = subIdxRef.current;
+    subIdxRef.current = want;
+    document.querySelectorAll(".narration-sub").forEach((n) => {
+      if (n !== blocks[want]) n.classList.remove("narration-sub");
+    });
+    const el = want >= 0 ? blocks[want] : undefined;
+    if (!el) return;
+    el.classList.add("narration-sub");
+    // Khối đầu của một mục có khung riêng: để lần cuộn tới mục lo, tránh hai lần cuộn chồng nhau.
+    const sectionScrolls = want === 0 && hasTarget;
+    if (prev !== want && follow && offer === null && !sectionScrolls) scrollIntoComfort(el);
+  };
 
   useEffect(() => {
     const root = document.getElementById(CONTENT_ID);
@@ -428,6 +506,10 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     if (!lectureOn || !lecture) {
       root.removeAttribute("data-narration-on");
       root.querySelectorAll(".narration-active").forEach((n) => n.classList.remove("narration-active"));
+      document.querySelectorAll(".narration-sub").forEach((n) => n.classList.remove("narration-sub"));
+      subsRef.current = [];
+      subIdxRef.current = -1;
+      subOwnerRef.current = -2;
       prevIdx.current = -1;
       return;
     }
@@ -436,12 +518,13 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
 
     if (lectureIdx !== prevIdx.current || (ui.follow && !prevFollow.current)) {
       needScroll.current = ui.follow && ui.offerSec === null;
+      subIdxRef.current = -1; // cuộn lại tới khối con hiện tại
     }
     prevIdx.current = lectureIdx;
     prevFollow.current = ui.follow;
 
     const apply = () => {
-      const { targets } = resolveTargets(root, anchors);
+      const { targets, subs } = resolveTargets(root, anchors);
       const el = lectureIdx >= 0 ? targets[lectureIdx] ?? null : null;
       root.querySelectorAll(".narration-active").forEach((n) => {
         if (n !== el) n.classList.remove("narration-active");
@@ -451,6 +534,14 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         needScroll.current = false;
         scrollIntoComfort(el);
       }
+      // Đổi mục: dựng lại danh sách khối con; DOM chỉ dựng lại giữa chừng thì giữ vị trí đang theo.
+      subsRef.current = lectureIdx >= 0 ? subs[lectureIdx] ?? [] : [];
+      liveRef.current.hasTarget = !!el;
+      if (subOwnerRef.current !== lectureIdx) {
+        subOwnerRef.current = lectureIdx;
+        subIdxRef.current = -1;
+      }
+      paintSub();
     };
     apply();
 
@@ -466,6 +557,12 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       cancelAnimationFrame(raf);
     };
   }, [lectureOn, lectureIdx, ui.follow, ui.offerSec, lecture]);
+
+  // Mỗi nhịp phát: tô sáng và cuộn theo khối con đang được giảng trong mục.
+  useEffect(() => {
+    if (lectureOn) paintSub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lectureOn, ui.time]);
 
   // Bấm tiêu đề một mục thì nghe từ đầu mục đó.
   useEffect(() => {
@@ -680,6 +777,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
               </button>
             </div>
           )}
+
+          {kind === "podcast" && podcast && <PodcastTranscript podcast={podcast} />}
 
           <div className={`${ui.expanded ? "block" : "hidden"} border-t border-token px-3 pb-3 pt-2 sm:block sm:px-4`}>
             <div className="flex items-center gap-2">

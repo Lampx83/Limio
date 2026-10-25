@@ -83,7 +83,7 @@ export interface CoursePlan {
   } | null;
 }
 
-export type SkipReason = "taught" | "has_activity";
+export type SkipReason = "taught" | "has_activity" | "in_custom_plan";
 
 export interface PackUpdateResult {
   updatedSessions: number[];
@@ -336,7 +336,7 @@ export async function updateCourseFromPack(
   const copied = course.sourcePackVersion ?? 0;
   if (pack.version <= copied) throw new CoursePackError("nothing_to_update");
 
-  const [packModules, ownModules, meetings] = await Promise.all([
+  const [packModules, ownModules, meetings, planned] = await Promise.all([
     db.module.findMany({
       where: { courseId: pack.courseId, sessionNo: { not: null } },
       orderBy: { sessionNo: "asc" },
@@ -347,8 +347,11 @@ export async function updateCourseFromPack(
       where: { section: { courseId }, seq: { not: null }, OR: [{ status: "held" }, { startsAt: { lte: now } }] },
       select: { seq: true },
     }),
+    // CENTER J — bài đang nằm trong kế hoạch tuỳ chỉnh của một buổi: thay chương sẽ xoá và tạo lại bài làm mất kế hoạch.
+    db.classMeetingLesson.findMany({ where: { meeting: { section: { courseId } } }, select: { lessonId: true } }),
   ]);
   const taught = new Set(meetings.map((m) => m.seq!));
+  const inCustomPlan = new Set(planned.map((p) => p.lessonId));
   const ownBySession = new Map(ownModules.map((m) => [m.sessionNo!, m]));
 
   const updatedSessions: number[] = [];
@@ -360,6 +363,10 @@ export async function updateCourseFromPack(
     const own = ownBySession.get(no);
     if (taught.has(no)) {
       skipped.push({ sessionNo: no, reason: "taught" });
+      continue;
+    }
+    if (own && own.lessons.some((l) => inCustomPlan.has(l.id))) {
+      skipped.push({ sessionNo: no, reason: "in_custom_plan" });
       continue;
     }
     if (own && (await moduleHasLearnerActivity(own.lessons.map((l) => l.id), db))) {

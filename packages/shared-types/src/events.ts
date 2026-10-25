@@ -249,6 +249,8 @@ export const LearningEventType = {
   ClassMeetingCancelled: "class.meeting.cancelled",
   ClassMeetingUpdated: "class.meeting.updated",
   ClassMeetingMakeupAdded: "class.meeting.makeup_added",
+  // CENTER J — kế hoạch giảng dạy của buổi (bài gắn vào buổi). Subject là giảng viên thao tác; payload chỉ mang id và số lượng.
+  ClassPlanChanged: "class.plan.changed",
   // CENTER C2 — điểm danh học viên. Subject là HỌC VIÊN được điểm danh (để Feedback Engine và
   // Gamification đọc theo người); giáo viên thao tác nằm trong payload.
   AttendanceStudentMarked: "attendance.student.marked",
@@ -266,6 +268,9 @@ export const LearningEventType = {
   GoalChanged: "goal.changed",
   GoalStatusChanged: "goal.status_changed",
   GoalSectionSet: "goal.section_set",
+  // Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md). Subject là người sửa khoá; payload chỉ mang id.
+  LessonDeckAttached: "lesson.deck.attached",
+  LessonDeckDetached: "lesson.deck.detached",
 
   // Nghe giảng / Podcast của bài học (docs/tieu-chi/nghe-giang-podcast.md, AC6). Chỉ đo cách học viên nghe:
   // KHÔNG ghi nội dung lời giảng. Ghi sự kiện không bao giờ được chặn hay làm chậm việc phát.
@@ -946,6 +951,17 @@ export interface ClassMeetingUpdatedPayload {
   changed: string[];
 }
 
+export interface ClassPlanChangedPayload {
+  meetingId: string;
+  sectionId: string;
+  courseId: string;
+  /** Số bài thêm và bỏ so với kế hoạch hiệu lực trước đó. */
+  added: number;
+  removed: number;
+  /** true = giáo viên bấm "Đặt lại theo giáo trình". */
+  reset: boolean;
+}
+
 export interface ClassMeetingMakeupAddedPayload {
   meetingId: string;
   sectionId: string;
@@ -1083,4 +1099,16 @@ export interface NarrationStoppedPayload {
   /** Phần trăm xa nhất đã nghe tới (0–100) trong lần nghe này. */
   percent: number;
   speed: number;
+}
+
+export interface LessonDeckAttachedPayload {
+  lessonId: string;
+  deckId: string;
+  /** Bài giảng cũ bị thay (null = bài học chưa có bài giảng). */
+  replacedDeckId: string | null;
+}
+
+export interface LessonDeckDetachedPayload {
+  lessonId: string;
+  deckId: string;
 }

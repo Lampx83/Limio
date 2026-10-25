@@ -33,8 +33,8 @@ export function canRevise(o: { importedRows: number; sourceChars: number }): boo
 
 /** Mức sàn thấp để lời dặn "rút còn 10 slide" làm được; mức trần theo thời lượng như lúc soạn đầu (R5). */
 export const REVISE_MIN_SLIDES = 6;
-export function reviseRange(minutes: number): { min: number; max: number } {
-  return { min: REVISE_MIN_SLIDES, max: slideRange(minutes).max };
+export function reviseRange(minutes: number, selfCheck = false): { min: number; max: number } {
+  return { min: REVISE_MIN_SLIDES, max: slideRange(minutes, selfCheck).max };
 }
 
 /** Dạng gửi AI: mỗi slide mang vai trò và tên phần của phần chứa nó, không có id nội bộ (R4). */

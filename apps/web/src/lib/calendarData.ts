@@ -385,7 +385,8 @@ export function meetingToItem(m: MeetingItem, href: string, attendance?: Attenda
     stateLabel: cancelled ? "Đã huỷ" : (chip?.label ?? "Buổi học"),
     kind: "meeting",
     detail: [
-      m.plan && m.seq ? `Buổi ${m.seq}` : null,
+      // "Buổi N" chỉ nhắc ở dòng chi tiết khi tên đã là tên giáo án; không thì tên đã là "Buổi N" rồi.
+      m.plan?.title && m.seq ? `Buổi ${m.seq}` : null,
       `${formatTime(m.startsAt)}–${formatTime(m.endsAt)}`,
       m.room ? `Phòng ${m.room}` : null,
     ]

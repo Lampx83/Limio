@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import MeetingPlanEditor, { type CourseTreeModule } from "./MeetingPlanEditor";
 import { formatTime, formatVN, fromDateTimeInputValue, toDateTimeInputValue } from "@/lib/datetime";
 
 type MeetingStatus = "planned" | "held" | "cancelled";
@@ -21,10 +22,14 @@ export interface ScheduleMeeting {
   locked: boolean;
   plan: {
     courseSlug: string;
-    sessionNo: number;
-    title: string;
+    sessionNo: number | null;
+    title: string | null;
     lessons: Array<{ id: string; title: string }>;
+    customized: boolean;
   } | null;
+  /** CENTER J — buổi đã tuỳ chỉnh kế hoạch giảng dạy. */
+  planCustomized: boolean;
+  planTopic: string | null;
 }
 
 interface SlotForm {
@@ -109,6 +114,7 @@ export default function SectionScheduleClient({
   canManage = true,
   viewerId,
   autoSendSummary = true,
+  courseTree = [],
 }: {
   courseId: string;
   sectionId: string;
@@ -120,9 +126,12 @@ export default function SectionScheduleClient({
   viewerId?: string;
   /** Lớp có tự gửi tổng kết chung khi giáo viên kết thúc buổi không (mặc định bật). */
   autoSendSummary?: boolean;
+  /** Cây chương và bài của khoá, để chọn bài đưa vào kế hoạch của buổi (chỉ người quản khoá). */
+  courseTree?: CourseTreeModule[];
 }) {
   const [detail, setDetail] = useState(initial);
   const [autoSend, setAutoSend] = useState(autoSendSummary);
+  const [planOpenId, setPlanOpenId] = useState<string | null>(null);
   const [form, setForm] = useState(() => toForm(initial));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -491,6 +500,16 @@ export default function SectionScheduleClient({
                           Điểm danh
                         </Link>
                       )}
+                      {(canManage || !m.plannedTeacherId || m.plannedTeacherId === viewerId) && (
+                        <button
+                          type="button"
+                          className="btn-secondary btn-sm"
+                          aria-expanded={planOpenId === m.id}
+                          onClick={() => setPlanOpenId(planOpenId === m.id ? null : m.id)}
+                        >
+                          Kế hoạch
+                        </button>
+                      )}
                       {canManage && m.status === "planned" && (
                         <>
                           <button
@@ -518,8 +537,10 @@ export default function SectionScheduleClient({
                 </div>
                 {m.status !== "cancelled" && m.plan && (
                   <p className="mt-1 text-caption text-muted">
-                    <span className="font-medium text-[rgb(var(--text))]">Giáo án:</span> {m.plan.title}
-                    {m.plan.lessons.length > 0 && " — "}
+                    <span className="font-medium text-[rgb(var(--text))]">Giáo án:</span>{" "}
+                    {m.plan.title ?? (m.plan.lessons.length === 0 ? "chưa có bài nào" : "")}
+                    {m.planCustomized && <span className="chip-accent ml-2 text-xs">Đã tuỳ chỉnh</span>}
+                    {m.plan.title && m.plan.lessons.length > 0 && " — "}
                     {m.plan.lessons.map((l, i) => (
                       <span key={l.id}>
                         {i > 0 && ", "}
@@ -530,8 +551,19 @@ export default function SectionScheduleClient({
                     ))}
                   </p>
                 )}
-                {m.status !== "cancelled" && !m.plan && detail.planSessions > 0 && (
-                  <p className="mt-1 text-caption text-muted">Chưa có giáo án cho buổi này.</p>
+                {m.status !== "cancelled" && !m.plan && (detail.planSessions > 0 || canManage) && (
+                  <p className="mt-1 text-caption text-muted">
+                    Chưa có giáo án cho buổi này.{canManage && " Bấm \"Kế hoạch\" để thêm bài vào buổi."}
+                  </p>
+                )}
+                {planOpenId === m.id && m.status !== "cancelled" && (
+                  <MeetingPlanEditor
+                    meetingId={m.id}
+                    canManage={canManage}
+                    courseTree={courseTree}
+                    onChanged={reload}
+                    onClose={() => setPlanOpenId(null)}
+                  />
                 )}
                 {m.status === "cancelled" && m.cancelReason && (
                   <p className="mt-1 text-caption text-muted">Lý do: {m.cancelReason}</p>

@@ -2,8 +2,10 @@ import { NextResponse } from "next/server";
 import {
   countUnassignedLearners,
   createCourseSection,
+  getSectionScheduleSummaries,
   listCourseSections,
 } from "@feedbackme/core-lms";
+import { getInstructorCenterAccess } from "@/lib/centerAccess";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 
@@ -16,11 +18,14 @@ export async function GET(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    const [sections, unassigned] = await Promise.all([
+    const [sections, unassigned, centerEnabled] = await Promise.all([
       listCourseSections(userId, params.id),
       countUnassignedLearners(userId, params.id),
+      getInstructorCenterAccess(userId),
     ]);
-    return NextResponse.json({ sections, unassigned });
+    // Tóm tắt lịch chỉ có khi tính năng trung tâm bật cho người xem; không thì thẻ lớp giữ nguyên như trước.
+    const schedules = centerEnabled ? await getSectionScheduleSummaries(userId, params.id) : null;
+    return NextResponse.json({ sections, unassigned, centerEnabled, schedules });
   } catch (e) {
     const mapped = mapKnownError(e);
     if (mapped) return mapped;

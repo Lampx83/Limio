@@ -6,7 +6,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import { formatDateTime } from "@/lib/datetime";
 import { useResizableColumns } from "@/lib/useResizableColumns";
 import { EmptyState, ShareCard, StatusBadge, type StatusTone } from "@/components/ui";
-import { ChevronDown, FileSpreadsheet, Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2, Users } from "lucide-react";
+import { CalendarDays, ChevronDown, FileSpreadsheet, Pencil, Plus, RefreshCw, RotateCcw, Search, Trash2, Users } from "lucide-react";
 import ImportStudentsButton from "./ImportStudentsButton";
 import SectionImportPanel from "./SectionImportPanel";
 
@@ -109,6 +109,8 @@ export default function SectionsClient({
 }) {
   const [sections, setSections] = useState<Section[]>([]);
   const [unassigned, setUnassigned] = useState(0);
+  // Tóm tắt lịch từng lớp (CENTER); null = tính năng trung tâm chưa bật cho người này, thẻ lớp giữ như trước.
+  const [schedules, setSchedules] = useState<Record<string, { hasSchedule: boolean; text: string }> | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -132,9 +134,14 @@ export default function SectionsClient({
       setErr(`HTTP ${r.status}`);
       return;
     }
-    const j = (await r.json()) as { sections: Section[]; unassigned?: number };
+    const j = (await r.json()) as {
+      sections: Section[];
+      unassigned?: number;
+      schedules?: Record<string, { hasSchedule: boolean; text: string }> | null;
+    };
     setSections(j.sections);
     setUnassigned(j.unassigned ?? 0);
+    setSchedules(j.schedules ?? null);
   };
 
   useEffect(() => {
@@ -492,6 +499,34 @@ export default function SectionsClient({
                             />
                           ) : (
                             <div className="space-y-4">
+                              {schedules && schedules[s.id] && (
+                                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
+                                  <p className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm" data-testid={`section-schedule-${s.id}`}>
+                                    <CalendarDays className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+                                    <span className="text-muted">Lịch dạy: </span>
+                                    <span className={schedules[s.id]!.hasSchedule ? "" : "font-semibold text-brand-700"}>{schedules[s.id]!.text}</span>
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Link
+                                      href={`/instructor/courses/${courseId}/sections/${s.id}?tab=lich-day`}
+                                      className="btn-primary btn-sm"
+                                      prefetch={false}
+                                    >
+                                      <CalendarDays className="h-3.5 w-3.5" aria-hidden />
+                                      Lịch dạy
+                                    </Link>
+                                    <Link
+                                      href={`/instructor/courses/${courseId}/sections/${s.id}?tab=hoc-vien`}
+                                      className="btn-secondary btn-sm"
+                                      prefetch={false}
+                                    >
+                                      <Users className="h-3.5 w-3.5" aria-hidden />
+                                      Danh sách học viên ({s.enrolledCount})
+                                    </Link>
+                                  </div>
+                                </div>
+                              )}
+
                               {s.description && (
                                 <p className="text-sm">
                                   <span className="text-muted">Ghi chú: </span>
@@ -518,14 +553,16 @@ export default function SectionsClient({
                                   sectionName={s.name}
                                   onImported={refresh}
                                 />
-                                <Link
-                                  href={`/instructor/courses/${courseId}/sections/${s.id}`}
-                                  className="btn-secondary btn-sm"
-                                  prefetch={false}
-                                >
-                                  <Users className="h-3.5 w-3.5" aria-hidden />
-                                  Danh sách học viên ({s.enrolledCount})
-                                </Link>
+                                {!schedules && (
+                                  <Link
+                                    href={`/instructor/courses/${courseId}/sections/${s.id}`}
+                                    className="btn-secondary btn-sm"
+                                    prefetch={false}
+                                  >
+                                    <Users className="h-3.5 w-3.5" aria-hidden />
+                                    Danh sách học viên ({s.enrolledCount})
+                                  </Link>
+                                )}
                                 <div className="ml-auto flex flex-wrap gap-2">
                                   <button type="button" onClick={() => setEditId(s.id)} className="btn-secondary btn-sm">
                                     <Pencil className="h-3.5 w-3.5" aria-hidden />

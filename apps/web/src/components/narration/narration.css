@@ -15,6 +15,14 @@
   transition: outline-color 0.25s ease, box-shadow 0.25s ease;
 }
 
+/* Khối con đang được đọc bên trong mục (đoạn văn, hình, hộp…): tô nền nhẹ để thấy lời giảng đang ở đâu. */
+.narration-sub {
+  border-radius: 0.5rem;
+  background-color: rgb(var(--brand) / 0.12);
+  box-shadow: 0 0 0 6px rgb(var(--brand) / 0.12);
+  transition: background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
 /* Khi trình nghe đang mở, tiêu đề mục bấm được để nghe từ đó. */
 [data-narration-on="1"] .lesson-section > h2,
 [data-narration-on="1"] [data-item-id] h2 {
@@ -99,7 +107,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .narration-wave[data-playing="1"] > i { animation: none; height: 10px; }
-  .narration-active, .narration-lift { transition: none; }
+  .narration-active, .narration-sub, .narration-lift { transition: none; }
 }
 
 @media print {

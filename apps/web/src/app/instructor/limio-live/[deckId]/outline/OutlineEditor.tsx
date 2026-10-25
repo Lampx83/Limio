@@ -51,6 +51,8 @@ interface Loaded {
   sourceKind: DeckSourceKind;
   webRefs: WebSourceRef[] | null;
   sourceFigureKeys?: string[];
+  /** Bài giảng gắn với bài học: mức slide 12–16 cho 15 phút và chỉ có câu trắc nghiệm tự kiểm tra. */
+  selfCheck?: boolean;
   minutes: number;
   outline: Outline;
   confirmedAt: string | null;
@@ -193,10 +195,10 @@ export default function OutlineEditor({ deckId }: { deckId: string }) {
   }, [opening, shown, gridTotal, deckId]);
 
   const stats = useMemo(() => outlineStats(outline), [outline]);
-  const range = slideRange(minutes);
+  const range = slideRange(minutes, data?.selfCheck);
   const warnings = useMemo(
-    () => outlineWarnings(outline, minutes, { sourceKind: data?.sourceKind, sourceFigureKeys: data?.sourceFigureKeys }),
-    [outline, minutes, data?.sourceKind, data?.sourceFigureKeys],
+    () => outlineWarnings(outline, minutes, { sourceKind: data?.sourceKind, sourceFigureKeys: data?.sourceFigureKeys, selfCheck: data?.selfCheck }),
+    [outline, minutes, data?.sourceKind, data?.sourceFigureKeys, data?.selfCheck],
   );
   const blocking = useMemo(() => outlineBlockingProblems(outline), [outline]);
 

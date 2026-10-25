@@ -4,6 +4,7 @@ import {
   ANCHOR_INTRO,
   ANCHOR_OUTRO,
   clearResume,
+  fractionWithin,
   listenedPercent,
   minutesLabel,
   nextStart,
@@ -15,6 +16,7 @@ import {
   segmentIndexAt,
   serializeResume,
   speedLabel,
+  weightedIndexAt,
   writeResume,
   type KeyValueStore,
 } from "./learner";
@@ -168,5 +170,33 @@ describe("nhãn và số liệu", () => {
     expect(listenedPercent(50, 200)).toBe(25);
     expect(listenedPercent(500, 200)).toBe(100);
     expect(listenedPercent(5, 0)).toBe(0);
+  });
+});
+
+describe("theo dõi trong một mục", () => {
+  it("weightedIndexAt chia theo độ dài chữ của từng khối", () => {
+    const w = [100, 300, 100]; // 20% / 60% / 20%
+    expect(weightedIndexAt(w, 0)).toBe(0);
+    expect(weightedIndexAt(w, 0.19)).toBe(0);
+    expect(weightedIndexAt(w, 0.21)).toBe(1);
+    expect(weightedIndexAt(w, 0.79)).toBe(1);
+    expect(weightedIndexAt(w, 0.81)).toBe(2);
+    expect(weightedIndexAt(w, 1)).toBe(2);
+  });
+
+  it("weightedIndexAt chịu được đầu vào lạ", () => {
+    expect(weightedIndexAt([], 0.5)).toBe(-1);
+    expect(weightedIndexAt([0, 0], 0.9)).toBe(1); // khối rỗng vẫn tính trọng số tối thiểu
+    expect(weightedIndexAt([5, 5], Number.NaN)).toBe(0);
+    expect(weightedIndexAt([5, 5], 7)).toBe(1);
+    expect(weightedIndexAt([5, 5], -3)).toBe(0);
+  });
+
+  it("fractionWithin kẹp trong 0–1 và đoạn rỗng cho 0", () => {
+    const seg = { startSec: 10, endSec: 20 };
+    expect(fractionWithin(seg, 5)).toBe(0);
+    expect(fractionWithin(seg, 15)).toBe(0.5);
+    expect(fractionWithin(seg, 25)).toBe(1);
+    expect(fractionWithin({ startSec: 3, endSec: 3 }, 3)).toBe(0);
   });
 });

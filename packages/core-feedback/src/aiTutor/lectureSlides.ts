@@ -44,6 +44,11 @@ export interface SlideDraftsInput {
   language?: string | null;
   /** Yêu cầu của giảng viên đi cùng tài liệu (M9). */
   intent?: string;
+  /**
+   * Kiểu của trường "notes": "teacher" (mặc định) là ghi chú cho người giảng; "narration" là LỜI ĐỌC cho học viên tự nghe
+   * (bài giảng gắn với bài học, docs/tieu-chi/nghe-giang-slide.md AC4) — chính chữ này được chuyển thành giọng nói.
+   */
+  notesStyle?: "teacher" | "narration";
 }
 
 export interface RawSlideDraft {
@@ -247,6 +252,12 @@ export function specKeyFor(s: OutlineSlideInput): string {
   return s.kind === "content" ? s.layout ?? "image" : s.kind;
 }
 
+const TEACHER_NOTES_RULE = `Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao. Slide thuộc phần "Dẫn dắt vào bài": chỉ cách dẫn để tạo tò mò (dừng một nhịp, mời cả lớp nghĩ hoặc trả lời, chưa giải đáp ngay và hẹn sẽ quay lại). Slide kết bài: gợi ý nói chậm, nối câu kết với câu hỏi mở đầu, rồi cảm ơn lớp.`;
+
+const NARRATION_NOTES_RULE = `Trường "notes" (mọi slide) là LỜI ĐỌC thành tiếng cho học viên tự nghe, KHÔNG phải ghi chú cho giảng viên. Viết văn nói mạch lạc, câu đầy đủ, xưng "mình – bạn", khoảng 60 đến 120 từ; không gạch đầu dòng, không markdown, không ký hiệu, không chữ viết tắt khó đọc thành tiếng. Chỉ nói về những gì đang hiện trên slide và ý có trong tài liệu; không nhắc hình, bảng hay khung mà slide không có. Slide bìa: lời chào và giới thiệu ngắn bài học. Slide mở phần: một câu chốt lại phần trước (bỏ qua nếu là phần đầu), rồi một câu nêu câu hỏi mà phần này sẽ trả lời. Slide quiz: chỉ đọc đề và các lựa chọn, TUYỆT ĐỐI không nói đáp án đúng hay lời giải thích. Slide kết bài: tóm ý chính và lời chào.`;
+
+export const notesRule = (style: SlideDraftsInput["notesStyle"]): string => (style === "narration" ? NARRATION_NOTES_RULE : TEACHER_NOTES_RULE);
+
 export function buildSlidesPrompt(input: SlideDraftsInput): { system: string; user: string } {
   const kind = input.sourceKind ?? "document";
   const basis = kind === "document" ? "một tài liệu" : kind === "topic" ? "mô tả của giảng viên (không có tài liệu gốc)" : "mô tả của giảng viên và các nguồn tìm trên internet";
@@ -258,7 +269,7 @@ Quy tắc bắt buộc:
 3. Văn phong khoa học, rõ ràng. Mọi mô tả, ý chính, giải thích phải là CÂU HOÀN CHỈNH có chủ ngữ và vị ngữ, kết thúc bằng dấu chấm. KHÔNG viết cụt, không chỉ liệt kê cụm từ.
 4. ${sourceRule(kind, "slides")}
 5. KHÔNG dùng emoji hay ký hiệu trang trí. ${slideLanguageRule(input.language, kind === "document" ? "tài liệu dùng" : "ngành quen dùng")}
-6. Trường "notes" (mọi slide): 2 đến 4 câu lời giảng cho giảng viên, nói trực tiếp với giảng viên (ví dụ "Nhấn mạnh...", "Hỏi cả lớp..."), nêu điều cần nói, ví dụ nên đưa hoặc câu hỏi nên đặt ra. Với slide quiz, nêu đáp án đúng và vì sao. Slide thuộc phần "Dẫn dắt vào bài": chỉ cách dẫn để tạo tò mò (dừng một nhịp, mời cả lớp nghĩ hoặc trả lời, chưa giải đáp ngay và hẹn sẽ quay lại). Slide kết bài: gợi ý nói chậm, nối câu kết với câu hỏi mở đầu, rồi cảm ơn lớp.
+6. ${notesRule(input.notesStyle)}
 7. Mỗi bố cục chỉ điền các trường được yêu cầu; mọi trường khác để chuỗi rỗng hoặc mảng rỗng (với "table" và "chart" không dùng: head, rows, labels, series là mảng rỗng, type là "bar").
 
 Trả về JSON đúng cấu trúc yêu cầu.`;

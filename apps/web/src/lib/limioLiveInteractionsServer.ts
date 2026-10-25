@@ -2,7 +2,7 @@
 // gọi AI một lần nhỏ rồi chèn đúng luật. Lỗi AI không bao giờ làm hỏng việc tạo bài: giữ dàn ý như cũ, kèm cảnh báo.
 import type OpenAI from "openai";
 import { generateInteractionTopUp, type LectureSourceKind } from "@feedbackme/core-feedback";
-import { capWhiteboards, insertInteractions, interactionGap, topUpSummary } from "./limioLiveInteractions";
+import { SELF_CHECK_TARGET, capWhiteboards, insertInteractions, interactionGap, quizOnly, topUpSummary } from "./limioLiveInteractions";
 import type { Outline } from "./limioLiveOutline";
 
 export const TOPUP_FAILED_WARNING = "Chưa bổ sung được slide tương tác tự động; thầy/cô có thể thêm ở dàn ý.";
@@ -13,9 +13,11 @@ export async function ensureInteractions(
   minutes: number,
   ctx: { sourceText: string; sourceKind?: LectureSourceKind; intent?: string | null },
   openai: OpenAI | null,
+  opts: { selfCheck?: boolean } = {},
 ): Promise<{ outline: Outline; added: number; warning: string | null }> {
-  const outline = capWhiteboards(outlineIn);
-  const gap = interactionGap(outline, minutes);
+  // Bài giảng của bài học: chỉ trắc nghiệm tự kiểm tra (nghe-giang-slide.md, AC3); mọi slide tương tác khác đổi thành trắc nghiệm.
+  const outline = opts.selfCheck ? quizOnly(capWhiteboards(outlineIn)) : capWhiteboards(outlineIn);
+  const gap = interactionGap(outline, minutes, opts.selfCheck ? SELF_CHECK_TARGET : undefined);
   if (gap.need <= 0) return { outline, added: 0, warning: null };
   if (!openai) return { outline, added: 0, warning: TOPUP_FAILED_WARNING };
   try {
@@ -34,7 +36,7 @@ export async function ensureInteractions(
       openai,
     );
     const r = insertInteractions(outline, rows);
-    return { outline: r.outline, added: r.added, warning: r.added < gap.need ? TOPUP_FAILED_WARNING : null };
+    return { outline: opts.selfCheck ? quizOnly(r.outline) : r.outline, added: r.added, warning: r.added < gap.need ? TOPUP_FAILED_WARNING : null };
   } catch (e) {
     console.error("[Limio-Live interaction top-up]", e);
     return { outline, added: 0, warning: TOPUP_FAILED_WARNING };
