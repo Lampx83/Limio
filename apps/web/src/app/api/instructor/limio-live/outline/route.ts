@@ -241,7 +241,7 @@ export async function POST(req: Request) {
             await attachLessonDeck(userId, lessonCtx.id, deck.id, { replace: lessonCtx.replace });
           } catch (e) {
             console.error("[Limio-Live outline] attach lesson deck", e);
-            warnings.push("Chưa gắn được bài giảng vào bài học; thầy/cô gắn lại ở mục Bài giảng slide của bài.");
+            warnings.push("Chưa gắn được bài giảng vào bài học; bài giảng vẫn được lưu trong Limio-Live của thầy/cô.");
           }
         }
         await emitLiveEvent(userId, LearningEventType.LiveDeckOutlineGenerated, {
