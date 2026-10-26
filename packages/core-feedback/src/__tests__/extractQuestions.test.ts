@@ -225,3 +225,80 @@ describe("extractQuestionsFromText — output", () => {
     ).rejects.toMatchObject({ code: "json_parse_failed" });
   });
 });
+
+describe("extractQuestionsFromText — văn bản dài chia lô", () => {
+  const longText = Array.from(
+    { length: 24 },
+    (_, i) =>
+      `Câu ${i + 1}. Doanh nghiệp A cần lập kế hoạch mua hàng cho quý tới, căn cứ bước 2.1 của quy trình, phương án nào là đúng nhất?\nA. Mua bổ sung\nB. Không mua thêm\nC. Mua theo giá thấp nhất\nD. Bỏ qua thời gian giao hàng\nĐáp án: B. Giải thích: pháp lý là tiêu chí tiên quyết, sau đó xét giá và thời gian giao hàng.`,
+  ).join("\n\n");
+
+  /** OpenAI giả: mỗi lô trả về đúng các "Câu N" nó thấy trong prompt, kèm finish_reason. */
+  function chunkAwareOpenAI(opts: { failOnChunk?: number; truncateChunk?: number } = {}) {
+    const calls: string[] = [];
+    const client = {
+      chat: {
+        completions: {
+          create: async (req: { messages: { role: string; content: string }[] }) => {
+            const user = req.messages.find((m) => m.role === "user")!.content;
+            const idx = calls.push(user) - 1;
+            if (opts.failOnChunk === idx) throw new Error("Request timed out.");
+            const nums = [...user.matchAll(/^Câu (\d+)\./gm)].map((m) => Number(m[1]));
+            const questions = nums.map((n) => ({ ...sampleQuestion, prompt: `Câu ${n}` }));
+            return {
+              choices: [
+                {
+                  finish_reason: opts.truncateChunk === idx ? "length" : "stop",
+                  message: { content: JSON.stringify({ questions, skipped: [] }) },
+                },
+              ],
+              usage: { prompt_tokens: 100, completion_tokens: 50 },
+            };
+          },
+        },
+      },
+    } as unknown as OpenAI;
+    return { client, calls };
+  }
+
+  it("chia thành nhiều lời gọi, mỗi lô ≤ 3.500 ký tự, và gộp đủ 24 câu đúng thứ tự", async () => {
+    expect(longText.length).toBeGreaterThan(3_500);
+    const userId = await makeUser("chunked");
+    const { client, calls } = chunkAwareOpenAI();
+    const r = await extractQuestionsFromText(userId, { rawText: longText }, client);
+
+    expect(calls.length).toBeGreaterThan(1);
+    for (const c of calls) expect(c.length).toBeLessThan(3_500 + 600); // + khung prompt
+    expect(r.questions.map((q) => (q as { prompt: string }).prompt)).toEqual(
+      Array.from({ length: 24 }, (_, i) => `Câu ${i + 1}`),
+    );
+  });
+
+  it("ví bị trừ tổng token của mọi lô", async () => {
+    const userId = await makeUser("chunk-charges");
+    const before = await getTokenBudget(userId);
+    const { client, calls } = chunkAwareOpenAI();
+    await extractQuestionsFromText(userId, { rawText: longText }, client);
+    const after = await getTokenBudget(userId);
+    expect(before.monthlyRemaining - after.monthlyRemaining).toBe(calls.length * 150);
+  });
+
+  it("một lô lỗi: cả lần nhập lỗi (không trả kết quả thiếu đoạn), nhưng token lô đã xong vẫn bị trừ", async () => {
+    const userId = await makeUser("chunk-fail");
+    const before = await getTokenBudget(userId);
+    const { client, calls } = chunkAwareOpenAI({ failOnChunk: 1 });
+    await expect(
+      extractQuestionsFromText(userId, { rawText: longText }, client),
+    ).rejects.toMatchObject({ code: "openai_error", details: "Request timed out." });
+    const after = await getTokenBudget(userId);
+    expect(before.monthlyRemaining - after.monthlyRemaining).toBe((calls.length - 1) * 150);
+  });
+
+  it("AI hết max_tokens (finish_reason=length): json_parse_failed kèm details=truncated", async () => {
+    const userId = await makeUser("truncated");
+    const { client } = chunkAwareOpenAI({ truncateChunk: 0 });
+    await expect(
+      extractQuestionsFromText(userId, { rawText: longText }, client),
+    ).rejects.toMatchObject({ code: "json_parse_failed", details: "truncated" });
+  });
+});
