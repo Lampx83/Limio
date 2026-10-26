@@ -243,6 +243,15 @@ export function isValidClosing(text: string): boolean {
   return t.length > 0 && !/\?\s*$/.test(t) && !/\?[^.!\n]{0,60}$/.test(t);
 }
 
+/**
+ * Phần "Nhìn lại" chỉ có ở lời kết, và chỉ khi có câu trả lời để nhận xét. Không có câu nào thì AI không có gì
+ * để nhận xét và sẽ tự bịa điểm làm tốt/cần cải thiện (bug thật: SV bấm kết thúc ngay mà vẫn nhận được
+ * "Em đã đưa ra được một ví dụ minh họa..."). Các pha khác giữ nguyên.
+ */
+export function closingSummaryFor(enabled: boolean, phase: OralPhase, answered: boolean): boolean {
+  return enabled && (phase !== "closing" || answered);
+}
+
 /** Tin nhắn cuối cùng (vai "user") ép mô hình chuyển sang viết lời kết — mạnh hơn hẳn chỉ dặn trong system. */
 function closingDirective(summary: boolean, retry: boolean, language: OralLanguage): ChatMessage {
   return {
@@ -488,6 +497,8 @@ export async function runOralExamTurn(
 
   const warmup = attempt.exam.oralWarmup;
   const phase = resolveOralPhase({ shouldClose, warmup, examinerTurns: questionsAsked });
+  const answered = turns.some((t) => t.role === "student") || Boolean(trimmedAnswer);
+  const closingSummary = closingSummaryFor(attempt.exam.oralClosingSummary, phase, answered);
   const { chunks: contextChunks, embedTokens } = await gatherOralContext({
     db,
     examId: attempt.exam.id,
@@ -510,7 +521,7 @@ export async function runOralExamTurn(
       elapsedMin: Math.floor(elapsedSec / 60),
     },
     feedbackMode: attempt.exam.oralFeedbackMode,
-    closingSummary: attempt.exam.oralClosingSummary,
+    closingSummary,
   });
 
   const history: ChatMessage[] = turns.map((t) => ({
@@ -530,7 +541,7 @@ export async function runOralExamTurn(
     if (phase === "closing") {
       chatResult = await generateClosing({
         messages,
-        summary: attempt.exam.oralClosingSummary,
+        summary: closingSummary,
         language: attempt.exam.language,
         computeChat: input.computeChat,
         onDelta: input.onDelta,
@@ -677,6 +688,8 @@ export async function runOralExamPreviewTurn(
 
   const warmup = exam.oralWarmup;
   const phase = resolveOralPhase({ shouldClose, warmup, examinerTurns: questionsAsked });
+  const answered = input.history.some((t) => t.role === "student") || Boolean(trimmedAnswer);
+  const closingSummary = closingSummaryFor(exam.oralClosingSummary, phase, answered);
   const { chunks: contextChunks, embedTokens } = await gatherOralContext({
     db,
     examId: exam.id,
@@ -697,7 +710,7 @@ export async function runOralExamPreviewTurn(
     // Bản thử không có đồng hồ — không báo giờ cho AI.
     timing: null,
     feedbackMode: exam.oralFeedbackMode,
-    closingSummary: exam.oralClosingSummary,
+    closingSummary,
   });
 
   const history: ChatMessage[] = input.history.map((t) => ({
@@ -714,7 +727,7 @@ export async function runOralExamPreviewTurn(
     if (phase === "closing") {
       chatResult = await generateClosing({
         messages: [{ role: "system", content: systemPrompt }, ...history],
-        summary: exam.oralClosingSummary,
+        summary: closingSummary,
         language: exam.language,
         computeChat: input.computeChat,
         onDelta: input.onDelta,

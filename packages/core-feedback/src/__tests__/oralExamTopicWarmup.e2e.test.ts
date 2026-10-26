@@ -19,6 +19,7 @@ import {
   resolveOralPhase,
   stripEvaluativeOpener,
   isValidClosing,
+  closingSummaryFor,
   typicalQuestionCount,
   runOralExamPreviewTurn,
   runOralExamTurn,
@@ -377,6 +378,15 @@ describe("prompt rules by feedback mode, last-question cue, closing summary (A6.
     const sum = buildOralSystemPrompt({ ...base, phase: "closing", closingSummary: true });
     expect(sum).toContain("Nhìn lại buổi vấn đáp");
     expect(sum).toContain("KHÔNG cho điểm số");
+  });
+
+  it("closing review needs at least one student answer; other phases keep the setting", () => {
+    // Bug thật: SV bấm kết thúc khi chưa trả lời câu nào, AI vẫn viết điểm làm tốt/cần cải thiện từ hư không.
+    expect(closingSummaryFor(true, "closing", false)).toBe(false);
+    expect(closingSummaryFor(true, "closing", true)).toBe(true);
+    expect(closingSummaryFor(false, "closing", true)).toBe(false);
+    expect(closingSummaryFor(true, "warmup", false)).toBe(true);
+    expect(closingSummaryFor(true, "normal", false)).toBe(true);
   });
 
   it("English exam: the language rule leads every phase, and fixed phrases are not Vietnamese", () => {
