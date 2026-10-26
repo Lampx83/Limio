@@ -2,6 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import {
+  MAX_TRACKED_PDF_PAGES,
+  PDF_VIEW_EVENT,
+  PDF_VIEW_REQUEST_EVENT,
+  type PdfViewDetail,
+} from "@/lib/pdfViewEvents";
 
 /**
  * B11 — đo người học thực sự ở lại bài bao lâu, cuộn tới đâu, xem hết bao nhiêu
@@ -26,6 +32,12 @@ import { apiUrl } from "@/lib/apiUrl";
  * ngay tới 80% rồi dừng" — hai hành vi rất khác nhau nhưng ra cùng một số.
  * Mỗi nhịp gửi *toàn bộ* tập đoạn đã gộp của phiên hiện tại (không phải phần
  * chênh) vì hợp đoạn là phép idempotent ở máy chủ — xem `mergeVideoRanges`.
+ *
+ * Đọc PDF theo trang (docs/tieu-chi/doc-pdf-theo-trang.md): `PdfViewer` báo trang
+ * đang mở và việc khung PDF có nằm trong màn hình không; bộ đo cộng thời gian vào
+ * trang đó, và chỉ khi cả tab lẫn khung PDF đang hiện. Ngược với video, đây là
+ * phần chênh (giây cộng được) chứ không phải tập đoạn — nên giữ phần lẻ dưới 1
+ * giây qua các nhịp, để lật nhanh nhiều trang không làm mất dần thời gian.
  */
 
 /** Gửi mỗi 30 giây. Đủ mịn để dựng đường cong đọc, đủ thưa để không ồn. */
@@ -42,6 +54,16 @@ const SETTLE_MS = 2_000;
  * khi tua đúng 1-2 giây).
  */
 const CONTINUOUS_GAP_SEC = 2;
+/** Trần theo từng nhịp, khớp validate ở máy chủ — vượt là cả nhịp bị từ chối, mất cả thời gian đọc. */
+const MAX_PDFS_PER_BEAT = 10;
+const MAX_PDF_PAGES_PER_BEAT = 60;
+
+interface PdfBeat {
+  contentItemId: string;
+  totalPages: number;
+  lastPage: number;
+  dwellSec: Record<string, number>;
+}
 
 interface Beat {
   activeSecDelta: number;
@@ -51,6 +73,7 @@ interface Beat {
   sessionEnd: boolean;
   videoRanges?: Array<[number, number]>;
   videoPositionSec?: number;
+  pdf?: PdfBeat[];
 }
 
 export default function LessonEngagementTracker({ lessonId }: { lessonId: string }) {
@@ -71,6 +94,10 @@ export default function LessonEngagementTracker({ lessonId }: { lessonId: string
   const closedRangesRef = useRef<Array<[number, number]>>([]);
   // Vị trí phát gần nhất từng thấy — "điểm dừng" nếu người học rời đi ngay sau đó.
   const lastPositionRef = useRef<number | null>(null);
+  // Trạng thái mới nhất của từng PDF trong bài do PdfViewer báo.
+  const pdfViewsRef = useRef(new Map<string, PdfViewDetail>());
+  // Mili-giây dừng chưa gửi, theo PDF rồi theo trang.
+  const pdfMsRef = useRef(new Map<string, Map<number, number>>());
 
   useEffect(() => {
     // Bài mới thì đếm lại từ đầu.
@@ -83,6 +110,8 @@ export default function LessonEngagementTracker({ lessonId }: { lessonId: string
     openRangeRef.current = null;
     closedRangesRef.current = [];
     lastPositionRef.current = null;
+    pdfViewsRef.current = new Map();
+    pdfMsRef.current = new Map();
     lastTickRef.current = document.visibilityState === "visible" ? Date.now() : null;
 
     /** Gộp một đoạn mới vào danh sách đã có — giữ danh sách luôn rời nhau, có thứ tự. */
@@ -106,8 +135,64 @@ export default function LessonEngagementTracker({ lessonId }: { lessonId: string
     /** Dồn khoảng thời gian tab đang hiện vào tổng, rồi đặt lại mốc. */
     function accumulate() {
       if (lastTickRef.current === null) return;
-      activeMsRef.current += Date.now() - lastTickRef.current;
-      lastTickRef.current = document.visibilityState === "visible" ? Date.now() : null;
+      const now = Date.now();
+      const elapsed = now - lastTickRef.current;
+      activeMsRef.current += elapsed;
+      // Cùng khoảng thời gian đó, tính cho trang PDF đang mở của mọi PDF đang nằm
+      // trong màn hình. Phải chạy TRƯỚC khi trạng thái PDF đổi (xem onPdfView).
+      for (const v of pdfViewsRef.current.values()) {
+        if (!v.inView || v.totalPages <= 0) continue;
+        let pages = pdfMsRef.current.get(v.contentItemId);
+        if (!pages) pdfMsRef.current.set(v.contentItemId, (pages = new Map()));
+        pages.set(v.page, (pages.get(v.page) ?? 0) + elapsed);
+      }
+      lastTickRef.current = document.visibilityState === "visible" ? now : null;
+    }
+
+    /** Lấy phần giây nguyên đã dồn, giữ lại phần lẻ cho nhịp sau. */
+    function drainPdf(): PdfBeat[] | undefined {
+      const out: PdfBeat[] = [];
+      for (const [id, pages] of pdfMsRef.current) {
+        const view = pdfViewsRef.current.get(id);
+        if (!view || view.totalPages <= 0 || out.length >= MAX_PDFS_PER_BEAT) continue;
+        const dwellSec: Record<string, number> = {};
+        let n = 0;
+        for (const [page, ms] of pages) {
+          const whole = Math.floor(ms / 1000);
+          if (whole <= 0) continue;
+          pages.set(page, ms - whole * 1000);
+          if (n >= MAX_PDF_PAGES_PER_BEAT || page > view.totalPages) continue;
+          dwellSec[String(page)] = Math.min(MAX_DELTA_SEC, whole);
+          n += 1;
+        }
+        if (n > 0) {
+          out.push({
+            contentItemId: id,
+            totalPages: view.totalPages,
+            lastPage: Math.min(view.totalPages, view.page),
+            dwellSec,
+          });
+        }
+      }
+      return out.length > 0 ? out : undefined;
+    }
+
+    /**
+     * PdfViewer báo đổi trang / ra-vào màn hình / gỡ. Chốt thời gian đã trôi cho
+     * trạng thái CŨ trước, rồi mới nhận trạng thái mới — nếu không, giây của trang
+     * 3 bị tính sang trang 4 vừa bấm tới.
+     */
+    function onPdfView(e: Event) {
+      const d = (e as CustomEvent<PdfViewDetail>).detail;
+      if (!d || typeof d.contentItemId !== "string") return;
+      accumulate();
+      if (d.totalPages <= 0 || d.totalPages > MAX_TRACKED_PDF_PAGES) {
+        // Chưa tải xong / lỗi / quá lớn / đã gỡ: ngừng đo, giữ phần giây đã dồn để lần gửi tới còn mang đi.
+        const prev = pdfViewsRef.current.get(d.contentItemId);
+        if (prev) pdfViewsRef.current.set(d.contentItemId, { ...prev, inView: false });
+        return;
+      }
+      pdfViewsRef.current.set(d.contentItemId, d);
     }
 
     function send(sessionEnd: boolean) {
@@ -142,6 +227,8 @@ export default function LessonEngagementTracker({ lessonId }: { lessonId: string
       if (lastPositionRef.current !== null) {
         payload.videoPositionSec = lastPositionRef.current;
       }
+      const pdf = drainPdf();
+      if (pdf) payload.pdf = pdf;
       sentSecRef.current += activeSecDelta;
       if (countsAsSession) firstBeatRef.current = false;
       if (sessionEnd) closedRef.current = true;
@@ -244,6 +331,9 @@ export default function LessonEngagementTracker({ lessonId }: { lessonId: string
     // `beforeunload` bỏ sót trên Safari và trên iOS.
     const onPageHide = () => send(true);
     window.addEventListener("pagehide", onPageHide);
+    document.addEventListener(PDF_VIEW_EVENT, onPdfView);
+    // PdfViewer nạp trễ có thể đã báo trước khi ta nghe: hỏi lại một lần.
+    document.dispatchEvent(new Event(PDF_VIEW_REQUEST_EVENT));
     document.addEventListener("timeupdate", onTimeUpdate, { capture: true });
     document.addEventListener("seeking", onSeeking, { capture: true });
     document.addEventListener("pause", onPauseOrEnded, { capture: true });
@@ -257,6 +347,7 @@ export default function LessonEngagementTracker({ lessonId }: { lessonId: string
       window.removeEventListener("resize", onScroll);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);
+      document.removeEventListener(PDF_VIEW_EVENT, onPdfView);
       document.removeEventListener("timeupdate", onTimeUpdate, { capture: true });
       document.removeEventListener("seeking", onSeeking, { capture: true });
       document.removeEventListener("pause", onPauseOrEnded, { capture: true });

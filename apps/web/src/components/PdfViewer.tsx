@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  PDF_VIEW_EVENT,
+  PDF_VIEW_REQUEST_EVENT,
+  type PdfViewDetail,
+} from "@/lib/pdfViewEvents";
 
 // pdfjs-dist is a large client-only library — dynamically imported to keep it
 // out of the server bundle. The worker is served from /pdf.worker.min.mjs
@@ -9,12 +14,21 @@ import { useEffect, useRef, useState } from "react";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PdfDoc = any;
 
+/** Khung PDF phải hiện bằng ngần này (so với chính nó) mới coi là đang đọc. */
+const IN_VIEW_FRACTION = 0.25;
+
 export default function PdfViewer({
   url,
   title,
+  contentItemId,
 }: {
   url: string;
   title?: string;
+  /**
+   * Có thì viewer báo trang đang xem cho bộ đo thời gian đọc bài
+   * (`LessonEngagementTracker`). Không có (form giảng viên, Limio-Live) thì im lặng.
+   */
+  contentItemId?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -24,6 +38,7 @@ export default function PdfViewer({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [inView, setInView] = useState(false);
 
   // Track container width to scale pages responsively (fit-to-width).
   useEffect(() => {
@@ -35,6 +50,59 @@ export default function PdfViewer({
     ro.observe(el);
     return () => ro.disconnect();
   }, [loading, error]);
+
+  // Khung PDF có nằm trong màn hình không. Bài có chữ ở trên và PDF ở cuối: em
+  // đang đọc chữ thì không tính là đang đọc trang PDF. Bài tính "đủ lớn" theo
+  // phần của chính khung, hoặc nửa màn hình nếu trang PDF cao hơn cả màn hình
+  // (khi đó không bao giờ phủ nổi 25% của nó).
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || !contentItemId || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return;
+        const need = Math.min(
+          entry.boundingClientRect.height * IN_VIEW_FRACTION,
+          window.innerHeight * 0.5,
+        );
+        setInView(entry.isIntersecting && entry.intersectionRect.height >= need && need > 0);
+      },
+      { threshold: Array.from({ length: 21 }, (_, i) => i / 20) },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      setInView(false);
+    };
+  }, [loading, error, contentItemId]);
+
+  // Báo bộ đo thời gian đọc. Ref giữ trạng thái mới nhất để hai nơi bắn (effect
+  // dưới và lời hỏi "ai đang có PDF?") cùng nói một điều.
+  const detailRef = useRef<PdfViewDetail | null>(null);
+  useEffect(() => {
+    if (!contentItemId) return;
+    const publish = () => {
+      if (detailRef.current) {
+        document.dispatchEvent(new CustomEvent<PdfViewDetail>(PDF_VIEW_EVENT, { detail: detailRef.current }));
+      }
+    };
+    detailRef.current = { contentItemId, page, totalPages, inView: inView && !error };
+    publish();
+    document.addEventListener(PDF_VIEW_REQUEST_EVENT, publish);
+    return () => document.removeEventListener(PDF_VIEW_REQUEST_EVENT, publish);
+  }, [contentItemId, page, totalPages, inView, error]);
+
+  // Gỡ viewer (đổi bài, đóng): báo "không còn xem" để bộ đo thôi cộng giây.
+  useEffect(() => {
+    if (!contentItemId) return;
+    return () => {
+      document.dispatchEvent(
+        new CustomEvent<PdfViewDetail>(PDF_VIEW_EVENT, {
+          detail: { contentItemId, page: 1, totalPages: 0, inView: false },
+        }),
+      );
+    };
+  }, [contentItemId]);
 
   // Load pdfjs and the PDF document whenever url changes.
   useEffect(() => {

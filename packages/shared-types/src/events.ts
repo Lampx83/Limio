@@ -330,6 +330,19 @@ export interface LessonEngagedPayload {
   videoPct: number;
   /** Tổng số giây cộng dồn của bài này sau khi tính cả lượt vừa rồi. */
   totalActiveSec: number;
+  /**
+   * Đọc PDF theo trang, số liệu CỘNG DỒN sau lượt này (như totalActiveSec).
+   * Vắng mặt khi bài không có PDF hoặc chưa đo được trang nào; dòng cũ cũng không có.
+   * Giây theo từng trang nằm ở LessonEngagement.pdfPages, không nhân bản vào event.
+   */
+  pdf?: Array<{
+    contentItemId: string;
+    totalPages: number;
+    /** Số trang có tổng thời gian dừng ≥ 3 giây. */
+    pagesViewed: number;
+    /** Trang đang mở ở nhịp gần nhất — điểm dừng. */
+    lastPage: number;
+  }>;
 }
 
 export interface LessonCompletedPayload {

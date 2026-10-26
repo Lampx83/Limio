@@ -4,6 +4,7 @@ import {
   assertCanEditCourse,
   CourseAuthzError,
   getCourseEngagement,
+  summarizePdfPages,
   videoRangesCoverageSec,
 } from "@feedbackme/core-lms";
 import { LearningEventType } from "@feedbackme/shared-types";
@@ -57,9 +58,12 @@ export async function GET(
         title: true,
         orderIndex: true,
         module: { select: { title: true, orderIndex: true } },
-        // Chỉ để tính % phủ thật (đoạn đã xem / độ dài) — không dùng type
-        // "video" nào khác nên không cần lọc thêm.
-        contentItems: { where: { type: "video" }, select: { payload: true }, take: 1 },
+        // Video: để tính % phủ thật (đoạn đã xem / độ dài). PDF: để biết bài có
+        // PDF nào, và tổng số trang làm mẫu số cho "số trang đã xem".
+        contentItems: {
+          where: { type: { in: ["video", "pdf"] } },
+          select: { id: true, type: true, payload: true },
+        },
       },
       orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
     }),
@@ -73,6 +77,16 @@ export async function GET(
 
   const byPair = new Map(engagement.map((e) => [`${e.userId}:${e.lessonId}`, e]));
 
+  // Tổng số trang của từng PDF: số lớn nhất mà bất kỳ người học nào từng báo
+  // (người chưa mở bài không báo gì, nhưng mẫu số phải như nhau cho cả lớp), rồi
+  // mới tới số ghi sẵn trong khối. Thiếu cả hai -> để trống, không đoán.
+  const pdfTotalPages = new Map<string, number>();
+  for (const e of engagement) {
+    for (const [id, st] of Object.entries(e.pdfPages ?? {})) {
+      pdfTotalPages.set(id, Math.max(pdfTotalPages.get(id) ?? 0, st.totalPages));
+    }
+  }
+
   const tutorTurns = new Map<string, number>();
   for (const e of tutorEvents) {
     const lid = (e.payload as { lessonId?: string } | null)?.lessonId;
@@ -85,8 +99,21 @@ export async function GET(
   for (const [uid, ref] of index) {
     for (const l of lessons) {
       const e = byPair.get(`${uid}:${l.id}`);
-      const durationSec = (l.contentItems[0]?.payload as { durationSec?: number } | undefined)
-        ?.durationSec;
+      const durationSec = (
+        l.contentItems.find((c) => c.type === "video")?.payload as
+          | { durationSec?: number }
+          | undefined
+      )?.durationSec;
+      const pdfItems = l.contentItems.filter((c) => c.type === "pdf");
+      const pdfTotals = pdfItems.map(
+        (c) =>
+          pdfTotalPages.get(c.id) ??
+          (c.payload as { totalPages?: number } | null)?.totalPages,
+      );
+      const pdfIds = new Set(pdfItems.map((c) => c.id));
+      const pdfSummary = summarizePdfPages(e?.pdfPages ?? null).filter((p) =>
+        pdfIds.has(p.contentItemId),
+      );
       const coverageSec = e?.videoRanges ? videoRangesCoverageSec(e.videoRanges) : 0;
       out.push({
         ...identityCols(ref),
@@ -105,6 +132,15 @@ export async function GET(
             ? Math.round(Math.min(1, coverageSec / durationSec) * 100)
             : "",
         "Điểm dừng gần nhất (giây)": e?.lastVideoPositionSec ?? "",
+        // Bài không có PDF -> rỗng, khác với "có PDF mà không xem" -> 0.
+        "Số trang PDF đã xem":
+          pdfItems.length === 0 ? "" : pdfSummary.reduce((n, p) => n + p.pagesViewed, 0),
+        "Tổng số trang PDF":
+          pdfItems.length === 0 || pdfTotals.some((t) => t === undefined)
+            ? ""
+            : pdfTotals.reduce<number>((n, t) => n + (t ?? 0), 0),
+        // Chỉ rõ nghĩa khi bài có đúng một PDF; nhiều PDF thì không có "trang cuối" chung.
+        "Trang PDF dừng gần nhất": pdfItems.length === 1 ? (pdfSummary[0]?.lastPage ?? "") : "",
         "Số lượt mở": e?.sessionCount ?? 0,
         "Số lượt hỏi trợ giảng AI": tutorTurns.get(`${uid}:${l.id}`) ?? 0,
         "Lần cuối vào": e?.lastSeenAt ?? "",

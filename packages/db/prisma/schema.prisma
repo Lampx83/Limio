@@ -892,6 +892,12 @@ model LessonEngagement {
   /// Vị trí phát gần nhất (giây) tại nhịp gần nhất — "điểm dừng" để biết bỏ
   /// dở ở đâu, khác với mốc cao nhất từng đạt.
   lastVideoPositionSec Int?
+  /// Thời gian dừng theo từng trang của các PDF trong bài, cộng dồn mọi lượt:
+  /// { [contentItemId]: { totalPages, lastPage, dwellSec: { "<trang>": giây } } }.
+  /// Chỉ đếm lúc tab hiện và khung PDF nằm trong màn hình. Null = chưa từng đo
+  /// (bài không có PDF, hoặc dòng có trước tính năng) — KHÔNG có nghĩa là
+  /// "không xem". Xem docs/tieu-chi/doc-pdf-theo-trang.md.
+  pdfPages             Json?
 
   firstSeenAt DateTime @default(now())
   lastSeenAt  DateTime @updatedAt

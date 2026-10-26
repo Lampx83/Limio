@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { prisma, type PrismaClient } from "@feedbackme/db";
+import { prisma, type Prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "./events";
 import { LearningError } from "./lessons";
@@ -34,6 +34,14 @@ import { LearningError } from "./lessons";
  * mất thật). Không dùng chung triết lý phần-chênh cho ranges vì tua đi tua
  * lại sinh nhiều đoạn nhỏ, cộng dồn kiểu chênh lệch sẽ nhân đôi phần chồng
  * lấn.
+ *
+ * `pdf` (đo đọc PDF theo trang, docs/tieu-chi/doc-pdf-theo-trang.md) quay lại
+ * triết lý phần-chênh của `activeSecDelta`: giây dừng ở một trang là đại lượng
+ * cộng được, không có "hợp" nào để gộp. Giá phải trả giống `activeSec` — mất
+ * một nhịp là mất đúng phần giây của nhịp đó. `maxScrollPct` không thay được:
+ * PDF phân trang một canvas, lật hết 40 trang mà không cuộn trang bài thì vẫn
+ * ghi 0%. Số liệu nằm ở cột `pdfPages`, KHÔNG phát event mỗi lần lật trang
+ * (append-only); `lesson.engaged` chỉ mang một bản tóm tắt cộng dồn.
  */
 
 /** Chặn trên cho phần chênh mỗi nhịp — xem giải thích ở `MAX_DELTA_SEC`. */
@@ -42,6 +50,99 @@ export const MAX_DELTA_SEC = 120;
 const MAX_RANGES_PER_BEAT = 40;
 
 const VideoRange = z.tuple([z.number().min(0), z.number().min(0)]);
+
+/** Trần số PDF và số trang gửi lên một nhịp — cùng lý do với MAX_RANGES_PER_BEAT. */
+const MAX_PDFS_PER_BEAT = 10;
+const MAX_PDF_PAGES_PER_BEAT = 60;
+/** Trần số trang một PDF — chặn khai totalPages vô lý làm phình cột JSON. */
+const MAX_PDF_TOTAL_PAGES = 2000;
+
+/**
+ * Một trang được coi là "đã xem" khi tổng thời gian dừng đạt ngưỡng này. Giây
+ * thô vẫn được lưu, nên đổi ngưỡng khi phân tích không phải đo lại.
+ */
+export const PDF_PAGE_VIEWED_MIN_SEC = 3;
+
+const PdfViewInput = z.object({
+  contentItemId: z.string().min(1).max(64),
+  totalPages: z.number().int().min(1).max(MAX_PDF_TOTAL_PAGES),
+  /** Trang đang mở lúc gửi nhịp — "điểm dừng", khác trang xem lâu nhất. */
+  lastPage: z.number().int().min(1).max(MAX_PDF_TOTAL_PAGES),
+  /** Phần chênh: số giây dừng ở mỗi trang kể từ nhịp trước. Khoá là số trang. */
+  dwellSec: z
+    .record(z.string().regex(/^\d{1,4}$/), z.number().int().min(1).max(MAX_DELTA_SEC))
+    .refine((r) => Object.keys(r).length <= MAX_PDF_PAGES_PER_BEAT, {
+      message: "too_many_pages",
+    }),
+});
+export type PdfViewInput = z.infer<typeof PdfViewInput>;
+
+export interface PdfItemState {
+  totalPages: number;
+  lastPage: number;
+  /** { "<trang>": tổng giây } */
+  dwellSec: Record<string, number>;
+}
+/** { [contentItemId]: PdfItemState } — hình dạng của cột `LessonEngagement.pdfPages`. */
+export type PdfPagesState = Record<string, PdfItemState>;
+
+/**
+ * Cộng phần chênh của một nhịp vào số liệu đã lưu. Hàm thuần: không sửa đối
+ * tượng đầu vào. Bỏ mục không thuộc `validItemIds` (khối của bài khác, khối
+ * không phải PDF, id bịa) và bỏ trang ngoài 1..totalPages — nhưng KHÔNG ném
+ * lỗi: một mục hỏng không đáng làm mất thời gian đọc, cuộn của cả nhịp.
+ * Trả về null chỉ khi chưa có gì để lưu, để cột giữ nguyên nghĩa "chưa từng đo".
+ */
+export function mergePdfPages(
+  existing: PdfPagesState | null,
+  incoming: PdfViewInput[],
+  validItemIds: ReadonlySet<string>,
+): PdfPagesState | null {
+  const out: PdfPagesState = {};
+  for (const [id, st] of Object.entries(existing ?? {})) {
+    out[id] = { ...st, dwellSec: { ...st.dwellSec } };
+  }
+
+  for (const v of incoming) {
+    if (!validItemIds.has(v.contentItemId)) continue;
+    const accepted: Array<[string, number]> = [];
+    for (const [key, sec] of Object.entries(v.dwellSec)) {
+      const page = Number(key);
+      if (page >= 1 && page <= v.totalPages && sec > 0) accepted.push([String(page), sec]);
+    }
+    if (accepted.length === 0) continue;
+
+    const cur = out[v.contentItemId] ?? { totalPages: v.totalPages, lastPage: 1, dwellSec: {} };
+    for (const [key, sec] of accepted) {
+      cur.dwellSec[key] = (cur.dwellSec[key] ?? 0) + sec;
+    }
+    cur.totalPages = v.totalPages;
+    cur.lastPage = Math.max(1, Math.min(v.totalPages, v.lastPage));
+    out[v.contentItemId] = cur;
+  }
+
+  return Object.keys(out).length > 0 ? out : null;
+}
+
+export interface PdfSummary {
+  contentItemId: string;
+  totalPages: number;
+  /** Số trang có tổng thời gian dừng ≥ PDF_PAGE_VIEWED_MIN_SEC. */
+  pagesViewed: number;
+  lastPage: number;
+}
+
+/** Tóm tắt cộng dồn cho payload `lesson.engaged` và cho báo cáo. */
+export function summarizePdfPages(state: PdfPagesState | null): PdfSummary[] {
+  return Object.entries(state ?? {}).map(([contentItemId, st]) => {
+    let pagesViewed = 0;
+    for (const [key, sec] of Object.entries(st.dwellSec)) {
+      // Trang vượt totalPages còn sót lại khi giảng viên thay PDF bằng bản ngắn hơn.
+      if (Number(key) <= st.totalPages && sec >= PDF_PAGE_VIEWED_MIN_SEC) pagesViewed += 1;
+    }
+    return { contentItemId, totalPages: st.totalPages, pagesViewed, lastPage: st.lastPage };
+  });
+}
 
 export const EngagementInput = z.object({
   /** Số giây tab hiện, tính từ lần gửi trước. */
@@ -58,6 +159,8 @@ export const EngagementInput = z.object({
   videoRanges: z.array(VideoRange).max(MAX_RANGES_PER_BEAT).optional(),
   /** Vị trí phát (giây) tại lần timeupdate gần nhất — "điểm dừng". */
   videoPositionSec: z.number().min(0).optional(),
+  /** Đo đọc PDF theo trang — phần chênh kể từ nhịp trước. Thiếu = máy khách cũ hoặc bài không PDF. */
+  pdf: z.array(PdfViewInput).max(MAX_PDFS_PER_BEAT).optional(),
 });
 
 export interface EngagementResult {
@@ -116,10 +219,14 @@ export async function recordLessonEngagement(
     select: {
       id: true,
       module: { select: { courseId: true } },
-      contentItems: { where: { type: "video" }, select: { payload: true }, take: 1 },
+      contentItems: {
+        where: { type: { in: ["video", "pdf"] } },
+        select: { id: true, type: true, payload: true },
+      },
     },
   });
   if (!lesson) throw new LearningError("lesson_not_found");
+  const videoItem = lesson.contentItems.find((c) => c.type === "video");
   const courseId = lesson.module.courseId;
 
   // Ghi danh là điều kiện: giảng viên xem thử bài của chính mình không nên
@@ -138,6 +245,7 @@ export async function recordLessonEngagement(
       maxVideoPct: true,
       sessionCount: true,
       videoRanges: true,
+      pdfPages: true,
     },
   });
 
@@ -147,6 +255,15 @@ export async function recordLessonEngagement(
         input.videoRanges,
       )
     : ((existing?.videoRanges as Array<[number, number]> | null) ?? undefined);
+
+  const existingPdf = (existing?.pdfPages as PdfPagesState | null) ?? null;
+  const nextPdf = input.pdf
+    ? mergePdfPages(
+        existingPdf,
+        input.pdf,
+        new Set(lesson.contentItems.filter((c) => c.type === "pdf").map((c) => c.id)),
+      )
+    : existingPdf;
 
   const next = {
     activeSec: (existing?.activeSec ?? 0) + input.activeSecDelta,
@@ -164,6 +281,7 @@ export async function recordLessonEngagement(
       ...next,
       videoRanges: mergedRanges ?? undefined,
       lastVideoPositionSec: input.videoPositionSec,
+      pdfPages: (nextPdf as unknown as Prisma.InputJsonValue | null) ?? undefined,
     },
     update: {
       ...next,
@@ -171,15 +289,17 @@ export async function recordLessonEngagement(
       ...(input.videoPositionSec !== undefined
         ? { lastVideoPositionSec: input.videoPositionSec }
         : {}),
+      ...(nextPdf && nextPdf !== existingPdf
+        ? { pdfPages: nextPdf as unknown as Prisma.InputJsonValue }
+        : {}),
     },
   });
 
   // Một lượt ngồi đọc khép lại — giờ mới có gì đáng kể vào lịch sử. Bỏ qua
   // lượt 0 giây: mở nhầm rồi đóng ngay không phải một lần học.
   if (input.sessionEnd && input.activeSecDelta > 0) {
-    const durationSec = (
-      lesson.contentItems[0]?.payload as { durationSec?: number } | undefined
-    )?.durationSec;
+    const durationSec = (videoItem?.payload as { durationSec?: number } | undefined)?.durationSec;
+    const pdf = summarizePdfPages(nextPdf);
     const coverageSec = mergedRanges ? videoRangesCoverageSec(mergedRanges) : undefined;
     await emitEvent(
       userId,
@@ -194,6 +314,8 @@ export async function recordLessonEngagement(
         ...(coverageSec !== undefined && durationSec
           ? { videoCoveragePct: Math.round(Math.min(1, coverageSec / durationSec) * 100) }
           : {}),
+        // Cộng dồn như totalActiveSec; vắng mặt (không phải mảng rỗng) khi chưa đo được trang nào.
+        ...(pdf.length > 0 ? { pdf } : {}),
       },
       { courseId },
       db,
@@ -215,6 +337,8 @@ export interface LessonEngagementRow {
   videoRanges: Array<[number, number]> | null;
   /** Vị trí phát gần nhất — điểm dừng. */
   lastVideoPositionSec: number | null;
+  /** Thời gian dừng theo trang của từng PDF. Null = chưa từng đo (không phải "không xem"). */
+  pdfPages: PdfPagesState | null;
 }
 
 /** Toàn bộ số liệu tương tác của một khoá — dùng cho bảng phân tích và export. */
@@ -234,11 +358,13 @@ export async function getCourseEngagement(
       lastSeenAt: true,
       videoRanges: true,
       lastVideoPositionSec: true,
+      pdfPages: true,
     },
     orderBy: [{ lessonId: "asc" }, { userId: "asc" }],
   });
   return rows.map((r) => ({
     ...r,
     videoRanges: r.videoRanges as Array<[number, number]> | null,
+    pdfPages: r.pdfPages as PdfPagesState | null,
   }));
 }
