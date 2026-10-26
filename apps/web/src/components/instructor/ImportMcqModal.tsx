@@ -316,7 +316,14 @@ function humanizeAiError(code: string | undefined, details: unknown): string {
     case "global_token_cap":
       return "Hệ thống đang tạm hết hạn mức AI dùng chung. Thử lại sau ít phút.";
     case "json_parse_failed":
+      if (details === "truncated") {
+        return "Đoạn này có quá nhiều câu nên AI trả lời bị cắt giữa chừng. Hãy tách thành 2–3 phần nhỏ hơn (khoảng 8–10 câu mỗi phần) rồi thử lại.";
+      }
+      return "AI không đọc được nội dung này, thử lại hoặc rút gọn văn bản.";
     case "openai_error":
+      if (typeof details === "string" && /time(d)?[ -]?out/i.test(details)) {
+        return "AI phản hồi quá chậm (hệ thống đang bận). Thử lại sau ít phút, hoặc tách văn bản thành phần nhỏ hơn.";
+      }
       return "AI không đọc được nội dung này, thử lại hoặc rút gọn văn bản.";
     case "forbidden":
       return "Bạn không có quyền dùng tính năng này.";

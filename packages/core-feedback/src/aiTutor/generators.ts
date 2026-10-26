@@ -5,6 +5,7 @@ import { AI_GRADE_CHAR_BUDGET, type LessonFormatTemplateKey } from "@feedbackme/
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "./aiTutor";
 import { normalizeTerm } from "../flashcardSrs";
 import { toPlainText } from "./plainText";
+import { mapWithLimit, splitIntoChunks } from "./textChunks";
 
 /**
  * AI authoring generators — used by instructor UI to draft skill tags,
@@ -20,6 +21,9 @@ import { toPlainText } from "./plainText";
  * theo lô cả khoá. Thêm generator mới thì phải thêm cả lời gọi này, nếu
  * không nó lại là một cửa mở thầm lặng.
  */
+
+/** `details` của json_parse_failed khi output bị cắt vì hết max_tokens. */
+export const AI_TRUNCATED = "truncated";
 
 export class AiGenerationError extends Error {
   constructor(
@@ -72,6 +76,11 @@ export async function callJsonModel<T>(
       max_tokens: maxTokens,
     });
     const content = res.choices[0]?.message?.content ?? "";
+    // Hết `max_tokens` giữa chừng: JSON chắc chắn cụt. Báo riêng (details =
+    // AI_TRUNCATED) để UI nói "văn bản dài quá" thay vì "AI không đọc được".
+    if (res.choices[0]?.finish_reason === "length") {
+      throw new AiGenerationError("json_parse_failed", AI_TRUNCATED);
+    }
     let data: T;
     try {
       data = JSON.parse(content);
@@ -870,6 +879,13 @@ ${raw}
 
 const EXTRACT_MIN_INPUT_CHARS = 20;
 const EXTRACT_MAX_INPUT_CHARS = 20_000;
+/**
+ * Mỗi lô ≈ 8–10 câu ≈ 1.500 token output (~45 giây trên LLM tự host), dư xa trần
+ * `max_tokens` 4000 và timeout 120 giây của SDK. 20.000 ký tự → tối đa ~6 lô.
+ */
+const EXTRACT_CHUNK_CHARS = 3_500;
+/** Song song vừa phải: vLLM batch tốt nhưng KV cache có hạn, và còn người dùng khác. */
+const EXTRACT_CHUNK_CONCURRENCY = 3;
 
 /**
  * Shape phải khớp CẤU TRÚC với `AiExtractedQuestion` ở
@@ -1087,22 +1103,50 @@ Quy tắc bắt buộc — vi phạm bất kỳ điều nào đều làm hỏng 
    lại để null — không tự suy đoán chủ đề từ nội dung câu hỏi.
 6. Nếu văn bản không chứa câu hỏi nào, trả về { questions: [] }.`;
 
-  const user = `# Văn bản gốc
+  const buildUser = (text: string) => `# Văn bản gốc
 """
-${raw}
+${text}
 """
 
 Trích xuất mọi câu hỏi trắc nghiệm/đúng-sai có trong văn bản trên; báo lại các câu
 đã bỏ qua vào "skipped". Trả JSON: { questions: [...], skipped: [...] }`;
 
-  const { data, inputTokens, outputTokens } = await callJsonModel<{
-    questions: ExtractedAiQuestion[];
-    skipped?: SkippedAiQuestion[];
-  }>(openai, model, system, user, "extracted_questions", EXTRACT_SCHEMA, 4000);
+  // Văn bản dài được chia lô theo ranh giới câu hỏi (xem textChunks.ts) và gọi
+  // song song, rồi gộp theo đúng thứ tự gốc.
+  const chunks = splitIntoChunks(raw, EXTRACT_CHUNK_CHARS);
+  const settled = await mapWithLimit(chunks, EXTRACT_CHUNK_CONCURRENCY, (chunk) =>
+    callJsonModel<{
+      questions: ExtractedAiQuestion[];
+      skipped?: SkippedAiQuestion[];
+    }>(openai, model, system, buildUser(chunk), "extracted_questions", EXTRACT_SCHEMA, 4000),
+  );
 
-  await logUsage(userId, model, inputTokens, outputTokens, db);
+  // Các lô đã chạy xong đã tốn token thật → ghi sổ kể cả khi một lô khác lỗi.
+  let inputTokens = 0;
+  let outputTokens = 0;
+  for (const r of settled) {
+    if (r.status === "fulfilled") {
+      inputTokens += r.value.inputTokens;
+      outputTokens += r.value.outputTokens;
+    }
+  }
+  if (inputTokens > 0 || outputTokens > 0) {
+    await logUsage(userId, model, inputTokens, outputTokens, db);
+  }
 
-  return { questions: data.questions ?? [], skipped: data.skipped ?? [] };
+  // Một lô lỗi ⇒ cả lần nhập lỗi, không trả kết quả thiếu một đoạn: GV sẽ tưởng
+  // đề chỉ có chừng đó câu (cùng nguyên tắc "không im lặng bỏ sót" ở prompt).
+  const failed = settled.find((r): r is PromiseRejectedResult => r.status === "rejected");
+  if (failed) throw failed.reason;
+
+  const questions: ExtractedAiQuestion[] = [];
+  const skipped: SkippedAiQuestion[] = [];
+  for (const r of settled) {
+    if (r.status !== "fulfilled") continue;
+    questions.push(...(r.value.data.questions ?? []));
+    skipped.push(...(r.value.data.skipped ?? []));
+  }
+  return { questions, skipped };
 }
 
 // =====================================================================
