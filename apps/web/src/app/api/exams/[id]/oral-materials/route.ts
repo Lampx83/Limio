@@ -7,6 +7,7 @@ import {
   listOralMaterials,
   MATERIAL_FILE_MIME_TYPES,
   MATERIAL_MAX_BYTES,
+  MATERIAL_MAX_TEXT_CHARS,
 } from "@feedbackme/core-lms";
 import { requireFeature } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
@@ -98,10 +99,16 @@ export async function POST(
   const filename = `${examId}-${now.getTime()}-${randomBytes(8).toString("hex")}.${ext}`;
   const key = oralExamMaterialKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
+  const extractedText = await extractMaterialText(buf, file.type);
+  // Kiểm trước khi lưu file, để không để lại file mồ côi trên storage khi bị từ chối.
+  if (extractedText !== null && extractedText.length > MATERIAL_MAX_TEXT_CHARS) {
+    return NextResponse.json(
+      { error: "text_too_long", details: { maxChars: MATERIAL_MAX_TEXT_CHARS } },
+      { status: 413 },
+    );
+  }
   const storage = storageFor(key);
   await storage.put(key.key, buf, file.type);
-
-  const extractedText = await extractMaterialText(buf, file.type);
 
   try {
     const r = await createOralMaterialDocument(userId, examId, {

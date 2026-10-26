@@ -54,6 +54,7 @@ const FRIENDLY_ERROR: Record<string, string> = {
   invalid_type: "Loại tài liệu không hợp lệ.",
   unsupported_media_type: "Định dạng file không hỗ trợ — chỉ nhận PDF, .docx, .txt, .md.",
   file_too_large: "File quá lớn — tối đa 20MB.",
+  text_too_long: "Nội dung tài liệu quá dài — tối đa 15.000 ký tự (khoảng 5 trang A4). Hãy tách thành nhiều tài liệu nhỏ hơn rồi tải lên lần lượt.",
   openai_not_configured: "Máy chủ chưa cấu hình khoá OpenAI nên chưa nhúng được tài liệu.",
   global_token_cap: "Hôm nay hệ thống đã hết hạn mức token AI — thử nhúng lại vào ngày mai.",
   openai_error: "OpenAI báo lỗi khi nhúng tài liệu — thử lại sau ít phút.",

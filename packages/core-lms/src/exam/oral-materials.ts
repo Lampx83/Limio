@@ -18,6 +18,9 @@ export const MATERIAL_FILE_MIME_TYPES = [
 // 20MB — đủ cho đề cương/tài liệu tham khảo dạng text; không phải kho video/audio.
 export const MATERIAL_MAX_BYTES = 20 * 1024 * 1024;
 
+// Trần ký tự văn bản trích từ tài liệu (sau khi parse PDF/Word/text), khoảng 5 trang A4. Tài liệu dài hơn phải tách nhỏ trước khi tải lên.
+export const MATERIAL_MAX_TEXT_CHARS = 15_000;
+
 // A6.4 — "rubric" KHÔNG còn tạo được mới ở đây: rubric giờ là Exam.oralRubricText
 // (text GV tự gõ/sửa bất cứ lúc nào, xem exams.ts) thay vì tài liệu file khoá
 // theo trạng thái draft. Giá trị "rubric" cũ trong DB (OralExamMaterialType)
@@ -51,7 +54,7 @@ const CreateFileMaterialInput = z.object({
   // null = đã cố parse nhưng thất bại (vd PDF scan không có text layer).
   // Route gọi extractMaterialText() trước rồi truyền kết quả vào đây — core
   // không tự parse để giữ hàm này thuần và dễ test.
-  extractedText: z.string().max(500_000).nullable(),
+  extractedText: z.string().max(MATERIAL_MAX_TEXT_CHARS).nullable(),
 });
 
 /** Đăng ký tài liệu dạng file (document | rubric) đã upload lên storage. */

@@ -12,6 +12,7 @@ import {
   deleteOralMaterial,
   ExamError,
   listOralMaterials,
+  MATERIAL_MAX_TEXT_CHARS,
   publishExam,
   reorderOralMaterials,
   upsertBlueprint,
@@ -104,6 +105,22 @@ describe("createOralMaterialDocument (A6.1)", () => {
         extractedText: "x",
       }),
     ).rejects.toMatchObject({ code: "validation_failed" });
+  });
+
+  it("rejects extracted text over MATERIAL_MAX_TEXT_CHARS, accepts exactly at the cap", async () => {
+    const { ownerId, examId } = await newOralExam("d1c");
+    const base = { type: "document" as const, title: "Dài", s3Key: "long.pdf", mimeType: "application/pdf" as const, sizeBytes: 10 };
+    await expect(
+      createOralMaterialDocument(ownerId, examId, {
+        ...base,
+        extractedText: "x".repeat(MATERIAL_MAX_TEXT_CHARS + 1),
+      }),
+    ).rejects.toMatchObject({ code: "validation_failed" });
+    const ok = await createOralMaterialDocument(ownerId, examId, {
+      ...base,
+      extractedText: "x".repeat(MATERIAL_MAX_TEXT_CHARS),
+    });
+    expect(ok.extracted).toBe(true);
   });
 
   it("second material appended at orderIndex=1", async () => {
