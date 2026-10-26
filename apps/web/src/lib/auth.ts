@@ -176,6 +176,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       user.id = result.id;
+      // Tên trong JWT/session phải là tên trong DB, không phải tên Google: NextAuth
+      // khởi tạo `token.name` từ `user.name` (= tên hồ sơ Google), nên không ghi đè
+      // thì tên người dùng đã tự sửa sẽ bị tên Google thay lại mỗi lần đăng nhập.
+      user.name = result.name;
       (user as { isEmailVerified?: boolean }).isEmailVerified = result.isEmailVerified;
       return true;
     },

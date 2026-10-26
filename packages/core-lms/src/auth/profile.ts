@@ -17,6 +17,14 @@ const AvatarUrl = z
 export const ProfileUpdateInput = z.object({
   displayName: z.string().min(1).max(80).trim().optional(),
   avatarUrl: AvatarUrl.optional().nullable(),
+  // Mã số sinh viên tự khai; chuỗi rỗng = xoá (lưu null).
+  studentCode: z
+    .string()
+    .trim()
+    .max(32)
+    .transform((s) => (s === "" ? null : s))
+    .nullable()
+    .optional(),
   locale: z.string().min(2).max(10).optional(),
   timezone: z.string().min(1).max(64).optional(),
   // Phase 1 C5 — opt out of public course leaderboards (spec §5.5).
@@ -52,6 +60,7 @@ const EXPORT_SELECT = {
       emailVerifiedAt: true,
       displayName: true,
       avatarUrl: true,
+      studentCode: true,
       locale: true,
       timezone: true,
       createdAt: true,

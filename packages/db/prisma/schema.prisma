@@ -28,6 +28,9 @@ model User {
   passwordHash                String?
   displayName                 String
   avatarUrl                   String?
+  // Mã số sinh viên do chính người dùng tự khai ở Cài đặt (không xác thực, không unique:
+  // chỉ để giáo viên đối chiếu). Nullable — phần lớn tài khoản không phải sinh viên.
+  studentCode                 String?
   // PR2.17 — Multi-tenancy: user thuộc về 1 Organization. Nullable trong
   // backfill phase; sẽ siết NOT NULL ở migration tiếp theo.
   organizationId              String?

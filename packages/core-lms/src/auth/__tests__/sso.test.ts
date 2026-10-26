@@ -37,3 +37,14 @@ describe("loginOrLinkSso — vai trò mặc định", () => {
     expect(await roleNames(u.id)).toEqual([RoleName.Admin]);
   });
 });
+
+describe("loginOrLinkSso — tên hiển thị", () => {
+  it("đăng nhập lại trả tên người dùng đã sửa, không phải tên Google", async () => {
+    const first = await loginOrLinkSso(input("sso-name@example.com", "g-4"));
+    await prisma.user.update({ where: { id: first!.id }, data: { displayName: "Tên Tự Sửa" } });
+    const again = await loginOrLinkSso({ ...input("sso-name@example.com", "g-4"), name: "Google Name" });
+    expect(again!.name).toBe("Tên Tự Sửa");
+    const row = await prisma.user.findUniqueOrThrow({ where: { id: first!.id } });
+    expect(row.displayName).toBe("Tên Tự Sửa");
+  });
+});

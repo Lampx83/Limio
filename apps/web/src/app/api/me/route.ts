@@ -14,6 +14,7 @@ export async function GET() {
       email: true,
       displayName: true,
       avatarUrl: true,
+      studentCode: true,
       locale: true,
       timezone: true,
       emailVerifiedAt: true,

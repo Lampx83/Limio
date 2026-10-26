@@ -9,6 +9,7 @@ interface InitialSettings {
   email: string;
   displayName: string;
   avatarUrl: string | null;
+  studentCode: string | null;
   locale: string;
   timezone: string;
   leaderboardOptOut: boolean;
@@ -38,6 +39,7 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
 
   // ---- Profile (avatar + display name + privacy) ----
   const [displayName, setDisplayName] = useState(initial.displayName);
+  const [studentCode, setStudentCode] = useState(initial.studentCode ?? "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(initial.avatarUrl);
   const [optOut, setOptOut] = useState(initial.leaderboardOptOut);
   const [profileSaving, setProfileSaving] = useState(false);
@@ -57,7 +59,7 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
     const res = await fetch(apiUrl("/api/me"), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ displayName, leaderboardOptOut: optOut }),
+      body: JSON.stringify({ displayName, studentCode, leaderboardOptOut: optOut }),
     });
     setProfileSaving(false);
     if (res.ok) {
@@ -231,6 +233,23 @@ export default function SettingsForm({ initial }: { initial: InitialSettings }) 
               />
               <span className="help">
                 Hiện trên bảng xếp hạng, bình luận và hồ sơ công khai.
+              </span>
+            </div>
+            <div>
+              <label className="label" htmlFor="studentCode">
+                Mã số sinh viên
+              </label>
+              <input
+                id="studentCode"
+                type="text"
+                value={studentCode}
+                onChange={(e) => setStudentCode(e.target.value)}
+                maxLength={32}
+                autoComplete="off"
+                className="input mt-1.5"
+              />
+              <span className="help">
+                Không bắt buộc. Bạn tự nhập để giảng viên đối chiếu; hệ thống không xác thực mã này.
               </span>
             </div>
             <div>
