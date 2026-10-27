@@ -9,7 +9,6 @@ import UserMenu from "./UserMenu";
 import StudentMenuTrigger from "./StudentMenuTrigger";
 import NotificationBell from "./NotificationBell";
 import HeaderCalendar from "./HeaderCalendar";
-import ScanQrButton from "./ScanQrButton";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
@@ -78,7 +77,7 @@ export default async function AppHeader() {
           {/* Nút Đấu trường: ẩn khi đang thi (xem TournamentCta). */}
           <TournamentCta activeRole={activeRole} />
 
-          {user && activeRole === "learner" && <ScanQrButton />}
+          {/* Nút quét QR của học viên đang ẩn (ScanQrButton); bật lại bằng cách render nó ở đây. */}
           {user && activeRole === "instructor" && <HeaderCalendar />}
           {user && (
             <NotificationBell
