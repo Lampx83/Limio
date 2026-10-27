@@ -24,7 +24,7 @@ export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mở ghi chú bài học này"
-        className="narration-lift group fixed bottom-36 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-transform hover:scale-105"
+        className="narration-lift group fixed bottom-36 right-4 z-30 flex h-11 w-11 short:bottom-24 short:right-3 short:h-9 short:w-9 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-transform hover:scale-105"
       >
         <Pencil size={18} />
               <FabTip>Ghi chú của tôi</FabTip>

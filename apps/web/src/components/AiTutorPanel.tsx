@@ -235,7 +235,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
           là một viên thuốc có chữ, to hơn hẳn hai nút kia và lệch lề — nhìn như
           ba thứ không liên quan xếp cạnh nhau.
         */
-        className="narration-lift group fixed bottom-20 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand-glow transition-transform hover:scale-105"
+        className="narration-lift group fixed bottom-20 right-4 z-30 flex h-11 w-11 short:bottom-[3.25rem] short:right-3 short:h-9 short:w-9 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand-glow transition-transform hover:scale-105"
       >
         <Bot size={20} />
         <FabTip>Trợ giảng AI</FabTip>

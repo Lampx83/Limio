@@ -22,7 +22,7 @@ export default function HeaderTagline({
   const guestTeachPage = pathname === "/" || pathname.startsWith("/register/instructor");
   const teach = role === "instructor" || role === "admin" || (guest && guestTeachPage);
   return (
-    <span className="hidden font-[family-name:var(--font-script)] text-base font-normal italic text-lime-700 sm:inline">
+    <span className="hidden font-[family-name:var(--font-script)] text-base font-normal italic text-lime-700 sm:inline short:hidden">
       {teach ? "Teach in Flow" : "Learn in Flow"}
     </span>
   );

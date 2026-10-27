@@ -91,7 +91,7 @@ export default function UserMenu({
         aria-label="Tài khoản"
       >
         {smallAvatar}
-        <span className="hidden font-medium sm:inline">{name}</span>
+        <span className="hidden font-medium sm:inline short:hidden">{name}</span>
         <span className="text-faint" aria-hidden>▾</span>
       </button>
 

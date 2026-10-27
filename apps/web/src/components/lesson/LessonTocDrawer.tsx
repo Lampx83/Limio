@@ -55,7 +55,7 @@ export default function LessonTocDrawer({
         type="button"
         onClick={() => setOpen(true)}
         aria-label={tooltipLabel}
-        className="narration-lift group fixed bottom-4 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-pink-500 text-white shadow-lg transition-transform hover:scale-105"
+        className="narration-lift group fixed bottom-4 right-4 z-30 flex h-11 w-11 short:bottom-2 short:right-3 short:h-9 short:w-9 items-center justify-center rounded-full bg-pink-500 text-white shadow-lg transition-transform hover:scale-105"
         aria-haspopup="dialog"
         aria-expanded={open}
       >

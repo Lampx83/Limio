@@ -481,7 +481,7 @@ export default function TeacherBar({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Mở bảng điều khiển giảng viên"
-        className="narration-lift group fixed bottom-52 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg transition-transform hover:scale-105"
+        className="narration-lift group fixed bottom-52 right-4 z-30 flex h-11 w-11 short:bottom-[8.75rem] short:right-3 short:h-9 short:w-9 items-center justify-center rounded-full bg-accent-500 text-white shadow-lg transition-transform hover:scale-105"
       >
         {/* Mũ tốt nghiệp đọc ra "sinh viên", không phải "giảng viên" — bảng
             giảng, đúng nghĩa hơn cho một bảng điều khiển lúc đứng lớp. */}

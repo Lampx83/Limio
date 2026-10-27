@@ -61,12 +61,12 @@ export default async function AppHeader() {
 
   return (
     <header className="border-b border-token bg-[rgb(var(--surface)/0.85)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.7)]">
-      <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6">
+      <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6 short:py-1">
         <div className="flex items-center gap-2 shrink-0">
         <StudentMenuTrigger variant="header" />
         <Link href="/" className="group flex items-baseline gap-2 shrink-0">
-          <LimeSliceIcon className="h-11 w-11 shrink-0 self-center transition-transform group-hover:scale-105 group-hover:rotate-12" />
-          <span className="text-3xl font-bold tracking-tight">
+          <LimeSliceIcon className="h-11 w-11 shrink-0 self-center short:h-8 short:w-8 transition-transform group-hover:scale-105 group-hover:rotate-12" />
+          <span className="text-3xl font-bold tracking-tight short:text-2xl">
             Lim<span className="text-pink-500">io</span>
           </span>
           <HeaderTagline activeRole={activeRole} roles={roles} guest={!user} />

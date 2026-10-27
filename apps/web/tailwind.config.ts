@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import typography from "@tailwindcss/typography";
+import plugin from "tailwindcss/plugin";
 
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
@@ -168,7 +169,18 @@ const config: Config = {
       },
     },
   },
-  plugins: [typography],
+  plugins: [
+    typography,
+    // Điện thoại xoay ngang: rộng ≥ sm nhưng chỉ cao ~360–430px, nên các
+    // breakpoint theo bề rộng không nhận ra được. `short:` thu gọn header và
+    // các nút nổi để nhường chỗ cho nội dung. Dùng addVariant chứ không khai
+    // báo trong `screens`: screens dạng raw làm `max-sm:` ngừng hoạt động.
+    // Plugin variant bị xếp trước `sm:`/`lg:` trong CSS nên `&:not(#short)`
+    // nâng độ đặc hiệu để `short:` luôn thắng chúng.
+    plugin(({ addVariant }) => {
+      addVariant("short", "@media (orientation: landscape) and (max-height: 500px) { &:not(#short) }");
+    }),
+  ],
 };
 
 export default config;
