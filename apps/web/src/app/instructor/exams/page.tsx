@@ -5,7 +5,6 @@ import {
   FileQuestion,
   Users,
   PencilLine,
-  ClipboardCheck,
   ChevronRight,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
@@ -16,7 +15,8 @@ import DeleteExamCardButton from "./DeleteExamCardButton";
 export const dynamic = "force-dynamic";
 
 // Màu chỉ để báo trạng thái (thanh cạnh trái + chấm nhỏ); phần còn lại của thẻ
-// trung tính, nhấn duy nhất bằng màu thương hiệu ở nút "Mở" / "Chấm bài".
+// trung tính, nhấn duy nhất bằng màu thương hiệu ở nút "Mở". Chấm bài không
+// hiện ở đây — nó thuộc Lịch sử thi (Tổ chức thi).
 const STATUS_META: Record<string, { label: string; rail: string; dot: string; text: string }> = {
   draft: { label: "Nháp", rail: "bg-slate-300", dot: "bg-slate-400", text: "text-slate-600" },
   published: { label: "Đã publish", rail: "bg-emerald-500", dot: "bg-emerald-500", text: "text-emerald-700" },
@@ -61,31 +61,6 @@ export default async function InstructorExamsHubPage() {
       },
     },
   });
-
-  // Pending-grade counts per exam — show badges to nudge instructor to grade.
-  const pendingByExam = new Map<string, number>();
-  if (exams.length > 0) {
-    const rows = await prisma.examAnswer.groupBy({
-      by: ["attemptId"],
-      where: {
-        needsGrading: true,
-        attempt: { examId: { in: exams.map((e) => e.id) } },
-        question: { type: { in: ["essay", "short_answer"] } },
-      },
-      _count: { _all: true },
-    });
-    // attemptId → examId mapping
-    const attempts = await prisma.examAttempt.findMany({
-      where: { id: { in: rows.map((r) => r.attemptId) } },
-      select: { id: true, examId: true },
-    });
-    const attemptToExam = new Map(attempts.map((a) => [a.id, a.examId]));
-    for (const r of rows) {
-      const examId = attemptToExam.get(r.attemptId);
-      if (!examId) continue;
-      pendingByExam.set(examId, (pendingByExam.get(examId) ?? 0) + r._count._all);
-    }
-  }
 
   const draftCount = exams.filter((e) => e.status === "draft").length;
   const publishedCount = exams.filter((e) => e.status === "published").length;
@@ -140,7 +115,6 @@ export default async function InstructorExamsHubPage() {
           {exams.map((e) => {
             const courseSegment = e.courseId ?? "none";
             const course = e.courseId ? courseById.get(e.courseId) : null;
-            const pending = pendingByExam.get(e.id) ?? 0;
             const status = STATUS_META[e.status] ?? STATUS_META.draft!;
             return (
               <li
@@ -205,22 +179,6 @@ export default async function InstructorExamsHubPage() {
                       <PencilLine className="h-3.5 w-3.5" aria-hidden />
                       Chỉnh sửa
                     </Link>
-                    {(pending > 0 || e._count.attempts > 0) && (
-                      <Link
-                        href={`/instructor/courses/${courseSegment}/exams/${e.id}/grading`}
-                        className={`${ACTION} !text-brand-700 hover:!bg-brand-50`}
-                        prefetch={false}
-                        title={pending > 0 ? `${pending} câu chờ chấm` : undefined}
-                      >
-                        <ClipboardCheck className="h-3.5 w-3.5" aria-hidden />
-                        Chấm bài
-                        {pending > 0 && (
-                          <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-semibold leading-4 text-white">
-                            {pending}
-                          </span>
-                        )}
-                      </Link>
-                    )}
                     <DeleteExamCardButton
                       examId={e.id}
                       title={e.title}
