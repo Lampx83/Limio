@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   BookOpen,
-  Clock,
   FileQuestion,
   Users,
   PencilLine,
@@ -53,7 +52,6 @@ export default async function InstructorExamsHubPage() {
       id: true,
       title: true,
       status: true,
-      durationMin: true,
       openAt: true,
       closeAt: true,
       courseId: true,
@@ -184,10 +182,6 @@ export default async function InstructorExamsHubPage() {
                   </div>
 
                   <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" aria-hidden />
-                      <b className="font-semibold text-slate-700">{e.durationMin}</b> phút
-                    </span>
                     <span className="inline-flex items-center gap-1.5">
                       <FileQuestion className="h-3.5 w-3.5" aria-hidden />
                       <b className="font-semibold text-slate-700">{e._count.questions}</b> câu
