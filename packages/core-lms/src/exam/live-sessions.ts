@@ -42,6 +42,8 @@ export interface ExamRun {
   revealAnswers: RevealPolicy | null;
   startedCount: number;
   submittedCount: number;
+  /** Số bài đã nộp còn câu chờ chấm tay — 0 với đề tự chấm hoàn toàn. */
+  pendingGradingCount: number;
 }
 
 export async function listExamRuns(
@@ -142,9 +144,17 @@ export async function listExamRuns(
         in: ["submitted", "auto_submitted", "graded"],
       };
 
+      // Đếm BÀI có ít nhất một câu chờ chấm — cùng định nghĩa với ô "bài chờ
+      // chấm tay" ở trang kết quả (results.ts), để số trên thẻ khớp số trong
+      // trang. Chỉ bài đã nộp mới tính: bài đang làm dở chưa tới lượt chấm.
+      const needsGrading = { answers: { some: { needsGrading: true } } };
+
       let started = await db.examAttempt.count({ where: scoped });
       let submitted = await db.examAttempt.count({
         where: { ...scoped, status: graded },
+      });
+      let pendingGrading = await db.examAttempt.count({
+        where: { ...scoped, status: graded, ...needsGrading },
       });
 
       if (started === 0 && r.accessMode === "authenticated") {
@@ -153,9 +163,12 @@ export async function listExamRuns(
         submitted = await db.examAttempt.count({
           where: { ...legacy, status: graded },
         });
+        pendingGrading = await db.examAttempt.count({
+          where: { ...legacy, status: graded, ...needsGrading },
+        });
       }
 
-      return { id: r.id, started, submitted };
+      return { id: r.id, started, submitted, pendingGrading };
     }),
   );
   const countById = new Map(perSession.map((x) => [x.id, x]));
@@ -181,5 +194,6 @@ export async function listExamRuns(
     revealAnswers: r.revealAnswers,
     startedCount: countById.get(r.id)?.started ?? 0,
     submittedCount: countById.get(r.id)?.submitted ?? 0,
+    pendingGradingCount: countById.get(r.id)?.pendingGrading ?? 0,
   }));
 }

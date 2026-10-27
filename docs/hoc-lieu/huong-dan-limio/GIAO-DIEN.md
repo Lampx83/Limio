@@ -251,10 +251,15 @@ phiếu mã", "Live monitor", bộ đếm "Đang chờ: N" (người trong phòn
 
 **Lịch sử thi** (`/instructor/exam-history`): tab Tất cả · Link thi nhanh · Thử nghiệm câu hỏi · Kỳ thi chính
 thức. Mỗi thẻ ca có nhãn Đang mở / Đã đóng, số "bài đã nộp", và các nút "Giám sát" (ca đã đóng thành "Xem
-lại") · "Kết quả" · "Tải" · "Quản lý ca" (chỉ ca chính thức) · "Phòng thi" · "Đóng ca" / "Mở lại" · "Xoá". Xoá
+lại") · nút kết quả · "Tải" · "Quản lý ca" (chỉ ca chính thức) · "Phòng thi" · "Đóng ca" / "Mở lại" · "Xoá". Xoá
 chỉ được khi ca đã đóng và chưa có bài nộp; nếu không, hộp thoại "Xoá ca thi?" gợi ý "Lưu trữ ca".
+**Nút kết quả đổi theo tình trạng ca:** chưa ai nộp thì không có nút kết quả và không có "Tải"; ca đang mở có
+bài nộp ghi "Kết quả tạm" (số liệu còn thay đổi); ca đã đóng ghi "Kết quả" (nút xanh nổi bật); ca Thử nghiệm
+câu hỏi ghi "Phân tích câu hỏi" và mở thẳng lát "Theo câu hỏi". Khi còn bài có câu tự luận chờ chấm, ô số ghi
+"n chờ chấm" màu hổ phách và có thêm nút "Chấm bài · n" mở thẳng lát "Chờ chấm tay" của ca đó (ca Thử nghiệm
+câu hỏi không có chấm tay).
 
-**Kết quả:** "Kết quả" mở `/instructor/exam-runs/<id>` với ba lát cắt "Theo thí sinh/học viên" · "Theo câu
+**Kết quả:** nút kết quả mở `/instructor/exam-runs/<id>` với ba lát cắt "Theo thí sinh/học viên" · "Theo câu
 hỏi" · "Chờ chấm tay"; có lọc ca và phòng, tìm kiếm, sắp xếp, "Xem bài làm" (chỉ bài đã nộp; chấm tại chỗ câu
 tự luận, "← Bài trước" / "Bài sau →", nhãn "Đã chấm xong"); bài còn tự luận ghi "chưa gồm câu chờ chấm". Menu
 "Xuất file": "Bảng điểm (Excel)" và "Dữ liệu phân tích (CSV)". Tab Kết quả của trang ca có "Xuất bảng điểm ca

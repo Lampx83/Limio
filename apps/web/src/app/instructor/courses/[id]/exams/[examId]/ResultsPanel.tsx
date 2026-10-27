@@ -25,6 +25,7 @@ export default function ResultsPanel({
   examId,
   courseId,
   lockedSessionId,
+  initialSlice = "students",
 }: {
   examId: string;
   courseId: string;
@@ -33,8 +34,10 @@ export default function ResultsPanel({
    * ca không còn nghĩa lý gì vì đã chọn ca rồi.
    */
   lockedSessionId?: string;
+  /** Lát cắt mở sẵn — nút "Chấm bài" ở Lịch sử thi vào thẳng "Chờ chấm tay". */
+  initialSlice?: Slice;
 }) {
-  const [slice, setSlice] = useState<Slice>("students");
+  const [slice, setSlice] = useState<Slice>(initialSlice);
   const [data, setData] = useState<ExamResults | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState(lockedSessionId ?? "");

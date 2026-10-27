@@ -20,8 +20,10 @@ export const dynamic = "force-dynamic";
  */
 export default async function ExamRunPage({
   params,
+  searchParams,
 }: {
   params: { sessionId: string };
+  searchParams: { slice?: string };
 }) {
   const session = await auth();
   if (!session?.user?.id)
@@ -120,6 +122,13 @@ export default async function ExamRunPage({
           examId={run.exam.id}
           courseId={run.exam.courseId ?? "none"}
           lockedSessionId={run.id}
+          initialSlice={
+            searchParams.slice === "grading"
+              ? "grading"
+              : searchParams.slice === "items"
+                ? "items"
+                : "students"
+          }
         />
       </div>
     </main>

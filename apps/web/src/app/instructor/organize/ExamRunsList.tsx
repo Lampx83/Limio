@@ -9,6 +9,7 @@ import {
   CalendarClock,
   Check,
   ChevronDown,
+  ClipboardCheck,
   Copy,
   DoorOpen,
   Download,
@@ -228,6 +229,21 @@ function Row({
 
   const kind = RUN_KIND[runKind(r)];
 
+  // Nút kết quả đổi theo tình trạng của ca chứ không cố định: cùng một chữ
+  // "Kết quả" cho ca chưa ai nộp, ca còn bài chờ chấm và ca thử nghiệm câu hỏi
+  // là nói sai cả ba. Thử nghiệm câu hỏi đo CÂU HỎI chứ không đo thí sinh nên
+  // không có điểm để chấm — vào thẳng lát "Theo câu hỏi".
+  const fieldTest = r.purpose === "field_test";
+  const hasSubmitted = r.submittedCount > 0;
+  const pending = fieldTest ? 0 : r.pendingGradingCount;
+  const runHref = `/instructor/exam-runs/${r.sessionId}`;
+  const resultsHref = fieldTest ? `${runHref}?slice=items` : runHref;
+  const gradingHref = `${runHref}?slice=grading`;
+  const resultsLabel = fieldTest ? "Phân tích câu hỏi" : r.isOpen ? "Kết quả tạm" : "Kết quả";
+  // Nút nổi bật duy nhất của hàng: còn bài chờ chấm thì là "Chấm bài", ngược
+  // lại ca đã đóng là "Kết quả". Ca đang mở chưa có kết luận nên không tô.
+  const resultsIsPrimary = pending === 0 && !r.isOpen;
+
   return (
     <li className="relative overflow-hidden rounded-xl border border-token bg-white shadow-sm">
       {/* Dải màu bên trái = hình thức thi (xem RUN_KIND). Ca đã đóng giữ màu
@@ -370,22 +386,42 @@ function Row({
         {/* Số bài đã nộp — thứ giáo viên mở trang này để xem đầu tiên, nên to
             và đứng riêng một góc. Đếm bài ĐÃ NỘP, không đếm bài đã bắt đầu:
             người mở đề rồi bỏ ngang chưa phải một lượt thi. */}
-        <Link
-          href={`/instructor/exam-runs/${r.sessionId}`}
-          className="flex shrink-0 flex-col items-center justify-center self-start rounded-lg px-1.5 py-1.5 sm:px-3 text-center hover:bg-slate-50"
-          title={`${r.submittedCount} bài đã nộp — bấm để xem kết quả`}
-        >
-          <span
-            className={`text-2xl font-bold leading-none tabular-nums ${
-              r.submittedCount > 0 ? "text-slate-900 dark:text-slate-100" : "text-faint"
-            }`}
-          >
-            {r.submittedCount}
-          </span>
-          <span className="mt-1 whitespace-nowrap text-caption text-faint">
-            <span className="hidden sm:inline">bài </span>đã nộp
-          </span>
-        </Link>
+        {(() => {
+          const tile = (
+            <>
+              <span
+                className={`text-2xl font-bold leading-none tabular-nums ${
+                  hasSubmitted ? "text-slate-900 dark:text-slate-100" : "text-faint"
+                }`}
+              >
+                {r.submittedCount}
+              </span>
+              <span className="mt-1 whitespace-nowrap text-caption text-faint">
+                <span className="hidden sm:inline">bài </span>đã nộp
+              </span>
+              {pending > 0 && (
+                <span className="mt-0.5 whitespace-nowrap text-caption font-medium text-amber-700">
+                  {pending} chờ chấm
+                </span>
+              )}
+            </>
+          );
+          const cls =
+            "flex shrink-0 flex-col items-center justify-center self-start rounded-lg px-1.5 py-1.5 sm:px-3 text-center";
+          // Chưa ai nộp thì không có gì để mở — để ô số đứng yên, không thành
+          // đường dẫn tới một trang trống.
+          return hasSubmitted ? (
+            <Link
+              href={pending > 0 ? gradingHref : resultsHref}
+              className={`${cls} hover:bg-slate-50`}
+              title={`${r.submittedCount} bài đã nộp${pending > 0 ? `, ${pending} chờ chấm` : ""} — bấm để xem`}
+            >
+              {tile}
+            </Link>
+          ) : (
+            <div className={cls}>{tile}</div>
+          );
+        })()}
       </div>
 
       {/* Hàng thao tác: mọi nút cùng một kiểu, chỉ nút Đóng tách sang phải và
@@ -404,18 +440,48 @@ function Row({
           <Radio className={`h-3.5 w-3.5 ${r.isOpen ? "text-red-500" : "text-faint"}`} />
           {r.isOpen ? "Giám sát" : "Xem lại"}
         </Link>
-        <Link href={`/instructor/exam-runs/${r.sessionId}`} className={BTN}>
-          <BarChart3 className="h-3.5 w-3.5 text-faint" />
-          Kết quả
-        </Link>
-        <a
-          href={apiUrl(`/api/exams/${r.examId}/results?sessionId=${r.sessionId}`)}
-          className={BTN}
-          title="Tải kết quả thí sinh của lần thi này"
-        >
-          <Download className="h-3.5 w-3.5 text-faint" />
-          Tải
-        </a>
+        {pending > 0 && (
+          <Link
+            href={gradingHref}
+            className="inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-amber-600"
+            title="Mở danh sách bài còn câu chờ chấm tay của ca này"
+          >
+            <ClipboardCheck className="h-3.5 w-3.5" />
+            Chấm bài · {pending}
+          </Link>
+        )}
+        {hasSubmitted && (
+          <Link
+            href={resultsHref}
+            className={
+              resultsIsPrimary
+                ? "inline-flex items-center gap-1.5 rounded-md bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-700"
+                : BTN
+            }
+            title={
+              fieldTest
+                ? "Câu nào lớp này làm sai nhiều, câu nào cần xem lại"
+                : r.isOpen
+                  ? "Ca còn mở nên số liệu còn thay đổi"
+                  : pending > 0
+                    ? "Điểm trung bình chưa đủ — còn bài chờ chấm tay"
+                    : undefined
+            }
+          >
+            <BarChart3 className={`h-3.5 w-3.5 ${resultsIsPrimary ? "" : "text-faint"}`} />
+            {resultsLabel}
+          </Link>
+        )}
+        {hasSubmitted && (
+          <a
+            href={apiUrl(`/api/exams/${r.examId}/results?sessionId=${r.sessionId}`)}
+            className={BTN}
+            title="Tải kết quả thí sinh của lần thi này"
+          >
+            <Download className="h-3.5 w-3.5 text-faint" />
+            Tải
+          </a>
+        )}
         {/* Kỳ thi chính thức thuộc một đợt: không có lối này thì lịch sử chỉ dẫn
             được tới kết quả, mất đường quay về chỗ sửa giờ, xếp phòng. */}
         {r.scale === "formal" && (

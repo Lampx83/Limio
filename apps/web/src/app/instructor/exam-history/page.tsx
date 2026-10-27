@@ -58,8 +58,8 @@ export default async function ExamHistoryPage({
     <main>
       <h1 className="text-2xl font-bold">Lịch sử thi</h1>
       <p className="mt-1 text-body text-faint">
-        Mọi lần thi bạn đã tổ chức. Bấm “Kết quả” để xem chi tiết, hoặc “Tải” để lấy
-        file điểm.
+        Mọi lần thi bạn đã tổ chức. Bấm nút kết quả để xem chi tiết, “Chấm bài” khi còn
+        bài tự luận chờ chấm, hoặc “Tải” để lấy file điểm.
       </p>
 
       <nav
