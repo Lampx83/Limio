@@ -33,6 +33,7 @@ import GamificationTab from "./GamificationTab";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
 import ExportButtons from "./ExportButtons";
+import ActivityLogButton from "./ActivityLogButton";
 import CourseGradeOverview from "../../assignments/CourseGradeOverview";
 
 export const dynamic = "force-dynamic";
@@ -546,6 +547,7 @@ export default async function InstructorCourseEditPage({
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {canEdit && <ExportButtons courseId={course.id} kinds={["enrollments"]} />}
+              {canEdit && <ActivityLogButton courseId={course.id} />}
             </div>
           </div>
 
