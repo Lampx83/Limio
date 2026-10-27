@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { apiUrl } from "@/lib/apiUrl";
 import {
   PDF_VIEW_EVENT,
   PDF_VIEW_REQUEST_EVENT,
@@ -16,11 +17,14 @@ type PdfDoc = any;
 
 /** Khung PDF phải hiện bằng ngần này (so với chính nó) mới coi là đang đọc. */
 const IN_VIEW_FRACTION = 0.25;
+/** Chiều cao thanh điều khiển khi toàn màn hình, trừ ra để trang PDF vừa khít phần còn lại. */
+const FS_BAR_PX = 64;
 
 export default function PdfViewer({
   url,
   title,
   contentItemId,
+  lessonId,
 }: {
   url: string;
   title?: string;
@@ -29,7 +33,10 @@ export default function PdfViewer({
    * (`LessonEngagementTracker`). Không có (form giảng viên, Limio-Live) thì im lặng.
    */
   contentItemId?: string;
+  /** Cùng với `contentItemId`: ghi lại việc học viên bấm mở PDF ở tab mới (AC6). */
+  lessonId?: string;
 }) {
+  const viewerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [pdfDoc, setPdfDoc] = useState<PdfDoc>(null);
@@ -39,6 +46,83 @@ export default function PdfViewer({
   const [error, setError] = useState<string | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [inView, setInView] = useState(false);
+  const [fsSupported, setFsSupported] = useState(false);
+  const [isFs, setIsFs] = useState(false);
+  // Cao màn hình khi đang toàn màn hình (0 = không). Để trang vừa khít cả chiều cao.
+  const [fsHeight, setFsHeight] = useState(0);
+
+  // Ghi việc mở PDF ở tab mới. Đo lường không bao giờ được làm chậm hay chặn việc mở
+  // tab: keepalive để sống qua cú chuyển tab, không chờ, nuốt mọi lỗi — cùng nguyên
+  // tắc với RemediationLink. Link vẫn là thẻ <a> thường nên mở được cả khi JS hỏng.
+  function recordOpen() {
+    if (!contentItemId || !lessonId) return;
+    try {
+      void fetch(apiUrl(`/api/lessons/${lessonId}/pdf-opened`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentItemId }),
+        keepalive: true,
+      }).catch(() => {});
+    } catch {
+      // Never let instrumentation break navigation.
+    }
+  }
+  // Bấm chuột giữa không bắn onClick mà bắn auxclick; vẫn là mở tab mới.
+  const onAuxClick = (e: React.MouseEvent) => {
+    if (e.button === 1) recordOpen();
+  };
+
+  // Toàn màn hình: chỉ hiện nút khi trình duyệt hỗ trợ (iPhone Safari thì không). Quyết
+  // định ở effect chứ không lúc render để khỏi lệch giữa máy chủ và máy khách.
+  useEffect(() => {
+    setFsSupported(
+      !!document.fullscreenEnabled && typeof HTMLElement.prototype.requestFullscreen === "function",
+    );
+  }, []);
+
+  useEffect(() => {
+    const sync = () => {
+      const on = !!viewerRef.current && document.fullscreenElement === viewerRef.current;
+      setIsFs(on);
+      setFsHeight(on ? window.innerHeight : 0);
+    };
+    document.addEventListener("fullscreenchange", sync);
+    window.addEventListener("resize", sync);
+    return () => {
+      document.removeEventListener("fullscreenchange", sync);
+      window.removeEventListener("resize", sync);
+      // Gỡ viewer khi đang toàn màn hình (đổi bài bằng phím tắt...): trả màn hình lại.
+      if (viewerRef.current && document.fullscreenElement === viewerRef.current) {
+        void document.exitFullscreen?.()?.catch?.(() => {});
+      }
+    };
+  }, []);
+
+  function enterFullscreen() {
+    try {
+      void Promise.resolve(viewerRef.current?.requestFullscreen?.()).catch(() => {});
+    } catch {
+      // Trình duyệt từ chối: trang giữ nguyên.
+    }
+  }
+  function exitFullscreen() {
+    try {
+      void Promise.resolve(document.exitFullscreen?.()).catch(() => {});
+    } catch {
+      // Đã thoát rồi.
+    }
+  }
+
+  // ← / → đổi trang khi toàn màn hình (Esc do trình duyệt lo).
+  useEffect(() => {
+    if (!isFs) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") setPage((p) => Math.min(totalPages, p + 1));
+      else if (e.key === "ArrowLeft") setPage((p) => Math.max(1, p - 1));
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isFs, totalPages]);
 
   // Track container width to scale pages responsively (fit-to-width).
   useEffect(() => {
@@ -149,12 +233,16 @@ export default function PdfViewer({
         if (cancelled || !canvas) return;
         const baseViewport = pdfPage.getViewport({ scale: 1 });
         const targetWidth = containerWidth > 0 ? containerWidth : baseViewport.width;
-        const cssScale = targetWidth / baseViewport.width;
+        let cssScale = targetWidth / baseViewport.width;
+        // Toàn màn hình: vừa khít cả chiều cao còn lại sau thanh điều khiển.
+        if (fsHeight > FS_BAR_PX) {
+          cssScale = Math.min(cssScale, (fsHeight - FS_BAR_PX) / baseViewport.height);
+        }
         const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
         const viewport = pdfPage.getViewport({ scale: cssScale * dpr });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
-        canvas.style.width = `${targetWidth}px`;
+        canvas.style.width = `${baseViewport.width * cssScale}px`;
         canvas.style.height = `${baseViewport.height * cssScale}px`;
         const ctx = canvas.getContext("2d")!;
         return pdfPage.render({ canvasContext: ctx, viewport }).promise;
@@ -168,11 +256,46 @@ export default function PdfViewer({
     return () => {
       cancelled = true;
     };
-  }, [pdfDoc, page, containerWidth]);
+  }, [pdfDoc, page, containerWidth, fsHeight]);
+
+  const pageLabel = (
+    <span className="min-w-[80px] text-center text-sm text-muted">
+      Trang {page} / {totalPages}
+    </span>
+  );
+  const prevBtn = (
+    <button
+      type="button"
+      onClick={() => setPage((p) => Math.max(1, p - 1))}
+      disabled={page <= 1}
+      className="btn-secondary btn-sm"
+      data-view-keep
+    >
+      ← Trước
+    </button>
+  );
+  const nextBtn = (
+    <button
+      type="button"
+      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+      disabled={page >= totalPages}
+      className="btn-secondary btn-sm"
+      data-view-keep
+    >
+      Sau →
+    </button>
+  );
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      {title && (
+    <div
+      ref={viewerRef}
+      className={
+        isFs
+          ? "flex h-full w-full flex-col items-center bg-[rgb(var(--surface))]"
+          : "flex flex-col items-center gap-3"
+      }
+    >
+      {title && !isFs && (
         <p className="self-start inline-flex items-center gap-2 text-sm font-medium text-muted">
           <span>📄</span>
           {title}
@@ -188,7 +311,14 @@ export default function PdfViewer({
       {error && (
         <div className="w-full rounded-xl border border-danger-100 bg-danger-50 px-4 py-3 text-sm text-danger-700">
           Không thể tải PDF.{" "}
-          <a href={url} target="_blank" rel="noopener noreferrer" className="link font-medium">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link font-medium"
+            onClick={recordOpen}
+            onAuxClick={onAuxClick}
+          >
             Mở trong tab mới
           </a>
         </div>
@@ -196,35 +326,53 @@ export default function PdfViewer({
 
       {!loading && !error && (
         <>
-          {totalPages > 1 && (
+          {isFs ? (
+            // Toàn màn hình chỉ còn: Thoát, Trước/Sau, số trang. Không tiêu đề, không link.
+            <div
+              className="flex w-full shrink-0 items-center justify-center gap-3 px-4"
+              style={{ height: FS_BAR_PX }}
+            >
+              {totalPages > 1 && prevBtn}
+              {pageLabel}
+              {totalPages > 1 && nextBtn}
+              <button
+                type="button"
+                onClick={exitFullscreen}
+                className="btn-secondary btn-sm ml-4"
+                data-view-keep
+              >
+                Thoát toàn màn hình
+              </button>
+            </div>
+          ) : (
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-                className="btn-secondary btn-sm"
-                data-view-keep
-              >
-                ← Trước
-              </button>
-              <span className="min-w-[80px] text-center text-sm text-muted">
-                Trang {page} / {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-                className="btn-secondary btn-sm"
-                data-view-keep
-              >
-                Sau →
-              </button>
+              {totalPages > 1 && (
+                <>
+                  {prevBtn}
+                  {pageLabel}
+                  {nextBtn}
+                </>
+              )}
+              {fsSupported && (
+                <button
+                  type="button"
+                  onClick={enterFullscreen}
+                  className="btn-secondary btn-sm"
+                  data-view-keep
+                >
+                  Toàn màn hình
+                </button>
+              )}
             </div>
           )}
 
           <div
             ref={containerRef}
-            className="w-full overflow-hidden rounded-xl border border-token shadow-card"
+            className={
+              isFs
+                ? "flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden"
+                : "w-full overflow-hidden rounded-xl border border-token shadow-card"
+            }
           >
             <canvas
               ref={canvasRef}
@@ -233,14 +381,18 @@ export default function PdfViewer({
             />
           </div>
 
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-faint link"
-          >
-            Mở PDF trong tab mới
-          </a>
+          {!isFs && (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-faint link"
+              onClick={recordOpen}
+              onAuxClick={onAuxClick}
+            >
+              Mở PDF trong tab mới
+            </a>
+          )}
         </>
       )}
     </div>

@@ -31,6 +31,8 @@
 - Đo vùng cuộn/phóng to trong một trang, thời gian dừng theo vị trí con trỏ.
 - Hiển thị cho học viên hoặc bảng điều khiển giảng viên (chỉ lưu + xuất nghiên cứu).
 - Bài PDF nhúng bằng `embed`/`file`/`external_link` (chỉ loại `pdf` dùng `PdfViewer`).
+- Đọc gì trong tab mới: PDF mở ở tab mới do trình xem PDF của trình duyệt vẽ, nằm ngoài trang Limio nên không đo được
+  trang nào, bao lâu (xem AC6 — chỉ ghi được việc họ có bấm mở; AC7 giảm nhu cầu mở tab mới bằng nút toàn màn hình).
 
 ## AC1 — Máy khách ghi thời gian dừng theo trang
 
@@ -78,3 +80,39 @@
 - Migration qua `prisma migrate`, cột `pdfPages Json?` nullable.
 - Không đổi giao diện giảng viên nên không cần cập nhật `GIAO-DIEN.md` / Lily.
 - Test chạy trong `packages/core-lms` (`engagement.test.ts`) trước khi viết code.
+
+## AC6 — Ghi việc mở PDF ở tab mới (bổ sung 27/10/2026)
+
+Lý do: mở PDF ở tab mới làm tab bài học bị ẩn nên bộ đo chốt lượt đọc; người đọc hết PDF ngoài trang và người mở rồi bỏ đi
+trông giống nhau (ít giây, 0 trang). Ghi cú bấm để tách hai trường hợp.
+
+- **Given** học viên đã ghi danh bấm "Mở PDF trong tab mới" (hoặc "Mở trong tab mới" khi PDF không tải được), **then**
+  máy khách gửi một yêu cầu nền và phát event `lesson.pdf.opened_external` với payload chỉ có `lessonId`, `contentItemId`.
+  Không mang tiêu đề, địa chỉ PDF hay nội dung.
+- Mỗi lần bấm một event, **không chống trùng**: mở đi mở lại là tín hiệu thật (như `feedback.remediation.clicked`).
+- **Không bao giờ chặn hay làm chậm việc mở tab**: gửi bằng `fetch` + `keepalive`, không chờ, nuốt mọi lỗi; link vẫn là thẻ `<a>`
+  thường (mở được cả khi JS lỗi, cả khi bấm chuột giữa / Ctrl+Click).
+- Máy chủ từ chối (không ghi gì): người chưa ghi danh, `contentItemId` không thuộc bài này hoặc không phải loại `pdf`,
+  bài không tồn tại. Chống kẻ khác bơm event cho khối bất kỳ làm sai số liệu.
+- `PdfViewer` ở nơi không có bộ đo (form giảng viên, Limio-Live) không gửi gì khi bấm.
+- Event **không tính là hoạt động của người dạy** (là hành vi học, thuộc namespace `lesson.*`), không cần thêm vào
+  `NON_LEARNER_ACTIVITY_PREFIXES`.
+- Xuất CSV nghiên cứu thêm cột **Mở PDF ở tab mới (lần)**: đếm event theo (người học × bài); bài không có PDF để rỗng,
+  bài có PDF mà không bấm ra 0.
+
+## AC7 — Nút toàn màn hình cho phần xem PDF (bổ sung 27/10/2026)
+
+Lý do: đọc ngay trong trang thì đo được; chuyển sang tab khác thì không (AC6). Nút toàn màn hình cho khung xem đủ lớn để
+học viên không cần mở tab mới.
+
+- **Given** trình duyệt hỗ trợ Fullscreen API, **then** `PdfViewer` có nút "Toàn màn hình" (hiện cả khi PDF chỉ 1 trang). Bấm thì
+  vùng xem PDF vào toàn màn hình, trang PDF **vừa khít cả chiều ngang lẫn chiều cao** màn hình, không phải cuộn mới thấy hết một trang.
+- **Đang toàn màn hình chỉ còn đúng ba thứ**: nút **"Thoát toàn màn hình"**, nút **Trước / Sau**, và số thứ tự trang
+  **"Trang X / N"**. **Bỏ hết phần còn lại**: tiêu đề (header), nút "Toàn màn hình", link "Mở PDF trong tab mới". Với PDF 1 trang thì
+  chỉ còn nút thoát và số trang (không có Trước/Sau). Thoát xong, mọi thứ hiện lại như cũ.
+- Esc cũng thoát (do trình duyệt). Phím ← / → đổi trang.
+- **Given** trình duyệt không hỗ trợ (vd Safari trên iPhone), **then** không hiện nút, không lỗi; link "Mở PDF trong tab mới" vẫn dùng được.
+- Trình duyệt từ chối vào toàn màn hình thì nuốt lỗi, trang không đổi.
+- **Đo đọc không đổi**: trong toàn màn hình `PdfViewer` vẫn báo trang đang mở và việc khung PDF nằm trong màn hình (AC1), nên
+  thời gian đọc vẫn cộng đúng trang. Không thêm event riêng cho toàn màn hình.
+- Áp dụng cho mọi nơi dùng `PdfViewer` (cả bản xem thử của giảng viên), nhưng chỉ bài học của khoá mới có đo.

@@ -14,6 +14,7 @@ export class LearningError extends Error {
     public readonly code:
       | "lesson_not_found"
       | "not_enrolled"
+      | "content_not_found"
       | "validation_failed",
     public readonly details?: unknown,
   ) {

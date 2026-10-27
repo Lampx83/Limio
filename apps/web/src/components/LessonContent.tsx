@@ -439,7 +439,12 @@ function ContentBlock({
     }
     case "pdf": {
       const p = payload as PdfPayload;
-      return <PdfViewer url={p.url} title={p.title} contentItemId={interactive ? itemId : undefined} />;
+      return <PdfViewer
+          url={p.url}
+          title={p.title}
+          contentItemId={interactive ? itemId : undefined}
+          lessonId={interactive ? lessonId : undefined}
+        />;
     }
     case "html_block": {
       const p = payload as HtmlBlockPayload;

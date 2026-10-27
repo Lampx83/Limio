@@ -4,6 +4,7 @@ export * from "./enroll";
 export * from "./courseAccess";
 export * from "./lessons";
 export * from "./engagement";
+export * from "./pdfExternal";
 export * from "./activity";
 export * from "./progress";
 export * from "./notes";

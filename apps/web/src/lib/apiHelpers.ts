@@ -167,7 +167,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
   }
   if (err instanceof LearningError) {
     const status =
-      err.code === "lesson_not_found"
+      err.code === "lesson_not_found" || err.code === "content_not_found"
         ? 404
         : err.code === "not_enrolled"
           ? 403

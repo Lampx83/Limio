@@ -48,7 +48,7 @@ export async function GET(
   });
   if (!course) return NextResponse.json({ error: "course_not_found" }, { status: 404 });
 
-  const [index, engagement, lessons, tutorEvents] = await Promise.all([
+  const [index, engagement, lessons, tutorEvents, pdfOpenEvents] = await Promise.all([
     learnerIndex(params.courseId),
     getCourseEngagement(params.courseId),
     prisma.lesson.findMany({
@@ -73,6 +73,11 @@ export async function GET(
       where: { courseId: params.courseId, eventType: LearningEventType.AiTutorAsked },
       select: { userId: true, payload: true },
     }),
+    // AC6 — số lần bấm "Mở PDF trong tab mới". Đếm từ dòng event vì mỗi lần bấm là một dòng.
+    prisma.learningEvent.findMany({
+      where: { courseId: params.courseId, eventType: LearningEventType.LessonPdfOpenedExternal },
+      select: { userId: true, payload: true },
+    }),
   ]);
 
   const byPair = new Map(engagement.map((e) => [`${e.userId}:${e.lessonId}`, e]));
@@ -93,6 +98,14 @@ export async function GET(
     if (!e.userId || !lid) continue;
     const k = `${e.userId}:${lid}`;
     tutorTurns.set(k, (tutorTurns.get(k) ?? 0) + 1);
+  }
+
+  const pdfOpens = new Map<string, number>();
+  for (const e of pdfOpenEvents) {
+    const lid = (e.payload as { lessonId?: string } | null)?.lessonId;
+    if (!e.userId || !lid) continue;
+    const k = `${e.userId}:${lid}`;
+    pdfOpens.set(k, (pdfOpens.get(k) ?? 0) + 1);
   }
 
   const out: Array<Record<string, unknown>> = [];
@@ -141,6 +154,9 @@ export async function GET(
             : pdfTotals.reduce<number>((n, t) => n + (t ?? 0), 0),
         // Chỉ rõ nghĩa khi bài có đúng một PDF; nhiều PDF thì không có "trang cuối" chung.
         "Trang PDF dừng gần nhất": pdfItems.length === 1 ? (pdfSummary[0]?.lastPage ?? "") : "",
+        // Đọc ngoài trang: tab bị ẩn nên các cột trên không thấy. Bài không có PDF -> rỗng.
+        "Mở PDF ở tab mới (lần)":
+          pdfItems.length === 0 ? "" : (pdfOpens.get(`${uid}:${l.id}`) ?? 0),
         "Số lượt mở": e?.sessionCount ?? 0,
         "Số lượt hỏi trợ giảng AI": tutorTurns.get(`${uid}:${l.id}`) ?? 0,
         "Lần cuối vào": e?.lastSeenAt ?? "",

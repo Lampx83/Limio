@@ -10,6 +10,10 @@ export const LearningEventType = {
   LessonViewed: "lesson.viewed",
   LessonCompleted: "lesson.completed",
   LessonEngaged: "lesson.engaged",
+  // Học viên bấm "Mở PDF trong tab mới" — sau đó tab bài học bị ẩn và bộ đo chốt
+  // lượt đọc, nên cú bấm là dấu vết duy nhất của việc đọc ngoài trang. Payload:
+  // LessonPdfOpenedExternalPayload.
+  LessonPdfOpenedExternal: "lesson.pdf.opened_external",
   EnrollmentSectionChanged: "enrollment.section_changed",
   AiTutorAsked: "ai.tutor.asked",
   // Annotation theo vùng chọn trong bài (LessonAnnotation). Payload không mang
@@ -343,6 +347,12 @@ export interface LessonEngagedPayload {
     /** Trang đang mở ở nhịp gần nhất — điểm dừng. */
     lastPage: number;
   }>;
+}
+
+/** Chỉ id: không tiêu đề, không địa chỉ PDF. Mỗi lần bấm một event, không chống trùng. */
+export interface LessonPdfOpenedExternalPayload {
+  lessonId: string;
+  contentItemId: string;
 }
 
 export interface LessonCompletedPayload {
