@@ -294,7 +294,7 @@ function Seg({
   );
 }
 
-type SortKey = "name" | "score" | "time";
+type SortKey = "name" | "score" | "time" | "grading";
 
 function StudentList({
   data,
@@ -322,8 +322,15 @@ function StudentList({
     if (sort === "name") {
       sorted.sort((a, b) => a.displayName.localeCompare(b.displayName, "vi"));
     } else if (sort === "score") {
-      // Chưa có điểm xuống cuối, không để chúng chen vào giữa bảng điểm.
-      sorted.sort((a, b) => (b.scorePct ?? -1) - (a.scorePct ?? -1));
+      // Chưa có điểm xuống cuối, không để chúng chen vào giữa bảng điểm. Bài còn
+      // câu chờ chấm cũng xuống cuối: nó chưa có tổng điểm.
+      const key = (r: ExamResultRow) => (r.needsGrading ? -1 : (r.scorePct ?? -2));
+      sorted.sort((a, b) => key(b) - key(a));
+    } else if (sort === "grading") {
+      // Người cần được chấm lên đầu, nhiều câu chờ nhất trước.
+      sorted.sort(
+        (a, b) => (b.breakdown?.essayPending ?? 0) - (a.breakdown?.essayPending ?? 0),
+      );
     } else {
       // Nộp sớm nhất lên đầu; ai chưa nộp xuống cuối.
       sorted.sort((a, b) => {
@@ -366,6 +373,7 @@ function StudentList({
           <option value="name">Tên (A → Z)</option>
           <option value="score">Điểm (cao → thấp)</option>
           <option value="time">Nộp lúc (sớm → muộn)</option>
+          {data.hasEssay && <option value="grading">Chờ chấm trước</option>}
         </select>
       </div>
 
@@ -381,12 +389,16 @@ function StudentList({
       </ul>
 
       <div className="hidden overflow-x-auto rounded-lg border border-default sm:block">
-        <table className="w-full min-w-[560px] text-sm">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-slate-50 text-left text-xs text-faint">
             <tr>
               <th className="px-3 py-2 font-medium">Thí sinh / Học viên</th>
               <th className="px-3 py-2 font-medium">Nộp lúc</th>
-              <th className="px-3 py-2 text-right font-medium">Điểm</th>
+              {data.hasObjective && (
+                <th className="px-3 py-2 text-right font-medium">Trắc nghiệm</th>
+              )}
+              {data.hasEssay && <th className="px-3 py-2 font-medium">Tự luận</th>}
+              <th className="px-3 py-2 text-right font-medium">Tổng điểm</th>
               <th className="px-3 py-2 font-medium">Trạng thái</th>
               <th className="px-3 py-2"></th>
             </tr>
@@ -396,6 +408,8 @@ function StudentList({
               <Row
                 key={r.attemptId ?? `ns-${i}`}
                 r={r}
+                hasObjective={data.hasObjective}
+                hasEssay={data.hasEssay}
                 totalPoints={data.totalPoints}
                 courseId={courseId}
                 examId={examId}
@@ -409,19 +423,77 @@ function StudentList({
 }
 
 function ScoreText({ r, totalPoints }: { r: ExamResultRow; totalPoints: number }) {
+  // Còn câu chờ chấm tay thì CHƯA CÓ tổng điểm: phần máy chấm đã có ở cột Trắc
+  // nghiệm, còn tổng thì chỉ chốt được khi chấm xong — hiện một con số tạm sẽ bị
+  // đọc nhầm thành điểm cuối.
+  if (r.needsGrading)
+    return (
+      <span className="text-faint" title="Chưa chốt: còn câu tự luận chờ chấm">
+        —
+      </span>
+    );
   if (r.score == null) return <span className="text-faint">—</span>;
+  return (
+    <div className="font-medium tabular-nums">
+      {r.score}/{totalPoints}
+      {r.scorePct != null && (
+        <span className="ml-1.5 font-normal text-faint">{formatPct(r.scorePct)}</span>
+      )}
+    </div>
+  );
+}
+
+/** Số câu máy chấm làm đúng — "19/20", đọc một nhìn là biết. */
+function ObjectiveText({ r }: { r: ExamResultRow }) {
+  const b = r.breakdown;
+  if (!b || b.objectiveTotal === 0) return <span className="text-faint">—</span>;
   return (
     <>
       <div className="font-medium tabular-nums">
-        {r.score}/{totalPoints}
-        {r.scorePct != null && (
-          <span className="ml-1.5 font-normal text-faint">{formatPct(r.scorePct)}</span>
-        )}
+        {b.objectiveCorrect}/{b.objectiveTotal}
       </div>
-      {/* Còn câu chờ chấm: số này mới là phần tự chấm, chưa phải điểm cuối. */}
-      {r.needsGrading && (
-        <div className="text-[11px] text-amber-700">chưa gồm câu chờ chấm</div>
-      )}
+      <div className="text-[11px] text-faint">câu đúng</div>
+    </>
+  );
+}
+
+/**
+ * Tự luận: còn chờ thì dẫn thẳng tới câu đầu tiên chờ chấm, nơi có sẵn rubric
+ * và nút "Gợi ý chấm" (AI chấm theo rubric); đã chấm thì dẫn tới bài để xem lại.
+ */
+function EssayCell({
+  r,
+  courseId,
+  examId,
+}: {
+  r: ExamResultRow;
+  courseId: string;
+  examId: string;
+}) {
+  const b = r.breakdown;
+  if (!r.attemptId || !b || b.essayTotal === 0) return <span className="text-faint">—</span>;
+  const base = `/instructor/courses/${courseId}/exams/${examId}/attempts/${r.attemptId}`;
+  // Chỉ một nút, không thêm nhãn chữ "chờ chấm": cột Trạng thái đã nói rồi.
+  if (b.essayPending > 0)
+    return (
+      <Link
+        href={b.firstPendingQuestionId ? `${base}#cau-${b.firstPendingQuestionId}` : base}
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white hover:bg-amber-600"
+        title="Mở bài làm tại câu đầu tiên chờ chấm — có rubric và nút “Gợi ý chấm” (AI)"
+      >
+        <PenLine className="h-3 w-3" />
+        Chấm bài · {b.essayPending} câu
+      </Link>
+    );
+  return (
+    <>
+      <div className="font-medium tabular-nums">
+        {b.essayScore}/{b.essayMax}
+        <span className="ml-1 text-[11px] font-normal text-faint">điểm</span>
+      </div>
+      <Link href={base} className="text-xs font-medium text-blue-600 hover:underline">
+        Xem bài
+      </Link>
     </>
   );
 }
@@ -441,11 +513,15 @@ function ViewLink({ r, courseId, examId }: { r: ExamResultRow; courseId: string;
 
 function Row({
   r,
+  hasObjective,
+  hasEssay,
   totalPoints,
   courseId,
   examId,
 }: {
   r: ExamResultRow;
+  hasObjective: boolean;
+  hasEssay: boolean;
   totalPoints: number;
   courseId: string;
   examId: string;
@@ -467,6 +543,16 @@ function Row({
       <td className="whitespace-nowrap px-3 py-2 text-xs text-faint tabular-nums">
         {r.submittedAt ? formatDateTime(r.submittedAt) : "—"}
       </td>
+      {hasObjective && (
+        <td className="px-3 py-2 text-right tabular-nums">
+          <ObjectiveText r={r} />
+        </td>
+      )}
+      {hasEssay && (
+        <td className="px-3 py-2">
+          <EssayCell r={r} courseId={courseId} examId={examId} />
+        </td>
+      )}
       <td className="px-3 py-2 text-right tabular-nums">
         <ScoreText r={r} totalPoints={totalPoints} />
       </td>
@@ -504,6 +590,22 @@ function StudentCard({
           <ScoreText r={r} totalPoints={totalPoints} />
         </div>
       </div>
+      {r.breakdown && (r.breakdown.objectiveTotal > 0 || r.breakdown.essayTotal > 0) && (
+        <div className="mt-2 flex flex-wrap items-start gap-x-6 gap-y-2 border-t border-default pt-2 text-xs">
+          {r.breakdown.objectiveTotal > 0 && (
+            <div>
+              <div className="text-faint">Trắc nghiệm</div>
+              <ObjectiveText r={r} />
+            </div>
+          )}
+          {r.breakdown.essayTotal > 0 && (
+            <div>
+              <div className="text-faint">Tự luận</div>
+              <EssayCell r={r} courseId={courseId} examId={examId} />
+            </div>
+          )}
+        </div>
+      )}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="text-faint">
           <Verdict r={r} />

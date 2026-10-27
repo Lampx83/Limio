@@ -162,6 +162,57 @@ describe("listExamResults", () => {
     expect(r.rows.find((x) => x.attemptId)!.needsGrading).toBe(true);
   });
 
+  it("tách điểm: trắc nghiệm đúng/tổng và tự luận chờ chấm, kèm câu để nhảy tới", async () => {
+    const s = await setup("breakdown", { essay: true });
+    await learnerTakes(s, 1, "a", { essayText: "bài viết" }); // đúng 1/1 trắc nghiệm
+    await learnerTakes(s, 2, "b", { essayText: "bài viết" }); // sai trắc nghiệm
+
+    const r = await listExamResults(s.ownerId, s.examId);
+    expect(r.hasObjective).toBe(true);
+    expect(r.hasEssay).toBe(true);
+    const done = r.rows.filter((x) => x.attemptId);
+    const byCorrect = done.map((x) => x.breakdown!.objectiveCorrect).sort();
+    expect(byCorrect).toEqual([0, 1]);
+    for (const row of done) {
+      const b = row.breakdown!;
+      expect(b.objectiveTotal).toBe(1);
+      expect(b.essayTotal).toBe(1);
+      expect(b.essayPending).toBe(1);
+      expect(b.essayMax).toBe(10);
+      expect(b.essayScore).toBe(0);
+      expect(b.firstPendingQuestionId).toBe(s.q2);
+    }
+  });
+
+  it("đề chỉ trắc nghiệm — không có cột tự luận", async () => {
+    const s = await setup("objonly");
+    await learnerTakes(s, 1, "a");
+
+    const r = await listExamResults(s.ownerId, s.examId);
+    expect(r.hasObjective).toBe(true);
+    expect(r.hasEssay).toBe(false);
+    expect(r.rows.find((x) => x.attemptId)!.breakdown!.essayTotal).toBe(0);
+  });
+
+  it("bài đang làm dở và người chưa làm không có phần tách điểm", async () => {
+    const s = await setup("nobreak");
+    await learnerTakes(s, 1, "a", { submit: false });
+    await enrollOnly(s, 2);
+
+    const r = await listExamResults(s.ownerId, s.examId);
+    expect(r.rows.every((x) => x.breakdown == null)).toBe(true);
+  });
+
+  it("điểm trung bình không tính bài còn câu chờ chấm", async () => {
+    const s = await setup("avgpending", { essay: true });
+    await learnerTakes(s, 1, "a", { essayText: "bài viết" });
+
+    const r = await listExamResults(s.ownerId, s.examId);
+    expect(r.summary.pendingGrading).toBe(1);
+    expect(r.summary.avgScoreCount).toBe(0);
+    expect(r.summary.avgScorePct).toBeNull();
+  });
+
   it("bài đang làm dở không tính là đã nộp", async () => {
     const s = await setup("inprogress");
     await learnerTakes(s, 1, "a", { submit: false });

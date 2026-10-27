@@ -260,8 +260,12 @@ câu hỏi ghi "Phân tích câu hỏi" và mở thẳng lát "Theo câu hỏi".
 câu hỏi không có chấm tay).
 
 **Kết quả:** nút kết quả mở `/instructor/exam-runs/<id>` với ba lát cắt "Theo thí sinh/học viên" · "Theo câu
-hỏi" · "Chờ chấm tay"; có lọc ca và phòng, tìm kiếm, sắp xếp, "Xem bài làm" (chỉ bài đã nộp; chấm tại chỗ câu
-tự luận, "← Bài trước" / "Bài sau →", nhãn "Đã chấm xong"); bài còn tự luận ghi "chưa gồm câu chờ chấm". Menu
+hỏi" · "Chờ chấm tay"; có lọc ca và phòng, tìm kiếm, sắp xếp (kể cả "Chờ chấm trước" khi đề có tự luận). Bảng
+theo thí sinh có các cột "Nộp lúc" · "Trắc nghiệm" (số câu đúng, ví dụ 19/20; chỉ hiện khi đề có câu máy chấm) ·
+"Tự luận" (chỉ hiện khi đề có câu tự luận hoặc trả lời ngắn) · "Tổng điểm" · "Trạng thái". Ở cột "Tự luận", bài còn
+câu chờ chấm có nút "Chấm bài · n câu" mở bài làm ngay tại câu đầu tiên chờ chấm (có rubric và nút
+"Gợi ý chấm" của AI); bài đã chấm hiện điểm tự luận và link "Xem bài". "Tổng điểm" của bài còn câu chờ chấm
+để trống ("—") cho đến khi chấm xong; điểm trung bình đầu trang chỉ tính bài đã chấm xong. Bấm "Xem bài làm" mở bài (chỉ bài đã nộp; chấm tại chỗ câu tự luận, "← Bài trước" / "Bài sau →", nhãn "Đã chấm xong"). Menu
 "Xuất file": "Bảng điểm (Excel)" và "Dữ liệu phân tích (CSV)". Tab Kết quả của trang ca có "Xuất bảng điểm ca
 thi (Excel)", mỗi dòng một thí sinh (STT, Họ tên, MSSV, Email, Mã lớp học, Mã lớp thi, Phòng, Mã thi, Trạng
 thái, Điểm, Điểm thang 10, Nộp lúc, Số lượt); thí sinh chưa vào thi vẫn có dòng.

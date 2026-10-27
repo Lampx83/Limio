@@ -212,7 +212,11 @@ export default async function ExamAttemptReviewPage({
           const awarded = ans ? (ans.manualScore ?? ans.autoScore) : null;
           const manual = q.type === "essay" || q.type === "short_answer";
           return (
-            <li key={q.id} className="rounded-lg border border-default bg-white p-4">
+            <li
+              key={q.id}
+              id={`cau-${q.id}`}
+              className="scroll-mt-20 rounded-lg border border-default bg-white p-4"
+            >
               <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
                 <span className="text-sm font-semibold">
                   Câu {i + 1}
