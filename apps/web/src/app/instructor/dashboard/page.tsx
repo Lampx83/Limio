@@ -17,6 +17,8 @@ import HomeStatusLine from "@/components/HomeStatusLine";
 import { getInstructorPendingSummary } from "@/lib/notifications";
 import { isTeachingOnly } from "@/lib/roleWorkspace";
 import CenterTeacherHome from "@/components/CenterTeacherHome";
+import ClassFeed from "@/components/ClassFeed";
+import { getClassFeed } from "@/lib/classFeedQuery";
 
 export const dynamic = "force-dynamic";
 
@@ -171,6 +173,8 @@ export default async function InstructorDashboard({
 
   const shownCourses = ownedCourses.slice(0, COURSES_SHOWN);
   const pending = await getInstructorPendingSummary(userId);
+  // Dòng tin phụ, lỗi ở đây không được làm hỏng trang chủ.
+  const feed = await getClassFeed(userId).catch(() => []);
 
   // Gợi ý khi ô tìm kiếm còn trống: việc hay làm nhất và khoá vừa sửa.
   const suggestions: SearchSuggestion[] = [makeSuggestion];
@@ -229,6 +233,8 @@ export default async function InstructorDashboard({
             })}
           </ul>
         </section>
+
+        <ClassFeed items={feed} />
       </div>
 
       {shouldShowTour && (
