@@ -16,7 +16,7 @@ const SCAN = 300;
  * Dòng tin lớp học cho trang chủ giảng viên: hoạt động tích cực của học viên đã ghi danh ở các khoá
  * mà người này dạy, 7 ngày gần nhất. Không trả payload thô, không trả điểm số.
  */
-export async function getClassFeed(instructorId: string, limit = 6): Promise<FeedItem[]> {
+export async function getClassFeed(instructorId: string, limit = 4): Promise<FeedItem[]> {
   const courses = await prisma.course.findMany({
     where: { instructors: { some: { userId: instructorId } } },
     select: { id: true, title: true },
