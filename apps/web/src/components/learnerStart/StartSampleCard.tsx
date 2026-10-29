@@ -31,8 +31,8 @@ export default function StartSampleCard({ sample }: { sample: StartSample }) {
       {/* Tên khoá, bài và nút "Học thử" cùng một hàng: nút nằm cạnh bài mà nó mở. */}
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-meta text-faint">{sample.title}</p>
-          <p className="mt-0.5 text-lg font-semibold leading-snug">{sample.firstLesson.title}</p>
+          <p className="text-h4 leading-snug">{sample.title}</p>
+          <p className="mt-1 text-sm leading-snug text-muted">{sample.firstLesson.title}</p>
           {minutes && (
             <p className="mt-1 flex items-center gap-1.5 text-sm text-muted">
               <Clock aria-hidden className="h-4 w-4" />
