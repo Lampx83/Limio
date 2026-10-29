@@ -409,11 +409,6 @@ export default async function LearnCoursePage({
             </section>
           )}
 
-          {/* Nộp bài theo nhóm — docs/group-submission-AC.md A7 */}
-          {myTeam && (
-            <CourseTeamPanel courseId={course.id} currentUserId={session.user.id} initial={myTeam} />
-          )}
-
           {/* Modules */}
           <section>
             <div className="flex items-baseline justify-between">
@@ -442,6 +437,12 @@ export default async function LearnCoursePage({
               markKind={currentMark}
             />
           </section>
+
+          {/* Nộp bài theo nhóm — docs/group-submission-AC.md A7. Đặt sau danh sách bài học để học viên
+              vào khoá là thấy bài học trước; thẻ bài tập nhóm vẫn nhảy tới đây qua COURSE_TEAM_ANCHOR. */}
+          {myTeam && (
+            <CourseTeamPanel courseId={course.id} currentUserId={session.user.id} initial={myTeam} />
+          )}
 
           {isComplete && (
             <div className="rounded-2xl border border-success-100 bg-success-50 p-5 text-center">
