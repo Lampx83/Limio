@@ -31,6 +31,10 @@ export interface ExamResultRow {
   displayName: string;
   /** Email (học viên ghi danh) hoặc mã dự thi (thí sinh vào bằng mã). */
   identifier: string | null;
+  /** MSSV thí sinh tự nhập khi vào thi, hoặc MSSV trong hồ sơ của học viên. */
+  mssv?: string | null;
+  /** Số lần rời tab trong bài này (sự cố `tab_blur`); người chưa làm thì không có. */
+  tabSwitchCount?: number;
   status: ExamResultRowStatus;
   score: number | null;
   scorePct: number | null;
@@ -115,6 +119,13 @@ export function attemptResultStatus(s: string): ExamResultRowStatus {
   }
 }
 
+/** MSSV ghi trong metadata của thí sinh (tự nhập ở form vào thi hoặc nhập từ danh sách). */
+function studentCodeOf(metadata: unknown): string | null {
+  if (!metadata || typeof metadata !== "object") return null;
+  const v = (metadata as Record<string, unknown>).studentCode;
+  return typeof v === "string" && v.trim() ? v.trim() : null;
+}
+
 export async function listExamResults(
   actorUserId: string,
   examId: string,
@@ -186,11 +197,13 @@ export async function listExamResults(
       candidateDisplayName: true,
       sessionId: true,
       session: { select: { title: true, code: true } },
-      user: { select: { displayName: true, email: true } },
+      user: { select: { displayName: true, email: true, studentCode: true } },
+      _count: { select: { incidents: { where: { type: "tab_blur" } } } },
       candidate: {
         select: {
           displayName: true,
           accessCode: true,
+          metadata: true,
           sessionId: true,
           roomId: true,
           session: { select: { title: true, code: true } },
@@ -211,6 +224,8 @@ export async function listExamResults(
       a.candidateDisplayName ??
       "(không tên)",
     identifier: a.user?.email ?? a.candidate?.accessCode ?? null,
+    mssv: studentCodeOf(a.candidate?.metadata) ?? a.user?.studentCode?.trim() ?? null,
+    tabSwitchCount: a._count.incidents,
     status: attemptResultStatus(a.status),
     score: a.score,
     scorePct: a.scorePct,

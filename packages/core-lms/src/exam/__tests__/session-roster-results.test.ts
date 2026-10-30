@@ -105,6 +105,23 @@ describe("listSessionRosterResults — kết quả theo ca, mỗi dòng một th
     expect(r.rows[0]).toMatchObject({ displayName: "Học viên Em", status: "submitted", score: 7, attemptCount: 3 });
   });
 
+  it("đếm số lần chuyển tab của lượt được tính điểm (chỉ tab_blur); MSSV tài khoản lấy từ hồ sơ", async () => {
+    const s = await setup("tabs");
+    const hv = await user("hv-tabs", "Học viên Tab");
+    await prisma.user.update({ where: { id: hv.userId }, data: { studentCode: "20201234" } });
+    const att = await attempt(s, { userId: hv.userId }, { status: "submitted", score: 5, submittedAt: new Date("2026-10-01T08:40:00Z") });
+    await prisma.examIncident.createMany({
+      data: [
+        { attemptId: att.id, type: "tab_blur", occurredAt: new Date("2026-10-01T08:10:00Z") },
+        { attemptId: att.id, type: "tab_blur", occurredAt: new Date("2026-10-01T08:20:00Z") },
+        { attemptId: att.id, type: "paste" },
+      ],
+    });
+
+    const r = await listSessionRosterResults(s.ownerId, s.sessionId);
+    expect(r.rows[0]).toMatchObject({ displayName: "Học viên Tab", mssv: "20201234", tabSwitchCount: 2 });
+  });
+
   it("phòng nhập từ Excel: mã lớp thi = tên phòng, mã lớp học = lớp sở hữu lớp thi", async () => {
     const s = await setup("rooms");
     await importSessionRooms(

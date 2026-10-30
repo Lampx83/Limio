@@ -32,6 +32,8 @@ export interface SessionRosterRow {
   /** Lượt được tính điểm; null khi chưa vào thi. */
   attemptId: string | null;
   attemptCount: number;
+  /** Số lần rời tab (sự cố `tab_blur`) của lượt được tính điểm; chưa vào thi thì 0. */
+  tabSwitchCount: number;
   score: number | null;
   scorePct: number | null;
   submittedAt: string | null;
@@ -54,6 +56,7 @@ interface AttemptLite {
   score: number | null;
   scorePct: number | null;
   answers: Array<{ needsGrading: boolean }>;
+  _count: { incidents: number };
 }
 
 /** Lượt nộp gần nhất; chưa nộp lượt nào thì lượt mới bắt đầu gần nhất. */
@@ -97,6 +100,7 @@ export async function listSessionRosterResults(
     score: true,
     scorePct: true,
     answers: { select: { needsGrading: true } },
+    _count: { select: { incidents: { where: { type: "tab_blur" } } } },
   } as const;
 
   const [candidates, accountAttempts, examClasses, sections] = await Promise.all([
@@ -109,14 +113,14 @@ export async function listSessionRosterResults(
         userId: true,
         room: { select: { name: true } },
         cohort: { select: { code: true, name: true } },
-        linkedUser: { select: { email: true } },
+        linkedUser: { select: { email: true, studentCode: true } },
         attempts: { select: attemptSelect },
       },
     }),
     // Học viên vào bằng tài khoản ở ca này mà không qua danh sách thí sinh.
     db.examAttempt.findMany({
       where: { examId: s.examId, sessionId, candidateId: null, userId: { not: null } },
-      select: { ...attemptSelect, userId: true, user: { select: { displayName: true, email: true } } },
+      select: { ...attemptSelect, userId: true, user: { select: { displayName: true, email: true, studentCode: true } } },
     }),
     courseId
       ? db.cohortExamClass.findMany({
@@ -152,7 +156,7 @@ export async function listSessionRosterResults(
   );
 
   const toRow = (
-    base: Omit<SessionRosterRow, "status" | "attemptId" | "attemptCount" | "score" | "scorePct" | "submittedAt" | "needsGrading">,
+    base: Omit<SessionRosterRow, "status" | "attemptId" | "attemptCount" | "tabSwitchCount" | "score" | "scorePct" | "submittedAt" | "needsGrading">,
     attempts: AttemptLite[],
   ): SessionRosterRow => {
     const a = pickAttempt(attempts);
@@ -161,6 +165,7 @@ export async function listSessionRosterResults(
       status: a ? attemptResultStatus(a.status) : "not_started",
       attemptId: a?.id ?? null,
       attemptCount: attempts.length,
+      tabSwitchCount: a?._count.incidents ?? 0,
       score: a?.score ?? null,
       scorePct: a?.scorePct ?? null,
       submittedAt: a?.submittedAt?.toISOString() ?? null,
@@ -181,7 +186,7 @@ export async function listSessionRosterResults(
     return toRow(
       {
         displayName: c.displayName,
-        mssv: str(md.studentCode),
+        mssv: str(md.studentCode) ?? str(c.linkedUser?.studentCode),
         email: (str(md.email) ?? c.linkedUser?.email ?? null)?.toLowerCase() ?? null,
         cohortCode,
         examClassCode,
@@ -200,7 +205,7 @@ export async function listSessionRosterResults(
       toRow(
         {
           displayName: u.displayName,
-          mssv: null,
+          mssv: str(u.studentCode),
           email: u.email.toLowerCase(),
           cohortCode: enrolledClass.get(userId) ?? null,
           examClassCode: null,

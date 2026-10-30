@@ -65,6 +65,7 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
   const cols = [
     "STT",
     "Thí sinh / Học viên",
+    "MSSV",
     "Email hoặc mã dự thi",
     "Ca thi",
     "Phòng",
@@ -73,8 +74,9 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
     `Tổng điểm`,
     "Tỉ lệ",
     "Trạng thái",
+    "Số lần chuyển tab",
   ];
-  const widths = [6, 28, 30, 24, 14, 18, 10, 12, 10, 20];
+  const widths = [6, 28, 14, 30, 24, 14, 18, 10, 12, 10, 20, 12];
 
   ws.getCell("A1").value = `Bảng điểm: ${input.examTitle}`;
   ws.getCell("A1").font = { bold: true, size: 14 };
@@ -101,6 +103,7 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
     const excelRow = ws.addRow([
       i + 1,
       r.displayName,
+      r.mssv ?? "",
       r.identifier ?? "",
       r.sessionTitle ?? "",
       r.roomName ?? "",
@@ -109,11 +112,15 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
       total,
       r.scorePct != null ? r.scorePct / 100 : "",
       v.label,
+      // Người chưa vào thi để trống, không ghi 0 như thể đã thi mà không rời tab.
+      r.attemptId ? (r.tabSwitchCount ?? 0) : "",
     ]);
-    excelRow.getCell(9).numFmt = "0.0%";
+    // MSSV giữ dạng chữ: Excel không được tự bỏ số 0 đầu.
+    excelRow.getCell(3).numFmt = "@";
+    excelRow.getCell(10).numFmt = "0.0%";
     const fill = VERDICT_FILL[v.label];
     if (fill) {
-      excelRow.getCell(10).fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
+      excelRow.getCell(11).fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
     }
   });
 
@@ -225,8 +232,9 @@ export function buildSessionRosterWorkbook(input: SessionRosterWorkbookInput): P
     "Điểm thang 10",
     "Nộp lúc",
     "Số lượt",
+    "Số lần chuyển tab",
   ];
-  const widths = [6, 28, 14, 30, 14, 14, 16, 12, 18, 9, 12, 18, 9];
+  const widths = [6, 28, 14, 30, 14, 14, 16, 12, 18, 9, 12, 18, 9, 12];
   const sections = input.sections ?? [];
   const pct = (w: number) => `${String(Math.round(w * 100) / 100).replace(".", ",")}%`;
   for (const sec of sections) {
@@ -272,6 +280,8 @@ export function buildSessionRosterWorkbook(input: SessionRosterWorkbookInput): P
       r.scorePct != null ? Math.round(r.scorePct) / 10 : "",
       r.submittedAt ? formatDateTime(new Date(r.submittedAt)) : "",
       r.attemptCount,
+      // Người chưa vào thi để trống, không ghi 0 như thể đã thi mà không rời tab.
+      r.attemptId ? r.tabSwitchCount : "",
       ...sections.map((_, k) => sectionCells?.[k] ?? "—"),
     ]);
     // MSSV và mã thi giữ dạng chữ: Excel không được tự bỏ số 0 đầu.
