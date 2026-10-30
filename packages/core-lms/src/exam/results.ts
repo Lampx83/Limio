@@ -210,7 +210,7 @@ export async function listExamResults(
           displayName: true,
           accessCode: true,
           metadata: true,
-          linkedUser: { select: { email: true } },
+          linkedUser: { select: { email: true, studentCode: true } },
           sessionId: true,
           roomId: true,
           session: { select: { title: true, code: true } },
@@ -235,7 +235,11 @@ export async function listExamResults(
       (a.user?.email ?? a.candidate?.linkedUser?.email ?? metaString(a.candidate?.metadata, "email"))?.toLowerCase() ??
       null,
     accessCode: a.candidate?.accessCode ?? null,
-    mssv: studentCodeOf(a.candidate?.metadata) ?? a.user?.studentCode?.trim() ?? null,
+    mssv:
+      studentCodeOf(a.candidate?.metadata) ??
+      a.user?.studentCode?.trim() ??
+      a.candidate?.linkedUser?.studentCode?.trim() ??
+      null,
     tabSwitchCount: a._count.incidents,
     status: attemptResultStatus(a.status),
     score: a.score,
@@ -304,7 +308,7 @@ export async function listExamResults(
   ) {
     const enrolled = await db.enrollment.findMany({
       where: { courseId: exam.courseId },
-      select: { user: { select: { id: true, displayName: true, email: true } } },
+      select: { user: { select: { id: true, displayName: true, email: true, studentCode: true } } },
     });
     notStartedRows = enrolled
       .filter((e) => !seenUserIds.has(e.user.id))
@@ -314,6 +318,7 @@ export async function listExamResults(
         identifier: e.user.email,
         email: e.user.email.toLowerCase(),
         accessCode: null,
+        mssv: e.user.studentCode?.trim() || null,
         status: "not_started" as const,
         score: null,
         scorePct: null,

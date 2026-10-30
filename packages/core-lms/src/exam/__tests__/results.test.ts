@@ -128,6 +128,27 @@ describe("listExamResults", () => {
     expect(r.totalPoints).toBe(10);
   });
 
+  it("mỗi dòng có email, MSSV lấy từ tài khoản và số lần chuyển tab (chỉ tab_blur)", async () => {
+    const s = await setup("mssvtab");
+    const uid = await learnerTakes(s, 1, "a");
+    const notStarted = await enrollOnly(s, 2);
+    await prisma.user.update({ where: { id: uid }, data: { studentCode: "20201234" } });
+    await prisma.user.update({ where: { id: notStarted }, data: { studentCode: "20205678" } });
+    const att = await prisma.examAttempt.findFirstOrThrow({ where: { examId: s.examId, userId: uid } });
+    await prisma.examIncident.createMany({
+      data: [
+        { attemptId: att.id, type: "tab_blur" },
+        { attemptId: att.id, type: "tab_blur" },
+        { attemptId: att.id, type: "paste" },
+      ],
+    });
+
+    const r = await listExamResults(s.ownerId, s.examId);
+    const done = r.rows.find((x) => x.attemptId === att.id)!;
+    expect(done).toMatchObject({ mssv: "20201234", email: `res-l-mssvtab-1@e.com`, tabSwitchCount: 2 });
+    expect(r.rows.find((x) => x.attemptId === null)).toMatchObject({ mssv: "20205678" });
+  });
+
   it("liệt kê học viên đã ghi danh nhưng chưa làm", async () => {
     const s = await setup("notstarted");
     await learnerTakes(s, 1, "a");
