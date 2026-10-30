@@ -50,8 +50,10 @@ describe("buildExamResultsWorkbook", () => {
     const summary = wb.getWorksheet("Tổng hợp")!;
     expect(summary.getRow(5).getCell(2).value).toBe("Thí sinh / Học viên");
     expect(summary.getRow(5).getCell(3).value).toBe("MSSV");
-    expect(summary.getRow(5).getCell(11).value).toBe("Trạng thái");
-    expect(summary.getRow(5).getCell(12).value).toBe("Số lần chuyển tab");
+    expect(summary.getRow(5).getCell(4).value).toBe("Email");
+    expect(summary.getRow(5).getCell(5).value).toBe("Mã dự thi");
+    expect(summary.getRow(5).getCell(12).value).toBe("Trạng thái");
+    expect(summary.getRow(5).getCell(13).value).toBe("Số lần chuyển tab");
     expect(summary.getCell("A1").value).toBe("Bảng điểm: Kỹ năng mềm 10 phút");
 
     const perQ = wb.getWorksheet("Theo câu")!;
@@ -69,9 +71,9 @@ describe("buildExamResultsWorkbook", () => {
     });
     const ws = (await readBack(buf)).getWorksheet("Tổng hợp")!;
     const data = ws.getRow(6);
-    expect(data.getCell(8).value).toBe(3);
-    expect(data.getCell(10).value).toBe(0.5);
-    expect(data.getCell(10).numFmt).toBe("0.0%");
+    expect(data.getCell(9).value).toBe(3);
+    expect(data.getCell(11).value).toBe(0.5);
+    expect(data.getCell(11).numFmt).toBe("0.0%");
   });
 
   it("có cột MSSV (giữ số 0 đầu) và số lần chuyển tab", async () => {
@@ -80,12 +82,14 @@ describe("buildExamResultsWorkbook", () => {
       sessionTitle: null,
       exportedAt,
       questions: [{ number: 1, points: 1 }],
-      rows: [{ row: row({ mssv: "0123456", tabSwitchCount: 3 }), cells: ["Đúng"] }],
+      rows: [{ row: row({ mssv: "0123456", email: "sv@neu.edu.vn", accessCode: "ABCD2345", tabSwitchCount: 3 }), cells: ["Đúng"] }],
     });
     const ws = (await readBack(buf)).getWorksheet("Tổng hợp")!;
     expect(ws.getRow(6).getCell(3).value).toBe("0123456");
     expect(ws.getRow(6).getCell(3).numFmt).toBe("@");
-    expect(ws.getRow(6).getCell(12).value).toBe(3);
+    expect(ws.getRow(6).getCell(4).value).toBe("sv@neu.edu.vn");
+    expect(ws.getRow(6).getCell(5).value).toBe("ABCD2345");
+    expect(ws.getRow(6).getCell(13).value).toBe(3);
   });
 
   it("dòng chưa làm để trống điểm và ghi 'Chưa làm'", async () => {
@@ -110,10 +114,10 @@ describe("buildExamResultsWorkbook", () => {
     });
     const ws = (await readBack(buf)).getWorksheet("Tổng hợp")!;
     const data = ws.getRow(6);
-    expect(data.getCell(8).value).toBe("");
-    expect(data.getCell(11).value).toBe("Chưa làm");
+    expect(data.getCell(9).value).toBe("");
+    expect(data.getCell(12).value).toBe("Chưa làm");
     // Chưa vào thi: để trống, không ghi 0 lần chuyển tab.
-    expect(data.getCell(12).value).toBe("");
+    expect(data.getCell(13).value).toBe("");
   });
 
   it("bài còn câu chờ chấm không được ghi là Đã chấm", async () => {
@@ -125,7 +129,7 @@ describe("buildExamResultsWorkbook", () => {
       rows: [{ row: row({ needsGrading: true }), cells: ["Chờ chấm"] }],
     });
     const wb = await readBack(buf);
-    expect(wb.getWorksheet("Tổng hợp")!.getRow(6).getCell(11).value).toBe(
+    expect(wb.getWorksheet("Tổng hợp")!.getRow(6).getCell(12).value).toBe(
       "Còn câu chờ chấm",
     );
     expect(wb.getWorksheet("Theo câu")!.getRow(2).getCell(3).value).toBe("Chờ chấm");
@@ -140,7 +144,7 @@ describe("buildExamResultsWorkbook", () => {
       rows: [{ row: row({}), cells: [] }],
     });
     const ws = (await readBack(buf)).getWorksheet("Tổng hợp")!;
-    expect(ws.getRow(6).getCell(7).value).toBe("11:10 27/08/2026");
+    expect(ws.getRow(6).getCell(8).value).toBe("11:10 27/08/2026");
   });
 
   it("freeze dòng tiêu đề để cuộn không mất tên cột", async () => {

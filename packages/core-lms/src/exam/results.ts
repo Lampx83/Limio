@@ -31,6 +31,10 @@ export interface ExamResultRow {
   displayName: string;
   /** Email (học viên ghi danh) hoặc mã dự thi (thí sinh vào bằng mã). */
   identifier: string | null;
+  /** Email tài khoản; thí sinh vào bằng mã thì lấy email tài khoản liên kết hoặc email tự nhập. */
+  email?: string | null;
+  /** Mã dự thi của thí sinh vào bằng mã; học viên vào bằng tài khoản không có. */
+  accessCode?: string | null;
   /** MSSV thí sinh tự nhập khi vào thi, hoặc MSSV trong hồ sơ của học viên. */
   mssv?: string | null;
   /** Số lần rời tab trong bài này (sự cố `tab_blur`); người chưa làm thì không có. */
@@ -120,11 +124,13 @@ export function attemptResultStatus(s: string): ExamResultRowStatus {
 }
 
 /** MSSV ghi trong metadata của thí sinh (tự nhập ở form vào thi hoặc nhập từ danh sách). */
-function studentCodeOf(metadata: unknown): string | null {
+function metaString(metadata: unknown, key: string): string | null {
   if (!metadata || typeof metadata !== "object") return null;
-  const v = (metadata as Record<string, unknown>).studentCode;
+  const v = (metadata as Record<string, unknown>)[key];
   return typeof v === "string" && v.trim() ? v.trim() : null;
 }
+
+const studentCodeOf = (metadata: unknown) => metaString(metadata, "studentCode");
 
 export async function listExamResults(
   actorUserId: string,
@@ -204,6 +210,7 @@ export async function listExamResults(
           displayName: true,
           accessCode: true,
           metadata: true,
+          linkedUser: { select: { email: true } },
           sessionId: true,
           roomId: true,
           session: { select: { title: true, code: true } },
@@ -224,6 +231,10 @@ export async function listExamResults(
       a.candidateDisplayName ??
       "(không tên)",
     identifier: a.user?.email ?? a.candidate?.accessCode ?? null,
+    email:
+      (a.user?.email ?? a.candidate?.linkedUser?.email ?? metaString(a.candidate?.metadata, "email"))?.toLowerCase() ??
+      null,
+    accessCode: a.candidate?.accessCode ?? null,
     mssv: studentCodeOf(a.candidate?.metadata) ?? a.user?.studentCode?.trim() ?? null,
     tabSwitchCount: a._count.incidents,
     status: attemptResultStatus(a.status),
@@ -301,6 +312,8 @@ export async function listExamResults(
         attemptId: null,
         displayName: e.user.displayName,
         identifier: e.user.email,
+        email: e.user.email.toLowerCase(),
+        accessCode: null,
         status: "not_started" as const,
         score: null,
         scorePct: null,

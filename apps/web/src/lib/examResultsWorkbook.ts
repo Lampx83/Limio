@@ -66,7 +66,8 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
     "STT",
     "Thí sinh / Học viên",
     "MSSV",
-    "Email hoặc mã dự thi",
+    "Email",
+    "Mã dự thi",
     "Ca thi",
     "Phòng",
     "Nộp lúc",
@@ -76,7 +77,7 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
     "Trạng thái",
     "Số lần chuyển tab",
   ];
-  const widths = [6, 28, 14, 30, 24, 14, 18, 10, 12, 10, 20, 12];
+  const widths = [6, 28, 14, 30, 14, 24, 14, 18, 10, 12, 10, 20, 12];
 
   ws.getCell("A1").value = `Bảng điểm: ${input.examTitle}`;
   ws.getCell("A1").font = { bold: true, size: 14 };
@@ -104,7 +105,8 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
       i + 1,
       r.displayName,
       r.mssv ?? "",
-      r.identifier ?? "",
+      r.email ?? "",
+      r.accessCode ?? "",
       r.sessionTitle ?? "",
       r.roomName ?? "",
       r.submittedAt ? formatDateTime(new Date(r.submittedAt)) : "",
@@ -117,10 +119,11 @@ function addSummarySheet(wb: ExcelJS.Workbook, input: ExamResultsWorkbookInput) 
     ]);
     // MSSV giữ dạng chữ: Excel không được tự bỏ số 0 đầu.
     excelRow.getCell(3).numFmt = "@";
-    excelRow.getCell(10).numFmt = "0.0%";
+    excelRow.getCell(5).numFmt = "@";
+    excelRow.getCell(11).numFmt = "0.0%";
     const fill = VERDICT_FILL[v.label];
     if (fill) {
-      excelRow.getCell(11).fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
+      excelRow.getCell(12).fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
     }
   });
 
