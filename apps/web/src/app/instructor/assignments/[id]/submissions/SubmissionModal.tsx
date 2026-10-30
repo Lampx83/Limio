@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { UserAvatar, StatusBadge, DateTime } from "@/components/ui";
 import GradeForm from "./GradeForm";
 import WritingFeedbackReview from "@/components/WritingFeedbackReview";
@@ -81,16 +82,18 @@ export default function SubmissionModal({
   const isGraded = submission.status === "graded";
   const hasAttachment = !!submission.attachmentUrl;
 
-  return (
+  // Portal ra <body>: nếu để trong cây trang, overlay kẹt dưới thanh AppHeader (sticky z-30)
+  // và phần đầu cửa sổ (tên học viên, nút Trước/Sau) bị header che mất.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`Bài làm của ${user.displayName}`}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4"
       onClick={onClose}
     >
       <div
-        className={`w-full rounded-2xl bg-[rgb(var(--surface))] shadow-2xl ${
+        className={`my-auto w-full rounded-2xl bg-[rgb(var(--surface))] shadow-2xl ${
           hasAttachment ? "max-w-2xl lg:max-w-6xl" : "max-w-2xl"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -144,7 +147,7 @@ export default function SubmissionModal({
           </div>
         </header>
 
-        <div className="max-h-[75vh] overflow-y-auto p-5">
+        <div className="max-h-[min(75vh,calc(100dvh-12rem))] overflow-y-auto p-5">
           <div
             key={submission.id}
             className={
@@ -223,6 +226,7 @@ export default function SubmissionModal({
           </button>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

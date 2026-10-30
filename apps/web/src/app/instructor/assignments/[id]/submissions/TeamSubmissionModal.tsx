@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Crown } from "lucide-react";
 import type { TeamSubmissionEntry } from "@feedbackme/core-lms";
@@ -71,16 +72,18 @@ export default function TeamSubmissionModal({
   const isGraded = latest.status === "graded";
   const hasAttachment = !!latest.attachmentUrl;
 
-  return (
+  // Portal ra <body>: nếu để trong cây trang, overlay kẹt dưới thanh AppHeader (sticky z-30)
+  // và phần đầu cửa sổ (tên học viên, nút Trước/Sau) bị header che mất.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={`Bài làm của nhóm ${entry.team.name}`}
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4"
       onClick={onClose}
     >
       <div
-        className={`w-full rounded-2xl bg-[rgb(var(--surface))] shadow-2xl ${
+        className={`my-auto w-full rounded-2xl bg-[rgb(var(--surface))] shadow-2xl ${
           hasAttachment ? "max-w-2xl lg:max-w-6xl" : "max-w-2xl"
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -124,7 +127,7 @@ export default function TeamSubmissionModal({
           </div>
         </header>
 
-        <div className="max-h-[75vh] overflow-y-auto p-5">
+        <div className="max-h-[min(75vh,calc(100dvh-12rem))] overflow-y-auto p-5">
           <div
             key={`${entry.team.id}-${latest.submissionId}`}
             className={hasAttachment ? "grid gap-5 lg:grid-cols-2 lg:items-start" : ""}
@@ -218,7 +221,8 @@ export default function TeamSubmissionModal({
           </button>
         </footer>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
