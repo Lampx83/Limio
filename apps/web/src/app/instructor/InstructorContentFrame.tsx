@@ -15,7 +15,14 @@ export default function InstructorContentFrame({ children }: { children: React.R
   return (
     <div className={`mx-auto w-full px-4 lg:px-6 pt-6 ${home ? "pb-3" : "pb-24"} ${full ? "" : "max-w-6xl"}`}>
       {/* key theo đường dẫn: mỗi lần đổi trang nội dung mới hiện dần (chỉ độ trong suốt, không dịch chuyển) thay vì bật ra đột ngột. */}
-      <div key={pathname} className="animate-overlay-in motion-reduce:animate-none">
+      {/* animationFillMode "backwards": `both` (mặc định của animate-overlay-in) giữ animation opacity có hiệu lực mãi,
+          biến khung này thành stacking context vĩnh viễn nên mọi `fixed z-50` bên trong (bảng Padlet, hộp thoại)
+          bị kẹt dưới header sticky z-30. Khung cuối của animation trùng trạng thái tự nhiên nên không cần giữ. */}
+      <div
+        key={pathname}
+        className="animate-overlay-in motion-reduce:animate-none"
+        style={{ animationFillMode: "backwards" }}
+      >
         {children}
       </div>
     </div>
