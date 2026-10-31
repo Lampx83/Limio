@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type MouseEventHandler } from "react";
+import { renderMath } from "@/lib/mathRender";
 
 /**
  * Render instructor-authored HTML (richtext content) after sanitizing
@@ -17,8 +18,11 @@ export default function SafeHtml({
   style,
   attrs,
   transform,
+  onClick,
 }: {
   html: string;
+  /** Uỷ quyền bấm cho nút nằm trong HTML đã dựng (vd. "Bước tiếp" của lời giải từng bước). */
+  onClick?: MouseEventHandler<HTMLDivElement>;
   className?: string;
   style?: CSSProperties;
   /** Thuộc tính data-* gắn lên khung (vd. data-palette của bài học). */
@@ -42,7 +46,10 @@ export default function SafeHtml({
         ADD_ATTR: ["target", "rel", "style"],
         ADD_TAGS: ["mark"],
       });
-      setClean(transform ? transform(sanitized) : sanitized);
+      // Dựng công thức trước, rồi mới tới transform (bố cục), để transform thấy HTML cuối cùng.
+      return renderMath(sanitized).then((withMath) => {
+        if (active) setClean(transform ? transform(withMath) : withMath);
+      });
     });
     return () => {
       active = false;
@@ -55,6 +62,7 @@ export default function SafeHtml({
     <div
       className={className}
       style={style}
+      onClick={onClick}
       {...attrs}
       // sanitized by DOMPurify in the effect above
       dangerouslySetInnerHTML={{ __html: clean }}

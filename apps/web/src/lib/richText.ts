@@ -35,8 +35,27 @@ export function plainToRichHtml(value: string | null | undefined): string {
   if (!trimmed) return "";
   return trimmed
     .split(/\n\s*\n/)
-    .map((para) => `<p>${escapeHtml(para).replace(/\n/g, "<br>")}</p>`)
+    .map((para) => `<p>${withMath(para, (t) => escapeHtml(t).replace(/\n/g, "<br>"))}</p>`)
     .join("");
+}
+
+/**
+ * Công thức trong chữ thường: `$x^2-5x+6=0$` → span data-latex (SafeHtml dựng bằng KaTeX, xem lib/mathRender.ts). Cùng
+ * luật với importer: sau "$" mở và trước "$" đóng không có khoảng trắng, sau "$" đóng không là chữ số — nên "giá $5 và
+ * $10" vẫn là tiền. Đề thi / phương án / giải thích của câu hỏi đều đi qua plainToRichHtml, nên một chỗ này phủ hết.
+ */
+const MATH_IN_TEXT = /\$([^\s$](?:[^$\n]*?[^\s$])?)\$(?!\d)/g;
+
+function withMath(text: string, escapeRest: (t: string) => string): string {
+  let out = "";
+  let last = 0;
+  for (const m of text.matchAll(MATH_IN_TEXT)) {
+    out += escapeRest(text.slice(last, m.index));
+    const latex = escapeHtml(m[1]!);
+    out += `<span class="math-inline" data-latex="${latex}">${latex}</span>`;
+    last = m.index! + m[0].length;
+  }
+  return out + escapeRest(text.slice(last));
 }
 
 /**

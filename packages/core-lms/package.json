@@ -17,6 +17,7 @@
     "backfill:stored-files": "node --env-file=../db/.env --import tsx scripts/backfill-stored-files.ts",
     "split:auto-rounds": "node --env-file=../db/.env --import tsx scripts/split-auto-rounds.ts",
     "storage:orphans": "node --env-file=../db/.env --import tsx scripts/report-orphan-files.ts",
+    "attach:pdf": "node --env-file=../db/.env --import tsx scripts/attach-pdf.ts",
     "import:course": "node --env-file=../db/.env --import tsx scripts/import-course.ts",
     "import:course:prod": "node --env-file=../db/.env.prod-import --import tsx scripts/import-course.ts",
     "update:lesson": "node --env-file=../db/.env --import tsx scripts/update-lesson.ts",

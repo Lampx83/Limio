@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CreateQuestionInput } from "../../src/quizzes/questions";
-import { LessonSpec, expandQuestion, lectureAnchorProblems, lessonContentItems, renderSection } from "../import-course";
+import { LessonSpec, expandQuestion, lectureAnchorProblems, lessonContentItems, markdownToHtml, renderSection } from "../import-course";
 
 describe("renderSection — bố cục như Bài học từ tài liệu", () => {
   it("dựng section/lesson-part đúng đánh dấu mà lessonLook.css dùng", () => {
@@ -113,5 +113,57 @@ describe("lectureAnchorProblems — mốc lời giảng phải khớp mục củ
     const l = LessonSpec.parse({ ...base, lecture: [{ anchor: "Quy trinh", text: "c" }] });
     expect(lectureAnchorProblems(l)).toEqual(['anchor "Quy trinh" không trùng mục nào của bài']);
     expect(lectureAnchorProblems(LessonSpec.parse(base))).toEqual([]);
+  });
+});
+
+describe("công thức toán trong markdown", () => {
+  it("$…$ thành span data-latex, không bị luật in đậm / nghiêng phá", () => {
+    const html = markdownToHtml("Nghiệm là $x_1 = \\frac{-b}{2a}$ và $a*b*c$ ở đây.", { toc: false });
+    expect(html).toContain('<span class="math-inline" data-latex="x_1 = \\frac{-b}{2a}">');
+    expect(html).toContain('data-latex="a*b*c"');
+    expect(html).not.toContain("<em>");
+  });
+  it("tiền tệ không bị bắt nhầm thành công thức", () => {
+    const html = markdownToHtml("Giá $5 và $10 mỗi cái.", { toc: false });
+    expect(html).not.toContain("data-latex");
+  });
+  it("escape nguồn LaTeX có dấu < > & \"", () => {
+    const html = markdownToHtml("$a<b \\& c>d$", { toc: false });
+    expect(html).toContain('data-latex="a&lt;b \\&amp; c&gt;d"');
+  });
+  it("$$…$$ một dòng và nhiều dòng thành khối math-block", () => {
+    const one = markdownToHtml("$$x=1$$", { toc: false });
+    expect(one).toContain('<div class="math-block" data-latex="x=1">');
+    const multi = markdownToHtml("$$\nx=\\frac{a}{b}\n$$\n\nTiếp.", { toc: false });
+    expect(multi).toContain('data-latex="x=\\frac{a}{b}"');
+    expect(multi).toContain("Tiếp.");
+  });
+});
+
+describe("lời giải hiện từng bước", () => {
+  const sec = {
+    layout: "steps" as const,
+    title: "Giải mẫu",
+    reveal: true,
+    parts: [{ title: "Một", md: "a" }, { title: "Hai", md: "b" }],
+  };
+  it("gắn data-reveal chỉ khi bố cục steps có từ 2 bước", () => {
+    expect(renderSection(sec)).toContain('data-layout="steps" data-reveal="1"');
+    expect(renderSection({ ...sec, parts: [sec.parts[0]!] })).not.toContain("data-reveal");
+    expect(renderSection({ ...sec, layout: "cards" })).not.toContain("data-reveal");
+  });
+  it("anchor lời giảng #n phải trỏ tới bước có thật của mục reveal", () => {
+    const base = LessonSpec.parse({
+      title: "B",
+      sections: [sec],
+      lecture: [{ anchor: "Giải mẫu #1", text: "x" }, { anchor: "Giải mẫu #2", text: "y" }],
+    });
+    expect(lectureAnchorProblems(base)).toEqual([]);
+    const bad = LessonSpec.parse({
+      title: "B",
+      sections: [sec],
+      lecture: [{ anchor: "Giải mẫu #3", text: "x" }, { anchor: "Giải mẫu #0", text: "y" }, { anchor: "Mục lạ #1", text: "z" }],
+    });
+    expect(lectureAnchorProblems(bad)).toHaveLength(3);
   });
 });

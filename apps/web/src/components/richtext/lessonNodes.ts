@@ -52,6 +52,12 @@ export const LessonSection = Node.create({
         },
         renderHTML: (attrs) => ({ "data-layout": attrs.layout }),
       },
+      // Bố cục "Các bước" hiện dần từng bước ở trang học viên (lib/lessonReveal.ts). Giữ qua lần sửa chữ.
+      reveal: {
+        default: false,
+        parseHTML: (el) => el.hasAttribute("data-reveal"),
+        renderHTML: (attrs) => (attrs.reveal ? { "data-reveal": "1" } : {}),
+      },
     };
   },
 
@@ -168,4 +174,58 @@ export const LessonFigure = Node.create({
   },
 });
 
-export const LESSON_NODES = [LessonDocument, LessonSection, LessonPart, LessonBox, LessonFigure];
+/**
+ * Công thức toán: chỉ lưu NGUỒN LaTeX trong `data-latex` (xem lib/mathRender.ts). Nguyên tử (atom): ở trình soạn
+ * hiện chữ nguồn trong ô mã, không sửa từng ký tự bên trong; ở trang học viên KaTeX dựng thành công thức.
+ * Không có hai nút này thì mọi công thức bị trình soạn làm phẳng thành chữ thường mỗi lần giảng viên sửa bài.
+ */
+export const LessonMathInline = Node.create({
+  name: "lessonMathInline",
+  group: "inline",
+  inline: true,
+  atom: true,
+  selectable: true,
+
+  addAttributes() {
+    return { latex: { default: "", parseHTML: (el) => el.getAttribute("data-latex") ?? "" } };
+  },
+
+  parseHTML() {
+    return [{ tag: "span.math-inline[data-latex]" }];
+  },
+
+  renderHTML({ node }) {
+    const latex = String(node.attrs.latex ?? "");
+    return ["span", { class: "math-inline", "data-latex": latex }, latex];
+  },
+});
+
+export const LessonMathBlock = Node.create({
+  name: "lessonMathBlock",
+  group: "block",
+  atom: true,
+  selectable: true,
+
+  addAttributes() {
+    return { latex: { default: "", parseHTML: (el) => el.getAttribute("data-latex") ?? "" } };
+  },
+
+  parseHTML() {
+    return [{ tag: "div.math-block[data-latex]" }];
+  },
+
+  renderHTML({ node }) {
+    const latex = String(node.attrs.latex ?? "");
+    return ["div", { class: "math-block", "data-latex": latex }, latex];
+  },
+});
+
+export const LESSON_NODES = [
+  LessonDocument,
+  LessonSection,
+  LessonPart,
+  LessonBox,
+  LessonFigure,
+  LessonMathInline,
+  LessonMathBlock,
+];

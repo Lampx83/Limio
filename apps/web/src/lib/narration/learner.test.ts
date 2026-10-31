@@ -12,6 +12,7 @@ import {
   parseResume,
   previousStart,
   readResume,
+  anchorLabel,
   resolveAnchors,
   segmentIndexAt,
   serializeResume,
@@ -91,6 +92,16 @@ describe("ánh xạ anchor với tiêu đề mục", () => {
       { type: "heading", index: 1 },
     ]);
     expect(normalizeHeading("“Hỏi  AI”: thế nào?")).toBe(normalizeHeading('"hỏi ai" thế nào'));
+  });
+  it("anchor có hậu tố #n trỏ tới bước n của mục", () => {
+    expect(resolveAnchors(["AI tạo ra câu trả lời như thế nào #2", "AI tạo ra câu trả lời như thế nào#10"], headings)).toEqual([
+      { type: "heading", index: 0, step: 2 },
+      { type: "heading", index: 0, step: 10 },
+    ]);
+    // #0 không phải bước nào: coi như cả mục.
+    expect(resolveAnchors(["AI tạo ra câu trả lời như thế nào #0"], headings)).toEqual([{ type: "heading", index: 0 }]);
+    expect(resolveAnchors(["Mục đã bị xoá #2"], headings)).toEqual([{ type: "none" }]);
+    expect(anchorLabel("Giải phương trình #3")).toBe("Giải phương trình · bước 3");
   });
   it("anchor không có mục tương ứng thì none, không đoán", () => {
     expect(resolveAnchors(["Mục đã bị xoá", ""], headings)).toEqual([{ type: "none" }, { type: "none" }]);

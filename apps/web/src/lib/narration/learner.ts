@@ -103,7 +103,7 @@ export const ANCHOR_OUTRO = "tong-ket";
 export type AnchorTarget =
   | { type: "intro" }
   | { type: "outro" }
-  | { type: "heading"; index: number }
+  | { type: "heading"; index: number; /** Bước thứ n (từ 1) của lời giải từng bước trong mục; không có = cả mục. */ step?: number }
   | { type: "none" };
 
 /** Bỏ dấu câu, dấu nháy, khoảng trắng thừa và hoa/thường — chữ trong `anchor` và trong HTML đã đi qua hai bộ chuẩn hoá khác nhau. */
@@ -124,10 +124,14 @@ export function resolveAnchors(anchors: readonly string[], headings: readonly (r
   return anchors.map((anchor): AnchorTarget => {
     if (anchor === ANCHOR_INTRO) return { type: "intro" };
     if (anchor === ANCHOR_OUTRO) return { type: "outro" };
-    const want = normalizeHeading(anchor);
+    // "Tiêu đề mục #2": đoạn giảng riêng cho bước 2 của mục đó (lời giải hiện từng bước).
+    const stepMatch = /^(.*?)\s*#(\d{1,2})$/.exec(anchor.trim());
+    const want = normalizeHeading(stepMatch ? stepMatch[1]! : anchor);
     if (!want) return { type: "none" };
     const index = normalized.findIndex((set) => set.has(want));
-    return index >= 0 ? { type: "heading", index } : { type: "none" };
+    if (index < 0) return { type: "none" };
+    const step = stepMatch ? Number(stepMatch[2]) : 0;
+    return step >= 1 ? { type: "heading", index, step } : { type: "heading", index };
   });
 }
 
@@ -135,7 +139,8 @@ export function resolveAnchors(anchors: readonly string[], headings: readonly (r
 export function anchorLabel(anchor: string): string {
   if (anchor === ANCHOR_INTRO) return "Mở đầu";
   if (anchor === ANCHOR_OUTRO) return "Tổng kết";
-  return anchor;
+  const m = /^(.*?)\s*#(\d{1,2})$/.exec(anchor.trim());
+  return m ? `${m[1]} · bước ${m[2]}` : anchor;
 }
 
 // ── Nhớ vị trí nghe dở ───────────────────────────────────────────────────────

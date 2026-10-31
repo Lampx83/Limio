@@ -217,6 +217,8 @@ export const LessonSpec = z.object({
         layout: z.enum(LESSON_LAYOUT_KEYS),
         title: z.string().min(1).max(200),
         intro: z.string().optional(),
+        /** Chỉ cho `steps`: ở trang học viên các bước hiện dần theo nút "Bước tiếp" (lời giải mẫu môn Toán). */
+        reveal: z.boolean().optional(),
         parts: z.array(z.object({ title: z.string().max(200).optional(), md: z.string().default("") })).min(1),
         /** Markdown đứng sau lưới (ghi nhớ, ví dụ, mẹo…), cùng khối với mục. */
         outro: z.string().optional(),
@@ -530,9 +532,26 @@ function zoomCjk(html: string): string {
   return html.replace(CJK_RUN, (m) => `<span style="font-size:1.3em">${m}</span>`);
 }
 
-/** Định dạng trong dòng: **đậm**, *nghiêng*, `mã`. Escape TRƯỚC, rồi mới gắn thẻ. */
+/**
+ * Công thức trong dòng: `$x^2-5x+6=0$`. Theo luật của pandoc để "$" tiền tệ không bị bắt nhầm: ngay sau "$" mở và
+ * ngay trước "$" đóng không được có khoảng trắng, và sau "$" đóng không được là chữ số ("giá $5 và $10" không phải
+ * công thức). Chỉ lưu nguồn LaTeX; trang học viên dựng bằng KaTeX (apps/web/src/lib/mathRender.ts).
+ */
+const MATH_INLINE = /\$([^\s$](?:[^$\n]*?[^\s$])?)\$(?!\d)/g;
+
+function mathSpan(latex: string): string {
+  return `<span class="math-inline" data-latex="${esc(latex)}">${esc(latex)}</span>`;
+}
+
+/** Định dạng trong dòng: **đậm**, *nghiêng*, `mã`, `$công thức$`. Escape TRƯỚC, rồi mới gắn thẻ. */
 function inline(raw: string): string {
-  const html = esc(raw)
+  // Công thức cất ra trước: LaTeX đầy "_", "*", "^" mà các luật in đậm / nghiêng bên dưới sẽ phá nát.
+  const maths: string[] = [];
+  const stashed = raw.replace(MATH_INLINE, (_m, latex: string) => {
+    maths.push(latex);
+    return `\uE000${maths.length - 1}\uE001`;
+  });
+  const html = esc(stashed)
     .replace(
       // Dạng "unrolled loop": tuyến tính, không có định lượng lồng nhau. Vẫn
       // nhận URL có một cấp ngoặc (trang File của Wikimedia), nhưng không thể
@@ -548,7 +567,7 @@ function inline(raw: string): string {
     );
   // Chạy sau cùng: thẻ do các bước trên sinh ra không chứa ký tự CJK nên
   // không có nguy cơ chèn span vào giữa tên thẻ.
-  return zoomCjk(html);
+  return zoomCjk(html).replace(/\uE000(\d+)\uE001/g, (_m, i: string) => mathSpan(maths[Number(i)]!));
 }
 
 /**
@@ -602,6 +621,32 @@ export function markdownToHtml(
     const t = line.trim();
 
     if (t === "") { i++; continue; }
+
+    // Công thức riêng một dòng / nhiều dòng giữa hai dấu `$$`.
+    if (t.startsWith("$$")) {
+      let body: string;
+      if (t.length > 4 && t.endsWith("$$")) {
+        body = t.slice(2, -2);
+        i++;
+      } else {
+        const buf: string[] = [];
+        const first = t.slice(2).trim();
+        if (first) buf.push(first);
+        i++;
+        while (i < lines.length && !lines[i]!.trim().endsWith("$$")) {
+          buf.push(lines[i]!);
+          i++;
+        }
+        if (i < lines.length) {
+          const last = lines[i]!.trim().slice(0, -2).trim();
+          if (last) buf.push(last);
+          i++;
+        }
+        body = buf.join("\n");
+      }
+      out.push(`<div class="math-block" data-latex="${esc(body.trim())}">${esc(body.trim())}</div>`);
+      continue;
+    }
 
     // Hình minh hoạ trên một dòng riêng: ![mô tả](url "chú thích").
     // Chú thích đi qua inline() nên viết được [tên nguồn](link) trong đó —
@@ -1044,7 +1089,18 @@ export function lectureAnchorProblems(l: z.infer<typeof LessonSpec>): string[] {
   const known = new Set<string>([LECTURE_INTRO_ANCHOR, LECTURE_OUTRO_ANCHOR]);
   for (const sec of l.sections ?? []) known.add(plainHeading(sec.title));
   for (const m of (l.body ?? "").matchAll(/^##\s+(.+?)\s*$/gm)) known.add(plainHeading(m[1]!));
-  return l.lecture.filter((seg) => !known.has(seg.anchor)).map((seg) => `anchor "${seg.anchor}" không trùng mục nào của bài`);
+  // "Tiêu đề mục #n": đoạn giảng riêng cho bước n của lời giải hiện từng bước (`reveal`). Bước không có thật thì lúc
+  // nghe không hiện bước nào và cũng không báo lỗi, nên phải bắt ở đây.
+  const stepsOf = new Map<string, number>();
+  for (const sec of l.sections ?? []) if (sec.reveal && sec.layout === "steps") stepsOf.set(plainHeading(sec.title), sec.parts.length);
+  return l.lecture
+    .filter((seg) => {
+      if (known.has(seg.anchor)) return false;
+      const m = /^(.*?)\s*#(\d{1,2})$/.exec(seg.anchor.trim());
+      const total = m ? stepsOf.get(m[1]!) : undefined;
+      return !(m && total !== undefined && Number(m[2]) >= 1 && Number(m[2]) <= total);
+    })
+    .map((seg) => `anchor "${seg.anchor}" không trùng mục nào của bài`);
 }
 
 export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
@@ -1103,7 +1159,8 @@ type SectionSpec = NonNullable<z.infer<typeof LessonSpec>["sections"]>[number];
  * bảng vẫn dùng được bên trong thẻ.
  */
 export function renderSection(sec: SectionSpec): string {
-  let out = `<section class="lesson-section" data-layout="${sec.layout}"><h2>${inline(sec.title)}</h2>`;
+  const reveal = sec.reveal && sec.layout === "steps" && sec.parts.length >= 2 ? ` data-reveal="1"` : "";
+  let out = `<section class="lesson-section" data-layout="${sec.layout}"${reveal}><h2>${inline(sec.title)}</h2>`;
   if (sec.intro) out += markdownToHtml(sec.intro, { toc: false });
   for (const part of sec.parts) {
     const head = part.title ? `<h3>${inline(part.title)}</h3>` : "";

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Inter, Nunito } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import AppHeader from "@/components/AppHeader";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
 import Toaster from "@/components/Toaster";

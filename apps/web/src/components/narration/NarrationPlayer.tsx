@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { ChevronUp, Navigation, Pause, Play, RotateCcw, SkipBack, SkipForward, X } from "lucide-react";
 import type { LectureForLearner, PodcastForLearner } from "@feedbackme/core-lms";
 import { getBrowserAudioPlayer } from "@/lib/exclusiveAudio";
+import { showSteps } from "@/lib/lessonReveal";
 import {
   NARRATION_SPEEDS,
   SPEED_KEY,
@@ -127,6 +128,15 @@ function resolveTargets(root: HTMLElement, anchors: string[]): Resolved {
       targets.push(box);
       headings.push(null);
       subs.push(box ? leafBlocks(box) : []);
+    } else if (r.type === "heading" && r.step) {
+      // Đoạn giảng riêng cho bước n của lời giải từng bước: tô sáng đúng bước đó. Không gán `headings` để bấm tiêu đề
+      // vẫn nghe từ đầu mục chứ không nhảy vào giữa lời giải.
+      const section = h2s[r.index]!.closest<HTMLElement>(".lesson-section");
+      const parts = section ? [...section.querySelectorAll<HTMLElement>(":scope > .lesson-part")] : [];
+      const part = parts[r.step - 1] ?? null;
+      targets.push(part);
+      headings.push(null);
+      subs.push(part ? leafBlocks(part) : []);
     } else if (r.type === "heading") {
       const h = h2s[r.index]!;
       const item = h.closest<HTMLElement>("[data-item-id]");
@@ -530,6 +540,12 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         if (n !== el) n.classList.remove("narration-active");
       });
       el?.classList.add("narration-active");
+      // Giọng đang giảng một bước của lời giải từng bước: hiện lời giải tới bước đó, như thầy viết lên bảng.
+      const stepSection = el?.parentElement?.classList.contains("lk-reveal") && el.classList.contains("lesson-part") ? el.parentElement : null;
+      if (stepSection && el) {
+        const idx = [...stepSection.querySelectorAll(":scope > .lesson-part")].indexOf(el);
+        if (idx >= 0) showSteps(stepSection, idx + 1);
+      }
       if (el && needScroll.current) {
         needScroll.current = false;
         scrollIntoComfort(el);
