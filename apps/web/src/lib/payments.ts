@@ -150,7 +150,7 @@ export async function processStripeWebhook(event: Stripe.Event) {
         : { id: null, durationMonths: null };
       // Cấp/gia hạn quyền truy cập — null durationMonths = vĩnh viễn, đúng
       // hành vi cũ cho Order không gắn CourseAccessPlan.
-      await extendEnrollmentAccess(order.userId, course, plan, tx as typeof prisma);
+      await extendEnrollmentAccess(order.userId, course, plan, tx as typeof prisma, { via: "order" });
     });
   } else if (event.type === "checkout.session.expired") {
     const sess = event.data.object as Stripe.Checkout.Session;

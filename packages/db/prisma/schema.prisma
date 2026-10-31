@@ -2883,6 +2883,11 @@ model CourseAccessCodeBatch {
   note      String?
   /// Số mã đã sinh cho lô (chốt lúc tạo; thu hồi không làm đổi).
   count     Int
+  /// AC3 — thời hạn truy cập (tháng) mà mỗi mã trong lô cấp, tính từ lúc kích hoạt. null = vĩnh viễn,
+  /// đúng hành vi của mọi mã trước AC3. Đặt lúc tạo lô, không có đường sửa.
+  accessDurationMonths Int?
+  /// AC3 — hạn kích hoạt: sau mốc này mã không đổi được nữa (cuối ngày theo giờ Việt Nam). null = không hạn.
+  activateBefore       DateTime?
   createdBy String
   createdAt DateTime @default(now())
 

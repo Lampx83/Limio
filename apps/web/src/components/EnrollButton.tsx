@@ -6,11 +6,13 @@ import { toast } from "@/lib/toast";
 import { formatPrice, isFree } from "@/lib/formatPrice";
 import { apiUrl } from "@/lib/apiUrl";
 import { enrollErrorMessage } from "@/lib/enrollErrors";
+import { accessSummary } from "@/lib/accessSummary";
 
 const REDEEM_ERROR_LABEL: Record<string, string> = {
   code_not_found: "Không tìm thấy mã này. Kiểm tra lại chữ/số đã gõ.",
   code_already_used: "Mã này đã được dùng rồi.",
   code_revoked: "Mã này đã bị thu hồi.",
+  code_expired: "Mã này đã hết hạn kích hoạt. Bạn hỏi lại người đã gửi mã nhé.",
   course_not_enrollable: "Khoá học hiện chưa mở đăng ký.",
   rate_limited: "Bạn thử quá nhiều lần, vui lòng đợi một chút rồi thử lại.",
   validation_failed: "Vui lòng nhập mã.",
@@ -130,7 +132,9 @@ export default function EnrollButton({
       setRedeeming(false);
       return;
     }
-    toast.success("Kích hoạt thành công", { description: "Đang chuyển vào khóa…" });
+    toast.success("Kích hoạt thành công", {
+      description: `${accessSummary(data.accessExpiresAt)} Đang chuyển vào khóa…`,
+    });
     window.location.href = `/learn/${data.courseSlug ?? slug}`;
   }
 

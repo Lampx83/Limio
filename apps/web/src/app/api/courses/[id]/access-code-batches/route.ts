@@ -22,11 +22,18 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   }
 }
 
-// POST /api/courses/[id]/access-code-batches — tạo một lô. Body: { label, count, note? }.
+// POST /api/courses/[id]/access-code-batches — tạo một lô.
+// Body: { label, count, note?, accessDurationMonths? (null = vĩnh viễn), activateBefore? ("YYYY-MM-DD", giờ VN) }.
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  const body = (await readJson(req)) as { label?: unknown; count?: unknown; note?: unknown } | null;
+  const body = (await readJson(req)) as {
+    label?: unknown;
+    count?: unknown;
+    note?: unknown;
+    accessDurationMonths?: unknown;
+    activateBefore?: unknown;
+  } | null;
   if (typeof body?.label !== "string" || typeof body.count !== "number") {
     return NextResponse.json({ error: "validation_failed", details: { max: ACCESS_CODE_BATCH_LIMIT } }, { status: 400 });
   }
@@ -36,6 +43,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       label: body.label,
       count: body.count,
       note: typeof body.note === "string" ? body.note : null,
+      // Kiểu sai thì đẩy xuống lõi để nó từ chối (validation_failed) thay vì lặng lẽ bỏ qua thành "vĩnh viễn".
+      accessDurationMonths: body.accessDurationMonths === undefined ? null : (body.accessDurationMonths as number | null),
+      activateBefore: body.activateBefore === undefined ? null : (body.activateBefore as string | null),
     });
     return NextResponse.json(r);
   } catch (e) {

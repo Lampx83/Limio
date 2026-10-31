@@ -156,6 +156,20 @@ AC1 (bảo vệ học liệu) → AC2 (lô mã + xuất file) → AC3 (thời h�
 
 - `enrollment.access.extended` (đã có) thêm trường tuỳ chọn `via: "access_code" | "order"` để phân tích nguồn; **không** ghi mã. Sự kiện cũ không có trường này vẫn hợp lệ.
 
+### Đã làm (31/10/2026)
+
+- Cột `accessDurationMonths`, `activateBefore` trên `CourseAccessCodeBatch` (migration `20261031020000_access_code_duration`, cả hai NULL = hành vi cũ). Form tạo lô có ô "Thời hạn truy cập" (Vĩnh viễn / 3 / 6 / 1 / 2 / 3 năm) và "Kích hoạt trước ngày"; thẻ lô hiện thời hạn, hạn kích hoạt, và nhãn "Hết hạn kích hoạt" khi đã qua. Lô chỉ đặt được lúc tạo, không có đường sửa nên không cần chặn sửa sau khi có mã đã dùng.
+- `redeemAccessCode` viết lại theo bảng các trường hợp ở trên; lõi tách hàm `endOfDayVn`. Hạn kích hoạt ở dạng `YYYY-MM-DD` giờ VN, từ chối ngày đã qua hoặc không có thật (2026-02-31).
+- **Khác bản nháp:**
+  - Ghi danh **mới** có thời hạn không đi qua `extendEnrollmentAccess`: hàm đó coi ghi danh vừa tạo (hạn null) là "đã vĩnh viễn" nên giữ nguyên. Hạn được đặt trực tiếp rồi ghi cùng sự kiện `enrollment.access.extended`. Người **đã** có ghi danh thì dùng `extendEnrollmentAccess` như dự định.
+  - Bấm hai lần cùng một mã của chính mình (khi đang có hạn) trả thành công, không tiêu thêm, không gia hạn lần hai.
+  - Ghi danh `dropped` / `refunded` nhập mã thì mở lại thành `active` (mã là bằng chứng đã trả tiền). Trước AC3, người đã ghi danh kiểu gì cũng bị trả về "đã có" mà không được mở lại.
+  - Lô vĩnh viễn nhập cho người đang có hạn nâng lên vĩnh viễn và tiêu mã (trước đây mã lẻ không tiêu). Người đã vĩnh viễn vẫn không tiêu mã.
+- Thông báo thành công nêu hạn ("Truy cập đến dd/mm/yyyy." / "Truy cập vĩnh viễn.") ở ô nhập mã trang khoá và ô "Nhập mã" trang Bắt đầu; lỗi `code_expired` trả 410 kèm câu riêng.
+- Đã thử trên dev: lô 1 năm hạn 31/12 → hạn lưu `16:59:59.999Z` đúng cuối ngày VN; nhập mã → hạn 31/10/2027; bấm lại cùng mã → không tiêu, cùng hạn; nhập mã thứ hai → 31/10/2028 (cộng dồn); đẩy mốc về quá khứ → 410 `code_expired`.
+- **Điều kiện bật tính năng:** trang khoá chỉ hiện ô nhập mã khi công tắc thanh toán toàn hệ thống (`paymentEnabled`) bật. Khi tắt, mọi khoá hiện là "Đăng ký miễn phí" và không có ô nhập mã (đã thấy trên dev). Khoá bán qua mã cần bật công tắc này, kể cả khi chưa dùng Stripe; ô "Nhập mã" ở trang Bắt đầu thì không phụ thuộc.
+- Chưa kiểm bằng mắt: nhãn "Hết hạn kích hoạt" trên thẻ lô / danh sách mã, và toast hiện hạn (chỉ kiểm qua API và test).
+
 ---
 
 ## AC4 — Hoàn tiền trên Stripe thu hồi quyền học

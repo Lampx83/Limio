@@ -157,7 +157,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
             err.code === "course_not_enrollable" ||
             err.code === "course_invite_only"
           ? 409
-          : err.code === "code_revoked"
+          : err.code === "code_revoked" || err.code === "code_expired"
             ? 410
             : 400;
     return NextResponse.json(

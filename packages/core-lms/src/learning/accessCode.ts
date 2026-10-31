@@ -1,6 +1,9 @@
 import { randomInt } from "node:crypto";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { EnrollError, enrollWithVerifiedPayment, type EnrollResult } from "./enroll";
+import { addMonthsUtc, extendEnrollmentAccess } from "./courseAccess";
+import { emitEvent } from "./events";
+import { LearningEventType } from "@feedbackme/shared-types";
 
 /**
  * Mã kích hoạt khoá học có phí.
@@ -22,7 +25,8 @@ export class AccessCodeError extends Error {
       | "code_already_used"
       | "code_revoked"
       | "course_not_enrollable"
-      | "batch_not_found",
+      | "batch_not_found"
+      | "code_expired",
     public readonly details?: unknown,
   ) {
     super(code);
@@ -146,19 +150,29 @@ export async function revokeAccessCode(
 export interface RedeemAccessCodeResult extends EnrollResult {
   courseSlug: string;
   courseTitle: string;
-  /** false nếu người này đã ghi danh khoá từ trước — mã không bị tiêu, vẫn
-   * dùng được cho người khác. */
+  /** false nếu người này đã có truy cập vĩnh viễn (hoặc bấm lại mã của chính mình) — mã không bị tiêu,
+   * vẫn dùng được cho người khác. */
   codeConsumed: boolean;
+  /** Hạn truy cập sau khi đổi mã; null = vĩnh viễn. */
+  accessExpiresAt: Date | null;
 }
 
 /**
- * Đổi mã lấy một chỗ trong khoá.
+ * Đổi mã lấy quyền vào khoá.
  *
- * Đọc trạng thái mã trước để trả lỗi rõ ràng và để không tiêu mã khi người
- * này đã ghi danh từ trước (ví dụ nhận nhầm 2 mã) — nhưng an toàn trước đua
- * tranh KHÔNG nằm ở lần đọc đó, mà ở updateMany có điều kiện `status:
- * "unused"` ngay sau: hai request cùng redeem một mã, chỉ một cái có
- * count=1, cái còn lại thấy count=0 và biết mã vừa bị người khác dùng mất.
+ * Mã thuộc một lô (AC2) có thể mang thời hạn truy cập và hạn kích hoạt (AC3); mã lẻ / mã có từ trước không có
+ * cả hai nên cấp vĩnh viễn, đúng như trước đây.
+ *
+ *  - Chưa ghi danh → ghi danh; lô có thời hạn thì đặt `accessExpiresAt` = lúc nhập + N tháng.
+ *  - Đã có truy cập VĨNH VIỄN → không có gì để cấp thêm, mã KHÔNG bị tiêu (nhận nhầm hai mã vẫn dùng được
+ *    cho người khác). Bấm hai lần cùng một mã của chính mình cũng trả thành công thay vì báo lỗi.
+ *  - Còn lại (đang có hạn, đã hết hạn, đã bỏ / hoàn tiền) → gia hạn qua `extendEnrollmentAccess`: cộng dồn từ hạn
+ *    hiện có nếu còn hiệu lực, tính từ bây giờ nếu đã hết; lô vĩnh viễn thì nâng lên vĩnh viễn; mã bị tiêu.
+ *  - Lô đã quá hạn kích hoạt → `code_expired`, mã giữ nguyên `unused`.
+ *
+ * Đọc trạng thái mã trước để trả lỗi rõ ràng, nhưng an toàn trước đua tranh KHÔNG nằm ở lần đọc đó mà ở
+ * updateMany có điều kiện `status: "unused"` ngay sau: hai request cùng redeem một mã, chỉ một cái có count=1.
+ * Kiểm hạn kích hoạt nằm cùng transaction, ngay trước lần tiêu mã đó.
  */
 export async function redeemAccessCode(
   userId: string,
@@ -170,29 +184,40 @@ export async function redeemAccessCode(
   return db.$transaction(async (tx) => {
     const record = await tx.courseAccessCode.findUnique({
       where: { code },
-      include: { course: true },
+      include: { course: true, batch: { select: { accessDurationMonths: true, activateBefore: true } } },
     });
     if (!record) throw new AccessCodeError("code_not_found");
     if (record.status === "revoked") throw new AccessCodeError("code_revoked");
 
-    const existingEnrollment = await tx.enrollment.findUnique({
+    const grantMonths = record.batch?.accessDurationMonths ?? null;
+    const now = new Date();
+    const existing = await tx.enrollment.findUnique({
       where: { userId_courseId: { userId, courseId: record.courseId } },
     });
-    if (existingEnrollment) {
+    const accessNow =
+      existing !== null &&
+      (existing.status === "active" || existing.status === "completed") &&
+      (existing.accessExpiresAt === null || existing.accessExpiresAt > now);
+    const base = { courseSlug: record.course.slug, courseTitle: record.course.title };
+
+    if (existing && accessNow && (existing.accessExpiresAt === null || record.redeemedByUserId === userId)) {
       return {
-        enrollmentId: existingEnrollment.id,
-        courseVersion: existingEnrollment.courseVersion,
+        enrollmentId: existing.id,
+        courseVersion: existing.courseVersion,
         created: false,
-        courseSlug: record.course.slug,
-        courseTitle: record.course.title,
+        accessExpiresAt: existing.accessExpiresAt,
+        ...base,
         codeConsumed: false,
       };
     }
     if (record.status === "redeemed") throw new AccessCodeError("code_already_used");
+    if (record.batch?.activateBefore && record.batch.activateBefore.getTime() <= now.getTime()) {
+      throw new AccessCodeError("code_expired");
+    }
 
     const claimed = await tx.courseAccessCode.updateMany({
       where: { code, status: "unused" },
-      data: { status: "redeemed", redeemedByUserId: userId, redeemedAt: new Date() },
+      data: { status: "redeemed", redeemedByUserId: userId, redeemedAt: now },
     });
     if (claimed.count === 0) {
       // Bị người khác giành mất giữa lúc đọc và lúc ghi ở trên.
@@ -200,18 +225,49 @@ export async function redeemAccessCode(
     }
 
     try {
-      // Cast — tx bên trong $transaction(async (tx) => ...) thiếu vài method
-      // quản lý kết nối so với PrismaClient đầy đủ (convention đã dùng ở
-      // processStripeWebhook cho resolveDefaultSectionId).
-      const result = await enrollWithVerifiedPayment(userId, record.course, tx as typeof prisma, {
-        baseUrl: opts?.baseUrl,
+      // Cast — tx bên trong $transaction(async (tx) => ...) thiếu vài method quản lý kết nối so với
+      // PrismaClient đầy đủ (convention đã dùng ở processStripeWebhook cho resolveDefaultSectionId).
+      const txDb = tx as typeof prisma;
+      let result: EnrollResult;
+      if (!existing) {
+        result = await enrollWithVerifiedPayment(userId, record.course, txDb, { baseUrl: opts?.baseUrl });
+        if (grantMonths !== null) {
+          // Không đi qua extendEnrollmentAccess: ghi danh vừa tạo có accessExpiresAt = null nên nó sẽ coi là
+          // "đã vĩnh viễn" và giữ nguyên. Đặt hạn trực tiếp, rồi ghi sự kiện cùng khuôn với đường gia hạn.
+          const expires = addMonthsUtc(now, grantMonths);
+          await tx.enrollment.update({ where: { id: result.enrollmentId }, data: { accessExpiresAt: expires } });
+          await emitEvent(
+            userId,
+            LearningEventType.EnrollmentAccessExtended,
+            {
+              enrollmentId: result.enrollmentId,
+              courseId: record.courseId,
+              accessPlanId: null,
+              durationMonths: grantMonths,
+              previousExpiresAt: null,
+              newExpiresAt: expires.toISOString(),
+              via: "access_code",
+            },
+            { courseId: record.courseId },
+            txDb,
+          );
+        }
+      } else {
+        if (record.course.status !== "published") throw new EnrollError("course_not_enrollable");
+        const r = await extendEnrollmentAccess(
+          userId,
+          record.course,
+          { id: null, durationMonths: grantMonths },
+          txDb,
+          { via: "access_code" },
+        );
+        result = { enrollmentId: r.enrollmentId, courseVersion: existing.courseVersion, created: false };
+      }
+      const after = await tx.enrollment.findUniqueOrThrow({
+        where: { id: result.enrollmentId },
+        select: { accessExpiresAt: true },
       });
-      return {
-        ...result,
-        courseSlug: record.course.slug,
-        courseTitle: record.course.title,
-        codeConsumed: true,
-      };
+      return { ...result, accessExpiresAt: after.accessExpiresAt, ...base, codeConsumed: true };
     } catch (e) {
       if (e instanceof EnrollError && e.code === "course_not_enrollable") {
         throw new AccessCodeError("course_not_enrollable");

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { accessSummary } from "@/lib/accessSummary";
+import { toast } from "@/lib/toast";
 import type { JoinMatch, JoinResolution } from "@/lib/joinCode";
 
 const NOT_FOUND =
@@ -72,8 +74,13 @@ export default function JoinCodeBox() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     });
-    const d = (await r.json().catch(() => ({}))) as { courseSlug?: string; error?: string };
+    const d = (await r.json().catch(() => ({}))) as {
+      courseSlug?: string;
+      error?: string;
+      accessExpiresAt?: string | null;
+    };
     if (r.ok && d.courseSlug) {
+      toast.success("Kích hoạt thành công", { description: `${accessSummary(d.accessExpiresAt)} Đang chuyển vào khóa…` });
       router.push(`/learn/${d.courseSlug}`);
       return;
     }
@@ -82,7 +89,9 @@ export default function JoinCodeBox() {
         ? "Bạn đã thử nhiều mã quá. Vui lòng đợi vài phút rồi thử lại."
         : d.error === "code_not_found"
           ? NOT_FOUND
-          : "Mã kích hoạt này đã được dùng hoặc không còn hiệu lực. Bạn hỏi lại người đã gửi mã nhé.",
+          : d.error === "code_expired"
+            ? "Mã kích hoạt này đã hết hạn kích hoạt. Bạn hỏi lại người đã gửi mã nhé."
+            : "Mã kích hoạt này đã được dùng hoặc không còn hiệu lực. Bạn hỏi lại người đã gửi mã nhé.",
     );
   }
 

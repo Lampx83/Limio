@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
-import { formatDateTime } from "@/lib/datetime";
+import { formatDate, formatDateTime } from "@/lib/datetime";
 import { formatPrice } from "@/lib/formatPrice";
 
 type CodeStatus = "unused" | "redeemed" | "revoked";
@@ -23,6 +23,8 @@ interface BatchRow {
   label: string;
   note: string | null;
   count: number;
+  accessDurationMonths: number | null;
+  activateBefore: string | null;
   createdAt: string;
   stats: { unused: number; redeemed: number; revoked: number };
 }
@@ -41,6 +43,27 @@ const STATUS_CLASS: Record<CodeStatus, string> = {
 
 const BATCH_MAX = 10_000;
 
+// Thời hạn hay dùng cho sách điện tử; null = vĩnh viễn (như các mã trước đây).
+const DURATION_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "", label: "Vĩnh viễn" },
+  { value: "3", label: "3 tháng" },
+  { value: "6", label: "6 tháng" },
+  { value: "12", label: "1 năm" },
+  { value: "24", label: "2 năm" },
+  { value: "36", label: "3 năm" },
+];
+
+function durationLabel(months: number | null): string {
+  if (months === null) return "Truy cập vĩnh viễn";
+  if (months % 12 === 0) return `Truy cập ${months / 12} năm`;
+  return `Truy cập ${months} tháng`;
+}
+
+/** Hạn kích hoạt đã qua? Mã chưa dùng của lô như vậy không đổi được nữa. */
+function activationClosed(activateBefore: string | null): boolean {
+  return activateBefore !== null && new Date(activateBefore).getTime() <= Date.now();
+}
+
 /**
  * Mã kích hoạt theo lô (docs/tieu-chi/hoc-lieu-nha-xuat-ban-P0.md, AC2). Mỗi lô là một đợt in (vd cả một đợt tái
  * bản sách): tạo một lần, xuất CSV cho nhà in, theo dõi bao nhiêu mã đã kích hoạt, thu hồi cả lô nếu in sai.
@@ -52,6 +75,8 @@ export default function AccessCodesPanel({ courseId }: { courseId: string }) {
   const [label, setLabel] = useState("");
   const [count, setCount] = useState("100");
   const [note, setNote] = useState("");
+  const [duration, setDuration] = useState("");
+  const [activateBefore, setActivateBefore] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -87,13 +112,19 @@ export default function AccessCodesPanel({ courseId }: { courseId: string }) {
       const res = await fetch(apiUrl(`/api/courses/${courseId}/access-code-batches`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, count: n, note: note.trim() || undefined }),
+        body: JSON.stringify({
+          label,
+          count: n,
+          note: note.trim() || undefined,
+          accessDurationMonths: duration ? Number(duration) : null,
+          activateBefore: activateBefore || null,
+        }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
         setErr(
           data.error === "validation_failed"
-            ? "Tên lô (tối đa 80 ký tự) hoặc số mã không hợp lệ."
+            ? "Tên lô (tối đa 80 ký tự), số mã, thời hạn hoặc hạn kích hoạt (phải là ngày chưa qua) không hợp lệ."
             : data.error === "course_invite_only"
               ? "Khoá chỉ vào bằng link mời lớp nên không dùng mã kích hoạt."
               : "Tạo lô thất bại. Vui lòng thử lại.",
@@ -103,6 +134,7 @@ export default function AccessCodesPanel({ courseId }: { courseId: string }) {
       setMsg(`Đã tạo lô "${label.trim()}" với ${n.toLocaleString("vi-VN")} mã.`);
       setLabel("");
       setNote("");
+      setActivateBefore("");
       await load();
     } catch {
       setErr("Chưa kết nối được tới Limio. Hãy kiểm tra mạng rồi thử lại.");
@@ -147,6 +179,35 @@ export default function AccessCodesPanel({ courseId }: { courseId: string }) {
             value={count}
             onChange={(e) => setCount(e.target.value)}
             className="input mt-1 w-28"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted" htmlFor="batch-duration">
+            Thời hạn truy cập
+          </label>
+          <select
+            id="batch-duration"
+            value={duration}
+            onChange={(e) => setDuration(e.target.value)}
+            className="input mt-1 w-36"
+          >
+            {DURATION_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted" htmlFor="batch-activate-before">
+            Kích hoạt trước ngày
+          </label>
+          <input
+            id="batch-activate-before"
+            type="date"
+            value={activateBefore}
+            onChange={(e) => setActivateBefore(e.target.value)}
+            className="input mt-1 w-40"
           />
         </div>
         <div className="min-w-[12rem] flex-1">
@@ -209,13 +270,15 @@ function CodeLookup({ courseId }: { courseId: string }) {
       }
       const d = (await res.json()) as {
         status: CodeStatus;
-        batch: { label: string } | null;
+        batch: { label: string; accessDurationMonths: number | null; activateBefore: string | null } | null;
         redeemedBy: { email: string; displayName: string } | null;
         redeemedAt: string | null;
       };
       setResult(
         [
-          STATUS_LABEL[d.status],
+          d.status === "unused" && activationClosed(d.batch?.activateBefore ?? null)
+            ? "Hết hạn kích hoạt"
+            : STATUS_LABEL[d.status],
           d.batch ? `lô "${d.batch.label}"` : "không thuộc lô nào",
           d.redeemedBy
             ? `bởi ${d.redeemedBy.displayName} (${d.redeemedBy.email})${d.redeemedAt ? ` · ${formatDateTime(d.redeemedAt)}` : ""}`
@@ -263,6 +326,7 @@ function BatchCard({
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const base = apiUrl(`/api/courses/${courseId}/access-code-batches/${batch.id}`);
+  const closed = activationClosed(batch.activateBefore);
 
   async function revokeAll() {
     if (
@@ -291,6 +355,13 @@ function BatchCard({
 
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
         <span className="chip">{batch.count.toLocaleString("vi-VN")} mã</span>
+        <span className="chip">{durationLabel(batch.accessDurationMonths)}</span>
+        {batch.activateBefore &&
+          (closed ? (
+            <span className="chip-danger">Hết hạn kích hoạt {formatDate(batch.activateBefore)}</span>
+          ) : (
+            <span className="chip">Kích hoạt trước {formatDate(batch.activateBefore)}</span>
+          ))}
         <span className="chip-brand">{batch.stats.unused.toLocaleString("vi-VN")} chưa dùng</span>
         <span className="chip-success">{batch.stats.redeemed.toLocaleString("vi-VN")} đã kích hoạt</span>
         {batch.stats.revoked > 0 && (
@@ -323,6 +394,7 @@ function BatchCard({
           // Số liệu của lô đổi (thu hồi cả lô, có người kích hoạt) thì danh sách mã đang mở phải tải lại,
           // không thì vẫn hiện trạng thái cũ.
           refreshKey={`${batch.stats.unused}-${batch.stats.redeemed}-${batch.stats.revoked}`}
+          activationClosed={closed}
         />
       )}
     </li>
@@ -334,11 +406,13 @@ function BatchCodes({
   courseId,
   onChanged,
   refreshKey,
+  activationClosed: closed,
 }: {
   url: string;
   courseId: string;
   onChanged: () => Promise<void>;
   refreshKey: string;
+  activationClosed: boolean;
 }) {
   const [status, setStatus] = useState<"" | CodeStatus>("");
   const [page, setPage] = useState(1);
@@ -395,7 +469,7 @@ function BatchCodes({
       ) : (
         <ul className="mt-2 divide-y divide-token">
           {data.rows.map((r) => (
-            <CodeLine key={r.id} row={r} onRevoke={() => void revokeOne(r.id, r.code)} />
+            <CodeLine key={r.id} row={r} expired={closed} onRevoke={() => void revokeOne(r.id, r.code)} />
           ))}
         </ul>
       )}
@@ -417,7 +491,7 @@ function BatchCodes({
   );
 }
 
-function CodeLine({ row: r, onRevoke }: { row: CodeRow; onRevoke: () => void }) {
+function CodeLine({ row: r, expired = false, onRevoke }: { row: CodeRow; expired?: boolean; onRevoke: () => void }) {
   const [copied, setCopied] = useState(false);
   async function copy() {
     await navigator.clipboard.writeText(r.code);
@@ -429,7 +503,11 @@ function CodeLine({ row: r, onRevoke }: { row: CodeRow; onRevoke: () => void }) 
       <code className="rounded bg-[rgb(var(--surface-muted))] px-2 py-1 font-mono font-semibold tracking-wider">
         {r.code}
       </code>
-      <span className={STATUS_CLASS[r.status]}>{STATUS_LABEL[r.status]}</span>
+      {r.status === "unused" && expired ? (
+        <span className="chip-danger">Hết hạn kích hoạt</span>
+      ) : (
+        <span className={STATUS_CLASS[r.status]}>{STATUS_LABEL[r.status]}</span>
+      )}
       {r.priceCentsSnapshot !== null && (
         <span className="text-xs text-muted">{formatPrice(r.priceCentsSnapshot, r.currency)}</span>
       )}

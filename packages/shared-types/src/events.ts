@@ -528,6 +528,8 @@ export interface EnrollmentAccessExtendedPayload {
   durationMonths: number | null;
   previousExpiresAt: string | null;
   newExpiresAt: string | null;
+  /** Nguồn cấp quyền (AC3). Sự kiện cũ không có trường này vẫn hợp lệ. Không bao giờ ghi chính mã kích hoạt. */
+  via?: "access_code" | "order";
 }
 
 export interface EnrollmentAccessExpiredPayload {

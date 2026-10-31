@@ -22,10 +22,25 @@ export const ACCESS_CODE_PAGE_SIZE = 50;
 const INSERT_CHUNK = 1_000;
 const MAX_TOP_UP_ROUNDS = 5;
 
+export const ACCESS_DURATION_MONTHS_MAX = 120;
+
 export interface CreateAccessCodeBatchInput {
   label: string;
   count: number;
   note?: string | null;
+  /** Tháng truy cập mỗi mã cấp, tính từ lúc kích hoạt. null/bỏ trống = vĩnh viễn (như trước AC3). */
+  accessDurationMonths?: number | null;
+  /** Hạn kích hoạt, dạng `YYYY-MM-DD` theo giờ Việt Nam; hết hạn vào cuối ngày đó. null/bỏ trống = không hạn. */
+  activateBefore?: string | null;
+}
+
+/** Cuối ngày `YYYY-MM-DD` theo giờ Việt Nam (UTC+7, không có giờ mùa hè); null nếu không phải ngày hợp lệ. */
+export function endOfDayVn(date: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const d = new Date(`${date}T23:59:59.999+07:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  // Date tự "cuộn" ngày không có thật (2026-02-31 → 03/03): chỉ nhận khi ngày VN của kết quả đúng bằng đầu vào.
+  return new Date(d.getTime() + 7 * 3600 * 1000).toISOString().slice(0, 10) === date ? d : null;
 }
 
 export interface AccessCodeBatchRow {
@@ -33,6 +48,8 @@ export interface AccessCodeBatchRow {
   label: string;
   note: string | null;
   count: number;
+  accessDurationMonths: number | null;
+  activateBefore: Date | null;
   createdAt: Date;
   stats: { unused: number; redeemed: number; revoked: number };
 }
@@ -45,7 +62,15 @@ export async function createAccessCodeBatch(
 ): Promise<{ batchId: string; count: number }> {
   const label = (input.label ?? "").trim();
   const note = input.note?.trim() ? input.note.trim() : null;
+  const accessDurationMonths = input.accessDurationMonths ?? null;
+  const activateBefore = input.activateBefore ? endOfDayVn(input.activateBefore) : null;
   if (
+    (accessDurationMonths !== null &&
+      (!Number.isInteger(accessDurationMonths) ||
+        accessDurationMonths < 1 ||
+        accessDurationMonths > ACCESS_DURATION_MONTHS_MAX)) ||
+    // Hạn kích hoạt đã qua thì lô sinh ra là mã chết ngay: từ chối thay vì để giảng viên in nhầm.
+    (input.activateBefore && (activateBefore === null || activateBefore.getTime() <= Date.now())) ||
     label.length < 1 ||
     label.length > ACCESS_CODE_BATCH_LABEL_MAX ||
     (note !== null && note.length > ACCESS_CODE_BATCH_NOTE_MAX) ||
@@ -69,7 +94,7 @@ export async function createAccessCodeBatch(
   return db.$transaction(
     async (tx) => {
       const batch = await tx.courseAccessCodeBatch.create({
-        data: { courseId, label, note, count: input.count, createdBy },
+        data: { courseId, label, note, count: input.count, accessDurationMonths, activateBefore, createdBy },
         select: { id: true },
       });
 
@@ -121,7 +146,15 @@ export async function listAccessCodeBatches(
     db.courseAccessCodeBatch.findMany({
       where: { courseId },
       orderBy: { createdAt: "desc" },
-      select: { id: true, label: true, note: true, count: true, createdAt: true },
+      select: {
+        id: true,
+        label: true,
+        note: true,
+        count: true,
+        accessDurationMonths: true,
+        activateBefore: true,
+        createdAt: true,
+      },
     }),
     db.courseAccessCode.groupBy({
       by: ["batchId", "status"],
@@ -186,7 +219,7 @@ export async function lookupAccessCode(courseId: string, rawCode: string, db: Pr
   const row = await db.courseAccessCode.findFirst({
     where: { code, courseId },
     include: {
-      batch: { select: { id: true, label: true } },
+      batch: { select: { id: true, label: true, accessDurationMonths: true, activateBefore: true } },
       redeemedBy: { select: { email: true, displayName: true } },
     },
   });

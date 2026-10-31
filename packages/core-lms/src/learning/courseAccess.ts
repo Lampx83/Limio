@@ -112,7 +112,7 @@ export async function updateCourseAccessPlan(
 // kênh cấp quyền thủ công khác trong tương lai.
 // =====================================================================
 
-function addMonthsUtc(date: Date, months: number): Date {
+export function addMonthsUtc(date: Date, months: number): Date {
   const d = new Date(date.getTime());
   d.setUTCMonth(d.getUTCMonth() + months);
   return d;
@@ -147,7 +147,7 @@ export async function extendEnrollmentAccess(
   course: { id: string; version: number },
   plan: ExtendAccessPlan,
   db: PrismaClient = prisma,
-  opts?: { sectionId?: string },
+  opts?: { sectionId?: string; via?: "access_code" | "order" },
 ): Promise<ExtendAccessResult> {
   const now = new Date();
   const existing = await db.enrollment.findUnique({
@@ -203,6 +203,7 @@ export async function extendEnrollmentAccess(
       durationMonths: plan.durationMonths,
       previousExpiresAt: existing?.accessExpiresAt?.toISOString() ?? null,
       newExpiresAt: newExpiresAt?.toISOString() ?? null,
+      ...(opts?.via ? { via: opts.via } : {}),
     },
     { courseId: course.id },
     db,
