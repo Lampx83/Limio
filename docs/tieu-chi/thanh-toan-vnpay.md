@@ -59,11 +59,11 @@ IPN là đường **duy nhất** cấp quyền học. VNPay gọi `GET` và ch�
 
 Chưa thể kiểm khi chưa có thông tin sandbox, nên **chưa được coi là xong** cho tới khi chạy các điểm này:
 
-1. Cách ký: tài liệu có ví dụ ký trên giá trị đã mã hoá URL (PHP, Node) và ví dụ không mã hoá (Java). Code dùng cách đã mã hoá; nếu sandbox từ chối chữ ký, đổi ở một hàm duy nhất.
-2. `vnp_OrderType`: dùng `other`; kiểm VNPay chấp nhận.
-3. IPN thật tới được địa chỉ công khai, trả đúng JSON, VNPay ngừng gửi lại sau `00`.
-4. Số tiền × 100 và `vnp_ExpireDate` được chấp nhận.
-5. Một thanh toán thành công và một thanh toán bị huỷ đi hết luồng, kể cả hai lần gửi IPN.
+1. ✅ Cách ký (31/10/2026, sandbox thật): đã mã hoá URL được VNPay chấp nhận, ở cả hai chiều (VNPay nhận URL của Limio; Limio kiểm chữ ký VNPay gửi về).
+2. ✅ `vnp_OrderType=other` được chấp nhận.
+3. ⏳ IPN thật tới được địa chỉ công khai, trả đúng JSON, VNPay ngừng gửi lại sau `00`. **Chưa thử**: sandbox không gọi được `localhost`; cần tên miền công khai và khai IPN URL ở trang quản trị VNPay. Đã thử thay thế: phát lại đúng bộ tham số VNPay gửi về vào IPN cục bộ → `00`, đơn `paid`, `gatewayTxnRef` = `vnp_TransactionNo`, quyền được cấp; gửi lại → `02`; đổi một chữ số của số tiền → `97`.
+4. ✅ Số tiền × 100 (199.000 VND hiện đúng) và `vnp_ExpireDate` (đồng hồ 15 phút) được chấp nhận.
+5. ⏳ Thanh toán thành công đã đi hết luồng (thẻ NCB thử, OTP, quay về `?paid=1`). **Chưa thử:** thanh toán bị huỷ / hết hạn, và kịch bản SIT của VNPay (cần IPN công khai).
 
 ## Đã làm (31/10/2026)
 
