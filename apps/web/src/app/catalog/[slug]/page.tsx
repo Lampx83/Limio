@@ -14,6 +14,7 @@ import JsonLd from "@/components/JsonLd";
 import { SITE_NAME, breadcrumbJsonLd, courseJsonLd, pageMetadata } from "@/lib/seo";
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
+import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import { StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
 import { courseLanguageLabel, courseLevelLabel, modulePrefix } from "@/lib/courseLabels";
@@ -93,7 +94,7 @@ export default async function CourseDetailPage({
   // Enrollment check + weekly/all-time leaderboard đều chỉ cần course.id/session,
   // không phụ thuộc nhau — chạy song song thay vì nối đuôi để rút ngắn thời gian
   // loading.tsx hiển thị khi chuyển trang từ catalog.
-  const [enrolled, weeklyLeaderboard, allTimeLeaderboard, accessPlans] = await Promise.all([
+  const [enrolled, weeklyLeaderboard, allTimeLeaderboard, accessPlans, paymentProviders] = await Promise.all([
     session?.user?.id ? isUserEnrolled(session.user.id, course.id) : Promise.resolve(false),
     getLeaderboard({
       scope: "course",
@@ -116,6 +117,8 @@ export default async function CourseDetailPage({
           select: { id: true, label: true, durationMonths: true, priceCents: true, currency: true },
         })
       : Promise.resolve([] as AccessPlanOption[]),
+    // Chỉ hỏi cổng nào đã cấu hình khi trang thật sự có nút thanh toán (bật thanh toán toàn hệ thống).
+    paymentEnabled ? getConfiguredPaymentProviders().catch(() => []) : Promise.resolve([]),
   ]);
 
   const cheapestPlan = accessPlans[0];
@@ -294,6 +297,7 @@ export default async function CourseDetailPage({
                 currency={course.currency}
                 paymentEnabled={paymentEnabled}
                 accessPlans={accessPlans}
+                paymentProviders={paymentProviders}
               />
             )
           }
@@ -348,6 +352,7 @@ export default async function CourseDetailPage({
                   currency={course.currency}
                   paymentEnabled={paymentEnabled}
                   accessPlans={accessPlans}
+                  paymentProviders={paymentProviders}
                 />
               )}
             </div>
@@ -494,6 +499,7 @@ export default async function CourseDetailPage({
                       currency={course.currency}
                       paymentEnabled={paymentEnabled}
                       accessPlans={accessPlans}
+                      paymentProviders={paymentProviders}
                     />
                   )}
                 </div>

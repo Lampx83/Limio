@@ -80,6 +80,10 @@ export const INTEGRATION_KEYS = [
   "openai",
   "stripe.secret",
   "vnpay.secret",
+  // VNPay cần thêm mã website (vnp_TmnCode) và địa chỉ thanh toán (trống = sandbox) —
+  // docs/tieu-chi/thanh-toan-vnpay.md. Hai giá trị này không phải bí mật nhưng lưu chung cơ chế cho gọn.
+  "vnpay.tmn_code",
+  "vnpay.payment_url",
   "momo.secret",
   // A6.6 — Vấn đáp bằng giọng nói. Vbee cần 2 secret (App-Id + Token, lấy ở
   // studio.vbee.vn/apps), khác OpenAI chỉ 1 key — theo đúng quy ước
@@ -172,6 +176,10 @@ function envFallbackName(key: string): string | null {
       return "STRIPE_SECRET";
     case "vnpay.secret":
       return "VNPAY_SECRET";
+    case "vnpay.tmn_code":
+      return "VNPAY_TMN_CODE";
+    case "vnpay.payment_url":
+      return "VNPAY_PAYMENT_URL";
     case "momo.secret":
       return "MOMO_SECRET";
     case "neutts.base_url":

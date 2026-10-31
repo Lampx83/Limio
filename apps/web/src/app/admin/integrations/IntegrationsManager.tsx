@@ -27,7 +27,22 @@ const LABELS: Record<
     placeholder: "sk_live_... / sk_test_...",
     emoji: "",
   },
-  "vnpay.secret": { name: "VNPay secret", placeholder: "VNPAY_HASH_SECRET", emoji: "" },
+  "vnpay.secret": {
+    name: "Khoá bí mật (vnp_HashSecret)",
+    placeholder: "VNPAY_HASH_SECRET",
+    help: "Do VNPay cấp cùng mã website. Không bao giờ gửi cho học viên hay dán vào chat.",
+    emoji: "",
+  },
+  "vnpay.tmn_code": {
+    name: "Mã website (vnp_TmnCode)",
+    placeholder: "VD: ABCD1234",
+    help: "8 ký tự do VNPay cấp cho từng website.",
+  },
+  "vnpay.payment_url": {
+    name: "Địa chỉ thanh toán",
+    placeholder: "https://pay.vnpay.vn/vpcpay.html",
+    help: "Để trống = sandbox (https://sandbox.vnpayment.vn/paymentv2/vpcpay.html). Khi chạy thật phải đặt địa chỉ production mà VNPay cấp.",
+  },
   "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY", emoji: "" },
   "vbee.app_id": { name: "App-Id", placeholder: "App-Id" },
   "vbee.token": { name: "Token", placeholder: "Token" },
@@ -88,6 +103,11 @@ const GROUPS: Record<
     help: "Khi đã nhập Base URL, luồng vấn đáp đọc bằng NEU TTS thay cho OpenAI. Để trống Base URL = dùng OpenAI TTS.",
     keys: ["neutts.base_url", "neutts.api_key", "neutts.voice"],
     embedsTester: true,
+  },
+  vnpay: {
+    name: "VNPay — thanh toán ATM / QR / thẻ",
+    help: "Cần cả mã website và khoá bí mật thì nút thanh toán VNPay mới hiện ở trang khoá. Địa chỉ nhận kết quả (IPN) khai ở cổng quản trị VNPay: https://<tên miền>/api/webhooks/vnpay. Xem docs/van-hanh/cong-thanh-toan.md.",
+    keys: ["vnpay.tmn_code", "vnpay.secret", "vnpay.payment_url"],
   },
   ga4: {
     name: "Google Analytics 4 — traffic & acquisition",

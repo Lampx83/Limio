@@ -22,7 +22,12 @@ const CHECKOUT_ERROR_LABEL: Record<string, string> = {
   stripe_not_configured: "Thanh toán thẻ hiện chưa khả dụng. Vui lòng dùng mã kích hoạt.",
   access_plan_not_found: "Gói này không còn bán. Vui lòng tải lại trang.",
   course_is_free: "Khoá học này miễn phí.",
+  vnpay_not_configured: "Thanh toán VNPay hiện chưa khả dụng. Vui lòng chọn cách khác hoặc dùng mã kích hoạt.",
+  currency_not_supported: "Khoá này chưa thanh toán được qua VNPay (chỉ hỗ trợ VND).",
+  course_not_enrollable: "Khoá học hiện chưa mở đăng ký.",
 };
+
+export type PaymentProviderChoice = "stripe" | "vnpay";
 
 export interface AccessPlanOption {
   id: string;
@@ -46,6 +51,7 @@ export default function EnrollButton({
   currency = "VND",
   paymentEnabled = false,
   accessPlans = [],
+  paymentProviders = [],
   // Chữ trên nút ở nhánh miễn phí. Mặc định "Đăng ký miễn phí" đứng cạnh ô
   // giá/thẻ "Miễn phí" nên hợp ngữ cảnh; nơi nào không có gì để so sánh giá
   // bên cạnh (banner "chưa đăng ký" trên trang khoá) thì truyền nhãn trung
@@ -60,6 +66,8 @@ export default function EnrollButton({
   paymentEnabled?: boolean;
   /** Gói bán theo thời hạn (CourseAccessPlan). Rỗng = đường cũ, giá phẳng + mã kích hoạt. */
   accessPlans?: AccessPlanOption[];
+  /** Cổng đã cấu hình (lib/paymentProviders). Có "vnpay" thì hiện lựa chọn; không có thì giữ nút thẻ như trước. */
+  paymentProviders?: PaymentProviderChoice[];
   freeLabel?: string;
 }) {
   const [submitting, setSubmitting] = useState(false);
@@ -138,7 +146,7 @@ export default function EnrollButton({
     window.location.href = `/learn/${data.courseSlug ?? slug}`;
   }
 
-  async function onCheckout() {
+  async function onCheckout(provider: PaymentProviderChoice = "stripe") {
     if (accessPlans.length > 0 && !selectedPlanId) return;
     setCheckingOut(true);
     const res = await fetch(apiUrl("/api/orders/checkout"), {
@@ -147,6 +155,8 @@ export default function EnrollButton({
       body: JSON.stringify({
         courseId,
         accessPlanId: accessPlans.length > 0 ? selectedPlanId : undefined,
+        // Chỉ gửi khi chọn VNPay: đường Stripe giữ nguyên body như trước.
+        ...(provider === "vnpay" ? { provider } : {}),
       }),
     });
     if (res.status === 401) {
@@ -198,14 +208,37 @@ export default function EnrollButton({
             </label>
           ))}
         </div>
-        <button
-          type="button"
-          onClick={() => void onCheckout()}
-          disabled={checkingOut || !selectedPlanId}
-          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {checkingOut ? "Đang mở trang thanh toán…" : "Thanh toán qua thẻ"}
-        </button>
+        {paymentProviders.includes("vnpay") ? (
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => void onCheckout("vnpay")}
+              disabled={checkingOut || !selectedPlanId}
+              className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {checkingOut ? "Đang mở trang thanh toán…" : "Thanh toán qua VNPay (ATM, QR, thẻ)"}
+            </button>
+            {paymentProviders.includes("stripe") && (
+              <button
+                type="button"
+                onClick={() => void onCheckout("stripe")}
+                disabled={checkingOut || !selectedPlanId}
+                className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Thanh toán bằng thẻ quốc tế
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void onCheckout()}
+            disabled={checkingOut || !selectedPlanId}
+            className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {checkingOut ? "Đang mở trang thanh toán…" : "Thanh toán qua thẻ"}
+          </button>
+        )}
         {!showRedeem ? (
           <button
             type="button"

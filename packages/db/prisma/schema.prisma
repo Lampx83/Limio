@@ -2793,6 +2793,9 @@ model Order {
   // AC4 — số tiền đã hoàn (đơn vị nhỏ nhất của currency, cộng dồn theo Stripe). Hoàn một phần: đơn vẫn
   // `paid` và quyền học giữ nguyên, cột này là dấu để người vận hành thấy. null = chưa hoàn đồng nào.
   refundedCents    Int?
+  // Mã giao dịch phía cổng nội địa (VNPay `vnp_TransactionNo`...), ghi lúc IPN báo thành công, để đối soát và để
+  // làm hoàn tiền sau này. Không unique: các cổng khác nhau có thể trùng dải số. Stripe dùng paymentIntentRef.
+  gatewayTxnRef    String?
   paidAt       DateTime?
   refundedAt   DateTime?
   createdAt    DateTime        @default(now())
