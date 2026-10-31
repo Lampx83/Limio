@@ -2,7 +2,7 @@
 
 > Trạng thái (31/10/2026): **đã nhập máy dev (nháp, chủ khoá `giangvien.mau@feedbackme.dev`)**: 5 bài, 37 câu hỏi, 11 lỗi tư duy;
 > công thức KaTeX, lời giải hiện từng bước, Nghe giảng từng bước, PDF bản đọc thử có bản quyền và lô 5 mã (12 tháng).
-> Chưa lên prod, chưa commit. Mục đích: để nhà xuất bản (đối tác sách "Ôn thi vào lớp 10") **xem sách của họ hiển thị thế nào
+> **Đã lên prod server 224 (31/10/2026)**: khoá nháp `6f091b2e-f06e-4564-9b13-8d88a5fc1090`, chủ khoá `joynguyen7@gmail.com`, đã bật bản quyền + lô 5 mã; PDF và hình đặt thẳng vào kho tệp (volume chung của 3 web). Giọng Nghe giảng trên prod **chưa tạo** (cần admin "Tạo giọng" bằng giọng NEU). Mục đích: để nhà xuất bản (đối tác sách "Ôn thi vào lớp 10") **xem sách của họ hiển thị thế nào
 > trên Limio** và thử luồng "sách giấy → nhập mã → học". Nội dung **do Limio tự soạn**, không trích sách của NXB nào.
 
 ## Thiết kế dạy học (đặc thù môn Toán)
@@ -45,8 +45,7 @@
 - [x] "Bước tiếp" / "Xem hết" chạy; Nghe giảng với giọng giả: bước tô sáng và bộ đếm "Bước n/6" đi theo thời gian audio, thanh phát ghi "… · bước 6".
 - [x] Test: `mathRender`, `lessonReveal`, `richTextMath`, `learner` (anchor `#n`), `importCourseLayouts` (math, reveal, anchor) xanh; `tsc` sạch.
 - [x] PDF bản quyền: người ẩn danh và học viên chưa ghi danh mở link PDF nhận 403.
-- [ ] **Chưa làm / chưa kiểm:** học viên đã nhập mã mở được PDF (200); giọng thật (hiện chỉ có tiếng bíp từ bộ đọc giả của dev — cần admin "Tạo lại"
-  bằng giọng NEU); xem quiz có công thức trên giao diện học viên; chạy trên prod (kho tệp prod là S3, `attach:pdf` không dùng được ở đó).
+- [ ] **Chưa làm / chưa kiểm:** học viên đã nhập mã mở được PDF (200); giọng thật (dev chỉ có tiếng bíp của bộ đọc giả; prod chưa tạo giọng — admin "Tạo giọng" bằng giọng NEU).
 
 ## Giới hạn đã biết
 

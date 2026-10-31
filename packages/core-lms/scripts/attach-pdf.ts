@@ -5,6 +5,8 @@
  *   pnpm --filter @feedbackme/core-lms attach:pdf --course on-thi-vao-10-toan-mau --lesson "biệt thức" \
  *     --owner gv@example.com --file ./doc.pdf --title "Bản đọc thử" --protect --batch "Mẫu cho NXB" --count 5 --months 12 --dry-run
  *
+ * Với `--existing-url /api/lesson-media/pdfs/<tên>.pdf` thì không ghi tệp: dùng khi tệp đã nằm sẵn ở kho (prod).
+ *
  * File được đặt đúng chỗ route `/api/lesson-media/pdfs` đặt (`uploads/public/lesson-media/pdfs/yyyy/mm/<tên>`),
  * tên theo khuôn `<userId>-<ms>-<hex>.pdf` để `lessonPdfKeyFromFilename` tìm lại được. Khối được tạo qua
  * createContentItem như UI giảng viên, nên payload được zod kiểm. Chạy lại không sinh trùng (khối PDF cùng
@@ -30,9 +32,11 @@ async function main() {
   const ownerEmail = arg("owner");
   const file = arg("file");
   const title = arg("title") ?? "Tài liệu PDF";
+  // Nơi lưu tệp không phải đĩa local (vd prod): tệp đã được đặt sẵn ở kho, chỉ cần tạo khối PDF trỏ tới nó.
+  const existingUrl = arg("existing-url");
   const dryRun = flag("dry-run");
-  if (!slug || !lessonKey || !ownerEmail || !file) {
-    console.error("Thiếu tham số: --course --lesson --owner --file [--title] [--protect] [--batch <tên> --count <n> --months <n>] [--dry-run]");
+  if (!slug || !lessonKey || !ownerEmail || (!file && !existingUrl)) {
+    console.error("Thiếu tham số: --course --lesson --owner (--file | --existing-url) [--title] [--protect] [--batch <tên> --count <n> --months <n>] [--dry-run]");
     process.exit(1);
   }
 
@@ -54,8 +58,13 @@ async function main() {
 
   if (existing) {
     console.log(`= Đã có khối PDF "${title}", bỏ qua bước gắn file.`);
+  } else if (existingUrl && !dryRun) {
+    if (!/^\/api\/lesson-media\/pdfs\/[A-Za-z0-9._-]+\.pdf$/.test(existingUrl)) throw new Error("--existing-url phải là /api/lesson-media/pdfs/<tên>.pdf");
+    const orderIndex = Math.max(-1, ...lesson.contentItems.map((c) => c.orderIndex)) + 1;
+    await createContentItem(owner.id, lesson.id, { type: "pdf", orderIndex, payload: { url: existingUrl, title } });
+    console.log(`✔ Gắn PDF có sẵn ${existingUrl} vào bài (khối thứ ${orderIndex}).`);
   } else if (!dryRun) {
-    const buf = await readFile(file);
+    const buf = await readFile(file!);
     if (buf.subarray(0, 5).toString() !== "%PDF-") throw new Error("File không phải PDF");
     const now = new Date();
     const filename = `${owner.id}-${now.getTime()}-${randomBytes(8).toString("hex")}.pdf`;
