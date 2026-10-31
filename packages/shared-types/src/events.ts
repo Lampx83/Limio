@@ -64,6 +64,9 @@ export const LearningEventType = {
   EnrollmentStatusChanged: "enrollment.status_changed",
   // Bán khoá học có thời hạn (CourseAccessPlan) — mua lần đầu hoặc gia hạn.
   EnrollmentAccessExtended: "enrollment.access.extended",
+  // AC4 — Stripe hoàn toàn bộ tiền nên quyền học bị đóng. Subject là học viên bị đóng quyền nhưng do hệ thống
+  // làm (không phải học viên hay giảng viên bấm), nên không tính là hoạt động học. Payload không mang số tiền.
+  EnrollmentRefunded: "enrollment.refunded",
   // Cron reaper phát hiện accessExpiresAt đã qua, chuyển status -> expired.
   EnrollmentAccessExpired: "enrollment.access.expired",
   // Cron nhắc hạn đã gửi email — chống gửi trùng qua accessExpiryReminderSentAt.
@@ -530,6 +533,12 @@ export interface EnrollmentAccessExtendedPayload {
   newExpiresAt: string | null;
   /** Nguồn cấp quyền (AC3). Sự kiện cũ không có trường này vẫn hợp lệ. Không bao giờ ghi chính mã kích hoạt. */
   via?: "access_code" | "order";
+}
+
+export interface EnrollmentRefundedPayload {
+  enrollmentId: string;
+  courseId: string;
+  orderId: string;
 }
 
 export interface EnrollmentAccessExpiredPayload {

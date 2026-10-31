@@ -2786,6 +2786,13 @@ model Order {
   status       OrderStatus     @default(pending)
   // Provider-specific reference (Stripe Checkout Session id, VNPay txn ref, ...)
   providerRef  String?         @unique
+  // AC4 — Stripe PaymentIntent của đơn, ghi lúc nhận checkout.session.completed. Sự kiện hoàn tiền
+  // (charge.refunded) chỉ mang payment_intent chứ không mang session, nên đây là khoá để tìm đơn.
+  // Đơn trước AC4 không có giá trị này: hoàn tiền của chúng không khớp được và để admin xử lý tay.
+  paymentIntentRef String?     @unique
+  // AC4 — số tiền đã hoàn (đơn vị nhỏ nhất của currency, cộng dồn theo Stripe). Hoàn một phần: đơn vẫn
+  // `paid` và quyền học giữ nguyên, cột này là dấu để người vận hành thấy. null = chưa hoàn đồng nào.
+  refundedCents    Int?
   paidAt       DateTime?
   refundedAt   DateTime?
   createdAt    DateTime        @default(now())

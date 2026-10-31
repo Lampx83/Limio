@@ -1,6 +1,11 @@
 import Stripe from "stripe";
 import { prisma } from "@feedbackme/db";
-import { getIntegrationSecret, extendEnrollmentAccess } from "@feedbackme/core-lms";
+import {
+  getIntegrationSecret,
+  extendEnrollmentAccess,
+  processChargeRefund,
+  type ChargeRefundFacts,
+} from "@feedbackme/core-lms";
 
 /**
  * Resolve Stripe client. Uses encrypted IntegrationCredential if set,
@@ -122,6 +127,26 @@ export async function createCheckoutSession(input: CreateCheckoutInput) {
   return { orderId: order.id, url: session.url ?? "" };
 }
 
+/** `payment_intent` của Stripe có thể là id, object đã mở rộng, hoặc null. */
+function paymentIntentIdOf(v: string | Stripe.PaymentIntent | null | undefined): string | null {
+  if (!v) return null;
+  return typeof v === "string" ? v : v.id;
+}
+
+/**
+ * Rút từ Charge mấy con số `processChargeRefund` cần. null nếu charge không có payment_intent (không có gì để
+ * khớp với đơn). "Hoàn hết" tin vào cờ `refunded` của Stripe và kiểm chéo bằng số tiền.
+ */
+export function chargeRefundFacts(charge: Stripe.Charge): ChargeRefundFacts | null {
+  const paymentIntentRef = paymentIntentIdOf(charge.payment_intent);
+  if (!paymentIntentRef) return null;
+  return {
+    paymentIntentRef,
+    refundedCents: charge.amount_refunded,
+    fullyRefunded: charge.refunded === true || (charge.amount > 0 && charge.amount_refunded >= charge.amount),
+  };
+}
+
 /**
  * Process a verified Stripe webhook event. Caller must have already
  * verified the signature.
@@ -136,7 +161,12 @@ export async function processStripeWebhook(event: Stripe.Event) {
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
         where: { id: order.id },
-        data: { status: "paid", paidAt: new Date() },
+        data: {
+          status: "paid",
+          paidAt: new Date(),
+          // AC4 — charge.refunded chỉ mang payment_intent, nên phải giữ nó lại ở đây để khớp được đơn sau này.
+          ...(paymentIntentIdOf(sess.payment_intent) ? { paymentIntentRef: paymentIntentIdOf(sess.payment_intent)! } : {}),
+        },
       });
       const course = await tx.course.findUniqueOrThrow({
         where: { id: order.courseId },
@@ -152,6 +182,26 @@ export async function processStripeWebhook(event: Stripe.Event) {
       // hành vi cũ cho Order không gắn CourseAccessPlan.
       await extendEnrollmentAccess(order.userId, course, plan, tx as typeof prisma, { via: "order" });
     });
+  } else if (event.type === "charge.refunded") {
+    const charge = event.data.object as Stripe.Charge;
+    const facts = chargeRefundFacts(charge);
+    if (!facts) {
+      console.warn(`[stripe] charge.refunded ${charge.id} không có payment_intent — bỏ qua`);
+      return;
+    }
+    const r = await processChargeRefund(facts);
+    // Không có gì để Stripe gửi lại: trả 200 cho mọi kết quả, chỉ ghi log để người vận hành xử lý tay khi cần.
+    if (r.result === "order_not_found") {
+      console.warn(
+        `[stripe] charge.refunded ${charge.id} (${facts.paymentIntentRef}) không khớp đơn nào — đơn trước AC4? Thu hồi quyền bằng tay nếu cần.`,
+      );
+    } else if (r.result === "partial") {
+      console.warn(
+        `[stripe] đơn ${r.orderId} được hoàn MỘT PHẦN (${facts.refundedCents}) — quyền học giữ nguyên, quyết định tay nếu cần.`,
+      );
+    } else if (r.result === "not_paid") {
+      console.warn(`[stripe] charge.refunded cho đơn ${r.orderId} chưa ở trạng thái paid — bỏ qua`);
+    }
   } else if (event.type === "checkout.session.expired") {
     const sess = event.data.object as Stripe.Checkout.Session;
     await prisma.order.updateMany({

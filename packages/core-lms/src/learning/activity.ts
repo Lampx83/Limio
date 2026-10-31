@@ -6,7 +6,7 @@ import type { Prisma } from "@feedbackme/db";
  * hoạt động thì lớp học viên vắng mặt vẫn "mới hoạt động hôm qua" và lọt khỏi danh sách bỏ bê.
  * `class.*`, `course.pack.*` và `meeting.*` (tổng kết, nhận xét) do giảng viên thao tác; `goal.*` là đặt kế hoạch, không phải học; `lesson.deck.*` là gắn bài giảng slide vào bài học. Thêm namespace sự kiện kiểu này thì thêm vào đây.
  */
-export const NON_LEARNER_ACTIVITY_PREFIXES = ["attendance.", "class.", "course.pack.", "course.protected_media.", "course.access_batch.", "meeting.", "goal.", "lesson.deck."] as const;
+export const NON_LEARNER_ACTIVITY_PREFIXES = ["attendance.", "class.", "course.pack.", "course.protected_media.", "course.access_batch.", "enrollment.refunded", "meeting.", "goal.", "lesson.deck."] as const;
 
 export function isLearnerActivityType(eventType: string): boolean {
   return !NON_LEARNER_ACTIVITY_PREFIXES.some((p) => eventType.startsWith(p));

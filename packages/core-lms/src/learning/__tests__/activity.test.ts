@@ -17,6 +17,8 @@ describe("isLearnerActivityType — điểm danh không phải hoạt động h�
     expect(isLearnerActivityType(LearningEventType.CourseAccessBatchCreated)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.CourseAccessBatchExported)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.CourseAccessBatchRevoked)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.EnrollmentRefunded)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.EnrollmentCreated)).toBe(true); // chỉ riêng enrollment.refunded bị loại
     expect(isLearnerActivityType(LearningEventType.MeetingNoteSent)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.GoalSet)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.GoalChanged)).toBe(false);

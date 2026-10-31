@@ -194,6 +194,16 @@ AC1 (bảo vệ học liệu) → AC2 (lô mã + xuất file) → AC3 (thời h�
 - Danh sách sự kiện đăng ký ở Stripe dashboard cần thêm `charge.refunded`; ghi vào `docs/van-hanh/` kèm lệnh kiểm tra, vì thiếu bước này tính năng im lặng không chạy.
 - Khoá cấp quyền bằng **mã kích hoạt** không đi qua Stripe nên không có hoàn tiền tự động: thu hồi bằng trang ghi danh (thủ công). Ghi rõ cho nhà xuất bản.
 
+### Đã làm (31/10/2026)
+
+- `Order.paymentIntentRef` (unique) và `Order.refundedCents` (migration `20261031030000_order_refund`). Webhook `checkout.session.completed` ghi `payment_intent` cùng lúc đánh dấu `paid`.
+- Lõi `core-lms/learning/orderRefund.ts` (`processChargeRefund`), webhook `charge.refunded` ở `apps/web/src/lib/payments.ts` rút số liệu từ Charge rồi gọi lõi. Sự kiện mới `enrollment.refunded` (chỉ `enrollmentId`, `courseId`, `orderId`; `eventKey` chống ghi hai lần; không tính là hoạt động học).
+- Kết quả theo từng trường hợp: hoàn hết → đơn `refunded` + ghi danh `refunded`, trừ khi còn đơn `paid` khác hoặc mã đã dùng cho cùng khoá; hoàn một phần → chỉ ghi `refundedCents`; đơn không khớp / chưa `paid` → ghi log, trả 200. Hai lần gửi đồng thời chỉ một bên xử lý (điều kiện `status: "paid"` ngay trong `updateMany`); sự kiện cũ đến muộn không kéo `refundedCents` lùi.
+- **Khác bản nháp:** không có trang danh sách đơn cho admin, nên "đã hoàn một phần" hiện chỉ ở cột `refundedCents` và log máy chủ (`[stripe] ... MỘT PHẦN`). Làm trang đó khi có nhu cầu.
+- **Lỗ hổng cấu hình bắt được khi làm:** `STRIPE_WEBHOOK_SECRET` không được truyền vào container web trong `docker-compose.prod.yml` (chỉ `STRIPE_SECRET_KEY`), nên webhook trên prod luôn trả 503 và người trả tiền không được ghi danh. Đã thêm vào compose và `.env.prod.example`. Cần đặt giá trị vào `.env.prod` rồi `up -d web` (xem `docs/van-hanh/cong-thanh-toan.md`).
+- Hướng dẫn cài cổng thanh toán: `docs/van-hanh/cong-thanh-toan.md`.
+- Chưa thử với Stripe thật (không có khoá): logic được kiểm bằng test lõi trên DB (15 test) và test webhook có mock (12 test); cần chạy mục 3.7 của hướng dẫn trong chế độ Test.
+
 ---
 
 ## Câu hỏi cần thầy chốt

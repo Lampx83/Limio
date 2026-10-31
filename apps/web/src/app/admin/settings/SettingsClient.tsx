@@ -304,8 +304,9 @@ export default function SettingsClient({
 
         {paymentEnabled && (
           <div className="mt-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-xs text-warning-800">
-            <strong>Gateway chưa tích hợp.</strong> Khoá học có phí sẽ hiện nút "Mua khoá học"
-            nhưng thanh toán thực tế chưa hoạt động. Cần cấu hình Stripe/VNPay trước khi thu tiền thật.
+            <strong>Cổng thanh toán:</strong> hiện chỉ có Stripe (thẻ quốc tế); VNPay và Momo chưa tích hợp.
+            Khoá có phí cần Stripe đã cấu hình (khoá bí mật và webhook) hoặc dùng mã kích hoạt cho người trả
+            tiền ngoài hệ thống. Xem docs/van-hanh/cong-thanh-toan.md.
           </div>
         )}
       </section>

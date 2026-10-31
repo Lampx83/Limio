@@ -52,6 +52,9 @@ x-web-env: &web-env
   MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID:-}
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+  # Khoá ký webhook (whsec_...) của endpoint /api/webhooks/stripe. Thiếu ⇒ webhook trả 503 và đơn đã trả tiền
+  # KHÔNG được ghi danh (xem docs/van-hanh/cong-thanh-toan.md).
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
   SENTRY_DSN: ${SENTRY_DSN:-}
   # Đọc bằng getEnv() ở server runtime (root layout), KHÔNG cần build-arg —
   # khác NEXT_PUBLIC_BASE_PATH ở dưới, đổi ID không cần rebuild image, chỉ
