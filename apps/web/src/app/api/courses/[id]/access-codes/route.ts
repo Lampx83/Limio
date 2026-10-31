@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 
 // GET /api/courses/[id]/access-codes — danh sách mã của khoá (giảng viên).
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: { id: string } },
 ) {
   const userId = await requireUserId();
@@ -22,7 +22,9 @@ export async function GET(
   } catch (e) {
     return mapKnownError(e) ?? (() => { throw e; })();
   }
-  const codes = await listAccessCodes(params.id);
+  // ?ungrouped=1: chỉ mã lẻ không thuộc lô nào (các lô xem qua /access-code-batches).
+  const ungroupedOnly = new URL(req.url).searchParams.get("ungrouped") === "1";
+  const codes = await listAccessCodes(params.id, undefined, { ungroupedOnly });
   return NextResponse.json({ codes });
 }
 

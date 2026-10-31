@@ -94,7 +94,7 @@ AC1 (bảo vệ học liệu) → AC2 (lô mã + xuất file) → AC3 (thời h�
 
 - **Given** giảng viên của khoá (quyền `assertCanEditCourse` như hiện nay), **When** sinh mã với **tên lô** (bắt buộc, ví dụ "Tái bản 2026 — đợt 1") và số lượng, **Then** hệ thống tạo một lô và đúng ngần ấy mã gắn vào lô đó.
 - Trần mỗi lô: **10.000 mã**. Trần 200 cũ chỉ còn áp cho đường sinh nhanh không đặt tên lô (giữ tương thích).
-- **Given** số lượng trên 500, **Then** việc sinh chạy ở nền (BullMQ) và trang lô hiện "đang sinh: x / n"; làm xong thì báo. Không bao giờ timeout giữa chừng làm lô nửa vời: lô chỉ chuyển sang "sẵn sàng" khi đủ mã.
+- **Đổi khi code (31/10):** bản nháp định sinh ở nền (BullMQ) khi trên 500 mã. Đo thực tế: 10.000 mã chèn theo khối 1.000 trong **0,7 giây**, nên sinh ngay trong một request, **trong một transaction**: lô chỉ tồn tại khi đủ mã, không bao giờ có lô nửa vời, và không cần cột trạng thái "đang sinh" hay worker. Làm nền khi nào đo thấy chậm.
 - Mã trùng khi sinh được bốc lại (như `generateAccessCodes` hiện có), không hỏng cả lô.
 - Mỗi lô chốt `priceCentsSnapshot` và `currency` của khoá lúc sinh (như hiện nay), để báo cáo doanh thu không lệch khi đổi giá sau.
 - **Given** khoá `invite_only`, **Then** từ chối sinh lô (giữ bất biến hiện có).
@@ -115,6 +115,14 @@ AC1 (bảo vệ học liệu) → AC2 (lô mã + xuất file) → AC3 (thời h�
 
 - **Given** một lô in sai, **When** thu hồi cả lô, **Then** mọi mã `unused` của lô thành `revoked` trong **một** thao tác có xác nhận (nói rõ "n mã chưa dùng sẽ bị thu hồi"). Mã `redeemed` không đổi và không bị rút quyền học viên.
 - Thu hồi từng mã đơn lẻ giữ nguyên như hiện nay.
+
+### Đã làm (31/10/2026)
+
+- Bảng `CourseAccessCodeBatch` + `CourseAccessCode.batchId` (migration `20261031010000_access_code_batch`); lõi ở `core-lms/learning/accessCodeBatch.ts`.
+- API: `GET/POST /api/courses/[id]/access-code-batches`, `DELETE …/[batchId]` (thu hồi cả lô), `GET …/[batchId]/codes` (phân trang, lọc), `GET …/[batchId]/export?scope=unused|all`, `GET /api/courses/[id]/access-codes/lookup?code=`. Mọi route đòi `assertCanEditCourse`.
+- Giao diện ở `AccessCodesPanel`: form tạo lô, tra cứu mã, thẻ từng lô (số liệu, xuất CSV, xem mã phân trang, thu hồi cả lô) và mục "Mã lẻ" cho mã không thuộc lô.
+- Đã thử trên dev: tạo lô 120 mã, CSV có BOM và 120 dòng đúng định dạng, phân trang 50/50/20, tra cứu mã gõ chữ thường có dấu cách, thu hồi cả lô; ẩn danh gọi các route đều 401.
+- Mã lẻ (sinh nhanh hoặc có từ trước) vẫn xem và thu hồi từng mã được; không còn nút sinh nhanh trên giao diện, đường API cũ `POST /access-codes` còn nguyên.
 
 ### Sự kiện
 

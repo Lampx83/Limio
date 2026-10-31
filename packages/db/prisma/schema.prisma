@@ -106,6 +106,7 @@ model User {
   aiTokenLedger                  AiTokenLedger[]
   aiTokenBalance                 AiTokenBalance?
   createdAccessCodes             CourseAccessCode[]        @relation("CourseAccessCodeCreator")
+  createdAccessCodeBatches       CourseAccessCodeBatch[]   @relation("CourseAccessCodeBatchCreator")
   redeemedAccessCodes            CourseAccessCode[]        @relation("CourseAccessCodeRedeemer")
   orders                         Order[]
   auditEntriesAsActor            AuditLog[]                @relation("AuditActor")
@@ -518,6 +519,7 @@ model Course {
   questionBanks         QuestionBank[]
   sections              CourseSection[]
   protectedMediaFiles   ProtectedMediaFile[]
+  accessCodeBatches     CourseAccessCodeBatch[]
   flashcardStates       FlashcardState[]
   cohortExamClasses     CohortExamClass[]
   examRounds            ExamRound[]
@@ -2859,13 +2861,36 @@ model CourseAccessCode {
   redeemedAt         DateTime?
   note               String?
   createdAt          DateTime               @default(now())
+  /// Lô (đợt in) mà mã thuộc về. null = mã sinh nhanh / mã có từ trước khi có lô.
+  batchId            String?
 
-  course     Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  creator    User   @relation("CourseAccessCodeCreator", fields: [createdBy], references: [id])
-  redeemedBy User?  @relation("CourseAccessCodeRedeemer", fields: [redeemedByUserId], references: [id])
+  course     Course                  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator    User                    @relation("CourseAccessCodeCreator", fields: [createdBy], references: [id])
+  redeemedBy User?                   @relation("CourseAccessCodeRedeemer", fields: [redeemedByUserId], references: [id])
+  batch      CourseAccessCodeBatch?  @relation(fields: [batchId], references: [id], onDelete: SetNull)
 
   @@index([courseId, status])
   @@index([redeemedByUserId])
+  @@index([batchId, status])
+}
+
+/// AC2 (docs/tieu-chi/hoc-lieu-nha-xuat-ban-P0.md) — một lô mã kích hoạt, vd một đợt in sách. Chỉ để gom, đếm,
+/// xuất file và thu hồi cả lô; giá chốt và trạng thái nằm ở từng CourseAccessCode.
+model CourseAccessCodeBatch {
+  id        String   @id @default(uuid())
+  courseId  String
+  label     String
+  note      String?
+  /// Số mã đã sinh cho lô (chốt lúc tạo; thu hồi không làm đổi).
+  count     Int
+  createdBy String
+  createdAt DateTime @default(now())
+
+  course  Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator User               @relation("CourseAccessCodeBatchCreator", fields: [createdBy], references: [id])
+  codes   CourseAccessCode[]
+
+  @@index([courseId, createdAt])
 }
 
 // =====================================================================

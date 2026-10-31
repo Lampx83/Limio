@@ -14,6 +14,9 @@ describe("isLearnerActivityType — điểm danh không phải hoạt động h�
     expect(isLearnerActivityType(LearningEventType.CoursePackUsed)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.CourseProtectedMediaEnabled)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.CourseProtectedMediaDisabled)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.CourseAccessBatchCreated)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.CourseAccessBatchExported)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.CourseAccessBatchRevoked)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.MeetingNoteSent)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.GoalSet)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.GoalChanged)).toBe(false);

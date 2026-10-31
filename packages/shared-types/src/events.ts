@@ -269,6 +269,11 @@ export const LearningEventType = {
   // payload chỉ mang id và số file, không tính là hoạt động học.
   CourseProtectedMediaEnabled: "course.protected_media.enabled",
   CourseProtectedMediaDisabled: "course.protected_media.disabled",
+  // AC2 lô mã kích hoạt. Subject là giảng viên thao tác; payload chỉ mang id và số lượng, KHÔNG mang mã
+  // (mã tự nó cấp quyền vào khoá nên không được nằm ở nơi đọc được rộng hơn bảng CourseAccessCode).
+  CourseAccessBatchCreated: "course.access_batch.created",
+  CourseAccessBatchExported: "course.access_batch.exported",
+  CourseAccessBatchRevoked: "course.access_batch.revoked",
   // CENTER C4 — kết thúc buổi, tổng kết gửi lớp, nhận xét cá nhân. Subject là giảng viên thao tác;
   // payload chỉ mang id và số liệu, KHÔNG mang chữ của nhận xét (theo mẫu assistant.question.asked).
   ClassMeetingClosed: "class.meeting.closed",
@@ -1122,6 +1127,13 @@ export interface GoalSectionSetPayload {
 // ── CENTER C3 — giáo trình dựng sẵn ──────────────────────────────────────
 
 // ── AC1 học liệu bản quyền ───────────────────────────────────────────────
+
+export interface CourseAccessBatchEventPayload {
+  batchId: string;
+  courseId: string;
+  /** created: số mã sinh; exported: số dòng trong file; revoked: số mã bị thu hồi. */
+  count: number;
+}
 
 export interface CourseProtectedMediaChangedPayload {
   courseId: string;

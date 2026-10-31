@@ -21,7 +21,8 @@ export class AccessCodeError extends Error {
       | "code_not_found"
       | "code_already_used"
       | "code_revoked"
-      | "course_not_enrollable",
+      | "course_not_enrollable"
+      | "batch_not_found",
     public readonly details?: unknown,
   ) {
     super(code);
@@ -36,7 +37,7 @@ const CODE_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 const GROUP_LEN = 4;
 const GROUP_COUNT = 3;
 
-function randomCode(): string {
+export function randomCode(): string {
   const groups: string[] = [];
   for (let g = 0; g < GROUP_COUNT; g++) {
     let group = "";
@@ -115,9 +116,14 @@ export async function generateAccessCodes(
   return created;
 }
 
-export async function listAccessCodes(courseId: string, db: PrismaClient = prisma) {
+/** `ungroupedOnly`: chỉ mã lẻ không thuộc lô nào (mã sinh nhanh, hoặc có từ trước khi có lô). */
+export async function listAccessCodes(
+  courseId: string,
+  db: PrismaClient = prisma,
+  opts: { ungroupedOnly?: boolean } = {},
+) {
   return db.courseAccessCode.findMany({
-    where: { courseId },
+    where: { courseId, ...(opts.ungroupedOnly ? { batchId: null } : {}) },
     orderBy: { createdAt: "desc" },
     take: 300,
     include: { redeemedBy: { select: { email: true, displayName: true } } },

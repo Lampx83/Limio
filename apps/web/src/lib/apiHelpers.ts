@@ -151,7 +151,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
   }
   if (err instanceof AccessCodeError) {
     const status =
-      err.code === "course_not_found" || err.code === "code_not_found"
+      err.code === "course_not_found" || err.code === "code_not_found" || err.code === "batch_not_found"
         ? 404
         : err.code === "code_already_used" ||
             err.code === "course_not_enrollable" ||

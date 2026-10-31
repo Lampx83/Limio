@@ -1,4 +1,5 @@
 export * from "./accessCode";
+export * from "./accessCodeBatch";
 export * from "./events";
 export * from "./enroll";
 export * from "./courseAccess";
