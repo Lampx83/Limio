@@ -6,6 +6,7 @@ import { CourseError } from "./courses";
 import { validateContentPayload, type ContentTypeKey } from "./contentSchemas";
 import { attachLessonActivity } from "./lessonActivity";
 import { recordContentVersion } from "./contentVersions";
+import { registerLessonMedia } from "./protectedMedia";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 
@@ -95,6 +96,7 @@ export async function createContentItem(
     await attachLessonActivity(tx, lessonId, "content", item.id);
     return item.id;
   });
+  await registerLessonMedia(lessonId, db);
   return { contentItemId: itemId };
 }
 
@@ -134,6 +136,7 @@ export async function updateContentItem(
     }
   }
   await db.contentItem.update({ where: { id: contentId }, data });
+  if (data.payload !== undefined) await registerLessonMedia(ctx.lessonId, db);
   if (parsed.data.versionSource === "before_convert") {
     await emitEvent(
       actorUserId,

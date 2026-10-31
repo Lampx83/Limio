@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
 import { lessonAudioKeyFromFilename } from "@/lib/storage-keys";
 import { audioMimeForFilename } from "@/lib/lessonAudio";
 import {
@@ -16,7 +17,7 @@ export const runtime = "nodejs";
  * file mang hậu tố ngẫu nhiên, giống video. Đuôi ngoài danh sách (kể cả wav)
  * không được phát.
  */
-export async function GET(
+export const GET = guardedLessonMedia(async function GET(
   req: Request,
   { params }: { params: { file: string } },
 ) {
@@ -47,4 +48,4 @@ export async function GET(
       "cache-control": "public, max-age=604800, immutable",
     },
   });
-}
+});

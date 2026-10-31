@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
 import { lessonImageKeyFromFilename } from "@/lib/storage-keys";
 import { isSafeFilename, resolveKey } from "@/lib/storage-serve";
 
@@ -13,7 +14,7 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
   svg: "image/svg+xml",
 };
 
-export async function GET(
+export const GET = guardedLessonMedia(async function GET(
   _req: Request,
   { params }: { params: { file: string } },
 ) {
@@ -36,4 +37,4 @@ export async function GET(
       "cache-control": "public, max-age=604800, immutable",
     },
   });
-}
+});

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
+import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
 import { lessonTranscriptKeyFromFilename } from "@/lib/storage-keys";
 import { isSafeFilename, resolveKey } from "@/lib/storage-serve";
 
 export const runtime = "nodejs";
 
-export async function GET(
+export const GET = guardedLessonMedia(async function GET(
   _req: Request,
   { params }: { params: { file: string } },
 ) {
@@ -24,4 +25,4 @@ export async function GET(
       "cache-control": "public, max-age=604800, immutable",
     },
   });
-}
+});

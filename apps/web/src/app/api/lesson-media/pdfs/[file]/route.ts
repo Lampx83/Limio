@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
 import { lessonPdfKeyFromFilename } from "@/lib/storage-keys";
 import {
   isSafeFilename,
@@ -8,7 +9,7 @@ import {
 
 export const runtime = "nodejs";
 
-export async function GET(
+export const GET = guardedLessonMedia(async function GET(
   req: Request,
   { params }: { params: { file: string } },
 ) {
@@ -32,4 +33,4 @@ export async function GET(
       "cache-control": "public, max-age=604800, immutable",
     },
   });
-}
+});

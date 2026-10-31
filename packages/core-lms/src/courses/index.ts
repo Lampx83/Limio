@@ -29,3 +29,4 @@ export * from "./scheduleSummary";
 export * from "./meetingPlan";
 export * from "./teacherCheckInCalc";
 export * from "./teacherCheckIn";
+export * from "./protectedMedia";

@@ -265,6 +265,10 @@ export const LearningEventType = {
   // CENTER C3 — giáo trình dựng sẵn. Subject là giảng viên thao tác.
   CoursePackUsed: "course.pack.used",
   CoursePackUpdated: "course.pack.updated",
+  // AC1 học liệu bản quyền (docs/tieu-chi/hoc-lieu-nha-xuat-ban-P0.md). Subject là người bật/tắt cờ;
+  // payload chỉ mang id và số file, không tính là hoạt động học.
+  CourseProtectedMediaEnabled: "course.protected_media.enabled",
+  CourseProtectedMediaDisabled: "course.protected_media.disabled",
   // CENTER C4 — kết thúc buổi, tổng kết gửi lớp, nhận xét cá nhân. Subject là giảng viên thao tác;
   // payload chỉ mang id và số liệu, KHÔNG mang chữ của nhận xét (theo mẫu assistant.question.asked).
   ClassMeetingClosed: "class.meeting.closed",
@@ -1116,6 +1120,14 @@ export interface GoalSectionSetPayload {
 }
 
 // ── CENTER C3 — giáo trình dựng sẵn ──────────────────────────────────────
+
+// ── AC1 học liệu bản quyền ───────────────────────────────────────────────
+
+export interface CourseProtectedMediaChangedPayload {
+  courseId: string;
+  /** Số file học liệu đang được bảo vệ sau thao tác (0 khi tắt). */
+  files: number;
+}
 
 export interface CoursePackUsedPayload {
   packId: string;

@@ -462,6 +462,10 @@ model Course {
   /// B16 — mở tự do hay chỉ vào bằng link mời lớp. Mặc định `open` để mọi khoá
   /// đang có giữ nguyên hành vi sau khi migrate.
   enrollMode             EnrollMode   @default(open)
+  /// Học liệu có bản quyền (docs/tieu-chi/hoc-lieu-nha-xuat-ban-P0.md, AC1). Bật thì file tải lên mà bài
+  /// của khoá tham chiếu chỉ phục vụ người có quyền vào khoá (ProtectedMediaFile), thay vì "ai có link
+  /// đều tải được". Mặc định tắt: khoá đang có và mọi URL đã nhúng giữ nguyên hành vi.
+  protectedMedia         Boolean      @default(false)
   personalizationEnabled Boolean      @default(false)
   /// LANG G3 — chế độ ngoại ngữ: bật trang "Hồ sơ 4 kỹ năng" và ô chọn kỹ năng ở
   /// form sửa bài. Bất biến (ép ở core-lms/courses.ts): languageMode ⇒
@@ -513,6 +517,7 @@ model Course {
   exams                 Exam[]
   questionBanks         QuestionBank[]
   sections              CourseSection[]
+  protectedMediaFiles   ProtectedMediaFile[]
   flashcardStates       FlashcardState[]
   cohortExamClasses     CohortExamClass[]
   examRounds            ExamRound[]
@@ -6159,4 +6164,19 @@ model AcquisitionTouch {
   createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// AC1 học liệu bản quyền — file học liệu nào thuộc khoá nào. URL trong DB chỉ mang tên file nên route
+/// phục vụ cần bảng tra này để biết file có phải của khoá bản quyền không. Một file có thể được nhiều khoá
+/// tham chiếu: được bảo vệ nếu bất kỳ khoá nào trong đó bật cờ. Ghi bởi core-lms/courses/protectedMedia.ts
+/// (lúc bật cờ, lúc lưu nội dung bài, lúc dựng trang bài); dòng của khoá tắt cờ bị xoá.
+model ProtectedMediaFile {
+  filename  String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([filename, courseId])
+  @@index([courseId])
 }

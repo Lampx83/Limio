@@ -14,6 +14,7 @@ import { ArrowLeft, Eye, Presentation } from "lucide-react";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import AccessCodesPanel from "./AccessCodesPanel";
+import ProtectedMediaPanel from "./ProtectedMediaPanel";
 import LessonSection from "./LessonSection";
 import ModuleSection from "./ModuleSection";
 import ModuleOverviewList from "./ModuleOverviewList";
@@ -129,6 +130,9 @@ export default async function InstructorCourseEditPage({
     isResearcher(userId),
   ]);
   if (!canAccess) redirect("/instructor/courses");
+  const protectedMediaFiles = course.protectedMedia
+    ? await prisma.protectedMediaFile.count({ where: { courseId: course.id } })
+    : 0;
   // Học viên / Lớp học / Grade / Phân tích chỉ có nghĩa khi khoá đã mở cho
   // người học: khoá nháp chưa có ai ghi danh, chưa có bài nộp hay dữ liệu học
   // tập. Khoá đã lưu trữ (từng publish) vẫn giữ để còn tra lại danh sách và điểm.
@@ -372,6 +376,16 @@ export default async function InstructorCourseEditPage({
                 <AccessCodesPanel courseId={course.id} />
               </section>
             )}
+
+          {isOwner && (
+            <section>
+              <ProtectedMediaPanel
+                courseId={course.id}
+                initialEnabled={course.protectedMedia}
+                initialFiles={protectedMediaFiles}
+              />
+            </section>
+          )}
 
           <section>
             <h2 className="text-base font-semibold">Giảng viên</h2>

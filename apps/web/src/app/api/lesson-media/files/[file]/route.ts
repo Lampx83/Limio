@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
 import { lessonFileKeyFromFilename } from "@/lib/storage-keys";
 import { lessonFileMimeForFilename } from "@/lib/lessonFile";
 import { isSafeFilename, resolveKey } from "@/lib/storage-serve";
@@ -14,7 +15,7 @@ export const runtime = "nodejs";
  * hiển thị khi lưu do thuộc tính `download` ở LessonContent đặt (header không
  * mang `filename=` nên `download` được ưu tiên).
  */
-export async function GET(_req: Request, { params }: { params: { file: string } }) {
+export const GET = guardedLessonMedia(async function GET(_req: Request, { params }: { params: { file: string } }) {
   const file = params.file;
   if (!isSafeFilename(file)) {
     return new NextResponse("forbidden", { status: 403 });
@@ -36,4 +37,4 @@ export async function GET(_req: Request, { params }: { params: { file: string } 
       "cache-control": "public, max-age=604800, immutable",
     },
   });
-}
+});

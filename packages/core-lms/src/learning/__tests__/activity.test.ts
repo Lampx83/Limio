@@ -12,6 +12,8 @@ describe("isLearnerActivityType — điểm danh không phải hoạt động h�
     expect(isLearnerActivityType(LearningEventType.AttendanceStudentMarked)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.ClassMeetingCancelled)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.CoursePackUsed)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.CourseProtectedMediaEnabled)).toBe(false);
+    expect(isLearnerActivityType(LearningEventType.CourseProtectedMediaDisabled)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.MeetingNoteSent)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.GoalSet)).toBe(false);
     expect(isLearnerActivityType(LearningEventType.GoalChanged)).toBe(false);

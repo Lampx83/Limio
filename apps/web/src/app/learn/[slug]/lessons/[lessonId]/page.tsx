@@ -10,6 +10,7 @@ import {
   getLessonSlideState,
   isUserEnrolled,
   listThreadsForLesson,
+  registerLessonMedia,
   resolveQuizScore,
 } from "@feedbackme/core-lms";
 import {
@@ -271,6 +272,10 @@ export default async function LessonPage({
     }
     // Otherwise fall through and render as preview below.
   }
+
+  // Khoá "Học liệu có bản quyền": đưa file của bài vào bảng bảo vệ TRƯỚC khi gửi link xuống trình duyệt. Lưới an toàn
+  // cho các đường ghi nội dung chưa móc registerLessonMedia (nhập Word/Markdown, AI, sao khoá...). Khoá thường: một truy vấn rồi thoát.
+  await registerLessonMedia(params.lessonId);
 
   // Dữ liệu có cấu trúc cho bài học công khai. Phải dựng trước khi rẽ nhánh:
   // Googlebot luôn rơi vào nhánh "preview" bên dưới (nó không đăng nhập được),

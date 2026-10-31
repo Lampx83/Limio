@@ -4,6 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const resolveKey = vi.fn();
 
+// Cổng học liệu bản quyền có test riêng (lib/lessonMediaGuard.test.ts); ở đây chỉ cần route chạy như trước.
+vi.mock("@/lib/lessonMediaGuard", () => ({ guardedLessonMedia: <T,>(h: T) => h }));
+
 vi.mock("@/lib/storage-serve", async (importActual) => {
   const actual = await importActual<typeof import("@/lib/storage-serve")>();
   return { ...actual, resolveKey };

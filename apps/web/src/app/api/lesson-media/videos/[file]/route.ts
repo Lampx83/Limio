@@ -1,5 +1,6 @@
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
 import { lessonVideoKeyFromFilename } from "@/lib/storage-keys";
 import {
   isSafeFilename,
@@ -25,7 +26,7 @@ const MIME: Record<string, string> = {
   ".mkv": "video/x-matroska",
 };
 
-export async function GET(
+export const GET = guardedLessonMedia(async function GET(
   req: Request,
   { params }: { params: { file: string } },
 ) {
@@ -58,4 +59,4 @@ export async function GET(
       "cache-control": "public, max-age=604800, immutable",
     },
   });
-}
+});

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardedLessonMedia } from "@/lib/lessonMediaGuard";
 import { lessonHtmlKeyFromFilename } from "@/lib/storage-keys";
 import { isSafeFilename, resolveKey } from "@/lib/storage-serve";
 
@@ -18,7 +19,7 @@ export const runtime = "nodejs";
 const SANDBOX_CSP =
   "sandbox allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox";
 
-export async function GET(
+export const GET = guardedLessonMedia(async function GET(
   _req: Request,
   { params }: { params: { file: string } },
 ) {
@@ -40,4 +41,4 @@ export async function GET(
       "x-content-type-options": "nosniff",
     },
   });
-}
+});
