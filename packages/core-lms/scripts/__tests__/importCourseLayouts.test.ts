@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CreateQuestionInput } from "../../src/quizzes/questions";
-import { LessonSpec, expandQuestion, lectureAnchorProblems, lessonContentItems, markdownToHtml, renderSection } from "../import-course";
+import { LessonSpec, embedProblems, expandQuestion, isSafeEmbedUrl, lectureAnchorProblems, lessonContentItems, markdownToHtml, renderSection } from "../import-course";
 
 describe("renderSection — bố cục như Bài học từ tài liệu", () => {
   it("dựng section/lesson-part đúng đánh dấu mà lessonLook.css dùng", () => {
@@ -165,5 +165,45 @@ describe("lời giải hiện từng bước", () => {
       lecture: [{ anchor: "Giải mẫu #3", text: "x" }, { anchor: "Giải mẫu #0", text: "y" }, { anchor: "Mục lạ #1", text: "z" }],
     });
     expect(lectureAnchorProblems(bad)).toHaveLength(3);
+  });
+});
+
+describe("embeds — khối nhúng tương tác", () => {
+  const body = "## Mở đầu\n\nDẫn.\n\n## Kéo để khám phá\n\nThử đi.\n\n## Tổng kết ý\n\nXong.";
+  const mk = (embeds: unknown[], extra: object = {}) =>
+    LessonSpec.parse({ title: "B", body, splitSections: true, toc: false, embeds, ...extra });
+  const types = (l: ReturnType<typeof mk>) => lessonContentItems(l).map((i) => i.type);
+
+  it("chèn ngay sau mục afterSection, giữ nguyên thứ tự các khối chữ", () => {
+    const l = mk([{ url: "/widgets/parabola.html", height: 560, afterSection: "Kéo để khám phá" }]);
+    const items = lessonContentItems(l);
+    const at = items.findIndex((i) => i.type === "embed");
+    expect(items.filter((i) => i.type === "embed")).toHaveLength(1);
+    expect(String(items[at - 1]!.payload.html)).toContain("Kéo để khám phá");
+    expect(String(items[at + 1]!.payload.html)).toContain("Tổng kết ý");
+    const e = items[at]!;
+    expect(e.payload).toEqual({ url: "/widgets/parabola.html", height: 560 });
+    expect(embedProblems(l)).toEqual([]);
+  });
+
+  it("không chỉ mục thì đặt sau mọi khối chữ, nhưng trước tổng kết", () => {
+    const l = mk([{ url: "https://example.com/x" }], { summary: ["Ý chính"] });
+    const t = types(l);
+    expect(t.at(-2)).toBe("embed");
+    expect(t.at(-1)).toBe("richtext"); // tổng kết vẫn là khối cuối
+  });
+
+  it("afterSection không trùng mục nào, hoặc thiếu splitSections → báo lỗi", () => {
+    expect(embedProblems(mk([{ url: "/w/a.html", afterSection: "Mục không có" }]))).toHaveLength(1);
+    const noSplit = LessonSpec.parse({ title: "B", body, embeds: [{ url: "/w/a.html", afterSection: "Mở đầu" }] });
+    expect(embedProblems(noSplit)).toHaveLength(1);
+  });
+
+  it("chỉ nhận đường dẫn cùng-origin hoặc https", () => {
+    for (const ok of ["/widgets/parabola.html", "https://www.geogebra.org/x"]) expect(isSafeEmbedUrl(ok)).toBe(true);
+    for (const bad of ["javascript:alert(1)", "//evil.com/x", "/\\evil.com", "http://insecure.com", "widgets/a.html", ""]) {
+      expect(isSafeEmbedUrl(bad)).toBe(false);
+    }
+    expect(() => mk([{ url: "//evil.com/x" }])).toThrow();
   });
 });
