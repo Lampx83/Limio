@@ -71,6 +71,11 @@ FB = [
     ("ham2.quen-dieu-kien", "Cắt trục hoành tại HAI điểm phân biệt ⇔ phương trình có hai nghiệm phân biệt ⇔ Δ > 0 (dấu lớn hơn hẳn). Δ = 0 là tiếp xúc, chỉ một điểm chung."),
 ]
 
+def plain(t):
+    """Câu hỏi và giải thích là chữ thuần + KaTeX, không qua markdown: dấu * sẽ hiện nguyên văn."""
+    return t.replace("*", "")
+
+
 def opt(label, ok=False, mis=None):
     o = {"label": label, "isCorrect": ok}
     if mis:
@@ -112,6 +117,9 @@ QUESTIONS = [
      "explanation": "$a=-1<0$ nên đỉnh là điểm cao nhất. Đỉnh $(2;9)$: $y=-4+8+5=9$. Đúng.",
      "options": [opt("Đúng", True), opt("Sai", mis="ham2.dau-a")]},
 ]
+
+for _q in QUESTIONS:
+    _q["prompt"], _q["explanation"] = plain(_q["prompt"]), plain(_q["explanation"])
 
 COURSE = {
     "title": "Toán — Hàm số bậc hai: học cùng giảng viên ảo (demo)",
@@ -227,7 +235,7 @@ LESSON = {
                    "Tìm và sửa lỗi sai dấu trong công thức hoành độ đỉnh"],
     "objectivesLead": "Học xong bài này, em có thể:",
     "body": BODY, "splitSections": True, "toc": False,
-    "embeds": [{"url": "/widgets/parabola.html", "height": 640, "afterSection": "Kéo thử: a, b, c làm gì với parabol"}],
+    "embeds": [{"url": "/widgets/parabola.html", "height": 720, "afterSection": "Kéo thử: a, b, c làm gì với parabol"}],
     "sections": SECTIONS,
     "flashcards": {"title": "Thẻ ghi nhớ · Hàm số bậc hai", "items": [
         {"term": "Hướng mở của parabol", "meaning": "Do dấu của a: a > 0 mở lên, a < 0 mở xuống."},

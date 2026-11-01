@@ -69,6 +69,15 @@ dùng lại phần còn lại.
 - Mọi đáp án số trong quiz được tính lại bằng script (không tin tay) trước khi nhập.
 - Kiểm bằng mắt trên máy dev: widget kéo được, quiz hiện công thức, Nghe giảng bám bước.
 
+## Đã kiểm (01/11/2026, máy dev)
+
+- [x] AC1 widget chạy khi nhúng trong bài: kéo a, b, c đổi đỉnh/Δ/nghiệm; a = 0 hiện cảnh báo; Δ < 0 ghi vô nghiệm; không cuộn ngang ở 375px.
+- [x] AC2 thử thách: 200 đề sinh ngẫu nhiên đều có đáp án nguyên và đỉnh khác trục tung (test `parabolaCore.test.ts`).
+- [x] AC3 importer: embed chèn đúng sau mục chỉ định, trước tổng kết nếu không chỉ mục; từ chối `//host`, `javascript:`, http (test `importCourseLayouts.test.ts`).
+- [x] AC4 Nghe giảng: 13 đoạn lời giảng bám đúng mục và 6 bước của ví dụ mẫu (importer kiểm anchor); giảng viên Tiến Đạt hiện, giọng giả của máy dev.
+- [x] AC5 quiz 8 câu: công thức dựng đúng, thang tự tin hiện.
+- [ ] Chưa kiểm: phản hồi lỗi tư duy trên đường nộp bài thật; giọng NEU TTS thật; widget trên điện thoại thật (mới kiểm bằng khung 375px — nội dung cao 723px nên khung nhúng đặt 720px).
+
 ## Rủi ro
 
 | Rủi ro | Cách giữ |
