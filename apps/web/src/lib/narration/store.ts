@@ -25,6 +25,8 @@ export interface NarrationUi {
   expanded: boolean;
   /** Đề nghị "Nghe tiếp từ …" đang chờ học viên chọn. */
   offerSec: number | null;
+  /** Chế độ trình chiếu: mỗi mục của bài là một slide toàn màn hình (docs/tieu-chi/trinh-chieu-giang-vien.md). Chỉ có nghĩa với lời giảng. */
+  stage: boolean;
 }
 
 export const NARRATION_INITIAL: NarrationUi = {
@@ -40,6 +42,7 @@ export const NARRATION_INITIAL: NarrationUi = {
   error: false,
   expanded: false,
   offerSec: null,
+  stage: false,
 };
 
 /** Các lệnh do trình phát (NarrationPlayer) đăng ký; các nút gọi qua đây. */

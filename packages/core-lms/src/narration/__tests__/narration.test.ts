@@ -291,6 +291,8 @@ describe("LessonNarration trong cơ sở dữ liệu", () => {
     await makeReady(lessonId, "podcast", PODCAST);
     const seen = await getLearnerNarrations(lessonId);
     expect(seen.lecture?.segments.map((s) => s.anchor)).toEqual(["mo-dau", "Ảo giác AI là gì", "tong-ket"]);
+    // Chữ lời giảng đi kèm từng đoạn để làm phụ đề trình chiếu (như bản chữ podcast).
+    expect(seen.lecture?.segments.map((s) => s.text)).toEqual(LECTURE.map((s) => s.text));
     expect(seen.podcast?.turns.map((t) => [t.speakerName, t.text.slice(0, 5)])).toEqual([
       ["Khoa", "Chào "],
       ["Linh", "Còn m"],

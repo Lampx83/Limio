@@ -37,10 +37,10 @@ export function NarrationAvatar({
   speaking?: boolean;
   /** Màu nền riêng của giảng viên ảo được chọn (xem `VIRTUAL_LECTURERS`); không có thì dùng nền mặc định. */
   accent?: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }) {
-  const dim = size === "sm" ? "h-9 w-9" : "h-11 w-11";
+  const dim = size === "sm" ? "h-9 w-9" : size === "lg" ? "h-24 w-24" : "h-11 w-11";
   const ring = speaking ? "narration-speaking" : "";
   let inner: ReactNode;
   if (who === "lecturer") {
