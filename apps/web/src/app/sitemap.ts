@@ -81,6 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified: latestCourseChange ?? now, changeFrequency: "weekly", priority: 1 },
     { url: absoluteUrl("/catalog"), lastModified: latestCourseChange ?? now, changeFrequency: "daily", priority: 0.9 },
+    { url: absoluteUrl("/learning"), lastModified: latestCourseChange ?? now, changeFrequency: "weekly", priority: 0.8 },
     // Trang giới thiệu hệ thống (file tĩnh trong public/gioi-thieu).
     { url: absoluteUrl("/gioi-thieu"), changeFrequency: "monthly", priority: 0.7 },
     { url: absoluteUrl("/xp-guide"), changeFrequency: "monthly", priority: 0.4 },
