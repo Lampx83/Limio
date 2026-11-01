@@ -16,9 +16,9 @@ export default function LecturerInvite({ courseSlug, name, accent }: { courseSlu
   const [hidden, setHidden] = useState(() => safeStorage()?.getItem(dismissKey(courseSlug)) === "1");
   if (hidden) return null;
   return (
-    <div className="banner-info mt-3 flex items-center gap-3 print:hidden">
+    <div className="banner-info mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 print:hidden">
       <NarrationAvatar who="lecturer" name={name} accent={accent} size="sm" />
-      <p className="min-w-0 flex-1 text-sm">
+      <p className="min-w-[10rem] flex-1 text-sm">
         <strong>{name}</strong> có thể giảng bài này cho bạn.
       </p>
       <button type="button" className="btn-primary btn-sm shrink-0" onClick={() => narrationCommands()?.open("lecture")}>
