@@ -137,3 +137,5 @@ trình phát, thanh tua, tốc độ, phụ đề không đổi gì.
 - **Nhịp nghỉ** (`NarrationPlayer`, chỉ bài dùng khung slide tương tác): hết mỗi đoạn giảng, giọng dừng 1,4 giây (2,6 giây khi sang slide mới, +0,9 giây nếu đoạn vừa rồi dài)
   rồi tự đi tiếp để học viên kịp nhìn và ngấm. Nút phát/dừng của học viên trong lúc nghỉ luôn thắng; slide chờ học viên làm đã có điểm dừng riêng nên không nghỉ chồng.
 - **F5 giữ chỗ**: học viên chuyển slide / tua thì vị trí được nhớ dù giọng chưa bắt đầu phát; mở lại thấy đúng slide đó cùng lời mời nghe tiếp.
+- **Một cửa vào**: khoá có lời mời «Học với giảng viên ảo» (mức Hiện) thì ẩn nút «Nghe giảng» ở đầu bài; học viên ẩn lời mời thì nút «Nghe giảng» hiện lại để không mất lối vào.
+  Việc ẩn lời mời nhớ **theo từng tài khoản** (`limio:lecturer-invite:<khoá>:<userId>`), không theo trình duyệt — hai người dùng chung một máy không ẩn lây cho nhau.
