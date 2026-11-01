@@ -418,6 +418,14 @@ model UserFeatureOverride {
 // A2 — Course Management
 // =====================================================================
 
+/// Bốn mức hiển thị giảng viên ảo (AC3): ép, hiện (tắt được), tự bật, không hiện.
+enum VirtualLecturerMode {
+  BAT_BUOC
+  HIEN
+  TU_BAT
+  AN
+}
+
 enum CourseStatus {
   draft
   review
@@ -484,6 +492,8 @@ model Course {
   /// (giảng viên mới không ghi danh nên cần đọc công khai mới xem được) — điều kiện
   /// này được ép ở setCourseSample và lọc lại ở listSampleCourses.
   isSample               Boolean      @default(false)
+  /// Mức giảng viên ảo RIÊNG của khoá; null = theo mặc định hệ thống (docs/tieu-chi/giang-vien-ao.md, AC1).
+  virtualLecturerMode    VirtualLecturerMode?
   /// Khoá mẫu cho HỌC VIÊN (khác isSample — mẫu cho giảng viên): thẻ "Thử học ngay" trên trang Bắt đầu của
   /// học viên chưa có khoá nào (docs/hoc-vien/trang-dau-hoc-vien-AC.md, AC3). null = không phải mẫu; có giá
   /// trị = lúc admin bật, trang Bắt đầu lấy khoá bật gần nhất. Chỉ bật được khi khoá published + tự ghi danh
