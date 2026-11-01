@@ -10,6 +10,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { JSDOM } from "jsdom";
 import { convertSlide, type ConvertedSlide, type SmartdocSlide } from "../src/lib/smartdocConvert";
 
 const LESSONS = [
@@ -19,6 +20,9 @@ const LESSONS = [
   { tep: "bai-toi-uu.json", tieuDe: "Hệ bất phương trình bậc nhất hai ẩn và tối ưu", moTa: "Miền nghiệm trên mặt phẳng toạ độ và bài toán tìm giá trị tốt nhất.", phut: 25 },
   { tep: "bai-xac-suat.json", tieuDe: "Xác suất cổ điển", moTa: "Không gian mẫu, biến cố và cách tính xác suất bằng định nghĩa cổ điển.", phut: 25 },
 ];
+
+// Bộ chuyển cần DOMParser — dựng bằng jsdom (cùng cách với convert-legacy-ai-lessons.ts).
+(globalThis as unknown as Record<string, unknown>).DOMParser = new JSDOM("").window.DOMParser;
 
 // Giảng viên mặc định của demo: Tiến Đạt (giọng `tiendat`), xưng «thầy».
 const PERSONA = { xung: "thầy", ten: "Tiến Đạt" };

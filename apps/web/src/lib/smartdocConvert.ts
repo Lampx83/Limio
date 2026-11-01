@@ -1,5 +1,3 @@
-import { JSDOM } from "jsdom";
-
 /**
  * Chuyển một bài của SmartDoc (slide HTML tương tác + lời giảng theo bước) sang định dạng nhập khoá của Limio
  * (`packages/core-lms/scripts/import-course.ts`): mỗi slide thành một mục `##` của bài, lời giảng của slide thành một đoạn
@@ -7,6 +5,8 @@ import { JSDOM } from "jsdom";
  *
  * Mất khi chuyển (nói rõ ở báo cáo của script): tương tác trên slide (nút, ô nhập, tab, mô phỏng), hình vẽ SVG, và
  * phần gia sư 1-1 (`giaSu`). Câu trắc nghiệm trên slide được giữ dạng tĩnh kèm đáp án.
+ *
+ * Cần DOM (`DOMParser`): chạy trong test jsdom, hoặc trong script sau khi dựng jsdom (xem scripts/convert-smartdoc-lesson.ts).
  */
 
 export interface SmartdocSlide {
@@ -169,7 +169,7 @@ export function cleanNarration(steps: readonly string[], persona: Persona): stri
 const capitalize = (s: string): string => (s ? s[0]!.toUpperCase() + s.slice(1) : s);
 
 export function convertSlide(slide: SmartdocSlide, persona: Persona, fallbackTitle: string): ConvertedSlide {
-  const doc = new JSDOM(`<body>${slide.html}</body>`).window.document;
+  const doc = new DOMParser().parseFromString(`<body>${slide.html}</body>`, "text/html");
   const root = doc.body;
   const section = root.querySelector("section") ?? root;
   const heading = section.querySelector("h1, h2, h3");
