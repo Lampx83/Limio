@@ -262,7 +262,7 @@ html[data-narration-stage] .narration-bar {
   display: flex;
   width: min(48rem, calc(100vw - 1.5rem));
   translate: -50% 0;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
   gap: 0.4rem;
 }
@@ -327,6 +327,7 @@ html[data-narration-stage] .narration-bar {
   box-shadow: none;
 }
 @media (min-width: 640px) {
+  /* Một hàng duy nhất: chuyển slide + phụ đề (hoặc nút nghe tiếp) · thanh tua · giờ · tốc độ · phát · đóng. */
   html[data-narration-stage] .narration-bar {
     inset-inline: 0;
     bottom: 0;
@@ -336,57 +337,64 @@ html[data-narration-stage] .narration-bar {
     border-radius: 0;
     background: var(--strip-bg);
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 0.25rem 0.75rem;
-    padding: 0.4rem calc(var(--slide-avatar) + 2rem) 0.4rem 1rem;
+    gap: 0.75rem;
+    padding: 0.35rem calc(var(--slide-avatar) + 2rem) 0.35rem 1rem;
   }
-  /* Hai hàng của thanh phát trải ra làm các ô cùng một dải. */
   html[data-narration-stage] .narration-bar > :first-child,
   html[data-narration-stage] .narration-bar .nb-more {
     display: contents;
   }
-  html[data-narration-stage] .narration-bar > :not(:first-child):not(.nb-more) {
-    flex: 1 1 100%;
-  }
-  html[data-narration-stage] .narration-bar .narration-wave {
+  html[data-narration-stage] .narration-bar .narration-wave,
+  html[data-narration-stage] .narration-bar .nb-title,
+  html[data-narration-stage] .narration-bar .nb-ctrl,
+  html[data-narration-stage] .narration-bar .nb-avatar {
     display: none;
   }
-  /* Thứ tự: ảnh · tên · điều khiển · thanh tua · giờ · phát · đóng. */
-  /* Ảnh giảng viên đã ở góc dưới phải: bỏ bản nhỏ trong thanh. */
-  html[data-narration-stage] .narration-bar > :first-child > :nth-child(1) { display: none; }
-  html[data-narration-stage] .narration-bar > :first-child > :nth-child(2) { order: 2; flex: 0 1 8rem; min-width: 0; }
-  html[data-narration-stage] .narration-bar .nb-ctrl { order: 3; margin-top: 0; flex-wrap: nowrap; }
-  html[data-narration-stage] .narration-bar .nb-slider { order: 4; flex: 1 1 8rem; min-width: 6rem; }
-  html[data-narration-stage] .narration-bar > :first-child > :nth-child(4) { order: 5; }
-  html[data-narration-stage] .narration-bar > :first-child > :nth-child(5) { order: 6; }
-  html[data-narration-stage] .narration-bar > :first-child > :nth-child(n + 6) { order: 7; }
+  html[data-narration-stage] .narration-bar .slide-dock { order: 1; }
+  html[data-narration-stage] .narration-bar .nb-offer {
+    order: 2;
+    flex: none;
+    border: 0;
+    padding: 0;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  html[data-narration-stage] .narration-bar .nb-slider { order: 3; flex: 0 1 12rem; min-width: 5rem; margin: 0; }
+  html[data-narration-stage] .narration-bar .nb-time { order: 4; }
+  html[data-narration-stage] .narration-bar .nb-speed { order: 5; }
+  html[data-narration-stage] .narration-bar > :first-child > button:not(.nb-title) { order: 6; }
+  html[data-narration-stage] .narration-bar > :first-child > :last-child { order: 7; }
 
-  .slide-dock {
-    inset-inline: 0;
-    bottom: calc(var(--narration-bar-h, 0px) - 8px);
-    width: auto;
-    height: 3.5rem;
+  /* Cụm chuyển slide + phụ đề nằm trong thanh, cùng hàng với nút phát. */
+  .narration-bar .slide-dock {
+    position: static;
     translate: none;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
     flex-direction: row;
+    align-items: center;
     gap: 0.75rem;
-    padding: 0.25rem calc(var(--slide-avatar) + 2rem) 0.25rem 1rem;
-    background: var(--strip-bg);
-    border-top: 1px solid var(--strip-line);
+    height: auto;
+    padding: 0;
+    background: none;
+    border: 0;
   }
   .slide-dock .slide-nav {
-    order: -1;
     flex: none;
   }
   .slide-dock .slide-subtitle {
     flex: 1 1 0;
     min-width: 0;
     padding: 0;
+    text-align: left;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    font-size: clamp(0.95rem, 0.85rem + 0.3vw, 1.15rem);
+    font-size: clamp(0.95rem, 0.85rem + 0.3vw, 1.1rem);
   }
   .slide-dock .slide-wait {
     flex: none;
@@ -416,14 +424,14 @@ html[data-narration-stage] .narration-bar {
     box-shadow: 0 0 0 3px rgb(var(--brand)), 0 4px 14px rgb(0 0 0 / 0.2);
   }
 
-  /* Slide dùng hết chiều cao còn lại phía trên dải (phụ đề 3,5rem + thanh phát). */
+  /* Slide dùng hết chiều cao còn lại phía trên dải (--narration-bar-h có cộng 8px khoảng hở của thanh nổi). */
   #lesson-content[data-slideshow][data-deck] {
-    padding-bottom: calc(var(--narration-bar-h, 0px) + 3.5rem - 8px);
+    padding-bottom: calc(var(--narration-bar-h, 0px) - 8px);
   }
   #lesson-content[data-slideshow][data-deck] iframe[src^="/decks/"] {
-    height: calc(100dvh - var(--narration-bar-h, 0px) - 3.5rem + 8px) !important;
+    height: calc(100dvh - var(--narration-bar-h, 0px) + 8px) !important;
   }
   #lesson-content[data-slideshow]:not([data-deck]) {
-    padding-bottom: calc(var(--narration-bar-h, 0px) + 5.5rem);
+    padding-bottom: calc(var(--narration-bar-h, 0px) + 1rem);
   }
 }

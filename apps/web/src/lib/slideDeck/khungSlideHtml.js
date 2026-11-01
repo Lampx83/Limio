@@ -347,6 +347,8 @@ body.dang-laser, body.dang-laser * { cursor: none !important; }
 .khung.dang-chi .chi-gach { opacity: 1; }
 .chi-gach path { fill: none; stroke: var(--vang); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
 .chi-gach.ve path { stroke-dashoffset: 0; transition: stroke-dashoffset .8s cubic-bezier(.45, 0, .25, 1); }
+/* Chỉ còn chấm laser: khung sáng và nét gạch dưới đè lên nội dung làm slide rối. */
+.chi-sang, .chi-gach { display: none !important; }
 .chi-tro { position: absolute; left: 0; top: 0; z-index: 10; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; pointer-events: none; opacity: 0;
   background: radial-gradient(circle, #fff 0 12%, #ff3b3b 16% 34%, rgba(255, 59, 59, .55) 52%, transparent 70%);
   box-shadow: 0 0 22px 8px rgba(255, 59, 59, .45);
@@ -620,6 +622,8 @@ html[data-an-thanh] .thanh-duoi { left: 0; right: 0; bottom: 0; top: auto; width
   background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; overflow: visible; pointer-events: none; }
 html[data-an-thanh] .thanh-duoi > :not(.tien-trinh) { display: none !important; }
 html[data-an-thanh] .thanh-duoi .tien-trinh { top: 0; bottom: auto; height: 3px; border-radius: 0 3px 3px 0; }
+/* Nút › ở thanh phát bên ngoài đã hiện ý tiếp theo: không để thêm nút gợi ý trong slide. */
+html[data-an-thanh] .goi-y { display: none !important; }
 html[data-an-thanh] .tong-quan { inset: 0; }
 html[data-an-thanh] .khay-ghi-chu { bottom: 0; }
 html[data-an-thanh] canvas.but { height: 100%; }

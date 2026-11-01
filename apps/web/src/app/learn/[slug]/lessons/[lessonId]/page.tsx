@@ -750,7 +750,7 @@ export default async function LessonPage({
           />
         )}
         {lecturerChoice?.mode === "HIEN" && (
-          <LecturerInvite courseSlug={params.slug} name={lecturerChoice.name} accent={lecturerChoice.accent} />
+          <LecturerInvite courseSlug={params.slug} userId={userId ?? null} name={lecturerChoice.name} accent={lecturerChoice.accent} />
         )}
         {!previewMode && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -758,7 +758,9 @@ export default async function LessonPage({
             {/* Màn hẹp: các nút nghe chia đều cột, nằm riêng một hàng; từ sm: xếp ngang theo bề rộng cố định của nút. */}
             {(narrations.lecture || narrations.podcast || slideInfo) && (
               <div className="grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto">
-                {narrations.lecture && <NarrationButton durationSec={narrations.lecture.durationSec} />}
+                {narrations.lecture && (
+                  <NarrationButton durationSec={narrations.lecture.durationSec} inviteCourseSlug={lecturerChoice?.mode === "HIEN" ? params.slug : undefined} userId={userId ?? null} />
+                )}
                 {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
                 {slideInfo && (
                   <LessonSlideButton lessonId={params.lessonId} lessonTitle={lesson.title} courseSlug={params.slug} info={slideInfo} />
