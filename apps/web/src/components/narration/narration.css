@@ -119,3 +119,319 @@
 body {
   padding-bottom: var(--narration-bar-h, 0px);
 }
+
+/*
+ * Trình chiếu (docs/tieu-chi/trinh-chieu-giang-vien.md): chính #lesson-content thành màn hình toàn khung, chỉ slide đang giảng
+ * (data-slide-on) hiện. Thanh phát ở dưới nâng lên trên lớp phủ để vẫn phát/tua/đổi tốc độ được.
+ */
+html[data-narration-stage] body {
+  overflow: hidden;
+}
+html[data-narration-stage] .narration-bar {
+  z-index: 70;
+}
+#lesson-content[data-slideshow] {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgb(var(--surface));
+  padding: 3.5rem 1rem calc(var(--narration-bar-h, 0px) + 7.5rem);
+  font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.3rem);
+}
+#lesson-content[data-slideshow] > * {
+  max-width: 56rem;
+  margin-inline: auto;
+}
+#lesson-content[data-slideshow] [data-slide]:not([data-slide-on]) {
+  display: none !important;
+}
+/* Cả màn hình đang là một slide: viền tô sáng cả mục là thừa, giữ tô khối con đang đọc. */
+#lesson-content[data-slideshow] .narration-active {
+  outline: none;
+  box-shadow: none;
+}
+@media (min-width: 1024px) {
+  #lesson-content[data-slideshow] {
+    padding-inline: 3rem;
+  }
+}
+
+/*
+ * Trình chiếu bằng khung slide tương tác (/decks/<id>): iframe chiếm trọn vùng giữa thanh trên và thanh phát;
+ * từ lg chừa bên phải cho giảng viên.
+ */
+#lesson-content[data-slideshow][data-deck] {
+  overflow: hidden;
+  background: var(--deck-bg, rgb(var(--surface)));
+  /* Chừa chỗ cho thanh phát nổi và cụm phụ đề + chuyển slide (~7rem) dưới khung. */
+  padding: 0 0 calc(var(--narration-bar-h, 0px) + 7rem);
+}
+#lesson-content[data-slideshow][data-deck] > * {
+  max-width: none;
+  margin: 0;
+}
+#lesson-content[data-slideshow][data-deck] [data-slide-on] {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+#lesson-content[data-slideshow][data-deck] iframe[src^="/decks/"] {
+  display: block;
+  width: 100%;
+  height: calc(100dvh - var(--narration-bar-h, 0px) - 7rem) !important;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Nút nổi trên slide (thoát, chuyển slide, phụ đề): nền tối mờ để đọc được cả trên slide tối lẫn trang bài sáng. */
+.slide-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 0.78);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+/* Điện thoại: nút thoát và ảnh giảng viên nằm trong dải riêng phía trên khung, không đè chữ của slide. */
+@media (max-width: 639px) {
+  #lesson-content[data-slideshow][data-deck] {
+    padding-top: 3.5rem;
+  }
+  #lesson-content[data-slideshow][data-deck] iframe[src^="/decks/"] {
+    height: calc(100dvh - var(--narration-bar-h, 0px) - 10.5rem) !important;
+  }
+}
+.slide-exit {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 65;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+}
+.slide-exit:hover {
+  background: rgb(15 23 42 / 0.92);
+}
+.slide-exit:focus-visible,
+.slide-btn:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+/* Giảng viên: điện thoại thì nút tròn nhỏ ở góc trên phải; từ sm là chân dung lớn ở góc dưới phải để thấy rõ mặt. */
+.slide-avatar {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 65;
+  width: 40px;
+  height: 40px;
+}
+.slide-avatar > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9);
+}
+.slide-avatar img {
+  object-position: 50% 22%;
+}
+/* Video giảng viên nói (AC7): cùng khung với chân dung tĩnh; ảnh bìa lúc đang tải là chính chân dung. */
+.slide-avatar > .slide-avatar-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: rgb(226 232 240);
+  object-fit: cover;
+  object-position: 50% 22%;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9);
+}
+.slide-avatar[data-speaking="1"] > .slide-avatar-video {
+  box-shadow: 0 0 0 2px rgb(var(--brand));
+}
+.slide-dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--narration-bar-h, 0px) + 0.25rem);
+  z-index: 66;
+  display: flex;
+  width: min(48rem, calc(100vw - 1.5rem));
+  translate: -50% 0;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.4rem;
+}
+.slide-nav {
+  gap: 0.125rem;
+  padding-inline: 0.25rem;
+}
+.slide-sep {
+  width: 1px;
+  height: 1.25rem;
+  margin-inline: 0.25rem;
+  background: rgb(255 255 255 / 0.3);
+}
+.slide-btn {
+  display: inline-flex;
+  min-width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: inherit;
+}
+.slide-btn:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.15);
+}
+.slide-btn-go {
+  gap: 0.25rem;
+  padding-inline: 0.75rem;
+  background: rgb(var(--brand));
+}
+.slide-btn-go:hover:not(:disabled) {
+  background: rgb(var(--brand) / 0.85);
+}
+.slide-wait {
+  padding: 0.15rem 0.75rem;
+  color: var(--deck-fg, rgb(var(--text)));
+  font-size: 0.95rem;
+}
+.slide-btn:disabled {
+  opacity: 0.35;
+}
+
+.slide-subtitle {
+  width: 100%;
+  padding: 0.25rem 1rem;
+  text-align: center;
+  color: var(--deck-fg, rgb(var(--text)));
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+  line-height: 1.4;
+}
+
+/*
+ * Dải điều khiển (từ sm): phụ đề + chuyển slide, rồi thanh phát, gom thành một dải full-width mỏng ở đáy với nền khác nội dung,
+ * để slide chiếm phần lớn màn hình. Điện thoại giữ bố cục xếp chồng ở trên.
+ */
+html[data-narration-stage] {
+  --strip-bg: color-mix(in srgb, var(--deck-fg, rgb(var(--text))) 7%, var(--deck-bg, rgb(var(--surface))));
+  --strip-line: color-mix(in srgb, var(--deck-fg, rgb(var(--text))) 14%, var(--deck-bg, rgb(var(--surface))));
+  --slide-avatar: clamp(104px, 8vw, 160px);
+}
+html[data-narration-stage] .narration-bar {
+  box-shadow: none;
+}
+@media (min-width: 640px) {
+  /* Một hàng duy nhất: chuyển slide + phụ đề (hoặc nút nghe tiếp) · thanh tua · giờ · tốc độ · phát · đóng. */
+  html[data-narration-stage] .narration-bar {
+    inset-inline: 0;
+    bottom: 0;
+    max-width: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--strip-bg);
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.35rem calc(var(--slide-avatar) + 2rem) 0.35rem 1rem;
+  }
+  html[data-narration-stage] .narration-bar > :first-child,
+  html[data-narration-stage] .narration-bar .nb-more {
+    display: contents;
+  }
+  html[data-narration-stage] .narration-bar .narration-wave,
+  html[data-narration-stage] .narration-bar .nb-title,
+  html[data-narration-stage] .narration-bar .nb-ctrl,
+  html[data-narration-stage] .narration-bar .nb-avatar {
+    display: none;
+  }
+  html[data-narration-stage] .narration-bar .slide-dock { order: 1; }
+  html[data-narration-stage] .narration-bar .nb-offer {
+    order: 2;
+    flex: none;
+    border: 0;
+    padding: 0;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  html[data-narration-stage] .narration-bar .nb-slider { order: 3; flex: 0 1 12rem; min-width: 5rem; margin: 0; }
+  html[data-narration-stage] .narration-bar .nb-time { order: 4; }
+  html[data-narration-stage] .narration-bar .nb-speed { order: 5; }
+  html[data-narration-stage] .narration-bar > :first-child > button:not(.nb-title) { order: 6; }
+  html[data-narration-stage] .narration-bar > :first-child > :last-child { order: 7; }
+
+  /* Cụm chuyển slide + phụ đề nằm trong thanh, cùng hàng với nút phát. */
+  .narration-bar .slide-dock {
+    position: static;
+    translate: none;
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+    height: auto;
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+  .slide-dock .slide-nav {
+    flex: none;
+  }
+  .slide-dock .slide-subtitle {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0;
+    text-align: left;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: clamp(0.95rem, 0.85rem + 0.3vw, 1.1rem);
+  }
+  .slide-dock .slide-wait {
+    flex: none;
+  }
+
+  /* Chân dung: nằm ở góc dưới phải, cao hơn dải một chút. */
+  .slide-avatar {
+    top: auto;
+    right: 1rem;
+    bottom: 0.5rem;
+    z-index: 75;
+    width: var(--slide-avatar);
+    height: var(--slide-avatar);
+  }
+  .slide-avatar > span.rounded-full {
+    border-radius: 1rem;
+    box-shadow: 0 0 0 3px var(--strip-bg), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+  .slide-avatar > span.narration-speaking {
+    box-shadow: 0 0 0 3px rgb(var(--brand)), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+  .slide-avatar > .slide-avatar-video {
+    border-radius: 1rem;
+    box-shadow: 0 0 0 3px var(--strip-bg), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+  .slide-avatar[data-speaking="1"] > .slide-avatar-video {
+    box-shadow: 0 0 0 3px rgb(var(--brand)), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+
+  /* Slide dùng hết chiều cao còn lại phía trên dải (--narration-bar-h có cộng 8px khoảng hở của thanh nổi). */
+  #lesson-content[data-slideshow][data-deck] {
+    padding-bottom: calc(var(--narration-bar-h, 0px) - 8px);
+  }
+  #lesson-content[data-slideshow][data-deck] iframe[src^="/decks/"] {
+    height: calc(100dvh - var(--narration-bar-h, 0px) + 8px) !important;
+  }
+  #lesson-content[data-slideshow]:not([data-deck]) {
+    padding-bottom: calc(var(--narration-bar-h, 0px) + 1rem);
+  }
+}

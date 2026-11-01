@@ -15,6 +15,15 @@ export function NarrationWave({ playing, className = "" }: { playing: boolean; c
   );
 }
 
+/** Giảng viên có ảnh chân dung thật (tệp trong public/lecturers); không có thì dùng hình vẽ. */
+const LECTURER_PHOTOS: Record<string, string> = {
+  "Tiến Đạt": "/lecturers/tien-dat.jpg",
+  "Bảo Trang": "/lecturers/bao-trang.jpg",
+};
+
+/** Ảnh chân dung thật của giảng viên (nếu có), để làm ảnh bìa và ảnh dự phòng của video giảng viên nói. */
+export const lecturerPhoto = (name: string | undefined): string | undefined => (name ? LECTURER_PHOTOS[name] : undefined);
+
 const HOST_STYLE = {
   A: "bg-indigo-600",
   B: "bg-amber-600",
@@ -29,18 +38,25 @@ export function NarrationAvatar({
   name,
   speaking = false,
   size = "md",
+  accent,
   className = "",
 }: {
   who: "lecturer" | "A" | "B";
   name?: string;
   speaking?: boolean;
-  size?: "sm" | "md";
+  /** Màu nền riêng của giảng viên ảo được chọn (xem `VIRTUAL_LECTURERS`); không có thì dùng nền mặc định. */
+  accent?: string;
+  size?: "sm" | "md" | "lg";
   className?: string;
 }) {
-  const dim = size === "sm" ? "h-9 w-9" : "h-11 w-11";
+  const dim = size === "sm" ? "h-9 w-9" : size === "lg" ? "h-24 w-24" : "h-11 w-11";
   const ring = speaking ? "narration-speaking" : "";
   let inner: ReactNode;
-  if (who === "lecturer") {
+  const photo = who === "lecturer" && name ? LECTURER_PHOTOS[name] : undefined;
+  if (photo) {
+    // eslint-disable-next-line @next/next/no-img-element
+    inner = <img src={photo} alt="" className="h-full w-full object-cover" draggable={false} />;
+  } else if (who === "lecturer") {
     inner = (
       <svg viewBox="0 0 40 40" className="h-full w-full" aria-hidden="true">
         <defs>
@@ -49,7 +65,7 @@ export function NarrationAvatar({
             <stop offset="1" stopColor="#0d9488" />
           </linearGradient>
         </defs>
-        <rect width="40" height="40" fill="url(#narration-avatar-bg)" />
+        <rect width="40" height="40" fill={accent ?? "url(#narration-avatar-bg)"} />
         <circle cx="20" cy="15.5" r="6.5" fill="#fff" fillOpacity="0.95" />
         <path d="M6.5 40c0-8.3 6-13.5 13.5-13.5S33.5 31.7 33.5 40Z" fill="#fff" fillOpacity="0.95" />
       </svg>

@@ -13,6 +13,7 @@ export * from "./skills";
 export * from "./autoTags";
 export * from "./assignments";
 export * from "./catalogSections";
+export * from "./virtualLecturer";
 export * from "./sectionDeadlines";
 export * from "./lessonDrafts";
 export * from "./contentVersions";

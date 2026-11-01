@@ -389,6 +389,19 @@
 /* Điện thoại: công thức dài nhỏ bớt một chút trước khi phải cuộn ngang. */
 @media (max-width: 640px) {
   .math-block .katex { font-size: 1.02em; }
+  /* Công thức inline dài (vd Δ=(−4)²−4·1·3=16−12=4) không được kéo cả trang rộng hơn màn hình: trang rộng ra thì
+     mọi nút `fixed` bên phải bị đẩy ra ngoài mép. Cho phép KaTeX xuống dòng ở dấu phép tính / dấu bằng. */
+  .math-inline,
+  .math-inline .katex { white-space: normal; }
+  /* Danh sách toạ độ O(0;0), A(40;0), … là MỘT khối KaTeX không có chỗ ngắt: không rộng quá khung, quá thì cuộn ngang.
+     inline-block + overflow thì đường cơ sở rơi xuống đáy khung → hạ xuống bằng phần "độ sâu" của KaTeX. */
+  .math-inline {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: -0.3em;
+  }
 }
 
 /* ── Lời giải hiện từng bước (data-reveal) — xem lib/lessonReveal.ts ──────────────────────────────────────── */

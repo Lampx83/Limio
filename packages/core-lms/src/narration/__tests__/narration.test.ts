@@ -22,7 +22,10 @@ import {
   failNarration,
   finishNarration,
   generateNarrationAudio,
+  LecturerVideoError,
   getLearnerNarrations,
+  getPlayableLecturerVideo,
+  saveLecturerVideo,
   getPlayableNarrationFile,
   listCourseNarrations,
   narrationState,
@@ -291,6 +294,8 @@ describe("LessonNarration trong cơ sở dữ liệu", () => {
     await makeReady(lessonId, "podcast", PODCAST);
     const seen = await getLearnerNarrations(lessonId);
     expect(seen.lecture?.segments.map((s) => s.anchor)).toEqual(["mo-dau", "Ảo giác AI là gì", "tong-ket"]);
+    // Chữ lời giảng đi kèm từng đoạn để làm phụ đề trình chiếu (như bản chữ podcast).
+    expect(seen.lecture?.segments.map((s) => s.text)).toEqual(LECTURE.map((s) => s.text));
     expect(seen.podcast?.turns.map((t) => [t.speakerName, t.text.slice(0, 5)])).toEqual([
       ["Khoa", "Chào "],
       ["Linh", "Còn m"],
@@ -317,5 +322,68 @@ describe("LessonNarration trong cơ sở dữ liệu", () => {
       ["podcast", "script"],
     ]);
     expect(rows[0]!.durationSec).toBeGreaterThan(0);
+  });
+  describe("video giảng viên nói (AC7)", () => {
+    const VIDEO = (forHash: string) => ({ key: "lesson-narration/x/v-lg.mp4", smKey: "lesson-narration/x/v-sm.mp4", sizeBytes: 1000, smSizeBytes: 300, forHash, lecturer: "tien-dat" });
+
+    it("chưa nạp thì không có video; nạp xong thì học viên thấy mã giảng viên, không thấy khoá tệp", async () => {
+      const { lessonId } = await makeLesson("v1");
+      await makeReady(lessonId, "lecture", LECTURE);
+      expect((await getLearnerNarrations(lessonId)).lecture?.videoLecturer).toBeNull();
+      expect(await getPlayableLecturerVideo(lessonId, "lg")).toBeNull();
+
+      await saveLecturerVideo(lessonId, VIDEO(scriptHash(LECTURE)));
+      const seen = await getLearnerNarrations(lessonId);
+      expect(seen.lecture?.videoLecturer).toBe("tien-dat");
+      expect(JSON.stringify(seen)).not.toContain("lesson-narration");
+      expect(await getPlayableLecturerVideo(lessonId, "lg")).toMatchObject({ key: "lesson-narration/x/v-lg.mp4", contentType: "video/mp4", sizeBytes: 1000 });
+      expect(await getPlayableLecturerVideo(lessonId, "sm")).toMatchObject({ key: "lesson-narration/x/v-sm.mp4", sizeBytes: 300 });
+    });
+
+    it("cờ tắt thì không có video ở cả hai đường", async () => {
+      const { lessonId } = await makeLesson("v2");
+      await makeReady(lessonId, "lecture", LECTURE);
+      await saveLecturerVideo(lessonId, VIDEO(scriptHash(LECTURE)));
+      expect((await getLearnerNarrations(lessonId, undefined, { lecturerVideo: false })).lecture?.videoLecturer).toBeNull();
+      expect(await getPlayableLecturerVideo(lessonId, "lg", undefined, { lecturerVideo: false })).toBeNull();
+    });
+
+    it("từ chối nạp khi giọng đã đổi so với lúc dựng, hoặc bài chưa có giọng", async () => {
+      const { lessonId } = await makeLesson("v3");
+      await expect(saveLecturerVideo(lessonId, VIDEO("x"))).rejects.toMatchObject({ code: "no_narration" });
+      await makeReady(lessonId, "lecture", LECTURE);
+      const err = await saveLecturerVideo(lessonId, VIDEO("khac")).catch((e) => e);
+      expect(err).toBeInstanceOf(LecturerVideoError);
+      expect(err.code).toBe("stale_audio");
+    });
+
+    it("tạo giọng lại thì video cũ bị bỏ và trả khoá để xoá khỏi kho", async () => {
+      const { lessonId } = await makeLesson("v4");
+      const id = await makeReady(lessonId, "lecture", LECTURE);
+      await saveLecturerVideo(lessonId, VIDEO(scriptHash(LECTURE)));
+      await claimNarrationForGeneration(id);
+      const gen = await generateNarrationAudio("lecture", LECTURE, { lecturer: "v" }, { synthesize: synth });
+      const r = await finishNarration(id, {
+        audioKey: `private/narration/${id}-2.mp3`,
+        contentType: "audio/mpeg",
+        sizeBytes: gen.mp3.length,
+        durationSec: gen.durationSec,
+        segments: gen.segments,
+        voices: { lecturer: "v" },
+        generatedHash: scriptHash(LECTURE),
+      });
+      expect(r.previousVideoKeys.sort()).toEqual(["lesson-narration/x/v-lg.mp4", "lesson-narration/x/v-sm.mp4"]);
+      expect(await getPlayableLecturerVideo(lessonId, "lg")).toBeNull();
+      expect((await getLearnerNarrations(lessonId)).lecture?.videoLecturer).toBeNull();
+    });
+
+    it("nạp lại bản khác trả khoá bản cũ; nạp lại đúng bản đó thì không có gì để xoá", async () => {
+      const { lessonId } = await makeLesson("v5");
+      await makeReady(lessonId, "lecture", LECTURE);
+      await saveLecturerVideo(lessonId, VIDEO(scriptHash(LECTURE)));
+      expect((await saveLecturerVideo(lessonId, VIDEO(scriptHash(LECTURE)))).previousKeys).toEqual([]);
+      const r = await saveLecturerVideo(lessonId, { ...VIDEO(scriptHash(LECTURE)), key: "k/new-lg.mp4", smKey: "k/new-sm.mp4" });
+      expect(r.previousKeys.sort()).toEqual(["lesson-narration/x/v-lg.mp4", "lesson-narration/x/v-sm.mp4"]);
+    });
   });
 });

@@ -149,6 +149,60 @@ export async function listCatalogSectionsForDisplay(
   return result;
 }
 
+/**
+ * Tên mục catalog mà trang `/learning` đọc. Admin tạo mục MANUAL với đúng tên
+ * này rồi chọn khoá + thứ tự — không có cờ riêng trên Course, nên đổi danh sách
+ * khoá không cần migration hay deploy. Cố ý KHÔNG gọi là "khoá mẫu": `isSample` (mẫu
+ * cho giảng viên) và khoá mẫu cho học viên ở trang Bắt đầu đã dùng chữ đó.
+ */
+export const LEARNING_SECTION_TITLE = "Học thử";
+
+export type LearningCourse = CatalogSectionCourseCard & {
+  publicAccess: boolean;
+  /**
+   * Bài đầu tiên (theo thứ tự module rồi bài), để nút "Học ngay" vào thẳng. Chỉ
+   * có khi khoá mở cho khách VÀ miễn phí: khoá bán phải đi qua trang giới thiệu
+   * để mua, kể cả khi ai đó lỡ bật `publicAccess` cho nó.
+   */
+  firstLessonId: string | null;
+};
+
+/**
+ * Public — khoá học mẫu cho trang `/learning`: các khoá published trong mục
+ * `LEARNING_SECTION_TITLE` đang bật, đúng thứ tự admin xếp. Trả `[]` khi
+ * chưa có mục (hoặc mục tắt/rỗng) để trang hiện trạng thái trống thay vì lỗi.
+ */
+export async function listLearningCourses(
+  db: PrismaClient = prisma,
+): Promise<LearningCourse[]> {
+  const section = await db.catalogSection.findFirst({
+    where: { title: LEARNING_SECTION_TITLE, type: "MANUAL", isActive: true },
+    orderBy: { order: "asc" },
+    select: { id: true },
+  });
+  if (!section) return [];
+
+  const links = await db.catalogSectionCourse.findMany({
+    where: { sectionId: section.id, course: { status: "published" } },
+    orderBy: { order: "asc" },
+    select: { course: { select: { ...COURSE_CARD_SELECT, publicAccess: true } } },
+  });
+
+  return Promise.all(
+    links.map(async ({ course }) => {
+      const paid = (course.priceCents ?? 0) > 0 || course.accessPlans.length > 0;
+      const first = course.publicAccess && !paid
+        ? await db.lesson.findFirst({
+            where: { module: { courseId: course.id } },
+            orderBy: [{ module: { orderIndex: "asc" } }, { orderIndex: "asc" }],
+            select: { id: true },
+          })
+        : null;
+      return { ...toCourseCardData(course), firstLessonId: first?.id ?? null };
+    }),
+  );
+}
+
 /** Admin — toàn bộ section (kể cả inactive/rỗng) cho trang quản trị. */
 export async function listCatalogSectionsForAdmin(
   actorUserId: string,

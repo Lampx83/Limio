@@ -5,7 +5,9 @@ import { prisma } from "@feedbackme/db";
 import {
   canEditCourse,
   effectiveAssignmentDues,
+  findVirtualLecturer,
   getCourseProgress,
+  getEffectiveVirtualLecturer,
   getLearnerNarrations,
   getLessonSlideState,
   isUserEnrolled,
@@ -45,7 +47,9 @@ import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import NarrationButton from "@/components/narration/NarrationButton";
 import NarrationPlayer from "@/components/narration/NarrationPlayer";
+import { lecturerVideoEnabled } from "@/lib/narration/lecturerVideoFlag";
 import PodcastButton from "@/components/narration/PodcastButton";
+import LecturerInvite from "@/components/narration/LecturerInvite";
 import LessonSlideButton, { type LessonSlideInfo } from "@/components/lesson/LessonSlideButton";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
@@ -227,7 +231,19 @@ export default async function LessonPage({
   const narrations =
     stageMode || previewMode
       ? { lecture: null, podcast: null }
-      : await getLearnerNarrations(params.lessonId).catch(() => ({ lecture: null, podcast: null }));
+      : await getLearnerNarrations(params.lessonId, undefined, { lecturerVideo: lecturerVideoEnabled() }).catch(() => ({ lecture: null, podcast: null }));
+
+  // Giảng viên ảo (docs/tieu-chi/giang-vien-ao.md): chỉ phủ lên Nghe giảng đã có giọng. Mức «Không hiện» (hoặc hệ thống tắt) thì
+  // giữ nguyên giao diện Nghe giảng như trước. Mức hiệu lực tính ở core-lms, một chỗ.
+  const lecturerChoice =
+    narrations.lecture
+      ? await getEffectiveVirtualLecturer(lesson.module.course.id, userId)
+          .then((e) => {
+            const l = findVirtualLecturer(e.lecturerCode);
+            return e.mode === "AN" || !l ? null : { mode: e.mode, code: l.code, name: l.name, accent: l.accent };
+          })
+          .catch(() => null)
+      : null;
 
   // B14 — khoá thì học viên vẫn biết bài này tồn tại (mục lục hiện tên kèm ổ
   // khoá), nhưng nội dung không được gửi xuống trình duyệt. Chặn ngay ở đây,
@@ -733,13 +749,18 @@ export default async function LessonPage({
             className="prose mt-2 max-w-none text-base text-muted dark:prose-invert"
           />
         )}
+        {lecturerChoice?.mode === "HIEN" && (
+          <LecturerInvite courseSlug={params.slug} userId={userId ?? null} name={lecturerChoice.name} accent={lecturerChoice.accent} />
+        )}
         {!previewMode && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {/* Các nút nghe nổi bật (Nghe giảng, Podcast, Slide) đứng bên trái; nút công cụ (in) dồn sang phải cùng hàng để đỡ tốn thêm một hàng. */}
             {/* Màn hẹp: các nút nghe chia đều cột, nằm riêng một hàng; từ sm: xếp ngang theo bề rộng cố định của nút. */}
             {(narrations.lecture || narrations.podcast || slideInfo) && (
               <div className="grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto">
-                {narrations.lecture && <NarrationButton durationSec={narrations.lecture.durationSec} />}
+                {narrations.lecture && (
+                  <NarrationButton durationSec={narrations.lecture.durationSec} inviteCourseSlug={lecturerChoice?.mode === "HIEN" ? params.slug : undefined} userId={userId ?? null} />
+                )}
                 {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
                 {slideInfo && (
                   <LessonSlideButton lessonId={params.lessonId} lessonTitle={lesson.title} courseSlug={params.slug} info={slideInfo} />
@@ -809,6 +830,7 @@ export default async function LessonPage({
           lessonTitle={lesson.title}
           lecture={narrations.lecture}
           podcast={narrations.podcast}
+          lecturer={lecturerChoice && { code: lecturerChoice.code, name: lecturerChoice.name, accent: lecturerChoice.accent, locked: lecturerChoice.mode === "BAT_BUOC" }}
         />
       )}
 

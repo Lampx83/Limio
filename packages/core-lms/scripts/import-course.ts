@@ -148,6 +148,11 @@ const PatternsSpec = z.object({
   rows: z.array(z.object({ zh: z.string().min(1), vi: z.string().min(1) })).min(1),
 });
 
+/** Đường dẫn cùng-origin (không phải `//host` hay `/\\host`) hoặc https. */
+export function isSafeEmbedUrl(v: string): boolean {
+  return /^\/(?![/\\])/.test(v) || /^https:\/\//i.test(v);
+}
+
 export const LessonSpec = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(2_000).optional(),
@@ -187,6 +192,22 @@ export const LessonSpec = z.object({
    * đánh số từ 1.
    */
   splitSections: z.boolean().optional(),
+  /**
+   * Khối nhúng tương tác (khối `embed`) — đồ thị kéo được, mô phỏng. Chèn NGAY SAU mục
+   * có tiêu đề `afterSection` (cần `splitSections`, vì chỉ có khe giữa hai khối mới
+   * chèn được); bỏ trống thì đặt sau mọi khối chữ. `url` là đường dẫn cùng-origin
+   * (`/widgets/...`) hoặc https — http bị chặn mixed content, `//host` trỏ sang host khác.
+   */
+  embeds: z
+    .array(
+      z.object({
+        url: z.string().refine(isSafeEmbedUrl, { message: "url phải là đường dẫn /… cùng origin hoặc https://…" }),
+        height: z.number().int().positive().max(1600).optional(),
+        afterSection: z.string().min(1).max(200).optional(),
+      }),
+    )
+    .max(6)
+    .optional(),
   /**
    * Thời lượng học dự kiến, tính bằng phút — con số hiện trên đầu bài và ghi
    * vào `Lesson.durationSec`.
@@ -1093,9 +1114,12 @@ export function lectureAnchorProblems(l: z.infer<typeof LessonSpec>): string[] {
   // nghe không hiện bước nào và cũng không báo lỗi, nên phải bắt ở đây.
   const stepsOf = new Map<string, number>();
   for (const sec of l.sections ?? []) if (sec.reveal && sec.layout === "steps") stepsOf.set(plainHeading(sec.title), sec.parts.length);
+  // Bài trình chiếu bằng khung slide (`/decks/<id>`): anchor `s<slide>b<bước>` trỏ vào slide trong khung, không phải mục của trang.
+  const hasDeck = (l.embeds ?? []).some((e) => e.url.startsWith("/decks/"));
   return l.lecture
     .filter((seg) => {
       if (known.has(seg.anchor)) return false;
+      if (hasDeck && /^s\d{1,3}b\d{1,2}$/.test(seg.anchor)) return false;
       const m = /^(.*?)\s*#(\d{1,2})$/.exec(seg.anchor.trim());
       const total = m ? stepsOf.get(m[1]!) : undefined;
       return !(m && total !== undefined && Number(m[2]) >= 1 && Number(m[2]) <= total);
@@ -1175,18 +1199,55 @@ export function renderSection(sec: SectionSpec): string {
  * Mọi khối nội dung của bài theo đúng thứ tự tạo: các khối văn bản (gắn `look` nếu bài có), rồi thẻ ghi nhớ
  * chen ngay trước khối tổng kết.
  */
-export function lessonContentItems(
-  l: z.infer<typeof LessonSpec>,
-): Array<{ type: "richtext"; payload: Record<string, unknown> } | { type: "vocab_list"; payload: Record<string, unknown> }> {
-  const items: Array<
-    { type: "richtext"; payload: Record<string, unknown> } | { type: "vocab_list"; payload: Record<string, unknown> }
-  > = renderLessonBlocks(l).map((html) => ({
-    type: "richtext" as const,
-    payload: l.look ? { html, look: { palette: l.look.palette, font: l.look.font ?? "modern" } } : { html },
-  }));
+type ContentItem =
+  | { type: "richtext"; payload: Record<string, unknown> }
+  | { type: "vocab_list"; payload: Record<string, unknown> }
+  | { type: "embed"; payload: Record<string, unknown> };
+
+/** Chữ thuần của tiêu đề `<h2>` đầu khối, để so với `embeds[].afterSection`. */
+function blockHeading(html: string): string | null {
+  const m = /<h2[^>]*>(.*?)<\/h2>/s.exec(html);
+  return m ? m[1]!.replace(/<[^>]+>/g, "").trim() : null;
+}
+
+/** Tên mục trong `embeds[].afterSection` không trùng khối nào → lỗi, để khỏi lặng lẽ đặt sai chỗ. */
+export function embedProblems(l: z.infer<typeof LessonSpec>): string[] {
+  const out: string[] = [];
+  const headings = new Set(renderLessonBlocks(l).map(blockHeading).filter((h): h is string => !!h));
+  for (const e of l.embeds ?? []) {
+    if (!e.afterSection) continue;
+    if (!l.splitSections) out.push(`embed "${e.url}": afterSection cần splitSections: true`);
+    else if (!headings.has(e.afterSection)) out.push(`embed "${e.url}": afterSection "${e.afterSection}" không trùng mục nào`);
+  }
+  return out;
+}
+
+/**
+ * Mọi khối nội dung của bài theo đúng thứ tự tạo: các khối văn bản (gắn `look` nếu bài có), khối nhúng ngay sau
+ * mục chỉ định (hoặc sau cùng), rồi thẻ ghi nhớ chen ngay trước khối tổng kết.
+ */
+export function lessonContentItems(l: z.infer<typeof LessonSpec>): ContentItem[] {
+  const blocks = renderLessonBlocks(l);
+  const items: ContentItem[] = [];
+  const embedFor = (e: NonNullable<typeof l.embeds>[number]): ContentItem => ({
+    type: "embed",
+    payload: { url: e.url, ...(e.height ? { height: e.height } : {}) },
+  });
+  const trailing = (l.embeds ?? []).filter((e) => !e.afterSection);
+  for (const html of blocks) {
+    items.push({
+      type: "richtext",
+      payload: l.look ? { html, look: { palette: l.look.palette, font: l.look.font ?? "modern" } } : { html },
+    });
+    const h = blockHeading(html);
+    for (const e of l.embeds ?? []) if (h && e.afterSection === h) items.push(embedFor(e));
+  }
+  // Khối nhúng không chỉ mục: đặt trước tổng kết (nếu có) như thẻ ghi nhớ, để tổng kết vẫn là khối cuối.
+  const tail = trailing.map(embedFor);
+  items.splice(l.summary?.length ? items.length - 1 : items.length, 0, ...tail);
   if (l.flashcards) {
-    const cards = {
-      type: "vocab_list" as const,
+    const cards: ContentItem = {
+      type: "vocab_list",
       payload: {
         title: l.flashcards.title ?? "Thẻ ghi nhớ",
         items: l.flashcards.items.map((c) => ({
@@ -1273,6 +1334,9 @@ async function main() {
       }
       for (const msg of lectureAnchorProblems(l)) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": lời giảng: ${msg}`);
+      }
+      for (const msg of embedProblems(l)) {
+        problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": ${msg}`);
       }
       const sections = countSections(l.body);
       if (sections > MAX_TOC_ITEMS) {

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đồ thị parabol</title>
+<style>
+  :root { --bg:#fff; --fg:#1f2937; --muted:#6b7280; --line:#e5e7eb; --curve:#2563eb; --acc:#dc2626; --ok:#15803d; --bad:#b45309; --card:#f8fafc; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0f172a; --fg:#e5e7eb; --muted:#94a3b8; --line:#334155; --curve:#60a5fa; --acc:#f87171; --ok:#4ade80; --bad:#fbbf24; --card:#1e293b; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--fg); }
+  .wrap { display:grid; gap:12px; padding:12px; grid-template-columns: minmax(0,1fr); }
+  @media (min-width: 640px) { .wrap { grid-template-columns: minmax(0,3fr) minmax(0,2fr); } }
+  canvas { width:100%; aspect-ratio: 1 / 1; border:1px solid var(--line); border-radius:12px; background:var(--bg); touch-action:none; }
+  .panel { display:grid; gap:10px; align-content:start; }
+  .row { display:grid; grid-template-columns: 2.2em 1fr 3.6em; gap:8px; align-items:center; }
+  .row label { font-weight:600; font-style:italic; }
+  .row input[type=range] { width:100%; min-height:28px; }
+  .row output { text-align:right; font-variant-numeric:tabular-nums; }
+  .eq { font-size:1.15em; text-align:center; padding:6px; background:var(--card); border-radius:8px; }
+  dl { margin:0; display:grid; grid-template-columns:auto 1fr; gap:2px 10px; padding:8px 10px; background:var(--card); border-radius:8px; }
+  dt { color:var(--muted); } dd { margin:0; font-variant-numeric:tabular-nums; }
+  .warn { color:var(--bad); font-weight:600; min-height:1.4em; }
+  .tools { display:flex; gap:8px; flex-wrap:wrap; }
+  button { font:inherit; padding:7px 12px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer; min-height:36px; }
+  button.primary { background:var(--curve); color:#fff; border-color:var(--curve); }
+  .challenge { padding:8px 10px; border:1px dashed var(--curve); border-radius:8px; display:none; }
+  .challenge.on { display:block; }
+  .verdict { margin-top:6px; font-weight:600; min-height:1.4em; }
+  .verdict.ok { color:var(--ok); } .verdict.no { color:var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <canvas id="cv" width="640" height="640" aria-label="Đồ thị hàm số bậc hai"></canvas>
+  <div class="panel">
+    <div class="eq" id="eq" aria-live="polite"></div>
+    <div class="row"><label for="a">a</label><input id="a" type="range" min="-5" max="5" step="0.5" value="1"><output id="oa"></output></div>
+    <div class="row"><label for="b">b</label><input id="b" type="range" min="-10" max="10" step="0.5" value="-2"><output id="ob"></output></div>
+    <div class="row"><label for="c">c</label><input id="c" type="range" min="-10" max="10" step="0.5" value="-3"><output id="oc"></output></div>
+    <div class="warn" id="warn" role="status"></div>
+    <dl>
+      <dt>Hướng</dt><dd id="dir"></dd>
+      <dt>Đỉnh</dt><dd id="vx"></dd>
+      <dt>Trục đối xứng</dt><dd id="ax"></dd>
+      <dt>Δ = b²−4ac</dt><dd id="dl"></dd>
+      <dt>Nghiệm</dt><dd id="rt"></dd>
+    </dl>
+    <div class="tools">
+      <button id="reset" type="button">Đặt lại</button>
+      <button id="chal" type="button" class="primary">Thử thách</button>
+    </div>
+    <div class="challenge" id="cbox">
+      <div id="ctext"></div>
+      <div class="tools" style="margin-top:6px">
+        <button id="check" type="button" class="primary">Kiểm tra</button>
+        <button id="next" type="button">Đề khác</button>
+      </div>
+      <div class="verdict" id="verdict" role="status"></div>
+    </div>
+  </div>
+</div>
+<script src="parabola-core.js"></script>
+<script>
+(function () {
+  var P = window.Parabola, $ = function (id) { return document.getElementById(id); };
+  var cv = $("cv"), ctx = cv.getContext("2d");
+  var sl = { a: $("a"), b: $("b"), c: $("c") };
+  var DEFAULT = { a: 1, b: -2, c: -3 };
+  var ch = null;
+  var R = 10; // khung vẽ [-R, R] hai trục
+
+  function val() { return { a: +sl.a.value, b: +sl.b.value, c: +sl.c.value }; }
+  function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+  function termText(a, b, c) {
+    var s = "y = " + P.coef(a) + "x²";
+    if (b !== 0) s += (b < 0 ? " − " : " + ") + P.coef(Math.abs(b)) + "x";
+    if (c !== 0) s += (c < 0 ? " − " : " + ") + P.fmt(Math.abs(c));
+    return s;
+  }
+
+  function draw(v, an) {
+    var W = cv.width, H = cv.height, S = W / (2 * R);
+    var X = function (x) { return W / 2 + x * S; }, Y = function (y) { return H / 2 - y * S; };
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = "16px system-ui, sans-serif";
+    ctx.lineWidth = 1; ctx.strokeStyle = css("--line"); ctx.fillStyle = css("--muted");
+    for (var i = -R; i <= R; i++) {
+      ctx.beginPath(); ctx.moveTo(X(i), 0); ctx.lineTo(X(i), H); ctx.moveTo(0, Y(i)); ctx.lineTo(W, Y(i)); ctx.stroke();
+    }
+    ctx.strokeStyle = css("--fg"); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, Y(0)); ctx.lineTo(W, Y(0)); ctx.moveTo(X(0), 0); ctx.lineTo(X(0), H); ctx.stroke();
+    for (var t = -R + 2; t <= R - 2; t += 2) { if (t) { ctx.fillText(String(t), X(t) - 5, Y(0) + 18); ctx.fillText(String(t), X(0) + 6, Y(t) + 5); } }
+    if (!an) return;
+    // trục đối xứng
+    ctx.setLineDash([8, 6]); ctx.strokeStyle = css("--acc"); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(X(an.axis), 0); ctx.lineTo(X(an.axis), H); ctx.stroke(); ctx.setLineDash([]);
+    // parabol
+    ctx.strokeStyle = css("--curve"); ctx.lineWidth = 3; ctx.beginPath();
+    var started = false;
+    for (var px = 0; px <= W; px += 2) {
+      var x = (px - W / 2) / S, y = P.evalAt(v.a, v.b, v.c, x), py = Y(y);
+      if (py < -50 || py > H + 50) { started = false; continue; }
+      if (!started) { ctx.moveTo(px, py); started = true; } else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    // đỉnh, nghiệm, giao trục tung
+    function dot(x, y, color, label) {
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(X(x), Y(y), 6, 0, 7); ctx.fill();
+      if (label) { ctx.fillStyle = css("--fg"); ctx.fillText(label, X(x) + 9, Y(y) - 9); }
+    }
+    an.roots.forEach(function (r) { dot(r, 0, css("--ok"), P.fmt(r)); });
+    dot(0, v.c, css("--muted"), "");
+    dot(an.vertex.x, an.vertex.y, css("--acc"), "(" + P.fmt(an.vertex.x) + "; " + P.fmt(an.vertex.y) + ")");
+    if (ch) { // điểm đề bài
+      ctx.strokeStyle = css("--ok"); ctx.lineWidth = 2;
+      [[ch.vertex.x, ch.vertex.y], [ch.through.x, ch.through.y]].forEach(function (p) {
+        ctx.beginPath(); ctx.arc(X(p[0]), Y(p[1]), 10, 0, 7); ctx.stroke();
+      });
+    }
+  }
+
+  function render() {
+    var v = val(), an = P.analyze(v.a, v.b, v.c);
+    $("oa").textContent = P.fmt(v.a); $("ob").textContent = P.fmt(v.b); $("oc").textContent = P.fmt(v.c);
+    $("eq").textContent = an ? termText(v.a, v.b, v.c) : "y = " + P.fmt(v.b) + "x" + (v.c < 0 ? " − " : " + ") + P.fmt(Math.abs(v.c));
+    $("warn").textContent = an ? "" : "a = 0 nên đây không còn là hàm bậc hai — đồ thị là đường thẳng.";
+    $("dir").textContent = an ? (an.opensUp ? "Mở lên (a > 0)" : "Mở xuống (a < 0)") : "—";
+    $("vx").textContent = an ? "(" + P.fmt(an.vertex.x) + "; " + P.fmt(an.vertex.y) + ")" : "—";
+    $("ax").textContent = an ? "x = " + P.fmt(an.axis) : "—";
+    $("dl").textContent = an ? P.fmt(an.delta) : "—";
+    $("rt").textContent = !an ? "—" : an.roots.length === 0 ? "vô nghiệm (Δ < 0)"
+      : an.roots.length === 1 ? "x = " + P.fmt(an.roots[0]) + " (nghiệm kép)"
+      : "x₁ = " + P.fmt(an.roots[0]) + ";  x₂ = " + P.fmt(an.roots[1]);
+    draw(v, an);
+  }
+
+  function newChallenge() {
+    ch = P.makeChallenge(Math.random);
+    $("ctext").textContent = "Kéo a, b, c để parabol có đỉnh (" + P.fmt(ch.vertex.x) + "; " + P.fmt(ch.vertex.y) +
+      ") và đi qua (0; " + P.fmt(ch.through.y) + "). Hai điểm cần đạt đang được khoanh xanh.";
+    $("verdict").textContent = ""; $("verdict").className = "verdict";
+    $("cbox").className = "challenge on";
+    render();
+  }
+
+  function check() {
+    var v = val(), r = P.checkChallenge(ch, v.a, v.b, v.c), el = $("verdict");
+    if (r.ok) { el.textContent = "Đúng rồi! Em tự giải thích: vì sao đỉnh lại có hoành độ −b/2a?"; el.className = "verdict ok"; }
+    else if (r.reason === "a=0") { el.textContent = "Cần a ≠ 0."; el.className = "verdict no"; }
+    else {
+      el.className = "verdict no";
+      el.textContent = r.vertexOff >= 0.05
+        ? "Đỉnh đang lệch " + P.fmt(r.vertexOff) + " đơn vị. Gợi ý: hoành độ đỉnh là −b/(2a)."
+        : "Đỉnh đúng rồi, nhưng đồ thị cắt trục tung chưa đúng chỗ (lệch " + P.fmt(r.pointOff) + "). Gợi ý: c là tung độ giao điểm với Oy.";
+    }
+  }
+
+  ["a", "b", "c"].forEach(function (k) { sl[k].addEventListener("input", function () { $("verdict").textContent = ""; render(); }); });
+  $("reset").addEventListener("click", function () { ["a", "b", "c"].forEach(function (k) { sl[k].value = DEFAULT[k]; }); render(); });
+  $("chal").addEventListener("click", newChallenge);
+  $("next").addEventListener("click", newChallenge);
+  $("check").addEventListener("click", check);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+  render();
+})();
+</script>
+</body>
+</html>
