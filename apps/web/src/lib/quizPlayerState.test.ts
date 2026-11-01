@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   answerSignature,
   flagStorageKey,
+  isOptionsCovered,
+  isWorkOnPaper,
   joinNumbers,
   leaveWarning,
   parseFlagged,
   questionStatus,
   saveStatusText,
+  showWorkOnPaperIntro,
   submitWarning,
 } from "./quizPlayerState";
 
@@ -113,5 +116,51 @@ describe("parseFlagged", () => {
   });
   it("khoá lưu theo từng lượt làm bài", () => {
     expect(flagStorageKey("att-1")).toBe("quiz-flags:att-1");
+  });
+});
+
+describe("nháp ra giấy", () => {
+  const paper = { type: "mcq", extra: { manifestKey: "a", workOnPaper: true } };
+  const plain = { type: "mcq", extra: { manifestKey: "b" } };
+  const base = { hasSavedAnswers: false, timeLimitSec: null, prepared: false };
+
+  it("chỉ nhận câu có phương án để nhìn", () => {
+    expect(isWorkOnPaper(paper)).toBe(true);
+    expect(isWorkOnPaper({ type: "true_false", extra: { workOnPaper: true } })).toBe(true);
+    expect(isWorkOnPaper(plain)).toBe(false);
+    expect(isWorkOnPaper({ type: "mcq", extra: null })).toBe(false);
+    expect(isWorkOnPaper({ type: "mcq" })).toBe(false);
+    expect(isWorkOnPaper({ type: "fill_in", extra: { workOnPaper: true } })).toBe(false);
+    expect(isWorkOnPaper({ type: "matching", extra: { workOnPaper: true } })).toBe(false);
+  });
+
+  it("hiện màn chuẩn bị khi quiz có câu đánh dấu và lượt làm còn mới", () => {
+    expect(showWorkOnPaperIntro({ ...base, questions: [plain, paper] })).toBe(true);
+  });
+  it("quiz không đánh dấu thì không hiện", () => {
+    expect(showWorkOnPaperIntro({ ...base, questions: [plain] })).toBe(false);
+  });
+  it("đã qua màn chuẩn bị thì không hiện lại", () => {
+    expect(showWorkOnPaperIntro({ ...base, questions: [paper], prepared: true })).toBe(false);
+  });
+  it("đã có câu trả lời thì vào thẳng bài làm", () => {
+    expect(showWorkOnPaperIntro({ ...base, questions: [paper], hasSavedAnswers: true })).toBe(false);
+  });
+  it("có giới hạn thời gian thì không hiện", () => {
+    expect(showWorkOnPaperIntro({ ...base, questions: [paper], timeLimitSec: 600 })).toBe(false);
+  });
+
+  it("câu đánh dấu chưa mở và chưa trả lời thì bị che", () => {
+    expect(isOptionsCovered(paper, { hasResponse: false, revealed: false })).toBe(true);
+  });
+  it("đã mở thì không che", () => {
+    expect(isOptionsCovered(paper, { hasResponse: false, revealed: true })).toBe(false);
+  });
+  it("đã có trả lời thì không che dù vừa tải lại trang", () => {
+    expect(isOptionsCovered(paper, { hasResponse: true, revealed: false })).toBe(false);
+  });
+  it("câu không đánh dấu không bao giờ bị che", () => {
+    expect(isOptionsCovered(plain, { hasResponse: false, revealed: false })).toBe(false);
+    expect(isOptionsCovered({ type: "fill_in", extra: { workOnPaper: true } }, { hasResponse: false, revealed: false })).toBe(false);
   });
 });

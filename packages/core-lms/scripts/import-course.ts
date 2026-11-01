@@ -87,6 +87,8 @@ const QuestionSpec = z.object({
    * đẻ ra bản thứ hai. Đặt khoá cho câu nào dự tính còn sửa.
    */
   key: z.string().min(1).max(80).optional(),
+  /** Câu cần tính toán: che đáp án cho tới khi học sinh bấm đã giải xong (docs/tieu-chi/quiz-nhap-ra-giay.md). */
+  workOnPaper: z.boolean().optional(),
   type: z.enum([
     "mcq",
     "true_false",
@@ -369,7 +371,9 @@ export function expandQuestion(
     explanation: q.explanation,
     points: q.points,
     orderIndex,
-    ...(q.key ? { extra: { manifestKey: q.key } } : {}),
+    ...(q.key || q.workOnPaper
+      ? { extra: { ...(q.key ? { manifestKey: q.key } : {}), ...(q.workOnPaper ? { workOnPaper: true } : {}) } }
+      : {}),
   };
 
   switch (q.type) {

@@ -111,3 +111,38 @@ export function parseFlagged(raw: string | null, validIds: ReadonlySet<string>):
     return new Set();
   }
 }
+
+// ── Nháp ra giấy (docs/tieu-chi/quiz-nhap-ra-giay.md) ─────────────────────────
+
+/** Chỉ câu có phương án để nhìn mới cần che: câu điền số hay ghép đôi thì che cũng không ngăn được gì. */
+const COVERABLE_TYPES = new Set(["mcq", "true_false"]);
+
+interface PaperQuestion {
+  type: string;
+  extra?: Record<string, unknown> | null;
+}
+
+export function isWorkOnPaper(q: PaperQuestion): boolean {
+  return COVERABLE_TYPES.has(q.type) && q.extra?.workOnPaper === true;
+}
+
+/**
+ * Hiện màn hình chuẩn bị giấy bút trước câu đầu? Không hiện khi có giới hạn thời gian, vì đồng hồ đã chạy từ lúc mở bài;
+ * và không hiện khi lượt làm đã có câu trả lời, vì đó là lúc học sinh quay lại làm tiếp.
+ */
+export function showWorkOnPaperIntro(input: {
+  questions: readonly PaperQuestion[];
+  hasSavedAnswers: boolean;
+  timeLimitSec: number | null;
+  prepared: boolean;
+}): boolean {
+  if (input.prepared || input.hasSavedAnswers || input.timeLimitSec) return false;
+  return input.questions.some(isWorkOnPaper);
+}
+
+/** Câu đang bị che đáp án? Câu đã mở hoặc đã có trả lời thì không che, để học sinh quay lại vẫn thấy lựa chọn của mình. */
+export function isOptionsCovered(q: PaperQuestion, input: { hasResponse: boolean; revealed: boolean }): boolean {
+  return isWorkOnPaper(q) && !input.hasResponse && !input.revealed;
+}
+
+export const preparedStorageKey = (attemptId: string): string => `quiz:${attemptId}:prepared`;

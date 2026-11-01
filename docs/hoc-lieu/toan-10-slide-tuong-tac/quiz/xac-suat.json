@@ -231,6 +231,7 @@
       },
       {
         "key": "xs-06-hai-mat-bang-nhau",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Gieo hai con xúc xắc cân đối. Xác suất để hai mặt có số chấm bằng nhau là:",
@@ -283,6 +284,7 @@
       },
       {
         "key": "xs-08-chia-het-4",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Rút ngẫu nhiên một thẻ từ $30$ thẻ đánh số từ $1$ đến $30$. Xác suất rút được thẻ ghi số chia hết cho $4$ là:",
@@ -309,6 +311,7 @@
       },
       {
         "key": "xs-09-it-nhat-mot",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Tung một đồng xu cân đối $4$ lần. Xác suất để có ít nhất một lần ngửa là:",
@@ -337,6 +340,7 @@
       },
       {
         "key": "xs-10-cung-mau",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 2,
         "prompt": "Một hộp có $3$ bi đỏ và $2$ bi xanh. Rút ngẫu nhiên cùng lúc hai bi. Xác suất để hai bi cùng màu là:",

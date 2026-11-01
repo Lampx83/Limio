@@ -15,6 +15,7 @@ Khoá bán do Limio soạn, theo Chương trình GDPT 2018 lớp 10. Đây **kh�
 - Mỗi bài 10 câu, 12 điểm: 3 Nhận biết, 5 Thông hiểu, 2 Vận dụng. Không bắt chọn độ tự tin.
 - Không dùng lại hàm số và số liệu đã có trong slide, để quiz đo được việc học sinh tự làm.
 - Phương án sai gắn mã lỗi tư duy `t10.<bài>.*` khi nó ứng với một lỗi cụ thể. Mỗi mã có một mẫu phản hồi.
+- Câu trắc nghiệm cần tính toán có `"workOnPaper": true`: đáp án được che cho tới khi học sinh bấm đã giải xong, và quiz có màn hình chuẩn bị giấy bút (`docs/tieu-chi/quiz-nhap-ra-giay.md`).
 - Thuật ngữ và kí hiệu theo đúng slide của bài (`bề lõm`, `đỉnh I`, `n(Ω)`, góc bù…).
 
 ## Dựng và nhập

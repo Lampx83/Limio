@@ -171,6 +171,7 @@
       },
       {
         "key": "con-04-tieu-diem-elip",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Hai tiêu điểm của elip $\\frac{x^2}{169}+\\frac{y^2}{144}=1$ là:",
@@ -199,6 +200,7 @@
       },
       {
         "key": "con-05-tieu-diem-hypebol",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Hai tiêu điểm của hypebol $\\frac{x^2}{16}-\\frac{y^2}{9}=1$ là:",
@@ -227,6 +229,7 @@
       },
       {
         "key": "con-06-duong-chuan",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Đường chuẩn của parabol $y^2=10x$ là:",
@@ -286,6 +289,7 @@
       },
       {
         "key": "con-09-viet-phuong-trinh",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Elip có hai tiêu điểm $F_1,F_2$ với $F_1F_2=12$ và $MF_1+MF_2=20$ với mọi điểm $M$ trên elip. Phương trình chính tắc của elip là:",

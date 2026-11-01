@@ -24,14 +24,18 @@ import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
 import { Check, Flag } from "lucide-react";
 import ConfidenceStars from "@/components/quiz/ConfidenceStars";
+import { CoveredOptions, WorkOnPaperIntro } from "@/components/quiz/WorkOnPaper";
 import { setQuizLeaveGuard } from "@/lib/quizLeaveGuard";
 import {
   answerSignature,
   flagStorageKey,
+  isOptionsCovered,
   leaveWarning,
   parseFlagged,
+  preparedStorageKey,
   questionStatus,
   saveStatusText,
+  showWorkOnPaperIntro,
   submitWarning,
   type QuestionStatus,
   type SaveState,
@@ -122,6 +126,11 @@ export default function QuizPlayer({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  // Nháp ra giấy (docs/tieu-chi/quiz-nhap-ra-giay.md): đã qua màn chuẩn bị chưa, và những câu học sinh đã bấm mở đáp án trong lần mở trang này.
+  const [prepared, setPrepared] = useState(false);
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
+  const answerAreaRef = useRef<HTMLDivElement>(null);
+  const focusAfterRevealRef = useRef(false);
   /**
    * B12 — thời gian thật của từng câu, cộng dồn theo mili-giây câu đó đang
    * hiện trên màn hình.
@@ -180,8 +189,20 @@ export default function QuizPlayer({
         } catch {
           // localStorage bị chặn (chế độ riêng tư): không nhớ được câu đánh dấu, vẫn làm bài bình thường.
         }
+        try {
+          setPrepared(window.localStorage.getItem(preparedStorageKey(attemptId)) === "1");
+        } catch {
+          // Không nhớ được thì tải lại trang sẽ gặp lại màn chuẩn bị, không ảnh hưởng bài làm.
+        }
       });
   }, [attemptId]);
+
+  // Vừa mở đáp án: đưa tiêu điểm tới phương án đầu tiên, vì nút vừa bấm đã biến mất.
+  useEffect(() => {
+    if (!focusAfterRevealRef.current) return;
+    focusAfterRevealRef.current = false;
+    answerAreaRef.current?.querySelector<HTMLElement>("input, button, textarea")?.focus();
+  }, [revealed]);
 
   // Rời trang khi còn câu chưa lưu được: hỏi lại. Câu đã lưu thì không mất, vào lại là làm tiếp.
   useEffect(() => {
@@ -483,6 +504,25 @@ export default function QuizPlayer({
   const seconds = remainingSec !== null ? remainingSec % 60 : 0;
   const timerDanger = remainingSec !== null && remainingSec < 60;
 
+  if (showWorkOnPaperIntro({ questions: quiz.questions, hasSavedAnswers: data.responses.length > 0, timeLimitSec: quiz.timeLimitSec, prepared })) {
+    return (
+      <WorkOnPaperIntro
+        title={quiz.title}
+        questionCount={quiz.questions.length}
+        points={quiz.questions.reduce((sum, q) => sum + q.points, 0)}
+        onReady={() => {
+          try {
+            window.localStorage.setItem(preparedStorageKey(attemptId), "1");
+          } catch {
+            /* bỏ qua */
+          }
+          stepEnteredAtRef.current = Date.now(); // thời gian làm câu 1 không tính lúc lấy giấy bút
+          setPrepared(true);
+        }}
+      />
+    );
+  }
+
   const currentQ = quiz.questions[currentStepIndex];
   const isFirst = currentStepIndex === 0;
   const isLast = currentStepIndex === quiz.questions.length - 1;
@@ -591,13 +631,22 @@ export default function QuizPlayer({
                 className="prose prose-lg mt-4 max-w-none leading-relaxed dark:prose-invert"
               />
             )}
-            <div className="mt-6">
-              <QuestionInput
-                question={currentQ}
-                answer={answers[currentQ.id]}
-                onChange={(r) => setResponse(currentQ.id, r)}
-                onBlur={() => saveAnswer(currentQ)}
-              />
+            <div ref={answerAreaRef} className="mt-6">
+              {isOptionsCovered(currentQ, { hasResponse: statusOf(currentQ) !== "empty", revealed: revealed.has(currentQ.id) }) ? (
+                <CoveredOptions
+                  onReveal={() => {
+                    focusAfterRevealRef.current = true;
+                    setRevealed((prev) => new Set(prev).add(currentQ.id));
+                  }}
+                />
+              ) : (
+                <QuestionInput
+                  question={currentQ}
+                  answer={answers[currentQ.id]}
+                  onChange={(r) => setResponse(currentQ.id, r)}
+                  onBlur={() => saveAnswer(currentQ)}
+                />
+              )}
             </div>
           </section>
         )}
@@ -1233,17 +1282,18 @@ function MatchingInput({
         {lefts.map((l) => (
           <li
             key={l.id}
-            className="flex items-center gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
+            className="space-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
           >
+            {/* Xếp chồng: ô chọn đứng cạnh chữ thì phương án dài làm cột chữ co lại còn từng ký tự một dòng. */}
             <SafeHtml
               html={plainToRichHtml(l.label)}
-              className="prose prose-sm max-w-none flex-1 text-sm font-medium dark:prose-invert"
+              className="prose prose-sm max-w-none text-sm font-medium dark:prose-invert"
             />
-            <span className="text-faint">→</span>
             <select
               value={byLeft.get(l.id) ?? ""}
               onChange={(e) => pick(l.id, e.target.value)}
-              className="select max-w-[220px]"
+              aria-label={htmlToPlainText(l.label)}
+              className="select min-h-[44px] w-full"
             >
               <option value="">— chọn —</option>
               {rights.map((r) => (

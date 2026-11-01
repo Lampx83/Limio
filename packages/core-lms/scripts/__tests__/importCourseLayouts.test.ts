@@ -219,3 +219,18 @@ describe("embeds — khối nhúng tương tác", () => {
     expect(() => mk([{ url: "//evil.com/x" }])).toThrow();
   });
 });
+
+describe("workOnPaper — câu cần nháp ra giấy", () => {
+  const q = { type: "mcq" as const, prompt: "Đề", options: [{ label: "A", isCorrect: true }, { label: "B", isCorrect: false }] };
+
+  it("đi vào extra cùng manifestKey", () => {
+    expect(expandQuestion({ ...q, key: "c1", workOnPaper: true }, 0).extra).toEqual({ manifestKey: "c1", workOnPaper: true });
+  });
+  it("không có key vẫn ghi được đánh dấu", () => {
+    expect(expandQuestion({ ...q, workOnPaper: true }, 0).extra).toEqual({ workOnPaper: true });
+  });
+  it("không đánh dấu thì extra như cũ", () => {
+    expect(expandQuestion({ ...q, key: "c1" }, 0).extra).toEqual({ manifestKey: "c1" });
+    expect(expandQuestion(q, 0).extra).toBeUndefined();
+  });
+});

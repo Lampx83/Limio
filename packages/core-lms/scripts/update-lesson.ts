@@ -441,6 +441,16 @@ async function main() {
       const hasKey = Boolean(
         (existing.extra as { manifestKey?: string } | null)?.manifestKey,
       );
+      // Đánh dấu nháp ra giấy không đổi đề hay đáp án, nên ghi được cả khi quiz đã có lượt làm.
+      const existingExtra = (existing.extra as Record<string, unknown> | null) ?? {};
+      const wantPaper = q.workOnPaper === true;
+      if (wantPaper !== (existingExtra.workOnPaper === true)) {
+        const { workOnPaper: _old, ...restExtra } = existingExtra;
+        console.log(`  ~ ${wantPaper ? "bật" : "tắt"} nháp ra giấy: ${q.prompt.slice(0, 60)}…`);
+        plan.push(async () => {
+          await updateQuestion(owner.id, existing.id, { extra: { ...restExtra, ...(wantPaper ? { workOnPaper: true } : {}) } });
+        });
+      }
       const same =
         (!q.key || hasKey) &&
         questionShape(payload) ===
@@ -465,7 +475,7 @@ async function main() {
           explanation: q.explanation ?? null,
           points: q.points,
           options: (payload.options as unknown[]) ?? undefined,
-          ...(q.key ? { extra: { manifestKey: q.key } } : {}),
+          ...(payload.extra ? { extra: payload.extra as Record<string, unknown> } : {}),
         });
       });
     }

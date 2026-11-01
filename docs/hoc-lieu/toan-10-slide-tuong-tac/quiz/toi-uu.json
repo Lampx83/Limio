@@ -210,6 +210,7 @@
       },
       {
         "key": "tu-05-dinh",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Giao điểm của hai đường thẳng $x+y=10$ và $2x+y=14$ là:",
@@ -263,6 +264,7 @@
       },
       {
         "key": "tu-07-gia-tri-nho-nhat",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Miền nghiệm của một hệ là tứ giác có các đỉnh $O(0;0)$, $A(6;0)$, $B(4;3)$, $C(0;5)$. Giá trị nhỏ nhất của $G=x-2y$ trên miền này là:",
@@ -328,6 +330,7 @@
       },
       {
         "key": "tu-10-gia-tri-lon-nhat",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Giá trị lớn nhất của $F=x+3y$ với $x\\ge0,\\ y\\ge0,\\ x+y\\le6,\\ y\\le4$ là:",

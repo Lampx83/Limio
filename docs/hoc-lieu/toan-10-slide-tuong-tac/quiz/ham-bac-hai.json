@@ -180,6 +180,7 @@
       },
       {
         "key": "hs2-04-dinh",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Toạ độ đỉnh của parabol $y=2x^2-8x+5$ là:",
@@ -222,6 +223,7 @@
       },
       {
         "key": "hs2-06-dong-bien",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Hàm số $y=-2x^2+4x+1$ đồng biến trên khoảng nào?",
@@ -250,6 +252,7 @@
       },
       {
         "key": "hs2-07-gtnn",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Giá trị nhỏ nhất của hàm số $y=x^2+4x+7$ là:",
@@ -303,6 +306,7 @@
       },
       {
         "key": "hs2-09-tham-so",
+        "workOnPaper": true,
         "type": "mcq",
         "points": 1,
         "prompt": "Parabol $y=x^2-2x+m$ không cắt trục $Ox$ khi và chỉ khi:",
