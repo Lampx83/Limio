@@ -8,12 +8,16 @@ import {
   listCatalogSectionsForAdmin,
   listCatalogSectionsForDisplay,
   listCoursesInSection,
+  listSampleCourses,
   removeCourseFromSection,
+  SAMPLE_COURSES_SECTION_TITLE,
   reorderCatalogSections,
   reorderCoursesInSection,
   updateCatalogSection,
 } from "../catalogSections";
-import { createCourse, publishCourse } from "../courses";
+import { createCourse, publishCourse, updateCourse } from "../courses";
+import { createModule } from "../modules";
+import { createLesson } from "../lessons";
 import { registerUser } from "../../auth/register";
 import { grantRole } from "../../auth/roles";
 
@@ -176,5 +180,88 @@ describe("CatalogSection — admin CRUD", () => {
     await expect(addCourseToSection(adminId, section.id, a)).rejects.toMatchObject({
       code: "validation_failed",
     });
+  });
+});
+
+describe("listSampleCourses — trang /learning", () => {
+  async function sampleSection(adminId: string, isActive = true) {
+    const section = await createCatalogSection(adminId, {
+      title: SAMPLE_COURSES_SECTION_TITLE,
+      type: "MANUAL",
+    });
+    if (!isActive) await updateCatalogSection(adminId, section.id, { isActive: false });
+    return section;
+  }
+
+  it("returns [] when no section is titled as the sample section", async () => {
+    const adminId = await makeAdmin("sample1@e.com");
+    const a = await publishedCourse(adminId, "s1");
+    const other = await createCatalogSection(adminId, { title: "Nổi bật", type: "MANUAL" });
+    await addCourseToSection(adminId, other.id, a);
+
+    expect(await listSampleCourses()).toEqual([]);
+  });
+
+  it("returns published courses in curated order and skips drafts", async () => {
+    const adminId = await makeAdmin("sample2@e.com");
+    const a = await publishedCourse(adminId, "s2a");
+    const b = await publishedCourse(adminId, "s2b");
+    const c = await publishedCourse(adminId, "s2c");
+    const section = await sampleSection(adminId);
+    await addCourseToSection(adminId, section.id, a);
+    await addCourseToSection(adminId, section.id, b);
+    await addCourseToSection(adminId, section.id, c);
+    await reorderCoursesInSection(adminId, section.id, [c, a, b]);
+    await prisma.course.update({ where: { id: a }, data: { status: "draft" } });
+
+    const courses = await listSampleCourses();
+    expect(courses.map((x) => x.id)).toEqual([c, b]);
+  });
+
+  it("is hidden while the section is switched off", async () => {
+    const adminId = await makeAdmin("sample3@e.com");
+    const a = await publishedCourse(adminId, "s3");
+    const section = await sampleSection(adminId, false);
+    await addCourseToSection(adminId, section.id, a);
+
+    expect(await listSampleCourses()).toEqual([]);
+  });
+
+  it("exposes the first lesson only for courses open to visitors", async () => {
+    const adminId = await makeAdmin("sample4@e.com");
+    const open = await publishedCourse(adminId, "s4open");
+    const closed = await publishedCourse(adminId, "s4closed");
+    for (const courseId of [open, closed]) {
+      const m = await createModule(adminId, courseId, { title: "M", orderIndex: 0 });
+      await createLesson(adminId, m.moduleId, { title: "Bài 2", orderIndex: 1 });
+      await createLesson(adminId, m.moduleId, { title: "Bài 1", orderIndex: 0 });
+    }
+    await updateCourse(adminId, open, { publicAccess: true });
+    const section = await sampleSection(adminId);
+    await addCourseToSection(adminId, section.id, open);
+    await addCourseToSection(adminId, section.id, closed);
+
+    const [o, c] = await listSampleCourses();
+    expect(o!.publicAccess).toBe(true);
+    const first = await prisma.lesson.findFirstOrThrow({
+      where: { module: { courseId: open }, orderIndex: 0 },
+    });
+    expect(o!.firstLessonId).toBe(first.id);
+    expect(c!.publicAccess).toBe(false);
+    expect(c!.firstLessonId).toBeNull();
+  });
+
+  it("never exposes a lesson link for a paid course, even if publicAccess is on", async () => {
+    const adminId = await makeAdmin("sample5@e.com");
+    const paid = await publishedCourse(adminId, "s5paid");
+    const m = await createModule(adminId, paid, { title: "M", orderIndex: 0 });
+    await createLesson(adminId, m.moduleId, { title: "Bài 1", orderIndex: 0 });
+    await updateCourse(adminId, paid, { publicAccess: true, priceCents: 50000 });
+    const section = await sampleSection(adminId);
+    await addCourseToSection(adminId, section.id, paid);
+
+    const [c] = await listSampleCourses();
+    expect(c!.priceCents).toBe(50000);
+    expect(c!.firstLessonId).toBeNull();
   });
 });
