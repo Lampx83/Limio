@@ -1,0 +1,345 @@
+{
+  "misconceptions": [
+    {
+      "code": "t10.hs2.khong-rut-gon",
+      "name": "Thấy x² là kết luận hàm bậc hai, không rút gọn",
+      "description": "Nhận dạng hàm bậc hai theo hình thức của biểu thức thay vì rút gọn về dạng ax² + bx + c. Sau khi rút gọn, số hạng x² có thể triệt tiêu và hàm số chỉ còn bậc nhất."
+    },
+    {
+      "code": "t10.hs2.so-sanh-a-theo-dau",
+      "name": "So độ hẹp theo a, không theo |a|",
+      "description": "Cho rằng a càng lớn thì parabol càng hẹp, nên bỏ qua các hệ số âm. Độ hẹp phụ thuộc vào trị tuyệt đối của a; dấu của a chỉ quyết định chiều của bề lõm."
+    },
+    {
+      "code": "t10.hs2.a-duong-cat-ox",
+      "name": "Cho rằng a > 0 thì parabol luôn cắt Ox",
+      "description": "Suy ra số giao điểm với trục Ox từ dấu của a. Số giao điểm do dấu của Δ quyết định."
+    },
+    {
+      "code": "t10.hs2.quen-dau-tru-dinh",
+      "name": "Quên dấu trừ trong công thức hoành độ đỉnh",
+      "description": "Tính hoành độ đỉnh bằng b/(2a) thay vì −b/(2a), nên đỉnh và trục đối xứng nằm sai phía."
+    },
+    {
+      "code": "t10.hs2.quen-so-2-mau",
+      "name": "Quên số 2 ở mẫu",
+      "description": "Tính hoành độ đỉnh bằng −b/a thay vì −b/(2a)."
+    },
+    {
+      "code": "t10.hs2.lay-c-lam-tung-do",
+      "name": "Lấy hệ số c làm tung độ đỉnh",
+      "description": "Nhầm điểm giao với trục Oy là (0; c) với đỉnh của parabol. Tung độ đỉnh phải tính bằng f(x_I) hoặc −Δ/(4a)."
+    },
+    {
+      "code": "t10.hs2.nham-chieu-bien-thien",
+      "name": "Nhầm chiều biến thiên khi a < 0",
+      "description": "Dùng chiều biến thiên của trường hợp a > 0 cho mọi parabol. Khi a < 0, hàm số đồng biến ở bên trái đỉnh và nghịch biến ở bên phải đỉnh."
+    },
+    {
+      "code": "t10.hs2.lay-tung-do-lam-moc",
+      "name": "Lấy tung độ đỉnh làm mốc của khoảng biến thiên",
+      "description": "Khoảng đồng biến và nghịch biến được xét trên trục hoành, nên mốc là hoành độ đỉnh, không phải tung độ đỉnh."
+    },
+    {
+      "code": "t10.hs2.nham-gia-tri-voi-hoanh-do",
+      "name": "Nhầm giá trị của hàm số với vị trí đạt giá trị",
+      "description": "Trả lời hoành độ đỉnh khi đề hỏi giá trị lớn nhất hoặc nhỏ nhất. Giá trị cần tìm là tung độ đỉnh; hoành độ đỉnh chỉ cho biết giá trị đó đạt tại đâu."
+    },
+    {
+      "code": "t10.hs2.sai-dieu-kien-delta",
+      "name": "Nhầm điều kiện của Δ khi có tham số",
+      "description": "Viết ngược dấu của Δ hoặc tính Δ thiếu hệ số 4. Parabol không cắt Ox khi Δ < 0, và Δ = b² − 4ac."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "t10.hs2.khong-rut-gon",
+      "body": "Hãy rút gọn biểu thức trước khi kết luận. Một hàm số chỉ là hàm bậc hai khi sau rút gọn có dạng ax² + bx + c với a ≠ 0.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.so-sanh-a-theo-dau",
+      "body": "Khi so độ hẹp của parabol, em hãy so |a|, không so a. Dấu của a chỉ cho biết bề lõm quay lên hay quay xuống.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.a-duong-cat-ox",
+      "body": "Dấu của a cho biết chiều của bề lõm, còn số giao điểm với Ox phải xét dấu của Δ. Ví dụ y = x² + 1 có a > 0 nhưng không cắt Ox.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.quen-dau-tru-dinh",
+      "body": "Hãy xem lại công thức x_I = −b/(2a): có dấu trừ phía trước. Em lấy b, đổi dấu, rồi mới chia cho 2a.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.quen-so-2-mau",
+      "body": "Mẫu số trong công thức hoành độ đỉnh là 2a, không phải a. Em hãy tính lại x_I = −b/(2a).",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.lay-c-lam-tung-do",
+      "body": "Hệ số c là tung độ giao điểm với trục Oy, không phải tung độ đỉnh. Muốn có tung độ đỉnh, em thay hoành độ đỉnh vào hàm số.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.nham-chieu-bien-thien",
+      "body": "Hãy hình dung parabol có a < 0: đồ thị đi lên tới đỉnh rồi đi xuống. Vì vậy hàm số đồng biến ở bên trái đỉnh và nghịch biến ở bên phải đỉnh.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.lay-tung-do-lam-moc",
+      "body": "Khoảng biến thiên là khoảng giá trị của x, nên mốc phải là hoành độ đỉnh. Tung độ đỉnh là giá trị của y.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.nham-gia-tri-voi-hoanh-do",
+      "body": "Đề hỏi giá trị của y. Hoành độ đỉnh chỉ cho biết giá trị đó đạt tại đâu, em cần thay tiếp vào hàm số để tính y.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.sai-dieu-kien-delta",
+      "body": "Parabol không cắt Ox khi phương trình ax² + bx + c = 0 vô nghiệm, tức là Δ = b² − 4ac < 0. Em hãy tính lại Δ theo m rồi giải bất phương trình.",
+      "priority": 10
+    }
+  ],
+  "quiz": {
+    "title": "Kiểm tra · Hàm số bậc hai và đồ thị",
+    "passThresholdPct": 60,
+    "requireConfidence": false,
+    "questions": [
+      {
+        "key": "hs2-01-nhan-dang",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Hàm số nào dưới đây là hàm số bậc hai?",
+        "explanation": "Rút gọn: $y=(x-1)(x+2)=x^2+x-2$ có $a=1\\neq0$ nên là hàm số bậc hai. Hàm $y=x^2-x(x+3)$ rút gọn thành $y=-3x$, chỉ là hàm bậc nhất; $y=x(x^2-1)$ là hàm bậc ba; $y=\\sqrt{x^2+1}$ không có dạng $ax^2+bx+c$.",
+        "options": [
+          {
+            "label": "$y=x^2-x(x+3)$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.khong-rut-gon"
+          },
+          {
+            "label": "$y=x(x^2-1)$",
+            "isCorrect": false
+          },
+          {
+            "label": "$y=(x-1)(x+2)$",
+            "isCorrect": true
+          },
+          {
+            "label": "$y=\\sqrt{x^2+1}$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "hs2-02-do-hep",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Trong bốn parabol dưới đây, parabol nào hẹp nhất?",
+        "explanation": "Độ hẹp phụ thuộc vào $|a|$. Bốn giá trị $|a|$ lần lượt là $4$, $2$, $\\frac12$ và $1$, nên $y=-4x^2+1$ hẹp nhất. Dấu âm của $a$ chỉ làm bề lõm quay xuống.",
+        "options": [
+          {
+            "label": "$y=2x^2$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.so-sanh-a-theo-dau"
+          },
+          {
+            "label": "$y=-4x^2+1$",
+            "isCorrect": true
+          },
+          {
+            "label": "$y=\\frac12x^2+x$",
+            "isCorrect": false
+          },
+          {
+            "label": "$y=x^2-3$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "hs2-03-a-duong",
+        "type": "true_false",
+        "points": 1,
+        "prompt": "Nếu $a>0$ thì parabol $y=ax^2+bx+c$ luôn cắt trục $Ox$.",
+        "explanation": "Sai. Số giao điểm với $Ox$ phụ thuộc vào dấu của $\\Delta$. Ví dụ $y=x^2+1$ có $a=1>0$ và $\\Delta=-4<0$ nên không cắt $Ox$.",
+        "options": [
+          {
+            "label": "Đúng",
+            "isCorrect": false,
+            "misconception": "t10.hs2.a-duong-cat-ox"
+          },
+          {
+            "label": "Sai",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "hs2-04-dinh",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Toạ độ đỉnh của parabol $y=2x^2-8x+5$ là:",
+        "explanation": "$x_I=-\\frac{b}{2a}=-\\frac{-8}{2\\cdot2}=2$ và $y_I=f(2)=2\\cdot4-16+5=-3$. Vậy đỉnh là $I(2;-3)$.",
+        "options": [
+          {
+            "label": "$(-2;29)$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.quen-dau-tru-dinh"
+          },
+          {
+            "label": "$(4;5)$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.quen-so-2-mau"
+          },
+          {
+            "label": "$(2;5)$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.lay-c-lam-tung-do"
+          },
+          {
+            "label": "$(2;-3)$",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "hs2-05-truc-doi-xung",
+        "type": "fill_in",
+        "points": 1,
+        "prompt": "Một parabol đi qua hai điểm $A(-1;4)$ và $B(5;4)$. Trục đối xứng của parabol này là đường thẳng $x=c$. Điền giá trị của $c$.",
+        "explanation": "$A$ và $B$ có cùng tung độ nên đối xứng với nhau qua trục của parabol. Trục đi qua trung điểm của $AB$: $x=\\frac{-1+5}{2}=2$.",
+        "answers": [
+          "2",
+          "x=2",
+          "x = 2",
+          "c=2",
+          "c = 2"
+        ]
+      },
+      {
+        "key": "hs2-06-dong-bien",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Hàm số $y=-2x^2+4x+1$ đồng biến trên khoảng nào?",
+        "explanation": "$x_I=-\\frac{4}{2\\cdot(-2)}=1$ và $a=-2<0$, nên đồ thị đi lên tới đỉnh rồi đi xuống. Hàm số đồng biến trên $(-\\infty;1)$ và nghịch biến trên $(1;+\\infty)$.",
+        "options": [
+          {
+            "label": "$(1;+\\infty)$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.nham-chieu-bien-thien"
+          },
+          {
+            "label": "$(-\\infty;1)$",
+            "isCorrect": true
+          },
+          {
+            "label": "$(-\\infty;3)$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.lay-tung-do-lam-moc"
+          },
+          {
+            "label": "$(-\\infty;-1)$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.quen-dau-tru-dinh"
+          }
+        ]
+      },
+      {
+        "key": "hs2-07-gtnn",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Giá trị nhỏ nhất của hàm số $y=x^2+4x+7$ là:",
+        "explanation": "$a=1>0$ nên hàm số đạt giá trị nhỏ nhất tại đỉnh. $x_I=-\\frac{4}{2}=-2$ và $y_I=f(-2)=4-8+7=3$. Giá trị nhỏ nhất bằng $3$, đạt tại $x=-2$.",
+        "options": [
+          {
+            "label": "$-2$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.nham-gia-tri-voi-hoanh-do"
+          },
+          {
+            "label": "$7$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.lay-c-lam-tung-do"
+          },
+          {
+            "label": "$3$",
+            "isCorrect": true
+          },
+          {
+            "label": "$19$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.quen-dau-tru-dinh"
+          }
+        ]
+      },
+      {
+        "key": "hs2-08-vi-tri-parabol",
+        "type": "matching",
+        "points": 2,
+        "prompt": "Hãy ghép mỗi trường hợp của $a$ và $\\Delta$ với vị trí của parabol so với trục $Ox$.",
+        "explanation": "Dấu của $a$ cho biết chiều của bề lõm, dấu của $\\Delta$ cho biết số giao điểm với $Ox$. Tung độ đỉnh bằng $-\\frac{\\Delta}{4a}$, nên khi $a<0$ và $\\Delta>0$ thì đỉnh nằm phía trên $Ox$.",
+        "pairs": [
+          {
+            "left": "a > 0, Δ < 0",
+            "right": "Nằm hoàn toàn phía trên Ox"
+          },
+          {
+            "left": "a < 0, Δ < 0",
+            "right": "Nằm hoàn toàn phía dưới Ox"
+          },
+          {
+            "left": "a > 0, Δ = 0",
+            "right": "Tiếp xúc Ox, phần còn lại nằm phía trên Ox"
+          },
+          {
+            "left": "a < 0, Δ > 0",
+            "right": "Cắt Ox tại hai điểm, đỉnh nằm phía trên Ox"
+          }
+        ]
+      },
+      {
+        "key": "hs2-09-tham-so",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Parabol $y=x^2-2x+m$ không cắt trục $Ox$ khi và chỉ khi:",
+        "explanation": "Parabol không cắt $Ox$ khi $\\Delta<0$. Ở đây $\\Delta=(-2)^2-4\\cdot1\\cdot m=4-4m$, nên $4-4m<0$, tức là $m>1$.",
+        "options": [
+          {
+            "label": "$m>1$",
+            "isCorrect": true
+          },
+          {
+            "label": "$m<1$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.sai-dieu-kien-delta"
+          },
+          {
+            "label": "$m=1$",
+            "isCorrect": false
+          },
+          {
+            "label": "$m>4$",
+            "isCorrect": false,
+            "misconception": "t10.hs2.sai-dieu-kien-delta"
+          }
+        ]
+      },
+      {
+        "key": "hs2-10-loi-nhuan",
+        "type": "fill_in",
+        "points": 2,
+        "prompt": "Một cửa hàng nhập mỗi chiếc áo với giá $20$ nghìn đồng. Nếu bán mỗi chiếc với giá $x$ nghìn đồng ($20<x<100$) thì mỗi ngày bán được $100-x$ chiếc. Để lợi nhuận mỗi ngày lớn nhất, cửa hàng nên bán mỗi chiếc với giá bao nhiêu nghìn đồng? Điền một số.",
+        "explanation": "Lợi nhuận mỗi ngày là $L(x)=(x-20)(100-x)=-x^2+120x-2000$. Vì $a=-1<0$ nên $L$ lớn nhất tại đỉnh: $x=-\\frac{120}{2\\cdot(-1)}=60$. Khi đó lợi nhuận là $L(60)=40\\cdot40=1600$ nghìn đồng.",
+        "answers": [
+          "60",
+          "60 nghìn",
+          "60 nghìn đồng"
+        ]
+      }
+    ]
+  }
+}

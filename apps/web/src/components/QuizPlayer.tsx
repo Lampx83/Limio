@@ -1302,12 +1302,12 @@ function MatchingLeftSlot({
     <li className="flex items-center gap-3">
       <SafeHtml
         html={plainToRichHtml(leftLabel)}
-        className="prose prose-sm max-w-none flex-1 text-sm font-medium dark:prose-invert"
+        className="prose prose-sm min-w-[6rem] max-w-none flex-1 text-sm font-medium dark:prose-invert"
       />
       <span className="text-faint">→</span>
       <div
         ref={setNodeRef}
-        className={`flex min-h-[44px] min-w-[180px] items-center justify-between gap-2 rounded-xl border-2 border-dashed p-2 transition-colors ${
+        className={`flex min-h-[44px] min-w-0 flex-[2] items-center justify-between gap-2 rounded-xl border-2 border-dashed p-2 transition-colors ${
           isOver
             ? "border-brand-500 bg-brand-soft"
             : assignedRight

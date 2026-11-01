@@ -1,0 +1,333 @@
+{
+  "misconceptions": [
+    {
+      "code": "t10.tamgiac.sai-dau-cosin",
+      "name": "Sai dấu trong định lí côsin",
+      "description": "Viết dấu cộng trước số hạng 2ac cos B. Định lí côsin có dấu trừ."
+    },
+    {
+      "code": "t10.tamgiac.thieu-he-so-2",
+      "name": "Thiếu hệ số 2 trong định lí côsin",
+      "description": "Viết ac cos B thay vì 2ac cos B."
+    },
+    {
+      "code": "t10.tamgiac.ghep-sai-cap",
+      "name": "Ghép sai cặp cạnh và góc",
+      "description": "Ghép một cạnh với góc không đối diện nó. Trong định lí sin và định lí côsin, mỗi cạnh đi với góc đối diện."
+    },
+    {
+      "code": "t10.tamgiac.quen-2r",
+      "name": "Quên số 2 trong 2R",
+      "description": "Viết a/sin A = R. Tỉ số này bằng đường kính 2R của đường tròn ngoại tiếp."
+    },
+    {
+      "code": "t10.tamgiac.quen-dau-cos-tu",
+      "name": "Quên cos của góc tù là số âm",
+      "description": "Dùng cos(180° − α) = cos α. Hai góc bù nhau có sin bằng nhau nhưng cos đối nhau."
+    },
+    {
+      "code": "t10.tamgiac.quen-khai-can",
+      "name": "Quên khai căn",
+      "description": "Dừng ở a² mà không khai căn để có độ dài cạnh."
+    },
+    {
+      "code": "t10.tamgiac.quen-nhan-nua",
+      "name": "Quên hệ số một phần hai trong công thức diện tích",
+      "description": "Tính S = bc sin A thay vì S = ½ bc sin A."
+    },
+    {
+      "code": "t10.tamgiac.nham-gia-tri-sin",
+      "name": "Nhầm giá trị sin của góc",
+      "description": "Lấy sin 150° = √3/2. Thực ra sin 150° = sin 30° = ½."
+    },
+    {
+      "code": "t10.tamgiac.nham-dau-sin-tu",
+      "name": "Cho rằng sin của góc tù là số âm",
+      "description": "Trong tam giác, sin của mọi góc đều dương, kể cả góc tù. Diện tích không thể âm."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "t10.tamgiac.sai-dau-cosin",
+      "body": "Định lí côsin có dấu trừ: b² = a² + c² − 2ac cos B. Khi B tù, cos B âm nên số hạng đó mới làm b² lớn hơn.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.thieu-he-so-2",
+      "body": "Số hạng cuối của định lí côsin là 2ac cos B, em đừng bỏ hệ số 2.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.ghep-sai-cap",
+      "body": "Mỗi cạnh đi cùng góc đối diện cùng tên: a với A, b với B, c với C. Em hãy kiểm tra lại từng cặp.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-2r",
+      "body": "Tỉ số a/sin A bằng 2R, tức là đường kính của đường tròn ngoại tiếp, không phải bán kính.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-dau-cos-tu",
+      "body": "Hai góc bù nhau có sin bằng nhau nhưng cos đối nhau: cos(180° − α) = −cos α. Vì vậy cos của góc tù là số âm.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-khai-can",
+      "body": "Định lí côsin cho a². Em đã tính đúng phần đó, chỉ còn khai căn để có độ dài cạnh.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-nhan-nua",
+      "body": "Công thức diện tích là S = ½ bc sin A, em đừng quên hệ số ½.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.nham-gia-tri-sin",
+      "body": "Dùng góc bù: sin 150° = sin(180° − 30°) = sin 30° = ½.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.nham-dau-sin-tu",
+      "body": "Trong tam giác, sin của góc tù vẫn dương; chỉ cos của góc tù mới âm. Diện tích cũng không thể âm.",
+      "priority": 10
+    }
+  ],
+  "quiz": {
+    "title": "Kiểm tra · Hệ thức lượng trong tam giác",
+    "passThresholdPct": 60,
+    "requireConfidence": false,
+    "questions": [
+      {
+        "key": "tg-01-cosin",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Trong tam giác $ABC$ với $a=BC,\\ b=CA,\\ c=AB$, hệ thức nào là đúng?",
+        "explanation": "Định lí côsin cho cạnh $b$: $b^2=a^2+c^2-2ac\\cos B$. Góc trong công thức là góc đối diện cạnh ở vế trái, cũng là góc xen giữa hai cạnh ở vế phải.",
+        "options": [
+          {
+            "label": "$b^2=a^2+c^2+2ac\\cos B$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.sai-dau-cosin"
+          },
+          {
+            "label": "$b^2=a^2+c^2-ac\\cos B$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.thieu-he-so-2"
+          },
+          {
+            "label": "$b^2=a^2+c^2-2ac\\cos B$",
+            "isCorrect": true
+          },
+          {
+            "label": "$b^2=a^2+c^2-2ac\\cos A$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.ghep-sai-cap"
+          }
+        ]
+      },
+      {
+        "key": "tg-02-sin",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Trong tam giác $ABC$ có $R$ là bán kính đường tròn ngoại tiếp, hệ thức nào là đúng?",
+        "explanation": "Định lí sin: $\\frac{a}{\\sin A}=\\frac{b}{\\sin B}=\\frac{c}{\\sin C}=2R$. Mỗi cạnh đi với sin của góc đối diện.",
+        "options": [
+          {
+            "label": "$\\frac{a}{\\sin A}=2R$",
+            "isCorrect": true
+          },
+          {
+            "label": "$\\frac{a}{\\sin A}=R$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.quen-2r"
+          },
+          {
+            "label": "$\\frac{a}{\\sin B}=\\frac{b}{\\sin A}$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.ghep-sai-cap"
+          },
+          {
+            "label": "$a\\sin A=b\\sin B$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.ghep-sai-cap"
+          }
+        ]
+      },
+      {
+        "key": "tg-03-goc-bu",
+        "type": "true_false",
+        "points": 1,
+        "prompt": "$\\cos150^\\circ=\\cos30^\\circ$.",
+        "explanation": "Sai. Hai góc bù nhau có cos đối nhau: $\\cos150^\\circ=-\\cos30^\\circ=-\\frac{\\sqrt3}{2}$. Riêng sin thì bằng nhau: $\\sin150^\\circ=\\sin30^\\circ$.",
+        "options": [
+          {
+            "label": "Đúng",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.quen-dau-cos-tu"
+          },
+          {
+            "label": "Sai",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "tg-04-tim-canh",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Tam giác $ABC$ có $AC=7$, $AB=8$ và $\\widehat{A}=120^\\circ$. Độ dài cạnh $BC$ là:",
+        "explanation": "$BC^2=7^2+8^2-2\\cdot7\\cdot8\\cdot\\cos120^\\circ=49+64+56=169$ nên $BC=13$. Vì $\\cos120^\\circ=-\\frac12$ nên số hạng cuối mang dấu cộng.",
+        "options": [
+          {
+            "label": "$\\sqrt{57}$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.quen-dau-cos-tu"
+          },
+          {
+            "label": "$169$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.quen-khai-can"
+          },
+          {
+            "label": "$15$",
+            "isCorrect": false
+          },
+          {
+            "label": "$13$",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "tg-05-tim-goc",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Tam giác $ABC$ có $a=7$, $b=5$, $c=3$. Số đo góc $A$ là:",
+        "explanation": "$\\cos A=\\frac{b^2+c^2-a^2}{2bc}=\\frac{25+9-49}{30}=-\\frac12$ nên $\\widehat{A}=120^\\circ$. Cạnh $a$ dài nhất nên góc $A$ lớn nhất.",
+        "options": [
+          {
+            "label": "$60^\\circ$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.quen-dau-cos-tu"
+          },
+          {
+            "label": "$120^\\circ$",
+            "isCorrect": true
+          },
+          {
+            "label": "$30^\\circ$",
+            "isCorrect": false
+          },
+          {
+            "label": "$150^\\circ$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "tg-06-dinh-li-sin",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Tam giác $ABC$ có $\\widehat{A}=45^\\circ$, $\\widehat{B}=60^\\circ$ và $BC=10$. Độ dài cạnh $AC$ là:",
+        "explanation": "$BC$ đối diện góc $A$, $AC$ đối diện góc $B$. Theo định lí sin, $AC=\\frac{BC\\sin B}{\\sin A}=\\frac{10\\cdot\\frac{\\sqrt3}{2}}{\\frac{\\sqrt2}{2}}=5\\sqrt6$.",
+        "options": [
+          {
+            "label": "$5\\sqrt6$",
+            "isCorrect": true
+          },
+          {
+            "label": "$\\frac{10\\sqrt6}{3}$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.ghep-sai-cap"
+          },
+          {
+            "label": "$5\\sqrt2$",
+            "isCorrect": false
+          },
+          {
+            "label": "$10$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "tg-07-dien-tich",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Tam giác có hai cạnh dài $10$ và $12$, góc xen giữa bằng $150^\\circ$. Diện tích tam giác là:",
+        "explanation": "$S=\\frac12\\cdot10\\cdot12\\cdot\\sin150^\\circ=60\\cdot\\frac12=30$. Vì $\\sin150^\\circ=\\sin30^\\circ=\\frac12$.",
+        "options": [
+          {
+            "label": "$60$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.quen-nhan-nua"
+          },
+          {
+            "label": "$30\\sqrt3$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.nham-gia-tri-sin"
+          },
+          {
+            "label": "$30$",
+            "isCorrect": true
+          },
+          {
+            "label": "$-30$",
+            "isCorrect": false,
+            "misconception": "t10.tamgiac.nham-dau-sin-tu"
+          }
+        ]
+      },
+      {
+        "key": "tg-08-chon-cong-cu",
+        "type": "matching",
+        "points": 2,
+        "prompt": "Hãy ghép mỗi tình huống với công cụ phù hợp nhất.",
+        "explanation": "Biết hai cạnh và góc xen giữa thì dùng định lí côsin để tìm cạnh. Biết hai góc và một cạnh thì dùng định lí sin. Biết ba cạnh thì dùng hệ quả của định lí côsin để tìm góc, và công thức Heron để tính diện tích.",
+        "pairs": [
+          {
+            "left": "Biết hai cạnh và góc xen giữa, tìm cạnh thứ ba",
+            "right": "Định lí côsin"
+          },
+          {
+            "left": "Biết hai góc và một cạnh, tìm cạnh khác",
+            "right": "Định lí sin"
+          },
+          {
+            "left": "Biết ba cạnh, tìm một góc",
+            "right": "Hệ quả của định lí côsin"
+          },
+          {
+            "left": "Biết ba cạnh, tìm diện tích",
+            "right": "Công thức Heron"
+          }
+        ]
+      },
+      {
+        "key": "tg-09-chieu-cao",
+        "type": "fill_in",
+        "points": 1,
+        "prompt": "Một mảnh đất hình tam giác có ba cạnh dài $7$ m, $15$ m và $20$ m. Tính chiều cao của tam giác ứng với cạnh dài $20$ m, theo đơn vị mét. Điền một số.",
+        "explanation": "Nửa chu vi $p=21$. Theo công thức Heron, $S=\\sqrt{21\\cdot14\\cdot6\\cdot1}=42$. Từ $S=\\frac12\\cdot20\\cdot h$ suy ra $h=\\frac{2\\cdot42}{20}=4{,}2$ m.",
+        "answers": [
+          "4,2",
+          "4.2",
+          "4,2 m",
+          "4.2 m"
+        ]
+      },
+      {
+        "key": "tg-10-qua-ho",
+        "type": "fill_in",
+        "points": 2,
+        "prompt": "Để đo khoảng cách giữa hai điểm $B$ và $C$ ở hai bờ một cái hồ, người ta đứng tại $A$ và đo được $AB=30$ m, $AC=80$ m, $\\widehat{BAC}=60^\\circ$. Tính khoảng cách $BC$, theo đơn vị mét. Điền một số.",
+        "explanation": "Biết hai cạnh và góc xen giữa nên dùng định lí côsin: $BC^2=30^2+80^2-2\\cdot30\\cdot80\\cdot\\cos60^\\circ=900+6400-2400=4900$. Vậy $BC=70$ m.",
+        "answers": [
+          "70",
+          "70 m"
+        ]
+      }
+    ]
+  }
+}

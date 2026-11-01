@@ -373,9 +373,11 @@ export default async function ResultPage({
                         initialRating={fb.rating}
                       />
                     </div>
-                    <p className="mt-2 whitespace-pre-wrap text-sm text-danger-700/90">
-                      {fb.body}
-                    </p>
+                    {/* Phản hồi trích cả phương án và lời giải nên có thể chứa công thức. */}
+                    <SafeHtml
+                      html={plainToRichHtml(fb.body)}
+                      className="mt-2 text-sm text-danger-700/90 [&_p+p]:mt-2"
+                    />
                     {askMoreHref(item.prompt) && (
                       <Link
                         href={askMoreHref(item.prompt)!}

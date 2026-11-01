@@ -1,0 +1,328 @@
+{
+  "misconceptions": [
+    {
+      "code": "t10.conic.nham-a-b",
+      "name": "Không kiểm a > b khi nhận phương trình chính tắc của elip",
+      "description": "Trong phương trình chính tắc của elip, mẫu của x² là a² và phải lớn hơn mẫu của y² là b². Phương trình có mẫu của y² lớn hơn vẫn là một elip nhưng không ở dạng chính tắc."
+    },
+    {
+      "code": "t10.conic.nham-elip-hypebol",
+      "name": "Nhầm elip với hypebol",
+      "description": "Không phân biệt tổng và hiệu khoảng cách trong định nghĩa, hoặc dấu cộng và dấu trừ trong phương trình chính tắc."
+    },
+    {
+      "code": "t10.conic.nham-he-thuc-c",
+      "name": "Dùng sai hệ thức giữa a, b, c",
+      "description": "Dùng c² = a² + b² cho elip hoặc c² = a² − b² cho hypebol."
+    },
+    {
+      "code": "t10.conic.lay-a-lam-c",
+      "name": "Lấy a làm c",
+      "description": "Lấy căn của mẫu số thứ nhất làm hoành độ tiêu điểm. Đó là a, còn tiêu điểm có hoành độ ±c."
+    },
+    {
+      "code": "t10.conic.sai-truc-tieu-diem",
+      "name": "Đặt tiêu điểm sai trục",
+      "description": "Với phương trình chính tắc của elip và hypebol, hai tiêu điểm nằm trên trục Ox, không nằm trên trục Oy."
+    },
+    {
+      "code": "t10.conic.quen-chia-doi-p",
+      "name": "Quên chia đôi khi đọc parabol",
+      "description": "Đọc nhầm hệ số trước x với p, hoặc quên rằng tiêu điểm và đường chuẩn cách đỉnh một khoảng p/2."
+    },
+    {
+      "code": "t10.conic.nham-tieu-diem-duong-chuan",
+      "name": "Nhầm tiêu điểm với đường chuẩn",
+      "description": "Viết đường chuẩn là x = p/2. Đường chuẩn nằm khác phía tiêu điểm so với đỉnh, nên có phương trình x = −p/2."
+    },
+    {
+      "code": "t10.conic.lay-2a-lam-a",
+      "name": "Lấy thẳng 2a, 2c làm mẫu số",
+      "description": "Dùng trực tiếp các số trong đề (tổng khoảng cách, tiêu cự) làm mẫu số, trong khi mẫu số phải là a² và b²."
+    },
+    {
+      "code": "t10.conic.lay-c-lam-b",
+      "name": "Lấy c² làm b²",
+      "description": "Dùng c² ở vị trí mẫu của y². Mẫu đó là b² và phải tính bằng b² = a² − c²."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "t10.conic.nham-a-b",
+      "body": "Phương trình chính tắc của elip đòi hỏi a > b > 0, tức là mẫu của x² lớn hơn mẫu của y². Em hãy so hai mẫu số trước khi kết luận.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.nham-elip-hypebol",
+      "body": "Elip dùng tổng MF₁ + MF₂ và dấu cộng trong phương trình; hypebol dùng trị tuyệt đối của hiệu |MF₁ − MF₂| và dấu trừ.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.nham-he-thuc-c",
+      "body": "Với elip, a lớn nhất nên c² = a² − b². Với hypebol, c lớn nhất nên c² = a² + b².",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.lay-a-lam-c",
+      "body": "Số dưới x² cho a², không cho c. Em cần tính c từ hệ thức của đường đang xét rồi mới viết tiêu điểm (±c; 0).",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.sai-truc-tieu-diem",
+      "body": "Ở dạng chính tắc, hai tiêu điểm nằm trên trục Ox nên có toạ độ (±c; 0).",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.quen-chia-doi-p",
+      "body": "Từ y² = 2px, em tìm p trước. Tiêu điểm là (p/2; 0) và đường chuẩn là x = −p/2, đều có p/2.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.nham-tieu-diem-duong-chuan",
+      "body": "Tiêu điểm và đường chuẩn nằm ở hai phía của đỉnh: tiêu điểm có hoành độ p/2, đường chuẩn là x = −p/2.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.lay-2a-lam-a",
+      "body": "Tổng MF₁ + MF₂ bằng 2a và tiêu cự bằng 2c. Em chia đôi để có a, c, rồi mới tính a² và b².",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.lay-c-lam-b",
+      "body": "Mẫu của y² là b². Em tính b² = a² − c², không dùng thẳng c².",
+      "priority": 10
+    }
+  ],
+  "quiz": {
+    "title": "Kiểm tra · Ba đường conic",
+    "passThresholdPct": 60,
+    "requireConfidence": false,
+    "questions": [
+      {
+        "key": "con-01-chinh-tac",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Phương trình nào dưới đây là phương trình chính tắc của một elip?",
+        "explanation": "Elip dạng chính tắc có dạng $\\frac{x^2}{a^2}+\\frac{y^2}{b^2}=1$ với $a>b>0$. Chỉ $\\frac{x^2}{16}+\\frac{y^2}{9}=1$ thoả, vì $16>9$. Phương trình $\\frac{x^2}{9}+\\frac{y^2}{16}=1$ có $a^2<b^2$ nên không ở dạng chính tắc.",
+        "options": [
+          {
+            "label": "$\\frac{x^2}{9}+\\frac{y^2}{16}=1$",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-a-b"
+          },
+          {
+            "label": "$\\frac{x^2}{16}+\\frac{y^2}{9}=1$",
+            "isCorrect": true
+          },
+          {
+            "label": "$\\frac{x^2}{16}-\\frac{y^2}{9}=1$",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-elip-hypebol"
+          },
+          {
+            "label": "$y^2=8x$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "con-02-dinh-nghia",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Cho hai điểm cố định $F_1,F_2$ với $F_1F_2=2c$ và số $a$ thoả $0<a<c$. Tập hợp các điểm $M$ có $|MF_1-MF_2|=2a$ là đường nào?",
+        "explanation": "Theo định nghĩa, tập hợp các điểm có trị tuyệt đối của hiệu khoảng cách tới hai điểm cố định bằng $2a$ là một hypebol. Elip dùng tổng khoảng cách.",
+        "options": [
+          {
+            "label": "Elip",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-elip-hypebol"
+          },
+          {
+            "label": "Parabol",
+            "isCorrect": false
+          },
+          {
+            "label": "Hypebol",
+            "isCorrect": true
+          },
+          {
+            "label": "Đường tròn",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "con-03-he-thuc",
+        "type": "true_false",
+        "points": 1,
+        "prompt": "Với elip $\\frac{x^2}{a^2}+\\frac{y^2}{b^2}=1$ $(a>b>0)$, ta có $c^2=a^2+b^2$.",
+        "explanation": "Sai. Với elip, $c^2=a^2-b^2$. Hệ thức $c^2=a^2+b^2$ là của hypebol.",
+        "options": [
+          {
+            "label": "Đúng",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-he-thuc-c"
+          },
+          {
+            "label": "Sai",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "con-04-tieu-diem-elip",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Hai tiêu điểm của elip $\\frac{x^2}{169}+\\frac{y^2}{144}=1$ là:",
+        "explanation": "$a^2=169$, $b^2=144$ nên $c^2=169-144=25$ và $c=5$. Hai tiêu điểm là $(-5;0)$ và $(5;0)$.",
+        "options": [
+          {
+            "label": "$(-\\sqrt{313};0),\\ (\\sqrt{313};0)$",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-he-thuc-c"
+          },
+          {
+            "label": "$(-13;0),\\ (13;0)$",
+            "isCorrect": false,
+            "misconception": "t10.conic.lay-a-lam-c"
+          },
+          {
+            "label": "$(0;-5),\\ (0;5)$",
+            "isCorrect": false,
+            "misconception": "t10.conic.sai-truc-tieu-diem"
+          },
+          {
+            "label": "$(-5;0),\\ (5;0)$",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "con-05-tieu-diem-hypebol",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Hai tiêu điểm của hypebol $\\frac{x^2}{16}-\\frac{y^2}{9}=1$ là:",
+        "explanation": "Với hypebol, $c^2=a^2+b^2=16+9=25$ nên $c=5$. Hai tiêu điểm là $(-5;0)$ và $(5;0)$.",
+        "options": [
+          {
+            "label": "$(-5;0),\\ (5;0)$",
+            "isCorrect": true
+          },
+          {
+            "label": "$(-\\sqrt7;0),\\ (\\sqrt7;0)$",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-he-thuc-c"
+          },
+          {
+            "label": "$(-4;0),\\ (4;0)$",
+            "isCorrect": false,
+            "misconception": "t10.conic.lay-a-lam-c"
+          },
+          {
+            "label": "$(0;-5),\\ (0;5)$",
+            "isCorrect": false,
+            "misconception": "t10.conic.sai-truc-tieu-diem"
+          }
+        ]
+      },
+      {
+        "key": "con-06-duong-chuan",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Đường chuẩn của parabol $y^2=10x$ là:",
+        "explanation": "$2p=10$ nên $p=5$. Đường chuẩn là $x=-\\frac{p}{2}=-\\frac52$; tiêu điểm là $\\left(\\frac52;0\\right)$.",
+        "options": [
+          {
+            "label": "$x=\\frac52$",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-tieu-diem-duong-chuan"
+          },
+          {
+            "label": "$x=-5$",
+            "isCorrect": false,
+            "misconception": "t10.conic.quen-chia-doi-p"
+          },
+          {
+            "label": "$x=-\\frac52$",
+            "isCorrect": true
+          },
+          {
+            "label": "$x=-10$",
+            "isCorrect": false,
+            "misconception": "t10.conic.quen-chia-doi-p"
+          }
+        ]
+      },
+      {
+        "key": "con-07-tong-khoang-cach",
+        "type": "fill_in",
+        "points": 1,
+        "prompt": "Điểm $M$ nằm trên elip $\\frac{x^2}{36}+\\frac{y^2}{20}=1$ có hai tiêu điểm $F_1,F_2$. Tính $MF_1+MF_2$. Điền một số.",
+        "explanation": "$a^2=36$ nên $a=6$. Với mọi điểm $M$ trên elip, $MF_1+MF_2=2a=12$.",
+        "answers": [
+          "12"
+        ]
+      },
+      {
+        "key": "con-08-ghep-dinh-nghia",
+        "type": "matching",
+        "points": 2,
+        "prompt": "Hãy ghép mỗi đường conic với định nghĩa và hệ thức của nó.",
+        "explanation": "Elip dùng tổng khoảng cách, hypebol dùng trị tuyệt đối của hiệu, parabol dùng khoảng cách tới tiêu điểm và đường chuẩn.",
+        "pairs": [
+          {
+            "left": "Elip",
+            "right": "MF₁ + MF₂ = 2a, c² = a² − b²"
+          },
+          {
+            "left": "Hypebol",
+            "right": "|MF₁ − MF₂| = 2a, c² = a² + b²"
+          },
+          {
+            "left": "Parabol",
+            "right": "MF = d(M; Δ), y² = 2px"
+          }
+        ]
+      },
+      {
+        "key": "con-09-viet-phuong-trinh",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Elip có hai tiêu điểm $F_1,F_2$ với $F_1F_2=12$ và $MF_1+MF_2=20$ với mọi điểm $M$ trên elip. Phương trình chính tắc của elip là:",
+        "explanation": "$2c=12$ nên $c=6$; $2a=20$ nên $a=10$. Khi đó $b^2=a^2-c^2=100-36=64$. Phương trình là $\\frac{x^2}{100}+\\frac{y^2}{64}=1$.",
+        "options": [
+          {
+            "label": "$\\frac{x^2}{100}+\\frac{y^2}{136}=1$",
+            "isCorrect": false,
+            "misconception": "t10.conic.nham-he-thuc-c"
+          },
+          {
+            "label": "$\\frac{x^2}{100}+\\frac{y^2}{64}=1$",
+            "isCorrect": true
+          },
+          {
+            "label": "$\\frac{x^2}{20}+\\frac{y^2}{12}=1$",
+            "isCorrect": false,
+            "misconception": "t10.conic.lay-2a-lam-a"
+          },
+          {
+            "label": "$\\frac{x^2}{100}+\\frac{y^2}{36}=1$",
+            "isCorrect": false,
+            "misconception": "t10.conic.lay-c-lam-b"
+          }
+        ]
+      },
+      {
+        "key": "con-10-den-pha",
+        "type": "fill_in",
+        "points": 2,
+        "prompt": "Mặt cắt của một gương đèn pha là parabol $y^2=2px$ (đơn vị cm, đỉnh ở gốc toạ độ). Miệng gương rộng $24$ cm, gương sâu $9$ cm. Bóng đèn đặt tại tiêu điểm. Bóng đèn cách đỉnh gương bao nhiêu xăng-ti-mét? Điền một số.",
+        "explanation": "Mép miệng gương là điểm $(9;12)$ nằm trên parabol, nên $12^2=2p\\cdot9$, suy ra $p=8$. Tiêu điểm cách đỉnh $\\frac{p}{2}=4$ cm.",
+        "answers": [
+          "4",
+          "4 cm"
+        ]
+      }
+    ]
+  }
+}

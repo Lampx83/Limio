@@ -1,0 +1,359 @@
+{
+  "misconceptions": [
+    {
+      "code": "t10.toiuu.khong-bac-nhat",
+      "name": "Nhận nhầm bất phương trình không phải bậc nhất",
+      "description": "Bất phương trình bậc nhất hai ẩn chỉ chứa x và y ở bậc một, không có x², xy hay ẩn ở mẫu."
+    },
+    {
+      "code": "t10.toiuu.dao-thu-tu-toa-do",
+      "name": "Đảo thứ tự hoành độ và tung độ",
+      "description": "Viết (y; x) thay vì (x; y). Thứ tự trong cặp số quyết định điểm nào đang được xét."
+    },
+    {
+      "code": "t10.toiuu.bo-bo-mien-nghiem",
+      "name": "Loại nhầm hoặc giữ nhầm đường biên",
+      "description": "Với dấu ≤ hoặc ≥, các điểm nằm trên bờ cũng là nghiệm. Chỉ với dấu < hoặc > thì bờ mới bị loại."
+    },
+    {
+      "code": "t10.toiuu.thu-diem-sai",
+      "name": "Xác định sai nửa mặt phẳng",
+      "description": "Chọn nửa mặt phẳng không chứa điểm thử dù điểm thử thoả bất phương trình."
+    },
+    {
+      "code": "t10.toiuu.gan-sai-he-so",
+      "name": "Gán sai hệ số cho ẩn",
+      "description": "Đưa hệ số của loại này cho ẩn của loại kia khi chuyển bài toán thành bất phương trình."
+    },
+    {
+      "code": "t10.toiuu.sai-chieu-bat-dang-thuc",
+      "name": "Viết sai chiều bất đẳng thức",
+      "description": "Dịch «tối đa» thành ≥ hoặc «tối thiểu» thành ≤."
+    },
+    {
+      "code": "t10.toiuu.nghi-o-nho-nhat",
+      "name": "Cho rằng giá trị nhỏ nhất luôn ở gốc toạ độ",
+      "description": "Giá trị của biểu thức tại O bằng 0, nhưng biểu thức có thể âm tại đỉnh khác."
+    },
+    {
+      "code": "t10.toiuu.chua-xet-het-dinh",
+      "name": "Chưa xét hết các đỉnh",
+      "description": "Kết luận sau khi tính tại một vài đỉnh. Giá trị tối ưu phải so sánh trên tất cả các đỉnh của miền nghiệm."
+    },
+    {
+      "code": "t10.toiuu.nham-lon-nho",
+      "name": "Nhầm giá trị lớn nhất với nhỏ nhất",
+      "description": "Trả lời giá trị lớn nhất khi đề hỏi giá trị nhỏ nhất, hoặc ngược lại."
+    },
+    {
+      "code": "t10.toiuu.diem-ngoai-mien",
+      "name": "Tính tại điểm nằm ngoài miền nghiệm",
+      "description": "Dùng giao điểm của các đường biên mà không kiểm tra điểm đó có thoả toàn bộ hệ hay không."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "t10.toiuu.khong-bac-nhat",
+      "body": "Bất phương trình bậc nhất hai ẩn có dạng ax + by ≤ c, không có x², tích xy hay ẩn ở mẫu.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.dao-thu-tu-toa-do",
+      "body": "Trong cặp (x; y), hoành độ viết trước, tung độ viết sau. Em thay lại đúng thứ tự vào biểu thức.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.bo-bo-mien-nghiem",
+      "body": "Hãy nhìn dấu của bất phương trình: có dấu bằng (≤, ≥) thì miền nghiệm kể cả bờ, không có dấu bằng (<, >) thì không kể bờ.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.thu-diem-sai",
+      "body": "Thay điểm O(0; 0) vào bất phương trình: nếu đúng thì miền nghiệm chứa O, nếu sai thì miền nghiệm không chứa O.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.gan-sai-he-so",
+      "body": "Hãy đối chiếu từng ẩn: x là số bánh loại A nên đi với lượng trứng của một chiếc bánh loại A; y tương tự với loại B.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.sai-chieu-bat-dang-thuc",
+      "body": "«Tối đa» nghĩa là không vượt quá, viết bằng dấu ≤; «ít nhất» viết bằng dấu ≥.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.nghi-o-nho-nhat",
+      "body": "Biểu thức có hệ số âm có thể cho giá trị âm. Em phải tính tại mọi đỉnh, không dừng ở O.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.chua-xet-het-dinh",
+      "body": "Giá trị lớn nhất hoặc nhỏ nhất đạt tại một đỉnh, nhưng phải tính ở tất cả các đỉnh mới biết là đỉnh nào.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.nham-lon-nho",
+      "body": "Em đã tính đúng các giá trị, chỉ cần đọc lại đề: đề đang hỏi giá trị nhỏ nhất hay lớn nhất.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.diem-ngoai-mien",
+      "body": "Giao điểm của hai đường biên chỉ là đỉnh khi nó thoả mọi bất phương trình còn lại. Em hãy thử điểm đó vào cả hệ.",
+      "priority": 10
+    }
+  ],
+  "quiz": {
+    "title": "Kiểm tra · Hệ bất phương trình bậc nhất hai ẩn và tối ưu",
+    "passThresholdPct": 60,
+    "requireConfidence": false,
+    "questions": [
+      {
+        "key": "tu-01-nhan-dang",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Bất phương trình nào dưới đây là bất phương trình bậc nhất hai ẩn $x,y$?",
+        "explanation": "$2x-3y\\le6$ có dạng $ax+by\\le c$ với $a=2$, $b=-3$. Các bất phương trình còn lại chứa $x^2$, tích $xy$ hoặc có ẩn ở mẫu.",
+        "options": [
+          {
+            "label": "$x^2+y\\le1$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.khong-bac-nhat"
+          },
+          {
+            "label": "$xy\\ge2$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.khong-bac-nhat"
+          },
+          {
+            "label": "$2x-3y\\le6$",
+            "isCorrect": true
+          },
+          {
+            "label": "$\\frac1x+y<3$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.khong-bac-nhat"
+          }
+        ]
+      },
+      {
+        "key": "tu-02-nghiem",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Cặp số nào dưới đây là nghiệm của bất phương trình $2x-y\\ge3$?",
+        "explanation": "Với $(2;1)$: $2\\cdot2-1=3\\ge3$ đúng. Với $(1;2)$: $2-2=0$; với $(0;0)$: $0$; với $(1;0)$: $2$; cả ba đều nhỏ hơn $3$.",
+        "options": [
+          {
+            "label": "$(1;2)$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.dao-thu-tu-toa-do"
+          },
+          {
+            "label": "$(2;1)$",
+            "isCorrect": true
+          },
+          {
+            "label": "$(0;0)$",
+            "isCorrect": false
+          },
+          {
+            "label": "$(1;0)$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "tu-03-bo",
+        "type": "true_false",
+        "points": 1,
+        "prompt": "Điểm nằm trên đường thẳng $x+y=6$ không thuộc miền nghiệm của bất phương trình $x+y\\le6$.",
+        "explanation": "Sai. Bất phương trình có dấu $\\le$ nên các điểm trên bờ cũng là nghiệm, ví dụ $(2;4)$ có $2+4=6\\le6$.",
+        "options": [
+          {
+            "label": "Đúng",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.bo-bo-mien-nghiem"
+          },
+          {
+            "label": "Sai",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "tu-04-mien-nghiem",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Miền nghiệm của bất phương trình $2x+y\\le4$ là:",
+        "explanation": "Thay $O(0;0)$: $0\\le4$ đúng nên miền nghiệm chứa $O$. Dấu $\\le$ có dấu bằng nên miền nghiệm kể cả đường thẳng $2x+y=4$.",
+        "options": [
+          {
+            "label": "Nửa mặt phẳng bờ $2x+y=4$ không chứa $O$, kể cả bờ",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.thu-diem-sai"
+          },
+          {
+            "label": "Nửa mặt phẳng bờ $2x+y=4$ chứa $O$, không kể bờ",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.bo-bo-mien-nghiem"
+          },
+          {
+            "label": "Nửa mặt phẳng bờ $2x+y=4$ không chứa $O$, không kể bờ",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.thu-diem-sai"
+          },
+          {
+            "label": "Nửa mặt phẳng bờ $2x+y=4$ chứa $O$, kể cả bờ",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "tu-05-dinh",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Giao điểm của hai đường thẳng $x+y=10$ và $2x+y=14$ là:",
+        "explanation": "Lấy phương trình thứ hai trừ phương trình thứ nhất: $x=4$. Thay vào $x+y=10$ được $y=6$. Giao điểm là $(4;6)$.",
+        "options": [
+          {
+            "label": "$(4;6)$",
+            "isCorrect": true
+          },
+          {
+            "label": "$(6;4)$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.dao-thu-tu-toa-do"
+          },
+          {
+            "label": "$(5;5)$",
+            "isCorrect": false
+          },
+          {
+            "label": "$(7;0)$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "tu-06-lap-bat-phuong-trinh",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Một tiệm làm $x$ bánh loại A và $y$ bánh loại B. Mỗi bánh loại A dùng $2$ quả trứng, mỗi bánh loại B dùng $3$ quả trứng, và tiệm có tối đa $60$ quả trứng. Bất phương trình mô tả giới hạn này là:",
+        "explanation": "Số trứng cần dùng là $2x+3y$ và không được vượt quá $60$, nên $2x+3y\\le60$.",
+        "options": [
+          {
+            "label": "$3x+2y\\le60$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.gan-sai-he-so"
+          },
+          {
+            "label": "$2x+3y\\ge60$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.sai-chieu-bat-dang-thuc"
+          },
+          {
+            "label": "$2x+3y\\le60$",
+            "isCorrect": true
+          },
+          {
+            "label": "$x+y\\le60$",
+            "isCorrect": false
+          }
+        ]
+      },
+      {
+        "key": "tu-07-gia-tri-nho-nhat",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Miền nghiệm của một hệ là tứ giác có các đỉnh $O(0;0)$, $A(6;0)$, $B(4;3)$, $C(0;5)$. Giá trị nhỏ nhất của $G=x-2y$ trên miền này là:",
+        "explanation": "$G(O)=0$, $G(A)=6$, $G(B)=-2$, $G(C)=-10$. Giá trị nhỏ nhất là $-10$, đạt tại $C$.",
+        "options": [
+          {
+            "label": "$0$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.nghi-o-nho-nhat"
+          },
+          {
+            "label": "$-2$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.chua-xet-het-dinh"
+          },
+          {
+            "label": "$6$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.nham-lon-nho"
+          },
+          {
+            "label": "$-10$",
+            "isCorrect": true
+          }
+        ]
+      },
+      {
+        "key": "tu-08-ghep-mien",
+        "type": "matching",
+        "points": 2,
+        "prompt": "Hãy ghép mỗi bất phương trình với miền nghiệm của nó.",
+        "explanation": "Với mỗi bất phương trình, em xét dấu có dấu bằng hay không để biết có kể bờ không, rồi thử một điểm để biết lấy nửa mặt phẳng nào. Với $x+y\\ge1$, điểm $O$ cho $0\\ge1$ sai nên miền nghiệm không chứa $O$.",
+        "pairs": [
+          {
+            "left": "x ≥ 0",
+            "right": "Bên phải trục Oy, kể cả trục Oy"
+          },
+          {
+            "left": "y ≤ 2",
+            "right": "Phía dưới đường thẳng y = 2, kể cả bờ"
+          },
+          {
+            "left": "y > 0",
+            "right": "Phía trên trục Ox, không kể trục Ox"
+          },
+          {
+            "left": "x + y ≥ 1",
+            "right": "Nửa mặt phẳng không chứa O, kể cả bờ"
+          }
+        ]
+      },
+      {
+        "key": "tu-09-trang-trai",
+        "type": "fill_in",
+        "points": 2,
+        "prompt": "Một trang trại trồng $x$ ha ngô và $y$ ha đậu trên tối đa $8$ ha đất. Mỗi ha ngô cần $1$ đơn vị nhân công, mỗi ha đậu cần $2$ đơn vị, và trang trại có tối đa $12$ đơn vị nhân công. Mỗi ha ngô lãi $3$ triệu đồng, mỗi ha đậu lãi $4$ triệu đồng. Tiền lãi lớn nhất là bao nhiêu triệu đồng? Điền một số.",
+        "explanation": "Hệ: $x\\ge0,\\ y\\ge0,\\ x+y\\le8,\\ x+2y\\le12$; lãi $F=3x+4y$. Các đỉnh là $(0;0)$, $(8;0)$, $(4;4)$, $(0;6)$, cho $F$ lần lượt bằng $0$, $24$, $28$, $24$. Lãi lớn nhất là $28$ triệu đồng, khi trồng mỗi loại $4$ ha.",
+        "answers": [
+          "28",
+          "28 triệu",
+          "28 triệu đồng"
+        ]
+      },
+      {
+        "key": "tu-10-gia-tri-lon-nhat",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Giá trị lớn nhất của $F=x+3y$ với $x\\ge0,\\ y\\ge0,\\ x+y\\le6,\\ y\\le4$ là:",
+        "explanation": "Các đỉnh của miền nghiệm là $(0;0)$, $(6;0)$, $(2;4)$, $(0;4)$, cho $F$ lần lượt bằng $0$, $6$, $14$, $12$. Giá trị lớn nhất là $14$. Điểm $(6;4)$ cho $F=18$ nhưng không thoả $x+y\\le6$.",
+        "options": [
+          {
+            "label": "$18$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.diem-ngoai-mien"
+          },
+          {
+            "label": "$14$",
+            "isCorrect": true
+          },
+          {
+            "label": "$12$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.chua-xet-het-dinh"
+          },
+          {
+            "label": "$6$",
+            "isCorrect": false,
+            "misconception": "t10.toiuu.chua-xet-het-dinh"
+          }
+        ]
+      }
+    ]
+  }
+}

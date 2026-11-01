@@ -7,7 +7,8 @@
  * Mỗi bài là một khối nhúng `/decks/<id>` (khung slide tương tác, xem `src/lib/slideDeck`); lời giảng của giảng viên ảo
  * là một đoạn cho mỗi bước `loiGiang.buoc` của mỗi slide, anchor `s<slide>b<bước>` để trình chiếu điều khiển khung theo giọng.
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { JSDOM } from "jsdom";
 import { deckAnchor } from "../src/lib/narration/deckSync";
 import { loadDeck } from "../src/lib/slideDeck/decks";
@@ -28,6 +29,20 @@ const LESSONS = [
 /** Giọng NEU TTS đọc khoảng ngần này ký tự mỗi phút (bài Hàm số bậc hai: 10.683 ký tự, 9:10). Giọng chưa tạo lúc nhập khoá nên phải ước lượng. */
 const CHARS_PER_MINUTE = 1165;
 
+/** Quiz của từng bài, soạn theo đúng nội dung bộ slide. Bài chưa có tệp thì chưa có quiz. */
+const QUIZ_DIR = path.join(process.cwd(), "../../docs/hoc-lieu/toan-10-slide-tuong-tac/quiz");
+
+interface QuizSource {
+  misconceptions: { code: string; name: string; description: string }[];
+  feedbackTemplates: { misconception: string; body: string; priority?: number }[];
+  quiz: { title: string; questions: unknown[] };
+}
+
+function loadQuiz(id: string): QuizSource | null {
+  const file = path.join(QUIZ_DIR, `${id}.json`);
+  return existsSync(file) ? (JSON.parse(readFileSync(file, "utf8")) as QuizSource) : null;
+}
+
 type Deck = { slides: { id: string; loiGiang?: { buoc?: string[] } }[] };
 
 export function deckLecture(deck: Deck): { anchor: string; text: string }[] {
@@ -47,11 +62,13 @@ function main() {
     console.error("usage: build-deck-course.ts <manifest.json>");
     process.exit(1);
   }
-  const lessons = LESSONS.map((meta) => {
+  const quizzes = LESSONS.map((meta) => loadQuiz(meta.id));
+  const lessons = LESSONS.map((meta, i) => {
     const deck = loadDeck(meta.id) as (Deck & { tieuDe?: string }) | null;
     if (!deck) throw new Error(`Thiếu bộ slide ${meta.id}`);
     const lecture = deckLecture(deck);
-    console.log(`${meta.tieuDe}: ${deck.slides.length} slide, ${lecture.length} đoạn lời giảng`);
+    const quiz = quizzes[i]?.quiz;
+    console.log(`${meta.tieuDe}: ${deck.slides.length} slide, ${lecture.length} đoạn lời giảng, ${quiz?.questions.length ?? 0} câu quiz`);
     return {
       title: meta.tieuDe,
       description: meta.moTa,
@@ -59,6 +76,7 @@ function main() {
       durationMin: Math.max(1, Math.round(lecture.reduce((sum, s) => sum + s.text.length, 0) / CHARS_PER_MINUTE)),
       embeds: [{ url: `/decks/${meta.id}`, height: 720 }],
       lecture,
+      ...(quiz ? { quiz } : {}),
     };
   });
   const manifest = {
@@ -72,6 +90,8 @@ function main() {
       level: "beginner" as const,
     },
     modules: [{ title: "Toán 10", lessons }],
+    misconceptions: quizzes.flatMap((q) => q?.misconceptions ?? []),
+    feedbackTemplates: quizzes.flatMap((q) => q?.feedbackTemplates ?? []),
   };
   writeFileSync(out, JSON.stringify(manifest, null, 2));
   console.log(`Đã ghi ${out}`);

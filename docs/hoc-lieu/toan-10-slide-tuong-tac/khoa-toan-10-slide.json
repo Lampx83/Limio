@@ -1,0 +1,2627 @@
+{
+  "course": {
+    "title": "Toán 10 — slide tương tác cùng giảng viên ảo",
+    "slug": "toan-10-slide-tuong-tac",
+    "description": "Năm bài Toán 10 (Chương trình GDPT 2018) dạng slide tương tác: kéo tham số xem đồ thị đổi, làm trắc nghiệm, ghép đôi ngay trên slide, trong khi giảng viên ảo giảng từng bước.",
+    "language": "vi",
+    "level": "beginner"
+  },
+  "modules": [
+    {
+      "title": "Toán 10",
+      "lessons": [
+        {
+          "title": "Hàm số bậc hai và đồ thị",
+          "description": "Parabol quanh ta, đỉnh, trục đối xứng, bảng biến thiên và bài toán thực tế.",
+          "durationMin": 8,
+          "embeds": [
+            {
+              "url": "/decks/ham-bac-hai",
+              "height": 720
+            }
+          ],
+          "lecture": [
+            {
+              "anchor": "s0b0",
+              "text": "Chào em! Thầy là Tiến Đạt, hôm nay thầy sẽ kèm riêng em bài này. Em hãy tưởng tượng mình đứng ở vạch ba điểm và ném một quả bóng rổ. Bóng vút lên, chậm dần, rồi rơi xuống rổ. Đường bay ấy tên là parabol, và chỉ một công thức ngắn cũng cho em biết bóng lên cao nhất bao nhiêu!"
+            },
+            {
+              "anchor": "s0b1",
+              "text": "Hôm nay em sẽ làm ba việc. Việc thứ nhất: nhận biết hàm số bậc hai."
+            },
+            {
+              "anchor": "s0b2",
+              "text": "Việc thứ hai: vẽ và đọc đồ thị của nó, nhất là đỉnh và trục đối xứng."
+            },
+            {
+              "anchor": "s0b3",
+              "text": "Việc thứ ba: dùng đồ thị để giải những bài toán có thật, như chính cú ném rổ kia. Sẵn sàng chưa? Mình bắt đầu nhé!"
+            },
+            {
+              "anchor": "s1b0",
+              "text": "Đây là sân bóng của em. Bóng rời tay ở độ cao hai mét, rổ cao ba phẩy không năm mét, cách chỗ ném sáu phẩy bảy lăm mét. Ném mạnh hay nhẹ, đường bay luôn là một đường cong cân đối gọi là parabol, và điểm cao nhất của nó gọi là đỉnh. Em chỉnh hai thanh a và b cho đến khi bóng vào rổ nhé. Vào rổ rồi thì em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s2b0",
+              "text": "Vậy hàm số bậc hai là gì? Đó là khi y được tính từ x theo biểu thức a x bình phương, cộng b x, cộng c. Ở đây a, b, c là những số thực cố định. Và điều kiện quan trọng nhất: a phải khác không."
+            },
+            {
+              "anchor": "s2b1",
+              "text": "Ví dụ, y bằng hai x bình phương, trừ ba x, cộng một. Ở đây a bằng hai, b bằng âm ba, c bằng một. Hệ số b hoặc c có thể bằng không, như hàm y bằng âm x bình phương cộng năm, có a bằng âm một và b bằng không."
+            },
+            {
+              "anchor": "s2b2",
+              "text": "Còn y bằng ba x trừ một thì sao? Hệ số của x bình phương bằng không, nên đây chỉ là hàm số bậc nhất. Hàm có x ở mẫu hay trong căn cũng không phải hàm bậc hai. Bây giờ em chọn đáp án cho câu hỏi bên phải nhé."
+            },
+            {
+              "anchor": "s3b0",
+              "text": "Bây giờ em tự khám phá nhé. Trên màn hình là đồ thị y bằng x bình phương, trừ hai x, trừ ba, cùng ba thanh trượt a, b và c. Dù kéo thế nào, đồ thị vẫn luôn là một parabol, khám phá xong thì em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s4b0",
+              "text": "Trong ba hệ số, hệ số a có vai trò đặc biệt. Bên trái là đồ thị y bằng a x bình phương, cùng đường y bằng x bình phương màu xám để so sánh. Em để ý thanh trượt a nhé."
+            },
+            {
+              "anchor": "s4b1",
+              "text": "Khi a dương, ví dụ a bằng hai, bề lõm quay lên trên. Đỉnh là điểm thấp nhất của đồ thị."
+            },
+            {
+              "anchor": "s4b2",
+              "text": "Em kéo a sang số âm, chẳng hạn âm một phần hai. Bề lõm quay xuống dưới, và đỉnh trở thành điểm cao nhất."
+            },
+            {
+              "anchor": "s4b3",
+              "text": "Còn độ bè thì sao? Giá trị tuyệt đối của a càng lớn, parabol càng hẹp, càng gần không thì parabol càng bè ra. Điều cần nhớ là: dấu của a cho biết chiều mở, độ lớn của a cho biết độ bè."
+            },
+            {
+              "anchor": "s5b0",
+              "text": "Mỗi parabol có một điểm đặc biệt gọi là đỉnh, và một đường thẳng chia nó thành hai nửa giống hệt nhau, gọi là trục đối xứng. Công thức có dùng delta, bằng b bình phương trừ bốn a c."
+            },
+            {
+              "anchor": "s5b1",
+              "text": "Đỉnh I có hoành độ bằng âm b chia cho hai a. Tung độ bằng âm delta chia cho bốn a."
+            },
+            {
+              "anchor": "s5b2",
+              "text": "Trục đối xứng là đường thẳng đi qua đỉnh, song song với trục tung. Phương trình của nó là x bằng âm b chia cho hai a."
+            },
+            {
+              "anchor": "s5b3",
+              "text": "Như em vừa thấy, dấu của a quyết định chiều mở. Hệ số a dương thì bề lõm quay lên, a âm thì bề lõm quay xuống."
+            },
+            {
+              "anchor": "s5b4",
+              "text": "Nếu quên công thức tung độ đỉnh thì sao? Rất đơn giản: thay hoành độ đỉnh vào hàm số là xong. Điều cần nhớ là: tìm hoành độ đỉnh trước, mọi thứ còn lại sẽ theo sau."
+            },
+            {
+              "anchor": "s6b0",
+              "text": "Bây giờ thầy làm mẫu một bài, em theo dõi thật kỹ nhé. Đề bài là tìm đỉnh của parabol y bằng x bình phương, trừ bốn x, cộng ba."
+            },
+            {
+              "anchor": "s6b1",
+              "text": "Bước một, đọc hệ số: a bằng một, b bằng âm bốn, c bằng ba. Em cẩn thận dấu trừ của b nhé."
+            },
+            {
+              "anchor": "s6b2",
+              "text": "Bước hai, tính delta. Bình phương của âm bốn là mười sáu, bốn nhân một nhân ba là mười hai. Vậy delta bằng mười sáu trừ mười hai, bằng bốn."
+            },
+            {
+              "anchor": "s6b3",
+              "text": "Bước ba, hoành độ đỉnh bằng âm b chia hai a, tức là bốn chia hai, bằng hai. Tung độ đỉnh bằng âm delta chia bốn a, tức là âm bốn chia bốn, bằng âm một. Thử lại: thay x bằng hai vào hàm số, ta cũng được âm một."
+            },
+            {
+              "anchor": "s6b4",
+              "text": "Kết luận: đỉnh I có hoành độ hai, tung độ âm một. Trục đối xứng là đường thẳng x bằng hai, và vì a bằng một là số dương nên bề lõm quay lên."
+            },
+            {
+              "anchor": "s6b5",
+              "text": "Và đây là đồ thị. Em thấy không? Đỉnh nằm đúng tại điểm có hoành độ hai, tung độ âm một, và là điểm thấp nhất của parabol."
+            },
+            {
+              "anchor": "s7b0",
+              "text": "Đến lượt em làm cùng thầy. Đề bài là tìm đỉnh của parabol y bằng x bình phương, cộng sáu x, cộng năm. Thầy đã viết sẵn các hệ số, em điền hoành độ đỉnh vào ô thứ nhất, rồi điền tung độ đỉnh vào ô thứ hai. Làm xong, em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s8b0",
+              "text": "Bây giờ em tự làm từ đầu đến cuối nhé, thầy không gợi sẵn nữa. Hãy tìm toạ độ đỉnh của parabol y bằng hai x bình phương, cộng bốn x, trừ một. Em nhập hoành độ trước, tung độ sau, ngăn cách bằng dấu chấm phẩy, cần thì bấm Gợi ý."
+            },
+            {
+              "anchor": "s9b0",
+              "text": "Mình dừng lại kiểm tra một chút nhé, em. Đây là cổng thành thạo thứ nhất, gồm ba câu ngắn về chiều mở, đỉnh và trục đối xứng. Em làm đúng ít nhất hai câu là qua cổng. Làm xong cả ba thẻ, em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s10b0",
+              "text": "Parabol cắt hai trục toạ độ ở đâu? Bên trái là parabol y bằng x bình phương, trừ hai x, trừ ba. Em có thể kéo thanh c để dịch parabol lên hoặc xuống."
+            },
+            {
+              "anchor": "s10b1",
+              "text": "Với trục tung, rất đơn giản: thay x bằng không, ta được y bằng c. Vậy parabol luôn cắt trục tung tại điểm có tung độ bằng c. Ở đây là điểm có hoành độ không, tung độ âm ba."
+            },
+            {
+              "anchor": "s10b2",
+              "text": "Với trục hoành, ta giải phương trình a x bình phương cộng b x cộng c bằng không, và số giao điểm phụ thuộc vào delta. Nếu delta dương, parabol cắt trục hoành tại hai điểm. Ở đây delta bằng mười sáu, hai giao điểm có hoành độ âm một và ba."
+            },
+            {
+              "anchor": "s10b3",
+              "text": "Nếu delta bằng không, parabol tiếp xúc với trục hoành tại đúng một điểm, chính là đỉnh. Với c bằng một, delta bằng không, và đỉnh nằm ngay trên trục hoành."
+            },
+            {
+              "anchor": "s10b4",
+              "text": "Còn nếu delta âm, parabol không cắt trục hoành. Em thử kéo c bằng hai: cả parabol nằm phía trên trục hoành. Điều cần nhớ là: dấu của delta cho biết số giao điểm với trục hoành."
+            },
+            {
+              "anchor": "s11b0",
+              "text": "Giờ em tự luyện một chút. Có ba hàm số, và ba cách một parabol gặp trục hoành. Với mỗi hàm số, em tính delta, bằng b bình phương trừ bốn a c, rồi ghép với ô phù hợp. Ghép xong cả ba cặp, em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s12b0",
+              "text": "Biết đỉnh, trục và chiều của bề lõm rồi, em đã đủ đồ nghề để vẽ đồ thị. Thầy sẽ vẽ mẫu parabol y bằng âm x bình phương, cộng hai x, cộng ba, với a bằng âm một, qua bốn bước."
+            },
+            {
+              "anchor": "s12b1",
+              "text": "Bước một, xác định đỉnh. Hoành độ đỉnh bằng âm hai chia cho âm hai, bằng một. Thay x bằng một vào hàm số, ta được bốn, vậy đỉnh có hoành độ một, tung độ bốn."
+            },
+            {
+              "anchor": "s12b2",
+              "text": "Bước hai, vẽ trục đối xứng. Đó là đường thẳng x bằng một, đi qua đỉnh."
+            },
+            {
+              "anchor": "s12b3",
+              "text": "Bước ba, lấy thêm vài điểm đặc biệt. Parabol cắt trục tung tại điểm có hoành độ không, tung độ ba. Điểm đối xứng với nó qua trục có hoành độ hai, tung độ ba. Giải phương trình, ta được hai giao điểm với trục hoành, có hoành độ âm một và ba."
+            },
+            {
+              "anchor": "s12b4",
+              "text": "Bước bốn, vẽ parabol. Hệ số a bằng âm một, nên bề lõm quay xuống, và em nối các điểm thành một đường cong trơn, đối xứng qua trục. Điều cần nhớ là: đỉnh trước, trục sau, rồi đến các điểm, cuối cùng mới nối."
+            },
+            {
+              "anchor": "s13b0",
+              "text": "Giờ em thử sắp xếp lại các bước vẽ đồ thị y bằng x bình phương, trừ hai x, trừ ba. Các bước đã bị xáo trộn, em kéo chúng về đúng thứ tự nhé. Xong thì em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s14b0",
+              "text": "Đồ thị cho em biết hàm số tăng hay giảm. Bảng bên trái gọi là bảng biến thiên, nó tóm tắt hàm số đồng biến ở đâu, nghịch biến ở đâu."
+            },
+            {
+              "anchor": "s14b1",
+              "text": "Xét trường hợp a dương, như parabol y bằng x bình phương, trừ bốn x, cộng ba. Đi từ trái sang phải, đồ thị đi xuống cho đến đỉnh, rồi đi lên. Vậy hàm số nghịch biến trên khoảng từ âm vô cùng đến hai. Nó đồng biến trên khoảng từ hai đến dương vô cùng, và đạt giá trị nhỏ nhất bằng âm một tại x bằng hai."
+            },
+            {
+              "anchor": "s14b2",
+              "text": "Khi a âm, mọi thứ đảo ngược. Ví dụ parabol y bằng âm x bình phương, cộng hai x, cộng ba, với a bằng âm một: đồ thị đi lên đến đỉnh, rồi đi xuống. Hàm số đồng biến trên khoảng từ âm vô cùng đến một, rồi nghịch biến trên khoảng từ một đến dương vô cùng. Hàm số đạt giá trị lớn nhất bằng bốn, tại x bằng một. Điều cần nhớ là: hàm số đổi chiều biến thiên tại đỉnh."
+            },
+            {
+              "anchor": "s15b0",
+              "text": "Một bạn đã giải bài này, nhưng có một dòng sai. Đề bài là xét sự biến thiên và tìm giá trị lớn nhất của y bằng âm x bình phương, cộng bốn x, cộng một. Ở đây a bằng âm một. Em bấm vào dòng sai, chọn lý do, xong thì bấm Tiếp tục."
+            },
+            {
+              "anchor": "s16b0",
+              "text": "Giờ là lúc dùng hàm số bậc hai cho một bài toán có thật. Bác Minh có bốn mươi mét lưới, muốn rào một mảnh vườn hình chữ nhật sát bức tường, nên lưới chỉ cần rào ba cạnh."
+            },
+            {
+              "anchor": "s16b1",
+              "text": "Gọi x là độ dài mỗi cạnh vuông góc với tường. Hai cạnh ấy dùng hết hai x mét lưới, nên cạnh song song với tường dài bốn mươi trừ hai x mét. Vì các cạnh phải dương, x nằm giữa không và hai mươi."
+            },
+            {
+              "anchor": "s16b2",
+              "text": "Diện tích bằng x nhân với bốn mươi trừ hai x, tức là âm hai nhân x bình phương, cộng bốn mươi x. Đây chính là một hàm số bậc hai!"
+            },
+            {
+              "anchor": "s16b3",
+              "text": "Hệ số a bằng âm hai, nên bề lõm quay xuống, và diện tích lớn nhất đạt tại đỉnh. Bây giờ em tự tính diện tích lớn nhất, rồi nhập vào ô bên phải nhé. Làm xong, em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s17b0",
+              "text": "Đây là cổng thành thạo cuối bài, em. Có ba thẻ: một câu về đồng biến, một bài phân loại theo delta, và một câu về giá trị lớn nhất. Em làm đúng ít nhất hai thẻ là qua cổng. Làm xong, em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s18b0",
+              "text": "Mình cùng tóm tắt lại bài học hôm nay nhé."
+            },
+            {
+              "anchor": "s18b1",
+              "text": "Thứ nhất, hàm số bậc hai có dạng y bằng a x bình phương, cộng b x, cộng c, với a khác không. Đồ thị của nó là một parabol."
+            },
+            {
+              "anchor": "s18b2",
+              "text": "Thứ hai, đỉnh có hoành độ bằng âm b chia hai a, tung độ bằng âm delta chia bốn a. Trục đối xứng đi qua đỉnh."
+            },
+            {
+              "anchor": "s18b3",
+              "text": "Thứ ba, khi a dương, bề lõm quay lên, hàm số đạt giá trị nhỏ nhất tại đỉnh. Còn khi a âm, bề lõm quay xuống, hàm số đạt giá trị lớn nhất tại đỉnh."
+            },
+            {
+              "anchor": "s18b4",
+              "text": "Thứ tư, parabol luôn cắt trục tung tại điểm có hoành độ không, tung độ c. Còn số giao điểm với trục hoành do dấu của delta quyết định."
+            },
+            {
+              "anchor": "s18b5",
+              "text": "Về nhà, em làm ba bài tập trên màn hình. Bài cuối cũng nói về một quả bóng, nhưng lần này là độ cao của bóng thay đổi theo thời gian. Làm xong, em bấm Xem đáp số để tự kiểm tra."
+            },
+            {
+              "anchor": "s19b0",
+              "text": "Trước khi chia tay, em làm phiếu ra về gồm ba câu ngắn nhé. Mỗi câu chỉ mất chừng một phút. Thầy rất vui vì đã học cùng em hôm nay, hẹn gặp lại em ở bài sau!"
+            }
+          ],
+          "quiz": {
+            "title": "Kiểm tra · Hàm số bậc hai và đồ thị",
+            "passThresholdPct": 60,
+            "requireConfidence": false,
+            "questions": [
+              {
+                "key": "hs2-01-nhan-dang",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Hàm số nào dưới đây là hàm số bậc hai?",
+                "explanation": "Rút gọn: $y=(x-1)(x+2)=x^2+x-2$ có $a=1\\neq0$ nên là hàm số bậc hai. Hàm $y=x^2-x(x+3)$ rút gọn thành $y=-3x$, chỉ là hàm bậc nhất; $y=x(x^2-1)$ là hàm bậc ba; $y=\\sqrt{x^2+1}$ không có dạng $ax^2+bx+c$.",
+                "options": [
+                  {
+                    "label": "$y=x^2-x(x+3)$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.khong-rut-gon"
+                  },
+                  {
+                    "label": "$y=x(x^2-1)$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$y=(x-1)(x+2)$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$y=\\sqrt{x^2+1}$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "hs2-02-do-hep",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Trong bốn parabol dưới đây, parabol nào hẹp nhất?",
+                "explanation": "Độ hẹp phụ thuộc vào $|a|$. Bốn giá trị $|a|$ lần lượt là $4$, $2$, $\\frac12$ và $1$, nên $y=-4x^2+1$ hẹp nhất. Dấu âm của $a$ chỉ làm bề lõm quay xuống.",
+                "options": [
+                  {
+                    "label": "$y=2x^2$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.so-sanh-a-theo-dau"
+                  },
+                  {
+                    "label": "$y=-4x^2+1$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$y=\\frac12x^2+x$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$y=x^2-3$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "hs2-03-a-duong",
+                "type": "true_false",
+                "points": 1,
+                "prompt": "Nếu $a>0$ thì parabol $y=ax^2+bx+c$ luôn cắt trục $Ox$.",
+                "explanation": "Sai. Số giao điểm với $Ox$ phụ thuộc vào dấu của $\\Delta$. Ví dụ $y=x^2+1$ có $a=1>0$ và $\\Delta=-4<0$ nên không cắt $Ox$.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.a-duong-cat-ox"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "hs2-04-dinh",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Toạ độ đỉnh của parabol $y=2x^2-8x+5$ là:",
+                "explanation": "$x_I=-\\frac{b}{2a}=-\\frac{-8}{2\\cdot2}=2$ và $y_I=f(2)=2\\cdot4-16+5=-3$. Vậy đỉnh là $I(2;-3)$.",
+                "options": [
+                  {
+                    "label": "$(-2;29)$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.quen-dau-tru-dinh"
+                  },
+                  {
+                    "label": "$(4;5)$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.quen-so-2-mau"
+                  },
+                  {
+                    "label": "$(2;5)$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.lay-c-lam-tung-do"
+                  },
+                  {
+                    "label": "$(2;-3)$",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "hs2-05-truc-doi-xung",
+                "type": "fill_in",
+                "points": 1,
+                "prompt": "Một parabol đi qua hai điểm $A(-1;4)$ và $B(5;4)$. Trục đối xứng của parabol này là đường thẳng $x=c$. Điền giá trị của $c$.",
+                "explanation": "$A$ và $B$ có cùng tung độ nên đối xứng với nhau qua trục của parabol. Trục đi qua trung điểm của $AB$: $x=\\frac{-1+5}{2}=2$.",
+                "answers": [
+                  "2",
+                  "x=2",
+                  "x = 2",
+                  "c=2",
+                  "c = 2"
+                ]
+              },
+              {
+                "key": "hs2-06-dong-bien",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Hàm số $y=-2x^2+4x+1$ đồng biến trên khoảng nào?",
+                "explanation": "$x_I=-\\frac{4}{2\\cdot(-2)}=1$ và $a=-2<0$, nên đồ thị đi lên tới đỉnh rồi đi xuống. Hàm số đồng biến trên $(-\\infty;1)$ và nghịch biến trên $(1;+\\infty)$.",
+                "options": [
+                  {
+                    "label": "$(1;+\\infty)$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.nham-chieu-bien-thien"
+                  },
+                  {
+                    "label": "$(-\\infty;1)$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$(-\\infty;3)$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.lay-tung-do-lam-moc"
+                  },
+                  {
+                    "label": "$(-\\infty;-1)$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.quen-dau-tru-dinh"
+                  }
+                ]
+              },
+              {
+                "key": "hs2-07-gtnn",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Giá trị nhỏ nhất của hàm số $y=x^2+4x+7$ là:",
+                "explanation": "$a=1>0$ nên hàm số đạt giá trị nhỏ nhất tại đỉnh. $x_I=-\\frac{4}{2}=-2$ và $y_I=f(-2)=4-8+7=3$. Giá trị nhỏ nhất bằng $3$, đạt tại $x=-2$.",
+                "options": [
+                  {
+                    "label": "$-2$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.nham-gia-tri-voi-hoanh-do"
+                  },
+                  {
+                    "label": "$7$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.lay-c-lam-tung-do"
+                  },
+                  {
+                    "label": "$3$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$19$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.quen-dau-tru-dinh"
+                  }
+                ]
+              },
+              {
+                "key": "hs2-08-vi-tri-parabol",
+                "type": "matching",
+                "points": 2,
+                "prompt": "Hãy ghép mỗi trường hợp của $a$ và $\\Delta$ với vị trí của parabol so với trục $Ox$.",
+                "explanation": "Dấu của $a$ cho biết chiều của bề lõm, dấu của $\\Delta$ cho biết số giao điểm với $Ox$. Tung độ đỉnh bằng $-\\frac{\\Delta}{4a}$, nên khi $a<0$ và $\\Delta>0$ thì đỉnh nằm phía trên $Ox$.",
+                "pairs": [
+                  {
+                    "left": "a > 0, Δ < 0",
+                    "right": "Nằm hoàn toàn phía trên Ox"
+                  },
+                  {
+                    "left": "a < 0, Δ < 0",
+                    "right": "Nằm hoàn toàn phía dưới Ox"
+                  },
+                  {
+                    "left": "a > 0, Δ = 0",
+                    "right": "Tiếp xúc Ox, phần còn lại nằm phía trên Ox"
+                  },
+                  {
+                    "left": "a < 0, Δ > 0",
+                    "right": "Cắt Ox tại hai điểm, đỉnh nằm phía trên Ox"
+                  }
+                ]
+              },
+              {
+                "key": "hs2-09-tham-so",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Parabol $y=x^2-2x+m$ không cắt trục $Ox$ khi và chỉ khi:",
+                "explanation": "Parabol không cắt $Ox$ khi $\\Delta<0$. Ở đây $\\Delta=(-2)^2-4\\cdot1\\cdot m=4-4m$, nên $4-4m<0$, tức là $m>1$.",
+                "options": [
+                  {
+                    "label": "$m>1$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$m<1$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.sai-dieu-kien-delta"
+                  },
+                  {
+                    "label": "$m=1$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$m>4$",
+                    "isCorrect": false,
+                    "misconception": "t10.hs2.sai-dieu-kien-delta"
+                  }
+                ]
+              },
+              {
+                "key": "hs2-10-loi-nhuan",
+                "type": "fill_in",
+                "points": 2,
+                "prompt": "Một cửa hàng nhập mỗi chiếc áo với giá $20$ nghìn đồng. Nếu bán mỗi chiếc với giá $x$ nghìn đồng ($20<x<100$) thì mỗi ngày bán được $100-x$ chiếc. Để lợi nhuận mỗi ngày lớn nhất, cửa hàng nên bán mỗi chiếc với giá bao nhiêu nghìn đồng? Điền một số.",
+                "explanation": "Lợi nhuận mỗi ngày là $L(x)=(x-20)(100-x)=-x^2+120x-2000$. Vì $a=-1<0$ nên $L$ lớn nhất tại đỉnh: $x=-\\frac{120}{2\\cdot(-1)}=60$. Khi đó lợi nhuận là $L(60)=40\\cdot40=1600$ nghìn đồng.",
+                "answers": [
+                  "60",
+                  "60 nghìn",
+                  "60 nghìn đồng"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Ba đường conic",
+          "description": "Elip, hypebol, parabol: phương trình chính tắc và hình dạng.",
+          "durationMin": 5,
+          "embeds": [
+            {
+              "url": "/decks/conic",
+              "height": 720
+            }
+          ],
+          "lecture": [
+            {
+              "anchor": "s0b0",
+              "text": "Chào em! Thầy là Tiến Đạt, hôm nay thầy kèm riêng em một bài rất đẹp của hình học: ba đường conic. Em đã từng thấy chiếc chảo ăng-ten trên mái nhà chưa? Hôm nay em sẽ tự trả lời được câu đó."
+            },
+            {
+              "anchor": "s0b1",
+              "text": "Việc thứ nhất: em nhận biết ba đường elip, hypebol và parabol từ cách vẽ chúng."
+            },
+            {
+              "anchor": "s0b2",
+              "text": "Việc thứ hai: em nhận biết phương trình chính tắc của chúng, rồi tìm tiêu điểm."
+            },
+            {
+              "anchor": "s0b3",
+              "text": "Việc thứ ba: em nhận ra ba đường ấy quanh mình, và giải thích vì sao chảo ăng-ten có dạng parabol. Mình bắt đầu nhé!"
+            },
+            {
+              "anchor": "s1b0",
+              "text": "Em nhìn ba đường cong bên trái. Đường khép kín như quả trứng dẹt là elip. Đường mở một phía là parabol. Còn đường có hai nhánh quay lưng vào nhau là hypebol."
+            },
+            {
+              "anchor": "s1b1",
+              "text": "Elip là hình dạng quỹ đạo của các hành tinh quanh Mặt Trời."
+            },
+            {
+              "anchor": "s1b2",
+              "text": "Parabol là mặt cắt của chảo ăng-ten và gương đèn pha. Lát nữa em sẽ thấy vì sao."
+            },
+            {
+              "anchor": "s1b3",
+              "text": "Còn đường viền của những tháp làm mát khổng lồ ở nhà máy điện có dáng gần với hypebol. Thật thú vị phải không em?"
+            },
+            {
+              "anchor": "s2b0",
+              "text": "Em hãy tưởng tượng: đóng hai cái đinh lên bảng, buộc một sợi dây vào hai đinh, rồi dùng bút căng dây và đi một vòng. Em xem hoạt cảnh bên trái nhé. Đúng rồi, tổng ấy luôn bằng độ dài sợi dây."
+            },
+            {
+              "anchor": "s2b1",
+              "text": "Đó chính là định nghĩa elip. Hai cái đinh là hai tiêu điểm. Tổng khoảng cách từ mỗi điểm trên elip tới hai tiêu điểm luôn bằng hai a. Trong hình, sợi dây dài mười, hai đinh cách nhau tám, nên c bằng bốn."
+            },
+            {
+              "anchor": "s2b2",
+              "text": "Em để ý điều kiện a lớn hơn c nhé. Dây phải dài hơn khoảng cách hai đinh, thì bút mới căng được dây mà đi vòng quanh."
+            },
+            {
+              "anchor": "s3b0",
+              "text": "Bây giờ mình đặt elip vào hệ trục toạ độ, sao cho hai tiêu điểm nằm trên trục hoành, đối xứng qua gốc. Khi đó elip có phương trình chính tắc: x bình phương trên a bình phương, cộng y bình phương trên b bình phương, bằng một. Trong đó c bình phương bằng a bình phương trừ b bình phương, và hai tiêu điểm là cộng trừ c trên trục hoành. Em thử kéo a và b ở hình bên trái xem elip thay đổi thế nào."
+            },
+            {
+              "anchor": "s3b1",
+              "text": "Với ví dụ x bình phương trên hai mươi lăm, cộng y bình phương trên chín, bằng một. Ta có a bằng năm, b bằng ba. Vậy c bình phương bằng hai mươi lăm trừ chín, bằng mười sáu, nên c bằng bốn."
+            },
+            {
+              "anchor": "s3b2",
+              "text": "Hai tiêu điểm nằm trên trục hoành, có hoành độ âm bốn và bốn."
+            },
+            {
+              "anchor": "s3b3",
+              "text": "Phần mở rộng, thuộc chuyên đề học tập: bốn đỉnh nằm trên hai trục, tại cộng trừ năm trên trục hoành và cộng trừ ba trên trục tung. Em nhớ nhé: với elip, a là số lớn nhất trong ba số a, b, c."
+            },
+            {
+              "anchor": "s4b0",
+              "text": "Đến lượt em. Cho elip x bình phương trên một trăm, cộng y bình phương trên ba mươi sáu, bằng một. Em tính c nhé. Làm xong em nhập kết quả, cần thì bấm Gợi ý."
+            },
+            {
+              "anchor": "s5b0",
+              "text": "Em xem hành tinh nhỏ chạy quanh ngôi sao nằm ở một tiêu điểm. Em có thấy nó chạy nhanh hơn khi đến gần ngôi sao không? Phần này là mở rộng, thuộc chuyên đề học tập. Để đo độ dẹt, người ta dùng tâm sai, bằng c chia cho a. Elip trong hình có a bằng năm, c bằng ba, nên tâm sai bằng ba phần năm."
+            },
+            {
+              "anchor": "s5b1",
+              "text": "Quỹ đạo thật của Trái Đất có tâm sai chỉ khoảng không phẩy không một sáu bảy, theo số liệu của NASA. Nghĩa là gần như tròn, nên hình bên đã được vẽ dẹt hơn nhiều để em dễ quan sát. Giờ em trả lời câu hỏi nhỏ bên dưới nhé."
+            },
+            {
+              "anchor": "s6b0",
+              "text": "Elip dùng tổng hai khoảng cách. Còn hypebol dùng hiệu. Hypebol là tập hợp những điểm mà hiệu khoảng cách tới hai tiêu điểm, lấy giá trị tuyệt đối, luôn bằng hai a. Phương trình chính tắc có dấu trừ thay cho dấu cộng; hệ thức giữa a, b, c cũng khác, lát nữa mình so sánh. Em kéo thử a và b ở hình bên trái nhé."
+            },
+            {
+              "anchor": "s6b1",
+              "text": "Với ví dụ x bình phương trên chín, trừ y bình phương trên mười sáu, bằng một. Lần này c bình phương bằng chín cộng mười sáu, bằng hai mươi lăm, nên c bằng năm."
+            },
+            {
+              "anchor": "s6b2",
+              "text": "Hai tiêu điểm nằm trên trục hoành, có hoành độ âm năm và năm. Mọi điểm trên hypebol có hiệu khoảng cách tới hai tiêu điểm bằng sáu."
+            },
+            {
+              "anchor": "s6b3",
+              "text": "Phần mở rộng: hai đỉnh nằm trên trục hoành, có hoành độ âm ba và ba, ở giữa hai tiêu điểm."
+            },
+            {
+              "anchor": "s6b4",
+              "text": "Đây là chỗ hay nhầm nhất, em ghi nhớ nhé. Với elip, a lớn nhất. Với hypebol, c lớn nhất, và c bình phương bằng a bình phương cộng b bình phương."
+            },
+            {
+              "anchor": "s7b0",
+              "text": "Em nhìn tháp làm mát bên trái: thắt ở giữa, loe ra ở hai đầu. Đường viền ấy có dáng hypebol. Hình dáng này giúp tháp vững chắc và không khí lưu thông tốt."
+            },
+            {
+              "anchor": "s7b1",
+              "text": "Mình mô hình hoá mặt cắt bằng hypebol x bình phương trên chín trăm, trừ y bình phương trên một nghìn sáu trăm, bằng một. Eo tháp rộng sáu mươi mét. Em tính chiều rộng ở độ cao ba mươi mét rồi nhập kết quả nhé."
+            },
+            {
+              "anchor": "s8b0",
+              "text": "Parabol là tập hợp những điểm cách đều một điểm cố định, gọi là tiêu điểm, và một đường thẳng cố định, gọi là đường chuẩn. Phương trình chính tắc là y bình phương bằng hai p x."
+            },
+            {
+              "anchor": "s8b1",
+              "text": "Với y bình phương bằng bốn x, ta có hai p bằng bốn, nên p bằng hai."
+            },
+            {
+              "anchor": "s8b2",
+              "text": "Tiêu điểm nằm trên trục hoành, có hoành độ bằng một. Đỉnh là gốc toạ độ."
+            },
+            {
+              "anchor": "s8b3",
+              "text": "Đường chuẩn là đường thẳng x bằng âm một."
+            },
+            {
+              "anchor": "s8b4",
+              "text": "Giờ em xem điều kì diệu: các tia sáng song song với trục, chạm vào gương parabol, đều phản xạ đi qua tiêu điểm. Đó là lí do chảo ăng-ten gom sóng vào đầu thu, và đèn pha chiếu ra chùm sáng song song."
+            },
+            {
+              "anchor": "s9b0",
+              "text": "Đây là mặt cắt của một chảo ăng-ten. Sóng từ vệ tinh đến gần như song song, chạm mặt chảo rồi hội tụ về tiêu điểm. Chảo này có miệng rộng tám mươi xăng-ti-mét và sâu mười xăng-ti-mét. Em tính xem đầu thu phải đặt cách đáy chảo bao xa, rồi nhập kết quả nhé."
+            },
+            {
+              "anchor": "s10b0",
+              "text": "Giờ em luyện tập ba bài nhỏ nhé. Câu một hỏi tiêu điểm của elip. Câu hai hỏi tiêu điểm của parabol. Câu ba, em xếp mỗi phương trình vào đúng loại đường. Em làm lần lượt từng tab, xong thì bấm Tiếp tục."
+            },
+            {
+              "anchor": "s11b0",
+              "text": "Mình cùng tóm tắt nhé. Elip: tổng khoảng cách tới hai tiêu điểm không đổi, phương trình có dấu cộng, c bình phương bằng a bình phương trừ b bình phương."
+            },
+            {
+              "anchor": "s11b1",
+              "text": "Hypebol: hiệu khoảng cách không đổi, phương trình có dấu trừ, c bình phương bằng a bình phương cộng b bình phương."
+            },
+            {
+              "anchor": "s11b2",
+              "text": "Parabol: cách đều tiêu điểm và đường chuẩn, phương trình y bình phương bằng hai p x, tiêu điểm cách đỉnh một nửa p."
+            },
+            {
+              "anchor": "s11b3",
+              "text": "Hôm nay em làm tốt lắm! Bài về nhà có hai câu, em làm xong rồi mới bấm xem đáp án nhé. Hẹn gặp lại em!"
+            }
+          ],
+          "quiz": {
+            "title": "Kiểm tra · Ba đường conic",
+            "passThresholdPct": 60,
+            "requireConfidence": false,
+            "questions": [
+              {
+                "key": "con-01-chinh-tac",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Phương trình nào dưới đây là phương trình chính tắc của một elip?",
+                "explanation": "Elip dạng chính tắc có dạng $\\frac{x^2}{a^2}+\\frac{y^2}{b^2}=1$ với $a>b>0$. Chỉ $\\frac{x^2}{16}+\\frac{y^2}{9}=1$ thoả, vì $16>9$. Phương trình $\\frac{x^2}{9}+\\frac{y^2}{16}=1$ có $a^2<b^2$ nên không ở dạng chính tắc.",
+                "options": [
+                  {
+                    "label": "$\\frac{x^2}{9}+\\frac{y^2}{16}=1$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-a-b"
+                  },
+                  {
+                    "label": "$\\frac{x^2}{16}+\\frac{y^2}{9}=1$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac{x^2}{16}-\\frac{y^2}{9}=1$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-elip-hypebol"
+                  },
+                  {
+                    "label": "$y^2=8x$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "con-02-dinh-nghia",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Cho hai điểm cố định $F_1,F_2$ với $F_1F_2=2c$ và số $a$ thoả $0<a<c$. Tập hợp các điểm $M$ có $|MF_1-MF_2|=2a$ là đường nào?",
+                "explanation": "Theo định nghĩa, tập hợp các điểm có trị tuyệt đối của hiệu khoảng cách tới hai điểm cố định bằng $2a$ là một hypebol. Elip dùng tổng khoảng cách.",
+                "options": [
+                  {
+                    "label": "Elip",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-elip-hypebol"
+                  },
+                  {
+                    "label": "Parabol",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Hypebol",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "Đường tròn",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "con-03-he-thuc",
+                "type": "true_false",
+                "points": 1,
+                "prompt": "Với elip $\\frac{x^2}{a^2}+\\frac{y^2}{b^2}=1$ $(a>b>0)$, ta có $c^2=a^2+b^2$.",
+                "explanation": "Sai. Với elip, $c^2=a^2-b^2$. Hệ thức $c^2=a^2+b^2$ là của hypebol.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-he-thuc-c"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "con-04-tieu-diem-elip",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Hai tiêu điểm của elip $\\frac{x^2}{169}+\\frac{y^2}{144}=1$ là:",
+                "explanation": "$a^2=169$, $b^2=144$ nên $c^2=169-144=25$ và $c=5$. Hai tiêu điểm là $(-5;0)$ và $(5;0)$.",
+                "options": [
+                  {
+                    "label": "$(-\\sqrt{313};0),\\ (\\sqrt{313};0)$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-he-thuc-c"
+                  },
+                  {
+                    "label": "$(-13;0),\\ (13;0)$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.lay-a-lam-c"
+                  },
+                  {
+                    "label": "$(0;-5),\\ (0;5)$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.sai-truc-tieu-diem"
+                  },
+                  {
+                    "label": "$(-5;0),\\ (5;0)$",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "con-05-tieu-diem-hypebol",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Hai tiêu điểm của hypebol $\\frac{x^2}{16}-\\frac{y^2}{9}=1$ là:",
+                "explanation": "Với hypebol, $c^2=a^2+b^2=16+9=25$ nên $c=5$. Hai tiêu điểm là $(-5;0)$ và $(5;0)$.",
+                "options": [
+                  {
+                    "label": "$(-5;0),\\ (5;0)$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$(-\\sqrt7;0),\\ (\\sqrt7;0)$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-he-thuc-c"
+                  },
+                  {
+                    "label": "$(-4;0),\\ (4;0)$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.lay-a-lam-c"
+                  },
+                  {
+                    "label": "$(0;-5),\\ (0;5)$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.sai-truc-tieu-diem"
+                  }
+                ]
+              },
+              {
+                "key": "con-06-duong-chuan",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Đường chuẩn của parabol $y^2=10x$ là:",
+                "explanation": "$2p=10$ nên $p=5$. Đường chuẩn là $x=-\\frac{p}{2}=-\\frac52$; tiêu điểm là $\\left(\\frac52;0\\right)$.",
+                "options": [
+                  {
+                    "label": "$x=\\frac52$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-tieu-diem-duong-chuan"
+                  },
+                  {
+                    "label": "$x=-5$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.quen-chia-doi-p"
+                  },
+                  {
+                    "label": "$x=-\\frac52$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$x=-10$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.quen-chia-doi-p"
+                  }
+                ]
+              },
+              {
+                "key": "con-07-tong-khoang-cach",
+                "type": "fill_in",
+                "points": 1,
+                "prompt": "Điểm $M$ nằm trên elip $\\frac{x^2}{36}+\\frac{y^2}{20}=1$ có hai tiêu điểm $F_1,F_2$. Tính $MF_1+MF_2$. Điền một số.",
+                "explanation": "$a^2=36$ nên $a=6$. Với mọi điểm $M$ trên elip, $MF_1+MF_2=2a=12$.",
+                "answers": [
+                  "12"
+                ]
+              },
+              {
+                "key": "con-08-ghep-dinh-nghia",
+                "type": "matching",
+                "points": 2,
+                "prompt": "Hãy ghép mỗi đường conic với định nghĩa và hệ thức của nó.",
+                "explanation": "Elip dùng tổng khoảng cách, hypebol dùng trị tuyệt đối của hiệu, parabol dùng khoảng cách tới tiêu điểm và đường chuẩn.",
+                "pairs": [
+                  {
+                    "left": "Elip",
+                    "right": "MF₁ + MF₂ = 2a, c² = a² − b²"
+                  },
+                  {
+                    "left": "Hypebol",
+                    "right": "|MF₁ − MF₂| = 2a, c² = a² + b²"
+                  },
+                  {
+                    "left": "Parabol",
+                    "right": "MF = d(M; Δ), y² = 2px"
+                  }
+                ]
+              },
+              {
+                "key": "con-09-viet-phuong-trinh",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Elip có hai tiêu điểm $F_1,F_2$ với $F_1F_2=12$ và $MF_1+MF_2=20$ với mọi điểm $M$ trên elip. Phương trình chính tắc của elip là:",
+                "explanation": "$2c=12$ nên $c=6$; $2a=20$ nên $a=10$. Khi đó $b^2=a^2-c^2=100-36=64$. Phương trình là $\\frac{x^2}{100}+\\frac{y^2}{64}=1$.",
+                "options": [
+                  {
+                    "label": "$\\frac{x^2}{100}+\\frac{y^2}{136}=1$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.nham-he-thuc-c"
+                  },
+                  {
+                    "label": "$\\frac{x^2}{100}+\\frac{y^2}{64}=1$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac{x^2}{20}+\\frac{y^2}{12}=1$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.lay-2a-lam-a"
+                  },
+                  {
+                    "label": "$\\frac{x^2}{100}+\\frac{y^2}{36}=1$",
+                    "isCorrect": false,
+                    "misconception": "t10.conic.lay-c-lam-b"
+                  }
+                ]
+              },
+              {
+                "key": "con-10-den-pha",
+                "type": "fill_in",
+                "points": 2,
+                "prompt": "Mặt cắt của một gương đèn pha là parabol $y^2=2px$ (đơn vị cm, đỉnh ở gốc toạ độ). Miệng gương rộng $24$ cm, gương sâu $9$ cm. Bóng đèn đặt tại tiêu điểm. Bóng đèn cách đỉnh gương bao nhiêu xăng-ti-mét? Điền một số.",
+                "explanation": "Mép miệng gương là điểm $(9;12)$ nằm trên parabol, nên $12^2=2p\\cdot9$, suy ra $p=8$. Tiêu điểm cách đỉnh $\\frac{p}{2}=4$ cm.",
+                "answers": [
+                  "4",
+                  "4 cm"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Hệ thức lượng trong tam giác",
+          "description": "Định lí côsin, định lí sin và giải tam giác trong thực tế.",
+          "durationMin": 5,
+          "embeds": [
+            {
+              "url": "/decks/tam-giac",
+              "height": 720
+            }
+          ],
+          "lecture": [
+            {
+              "anchor": "s0b0",
+              "text": "Chào em! Thầy là Tiến Đạt, hôm nay thầy sẽ kèm em bài hệ thức lượng trong tam giác. Em thử nghĩ xem: làm sao đo được chiều cao một toà tháp mà không cần trèo lên? Hay đo bề rộng một con sông mà không cần bơi qua? Hôm nay em sẽ làm được cả hai."
+            },
+            {
+              "anchor": "s0b1",
+              "text": "Việc thứ nhất: định lí côsin. Nó giúp em tìm một cạnh khi biết hai cạnh và góc xen giữa."
+            },
+            {
+              "anchor": "s0b2",
+              "text": "Việc thứ hai: định lí sin, và cách tính diện tích tam giác khi biết hai cạnh và một góc."
+            },
+            {
+              "anchor": "s0b3",
+              "text": "Việc thứ ba: ghép các định lí lại để giải tam giác, rồi đo đạc như một kĩ sư thật sự. Mình bắt đầu nhé!"
+            },
+            {
+              "anchor": "s1b0",
+              "text": "Mình vào việc ngay với một câu đố nhé. Bên phải là một toà tháp. Em đứng ở điểm A, nhìn lên đỉnh tháp dưới góc ba mươi lăm độ. Em đi thẳng về phía tháp thêm hai mươi mét, tới điểm B, thì góc nhìn tăng lên năm mươi độ."
+            },
+            {
+              "anchor": "s1b1",
+              "text": "Khó ở chỗ: em không thể đo chiều cao trực tiếp, vì chẳng ai trèo lên đỉnh tháp với thước dây cả."
+            },
+            {
+              "anchor": "s1b2",
+              "text": "Nhưng em đo được một đoạn thẳng trên mặt đất, và hai góc nhìn. Ba con số đó là đủ."
+            },
+            {
+              "anchor": "s1b3",
+              "text": "Vì A, B và đỉnh tháp tạo thành một tam giác. Biết đủ yếu tố, tam giác sẽ tính hộ phần còn lại. Em thử kéo điểm A, điểm B, hoặc đổi góc nhìn, và xem các bước tính thay đổi theo."
+            },
+            {
+              "anchor": "s1b4",
+              "text": "Ở đây thầy bỏ qua chiều cao của giác kế, coi như đặt sát mặt đất. Với số đo ban đầu, tháp cao khoảng ba mươi ba phẩy chín lăm mét. Cuối bài, em sẽ tự tính được con số này."
+            },
+            {
+              "anchor": "s2b0",
+              "text": "Trước khi vào định lí, mình thống nhất cách gọi tên nhé. Trong tam giác A B C, cạnh nằm đối diện góc A gọi là a, tức là cạnh B C. Tương tự, cạnh b đối diện góc B, cạnh c đối diện góc C."
+            },
+            {
+              "anchor": "s2b1",
+              "text": "Điều thứ nhất cần nhớ: tổng ba góc trong một tam giác luôn bằng một trăm tám mươi độ. Biết hai góc, em luôn tìm được góc thứ ba."
+            },
+            {
+              "anchor": "s2b2",
+              "text": "Điều thứ hai: với góc tù, sin của nó bằng sin của góc bù với nó. Còn côsin thì đổi dấu, nên côsin của góc tù là một số âm."
+            },
+            {
+              "anchor": "s2b3",
+              "text": "Ví dụ, côsin của một trăm hai mươi độ bằng âm côsin sáu mươi độ, tức là âm một phần hai. Còn sin một trăm hai mươi độ bằng căn ba phần hai."
+            },
+            {
+              "anchor": "s2b4",
+              "text": "Và một lời dặn rất thực tế: khi bấm máy tính, em phải để máy ở chế độ độ, chữ D, chứ không phải radian. Để nhầm chế độ là sai cả bài, dù công thức hoàn toàn đúng!"
+            },
+            {
+              "anchor": "s3b0",
+              "text": "Đây là công cụ thứ nhất: định lí côsin. Bình phương cạnh a bằng b bình phương cộng c bình phương, trừ đi hai lần b nhân c nhân côsin A. Em để ý: góc A chính là góc xen giữa hai cạnh b và c."
+            },
+            {
+              "anchor": "s3b1",
+              "text": "Viết tương tự cho cạnh b và cạnh c. Mỗi công thức luôn có một cạnh, và góc đối diện với cạnh đó."
+            },
+            {
+              "anchor": "s3b2",
+              "text": "Thú vị nhất là khi góc A vuông. Côsin chín mươi độ bằng không, số hạng cuối biến mất, và em được định lí Pythagore quen thuộc. Định lí côsin chính là Pythagore mở rộng cho mọi tam giác."
+            },
+            {
+              "anchor": "s3b3",
+              "text": "Chuyển vế, em được công thức tính côsin của một góc khi biết cả ba cạnh. Biết côsin rồi, máy tính sẽ cho em số đo góc."
+            },
+            {
+              "anchor": "s3b4",
+              "text": "Tóm lại, dùng định lí côsin khi biết hai cạnh và góc xen giữa, hoặc khi biết cả ba cạnh."
+            },
+            {
+              "anchor": "s4b0",
+              "text": "Mình làm một ví dụ gần gũi nhé. Từ ngã ba A có hai con đường thẳng, hợp với nhau góc sáu mươi độ. Nhà bạn Lan cách ngã ba năm ki lô mét, trường cách ngã ba tám ki lô mét."
+            },
+            {
+              "anchor": "s4b1",
+              "text": "Bước một, nhận dạng. Em biết hai cạnh, tám và năm, cùng góc xen giữa sáu mươi độ. Đúng tình huống của định lí côsin!"
+            },
+            {
+              "anchor": "s4b2",
+              "text": "Bước hai, thay số. Tám bình phương là sáu mươi tư, năm bình phương là hai mươi lăm. Hai nhân tám nhân năm nhân côsin sáu mươi độ, tức là nhân một phần hai, được bốn mươi. Vậy a bình phương bằng bốn mươi chín."
+            },
+            {
+              "anchor": "s4b3",
+              "text": "Bước ba, khai căn: a bằng bảy. Đường chim bay từ nhà Lan tới trường dài bảy ki lô mét. Gọn gàng phải không em?"
+            },
+            {
+              "anchor": "s5b0",
+              "text": "Đến lượt em! Hai xe rời ngã ba theo hai con đường hợp với nhau góc một trăm hai mươi độ. Một xe đi được sáu ki lô mét, xe kia đi được mười ki lô mét. Em tính khoảng cách giữa hai xe rồi nhập vào ô bên phải. Cẩn thận với góc tù nhé!"
+            },
+            {
+              "anchor": "s6b0",
+              "text": "Công cụ thứ hai là định lí sin. Trong mọi tam giác, mỗi cạnh chia cho sin của góc đối diện đều cho cùng một số. Số đó bằng hai lần bán kính đường tròn ngoại tiếp tam giác."
+            },
+            {
+              "anchor": "s6b1",
+              "text": "Mấu chốt là ghép đúng cặp: cạnh a đi với sin A, cạnh b đi với sin B, cạnh c đi với sin C. Cạnh và góc trong một cặp luôn nằm đối diện nhau."
+            },
+            {
+              "anchor": "s6b2",
+              "text": "Định lí sin phù hợp nhất khi em biết hai góc và một cạnh. Khi đó, việc đầu tiên là tìm góc thứ ba, bằng một trăm tám mươi độ trừ tổng hai góc kia. Rất nhiều bạn quên bước này!"
+            },
+            {
+              "anchor": "s6b3",
+              "text": "Công thức còn giúp tính bán kính đường tròn ngoại tiếp. Bây giờ em thử câu hỏi bên phải: chọn đúng công cụ trước khi tính."
+            },
+            {
+              "anchor": "s7b0",
+              "text": "Giờ mình dùng định lí sin cho một việc thật: đo khoảng cách qua sông mà không cần qua sông. Em chọn hai điểm A và B bên này bờ, cách nhau năm mươi mét. Bên kia sông có một cái cây, gọi là điểm C. Đứng ở A và ở B, em đo hai góc ngắm về phía cái cây."
+            },
+            {
+              "anchor": "s7b1",
+              "text": "Bước một, tìm góc thứ ba. Góc C bằng một trăm tám mươi độ trừ bảy mươi độ, trừ sáu mươi độ, được năm mươi độ."
+            },
+            {
+              "anchor": "s7b2",
+              "text": "Bước hai, ghép cặp. Cạnh A C nằm đối diện góc B, còn cạnh A B nằm đối diện góc C. Vậy A C chia sin B bằng A B chia sin C."
+            },
+            {
+              "anchor": "s7b3",
+              "text": "Bước ba, tính: A C bằng năm mươi nhân sin sáu mươi độ, chia sin năm mươi độ, xấp xỉ năm mươi sáu phẩy năm ba mét. Em thử kéo điểm B hoặc đổi góc, xem khoảng cách thay đổi thế nào."
+            },
+            {
+              "anchor": "s8b0",
+              "text": "Em thử sức với một con sông khác nhé. Hai điểm A và B cách nhau bốn mươi mét. Góc ở A đo được tám mươi độ, góc ở B đo được năm mươi lăm độ. Em tính khoảng cách từ A tới cái cây, làm tròn đến hai chữ số thập phân, rồi nhập vào ô bên phải."
+            },
+            {
+              "anchor": "s9b0",
+              "text": "Một câu hỏi đời thường: một mảnh đất hình tam giác rộng bao nhiêu mét vuông? Hôm nay em có thêm hai công thức rất gọn."
+            },
+            {
+              "anchor": "s9b1",
+              "text": "Công thức thứ nhất: diện tích bằng một phần hai, nhân hai cạnh, nhân sin của góc xen giữa. Em để ý: ở đây là sin, không phải côsin."
+            },
+            {
+              "anchor": "s9b2",
+              "text": "Công thức thứ hai, của Heron, dùng khi biết cả ba cạnh. Em tính nửa chu vi p trước, rồi lấy căn của p nhân với p trừ từng cạnh."
+            },
+            {
+              "anchor": "s9b3",
+              "text": "Ví dụ, ba cạnh mười ba, mười bốn, mười lăm. Nửa chu vi bằng hai mươi mốt, và diện tích tròn trịa bằng tám mươi tư. Giờ em làm câu trắc nghiệm bên phải nhé."
+            },
+            {
+              "anchor": "s10b0",
+              "text": "Đây là thử thách cuối, giống hệt câu đố đầu bài. Em đứng ở A, nhìn đỉnh tháp dưới góc bốn mươi độ. Tiến thêm hai mươi lăm mét tới B, góc nhìn là sáu mươi lăm độ. Em tính chiều cao tháp, làm tròn đến hai chữ số thập phân. Làm đúng là em đã thành thạo bài này rồi đấy!"
+            },
+            {
+              "anchor": "s11b0",
+              "text": "Mình cùng nhìn lại cả bài nhé. Em đã có trong tay ba công cụ, và biết lúc nào dùng cái nào."
+            },
+            {
+              "anchor": "s11b1",
+              "text": "Một, định lí côsin: dùng khi biết hai cạnh và góc xen giữa, hoặc biết cả ba cạnh."
+            },
+            {
+              "anchor": "s11b2",
+              "text": "Hai, định lí sin: dùng khi biết hai góc và một cạnh. Nhớ ghép mỗi cạnh với sin của góc đối diện."
+            },
+            {
+              "anchor": "s11b3",
+              "text": "Ba, diện tích bằng một phần hai nhân hai cạnh nhân sin góc xen giữa. Biết ba cạnh thì dùng công thức Heron."
+            },
+            {
+              "anchor": "s11b4",
+              "text": "Và ba lỗi cần tránh: quên tìm góc thứ ba, ghép sai cặp cạnh với góc, và để máy tính ở chế độ radian. Bài về nhà là đo chiều cao cột cờ ở trường em. Chúc em đo thật chuẩn nhé!"
+            }
+          ],
+          "quiz": {
+            "title": "Kiểm tra · Hệ thức lượng trong tam giác",
+            "passThresholdPct": 60,
+            "requireConfidence": false,
+            "questions": [
+              {
+                "key": "tg-01-cosin",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Trong tam giác $ABC$ với $a=BC,\\ b=CA,\\ c=AB$, hệ thức nào là đúng?",
+                "explanation": "Định lí côsin cho cạnh $b$: $b^2=a^2+c^2-2ac\\cos B$. Góc trong công thức là góc đối diện cạnh ở vế trái, cũng là góc xen giữa hai cạnh ở vế phải.",
+                "options": [
+                  {
+                    "label": "$b^2=a^2+c^2+2ac\\cos B$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.sai-dau-cosin"
+                  },
+                  {
+                    "label": "$b^2=a^2+c^2-ac\\cos B$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.thieu-he-so-2"
+                  },
+                  {
+                    "label": "$b^2=a^2+c^2-2ac\\cos B$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$b^2=a^2+c^2-2ac\\cos A$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.ghep-sai-cap"
+                  }
+                ]
+              },
+              {
+                "key": "tg-02-sin",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Trong tam giác $ABC$ có $R$ là bán kính đường tròn ngoại tiếp, hệ thức nào là đúng?",
+                "explanation": "Định lí sin: $\\frac{a}{\\sin A}=\\frac{b}{\\sin B}=\\frac{c}{\\sin C}=2R$. Mỗi cạnh đi với sin của góc đối diện.",
+                "options": [
+                  {
+                    "label": "$\\frac{a}{\\sin A}=2R$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac{a}{\\sin A}=R$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.quen-2r"
+                  },
+                  {
+                    "label": "$\\frac{a}{\\sin B}=\\frac{b}{\\sin A}$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.ghep-sai-cap"
+                  },
+                  {
+                    "label": "$a\\sin A=b\\sin B$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.ghep-sai-cap"
+                  }
+                ]
+              },
+              {
+                "key": "tg-03-goc-bu",
+                "type": "true_false",
+                "points": 1,
+                "prompt": "$\\cos150^\\circ=\\cos30^\\circ$.",
+                "explanation": "Sai. Hai góc bù nhau có cos đối nhau: $\\cos150^\\circ=-\\cos30^\\circ=-\\frac{\\sqrt3}{2}$. Riêng sin thì bằng nhau: $\\sin150^\\circ=\\sin30^\\circ$.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.quen-dau-cos-tu"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "tg-04-tim-canh",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Tam giác $ABC$ có $AC=7$, $AB=8$ và $\\widehat{A}=120^\\circ$. Độ dài cạnh $BC$ là:",
+                "explanation": "$BC^2=7^2+8^2-2\\cdot7\\cdot8\\cdot\\cos120^\\circ=49+64+56=169$ nên $BC=13$. Vì $\\cos120^\\circ=-\\frac12$ nên số hạng cuối mang dấu cộng.",
+                "options": [
+                  {
+                    "label": "$\\sqrt{57}$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.quen-dau-cos-tu"
+                  },
+                  {
+                    "label": "$169$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.quen-khai-can"
+                  },
+                  {
+                    "label": "$15$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$13$",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "tg-05-tim-goc",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Tam giác $ABC$ có $a=7$, $b=5$, $c=3$. Số đo góc $A$ là:",
+                "explanation": "$\\cos A=\\frac{b^2+c^2-a^2}{2bc}=\\frac{25+9-49}{30}=-\\frac12$ nên $\\widehat{A}=120^\\circ$. Cạnh $a$ dài nhất nên góc $A$ lớn nhất.",
+                "options": [
+                  {
+                    "label": "$60^\\circ$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.quen-dau-cos-tu"
+                  },
+                  {
+                    "label": "$120^\\circ$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$30^\\circ$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$150^\\circ$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "tg-06-dinh-li-sin",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Tam giác $ABC$ có $\\widehat{A}=45^\\circ$, $\\widehat{B}=60^\\circ$ và $BC=10$. Độ dài cạnh $AC$ là:",
+                "explanation": "$BC$ đối diện góc $A$, $AC$ đối diện góc $B$. Theo định lí sin, $AC=\\frac{BC\\sin B}{\\sin A}=\\frac{10\\cdot\\frac{\\sqrt3}{2}}{\\frac{\\sqrt2}{2}}=5\\sqrt6$.",
+                "options": [
+                  {
+                    "label": "$5\\sqrt6$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac{10\\sqrt6}{3}$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.ghep-sai-cap"
+                  },
+                  {
+                    "label": "$5\\sqrt2$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$10$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "tg-07-dien-tich",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Tam giác có hai cạnh dài $10$ và $12$, góc xen giữa bằng $150^\\circ$. Diện tích tam giác là:",
+                "explanation": "$S=\\frac12\\cdot10\\cdot12\\cdot\\sin150^\\circ=60\\cdot\\frac12=30$. Vì $\\sin150^\\circ=\\sin30^\\circ=\\frac12$.",
+                "options": [
+                  {
+                    "label": "$60$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.quen-nhan-nua"
+                  },
+                  {
+                    "label": "$30\\sqrt3$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.nham-gia-tri-sin"
+                  },
+                  {
+                    "label": "$30$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$-30$",
+                    "isCorrect": false,
+                    "misconception": "t10.tamgiac.nham-dau-sin-tu"
+                  }
+                ]
+              },
+              {
+                "key": "tg-08-chon-cong-cu",
+                "type": "matching",
+                "points": 2,
+                "prompt": "Hãy ghép mỗi tình huống với công cụ phù hợp nhất.",
+                "explanation": "Biết hai cạnh và góc xen giữa thì dùng định lí côsin để tìm cạnh. Biết hai góc và một cạnh thì dùng định lí sin. Biết ba cạnh thì dùng hệ quả của định lí côsin để tìm góc, và công thức Heron để tính diện tích.",
+                "pairs": [
+                  {
+                    "left": "Biết hai cạnh và góc xen giữa, tìm cạnh thứ ba",
+                    "right": "Định lí côsin"
+                  },
+                  {
+                    "left": "Biết hai góc và một cạnh, tìm cạnh khác",
+                    "right": "Định lí sin"
+                  },
+                  {
+                    "left": "Biết ba cạnh, tìm một góc",
+                    "right": "Hệ quả của định lí côsin"
+                  },
+                  {
+                    "left": "Biết ba cạnh, tìm diện tích",
+                    "right": "Công thức Heron"
+                  }
+                ]
+              },
+              {
+                "key": "tg-09-chieu-cao",
+                "type": "fill_in",
+                "points": 1,
+                "prompt": "Một mảnh đất hình tam giác có ba cạnh dài $7$ m, $15$ m và $20$ m. Tính chiều cao của tam giác ứng với cạnh dài $20$ m, theo đơn vị mét. Điền một số.",
+                "explanation": "Nửa chu vi $p=21$. Theo công thức Heron, $S=\\sqrt{21\\cdot14\\cdot6\\cdot1}=42$. Từ $S=\\frac12\\cdot20\\cdot h$ suy ra $h=\\frac{2\\cdot42}{20}=4{,}2$ m.",
+                "answers": [
+                  "4,2",
+                  "4.2",
+                  "4,2 m",
+                  "4.2 m"
+                ]
+              },
+              {
+                "key": "tg-10-qua-ho",
+                "type": "fill_in",
+                "points": 2,
+                "prompt": "Để đo khoảng cách giữa hai điểm $B$ và $C$ ở hai bờ một cái hồ, người ta đứng tại $A$ và đo được $AB=30$ m, $AC=80$ m, $\\widehat{BAC}=60^\\circ$. Tính khoảng cách $BC$, theo đơn vị mét. Điền một số.",
+                "explanation": "Biết hai cạnh và góc xen giữa nên dùng định lí côsin: $BC^2=30^2+80^2-2\\cdot30\\cdot80\\cdot\\cos60^\\circ=900+6400-2400=4900$. Vậy $BC=70$ m.",
+                "answers": [
+                  "70",
+                  "70 m"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Hệ bất phương trình bậc nhất hai ẩn và tối ưu",
+          "description": "Miền nghiệm trên mặt phẳng toạ độ và bài toán tìm giá trị tốt nhất.",
+          "durationMin": 4,
+          "embeds": [
+            {
+              "url": "/decks/toi-uu",
+              "height": 720
+            }
+          ],
+          "lecture": [
+            {
+              "anchor": "s0b0",
+              "text": "Chào em! Thầy là Tiến Đạt. Hôm nay mình sẽ giúp một xưởng mộc nhỏ. Xưởng muốn biết: làm bao nhiêu sản phẩm mỗi loại thì lãi nhiều nhất?"
+            },
+            {
+              "anchor": "s0b1",
+              "text": "Việc thứ nhất: em nhận biết bất phương trình và hệ bất phương trình bậc nhất hai ẩn."
+            },
+            {
+              "anchor": "s0b2",
+              "text": "Việc thứ hai: em biểu diễn miền nghiệm của chúng trên mặt phẳng toạ độ."
+            },
+            {
+              "anchor": "s0b3",
+              "text": "Việc thứ ba: em dùng miền nghiệm để tìm phương án lãi nhiều nhất. Mình bắt đầu nhé!"
+            },
+            {
+              "anchor": "s1b0",
+              "text": "Đây là bài toán của mình. Một xưởng mộc làm hai loại tủ, A và B. Mỗi tháng xưởng chỉ có tối đa bốn mươi bộ gỗ và chín mươi ngày công thợ."
+            },
+            {
+              "anchor": "s1b1",
+              "text": "Em đọc bảng nhé: mỗi tủ, loại nào cũng cần một bộ gỗ. Tủ A cần một ngày công, tủ B cần ba ngày công. Tủ A lãi ba triệu đồng, tủ B lãi năm triệu đồng."
+            },
+            {
+              "anchor": "s1b2",
+              "text": "Câu hỏi là: mỗi tháng nên làm bao nhiêu tủ mỗi loại để lãi nhiều nhất? Tủ B lãi nhiều hơn, nhưng lại tốn nhiều ngày công. Mình cần một cách tính chắc chắn."
+            },
+            {
+              "anchor": "s2b0",
+              "text": "Một bất phương trình bậc nhất hai ẩn có dạng a x cộng b y nhỏ hơn hoặc bằng c, hoặc dùng các dấu lớn hơn, nhỏ hơn. Hai hệ số a và b không được cùng bằng không. Mỗi cặp số thoả mãn nó gọi là một nghiệm."
+            },
+            {
+              "anchor": "s2b1",
+              "text": "Với xưởng mộc, gọi x là số tủ A, y là số tủ B. Giới hạn ngày công viết thành: x cộng ba y nhỏ hơn hoặc bằng chín mươi. Cặp x bằng mười, y bằng hai mươi là một nghiệm, vì mười cộng sáu mươi bằng bảy mươi, chưa vượt chín mươi. Giờ em thử chọn một nghiệm khác ở bên phải nhé."
+            },
+            {
+              "anchor": "s3b0",
+              "text": "Tập hợp các điểm có toạ độ là nghiệm gọi là miền nghiệm. Trên mặt phẳng toạ độ, nó là một nửa mặt phẳng; ở hình bên mình chỉ vẽ phần trong góc phần tư thứ nhất. Mình làm với bất phương trình về gỗ: x cộng y nhỏ hơn hoặc bằng bốn mươi."
+            },
+            {
+              "anchor": "s3b1",
+              "text": "Bước một: vẽ đường thẳng x cộng y bằng bốn mươi. Nó cắt trục hoành tại điểm có hoành độ bốn mươi, và cắt trục tung tại điểm có tung độ bốn mươi."
+            },
+            {
+              "anchor": "s3b2",
+              "text": "Bước hai: thử một điểm dễ tính, thường là gốc toạ độ. Không cộng không bằng không, nhỏ hơn bốn mươi, đúng."
+            },
+            {
+              "anchor": "s3b3",
+              "text": "Bước ba: vậy nửa mặt phẳng chứa gốc toạ độ là miền nghiệm. Bờ cũng thuộc miền nghiệm, vì có dấu bằng. Ở hình bên phải, phần còn sáng chính là miền nghiệm, vẽ trong góc phần tư thứ nhất."
+            },
+            {
+              "anchor": "s4b0",
+              "text": "Bây giờ mình dịch bài toán sang ngôn ngữ toán học. Gọi x là số tủ A, y là số tủ B làm trong một tháng."
+            },
+            {
+              "anchor": "s4b1",
+              "text": "Thứ nhất, số tủ không thể âm: x và y đều lớn hơn hoặc bằng không."
+            },
+            {
+              "anchor": "s4b2",
+              "text": "Thứ hai, về gỗ: mỗi tủ một bộ gỗ, tổng không quá bốn mươi. Vậy x cộng y nhỏ hơn hoặc bằng bốn mươi."
+            },
+            {
+              "anchor": "s4b3",
+              "text": "Thứ ba, về ngày công: tủ A một ngày, tủ B ba ngày, tổng không quá chín mươi. Vậy x cộng ba y nhỏ hơn hoặc bằng chín mươi."
+            },
+            {
+              "anchor": "s4b4",
+              "text": "Cuối cùng là tiền lãi: F bằng ba x cộng năm y, tính bằng triệu đồng. Mục tiêu là làm cho F lớn nhất. Ba dòng đầu, gồm bốn bất phương trình, tạo thành một hệ bất phương trình bậc nhất hai ẩn; dòng cuối là biểu thức F cần làm lớn nhất."
+            },
+            {
+              "anchor": "s5b0",
+              "text": "Miền nghiệm của cả hệ là phần chung của các miền nghiệm. Mình tô bỏ lần lượt từng phần không thoả mãn nhé."
+            },
+            {
+              "anchor": "s5b1",
+              "text": "Với x lớn hơn hoặc bằng không, mình bỏ phần bên trái trục tung."
+            },
+            {
+              "anchor": "s5b2",
+              "text": "Với y lớn hơn hoặc bằng không, mình bỏ phần bên dưới trục hoành."
+            },
+            {
+              "anchor": "s5b3",
+              "text": "Với ràng buộc gỗ, mình bỏ phần phía trên đường x cộng y bằng bốn mươi."
+            },
+            {
+              "anchor": "s5b4",
+              "text": "Với ràng buộc ngày công, mình bỏ phần phía trên đường x cộng ba y bằng chín mươi."
+            },
+            {
+              "anchor": "s5b5",
+              "text": "Phần còn lại là tứ giác O A B C, với O là gốc toạ độ. Đỉnh A có hoành độ bốn mươi, tung độ không. Đỉnh B có hoành độ mười lăm, tung độ hai mươi lăm. Đỉnh C có hoành độ không, tung độ ba mươi."
+            },
+            {
+              "anchor": "s6b0",
+              "text": "Đến lượt em! Đỉnh B nằm trên cả hai đường biên: x cộng y bằng bốn mươi, và x cộng ba y bằng chín mươi. Em giải hệ hai phương trình này để tìm toạ độ của B. Làm xong em nhập kết quả, hoành độ trước, tung độ sau."
+            },
+            {
+              "anchor": "s7b0",
+              "text": "Em xem đường thẳng màu cam ở hình bên trái, mình gọi vui là đường lợi nhuận: mọi điểm trên đó cho cùng một tiền lãi F. Kéo nó ra xa gốc toạ độ, tiền lãi tăng dần. Điểm cuối cùng nó còn chạm vào miền nghiệm là phương án lãi nhiều nhất. Vì thế, giá trị lớn nhất và nhỏ nhất luôn đạt tại một đỉnh."
+            },
+            {
+              "anchor": "s7b1",
+              "text": "Bây giờ em bấm vào đỉnh mà em cho là lãi nhiều nhất trên hình. Rồi em nhập tiền lãi lớn nhất, tính bằng triệu đồng, vào ô bên phải nhé."
+            },
+            {
+              "anchor": "s8b0",
+              "text": "Giả sử giá thị trường thay đổi: tủ A lãi hai triệu, tủ B chỉ lãi một triệu. Em bấm vào đỉnh mà em cho là lãi nhiều nhất với giá mới nhé."
+            },
+            {
+              "anchor": "s9b0",
+              "text": "Em vừa đi trọn một bài toán tối ưu. Bây giờ em thử sắp xếp lại bốn bước giải cho đúng thứ tự nhé. Xong em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s10b0",
+              "text": "Giờ em luyện tập ba câu nhé. Câu một tìm giá trị nhỏ nhất. Câu hai, em xếp mỗi điểm vào đúng nhóm. Câu ba tìm giá trị lớn nhất. Em làm lần lượt, xong thì bấm Tiếp tục."
+            },
+            {
+              "anchor": "s11b0",
+              "text": "Mình tổng kết bằng bốn bước nhé. Bước một: đặt ẩn, viết hệ bất phương trình và biểu thức F."
+            },
+            {
+              "anchor": "s11b1",
+              "text": "Bước hai: vẽ miền nghiệm bằng cách tô bỏ phần không thoả mãn."
+            },
+            {
+              "anchor": "s11b2",
+              "text": "Bước ba: tìm toạ độ các đỉnh, bằng cách giải hệ hai đường biên."
+            },
+            {
+              "anchor": "s11b3",
+              "text": "Bước bốn: tính biểu thức F tại các đỉnh, rồi chọn giá trị lớn nhất hoặc nhỏ nhất."
+            },
+            {
+              "anchor": "s11b4",
+              "text": "Hôm nay em đã giúp xưởng mộc tìm được phương án tốt nhất. Giỏi lắm! Bài về nhà ở bên dưới, em làm xong rồi mới mở đáp án nhé."
+            }
+          ],
+          "quiz": {
+            "title": "Kiểm tra · Hệ bất phương trình bậc nhất hai ẩn và tối ưu",
+            "passThresholdPct": 60,
+            "requireConfidence": false,
+            "questions": [
+              {
+                "key": "tu-01-nhan-dang",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Bất phương trình nào dưới đây là bất phương trình bậc nhất hai ẩn $x,y$?",
+                "explanation": "$2x-3y\\le6$ có dạng $ax+by\\le c$ với $a=2$, $b=-3$. Các bất phương trình còn lại chứa $x^2$, tích $xy$ hoặc có ẩn ở mẫu.",
+                "options": [
+                  {
+                    "label": "$x^2+y\\le1$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.khong-bac-nhat"
+                  },
+                  {
+                    "label": "$xy\\ge2$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.khong-bac-nhat"
+                  },
+                  {
+                    "label": "$2x-3y\\le6$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac1x+y<3$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.khong-bac-nhat"
+                  }
+                ]
+              },
+              {
+                "key": "tu-02-nghiem",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Cặp số nào dưới đây là nghiệm của bất phương trình $2x-y\\ge3$?",
+                "explanation": "Với $(2;1)$: $2\\cdot2-1=3\\ge3$ đúng. Với $(1;2)$: $2-2=0$; với $(0;0)$: $0$; với $(1;0)$: $2$; cả ba đều nhỏ hơn $3$.",
+                "options": [
+                  {
+                    "label": "$(1;2)$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.dao-thu-tu-toa-do"
+                  },
+                  {
+                    "label": "$(2;1)$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$(0;0)$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$(1;0)$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "tu-03-bo",
+                "type": "true_false",
+                "points": 1,
+                "prompt": "Điểm nằm trên đường thẳng $x+y=6$ không thuộc miền nghiệm của bất phương trình $x+y\\le6$.",
+                "explanation": "Sai. Bất phương trình có dấu $\\le$ nên các điểm trên bờ cũng là nghiệm, ví dụ $(2;4)$ có $2+4=6\\le6$.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.bo-bo-mien-nghiem"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "tu-04-mien-nghiem",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Miền nghiệm của bất phương trình $2x+y\\le4$ là:",
+                "explanation": "Thay $O(0;0)$: $0\\le4$ đúng nên miền nghiệm chứa $O$. Dấu $\\le$ có dấu bằng nên miền nghiệm kể cả đường thẳng $2x+y=4$.",
+                "options": [
+                  {
+                    "label": "Nửa mặt phẳng bờ $2x+y=4$ không chứa $O$, kể cả bờ",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.thu-diem-sai"
+                  },
+                  {
+                    "label": "Nửa mặt phẳng bờ $2x+y=4$ chứa $O$, không kể bờ",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.bo-bo-mien-nghiem"
+                  },
+                  {
+                    "label": "Nửa mặt phẳng bờ $2x+y=4$ không chứa $O$, không kể bờ",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.thu-diem-sai"
+                  },
+                  {
+                    "label": "Nửa mặt phẳng bờ $2x+y=4$ chứa $O$, kể cả bờ",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "tu-05-dinh",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Giao điểm của hai đường thẳng $x+y=10$ và $2x+y=14$ là:",
+                "explanation": "Lấy phương trình thứ hai trừ phương trình thứ nhất: $x=4$. Thay vào $x+y=10$ được $y=6$. Giao điểm là $(4;6)$.",
+                "options": [
+                  {
+                    "label": "$(4;6)$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$(6;4)$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.dao-thu-tu-toa-do"
+                  },
+                  {
+                    "label": "$(5;5)$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$(7;0)$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "tu-06-lap-bat-phuong-trinh",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Một tiệm làm $x$ bánh loại A và $y$ bánh loại B. Mỗi bánh loại A dùng $2$ quả trứng, mỗi bánh loại B dùng $3$ quả trứng, và tiệm có tối đa $60$ quả trứng. Bất phương trình mô tả giới hạn này là:",
+                "explanation": "Số trứng cần dùng là $2x+3y$ và không được vượt quá $60$, nên $2x+3y\\le60$.",
+                "options": [
+                  {
+                    "label": "$3x+2y\\le60$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.gan-sai-he-so"
+                  },
+                  {
+                    "label": "$2x+3y\\ge60$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.sai-chieu-bat-dang-thuc"
+                  },
+                  {
+                    "label": "$2x+3y\\le60$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$x+y\\le60$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "tu-07-gia-tri-nho-nhat",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Miền nghiệm của một hệ là tứ giác có các đỉnh $O(0;0)$, $A(6;0)$, $B(4;3)$, $C(0;5)$. Giá trị nhỏ nhất của $G=x-2y$ trên miền này là:",
+                "explanation": "$G(O)=0$, $G(A)=6$, $G(B)=-2$, $G(C)=-10$. Giá trị nhỏ nhất là $-10$, đạt tại $C$.",
+                "options": [
+                  {
+                    "label": "$0$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.nghi-o-nho-nhat"
+                  },
+                  {
+                    "label": "$-2$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.chua-xet-het-dinh"
+                  },
+                  {
+                    "label": "$6$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.nham-lon-nho"
+                  },
+                  {
+                    "label": "$-10$",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "tu-08-ghep-mien",
+                "type": "matching",
+                "points": 2,
+                "prompt": "Hãy ghép mỗi bất phương trình với miền nghiệm của nó.",
+                "explanation": "Với mỗi bất phương trình, em xét dấu có dấu bằng hay không để biết có kể bờ không, rồi thử một điểm để biết lấy nửa mặt phẳng nào. Với $x+y\\ge1$, điểm $O$ cho $0\\ge1$ sai nên miền nghiệm không chứa $O$.",
+                "pairs": [
+                  {
+                    "left": "x ≥ 0",
+                    "right": "Bên phải trục Oy, kể cả trục Oy"
+                  },
+                  {
+                    "left": "y ≤ 2",
+                    "right": "Phía dưới đường thẳng y = 2, kể cả bờ"
+                  },
+                  {
+                    "left": "y > 0",
+                    "right": "Phía trên trục Ox, không kể trục Ox"
+                  },
+                  {
+                    "left": "x + y ≥ 1",
+                    "right": "Nửa mặt phẳng không chứa O, kể cả bờ"
+                  }
+                ]
+              },
+              {
+                "key": "tu-09-trang-trai",
+                "type": "fill_in",
+                "points": 2,
+                "prompt": "Một trang trại trồng $x$ ha ngô và $y$ ha đậu trên tối đa $8$ ha đất. Mỗi ha ngô cần $1$ đơn vị nhân công, mỗi ha đậu cần $2$ đơn vị, và trang trại có tối đa $12$ đơn vị nhân công. Mỗi ha ngô lãi $3$ triệu đồng, mỗi ha đậu lãi $4$ triệu đồng. Tiền lãi lớn nhất là bao nhiêu triệu đồng? Điền một số.",
+                "explanation": "Hệ: $x\\ge0,\\ y\\ge0,\\ x+y\\le8,\\ x+2y\\le12$; lãi $F=3x+4y$. Các đỉnh là $(0;0)$, $(8;0)$, $(4;4)$, $(0;6)$, cho $F$ lần lượt bằng $0$, $24$, $28$, $24$. Lãi lớn nhất là $28$ triệu đồng, khi trồng mỗi loại $4$ ha.",
+                "answers": [
+                  "28",
+                  "28 triệu",
+                  "28 triệu đồng"
+                ]
+              },
+              {
+                "key": "tu-10-gia-tri-lon-nhat",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Giá trị lớn nhất của $F=x+3y$ với $x\\ge0,\\ y\\ge0,\\ x+y\\le6,\\ y\\le4$ là:",
+                "explanation": "Các đỉnh của miền nghiệm là $(0;0)$, $(6;0)$, $(2;4)$, $(0;4)$, cho $F$ lần lượt bằng $0$, $6$, $14$, $12$. Giá trị lớn nhất là $14$. Điểm $(6;4)$ cho $F=18$ nhưng không thoả $x+y\\le6$.",
+                "options": [
+                  {
+                    "label": "$18$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.diem-ngoai-mien"
+                  },
+                  {
+                    "label": "$14$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$12$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.chua-xet-het-dinh"
+                  },
+                  {
+                    "label": "$6$",
+                    "isCorrect": false,
+                    "misconception": "t10.toiuu.chua-xet-het-dinh"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Xác suất cổ điển",
+          "description": "Không gian mẫu, biến cố và cách tính xác suất bằng định nghĩa cổ điển.",
+          "durationMin": 5,
+          "embeds": [
+            {
+              "url": "/decks/xac-suat",
+              "height": 720
+            }
+          ],
+          "lecture": [
+            {
+              "anchor": "s0b0",
+              "text": "Chào em! Thầy là Tiến Đạt. Hôm nay mình học cách đo sự may rủi bằng một con số. Gieo một con xúc xắc, em có dám chắc sẽ ra mặt sáu chấm không? Không ai chắc được, nhưng toán học vẫn nói được rất nhiều điều."
+            },
+            {
+              "anchor": "s0b1",
+              "text": "Việc thứ nhất: mô tả một phép thử, tập hợp mọi kết quả của nó, và các biến cố."
+            },
+            {
+              "anchor": "s0b2",
+              "text": "Việc thứ hai: tính xác suất bằng một công thức đếm rất gọn."
+            },
+            {
+              "anchor": "s0b3",
+              "text": "Việc thứ ba: tự gieo thử hàng nghìn lần ngay trên màn hình, để thấy thực nghiệm khớp với công thức. Mình bắt đầu nhé!"
+            },
+            {
+              "anchor": "s1b0",
+              "text": "Mình vào bài bằng một trò chơi. An và Bình cùng gieo hai con xúc xắc rồi cộng số chấm lại. An đoán tổng bằng bảy, Bình đoán tổng bằng mười hai."
+            },
+            {
+              "anchor": "s1b1",
+              "text": "Tổng nhỏ nhất là hai, lớn nhất là mười hai, tất cả có mười một giá trị."
+            },
+            {
+              "anchor": "s1b2",
+              "text": "Vậy mỗi tổng có cơ hội như nhau không? Em thử bấm gieo mười lần, rồi một trăm lần, rồi một nghìn lần, và so cột của tổng bảy với cột của tổng mười hai. Cuối bài, em sẽ giải thích được vì sao."
+            },
+            {
+              "anchor": "s2b0",
+              "text": "Trước hết là hai khái niệm nền. Phép thử ngẫu nhiên là một thí nghiệm hay một hành động mà em không biết trước được kết quả, như tung đồng xu hay gieo xúc xắc. Tập hợp tất cả các kết quả có thể xảy ra gọi là không gian mẫu, kí hiệu bằng chữ cái ô mê ga."
+            },
+            {
+              "anchor": "s2b1",
+              "text": "Tung một đồng xu: không gian mẫu có hai kết quả, sấp hoặc ngửa."
+            },
+            {
+              "anchor": "s2b2",
+              "text": "Gieo một con xúc xắc: không gian mẫu có sáu kết quả, từ một đến sáu chấm. Bây giờ em thử câu hỏi bên phải."
+            },
+            {
+              "anchor": "s3b0",
+              "text": "Tiếp theo là biến cố. Biến cố là một tập con của không gian mẫu. Những kết quả nằm trong biến cố được gọi là kết quả thuận lợi cho biến cố đó."
+            },
+            {
+              "anchor": "s3b1",
+              "text": "Ví dụ, gieo một con xúc xắc, biến cố A là số chấm chẵn. A gồm ba kết quả: hai, bốn và sáu chấm."
+            },
+            {
+              "anchor": "s3b2",
+              "text": "Biến cố đối của A, kí hiệu A ngang, tức chữ A có gạch phía trên, xảy ra đúng khi A không xảy ra. Ở đây là số chấm lẻ: một, ba và năm chấm."
+            },
+            {
+              "anchor": "s3b3",
+              "text": "Không gian mẫu là biến cố chắc chắn, luôn xảy ra. Tập rỗng là biến cố không thể. Giờ em ghép mỗi biến cố bên phải với tập hợp của nó nhé."
+            },
+            {
+              "anchor": "s4b0",
+              "text": "Đây là công thức trung tâm của bài. Giả sử không gian mẫu gồm hữu hạn kết quả, có khả năng xảy ra như nhau. Khi đó, xác suất của biến cố A bằng số kết quả thuận lợi cho A, chia cho số phần tử của không gian mẫu."
+            },
+            {
+              "anchor": "s4b1",
+              "text": "Ví dụ: gieo xúc xắc, biến cố số chấm chẵn có ba kết quả thuận lợi trên sáu kết quả. Xác suất bằng ba phần sáu, tức là một phần hai."
+            },
+            {
+              "anchor": "s4b2",
+              "text": "Vì số kết quả thuận lợi không vượt quá tổng số kết quả, xác suất luôn nằm trong khoảng từ không đến một. Biến cố chắc chắn có xác suất bằng một, biến cố không thể có xác suất bằng không."
+            },
+            {
+              "anchor": "s4b3",
+              "text": "Với biến cố đối, em lấy một trừ đi xác suất của A. Mẹo này rất hữu ích khi đếm trực tiếp quá dài."
+            },
+            {
+              "anchor": "s4b4",
+              "text": "Một điều kiện quan trọng: các kết quả phải đồng khả năng. Nếu xúc xắc bị làm lệch, công thức này không còn dùng được nữa."
+            },
+            {
+              "anchor": "s5b0",
+              "text": "Bây giờ mình kiểm chứng công thức bằng thực nghiệm. Tần suất của một biến cố, còn gọi là xác suất thực nghiệm, là số lần nó xảy ra chia cho số lần thử. Em chọn thẻ đồng xu hoặc thẻ xúc xắc, rồi bấm gieo."
+            },
+            {
+              "anchor": "s5b1",
+              "text": "Khi gieo ít lần, tần suất nhảy lên nhảy xuống rất mạnh. Gieo mười lần mà được bảy lần ngửa cũng chẳng có gì lạ."
+            },
+            {
+              "anchor": "s5b2",
+              "text": "Nhưng khi số lần gieo tăng lên hàng nghìn, tần suất thường ổn định dần, sát vạch đứt, chính là xác suất tính bằng công thức."
+            },
+            {
+              "anchor": "s5b3",
+              "text": "Với đồng xu, tần suất mặt ngửa dao động quanh một phần hai. Với xúc xắc, tần suất mỗi mặt dao động quanh một phần sáu, khoảng không phẩy một sáu bảy. Đó là lí do xác suất là con số đáng tin, dù từng lần gieo vẫn hoàn toàn ngẫu nhiên."
+            },
+            {
+              "anchor": "s6b0",
+              "text": "Quay lại trò chơi của An và Bình. Khi gieo hai con xúc xắc, mỗi kết quả là một cặp số. Bảng bên trái ghi tổng số chấm cho từng cặp: hàng là con thứ nhất, cột là con thứ hai."
+            },
+            {
+              "anchor": "s6b1",
+              "text": "Cặp một với sáu khác cặp sáu với một, vì hai con xúc xắc là hai vật khác nhau. Em cứ tưởng tượng một con màu đỏ, một con màu xanh."
+            },
+            {
+              "anchor": "s6b2",
+              "text": "Mỗi con có sáu mặt, nên có sáu nhân sáu, bằng ba mươi sáu cặp, và các cặp này đồng khả năng."
+            },
+            {
+              "anchor": "s6b3",
+              "text": "Những ô được tô màu là các cặp có tổng bằng bảy. Em đếm thử, rồi sang slide sau tính xác suất nhé."
+            },
+            {
+              "anchor": "s7b0",
+              "text": "Đến lượt em! Gieo hai con xúc xắc cân đối, tính xác suất để tổng số chấm bằng bảy. Em có thể nhập phân số tối giản hoặc số thập phân. Nhớ là hai con xúc xắc phân biệt nhé!"
+            },
+            {
+              "anchor": "s8b0",
+              "text": "Giờ mình giải đáp câu đố đầu bài. Em gieo hai xúc xắc một nghìn lần, rồi mười nghìn lần, và nhìn cột tổng bảy với cột tổng mười hai."
+            },
+            {
+              "anchor": "s8b1",
+              "text": "Tổng bảy có sáu cặp, xác suất bằng một phần sáu, khoảng không phẩy một sáu bảy."
+            },
+            {
+              "anchor": "s8b2",
+              "text": "Tổng mười hai chỉ có một cặp, là sáu với sáu. Xác suất chỉ bằng một phần ba mươi sáu, khoảng không phẩy không hai tám."
+            },
+            {
+              "anchor": "s8b3",
+              "text": "Vậy An có khả năng đoán đúng gấp sáu lần Bình. Biểu đồ mô phỏng có dạng như một ngọn núi, cao nhất ở tổng bảy. Em thấy công thức và thực nghiệm khớp nhau chưa?"
+            },
+            {
+              "anchor": "s9b0",
+              "text": "Khi phép thử gồm nhiều bước, sơ đồ hình cây giúp em liệt kê không sót. Đây là sơ đồ cho phép thử tung một đồng xu ba lần liên tiếp."
+            },
+            {
+              "anchor": "s9b1",
+              "text": "Mỗi lần tung, cây tách làm hai nhánh: sấp hoặc ngửa. Mỗi đường đi từ gốc tới một lá là một kết quả."
+            },
+            {
+              "anchor": "s9b2",
+              "text": "Ba lần tung, mỗi lần hai nhánh, nên có hai nhân hai nhân hai, bằng tám kết quả. Em dò trên cây rồi trả lời câu hỏi bên phải nhé."
+            },
+            {
+              "anchor": "s10b0",
+              "text": "Đến phần luyện tập, gồm ba câu trong ba thẻ. Câu một là rút thẻ, câu hai gieo hai xúc xắc, câu ba lấy bi trong hộp. Với câu hai, em thử dùng biến cố đối cho nhanh. Làm xong cả ba thẻ, em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s11b0",
+              "text": "Mình cùng tổng kết bài học nhé."
+            },
+            {
+              "anchor": "s11b1",
+              "text": "Không gian mẫu là tập hợp mọi kết quả có thể xảy ra. Biến cố là một tập con của nó."
+            },
+            {
+              "anchor": "s11b2",
+              "text": "Khi các kết quả đồng khả năng, xác suất bằng số kết quả thuận lợi chia cho số phần tử của không gian mẫu. Xác suất luôn nằm trong khoảng từ không đến một."
+            },
+            {
+              "anchor": "s11b3",
+              "text": "Xác suất của biến cố đối bằng một trừ xác suất của biến cố. Hãy dùng nó khi đếm trực tiếp quá dài."
+            },
+            {
+              "anchor": "s11b4",
+              "text": "Cuối cùng, khi đếm, em dùng bảng, sơ đồ hình cây hoặc tổ hợp, và luôn coi các vật là phân biệt. Thêm một nguyên lí: biến cố có xác suất rất nhỏ thì trong một lần thử, coi như nó không xảy ra. Về nhà, em thử tung đồng xu thật và so với mô phỏng nhé. Hẹn gặp lại em!"
+            }
+          ],
+          "quiz": {
+            "title": "Kiểm tra · Xác suất cổ điển",
+            "passThresholdPct": 60,
+            "requireConfidence": false,
+            "questions": [
+              {
+                "key": "xs-01-khong-gian-mau",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Tung một đồng xu rồi gieo một con xúc xắc. Không gian mẫu có bao nhiêu phần tử?",
+                "explanation": "Mỗi mặt của đồng xu đi với $6$ mặt của xúc xắc, nên $n(\\Omega)=2\\cdot6=12$.",
+                "options": [
+                  {
+                    "label": "$8$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.cong-thay-nhan"
+                  },
+                  {
+                    "label": "$12$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$6$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$2$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xs-02-bien-co-doi",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Biến cố $A$ có $P(A)=0{,}3$. Xác suất của biến cố đối $\\overline{A}$ là:",
+                "explanation": "$P(\\overline{A})=1-P(A)=1-0{,}3=0{,}7$.",
+                "options": [
+                  {
+                    "label": "$0{,}3$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.sai-bien-co-doi"
+                  },
+                  {
+                    "label": "$1{,}3$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.sai-bien-co-doi"
+                  },
+                  {
+                    "label": "$-0{,}3$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$0{,}7$",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "xs-03-dong-kha-nang",
+                "type": "true_false",
+                "points": 1,
+                "prompt": "Gieo hai con xúc xắc cân đối. Tổng số chấm có $11$ giá trị từ $2$ đến $12$, nên xác suất để tổng bằng $5$ là $\\frac{1}{11}$.",
+                "explanation": "Sai. Các tổng không đồng khả năng. Có $36$ cặp đồng khả năng, trong đó $4$ cặp có tổng bằng $5$: $(1;4),(2;3),(3;2),(4;1)$. Vậy xác suất là $\\frac{4}{36}=\\frac19$.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.khong-dong-kha-nang"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "xs-04-bi",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Một hộp có $5$ bi đỏ và $3$ bi xanh. Rút ngẫu nhiên một bi. Xác suất rút được bi đỏ là:",
+                "explanation": "$n(\\Omega)=8$ và có $5$ bi đỏ, nên $P=\\frac58$.",
+                "options": [
+                  {
+                    "label": "$\\frac53$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.chia-sai-mau"
+                  },
+                  {
+                    "label": "$\\frac58$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac38$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.nham-bien-co"
+                  },
+                  {
+                    "label": "$\\frac12$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.khong-dong-kha-nang"
+                  }
+                ]
+              },
+              {
+                "key": "xs-05-tong-9",
+                "type": "fill_in",
+                "points": 1,
+                "prompt": "Gieo hai con xúc xắc cân đối. Tính xác suất để tổng số chấm bằng $9$. Nhập phân số tối giản (ví dụ 2/9) hoặc số thập phân làm tròn đến hai chữ số.",
+                "explanation": "Các cặp thuận lợi là $(3;6),(4;5),(5;4),(6;3)$, nên $P=\\frac{4}{36}=\\frac19\\approx0{,}11$.",
+                "answers": [
+                  "1/9",
+                  "0,11",
+                  "0.11"
+                ]
+              },
+              {
+                "key": "xs-06-hai-mat-bang-nhau",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Gieo hai con xúc xắc cân đối. Xác suất để hai mặt có số chấm bằng nhau là:",
+                "explanation": "Có $6$ cặp thuận lợi $(1;1),(2;2),\\dots,(6;6)$ trên $36$ cặp đồng khả năng, nên $P=\\frac{6}{36}=\\frac16$.",
+                "options": [
+                  {
+                    "label": "$\\frac16$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac27$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.khong-phan-biet-vat"
+                  },
+                  {
+                    "label": "$\\frac{1}{36}$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.thieu-ket-qua"
+                  },
+                  {
+                    "label": "$\\frac{1}{12}$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xs-07-ghep-xac-suat",
+                "type": "matching",
+                "points": 2,
+                "prompt": "Rút ngẫu nhiên một thẻ từ $10$ thẻ đánh số từ $1$ đến $10$. Hãy ghép mỗi biến cố với xác suất của nó.",
+                "explanation": "Số chia hết cho $5$ là $\\{5;10\\}$; số nguyên tố là $\\{2;3;5;7\\}$. Số lớn hơn $10$ là biến cố không thể; số nhỏ hơn $11$ là biến cố chắc chắn.",
+                "pairs": [
+                  {
+                    "left": "Số chia hết cho 5",
+                    "right": "1/5"
+                  },
+                  {
+                    "left": "Số nguyên tố",
+                    "right": "2/5"
+                  },
+                  {
+                    "left": "Số lớn hơn 10",
+                    "right": "0"
+                  },
+                  {
+                    "left": "Số nhỏ hơn 11",
+                    "right": "1"
+                  }
+                ]
+              },
+              {
+                "key": "xs-08-chia-het-4",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Rút ngẫu nhiên một thẻ từ $30$ thẻ đánh số từ $1$ đến $30$. Xác suất rút được thẻ ghi số chia hết cho $4$ là:",
+                "explanation": "$A=\\{4;8;12;16;20;24;28\\}$ nên $n(A)=7$ và $P=\\frac{7}{30}$.",
+                "options": [
+                  {
+                    "label": "$\\frac14$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.doan-theo-ti-le"
+                  },
+                  {
+                    "label": "$\\frac{2}{15}$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$\\frac{7}{30}$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac{4}{15}$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "xs-09-it-nhat-mot",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Tung một đồng xu cân đối $4$ lần. Xác suất để có ít nhất một lần ngửa là:",
+                "explanation": "$n(\\Omega)=2^4=16$. Biến cố đối là «cả bốn lần đều sấp», có đúng $1$ kết quả. Vậy $P=1-\\frac{1}{16}=\\frac{15}{16}$.",
+                "options": [
+                  {
+                    "label": "$\\frac{1}{16}$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.quen-lay-phan-bu"
+                  },
+                  {
+                    "label": "$\\frac14$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.thieu-ket-qua"
+                  },
+                  {
+                    "label": "$\\frac12$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.khong-dong-kha-nang"
+                  },
+                  {
+                    "label": "$\\frac{15}{16}$",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "xs-10-cung-mau",
+                "type": "mcq",
+                "points": 2,
+                "prompt": "Một hộp có $3$ bi đỏ và $2$ bi xanh. Rút ngẫu nhiên cùng lúc hai bi. Xác suất để hai bi cùng màu là:",
+                "explanation": "$n(\\Omega)=C_5^2=10$. Hai bi cùng đỏ có $C_3^2=3$ cách, cùng xanh có $C_2^2=1$ cách. Vậy $P=\\frac{3+1}{10}=\\frac25$.",
+                "options": [
+                  {
+                    "label": "$\\frac{3}{10}$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.quen-truong-hop"
+                  },
+                  {
+                    "label": "$\\frac25$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\frac{13}{25}$",
+                    "isCorrect": false,
+                    "misconception": "t10.xacsuat.co-hoan-lai"
+                  },
+                  {
+                    "label": "$\\frac12$",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "misconceptions": [
+    {
+      "code": "t10.hs2.khong-rut-gon",
+      "name": "Thấy x² là kết luận hàm bậc hai, không rút gọn",
+      "description": "Nhận dạng hàm bậc hai theo hình thức của biểu thức thay vì rút gọn về dạng ax² + bx + c. Sau khi rút gọn, số hạng x² có thể triệt tiêu và hàm số chỉ còn bậc nhất."
+    },
+    {
+      "code": "t10.hs2.so-sanh-a-theo-dau",
+      "name": "So độ hẹp theo a, không theo |a|",
+      "description": "Cho rằng a càng lớn thì parabol càng hẹp, nên bỏ qua các hệ số âm. Độ hẹp phụ thuộc vào trị tuyệt đối của a; dấu của a chỉ quyết định chiều của bề lõm."
+    },
+    {
+      "code": "t10.hs2.a-duong-cat-ox",
+      "name": "Cho rằng a > 0 thì parabol luôn cắt Ox",
+      "description": "Suy ra số giao điểm với trục Ox từ dấu của a. Số giao điểm do dấu của Δ quyết định."
+    },
+    {
+      "code": "t10.hs2.quen-dau-tru-dinh",
+      "name": "Quên dấu trừ trong công thức hoành độ đỉnh",
+      "description": "Tính hoành độ đỉnh bằng b/(2a) thay vì −b/(2a), nên đỉnh và trục đối xứng nằm sai phía."
+    },
+    {
+      "code": "t10.hs2.quen-so-2-mau",
+      "name": "Quên số 2 ở mẫu",
+      "description": "Tính hoành độ đỉnh bằng −b/a thay vì −b/(2a)."
+    },
+    {
+      "code": "t10.hs2.lay-c-lam-tung-do",
+      "name": "Lấy hệ số c làm tung độ đỉnh",
+      "description": "Nhầm điểm giao với trục Oy là (0; c) với đỉnh của parabol. Tung độ đỉnh phải tính bằng f(x_I) hoặc −Δ/(4a)."
+    },
+    {
+      "code": "t10.hs2.nham-chieu-bien-thien",
+      "name": "Nhầm chiều biến thiên khi a < 0",
+      "description": "Dùng chiều biến thiên của trường hợp a > 0 cho mọi parabol. Khi a < 0, hàm số đồng biến ở bên trái đỉnh và nghịch biến ở bên phải đỉnh."
+    },
+    {
+      "code": "t10.hs2.lay-tung-do-lam-moc",
+      "name": "Lấy tung độ đỉnh làm mốc của khoảng biến thiên",
+      "description": "Khoảng đồng biến và nghịch biến được xét trên trục hoành, nên mốc là hoành độ đỉnh, không phải tung độ đỉnh."
+    },
+    {
+      "code": "t10.hs2.nham-gia-tri-voi-hoanh-do",
+      "name": "Nhầm giá trị của hàm số với vị trí đạt giá trị",
+      "description": "Trả lời hoành độ đỉnh khi đề hỏi giá trị lớn nhất hoặc nhỏ nhất. Giá trị cần tìm là tung độ đỉnh; hoành độ đỉnh chỉ cho biết giá trị đó đạt tại đâu."
+    },
+    {
+      "code": "t10.hs2.sai-dieu-kien-delta",
+      "name": "Nhầm điều kiện của Δ khi có tham số",
+      "description": "Viết ngược dấu của Δ hoặc tính Δ thiếu hệ số 4. Parabol không cắt Ox khi Δ < 0, và Δ = b² − 4ac."
+    },
+    {
+      "code": "t10.conic.nham-a-b",
+      "name": "Không kiểm a > b khi nhận phương trình chính tắc của elip",
+      "description": "Trong phương trình chính tắc của elip, mẫu của x² là a² và phải lớn hơn mẫu của y² là b². Phương trình có mẫu của y² lớn hơn vẫn là một elip nhưng không ở dạng chính tắc."
+    },
+    {
+      "code": "t10.conic.nham-elip-hypebol",
+      "name": "Nhầm elip với hypebol",
+      "description": "Không phân biệt tổng và hiệu khoảng cách trong định nghĩa, hoặc dấu cộng và dấu trừ trong phương trình chính tắc."
+    },
+    {
+      "code": "t10.conic.nham-he-thuc-c",
+      "name": "Dùng sai hệ thức giữa a, b, c",
+      "description": "Dùng c² = a² + b² cho elip hoặc c² = a² − b² cho hypebol."
+    },
+    {
+      "code": "t10.conic.lay-a-lam-c",
+      "name": "Lấy a làm c",
+      "description": "Lấy căn của mẫu số thứ nhất làm hoành độ tiêu điểm. Đó là a, còn tiêu điểm có hoành độ ±c."
+    },
+    {
+      "code": "t10.conic.sai-truc-tieu-diem",
+      "name": "Đặt tiêu điểm sai trục",
+      "description": "Với phương trình chính tắc của elip và hypebol, hai tiêu điểm nằm trên trục Ox, không nằm trên trục Oy."
+    },
+    {
+      "code": "t10.conic.quen-chia-doi-p",
+      "name": "Quên chia đôi khi đọc parabol",
+      "description": "Đọc nhầm hệ số trước x với p, hoặc quên rằng tiêu điểm và đường chuẩn cách đỉnh một khoảng p/2."
+    },
+    {
+      "code": "t10.conic.nham-tieu-diem-duong-chuan",
+      "name": "Nhầm tiêu điểm với đường chuẩn",
+      "description": "Viết đường chuẩn là x = p/2. Đường chuẩn nằm khác phía tiêu điểm so với đỉnh, nên có phương trình x = −p/2."
+    },
+    {
+      "code": "t10.conic.lay-2a-lam-a",
+      "name": "Lấy thẳng 2a, 2c làm mẫu số",
+      "description": "Dùng trực tiếp các số trong đề (tổng khoảng cách, tiêu cự) làm mẫu số, trong khi mẫu số phải là a² và b²."
+    },
+    {
+      "code": "t10.conic.lay-c-lam-b",
+      "name": "Lấy c² làm b²",
+      "description": "Dùng c² ở vị trí mẫu của y². Mẫu đó là b² và phải tính bằng b² = a² − c²."
+    },
+    {
+      "code": "t10.tamgiac.sai-dau-cosin",
+      "name": "Sai dấu trong định lí côsin",
+      "description": "Viết dấu cộng trước số hạng 2ac cos B. Định lí côsin có dấu trừ."
+    },
+    {
+      "code": "t10.tamgiac.thieu-he-so-2",
+      "name": "Thiếu hệ số 2 trong định lí côsin",
+      "description": "Viết ac cos B thay vì 2ac cos B."
+    },
+    {
+      "code": "t10.tamgiac.ghep-sai-cap",
+      "name": "Ghép sai cặp cạnh và góc",
+      "description": "Ghép một cạnh với góc không đối diện nó. Trong định lí sin và định lí côsin, mỗi cạnh đi với góc đối diện."
+    },
+    {
+      "code": "t10.tamgiac.quen-2r",
+      "name": "Quên số 2 trong 2R",
+      "description": "Viết a/sin A = R. Tỉ số này bằng đường kính 2R của đường tròn ngoại tiếp."
+    },
+    {
+      "code": "t10.tamgiac.quen-dau-cos-tu",
+      "name": "Quên cos của góc tù là số âm",
+      "description": "Dùng cos(180° − α) = cos α. Hai góc bù nhau có sin bằng nhau nhưng cos đối nhau."
+    },
+    {
+      "code": "t10.tamgiac.quen-khai-can",
+      "name": "Quên khai căn",
+      "description": "Dừng ở a² mà không khai căn để có độ dài cạnh."
+    },
+    {
+      "code": "t10.tamgiac.quen-nhan-nua",
+      "name": "Quên hệ số một phần hai trong công thức diện tích",
+      "description": "Tính S = bc sin A thay vì S = ½ bc sin A."
+    },
+    {
+      "code": "t10.tamgiac.nham-gia-tri-sin",
+      "name": "Nhầm giá trị sin của góc",
+      "description": "Lấy sin 150° = √3/2. Thực ra sin 150° = sin 30° = ½."
+    },
+    {
+      "code": "t10.tamgiac.nham-dau-sin-tu",
+      "name": "Cho rằng sin của góc tù là số âm",
+      "description": "Trong tam giác, sin của mọi góc đều dương, kể cả góc tù. Diện tích không thể âm."
+    },
+    {
+      "code": "t10.toiuu.khong-bac-nhat",
+      "name": "Nhận nhầm bất phương trình không phải bậc nhất",
+      "description": "Bất phương trình bậc nhất hai ẩn chỉ chứa x và y ở bậc một, không có x², xy hay ẩn ở mẫu."
+    },
+    {
+      "code": "t10.toiuu.dao-thu-tu-toa-do",
+      "name": "Đảo thứ tự hoành độ và tung độ",
+      "description": "Viết (y; x) thay vì (x; y). Thứ tự trong cặp số quyết định điểm nào đang được xét."
+    },
+    {
+      "code": "t10.toiuu.bo-bo-mien-nghiem",
+      "name": "Loại nhầm hoặc giữ nhầm đường biên",
+      "description": "Với dấu ≤ hoặc ≥, các điểm nằm trên bờ cũng là nghiệm. Chỉ với dấu < hoặc > thì bờ mới bị loại."
+    },
+    {
+      "code": "t10.toiuu.thu-diem-sai",
+      "name": "Xác định sai nửa mặt phẳng",
+      "description": "Chọn nửa mặt phẳng không chứa điểm thử dù điểm thử thoả bất phương trình."
+    },
+    {
+      "code": "t10.toiuu.gan-sai-he-so",
+      "name": "Gán sai hệ số cho ẩn",
+      "description": "Đưa hệ số của loại này cho ẩn của loại kia khi chuyển bài toán thành bất phương trình."
+    },
+    {
+      "code": "t10.toiuu.sai-chieu-bat-dang-thuc",
+      "name": "Viết sai chiều bất đẳng thức",
+      "description": "Dịch «tối đa» thành ≥ hoặc «tối thiểu» thành ≤."
+    },
+    {
+      "code": "t10.toiuu.nghi-o-nho-nhat",
+      "name": "Cho rằng giá trị nhỏ nhất luôn ở gốc toạ độ",
+      "description": "Giá trị của biểu thức tại O bằng 0, nhưng biểu thức có thể âm tại đỉnh khác."
+    },
+    {
+      "code": "t10.toiuu.chua-xet-het-dinh",
+      "name": "Chưa xét hết các đỉnh",
+      "description": "Kết luận sau khi tính tại một vài đỉnh. Giá trị tối ưu phải so sánh trên tất cả các đỉnh của miền nghiệm."
+    },
+    {
+      "code": "t10.toiuu.nham-lon-nho",
+      "name": "Nhầm giá trị lớn nhất với nhỏ nhất",
+      "description": "Trả lời giá trị lớn nhất khi đề hỏi giá trị nhỏ nhất, hoặc ngược lại."
+    },
+    {
+      "code": "t10.toiuu.diem-ngoai-mien",
+      "name": "Tính tại điểm nằm ngoài miền nghiệm",
+      "description": "Dùng giao điểm của các đường biên mà không kiểm tra điểm đó có thoả toàn bộ hệ hay không."
+    },
+    {
+      "code": "t10.xacsuat.cong-thay-nhan",
+      "name": "Cộng thay vì nhân khi đếm hai bước",
+      "description": "Hai bước liên tiếp phải nhân số khả năng. Cộng chỉ đúng khi chọn một trong các phương án."
+    },
+    {
+      "code": "t10.xacsuat.sai-bien-co-doi",
+      "name": "Dùng sai công thức biến cố đối",
+      "description": "Biến cố đối có xác suất bằng 1 − P(A), không phải P(A) hay 1 + P(A)."
+    },
+    {
+      "code": "t10.xacsuat.khong-dong-kha-nang",
+      "name": "Dùng công thức khi các kết quả không đồng khả năng",
+      "description": "Coi mỗi giá trị hay mỗi loại là một kết quả đồng khả năng. Công thức cổ điển chỉ dùng cho các kết quả đồng khả năng."
+    },
+    {
+      "code": "t10.xacsuat.chia-sai-mau",
+      "name": "Chia cho phần còn lại thay vì toàn bộ",
+      "description": "Lấy số kết quả thuận lợi chia cho số kết quả không thuận lợi. Mẫu số phải là toàn bộ không gian mẫu."
+    },
+    {
+      "code": "t10.xacsuat.nham-bien-co",
+      "name": "Tính nhầm biến cố",
+      "description": "Đếm kết quả của biến cố khác với biến cố đề hỏi."
+    },
+    {
+      "code": "t10.xacsuat.khong-phan-biet-vat",
+      "name": "Không coi các vật là phân biệt",
+      "description": "Coi (1; 2) và (2; 1) là một kết quả. Khi đó các kết quả không còn đồng khả năng."
+    },
+    {
+      "code": "t10.xacsuat.thieu-ket-qua",
+      "name": "Đếm thiếu kết quả thuận lợi",
+      "description": "Dừng lại khi mới tìm được một phần các kết quả thuận lợi."
+    },
+    {
+      "code": "t10.xacsuat.quen-lay-phan-bu",
+      "name": "Quên lấy 1 trừ khi dùng biến cố đối",
+      "description": "Tính xong xác suất của biến cố đối nhưng trả lời luôn số đó."
+    },
+    {
+      "code": "t10.xacsuat.doan-theo-ti-le",
+      "name": "Đoán theo tỉ lệ thay vì đếm",
+      "description": "Cho rằng xác suất số chia hết cho k luôn bằng 1/k. Điều này chỉ đúng khi số phần tử chia hết cho k."
+    },
+    {
+      "code": "t10.xacsuat.quen-truong-hop",
+      "name": "Bỏ sót một trường hợp của biến cố",
+      "description": "Biến cố có nhiều trường hợp rời nhau nhưng mới tính một trường hợp."
+    },
+    {
+      "code": "t10.xacsuat.co-hoan-lai",
+      "name": "Coi rút cùng lúc như rút có hoàn lại",
+      "description": "Tính như thể rút lần lượt rồi trả bi lại, nên không gian mẫu sai."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "t10.hs2.khong-rut-gon",
+      "body": "Hãy rút gọn biểu thức trước khi kết luận. Một hàm số chỉ là hàm bậc hai khi sau rút gọn có dạng ax² + bx + c với a ≠ 0.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.so-sanh-a-theo-dau",
+      "body": "Khi so độ hẹp của parabol, em hãy so |a|, không so a. Dấu của a chỉ cho biết bề lõm quay lên hay quay xuống.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.a-duong-cat-ox",
+      "body": "Dấu của a cho biết chiều của bề lõm, còn số giao điểm với Ox phải xét dấu của Δ. Ví dụ y = x² + 1 có a > 0 nhưng không cắt Ox.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.quen-dau-tru-dinh",
+      "body": "Hãy xem lại công thức x_I = −b/(2a): có dấu trừ phía trước. Em lấy b, đổi dấu, rồi mới chia cho 2a.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.quen-so-2-mau",
+      "body": "Mẫu số trong công thức hoành độ đỉnh là 2a, không phải a. Em hãy tính lại x_I = −b/(2a).",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.lay-c-lam-tung-do",
+      "body": "Hệ số c là tung độ giao điểm với trục Oy, không phải tung độ đỉnh. Muốn có tung độ đỉnh, em thay hoành độ đỉnh vào hàm số.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.nham-chieu-bien-thien",
+      "body": "Hãy hình dung parabol có a < 0: đồ thị đi lên tới đỉnh rồi đi xuống. Vì vậy hàm số đồng biến ở bên trái đỉnh và nghịch biến ở bên phải đỉnh.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.lay-tung-do-lam-moc",
+      "body": "Khoảng biến thiên là khoảng giá trị của x, nên mốc phải là hoành độ đỉnh. Tung độ đỉnh là giá trị của y.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.nham-gia-tri-voi-hoanh-do",
+      "body": "Đề hỏi giá trị của y. Hoành độ đỉnh chỉ cho biết giá trị đó đạt tại đâu, em cần thay tiếp vào hàm số để tính y.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.hs2.sai-dieu-kien-delta",
+      "body": "Parabol không cắt Ox khi phương trình ax² + bx + c = 0 vô nghiệm, tức là Δ = b² − 4ac < 0. Em hãy tính lại Δ theo m rồi giải bất phương trình.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.nham-a-b",
+      "body": "Phương trình chính tắc của elip đòi hỏi a > b > 0, tức là mẫu của x² lớn hơn mẫu của y². Em hãy so hai mẫu số trước khi kết luận.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.nham-elip-hypebol",
+      "body": "Elip dùng tổng MF₁ + MF₂ và dấu cộng trong phương trình; hypebol dùng trị tuyệt đối của hiệu |MF₁ − MF₂| và dấu trừ.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.nham-he-thuc-c",
+      "body": "Với elip, a lớn nhất nên c² = a² − b². Với hypebol, c lớn nhất nên c² = a² + b².",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.lay-a-lam-c",
+      "body": "Số dưới x² cho a², không cho c. Em cần tính c từ hệ thức của đường đang xét rồi mới viết tiêu điểm (±c; 0).",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.sai-truc-tieu-diem",
+      "body": "Ở dạng chính tắc, hai tiêu điểm nằm trên trục Ox nên có toạ độ (±c; 0).",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.quen-chia-doi-p",
+      "body": "Từ y² = 2px, em tìm p trước. Tiêu điểm là (p/2; 0) và đường chuẩn là x = −p/2, đều có p/2.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.nham-tieu-diem-duong-chuan",
+      "body": "Tiêu điểm và đường chuẩn nằm ở hai phía của đỉnh: tiêu điểm có hoành độ p/2, đường chuẩn là x = −p/2.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.lay-2a-lam-a",
+      "body": "Tổng MF₁ + MF₂ bằng 2a và tiêu cự bằng 2c. Em chia đôi để có a, c, rồi mới tính a² và b².",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.conic.lay-c-lam-b",
+      "body": "Mẫu của y² là b². Em tính b² = a² − c², không dùng thẳng c².",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.sai-dau-cosin",
+      "body": "Định lí côsin có dấu trừ: b² = a² + c² − 2ac cos B. Khi B tù, cos B âm nên số hạng đó mới làm b² lớn hơn.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.thieu-he-so-2",
+      "body": "Số hạng cuối của định lí côsin là 2ac cos B, em đừng bỏ hệ số 2.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.ghep-sai-cap",
+      "body": "Mỗi cạnh đi cùng góc đối diện cùng tên: a với A, b với B, c với C. Em hãy kiểm tra lại từng cặp.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-2r",
+      "body": "Tỉ số a/sin A bằng 2R, tức là đường kính của đường tròn ngoại tiếp, không phải bán kính.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-dau-cos-tu",
+      "body": "Hai góc bù nhau có sin bằng nhau nhưng cos đối nhau: cos(180° − α) = −cos α. Vì vậy cos của góc tù là số âm.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-khai-can",
+      "body": "Định lí côsin cho a². Em đã tính đúng phần đó, chỉ còn khai căn để có độ dài cạnh.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.quen-nhan-nua",
+      "body": "Công thức diện tích là S = ½ bc sin A, em đừng quên hệ số ½.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.nham-gia-tri-sin",
+      "body": "Dùng góc bù: sin 150° = sin(180° − 30°) = sin 30° = ½.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.tamgiac.nham-dau-sin-tu",
+      "body": "Trong tam giác, sin của góc tù vẫn dương; chỉ cos của góc tù mới âm. Diện tích cũng không thể âm.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.khong-bac-nhat",
+      "body": "Bất phương trình bậc nhất hai ẩn có dạng ax + by ≤ c, không có x², tích xy hay ẩn ở mẫu.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.dao-thu-tu-toa-do",
+      "body": "Trong cặp (x; y), hoành độ viết trước, tung độ viết sau. Em thay lại đúng thứ tự vào biểu thức.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.bo-bo-mien-nghiem",
+      "body": "Hãy nhìn dấu của bất phương trình: có dấu bằng (≤, ≥) thì miền nghiệm kể cả bờ, không có dấu bằng (<, >) thì không kể bờ.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.thu-diem-sai",
+      "body": "Thay điểm O(0; 0) vào bất phương trình: nếu đúng thì miền nghiệm chứa O, nếu sai thì miền nghiệm không chứa O.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.gan-sai-he-so",
+      "body": "Hãy đối chiếu từng ẩn: x là số bánh loại A nên đi với lượng trứng của một chiếc bánh loại A; y tương tự với loại B.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.sai-chieu-bat-dang-thuc",
+      "body": "«Tối đa» nghĩa là không vượt quá, viết bằng dấu ≤; «ít nhất» viết bằng dấu ≥.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.nghi-o-nho-nhat",
+      "body": "Biểu thức có hệ số âm có thể cho giá trị âm. Em phải tính tại mọi đỉnh, không dừng ở O.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.chua-xet-het-dinh",
+      "body": "Giá trị lớn nhất hoặc nhỏ nhất đạt tại một đỉnh, nhưng phải tính ở tất cả các đỉnh mới biết là đỉnh nào.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.nham-lon-nho",
+      "body": "Em đã tính đúng các giá trị, chỉ cần đọc lại đề: đề đang hỏi giá trị nhỏ nhất hay lớn nhất.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.toiuu.diem-ngoai-mien",
+      "body": "Giao điểm của hai đường biên chỉ là đỉnh khi nó thoả mọi bất phương trình còn lại. Em hãy thử điểm đó vào cả hệ.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.cong-thay-nhan",
+      "body": "Mỗi kết quả của bước đầu đi với mọi kết quả của bước sau, nên số kết quả là tích, không phải tổng.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.sai-bien-co-doi",
+      "body": "P(biến cố đối) = 1 − P(A). Tổng xác suất của một biến cố và biến cố đối của nó luôn bằng 1.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.khong-dong-kha-nang",
+      "body": "Công thức P(A) = n(A)/n(Ω) chỉ đúng khi các kết quả đồng khả năng. Em cần đếm trên từng kết quả cơ bản, không đếm theo loại hay theo giá trị.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.chia-sai-mau",
+      "body": "Mẫu số là n(Ω), số mọi kết quả có thể, gồm cả các kết quả không thuận lợi.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.nham-bien-co",
+      "body": "Em hãy đọc lại đề và viết rõ biến cố cần tính trước khi đếm.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.khong-phan-biet-vat",
+      "body": "Hãy coi hai xúc xắc là phân biệt: (1; 2) và (2; 1) là hai kết quả khác nhau, nên n(Ω) = 36.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.thieu-ket-qua",
+      "body": "Em hãy liệt kê có hệ thống để không bỏ sót kết quả thuận lợi nào.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.quen-lay-phan-bu",
+      "body": "Em đã tính P của biến cố đối. Đáp số của đề bằng 1 trừ đi số đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.doan-theo-ti-le",
+      "body": "Em hãy đếm thật số phần tử thoả mãn. Với các số từ 1 đến 30, tỉ lệ số chia hết cho 4 không đúng bằng 1/4.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.quen-truong-hop",
+      "body": "«Cùng màu» gồm hai trường hợp: cùng đỏ hoặc cùng xanh. Em cần cộng cả hai.",
+      "priority": 10
+    },
+    {
+      "misconception": "t10.xacsuat.co-hoan-lai",
+      "body": "Rút cùng lúc hai bi thì mỗi kết quả là một cặp bi khác nhau, nên n(Ω) là số tổ hợp, không phải 5 · 5.",
+      "priority": 10
+    }
+  ]
+}

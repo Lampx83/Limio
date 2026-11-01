@@ -33,6 +33,7 @@ import {
   countSections,
   expandQuestion,
   renderLessonBlocks,
+  upsertFeedbackTemplate,
   resolveManifest,
 } from "./import-course";
 
@@ -192,6 +193,38 @@ async function main() {
   }
 
   // ── Bài chưa có trên hệ thống ───────────────────────────────────────────────
+  /** Tạo quiz của bài từ manifest, kèm lỗi tư duy và mẫu phản hồi mà quiz cần. Chỉ thêm, không đụng quiz khác. */
+  const createLessonQuiz = async (lessonId: string): Promise<void> => {
+    if (!spec.quiz) return;
+    const mcIds = new Map<string, string>();
+    for (const m of manifest.misconceptions ?? []) {
+      const row = await prisma.misconception.upsert({
+        where: { code: m.code },
+        update: { name: m.name, description: m.description },
+        create: { code: m.code, name: m.name, description: m.description },
+        select: { id: true },
+      });
+      mcIds.set(m.code, row.id);
+    }
+    for (const t of manifest.feedbackTemplates ?? []) {
+      if (t.misconception && mcIds.has(t.misconception)) await upsertFeedbackTemplate(mcIds.get(t.misconception)!, t.body, t.priority ?? 100);
+    }
+    const { quizId } = await createQuiz(
+      owner.id,
+      { courseId: course.id, lessonId },
+      {
+        title: spec.quiz.title,
+        passThresholdPct: spec.quiz.passThresholdPct,
+        requireConfidence: spec.quiz.requireConfidence,
+        timeLimitSec: spec.quiz.timeLimitSec,
+        maxAttempts: spec.quiz.maxAttempts,
+      },
+    );
+    for (const [qi, q] of spec.quiz.questions.entries()) {
+      await createQuestion(owner.id, quizId, expandQuestion(q, qi, mcIds));
+    }
+  };
+
   // Tạo mới phải xin phép bằng cờ --create: gõ nhầm tên bài mà script lặng lẽ
   // tạo thêm một bài trùng nội dung thì còn tệ hơn là báo lỗi.
   if (lessons.length === 0) {
@@ -234,32 +267,7 @@ async function main() {
         payload: { html },
       });
     }
-    if (spec.quiz) {
-      const mcIds = new Map<string, string>();
-      for (const m of manifest.misconceptions ?? []) {
-        const row = await prisma.misconception.upsert({
-          where: { code: m.code },
-          update: { name: m.name, description: m.description },
-          create: { code: m.code, name: m.name, description: m.description },
-          select: { id: true },
-        });
-        mcIds.set(m.code, row.id);
-      }
-      const { quizId } = await createQuiz(
-        owner.id,
-        { courseId: course.id, lessonId },
-        {
-          title: spec.quiz.title,
-          passThresholdPct: spec.quiz.passThresholdPct,
-          requireConfidence: spec.quiz.requireConfidence,
-          timeLimitSec: spec.quiz.timeLimitSec,
-          maxAttempts: spec.quiz.maxAttempts,
-        },
-      );
-      for (const [qi, q] of spec.quiz.questions.entries()) {
-        await createQuestion(owner.id, quizId, expandQuestion(q, qi, mcIds));
-      }
-    }
+    await createLessonQuiz(lessonId);
     console.log(`\n✔ Đã tạo bài "${spec.title}" (${lessonId}).`);
     return;
   }
@@ -469,7 +477,8 @@ async function main() {
       }
     }
   } else if (spec.quiz && !quiz) {
-    console.log("  ! manifest có quiz nhưng bài trên hệ thống chưa có — script này không tạo quiz mới");
+    console.log(`  + tạo quiz mới: ${spec.quiz.title} (${spec.quiz.questions.length} câu)`);
+    plan.push(() => createLessonQuiz(lesson.id));
   }
 
   if (plan.length === 0) {

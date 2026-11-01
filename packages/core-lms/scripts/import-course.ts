@@ -1048,7 +1048,7 @@ export function renderDialogue(d: DialogueSpec): string {
  *
  * Xoá hàm này, quay lại dùng Prisma, sau khi B9 lên prod.
  */
-async function upsertFeedbackTemplate(
+export async function upsertFeedbackTemplate(
   misconceptionId: string | null,
   body: string,
   priority: number,
