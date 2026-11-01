@@ -126,3 +126,14 @@ trình phát, thanh tua, tốc độ, phụ đề không đổi gì.
 - Test hàm thuần (`lecturerVideoPlan.test.ts`): ranh giới clip theo số hình, tổng đúng độ dài giọng, đoạn chồng nhau bị từ chối, chọn bản theo bề rộng, ngưỡng tua.
 - Test lõi (`narration.test.ts`): video chỉ tới học viên khi còn khớp giọng; tạo giọng lại làm video cũ; cờ tắt; nạp video từ chối khi giọng đã đổi.
 - Duyệt tay (dev, video thật): desktop + 375px; tạm dừng/tua/đổi tốc độ; xoá video thì về ảnh tĩnh.
+
+## Dải điều khiển một hàng, laser, nhịp nghỉ (01/11/2026)
+
+- **Một hàng duy nhất** từ `sm` trở lên (slide cần nhiều chỗ nhất): chuyển slide + phụ đề (hoặc «Nghe tiếp từ / Nghe từ đầu» khi có lời mời nghe tiếp) · thanh tua · giờ · tốc độ · phát.
+  `SlideDock` render **trong** thanh phát (không còn cụm nổi riêng); điện thoại vẫn tách thành cụm nổi phía trên thanh.
+- Bỏ phần thừa: tên giảng viên + mã đoạn, nút Trước/Sau chữ, hàng tốc độ (gom vào nút «1×» bấm mới xổ ra), nút X trong thanh (đã có X thoát góc trên trái),
+  bộ đếm «n / N» trong nút chuyển slide khi khung slide tương tác đã tự hiện ở góc trên, nút «hiện ý tiếp theo» trong slide (nút › ở thanh làm đúng việc đó).
+- **Con trỏ laser là dấu duy nhất** chỉ chỗ đang giảng: không còn khung sáng viền xanh và nét gạch cam đè lên nội dung.
+- **Nhịp nghỉ** (`NarrationPlayer`, chỉ bài dùng khung slide tương tác): hết mỗi đoạn giảng, giọng dừng 1,4 giây (2,6 giây khi sang slide mới, +0,9 giây nếu đoạn vừa rồi dài)
+  rồi tự đi tiếp để học viên kịp nhìn và ngấm. Nút phát/dừng của học viên trong lúc nghỉ luôn thắng; slide chờ học viên làm đã có điểm dừng riêng nên không nghỉ chồng.
+- **F5 giữ chỗ**: học viên chuyển slide / tua thì vị trí được nhớ dù giọng chưa bắt đầu phát; mở lại thấy đúng slide đó cùng lời mời nghe tiếp.
