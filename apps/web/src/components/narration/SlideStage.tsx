@@ -59,8 +59,7 @@ export default function SlideStage({
   return (
     <>
       <button type="button" className="slide-pill slide-exit print:hidden" onClick={onExit} aria-label="Thoát trình chiếu (Esc)">
-        <X size={18} />
-        <span className="hidden sm:inline">Thoát</span>
+        <X size={20} />
       </button>
 
       <span className="slide-avatar print:hidden" data-speaking={speaking ? "1" : "0"}>

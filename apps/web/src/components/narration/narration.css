@@ -210,13 +210,9 @@ html[data-narration-stage] .narration-bar {
   top: 0.75rem;
   left: 0.75rem;
   z-index: 65;
-  min-height: 40px;
-  min-width: 40px;
+  width: 40px;
+  height: 40px;
   justify-content: center;
-  gap: 0.25rem;
-  padding-inline: 0.6rem;
-  font-size: 0.875rem;
-  font-weight: 500;
 }
 .slide-exit:hover {
   background: rgb(15 23 42 / 0.92);
@@ -226,25 +222,26 @@ html[data-narration-stage] .narration-bar {
   outline: 2px solid rgb(var(--brand));
   outline-offset: 2px;
 }
-/* Giảng viên ở góc dưới phải, to và rõ mặt (AC7): video Ditto, hoặc ảnh chân dung khi chưa có video. Điện thoại: nhỏ hơn và nằm trên cụm phụ đề. */
+/* Giảng viên (AC7): điện thoại thì nút tròn nhỏ ở góc trên phải (không đè slide); từ sm là khung lớn ở góc dưới phải để thấy rõ mặt:
+   video Ditto khi có, ảnh chân dung khi chưa có. Cụm phụ đề + chuyển slide nằm giữa, né khung này. */
 html[data-narration-stage] {
-  --slide-avatar-w: 5.5rem;
+  --slide-avatar-w: 40px;
 }
 .slide-avatar {
   position: fixed;
+  top: 0.75rem;
   right: 0.75rem;
-  bottom: calc(var(--narration-bar-h, 0px) + 6.75rem);
   z-index: 65;
-  width: var(--slide-avatar-w, 5.5rem);
+  width: var(--slide-avatar-w);
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 1rem;
+  border-radius: 999px;
   background: rgb(226 232 240);
-  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9), 0 6px 24px rgb(15 23 42 / 0.28);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9);
   transition: box-shadow 0.2s;
 }
 .slide-avatar[data-speaking="1"] {
-  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9), 0 0 0 5px rgb(var(--brand)), 0 6px 24px rgb(15 23 42 / 0.28);
+  box-shadow: 0 0 0 2px rgb(var(--brand));
 }
 .slide-avatar-video,
 .slide-avatar .slide-avatar-still {
@@ -253,15 +250,27 @@ html[data-narration-stage] {
   height: 100%;
   border-radius: 0;
   object-fit: cover;
+  object-position: 50% 22%;
 }
 @media (min-width: 640px) {
   html[data-narration-stage] {
     --slide-avatar-w: clamp(9rem, 17vw, 15rem);
   }
   .slide-avatar {
+    top: auto;
     right: 1rem;
     bottom: calc(var(--narration-bar-h, 0px) + 0.75rem);
     border-radius: 1.25rem;
+    box-shadow: 0 0 0 3px rgb(255 255 255 / 0.95), 0 6px 24px rgb(15 23 42 / 0.28);
+  }
+  .slide-avatar[data-speaking="1"] {
+    box-shadow: 0 0 0 3px rgb(var(--brand)), 0 6px 24px rgb(15 23 42 / 0.28);
+  }
+}
+@media (min-width: 1280px) {
+  /* Đủ rộng để thanh phát (tối đa 48rem) nằm giữa còn khung giảng viên nằm ngoài, sát góc dưới. */
+  .slide-avatar {
+    bottom: 1rem;
   }
 }
 .slide-dock {

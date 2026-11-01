@@ -613,8 +613,9 @@ const CSS_AN_THANH = `
 html[data-an-thanh] .san-khau { inset: 0; }
 html[data-an-thanh] .khung { border-radius: 0; box-shadow: none; }
 /* Trình chiếu toàn khung: slide liền một màu với vùng xung quanh, không viền thẻ và không quầng sáng bị cắt lộ cạnh. */
-html[data-an-thanh] .san-khau, html[data-an-thanh] .khung > section { background: var(--nen); }
-html[data-an-thanh] .khung > section::before, html[data-an-thanh] .khung > section::after { display: none; }
+html[data-an-thanh] .san-khau { background: var(--nen); }
+html[data-an-thanh] .khung > section:not(.bia):not(.chuong):not(.tong-ket) { background: var(--nen); }
+html[data-an-thanh] .khung > section:not(.bia)::before, html[data-an-thanh] .khung > section:not(.bia)::after { display: none; }
 html[data-an-thanh] .thanh-duoi { left: 0; right: 0; bottom: 0; top: auto; width: auto; max-width: none; height: 3px; padding: 0; border: 0; border-radius: 0;
   background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; overflow: visible; pointer-events: none; }
 html[data-an-thanh] .thanh-duoi > :not(.tien-trinh) { display: none !important; }
