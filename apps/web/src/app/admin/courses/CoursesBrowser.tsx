@@ -15,6 +15,8 @@ interface CourseRow {
   currency: string;
   publicAccess: boolean;
   isSample: boolean;
+  /** null = theo mặc định hệ thống. */
+  virtualLecturerMode: string | null;
   isLearnerSample: boolean;
   enrollMode: string;
   activeAccessPlanCount: number;
@@ -33,6 +35,14 @@ const STATUS_LABEL: Record<string, string> = {
   published: "Đã publish",
   archived: "Lưu trữ",
 };
+
+const VIRTUAL_LECTURER_OPTIONS = [
+  { value: "", label: "Theo mặc định hệ thống" },
+  { value: "BAT_BUOC", label: "Bắt buộc" },
+  { value: "HIEN", label: "Hiện" },
+  { value: "TU_BAT", label: "Em tự bật" },
+  { value: "AN", label: "Không hiện" },
+];
 
 const STATUS_TONE: Record<string, StatusTone> = {
   draft: "neutral",
@@ -139,6 +149,28 @@ export default function CoursesBrowser() {
       }
       setData((d) =>
         d ? { ...d, courses: d.courses.map((x) => (x.id === c.id ? { ...x, isLearnerSample: next } : x)) } : d,
+      );
+    } finally {
+      setSavingSample(null);
+    }
+  }
+
+  async function changeVirtualLecturer(c: CourseRow, value: string) {
+    setSampleError(null);
+    setSavingSample(c.id);
+    try {
+      const mode = value === "" ? null : value;
+      const r = await fetch(apiUrl(`/api/admin/courses/${c.id}/virtual-lecturer`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode }),
+      });
+      if (!r.ok) {
+        setSampleError("Không lưu được, thử lại sau.");
+        return;
+      }
+      setData((d) =>
+        d ? { ...d, courses: d.courses.map((x) => (x.id === c.id ? { ...x, virtualLecturerMode: mode } : x)) } : d,
       );
     } finally {
       setSavingSample(null);
@@ -277,6 +309,22 @@ export default function CoursesBrowser() {
                         ariaLabel={`Khoá mẫu cho học viên: ${c.title}`}
                         onChange={(next) => void toggleLearnerSample(c, next)}
                       />
+                      <label className="flex items-center gap-2 text-xs text-muted">
+                        <span className="shrink-0">Giảng viên ảo</span>
+                        <select
+                          value={c.virtualLecturerMode ?? ""}
+                          disabled={busy}
+                          aria-label={`Giảng viên ảo: ${c.title}`}
+                          onChange={(e) => void changeVirtualLecturer(c, e.target.value)}
+                          className="rounded-md border border-token bg-[rgb(var(--surface))] px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                        >
+                          {VIRTUAL_LECTURER_OPTIONS.map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
