@@ -26,7 +26,7 @@ import {
   writeResume,
   type NarrationKind,
 } from "@/lib/narration/learner";
-import { isDeckLecture } from "@/lib/narration/deckSync";
+import { isDeckLecture, parseDeckAnchor } from "@/lib/narration/deckSync";
 import { buildSlideUnits, clearSlides, firstSegmentPerUnit, markSlides, subtitleAt, unitIndexOf } from "@/lib/narration/slideshow";
 import {
   getNarrationState,
@@ -228,6 +228,29 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       narrationCommands()?.playFrom("lecture", seg.startSec);
     },
   });
+
+  // Slide chờ học viên làm (ghép đôi, trắc nghiệm…): đọc hết lời giảng của slide đó thì dừng giọng, học viên bấm Tiếp tục là giọng đi tiếp.
+  const waitedSlide = useRef(-1);
+  const [waitSlide, setWaitSlide] = useState<number | null>(null);
+  useEffect(() => {
+    if (!stageOn || !deckLecture || lectureIdx < 0) return;
+    const here = parseDeckAnchor(deckAnchors[lectureIdx] ?? "");
+    if (!here) return;
+    if (waitedSlide.current !== -1 && waitedSlide.current !== here.slide) waitedSlide.current = -1;
+    const next = parseDeckAnchor(deckAnchors[lectureIdx + 1] ?? "");
+    if (next && next.slide === here.slide) return; // còn bước sau trong cùng slide
+    const seg = lecture?.segments[lectureIdx];
+    if (!seg || !ui.playing || ui.time < seg.endSec - 0.15) return;
+    if (waitedSlide.current === here.slide || !deckBridge.waits(here.slide)) return;
+    waitedSlide.current = here.slide;
+    setWaitSlide(here.slide);
+    narrationCommands()?.toggle(); // đang phát → tạm dừng
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stageOn, deckLecture, lectureIdx, ui.playing, ui.time]);
+  const waiting = waitSlide !== null && !ui.playing && stageOn;
+  useEffect(() => {
+    if (ui.playing) setWaitSlide(null);
+  }, [ui.playing]);
 
   // ── Động cơ: thẻ audio, lệnh, sự kiện, nhớ vị trí ───────────────────────────────
   useEffect(() => {
@@ -841,6 +864,9 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
           count={deckLecture ? deckBridge.pos?.n ?? 0 : slide.count}
           subtitle={subtitle}
           showSubtitles={showSubtitles}
+          waiting={waiting}
+          lecturer={lecturer ?? undefined}
+          speaking={ui.playing && !ui.loading}
           onToggleSubtitles={() => {
             const next = !showSubtitles;
             setShowSubtitles(next);
@@ -879,7 +905,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                 <NarrationAvatar who="B" name={podcast.hosts.B} size="sm" speaking={ui.playing && speakerNow === "B"} />
               </span>
             ) : (
-              <NarrationAvatar who="lecturer" name={lecturer?.name} accent={lecturer?.accent} speaking={ui.playing} />
+              <NarrationAvatar who="lecturer" name={lecturer?.name} accent={lecturer?.accent} size={stageOn ? "sm" : "md"} speaking={ui.playing} />
             )}
             <button
               type="button"
@@ -959,8 +985,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
 
           {kind === "podcast" && podcast && <PodcastTranscript podcast={podcast} />}
 
-          <div className={`${ui.expanded ? "block" : "hidden"} border-t border-token px-3 pb-3 pt-2 sm:block sm:px-4`}>
-            <div className="flex items-center gap-2">
+          <div className={`${ui.expanded ? "block" : "hidden"} nb-more border-t border-token px-3 pb-3 pt-2 sm:block sm:px-4`}>
+            <div className="nb-slider flex items-center gap-2">
               <span className="w-10 shrink-0 text-right tabular-nums text-xs text-muted sm:hidden">{formatClock(ui.time)}</span>
               <input
                 type="range"
@@ -976,7 +1002,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
               />
               <span className="w-10 shrink-0 tabular-nums text-xs text-muted sm:hidden">{formatClock(duration)}</span>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className="nb-ctrl mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
@@ -1019,7 +1045,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                   Trình chiếu
                 </button>
               )}
-              {kind === "lecture" && ui.follow && <span className="ml-auto hidden text-xs text-muted md:inline">Bấm tiêu đề một {unit} để nghe từ đó</span>}
+              {kind === "lecture" && ui.follow && !stageOn && <span className="ml-auto hidden text-xs text-muted md:inline">Bấm tiêu đề một {unit} để nghe từ đó</span>}
             </div>
           </div>
         </div>

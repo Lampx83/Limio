@@ -51,6 +51,12 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
       if (!f || !doc?.documentElement) return;
       doc.documentElement.toggleAttribute("data-an-thanh", compact);
       f.contentWindow?.dispatchEvent(new Event("resize")); // khung tính lại cỡ sân khấu
+      // Vùng dưới khung (phụ đề, thanh chuyển slide) dùng đúng nền và màu chữ của slide thay vì nền trang bài.
+      const cs = f.contentWindow?.getComputedStyle(doc.body);
+      const bg = cs?.getPropertyValue("--nen").trim();
+      const fg = cs?.getPropertyValue("--chu").trim();
+      if (bg) document.documentElement.style.setProperty("--deck-bg", bg);
+      if (fg) document.documentElement.style.setProperty("--deck-fg", fg);
     } catch {
       /* khung chưa nạp xong — thử lại khi nó báo sẵn sàng */
     }
@@ -69,6 +75,8 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
       } catch {
         /* bỏ qua */
       }
+      document.documentElement.style.removeProperty("--deck-bg");
+      document.documentElement.style.removeProperty("--deck-fg");
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, compact]);
@@ -123,6 +131,14 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
 
   return {
     pos,
+    /** Slide `i` chờ học viên làm xong mới sang (cờ data-dung-cuoi do buildDeckHtml đặt). */
+    waits: (i: number): boolean => {
+      try {
+        return !!frame()?.contentDocument?.querySelectorAll(".khung > section")[i]?.hasAttribute("data-dung-cuoi");
+      } catch {
+        return false;
+      }
+    },
     prev: () => postRef.current(deckCmd("lui")),
     next: () => postRef.current(deckCmd("tien")),
   };

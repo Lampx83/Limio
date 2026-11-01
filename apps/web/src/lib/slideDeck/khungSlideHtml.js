@@ -25,6 +25,7 @@ export const MAU_SLIDE = [
   { ma: "luc", ten: "Lục", mau: "#0b7a5a" },
   { ma: "cam", ten: "Cam", mau: "#d9480f" },
   { ma: "hong", ten: "Hồng", mau: "#c2255c" },
+  { ma: "limio", ten: "Limio", mau: "#4d7c0f" },
 ];
 
 export const GIOI_HAN_SLIDE = { soSlide: 40, doDaiMotSlide: 9000, ghiChu: 1500 };
@@ -88,6 +89,10 @@ export const CSS_KHUNG = `
 [data-mau="luc"] { --mau: #0b7a5a; --mau-2: #20c997; --mau-dam: #064535; --mau-nhat: #def7ee; --mau-vua: #a6e9d2; }
 [data-mau="cam"] { --mau: #d9480f; --mau-2: #ff922b; --mau-dam: #7a2606; --mau-nhat: #ffeddf; --mau-vua: #ffd0a8; }
 [data-mau="hong"] { --mau: #c2255c; --mau-2: #f06595; --mau-dam: #6b1233; --mau-nhat: #ffe8f0; --mau-vua: #fbc2d6; }
+/* Giao diện Limio: nhấn xanh chanh (--brand) trên nền trắng/xám nhạt như phần còn lại của trang, tối thì theo token tối của Limio. */
+[data-mau="limio"] { --mau: #4d7c0f; --mau-2: #65a30d; --mau-dam: #365314; --mau-nhat: #f7fee7; --mau-vua: #d9f99d;
+  --nen: #fafafc; --the: #ffffff; --the-2: #f4f4f8; --chu: #030712; --chu-phu: #475062; --vien: #e2e2e8;
+  --bong: 0 10px 30px rgba(3, 7, 18, 0.08), 0 2px 6px rgba(3, 7, 18, 0.05); }
 [data-theme="toi"] {
   --nen: #0b1220; --the: #141e35; --the-2: #1b2744; --chu: #eaf0fb; --chu-phu: #a3b2cc; --vien: #2a3858;
   --mau-nhat: #1a2a4a; --mau-vua: #31507f; --dung-nhat: #11382a; --sai-nhat: #432024; --vang-nhat: #3b3112;
@@ -98,6 +103,8 @@ export const CSS_KHUNG = `
 [data-theme="toi"][data-mau="luc"] { --mau: #1fae85; --mau-2: #4fe0b5; --mau-nhat: #0f3a2f; --mau-vua: #1f6b57; }
 [data-theme="toi"][data-mau="cam"] { --mau: #f06a2a; --mau-2: #ffa94d; --mau-nhat: #3f2210; --mau-vua: #8a4a1e; }
 [data-theme="toi"][data-mau="hong"] { --mau: #e64980; --mau-2: #ff8fb3; --mau-nhat: #43182b; --mau-vua: #8a3a5a; }
+[data-theme="toi"][data-mau="limio"] { --mau: #84cc16; --mau-2: #a3e635; --mau-nhat: #21320c; --mau-vua: #3f6212;
+  --nen: #090b14; --the: #111320; --the-2: #181b2b; --chu: #f0f2fa; --chu-phu: #a0a8bc; --vien: #262a3c; }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; background: var(--nen); color: var(--chu); font-family: var(--font); -webkit-font-smoothing: antialiased; }
@@ -604,6 +611,10 @@ html[data-huong="lui"]::view-transition-new(khung-slide) { animation-name: hlVtV
  */
 const CSS_AN_THANH = `
 html[data-an-thanh] .san-khau { inset: 0; }
+html[data-an-thanh] .khung { border-radius: 0; box-shadow: none; }
+/* Trình chiếu toàn khung: slide liền một màu với vùng xung quanh, không viền thẻ và không quầng sáng bị cắt lộ cạnh. */
+html[data-an-thanh] .san-khau, html[data-an-thanh] .khung > section { background: var(--nen); }
+html[data-an-thanh] .khung > section::before, html[data-an-thanh] .khung > section::after { display: none; }
 html[data-an-thanh] .thanh-duoi { left: 0; right: 0; bottom: 0; top: auto; width: auto; max-width: none; height: 3px; padding: 0; border: 0; border-radius: 0;
   background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; overflow: visible; pointer-events: none; }
 html[data-an-thanh] .thanh-duoi > :not(.tien-trinh) { display: none !important; }
@@ -1410,13 +1421,14 @@ const NUT = (lenh, nhan, tip, phim) =>
 /**
  * Tài liệu HTML hoàn chỉnh của một bộ slide.
  * @param {{html: string, ghiChu?: string}[]} slides  mỗi html là đúng một thẻ <section> đã được máy chủ lọc
- * @param {{tieuDe?: string, mau?: string, toi?: boolean, ngonNgu?: string, kieu?: string, anThanhDuoi?: boolean}} tuyChon
+ * @param {{tieuDe?: string, mau?: string, toi?: boolean, sang?: boolean, ngonNgu?: string, kieu?: string, anThanhDuoi?: boolean}} tuyChon
  *   ngonNgu: "vi" | "en" — ngôn ngữ của giáo trình; quyết định chữ trên giao diện khung (không phải chữ của slide).
  *   kieu: "hoclieu" — giao diện trình chiếu kiểu Học liệu AI Research (nền tối, thẻ bo tròn, thanh đáy dồn trái chừa
  *   góc dưới phải cho khung người giảng); bỏ trống là giao diện mặc định như trước.
+ *   sang: với kieu "hoclieu", mở bằng nền sáng thay vì tối (phím T vẫn đổi qua lại).
  *   anThanhDuoi: ẩn thanh điều khiển đáy (trang cha tự có dải điều khiển, gửi {lenh:"nut", ten}); sân khấu dùng cả chỗ đó.
  */
-export function dungTaiLieuSlide(slides, { tieuDe, mau = "xanh", toi = false, ngonNgu = "vi", kieu, anThanhDuoi = false } = {}) {
+export function dungTaiLieuSlide(slides, { tieuDe, mau = "xanh", toi = false, sang = false, ngonNgu = "vi", kieu, anThanhDuoi = false } = {}) {
   const ngon = ngonNgu === "en" ? "en" : "vi";
   const T = TU_DIEN[ngon];
   let soCongThuc = 0;
@@ -1436,7 +1448,7 @@ export function dungTaiLieuSlide(slides, { tieuDe, mau = "xanh", toi = false, ng
   // Từ điển đưa vào trang dưới dạng JSON; thoát "<" để chuỗi không thể đóng thẻ script sớm.
   const tuDienJson = JSON.stringify(T).replace(/</g, "\\u003c");
   return `<!doctype html>
-<html lang="${ngon}" data-mau="${mauHopLe}"${toi || kieuHopLe === "hoclieu" ? ' data-theme="toi"' : ""}${kieuHopLe ? ` data-kieu="${kieuHopLe}"` : ""}${anThanhDuoi ? ' data-an-thanh="1"' : ""}>
+<html lang="${ngon}" data-mau="${mauHopLe}"${toi || (kieuHopLe === "hoclieu" && !sang) ? ' data-theme="toi"' : ""}${kieuHopLe ? ` data-kieu="${kieuHopLe}"` : ""}${anThanhDuoi ? ' data-an-thanh="1"' : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
