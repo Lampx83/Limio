@@ -15,12 +15,14 @@ export default function LecturerVideo({
   photo,
   name,
   accent,
+  speaking,
 }: {
   lessonId: string;
   audio: RefObject<HTMLAudioElement | null>;
   photo?: string;
   name?: string;
   accent?: string;
+  speaking: boolean;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [src, setSrc] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function LecturerVideo({
   }, [audio, src, failed]);
 
   if (failed || !src) {
-    return <NarrationAvatar who="lecturer" name={name} accent={accent} size="lg" className="slide-avatar-still" />;
+    return <NarrationAvatar who="lecturer" name={name} accent={accent} size="sm" speaking={speaking} />;
   }
   return (
     <video

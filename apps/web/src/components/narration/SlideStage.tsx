@@ -64,9 +64,9 @@ export default function SlideStage({
 
       <span className="slide-avatar print:hidden" data-speaking={speaking ? "1" : "0"}>
         {video ? (
-          <LecturerVideo lessonId={video.lessonId} audio={video.audio} photo={lecturerPhoto(lecturer?.name)} name={lecturer?.name} accent={lecturer?.accent} />
+          <LecturerVideo lessonId={video.lessonId} audio={video.audio} photo={lecturerPhoto(lecturer?.name)} name={lecturer?.name} accent={lecturer?.accent} speaking={speaking} />
         ) : (
-          <NarrationAvatar who="lecturer" name={lecturer?.name} accent={lecturer?.accent} size="lg" className="slide-avatar-still" />
+          <NarrationAvatar who="lecturer" name={lecturer?.name} accent={lecturer?.accent} size="sm" speaking={speaking} />
         )}
       </span>
 

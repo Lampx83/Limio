@@ -347,9 +347,9 @@ body.dang-laser, body.dang-laser * { cursor: none !important; }
 .khung.dang-chi .chi-gach { opacity: 1; }
 .chi-gach path { fill: none; stroke: var(--vang); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
 .chi-gach.ve path { stroke-dashoffset: 0; transition: stroke-dashoffset .8s cubic-bezier(.45, 0, .25, 1); }
-.chi-tro { position: absolute; left: 0; top: 0; z-index: 10; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; pointer-events: none; opacity: 0;
-  background: radial-gradient(circle, #fff 0 24%, var(--mau-2) 28% 60%, transparent 64%);
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--mau) 28%, transparent), 0 8px 20px rgba(0, 0, 0, .3);
+.chi-tro { position: absolute; left: 0; top: 0; z-index: 10; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle, #fff 0 12%, #ff3b3b 16% 34%, rgba(255, 59, 59, .55) 52%, transparent 70%);
+  box-shadow: 0 0 22px 8px rgba(255, 59, 59, .45);
   transition: transform .45s cubic-bezier(.22, 1, .36, 1), opacity .3s ease; }
 .chi-tro.hien { opacity: 1; }
 .chi-tro.di { transition: transform .8s cubic-bezier(.45, 0, .25, 1), opacity .3s ease; }
@@ -1247,6 +1247,7 @@ function chayKhung() {
     if (chiDaDi) datTro(p.x + w, p.y + p.h + 9);
     return p;
   };
+  var chiEl;
   var chi = function (ten) {
     var tuCu = chiTro.classList.contains("hien");
     boChi();
@@ -1255,6 +1256,9 @@ function chayKhung() {
     if (!ten || !s) return;
     var el = null;
     $$("[data-chi]", s).some(function (x) { if (x.getAttribute("data-chi") === ten) { el = x; return true; } return false; });
+    chiEl(el, tuCu);
+  };
+  chiEl = function (el, tuCu) {
     if (!el) return;
     // Phần tử chưa tới bước hiện dần, hoặc đang bị ẩn (tab khác, display:none) thì bỏ qua.
     var an = el.closest(".an-buoc");
@@ -1281,6 +1285,23 @@ function chayKhung() {
     }, giamDong() ? 0 : 420));
     // Phần tử có thể còn đang trượt vào (hiệu ứng vào slide, công thức vừa có phông): đo lại vài lần.
     [250, 700, 1300].forEach(function (ms) { chiHen.push(setTimeout(function () { if (chiDang === el) datChi(el); }, ms)); });
+  };
+  // Lệnh "chi-buoc": chỉ vào phần vừa hiện ở bước hiện tại (trang cha gửi mỗi khi giọng giảng sang bước mới, không cần khai báo từng chỗ chỉ).
+  // Bước cuối của slide chờ học viên làm (data-dung-cuoi) thì chỉ vào phần để làm (trắc nghiệm, ghép đôi, ô nhập, mô phỏng…), không có thì phần tử [data-chi] đầu tiên.
+  var chiBuoc = function () {
+    var s = dsSlide[hien], b = s && s._b, el = null;
+    if (b && b.da > 0) el = b.ds[b.da - 1];
+    if (s && s.hasAttribute("data-dung-cuoi") && (!b || b.da >= b.ds.length)) {
+      var viec = null;
+      $$("[data-chi]", s).some(function (x) { if (x.matches(".trac-nghiem, .ghep-doi, .nhap-dap-an, .tabs, .nem-bong, .parabol, .keo-tha")) { viec = x; return true; } return false; });
+      el = viec || $("[data-chi]", s) || el;
+    }
+    // Chưa hiện ý nào: chỉ vào hình/công cụ chính của slide (phần tử [data-chi] đầu tiên không phải đoạn chữ).
+    if (!el && s) $$("[data-chi]", s).some(function (x) { if (!/^(P|LI|UL|OL|H[1-6])$/.test(x.tagName)) { el = x; return true; } return false; });
+    if (!el) { boChi(); return; }
+    var tuCu = chiTro.classList.contains("hien");
+    boChi();
+    chiEl(el, tuCu);
   };
 
   /* ── Khởi tạo ── */
@@ -1352,6 +1373,7 @@ function chayKhung() {
       else if (d.lenh === "tien") tien();
       else if (d.lenh === "lui") lui();
       else if (d.lenh === "chi") chi(d.ten);
+      else if (d.lenh === "chi-buoc") chiBuoc();
       // Nút của dải điều khiển trang cha: gọi đúng hàm của nút tương ứng trên thanh đáy.
       else if (d.lenh === "nut" && /^(tong-quan|ghi-chu|but|laser|nen|toan-man|tro-giup|xoa-but)$/.test(String(d.ten))) lenh[d.ten]();
       return;
