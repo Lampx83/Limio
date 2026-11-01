@@ -210,13 +210,9 @@ html[data-narration-stage] .narration-bar {
   top: 0.75rem;
   left: 0.75rem;
   z-index: 65;
-  min-height: 40px;
-  min-width: 40px;
+  width: 40px;
+  height: 40px;
   justify-content: center;
-  gap: 0.25rem;
-  padding-inline: 0.6rem;
-  font-size: 0.875rem;
-  font-weight: 500;
 }
 .slide-exit:hover {
   background: rgb(15 23 42 / 0.92);
@@ -226,13 +222,45 @@ html[data-narration-stage] .narration-bar {
   outline: 2px solid rgb(var(--brand));
   outline-offset: 2px;
 }
+/* Giảng viên: điện thoại thì nút tròn nhỏ ở góc trên phải; từ sm là chân dung lớn ở góc dưới phải để thấy rõ mặt. */
 .slide-avatar {
   position: fixed;
   top: 0.75rem;
   right: 0.75rem;
   z-index: 65;
-  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+}
+.slide-avatar > span {
+  display: block;
+  width: 100%;
+  height: 100%;
   box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9);
+}
+.slide-avatar img {
+  object-position: 50% 22%;
+}
+@media (min-width: 640px) {
+  .slide-avatar {
+    top: auto;
+    right: 1rem;
+    bottom: calc(var(--narration-bar-h, 0px) + 0.5rem);
+    width: clamp(120px, 12vw, 220px);
+    height: clamp(120px, 12vw, 220px);
+  }
+  .slide-avatar > span.rounded-full {
+    border-radius: 1.25rem;
+    box-shadow: 0 0 0 3px rgb(255 255 255 / 0.95), 0 6px 20px rgb(0 0 0 / 0.18);
+  }
+  .slide-avatar > span.narration-speaking {
+    box-shadow: 0 0 0 3px rgb(var(--brand)), 0 6px 20px rgb(0 0 0 / 0.18);
+  }
+}
+@media (min-width: 1280px) {
+  /* Đủ rộng để thanh phát (tối đa 48rem) nằm giữa còn chân dung nằm ngoài, sát góc dưới. */
+  .slide-avatar {
+    bottom: 1rem;
+  }
 }
 .slide-dock {
   position: fixed;

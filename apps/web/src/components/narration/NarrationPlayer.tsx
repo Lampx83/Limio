@@ -650,7 +650,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         scrollIntoComfort(el);
       }
       // Đổi mục: dựng lại danh sách khối con; DOM chỉ dựng lại giữa chừng thì giữ vị trí đang theo.
-      subsRef.current = lectureIdx >= 0 ? subs[lectureIdx] ?? [] : [];
+      // Bài trình chiếu bằng khung slide: nội dung nằm trong iframe, không có khối con của trang để tô.
+      subsRef.current = lectureIdx >= 0 && !deckLecture ? subs[lectureIdx] ?? [] : [];
       liveRef.current.hasTarget = !!el;
       if (subOwnerRef.current !== lectureIdx) {
         subOwnerRef.current = lectureIdx;
