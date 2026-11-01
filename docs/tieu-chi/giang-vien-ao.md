@@ -1,8 +1,9 @@
 # Giảng viên ảo trong Limio — tiêu chí chấp nhận
 
-> Bản nháp 01/11/2026, chờ duyệt trước khi code. Mở rộng `nghe-giang-slide.md`: bài giảng slide của bài học vốn đã có **giọng đọc tự chuyển slide**;
-> việc này thêm **giảng viên hiện hình** (chân dung, phụ đề, chọn người giảng) và **cài đặt quản trị** bật/tắt/ép dùng. Học từ phần giảng viên ảo của
-> SmartDoc (`nguoiGiang/`, `CaiDatLop.jsx`) nhưng không chép nguyên: Limio dùng lại bài giảng slide và giọng đọc sẵn có, không dựng trình phát thứ hai.
+> Cập nhật 01/11/2026 sau khi code AC1–AC3. **Đính chính bản nháp đầu:** bản nháp tưởng Limio đã có trình phát slide tự chuyển theo giọng; thực tế
+> `nghe-giang-slide.md` mới làm giai đoạn 1–2 (gắn bài giảng, AI sinh slide), **chưa có** giọng từng slide và trình phát slide (giai đoạn 3–4). Vì vậy giảng viên ảo
+> được dựng trên **Nghe giảng có sẵn** (lời giảng bám mục/bước của bài viết, `NarrationPlayer`): thêm **giảng viên hiện hình** (tên, màu, chân dung) và
+> **cài đặt quản trị** bật/tắt/ép dùng. Học từ SmartDoc (`nguoiGiang/`, `CaiDatLop.jsx`) nhưng không chép nguyên, không dựng trình phát thứ hai.
 
 ## Vì sao làm
 
@@ -17,14 +18,15 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 - **Học liệu AI Research** (`/Users/mac/Documents/Code/Portal-Deploy/Research/HocLieu`, nguồn là file TypeScript, không có DB nội dung): 1 khoá «Nghiên cứu khoa học: từ ý tưởng đến
   công bố», 8 buổi × 150 phút, **311 slide** (13 kiểu: sơ đồ, bảng, so sánh, ví dụ, hoạt động…), 131 câu quiz, mỗi buổi một giảng viên ảo (8 người, mã giọng NEU TTS)
   và lời giảng theo từng bước hiện dần. Có 4 đề tài xuyên suốt (token `{{…}}`). Âm thanh dựng sẵn 22.250 mp3 / 464 MB.
-- **Limio** đã có: `LiveDeck`/`LiveSlide` (lời giảng = `config.presenterNote`), `LessonNarration` (loại `lecture`, tạo giọng, mốc thời gian từng đoạn), trình phát nghe giảng
-  slide, cài đặt hệ thống (`SiteSetting`, trang `/admin/settings`). **Chưa có** giảng viên hiện hình và mọi cài đặt về nó.
+- **Limio** đã có: `LessonNarration` (loại `lecture`, tạo giọng, mốc thời gian từng đoạn, anchor = tên mục / `mo-dau` / `tong-ket` / `Tên mục #n` cho bước hiện dần),
+  `NarrationPlayer`, `LiveDeck`/`LiveSlide`, cài đặt hệ thống (`SiteSetting`, `/admin/settings`). **Chưa có** trình phát slide có giọng từng slide.
+  **Đã làm (PR #106, #107):** cài đặt quản trị, hàm mức hiệu lực, giảng viên hiện tên + màu trên Nghe giảng, thanh mời (Hiện), khoá nút đóng (Bắt buộc).
 
 ## Phạm vi
 
-**Giai đoạn 1 (tài liệu này):** cài đặt quản trị, giảng viên hiện hình trên trình phát slide sẵn có, nhập khoá AI Research.
+**Giai đoạn 1 (tài liệu này):** cài đặt quản trị, giảng viên hiện hình trên Nghe giảng sẵn có, nhập bài trình diễn Toán 10, rồi khoá AI Research.
 **Để sau (ghi rõ để khỏi hiểu nhầm là bỏ sót):** gia sư 1-1 (giảng lại / ví dụ khác / hỏi đáp), cổng đạt mức thành thạo, slide HTML tương tác kiểu SmartDoc có `data-chi` và thẻ nhịp
-`[chỉ]` `[nghĩ]`, video avatar, nhập học phần mẫu Toán 10 (cần runtime iframe riêng, xem ❓5).
+`[chỉ]` `[nghĩ]`, video avatar, slide HTML tương tác của SmartDoc (đã chốt: chuyển thành bài viết theo mục, mất tương tác), **giảng viên có chân dung thật** (đang dùng khung tròn + màu; chờ Vidgen).
 
 ## AC1 — Cài đặt quản trị
 
@@ -37,9 +39,9 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 
 ## AC2 — Học viên thấy và dùng
 
-- **Given** bài học có bài giảng slide **đã có giọng** (`LessonNarration.status = ready`) và giảng viên ảo đang được bật cho khoá, **when** học viên mở trình phát slide,
-  **then** thấy giảng viên ở một góc: chân dung, hiệu ứng khi đang nói, **phụ đề** theo lời đang đọc, nút chọn người giảng (nếu mức cho phép), tốc độ 0,75–1,5 và tắt/bật phụ đề.
-- Bài **chưa có giọng** thì không hiện giảng viên ảo (như nút nghe giảng hiện nay), không lỗi.
+- **Given** bài học có lời giảng **đã có giọng** (`LessonNarration` loại `lecture`, trạng thái `ready`) và giảng viên ảo đang được bật cho khoá, **when** học viên mở Nghe giảng,
+  **then** trình phát mang tên và màu giảng viên được chọn, kèm hiệu ứng khi đang nói và tốc độ 0,75–1,5 (đã có). **Chưa làm:** chọn người giảng ở phía học viên, phụ đề.
+- Bài **chưa có giọng** thì không hiện giảng viên ảo (như nút Nghe giảng hiện nay), không lỗi. (Đã làm.)
 - Lựa chọn của học viên (người giảng, tốc độ, phụ đề) nhớ trong trình duyệt; không gửi lên máy chủ. Tên gọi/biệt danh **không** gửi đi.
 - Người xem thử (giảng viên xem thử khoá, khách xem khoá công khai) thấy đúng như học viên; không cần đăng nhập thì không ghi sự kiện học tập.
 
@@ -47,7 +49,7 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 
 | Mức | Hành vi |
 |---|---|
-| Bắt buộc | Mở slide là vào thẳng chế độ có giảng viên; không tắt được; không đổi được người giảng nếu admin khoá |
+| Bắt buộc | Mở bài là vào thẳng Nghe giảng với giảng viên; nút đóng bị ẩn; không đổi được người giảng nếu admin khoá |
 | Hiện | Có thanh mời «Học với giảng viên ảo»; học viên tắt được |
 | Em tự bật | Mặc định tắt; có nút phụ «Bật giảng viên ảo» |
 | Không hiện | Không có giảng viên ảo |
@@ -55,9 +57,16 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 - Mức hiệu lực = mức riêng của khoá, không có thì mức mặc định hệ thống; công tắc toàn hệ thống tắt thì coi như «Không hiện».
 - **Khác SmartDoc:** SmartDoc chỉ ép mức «Không hiện» ở máy chủ, còn ba mức kia chỉ nằm ở giao diện. Ở Limio hàm tính mức hiệu lực nằm **một chỗ ở `core-lms`**, trang và API cùng gọi nó;
   «Không hiện» thì API phục vụ phần giảng viên ảo trả 403, không chỉ ẩn nút.
-- Giảng viên xem khoá mình dạy luôn thấy được (để kiểm tra), không bị «Không hiện» che.
+- Giảng viên xem khoá mình dạy luôn thấy được (để kiểm tra), không bị «Không hiện» che (khi đó mức là «Em tự bật»). (Đã làm trong `resolveVirtualLecturerMode`.)
+
+## AC4a — Nhập bài trình diễn Toán 10 của SmartDoc (đã làm, chờ nhập prod)
+
+- Bộ chuyển `smartdocConvert.ts` + `scripts/convert-smartdoc-lesson.ts`: mỗi slide thành một mục `##` của bài viết (công thức `\(..\)` → `$..$`, ô định nghĩa → trích dẫn, trắc nghiệm → câu hỏi + đáp án, nút/ô nhập bị bỏ, SVG bị bỏ và ghi một dòng), lời giảng bám đúng tên mục (slide bìa → `mo-dau`).
+- Kết quả: 68 slide, 31.498 ký tự lời giảng, 10 SVG bỏ; khoá `toan-10-giang-vien-ao-demo`, nháp. Giọng tạo bằng «Giọng đọc» (mã `tiendat`).
 
 ## AC4 — Nhập khoá «Nghiên cứu khoa học: từ ý tưởng đến công bố» (AI Research)
+
+> Cách làm theo AC4a (bài viết theo mục + lời giảng bám mục), **không** theo slide `LiveDeck` như bản nháp đầu viết bên dưới; các dòng về `LiveDeck`/`presenterNote` chỉ còn giá trị tham khảo cho giai đoạn có trình phát slide.
 
 - Một script chạy được lại nhiều lần (idempotent theo `slug`), đọc nguồn TypeScript của Học liệu, **không** copy thủ công: tạo 1 khoá, 8 module/bài học tương ứng 8 buổi, mỗi buổi một `LiveDeck` gắn vào bài học.
 - Ánh xạ slide: slide chữ/ví dụ/so sánh/bảng → slide `content` (HTML an toàn do Limio-Live dựng); câu quiz → slide `quiz`; hoạt động/công cụ → slide `content` mô tả hoạt động. Sơ đồ (`diagram`) **chưa vẽ lại**:
@@ -71,7 +80,7 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 
 - Ghi sự kiện `lesson.lecturer.opened` (mở chế độ giảng viên ảo) và `lesson.lecturer.completed` (nghe hết bài) vào `LearningEvent`, payload chỉ có id bài, id người giảng, mức; **không** có biệt danh hay nội dung lời.
 - Không lưu gì về lựa chọn giao diện của học viên ở máy chủ. Xoá tài khoản thì sự kiện đi theo luồng xoá sẵn có.
-- Phần giảng viên ảo dùng chung quyền truy cập bài học của trình phát slide (khoá chưa xuất bản, bài ẩn/khoá thì chặn như `canListenToLesson`).
+- Phần giảng viên ảo dùng chung quyền truy cập bài học của Nghe giảng (khoá chưa xuất bản, bài ẩn/khoá thì chặn như `canListenToLesson`). Sự kiện `lesson.lecturer.*` **chưa ghi** — làm ở đợt sau.
 
 ## AC6 — Kiểm thử
 
@@ -91,6 +100,6 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 
 - **Nguồn các môn Codelab.** Server 217 (SmartDoc) chỉ có 7 học phần (Khoa học dữ liệu cơ bản, Nhập môn CNTT, Thiết kế Web, Dữ liệu phi cấu trúc, NCKH, Lịch sử Đảng…), không có SQL / giải thuật / Java.
   Các môn lập trình nhiều khả năng nằm ở hệ Codelab OJ (máy 220/221, bài tập chấm tự động), nhưng tài khoản `codelab` hiện **không có quyền Docker** ở hai máy đó nên chưa đọc được. Anh nhắc các môn lập trình / SQL / giải thuật / Java trên Codelab: cần biết môn nằm ở đâu và có slide + lời giảng không, hay chỉ là bài tập chấm tự động (nếu chỉ là bài tập thì không thuộc phạm vi giảng viên ảo).
-- **Slide HTML của SmartDoc** (có `data-chi`, thẻ nhịp `[chỉ]` `[nghĩ]`) không khớp slide `content` an toàn của Limio. Cần chọn: chuyển đổi thành slide Limio (mất tương tác), hay làm runtime iframe riêng (công lớn, để giai đoạn 2).
+- ~~Slide HTML của SmartDoc~~ — **đã chốt «Đồng ý» mất tương tác**; bài tương tác cao dựng riêng, xem `bai-giang-toan-tuong-tac.md`.
 - **Chi phí TTS:** 4 khoá AI Research × 311 slide là ~1.250 slide cần giọng; cần ước tính thời gian tạo trên máy 232 và duyệt trước khi chạy hàng loạt (tạo theo từng khoá).
 - **Khoá AI Research có trùng NCKH 101–501 đã có trên Limio không?**
