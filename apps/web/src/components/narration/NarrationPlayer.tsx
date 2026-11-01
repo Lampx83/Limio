@@ -837,8 +837,6 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     <>
       {stageOn && (
         <SlideStage
-          lecturer={{ name: lecturerName, accent: lecturer?.accent }}
-          speaking={ui.playing && !ui.loading}
           index={deckLecture ? deckBridge.pos?.i ?? 0 : slide.cur}
           count={deckLecture ? deckBridge.pos?.n ?? 0 : slide.count}
           subtitle={subtitle}

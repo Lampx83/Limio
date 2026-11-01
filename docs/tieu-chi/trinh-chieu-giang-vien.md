@@ -34,13 +34,13 @@ chỉ thiếu một **khung trình chiếu**. Dựng khung này thì mọi khoá
 
 ## AC3 — Giảng viên và phụ đề
 
-- Giảng viên hiện **tên, chân dung (khung màu của người đó), hiệu ứng khi đang nói**; phụ đề là câu đang đọc, chạy theo giọng.
+- Giảng viên hiện trên **thanh phát** (tên, chân dung, hiệu ứng khi đang nói); trình chiếu không lặp lại khung giảng viên riêng. Phụ đề là câu đang đọc, chạy theo giọng.
 - Phụ đề chia theo câu, thời gian chia theo số ký tự trong đoạn (ước lượng, không chính xác từng chữ). Tắt/bật được; nhớ trong trình duyệt.
 - Học viên **nhận chữ lời giảng** (như podcast đã nhận bản chữ) để làm phụ đề. Không lộ ghi chú giảng của slide LiveDeck (không liên quan chế độ này).
 
 ## AC4 — Điện thoại và truy cập
 
-- Điện thoại: slide co theo màn hình, không cuộn ngang, nút ≥ 44px, giảng viên thu nhỏ cùng phụ đề phía trên thanh phát; công thức dài cuộn trong khung.
+- Điện thoại: slide co theo màn hình, không cuộn ngang, nút ≥ 44px, phụ đề phía trên thanh phát; công thức dài cuộn trong khung.
 - Tôn trọng «giảm chuyển động». Bàn phím: cách = phát/dừng, ←/→ = slide trước/sau, Esc = thoát.
 - Quyền truy cập đúng như Nghe giảng (`canListenToLesson`); không thêm đường lộ audio.
 - Đo lường dùng lại `narration.*`; không thêm sự kiện.

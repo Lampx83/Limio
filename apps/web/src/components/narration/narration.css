@@ -154,7 +154,7 @@ html[data-narration-stage] .narration-bar {
 }
 @media (min-width: 1024px) {
   #lesson-content[data-slideshow] {
-    padding-inline: 3rem 14rem;
+    padding-inline: 3rem;
   }
 }
 
@@ -184,11 +184,6 @@ html[data-narration-stage] .narration-bar {
   border: 0;
   border-radius: 0;
   box-shadow: none;
-}
-@media (min-width: 1024px) {
-  #lesson-content[data-slideshow][data-deck] {
-    padding-inline: 0 12rem;
-  }
 }
 
 .slide-top {
@@ -228,25 +223,6 @@ html[data-narration-stage] .narration-bar {
 .slide-btn:focus-visible {
   outline: 2px solid rgb(var(--brand));
   outline-offset: 2px;
-}
-
-/* Giảng viên cỡ lớn bên phải (từ lg); dưới lg đã có ảnh nhỏ trong thanh trên. */
-.slide-lecturer {
-  display: none;
-}
-@media (min-width: 1024px) {
-  .slide-lecturer {
-    position: fixed;
-    top: 5rem;
-    right: 2rem;
-    z-index: 62;
-    display: block;
-    width: 10rem;
-    text-align: center;
-  }
-  .slide-lecturer > span {
-    display: inline-block;
-  }
 }
 
 .slide-subtitle {
