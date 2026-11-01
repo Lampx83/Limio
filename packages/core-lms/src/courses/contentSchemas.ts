@@ -76,7 +76,9 @@ export const RichTextPayload = z.object({
 });
 
 export const EmbedPayload = z.object({
-  url: z.string().url(),
+  // URL ngoài như cũ, hoặc đường dẫn cùng-origin tới widget của Limio (`/widgets/…`).
+  // Chặn `//host` và `/\host`: trông như đường dẫn nhưng trỏ sang host khác.
+  url: z.union([z.string().url(), z.string().regex(/^\/(?![/\\])/)]),
   height: z.number().int().positive().optional(),
 });
 
