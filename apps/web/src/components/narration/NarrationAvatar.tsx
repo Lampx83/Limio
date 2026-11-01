@@ -15,6 +15,12 @@ export function NarrationWave({ playing, className = "" }: { playing: boolean; c
   );
 }
 
+/** Giảng viên có ảnh chân dung thật (tệp trong public/lecturers); không có thì dùng hình vẽ. */
+const LECTURER_PHOTOS: Record<string, string> = {
+  "Tiến Đạt": "/lecturers/tien-dat.jpg",
+  "Bảo Trang": "/lecturers/bao-trang.jpg",
+};
+
 const HOST_STYLE = {
   A: "bg-indigo-600",
   B: "bg-amber-600",
@@ -43,7 +49,11 @@ export function NarrationAvatar({
   const dim = size === "sm" ? "h-9 w-9" : size === "lg" ? "h-24 w-24" : "h-11 w-11";
   const ring = speaking ? "narration-speaking" : "";
   let inner: ReactNode;
-  if (who === "lecturer") {
+  const photo = who === "lecturer" && name ? LECTURER_PHOTOS[name] : undefined;
+  if (photo) {
+    // eslint-disable-next-line @next/next/no-img-element
+    inner = <img src={photo} alt="" className="h-full w-full object-cover" draggable={false} />;
+  } else if (who === "lecturer") {
     inner = (
       <svg viewBox="0 0 40 40" className="h-full w-full" aria-hidden="true">
         <defs>

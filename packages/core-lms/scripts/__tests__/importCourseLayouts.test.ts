@@ -114,6 +114,18 @@ describe("lectureAnchorProblems — mốc lời giảng phải khớp mục củ
     expect(lectureAnchorProblems(l)).toEqual(['anchor "Quy trinh" không trùng mục nào của bài']);
     expect(lectureAnchorProblems(LessonSpec.parse(base))).toEqual([]);
   });
+
+  it("anchor s<slide>b<bước> chỉ hợp lệ khi bài nhúng khung slide /decks/…", () => {
+    const lecture = [{ anchor: "s0b0", text: "a" }, { anchor: "s3b2", text: "b" }];
+    const withDeck = LessonSpec.parse({ ...base, embeds: [{ url: "/decks/ham-bac-hai", height: 720 }], lecture });
+    expect(lectureAnchorProblems(withDeck)).toEqual([]);
+    const widgetOnly = LessonSpec.parse({ ...base, embeds: [{ url: "/widgets/parabola.html" }], lecture });
+    expect(lectureAnchorProblems(widgetOnly)).toHaveLength(2);
+    expect(lectureAnchorProblems(LessonSpec.parse({ ...base, lecture }))).toHaveLength(2);
+    // vẫn bắt anchor lạ trong bài deck
+    const odd = LessonSpec.parse({ ...base, embeds: [{ url: "/decks/x" }], lecture: [{ anchor: "slide-1", text: "a" }] });
+    expect(lectureAnchorProblems(odd)).toHaveLength(1);
+  });
 });
 
 describe("công thức toán trong markdown", () => {

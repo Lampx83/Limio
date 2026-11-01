@@ -1114,9 +1114,12 @@ export function lectureAnchorProblems(l: z.infer<typeof LessonSpec>): string[] {
   // nghe không hiện bước nào và cũng không báo lỗi, nên phải bắt ở đây.
   const stepsOf = new Map<string, number>();
   for (const sec of l.sections ?? []) if (sec.reveal && sec.layout === "steps") stepsOf.set(plainHeading(sec.title), sec.parts.length);
+  // Bài trình chiếu bằng khung slide (`/decks/<id>`): anchor `s<slide>b<bước>` trỏ vào slide trong khung, không phải mục của trang.
+  const hasDeck = (l.embeds ?? []).some((e) => e.url.startsWith("/decks/"));
   return l.lecture
     .filter((seg) => {
       if (known.has(seg.anchor)) return false;
+      if (hasDeck && /^s\d{1,3}b\d{1,2}$/.test(seg.anchor)) return false;
       const m = /^(.*?)\s*#(\d{1,2})$/.exec(seg.anchor.trim());
       const total = m ? stepsOf.get(m[1]!) : undefined;
       return !(m && total !== undefined && Number(m[2]) >= 1 && Number(m[2]) <= total);

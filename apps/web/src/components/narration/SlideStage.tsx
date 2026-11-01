@@ -1,16 +1,13 @@
 "use client";
 
 import { Captions, CaptionsOff, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { NarrationAvatar } from "./NarrationAvatar";
 
 /**
- * Phần khung của chế độ trình chiếu (docs/tieu-chi/trinh-chieu-giang-vien.md): giảng viên, số slide, phụ đề, nút thoát.
+ * Phần khung của chế độ trình chiếu (docs/tieu-chi/trinh-chieu-giang-vien.md): số slide, phụ đề, nút thoát (giảng viên đã có trên thanh phát).
  * Nội dung slide là chính trang bài (NarrationPlayer đánh dấu `data-slide-on`, CSS trong narration.css đưa nó ra toàn màn hình);
  * thanh phát ở dưới vẫn là điều khiển phát/tua/tốc độ như Nghe giảng.
  */
 export default function SlideStage({
-  lecturer,
-  speaking,
   index,
   count,
   subtitle,
@@ -20,8 +17,6 @@ export default function SlideStage({
   onNext,
   onExit,
 }: {
-  lecturer: { name: string; accent?: string };
-  speaking: boolean;
   /** Slide đang hiện, từ 0. */
   index: number;
   count: number;
@@ -35,9 +30,7 @@ export default function SlideStage({
   return (
     <>
       <div className="slide-top print:hidden">
-        <NarrationAvatar who="lecturer" name={lecturer.name} accent={lecturer.accent} size="sm" speaking={speaking} className="lg:hidden" />
-        <span className="hidden min-w-0 truncate text-sm font-semibold sm:block lg:hidden">{lecturer.name}</span>
-        <span className="ml-auto lg:ml-0" />
+        <span className="ml-auto" />
         <button type="button" className="slide-btn" onClick={() => onPrev?.()} disabled={!onPrev} aria-label="Slide trước">
           <ChevronLeft size={20} />
         </button>
@@ -61,12 +54,6 @@ export default function SlideStage({
           <span className="hidden sm:inline">Thoát</span>
         </button>
       </div>
-
-      <aside className="slide-lecturer print:hidden" aria-label={`Giảng viên ${lecturer.name}`}>
-        <NarrationAvatar who="lecturer" name={lecturer.name} accent={lecturer.accent} size="lg" speaking={speaking} />
-        <p className="mt-2 text-sm font-semibold">{lecturer.name}</p>
-        <p className="text-xs text-muted">{speaking ? "Đang giảng" : "Tạm dừng"}</p>
-      </aside>
 
       {showSubtitles && subtitle && (
         <p className="slide-subtitle print:hidden" aria-hidden="true">

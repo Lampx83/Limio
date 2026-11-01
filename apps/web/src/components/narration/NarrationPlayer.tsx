@@ -26,6 +26,7 @@ import {
   writeResume,
   type NarrationKind,
 } from "@/lib/narration/learner";
+import { isDeckLecture } from "@/lib/narration/deckSync";
 import { buildSlideUnits, clearSlides, firstSegmentPerUnit, markSlides, subtitleAt, unitIndexOf } from "@/lib/narration/slideshow";
 import {
   getNarrationState,
@@ -39,6 +40,7 @@ import {
 import { LECTURER_NAME, NarrationAvatar, NarrationWave } from "./NarrationAvatar";
 import PodcastTranscript from "./PodcastTranscript";
 import SlideStage from "./SlideStage";
+import { useDeckBridge } from "./useDeckBridge";
 import "./narration.css";
 
 const EVENTS_URL = "/api/me/narration-events";
@@ -209,6 +211,23 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   const [slide, setSlide] = useState({ cur: 0, count: 0 });
   const [slideTick, setSlideTick] = useState(0);
   const [showSubtitles, setShowSubtitles] = useState(() => safeStorage()?.getItem(SUBTITLES_KEY) !== "0");
+
+  // Bài trình chiếu bằng khung slide tương tác (`/decks/<id>`): giọng điều khiển khung, và ngược lại.
+  const deckAnchors = useMemo(() => lecture?.segments.map((s) => s.anchor) ?? [], [lecture]);
+  const deckLecture = isDeckLecture(deckAnchors);
+  const deckBridge = useDeckBridge({
+    active: lectureOn && deckLecture,
+    compact: stageOn,
+    frame: () => document.querySelector<HTMLIFrameElement>(`#${CONTENT_ID} iframe[src^="/decks/"]`),
+    anchors: deckAnchors,
+    segIdx: lectureIdx,
+    onSeek: (i) => {
+      const seg = lecture?.segments[i];
+      if (!seg) return;
+      patchNarration({ follow: true });
+      narrationCommands()?.playFrom("lecture", seg.startSec);
+    },
+  });
 
   // ── Động cơ: thẻ audio, lệnh, sự kiện, nhớ vị trí ───────────────────────────────
   useEffect(() => {
@@ -539,6 +558,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     if (!lectureOn || !lecture) {
       root.removeAttribute("data-narration-on");
       root.removeAttribute("data-slideshow");
+      root.removeAttribute("data-deck");
       clearSlides(root);
       root.querySelectorAll(".narration-active").forEach((n) => n.classList.remove("narration-active"));
       document.querySelectorAll(".narration-sub").forEach((n) => n.classList.remove("narration-sub"));
@@ -567,9 +587,16 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       el?.classList.add("narration-active");
       if (stageOn) {
         root.setAttribute("data-slideshow", "1");
-        const units = buildSlideUnits(root);
+        let units = buildSlideUnits(root);
+        const deckFrame = isDeckLecture(anchors) ? root.querySelector('iframe[src^="/decks/"]') : null;
+        if (deckFrame) {
+          // Khung slide là cả màn hình: tách nó khỏi chữ giới thiệu của bài, chữ ấy không hiện lúc trình chiếu.
+          root.setAttribute("data-deck", "1");
+          const block = deckFrame.closest<HTMLElement>("[data-item-id]");
+          if (block) units = [...units.map((u) => u.filter((e) => e !== block)).filter((u) => u.length > 0), [block]];
+        } else root.removeAttribute("data-deck");
         const segUnit = targets.map((t, i) => unitIndexOf(units, t ?? subs[i]?.[0] ?? null));
-        let cur = lectureIdx >= 0 ? segUnit[lectureIdx] ?? -1 : -1;
+        let cur = deckFrame ? unitIndexOf(units, deckFrame) : lectureIdx >= 0 ? segUnit[lectureIdx] ?? -1 : -1;
         if (cur < 0) cur = Math.max(0, Math.min(slideRef.current.cur, units.length - 1)); // không rõ: giữ slide đang hiện
         const forced = slideRef.current.forced;
         if (forced && forced.seg === lectureIdx && forced.u < units.length) cur = forced.u;
@@ -585,6 +612,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         setSlide((s) => (s.cur === cur && s.count === units.length ? s : { cur, count: units.length }));
       } else {
         root.removeAttribute("data-slideshow");
+        root.removeAttribute("data-deck");
         clearSlides(root);
         slideRef.current.shown = -1;
       }
@@ -709,6 +737,12 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   }, [stageOn]);
 
   const goSlide = (dir: -1 | 1) => {
+    if (deckLecture) {
+      // Khung tự biết bước/slide kế; nó báo lại và giọng nhảy theo (useDeckBridge).
+      if (dir < 0) deckBridge.prev();
+      else deckBridge.next();
+      return;
+    }
     const r = slideRef.current;
     const u = r.cur + dir;
     if (u < 0 || u >= r.first.length) return;
@@ -803,10 +837,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     <>
       {stageOn && (
         <SlideStage
-          lecturer={{ name: lecturerName, accent: lecturer?.accent }}
-          speaking={ui.playing && !ui.loading}
-          index={slide.cur}
-          count={slide.count}
+          index={deckLecture ? deckBridge.pos?.i ?? 0 : slide.cur}
+          count={deckLecture ? deckBridge.pos?.n ?? 0 : slide.count}
           subtitle={subtitle}
           showSubtitles={showSubtitles}
           onToggleSubtitles={() => {
@@ -818,8 +850,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
               /* bỏ qua */
             }
           }}
-          onPrev={slide.cur > 0 ? () => goSlide(-1) : null}
-          onNext={slide.cur < slide.count - 1 ? () => goSlide(1) : null}
+          onPrev={(deckLecture ? deckBridge.pos?.i ?? 0 : slide.cur) > 0 ? () => goSlide(-1) : null}
+          onNext={(deckLecture ? deckBridge.pos?.i ?? 0 : slide.cur) < (deckLecture ? deckBridge.pos?.n ?? 0 : slide.count) - 1 ? () => goSlide(1) : null}
           onExit={() => patchNarration({ stage: false })}
         />
       )}
