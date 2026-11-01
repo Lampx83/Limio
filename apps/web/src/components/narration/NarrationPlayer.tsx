@@ -166,6 +166,8 @@ interface Props {
   lessonTitle: string;
   lecture: LectureForLearner | null;
   podcast: PodcastForLearner | null;
+  /** Giảng viên ảo của khoá (docs/tieu-chi/giang-vien-ao.md); không có = giao diện Nghe giảng như trước. `locked` = mức «Bắt buộc». */
+  lecturer?: { name: string; accent: string; locked: boolean } | null;
 }
 
 /**
@@ -173,7 +175,7 @@ interface Props {
  * tô sáng + tự cuộn theo mục đang giảng, nhớ vị trí nghe dở, ghi sự kiện đo lường, và vẽ thanh phát cố định ở cuối màn hình.
  * Xem docs/tieu-chi/nghe-giang-podcast.md (AC3–AC6).
  */
-export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcast }: Props) {
+export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcast, lecturer }: Props) {
   const ui = useNarration();
   const audioRef = useRef<HTMLAudioElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -644,6 +646,12 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     };
   }, [ui.open, ui.expanded, ui.offerSec, ui.ended, ui.error, kind]);
 
+  // Mức «Bắt buộc»: vào bài là thanh phát mở sẵn (tự phát nếu trình duyệt cho phép, không thì chờ bấm Phát) và không đóng được.
+  const lockedLecture = !!lecturer?.locked && !!lecture;
+  useEffect(() => {
+    if (lockedLecture) narrationCommands()?.open("lecture");
+  }, [lockedLecture]);
+
   // ── Phím điều khiển trên màn hình khoá / tai nghe ─────────────────────────────
   useEffect(() => {
     if (!ui.open || !kind || !("mediaSession" in navigator)) return;
@@ -674,7 +682,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   const c = narrationCommands;
   const showBar = ui.open && kind !== null && data !== null;
   const cur = activeIdx >= 0 ? items[activeIdx] : undefined;
-  let title: string = LECTURER_NAME;
+  const lecturerName = lecturer?.name ?? LECTURER_NAME;
+  let title: string = lecturerName;
   let subline = "";
   if (kind === "lecture") {
     const seg = cur as LectureForLearner["segments"][number] | undefined;
@@ -718,7 +727,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                 <NarrationAvatar who="B" name={podcast.hosts.B} size="sm" speaking={ui.playing && speakerNow === "B"} />
               </span>
             ) : (
-              <NarrationAvatar who="lecturer" speaking={ui.playing} />
+              <NarrationAvatar who="lecturer" name={lecturer?.name} accent={lecturer?.accent} speaking={ui.playing} />
             )}
             <button
               type="button"
@@ -753,14 +762,16 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
             >
               <ChevronUp size={18} className={ui.expanded ? "rotate-180" : ""} />
             </button>
-            <button
-              type="button"
-              onClick={() => c()?.close()}
-              aria-label="Đóng thanh phát"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-[rgb(var(--surface-muted))]"
-            >
-              <X size={18} />
-            </button>
+            {!lecturer?.locked && (
+              <button
+                type="button"
+                onClick={() => c()?.close()}
+                aria-label="Đóng thanh phát"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-[rgb(var(--surface-muted))]"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
 
           {ui.offerSec !== null && (
