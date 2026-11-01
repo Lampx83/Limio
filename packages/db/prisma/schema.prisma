@@ -693,6 +693,17 @@ model LessonNarration {
   voices        Json?
   generatedHash String?
   generatedAt   DateTime?
+  /// Video giảng viên nói (Ditto, lip-sync), tắt tiếng, dài bằng tệp giọng; chỉ có ở lời giảng. Dựng offline rồi nạp bằng
+  /// `apps/web/scripts/lecturer-video.ts` (docs/tieu-chi/trinh-chieu-giang-vien.md, AC7). Khoá lớp `private`: bản 512 px, bản 256 px.
+  videoKey         String?
+  videoSmKey       String?
+  videoSizeBytes   Int?
+  videoSmSizeBytes Int?
+  /// `generatedHash` của giọng lúc dựng video. Khác `generatedHash` hiện tại = giọng đã tạo lại, video cũ không còn dùng.
+  videoForHash     String?
+  /// Mã giảng viên ảo mà video thể hiện (vd `tien-dat`); chỉ phát khi học viên đang học với đúng giảng viên đó.
+  videoLecturer    String?
+  videoBuiltAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

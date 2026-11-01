@@ -47,6 +47,7 @@ import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import NarrationButton from "@/components/narration/NarrationButton";
 import NarrationPlayer from "@/components/narration/NarrationPlayer";
+import { lecturerVideoEnabled } from "@/lib/narration/lecturerVideoFlag";
 import PodcastButton from "@/components/narration/PodcastButton";
 import LecturerInvite from "@/components/narration/LecturerInvite";
 import LessonSlideButton, { type LessonSlideInfo } from "@/components/lesson/LessonSlideButton";
@@ -230,7 +231,7 @@ export default async function LessonPage({
   const narrations =
     stageMode || previewMode
       ? { lecture: null, podcast: null }
-      : await getLearnerNarrations(params.lessonId).catch(() => ({ lecture: null, podcast: null }));
+      : await getLearnerNarrations(params.lessonId, undefined, { lecturerVideo: lecturerVideoEnabled() }).catch(() => ({ lecture: null, podcast: null }));
 
   // Giảng viên ảo (docs/tieu-chi/giang-vien-ao.md): chỉ phủ lên Nghe giảng đã có giọng. Mức «Không hiện» (hoặc hệ thống tắt) thì
   // giữ nguyên giao diện Nghe giảng như trước. Mức hiệu lực tính ở core-lms, một chỗ.
@@ -239,7 +240,7 @@ export default async function LessonPage({
       ? await getEffectiveVirtualLecturer(lesson.module.course.id, userId)
           .then((e) => {
             const l = findVirtualLecturer(e.lecturerCode);
-            return e.mode === "AN" || !l ? null : { mode: e.mode, name: l.name, accent: l.accent };
+            return e.mode === "AN" || !l ? null : { mode: e.mode, code: l.code, name: l.name, accent: l.accent };
           })
           .catch(() => null)
       : null;
@@ -827,7 +828,7 @@ export default async function LessonPage({
           lessonTitle={lesson.title}
           lecture={narrations.lecture}
           podcast={narrations.podcast}
-          lecturer={lecturerChoice && { name: lecturerChoice.name, accent: lecturerChoice.accent, locked: lecturerChoice.mode === "BAT_BUOC" }}
+          lecturer={lecturerChoice && { code: lecturerChoice.code, name: lecturerChoice.name, accent: lecturerChoice.accent, locked: lecturerChoice.mode === "BAT_BUOC" }}
         />
       )}
 

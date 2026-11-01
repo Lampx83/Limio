@@ -226,13 +226,43 @@ html[data-narration-stage] .narration-bar {
   outline: 2px solid rgb(var(--brand));
   outline-offset: 2px;
 }
+/* Giảng viên ở góc dưới phải, to và rõ mặt (AC7): video Ditto, hoặc ảnh chân dung khi chưa có video. Điện thoại: nhỏ hơn và nằm trên cụm phụ đề. */
+html[data-narration-stage] {
+  --slide-avatar-w: 5.5rem;
+}
 .slide-avatar {
   position: fixed;
-  top: 0.75rem;
   right: 0.75rem;
+  bottom: calc(var(--narration-bar-h, 0px) + 6.75rem);
   z-index: 65;
-  border-radius: 999px;
-  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9);
+  width: var(--slide-avatar-w, 5.5rem);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: rgb(226 232 240);
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9), 0 6px 24px rgb(15 23 42 / 0.28);
+  transition: box-shadow 0.2s;
+}
+.slide-avatar[data-speaking="1"] {
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9), 0 0 0 5px rgb(var(--brand)), 0 6px 24px rgb(15 23 42 / 0.28);
+}
+.slide-avatar-video,
+.slide-avatar .slide-avatar-still {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  object-fit: cover;
+}
+@media (min-width: 640px) {
+  html[data-narration-stage] {
+    --slide-avatar-w: clamp(9rem, 17vw, 15rem);
+  }
+  .slide-avatar {
+    right: 1rem;
+    bottom: calc(var(--narration-bar-h, 0px) + 0.75rem);
+    border-radius: 1.25rem;
+  }
 }
 .slide-dock {
   position: fixed;
@@ -245,6 +275,12 @@ html[data-narration-stage] .narration-bar {
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
+}
+/* Từ sm giảng viên chiếm góc dưới phải: cụm phụ đề + chuyển slide nằm giữa hai bên, không đè lên video. */
+@media (min-width: 640px) {
+  .slide-dock {
+    width: min(48rem, calc(100vw - 2 * var(--slide-avatar-w, 9rem) - 3rem));
+  }
 }
 .slide-nav {
   gap: 0.125rem;

@@ -1,8 +1,9 @@
 "use client";
 
 import { Captions, CaptionsOff, ChevronLeft, ChevronRight, Maximize, Minimize, X } from "lucide-react";
-import { useEffect, useState } from "react";
-import { NarrationAvatar } from "./NarrationAvatar";
+import { useEffect, useState, type RefObject } from "react";
+import { NarrationAvatar, lecturerPhoto } from "./NarrationAvatar";
+import LecturerVideo from "./LecturerVideo";
 
 /**
  * Phần khung của chế độ trình chiếu (docs/tieu-chi/trinh-chieu-giang-vien.md): nút thoát ở góc trên trái, ảnh giảng viên ở góc trên phải,
@@ -16,6 +17,7 @@ export default function SlideStage({
   subtitle,
   showSubtitles,
   lecturer,
+  video,
   speaking,
   waiting,
   onToggleSubtitles,
@@ -29,6 +31,8 @@ export default function SlideStage({
   subtitle: string;
   showSubtitles: boolean;
   lecturer?: { name?: string; accent?: string };
+  /** Có video giảng viên nói cho bài này (AC7): video thay ảnh tĩnh ở góc dưới phải, chạy theo thẻ audio. */
+  video?: { lessonId: string; audio: RefObject<HTMLAudioElement | null> };
   speaking: boolean;
   /** Giọng đang dừng chờ học viên làm bài trên slide. */
   waiting: boolean;
@@ -59,8 +63,12 @@ export default function SlideStage({
         <span className="hidden sm:inline">Thoát</span>
       </button>
 
-      <span className="slide-avatar print:hidden">
-        <NarrationAvatar who="lecturer" name={lecturer?.name} accent={lecturer?.accent} size="sm" speaking={speaking} />
+      <span className="slide-avatar print:hidden" data-speaking={speaking ? "1" : "0"}>
+        {video ? (
+          <LecturerVideo lessonId={video.lessonId} audio={video.audio} photo={lecturerPhoto(lecturer?.name)} name={lecturer?.name} accent={lecturer?.accent} />
+        ) : (
+          <NarrationAvatar who="lecturer" name={lecturer?.name} accent={lecturer?.accent} size="lg" className="slide-avatar-still" />
+        )}
       </span>
 
       <div className="slide-dock print:hidden">

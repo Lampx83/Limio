@@ -177,7 +177,7 @@ interface Props {
   lecture: LectureForLearner | null;
   podcast: PodcastForLearner | null;
   /** Giảng viên ảo của khoá (docs/tieu-chi/giang-vien-ao.md); không có = giao diện Nghe giảng như trước. `locked` = mức «Bắt buộc». */
-  lecturer?: { name: string; accent: string; locked: boolean } | null;
+  lecturer?: { code: string; name: string; accent: string; locked: boolean } | null;
 }
 
 /**
@@ -866,6 +866,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
           showSubtitles={showSubtitles}
           waiting={waiting}
           lecturer={lecturer ?? undefined}
+          video={lecture?.videoLecturer && lecturer?.code === lecture.videoLecturer ? { lessonId, audio: audioRef } : undefined}
           speaking={ui.playing && !ui.loading}
           onToggleSubtitles={() => {
             const next = !showSubtitles;
