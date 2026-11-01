@@ -158,6 +158,39 @@ html[data-narration-stage] .narration-bar {
   }
 }
 
+/*
+ * Trình chiếu bằng khung slide tương tác (/decks/<id>): iframe chiếm trọn vùng giữa thanh trên và thanh phát;
+ * từ lg chừa bên phải cho giảng viên.
+ */
+#lesson-content[data-slideshow][data-deck] {
+  overflow: hidden;
+  /* Chừa chỗ cho thanh phát nổi (~6rem) và dòng phụ đề (~3.5rem) dưới khung. */
+  padding: 3.5rem 0 10.5rem;
+}
+#lesson-content[data-slideshow][data-deck] > * {
+  max-width: none;
+  margin: 0;
+}
+#lesson-content[data-slideshow][data-deck] [data-slide-on] {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+#lesson-content[data-slideshow][data-deck] iframe[src^="/decks/"] {
+  display: block;
+  width: 100%;
+  height: calc(100dvh - 14rem) !important;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+@media (min-width: 1024px) {
+  #lesson-content[data-slideshow][data-deck] {
+    padding-inline: 0 12rem;
+  }
+}
+
 .slide-top {
   position: fixed;
   inset: 0 0 auto 0;

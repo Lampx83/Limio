@@ -57,9 +57,30 @@ chỉ thiếu một **khung trình chiếu**. Dựng khung này thì mọi khoá
 - [x] AC3 phụ đề chạy theo câu, tắt/bật được.
 - [x] AC4 375px: không cuộn ngang, nút ≥ 44px, ảnh giảng viên thu nhỏ trong thanh trên; token màu đổi theo giao diện tối.
 - [x] AC5 test: `slideshow.test.ts` (17), `narration.test.ts` (chữ lời giảng tới học viên).
+- [x] AC6 (máy dev, giọng giả) bài «Hàm số bậc hai»: giọng qua slide 2→3→4 thì khung theo; bấm Tiếp trong khung nhảy giọng tới bước kế, Lui nhảy ngược lại; 375px khung co theo, không cuộn ngang. Test: `deckSync.test.ts` (10), `decks.test.ts` (7), importer (anchor deck).
 - [ ] Chưa kiểm: giọng NEU TTS thật; điện thoại thật; ghi nhớ giữa các thiết bị cho phụ đề (chỉ localStorage).
+
+## AC6 — Bài dùng khung slide tương tác (`/decks/<id>`)
+
+Slide chữ dựng từ trang bài (AC2) vẫn dùng cho mọi bài thường. Riêng bài **Toán 10 — slide tương tác** nhúng khung slide của SmartDoc
+(kéo tham số, trắc nghiệm, ghép đôi, thẻ lật… ngay trên slide):
+
+- **Given** bài có khối nhúng `/decks/<id>` và lời giảng toàn anchor `s<slide>b<bước>`, **when** học viên nghe giảng, **then** giọng sang đoạn nào
+  thì khung nhảy tới đúng slide và bước đó (kể cả khi chưa bật trình chiếu, khung nằm trong trang).
+- **Given** học viên tự bấm Tiếp / Lui / chọn slide trong khung (hoặc nút ‹ › của thanh trên, phím ←/→), **when** khung báo vị trí mới,
+  **then** giọng nhảy tới đoạn tương ứng; lệnh do chính giọng gửi xuống không bị coi là thao tác của học viên (không lặp vô hạn).
+- **Given** trình chiếu toàn màn hình, **then** khung chiếm trọn vùng giữa thanh trên và thanh phát, chữ giới thiệu của bài ẩn đi, thanh điều khiển
+  đáy của khung ẩn (thanh phát Limio thay vào); thoát trình chiếu thì thanh ấy hiện lại để vẫn tự lật slide được.
+- **Given** tin nhắn tới từ nơi khác (không phải iframe của bài, khác origin, sai giao thức), **then** bị bỏ.
+- Importer chỉ nhận anchor `s<i>b<b>` khi bài có khối nhúng `/decks/…`; anchor lạ vẫn bị từ chối.
+- Bộ slide là tệp JSON trong `apps/web/src/content/decks/` (id chỉ `[a-z0-9-]`, tải theo danh sách có sẵn, không đọc đường dẫn người dùng đưa);
+  route `/decks/<id>` không lập chỉ mục (`noindex`) và nằm sau đăng nhập (`PRIVATE_PREFIXES`).
+- Dựng khoá: `tsx apps/web/scripts/build-deck-course.ts <manifest.json>` rồi `pnpm import:course`.
 
 ## Giới hạn đã biết
 
 - Bài viết liền **một khối nhiều `##`** (không phải bố cục `sections`) chỉ thành **một** slide dài, cuộn trong khung: DOM do React dựng, không xẻ ra được. Muốn mỗi mục một slide thì dựng bài bằng bố cục nhiều mục (importer làm sẵn).
 - Phụ đề chia thời gian theo số ký tự, lệch vài giây ở câu dài là bình thường.
+- Khung SmartDoc **chưa có cá nhân hoá**: chưa có gia sư riêng theo BKT, chưa ghi kết quả thao tác trong khung (trắc nghiệm, thanh trượt) vào `LearningEvent`/XP. Bước sau.
+- Slide tương tác «dừng chờ học viên» (`dungCuoi`): giọng vẫn chạy tiếp sang slide sau, không tự dừng chờ.
+- Phím ←/→ chỉ hoạt động khi tiêu điểm ở trang; khi đang bấm trong khung, khung tự xử lý phím của nó.

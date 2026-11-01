@@ -38,6 +38,8 @@ const PRIVATE_PREFIXES = [
   "/tournaments",
   // Link xem bài giảng gửi tay (ai có link cũng xem), không phải trang cho công cụ tìm kiếm.
   "/bai-giang",
+  // Khung slide tương tác nhúng vào bài học, không phải trang để index.
+  "/decks",
 ];
 
 /**
