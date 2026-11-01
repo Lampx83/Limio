@@ -28,6 +28,13 @@ describe("bộ slide tương tác", () => {
     expect(html).toContain("html[data-an-thanh]");
     expect(html).not.toContain('data-an-thanh="1"');
     expect(html).toContain("katex");
+    // Giao diện Limio, mở bằng nền sáng.
+    const root = html.slice(0, html.indexOf(">", html.indexOf("<html")));
+    expect(root).toContain('data-mau="limio"');
+    expect(root).not.toContain("data-theme");
+    // Slide chờ học viên làm (dungCuoi) mang cờ để trình chiếu dừng giọng; slide thường thì không.
+    const waits = deck.slides.filter((s) => s.loiGiang?.dungCuoi).length;
+    expect((html.match(/<section data-dung-cuoi="1"/g) ?? []).length).toBe(waits);
     // Công thức đã thành HTML KaTeX: phần slide (trước thẻ script đầu tiên) không còn \(…\) thô.
     expect(html.slice(0, html.indexOf("<script"))).not.toContain("\\(");
   });
