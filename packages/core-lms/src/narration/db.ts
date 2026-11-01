@@ -151,7 +151,8 @@ export interface LectureForLearner {
   /** Đổi mỗi lần tạo giọng lại: khoá vị trí nghe dở và địa chỉ tệp. */
   version: number;
   durationSec: number;
-  segments: Array<{ anchor: string; startSec: number; endSec: number }>;
+  /** `text` = chữ lời giảng của đoạn, để trình chiếu hiện phụ đề; thiếu khi kịch bản không đọc được. */
+  segments: Array<{ anchor: string; startSec: number; endSec: number; text?: string }>;
 }
 
 export interface PodcastForLearner {
@@ -177,11 +178,16 @@ export async function getLearnerNarrations(
     if (!isLearnerVisible(row) || row.durationSec == null || !row.segments) continue;
     const version = row.generatedAt ? row.generatedAt.getTime() : 0;
     if (row.kind === "lecture") {
+      const script = LectureScript.safeParse(row.script);
+      const textOf = new Map(script.success ? script.data.map((s) => [s.anchor, s.text] as const) : []);
       lecture = {
         kind: "lecture",
         version,
         durationSec: row.durationSec,
-        segments: row.segments as unknown as LectureForLearner["segments"],
+        segments: (row.segments as unknown as LectureForLearner["segments"]).map((seg) => {
+          const text = textOf.get(seg.anchor);
+          return text === undefined ? seg : { ...seg, text };
+        }),
       };
     } else if (row.kind === "podcast") {
       const script = PodcastScript.safeParse(row.script);

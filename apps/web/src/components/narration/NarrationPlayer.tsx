@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { ChevronUp, Navigation, Pause, Play, RotateCcw, SkipBack, SkipForward, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronUp, Navigation, Pause, Play, Presentation, RotateCcw, SkipBack, SkipForward, X } from "lucide-react";
 import type { LectureForLearner, PodcastForLearner } from "@feedbackme/core-lms";
 import { getBrowserAudioPlayer } from "@/lib/exclusiveAudio";
 import { showSteps } from "@/lib/lessonReveal";
@@ -26,6 +26,7 @@ import {
   writeResume,
   type NarrationKind,
 } from "@/lib/narration/learner";
+import { buildSlideUnits, clearSlides, firstSegmentPerUnit, markSlides, subtitleAt, unitIndexOf } from "@/lib/narration/slideshow";
 import {
   getNarrationState,
   narrationCommands,
@@ -37,11 +38,13 @@ import {
 } from "@/lib/narration/store";
 import { LECTURER_NAME, NarrationAvatar, NarrationWave } from "./NarrationAvatar";
 import PodcastTranscript from "./PodcastTranscript";
+import SlideStage from "./SlideStage";
 import "./narration.css";
 
 const EVENTS_URL = "/api/me/narration-events";
 const CONTENT_ID = "lesson-content";
 const SAVE_EVERY_MS = 5000;
+const SUBTITLES_KEY = "limio:slideshow-subtitles";
 
 /** Gửi rồi quên: lỗi mạng, chặn quảng cáo… đều bị nuốt, và không bao giờ được làm chậm việc phát. */
 function sendEvent(body: Record<string, unknown>): void {
@@ -155,6 +158,11 @@ function resolveTargets(root: HTMLElement, anchors: string[]): Resolved {
 }
 
 function scrollIntoComfort(el: HTMLElement): void {
+  // Trình chiếu: #lesson-content tự cuộn (cố định toàn màn hình), cuộn trang không có tác dụng.
+  if (document.getElementById(CONTENT_ID)?.hasAttribute("data-slideshow")) {
+    el.scrollIntoView({ block: "center", behavior: prefersReducedMotion() ? "auto" : "smooth" });
+    return;
+  }
   const top = el.getBoundingClientRect().top;
   // Đã nằm ở nửa trên màn hình, dưới thanh đầu trang: không cuộn thêm cho đỡ giật.
   if (top >= 72 && top <= window.innerHeight * 0.55) return;
@@ -188,6 +196,19 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   const activeIdx = ui.open ? segmentIndexAt(items, ui.time) : -1;
   const lectureOn = ui.open && kind === "lecture";
   const lectureIdx = lectureOn ? activeIdx : -1;
+  const stageOn = lectureOn && ui.stage;
+  // Slide đang hiện (đánh dấu trong DOM bởi apply) và đoạn giảng đầu của từng slide, để Trước/Sau nhảy giọng theo.
+  // `own[u]` = slide u có đoạn giảng riêng. `forced` = slide học viên tự bấm tới dù không có lời giảng; hết hiệu lực khi giọng sang đoạn khác.
+  const slideRef = useRef<{ cur: number; first: number[]; own: boolean[]; shown: number; forced: { u: number; seg: number } | null }>({
+    cur: 0,
+    first: [],
+    own: [],
+    shown: -1,
+    forced: null,
+  });
+  const [slide, setSlide] = useState({ cur: 0, count: 0 });
+  const [slideTick, setSlideTick] = useState(0);
+  const [showSubtitles, setShowSubtitles] = useState(() => safeStorage()?.getItem(SUBTITLES_KEY) !== "0");
 
   // ── Động cơ: thẻ audio, lệnh, sự kiện, nhớ vị trí ───────────────────────────────
   useEffect(() => {
@@ -342,7 +363,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       close() {
         endSession();
         audio.pause();
-        patchNarration({ open: false, playing: false, loading: false, offerSec: null, expanded: false });
+        patchNarration({ open: false, playing: false, loading: false, offerSec: null, expanded: false, stage: false });
       },
       setSpeed(s) {
         if (!isNarrationSpeed(s)) return;
@@ -517,6 +538,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     if (!root) return;
     if (!lectureOn || !lecture) {
       root.removeAttribute("data-narration-on");
+      root.removeAttribute("data-slideshow");
+      clearSlides(root);
       root.querySelectorAll(".narration-active").forEach((n) => n.classList.remove("narration-active"));
       document.querySelectorAll(".narration-sub").forEach((n) => n.classList.remove("narration-sub"));
       subsRef.current = [];
@@ -542,6 +565,29 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         if (n !== el) n.classList.remove("narration-active");
       });
       el?.classList.add("narration-active");
+      if (stageOn) {
+        root.setAttribute("data-slideshow", "1");
+        const units = buildSlideUnits(root);
+        const segUnit = targets.map((t, i) => unitIndexOf(units, t ?? subs[i]?.[0] ?? null));
+        let cur = lectureIdx >= 0 ? segUnit[lectureIdx] ?? -1 : -1;
+        if (cur < 0) cur = Math.max(0, Math.min(slideRef.current.cur, units.length - 1)); // không rõ: giữ slide đang hiện
+        const forced = slideRef.current.forced;
+        if (forced && forced.seg === lectureIdx && forced.u < units.length) cur = forced.u;
+        else slideRef.current.forced = null;
+        markSlides(root, units, cur);
+        slideRef.current.first = firstSegmentPerUnit(segUnit, units.length);
+        slideRef.current.own = units.map((_, u) => segUnit.includes(u));
+        slideRef.current.cur = cur;
+        if (slideRef.current.shown !== cur) {
+          slideRef.current.shown = cur;
+          root.scrollTop = 0;
+        }
+        setSlide((s) => (s.cur === cur && s.count === units.length ? s : { cur, count: units.length }));
+      } else {
+        root.removeAttribute("data-slideshow");
+        clearSlides(root);
+        slideRef.current.shown = -1;
+      }
       // Giọng đang giảng một bước của lời giải từng bước: hiện lời giải tới bước đó, như thầy viết lên bảng.
       const stepSection = el?.parentElement?.classList.contains("lk-reveal") && el.classList.contains("lesson-part") ? el.parentElement : null;
       if (stepSection && el) {
@@ -574,7 +620,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       mo.disconnect();
       cancelAnimationFrame(raf);
     };
-  }, [lectureOn, lectureIdx, ui.follow, ui.offerSec, lecture]);
+  }, [lectureOn, lectureIdx, ui.follow, ui.offerSec, lecture, stageOn, slideTick]);
 
   // Mỗi nhịp phát: tô sáng và cuộn theo khối con đang được giảng trong mục.
   useEffect(() => {
@@ -649,8 +695,57 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   // Mức «Bắt buộc»: vào bài là thanh phát mở sẵn (tự phát nếu trình duyệt cho phép, không thì chờ bấm Phát) và không đóng được.
   const lockedLecture = !!lecturer?.locked && !!lecture;
   useEffect(() => {
-    if (lockedLecture) narrationCommands()?.open("lecture");
+    if (!lockedLecture) return;
+    patchNarration({ stage: true }); // «Bắt buộc» vào thẳng trình chiếu; học viên vẫn thoát về chế độ đọc được
+    narrationCommands()?.open("lecture");
   }, [lockedLecture]);
+
+  // ── Trình chiếu: khoá cuộn trang, nhớ phụ đề, phím tắt ─────────────
+  useEffect(() => {
+    if (!stageOn) return;
+    const html = document.documentElement;
+    html.setAttribute("data-narration-stage", "1");
+    return () => html.removeAttribute("data-narration-stage");
+  }, [stageOn]);
+
+  const goSlide = (dir: -1 | 1) => {
+    const r = slideRef.current;
+    const u = r.cur + dir;
+    if (u < 0 || u >= r.first.length) return;
+    if (!r.own[u]) {
+      // Slide không có lời giảng riêng (vd câu hỏi thường gặp): chỉ đổi slide, giọng vẫn chạy.
+      r.forced = { u, seg: lectureIdx };
+      setSlideTick((t) => t + 1);
+      return;
+    }
+    const seg = lecture?.segments[r.first[u]!];
+    if (!seg) return;
+    r.forced = null;
+    patchNarration({ follow: true });
+    narrationCommands()?.playFrom("lecture", seg.startSec);
+  };
+  const goSlideRef = useRef(goSlide);
+  goSlideRef.current = goSlide;
+
+  useEffect(() => {
+    if (!stageOn) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        patchNarration({ stage: false });
+        return;
+      }
+      const t = e.target instanceof Element ? e.target : null;
+      if (t?.closest("input, textarea, select, button, a, [contenteditable], [data-narration-bar]")) return;
+      if (e.key === "ArrowRight") goSlideRef.current(1);
+      else if (e.key === "ArrowLeft") goSlideRef.current(-1);
+      else if (e.key === " ") {
+        e.preventDefault();
+        narrationCommands()?.toggle();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stageOn]);
 
   // ── Phím điều khiển trên màn hình khoá / tai nghe ─────────────────────────────
   useEffect(() => {
@@ -701,8 +796,33 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   const canNext = nextStart(items, ui.time) !== null;
   const speakerNow = kind === "podcast" ? (cur as PodcastForLearner["turns"][number] | undefined)?.speaker : undefined;
 
+  const lectureSeg = lectureIdx >= 0 ? lecture?.segments[lectureIdx] : undefined;
+  const subtitle = stageOn && showSubtitles && lectureSeg ? subtitleAt(lectureSeg.text, lectureSeg, ui.time) : "";
+
   return (
     <>
+      {stageOn && (
+        <SlideStage
+          lecturer={{ name: lecturerName, accent: lecturer?.accent }}
+          speaking={ui.playing && !ui.loading}
+          index={slide.cur}
+          count={slide.count}
+          subtitle={subtitle}
+          showSubtitles={showSubtitles}
+          onToggleSubtitles={() => {
+            const next = !showSubtitles;
+            setShowSubtitles(next);
+            try {
+              safeStorage()?.setItem(SUBTITLES_KEY, next ? "1" : "0");
+            } catch {
+              /* bỏ qua */
+            }
+          }}
+          onPrev={slide.cur > 0 ? () => goSlide(-1) : null}
+          onNext={slide.cur < slide.count - 1 ? () => goSlide(1) : null}
+          onExit={() => patchNarration({ stage: false })}
+        />
+      )}
       {/* Thẻ audio ẩn: không có `controls` nên không có menu "Tải xuống"; `nodownload` cho chắc. Nguồn chỉ nạp khi học viên bấm nghe. */}
       <audio ref={audioRef} preload="none" className="hidden" controlsList="nodownload noplaybackrate" />
       {showBar && (
@@ -861,6 +981,12 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                   </button>
                 ))}
               </div>
+              {kind === "lecture" && !stageOn && (
+                <button type="button" className="btn-pill" onClick={() => patchNarration({ stage: true })}>
+                  <Presentation size={14} />
+                  Trình chiếu
+                </button>
+              )}
               {kind === "lecture" && ui.follow && <span className="ml-auto hidden text-xs text-muted md:inline">Bấm tiêu đề một {unit} để nghe từ đó</span>}
             </div>
           </div>

@@ -119,3 +119,115 @@
 body {
   padding-bottom: var(--narration-bar-h, 0px);
 }
+
+/*
+ * Trình chiếu (docs/tieu-chi/trinh-chieu-giang-vien.md): chính #lesson-content thành màn hình toàn khung, chỉ slide đang giảng
+ * (data-slide-on) hiện. Thanh phát ở dưới nâng lên trên lớp phủ để vẫn phát/tua/đổi tốc độ được.
+ */
+html[data-narration-stage] body {
+  overflow: hidden;
+}
+html[data-narration-stage] .narration-bar {
+  z-index: 70;
+}
+#lesson-content[data-slideshow] {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgb(var(--surface));
+  padding: 4.5rem 1rem calc(var(--narration-bar-h, 0px) + 6rem);
+  font-size: clamp(1.05rem, 0.9rem + 0.5vw, 1.3rem);
+}
+#lesson-content[data-slideshow] > * {
+  max-width: 56rem;
+  margin-inline: auto;
+}
+#lesson-content[data-slideshow] [data-slide]:not([data-slide-on]) {
+  display: none !important;
+}
+/* Cả màn hình đang là một slide: viền tô sáng cả mục là thừa, giữ tô khối con đang đọc. */
+#lesson-content[data-slideshow] .narration-active {
+  outline: none;
+  box-shadow: none;
+}
+@media (min-width: 1024px) {
+  #lesson-content[data-slideshow] {
+    padding-inline: 3rem 14rem;
+  }
+}
+
+.slide-top {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgb(var(--border));
+  background: rgb(var(--surface) / 0.94);
+  backdrop-filter: blur(6px);
+}
+.slide-btn {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  border-radius: 999px;
+  color: rgb(var(--text));
+}
+.slide-btn:hover:not(:disabled) {
+  background: rgb(var(--surface-muted));
+}
+.slide-btn:disabled {
+  opacity: 0.35;
+}
+.slide-btn-text {
+  padding-inline: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.slide-btn:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+
+/* Giảng viên cỡ lớn bên phải (từ lg); dưới lg đã có ảnh nhỏ trong thanh trên. */
+.slide-lecturer {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .slide-lecturer {
+    position: fixed;
+    top: 5rem;
+    right: 2rem;
+    z-index: 62;
+    display: block;
+    width: 10rem;
+    text-align: center;
+  }
+  .slide-lecturer > span {
+    display: inline-block;
+  }
+}
+
+.slide-subtitle {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--narration-bar-h, 0px) + 0.75rem);
+  z-index: 66;
+  width: min(48rem, calc(100vw - 1.5rem));
+  translate: -50% 0;
+  padding: 0.6rem 1rem;
+  border-radius: 0.9rem;
+  background: rgb(15 23 42 / 0.88);
+  color: #fff;
+  text-align: center;
+  font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
+  line-height: 1.4;
+}

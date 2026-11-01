@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Headphones, X } from "lucide-react";
 import { safeStorage } from "@/lib/narration/learner";
-import { narrationCommands } from "@/lib/narration/store";
+import { narrationCommands, patchNarration } from "@/lib/narration/store";
 import { NarrationAvatar } from "./NarrationAvatar";
 
 const dismissKey = (courseSlug: string) => `limio:lecturer-invite:${courseSlug}`;
@@ -21,7 +21,10 @@ export default function LecturerInvite({ courseSlug, name, accent }: { courseSlu
       <p className="min-w-[10rem] flex-1 text-sm">
         <strong>{name}</strong> có thể giảng bài này cho bạn.
       </p>
-      <button type="button" className="btn-primary btn-sm shrink-0" onClick={() => narrationCommands()?.open("lecture")}>
+      <button type="button" className="btn-primary btn-sm shrink-0" onClick={() => {
+          patchNarration({ stage: true });
+          narrationCommands()?.open("lecture");
+        }}>
         <Headphones size={14} />
         Học với giảng viên ảo
       </button>
