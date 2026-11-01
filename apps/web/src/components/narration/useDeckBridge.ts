@@ -19,17 +19,21 @@ export interface DeckBridgeOptions {
   segIdx: number;
   /** Học viên bấm trong khung để tới (slide, bước): nhảy giọng tới đoạn tương ứng. */
   onSeek: (segIdx: number) => void;
+  /** Học viên bấm Esc khi tiêu điểm đang ở trong khung: phím không ra tới trang nên khung báo lên. */
+  onExit?: () => void;
 }
 
 /**
  * Cầu nối hai chiều giữa Nghe giảng và khung slide tương tác `/decks/<id>`:
  * giọng sang đoạn mới → khung nhảy tới đúng slide/bước; học viên tự bấm Sau/Trước/chọn slide trong khung → giọng nhảy theo.
  */
-export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek }: DeckBridgeOptions) {
+export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek, onExit }: DeckBridgeOptions) {
   const [pos, setPos] = useState<{ i: number; n: number } | null>(null);
   const last = useRef<{ i: number; b: number; at: number } | null>(null); // lệnh `toi` mình vừa gửi
   const seekRef = useRef(onSeek);
   seekRef.current = onSeek;
+  const exitRef = useRef(onExit);
+  exitRef.current = onExit;
   const anchorsRef = useRef(anchors);
   anchorsRef.current = anchors;
   const segRef = useRef(segIdx);
@@ -52,6 +56,9 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
       const doc = f?.contentDocument;
       if (!f || !doc?.documentElement) return;
       doc.documentElement.toggleAttribute("data-an-thanh", compact);
+      // Khung thường nạp xong từ trước khi nghe nên lời báo «sẵn sàng» đã trôi qua: tự đếm slide để nút chuyển slide dùng được ngay.
+      const n = doc.querySelectorAll(".khung > section").length;
+      if (n > 0) setPos((p) => p ?? { i: parseDeckAnchor(anchorsRef.current[segRef.current] ?? "")?.slide ?? 0, n });
       f.contentWindow?.dispatchEvent(new Event("resize")); // khung tính lại cỡ sân khấu
       // Vùng dưới khung (phụ đề, thanh chuyển slide) dùng đúng nền và màu chữ của slide thay vì nền trang bài.
       const cs = f.contentWindow?.getComputedStyle(doc.body);
@@ -110,6 +117,10 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
       if (e.origin !== window.location.origin || e.source !== frame()?.contentWindow) return;
       const ev = parseDeckMessage(e.data);
       if (!ev) return;
+      if (ev.loai === "thoat") {
+        exitRef.current?.();
+        return;
+      }
       if (ev.loai === "san-sang") {
         applyCompactRef.current();
         if (typeof ev.n === "number") setPos((p) => ({ i: p?.i ?? 0, n: ev.n! }));

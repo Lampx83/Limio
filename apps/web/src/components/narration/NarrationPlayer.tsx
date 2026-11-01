@@ -26,6 +26,7 @@ import {
   writeResume,
   type NarrationKind,
 } from "@/lib/narration/learner";
+import { heardFraction, readHeard, stepHeard, writeHeard, type HeardRanges } from "@/lib/narration/deckCover";
 import { isDeckLecture, parseDeckAnchor } from "@/lib/narration/deckSync";
 import { buildSlideUnits, clearSlides, firstSegmentPerUnit, markSlides, subtitleAt, unitIndexOf } from "@/lib/narration/slideshow";
 import {
@@ -183,6 +184,8 @@ interface Props {
   podcast: PodcastForLearner | null;
   /** Giảng viên ảo của khoá (docs/tieu-chi/giang-vien-ao.md); không có = giao diện Nghe giảng như trước. `locked` = mức «Bắt buộc». */
   lecturer?: { code: string; name: string; accent: string; locked: boolean } | null;
+  /** Bài có màn hình bìa (docs/tieu-chi/bai-slide-man-hinh-bia.md): thoát trình chiếu là dừng hẳn về bìa, và đo phần lời giảng đã nghe. */
+  deckCover?: boolean;
 }
 
 /**
@@ -190,12 +193,14 @@ interface Props {
  * tô sáng + tự cuộn theo mục đang giảng, nhớ vị trí nghe dở, ghi sự kiện đo lường, và vẽ thanh phát cố định ở cuối màn hình.
  * Xem docs/tieu-chi/nghe-giang-podcast.md (AC3–AC6).
  */
-export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcast, lecturer }: Props) {
+export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcast, lecturer, deckCover = false }: Props) {
   const ui = useNarration();
   const audioRef = useRef<HTMLAudioElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const dataRef = useRef({ lecture, podcast });
   dataRef.current = { lecture, podcast };
+  const deckCoverRef = useRef(deckCover);
+  deckCoverRef.current = deckCover;
 
   const kind = ui.kind;
   const data = kind === "lecture" ? lecture : kind === "podcast" ? podcast : null;
@@ -235,6 +240,10 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
   // Bài trình chiếu bằng khung slide tương tác (`/decks/<id>`): giọng điều khiển khung, và ngược lại.
   const deckAnchors = useMemo(() => lecture?.segments.map((s) => s.anchor) ?? [], [lecture]);
   const deckLecture = isDeckLecture(deckAnchors);
+  const exitStage = () => {
+    if (deckCover) narrationCommands()?.close();
+    else patchNarration({ stage: false });
+  };
   const deckBridge = useDeckBridge({
     active: lectureOn && deckLecture,
     compact: stageOn,
@@ -245,8 +254,12 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       const seg = lecture?.segments[i];
       if (!seg) return;
       patchNarration({ follow: true });
-      narrationCommands()?.playFrom("lecture", seg.startSec);
+      // Học viên đã bấm dừng để tự xem slide thì lật slide không tự phát lại. Giọng chỉ đang nghỉ nhịp hay chờ làm bài thì vẫn đi tiếp.
+      const stoppedByLearner = deckCover && !getNarrationState().playing && !breathTimer.current && waitSlide === null;
+      if (stoppedByLearner) narrationCommands()?.seek(seg.startSec);
+      else narrationCommands()?.playFrom("lecture", seg.startSec);
     },
+    onExit: stageOn ? exitStage : undefined,
   });
 
   // Slide chờ học viên làm (ghép đôi, trắc nghiệm…): đọc hết lời giảng của slide đó thì dừng giọng, học viên bấm Tiếp tục là giọng đi tiếp.
@@ -323,6 +336,21 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     // moved: học viên tự chuyển chỗ (bấm slide, tua) nên vị trí đáng nhớ dù giọng chưa phát được; không thì F5 quay lại chỗ cũ.
     const sess = { started: false, resumed: false, maxPos: 0, moved: false };
 
+    // Phần lời giảng đã nghe thật của bài có màn hình bìa. `heardAt` = giờ của nhịp trước; null ngay sau khi nhảy chỗ để bước nhảy không được cộng.
+    const heardLecture = () => (deckCoverRef.current ? dataRef.current.lecture : null);
+    let heard: HeardRanges = heardLecture() ? readHeard(store, lessonId, heardLecture()!.version) : [];
+    let heardAt: number | null = null;
+    let heardSavedAt = 0;
+    const publishHeard = () => {
+      const d = heardLecture();
+      if (d) patchNarration({ heard: heardFraction(heard, d.durationSec) });
+    };
+    const saveHeard = () => {
+      const d = heardLecture();
+      if (d) writeHeard(store, lessonId, d.version, heard);
+    };
+    publishHeard();
+
     const storedSpeed = Number(store?.getItem(SPEED_KEY));
     const speed = isNarrationSpeed(storedSpeed) ? storedSpeed : 1;
     audio.defaultPlaybackRate = speed;
@@ -356,6 +384,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     }
 
     function applySeek(sec: number) {
+      heardAt = null;
       if (audio!.readyState >= 1) {
         audio!.currentTime = sec;
         pendingSeek = null;
@@ -455,6 +484,14 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         play();
       },
       restart,
+      enter(k) {
+        const d = dataOf(k);
+        if (!d) return;
+        const resume = readResume(store, lessonId, k, d.version, d.durationSec);
+        sess.resumed = resume !== null;
+        show(k, resume ?? 0, null);
+        play();
+      },
       seek(sec) {
         const st = getNarrationState();
         const target = Math.min(Math.max(0, sec), st.duration || sec);
@@ -530,6 +567,18 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         lastSave = now;
         savePosition();
       }
+      if (heardLecture() && currentKind() === "lecture") {
+        heard = audio.seeking ? heard : stepHeard(heard, heardAt, t);
+        heardAt = audio.seeking ? null : t;
+        publishHeard();
+        if (now - heardSavedAt > SAVE_EVERY_MS) {
+          heardSavedAt = now;
+          saveHeard();
+        }
+      }
+    });
+    on("seeking", () => {
+      heardAt = null;
     });
     on("play", () => {
       patchNarration({ playing: true, ended: false });
@@ -550,6 +599,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     on("pause", () => {
       patchNarration({ playing: false });
       savePosition();
+      saveHeard();
     });
     on("waiting", () => patchNarration({ loading: true }));
     on("canplay", () => patchNarration({ loading: false }));
@@ -575,15 +625,21 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       if (getBrowserAudioPlayer().playingId() !== null && !audio.paused) audio.pause();
     });
 
-    const onPageHide = () => endSession();
+    const onPageHide = () => {
+      endSession();
+      saveHeard();
+    };
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") savePosition();
+      if (document.visibilityState !== "hidden") return;
+      savePosition();
+      saveHeard();
     };
     window.addEventListener("pagehide", onPageHide);
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       endSession();
+      saveHeard();
       audio.pause();
       offs.forEach((off) => off());
       document.removeEventListener("play", onOtherPlay, true);
@@ -850,7 +906,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     if (!stageOn) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        patchNarration({ stage: false });
+        exitStage();
         return;
       }
       const t = e.target instanceof Element ? e.target : null;
@@ -925,7 +981,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
           lecturer={lecturer ?? undefined}
           video={lecture?.videoLecturer && lecturer?.code === lecture.videoLecturer ? { lessonId, audio: audioRef } : undefined}
           speaking={ui.playing && !ui.loading}
-          onExit={() => patchNarration({ stage: false })}
+          onExit={exitStage}
         />
       )}
       {/* Thẻ audio ẩn: không có `controls` nên không có menu "Tải xuống"; `nodownload` cho chắc. Nguồn chỉ nạp khi học viên bấm nghe. */}

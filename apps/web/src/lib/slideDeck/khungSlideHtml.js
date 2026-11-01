@@ -115,7 +115,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   background: var(--the); box-shadow: 0 30px 80px rgba(8, 20, 50, 0.28), 0 0 0 1px var(--vien); }
 
 /* ── Slide ── */
-.khung > section { position: absolute; inset: 0; font-size: 36px; line-height: 1.45; padding: 120px 110px 84px; overflow: hidden; overflow: clip;
+.khung > section { position: absolute; inset: 0; font-size: 36px; line-height: 1.45; padding: 72px 110px 84px; overflow: hidden; overflow: clip;
   opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .35s ease; background: var(--the); }
 .khung > section.hien-tai { opacity: 1; visibility: visible; pointer-events: auto; z-index: 2; }
 .khung > section.hien-tai.tien { animation: vaoPhai .5s cubic-bezier(.2, .7, .2, 1); }
@@ -123,14 +123,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes vaoPhai { from { opacity: 0; transform: translateX(60px); } to { opacity: 1; transform: none; } }
 @keyframes vaoTrai { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: none; } }
 @keyframes len { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
-.khung > section.hien-tai > :not(.dau-slide):not(.ghi-chu):not(.than), .khung > section.hien-tai > .than > * { animation: len .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 70ms + 120ms); }
+.khung > section.hien-tai > :not(.so-slide):not(.ghi-chu):not(.than), .khung > section.hien-tai > .than > * { animation: len .55s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--i, 0) * 70ms + 120ms); }
 .khung > section::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 14px; background: linear-gradient(180deg, var(--mau), var(--mau-2)); }
 .khung > section::after { content: ""; position: absolute; right: -180px; top: -180px; width: 460px; height: 460px; border-radius: 50%;
   background: radial-gradient(circle, var(--mau-nhat), transparent 68%); pointer-events: none; z-index: 0; }
 .khung > section > * { position: relative; z-index: 1; }
-.dau-slide { position: absolute !important; left: 110px; right: 110px; top: 38px; display: flex; justify-content: space-between; align-items: center;
-  font-size: .55em; letter-spacing: .04em; color: var(--chu-phu); text-transform: uppercase; font-weight: 600; z-index: 3; }
-.dau-slide b { color: var(--mau); }
+/* Số trang trên slide: góc trên phải, vì góc dưới phải là chỗ của giảng viên khi trình chiếu. */
+.so-slide { position: absolute !important; top: 28px; right: 40px; font-size: 22px; font-weight: 600; letter-spacing: .02em; color: var(--chu-phu); font-variant-numeric: tabular-nums; z-index: 3; }
 section:not(.bia):not(.chuong):not(.hai-cot) { display: flex; flex-direction: column; }
 section > .than { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 28px; }
 section > .than > :first-child { margin-top: auto; }
@@ -164,7 +163,6 @@ section.bia::after { right: -120px; top: auto; bottom: -220px; width: 760px; hei
 section.bia h1 { font-size: 2.9em; color: #fff; max-width: 1150px; }
 section.bia .phu-de { color: rgba(255, 255, 255, .86); font-size: 1em; max-width: 1000px; margin: .2em 0 0; }
 section.bia p { color: rgba(255, 255, 255, .8); }
-section.bia .dau-slide { display: none; }
 section.bia .chip { background: rgba(255, 255, 255, .18); color: #fff; align-self: flex-start; margin: 0 0 1.1em; padding: .3em 1em; font-size: .6em; }
 section.bia h1::before { content: ""; display: block; width: 110px; height: 9px; border-radius: 5px; background: var(--vang); margin-bottom: .55em; }
 section.chuong { background: linear-gradient(135deg, var(--mau-nhat), var(--the)); display: flex; flex-direction: column; justify-content: center; padding-left: 150px; }
@@ -396,7 +394,7 @@ export const CSS_HOC_LIEU = `
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--vien) 70%, transparent), 0 40px 90px rgba(0, 0, 0, .38); }
 
 /* Slide: liền nền, quầng sáng trôi chậm ở góc, lưới chấm mờ ở góc trên trái */
-[data-kieu="hoclieu"] .khung > section { padding: 112px 104px 92px; line-height: 1.38;
+[data-kieu="hoclieu"] .khung > section { padding: 72px 104px 92px; line-height: 1.38;
   background: radial-gradient(760px 760px at -8% 112%, color-mix(in srgb, var(--mau-2) 13%, transparent), transparent 68%), var(--nen);
   transform: scale(.965); transition: opacity .42s var(--em), transform .42s var(--em), visibility 0s linear .42s; }
 [data-kieu="hoclieu"] .khung > section.hien-tai { transform: none; transition: opacity .3s ease, transform .3s ease, visibility 0s; }
@@ -410,16 +408,11 @@ export const CSS_HOC_LIEU = `
 [data-kieu="hoclieu"] .khung > section::after { right: -360px; top: -470px; width: 940px; height: 940px;
   background: radial-gradient(circle, color-mix(in srgb, var(--mau) 26%, transparent) 0%, transparent 68%); animation: hlTroi 26s ease-in-out infinite alternate; }
 @keyframes hlTroi { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-50px, 42px, 0) scale(1.1); } }
-[data-kieu="hoclieu"] .khung > section.hien-tai > :not(.dau-slide):not(.ghi-chu):not(.than), [data-kieu="hoclieu"] .khung > section.hien-tai > .than > * {
+[data-kieu="hoclieu"] .khung > section.hien-tai > :not(.so-slide):not(.ghi-chu):not(.than), [data-kieu="hoclieu"] .khung > section.hien-tai > .than > * {
   animation: hlLen .7s var(--em) both; animation-delay: calc(var(--i, 0) * 80ms + 140ms); }
 @keyframes hlLen { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
 
 /* Dòng đầu: nhãn chữ hoa màu nhấn có chấm tròn (eyebrow) */
-[data-kieu="hoclieu"] .dau-slide { left: 104px; right: 104px; top: 40px; font-size: 21px; font-weight: 800; letter-spacing: .16em; color: var(--mau); }
-[data-kieu="hoclieu"] .dau-slide span { display: inline-flex; align-items: center; gap: 14px; }
-[data-kieu="hoclieu"] .dau-slide span::before { content: ""; width: 14px; height: 14px; border-radius: 50%; flex: none;
-  background: linear-gradient(135deg, var(--mau), var(--mau-2)); box-shadow: 0 0 0 6px color-mix(in srgb, var(--mau) 20%, transparent); }
-[data-kieu="hoclieu"] .dau-slide b { color: var(--chu-phu); font-weight: 700; letter-spacing: .08em; }
 
 /* Tiêu đề lớn, đậm, vạch nhấn mọc ra */
 [data-kieu="hoclieu"] section h1 { font-weight: 900; letter-spacing: -.03em; }
@@ -552,8 +545,8 @@ export const CSS_HOC_LIEU = `
 [data-kieu="hoclieu"] .tro-giup > div { border-radius: 20px; border: 1px solid var(--vien); }
 
 /* Tiêu đề hiện chữ mượt: quét mặt nạ trái → phải kèm mờ dần (không tách từng từ) */
-[data-kieu="hoclieu"] .khung > section.hien-tai > h2:not(.dau-slide):not(.ghi-chu):not(.than),
-[data-kieu="hoclieu"] .khung > section.bia.hien-tai > h1:not(.dau-slide):not(.ghi-chu):not(.than) {
+[data-kieu="hoclieu"] .khung > section.hien-tai > h2:not(.ghi-chu):not(.than),
+[data-kieu="hoclieu"] .khung > section.bia.hien-tai > h1:not(.ghi-chu):not(.than) {
   -webkit-mask-image: linear-gradient(90deg, #000 45%, transparent 55%); mask-image: linear-gradient(90deg, #000 45%, transparent 55%);
   -webkit-mask-size: 260% 100%; mask-size: 260% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
   animation: hlChu 1s var(--em) both; animation-delay: .08s; }
@@ -583,8 +576,8 @@ html[data-huong="lui"]::view-transition-new(khung-slide) { animation-name: hlVtV
 
 /* Màn hẹp (html.hep do khung tự đặt): slide rộng 860–1100 px logic, cao theo màn hình, cuộn dọc khi dài */
 [data-kieu="hoclieu"].hep .khung { border-radius: 12px; }
-[data-kieu="hoclieu"].hep .khung > section { padding: 92px 44px 72px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
-[data-kieu="hoclieu"].hep .dau-slide { left: 44px; right: 44px; top: 34px; font-size: 19px; }
+.hep .so-slide { top: 12px; right: 24px; font-size: 18px; }
+[data-kieu="hoclieu"].hep .khung > section { padding: 48px 44px 72px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
 [data-kieu="hoclieu"].hep section h2 { font-size: 1.5em; }
 [data-kieu="hoclieu"].hep section.bia { padding: 0 52px; }
 [data-kieu="hoclieu"].hep section.bia::before { display: none; }
@@ -654,7 +647,6 @@ function chayKhung() {
   var n = dsSlide.length;
   var hien = -1;
   var diem = { dung: 0, tong: 0 };
-  var tieuDe = document.title || "";
   var gui = function (o) {
     try { parent.postMessage(Object.assign({ smartdocSlide: true }, o), "*"); } catch { /* không có cha */ }
   };
@@ -738,10 +730,10 @@ function chayKhung() {
   /* ── Dựng thành phần trong từng slide ── */
   var dungSlide = function (s, k) {
     if (!s.classList.contains("bia")) {
-      var dau = document.createElement("div");
-      dau.className = "dau-slide";
-      dau.innerHTML = "<span>" + esc(tieuDe) + "</span><b>" + (k + 1) + " / " + n + "</b>";
-      s.insertBefore(dau, s.firstChild);
+      var soSlide = document.createElement("div");
+      soSlide.className = "so-slide";
+      soSlide.textContent = (k + 1) + " / " + n;
+      s.insertBefore(soSlide, s.firstChild);
     }
 
     // Thân slide: mọi thứ sau tiêu đề được bọc lại để căn giữa theo chiều dọc
@@ -750,7 +742,7 @@ function chayKhung() {
       than.className = "than";
       var dung = false;
       Array.prototype.slice.call(s.children).forEach(function (c) {
-        if (c.classList.contains("dau-slide")) return;
+        if (c.classList.contains("so-slide")) return;
         if (!dung && (/^H[12]$/.test(c.tagName) || c.classList.contains("phu-de"))) return;
         dung = true;
         than.appendChild(c);
@@ -961,7 +953,7 @@ function chayKhung() {
     if (!ds.length) {
       var than = $(":scope > .than", s) || s, lon = null;
       Array.prototype.forEach.call(than.children, function (c) {
-        if (/\b(dau-slide|ghi-chu|than)\b/.test(c.className) || /^H[1-3]$/.test(c.tagName)) return;
+        if (/\b(so-slide|ghi-chu|than)\b/.test(c.className) || /^H[1-3]$/.test(c.tagName)) return;
         if (!lon || c.offsetHeight > lon.offsetHeight) lon = c;
       });
       if (lon) ds = [lon];

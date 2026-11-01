@@ -7,6 +7,8 @@ import { Download, ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import { formatBytes } from "@/lib/formatBytes";
+import { deckIdOfUrl } from "@/lib/narration/deckCover";
+import DeckCover, { type DeckCoverInfo } from "./narration/DeckCover";
 import SafeHtml from "./SafeHtml";
 import LessonRichText from "./lesson/LessonRichText";
 import AudioLessonPlayer from "./AudioLessonPlayer";
@@ -103,10 +105,13 @@ export default function LessonContent({
   courseId,
   lessonId,
   interactive = true,
+  deckCover,
 }: {
   items: ContentItem[];
   courseId?: string;
   lessonId?: string;
+  /** Bài có màn hình bìa: khung slide này hiện thành bìa thay vì khung nhúng thường. */
+  deckCover?: DeckCoverInfo | null;
   /**
    * False for logged-out visitors on a public course. Content types whose player
    * needs an authenticated session (SCORM, H5P, LTI) render a sign-in prompt
@@ -129,6 +134,7 @@ export default function LessonContent({
             courseId={courseId}
             lessonId={lessonId}
             interactive={interactive}
+            deckCover={deckCover}
           />
         </div>
       ))}
@@ -197,6 +203,7 @@ function ContentBlock({
   courseId,
   lessonId,
   interactive,
+  deckCover,
 }: {
   type: string;
   payload: unknown;
@@ -204,6 +211,7 @@ function ContentBlock({
   courseId?: string;
   lessonId?: string;
   interactive: boolean;
+  deckCover?: DeckCoverInfo | null;
 }) {
   switch (type) {
     case "video": {
@@ -383,6 +391,7 @@ function ContentBlock({
     }
     case "embed": {
       const p = payload as EmbedPayload;
+      if (deckCover && deckIdOfUrl(p.url) === deckCover.deckId) return <DeckCover url={p.url} info={deckCover} />;
       return (
         <iframe
           src={p.url}

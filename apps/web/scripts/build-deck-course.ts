@@ -18,12 +18,15 @@ import { cleanNarration } from "../src/lib/smartdocConvert";
 const PERSONA = { xung: "thầy", ten: "Tiến Đạt" };
 
 const LESSONS = [
-  { id: "ham-bac-hai", tieuDe: "Hàm số bậc hai và đồ thị", moTa: "Parabol quanh ta, đỉnh, trục đối xứng, bảng biến thiên và bài toán thực tế.", phut: 85 },
-  { id: "conic", tieuDe: "Ba đường conic", moTa: "Elip, hypebol, parabol: phương trình chính tắc và hình dạng.", phut: 25 },
-  { id: "tam-giac", tieuDe: "Hệ thức lượng trong tam giác", moTa: "Định lí côsin, định lí sin và giải tam giác trong thực tế.", phut: 25 },
-  { id: "toi-uu", tieuDe: "Hệ bất phương trình bậc nhất hai ẩn và tối ưu", moTa: "Miền nghiệm trên mặt phẳng toạ độ và bài toán tìm giá trị tốt nhất.", phut: 25 },
-  { id: "xac-suat", tieuDe: "Xác suất cổ điển", moTa: "Không gian mẫu, biến cố và cách tính xác suất bằng định nghĩa cổ điển.", phut: 25 },
+  { id: "ham-bac-hai", tieuDe: "Hàm số bậc hai và đồ thị", moTa: "Parabol quanh ta, đỉnh, trục đối xứng, bảng biến thiên và bài toán thực tế." },
+  { id: "conic", tieuDe: "Ba đường conic", moTa: "Elip, hypebol, parabol: phương trình chính tắc và hình dạng." },
+  { id: "tam-giac", tieuDe: "Hệ thức lượng trong tam giác", moTa: "Định lí côsin, định lí sin và giải tam giác trong thực tế." },
+  { id: "toi-uu", tieuDe: "Hệ bất phương trình bậc nhất hai ẩn và tối ưu", moTa: "Miền nghiệm trên mặt phẳng toạ độ và bài toán tìm giá trị tốt nhất." },
+  { id: "xac-suat", tieuDe: "Xác suất cổ điển", moTa: "Không gian mẫu, biến cố và cách tính xác suất bằng định nghĩa cổ điển." },
 ];
+
+/** Giọng NEU TTS đọc khoảng ngần này ký tự mỗi phút (bài Hàm số bậc hai: 10.683 ký tự, 9:10). Giọng chưa tạo lúc nhập khoá nên phải ước lượng. */
+const CHARS_PER_MINUTE = 1165;
 
 type Deck = { slides: { id: string; loiGiang?: { buoc?: string[] } }[] };
 
@@ -52,8 +55,8 @@ function main() {
     return {
       title: meta.tieuDe,
       description: meta.moTa,
-      body: `## Bài giảng tương tác\n\n${meta.moTa} Bấm «Nghe giảng» để học cùng giảng viên ảo: thầy giảng đến đâu, slide chạy đến đó; em có thể tự thao tác trên từng slide.`,
-      durationMin: meta.phut,
+      // Không có `body`: màn hình bìa là toàn bộ phần mở đầu của bài (docs/tieu-chi/bai-slide-man-hinh-bia.md).
+      durationMin: Math.max(1, Math.round(lecture.reduce((sum, s) => sum + s.text.length, 0) / CHARS_PER_MINUTE)),
       embeds: [{ url: `/decks/${meta.id}`, height: 720 }],
       lecture,
     };

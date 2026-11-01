@@ -102,6 +102,7 @@ describe("ánh xạ anchor với tiêu đề mục", () => {
     expect(resolveAnchors(["AI tạo ra câu trả lời như thế nào #0"], headings)).toEqual([{ type: "heading", index: 0 }]);
     expect(resolveAnchors(["Mục đã bị xoá #2"], headings)).toEqual([{ type: "none" }]);
     expect(anchorLabel("Giải phương trình #3")).toBe("Giải phương trình · bước 3");
+    expect(anchorLabel("s15b0")).toBe("Slide 16");
   });
   it("anchor không có mục tương ứng thì none, không đoán", () => {
     expect(resolveAnchors(["Mục đã bị xoá", ""], headings)).toEqual([{ type: "none" }, { type: "none" }]);

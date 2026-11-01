@@ -18,6 +18,8 @@ chỉ thiếu một **khung trình chiếu**. Dựng khung này thì mọi khoá
 
 ## AC1 — Vào và thoát
 
+> Bài dùng khung slide tương tác có lối vào và cách thoát riêng: xem `bai-slide-man-hinh-bia.md`.
+
 - **Given** bài có Nghe giảng (đã có giọng), **when** học viên bấm «Học với giảng viên ảo» (thanh mời) hoặc nút «Trình chiếu» trên thanh phát,
   **then** nội dung bài thành các slide toàn màn hình; **Nghe giảng** ở đầu bài vẫn là chế độ đọc cuộn như cũ.
 - **Given** đang trình chiếu, **when** bấm «Thoát» hoặc Esc, **then** về trang bài ở đúng mục đang giảng; giọng vẫn phát nếu đang phát.

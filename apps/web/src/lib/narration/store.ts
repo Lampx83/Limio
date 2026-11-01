@@ -27,6 +27,8 @@ export interface NarrationUi {
   offerSec: number | null;
   /** Chế độ trình chiếu: mỗi mục của bài là một slide toàn màn hình (docs/tieu-chi/trinh-chieu-giang-vien.md). Chỉ có nghĩa với lời giảng. */
   stage: boolean;
+  /** Phần lời giảng đã nghe thật, từ 0 tới 1. Chỉ đo ở bài có màn hình bìa (docs/tieu-chi/bai-slide-man-hinh-bia.md). */
+  heard: number;
 }
 
 export const NARRATION_INITIAL: NarrationUi = {
@@ -43,12 +45,15 @@ export const NARRATION_INITIAL: NarrationUi = {
   expanded: false,
   offerSec: null,
   stage: false,
+  heard: 0,
 };
 
 /** Các lệnh do trình phát (NarrationPlayer) đăng ký; các nút gọi qua đây. */
 export interface NarrationCommands {
   /** Bấm nút trên trang: có vị trí nhớ thì hỏi nghe tiếp hay từ đầu, không thì phát từ đầu. */
   open(kind: NarrationKind): void;
+  /** Bấm nút ở màn hình bìa: nút đã nói rõ học tiếp hay từ đầu nên phát luôn, không hỏi lại. */
+  enter(kind: NarrationKind): void;
   /** Phát từ một vị trí (bấm vào một lượt của bản chữ podcast). */
   playFrom(kind: NarrationKind, sec: number): void;
   toggle(): void;

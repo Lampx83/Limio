@@ -1329,7 +1329,7 @@ async function main() {
   let questionCount = 0;
   for (const [mi, m] of manifest.modules.entries()) {
     for (const [li, l] of m.lessons.entries()) {
-      if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz) {
+      if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz && !l.embeds?.length) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": rỗng — không có nội dung lẫn quiz`);
       }
       for (const msg of lectureAnchorProblems(l)) {
@@ -1434,6 +1434,7 @@ async function main() {
         l.dialogue ? `hội thoại ${l.dialogue.turns.length} lượt` : null,
         l.patterns ? `bảng mẫu ${l.patterns.rows.length} dòng` : null,
         l.body ? "nội dung" : null,
+        l.embeds?.length ? `${l.embeds.length} khối nhúng` : null,
         l.quiz ? `quiz ${l.quiz.questions.length} câu` : null,
       ].filter(Boolean);
       console.log(`      · ${l.title} — ${bits.join(", ") || "trống"}`);

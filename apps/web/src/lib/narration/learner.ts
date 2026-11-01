@@ -1,4 +1,5 @@
 import { formatClock } from "@/lib/audioClock";
+import { parseDeckAnchor } from "./deckSync";
 
 /**
  * Phần thuần của giao diện Nghe giảng / Podcast phía học viên (docs/tieu-chi/nghe-giang-podcast.md, AC3–AC4):
@@ -139,6 +140,8 @@ export function resolveAnchors(anchors: readonly string[], headings: readonly (r
 export function anchorLabel(anchor: string): string {
   if (anchor === ANCHOR_INTRO) return "Mở đầu";
   if (anchor === ANCHOR_OUTRO) return "Tổng kết";
+  const deck = parseDeckAnchor(anchor);
+  if (deck) return `Slide ${deck.slide + 1}`;
   const m = /^(.*?)\s*#(\d{1,2})$/.exec(anchor.trim());
   return m ? `${m[1]} · bước ${m[2]}` : anchor;
 }

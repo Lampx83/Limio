@@ -18,6 +18,7 @@ const Body = z.object({
     .enum([
       "marked_complete",
       "watched_threshold",
+      "listened_threshold",
       "all_activities_completed",
       "scrolled_to_end",
       "skipped",

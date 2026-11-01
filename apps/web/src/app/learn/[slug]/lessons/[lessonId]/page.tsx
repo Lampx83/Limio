@@ -50,6 +50,9 @@ import NarrationPlayer from "@/components/narration/NarrationPlayer";
 import { lecturerVideoEnabled } from "@/lib/narration/lecturerVideoFlag";
 import PodcastButton from "@/components/narration/PodcastButton";
 import LecturerInvite from "@/components/narration/LecturerInvite";
+import type { DeckCoverInfo } from "@/components/narration/DeckCover";
+import { deckCoverId, withoutDeckIntro } from "@/lib/narration/deckCover";
+import { loadDeck } from "@/lib/slideDeck/decks";
 import LessonSlideButton, { type LessonSlideInfo } from "@/components/lesson/LessonSlideButton";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
@@ -616,6 +619,29 @@ export default async function LessonPage({
   //   - Scroll-to-end ONLY when neither video nor activities apply (text/PDF/
   //     embed lessons). Avoids forcing a scroll on lessons where the video or
   //     quiz already verifies engagement.
+  // Bài slide tương tác có giọng: màn hình bìa là lối vào duy nhất, và phải nghe đủ lời giảng mới xong (docs/tieu-chi/bai-slide-man-hinh-bia.md).
+  const coverDeckId = deckCoverId(
+    lesson.contentItems.filter((c) => !c.isHidden),
+    narrations.lecture?.segments.map((s) => s.anchor) ?? null,
+    !!lecturerChoice,
+  );
+  const coverDeck = coverDeckId ? loadDeck(coverDeckId) : null;
+  const listenThresholdPct = lesson.completionThresholdPct ?? 80;
+  const deckCover: DeckCoverInfo | null =
+    coverDeckId && coverDeck && narrations.lecture && lecturerChoice
+      ? {
+          deckId: coverDeckId,
+          lessonId: lesson.id,
+          version: narrations.lecture.version,
+          durationSec: narrations.lecture.durationSec,
+          segments: narrations.lecture.segments.map(({ anchor, startSec, endSec }) => ({ anchor, startSec, endSec })),
+          slideCount: coverDeck.slides.length,
+          lecturerName: lecturerChoice.name,
+          lecturerAccent: lecturerChoice.accent,
+          completed: completedEvent !== null,
+          thresholdPct: listenThresholdPct,
+        }
+      : null;
   const hasNativeVideo = lesson.contentItems.some(
     (c) =>
       c.type === "video" &&
@@ -643,13 +669,15 @@ export default async function LessonPage({
     pendingActivityCount,
     totalActivityCount,
     // Scroll fallback only when there's no other engagement signal to verify.
-    requireScrollToEnd: !hasNativeVideo && !hasAnyActivity,
+    requireScrollToEnd: !hasNativeVideo && !hasAnyActivity && !deckCover,
+    requireListen: !!deckCover,
+    listenThresholdPct,
   };
 
   // Ghi chú giảng viên là một LOẠI nội dung riêng, không phải khối bị ẩn: học
   // viên không bao giờ nhận được nó, kể cả khi ai đó lỡ bật `isHidden` sai.
   const teacherNotes = lesson.contentItems.filter((c) => c.type === "teacher_note");
-  const visibleItems = withoutHiddenAudioTranscripts(
+  const allVisibleItems = withoutHiddenAudioTranscripts(
       lesson.contentItems
       .filter((c) => !c.isHidden)
       // Người dạy nhận ghi chú NGAY TỪ ĐẦU, bật/tắt chỉ là đổi hiển thị bằng CSS.
@@ -664,6 +692,7 @@ export default async function LessonPage({
         orderIndex: c.orderIndex,
       })),
   );
+  const visibleItems = deckCover ? withoutDeckIntro(allVisibleItems) : allVisibleItems;
 
   // Mục lục nổi "Trong bài này" (LessonSectionNav) chỉ hiện khi bài có từ 2 thẻ
   // h2 có id trở lên — cùng ngưỡng với chính component đó. Tính sẵn ở máy chủ
@@ -749,7 +778,7 @@ export default async function LessonPage({
             className="prose mt-2 max-w-none text-base text-muted dark:prose-invert"
           />
         )}
-        {lecturerChoice?.mode === "HIEN" && (
+        {lecturerChoice?.mode === "HIEN" && !deckCover && (
           <LecturerInvite courseSlug={params.slug} userId={userId ?? null} name={lecturerChoice.name} accent={lecturerChoice.accent} />
         )}
         {!previewMode && (
@@ -758,7 +787,7 @@ export default async function LessonPage({
             {/* Màn hẹp: các nút nghe chia đều cột, nằm riêng một hàng; từ sm: xếp ngang theo bề rộng cố định của nút. */}
             {(narrations.lecture || narrations.podcast || slideInfo) && (
               <div className="grid w-full auto-cols-fr grid-flow-col gap-2 sm:flex sm:w-auto">
-                {narrations.lecture && (
+                {narrations.lecture && !deckCover && (
                   <NarrationButton durationSec={narrations.lecture.durationSec} inviteCourseSlug={lecturerChoice?.mode === "HIEN" ? params.slug : undefined} userId={userId ?? null} />
                 )}
                 {narrations.podcast && <PodcastButton durationSec={narrations.podcast.durationSec} title={narrations.podcast.title} />}
@@ -830,6 +859,7 @@ export default async function LessonPage({
           lessonTitle={lesson.title}
           lecture={narrations.lecture}
           podcast={narrations.podcast}
+          deckCover={!!deckCover}
           lecturer={lecturerChoice && { code: lecturerChoice.code, name: lecturerChoice.name, accent: lecturerChoice.accent, locked: lecturerChoice.mode === "BAT_BUOC" }}
         />
       )}
@@ -877,6 +907,7 @@ export default async function LessonPage({
           items={visibleItems}
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
+          deckCover={deckCover}
         />
         </div>
         <div

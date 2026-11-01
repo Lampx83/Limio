@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Video, ListChecks, ScrollText } from "lucide-react";
+import { Check, Headphones, Video, ListChecks, ScrollText } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { heardPercent } from "@/lib/narration/deckCover";
+import { getNarrationState, subscribeNarration } from "@/lib/narration/store";
 
 /**
  * Top-of-lesson "what's left to complete" panel. Owns the auto-complete
@@ -25,7 +27,12 @@ interface AutoCompleteConfig {
   pendingActivityCount: number;
   totalActivityCount: number;
   requireScrollToEnd: boolean;
+  /** Bài có màn hình bìa: phải nghe đủ lời giảng (docs/tieu-chi/bai-slide-man-hinh-bia.md, AC4). */
+  requireListen: boolean;
+  listenThresholdPct: number;
 }
+
+const heardPctSnapshot = (): number => heardPercent(getNarrationState().heard);
 
 export default function LessonCompletionPrompt({
   lessonId,
@@ -46,6 +53,8 @@ export default function LessonCompletionPrompt({
   const activitiesMet =
     !autoComplete.requireAllActivities || autoComplete.pendingActivityCount === 0;
   const [scrollMet, setScrollMet] = useState(false);
+  const heardPct = useSyncExternalStore(subscribeNarration, heardPctSnapshot, () => 0);
+  const listenMet = !autoComplete.requireListen || heardPct >= autoComplete.listenThresholdPct;
   // Prevent double-fire within one page load. /complete is idempotent server-
   // side via eventKey dedup, but no need for noisy network either.
   const firedRef = useRef(false);
@@ -55,7 +64,7 @@ export default function LessonCompletionPrompt({
 
   const fireComplete = useCallback(
     async (
-      reason: "watched_threshold" | "all_activities_completed" | "scrolled_to_end",
+      reason: "watched_threshold" | "listened_threshold" | "all_activities_completed" | "scrolled_to_end",
     ) => {
       if (completed || firedRef.current) return;
       firedRef.current = true;
@@ -72,11 +81,20 @@ export default function LessonCompletionPrompt({
           // Give the success state ~1s of stage time before reloading so the
           // learner registers what happened.
           setTimeout(() => {
-            if (data?.courseCompleted) {
-              window.location.href = `/learn/${courseSlug}`;
-            } else {
-              router.refresh();
-            }
+            const leave = () => {
+              if (data?.courseCompleted) {
+                window.location.href = `/learn/${courseSlug}`;
+              } else {
+                router.refresh();
+              }
+            };
+            // Đủ ngưỡng nghe khi học viên vẫn đang học toàn màn hình: đợi họ thoát, đừng cắt ngang bài giảng.
+            if (!getNarrationState().stage) return leave();
+            const off = subscribeNarration(() => {
+              if (getNarrationState().stage) return;
+              off();
+              leave();
+            });
           }, 1000);
         } else {
           firedRef.current = false;
@@ -143,15 +161,17 @@ export default function LessonCompletionPrompt({
     const videoOK = !autoComplete.requireVideoWatch || videoMet;
     const activitiesOK = !autoComplete.requireAllActivities || activitiesMet;
     const scrollOK = !autoComplete.requireScrollToEnd || scrollMet;
-    if (!(videoOK && activitiesOK && scrollOK)) return;
-    const reason: "watched_threshold" | "all_activities_completed" | "scrolled_to_end" =
-      autoComplete.requireScrollToEnd &&
-      !autoComplete.requireVideoWatch &&
-      !autoComplete.requireAllActivities
-        ? "scrolled_to_end"
-        : autoComplete.requireVideoWatch
-          ? "watched_threshold"
-          : "all_activities_completed";
+    if (!(videoOK && activitiesOK && scrollOK && listenMet)) return;
+    const reason: "watched_threshold" | "listened_threshold" | "all_activities_completed" | "scrolled_to_end" =
+      autoComplete.requireListen
+        ? "listened_threshold"
+        : autoComplete.requireScrollToEnd &&
+            !autoComplete.requireVideoWatch &&
+            !autoComplete.requireAllActivities
+          ? "scrolled_to_end"
+          : autoComplete.requireVideoWatch
+            ? "watched_threshold"
+            : "all_activities_completed";
     void fireComplete(reason);
   }, [
     activitiesMet,
@@ -160,6 +180,8 @@ export default function LessonCompletionPrompt({
     autoComplete.requireVideoWatch,
     completed,
     fireComplete,
+    listenMet,
+    autoComplete.requireListen,
     scrollMet,
     videoMet,
   ]);
@@ -185,6 +207,10 @@ export default function LessonCompletionPrompt({
   }
   if (autoComplete.requireScrollToEnd) {
     progressFractions.push(scrollMet ? 1 : 0);
+  }
+  if (autoComplete.requireListen) {
+    // Cùng cách tính với video: so với ngưỡng yêu cầu.
+    progressFractions.push(autoComplete.listenThresholdPct > 0 ? Math.min(1, heardPct / autoComplete.listenThresholdPct) : 1);
   }
   const lessonProgressPct = completed
     ? 100
@@ -237,6 +263,15 @@ export default function LessonCompletionPrompt({
       label: "Video",
       detail: videoMet ? undefined : `${pct}%/${autoComplete.videoThresholdPct}%`,
       done: videoMet,
+    });
+  }
+  if (autoComplete.requireListen) {
+    rows.push({
+      key: "listen",
+      icon: <Headphones size={13} />,
+      label: "Nghe giảng",
+      detail: listenMet ? undefined : `${heardPct}%/${autoComplete.listenThresholdPct}%`,
+      done: listenMet,
     });
   }
   if (autoComplete.requireAllActivities) {
