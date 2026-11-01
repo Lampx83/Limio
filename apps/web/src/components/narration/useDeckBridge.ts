@@ -5,6 +5,8 @@ import { deckCmd, firstSegmentOfDeckSlide, parseDeckAnchor, parseDeckMessage, se
 
 /** Tin do chính lệnh `toi` của mình gây ra (khung phản hồi lại) chỉ bị bỏ trong khoảng này. */
 const ECHO_MS = 700;
+/** Lệnh cho khung chỉ laser vào phần vừa hiện ở bước hiện tại. */
+const POINT = { smartdocDieuKhien: true, lenh: "chi-buoc" } as const;
 
 export interface DeckBridgeOptions {
   /** Đang nghe một bài deck. */
@@ -75,6 +77,11 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
       } catch {
         /* bỏ qua */
       }
+      try {
+        frame()?.contentWindow?.postMessage({ smartdocDieuKhien: true, lenh: "chi", ten: "" }, window.location.origin);
+      } catch {
+        /* bỏ qua */
+      }
       document.documentElement.style.removeProperty("--deck-bg");
       document.documentElement.style.removeProperty("--deck-fg");
     };
@@ -87,9 +94,13 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
     const p = parseDeckAnchor(anchors[segIdx] ?? "");
     if (!p) return;
     const sent = last.current;
-    if (sent && sent.i === p.slide && sent.b === p.step && Date.now() - sent.at < ECHO_MS) return; // khung vừa tự tới đó
+    if (sent && sent.i === p.slide && sent.b === p.step && Date.now() - sent.at < ECHO_MS) {
+      postRef.current(POINT); // khung vừa tự tới đó: không gửi lại lệnh tới, chỉ chỉ laser
+      return;
+    }
     last.current = { i: p.slide, b: p.step, at: Date.now() };
     postRef.current(toDeck(p.slide, p.step));
+    postRef.current(POINT); // con trỏ laser chỉ vào phần giảng viên đang nói tới
   }, [active, segIdx, anchors]);
 
   // Khung → giọng (và số trang).
@@ -106,6 +117,7 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek 
         if (p) {
           last.current = { i: p.slide, b: p.step, at: Date.now() };
           postRef.current(toDeck(p.slide, p.step));
+          postRef.current(POINT);
         }
         return;
       }
