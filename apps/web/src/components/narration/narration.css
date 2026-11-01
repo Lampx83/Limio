@@ -240,28 +240,6 @@ html[data-narration-stage] .narration-bar {
 .slide-avatar img {
   object-position: 50% 22%;
 }
-@media (min-width: 640px) {
-  .slide-avatar {
-    top: auto;
-    right: 1rem;
-    bottom: calc(var(--narration-bar-h, 0px) + 0.5rem);
-    width: clamp(120px, 12vw, 220px);
-    height: clamp(120px, 12vw, 220px);
-  }
-  .slide-avatar > span.rounded-full {
-    border-radius: 1.25rem;
-    box-shadow: 0 0 0 3px rgb(255 255 255 / 0.95), 0 6px 20px rgb(0 0 0 / 0.18);
-  }
-  .slide-avatar > span.narration-speaking {
-    box-shadow: 0 0 0 3px rgb(var(--brand)), 0 6px 20px rgb(0 0 0 / 0.18);
-  }
-}
-@media (min-width: 1280px) {
-  /* Đủ rộng để thanh phát (tối đa 48rem) nằm giữa còn chân dung nằm ngoài, sát góc dưới. */
-  .slide-avatar {
-    bottom: 1rem;
-  }
-}
 .slide-dock {
   position: fixed;
   left: 50%;
@@ -313,32 +291,6 @@ html[data-narration-stage] .narration-bar {
   opacity: 0.35;
 }
 
-/* Thanh phát trong trình chiếu: không bóng đổ, gọn một nửa chiều cao (thanh tua và điều khiển chung một hàng từ sm). */
-html[data-narration-stage] .narration-bar {
-  box-shadow: none;
-}
-@media (min-width: 640px) {
-  html[data-narration-stage] .narration-bar > :first-child {
-    padding-block: 0.375rem;
-  }
-  html[data-narration-stage] .narration-bar .nb-more {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    border-top: 0;
-    padding-top: 0;
-    padding-bottom: 0.5rem;
-  }
-  html[data-narration-stage] .narration-bar .nb-slider {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-  html[data-narration-stage] .narration-bar .nb-ctrl {
-    margin-top: 0;
-    flex-wrap: nowrap;
-  }
-}
-
 .slide-subtitle {
   width: 100%;
   padding: 0.25rem 1rem;
@@ -346,4 +298,111 @@ html[data-narration-stage] .narration-bar {
   color: var(--deck-fg, rgb(var(--text)));
   font-size: clamp(1rem, 0.9rem + 0.4vw, 1.25rem);
   line-height: 1.4;
+}
+
+/*
+ * Dải điều khiển (từ sm): phụ đề + chuyển slide, rồi thanh phát, gom thành một dải full-width mỏng ở đáy với nền khác nội dung,
+ * để slide chiếm phần lớn màn hình. Điện thoại giữ bố cục xếp chồng ở trên.
+ */
+html[data-narration-stage] {
+  --strip-bg: color-mix(in srgb, var(--deck-fg, rgb(var(--text))) 7%, var(--deck-bg, rgb(var(--surface))));
+  --strip-line: color-mix(in srgb, var(--deck-fg, rgb(var(--text))) 14%, var(--deck-bg, rgb(var(--surface))));
+  --slide-avatar: clamp(104px, 8vw, 160px);
+}
+html[data-narration-stage] .narration-bar {
+  box-shadow: none;
+}
+@media (min-width: 640px) {
+  html[data-narration-stage] .narration-bar {
+    inset-inline: 0;
+    bottom: 0;
+    max-width: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--strip-bg);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.4rem calc(var(--slide-avatar) + 2rem) 0.4rem 1rem;
+  }
+  /* Hai hàng của thanh phát trải ra làm các ô cùng một dải. */
+  html[data-narration-stage] .narration-bar > :first-child,
+  html[data-narration-stage] .narration-bar .nb-more {
+    display: contents;
+  }
+  html[data-narration-stage] .narration-bar > :not(:first-child):not(.nb-more) {
+    flex: 1 1 100%;
+  }
+  html[data-narration-stage] .narration-bar .narration-wave {
+    display: none;
+  }
+  /* Thứ tự: ảnh · tên · điều khiển · thanh tua · giờ · phát · đóng. */
+  /* Ảnh giảng viên đã ở góc dưới phải: bỏ bản nhỏ trong thanh. */
+  html[data-narration-stage] .narration-bar > :first-child > :nth-child(1) { display: none; }
+  html[data-narration-stage] .narration-bar > :first-child > :nth-child(2) { order: 2; flex: 0 1 8rem; min-width: 0; }
+  html[data-narration-stage] .narration-bar .nb-ctrl { order: 3; margin-top: 0; flex-wrap: nowrap; }
+  html[data-narration-stage] .narration-bar .nb-slider { order: 4; flex: 1 1 8rem; min-width: 6rem; }
+  html[data-narration-stage] .narration-bar > :first-child > :nth-child(4) { order: 5; }
+  html[data-narration-stage] .narration-bar > :first-child > :nth-child(5) { order: 6; }
+  html[data-narration-stage] .narration-bar > :first-child > :nth-child(n + 6) { order: 7; }
+
+  .slide-dock {
+    inset-inline: 0;
+    bottom: calc(var(--narration-bar-h, 0px) - 8px);
+    width: auto;
+    height: 3.5rem;
+    translate: none;
+    flex-direction: row;
+    gap: 0.75rem;
+    padding: 0.25rem calc(var(--slide-avatar) + 2rem) 0.25rem 1rem;
+    background: var(--strip-bg);
+    border-top: 1px solid var(--strip-line);
+  }
+  .slide-dock .slide-nav {
+    order: -1;
+    flex: none;
+  }
+  .slide-dock .slide-subtitle {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: clamp(0.95rem, 0.85rem + 0.3vw, 1.15rem);
+  }
+  .slide-dock .slide-wait {
+    flex: none;
+  }
+
+  /* Chân dung: nằm ở góc dưới phải, cao hơn dải một chút. */
+  .slide-avatar {
+    top: auto;
+    right: 1rem;
+    bottom: 0.5rem;
+    z-index: 75;
+    width: var(--slide-avatar);
+    height: var(--slide-avatar);
+  }
+  .slide-avatar > span.rounded-full {
+    border-radius: 1rem;
+    box-shadow: 0 0 0 3px var(--strip-bg), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+  .slide-avatar > span.narration-speaking {
+    box-shadow: 0 0 0 3px rgb(var(--brand)), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+
+  /* Slide dùng hết chiều cao còn lại phía trên dải (phụ đề 3,5rem + thanh phát). */
+  #lesson-content[data-slideshow][data-deck] {
+    padding-bottom: calc(var(--narration-bar-h, 0px) + 3.5rem - 8px);
+  }
+  #lesson-content[data-slideshow][data-deck] iframe[src^="/decks/"] {
+    height: calc(100dvh - var(--narration-bar-h, 0px) - 3.5rem + 8px) !important;
+  }
+  #lesson-content[data-slideshow]:not([data-deck]) {
+    padding-bottom: calc(var(--narration-bar-h, 0px) + 5.5rem);
+  }
 }
