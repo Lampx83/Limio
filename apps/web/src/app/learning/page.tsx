@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { listSampleCourses, type SampleCourse } from "@feedbackme/core-lms";
+import { listLearningCourses, type LearningCourse } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { isFree, formatPrice } from "@/lib/formatPrice";
@@ -28,7 +28,7 @@ const LEVEL_LABEL: Record<string, string> = {
 
 export default async function LearningPage() {
   const session = await auth();
-  const [courses, paymentEnabled] = await Promise.all([listSampleCourses(), getPaymentEnabled()]);
+  const [courses, paymentEnabled] = await Promise.all([listLearningCourses(), getPaymentEnabled()]);
 
   const enrolledCourseIds =
     session?.user?.id && courses.length > 0
@@ -88,7 +88,7 @@ export default async function LearningPage() {
       ) : (
         <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c, idx) => (
-            <SampleCourseCard
+            <LearningCourseCard
               key={c.id}
               course={c}
               idx={idx}
@@ -102,13 +102,13 @@ export default async function LearningPage() {
   );
 }
 
-function SampleCourseCard({
+function LearningCourseCard({
   course: c,
   idx,
   paymentEnabled,
   enrolled,
 }: {
-  course: SampleCourse;
+  course: LearningCourse;
   idx: number;
   paymentEnabled: boolean;
   enrolled: boolean;

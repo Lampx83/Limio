@@ -152,11 +152,12 @@ export async function listCatalogSectionsForDisplay(
 /**
  * Tên mục catalog mà trang `/learning` đọc. Admin tạo mục MANUAL với đúng tên
  * này rồi chọn khoá + thứ tự — không có cờ riêng trên Course, nên đổi danh sách
- * khoá mẫu không cần migration hay deploy.
+ * khoá không cần migration hay deploy. Cố ý KHÔNG gọi là "khoá mẫu": `isSample` (mẫu
+ * cho giảng viên) và khoá mẫu cho học viên ở trang Bắt đầu đã dùng chữ đó.
  */
-export const SAMPLE_COURSES_SECTION_TITLE = "Khoá mẫu";
+export const LEARNING_SECTION_TITLE = "Học thử";
 
-export type SampleCourse = CatalogSectionCourseCard & {
+export type LearningCourse = CatalogSectionCourseCard & {
   publicAccess: boolean;
   /**
    * Bài đầu tiên (theo thứ tự module rồi bài), để nút "Học ngay" vào thẳng. Chỉ
@@ -168,14 +169,14 @@ export type SampleCourse = CatalogSectionCourseCard & {
 
 /**
  * Public — khoá học mẫu cho trang `/learning`: các khoá published trong mục
- * `SAMPLE_COURSES_SECTION_TITLE` đang bật, đúng thứ tự admin xếp. Trả `[]` khi
+ * `LEARNING_SECTION_TITLE` đang bật, đúng thứ tự admin xếp. Trả `[]` khi
  * chưa có mục (hoặc mục tắt/rỗng) để trang hiện trạng thái trống thay vì lỗi.
  */
-export async function listSampleCourses(
+export async function listLearningCourses(
   db: PrismaClient = prisma,
-): Promise<SampleCourse[]> {
+): Promise<LearningCourse[]> {
   const section = await db.catalogSection.findFirst({
-    where: { title: SAMPLE_COURSES_SECTION_TITLE, type: "MANUAL", isActive: true },
+    where: { title: LEARNING_SECTION_TITLE, type: "MANUAL", isActive: true },
     orderBy: { order: "asc" },
     select: { id: true },
   });
