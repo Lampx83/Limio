@@ -29,11 +29,14 @@ export function NarrationAvatar({
   name,
   speaking = false,
   size = "md",
+  accent,
   className = "",
 }: {
   who: "lecturer" | "A" | "B";
   name?: string;
   speaking?: boolean;
+  /** Màu nền riêng của giảng viên ảo được chọn (xem `VIRTUAL_LECTURERS`); không có thì dùng nền mặc định. */
+  accent?: string;
   size?: "sm" | "md";
   className?: string;
 }) {
@@ -49,7 +52,7 @@ export function NarrationAvatar({
             <stop offset="1" stopColor="#0d9488" />
           </linearGradient>
         </defs>
-        <rect width="40" height="40" fill="url(#narration-avatar-bg)" />
+        <rect width="40" height="40" fill={accent ?? "url(#narration-avatar-bg)"} />
         <circle cx="20" cy="15.5" r="6.5" fill="#fff" fillOpacity="0.95" />
         <path d="M6.5 40c0-8.3 6-13.5 13.5-13.5S33.5 31.7 33.5 40Z" fill="#fff" fillOpacity="0.95" />
       </svg>

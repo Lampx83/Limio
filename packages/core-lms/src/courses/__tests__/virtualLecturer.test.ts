@@ -6,6 +6,7 @@ import { registerUser } from "../../auth/register";
 import { grantRole } from "../../auth/roles";
 import {
   VIRTUAL_LECTURERS,
+  findVirtualLecturer,
   getEffectiveVirtualLecturer,
   getVirtualLecturerSettings,
   resolveVirtualLecturerMode,
@@ -213,5 +214,17 @@ describe("getEffectiveVirtualLecturer — trang và API cùng gọi một chỗ"
     });
     const e = await getEffectiveVirtualLecturer(s.courseId, s.learnerId);
     expect(e.lecturerCode).toBe(lecturerCode(3));
+  });
+});
+
+describe("danh sách giảng viên ảo", () => {
+  it("mã không trùng, có màu nhận diện, tra theo mã được", () => {
+    const codes = VIRTUAL_LECTURERS.map((l) => l.code);
+    expect(new Set(codes).size).toBe(codes.length);
+    for (const l of VIRTUAL_LECTURERS) {
+      expect(l.accent).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(findVirtualLecturer(l.code)).toBe(l);
+    }
+    expect(findVirtualLecturer("khong-ton-tai")).toBeUndefined();
   });
 });

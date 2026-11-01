@@ -5,7 +5,9 @@ import { prisma } from "@feedbackme/db";
 import {
   canEditCourse,
   effectiveAssignmentDues,
+  findVirtualLecturer,
   getCourseProgress,
+  getEffectiveVirtualLecturer,
   getLearnerNarrations,
   getLessonSlideState,
   isUserEnrolled,
@@ -46,6 +48,7 @@ import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import NarrationButton from "@/components/narration/NarrationButton";
 import NarrationPlayer from "@/components/narration/NarrationPlayer";
 import PodcastButton from "@/components/narration/PodcastButton";
+import LecturerInvite from "@/components/narration/LecturerInvite";
 import LessonSlideButton, { type LessonSlideInfo } from "@/components/lesson/LessonSlideButton";
 import TeacherBar, { StageListener } from "@/components/lesson/TeacherBar";
 import { isNativeVideoUrl } from "@/lib/videoUrl";
@@ -228,6 +231,18 @@ export default async function LessonPage({
     stageMode || previewMode
       ? { lecture: null, podcast: null }
       : await getLearnerNarrations(params.lessonId).catch(() => ({ lecture: null, podcast: null }));
+
+  // Giảng viên ảo (docs/tieu-chi/giang-vien-ao.md): chỉ phủ lên Nghe giảng đã có giọng. Mức «Không hiện» (hoặc hệ thống tắt) thì
+  // giữ nguyên giao diện Nghe giảng như trước. Mức hiệu lực tính ở core-lms, một chỗ.
+  const lecturerChoice =
+    narrations.lecture
+      ? await getEffectiveVirtualLecturer(lesson.module.course.id, userId)
+          .then((e) => {
+            const l = findVirtualLecturer(e.lecturerCode);
+            return e.mode === "AN" || !l ? null : { mode: e.mode, name: l.name, accent: l.accent };
+          })
+          .catch(() => null)
+      : null;
 
   // B14 — khoá thì học viên vẫn biết bài này tồn tại (mục lục hiện tên kèm ổ
   // khoá), nhưng nội dung không được gửi xuống trình duyệt. Chặn ngay ở đây,
@@ -733,6 +748,9 @@ export default async function LessonPage({
             className="prose mt-2 max-w-none text-base text-muted dark:prose-invert"
           />
         )}
+        {lecturerChoice?.mode === "HIEN" && (
+          <LecturerInvite courseSlug={params.slug} name={lecturerChoice.name} accent={lecturerChoice.accent} />
+        )}
         {!previewMode && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {/* Các nút nghe nổi bật (Nghe giảng, Podcast, Slide) đứng bên trái; nút công cụ (in) dồn sang phải cùng hàng để đỡ tốn thêm một hàng. */}
@@ -809,6 +827,7 @@ export default async function LessonPage({
           lessonTitle={lesson.title}
           lecture={narrations.lecture}
           podcast={narrations.podcast}
+          lecturer={lecturerChoice && { name: lecturerChoice.name, accent: lecturerChoice.accent, locked: lecturerChoice.mode === "BAT_BUOC" }}
         />
       )}
 

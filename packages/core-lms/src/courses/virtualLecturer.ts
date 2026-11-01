@@ -26,6 +26,8 @@ export interface VirtualLecturer {
   gender: "female" | "male";
   /** Mã giọng NEU TTS. */
   voice: string;
+  /** Màu nhận diện, dùng cho nền chân dung tạm (SVG) cho tới khi có ảnh do Vidgen sinh. */
+  accent: string;
 }
 
 /**
@@ -33,14 +35,14 @@ export interface VirtualLecturer {
  * 8 giảng viên ảo của Học liệu AI Research.
  */
 export const VIRTUAL_LECTURERS: readonly VirtualLecturer[] = [
-  { code: "mai-chi", name: "Mai Chi", gender: "female", voice: "maichi" },
-  { code: "quang-minh", name: "Quang Minh", gender: "male", voice: "quangminh" },
-  { code: "kim-oanh", name: "Kim Oanh", gender: "female", voice: "kimoanh" },
-  { code: "huu-duc", name: "Hữu Đức", gender: "male", voice: "huuduc" },
-  { code: "ha-my", name: "Hà My", gender: "female", voice: "hamy" },
-  { code: "gia-huy", name: "Gia Huy", gender: "male", voice: "giahuy" },
-  { code: "bao-trang", name: "Bảo Trang", gender: "female", voice: "baotrang" },
-  { code: "tien-dat", name: "Tiến Đạt", gender: "male", voice: "tiendat" },
+  { code: "mai-chi", name: "Mai Chi", gender: "female", voice: "maichi", accent: "#4f46e5" },
+  { code: "quang-minh", name: "Quang Minh", gender: "male", voice: "quangminh", accent: "#0d9488" },
+  { code: "kim-oanh", name: "Kim Oanh", gender: "female", voice: "kimoanh", accent: "#7c3aed" },
+  { code: "huu-duc", name: "Hữu Đức", gender: "male", voice: "huuduc", accent: "#d97706" },
+  { code: "ha-my", name: "Hà My", gender: "female", voice: "hamy", accent: "#e11d48" },
+  { code: "gia-huy", name: "Gia Huy", gender: "male", voice: "giahuy", accent: "#0284c7" },
+  { code: "bao-trang", name: "Bảo Trang", gender: "female", voice: "baotrang", accent: "#c026d3" },
+  { code: "tien-dat", name: "Tiến Đạt", gender: "male", voice: "tiendat", accent: "#059669" },
 ];
 
 const KEY_ENABLED = "virtual_lecturer.enabled";
@@ -55,6 +57,10 @@ export interface VirtualLecturerSettings {
 
 const DEFAULT_MODE: VirtualLecturerModeValue = "HIEN";
 const DEFAULT_LECTURER_CODE = "mai-chi";
+
+export function findVirtualLecturer(code: string): VirtualLecturer | undefined {
+  return VIRTUAL_LECTURERS.find((l) => l.code === code);
+}
 
 function isMode(v: unknown): v is VirtualLecturerModeValue {
   return typeof v === "string" && (VIRTUAL_LECTURER_MODES as readonly string[]).includes(v);
