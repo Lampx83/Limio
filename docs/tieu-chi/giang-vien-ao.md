@@ -82,14 +82,15 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 
 ## Đã chốt (01/11/2026)
 
-1. **Nguồn demo SmartDoc:** đưa lên **4 bài trình diễn Toán 10** (Ba đường conic, Hệ thức lượng trong tam giác, Hệ bất phương trình bậc nhất hai ẩn và tối ưu, Xác suất cổ điển). Bài 1 «Hàm số bậc hai» (đầy đủ) đi cùng làm bài mẫu chuẩn.
-2. **Đề tài của khoá AI Research:** không chọn một trong 4 đề tài tài chính / sức khoẻ / môi trường / giáo dục; thay bằng các **môn học trên Codelab** (lập trình, SQL, giải thuật, web, Java…). Nguồn nội dung các môn này **chưa xác định** (xem dưới).
-3. **Chân dung giảng viên:** dùng SVG minh hoạ động trước, thay ảnh thật sau.
+1. **Nguồn demo SmartDoc:** đưa lên **4 bài trình diễn Toán 10** (Ba đường conic, Hệ thức lượng trong tam giác, Hệ bất phương trình bậc nhất hai ẩn và tối ưu, Xác suất cổ điển) cùng bài 1 «Hàm số bậc hai» (đầy đủ) làm bài mẫu chuẩn.
+2. **AI Research nhập thành 4 khoá, mỗi khoá một đề tài** (tài chính, sức khoẻ, môi trường, giáo dục), thay vì chọn một đề tài. Script nhập nhận tham số đề tài và tạo một khoá cho mỗi đề tài (slug riêng, idempotent theo slug).
+3. **Chân dung giảng viên:** tạm thời do **AI tạo**, liên hệ **Vidgen** để sinh (chưa dùng ảnh người thật). Giai đoạn này chỉ cần danh sách cố định mã giảng viên → tệp ảnh; trong lúc chờ Vidgen thì dùng SVG minh hoạ, thay tệp là xong, không đổi code.
+4. **Giọng đọc:** dùng **NEU TTS trên máy 232**, đường sẵn có của Limio («Giọng đọc» ở trang quản trị); không dựng đường TTS mới.
 
 ## Còn mở
 
 - **Nguồn các môn Codelab.** Server 217 (SmartDoc) chỉ có 7 học phần (Khoa học dữ liệu cơ bản, Nhập môn CNTT, Thiết kế Web, Dữ liệu phi cấu trúc, NCKH, Lịch sử Đảng…), không có SQL / giải thuật / Java.
-  Các môn lập trình nhiều khả năng nằm ở hệ Codelab OJ (máy 220/221, bài tập chấm tự động), nhưng tài khoản `codelab` hiện **không có quyền Docker** ở hai máy đó nên chưa đọc được. Cần anh cho biết môn nằm ở đâu và có slide + lời giảng không, hay chỉ là bài tập.
+  Các môn lập trình nhiều khả năng nằm ở hệ Codelab OJ (máy 220/221, bài tập chấm tự động), nhưng tài khoản `codelab` hiện **không có quyền Docker** ở hai máy đó nên chưa đọc được. Anh nhắc các môn lập trình / SQL / giải thuật / Java trên Codelab: cần biết môn nằm ở đâu và có slide + lời giảng không, hay chỉ là bài tập chấm tự động (nếu chỉ là bài tập thì không thuộc phạm vi giảng viên ảo).
 - **Slide HTML của SmartDoc** (có `data-chi`, thẻ nhịp `[chỉ]` `[nghĩ]`) không khớp slide `content` an toàn của Limio. Cần chọn: chuyển đổi thành slide Limio (mất tương tác), hay làm runtime iframe riêng (công lớn, để giai đoạn 2).
-- **Chi phí TTS:** ai duyệt khi tạo giọng cho khoảng 311 slide AI Research + 5 bài Toán 10, và dùng đường TTS nào trên production.
+- **Chi phí TTS:** 4 khoá AI Research × 311 slide là ~1.250 slide cần giọng; cần ước tính thời gian tạo trên máy 232 và duyệt trước khi chạy hàng loạt (tạo theo từng khoá).
 - **Khoá AI Research có trùng NCKH 101–501 đã có trên Limio không?**
