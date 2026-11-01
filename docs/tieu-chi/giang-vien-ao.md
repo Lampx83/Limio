@@ -80,10 +80,16 @@ khoá nào thì bắt buộc, gợi ý hay ẩn.
 - Test script nhập: chạy hai lần không nhân đôi; báo cáo đúng số liệu trên một buổi nhỏ có sẵn trong repo.
 - Duyệt tay trên trình duyệt ở điện thoại và máy tính (sidebar/drawer theo `CLAUDE.md` §4.6), cả giao diện sáng và tối.
 
-## Điểm cần bạn chốt
+## Đã chốt (01/11/2026)
 
-1. **Khoá AI Research có trùng NCKH 101–501 đã có trên Limio không?** Nếu nội dung chồng nhau, nên nhập thành khoá riêng hay thay thế?
-2. Đề tài xuyên suốt dùng bản nào: tài chính, sức khoẻ, môi trường hay giáo dục? (hoặc nhập 4 khoá riêng)
-3. Chân dung 2 người giảng của SmartDoc (Tiến Đạt, Bảo Trang) và 8 người của AI Research: dùng ảnh/SVG nào, ai cấp phép? Chưa có thì dùng SVG minh hoạ động trước.
-4. Giọng đọc production: Limio đang dùng đường TTS nào và khoá nào? Tạo giọng cho 311 slide tốn bao nhiêu và ai duyệt chi phí?
-5. Học phần mẫu Toán 10 của SmartDoc cần runtime slide HTML riêng — để giai đoạn 2, hay nhúng bản demo đang chạy trong lúc chờ?
+1. **Nguồn demo SmartDoc:** đưa lên **4 bài trình diễn Toán 10** (Ba đường conic, Hệ thức lượng trong tam giác, Hệ bất phương trình bậc nhất hai ẩn và tối ưu, Xác suất cổ điển). Bài 1 «Hàm số bậc hai» (đầy đủ) đi cùng làm bài mẫu chuẩn.
+2. **Đề tài của khoá AI Research:** không chọn một trong 4 đề tài tài chính / sức khoẻ / môi trường / giáo dục; thay bằng các **môn học trên Codelab** (lập trình, SQL, giải thuật, web, Java…). Nguồn nội dung các môn này **chưa xác định** (xem dưới).
+3. **Chân dung giảng viên:** dùng SVG minh hoạ động trước, thay ảnh thật sau.
+
+## Còn mở
+
+- **Nguồn các môn Codelab.** Server 217 (SmartDoc) chỉ có 7 học phần (Khoa học dữ liệu cơ bản, Nhập môn CNTT, Thiết kế Web, Dữ liệu phi cấu trúc, NCKH, Lịch sử Đảng…), không có SQL / giải thuật / Java.
+  Các môn lập trình nhiều khả năng nằm ở hệ Codelab OJ (máy 220/221, bài tập chấm tự động), nhưng tài khoản `codelab` hiện **không có quyền Docker** ở hai máy đó nên chưa đọc được. Cần anh cho biết môn nằm ở đâu và có slide + lời giảng không, hay chỉ là bài tập.
+- **Slide HTML của SmartDoc** (có `data-chi`, thẻ nhịp `[chỉ]` `[nghĩ]`) không khớp slide `content` an toàn của Limio. Cần chọn: chuyển đổi thành slide Limio (mất tương tác), hay làm runtime iframe riêng (công lớn, để giai đoạn 2).
+- **Chi phí TTS:** ai duyệt khi tạo giọng cho khoảng 311 slide AI Research + 5 bài Toán 10, và dùng đường TTS nào trên production.
+- **Khoá AI Research có trùng NCKH 101–501 đã có trên Limio không?**
