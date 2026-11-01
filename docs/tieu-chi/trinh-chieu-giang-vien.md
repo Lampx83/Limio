@@ -13,7 +13,7 @@ chỉ thiếu một **khung trình chiếu**. Dựng khung này thì mọi khoá
 ## Chưa làm trong đợt này
 
 - Giọng và lời giảng riêng cho slide LiveDeck (giai đoạn 3–4 của `nghe-giang-slide.md`).
-- Chân dung thật của giảng viên (đang dùng khung tròn + màu; chờ Vidgen).
+- Chân dung thật của giảng viên: đã có ảnh tĩnh; video nói được (Ditto) làm ở AC7.
 - Chọn người giảng ở phía học viên; slide tương tác cộng tác (bình chọn, bảng trắng).
 
 ## AC1 — Vào và thoát
@@ -92,3 +92,37 @@ Slide chữ dựng từ trang bài (AC2) vẫn dùng cho mọi bài thường. R
 - **Giao diện slide** theo Limio: màu nhấn xanh chanh `--brand`, nền sáng (phím T trong khung vẫn đổi sang tối); khi trình chiếu, slide liền một màu với vùng xung quanh (không viền thẻ, không quầng sáng bị cắt).
 - **Dừng chờ học viên:** slide có `loiGiang.dungCuoi` được đánh dấu `data-dung-cuoi`; giọng đọc hết lời giảng của slide đó thì tạm dừng, hiện «Em làm xong rồi bấm Tiếp tục», nút › thành «Tiếp tục». Bấm Tiếp tục (hoặc ›) thì sang slide sau và giọng đi tiếp. Chưa nhận biết «làm xong» từ khung — học viên tự bấm.
 - Đã kiểm trên máy dev (giọng giả): dừng ở slide 12 «Ghép hàm số», bấm Tiếp tục → 13 và giọng chạy; 375px không đè chữ.
+
+## AC7 — Giảng viên nói thật (video Ditto, lip-sync)
+
+Thầy Tiến Đạt hiện **to ở góc dưới bên phải**, rõ mặt, và **mở miệng nói khớp với giọng**. Video do Ditto (dịch vụ avatar của Vidgen trên server 232)
+dựng từ ảnh `public/lecturers/tien-dat.jpg` và chính tệp giọng của bài; video **tắt tiếng**, chạy theo `audio.currentTime` của trình phát nên
+trình phát, thanh tua, tốc độ, phụ đề không đổi gì.
+
+- **Given** bài có giọng và đã nạp video giảng viên, **when** học viên vào trình chiếu và bấm phát, **then** góc dưới phải hiện video giảng viên
+  (mặt rõ, cỡ lớn trên máy tính, nhỏ hơn trên điện thoại), miệng chuyển động khớp tiếng; tạm dừng giọng thì video dừng, tua giọng thì video nhảy theo.
+- **Given** video lệch giọng quá 0,25 giây (tua, mạng chậm, tab nền), **then** video tự tua về đúng giờ của giọng; lệch nhỏ hơn thì không tua (không giật).
+- **Given** đổi tốc độ nghe (0,75×–1,5×), **then** video chạy cùng tốc độ.
+- **Given** bài chưa có video, video đã cũ (giọng được tạo lại sau khi dựng video), cờ tắt, hoặc video lỗi tải/phát, **then** góc dưới phải hiện ảnh tĩnh
+  như trước, không báo lỗi cho học viên, giọng và slide chạy bình thường. Ảnh tĩnh cũng là ảnh bìa (`poster`) lúc video đang tải.
+- Điện thoại (< 640px) hoặc bật tiết kiệm dữ liệu dùng bản 256 px (~1/3 dung lượng); từ 640px dùng bản 512 px. Video chỉ tải khi học viên vào trình chiếu.
+- Quyền xem video giống Nghe giảng (`canListenToLesson`); tệp nằm ở lớp `private`, không có đường dẫn công khai, chỉ phục vụ cho phần tử `<video>` của trang
+  (`Sec-Fetch-Dest: video`), cho tua (Range), không cho bộ nhớ đệm công cộng lưu.
+- Bật/tắt bằng biến môi trường `NARRATION_LECTURER_VIDEO` (mặc định bật; `0`/`off` tắt cho mọi bài). Không có tên miền hay máy chủ nào ghi cứng trong mã.
+- Chỉ ảnh tĩnh khi ở chế độ đọc (Nghe giảng cuộn) — video chỉ dùng trong trình chiếu.
+
+### Dựng và nạp video
+
+- Ditto nằm trong mạng riêng của server 232 nên **production không gọi được**: video dựng offline bằng `apps/web/scripts/build-lecturer-video.ts` (trên máy có ssh
+  tới 232), rồi nạp bằng `apps/web/scripts/lecturer-video.ts attach`. Hướng dẫn ở `docs/van-hanh/giang-vien-ao-video.md`.
+- Mỗi bài dựng **một video cả bài** dài đúng bằng tệp giọng, 25 hình/giây, tắt tiếng; mỗi đoạn giảng (`segments`) là một clip Ditto, khoảng lặng giữa hai đoạn giữ hình
+  cuối clip trước. Ranh giới tính theo số hình tuyệt đối từ mốc giây nên không trôi dần.
+- Script dựng **chạy lại được, idempotent**: đoạn đã có trong cache không gọi lại Ditto; bài đã dựng khớp ảnh + giọng + mốc đoạn thì bỏ qua. Script nạp mặc định chỉ
+  in kế hoạch (dry run), ghi khi có `--apply`, bỏ qua bài đã nạp đúng bản, từ chối bài mà giọng đã đổi so với lúc dựng.
+- Tạo lại giọng của bài thì video cũ không còn dùng (và bị xoá khỏi kho); cần dựng và nạp lại.
+
+### Kiểm thử AC7
+
+- Test hàm thuần (`lecturerVideoPlan.test.ts`): ranh giới clip theo số hình, tổng đúng độ dài giọng, đoạn chồng nhau bị từ chối, chọn bản theo bề rộng, ngưỡng tua.
+- Test lõi (`narration.test.ts`): video chỉ tới học viên khi còn khớp giọng; tạo giọng lại làm video cũ; cờ tắt; nạp video từ chối khi giọng đã đổi.
+- Duyệt tay (dev, video thật): desktop + 375px; tạm dừng/tua/đổi tốc độ; xoá video thì về ảnh tĩnh.

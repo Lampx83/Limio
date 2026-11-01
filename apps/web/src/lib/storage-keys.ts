@@ -145,6 +145,13 @@ export function narrationChunkKey(narrationId: string, hash: string): StorageKey
 }
 
 /**
+ * Video giảng viên nói của một bài (docs/tieu-chi/trinh-chieu-giang-vien.md, AC7), cùng thư mục với giọng của bài. Lớp `private`:
+ * phục vụ qua `/api/lessons/[lessonId]/narration/video`, không có đường dẫn công khai.
+ */
+export function lessonLecturerVideoKey(lessonId: string, filename: string): StorageKey {
+  return { layer: "private", key: `lesson-narration/${lessonId}/${filename}` };
+}
+/**
  * Bản đọc thử một giọng. Nằm ở private (không phải tmp) vì tmp bị dọn sau 24 giờ, mà bản thử chỉ có ý nghĩa khi
  * giữ lâu. `hash` gắn với câu mẫu nên đổi câu mẫu thì tự tạo lại, không phục vụ bản cũ.
  */

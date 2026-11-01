@@ -74,7 +74,7 @@ export async function runNarrationJob(id: string, voices: NarrationVoices): Prom
     const audioKey = lessonNarrationKey(row.lessonId, filename);
     await storageFor(audioKey).put(audioKey.key, result.mp3, "audio/mpeg");
 
-    const { previousAudioKey } = await finishNarration(id, {
+    const { previousAudioKey, previousVideoKeys } = await finishNarration(id, {
       audioKey: audioKey.key,
       contentType: "audio/mpeg",
       sizeBytes: result.mp3.length,
@@ -88,6 +88,9 @@ export async function runNarrationJob(id: string, voices: NarrationVoices): Prom
     // Dọn: tệp cũ của lần tạo trước và các đoạn WAV tạm. Lỗi dọn không làm hỏng kết quả.
     if (previousAudioKey) {
       await storageFor({ layer: "private", key: previousAudioKey }).delete(previousAudioKey).catch(() => {});
+    }
+    for (const key of previousVideoKeys) {
+      await storageFor({ layer: "private", key }).delete(key).catch(() => {});
     }
     for (const key of touchedChunks) {
       await storageFor({ layer: "tmp", key }).delete(key).catch(() => {});

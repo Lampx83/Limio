@@ -240,6 +240,20 @@ html[data-narration-stage] .narration-bar {
 .slide-avatar img {
   object-position: 50% 22%;
 }
+/* Video giảng viên nói (AC7): cùng khung với chân dung tĩnh; ảnh bìa lúc đang tải là chính chân dung. */
+.slide-avatar > .slide-avatar-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  background: rgb(226 232 240);
+  object-fit: cover;
+  object-position: 50% 22%;
+  box-shadow: 0 0 0 2px rgb(255 255 255 / 0.9);
+}
+.slide-avatar[data-speaking="1"] > .slide-avatar-video {
+  box-shadow: 0 0 0 2px rgb(var(--brand));
+}
 .slide-dock {
   position: fixed;
   left: 50%;
@@ -392,6 +406,13 @@ html[data-narration-stage] .narration-bar {
     box-shadow: 0 0 0 3px var(--strip-bg), 0 4px 14px rgb(0 0 0 / 0.2);
   }
   .slide-avatar > span.narration-speaking {
+    box-shadow: 0 0 0 3px rgb(var(--brand)), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+  .slide-avatar > .slide-avatar-video {
+    border-radius: 1rem;
+    box-shadow: 0 0 0 3px var(--strip-bg), 0 4px 14px rgb(0 0 0 / 0.2);
+  }
+  .slide-avatar[data-speaking="1"] > .slide-avatar-video {
     box-shadow: 0 0 0 3px rgb(var(--brand)), 0 4px 14px rgb(0 0 0 / 0.2);
   }
 

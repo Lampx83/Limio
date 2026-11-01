@@ -96,8 +96,8 @@ export async function finishNarration(
     generatedHash: string;
   },
   db: PrismaClient = prisma,
-): Promise<{ previousAudioKey: string | null }> {
-  const before = await db.lessonNarration.findUniqueOrThrow({ where: { id }, select: { audioKey: true } });
+): Promise<{ previousAudioKey: string | null; previousVideoKeys: string[] }> {
+  const before = await db.lessonNarration.findUniqueOrThrow({ where: { id }, select: { audioKey: true, videoKey: true, videoSmKey: true } });
   await db.lessonNarration.update({
     where: { id },
     data: {
@@ -112,9 +112,20 @@ export async function finishNarration(
       voices: result.voices as Prisma.InputJsonValue,
       generatedHash: result.generatedHash,
       generatedAt: new Date(),
+      // Giọng mới thì video cũ (dựng theo giọng cũ) không còn khớp: bỏ khỏi bài, tệp để nơi gọi xoá.
+      videoKey: null,
+      videoSmKey: null,
+      videoSizeBytes: null,
+      videoSmSizeBytes: null,
+      videoForHash: null,
+      videoLecturer: null,
+      videoBuiltAt: null,
     },
   });
-  return { previousAudioKey: before.audioKey && before.audioKey !== result.audioKey ? before.audioKey : null };
+  return {
+    previousAudioKey: before.audioKey && before.audioKey !== result.audioKey ? before.audioKey : null,
+    previousVideoKeys: [before.videoKey, before.videoSmKey].filter((k): k is string => !!k),
+  };
 }
 
 /**
@@ -151,6 +162,8 @@ export interface LectureForLearner {
   /** Đổi mỗi lần tạo giọng lại: khoá vị trí nghe dở và địa chỉ tệp. */
   version: number;
   durationSec: number;
+  /** Mã giảng viên ảo trong video giảng viên nói khớp đúng giọng hiện tại (cờ bật), để trình chiếu dùng thay ảnh tĩnh; null = không có. Không bao giờ trả khoá tệp. */
+  videoLecturer: string | null;
   /** `text` = chữ lời giảng của đoạn, để trình chiếu hiện phụ đề; thiếu khi kịch bản không đọc được. */
   segments: Array<{ anchor: string; startSec: number; endSec: number; text?: string }>;
 }
@@ -170,6 +183,7 @@ export type NarrationForLearner = LectureForLearner | PodcastForLearner;
 export async function getLearnerNarrations(
   lessonId: string,
   db: PrismaClient = prisma,
+  opts: { lecturerVideo?: boolean } = {},
 ): Promise<{ lecture: LectureForLearner | null; podcast: PodcastForLearner | null }> {
   const rows = await db.lessonNarration.findMany({ where: { lessonId } });
   let lecture: LectureForLearner | null = null;
@@ -184,6 +198,7 @@ export async function getLearnerNarrations(
         kind: "lecture",
         version,
         durationSec: row.durationSec,
+        videoLecturer: (opts.lecturerVideo ?? true) && isLecturerVideoCurrent(row) ? row.videoLecturer : null,
         segments: (row.segments as unknown as LectureForLearner["segments"]).map((seg) => {
           const text = textOf.get(seg.anchor);
           return text === undefined ? seg : { ...seg, text };
@@ -211,6 +226,10 @@ export async function getLearnerNarrations(
   return { lecture, podcast };
 }
 
+/** Video giảng viên của lời giảng còn khớp giọng hiện tại (giọng tạo lại sau khi dựng video thì video cũ không dùng). */
+export const isLecturerVideoCurrent = (row: NarrationRowLike & { videoKey: string | null; videoForHash: string | null; videoLecturer: string | null }): boolean =>
+  isLearnerVisible(row) && !!row.videoKey && !!row.videoLecturer && row.videoForHash === row.generatedHash;
+
 /** Khoá tệp để tuyến phát đọc; chỉ trả khi tệp khớp kịch bản hiện tại. */
 export async function getPlayableNarrationFile(
   lessonId: string,
@@ -220,6 +239,58 @@ export async function getPlayableNarrationFile(
   const row = await db.lessonNarration.findUnique({ where: { lessonId_kind: { lessonId, kind } } });
   if (!row || !isLearnerVisible(row) || !row.audioKey) return null;
   return { audioKey: row.audioKey, contentType: row.contentType ?? "audio/mpeg", sizeBytes: row.sizeBytes };
+}
+
+export type LecturerVideoRendition = "lg" | "sm";
+
+/** Khoá video giảng viên để tuyến phát đọc. Hỏi bản nhỏ mà chưa có thì trả bản lớn. Không có / đã cũ / cờ tắt thì null. */
+export async function getPlayableLecturerVideo(
+  lessonId: string,
+  rendition: LecturerVideoRendition,
+  db: PrismaClient = prisma,
+  opts: { lecturerVideo?: boolean } = {},
+): Promise<{ key: string; contentType: string; sizeBytes: number | null } | null> {
+  if (opts.lecturerVideo === false) return null;
+  const row = await db.lessonNarration.findUnique({ where: { lessonId_kind: { lessonId, kind: "lecture" } } });
+  if (!row || !isLecturerVideoCurrent(row)) return null;
+  if (rendition === "sm" && row.videoSmKey) return { key: row.videoSmKey, contentType: "video/mp4", sizeBytes: row.videoSmSizeBytes };
+  return { key: row.videoKey!, contentType: "video/mp4", sizeBytes: row.videoSizeBytes };
+}
+
+export class LecturerVideoError extends Error {
+  constructor(
+    public readonly code: "no_narration" | "stale_audio",
+    message?: string,
+  ) {
+    super(message ?? code);
+  }
+}
+
+/**
+ * Ghi video giảng viên đã nạp lên kho vào bài. `forHash` là `generatedHash` của giọng lúc dựng; khác giọng hiện tại thì từ chối
+ * (video lệch tiếng còn tệ hơn không có video). Trả khoá video cũ bị thay để nơi gọi xoá khỏi kho.
+ */
+export async function saveLecturerVideo(
+  lessonId: string,
+  video: { key: string; smKey: string; sizeBytes: number; smSizeBytes: number; forHash: string; lecturer: string },
+  db: PrismaClient = prisma,
+): Promise<{ previousKeys: string[] }> {
+  const row = await db.lessonNarration.findUnique({ where: { lessonId_kind: { lessonId, kind: "lecture" } } });
+  if (!row || !isLearnerVisible(row)) throw new LecturerVideoError("no_narration", "bài chưa có lời giảng đã tạo giọng");
+  if (row.generatedHash !== video.forHash) throw new LecturerVideoError("stale_audio", "giọng của bài đã đổi so với lúc dựng video");
+  await db.lessonNarration.update({
+    where: { id: row.id },
+    data: {
+      videoKey: video.key,
+      videoSmKey: video.smKey,
+      videoSizeBytes: video.sizeBytes,
+      videoSmSizeBytes: video.smSizeBytes,
+      videoForHash: video.forHash,
+      videoLecturer: video.lecturer,
+      videoBuiltAt: new Date(),
+    },
+  });
+  return { previousKeys: [row.videoKey, row.videoSmKey].filter((k): k is string => !!k && k !== video.key && k !== video.smKey) };
 }
 
 // ── Quản trị ─────────────────────────────────────────────────────────────────

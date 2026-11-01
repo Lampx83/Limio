@@ -21,6 +21,9 @@ const LECTURER_PHOTOS: Record<string, string> = {
   "Bảo Trang": "/lecturers/bao-trang.jpg",
 };
 
+/** Ảnh chân dung thật của giảng viên (nếu có), để làm ảnh bìa và ảnh dự phòng của video giảng viên nói. */
+export const lecturerPhoto = (name: string | undefined): string | undefined => (name ? LECTURER_PHOTOS[name] : undefined);
+
 const HOST_STYLE = {
   A: "bg-indigo-600",
   B: "bg-amber-600",
