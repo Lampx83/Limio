@@ -81,11 +81,11 @@ export default async function OralGradingDetailPage({
         </div>
         <a
           href={apiUrl(
-            `/api/exams/${params.examId}/oral-attempt/${params.attemptId}/export-pdf`,
+            `/api/exams/${params.examId}/oral-attempt/${params.attemptId}/export-docx`,
           )}
           className="shrink-0 rounded border border-default px-3 py-1.5 text-xs font-medium hover:bg-slate-50"
         >
-          Xuất PDF
+          Xuất Word
         </a>
       </div>
 

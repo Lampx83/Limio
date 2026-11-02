@@ -654,7 +654,10 @@ Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral
    viên đã ghi danh tự vào từ trang khoá (mục Đề thi); học viên khác nhập mã.
 6. Nút đầu trang đề: "Thử vấn đáp" (thử, không tạo lượt), "Live", "Chấm bài" (khi đã có lượt). Chấm: "Chấm bằng
    AI" / "Chấm lại bằng AI" từng lượt, "Điểm của bạn" (/100), "Ghi chú cho sinh viên (tuỳ chọn)", "Chốt điểm" /
-   "Lưu điểm mới"; điểm luôn do giảng viên duyệt; có "Xuất điểm (Excel)" và "Xuất tất cả PDF (.zip)".
+   "Lưu điểm mới"; điểm luôn do giảng viên duyệt; có "Xuất điểm (Excel)". Xuất nội dung phiên: tick ô từng lượt hoặc
+   "Chọn tất cả" rồi bấm "Xuất Word" (một người), "Xuất n file Word (.zip)" (nhiều người), không tick ai thì nút là
+   "Xuất tất cả file Word (.zip)". File nén có một thư mục chứa file từng người, tên file "Tên học viên - ngày thi -
+   Tên đề.docx". Trang chấm từng lượt cũng có "Xuất Word".
 7. Giọng nói: giảng viên chỉ chọn "Trả lời bằng: Giọng nói"; chọn giọng đọc (NEU TTS) thuộc phần quản trị, giảng
    viên không chỉnh. Giao diện học viên theo ngôn ngữ của đề (vi/en; tiếng Trung dùng giao diện tiếng Việt).
 

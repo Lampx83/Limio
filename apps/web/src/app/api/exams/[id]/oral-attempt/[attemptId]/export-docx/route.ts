@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { renderToBuffer } from "@react-pdf/renderer";
 import { prisma } from "@feedbackme/db";
 import { CourseAuthzError, ExamError, getOralEvaluation } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { formatDateTime } from "@/lib/datetime";
-import { OralExamPdfDocument, buildOralExamPdfFilename } from "@/lib/oralExamPdf";
+import { renderOralExamDocx } from "@/lib/oralExamDocx";
+import { buildOralExamFilename } from "@/lib/oralExamFilename";
+import { contentDisposition } from "@/lib/examResultsWorkbook";
 
 export const runtime = "nodejs";
 
-// A6.6 — Xuất PDF 1 phiên vấn đáp (hội thoại + điểm + nhận xét) để GV lưu
+// A6.6 — Xuất Word 1 phiên vấn đáp (hội thoại + điểm + nhận xét) để GV lưu
 // trữ. Dùng chung authz + data loading với trang chấm chi tiết
 // (getOralEvaluation đã tự kiểm tra quyền + exam.kind + attempt đã kết thúc).
 export async function GET(
@@ -34,6 +35,7 @@ export async function GET(
   const attempt = await prisma.examAttempt.findUnique({
     where: { id: params.attemptId },
     select: {
+      startedAt: true,
       submittedAt: true,
       user: { select: { displayName: true, email: true } },
       exam: {
@@ -51,30 +53,33 @@ export async function GET(
   const graded = view.evaluation?.status === "approved" || view.evaluation?.status === "overridden";
   const studentName = attempt.user?.displayName ?? attempt.user?.email ?? "Sinh viên";
 
-  const buf = await renderToBuffer(
-    OralExamPdfDocument({
-      examTitle: attempt.exam.title,
-      courseTitle: attempt.exam.course?.title ?? null,
-      studentName,
-      studentEmail: attempt.user?.email ?? null,
-      submittedAtLabel: attempt.submittedAt ? formatDateTime(attempt.submittedAt) : null,
-      gradedAtLabel: view.evaluation?.gradedAt ? formatDateTime(view.evaluation.gradedAt) : null,
-      graded,
-      instructorScore: view.evaluation?.instructorScore ?? null,
-      instructorNotes: view.evaluation?.instructorNotes ?? null,
-      aiSuggestedScore: view.evaluation?.aiSuggestedScore ?? null,
-      aiSummary: view.evaluation?.aiSummary ?? null,
-      aiRubricBreakdown: breakdown,
-      turns: view.turns.map((t) => ({ role: t.role as "examiner" | "student", content: t.content })),
-      generatedAtLabel: formatDateTime(new Date()),
-    }),
-  );
+  const buf = await renderOralExamDocx({
+    examTitle: attempt.exam.title,
+    courseTitle: attempt.exam.course?.title ?? null,
+    studentName,
+    studentEmail: attempt.user?.email ?? null,
+    submittedAtLabel: attempt.submittedAt ? formatDateTime(attempt.submittedAt) : null,
+    gradedAtLabel: view.evaluation?.gradedAt ? formatDateTime(view.evaluation.gradedAt) : null,
+    graded,
+    instructorScore: view.evaluation?.instructorScore ?? null,
+    instructorNotes: view.evaluation?.instructorNotes ?? null,
+    aiSuggestedScore: view.evaluation?.aiSuggestedScore ?? null,
+    aiSummary: view.evaluation?.aiSummary ?? null,
+    aiRubricBreakdown: breakdown,
+    turns: view.turns.map((t) => ({ role: t.role as "examiner" | "student", content: t.content })),
+    generatedAtLabel: formatDateTime(new Date()),
+  });
 
-  const filename = buildOralExamPdfFilename(attempt.exam.title, studentName, attempt.submittedAt);
+  const filename = buildOralExamFilename(
+    studentName,
+    attempt.submittedAt ?? attempt.startedAt,
+    attempt.exam.title,
+  );
   return new NextResponse(new Uint8Array(buf), {
     headers: {
-      "content-type": "application/pdf",
-      "content-disposition": `attachment; filename="${filename}"`,
+      "content-type":
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "content-disposition": contentDisposition(filename),
       "content-length": String(buf.length),
     },
   });

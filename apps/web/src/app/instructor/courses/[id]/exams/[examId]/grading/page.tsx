@@ -5,7 +5,7 @@ import { assertCanEditExam, CourseAuthzError, getRoomScope } from "@feedbackme/c
 import { auth } from "@/lib/auth";
 import GradeForm from "./GradeForm";
 import EssayRubric, { essayRubricOf } from "./EssayRubric";
-import DeleteOralAttemptButton from "@/components/exam/DeleteOralAttemptButton";
+import OralAttemptsList from "./OralAttemptsList";
 import OralRubricEditor from "./OralRubricEditor";
 import RegradeAllButton from "./RegradeAllButton";
 import SafeHtml from "@/components/SafeHtml";
@@ -90,14 +90,6 @@ export default async function GradingInboxPage({
             >
               Xuất điểm (Excel)
             </a>
-            {attempts.length > 0 && (
-              <a
-                href={apiUrl(`/api/exams/${exam.id}/oral-export/pdf-batch`)}
-                className="rounded border border-default px-3 py-1.5 text-xs font-medium hover:bg-slate-50"
-              >
-                Xuất tất cả PDF (.zip)
-              </a>
-            )}
           </div>
         </div>
 
@@ -110,45 +102,19 @@ export default async function GradingInboxPage({
             Chưa có lượt vấn đáp nào kết thúc.
           </p>
         ) : (
-          <ul className="mt-6 space-y-2">
-            {attempts.map((a) => {
-              const ev = a.oralEvaluation;
-              const graded = a.status === "graded";
-              const studentLabel = a.user?.displayName ?? a.user?.email ?? "Sinh viên";
-              return (
-                <li
-                  key={a.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-default bg-white p-4 hover:border-brand-400"
-                >
-                  <Link
-                    href={`/instructor/courses/${courseSegment}/exams/${exam.id}/grading/${a.id}`}
-                    className="min-w-0 flex-1"
-                  >
-                    <p className="text-sm font-medium">{studentLabel}</p>
-                    <p className="text-caption text-faint">
-                      {a.user?.email}
-                      {a.submittedAt && ` · Nộp ${formatDateTime(a.submittedAt)}`}
-                    </p>
-                  </Link>
-                  <div className="flex items-center gap-2">
-                    {ev?.aiSuggestedScore !== null && ev?.aiSuggestedScore !== undefined && !graded && (
-                      <span className="text-caption text-faint">
-                        AI gợi ý: {ev.aiSuggestedScore}
-                      </span>
-                    )}
-                    {graded ? (
-                      <StatusBadge tone="success">
-                        Đã chấm — {ev?.instructorScore}/100
-                      </StatusBadge>
-                    ) : (
-                      <StatusBadge tone="warning">Chờ chấm</StatusBadge>
-                    )}
-                    <DeleteOralAttemptButton attemptId={a.id} studentLabel={studentLabel} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <OralAttemptsList
+            examId={exam.id}
+            gradingPath={`/instructor/courses/${courseSegment}/exams/${exam.id}/grading`}
+            attempts={attempts.map((a) => ({
+              id: a.id,
+              studentLabel: a.user?.displayName ?? a.user?.email ?? "Sinh viên",
+              email: a.user?.email ?? null,
+              submittedAtLabel: a.submittedAt ? formatDateTime(a.submittedAt) : null,
+              graded: a.status === "graded",
+              aiSuggestedScore: a.oralEvaluation?.aiSuggestedScore ?? null,
+              instructorScore: a.oralEvaluation?.instructorScore ?? null,
+            }))}
+          />
         )}
       </main>
     );
