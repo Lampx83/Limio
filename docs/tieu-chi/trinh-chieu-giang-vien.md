@@ -84,7 +84,6 @@ Slide chữ dựng từ trang bài (AC2) vẫn dùng cho mọi bài thường. R
 - Bài viết liền **một khối nhiều `##`** (không phải bố cục `sections`) chỉ thành **một** slide dài, cuộn trong khung: DOM do React dựng, không xẻ ra được. Muốn mỗi mục một slide thì dựng bài bằng bố cục nhiều mục (importer làm sẵn).
 - Phụ đề chia thời gian theo số ký tự, lệch vài giây ở câu dài là bình thường.
 - Khung SmartDoc **chưa có cá nhân hoá**: chưa có gia sư riêng theo BKT, chưa ghi kết quả thao tác trong khung (trắc nghiệm, thanh trượt) vào `LearningEvent`/XP. Bước sau.
-- Slide tương tác «dừng chờ học viên» (`dungCuoi`): giọng vẫn chạy tiếp sang slide sau, không tự dừng chờ.
 - Phím ←/→ chỉ hoạt động khi tiêu điểm ở trang; khi đang bấm trong khung, khung tự xử lý phím của nó.
 
 ## Bố cục và dừng chờ (01/11/2026, chiều)
@@ -92,7 +91,7 @@ Slide chữ dựng từ trang bài (AC2) vẫn dùng cho mọi bài thường. R
 - **Bố cục:** không có thanh nền trên cùng. «Thoát» ở góc trên trái, ảnh giảng viên nhỏ ở góc trên phải (viền sáng khi đang nói); phía dưới slide là phụ đề (không nền riêng, dùng nền và màu chữ của slide) rồi thanh chuyển slide: ‹ số trang › · phụ đề · toàn màn hình. Từ dưới 640px khung nhường dải 3,5rem phía trên cho hai nút này để không đè chữ slide.
 - **Thanh phát** trong trình chiếu không đổ bóng, thanh tua và điều khiển chung một hàng từ `sm` (thấp khoảng một nửa).
 - **Giao diện slide** theo Limio: màu nhấn xanh chanh `--brand`, nền sáng (phím T trong khung vẫn đổi sang tối); khi trình chiếu, slide liền một màu với vùng xung quanh (không viền thẻ, không quầng sáng bị cắt).
-- **Dừng chờ học viên:** slide có `loiGiang.dungCuoi` được đánh dấu `data-dung-cuoi`; giọng đọc hết lời giảng của slide đó thì tạm dừng, hiện «Em làm xong rồi bấm Tiếp tục», nút › thành «Tiếp tục». Bấm Tiếp tục (hoặc ›) thì sang slide sau và giọng đi tiếp. Chưa nhận biết «làm xong» từ khung — học viên tự bấm.
+- **Dừng chờ học viên:** slide có `loiGiang.dungCuoi` được đánh dấu `data-dung-cuoi`; giọng đọc hết lời giảng của slide đó thì tạm dừng, hiện «Em làm xong rồi bấm Tiếp tục», nút › thành «Tiếp tục». Bấm Tiếp tục (hoặc ›) thì sang slide sau và giọng đi tiếp. Chưa nhận biết «làm xong» từ khung — học viên tự bấm. Điểm dừng ở cuối từng bước (`[chờ: …]`, `[nghĩ n: …]`): xem `dung-nghi-loi-giang-slide.md`.
 - Đã kiểm trên máy dev (giọng giả): dừng ở slide 12 «Ghép hàm số», bấm Tiếp tục → 13 và giọng chạy; 375px không đè chữ.
 
 ## AC7 — Giảng viên nói thật (video Ditto, lip-sync)

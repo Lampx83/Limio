@@ -334,6 +334,9 @@ html[data-narration-stage] .narration-bar {
   color: var(--deck-fg, rgb(var(--text)));
   font-size: 0.95rem;
 }
+.slide-wait-prompt {
+  font-weight: 600;
+}
 .slide-btn:disabled {
   opacity: 0.35;
 }
@@ -430,7 +433,15 @@ html[data-narration-stage] .narration-bar {
     font-size: clamp(0.95rem, 0.85rem + 0.3vw, 1.1rem);
   }
   .slide-dock .slide-wait {
-    flex: none;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0;
+    text-align: left;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   /* Chân dung: nằm ở góc dưới phải, cao hơn dải một chút. */

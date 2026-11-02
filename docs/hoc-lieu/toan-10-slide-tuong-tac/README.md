@@ -18,6 +18,10 @@ Khoá bán do Limio soạn, theo Chương trình GDPT 2018 lớp 10. Đây **kh�
 - Câu trắc nghiệm cần tính toán có `"workOnPaper": true`: đáp án được che cho tới khi học sinh bấm đã giải xong, và quiz có màn hình chuẩn bị giấy bút (`docs/tieu-chi/quiz-nhap-ra-giay.md`).
 - Thuật ngữ và kí hiệu theo đúng slide của bài (`bề lõm`, `đỉnh I`, `n(Ω)`, góc bù…).
 
+## Quy ước soạn lời giảng
+
+Giọng chỉ dừng ở cuối một bước. `[chờ: lời nhắc]` khi học sinh phải thao tác, `[nghĩ n: câu hỏi]` khi chỉ cần suy nghĩ, `dungCuoi` khi chờ ở cuối slide. Chữ sau dấu hai chấm hiện trên màn hình lúc dừng, không được đọc thành tiếng. Test `decks.test.ts` chặn dấu đặt giữa bước và câu giao thao tác ở chỗ giọng không dừng (`docs/tieu-chi/dung-nghi-loi-giang-slide.md`).
+
 ## Dựng và nhập
 
 `khoa-toan-10-slide.json` là tệp sinh ra, đừng sửa tay.
@@ -31,6 +35,8 @@ Khoá mới: `pnpm import:course -- --file <tệp> --owner <email> --dry-run`. K
 ```bash
 pnpm --filter @feedbackme/core-lms update:lesson -- --file ../../docs/hoc-lieu/toan-10-slide-tuong-tac/khoa-toan-10-slide.json --owner <email> --lesson "Ba đường conic" --dry-run
 ```
+
+Lời giảng đổi thì `update-lesson.ts` ghi kịch bản mới và giọng cũ ngừng phát ngay: phải tạo giọng lại liền sau đó, và dựng lại video nếu có. Chỉ thêm điểm dừng hay bỏ dấu thì kịch bản không đổi, không cần tạo lại giọng.
 
 Khi chạy trên bài đã nhập theo script cũ, khối giới thiệu đầu bài được thay bằng dòng thời lượng và số câu. Script không xoá gì khác. Quiz đã có lượt làm thì không đổi câu hỏi nếu không truyền `--force`.
 

@@ -50,6 +50,7 @@ export function SlideDock({
   subtitle,
   showSubtitles,
   waiting,
+  prompt,
   onToggleSubtitles,
   onPrev,
   onNext,
@@ -63,6 +64,8 @@ export function SlideDock({
   showSubtitles: boolean;
   /** Giọng đang dừng chờ học viên làm bài trên slide. */
   waiting: boolean;
+  /** Lời nhắc của điểm dừng ở cuối bước (`[chờ: …]`, `[nghĩ n: …]`). Rỗng thì dùng câu chung. */
+  prompt: string;
   onToggleSubtitles: () => void;
   onPrev: (() => void) | null;
   onNext: (() => void) | null;
@@ -119,14 +122,20 @@ export function SlideDock({
           </button>
         )}
       </div>
-      {showSubtitles && subtitle && (
+      {showSubtitles && subtitle && !waiting && (
         <p className="slide-subtitle" aria-hidden="true">
           {subtitle}
         </p>
       )}
       {waiting && (
         <p className="slide-wait" role="status">
-          Em làm xong rồi bấm <b>Tiếp tục</b> nhé
+          {prompt ? (
+            <b className="slide-wait-prompt">{prompt}</b>
+          ) : (
+            <>
+              Em làm xong rồi bấm <b>Tiếp tục</b> nhé
+            </>
+          )}
         </p>
       )}
     </div>

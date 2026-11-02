@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 // Khung slide tương tác chép từ SmartDoc (docs/tieu-chi/slide-tuong-tac-smartdoc.md); chỉ dựng HTML, không đụng DOM.
 import { dungTaiLieuSlide } from "./khungSlideHtml.js";
+import { stepPausesOf } from "../narration/deckSync";
 
 export interface DeckSlide {
   id: string;
@@ -33,6 +34,8 @@ export function loadDeck(id: string): Deck | null {
   }
 }
 
+const escapeAttr = (s: string): string => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 /**
  * Tài liệu HTML đầy đủ của bộ slide. `kieu: "hoclieu"` là giao diện Học liệu của SmartDoc, ở đây dùng màu Limio, nền sáng.
  *
@@ -41,10 +44,13 @@ export function loadDeck(id: string): Deck | null {
  * `data-an-thanh` lên <html> của khung (cùng origin, xem useDeckBridge).
  */
 export function buildDeckHtml(deck: Deck): string {
-  // Slide chờ học viên làm (dungCuoi) mang cờ data-dung-cuoi để trình chiếu biết chỗ nào dừng giọng (useDeckBridge).
-  const slides = deck.slides.map((s) =>
-    s.loiGiang?.dungCuoi ? { ...s, html: s.html.replace(/^\s*<section\b/i, '<section data-dung-cuoi="1"') } : s,
-  );
+  // Slide chờ học viên làm (dungCuoi) mang cờ data-dung-cuoi, điểm dừng ở cuối bước (`[chờ]`, `[nghĩ n]`) mang data-dung-buoc,
+  // để trình chiếu biết chỗ nào dừng giọng (useDeckBridge).
+  const slides = deck.slides.map((s) => {
+    const pauses = stepPausesOf(s.loiGiang?.buoc ?? []);
+    const attrs = `${s.loiGiang?.dungCuoi ? ' data-dung-cuoi="1"' : ""}${pauses ? ` data-dung-buoc="${escapeAttr(JSON.stringify(pauses))}"` : ""}`;
+    return attrs ? { ...s, html: s.html.replace(/^\s*<section\b/i, `<section${attrs}`) } : s;
+  });
   return dungTaiLieuSlide(slides, {
     tieuDe: deck.tieuDe,
     mau: "limio",

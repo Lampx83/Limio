@@ -1,5 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { deckAnchor, firstSegmentOfDeckSlide, isDeckLecture, parseDeckAnchor, parseDeckMessage, segmentForDeckPos } from "./deckSync";
+import {
+  deckAnchor,
+  firstSegmentOfDeckSlide,
+  isDeckLecture,
+  misplacedPauseMarks,
+  parseDeckAnchor,
+  parseDeckMessage,
+  parseStepPause,
+  pauseFromAttr,
+  segmentForDeckPos,
+  stepPausesOf,
+} from "./deckSync";
 
 const A = ["s0b0", "s0b1", "s1b0", "s2b0", "s2b2"];
 
@@ -50,5 +61,35 @@ describe("tin từ khung", () => {
   });
   it("số không hữu hạn bị bỏ", () => {
     expect(parseDeckMessage({ smartdocSlide: true, loai: "trang", i: NaN })!.i).toBeUndefined();
+  });
+});
+
+describe("điểm dừng ở cuối bước", () => {
+  it("đọc dấu chờ và dấu nghĩ ở cuối bước", () => {
+    expect(parseStepPause("Em kéo a nhé. [chờ: Em kéo a sang số âm]")).toEqual({ kieu: "cho", nhac: "Em kéo a sang số âm" });
+    expect(parseStepPause("Câu đố. [nghĩ 5: Tháp cao bao nhiêu mét?] ")).toEqual({ kieu: "nghi", giay: 5, nhac: "Tháp cao bao nhiêu mét?" });
+  });
+  it("dấu giữa bước, thiếu lời nhắc hay thiếu số giây thì không phải điểm dừng", () => {
+    expect(parseStepPause("[nghĩ 5: Hỏi?] Đáp ngay.")).toBeNull();
+    expect(parseStepPause("Lời. [chờ]")).toBeNull();
+    expect(parseStepPause("Lời. [nghĩ: Hỏi?]")).toBeNull();
+    expect(parseStepPause("Lời. [dừng 1]")).toBeNull();
+  });
+  it("chỉ ra dấu đặt sai chỗ", () => {
+    expect(misplacedPauseMarks("[nghĩ 5: Hỏi?] Đáp ngay.")).toEqual(["[nghĩ 5: Hỏi?]"]);
+    expect(misplacedPauseMarks("Lời. [chờ]")).toEqual(["[chờ]"]);
+    expect(misplacedPauseMarks("[chờ: A] Lời. [nghĩ 3: B]")).toEqual(["[chờ: A]"]);
+    expect(misplacedPauseMarks("Lời. [nghĩ 3: B]")).toEqual([]);
+  });
+  it("lập bảng theo bước và đọc lại từ thuộc tính; dữ liệu hỏng thì coi như không có", () => {
+    const table = stepPausesOf(["Một.", "Hai. [chờ: Làm đi]", "Ba. [nghĩ 4: Vì sao?]"]);
+    expect(Object.keys(table!)).toEqual(["1", "2"]);
+    const attr = JSON.stringify(table);
+    expect(pauseFromAttr(attr, 1)).toEqual({ kieu: "cho", nhac: "Làm đi" });
+    expect(pauseFromAttr(attr, 2)).toEqual({ kieu: "nghi", giay: 4, nhac: "Vì sao?" });
+    expect(pauseFromAttr(attr, 0)).toBeNull();
+    expect(pauseFromAttr("{hỏng", 1)).toBeNull();
+    expect(pauseFromAttr(null, 1)).toBeNull();
+    expect(stepPausesOf(["Một.", "Hai."])).toBeNull();
   });
 });

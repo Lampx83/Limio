@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { deckCmd, firstSegmentOfDeckSlide, parseDeckAnchor, parseDeckMessage, segmentForDeckPos, toDeck } from "@/lib/narration/deckSync";
+import {
+  deckCmd,
+  firstSegmentOfDeckSlide,
+  parseDeckAnchor,
+  parseDeckMessage,
+  pauseFromAttr,
+  segmentForDeckPos,
+  toDeck,
+  type StepPause,
+} from "@/lib/narration/deckSync";
 
 /** Tin do chính lệnh `toi` của mình gây ra (khung phản hồi lại) chỉ bị bỏ trong khoảng này. */
 const ECHO_MS = 700;
@@ -160,6 +169,14 @@ export function useDeckBridge({ active, compact, frame, anchors, segIdx, onSeek,
         return !!frame()?.contentDocument?.querySelectorAll(".khung > section")[i]?.hasAttribute("data-dung-cuoi");
       } catch {
         return false;
+      }
+    },
+    /** Điểm dừng ở cuối bước `step` của slide `i` (cờ data-dung-buoc do buildDeckHtml đặt). */
+    stepPause: (i: number, step: number): StepPause | null => {
+      try {
+        return pauseFromAttr(frame()?.contentDocument?.querySelectorAll(".khung > section")[i]?.getAttribute("data-dung-buoc"), step);
+      } catch {
+        return null;
       }
     },
     prev: () => postRef.current(deckCmd("lui")),

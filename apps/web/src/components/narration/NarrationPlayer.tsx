@@ -27,7 +27,7 @@ import {
   type NarrationKind,
 } from "@/lib/narration/learner";
 import { heardFraction, readHeard, stepHeard, writeHeard, type HeardRanges } from "@/lib/narration/deckCover";
-import { isDeckLecture, parseDeckAnchor } from "@/lib/narration/deckSync";
+import { isDeckLecture, parseDeckAnchor, type StepPause } from "@/lib/narration/deckSync";
 import { buildSlideUnits, clearSlides, firstSegmentPerUnit, markSlides, subtitleAt, unitIndexOf } from "@/lib/narration/slideshow";
 import {
   getNarrationState,
@@ -255,29 +255,50 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       if (!seg) return;
       patchNarration({ follow: true });
       // Học viên đã bấm dừng để tự xem slide thì lật slide không tự phát lại. Giọng chỉ đang nghỉ nhịp hay chờ làm bài thì vẫn đi tiếp.
-      const stoppedByLearner = deckCover && !getNarrationState().playing && !breathTimer.current && waitSlide === null;
+      const stoppedByLearner = deckCover && !getNarrationState().playing && !breathTimer.current && hold === null;
       if (stoppedByLearner) narrationCommands()?.seek(seg.startSec);
       else narrationCommands()?.playFrom("lecture", seg.startSec);
     },
     onExit: stageOn ? exitStage : undefined,
   });
 
-  // Slide chờ học viên làm (ghép đôi, trắc nghiệm…): đọc hết lời giảng của slide đó thì dừng giọng, học viên bấm Tiếp tục là giọng đi tiếp.
-  const waitedSlide = useRef(-1);
-  const [waitSlide, setWaitSlide] = useState<number | null>(null);
+  // Điểm dừng của một đoạn giảng: dấu ở cuối bước (`[chờ]`, `[nghĩ n]`), hoặc cuối slide chờ học viên làm (ghép đôi, trắc nghiệm…).
+  const segmentStop = (idx: number): StepPause | null => {
+    const here = parseDeckAnchor(deckAnchors[idx] ?? "");
+    if (!here) return null;
+    const own = deckBridge.stepPause(here.slide, here.step);
+    if (own) return own;
+    const next = parseDeckAnchor(deckAnchors[idx + 1] ?? "");
+    if (next && next.slide === here.slide) return null; // còn bước sau trong cùng slide
+    return deckBridge.waits(here.slide) ? { kieu: "cho", nhac: "" } : null;
+  };
+  // Đọc hết đoạn có điểm dừng thì dừng giọng. Chờ bấm: học viên bấm Tiếp tục là giọng đi tiếp. Nghĩ: hết giờ giọng tự đi tiếp.
+  const heldSeg = useRef(-1);
+  const thinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearThink = () => {
+    if (thinkTimer.current) clearTimeout(thinkTimer.current);
+    thinkTimer.current = null;
+  };
+  const [hold, setHold] = useState<{ seg: number; nhac: string; thinking: boolean } | null>(null);
   useEffect(() => {
     if (!stageOn || !deckLecture || lectureIdx < 0) return;
-    const here = parseDeckAnchor(deckAnchors[lectureIdx] ?? "");
-    if (!here) return;
-    if (waitedSlide.current !== -1 && waitedSlide.current !== here.slide) waitedSlide.current = -1;
-    const next = parseDeckAnchor(deckAnchors[lectureIdx + 1] ?? "");
-    if (next && next.slide === here.slide) return; // còn bước sau trong cùng slide
     const seg = lecture?.segments[lectureIdx];
-    if (!seg || !ui.playing || ui.time < seg.endSec - 0.15) return;
-    if (waitedSlide.current === here.slide || !deckBridge.waits(here.slide)) return;
-    waitedSlide.current = here.slide;
-    setWaitSlide(here.slide);
+    if (!seg) return;
+    // Sang đoạn khác hoặc tua ngược trong đoạn thì lần sau đọc hết lại dừng tiếp.
+    if (heldSeg.current !== -1 && (heldSeg.current !== lectureIdx || ui.time < seg.endSec - 1)) heldSeg.current = -1;
+    if (!ui.playing || ui.time < seg.endSec - 0.15 || heldSeg.current === lectureIdx) return;
+    const stop = segmentStop(lectureIdx);
+    if (!stop) return;
+    heldSeg.current = lectureIdx;
+    setHold({ seg: lectureIdx, nhac: stop.nhac, thinking: stop.kieu === "nghi" });
     narrationCommands()?.toggle(); // đang phát → tạm dừng
+    if (stop.kieu === "nghi") {
+      clearThink();
+      thinkTimer.current = setTimeout(() => {
+        thinkTimer.current = null;
+        if (!getNarrationState().playing) narrationCommands()?.toggle();
+      }, stop.giay * 1000);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stageOn, deckLecture, lectureIdx, ui.playing, ui.time]);
   // Nhịp nghỉ: hết mỗi đoạn giảng thì dừng giọng một lát cho học viên kịp nhìn và ngấm, rồi tự đi tiếp. Nghỉ lâu hơn khi sang slide mới
@@ -294,7 +315,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     const here = parseDeckAnchor(deckAnchors[lectureIdx] ?? "");
     const next = parseDeckAnchor(deckAnchors[lectureIdx + 1] ?? "");
     const slideChange = !!here && !!next && here.slide !== next.slide;
-    if (slideChange && here && deckBridge.waits(here.slide)) return; // slide chờ học viên làm: đã có điểm dừng riêng
+    if (segmentStop(lectureIdx)) return; // đoạn này đã có điểm dừng riêng
     breathedIdx.current = lectureIdx;
     const gap = (slideChange ? BREATH_SLIDE_MS : BREATH_STEP_MS) + ((seg.text?.length ?? 0) > BREATH_LONG_CHARS ? BREATH_LONG_MS : 0);
     narrationCommands()?.toggle(); // đang phát → tạm dừng
@@ -317,10 +338,28 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     },
     [],
   );
-  const waiting = waitSlide !== null && !ui.playing && stageOn;
+  const waiting = hold !== null && hold.seg === lectureIdx && !ui.playing && stageOn;
+  const thinking = waiting && hold.thinking;
+  // Giọng chạy lại, sang đoạn khác hay thoát trình chiếu thì điểm dừng hết hiệu lực; hẹn giờ không được tự bật lại giọng.
   useEffect(() => {
-    if (ui.playing) setWaitSlide(null);
-  }, [ui.playing]);
+    if (ui.playing || !stageOn || (hold && hold.seg !== lectureIdx)) {
+      clearThink();
+      setHold(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ui.playing, stageOn, lectureIdx]);
+  useEffect(() => clearThink, []);
+  /** Nút phát/dừng. Trong khoảng nghĩ giọng đang "chạy" với học viên nên bấm là giữ lại: bỏ hẹn giờ, chờ họ tự bấm tiếp. */
+  const togglePlay = () => {
+    if (thinkTimer.current) {
+      clearThink();
+      setHold((h) => (h ? { ...h, thinking: false } : h));
+      return;
+    }
+    narrationCommands()?.toggle();
+  };
+  const togglePlayRef = useRef(togglePlay);
+  togglePlayRef.current = togglePlay;
 
   // ── Động cơ: thẻ audio, lệnh, sự kiện, nhớ vị trí ───────────────────────────────
   useEffect(() => {
@@ -915,7 +954,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
       else if (e.key === "ArrowLeft") goSlideRef.current(-1);
       else if (e.key === " ") {
         e.preventDefault();
-        narrationCommands()?.toggle();
+        togglePlayRef.current();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -996,7 +1035,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
             // Phím cách phát/dừng khi tiêu điểm ở thanh phát (nút bấm tự xử lý phím cách của chính nó).
             if (e.key === " " && !(e.target instanceof HTMLButtonElement)) {
               e.preventDefault();
-              c()?.toggle();
+              togglePlay();
             }
           }}
           className="narration-bar fixed inset-x-0 bottom-0 z-30 border-t border-token bg-[rgb(var(--surface))] pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_rgba(0,0,0,0.12)] print:hidden sm:inset-x-4 sm:bottom-3 sm:mx-auto sm:max-w-3xl sm:rounded-2xl sm:border sm:pb-0"
@@ -1020,6 +1059,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                 subtitle={ui.offerSec === null ? subtitle : ""}
                 showSubtitles={showSubtitles}
                 waiting={waiting}
+                prompt={waiting ? hold.nhac : ""}
                 onToggleSubtitles={() => {
                   const next = !showSubtitles;
                   setShowSubtitles(next);
@@ -1085,11 +1125,11 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
             )}
             <button
               type="button"
-              onClick={() => c()?.toggle()}
-              aria-label={ui.ended ? "Nghe lại" : ui.playing ? "Tạm dừng" : "Phát"}
+              onClick={togglePlay}
+              aria-label={ui.ended ? "Nghe lại" : ui.playing || thinking ? "Tạm dừng" : "Phát"}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--brand))] text-white shadow transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(var(--brand))]"
             >
-              {ui.ended ? <RotateCcw size={20} /> : ui.playing ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
+              {ui.ended ? <RotateCcw size={20} /> : ui.playing || thinking ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
             </button>
             <button
               type="button"

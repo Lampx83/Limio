@@ -26,6 +26,8 @@ import { createContentItem, updateContentItem } from "../src/courses/contents";
 import { createLesson, updateLesson } from "../src/courses/lessons";
 import { createQuiz, updateQuiz } from "../src/quizzes/quizzes";
 import { createQuestion, updateQuestion } from "../src/quizzes/questions";
+import { saveNarrationScript } from "../src/narration/db";
+import { scriptHash } from "../src/narration/script";
 
 import {
   MAX_TOC_ITEMS,
@@ -495,6 +497,19 @@ async function main() {
     console.log("\nKhông có gì phải đổi.");
     return;
   }
+  // Lời giảng đổi thì giọng cũ thành "đã cũ": học viên không nghe được bài này cho tới khi tạo giọng lại.
+  if (spec.lecture) {
+    const lecture = spec.lecture;
+    const current = await prisma.lessonNarration.findUnique({
+      where: { lessonId_kind: { lessonId: lesson.id, kind: "lecture" } },
+      select: { scriptHash: true },
+    });
+    if (current?.scriptHash !== scriptHash(lecture)) {
+      console.log(`  ~ lời giảng đổi (${lecture.length} đoạn): phải tạo giọng lại ngay sau khi ghi, trong lúc đó học viên không nghe được bài này`);
+      plan.push(() => saveNarrationScript(lesson.id, "lecture", lecture));
+    }
+  }
+
   if (dryRun) {
     console.log(`\n[dry-run] ${plan.length} thay đổi. Không ghi gì.`);
     return;

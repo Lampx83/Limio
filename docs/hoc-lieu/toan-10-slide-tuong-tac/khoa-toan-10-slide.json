@@ -63,11 +63,11 @@
             },
             {
               "anchor": "s4b1",
-              "text": "Khi a dương, ví dụ a bằng hai, bề lõm quay lên trên. Đỉnh là điểm thấp nhất của đồ thị."
+              "text": "Khi a dương, ví dụ a bằng hai, bề lõm quay lên trên. Đỉnh là điểm thấp nhất của đồ thị. Bây giờ em kéo a sang số âm, chẳng hạn âm một phần hai, xem parabol thế nào."
             },
             {
               "anchor": "s4b2",
-              "text": "Em kéo a sang số âm, chẳng hạn âm một phần hai. Bề lõm quay xuống dưới, và đỉnh trở thành điểm cao nhất."
+              "text": "Khi a âm, bề lõm quay xuống dưới, và đỉnh trở thành điểm cao nhất."
             },
             {
               "anchor": "s4b3",
@@ -143,11 +143,11 @@
             },
             {
               "anchor": "s10b3",
-              "text": "Nếu delta bằng không, parabol tiếp xúc với trục hoành tại đúng một điểm, chính là đỉnh. Với c bằng một, delta bằng không, và đỉnh nằm ngay trên trục hoành."
+              "text": "Nếu delta bằng không, parabol tiếp xúc với trục hoành tại đúng một điểm, chính là đỉnh. Em kéo c bằng một xem sao."
             },
             {
               "anchor": "s10b4",
-              "text": "Còn nếu delta âm, parabol không cắt trục hoành. Em thử kéo c bằng hai: cả parabol nằm phía trên trục hoành. Điều cần nhớ là: dấu của delta cho biết số giao điểm với trục hoành."
+              "text": "Với c bằng một, delta bằng không, và đỉnh nằm ngay trên trục hoành. Còn nếu delta âm, parabol không cắt trục hoành. Với c bằng hai, cả parabol nằm phía trên trục hoành. Điều cần nhớ là: dấu của delta cho biết số giao điểm với trục hoành."
             },
             {
               "anchor": "s11b0",
@@ -183,7 +183,7 @@
             },
             {
               "anchor": "s14b1",
-              "text": "Xét trường hợp a dương, như parabol y bằng x bình phương, trừ bốn x, cộng ba. Đi từ trái sang phải, đồ thị đi xuống cho đến đỉnh, rồi đi lên. Vậy hàm số nghịch biến trên khoảng từ âm vô cùng đến hai. Nó đồng biến trên khoảng từ hai đến dương vô cùng, và đạt giá trị nhỏ nhất bằng âm một tại x bằng hai."
+              "text": "Xét trường hợp a dương, như parabol y bằng x bình phương, trừ bốn x, cộng ba. Đi từ trái sang phải, đồ thị đi xuống cho đến đỉnh, rồi đi lên. Vậy hàm số nghịch biến trên khoảng từ âm vô cùng đến hai. Nó đồng biến trên khoảng từ hai đến dương vô cùng, và đạt giá trị nhỏ nhất bằng âm một tại x bằng hai. Bây giờ em bấm thẻ a nhỏ hơn không để xem bảng."
             },
             {
               "anchor": "s14b2",
@@ -499,7 +499,7 @@
           "lecture": [
             {
               "anchor": "s0b0",
-              "text": "Chào em! Thầy là Tiến Đạt, hôm nay thầy kèm riêng em một bài rất đẹp của hình học: ba đường conic. Em đã từng thấy chiếc chảo ăng-ten trên mái nhà chưa? Hôm nay em sẽ tự trả lời được câu đó."
+              "text": "Chào em! Thầy là Tiến Đạt, hôm nay thầy kèm riêng em một bài rất đẹp của hình học: ba đường conic. Em đã từng thấy chiếc chảo ăng-ten trên mái nhà chưa? Vì sao chảo lại cong như thế? Hôm nay em sẽ tự trả lời được câu đó."
             },
             {
               "anchor": "s0b1",
@@ -531,11 +531,11 @@
             },
             {
               "anchor": "s2b0",
-              "text": "Em hãy tưởng tượng: đóng hai cái đinh lên bảng, buộc một sợi dây vào hai đinh, rồi dùng bút căng dây và đi một vòng. Em xem hoạt cảnh bên trái nhé. Đúng rồi, tổng ấy luôn bằng độ dài sợi dây."
+              "text": "Em hãy tưởng tượng: đóng hai cái đinh lên bảng, buộc một sợi dây vào hai đinh, rồi dùng bút căng dây và đi một vòng. Em xem hoạt cảnh bên trái nhé. Tổng hai đoạn dây có thay đổi không?"
             },
             {
               "anchor": "s2b1",
-              "text": "Đó chính là định nghĩa elip. Hai cái đinh là hai tiêu điểm. Tổng khoảng cách từ mỗi điểm trên elip tới hai tiêu điểm luôn bằng hai a. Trong hình, sợi dây dài mười, hai đinh cách nhau tám, nên c bằng bốn."
+              "text": "Tổng ấy luôn bằng độ dài sợi dây. Đó chính là định nghĩa elip. Hai cái đinh là hai tiêu điểm. Tổng khoảng cách từ mỗi điểm trên elip tới hai tiêu điểm luôn bằng hai a. Trong hình, sợi dây dài mười, hai đinh cách nhau tám, nên c bằng bốn."
             },
             {
               "anchor": "s2b2",
@@ -563,7 +563,7 @@
             },
             {
               "anchor": "s5b0",
-              "text": "Em xem hành tinh nhỏ chạy quanh ngôi sao nằm ở một tiêu điểm. Em có thấy nó chạy nhanh hơn khi đến gần ngôi sao không? Phần này là mở rộng, thuộc chuyên đề học tập. Để đo độ dẹt, người ta dùng tâm sai, bằng c chia cho a. Elip trong hình có a bằng năm, c bằng ba, nên tâm sai bằng ba phần năm."
+              "text": "Em xem hành tinh nhỏ chạy quanh ngôi sao nằm ở một tiêu điểm. Nó chạy nhanh hơn khi đến gần ngôi sao. Phần này là mở rộng, thuộc chuyên đề học tập. Để đo độ dẹt, người ta dùng tâm sai, bằng c chia cho a. Elip trong hình có a bằng năm, c bằng ba, nên tâm sai bằng ba phần năm."
             },
             {
               "anchor": "s5b1",

@@ -154,7 +154,7 @@ function walk(parent: El, acc: Acc, skipFirstHeading: { done: boolean }): void {
 export function cleanNarration(steps: readonly string[], persona: Persona): string {
   const text = steps
     .join(" ")
-    .replace(/\[(?:dừng|nghĩ|chỉ)[^\]]*\]/gi, " ")
+    .replace(/\[(?:dừng|nghĩ|chờ|chỉ)[^\]]*\]/gi, " ")
     .replace(/\{\{Tx\}\}/g, capitalize(persona.xung))
     .replace(/\{\{tx\}\}/g, persona.xung)
     .replace(/\{\{gv\}\}/g, persona.ten)
