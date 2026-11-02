@@ -9,13 +9,13 @@ export { AiTutorError } from "./errors";
 
 // Caps — override per env if needed.
 export const MAX_TURNS_PER_HOUR = Number(process.env.AI_TURNS_PER_HOUR ?? "10");
-// Trần toàn hệ thống. Hai cap trên bảo vệ người dùng khỏi chính họ; cap này
-// bảo vệ hoá đơn. Cap-theo-người nhân với số người là một con số không có
-// chặn trên, mà số người thì chỉ có tăng — mở AI tutor cho 5.000 sinh viên là
-// mở trần 250 triệu token/ngày mà không ai cố tình làm gì sai cả.
+// Trần toàn hệ thống: mặc định KHÔNG có trần. Mức cũ 5 triệu token/ngày đã chặn
+// giữa chừng 24 lượt thi vấn đáp (2026-11-02): một đợt thi tự nó đã dùng hết con
+// số đó, mà LLM tự host thì không tính tiền theo token. Muốn đặt trần thì đặt
+// SiteSetting hoặc env; 0 vẫn là công tắc khẩn tắt mọi lời gọi AI.
 export const GLOBAL_TOKENS_PER_DAY_KEY = "ai.tokens_per_day_global";
 export const DEFAULT_GLOBAL_TOKENS_PER_DAY = Number(
-  process.env.AI_TOKENS_PER_DAY_GLOBAL ?? "5000000",
+  process.env.AI_TOKENS_PER_DAY_GLOBAL ?? Number.POSITIVE_INFINITY,
 );
 
 /**
@@ -67,8 +67,7 @@ export type AiCapScope = "tutor" | "generator" | "oral_exam";
 /**
  * Trần ngày toàn hệ thống. Ưu tiên SiteSetting (đổi được lúc đang chạy, không
  * cần restart) rồi mới tới env. Giá trị 0 là công tắc khẩn: tắt sạch mọi lời
- * gọi AI. Giá trị rác thì bỏ qua và quay về mặc định — một ký tự gõ nhầm
- * trong ô cấu hình không được phép âm thầm biến thành "không giới hạn".
+ * gọi AI. Giá trị rác thì bỏ qua và quay về mặc định.
  */
 async function resolveGlobalTokenCap(db: PrismaClient): Promise<number> {
   const row = await db.siteSetting.findUnique({

@@ -107,11 +107,19 @@ describe("assertWithinCaps — trần toàn hệ thống", () => {
     expect(await codeOf(assertWithinCaps(u.id))).toBe("global_token_cap");
   });
 
-  it("giá trị rác thì quay về mặc định, không biến thành không giới hạn", async () => {
+  it("giá trị rác thì bỏ qua và quay về mặc định", async () => {
     const u = await makeUser("garbage");
     await setGlobalCap("năm triệu");
 
     expect(await codeOf(assertWithinCaps(u.id))).toBeNull();
+  });
+
+  it("mặc định không có trần: một đợt thi lớn không chặn người khác", async () => {
+    const heavy = await makeUser("no-cap-heavy");
+    const fresh = await makeUser("no-cap-fresh");
+    await spend(heavy.id, 6_000_000);
+
+    expect(await codeOf(assertWithinCaps(fresh.id))).toBeNull();
   });
 });
 
