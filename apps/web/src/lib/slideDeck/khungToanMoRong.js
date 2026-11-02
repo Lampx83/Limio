@@ -18,11 +18,20 @@
  *   .tam-giac-do  {"bai":"chieu-cao|qua-song","AB":20,"goc":[35,50],"keo":["A","B","goc","AB"],"donVi":"m","buocHien":true}
  *                  Mỗi dòng tính là một bước hiện dần (tắt bằng "buocHien":false).
  *   .mo-phong-xs  {"loai":"xuc-xac|dong-xu|hai-xuc-xac-tong","soLan":[10,100,1000,10000]}
+ *   .hinh-dung    {"vung":{"x":[-1.2,1.2],"y":[-0.2,1.5]},"diem":[…],"net":[["A","B"],{"a":"H","b":"K","lop":"cam","dut":true}],
+ *                  "tron":[{"tam":"O","qua":"B"}],"vuong":[["B","D","H"]],"do":[{"nhan":"HK","a":"H","b":"K"}],"tiLe":5,"chu":"…"}
+ *                  Hình học dựng theo từng bước, kéo được. Mỗi điểm khai báo một cách dựng (xem L.dungHinh), điểm sau chỉ dùng điểm trước:
+ *                  {"ten":"O","x":0,"y":0}, {"ten":"A","tren":["O","B"],"goc":106,"keo":[97,140]} (trên đường tròn tâm O qua B),
+ *                  {"ten":"H","chia":["A","B"],"t":0.2,"keo":[0.05,0.28]}, {"ten":"D","chan":["H","B","C"]} (chân đường vuông góc),
+ *                  {"ten":"E","giao":[["D","H"],["A","C"]]}, {"ten":"M","giao":[["D","F"],{"qua":"A","vuongGoc":["D","E"]}]},
+ *                  {"ten":"F","giaoTron":[["C","H"],"O","B"],"khac":"C"}, {"ten":"I","trungDiem":["A","M"]}. "nhan":[dx,dy] đặt nhãn.
+ *                  Vẽ dần theo lời giảng: điểm, net, tron, vuong mang "buoc":k thì chỉ hiện từ bước k của slide (bước 0 là lúc mở slide),
+ *                  nét mới được vẽ ra. vuong khi đó viết {"v":["B","D","H"],"buoc":2}. Điểm không dựng đề vẫn tính được nếu "an":true.
  */
 export const CSS_TOAN_MO_RONG = `
 /* ── Thành phần Toán mở rộng (khungToanMoRong.js) ── */
-.conic, .mien-nghiem, .tam-giac-do, .mo-phong-xs { --tm-cao: 540px; --tm-cam: #e8590c; --tm-tim: #7048e8; --tm-la: #2b8a3e; --tm-vang: #f08c00; --tm-nen-svg: var(--the); position: relative; }
-[data-theme="toi"] .conic, [data-theme="toi"] .mien-nghiem, [data-theme="toi"] .tam-giac-do, [data-theme="toi"] .mo-phong-xs { --tm-cam: #ff8a3d; --tm-tim: #a48bff; --tm-la: #51cf66; --tm-vang: #ffc94d; }
+.conic, .mien-nghiem, .tam-giac-do, .mo-phong-xs, .hinh-dung { --tm-cao: 540px; --tm-cam: #e8590c; --tm-tim: #7048e8; --tm-la: #2b8a3e; --tm-vang: #f08c00; --tm-nen-svg: var(--the); position: relative; }
+[data-theme="toi"] .conic, [data-theme="toi"] .mien-nghiem, [data-theme="toi"] .tam-giac-do, [data-theme="toi"] .mo-phong-xs, [data-theme="toi"] .hinh-dung { --tm-cam: #ff8a3d; --tm-tim: #a48bff; --tm-la: #51cf66; --tm-vang: #ffc94d; }
 .tm-loi { display: block; margin: .3em 0; padding: .55em .9em; border-radius: 12px; border: 2px dashed var(--sai); background: var(--sai-nhat); color: var(--sai); font-size: 18px; line-height: 1.4; font-family: var(--mono); white-space: pre-wrap; }
 .tm-hop { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(0, 1fr); gap: 22px; height: var(--tm-cao); align-items: stretch; margin: .2em 0 .4em; }
 .tm-the { position: relative; background: var(--the); border: 1px solid var(--vien); border-radius: 22px; box-shadow: var(--bong); overflow: hidden; min-height: 0; min-width: 0; }
@@ -105,6 +114,21 @@ section svg.tm-svg { max-width: none; height: 100%; }
 .tm-ghim-dau { fill: var(--tm-cam); stroke: rgba(0, 0, 0, .25); stroke-width: 1.5; }
 .tm-ghim-sang { fill: #fff; opacity: .7; }
 .tm-diem-m { fill: var(--mau); stroke: var(--tm-nen-svg); stroke-width: 4; }
+.tm-hop.tm-hop-1 { grid-template-columns: minmax(0, 1fr); }
+.tm-hd-net { stroke: var(--chu); stroke-width: 3; stroke-linecap: round; fill: none; }
+.tm-hd-nhat { stroke: var(--chu-phu); stroke-width: 2.4; }
+.tm-hd-mau { stroke: var(--mau); stroke-width: 4; }
+.tm-hd-cam { stroke: var(--tm-cam); stroke-width: 4.5; }
+.tm-hd-la { stroke: var(--tm-la); stroke-width: 4; }
+.tm-hd-dut { stroke-dasharray: 9 8; }
+.tm-hd-vuong { fill: none; stroke: var(--chu); stroke-width: 2; }
+.tm-hd-diem { fill: var(--chu); }
+.tm-hd-lop { transition: opacity .35s ease; }
+.tm-hd-lop.tm-hd-an { opacity: 0; visibility: hidden; }
+.tm-hd-ve .tm-hd-net:not(.tm-hd-dut) { stroke-dasharray: 1; animation: tmHdVe .8s cubic-bezier(.4, .1, .2, 1) both; }
+@keyframes tmHdVe { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.tm-hd-so { display: flex; justify-content: space-between; gap: .6em; padding: .35em .7em; border: 2px solid var(--vien); border-radius: 14px; background: var(--the); font-size: 1.5em; font-weight: 700; }
+.tm-hd-chu { font-size: 1.25em; line-height: 1.4; }
 .tm-tay { cursor: grab; touch-action: none; }
 .tm-tay:active { cursor: grabbing; }
 .tm-tay .tm-vong { fill: var(--tm-cam); fill-opacity: .12; stroke: var(--tm-cam); stroke-width: 2.4; stroke-dasharray: 5 5; transform-box: fill-box; transform-origin: center; animation: tmQuay 7s linear infinite; }
@@ -605,7 +629,85 @@ export function chayToanMoRong(tuyChon) {
       return soNgauNhien(6, layU32);
     };
 
+    /*
+     * Toạ độ mọi điểm của một hình dựng theo từng bước (.hinh-dung). `gt` ghi đè tham số của điểm kéo được: góc (độ) với
+     * điểm trên đường tròn, t với điểm chia đoạn. Điểm không dựng được (hai đường song song, đường thẳng không cắt đường
+     * tròn) là null, và mọi điểm dựng từ nó cũng null.
+     */
+    var dungHinh = function (ds, gt) {
+      var P = {};
+      var duong = function (d) {
+        if (Array.isArray(d)) {
+          var a = P[d[0]], b = P[d[1]];
+          return a && b ? { p: a, v: [b[0] - a[0], b[1] - a[1]] } : null;
+        }
+        var q = P[d.qua], m = d.vuongGoc || d.songSong;
+        var u = q && m && P[m[0]], w = q && m && P[m[1]];
+        if (!u || !w) return null;
+        var vx = w[0] - u[0], vy = w[1] - u[1];
+        return { p: q, v: d.vuongGoc ? [-vy, vx] : [vx, vy] };
+      };
+      ds.forEach(function (d) {
+        var g = gt && gt[d.ten] != null ? gt[d.ten] : null, kq = null, a, b, c;
+        if (d.tren) {
+          a = P[d.tren[0]]; b = P[d.tren[1]];
+          if (a && b) {
+            var r = Math.sqrt((b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]));
+            var goc = (g != null ? g : d.goc) * Math.PI / 180;
+            kq = [a[0] + r * Math.cos(goc), a[1] + r * Math.sin(goc)];
+          }
+        } else if (d.chia) {
+          a = P[d.chia[0]]; b = P[d.chia[1]];
+          var t = g != null ? g : d.t;
+          if (a && b) kq = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+        } else if (d.trungDiem) {
+          a = P[d.trungDiem[0]]; b = P[d.trungDiem[1]];
+          if (a && b) kq = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+        } else if (d.chan) {
+          a = P[d.chan[0]]; b = P[d.chan[1]]; c = P[d.chan[2]];
+          if (a && b && c) {
+            var ux = c[0] - b[0], uy = c[1] - b[1], uu = ux * ux + uy * uy;
+            if (uu > 1e-12) {
+              var s = ((a[0] - b[0]) * ux + (a[1] - b[1]) * uy) / uu;
+              kq = [b[0] + ux * s, b[1] + uy * s];
+            }
+          }
+        } else if (d.giao) {
+          var l1 = duong(d.giao[0]), l2 = duong(d.giao[1]);
+          if (l1 && l2) {
+            var det = l1.v[0] * l2.v[1] - l1.v[1] * l2.v[0];
+            if (Math.abs(det) > 1e-9) {
+              var h = ((l2.p[0] - l1.p[0]) * l2.v[1] - (l2.p[1] - l1.p[1]) * l2.v[0]) / det;
+              kq = [l1.p[0] + l1.v[0] * h, l1.p[1] + l1.v[1] * h];
+            }
+          }
+        } else if (d.giaoTron) {
+          var l = duong(d.giaoTron[0]);
+          a = P[d.giaoTron[1]]; b = P[d.giaoTron[2]];
+          if (l && a && b) {
+            var R2 = (b[0] - a[0]) * (b[0] - a[0]) + (b[1] - a[1]) * (b[1] - a[1]);
+            var fx = l.p[0] - a[0], fy = l.p[1] - a[1];
+            var A2 = l.v[0] * l.v[0] + l.v[1] * l.v[1], B2 = 2 * (fx * l.v[0] + fy * l.v[1]), C2 = fx * fx + fy * fy - R2;
+            var D2 = B2 * B2 - 4 * A2 * C2;
+            if (A2 > 1e-12 && D2 >= 0) {
+              var cD = Math.sqrt(D2);
+              var n1 = [l.p[0] + l.v[0] * (-B2 + cD) / (2 * A2), l.p[1] + l.v[1] * (-B2 + cD) / (2 * A2)];
+              var n2 = [l.p[0] + l.v[0] * (-B2 - cD) / (2 * A2), l.p[1] + l.v[1] * (-B2 - cD) / (2 * A2)];
+              var kh = d.khac ? P[d.khac] : null;
+              var cach = function (n) { return kh ? (n[0] - kh[0]) * (n[0] - kh[0]) + (n[1] - kh[1]) * (n[1] - kh[1]) : 0; };
+              kq = cach(n1) >= cach(n2) ? n1 : n2;
+            }
+          }
+        } else if (typeof d.x === "number" && typeof d.y === "number") {
+          kq = [d.x, d.y];
+        }
+        P[d.ten] = kq;
+      });
+      return P;
+    };
+
     return {
+      dungHinh: dungHinh,
       PS: PS, tuSo: tuSo, cong: cong, tru: tru, nhan: nhan, chia: chia, ss: ss, gt: gt, chuPS: chuPS, so: so, soNhom: soNhom,
       chuCan: chuCan, tachChinhPhuong: tachChinhPhuong, buocDep: buocDep, kc: kc,
       thongSoConic: thongSoConic, phanXa: phanXa, phanXaParabol: phanXaParabol, giaoTiaElip: giaoTiaElip, phanXaElip: phanXaElip,
@@ -2441,8 +2543,161 @@ export function chayToanMoRong(tuyChon) {
     theoSlide(el, function () { veBieuDo(true); }, function () { if (!dangChay) lap.dung(); });
   };
 
+  /* ═══════════════ .hinh-dung ═══════════════ */
+  var dungHinhDung = function (el) {
+    var d = docJson(el);
+    var dsDiem = Array.isArray(d.diem) ? d.diem : [];
+    var vung = d.vung || { x: [-1.2, 1.2], y: [-1.2, 1.2] };
+    var W = 900, k = W / (vung.x[1] - vung.x[0]), H = Math.round((vung.y[1] - vung.y[0]) * k);
+    var X = function (x) { return (x - vung.x[0]) * k; }, Y = function (y) { return (vung.y[1] - y) * k; };
+    var dsDo = Array.isArray(d.do) ? d.do : [];
+    var coBang = dsDo.length > 0 || typeof d.chu === "string";
+    var themGhi = giuNoiDungCu(el, null);
+    var hop = taoHop(el, coBang ? "tm-hop-hd" : "tm-hop-hd tm-hop-1");
+    var the = tao("div", "tm-the tm-hinh");
+    hop.appendChild(the);
+    var svg = taoS("svg", { class: "tm-svg", viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": typeof d.moTa === "string" ? d.moTa : "Hình học kéo được" });
+    the.appendChild(svg);
+    var buocCua = function (x) { return x && typeof x.buoc === "number" && x.buoc > 0 ? x.buoc : 0; };
+    var soLop = 1;
+    [dsDiem, d.net || [], d.tron || [], d.vuong || []].forEach(function (ds) { ds.forEach(function (x) { soLop = Math.max(soLop, buocCua(x) + 1); }); });
+    // Mỗi lớp là một bước của lời giảng. Nét nằm dưới chữ, chữ nằm dưới tay kéo, nên mỗi lớp có hai nhóm.
+    var lopNetG = [], lopChuG = [], k2;
+    for (k2 = 0; k2 < soLop; k2++) lopNetG.push(taoS("g", { class: "tm-hd-lop" }, svg));
+    for (k2 = 0; k2 < soLop; k2++) lopChuG.push(taoS("g", { class: "tm-hd-lop" }, svg));
+    var gTay = taoS("g", null, svg);
+    var gt = {}, P = {};
+    var dsSo = [];
+    if (coBang) {
+      var bang = tao("div", "tm-bang");
+      hop.appendChild(bang);
+      if (typeof d.chu === "string") bang.appendChild(tao("div", "tm-hd-chu", d.chu));
+      dsDo.forEach(function (m) {
+        var o = tao("div", "tm-hd-so");
+        o.setAttribute("data-chi", "do-" + m.nhan);
+        o.appendChild(tao("span", "", m.nhan));
+        var v = tao("span", "");
+        o.appendChild(v);
+        bang.appendChild(o);
+        dsSo.push({ m: m, v: v });
+      });
+    }
+    var tiLe = soLieu(d.tiLe, 1);
+    var lopNet = function (n) {
+      var lop = "tm-hd-net";
+      if (n.lop === "cam" || n.lop === "mau" || n.lop === "la" || n.lop === "nhat") lop += " tm-hd-" + n.lop;
+      if (n.dut) lop += " tm-hd-dut";
+      return lop;
+    };
+    var ve = function () {
+      P = L.dungHinh(dsDiem, gt);
+      lopNetG.concat(lopChuG).forEach(function (g) { g.textContent = ""; });
+      // pathLength để nét mới vẽ ra được từ đầu tới cuối; nét đứt giữ nguyên mẫu đứt nên chỉ hiện dần.
+      var veDuoc = function (n) { return n.dut ? {} : { pathLength: 1 }; };
+      (d.tron || []).forEach(function (c) {
+        var tam = P[c.tam], qua = P[c.qua];
+        var tam2 = c.duongKinh ? P[c.duongKinh[0]] : null, dk2 = c.duongKinh ? P[c.duongKinh[1]] : null;
+        if (tam2 && dk2) { tam = [(tam2[0] + dk2[0]) / 2, (tam2[1] + dk2[1]) / 2]; qua = dk2; }
+        if (!tam || !qua) return;
+        var dx = qua[0] - tam[0], dy = qua[1] - tam[1];
+        var vong = taoS("circle", { cx: r1(X(tam[0])), cy: r1(Y(tam[1])), r: r1(Math.sqrt(dx * dx + dy * dy) * k), class: lopNet(c) }, lopNetG[buocCua(c)]);
+        dat(vong, veDuoc(c));
+      });
+      (d.net || []).forEach(function (n) {
+        var a = P[Array.isArray(n) ? n[0] : n.a], b = P[Array.isArray(n) ? n[1] : n.b];
+        if (!a || !b) return;
+        var kieu = Array.isArray(n) ? {} : n;
+        var net = taoS("line", { x1: r1(X(a[0])), y1: r1(Y(a[1])), x2: r1(X(b[0])), y2: r1(Y(b[1])), class: lopNet(kieu) }, lopNetG[buocCua(kieu)]);
+        dat(net, veDuoc(kieu));
+      });
+      (d.vuong || []).forEach(function (mv) {
+        var v = Array.isArray(mv) ? mv : mv.v;
+        var a = P[v[0]], o = P[v[1]], b = P[v[2]];
+        if (!a || !o || !b) return;
+        var dv = function (q) {
+          var x = X(q[0]) - X(o[0]), y = Y(q[1]) - Y(o[1]), l = Math.sqrt(x * x + y * y) || 1;
+          return [x / l * 15, y / l * 15];
+        };
+        var u = dv(a), w = dv(b), ox = X(o[0]), oy = Y(o[1]);
+        taoS("polyline", { points: [ox + u[0], oy + u[1], ox + u[0] + w[0], oy + u[1] + w[1], ox + w[0], oy + w[1]].map(r1).join(" "), class: "tm-hd-vuong" }, lopNetG[buocCua(mv)]);
+      });
+      dsDiem.forEach(function (m) {
+        var q = P[m.ten];
+        if (!q || m.an) return;
+        var n = Array.isArray(m.nhan) ? m.nhan : [14, -12];
+        var gChu = lopChuG[buocCua(m)];
+        if (!m.keo) taoS("circle", { cx: r1(X(q[0])), cy: r1(Y(q[1])), r: 6, class: "tm-hd-diem" }, gChu);
+        chuS(gChu, X(q[0]) + n[0], Y(q[1]) + n[1], m.ten, "tm-nhan" + (m.lop === "cam" ? " tm-nhan-cam" : ""), { "text-anchor": "middle" });
+      });
+      dsTay.forEach(function (t) {
+        var q = P[t.ten];
+        if (q) t.g.setAttribute("transform", "translate(" + r1(X(q[0])) + " " + r1(Y(q[1])) + ")");
+      });
+      dsSo.forEach(function (s) {
+        var a = P[s.m.a], b = P[s.m.b];
+        if (!a || !b) { s.v.textContent = "—"; return; }
+        var dx = a[0] - b[0], dy = a[1] - b[1];
+        s.v.textContent = L.so(Math.sqrt(dx * dx + dy * dy) * tiLe, 2);
+      });
+    };
+    var dsTay = [];
+    dsDiem.forEach(function (m) {
+      if (!Array.isArray(m.keo) || !(m.tren || m.chia)) return;
+      var g = taoS("g", { class: "tm-tay", "data-chi": "diem-" + m.ten }, gTay);
+      taoS("circle", { r: 19, class: "tm-vong" }, g);
+      taoS("circle", { r: 7, fill: "var(--chu)" }, g);
+      taoS("circle", { r: 28, class: "tm-trong" }, g);
+      dsTay.push({ ten: m.ten, g: g, buoc: buocCua(m) });
+      keoTha(g, svg, W, H, {
+        dc: function (px, py) {
+          var x = vung.x[0] + px / k, y = vung.y[1] - py / k, moi;
+          if (m.tren) {
+            var tam = P[m.tren[0]];
+            moi = Math.atan2(y - tam[1], x - tam[0]) * 180 / Math.PI;
+            if (moi < 0) moi += 360;
+          } else {
+            var a = P[m.chia[0]], b = P[m.chia[1]], ux = b[0] - a[0], uy = b[1] - a[1];
+            moi = ((x - a[0]) * ux + (y - a[1]) * uy) / ((ux * ux + uy * uy) || 1);
+          }
+          gt[m.ten] = Math.min(m.keo[1], Math.max(m.keo[0], moi));
+          ve();
+        }
+      });
+    });
+    ve();
+    // Vẽ dần: theo bước của slide (khung ghi ở section._b, đổi class da-hien của các phần hiện dần). Đang in (body.tat-ca) thì hiện hết.
+    if (soLop > 1) {
+      var sec = el.closest("section"), daThay = 0;
+      var theoBuoc = function () {
+        var hetCa = document.body.classList.contains("tat-ca");
+        var da = hetCa ? soLop : sec && sec._b ? sec._b.da : 0;
+        for (var i = 0; i < soLop; i++) {
+          var an = i > da;
+          lopNetG[i].classList.toggle("tm-hd-an", an);
+          lopChuG[i].classList.toggle("tm-hd-an", an);
+          if (!an && i > daThay && !itDong) {
+            (function (g) {
+              g.classList.add("tm-hd-ve");
+              setTimeout(function () { g.classList.remove("tm-hd-ve"); }, 900);
+            })(lopNetG[i]);
+          }
+        }
+        dsTay.forEach(function (t) { t.g.style.visibility = t.buoc > da ? "hidden" : ""; });
+        daThay = da;
+      };
+      theoBuoc();
+      if (sec) {
+        try {
+          // Chỉ theo các phần hiện dần: nét vẽ lại khi kéo không được đánh thức bộ theo dõi này.
+          new MutationObserver(theoBuoc).observe(sec, { attributes: true, attributeFilter: ["class"], subtree: true });
+        } catch { /* cũ */ }
+        setTimeout(theoBuoc, 0);
+      }
+    }
+  };
+
   /* ═══════════════ Dựng tất cả ═══════════════ */
-  var BANG = [[".conic", "conic", dungConic], [".mien-nghiem", "mien-nghiem", dungMienNghiem], [".tam-giac-do", "tam-giac-do", dungTamGiacDo], [".mo-phong-xs", "mo-phong-xs", dungMoPhongXs]];
+  var BANG = [[".conic", "conic", dungConic], [".mien-nghiem", "mien-nghiem", dungMienNghiem], [".tam-giac-do", "tam-giac-do", dungTamGiacDo], [".mo-phong-xs", "mo-phong-xs", dungMoPhongXs], [".hinh-dung", "hinh-dung", dungHinhDung]];
   BANG.forEach(function (m) {
     $$(".khung > section " + m[0] + ", .khung > section" + m[0]).forEach(function (el) {
       if (el._tmXong) return;

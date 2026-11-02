@@ -1,0 +1,98 @@
+[
+  {
+    "anchor": "s0b0",
+    "text": "Chào em! Thầy là Tiến Đạt. Hôm nay mình học một dạng thường nằm ở ý cuối của câu hai: tìm x để một biểu thức chứa căn nhận giá trị nguyên. Dạng này dễ mất điểm vì có một cách làm rất quen tay nhưng lại sai. Học xong bài này, em sẽ biết khi nào được dùng ước số, và khi nào phải chặn biểu thức giữa hai số."
+  },
+  {
+    "anchor": "s1b0",
+    "text": "Việc đầu tiên không phải là tính toán, mà là đọc đề. Nếu đề không nói x là số nguyên, thì mẫu số có thể là một phân số, nên không dùng ước số được. Lúc này cách đúng là chặn biểu thức giữa hai số."
+  },
+  {
+    "anchor": "s1b1",
+    "text": "Còn nếu đề cho x là số nguyên, căn x cũng phải nguyên thì biểu thức mới nguyên. Chỉ khi đó ta mới được dùng ước số. Đề thi vào lớp mười của Hà Nội năm hai nghìn không trăm hai mươi sáu thuộc kiểu thứ nhất."
+  },
+  {
+    "anchor": "s2b0",
+    "text": "Dù đề thuộc kiểu nào, bước đầu tiên vẫn là tách phần nguyên. Ta viết tử số thành một bội của mẫu số, cộng hoặc trừ một số. Nhờ vậy, x chỉ còn xuất hiện ở một chỗ. Em ghép mỗi biểu thức với dạng đã tách của nó, rồi bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s3b0",
+    "text": "Mình cùng làm một ví dụ, với P bằng căn x trừ ba, chia cho căn x cộng một, và x không âm. Đề không nói x là số nguyên, nên ta đi theo cách chặn."
+  },
+  {
+    "anchor": "s3b1",
+    "text": "Tách phần nguyên: P bằng một, trừ bốn phần căn x cộng một."
+  },
+  {
+    "anchor": "s3b2",
+    "text": "Bây giờ chặn. Căn x cộng một lớn hơn hoặc bằng một, nên phân số nằm từ trên không đến tối đa là bốn. Vậy P đi từ âm ba đến dưới một. Trên trục số là đoạn màu cam: có lấy âm ba, nhưng không lấy một."
+  },
+  {
+    "anchor": "s3b3",
+    "text": "Trong đoạn đó có bốn số nguyên: âm ba, âm hai, âm một và không."
+  },
+  {
+    "anchor": "s3b4",
+    "text": "Mỗi giá trị của P cho một phương trình ẩn căn x. Giải ra, x bằng không, một phần chín, một, và chín. Giá trị một phần chín ứng với mẫu số bằng bốn phần ba, không phải số nguyên, nhưng P vẫn bằng âm hai."
+  },
+  {
+    "anchor": "s4b0",
+    "text": "Đây là lỗi hay gặp nhất của dạng này. Một bạn đã giải bài toán tương tự như trên màn hình. Em đọc kỹ đề và từng dòng, bấm vào dòng sai, rồi bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s5b0",
+    "text": "Dòng sai là dòng thứ hai. Đề không nói x nguyên, nên căn x cộng một có thể là phân số. Ta chặn lại: P đi từ âm bốn đến dưới một, tức là có năm số nguyên."
+  },
+  {
+    "anchor": "s5b1",
+    "text": "Giải từng trường hợp, ta được năm giá trị của x. Cách dùng ước số chỉ tìm được hai giá trị đầu và cuối, nên đã đánh mất ba nghiệm còn lại."
+  },
+  {
+    "anchor": "s6b0",
+    "text": "Đến lượt em. Em làm đủ các bước vừa học ra giấy: tách phần nguyên, chặn, rồi thử từng số nguyên. Cần thì bấm gợi ý. Có đáp số rồi, em nhập vào ô bên phải và bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s7b0",
+    "text": "Bước cuối cùng hay bị bỏ qua là đối chiếu điều kiện. Vẫn biểu thức ở ví dụ, nhưng điều kiện đã đổi: x dương và x khác chín. Em chọn đáp án đúng rồi bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s8b0",
+    "text": "Bây giờ là kiểu đề thứ hai: cùng biểu thức đó, nhưng x là số tự nhiên. Đây mới là lúc dùng ước số."
+  },
+  {
+    "anchor": "s8b1",
+    "text": "Nếu căn x không nguyên thì căn x là số vô tỉ, kéo theo P không thể là số nguyên. Vậy căn x phải nguyên."
+  },
+  {
+    "anchor": "s8b2",
+    "text": "Khi đó căn x cộng một là một ước dương của bốn, tức là một, hai, hoặc bốn."
+  },
+  {
+    "anchor": "s8b3",
+    "text": "Giải ra, x bằng không, một và chín. So với ví dụ trước, ta mất đúng giá trị một phần chín, vì nó không phải số tự nhiên. Cùng một biểu thức, chỉ khác điều kiện của x, mà đáp số đã khác."
+  },
+  {
+    "anchor": "s9b0",
+    "text": "Em thử với kiểu đề này. Lần này x là số tự nhiên, nên em được dùng ước số. Em làm ra giấy, nhập tập đáp số vào ô bên phải, rồi bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s10b0",
+    "text": "Mình tóm tắt lại bài học thành bốn bước."
+  },
+  {
+    "anchor": "s10b1",
+    "text": "Một, đọc đề xem x có phải là số nguyên không. Câu trả lời quyết định cách làm."
+  },
+  {
+    "anchor": "s10b2",
+    "text": "Hai, tách phần nguyên, để x chỉ còn ở một chỗ."
+  },
+  {
+    "anchor": "s10b3",
+    "text": "Ba, nếu x không nguyên thì chặn biểu thức giữa hai số. Nếu x nguyên thì dùng ước số."
+  },
+  {
+    "anchor": "s10b4",
+    "text": "Bốn, giải từng trường hợp, rồi đối chiếu với điều kiện của đề. Phần luyện tập ngay dưới phần slide sẽ kiểm tra lại cả bốn bước với số liệu mới. Chúc em học tốt nhé!"
+  }
+]

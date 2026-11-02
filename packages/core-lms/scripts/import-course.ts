@@ -206,6 +206,11 @@ export const LessonSpec = z.object({
         url: z.string().refine(isSafeEmbedUrl, { message: "url phải là đường dẫn /… cùng origin hoặc https://…" }),
         height: z.number().int().positive().max(1600).optional(),
         afterSection: z.string().min(1).max(200).optional(),
+        /**
+         * Đặt khối nhúng lên đầu bài, trước mọi khối chữ. Trang bài ẩn phần đứng trước khung slide có màn hình bìa
+         * (`withoutDeckIntro`), nên bài vừa có khung slide vừa có phần đọc lại thì khung phải đứng đầu.
+         */
+        atStart: z.boolean().optional(),
       }),
     )
     .max(6)
@@ -1219,6 +1224,7 @@ export function embedProblems(l: z.infer<typeof LessonSpec>): string[] {
   const out: string[] = [];
   const headings = new Set(renderLessonBlocks(l).map(blockHeading).filter((h): h is string => !!h));
   for (const e of l.embeds ?? []) {
+    if (e.atStart && e.afterSection) out.push(`embed "${e.url}": chỉ chọn một trong atStart và afterSection`);
     if (!e.afterSection) continue;
     if (!l.splitSections) out.push(`embed "${e.url}": afterSection cần splitSections: true`);
     else if (!headings.has(e.afterSection)) out.push(`embed "${e.url}": afterSection "${e.afterSection}" không trùng mục nào`);
@@ -1237,7 +1243,8 @@ export function lessonContentItems(l: z.infer<typeof LessonSpec>): ContentItem[]
     type: "embed",
     payload: { url: e.url, ...(e.height ? { height: e.height } : {}) },
   });
-  const trailing = (l.embeds ?? []).filter((e) => !e.afterSection);
+  const leading = (l.embeds ?? []).filter((e) => e.atStart);
+  const trailing = (l.embeds ?? []).filter((e) => !e.afterSection && !e.atStart);
   for (const html of blocks) {
     items.push({
       type: "richtext",
@@ -1265,6 +1272,7 @@ export function lessonContentItems(l: z.infer<typeof LessonSpec>): ContentItem[]
     // Tổng kết (nếu có) luôn là khối cuối của renderLessonBlocks.
     items.splice(l.summary?.length ? items.length - 1 : items.length, 0, cards);
   }
+  items.unshift(...leading.map(embedFor));
   return items;
 }
 

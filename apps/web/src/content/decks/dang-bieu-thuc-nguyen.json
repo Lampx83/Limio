@@ -1,0 +1,160 @@
+{
+  "tieuDe": "Tìm x để biểu thức nguyên",
+  "mau": "xanh",
+  "ngonNgu": "vi",
+  "nguoiGiang": {
+    "macDinh": "tiendat",
+    "dsGiangVien": [
+      {
+        "ma": "tiendat",
+        "ten": "Tiến Đạt",
+        "gioi": "nam",
+        "xung": "thầy"
+      },
+      {
+        "ma": "baotrang",
+        "ten": "Bảo Trang",
+        "gioi": "nu",
+        "xung": "cô"
+      }
+    ],
+    "xungHoHs": "em",
+    "phatAm": {}
+  },
+  "slides": [
+    {
+      "id": "dbtn-01",
+      "html": "<section class=\"bia\"><h1>Tìm \\(x\\) để biểu thức nguyên</h1><p class=\"phu-de\">Dạng thường gặp ở ý cuối của câu II, và là chỗ rất dễ mất điểm</p></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Chào em! {{Tx}} là {{gv}}. Hôm nay mình học một dạng thường nằm ở ý cuối của câu hai: tìm x để một biểu thức chứa căn nhận giá trị nguyên. Dạng này dễ mất điểm vì có một cách làm rất quen tay nhưng lại sai. Học xong bài này, em sẽ biết khi nào được dùng ước số, và khi nào phải chặn biểu thức giữa hai số."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "dbtn-02",
+      "html": "<section class=\"hai-cot\"><h2>Đọc đề trước: \\(x\\) có phải số nguyên không?</h2><div class=\"cot\"><div class=\"dinh-nghia\" data-chi=\"khong-nguyen\"><b>Đề không nói \\(x\\) nguyên.</b> Mẫu số có thể là phân số, nên không dùng ước số được. Ta chặn biểu thức giữa hai số, rồi thử từng số nguyên.</div></div><div class=\"cot\"><div class=\"dinh-nghia hien\" data-chi=\"nguyen\"><b>Đề cho \\(x\\) nguyên.</b> Khi đó \\(\\sqrt{x}\\) phải là số nguyên thì biểu thức mới nguyên, và ta được dùng ước số.</div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Việc đầu tiên không phải là tính toán, mà là đọc đề. [chỉ: khong-nguyen] Nếu đề không nói x là số nguyên, thì mẫu số có thể là một phân số, nên không dùng ước số được. Lúc này cách đúng là chặn biểu thức giữa hai số.",
+          "[chỉ: nguyen] Còn nếu đề cho x là số nguyên, căn x cũng phải nguyên thì biểu thức mới nguyên. Chỉ khi đó ta mới được dùng ước số. Đề thi vào lớp mười của Hà Nội năm hai nghìn không trăm hai mươi sáu thuộc kiểu thứ nhất."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "dbtn-03",
+      "html": "<section class=\"noi-dung\"><h2>Bước 1: tách phần nguyên</h2><p class=\"phu-de\">Viết tử số thành một bội của mẫu số, cộng hoặc trừ một số. Em hãy ghép mỗi biểu thức với dạng đã tách của nó.</p><div class=\"ghep-doi\" data-chi=\"ghep\"><div class=\"cap\"><span class=\"a\">\\(\\dfrac{\\sqrt{x}-1}{\\sqrt{x}+2}\\)</span><span class=\"b\">\\(1-\\dfrac{3}{\\sqrt{x}+2}\\)</span></div><div class=\"cap\"><span class=\"a\">\\(\\dfrac{2\\sqrt{x}+1}{\\sqrt{x}+1}\\)</span><span class=\"b\">\\(2-\\dfrac{1}{\\sqrt{x}+1}\\)</span></div><div class=\"cap\"><span class=\"a\">\\(\\dfrac{\\sqrt{x}+5}{\\sqrt{x}+1}\\)</span><span class=\"b\">\\(1+\\dfrac{4}{\\sqrt{x}+1}\\)</span></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Dù đề thuộc kiểu nào, bước đầu tiên vẫn là tách phần nguyên. Ta viết tử số thành một bội của mẫu số, cộng hoặc trừ một số. Nhờ vậy, x chỉ còn xuất hiện ở một chỗ. [chỉ: ghep] Em ghép mỗi biểu thức với dạng đã tách của nó, rồi bấm Tiếp tục nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "dbtn-04",
+      "html": "<section class=\"noi-dung\"><h2>Ví dụ: \\(P=\\dfrac{\\sqrt{x}-3}{\\sqrt{x}+1}\\) với \\(x\\geq 0\\)</h2><ul class=\"hien-dan\"><li>Tách phần nguyên: \\(P=1-\\dfrac{4}{\\sqrt{x}+1}\\).</li><li>Chặn: \\(\\sqrt{x}+1\\geq 1\\) nên \\(0\\lt\\dfrac{4}{\\sqrt{x}+1}\\leq 4\\), do đó \\(-3\\leq P\\lt 1\\).<br><svg viewBox=\"0 0 660 96\" width=\"660\" height=\"96\" data-chi=\"truc-so\"><line x1=\"20\" y1=\"44\" x2=\"640\" y2=\"44\" stroke=\"currentColor\" stroke-width=\"3\"></line><line x1=\"150\" y1=\"44\" x2=\"510\" y2=\"44\" stroke=\"#e8590c\" stroke-width=\"9\"></line><line x1=\"60\" y1=\"36\" x2=\"60\" y2=\"52\" stroke=\"currentColor\" stroke-width=\"3\"></line><text x=\"60\" y=\"84\" font-size=\"26\" text-anchor=\"middle\" fill=\"currentColor\">−4</text><line x1=\"150\" y1=\"36\" x2=\"150\" y2=\"52\" stroke=\"currentColor\" stroke-width=\"3\"></line><text x=\"150\" y=\"84\" font-size=\"26\" text-anchor=\"middle\" fill=\"currentColor\">−3</text><line x1=\"240\" y1=\"36\" x2=\"240\" y2=\"52\" stroke=\"currentColor\" stroke-width=\"3\"></line><text x=\"240\" y=\"84\" font-size=\"26\" text-anchor=\"middle\" fill=\"currentColor\">−2</text><line x1=\"330\" y1=\"36\" x2=\"330\" y2=\"52\" stroke=\"currentColor\" stroke-width=\"3\"></line><text x=\"330\" y=\"84\" font-size=\"26\" text-anchor=\"middle\" fill=\"currentColor\">−1</text><line x1=\"420\" y1=\"36\" x2=\"420\" y2=\"52\" stroke=\"currentColor\" stroke-width=\"3\"></line><text x=\"420\" y=\"84\" font-size=\"26\" text-anchor=\"middle\" fill=\"currentColor\">0</text><line x1=\"510\" y1=\"36\" x2=\"510\" y2=\"52\" stroke=\"currentColor\" stroke-width=\"3\"></line><text x=\"510\" y=\"84\" font-size=\"26\" text-anchor=\"middle\" fill=\"currentColor\">1</text><line x1=\"600\" y1=\"36\" x2=\"600\" y2=\"52\" stroke=\"currentColor\" stroke-width=\"3\"></line><text x=\"600\" y=\"84\" font-size=\"26\" text-anchor=\"middle\" fill=\"currentColor\">2</text><circle cx=\"150\" cy=\"44\" r=\"10\" fill=\"#e8590c\"></circle><circle cx=\"240\" cy=\"44\" r=\"10\" fill=\"#e8590c\"></circle><circle cx=\"330\" cy=\"44\" r=\"10\" fill=\"#e8590c\"></circle><circle cx=\"420\" cy=\"44\" r=\"10\" fill=\"#e8590c\"></circle><circle cx=\"510\" cy=\"44\" r=\"10\" fill=\"#ffffff\" stroke=\"#e8590c\" stroke-width=\"5\"></circle></svg></li><li>\\(P\\) nguyên nên \\(P\\in\\{-3;-2;-1;0\\}\\).</li><li>Giải từng trường hợp: \\(\\sqrt{x}+1=1;\\ \\dfrac{4}{3};\\ 2;\\ 4\\), nên \\(x\\in\\left\\{0;\\dfrac{1}{9};1;9\\right\\}\\).</li></ul></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Mình cùng làm một ví dụ, với P bằng căn x trừ ba, chia cho căn x cộng một, và x không âm. Đề không nói x là số nguyên, nên ta đi theo cách chặn.",
+          "Tách phần nguyên: P bằng một, trừ bốn phần căn x cộng một.",
+          "[chỉ: truc-so] Bây giờ chặn. Căn x cộng một lớn hơn hoặc bằng một, nên phân số nằm từ trên không đến tối đa là bốn. Vậy P đi từ âm ba đến dưới một. Trên trục số là đoạn màu cam: có lấy âm ba, nhưng không lấy một.",
+          "Trong đoạn đó có bốn số nguyên: âm ba, âm hai, âm một và không.",
+          "Mỗi giá trị của P cho một phương trình ẩn căn x. Giải ra, x bằng không, một phần chín, một, và chín. Giá trị một phần chín ứng với mẫu số bằng bốn phần ba, không phải số nguyên, nhưng P vẫn bằng âm hai."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "dbtn-05",
+      "html": "<section class=\"noi-dung\"><h2>Lời giải này sai ở đâu?</h2><p class=\"phu-de\">Tìm \\(x\\) để \\(P=\\dfrac{\\sqrt{x}-4}{\\sqrt{x}+1}\\) nguyên, với \\(x\\geq 0\\). Một bạn giải như sau, em hãy bấm vào dòng sai.</p><div class=\"tim-loi\" data-chi=\"tim-loi\"><div class=\"dong\" data-gt=\"dong-1\">\\(P=1-\\dfrac{5}{\\sqrt{x}+1}\\).</div><div class=\"dong\" data-gt=\"dong-2\" data-sai=\"Đề không cho x nguyên nên √x + 1 có thể là phân số. Lập luận theo ước số chỉ đúng khi √x + 1 là số nguyên.\">\\(P\\) nguyên nên \\(\\sqrt{x}+1\\) là ước của \\(5\\).</div><div class=\"dong\" data-gt=\"dong-3\">Vì \\(\\sqrt{x}+1\\geq 1\\) nên \\(\\sqrt{x}+1\\in\\{1;5\\}\\).</div><div class=\"dong\" data-gt=\"dong-4\">Vậy \\(x\\in\\{0;16\\}\\).</div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Đây là lỗi hay gặp nhất của dạng này. [chỉ: tim-loi] Một bạn đã giải bài toán tương tự như trên màn hình. Em đọc kỹ đề và từng dòng, bấm vào dòng sai, rồi bấm Tiếp tục nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "dbtn-06",
+      "html": "<section class=\"noi-dung\"><h2>Lời giải đúng có năm giá trị, không phải hai</h2><p>Dòng sai là dòng thứ hai. Vì \\(\\sqrt{x}+1\\geq 1\\) nên \\(-4\\leq P\\lt 1\\), do đó \\(P\\) nhận năm giá trị nguyên.</p><table class=\"hien\" data-chi=\"bang\"><tbody><tr><th>\\(P\\)</th><td>\\(-4\\)</td><td>\\(-3\\)</td><td>\\(-2\\)</td><td>\\(-1\\)</td><td>\\(0\\)</td></tr><tr><th>\\(\\sqrt{x}+1\\)</th><td>\\(1\\)</td><td>\\(\\dfrac{5}{4}\\)</td><td>\\(\\dfrac{5}{3}\\)</td><td>\\(\\dfrac{5}{2}\\)</td><td>\\(5\\)</td></tr><tr><th>\\(x\\)</th><td>\\(0\\)</td><td>\\(\\dfrac{1}{16}\\)</td><td>\\(\\dfrac{4}{9}\\)</td><td>\\(\\dfrac{9}{4}\\)</td><td>\\(16\\)</td></tr></tbody></table></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Dòng sai là dòng thứ hai. Đề không nói x nguyên, nên căn x cộng một có thể là phân số. Ta chặn lại: P đi từ âm bốn đến dưới một, tức là có năm số nguyên.",
+          "[chỉ: bang] Giải từng trường hợp, ta được năm giá trị của x. Cách dùng ước số chỉ tìm được hai giá trị đầu và cuối, nên đã đánh mất ba nghiệm còn lại."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "dbtn-07",
+      "html": "<section class=\"hai-cot\"><h2>Em tự làm</h2><div class=\"cot\"><div class=\"dinh-nghia\" data-chi=\"de\">Với \\(x\\geq 0\\), tìm tất cả giá trị của \\(x\\) để \\[P=\\frac{\\sqrt{x}-5}{\\sqrt{x}+2}\\] là số nguyên.</div></div><div class=\"cot\"><div class=\"nhap-dap-an\" data-loai=\"tap-hop\" data-dap-an=\"{1/9; 9/4; 25}\" data-chi=\"nhap\"><p class=\"cau\">Tập các giá trị của \\(x\\) là</p><div class=\"go-y\">Tách: \\(P=1-\\dfrac{7}{\\sqrt{x}+2}\\).</div><div class=\"go-y\">\\(\\sqrt{x}+2\\geq 2\\) nên \\(-\\dfrac{5}{2}\\leq P\\lt 1\\), tức là \\(P\\in\\{-2;-1;0\\}\\).</div><div class=\"loi-sai\" data-khi=\"{25}\">Em đã xét ước của \\(7\\), nên chỉ còn \\(\\sqrt{x}+2=7\\). Đề không cho \\(x\\) nguyên, em hãy chặn \\(P\\) rồi thử từng số nguyên.</div><div class=\"giai-thich\">\\(P=-2,\\ -1,\\ 0\\) lần lượt cho \\(\\sqrt{x}+2=\\dfrac{7}{3},\\ \\dfrac{7}{2},\\ 7\\), nên \\(x\\in\\left\\{\\dfrac{1}{9};\\dfrac{9}{4};25\\right\\}\\).</div></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Đến lượt em. [chỉ: de] Em làm đủ các bước vừa học ra giấy: tách phần nguyên, chặn, rồi thử từng số nguyên. [chỉ: nhap] Cần thì bấm gợi ý. Có đáp số rồi, em nhập vào ô bên phải và bấm Tiếp tục nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "dbtn-08",
+      "html": "<section class=\"hai-cot\"><h2>Đừng quên đối chiếu điều kiện</h2><div class=\"cot\"><p>Quay lại biểu thức ở ví dụ: \\(P=\\dfrac{\\sqrt{x}-3}{\\sqrt{x}+1}\\).</p><div class=\"dinh-nghia\" data-chi=\"de\">Lần này điều kiện là \\(x\\gt 0,\\ x\\neq 9\\).</div></div><div class=\"cot\"><div class=\"trac-nghiem\" data-chi=\"cau\"><p class=\"cau\">Các giá trị của \\(x\\) để \\(P\\) nguyên là</p><button class=\"lc\" data-gt=\"xinleft0dfrac1919rig\" data-phan-hoi=\"Đây là đáp số của điều kiện x ≥ 0. Với điều kiện mới, x = 0 và x = 9 đều bị loại.\">\\(x\\in\\left\\{0;\\dfrac{1}{9};1;9\\right\\}\\)</button><button class=\"lc\" data-gt=\"xinleftdfrac1919righ\" data-phan-hoi=\"Đề có điều kiện x khác 9, nên x = 9 bị loại.\">\\(x\\in\\left\\{\\dfrac{1}{9};1;9\\right\\}\\)</button><button class=\"lc\" data-gt=\"xinleft0dfrac191righ\" data-phan-hoi=\"Đề yêu cầu x > 0, nên x = 0 bị loại.\">\\(x\\in\\left\\{0;\\dfrac{1}{9};1\\right\\}\\)</button><button class=\"lc dung\" data-gt=\"xinleftdfrac191right\">\\(x\\in\\left\\{\\dfrac{1}{9};1\\right\\}\\)</button><div class=\"giai-thich\">Trong bốn giá trị đã tìm, \\(x=0\\) không thoả \\(x\\gt 0\\) và \\(x=9\\) không thoả \\(x\\neq 9\\).</div></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Bước cuối cùng hay bị bỏ qua là đối chiếu điều kiện. [chỉ: de] Vẫn biểu thức ở ví dụ, nhưng điều kiện đã đổi: x dương và x khác chín. [chỉ: cau] Em chọn đáp án đúng rồi bấm Tiếp tục nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "dbtn-09",
+      "html": "<section class=\"noi-dung\"><h2>Khi đề cho \\(x\\) là số tự nhiên</h2><p>Vẫn \\(P=1-\\dfrac{4}{\\sqrt{x}+1}\\), nhưng lần này \\(x\\in\\mathbb{N}\\).</p><ul class=\"hien-dan\"><li>Nếu \\(\\sqrt{x}\\) không nguyên thì \\(\\sqrt{x}\\) là số vô tỉ, kéo theo \\(P\\) không nguyên. Vậy \\(\\sqrt{x}\\) phải nguyên.</li><li>Khi đó \\(\\sqrt{x}+1\\) là ước dương của \\(4\\), tức là \\(\\sqrt{x}+1\\in\\{1;2;4\\}\\).</li><li>Vậy \\(x\\in\\{0;1;9\\}\\). Giá trị \\(x=\\dfrac{1}{9}\\) của ví dụ trước bị loại vì không phải số tự nhiên.</li></ul></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Bây giờ là kiểu đề thứ hai: cùng biểu thức đó, nhưng x là số tự nhiên. Đây mới là lúc dùng ước số.",
+          "Nếu căn x không nguyên thì căn x là số vô tỉ, kéo theo P không thể là số nguyên. Vậy căn x phải nguyên.",
+          "Khi đó căn x cộng một là một ước dương của bốn, tức là một, hai, hoặc bốn.",
+          "Giải ra, x bằng không, một và chín. So với ví dụ trước, ta mất đúng giá trị một phần chín, vì nó không phải số tự nhiên. Cùng một biểu thức, chỉ khác điều kiện của x, mà đáp số đã khác."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "dbtn-10",
+      "html": "<section class=\"hai-cot\"><h2>Em tự làm: \\(x\\) là số tự nhiên</h2><div class=\"cot\"><div class=\"dinh-nghia\" data-chi=\"de\">Với \\(x\\in\\mathbb{N}\\), tìm tất cả giá trị của \\(x\\) để \\[Q=\\frac{\\sqrt{x}+9}{\\sqrt{x}+1}\\] là số nguyên.</div></div><div class=\"cot\"><div class=\"nhap-dap-an\" data-loai=\"tap-hop\" data-dap-an=\"{0; 1; 9; 49}\" data-chi=\"nhap\"><p class=\"cau\">Tập các giá trị của \\(x\\) là</p><div class=\"go-y\">Tách: \\(Q=1+\\dfrac{8}{\\sqrt{x}+1}\\). Khi đó \\(\\sqrt{x}+1\\) là ước dương của \\(8\\).</div><div class=\"loi-sai\" data-khi=\"{1; 9; 49}\">Em đã bỏ sót \\(\\sqrt{x}+1=1\\), tức là \\(x=0\\). Số \\(0\\) cũng là số tự nhiên.</div><div class=\"giai-thich\">\\(\\sqrt{x}+1\\in\\{1;2;4;8\\}\\), nên \\(x\\in\\{0;1;9;49\\}\\).</div></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Em thử với kiểu đề này. [chỉ: de] Lần này x là số tự nhiên, nên em được dùng ước số. [chỉ: nhap] Em làm ra giấy, nhập tập đáp số vào ô bên phải, rồi bấm Tiếp tục nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "dbtn-11",
+      "html": "<section class=\"tong-ket\"><h2>Bốn bước của dạng này</h2><ul class=\"hien-dan\"><li>Đọc đề: \\(x\\) có phải là số nguyên không?</li><li>Tách phần nguyên để \\(x\\) chỉ còn ở một chỗ.</li><li>Nếu \\(x\\) không nguyên thì chặn biểu thức; nếu \\(x\\) nguyên thì dùng ước số.</li><li>Giải từng trường hợp và đối chiếu với điều kiện của đề.</li></ul></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Mình tóm tắt lại bài học thành bốn bước.",
+          "Một, đọc đề xem x có phải là số nguyên không. Câu trả lời quyết định cách làm.",
+          "Hai, tách phần nguyên, để x chỉ còn ở một chỗ.",
+          "Ba, nếu x không nguyên thì chặn biểu thức giữa hai số. Nếu x nguyên thì dùng ước số.",
+          "Bốn, giải từng trường hợp, rồi đối chiếu với điều kiện của đề. Phần luyện tập ngay dưới phần slide sẽ kiểm tra lại cả bốn bước với số liệu mới. Chúc em học tốt nhé!"
+        ],
+        "dungCuoi": false
+      }
+    }
+  ]
+}

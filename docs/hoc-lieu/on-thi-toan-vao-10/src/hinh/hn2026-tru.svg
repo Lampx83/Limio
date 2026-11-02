@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 330" width="340" height="330" font-family="Helvetica, Arial, sans-serif">
+<rect width="340" height="330" fill="#ffffff"/>
+<ellipse cx="160" cy="62" rx="95" ry="24" fill="#eff6ff" stroke="#0f172a" stroke-width="2"/>
+<line x1="65" y1="62" x2="65" y2="268" stroke="#0f172a" stroke-width="2"/>
+<line x1="255" y1="62" x2="255" y2="268" stroke="#0f172a" stroke-width="2"/>
+<path d="M 65 268 A 95 24 0 0 0 255 268" fill="none" stroke="#0f172a" stroke-width="2"/>
+<path d="M 65 268 A 95 24 0 0 1 255 268" fill="none" stroke="#64748b" stroke-width="1.6" stroke-dasharray="6 5"/>
+<line x1="160" y1="62" x2="255" y2="62" stroke="#2563eb" stroke-width="2.2"/>
+<circle cx="160" cy="62" r="3.2" fill="#2563eb"/>
+<text x="207.5" y="84" font-size="16" fill="#2563eb" font-weight="600" text-anchor="middle">12 cm</text>
+<line x1="277" y1="62" x2="277" y2="268" stroke="#dc2626" stroke-width="2"/>
+<line x1="270" y1="62" x2="284" y2="62" stroke="#dc2626" stroke-width="2"/>
+<line x1="270" y1="268" x2="284" y2="268" stroke="#dc2626" stroke-width="2"/>
+<text x="286" y="170.0" font-size="16" fill="#dc2626" font-weight="600">25 cm</text>
+</svg>

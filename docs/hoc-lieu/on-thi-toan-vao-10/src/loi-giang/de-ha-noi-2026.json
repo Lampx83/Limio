@@ -1,0 +1,242 @@
+[
+  {
+    "anchor": "s0b0",
+    "text": "Chào em! Thầy là Tiến Đạt. Hôm nay thầy và em cùng giải đề Toán vào lớp mười của Hà Nội năm hai nghìn không trăm hai mươi sáu. Với mỗi câu, em chuẩn bị giấy bút và tự làm trước. Khi em có đáp số, thầy sẽ cùng em đối chiếu từng bước, và chỉ ra những chỗ dễ mất điểm nhất."
+  },
+  {
+    "anchor": "s1b0",
+    "text": "Đề có năm câu, làm trong một trăm hai mươi phút. Trong cột điểm, riêng câu bốn đã chiếm bốn điểm, nên thầy gợi ý dành khoảng năm mươi phút cho câu này."
+  },
+  {
+    "anchor": "s1b1",
+    "text": "Câu năm chỉ có nửa điểm, nên đừng sa đà vào nó từ đầu. Nên làm chắc các câu dễ trước, và luôn giữ lại mười phút cuối để soát bài."
+  },
+  {
+    "anchor": "s2b0",
+    "text": "Mình khởi động với câu một. Có hai ý ngắn: ý một tính tần số tương đối, ý hai tính xác suất. Em làm cả hai thẻ. Xong thì em bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s3b0",
+    "text": "Sang câu hai. Đề cho hai biểu thức A và B, với x dương và x khác chín. Ý một rất nhẹ nhàng: tính A khi x bằng hai mươi lăm. Em nhập đáp số rồi bấm Tiếp tục."
+  },
+  {
+    "anchor": "s4b0",
+    "text": "Ý hai là rút gọn B. Em làm ra giấy trước đã. Sau đó, em kéo các dòng trên màn hình về đúng thứ tự, rồi bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s5b0",
+    "text": "Bây giờ là ý khó nhất của câu hai. Đề hỏi: tìm x để P là số nguyên. Đây là lời giải mà rất nhiều bạn sẽ viết, và nó bị mất điểm. Em đọc thật kỹ đề và từng dòng, bấm vào dòng sai, rồi bấm Tiếp tục."
+  },
+  {
+    "anchor": "s6b0",
+    "text": "Dòng sai là dòng thứ hai: đề không hề nói x là số nguyên, nên căn x cộng ba có thể là một phân số. Cách làm đúng là chặn P giữa hai số."
+  },
+  {
+    "anchor": "s6b1",
+    "text": "Vì x dương nên căn x cộng ba lớn hơn ba. Do đó phân số bảy trên căn x cộng ba nằm giữa không và bảy phần ba."
+  },
+  {
+    "anchor": "s6b2",
+    "text": "Suy ra P nằm giữa âm bốn phần ba và một. Trong khoảng này chỉ có hai số nguyên là âm một và không."
+  },
+  {
+    "anchor": "s6b3",
+    "text": "P bằng không khi căn x cộng ba bằng bảy, tức là x bằng mười sáu."
+  },
+  {
+    "anchor": "s6b4",
+    "text": "P bằng âm một khi căn x cộng ba bằng bảy phần hai, tức là x bằng một phần tư. Đây chính là nghiệm mà lời giải kia đánh mất."
+  },
+  {
+    "anchor": "s7b0",
+    "text": "Câu ba gồm hai bài toán thực tế. Em làm lần lượt hai thẻ. Với thẻ thứ nhất, em đọc kỹ cụm từ nhiều hơn năm áo mỗi ngày. Làm xong cả hai, em bấm Tiếp tục."
+  },
+  {
+    "anchor": "s8b0",
+    "text": "Ý một, em đặt x là số áo mỗi ngày theo kế hoạch, vì đó chính là đại lượng đề hỏi. Ba ngày đầu may ba x áo, bảy ngày sau may bảy nhân x cộng năm áo. Giải ra x bằng ba mươi, và thử lại đúng ba trăm ba mươi lăm áo."
+  },
+  {
+    "anchor": "s8b1",
+    "text": "Ý hai có hai đại lượng nên em dùng hai ẩn. Một phương trình về số bông, một phương trình về số tiền. Giải ra mười lăm bông hoa hồng và mười bông hoa cúc."
+  },
+  {
+    "anchor": "s9b0",
+    "text": "Ý ba là hệ thức Viète. Biểu thức Q trông khá rắc rối và không đối xứng. Em tính ra giấy, cần thì bấm gợi ý. Có đáp số rồi, em nhập vào và bấm Tiếp tục."
+  },
+  {
+    "anchor": "s10b0",
+    "text": "Đầu tiên em viết hệ thức Viète: tổng hai nghiệm bằng ba, tích hai nghiệm bằng một."
+  },
+  {
+    "anchor": "s10b1",
+    "text": "Tích bằng một là chìa khoá. Nó cho biết chia cho x một cũng chính là nhân với x hai, và chia cho x hai cũng là nhân với x một."
+  },
+  {
+    "anchor": "s10b2",
+    "text": "Nhờ vậy mọi mẫu số biến mất. Gom lại, Q bằng ba nhân tổng bình phương, trừ đi tổng hai nghiệm. Biểu thức tưởng không đối xứng hoá ra lại đối xứng."
+  },
+  {
+    "anchor": "s10b3",
+    "text": "Tổng bình phương bằng chín trừ hai, tức là bảy. Vậy Q bằng hai mươi mốt trừ ba, bằng mười tám."
+  },
+  {
+    "anchor": "s11b0",
+    "text": "Sang câu bốn, phần nhiều điểm nhất của đề. Ý một là một chiếc xô hình trụ có bán kính mười hai xăng ti mét, cao hai mươi lăm xăng ti mét. Em làm hai thẻ a và b. Xong thì em bấm Tiếp tục."
+  },
+  {
+    "anchor": "s12b0",
+    "text": "Mình đi lại ý b nhé. Có ba việc phải làm theo thứ tự."
+  },
+  {
+    "anchor": "s12b1",
+    "text": "Việc một, tính thể tích xô: pi r bình phương h, bằng mười một nghìn ba trăm linh bốn xăng ti mét khối."
+  },
+  {
+    "anchor": "s12b2",
+    "text": "Việc hai, mỗi lần chỉ múc tám mươi phần trăm, tức là khoảng chín phẩy không bốn lít. Cần đổi đơn vị trước khi chia."
+  },
+  {
+    "anchor": "s12b3",
+    "text": "Việc ba, lấy một trăm năm mươi chia cho lượng đó, được khoảng mười sáu phẩy năm chín. Mười sáu xô thì bể chưa đầy, nên đáp số là mười bảy xô. Đây là chỗ làm tròn thông thường sẽ sai nếu phần lẻ nhỏ."
+  },
+  {
+    "anchor": "s13b0",
+    "text": "Đến bài hình, phần nhiều điểm nhất của đề. Mình dựng hình theo đúng thứ tự của đề nhé. Đầu tiên là đường tròn tâm O, đường kính B C."
+  },
+  {
+    "anchor": "s13b1",
+    "text": "Tiếp theo, lấy điểm A trên đường tròn, gần B hơn để A B nhỏ hơn A C. Vì B C là đường kính nên tam giác A B C vuông tại A."
+  },
+  {
+    "anchor": "s13b2",
+    "text": "Lấy điểm H trên đoạn A B, sao cho H gần A hơn gần B."
+  },
+  {
+    "anchor": "s13b3",
+    "text": "Cuối cùng, kẻ đường thẳng qua H vuông góc với B C. Nó cắt B C tại D, và cắt đường thẳng A C tại E."
+  },
+  {
+    "anchor": "s13b4",
+    "text": "Bây giờ em vẽ lại hình ra giấy của mình, rồi kéo thử điểm A và điểm H trên màn hình. Xong thì em bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s14b0",
+    "text": "Ý a yêu cầu chứng minh bốn điểm A, H, D, C cùng thuộc một đường tròn. Muốn vậy, em tìm một đoạn thẳng mà hai điểm còn lại cùng nhìn dưới góc vuông. Em nhìn hình, chọn đáp án, rồi bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s15b0",
+    "text": "Mình đối chiếu nhé. Đoạn cần tìm là H C."
+  },
+  {
+    "anchor": "s15b1",
+    "text": "Mình kẻ đoạn H C. Điểm H nằm trên A B, nên góc H A C là góc vuông của tam giác đã cho."
+  },
+  {
+    "anchor": "s15b2",
+    "text": "Vì H D vuông góc với B C, nên góc H D C cũng bằng chín mươi độ."
+  },
+  {
+    "anchor": "s15b3",
+    "text": "A và D cùng nhìn H C dưới một góc vuông, nên cả hai nằm trên đường tròn đường kính H C. Đây là đường tròn nét đứt vừa hiện ra, và nó sẽ được dùng lại ở ý b."
+  },
+  {
+    "anchor": "s16b0",
+    "text": "Ý b có hai phần. Phần đầu là chứng minh một đẳng thức tích. Em làm ra giấy, khi nào cần thì mở gợi ý. Có lời giải rồi, em bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s17b0",
+    "text": "Mình đối chiếu nhé. Đổi đẳng thức tích thành tỉ lệ: A E trên A B bằng E H trên B C. Bốn đoạn này nằm trong hai tam giác A E H và A B C."
+  },
+  {
+    "anchor": "s17b1",
+    "text": "Tam giác A E H được tô màu trên hình. Hai tam giác cùng có một góc vuông tại A. Ngoài ra, góc A E H và góc A B C cùng phụ với góc A C B, nên chúng bằng nhau."
+  },
+  {
+    "anchor": "s17b2",
+    "text": "Vậy hai tam giác đồng dạng theo trường hợp góc góc. Từ tỉ lệ cạnh, nhân chéo là được đẳng thức cần chứng minh."
+  },
+  {
+    "anchor": "s18b0",
+    "text": "Phần hai cần nhiều ý tưởng hơn, và hình sẽ có thêm hai điểm mới."
+  },
+  {
+    "anchor": "s18b1",
+    "text": "Đường thẳng C H cắt đường tròn tại điểm thứ hai là F. Đường thẳng qua A vuông góc với E D cắt D F tại M. Đề yêu cầu chứng minh góc E M H vuông. Em làm ra giấy, cần thì mở gợi ý. Xong thì em bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s19b0",
+    "text": "Mình đối chiếu nhé. Ý tưởng chính là tìm mối liên hệ giữa điểm M và điểm A."
+  },
+  {
+    "anchor": "s19b1",
+    "text": "Mình kẻ B F. Điểm F nằm trên đường tròn đường kính B C nên góc B F C vuông. Kết hợp với góc B D H vuông, bốn điểm B, D, H, F cùng thuộc đường tròn đường kính B H."
+  },
+  {
+    "anchor": "s19b2",
+    "text": "Mình kẻ D A và D M, hai đoạn màu xanh lá. Nối các góc bằng nhau qua ba đường tròn: góc H D F bằng góc H B F, bằng góc A C H, bằng góc A D H. Vậy D H chia đôi góc A D M."
+  },
+  {
+    "anchor": "s19b3",
+    "text": "Mình kẻ A M, cắt D E tại I. Trong tam giác A D M, đoạn D I vừa là đường cao vừa là phân giác, nên tam giác cân tại D, và D E là trung trực của A M."
+  },
+  {
+    "anchor": "s19b4",
+    "text": "Mình kẻ M E và M H. H và E nằm trên trung trực nên H M bằng H A, E M bằng E A. Hai tam giác E M H và E A H bằng nhau, nên góc E M H bằng góc E A H, bằng chín mươi độ."
+  },
+  {
+    "anchor": "s20b0",
+    "text": "Ý c là ý khó nhất của đề. Thay vì chứng minh ngay, mình dự đoán trước đã. Em kéo điểm A và điểm H nhiều lần, rồi nhìn ba độ dài ở bên phải để tìm hai độ dài luôn bằng nhau. Khi đã có dự đoán, em thử chứng minh ra giấy, rồi bấm Tiếp tục nhé."
+  },
+  {
+    "anchor": "s21b0",
+    "text": "Chắc em đã thấy: H K luôn bằng H M, dù kéo thế nào. Vậy tam giác cân tại H, và mình cần chứng minh hai góc ở K và M bằng nhau."
+  },
+  {
+    "anchor": "s21b1",
+    "text": "Mình thêm điểm N là giao của đường thẳng B M với đường thẳng D E. Hai điều kiện H B lớn hơn H A và A B nhỏ hơn A C của đề bảo đảm các điểm nằm theo thứ tự B, K, M, N."
+  },
+  {
+    "anchor": "s21b2",
+    "text": "Mình kẻ K C. Góc B K C vuông, nên tam giác B K C đồng dạng với tam giác B D N. Tương tự, tam giác B D H đồng dạng với tam giác B A C. Cả hai cho cùng một tích B D nhân B C, nên B K nhân B N bằng B H nhân B A."
+  },
+  {
+    "anchor": "s21b3",
+    "text": "Mình kẻ H K và A N. Từ đẳng thức vừa có, hai tam giác B K H và B A N có góc B chung và hai cạnh tỉ lệ, nên đồng dạng. Suy ra góc B K H bằng góc B A N."
+  },
+  {
+    "anchor": "s21b4",
+    "text": "Mình kẻ H M. Theo ý b, D E là trung trực của A M, nên hai tam giác H A N và H M N bằng nhau, và góc H A N bằng góc H M N. Góc H K M kề bù với góc B K H, góc H M K kề bù với góc H M N, nên hai góc này bằng nhau. Vậy tam giác H K M cân tại H."
+  },
+  {
+    "anchor": "s22b0",
+    "text": "Câu cuối là bài toán tối ưu. Công ty càng thuê nhiều công nhân thì càng nhanh xong, nên tiền kho giảm nhưng tiền thưởng tăng. Em tự làm rồi nhập số công nhân. Xong thì em bấm Tiếp tục."
+  },
+  {
+    "anchor": "s23b0",
+    "text": "Gọi x là số công nhân và y là số ngày. Tổng sản phẩm bằng năm x y, nên x nhân y bằng hai trăm."
+  },
+  {
+    "anchor": "s23b1",
+    "text": "Chi phí gồm x triệu tiền thưởng và ba y triệu tiền kho. Thay y bằng hai trăm chia x, ta được chi phí chỉ theo một ẩn: x cộng sáu trăm chia x."
+  },
+  {
+    "anchor": "s23b2",
+    "text": "Vì x và y đều nguyên dương nên x là ước của hai trăm, chỉ có mười hai giá trị. Lập bảng là thấy ngay: nhỏ nhất là bốn mươi chín triệu, khi có hai mươi lăm công nhân làm trong tám ngày."
+  },
+  {
+    "anchor": "s24b0",
+    "text": "Mình đã đi hết đề rồi. Thầy muốn em mang theo ba điều."
+  },
+  {
+    "anchor": "s24b1",
+    "text": "Một, khi đề không nói x là số nguyên, đừng xét ước số, mà chặn biểu thức giữa hai số rồi thử từng số nguyên."
+  },
+  {
+    "anchor": "s24b2",
+    "text": "Hai, trong bài toán thực tế, chữ ít nhất nghĩa là làm tròn lên, và cần đổi đơn vị trước khi tính."
+  },
+  {
+    "anchor": "s24b3",
+    "text": "Ba, ở bài hình, kết quả của ý trước thường là chìa khoá của ý sau: ý c dùng lại đúng điều ý b đã chứng minh. Lời giải chi tiết nằm ngay dưới phần slide, còn từng dạng có bài luyện riêng. Chúc em thi thật tốt nhé!"
+  }
+]

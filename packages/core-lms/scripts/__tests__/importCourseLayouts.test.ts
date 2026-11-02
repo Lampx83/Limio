@@ -181,6 +181,28 @@ describe("lời giải hiện từng bước", () => {
 });
 
 describe("embeds — khối nhúng tương tác", () => {
+  it("atStart đặt khung lên đầu bài, phần chữ và tổng kết giữ nguyên thứ tự", () => {
+    const l = LessonSpec.parse({
+      title: "Bài",
+      body: "Phần đọc lại.",
+      summary: ["Ý chính"],
+      embeds: [{ url: "/decks/de-mau", height: 720, atStart: true }],
+    });
+    const items = lessonContentItems(l);
+    expect(items[0]!.type).toBe("embed");
+    expect(items[0]!.payload.url).toBe("/decks/de-mau");
+    expect(items.slice(1).every((i) => i.type === "richtext")).toBe(true);
+  });
+
+  it("không cho vừa atStart vừa afterSection", () => {
+    const l = LessonSpec.parse({
+      title: "Bài",
+      body: "Phần đọc lại.",
+      embeds: [{ url: "/decks/de-mau", atStart: true, afterSection: "Mục" }],
+    });
+    expect(embedProblems(l).join(" ")).toContain("atStart");
+  });
+
   const body = "## Mở đầu\n\nDẫn.\n\n## Kéo để khám phá\n\nThử đi.\n\n## Tổng kết ý\n\nXong.";
   const mk = (embeds: unknown[], extra: object = {}) =>
     LessonSpec.parse({ title: "B", body, splitSections: true, toc: false, embeds, ...extra });

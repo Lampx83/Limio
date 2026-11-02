@@ -1,0 +1,1145 @@
+{
+  "course": {
+    "title": "Ôn thi Toán vào 10",
+    "slug": "on-thi-toan-vao-10",
+    "description": "Khoá ôn thi Toán vào lớp 10 theo đề Hà Nội. Em luyện từng dạng hay gặp cùng giảng viên ảo trên slide tương tác, rồi giải các đề mẫu: tự làm trước, đối chiếu từng bước sau, và có lời giải chi tiết để đọc lại.",
+    "language": "vi",
+    "level": "beginner",
+    "category": "Ôn thi",
+    "personalizationEnabled": true
+  },
+  "misconceptions": [
+    {
+      "code": "giaide.uoc-khi-x-khong-nguyen",
+      "name": "Xét ước số khi biến không nhất thiết nguyên",
+      "description": "Coi mẫu của biểu thức là số nguyên nên chỉ xét các ước của tử, trong khi đề không cho x nguyên. Mẫu có thể là phân số mà biểu thức vẫn nguyên, vì vậy cách này bỏ sót nghiệm."
+    },
+    {
+      "code": "giaide.quen-dau-mut",
+      "name": "Sai ở đầu mút khi chặn biểu thức",
+      "description": "Dùng nhầm dấu lớn hơn hẳn và dấu lớn hơn hoặc bằng. Với x ≥ 0, giá trị x = 0 được phép; với x > 0 thì không. Chặn sai dấu sẽ làm thừa hoặc mất giá trị ở đầu mút."
+    },
+    {
+      "code": "giaide.tong-binh-phuong",
+      "name": "Tính sai tổng bình phương hai nghiệm",
+      "description": "Viết x₁² + x₂² = (x₁ + x₂)², bỏ quên hai lần tích, hoặc cộng thêm hai lần tích thay vì trừ đi."
+    },
+    {
+      "code": "giaide.lam-tron-xuong",
+      "name": "Làm tròn xuống trong bài toán ít nhất",
+      "description": "Dùng quy tắc làm tròn thông thường cho số lần đổ nước. Khi đề hỏi cần ít nhất bao nhiêu lần để đủ, phần lẻ vẫn cần thêm một lần nữa."
+    },
+    {
+      "code": "giaide.quen-ti-le",
+      "name": "Bỏ qua tỉ lệ phần trăm của đề",
+      "description": "Lấy cả thể tích xô làm lượng nước mỗi lần, quên rằng đề chỉ cho múc một phần trăm nào đó của thể tích."
+    },
+    {
+      "code": "giaide.sai-dau-tach",
+      "name": "Tách phần nguyên sai",
+      "description": "Viết sai số dư khi tách tử số theo mẫu số, hoặc sai dấu của phần phân số. Khi đó mọi bước chặn phía sau đều sai."
+    },
+    {
+      "code": "giaide.quen-doi-chieu",
+      "name": "Không đối chiếu đáp số với điều kiện của đề",
+      "description": "Giải đủ các trường hợp rồi nhận hết, quên loại những giá trị mà điều kiện của đề không cho phép."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "giaide.uoc-khi-x-khong-nguyen",
+      "body": "Đề không cho x là số nguyên, nên mẫu số có thể là phân số. Xét ước số sẽ bỏ sót những nghiệm như vậy. Em hãy chặn P giữa hai số rồi thử từng số nguyên trong khoảng đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "giaide.quen-dau-mut",
+      "body": "Em hãy nhìn lại điều kiện của x. Với x ≥ 0, giá trị x = 0 được phép nên phải giữ dấu lớn hơn hoặc bằng khi chặn. Với x > 0, giá trị đó bị loại nên dùng dấu lớn hơn hẳn. Hãy thay giá trị đầu mút vào để kiểm tra.",
+      "priority": 10
+    },
+    {
+      "misconception": "giaide.tong-binh-phuong",
+      "body": "Tổng bình phương hai nghiệm được tính bằng x₁² + x₂² = (x₁ + x₂)² − 2x₁x₂, nên có dấu trừ và hệ số 2. Em hãy thử với hai số cụ thể, ví dụ 1 và 2: 1² + 2² = 5, còn (1 + 2)² = 9.",
+      "priority": 10
+    },
+    {
+      "misconception": "giaide.lam-tron-xuong",
+      "body": "Đề hỏi ít nhất bao nhiêu xô để đầy bể. Nếu lấy số nhỏ hơn thương thì bể vẫn chưa đầy, vì vậy em phải làm tròn lên dù phần lẻ nhỏ. Em nhân ngược lại để kiểm tra lượng nước có đủ không.",
+      "priority": 10
+    },
+    {
+      "misconception": "giaide.quen-ti-le",
+      "body": "Em đã dùng cả thể tích xô, trong khi đề nói mỗi lần chỉ múc 75% thể tích. Em hãy tính lượng nước thực múc trước, rồi mới lấy thể tích bể chia cho lượng đó.",
+      "priority": 10
+    },
+    {
+      "misconception": "giaide.sai-dau-tach",
+      "body": "Em hãy nhân ngược lại để kiểm tra phép tách: lấy phần nguyên nhân với mẫu số, cộng phần còn lại, xem có đúng bằng tử số không. Phép kiểm tra này chỉ mất vài giây và bắt được gần hết lỗi dấu.",
+      "priority": 10
+    },
+    {
+      "misconception": "giaide.quen-doi-chieu",
+      "body": "Em đã giải đúng các trường hợp, nhưng còn phải đối chiếu với điều kiện của đề. Trước khi kết luận, hãy thay từng giá trị của x vào điều kiện và loại những giá trị không thoả.",
+      "priority": 10
+    }
+  ],
+  "modules": [
+    {
+      "title": "Bắt đầu",
+      "description": "Cấu trúc đề và cách dùng khoá.",
+      "lessons": [
+        {
+          "title": "Cấu trúc đề và cách ôn",
+          "durationMin": 5,
+          "description": "Đề Toán vào 10 của Hà Nội gồm những gì, chia thời gian ra sao, và nên dùng khoá này thế nào.",
+          "look": {
+            "palette": "limio",
+            "font": "modern"
+          },
+          "body": "Đề Toán vào lớp 10 của Hà Nội là đề tự luận, làm trong 120 phút, thang điểm 10. Bảng dưới đây mô tả đề năm 2026. Cột thời gian là gợi ý của Limio, phần còn lại 10 phút dành để soát bài.\n\n| Câu | Điểm | Nội dung | Thời gian gợi ý |\n|---|---|---|---|\n| I | 1,5 | Thống kê và xác suất | 10 phút |\n| II | 1,5 | Biểu thức chứa căn | 15 phút |\n| III | 2,5 | Bài toán thực tế và hệ thức Viète | 25 phút |\n| IV | 4,0 | Hình khối và hình học đường tròn | 50 phút |\n| V | 0,5 | Câu phân loại | 10 phút |\n\n> [!ghi-nho] Bảng này được tổng hợp từ đề đã thi, không phải văn bản của Sở Giáo dục và Đào tạo Hà Nội. Đề năm sau có thể thay đổi, nên em hãy theo dõi thông báo chính thức.\n\n## Cách dùng khoá này\n\nEm bắt đầu với mục **Luyện theo dạng**. Mỗi bài dạy một dạng hay gặp, có bài tự làm ngay trên slide và phần luyện tập để biết mình đã vững chưa. Dạng nào chưa vững thì em làm lại trước khi sang dạng khác.\n\nSau đó em sang mục **Giải đề mẫu**. Với mỗi đề, em chuẩn bị giấy bút và tự làm từng câu trước khi đối chiếu với lời giải, vì đọc một lời giải đúng rất dễ tạo cảm giác mình đã biết làm."
+        }
+      ]
+    },
+    {
+      "title": "Luyện theo dạng",
+      "description": "Mỗi bài là một dạng hay gặp, xếp theo câu của đề.",
+      "lessons": [
+        {
+          "title": "Câu II: Tìm x để biểu thức nguyên",
+          "description": "Nhận ra kiểu đề, tách phần nguyên, chặn biểu thức hoặc dùng ước số, rồi đối chiếu điều kiện.",
+          "durationMin": 18,
+          "embeds": [
+            {
+              "url": "/decks/dang-bieu-thuc-nguyen",
+              "height": 720
+            }
+          ],
+          "lecture": [
+            {
+              "anchor": "s0b0",
+              "text": "Chào em! Thầy là Tiến Đạt. Hôm nay mình học một dạng thường nằm ở ý cuối của câu hai: tìm x để một biểu thức chứa căn nhận giá trị nguyên. Dạng này dễ mất điểm vì có một cách làm rất quen tay nhưng lại sai. Học xong bài này, em sẽ biết khi nào được dùng ước số, và khi nào phải chặn biểu thức giữa hai số."
+            },
+            {
+              "anchor": "s1b0",
+              "text": "Việc đầu tiên không phải là tính toán, mà là đọc đề. Nếu đề không nói x là số nguyên, thì mẫu số có thể là một phân số, nên không dùng ước số được. Lúc này cách đúng là chặn biểu thức giữa hai số."
+            },
+            {
+              "anchor": "s1b1",
+              "text": "Còn nếu đề cho x là số nguyên, căn x cũng phải nguyên thì biểu thức mới nguyên. Chỉ khi đó ta mới được dùng ước số. Đề thi vào lớp mười của Hà Nội năm hai nghìn không trăm hai mươi sáu thuộc kiểu thứ nhất."
+            },
+            {
+              "anchor": "s2b0",
+              "text": "Dù đề thuộc kiểu nào, bước đầu tiên vẫn là tách phần nguyên. Ta viết tử số thành một bội của mẫu số, cộng hoặc trừ một số. Nhờ vậy, x chỉ còn xuất hiện ở một chỗ. Em ghép mỗi biểu thức với dạng đã tách của nó, rồi bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s3b0",
+              "text": "Mình cùng làm một ví dụ, với P bằng căn x trừ ba, chia cho căn x cộng một, và x không âm. Đề không nói x là số nguyên, nên ta đi theo cách chặn."
+            },
+            {
+              "anchor": "s3b1",
+              "text": "Tách phần nguyên: P bằng một, trừ bốn phần căn x cộng một."
+            },
+            {
+              "anchor": "s3b2",
+              "text": "Bây giờ chặn. Căn x cộng một lớn hơn hoặc bằng một, nên phân số nằm từ trên không đến tối đa là bốn. Vậy P đi từ âm ba đến dưới một. Trên trục số là đoạn màu cam: có lấy âm ba, nhưng không lấy một."
+            },
+            {
+              "anchor": "s3b3",
+              "text": "Trong đoạn đó có bốn số nguyên: âm ba, âm hai, âm một và không."
+            },
+            {
+              "anchor": "s3b4",
+              "text": "Mỗi giá trị của P cho một phương trình ẩn căn x. Giải ra, x bằng không, một phần chín, một, và chín. Giá trị một phần chín ứng với mẫu số bằng bốn phần ba, không phải số nguyên, nhưng P vẫn bằng âm hai."
+            },
+            {
+              "anchor": "s4b0",
+              "text": "Đây là lỗi hay gặp nhất của dạng này. Một bạn đã giải bài toán tương tự như trên màn hình. Em đọc kỹ đề và từng dòng, bấm vào dòng sai, rồi bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s5b0",
+              "text": "Dòng sai là dòng thứ hai. Đề không nói x nguyên, nên căn x cộng một có thể là phân số. Ta chặn lại: P đi từ âm bốn đến dưới một, tức là có năm số nguyên."
+            },
+            {
+              "anchor": "s5b1",
+              "text": "Giải từng trường hợp, ta được năm giá trị của x. Cách dùng ước số chỉ tìm được hai giá trị đầu và cuối, nên đã đánh mất ba nghiệm còn lại."
+            },
+            {
+              "anchor": "s6b0",
+              "text": "Đến lượt em. Em làm đủ các bước vừa học ra giấy: tách phần nguyên, chặn, rồi thử từng số nguyên. Cần thì bấm gợi ý. Có đáp số rồi, em nhập vào ô bên phải và bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s7b0",
+              "text": "Bước cuối cùng hay bị bỏ qua là đối chiếu điều kiện. Vẫn biểu thức ở ví dụ, nhưng điều kiện đã đổi: x dương và x khác chín. Em chọn đáp án đúng rồi bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s8b0",
+              "text": "Bây giờ là kiểu đề thứ hai: cùng biểu thức đó, nhưng x là số tự nhiên. Đây mới là lúc dùng ước số."
+            },
+            {
+              "anchor": "s8b1",
+              "text": "Nếu căn x không nguyên thì căn x là số vô tỉ, kéo theo P không thể là số nguyên. Vậy căn x phải nguyên."
+            },
+            {
+              "anchor": "s8b2",
+              "text": "Khi đó căn x cộng một là một ước dương của bốn, tức là một, hai, hoặc bốn."
+            },
+            {
+              "anchor": "s8b3",
+              "text": "Giải ra, x bằng không, một và chín. So với ví dụ trước, ta mất đúng giá trị một phần chín, vì nó không phải số tự nhiên. Cùng một biểu thức, chỉ khác điều kiện của x, mà đáp số đã khác."
+            },
+            {
+              "anchor": "s9b0",
+              "text": "Em thử với kiểu đề này. Lần này x là số tự nhiên, nên em được dùng ước số. Em làm ra giấy, nhập tập đáp số vào ô bên phải, rồi bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s10b0",
+              "text": "Mình tóm tắt lại bài học thành bốn bước."
+            },
+            {
+              "anchor": "s10b1",
+              "text": "Một, đọc đề xem x có phải là số nguyên không. Câu trả lời quyết định cách làm."
+            },
+            {
+              "anchor": "s10b2",
+              "text": "Hai, tách phần nguyên, để x chỉ còn ở một chỗ."
+            },
+            {
+              "anchor": "s10b3",
+              "text": "Ba, nếu x không nguyên thì chặn biểu thức giữa hai số. Nếu x nguyên thì dùng ước số."
+            },
+            {
+              "anchor": "s10b4",
+              "text": "Bốn, giải từng trường hợp, rồi đối chiếu với điều kiện của đề. Phần luyện tập ngay dưới phần slide sẽ kiểm tra lại cả bốn bước với số liệu mới. Chúc em học tốt nhé!"
+            }
+          ],
+          "quiz": {
+            "title": "Luyện dạng: tìm x để biểu thức nguyên",
+            "requireConfidence": false,
+            "questions": [
+              {
+                "key": "btn.tach",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Tách phần nguyên của $\\dfrac{\\sqrt{x}+4}{\\sqrt{x}+1}$ được:",
+                "explanation": "Ta có $\\sqrt{x}+4=(\\sqrt{x}+1)+3$, nên biểu thức bằng $1+\\dfrac{3}{\\sqrt{x}+1}$.",
+                "options": [
+                  {
+                    "label": "$1-\\dfrac{3}{\\sqrt{x}+1}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.sai-dau-tach"
+                  },
+                  {
+                    "label": "$1+\\dfrac{3}{\\sqrt{x}+1}$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$4+\\dfrac{3}{\\sqrt{x}+1}$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$1+\\dfrac{4}{\\sqrt{x}+1}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.sai-dau-tach"
+                  }
+                ]
+              },
+              {
+                "key": "btn.uoc-dung-sai",
+                "type": "true_false",
+                "points": 1,
+                "prompt": "Với $x\\geq 0$ và đề không nói $x$ nguyên, muốn $P=1-\\dfrac{3}{\\sqrt{x}+2}$ nguyên thì $\\sqrt{x}+2$ phải là ước của $3$.",
+                "explanation": "Sai. Đề không cho $x$ nguyên nên $\\sqrt{x}+2$ có thể là phân số. Chẳng hạn $\\sqrt{x}+2=\\dfrac{3}{2}$ thì phân số bằng $2$. Cách làm đúng là chặn $P$ rồi thử từng số nguyên.",
+                "options": [
+                  {
+                    "label": "Đúng",
+                    "isCorrect": false,
+                    "misconception": "giaide.uoc-khi-x-khong-nguyen"
+                  },
+                  {
+                    "label": "Sai",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "btn.dau-chan",
+                "type": "mcq",
+                "points": 1,
+                "prompt": "Với $x\\gt 0$, khẳng định nào đúng?",
+                "explanation": "Vì $x\\gt 0$ nên $\\sqrt{x}+2\\gt 2$, do đó $0\\lt\\dfrac{3}{\\sqrt{x}+2}\\lt\\dfrac{3}{2}$, với dấu nhỏ hơn hẳn.",
+                "options": [
+                  {
+                    "label": "$0\\lt\\dfrac{3}{\\sqrt{x}+2}\\leq\\dfrac{3}{2}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.quen-dau-mut"
+                  },
+                  {
+                    "label": "$0\\leq\\dfrac{3}{\\sqrt{x}+2}\\lt\\dfrac{3}{2}$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$0\\lt\\dfrac{3}{\\sqrt{x}+2}\\lt\\dfrac{3}{2}$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$\\dfrac{3}{2}\\lt\\dfrac{3}{\\sqrt{x}+2}$",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "btn.khoang",
+                "type": "mcq",
+                "points": 1,
+                "workOnPaper": true,
+                "prompt": "Với $x\\geq 0$, biểu thức $P=\\dfrac{\\sqrt{x}-1}{\\sqrt{x}+3}$ nằm trong khoảng nào?",
+                "explanation": "$P=1-\\dfrac{4}{\\sqrt{x}+3}$. Vì $\\sqrt{x}+3\\geq 3$ nên $0\\lt\\dfrac{4}{\\sqrt{x}+3}\\leq\\dfrac{4}{3}$, do đó $-\\dfrac{1}{3}\\leq P\\lt 1$.",
+                "options": [
+                  {
+                    "label": "$-\\dfrac{1}{3}\\leq P\\lt 1$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$-3\\leq P\\lt 1$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$0\\lt P\\leq\\dfrac{4}{3}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.sai-dau-tach"
+                  },
+                  {
+                    "label": "$-\\dfrac{1}{3}\\lt P\\leq 1$",
+                    "isCorrect": false,
+                    "misconception": "giaide.quen-dau-mut"
+                  }
+                ]
+              },
+              {
+                "key": "btn.mot-gia-tri",
+                "type": "fill_in",
+                "points": 1,
+                "workOnPaper": true,
+                "prompt": "Với $x\\geq 0$, có đúng một giá trị của $x$ để $P=\\dfrac{\\sqrt{x}-1}{\\sqrt{x}+3}$ là số nguyên. Điền giá trị đó.",
+                "explanation": "Vì $-\\dfrac{1}{3}\\leq P\\lt 1$ nên số nguyên duy nhất là $P=0$, tức là $\\sqrt{x}=1$ và $x=1$.",
+                "answers": [
+                  "1"
+                ]
+              },
+              {
+                "key": "hn26.p-nguyen",
+                "type": "mcq",
+                "points": 1,
+                "workOnPaper": true,
+                "prompt": "Với $x\\geq 0$, tất cả giá trị của $x$ để $P=\\dfrac{\\sqrt{x}-2}{\\sqrt{x}+1}$ là số nguyên là:",
+                "explanation": "$P=1-\\dfrac{3}{\\sqrt{x}+1}$. Vì $\\sqrt{x}+1\\geq 1$ nên $-2\\leq P\\lt 1$, do đó $P\\in\\{-2;-1;0\\}$. Ba giá trị này lần lượt cho $x=0$, $x=\\dfrac{1}{4}$ và $x=4$.",
+                "options": [
+                  {
+                    "label": "$x\\in\\{0;4\\}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.uoc-khi-x-khong-nguyen"
+                  },
+                  {
+                    "label": "$x\\in\\left\\{\\dfrac{1}{4};4\\right\\}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.quen-dau-mut"
+                  },
+                  {
+                    "label": "$x\\in\\{4\\}$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$x\\in\\left\\{0;\\dfrac{1}{4};4\\right\\}$",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "btn.dem",
+                "type": "mcq",
+                "points": 1,
+                "workOnPaper": true,
+                "prompt": "Với $x\\gt 0$, có bao nhiêu giá trị của $x$ để $P=\\dfrac{\\sqrt{x}-5}{\\sqrt{x}+1}$ là số nguyên?",
+                "explanation": "$P=1-\\dfrac{6}{\\sqrt{x}+1}$. Vì $\\sqrt{x}+1\\gt 1$ nên $-5\\lt P\\lt 1$, do đó $P\\in\\{-4;-3;-2;-1;0\\}$. Mỗi giá trị của $P$ cho đúng một giá trị của $x$, nên có $5$ giá trị.",
+                "options": [
+                  {
+                    "label": "$3$",
+                    "isCorrect": false,
+                    "misconception": "giaide.uoc-khi-x-khong-nguyen"
+                  },
+                  {
+                    "label": "$4$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$5$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$6$",
+                    "isCorrect": false,
+                    "misconception": "giaide.quen-dau-mut"
+                  }
+                ]
+              },
+              {
+                "key": "btn.khong-co",
+                "type": "mcq",
+                "points": 1,
+                "workOnPaper": true,
+                "prompt": "Với $x\\geq 0$, các giá trị của $x$ để $P=\\dfrac{\\sqrt{x}+1}{\\sqrt{x}+3}$ là số nguyên là:",
+                "explanation": "$P=1-\\dfrac{2}{\\sqrt{x}+3}$. Vì $\\sqrt{x}+3\\geq 3$ nên $\\dfrac{1}{3}\\leq P\\lt 1$. Trong khoảng này không có số nguyên nào.",
+                "options": [
+                  {
+                    "label": "$x=0$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$x=1$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$x\\in\\{0;1\\}$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "Không có giá trị nào",
+                    "isCorrect": true
+                  }
+                ]
+              },
+              {
+                "key": "btn.dieu-kien",
+                "type": "mcq",
+                "points": 2,
+                "workOnPaper": true,
+                "prompt": "Với $x\\geq 0,\\ x\\neq 9$, tất cả giá trị của $x$ để $P=\\dfrac{\\sqrt{x}-3}{\\sqrt{x}+2}$ là số nguyên là:",
+                "explanation": "$P=1-\\dfrac{5}{\\sqrt{x}+2}$. Vì $\\sqrt{x}+2\\geq 2$ nên $-\\dfrac{3}{2}\\leq P\\lt 1$, do đó $P\\in\\{-1;0\\}$, cho $x=\\dfrac{1}{4}$ và $x=9$. Đề có $x\\neq 9$ nên chỉ còn $x=\\dfrac{1}{4}$.",
+                "options": [
+                  {
+                    "label": "$x=\\dfrac{1}{4}$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$x\\in\\left\\{\\dfrac{1}{4};9\\right\\}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.quen-doi-chieu"
+                  },
+                  {
+                    "label": "$x=9$",
+                    "isCorrect": false,
+                    "misconception": "giaide.uoc-khi-x-khong-nguyen"
+                  },
+                  {
+                    "label": "Không có giá trị nào",
+                    "isCorrect": false
+                  }
+                ]
+              },
+              {
+                "key": "btn.tu-nhien",
+                "type": "mcq",
+                "points": 2,
+                "workOnPaper": true,
+                "prompt": "Với $x\\in\\mathbb{N}$, tất cả giá trị của $x$ để $Q=\\dfrac{\\sqrt{x}+7}{\\sqrt{x}+1}$ là số nguyên là:",
+                "explanation": "$Q=1+\\dfrac{6}{\\sqrt{x}+1}$. Vì $x$ là số tự nhiên nên $\\sqrt{x}$ phải nguyên, và $\\sqrt{x}+1$ là ước dương của $6$, tức là $1;2;3;6$. Vậy $x\\in\\{0;1;4;25\\}$.",
+                "options": [
+                  {
+                    "label": "$x\\in\\{1;4;25\\}$",
+                    "isCorrect": false,
+                    "misconception": "giaide.quen-dau-mut"
+                  },
+                  {
+                    "label": "$x\\in\\{0;1;4;25\\}$",
+                    "isCorrect": true
+                  },
+                  {
+                    "label": "$x\\in\\{0;1;4;5\\}$",
+                    "isCorrect": false
+                  },
+                  {
+                    "label": "$x\\in\\{1;2;3;6\\}$",
+                    "isCorrect": false
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "Giải đề mẫu: năm 2026",
+      "description": "Các đề Toán vào lớp 10 của năm 2026, tự làm rồi đối chiếu từng bước.",
+      "lessons": [
+        {
+          "title": "Đề Hà Nội năm 2026",
+          "durationMin": 120,
+          "description": "Đề Toán vào lớp 10 của Hà Nội, thi ngày 31/5/2026. Em tự làm từng câu trên slide cùng giảng viên, kéo hình để dự đoán, rồi đọc lại lời giải chi tiết ở phần dưới.",
+          "look": {
+            "palette": "limio",
+            "font": "modern"
+          },
+          "embeds": [
+            {
+              "url": "/decks/de-ha-noi-2026",
+              "height": 720,
+              "atStart": true
+            }
+          ],
+          "body": "Phần dưới đây là lời giải chi tiết để em đọc lại sau khi học cùng giảng viên. Mỗi ý có đề bài ở đầu mục, và những ý khó có gợi ý được gập lại. Em bấm **Bước tiếp** để xem từng dòng và dừng ở dòng đầu tiên khác với bài của mình, vì đó là chỗ cần học.\n\n> [!ghi-nho] Đề bài trong bài học được diễn đạt lại ngắn gọn và giữ nguyên số liệu; lời giải do Limio soạn. Nếu muốn luyện như thi thật, em hãy tính giờ và làm theo ảnh đề gốc đăng trên [báo Lao Động](https://laodong.vn/giao-duc/de-thi-dap-an-mon-toan-thi-vao-lop-10-tai-ha-noi-nam-2026-1711071.ldo).",
+          "sections": [
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu I.1: Bảng tần số ghép nhóm",
+              "intro": "**Đề bài.** Chiều cao (cm) của 50 học sinh lớp 6 được thống kê như sau. Hãy xác định tần số và tần số tương đối của nhóm $[150;155)$.\n\n| Chiều cao | $[140;145)$ | $[145;150)$ | $[150;155)$ | $[155;160)$ | $[160;165)$ |\n|---|---|---|---|---|---|\n| Số học sinh | 10 | 18 | 14 | 6 | 2 |",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Đọc tần số từ bảng",
+                  "md": "Tần số của nhóm $[150;155)$ là số học sinh ở cột của nhóm đó, tức là $14$."
+                },
+                {
+                  "title": "Kiểm tra cỡ mẫu",
+                  "md": "$$10+18+14+6+2=50$$\n\nTổng này khớp với 50 học sinh mà đề cho. Vì sao cần cộng: tần số tương đối phải chia cho cỡ mẫu, nên ta chắc chắn số này trước khi chia."
+                },
+                {
+                  "title": "Tính tần số tương đối",
+                  "md": "$$f=\\frac{14}{50}\\cdot 100\\%=28\\%$$\n\nVậy nhóm $[150;155)$ có tần số $14$ và tần số tương đối $28\\%$."
+                }
+              ],
+              "outro": "> [!canh-bao] Nhóm $[150;155)$ chứa $150$ nhưng không chứa $155$. Học sinh cao đúng $155$ cm thuộc nhóm kế tiếp, vì vậy em đọc kỹ dấu ngoặc khi đề cho số liệu rời."
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu I.2: Xác suất của biến cố",
+              "intro": "**Đề bài.** Một hộp có 6 quả bóng cùng loại, ghi các số $1,2,3,4,5,6$, mỗi quả một số khác nhau. Lấy ngẫu nhiên một quả. Tính xác suất của biến cố $A$: “Số ghi trên quả bóng lấy được là số chẵn”.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Viết không gian mẫu",
+                  "md": "$$\\Omega=\\{1;2;3;4;5;6\\},\\quad n(\\Omega)=6$$\n\nCác quả bóng cùng loại nên sáu kết quả này đồng khả năng."
+                },
+                {
+                  "title": "Liệt kê kết quả thuận lợi",
+                  "md": "Các kết quả thuận lợi cho $A$ là $2;4;6$, nên có $3$ kết quả."
+                },
+                {
+                  "title": "Tính xác suất",
+                  "md": "$$P(A)=\\frac{3}{6}=\\frac{1}{2}$$"
+                }
+              ]
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu II.1: Tính giá trị biểu thức",
+              "intro": "**Đề bài.** Cho $A=\\dfrac{\\sqrt{x}-4}{\\sqrt{x}}$ và $B=\\dfrac{4}{\\sqrt{x}-3}+\\dfrac{x-7\\sqrt{x}-12}{x-9}$ với $x>0,\\ x\\neq 9$. Tính giá trị của $A$ khi $x=25$.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Kiểm tra điều kiện",
+                  "md": "Giá trị $x=25$ thoả mãn $x>0$ và $x\\neq 9$, nên ta được thay vào biểu thức."
+                },
+                {
+                  "title": "Thay số và tính",
+                  "md": "$$A=\\frac{\\sqrt{25}-4}{\\sqrt{25}}=\\frac{5-4}{5}=\\frac{1}{5}$$"
+                }
+              ]
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu II.2: Rút gọn biểu thức",
+              "intro": "**Đề bài.** Với biểu thức $B$ ở trên, chứng minh rằng $B=\\dfrac{\\sqrt{x}}{\\sqrt{x}+3}$.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Phân tích mẫu chung",
+                  "md": "$$x-9=(\\sqrt{x}-3)(\\sqrt{x}+3)$$\n\nVì sao: đây là hiệu hai bình phương, và nó cho thấy mẫu chung của cả hai phân thức chính là $x-9$."
+                },
+                {
+                  "title": "Quy đồng",
+                  "md": "$$B=\\frac{4(\\sqrt{x}+3)+x-7\\sqrt{x}-12}{(\\sqrt{x}-3)(\\sqrt{x}+3)}$$"
+                },
+                {
+                  "title": "Rút gọn tử",
+                  "md": "$$4\\sqrt{x}+12+x-7\\sqrt{x}-12=x-3\\sqrt{x}=\\sqrt{x}(\\sqrt{x}-3)$$\n\nHai số $12$ và $-12$ triệt tiêu, và $4\\sqrt{x}-7\\sqrt{x}=-3\\sqrt{x}$."
+                },
+                {
+                  "title": "Chia cho thừa số chung",
+                  "md": "$$B=\\frac{\\sqrt{x}(\\sqrt{x}-3)}{(\\sqrt{x}-3)(\\sqrt{x}+3)}=\\frac{\\sqrt{x}}{\\sqrt{x}+3}$$\n\nPhép chia hợp lệ vì $x\\neq 9$ nên $\\sqrt{x}-3\\neq 0$."
+                }
+              ]
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu II.3: Tìm x để P nguyên",
+              "intro": "**Đề bài.** Tìm tất cả giá trị của $x$ để biểu thức $P=A\\cdot B$ có giá trị là số nguyên.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng.\n\n:::Bí quá thì mở gợi ý\nEm hãy viết $P$ dưới dạng một số nguyên trừ đi một phân số, sao cho $x$ chỉ còn xuất hiện ở mẫu của phân số đó. Sau đó em dùng điều kiện $x>0$ để chặn $P$.\n:::"
+                },
+                {
+                  "title": "Viết gọn biểu thức P",
+                  "md": "$$P=\\frac{\\sqrt{x}-4}{\\sqrt{x}}\\cdot\\frac{\\sqrt{x}}{\\sqrt{x}+3}=\\frac{\\sqrt{x}-4}{\\sqrt{x}+3}$$"
+                },
+                {
+                  "title": "Tách phần nguyên",
+                  "md": "$$P=\\frac{(\\sqrt{x}+3)-7}{\\sqrt{x}+3}=1-\\frac{7}{\\sqrt{x}+3}$$\n\nVì sao: sau khi tách, $x$ chỉ còn xuất hiện ở một chỗ, nên việc đánh giá $P$ trở nên dễ dàng."
+                },
+                {
+                  "title": "Chặn P giữa hai số",
+                  "md": "Vì $x>0$ nên $\\sqrt{x}+3>3$, do đó\n\n$$0<\\frac{7}{\\sqrt{x}+3}<\\frac{7}{3}\\quad\\Rightarrow\\quad -\\frac{4}{3}<P<1$$"
+                },
+                {
+                  "title": "Liệt kê số nguyên trong khoảng",
+                  "md": "Các số nguyên nằm trong khoảng $\\left(-\\dfrac{4}{3};1\\right)$ là $-1$ và $0$."
+                },
+                {
+                  "title": "Giải từng trường hợp",
+                  "md": "Với $P=0$: $\\sqrt{x}+3=7$, nên $x=16$.\n\nVới $P=-1$: $\\dfrac{7}{\\sqrt{x}+3}=2$, nên $\\sqrt{x}=\\dfrac{1}{2}$ và $x=\\dfrac{1}{4}$.\n\nCả hai giá trị đều thoả mãn $x>0,\\ x\\neq 9$. Vậy $x\\in\\left\\{16;\\dfrac{1}{4}\\right\\}$."
+                }
+              ],
+              "outro": "> [!canh-bao] Đề **không** cho $x$ là số nguyên, nên $\\sqrt{x}+3$ không nhất thiết nguyên. Nếu chỉ xét “$\\sqrt{x}+3$ là ước của $7$” thì em chỉ tìm được $x=16$ và mất nghiệm $x=\\dfrac{1}{4}$, vì khi đó $\\sqrt{x}+3=\\dfrac{7}{2}$ không phải là số nguyên mà $P$ vẫn bằng $-1$. Với loại đề này, cách chắc chắn là chặn $P$ rồi thử từng số nguyên."
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu III.1: Bài toán năng suất",
+              "intro": "**Đề bài.** Một tổ sản xuất lập kế hoạch may một số áo như nhau mỗi ngày. Trong 3 ngày đầu, tổ may đúng kế hoạch. Trong 7 ngày tiếp theo, nhờ cải tiến kỹ thuật, mỗi ngày tổ may nhiều hơn 5 áo so với kế hoạch. Sau 10 ngày, tổ may được tổng cộng 335 áo. Hỏi theo kế hoạch mỗi ngày tổ may bao nhiêu áo?",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Đặt ẩn và điều kiện",
+                  "md": "Gọi $x$ là số áo tổ may mỗi ngày theo kế hoạch, với $x\\in\\mathbb{N}^*$."
+                },
+                {
+                  "title": "Biểu diễn từng giai đoạn",
+                  "md": "Ba ngày đầu tổ may $3x$ áo. Bảy ngày sau, mỗi ngày tổ may $x+5$ áo, nên cả bảy ngày may $7(x+5)$ áo."
+                },
+                {
+                  "title": "Lập và giải phương trình",
+                  "md": "$$3x+7(x+5)=335\\;\\Rightarrow\\;10x+35=335\\;\\Rightarrow\\;x=30$$"
+                },
+                {
+                  "title": "Đối chiếu và kết luận",
+                  "md": "Giá trị $x=30$ thoả mãn điều kiện. Thử lại: $3\\cdot 30+7\\cdot 35=90+245=335$.\n\nVậy theo kế hoạch, mỗi ngày tổ may $30$ áo."
+                }
+              ],
+              "outro": "> [!canh-bao] “Nhiều hơn 5 áo” là nhiều hơn **mỗi ngày**. Nếu viết $7x+5$ thì em đã coi cả bảy ngày chỉ nhiều hơn 5 áo, và phương trình sai từ đầu."
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu III.2: Lập hệ phương trình",
+              "intro": "**Đề bài.** Một người mua 25 bông hoa gồm hoa hồng và hoa cúc, hết 180 nghìn đồng. Mỗi bông hoa hồng giá 8 nghìn đồng, mỗi bông hoa cúc giá 6 nghìn đồng. Hỏi người đó mua bao nhiêu bông mỗi loại?",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Đặt ẩn và điều kiện",
+                  "md": "Gọi $x$, $y$ lần lượt là số bông hoa hồng và hoa cúc, với $x,y\\in\\mathbb{N}$."
+                },
+                {
+                  "title": "Lập hệ phương trình",
+                  "md": "$$\\begin{cases}x+y=25\\\\ 8x+6y=180\\end{cases}$$\n\nPhương trình thứ hai dùng đơn vị nghìn đồng cho cả hai vế."
+                },
+                {
+                  "title": "Giải hệ",
+                  "md": "Từ phương trình đầu có $y=25-x$. Thay vào phương trình sau:\n\n$$8x+6(25-x)=180\\;\\Rightarrow\\;2x=30\\;\\Rightarrow\\;x=15,\\ y=10$$"
+                },
+                {
+                  "title": "Thử lại và kết luận",
+                  "md": "Thử lại: $15+10=25$ và $8\\cdot 15+6\\cdot 10=120+60=180$.\n\nVậy người đó mua $15$ bông hoa hồng và $10$ bông hoa cúc."
+                }
+              ]
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu III.3: Hệ thức Viète",
+              "intro": "**Đề bài.** Phương trình $x^2-3x+1=0$ có hai nghiệm phân biệt $x_1,x_2$. Tính giá trị của $Q=\\dfrac{3x_2-1}{x_1}+\\dfrac{3x_1}{x_2}-x_1$.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng.\n\n:::Bí quá thì mở gợi ý\nEm hãy tính tích $x_1x_2$ trước khi quy đồng và thử xem giá trị của tích giúp gì cho các phép chia trong $Q$.\n:::"
+                },
+                {
+                  "title": "Viết hệ thức Viète",
+                  "md": "$$x_1+x_2=3,\\qquad x_1x_2=1$$\n\nĐề đã cho biết phương trình có hai nghiệm phân biệt nên ta được dùng hệ thức này; thật vậy, $\\Delta=9-4=5>0$."
+                },
+                {
+                  "title": "Tận dụng tích bằng một",
+                  "md": "Vì $x_1x_2=1$ nên $\\dfrac{1}{x_1}=x_2$ và $\\dfrac{1}{x_2}=x_1$. Thay vào $Q$:\n\n$$Q=(3x_2-1)x_2+3x_1\\cdot x_1-x_1=3x_2^2-x_2+3x_1^2-x_1$$"
+                },
+                {
+                  "title": "Đưa về tổng và tích",
+                  "md": "$$Q=3(x_1^2+x_2^2)-(x_1+x_2)$$\n\nMà $x_1^2+x_2^2=(x_1+x_2)^2-2x_1x_2=9-2=7$."
+                },
+                {
+                  "title": "Tính kết quả",
+                  "md": "$$Q=3\\cdot 7-3=18$$"
+                }
+              ],
+              "outro": "> [!meo] Trước khi quy đồng một biểu thức Viète, em hãy nhìn tích $x_1x_2$. Khi tích bằng $1$, mỗi phép chia cho một nghiệm trở thành phép nhân với nghiệm kia, và bài toán ngắn đi rất nhiều."
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu IV.1: Hình trụ và bài toán thực tế",
+              "intro": "**Đề bài.** Một xô đựng nước dạng hình trụ cao 25 cm, bán kính đáy 12 cm (lấy $\\pi=3{,}14$, coi độ dày của xô không đáng kể). (a) Tính diện tích xung quanh của xô. (b) Người ta dùng xô đổ nước vào một bể có thể tích 150 lít; mỗi lần múc chỉ múc lượng nước bằng $80\\%$ thể tích của xô. Bể ban đầu không có nước. Hỏi cần ít nhất bao nhiêu xô để đổ đầy bể? (Biết $1$ lít $=1000\\ \\text{cm}^3$.)\n\n![Xô hình trụ có bán kính đáy 12 cm và chiều cao 25 cm](/api/lesson-media/images/10a531c0-b1c1-4883-a65c-164e7c3e189c-1793585409580-942f74ac6117128a.svg \"Xô nước trong đề, vẽ lại theo số liệu của đề.\")",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Tính diện tích xung quanh",
+                  "md": "$$S_{xq}=2\\pi rh=2\\cdot 3{,}14\\cdot 12\\cdot 25=1884\\ (\\text{cm}^2)$$"
+                },
+                {
+                  "title": "Tính thể tích của xô",
+                  "md": "$$V=\\pi r^2h=3{,}14\\cdot 12^2\\cdot 25=11304\\ (\\text{cm}^3)$$"
+                },
+                {
+                  "title": "Tính lượng nước mỗi lần múc",
+                  "md": "$$80\\%\\cdot 11304=9043{,}2\\ (\\text{cm}^3)=9{,}0432\\ (\\text{lít})$$"
+                },
+                {
+                  "title": "Chia và làm tròn lên",
+                  "md": "$$150:9{,}0432\\approx 16{,}59$$\n\nSố lần đổ phải là số nguyên và phải đủ đầy bể, nên ta lấy số nguyên nhỏ nhất không nhỏ hơn $16{,}59$, tức là $17$."
+                },
+                {
+                  "title": "Kiểm tra bằng hai số liền nhau",
+                  "md": "Với $16$ xô, lượng nước là $16\\cdot 9{,}0432\\approx 144{,}7$ lít, chưa đầy bể. Với $17$ xô, lượng nước là $17\\cdot 9{,}0432\\approx 153{,}7$ lít, đã đủ.\n\nVậy cần ít nhất $17$ xô nước."
+                }
+              ],
+              "outro": "> [!canh-bao] Chữ “ít nhất” trong bài toán này nghĩa là phải **làm tròn lên**, kể cả khi phần thập phân nhỏ hơn $0{,}5$. Em cũng cần đổi đơn vị trước khi chia, vì thể tích xô tính bằng cm³ còn thể tích bể tính bằng lít."
+            },
+            {
+              "layout": "text",
+              "title": "Câu IV.2: Đề bài hình học",
+              "parts": [
+                {
+                  "md": "**Đề bài.** Cho tam giác $ABC$ vuông tại $A$ ($AB<AC$) nội tiếp đường tròn tâm $O$, đường kính $BC$. Lấy điểm $H$ thuộc đoạn $AB$ sao cho $HB>HA$ ($H$ khác $A$). Đường thẳng qua $H$ vuông góc với $BC$ cắt $BC$ tại $D$ và cắt đường thẳng $AC$ tại $E$.\n\na) Chứng minh bốn điểm $A,H,D,C$ cùng thuộc một đường tròn.\n\nb) Đường thẳng $CH$ cắt $(O)$ tại điểm thứ hai $F$. Đường thẳng qua $A$ vuông góc với $ED$ cắt $DF$ tại $M$. Chứng minh $AE\\cdot BC=EH\\cdot AB$ và $\\widehat{EMH}=90^\\circ$.\n\nc) Đường thẳng $BM$ cắt $(O)$ tại điểm thứ hai $K$. Chứng minh tam giác $HKM$ là tam giác cân.\n\n> [!meo] Em hãy tự vẽ hình trước khi xem lời giải. Vẽ đường tròn đủ lớn và đặt $A$ gần $B$ để $AB<AC$, rồi đặt $H$ gần $A$ hơn gần $B$ để $HB>HA$. Hình vẽ đúng tỉ lệ giúp em nhìn ra nhiều góc bằng nhau."
+                }
+              ]
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu IV.2a: Bốn điểm cùng thuộc đường tròn",
+              "intro": "**Đề bài.** Chứng minh bốn điểm $A,H,D,C$ cùng thuộc một đường tròn.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Xét góc tại A",
+                  "md": "![Hình vẽ ý a: đường tròn đường kính HC đi qua A và D](/api/lesson-media/images/10a531c0-b1c1-4883-a65c-164e7c3e189c-1793585409581-65102b1567f9fa41.svg \"Đường tròn nét đứt có đường kính HC đi qua A và D.\")\n\nTam giác $ABC$ vuông tại $A$ và $H$ thuộc $AB$, nên $\\widehat{HAC}=90^\\circ$. Do đó $A$ thuộc đường tròn đường kính $HC$."
+                },
+                {
+                  "title": "Xét góc tại D",
+                  "md": "Vì $HD\\perp BC$ tại $D$ nên $\\widehat{HDC}=90^\\circ$. Do đó $D$ cũng thuộc đường tròn đường kính $HC$."
+                },
+                {
+                  "title": "Kết luận",
+                  "md": "Hai điểm $A$ và $D$ cùng nhìn đoạn $HC$ dưới một góc vuông, nên bốn điểm $A,H,D,C$ cùng thuộc đường tròn đường kính $HC$."
+                }
+              ]
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu IV.2b, phần 1: Tam giác đồng dạng",
+              "intro": "**Đề bài.** Chứng minh $AE\\cdot BC=EH\\cdot AB$.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng."
+                },
+                {
+                  "title": "Tìm cặp tam giác từ đẳng thức",
+                  "md": "Đẳng thức cần chứng minh tương đương với $\\dfrac{AE}{AB}=\\dfrac{EH}{BC}$. Tỉ lệ này gợi ý xét hai tam giác $AEH$ và $ABC$."
+                },
+                {
+                  "title": "Chỉ ra hai cặp góc bằng nhau",
+                  "md": "Ta có $\\widehat{EAH}=\\widehat{BAC}=90^\\circ$, vì $E$ thuộc đường thẳng $AC$ và $H$ thuộc $AB$.\n\nTrong tam giác $EDC$ vuông tại $D$, góc $\\widehat{DEC}$ phụ với $\\widehat{ACB}$. Trong tam giác $ABC$ vuông tại $A$, góc $\\widehat{ABC}$ cũng phụ với $\\widehat{ACB}$. Do đó $\\widehat{AEH}=\\widehat{ABC}$."
+                },
+                {
+                  "title": "Suy ra đẳng thức",
+                  "md": "Vậy $\\triangle AEH\\sim\\triangle ABC$ (g.g), nên\n\n$$\\frac{AE}{AB}=\\frac{EH}{BC}\\;\\Rightarrow\\;AE\\cdot BC=EH\\cdot AB$$"
+                }
+              ]
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu IV.2b, phần 2: Chứng minh góc vuông",
+              "intro": "**Đề bài.** Chứng minh $\\widehat{EMH}=90^\\circ$.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng.\n\n:::Bí quá thì mở gợi ý\nĐiểm $F$ tạo thêm một đường tròn có đường kính $BH$. Em hãy thử chứng minh $DH$ là phân giác của góc $\\widehat{ADM}$, rồi xem tam giác $ADM$ có gì đặc biệt.\n:::"
+                },
+                {
+                  "title": "Thêm một đường tròn nữa",
+                  "md": "![Hình vẽ ý b: DH là phân giác của góc ADM, M đối xứng với A qua DE](/api/lesson-media/images/10a531c0-b1c1-4883-a65c-164e7c3e189c-1793585409581-308634476cc06293.svg \"DH là phân giác của góc ADM và là trung trực của AM.\")\n\n$F$ thuộc đường tròn đường kính $BC$ nên $\\widehat{BFH}=\\widehat{BFC}=90^\\circ$. Mặt khác $\\widehat{BDH}=90^\\circ$. Vì vậy $B,D,H,F$ cùng thuộc đường tròn đường kính $BH$."
+                },
+                {
+                  "title": "Chứng minh DH là phân giác",
+                  "md": "Ta nối ba cặp góc bằng nhau:\n\n- $\\widehat{HDF}=\\widehat{HBF}$ vì cùng chắn cung $HF$ của đường tròn đường kính $BH$.\n- $\\widehat{ABF}=\\widehat{ACF}$ vì cùng chắn cung $AF$ của $(O)$.\n- $\\widehat{ACH}=\\widehat{ADH}$ vì cùng chắn cung $AH$ của đường tròn ở ý a.\n\nVì $H$ thuộc $AB$ và $CF$ đi qua $H$, ta suy ra $\\widehat{HDF}=\\widehat{ADH}$, tức là $DH$ là phân giác của góc $\\widehat{ADM}$."
+                },
+                {
+                  "title": "Suy ra DE là trung trực của AM",
+                  "md": "Gọi $I$ là giao điểm của $AM$ và $DE$. Tam giác $ADM$ có $DI$ vừa là đường cao ($AM\\perp DE$) vừa là phân giác, nên tam giác này cân tại $D$ và $IA=IM$. Do đó $DE$ là đường trung trực của đoạn $AM$."
+                },
+                {
+                  "title": "Kết luận góc vuông",
+                  "md": "Vì $H$ và $E$ thuộc đường trung trực của $AM$ nên $HM=HA$ và $EM=EA$. Cùng với cạnh chung $EH$, ta có $\\triangle EMH=\\triangle EAH$ (c.c.c). Do đó $\\widehat{EMH}=\\widehat{EAH}=90^\\circ$."
+                }
+              ],
+              "outro": "> [!ghi-nho] Kết quả đáng nhớ của ý này là $M$ đối xứng với $A$ qua đường thẳng $DE$, nên $HM=HA$. Ý c sẽ dùng lại điều đó."
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu IV.2c: Tam giác cân",
+              "intro": "**Đề bài.** Đường thẳng $BM$ cắt $(O)$ tại điểm thứ hai $K$. Chứng minh tam giác $HKM$ cân.",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng.\n\n:::Bí quá thì mở gợi ý\nEm hãy đoán xem tam giác cân tại đỉnh nào, rồi gọi $N$ là giao điểm của $BM$ và $DE$. So sánh các tích đoạn thẳng từ $B$ sẽ cho một cặp tam giác đồng dạng.\n:::"
+                },
+                {
+                  "title": "Dự đoán và thêm điểm phụ",
+                  "md": "![Hình vẽ ý c: HK bằng HM, N là giao điểm của BM và DE](/api/lesson-media/images/10a531c0-b1c1-4883-a65c-164e7c3e189c-1793585409581-f1a3436b012a5aea.svg \"Đường tròn nét đứt tâm H đi qua A, M và K; N là giao điểm của BM và DE.\")\n\nHình vẽ cho thấy $HK=HM$, nên ta dự đoán tam giác cân tại $H$. Gọi $N$ là giao điểm của đường thẳng $BM$ và đường thẳng $DE$. Vì $HB>HA$ nên $M$ nằm giữa $B$ và $N$; vì $AB<AC$ nên $M$ nằm ngoài $(O)$, do đó $K$ nằm giữa $B$ và $M$. Như vậy bốn điểm nằm theo thứ tự $B,K,M,N$."
+                },
+                {
+                  "title": "Hai tích cùng bằng BD nhân BC",
+                  "md": "Điểm $K$ thuộc đường tròn đường kính $BC$ nên $\\widehat{BKC}=90^\\circ$. Do đó $\\triangle BKC\\sim\\triangle BDN$ (chung góc $B$, cùng có góc vuông), suy ra $BK\\cdot BN=BD\\cdot BC$.\n\nTương tự, $\\triangle BDH\\sim\\triangle BAC$ (chung góc $B$, cùng có góc vuông), suy ra $BH\\cdot BA=BD\\cdot BC$.\n\nVậy $BK\\cdot BN=BH\\cdot BA$."
+                },
+                {
+                  "title": "Tìm góc bằng góc đáy",
+                  "md": "Từ $\\dfrac{BK}{BA}=\\dfrac{BH}{BN}$ và góc $B$ chung, ta có $\\triangle BKH\\sim\\triangle BAN$ (c.g.c). Do đó $\\widehat{BKH}=\\widehat{BAN}$."
+                },
+                {
+                  "title": "Dùng tính đối xứng",
+                  "md": "Theo ý b, $DE$ là trung trực của $AM$. Điểm $H$ và $N$ đều thuộc $DE$ nên $HA=HM$ và $NA=NM$. Với cạnh chung $HN$, ta có $\\triangle HAN=\\triangle HMN$ (c.c.c), do đó $\\widehat{HAN}=\\widehat{HMN}$."
+                },
+                {
+                  "title": "Kết luận tam giác cân",
+                  "md": "Vì $H$ thuộc $AB$ nên $\\widehat{BAN}=\\widehat{HAN}$. Vì các điểm nằm theo thứ tự $B,K,M,N$ nên\n\n$$\\widehat{HKM}=180^\\circ-\\widehat{BKH}=180^\\circ-\\widehat{HAN}=180^\\circ-\\widehat{HMN}=\\widehat{HMK}$$\n\nTam giác $HKM$ có hai góc ở $K$ và $M$ bằng nhau, nên tam giác này cân tại $H$."
+                }
+              ],
+              "outro": "> [!meo] Khi đề có nhiều đường thẳng đi qua cùng một điểm như $B$, em hãy thử viết các tích đoạn thẳng từ điểm đó. Hai tích bằng nhau thường cho một cặp tam giác đồng dạng, và cặp tam giác này chuyển được góc từ chỗ khó nhìn sang chỗ dễ nhìn."
+            },
+            {
+              "layout": "steps",
+              "reveal": true,
+              "title": "Câu V: Chi phí nhỏ nhất",
+              "intro": "**Đề bài.** Một công ty thuê một kho xưởng và điều động một số công nhân để hoàn thành đơn hàng 1000 sản phẩm. Chi phí thuê kho là 3 triệu đồng mỗi ngày. Mỗi công nhân làm được 5 sản phẩm một ngày và được thưởng 1 triệu đồng sau khi đơn hàng hoàn thành. Công ty nên điều động bao nhiêu công nhân và thuê kho trong bao nhiêu ngày để tổng chi phí thuê kho và thưởng là nhỏ nhất?",
+              "parts": [
+                {
+                  "title": "Tự làm ra giấy",
+                  "md": "Em hãy làm ý này ra giấy trước, rồi bấm **Bước tiếp** để đối chiếu từng dòng.\n\n:::Bí quá thì mở gợi ý\nEm hãy biểu diễn tổng chi phí theo một ẩn duy nhất. Lưu ý rằng số công nhân và số ngày đều là số nguyên dương, nên số giá trị cần thử không nhiều.\n:::"
+                },
+                {
+                  "title": "Đặt ẩn",
+                  "md": "Gọi $x$ là số công nhân và $y$ là số ngày thuê kho, với $x,y\\in\\mathbb{N}^*$."
+                },
+                {
+                  "title": "Liên hệ giữa hai ẩn",
+                  "md": "Mỗi ngày $x$ công nhân làm được $5x$ sản phẩm, nên $5xy=1000$, tức là $xy=200$."
+                },
+                {
+                  "title": "Viết chi phí theo một ẩn",
+                  "md": "Tổng chi phí tính bằng triệu đồng là\n\n$$P=x+3y=x+\\frac{600}{x}$$"
+                },
+                {
+                  "title": "Thử các giá trị có thể",
+                  "md": "Vì $x,y$ nguyên dương và $xy=200$ nên $x$ là ước của $200$.\n\n| $x$ | 1 | 2 | 4 | 5 | 8 | 10 | 20 | 25 | 40 | 50 | 100 | 200 |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|\n| $P$ | 601 | 302 | 154 | 125 | 83 | 70 | 50 | 49 | 55 | 62 | 106 | 203 |"
+                },
+                {
+                  "title": "Kết luận",
+                  "md": "Giá trị nhỏ nhất của $P$ là $49$ triệu đồng, đạt được khi $x=25$ và $y=8$.\n\nVậy công ty nên điều động $25$ công nhân và thuê kho trong $8$ ngày."
+                }
+              ],
+              "outro": ":::Cách lập luận không cần bảng\nVới mọi số nguyên $x$, hai số $x-24$ và $x-25$ là hai số nguyên liên tiếp nên $(x-24)(x-25)\\geq 0$. Khai triển ta có $x^2+600\\geq 49x$, và chia hai vế cho $x>0$ được $x+\\dfrac{600}{x}\\geq 49$. Dấu bằng xảy ra khi $x=24$ hoặc $x=25$. Tuy nhiên $x=24$ cho $y$ không nguyên, nên chỉ có $x=25$ là thoả mãn.\n:::"
+            }
+          ],
+          "summary": [
+            "Khi đề không cho biến nguyên, em chặn biểu thức giữa hai số rồi thử từng số nguyên, thay vì xét ước số.",
+            "Trong bài toán thực tế, chữ “ít nhất” yêu cầu làm tròn lên, và em cần đổi đơn vị trước khi tính.",
+            "Khi tích hai nghiệm bằng 1, phép chia cho một nghiệm trở thành phép nhân với nghiệm kia.",
+            "Ở bài hình nhiều ý, kết quả của ý trước thường là chìa khoá của ý sau: ý b cho HA = HM, và ý c dùng lại điều đó."
+          ],
+          "lecture": [
+            {
+              "anchor": "s0b0",
+              "text": "Chào em! Thầy là Tiến Đạt. Hôm nay thầy và em cùng giải đề Toán vào lớp mười của Hà Nội năm hai nghìn không trăm hai mươi sáu. Với mỗi câu, em chuẩn bị giấy bút và tự làm trước. Khi em có đáp số, thầy sẽ cùng em đối chiếu từng bước, và chỉ ra những chỗ dễ mất điểm nhất."
+            },
+            {
+              "anchor": "s1b0",
+              "text": "Đề có năm câu, làm trong một trăm hai mươi phút. Trong cột điểm, riêng câu bốn đã chiếm bốn điểm, nên thầy gợi ý dành khoảng năm mươi phút cho câu này."
+            },
+            {
+              "anchor": "s1b1",
+              "text": "Câu năm chỉ có nửa điểm, nên đừng sa đà vào nó từ đầu. Nên làm chắc các câu dễ trước, và luôn giữ lại mười phút cuối để soát bài."
+            },
+            {
+              "anchor": "s2b0",
+              "text": "Mình khởi động với câu một. Có hai ý ngắn: ý một tính tần số tương đối, ý hai tính xác suất. Em làm cả hai thẻ. Xong thì em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s3b0",
+              "text": "Sang câu hai. Đề cho hai biểu thức A và B, với x dương và x khác chín. Ý một rất nhẹ nhàng: tính A khi x bằng hai mươi lăm. Em nhập đáp số rồi bấm Tiếp tục."
+            },
+            {
+              "anchor": "s4b0",
+              "text": "Ý hai là rút gọn B. Em làm ra giấy trước đã. Sau đó, em kéo các dòng trên màn hình về đúng thứ tự, rồi bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s5b0",
+              "text": "Bây giờ là ý khó nhất của câu hai. Đề hỏi: tìm x để P là số nguyên. Đây là lời giải mà rất nhiều bạn sẽ viết, và nó bị mất điểm. Em đọc thật kỹ đề và từng dòng, bấm vào dòng sai, rồi bấm Tiếp tục."
+            },
+            {
+              "anchor": "s6b0",
+              "text": "Dòng sai là dòng thứ hai: đề không hề nói x là số nguyên, nên căn x cộng ba có thể là một phân số. Cách làm đúng là chặn P giữa hai số."
+            },
+            {
+              "anchor": "s6b1",
+              "text": "Vì x dương nên căn x cộng ba lớn hơn ba. Do đó phân số bảy trên căn x cộng ba nằm giữa không và bảy phần ba."
+            },
+            {
+              "anchor": "s6b2",
+              "text": "Suy ra P nằm giữa âm bốn phần ba và một. Trong khoảng này chỉ có hai số nguyên là âm một và không."
+            },
+            {
+              "anchor": "s6b3",
+              "text": "P bằng không khi căn x cộng ba bằng bảy, tức là x bằng mười sáu."
+            },
+            {
+              "anchor": "s6b4",
+              "text": "P bằng âm một khi căn x cộng ba bằng bảy phần hai, tức là x bằng một phần tư. Đây chính là nghiệm mà lời giải kia đánh mất."
+            },
+            {
+              "anchor": "s7b0",
+              "text": "Câu ba gồm hai bài toán thực tế. Em làm lần lượt hai thẻ. Với thẻ thứ nhất, em đọc kỹ cụm từ nhiều hơn năm áo mỗi ngày. Làm xong cả hai, em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s8b0",
+              "text": "Ý một, em đặt x là số áo mỗi ngày theo kế hoạch, vì đó chính là đại lượng đề hỏi. Ba ngày đầu may ba x áo, bảy ngày sau may bảy nhân x cộng năm áo. Giải ra x bằng ba mươi, và thử lại đúng ba trăm ba mươi lăm áo."
+            },
+            {
+              "anchor": "s8b1",
+              "text": "Ý hai có hai đại lượng nên em dùng hai ẩn. Một phương trình về số bông, một phương trình về số tiền. Giải ra mười lăm bông hoa hồng và mười bông hoa cúc."
+            },
+            {
+              "anchor": "s9b0",
+              "text": "Ý ba là hệ thức Viète. Biểu thức Q trông khá rắc rối và không đối xứng. Em tính ra giấy, cần thì bấm gợi ý. Có đáp số rồi, em nhập vào và bấm Tiếp tục."
+            },
+            {
+              "anchor": "s10b0",
+              "text": "Đầu tiên em viết hệ thức Viète: tổng hai nghiệm bằng ba, tích hai nghiệm bằng một."
+            },
+            {
+              "anchor": "s10b1",
+              "text": "Tích bằng một là chìa khoá. Nó cho biết chia cho x một cũng chính là nhân với x hai, và chia cho x hai cũng là nhân với x một."
+            },
+            {
+              "anchor": "s10b2",
+              "text": "Nhờ vậy mọi mẫu số biến mất. Gom lại, Q bằng ba nhân tổng bình phương, trừ đi tổng hai nghiệm. Biểu thức tưởng không đối xứng hoá ra lại đối xứng."
+            },
+            {
+              "anchor": "s10b3",
+              "text": "Tổng bình phương bằng chín trừ hai, tức là bảy. Vậy Q bằng hai mươi mốt trừ ba, bằng mười tám."
+            },
+            {
+              "anchor": "s11b0",
+              "text": "Sang câu bốn, phần nhiều điểm nhất của đề. Ý một là một chiếc xô hình trụ có bán kính mười hai xăng ti mét, cao hai mươi lăm xăng ti mét. Em làm hai thẻ a và b. Xong thì em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s12b0",
+              "text": "Mình đi lại ý b nhé. Có ba việc phải làm theo thứ tự."
+            },
+            {
+              "anchor": "s12b1",
+              "text": "Việc một, tính thể tích xô: pi r bình phương h, bằng mười một nghìn ba trăm linh bốn xăng ti mét khối."
+            },
+            {
+              "anchor": "s12b2",
+              "text": "Việc hai, mỗi lần chỉ múc tám mươi phần trăm, tức là khoảng chín phẩy không bốn lít. Cần đổi đơn vị trước khi chia."
+            },
+            {
+              "anchor": "s12b3",
+              "text": "Việc ba, lấy một trăm năm mươi chia cho lượng đó, được khoảng mười sáu phẩy năm chín. Mười sáu xô thì bể chưa đầy, nên đáp số là mười bảy xô. Đây là chỗ làm tròn thông thường sẽ sai nếu phần lẻ nhỏ."
+            },
+            {
+              "anchor": "s13b0",
+              "text": "Đến bài hình, phần nhiều điểm nhất của đề. Mình dựng hình theo đúng thứ tự của đề nhé. Đầu tiên là đường tròn tâm O, đường kính B C."
+            },
+            {
+              "anchor": "s13b1",
+              "text": "Tiếp theo, lấy điểm A trên đường tròn, gần B hơn để A B nhỏ hơn A C. Vì B C là đường kính nên tam giác A B C vuông tại A."
+            },
+            {
+              "anchor": "s13b2",
+              "text": "Lấy điểm H trên đoạn A B, sao cho H gần A hơn gần B."
+            },
+            {
+              "anchor": "s13b3",
+              "text": "Cuối cùng, kẻ đường thẳng qua H vuông góc với B C. Nó cắt B C tại D, và cắt đường thẳng A C tại E."
+            },
+            {
+              "anchor": "s13b4",
+              "text": "Bây giờ em vẽ lại hình ra giấy của mình, rồi kéo thử điểm A và điểm H trên màn hình. Xong thì em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s14b0",
+              "text": "Ý a yêu cầu chứng minh bốn điểm A, H, D, C cùng thuộc một đường tròn. Muốn vậy, em tìm một đoạn thẳng mà hai điểm còn lại cùng nhìn dưới góc vuông. Em nhìn hình, chọn đáp án, rồi bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s15b0",
+              "text": "Mình đối chiếu nhé. Đoạn cần tìm là H C."
+            },
+            {
+              "anchor": "s15b1",
+              "text": "Mình kẻ đoạn H C. Điểm H nằm trên A B, nên góc H A C là góc vuông của tam giác đã cho."
+            },
+            {
+              "anchor": "s15b2",
+              "text": "Vì H D vuông góc với B C, nên góc H D C cũng bằng chín mươi độ."
+            },
+            {
+              "anchor": "s15b3",
+              "text": "A và D cùng nhìn H C dưới một góc vuông, nên cả hai nằm trên đường tròn đường kính H C. Đây là đường tròn nét đứt vừa hiện ra, và nó sẽ được dùng lại ở ý b."
+            },
+            {
+              "anchor": "s16b0",
+              "text": "Ý b có hai phần. Phần đầu là chứng minh một đẳng thức tích. Em làm ra giấy, khi nào cần thì mở gợi ý. Có lời giải rồi, em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s17b0",
+              "text": "Mình đối chiếu nhé. Đổi đẳng thức tích thành tỉ lệ: A E trên A B bằng E H trên B C. Bốn đoạn này nằm trong hai tam giác A E H và A B C."
+            },
+            {
+              "anchor": "s17b1",
+              "text": "Tam giác A E H được tô màu trên hình. Hai tam giác cùng có một góc vuông tại A. Ngoài ra, góc A E H và góc A B C cùng phụ với góc A C B, nên chúng bằng nhau."
+            },
+            {
+              "anchor": "s17b2",
+              "text": "Vậy hai tam giác đồng dạng theo trường hợp góc góc. Từ tỉ lệ cạnh, nhân chéo là được đẳng thức cần chứng minh."
+            },
+            {
+              "anchor": "s18b0",
+              "text": "Phần hai cần nhiều ý tưởng hơn, và hình sẽ có thêm hai điểm mới."
+            },
+            {
+              "anchor": "s18b1",
+              "text": "Đường thẳng C H cắt đường tròn tại điểm thứ hai là F. Đường thẳng qua A vuông góc với E D cắt D F tại M. Đề yêu cầu chứng minh góc E M H vuông. Em làm ra giấy, cần thì mở gợi ý. Xong thì em bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s19b0",
+              "text": "Mình đối chiếu nhé. Ý tưởng chính là tìm mối liên hệ giữa điểm M và điểm A."
+            },
+            {
+              "anchor": "s19b1",
+              "text": "Mình kẻ B F. Điểm F nằm trên đường tròn đường kính B C nên góc B F C vuông. Kết hợp với góc B D H vuông, bốn điểm B, D, H, F cùng thuộc đường tròn đường kính B H."
+            },
+            {
+              "anchor": "s19b2",
+              "text": "Mình kẻ D A và D M, hai đoạn màu xanh lá. Nối các góc bằng nhau qua ba đường tròn: góc H D F bằng góc H B F, bằng góc A C H, bằng góc A D H. Vậy D H chia đôi góc A D M."
+            },
+            {
+              "anchor": "s19b3",
+              "text": "Mình kẻ A M, cắt D E tại I. Trong tam giác A D M, đoạn D I vừa là đường cao vừa là phân giác, nên tam giác cân tại D, và D E là trung trực của A M."
+            },
+            {
+              "anchor": "s19b4",
+              "text": "Mình kẻ M E và M H. H và E nằm trên trung trực nên H M bằng H A, E M bằng E A. Hai tam giác E M H và E A H bằng nhau, nên góc E M H bằng góc E A H, bằng chín mươi độ."
+            },
+            {
+              "anchor": "s20b0",
+              "text": "Ý c là ý khó nhất của đề. Thay vì chứng minh ngay, mình dự đoán trước đã. Em kéo điểm A và điểm H nhiều lần, rồi nhìn ba độ dài ở bên phải để tìm hai độ dài luôn bằng nhau. Khi đã có dự đoán, em thử chứng minh ra giấy, rồi bấm Tiếp tục nhé."
+            },
+            {
+              "anchor": "s21b0",
+              "text": "Chắc em đã thấy: H K luôn bằng H M, dù kéo thế nào. Vậy tam giác cân tại H, và mình cần chứng minh hai góc ở K và M bằng nhau."
+            },
+            {
+              "anchor": "s21b1",
+              "text": "Mình thêm điểm N là giao của đường thẳng B M với đường thẳng D E. Hai điều kiện H B lớn hơn H A và A B nhỏ hơn A C của đề bảo đảm các điểm nằm theo thứ tự B, K, M, N."
+            },
+            {
+              "anchor": "s21b2",
+              "text": "Mình kẻ K C. Góc B K C vuông, nên tam giác B K C đồng dạng với tam giác B D N. Tương tự, tam giác B D H đồng dạng với tam giác B A C. Cả hai cho cùng một tích B D nhân B C, nên B K nhân B N bằng B H nhân B A."
+            },
+            {
+              "anchor": "s21b3",
+              "text": "Mình kẻ H K và A N. Từ đẳng thức vừa có, hai tam giác B K H và B A N có góc B chung và hai cạnh tỉ lệ, nên đồng dạng. Suy ra góc B K H bằng góc B A N."
+            },
+            {
+              "anchor": "s21b4",
+              "text": "Mình kẻ H M. Theo ý b, D E là trung trực của A M, nên hai tam giác H A N và H M N bằng nhau, và góc H A N bằng góc H M N. Góc H K M kề bù với góc B K H, góc H M K kề bù với góc H M N, nên hai góc này bằng nhau. Vậy tam giác H K M cân tại H."
+            },
+            {
+              "anchor": "s22b0",
+              "text": "Câu cuối là bài toán tối ưu. Công ty càng thuê nhiều công nhân thì càng nhanh xong, nên tiền kho giảm nhưng tiền thưởng tăng. Em tự làm rồi nhập số công nhân. Xong thì em bấm Tiếp tục."
+            },
+            {
+              "anchor": "s23b0",
+              "text": "Gọi x là số công nhân và y là số ngày. Tổng sản phẩm bằng năm x y, nên x nhân y bằng hai trăm."
+            },
+            {
+              "anchor": "s23b1",
+              "text": "Chi phí gồm x triệu tiền thưởng và ba y triệu tiền kho. Thay y bằng hai trăm chia x, ta được chi phí chỉ theo một ẩn: x cộng sáu trăm chia x."
+            },
+            {
+              "anchor": "s23b2",
+              "text": "Vì x và y đều nguyên dương nên x là ước của hai trăm, chỉ có mười hai giá trị. Lập bảng là thấy ngay: nhỏ nhất là bốn mươi chín triệu, khi có hai mươi lăm công nhân làm trong tám ngày."
+            },
+            {
+              "anchor": "s24b0",
+              "text": "Mình đã đi hết đề rồi. Thầy muốn em mang theo ba điều."
+            },
+            {
+              "anchor": "s24b1",
+              "text": "Một, khi đề không nói x là số nguyên, đừng xét ước số, mà chặn biểu thức giữa hai số rồi thử từng số nguyên."
+            },
+            {
+              "anchor": "s24b2",
+              "text": "Hai, trong bài toán thực tế, chữ ít nhất nghĩa là làm tròn lên, và cần đổi đơn vị trước khi tính."
+            },
+            {
+              "anchor": "s24b3",
+              "text": "Ba, ở bài hình, kết quả của ý trước thường là chìa khoá của ý sau: ý c dùng lại đúng điều ý b đã chứng minh. Lời giải chi tiết nằm ngay dưới phần slide, còn từng dạng có bài luyện riêng. Chúc em thi thật tốt nhé!"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
