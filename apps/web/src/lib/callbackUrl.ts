@@ -15,6 +15,15 @@ export function sanitizeCallbackUrl(raw: string | null | undefined): string {
   return raw;
 }
 
+/**
+ * Đích của người ĐÃ đăng nhập khi mở `/signin`: đi thẳng tới đích thay vì hỏi lại
+ * mật khẩu. Đích trỏ về chính `/signin` thì về "/" để không lặp chuyển hướng.
+ */
+export function signedInRedirectTarget(raw: string | string[] | null | undefined): string {
+  const target = sanitizeCallbackUrl(typeof raw === "string" ? raw : null);
+  return /^\/signin(?:[/?#]|$)/.test(target) ? "/" : target;
+}
+
 /** Gắn `?callbackUrl=` vào một trang auth, bỏ qua khi đích là mặc định "/". */
 export function withCallbackUrl(path: string, callbackPath: string): string {
   if (callbackPath === "/") return path;
