@@ -2451,9 +2451,11 @@ export function chayToanMoRong(tuyChon) {
     });
   });
 
-  // Vừa chiều cao: thành phần cao mặc định 540px; nếu slide bị tràn (chữ, phụ đề quanh thành phần) thì thu thành phần lại
-  // trước khi khung phải thu nhỏ cỡ chữ cả slide (vuaKhung của chayKhung).
+  // Vừa chiều cao: nếu slide bị tràn (chữ, phụ đề quanh thành phần) thì thu thành phần lại trước khi khung phải thu nhỏ cỡ chữ
+  // cả slide (vuaKhung của chayKhung). Trong một cột còn chỗ thì giãn ra hết cột, vì hình luôn là phần chính của cột đó.
+  var CAO_MAC_DINH = 540, CAO_TRONG_COT = 660, CAO_THAP_NHAT = 330;
   var vuaCao = function () {
+    var hep = document.documentElement.classList.contains("hep");
     $$(".khung > section").forEach(function (s) {
       var hops = $$(".tm-hop", s);
       var hien = hops.filter(function (h) { return h.getClientRects().length; });
@@ -2472,11 +2474,25 @@ export function chayToanMoRong(tuyChon) {
       });
       var du = (day - gioiHan) / tl;
       var cao = hien[0].getBoundingClientRect().height / tl;
-      var moi = du > 1 ? Math.max(330, Math.floor(cao - du - 4)) : cao;
+      var tran = cot && !hep ? CAO_TRONG_COT : CAO_MAC_DINH;
+      var moi = Math.min(tran, Math.max(CAO_THAP_NHAT, Math.floor(cao - du - 4)));
       if (Math.abs(moi - cao) < 1) return;
       hops.forEach(function (h) { h.style.setProperty("--tm-cao", moi + "px"); });
     });
   };
   try { vuaCao(); } catch (e) { /* không đo được */ }
   try { if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { try { vuaCao(); } catch (e) { /* bỏ qua */ } }); } catch (e) { /* cũ */ }
+  // Khung nạp ở cỡ nhỏ (trong trang bài học) rồi mới vào toàn màn hình: phải đo lại, kẻo hình giữ mãi cỡ đã thu.
+  // Chạy trước vuaKhung (120 ms sau resize, chỉ khi cỡ logic đổi) và bỏ cỡ chữ cũ để vuaKhung đo đúng theo cỡ mới.
+  var khungDo = document.querySelector(".khung"), kichDo = "", henDo = 0;
+  window.addEventListener("resize", function () {
+    clearTimeout(henDo);
+    henDo = setTimeout(function () {
+      var kich = khungDo ? khungDo.offsetWidth + "x" + khungDo.offsetHeight : "";
+      if (kich === kichDo) return;
+      kichDo = kich;
+      $$(".khung > section").forEach(function (s) { if ($$(".tm-hop", s).length) s.style.fontSize = ""; });
+      try { vuaCao(); } catch (e) { /* không đo được */ }
+    }, 60);
+  });
 }
