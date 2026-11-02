@@ -289,9 +289,9 @@ pre.ma .sao:hover { background: #20315a; }
 .tk { color: #ff7b9c; font-weight: 600; } .ts { color: #9ce38a; } .tn { color: #ffb86b; } .tc { color: #6f86ad; font-style: italic; } .th { color: #7cc4ff; } .tg { color: #ff9ac1; }
 
 /* Gợi ý bấm tiếp khi slide còn ý chưa hiện */
-.goi-y { position: absolute; right: 36px; bottom: 26px; z-index: 6; padding: 8px 20px; border-radius: 999px; background: var(--mau); color: #fff; font-size: 24px; font-weight: 700;
+.goi-y { position: absolute; right: 36px; bottom: 26px; z-index: 6; padding: 8px 20px; border: 0; border-radius: 999px; background: var(--mau); color: #fff; font-size: 24px; font-weight: 700;
   letter-spacing: .01em; box-shadow: 0 8px 22px rgba(0, 0, 0, .22); opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .3s, transform .3s; }
-.goi-y.co { opacity: .95; transform: none; animation: nhip 1.8s ease-in-out infinite; }
+.goi-y.co { opacity: .95; transform: none; pointer-events: auto; animation: nhip 1.8s ease-in-out infinite; }
 @keyframes nhip { 50% { transform: translateY(-5px); } }
 
 /* Thanh điều khiển */
@@ -1021,8 +1021,11 @@ function chayKhung() {
   var goiY = $(".goi-y");
   var capNhatGoiY = function () {
     var b = dsSlide[hien] && dsSlide[hien]._b;
-    goiY.classList.toggle("co", Boolean(b && b.da < b.ds.length));
+    var con = Boolean(b && b.da < b.ds.length);
+    goiY.classList.toggle("co", con);
+    goiY.disabled = !con;
   };
+  goiY.addEventListener("click", function () { tien(); goiY.blur(); });
   // Giao thức với trang cha (docs/demo-toan10/HOP-DONG.md, mục 4): "trang" khi vào slide, "buoc" mỗi khi số bước đã hiện
   // đổi (và ngay sau "trang"), "san-sang" khi dựng xong.
   var buocDaBao = "";
@@ -1482,7 +1485,7 @@ ${cssToan}${kieuHopLe === "hoclieu" ? `<style>${CSS_HOC_LIEU}</style>\n` : ""}${
 <body>
 <div class="san-khau"><div class="khung">
 ${phan}
-<div class="goi-y">${thoat(T.goiY)}</div>
+<button type="button" class="goi-y" disabled>${thoat(T.goiY)}</button>
 </div></div>
 <canvas class="but"></canvas>
 <div class="laser"></div>
