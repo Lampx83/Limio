@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giới thiệu Limio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap">
+<style>
+/*
+  Bài trình chiếu giới thiệu Limio cho người chưa từng sử dụng. Khung 1920x1080, tự co theo cửa sổ.
+  Phím: ← → (hoặc Space) chuyển slide, N hiện/ẩn lời giảng, F toàn màn hình, Home/End. In ra PDF: Ctrl/Cmd+P (mỗi slide một trang).
+  Quy ước giao diện (docs memory "slide"): chữ thân >= 40 px trên khung 1920 (tương đương >= 26 px trên 1280),
+  không nhãn bo tròn trang trí, không emoji (biểu tượng là SVG), phân cấp bằng độ đậm chứ không bằng cỡ chữ,
+  font không chân tối ưu tiếng Việt, tiêu đề line-height >= 1.2, animation nhẹ và tắt khi prefers-reduced-motion.
+*/
+:root {
+  --ink: #0B1220; --ink2: #374151; --mute: #6B7280;
+  --g1: #3F6212; --g2: #65A30D; --g3: #84CC16;
+  --l50: #F7FEE7; --l100: #ECFCCB; --l200: #D9F99D;
+  --cream: #FAFAF7; --white: #FFFFFF; --line: #E5E7EB;
+  --pink: #BE185D; --pink100: #FCE7F3;
+  --font: "Be Vietnam Pro", "Lexend", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: #0F172A; color: var(--ink); font-family: var(--font); overflow: hidden; }
+h1, h2, h3, p, ul, ol { margin: 0; padding: 0; }
+#viewport { position: absolute; left: 0; right: 0; top: 0; bottom: var(--nb, 0px); overflow: hidden; }
+#stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: center center; }
+
+.slide {
+  position: absolute; inset: 0; padding: 84px 120px 76px; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--cream); opacity: 0; visibility: hidden; transform: scale(1.02);
+  transition: opacity .4s, transform .6s cubic-bezier(.2,.8,.2,1), visibility 0s .4s;
+}
+.slide.active { opacity: 1; visibility: visible; transform: none; transition: opacity .4s, transform .6s cubic-bezier(.2,.8,.2,1); }
+.s-lime { background: var(--l50); }
+.s-dark { background: var(--g1); color: #fff; }
+
+h1 { font-size: 112px; line-height: 1.2; font-weight: 800; letter-spacing: -.02em; }
+h2 { text-wrap: balance; font-size: 72px; line-height: 1.22; font-weight: 800; letter-spacing: -.015em; max-width: 1600px; margin-bottom: 48px; }
+h3 { font-size: 46px; line-height: 1.25; font-weight: 700; }
+.lead { font-size: 52px; line-height: 1.4; font-weight: 500; color: var(--ink2); }
+.s-dark .lead { color: var(--l100); }
+.note-line { font-size: 44px; line-height: 1.4; font-weight: 700; color: var(--ink); margin-top: 44px; }
+.note-line.soft { font-weight: 500; color: var(--ink2); }
+.note-line b { color: var(--pink); }
+
+svg.ic { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Hiện dần từng phần, nhẹ nhàng */
+.rv { opacity: 0; transform: translateY(22px); }
+.slide.active .rv { opacity: 1; transform: none; transition: opacity .55s ease, transform .6s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--i, 0) * 90ms + 160ms); }
+
+/* Thẻ */
+.cards { display: grid; gap: 40px; flex: 1; align-content: stretch; }
+.cards.c3 { grid-template-columns: repeat(3, 1fr); }
+.cards.c2 { grid-template-columns: repeat(2, 1fr); }
+.card { position: relative; background: var(--white); border-radius: 32px; padding: 48px 48px 52px; overflow: hidden; }
+.card .bg-n { position: absolute; right: 28px; top: 4px; font-size: 200px; font-weight: 800; line-height: 1; color: var(--l100); }
+.card .badge { position: relative; width: 96px; height: 96px; border-radius: 50%; background: var(--g3); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 54px; font-weight: 800; margin-bottom: 32px; }
+.card h3 { position: relative; margin-bottom: 18px; }
+.card p { position: relative; font-size: 42px; line-height: 1.45; font-weight: 500; color: var(--ink2); }
+.cards.c3 .card h3 { font-size: 44px; font-weight: 800; }
+.cards.c3 .card p { font-size: 44px; line-height: 1.42; }
+.cards.c2 .card h3 { font-size: 50px; font-weight: 800; }
+.cards.c2 .card p { font-size: 46px; }
+
+/* Các bước nối nhau bằng mũi tên */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 64px; flex: 1; align-content: start; }
+.step { position: relative; background: var(--white); border-radius: 32px; padding: 44px 40px 48px; }
+.step:not(:last-child)::after {
+  content: ""; position: absolute; right: -52px; top: 50%; width: 40px; height: 40px; margin-top: -20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2365A30D' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.step .badge { width: 96px; height: 96px; border-radius: 50%; background: var(--g3); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 56px; margin-bottom: 30px; }
+.step p { font-size: 46px; line-height: 1.4; font-weight: 700; color: var(--ink); }
+
+/* Danh sách ý: ý cha đậm đen, ý con xám cùng cỡ */
+.pts { list-style: none; display: grid; gap: 34px; }
+.pts li { position: relative; padding-left: 76px; font-size: 44px; line-height: 1.42; font-weight: 500; color: var(--ink2); }
+.pts li b { font-weight: 800; color: var(--ink); }
+.pts.big { gap: 42px; }
+.pts.big li { font-size: 50px; line-height: 1.4; padding-left: 84px; }
+.pts li::before { content: ""; position: absolute; left: 0; top: 4px; width: 50px; height: 50px; border-radius: 50%; background: var(--g3); }
+.pts li::after { content: ""; position: absolute; left: 17px; top: 10px; width: 12px; height: 24px; border: solid var(--ink); border-width: 0 5px 5px 0; transform: rotate(40deg); }
+
+.grid5 { display: grid; grid-template-columns: repeat(6, 1fr); gap: 36px; flex: 1; align-content: stretch; }
+.grid5 .item, .grid6 .item { padding: 30px 34px 34px; }
+.grid6 { gap: 28px; }
+.grid6 .item p { font-size: 40px; line-height: 1.4; }
+.grid5 .hd, .grid6 .hd { display: flex; align-items: center; gap: 22px; margin-bottom: 16px; }
+.grid5 .item .ico, .grid6 .item .ico { width: 68px; height: 68px; font-size: 40px; margin: 0; flex: none; }
+.grid5 .item h3, .grid6 .item h3 { margin: 0; font-size: 44px; font-weight: 800; line-height: 1.2; }
+.grid5 .item p { font-size: 42px; line-height: 1.4; }
+.grid5 .item:nth-child(-n+3) { grid-column: span 2; }
+.grid5 .item:nth-child(n+4) { grid-column: span 3; }
+.split { flex: 1; display: grid; grid-template-columns: 1fr 740px; gap: 80px; align-items: center; }
+.split.wide-right { grid-template-columns: 1fr 700px; }
+
+/* Khung minh hoạ giao diện */
+.mock { background: var(--white); border-radius: 32px; padding: 44px 44px 48px; }
+.mock .cap { font-size: 40px; line-height: 1.4; font-weight: 700; color: var(--ink); margin-bottom: 26px; }
+.field { margin-bottom: 26px; }
+.field .lb { font-size: 38px; font-weight: 700; color: var(--ink2); margin-bottom: 10px; }
+.field .vl { font-size: 40px; font-weight: 500; line-height: 1.3; color: var(--ink); background: var(--l50); border-radius: 18px; padding: 16px 24px; }
+.btns { display: flex; gap: 24px; margin-top: 34px; }
+.btn { font-size: 40px; font-weight: 700; padding: 18px 34px; border-radius: 18px; }
+.btn.go { background: var(--g3); color: var(--ink); }
+.btn.no { color: var(--pink); border: 3px solid var(--pink); }
+
+.row-ui { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; padding: 26px 0; border-top: 2px solid var(--line); }
+.row-ui:first-of-type { border-top: 0; }
+.row-ui .sm { font-size: 38px; font-weight: 500; color: var(--mute); }
+.row-ui .tt { font-size: 44px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.row-ui .lab { font-size: 44px; font-weight: 800; }
+.lab.need { color: var(--pink); }
+.lab.solid { color: var(--g1); }
+.fb p { font-size: 40px; line-height: 1.42; font-weight: 500; color: var(--ink2); margin-bottom: 18px; }
+.fb p.q { color: var(--ink); font-weight: 700; }
+.fb p.hint { color: var(--g1); font-weight: 700; margin-bottom: 0; }
+
+.gate { display: grid; gap: 28px; }
+.gate .g { display: grid; grid-template-columns: 96px 1fr; gap: 26px; align-items: center; background: var(--white); border-radius: 28px; padding: 32px 36px; border-left: 14px solid var(--g3); }
+.gate .g.bad { border-left-color: var(--pink); }
+.gate .g .ico { width: 96px; height: 96px; border-radius: 50%; background: var(--l100); color: var(--g1); display: flex; align-items: center; justify-content: center; font-size: 60px; }
+.gate .g.bad .ico { background: var(--pink100); color: var(--pink); }
+.gate .who { font-size: 40px; font-weight: 500; color: var(--ink2); line-height: 1.3; }
+.gate .res { font-size: 44px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+
+.grid6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px; flex: 1; align-content: start; }
+.item { background: var(--white); border-radius: 28px; padding: 40px 40px 44px; }
+.item .ico { width: 88px; height: 88px; border-radius: 50%; background: var(--g3); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 50px; margin-bottom: 24px; }
+.item h3 { margin-bottom: 14px; }
+.item p { font-size: 40px; line-height: 1.42; font-weight: 500; color: var(--ink2); }
+
+.three-ic .ico { width: 110px; height: 110px; border-radius: 50%; background: var(--g3); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 62px; margin-bottom: 30px; }
+
+/* Bìa và kết */
+.cover { justify-content: center; }
+.cover .logo svg { height: 128px; width: auto; display: block; margin-bottom: 72px; }
+.cover h1 { max-width: 1400px; margin-bottom: 44px; }
+.cover .lead { max-width: 1300px; }
+.cover .big-icon { position: absolute; right: -180px; bottom: -200px; width: 1000px; opacity: .22; }
+.cover .big-icon svg { width: 100%; height: auto; display: block; }
+.end h2 { font-size: 96px; max-width: none; margin-bottom: 40px; }
+.end .logo svg { height: 118px; width: auto; display: block; margin-bottom: 64px; }
+
+
+/* Sơ đồ nút nối nhau bằng mũi tên */
+.arr { display: flex; align-items: center; justify-content: center; color: var(--g2); font-size: 56px; flex: none; }
+.nodes { display: flex; align-items: stretch; gap: 28px; flex: 1; align-content: center; }
+.node { flex: 1; min-width: 0; background: var(--white); border-radius: 32px; padding: 40px 34px 44px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
+.node .ico { width: 88px; height: 88px; border-radius: 50%; background: var(--g3); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 50px; margin-bottom: 24px; }
+.node h3 { margin-bottom: 12px; font-size: 46px; font-weight: 800; }
+.node p { font-size: 42px; line-height: 1.4; font-weight: 500; color: var(--ink2); }
+.node.core { background: var(--g1); }
+.node.core h3 { color: #fff; }
+.node.core p { color: var(--l100); }
+.node.core .ico { background: var(--l200); }
+.node.ok { border-left: 14px solid var(--g3); }
+.node.no { border-left: 14px solid var(--pink); }
+.nodes.compact { gap: 22px; }
+.nodes.compact .node { padding: 26px 26px 28px; }
+.nodes.compact .node .ico { width: 68px; height: 68px; font-size: 40px; margin-bottom: 14px; }
+.nodes.compact .node h3 { font-size: 44px; margin-bottom: 8px; }
+.nodes.compact .node p { font-size: 40px; line-height: 1.35; }
+.nodes.compact .stack { gap: 22px; }
+.nodes.compact .arr { font-size: 48px; }
+.stack { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.stack .node { flex: 1; }
+.steps.s5 { grid-template-columns: repeat(5, 1fr); gap: 56px; }
+.steps.s5 .step { padding: 36px 26px 40px; }
+.steps.s5 .step p { font-size: 42px; }
+.steps.s5 .step:not(:last-child)::after { right: -46px; width: 36px; height: 36px; margin-top: -18px; }
+.steps.s3 { grid-template-columns: repeat(3, 1fr); }
+.steps.s3 .step p { font-size: 46px; }
+
+/* Ba nhãn thay cho điểm số */
+.bands { display: grid; gap: 28px; }
+.band { display: grid; grid-template-columns: 520px 1fr; align-items: center; gap: 24px; background: var(--white); border-radius: 28px; padding: 38px 48px; border-left: 16px solid var(--g3); }
+.band.r { border-left-color: var(--pink); }
+.band.a { border-left-color: #D97706; }
+.band .nm { font-size: 60px; font-weight: 800; line-height: 1.2; }
+.band.r .nm { color: var(--pink); }
+.band.a .nm { color: #92400E; }
+.band.g .nm { color: var(--g1); }
+.band .ds { font-size: 48px; font-weight: 500; color: var(--ink2); line-height: 1.35; }
+
+/* Hai làn vào khoá */
+.lane { margin-bottom: 38px; }
+.lane .lt { font-size: 48px; font-weight: 800; margin-bottom: 16px; }
+.flow3 { display: grid; grid-template-columns: 1fr 64px 1fr 64px 1fr; align-items: stretch; }
+.fc { background: var(--white); border-radius: 26px; padding: 30px 34px; font-size: 42px; font-weight: 700; line-height: 1.3; display: flex; align-items: center; gap: 24px; color: var(--ink); }
+.fc .n { flex: none; width: 64px; height: 64px; border-radius: 50%; background: var(--g3); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 800; }
+.grid6.g4 { grid-template-columns: repeat(2, 1fr); }
+
+
+/* Câu đầy đủ trong thẻ, bước và sơ đồ: chủ ngữ in đậm, vị ngữ đi liền sau */
+.card p b, .node p b, .item p b, .step p b { font-weight: 800; color: var(--ink); }
+.node.core p b { color: #fff; }
+.cards.c3 .card p { font-size: 46px; line-height: 1.4; }
+.cards.c3.dense .card p { font-size: 42px; line-height: 1.4; }
+.cards.c3.dense .badge { width: 80px; height: 80px; font-size: 44px; margin-bottom: 20px; }
+.cards.c3.dense { gap: 32px; }
+.three-ic .card .ico { margin-bottom: 26px; }
+.node p { font-size: 44px; line-height: 1.4; }
+.nodes.compact .node p { font-size: 40px; }
+.steps p { font-size: 42px; }
+.steps.s5 .step p { font-size: 40px; }
+.steps.s3 .step p { font-size: 46px; }
+.grid5.plain .item, .grid6.plain .item { padding: 30px 34px 34px; }
+.plain .item .ico { width: 68px; height: 68px; font-size: 40px; margin: 0 0 18px; }
+.grid5.plain .item p { font-size: 40px; line-height: 1.4; }
+.grid6.plain .item p { font-size: 46px; line-height: 1.4; }
+.pts.mid { gap: 40px; }
+.pts.mid li { font-size: 46px; line-height: 1.4; }
+.band .ds { font-size: 46px; }
+.fc { font-size: 40px; }
+
+
+/* Chỉnh khoảng cách để chữ không vượt lề dưới */
+.note-line { margin-top: 30px; }
+.cards.c3.dense .card { padding: 36px 40px 38px; }
+.nodes.compact .node { padding: 20px 24px 22px; }
+.nodes.compact .node .ico { width: 60px; height: 60px; font-size: 36px; margin-bottom: 10px; }
+.mock { padding: 36px 40px 40px; }
+.band { padding: 30px 48px; }
+.bands { gap: 24px; }
+.grid6.g4.plain .item p { font-size: 44px; }
+.grid6.g4 { gap: 28px; }
+
+
+/* Sơ đồ hai lộ trình: cùng một khoá, hai người học */
+.paths { display: grid; gap: 28px; flex: 1; align-content: start; }
+.pcard { background: var(--white); border-radius: 32px; padding: 30px 36px 32px; }
+.prow { display: grid; grid-template-columns: 250px repeat(5, 1fr); gap: 18px; align-items: stretch; }
+.prow .who { display: flex; align-items: center; gap: 16px; font-size: 48px; font-weight: 800; color: var(--ink); }
+.prow .who .ico { width: 72px; height: 72px; border-radius: 50%; background: var(--g3); color: var(--ink); display: flex; align-items: center; justify-content: center; font-size: 42px; flex: none; }
+.tile { border-top: 12px solid #D1D5DB; background: var(--l50); border-radius: 18px; padding: 12px 18px 16px; }
+.tile .ln { font-size: 42px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.tile .lb { font-size: 38px; font-weight: 700; line-height: 1.25; color: var(--mute); }
+.tile.r { border-top-color: var(--pink); } .tile.r .lb { color: var(--pink); }
+.tile.a { border-top-color: #D97706; } .tile.a .lb { color: #92400E; }
+.tile.g { border-top-color: var(--g3); } .tile.g .lb { color: var(--g1); }
+.psug { font-size: 44px; line-height: 1.4; font-weight: 500; color: var(--ink2); margin-top: 18px; }
+.psug b { font-weight: 800; color: var(--ink); }
+
+
+/* ===== Trang trí cho bắt mắt (bảng màu Limio: xanh chanh, hồng dưa hấu, vàng chanh) ===== */
+.slide { background:
+    radial-gradient(circle at 100% 0%, rgba(217,249,157,.6) 0, transparent 36%),
+    radial-gradient(circle at 0% 100%, rgba(252,231,243,.95) 0, transparent 32%),
+    var(--cream); }
+.s-lime { background:
+    radial-gradient(circle at 100% 0%, rgba(255,255,255,.75) 0, transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(252,231,243,.8) 0, transparent 30%),
+    linear-gradient(160deg, #F7FEE7 0%, #ECFCCB 100%); }
+.s-dark { background:
+    radial-gradient(circle at 88% 92%, rgba(244,114,182,.30) 0, transparent 42%),
+    radial-gradient(circle at 8% 6%, rgba(132,204,22,.28) 0, transparent 38%),
+    linear-gradient(135deg, #3F6212 0%, #2C4709 100%); }
+.slide:not(.s-dark)::after { content: ""; position: absolute; right: -150px; bottom: -150px; width: 430px; height: 430px; border-radius: 50%; border: 38px solid rgba(132,204,22,.13); pointer-events: none; z-index: 0; }
+.slide:not(.s-dark)::before { content: ""; position: absolute; left: -90px; top: 38%; width: 200px; height: 200px; border-radius: 50%; background: rgba(244,114,182,.10); pointer-events: none; z-index: 0; }
+.slide > :not(.big-icon):not(.notes) { position: relative; z-index: 1; }
+
+/* thanh nhấn dưới/đầu tiêu đề và gạch nhấn cho cụm từ chính */
+.slide:not(.end) h2::before { content: ""; position: absolute; left: 0; top: -30px; width: 120px; height: 12px; border-radius: 8px; background: linear-gradient(90deg, #84CC16, #EC4899); }
+h2 em, h1 em { font-style: normal; background: linear-gradient(transparent 60%, rgba(244,114,182,.5) 60% 92%, transparent 92%); padding: 0 6px; margin: 0 -6px; border-radius: 6px; }
+.s-dark h2 em, .s-dark h1 em { background: none; color: var(--l200); text-decoration: underline; text-decoration-color: #F472B6; text-decoration-thickness: 10px; text-underline-offset: 12px; text-decoration-skip-ink: none; padding: 0; margin: 0; }
+
+/* thẻ: đổ bóng nhẹ, viền xanh mờ */
+.card, .node, .item, .step, .mock, .pcard, .band, .fc, .gate .g { box-shadow: 0 14px 34px rgba(63,98,18,.11); border: 2px solid rgba(132,204,22,.20); }
+.node.core { border-color: transparent; background: linear-gradient(145deg, #4D7C0F, #3F6212); box-shadow: 0 16px 36px rgba(63,98,18,.28); }
+
+/* huy hiệu và biểu tượng: luân phiên xanh chanh, hồng, vàng chanh; có vòng sáng */
+.badge, .ico, .step .badge, .fc .n { background: linear-gradient(145deg, #BEF264, #84CC16); box-shadow: 0 0 0 8px rgba(132,204,22,.20); }
+.cards .card:nth-child(2) .badge, .cards .card:nth-child(2) .ico,
+.grid5 .item:nth-child(2) .ico, .grid6 .item:nth-child(2) .ico { background: linear-gradient(145deg, #FBCFE8, #F472B6); box-shadow: 0 0 0 8px rgba(244,114,182,.20); }
+.cards .card:nth-child(3) .badge, .cards .card:nth-child(3) .ico,
+.grid5 .item:nth-child(3) .ico, .grid6 .item:nth-child(3) .ico { background: linear-gradient(145deg, #FEF08A, #FACC15); box-shadow: 0 0 0 8px rgba(250,204,21,.22); }
+.grid5 .item:nth-child(4) .ico, .grid6 .item:nth-child(4) .ico { background: linear-gradient(145deg, #FBCFE8, #F472B6); box-shadow: 0 0 0 8px rgba(244,114,182,.20); }
+.cards .card:nth-child(2) .bg-n { color: rgba(244,114,182,.20); }
+.cards .card:nth-child(3) .bg-n { color: rgba(250,204,21,.30); }
+.node.core .ico { background: linear-gradient(145deg, #ECFCCB, #D9F99D); box-shadow: 0 0 0 8px rgba(236,252,203,.22); }
+.steps .step:nth-child(2) .badge { background: linear-gradient(145deg, #FBCFE8, #F472B6); box-shadow: 0 0 0 8px rgba(244,114,182,.20); }
+.steps .step:nth-child(3) .badge { background: linear-gradient(145deg, #FEF08A, #FACC15); box-shadow: 0 0 0 8px rgba(250,204,21,.22); }
+.steps .step:nth-child(4) .badge { background: linear-gradient(145deg, #BAE6FD, #38BDF8); box-shadow: 0 0 0 8px rgba(56,189,248,.20); }
+.steps .step:nth-child(5) .badge { background: linear-gradient(145deg, #DDD6FE, #A78BFA); box-shadow: 0 0 0 8px rgba(167,139,250,.20); }
+.step:not(:last-child)::after { width: 46px; height: 46px; margin-top: -23px; right: -56px; }
+.arr { color: var(--g1); }
+
+/* danh sách ý: dấu tích xanh chanh có vòng sáng */
+.pts li::before { background: linear-gradient(145deg, #BEF264, #84CC16); box-shadow: 0 0 0 6px rgba(132,204,22,.20); }
+
+/* ba nhãn: nền màu nhẹ theo mức */
+.band.r { background: linear-gradient(90deg, rgba(252,231,243,.95), #fff 62%); }
+.band.a { background: linear-gradient(90deg, rgba(254,243,199,.95), #fff 62%); }
+.band.g { background: linear-gradient(90deg, rgba(236,252,203,.95), #fff 62%); }
+
+/* sơ đồ hai lộ trình: ô bài có nền theo nhãn */
+.tile.r { background: rgba(252,231,243,.8); } .tile.a { background: rgba(254,243,199,.9); } .tile.g { background: rgba(236,252,203,.95); }
+.tile { background: #F3F4F6; }
+.tile.r, .tile.a, .tile.g { background-clip: padding-box; }
+.psug { border-top: 2px dashed rgba(132,204,22,.45); padding-top: 16px; }
+
+/* slide mở đầu từng phần: số phần lớn, mờ, ở góc phải */
+.slide[data-n]::after { content: attr(data-n); position: absolute; right: 90px; bottom: -150px; font-size: 900px; font-weight: 800; line-height: 1; color: rgba(217,249,157,.13); pointer-events: none; z-index: 0; border: 0; width: auto; height: auto; border-radius: 0; background: none; }
+.slide[data-n]::before { display: none; }
+.cover .big-icon svg { animation: spinSlow 120s linear infinite; }
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .cover .big-icon svg { animation: none; } }
+@media print { .cover .big-icon svg { animation: none; } }
+
+/* Lời giảng: chỉ người trình bày thấy, bật bằng phím N */
+.notes { display: none; }
+#notesbar {
+  position: fixed; left: 0; right: 0; bottom: 0; height: var(--nbh, 240px); overflow: auto; z-index: 20;
+  background: #0B1220; color: #E5E7EB; padding: 16px 32px 18px; font: 500 19px/1.6 var(--font); display: none;
+}
+body.show-notes #notesbar { display: block; }
+#notesbar .k { color: #9CA3AF; font-size: 15px; margin-top: 10px; }
+#notesbar p { margin: 0 0 8px; }
+#notesbar b { color: #D9F99D; }
+
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slide.active { transition: none; transform: none; }
+  .rv, .slide.active .rv { opacity: 1; transform: none; transition: none; }
+}
+@page { size: 1920px 1080px; margin: 0; }
+@media print {
+  html, body { height: auto; overflow: visible; background: #fff; }
+  #viewport { position: static; overflow: visible; }
+  #stage { position: static; transform: none !important; width: 1920px; height: auto; }
+  .slide { position: relative; opacity: 1 !important; visibility: visible !important; transform: none !important; width: 1920px; height: 1080px; page-break-after: always; break-after: page; }
+  .rv { opacity: 1 !important; transform: none !important; }
+  #notesbar { display: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5C4 3.7 4.7 3 5.5 3H19v15H5.5C4.7 18 4 18.7 4 19.5z"/><path d="M4 19.5C4 20.3 4.7 21 5.5 21H19v-3"/><path d="M8 7h7"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.5 9"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5.5 3.5-5.5 3.5z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M11 3l1.9 5.4L18 10l-5.1 1.6L11 17l-1.9-5.4L4 10l5.1-1.6z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8 20h8M9 17h6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/></symbol>
+    <symbol id="i-user-ok" viewBox="0 0 24 24"><circle cx="10" cy="8" r="4"/><path d="M3 20a7 7 0 0 1 12-4.5"/><path d="M15.5 18.5l2.2 2.2L21.5 17"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+    <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 5H7l6 7-6 7h11"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5L12 12l8-4.5M12 12v9"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.7 12.4a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.8L20 7H6"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></symbol>
+    <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6H15a3 3 0 0 1 0 6H9a3 3 0 0 0 0 6h6.5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
+    <symbol id="i-medal" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></symbol>
+    <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 0-8z"/></symbol>
+    <symbol id="i-slides" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  </defs>
+</svg>
+
+<div id="viewport">
+<div id="stage">
+
+<!-- 1. Bìa -->
+<section class="slide s-dark cover" aria-label="Bìa">
+  <div class="big-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Limio"><title>Limio</title><circle cx="16" cy="16" r="15" fill="#3F6212"/><circle cx="16" cy="16" r="14" fill="#65A30D"/><circle cx="16" cy="16" r="12" fill="#ECFCCB"/><g stroke="#84CC16" stroke-width="1.4" stroke-linecap="round"><line x1="16" y1="4.5" x2="16" y2="27.5"/><line x1="4.5" y1="16" x2="27.5" y2="16"/><line x1="7.9" y1="7.9" x2="24.1" y2="24.1"/><line x1="24.1" y1="7.9" x2="7.9" y2="24.1"/></g><g fill="#D9F99D" opacity="0.6"><ellipse cx="16" cy="10.5" rx="2" ry="1"/><ellipse cx="16" cy="21.5" rx="2" ry="1"/><ellipse cx="10.5" cy="16" rx="1" ry="2"/><ellipse cx="21.5" cy="16" rx="1" ry="2"/></g><circle cx="16" cy="16" r="1.6" fill="#84CC16"/><ellipse cx="13" cy="13" rx="0.6" ry="1" fill="#365314"/><ellipse cx="19" cy="19" rx="0.6" ry="1" fill="#365314"/></svg></div>
+  <div class="logo rv" style="--i:0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 338 100" width="338" height="100" role="img" aria-label="Limio"><title>Limio</title><g transform="scale(3.125)"><circle cx="16" cy="16" r="15" fill="#ECFCCB"/><circle cx="16" cy="16" r="14" fill="#ECFCCB"/><circle cx="16" cy="16" r="12" fill="#84CC16"/><g stroke="#ECFCCB" stroke-width="1.4" stroke-linecap="round"><line x1="16" y1="4.5" x2="16" y2="27.5"/><line x1="4.5" y1="16" x2="27.5" y2="16"/><line x1="7.9" y1="7.9" x2="24.1" y2="24.1"/><line x1="24.1" y1="7.9" x2="7.9" y2="24.1"/></g><g fill="#D9F99D" opacity="0.6"><ellipse cx="16" cy="10.5" rx="2" ry="1"/><ellipse cx="16" cy="21.5" rx="2" ry="1"/><ellipse cx="10.5" cy="16" rx="1" ry="2"/><ellipse cx="21.5" cy="16" rx="1" ry="2"/></g><circle cx="16" cy="16" r="1.6" fill="#ECFCCB"/><ellipse cx="13" cy="13" rx="0.6" ry="1" fill="#365314"/><ellipse cx="19" cy="19" rx="0.6" ry="1" fill="#365314"/></g><path transform="translate(121.00 80.56) scale(0.04102 -0.04102)" fill="#FFFFFF" d="M116 0L116 1490L469 1490L469 288L1092 288L1092 0Z"/><path transform="translate(165.98 80.56) scale(0.04102 -0.04102)" fill="#FFFFFF" d="M115 0L115 1118L464 1118L464 0ZM289 1249Q215 1249 162 1298Q109 1347 109 1417Q109 1487 162 1536Q215 1585 289 1585Q364 1585 417 1536Q470 1487 470 1417Q470 1347 417 1298Q364 1249 289 1249Z"/><path transform="translate(187.25 80.56) scale(0.04102 -0.04102)" fill="#FFFFFF" d="M115 0L115 1118L436 1118L452 896Q498 1022 585.5 1077.5Q673 1133 774 1133Q880 1133 950.5 1072Q1021 1011 1062 874Q1113 1012 1212.5 1072.5Q1312 1133 1425 1133Q1582 1133 1682.5 1032Q1783 931 1783 754L1783 0L1435 0L1435 675Q1435 760 1390.5 804Q1346 848 1277 848Q1203 848 1160 799.5Q1117 751 1117 671L1117 0L782 0L782 680Q782 757 738.5 802.5Q695 848 626 848Q555 848 509.5 800Q464 752 464 664L464 0Z"/><path transform="translate(262.61 80.56) scale(0.04102 -0.04102)" fill="#F9A8D4" d="M115 0L115 1118L464 1118L464 0ZM289 1249Q215 1249 162 1298Q109 1347 109 1417Q109 1487 162 1536Q215 1585 289 1585Q364 1585 417 1536Q470 1487 470 1417Q470 1347 417 1298Q364 1249 289 1249Z"/><path transform="translate(283.88 80.56) scale(0.04102 -0.04102)" fill="#F9A8D4" d="M634 -21Q459 -21 333 51.5Q207 124 139.5 253.5Q72 383 72 555Q72 727 139.5 857Q207 987 333 1059.5Q459 1132 634 1132Q809 1132 934.5 1059.5Q1060 987 1127.5 857Q1195 727 1195 555Q1195 383 1127.5 253.5Q1060 124 934.5 51.5Q809 -21 634 -21ZM634 246Q734 246 787 331.5Q840 417 840 557Q840 697 787 781Q734 865 634 865Q534 865 481 781Q428 697 428 557Q428 417 481 331.5Q534 246 634 246Z"/></svg></div>
+  <h1 class="rv" style="--i:1">Limio giúp mỗi người học có <em>một lộ trình riêng</em></h1>
+  <div class="notes">
+    <p>Kính chào quý vị. Hôm nay chúng tôi xin giới thiệu Limio cho những người chưa từng sử dụng. Bài trình bày đi từ một vấn đề quen thuộc, rồi nói Limio là gì, và sau đó đi vào ba nhóm tính năng chính: cá nhân hoá cho người học, thanh toán, và bảo vệ học liệu.</p>
+    <p>Bài có hai mươi sáu slide, chia làm ba phần. Mỗi phần mở đầu bằng một câu hỏi để dễ theo dõi.</p>
+  </div>
+</section>
+<!-- 2. Vấn đề quen thuộc -->
+<section class="slide" aria-label="Vấn đề quen thuộc">
+  <h2 class="rv" style="--i:0">Bạn đã bao giờ học một khoá trực tuyến rồi <em>bỏ dở giữa chừng</em> chưa?</h2>
+  <p class="lead rv" style="--i:1; margin-bottom:32px">Có ba lý do mà người học rất thường gặp.</p>
+  <div class="cards c3 dense">
+    <div class="card rv" style="--i:2"><span class="bg-n" aria-hidden="true">1</span><div class="badge"><svg class="ic"><use href="#i-list"/></svg></div>
+      <p><b>Người học không biết mình đã hiểu bài đến đâu.</b> Họ làm xong bài nhưng vẫn không chắc mình đã nắm được kiến thức hay chưa.</p></div>
+    <div class="card rv" style="--i:3"><span class="bg-n" aria-hidden="true">2</span><div class="badge"><svg class="ic"><use href="#i-route"/></svg></div>
+      <p><b>Người học không biết nên học gì tiếp theo.</b> Mọi người học cùng một thứ tự, dù mỗi người cần ôn một chỗ khác nhau.</p></div>
+    <div class="card rv" style="--i:4"><span class="bg-n" aria-hidden="true">3</span><div class="badge"><svg class="ic"><use href="#i-user"/></svg></div>
+      <p><b>Người học dễ nản khi học một mình.</b> Họ không có ai nhắc nhở và khó nhận ra mình đang tiến bộ.</p></div>
+  </div>
+  <div class="notes">
+    <p>Chúng ta hãy bắt đầu bằng một câu hỏi quen thuộc: bạn đã bao giờ học một khoá trực tuyến rồi bỏ dở giữa chừng chưa? Có ba lý do rất thường gặp.</p>
+    <p>Thứ nhất, người học không biết mình đã hiểu đến đâu: làm xong bài mà vẫn không chắc mình nắm được chưa. Thứ hai, họ không biết nên học gì tiếp: mọi người học cùng một thứ tự, dù mỗi người cần ôn một chỗ khác nhau. Thứ ba, học một mình rất dễ nản, vì không có ai nhắc nhở và khó thấy mình tiến bộ.</p>
+    <p><b>Ghi chú cho người trình bày:</b> đây là ba lý do thường gặp, không phải số liệu thống kê; không nêu tỉ lệ nào.</p>
+  </div>
+</section>
+<!-- 3. Limio là gì -->
+<section class="slide s-lime" aria-label="Limio là gì">
+  <h2 class="rv" style="--i:0">Limio là một lớp học trực tuyến, nơi mỗi người học <em>được theo sát riêng</em></h2>
+  <div class="nodes">
+    <div class="node rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-pencil"/></svg></div><p><b>Người soạn</b> đưa bài giảng và câu hỏi lên Limio.</p></div>
+    <div class="arr rv" style="--i:2"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="node core rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-sparkle"/></svg></div><p><b>Limio</b> theo dõi kết quả làm bài của từng người.</p></div>
+    <div class="arr rv" style="--i:4"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="node rv" style="--i:5"><div class="ico"><svg class="ic"><use href="#i-user"/></svg></div><p><b>Người học</b> học trên Limio và nhận gợi ý riêng cho mình.</p></div>
+  </div>
+  <div class="notes">
+    <p>Limio là một nền tảng dạy và học trực tuyến. Hãy hình dung nó như một lớp học trên mạng, nơi mỗi người học được theo sát riêng.</p>
+    <p>Người soạn đưa bài giảng và câu hỏi lên Limio. Người học học trên đó. Ở giữa, Limio theo dõi kết quả làm bài của từng người, rồi nói với từng người nên làm gì tiếp theo. Việc theo dõi và gợi ý này dùng trí tuệ nhân tạo và các quy tắc học tập, nên nó chạy được cả khi không có giáo viên bên cạnh.</p>
+    <p><b>Ghi chú cho người trình bày:</b> khẩu hiệu thương hiệu là “Learn in Flow”, tiếng Việt là “Dạy đúng nhịp, học đúng chỗ”.</p>
+  </div>
+</section>
+<!-- 4. Một khoá học gồm những gì -->
+<section class="slide" aria-label="Một khoá học gồm những gì">
+  <h2 class="rv" style="--i:0">Một khoá học trên Limio được tổ chức <em>theo từng cấp</em>, từ khoá đến bài học</h2>
+  <div class="nodes compact">
+    <div class="node rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-layers"/></svg></div><p><b>Khoá học</b> là một chủ đề học trọn vẹn.</p></div>
+    <div class="arr rv" style="--i:2"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="node rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-folder"/></svg></div><p><b>Chương</b> nhóm các bài liên quan với nhau.</p></div>
+    <div class="arr rv" style="--i:4"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="node rv" style="--i:5"><div class="ico"><svg class="ic"><use href="#i-book"/></svg></div><p><b>Bài học</b> là một đơn vị học nhỏ.</p></div>
+    <div class="arr rv" style="--i:6"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="stack">
+      <div class="node rv" style="--i:7"><p><b>Nội dung</b> gồm văn bản, video hoặc slide.</p></div>
+      <div class="node rv" style="--i:8"><p><b>Quiz</b> là các câu hỏi kiểm tra ở cuối bài.</p></div>
+    </div>
+  </div>
+  <p class="note-line rv" style="--i:9">Mỗi bài học tự trở thành một chủ đề, để Limio theo dõi mức hiểu bài của người học.</p>
+  <div class="notes">
+    <p>Một khoá học trên Limio được tổ chức rất quen thuộc. Một khoá gồm nhiều chương. Mỗi chương gồm nhiều bài học. Mỗi bài học có phần nội dung, như văn bản, video hay slide, và thường có một quiz, tức là một bài kiểm tra ngắn cuối bài.</p>
+    <p>Điều quan trọng cho các phần sau là: mỗi bài học tự trở thành một chủ đề. Khi người học làm quiz của bài đó, Limio biết người học hiểu bài ấy đến đâu. Người soạn không phải gắn thẻ kỹ năng bằng tay.</p>
+  </div>
+</section>
+<!-- 5. Ai dùng Limio -->
+<section class="slide s-lime" aria-label="Ai dùng Limio">
+  <h2 class="rv" style="--i:0"><em>Ba nhóm người</em> cùng sử dụng Limio</h2>
+  <div class="cards c3 three-ic">
+    <div class="card rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-user"/></svg></div><p><b>Người học</b> học theo khoá, làm quiz và nhận gợi ý riêng cho mình.</p></div>
+    <div class="card rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-pencil"/></svg></div><p><b>Người soạn</b> tạo khoá, đưa nội dung và câu hỏi lên, rồi xem kết quả của lớp mình.</p></div>
+    <div class="card rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-shield"/></svg></div><p><b>Người quản lý</b> phát mã kích hoạt, đặt gói truy cập và thu hồi quyền khi cần.</p></div>
+  </div>
+  <div class="notes">
+    <p>Có ba nhóm người cùng dùng Limio. Người học học theo khoá, làm quiz và nhận gợi ý riêng cho mình. Người soạn tạo khoá, đưa nội dung và câu hỏi lên, và xem kết quả của lớp mình. Người quản lý phát mã kích hoạt, đặt gói truy cập và thu hồi quyền khi cần.</p>
+    <p><b>Ghi chú cho người trình bày:</b> trên thực tế, việc đặt gói bán hiện do quản trị viên nền tảng thực hiện; chủ khoá tạo và quản lý mã kích hoạt. Ở mức giới thiệu, ba nhóm trên là đủ.</p>
+  </div>
+</section>
+<!-- 6. Hành trình của người học -->
+<section class="slide" aria-label="Hành trình của người học">
+  <h2 class="rv" style="--i:0">Một người học đi qua <em>năm bước</em> trên Limio</h2>
+  <div class="steps s5">
+    <div class="step rv" style="--i:1"><div class="badge"><svg class="ic"><use href="#i-key"/></svg></div><p>Người học vào khoá.</p></div>
+    <div class="step rv" style="--i:2"><div class="badge"><svg class="ic"><use href="#i-book"/></svg></div><p>Người học học từng bài.</p></div>
+    <div class="step rv" style="--i:3"><div class="badge"><svg class="ic"><use href="#i-list"/></svg></div><p>Người học làm quiz cuối bài.</p></div>
+    <div class="step rv" style="--i:4"><div class="badge"><svg class="ic"><use href="#i-sparkle"/></svg></div><p>Limio hiện gợi ý và phản hồi.</p></div>
+    <div class="step rv" style="--i:5"><div class="badge"><svg class="ic"><use href="#i-route"/></svg></div><p>Người học ôn chỗ yếu rồi đi tiếp.</p></div>
+  </div>
+  <p class="note-line soft rv" style="--i:6">Vòng này lặp lại sau mỗi bài, nên lộ trình luôn bám theo người học.</p>
+  <div class="notes">
+    <p>Đây là hành trình của một người học. Họ vào khoá, bằng mã kích hoạt hoặc bằng cách mua trực tiếp. Họ học từng bài. Cuối bài họ làm một quiz. Limio cho họ xem gợi ý và phản hồi. Họ ôn chỗ còn yếu rồi đi tiếp. Vòng này lặp lại sau mỗi bài, nên lộ trình luôn bám theo chính người học chứ không cố định cho mọi người.</p>
+  </div>
+</section>
+<!-- 7. Ba nhóm tính năng -->
+<section class="slide s-lime" aria-label="Ba nhóm tính năng">
+  <h2 class="rv" style="--i:0">Hôm nay chúng ta sẽ xem <em>ba nhóm tính năng chính</em> của Limio</h2>
+  <div class="cards c3">
+    <div class="card rv" style="--i:1"><span class="bg-n" aria-hidden="true">1</span><div class="badge"><svg class="ic"><use href="#i-sparkle"/></svg></div>
+      <p><b>Cá nhân hoá</b> giúp mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp.</p></div>
+    <div class="card rv" style="--i:2"><span class="bg-n" aria-hidden="true">2</span><div class="badge"><svg class="ic"><use href="#i-cart"/></svg></div>
+      <p><b>Kênh thanh toán</b> giúp người học vào khoá dễ dàng, bằng thanh toán trực tiếp hoặc bằng mã.</p></div>
+    <div class="card rv" style="--i:3"><span class="bg-n" aria-hidden="true">3</span><div class="badge"><svg class="ic"><use href="#i-lock"/></svg></div>
+      <p><b>Bảo vệ học liệu</b> giúp tệp học liệu chỉ đến đúng người có quyền.</p></div>
+  </div>
+  <div class="notes">
+    <p>Từ đây, chúng ta xem ba nhóm tính năng chính. Nhóm thứ nhất là cá nhân hoá cho người học: mỗi người biết mình hiểu đến đâu và nên làm gì tiếp. Nhóm thứ hai là kênh thanh toán: người học vào khoá dễ dàng bằng thanh toán trực tiếp hoặc bằng mã. Nhóm thứ ba là bảo vệ học liệu: tệp học liệu chỉ đến đúng người có quyền.</p>
+  </div>
+</section>
+<!-- 8. Phần một -->
+<section class="slide s-dark cover end" aria-label="Phần một" data-n="1">
+  <p class="lead rv" style="--i:0; margin-bottom:28px">Phần một</p>
+  <h2 class="rv" style="--i:1">Làm sao mỗi người học biết mình đang <em>hiểu đến đâu</em>?</h2>
+  <p class="lead rv" style="--i:2">Nhóm tính năng cá nhân hoá sẽ giúp trả lời câu hỏi này.</p>
+  <div class="notes">
+    <p>Phần một bắt đầu bằng một câu hỏi: làm sao mỗi người học biết mình đang hiểu đến đâu? Đó là việc của nhóm tính năng cá nhân hoá.</p>
+  </div>
+</section>
+<!-- 8b. Hai lộ trình -->
+<section class="slide s-lime" aria-label="Hai lộ trình khác nhau">
+  <h2 class="rv" style="--i:0">Cùng một khoá học, Limio gợi ý <em>hai lộ trình khác nhau</em> cho hai người học</h2>
+  <div class="paths">
+    <div class="pcard rv" style="--i:1">
+      <div class="prow"><div class="who"><span class="ico"><svg class="ic"><use href="#i-user"/></svg></span>Minh</div>
+        <div class="tile r"><div class="ln">Bài 1</div><div class="lb">Cần ôn</div></div><div class="tile g"><div class="ln">Bài 2</div><div class="lb">Vững</div></div><div class="tile "><div class="ln">Bài 3</div><div class="lb">Chưa học</div></div><div class="tile "><div class="ln">Bài 4</div><div class="lb">Chưa học</div></div><div class="tile "><div class="ln">Bài 5</div><div class="lb">Chưa học</div></div></div>
+      <p class="psug"><b>Limio gợi ý Minh</b> ôn lại Bài 1, học tiếp Bài 3 và lướt qua Bài 2.</p>
+    </div>
+    <div class="pcard rv" style="--i:2">
+      <div class="prow"><div class="who"><span class="ico"><svg class="ic"><use href="#i-user"/></svg></span>Lan</div>
+        <div class="tile g"><div class="ln">Bài 1</div><div class="lb">Vững</div></div><div class="tile a"><div class="ln">Bài 2</div><div class="lb">Nên luyện</div></div><div class="tile "><div class="ln">Bài 3</div><div class="lb">Chưa học</div></div><div class="tile "><div class="ln">Bài 4</div><div class="lb">Chưa học</div></div><div class="tile "><div class="ln">Bài 5</div><div class="lb">Chưa học</div></div></div>
+      <p class="psug"><b>Limio gợi ý Lan</b> học tiếp Bài 3 và luyện thêm Bài 2.</p>
+    </div>
+  </div>
+  <div class="notes">
+    <p>Cá nhân hoá nghĩa là gì? Hãy nhìn một khoá học có năm bài, và hai người học là Minh và Lan. Cả hai cùng học một khoá, nhưng kết quả làm quiz của họ khác nhau, nên Limio gợi ý hai lộ trình khác nhau.</p>
+    <p>Minh còn yếu ở Bài 1, nên Limio gợi ý Minh ôn lại Bài 1 trước. Bài 2 Minh đã làm rất tốt, nên Limio cho biết Minh có thể lướt qua và học tiếp Bài 3. Lan thì vững Bài 1, còn Bài 2 cần luyện thêm, nên Limio gợi ý Lan học tiếp Bài 3 và luyện thêm Bài 2.</p>
+    <p><b>Ghi chú cho người trình bày:</b> Minh và Lan là nhân vật minh hoạ. Thứ tự gợi ý của Limio là: bài đã học nhưng còn yếu được đưa lên đầu, rồi đến bài tiếp theo trong khoá, rồi đến bài cần luyện thêm, và bài đã vững mà chưa học được gợi ý là có thể lướt qua. Đây chỉ là gợi ý; người học vẫn mở được bất kỳ bài nào.</p>
+  </div>
+</section>
+
+<!-- 9. Vòng cá nhân hoá -->
+<section class="slide" aria-label="Vòng cá nhân hoá">
+  <h2 class="rv" style="--i:0">Limio theo dõi kết quả làm bài rồi nói với từng người học <em>nên làm gì tiếp theo</em></h2>
+  <div class="steps">
+    <div class="step rv" style="--i:1"><div class="badge">1</div><p>Người học làm quiz ở cuối bài.</p></div>
+    <div class="step rv" style="--i:2"><div class="badge">2</div><p>Limio cập nhật mức hiểu bài của bài đó.</p></div>
+    <div class="step rv" style="--i:3"><div class="badge">3</div><p>Trang khoá gợi ý bài nên ôn, bài tiếp theo và bài có thể lướt qua.</p></div>
+    <div class="step rv" style="--i:4"><div class="badge">4</div><p>Mỗi câu sai có phản hồi riêng và liên kết về bài cần xem lại.</p></div>
+  </div>
+  <p class="note-line rv" style="--i:5">Tất cả diễn ra tự động, không cần giáo viên chấm bài hay nhắc nhở.</p>
+  <div class="notes">
+    <p>Đây là cách cá nhân hoá hoạt động. Người học làm quiz cuối bài. Limio cập nhật mức hiểu bài của bài đó. Trang khoá gợi ý bài nên ôn, bài tiếp theo và bài có thể lướt qua. Mỗi câu sai có phản hồi riêng và liên kết về bài cần xem lại. Tất cả diễn ra tự động, không cần giáo viên chấm hay nhắc.</p>
+    <p><b>Ghi chú cho người trình bày:</b> chúng tôi đã chạy thử toàn bộ vòng này trên một khoá thử, ghi danh bằng mã, với một học viên và chín câu hỏi. Phản hồi được ghép bằng quy tắc, không gọi mô hình ngôn ngữ, nên không phát sinh chi phí theo từng lượt. Độ tin cậy của nhãn khi mỗi bài chỉ có một hai câu còn cần kiểm với dữ liệu thật. Tính năng chỉ chạy khi khoá bật cá nhân hoá; trang soạn khoá có bảng báo khoá đã đủ dữ liệu chưa.</p>
+  </div>
+</section>
+<!-- 10. Ví dụ minh hoạ -->
+<section class="slide s-lime" aria-label="Ví dụ minh hoạ">
+  <h2 class="rv" style="--i:0">Ví dụ: Minh vừa <em>làm sai một câu</em> trong quiz của Bài 1</h2>
+  <div class="split">
+    <div class="mock fb rv" style="--i:1">
+      <div class="cap">Limio phản hồi ngay cho Minh.</div>
+      <p class="q">Câu này thuộc “Bài 1”.</p>
+      <p>Mình thấy bạn chọn “Gần đúng (dễ nhầm)”, trong khi đáp án đúng là “Đúng”.</p>
+      <p>Chỗ này dễ nhầm: Nhầm hai khái niệm gần nhau.</p>
+      <p class="hint">Bạn xem lại “Bài 1” rồi thử lại nhé.</p>
+    </div>
+    <div class="mock rv" style="--i:2">
+      <div class="cap">Lộ trình của Minh thay đổi như sau.</div>
+      <div class="row-ui"><div><div class="sm">Bài tiếp theo · Chương 1</div><div class="tt">Bài 1</div></div><div class="lab need">Cần ôn</div></div>
+      <div class="row-ui"><div><div class="sm">Có thể lướt qua · Chương 1</div><div class="tt">Bài 2</div></div><div class="lab solid">Vững</div></div>
+    </div>
+  </div>
+  <p class="note-line soft rv" style="--i:3">Đây là ví dụ minh hoạ, được dựng lại từ màn hình thật của khoá thử.</p>
+  <div class="notes">
+    <p>Hãy theo dõi một ví dụ. Minh làm quiz của Bài 1 và chọn sai một câu. Limio phản hồi ngay: câu này thuộc Bài 1, Minh đã chọn gì so với đáp án đúng, chỗ này dễ nhầm ở đâu, và nên xem lại Bài 1.</p>
+    <p>Đồng thời, lộ trình của Minh thay đổi: Bài 1 hiện nhãn Cần ôn và là bài tiếp theo; Bài 2, mà Minh đã làm tốt, hiện nhãn Vững và được gợi ý là có thể lướt qua. Minh vẫn có thể học bất kỳ bài nào, vì đây chỉ là gợi ý.</p>
+    <p><b>Ghi chú cho người trình bày:</b> Minh là nhân vật minh hoạ. Lời giải thích trong phản hồi lấy từ phần giải thích của chính câu hỏi; nếu câu không có giải thích, Limio dùng mẫu theo kiểu nhầm lẫn.</p>
+  </div>
+</section>
+<!-- 11. Ba nhãn -->
+<section class="slide" aria-label="Ba nhãn">
+  <h2 class="rv" style="--i:0">Limio dùng <em>ba nhãn</em> thay cho điểm số</h2>
+  <div class="bands">
+    <div class="band r rv" style="--i:1"><div class="nm">Cần ôn</div><div class="ds">Nhãn này có nghĩa là người học nên xem lại bài trước khi học tiếp.</div></div>
+    <div class="band a rv" style="--i:2"><div class="nm">Nên luyện</div><div class="ds">Nhãn này có nghĩa là người học nên làm thêm vài câu để chắc hơn.</div></div>
+    <div class="band g rv" style="--i:3"><div class="nm">Vững</div><div class="ds">Nhãn này có nghĩa là người học có thể lướt qua bài và đi tiếp.</div></div>
+  </div>
+  <p class="note-line soft rv" style="--i:4">Người học chỉ nhìn thấy nhãn và việc nên làm tiếp, không nhìn thấy điểm số nội bộ.</p>
+  <div class="notes">
+    <p>Limio dùng ba nhãn thay cho điểm số. Cần ôn nghĩa là nên xem lại bài trước khi học tiếp. Nên luyện nghĩa là làm thêm vài câu để chắc hơn. Vững nghĩa là có thể lướt qua và đi tiếp.</p>
+    <p>Người học chỉ thấy nhãn và việc nên làm tiếp, không thấy điểm số nội bộ. Hệ thống cũng không nhận xét về con người, chỉ nói về câu trả lời và bước tiếp theo.</p>
+  </div>
+</section>
+<!-- 12. Học liệu: bài giảng -->
+<section class="slide s-lime" aria-label="Các dạng bài giảng">
+  <h2 class="rv" style="--i:0">Limio hỗ trợ <em>nhiều dạng bài giảng tương tác</em></h2>
+  <div class="cards c3 three-ic">
+    <div class="card rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-slides"/></svg></div><p><b>Slide tương tác</b> có câu hỏi và hoạt động ngay trong bài.</p></div>
+    <div class="card rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-mic"/></svg></div><p><b>Chế độ nghe giảng</b> đọc lời giảng theo từng bước, để người học vừa nghe vừa xem.</p></div>
+    <div class="card rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-sigma"/></svg></div><p><b>Công thức toán</b> hiển thị sắc nét, và lời giải hiện ra từng bước.</p></div>
+  </div>
+  <div class="notes">
+    <p>Việc học diễn ra trên nhiều dạng học liệu. Trước hết là các dạng bài giảng. Slide tương tác có câu hỏi và hoạt động ngay trong bài. Chế độ nghe giảng có giọng đọc lời giảng theo từng bước, để người học vừa nghe vừa xem. Công thức toán hiển thị sắc nét, và lời giải hiện ra từng bước.</p>
+  </div>
+</section>
+<!-- 13. Học liệu: video, quiz, tệp có sẵn -->
+<section class="slide" aria-label="Video, quiz và học liệu có sẵn">
+  <h2 class="rv" style="--i:0">Limio cũng hỗ trợ video, nhiều dạng quiz và <em>học liệu làm sẵn</em></h2>
+  <div class="cards c3 three-ic">
+    <div class="card rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-play"/></svg></div><p><b>Video và âm thanh</b> phát ngay trong bài, và có thể chèn câu hỏi giữa video.</p></div>
+    <div class="card rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-list"/></svg></div><p><b>Quiz</b> có nhiều dạng, như trắc nghiệm, điền khuyết, ghép cặp, sắp xếp và tự luận.</p></div>
+    <div class="card rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-box"/></svg></div><p><b>Học liệu làm từ công cụ khác</b> vẫn đưa được vào khoá, ví dụ gói SCORM hoặc H5P.</p></div>
+  </div>
+  <div class="notes">
+    <p>Limio cũng hỗ trợ các dạng học liệu khác. Video và âm thanh phát ngay trong bài, và có thể chèn câu hỏi giữa video. Quiz có nhiều dạng, như trắc nghiệm, điền khuyết, ghép cặp, sắp xếp và tự luận. Học liệu làm từ công cụ khác, như gói SCORM hay H5P, cũng đưa được vào khoá.</p>
+    <p><b>Ghi chú cho người trình bày:</b> nhãn Cần ôn, Nên luyện, Vững được tính từ kết quả quiz; các dạng học liệu khác không tự cập nhật nhãn. Limio có mô-đun tiếp nhận SCORM, H5P và công cụ ngoài qua LTI, nhưng chưa thử với tệp thật, nên cần kiểm một mẫu trước khi hứa.</p>
+  </div>
+</section>
+
+<!-- 14. Giữ thói quen học -->
+<section class="slide" aria-label="Giữ thói quen học">
+  <h2 class="rv" style="--i:0">Điểm, huy hiệu và chuỗi ngày học giúp người học <em>giữ được thói quen</em></h2>
+  <div class="grid6 g4 plain">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-star"/></svg></div><p><b>Mỗi hoạt động học</b> được cộng điểm, và người học lên cấp dần.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-medal"/></svg></div><p><b>Huy hiệu</b> được trao khi người học đạt các mốc, như bước chân đầu tiên hoặc điểm tuyệt đối.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-fire"/></svg></div><p><b>Chuỗi ngày học</b> đếm số ngày học liên tục, để nhắc người học quay lại.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-trophy"/></svg></div><p><b>Bảng xếp hạng</b> cho người học xem thứ hạng theo tuần hoặc theo toàn bộ thời gian.</p></div>
+  </div>
+  <div class="notes">
+    <p>Để người học giữ được thói quen, Limio có các yếu tố tạo động lực. Mỗi hoạt động học được cộng điểm và lên cấp dần. Người học nhận huy hiệu khi đạt mốc, chẳng hạn bước chân đầu tiên hay điểm tuyệt đối. Chuỗi ngày học đếm số ngày học liên tục để nhắc người học quay lại. Bảng xếp hạng xem được theo tuần hoặc toàn bộ thời gian.</p>
+    <p><b>Ghi chú cho người trình bày:</b> mức điểm được điều chỉnh theo mức hiểu bài để tránh làm bài dễ lấy điểm; chúng tôi chưa trình bày chi tiết ở đây.</p>
+  </div>
+</section>
+<!-- 15. Phần hai -->
+<section class="slide s-dark cover end" aria-label="Phần hai" data-n="2">
+  <p class="lead rv" style="--i:0; margin-bottom:28px">Phần hai</p>
+  <h2 class="rv" style="--i:1">Làm sao người học <em>vào khoá một cách dễ dàng</em>?</h2>
+  <p class="lead rv" style="--i:2">Kênh thanh toán của Limio sẽ giúp trả lời câu hỏi này.</p>
+  <div class="notes">
+    <p>Phần hai bắt đầu bằng câu hỏi: làm sao người học vào khoá một cách dễ dàng? Đó là việc của kênh thanh toán.</p>
+  </div>
+</section>
+<!-- 16. Hai cách vào khoá -->
+<section class="slide" aria-label="Hai cách vào khoá">
+  <h2 class="rv" style="--i:0">Người học có <em>hai cách</em> để vào một khoá</h2>
+  <div class="lane rv" style="--i:1"><div class="lt">Cách thứ nhất là mua trực tiếp trên Limio.</div>
+    <div class="flow3">
+      <div class="fc"><span class="n">1</span>Người học chọn khoá và gói muốn mua.</div><div class="arr"><svg class="ic"><use href="#i-arrow"/></svg></div>
+      <div class="fc"><span class="n">2</span>Người học thanh toán qua VNPay.</div><div class="arr"><svg class="ic"><use href="#i-arrow"/></svg></div>
+      <div class="fc"><span class="n">3</span>Người học vào học ngay.</div>
+    </div></div>
+  <div class="lane rv" style="--i:2"><div class="lt">Cách thứ hai là nhập mã kích hoạt.</div>
+    <div class="flow3">
+      <div class="fc"><span class="n">1</span>Người học có một mã kích hoạt.</div><div class="arr"><svg class="ic"><use href="#i-arrow"/></svg></div>
+      <div class="fc"><span class="n">2</span>Người học nhập mã trên Limio.</div><div class="arr"><svg class="ic"><use href="#i-arrow"/></svg></div>
+      <div class="fc"><span class="n">3</span>Người học vào học ngay.</div>
+    </div></div>
+  <p class="note-line soft rv" style="--i:3">Với cả hai cách, người học đều được đăng ký vào khoá mà không cần ai duyệt.</p>
+  <div class="notes">
+    <p>Người học có hai cách để vào khoá. Cách thứ nhất là mua trực tiếp trên Limio: chọn khoá và gói muốn mua, thanh toán qua VNPay, rồi vào học ngay. Cách thứ hai là nhập mã kích hoạt: có một mã, nhập mã trên Limio, rồi vào học ngay.</p>
+    <p>Cả hai cách đều cho cùng một kết quả: người học được đăng ký vào khoá, không cần ai duyệt.</p>
+  </div>
+</section>
+<!-- 17. Thanh toán trực tiếp -->
+<section class="slide s-lime" aria-label="Thanh toán trực tiếp">
+  <h2 class="rv" style="--i:0">Người học có thể thanh toán trực tiếp bằng <em>những cách quen thuộc</em></h2>
+  <ul class="pts mid">
+    <li class="rv" style="--i:1"><b>Người học thanh toán qua VNPay.</b> Họ có thể trả bằng thẻ ATM nội địa, mã QR ngân hàng hoặc thẻ thanh toán.</li>
+    <li class="rv" style="--i:2"><b>Mỗi khoá có thể có nhiều gói truy cập.</b> Mỗi gói có một thời hạn và một mức giá riêng.</li>
+    <li class="rv" style="--i:3"><b>Quyền học được cấp khi VNPay xác nhận giao dịch.</b> Người học không phải chờ ai duyệt.</li>
+    <li class="rv" style="--i:4"><b>Thời hạn được cộng dồn khi người học mua thêm hoặc nhập thêm mã.</b> Nhờ vậy, họ không mất phần thời gian còn lại.</li>
+  </ul>
+  <div class="notes">
+    <p>Với thanh toán trực tiếp, người học trả bằng thẻ ATM nội địa, mã QR ngân hàng hoặc thẻ thanh toán qua VNPay. Mỗi khoá có thể có nhiều gói truy cập, mỗi gói một thời hạn và một mức giá. Quyền học được cấp ngay khi VNPay xác nhận giao dịch với máy chủ của Limio. Nếu một người vừa mua vừa nhập thêm mã, thời hạn được cộng dồn.</p>
+    <p><b>Ghi chú cho người trình bày, cần nói thật:</b> VNPay đã được thử trên môi trường thử nghiệm của VNPay, từ lúc tạo đơn, thanh toán bằng thẻ thử cho đến trang quay về, nhưng chưa chạy bằng tài khoản thật và chưa nhận thông báo xác nhận thật từ VNPay vào địa chỉ công khai. Hệ thống cũng có kênh thẻ quốc tế qua Stripe, nhưng việc mở được hay không còn phụ thuộc pháp nhân đăng ký. Momo và ZaloPay chưa có.</p>
+  </div>
+</section>
+<!-- 18. Mã kích hoạt theo lô -->
+<section class="slide" aria-label="Mã kích hoạt theo lô">
+  <h2 class="rv" style="--i:0">Mã kích hoạt là <em>một cách khác</em> để người học vào khoá</h2>
+  <div class="cards c3 three-ic">
+    <div class="card rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-layers"/></svg></div><p><b>Mã được quản lý theo lô.</b> Mỗi lô có tên và ghi chú, và tạo được tối đa mười nghìn mã.</p></div>
+    <div class="card rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-download"/></svg></div><p><b>Cả lô mã xuất được ra tệp CSV,</b> để in hoặc gửi đi.</p></div>
+    <div class="card rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-clock"/></svg></div><p><b>Mã cấp quyền vĩnh viễn hoặc theo số tháng,</b> và thời hạn tính từ lúc người học kích hoạt.</p></div>
+  </div>
+  <div class="notes">
+    <p>Mã kích hoạt là một cách khác để người học vào khoá, phù hợp khi việc bán diễn ra ở nơi khác. Mã được quản lý theo lô. Mỗi lô có tên và ghi chú, tạo được tối đa mười nghìn mã trong một lần. Cả lô xuất ra một tệp CSV để in hoặc gửi đi; tệp mở được bằng Excel với tiếng Việt có dấu.</p>
+    <p>Mã có thể cấp quyền vĩnh viễn hoặc theo số tháng, và thời hạn tính từ lúc người học kích hoạt chứ không phải lúc tạo mã.</p>
+  </div>
+</section>
+
+<!-- 18b. Giới hạn và thu hồi mã -->
+<section class="slide s-lime" aria-label="Giới hạn và thu hồi mã">
+  <h2 class="rv" style="--i:0">Người quản lý có thể <em>giới hạn và thu hồi</em> mã khi cần</h2>
+  <div class="cards c2 three-ic">
+    <div class="card rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-cal"/></svg></div><p><b>Mã chỉ đổi được trước một ngày đã định,</b> khi người quản lý đặt hạn kích hoạt.</p></div>
+    <div class="card rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-ban"/></svg></div><p><b>Người quản lý thu hồi được cả lô.</b> Các mã chưa dùng bị vô hiệu hoá, còn người đã kích hoạt giữ nguyên quyền.</p></div>
+  </div>
+  <div class="notes">
+    <p>Người quản lý cũng đặt được hạn kích hoạt cho mã, và sau ngày đó mã không đổi được nữa. Nếu một lô lỗi hoặc thất lạc, toàn bộ các mã chưa dùng của lô bị vô hiệu hoá trong một thao tác, còn người đã kích hoạt vẫn giữ nguyên quyền.</p>
+    <p><b>Ghi chú cho người trình bày:</b> mã không bao giờ xuất hiện trong nhật ký sự kiện.</p>
+  </div>
+</section>
+
+<!-- 19. Phần ba -->
+<section class="slide s-dark cover end" aria-label="Phần ba" data-n="3">
+  <p class="lead rv" style="--i:0; margin-bottom:28px">Phần ba</p>
+  <h2 class="rv" style="--i:1">Làm sao học liệu <em>chỉ đến đúng người có quyền</em>?</h2>
+  <p class="lead rv" style="--i:2">Phần bảo vệ học liệu của Limio sẽ giúp trả lời câu hỏi này.</p>
+  <div class="notes">
+    <p>Phần ba bắt đầu bằng câu hỏi: làm sao học liệu chỉ đến đúng người có quyền? Đó là việc của phần bảo vệ học liệu.</p>
+  </div>
+</section>
+<!-- 20. Đường dẫn bị chuyển -->
+<section class="slide s-lime" aria-label="Đường dẫn bị chuyển">
+  <h2 class="rv" style="--i:0">Điều gì xảy ra khi một người <em>gửi đường dẫn</em> của tệp học liệu cho người khác?</h2>
+  <div class="nodes compact">
+    <div class="node rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-link"/></svg></div><p><b>Một người</b> gửi đường dẫn của tệp học liệu cho người khác.</p></div>
+    <div class="arr rv" style="--i:2"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="node core rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-shield"/></svg></div><p><b>Limio</b> kiểm tra xem người mở đã đăng nhập và có quyền học hay chưa.</p></div>
+    <div class="arr rv" style="--i:4"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="stack">
+      <div class="node ok rv" style="--i:5"><p><b>Người có quyền</b> mở được tệp.</p></div>
+      <div class="node no rv" style="--i:6"><p><b>Người chưa có quyền</b> bị từ chối.</p></div>
+    </div>
+  </div>
+  <p class="note-line soft rv" style="--i:7">Cách này ngăn việc chia sẻ tệp bằng đường dẫn, nhưng không thay thế các biện pháp chống sao chép chuyên dụng.</p>
+  <div class="notes">
+    <p>Hãy hình dung một người đã mua khoá gửi đường dẫn của một tệp học liệu cho người khác. Với khoá bản quyền, Limio không mở tệp ngay. Nó kiểm tra người mở đã đăng nhập và có quyền học chưa. Người có quyền thì mở được. Người chưa có quyền thì bị từ chối. Nếu Limio chưa xác minh được quyền, nó cũng từ chối chứ không mở.</p>
+    <p>Chủ khoá chỉ cần bật một công tắc là khoá chuyển sang chế độ học liệu bản quyền, áp dụng cho các tệp học liệu tải lên.</p>
+    <p>Chúng tôi nói rõ phạm vi: cách này ngăn việc chuyển tay bằng đường dẫn, nhưng người đã có quyền học vẫn có thể lưu tệp về máy như với mọi trang web. Limio không phải là hệ thống chống sao chép chuyên dụng.</p>
+    <p><b>Ghi chú cho người trình bày:</b> nút “Tải về” của người học chưa được ẩn theo khoá bản quyền, và chưa có dấu mờ gắn tên người học lên tệp; đây là việc có thể làm tiếp nếu cần.</p>
+  </div>
+</section>
+<!-- 21. Quyền truy cập có thời hạn -->
+<section class="slide" aria-label="Kiểm soát quyền truy cập">
+  <h2 class="rv" style="--i:0">Quyền truy cập của người học <em>có thời hạn</em> và có thể được thu hồi khi cần</h2>
+  <ul class="pts mid">
+    <li class="rv" style="--i:1"><b>Khi hết thời hạn, quyền học đóng lại.</b> Limio kiểm tra điều này ngay mỗi lần người học truy cập.</li>
+    <li class="rv" style="--i:2"><b>Người quản lý thu hồi được cả lô mã chưa dùng.</b> Những người đã kích hoạt vẫn giữ nguyên quyền.</li>
+    <li class="rv" style="--i:3"><b>Khi hoàn tiền toàn bộ, quyền học được đóng lại.</b> Lịch sử học của người học vẫn được giữ nguyên.</li>
+    <li class="rv" style="--i:4"><b>Việc dò mã hàng loạt bị chặn.</b> Limio giới hạn tần suất nhập mã theo địa chỉ mạng và theo tài khoản.</li>
+  </ul>
+  <div class="notes">
+    <p>Bảo vệ học liệu còn nằm ở việc kiểm soát quyền truy cập. Quyền học có thể có thời hạn, và khi hết hạn thì bị đóng lại ngay ở lần truy cập tiếp theo, không phải chờ một tác vụ chạy nền. Một lô mã có thể thu hồi cả lô cho các mã chưa dùng. Khi hoàn tiền toàn bộ, quyền học được đóng lại, còn lịch sử học vẫn được giữ nguyên. Việc dò mã hàng loạt bị chặn bằng giới hạn tần suất theo địa chỉ mạng và theo tài khoản.</p>
+    <p><b>Ghi chú cho người trình bày, cần nói thật:</b> với thẻ quốc tế qua Stripe, hoàn tiền toàn bộ tự đóng quyền học. Với VNPay, quản trị viên đóng quyền bằng tay, và chưa có đối soát tự động khi VNPay không gửi được thông báo.</p>
+  </div>
+</section>
+<!-- 22. Ba điều cần nhớ -->
+<section class="slide s-lime" aria-label="Ba điều cần nhớ">
+  <h2 class="rv" style="--i:0"><em>Ba điều</em> cần nhớ về Limio</h2>
+  <div class="cards c3">
+    <div class="card rv" style="--i:1"><span class="bg-n" aria-hidden="true">1</span><div class="badge"><svg class="ic"><use href="#i-sparkle"/></svg></div>
+      <p><b>Cá nhân hoá</b> giúp mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp, kể cả khi không có giáo viên.</p></div>
+    <div class="card rv" style="--i:2"><span class="bg-n" aria-hidden="true">2</span><div class="badge"><svg class="ic"><use href="#i-cart"/></svg></div>
+      <p><b>Thanh toán</b> cho phép người học vào khoá bằng thanh toán trực tiếp qua VNPay hoặc bằng mã kích hoạt.</p></div>
+    <div class="card rv" style="--i:3"><span class="bg-n" aria-hidden="true">3</span><div class="badge"><svg class="ic"><use href="#i-lock"/></svg></div>
+      <p><b>Bảo vệ</b> bảo đảm tệp học liệu chỉ mở cho người có quyền, và quyền truy cập có thời hạn, thu hồi được.</p></div>
+  </div>
+  <div class="notes">
+    <p>Xin tóm tắt ba điều cần nhớ. Một, cá nhân hoá: mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp, kể cả khi không có giáo viên. Hai, thanh toán: người học vào khoá bằng thanh toán trực tiếp qua VNPay hoặc bằng mã kích hoạt. Ba, bảo vệ: tệp học liệu chỉ mở cho người có quyền, và quyền truy cập có thời hạn, thu hồi được.</p>
+  </div>
+</section>
+<!-- 23. Bắt đầu -->
+<section class="slide" aria-label="Bắt đầu">
+  <h2 class="rv" style="--i:0">Bạn có thể bắt đầu với Limio <em>theo ba bước</em></h2>
+  <div class="steps s3">
+    <div class="step rv" style="--i:1"><div class="badge">1</div><p>Bạn xem một khoá mẫu trên Limio để hình dung người học sẽ thấy những gì.</p></div>
+    <div class="step rv" style="--i:2"><div class="badge">2</div><p>Bạn thử với một khoá hoặc một chương của mình, có quiz ở cuối mỗi bài.</p></div>
+    <div class="step rv" style="--i:3"><div class="badge">3</div><p>Bạn chọn cách để người học vào khoá: thanh toán trực tiếp hay mã kích hoạt.</p></div>
+  </div>
+  <div class="notes">
+    <p>Để bắt đầu với Limio, bước một là xem một khoá mẫu để hình dung người học sẽ thấy gì. Bước hai là thử với một khoá hoặc một chương của quý vị, có quiz cuối mỗi bài, vì quiz là dữ liệu để Limio cá nhân hoá. Bước ba là chọn cách để người học vào khoá: thanh toán trực tiếp hay mã kích hoạt.</p>
+    <p><b>Ghi chú cho người trình bày:</b> đây là gợi ý quy trình, chưa gồm điều khoản thương mại; không nêu giá hay thời hạn khi chưa chốt. Với phần thử, nên có ít nhất ba câu cho mỗi bài và viết lời giải thích cho từng câu.</p>
+  </div>
+</section>
+<!-- 24. Kết -->
+<section class="slide s-dark cover end" aria-label="Kết">
+  <div class="big-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Limio"><title>Limio</title><circle cx="16" cy="16" r="15" fill="#3F6212"/><circle cx="16" cy="16" r="14" fill="#65A30D"/><circle cx="16" cy="16" r="12" fill="#ECFCCB"/><g stroke="#84CC16" stroke-width="1.4" stroke-linecap="round"><line x1="16" y1="4.5" x2="16" y2="27.5"/><line x1="4.5" y1="16" x2="27.5" y2="16"/><line x1="7.9" y1="7.9" x2="24.1" y2="24.1"/><line x1="24.1" y1="7.9" x2="7.9" y2="24.1"/></g><g fill="#D9F99D" opacity="0.6"><ellipse cx="16" cy="10.5" rx="2" ry="1"/><ellipse cx="16" cy="21.5" rx="2" ry="1"/><ellipse cx="10.5" cy="16" rx="1" ry="2"/><ellipse cx="21.5" cy="16" rx="1" ry="2"/></g><circle cx="16" cy="16" r="1.6" fill="#84CC16"/><ellipse cx="13" cy="13" rx="0.6" ry="1" fill="#365314"/><ellipse cx="19" cy="19" rx="0.6" ry="1" fill="#365314"/></svg></div>
+  <div class="logo rv" style="--i:0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 424 100" width="424" height="100" role="img" aria-label="Limio.vn"><title>Limio.vn</title><g transform="scale(3.125)"><circle cx="16" cy="16" r="15" fill="#ECFCCB"/><circle cx="16" cy="16" r="14" fill="#ECFCCB"/><circle cx="16" cy="16" r="12" fill="#84CC16"/><g stroke="#ECFCCB" stroke-width="1.4" stroke-linecap="round"><line x1="16" y1="4.5" x2="16" y2="27.5"/><line x1="4.5" y1="16" x2="27.5" y2="16"/><line x1="7.9" y1="7.9" x2="24.1" y2="24.1"/><line x1="24.1" y1="7.9" x2="7.9" y2="24.1"/></g><g fill="#D9F99D" opacity="0.6"><ellipse cx="16" cy="10.5" rx="2" ry="1"/><ellipse cx="16" cy="21.5" rx="2" ry="1"/><ellipse cx="10.5" cy="16" rx="1" ry="2"/><ellipse cx="21.5" cy="16" rx="1" ry="2"/></g><circle cx="16" cy="16" r="1.6" fill="#ECFCCB"/><ellipse cx="13" cy="13" rx="0.6" ry="1" fill="#365314"/><ellipse cx="19" cy="19" rx="0.6" ry="1" fill="#365314"/></g><path transform="translate(121.00 80.56) scale(0.04102 -0.04102)" fill="#FFFFFF" d="M116 0L116 1490L469 1490L469 288L1092 288L1092 0Z"/><path transform="translate(165.98 80.56) scale(0.04102 -0.04102)" fill="#FFFFFF" d="M115 0L115 1118L464 1118L464 0ZM289 1249Q215 1249 162 1298Q109 1347 109 1417Q109 1487 162 1536Q215 1585 289 1585Q364 1585 417 1536Q470 1487 470 1417Q470 1347 417 1298Q364 1249 289 1249Z"/><path transform="translate(187.25 80.56) scale(0.04102 -0.04102)" fill="#FFFFFF" d="M115 0L115 1118L436 1118L452 896Q498 1022 585.5 1077.5Q673 1133 774 1133Q880 1133 950.5 1072Q1021 1011 1062 874Q1113 1012 1212.5 1072.5Q1312 1133 1425 1133Q1582 1133 1682.5 1032Q1783 931 1783 754L1783 0L1435 0L1435 675Q1435 760 1390.5 804Q1346 848 1277 848Q1203 848 1160 799.5Q1117 751 1117 671L1117 0L782 0L782 680Q782 757 738.5 802.5Q695 848 626 848Q555 848 509.5 800Q464 752 464 664L464 0Z"/><path transform="translate(262.61 80.56) scale(0.04102 -0.04102)" fill="#F9A8D4" d="M115 0L115 1118L464 1118L464 0ZM289 1249Q215 1249 162 1298Q109 1347 109 1417Q109 1487 162 1536Q215 1585 289 1585Q364 1585 417 1536Q470 1487 470 1417Q470 1347 417 1298Q364 1249 289 1249Z"/><path transform="translate(283.88 80.56) scale(0.04102 -0.04102)" fill="#F9A8D4" d="M634 -21Q459 -21 333 51.5Q207 124 139.5 253.5Q72 383 72 555Q72 727 139.5 857Q207 987 333 1059.5Q459 1132 634 1132Q809 1132 934.5 1059.5Q1060 987 1127.5 857Q1195 727 1195 555Q1195 383 1127.5 253.5Q1060 124 934.5 51.5Q809 -21 634 -21ZM634 246Q734 246 787 331.5Q840 417 840 557Q840 697 787 781Q734 865 634 865Q534 865 481 781Q428 697 428 557Q428 417 481 331.5Q534 246 634 246Z"/><path transform="translate(335.05 80.56) scale(0.02871 -0.02871)" fill="#D9F99D" d="M326 -17Q259 -17 212.5 29Q166 75 166 143Q166 210 212.5 256Q259 302 326 302Q394 302 440.5 256Q487 210 487 143Q487 75 440.5 29Q394 -17 326 -17Z"/><path transform="translate(352.62 80.56) scale(0.02871 -0.02871)" fill="#D9F99D" d="M455 0L39 1118L317 1118L521 510Q557 403 583 295Q609 187 636 76L571 76Q599 187 624.5 295Q650 403 685 510L888 1118L1164 1118L746 0Z"/><path transform="translate(385.96 80.56) scale(0.02871 -0.02871)" fill="#D9F99D" d="M398 655L398 0L138 0L138 1118L384 1118L388 842L367 842Q414 987 505 1059.5Q596 1132 733 1132Q848 1132 934 1083Q1020 1034 1067.5 940Q1115 846 1115 711L1115 0L855 0L855 671Q855 783 797 847Q739 911 637 911Q568 911 514 881Q460 851 429 793.5Q398 736 398 655Z"/></svg></div>
+  <h2 class="rv" style="--i:1">Xin <em>cảm ơn</em> quý vị đã theo dõi</h2>
+  <p class="lead rv" style="--i:2">Chúng tôi mời quý vị xem trực tiếp từng nhóm tính năng trên Limio.</p>
+  <div class="notes">
+    <p>Xin cảm ơn quý vị đã theo dõi. Chúng tôi mời quý vị xem trực tiếp từng nhóm tính năng trên Limio, và rất mong được nghe quý vị thấy nhóm nào phù hợp nhất để thử trước.</p>
+  </div>
+</section>
+</div>
+</div>
+
+<div id="notesbar" role="region" aria-label="Lời giảng"><div id="notesbody"></div><div class="k">Phím: ← → chuyển slide · N ẩn/hiện lời giảng · F toàn màn hình · Ctrl/Cmd+P in ra PDF</div></div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var stage = document.getElementById("stage");
+  var body = document.body;
+  var notesBody = document.getElementById("notesbody");
+  var cur = 0;
+
+  function notesHeight() { return body.classList.contains("show-notes") ? Math.min(Math.round(window.innerHeight * 0.34), 320) : 0; }
+  function fit() {
+    var nh = notesHeight();
+    document.documentElement.style.setProperty("--nb", nh + "px");
+    document.documentElement.style.setProperty("--nbh", nh + "px");
+    var s = Math.min(window.innerWidth / 1920, (window.innerHeight - nh) / 1080);
+    stage.style.transform = "translate(-50%, -50%) scale(" + s + ")";
+  }
+  function show(n) {
+    cur = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (el, i) { el.classList.toggle("active", i === cur); });
+    var n_ = slides[cur].querySelector(".notes");
+    notesBody.innerHTML = n_ ? n_.innerHTML : "";
+    try { history.replaceState(null, "", "#" + (cur + 1)); } catch (e) {}
+  }
+  function next() { show(cur + 1); }
+  function prev() { show(cur - 1); }
+
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    switch (e.key) {
+      case "ArrowRight": case "PageDown": case " ": case "Enter": e.preventDefault(); next(); break;
+      case "ArrowLeft": case "PageUp": case "Backspace": e.preventDefault(); prev(); break;
+      case "Home": show(0); break;
+      case "End": show(slides.length - 1); break;
+      case "n": case "N": body.classList.toggle("show-notes"); fit(); break;
+      case "f": case "F":
+        if (!document.fullscreenElement) { (document.documentElement.requestFullscreen || function () {}).call(document.documentElement); }
+        else { document.exitFullscreen(); }
+        break;
+    }
+  });
+  document.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest("#notesbar")) return;
+    if (window.getSelection && String(window.getSelection())) return;
+    if (e.clientX < window.innerWidth * 0.3) prev(); else next();
+  });
+  var x0 = null;
+  document.addEventListener("touchstart", function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (x0 === null) return;
+    var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+  window.addEventListener("resize", fit);
+  window.addEventListener("hashchange", function () { var k = parseInt((location.hash || "").slice(1), 10); if (!isNaN(k) && k - 1 !== cur) show(k - 1); });
+
+  var h = parseInt((location.hash || "").slice(1), 10);
+  if (location.search.indexOf("notes") !== -1) body.classList.add("show-notes");
+  fit();
+  show(isNaN(h) ? 0 : h - 1);
+})();
+</script>
+</body>
+</html>
