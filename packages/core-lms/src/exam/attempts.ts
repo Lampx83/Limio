@@ -53,6 +53,13 @@ interface ShuffleSnapshot {
   optionOrderByQuestion: Record<string, string[]>;
 }
 
+function isTrueFalseChoice(options: Array<{ label?: string }>): boolean {
+  if (options.length !== 2) return false;
+  const labels = options.map((o) => (o.label ?? "").trim().toLowerCase()).sort();
+  const [first, second] = labels;
+  return (first === "sai" && second === "đúng") || (first === "false" && second === "true");
+}
+
 export async function buildShuffleSnapshot(
   examId: string,
   attemptId: string,
@@ -86,10 +93,12 @@ export async function buildShuffleSnapshot(
     // confuse learners. Passages themselves can still be reordered by the
     // instructor via orderIndex; we don't shuffle passage order here.
     if (key === "standalone") {
-      const ids = list.map((q) => q.id);
+      // Tự luận luôn ở cuối: thí sinh làm hết phần trắc nghiệm rồi mới viết bài.
+      const shuffled = list.filter((q) => q.type !== "essay").map((q) => q.id);
+      const essays = list.filter((q) => q.type === "essay").map((q) => q.id);
       questionOrderByPassage[key] = shuffleQuestions
-        ? seededShuffle(ids, `${attemptId}:passage:standalone`)
-        : ids;
+        ? [...seededShuffle(shuffled, `${attemptId}:passage:standalone`), ...essays]
+        : list.map((q) => q.id);
     } else {
       const sorted = list
         .slice()
@@ -102,7 +111,9 @@ export async function buildShuffleSnapshot(
   if (shuffleOptions) {
     for (const q of questions) {
       if (q.type !== "mcq" && q.type !== "multi") continue;
-      const cfg = q.config as { options?: Array<{ id: string }> };
+      const cfg = q.config as { options?: Array<{ id: string; label?: string }> };
+      // Đổi chỗ hai nút Đúng/Sai giữa các ý chỉ làm thí sinh bấm nhầm, không chống được nhìn bài.
+      if (isTrueFalseChoice(cfg.options ?? [])) continue;
       const ids = (cfg.options ?? []).map((o) => o.id);
       optionOrderByQuestion[q.id] = seededShuffle(ids, `${attemptId}:opt:${q.id}`);
     }
