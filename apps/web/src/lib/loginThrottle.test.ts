@@ -28,7 +28,7 @@ vi.mock("@feedbackme/core-lms", () => ({ loginCredentials, logAudit }));
 const findUnique = vi.fn(async () => ({ id: "user-1" }));
 vi.mock("@feedbackme/db", () => ({ prisma: { user: { findUnique } } }));
 
-const { throttledLogin, clearLoginFailures, LOGIN_EMAIL_LIMIT, LOGIN_IP_LIMIT } = await import(
+const { throttledLogin, clearLoginFailures, LOGIN_EMAIL_LIMIT } = await import(
   "./loginThrottle"
 );
 
@@ -54,8 +54,6 @@ describe("throttledLogin", () => {
     await wrong();
     expect(await right()).toEqual({ status: "ok", user: USER });
     expect(buckets.has("login:fail:email:a@x.vn")).toBe(false);
-    // Bucket IP không được xoá — một tài khoản đúng không được rửa lượt dò của IP.
-    expect(buckets.get("login:fail:ip:1.2.3.4")).toBe(2);
   });
 
   it("khoá email sau 5 lần sai, ghi audit đúng một lần", async () => {
@@ -90,20 +88,22 @@ describe("throttledLogin", () => {
     expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ targetUserId: null }));
   });
 
-  it("khoá IP sau 30 lần sai rải trên nhiều email", async () => {
-    for (let i = 0; i < LOGIN_IP_LIMIT; i++) await wrong(`u${i}@x.vn`);
-    expect(logAudit).toHaveBeenCalledWith(
-      expect.objectContaining({ payload: expect.objectContaining({ scope: "ip", ip: "1.2.3.4" }) }),
-    );
-    expect((await right("moi@x.vn")).status).toBe("locked");
-    // IP khác vẫn vào được.
-    expect((await right("a@x.vn", "5.6.7.8")).status).toBe("ok");
+  it("cả phòng thi chung một IP gõ sai nhiều lần vẫn không khoá người nhập đúng", async () => {
+    for (let i = 0; i < 200; i++) expect((await wrong(`sv${i}@x.vn`)).status).toBe("invalid");
+    expect((await right("moi@x.vn")).status).toBe("ok");
+    expect([...buckets.keys()].some((k) => k.includes(":ip:"))).toBe(false);
+    expect(logAudit).not.toHaveBeenCalled();
   });
 
-  it("IP 'unknown' thì bỏ hàng rào IP, vẫn giữ hàng rào email", async () => {
-    for (let i = 0; i < LOGIN_IP_LIMIT + 5; i++) await wrong(`u${i}@x.vn`, "unknown");
-    expect([...buckets.keys()].some((k) => k.includes(":ip:"))).toBe(false);
-    expect((await right("a@x.vn", "unknown")).status).toBe("ok");
+  it("một email sai đủ 5 lần chỉ khoá email đó, người khác cùng IP vẫn vào được", async () => {
+    for (let i = 0; i < LOGIN_EMAIL_LIMIT; i++) await wrong("a@x.vn");
+    expect((await right("a@x.vn")).status).toBe("locked");
+    expect((await right("b@x.vn")).status).toBe("ok");
+  });
+
+  it("IP 'unknown' vẫn giữ hàng rào email", async () => {
+    for (let i = 0; i < LOGIN_EMAIL_LIMIT; i++) await wrong("a@x.vn", "unknown");
+    expect((await right("a@x.vn", "unknown")).status).toBe("locked");
   });
 
   it("Redis lỗi thì cho qua (fail open)", async () => {
