@@ -323,7 +323,7 @@ export default async function InstructorCourseEditPage({
       {/* TAB: Tổng quan */}
       {tab === "overview" && (
         <div className="mt-5 space-y-6">
-          {course.personalizationEnabled && untaggedLessonIds.length > 0 && (
+          {canResearch && course.personalizationEnabled && untaggedLessonIds.length > 0 && (
             <div className="banner-warning">
               <span className="text-xl shrink-0" aria-hidden>⚠️</span>
               <div className="flex-1">
@@ -353,6 +353,7 @@ export default async function InstructorCourseEditPage({
           <section>
             <CourseMetaForm
               courseId={course.id}
+              showResearch={canResearch}
               initial={{
                 title: course.title,
                 description: course.description,
@@ -370,7 +371,7 @@ export default async function InstructorCourseEditPage({
           </section>
           )}
 
-          {readiness?.enabled && (
+          {canResearch && readiness?.enabled && (
             <section>
               <PersonalizationReadinessPanel courseId={course.id} readiness={readiness} />
             </section>

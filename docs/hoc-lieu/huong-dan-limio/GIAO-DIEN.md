@@ -88,7 +88,7 @@ còn lại vào "Khoá học của tôi" → "+ Tạo khóa học" (`/instructor
 nháp — bạn có thể bổ sung module, lesson, quiz ở bước tiếp theo." Các ô theo thứ tự:
 Tiêu đề (bắt buộc, tối đa 200 ký tự; gợi ý "Ví dụ: Đại số cơ bản") · Mô tả (bắt buộc, soạn được định dạng;
 gợi ý "Khóa học này dành cho ai? Học xong sẽ làm được gì?") · Level: Cơ bản / Trung cấp / Nâng cao ·
-Ngôn ngữ: Tiếng Việt / English · Category (không bắt buộc) · ô chọn **"Bật cá nhân hoá học tập"** · nhóm
+Ngôn ngữ: Tiếng Việt / English · Category (không bắt buộc) · (ô **"Bật cá nhân hoá học tập"** chỉ nhà nghiên cứu thấy) · nhóm
 "Ai vào được khoá này": **"Mở — ai cũng tự đăng ký được"** hoặc **"Chỉ vào bằng link mời lớp"**. Nút:
 "Hủy", "Tạo và tiếp tục". Trang **không còn** khối "khoá mẫu ngoại ngữ" (đã gỡ 2026-10-10).
 
@@ -104,7 +104,7 @@ không sửa** (hệ thống không kiểm tra khoá rỗng) — nên nhắc th�
   nhà nghiên cứu — không nhắc.
 - **Tổng quan** là bản tóm tắt chỉ đọc (Level, Ngôn ngữ, Category, Giá, thẻ "Chế độ": "LMS thường" /
   "AI Feedback" / "Ngoại ngữ (4 kỹ năng)") kèm nút "Sửa". Biểu mẫu "Sửa" có: ô **"Cá nhân hoá học tập"**
-  (không có chữ "Bật" như biểu mẫu tạo), ô **"Chế độ ngoại ngữ"** (mới; xem mục 12), "Giá khoá học"
+  (chỉ nhà nghiên cứu thấy; giảng viên thường không thấy ô này và bảng "Sẵn sàng cá nhân hoá" ở Tổng quan), ô **"Chế độ ngoại ngữ"** (mới; xem mục 12), "Giá khoá học"
   (mặc định VND, "Nhập số nguyên (đồng). Ví dụ: 299000."; chỉ khi chọn USD mới nhập theo cent, "999 = $9.99";
   để trống = miễn phí; chỉ hiện với khoá "Mở"; khoá có giá sinh mã kích hoạt sau khi lưu), ô chọn
   **"Công khai — xem được không cần đăng nhập"** (chỉ có tác dụng sau khi xuất bản; tiến độ, ghi chú,

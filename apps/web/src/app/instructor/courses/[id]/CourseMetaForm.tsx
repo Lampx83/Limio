@@ -58,9 +58,12 @@ const FACT_TONE: Record<string, { chip: string; icon: string }> = {
 export default function CourseMetaForm({
   courseId,
   initial,
+  showResearch = false,
 }: {
   courseId: string;
   initial: Initial;
+  /** Cờ Cá nhân hoá học tập là công cụ nghiên cứu: chỉ Researcher thấy. */
+  showResearch?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -269,32 +272,34 @@ export default function CourseMetaForm({
           />
         </div>
       </div>
-      <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={personalizationEnabled}
-            disabled={languageMode}
-            onChange={(e) => setPersonalizationEnabled(e.target.checked)}
-            className="mt-1 h-4 w-4 shrink-0"
-          />
-          <div className="min-w-0">
-            <span className="font-medium">Cá nhân hoá học tập</span>
-            {languageMode && (
-              <span className="mt-0.5 block text-xs text-muted">
-                Đang bị khoá vì Chế độ ngoại ngữ đang bật — tắt Chế độ ngoại ngữ trước nếu muốn tắt mục này.
-              </span>
-            )}
-            <p className="mt-1 text-xs text-muted">
-              Bật: hệ thống tự coi mỗi bài học là một chủ đề để theo dõi mức
-              thành thạo của từng học viên, rồi gợi ý ôn tập và lộ trình riêng —
-              bạn không cần gắn chủ đề thủ công. Các bài học hiện có cũng được
-              tự gắn chủ đề.
-              Tắt: khoá học chạy như LMS thông thường.
-            </p>
-          </div>
-        </label>
-      </div>
+      {showResearch && (
+        <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={personalizationEnabled}
+              disabled={languageMode}
+              onChange={(e) => setPersonalizationEnabled(e.target.checked)}
+              className="mt-1 h-4 w-4 shrink-0"
+            />
+            <div className="min-w-0">
+              <span className="font-medium">Cá nhân hoá học tập</span>
+              {languageMode && (
+                <span className="mt-0.5 block text-xs text-muted">
+                  Đang bị khoá vì Chế độ ngoại ngữ đang bật — tắt Chế độ ngoại ngữ trước nếu muốn tắt mục này.
+                </span>
+              )}
+              <p className="mt-1 text-xs text-muted">
+                Bật: hệ thống tự coi mỗi bài học là một chủ đề để theo dõi mức
+                thành thạo của từng học viên, rồi gợi ý ôn tập và lộ trình riêng —
+                bạn không cần gắn chủ đề thủ công. Các bài học hiện có cũng được
+                tự gắn chủ đề.
+                Tắt: khoá học chạy như LMS thông thường.
+              </p>
+            </div>
+          </label>
+        </div>
+      )}
       <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
         <label className={`flex items-start gap-3 ${personalizationEnabled ? "cursor-pointer" : "opacity-60"}`}>
           <input
@@ -309,7 +314,10 @@ export default function CourseMetaForm({
             <p className="mt-1 text-xs text-muted">
               Bật: học viên có trang Hồ sơ 4 kỹ năng (nghe, nói, đọc, viết), và form sửa bài có ô chọn kỹ năng của bài.
               Học viên chỉ thấy nhãn mức độ, không thấy phần trăm.
-              {!personalizationEnabled && " Cần bật Cá nhân hoá học tập trước."}
+              {!personalizationEnabled &&
+                (showResearch
+                  ? " Cần bật Cá nhân hoá học tập trước."
+                  : " Khoá này chưa bật cá nhân hoá nên chưa dùng được; liên hệ quản trị để được bật.")}
             </p>
           </div>
         </label>

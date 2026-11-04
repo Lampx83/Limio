@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
+import { useSession } from "next-auth/react";
 import { apiUrl } from "@/lib/apiUrl";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
@@ -85,6 +86,9 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 }
 
 export default function NewCoursePage() {
+  // Cờ cá nhân hoá là công cụ nghiên cứu: chỉ Researcher (hoặc admin) thấy ô bật; khoá mới luôn tắt với người khác.
+  const roles = useSession().data?.user?.roles ?? [];
+  const showResearch = roles.includes("researcher") || roles.includes("admin");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState("vi");
@@ -287,26 +291,28 @@ export default function NewCoursePage() {
             <FieldError id="category-error" message={fieldErrors.category} />
           </div>
         </div>
-        <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={personalizationEnabled}
-              onChange={(e) => setPersonalizationEnabled(e.target.checked)}
-              className="mt-1 h-4 w-4 shrink-0"
-            />
-            <div className="min-w-0">
-              <span className="font-medium">Bật cá nhân hoá học tập</span>
-              <p className="mt-1 text-xs text-muted">
-                Khi bật: hệ thống tự coi mỗi bài học là một chủ đề để theo dõi mức
-                thành thạo của từng học viên, rồi gợi ý ôn tập và lộ trình riêng —
-                bạn không cần gắn chủ đề thủ công.
-                Khi tắt (mặc định): khoá học chạy như LMS thông thường.
-                Bạn có thể đổi lại trong cài đặt khoá học.
-              </p>
-            </div>
-          </label>
-        </div>
+        {showResearch && (
+          <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={personalizationEnabled}
+                onChange={(e) => setPersonalizationEnabled(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0"
+              />
+              <div className="min-w-0">
+                <span className="font-medium">Bật cá nhân hoá học tập</span>
+                <p className="mt-1 text-xs text-muted">
+                  Khi bật: hệ thống tự coi mỗi bài học là một chủ đề để theo dõi mức
+                  thành thạo của từng học viên, rồi gợi ý ôn tập và lộ trình riêng —
+                  bạn không cần gắn chủ đề thủ công.
+                  Khi tắt (mặc định): khoá học chạy như LMS thông thường.
+                  Bạn có thể đổi lại trong cài đặt khoá học.
+                </p>
+              </div>
+            </label>
+          </div>
+        )}
         {/* Ai vào được khoá. Hỏi ngay lúc tạo vì đổi sau khi đã phát link thì
             những người vào rồi vẫn ở lại — chặn cửa không đuổi được ai. */}
         <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
