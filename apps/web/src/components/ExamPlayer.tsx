@@ -1086,6 +1086,10 @@ export default function ExamPlayer(props: Props) {
           </div>
         </header>
         )}
+        {/* Trình duyệt không cho cảnh báo ngay lúc bấm chuyển tab, nên nhắc sẵn trước khi thí sinh bấm. */}
+        <p className="mb-2 text-xs font-medium text-danger-700">
+          Không rời khỏi trang thi. Mọi lần rời trang đều được ghi lại.
+        </p>
         <QuestionPalette items={paletteItems} onJump={jumpToQuestion} />
       </div>
 
