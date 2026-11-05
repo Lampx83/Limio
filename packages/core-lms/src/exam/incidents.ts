@@ -21,7 +21,8 @@ const INCIDENT_TYPES = [
  * Cùng một loại sự cố của cùng một lượt thi trong khoảng này chỉ ghi MỘT dòng. Có thật: một lượt vấn đáp
  * trên điện thoại ghi 1.058 dòng `tab_blur` trong chưa đến 1 phút — con người không làm được, đó là bùng
  * nổ sự kiện của trình duyệt/thiết bị, và nó làm màn chấm hiện một cờ gian lận vô nghĩa. Phía client cũng
- * chỉ báo sau 5 giây rời thật sự, nên 10 giây ở đây không nuốt mất sự kiện thật nào.
+ * chỉ báo khi rời từ 1 giây, nên các lần rời liên tiếp trong 10 giây chỉ thành một dòng ở đây; thí sinh
+ * vẫn thấy cảnh báo mỗi lần quay lại.
  */
 export const INCIDENT_DEDUPE_WINDOW_MS = 10_000;
 
