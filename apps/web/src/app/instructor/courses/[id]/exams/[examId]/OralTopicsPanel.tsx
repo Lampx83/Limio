@@ -24,6 +24,7 @@ const STUDENT_BRIEF_MAX = 2_000;
 const TOPICS_MAX = 30;
 
 const FRIENDLY_ERROR: Record<string, string> = {
+  legacy_oral_disabled: "Vấn đáp AI bản này đã ngừng, không thêm hay sửa chủ đề được nữa. Kết quả cũ vẫn xem được.",
   validation_failed: "Cần nhập cả tiêu đề và mô tả (và không vượt giới hạn ký tự).",
   exam_not_draft: "Đề đã publish — chủ đề đã khoá.",
   topic_not_found: "Chủ đề này không còn tồn tại.",

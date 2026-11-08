@@ -177,6 +177,8 @@ export const LearningEventType = {
   // A6.4 — chấm điểm buổi vấn đáp: AI đề xuất, rồi GV duyệt/sửa.
   ExamOralEvaluationGenerated: "exam.oral_evaluation.generated",
   ExamOralEvaluationGraded: "exam.oral_evaluation.graded",
+  // Admin bật/tắt vấn đáp AI bản cũ (docs/tieu-chi/limio-van-dap.md). Payload chỉ mang cờ bật/tắt.
+  ExamOralLegacySwitched: "exam.oral_legacy.switched",
 
   // Feedback
   SkillStateUpdated: "skill.state.updated",
@@ -608,6 +610,11 @@ export interface ExamOralEvaluationGeneratedPayload {
   examId: string;
   attemptId: string;
   aiSuggestedScore: number | null;
+}
+
+export interface ExamOralLegacySwitchedPayload {
+  /** true = vấn đáp bản cũ đã bị tắt. */
+  disabled: boolean;
 }
 
 export interface ExamOralEvaluationGradedPayload {

@@ -11,6 +11,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { prisma } from "@feedbackme/db";
+import { isLegacyOralDisabled } from "@feedbackme/core-lms";
 import { requireFeature } from "@/lib/session";
 import { formatDate } from "@/lib/datetime";
 import EmptyState from "@/components/ui/EmptyState";
@@ -75,9 +76,18 @@ export default async function OralExamsHubPage() {
 
   const draftCount = exams.filter((e) => e.status === "draft").length;
   const publishedCount = exams.filter((e) => e.status === "published").length;
+  const legacyDisabled = await isLegacyOralDisabled();
 
   return (
     <main>
+      {legacyDisabled && (
+        <div className="banner-info mb-4 text-sm" role="status">
+          <p className="font-medium">Vấn đáp AI bản này đã ngừng nhận đề và buổi mới.</p>
+          <p className="mt-0.5">
+            Kết quả, bảng điểm và nội dung các phiên cũ vẫn xem, chấm và xuất (Excel, Word) được như bình thường.
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Phòng vấn đáp AI</h1>
@@ -91,12 +101,14 @@ export default async function OralExamsHubPage() {
             </p>
           )}
         </div>
-        <Link
-          href="/instructor/oral-exams/new"
-          className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
-        >
-          + Tạo đề vấn đáp mới
-        </Link>
+        {!legacyDisabled && (
+          <Link
+            href="/instructor/oral-exams/new"
+            className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            + Tạo đề vấn đáp mới
+          </Link>
+        )}
       </div>
 
       {exams.length === 0 ? (
@@ -104,10 +116,16 @@ export default async function OralExamsHubPage() {
           <EmptyState
             icon="🎙️"
             title="Chưa có đề vấn đáp nào"
-            description="Tạo đề mới rồi nộp tài liệu để AI dựa vào đó hỏi sinh viên."
-            actions={[
-              { label: "+ Tạo đề vấn đáp mới", href: "/instructor/oral-exams/new", variant: "primary" },
-            ]}
+            description={
+              legacyDisabled
+                ? "Vấn đáp AI bản này đã ngừng nhận đề mới."
+                : "Tạo đề mới rồi nộp tài liệu để AI dựa vào đó hỏi sinh viên."
+            }
+            actions={
+              legacyDisabled
+                ? []
+                : [{ label: "+ Tạo đề vấn đáp mới", href: "/instructor/oral-exams/new", variant: "primary" }]
+            }
           />
         </div>
       ) : (

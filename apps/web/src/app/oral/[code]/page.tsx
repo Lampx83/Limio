@@ -102,6 +102,8 @@ function describeError(code: string): string {
       return "Buổi vấn đáp đã đóng.";
     case "attempt_limit_reached":
       return "Bạn đã dùng hết số lượt vấn đáp cho phép.";
+    case "legacy_oral_disabled":
+      return "Vấn đáp AI bản này đã ngừng nhận lượt mới. Vui lòng liên hệ giảng viên.";
     default:
       return `Lỗi: ${code}`;
   }

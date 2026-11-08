@@ -84,6 +84,8 @@ export class ExamError extends Error {
       | "forbidden"
       // A6.1 — Vấn đáp AI
       | "exam_not_oral"
+      // Vấn đáp AI bản cũ đã tắt (xem legacy-oral-switch.ts): không bắt đầu thêm gì mới.
+      | "legacy_oral_disabled"
       | "exam_not_written"
       | "material_not_found"
       | "unsupported_material_type"

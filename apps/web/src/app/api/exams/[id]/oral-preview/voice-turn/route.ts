@@ -15,6 +15,7 @@ import {
   CourseAuthzError,
   getIntegrationSecret,
   IntegrationError,
+  isLegacyOralDisabled,
 } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
@@ -40,6 +41,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   });
   if (!exam) return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
   if (exam.kind !== "oral") return NextResponse.json({ error: "exam_not_oral" }, { status: 400 });
+  if (await isLegacyOralDisabled()) return NextResponse.json({ error: "legacy_oral_disabled" }, { status: 409 });
   try {
     await assertCanEditExam(userId, exam);
   } catch (e) {

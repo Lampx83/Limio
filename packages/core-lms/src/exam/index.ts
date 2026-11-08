@@ -59,4 +59,5 @@ export * from "./oral-materials";
 export * from "./oral-topics";
 export * from "./oral-material-extract";
 export * from "./oral-attempts";
+export * from "./legacy-oral-switch";
 export * from "./oral-evaluation";

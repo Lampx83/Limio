@@ -192,6 +192,8 @@ function describeExamError(code: string): string {
       return "Bạn đã dùng hết số lượt thi cho phép.";
     case "not_enrolled":
       return "Bạn chưa đăng ký khóa học này.";
+    case "legacy_oral_disabled":
+      return "Vấn đáp AI bản này đã ngừng nhận lượt mới. Vui lòng liên hệ giảng viên.";
     default:
       return `Lỗi: ${code}`;
   }

@@ -49,6 +49,7 @@ function formatSize(bytes: number | null): string {
 }
 
 const FRIENDLY_ERROR: Record<string, string> = {
+  legacy_oral_disabled: "Vấn đáp AI bản này đã ngừng, không thêm hay sửa tài liệu được nữa. Kết quả cũ vẫn xem được.",
   no_file: "Chưa chọn file.",
   title_required: "Cần nhập tiêu đề.",
   invalid_type: "Loại tài liệu không hợp lệ.",
