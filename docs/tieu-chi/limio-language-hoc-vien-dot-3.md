@@ -128,3 +128,11 @@ Hệ thống Đề thi đã có gần hết thứ Figma cần, và **chưa có t
 - **Khác tiêu chí v2:** khối chỉ chọn được đề **thi thử** (`mockMode`), vì bộ máy luyện đề chỉ chạy với loại đề đó; đã ghi vào thông báo của ô chọn và vào `GIAO-DIEN.md`.
 - **Dữ liệu dev đã dùng để xem:** thêm tạm một khối "Bài luyện" vào bài "Đọc: Giới thiệu bản thân" của khoá demo và một buổi luyện của giảng viên mẫu, **đã xoá cả hai**; sự kiện `exam.practice.*` đã ghi vẫn còn (append-only).
 - **Lưu ý khi commit:** `schema.prisma` và `courses/courses.ts` có thay đổi của việc khác cùng file (B12/B16): chỉ staging phần của 3b (một giá trị enum; một dòng `continue` trong nhân đôi khoá). `teacherAssistantGuide.ts` đổi cả dòng đã commit ở đợt 2 (tách mục).
+
+## Quyết định về 3c (09/11/2026)
+
+Thầy chốt: **bỏ phần dẫn chứng nhập chỉ số ký tự** (`evidenceSpan`) vì quá thủ công. Giảng viên chỉ ra đoạn chứng minh đáp án ngay trong ô **"Giải thích đáp án"** sẵn có của trình soạn câu hỏi (lưu ở `config.explanation`); ô này đã hiện cho học viên sau "Kiểm tra câu n" trong Bài luyện (3b).
+
+- **Bỏ:** nút "Xem dẫn chứng", ô nhập chỉ số, tô sáng vùng dẫn chứng. Cột `evidenceSpan` vẫn nằm trong schema, chưa dùng.
+- **Làm (chữ hướng dẫn):** ô "Giải thích đáp án" ở trình soạn câu hỏi của đề nói rõ giải thích hiện ngay sau "Kiểm tra câu n" ở Bài luyện và gợi ý nêu đoạn nào chứng minh đáp án. Chưa commit.
+- **Chưa làm, chờ thầy quyết:** transcript đánh số đoạn (①②…) cho bài nghe. Khi không còn nút dẫn chứng thì việc đánh số chỉ có ích nếu giảng viên viết "đoạn ②" trong giải thích.

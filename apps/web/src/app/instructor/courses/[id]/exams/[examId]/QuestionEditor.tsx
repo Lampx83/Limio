@@ -613,8 +613,9 @@ export default function QuestionEditor({
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
         />
         <p className="mt-1 text-caption text-faint">
-          Chỉ hiện khi đề bật “Hiện kết quả sau khi nộp”. Để trống thì học sinh
-          không thấy khối giải thích.
+          Ở đề thi, chỉ hiện khi đề bật “Hiện kết quả sau khi nộp”. Ở “Bài luyện” nhúng trong bài học, hiện ngay khi
+          học viên bấm “Kiểm tra câu n”; nên chỉ rõ đoạn nào của bài đọc/bài nghe chứng minh đáp án. Để trống thì học
+          viên không thấy khối giải thích.
         </p>
       </div>
 
