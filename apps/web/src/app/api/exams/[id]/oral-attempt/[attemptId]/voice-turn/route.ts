@@ -113,7 +113,7 @@ export async function POST(
   let audioChunks: string[] = [];
   let contentType = "audio/mpeg";
   try {
-    const tts = await (await resolveTextToSpeech(openai))(turnResult.assistantContent);
+    const tts = await (await resolveTextToSpeech(openai, attempt.exam.language))(turnResult.assistantContent);
     audioChunks = tts.audioChunks.map((b) => b.toString("base64"));
     contentType = tts.contentType;
   } catch (e) {
@@ -121,6 +121,8 @@ export async function POST(
     // mất gì nếu chỉ riêng bước đọc thành tiếng lỗi. Trả về không có audio,
     // SV dùng bản chữ (assistantText) qua nút "chuyển sang gõ chữ".
     if (!isTtsProviderError(e)) throw e;
+    // Không nuốt im: lỗi đọc thành tiếng là lý do duy nhất khiến vấn đáp giọng nói "không có tiếng".
+    console.warn("[oral-exam] TTS thất bại, trả chữ không kèm tiếng:", (e as { details?: unknown }).details ?? e);
   }
 
   return NextResponse.json({

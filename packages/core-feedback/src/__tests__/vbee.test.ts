@@ -199,3 +199,16 @@ describe("testVbeeCredentials (A6.6)", () => {
     if (!r.ok) expect(r.error).toBe("invalid token");
   });
 });
+
+describe("splitForTts — tiếng Trung", () => {
+  it("tách theo dấu câu Hán dù không có khoảng trắng, mỗi đoạn không vượt giới hạn", () => {
+    const sentence = "请你用自己的话解释一下递归的基本思想。";
+    const text = sentence.repeat(30);
+    const parts = splitForTts(text, 100);
+    expect(parts.length).toBeGreaterThan(1);
+    for (const p of parts) expect(p.length).toBeLessThanOrEqual(100);
+    expect(parts.join("")).toBe(text);
+    // Mỗi đoạn kết thúc đúng ở cuối câu, không cắt giữa câu.
+    for (const p of parts) expect(p.endsWith("。")).toBe(true);
+  });
+});
