@@ -8,6 +8,7 @@ import PanelToggle from "@/components/ui/PanelToggle";
 import Tooltip from "@/components/ui/Tooltip";
 import { WordCloudIcon } from "@/components/icons/WordCloudIcon";
 import {
+  Sparkles,
   House,
   GraduationCap,
   BookOpen,
@@ -85,6 +86,8 @@ type Item = {
   section?: string;
   /** Chỉ Researcher thấy — khu vực nghiên cứu, giảng viên thường không cần. */
   researcherOnly?: boolean;
+  /** Chỉ người có cờ `van_dap.access` thấy — Limio Vấn đáp đang thử nghiệm, chạy song song bản cũ. */
+  vanDapOnly?: boolean;
 };
 
 type ModuleColors = {
@@ -224,8 +227,11 @@ const MODULES: ModuleDef[] = [
       itemIconFg: "text-lime-600 dark:text-lime-300",
       headerText: "text-lime-700 dark:text-lime-400",
     },
-    matchPrefixes: ["/instructor/oral-exams"],
-    items: [{ label: "Phòng vấn đáp", href: "/instructor/oral-exams", icon: Bot }],
+    matchPrefixes: ["/instructor/oral-exams", "/instructor/van-dap"],
+    items: [
+      { label: "Phòng vấn đáp", href: "/instructor/oral-exams", icon: Bot },
+      { label: "Limio Vấn đáp", href: "/instructor/van-dap", icon: Sparkles, vanDapOnly: true },
+    ],
   },
   {
     id: "exam",
@@ -332,6 +338,8 @@ export default function InstructorLeftMenu(props: {
   isResearcher?: boolean;
   /** Tính năng trung tâm (Lịch dạy, Giáo trình) có được bật cho tài khoản này không. */
   centerEnabled?: boolean;
+  /** Cờ `van_dap.access`: có thấy mục Limio Vấn đáp (đang thử nghiệm) không. */
+  vanDapEnabled?: boolean;
   /** Giảng viên trung tâm: chỉ dạy, không soạn — menu rút gọn còn Lịch dạy, Assignment, Forum Q&A. */
   teachingOnly?: boolean;
 }) {
@@ -347,12 +355,14 @@ function InstructorLeftMenuInner({
   isProctor = false,
   isResearcher = false,
   centerEnabled = false,
+  vanDapEnabled = false,
   teachingOnly = false,
 }: {
   isInstructor?: boolean;
   isProctor?: boolean;
   isResearcher?: boolean;
   centerEnabled?: boolean;
+  vanDapEnabled?: boolean;
   teachingOnly?: boolean;
 }) {
   const modules = MODULES.map((m) => ({
@@ -360,6 +370,7 @@ function InstructorLeftMenuInner({
     items: m.items.filter((it) => {
       // Giảng viên trung tâm chỉ dạy: bỏ mọi thứ để soạn (khoá, giáo trình, slide, đề thi, đấu trường, phân tích).
       if (teachingOnly) return !!it.href && TEACHING_ONLY_HREFS.has(it.href);
+      if (it.vanDapOnly && !vanDapEnabled) return false;
       return (!it.researcherOnly || isResearcher) && (centerEnabled || !it.href || !CENTER_INSTRUCTOR_HREFS.has(it.href));
     }),
   })).filter((m) => !teachingOnly || m.items.length > 0);

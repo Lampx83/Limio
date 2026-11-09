@@ -1,6 +1,6 @@
 # Limio Vấn đáp — làm lại vấn đáp AI, chạy song song bản cũ
 
-Trạng thái: **nháp chờ duyệt** (07/11/2026). Chưa có dòng code nào.
+Trạng thái: **đã duyệt (08/11/2026). Mốc 0 và Mốc 1 đã code, chờ thầy/cô test tay.** Mốc 2 trở đi chưa làm. Bản công tắc tắt vấn đáp cũ (AC0.9–AC0.11) đã làm từ 07/11/2026.
 
 ## 1. Vì sao làm lại
 
@@ -45,6 +45,12 @@ Mỗi mốc xong thì dừng để thầy/cô duyệt rồi mới sang mốc k�
 
 ### Mốc 0 — khung song song
 
+Ghi chú thực hiện (08/11/2026), những chỗ khác chữ của tiêu chí:
+- **Bật tính năng:** cờ `van_dap.access` được seed khi máy chủ khởi động (mặc định tắt). Bật cho từng người ở trang cờ tính năng của admin. Máy 224 và máy AWS bật riêng.
+- **AC0.6:** tra mã và trang vào `/van-dap/<mã>` đã có và đã test, nhưng nút "Mở buổi" thuộc Mốc 2, nên lúc này chưa có buổi nào để học viên vào. Trang vào chỉ báo "phòng đang được hoàn thiện".
+- **AC0.8:** Lily chưa dạy mục này; đã ghi vào `MENU_NOT_IN_ASSISTANT` (đang thử nghiệm, bật theo cờ). Khi chuyển dần sang bản mới thì phải dạy Lily.
+- Menu: mục "Limio Vấn đáp" nằm trong nhóm "Vấn đáp AI", ngay dưới "Phòng vấn đáp".
+
 - **AC0.1** Given giảng viên không có cờ `van_dap.access`, When mở menu hoặc gõ thẳng `/instructor/van-dap`, Then menu không có mục "Limio Vấn đáp" và đường dẫn bị từ chối như các trang bị khoá quyền khác.
 - **AC0.2** Given giảng viên có cờ, When mở menu, Then thấy "Limio Vấn đáp"; trang đầu liệt kê đề của mình (rỗng lúc đầu) và có nút "Tạo đề Limio Vấn đáp".
 - **AC0.3** Given bất kỳ giảng viên nào, When dùng "Phòng vấn đáp" và mọi đề vấn đáp cũ, Then hành vi y hệt trước đó và toàn bộ test hiện có của vấn đáp cũ vẫn xanh.
@@ -59,6 +65,13 @@ Mỗi mốc xong thì dừng để thầy/cô duyệt rồi mới sang mốc k�
 - **AC0.11 (ĐÃ LÀM)** Given admin mở /admin/settings, Then thấy trước khi tắt: số đề cũ (nháp/đã xuất bản), số buổi đang mở, số lượt thi đang làm dở, số bài chờ chốt điểm; tắt khi còn buổi mở hoặc lượt dở thì có hộp xác nhận kèm số liệu. Tắt/bật lại được bất cứ lúc nào và dữ liệu không mất.
 
 ### Mốc 1 — Dàn câu hỏi
+
+Ghi chú thực hiện (08/11/2026):
+- **AC1.1:** bản mới không có nút "Tiếp tục" như bản cũ; thay bằng việc chặn "Tạo dàn từ tài liệu" và "Xuất bản" khi còn tệp chọn dở chưa bấm "Tải lên", kèm thông báo.
+- **AC1.3–1.4:** đoạn nguồn do hệ thống ghép từ chính tài liệu (mô hình chỉ trả số đoạn), nên không bao giờ là chữ do mô hình bịa. Tài liệu dài chia phần ~24.000 ký tự; mỗi phần sinh ứng viên, một lượt gộp chọn–xếp thứ tự (không viết ý mới). Gộp hỏng thì lấy luân phiên giữa các phần.
+- **AC1.6:** kéo thả trên máy tính; có nút Lên/Xuống cho điện thoại và bàn phím.
+- **AC1.7:** số câu ước tính lấy mỗi lượt hỏi–đáp ≈ 1,5 phút; ý đứng sau không kịp thì đánh dấu "không kịp".
+- Chưa thử với mô hình Qwen thật: test dùng mô hình giả. Cần thử vài tài liệu thật trước khi bàn giao nhóm thử (xem mục 7).
 
 - **AC1.1** Given đề nháp, When giảng viên tải tệp PDF, Word, .txt hoặc .md (tối đa 20 MB), Then tệp xuất hiện trong danh sách sau khi bấm "Tải lên"; "Tiếp tục" không âm thầm bỏ tệp đang chọn dở (có cảnh báo nếu còn tệp chưa tải).
 - **AC1.2** Given tệp không đọc được chữ (PDF scan), When tải lên, Then hiện thông báo rõ "tệp này không đọc được chữ" ngay, không im lặng.

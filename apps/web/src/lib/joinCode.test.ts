@@ -10,6 +10,7 @@ function fakeDb(over: Record<string, Record<string, (...a: unknown[]) => Promise
     courseSection: table("courseSection"),
     examSession: table("examSession"),
     exam: table("exam"),
+    vanDapSession: table("vanDapSession"),
     gameSession: table("gameSession"),
     liveSession: table("liveSession"),
     liveSlideCode: table("liveSlideCode"),
@@ -94,6 +95,37 @@ describe("findJoinMatches", () => {
     expect(await findJoinMatches("ABC234", db)).toEqual([
       { kind: "live", href: "/learn/live/ABC234", label: "Bài giảng trực tiếp: OER", ended: false },
     ]);
+  });
+
+  it("mã buổi Limio Vấn đáp dẫn vào phòng của bản mới, tách khỏi vấn đáp cũ (AC0.6)", async () => {
+    const db = fakeDb({
+      vanDapSession: { findUnique: async () => ({ title: null, status: "open", exam: { title: "Vấn đáp chương 3", status: "published" } }) },
+    });
+    expect(await findJoinMatches("ABC234", db)).toEqual([
+      { kind: "van_dap", href: "/van-dap/ABC234", label: "Limio Vấn đáp: Vấn đáp chương 3", ended: false },
+    ]);
+  });
+
+  it("buổi Limio Vấn đáp đã đóng báo ended; đề chưa xuất bản coi như không tồn tại", async () => {
+    const closed = fakeDb({
+      vanDapSession: { findUnique: async () => ({ title: "Buổi sáng", status: "closed", exam: { title: "Đề", status: "published" } }) },
+    });
+    expect((await findJoinMatches("ABC234", closed))[0]).toMatchObject({ kind: "van_dap", ended: true, label: "Limio Vấn đáp: Buổi sáng" });
+    const draft = fakeDb({
+      vanDapSession: { findUnique: async () => ({ title: null, status: "open", exam: { title: "Đề", status: "draft" } }) },
+    });
+    expect(await findJoinMatches("ABC234", draft)).toEqual([]);
+  });
+
+  it("mã Limio Vấn đáp trùng mã vấn đáp cũ: hiện màn chọn, không đoán hộ", async () => {
+    const db = fakeDb({
+      examSession: { findFirst: none, findUnique: async () => ({ title: "Buổi cũ", status: "open", exam: { title: "Đề cũ" } }) },
+      vanDapSession: { findUnique: async () => ({ title: null, status: "open", exam: { title: "Đề mới", status: "published" } }) },
+    });
+    const out = await findJoinMatches("ABC234", db);
+    expect(out.map((m) => m.kind)).toEqual(["oral", "van_dap"]);
+    const r = decideJoin("ABC234", out);
+    expect(r.result).toBe("choose");
   });
 
   it("mã không phải 6 ký tự thì không tra DB", async () => {

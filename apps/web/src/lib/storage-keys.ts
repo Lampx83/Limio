@@ -94,6 +94,7 @@ type DateShardedKind =
   | "submissions"
   | "proctor-snapshots"
   | "oral-exam-materials"
+  | "van-dap-materials"
   | "whiteboard-pages"
   | "board-attachments"
   | "limio-live-slides"
@@ -255,6 +256,13 @@ export function submissionKeyFromFilename(filename: string): StorageKey | null {
 }
 export function proctorSnapshotKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("private", "proctor-snapshots", filename);
+}
+/** Limio Vấn đáp: tài liệu nguồn để sinh dàn. `private`, chỉ người soạn đề đọc. */
+export function vanDapMaterialKey(date: Date, filename: string): StorageKey {
+  return dateSharded("private", "van-dap-materials", date, filename);
+}
+export function vanDapMaterialKeyFromFilename(filename: string): StorageKey | null {
+  return dateShardedFromFilename("private", "van-dap-materials", filename);
 }
 export function oralExamMaterialKeyFromFilename(filename: string): StorageKey | null {
   return dateShardedFromFilename("private", "oral-exam-materials", filename);

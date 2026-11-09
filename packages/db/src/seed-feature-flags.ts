@@ -152,6 +152,16 @@ const FLAGS: FlagSeed[] = [
     defaultValue: true,
     sellable: false,
   },
+  {
+    key: "van_dap.access",
+    group: "ai_oral",
+    name: "Dùng Limio Vấn đáp (thử nghiệm)",
+    description:
+      "Bản làm lại của vấn đáp AI, chạy song song bản cũ (docs/tieu-chi/limio-van-dap.md). Mặc định TẮT; bật từng người ở trang cờ tính năng.",
+    valueType: "boolean",
+    defaultValue: false,
+    sellable: false,
+  },
   // --- AI Tutor ---
   {
     key: "ai.tutor.access",
