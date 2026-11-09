@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CreateQuestionInput } from "../../src/quizzes/questions";
-import { LessonSpec, embedProblems, expandQuestion, isSafeEmbedUrl, lectureAnchorProblems, lessonContentItems, markdownToHtml, renderSection } from "../import-course";
+import { LessonSpec, embedProblems, expandQuestion, isSafeEmbedUrl, lectureAnchorProblems, lessonContentItems, markdownToHtml, renderSection, setImportLanguage } from "../import-course";
 
 describe("renderSection — bố cục như Bài học từ tài liệu", () => {
   it("dựng section/lesson-part đúng đánh dấu mà lessonLook.css dùng", () => {
@@ -254,5 +254,44 @@ describe("workOnPaper — câu cần nháp ra giấy", () => {
   it("không đánh dấu thì extra như cũ", () => {
     expect(expandQuestion({ ...q, key: "c1" }, 0).extra).toEqual({ manifestKey: "c1" });
     expect(expandQuestion(q, 0).extra).toBeUndefined();
+  });
+});
+
+describe("nhãn do importer chèn theo ngôn ngữ khoá", () => {
+  const lesson = LessonSpec.parse({
+    title: "Lesson",
+    durationMin: 20,
+    objectives: ["Solve a system"],
+    body: "Intro.\n\n> [!ghi-nho] Key point.\n\n> [!canh-bao] Watch out.\n\n## One\n\nText.",
+    summary: ["Idea"],
+    quiz: { title: "Q", questions: [{ type: "true_false", prompt: "x", options: [{ label: "T", isCorrect: true }, { label: "F", isCorrect: false }] }] },
+  });
+  const html = () => lessonContentItems(lesson).map((i) => JSON.stringify(i.payload)).join("");
+
+  it("khoá tiếng Anh: mục tiêu, tổng kết, callout, dải thông tin bằng tiếng Anh", () => {
+    setImportLanguage("en");
+    try {
+      const h = html();
+      expect(h).toContain("Learning objectives");
+      expect(h).toContain("Summary");
+      expect(h).toContain("Key idea");
+      expect(h).toContain("Common pitfall");
+      expect(h).toContain("20 min");
+      expect(h).toContain("1 practice question");
+      expect(h).not.toContain("Mục tiêu bài học");
+      expect(h).not.toContain("Ghi nhớ");
+    } finally {
+      setImportLanguage(undefined);
+    }
+  });
+
+  it("không đặt ngôn ngữ (hoặc ngôn ngữ chưa có bảng nhãn) thì vẫn là tiếng Việt", () => {
+    setImportLanguage("fr");
+    const h = html();
+    expect(h).toContain("Mục tiêu bài học");
+    expect(h).toContain("Tổng kết");
+    expect(h).toContain("Ghi nhớ");
+    expect(h).toContain("20 phút");
+    setImportLanguage(undefined);
   });
 });

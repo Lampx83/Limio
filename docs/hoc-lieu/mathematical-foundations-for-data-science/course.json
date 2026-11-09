@@ -1,0 +1,34 @@
+{
+  "course": {
+    "title": "Mathematical Foundations for Data Science",
+    "slug": "mathematical-foundations-for-data-science",
+    "language": "en",
+    "level": "beginner",
+    "category": "Data Science",
+    "personalizationEnabled": true,
+    "description": "The mathematics you need before machine learning, in three connected parts: **Linear Algebra** (linear systems, matrices, determinants, eigenvalues, vector spaces, linear mappings), **Calculus and Optimization** (functions, derivatives, the chain rule, partial derivatives, gradients, gradient descent) and **Probability and Statistics** (conditional probability, Bayes' rule, random variables, distributions, expectation, variance, joint distributions, sampling, estimation and confidence intervals).\n\n15 topics · about 45 hours (15 class hours + 30 hours of independent study). Each topic has worked examples, practice questions with feedback on the exact misconception behind a wrong answer, and flashcards for spaced review. Lecture notes and slides for every part are attached as PDFs."
+  },
+  "startModule": {
+    "title": "Start here",
+    "description": "What the course covers, how it is assessed and how to study it.",
+    "lessons": [
+      {
+        "title": "Course overview and syllabus",
+        "durationMin": 12,
+        "description": "Aim, ten learning outcomes, the three parts, the 15 topics and how you are assessed.",
+        "look": { "palette": "limio", "font": "modern" },
+        "objectives": [
+          "Name the three parts of the course and the topics each contains",
+          "Relate each learning outcome (LO.1–LO.10) to the kind of task you will be asked to do",
+          "Plan your 45 hours: 15 hours in class and 30 hours of independent practice"
+        ],
+        "body": "Machine learning is applied mathematics. A model is a function with parameters, training is optimisation of those parameters, and the data it learns from is uncertain. This course gives you exactly the three mathematical languages behind that sentence — **linear algebra** for representing data and transformations, **calculus** for measuring change and optimising, and **probability and statistics** for reasoning under uncertainty.\n\n> [!ghi-nho] The emphasis is on **mathematical reasoning and interpretation in data science and machine learning contexts**, not on memorising formulas. When you finish a topic you should be able to say what an object *means* (a matrix as a transformation, a gradient as the direction of steepest increase, a confidence interval as a statement about a procedure) and when to use it.\n\n## Course facts\n\n| | |\n|---|---|\n| Class contact | 15 hours |\n| Independent study | 30 hours |\n| Total workload | 45 hours |\n| Structure | 3 parts · 15 topics |\n\n## The three parts\n\n| Part | Module | Class hours | Topics |\n|---|---|---|---|\n| I | Linear Algebra | 5 | 1 Linear systems · 2 Matrix operations and inverses · 3 Determinants · 4 Eigenvalues and eigenvectors · 5 Vector spaces and linear mappings |\n| II | Calculus and Optimization for Machine Learning | 5 | 6 Functions, exponentials and logarithms · 7 Derivatives, chain rule and marginal effects · 8 Partial derivatives and the gradient · 9 Optimization and gradient descent |\n| III | Introduction to Probability and Statistics | 5 | 10 Probability foundations · 11 Random variables and distributions · 12 Expectation, variance and moments · 13 Joint distributions and dependence · 14 Sampling distributions and the CLT · 15 Estimation and confidence intervals |\n\n## Learning outcomes\n\nBy the end of the course you can:\n\n- **LO.1 (Understand)** Explain the concepts and terminology of linear algebra, calculus and optimization, and probability and statistics.\n- **LO.2 (Understand)** Explain the structure and solution of linear systems and the main properties and operations of matrices.\n- **LO.3 (Understand)** Explain determinants, eigenvalues, eigenvectors, vector spaces and linear mappings.\n- **LO.4 (Understand)** Explain functions, limits, derivatives, the chain rule, marginal effects, partial derivatives and gradients.\n- **LO.5 (Apply)** Apply derivatives and gradients to analyse functions and basic optimization problems, including gradient descent.\n- **LO.6 (Apply)** Apply probability rules, conditional probability, independence, the law of total probability and Bayes' rule.\n- **LO.7 (Apply)** Work with random variables, mass and density functions, cumulative distributions, common distributions, expectation and variance.\n- **LO.8 (Analyze)** Analyse joint, marginal and conditional distributions, dependence, covariance, correlation and conditional expectation.\n- **LO.9 (Analyze)** Analyse sampling distributions and estimators using bias, variance, mean square error, confidence intervals, efficiency and consistency.\n- **LO.10 (Evaluate)** Select and justify the mathematical concepts and procedures that suit a structured data science or machine learning problem.\n\n## How you are assessed\n\n| Component | Weight | What it looks like | LOs |\n|---|---|---|---|\n| Quiz / short analytical test | 20% | Short-answer and problem-based questions on definitions, calculations and interpretation | LO.1–LO.7 |\n| Problem-solving assignment | 30% | Structured problems from all three parts, with your reasoning explained | LO.2–LO.9 |\n| Integrated final assessment | 50% | Scenarios where you choose and apply methods from the whole course | LO.2–LO.10 |\n\nThe quizzes in this course follow the first component: every wrong answer is linked to a specific misconception, and the feedback tells you *where the reasoning went wrong*, not just that it did.\n\n## How to study each topic\n\n1. Read the lesson and **try each worked example yourself before opening the next step**.\n2. Do the topic quiz. Rate your confidence before you see the answer — knowing that you are unsure is information.\n3. Review the flashcards the next day, then a week later.\n4. Read the lecture notes PDF for the full derivations and look at the slides before class.\n\n## Recommended resources\n\nThe lecture notes and slides attached to each part are the primary text. For further reading, see the textbooks listed in the syllabus (Strang, *Introduction to Linear Algebra*; Boyd & Vandenberghe, *Introduction to Applied Linear Algebra*; Deisenroth, Faisal & Ong, *Mathematics for Machine Learning*; Wasserman, *All of Statistics*).",
+        "summary": [
+          "The course has three parts and fifteen topics; each part is five class hours.",
+          "Quizzes (20%), the problem-solving assignment (30%) and the integrated final assessment (50%) together test LO.1–LO.10.",
+          "Study by attempting every step yourself first, using the quiz confidence rating, and reviewing flashcards on a spaced schedule."
+        ]
+      }
+    ]
+  }
+}
