@@ -10,6 +10,7 @@ import {
   FileType,
   Globe,
   BookA,
+  ClipboardCheck,
   Headphones,
   MessagesSquare,
   LayoutTemplate,
@@ -43,7 +44,8 @@ type ContentSubtype =
   | "html_block"
   | "audio"
   | "vocab_list"
-  | "dialogue";
+  | "dialogue"
+  | "exam_practice";
 
 type Tile = {
   /** Unique key */
@@ -155,6 +157,16 @@ const TILES: Tile[] = [
     description: "Các lượt thoại có người nói, phiên âm, bản dịch và audio từng câu",
     keywords: "hội thoại dialogue conversation nghe nói ngoại ngữ",
     pick: { kind: "content", subtype: "dialogue" },
+  },
+  {
+    key: "exam_practice",
+    group: "resource",
+    icon: ClipboardCheck,
+    color: "bg-stone-200 text-stone-800",
+    name: "Bài luyện",
+    description: "Đoạn văn hoặc bài nghe kèm câu hỏi, học viên kiểm tra từng câu ngay trong bài",
+    keywords: "bài luyện luyện đề câu hỏi đoạn văn đọc hiểu nghe ngoại ngữ thi thử exam practice",
+    pick: { kind: "content", subtype: "exam_practice" },
   },
   {
     key: "pdf",

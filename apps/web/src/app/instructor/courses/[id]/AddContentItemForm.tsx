@@ -8,6 +8,7 @@ import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import { AUDIO_MAX_BYTES, AUDIO_UPLOAD_ACCEPT } from "@/lib/lessonAudio";
 import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
+import PracticeBlockFields from "./PracticeBlockFields";
 import LessonFileUploadPanel from "./LessonFileUploadPanel";
 import {
   dialogueEditorFromPayload,
@@ -103,7 +104,8 @@ type ContentType =
   | "html_block"
   | "audio"
   | "vocab_list"
-  | "dialogue";
+  | "dialogue"
+  | "exam_practice";
 
 const TYPE_LABEL: Record<ContentType, string> = {
   richtext: "Văn bản (rich text)",
@@ -121,6 +123,7 @@ const TYPE_LABEL: Record<ContentType, string> = {
   audio: "Audio (bài nghe)",
   vocab_list: "Từ vựng (bảng từ)",
   dialogue: "Hội thoại",
+  exam_practice: "Bài luyện",
 };
 
 export default function AddContentItemForm({
@@ -170,6 +173,7 @@ export default function AddContentItemForm({
   // URL khác thì bỏ (không còn đúng file đó nữa).
   const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(null);
   const [linkTitle, setLinkTitle] = useState("");
+  const [practiceExamId, setPracticeExamId] = useState("");
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioShowTranscript, setAudioShowTranscript] = useState(true);
   const [vocabValue, setVocabValue] = useState<VocabEditorValue>(() => vocabEditorFromPayload(null));
@@ -481,6 +485,14 @@ export default function AddContentItemForm({
         payload = dialoguePayloadFromEditor(dialogueValue);
         break;
       }
+      case "exam_practice":
+        if (!practiceExamId) {
+          setError("Hãy chọn một đề thi thử cho bài luyện.");
+          setBusy(false);
+          return;
+        }
+        payload = { examId: practiceExamId, title: linkTitle.trim() || undefined };
+        break;
       case "scorm":
         if (!scormPackageId) {
           setError(lmsErrorMessage("missing_scorm_package"));
@@ -822,6 +834,9 @@ export default function AddContentItemForm({
 
       {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
       {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
+      {type === "exam_practice" && (
+        <PracticeBlockFields lessonId={lessonId} examId={practiceExamId} title={linkTitle} onExamId={setPracticeExamId} onTitle={setLinkTitle} />
+      )}
 
       {type === "audio" && (
         <div className="space-y-2">

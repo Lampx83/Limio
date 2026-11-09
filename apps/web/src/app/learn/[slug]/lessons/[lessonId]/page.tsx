@@ -10,7 +10,9 @@ import {
   getEffectiveVirtualLecturer,
   getLearnerNarrations,
   getLessonSlideState,
+  ExamError,
   buildLessonFrame,
+  getPracticeForEmbed,
   isUserEnrolled,
   listMockExamsForLearner,
   listThreadsForLesson,
@@ -33,6 +35,8 @@ import { getActiveRole } from "@/lib/active-role";
 import { languageShellIsLearner } from "@/lib/languageMenu";
 import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
 import LessonFrameLayout, { LessonFooter, LessonViewTabs } from "@/components/language/LessonFrame";
+import LessonPractice from "@/components/language/LessonPractice";
+import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
@@ -730,6 +734,42 @@ export default async function LessonPage({
   // bài không có mục lục bị đẩy lệch vào 16rem so với tiêu đề bài. Không thể chờ
   // client quyết (nav mount sau khi nội dung được làm sạch) vì cột hiện ra muộn
   // sẽ làm cả bài giật sang phải.
+  // LANG đợt 3b — khối "Bài luyện": dựng sẵn ở máy chủ theo dữ liệu của người xem. Chỉ học viên đã ghi danh ở trang bài
+  // thường (không xem thử, không chiếu lớp, không chế độ giảng viên); nơi khác khối không hiện gì.
+  const practiceBlocks: Record<string, React.ReactNode> = {};
+  if (enrolled && !previewMode && !stageMode && !teacherMode) {
+    for (const it of shownItems) {
+      if (it.type !== "exam_practice") continue;
+      const p = (it.payload ?? {}) as { examId?: string; title?: string };
+      if (!p.examId) continue;
+      const title = p.title || "Bài luyện";
+      if (!languageSkin) {
+        // Vỏ thường chưa có giao diện nhúng: dẫn sang trang luyện đề sẵn có của đề.
+        practiceBlocks[it.id] = (
+          <PracticeBlockNotice
+            title={title}
+            message="Bài luyện có đoạn văn và câu hỏi, kiểm tra từng câu ngay khi làm."
+            href={`/learn/${params.slug}/exams/${p.examId}/practice`}
+            cta="Mở bài luyện"
+          />
+        );
+        continue;
+      }
+      try {
+        const embed = await getPracticeForEmbed(userId, p.examId);
+        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} />;
+      } catch (e) {
+        if (!(e instanceof ExamError)) throw e;
+        practiceBlocks[it.id] = (
+          <PracticeBlockNotice
+            title={title}
+            message={e.code === "practice_disabled" ? "Bài luyện đang tắt. Giảng viên sẽ mở khi lớp học tới phần này." : "Bài luyện này hiện chưa dùng được."}
+          />
+        );
+      }
+    }
+  }
+
   const sectionCount = shownItems.reduce(
     (n, c) => n + (JSON.stringify(c.payload ?? "").match(/<h2\b[^>]*?\bid=/gi)?.length ?? 0),
     0,
@@ -948,6 +988,7 @@ export default async function LessonPage({
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
           deckCover={deckCover}
+          blocks={practiceBlocks}
         />
         </div>
         <div

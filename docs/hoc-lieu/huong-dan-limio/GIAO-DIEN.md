@@ -618,6 +618,17 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   (Không gán, Nghe, Nói, Đọc, Viết) và học viên có trang "Hồ sơ 4 kỹ năng" (chỉ nhãn Cần ôn / Nên luyện thêm /
   Vững, không hiện %), khối "Luyện hôm nay". Flashcard "Ôn từ vựng" (lịch ôn cách quãng) không phụ thuộc chế
   độ này.
+- **Bài luyện** (LANG đợt 3b, mới; đã đối chiếu mã 2026-11-09): trong bài học, "+ Thêm hoạt động/tài nguyên" có ô
+  **"Bài luyện"**. Chọn một **đề thi thử đã xuất bản của chính khoá** ở ô "Đề thi thử" (đề khoá khác, đề nháp hoặc
+  đề thi thường không chọn được; đề đang tắt "Cho luyện đề" vẫn chọn được và ô ghi chú rõ), có thể đặt "Tiêu đề bài
+  luyện" (trống thì dùng tên đề). Đề tạo ở mục Đề thi ("Tạo đề thi thử từ khung"), soạn đoạn văn và câu hỏi như đề
+  thi thử. Học viên ở vỏ Limio Language thấy bài luyện **ngay trong trang bài**: đoạn văn bên trái và câu hỏi bên
+  phải ("Chia đôi", có nút "Một cột" để đổi; dưới màn hình lớn luôn xếp dọc), chọn đáp án thì tự lưu, bấm "Kiểm tra
+  câu n" để thấy "Chính xác" hoặc "Chưa chính xác" kèm giải thích của giảng viên (nhập ở câu hỏi của đề); "Kết thúc
+  bài luyện" hiện tóm tắt đúng theo kỹ năng và nút "Luyện lại". Bài luyện **không vào sổ điểm** và **chưa làm đổi nhãn
+  Cần ôn / Nên luyện / Vững**. Học viên ở vỏ Limio thường thấy một thẻ dẫn sang trang luyện đề của đề đó. Khi nhân đôi
+  cả khoá, khối "Bài luyện" **không** được chép sang (đề thuộc khoá gốc), thầy/cô thêm lại ở khoá mới; nhân đôi một
+  bài trong cùng khoá thì giữ.
 - **Thư viện giáo trình** (LANG đợt 2, mới; đã đối chiếu mã 2026-11-09): ở tab Tổng quan của khoá bật "Chế độ
   ngoại ngữ", **chỉ chủ khoá và admin** thấy mục **"Thư viện giáo trình"** (đồng giảng viên không thấy): ô
   "Đưa vào Thư viện giáo trình", các ô "Nhà xuất bản", "Tác giả", "Ấn bản", hai ô chọn mức "Trình độ từ" và

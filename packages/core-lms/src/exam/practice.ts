@@ -277,6 +277,85 @@ export async function getPracticeSession(userId: string, sessionId: string, db: 
   };
 }
 
+export interface PracticeEmbed {
+  examId: string;
+  title: string;
+  /** null = chưa có buổi luyện dở: buổi chỉ được tạo khi học viên chọn đáp án đầu tiên. */
+  sessionId: string | null;
+  checkEnabled: boolean;
+  timed: boolean;
+  questions: Array<{
+    id: string;
+    type: string;
+    prompt: string;
+    points: number;
+    passageId: string | null;
+    sectionTitle: string;
+    languageSkill: string | null;
+    /** Cấu hình CÔNG KHAI: không có đáp án đúng, giải thích hay dẫn chứng. */
+    config: Record<string, unknown>;
+  }>;
+  passages: Array<{ id: string; title: string; contentJson: unknown }>;
+  answers: Array<{ questionId: string; answerJson: unknown; checked: boolean; isCorrect: boolean | null }>;
+}
+
+/**
+ * LANG đợt 3b — dữ liệu để NHÚNG bài luyện vào trang bài học. Chỉ ĐỌC, không tạo buổi luyện. Có buổi dở thì dùng
+ * đúng phạm vi và đáp án của buổi đó; chưa có thì trả cả đề để học viên làm ngay (buổi được tạo khi chọn đáp án
+ * đầu tiên). Cùng điều kiện với luyện đề thường: ghi danh, đề thi thử đã xuất bản, bật "Cho luyện đề"
+ * (ném `ExamError`: not_enrolled / practice_disabled / exam_not_found).
+ */
+export async function getPracticeForEmbed(userId: string, examId: string, db: PrismaClient = prisma): Promise<PracticeEmbed> {
+  const exam = await loadPracticeExam(userId, examId, db);
+  const open = await db.examPracticeSession.findFirst({ where: { userId, examId, status: "in_progress" }, select: { id: true } });
+  if (open) {
+    const s = await getPracticeSession(userId, open.id, db);
+    return {
+      examId,
+      title: exam.title,
+      sessionId: s.sessionId,
+      checkEnabled: s.checkEnabled,
+      timed: s.timed,
+      questions: s.questions.map((q) => ({
+        id: q.id,
+        type: q.type,
+        prompt: q.prompt,
+        points: q.points,
+        passageId: q.passageId,
+        sectionTitle: q.sectionTitle,
+        languageSkill: q.languageSkill,
+        config: q.config as Record<string, unknown>,
+      })),
+      passages: s.passages,
+      answers: s.answers,
+    };
+  }
+  const all = await loadExamQuestions(examId, db);
+  const passageIds = [...new Set(all.map((q) => q.passageId).filter((x): x is string => !!x))];
+  const passages = passageIds.length
+    ? await db.examPassage.findMany({ where: { id: { in: passageIds } }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true, contentJson: true } })
+    : [];
+  return {
+    examId,
+    title: exam.title,
+    sessionId: null,
+    checkEnabled: true,
+    timed: false,
+    questions: all.map((q) => ({
+      id: q.id,
+      type: q.type,
+      prompt: q.prompt,
+      points: q.points,
+      passageId: q.passageId,
+      sectionTitle: q.sectionTitle,
+      languageSkill: q.languageSkill,
+      config: toPublicQuestionConfig(q.type, q.config) as Record<string, unknown>,
+    })),
+    passages,
+    answers: [],
+  };
+}
+
 export async function savePracticeAnswer(
   userId: string,
   sessionId: string,

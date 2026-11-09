@@ -814,6 +814,9 @@ enum ContentType {
   // Payload JSON; mỗi dòng/lượt có `id` ổn định do server gán.
   vocab_list
   dialogue
+  // LANG đợt 3b — "Bài luyện": nhúng bài luyện đề (đoạn văn + câu hỏi, kiểm tra từng câu) của một đề thi thử cùng khoá
+  // vào bài học. Payload { examId, title? }. Dùng bộ máy ExamPracticeSession; xem docs/tieu-chi/limio-language-hoc-vien-dot-3.md.
+  exam_practice
 }
 
 /// LANG G4 — lịch ôn flashcard của MỘT học viên cho MỘT dòng từ vựng. Chỉ có dòng

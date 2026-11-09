@@ -276,12 +276,22 @@ export const GUIDES: readonly GuideEntry[] = [
   {
     id: "ngoai-ngu",
     title: "Dạy ngoại ngữ: bài nghe, từ vựng, hội thoại, thi thử",
-    keywords: ["ngoại ngữ", "tiếng trung", "tiếng anh", "từ vựng", "hội thoại", "audio", "bài nghe", "flashcard", "hsk", "ielts", "toeic", "phiên âm", "pinyin", "chế độ ngoại ngữ", "4 kỹ năng", "góp ý bài viết", "góp ý bài nói", "thư viện giáo trình", "giáo trình", "nhà xuất bản", "tác giả", "ấn bản", "xem thử"],
+    keywords: ["ngoại ngữ", "tiếng trung", "tiếng anh", "từ vựng", "hội thoại", "audio", "bài nghe", "flashcard", "hsk", "ielts", "toeic", "phiên âm", "pinyin", "chế độ ngoại ngữ", "4 kỹ năng", "góp ý bài viết", "góp ý bài nói"],
     destinationIds: ["my_courses", "exams"],
-    body: `Trong bài học, bấm "+ Thêm hoạt động/tài nguyên" để thêm "Audio (bài nghe)" (tải mp3, m4a, ogg hoặc dán link, kèm lời thoại tuỳ chọn), "Từ vựng (bảng từ)" (gõ từng từ, dán từ Excel, hoặc "Nhập bằng AI" từ văn bản rồi duyệt trước khi thêm) và "Hội thoại" (gõ từng lượt hoặc dán cả đoạn, có audio và đặt mốc thời gian theo lượt). Ở tab Tổng quan, bấm "Sửa" rồi bật "Chế độ ngoại ngữ" (cần bật cá nhân hoá trước): mỗi bài có ô "Kỹ năng" Nghe, Nói, Đọc, Viết và học viên có trang "Hồ sơ 4 kỹ năng" chỉ hiện nhãn mức, không hiện phần trăm. Học viên cũng ôn từ vựng bằng flashcard theo lịch ôn cách quãng. Đề thi thử theo khung HSK, IELTS, TOEIC hoặc tuỳ chỉnh tạo ở trang đề thi của khoá ("Tạo đề thi thử từ khung"), có giờ riêng từng phần, cho nghe 1 lần hoặc giới hạn số lần; học viên thấy mục "Luyện thi". Góp ý bài viết và bài nói do AI tạo hiện ở cửa sổ chấm bài nộp, thầy/cô sửa rồi bấm "Duyệt" hoặc "Từ chối" trước khi học viên thấy là đã duyệt. Muốn học viên tìm thấy khoá như một giáo trình, chủ khoá (đồng giảng viên không thấy mục này) vào tab Tổng quan, mục "Thư viện giáo trình", tick "Đưa vào Thư viện giáo trình", điền "Nhà xuất bản", "Tác giả", "Ấn bản", chọn trình độ và "Kỹ năng trọng tâm" rồi bấm "Lưu thông tin". Khoá chỉ hiện ở thư viện khi đã xuất bản và cho ghi danh tự do, khoá chỉ vào bằng link mời thì không đưa vào được. Học viên chỉ xem thử được những bài thầy/cô đã đặt "Cho xem thử" trong menu của bài.`,
+    body: `Trong bài học, bấm "+ Thêm hoạt động/tài nguyên" để thêm "Audio (bài nghe)" (tải mp3, m4a, ogg hoặc dán link, kèm lời thoại tuỳ chọn), "Từ vựng (bảng từ)" (gõ từng từ, dán từ Excel, hoặc "Nhập bằng AI" từ văn bản rồi duyệt trước khi thêm) và "Hội thoại" (gõ từng lượt hoặc dán cả đoạn, có audio và đặt mốc thời gian theo lượt). Ở tab Tổng quan, bấm "Sửa" rồi bật "Chế độ ngoại ngữ" (cần bật cá nhân hoá trước): mỗi bài có ô "Kỹ năng" Nghe, Nói, Đọc, Viết và học viên có trang "Hồ sơ 4 kỹ năng" chỉ hiện nhãn mức, không hiện phần trăm. Học viên cũng ôn từ vựng bằng flashcard theo lịch ôn cách quãng. Đề thi thử theo khung HSK, IELTS, TOEIC hoặc tuỳ chỉnh tạo ở trang đề thi của khoá ("Tạo đề thi thử từ khung"), có giờ riêng từng phần, cho nghe 1 lần hoặc giới hạn số lần; học viên thấy mục "Luyện thi". Góp ý bài viết và bài nói do AI tạo hiện ở cửa sổ chấm bài nộp, thầy/cô sửa rồi bấm "Duyệt" hoặc "Từ chối" trước khi học viên thấy là đã duyệt.`,
     useCases: [
       `Dạy bài hội thoại tiếng Trung, thầy/cô thêm khối Hội thoại có audio cả đoạn để học viên vừa nghe vừa theo dõi từng lượt.`,
       `Cuối học kỳ, thầy/cô tạo đề thi thử theo khung HSK để học viên luyện đúng định dạng.`,
+    ],
+  },
+  {
+    id: "giao-trinh-bai-luyen",
+    title: "Thư viện giáo trình và Bài luyện trong bài học (Limio Language)",
+    keywords: ["thư viện giáo trình", "giáo trình", "nhà xuất bản", "tác giả", "ấn bản", "xem thử", "bài luyện", "đề thi thử trong bài", "câu hỏi trong bài", "đoạn văn", "đọc hiểu", "kiểm tra câu", "chia đôi"],
+    destinationIds: ["my_courses", "exams"],
+    body: `Để học viên làm câu hỏi ngay trong bài, thầy/cô tạo đề thi thử theo khung và xuất bản đề ở mục Đề thi, rồi trong bài bấm "+ Thêm hoạt động/tài nguyên", chọn "Bài luyện" và chọn "Đề thi thử" đó; học viên ở Limio Language làm ngay trong bài, đoạn văn bên cạnh câu hỏi, bấm "Kiểm tra câu n" để thấy đúng sai và giải thích. Bài luyện không vào sổ điểm. Muốn học viên tìm thấy khoá như một giáo trình, chủ khoá (đồng giảng viên không thấy mục này) vào tab Tổng quan, mục "Thư viện giáo trình", tick "Đưa vào Thư viện giáo trình", điền "Nhà xuất bản", "Tác giả", "Ấn bản", chọn trình độ và "Kỹ năng trọng tâm" rồi bấm "Lưu thông tin". Khoá chỉ hiện ở thư viện khi đã xuất bản và cho ghi danh tự do, khoá chỉ vào bằng link mời thì không đưa vào được. Học viên chỉ xem thử được những bài thầy/cô đã đặt "Cho xem thử" trong menu của bài.`,
+    useCases: [
+      `Dạy một bài đọc hiểu, thầy/cô nhúng đề thi thử có đoạn văn và 5 câu hỏi vào đúng bài để học viên đọc rồi kiểm tra từng câu ngay trên trang.`,
       `Thầy/cô dùng một giáo trình in sẵn, nên đưa khoá vào Thư viện giáo trình kèm nhà xuất bản và tác giả để học viên tìm, lưu và xem thử vài bài đầu trước khi ghi danh.`,
     ],
   },

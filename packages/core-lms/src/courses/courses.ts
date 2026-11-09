@@ -711,6 +711,8 @@ export async function cloneModuleTree(
       },
     });
     for (const c of l.contentItems) {
+      // Khối "Bài luyện" trỏ tới đề của khoá gốc: sang khoá mới thì không còn hợp lệ, bỏ qua (giảng viên thêm lại).
+      if (c.type === "exam_practice") continue;
       const newContent = await tx.contentItem.create({
         data: {
           lessonId: newLesson.id,

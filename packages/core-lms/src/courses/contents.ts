@@ -7,10 +7,11 @@ import { validateContentPayload, type ContentTypeKey } from "./contentSchemas";
 import { attachLessonActivity } from "./lessonActivity";
 import { recordContentVersion } from "./contentVersions";
 import { registerLessonMedia } from "./protectedMedia";
+import { assertPracticeBlockExam } from "./practiceBlock";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 
-const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p", "html_block", "audio", "vocab_list", "dialogue", "teacher_note"]);
+const TypeEnum = z.enum(["video", "markdown", "richtext", "embed", "file", "external_link", "pdf", "scorm", "lti", "h5p", "html_block", "audio", "vocab_list", "dialogue", "exam_practice", "teacher_note"]);
 
 export const CreateContentInput = z.object({
   type: TypeEnum,
@@ -82,6 +83,10 @@ export async function createContentItem(
     );
   }
 
+  if (parsed.data.type === "exam_practice") {
+    await assertPracticeBlockExam(courseId, (validatedPayload as { examId: string }).examId, db);
+  }
+
   // Wrap entity create + LessonActivity attach in one transaction so a failure
   // attaching to the ordering layer rolls back the entity create.
   const itemId = await (db as typeof prisma).$transaction(async (tx) => {
@@ -123,6 +128,9 @@ export async function updateContentItem(
         e instanceof z.ZodError ? e.flatten() : String(e),
       );
     }
+  }
+  if (effectiveType === "exam_practice" && data.payload !== undefined) {
+    await assertPracticeBlockExam(ctx.courseId, (data.payload as { examId: string }).examId, db);
   }
   if (parsed.data.type !== undefined) data.type = parsed.data.type;
   if (parsed.data.orderIndex !== undefined) data.orderIndex = parsed.data.orderIndex;

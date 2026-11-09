@@ -1,6 +1,6 @@
 # Limio Language — Chi tiết bài học, đợt 3 (làm câu hỏi ngay trong bài, tái dùng bộ máy "Luyện đề") — Acceptance criteria
 
-> Bản nháp **v2** 09/11/2026, **đã duyệt; 3a đã code (xem "Đã làm 3a" ở cuối), chưa commit.** v1 dựng câu hỏi tại chỗ trên `Quiz`; v2 đổi sang tái dùng bộ máy **đoạn văn + câu hỏi + luyện đề** của hệ thống Đề thi theo gợi ý của thầy. Thiết kế: Figma "Limio Language", 4 frame bài học. Tiếp nối đợt 1 (`aa9a7e63`) và đợt 2 (`9f03a9da`).
+> Bản nháp **v2** 09/11/2026, **đã duyệt; 3a đã commit (`65c5b66c`), 3b đã code (xem "Đã làm 3b" ở cuối), chưa commit.** v1 dựng câu hỏi tại chỗ trên `Quiz`; v2 đổi sang tái dùng bộ máy **đoạn văn + câu hỏi + luyện đề** của hệ thống Đề thi theo gợi ý của thầy. Thiết kế: Figma "Limio Language", 4 frame bài học. Tiếp nối đợt 1 (`aa9a7e63`) và đợt 2 (`9f03a9da`).
 
 ## Vì sao làm
 
@@ -115,3 +115,16 @@ Hệ thống Đề thi đã có gần hết thứ Figma cần, và **chưa có t
 - **Dời sang 3b:** phần "chia đôi" của AC3. Chia đôi chỉ có nghĩa khi bài có khối "Bài luyện" (đoạn văn + câu hỏi), nên làm cùng 3b.
 - **Chưa xem bằng mắt:** tab "Bài học | Từ vựng" trên dữ liệu thật (khoá demo chưa có bài vừa có nội dung vừa có từ vựng; đã có test render), số phút ở thanh bài (dữ liệu demo chưa khai báo `durationSec`), thanh bài khi có bài khoá.
 - **Lưu ý khi commit:** `learn/[slug]/lessons/[lessonId]/page.tsx` và `core-lms/src/language/index.ts` chỉ có thay đổi của 3a; không file dùng chung nào có thay đổi của việc khác lẫn vào.
+
+## Đã làm 3b (09/11/2026, chưa commit)
+
+- **Schema + migration `20261109200000_exam_practice_content_type`:** chỉ thêm giá trị `exam_practice` vào enum `ContentType` (không cột, không bảng mới). Áp lên DB dev bằng `migrate deploy`, DB test bằng `db push`.
+- **Lõi:** `ExamPracticePayload` (`{ examId, title? }`) và kiểm ở `contents.ts` khi tạo/sửa (`courses/practiceBlock.ts`): đề phải **cùng khoá, đề thi viết, là đề thi thử, đã xuất bản**; `listSelectablePracticeExams` cho ô chọn đề; `getPracticeForEmbed` (`exam/practice.ts`, chỉ đọc, không tạo buổi luyện, dùng cấu hình công khai); nhân đôi khoá **bỏ** khối này, nhân đôi bài trong cùng khoá giữ.
+- **API:** `GET /api/lessons/[lessonId]/practice-exams`. Chấm, lưu, kiểm tra, kết thúc **dùng nguyên** `/api/exams/[id]/practice` và `/api/practice-sessions/...` đã có (không route chấm mới).
+- **Giao diện học viên:** `LessonPractice` (vỏ Figma; chia đôi/một cột nhớ ở trình duyệt, tự lưu, "Kiểm tra câu n", nạp lại kết quả đã kiểm tra khi mở lại bài, tóm tắt theo kỹ năng, "Luyện lại"), `PracticeBlockNotice` (bài luyện tắt/không dùng được, và thẻ dẫn sang trang luyện đề ở vỏ thường), `lib/lessonPracticeView.ts`; `LessonContent` nhận thêm `blocks`. **Không sửa** `PracticePlayer`, `ExamQuestion`, `AnswerReview`.
+- **Giao diện giảng viên:** tile "Bài luyện" ở bộ chọn hoạt động, ô "Đề thi thử" + "Tiêu đề bài luyện" ở form thêm/sửa khối (`PracticeBlockFields`), dòng hiển thị trong danh sách khối; `GIAO-DIEN.md` và hướng dẫn của Lily (mục mới "giao-trinh-bai-luyen", tách ra khỏi "ngoai-ngu" vì mục đó vượt 1.500 chữ).
+- **Kiểm thử:** web 216 file / 2527 test xanh, `core-lms` (language, courses, exam) 112 file / 1415 test xanh, `tsc` sạch ở cả hai gói. Xem trên dev với khoá demo + đề "Thi thử HSK 3 (demo)": chọn đáp án tự tạo buổi luyện, "Kiểm tra câu 1" ra "Chính xác", mở lại bài thì kết quả được nạp lại, 375px không tràn ngang và ẩn nút bố cục, danh sách khối của giảng viên hiện dòng "Bài luyện".
+- **Chưa xem bằng mắt:** form thêm khối "Bài luyện" (bộ chọn đề), câu trả lời sai (đã có test), tóm tắt khi kết thúc (đã có test), đoạn văn có ảnh/âm thanh thật.
+- **Khác tiêu chí v2:** khối chỉ chọn được đề **thi thử** (`mockMode`), vì bộ máy luyện đề chỉ chạy với loại đề đó; đã ghi vào thông báo của ô chọn và vào `GIAO-DIEN.md`.
+- **Dữ liệu dev đã dùng để xem:** thêm tạm một khối "Bài luyện" vào bài "Đọc: Giới thiệu bản thân" của khoá demo và một buổi luyện của giảng viên mẫu, **đã xoá cả hai**; sự kiện `exam.practice.*` đã ghi vẫn còn (append-only).
+- **Lưu ý khi commit:** `schema.prisma` và `courses/courses.ts` có thay đổi của việc khác cùng file (B12/B16): chỉ staging phần của 3b (một giá trị enum; một dòng `continue` trong nhân đôi khoá). `teacherAssistantGuide.ts` đổi cả dòng đã commit ở đợt 2 (tách mục).
