@@ -602,7 +602,7 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
 ## 12. Ngoại ngữ (LANG, mới)
 
 - **Khối bài học:** "Audio (bài nghe)" (tiêu đề; đường dẫn https hoặc tải mp3/m4a/ogg/webm; "Lời thoại (không
-  bắt buộc)"; tick "Cho học viên xem lời thoại" — bỏ tick với bài nghe hiểu thì lời thoại không tới học viên) ·
+  bắt buộc)"; tick "Cho học viên xem lời thoại" — bỏ tick với bài nghe hiểu thì lời thoại không tới học viên; lời thoại cách nhau bằng dòng trống thì học viên ở Limio Language thấy được đánh số ①②… để thầy/cô viết "đoạn ②" trong "Giải thích đáp án") ·
   "Từ vựng (bảng từ)" ("Tiêu đề khối", "Nhãn cột phiên âm" như Pinyin/IPA/Furigana; "Cách thêm từ": "Gõ từng
   từ", "Dán từ Excel" 2/3/4 cột cách nhau tab hoặc `|` rồi "Thêm vào danh sách", "Nhập bằng AI"; "Thêm ví dụ và
   ghi chú", "Thêm audio" từng từ, "Xem trước như học viên"; từ trùng thì hỏi "Vẫn thêm … từ trùng" hoặc "Bỏ

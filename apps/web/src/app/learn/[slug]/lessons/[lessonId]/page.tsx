@@ -989,6 +989,7 @@ export default async function LessonPage({
           lessonId={lesson.id}
           deckCover={deckCover}
           blocks={practiceBlocks}
+          numberTranscripts={languageSkin}
         />
         </div>
         <div

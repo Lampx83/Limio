@@ -63,6 +63,35 @@ describe("AudioLessonPlayer", () => {
     expect(text(out)).not.toContain("Lời thoại");
   });
 
+  it("LANG 3c: numberParagraphs đánh số ①② theo đoạn (cách nhau dòng trống), thứ tự đúng, vẫn gấp mặc định", () => {
+    const out = render({ transcript: "Đoạn đầu.\n\nĐoạn hai\ncó hai dòng.\n\nĐoạn ba.", numberParagraphs: true });
+    expect(out).toContain('data-testid="numbered-transcript"');
+    const t = text(out);
+    expect(t.indexOf("①")).toBeLessThan(t.indexOf("Đoạn đầu."));
+    expect(t.indexOf("②")).toBeLessThan(t.indexOf("Đoạn hai"));
+    expect(t.indexOf("③")).toBeLessThan(t.indexOf("Đoạn ba."));
+    expect(t).toContain("Đoạn 1.");
+    expect(out).not.toMatch(/<details[^>]*\bopen\b/);
+  });
+
+  it("LANG 3c: mặc định KHÔNG đánh số (bài ngoài khung Language giữ nguyên); chỉ một đoạn thì cũng không đánh số", () => {
+    const base = "Đoạn đầu.\n\nĐoạn hai.";
+    expect(render({ transcript: base })).not.toContain("numbered-transcript");
+    expect(render({ transcript: "Chỉ một đoạn\ncó hai dòng.", numberParagraphs: true })).not.toContain("numbered-transcript");
+  });
+
+  it("LANG 3c: bài nghe hiểu ẩn lời thoại thì đánh số cũng KHÔNG làm lọt lời thoại vào mã", () => {
+    const out = render({ transcript: "BÍ MẬT_MỘT\n\nBÍ MẬT_HAI", showTranscript: false, numberParagraphs: true });
+    expect(out).not.toContain("BÍ MẬT");
+    expect(out).not.toContain("numbered-transcript");
+  });
+
+  it("LANG 3c: HTML trong lời thoại đánh số vẫn là chữ thuần", () => {
+    const out = render({ transcript: "<img src=x onerror=alert(1)>\n\n<b>hai</b>", numberParagraphs: true });
+    expect(out).not.toContain("<img");
+    expect(out).not.toContain("<b>");
+  });
+
   it("không có lời thoại thì không dựng khối lời thoại rỗng", () => {
     const out = render();
     expect(out).not.toContain("<details");

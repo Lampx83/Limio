@@ -135,4 +135,4 @@ Thầy chốt: **bỏ phần dẫn chứng nhập chỉ số ký tự** (`eviden
 
 - **Bỏ:** nút "Xem dẫn chứng", ô nhập chỉ số, tô sáng vùng dẫn chứng. Cột `evidenceSpan` vẫn nằm trong schema, chưa dùng.
 - **Làm (chữ hướng dẫn):** ô "Giải thích đáp án" ở trình soạn câu hỏi của đề nói rõ giải thích hiện ngay sau "Kiểm tra câu n" ở Bài luyện và gợi ý nêu đoạn nào chứng minh đáp án. Chưa commit.
-- **Chưa làm, chờ thầy quyết:** transcript đánh số đoạn (①②…) cho bài nghe. Khi không còn nút dẫn chứng thì việc đánh số chỉ có ích nếu giảng viên viết "đoạn ②" trong giải thích.
+- **Làm tiếp (thầy bảo "tiếp tục 3c"):** transcript đánh số đoạn ①②… cho khối **Audio** của bài, chỉ trong khung bài học Language. Tách đoạn theo dòng trống; từ hai đoạn trở lên mới đánh số; mặc định vẫn gấp; bài nghe hiểu đã ẩn lời thoại thì **không** có lời thoại trong mã (đã có test); lời thoại luôn là chữ thuần. Bài ngoài khung Language giữ nguyên. Không dùng cho video (video giữ transcript hiện có). Tác dụng: giảng viên viết "đoạn ②" trong "Giải thích đáp án" và học viên tìm được đoạn đó. Không schema, không API mới. Chưa commit.
