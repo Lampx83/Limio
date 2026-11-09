@@ -732,7 +732,7 @@ export function markdownToHtml(
       // đoán theo chữ đầu: tiêu đề tiếng Việt cũng có thể bắt đầu bằng chữ
       // thường, đoán mò thì có ngày nuốt mất một từ của tiêu đề.
       const open = /^:::(mau)\b\s*(.*)$/.exec(t);
-      const title = (open ? open[2]! : t.slice(3)).trim() || "Xem thêm";
+      const title = (open ? open[2]! : t.slice(3)).trim() || T().moreTitle;
       i++;
       const inner: string[] = [];
       while (i < lines.length && lines[i]!.trim() !== ":::") {
@@ -882,7 +882,7 @@ export function markdownToHtml(
   // Tổng kết chèn ngay trước mục luyện tập; bài nào không theo quy ước đó thì
   // đặt cuối. Chèn trước khi dựng mục lục để chỉ số `at` còn đúng.
   if (opts.beforeLastSection) {
-    const last = [...headings].reverse().find((h) => h.text.startsWith("Luyện tập"));
+    const last = [...headings].reverse().find((h) => T().practiceHeading.some((w) => h.text.startsWith(w)));
     if (last) out.splice(last.at, 0, opts.beforeLastSection);
     else out.push(opts.beforeLastSection);
   }
@@ -904,10 +904,10 @@ export function markdownToHtml(
       })
       .join("");
     out.unshift(
-      `<nav aria-label="Mục lục bài học" style="border:1px solid ${RULE};border-radius:.6rem;` +
+      `<nav aria-label="${T().tocNav}" style="border:1px solid ${RULE};border-radius:.6rem;` +
         `padding:.9rem 1.1rem;margin:0 0 1.4rem">` +
         `<div style="font-size:${CAPTION};font-weight:600;color:${MUTED};letter-spacing:.04em;` +
-        `text-transform:uppercase;margin:0 0 .5rem">Trong bài này</div>` +
+        `text-transform:uppercase;margin:0 0 .5rem">${T().tocTitle}</div>` +
         `<ol style="margin:0;padding:0;list-style:none;font-size:${TEXT};line-height:1.6;` +
         `column-width:19rem;column-gap:2rem">${items}</ol>` +
         `</nav>`,
@@ -921,15 +921,15 @@ export function markdownToHtml(
  * Khối "Học xong bài này, bạn có thể…" đặt trên cùng, trước mục lục: người học
  * cần biết bài này để làm gì trước khi quyết định đọc tiếp.
  */
-function objectivesBox(items: string[], lead = "Học xong bài này, bạn có thể:"): string {
+function objectivesBox(items: string[], lead: string = T().objectivesLead): string {
   const lis = items
     .map((it) => `<li style="margin:.3rem 0">${inline(it)}</li>`)
     .join("");
   return (
-    `<section aria-label="Mục tiêu bài học" style="border-left:4px solid rgba(59,130,246,.55);` +
+    `<section aria-label="${T().objectivesAria}" style="border-left:4px solid rgba(59,130,246,.55);` +
     `background:rgba(59,130,246,.06);border-radius:.35rem;padding:.9rem 1.1rem;margin:0 0 1.3rem">` +
     `<div style="font-size:${CAPTION};font-weight:600;color:${MUTED};letter-spacing:.04em;` +
-    `text-transform:uppercase;margin:0 0 .35rem">Mục tiêu bài học</div>` +
+    `text-transform:uppercase;margin:0 0 .35rem">${T().objectivesTitle}</div>` +
     `<p style="margin:0 0 .5rem;font-size:${TEXT};line-height:1.7">${inline(lead)}</p>` +
     `<ul style="margin:0;padding-left:1.3rem;font-size:${TEXT};line-height:1.7">${lis}</ul>` +
     `</section>`
@@ -953,13 +953,63 @@ const CALLOUTS: Record<string, { label: string; hue: string }> = {
   "meo": { label: "Mẹo thực hành", hue: "139,92,246" },
 };
 
+/**
+ * Nhãn do importer tự chèn vào HTML bài (mục lục, mục tiêu, tổng kết, nhãn callout, dải thông tin…).
+ * Chọn theo `course.language` của file học liệu: khoá tiếng Anh mà vẫn hiện "Tổng kết" / "Ghi nhớ" thì
+ * người học thấy ngay đó là bản dịch cẩu thả. Ngôn ngữ nào chưa có bảng thì dùng tiếng Việt như trước.
+ * Chỉ đổi nhãn của importer — chữ do người soạn viết thì để nguyên.
+ */
+const LABELS = {
+  vi: {
+    callouts: { "ghi-nho": "Ghi nhớ", "vi-du": "Ví dụ", "canh-bao": "Bẫy thường gặp", meo: "Mẹo thực hành" } as Record<string, string>,
+    tocNav: "Mục lục bài học",
+    tocTitle: "Trong bài này",
+    objectivesAria: "Mục tiêu bài học",
+    objectivesTitle: "Mục tiêu bài học",
+    objectivesLead: "Học xong bài này, bạn có thể:",
+    summaryAria: "Tổng kết bài học",
+    summaryTitle: "Tổng kết",
+    moreTitle: "Xem thêm",
+    practiceHeading: ["Luyện tập"],
+    minutes: (n: number) => `${n} phút`,
+    readMinutes: (n: number) => `~${n} phút đọc`,
+    parts: (n: number) => `${n} phần`,
+    questions: (n: number) => `${n} câu ôn tập`,
+    flashcards: "Thẻ ghi nhớ",
+  },
+  en: {
+    callouts: { "ghi-nho": "Key idea", "vi-du": "Example", "canh-bao": "Common pitfall", meo: "Tip" } as Record<string, string>,
+    tocNav: "Lesson contents",
+    tocTitle: "In this lesson",
+    objectivesAria: "Learning objectives",
+    objectivesTitle: "Learning objectives",
+    objectivesLead: "By the end of this lesson you can:",
+    summaryAria: "Lesson summary",
+    summaryTitle: "Summary",
+    moreTitle: "Read more",
+    practiceHeading: ["Luyện tập", "Practice"],
+    minutes: (n: number) => `${n} min`,
+    readMinutes: (n: number) => `~${n} min read`,
+    parts: (n: number) => `${n} ${n === 1 ? "section" : "sections"}`,
+    questions: (n: number) => `${n} practice ${n === 1 ? "question" : "questions"}`,
+    flashcards: "Flashcards",
+  },
+};
+let activeLang: keyof typeof LABELS = "vi";
+/** Đặt ngôn ngữ nhãn cho lần nhập này (gọi một lần sau khi đọc file học liệu). */
+export function setImportLanguage(language: string | undefined): void {
+  const code = (language ?? "vi").toLowerCase().split("-")[0]!;
+  activeLang = code in LABELS ? (code as keyof typeof LABELS) : "vi";
+}
+const T = () => LABELS[activeLang];
+
 function calloutBox(kind: string, inner: string): string {
   const c = CALLOUTS[kind]!;
   return (
     `<aside style="border-left:4px solid rgba(${c.hue},.6);background:rgba(${c.hue},.07);` +
     `border-radius:0 .45rem .45rem 0;padding:.8rem 1rem;margin:1.1rem 0">` +
     `<div style="font-size:${CAPTION};font-weight:700;letter-spacing:.04em;text-transform:uppercase;` +
-    `color:rgb(${c.hue});margin:0 0 .3rem">${c.label}</div>` +
+    `color:rgb(${c.hue});margin:0 0 .3rem">${T().callouts[kind] ?? c.label}</div>` +
     `<div style="font-size:${TEXT};line-height:1.8">${inner}</div></aside>`
   );
 }
@@ -984,10 +1034,10 @@ function metaBar(chips: string[]): string {
 function summaryBox(items: string[]): string {
   const lis = items.map((it) => `<li style="margin:.3rem 0">${inline(it)}</li>`).join("");
   return (
-    `<section aria-label="Tổng kết bài học" style="border-left:4px solid rgba(34,139,110,.55);` +
+    `<section aria-label="${T().summaryAria}" style="border-left:4px solid rgba(34,139,110,.55);` +
     `background:rgba(34,139,110,.06);border-radius:.35rem;padding:.9rem 1.1rem;margin:1.6rem 0 1.3rem">` +
     `<div style="font-size:${CAPTION};font-weight:600;color:${MUTED};letter-spacing:.04em;` +
-    `text-transform:uppercase;margin:0 0 .35rem">Tổng kết</div>` +
+    `text-transform:uppercase;margin:0 0 .35rem">${T().summaryTitle}</div>` +
     `<ul style="margin:0;padding-left:1.3rem;font-size:${TEXT};line-height:1.7">${lis}</ul>` +
     `</section>`
   );
@@ -1143,11 +1193,11 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   // văn xuôi tiếng Việt, làm tròn lên phút gần nhất.
   const words = (l.body ?? "").split(/\s+/).filter(Boolean).length;
   const chips: string[] = [];
-  if (l.durationMin) chips.push(`${l.durationMin} phút`);
-  else if (words > 0) chips.push(`~${Math.max(1, Math.round(words / 200))} phút đọc`);
+  if (l.durationMin) chips.push(T().minutes(l.durationMin));
+  else if (words > 0) chips.push(T().readMinutes(Math.max(1, Math.round(words / 200))));
   const sectionCount = countSections(l.body) + (l.sections?.length ?? 0);
-  if (sectionCount > 0) chips.push(`${sectionCount} phần`);
-  if (l.quiz?.questions.length) chips.push(`${l.quiz.questions.length} câu ôn tập`);
+  if (sectionCount > 0) chips.push(T().parts(sectionCount));
+  if (l.quiz?.questions.length) chips.push(T().questions(l.quiz.questions.length));
 
   const head =
     (chips.length > 1 ? metaBar(chips) : "") +
@@ -1260,7 +1310,7 @@ export function lessonContentItems(l: z.infer<typeof LessonSpec>): ContentItem[]
     const cards: ContentItem = {
       type: "vocab_list",
       payload: {
-        title: l.flashcards.title ?? "Thẻ ghi nhớ",
+        title: l.flashcards.title ?? T().flashcards,
         items: l.flashcards.items.map((c) => ({
           term: c.term,
           meaning: c.meaning,
@@ -1325,6 +1375,7 @@ async function main() {
     return;
   }
   const manifest = parsed.data;
+  setImportLanguage(manifest.course.language);
 
   // Kiểm mọi câu hỏi TRƯỚC khi ghi dòng nào. Một câu sai ở bài cuối mà chỉ vỡ
   // lúc đang ghi thì để lại khoá dở dang trên production.

@@ -1,0 +1,381 @@
+{
+  "module": {
+    "title": "Integrated final assessment",
+    "description": "Scenario questions that combine linear algebra, calculus/optimization and probability/statistics.",
+    "lessons": [
+      {
+        "title": "Integrated final assessment: choosing the right tool",
+        "durationMin": 60,
+        "description": "Eleven scenario questions that mix all three parts — pick the method, justify it, compute it, interpret it.",
+        "look": {
+          "palette": "vibrant",
+          "font": "modern"
+        },
+        "objectives": [
+          "Select the mathematical concept that fits a structured data science or machine learning question",
+          "Carry the calculation through correctly and interpret the result in context",
+          "Spot the classic misreading (wrong sign, standard deviation vs standard error, reversed conditional)"
+        ],
+        "objectivesLead": "By the end of this assessment you can:",
+        "body": "The final assessment is worth 50% of the course and asks for something different from the topic quizzes: you are given a **situation** and must decide which tool applies, apply it, and say what the answer means. The questions below are a full-length rehearsal covering LO.2–LO.10.\n\n## Choosing the tool\n\n| The question sounds like… | Reach for… | Part |\n|---|---|---|\n| \"How many solutions / can this system be solved?\" | Augmented matrix, row reduction, rank | I |\n| \"Can I undo this transformation?\" | Determinant ≠ 0, inverse | I |\n| \"Which directions does this matrix stretch or preserve?\" | Eigenvalues and eigenvectors | I |\n| \"How fast does the output change when I nudge an input?\" | Derivative, chain rule, marginal effect | II |\n| \"How do I adjust several parameters to lower the loss?\" | Gradient, gradient descent | II |\n| \"How likely is X given that I observed Y?\" | Conditional probability, Bayes' rule | III |\n| \"What is the typical value and spread of a random quantity?\" | Expectation, variance | III |\n| \"How do two quantities move together?\" | Covariance, correlation, conditional expectation | III |\n| \"How much can I trust this sample average?\" | Sampling distribution, CLT, standard error, confidence interval | III |\n\n> [!meo] Before computing, write one sentence naming the object you are asked for (a probability, a rate of change, a direction, an interval). Most lost marks come from answering a neighbouring question correctly.\n\n> [!canh-bao] Time yourself: the quiz is built for about 40 minutes. Do the calculations on paper first; the answer check appears only after you commit.",
+        "summary": [
+          "Decide first what is being asked, then choose the method.",
+          "Check each result for plausibility: probabilities in [0,1], variances non-negative, descent steps that lower the loss.",
+          "The same mathematical objects (matrices, gradients, distributions) appear in every part — the final assessment is about moving between them."
+        ],
+        "quiz": {
+          "title": "Integrated final assessment",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "timeLimitSec": 2700,
+          "questions": [
+            {
+              "key": "fin.regression",
+              "type": "fill_in",
+              "points": 2,
+              "workOnPaper": true,
+              "prompt": "You fit the line $y=a+bx$ to the points $(1,2)$, $(2,3)$, $(3,5)$ by solving the normal equations $X^TX\\,\\beta=X^Ty$ with $\\beta=(a,b)^T$. What is the slope $b$? (Give a decimal or a fraction.)",
+              "answers": [
+                "1.5",
+                "3/2",
+                "1,5"
+              ],
+              "explanation": "$X^TX=\\begin{bmatrix}3&6\\\\6&14\\end{bmatrix}$ and $X^Ty=\\begin{bmatrix}10\\\\23\\end{bmatrix}$. Row-reduce (or use the inverse, $\\det=6$): $a=\\tfrac13$, $b=\\tfrac32$. Check the residuals: the fitted values $\\tfrac{11}{6},\\tfrac{20}{6},\\tfrac{29}{6}$ are close to $2,3,5$."
+            },
+            {
+              "key": "fin.pca",
+              "type": "mcq",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "A data set has covariance matrix $\\Sigma=\\begin{bmatrix}2&1\\\\1&2\\end{bmatrix}$. Which statement about the direction of **maximum variance** is correct?",
+              "explanation": "$\\det(\\Sigma-\\lambda I)=(2-\\lambda)^2-1=0$ gives $\\lambda=3$ and $\\lambda=1$. For $\\lambda=3$: $(\\Sigma-3I)v=0$ gives $v=(1,1)$. The variance along an eigenvector equals its eigenvalue, so the share is $3/(3+1)=75\\%$. The equal diagonal entries only mean the two axes have equal variance; the correlation $\\Sigma_{12}=1$ tilts the best direction by $45^\\circ$.",
+              "options": [
+                {
+                  "label": "It is the eigenvector for the eigenvalue $3$, i.e. the direction $(1,1)/\\sqrt2$, and it carries $75\\%$ of the total variance.",
+                  "isCorrect": true
+                },
+                {
+                  "label": "It is the eigenvector for the eigenvalue $1$, i.e. $(1,-1)/\\sqrt2$, and it carries $25\\%$ of the total variance.",
+                  "isCorrect": false,
+                  "misconception": "fin.smallest-eigenvalue"
+                },
+                {
+                  "label": "It is the first coordinate axis $(1,0)$, because $\\Sigma_{11}=2$ is the largest diagonal entry.",
+                  "isCorrect": false,
+                  "misconception": "fin.axis-is-direction"
+                },
+                {
+                  "label": "There is no unique direction, because the two variances are equal.",
+                  "isCorrect": false,
+                  "misconception": "fin.axis-is-direction"
+                }
+              ]
+            },
+            {
+              "key": "fin.gd",
+              "type": "mcq",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "The loss is $L(w_1,w_2)=w_1^2+3w_2^2$. Starting at $w=(2,1)$, one gradient-descent step with learning rate $\\eta=0.1$ gives which point?",
+              "explanation": "$\\nabla L=(2w_1,\\,6w_2)=(4,6)$ at $(2,1)$. Descent moves **against** the gradient: $w\\leftarrow w-\\eta\\nabla L=(2-0.4,\\,1-0.6)=(1.6,\\,0.4)$. Adding the gradient would climb the hill; using the wrong partial derivative (e.g. $3w_2$ instead of $6w_2$) gives $(1.8,0.7)$.",
+              "options": [
+                {
+                  "label": "$(1.6,\\,0.4)$",
+                  "isCorrect": true
+                },
+                {
+                  "label": "$(2.4,\\,1.6)$",
+                  "isCorrect": false,
+                  "misconception": "fin.gd-sign"
+                },
+                {
+                  "label": "$(1.8,\\,0.7)$",
+                  "isCorrect": false,
+                  "misconception": "fin.partial-vs-total"
+                },
+                {
+                  "label": "$(0.4,\\,0.6)$",
+                  "isCorrect": false,
+                  "misconception": "fin.gd-sign"
+                }
+              ]
+            },
+            {
+              "key": "fin.sigmoid",
+              "type": "mcq",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "The logistic function is $\\sigma(z)=\\dfrac{1}{1+e^{-z}}$. What is $\\sigma'(0)$?",
+              "explanation": "By the chain rule $\\sigma'(z)=\\sigma(z)\\,(1-\\sigma(z))$. At $z=0$, $\\sigma(0)=\\tfrac12$ so $\\sigma'(0)=\\tfrac12\\cdot\\tfrac12=\\tfrac14$. The value $0.5$ is $\\sigma(0)$ itself, not its slope.",
+              "options": [
+                {
+                  "label": "$0.25$",
+                  "isCorrect": true
+                },
+                {
+                  "label": "$0.5$",
+                  "isCorrect": false,
+                  "misconception": "fin.sigmoid-value"
+                },
+                {
+                  "label": "$1$",
+                  "isCorrect": false,
+                  "misconception": "fin.sigmoid-value"
+                },
+                {
+                  "label": "$0$",
+                  "isCorrect": false
+                }
+              ]
+            },
+            {
+              "key": "fin.bayes",
+              "type": "mcq",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "A spam filter: $20\\%$ of mail is spam. The word \"prize\" appears in $60\\%$ of spam and $10\\%$ of non-spam. An email contains \"prize\". What is $P(\\text{spam}\\mid\\text{prize})$?",
+              "explanation": "Bayes: $\\dfrac{0.6\\cdot0.2}{0.6\\cdot0.2+0.1\\cdot0.8}=\\dfrac{0.12}{0.20}=0.60$. $0.12$ is only the numerator (the joint probability); $0.6$ is $P(\\text{prize}\\mid\\text{spam})$, which is a different conditional.",
+              "options": [
+                {
+                  "label": "$0.60$",
+                  "isCorrect": true
+                },
+                {
+                  "label": "$0.12$",
+                  "isCorrect": false,
+                  "misconception": "fin.posterior-ignores-prior"
+                },
+                {
+                  "label": "$0.20$",
+                  "isCorrect": false,
+                  "misconception": "fin.posterior-ignores-prior"
+                },
+                {
+                  "label": "$0.857$",
+                  "isCorrect": false,
+                  "misconception": "fin.transposed-conditional"
+                }
+              ]
+            },
+            {
+              "key": "fin.variance",
+              "type": "fill_in",
+              "points": 2,
+              "workOnPaper": true,
+              "prompt": "$X$ has $E[X]=1$ and $\\operatorname{Var}(X)=4$. Let $Y=3X-2$. Enter $\\operatorname{Var}(Y)$.",
+              "answers": [
+                "36"
+              ],
+              "explanation": "$\\operatorname{Var}(aX+b)=a^2\\operatorname{Var}(X)$: the shift $-2$ does not change spread and the factor $3$ is squared, so $9\\cdot4=36$. (Also $E[Y]=3\\cdot1-2=1$.)"
+            },
+            {
+              "key": "fin.ci",
+              "type": "mcq",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "A sample of $n=100$ values has mean $\\bar x=50$ and the population standard deviation is known to be $\\sigma=15$. Which is the $95\\%$ confidence interval for the mean, and how should it be read?",
+              "explanation": "The standard error is $\\sigma/\\sqrt n=15/10=1.5$, so the margin is $1.96\\cdot1.5\\approx2.94$ and the interval is $[47.06,52.94]$. $\\mu$ is a fixed number; the $95\\%$ describes the **procedure**, not this one interval. Using $\\sigma=15$ instead of the standard error $1.5$ describes the spread of individual values, not the uncertainty of the mean.",
+              "options": [
+                {
+                  "label": "$[47.06,\\ 52.94]$ — if we repeated the sampling many times, about $95\\%$ of intervals built this way would contain $\\mu$.",
+                  "isCorrect": true
+                },
+                {
+                  "label": "$[47.06,\\ 52.94]$ — there is a $95\\%$ probability that $\\mu$ lies in this particular interval.",
+                  "isCorrect": false,
+                  "misconception": "fin.ci-probability"
+                },
+                {
+                  "label": "$[20.6,\\ 79.4]$ — it contains $95\\%$ of individual observations.",
+                  "isCorrect": false,
+                  "misconception": "fin.sd-vs-se"
+                },
+                {
+                  "label": "$[35.0,\\ 65.0]$ — the margin is $\\sigma$ and the interval does not depend on $n$.",
+                  "isCorrect": false,
+                  "misconception": "fin.sd-vs-se"
+                }
+              ]
+            },
+            {
+              "key": "fin.mle",
+              "type": "fill_in",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "You flip a coin $10$ times and see $7$ heads. What is the maximum-likelihood estimate of the probability of heads?",
+              "answers": [
+                "0.7",
+                "7/10",
+                "70%",
+                ".7"
+              ],
+              "explanation": "The likelihood $p^7(1-p)^3$ is maximised where its derivative of the log vanishes: $7/p-3/(1-p)=0$, so $\\hat p=7/10$."
+            },
+            {
+              "key": "fin.bias",
+              "type": "fill_in",
+              "points": 2,
+              "workOnPaper": true,
+              "prompt": "Observations are i.i.d. with variance $\\sigma^2=10$. The estimator $\\tilde S^2=\\dfrac1n\\sum_i(X_i-\\bar X)^2$ is computed from samples of size $n=5$. What is $E[\\tilde S^2]$?",
+              "answers": [
+                "8"
+              ],
+              "explanation": "Dividing by $n$ instead of $n-1$ gives $E[\\tilde S^2]=\\dfrac{n-1}{n}\\sigma^2=\\dfrac45\\cdot10=8$. The estimator is biased low by $2$; dividing by $n-1$ removes the bias."
+            },
+            {
+              "key": "fin.uncorrelated",
+              "type": "true_false",
+              "points": 1,
+              "prompt": "If two random variables are uncorrelated ($\\operatorname{Cov}(X,Y)=0$), they must be independent.",
+              "explanation": "False. Independence implies zero covariance, not the other way round. Take $X$ symmetric about $0$ and $Y=X^2$: $\\operatorname{Cov}(X,Y)=E[X^3]-E[X]E[X^2]=0$, yet $Y$ is completely determined by $X$.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "fin.uncorrelated-independent"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "fin.methods",
+              "type": "matching",
+              "points": 3,
+              "prompt": "Match each data-science task with the mathematical tool from this course that answers it.",
+              "pairs": [
+                {
+                  "left": "Does a system of equations have a unique solution?",
+                  "right": "Row reduction and rank"
+                },
+                {
+                  "left": "Minimise a differentiable loss over parameters",
+                  "right": "Gradient descent"
+                },
+                {
+                  "left": "Probability of a disease given a positive test",
+                  "right": "Bayes' rule"
+                },
+                {
+                  "left": "Uncertainty of a sample average",
+                  "right": "Standard error and confidence interval"
+                },
+                {
+                  "left": "Directions a covariance matrix stretches the data most",
+                  "right": "Eigenvectors and eigenvalues"
+                }
+              ],
+              "explanation": "Choosing the right tool is learning outcome LO.10. Each pairing follows from the question being asked: existence/uniqueness → rank; \"how do I improve parameters\" → gradient; reversing a conditional → Bayes; precision of an estimate → standard error; principal directions → eigen-decomposition."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "misconceptions": [
+    {
+      "code": "fin.smallest-eigenvalue",
+      "name": "Picking the smallest eigenvalue",
+      "description": "Treats the eigenvector of the smallest eigenvalue as the direction of maximum variance, or mixes up which eigenvalue measures how much spread lies along its eigenvector."
+    },
+    {
+      "code": "fin.axis-is-direction",
+      "name": "Reading the direction off the diagonal",
+      "description": "Assumes the direction of maximum variance is a coordinate axis, or that equal variances mean no preferred direction, ignoring the off-diagonal covariance."
+    },
+    {
+      "code": "fin.gd-sign",
+      "name": "Wrong sign in the update",
+      "description": "Adds the gradient instead of subtracting it, or subtracts without multiplying by the learning rate."
+    },
+    {
+      "code": "fin.partial-vs-total",
+      "name": "Slipping on a partial derivative",
+      "description": "Differentiates one coordinate with the wrong rule (for example $3w_2$ instead of $6w_2$) when assembling the gradient."
+    },
+    {
+      "code": "fin.sigmoid-value",
+      "name": "Confusing a function with its derivative",
+      "description": "Reports $\\sigma(0)$ (the value) when asked for $\\sigma'(0)$ (the slope)."
+    },
+    {
+      "code": "fin.posterior-ignores-prior",
+      "name": "Dropping the denominator or the prior",
+      "description": "Reports the joint probability (numerator of Bayes' rule) or the prior as if it were the posterior."
+    },
+    {
+      "code": "fin.transposed-conditional",
+      "name": "Reversing the conditional",
+      "description": "Treats $P(\\text{word}\\mid\\text{spam})$ as if it were $P(\\text{spam}\\mid\\text{word})$ or computes a ratio that mixes the two."
+    },
+    {
+      "code": "fin.ci-probability",
+      "name": "Probability statement about a fixed interval",
+      "description": "Says there is a $95\\%$ probability that $\\mu$ is inside this particular computed interval."
+    },
+    {
+      "code": "fin.sd-vs-se",
+      "name": "Standard deviation instead of standard error",
+      "description": "Uses $\\sigma$ (spread of individual observations) where the standard error $\\sigma/\\sqrt n$ (spread of the sample mean) belongs."
+    },
+    {
+      "code": "fin.uncorrelated-independent",
+      "name": "Zero covariance means independence",
+      "description": "Believes uncorrelated variables are independent."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "fin.smallest-eigenvalue",
+      "body": "The variance along an eigenvector of the covariance matrix **equals its eigenvalue**, so the largest eigenvalue marks the direction of greatest spread. Recompute both eigenvalues and compare.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.axis-is-direction",
+      "body": "The off-diagonal entry is the covariance between the variables and tilts the principal axis away from the coordinate axes. Always find eigenvectors; do not read the answer off the diagonal.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.gd-sign",
+      "body": "The gradient points uphill (direction of steepest **increase**). To reduce the loss move the opposite way: $w \\leftarrow w - \\eta\\nabla L$.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.partial-vs-total",
+      "body": "Take each partial derivative separately, treating the other variable as a constant: $\\partial/\\partial w_2\\,(3w_2^2)=6w_2$.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.sigmoid-value",
+      "body": "Read the question for the quantity being asked: $\\sigma(0)=0.5$ but the slope is $\\sigma(0)(1-\\sigma(0))=0.25$.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.posterior-ignores-prior",
+      "body": "The posterior divides by the **total** probability of the evidence: $P(\\text{spam}\\mid\\text{word})=P(\\text{word}\\mid\\text{spam})P(\\text{spam})/P(\\text{word})$, with $P(\\text{word})$ from the law of total probability.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.transposed-conditional",
+      "body": "$P(A\\mid B)$ and $P(B\\mid A)$ are different numbers; Bayes' rule is exactly the bridge between them, and it needs the prior.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.ci-probability",
+      "body": "$\\mu$ is fixed and the interval is already computed, so it either contains $\\mu$ or not. The $95\\%$ is the long-run proportion of intervals built this way that capture $\\mu$.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.sd-vs-se",
+      "body": "The mean of $n$ observations varies less than a single observation: its standard deviation is $\\sigma/\\sqrt n$. A confidence interval for $\\mu$ must use that.",
+      "priority": 10
+    },
+    {
+      "misconception": "fin.uncorrelated-independent",
+      "body": "Covariance measures only **linear** association. $Y=X^2$ with $X$ symmetric about $0$ has zero covariance but is fully dependent on $X$.",
+      "priority": 10
+    }
+  ]
+}
