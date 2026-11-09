@@ -625,8 +625,12 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   thi thử. Học viên ở vỏ Limio Language thấy bài luyện **ngay trong trang bài**: đoạn văn bên trái và câu hỏi bên
   phải ("Chia đôi", có nút "Một cột" để đổi; dưới màn hình lớn luôn xếp dọc), chọn đáp án thì tự lưu, bấm "Kiểm tra
   câu n" để thấy "Chính xác" hoặc "Chưa chính xác" kèm giải thích của giảng viên (nhập ở câu hỏi của đề); "Kết thúc
-  bài luyện" hiện tóm tắt đúng theo kỹ năng và nút "Luyện lại". Bài luyện **không vào sổ điểm** và **chưa làm đổi nhãn
-  Cần ôn / Nên luyện / Vững**. Học viên ở vỏ Limio thường thấy một thẻ dẫn sang trang luyện đề của đề đó. Khi nhân đôi
+  bài luyện" hiện tóm tắt đúng theo kỹ năng và nút "Luyện lại". Bài luyện **không vào sổ điểm**. Với khoá bật "Cá nhân
+  hoá học tập", **lần kiểm tra đầu tiên của mỗi câu** (làm trong bài học) được tính là một lượt luyện của kỹ năng bài đó:
+  sửa đáp án rồi kiểm tra lại không tính thêm, câu tự luận không tính, và nhãn Cần ôn / Nên luyện / Vững ở "Hồ sơ
+  kỹ năng" chỉ hiện khi kỹ năng đã đủ 5 lượt. Luyện đề làm ở trang riêng (không qua khối "Bài luyện") không làm đổi nhãn.
+  Học viên có thêm trang **"Lịch ôn tập"** trong menu của Limio Language: thẻ từ vựng đến hạn hôm nay, lịch 7 ngày tới,
+  các câu luyện lần gần nhất làm sai ("Làm lại") và gợi ý bài nên luyện. Học viên ở vỏ Limio thường thấy một thẻ dẫn sang trang luyện đề của đề đó. Khi nhân đôi
   cả khoá, khối "Bài luyện" **không** được chép sang (đề thuộc khoá gốc), thầy/cô thêm lại ở khoá mới; nhân đôi một
   bài trong cùng khoá thì giữ.
 - **Thư viện giáo trình** (LANG đợt 2, mới; đã đối chiếu mã 2026-11-09): ở tab Tổng quan của khoá bật "Chế độ

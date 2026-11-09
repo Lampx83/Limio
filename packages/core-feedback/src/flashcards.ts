@@ -302,6 +302,44 @@ export async function getFlashcardStats(
   return out;
 }
 
+export interface FlashcardScheduleDay {
+  /** 00:00 giờ Việt Nam của ngày đó. */
+  dayStart: Date;
+  count: number;
+}
+
+export interface FlashcardSchedule {
+  enrolled: boolean;
+  /** `days` ngày liên tiếp bắt đầu từ hôm nay; thẻ quá hạn tính vào hôm nay. Thẻ đến hạn xa hơn không có trong danh sách. */
+  days: FlashcardScheduleDay[];
+}
+
+/**
+ * LANG đợt 4 — lịch ôn thẻ trong `days` ngày tới (giờ Việt Nam), cho trang "Lịch ôn tập". Chỉ tính thẻ còn hiển thị trong
+ * bộ thẻ (cùng luật với `getFlashcardStats`: bài ẩn/khoá không tính, từ trùng gộp một) và đã có trạng thái ôn.
+ */
+export async function getFlashcardSchedule(
+  userId: string,
+  courseId: string,
+  days = 7,
+  now: Date = new Date(),
+  db: PrismaClient = prisma,
+): Promise<FlashcardSchedule> {
+  const n = Math.max(1, Math.min(31, Math.floor(days)));
+  const today = vnDayStart(now).getTime();
+  const out: FlashcardScheduleDay[] = Array.from({ length: n }, (_, i) => ({ dayStart: new Date(today + i * DAY_MS), count: 0 }));
+  const deck = await loadDeck(userId, courseId, now, db);
+  if (!deck.enrolled) return { enrolled: false, days: out };
+  for (const c of deck.cards) {
+    const s = deck.states.get(c.itemId);
+    if (!s) continue;
+    const idx = Math.floor((vnDayStart(s.dueAt).getTime() - today) / DAY_MS);
+    const day = idx < 0 ? 0 : idx;
+    if (day < n) out[day]!.count += 1;
+  }
+  return { enrolled: true, days: out };
+}
+
 const isUniqueViolation = (e: unknown) => (e as { code?: string })?.code === "P2002";
 class RetryReview extends Error {}
 

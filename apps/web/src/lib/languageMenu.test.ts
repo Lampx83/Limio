@@ -2,16 +2,12 @@ import { describe, expect, it } from "vitest";
 import { isLanguageMenuActive, languageMenuGroups, languageShellIsLearner } from "./languageMenu";
 
 describe("languageMenu — học viên", () => {
-  it("có ba mục theo Figma: Lộ trình của tôi, Thư viện giáo trình, Đã lưu & ghi chú", () => {
+  it("có bốn mục theo Figma: Lộ trình của tôi, Thư viện giáo trình, Đã lưu & ghi chú, Lịch ôn tập", () => {
     const items = languageMenuGroups().flatMap((g) => g.items);
-    expect(items.map((i) => i.label)).toEqual(["Lộ trình của tôi", "Thư viện giáo trình", "Đã lưu & ghi chú"]);
-    expect(items.map((i) => i.href)).toEqual(["/language", "/language/thu-vien", "/me/notes"]);
+    expect(items.map((i) => i.label)).toEqual(["Lộ trình của tôi", "Thư viện giáo trình", "Đã lưu & ghi chú", "Lịch ôn tập"]);
+    expect(items.map((i) => i.href)).toEqual(["/language", "/language/thu-vien", "/me/notes", "/language/lich-on-tap"]);
   });
 
-  it("không có mục chết: chưa đưa Lịch ôn tập vào vì chưa có trang", () => {
-    const labels = languageMenuGroups().flatMap((g) => g.items.map((i) => i.label));
-    expect(labels).not.toContain("Lịch ôn tập");
-  });
 
   it("href không trùng nhau", () => {
     const hrefs = languageMenuGroups().flatMap((g) => g.items.map((i) => i.href));
@@ -22,6 +18,8 @@ describe("languageMenu — học viên", () => {
     expect(isLanguageMenuActive("/language", "/language")).toBe(true);
     expect(isLanguageMenuActive("/language", "/language/practice")).toBe(false);
     expect(isLanguageMenuActive("/language", "/language/thu-vien")).toBe(false);
+    expect(isLanguageMenuActive("/language/lich-on-tap", "/language/lich-on-tap?course=x")).toBe(true);
+    expect(isLanguageMenuActive("/language", "/language/lich-on-tap")).toBe(false);
     expect(isLanguageMenuActive("/language/thu-vien", "/language/thu-vien?tab=saved")).toBe(true);
     expect(isLanguageMenuActive("/language/thu-vien", "/language")).toBe(false);
     expect(isLanguageMenuActive("/me/notes", "/me/notes")).toBe(true);

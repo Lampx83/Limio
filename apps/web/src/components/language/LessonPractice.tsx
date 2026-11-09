@@ -46,7 +46,7 @@ function explanationOf(config: unknown): string | null {
  * (buổi luyện, tự lưu, kiểm tra từng câu) nhưng với vỏ giao diện Language và không chuyển trang. Buổi luyện chỉ được
  * tạo khi học viên chọn đáp án đầu tiên. Chỉ import ExamQuestion/PassageView/QuestionCard, không sửa chúng.
  */
-export default function LessonPractice({ slug, embed, blockTitle }: { slug: string; embed: PracticeEmbed; blockTitle?: string }) {
+export default function LessonPractice({ slug, embed, blockTitle, lessonId }: { slug: string; embed: PracticeEmbed; blockTitle?: string; lessonId?: string }) {
   const { questions, passages } = embed;
   const steps = useMemo(() => buildSteps(questions), [questions]);
   const numberOf = useMemo(() => new Map(questions.map((q, i) => [q.id, i + 1])), [questions]);
@@ -68,6 +68,10 @@ export default function LessonPractice({ slug, embed, blockTitle }: { slug: stri
   const [finishing, setFinishing] = useState(false);
   const [result, setResult] = useState<PracticeResult | null>(null);
 
+  // Gửi kèm bài chứa khối để máy chủ ghi nhận lượt quan sát kỹ năng (kiểm tra liên kết ở máy chủ; không có thì như cũ).
+  const checkInit: RequestInit = lessonId
+    ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lessonId }) }
+    : { method: "POST" };
   const sessionRef = useRef<string | null>(embed.sessionId);
   const startingRef = useRef<Promise<string> | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -134,7 +138,7 @@ export default function LessonPractice({ slug, embed, blockTitle }: { slug: stri
     (async () => {
       for (const qid of ids) {
         try {
-          const res = await fetch(apiUrl(`/api/practice-sessions/${embed.sessionId}/check/${qid}`), { method: "POST" });
+          const res = await fetch(apiUrl(`/api/practice-sessions/${embed.sessionId}/check/${qid}`), checkInit);
           if (res.ok && !cancelled) {
             const data = (await res.json().catch(() => null)) as CheckResult | null;
             if (data) setChecks((p) => ({ ...p, [qid]: data }));
@@ -170,7 +174,7 @@ export default function LessonPractice({ slug, embed, blockTitle }: { slug: stri
       clearTimeout(timers.current[qid]);
       await save(qid, answersRef.current[qid] ?? null);
       const sid = await ensureSession();
-      const res = await fetch(apiUrl(`/api/practice-sessions/${sid}/check/${qid}`), { method: "POST" });
+      const res = await fetch(apiUrl(`/api/practice-sessions/${sid}/check/${qid}`), checkInit);
       if (!res.ok) {
         setError(res.status === 409 ? "Hãy trả lời câu này trước khi kiểm tra." : err.check);
         return;

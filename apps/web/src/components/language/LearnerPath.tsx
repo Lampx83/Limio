@@ -82,12 +82,15 @@ export default function LearnerPath({
   path,
   goal,
   dueCards,
+  practiceToReview = 0,
   hasExams,
 }: {
   userName: string;
   path: SelectedPath;
   goal: LearnerPathGoal | null;
   dueCards: number;
+  /** LANG đợt 4 — số câu luyện mà lần trả lời gần nhất sai (các đề của khoá đang chọn). */
+  practiceToReview?: number;
   hasExams: boolean;
 }) {
   const { selected } = path;
@@ -227,21 +230,27 @@ export default function LearnerPath({
 
           <section
             aria-labelledby="review-title"
-            className={`rounded-2xl border p-4 ${dueCards > 0 ? "border-lime-200 bg-lime-50" : "border-token bg-[rgb(var(--surface))]"}`}
+            className={`rounded-2xl border p-4 ${dueCards + practiceToReview > 0 ? "border-lime-200 bg-lime-50" : "border-token bg-[rgb(var(--surface))]"}`}
           >
             <h2 id="review-title" className="flex items-center gap-2 text-sm font-bold">
               <RotateCcw size={16} aria-hidden /> Đến lúc ôn lại
             </h2>
-            {dueCards > 0 ? (
+            {dueCards + practiceToReview > 0 ? (
               <>
-                <p className="text-meta mt-2">{dueCards} từ vựng</p>
-                <Link href={`/learn/${selected.slug}/flashcards`} className="btn-ghost btn-sm mt-3 inline-flex">
-                  Ôn kiến thức đã học
-                </Link>
+                {dueCards > 0 && <p className="text-meta mt-2">{dueCards} từ vựng</p>}
+                {practiceToReview > 0 && <p className="text-meta mt-1">{practiceToReview} câu luyện nên làm lại</p>}
+                {dueCards > 0 && (
+                  <Link href={`/learn/${selected.slug}/flashcards`} className="btn-ghost btn-sm mt-3 inline-flex">
+                    Ôn kiến thức đã học
+                  </Link>
+                )}
               </>
             ) : (
-              <p className="text-meta mt-2">Hôm nay không có thẻ nào đến hạn.</p>
+              <p className="text-meta mt-2">Hôm nay không có gì đến hạn.</p>
             )}
+            <Link href={`/language/lich-on-tap?course=${encodeURIComponent(selected.slug)}`} className="link mt-3 block text-sm font-semibold">
+              Xem lịch ôn tập →
+            </Link>
           </section>
 
           {hasExams && (

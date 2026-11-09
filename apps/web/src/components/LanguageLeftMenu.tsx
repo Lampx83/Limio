@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeftRight, Bookmark, ChevronRight, Home, Languages, Library, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Bookmark, CalendarClock, ChevronRight, Home, Languages, Library, X, type LucideIcon } from "lucide-react";
 import { useSidebarNav } from "./useSidebarNav";
 import { STUDENT_MENU_TOGGLE_EVENT } from "./StudentLeftMenu";
 import { apiUrl } from "@/lib/apiUrl";
@@ -13,6 +13,7 @@ const ICONS: Record<LanguageIconKey, LucideIcon> = {
   home: Home,
   library: Library,
   notes: Bookmark,
+  review: CalendarClock,
 };
 
 const LS_KEY = "fbm-language-menu-collapsed";

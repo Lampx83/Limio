@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getLanguageLearnerPath, listMockExamsForLearner, listMyGoals } from "@feedbackme/core-lms";
+import { getLanguageLearnerPath, getPracticeReviewSummary, listMockExamsForLearner, listMyGoals } from "@feedbackme/core-lms";
 import { getFlashcardStats } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import { ROLE_DEFAULT_PATH, getActiveRole } from "@/lib/active-role";
@@ -47,10 +47,11 @@ export default async function LanguageHome({ searchParams }: { searchParams: Rec
   const selected = path.selected;
 
   // Lỗi ở một khối phụ không được làm hỏng cả trang.
-  const [cards, goals, mockExams] = await Promise.all([
+  const [cards, goals, mockExams, practiceReview] = await Promise.all([
     getFlashcardStats(userId, selected.id).catch(() => null),
     listMyGoals(userId).catch(() => []),
     listMockExamsForLearner(userId, selected.id).catch(() => []),
+    getPracticeReviewSummary(userId, selected.id).catch(() => []),
   ]);
   const g = goals.find((x) => x.courseId === selected.id && x.status === "active");
   const goal: LearnerPathGoal | null = g
@@ -63,6 +64,7 @@ export default async function LanguageHome({ searchParams }: { searchParams: Rec
       path={{ ...path, selected }}
       goal={goal}
       dueCards={cards?.dueToday ?? 0}
+      practiceToReview={practiceReview.reduce((n, p) => n + p.wrong, 0)}
       hasExams={mockExams.length > 0}
     />
   );

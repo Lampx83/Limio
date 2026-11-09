@@ -3,7 +3,7 @@
  * component ánh xạ sang biểu tượng) để thử được không cần React.
  */
 
-export type LanguageIconKey = "home" | "library" | "notes";
+export type LanguageIconKey = "home" | "library" | "notes" | "review";
 
 export interface LanguageMenuItem {
   label: string;
@@ -16,7 +16,7 @@ export interface LanguageMenuGroup {
   items: LanguageMenuItem[];
 }
 
-/** Nhóm "Không gian học". Lịch ôn tập chưa có trang nên chưa đưa vào (không để mục chết). */
+/** Nhóm "Không gian học" theo Figma. */
 export function languageMenuGroups(): LanguageMenuGroup[] {
   return [
     {
@@ -26,6 +26,7 @@ export function languageMenuGroups(): LanguageMenuGroup[] {
         { label: "Lộ trình của tôi", href: "/language", icon: "home" },
         { label: "Thư viện giáo trình", href: "/language/thu-vien", icon: "library" },
         { label: "Đã lưu & ghi chú", href: "/me/notes", icon: "notes" },
+        { label: "Lịch ôn tập", href: "/language/lich-on-tap", icon: "review" },
       ],
     },
   ];

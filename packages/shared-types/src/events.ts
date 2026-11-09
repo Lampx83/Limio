@@ -116,6 +116,9 @@ export const LearningEventType = {
   // LANG G5e — luyện đề (bảng riêng, không phải lượt thi): trả lời một câu đã chấm, và kết thúc buổi.
   ExamPracticeAnswered: "exam.practice.answered",
   ExamPracticeCompleted: "exam.practice.completed",
+  // LANG đợt 4 — lượt quan sát kỹ năng của Bài luyện nhúng trong bài học: lần kiểm tra ĐẦU TIÊN của mỗi (buổi, câu) áp
+  // lên skill gắn vào bài (BKT). Payload chỉ mang id và đúng/sai; eventKey chống tính trùng.
+  ExamPracticeObserved: "exam.practice.observed",
   // LANG G6 — góp ý bài viết do AI sinh: sinh ra, giảng viên duyệt, giảng viên từ chối.
   WritingFeedbackGenerated: "writing.feedback.generated",
   WritingFeedbackApproved: "writing.feedback.approved",

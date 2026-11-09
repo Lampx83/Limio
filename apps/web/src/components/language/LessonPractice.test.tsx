@@ -230,6 +230,28 @@ describe("LessonPractice — bài luyện nhúng trong bài", () => {
     expect(text()).toContain("1 đã kiểm tra");
   });
 
+  it("đợt 4: khi có lessonId, mỗi lần kiểm tra (kể cả nạp lại kết quả) gửi kèm { lessonId }; không có thì không gửi thân", async () => {
+    await act(async () => {
+      root.render(<LessonPractice slug="ielts" embed={embed()} lessonId="les1" />);
+    });
+    await flush();
+    await click(radios()[0]!);
+    await flush(600);
+    await click(button(/Kiểm tra câu 1/));
+    await flush();
+    const checkCall = calls.find((c) => c.url.includes("/check/q1"))!;
+    expect(checkCall.body).toEqual({ lessonId: "les1" });
+    act(() => root.unmount());
+    root = createRoot(host);
+    calls.length = 0;
+    await render();
+    await click(radios()[0]!);
+    await flush(600);
+    await click(button(/Kiểm tra câu 1/));
+    await flush();
+    expect(calls.find((c) => c.url.includes("/check/q1"))!.body).toBeUndefined();
+  });
+
   it("đề tắt kiểm tra từng câu thì không có nút Kiểm tra", async () => {
     await render(embed({ checkEnabled: false }));
     expect(host.textContent).not.toContain("Kiểm tra câu 1");

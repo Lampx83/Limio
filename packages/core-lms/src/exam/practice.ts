@@ -540,6 +540,94 @@ export async function abandonPracticeSession(userId: string, sessionId: string, 
   await db.examPracticeSession.update({ where: { id: sessionId }, data: { status: "abandoned", completedAt: new Date() } });
 }
 
+export interface PracticeObservation {
+  /** true = lượt quan sát này MỚI được ghi (gọi BKT); false = đã tính rồi hoặc không hợp lệ. */
+  created: boolean;
+  /** Đúng/sai của câu, theo dữ liệu đã chấm ở máy chủ (không lấy từ máy khách). */
+  correct: boolean | null;
+}
+
+/**
+ * LANG đợt 4 — ghi nhận lượt quan sát kỹ năng của MỘT câu làm trong Bài luyện nhúng ở bài `lessonId`. Chỉ ghi sự kiện
+ * `exam.practice.observed` (eventKey theo buổi + câu nên mỗi câu chỉ tính LẦN KIỂM TRA ĐẦU TIÊN); việc cập nhật BKT do tầng
+ * `apps/web` làm khi `created` (core-lms không import core-feedback, §4.3).
+ *
+ * Không tin `lessonId` từ máy khách. Liên kết chỉ hợp lệ khi: buổi của chính người gọi và còn dở hoặc vừa xong; câu thuộc
+ * phạm vi buổi và đã được kiểm tra, chấm tự động được; bài hiển thị cho học viên, cùng khoá với đề, học viên đang ghi danh,
+ * và bài có khối `exam_practice` không ẩn trỏ đúng đề của buổi. Sai thì trả `created: false`, không ném lỗi.
+ */
+export async function observePracticeAnswer(
+  userId: string,
+  sessionId: string,
+  questionId: string,
+  lessonId: string,
+  db: PrismaClient = prisma,
+): Promise<PracticeObservation> {
+  const none: PracticeObservation = { created: false, correct: null };
+  const s = await db.examPracticeSession.findUnique({ where: { id: sessionId } });
+  if (!s || s.userId !== userId || s.status === "abandoned") return none;
+  const scope = s.scope as unknown as Scope;
+  if (!scope.questionIds?.includes(questionId)) return none;
+
+  const answer = await db.examPracticeAnswer.findUnique({ where: { sessionId_questionId: { sessionId, questionId } } });
+  if (!answer || answer.checkedAt === null || answer.isCorrect === null) return none;
+
+  const exam = await db.exam.findUnique({ where: { id: s.examId }, select: { courseId: true } });
+  if (!exam?.courseId) return none;
+  const lesson = await db.lesson.findFirst({
+    where: {
+      id: lessonId,
+      isHidden: false,
+      module: { courseId: exam.courseId, isHidden: false },
+      contentItems: { some: { type: "exam_practice", isHidden: false, payload: { path: ["examId"], equals: s.examId } } },
+    },
+    select: { id: true },
+  });
+  if (!lesson) return none;
+  if (!(await isUserEnrolled(userId, exam.courseId, db))) return none;
+
+  const r = await emitEvent(
+    userId,
+    LearningEventType.ExamPracticeObserved,
+    { examId: s.examId, sessionId, questionId, lessonId, correct: answer.isCorrect },
+    { courseId: exam.courseId, eventKey: `exam.practice.observed:${sessionId}:${questionId}` },
+    db,
+  );
+  return { created: r.created, correct: answer.isCorrect };
+}
+
+export interface PracticeReviewItem {
+  examId: string;
+  title: string;
+  /** Số câu mà lần trả lời GẦN NHẤT sai (câu tự luận chưa chấm không tính). */
+  wrong: number;
+}
+
+/**
+ * LANG đợt 4 — các đề thi thử đã bật "Cho luyện đề" của khoá mà học viên còn câu "nên làm lại". Rỗng khi chưa ghi
+ * danh. Chỉ ĐỌC, chỉ dữ liệu của chính `userId`.
+ */
+export async function getPracticeReviewSummary(userId: string, courseId: string, db: PrismaClient = prisma): Promise<PracticeReviewItem[]> {
+  if (!(await isUserEnrolled(userId, courseId, db))) return [];
+  const exams = await db.exam.findMany({
+    where: { courseId, status: "published", kind: "written", mockMode: true, allowPractice: true },
+    orderBy: { title: "asc" },
+    take: 100,
+    select: { id: true, title: true },
+  });
+  if (exams.length === 0) return [];
+  const rows = await db.examPracticeAnswer.findMany({
+    where: { session: { userId, examId: { in: exams.map((e) => e.id) } } },
+    orderBy: { updatedAt: "desc" },
+    select: { questionId: true, isCorrect: true, session: { select: { examId: true } } },
+  });
+  const latest = new Map<string, { examId: string; isCorrect: boolean | null }>();
+  for (const r of rows) if (!latest.has(r.questionId)) latest.set(r.questionId, { examId: r.session.examId, isCorrect: r.isCorrect });
+  const wrongBy = new Map<string, number>();
+  for (const v of latest.values()) if (v.isCorrect === false) wrongBy.set(v.examId, (wrongBy.get(v.examId) ?? 0) + 1);
+  return exams.flatMap((e) => (wrongBy.get(e.id) ? [{ examId: e.id, title: e.title, wrong: wrongBy.get(e.id)! }] : []));
+}
+
 export interface PracticeSkillSummary {
   sessionCount: number;
   lastAt: Date | null;

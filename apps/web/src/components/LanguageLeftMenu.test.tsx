@@ -16,8 +16,8 @@ describe("LanguageLeftMenu — đợt 1 (học viên)", () => {
   it("có hai mục theo Figma và tiêu đề khu vực, không có mục chưa có trang", () => {
     mockPath = "/language";
     const t = text(renderToStaticMarkup(<LanguageLeftMenu />));
-    for (const s of ["Limio Language", "Lộ trình của tôi", "Thư viện giáo trình", "Đã lưu & ghi chú", "Về Limio"]) expect(t).toContain(s);
-    for (const s of ["Lịch ôn tập", "Đấu trường"]) expect(t).not.toContain(s);
+    for (const s of ["Limio Language", "Lộ trình của tôi", "Thư viện giáo trình", "Đã lưu & ghi chú", "Lịch ôn tập", "Về Limio"]) expect(t).toContain(s);
+    expect(t).not.toContain("Đấu trường");
   });
 
   it("mục của trang hiện tại có aria-current; /language không sáng ở trang con", () => {

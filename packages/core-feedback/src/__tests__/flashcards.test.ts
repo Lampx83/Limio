@@ -7,6 +7,7 @@ import {
   FLASHCARD_SESSION_LIMIT,
   FlashcardError,
   getFlashcardQueue,
+  getFlashcardSchedule,
   getFlashcardStats,
   reviewFlashcard,
 } from "../flashcards";
@@ -461,5 +462,48 @@ describe("thống kê (G4.4)", () => {
   it("chưa ghi danh → thống kê rỗng (không lộ gì)", async () => {
     const f = await fx(one(["a"]), { enroll: false });
     expect(await getFlashcardStats(f.userId, f.courseId, NOW)).toMatchObject({ total: 0, learned: 0, dueToday: 0, enrolled: false });
+  });
+});
+
+describe("getFlashcardSchedule — lịch ôn 7 ngày (LANG đợt 4)", () => {
+  it("thẻ quá hạn tính vào hôm nay; mỗi ngày tới đếm đúng; xa hơn 7 ngày và thẻ chưa ôn lần nào không tính", async () => {
+    const f = await fx(one(["a", "b", "c", "d", "e", "f"]));
+    await putState(f, "a", { dueAt: new Date(TODAY0.getTime() - 3 * DAY) }); // quá hạn
+    await putState(f, "b", { dueAt: new Date(TODAY0.getTime() + 2 * 60 * 60 * 1000) }); // hôm nay
+    await putState(f, "c", { dueAt: new Date(TODAY0.getTime() + DAY + 5 * 60 * 1000) }); // ngày mai
+    await putState(f, "d", { dueAt: new Date(TODAY0.getTime() + 6 * DAY + 1000) }); // ngày thứ 7
+    await putState(f, "e", { dueAt: new Date(TODAY0.getTime() + 7 * DAY + 1000) }); // ngoài khoảng 7 ngày
+    // "f" chưa có trạng thái: không tính
+    const r = await getFlashcardSchedule(f.userId, f.courseId, 7, NOW);
+    expect(r.enrolled).toBe(true);
+    expect(r.days).toHaveLength(7);
+    expect(r.days.map((d) => d.count)).toEqual([2, 1, 0, 0, 0, 0, 1]);
+    expect(r.days[0]!.dayStart.getTime()).toBe(TODAY0.getTime());
+    expect(r.days[6]!.dayStart.getTime()).toBe(TODAY0.getTime() + 6 * DAY);
+  });
+
+  it("ranh giới ngày theo giờ Việt Nam: một phút trước nửa đêm VN vẫn là hôm nay, một phút sau là ngày mai", async () => {
+    const f = await fx(one(["x", "y"]));
+    await putState(f, "x", { dueAt: new Date(END_OF_TODAY.getTime() - 60 * 1000) });
+    await putState(f, "y", { dueAt: new Date(END_OF_TODAY.getTime() + 60 * 1000) });
+    const r = await getFlashcardSchedule(f.userId, f.courseId, 7, NOW);
+    expect(r.days.slice(0, 2).map((d) => d.count)).toEqual([1, 1]);
+  });
+
+  it("thẻ ở bài ẩn không tính; chưa ghi danh thì enrolled=false và mọi ngày đều 0", async () => {
+    const f = await fx([{ lessons: [{ blocks: [{ items: [{ term: "an" }] }], hidden: true }, { blocks: [{ items: [{ term: "hien" }] }] }] }]);
+    await putState(f, "an");
+    await putState(f, "hien");
+    expect((await getFlashcardSchedule(f.userId, f.courseId, 7, NOW)).days[0]!.count).toBe(1);
+    const g = await fx(one(["z"]), { enroll: false });
+    const r = await getFlashcardSchedule(g.userId, g.courseId, 7, NOW);
+    expect(r.enrolled).toBe(false);
+    expect(r.days.every((d) => d.count === 0)).toBe(true);
+  });
+
+  it("số ngày được kẹp trong 1..31", async () => {
+    const f = await fx(one(["k"]));
+    expect((await getFlashcardSchedule(f.userId, f.courseId, 0, NOW)).days).toHaveLength(1);
+    expect((await getFlashcardSchedule(f.userId, f.courseId, 99, NOW)).days).toHaveLength(31);
   });
 });

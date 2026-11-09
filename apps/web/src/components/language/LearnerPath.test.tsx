@@ -89,13 +89,25 @@ describe("LearnerPath — đợt 1", () => {
     expect(t).not.toContain("Dự kiến đạt");
   });
 
-  it("ôn lại: có thẻ đến hạn thì có nút tới flashcards; không có thì báo không có thẻ; không nhắc ngữ pháp", () => {
+  it("ôn lại: có thẻ đến hạn thì có nút tới flashcards; không có gì thì báo không có gì đến hạn; không nhắc ngữ pháp", () => {
     const due = render(path(), { dueCards: 8 });
     expect(text(due)).toContain("8 từ vựng");
     expect(due).toContain('href="/learn/ielts/flashcards"');
     const none = text(render());
-    expect(none).toContain("Hôm nay không có thẻ nào đến hạn");
+    expect(none).toContain("Hôm nay không có gì đến hạn");
     expect(none).not.toContain("ngữ pháp");
+  });
+
+  it("đợt 4: thẻ ôn lại thêm dòng 'n câu luyện nên làm lại' và luôn có liên kết tới Lịch ôn tập của khoá", () => {
+    const only = render(path(), { dueCards: 0, practiceToReview: 3 });
+    expect(text(only)).toContain("3 câu luyện nên làm lại");
+    expect(text(only)).not.toContain("Hôm nay không có gì đến hạn");
+    expect(only).not.toContain("flashcards");
+    const both = render(path(), { dueCards: 2, practiceToReview: 1 });
+    expect(text(both)).toContain("2 từ vựng");
+    expect(text(both)).toContain("1 câu luyện nên làm lại");
+    for (const h of [only, both, render()]) expect(h).toContain('href="/language/lich-on-tap?course=ielts"');
+    expect(text(render())).not.toContain("câu luyện nên làm lại");
   });
 
   it("Luyện đề: tab và thẻ chỉ hiện khi khoá có đề, trỏ tới mục Luyện thi của trang khoá", () => {
