@@ -1,5 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { Agent as HttpAgent } from "node:http";
+import { Agent as HttpsAgent } from "node:https";
 import type { Readable } from "node:stream";
 import {
   S3Client,
@@ -325,6 +327,14 @@ const ledgerCache = new Map<StorageLayer, StorageAdapter>();
 function s3Client(): S3Client | null {
   if (!process.env.S3_BUCKET) return null;
   return new S3Client({
+    // Mặc định SDK chỉ mở 50 socket tới mỗi endpoint và để yêu cầu thứ 51 xếp hàng vô hạn; một đợt xem video
+    // đông làm cả web đứng hình. Nới pool và đặt hạn chờ kết nối (cảnh báo sớm khi pool lại đầy).
+    requestHandler: {
+      httpAgent: new HttpAgent({ keepAlive: true, maxSockets: 256 }),
+      httpsAgent: new HttpsAgent({ keepAlive: true, maxSockets: 256 }),
+      connectionTimeout: 5_000,
+      socketAcquisitionWarningTimeout: 5_000,
+    },
     region: process.env.S3_REGION ?? "us-east-1",
     ...(process.env.S3_ENDPOINT && {
       endpoint: process.env.S3_ENDPOINT,
