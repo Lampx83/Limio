@@ -8,6 +8,7 @@ export * from "./lessonOutline";
 export * from "./mastery";
 export * from "./academicTerm";
 export * from "./languageSkills";
+export * from "./library";
 export * from "./flashcards";
 export * from "./aiGrading";
 export * from "./liveIllustrations";

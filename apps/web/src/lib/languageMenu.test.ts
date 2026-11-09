@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { isLanguageMenuActive, languageMenuGroups, languageShellIsLearner } from "./languageMenu";
 
-describe("languageMenu — đợt 1 (học viên)", () => {
-  it("có đúng hai mục theo Figma: Lộ trình của tôi và Đã lưu & ghi chú", () => {
+describe("languageMenu — học viên", () => {
+  it("có ba mục theo Figma: Lộ trình của tôi, Thư viện giáo trình, Đã lưu & ghi chú", () => {
     const items = languageMenuGroups().flatMap((g) => g.items);
-    expect(items.map((i) => i.label)).toEqual(["Lộ trình của tôi", "Đã lưu & ghi chú"]);
-    expect(items.map((i) => i.href)).toEqual(["/language", "/me/notes"]);
+    expect(items.map((i) => i.label)).toEqual(["Lộ trình của tôi", "Thư viện giáo trình", "Đã lưu & ghi chú"]);
+    expect(items.map((i) => i.href)).toEqual(["/language", "/language/thu-vien", "/me/notes"]);
   });
 
-  it("không có mục chết: chưa đưa Thư viện giáo trình và Lịch ôn tập vào", () => {
+  it("không có mục chết: chưa đưa Lịch ôn tập vào vì chưa có trang", () => {
     const labels = languageMenuGroups().flatMap((g) => g.items.map((i) => i.label));
-    expect(labels).not.toContain("Thư viện giáo trình");
     expect(labels).not.toContain("Lịch ôn tập");
   });
 
@@ -22,6 +21,9 @@ describe("languageMenu — đợt 1 (học viên)", () => {
   it("/language chỉ sáng ở đúng trang chủ, mục khác sáng cả ở trang con và bỏ query", () => {
     expect(isLanguageMenuActive("/language", "/language")).toBe(true);
     expect(isLanguageMenuActive("/language", "/language/practice")).toBe(false);
+    expect(isLanguageMenuActive("/language", "/language/thu-vien")).toBe(false);
+    expect(isLanguageMenuActive("/language/thu-vien", "/language/thu-vien?tab=saved")).toBe(true);
+    expect(isLanguageMenuActive("/language/thu-vien", "/language")).toBe(false);
     expect(isLanguageMenuActive("/me/notes", "/me/notes")).toBe(true);
     expect(isLanguageMenuActive("/me/notes", "/me/notes/abc?x=1")).toBe(true);
     expect(isLanguageMenuActive("/me/notes", "/me/notes-khac")).toBe(false);

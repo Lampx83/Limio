@@ -16,14 +16,16 @@ describe("LanguageLeftMenu — đợt 1 (học viên)", () => {
   it("có hai mục theo Figma và tiêu đề khu vực, không có mục chưa có trang", () => {
     mockPath = "/language";
     const t = text(renderToStaticMarkup(<LanguageLeftMenu />));
-    for (const s of ["Limio Language", "Lộ trình của tôi", "Đã lưu & ghi chú", "Về Limio"]) expect(t).toContain(s);
-    for (const s of ["Thư viện giáo trình", "Lịch ôn tập", "Đấu trường"]) expect(t).not.toContain(s);
+    for (const s of ["Limio Language", "Lộ trình của tôi", "Thư viện giáo trình", "Đã lưu & ghi chú", "Về Limio"]) expect(t).toContain(s);
+    for (const s of ["Lịch ôn tập", "Đấu trường"]) expect(t).not.toContain(s);
   });
 
   it("mục của trang hiện tại có aria-current; /language không sáng ở trang con", () => {
     mockPath = "/language";
     const cur = (h: string) => [...h.matchAll(/<a[^>]*aria-current="page"[^>]*>(.*?)<\/a>/g)].map((m) => text(m[1]!).trim());
     expect(cur(renderToStaticMarkup(<LanguageLeftMenu />))).toEqual(["Lộ trình của tôi"]);
+    mockPath = "/language/thu-vien";
+    expect(cur(renderToStaticMarkup(<LanguageLeftMenu />))).toEqual(["Thư viện giáo trình"]);
     mockPath = "/me/notes";
     expect(cur(renderToStaticMarkup(<LanguageLeftMenu />))).toEqual(["Đã lưu & ghi chú"]);
     mockPath = "/language";

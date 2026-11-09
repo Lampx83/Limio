@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowLeftRight, Bookmark, ChevronRight, Home, Languages, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Bookmark, ChevronRight, Home, Languages, Library, X, type LucideIcon } from "lucide-react";
 import { useSidebarNav } from "./useSidebarNav";
 import { STUDENT_MENU_TOGGLE_EVENT } from "./StudentLeftMenu";
 import { apiUrl } from "@/lib/apiUrl";
@@ -11,6 +11,7 @@ import { isLanguageMenuActive, languageMenuGroups, type LanguageIconKey } from "
 
 const ICONS: Record<LanguageIconKey, LucideIcon> = {
   home: Home,
+  library: Library,
   notes: Bookmark,
 };
 

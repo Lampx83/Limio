@@ -277,6 +277,13 @@ export const LearningEventType = {
   CourseAccessBatchCreated: "course.access_batch.created",
   CourseAccessBatchExported: "course.access_batch.exported",
   CourseAccessBatchRevoked: "course.access_batch.revoked",
+  // LANG đợt 2 — Thư viện giáo trình. Subject là học viên (lưu/bỏ lưu) hoặc chủ khoá (đưa vào/ra thư viện); payload
+  // chỉ mang id, KHÔNG tính là hoạt động học (tiền tố "library." trong NON_LEARNER_ACTIVITY_PREFIXES): lưu một
+  // giáo trình không phải là học.
+  LibraryCourseSaved: "library.course.saved",
+  LibraryCourseUnsaved: "library.course.unsaved",
+  LibraryCourseListed: "library.course.listed",
+  LibraryCourseUnlisted: "library.course.unlisted",
   // CENTER C4 — kết thúc buổi, tổng kết gửi lớp, nhận xét cá nhân. Subject là giảng viên thao tác;
   // payload chỉ mang id và số liệu, KHÔNG mang chữ của nhận xét (theo mẫu assistant.question.asked).
   ClassMeetingClosed: "class.meeting.closed",
@@ -1144,6 +1151,11 @@ export interface CourseAccessBatchEventPayload {
   courseId: string;
   /** created: số mã sinh; exported: số dòng trong file; revoked: số mã bị thu hồi. */
   count: number;
+}
+
+/** library.course.saved / unsaved / listed / unlisted — chỉ id khoá. */
+export interface LibraryCoursePayload {
+  courseId: string;
 }
 
 export interface CourseProtectedMediaChangedPayload {
