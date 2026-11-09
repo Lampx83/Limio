@@ -130,6 +130,9 @@ export async function streamWithRange(
  * nạp cả file vào RAM. Trả null khi adapter không stream được (file chỉ còn ở
  * fallback local, hoặc không phải S3) — caller rơi về `resolved.get()`.
  */
+/** Đoạn tối đa một yêu cầu Range từ S3 (xem `streamStorageWithRange`). 8 MB ≈ vài chục giây video 720p. */
+export const MAX_RANGE_BYTES = 8 * 1024 * 1024;
+
 export async function streamStorageWithRange(
   key: StorageKey,
   contentType: string,
@@ -160,8 +163,18 @@ export async function streamStorageWithRange(
     });
   }
 
-  const part = await adapter.getRange(key.key, start, end);
+  // Mỗi yêu cầu chỉ trả một đoạn vừa phải. Trình duyệt mở video bằng `Range: bytes=0-` (xin tới hết file);
+  // nếu phục vụ trọn, mỗi người xem giữ một socket S3 suốt thời gian họ tạm dừng/đệm. Pool S3 của mỗi web có
+  // hữu hạn socket, nên chục người mở video là pool đầy, mọi yêu cầu S3 sau xếp hàng tới khi Caddy cắt 5 phút
+  // rồi coi cả web là hỏng → 503 toàn site (sự cố 09/11/2026). Trả 206 ngắn hơn đã xin là hợp lệ: trình duyệt
+  // tự xin đoạn kế tiếp, còn socket được trả ngay sau mỗi đoạn.
+  // Chỉ cắt khi client chủ động xin Range (206 cho phép trả ít hơn đã xin). Không có header Range thì phải trả
+  // đủ file với 200 — cắt cụt rồi vẫn báo 200 là làm hỏng file tải về.
+  const capped = range ? Math.min(end ?? total - 1, start + MAX_RANGE_BYTES - 1) : (end ?? total - 1);
+  const part = await adapter.getRange(key.key, start, capped);
   if (!part) return null;
+  // Client ngắt giữa chừng (đóng tab, tua) thì đóng luôn luồng S3, không để socket treo tới khi đọc hết đoạn.
+  req.signal?.addEventListener("abort", () => part.body.destroy(), { once: true });
 
   const headers: Record<string, string> = {
     "content-type": contentType,
