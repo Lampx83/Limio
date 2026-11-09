@@ -2,6 +2,9 @@ import { auth } from "@/lib/auth";
 import StudentLeftMenu from "@/components/StudentLeftMenu";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import AdminSidebar from "@/app/admin/_components/AdminSidebar";
+import LanguageLeftMenu from "@/components/LanguageLeftMenu";
+import { getAppMode } from "@/lib/appMode.server";
+import { languageShellIsLearner } from "@/lib/languageMenu";
 import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
 import { getActiveRole, isTeachingOnly } from "@/lib/active-role";
 import { isResearcher } from "@feedbackme/core-lms";
@@ -39,8 +42,11 @@ export default async function MeLayout({
   const centerEnabled = activeRole === "instructor" && userId ? await getInstructorCenterAccess(userId) : false;
   const showSchedule = isStudentWorkspace && userId ? await getLearnerCenterAccess(userId) : false;
 
-  const leftMenu =
-    activeRole === "admin" ? (
+  // LANG L2 — vỏ Limio Language (đợt 1: chỉ vai học viên; giảng viên/admin giữ menu của mình).
+  const languageShell = getAppMode() === "language" && languageShellIsLearner(activeRole);
+  const leftMenu = languageShell ? (
+    <LanguageLeftMenu />
+  ) : activeRole === "admin" ? (
       <AdminSidebar />
     ) : activeRole === "instructor" ? (
       <InstructorLeftMenu isResearcher={hasResearcherRole} centerEnabled={centerEnabled} teachingOnly={isTeachingOnly(roles)} />

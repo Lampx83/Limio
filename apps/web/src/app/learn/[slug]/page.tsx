@@ -320,7 +320,7 @@ export default async function LearnCoursePage({
           {/* LANG G5c — Luyện thi: đề thi thử đã xuất bản của khoá. Trước đây học viên không có
               đường nào vào đề thi từ trang khoá (chỉ qua link giảng viên gửi). */}
           {mockExams.length > 0 && (
-            <section aria-labelledby="mock-exams-title">
+            <section id="luyen-thi" aria-labelledby="mock-exams-title">
               <h2 id="mock-exams-title" className="text-h3">Luyện thi</h2>
               <p className="text-meta mt-1">
                 Thi thử theo cấu trúc đề thật (mỗi phần có giờ riêng, làm lần lượt, không quay lại) hoặc luyện đề theo kỹ năng (không bấm giờ, xem đáp án ngay).
