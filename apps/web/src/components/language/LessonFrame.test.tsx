@@ -87,7 +87,7 @@ describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
   it("dưới lg có khối mở/đóng 'Bài trong unit', từ lg có thanh bên (đúng breakpoint §4.6)", () => {
     const html = render();
     expect(html).toContain("lg:hidden");
-    expect(html).toMatch(/<aside[^>]*class="hidden lg:block"/);
+    expect(html).toMatch(/<aside[^>]*class="hidden [^"]*lg:block"/);
     expect(text(html)).toContain("Bài trong unit · 1 / 4");
   });
 

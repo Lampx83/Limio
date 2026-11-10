@@ -2,6 +2,8 @@
 
 > Bản nháp 10/11/2026, **đã duyệt và đã code (xem "Đã làm" ở cuối), chưa commit.** Theo thiết kế Figma thầy gửi 10/11/2026 (khung bài học "Reading Skill": menu trái là các bài trong module, "Bài tiếp theo / Bài trước", panel phải có tab "AI trợ giảng" và "Ghi chú"). Tiếp nối khung bài học đợt 3a (`docs/tieu-chi/limio-language-hoc-vien-dot-3.md`).
 
+> **Cập nhật 10/11/2026 (sau khi lên production):** giữ panel phải theo Figma; thanh bài thu hẹp (13rem, 14rem từ 1536 px), nội dung dùng hết bề ngang cột giữa, bỏ mục lục "Trong bài này" ở mọi bài. (Có lúc thầy bảo bỏ panel rồi lại chọn khôi phục theo Figma — phương án cuối là có panel.)
+
 ## Đánh giá phương án hiện tại
 
 | Thành phần trong thiết kế | Hiện trạng trong mã | Đánh giá |

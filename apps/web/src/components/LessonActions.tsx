@@ -192,28 +192,30 @@ export function LessonNotes({
       )}
       <form
         onSubmit={onSubmit}
-        className="mt-4 space-y-3 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3"
+        className={`space-y-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-2.5 ${hideHeading ? "" : "mt-4"}`}
       >
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          rows={3}
+          rows={2}
           placeholder="Viết ghi chú... (insight, câu hỏi, link tham khảo)"
           className="textarea"
         />
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2">
           <input
             type="number"
             min={0}
             value={timestamp}
             onChange={(e) => setTimestamp(e.target.value)}
-            placeholder="Timestamp (s)"
-            className="input w-32 text-sm"
+            placeholder="Giây"
+            title="Mốc thời gian trong video (giây) — có thể bỏ trống"
+            aria-label="Mốc thời gian (giây), có thể bỏ trống"
+            className="input w-20 text-sm"
           />
           <button
             type="submit"
             disabled={submitting || !body.trim()}
-            className="btn-primary btn-sm"
+            className="btn-primary btn-sm ml-auto"
           >
             Lưu ghi chú
           </button>
@@ -221,15 +223,15 @@ export function LessonNotes({
       </form>
 
       {notes.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-dashed border-token p-6 text-center text-sm text-faint">
+        <div className="mt-3 rounded-xl border border-dashed border-token px-3 py-3 text-center text-sm text-faint">
           Chưa có ghi chú nào.
         </div>
       ) : (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-3 space-y-1.5">
           {notes.map((n) => (
             <li
               key={n.id}
-              className="flex items-start justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"
+              className="flex items-start justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-2.5"
             >
               <div className="min-w-0 flex-1">
                 {n.timestampSec !== null && (

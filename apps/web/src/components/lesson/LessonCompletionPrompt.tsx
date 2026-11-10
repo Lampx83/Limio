@@ -39,11 +39,14 @@ export default function LessonCompletionPrompt({
   courseSlug,
   initiallyCompleted,
   autoComplete,
+  inline = false,
 }: {
   lessonId: string;
   courseSlug: string;
   initiallyCompleted: boolean;
   autoComplete: AutoCompleteConfig;
+  /** Khung bài học: thanh tiến độ và dải chip "Để hoàn thành bài" cùng một hàng (từ sm) thay vì hai hàng, để thẻ tiêu đề thấp hơn. */
+  inline?: boolean;
 }) {
   const router = useRouter();
   const [completed, setCompleted] = useState(initiallyCompleted);
@@ -221,7 +224,7 @@ export default function LessonCompletionPrompt({
       : 0;
 
   const progressBar = (
-    <div className="mb-2 flex items-center gap-3">
+    <div className={`flex items-center gap-3 ${inline ? "" : "mb-2"}`}>
       <p className="shrink-0 text-sm text-muted">
         <span className="tabular-nums">{lessonProgressPct}%</span> hoàn thành bài học
       </p>
@@ -330,9 +333,7 @@ export default function LessonCompletionPrompt({
   // biến nhất), và lặp lại thông tin mỗi hoạt động đã tự hiển thị ngay tại
   // chỗ nó nằm trong bài. Luôn hiện đủ, không thu gọn/mở rộng — 1-3 chip một
   // dòng không cần che bớt.
-  return (
-    <>
-      {progressBar}
+  const chips = (
       <div className="flex flex-wrap items-center gap-2 text-sm">
       <span className="shrink-0 text-xs font-medium text-[rgb(var(--text-muted))]">
         {allDone ? "Đang lưu…" : "Để hoàn thành bài:"}
@@ -352,6 +353,19 @@ export default function LessonCompletionPrompt({
         </span>
       ))}
       </div>
+  );
+
+  if (inline)
+    return (
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <div className="min-w-[14rem] flex-1">{progressBar}</div>
+        {chips}
+      </div>
+    );
+  return (
+    <>
+      {progressBar}
+      {chips}
     </>
   );
 }

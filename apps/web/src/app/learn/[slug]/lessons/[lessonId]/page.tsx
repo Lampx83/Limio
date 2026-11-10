@@ -784,7 +784,9 @@ export default async function LessonPage({
       // w-full: <main> là item của một flex column (layout gốc) và có mx-auto, nên
       // không có w-full thì nó co theo nội dung — bài ngắn/không mục lục hẹp hơn
       // hẳn bài có mục lục, chuyển bài qua lại thì độ rộng trang nhảy.
-      className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"
+      // Trong khung 3 cột, khung ngoài đã lo lề: bỏ max-w-6xl + px-6 (chúng làm cột giữa hẹp thêm ~3rem) và dùng hết bề ngang cột giữa
+      // (không căn giữa/giới hạn: thầy thấy khoảng trắng hai bên thừa).
+      className={lessonFrame ? "w-full py-6" : "mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"}
     >
       {stageMode && <StageListener lessonId={lesson.id} />}
       {structuredData}
@@ -795,7 +797,8 @@ export default async function LessonPage({
         trăm hoàn thành chuyển xuống nằm ngay cạnh thanh tiến độ, vì đó chính
         là thứ chúng nói về.
       */}
-      {!previewMode && (
+      {/* Trong khung 3 cột hàng này không còn gì ngoài nút của giảng viên, nên nút dời vào thẻ tiêu đề (cùng hàng với chip) và bỏ cả hàng. */}
+      {!previewMode && !lessonFrame && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           {/* Khung Language đã có đường dẫn "Học / Khoá / Unit / Bài" và "Về lộ trình" nên bỏ liên kết trùng này. */}
           {!lessonFrame && (
@@ -835,18 +838,33 @@ export default async function LessonPage({
         chúng thao tác lên chính bài này, nên đặt cạnh tên bài thì rõ phạm vi
         hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
       */}
-      <header className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
-        <span className="chip">{lesson.module.title}</span>
-        {lessonFrame && lesson.languageSkill && (
-          <span className="chip-brand ml-2">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>
+      <header className={`rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card ${lessonFrame ? "mt-2 p-3 sm:p-4" : "mt-3 p-4 sm:p-5"}`}>
+        {/* Trong khung, tên module đã có ở đường dẫn phía trên nên bỏ chip (tiết kiệm một hàng); chỉ giữ hàng khi còn chip kỹ năng / nút của giảng viên. */}
+        {(!lessonFrame || lesson.languageSkill || (!previewMode && canEdit)) && (
+        <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${lessonFrame ? "mb-1" : ""}`}>
+          {!lessonFrame && <span className="chip">{lesson.module.title}</span>}
+          {lessonFrame && lesson.languageSkill && (
+            <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>
+          )}
+          {lessonFrame && !previewMode && canEdit && (
+            <Link
+              href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+              title="Quay về màn hình soạn nội dung của bài này."
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+            >
+              <PenLine className="h-4 w-4" aria-hidden />
+              Về soạn nội dung
+            </Link>
+          )}
+        </div>
         )}
-        <h1 className="mt-2 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className={`h-display font-bold ${lessonFrame ? "text-2xl sm:text-3xl" : "mt-2 text-3xl sm:text-4xl"}`}>
           {lesson.title}
         </h1>
         {lesson.description && (
           <SafeHtml
             html={plainToRichHtml(lesson.description)}
-            className="prose mt-2 max-w-none text-base text-muted dark:prose-invert"
+            className={`prose max-w-none text-muted dark:prose-invert ${lessonFrame ? "mt-1 text-sm" : "mt-2 text-base"}`}
           />
         )}
         {lecturerChoice?.mode === "HIEN" && !deckCover && (
@@ -867,14 +885,17 @@ export default async function LessonPage({
                 )}
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:ml-auto">
-              {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
-              <LessonContentToolbar
-                printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
-                  teacherMode ? "?gv=1" : ""
-                }`}
-              />
-            </div>
+            {/* Khung 3 cột (thầy chốt 10/11/2026): bỏ nút "In / Lưu PDF". Trang /print vẫn còn, các bài ngoài khung vẫn có nút. */}
+            {!lessonFrame && (
+              <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:ml-auto">
+                {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
+                <LessonContentToolbar
+                  printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
+                    teacherMode ? "?gv=1" : ""
+                  }`}
+                />
+              </div>
+            )}
           </div>
         )}
         {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
@@ -883,8 +904,9 @@ export default async function LessonPage({
             là client component; xem LessonCompletionPrompt để biết công
             thức gộp. */}
         {!previewMode && (
-          <div className="mt-3">
+          <div className={lessonFrame ? "mt-2" : "mt-3"}>
             <LessonCompletionPrompt
+              inline={!!lessonFrame}
               lessonId={lesson.id}
               courseSlug={params.slug}
               initiallyCompleted={completedEvent !== null}
