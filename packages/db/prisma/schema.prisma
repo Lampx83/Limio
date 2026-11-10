@@ -212,6 +212,9 @@ model User {
   // Growth attribution — điểm chạm đầu tiên (utm/click-id/referrer) lúc đăng ký.
   acquisitionTouch AcquisitionTouch?
 
+  // LANG đợt 2 — giáo trình học viên đã lưu ở Thư viện giáo trình (riêng tư, xoá theo tài khoản).
+  courseSaves CourseSave[]
+
   @@index([createdAt])
   // Luồng growth events phân trang theo mốc xác minh email (xem AcquisitionTouch).
   @@index([emailVerifiedAt])
@@ -476,6 +479,17 @@ model Course {
   /// của khoá tham chiếu chỉ phục vụ người có quyền vào khoá (ProtectedMediaFile), thay vì "ai có link
   /// đều tải được". Mặc định tắt: khoá đang có và mọi URL đã nhúng giữ nguyên hành vi.
   protectedMedia         Boolean      @default(false)
+  /// LANG đợt 2 (docs/tieu-chi/limio-language-hoc-vien-dot-2.md) — Thư viện giáo trình. Chỉ có tác dụng khi khoá
+  /// `published` và `enrollMode = open`. Mặc định tắt: khoá đang có không tự xuất hiện ở thư viện.
+  inLibrary              Boolean      @default(false)
+  publisher              String?
+  authors                String?
+  edition                String?
+  /// Mức hoặc khoảng CEFR: "A2", "B1-B2" (kiểm ở core-lms/language/library.ts).
+  levelBand              String?
+  /// Kỹ năng trọng tâm: reading|listening|speaking|writing|grammar|vocabulary. Không dùng enum LanguageSkill
+  /// vì ngữ pháp và từ vựng không phải một trong bốn kỹ năng.
+  focusTags              String[]     @default([])
   personalizationEnabled Boolean      @default(false)
   /// LANG G3 — chế độ ngoại ngữ: bật trang "Hồ sơ 4 kỹ năng" và ô chọn kỹ năng ở
   /// form sửa bài. Bất biến (ép ở core-lms/courses.ts): languageMode ⇒
@@ -531,6 +545,7 @@ model Course {
   vanDapExams           VanDapExam[]
   sections              CourseSection[]
   protectedMediaFiles   ProtectedMediaFile[]
+  librarySaves          CourseSave[]
   accessCodeBatches     CourseAccessCodeBatch[]
   flashcardStates       FlashcardState[]
   cohortExamClasses     CohortExamClass[]
@@ -543,6 +558,7 @@ model Course {
 
   @@index([status, publishedAt])
   @@index([category, level])
+  @@index([inLibrary, status])
 }
 
 enum CatalogSectionType {
@@ -800,6 +816,9 @@ enum ContentType {
   // Payload JSON; mỗi dòng/lượt có `id` ổn định do server gán.
   vocab_list
   dialogue
+  // LANG đợt 3b — "Bài luyện": nhúng bài luyện đề (đoạn văn + câu hỏi, kiểm tra từng câu) của một đề thi thử cùng khoá
+  // vào bài học. Payload { examId, title? }. Dùng bộ máy ExamPracticeSession; xem docs/tieu-chi/limio-language-hoc-vien-dot-3.md.
+  exam_practice
 }
 
 /// LANG G4 — lịch ôn flashcard của MỘT học viên cho MỘT dòng từ vựng. Chỉ có dòng
@@ -6369,4 +6388,19 @@ model VanDapSession {
   exam VanDapExam @relation(fields: [examId], references: [id], onDelete: Cascade)
 
   @@index([examId, status])
+}
+
+// LANG đợt 2 — "Lưu" một giáo trình ở Thư viện giáo trình. Riêng tư: chỉ chính học viên thấy. Khoá chính
+// (userId, courseId) nên lưu hai lần không tạo hàng thứ hai.
+model CourseSave {
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([userId, courseId])
+  @@index([userId, createdAt])
+  @@index([courseId])
 }

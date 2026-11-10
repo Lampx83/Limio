@@ -1,7 +1,7 @@
 import { unstable_cache, revalidateTag } from "next/cache";
-import { hasClassSchedule, isCenterEnabledForUser } from "@feedbackme/core-lms";
+import { hasClassSchedule, isCenterEnabledForUser, learnerHasActiveGoal } from "@feedbackme/core-lms";
 
-export { CENTER_INSTRUCTOR_HREFS, CENTER_LEARNER_HREF, CENTER_LEARNER_HREFS, TEACHING_ONLY_HREFS } from "./centerAccess.constants";
+export { CENTER_INSTRUCTOR_HREFS, CENTER_LEARNER_HREF, LEARNER_GOALS_HREF, TEACHING_ONLY_HREFS } from "./centerAccess.constants";
 
 const TAG = "center-access";
 
@@ -18,6 +18,16 @@ export const getInstructorCenterAccess = unstable_cache(
 export const getLearnerCenterAccess = unstable_cache(
   async (userId: string) => hasClassSchedule(userId),
   ["center-access-learner"],
+  { revalidate: 30, tags: [TAG] },
+);
+
+/**
+ * Mục "Mục tiêu" của học viên: học ở lớp có lịch HOẶC đang có một mục tiêu đang theo đuổi (AC2b). Cùng cách cache với
+ * `getLearnerCenterAccess` nên mục có thể chậm hiện cỡ 30 giây sau khi giáo viên đặt mục tiêu.
+ */
+export const getLearnerGoalsAccess = unstable_cache(
+  async (userId: string) => (await hasClassSchedule(userId)) || (await learnerHasActiveGoal(userId)),
+  ["center-access-learner-goals"],
   { revalidate: 30, tags: [TAG] },
 );
 

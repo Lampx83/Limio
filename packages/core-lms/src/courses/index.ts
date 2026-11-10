@@ -7,6 +7,7 @@ export * from "./sections";
 export * from "./sectionImport";
 export * from "./modules";
 export * from "./lessons";
+export * from "./practiceBlock";
 export * from "./contents";
 export * from "./lessonActivity";
 export * from "./skills";

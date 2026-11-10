@@ -277,6 +277,85 @@ export async function getPracticeSession(userId: string, sessionId: string, db: 
   };
 }
 
+export interface PracticeEmbed {
+  examId: string;
+  title: string;
+  /** null = chưa có buổi luyện dở: buổi chỉ được tạo khi học viên chọn đáp án đầu tiên. */
+  sessionId: string | null;
+  checkEnabled: boolean;
+  timed: boolean;
+  questions: Array<{
+    id: string;
+    type: string;
+    prompt: string;
+    points: number;
+    passageId: string | null;
+    sectionTitle: string;
+    languageSkill: string | null;
+    /** Cấu hình CÔNG KHAI: không có đáp án đúng, giải thích hay dẫn chứng. */
+    config: Record<string, unknown>;
+  }>;
+  passages: Array<{ id: string; title: string; contentJson: unknown }>;
+  answers: Array<{ questionId: string; answerJson: unknown; checked: boolean; isCorrect: boolean | null }>;
+}
+
+/**
+ * LANG đợt 3b — dữ liệu để NHÚNG bài luyện vào trang bài học. Chỉ ĐỌC, không tạo buổi luyện. Có buổi dở thì dùng
+ * đúng phạm vi và đáp án của buổi đó; chưa có thì trả cả đề để học viên làm ngay (buổi được tạo khi chọn đáp án
+ * đầu tiên). Cùng điều kiện với luyện đề thường: ghi danh, đề thi thử đã xuất bản, bật "Cho luyện đề"
+ * (ném `ExamError`: not_enrolled / practice_disabled / exam_not_found).
+ */
+export async function getPracticeForEmbed(userId: string, examId: string, db: PrismaClient = prisma): Promise<PracticeEmbed> {
+  const exam = await loadPracticeExam(userId, examId, db);
+  const open = await db.examPracticeSession.findFirst({ where: { userId, examId, status: "in_progress" }, select: { id: true } });
+  if (open) {
+    const s = await getPracticeSession(userId, open.id, db);
+    return {
+      examId,
+      title: exam.title,
+      sessionId: s.sessionId,
+      checkEnabled: s.checkEnabled,
+      timed: s.timed,
+      questions: s.questions.map((q) => ({
+        id: q.id,
+        type: q.type,
+        prompt: q.prompt,
+        points: q.points,
+        passageId: q.passageId,
+        sectionTitle: q.sectionTitle,
+        languageSkill: q.languageSkill,
+        config: q.config as Record<string, unknown>,
+      })),
+      passages: s.passages,
+      answers: s.answers,
+    };
+  }
+  const all = await loadExamQuestions(examId, db);
+  const passageIds = [...new Set(all.map((q) => q.passageId).filter((x): x is string => !!x))];
+  const passages = passageIds.length
+    ? await db.examPassage.findMany({ where: { id: { in: passageIds } }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true, contentJson: true } })
+    : [];
+  return {
+    examId,
+    title: exam.title,
+    sessionId: null,
+    checkEnabled: true,
+    timed: false,
+    questions: all.map((q) => ({
+      id: q.id,
+      type: q.type,
+      prompt: q.prompt,
+      points: q.points,
+      passageId: q.passageId,
+      sectionTitle: q.sectionTitle,
+      languageSkill: q.languageSkill,
+      config: toPublicQuestionConfig(q.type, q.config) as Record<string, unknown>,
+    })),
+    passages,
+    answers: [],
+  };
+}
+
 export async function savePracticeAnswer(
   userId: string,
   sessionId: string,
@@ -459,6 +538,94 @@ export async function abandonPracticeSession(userId: string, sessionId: string, 
   const s = await loadOwnedSession(userId, sessionId, db);
   if (s.status !== "in_progress") return;
   await db.examPracticeSession.update({ where: { id: sessionId }, data: { status: "abandoned", completedAt: new Date() } });
+}
+
+export interface PracticeObservation {
+  /** true = lượt quan sát này MỚI được ghi (gọi BKT); false = đã tính rồi hoặc không hợp lệ. */
+  created: boolean;
+  /** Đúng/sai của câu, theo dữ liệu đã chấm ở máy chủ (không lấy từ máy khách). */
+  correct: boolean | null;
+}
+
+/**
+ * LANG đợt 4 — ghi nhận lượt quan sát kỹ năng của MỘT câu làm trong Bài luyện nhúng ở bài `lessonId`. Chỉ ghi sự kiện
+ * `exam.practice.observed` (eventKey theo buổi + câu nên mỗi câu chỉ tính LẦN KIỂM TRA ĐẦU TIÊN); việc cập nhật BKT do tầng
+ * `apps/web` làm khi `created` (core-lms không import core-feedback, §4.3).
+ *
+ * Không tin `lessonId` từ máy khách. Liên kết chỉ hợp lệ khi: buổi của chính người gọi và còn dở hoặc vừa xong; câu thuộc
+ * phạm vi buổi và đã được kiểm tra, chấm tự động được; bài hiển thị cho học viên, cùng khoá với đề, học viên đang ghi danh,
+ * và bài có khối `exam_practice` không ẩn trỏ đúng đề của buổi. Sai thì trả `created: false`, không ném lỗi.
+ */
+export async function observePracticeAnswer(
+  userId: string,
+  sessionId: string,
+  questionId: string,
+  lessonId: string,
+  db: PrismaClient = prisma,
+): Promise<PracticeObservation> {
+  const none: PracticeObservation = { created: false, correct: null };
+  const s = await db.examPracticeSession.findUnique({ where: { id: sessionId } });
+  if (!s || s.userId !== userId || s.status === "abandoned") return none;
+  const scope = s.scope as unknown as Scope;
+  if (!scope.questionIds?.includes(questionId)) return none;
+
+  const answer = await db.examPracticeAnswer.findUnique({ where: { sessionId_questionId: { sessionId, questionId } } });
+  if (!answer || answer.checkedAt === null || answer.isCorrect === null) return none;
+
+  const exam = await db.exam.findUnique({ where: { id: s.examId }, select: { courseId: true } });
+  if (!exam?.courseId) return none;
+  const lesson = await db.lesson.findFirst({
+    where: {
+      id: lessonId,
+      isHidden: false,
+      module: { courseId: exam.courseId, isHidden: false },
+      contentItems: { some: { type: "exam_practice", isHidden: false, payload: { path: ["examId"], equals: s.examId } } },
+    },
+    select: { id: true },
+  });
+  if (!lesson) return none;
+  if (!(await isUserEnrolled(userId, exam.courseId, db))) return none;
+
+  const r = await emitEvent(
+    userId,
+    LearningEventType.ExamPracticeObserved,
+    { examId: s.examId, sessionId, questionId, lessonId, correct: answer.isCorrect },
+    { courseId: exam.courseId, eventKey: `exam.practice.observed:${sessionId}:${questionId}` },
+    db,
+  );
+  return { created: r.created, correct: answer.isCorrect };
+}
+
+export interface PracticeReviewItem {
+  examId: string;
+  title: string;
+  /** Số câu mà lần trả lời GẦN NHẤT sai (câu tự luận chưa chấm không tính). */
+  wrong: number;
+}
+
+/**
+ * LANG đợt 4 — các đề thi thử đã bật "Cho luyện đề" của khoá mà học viên còn câu "nên làm lại". Rỗng khi chưa ghi
+ * danh. Chỉ ĐỌC, chỉ dữ liệu của chính `userId`.
+ */
+export async function getPracticeReviewSummary(userId: string, courseId: string, db: PrismaClient = prisma): Promise<PracticeReviewItem[]> {
+  if (!(await isUserEnrolled(userId, courseId, db))) return [];
+  const exams = await db.exam.findMany({
+    where: { courseId, status: "published", kind: "written", mockMode: true, allowPractice: true },
+    orderBy: { title: "asc" },
+    take: 100,
+    select: { id: true, title: true },
+  });
+  if (exams.length === 0) return [];
+  const rows = await db.examPracticeAnswer.findMany({
+    where: { session: { userId, examId: { in: exams.map((e) => e.id) } } },
+    orderBy: { updatedAt: "desc" },
+    select: { questionId: true, isCorrect: true, session: { select: { examId: true } } },
+  });
+  const latest = new Map<string, { examId: string; isCorrect: boolean | null }>();
+  for (const r of rows) if (!latest.has(r.questionId)) latest.set(r.questionId, { examId: r.session.examId, isCorrect: r.isCorrect });
+  const wrongBy = new Map<string, number>();
+  for (const v of latest.values()) if (v.isCorrect === false) wrongBy.set(v.examId, (wrongBy.get(v.examId) ?? 0) + 1);
+  return exams.flatMap((e) => (wrongBy.get(e.id) ? [{ examId: e.id, title: e.title, wrong: wrongBy.get(e.id)! }] : []));
 }
 
 export interface PracticeSkillSummary {

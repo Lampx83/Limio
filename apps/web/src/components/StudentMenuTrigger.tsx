@@ -9,18 +9,26 @@ type Variant = "header" | "floating";
 
 const PATH_PREFIXES = ["/me", "/learn/"];
 
-function shouldShow(pathname: string): boolean {
-  return PATH_PREFIXES.some((p) => pathname === p || pathname.startsWith(p));
+// Các trang /language/* (Lịch ôn tập…) cũng có menu học viên — nhưng chỉ khi đã đăng nhập bằng vai học viên
+// (khách ở /language chỉ thấy trang giới thiệu, không có menu để mở).
+const LANGUAGE_PATH_PREFIXES = ["/language"];
+
+function shouldShow(pathname: string, languagePages: boolean): boolean {
+  const prefixes = languagePages ? [...PATH_PREFIXES, ...LANGUAGE_PATH_PREFIXES] : PATH_PREFIXES;
+  return prefixes.some((p) => pathname === p || pathname.startsWith(p));
 }
 
 export default function StudentMenuTrigger({
   variant = "header",
+  languagePages = false,
 }: {
   variant?: Variant;
+  /** Hiện cả ở /language/* (người xem là học viên đã đăng nhập). */
+  languagePages?: boolean;
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  if (!shouldShow(pathname)) return null;
+  if (!shouldShow(pathname, languagePages)) return null;
   // Giảng viên xem thử bài (?preview=1): trang chỉ còn tên bài + nội dung.
   if (searchParams.get("preview") === "1") return null;
 

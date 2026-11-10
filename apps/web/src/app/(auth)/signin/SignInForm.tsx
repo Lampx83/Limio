@@ -22,6 +22,18 @@ interface DemoAccount {
 
 const DEMO_ACCOUNTS: DemoAccount[] = [
   {
+    email: "lang.hocvien@feedbackme.dev",
+    label: "Học viên Language",
+    roleLabel: "Learner",
+    hint: "Học khoá \"Tiếng Trung cơ bản (demo ngoại ngữ)\" — thử Limio Language: khung bài học, Bài luyện làm tại chỗ và mục Mục tiêu (có sẵn một mục tiêu, thẻ ôn và một câu luyện làm sai). Tạo bởi scripts/seed-language-demo-accounts.ts.",
+  },
+  {
+    email: "lang.giangvien@feedbackme.dev",
+    label: "Giảng viên Language",
+    roleLabel: "Instructor",
+    hint: "Đồng chủ khoá demo ngoại ngữ — thêm khối \"Bài luyện\" vào bài học ở trang khoá.",
+  },
+  {
     email: "giangvien.mau@feedbackme.dev",
     label: "Giảng viên Mẫu",
     roleLabel: "Instructor",

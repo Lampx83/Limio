@@ -106,10 +106,19 @@ export default function LessonContent({
   lessonId,
   interactive = true,
   deckCover,
+  blocks,
+  numberTranscripts = false,
 }: {
   items: ContentItem[];
   courseId?: string;
   lessonId?: string;
+  /**
+   * Khối cần dữ liệu riêng của người xem (hiện chỉ "Bài luyện", exam_practice) do trang bài dựng sẵn rồi truyền
+   * vào theo id khối. Khối loại này không có phần tử tương ứng thì không hiện gì (trang in, xem thử, người chưa ghi danh).
+   */
+  blocks?: Record<string, React.ReactNode>;
+  /** LANG 3c — đánh số ①②… các đoạn lời thoại của khối Audio (chỉ khung bài học Language). */
+  numberTranscripts?: boolean;
   /** Bài có màn hình bìa: khung slide này hiện thành bìa thay vì khung nhúng thường. */
   deckCover?: DeckCoverInfo | null;
   /**
@@ -122,22 +131,29 @@ export default function LessonContent({
 }) {
   return (
     <div className="space-y-6">
-      {items.map((item) => (
+      {items.map((item) =>
+        item.type === "exam_practice" && !blocks?.[item.id] ? null : (
         // data-item-id: mốc neo ổn định giữa cửa sổ điều khiển và màn chiếu.
         // Không đánh theo thứ tự được — cửa sổ điều khiển có thêm các khối ghi
         // chú giảng viên xen giữa, nên khối thứ 3 ở hai bên là hai thứ khác nhau.
         <div key={item.id} data-item-id={item.id}>
-          <ContentBlock
-            type={item.type}
-            payload={item.payload}
-            itemId={item.id}
-            courseId={courseId}
-            lessonId={lessonId}
-            interactive={interactive}
-            deckCover={deckCover}
-          />
+          {item.type === "exam_practice" ? (
+            blocks?.[item.id]
+          ) : (
+            <ContentBlock
+              type={item.type}
+              payload={item.payload}
+              itemId={item.id}
+              courseId={courseId}
+              lessonId={lessonId}
+              interactive={interactive}
+              deckCover={deckCover}
+              numberTranscripts={numberTranscripts}
+            />
+          )}
         </div>
-      ))}
+        ),
+      )}
     </div>
   );
 }
@@ -204,6 +220,7 @@ function ContentBlock({
   lessonId,
   interactive,
   deckCover,
+  numberTranscripts,
 }: {
   type: string;
   payload: unknown;
@@ -212,6 +229,7 @@ function ContentBlock({
   lessonId?: string;
   interactive: boolean;
   deckCover?: DeckCoverInfo | null;
+  numberTranscripts?: boolean;
 }) {
   switch (type) {
     case "video": {
@@ -282,6 +300,7 @@ function ContentBlock({
           caption={p.caption}
           transcript={p.transcript}
           showTranscript={p.showTranscript}
+          numberParagraphs={numberTranscripts}
         />
       );
     }

@@ -14,6 +14,7 @@ import {
   Globe,
   Headphones,
   BookA,
+  ClipboardCheck,
   MessagesSquare,
   LayoutTemplate,
   Link2,
@@ -73,6 +74,8 @@ function summarize(type: string, payload: unknown): string {
       return `${String(p.title ?? "Từ vựng")} — ${blockSummary(type, payload)}`;
     case "dialogue":
       return `${String(p.title ?? "Hội thoại")} — ${blockSummary(type, payload)}`;
+    case "exam_practice":
+      return String(p.title ?? "Bài luyện");
     case "scorm":
       return `${String(p.title ?? "SCORM")} — packageId=${String(p.packageId ?? "")}`;
     case "lti":
@@ -100,6 +103,7 @@ export const ICON: Record<string, typeof Video> = {
   audio: Headphones,
   vocab_list: BookA,
   dialogue: MessagesSquare,
+  exam_practice: ClipboardCheck,
 };
 
 // Mỗi loại content 1 màu riêng để quét mắt nhanh giữa danh sách nhiều loại
@@ -121,6 +125,7 @@ export const TYPE_COLOR: Record<string, string> = {
   audio: "bg-sky-100 text-sky-700",
   vocab_list: "bg-yellow-100 text-yellow-800",
   dialogue: "bg-green-100 text-green-700",
+  exam_practice: "bg-stone-200 text-stone-800",
 };
 export const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
 

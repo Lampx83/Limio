@@ -13,6 +13,7 @@ import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
 import HeaderTagline from "./HeaderTagline";
+import { isLearnerRole } from "@/lib/learnerRole";
 
 // Header render trên MỌI trang — cache isAnyOrgAdmin 60s/userId để không query
 // OrganizationAdmin mỗi request, cùng cách admin/layout.tsx cache isAdmin.
@@ -29,6 +30,8 @@ export default async function AppHeader() {
   const activeRole = getActiveRole(roles);
   // Chỉ cần cho nhánh guest bên dưới — bỏ qua query khi đã đăng nhập.
   const registerEnabled = user ? true : await getRegisterEnabled();
+  // /language/* có menu học viên cho người đã đăng nhập bằng vai học viên (khách chỉ thấy trang giới thiệu).
+  const languagePages = !!user?.id && isLearnerRole(activeRole);
 
   // Fetch avatar separately — JWT session doesn't refresh after upload, so
   // reading from DB on each request keeps the header always fresh. Cheap
@@ -63,7 +66,7 @@ export default async function AppHeader() {
     <header className="border-b border-token bg-[rgb(var(--surface)/0.85)] backdrop-blur supports-[backdrop-filter]:bg-[rgb(var(--surface)/0.7)]">
       <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6 short:py-1">
         <div className="flex items-center gap-2 shrink-0">
-        <StudentMenuTrigger variant="header" />
+        <StudentMenuTrigger variant="header" languagePages={languagePages} />
         <Link href="/" className="group flex items-baseline gap-2 shrink-0">
           <LimeSliceIcon className="h-11 w-11 shrink-0 self-center short:h-8 short:w-8 transition-transform group-hover:scale-105 group-hover:rotate-12" />
           <span className="text-3xl font-bold tracking-tight short:text-2xl">

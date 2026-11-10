@@ -29,19 +29,22 @@ export default function PracticeSetup({
   title,
   sections,
   inProgress,
+  initialFilter = "all",
 }: {
   slug: string;
   examId: string;
   title: string;
   sections: PracticeSectionInfo[];
   inProgress: { sessionId: string; answered: number; total: number } | null;
+  /** LANG đợt 4 — "Làm lại" từ trang Lịch ôn tập mở sẵn bộ lọc "Chỉ câu từng sai". */
+  initialFilter?: PracticeFilter;
 }) {
   const router = useRouter();
   const skills = [...new Set(sections.map((s) => s.languageSkill).filter((x): x is string => !!x))];
   const [pickedSkills, setPickedSkills] = useState<string[]>([]);
   const [pickedSections, setPickedSections] = useState<string[]>([]);
   const [all, setAll] = useState(false);
-  const [filter, setFilter] = useState<PracticeFilter>("all");
+  const [filter, setFilter] = useState<PracticeFilter>(initialFilter);
   const [checkEnabled, setCheckEnabled] = useState(true);
   const [timed, setTimed] = useState(false);
   const [busy, setBusy] = useState(false);

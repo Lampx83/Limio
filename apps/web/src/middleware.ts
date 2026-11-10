@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { applyAttributionCookie } from "@/lib/growth/edge";
+import { languageHostRewrite } from "@/lib/languageHost";
 
 /**
  * Gắn `X-Robots-Tag: noindex, nofollow` cho mọi route riêng tư.
@@ -59,7 +60,21 @@ function isPrivate(pathname: string): boolean {
 }
 
 export function middleware(req: NextRequest) {
-  const res = NextResponse.next();
+  // Tên miền riêng của Limio Language (LANGUAGE_HOST, tuỳ chọn): "/" được viết lại thành trang giới thiệu /language. Không còn
+  // chế độ giao diện/cookie — xem docs/tieu-chi/limio-language-gop-menu.md (AC4).
+  const rewriteTo = languageHostRewrite({
+    host: req.headers.get("host"),
+    languageHost: process.env.LANGUAGE_HOST,
+    pathname: req.nextUrl.pathname,
+  });
+  let res: NextResponse;
+  if (rewriteTo) {
+    const url = req.nextUrl.clone();
+    url.pathname = rewriteTo;
+    res = NextResponse.rewrite(url);
+  } else {
+    res = NextResponse.next();
+  }
   // `pathname` đã bỏ basePath, nên danh sách trên viết theo đường dẫn app —
   // giống mọi nơi khác trong codebase (xem `lib/apiUrl.ts`).
   if (isPrivate(req.nextUrl.pathname)) {

@@ -377,6 +377,15 @@ export async function listMyGoals(userId: string, opts: { includeInactive?: bool
   return rows.map(toView);
 }
 
+/**
+ * Học viên có mục tiêu nào đang theo đuổi không (gắn khoá hay mục tiêu chung đều tính). Quyết định mục "Mục tiêu" có hiện ở
+ * menu hay không (docs/tieu-chi/limio-language-gop-menu.md, AC2b). Dùng chỉ mục (userId, status), chỉ lấy 1 dòng.
+ */
+export async function learnerHasActiveGoal(userId: string, db: DbClient = prisma): Promise<boolean> {
+  const row = await db.learnerGoal.findFirst({ where: { userId, status: "active" }, select: { id: true } });
+  return row !== null;
+}
+
 /** Mục tiêu của một học viên trong một khoá, cho giáo viên (hoặc chính học viên). */
 export async function listLearnerGoals(
   actorUserId: string,

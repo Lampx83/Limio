@@ -139,6 +139,8 @@ export async function updateLearnerStateForLessonObservation(
   lessonId: string,
   isCorrect: boolean,
   db: PrismaClient = prisma,
+  /** Nguồn của lượt quan sát, ghi vào `skill.state.updated`: "h5p" (xAPI) hoặc "practice" (Bài luyện nhúng trong bài). */
+  source: "h5p" | "practice" = "h5p",
 ): Promise<{
   skillsUpdated: number;
   newlyMastered: NewlyMasteredSkill[];
@@ -151,54 +153,60 @@ export async function updateLearnerStateForLessonObservation(
   let skillsUpdated = 0;
 
   for (const t of tags) {
-    const existing = await db.learnerSkillState.findUnique({
-      where: { userId_skillId: { userId, skillId: t.skillId } },
-    });
-    const priorMastery = existing?.masteryProbability ?? BKT.P_L0;
-    const next = updateMasteryBkt(priorMastery, isCorrect);
-    const mastery = next.newMastery;
-    const attempts = (existing?.attempts ?? 0) + 1;
-    const correctCount = (existing?.correctCount ?? 0) + (isCorrect ? 1 : 0);
+    // Đọc-sửa-ghi trạng thái BKT phải tuần tự theo (người học, skill): hai lượt quan sát chạy song song (vd bấm "Kiểm tra" hai
+    // câu liên tiếp ở Bài luyện) nếu không khoá sẽ cùng đọc một giá trị cũ và mất một lượt. Khoá tư vấn cấp giao dịch.
+    const result = await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`bkt:${userId}:${t.skillId}`}, 0))`;
+      const existing = await tx.learnerSkillState.findUnique({
+        where: { userId_skillId: { userId, skillId: t.skillId } },
+      });
+      const priorMastery = existing?.masteryProbability ?? BKT.P_L0;
+      const next = updateMasteryBkt(priorMastery, isCorrect);
+      const mastery = next.newMastery;
+      const attempts = (existing?.attempts ?? 0) + 1;
+      const correctCount = (existing?.correctCount ?? 0) + (isCorrect ? 1 : 0);
 
-    await db.learnerSkillState.upsert({
-      where: { userId_skillId: { userId, skillId: t.skillId } },
-      create: {
-        userId,
-        skillId: t.skillId,
-        masteryProbability: mastery,
-        attempts,
-        correctCount,
-      },
-      update: { masteryProbability: mastery, attempts, correctCount },
-    });
-    await db.learningEvent.create({
-      data: {
-        userId,
-        eventType: LearningEventType.SkillStateUpdated,
-        payload: {
+      await tx.learnerSkillState.upsert({
+        where: { userId_skillId: { userId, skillId: t.skillId } },
+        create: {
+          userId,
           skillId: t.skillId,
           masteryProbability: mastery,
           attempts,
           correctCount,
-          source: "h5p",
-          lessonId,
-        } as Prisma.InputJsonValue,
-      },
+        },
+        update: { masteryProbability: mastery, attempts, correctCount },
+      });
+      await tx.learningEvent.create({
+        data: {
+          userId,
+          eventType: LearningEventType.SkillStateUpdated,
+          payload: {
+            skillId: t.skillId,
+            masteryProbability: mastery,
+            attempts,
+            correctCount,
+            source,
+            lessonId,
+          } as Prisma.InputJsonValue,
+        },
+      });
+      if (priorMastery < MASTERY_THRESHOLD && mastery >= MASTERY_THRESHOLD) {
+        const skill = await tx.skill.findUniqueOrThrow({
+          where: { id: t.skillId },
+          select: { id: true, code: true, name: true },
+        });
+        return {
+          skillId: skill.id,
+          skillCode: skill.code,
+          skillName: skill.name,
+          masteryProbability: mastery,
+        } satisfies NewlyMasteredSkill;
+      }
+      return null;
     });
     skillsUpdated += 1;
-
-    if (priorMastery < MASTERY_THRESHOLD && mastery >= MASTERY_THRESHOLD) {
-      const skill = await db.skill.findUniqueOrThrow({
-        where: { id: t.skillId },
-        select: { id: true, code: true, name: true },
-      });
-      newlyMastered.push({
-        skillId: skill.id,
-        skillCode: skill.code,
-        skillName: skill.name,
-        masteryProbability: mastery,
-      });
-    }
+    if (result) newlyMastered.push(result);
   }
   return { skillsUpdated, newlyMastered };
 }

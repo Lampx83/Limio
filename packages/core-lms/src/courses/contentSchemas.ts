@@ -285,6 +285,15 @@ export const TeacherNotePayload = z.object({
   html: z.string().min(1).max(200_000),
 });
 
+/**
+ * LANG đợt 3b — khối "Bài luyện": trỏ tới MỘT đề thi thử của cùng khoá (kiểm cùng khoá/đã xuất bản ở contents.ts vì
+ * cần DB). `title` tuỳ chọn để giảng viên đặt tên khối; trống thì học viên thấy tên đề.
+ */
+export const ExamPracticePayload = z.object({
+  examId: z.string().uuid(),
+  title: z.string().trim().max(200).optional(),
+});
+
 const PAYLOAD_BY_TYPE = {
   video: VideoPayload,
   markdown: MarkdownPayload,
@@ -301,6 +310,7 @@ const PAYLOAD_BY_TYPE = {
   audio: AudioPayload,
   vocab_list: VocabListPayload,
   dialogue: DialoguePayload,
+  exam_practice: ExamPracticePayload,
 } as const;
 
 export type ContentTypeKey = keyof typeof PAYLOAD_BY_TYPE;

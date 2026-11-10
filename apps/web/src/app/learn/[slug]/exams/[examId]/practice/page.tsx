@@ -7,7 +7,7 @@ import PracticeSetup from "@/components/exam/PracticeSetup";
 export const dynamic = "force-dynamic";
 
 /** LANG G5e — chọn phạm vi luyện đề (kỹ năng / phần / cả đề). */
-export default async function PracticeSetupPage({ params }: { params: { slug: string; examId: string } }) {
+export default async function PracticeSetupPage({ params, searchParams }: { params: { slug: string; examId: string }; searchParams?: { filter?: string } }) {
   const session = await auth();
   if (!session?.user?.id) redirect(`/signin?callbackUrl=/learn/${params.slug}/exams/${params.examId}/practice`);
   const course = await prisma.course.findUnique({ where: { slug: params.slug }, select: { id: true } });
@@ -18,7 +18,7 @@ export default async function PracticeSetupPage({ params }: { params: { slug: st
     const o = await getPracticeOverview(session.user.id, params.examId);
     const exam = await prisma.exam.findUnique({ where: { id: params.examId }, select: { courseId: true } });
     if (exam?.courseId !== course.id) notFound();
-    return <PracticeSetup slug={params.slug} examId={params.examId} title={o.title} sections={o.sections} inProgress={o.inProgress} />;
+    return <PracticeSetup slug={params.slug} examId={params.examId} title={o.title} sections={o.sections} inProgress={o.inProgress} initialFilter={searchParams?.filter === "wrong" ? "wrong" : "all"} />;
   } catch (e) {
     if (e instanceof ExamError) {
       return (

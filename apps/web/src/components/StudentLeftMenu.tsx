@@ -24,7 +24,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
-import { CENTER_LEARNER_HREFS } from "@/lib/centerAccess.constants";
+import { CENTER_LEARNER_HREF, LEARNER_GOALS_HREF } from "@/lib/centerAccess.constants";
 
 export const STUDENT_MENU_TOGGLE_EVENT = "fbm:student-menu:toggle";
 
@@ -42,14 +42,24 @@ type Group = {
   items: Item[];
 };
 
+/** Cờ quyết định mục có điều kiện nào được hiện (xem `visibleStudentMenuGroups`). */
+export type StudentMenuFlags = {
+  /** Học viên đang học ở lớp có lịch → "Lịch học". */
+  showSchedule?: boolean;
+  /** Lớp có lịch hoặc đang có mục tiêu → "Mục tiêu". */
+  showGoals?: boolean;
+  /** Trang Token AI đã mở khoá. */
+  tokensUnlocked?: boolean;
+};
+
 const GROUPS: Group[] = [
   {
     id: "learning",
     label: "Học tập",
     items: [
       { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen, tourId: "help-tour-nav-courses" },
-      { label: "Lịch học", href: "/me/lich-hoc", icon: CalendarDays },
-      { label: "Mục tiêu", href: "/me/muc-tieu", icon: Target },
+      { label: "Lịch học", href: CENTER_LEARNER_HREF, icon: CalendarDays },
+      { label: "Mục tiêu", href: LEARNER_GOALS_HREF, icon: Target },
       { label: "Ghi chú", href: "/me/notes", icon: Pencil, tourId: "help-tour-nav-notes" },
       { label: "Kỹ năng", href: "/me/skills", icon: Brain, tourId: "help-tour-nav-skills" },
       { label: "Huy hiệu", href: "/me/badges", icon: Award, tourId: "help-tour-nav-badges" },
@@ -84,17 +94,37 @@ const GROUPS: Group[] = [
 
 const LS_KEY = "fbm-student-menu-collapsed";
 
+/**
+ * Các nhóm menu học viên sau khi áp điều kiện hiện — hàm thuần để kiểm thử được mà không cần vẽ giao diện
+ * (docs/tieu-chi/limio-language-gop-menu.md, AC2/AC2b).
+ */
+export function visibleStudentMenuGroups(flags: StudentMenuFlags = {}): Group[] {
+  const { showSchedule = false, showGoals = false, tokensUnlocked = true } = flags;
+  return GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter((it) => {
+      if (it.href === AI_TOKENS_HREF) return tokensUnlocked;
+      if (it.href === CENTER_LEARNER_HREF) return showSchedule;
+      if (it.href === LEARNER_GOALS_HREF) return showGoals;
+      return true;
+    }),
+  }));
+}
+
 export default function StudentLeftMenu({
   desktopSidebar = true,
   badges = {},
   continueTo,
   showSchedule = false,
+  showGoals = false,
 }: {
   desktopSidebar?: boolean;
   badges?: Record<string, { count: number; tone?: "warn" | "danger" }>;
   continueTo?: { href: string; title: string } | null;
   /** Học viên đang học ở lớp có lịch → hiện mục "Lịch học". */
   showSchedule?: boolean;
+  /** Lớp có lịch hoặc đang có mục tiêu → hiện mục "Mục tiêu". */
+  showGoals?: boolean;
 }) {
   const tokensUnlocked = useAiTokensPageUnlocked();
   const { pathname, collapsed, toggle, pendingHref, linkProps } = useSidebarNav(LS_KEY);
@@ -161,13 +191,7 @@ export default function StudentLeftMenu({
         </div>
       )}
 
-      {GROUPS.map((group, idx) => {
-        const g = {
-          ...group,
-          items: group.items.filter(
-            (it) => (tokensUnlocked || it.href !== AI_TOKENS_HREF) && (showSchedule || !CENTER_LEARNER_HREFS.has(it.href)),
-          ),
-        };
+      {visibleStudentMenuGroups({ showSchedule, showGoals, tokensUnlocked }).map((g, idx) => {
         const isCollapsed = !!collapsed[g.id];
         return (
           <div key={g.id} className="px-3">

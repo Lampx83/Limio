@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { getSectionGoal, listMyGoals, type GoalView } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
-import { getLearnerCenterAccess } from "@/lib/centerAccess";
+import { getLearnerGoalsAccess } from "@/lib/centerAccess";
 import { loadGoalWithProgress } from "@/lib/goalProgress";
 import GoalsClient, { type CourseGoalCard } from "./GoalsClient";
 
@@ -16,7 +16,8 @@ export default async function MucTieuPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/signin?callbackUrl=/me/muc-tieu");
   const userId = session.user.id;
-  if (!(await getLearnerCenterAccess(userId))) redirect("/me/dashboard");
+  // Vào được khi học ở lớp có lịch HOẶC đang có một mục tiêu đang theo đuổi (cùng điều kiện hiện mục menu).
+  if (!(await getLearnerGoalsAccess(userId))) redirect("/me/dashboard");
 
   const [enrollments, mine] = await Promise.all([
     prisma.enrollment.findMany({

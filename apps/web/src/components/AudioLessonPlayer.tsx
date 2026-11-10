@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Pause, Play, Repeat, Volume2, VolumeX } from "lucide-react";
 import { formatClock, progressPct } from "@/lib/audioClock";
+import { paragraphMarker, splitTranscriptParagraphs } from "@/lib/transcriptParagraphs";
 
 /** LANG K2 — điều khiển từ ngoài (hội thoại tua tới mốc của một lượt). */
 export interface AudioControl {
@@ -35,6 +36,7 @@ export default function AudioLessonPlayer({
   caption,
   transcript,
   showTranscript = true,
+  numberParagraphs = false,
   compact = false,
   controlRef,
   onTimeChange,
@@ -46,6 +48,8 @@ export default function AudioLessonPlayer({
   caption?: string;
   transcript?: string;
   showTranscript?: boolean;
+  /** LANG 3c — đánh số ①②… các đoạn của lời thoại (tách theo dòng trống; từ hai đoạn trở lên mới đánh số). */
+  numberParagraphs?: boolean;
   /** Gọn: trình phát và tốc độ/lặp lại nằm chung một hàng (dùng trong hội thoại, nơi chiều dọc quý). */
   compact?: boolean;
   /** K2 — gắn bộ điều khiển (tua/tạm dừng) cho thành phần cha. */
@@ -112,6 +116,7 @@ export default function AudioLessonPlayer({
   const pct = progressPct(shown, duration);
 
   const hasTranscript = showTranscript && !!transcript?.trim();
+  const paragraphs = hasTranscript && numberParagraphs ? splitTranscriptParagraphs(transcript ?? "") : [];
 
   return (
     <figure
@@ -236,7 +241,21 @@ export default function AudioLessonPlayer({
       {hasTranscript && (
         <details className="rounded-lg border border-token px-3 py-2">
           <summary className="cursor-pointer text-sm font-medium">Lời thoại</summary>
-          <p className="mt-2 whitespace-pre-line text-body">{transcript}</p>
+          {paragraphs.length >= 2 ? (
+            <ol className="mt-2 space-y-2 text-body" data-testid="numbered-transcript">
+              {paragraphs.map((para, i) => (
+                <li key={i} className="flex gap-2">
+                  <span aria-hidden className="shrink-0 font-semibold text-lime-700">
+                    {paragraphMarker(i + 1)}
+                  </span>
+                  <span className="sr-only">Đoạn {i + 1}. </span>
+                  <span className="whitespace-pre-line">{para}</span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-2 whitespace-pre-line text-body">{transcript}</p>
+          )}
         </details>
       )}
     </figure>
