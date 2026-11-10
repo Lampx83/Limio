@@ -29,12 +29,13 @@ export interface LessonFrameInput {
 }
 
 /**
- * Có dùng khung 3 cột không. Chỉ học viên ĐÃ GHI DANH; giữ giao diện cũ cho người đọc chưa ghi danh, xem thử, chiếu lớp,
- * giảng viên đứng lớp và bài có bài giảng slide. Công tắc tắt thì chỉ còn khoá ngoại ngữ.
+ * Có dùng khung 3 cột không. Học viên ĐÃ GHI DANH, và giảng viên đang "xem như học viên" (`previewMode`, để thấy đúng cái học viên thấy);
+ * giữ giao diện cũ cho người đọc chưa ghi danh, chiếu lớp, giảng viên đứng lớp và bài có bài giảng slide. Công tắc tắt thì chỉ còn khoá ngoại ngữ.
  */
 export function lessonFrameApplies(i: LessonFrameInput): boolean {
+  if (i.stageMode || i.teacherMode || i.hasDeckCover) return false;
+  if (i.previewMode) return i.languageMode || i.allCoursesEnabled;
   if (!i.enrolled || !i.learnerRole) return false;
-  if (i.previewMode || i.stageMode || i.teacherMode || i.hasDeckCover) return false;
   return i.languageMode || i.allCoursesEnabled;
 }
 

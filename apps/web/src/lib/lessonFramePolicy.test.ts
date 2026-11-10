@@ -28,17 +28,25 @@ describe("lessonFrameApplies", () => {
   it("học viên đã ghi danh ở khoá thường: có khung (công tắc bật)", () => {
     expect(lessonFrameApplies(base)).toBe(true);
   });
-  it("giữ giao diện cũ cho: chưa ghi danh, không phải học viên, xem thử, chiếu lớp, giảng viên đứng lớp, bài có slide", () => {
+  it("giữ giao diện cũ cho: chưa ghi danh, không phải học viên, chiếu lớp, giảng viên đứng lớp, bài có slide", () => {
     for (const patch of [
       { enrolled: false },
       { learnerRole: false },
-      { previewMode: true },
       { stageMode: true },
       { teacherMode: true },
       { hasDeckCover: true },
     ]) {
       expect(lessonFrameApplies({ ...base, ...patch })).toBe(false);
       expect(lessonFrameApplies({ ...base, languageMode: true, ...patch })).toBe(false);
+    }
+  });
+  it("giảng viên xem như học viên (không ghi danh, không phải vai học viên) cũng có khung, như học viên đã ghi danh", () => {
+    const t = { ...base, enrolled: false, learnerRole: false, previewMode: true };
+    expect(lessonFrameApplies(t)).toBe(true);
+    expect(lessonFrameApplies({ ...t, languageMode: true, allCoursesEnabled: false })).toBe(true);
+    expect(lessonFrameApplies({ ...t, allCoursesEnabled: false })).toBe(false); // công tắc tắt + khoá thường: giao diện cũ
+    for (const patch of [{ stageMode: true }, { teacherMode: true }, { hasDeckCover: true }]) {
+      expect(lessonFrameApplies({ ...t, ...patch })).toBe(false);
     }
   });
   it("công tắc tắt: khoá thường quay về giao diện cũ, khoá ngoại ngữ vẫn có khung", () => {

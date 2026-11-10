@@ -32,7 +32,16 @@ export function splitLessonItems<T extends Item>(items: T[]): { lesson: T[]; voc
 }
 
 /** Đường dẫn của một chế độ xem trong cùng bài ("Bài học" là đường dẫn gốc, không kèm tham số). */
-export function lessonViewHref(slug: string, lessonId: string, view: LessonView): string {
+/** Thêm `preview=1` vào đường dẫn khi giảng viên đang "xem như học viên", để bấm qua lại trong khung vẫn ở chế độ xem thử. */
+export function previewHref(href: string, preview: boolean | undefined): string {
+  if (!preview) return href;
+  const hash = href.indexOf("#");
+  const path = hash >= 0 ? href.slice(0, hash) : href;
+  const frag = hash >= 0 ? href.slice(hash) : "";
+  return `${path}${path.includes("?") ? "&" : "?"}preview=1${frag}`;
+}
+
+export function lessonViewHref(slug: string, lessonId: string, view: LessonView, preview?: boolean): string {
   const base = `/learn/${slug}/lessons/${lessonId}`;
-  return view === "vocab" ? `${base}?view=vocab` : base;
+  return previewHref(view === "vocab" ? `${base}?view=vocab` : base, preview);
 }
