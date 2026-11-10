@@ -113,7 +113,7 @@ describe("LibraryView — Thư viện giáo trình", () => {
     expect(html).not.toContain("<script>alert");
   });
 
-  it("khối Đang học: tiến độ Unit, nút Tiếp tục học tới đúng bài, liên kết lộ trình; thẻ đó không lặp ở lưới", () => {
+  it("khối Đang học: tiến độ Unit, nút Tiếp tục học tới đúng bài, liên kết mở khoá học; thẻ đó không lặp ở lưới", () => {
     const inProgress = {
       card: card({ id: "c2", slug: "reading", title: "Active Skills for Reading 3", enrolled: true }),
       lessonId: "l5",
@@ -128,7 +128,7 @@ describe("LibraryView — Thư viện giáo trình", () => {
     expect(t).toContain("Đang học");
     expect(t).toContain("Unit 3 · 1 / 3 bài");
     expect(html).toContain('href="/learn/reading/lessons/l5"');
-    expect(html).toContain('href="/language?course=reading"');
+    expect(html).toContain('href="/learn/reading"');
     expect(t).toContain("Khám phá thêm");
   });
 

@@ -2,13 +2,10 @@ import { auth } from "@/lib/auth";
 import StudentLeftMenu from "@/components/StudentLeftMenu";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
 import AdminSidebar from "@/app/admin/_components/AdminSidebar";
-import LanguageLeftMenu from "@/components/LanguageLeftMenu";
-import { getAppMode } from "@/lib/appMode.server";
-import { languageShellIsLearner } from "@/lib/languageMenu";
-import { getStudentMenuBadges, getStudentMenuContinue } from "@/lib/studentMenuBadges";
+import { getStudentMenuContext } from "@/lib/studentMenuContext";
 import { getActiveRole, isTeachingOnly } from "@/lib/active-role";
 import { isResearcher } from "@feedbackme/core-lms";
-import { getInstructorCenterAccess, getLearnerCenterAccess } from "@/lib/centerAccess";
+import { getInstructorCenterAccess } from "@/lib/centerAccess";
 
 // /me/* là các trang dùng chung mọi role (ví dụ Token AI, Cài đặt tài khoản)
 // — cả StudentLeftMenu lẫn InstructorLeftMenu đều trỏ "Token AI" về đây.
@@ -26,12 +23,7 @@ export default async function MeLayout({
   const activeRole = getActiveRole(roles);
 
   const isStudentWorkspace = activeRole !== "instructor" && activeRole !== "admin";
-  const [badges, continueTo] = isStudentWorkspace
-    ? await Promise.all([
-        getStudentMenuBadges(session?.user?.id),
-        getStudentMenuContinue(session?.user?.id),
-      ])
-    : [{}, null];
+  const menu = isStudentWorkspace ? await getStudentMenuContext(session?.user?.id) : null;
 
   const hasResearcherRole =
     activeRole === "instructor" && session?.user?.id
@@ -40,18 +32,19 @@ export default async function MeLayout({
 
   const userId = session?.user?.id;
   const centerEnabled = activeRole === "instructor" && userId ? await getInstructorCenterAccess(userId) : false;
-  const showSchedule = isStudentWorkspace && userId ? await getLearnerCenterAccess(userId) : false;
 
-  // LANG L2 — vỏ Limio Language (đợt 1: chỉ vai học viên; giảng viên/admin giữ menu của mình).
-  const languageShell = getAppMode() === "language" && languageShellIsLearner(activeRole);
-  const leftMenu = languageShell ? (
-    <LanguageLeftMenu />
-  ) : activeRole === "admin" ? (
+  const leftMenu =
+    activeRole === "admin" ? (
       <AdminSidebar />
     ) : activeRole === "instructor" ? (
       <InstructorLeftMenu isResearcher={hasResearcherRole} centerEnabled={centerEnabled} teachingOnly={isTeachingOnly(roles)} />
     ) : (
-      <StudentLeftMenu badges={badges} continueTo={continueTo} showSchedule={showSchedule} />
+      <StudentLeftMenu
+        badges={menu?.badges}
+        continueTo={menu?.continueTo}
+        showSchedule={menu?.showSchedule}
+        showGoals={menu?.showGoals}
+      />
     );
 
   return (

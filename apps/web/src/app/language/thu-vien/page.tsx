@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { listLibrary } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { ROLE_DEFAULT_PATH, getActiveRole } from "@/lib/active-role";
-import { languageShellIsLearner } from "@/lib/languageMenu";
+import { isLearnerRole } from "@/lib/learnerRole";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { NOINDEX } from "@/lib/seo";
 import LibraryView from "@/components/language/LibraryView";
@@ -20,7 +20,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Reco
   const userId = session?.user?.id;
   if (!userId) redirect("/signin?callbackUrl=/language/thu-vien");
   const activeRole = getActiveRole(session.user.roles ?? []);
-  if (!languageShellIsLearner(activeRole)) redirect(ROLE_DEFAULT_PATH[activeRole] ?? "/instructor/dashboard");
+  if (!isLearnerRole(activeRole)) redirect(ROLE_DEFAULT_PATH[activeRole] ?? "/instructor/dashboard");
 
   const [data, paymentEnabled] = await Promise.all([listLibrary(userId, searchParams), getPaymentEnabled().catch(() => false)]);
   return <LibraryView data={data} paymentEnabled={paymentEnabled} />;

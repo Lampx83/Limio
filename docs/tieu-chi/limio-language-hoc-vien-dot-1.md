@@ -2,6 +2,8 @@
 
 > Bản nháp 09/11/2026, **đã duyệt và đã code (xem "Đã làm" ở cuối), chưa commit.** Thiết kế: Figma "Limio Language" (frame "Tổng quan lộ trình học"). Gắn với LANG (docs/LANG-languages-AC.md), B4 (lộ trình), A3 (ghi danh), CENTER C6 (mục tiêu); ID chính thức đối chiếu spec khi commit.
 
+> **Cập nhật 10/11/2026 — đã được thay một phần bởi `docs/tieu-chi/limio-language-gop-menu.md`:** "vỏ" Language bằng cookie, menu riêng (`LanguageLeftMenu`), nút "Về Limio" và trang "Lộ trình của tôi" **đã bỏ** (trùng với học viên Limio thường). Học viên dùng một menu duy nhất; khung bài học Language bật theo khoá. Phần còn lại của tài liệu này giữ làm lịch sử.
+
 ## Vì sao làm
 
 Giao diện ngoại ngữ cho học viên theo Figma gồm: tab **Học / Luyện đề**, menu "Không gian học", trang **Lộ trình của tôi** (tiếp tục học, lộ trình theo Unit, mục tiêu, tiến độ theo kỹ năng, nhắc ôn). Mã vỏ Limio Language đã từng vào main (PR #94) rồi bị revert cùng cả gói ops; lần này lấy lại **chỉ phần vỏ**, và dựng trang Lộ trình trên dữ liệu đã có.

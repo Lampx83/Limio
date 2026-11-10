@@ -12,6 +12,7 @@ import {
   changeGoal,
   getEffectiveGoal,
   getGoalHistory,
+  learnerHasActiveGoal,
   listLearnerGoals,
   listMyGoals,
   listSectionLearnerGoals,
@@ -128,6 +129,25 @@ describe("setGoal — đặt mục tiêu (C6.1)", () => {
     const no = await teachOnly(s, "lg-teach-no", false);
     await expect(setGoal(no, { userId: s.learners[0]!, courseId: s.courseId, ...HSK3 }, NOW)).rejects.toBeInstanceOf(CourseAuthzError);
     await expect(setGoal(yes, { userId: s.learners[0]!, courseId: s.courseId, ...HSK3 }, NOW)).resolves.toMatchObject({ setById: yes });
+  });
+});
+
+describe("learnerHasActiveGoal — điều kiện hiện mục Mục tiêu ở menu", () => {
+  it("chưa có mục tiêu: false; có mục tiêu đang theo đuổi (gắn khoá hay chung): true; chỉ còn mục tiêu đã đóng: false", async () => {
+    const s = await setup("lg-has");
+    const me = s.learners[0]!;
+    expect(await learnerHasActiveGoal(me)).toBe(false);
+
+    const g = await setGoal(me, { courseId: s.courseId, ...HSK3 }, NOW);
+    expect(await learnerHasActiveGoal(me)).toBe(true);
+    // Người khác không bị ảnh hưởng.
+    expect(await learnerHasActiveGoal(s.learners[1]!)).toBe(false);
+
+    await setGoalStatus(me, g.id, "achieved");
+    expect(await learnerHasActiveGoal(me)).toBe(false);
+
+    await setGoal(me, { ...HSK3 }, NOW);
+    expect(await learnerHasActiveGoal(me)).toBe(true);
   });
 });
 

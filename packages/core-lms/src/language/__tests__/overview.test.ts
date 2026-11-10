@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { prisma } from "@feedbackme/db";
-import { buildLanguagePath, getLanguageLearnerPath, learnerHasLanguageCourses, unitState } from "../overview";
+import { buildLanguagePath, getLanguageLearnerPath, unitState } from "../overview";
 import type { CourseProgress } from "../../learning/progress";
 import { registerUser } from "../../auth/register";
 import { createCourse, publishCourse } from "../../courses/courses";
@@ -122,7 +122,6 @@ describe("getLanguageLearnerPath (DB)", () => {
     const r = await getLanguageLearnerPath(learner, null);
     expect(r.selected).toBeNull();
     expect(r.courses).toEqual([]);
-    expect(await learnerHasLanguageCourses(learner)).toBe(false);
   });
 
   it("tổng hợp đúng tiến độ Unit và kỹ năng sau khi hoàn thành bài", async () => {
@@ -138,7 +137,6 @@ describe("getLanguageLearnerPath (DB)", () => {
       { skill: "listening", done: 0, total: 1, pct: 0 },
     ]);
     expect(r.continue?.lessonId).toBe(c.lessonIds[1]);
-    expect(await learnerHasLanguageCourses(learner)).toBe(true);
   });
 
   it("slug của khoá người khác (hoặc không ghi danh) bị bỏ qua, không lộ khoá đó", async () => {

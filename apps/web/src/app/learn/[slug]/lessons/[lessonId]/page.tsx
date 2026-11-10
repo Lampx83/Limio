@@ -30,9 +30,8 @@ import {
 import { LANGUAGE_SKILL_LABEL, LearningEventType } from "@feedbackme/shared-types";
 import { estimateLessonDeckTokens, formatTokenCount } from "@/lib/limioLiveLessonDeck";
 import { auth } from "@/lib/auth";
-import { getAppMode } from "@/lib/appMode.server";
 import { getActiveRole } from "@/lib/active-role";
-import { languageShellIsLearner } from "@/lib/languageMenu";
+import { isLearnerRole } from "@/lib/learnerRole";
 import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
 import LessonFrameLayout, { LessonFooter, LessonViewTabs } from "@/components/language/LessonFrame";
 import LessonPractice from "@/components/language/LessonPractice";
@@ -706,16 +705,16 @@ export default async function LessonPage({
   );
   const visibleItems = deckCover ? withoutDeckIntro(allVisibleItems) : allVisibleItems;
 
-  // LANG đợt 3a — khung bài học kiểu Limio Language (docs/tieu-chi/limio-language-hoc-vien-dot-3.md). Chỉ khi: vỏ Language,
-  // vai học viên, khoá bật chế độ ngoại ngữ, đã ghi danh, và không phải xem thử/chiếu lớp/chế độ giảng viên. Bài khác giữ nguyên.
+  // LANG đợt 3a — khung bài học kiểu Limio Language (docs/tieu-chi/limio-language-hoc-vien-dot-3.md). Bật THEO KHOÁ (không còn
+  // "vỏ" theo cookie — docs/tieu-chi/limio-language-gop-menu.md, AC6): khoá bật chế độ ngoại ngữ, vai học viên, đã ghi danh,
+  // và không phải xem thử/chiếu lớp/chế độ giảng viên. Bài của khoá thường giữ nguyên.
   const languageSkin =
     lesson.module.course.languageMode &&
     enrolled &&
     !previewMode &&
     !stageMode &&
     !teacherMode &&
-    getAppMode() === "language" &&
-    languageShellIsLearner(getActiveRole(session?.user?.roles ?? []));
+    isLearnerRole(getActiveRole(session?.user?.roles ?? []));
   const languageFrame = languageSkin
     ? buildLessonFrame(progress, lesson.id, await loadLessonDurations(progress.modules.flatMap((m) => m.lessons.map((l) => l.id))))
     : null;
@@ -757,7 +756,7 @@ export default async function LessonPage({
       }
       try {
         const embed = await getPracticeForEmbed(userId, p.examId);
-        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} />;
+        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
         practiceBlocks[it.id] = (

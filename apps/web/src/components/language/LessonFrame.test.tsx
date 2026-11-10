@@ -36,10 +36,10 @@ const render = (f = frame(), hasExams = false) =>
   );
 
 describe("LessonFrameLayout — thanh bài trong Unit", () => {
-  it("có link Về lộ trình, tên Unit, 'x / y bài hoàn thành', và bọc đúng nội dung của trang bài", () => {
+  it("có link Về khoá học, tên Unit, 'x / y bài hoàn thành', và bọc đúng nội dung của trang bài", () => {
     const html = render();
     const t = text(html);
-    expect(html).toContain('href="/language?course=ielts"');
+    expect(html).toContain('href="/learn/ielts"');
     expect(t).toContain("Endangered Species");
     expect(t).toContain("1 / 4 bài hoàn thành");
     expect(t).toContain("NỘI DUNG BÀI");
@@ -82,7 +82,7 @@ describe("LessonCrumbs", () => {
   it("Học / Khoá / Unit / Bài, bài hiện tại không phải link", () => {
     const html = renderToStaticMarkup(<LessonCrumbs slug="ielts" courseTitle="Active Skills" unitTitle="Unit 3" lessonTitle="Reading Skill" />);
     expect(text(html)).toContain("Học / Active Skills / Unit 3 / Reading Skill");
-    expect(html).toContain('href="/language"');
+    expect(html).toContain('href="/me/dashboard"');
     expect(html).toContain('href="/learn/ielts"');
     expect(html).toMatch(/<span aria-current="page"[^>]*>Reading Skill<\/span>/);
   });
@@ -109,10 +109,10 @@ describe("LessonFooter", () => {
     expect(html).toContain('href="/learn/ielts/lessons/l3"');
     expect(text(html)).toContain("Bài tập tiếp theo →");
   });
-  it("bài cuối: nút thành Về lộ trình", () => {
+  it("bài cuối: nút thành Về khoá học", () => {
     const html = renderToStaticMarkup(<LessonFooter slug="ielts" next={null} />);
-    expect(text(html)).toContain("Về lộ trình");
+    expect(text(html)).toContain("Về khoá học");
     expect(text(html)).not.toContain("Bài tập tiếp theo");
-    expect(html).toContain('href="/language?course=ielts"');
+    expect(html).toContain('href="/learn/ielts"');
   });
 });

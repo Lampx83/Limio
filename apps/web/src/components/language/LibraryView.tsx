@@ -164,8 +164,8 @@ export default function LibraryView({ data, paymentEnabled }: { data: LibraryPag
                 <Link href={`/learn/${featured.card.slug}/lessons/${featured.lessonId}`} className="btn-primary btn-sm">
                   Tiếp tục học
                 </Link>
-                <Link href={`/language?course=${encodeURIComponent(featured.card.slug)}`} className="link text-sm">
-                  Mở lộ trình giáo trình ↗
+                <Link href={`/learn/${featured.card.slug}`} className="link text-sm">
+                  Mở khoá học ↗
                 </Link>
               </div>
             </section>

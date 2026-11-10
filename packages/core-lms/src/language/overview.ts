@@ -146,12 +146,3 @@ export async function getLanguageLearnerPath(
     ...buildLanguagePath(progress, meta, chosen.lastLessonId),
   };
 }
-
-/** Học viên có khoá ngoại ngữ nào đang học không — quyết định có hiện lối "Limio Language" ở vỏ thường. */
-export async function learnerHasLanguageCourses(userId: string, db: PrismaClient = prisma): Promise<boolean> {
-  const row = await db.enrollment.findFirst({
-    where: { userId, status: "active", course: { languageMode: true } },
-    select: { id: true },
-  });
-  return !!row;
-}

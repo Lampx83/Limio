@@ -1,73 +1,29 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getLanguageLearnerPath, getPracticeReviewSummary, listMockExamsForLearner, listMyGoals } from "@feedbackme/core-lms";
-import { getFlashcardStats } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
 import { ROLE_DEFAULT_PATH, getActiveRole } from "@/lib/active-role";
-import { languageShellIsLearner } from "@/lib/languageMenu";
-import { formatDayKey } from "@/lib/datetime";
+import { isLearnerRole } from "@/lib/learnerRole";
 import { NOINDEX } from "@/lib/seo";
-import EmptyState from "@/components/ui/EmptyState";
-import LearnerPath, { type LearnerPathGoal } from "@/components/language/LearnerPath";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
   const session = await auth();
-  // Khách thấy trang giới thiệu (index được); người đã đăng nhập thấy dữ liệu riêng ⇒ noindex.
-  return session?.user?.id ? { title: "Lộ trình của tôi — Limio Language", ...NOINDEX } : { title: "Limio Language — Speak in Flow" };
+  // Khách thấy trang giới thiệu (index được); người đã đăng nhập bị chuyển đi nên không có gì để index.
+  return session?.user?.id ? { title: "Limio Language", ...NOINDEX } : { title: "Limio Language — Speak in Flow" };
 }
 
 /**
- * LANG đợt 1 — trang chủ Limio Language. Khách: giới thiệu. Học viên: "Lộ trình của tôi". Giảng viên/admin: chuyển về
- * trang chủ của họ (vỏ giảng viên để đợt sau).
+ * Trang giới thiệu Limio Language cho khách. Người đã đăng nhập không có trang chủ Language riêng nữa (trang "Lộ trình
+ * của tôi" đã bỏ vì trùng với học viên Limio thường — docs/tieu-chi/limio-language-gop-menu.md): học viên về trang chủ học
+ * viên, giảng viên/admin về trang chủ của họ.
  */
-export default async function LanguageHome({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
+export default async function LanguageHome() {
   const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) return <GuestIntro />;
-
+  if (!session?.user?.id) return <GuestIntro />;
   const activeRole = getActiveRole(session.user.roles ?? []);
-  if (!languageShellIsLearner(activeRole)) redirect(ROLE_DEFAULT_PATH[activeRole] ?? "/instructor/dashboard");
-
-  const course = typeof searchParams.course === "string" ? searchParams.course : null;
-  const path = await getLanguageLearnerPath(userId, course);
-  if (!path.selected) {
-    return (
-      <main className="mx-auto w-full max-w-3xl px-4 py-10 sm:px-6">
-        <EmptyState
-          title="Bạn chưa học khoá ngoại ngữ nào"
-          description="Tìm một khoá trong danh mục, hoặc dùng đường dẫn mời của giảng viên."
-          actions={[{ label: "Xem danh mục khoá học", href: "/catalog", variant: "primary" }]}
-        />
-      </main>
-    );
-  }
-  const selected = path.selected;
-
-  // Lỗi ở một khối phụ không được làm hỏng cả trang.
-  const [cards, goals, mockExams, practiceReview] = await Promise.all([
-    getFlashcardStats(userId, selected.id).catch(() => null),
-    listMyGoals(userId).catch(() => []),
-    listMockExamsForLearner(userId, selected.id).catch(() => []),
-    getPracticeReviewSummary(userId, selected.id).catch(() => []),
-  ]);
-  const g = goals.find((x) => x.courseId === selected.id && x.status === "active");
-  const goal: LearnerPathGoal | null = g
-    ? { level: g.targetLevel, targetDate: formatDayKey(g.targetDate), hoursPerWeek: g.hoursPerWeek }
-    : null;
-
-  return (
-    <LearnerPath
-      userName={session.user.name ?? "bạn"}
-      path={{ ...path, selected }}
-      goal={goal}
-      dueCards={cards?.dueToday ?? 0}
-      practiceToReview={practiceReview.reduce((n, p) => n + p.wrong, 0)}
-      hasExams={mockExams.length > 0}
-    />
-  );
+  redirect(isLearnerRole(activeRole) ? "/me/dashboard" : (ROLE_DEFAULT_PATH[activeRole] ?? "/instructor/dashboard"));
 }
 
 function GuestIntro() {

@@ -69,8 +69,8 @@ function RailBody({ slug, frame, hasExams }: { slug: string; frame: LessonFrameD
   const pct = frame.unitTotal === 0 ? 0 : Math.round((frame.unitDone / frame.unitTotal) * 100);
   return (
     <div>
-      <Link href={`/language?course=${encodeURIComponent(slug)}`} className="link text-sm">
-        ← Về lộ trình
+      <Link href={`/learn/${slug}`} className="link text-sm">
+        ← Về khoá học
       </Link>
       <div className="mt-4 text-xs font-bold uppercase tracking-wider text-lime-700">Unit</div>
       <div className="text-h4 mt-0.5">{frame.unitTitle}</div>
@@ -103,7 +103,7 @@ function RailBody({ slug, frame, hasExams }: { slug: string; frame: LessonFrameD
 export function LessonCrumbs({ slug, courseTitle, unitTitle, lessonTitle }: { slug: string; courseTitle: string; unitTitle: string; lessonTitle: string }) {
   return (
     <nav aria-label="Vị trí bài học" className="text-caption flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-muted">
-      <Link href="/language" className="hover:underline">
+      <Link href="/me/dashboard" className="hover:underline">
         Học
       </Link>
       <span aria-hidden>/</span>
@@ -143,7 +143,7 @@ export function LessonViewTabs({ slug, lessonId, view, vocabCount }: { slug: str
   );
 }
 
-/** Chân trang: bài kế tiếp và nút đi tiếp; hết bài thì về lộ trình. */
+/** Chân trang: bài kế tiếp và nút đi tiếp; hết bài thì về trang khoá. */
 export function LessonFooter({ slug, next }: { slug: string; next: LessonFrameData["next"] }) {
   return (
     <footer className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-token pt-4">
@@ -153,8 +153,8 @@ export function LessonFooter({ slug, next }: { slug: string; next: LessonFrameDa
           Bài tập tiếp theo →
         </Link>
       ) : (
-        <Link href={`/language?course=${encodeURIComponent(slug)}`} className="btn-primary btn-sm">
-          Về lộ trình
+        <Link href={`/learn/${slug}`} className="btn-primary btn-sm">
+          Về khoá học
         </Link>
       )}
     </footer>

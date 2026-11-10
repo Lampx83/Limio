@@ -2,6 +2,8 @@
 
 > Bản nháp 09/11/2026, **đã duyệt và đã code (xem "Đã làm" ở cuối), chưa commit.** Thiết kế: Figma "Limio Language", frame "Thư viện giáo trình". Tiếp nối `docs/tieu-chi/limio-language-hoc-vien-dot-1.md` (đã commit `aa9a7e63`). Gắn với A1 (khoá), A3 (ghi danh), A9 (thanh toán); ID chính thức đối chiếu spec khi commit.
 
+> **Cập nhật 10/11/2026:** mục "Thư viện giáo trình" nay nằm trong nhóm "Khám phá" của menu học viên duy nhất, ngay sau "Danh mục khoá học" (xem `docs/tieu-chi/limio-language-gop-menu.md`); không còn menu Language riêng. Liên kết "Mở lộ trình giáo trình" của thẻ Đang học đổi thành "Mở khoá học".
+
 ## Vì sao làm
 
 Figma có trang **Thư viện giáo trình**: học viên tìm giáo trình theo nhà xuất bản, trình độ, kỹ năng; thấy giáo trình đang học; **Lưu** để xem sau; **Preview** trước khi học. Limio chưa có: khoá chưa có thông tin nhà xuất bản, tác giả, ấn bản, trình độ, kỹ năng trọng tâm; chưa có "lưu khoá".

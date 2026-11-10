@@ -5,7 +5,7 @@ import { getFlashcardSchedule, getLanguageProfile } from "@feedbackme/core-feedb
 import { LANGUAGE_SKILL_LABEL } from "@feedbackme/shared-types";
 import { auth } from "@/lib/auth";
 import { ROLE_DEFAULT_PATH, getActiveRole } from "@/lib/active-role";
-import { languageShellIsLearner } from "@/lib/languageMenu";
+import { isLearnerRole } from "@/lib/learnerRole";
 import { NOINDEX } from "@/lib/seo";
 import EmptyState from "@/components/ui/EmptyState";
 import ReviewSchedule from "@/components/language/ReviewSchedule";
@@ -22,7 +22,7 @@ export default async function ReviewSchedulePage({ searchParams }: { searchParam
   const userId = session?.user?.id;
   if (!userId) redirect("/signin?callbackUrl=/language/lich-on-tap");
   const activeRole = getActiveRole(session.user.roles ?? []);
-  if (!languageShellIsLearner(activeRole)) redirect(ROLE_DEFAULT_PATH[activeRole] ?? "/instructor/dashboard");
+  if (!isLearnerRole(activeRole)) redirect(ROLE_DEFAULT_PATH[activeRole] ?? "/instructor/dashboard");
 
   const course = typeof searchParams.course === "string" ? searchParams.course : null;
   const path = await getLanguageLearnerPath(userId, course);

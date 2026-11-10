@@ -2,6 +2,8 @@
 
 > Bản nháp 09/11/2026, **đã duyệt và đã code (xem "Đã làm" ở cuối), chưa commit.** Tiếp nối đợt 1–3 (`aa9a7e63` … `2b585e40`). Gắn với B1/B2 (BKT, hồ sơ kỹ năng), LANG G3/G5e, và menu "Lịch ôn tập" trong Figma.
 
+> **Cập nhật 10/11/2026:** trang "Lộ trình của tôi" đã bỏ, và mục "Lịch ôn tập" **tạm bỏ khỏi menu** (trang `/language/lich-on-tap`, các hàm đọc dữ liệu và cầu nối Bài luyện → nhãn kỹ năng vẫn giữ; chỉ không có liên kết dẫn tới). Xem `docs/tieu-chi/limio-language-gop-menu.md`.
+
 ## Vì sao làm
 
 Đợt 3 để lại hai khoảng trống đã nói thẳng:
