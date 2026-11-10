@@ -12,8 +12,12 @@ import {
   createAudioAsset,
   createExam,
   createImageAsset,
+  createExamQuestion,
   createPassage,
+  deleteExamQuestion,
   deletePassage,
+  explanationAudioFilename,
+  updateExamQuestion,
   examAssetFilename,
   getAudioTranscriptForEditor,
   getAudioTranscriptsForPassages,
@@ -126,6 +130,89 @@ describe("dọn tệp khi gỡ khỏi đoạn", () => {
     const r = await updatePassage(s.owner, passageId, { contentJson: doc() });
     expect(r.removedFiles).toEqual([]);
     expect(await prisma.examAsset.count({ where: { examId, s3Key: "p6-i.png" } })).toBe(1);
+  });
+});
+
+describe("audio bài mẫu của câu tự luận (explanationAudio)", () => {
+  const url = (f: string) => `/api/exam-assets/${f}`;
+  const essay = (f?: string) => ({
+    type: "essay" as const,
+    prompt: "What did you learn?",
+    points: 1,
+    config: { explanation: "Mẫu", ...(f ? { explanationAudio: url(f) } : {}) },
+  });
+
+  it("lấy tên tệp từ cấu hình câu; không có hoặc đường dẫn lạ thì null", () => {
+    expect(explanationAudioFilename({ explanationAudio: url("m1.mp3") })).toBe("m1.mp3");
+    expect(explanationAudioFilename({})).toBeNull();
+    expect(explanationAudioFilename(null)).toBeNull();
+    expect(explanationAudioFilename({ explanationAudio: "https://x.com/a.mp3" })).toBeNull();
+  });
+
+  it("đổi audio mẫu: tệp cũ bị xoá dòng ExamAsset và được trả để xoá khỏi kho; tệp mới giữ nguyên", async () => {
+    const s = await setup("qa1");
+    await mkAudio(s.owner, s.examId, "qa1-old.mp3");
+    await mkAudio(s.owner, s.examId, "qa1-new.mp3");
+    const { questionId } = await createExamQuestion(s.owner, s.examId, essay("qa1-old.mp3"));
+    const r = await updateExamQuestion(s.owner, questionId, { config: essay("qa1-new.mp3").config });
+    expect(r.removedFiles).toEqual(["qa1-old.mp3"]);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa1-old.mp3" } })).toBe(0);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa1-new.mp3" } })).toBe(1);
+  });
+
+  it("gỡ audio mẫu (bấm Xoá) thì dọn tệp; sửa chữ mà giữ audio thì không đụng", async () => {
+    const s = await setup("qa2");
+    await mkAudio(s.owner, s.examId, "qa2.mp3");
+    const { questionId } = await createExamQuestion(s.owner, s.examId, essay("qa2.mp3"));
+    const keep = await updateExamQuestion(s.owner, questionId, { config: { explanation: "Mẫu mới", explanationAudio: url("qa2.mp3") } });
+    expect(keep.removedFiles).toEqual([]);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa2.mp3" } })).toBe(1);
+    const r = await updateExamQuestion(s.owner, questionId, { config: { explanation: "Mẫu mới" } });
+    expect(r.removedFiles).toEqual(["qa2.mp3"]);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa2.mp3" } })).toBe(0);
+  });
+
+  it("sửa câu mà không gửi config thì không dọn gì", async () => {
+    const s = await setup("qa3");
+    await mkAudio(s.owner, s.examId, "qa3.mp3");
+    const { questionId } = await createExamQuestion(s.owner, s.examId, essay("qa3.mp3"));
+    const r = await updateExamQuestion(s.owner, questionId, { prompt: "Đổi đề" });
+    expect(r.removedFiles).toEqual([]);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa3.mp3" } })).toBe(1);
+  });
+
+  it("xoá câu thì dọn audio mẫu, trừ khi câu khác còn dùng cùng tệp", async () => {
+    const s = await setup("qa4");
+    await mkAudio(s.owner, s.examId, "qa4.mp3");
+    const a = await createExamQuestion(s.owner, s.examId, essay("qa4.mp3"));
+    const b = await createExamQuestion(s.owner, s.examId, essay("qa4.mp3"));
+    expect((await deleteExamQuestion(s.owner, a.questionId)).removedFiles).toEqual([]);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa4.mp3" } })).toBe(1);
+    expect((await deleteExamQuestion(s.owner, b.questionId)).removedFiles).toEqual(["qa4.mp3"]);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa4.mp3" } })).toBe(0);
+  });
+
+  it("tệp dùng chung với đề khác: xoá dòng ở đề này nhưng KHÔNG xoá khỏi kho", async () => {
+    const s = await setup("qa5");
+    const other = await setup("qa5b");
+    await mkAudio(s.owner, s.examId, "qa5.mp3");
+    await mkAudio(other.owner, other.examId, "qa5.mp3");
+    const { questionId } = await createExamQuestion(s.owner, s.examId, essay("qa5.mp3"));
+    const r = await deleteExamQuestion(s.owner, questionId);
+    expect(r.removedFiles).toEqual([]);
+    expect(await prisma.examAsset.count({ where: { examId: s.examId, s3Key: "qa5.mp3" } })).toBe(0);
+    expect(await prisma.examAsset.count({ where: { examId: other.examId, s3Key: "qa5.mp3" } })).toBe(1);
+  });
+
+  it("đề thường đã xuất bản: không dọn", async () => {
+    const s = await setup("qa6");
+    const { examId } = await createExam(s.owner, s.courseId, { title: "Đề thường", durationMin: 10 });
+    await mkAudio(s.owner, examId, "qa6.mp3");
+    const { questionId } = await createExamQuestion(s.owner, examId, essay("qa6.mp3"));
+    await prisma.exam.update({ where: { id: examId }, data: { status: "published" } });
+    const r = await updateExamQuestion(s.owner, questionId, { config: { explanation: "Mẫu" } });
+    expect(r.removedFiles).toEqual([]);
+    expect(await prisma.examAsset.count({ where: { examId, s3Key: "qa6.mp3" } })).toBe(1);
   });
 });
 

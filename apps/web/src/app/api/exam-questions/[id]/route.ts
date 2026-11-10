@@ -2,8 +2,19 @@ import { NextResponse } from "next/server";
 import { deleteExamQuestion, updateExamQuestion } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
+import { storageFor } from "@/lib/storage";
+import { examAssetKeyFromFilename } from "@/lib/storage-keys";
 
 export const runtime = "nodejs";
+
+/** Xoá khỏi kho các tệp audio bài mẫu không còn dòng nào trỏ tới (lõi đã dọn bảng). Lỗi xoá tệp không làm hỏng việc lưu câu. */
+async function deleteStoredFiles(filenames: string[]) {
+  for (const f of filenames) {
+    const key = examAssetKeyFromFilename(f);
+    if (!key) continue;
+    await storageFor(key).delete(key.key).catch((e) => console.error("[exam-questions] không xoá được tệp", f, e));
+  }
+}
 
 export async function PATCH(
   req: Request,
@@ -13,7 +24,8 @@ export async function PATCH(
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const body = await readJson(req);
   try {
-    await updateExamQuestion(userId, params.id, body);
+    const { removedFiles } = await updateExamQuestion(userId, params.id, body);
+    await deleteStoredFiles(removedFiles);
     return NextResponse.json({ ok: true });
   } catch (e) {
     const mapped = mapKnownError(e);
@@ -29,7 +41,8 @@ export async function DELETE(
   const userId = await requireUserId();
   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   try {
-    await deleteExamQuestion(userId, params.id);
+    const { removedFiles } = await deleteExamQuestion(userId, params.id);
+    await deleteStoredFiles(removedFiles);
     return NextResponse.json({ ok: true });
   } catch (e) {
     const mapped = mapKnownError(e);

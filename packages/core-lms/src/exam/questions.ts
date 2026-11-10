@@ -4,6 +4,7 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { configSchemaForType } from "./schemas";
 import { ExamError } from "./types";
+import { canPruneAssets, pruneDeletedQuestionAssets, pruneRemovedQuestionAssets } from "./passageAssets";
 
 const P0_QUESTION_TYPES = [
   "mcq",
@@ -78,7 +79,8 @@ async function loadQuestionWithCourse(questionId: string, db: PrismaClient) {
       id: true,
       examId: true,
       passageId: true,
-      exam: { select: { courseId: true, createdById: true, status: true } },
+      config: true,
+      exam: { select: { courseId: true, createdById: true, status: true, ownerContentItemId: true } },
     },
   });
   if (!q) throw new ExamError("validation_failed", "question_not_found");
@@ -204,7 +206,7 @@ export async function updateExamQuestion(
   questionId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
-): Promise<void> {
+): Promise<{ removedFiles: string[] }> {
   const q = await loadQuestionWithCourse(questionId, db);
   if (q.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, q.exam, db);
@@ -268,18 +270,26 @@ export async function updateExamQuestion(
     }
   });
   await afterOwnedPracticeChanged(actorUserId, q.examId, db);
+  // Audio bài mẫu vừa gỡ/đổi: dọn khỏi đề (trả tên tệp để lớp gọi xoá khỏi kho). Chỉ đề nháp và đề ẩn của Bài luyện.
+  const removedFiles =
+    validConfig !== undefined && canPruneAssets(q.exam)
+      ? await pruneRemovedQuestionAssets(q.examId, q.config, validConfig, db)
+      : [];
+  return { removedFiles };
 }
 
 export async function deleteExamQuestion(
   actorUserId: string,
   questionId: string,
   db: PrismaClient = prisma,
-): Promise<void> {
+): Promise<{ removedFiles: string[] }> {
   const q = await loadQuestionWithCourse(questionId, db);
   if (q.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, q.exam, db);
   await db.examQuestion.delete({ where: { id: questionId } });
   await afterOwnedPracticeChanged(actorUserId, q.examId, db);
+  const removedFiles = canPruneAssets(q.exam) ? await pruneDeletedQuestionAssets(q.examId, q.config, db) : [];
+  return { removedFiles };
 }
 
 /**
