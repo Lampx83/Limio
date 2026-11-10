@@ -15,6 +15,7 @@ import {
   Headphones,
   BookA,
   ClipboardCheck,
+  ClipboardList,
   MessagesSquare,
   LayoutTemplate,
   Link2,
@@ -76,6 +77,8 @@ function summarize(type: string, payload: unknown): string {
       return `${String(p.title ?? "Hội thoại")} — ${blockSummary(type, payload)}`;
     case "exam_practice":
       return String(p.title ?? "Bài luyện");
+    case "exam_ref":
+      return String(p.title ?? "Đề thi");
     case "scorm":
       return `${String(p.title ?? "SCORM")} — packageId=${String(p.packageId ?? "")}`;
     case "lti":
@@ -104,6 +107,7 @@ export const ICON: Record<string, typeof Video> = {
   vocab_list: BookA,
   dialogue: MessagesSquare,
   exam_practice: ClipboardCheck,
+  exam_ref: ClipboardList,
 };
 
 // Mỗi loại content 1 màu riêng để quét mắt nhanh giữa danh sách nhiều loại
@@ -126,8 +130,46 @@ export const TYPE_COLOR: Record<string, string> = {
   vocab_list: "bg-yellow-100 text-yellow-800",
   dialogue: "bg-green-100 text-green-700",
   exam_practice: "bg-stone-200 text-stone-800",
+  exam_ref: "bg-lime-100 text-lime-800",
 };
 export const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
+
+const EXAM_REF_ISSUE: Record<string, string> = {
+  not_selected: "Chưa chọn đề — bấm sửa để chọn. Học viên chưa thấy khối này.",
+  missing: "Đề đã bị xoá — chọn đề khác. Học viên chưa thấy khối này.",
+  draft: "Đề chưa xuất bản — học viên chưa thấy khối này.",
+  archived: "Đề đã lưu trữ — học viên chưa thấy khối này.",
+  other_course: "Đề thuộc khoá khác — chọn đề của khoá này.",
+  modes_off: "Đề đã tắt cả Thi thử và Luyện đề — học viên chưa thấy khối này.",
+};
+
+/** Tóm tắt khối Đề thi: tên đề, trạng thái, hai công tắc; báo rõ lý do khi học viên chưa thấy khối. */
+function ExamRefInfo({ contentId, onLoaded }: { contentId: string; onLoaded: (info: { courseId: string; examId: string | null }) => void }) {
+  const [info, setInfo] = useState<{ courseId: string; examId: string | null; title: string | null; issue: string; allowMock: boolean; allowPractice: boolean } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch(apiUrl(`/api/contents/${contentId}/exam-ref`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && d) {
+          setInfo(d);
+          onLoaded({ courseId: d.courseId, examId: d.examId });
+        }
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contentId]);
+  if (!info) return null;
+  if (info.issue !== "ok") return <p className="mt-1 text-xs font-medium text-amber-700">{EXAM_REF_ISSUE[info.issue] ?? "Đề chưa dùng được."}</p>;
+  return (
+    <p className="mt-1 text-xs text-muted">
+      {info.title} · Đã xuất bản · {[info.allowMock ? "Cho thi thử" : null, info.allowPractice ? "Cho luyện đề" : null].filter(Boolean).join(", ")}
+    </p>
+  );
+}
 
 /** Tóm tắt khối Bài luyện: số đoạn, số câu; báo rõ khi chưa có câu hỏi (học viên sẽ không thấy khối). */
 function PracticeBlockInfo({ contentId }: { contentId: string }) {
@@ -161,6 +203,7 @@ export default function ContentItemRow({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [examRef, setExamRef] = useState<{ courseId: string; examId: string | null } | null>(null);
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [isHidden, setIsHidden] = useState(item.isHidden ?? false);
@@ -178,7 +221,9 @@ export default function ContentItemRow({
 
   async function remove() {
     const message =
-      item.type === "exam_practice"
+      item.type === "exam_ref"
+        ? "Xoá khối đề thi này khỏi bài? Đề thi vẫn còn ở khoá, chỉ không hiện trong bài nữa."
+        : item.type === "exam_practice"
         ? "Xoá bài luyện này? Toàn bộ đoạn văn, câu hỏi và kết quả luyện tập của học viên trong bài luyện cũng bị xoá, không hoàn tác được."
         : `Xoá content "${item.type}"? Hành động này không thể hoàn tác.`;
     if (!confirm(message)) return;
@@ -260,6 +305,7 @@ export default function ContentItemRow({
           {summarize(item.type, item.payload)}
         </p>
         {item.type === "exam_practice" && <PracticeBlockInfo contentId={item.id} />}
+        {item.type === "exam_ref" && <ExamRefInfo contentId={item.id} onLoaded={setExamRef} />}
       </div>
 
       <div className="flex shrink-0 items-center gap-1 rounded-lg p-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-lg:opacity-100">
@@ -278,6 +324,16 @@ export default function ContentItemRow({
         >
           {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
+        {item.type === "exam_ref" && examRef?.examId && (
+          <Link
+            href={`/instructor/courses/${examRef.courseId}/exams/${examRef.examId}`}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700"
+            title="Mở trang soạn đề này"
+          >
+            Sửa đề
+            <ExternalLink className="h-3 w-3" aria-hidden />
+          </Link>
+        )}
         {item.type === "exam_practice" && (
           <Link
             href={`${pathname}/bai-luyen/${item.id}`}

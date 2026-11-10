@@ -103,3 +103,14 @@
 - **Kiểm tra:** `tsc` sạch; web 219 file / 2510+ test (gồm `lessonFramePolicy.test.ts` 8 ca, `LessonFrameShell.test.tsx` 10 ca jsdom, `LessonFrame.test.tsx` viết lại); core-lms `lessonFrame.test.ts` (thêm `prev`). Xem trên trình duyệt (dev): khoá thường ở 1600 px (panel mở sẵn), 1400 px (đóng sẵn, mở ra 3 cột, tab Ghi chú), 375 px (khối thu gọn "Bài trong module", ngăn kéo, thanh đáy), khoá ngoại ngữ ("Unit", Bài luyện trong khung), công tắc `false` (quay về nút nổi cũ).
 - **Lỗi bắt được khi xem trình duyệt:** lớp `flex` của Tailwind đè thuộc tính `hidden` làm panel đóng vẫn hiện; đã sửa bằng lớp `hidden` theo trạng thái và có test.
 - **Chưa kiểm bằng mắt:** bài có bài giảng slide (ngoại lệ, đã có test điều kiện), chiếu lớp/giảng viên đứng lớp, và từng loại khối rộng (SCORM/H5P/LTI) trong cột hẹp; "Hỏi AI" bằng chuột phải thật (đã kiểm bằng test sự kiện).
+
+## Bổ sung 10/11/2026 — nút "Mục lục khoá học" trong khung 3 cột
+
+- Khung 3 cột chỉ liệt kê bài của unit/module hiện tại và ẩn nút mục lục nổi của giao diện cũ (`!lessonFrame`), nên học viên mất cách nhảy sang bài ở unit khác. Thêm nút chữ **"Mục lục khoá học"** ở **hàng đường dẫn** phía trên nội dung ("Học / Khoá / Unit / Bài"), căn phải (màn hẹp xuống dòng nhưng vẫn căn phải). Không đặt ở thanh bên: thầy nhận xét để cạnh danh sách bài của unit thì dễ lẫn hai loại mục lục.
+- Bấm nút mở đúng ngăn kéo "Mục lục bài học" toàn khoá đang có (`LessonTocDrawer`): module, bài, đã xong/đang khoá, bài đang xem tô sáng. Ngăn kéo trượt ra **từ bên phải**, cùng phía với nút (prop `side`, mặc định phải; từng thử từ trái khi nút ở thanh bên và thầy thấy lệch phía).
+- Dữ liệu: `LessonFrameLayout` nhận thêm `tocModules` (từ `progress.modules`); không truyền thì không có nút. Test: `LessonFrame.test.tsx` (nút có đúng 1 chỗ ở hàng đường dẫn, không nằm trong `aside`, không có khi không có dữ liệu). Đã xem trên trình duyệt ở ~826 px và 1200 px với tài khoản học viên demo.
+
+## Bổ sung 10/11/2026 — header bài học gọn hơn
+
+- Header trong khung 3 cột (thầy: "header 1.1 Vocabulary quá rộng, tối ưu không gian") trước gồm 4–5 hàng: nút "Về soạn nội dung", tên bài cỡ 3xl, dòng mô tả (hay trùng tên unit, vd. "Lifestyle"), hàng nút Slide/Nghe giảng, hàng thanh tiến độ. Nay còn **2 hàng**: (1) chip kỹ năng + tên bài (cỡ 2xl) bên trái, "Về soạn nội dung" bên phải; (2) nút Slide/Nghe giảng cùng hàng với thanh tiến độ và chip "Để hoàn thành bài". Mô tả trùng tên unit/module thì bỏ. Giao diện bài học ngoài khung giữ nguyên.
+

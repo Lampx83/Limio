@@ -13,6 +13,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import ExamRefPicker from "./ExamRefPicker";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { toast } from "@/lib/toast";
@@ -62,7 +63,8 @@ type ContentType =
   | "audio"
   | "vocab_list"
   | "dialogue"
-  | "exam_practice";
+  | "exam_practice"
+  | "exam_ref";
 
 interface Props {
   item: {
@@ -97,6 +99,7 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
       : null,
   );
   const [linkTitle, setLinkTitle] = useState<string>(String(initial.title ?? ""));
+  const [examRefId, setExamRefId] = useState<string | null>((initial.examId as string | null | undefined) ?? null);
   const [htmlBlockBody, setHtmlBlockBody] = useState<string>(
     String(initial.body ?? ""),
   );
@@ -274,6 +277,14 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         break;
       case "exam_practice":
         payload = { title: linkTitle.trim() || undefined };
+        break;
+      case "exam_ref":
+        if (!examRefId) {
+          setError("Chọn một đề thi để gắn vào bài.");
+          setBusy(false);
+          return;
+        }
+        payload = { examId: examRefId, title: linkTitle.trim() || undefined };
         break;
       case "scorm":
         payload = {
@@ -505,6 +516,19 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
 
       {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
       {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
+      {type === "exam_ref" && (
+        <div className="space-y-2">
+          <ExamRefPicker lessonId={lessonId} value={examRefId} onChange={setExamRefId} />
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề khối (không bắt buộc — mặc định là tên đề)"
+            className="input"
+            aria-label="Tiêu đề khối"
+          />
+        </div>
+      )}
       {type === "exam_practice" && (
         <input
           value={linkTitle}

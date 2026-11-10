@@ -113,7 +113,7 @@ export default function LessonContent({
   courseId?: string;
   lessonId?: string;
   /**
-   * Khối cần dữ liệu riêng của người xem (hiện chỉ "Bài luyện", exam_practice) do trang bài dựng sẵn rồi truyền
+   * Khối cần dữ liệu riêng của người xem ("Bài luyện" exam_practice và "Đề thi" exam_ref) do trang bài dựng sẵn rồi truyền
    * vào theo id khối. Khối loại này không có phần tử tương ứng thì không hiện gì (trang in, xem thử, người chưa ghi danh).
    */
   blocks?: Record<string, React.ReactNode>;
@@ -132,12 +132,12 @@ export default function LessonContent({
   return (
     <div className="space-y-6">
       {items.map((item) =>
-        item.type === "exam_practice" && !blocks?.[item.id] ? null : (
+        (item.type === "exam_practice" || item.type === "exam_ref") && !blocks?.[item.id] ? null : (
         // data-item-id: mốc neo ổn định giữa cửa sổ điều khiển và màn chiếu.
         // Không đánh theo thứ tự được — cửa sổ điều khiển có thêm các khối ghi
         // chú giảng viên xen giữa, nên khối thứ 3 ở hai bên là hai thứ khác nhau.
         <div key={item.id} data-item-id={item.id}>
-          {item.type === "exam_practice" ? (
+          {item.type === "exam_practice" || item.type === "exam_ref" ? (
             blocks?.[item.id]
           ) : (
             <ContentBlock

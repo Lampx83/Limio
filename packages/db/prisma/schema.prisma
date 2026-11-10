@@ -819,6 +819,9 @@ enum ContentType {
   // LANG đợt 3b — "Bài luyện": nhúng bài luyện đề (đoạn văn + câu hỏi, kiểm tra từng câu) của một đề thi thử cùng khoá
   // vào bài học. Payload { examId, title? }. Dùng bộ máy ExamPracticeSession; xem docs/tieu-chi/limio-language-hoc-vien-dot-3.md.
   exam_practice
+  // Khối "Đề thi": gắn một đề thi thử đã có của CHÍNH khoá vào bài học. Payload { examId (null sau khi nhân bản khoá), title? }.
+  // Học viên thấy thẻ Thi thử / Luyện đề như ở trang khoá; xem docs/tieu-chi/bai-hoc-gan-de-thi.md.
+  exam_ref
 }
 
 /// LANG G4 — lịch ôn flashcard của MỘT học viên cho MỘT dòng từ vựng. Chỉ có dòng

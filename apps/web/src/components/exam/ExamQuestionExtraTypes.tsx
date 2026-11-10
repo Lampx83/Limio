@@ -81,6 +81,8 @@ export function MatchingQuestion({
         onChange({ matched: Object.fromEntries(pairs.map((p) => [p.leftId, p.rightId])) });
       }}
       onBlur={noop}
+      // Đề thi/luyện đề đặt câu hỏi ở cột hẹp cạnh đoạn văn: kho thẻ nằm trên, ô ghép xếp thành một cột.
+      layout="stacked"
     />
   );
 }

@@ -15,12 +15,21 @@ export default function LessonTocDrawer({
   currentLessonId,
   modules,
   tooltipLabel = "Mục lục",
+  trigger = "fab",
+  side = "right",
 }: {
   slug: string;
   currentLessonId: string;
   modules: TocModule[];
   /** Tên hiện khi rê chuột vào nút — vd. "Mục lục khoá · bài 3/22". */
   tooltipLabel?: string;
+  /**
+   * "fab": nút tròn nổi bên phải (giao diện bài học cũ). "inline": nút chữ đặt tại chỗ (hàng đường dẫn của khung 3 cột, nơi cột nút
+   * nổi đã đầy); ngăn kéo mục lục toàn khoá giống hệt.
+   */
+  trigger?: "fab" | "inline";
+  /** Ngăn kéo trượt ra từ phía nào (cùng phía với nút). */
+  side?: "left" | "right";
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -51,6 +60,19 @@ export default function LessonTocDrawer({
       {/* Cùng cột nút nổi bên phải với Ghi chú / Trợ giảng AI / Bảng giảng
           viên (xem TeacherBar, LessonNotesDrawer, AiTutorPanel) — thấp nhất
           trong cột vì đây là điều hướng dùng đầu tiên khi vào bài. */}
+      {trigger === "inline" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Mục lục khoá học"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-brand-soft"
+        >
+          <List size={15} aria-hidden />
+          Mục lục khoá học
+        </button>
+      ) : (
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -62,6 +84,7 @@ export default function LessonTocDrawer({
         <List size={18} />
         <FabTip>{tooltipLabel}</FabTip>
       </button>
+      )}
 
       {/*
         Lớp phủ được portal thẳng ra <body>. Nút mở nằm trong thanh cố định
@@ -80,7 +103,10 @@ export default function LessonTocDrawer({
           aria-label="Mục lục bài học"
         >
           <aside
-            className="absolute right-0 top-0 flex h-full w-80 max-w-[88vw] flex-col border-l border-token bg-[rgb(var(--surface))] shadow-2xl"
+            // Ngăn kéo mở từ phía có nút (mặc định phải: nút nổi ở mép phải, nút chữ ở hàng đường dẫn căn phải).
+            className={`absolute top-0 flex h-full w-80 max-w-[88vw] flex-col border-token bg-[rgb(var(--surface))] shadow-2xl ${
+              side === "left" ? "left-0 border-r" : "right-0 border-l"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-token px-4 py-3">

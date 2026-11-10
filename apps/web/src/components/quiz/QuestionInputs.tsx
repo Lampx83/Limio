@@ -182,11 +182,17 @@ export function MatchingInput({
   answer,
   onChange,
   onBlur,
+  layout = "side",
 }: {
   question: Question;
   answer: AnswerState | undefined;
   onChange: (r: Response) => void;
   onBlur: () => void;
+  /**
+   * "side": hai cột cạnh nhau (kho thẻ bên phải) — hợp trang rộng như Quiz. "stacked": kho thẻ nằm trên, các ô ghép xếp thành một cột
+   * bên dưới, mỗi ô dùng hết bề ngang — hợp cột hẹp cạnh đoạn văn của đề thi/luyện đề (hai cột trong cột hẹp làm thẻ tràn ra khỏi ô).
+   */
+  layout?: "side" | "stacked";
 }) {
   const lefts = question.options.filter((o) => o.extra?.side === "left");
   const rights = question.options.filter((o) => o.extra?.side === "right");
@@ -285,27 +291,40 @@ export function MatchingInput({
       {/* Desktop: drag from right pool to left slots */}
       <div className="hidden md:block">
         <p className="mb-2 text-xs text-faint">
-          Kéo các thẻ bên phải thả vào ô trống tương ứng bên trái
+          {layout === "stacked" ? "Kéo các thẻ từ kho bên dưới thả vào ô trống tương ứng" : "Kéo các thẻ bên phải thả vào ô trống tương ứng bên trái"}
         </p>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-2 gap-4">
-            <ul className="space-y-2">
-              {lefts.map((l) => (
-                <MatchingLeftSlot
-                  key={l.id}
-                  leftId={l.id}
-                  leftLabel={l.label}
-                  assignedRight={
-                    byLeft.has(l.id)
-                      ? { id: byLeft.get(l.id)!, label: rightById.get(byLeft.get(l.id)!)?.label ?? "" }
-                      : null
-                  }
-                  onClear={() => clear(l.id)}
-                />
-              ))}
-            </ul>
-            <MatchingPool poolRights={poolRights} />
-          </div>
+          {(() => {
+            const slots = (
+              <ul className="space-y-2">
+                {lefts.map((l) => (
+                  <MatchingLeftSlot
+                    key={l.id}
+                    leftId={l.id}
+                    leftLabel={l.label}
+                    assignedRight={
+                      byLeft.has(l.id)
+                        ? { id: byLeft.get(l.id)!, label: rightById.get(byLeft.get(l.id)!)?.label ?? "" }
+                        : null
+                    }
+                    onClear={() => clear(l.id)}
+                    compact={layout === "stacked"}
+                  />
+                ))}
+              </ul>
+            );
+            return layout === "stacked" ? (
+              <div className="space-y-3">
+                <MatchingPool poolRights={poolRights} />
+                {slots}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {slots}
+                <MatchingPool poolRights={poolRights} />
+              </div>
+            );
+          })()}
         </DndContext>
       </div>
     </>
@@ -317,23 +336,30 @@ function MatchingLeftSlot({
   leftLabel,
   assignedRight,
   onClear,
+  compact = false,
 }: {
   leftId: string;
   leftLabel: string;
   assignedRight: { id: string; label: string } | null;
   onClear: () => void;
+  /** Cột hẹp: nhãn bên trái chỉ chiếm vừa chữ (tối đa 40%), ô thả dùng hết phần còn lại. */
+  compact?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `left:${leftId}` });
   return (
-    <li className="flex items-center gap-3">
+    <li className="flex items-center gap-2">
       <SafeHtml
         html={plainToRichHtml(leftLabel)}
-        className="prose prose-sm min-w-[6rem] max-w-none flex-1 text-sm font-medium dark:prose-invert"
+        className={`prose prose-sm max-w-none text-sm font-medium dark:prose-invert ${
+          compact ? "max-w-[40%] shrink-0" : "min-w-[6rem] flex-1"
+        }`}
       />
       <span className="text-faint">→</span>
       <div
         ref={setNodeRef}
-        className={`flex min-h-[44px] min-w-0 flex-[2] items-center justify-between gap-2 rounded-xl border-2 border-dashed p-2 transition-colors ${
+        className={`flex min-h-[44px] min-w-0 items-center justify-between gap-2 rounded-xl border-2 border-dashed p-2 transition-colors ${
+          compact ? "flex-1" : "flex-[2]"
+        } ${
           isOver
             ? "border-brand-500 bg-brand-soft"
             : assignedRight
@@ -347,7 +373,7 @@ function MatchingLeftSlot({
             <button
               type="button"
               onClick={onClear}
-              className="text-xs text-faint hover:text-brand-700"
+              className="shrink-0 px-1 text-xs text-faint hover:text-brand-700"
               aria-label="Bỏ chọn"
             >
               ✕
@@ -405,7 +431,7 @@ function MatchingDraggable({
       style={style}
       {...attributes}
       {...listeners}
-      className={`inline-flex cursor-grab touch-none items-center rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-sm shadow-sm transition-shadow hover:shadow active:cursor-grabbing ${
+      className={`inline-flex min-w-0 max-w-full cursor-grab touch-none items-center break-words rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-sm shadow-sm transition-shadow hover:shadow active:cursor-grabbing ${
         compact ? "" : ""
       }`}
     >

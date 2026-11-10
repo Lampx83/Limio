@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { LessonFrameData } from "@feedbackme/core-lms";
 
+vi.mock("next/navigation", () => ({ usePathname: () => "/learn/ielts/lessons/l2" }));
+
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
     <a href={href} {...rest}>
@@ -33,7 +35,12 @@ const frame = (o: Partial<LessonFrameData> = {}): LessonFrameData => ({
   ...o,
 });
 
-const render = (f = frame(), hasExams = false, levelLabel = "Unit", notesCount = 0) =>
+const TOC_MODULES = [
+  { id: "m1", title: "Unit 1", lessons: [{ id: "a1", title: "Bài mở đầu", completed: true }] },
+  { id: "m2", title: "Unit 2", lessons: [{ id: "l2", title: "Reading Skill", completed: false }] },
+];
+
+const render = (f = frame(), hasExams = false, levelLabel = "Unit", notesCount = 0, tocModules?: typeof TOC_MODULES) =>
   renderToStaticMarkup(
     <LessonFrameLayout
       slug="ielts"
@@ -44,6 +51,7 @@ const render = (f = frame(), hasExams = false, levelLabel = "Unit", notesCount =
       hasExams={hasExams}
       levelLabel={levelLabel}
       notesCount={notesCount}
+      tocModules={tocModules}
     >
       <main>NỘI DUNG BÀI</main>
     </LessonFrameLayout>,
@@ -57,6 +65,30 @@ describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
     expect(t).toContain("Endangered Species");
     expect(t).toContain("1 / 4 bài hoàn thành");
     expect(t).toContain("NỘI DUNG BÀI");
+  });
+
+  it("nút 'Mục lục khoá học' ở hàng đường dẫn (không nằm trong thanh bên của unit): có khi truyền dữ liệu khoá, không có khi không", () => {
+    const withToc = render(frame(), false, "Unit", 0, TOC_MODULES);
+    expect((text(withToc).match(/Mục lục khoá học/g) ?? []).length).toBe(1);
+    expect(withToc).toContain('aria-haspopup="dialog"');
+    // nút nằm cùng hàng với đường dẫn "Học / Khoá / …", không trong thanh bên (aside) và không trong khối thu gọn
+    const crumbsRow = withToc.match(/<div class="flex flex-wrap items-center justify-between[^>]*>[\s\S]*?<\/nav>[\s\S]*?Mục lục khoá học/);
+    expect(crumbsRow).not.toBeNull();
+    const aside = withToc.match(/<aside[\s\S]*?<\/aside>/)![0];
+    expect(aside).not.toContain("Mục lục khoá học");
+    expect(text(render())).not.toContain("Mục lục khoá học");
+  });
+
+  it("mọi dòng cùng độ đậm: bài đang xem không in đậm riêng (chữ đậm rộng hơn làm tên bài xuống dòng khác khi đổi bài)", () => {
+    const html = render();
+    const titleClasses = [...html.matchAll(/<span class="(block text-sm[^"]*)">/g)].map((m) => m[1]!);
+    expect(titleClasses.length).toBeGreaterThanOrEqual(4);
+    for (const c of titleClasses) {
+      expect(c).toContain("font-medium");
+      expect(c).not.toContain("font-semibold");
+    }
+    // vẫn phân biệt được bài đang xem: nền + vạch trái + aria-current
+    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*class="[^"]*border-brand-600 bg-brand-50|class="[^"]*border-brand-600 bg-brand-50[^"]*"[^>]*aria-current="page"/);
   });
 
   it("từng dòng: số phút chỉ khi có, trạng thái chữ cho bài đã xong/khoá, bài đang xem có aria-current", () => {
