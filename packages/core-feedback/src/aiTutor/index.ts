@@ -8,6 +8,7 @@ export * from "./lectureOutline";
 export * from "./lectureSlides";
 export * from "./lectureSlideEdit";
 export * from "./lessonOutline";
+export * from "./vandapPlan";
 export * from "./lessonWriter";
 export * from "./lectureSlideChat";
 export * from "./lectureLanguage";

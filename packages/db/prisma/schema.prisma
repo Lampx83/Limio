@@ -171,6 +171,7 @@ model User {
   ownedWhiteboards                   Whiteboard[]                       @relation("WhiteboardOwner")
   groupMemberships                   GroupMembership[]
   timerTemplates                     TimerTemplate[]
+  vanDapExams                        VanDapExam[]                       @relation("VanDapExamCreator")
   teachingActivityPlans              TeachingActivityPlan[]
   teachingActivityPlanCollaborations TeachingActivityPlanCollaborator[]
   teachingActivityPlanSaves          TeachingActivityPlanSave[]
@@ -541,6 +542,7 @@ model Course {
   timerTemplates        TimerTemplate[]
   exams                 Exam[]
   questionBanks         QuestionBank[]
+  vanDapExams           VanDapExam[]
   sections              CourseSection[]
   protectedMediaFiles   ProtectedMediaFile[]
   librarySaves          CourseSave[]
@@ -6259,6 +6261,133 @@ model ProtectedMediaFile {
 
   @@id([filename, courseId])
   @@index([courseId])
+}
+
+// =====================================================================
+// Limio Vấn đáp — làm lại vấn đáp AI, chạy SONG SONG bản cũ (docs/tieu-chi/limio-van-dap.md).
+// Không đụng Exam/OralExam*: bảng, route, trang và sự kiện `vandap.*` riêng.
+// Mỗi đầu vào chỉ có MỘT vai trò: tài liệu → nguồn sinh dàn; dàn (VanDapItem) → hỏi gì, thứ tự nào;
+// kịch bản (VanDapScenario) → hỏi trong bối cảnh nào; ghi chú giọng điệu → hỏi thế nào; rubric → chấm thế nào.
+// =====================================================================
+
+enum VanDapExamStatus {
+  draft
+  published
+  archived
+}
+
+enum VanDapLevel {
+  basic
+  intermediate
+  advanced
+}
+
+enum VanDapSessionStatus {
+  open
+  closed
+}
+
+model VanDapExam {
+  id                 String           @id @default(uuid())
+  title              String
+  // Null = đề độc lập, createdById là chủ duy nhất (cùng quy ước Exam.courseId).
+  courseId           String?
+  createdById        String
+  status             VanDapExamStatus @default(draft)
+  language           OralExamLanguage @default(vi)
+  durationMin        Int              @default(15)
+  // Hỏi THẾ NÀO — tối đa 500 ký tự (kiểm ở core-lms). Sửa được cả khi đã xuất bản.
+  toneNote           String?          @db.Text
+  // Chấm THẾ NÀO — không ảnh hưởng câu hỏi. Sửa được cả khi đã xuất bản.
+  rubricText         String?          @db.Text
+  // Prompt của đề vấn đáp cũ, chỉ để đối chiếu (khung chỉ đọc). KHÔNG BAO GIỜ đưa vào prompt của AI.
+  legacyPrompt       String?          @db.Text
+  // Không có khoá ngoại: đề cũ bị xoá thì bản sao vẫn sống.
+  importedFromExamId String?
+  publishedAt        DateTime?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  course    Course?          @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  createdBy User             @relation("VanDapExamCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  materials VanDapMaterial[]
+  items     VanDapItem[]
+  scenarios VanDapScenario[]
+  sessions  VanDapSession[]
+
+  @@index([createdById, createdAt])
+  @@index([courseId])
+}
+
+// Tài liệu = NGUỒN để sinh dàn, chỉ dùng lúc soạn đề. Lúc thi AI không tự tìm trong tài liệu.
+// Chỉ giữ phần chữ đã trích; đề sao chép từ bản cũ không có tệp đứng sau.
+model VanDapMaterial {
+  id            String   @id @default(uuid())
+  examId        String
+  title         String
+  mimeType      String?
+  sizeBytes     Int?
+  s3Key         String?
+  extractedText String   @db.Text
+  orderIndex    Int
+  uploadedById  String
+  uploadedAt    DateTime @default(now())
+
+  exam VanDapExam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([examId, orderIndex])
+}
+
+// "Ý cần hỏi" — HỎI GÌ, THỨ TỰ NÀO. orderIndex = thứ tự ưu tiên khi hỏi (hết giờ vẫn phủ được ý quan trọng).
+// expectedAnswer và sourceExcerpt KHÔNG BAO GIỜ có trong phản hồi dành cho học viên.
+model VanDapItem {
+  id             String      @id @default(uuid())
+  examId         String
+  orderIndex     Int
+  core           String      @db.Text
+  sourceExcerpt  String      @default("") @db.Text
+  level          VanDapLevel @default(intermediate)
+  expectedAnswer String      @default("") @db.Text
+  maxFollowUps   Int         @default(2)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  exam VanDapExam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([examId, orderIndex])
+}
+
+// Kịch bản = HỎI TRONG BỐI CẢNH NÀO. Dùng chung một dàn; không có dàn riêng.
+model VanDapScenario {
+  id           String   @id @default(uuid())
+  examId       String
+  orderIndex   Int
+  title        String
+  // Bối cảnh cho AI (có thể chứa dữ kiện chỉ AI biết) — không gửi cho học viên.
+  aiContext    String   @db.Text
+  // Thẻ "Tình huống của bạn" — phần học viên ĐƯỢC đọc.
+  studentBrief String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  exam VanDapExam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([examId, orderIndex])
+}
+
+// Buổi vấn đáp đang mở cho học viên vào bằng mã 6 ký tự (mở buổi: Mốc 2).
+model VanDapSession {
+  id         String              @id @default(uuid())
+  examId     String
+  title      String?
+  joinCode   String              @unique
+  status     VanDapSessionStatus @default(open)
+  openedById String
+  openedAt   DateTime            @default(now())
+  closedAt   DateTime?
+
+  exam VanDapExam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@index([examId, status])
 }
 
 // LANG đợt 2 — "Lưu" một giáo trình ở Thư viện giáo trình. Riêng tư: chỉ chính học viên thấy. Khoá chính

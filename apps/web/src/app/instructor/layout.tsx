@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NOINDEX } from "@/lib/seo";
 import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
-import { isCenterTeacher, isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
+import { isCenterTeacher, isFeatureEnabled, isInstructor, isResearcher, userIsAnyProctor } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import InstructorLeftMenu from "@/components/InstructorLeftMenu";
@@ -56,6 +56,15 @@ const getRecentCourseTitle = unstable_cache(
   { revalidate: 60 },
 );
 
+// Cờ thử nghiệm Limio Vấn đáp. Chưa seed cờ (máy chủ chưa chạy seed) thì coi như tắt, đừng làm hỏng cả khu giảng viên.
+async function isVanDapEnabled(userId: string): Promise<boolean> {
+  try {
+    return await isFeatureEnabled(userId, "van_dap.access");
+  } catch {
+    return false;
+  }
+}
+
 export default async function InstructorLayout({
   children,
 }: {
@@ -88,6 +97,7 @@ export default async function InstructorLayout({
   const teachingOnly = isTeachingOnly(session.user.roles ?? []);
   const recentCourseTitle = hasInstructorRole ? await getRecentCourseTitle(session.user.id) : null;
   const centerEnabled = hasInstructorRole || hasCenterTeacherRole ? await getInstructorCenterAccess(session.user.id) : false;
+  const vanDapEnabled = hasInstructorRole ? await isVanDapEnabled(session.user.id) : false;
 
   return (
     <ActiveNavSectionProvider>
@@ -100,6 +110,7 @@ export default async function InstructorLayout({
             isProctor={isProctor}
             isResearcher={hasResearcherRole}
             centerEnabled={centerEnabled}
+            vanDapEnabled={vanDapEnabled}
           />
           <div className="min-w-0 flex-1">
             <InstructorContentFrame>{children}</InstructorContentFrame>

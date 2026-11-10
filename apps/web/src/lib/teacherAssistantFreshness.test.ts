@@ -113,6 +113,7 @@ const MENU_NOT_IN_ASSISTANT: Record<string, string> = {
   "/instructor/analytics": "Chỉ dành cho nhà nghiên cứu, không hướng dẫn giảng viên thường.",
   "/me/ai-tokens": "Chỉ hiện khi quản trị viên mở trang; trợ lý không hứa với mọi giảng viên.",
   "/instructor/my-rooms": "Dành cho giám thị (người không dạy khoá nào).",
+  "/instructor/van-dap": "Limio Vấn đáp đang thử nghiệm, chỉ hiện với người được bật cờ van_dap.access; trợ lý chưa hứa với mọi giảng viên.",
 };
 
 const menuSource = fs.readFileSync(path.join(webSrc, "components/InstructorLeftMenu.tsx"), "utf8");

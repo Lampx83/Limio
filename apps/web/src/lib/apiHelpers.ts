@@ -260,6 +260,7 @@ export function mapKnownError(err: unknown): NextResponse | null {
               err.code === "exam_not_draft" ||
               err.code === "exam_not_oral" ||
               err.code === "exam_not_written" ||
+              err.code === "legacy_oral_disabled" ||
               err.code === "attempt_already_submitted" ||
               err.code === "attempt_limit_reached" ||
               err.code === "session_stale" ||

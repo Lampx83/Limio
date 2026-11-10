@@ -68,7 +68,7 @@ export function resolutionKind(r: JoinResolution): { kind: OnboardingCodeKind; e
 /** Tra một mã 6 ký tự trong mọi bảng mã học viên có thể nhận. Bản nháp/đã xoá coi như không tồn tại. */
 export async function findJoinMatches(code: string, db = prisma): Promise<JoinMatch[]> {
   if (code.length !== 6) return [];
-  const [section, examSession, exam, oral, game, live, slideCode, board, whiteboard] = await Promise.all([
+  const [section, examSession, exam, oral, vanDap, game, live, slideCode, board, whiteboard] = await Promise.all([
     db.courseSection.findUnique({
       where: { inviteCode: code },
       select: { name: true, isDefault: true, course: { select: { title: true, status: true } } },
@@ -81,6 +81,11 @@ export async function findJoinMatches(code: string, db = prisma): Promise<JoinMa
     db.examSession.findUnique({
       where: { oralJoinCode: code },
       select: { title: true, status: true, exam: { select: { title: true } } },
+    }),
+    // Limio Vấn đáp (bản làm lại, chạy song song vấn đáp cũ): bảng mã riêng, cùng bảng chữ 6 ký tự.
+    db.vanDapSession.findUnique({
+      where: { joinCode: code },
+      select: { title: true, status: true, exam: { select: { title: true, status: true } } },
     }),
     db.gameSession.findUnique({ where: { code }, select: { title: true, status: true } }),
     db.liveSession.findUnique({ where: { joinCode: code }, select: { endedAt: true, deck: { select: { title: true } } } }),
@@ -120,6 +125,15 @@ export async function findJoinMatches(code: string, db = prisma): Promise<JoinMa
       href: `/oral/${code}`,
       label: `Vấn đáp: ${oral.title ?? oral.exam.title}`,
       ended: oral.status === "closed" || oral.status === "archived",
+    });
+  }
+  // Đề chưa xuất bản coi như không tồn tại (cùng quy ước với bản nháp của các loại khác).
+  if (vanDap && vanDap.exam.status === "published") {
+    out.push({
+      kind: "van_dap",
+      href: `/van-dap/${code}`,
+      label: `Limio Vấn đáp: ${vanDap.title ?? vanDap.exam.title}`,
+      ended: vanDap.status === "closed",
     });
   }
   if (game) {

@@ -12,7 +12,9 @@ import {
   VIRTUAL_LECTURER_MODE_LABELS,
   getVirtualLecturerSettings,
 } from "@feedbackme/core-lms";
+import { getLegacyOralReadiness } from "@feedbackme/core-lms";
 import SettingsClient from "./SettingsClient";
+import LegacyOralSwitch from "./LegacyOralSwitch";
 import VirtualLecturerSettings from "./VirtualLecturerSettings";
 
 const MODE_HINTS: Record<(typeof VIRTUAL_LECTURER_MODES)[number], string> = {
@@ -25,7 +27,7 @@ const MODE_HINTS: Record<(typeof VIRTUAL_LECTURER_MODES)[number], string> = {
 export const revalidate = 30;
 
 export default async function AdminSettingsPage() {
-  const [paymentEnabled, registerEnabled, footer, bank, signatureUrl, signatureMeta, virtualLecturer] =
+  const [paymentEnabled, registerEnabled, footer, bank, signatureUrl, signatureMeta, virtualLecturer, legacyOral] =
     await Promise.all([
       getPaymentEnabled(),
       getRegisterEnabled(),
@@ -34,6 +36,7 @@ export default async function AdminSettingsPage() {
       getLimioSignatureUrl(),
       getLimioSignatureMeta(),
       getVirtualLecturerSettings(),
+      getLegacyOralReadiness(),
     ]);
 
   return (
@@ -66,6 +69,8 @@ export default async function AdminSettingsPage() {
         }))}
         lecturers={VIRTUAL_LECTURERS.map((l) => ({ code: l.code, name: l.name }))}
       />
+
+      <LegacyOralSwitch initial={legacyOral} />
     </div>
   );
 }

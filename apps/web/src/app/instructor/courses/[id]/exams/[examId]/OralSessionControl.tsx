@@ -72,7 +72,13 @@ export default function OralSessionControl({
     const data = await res.json().catch(() => ({}));
     setBusy(false);
     if (!res.ok) {
-      setError(typeof data?.error === "string" ? data.error : "Không thực hiện được.");
+      setError(
+        data?.error === "legacy_oral_disabled"
+          ? "Vấn đáp AI bản này đã ngừng mở buổi mới. Đóng buổi và xem kết quả cũ vẫn được."
+          : typeof data?.error === "string"
+            ? data.error
+            : "Không thực hiện được.",
+      );
       if (Array.isArray(data?.details?.errors)) setDetails(data.details.errors);
       return;
     }

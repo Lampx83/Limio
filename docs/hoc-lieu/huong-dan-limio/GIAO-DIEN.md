@@ -649,7 +649,7 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
 ## 13. Vấn đáp AI (mới)
 
 Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral-exams`, "Phòng vấn đáp AI").
-1. Bấm "Tạo đề vấn đáp mới" (`/instructor/oral-exams/new`; trong menu Limio gọi "Soạn đề vấn đáp"). Chọn "Khoá
+1. Bấm "Tạo đề vấn đáp mới" (`/instructor/oral-exams/new`; giao diện không có nút nào tên "Soạn đề vấn đáp"). Chọn "Khoá
    học (tuỳ chọn)", mặc định "Không gắn khoá học (đề độc lập)" (vào bằng mã).
 2. Biểu mẫu: "Tiêu đề"; "Trả lời bằng" (Gõ văn bản / Giọng nói); "Ngôn ngữ hỏi-đáp" (Tiếng Việt / English /
    Tiếng Trung, **không đổi được sau khi tạo**); "Hướng dẫn phong cách hỏi cho AI giám khảo"; "Mô tả — hiện cho
@@ -658,7 +658,9 @@ Cần quyền `ai_oral.access`. Menu → "Phòng vấn đáp" (`/instructor/oral
    "Số lượt tối đa mỗi sinh viên", điểm tính lượt cao nhất). Thời lượng **không còn ở biểu mẫu** (nhập lúc mở
    buổi). Bấm "Lưu và tiếp tục".
 3. Đề có tab "Tổng quan" / "Tài liệu" / "Tổ chức thi" (không có tab Nội dung). Tab **"Tài liệu"**: "Tải file
-   lên" (PDF, .docx, .txt, .md, tối đa 20 MB) hoặc "Nhập danh sách chủ đề"; cần ít nhất 1 tài liệu trước khi mở;
+   lên" (mở khung nhỏ: "Tiêu đề", chọn tệp PDF/.docx/.txt/.md tối đa 20 MB, rồi **phải bấm "Tải lên"** trong khung)
+   hoặc "Nhập danh sách chủ đề" (khung "Tiêu đề" + "Nội dung", bấm "Lưu"). Nút "Tiếp tục" cuối tab chỉ chuyển sang
+   tab "Tổ chức thi", không lưu tệp đang chọn dở (chưa bấm "Tải lên" thì vẫn báo chưa có tài liệu); cần ít nhất 1 tài liệu trước khi mở;
    trạng thái "Đã nhúng" / "Nhúng ngay"; mở buổi rồi thì khoá, không sửa tài liệu. Tuỳ chọn "Chủ đề giao cho
    từng sinh viên" (chia đều chủ đề).
 4. **Rubric:** không còn tải lên như tài liệu. Nhập ở trang **"Chấm vấn đáp"** → dòng "Rubric chấm điểm:" với

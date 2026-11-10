@@ -15,6 +15,7 @@ import {
   CourseAuthzError,
   getIntegrationSecret,
   IntegrationError,
+  isLegacyOralDisabled,
 } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { requireUserId } from "@/lib/session";
@@ -40,6 +41,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   });
   if (!exam) return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
   if (exam.kind !== "oral") return NextResponse.json({ error: "exam_not_oral" }, { status: 400 });
+  if (await isLegacyOralDisabled()) return NextResponse.json({ error: "legacy_oral_disabled" }, { status: 409 });
   try {
     await assertCanEditExam(userId, exam);
   } catch (e) {
@@ -122,12 +124,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   let audioChunks: string[] = [];
   let contentType = "audio/mpeg";
   try {
-    const tts = await (await resolveTextToSpeech(openai))(turnResult.assistantContent);
+    const tts = await (await resolveTextToSpeech(openai, exam.language))(turnResult.assistantContent);
     audioChunks = tts.audioChunks.map((b) => b.toString("base64"));
     contentType = tts.contentType;
   } catch (e) {
     // Như bản thật: lỗi đọc thành tiếng thì vẫn trả chữ, không làm hỏng lượt.
     if (!isTtsProviderError(e)) throw e;
+    // Không nuốt im: lỗi đọc thành tiếng là lý do duy nhất khiến vấn đáp giọng nói "không có tiếng".
+    console.warn("[oral-exam] TTS thất bại, trả chữ không kèm tiếng:", (e as { details?: unknown }).details ?? e);
   }
 
   return NextResponse.json({

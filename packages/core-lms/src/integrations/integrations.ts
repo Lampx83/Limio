@@ -100,6 +100,9 @@ export const INTEGRATION_KEYS = [
   "neutts.base_url",
   "neutts.api_key",
   "neutts.voice",
+  // Giọng NEU quyết định ngôn ngữ đọc: đề tiếng Trung/Anh dùng giọng riêng, không dùng giọng Việt ở trên.
+  "neutts.voice_zh",
+  "neutts.voice_en",
   // Limio-Live: tìm trang trên internet khi soạn bài giảng từ mô tả chủ đề (apps/web/src/lib/webSearch.ts).
   "websearch.tavily",
 ] as const;
@@ -188,6 +191,10 @@ function envFallbackName(key: string): string | null {
       return "NEUTTS_API_KEY";
     case "neutts.voice":
       return "NEUTTS_VOICE";
+    case "neutts.voice_zh":
+      return "NEUTTS_VOICE_ZH";
+    case "neutts.voice_en":
+      return "NEUTTS_VOICE_EN";
     case "websearch.tavily":
       return "TAVILY_API_KEY";
     default:

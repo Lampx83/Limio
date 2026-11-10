@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import NeuApiTester from "./NeuApiTester";
 import { formatDateTime } from "@/lib/datetime";
@@ -61,6 +61,16 @@ const LABELS: Record<
     placeholder: "baotrang",
     help: "Một trong: baotrang, giahuy, hamy, huuduc, kimoanh, maichi, quangminh, tiendat. Bỏ trống = baotrang.",
   },
+  "neutts.voice_zh": {
+    name: "Giọng tiếng Trung",
+    placeholder: "",
+    help: "Giọng đọc cho đề vấn đáp tiếng Trung. Bỏ trống = hệ thống lấy giọng tiếng Trung đầu tiên NEU trả về.",
+  },
+  "neutts.voice_en": {
+    name: "Giọng tiếng Anh",
+    placeholder: "",
+    help: "Giọng đọc cho đề vấn đáp tiếng Anh. Bỏ trống = hệ thống lấy giọng tiếng Anh đầu tiên NEU trả về.",
+  },
   "websearch.tavily": {
     name: "Tavily API key (tìm trên internet)",
     placeholder: "tvly-...",
@@ -99,9 +109,9 @@ const GROUPS: Record<
     testEndpoint: "/api/admin/integrations/vbee/test",
   },
   neutts: {
-    name: "NEU TTS — đọc giọng tiếng Việt (vấn đáp)",
-    help: "Khi đã nhập Base URL, luồng vấn đáp đọc bằng NEU TTS thay cho OpenAI. Để trống Base URL = dùng OpenAI TTS.",
-    keys: ["neutts.base_url", "neutts.api_key", "neutts.voice"],
+    name: "NEU TTS — đọc giọng vấn đáp (Việt, Trung, Anh)",
+    help: "Khi đã nhập Base URL, luồng vấn đáp đọc bằng NEU TTS thay cho OpenAI. Mỗi ngôn ngữ của đề dùng giọng của ngôn ngữ đó. Để trống Base URL = dùng OpenAI TTS.",
+    keys: ["neutts.base_url", "neutts.api_key", "neutts.voice", "neutts.voice_zh", "neutts.voice_en"],
     embedsTester: true,
   },
   vnpay: {
@@ -307,6 +317,25 @@ function IntegrationField({
   const [busy, setBusy] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [showInput, setShowInput] = useState(!status.hasValue);
+  // Giọng tiếng Trung/Anh: danh sách giọng lấy từ NEU, lọc theo ngôn ngữ của ô này.
+  const voiceLang = status.key === "neutts.voice_zh" ? "zh" : status.key === "neutts.voice_en" ? "en" : null;
+  const [langVoices, setLangVoices] = useState<string[] | null>(null);
+  useEffect(() => {
+    if (!voiceLang) return;
+    let cancelled = false;
+    fetch(apiUrl("/api/admin/integrations/neutts/voices"), { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { ok?: boolean; voices?: Array<{ voice: string; language: string }> }) => {
+        if (cancelled || !j.ok) return;
+        const list = (j.voices ?? []).filter((v) => v.language === voiceLang).map((v) => v.voice);
+        setLangVoices(list);
+        setValue((cur) => cur || list[0] || "");
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [voiceLang]);
 
   async function save() {
     if (!value.trim()) return;
@@ -400,6 +429,14 @@ function IntegrationField({
               className="input font-mono"
             >
               {NEU_TTS_VOICES.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          ) : voiceLang && langVoices && langVoices.length > 0 ? (
+            <select value={value} onChange={(e) => setValue(e.target.value)} className="input font-mono">
+              {langVoices.map((v) => (
                 <option key={v} value={v}>
                   {v}
                 </option>

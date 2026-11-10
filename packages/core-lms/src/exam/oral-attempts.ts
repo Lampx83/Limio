@@ -6,6 +6,7 @@ import { assertCanEditExam } from "../courses/authz";
 import { assertEligibleForExam } from "./cohorts";
 import { publishExam } from "./exams";
 import { isSessionOpen } from "./session-window";
+import { assertLegacyOralEnabled, isLegacyOralDisabled } from "./legacy-oral-switch";
 import { pickOralTopicForAttempt } from "./oral-topics";
 import { ExamError } from "./types";
 
@@ -138,6 +139,8 @@ export async function startOralExamAttempt(
   }
   if (decision === "limit_reached") throw new ExamError("attempt_limit_reached");
   if (decision === "already_submitted") throw new ExamError("attempt_already_submitted");
+  // Sau các nhánh "resume": lượt đang làm dở luôn được làm nốt, chỉ lượt MỚI mới bị chặn khi bản cũ đã tắt.
+  await assertLegacyOralEnabled(db);
 
   const attemptId = randomUUID();
   const durationSec = eligibility.durationSec;
@@ -212,6 +215,7 @@ export async function openOralExamSession(
   if (!exam) throw new ExamError("exam_not_found");
   await assertCanEditExam(actorUserId, exam, db);
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
+  await assertLegacyOralEnabled(db);
 
   const wasDraft = exam.status === "draft";
   if (wasDraft) {
@@ -384,7 +388,8 @@ export async function resolveOralJoinCode(
     examTitle: session.exam.title,
     courseTitle: session.exam.course?.title ?? null,
     courseSlug: session.exam.course?.slug ?? null,
-    isOpen: isSessionOpen(session, new Date()),
+    // Bản cũ đã tắt thì mã không còn vào được: hiện "đã đóng" thay vì để học viên bấm vào rồi mới báo lỗi.
+    isOpen: isSessionOpen(session, new Date()) && !(await isLegacyOralDisabled(db)),
   };
 }
 
@@ -436,6 +441,7 @@ export async function joinOralSessionByCode(
   }
   if (decision === "limit_reached") throw new ExamError("attempt_limit_reached");
   if (decision === "already_submitted") throw new ExamError("attempt_already_submitted");
+  await assertLegacyOralEnabled(db);
 
   const attemptId = randomUUID();
   const durationSec = (session.durationOverrideMin ?? session.exam.durationMin) * 60;
