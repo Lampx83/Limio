@@ -110,6 +110,29 @@ describe("listMockExamsForLearner", () => {
     expect((await listMockExamsForLearner(c.learnerId, c.courseId))[0]!.attempt).toBeNull();
   });
 
+  it("trạng thái LUYỆN ĐỀ tách khỏi lượt thi thử: chưa luyện → đang luyện dở (x/y câu) → số buổi đã xong; chỉ của chính học viên", async () => {
+    const c = await setupCourse("practice");
+    const examId = await makeExam(c, "Thi thử");
+    await enrollInCourse(c.learnerId, c.courseId);
+    const other = await registerUser({ email: "mc-l2-practice@e.com", password: "password1234", displayName: "L2" }, BASE);
+    await enrollInCourse(other.userId, c.courseId);
+    const get = async () => (await listMockExamsForLearner(c.learnerId, c.courseId))[0]!;
+
+    expect((await get()).practice).toEqual({ inProgress: null, completedCount: 0 });
+
+    const scope = { sectionIds: [], questionIds: ["q1", "q2", "q3"], filter: "all" };
+    const open = await prisma.examPracticeSession.create({ data: { examId, userId: c.learnerId, status: "in_progress", scope } });
+    await prisma.examPracticeSession.create({ data: { examId, userId: c.learnerId, status: "completed", scope, completedAt: new Date() } });
+    await prisma.examPracticeSession.create({ data: { examId, userId: c.learnerId, status: "abandoned", scope } });
+    await prisma.examPracticeSession.create({ data: { examId, userId: other.userId, status: "completed", scope, completedAt: new Date() } });
+
+    const card = await get();
+    expect(card.practice).toEqual({ inProgress: { sessionId: open.id, answered: 0, total: 3 }, completedCount: 1 });
+    // Luyện đề không đụng tới trạng thái thi thử.
+    expect(card.attempt).toBeNull();
+    expect(card.attemptCount).toBe(0);
+  });
+
   it("khoá không có đề thi thử → mảng rỗng", async () => {
     const c = await setupCourse("empty");
     await enrollInCourse(c.learnerId, c.courseId);

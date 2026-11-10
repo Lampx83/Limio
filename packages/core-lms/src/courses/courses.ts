@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
-import { RoleName } from "@feedbackme/shared-types";
+import { COURSE_COVER_PATH_PREFIX, LIBRARY_TEXT_MAX, RoleName } from "@feedbackme/shared-types";
 import { logAudit } from "../auth/audit";
 import { isAdmin } from "../auth/roles";
 import { uniqueCourseSlug } from "./slug";
@@ -14,6 +14,31 @@ import {
   isAutoLessonSkillCode,
 } from "./autoTags";
 
+/**
+ * `coverUrl` hợp lệ: ảnh đã tải lên (đường dẫn nội bộ, một cấp, ký tự an toàn) hoặc URL http(s) tuyệt đối (khoá cũ nhập tay).
+ * Không nhận scheme khác (javascript:, data:, ftp:) và không nhận thoát thư mục.
+ */
+export function isAllowedCoverUrl(v: string): boolean {
+  if (v.startsWith(COURSE_COVER_PATH_PREFIX)) return /^[A-Za-z0-9._-]+$/.test(v.slice(COURSE_COVER_PATH_PREFIX.length)) && !v.includes("..");
+  try {
+    const u = new URL(v);
+    return u.protocol === "https:" || u.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+const coverUrlField = z.string().max(500).refine(isAllowedCoverUrl, "coverUrl không hợp lệ");
+
+/** Thông tin sách (nhà xuất bản, tác giả, lần xuất bản): cắt khoảng trắng, rỗng = xoá (null), tối đa LIBRARY_TEXT_MAX ký tự. */
+const bookTextField = z
+  .string()
+  .trim()
+  .max(LIBRARY_TEXT_MAX)
+  .transform((s) => (s === "" ? null : s))
+  .nullable()
+  .optional();
+
 export const CreateCourseInput = z.object({
   title: z.string().min(1).max(200).trim(),
   description: z.string().min(1).max(20_000).trim(),
@@ -26,7 +51,7 @@ export const CreateCourseInput = z.object({
   language: z.string().min(2).max(10).optional(),
   level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
   category: z.string().max(80).optional(),
-  coverUrl: z.string().url().max(500).optional(),
+  coverUrl: coverUrlField.optional(),
   personalizationEnabled: z.boolean().optional(),
   languageMode: z.boolean().optional(),
   enrollMode: z.enum(["open", "invite_only"]).optional(),
@@ -38,7 +63,10 @@ export const UpdateCourseInput = z.object({
   language: z.string().min(2).max(10).optional(),
   level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
   category: z.string().max(80).optional().nullable(),
-  coverUrl: z.string().url().max(500).optional().nullable(),
+  coverUrl: coverUrlField.optional().nullable(),
+  publisher: bookTextField,
+  authors: bookTextField,
+  edition: bookTextField,
   priceCents: z.number().int().min(0).optional().nullable(),
   currency: z.enum(["VND", "USD"]).optional(),
   personalizationEnabled: z.boolean().optional(),

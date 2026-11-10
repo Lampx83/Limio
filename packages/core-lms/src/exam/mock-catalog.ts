@@ -3,7 +3,7 @@ import { isUserEnrolled } from "../learning/enroll";
 import { ExamError } from "./types";
 
 /**
- * LANG G5c — mục "Luyện thi" trên trang khoá: các đề thi thử đã xuất bản của khoá,
+ * LANG G5c — khối "Thi thử" (trước là "Luyện thi") trên trang khoá: các đề thi thử đã xuất bản của khoá,
  * kèm cấu trúc các phần và trạng thái của chính học viên. Trước đây học viên không
  * có đường nào vào đề thi từ trang khoá (chỉ qua link giảng viên gửi).
  */
@@ -19,6 +19,16 @@ export interface MockExamCard {
   attempt: { attemptId: string; status: string; submittedAt: Date | null; scorePct: number | null } | null;
   /** Số lượt đã làm (kể cả lượt đang dở). */
   attemptCount: number;
+  /**
+   * Trạng thái LUYỆN ĐỀ của chính học viên (bảng ExamPracticeSession, tách khỏi lượt thi thử). Không có điểm:
+   * luyện đề không phải điểm số.
+   */
+  practice: {
+    /** Buổi luyện đang dở (mỗi đề tối đa một); answered/total = số câu đã trả lời / số câu đã chốt của buổi. */
+    inProgress: { sessionId: string; answered: number; total: number } | null;
+    /** Số buổi đã hoàn thành. */
+    completedCount: number;
+  };
 }
 
 export async function listMockExamsForLearner(
@@ -61,7 +71,24 @@ export async function listMockExamsForLearner(
     counts.set(a.examId, (counts.get(a.examId) ?? 0) + 1);
   }
 
+  // Buổi luyện đề của học viên. Lỗi ở đây không được làm mất cả danh sách đề: coi như chưa luyện.
+  const examIds = exams.map((e) => e.id);
+  const [practiceOpen, practiceDone] = await Promise.all([
+    db.examPracticeSession
+      .findMany({
+        where: { userId, examId: { in: examIds }, status: "in_progress" },
+        select: { id: true, examId: true, scope: true, _count: { select: { answers: true } } },
+      })
+      .catch(() => []),
+    db.examPracticeSession
+      .groupBy({ by: ["examId"], where: { userId, examId: { in: examIds }, status: "completed" }, _count: { _all: true } })
+      .catch(() => []),
+  ]);
+  const openByExam = new Map(practiceOpen.map((p) => [p.examId, p]));
+  const doneByExam = new Map(practiceDone.map((p) => [p.examId, p._count._all]));
+
   return exams.map((e) => {
+    const open = openByExam.get(e.id);
     const sections = e.sections.map((s) => ({
       title: s.title,
       languageSkill: s.languageSkill,
@@ -77,6 +104,16 @@ export async function listMockExamsForLearner(
       sections,
       attempt: a ? { attemptId: a.id, status: a.status, submittedAt: a.submittedAt, scorePct: a.scorePct } : null,
       attemptCount: counts.get(e.id) ?? 0,
+      practice: {
+        inProgress: open
+          ? {
+              sessionId: open.id,
+              answered: open._count.answers,
+              total: ((open.scope as { questionIds?: unknown[] } | null)?.questionIds ?? []).length,
+            }
+          : null,
+        completedCount: doneByExam.get(e.id) ?? 0,
+      },
     };
   });
 }

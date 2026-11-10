@@ -19,6 +19,9 @@ export const LIBRARY_FOCUS_LABEL: Record<LibraryFocusTag, string> = {
 export const LIBRARY_FOCUS_MAX = 6;
 export const LIBRARY_TEXT_MAX = 120;
 
+/** Đường dẫn công khai của ảnh bìa khoá tải lên từ máy (route `/api/course-covers/[file]`); dùng chung cho kiểm đầu vào và phục vụ tệp. */
+export const COURSE_COVER_PATH_PREFIX = "/api/course-covers/";
+
 /** Thứ tự các mức CEFR. */
 export const CEFR_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 export type CefrLevel = (typeof CEFR_LEVELS)[number];
