@@ -10,14 +10,12 @@ import {
   getPersonalizationReadiness,
   isResearcher,
   isCourseOwner,
-  getCourseLibraryState,
 } from "@feedbackme/core-lms";
 import { ArrowLeft, Eye, Presentation } from "lucide-react";
 import { auth } from "@/lib/auth";
 import CourseMetaForm from "./CourseMetaForm";
 import AccessCodesPanel from "./AccessCodesPanel";
 import ProtectedMediaPanel from "./ProtectedMediaPanel";
-import LibraryMetaPanel from "./LibraryMetaPanel";
 import PersonalizationReadinessPanel from "./PersonalizationReadinessPanel";
 import LessonSection from "./LessonSection";
 import ModuleSection from "./ModuleSection";
@@ -136,8 +134,6 @@ export default async function InstructorCourseEditPage({
   if (!canAccess) redirect("/instructor/courses");
   // AC1 tự học cá nhân hoá — bảng "Sẵn sàng" và cờ khoá bán cho cảnh báo lúc Publish. Chỉ người sửa được khoá.
   const readiness = canEdit ? await getPersonalizationReadiness(userId, course.id) : null;
-  // LANG đợt 2 — thông tin Thư viện giáo trình: chỉ chủ khoá/admin, và chỉ ở khoá bật chế độ ngoại ngữ.
-  const libraryState = isOwner && course.languageMode ? await getCourseLibraryState(course.id) : null;
   const protectedMediaFiles = course.protectedMedia
     ? await prisma.protectedMediaFile.count({ where: { courseId: course.id } })
     : 0;
@@ -393,12 +389,6 @@ export default async function InstructorCourseEditPage({
                 <AccessCodesPanel courseId={course.id} />
               </section>
             )}
-
-          {libraryState && (
-            <section>
-              <LibraryMetaPanel courseId={course.id} initial={libraryState} />
-            </section>
-          )}
 
           {isOwner && (
             <section>

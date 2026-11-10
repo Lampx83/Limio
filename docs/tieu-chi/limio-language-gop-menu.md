@@ -13,13 +13,13 @@ Hệ thống đang có ba tên: Limio thường, tính năng trung tâm, Limio L
 
 **Quyết định (thầy chốt 10/11/2026):**
 1. Gộp thành **một menu học viên có điều kiện**; bỏ thẻ "Limio Language" xanh chanh và nút "Về Limio"; nhận diện Language chỉ còn ở **khung bài học** và các trang `/language/*`.
-2. **"Thư viện giáo trình" nằm cạnh "Danh mục khoá học"** trong nhóm "Khám phá", hiện cho mọi học viên.
+2. ~~"Thư viện giáo trình" nằm cạnh "Danh mục khoá học"~~ — **bỏ khỏi menu (thầy chốt cuối 10/11/2026):** Danh mục khoá học đã đủ cho việc tìm khoá. Trang `/language/thu-vien` và ô "Thư viện giáo trình" của giảng viên vẫn còn nhưng không có liên kết dẫn tới từ menu.
 3. **Bỏ trang "Lộ trình của tôi"** (kể cả khối "Tiến độ theo kỹ năng" theo %, vì chỉ là tỷ lệ bài đã hoàn thành).
 4. **Tạm bỏ "Lịch ôn tập" khỏi menu.** Nhóm "Ngoại ngữ" vì thế không còn mục nào và bị bỏ.
 
 ## Phạm vi
 
-- **Có:** (A) một menu học viên duy nhất, thêm "Thư viện giáo trình" vào nhóm "Khám phá"; (B) một hàm dựng dữ liệu menu dùng chung cho ba chỗ gắn menu (sửa luôn lỗi ngăn kéo trang bài học); (C) bỏ chế độ "vỏ" (cookie, route đổi chế độ, dấu hiệu ở header); (D) khung bài học Language bật theo **khoá**, không theo chế độ; (E) bỏ trang Lộ trình và xử lý `/language`; (F) dọn mã thừa, cập nhật test và tài liệu.
+- **Có:** (A) một menu học viên duy nhất (mục "Thư viện giáo trình" từng nằm trong nhóm "Khám phá", đã bỏ cuối ngày); (B) một hàm dựng dữ liệu menu dùng chung cho ba chỗ gắn menu (sửa luôn lỗi ngăn kéo trang bài học); (C) bỏ chế độ "vỏ" (cookie, route đổi chế độ, dấu hiệu ở header); (D) khung bài học Language bật theo **khoá**, không theo chế độ; (E) bỏ trang Lộ trình và xử lý `/language`; (F) dọn mã thừa, cập nhật test và tài liệu.
 - **Không đổi schema, không migration, không thêm sự kiện.**
 - **Giữ nguyên, chỉ không gắn vào menu ("tạm bỏ"):** trang `/language/lich-on-tap`, component `ReviewSchedule`, `getFlashcardSchedule`, `getPracticeReviewSummary`, bộ lọc `?filter=wrong` của trang luyện đề, và cầu nối Bài luyện → nhãn kỹ năng của đợt 4 (sự kiện `exam.practice.observed`, BKT). Đây là chức năng nền và dữ liệu đang chạy, không phải menu; muốn bật lại chỉ cần thêm một mục menu.
 - **Không làm:** làm lại `/me/lich-hoc` và `/me/muc-tieu` theo tông Language; vỏ giảng viên Language; thương hiệu theo tên miền riêng (chỉ giữ phép viết lại `/` → `/language` của `LANGUAGE_HOST`, xem AC5); đổi cách trung tâm bật tính năng (`centerEnabled`, cờ `center.access`, lớp có lịch).
@@ -37,19 +37,18 @@ Hệ thống đang có ba tên: Limio thường, tính năng trung tâm, Limio L
 Tiếp tục học (như cũ)
 Học tập      Khoá học của tôi · Lịch học* · Mục tiêu* · Ghi chú · Kỹ năng · Huy hiệu · e-Portfolio của tôi
 Phản hồi     Chấm bài bạn học
-Khám phá     Danh mục khoá học · Thư viện giáo trình · Đấu trường · Bảng xếp hạng
+Khám phá     Danh mục khoá học · Đấu trường · Bảng xếp hạng
 Tài khoản    Token AI* · Cài đặt
 ```
 
 Dấu `*` là mục có điều kiện.
 
-- **"Thư viện giáo trình"** (`/language/thu-vien`, biểu tượng thư viện như Figma) nằm ngay sau "Danh mục khoá học", hiện cho **mọi học viên đã đăng nhập**, không cần có khoá ngoại ngữ.
+- **Không có mục menu riêng cho Limio Language** (ban đầu có "Thư viện giáo trình" trong nhóm "Khám phá", thầy bỏ cuối 10/11/2026): khoá ngoại ngữ tìm ở "Danh mục khoá học". Trang `/language/thu-vien` còn truy cập được bằng địa chỉ trực tiếp.
 - **Không còn** nhóm "Ngoại ngữ", mục "Lộ trình của tôi" và mục "Đã lưu & ghi chú" (chỉ còn "Ghi chú", `/me/notes`).
 - **Lịch học** hiện khi học viên đang học ở lớp có lịch (`getLearnerCenterAccess`, như cũ).
 - **Mục tiêu** hiện khi học viên học ở lớp có lịch **hoặc đang có một mục tiêu đang theo đuổi** (thầy chốt 10/11/2026), xem AC2b. Token AI theo điều kiện mở khoá như cũ.
 - Điều kiện chỉ ẩn/hiện ở giao diện, **không** đổi quyền truy cập các trang dữ liệu riêng.
 - Nhóm gập được và nhớ trạng thái gập như các nhóm khác; không dùng lại khoá `fbm-language-menu-collapsed`.
-- Mục "Thư viện giáo trình" sáng ở `/language/thu-vien` và trang con của nó.
 
 ## AC2b — Mục "Mục tiêu" hiện theo mục tiêu, không chỉ theo lớp có lịch
 
@@ -96,7 +95,7 @@ Lý do: thẻ "Mục tiêu của bạn" của trang Lộ trình (bị bỏ) và 
 
 ## AC7 — Kiểm thử và tài liệu
 
-- **Test bảng cho menu** (hàm thuần): học viên thường; học viên lớp có lịch (Lịch học + Mục tiêu); học viên không có lớp lịch nhưng có mục tiêu đang theo đuổi (chỉ Mục tiêu); học viên chỉ còn mục tiêu đã đóng (không có cả hai); có/không mở khoá Token AI; mỗi trường hợp khẳng định đúng tập `href` hiện ra và đúng thứ tự (kiểm "Thư viện giáo trình" luôn có, ngay sau "Danh mục khoá học").
+- **Test bảng cho menu** (hàm thuần): học viên thường; học viên lớp có lịch (Lịch học + Mục tiêu); học viên không có lớp lịch nhưng có mục tiêu đang theo đuổi (chỉ Mục tiêu); học viên chỉ còn mục tiêu đã đóng (không có cả hai); có/không mở khoá Token AI; mỗi trường hợp khẳng định đúng tập `href` hiện ra và đúng thứ tự (kiểm nhóm Khám phá chỉ có Danh mục khoá học, Đấu trường, Bảng xếp hạng).
 - Test điều kiện `languageSkin` không còn phụ thuộc cookie (đặt cookie `limio_app=language` hay không đều cho cùng kết quả).
 - Test trang `/language`: khách thấy giới thiệu; học viên chuyển về `/me/dashboard`; giảng viên chuyển về trang của họ.
 - Test cổng vào `/me/muc-tieu`: vào được khi lớp có lịch hoặc có mục tiêu đang theo đuổi; chuyển về `/me/dashboard` khi không có cả hai.
@@ -106,7 +105,7 @@ Lý do: thẻ "Mục tiêu của bạn" của trang Lộ trình (bị bỏ) và 
 
 ## Đã chốt
 
-1. "Thư viện giáo trình" hiện cùng "Danh mục khoá học" trong nhóm "Khám phá", cho mọi học viên.
+1. ~~"Thư viện giáo trình" hiện cùng "Danh mục khoá học"~~ — đã bỏ khỏi menu (xem Quyết định 2).
 2. Bỏ trang "Lộ trình của tôi" (và khối 4 kỹ năng theo %).
 3. Tạm bỏ "Lịch ôn tập" khỏi menu (giữ mã và dữ liệu).
 4. Mục "Mục tiêu" hiện khi học viên học ở lớp có lịch **hoặc đang có một mục tiêu** (AC2b); "Lịch học" vẫn chỉ theo lớp có lịch.
@@ -119,10 +118,22 @@ Lý do: thẻ "Mục tiêu của bạn" của trang Lộ trình (bị bỏ) và 
 
 ## Đã làm (10/11/2026)
 
-- **Menu:** `StudentLeftMenu` là menu duy nhất; `visibleStudentMenuGroups` (hàm thuần, có test) áp điều kiện: Lịch học theo lớp có lịch, **Mục tiêu theo lớp có lịch hoặc có mục tiêu đang theo đuổi**, "Thư viện giáo trình" trong nhóm Khám phá. Đã xoá `LanguageLeftMenu` (+ test), `lib/languageMenu.ts` (+ test), nút "Về Limio", trang "Lộ trình của tôi" (`LearnerPath` + test). `lib/learnerRole.ts` (`isLearnerRole`) thay `languageShellIsLearner`.
+- **Menu:** `StudentLeftMenu` là menu duy nhất; `visibleStudentMenuGroups` (hàm thuần, có test) áp điều kiện: Lịch học theo lớp có lịch, **Mục tiêu theo lớp có lịch hoặc có mục tiêu đang theo đuổi**, (sau đó đã bỏ mục "Thư viện giáo trình" khỏi menu, xem "Cập nhật cuối ngày"). Đã xoá `LanguageLeftMenu` (+ test), `lib/languageMenu.ts` (+ test), nút "Về Limio", trang "Lộ trình của tôi" (`LearnerPath` + test). `lib/learnerRole.ts` (`isLearnerRole`) thay `languageShellIsLearner`.
 - **Dữ liệu menu dùng chung:** `lib/studentMenuContext.ts` (`getStudentMenuContext`), gọi từ `app/me/layout.tsx`, `app/learn/[slug]/layout.tsx`, `app/language/layout.tsx`. Sửa lỗi ngăn kéo trang bài học trước đây không có Lịch học/Mục tiêu. `core-lms`: `learnerHasActiveGoal` (+ test); `lib/centerAccess.ts`: `getLearnerGoalsAccess` (cache 30 giây); `/me/muc-tieu` dùng cùng điều kiện.
 - **Bỏ vỏ:** xoá `lib/appMode*`, `GET /api/app-mode` (trả 404), cookie `limio_app`; header không còn nhãn "Language", tagline "Speak in Flow", nút lối vào; Đấu trường luôn hiện. `LANGUAGE_HOST` chỉ còn viết lại `/` → `/language` (`lib/languageHost.ts`, có test). `learnerHasLanguageCourses` đã xoá.
 - **Khung bài học theo khoá:** `languageSkin` không còn đọc cookie. Liên kết "Về lộ trình" của khung bài học, "Học" ở đường dẫn và "Mở lộ trình giáo trình" ở thẻ Đang học đổi sang trang khoá / `/me/dashboard`.
 - **`/language`:** khách thấy trang giới thiệu; học viên chuyển về `/me/dashboard`; giảng viên/admin về trang của họ. `/language/lich-on-tap` còn truy cập được bằng địa chỉ trực tiếp, không có liên kết dẫn tới.
 - **Kiểm tra:** web 218 file / 2518 test, core-lms (goals, overview) 34 test, `tsc` sạch ở web và core-lms. Xem trên bản dev bằng tài khoản Học viên Language: `/language` → `/me/dashboard`; menu có Mục tiêu (không có Lịch học), "Thư viện giáo trình" sáng ở Thư viện; bài học ngoại ngữ vẫn có khung Language khi không có cookie; khách thấy giới thiệu, `/api/app-mode` 404, không đặt cookie.
 - **Chưa kiểm bằng mắt / chưa có test tự động:** cổng vào `/me/muc-tieu` (chỉ phủ gián tiếp qua test `learnerHasActiveGoal` và test menu); học viên lớp có lịch thật (cần dữ liệu lớp); giảng viên vào `/language` (đường chuyển hướng giữ nguyên mã cũ).
+
+### Cập nhật cuối ngày 10/11/2026
+Sau khi commit `d47fbd94`, thầy bỏ mục "Thư viện giáo trình" khỏi menu học viên (Danh mục khoá học đã đủ) và bỏ ô tích "Đưa vào Thư viện giáo trình" của giảng viên (AC9). Menu học viên không còn mục nào của Limio Language; trang Thư viện và API vẫn còn nhưng không có lối vào.
+
+## AC9 — Bỏ ô tích "Đưa vào Thư viện giáo trình" của giảng viên (thầy chốt cuối ngày 10/11/2026)
+
+Thầy bỏ mục menu "Thư viện giáo trình" của học viên, rồi quyết định **giữ nguyên tính năng Thư viện ở đó và chỉ bỏ ô của giáo viên**, để không ai đưa khoá vào một thư viện mà học viên không còn lối vào. (Có lúc định bỏ hẳn Thư viện; đã hoàn tác theo ý thầy, dev DB đã được phục hồi.)
+
+- **Xoá:** `LibraryMetaPanel` (ô "Thư viện giáo trình" với ô tích và các ô nhà xuất bản, tác giả, ấn bản, trình độ, kỹ năng) và chỗ gắn nó ở trang khoá của giảng viên (`getCourseLibraryState` không còn được trang gọi).
+- **Sửa tài liệu cho khớp giao diện:** hướng dẫn Lily (mục "Bài luyện trong bài học") bỏ các câu dạy tick "Đưa vào Thư viện giáo trình" và "Cho xem thử" gắn với thư viện; `GIAO-DIEN.md` bỏ mục "Thư viện giáo trình" của giảng viên.
+- **Giữ nguyên:** trang `/language/thu-vien` và các component, `PUT /api/courses/[id]/library`, `POST/DELETE /api/library/saves`, `core-lms/language/library.ts`, 6 cột thư viện của `Course` và bảng `CourseSave`, sự kiện `library.*`. Khi không còn ô nào bật `inLibrary` thì thư viện luôn trống và không có liên kết dẫn tới; muốn bật lại chỉ cần thêm lại ô giảng viên và mục menu.
+- **Không** có migration mới: migration `20261109100000_language_library` giữ nguyên.

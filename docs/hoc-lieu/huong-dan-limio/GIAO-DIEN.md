@@ -633,17 +633,6 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   các câu luyện lần gần nhất làm sai ("Làm lại") và gợi ý bài nên luyện. Học viên ở vỏ Limio thường thấy một thẻ dẫn sang trang luyện đề của đề đó. Khi nhân đôi
   cả khoá, khối "Bài luyện" **không** được chép sang (đề thuộc khoá gốc), thầy/cô thêm lại ở khoá mới; nhân đôi một
   bài trong cùng khoá thì giữ.
-- **Thư viện giáo trình** (LANG đợt 2, mới; đã đối chiếu mã 2026-11-09): ở tab Tổng quan của khoá bật "Chế độ
-  ngoại ngữ", **chỉ chủ khoá và admin** thấy mục **"Thư viện giáo trình"** (đồng giảng viên không thấy): ô
-  "Đưa vào Thư viện giáo trình", các ô "Nhà xuất bản", "Tác giả", "Ấn bản", hai ô chọn mức "Trình độ từ" và
-  "Đến" (CEFR A1–C2; một mức hoặc một khoảng như B1–B2), nhóm "Kỹ năng trọng tâm" (Đọc, Nghe, Nói, Viết, Ngữ
-  pháp, Từ vựng), nút "Lưu thông tin". Khoá chỉ hiện ở thư viện khi **đã xuất bản** và **cho ghi danh tự do**
-  (khoá chỉ vào bằng link mời không đưa vào được); mục này báo rõ khi khoá đã bật nhưng chưa hiện và vì sao. Học
-  viên mở thư viện từ menu "Thư viện giáo trình" của Limio Language: tìm theo tên/tác giả/nhà xuất bản, lọc nhà
-  xuất bản, trình độ, kỹ năng, bấm "Lưu" để xem lại ở tab "Đã lưu", "Preview" để xem thử. **"Preview" chỉ mở
-  được các bài thầy/cô đã đặt "Cho xem thử"** (menu "⋮" của bài); khoá không có bài xem thử thì thẻ không có nút
-  Preview. Thẻ không cấp quyền học: học viên chưa ghi danh bấm vào tên giáo trình để sang trang giới thiệu, mua
-  hoặc nhập mã như mọi khoá khác.
 - **Thi thử** (HSK, IELTS, TOEIC, Tuỳ chỉnh): trang đề thi của khoá (`/instructor/courses/{id}/exams/new`) có
   "Tạo đề thi thử từ khung" — chọn khung, nhập "Tiêu đề đề thi", "Tạo đề". Tab Nội dung của đề có khối "Đề thi
   thử (HSK · IELTS · TOEIC…)" (giờ riêng từng phần, không quay lại phần đã nộp), hai công tắc "Cho thi thử" và

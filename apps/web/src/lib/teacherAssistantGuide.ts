@@ -286,13 +286,13 @@ export const GUIDES: readonly GuideEntry[] = [
   },
   {
     id: "giao-trinh-bai-luyen",
-    title: "Thư viện giáo trình và Bài luyện trong bài học (Limio Language)",
-    keywords: ["thư viện giáo trình", "giáo trình", "nhà xuất bản", "tác giả", "ấn bản", "xem thử", "bài luyện", "đề thi thử trong bài", "câu hỏi trong bài", "đoạn văn", "đọc hiểu", "kiểm tra câu", "chia đôi"],
+    title: "Bài luyện trong bài học (Limio Language)",
+    keywords: ["giáo trình", "bài luyện", "đề thi thử trong bài", "câu hỏi trong bài", "đoạn văn", "đọc hiểu", "kiểm tra câu", "chia đôi"],
     destinationIds: ["my_courses", "exams"],
-    body: `Để học viên làm câu hỏi ngay trong bài, thầy/cô tạo đề thi thử theo khung và xuất bản đề ở mục Đề thi, rồi trong bài bấm "+ Thêm hoạt động/tài nguyên", chọn "Bài luyện" và chọn "Đề thi thử" đó; học viên ở Limio Language làm ngay trong bài, đoạn văn bên cạnh câu hỏi, bấm "Kiểm tra câu n" để thấy đúng sai và giải thích. Bài luyện không vào sổ điểm nhưng lần kiểm tra đầu của mỗi câu được tính vào nhãn kỹ năng của bài (khoá bật cá nhân hoá). Muốn học viên tìm thấy khoá như một giáo trình, chủ khoá (đồng giảng viên không thấy mục này) vào tab Tổng quan, mục "Thư viện giáo trình", tick "Đưa vào Thư viện giáo trình", điền "Nhà xuất bản", "Tác giả", "Ấn bản", chọn trình độ và "Kỹ năng trọng tâm" rồi bấm "Lưu thông tin". Khoá chỉ hiện ở thư viện khi đã xuất bản và cho ghi danh tự do, khoá chỉ vào bằng link mời thì không đưa vào được. Học viên chỉ xem thử được những bài thầy/cô đã đặt "Cho xem thử" trong menu của bài.`,
+    body: `Để học viên làm câu hỏi ngay trong bài, thầy/cô tạo đề thi thử theo khung và xuất bản đề ở mục Đề thi, rồi trong bài bấm "+ Thêm hoạt động/tài nguyên", chọn "Bài luyện" và chọn "Đề thi thử" đó; học viên ở Limio Language làm ngay trong bài, đoạn văn bên cạnh câu hỏi, bấm "Kiểm tra câu n" để thấy đúng sai và giải thích. Bài luyện không vào sổ điểm nhưng lần kiểm tra đầu của mỗi câu được tính vào nhãn kỹ năng của bài (khoá bật cá nhân hoá).`,
     useCases: [
       `Dạy một bài đọc hiểu, thầy/cô nhúng đề thi thử có đoạn văn và 5 câu hỏi vào đúng bài để học viên đọc rồi kiểm tra từng câu ngay trên trang.`,
-      `Thầy/cô dùng một giáo trình in sẵn, nên đưa khoá vào Thư viện giáo trình kèm nhà xuất bản và tác giả để học viên tìm, lưu và xem thử vài bài đầu trước khi ghi danh.`,
+      `Bài nghe của một unit cần kiểm tra ngay sau khi học viên nghe xong, nên thầy/cô nhúng đề thi thử phần Nghe vào bài đó để học viên làm và xem giải thích từng câu tại chỗ.`,
     ],
   },
   {

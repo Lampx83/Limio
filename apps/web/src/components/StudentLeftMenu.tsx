@@ -20,7 +20,6 @@ import {
   PlayCircle,
   Coins,
   FolderOpen,
-  Library,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -79,8 +78,6 @@ const GROUPS: Group[] = [
     label: "Khám phá",
     items: [
       { label: "Danh mục khoá học", href: "/catalog", icon: Compass, tourId: "help-tour-nav-catalog" },
-      // Limio Language: lối khám phá giáo trình ngoại ngữ, hiện cho mọi học viên (không cần đã có khoá ngoại ngữ).
-      { label: "Thư viện giáo trình", href: "/language/thu-vien", icon: Library },
       { label: "Đấu trường", href: "/tournaments", icon: Trophy, tourId: "help-tour-nav-tournaments" },
       { label: "Bảng xếp hạng", href: "/leaderboard", icon: BarChart3, tourId: "help-tour-nav-leaderboard" },
     ],
