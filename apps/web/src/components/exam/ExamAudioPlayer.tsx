@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Volume2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { audioPlayView, type ExamAudioPolicy } from "@/lib/examAudio";
+import AudioTranscript from "./AudioTranscript";
 
 /** Bối cảnh audio của một bài đọc/nghe trong đề thi thử; không có (null) = trình phát gốc. */
 export interface ExamAudioContextValue {
@@ -47,7 +48,8 @@ export default function ExamAudioPlayer({ src, alt }: { src: string; alt?: strin
         <audio src={src} controls preload="metadata" className="w-full">
           <track kind="captions" />
         </audio>
-        {alt && <p className="mt-1 text-xs text-faint">🎵 {alt}</p>}
+        {alt && <p className="mt-1 text-xs text-faint">{alt}</p>}
+        <AudioTranscript src={src} />
       </div>
     );
   }
@@ -147,7 +149,8 @@ export default function ExamAudioPlayer({ src, alt }: { src: string; alt?: strin
           {error}
         </p>
       )}
-      {alt && <p className="mt-1 text-xs text-faint">🎵 {alt}</p>}
+      {alt && <p className="mt-1 text-xs text-faint">{alt}</p>}
+      <AudioTranscript src={src} />
     </div>
   );
 }

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { PASSAGE_FONT_SIZE_VALUES } from "@/lib/passageFontSizes";
 import { passageHighlightColor, passageTextColor } from "@/lib/passageColors";
+import AudioTranscript, { AudioTranscriptContext } from "./AudioTranscript";
+import PassageImage from "./PassageImage";
 import ExamAudioPlayer, { ExamAudioContext, type ExamAudioContextValue } from "./ExamAudioPlayer";
 
 export interface TiptapDoc {
@@ -11,7 +13,13 @@ export interface TiptapDoc {
 }
 
 interface Props {
-  passage: { id: string; title: string; contentJson: TiptapDoc };
+  passage: {
+    id: string;
+    title: string;
+    contentJson: TiptapDoc;
+    /** Transcript các audio của đoạn (tên tệp → chữ). Chỉ truyền ở chế độ cho phép xem; lượt thi thử đang làm thì không bao giờ có. */
+    transcripts?: Record<string, string>;
+  };
   attemptId: string;
   /** G5b — đề thi thử: giới hạn lượt nghe. Không truyền = trình phát gốc như cũ. */
   audio?: Omit<ExamAudioContextValue, "attemptId" | "passageId">;
@@ -58,6 +66,7 @@ export default function PassageView({ passage, attemptId, audio }: Props) {
 
   return (
     <ExamAudioContext.Provider value={audioCtx}>
+    <AudioTranscriptContext.Provider value={passage.transcripts ?? null}>
     <div>
       {/* Tiêu đề bài đọc: cỡ lớn, đậm, kèm vạch nhấn màu thương hiệu ngắn bên dưới (kiểu tiêu đề báo/sách), tách khỏi phần thân. */}
       <header className="mb-4">
@@ -78,6 +87,7 @@ export default function PassageView({ passage, attemptId, audio }: Props) {
         />
       </details>
     </div>
+    </AudioTranscriptContext.Provider>
     </ExamAudioContext.Provider>
   );
 }
@@ -154,9 +164,7 @@ function RenderNode({ node }: { node: ElementNode }) {
       const src = node.attrs?.src as string | undefined;
       const alt = node.attrs?.alt as string | undefined;
       if (!src) return null;
-      return (
-        <img src={src} alt={alt ?? ""} className="rounded border border-default" />
-      );
+      return <PassageImage src={src} alt={alt} />;
     }
     case "audio": {
       const src = node.attrs?.src as string | undefined;
@@ -194,9 +202,10 @@ function RenderNode({ node }: { node: ElementNode }) {
           )}
           {alt && (
             <p className="mt-1 text-xs text-faint" aria-label="Video description">
-              🎬 {alt}
+              {alt}
             </p>
           )}
+          <AudioTranscript src={src} kind="video" />
         </div>
       );
     }
@@ -285,7 +294,7 @@ function resolveVideoEmbed(src: string): VideoEmbed {
   }
 
   // Direct file
-  if (/\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(src)) {
+  if (/\.(mp4|webm|mov|m4v|ogv|mkv)(\?|#|$)/i.test(src)) {
     return { kind: "file", url: src };
   }
 

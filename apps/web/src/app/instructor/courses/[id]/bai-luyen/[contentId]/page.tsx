@@ -45,10 +45,6 @@ export default async function PracticeEditorPage({ params }: { params: { id: str
           <Eye size={14} aria-hidden /> Xem trước
         </Link>
       </header>
-      <p className="text-meta mt-3 max-w-2xl text-muted">
-        Đưa đoạn văn hoặc bài nghe lên, rồi thêm câu hỏi cho từng đoạn. Học viên đọc hoặc nghe, trả lời và bấm “Kiểm tra câu n” để biết
-        đúng sai ngay trong bài; phần “Giải thích đáp án” của mỗi câu hiện ra sau khi kiểm tra. Mọi thay đổi được lưu ngay khi bấm Lưu.
-      </p>
       <PracticeEditor
         examId={data.examId}
         sectionId={data.sectionId}

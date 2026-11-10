@@ -1761,7 +1761,7 @@ function VideoUploadPanel({
             {f.note && <span className="text-muted"> ({f.note})</span>}
           </span>
         ))}
-        <span className="text-faint">· tối đa 500 MB</span>
+        <span className="text-faint">· tối đa 100 MB</span>
       </div>
     </div>
   );

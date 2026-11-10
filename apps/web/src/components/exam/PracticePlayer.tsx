@@ -24,6 +24,7 @@ interface PPassage {
   id: string;
   title: string;
   contentJson: { type: "doc"; content: unknown[] };
+  transcripts?: Record<string, string>;
 }
 interface PAnswer {
   questionId: string;

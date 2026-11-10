@@ -29,7 +29,7 @@ export default async function PracticeSessionPage({ params }: { params: { slug: 
         languageSkill: q.languageSkill,
         config: q.config,
       }))}
-      passages={s.passages.map((p) => ({ id: p.id, title: p.title, contentJson: p.contentJson as unknown as { type: "doc"; content: unknown[] } }))}
+      passages={s.passages.map((p) => ({ id: p.id, title: p.title, contentJson: p.contentJson as unknown as { type: "doc"; content: unknown[] }, transcripts: p.transcripts }))}
       initialAnswers={s.answers}
     />
   );
