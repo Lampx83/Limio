@@ -1314,6 +1314,27 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   cursor: col-resize;
 }
 
+/* Bài luyện nhúng trong trang bài học: cỡ chữ ngang phần nội dung và mục tiêu của bài (≈ 1.25rem), không nhỏ hơn hẳn như `prose-sm` của
+   phòng thi. Chỉ áp trong `.lp-large` (khối Bài luyện của trang bài học), không đụng phòng thi/luyện đề. */
+.lp-large .prose-sm {
+  font-size: 1.25rem;
+  line-height: 1.75;
+}
+.lp-large [id^="lp-"] .text-sm,
+.lp-large [id^="lp-"] input,
+.lp-large [id^="lp-"] textarea {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.lp-large [id^="lp-"] .text-xs {
+  font-size: 0.9375rem;
+}
+/* Ô tick/chọn nằm giữa dòng đầu của lựa chọn: dòng cao 1.8rem, ô cao 1rem nên cách đỉnh 0.52rem (đo trên màn: ngang tâm chữ; mặc định `mt-1` chỉ khớp chữ nhỏ). */
+.lp-large [id^="lp-"] label > input[type="radio"],
+.lp-large [id^="lp-"] label > input[type="checkbox"] {
+  margin-top: 0.52rem;
+}
+
 /* Thẻ audio/video trong trình soạn Đoạn văn (lib/passageDoc.ts): khối không sửa chữ được, chọn rồi xoá như một phần tử. */
 .passage-media-chip {
   @apply my-2 flex items-center gap-2 rounded-lg border border-token px-3 py-2 text-sm;

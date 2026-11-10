@@ -18,6 +18,9 @@ import {
 import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "@/components/exam/ExamQuestion";
 import PassageView from "@/components/exam/PassageView";
 import { QuestionCard } from "@/components/exam/AnswerReview";
+import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
+import EssayFeedback from "./EssayFeedback";
+import { essayFeedbackEnabled, essayVoiceEnabled, parseFeedback, type FeedbackView } from "@/lib/practiceEssayView";
 
 interface CheckResult {
   isCorrect: boolean | null;
@@ -25,6 +28,9 @@ interface CheckResult {
   maxScore: number;
   manual: boolean;
   config: unknown;
+  /** Câu mở: góp ý AI (bỏ toạ độ và số mục bị lọc ở máy chủ) hoặc mã ngắn vì sao chưa có. */
+  feedback?: unknown;
+  feedbackError?: string;
 }
 
 type SaveState = "idle" | "saving" | "saved" | "error";
@@ -39,6 +45,13 @@ const err = {
 function explanationOf(config: unknown): string | null {
   const e = (config as { explanation?: unknown } | null)?.explanation;
   return typeof e === "string" && e.trim() ? e.trim() : null;
+}
+
+/** Bỏ khoá `qid` khỏi một bản đồ theo câu (không đổi tham chiếu nếu khoá không có). */
+function without<T>(m: Record<string, T>, qid: string): Record<string, T> {
+  if (!(qid in m)) return m;
+  const { [qid]: _gone, ...rest } = m;
+  return rest;
 }
 
 /**
@@ -73,6 +86,20 @@ export default function LessonPractice({
   const [checks, setChecks] = useState<Record<string, CheckResult>>({});
   // Câu đã kiểm tra ở lần mở trước: kết quả không được lưu phía trình duyệt, nên nạp lại từ máy chủ khi mở bài.
   const [restoring, setRestoring] = useState<Set<string>>(() => new Set(embed.answers.filter((a) => a.checked).map((a) => a.questionId)));
+  // Câu mở: góp ý AI hiện có (khôi phục từ máy chủ khi mở lại bài), lý do chưa có góp ý, và bản ghi âm của học viên
+  // (số lần ghi: 0 = chưa ghi; dùng làm tham số chống bộ nhớ đệm của trình phát).
+  const [feedbacks, setFeedbacks] = useState<Record<string, FeedbackView>>(() => {
+    const out: Record<string, FeedbackView> = {};
+    for (const a of embed.answers) {
+      const f = parseFeedback(a.aiFeedback);
+      if (f) out[a.questionId] = f;
+    }
+    return out;
+  });
+  const [feedbackErrors, setFeedbackErrors] = useState<Record<string, string>>({});
+  const [audioVer, setAudioVer] = useState<Record<string, number>>(() =>
+    Object.fromEntries(embed.answers.filter((a) => a.hasAudio).map((a) => [a.questionId, 1])),
+  );
   const [busyCheck, setBusyCheck] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +112,12 @@ export default function LessonPractice({
   const checkInit: RequestInit = lessonId
     ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ lessonId }) }
     : { method: "POST" };
+  // Nạp lại kết quả khi mở bài: báo máy chủ đây không phải lần bấm "Kiểm tra" mới, để không tự gọi AI (góp ý đã lưu nằm trong embed).
+  const restoreInit: RequestInit = {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ...(lessonId ? { lessonId } : {}), restore: true }),
+  };
   const sessionRef = useRef<string | null>(embed.sessionId);
   const startingRef = useRef<Promise<string> | null>(null);
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -153,7 +186,7 @@ export default function LessonPractice({
     (async () => {
       for (const qid of ids) {
         try {
-          const res = await fetch(apiUrl(`/api/practice-sessions/${embed.sessionId}/check/${qid}`), checkInit);
+          const res = await fetch(apiUrl(`/api/practice-sessions/${embed.sessionId}/check/${qid}`), restoreInit);
           if (res.ok && !cancelled) {
             const data = (await res.json().catch(() => null)) as CheckResult | null;
             if (data) setChecks((p) => ({ ...p, [qid]: data }));
@@ -172,14 +205,50 @@ export default function LessonPractice({
   }, []);
 
   function onChange(qid: string, v: AnswerValue) {
+    // Câu mở còn bản ghi âm: chữ sửa tay vẫn là bản chữ của lời nói, nên giữ cờ `viaVoice` để tiêu chí Lưu loát còn được xét.
+    if (qid in audioVer && qById.get(qid)?.type === "essay" && v && "text" in v) v = { ...v, viaVoice: true } as AnswerValue;
     setAnswers((p) => ({ ...p, [qid]: v }));
-    setChecks((p) => {
-      if (!(qid in p)) return p;
-      const { [qid]: _gone, ...rest } = p; // sửa đáp án → phải kiểm tra lại (hành vi của luyện đề)
-      return rest;
-    });
+    setChecks((p) => without(p, qid)); // sửa đáp án → phải kiểm tra lại (hành vi của luyện đề)
+    setFeedbacks((p) => without(p, qid)); // góp ý AI của câu trả lời cũ không còn đúng
+    setFeedbackErrors((p) => without(p, qid));
     clearTimeout(timers.current[qid]);
     timers.current[qid] = setTimeout(() => void save(qid, v), 500);
+  }
+
+  /**
+   * Dùng bản ghi âm làm câu trả lời: máy chủ chuyển chữ, lưu bản ghi và câu trả lời (đã xoá kết quả kiểm tra và góp ý cũ),
+   * rồi trả bản chữ để điền vào ô. Ném `VoiceUseError(mã)` để ô giọng nói hiện lời nhắn đúng; ô gõ vẫn dùng được.
+   */
+  async function useVoice(qid: string, file: File): Promise<void> {
+    if (preview) throw new VoiceUseError("preview");
+    let sid: string;
+    try {
+      sid = await ensureSession();
+    } catch {
+      throw new VoiceUseError("network");
+    }
+    const form = new FormData();
+    form.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(apiUrl(`/api/practice-sessions/${sid}/voice/${qid}`), { method: "POST", body: form });
+    } catch {
+      throw new VoiceUseError("network");
+    }
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as { error?: unknown } | null;
+      throw new VoiceUseError(typeof j?.error === "string" ? j.error : "failed");
+    }
+    const data = (await res.json().catch(() => null)) as { text?: unknown } | null;
+    if (typeof data?.text !== "string" || data.text.trim() === "") throw new VoiceUseError("no_speech");
+    clearTimeout(timers.current[qid]); // chữ gõ dở chưa kịp lưu không được ghi đè bản chữ vừa lưu
+    setAnswers((p) => ({ ...p, [qid]: { text: data.text as string, viaVoice: true } as AnswerValue }));
+    setChecks((p) => without(p, qid));
+    setFeedbacks((p) => without(p, qid));
+    setFeedbackErrors((p) => without(p, qid));
+    setAudioVer((p) => ({ ...p, [qid]: (p[qid] ?? 0) + 1 }));
+    setSaveState("saved");
+    setError(null);
   }
 
   async function check(qid: string) {
@@ -202,6 +271,11 @@ export default function LessonPractice({
       }
       const data = (await res.json()) as CheckResult;
       setChecks((p) => ({ ...p, [qid]: data }));
+      if (data.manual) {
+        const f = parseFeedback(data.feedback);
+        setFeedbacks((p) => (f ? { ...p, [qid]: f } : without(p, qid)));
+        setFeedbackErrors((p) => (data.feedbackError && !f ? { ...p, [qid]: data.feedbackError } : without(p, qid)));
+      }
     } catch {
       setError(err.check);
     } finally {
@@ -233,6 +307,9 @@ export default function LessonPractice({
     setSessionId(null);
     setAnswers({});
     setChecks({});
+    setFeedbacks({});
+    setFeedbackErrors({});
+    setAudioVer({});
     setResult(null);
     setStepIdx(0);
     setSaveState("idle");
@@ -290,6 +367,9 @@ export default function LessonPractice({
     const value = answers[qid] ?? null;
     const res = checks[qid];
     const explanation = res ? explanationOf(res.config) : null;
+    const isEssay = q.type === "essay";
+    const aiOn = isEssay && essayFeedbackEnabled(q.config);
+    const hasRecording = (audioVer[qid] ?? 0) > 0;
     return (
       <div key={qid} id={`lp-${qid}`} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -302,23 +382,36 @@ export default function LessonPractice({
           )}
         </div>
         <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} />
+        {isEssay && essayVoiceEnabled(q.config) && (
+          <EssayVoiceAnswer
+            preview={preview}
+            recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
+            viaVoiceText={!!value && "viaVoice" in value && (value as { viaVoice?: unknown }).viaVoice === true}
+            hasText={isAnswered(value)}
+            onUse={(file) => useVoice(qid, file)}
+          />
+        )}
         {embed.checkEnabled && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            {!res ? <span className="text-caption text-muted">Bạn có thể đổi đáp án trước khi kiểm tra.</span> : <span />}
+            {!res ? (
+              <span className="text-caption text-muted">
+                {aiOn && !preview ? "Khi bấm Kiểm tra, câu trả lời của bạn được gửi tới AI để nhận xét." : "Bạn có thể đổi đáp án trước khi kiểm tra."}
+              </span>
+            ) : (
+              <span />
+            )}
             <button
               type="button"
               onClick={() => void check(qid)}
               disabled={!isAnswered(value) || busyCheck === qid || restoring.has(qid)}
               className="btn-primary btn-sm disabled:opacity-50"
             >
-              {busyCheck === qid ? "Đang kiểm tra…" : `Kiểm tra câu ${n}`}
+              {busyCheck === qid ? (aiOn && !preview ? "Đang nhận xét…" : "Đang kiểm tra…") : `Kiểm tra câu ${n}`}
             </button>
           </div>
         )}
         {res && res.manual && (
-          <p className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-            Câu tự luận không kiểm tra tự động được. Hãy tự đối chiếu với bài mẫu hoặc nhờ giảng viên góp ý.
-          </p>
+          <EssayFeedback config={res.config} feedback={feedbacks[qid] ?? null} feedbackError={feedbackErrors[qid] ?? null} preview={preview} />
         )}
         {res && !res.manual && (
           <div role="status" className={`mt-3 rounded-lg border p-3 text-sm ${res.isCorrect ? "border-lime-300 bg-lime-50" : "border-red-200 bg-red-50"}`}>
@@ -408,7 +501,7 @@ export default function LessonPractice({
   const splitView = !!(step?.passageId && split);
 
   return (
-    <section aria-labelledby="lp-title" className="my-6" data-testid="lesson-practice">
+    <section aria-labelledby="lp-title" className="lp-large my-6" data-testid="lesson-practice">
       {!splitView && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
