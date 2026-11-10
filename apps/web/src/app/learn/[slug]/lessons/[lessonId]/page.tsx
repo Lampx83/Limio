@@ -1089,6 +1089,7 @@ export default async function LessonPage({
       hasExams={frameHasExams}
       levelLabel={lessonLevelLabel(languageMode)}
       notesCount={notesCount}
+      tocModules={progress.modules}
     >
       {body}
     </LessonFrameLayout>

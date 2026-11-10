@@ -3,6 +3,7 @@ import { Check, Lock } from "lucide-react";
 import type { LessonFrameData, LessonRailItem } from "@feedbackme/core-lms";
 import { lessonViewHref, type LessonView } from "@/lib/lessonFrameView";
 import LessonFrameShell from "./LessonFrameShell";
+import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 
 /**
  * Khung bài học 3 cột (Figma "Chi tiết bài học"): thanh bài trong unit/module · nội dung · panel AI trợ giảng + Ghi chú. Làm ở
@@ -66,6 +67,8 @@ function RailList({ slug, frame }: { slug: string; frame: LessonFrameData }) {
     </ul>
   );
 }
+
+type TocModules = React.ComponentProps<typeof LessonTocDrawer>["modules"];
 
 function RailBody({ slug, frame, hasExams, levelLabel }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string }) {
   const pct = frame.unitTotal === 0 ? 0 : Math.round((frame.unitDone / frame.unitTotal) * 100);
@@ -197,6 +200,7 @@ export default function LessonFrameLayout({
   hasExams,
   levelLabel,
   notesCount,
+  tocModules,
   children,
 }: {
   slug: string;
@@ -209,6 +213,8 @@ export default function LessonFrameLayout({
   levelLabel: string;
   /** Số ghi chú của học viên cho bài này (hiện ở tab "Ghi chú · n" trước khi mở panel). */
   notesCount: number;
+  /** Các module/bài của cả khoá cho nút "Mục lục khoá học" ở thanh bên; không truyền thì không có nút. */
+  tocModules?: TocModules;
   children: React.ReactNode;
 }) {
   const levelLower = levelLabel.toLowerCase();
@@ -219,7 +225,17 @@ export default function LessonFrameLayout({
       rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} />}
       railLabel={`Bài trong ${levelLower}`}
       railSummary={`Bài trong ${levelLower} · ${frame.unitDone} / ${frame.unitTotal}`}
-      crumbs={<LessonCrumbs slug={slug} courseTitle={courseTitle} unitTitle={frame.unitTitle} lessonTitle={lessonTitle} />}
+      crumbs={
+        // Mục lục toàn khoá nằm ở hàng đường dẫn (căn phải), tách khỏi danh sách bài của unit ở thanh bên để không lẫn hai loại mục lục.
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <LessonCrumbs slug={slug} courseTitle={courseTitle} unitTitle={frame.unitTitle} lessonTitle={lessonTitle} />
+          {tocModules && tocModules.length > 0 && (
+            <div className="ml-auto">
+              <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" />
+            </div>
+          )}
+        </div>
+      }
       nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} />}
     >
       {children}
