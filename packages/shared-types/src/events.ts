@@ -630,8 +630,6 @@ export interface ExamOralLegacySwitchedPayload {
   disabled: boolean;
 }
 
-export interface ExamOralEvaluationGradedPayload {
-  examId: string;
 /** Mọi sự kiện `vandap.*` chỉ mang id và số liệu. */
 export interface VanDapExamCreatedPayload {
   examId: string;
@@ -679,6 +677,8 @@ export interface VanDapScenarioEditedPayload {
   scenarioId?: string;
 }
 
+export interface ExamOralEvaluationGradedPayload {
+  examId: string;
   attemptId: string;
   instructorScore: number;
   status: "approved" | "overridden";
@@ -1024,8 +1024,8 @@ export type OnboardingCodeKind =
   | "whiteboard"
   | "access_code"
   | "none"
-  | "ambiguous";
-  | "van_dap"
+  | "ambiguous"
+  | "van_dap";
 
 export interface OnboardingCodeSubmittedPayload {
   /** Độ dài mã sau khi chuẩn hoá — đủ để biết học viên gõ sai kiểu gì mà không lộ mã. */
