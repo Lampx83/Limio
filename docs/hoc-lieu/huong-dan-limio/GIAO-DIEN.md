@@ -622,7 +622,7 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   đề thi, nên **không** qua mục Đề thi. Trong bài, "+ Thêm hoạt động/tài nguyên" có ô **"Bài luyện"**: chỉ hỏi "Tiêu đề bài
   luyện (không bắt buộc)", sau khi lưu mở thẳng trang **"Soạn bài luyện"** (`/instructor/courses/{id}/bai-luyen/{khối}`); hàng khối
   trong bài có tóm tắt "n đoạn · m câu hỏi" (hoặc cảnh báo "Chưa có câu hỏi — học viên chưa thấy bài luyện này") và nút **"Soạn bài
-  luyện"**. Trang soạn có "Thêm đoạn văn / bài nghe" (tiêu đề, nội dung, ảnh, âm thanh tải lên, "Phát audio": nghe tự do /
+  luyện"**. Trang soạn có "Thêm đoạn văn / bài nghe" (tiêu đề, nội dung; nút "Tải ảnh", "Tải audio", **"Tải video lên"** (MP4, WebM, MOV, MKV, OGV, tối đa 500 MB) và **"Dán link video"** (YouTube, Vimeo, Google Drive, OneDrive hoặc link tệp .mp4/.webm), mỗi thứ hỏi mô tả (alt text); "Phát audio": nghe tự do /
   giới hạn số lần / nghe 1 lần), mỗi đoạn có "Thêm câu hỏi vào đoạn này"; ngoài đoạn còn "Thêm câu hỏi không thuộc đoạn". Dạng câu:
   một đáp án, nhiều đáp án, Đúng/Sai/Không có thông tin, điền khuyết, trả lời ngắn, sắp xếp, ghép cặp, số, kéo thả điền (**không có
   tự luận**; không có ô điểm, skill, giờ, phần). Mỗi câu có ô **"Giải thích đáp án"** hiện cho học viên sau khi kiểm tra. Mũi tên lên/

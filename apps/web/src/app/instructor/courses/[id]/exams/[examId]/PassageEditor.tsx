@@ -67,6 +67,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
   const [uploading, setUploading] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
 
   function onInsertVideo() {
@@ -110,6 +111,45 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
       (end < before.length ? sep : "") +
       before.slice(end);
     setV({ ...v, content: inserted });
+  }
+
+  /** Chèn một thẻ vào nội dung tại vị trí con trỏ (cách các đoạn một dòng trống). */
+  function insertToken(md: string) {
+    const ta = contentRef.current;
+    const before = v.content;
+    const start = ta?.selectionStart ?? before.length;
+    const end = ta?.selectionEnd ?? before.length;
+    const sep = before.length === 0 ? "" : "\n\n";
+    setV({
+      ...v,
+      content: before.slice(0, start) + (start === 0 ? "" : sep) + md + (end < before.length ? sep : "") + before.slice(end),
+    });
+  }
+
+  /** Bài luyện: tải tệp video từ máy lên (dùng kho video của bài học: MP4, WebM, MOV, MKV, OGV, tối đa 500 MB). */
+  async function onUploadVideo(file: File) {
+    const alt = window.prompt("Mô tả nội dung video (alt text) — bắt buộc cho accessibility:", "");
+    if (alt === null) return;
+    const trimmed = alt.trim();
+    if (!trimmed) {
+      window.alert("Alt text không được để trống.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(apiUrl("/api/lesson-media/videos"), { method: "POST", body: form });
+      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        window.alert(`Tải video lỗi: ${data.error ?? res.status}`);
+        return;
+      }
+      insertToken(`[[video:${data.url}|${trimmed}]]`);
+    } finally {
+      setUploading(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
   }
 
   async function onUploadFile(file: File, kind: "image" | "audio") {
@@ -249,9 +289,31 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               disabled={uploading}
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
-              <Video className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Chèn video
+              <Video className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> {practiceMode ? "Dán link video" : "Chèn video"}
             </button>
+            {practiceMode && (
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                disabled={uploading}
+                className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
+              >
+                <Video className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải video lên
+              </button>
+            )}
           </div>
+          {practiceMode && (
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,.mp4,.webm,.ogv,.mov,.mkv"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onUploadVideo(f);
+              }}
+            />
+          )}
           <input
             ref={imageInputRef}
             type="file"

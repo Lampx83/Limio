@@ -39,7 +39,7 @@ Phương án thay thế (không đề xuất): lưu câu hỏi thành JSON ngay 
 
 ## AC2 — Đưa học liệu lên
 
-- Editor cho thêm nhiều **Đoạn**; mỗi đoạn có: tiêu đề (không bắt buộc), nội dung soạn bằng trình soạn văn bản của Limio, **ảnh** và **âm thanh** tải lên (bài nghe), cho nghe lại thoải mái hoặc giới hạn số lần (dùng lại chính sách nghe lại sẵn có của đoạn văn đề thi).
+- Editor cho thêm nhiều **Đoạn**; mỗi đoạn có: tiêu đề (không bắt buộc), nội dung soạn bằng trình soạn văn bản của Limio, **ảnh**, **âm thanh** (bài nghe) và **video** (tải tệp từ máy lên bằng "Tải video lên", hoặc "Dán link video" YouTube/Vimeo/Google Drive/OneDrive/link .mp4), cho nghe lại thoải mái hoặc giới hạn số lần (dùng lại chính sách nghe lại sẵn có của đoạn văn đề thi).
 - Mỗi đoạn có các **câu hỏi** của nó; ngoài ra có thể có câu hỏi **không thuộc đoạn nào**.
 - Sắp xếp lại thứ tự đoạn và câu (kéo thả hoặc nút lên/xuống), nhân bản và xoá đoạn/câu.
 - Xoá đoạn hoặc câu đã có học viên làm có **hộp xác nhận nói rõ** là lượt làm của học viên với câu đó cũng bị xoá.
@@ -118,3 +118,4 @@ Phương án thay thế (không đề xuất): lưu câu hỏi thành JSON ngay 
 - **Dọn:** xoá `PracticeBlockFields`, `listSelectablePracticeExams`, `assertPracticeBlockExam`, route `/api/lessons/[lessonId]/practice-exams`. Cập nhật Lily, `GIAO-DIEN.md`, CLAUDE.md §4.6.1 và script seed demo.
 - **Kiểm tra:** `tsc` sạch (web, core-lms, shared-types); web 217 file / 2486 test; core-lms 194 file / 2184 test (gồm `practiceBlock.test.ts` viết lại 13 ca, `practiceObserve.test.ts`). Xem trên trình duyệt (dev): trang soạn, xem trước và chấm câu, hàng khối trong bài, bản hẹp 375 px, học viên làm bài luyện từ nội dung mới.
 - **Chưa kiểm bằng mắt:** tải âm thanh/ảnh thật vào đoạn từ editor; nhân bản bài/khoá trên giao diện (đã có test dịch vụ); thêm khối mới qua hộp "+ Thêm hoạt động/tài nguyên".
+- **Video trong đoạn (bổ sung 10/11/2026):** ngoài ảnh và âm thanh, đoạn văn của Bài luyện nhận **video**: nút **"Tải video lên"** (kho video của bài học: MP4, WebM, MOV, MKV, OGV, tối đa 500 MB; chỉ ở chế độ Bài luyện, không mở thêm cho đề thi) và **"Dán link video"** (YouTube, Vimeo, Google Drive, OneDrive, link .mp4/.webm; có sẵn từ trước, đổi nhãn "Chèn video"). Mỗi video bắt buộc có mô tả (alt text). Học viên thấy trình phát `<video>` (tệp) hoặc khung nhúng (link). Test: `contentHelpers.video.test.tsx` (thẻ ↔ nút video, `<video>` đúng tệp, nhúng YouTube/Vimeo).
