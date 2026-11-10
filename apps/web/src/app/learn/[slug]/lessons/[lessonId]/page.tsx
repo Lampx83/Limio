@@ -34,7 +34,9 @@ import { auth } from "@/lib/auth";
 import { getActiveRole } from "@/lib/active-role";
 import { isLearnerRole } from "@/lib/learnerRole";
 import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
-import LessonFrameLayout, { LessonFooter, LessonViewTabs } from "@/components/language/LessonFrame";
+import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
+import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel } from "@/lib/lessonFramePolicy";
+import { getSiteSetting } from "@/lib/site-settings";
 import LessonPractice from "@/components/language/LessonPractice";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
@@ -706,24 +708,31 @@ export default async function LessonPage({
   );
   const visibleItems = deckCover ? withoutDeckIntro(allVisibleItems) : allVisibleItems;
 
-  // LANG đợt 3a — khung bài học kiểu Limio Language (docs/tieu-chi/limio-language-hoc-vien-dot-3.md). Bật THEO KHOÁ (không còn
-  // "vỏ" theo cookie — docs/tieu-chi/limio-language-gop-menu.md, AC6): khoá bật chế độ ngoại ngữ, vai học viên, đã ghi danh,
-  // và không phải xem thử/chiếu lớp/chế độ giảng viên. Bài của khoá thường giữ nguyên.
-  const languageSkin =
-    lesson.module.course.languageMode &&
-    enrolled &&
-    !previewMode &&
-    !stageMode &&
-    !teacherMode &&
-    isLearnerRole(getActiveRole(session?.user?.roles ?? []));
-  const languageFrame = languageSkin
+  // Khung bài học 3 cột (thanh bài · nội dung · panel AI trợ giảng + Ghi chú) cho MỌI khoá — docs/tieu-chi/limio-language-bai-hoc-3-cot.md.
+  // Bật cho học viên ĐÃ GHI DANH; giữ giao diện cũ cho chưa ghi danh, xem thử, chiếu lớp, giảng viên đứng lớp và bài có bài giảng slide
+  // (`lessonFrameApplies`). Công tắc `lesson_frame.all_courses` = "false" thì chỉ còn khoá ngoại ngữ. Tính năng riêng của ngoại ngữ
+  // (đánh số lời thoại, tab Từ vựng) vẫn theo khoá `languageMode` (`languageSkin`).
+  const languageMode = lesson.module.course.languageMode;
+  const frameOn = lessonFrameApplies({
+    languageMode,
+    allCoursesEnabled: isLessonFrameAllCoursesEnabled(await getSiteSetting(LESSON_FRAME_ALL_COURSES_KEY)),
+    enrolled: !!enrolled,
+    learnerRole: isLearnerRole(getActiveRole(session?.user?.roles ?? [])),
+    previewMode: !!previewMode,
+    stageMode: !!stageMode,
+    teacherMode: !!teacherMode,
+    hasDeckCover: !!deckCover,
+  });
+  const languageSkin = frameOn && languageMode;
+  const lessonFrame = frameOn
     ? buildLessonFrame(progress, lesson.id, await loadLessonDurations(progress.modules.flatMap((m) => m.lessons.map((l) => l.id))))
     : null;
-  const frameHasExams = languageFrame
+  const notesCount = lessonFrame && userId ? await prisma.note.count({ where: { lessonId: lesson.id, userId } }) : 0;
+  const frameHasExams = lessonFrame
     ? (await listMockExamsForLearner(userId, lesson.module.course.id).catch(() => [])).length > 0
     : false;
   // Bài chỉ toàn từ vựng thì không tách tab (tab "Bài học" sẽ trống): hiện thẳng như cũ.
-  const rawSplit = languageFrame ? splitLessonItems(visibleItems) : null;
+  const rawSplit = languageSkin && lessonFrame ? splitLessonItems(visibleItems) : null;
   const split = rawSplit && rawSplit.count > 0 && rawSplit.lesson.length > 0 ? rawSplit : null;
   const lessonView = split ? parseLessonView(searchParams?.view) : "lesson";
   const shownItems = split ? (lessonView === "vocab" ? split.vocab : split.lesson) : visibleItems;
@@ -747,8 +756,8 @@ export default async function LessonPage({
       if (!info?.examId || info.questions === 0) continue;
       const examId = info.examId;
       const title = p.title || "Bài luyện";
-      if (!languageSkin) {
-        // Vỏ thường chưa có giao diện nhúng: dẫn sang trang luyện đề sẵn có của đề.
+      if (!lessonFrame) {
+        // Ngoài khung (chiếu lớp, bài có slide, công tắc tắt…) chưa có giao diện nhúng: dẫn sang trang luyện đề sẵn có của đề.
         practiceBlocks[it.id] = (
           <PracticeBlockNotice
             title={title}
@@ -802,7 +811,7 @@ export default async function LessonPage({
       {!previewMode && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           {/* Khung Language đã có đường dẫn "Học / Khoá / Unit / Bài" và "Về lộ trình" nên bỏ liên kết trùng này. */}
-          {!languageFrame && (
+          {!lessonFrame && (
           <Link
             href={`/learn/${params.slug}`}
             className="link inline-flex items-center gap-1 text-base font-medium"
@@ -841,7 +850,7 @@ export default async function LessonPage({
       */}
       <header className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
         <span className="chip">{lesson.module.title}</span>
-        {languageFrame && lesson.languageSkill && (
+        {lessonFrame && lesson.languageSkill && (
           <span className="chip-brand ml-2">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>
         )}
         <h1 className="mt-2 h-display text-3xl font-bold sm:text-4xl">
@@ -993,7 +1002,8 @@ export default async function LessonPage({
         </div>
         <div
           id="lesson-annotation-gutter"
-          className="pointer-events-none absolute bottom-0 right-0 top-0 hidden w-14 lg:block xl:w-44"
+          // Trong khung 3 cột panel phải đã chiếm chỗ bên phải: lề annotation thu về sát (không chồng lên nội dung).
+          className={`pointer-events-none absolute bottom-0 right-0 top-0 hidden w-14 lg:block ${lessonFrame ? "" : "xl:w-44"}`}
         />
         </div>
         </div>
@@ -1028,9 +1038,7 @@ export default async function LessonPage({
         }}
       </LessonTabs>
 
-      {!previewMode && <LessonNotesDrawer lessonId={lesson.id} />}
-
-      {languageFrame && <LessonFooter slug={params.slug} next={languageFrame.next} />}
+      {!previewMode && !lessonFrame && <LessonNotesDrawer lessonId={lesson.id} />}
 
       {/* Sentinel for scroll-to-end auto-complete tracker (text-only lessons). */}
       <div id="lesson-end-sentinel" aria-hidden className="h-px w-full" />
@@ -1046,7 +1054,7 @@ export default async function LessonPage({
         />
       )}
 
-      {!previewMode && (
+      {!previewMode && !lessonFrame && (
         <LessonTocDrawer
           slug={params.slug}
           currentLessonId={lesson.id}
@@ -1055,7 +1063,7 @@ export default async function LessonPage({
         />
       )}
 
-      {!previewMode && <AiTutorPanel lessonId={lesson.id} />}
+      {!previewMode && !lessonFrame && <AiTutorPanel lessonId={lesson.id} />}
 
       {/* Bôi đen → chuột phải → annotation / hỏi AI. Không gắn khi chiếu lớp
           (stage): menu chuột phải bất ngờ hiện trên màn chiếu là điều không ai
@@ -1071,13 +1079,16 @@ export default async function LessonPage({
     </main>
   );
 
-  return languageFrame ? (
+  return lessonFrame ? (
     <LessonFrameLayout
       slug={params.slug}
+      lessonId={lesson.id}
       courseTitle={lesson.module.course.title}
       lessonTitle={lesson.title}
-      frame={languageFrame}
+      frame={lessonFrame}
       hasExams={frameHasExams}
+      levelLabel={lessonLevelLabel(languageMode)}
+      notesCount={notesCount}
     >
       {body}
     </LessonFrameLayout>

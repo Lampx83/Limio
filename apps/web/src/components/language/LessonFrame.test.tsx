@@ -10,7 +10,11 @@ vi.mock("next/link", () => ({
   ),
 }));
 
-import LessonFrameLayout, { LessonCrumbs, LessonFooter, LessonViewTabs } from "./LessonFrame";
+// Panel phải (AI + Ghi chú) dùng API/streaming nên thay bằng khung rỗng khi chỉ kiểm bố cục tĩnh.
+vi.mock("@/components/AiTutorPanel", () => ({ default: () => null }));
+vi.mock("@/components/LessonActions", () => ({ LessonNotes: () => null }));
+
+import LessonFrameLayout, { LessonCrumbs, LessonNavBar, LessonViewTabs } from "./LessonFrame";
 
 const text = (h: string) => h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 
@@ -25,17 +29,27 @@ const frame = (o: Partial<LessonFrameData> = {}): LessonFrameData => ({
     { id: "l4", title: "Vocabulary Skill", minutes: 7, state: "locked" },
   ],
   next: { id: "l3", title: "Reading Comprehension" },
+  prev: { id: "l1", title: "Before You Read" },
   ...o,
 });
 
-const render = (f = frame(), hasExams = false) =>
+const render = (f = frame(), hasExams = false, levelLabel = "Unit", notesCount = 0) =>
   renderToStaticMarkup(
-    <LessonFrameLayout slug="ielts" courseTitle="Active Skills" lessonTitle="Reading Skill" frame={f} hasExams={hasExams}>
+    <LessonFrameLayout
+      slug="ielts"
+      lessonId="l2"
+      courseTitle="Active Skills"
+      lessonTitle="Reading Skill"
+      frame={f}
+      hasExams={hasExams}
+      levelLabel={levelLabel}
+      notesCount={notesCount}
+    >
       <main>NỘI DUNG BÀI</main>
     </LessonFrameLayout>,
   );
 
-describe("LessonFrameLayout — thanh bài trong Unit", () => {
+describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
   it("có link Về khoá học, tên Unit, 'x / y bài hoàn thành', và bọc đúng nội dung của trang bài", () => {
     const html = render();
     const t = text(html);
@@ -76,6 +90,32 @@ describe("LessonFrameLayout — thanh bài trong Unit", () => {
     expect(html).toMatch(/<aside[^>]*class="hidden lg:block"/);
     expect(text(html)).toContain("Bài trong unit · 1 / 4");
   });
+
+  it("nhãn cấp trên bài theo khoá: UNIT ở khoá ngoại ngữ, MODULE ở khoá khác (rail, khối thu gọn và aria-label)", () => {
+    const unit = render(frame(), false, "Unit");
+    expect(text(unit)).toContain("Unit");
+    expect(unit).toContain('aria-label="Bài trong unit"');
+    const mod = render(frame(), false, "Module");
+    expect(text(mod)).toContain("Module");
+    expect(text(mod)).toContain("Bài trong module · 1 / 4");
+    expect(mod).toContain('aria-label="Bài trong module"');
+    expect(mod).not.toContain("Bài trong unit");
+  });
+
+  it("có panel phải với hai tab AI trợ giảng và Ghi chú (kèm số ghi chú), panel ẩn cho tới khi mở; thanh Bài trước/Bài tiếp theo ở cuối cột nội dung", () => {
+    const html = render(frame(), false, "Module", 2);
+    expect(html).toContain('role="tablist"');
+    expect(text(html)).toContain("AI trợ giảng");
+    expect(text(html)).toContain("Ghi chú · 2");
+    expect(html).toMatch(/<aside[^>]*aria-label="Trợ giảng AI và ghi chú"[^>]*hidden/);
+    expect(html).toContain('aria-label="Mở trợ giảng AI và ghi chú"');
+    expect(html).toContain('aria-label="Chuyển bài"');
+    expect(html.indexOf("NỘI DUNG BÀI")).toBeLessThan(html.indexOf('aria-label="Chuyển bài"'));
+  });
+
+  it("không có ghi chú thì tab chỉ ghi 'Ghi chú' (không hiện số 0)", () => {
+    expect(text(render(frame(), false, "Module", 0))).not.toContain("Ghi chú · 0");
+  });
 });
 
 describe("LessonCrumbs", () => {
@@ -102,17 +142,31 @@ describe("LessonViewTabs", () => {
   });
 });
 
-describe("LessonFooter", () => {
-  it("có bài kế: 'Tiếp theo: …' và nút Bài tập tiếp theo tới đúng bài", () => {
-    const html = renderToStaticMarkup(<LessonFooter slug="ielts" next={{ id: "l3", title: "Reading Comprehension" }} />);
-    expect(text(html)).toContain("Tiếp theo: Reading Comprehension");
+describe("LessonNavBar", () => {
+  it("có cả bài trước và bài kế: hai liên kết đúng bài, nhãn 'Bài trước' / 'Bài tiếp theo'", () => {
+    const html = renderToStaticMarkup(
+      <LessonNavBar slug="ielts" prev={{ id: "l1", title: "Before You Read" }} next={{ id: "l3", title: "Reading Comprehension" }} />,
+    );
+    expect(text(html)).toContain("Bài trước");
+    expect(text(html)).toContain("Bài tiếp theo");
+    expect(html).toContain('href="/learn/ielts/lessons/l1"');
     expect(html).toContain('href="/learn/ielts/lessons/l3"');
-    expect(text(html)).toContain("Bài tập tiếp theo →");
+    expect(html).toContain("sticky bottom-0");
   });
-  it("bài cuối: nút thành Về khoá học", () => {
-    const html = renderToStaticMarkup(<LessonFooter slug="ielts" next={null} />);
+  it("bài đầu tiên: không có 'Bài trước'", () => {
+    const html = renderToStaticMarkup(<LessonNavBar slug="ielts" prev={null} next={{ id: "l3", title: "Reading Comprehension" }} />);
+    expect(text(html)).not.toContain("Bài trước");
+    expect(text(html)).toContain("Bài tiếp theo");
+  });
+  it("bài cuối: 'Bài tiếp theo' thành 'Về khoá học'", () => {
+    const html = renderToStaticMarkup(<LessonNavBar slug="ielts" prev={{ id: "l1", title: "A" }} next={null} />);
     expect(text(html)).toContain("Về khoá học");
-    expect(text(html)).not.toContain("Bài tập tiếp theo");
+    expect(text(html)).not.toContain("Bài tiếp theo");
     expect(html).toContain('href="/learn/ielts"');
+  });
+  it("tên bài dài được rút gọn", () => {
+    const long = "Tên bài rất rất dài ".repeat(6);
+    const html = renderToStaticMarkup(<LessonNavBar slug="s" prev={null} next={{ id: "n", title: long }} />);
+    expect(text(html)).toContain("…");
   });
 });
