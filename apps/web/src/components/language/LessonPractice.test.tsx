@@ -222,6 +222,23 @@ describe("LessonPractice — bài luyện nhúng trong bài", () => {
     expect(host.querySelector('[data-testid="lp-passage"]')).toBeNull();
   });
 
+  it("không có thanh chuyển bước: đổi bước bằng bản đồ câu hỏi (bấm số câu ở bước khác thì sang bước đó)", async () => {
+    const two = embed({
+      questions: [
+        ...embed().questions,
+        { id: "q3", type: "mcq", prompt: "Câu hỏi ba?", points: 1, passageId: "p2", sectionTitle: "Đọc", languageSkill: "reading", config: mcqConfig },
+      ],
+      passages: [...embed().passages, { id: "p2", title: "Đoạn hai", contentJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Đoạn hai." }] }] } }],
+    });
+    await render(two);
+    for (const t of ["Bước trước", "Bước sau", "Quay lại", "Tiếp →", "Bước 1 /"]) expect(text()).not.toContain(t);
+    expect(text()).toContain("Câu hỏi một?");
+    expect(text()).not.toContain("Câu hỏi ba?");
+    const q3 = host.querySelector('button[aria-label^="Câu 3"]') as HTMLButtonElement;
+    await act(async () => q3.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(text()).toContain("Câu hỏi ba?");
+  });
+
   it("mở lại bài có câu đã kiểm tra: nạp lại kết quả từ máy chủ, không tạo buổi mới", async () => {
     const e = embed({ sessionId: "s1", answers: [{ questionId: "q1", answerJson: { optionIds: ["a"] }, checked: true, isCorrect: true }] });
     await render(e);

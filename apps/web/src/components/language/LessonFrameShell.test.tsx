@@ -67,18 +67,30 @@ describe("LessonFrameShell — panel phải theo chiều ngang (AC1)", () => {
     setWidth(1600);
     await render();
     expect(isOpen()).toBe(true);
-    expect(host.querySelector(".xl\\:grid-cols-\\[16rem_minmax\\(0\\,1fr\\)_24rem\\]")).not.toBeNull();
+    expect(host.querySelector(".xl\\:grid-cols-\\[12rem_minmax\\(0\\,1fr\\)_20rem\\]")).not.toBeNull();
     expect(openBtn()).toBeNull();
+  });
+
+  it("gốc khung có dấu data-lesson-frame (CSS dùng để ẩn nút nổi 'Về trang chủ' đè lên rail) và nút mở panel là nút tròn cùng mép phải với nút cuộn, xếp ngay dưới nó", async () => {
+    setWidth(1400);
+    await render();
+    expect(host.querySelector("[data-lesson-frame]")).not.toBeNull();
+    const c = openBtn()!.className;
+    expect(c).toContain("right-4"); // cùng mép phải với ScrollEnds của trang bài (fixed bottom-[17rem] right-4)
+    expect(c).toContain("rounded-full");
+    expect(c).toContain("bottom-[14.2rem]"); // ngay dưới cặp nút cuộn (bottom-[17rem])
+    expect(c).toContain("narration-lift");
+    expect(c).not.toContain("top-1/2");
   });
 
   it("1280–1535 px: đóng sẵn, có nút mở; mở ra thì thành 3 cột", async () => {
     setWidth(1400);
     await render();
     expect(isOpen()).toBe(false);
-    expect(host.querySelector(".xl\\:grid-cols-\\[16rem_minmax\\(0\\,1fr\\)_24rem\\]")).toBeNull();
+    expect(host.querySelector(".xl\\:grid-cols-\\[12rem_minmax\\(0\\,1fr\\)_20rem\\]")).toBeNull();
     await click(openBtn()!);
     expect(isOpen()).toBe(true);
-    expect(host.querySelector(".xl\\:grid-cols-\\[16rem_minmax\\(0\\,1fr\\)_24rem\\]")).not.toBeNull();
+    expect(host.querySelector(".xl\\:grid-cols-\\[12rem_minmax\\(0\\,1fr\\)_20rem\\]")).not.toBeNull();
   });
 
   it("dưới 1280 px: đóng sẵn; mở ra có nền mờ (ngăn kéo), Esc và bấm nền đều đóng", async () => {
@@ -94,6 +106,20 @@ describe("LessonFrameShell — panel phải theo chiều ngang (AC1)", () => {
     expect(isOpen()).toBe(false);
     await click(openBtn()!);
     await click(host.querySelector(".bg-black\\/40")!);
+    expect(isOpen()).toBe(false);
+  });
+
+  it("ngăn kéo (dưới 1280 px) KHÔNG nhớ trạng thái mở: mở rồi tải lại trang thì vẫn đóng, không ghi gì vào lưu trữ", async () => {
+    setWidth(900);
+    window.localStorage.setItem("limio:lesson-panel:open:narrow", "1"); // giá trị cũ còn sót từ bản trước phải bị bỏ qua
+    await render();
+    expect(isOpen()).toBe(false);
+    await click(openBtn()!);
+    expect(isOpen()).toBe(true);
+    expect(window.localStorage.getItem("limio:lesson-panel:open:narrow")).toBe("1"); // không bị ghi lại (giữ nguyên giá trị cũ)
+    act(() => root.unmount());
+    root = createRoot(host);
+    await render();
     expect(isOpen()).toBe(false);
   });
 

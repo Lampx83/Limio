@@ -158,7 +158,7 @@ export function LessonNavBar({ slug, prev, next }: { slug: string; prev: LessonF
   return (
     <nav
       aria-label="Chuyển bài"
-      className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-token bg-[rgb(var(--surface)/0.94)] px-4 py-3 backdrop-blur lg:mx-0 lg:rounded-t-xl"
+      className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-token bg-[rgb(var(--surface)/0.94)] px-4 py-2 backdrop-blur lg:mx-0 lg:rounded-t-xl"
     >
       {prev ? (
         <Link href={lessonViewHref(slug, prev.id, "lesson")} className="btn-ghost btn-sm inline-flex min-w-0 items-center gap-1.5" title={prev.title}>

@@ -57,7 +57,6 @@ import LessonEngagementTracker from "@/components/lesson/LessonEngagementTracker
 import ScrollEnds from "@/components/ScrollEnds";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
-import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import NarrationButton from "@/components/narration/NarrationButton";
 import NarrationPlayer from "@/components/narration/NarrationPlayer";
@@ -737,12 +736,6 @@ export default async function LessonPage({
   const lessonView = split ? parseLessonView(searchParams?.view) : "lesson";
   const shownItems = split ? (lessonView === "vocab" ? split.vocab : split.lesson) : visibleItems;
 
-  // Mục lục nổi "Trong bài này" (LessonSectionNav) chỉ hiện khi bài có từ 2 thẻ
-  // h2 có id trở lên — cùng ngưỡng với chính component đó. Tính sẵn ở máy chủ
-  // để chỉ chừa cột cho nó khi nó thật sự sẽ hiện: chừa cột vô điều kiện thì
-  // bài không có mục lục bị đẩy lệch vào 16rem so với tiêu đề bài. Không thể chờ
-  // client quyết (nav mount sau khi nội dung được làm sạch) vì cột hiện ra muộn
-  // sẽ làm cả bài giật sang phải.
   // LANG đợt 3b — khối "Bài luyện": dựng sẵn ở máy chủ theo dữ liệu của người xem. Chỉ học viên đã ghi danh ở trang bài
   // thường (không xem thử, không chiếu lớp, không chế độ giảng viên); nơi khác khối không hiện gì.
   const practiceBlocks: Record<string, React.ReactNode> = {};
@@ -778,12 +771,6 @@ export default async function LessonPage({
     }
   }
 
-  const sectionCount = shownItems.reduce(
-    (n, c) => n + (JSON.stringify(c.payload ?? "").match(/<h2\b[^>]*?\bid=/gi)?.length ?? 0),
-    0,
-  );
-  const hasSectionNav = sectionCount >= 2;
-
   const body = (
     <main
       // `data-stage` bật bộ CSS biến trang thành màn chiếu: giấu mọi thứ trừ
@@ -797,7 +784,9 @@ export default async function LessonPage({
       // w-full: <main> là item của một flex column (layout gốc) và có mx-auto, nên
       // không có w-full thì nó co theo nội dung — bài ngắn/không mục lục hẹp hơn
       // hẳn bài có mục lục, chuyển bài qua lại thì độ rộng trang nhảy.
-      className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"
+      // Trong khung 3 cột, khung ngoài đã lo lề: bỏ max-w-6xl + px-6 (chúng làm cột giữa hẹp thêm ~3rem) và dùng hết bề ngang cột giữa
+      // (không căn giữa/giới hạn: thầy thấy khoảng trắng hai bên thừa).
+      className={lessonFrame ? "w-full py-6" : "mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"}
     >
       {stageMode && <StageListener lessonId={lesson.id} />}
       {structuredData}
@@ -808,7 +797,8 @@ export default async function LessonPage({
         trăm hoàn thành chuyển xuống nằm ngay cạnh thanh tiến độ, vì đó chính
         là thứ chúng nói về.
       */}
-      {!previewMode && (
+      {/* Trong khung 3 cột hàng này không còn gì ngoài nút của giảng viên, nên nút dời vào thẻ tiêu đề (cùng hàng với chip) và bỏ cả hàng. */}
+      {!previewMode && !lessonFrame && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           {/* Khung Language đã có đường dẫn "Học / Khoá / Unit / Bài" và "Về lộ trình" nên bỏ liên kết trùng này. */}
           {!lessonFrame && (
@@ -848,18 +838,33 @@ export default async function LessonPage({
         chúng thao tác lên chính bài này, nên đặt cạnh tên bài thì rõ phạm vi
         hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
       */}
-      <header className="mt-3 rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card sm:p-5">
-        <span className="chip">{lesson.module.title}</span>
-        {lessonFrame && lesson.languageSkill && (
-          <span className="chip-brand ml-2">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>
+      <header className={`rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card ${lessonFrame ? "mt-2 p-3 sm:p-4" : "mt-3 p-4 sm:p-5"}`}>
+        {/* Trong khung, tên module đã có ở đường dẫn phía trên nên bỏ chip (tiết kiệm một hàng); chỉ giữ hàng khi còn chip kỹ năng / nút của giảng viên. */}
+        {(!lessonFrame || lesson.languageSkill || (!previewMode && canEdit)) && (
+        <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${lessonFrame ? "mb-1" : ""}`}>
+          {!lessonFrame && <span className="chip">{lesson.module.title}</span>}
+          {lessonFrame && lesson.languageSkill && (
+            <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>
+          )}
+          {lessonFrame && !previewMode && canEdit && (
+            <Link
+              href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+              title="Quay về màn hình soạn nội dung của bài này."
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+            >
+              <PenLine className="h-4 w-4" aria-hidden />
+              Về soạn nội dung
+            </Link>
+          )}
+        </div>
         )}
-        <h1 className="mt-2 h-display text-3xl font-bold sm:text-4xl">
+        <h1 className={`h-display font-bold ${lessonFrame ? "text-2xl sm:text-3xl" : "mt-2 text-3xl sm:text-4xl"}`}>
           {lesson.title}
         </h1>
         {lesson.description && (
           <SafeHtml
             html={plainToRichHtml(lesson.description)}
-            className="prose mt-2 max-w-none text-base text-muted dark:prose-invert"
+            className={`prose max-w-none text-muted dark:prose-invert ${lessonFrame ? "mt-1 text-sm" : "mt-2 text-base"}`}
           />
         )}
         {lecturerChoice?.mode === "HIEN" && !deckCover && (
@@ -880,14 +885,17 @@ export default async function LessonPage({
                 )}
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:ml-auto">
-              {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
-              <LessonContentToolbar
-                printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
-                  teacherMode ? "?gv=1" : ""
-                }`}
-              />
-            </div>
+            {/* Khung 3 cột (thầy chốt 10/11/2026): bỏ nút "In / Lưu PDF". Trang /print vẫn còn, các bài ngoài khung vẫn có nút. */}
+            {!lessonFrame && (
+              <div className="flex flex-wrap items-center gap-2 max-sm:w-full sm:ml-auto">
+                {/* Bản in mở tab mới, trang in tự gọi hộp thoại in. */}
+                <LessonContentToolbar
+                  printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
+                    teacherMode ? "?gv=1" : ""
+                  }`}
+                />
+              </div>
+            )}
           </div>
         )}
         {/* Thanh tiến độ + dải chip "để hoàn thành bài" gộp thành 1 số duy
@@ -896,8 +904,9 @@ export default async function LessonPage({
             là client component; xem LessonCompletionPrompt để biết công
             thức gộp. */}
         {!previewMode && (
-          <div className="mt-3">
+          <div className={lessonFrame ? "mt-2" : "mt-3"}>
             <LessonCompletionPrompt
+              inline={!!lessonFrame}
               lessonId={lesson.id}
               courseSlug={params.slug}
               initiallyCompleted={completedEvent !== null}
@@ -963,20 +972,11 @@ export default async function LessonPage({
         />
       )}
 
-      {/* Nội dung bài + mục lục nổi bên trái (từ 1280px trở lên).
-          Khối phóng toàn màn hình là #lesson-stage chứ không phải riêng phần
-          nội dung: phóng to mà bỏ mục lục lại phía sau thì bài dài mất luôn
-          cách nhảy giữa các mục — đúng lúc cần nhất. */}
-      <div
-        id="lesson-stage"
-        className={`mt-8 ${hasSectionNav ? "xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8" : ""}`}
-      >
-        {hasSectionNav && <LessonSectionNav containerId="lesson-content" />}
-        {/* col-start-2 cố định khi có mục lục: bài có grid 2 cột mà nav mount muộn
-            (sau khi SafeHtml làm sạch nội dung) thì item duy nhất còn lại sẽ bị
-            auto-placement đẩy vào cột 1 (16rem). Bài không có mục lục thì không
-            dùng grid, nội dung thẳng hàng với tiêu đề. */}
-        <div className={hasSectionNav ? "xl:col-start-2" : undefined}>
+      {/* Khối phóng toàn màn hình là #lesson-stage. Bài không còn mục lục
+          "Trong bài này" (đã bỏ 2026-11-10: chỉ bài có từ 2 tiêu đề mới có, nên
+          các bài không đồng nhất), nội dung thẳng hàng với tiêu đề bài. */}
+      <div id="lesson-stage" className="mt-8">
+        <div>
         {/* Trên màn chiếu, tên bài nằm ở đầu trang và cuộn đi cùng nội dung. Từng
             dính theo mép trên, nhưng header site bị ẩn nên offset 74px chừa một
             khoảng hở cho nội dung chạy xuyên qua phía trên tiêu đề, và tiêu đề

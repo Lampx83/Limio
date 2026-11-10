@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PanelRightOpen, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import AiTutorPanel from "@/components/AiTutorPanel";
 import { LessonNotes } from "@/components/LessonActions";
 import {
@@ -67,8 +67,9 @@ export default function LessonFrameShell({
       clsRef.current = next;
       setCls(next);
       if (changed) {
-        const pref = readPanelOpenPref(storage(), next);
-        const wantOpen = pref ?? defaultPanelOpen(next);
+        // Ngăn kéo (dưới 1280 px) KHÔNG nhớ trạng thái mở: bật sẵn sẽ che cả bài mỗi lần tải trang. Chỉ lớp gắn cố định mới nhớ.
+        const pref = panelIsDocked(next) ? readPanelOpenPref(storage(), next) : null;
+        const wantOpen = panelIsDocked(next) ? (pref ?? defaultPanelOpen(next)) : false;
         setOpen(wantOpen);
         if (wantOpen) setEverOpened(true);
       }
@@ -87,14 +88,14 @@ export default function LessonFrameShell({
       }
       setOpen(true);
       setEverOpened(true);
-      writePanelOpenPref(storage(), clsRef.current ?? "narrow", true);
+      if (panelIsDocked(clsRef.current ?? "narrow")) writePanelOpenPref(storage(), clsRef.current ?? "narrow", true);
     },
     [storage],
   );
 
   const closePanel = useCallback(() => {
     setOpen(false);
-    writePanelOpenPref(storage(), clsRef.current ?? "narrow", false);
+    if (panelIsDocked(clsRef.current ?? "narrow")) writePanelOpenPref(storage(), clsRef.current ?? "narrow", false);
   }, [storage]);
 
   const chooseTab = (t: PanelTab) => {
@@ -137,15 +138,20 @@ export default function LessonFrameShell({
 
   return (
     <div
-      className={`mx-auto w-full max-w-[100rem] px-4 pt-4 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-6 lg:px-6 ${
-        open ? "xl:grid-cols-[16rem_minmax(0,1fr)_24rem]" : ""
+      // Dấu hiệu cho CSS: trong khung, nút nổi "Về trang chủ học viên" (góc dưới trái) bị rail che/đè chữ nên ẩn từ `lg` (globals.css).
+      data-lesson-frame=""
+      // Ba dải toàn chiều cao như thiết kế Figma (thanh bài | nội dung | panel), ngăn bằng đường kẻ; không bọc khung/lề ngoài để nội dung
+      // dùng hết bề ngang. Thanh bài 12rem, panel 20rem ở 1280–1535 px; nới ra 13rem/22rem từ 1536 px.
+      className={`w-full lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] ${
+        open ? "xl:grid-cols-[12rem_minmax(0,1fr)_20rem] 2xl:grid-cols-[13rem_minmax(0,1fr)_22rem]" : "2xl:grid-cols-[13rem_minmax(0,1fr)]"
       }`}
     >
-      <aside aria-label={railLabel} className="hidden lg:block">
-        <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto pb-6 pr-1">{rail}</div>
+      <aside aria-label={railLabel} className="hidden border-r border-token lg:block">
+        <div className="sticky top-20 max-h-[calc(100vh-5rem)] overflow-y-auto px-3 pb-6 pt-4">{rail}</div>
       </aside>
 
-      <div className="min-w-0">
+      {/* Panel đóng: chừa lề phải ~4rem để hai nút nổi (cuộn lên/xuống + mở panel, rộng 40px cách mép 17px) nằm NGOÀI nội dung chứ không đè lên chữ. */}
+      <div className={`min-w-0 px-4 pt-4 lg:pl-5 ${open ? "lg:pr-5" : "lg:pr-16"}`}>
         <details className="mb-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-3 lg:hidden">
           <summary className="cursor-pointer text-sm font-semibold">{railSummary}</summary>
           <div className="mt-3">{rail}</div>
@@ -162,7 +168,7 @@ export default function LessonFrameShell({
         aria-label="Trợ giảng AI và ghi chú"
         hidden={!open}
         // `hidden` (lớp) chứ không chỉ thuộc tính: lớp `flex` của Tailwind đè display:none của thuộc tính `hidden`, làm panel đóng vẫn hiện.
-        className={`${open ? "flex" : "hidden"} fixed inset-y-0 right-0 z-50 w-full max-w-md flex-col border-l border-token bg-[rgb(var(--surface))] shadow-2xl xl:sticky xl:inset-auto xl:top-20 xl:z-auto xl:h-[calc(100vh-6rem)] xl:max-w-none xl:rounded-2xl xl:border xl:shadow-none`}
+        className={`${open ? "flex" : "hidden"} fixed inset-y-0 right-0 z-50 w-full max-w-md flex-col border-l border-token bg-[rgb(var(--surface))] shadow-2xl xl:sticky xl:inset-auto xl:top-20 xl:z-auto xl:h-[calc(100vh-5rem)] xl:max-w-none xl:border-y-0 xl:border-r-0 xl:shadow-none`}
       >
         <div className="flex items-center gap-1 border-b border-token px-3 pt-2">
           <div role="tablist" aria-label="Công cụ học" className="flex flex-1 gap-1" onKeyDown={onTabKey}>
@@ -207,7 +213,7 @@ export default function LessonFrameShell({
               <div id="lesson-panel-ai" role="tabpanel" aria-labelledby="lesson-panel-tab-ai" hidden={tab !== "ai"} className="absolute inset-0">
                 <AiTutorPanel lessonId={lessonId} docked active={open && tab === "ai"} ask={ask} onRequestOpen={() => openPanel("ai")} />
               </div>
-              <div id="lesson-panel-notes" role="tabpanel" aria-labelledby="lesson-panel-tab-notes" hidden={tab !== "notes"} className="absolute inset-0 overflow-y-auto px-4 pb-6 pt-3">
+              <div id="lesson-panel-notes" role="tabpanel" aria-labelledby="lesson-panel-tab-notes" hidden={tab !== "notes"} className="absolute inset-0 overflow-y-auto px-3 pb-4 pt-2.5">
                 <LessonNotes lessonId={lessonId} hideHeading onCount={setNotes} />
               </div>
             </>
@@ -215,17 +221,22 @@ export default function LessonFrameShell({
         </div>
       </aside>
 
-      {/* Nút mở panel khi đang đóng: mép phải, giữa chiều cao màn hình. */}
+      {/* Nút mở panel khi đang đóng: nút tròn cùng bề rộng (~2.35rem) và cùng mép phải (right-4) với cặp nút cuộn lên/xuống của trang bài
+          (ScrollEnds, bottom-[17rem]), xếp ngay dưới nó cho thành một cột thẳng hàng; `narration-lift` để nâng theo khi có thanh nghe giảng. */}
       {!open && (
         <button
           type="button"
           onClick={() => openPanel()}
           aria-label="Mở trợ giảng AI và ghi chú"
-          className="fixed right-0 top-1/2 z-30 flex -translate-y-1/2 flex-col items-center gap-1.5 rounded-l-xl border border-r-0 border-token bg-[rgb(var(--surface))] px-2 py-3 text-xs font-semibold text-brand-700 shadow-card hover:bg-brand-soft"
+          title={`AI trợ giảng và Ghi chú${notes > 0 ? ` · ${notes} ghi chú` : ""}`}
+          className="narration-lift fixed bottom-[14.2rem] right-4 z-30 flex h-[2.35rem] w-[2.35rem] items-center justify-center rounded-full bg-brand-gradient text-white shadow-lg ring-2 ring-white/80 transition-transform hover:scale-105 print:hidden"
         >
-          <Sparkles size={16} aria-hidden />
-          <span className="[writing-mode:vertical-rl]">AI · Ghi chú{notes > 0 ? ` · ${notes}` : ""}</span>
-          <PanelRightOpen size={14} aria-hidden className="text-faint" />
+          <Sparkles size={18} aria-hidden />
+          {notes > 0 && (
+            <span aria-hidden className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-brand-700 shadow ring-1 ring-brand-200">
+              {notes}
+            </span>
+          )}
         </button>
       )}
     </div>
