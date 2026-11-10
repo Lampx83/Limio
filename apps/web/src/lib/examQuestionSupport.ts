@@ -1,7 +1,7 @@
 /**
- * Loại câu hỏi mà trình làm bài đề thi (`ExamQuestion`) vẽ được. Trình soạn và máy chủ nhận 10 loại, nhưng trình làm bài mới có 6:
- * Sắp xếp, Ghép cặp, Số, Kéo thả điền chưa có giao diện (và máy chủ chưa gửi cấu hình của chúng xuống trình duyệt). Xem
- * docs/tieu-chi/exam-loai-cau-va-dan-anh-doan-van.md. Khi mục C làm xong thì thêm 4 loại vào đây — một chỗ duy nhất.
+ * Loại câu hỏi mà trình làm bài đề thi (`ExamQuestion`) vẽ được: đủ 10 loại của trình soạn (từ mục C của
+ * docs/tieu-chi/exam-loai-cau-va-dan-anh-doan-van.md; trước đó Sắp xếp, Ghép cặp, Số, Kéo thả điền tạm bị ẩn khỏi bộ chọn). Thêm loại
+ * câu mới thì thêm vào đây — một chỗ duy nhất; loại nào chưa có ở đây thì bộ chọn không cho tạo và câu cũ hiện nhãn cảnh báo.
  */
 export const PLAYABLE_EXAM_QUESTION_TYPES = [
   "mcq",
@@ -10,6 +10,10 @@ export const PLAYABLE_EXAM_QUESTION_TYPES = [
   "gap_fill",
   "short_answer",
   "essay",
+  "ordering",
+  "matching",
+  "numerical",
+  "drag_drop_fill",
 ] as const;
 
 export function isPlayableExamQuestionType(type: string): boolean {

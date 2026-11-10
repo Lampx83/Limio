@@ -4,13 +4,37 @@ import { useMemo } from "react";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { UNPLAYABLE_FOR_LEARNER } from "@/lib/examQuestionSupport";
+import { DragDropFillQuestion, MatchingQuestion, NumericalQuestion, OrderingQuestion } from "./ExamQuestionExtraTypes";
 
 export type AnswerValue =
   | { optionIds: string[] }
   | { correct: "true" | "false" | "notgiven" }
   | { blanks: Record<string, string> }
   | { text: string }
+  // Sắp xếp: mã công khai theo thứ tự học viên xếp. Ghép cặp: mã cặp (vế trái) → mã công khai của vế phải đã chọn.
+  // Kéo thả điền: số ô trống → mã công khai của token đã đặt. Số: giá trị nhập (chuỗi hoặc số).
+  | { order: string[] }
+  | { matched: Record<string, string> }
+  | { placed: Record<string, string> }
+  | { value: string | number }
   | null;
+
+/**
+ * Câu đã có đáp án chưa — MỘT hàm cho mọi trình làm bài (đề thi, luyện đề, Bài luyện), để thêm loại câu mới chỉ sửa một chỗ.
+ * Phải khớp điều kiện máy chủ thật sự chấp nhận làm đáp án (rỗng thì không lưu, không cho "Kiểm tra").
+ */
+export function isAnswerValueAnswered(v: AnswerValue): boolean {
+  if (v == null) return false;
+  if ("optionIds" in v) return v.optionIds.length > 0;
+  if ("correct" in v) return !!v.correct;
+  if ("blanks" in v) return Object.values(v.blanks).some((x) => typeof x === "string" && x.trim() !== "");
+  if ("text" in v) return v.text.trim() !== "";
+  if ("order" in v) return v.order.length > 0;
+  if ("matched" in v) return Object.values(v.matched).some((x) => !!x);
+  if ("placed" in v) return Object.values(v.placed).some((x) => !!x);
+  if ("value" in v) return typeof v.value === "number" ? Number.isFinite(v.value) : String(v.value).trim() !== "";
+  return false;
+}
 
 interface QuestionData {
   id: string;
@@ -70,6 +94,22 @@ export default function ExamQuestion({ question, value, onChange, optionOrder }:
         return <ShortAnswerInput value={value} onChange={onChange} />;
       case "essay":
         return <EssayInput value={value} onChange={onChange} />;
+      case "ordering":
+        return <OrderingQuestion questionId={question.id} config={question.config} value={value} onChange={onChange} />;
+      case "matching":
+        return <MatchingQuestion questionId={question.id} config={question.config} value={value} onChange={onChange} />;
+      case "drag_drop_fill":
+        return (
+          <DragDropFillQuestion
+            questionId={question.id}
+            prompt={question.prompt}
+            config={question.config}
+            value={value}
+            onChange={onChange}
+          />
+        );
+      case "numerical":
+        return <NumericalQuestion value={value} onChange={onChange} />;
       default:
         return (
           <p role="status" className="text-sm text-amber-800">{UNPLAYABLE_FOR_LEARNER}</p>
@@ -79,7 +119,8 @@ export default function ExamQuestion({ question, value, onChange, optionOrder }:
 
   return (
     <div>
-      {prompt}
+      {/* Kéo thả điền tự vẽ đề (kèm ô thả tại chỗ [[N]]), nên bỏ khối đề chung để không hiện ký hiệu [[N]] thô. */}
+      {question.type !== "drag_drop_fill" && prompt}
       {inner}
     </div>
   );

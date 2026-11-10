@@ -624,8 +624,8 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   trong bài có tóm tắt "n đoạn · m câu hỏi" (hoặc cảnh báo "Chưa có câu hỏi — học viên chưa thấy bài luyện này") và nút **"Soạn bài
   luyện"**. Trang soạn có "Thêm đoạn văn / bài nghe" (tiêu đề, nội dung; nút "Tải ảnh" (hoặc dán ảnh từ clipboard vào ô nội dung bằng Ctrl/Cmd+V, cũng hỏi mô tả ảnh; ảnh PNG, JPG, WebP, GIF), "Tải audio", **"Tải video lên"** (MP4, WebM, MOV, MKV, OGV, tối đa 500 MB) và **"Dán link video"** (YouTube, Vimeo, Google Drive, OneDrive hoặc link tệp .mp4/.webm), mỗi thứ hỏi mô tả (alt text); "Phát audio": nghe tự do /
   giới hạn số lần / nghe 1 lần), mỗi đoạn có "Thêm câu hỏi vào đoạn này"; ngoài đoạn còn "Thêm câu hỏi không thuộc đoạn". Dạng câu:
-  một đáp án, nhiều đáp án, Đúng/Sai/Không có thông tin, điền khuyết, trả lời ngắn (**không có tự luận**; từ 10/11/2026 bộ chọn tạm
-  **ẩn** sắp xếp, ghép cặp, số, kéo thả điền vì trình làm bài chưa hiển thị được; câu loại đó đã tạo thì hiện nhãn "Chưa làm được — nên đổi loại"; không có ô điểm, skill, giờ, phần). Mỗi câu có ô **"Giải thích đáp án"** hiện cho học viên sau khi kiểm tra. Mũi tên lên/
+  một đáp án, nhiều đáp án, Đúng/Sai/Không có thông tin, điền khuyết, trả lời ngắn, sắp xếp, ghép cặp, số, kéo thả điền (**không có
+  tự luận**; từ 10/11/2026 học viên làm được đủ các loại này, kể cả sắp xếp, ghép cặp và kéo thả điền); không có ô điểm, skill, giờ, phần). Mỗi câu có ô **"Giải thích đáp án"** hiện cho học viên sau khi kiểm tra. Mũi tên lên/
   xuống đổi thứ tự đoạn và câu; "Sửa", "Xoá" (xoá đoạn hoặc câu có hộp xác nhận nói rõ kết quả luyện của học viên cũng mất); nút
   **"Xem trước"** mở đúng giao diện học viên, chấm được nhưng không lưu gì. Học viên chỉ thấy bài luyện khi có ít nhất một câu và
   làm ngay trong trang bài: đoạn văn bên cạnh câu hỏi, bấm "Kiểm tra câu n". Bài luyện **không vào sổ điểm**. Với khoá bật "Cá nhân

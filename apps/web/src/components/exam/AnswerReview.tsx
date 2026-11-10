@@ -40,7 +40,8 @@ export function QuestionCard({ q, idx }: { q: QuestionReview; idx: number }) {
         <div className="flex gap-1 text-sm font-medium leading-snug">
           <span className="text-faint">Câu {idx + 1}.</span>
           <SafeHtml
-            html={plainToRichHtml(q.prompt)}
+            // Kéo thả điền: đề có ký hiệu ô [[N]] → hiện "(Ô N)" cho dễ đọc.
+            html={plainToRichHtml(q.type === "drag_drop_fill" ? q.prompt.replace(/\[\[(\d+)\]\]/g, "(Ô $1)") : q.prompt)}
             className="prose prose-sm flex-1 max-w-none dark:prose-invert"
           />
         </div>
@@ -65,6 +66,10 @@ export function QuestionCard({ q, idx }: { q: QuestionReview; idx: number }) {
         {(q.type === "essay" || q.type === "short_answer") && (
           <EssayAnswer q={q} />
         )}
+        {q.type === "ordering" && <OrderingAnswer q={q} />}
+        {q.type === "matching" && <MatchingAnswer q={q} />}
+        {q.type === "drag_drop_fill" && <DragDropFillAnswer q={q} />}
+        {q.type === "numerical" && <NumericalAnswer q={q} />}
       </div>
 
       {/* Explanation */}
@@ -219,4 +224,154 @@ function EssayAnswer({ q }: { q: QuestionReview }) {
       )}
     </div>
   );
+}
+
+// ─── SẮP XẾP / GHÉP CẶP / KÉO THẢ ĐIỀN / SỐ ───────────────────────────────────
+//
+// Đáp án học viên lưu là MÃ CÔNG KHAI (xem core-lms/exam/public-tokens.ts); cấu hình xem lại kèm `reviewTokens` (mã gốc → mã công
+// khai) để đổi về mã gốc rồi so với đáp án đúng. Dữ liệu cũ lưu mã gốc vẫn dùng được.
+
+type ReviewCfg = { reviewTokens?: Record<string, string> };
+
+function idResolver(cfg: ReviewCfg, ids: string[]): (v: unknown) => string | null {
+  const inverse = new Map(Object.entries(cfg.reviewTokens ?? {}).map(([id, token]) => [token, id]));
+  return (v) => (typeof v !== "string" ? null : ids.includes(v) ? v : (inverse.get(v) ?? null));
+}
+
+const ROW_OK = "border-emerald-400 bg-emerald-50 text-emerald-900";
+const ROW_BAD = "border-red-400 bg-red-50 text-red-900";
+const ROW_NEUTRAL = "border-default text-default";
+
+function Label({ html }: { html: string }) {
+  return <SafeHtml html={plainToRichHtml(html)} className="prose prose-sm max-w-none dark:prose-invert" />;
+}
+
+function NoAnswer() {
+  return <p className="text-xs text-faint">Bạn chưa trả lời câu này.</p>;
+}
+
+function OrderingAnswer({ q }: { q: QuestionReview }) {
+  const cfg = q.config as ReviewCfg & { items: Array<{ id: string; label: string }> };
+  const ids = cfg.items.map((i) => i.id);
+  const resolve = idResolver(cfg, ids);
+  const order = (q.answer?.answerJson as { order?: unknown } | null)?.order;
+  const mine = Array.isArray(order) ? order.map(resolve) : [];
+  const labelOf = new Map(cfg.items.map((i) => [i.id, i.label]));
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div>
+        <p className="mb-1 text-xs font-medium text-faint">Thứ tự đúng</p>
+        <ol className="space-y-1.5">
+          {cfg.items.map((it, i) => (
+            <li key={it.id} className={`flex gap-2 rounded border px-3 py-1.5 text-sm ${ROW_NEUTRAL}`}>
+              <span className="w-5 shrink-0 font-bold">{i + 1}.</span>
+              <Label html={it.label} />
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div>
+        <p className="mb-1 text-xs font-medium text-faint">Bạn xếp</p>
+        {mine.length === 0 ? (
+          <NoAnswer />
+        ) : (
+          <ol className="space-y-1.5">
+            {mine.map((id, i) => (
+              <li key={i} className={`flex gap-2 rounded border px-3 py-1.5 text-sm ${id === ids[i] ? ROW_OK : ROW_BAD}`}>
+                <span className="w-5 shrink-0 font-bold">{id === ids[i] ? "✓" : "✗"}</span>
+                <Label html={(id && labelOf.get(id)) || "—"} />
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MatchingAnswer({ q }: { q: QuestionReview }) {
+  const cfg = q.config as ReviewCfg & { pairs: Array<{ id: string; left: string; right: string }> };
+  const ids = cfg.pairs.map((p) => p.id);
+  const resolve = idResolver(cfg, ids);
+  const matched = (q.answer?.answerJson as { matched?: Record<string, unknown> } | null)?.matched ?? {};
+  const rightOf = new Map(cfg.pairs.map((p) => [p.id, p.right]));
+  const answered = Object.keys(matched).length > 0;
+  if (!answered) return <NoAnswer />;
+  return (
+    <ul className="space-y-1.5">
+      {cfg.pairs.map((p) => {
+        const pickedId = resolve(matched[p.id]);
+        const ok = pickedId === p.id;
+        return (
+          <li key={p.id} className={`flex flex-wrap items-start gap-2 rounded border px-3 py-1.5 text-sm ${ok ? ROW_OK : ROW_BAD}`}>
+            <span className="w-4 shrink-0 font-bold">{ok ? "✓" : "✗"}</span>
+            <Label html={p.left} />
+            <span className="text-faint">→</span>
+            <Label html={p.right} />
+            {!ok && (
+              <span className="ml-auto shrink-0 text-xs text-red-600">
+                Bạn chọn: {pickedId ? htmlToPlain(rightOf.get(pickedId) ?? "") : "chưa ghép"}
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function DragDropFillAnswer({ q }: { q: QuestionReview }) {
+  const cfg = q.config as ReviewCfg & { tokens: Array<{ id: string; label: string; blankIndex: number | null }> };
+  const ids = cfg.tokens.map((t) => t.id);
+  const resolve = idResolver(cfg, ids);
+  const placed = (q.answer?.answerJson as { placed?: Record<string, unknown> } | null)?.placed ?? {};
+  const labelOf = new Map(cfg.tokens.map((t) => [t.id, t.label]));
+  const blanks = cfg.tokens
+    .filter((t): t is { id: string; label: string; blankIndex: number } => t.blankIndex !== null)
+    .sort((a, b) => a.blankIndex - b.blankIndex);
+  if (Object.keys(placed).length === 0) return <NoAnswer />;
+  return (
+    <ul className="space-y-1.5">
+      {blanks.map((b) => {
+        const mineId = resolve(placed[String(b.blankIndex)]);
+        const ok = mineId === b.id;
+        return (
+          <li key={b.id} className={`flex flex-wrap items-start gap-2 rounded border px-3 py-1.5 text-sm ${ok ? ROW_OK : ROW_BAD}`}>
+            <span className="w-4 shrink-0 font-bold">{ok ? "✓" : "✗"}</span>
+            <span className="text-faint">Ô {b.blankIndex}:</span>
+            <Label html={b.label} />
+            {!ok && (
+              <span className="ml-auto shrink-0 text-xs text-red-600">
+                Bạn đặt: {mineId ? htmlToPlain(labelOf.get(mineId) ?? "") : "để trống"}
+              </span>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function NumericalAnswer({ q }: { q: QuestionReview }) {
+  const cfg = q.config as { expected?: number; tolerance?: number };
+  const raw = (q.answer?.answerJson as { value?: unknown } | null)?.value;
+  const num = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw.trim()) : NaN;
+  const ok = Number.isFinite(num) && typeof cfg.expected === "number" && Math.abs(num - cfg.expected) <= (cfg.tolerance ?? 0);
+  return (
+    <div className="space-y-1.5 text-sm">
+      <p className={`rounded border px-3 py-1.5 ${ROW_OK}`}>
+        Đáp án đúng: <strong>{cfg.expected}</strong>
+        {cfg.tolerance ? ` (sai số ±${cfg.tolerance})` : ""}
+      </p>
+      {raw === undefined || raw === null || String(raw).trim() === "" ? (
+        <NoAnswer />
+      ) : (
+        <p className={`rounded border px-3 py-1.5 ${ok ? ROW_OK : ROW_BAD}`}>Bạn nhập: <strong>{String(raw)}</strong></p>
+      )}
+    </div>
+  );
+}
+
+function htmlToPlain(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }

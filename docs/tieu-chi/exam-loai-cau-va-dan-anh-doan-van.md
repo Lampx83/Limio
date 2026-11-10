@@ -1,6 +1,6 @@
 # Đề thi / Bài luyện: loại câu chưa làm được và dán ảnh vào Đoạn văn — Acceptance criteria
 
-> 10/11/2026, **thầy đã duyệt; A và B đã code (xem "Đã làm" ở cuối), chưa commit; C chưa làm.** Phát hiện từ khoá "Speak Out 2nd Edition" trên server 224: trình soạn cho tạo câu Ghép cặp (`matching`) trong Bài luyện nhưng trình làm bài báo "Unsupported question type: matching". Ba việc, làm theo thứ tự A → B → C; A và B đẩy được ngay, C lớn hơn.
+> 10/11/2026, **thầy đã duyệt; A, B đã commit (`1124c5c8`); C đã code (xem "Đã làm C"), chưa commit.** Phát hiện từ khoá "Speak Out 2nd Edition" trên server 224: trình soạn cho tạo câu Ghép cặp (`matching`) trong Bài luyện nhưng trình làm bài báo "Unsupported question type: matching". Ba việc, làm theo thứ tự A → B → C; A và B đẩy được ngay, C lớn hơn.
 
 ## Hiện trạng (đã đối chiếu mã, 10/11/2026)
 
@@ -57,3 +57,12 @@ Chấm điểm từng phần cho ghép cặp/kéo thả; loại câu mới; sử
 - **B:** `lib/examQuestionSupport.ts` (danh sách 6 loại làm được, nhãn và câu cảnh báo; test); bộ chọn của `QuestionEditor` chỉ còn 6 loại (đã xem trên trình duyệt); danh sách câu của đề thi (`ContentManager`) và Bài luyện (`PracticeEditor`) hiện nhãn "Chưa làm được — nên đổi loại" cho câu thuộc 4 loại; `ExamQuestion` hiện "Câu này chưa hiển thị được. Báo giảng viên." thay dòng tiếng Anh đỏ. Sửa chữ còn sót "Luyện thi" trong giải thích công tắc ở `MockExamPanel`. Cập nhật `GIAO-DIEN.md`.
 - **Chưa xem tay:** nhãn cảnh báo trên một câu `matching` có sẵn và câu tiếng Việt phía học viên (mới có test và đọc mã). Đường nhập vào đề thi khác không đi qua bộ chọn (AI import, Ngân hàng câu hỏi, Excel import) vẫn có thể đưa 4 loại vào đề: ngoài phạm vi, nhãn cảnh báo là lưới an toàn; C sẽ giải quyết.
 - **Nút cam chồng nút AI/Ghi chú:** sửa ở commit riêng (xem lịch sử nhánh).
+
+## Đã làm C (10/11/2026)
+
+- **Giao diện dùng chung:** `components/quiz/QuestionInputs.tsx` (Sắp xếp, Ghép cặp, Kéo thả điền chuyển NGUYÊN VĂN từ `QuizPlayer`, kèm `questionInputTypes.ts`); `QuizPlayer` chỉ còn import, hành vi Quiz không đổi (273 test component qua). Lớp nối cho đề thi: `exam/ExamQuestionExtraTypes.tsx` (đổi config/đáp án của đề thi sang dạng của Quiz) + ô nhập số; `ExamQuestion` vẽ đủ 10 loại, bỏ khối đề chung cho Kéo thả điền (tự vẽ ô thả). `isAnswerValueAnswered` thay ba bản `isAnswered` riêng ở ExamPlayer, PracticePlayer, LessonPractice.
+- **Máy chủ (không lộ đáp án):** `core-lms/exam/public-tokens.ts` (`publicToken` HMAC, `resolvePublicId`, `seededShuffle`); `toPublicQuestionConfig(type, config, seed)` trả cấu hình cho 4 loại: Sắp xếp xáo và đổi mã, Ghép cặp (vế trái mã cặp, vế phải xáo + mã công khai), Kéo thả (token xáo + mã công khai, không `blankIndex`), Số (rỗng); seed = lượt làm/học viên + câu nên tải lại không đổi thứ tự. Chấm điểm (`gradeOrdering/Matching/DragDropFill`) nhận mã công khai và cả mã gốc cũ. Khoá HMAC: `EXAM_PUBLIC_SECRET`, không có thì `NEXTAUTH_SECRET`/`AUTH_SECRET` (đổi khoá thì đáp án 4 loại này đang làm dở coi như chưa trả lời).
+- **Xem lại đáp án:** `withReviewTokens` thêm bảng mã vào cấu hình đầy đủ ở kết quả kiểm tra, kết quả luyện đề và xem lại bài thi; `AnswerReview` hiện thứ tự đúng/đã xếp, từng cặp, từng ô, đáp án số cho 4 loại; đề Kéo thả hiện "(Ô N)" thay `[[N]]`.
+- **Bỏ phần ẩn ở B:** `examQuestionSupport` có đủ 10 loại; bộ chọn trình soạn hiện lại 4 loại.
+- **Kiểm thử:** `public-tokens.test.ts` (15 ca: mã, xáo, không lộ, chấm bằng mã công khai), `ExamQuestion.test.tsx` (15 ca: vẽ, đáp án, xem lại). Đã làm thử trên trình duyệt ở chế độ luyện đề với đề 4 loại câu: sắp xếp (↑↓), ghép cặp (chọn), kéo thả (kéo bằng chuột), số, đúng/sai chấm đúng; dữ liệu trang không chứa mã gốc, `blankIndex`, đáp án số hay lời giải.
+- **Chưa xem tay:** kéo thả bằng cảm ứng thật trên điện thoại (Kéo thả điền chỉ có kéo, không có phương án chạm như Sắp xếp/Ghép cặp: đúng như Quiz hiện nay); đề thi thật (ExamPlayer, có giờ) và trang xem lại của lượt thi (đã phủ bằng test, chưa mở); Bài luyện nhúng trong bài học (`LessonPractice`).

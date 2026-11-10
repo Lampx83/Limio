@@ -12,22 +12,12 @@ import {
   retryDelayMs,
 } from "@/lib/examPlayerSync";
 import PassageView from "./exam/PassageView";
-import ExamQuestion, { type AnswerValue } from "./exam/ExamQuestion";
+import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "./exam/ExamQuestion";
 import QuestionPalette from "./exam/QuestionPalette";
 import FullscreenGate from "./exam/FullscreenGate";
 import TabBlurWarning from "./exam/TabBlurWarning";
 import MultiTabDetector from "./exam/MultiTabDetector";
 import SubmitReviewModal from "./exam/SubmitReviewModal";
-
-function isAnswered(value: AnswerValue): boolean {
-  if (value == null) return false;
-  if ("optionIds" in value) return value.optionIds.length > 0;
-  if ("correct" in value) return !!value.correct;
-  if ("blanks" in value)
-    return Object.values(value.blanks).some((v) => typeof v === "string" && v.trim() !== "");
-  if ("text" in value) return value.text.trim() !== "";
-  return false;
-}
 
 interface TiptapDoc {
   type: "doc";

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiUrl } from "@/lib/apiUrl";
 import PassageView from "./PassageView";
-import ExamQuestion, { type AnswerValue } from "./ExamQuestion";
+import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "./ExamQuestion";
 import { QuestionCard } from "./AnswerReview";
 import { formatClock } from "@/lib/audioClock";
 
@@ -36,15 +36,6 @@ interface CheckResult {
   maxScore: number;
   manual: boolean;
   config: unknown;
-}
-
-function isAnswered(v: AnswerValue): boolean {
-  if (v == null) return false;
-  if ("optionIds" in v) return v.optionIds.length > 0;
-  if ("correct" in v) return !!v.correct;
-  if ("blanks" in v) return Object.values(v.blanks).some((x) => typeof x === "string" && x.trim() !== "");
-  if ("text" in v) return v.text.trim() !== "";
-  return false;
 }
 
 type Step = { key: string; passageId: string | null; questionIds: string[] };

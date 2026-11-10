@@ -15,7 +15,7 @@ import {
   writeLayoutPref,
   type LayoutPref,
 } from "@/lib/lessonPracticeView";
-import ExamQuestion, { type AnswerValue } from "@/components/exam/ExamQuestion";
+import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "@/components/exam/ExamQuestion";
 import PassageView from "@/components/exam/PassageView";
 import { QuestionCard } from "@/components/exam/AnswerReview";
 
@@ -46,19 +46,6 @@ function explanationOf(config: unknown): string | null {
  * (buổi luyện, tự lưu, kiểm tra từng câu) nhưng với vỏ giao diện Language và không chuyển trang. Buổi luyện chỉ được
  * tạo khi học viên chọn đáp án đầu tiên. Chỉ import ExamQuestion/PassageView/QuestionCard, không sửa chúng.
  */
-/**
- * Câu đã có đáp án chưa (giống PracticePlayer). Viết riêng ở đây để Bài luyện không phụ thuộc thay đổi dở của màn hình làm
- * bài; khi các dạng câu mới (sắp xếp, ghép cặp…) vào ExamQuestion thì chuyển sang dùng chung hàm ở đó.
- */
-function isAnswered(v: AnswerValue): boolean {
-  if (v == null) return false;
-  if ("optionIds" in v) return v.optionIds.length > 0;
-  if ("correct" in v) return !!v.correct;
-  if ("blanks" in v) return Object.values(v.blanks).some((x) => typeof x === "string" && x.trim() !== "");
-  if ("text" in v) return v.text.trim() !== "";
-  return false;
-}
-
 export default function LessonPractice({
   slug,
   embed,

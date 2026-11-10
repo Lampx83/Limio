@@ -1,6 +1,7 @@
 export * from "./types";
 export * from "./schemas";
 export * from "./public-config";
+export * from "./public-tokens";
 export * from "./exams";
 export * from "./passages";
 export * from "./assets";
