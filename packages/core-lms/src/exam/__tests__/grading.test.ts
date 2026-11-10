@@ -232,3 +232,20 @@ describe("gradeExamAnswer", () => {
     });
   });
 });
+
+describe("gap_fill: so khớp không phân biệt hoa thường, dấu nháy và khoảng trắng", () => {
+  const cfg = { blanks: [{ id: "b1", acceptedAnswers: ["I’m trying", "had our washing machine fixed"], matchMode: "case_insensitive" as const }] };
+  const ans = (v: string) => ({ blanks: { b1: v } });
+  it("dấu nháy cong và thẳng như nhau, hoa thường và khoảng trắng thừa bỏ qua", () => {
+    for (const v of ["I'm trying", "i’m  trying ", "I‘m trying", "HAD our washing   machine fixed"]) {
+      expect(gradeExamAnswer("gap_fill", cfg, ans(v), 1).autoScore, v).toBe(1);
+    }
+  });
+  it("sai chữ vẫn sai", () => {
+    expect(gradeExamAnswer("gap_fill", cfg, ans("I'm try"), 1).autoScore).toBe(0);
+  });
+  it("chế độ exact vẫn phân biệt", () => {
+    const exact = { blanks: [{ id: "b1", acceptedAnswers: ["I’m"], matchMode: "exact" as const }] };
+    expect(gradeExamAnswer("gap_fill", exact, ans("I'm"), 1).autoScore).toBe(0);
+  });
+});

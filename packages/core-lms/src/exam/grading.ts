@@ -59,8 +59,16 @@ function matches(
   mode: "exact" | "case_insensitive",
 ): boolean {
   if (mode === "exact") return accepted.includes(candidate);
-  const lower = candidate.toLowerCase().trim();
-  return accepted.some((a) => a.toLowerCase().trim() === lower);
+  const lower = foldAnswer(candidate);
+  return accepted.some((a) => foldAnswer(a) === lower);
+}
+
+/**
+ * So khớp không phân biệt hoa thường: bỏ khoảng trắng đầu/cuối, gộp khoảng trắng liên tiếp và coi dấu nháy cong (’ ‘) như
+ * dấu nháy thẳng ('). Bài tiếng Anh hay có "I'm"/"I’m" và máy học viên gõ kiểu nào cũng được: bắt đúng kiểu dấu nháy là phạt oan.
+ */
+export function foldAnswer(s: string): string {
+  return s.toLowerCase().replace(/[\u2018\u2019\u02bc`]/g, "'").replace(/\s+/g, " ").trim();
 }
 
 function gradeGapFill(config: unknown, answer: unknown, points: number): GradeResult {
