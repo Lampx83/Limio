@@ -3564,9 +3564,20 @@ model GameAnswer {
 ///   field_test — đo câu hỏi. KHÔNG hiện đáp án (hiện là đốt câu hỏi: lớp sau
 ///                không thử nghiệm sạch được nữa), điểm không nên tính cho học
 ///                sinh vì đề chưa kiểm định, và được phép chở câu nháp.
+///   survey     — phiếu khảo sát (docs/tieu-chi/de-thi-khao-sat.md). Câu không có
+///                đáp án đúng, không bao giờ chấm hay hiện điểm, không vào sổ điểm;
+///                xuất câu trả lời thô ra Excel.
 enum ExamPurpose {
   assessment
   field_test
+  survey
+}
+
+/// Lần đo của phiếu khảo sát trước/sau. Trên ExamPassage (phần của phiếu): NULL = dùng
+/// ở cả hai lần. Trên ExamSession (ca): NULL = không phân lần, hiện mọi phần.
+enum SurveyPhase {
+  pre
+  post
 }
 
 enum ExamStatus {
@@ -3636,6 +3647,8 @@ enum ExamQuestionType {
   ordering
   numerical
   drag_drop_fill
+  // Thang trượt — chỉ dùng trong đề Khảo sát (giá trị trong [min, max] theo bước).
+  slider
 }
 
 enum ExamAssetType {
@@ -4015,6 +4028,8 @@ model ExamPassage {
   // Only when audioPolicy = limited_replay. Range 1-10 (app-validated).
   maxAudioPlays Int?
   revealMode    ExamPassageRevealMode  @default(all_at_once)
+  // Đề Khảo sát: đoạn văn là một "phần" của phiếu, nội dung là lời dẫn. NULL = cả hai lần đo.
+  surveyPhase   SurveyPhase?
   createdAt     DateTime               @default(now())
   updatedAt     DateTime               @updatedAt
 
@@ -4911,6 +4926,9 @@ model ExamSession {
   // chứa câu hỏi chưa kết nạp vào ngân hàng không. Đó là tính chất của nội
   // dung, nên nó vẫn chặn chiều ngược lại (đề thử nghiệm không đem thi thật).
   purpose             ExamPurpose?
+  // Đề Khảo sát: ca này là lần đo trước hay sau; quyết định phần nào của phiếu được hiện.
+  // NULL = không phân lần.
+  surveyPhase         SurveyPhase?
   // A5.8.6.5 Q2 — IP/CIDR allowlist to bypass open-mode rate-limit (labs).
   // Empty array = no allowlist; non-empty = only these IPs/CIDRs pass.
   ipAllowlist         String[]              @default([])

@@ -18,12 +18,15 @@ export function QuestionSetHeader({ count }: { count: number }) {
 }
 
 /** Đầu một câu: thẻ "Câu n", số điểm, và (bên phải) trạng thái như "Đã trả lời" / "Đúng". */
-export function QuestionNumber({ n, points, right }: { n: number | string; points: number; right?: ReactNode }) {
+/** `points` bỏ trống = không hiện ô điểm (phiếu Khảo sát). */
+export function QuestionNumber({ n, points, right }: { n: number | string; points?: number; right?: ReactNode }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
       <h3 className="flex flex-wrap items-center gap-2">
         <span className="inline-flex h-7 items-center rounded-full bg-brand-gradient px-3 text-sm font-bold tabular-nums text-white shadow-sm">Câu {n}</span>
-        <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs font-medium text-muted">{points} điểm</span>
+        {points !== undefined && (
+          <span className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs font-medium text-muted">{points} điểm</span>
+        )}
       </h3>
       {right}
     </div>

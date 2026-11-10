@@ -16,6 +16,14 @@ const MESSAGES: Record<string, string> = {
   forbidden: "Tài khoản này không được vào ca thi này. Liên hệ giảng viên.",
   rate_limited: "Bạn thao tác quá nhanh. Thử lại sau ít phút.",
   network_not_allowed: "Bạn đang ở dải mạng không phù hợp để vào thi.",
+  not_enrolled: "Bạn chưa ghi danh vào khoá học của phiếu này. Liên hệ giảng viên.",
+};
+
+/** Lời của phiếu Khảo sát (docs/tieu-chi/de-thi-khao-sat.md AC6) — không dùng chữ "thi". */
+const SURVEY_MESSAGES: Record<string, string> = {
+  exam_not_open: "Phiếu khảo sát chưa mở. Vui lòng đợi giảng viên.",
+  exam_window_closed: "Phiếu khảo sát đã đóng.",
+  attempt_already_submitted: "Bạn đã nộp phiếu này.",
 };
 
 /** Vào thi bằng tài khoản đang đăng nhập — không hỏi lại tên hay MSSV. */
@@ -28,6 +36,7 @@ export default function AccountClaim({
   questionCount,
   resuming,
   submitted,
+  survey = false,
 }: {
   code: string;
   examTitle: string;
@@ -39,6 +48,8 @@ export default function AccountClaim({
   resuming: boolean;
   /** Đã nộp (hoặc hết giờ tự nộp) trong ca này: không còn gì để vào. */
   submitted: boolean;
+  /** Đề Khảo sát: lời "phiếu", không nói "thi". */
+  survey?: boolean;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -51,7 +62,12 @@ export default function AccountClaim({
       const r = await fetch(apiUrl(`/api/exam-lobby/${code}/claim`), { method: "POST" });
       const j = (await r.json().catch(() => null)) as { attemptId?: string; error?: string } | null;
       if (!r.ok || !j?.attemptId) {
-        setErr(MESSAGES[j?.error ?? ""] ?? "Không vào được ca thi. Thử lại.");
+        const key = j?.error ?? "";
+        setErr(
+          (survey ? SURVEY_MESSAGES[key] : undefined) ??
+            MESSAGES[key] ??
+            (survey ? "Không mở được phiếu. Thử lại." : "Không vào được ca thi. Thử lại."),
+        );
         setBusy(false);
         return;
       }
@@ -62,6 +78,21 @@ export default function AccountClaim({
       setBusy(false);
     }
   };
+
+  if (submitted && survey) {
+    return (
+      <EntryShell step={3}>
+        <EntryGreeting name={displayName} />
+        <div className="mt-4 text-center">
+          <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-500" aria-hidden />
+          <h1 className="mt-4 text-h2 text-[rgb(var(--text))]">Bạn đã nộp phiếu này</h1>
+          <p className="mt-2 text-sm text-muted">
+            Câu trả lời của bạn cho <b className="text-[rgb(var(--text))]">{examTitle}</b> đã được ghi nhận. Cảm ơn bạn.
+          </p>
+        </div>
+      </EntryShell>
+    );
+  }
 
   if (submitted) {
     return (
@@ -89,7 +120,13 @@ export default function AccountClaim({
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-600" />
           </span>
-          {resuming ? "Bài đang làm của bạn" : "Ca thi đã mở"}
+          {survey
+            ? resuming
+              ? "Phiếu đang làm của bạn"
+              : "Phiếu khảo sát đã mở"
+            : resuming
+              ? "Bài đang làm của bạn"
+              : "Ca thi đã mở"}
         </span>
         <h1 className="mt-4 text-h2 text-[rgb(var(--text))]">{examTitle}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
@@ -107,7 +144,16 @@ export default function AccountClaim({
       <p className="mt-5 flex items-start gap-2 rounded-xl bg-[rgb(var(--surface-muted))] px-4 py-3 text-sm text-muted">
         <Timer className="mt-0.5 h-4 w-4 shrink-0 text-accent-600" aria-hidden />
         <span>
-          {resuming ? (
+          {survey ? (
+            resuming ? (
+              <>Bạn sẽ tiếp tục phiếu đang làm; câu đã trả lời được giữ nguyên.</>
+            ) : (
+              <>
+                Bạn có <b className="text-[rgb(var(--text))]">{durationMin} phút</b> để trả lời phiếu. Không có
+                câu trả lời đúng hay sai, và phiếu không tính điểm.
+              </>
+            )
+          ) : resuming ? (
             <>Bạn sẽ tiếp tục bài đang làm; đồng hồ không bị tính lại.</>
           ) : (
             <>
@@ -125,7 +171,17 @@ export default function AccountClaim({
         className="btn-primary btn-lg mt-6 w-full"
       >
         <Play className="h-5 w-5" aria-hidden />
-        {busy ? "Đang vào thi…" : resuming ? "Tiếp tục làm bài" : "Vào thi"}
+        {survey
+          ? busy
+            ? "Đang mở phiếu…"
+            : resuming
+              ? "Tiếp tục làm phiếu"
+              : "Bắt đầu làm phiếu"
+          : busy
+            ? "Đang vào thi…"
+            : resuming
+              ? "Tiếp tục làm bài"
+              : "Vào thi"}
       </button>
 
       {err && (

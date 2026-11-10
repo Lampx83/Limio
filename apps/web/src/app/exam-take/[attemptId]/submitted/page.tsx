@@ -5,8 +5,10 @@ import {
   getCandidateResultByAttemptId,
   getExamAttemptReview,
 } from "@feedbackme/core-lms";
+import { prisma } from "@feedbackme/db";
 import AnswerReview from "@/components/exam/AnswerReview";
 import { requireExamSubject } from "@/lib/session";
+import { formatDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,30 @@ export default async function ExamSubmittedPage({
   // without trying to fetch results (avoid leaking another candidate's data).
   if (!subject) {
     return <Generic />;
+  }
+
+  // Phiếu Khảo sát: không bao giờ chấm hay hiện điểm (docs/tieu-chi/de-thi-khao-sat.md AC6).
+  const surveyAttempt = await prisma.examAttempt.findUnique({
+    where: { id: params.attemptId },
+    select: { submittedAt: true, exam: { select: { purpose: true } } },
+  });
+  if (surveyAttempt?.exam.purpose === "survey") {
+    return (
+      <main className="mx-auto flex min-h-[80vh] max-w-md flex-col justify-center px-6 py-10 text-center">
+        <CheckCircle className="mx-auto h-16 w-16 text-emerald-500" aria-hidden />
+        <h1 className="mt-4 text-h2">Đã ghi nhận phiếu của bạn</h1>
+        <p className="mt-3 text-sm text-muted">Cảm ơn bạn đã dành thời gian trả lời.</p>
+        {surveyAttempt.submittedAt && (
+          <p className="mt-1 text-xs text-faint">Nộp lúc {formatDateTime(surveyAttempt.submittedAt)}</p>
+        )}
+        <Link
+          href="/"
+          className="mt-6 inline-block rounded bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-200"
+        >
+          Về trang chủ
+        </Link>
+      </main>
+    );
   }
 
   let result: Awaited<ReturnType<typeof getCandidateResultByAttemptId>> | null = null;

@@ -33,7 +33,7 @@ export interface ExamRun {
   accessMode: string;
   scale: "simple" | "formal";
   /** Mục đích của buổi — buổi không tự khai thì theo gói đề. */
-  purpose: "assessment" | "field_test";
+  purpose: "assessment" | "field_test" | "survey";
   timingMode: "scheduled" | "manual";
   /** Null với ca thủ công — nó đóng khi giáo viên bấm. */
   closesAt: string | null;

@@ -29,7 +29,8 @@ export default async function ItemAnalyticsPage({
 
   // Exams the instructor can see (= exams in courses they instruct).
   const exams = await prisma.exam.findMany({
-    where: { ownerContentItemId: null, course: { instructors: { some: { userId } } } },
+    // Phiếu Khảo sát không có thống kê câu (không chấm).
+    where: { ownerContentItemId: null, course: { instructors: { some: { userId } } }, purpose: { not: "survey" } },
     orderBy: [{ updatedAt: "desc" }],
     select: {
       id: true,

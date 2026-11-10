@@ -45,6 +45,11 @@ async function shareExamLinkImpl(
      * Bỏ trống = theo gói đề.
      */
     purpose?: "assessment" | "field_test";
+    /**
+     * Đề Khảo sát: ca này là lần đo trước hay sau (quyết định phần nào hiện).
+     * Bỏ trống/null = không phân lần. Bị bỏ qua với đề không phải Khảo sát.
+     */
+    surveyPhase?: "pre" | "post" | null;
   } = {},
   db: PrismaClient = prisma,
 ): Promise<{
@@ -94,6 +99,15 @@ async function shareExamLinkImpl(
       message: "Giờ mở phải trước giờ đóng.",
     });
   }
+  // Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md): ca luôn mang mục đích của đề và
+  // không bao giờ hiện đáp án/điểm; đề thường không có lần đo.
+  const isSurvey = exam.purpose === "survey";
+  if (isSurvey) {
+    opts = { ...opts, purpose: undefined, revealAnswers: "never" };
+  } else {
+    opts = { ...opts, surveyPhase: null };
+  }
+  const surveyPhase = isSurvey ? (opts.surveyPhase ?? null) : null;
   if (exam._count.questions === 0) {
     throw new ExamError("validation_failed", {
       reason: "no_questions",
@@ -125,6 +139,7 @@ async function shareExamLinkImpl(
       timingMode: true,
       status: true,
       purpose: true,
+      surveyPhase: true,
     },
     // Mới nhất trước: nếu có nhiều ca còn mở thì ca vừa tạo mới là ca giáo
     // viên đang nói tới.
@@ -140,7 +155,9 @@ async function shareExamLinkImpl(
         // Cùng lý do: buổi đang mở kiểu thi thật thì không được lặng lẽ biến
         // thành đợt thử nghiệm chỉ vì lần này bấm Mở từ trang thử nghiệm.
         // Khác mục đích ⇒ đó là buổi khác, mở buổi mới.
-        (s.purpose ?? exam.purpose) === (opts.purpose ?? exam.purpose),
+        (s.purpose ?? exam.purpose) === (opts.purpose ?? exam.purpose) &&
+        // Khảo sát: lần trước và lần sau là hai ca khác nhau (mỗi ca một lượt/người).
+        (s.surveyPhase ?? null) === surveyPhase,
     ) ?? null;
 
   const published = exam.status !== "published";
@@ -167,6 +184,7 @@ async function shareExamLinkImpl(
         durationOverrideMin: opts.durationMin ?? null,
         revealAnswers: opts.revealAnswers ?? null,
         purpose: opts.purpose ?? null,
+        surveyPhase,
       },
     });
     return {
@@ -203,6 +221,7 @@ async function shareExamLinkImpl(
           scale: opts.scale ?? "simple",
           revealAnswers: opts.revealAnswers ?? null,
           purpose: opts.purpose ?? null,
+          surveyPhase,
         },
         select: { id: true },
       });

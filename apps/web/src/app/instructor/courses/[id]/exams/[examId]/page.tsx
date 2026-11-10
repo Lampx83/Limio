@@ -169,10 +169,10 @@ export default async function EditExamPage({
               <>{exam._count.oralMaterials} tài liệu</>
             ) : (
               <>
-                {exam._count.passages} đoạn · {exam._count.questions} câu hỏi
+                {exam._count.passages} {exam.purpose === "survey" ? "phần" : "đoạn"} · {exam._count.questions} câu hỏi
               </>
             )}{" "}
-            · {attemptCount} lượt thi
+            · {attemptCount} {exam.purpose === "survey" ? "phiếu đã làm" : "lượt thi"}
           </p>
         </div>
 
@@ -319,7 +319,7 @@ export default async function EditExamPage({
 
       {activeTab === "content" && (
         <>
-          {exam.kind !== "oral" && (
+          {exam.kind !== "oral" && exam.purpose !== "survey" && (
             <MockExamPanel
               examId={exam.id}
               initialMockMode={exam.mockMode}
@@ -334,11 +334,15 @@ export default async function EditExamPage({
             />
           )}
           <section className="mt-6 rounded border border-default bg-white p-5">
-            <h2 className="mb-1 text-base font-semibold">Nội dung bài thi</h2>
+            <h2 className="mb-1 text-base font-semibold">
+              {exam.purpose === "survey" ? "Nội dung phiếu khảo sát" : "Nội dung bài thi"}
+            </h2>
             <p className="mb-4 text-sm text-faint">
               {exam.status === "archived"
                 ? "Bài thi đã lưu trữ — nội dung khoá, không sửa được."
-                : "Thêm câu hỏi từ ngân hàng, hoặc tự soạn. Gắn skill là tuỳ chọn (cần nếu muốn cá nhân hoá phản hồi)."}
+                : exam.purpose === "survey"
+                  ? "Chia phiếu thành các phần, mỗi phần có lời dẫn và lần đo dùng phần đó. Câu hỏi không có đáp án đúng; đặt mã câu để làm tiêu đề cột khi xuất Excel."
+                  : "Thêm câu hỏi từ ngân hàng, hoặc tự soạn. Gắn skill là tuỳ chọn (cần nếu muốn cá nhân hoá phản hồi)."}
             </p>
             {isPublished && hasAttempts && (
               <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
@@ -359,6 +363,7 @@ export default async function EditExamPage({
                 maxAudioPlays: p.maxAudioPlays,
                 revealMode: p.revealMode,
                 orderIndex: p.orderIndex,
+                surveyPhase: p.surveyPhase,
                 skills: p.skillTags.map((t) => ({
                   id: t.skill.id,
                   code: t.skill.code,
@@ -382,10 +387,12 @@ export default async function EditExamPage({
                   name: t.skill.name,
                 })),
               }))}
+              survey={exam.purpose === "survey"}
             />
           </section>
 
-          <SectionsPanel examId={exam.id} />
+          {/* Phiếu Khảo sát không chia "phần chấm điểm" (trọng số, bảng quy đổi) — phần của phiếu là đoạn văn. */}
+          {exam.purpose !== "survey" && <SectionsPanel examId={exam.id} />}
         </>
       )}
     </main>

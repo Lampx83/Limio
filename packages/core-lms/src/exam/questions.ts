@@ -2,7 +2,7 @@ import { afterOwnedPracticeChanged } from "../courses/practiceBlock";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
-import { configSchemaForType } from "./schemas";
+import { configSchemaForType, surveyQuestionCode } from "./schemas";
 import { ExamError } from "./types";
 
 const P0_QUESTION_TYPES = [
@@ -19,6 +19,8 @@ const P0_QUESTION_TYPES = [
   "ordering",
   "numerical",
   "drag_drop_fill",
+  // Thang trượt — chỉ đề Khảo sát (schemas.ts chặn ở đề thường).
+  "slider",
 ] as const;
 
 const questionType = z.enum(P0_QUESTION_TYPES);
@@ -62,7 +64,7 @@ export const UpdateExamQuestionInput = z.object({
 async function assertExamDraft(examId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, createdById: true, status: true, kind: true },
+    select: { id: true, courseId: true, createdById: true, status: true, kind: true, purpose: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.status === "archived") throw new ExamError("exam_not_draft");
@@ -78,20 +80,39 @@ async function loadQuestionWithCourse(questionId: string, db: PrismaClient) {
       id: true,
       examId: true,
       passageId: true,
-      exam: { select: { courseId: true, createdById: true, status: true } },
+      exam: { select: { courseId: true, createdById: true, status: true, purpose: true } },
     },
   });
   if (!q) throw new ExamError("validation_failed", "question_not_found");
   return q;
 }
 
-function validateConfigForType(type: string, config: unknown): unknown {
-  const schema = configSchemaForType(type);
+function validateConfigForType(type: string, config: unknown, survey = false): unknown {
+  const schema = configSchemaForType(type, { survey });
   const parsed = schema.safeParse(config);
   if (!parsed.success) {
     throw new ExamError("validation_failed", parsed.error.flatten());
   }
   return parsed.data;
+}
+
+/** Đề Khảo sát: "Mã câu" không được trùng trong cùng đề (là tiêu đề cột khi xuất). */
+async function assertSurveyCodeUnique(
+  examId: string,
+  config: unknown,
+  exceptQuestionId: string | null,
+  db: PrismaClient,
+) {
+  const code = surveyQuestionCode(config);
+  if (!code) return;
+  const others = await db.examQuestion.findMany({
+    where: { examId, ...(exceptQuestionId ? { NOT: { id: exceptQuestionId } } : {}) },
+    select: { config: true },
+  });
+  const lower = code.toLowerCase();
+  if (others.some((o) => surveyQuestionCode(o.config)?.toLowerCase() === lower)) {
+    throw new ExamError("validation_failed", "survey_code_duplicate");
+  }
 }
 
 async function assertPassageInExam(
@@ -136,7 +157,9 @@ export async function createExamQuestion(
   const parsed = CreateExamQuestionInput.safeParse(rawInput);
   if (!parsed.success) throw new ExamError("validation_failed", parsed.error.flatten());
   const d = parsed.data;
-  const validConfig = validateConfigForType(d.type, d.config);
+  const survey = exam.purpose === "survey";
+  const validConfig = validateConfigForType(d.type, d.config, survey);
+  if (survey) await assertSurveyCodeUnique(examId, validConfig, null, db);
 
   const passageId = d.passageId ?? null;
   if (passageId) {
@@ -153,7 +176,8 @@ export async function createExamQuestion(
     const orderInPassage = passageId
       ? await tx.examQuestion.count({ where: { passageId } })
       : null;
-    const points = d.points ?? 1;
+    // Đề Khảo sát không chấm: mọi câu 0 điểm, bất kể client gửi gì.
+    const points = survey ? 0 : (d.points ?? 1);
 
     const q = await tx.examQuestion.create({
       data: {
@@ -221,7 +245,8 @@ export async function updateExamQuestion(
     });
     const effectiveType = d.type ?? current.type;
     const effectiveConfig = d.config !== undefined ? d.config : current.config;
-    validConfig = validateConfigForType(effectiveType, effectiveConfig);
+    validConfig = validateConfigForType(effectiveType, effectiveConfig, q.exam.purpose === "survey");
+    if (q.exam.purpose === "survey") await assertSurveyCodeUnique(q.examId, validConfig, questionId, db);
   }
 
   // If passageId changes, sanity check it belongs to the same exam.
@@ -234,7 +259,7 @@ export async function updateExamQuestion(
     if (d.type !== undefined) data.type = d.type;
     if (d.prompt !== undefined) data.prompt = d.prompt;
     if (validConfig !== undefined) data.config = validConfig as Prisma.InputJsonValue;
-    if (d.points !== undefined) data.points = d.points;
+    if (d.points !== undefined) data.points = q.exam.purpose === "survey" ? 0 : d.points;
     if (d.passageId !== undefined) {
       data.passage = d.passageId
         ? { connect: { id: d.passageId } }

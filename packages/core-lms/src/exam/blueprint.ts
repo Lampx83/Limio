@@ -504,9 +504,10 @@ export async function assembleExamFromBlueprint(
 ): Promise<AssembleBlueprintResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, createdById: true, status: true },
+    select: { courseId: true, createdById: true, status: true, purpose: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
+  if (exam.purpose === "survey") throw new ExamError("validation_failed", "survey_import_unsupported");
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, exam, db);
   if (!exam.courseId) {
@@ -814,10 +815,11 @@ export async function importPreviewToExam(
 ): Promise<ImportPreviewResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true, createdById: true, status: true },
+    select: { id: true, courseId: true, createdById: true, status: true, purpose: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
   await assertCanEditExam(actorUserId, exam, db);
+  if (exam.purpose === "survey") throw new ExamError("validation_failed", "survey_import_unsupported");
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");
 
   const section = await db.examSection.findFirst({

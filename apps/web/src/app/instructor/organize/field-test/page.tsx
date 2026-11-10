@@ -28,7 +28,9 @@ export default async function OrganizeFieldTestPage({
     where: { ownerContentItemId: null,
       courseId: { in: courses.map((c) => c.id) },
       status: { not: "archived" },
-      // KHÔNG lọc theo purpose. Thử nghiệm là tính chất của BUỔI THI, nên
+      // Ngoại lệ duy nhất: phiếu Khảo sát không có đáp án để đo chất lượng câu.
+      purpose: { not: "survey" },
+      // KHÔNG lọc theo purpose (ngoài Khảo sát). Thử nghiệm là tính chất của BUỔI THI, nên
       // gói đề bình thường cũng đem đo chất lượng câu hỏi được — đó mới là
       // việc giáo viên hay làm. Lọc `purpose: "field_test"` như trước khiến
       // danh sách luôn rỗng, vì mọi đường tạo gói đề đều ghi cứng

@@ -159,8 +159,94 @@ export const DragDropFillConfig = z
     message: "phải có ít nhất 1 chỗ trống thật (blankIndex khác null) — không chỉ toàn mồi nhử",
   });
 
-/** Discriminated by ExamQuestion.type. */
-export function configSchemaForType(type: string): z.ZodTypeAny {
+// ---------------------------------------------------------------------------
+// Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md) — câu KHÔNG có đáp án đúng.
+// Cùng tên loại câu với đề thường (mcq/multi/short_answer/essay) để dùng lại
+// trình làm bài, nhưng cấu hình riêng: không isCorrect, không acceptedAnswers,
+// không rubric. `code` là "Mã câu" (tiêu đề cột khi xuất), không hiện cho học viên.
+// ---------------------------------------------------------------------------
+
+const surveyCodeField = {
+  code: z
+    .string()
+    .trim()
+    .max(20)
+    .regex(/^[\p{L}\p{N}_.-]*$/u, "Mã câu chỉ gồm chữ, số và _ . -")
+    .optional()
+    .transform((v) => (v ? v : undefined)),
+};
+
+const surveyOptionSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().trim().min(1).max(2_000),
+});
+
+const uniqueOptionIds = (c: { options: Array<{ id: string }> }) =>
+  new Set(c.options.map((o) => o.id)).size === c.options.length;
+
+export const SurveyChoiceConfig = z
+  .object({ options: z.array(surveyOptionSchema).min(2).max(10), ...surveyCodeField })
+  .refine(uniqueOptionIds, { message: "option ids must be unique" });
+
+export const SurveyTextConfig = z.object({ ...surveyCodeField });
+
+/** Thang trượt: giá trị trong [min, max], cách min một bội số của step. */
+export const SliderConfig = z
+  .object({
+    min: z.number().int().min(-1_000).max(1_000),
+    max: z.number().int().min(-1_000).max(1_000),
+    step: z.number().int().positive().max(1_000),
+    minLabel: z.string().trim().max(60).optional(),
+    maxLabel: z.string().trim().max(60).optional(),
+    ...surveyCodeField,
+  })
+  .refine((c) => c.max > c.min, { message: "max phải lớn hơn min", path: ["max"] })
+  .refine((c) => (c.max - c.min) % c.step === 0, {
+    message: "khoảng (max - min) phải chia hết cho bước",
+    path: ["step"],
+  });
+
+/** Loại câu dùng được trong đề Khảo sát. */
+export const SURVEY_QUESTION_TYPES = ["mcq", "multi", "short_answer", "essay", "slider"] as const;
+
+export function isSurveyQuestionType(type: string): boolean {
+  return (SURVEY_QUESTION_TYPES as readonly string[]).includes(type);
+}
+
+/** Mã câu của một câu khảo sát (hoặc undefined). */
+export function surveyQuestionCode(config: unknown): string | undefined {
+  const code = (config as { code?: unknown } | null)?.code;
+  return typeof code === "string" && code.trim() ? code.trim() : undefined;
+}
+
+/** Câu trả lời thang trượt có hợp lệ với cấu hình không. */
+export function isValidSliderValue(config: unknown, value: unknown): value is number {
+  const c = config as { min?: number; max?: number; step?: number } | null;
+  if (!c || typeof value !== "number" || !Number.isFinite(value)) return false;
+  const { min = 0, max = 0, step = 1 } = c;
+  return value >= min && value <= max && (value - min) % step === 0;
+}
+
+/**
+ * Discriminated by ExamQuestion.type. `opts.survey` = câu thuộc đề Khảo sát:
+ * chỉ nhận các loại trong SURVEY_QUESTION_TYPES, với cấu hình không có đáp án.
+ * Thang trượt chỉ có ở đề Khảo sát.
+ */
+export function configSchemaForType(type: string, opts: { survey?: boolean } = {}): z.ZodTypeAny {
+  if (opts.survey) {
+    switch (type) {
+      case "mcq":
+      case "multi":
+        return SurveyChoiceConfig;
+      case "short_answer":
+      case "essay":
+        return SurveyTextConfig;
+      case "slider":
+        return SliderConfig;
+      default:
+        return z.never();
+    }
+  }
   switch (type) {
     case "mcq":
       return McqConfig;

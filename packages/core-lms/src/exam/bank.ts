@@ -1134,6 +1134,8 @@ export async function copyBankQuestionToExam(
     select: { id: true, courseId: true, createdById: true, status: true, purpose: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
+  // Câu ngân hàng luôn có đáp án đúng — không chép vào đề Khảo sát.
+  if (exam.purpose === "survey") throw new ExamError("validation_failed", "survey_import_unsupported");
 
   // Câu chưa kết nạp vào kho CHỈ được chở bởi đề thử nghiệm — đó chính là lý do
   // đề thử nghiệm tồn tại. Đề thi thật vẫn chỉ nhận câu đã published, giữ

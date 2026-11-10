@@ -137,6 +137,7 @@ async function loadExamForRuntime(examId: string, db: PrismaClient) {
       allowMock: true,
       shuffleQuestions: true,
       shuffleOptions: true,
+      purpose: true,
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
@@ -169,6 +170,11 @@ export async function startExamAttempt(
   durationSec: number;
 }> {
   const exam = await loadExamForRuntime(examId, db);
+  // Phiếu Khảo sát chỉ làm qua mã QR theo lần đo (claimByAccount) — đường trang khoá
+  // học không biết lần đo và không tách lượt trước/sau (docs/tieu-chi/de-thi-khao-sat.md AC5).
+  if (exam.purpose === "survey") {
+    throw new ExamError("exam_not_open", { reason: "survey_qr_only" });
+  }
 
   // A5.8: composite unique was replaced with partial unique index in raw SQL;
   // Prisma can't model partial unique, so we use findFirst here. Still hits the

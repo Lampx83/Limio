@@ -185,6 +185,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "phieu-khao-sat",
+    title: "Phiếu khảo sát trước và sau (không chấm điểm)",
+    keywords: ["khảo sát", "phiếu khảo sát", "bảng hỏi", "pre post", "trước sau", "lần đo", "thang likert", "thang trượt", "thực nghiệm", "nghiên cứu", "xuất câu trả lời", "mã câu"],
+    destinationIds: ["quick_exam", "exam_history"],
+    body: `Phiếu khảo sát là một đề thi đặt "Mục đích" là "Khảo sát (không chấm điểm)" (trong phần Nâng cao của biểu mẫu đề). Phiếu không có đáp án đúng, không chấm và sinh viên không bao giờ thấy điểm. Ở tab Nội dung, thầy/cô bấm "Thêm phần" để chia phiếu thành các phần; mỗi phần có tiêu đề, lời dẫn và ô "Dùng ở lần đo" (Cả hai lần, Chỉ lần trước hoặc Chỉ lần sau). Câu hỏi có năm dạng: Một lựa chọn (dùng cho thang 1–5), Nhiều lựa chọn, Thang trượt (ví dụ 0–100), Trả lời ngắn và Trả lời dài. Nên điền "Mã câu" (ví dụ TT01) để làm tiêu đề cột khi xuất. Để sinh viên làm phiếu, vào "Link thi nhanh", chọn phiếu (có chữ [Khảo sát] trước tên), chọn "Lần đo" rồi bấm "Mở" và chiếu mã QR. Sinh viên phải đăng nhập và đã ghi danh khoá; mỗi người làm một lần cho mỗi lần đo. Mở "Xem kết quả" của ca để thấy số phiếu đã nộp và bấm "Xuất câu trả lời (Excel)" hoặc "Xuất mọi lần đo của phiếu": mỗi lượt nộp một dòng, mỗi câu một cột, lựa chọn ghi bằng số thứ tự, kèm sheet giải thích từng mã câu. Phiếu khảo sát không nhận câu từ ngân hàng, AI import hay Excel import, vì các nguồn đó luôn có đáp án đúng.`,
+    useCases: [
+      `Trước và sau một thực nghiệm sư phạm, thầy/cô dùng một phiếu có phần "Chỉ lần trước" và "Chỉ lần sau", mở hai lần bằng mã QR rồi xuất Excel để so sánh.`,
+      `Cuối học phần, thầy/cô mở phiếu lấy ý kiến sinh viên về cách tổ chức các buổi thực hành mà không cần chấm điểm.`,
+    ],
+  },
+  {
     id: "bai-tap-cham-bai",
     title: "Bài tập và chấm bài",
     keywords: ["bài tập", "assignment", "chấm bài", "chấm điểm", "nhận xét", "bài nộp", "chờ chấm", "chấm tự luận", "chấm nhanh", "bài tiếp", "gợi ý điểm", "xoá bài tập", "xoá assignment", "chuyển bài tập", "di chuyển bài tập", "đặt nhầm chỗ", "sửa bài tập", "ẩn bài tập"],

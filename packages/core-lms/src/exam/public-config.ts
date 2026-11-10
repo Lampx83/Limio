@@ -70,6 +70,18 @@ export function toPublicQuestionConfig(
       return {};
     case "essay":
       return typeof c.minWords === "number" ? { minWords: c.minWords } : {};
+    case "slider": {
+      // Thang trượt của đề Khảo sát — không có đáp án; mã câu (`code`) không gửi xuống.
+      const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
+      const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+      return {
+        min: num(c.min, 0),
+        max: num(c.max, 100),
+        step: num(c.step, 1),
+        ...(str(c.minLabel) ? { minLabel: str(c.minLabel) } : {}),
+        ...(str(c.maxLabel) ? { maxLabel: str(c.maxLabel) } : {}),
+      };
+    }
     default:
       // true_false_notgiven, short_answer, và mọi loại chưa biết.
       return {};

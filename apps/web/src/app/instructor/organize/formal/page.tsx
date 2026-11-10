@@ -37,6 +37,8 @@ export default async function OrganizeFormalPage({
       status: { not: "archived" },
       // Vấn đáp AI mở qua Link thi nhanh — chưa có phòng/giám thị nhiều người.
       kind: "written",
+      // Phiếu Khảo sát mở bằng Link thi nhanh theo lần đo, không vào kỳ thi chính thức.
+      purpose: { not: "survey" },
       questions: { some: {} },
       OR: [
         ...(courses.length > 0 ? [{ courseId: { in: courses.map((c) => c.id) } }] : []),

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
-import { getAttemptRuntime, toPublicQuestionConfig } from "@feedbackme/core-lms";
+import { filterSurveyContent, getAttemptRuntime, toPublicQuestionConfig } from "@feedbackme/core-lms";
 import { requireExamSubject } from "@/lib/session";
 import ExamPlayer from "@/components/ExamPlayer";
 import SebBrowserPrompt from "@/components/exam/SebBrowserPrompt";
@@ -63,6 +63,20 @@ export default async function ExamTakePage({
     },
   });
 
+  // Đề Khảo sát: chỉ hiện các phần thuộc lần đo của ca (docs/tieu-chi/de-thi-khao-sat.md AC4).
+  const survey = examDetail.purpose === "survey";
+  const sessionPhase = survey
+    ? (
+        await prisma.examAttempt.findUnique({
+          where: { id: runtime.attemptId },
+          select: { session: { select: { surveyPhase: true } } },
+        })
+      )?.session?.surveyPhase ?? null
+    : null;
+  const visible = survey
+    ? filterSurveyContent(examDetail.passages, examDetail.questions, sessionPhase)
+    : { passages: examDetail.passages, questions: examDetail.questions };
+
   // A7.8 — Strict proctoring: block non-SEB resume of an in-progress attempt.
   if (requiresSeb(examDetail.proctoringLevel)) {
     const { isSeb } = detectSeb(headers());
@@ -92,12 +106,13 @@ export default async function ExamTakePage({
         showResultsAfterSubmit: examDetail.showResultsAfterSubmit,
         proctoringLevel: examDetail.proctoringLevel,
       }}
-      passages={examDetail.passages.map((p) => ({
+      survey={survey}
+      passages={visible.passages.map((p) => ({
         id: p.id,
         title: p.title,
         contentJson: p.contentJson as unknown as TiptapDoc,
       }))}
-      questions={examDetail.questions.map((q) => ({
+      questions={visible.questions.map((q) => ({
         id: q.id,
         type: q.type,
         prompt: q.prompt,

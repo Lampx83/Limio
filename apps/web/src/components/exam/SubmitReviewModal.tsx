@@ -16,6 +16,8 @@ interface Props {
   onJump: (questionId: string) => void;
   /** Đề thi thử nộp từng phần: đổi chữ và nói rõ không quay lại được. */
   section?: { title: string; isLast: boolean };
+  /** Phiếu Khảo sát: không nói "bài", không nhắc điểm (docs/tieu-chi/de-thi-khao-sat.md AC6). */
+  survey?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ export default function SubmitReviewModal({
   onConfirm,
   onJump,
   section,
+  survey = false,
 }: Props) {
   if (!open) return null;
   const unanswered = items.filter((i) => !i.answered);
@@ -46,7 +49,11 @@ export default function SubmitReviewModal({
       <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-lg bg-white shadow-xl">
         <div className="border-b border-default px-5 py-3">
           <h2 id="submit-review-title" className="text-base font-semibold">
-            {section && !section.isLast ? `Nộp ${section.title}?` : "Xem lại trước khi nộp bài"}
+            {section && !section.isLast
+              ? `Nộp ${section.title}?`
+              : survey
+                ? "Xem lại trước khi nộp phiếu"
+                : "Xem lại trước khi nộp bài"}
           </h2>
         </div>
 
@@ -67,7 +74,7 @@ export default function SubmitReviewModal({
 
           {unanswered.length === 0 ? (
             <div className="rounded border border-emerald-300 bg-emerald-50 p-3 text-emerald-800">
-              ✓ Bạn đã trả lời tất cả các câu. Sẵn sàng nộp bài.
+              ✓ Bạn đã trả lời tất cả các câu. Sẵn sàng nộp {survey ? "phiếu" : "bài"}.
             </div>
           ) : (
             <div>
@@ -97,8 +104,9 @@ export default function SubmitReviewModal({
                 ))}
               </ul>
               <p className="mt-3 text-xs text-faint">
-                Các câu chưa trả lời sẽ bị tính 0 điểm. Bạn vẫn có thể nộp bài
-                nếu đã chắc chắn.
+                {survey
+                  ? `Bạn còn ${unanswered.length} câu chưa trả lời. Vẫn nộp phiếu?`
+                  : "Các câu chưa trả lời sẽ bị tính 0 điểm. Bạn vẫn có thể nộp bài nếu đã chắc chắn."}
               </p>
             </div>
           )}
@@ -128,10 +136,14 @@ export default function SubmitReviewModal({
               : unanswered.length > 0
                 ? section && !section.isLast
                   ? "Vẫn nộp phần này"
-                  : "Vẫn nộp bài"
+                  : survey
+                    ? "Vẫn nộp phiếu"
+                    : "Vẫn nộp bài"
                 : section && !section.isLast
                   ? "Nộp phần này"
-                  : "Nộp bài"}
+                  : survey
+                    ? "Nộp phiếu"
+                    : "Nộp bài"}
           </button>
         </div>
       </div>

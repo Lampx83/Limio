@@ -34,12 +34,55 @@ async function loadAttemptForGrading(attemptId: string, db: PrismaClient) {
           courseId: true,
           showResultsAfterSubmit: true,
           kind: true,
+          purpose: true,
         },
       },
     },
   });
   if (!attempt) throw new ExamError("attempt_not_found");
   return attempt;
+}
+
+/**
+ * Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md): nộp là xong, KHÔNG chấm. Câu trả lời
+ * giữ nguyên, không đặt điểm, không bao giờ "chờ chấm"; lượt không có score/scorePct;
+ * không phát exam.graded. Payload sự kiện không mang câu trả lời.
+ */
+async function finalizeSurveySubmission(
+  attempt: Awaited<ReturnType<typeof loadAttemptForGrading>>,
+  reason: "manual" | "timer_expired" | "force_submitted",
+  db: PrismaClient,
+): Promise<ExamSubmitResult> {
+  const nextStatus = reason === "timer_expired" ? "auto_submitted" : "submitted";
+  await db.examAnswer.updateMany({
+    where: { attemptId: attempt.id },
+    data: { autoScore: null, needsGrading: false },
+  });
+  await db.examAttempt.update({
+    where: { id: attempt.id },
+    data: { status: nextStatus, submittedAt: new Date(), gradedAt: null, score: null, scorePct: null },
+  });
+  const eventType =
+    reason === "manual" ? LearningEventType.ExamSubmitted : LearningEventType.ExamAutoSubmitted;
+  await emitEvent(
+    attempt.userId,
+    eventType,
+    {
+      examId: attempt.examId,
+      attemptId: attempt.id,
+      autoScore: 0,
+      fullyGraded: false,
+      survey: true,
+      ...(reason === "timer_expired" ? { reason: "timer_expired" as const } : {}),
+    },
+    {
+      courseId: attempt.exam.courseId,
+      candidateId: attempt.candidateId ?? undefined,
+      eventKey: `${eventType}:${attempt.id}`,
+    },
+    db,
+  );
+  return { autoScore: 0, fullyGraded: false, status: nextStatus };
 }
 
 async function loadQuestionsWithAnswers(
@@ -157,6 +200,7 @@ export async function finalizeSubmission(
       status: attempt.status as ExamSubmitResult["status"],
     };
   }
+  if (attempt.exam.purpose === "survey") return finalizeSurveySubmission(attempt, reason, db);
   const questions = await loadQuestionsWithAnswers(attempt.examId, attemptId, db);
 
   const { autoScore, allGraded, scoreOf } = await applyAutoGrading(attemptId, questions, db);
@@ -249,9 +293,11 @@ export async function regradeExamAttempts(
 ): Promise<RegradeExamResult> {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { id: true, courseId: true },
+    select: { id: true, courseId: true, purpose: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
+  // Đề Khảo sát không chấm nên không có gì để chấm lại.
+  if (exam.purpose === "survey") return { attemptsProcessed: 0, attemptsChanged: 0, answersChanged: 0 };
 
   const questions = await db.examQuestion.findMany({
     where: { examId },
@@ -496,6 +542,10 @@ export async function applyAutoGradingForAttempt(
   if (attempt.status === "in_progress") {
     throw new ExamError("attempt_not_submitted");
   }
+  // Phiếu Khảo sát nằm ở "đã nộp" vĩnh viễn — không bao giờ chấm (kể cả từ cron gỡ kẹt).
+  if (attempt.exam.purpose === "survey") {
+    return { autoScore: 0, fullyGraded: false, status: attempt.status as ExamSubmitResult["status"] };
+  }
   const questions = await loadQuestionsWithAnswers(attempt.examId, attemptId, db);
   const { autoScore, allGraded, scoreOf } = await applyAutoGrading(attemptId, questions, db);
 
@@ -615,6 +665,9 @@ export async function gradeStuckSubmittedAttempts(
       status: { in: ["submitted", "auto_submitted"] },
       score: null,
       submittedAt: { lt: cutoff, not: null },
+      // Phiếu Khảo sát luôn score = null và không bao giờ chấm. Không loại ra thì
+      // chúng chiếm hết `take` mỗi lượt và bài thi kẹt thật không bao giờ tới lượt.
+      exam: { purpose: { not: "survey" } },
     },
     select: { id: true },
     take: batchSize,

@@ -160,6 +160,8 @@ export const LearningEventType = {
   ExamCandidateAttendanceSet: "exam.candidate.attendance_set",
   ExamProctorInvited: "exam.proctor.invited",
   ExamShareLinkOpened: "exam.share_link.opened",
+  // Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md): giảng viên xuất câu trả lời. Không phải hoạt động học.
+  ExamSurveyExported: "exam.survey.exported",
   // Audio runtime — P1 only
   ExamAudioPlayed: "exam.audio.played",
   ExamAudioCompleted: "exam.audio.completed",
@@ -774,6 +776,16 @@ export interface ExamSubmittedPayload {
   autoScore: number;
   /** True when no manual grading is pending. */
   fullyGraded: boolean;
+  /** Phiếu Khảo sát: không chấm (autoScore = 0, fullyGraded = false, không có exam.graded). */
+  survey?: true;
+}
+
+/** Không mang câu trả lời, chỉ số dòng và bộ lọc. */
+export interface ExamSurveyExportedPayload {
+  examId: string;
+  rowCount: number;
+  sessionId: string | null;
+  phase: "pre" | "post" | null;
 }
 
 export interface ExamAutoSubmittedPayload {

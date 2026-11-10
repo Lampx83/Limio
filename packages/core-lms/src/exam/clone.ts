@@ -71,6 +71,8 @@ export async function cloneExam(
         shuffleQuestions: source.shuffleQuestions,
         shuffleOptions: source.shuffleOptions,
         showResultsAfterSubmit: source.showResultsAfterSubmit,
+        // Đề Khảo sát nhân bản vẫn là Khảo sát (docs/tieu-chi/de-thi-khao-sat.md AC1).
+        purpose: source.purpose,
         status: "draft",
         // Code-based access reset to authenticated — instructor wires fresh.
         accessMode: "authenticated",
@@ -114,6 +116,7 @@ export async function cloneExam(
           audioPolicy: p.audioPolicy,
           maxAudioPlays: p.maxAudioPlays,
           revealMode: p.revealMode,
+          surveyPhase: p.surveyPhase,
         },
         select: { id: true },
       });

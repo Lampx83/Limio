@@ -25,6 +25,8 @@ interface PassageData {
   revealMode: "all_at_once" | "sequential";
   skills: Skill[];
   orderIndex: number;
+  /** Đề Khảo sát: phần này dùng ở lần đo nào (null = cả hai lần). */
+  surveyPhase?: "pre" | "post" | null;
 }
 
 interface QuestionData {
@@ -59,6 +61,8 @@ interface Props {
   editable: boolean;
   passages: PassageData[];
   questions: QuestionData[];
+  /** Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md): đoạn văn = "phần" của phiếu, không điểm, không nhập/ngân hàng. */
+  survey?: boolean;
 }
 
 const NEW_SECTION_HINT =
@@ -78,6 +82,14 @@ const TYPE_LABEL: Record<string, string> = {
   drag_drop_fill: "Kéo thả",
 };
 
+const SURVEY_TYPE_LABEL: Record<string, string> = {
+  mcq: "Một lựa chọn",
+  multi: "Nhiều lựa chọn",
+  slider: "Thang trượt",
+  short_answer: "Trả lời ngắn",
+  essay: "Trả lời dài",
+};
+
 type EditState =
   | { kind: "idle" }
   | { kind: "newPassage" }
@@ -85,7 +97,12 @@ type EditState =
   | { kind: "newQuestion"; passageId: string | null; sectionId?: string | null }
   | { kind: "editQuestion"; questionId: string };
 
-export default function ContentManager({ examId, courseId, editable, passages, questions }: Props) {
+const SURVEY_PHASE_BADGE: Record<string, string> = {
+  pre: "Chỉ lần trước",
+  post: "Chỉ lần sau",
+};
+
+export default function ContentManager({ examId, courseId, editable, passages, questions, survey = false }: Props) {
   const router = useRouter();
   const [edit, setEdit] = useState<EditState>({ kind: "idle" });
   const [working, setWorking] = useState(false);
@@ -284,6 +301,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
           examId={examId}
           passageId={passageId}
           questionId={q.id}
+          survey={survey}
           initial={{
             type: q.type,
             prompt: q.prompt,
@@ -318,9 +336,9 @@ export default function ContentManager({ examId, courseId, editable, passages, q
           </span>
         )}
         <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
-          {TYPE_LABEL[q.type] ?? q.type}
+          {(survey ? SURVEY_TYPE_LABEL[q.type] : TYPE_LABEL[q.type]) ?? q.type}
         </span>
-        {!isPlayableExamQuestionType(q.type) && (
+        {!survey && !isPlayableExamQuestionType(q.type) && (
           <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title={UNPLAYABLE_TYPE_HINT}>
             {UNPLAYABLE_TYPE_BADGE} — nên đổi loại
           </span>
@@ -333,9 +351,14 @@ export default function ContentManager({ examId, courseId, editable, passages, q
             {q.bankCode}
           </span>
         )}
+        {survey && typeof q.config.code === "string" && q.config.code && (
+          <span className="rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-indigo-700" title="Mã câu (tiêu đề cột khi xuất)">
+            {q.config.code}
+          </span>
+        )}
         <span className="flex-1 whitespace-pre-wrap break-words">{q.prompt || <em className="text-faint">(chưa có đề)</em>}</span>
-        <span className="text-xs text-faint">{q.points} điểm</span>
-        {q.skills.length === 0 && (
+        {!survey && <span className="text-xs text-faint">{q.points} điểm</span>}
+        {!survey && q.skills.length === 0 && (
           <span
             title="Câu hỏi này chưa gắn skill. Không bắt buộc để publish; chỉ cần nếu muốn cá nhân hoá phản hồi."
             className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800"
@@ -387,7 +410,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
     );
   }
 
-  const showPassages = passages.length > 0 || edit.kind === "newPassage";
+  const showPassages = survey || passages.length > 0 || edit.kind === "newPassage";
 
   return (
     <div className="space-y-6">
@@ -398,8 +421,31 @@ export default function ContentManager({ examId, courseId, editable, passages, q
         onClose={() => setImportOpen(false)}
       />
 
+      {/* Phiếu Khảo sát: chỉ soạn tay — không AI/Excel/ngân hàng (các đường đó sinh câu có đáp án). */}
+      {editable && survey && edit.kind === "idle" && (
+        <div className="-mt-3 mb-1 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setEdit({ kind: "newPassage" })}
+            className="inline-flex items-center gap-1.5 rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            <Plus className="h-4 w-4" /> Thêm phần
+          </button>
+          <button
+            type="button"
+            onClick={() => setEdit({ kind: "newQuestion", passageId: null, sectionId: null })}
+            className="inline-flex items-center gap-1.5 rounded border border-token bg-white px-3 py-2 text-sm font-medium text-muted hover:border-brand-300 hover:text-brand-700"
+          >
+            <PenLine className="h-4 w-4" /> Câu không thuộc phần nào
+          </button>
+          <p className="w-full text-caption text-faint">
+            Mỗi phần có tiêu đề, lời dẫn (ví dụ cách hiểu thang điểm) và lần đo dùng phần đó.
+          </p>
+        </div>
+      )}
+
       {/* CTA chính (chỉ khi chưa chia phần — đã chia thì mỗi khung có CTA riêng) + menu phụ */}
-      {editable && (
+      {editable && !survey && (
         <div className="-mt-3 mb-1 flex flex-wrap items-center justify-between gap-2">
           {!boxed && edit.kind === "idle" && !addMenuOpen && (
             <button
@@ -543,9 +589,9 @@ export default function ContentManager({ examId, courseId, editable, passages, q
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-faint">
-            Đoạn bài đọc ({passages.length})
+            {survey ? "Các phần của phiếu" : "Đoạn bài đọc"} ({passages.length})
           </h3>
-          {editable && edit.kind === "idle" && (
+          {editable && edit.kind === "idle" && !survey && (
             <button
               type="button"
               onClick={() => setEdit({ kind: "newPassage" })}
@@ -561,6 +607,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
             <PassageEditor
               mode="create"
               examId={examId}
+              survey={survey}
               onClose={() => setEdit({ kind: "idle" })}
             />
           </div>
@@ -568,7 +615,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
 
         {passages.length === 0 && edit.kind !== "newPassage" && (
           <p className="rounded border border-dashed border-default px-4 py-6 text-center text-sm text-faint">
-            Chưa có đoạn bài đọc nào.
+            {survey ? "Chưa có phần nào. Bấm “Thêm phần” để bắt đầu." : "Chưa có đoạn bài đọc nào."}
           </p>
         )}
 
@@ -596,6 +643,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                     mode="edit"
                     examId={examId}
                     passageId={p.id}
+                    survey={survey}
                     initial={{
                       title: p.title,
                       contentJson: p.contentJson,
@@ -603,6 +651,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                       maxAudioPlays: p.maxAudioPlays,
                       revealMode: p.revealMode,
                       skills: p.skills,
+                      surveyPhase: p.surveyPhase ?? null,
                     }}
                     onClose={() => setEdit({ kind: "idle" })}
                   />
@@ -614,8 +663,13 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                           ⋮⋮
                         </span>
                       )}
-                      <span className="text-xs text-faint">Đoạn {pi + 1}</span>
+                      <span className="text-xs text-faint">{survey ? "Phần" : "Đoạn"} {pi + 1}</span>
                       <h4 className="flex-1 truncate font-medium">{p.title}</h4>
+                      {survey && (
+                        <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
+                          {p.surveyPhase ? SURVEY_PHASE_BADGE[p.surveyPhase] : "Cả hai lần"}
+                        </span>
+                      )}
                       <span className="text-xs text-faint">{qs.length} câu</span>
                       {editable && (
                         <>
@@ -640,7 +694,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                             onClick={() => setEdit({ kind: "editPassage", passageId: p.id })}
                             className="rounded border border-default px-2 py-0.5 text-xs"
                           >
-                            Sửa đoạn
+                            {survey ? "Sửa phần" : "Sửa đoạn"}
                           </button>
                           <button
                             type="button"
@@ -673,6 +727,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                           mode="create"
                           examId={examId}
                           passageId={p.id}
+                          survey={survey}
                           onClose={() => setEdit({ kind: "idle" })}
                         />
                       </div>
@@ -682,7 +737,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                         onClick={() => setEdit({ kind: "newQuestion", passageId: p.id })}
                         className="mt-2 rounded border border-dashed border-emerald-400 px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50"
                       >
-                        + Thêm câu hỏi vào đoạn này
+                        {survey ? "+ Thêm câu hỏi vào phần này" : "+ Thêm câu hỏi vào đoạn này"}
                       </button>
                     ) : null}
                   </>
@@ -699,7 +754,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-wide text-faint">
-              Câu hỏi độc lập ({standalone.length})
+              {survey ? "Câu không thuộc phần nào" : "Câu hỏi độc lập"} ({standalone.length})
             </h3>
           </div>
 
@@ -709,6 +764,7 @@ export default function ContentManager({ examId, courseId, editable, passages, q
                 mode="create"
                 examId={examId}
                 passageId={null}
+                survey={survey}
                 onClose={() => setEdit({ kind: "idle" })}
               />
             </div>

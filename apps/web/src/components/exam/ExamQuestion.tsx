@@ -110,6 +110,14 @@ export default function ExamQuestion({ question, value, onChange, optionOrder }:
         );
       case "numerical":
         return <NumericalQuestion value={value} onChange={onChange} />;
+      case "slider":
+        return (
+          <SliderInput
+            config={question.config as unknown as SliderConfig}
+            value={value}
+            onChange={onChange}
+          />
+        );
       default:
         return (
           <p role="status" className="text-sm text-amber-800">{UNPLAYABLE_FOR_LEARNER}</p>
@@ -288,5 +296,71 @@ function EssayInput({
       className="w-full rounded border border-default px-2 py-1 text-sm"
       placeholder="Viết bài làm của bạn ở đây…"
     />
+  );
+}
+
+interface SliderConfig {
+  min?: number;
+  max?: number;
+  step?: number;
+  minLabel?: string;
+  maxLabel?: string;
+}
+
+/**
+ * Thang trượt của phiếu Khảo sát (docs/tieu-chi/de-thi-khao-sat.md AC3). Chưa chạm thì
+ * KHÔNG có giá trị (thanh mờ, không lưu gì), để "chưa trả lời" khác "chọn số nhỏ nhất".
+ */
+function SliderInput({
+  config,
+  value,
+  onChange,
+}: {
+  config: SliderConfig;
+  value: AnswerValue;
+  onChange: (v: AnswerValue) => void;
+}) {
+  const min = config.min ?? 0;
+  const max = config.max ?? 100;
+  const step = config.step ?? 1;
+  const raw = value && "value" in value ? value.value : null;
+  const current = raw === null || raw === "" || !Number.isFinite(Number(raw)) ? null : Number(raw);
+  const mid = min + Math.round((max - min) / 2 / step) * step;
+  const pick = (v: string) => onChange({ value: Number(v) });
+  return (
+    <div className="max-w-xl">
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={current ?? mid}
+        onChange={(e) => pick(e.target.value)}
+        // Chạm đúng điểm giữa khi chưa có giá trị không phát onChange — bắt thêm ở đây.
+        onPointerUp={(e) => pick(e.currentTarget.value)}
+        aria-label="Chọn giá trị trên thang"
+        aria-valuetext={current === null ? "Chưa chọn" : String(current)}
+        className={`h-8 w-full cursor-pointer accent-brand-600 ${current === null ? "opacity-40" : ""}`}
+      />
+      <div className="flex justify-between gap-4 text-xs text-faint">
+        <span>
+          {min}
+          {config.minLabel ? ` · ${config.minLabel}` : ""}
+        </span>
+        <span className="text-right">
+          {max}
+          {config.maxLabel ? ` · ${config.maxLabel}` : ""}
+        </span>
+      </div>
+      <p className="mt-2 text-sm" aria-live="polite">
+        {current === null ? (
+          <span className="text-muted">Chạm hoặc kéo trên thanh để chọn.</span>
+        ) : (
+          <>
+            Bạn chọn: <b className="text-base tabular-nums">{current}</b>
+          </>
+        )}
+      </p>
+    </div>
   );
 }

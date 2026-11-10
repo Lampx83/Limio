@@ -74,6 +74,8 @@ export interface LobbyTarget {
   /** Đề đã publish và không phải vấn đáp AI — mới vào lobby/thi qua mã được. */
   ready: boolean;
   isOral: boolean;
+  /** Đề Khảo sát: chỉ vào bằng tài khoản đã ghi danh khoá (docs/tieu-chi/de-thi-khao-sat.md). */
+  isSurvey: boolean;
 }
 
 const SESSION_SELECT = {
@@ -83,7 +85,7 @@ const SESSION_SELECT = {
   closesAt: true,
   timingMode: true,
   status: true,
-  exam: { select: { title: true, status: true, kind: true, courseId: true } },
+  exam: { select: { title: true, status: true, kind: true, courseId: true, purpose: true } },
 } as const;
 
 /**
@@ -131,6 +133,7 @@ export async function resolveLobbyTarget(
     closesAt: session.closesAt,
     ready: session.exam.status === "published" && session.exam.kind === "written",
     isOral: session.exam.kind === "oral",
+    isSurvey: session.exam.purpose === "survey",
   };
 }
 
@@ -169,6 +172,15 @@ export async function claimByAccount(
     select: { id: true, displayName: true, email: true },
   });
   if (!user) throw new ExamError("forbidden");
+
+  // Phiếu Khảo sát: chỉ học viên đang ghi danh khoá của đề.
+  if (target.isSurvey && target.courseId) {
+    const enrolled = await db.enrollment.findFirst({
+      where: { userId, courseId: target.courseId, status: { in: ["active", "completed"] } },
+      select: { id: true },
+    });
+    if (!enrolled) throw new ExamError("not_enrolled");
+  }
 
   const exam = await db.exam.findUniqueOrThrow({
     where: { id: target.examId },

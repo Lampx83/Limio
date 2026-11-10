@@ -53,7 +53,7 @@ interface InitialValues {
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
   showResultsAfterSubmit: boolean;
-  purpose: "assessment" | "field_test";
+  purpose: "assessment" | "field_test" | "survey";
   // A6.1/A6.6 — Bất biến sau khi tạo (đổi kind = tạo Exam mới), nên chỉ hiện
   // ô chọn ở mode="create". Optional vì initial của mode="edit" (page.tsx cũ
   // trước khi có oral) có thể chưa truyền.
@@ -414,9 +414,24 @@ export default function ExamMetaForm({
                 options={[
                   { value: "assessment", label: "Đề thi thật — đo học sinh" },
                   { value: "field_test", label: "Đề thử nghiệm — đo câu hỏi" },
+                  ...(v.kind === "oral" ? [] : [{ value: "survey", label: "Khảo sát (không chấm điểm)" }]),
                 ]}
                 onChange={(s) => {
                   const purpose = s as InitialValues["purpose"];
+                  if (purpose === "survey") {
+                    // Đề Khảo sát: thứ tự lựa chọn là thang đo, không chấm, không giám sát
+                    // (máy chủ cũng ép các giá trị này — xem SURVEY_FIXED_SETTINGS).
+                    setV({
+                      ...v,
+                      purpose,
+                      showResultsAfterSubmit: false,
+                      shuffleQuestions: false,
+                      shuffleOptions: false,
+                      proctoringLevel: "none",
+                      gradingMode: "auto",
+                    });
+                    return;
+                  }
                   // Chuyển sang đề thử nghiệm thì tắt luôn hiện đáp án: để bật là
                   // đốt câu hỏi, lớp sau không thử nghiệm sạch được nữa. GV vẫn bật
                   // lại được ngay bên dưới nếu cố ý.
@@ -437,7 +452,14 @@ export default function ExamMetaForm({
               )}
             </div>
 
-            {v.kind === "oral" ? (
+            {v.purpose === "survey" && (
+              <p className="banner-info px-3 py-2 text-caption">
+                Phiếu khảo sát: câu hỏi không có đáp án đúng, không chấm và không hiện điểm cho
+                sinh viên. Sinh viên làm phiếu bằng mã QR từ mục &ldquo;Link thi nhanh&rdquo;; xuất câu
+                trả lời ở tab Kết quả bằng nút &ldquo;Xuất câu trả lời (Excel)&rdquo;.
+              </p>
+            )}
+            {v.purpose === "survey" ? null : v.kind === "oral" ? (
               // Vấn đáp AI: không có ExamQuestion nên trộn câu hỏi/đáp án vô
               // nghĩa; chấm điểm luôn là AI gợi ý + GV duyệt tay (xem tab
               // Chấm điểm), không theo gradingMode; giám thị luôn bắt buộc
