@@ -366,6 +366,10 @@ export default async function InstructorCourseEditPage({
                 languageMode: course.languageMode,
                 publicAccess: course.publicAccess,
                 enrollMode: course.enrollMode,
+                publisher: course.publisher ?? "",
+                authors: course.authors ?? "",
+                edition: course.edition ?? "",
+                coverUrl: course.coverUrl,
               }}
             />
           </section>

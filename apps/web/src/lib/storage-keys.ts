@@ -65,6 +65,18 @@ export function orgLogoKeyFromFilename(filename: string): StorageKey | null {
   return orgLogoKey(m[1]!, filename);
 }
 
+/** Ảnh bìa / banner của khoá — mỗi khoá một thư mục, cùng dạng với orgLogoKey. */
+export function courseCoverKey(courseId: string, filename: string): StorageKey {
+  return { layer: "public", key: `course-covers/${courseId}/${filename}` };
+}
+
+/** Suy thư mục từ tên tệp ảnh bìa bắt đầu bằng `<courseId>-`. */
+export function courseCoverKeyFromFilename(filename: string): StorageKey | null {
+  const m = /^([A-Za-z0-9_-]+)-[A-Za-z0-9]+\.[A-Za-z0-9]+$/.exec(filename);
+  if (!m) return null;
+  return courseCoverKey(m[1]!, filename);
+}
+
 /** Org signature image — per-org subdir, same shape as orgLogoKey. */
 export function orgSignatureKey(organizationId: string, filename: string): StorageKey {
   return { layer: "public", key: `org-signatures/${organizationId}/${filename}` };

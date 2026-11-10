@@ -8,6 +8,7 @@ import { plainToRichHtml } from "@/lib/richText";
 import SafeHtml from "@/components/SafeHtml";
 import { toast } from "@/lib/toast";
 import { lmsErrorMessage } from "@/lib/lmsErrors";
+import CourseCoverUpload from "./CourseCoverUpload";
 import { BarChart3, Languages, Tag, Wallet, PencilLine, Sparkles, BookOpen, type LucideIcon } from "lucide-react";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
@@ -26,6 +27,11 @@ interface Initial {
   languageMode: boolean;
   publicAccess: boolean;
   enrollMode: "open" | "invite_only";
+  /** Thông tin sách (nếu có) và ảnh bìa — docs/tieu-chi/trang-khoa-hoc-banner-sach.md. */
+  publisher: string;
+  authors: string;
+  edition: string;
+  coverUrl: string | null;
 }
 
 const FACT_TONE: Record<string, { chip: string; icon: string }> = {
@@ -85,6 +91,9 @@ export default function CourseMetaForm({
   const [languageMode, setLanguageMode] = useState(initial.languageMode);
   const [publicAccess, setPublicAccess] = useState(initial.publicAccess);
   const [enrollMode, setEnrollMode] = useState(initial.enrollMode);
+  const [publisher, setPublisher] = useState(initial.publisher);
+  const [authors, setAuthors] = useState(initial.authors);
+  const [edition, setEdition] = useState(initial.edition);
   const [busy, setBusy] = useState(false);
 
   const LEVEL_LABEL: Record<string, string> = {
@@ -194,6 +203,10 @@ export default function CourseMetaForm({
         languageMode,
         publicAccess,
         enrollMode,
+        // Rỗng = xoá (máy chủ chuẩn hoá thành null).
+        publisher,
+        authors,
+        edition,
       }),
     });
     setBusy(false);
@@ -272,6 +285,32 @@ export default function CourseMetaForm({
           />
         </div>
       </div>
+      <fieldset className="space-y-3 rounded-xl border border-token p-4">
+        <legend className="px-1 text-sm font-semibold">Thông tin sách (nếu có)</legend>
+        <p className="text-xs text-muted">
+          Khoá dạy theo một giáo trình thì điền để hiện dưới tên khoá ở banner, thư viện giáo trình và trang danh mục. Bỏ trống nếu không dùng.
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className="label" htmlFor="cm-publisher">Nhà xuất bản</label>
+            <input id="cm-publisher" value={publisher} onChange={(e) => setPublisher(e.target.value)} maxLength={120} className="input mt-1.5" placeholder="National Geographic Learning" />
+          </div>
+          <div>
+            <label className="label" htmlFor="cm-authors">Tác giả</label>
+            <input id="cm-authors" value={authors} onChange={(e) => setAuthors(e.target.value)} maxLength={120} className="input mt-1.5" placeholder="Neil J Anderson" />
+          </div>
+          <div>
+            <label className="label" htmlFor="cm-edition">Lần xuất bản</label>
+            <input id="cm-edition" value={edition} onChange={(e) => setEdition(e.target.value)} maxLength={120} className="input mt-1.5" placeholder="Third Edition" />
+          </div>
+        </div>
+        <div>
+          <span className="label">Ảnh bìa / banner</span>
+          <div className="mt-1.5">
+            <CourseCoverUpload courseId={courseId} initialUrl={initial.coverUrl} />
+          </div>
+        </div>
+      </fieldset>
       {showResearch && (
         <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
           <label className="flex items-start gap-3 cursor-pointer">

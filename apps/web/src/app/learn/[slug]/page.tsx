@@ -30,6 +30,7 @@ import { continueButtonText, describeLevel, pickContinueLesson, streakLabel } fr
 import { courseMetaLine, modulePrefix } from "@/lib/courseLabels";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 import LearningPathList from "@/components/LearningPathList";
+import { CourseBookLine, CourseHeroCover } from "@/components/course/CourseHeroBook";
 import CourseTeamPanel, { type CourseTeamState } from "@/components/course/CourseTeamPanel";
 
 export const dynamic = "force-dynamic";
@@ -192,7 +193,9 @@ export default async function LearnCoursePage({
       {/* Hero header */}
       <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
         <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
-        <div className="relative">
+        {/* Ảnh bìa (nếu có) ở cột phải, từ sm trở lên; phần bên trái giữ nguyên như trước. */}
+        <div className="relative sm:flex sm:items-center sm:gap-8">
+        <div className="relative min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
@@ -201,6 +204,7 @@ export default async function LearnCoursePage({
               <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
                 {course.title}
               </h1>
+              <CourseBookLine publisher={course.publisher} authors={course.authors} edition={course.edition} />
             </div>
             {streak.currentStreak > 0 && (
               <div
@@ -273,6 +277,8 @@ export default async function LearnCoursePage({
               </Link>
             )}
           </div>
+        </div>
+        <CourseHeroCover url={course.coverUrl} />
         </div>
       </header>
 
