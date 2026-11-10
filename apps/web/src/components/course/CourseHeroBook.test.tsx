@@ -22,11 +22,11 @@ describe("CourseBookLine (AC1)", () => {
 });
 
 describe("CourseHeroCover (AC2)", () => {
-  it("có ảnh: dựng ảnh trang trí (alt rỗng), ẩn dưới sm và hiện từ sm", () => {
+  it("có ảnh: dựng ảnh trang trí (alt rỗng), ẩn dưới lg và hiện từ lg", () => {
     const html = renderToStaticMarkup(<CourseHeroCover url="/api/course-covers/c1-aabbccddeeff.jpg" />);
     expect(html).toContain('src="/api/course-covers/c1-aabbccddeeff.jpg"');
     expect(html).toContain('alt=""');
-    expect(html).toMatch(/class="hidden [^"]*sm:block"/);
+    expect(html).toMatch(/class="hidden [^"]*lg:block"/);
   });
 
   it("không có ảnh: không dựng gì", () => {

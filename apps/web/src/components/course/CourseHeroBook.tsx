@@ -13,13 +13,13 @@ export function CourseBookLine({ publisher, authors, edition }: { publisher: str
   return <p className="mt-2 text-sm text-white/85">{text}</p>;
 }
 
-/** Ảnh bìa ở cột phải banner: tỉ lệ bìa sách, bo nhẹ, đổ bóng; ẩn dưới `sm` để banner không dài thêm trên điện thoại. Ảnh trang trí nên alt rỗng. */
+/** Ảnh bìa ở cột phải banner: tỉ lệ bìa sách, bo nhẹ, đổ bóng; chỉ hiện từ `lg` (1024 px): dưới đó hai ô tiến độ/XP bên trái cần cả bề ngang, thêm cột ảnh thì chúng bị ép hẹp, chữ xuống từng từ. Ảnh trang trí nên alt rỗng. */
 export function CourseHeroCover({ url }: { url: string | null }) {
   if (!url) return null;
   return (
-    <div className="hidden shrink-0 sm:block" data-testid="course-hero-cover">
+    <div className="hidden shrink-0 lg:block" data-testid="course-hero-cover">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={url} alt="" className="h-44 w-auto max-w-[8.5rem] rounded-sm object-cover shadow-xl ring-1 ring-black/10 lg:h-52 lg:max-w-[10rem]" />
+      <img src={url} alt="" className="h-52 w-auto max-w-[10rem] rounded-sm object-cover shadow-xl ring-1 ring-black/10" />
     </div>
   );
 }

@@ -20,16 +20,24 @@ export function levelNameVi(name: string): string {
   return LEVEL_NAME_VI[name] ?? name;
 }
 
-export function describeLevel(input: {
+interface LevelInput {
   level: number;
   levelName: string;
   xpToNext: number | null;
   isMaxLevel: boolean;
-}): string {
+}
+
+/** Tách dòng mô tả cấp thành phần chính (luôn hiện) và phần "cần thêm … XP" (màn hẹp có thể ẩn). */
+export function describeLevelParts(input: LevelInput): { head: string; more: string | null } {
   const head = `Cấp ${input.level} · ${levelNameVi(input.levelName)}`;
-  if (input.isMaxLevel) return `${head} (cấp cao nhất)`;
-  if (input.xpToNext === null) return head;
-  return `${head}. Cần thêm ${input.xpToNext} XP để lên cấp ${input.level + 1}.`;
+  if (input.isMaxLevel) return { head: `${head} (cấp cao nhất)`, more: null };
+  if (input.xpToNext === null) return { head, more: null };
+  return { head, more: `Cần thêm ${input.xpToNext} XP để lên cấp ${input.level + 1}.` };
+}
+
+export function describeLevel(input: LevelInput): string {
+  const { head, more } = describeLevelParts(input);
+  return more ? `${head}. ${more}` : head;
 }
 
 export interface LessonProgressItem {
@@ -85,4 +93,87 @@ export function gapToNextRank(input: {
 export function gapText(gap: { aboveRank: number; gapXp: number }): string {
   if (gap.gapXp === 0) return `Bạn đang ngang điểm với hạng ${gap.aboveRank}.`;
   return `Còn cách hạng ${gap.aboveRank} ${gap.gapXp.toLocaleString("vi-VN")} XP.`;
+}
+
+// ── Thẻ cột phải của trang khoá ngoại ngữ (docs/tieu-chi/trang-khoa-hoc-cot-phai-theo-figma.md) ──
+
+/** Thứ tự dòng của thẻ "Tiến độ theo kỹ năng" theo Figma: Đọc, Nghe, Nói, Viết. */
+const SKILL_CARD_ORDER = ["reading", "listening", "speaking", "writing"] as const;
+const SKILL_CARD_LABEL: Record<(typeof SKILL_CARD_ORDER)[number], string> = {
+  reading: "Đọc",
+  listening: "Nghe",
+  speaking: "Nói",
+  writing: "Viết",
+};
+
+export interface SkillProgressRow {
+  skill: string;
+  label: string;
+  /** Số bài đã luyện / tổng bài, làm tròn 0–100; null khi kỹ năng chưa có bài nào. KHÔNG phải mastery. */
+  pct: number | null;
+}
+
+export function skillProgressRows(
+  skills: Array<{ skill: string; lessonsTotal: number; lessonsPracticed: number }>,
+): SkillProgressRow[] {
+  return SKILL_CARD_ORDER.map((k) => {
+    const row = skills.find((s) => s.skill === k);
+    const total = row?.lessonsTotal ?? 0;
+    const pct = total > 0 ? Math.min(100, Math.round(((row?.lessonsPracticed ?? 0) / total) * 100)) : null;
+    return { skill: k, label: SKILL_CARD_LABEL[k], pct };
+  });
+}
+
+export interface ReviewCardView {
+  done: boolean;
+  /** "n từ vựng" khi còn thẻ đến hạn; câu "Hôm nay bạn đã ôn xong." khi hết. */
+  headline: string;
+  /** "Từ <tên bài>" khi có gợi ý bài nên ôn, không thì null (không hiện dòng). */
+  fromLine: string | null;
+  buttonLabel: string;
+}
+
+export function reviewCardView(input: { reviewable: number; suggestionLessonTitle?: string | null }): ReviewCardView {
+  const title = input.suggestionLessonTitle?.trim();
+  const fromLine = title ? `Từ ${title}` : null;
+  if (input.reviewable > 0) {
+    return { done: false, headline: `${input.reviewable} từ vựng`, fromLine, buttonLabel: "Ôn kiến thức đã học" };
+  }
+  return { done: true, headline: "Hôm nay bạn đã ôn xong.", fromLine: null, buttonLabel: "Xem bộ thẻ" };
+}
+
+// ── Thẻ đề: hai cột "Thi thử" và "Luyện đề" (AC6 của docs/tieu-chi/trang-khoa-hoc-cot-phai-theo-figma.md) ──
+
+/** Dòng trạng thái của cột Thi thử (lượt thi `ExamAttempt`). */
+export function mockStatusText(o: {
+  attempt: { status: string; scorePct: number | null } | null;
+  attemptCount: number;
+}): string {
+  const a = o.attempt;
+  if (!a) return "Chưa làm";
+  if (a.status === "in_progress") return `Đang làm dở · lượt ${o.attemptCount}`;
+  return `Đã thi ${o.attemptCount} lần${a.scorePct != null ? ` · gần nhất ${Math.round(a.scorePct)}%` : ""}`;
+}
+
+export interface PracticeState {
+  inProgress: { sessionId: string; answered: number; total: number } | null;
+  completedCount: number;
+}
+
+/** Dòng trạng thái của cột Luyện đề. Không có điểm hay %: luyện đề không phải điểm số. */
+export function practiceStatusText(p: PracticeState): string {
+  if (p.inProgress) return `Đang luyện dở · ${p.inProgress.answered}/${p.inProgress.total} câu`;
+  if (p.completedCount > 0) return `Đã luyện ${p.completedCount} buổi`;
+  return "Chưa luyện";
+}
+
+export function practiceButtonLabel(p: PracticeState): string {
+  return p.inProgress ? "Tiếp tục luyện" : "Luyện đề";
+}
+
+/** Đích của nút Luyện đề: có buổi dở thì vào thẳng buổi đó, không thì sang trang chọn phạm vi. */
+export function practiceHref(slug: string, examId: string, p: PracticeState): string {
+  return p.inProgress
+    ? `/learn/${slug}/exams/${examId}/practice/${p.inProgress.sessionId}`
+    : `/learn/${slug}/exams/${examId}/practice`;
 }

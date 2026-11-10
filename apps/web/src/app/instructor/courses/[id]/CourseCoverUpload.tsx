@@ -69,7 +69,7 @@ export default function CourseCoverUpload({ courseId, initialUrl }: { courseId: 
       </div>
       <div className="min-w-0 space-y-2">
         <p className="text-xs text-muted">
-          Ảnh hiện ở bên phải banner trang khoá của học viên (từ màn 640 px trở lên), nên dùng ảnh đứng như bìa sách. JPG, PNG hoặc WebP, tối đa 5 MB.
+          Ảnh hiện ở bên phải banner trang khoá của học viên (từ màn 1024 px trở lên), nên dùng ảnh đứng như bìa sách. JPG, PNG hoặc WebP, tối đa 5 MB.
         </p>
         <div className="flex flex-wrap gap-2">
           <input ref={inputRef} type="file" accept={ACCEPT} className="sr-only" onChange={onPick} aria-label="Chọn ảnh bìa" disabled={busy} />

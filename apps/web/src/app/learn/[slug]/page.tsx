@@ -1,7 +1,7 @@
 import BadgeIcon from "@/components/ui/BadgeIcon";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ChevronRight, Lock } from "lucide-react";
+import { ChevronRight, Lock, RotateCcw } from "lucide-react";
 import { prisma } from "@feedbackme/db";
 import {
   canEditCourse,
@@ -20,13 +20,24 @@ import {
   listBadgeCatalog,
   listUserBadges,
 } from "@feedbackme/core-gamification";
-import { getFlashcardStats, getLearningPath, recordPathShown } from "@feedbackme/core-feedback";
+import { getFlashcardStats, getLanguageProfile, getLearningPath, recordPathShown } from "@feedbackme/core-feedback";
 import { reviewableToday } from "@/lib/flashcardSession";
 import { auth } from "@/lib/auth";
 import { StickyMobileCTA } from "@/components/ui";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
 import SmartBackLink from "@/components/SmartBackLink";
-import { continueButtonText, describeLevel, pickContinueLesson, streakLabel } from "@/lib/courseHomeView";
+import {
+  continueButtonText,
+  describeLevelParts,
+  mockStatusText,
+  pickContinueLesson,
+  practiceButtonLabel,
+  practiceHref,
+  practiceStatusText,
+  reviewCardView,
+  skillProgressRows,
+  streakLabel,
+} from "@/lib/courseHomeView";
 import { courseMetaLine, modulePrefix } from "@/lib/courseLabels";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 import LearningPathList from "@/components/LearningPathList";
@@ -155,6 +166,20 @@ export default async function LearnCoursePage({
           },
         }))
       : null;
+  // Thẻ "Tiến độ theo kỹ năng" (cột phải): chỉ gọi hồ sơ khi đủ điều kiện hiển thị — khoá ngoại ngữ,
+  // có cá nhân hoá, không phải lớp đối chứng (learningPath.enabled). Lỗi ở đây không làm hỏng trang khoá.
+  const languageProfile =
+    course.languageMode && learningPath.enabled
+      ? await getLanguageProfile(session.user.id, course.id, "learner").catch(() => null)
+      : null;
+  const skillRows = languageProfile?.enabled ? skillProgressRows(languageProfile.skills) : null;
+  const reviewCard =
+    flashcardStats.total > 0
+      ? reviewCardView({
+          reviewable: reviewableToday(flashcardStats),
+          suggestionLessonTitle: languageProfile?.enabled ? languageProfile.suggestion?.lessonTitle : null,
+        })
+      : null;
   const earnedCodes = new Set(earned.map((u) => u.badge.code));
   const completedSet = new Set(
     progress.modules.flatMap((m) => m.lessons.filter((l) => l.completed).map((l) => l.id)),
@@ -193,8 +218,8 @@ export default async function LearnCoursePage({
       {/* Hero header */}
       <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
         <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
-        {/* Ảnh bìa (nếu có) ở cột phải, từ sm trở lên; phần bên trái giữ nguyên như trước. */}
-        <div className="relative sm:flex sm:items-center sm:gap-8">
+        {/* Ảnh bìa (nếu có) ở cột phải, từ lg (1024 px) trở lên: dưới đó hai ô tiến độ/XP cần cả bề ngang, thêm cột ảnh làm chúng bị ép hẹp. Phần bên trái giữ nguyên như trước. */}
+        <div className="relative lg:flex lg:items-center lg:gap-8">
         <div className="relative min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -238,12 +263,23 @@ export default async function LearnCoursePage({
             <ProgressTile
               label="Điểm tương tác"
               value={`${xp.xp} XP`}
-              hint={describeLevel({
-                level: xp.level,
-                levelName: xp.levelName,
-                xpToNext: xp.xpToNext,
-                isMaxLevel: xp.isMaxLevel,
-              })}
+              hint={(() => {
+                const { head, more } = describeLevelParts({
+                  level: xp.level,
+                  levelName: xp.levelName,
+                  xpToNext: xp.xpToNext,
+                  isMaxLevel: xp.isMaxLevel,
+                });
+                // Màn hẹp (< sm) chỉ giữ "Cấp n · Tên cấp"; câu "Cần thêm … XP" hiện từ sm.
+                return more ? (
+                  <>
+                    {head}
+                    <span className="hidden sm:inline">. {more}</span>
+                  </>
+                ) : (
+                  head
+                );
+              })()}
               pct={xp.levelProgressPct}
               barClass="bg-accent-300"
               tone="white"
@@ -285,119 +321,6 @@ export default async function LearnCoursePage({
       {/* Content grid */}
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-8">
-          {/* LANG G3 — lối vào Hồ sơ 4 kỹ năng. Dùng learningPath.enabled để lớp đối chứng
-              (B10) và khoá tắt cá nhân hoá không bao giờ thấy lối vào này. */}
-          {course.languageMode && learningPath.enabled && (
-            <section>
-              <Link
-                href={`/learn/${params.slug}/skills`}
-                className="flex items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4 transition-colors hover:bg-brand-soft"
-              >
-                <span>
-                  <span className="text-body font-medium">Hồ sơ 4 kỹ năng</span>
-                  <span className="text-meta block">Xem bạn đang mạnh và cần luyện kỹ năng nào: nghe, nói, đọc, viết.</span>
-                </span>
-                <span aria-hidden>→</span>
-              </Link>
-            </section>
-          )}
-
-          {/* LANG G4 — ôn từ vựng bằng flashcard. Không phụ thuộc chế độ ngoại ngữ hay lớp đối
-              chứng: đây là công cụ ghi nhớ, không phải feedback cá nhân hoá. */}
-          {flashcardStats.total > 0 && (
-            <section>
-              <Link
-                href={`/learn/${params.slug}/flashcards`}
-                className="flex items-center justify-between gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4 transition-colors hover:bg-brand-soft"
-              >
-                <span>
-                  <span className="text-body font-medium">Ôn từ vựng</span>
-                  <span className="text-meta block">
-                    {reviewableToday(flashcardStats) > 0
-                      ? `${reviewableToday(flashcardStats)} thẻ có thể ôn hôm nay.`
-                      : "Hôm nay bạn đã ôn xong."}
-                  </span>
-                </span>
-                <span aria-hidden>→</span>
-              </Link>
-            </section>
-          )}
-
-          {/* LANG G5c — Luyện thi: đề thi thử đã xuất bản của khoá. Trước đây học viên không có
-              đường nào vào đề thi từ trang khoá (chỉ qua link giảng viên gửi). */}
-          {mockExams.length > 0 && (
-            <section id="luyen-thi" aria-labelledby="mock-exams-title">
-              <h2 id="mock-exams-title" className="text-h3">Luyện thi</h2>
-              <p className="text-meta mt-1">
-                Thi thử theo cấu trúc đề thật (mỗi phần có giờ riêng, làm lần lượt, không quay lại) hoặc luyện đề theo kỹ năng (không bấm giờ, xem đáp án ngay).
-              </p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {mockExams.map((e) => {
-                  const a = e.attempt;
-                  const inProgress = a?.status === "in_progress";
-                  const href = `/learn/${params.slug}/exams/${e.examId}`;
-                  return (
-                    <div key={e.examId} className="flex flex-col gap-3 rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
-                      <div>
-                        <p className="text-body font-semibold">{e.title}</p>
-                        <p className="text-meta">
-                          {e.sections.length} phần · {e.totalMinutes} phút
-                        </p>
-                      </div>
-                      <ul className="flex flex-wrap gap-1.5">
-                        {e.sections.map((sec, i) => (
-                          <li key={i} className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs text-muted">
-                            {sec.languageSkill &&
-                            isLanguageSkill(sec.languageSkill) &&
-                            LANGUAGE_SKILL_LABEL[sec.languageSkill] !== sec.title
-                              ? `${LANGUAGE_SKILL_LABEL[sec.languageSkill]} · `
-                              : ""}
-                            {sec.title} · {sec.durationMin}′
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-auto flex items-center justify-between gap-2">
-                        <span className="text-meta">
-                          {!a
-                            ? "Chưa làm"
-                            : inProgress
-                              ? `Đang làm dở · lượt ${e.attemptCount}`
-                              : `Đã thi ${e.attemptCount} lần${a.scorePct != null ? ` · gần nhất ${Math.round(a.scorePct)}%` : ""}`}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          {a && !inProgress && (
-                            <Link
-                              href={`${href}/${a.attemptId}/result`}
-                              className="inline-flex h-9 items-center rounded-full border border-token px-4 text-sm hover:bg-brand-soft"
-                            >
-                              Xem kết quả
-                            </Link>
-                          )}
-                          {e.allowPractice && (
-                            <Link
-                              href={`${href}/practice`}
-                              className="inline-flex h-9 items-center rounded-full border border-brand-300 bg-brand-soft px-4 text-sm font-medium text-brand-800 hover:bg-brand-100"
-                            >
-                              Luyện đề
-                            </Link>
-                          )}
-                          {(e.allowMock || inProgress) && (
-                            <Link
-                              href={a && !inProgress ? `${href}?retake=1` : href}
-                              className="inline-flex h-9 items-center rounded-full bg-brand-600 px-4 text-sm font-medium text-white hover:bg-brand-700"
-                            >
-                              {!a ? "Thi thử" : inProgress ? "Tiếp tục" : "Thi lại"}
-                            </Link>
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
           {/* B4 — lộ trình cá nhân hoá */}
           {learningPath.steps.length > 0 && (
             <section>
@@ -444,6 +367,88 @@ export default async function LearnCoursePage({
             />
           </section>
 
+          {/* LANG G5c — khối "Thi thử" (trước là "Luyện thi"): đề thi thử đã xuất bản của khoá. Trước đây học viên không có
+              đường nào vào đề thi từ trang khoá (chỉ qua link giảng viên gửi). */}
+          {mockExams.length > 0 && (
+            <section id="luyen-thi" aria-labelledby="mock-exams-title">
+              <h2 id="mock-exams-title" className="text-h3">Thi thử</h2>
+              <div className="mt-3 grid gap-3">
+                {mockExams.map((e) => {
+                  const a = e.attempt;
+                  const inProgress = a?.status === "in_progress";
+                  const href = `/learn/${params.slug}/exams/${e.examId}`;
+                  // Hai chế độ lưu ở bảng riêng nên trạng thái và nút riêng, hiện thành hai cột (AC6).
+                  const showMock = e.allowMock || inProgress;
+                  const showPractice = e.allowPractice;
+                  const colClass = "flex flex-col gap-2 rounded-lg border border-token p-3";
+                  const btnBase = "inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm";
+                  return (
+                    <div key={e.examId} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+                      <div>
+                        <p className="text-body font-semibold">{e.title}</p>
+                        <p className="text-meta">
+                          {e.sections.length} phần · {e.totalMinutes} phút
+                        </p>
+                      </div>
+                      <ul className="mt-3 flex flex-wrap gap-1.5">
+                        {e.sections.map((sec, i) => (
+                          <li key={i} className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs text-muted">
+                            {sec.languageSkill &&
+                            isLanguageSkill(sec.languageSkill) &&
+                            LANGUAGE_SKILL_LABEL[sec.languageSkill] !== sec.title
+                              ? `${LANGUAGE_SKILL_LABEL[sec.languageSkill]} · `
+                              : ""}
+                            {sec.title} · {sec.durationMin}′
+                          </li>
+                        ))}
+                      </ul>
+                      <div className={`mt-4 grid gap-3 ${showMock && showPractice ? "sm:grid-cols-2" : ""}`}>
+                        {showMock && (
+                          <div className={colClass} data-testid="exam-col-mock">
+                            <p className="text-sm font-semibold">Thi thử</p>
+                            <p className="text-caption text-muted">Mô phỏng thi thật</p>
+                            <p className="text-meta">{mockStatusText({ attempt: a, attemptCount: e.attemptCount })}</p>
+                            <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                              {a && !inProgress && (
+                                <Link
+                                  href={`${href}/${a.attemptId}/result`}
+                                  className={`${btnBase} border border-token hover:bg-brand-soft`}
+                                >
+                                  Xem kết quả
+                                </Link>
+                              )}
+                              <Link
+                                href={a && !inProgress ? `${href}?retake=1` : href}
+                                className={`${btnBase} bg-brand-600 font-medium text-white hover:bg-brand-700`}
+                              >
+                                {!a ? "Thi thử" : inProgress ? "Tiếp tục thi" : "Thi lại"}
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                        {showPractice && (
+                          <div className={colClass} data-testid="exam-col-practice">
+                            <p className="text-sm font-semibold">Luyện đề</p>
+                            <p className="text-caption text-muted">Không bấm giờ, xem đáp án ngay</p>
+                            <p className="text-meta">{practiceStatusText(e.practice)}</p>
+                            <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                              <Link
+                                href={practiceHref(params.slug, e.examId, e.practice)}
+                                className={`${btnBase} border border-brand-300 bg-brand-soft font-medium text-brand-800 hover:bg-brand-100`}
+                              >
+                                {practiceButtonLabel(e.practice)}
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
           {/* Nộp bài theo nhóm — docs/group-submission-AC.md A7. Đặt sau danh sách bài học để học viên
               vào khoá là thấy bài học trước; thẻ bài tập nhóm vẫn nhảy tới đây qua COURSE_TEAM_ANCHOR. */}
           {myTeam && (
@@ -462,6 +467,59 @@ export default async function LearnCoursePage({
 
         {/* Sidebar */}
         <aside className="space-y-5">
+          {/* Thẻ theo Figma "Limio Language" — docs/tieu-chi/trang-khoa-hoc-cot-phai-theo-figma.md */}
+          {skillRows && (
+            <Link
+              href={`/learn/${params.slug}/skills`}
+              className="card block transition-colors hover:bg-brand-soft"
+              aria-label="Tiến độ theo kỹ năng — xem hồ sơ kỹ năng"
+            >
+              <h2 className="text-base font-semibold">Tiến độ theo kỹ năng</h2>
+              <ul className="mt-4 space-y-3">
+                {skillRows.map((r) => (
+                  <li key={r.skill}>
+                    <div className="flex items-baseline justify-between text-sm">
+                      <span>{r.label}</span>
+                      <span className="text-faint">{r.pct === null ? "—" : `${r.pct}%`}</span>
+                    </div>
+                    <div className="mt-1 h-1.5 rounded-full bg-[rgb(var(--surface-muted))]">
+                      <div
+                        className="h-1.5 rounded-full bg-success-500"
+                        style={{ width: `${r.pct ?? 0}%` }}
+                        role="presentation"
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-caption mt-3 text-faint">Dựa trên bài học đã hoàn thành</p>
+              <p className="mt-1 text-sm font-medium text-brand-600">Xem hồ sơ kỹ năng →</p>
+            </Link>
+          )}
+          {reviewCard && (
+            <section className="rounded-2xl border border-success-100 bg-success-50 p-5">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
+                <RotateCcw className="h-5 w-5 text-success-700" aria-hidden />
+                Đến lúc ôn lại
+              </h2>
+              <p className="mt-3 text-sm text-muted">{reviewCard.headline}</p>
+              {reviewCard.fromLine && <p className="text-sm text-muted">{reviewCard.fromLine}</p>}
+              <Link
+                href={`/learn/${params.slug}/flashcards`}
+                className="mt-4 inline-flex rounded-lg border border-token bg-[rgb(var(--surface))] px-4 py-2 text-sm font-medium transition-colors hover:bg-brand-soft"
+              >
+                {reviewCard.buttonLabel}
+              </Link>
+            </section>
+          )}
+          {mockExams.length > 0 && (
+            <section className="card">
+              <h2 className="text-base font-semibold">Sẵn sàng vận dụng?</h2>
+              <a href="#luyen-thi" className="link mt-2 inline-flex items-center gap-1 text-sm font-medium">
+                Thi thử <span aria-hidden>↗</span>
+              </a>
+            </section>
+          )}
           {/* Daily quests */}
           {dailyQuests.length > 0 && (
             <section className="card">
@@ -781,7 +839,7 @@ function ProgressTile({
 }: {
   label: string;
   value: string;
-  hint?: string | null;
+  hint?: React.ReactNode;
   pct: number;
   barClass: string;
   tone: "white";

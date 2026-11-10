@@ -635,7 +635,7 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   "Tạo đề thi thử từ khung" — chọn khung, nhập "Tiêu đề đề thi", "Tạo đề". Tab Nội dung của đề có khối "Đề thi
   thử (HSK · IELTS · TOEIC…)" (giờ riêng từng phần, không quay lại phần đã nộp), hai công tắc "Cho thi thử" và
   "Cho luyện đề", bảng Phần / Kỹ năng / Giờ (phút) / Số câu, "Bảng quy đổi điểm (tuỳ chọn)", và "Phát audio"
-  ("Nghe tự do", "Giới hạn số lần", "Nghe 1 lần"). Học viên thấy mục "Luyện thi" ở trang khoá.
+  ("Nghe tự do", "Giới hạn số lần", "Nghe 1 lần"). Học viên thấy khối "Thi thử" ở trang khoá (mỗi đề có nút "Thi thử" và "Luyện đề", tuỳ hai công tắc trên); từ 10/11/2026 khối này đổi tên từ "Luyện thi".
 - **Góp ý bài viết / bài nói bằng AI:** học viên bấm "Nhận góp ý bài viết" / "Nhận góp ý bài nói" (khoá phải bật
   chế độ ngoại ngữ; điều kiện đầy đủ chưa kiểm chứng). Ở cửa sổ chấm bài nộp, giảng viên thấy "Góp ý bài viết
   do AI tạo" / "Góp ý bài nói do AI tạo", sửa từng mục, ghi "Ghi chú cho học viên (không bắt buộc)", rồi

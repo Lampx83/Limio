@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   continueButtonText,
   describeLevel,
+  describeLevelParts,
+  skillProgressRows,
+  reviewCardView,
+  mockStatusText,
+  practiceStatusText,
+  practiceButtonLabel,
+  practiceHref,
   gapText,
   gapToNextRank,
   levelNameVi,
@@ -100,5 +107,81 @@ describe("pickContinueLesson — nút Tiếp tục và dấu trong danh sách tr
   it("học xong cả khoá → quay lại bài gần nhất để ôn; chưa có gì → null", () => {
     expect(pickContinueLesson("1.2", [L("1.1", true), L("1.2", true)])).toEqual({ id: "1.2", title: "Bài 1.2", kind: "current" });
     expect(pickContinueLesson(null, [])).toBeNull();
+  });
+});
+
+describe("describeLevelParts", () => {
+  it("tách phần chính và câu \"Cần thêm … XP\"; cấp cao nhất hoặc không có mốc thì không có phần thêm", () => {
+    expect(describeLevelParts({ level: 1, levelName: "Newcomer", xpToNext: 190, isMaxLevel: false })).toEqual({
+      head: "Cấp 1 · Người mới",
+      more: "Cần thêm 190 XP để lên cấp 2.",
+    });
+    expect(describeLevelParts({ level: 5, levelName: "Master", xpToNext: 0, isMaxLevel: true }).more).toBeNull();
+    expect(describeLevelParts({ level: 2, levelName: "Engaged", xpToNext: null, isMaxLevel: false }).more).toBeNull();
+  });
+});
+
+describe("skillProgressRows", () => {
+  it("thứ tự Đọc, Nghe, Nói, Viết; phần trăm = bài đã luyện / tổng bài, làm tròn", () => {
+    const rows = skillProgressRows([
+      { skill: "listening", lessonsTotal: 20, lessonsPracticed: 7 },
+      { skill: "speaking", lessonsTotal: 5, lessonsPracticed: 1 },
+      { skill: "reading", lessonsTotal: 12, lessonsPracticed: 5 },
+      { skill: "writing", lessonsTotal: 11, lessonsPracticed: 2 },
+    ]);
+    expect(rows.map((r) => r.label)).toEqual(["Đọc", "Nghe", "Nói", "Viết"]);
+    expect(rows.map((r) => r.pct)).toEqual([42, 35, 20, 18]);
+  });
+  it("kỹ năng không có bài (hoặc thiếu hẳn) trả null, không chia cho 0; luyện hết là 100", () => {
+    const rows = skillProgressRows([
+      { skill: "reading", lessonsTotal: 0, lessonsPracticed: 0 },
+      { skill: "listening", lessonsTotal: 3, lessonsPracticed: 3 },
+    ]);
+    expect(rows.map((r) => r.pct)).toEqual([null, 100, null, null]);
+  });
+});
+
+describe("reviewCardView", () => {
+  it("còn thẻ đến hạn: số từ vựng, nút Ôn kiến thức đã học, dòng Từ <bài> khi có gợi ý", () => {
+    expect(reviewCardView({ reviewable: 8, suggestionLessonTitle: " Unit 02 " })).toEqual({
+      done: false,
+      headline: "8 từ vựng",
+      fromLine: "Từ Unit 02",
+      buttonLabel: "Ôn kiến thức đã học",
+    });
+    expect(reviewCardView({ reviewable: 8 }).fromLine).toBeNull();
+    expect(reviewCardView({ reviewable: 8, suggestionLessonTitle: "  " }).fromLine).toBeNull();
+  });
+  it("hết thẻ: báo đã ôn xong, nút Xem bộ thẻ, không có dòng Từ", () => {
+    expect(reviewCardView({ reviewable: 0, suggestionLessonTitle: "Unit 02" })).toEqual({
+      done: true,
+      headline: "Hôm nay bạn đã ôn xong.",
+      fromLine: null,
+      buttonLabel: "Xem bộ thẻ",
+    });
+  });
+});
+
+describe("thẻ đề hai cột: Thi thử và Luyện đề", () => {
+  it("mockStatusText: chưa làm, đang làm dở, đã thi (có/không điểm)", () => {
+    expect(mockStatusText({ attempt: null, attemptCount: 0 })).toBe("Chưa làm");
+    expect(mockStatusText({ attempt: { status: "in_progress", scorePct: null }, attemptCount: 1 })).toBe("Đang làm dở · lượt 1");
+    expect(mockStatusText({ attempt: { status: "submitted", scorePct: 72.4 }, attemptCount: 2 })).toBe("Đã thi 2 lần · gần nhất 72%");
+    expect(mockStatusText({ attempt: { status: "submitted", scorePct: null }, attemptCount: 1 })).toBe("Đã thi 1 lần");
+  });
+
+  it("practiceStatusText: buổi dở thắng số buổi đã xong; không hiện điểm", () => {
+    expect(practiceStatusText({ inProgress: null, completedCount: 0 })).toBe("Chưa luyện");
+    expect(practiceStatusText({ inProgress: null, completedCount: 3 })).toBe("Đã luyện 3 buổi");
+    expect(practiceStatusText({ inProgress: { sessionId: "s1", answered: 12, total: 30 }, completedCount: 3 })).toBe("Đang luyện dở · 12/30 câu");
+  });
+
+  it("nút và đích của Luyện đề: có buổi dở thì Tiếp tục luyện vào thẳng buổi đó", () => {
+    const idle = { inProgress: null, completedCount: 0 };
+    const open = { inProgress: { sessionId: "s1", answered: 1, total: 5 }, completedCount: 0 };
+    expect(practiceButtonLabel(idle)).toBe("Luyện đề");
+    expect(practiceButtonLabel(open)).toBe("Tiếp tục luyện");
+    expect(practiceHref("ielts", "e1", idle)).toBe("/learn/ielts/exams/e1/practice");
+    expect(practiceHref("ielts", "e1", open)).toBe("/learn/ielts/exams/e1/practice/s1");
   });
 });

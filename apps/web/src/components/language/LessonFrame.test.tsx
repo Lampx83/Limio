@@ -77,10 +77,11 @@ describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
     expect(html).toContain('aria-disabled="true"');
   });
 
-  it("'Sẵn sàng vận dụng? Luyện đề' chỉ khi khoá có đề, trỏ tới mục Luyện thi của khoá", () => {
+  it("'Sẵn sàng vận dụng? Thi thử' chỉ khi khoá có đề, trỏ tới khối Thi thử của khoá", () => {
     expect(text(render(frame(), false))).not.toContain("Sẵn sàng vận dụng");
     const html = render(frame(), true);
     expect(text(html)).toContain("Sẵn sàng vận dụng?");
+    expect(text(html)).toContain("Thi thử");
     expect(html).toContain('href="/learn/ielts#luyen-thi"');
   });
 

@@ -93,7 +93,7 @@ function RailBody({ slug, frame, hasExams, levelLabel }: { slug: string; frame: 
         <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
           <div className="text-sm font-bold">Sẵn sàng vận dụng?</div>
           <Link href={`/learn/${slug}#luyen-thi`} className="link mt-1 inline-block text-sm font-semibold">
-            Luyện đề ↗
+            Thi thử ↗
           </Link>
         </div>
       )}
