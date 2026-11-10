@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireUserId } from "@/lib/session";
 import { storageFor } from "@/lib/storage";
 import { lessonVideoKey } from "@/lib/storage-keys";
+import { resolveVideoMime, SUPPORTED_VIDEO_TYPES, VIDEO_MAX_BYTES } from "@/lib/videoUpload";
 
 export const runtime = "nodejs";
 
@@ -23,27 +24,7 @@ export const runtime = "nodejs";
  * CLAUDE.md tech stack); the storage adapter abstracts that switch.
  */
 
-const MAX_VIDEO_BYTES = 500 * 1024 * 1024; // 500 MB
-
-// Route-file exports beyond HTTP method handlers / `runtime` confuse the
-// Next.js route type-generator, so keep this list local. The form duplicates
-// the human-facing list separately on the client.
-const SUPPORTED_VIDEO_MIMES: ReadonlyArray<{
-  mime: string;
-  ext: string;
-  label: string;
-}> = [
-  { mime: "video/mp4", ext: "mp4", label: "MP4 (H.264 / H.265)" },
-  { mime: "video/webm", ext: "webm", label: "WebM (VP8/VP9)" },
-  { mime: "video/ogg", ext: "ogv", label: "Ogg Theora" },
-  { mime: "video/quicktime", ext: "mov", label: "MOV (QuickTime)" },
-  { mime: "video/x-matroska", ext: "mkv", label: "MKV" },
-];
-
-const ALLOWED_MIME = new Set(SUPPORTED_VIDEO_MIMES.map((m) => m.mime));
-const MIME_TO_EXT: Record<string, string> = Object.fromEntries(
-  SUPPORTED_VIDEO_MIMES.map((m) => [m.mime, m.ext]),
-);
+const MIME_TO_EXT: Record<string, string> = Object.fromEntries(SUPPORTED_VIDEO_TYPES.map((m) => [m.mime, m.ext]));
 
 export async function POST(req: Request) {
   const userId = await requireUserId();
@@ -68,29 +49,31 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  if (file.size > MAX_VIDEO_BYTES) {
+  if (file.size > VIDEO_MAX_BYTES) {
     return NextResponse.json(
-      { error: "file_too_large", details: { maxBytes: MAX_VIDEO_BYTES } },
+      { error: "file_too_large", details: { maxBytes: VIDEO_MAX_BYTES } },
       { status: 413 },
     );
   }
-  if (!ALLOWED_MIME.has(file.type)) {
+  // Loại tệp do trình duyệt báo có thể rỗng (Safari, .mkv/.mov): dựa vào đuôi tệp khi đó.
+  const mime = resolveVideoMime(file.type, file.name);
+  if (!mime) {
     return NextResponse.json(
       {
         error: "unsupported_media_type",
-        details: { allowed: SUPPORTED_VIDEO_MIMES.map((m) => m.mime) },
+        details: { allowed: SUPPORTED_VIDEO_TYPES.map((m) => m.mime) },
       },
       { status: 415 },
     );
   }
 
-  const ext = MIME_TO_EXT[file.type] ?? "bin";
+  const ext = MIME_TO_EXT[mime] ?? "bin";
   const now = new Date();
   const suffix = randomBytes(8).toString("hex");
   const filename = `${userId}-${now.getTime()}-${suffix}.${ext}`;
   const key = lessonVideoKey(now, filename);
   const buf = Buffer.from(await file.arrayBuffer());
-  await storageFor(key).put(key.key, buf, file.type);
+  await storageFor(key).put(key.key, buf, mime);
 
   return NextResponse.json(
     {
@@ -98,7 +81,7 @@ export async function POST(req: Request) {
       url: `/api/lesson-media/videos/${filename}`,
       filename,
       sizeBytes: file.size,
-      mime: file.type,
+      mime,
     },
     { status: 201 },
   );

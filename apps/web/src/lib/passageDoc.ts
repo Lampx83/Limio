@@ -16,7 +16,7 @@ import { passageHighlightColor, passageTextColor } from "./passageColors";
  * Audio và video là hai nút khối riêng (không có trong Tiptap mặc định); trong ô soạn hiện thành thẻ có biểu tượng và mô tả.
  */
 
-function mediaNode(name: "audio" | "video", icon: string, fallback: string) {
+function mediaNode(name: "audio" | "video", fallback: string) {
   return Node.create({
     name,
     group: "block",
@@ -42,14 +42,14 @@ function mediaNode(name: "audio" | "video", icon: string, fallback: string) {
       return [
         "div",
         { "data-passage-media": name, "data-src": String(node.attrs.src ?? ""), "data-alt": alt, class: "passage-media-chip" },
-        `${icon} ${alt || fallback}`,
+        alt || fallback,
       ];
     },
   });
 }
 
-export const PassageAudio = mediaNode("audio", "🔊", "Audio");
-export const PassageVideo = mediaNode("video", "🎬", "Video");
+export const PassageAudio = mediaNode("audio", "Audio");
+export const PassageVideo = mediaNode("video", "Video");
 
 export const PASSAGE_EXTENSIONS = [
   StarterKit.configure({
@@ -65,7 +65,7 @@ export const PASSAGE_EXTENSIONS = [
   }),
   Underline,
   Highlight.configure({ multicolor: true }),
-  Image.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "max-w-full h-auto rounded-md" } }),
+  Image.configure({ inline: false, allowBase64: false, HTMLAttributes: { class: "mx-auto block max-h-[28rem] w-auto max-w-full rounded-md object-contain" } }),
   TextStyle,
   FontSize,
   Color,

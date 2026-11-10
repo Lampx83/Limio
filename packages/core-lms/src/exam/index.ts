@@ -5,6 +5,7 @@ export * from "./public-tokens";
 export * from "./exams";
 export * from "./passages";
 export * from "./assets";
+export * from "./passageAssets";
 export * from "./questions";
 export * from "./attempts";
 export * from "./grading";

@@ -1,3 +1,4 @@
+import { getAudioTranscriptsForPassages, transcriptKeysInDoc } from "./passageAssets";
 import { assertCanEditCourse } from "../courses/authz";
 import { createHash } from "node:crypto";
 import { z } from "zod";
@@ -268,7 +269,7 @@ export async function getPracticeSession(userId: string, sessionId: string, db: 
       // Cấu hình CÔNG KHAI: đáp án đúng chỉ trả về sau khi kiểm tra (checkPracticeAnswer).
       config: toPublicQuestionConfig(q.type, q.config, `${userId}:${q.id}`),
     })),
-    passages,
+    passages: await withTranscripts(s.examId, passages, db),
     answers: answers.map((a) => ({
       questionId: a.questionId,
       answerJson: a.answerJson,
@@ -296,7 +297,7 @@ export interface PracticeEmbed {
     /** Cấu hình CÔNG KHAI: không có đáp án đúng, giải thích hay dẫn chứng. */
     config: Record<string, unknown>;
   }>;
-  passages: Array<{ id: string; title: string; contentJson: unknown }>;
+  passages: Array<{ id: string; title: string; contentJson: unknown; transcripts?: Record<string, string> }>;
   answers: Array<{ questionId: string; answerJson: unknown; checked: boolean; isCorrect: boolean | null }>;
 }
 
@@ -358,9 +359,27 @@ async function buildFreshEmbed(examId: string, title: string, seed: string, db: 
       languageSkill: q.languageSkill,
       config: toPublicQuestionConfig(q.type, q.config, `${seed}:${q.id}`) as Record<string, unknown>,
     })),
-    passages,
+    passages: await withTranscripts(examId, passages, db),
     answers: [],
   };
+}
+
+/**
+ * Gắn transcript của các audio vào từng đoạn (khoá = tên tệp). Luyện đề và Bài luyện không tính điểm chính thức nên học viên được
+ * tự mở/ẩn transcript bất cứ lúc nào (thầy chốt 10/11/2026); đường thi thử có giờ không đi qua hàm này.
+ */
+async function withTranscripts<P extends { id: string; title: string; contentJson: unknown }>(
+  examId: string,
+  passages: P[],
+  db: PrismaClient,
+): Promise<Array<P & { transcripts: Record<string, string> }>> {
+  const all = await getAudioTranscriptsForPassages(examId, passages, db);
+  return passages.map((p) => {
+    const mine: Record<string, string> = {};
+    const k = transcriptKeysInDoc(p.contentJson);
+    for (const f of [...k.audio, ...k.video]) if (all[f]) mine[f] = all[f]!;
+    return { ...p, transcripts: mine };
+  });
 }
 
 /**

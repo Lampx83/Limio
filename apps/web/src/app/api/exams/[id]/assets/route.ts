@@ -8,6 +8,7 @@ import {
   ExamError,
   IMAGE_MAX_BYTES,
   IMAGE_MIME_TYPES,
+  listAudioTranscriptFlags,
 } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
@@ -113,6 +114,21 @@ export async function POST(
     );
   } catch (e) {
     await storage.delete(key.key).catch(() => undefined);
+    if (e instanceof ExamError) {
+      const mapped = mapKnownError(e);
+      if (mapped) return mapped;
+    }
+    throw e;
+  }
+}
+
+/** Các audio của đề đã có transcript (tên tệp → có/không), cho nhãn "Có transcript" trên thẻ audio trong trình soạn. */
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
+  const userId = await requireUserId();
+  if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  try {
+    return NextResponse.json({ transcripts: await listAudioTranscriptFlags(userId, params.id) });
+  } catch (e) {
     if (e instanceof ExamError) {
       const mapped = mapKnownError(e);
       if (mapped) return mapped;

@@ -1,10 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Editor } from "@tiptap/react";
 import dynamic from "next/dynamic";
-import { Music, Video } from "lucide-react";
+import { Link2, Music, Video } from "lucide-react";
+import TranscriptDialog from "@/components/exam/TranscriptDialog";
+import { downscaleImage } from "@/lib/downscaleImage";
+import { checkAudioFile, checkImageFile, checkVideoFile } from "@/lib/mediaLimits";
+import { videoUploadErrorMessage } from "@/lib/videoUpload";
+import { examAssetFilenameFromUrl, videoTranscriptKey } from "@/lib/examAssetUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillPicker from "./SkillPicker";
 import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
@@ -71,8 +76,6 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const audioInputRef = useRef<HTMLInputElement | null>(null);
-  const videoInputRef = useRef<HTMLInputElement | null>(null);
 
   // Nội dung: Tiptap JSON ↔ HTML của trình soạn (lib/passageDoc.ts). Đoạn có nút trình soạn chưa hỗ trợ thì giữ nguyên và chỉ hiện bản xem,
   // trừ khi người soạn chủ động chuyển sang soạn (mất phần đó khi lưu). Chưa sửa gì thì không gửi lại nội dung — đoạn cũ không bị đổi một chữ.
@@ -85,6 +88,26 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
   );
   const [dirty, setDirty] = useState(false);
   const editorRef = useRef<Editor | null>(null);
+  // Audio của đề → đã có transcript (cho nhãn trên thẻ audio); hộp thoại tải audio và sửa transcript.
+  const [flags, setFlags] = useState<Record<string, boolean>>({});
+  // Hộp thoại đang mở để thêm audio/video (tệp hoặc link) kèm mô tả và transcript.
+  const [pendingMedia, setPendingMedia] = useState<{ kind: "audio" | "video-file"; file: File | null } | { kind: "video-link" } | null>(null);
+  const [pickError, setPickError] = useState<string | null>(null);
+  const [editingTranscript, setEditingTranscript] = useState<{ kind: "audio" | "video"; key: string; src: string; alt: string; transcript: string | null } | null>(null);
+  const [dialogBusy, setDialogBusy] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  useEffect(() => {
+    let off = false;
+    void fetch(apiUrl(`/api/exams/${examId}/assets`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { transcripts?: Record<string, boolean> } | null) => {
+        if (!off && d?.transcripts) setFlags(d.transcripts);
+      })
+      .catch(() => undefined);
+    return () => {
+      off = true;
+    };
+  }, [examId]);
 
   /** Chèn khối audio/video tại con trỏ của trình soạn. */
   function insertMedia(type: "audio" | "video", src: string, alt: string) {
@@ -108,6 +131,12 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
 
   /** Tải ảnh lên cho trình soạn: hỏi mô tả (bắt buộc), trả URL; huỷ hoặc lỗi thì null. */
   async function uploadImage(file: File): Promise<{ url: string; alt: string } | null> {
+    const toSend = await downscaleImage(file); // ảnh quá lớn thu về cạnh dài 2000 px trước khi tải (dung lượng tính trên tệp này)
+    const problem = checkImageFile(toSend);
+    if (problem) {
+      window.alert(problem);
+      return null;
+    }
     const alt = window.prompt("Mô tả ảnh (alt text) — bắt buộc cho accessibility:", "");
     if (alt === null) return null;
     const trimmed = alt.trim();
@@ -118,7 +147,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
     setUploading(true);
     try {
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", toSend);
       form.append("altText", trimmed);
       const res = await fetch(apiUrl(`/api/exams/${examId}/assets`), { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
@@ -132,89 +161,137 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
     }
   }
 
+  /** "Dán link video": mở hộp thoại hỏi URL, mô tả (bắt buộc) và transcript (tuỳ chọn). */
   function onInsertVideo() {
-    const url = window.prompt(
-      "Dán URL video. Hỗ trợ: YouTube, Vimeo, Google Drive (link chia sẻ), OneDrive (link Embed), hoặc file .mp4/.webm trực tiếp.\n\nLưu ý: Google Drive cần đặt quyền 'Anyone with the link'. OneDrive nên dùng link Embed (Share → Embed).",
-      "",
-    );
-    if (url === null) return;
-    const trimmedUrl = url.trim();
-    if (!trimmedUrl) {
-      window.alert("URL không được để trống.");
-      return;
-    }
+    setDialogError(null);
+    setPendingMedia({ kind: "video-link" });
+  }
+
+  /** Bấm "Tải audio" / "Tải video lên": mở hộp thoại nói rõ định dạng và dung lượng cho phép, rồi chọn tệp, mô tả, transcript trong đó. */
+  function openUploadDialog(kind: "audio" | "video-file") {
+    setDialogError(null);
+    setPickError(null);
+    setPendingMedia({ kind, file: null });
+  }
+
+  /** Chọn tệp trong hộp thoại: kiểm định dạng và dung lượng ngay, báo lỗi cạnh ô chọn (không tải lên khi sai). */
+  function pickFile(f: File | null) {
+    setDialogError(null);
+    if (!f || !pendingMedia || pendingMedia.kind === "video-link") return;
+    const problem = pendingMedia.kind === "audio" ? checkAudioFile(f) : checkVideoFile(f);
+    setPickError(problem);
+    setPendingMedia({ kind: pendingMedia.kind, file: problem ? null : f });
+  }
+
+  /** Lưu transcript của video đã chèn (tạo dòng lưu khi có chữ). Lỗi ở đây không làm mất khối video vừa chèn. */
+  async function saveVideoTranscript(src: string, alt: string, transcript: string): Promise<boolean> {
+    const res = await fetch(apiUrl(`/api/exams/${examId}/video-transcript`), {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ src, alt, transcript }),
+    });
+    return res.ok;
+  }
+
+  /** Bấm nút chính trong hộp thoại: tải tệp lên (audio/video) hoặc nhận link, chèn khối tại con trỏ, kèm transcript. */
+  async function submitMedia(vals: { alt: string; transcript: string; url: string }) {
+    if (!pendingMedia) return;
+    if (pendingMedia.kind !== "video-link" && !pendingMedia.file) return;
+    const hasText = vals.transcript.trim().length > 0;
+    setDialogBusy(true);
+    setDialogError(null);
     try {
-      const u = new URL(trimmedUrl);
-      if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error();
+      if (pendingMedia.kind === "audio") {
+        setUploading(true);
+        const form = new FormData();
+        form.append("file", pendingMedia.file!);
+        form.append("altText", vals.alt);
+        if (hasText) form.append("transcript", vals.transcript.trim());
+        const res = await fetch(apiUrl(`/api/exams/${examId}/assets`), { method: "POST", body: form });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setDialogError(`Tải lên lỗi: ${data?.error ?? res.status}`);
+          return;
+        }
+        const name = examAssetFilenameFromUrl(data.url);
+        if (name) setFlags((f) => ({ ...f, [name]: hasText }));
+        insertMedia("audio", data.url as string, vals.alt);
+      } else {
+        let src = vals.url.trim();
+        if (pendingMedia.kind === "video-file") {
+          setUploading(true);
+          const form = new FormData();
+          form.append("file", pendingMedia.file!);
+          const res = await fetch(apiUrl("/api/lesson-media/videos"), { method: "POST", body: form });
+          const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+          if (!res.ok || !data.url) {
+            setDialogError(videoUploadErrorMessage(data.error, res.status));
+            return;
+          }
+          src = data.url;
+        }
+        insertMedia("video", src, vals.alt);
+        if (hasText) {
+          const ok = await saveVideoTranscript(src, vals.alt, vals.transcript).catch(() => false);
+          const key = videoTranscriptKey(src);
+          if (ok && key) setFlags((f) => ({ ...f, [key]: true }));
+          else window.alert("Đã chèn video nhưng chưa lưu được transcript. Bấm nút \"Transcript\" trên thẻ video để nhập lại.");
+        }
+      }
+      setPendingMedia(null);
     } catch {
-      window.alert("URL không hợp lệ (chỉ chấp nhận http/https).");
-      return;
-    }
-    const alt = window.prompt(
-      "Mô tả video (alt text) — bắt buộc cho accessibility:",
-      "",
-    );
-    if (alt === null) return;
-    const trimmed = alt.trim();
-    if (!trimmed) {
-      window.alert("Alt text không được để trống.");
-      return;
-    }
-    insertMedia("video", trimmedUrl, trimmed);
-  }
-
-  /** Bài luyện: tải tệp video từ máy lên (dùng kho video của bài học: MP4, WebM, MOV, MKV, OGV, tối đa 500 MB). */
-  async function onUploadVideo(file: File) {
-    const alt = window.prompt("Mô tả nội dung video (alt text) — bắt buộc cho accessibility:", "");
-    if (alt === null) return;
-    const trimmed = alt.trim();
-    if (!trimmed) {
-      window.alert("Alt text không được để trống.");
-      return;
-    }
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch(apiUrl("/api/lesson-media/videos"), { method: "POST", body: form });
-      const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        window.alert(`Tải video lỗi: ${data.error ?? res.status}`);
-        return;
-      }
-      insertMedia("video", data.url, trimmed);
+      setDialogError("Không tải được (mất kết nối hoặc tệp quá nặng). Kiểm tra mạng rồi thử lại.");
     } finally {
+      setDialogBusy(false);
       setUploading(false);
-      if (videoInputRef.current) videoInputRef.current.value = "";
     }
   }
 
-  /** Tải audio lên (hỏi mô tả và transcript tuỳ chọn) rồi chèn khối audio tại con trỏ. */
-  async function onUploadAudio(file: File) {
-    const alt = window.prompt("Mô tả nội dung audio (alt text) — bắt buộc cho accessibility:", "");
-    if (alt === null) return;
-    const trimmed = alt.trim();
-    if (!trimmed) {
-      window.alert("Alt text không được để trống.");
-      return;
-    }
-    const transcript = window.prompt("Transcript (tuỳ chọn) — khuyến nghị cho audio nghe 1 lần:", "");
-    setUploading(true);
+  /** Nút "Transcript" trên thẻ audio/video: nạp transcript hiện có rồi mở hộp thoại sửa. */
+  async function openTranscriptEditor(src: string, alt: string, kind: "audio" | "video") {
+    const key = kind === "audio" ? examAssetFilenameFromUrl(src) : videoTranscriptKey(src);
+    if (!key) return;
+    setDialogError(null);
+    setEditingTranscript({ kind, key, src, alt, transcript: null });
     try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("altText", trimmed);
-      if (transcript && transcript.trim().length > 0) form.append("transcript", transcript.trim());
-      const res = await fetch(apiUrl(`/api/exams/${examId}/assets`), { method: "POST", body: form });
-      const data = await res.json().catch(() => ({}));
+      const res = await fetch(
+        apiUrl(kind === "audio" ? `/api/exams/${examId}/assets/${key}` : `/api/exams/${examId}/video-transcript?src=${encodeURIComponent(src)}`),
+      );
+      const d = (await res.json().catch(() => ({}))) as { transcript?: string; error?: string };
+      if (!res.ok) throw new Error(d.error ?? String(res.status));
+      setEditingTranscript({ kind, key, src, alt, transcript: d.transcript ?? "" });
+    } catch (e) {
+      setEditingTranscript(null);
+      window.alert(`Không mở được transcript: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+
+  async function saveTranscript(vals: { transcript: string }) {
+    if (!editingTranscript) return;
+    setDialogBusy(true);
+    setDialogError(null);
+    try {
+      const res =
+        editingTranscript.kind === "audio"
+          ? await fetch(apiUrl(`/api/exams/${examId}/assets/${editingTranscript.key}`), {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ transcript: vals.transcript }),
+            })
+          : await fetch(apiUrl(`/api/exams/${examId}/video-transcript`), {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ src: editingTranscript.src, alt: editingTranscript.alt, transcript: vals.transcript }),
+            });
+      const d = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        window.alert(`Upload lỗi: ${data?.error ?? res.status}`);
+        setDialogError(`Lưu lỗi: ${d.error ?? res.status}`);
         return;
       }
-      insertMedia("audio", data.url as string, trimmed);
+      setFlags((f) => ({ ...f, [editingTranscript.key]: vals.transcript.trim().length > 0 }));
+      setEditingTranscript(null);
     } finally {
-      setUploading(false);
-      if (audioInputRef.current) audioInputRef.current.value = "";
+      setDialogBusy(false);
     }
   }
 
@@ -277,7 +354,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
           <div className="flex gap-1">
             <button
               type="button"
-              onClick={() => audioInputRef.current?.click()}
+              onClick={() => openUploadDialog("audio")}
               disabled={uploading || readOnlyContent}
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
@@ -289,12 +366,12 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               disabled={uploading || readOnlyContent}
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
-              <Video className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> {practiceMode ? "Dán link video" : "Chèn video"}
+              <Link2 className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> {practiceMode ? "Dán link video" : "Chèn video"}
             </button>
             {practiceMode && (
               <button
                 type="button"
-                onClick={() => videoInputRef.current?.click()}
+                onClick={() => openUploadDialog("video-file")}
                 disabled={uploading || readOnlyContent}
                 className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
               >
@@ -302,28 +379,6 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               </button>
             )}
           </div>
-          {practiceMode && (
-            <input
-              ref={videoInputRef}
-              type="file"
-              accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,.mp4,.webm,.ogv,.mov,.mkv"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void onUploadVideo(f);
-              }}
-            />
-          )}
-          <input
-            ref={audioInputRef}
-            type="file"
-            accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void onUploadAudio(f);
-            }}
-          />
         </div>
         <div className="mt-1">
           {readOnlyContent && initialDoc ? (
@@ -349,6 +404,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
                 editorRef.current = ed;
               }}
               uploadImage={uploadImage}
+              media={{ transcriptFlags: flags, onEditTranscript: (src, alt, kind) => void openTranscriptEditor(src, alt, kind) }}
               placeholder="Soạn hoặc dán nội dung bài đọc ở đây (dán được cả ảnh từ clipboard)."
             />
           )}
@@ -431,6 +487,43 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
           {saving ? "Đang lưu…" : mode === "create" ? "Thêm đoạn" : "Lưu"}
         </button>
       </div>
+      {pendingMedia && (
+        <TranscriptDialog
+          title={pendingMedia.kind === "audio" ? "Tải audio lên" : pendingMedia.kind === "video-file" ? "Tải video lên" : "Dán link video"}
+          media={pendingMedia.kind === "audio" ? "audio" : "video"}
+          askUrl={pendingMedia.kind === "video-link"}
+          busy={dialogBusy}
+          error={dialogError}
+          submitLabel={pendingMedia.kind === "video-link" ? "Chèn video" : "Tải lên"}
+          fileField={
+            pendingMedia.kind === "video-link"
+              ? undefined
+              : {
+                  accept:
+                    pendingMedia.kind === "audio"
+                      ? "audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4"
+                      : "video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,.mp4,.webm,.ogv,.mov,.mkv",
+                  file: pendingMedia.file,
+                  error: pickError,
+                  onPick: pickFile,
+                }
+          }
+          onSubmit={(vals) => void submitMedia(vals)}
+          onCancel={() => setPendingMedia(null)}
+        />
+      )}
+      {editingTranscript && editingTranscript.transcript !== null && (
+        <TranscriptDialog
+          title={`Transcript: ${editingTranscript.alt || (editingTranscript.kind === "audio" ? "audio" : "video")}`}
+          media={editingTranscript.kind}
+          initialTranscript={editingTranscript.transcript}
+          busy={dialogBusy}
+          error={dialogError}
+          submitLabel="Lưu transcript"
+          onSubmit={(v) => void saveTranscript(v)}
+          onCancel={() => setEditingTranscript(null)}
+        />
+      )}
     </form>
   );
 }

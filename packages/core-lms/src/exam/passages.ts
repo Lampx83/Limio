@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
+import { pruneDeletedPassageAssets, pruneRemovedPassageAssets } from "./passageAssets";
 
 const audioPolicy = z.enum(["free_replay", "limited_replay", "once_only"]);
 const revealMode = z.enum(["all_at_once", "sequential"]);
@@ -60,7 +61,7 @@ async function assertExamDraft(examId: string, db: PrismaClient) {
 async function loadPassageWithCourse(passageId: string, db: PrismaClient) {
   const p = await db.examPassage.findUnique({
     where: { id: passageId },
-    select: { id: true, examId: true, exam: { select: { courseId: true, createdById: true, status: true } } },
+    select: { id: true, examId: true, contentJson: true, exam: { select: { courseId: true, createdById: true, status: true, ownerContentItemId: true } } },
   });
   if (!p) throw new ExamError("passage_not_found");
   return p;
@@ -115,7 +116,7 @@ export async function updatePassage(
   passageId: string,
   rawInput: unknown,
   db: PrismaClient = prisma,
-): Promise<void> {
+): Promise<{ removedFiles: string[] }> {
   const p = await loadPassageWithCourse(passageId, db);
   if (p.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, p.exam, db);
@@ -162,18 +163,31 @@ export async function updatePassage(
     }
   });
   await afterOwnedPracticeChanged(actorUserId, p.examId, db);
+  // Ảnh/audio vừa gỡ khỏi đoạn: dọn khỏi đề (và trả tên tệp để lớp gọi xoá khỏi kho). Đề thường đã xuất bản thì giữ lại
+  // (có thể đang có người làm); đề nháp và đề ẩn của Bài luyện thì dọn.
+  const removedFiles =
+    d.contentJson !== undefined && canPruneAssets(p.exam)
+      ? await pruneRemovedPassageAssets(p.examId, passageId, p.contentJson, d.contentJson, db)
+      : [];
+  return { removedFiles };
+}
+
+function canPruneAssets(exam: { status: string; ownerContentItemId: string | null }): boolean {
+  return exam.ownerContentItemId ? exam.status !== "archived" : exam.status === "draft";
 }
 
 export async function deletePassage(
   actorUserId: string,
   passageId: string,
   db: PrismaClient = prisma,
-): Promise<void> {
+): Promise<{ removedFiles: string[] }> {
   const p = await loadPassageWithCourse(passageId, db);
   if (p.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, p.exam, db);
   await db.examPassage.delete({ where: { id: passageId } });
   await afterOwnedPracticeChanged(actorUserId, p.examId, db);
+  const removedFiles = canPruneAssets(p.exam) ? await pruneDeletedPassageAssets(p.examId, passageId, p.contentJson, db) : [];
+  return { removedFiles };
 }
 
 /** A7.2.4 — Reorder passages within an exam. Same 2-pass technique as modules. */

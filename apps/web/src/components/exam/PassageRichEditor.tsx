@@ -2,7 +2,8 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
-import { PASSAGE_EXTENSIONS, PASSAGE_TABLE_MAX_COLS, PASSAGE_TABLE_MAX_ROWS, flattenTableCellsHtml } from "@/lib/passageDoc";
+import { PASSAGE_TABLE_MAX_COLS, PASSAGE_TABLE_MAX_ROWS, flattenTableCellsHtml } from "@/lib/passageDoc";
+import { PASSAGE_EDITOR_EXTENSIONS, PassageMediaContext, type PassageMediaActions } from "./passageNodeViews";
 import { PASSAGE_FONT_SIZES } from "@/lib/passageFontSizes";
 import { PASSAGE_HIGHLIGHT_COLORS, PASSAGE_TEXT_COLORS, passageHighlightColor, passageTextColor } from "@/lib/passageColors";
 import { cleanWordHtml } from "@/components/richtext/wordPaste";
@@ -24,6 +25,7 @@ export default function PassageRichEditor({
   uploadImage,
   placeholder = "Soạn nội dung bài đọc ở đây…",
   minHeight = 200,
+  media,
 }: {
   html: string;
   /** Gọi mỗi lần người soạn sửa (không gọi khi nạp nội dung ban đầu). */
@@ -33,6 +35,8 @@ export default function PassageRichEditor({
   uploadImage: (file: File) => Promise<PassageImageUpload | null>;
   placeholder?: string;
   minHeight?: number;
+  /** Nhãn/nút transcript trên thẻ audio (tên tệp audio → đã có transcript). Không truyền = thẻ audio chỉ có nút Xoá. */
+  media?: PassageMediaActions;
 }) {
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -42,7 +46,7 @@ export default function PassageRichEditor({
   uploadRef.current = uploadImage;
 
   const editor = useEditor({
-    extensions: PASSAGE_EXTENSIONS,
+    extensions: PASSAGE_EDITOR_EXTENSIONS,
     content: html || "",
     immediatelyRender: false,
     editorProps: {
@@ -257,7 +261,7 @@ export default function PassageRichEditor({
             />
           )}
         </ToolbarMenu>
-        <button type="button" onClick={() => fileRef.current?.click()} className={btn(false)} title="Chèn ảnh (cũng có thể dán hoặc kéo thả vào ô)" aria-label="Chèn ảnh">
+        <button type="button" onClick={() => fileRef.current?.click()} className={btn(false)} title="Chèn ảnh: PNG, JPG, WebP, GIF, tối đa 5 MB (cũng có thể dán hoặc kéo thả vào ô)" aria-label="Chèn ảnh">
           🖼️
         </button>
         <input
@@ -276,7 +280,9 @@ export default function PassageRichEditor({
           ⌫
         </button>
       </div>
-      <EditorContent editor={editor} />
+      <PassageMediaContext.Provider value={media ?? null}>
+        <EditorContent editor={editor} />
+      </PassageMediaContext.Provider>
       {error && <p className="border-t border-token px-3 py-1.5 text-xs text-danger-600">Lỗi tải ảnh: {error}</p>}
     </div>
   );
