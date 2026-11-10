@@ -45,7 +45,8 @@ export function splitForTts(text: string, maxChars: number = TTS_MAX_CHARS): str
   if (trimmed.length === 0) return [];
   if (trimmed.length <= maxChars) return [trimmed];
 
-  const sentences = trimmed.split(/(?<=[.!?…])\s+/).filter((s) => s.length > 0);
+  // Chữ Hán không có dấu cách sau dấu câu (。！？；) nên tách riêng, không đòi khoảng trắng đi sau.
+  const sentences = trimmed.split(/(?<=[.!?…])\s+|(?<=[。！？；])\s*/).filter((s) => s.length > 0);
   const chunks: string[] = [];
   let current = "";
 
@@ -62,7 +63,7 @@ export function splitForTts(text: string, maxChars: number = TTS_MAX_CHARS): str
       if (current.length === 0) {
         current = p;
       } else if (current.length + 1 + p.length <= maxChars) {
-        current = `${current} ${p}`;
+        current = /[。！？；]$/.test(current) ? `${current}${p}` : `${current} ${p}`;
       } else {
         flush();
         current = p;
@@ -77,7 +78,7 @@ function splitLongSentence(sentence: string, maxChars: number): string[] {
   const parts: string[] = [];
   let rest = sentence;
   while (rest.length > maxChars) {
-    let cut = rest.lastIndexOf(" ", maxChars);
+    let cut = Math.max(rest.lastIndexOf(" ", maxChars), rest.lastIndexOf("，", maxChars - 1) + 1, rest.lastIndexOf("、", maxChars - 1) + 1);
     if (cut <= 0) cut = maxChars;
     parts.push(rest.slice(0, cut).trim());
     rest = rest.slice(cut).trim();

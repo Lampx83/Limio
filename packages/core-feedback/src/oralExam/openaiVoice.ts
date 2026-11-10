@@ -35,20 +35,21 @@ export function openAiTextToSpeech(
 ): TextToSpeechFn {
   return async (text: string) => {
     const segments = splitForTts(text, OPENAI_TTS_MAX_CHARS);
-    const audioChunks: Buffer[] = [];
-    for (const segment of segments) {
-      try {
-        const res = await openai.audio.speech.create({
-          model: "tts-1",
-          voice,
-          input: segment,
-          response_format: "mp3",
-        });
-        audioChunks.push(Buffer.from(await res.arrayBuffer()));
-      } catch (e) {
-        throw new OpenAiVoiceError("tts_failed", e);
-      }
-    }
+    const audioChunks = await Promise.all(
+      segments.map(async (segment) => {
+        try {
+          const res = await openai.audio.speech.create({
+            model: "tts-1",
+            voice,
+            input: segment,
+            response_format: "mp3",
+          });
+          return Buffer.from(await res.arrayBuffer());
+        } catch (e) {
+          throw new OpenAiVoiceError("tts_failed", e);
+        }
+      }),
+    );
     return { audioChunks, contentType: "audio/mpeg" };
   };
 }

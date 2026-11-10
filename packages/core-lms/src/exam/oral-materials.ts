@@ -3,6 +3,7 @@ import { prisma, type PrismaClient, type OralExamMaterial } from "@feedbackme/db
 import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
+import { assertLegacyOralEnabled } from "./legacy-oral-switch";
 import { ExamError } from "./types";
 
 // A6.1 — Vấn đáp AI. Tài liệu GV upload cho "giảng viên ảo" — KHÔNG BAO GIỜ lộ
@@ -38,6 +39,7 @@ async function assertExamOralAndEditable(
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
+  await assertLegacyOralEnabled(db);
   // Cùng bất biến với ExamAsset — sửa tài liệu sau publish có thể khiến sinh
   // viên thi cùng ca gặp nội dung khác nhau tuỳ lúc AI đọc lại tài liệu.
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");

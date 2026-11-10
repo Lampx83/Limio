@@ -5,6 +5,7 @@ import { assertCanEditCourse, assertCanEditExam, CourseAuthzError } from "../cou
 import { isInstructor } from "../auth/roles";
 import { emitEvent } from "../learning/events";
 import { ExamError } from "./types";
+import { assertLegacyOralEnabled } from "./legacy-oral-switch";
 import { validateMockExamForPublish } from "./mock-sections";
 import { importPreviewToExam } from "./blueprint";
 import { WizardConfigShape, type WizardConfigT, assembleWizardPool } from "./wizard";
@@ -124,6 +125,7 @@ export async function createExam(
     throw new ExamError("validation_failed", parsed.error.flatten());
   }
   const d = parsed.data;
+  if (d.kind === "oral") await assertLegacyOralEnabled(db);
   // Nhiều lượt chỉ có cho vấn đáp AI — thi viết (chấm tự động, xáo đề, mã thi…) vẫn 1 lượt.
   if (d.attemptPolicy === "multi" && d.kind !== "oral") {
     throw new ExamError("validation_failed", "attemptPolicy=multi chỉ áp dụng cho đề vấn đáp");

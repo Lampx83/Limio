@@ -70,7 +70,7 @@ export const ASSISTANT_DESTINATIONS: readonly AssistantDestination[] = [
   { id: "quick_exam", label: "Link thi nhanh", description: "Tạo nhanh một buổi kiểm tra trên lớp: chọn đề, gửi link cho cả lớp làm ngay.", href: "/instructor/organize/quick", icon: "exam" },
   { id: "organize", label: "Tổ chức thi", description: "Lập đợt thi, ca thi và phòng thi cho thí sinh.", href: "/instructor/organize", icon: "organize" },
   { id: "exam_history", label: "Lịch sử thi", description: "Xem lại các buổi và đợt thi đã tổ chức cùng kết quả.", href: "/instructor/exam-history", icon: "organize" },
-  { id: "oral_exam_new", label: "Soạn đề vấn đáp", description: "Soạn đề cho phòng vấn đáp AI: câu hỏi, tiêu chí và thời gian.", href: "/instructor/oral-exams/new", icon: "oral" },
+  { id: "oral_exam_new", label: "Tạo đề vấn đáp mới", description: "Tạo đề cho phòng vấn đáp AI: tiêu đề, ngôn ngữ, tài liệu và thời gian.", href: "/instructor/oral-exams/new", icon: "oral" },
   { id: "oral_exams", label: "Vấn đáp AI", description: "Mở phòng vấn đáp để AI hỏi đáp trực tiếp với học viên.", href: "/instructor/oral-exams", icon: "oral" },
   { id: "tournaments", label: "Đấu trường", description: "Tổ chức cuộc thi nhiều vòng có xếp hạng để tạo động lực học.", href: "/instructor/tournaments", icon: "tournament" },
 ];

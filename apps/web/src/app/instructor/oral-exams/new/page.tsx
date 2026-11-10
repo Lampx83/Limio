@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { isLegacyOralDisabled } from "@feedbackme/core-lms";
 import { requireFeature } from "@/lib/session";
 import OralNewExamForm from "./OralNewExamForm";
 
@@ -16,6 +17,8 @@ export default async function NewOralExamPage({
 }) {
   const userId = await requireFeature("ai_oral.access");
   if (!userId) redirect("/instructor/dashboard");
+  // Bản cũ đã tắt: không còn tạo đề mới, về danh sách (có banner giải thích).
+  if (await isLegacyOralDisabled()) redirect("/instructor/oral-exams");
 
   const ownedCourses = await prisma.course.findMany({
     where: { instructors: { some: { userId } } },

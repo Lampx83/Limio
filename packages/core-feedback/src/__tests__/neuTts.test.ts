@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isTtsProviderError, NEU_TTS_MAX_CHARS, neuTextToSpeech, NeuTtsError } from "../oralExam/neuTts";
+import { isTtsProviderError, NEU_TTS_MAX_CHARS, neuTextToSpeech, NeuTtsError, pickNeuVoice } from "../oralExam/neuTts";
 
 // A6.6 — chỉ test phần thuần của adapter (URL, header, chunking, mapping lỗi)
 // bằng fetch giả — không gọi dịch vụ TTS thật.
@@ -77,5 +77,24 @@ describe("neuTextToSpeech", () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
 
     await expect(neuTextToSpeech(config)("Xin chào")).rejects.toBeInstanceOf(NeuTtsError);
+  });
+});
+
+describe("pickNeuVoice", () => {
+  const voices = [
+    { voice: "baotrang", language: "vi" },
+    { voice: "emma", language: "en" },
+    { voice: "xiaoxiao", language: "zh" },
+    { voice: "yunxi", language: "zh" },
+  ];
+  it("lấy giọng đầu tiên của ngôn ngữ đề, không dùng giọng Việt đã cấu hình cho đề tiếng Trung", () => {
+    expect(pickNeuVoice(voices, "zh", "baotrang")).toBe("xiaoxiao");
+    expect(pickNeuVoice(voices, "en", "baotrang")).toBe("emma");
+  });
+  it("giữ giọng đã cấu hình nếu cùng ngôn ngữ", () => {
+    expect(pickNeuVoice(voices, "zh", "yunxi")).toBe("yunxi");
+  });
+  it("không có giọng của ngôn ngữ đó thì trả null", () => {
+    expect(pickNeuVoice(voices.filter((v) => v.language === "vi"), "zh")).toBeNull();
   });
 });

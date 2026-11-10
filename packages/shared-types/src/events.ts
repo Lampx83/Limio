@@ -177,6 +177,8 @@ export const LearningEventType = {
   // A6.4 — chấm điểm buổi vấn đáp: AI đề xuất, rồi GV duyệt/sửa.
   ExamOralEvaluationGenerated: "exam.oral_evaluation.generated",
   ExamOralEvaluationGraded: "exam.oral_evaluation.graded",
+  // Admin bật/tắt vấn đáp AI bản cũ (docs/tieu-chi/limio-van-dap.md). Payload chỉ mang cờ bật/tắt.
+  ExamOralLegacySwitched: "exam.oral_legacy.switched",
 
   // Feedback
   SkillStateUpdated: "skill.state.updated",
@@ -184,6 +186,19 @@ export const LearningEventType = {
   MisconceptionResolved: "misconception.resolved",
   FeedbackDelivered: "feedback.delivered",
   FeedbackRated: "feedback.rated",
+  // Limio Vấn đáp (docs/tieu-chi/limio-van-dap.md): subject là giảng viên thao tác; payload chỉ mang id và số liệu,
+  // KHÔNG mang nội dung tài liệu, câu hỏi hay đáp án. Không tính là hoạt động học (tiền tố "vandap." trong
+  // NON_LEARNER_ACTIVITY_PREFIXES).
+  VanDapExamCreated: "vandap.exam.created",
+  VanDapExamImported: "vandap.exam.imported",
+  VanDapExamUpdated: "vandap.exam.updated",
+  VanDapExamPublished: "vandap.exam.published",
+  VanDapExamDeleted: "vandap.exam.deleted",
+  VanDapMaterialAdded: "vandap.material.added",
+  VanDapMaterialRemoved: "vandap.material.removed",
+  VanDapPlanGenerated: "vandap.plan.generated",
+  VanDapPlanEdited: "vandap.plan.edited",
+  VanDapScenarioEdited: "vandap.scenario.edited",
   /** B9.2 — learner opened a lesson the feedback routed them to (uptake). */
   FeedbackRemediationClicked: "feedback.remediation.clicked",
   AdaptivePathUpdated: "adaptive.path.updated",
@@ -610,6 +625,58 @@ export interface ExamOralEvaluationGeneratedPayload {
   aiSuggestedScore: number | null;
 }
 
+export interface ExamOralLegacySwitchedPayload {
+  /** true = vấn đáp bản cũ đã bị tắt. */
+  disabled: boolean;
+}
+
+/** Mọi sự kiện `vandap.*` chỉ mang id và số liệu. */
+export interface VanDapExamCreatedPayload {
+  examId: string;
+}
+export interface VanDapExamImportedPayload {
+  examId: string;
+  /** Đề vấn đáp cũ được sao chép (đề cũ không đổi gì). */
+  fromExamId: string;
+  materials: number;
+  scenarios: number;
+}
+export interface VanDapExamUpdatedPayload {
+  examId: string;
+  /** Tên các trường đổi (không mang giá trị): title, durationMin, language, toneNote, rubricText. */
+  fields: string[];
+}
+export interface VanDapExamPublishedPayload {
+  examId: string;
+  items: number;
+  scenarios: number;
+}
+export interface VanDapExamDeletedPayload {
+  examId: string;
+}
+export interface VanDapMaterialPayload {
+  examId: string;
+  materialId: string;
+  /** Số ký tự đã trích (không mang chữ). */
+  chars?: number;
+}
+export interface VanDapPlanGeneratedPayload {
+  examId: string;
+  items: number;
+  /** Số phần tài liệu mô hình đọc (>1 = sinh theo từng phần rồi gộp). */
+  parts: number;
+}
+export interface VanDapPlanEditedPayload {
+  examId: string;
+  op: "created" | "updated" | "deleted" | "reordered";
+  itemId?: string;
+}
+export interface VanDapScenarioEditedPayload {
+  examId: string;
+  op: "created" | "updated" | "deleted" | "reordered";
+  scenarioId?: string;
+}
+
 export interface ExamOralEvaluationGradedPayload {
   examId: string;
   attemptId: string;
@@ -957,7 +1024,8 @@ export type OnboardingCodeKind =
   | "whiteboard"
   | "access_code"
   | "none"
-  | "ambiguous";
+  | "ambiguous"
+  | "van_dap";
 
 export interface OnboardingCodeSubmittedPayload {
   /** Độ dài mã sau khi chuẩn hoá — đủ để biết học viên gõ sai kiểu gì mà không lộ mã. */

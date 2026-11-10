@@ -3,6 +3,7 @@ import { prisma, type PrismaClient, type OralExamTopic } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { assertCanEditExam } from "../courses/authz";
 import { emitEvent } from "../learning/events";
+import { assertLegacyOralEnabled } from "./legacy-oral-switch";
 import { ExamError } from "./types";
 
 // A6.7 — Chủ đề (tình huống) giao cho từng sinh viên trong đề vấn đáp AI.
@@ -39,6 +40,7 @@ async function assertOralDraftAndEditable(examId: string, actorUserId: string, d
   });
   if (!exam) throw new ExamError("exam_not_found");
   if (exam.kind !== "oral") throw new ExamError("exam_not_oral");
+  await assertLegacyOralEnabled(db);
   if (exam.status !== "draft") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, exam, db);
   return exam;
