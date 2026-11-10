@@ -8,6 +8,7 @@ import PassageEditor from "./PassageEditor";
 import QuestionEditor from "./QuestionEditor";
 import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
 import ImportQuestionsModal from "./ImportQuestionsModal";
+import { UNPLAYABLE_TYPE_BADGE, UNPLAYABLE_TYPE_HINT, isPlayableExamQuestionType } from "@/lib/examQuestionSupport";
 
 interface Skill {
   id: string;
@@ -319,6 +320,11 @@ export default function ContentManager({ examId, courseId, editable, passages, q
         <span className="rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-700">
           {TYPE_LABEL[q.type] ?? q.type}
         </span>
+        {!isPlayableExamQuestionType(q.type) && (
+          <span className="rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-800" title={UNPLAYABLE_TYPE_HINT}>
+            {UNPLAYABLE_TYPE_BADGE} — nên đổi loại
+          </span>
+        )}
         {q.bankCode && (
           <span
             className="rounded bg-indigo-50 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-indigo-700"

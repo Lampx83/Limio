@@ -148,7 +148,7 @@ export default function MockExamPanel({
           <span>
             <span className="font-medium">Cho thi thử</span>
             <span className="block text-faint">
-              Tắt thì học viên không bắt đầu được lượt thi mới và đề biến mất khỏi mục “Luyện thi” (lượt đang làm dở vẫn
+              Tắt thì học viên không bắt đầu được lượt thi mới và đề biến mất khỏi khối “Thi thử” ở trang khoá (lượt đang làm dở vẫn
               tiếp tục được). Đổi được bất cứ lúc nào, kể cả sau khi xuất bản.
             </span>
           </span>

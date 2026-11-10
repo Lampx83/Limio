@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
+import { UNPLAYABLE_FOR_LEARNER } from "@/lib/examQuestionSupport";
 
 export type AnswerValue =
   | { optionIds: string[] }
@@ -71,7 +72,7 @@ export default function ExamQuestion({ question, value, onChange, optionOrder }:
         return <EssayInput value={value} onChange={onChange} />;
       default:
         return (
-          <p className="text-xs text-red-700">Unsupported question type: {question.type}</p>
+          <p role="status" className="text-sm text-amber-800">{UNPLAYABLE_FOR_LEARNER}</p>
         );
     }
   }, [question, value, onChange, optionOrder]);

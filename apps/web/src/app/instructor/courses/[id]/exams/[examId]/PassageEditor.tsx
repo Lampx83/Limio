@@ -6,6 +6,7 @@ import { Image, Music, Video } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillPicker from "./SkillPicker";
 import { plainTextToTiptap, tiptapToPlainText } from "./contentHelpers";
+import { pickPastedImage } from "@/lib/pastedImage";
 
 interface Skill {
   id: string;
@@ -340,7 +341,18 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
           rows={8}
           value={v.content}
           onChange={(e) => setV({ ...v, content: e.target.value })}
-          placeholder="Dán nội dung bài đọc ở đây. Cách 1 dòng trắng giữa các đoạn."
+          onPaste={(e) => {
+            // Dán ảnh từ clipboard (ảnh chụp màn hình, "Copy image"): tải lên như nút "Tải ảnh". Có chữ thì dán chữ như thường.
+            const r = pickPastedImage({ files: e.clipboardData.files, text: e.clipboardData.getData("text/plain") });
+            if (r.kind === "none") return;
+            e.preventDefault();
+            if (r.kind === "unsupported") {
+              window.alert("Chỉ dán được ảnh PNG, JPG, WebP hoặc GIF.");
+              return;
+            }
+            if (!uploading) void onUploadFile(r.file, "image");
+          }}
+          placeholder="Dán nội dung bài đọc ở đây (dán được cả ảnh từ clipboard). Cách 1 dòng trắng giữa các đoạn."
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm font-mono"
         />
       </div>
