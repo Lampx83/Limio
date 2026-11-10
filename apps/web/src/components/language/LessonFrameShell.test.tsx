@@ -71,6 +71,14 @@ describe("LessonFrameShell — panel phải theo chiều ngang (AC1)", () => {
     expect(openBtn()).toBeNull();
   });
 
+  it("gốc khung có dấu data-lesson-frame (CSS dùng để ẩn nút nổi 'Về trang chủ' đè lên rail) và nút mở panel nằm cao 32%, không đè nút cuộn", async () => {
+    setWidth(1400);
+    await render();
+    expect(host.querySelector("[data-lesson-frame]")).not.toBeNull();
+    expect(openBtn()!.className).toContain("top-[32%]");
+    expect(openBtn()!.className).not.toContain("top-1/2");
+  });
+
   it("1280–1535 px: đóng sẵn, có nút mở; mở ra thì thành 3 cột", async () => {
     setWidth(1400);
     await render();
@@ -94,6 +102,20 @@ describe("LessonFrameShell — panel phải theo chiều ngang (AC1)", () => {
     expect(isOpen()).toBe(false);
     await click(openBtn()!);
     await click(host.querySelector(".bg-black\\/40")!);
+    expect(isOpen()).toBe(false);
+  });
+
+  it("ngăn kéo (dưới 1280 px) KHÔNG nhớ trạng thái mở: mở rồi tải lại trang thì vẫn đóng, không ghi gì vào lưu trữ", async () => {
+    setWidth(900);
+    window.localStorage.setItem("limio:lesson-panel:open:narrow", "1"); // giá trị cũ còn sót từ bản trước phải bị bỏ qua
+    await render();
+    expect(isOpen()).toBe(false);
+    await click(openBtn()!);
+    expect(isOpen()).toBe(true);
+    expect(window.localStorage.getItem("limio:lesson-panel:open:narrow")).toBe("1"); // không bị ghi lại (giữ nguyên giá trị cũ)
+    act(() => root.unmount());
+    root = createRoot(host);
+    await render();
     expect(isOpen()).toBe(false);
   });
 

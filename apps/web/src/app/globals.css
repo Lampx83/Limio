@@ -1004,11 +1004,10 @@ main[data-gv="1"] [data-teacher-note] {
   margin-inline: auto;
 }
 
-/* Chừa chỗ cho thanh tiêu đề dính trên cùng khi nhảy neo từ mục lục
-   ("Trong bài này", `LessonSectionNav.tsx`) — không thì heading nhảy tới sẽ
-   nằm khuất dưới thanh đó. Học liệu import sẵn tự set `scroll-margin-top`
-   inline cho từng heading; luật này phủ luôn heading soạn qua editor (không
-   có style inline) nên mục lục cuộn đúng bất kể nội dung từ đâu ra. */
+/* Chừa chỗ cho thanh tiêu đề dính trên cùng khi nhảy tới một neo (đường
+   dẫn có #id) — không thì heading nhảy tới sẽ nằm khuất dưới thanh đó. Học
+   liệu import sẵn tự set `scroll-margin-top` inline cho từng heading; luật
+   này phủ luôn heading soạn qua editor (không có style inline). */
 #lesson-content h1[id],
 #lesson-content h2[id],
 #lesson-content h3[id] {
@@ -1209,3 +1208,14 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
     bottom: 5.5rem;
   }
 }
+
+/*
+ * Khung bài học 3 cột (LessonFrameShell): từ `lg` rail trái đã chiếm góc dưới trái, nút nổi "Về trang chủ học viên" sẽ đè lên chữ
+ * của rail. Rail đã có "← Về khoá học" và logo ở header nên ẩn nút nổi này khi có khung. Dưới `lg` rail thu gọn nên giữ nút.
+ */
+@media (min-width: 1024px) {
+  body:has([data-lesson-frame]) a[data-app-chrome][href$="/me/dashboard"] {
+    display: none;
+  }
+}
+

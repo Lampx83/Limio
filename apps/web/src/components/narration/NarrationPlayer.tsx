@@ -70,7 +70,7 @@ function sendEvent(body: Record<string, unknown>): void {
 
 const prefersReducedMotion = (): boolean => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** Các cách đọc chữ của một thẻ h2: đầy đủ, và bỏ huy hiệu số thứ tự (xem LessonSectionNav). */
+/** Các cách đọc chữ của một thẻ h2: đầy đủ, và bỏ huy hiệu số thứ tự (mục lục "Trong bài này" đã bỏ). */
 function headingCandidates(h: HTMLElement): string[] {
   const full = h.textContent ?? "";
   const last = h.querySelector("span:last-of-type")?.textContent;

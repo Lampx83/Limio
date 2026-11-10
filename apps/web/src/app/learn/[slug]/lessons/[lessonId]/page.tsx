@@ -57,7 +57,6 @@ import LessonEngagementTracker from "@/components/lesson/LessonEngagementTracker
 import ScrollEnds from "@/components/ScrollEnds";
 import LessonNotesDrawer from "@/components/lesson/LessonNotesDrawer";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
-import LessonSectionNav from "@/components/lesson/LessonSectionNav";
 import LessonContentToolbar from "@/components/lesson/LessonContentToolbar";
 import NarrationButton from "@/components/narration/NarrationButton";
 import NarrationPlayer from "@/components/narration/NarrationPlayer";
@@ -737,12 +736,6 @@ export default async function LessonPage({
   const lessonView = split ? parseLessonView(searchParams?.view) : "lesson";
   const shownItems = split ? (lessonView === "vocab" ? split.vocab : split.lesson) : visibleItems;
 
-  // Mục lục nổi "Trong bài này" (LessonSectionNav) chỉ hiện khi bài có từ 2 thẻ
-  // h2 có id trở lên — cùng ngưỡng với chính component đó. Tính sẵn ở máy chủ
-  // để chỉ chừa cột cho nó khi nó thật sự sẽ hiện: chừa cột vô điều kiện thì
-  // bài không có mục lục bị đẩy lệch vào 16rem so với tiêu đề bài. Không thể chờ
-  // client quyết (nav mount sau khi nội dung được làm sạch) vì cột hiện ra muộn
-  // sẽ làm cả bài giật sang phải.
   // LANG đợt 3b — khối "Bài luyện": dựng sẵn ở máy chủ theo dữ liệu của người xem. Chỉ học viên đã ghi danh ở trang bài
   // thường (không xem thử, không chiếu lớp, không chế độ giảng viên); nơi khác khối không hiện gì.
   const practiceBlocks: Record<string, React.ReactNode> = {};
@@ -777,12 +770,6 @@ export default async function LessonPage({
       }
     }
   }
-
-  const sectionCount = shownItems.reduce(
-    (n, c) => n + (JSON.stringify(c.payload ?? "").match(/<h2\b[^>]*?\bid=/gi)?.length ?? 0),
-    0,
-  );
-  const hasSectionNav = sectionCount >= 2;
 
   const body = (
     <main
@@ -963,20 +950,11 @@ export default async function LessonPage({
         />
       )}
 
-      {/* Nội dung bài + mục lục nổi bên trái (từ 1280px trở lên).
-          Khối phóng toàn màn hình là #lesson-stage chứ không phải riêng phần
-          nội dung: phóng to mà bỏ mục lục lại phía sau thì bài dài mất luôn
-          cách nhảy giữa các mục — đúng lúc cần nhất. */}
-      <div
-        id="lesson-stage"
-        className={`mt-8 ${hasSectionNav ? "xl:grid xl:grid-cols-[16rem_minmax(0,1fr)] xl:gap-8" : ""}`}
-      >
-        {hasSectionNav && <LessonSectionNav containerId="lesson-content" />}
-        {/* col-start-2 cố định khi có mục lục: bài có grid 2 cột mà nav mount muộn
-            (sau khi SafeHtml làm sạch nội dung) thì item duy nhất còn lại sẽ bị
-            auto-placement đẩy vào cột 1 (16rem). Bài không có mục lục thì không
-            dùng grid, nội dung thẳng hàng với tiêu đề. */}
-        <div className={hasSectionNav ? "xl:col-start-2" : undefined}>
+      {/* Khối phóng toàn màn hình là #lesson-stage. Bài không còn mục lục
+          "Trong bài này" (đã bỏ 2026-11-10: chỉ bài có từ 2 tiêu đề mới có, nên
+          các bài không đồng nhất), nội dung thẳng hàng với tiêu đề bài. */}
+      <div id="lesson-stage" className="mt-8">
+        <div>
         {/* Trên màn chiếu, tên bài nằm ở đầu trang và cuộn đi cùng nội dung. Từng
             dính theo mép trên, nhưng header site bị ẩn nên offset 74px chừa một
             khoảng hở cho nội dung chạy xuyên qua phía trên tiêu đề, và tiêu đề

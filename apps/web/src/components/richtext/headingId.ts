@@ -31,9 +31,9 @@ export function uniqueHeadingId(base: string, used: ReadonlySet<string>): string
 
 /**
  * Gán `id` cho mỗi heading (H1-H3) ngay khi giáo viên gõ, để mục lục nổi
- * ("Trong bài này", `LessonSectionNav.tsx`) hoạt động với nội dung soạn qua
- * editor — trước đây chỉ nội dung import bằng script mới có `id` trên
- * heading, nên mục lục lặng lẽ không hiện với bài giáo viên tự soạn.
+ * (neo liên kết, đọc theo thẻ h2 của Nghe giảng) hoạt động với nội dung soạn
+ * qua editor — trước đây chỉ nội dung import bằng script mới có `id` trên
+ * heading. (Mục lục nổi "Trong bài này" đã bỏ 2026-11-10; `id` vẫn dùng cho các việc trên.)
  *
  * `id` chỉ được sinh MỘT LẦN cho mỗi heading (khi nó còn thiếu id) rồi giữ
  * nguyên kể cả khi sửa lại chữ sau đó — nếu sinh lại theo mỗi lần gõ thì

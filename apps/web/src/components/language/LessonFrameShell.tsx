@@ -67,8 +67,9 @@ export default function LessonFrameShell({
       clsRef.current = next;
       setCls(next);
       if (changed) {
-        const pref = readPanelOpenPref(storage(), next);
-        const wantOpen = pref ?? defaultPanelOpen(next);
+        // Ngăn kéo (dưới 1280 px) KHÔNG nhớ trạng thái mở: bật sẵn sẽ che cả bài mỗi lần tải trang. Chỉ lớp gắn cố định mới nhớ.
+        const pref = panelIsDocked(next) ? readPanelOpenPref(storage(), next) : null;
+        const wantOpen = panelIsDocked(next) ? (pref ?? defaultPanelOpen(next)) : false;
         setOpen(wantOpen);
         if (wantOpen) setEverOpened(true);
       }
@@ -87,14 +88,14 @@ export default function LessonFrameShell({
       }
       setOpen(true);
       setEverOpened(true);
-      writePanelOpenPref(storage(), clsRef.current ?? "narrow", true);
+      if (panelIsDocked(clsRef.current ?? "narrow")) writePanelOpenPref(storage(), clsRef.current ?? "narrow", true);
     },
     [storage],
   );
 
   const closePanel = useCallback(() => {
     setOpen(false);
-    writePanelOpenPref(storage(), clsRef.current ?? "narrow", false);
+    if (panelIsDocked(clsRef.current ?? "narrow")) writePanelOpenPref(storage(), clsRef.current ?? "narrow", false);
   }, [storage]);
 
   const chooseTab = (t: PanelTab) => {
@@ -137,6 +138,8 @@ export default function LessonFrameShell({
 
   return (
     <div
+      // Dấu hiệu cho CSS: trong khung, nút nổi "Về trang chủ học viên" (góc dưới trái) bị rail che/đè chữ nên ẩn từ `lg` (globals.css).
+      data-lesson-frame=""
       className={`mx-auto w-full max-w-[100rem] px-4 pt-4 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-6 lg:px-6 ${
         open ? "xl:grid-cols-[16rem_minmax(0,1fr)_24rem]" : ""
       }`}
@@ -221,7 +224,8 @@ export default function LessonFrameShell({
           type="button"
           onClick={() => openPanel()}
           aria-label="Mở trợ giảng AI và ghi chú"
-          className="fixed right-0 top-1/2 z-30 flex -translate-y-1/2 flex-col items-center gap-1.5 rounded-l-xl border border-r-0 border-token bg-[rgb(var(--surface))] px-2 py-3 text-xs font-semibold text-brand-700 shadow-card hover:bg-brand-soft"
+          // Cao 32% (không phải giữa màn hình) để không đè lên cặp nút cuộn lên/xuống ở giữa mép phải và các nút nổi bên dưới.
+          className="fixed right-0 top-[32%] z-30 flex -translate-y-1/2 flex-col items-center gap-1.5 rounded-l-xl border border-r-0 border-token bg-[rgb(var(--surface))] px-2 py-3 text-xs font-semibold text-brand-700 shadow-card hover:bg-brand-soft"
         >
           <Sparkles size={16} aria-hidden />
           <span className="[writing-mode:vertical-rl]">AI · Ghi chú{notes > 0 ? ` · ${notes}` : ""}</span>
