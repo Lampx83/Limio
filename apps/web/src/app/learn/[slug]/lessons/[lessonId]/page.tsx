@@ -949,7 +949,7 @@ export default async function LessonPage({
 
       {/* Bài học là trang dài nhất hệ thống có. Xếp tiếp vào cột nút nổi bên
           phải; ẩn khi đang chiếu, vì lúc đó cả lớp nhìn vào màn hình. */}
-      {!stageMode && <ScrollEnds className="narration-lift fixed bottom-[17rem] right-4 z-30" />}
+      {!stageMode && <ScrollEnds className={`narration-lift fixed bottom-[17rem] right-4 z-30${lessonFrame ? " lesson-fab-scroll" : ""}`} />}
       {(narrations.lecture || narrations.podcast) && (
         <NarrationPlayer
           lessonId={lesson.id}

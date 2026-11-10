@@ -2,6 +2,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 import { gradeExamAnswer, type GradeResult } from "./grading";
+import { withReviewTokens } from "./public-config";
 import { assertSubjectOwnsAttempt, type ExamSubject } from "./subject";
 import { ExamError } from "./types";
 import { describeWeights, loadScoringPlan, scorePctFor } from "./weighted-score";
@@ -832,7 +833,7 @@ export async function getExamAttemptReview(
         type: q.type,
         prompt: q.prompt,
         points: q.points,
-        config: q.config,
+        config: withReviewTokens(q.type, q.config),
         // explanation may be stored inside config.explanation for some question types
         explanation: (q.config as Record<string, unknown>).explanation as string | undefined ?? null,
         answer: ans

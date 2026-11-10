@@ -1,4 +1,5 @@
 import type { ExamQuestionType } from "@feedbackme/db";
+import { resolvePublicId } from "./public-tokens";
 
 /**
  * Pure per-type grader. Given a question's config + the learner's answer
@@ -94,10 +95,13 @@ function gradeOrdering(config: unknown, answer: unknown, points: number): GradeR
   const userOrder = (
     (answer as { order?: unknown } | null)?.order ?? []
   ) as unknown[];
+  // Trình duyệt gửi MÃ CÔNG KHAI (xem public-tokens.ts); mã gốc của dữ liệu cũ vẫn được nhận.
   const ids = Array.isArray(userOrder)
-    ? userOrder.filter((x): x is string => typeof x === "string")
+    ? userOrder.map((x) => resolvePublicId(canonical, x)).filter((x): x is string => x !== null)
     : [];
-  if (ids.length !== canonical.length) return { autoScore: 0, needsGrading: false };
+  if (!Array.isArray(userOrder) || ids.length !== userOrder.length || ids.length !== canonical.length) {
+    return { autoScore: 0, needsGrading: false };
+  }
   const isCorrect = ids.every((id, i) => id === canonical[i]);
   return { autoScore: isCorrect ? points : 0, needsGrading: false };
 }
@@ -110,8 +114,10 @@ function gradeOrdering(config: unknown, answer: unknown, points: number): GradeR
 function gradeMatching(config: unknown, answer: unknown, points: number): GradeResult {
   const pairs = (config as { pairs: Array<{ id: string }> }).pairs;
   const matched = (answer as { matched?: Record<string, unknown> } | null)?.matched ?? {};
+  const pairIds = pairs.map((p) => p.id);
   for (const p of pairs) {
-    if (matched[p.id] !== p.id) return { autoScore: 0, needsGrading: false };
+    // Vế phải gửi lên là mã công khai (hoặc mã cặp gốc của dữ liệu cũ).
+    if (resolvePublicId(pairIds, matched[p.id]) !== p.id) return { autoScore: 0, needsGrading: false };
   }
   return { autoScore: points, needsGrading: false };
 }
@@ -142,8 +148,9 @@ function gradeDragDropFill(config: unknown, answer: unknown, points: number): Gr
     if (typeof t.blankIndex === "number") expected.set(t.blankIndex, t.id);
   }
   if (expected.size === 0) return { autoScore: 0, needsGrading: false };
+  const tokenIds = tokens.map((t) => t.id);
   for (const [idx, tokenId] of expected) {
-    if (placed[String(idx)] !== tokenId) return { autoScore: 0, needsGrading: false };
+    if (resolvePublicId(tokenIds, placed[String(idx)]) !== tokenId) return { autoScore: 0, needsGrading: false };
   }
   return { autoScore: points, needsGrading: false };
 }

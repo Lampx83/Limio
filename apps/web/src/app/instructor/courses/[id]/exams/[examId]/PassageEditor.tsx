@@ -2,10 +2,19 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image, Music, Video } from "lucide-react";
+import type { Editor } from "@tiptap/react";
+import dynamic from "next/dynamic";
+import { Music, Video } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillPicker from "./SkillPicker";
-import { plainTextToTiptap, tiptapToPlainText } from "./contentHelpers";
+import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
+import { PASSAGE_TABLE_MAX_COLS, PASSAGE_TABLE_MAX_ROWS, findUnsupported, htmlToPassageDocChecked, passageDocToHtml, unsupportedLabels } from "@/lib/passageDoc";
+
+// Trình soạn Tiptap chỉ chạy ở trình duyệt (cần DOM).
+const PassageRichEditor = dynamic(() => import("@/components/exam/PassageRichEditor"), {
+  ssr: false,
+  loading: () => <div className="rounded-lg border border-token bg-[rgb(var(--surface))] p-3 text-sm text-faint">Đang tải trình soạn…</div>,
+});
 
 interface Skill {
   id: string;
@@ -15,7 +24,6 @@ interface Skill {
 
 interface PassageInput {
   title: string;
-  content: string;
   audioPolicy: "free_replay" | "limited_replay" | "once_only";
   maxAudioPlays: number;
   revealMode: "all_at_once" | "sequential";
@@ -41,7 +49,6 @@ interface Props {
 
 const EMPTY: PassageInput = {
   title: "",
-  content: "",
   audioPolicy: "free_replay",
   maxAudioPlays: 2,
   revealMode: "all_at_once",
@@ -54,7 +61,6 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
     initial
       ? {
           title: initial.title,
-          content: tiptapToPlainText(initial.contentJson),
           audioPolicy: initial.audioPolicy,
           maxAudioPlays: initial.maxAudioPlays ?? 2,
           revealMode: initial.revealMode,
@@ -65,10 +71,66 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const audioInputRef = useRef<HTMLInputElement | null>(null);
   const videoInputRef = useRef<HTMLInputElement | null>(null);
-  const contentRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Nội dung: Tiptap JSON ↔ HTML của trình soạn (lib/passageDoc.ts). Đoạn có nút trình soạn chưa hỗ trợ thì giữ nguyên và chỉ hiện bản xem,
+  // trừ khi người soạn chủ động chuyển sang soạn (mất phần đó khi lưu). Chưa sửa gì thì không gửi lại nội dung — đoạn cũ không bị đổi một chữ.
+  const initialDoc = initial?.contentJson as TiptapDoc | undefined;
+  const [unsupported] = useState<string[]>(() => (initialDoc ? findUnsupported(initialDoc) : []));
+  const [forceEdit, setForceEdit] = useState(false);
+  const readOnlyContent = unsupported.length > 0 && !forceEdit;
+  const [html, setHtml] = useState<string>(() =>
+    initialDoc && typeof document !== "undefined" && findUnsupported(initialDoc).length === 0 ? passageDocToHtml(initialDoc) : "",
+  );
+  const [dirty, setDirty] = useState(false);
+  const editorRef = useRef<Editor | null>(null);
+
+  /** Chèn khối audio/video tại con trỏ của trình soạn. */
+  function insertMedia(type: "audio" | "video", src: string, alt: string) {
+    const ed = editorRef.current;
+    if (!ed) {
+      window.alert("Trình soạn chưa sẵn sàng, thử lại sau giây lát.");
+      return;
+    }
+    // Kèm một đoạn trống phía sau để con trỏ rời khỏi khối: nếu khối còn được chọn thì lần chèn kế tiếp (ảnh, audio…) sẽ thay thế nó.
+    ed.chain().focus().insertContent([{ type, attrs: { src, alt } }, { type: "paragraph" }]).run();
+  }
+
+  /** Chuyển đoạn có phần chưa hỗ trợ sang trình soạn: phần đó mất khi lưu (người soạn đã xác nhận). */
+  function startEditingAnyway() {
+    if (!initialDoc) return;
+    if (!window.confirm(`Chuyển sang trình soạn sẽ xoá phần chưa hỗ trợ (${unsupportedLabels(unsupported).join(", ")}) khi bạn lưu. Vẫn chuyển?`)) return;
+    setHtml(passageDocToHtml(initialDoc));
+    setDirty(true);
+    setForceEdit(true);
+  }
+
+  /** Tải ảnh lên cho trình soạn: hỏi mô tả (bắt buộc), trả URL; huỷ hoặc lỗi thì null. */
+  async function uploadImage(file: File): Promise<{ url: string; alt: string } | null> {
+    const alt = window.prompt("Mô tả ảnh (alt text) — bắt buộc cho accessibility:", "");
+    if (alt === null) return null;
+    const trimmed = alt.trim();
+    if (!trimmed) {
+      window.alert("Alt text không được để trống.");
+      return null;
+    }
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("altText", trimmed);
+      const res = await fetch(apiUrl(`/api/exams/${examId}/assets`), { method: "POST", body: form });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.url) {
+        window.alert(`Upload lỗi: ${data?.error ?? res.status}`);
+        return null;
+      }
+      return { url: data.url as string, alt: trimmed };
+    } finally {
+      setUploading(false);
+    }
+  }
 
   function onInsertVideo() {
     const url = window.prompt(
@@ -98,32 +160,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
       window.alert("Alt text không được để trống.");
       return;
     }
-    const md = `[[video:${trimmedUrl}|${trimmed}]]`;
-    const ta = contentRef.current;
-    const before = v.content;
-    const start = ta?.selectionStart ?? before.length;
-    const end = ta?.selectionEnd ?? before.length;
-    const sep = before.length === 0 ? "" : "\n\n";
-    const inserted =
-      before.slice(0, start) +
-      (start === 0 ? "" : sep) +
-      md +
-      (end < before.length ? sep : "") +
-      before.slice(end);
-    setV({ ...v, content: inserted });
-  }
-
-  /** Chèn một thẻ vào nội dung tại vị trí con trỏ (cách các đoạn một dòng trống). */
-  function insertToken(md: string) {
-    const ta = contentRef.current;
-    const before = v.content;
-    const start = ta?.selectionStart ?? before.length;
-    const end = ta?.selectionEnd ?? before.length;
-    const sep = before.length === 0 ? "" : "\n\n";
-    setV({
-      ...v,
-      content: before.slice(0, start) + (start === 0 ? "" : sep) + md + (end < before.length ? sep : "") + before.slice(end),
-    });
+    insertMedia("video", trimmedUrl, trimmed);
   }
 
   /** Bài luyện: tải tệp video từ máy lên (dùng kho video của bài học: MP4, WebM, MOV, MKV, OGV, tối đa 500 MB). */
@@ -145,68 +182,38 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
         window.alert(`Tải video lỗi: ${data.error ?? res.status}`);
         return;
       }
-      insertToken(`[[video:${data.url}|${trimmed}]]`);
+      insertMedia("video", data.url, trimmed);
     } finally {
       setUploading(false);
       if (videoInputRef.current) videoInputRef.current.value = "";
     }
   }
 
-  async function onUploadFile(file: File, kind: "image" | "audio") {
-    const promptLabel =
-      kind === "image"
-        ? "Mô tả ảnh (alt text) — bắt buộc cho accessibility:"
-        : "Mô tả nội dung audio (alt text) — bắt buộc cho accessibility:";
-    const alt = window.prompt(promptLabel, "");
+  /** Tải audio lên (hỏi mô tả và transcript tuỳ chọn) rồi chèn khối audio tại con trỏ. */
+  async function onUploadAudio(file: File) {
+    const alt = window.prompt("Mô tả nội dung audio (alt text) — bắt buộc cho accessibility:", "");
     if (alt === null) return;
     const trimmed = alt.trim();
     if (!trimmed) {
       window.alert("Alt text không được để trống.");
       return;
     }
-    let transcript: string | null = null;
-    if (kind === "audio") {
-      transcript = window.prompt(
-        "Transcript (tuỳ chọn) — khuyến nghị cho audio nghe 1 lần:",
-        "",
-      );
-    }
+    const transcript = window.prompt("Transcript (tuỳ chọn) — khuyến nghị cho audio nghe 1 lần:", "");
     setUploading(true);
     try {
       const form = new FormData();
       form.append("file", file);
       form.append("altText", trimmed);
-      if (transcript && transcript.trim().length > 0) {
-        form.append("transcript", transcript.trim());
-      }
-      const res = await fetch(apiUrl(`/api/exams/${examId}/assets`), {
-        method: "POST",
-        body: form,
-      });
+      if (transcript && transcript.trim().length > 0) form.append("transcript", transcript.trim());
+      const res = await fetch(apiUrl(`/api/exams/${examId}/assets`), { method: "POST", body: form });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         window.alert(`Upload lỗi: ${data?.error ?? res.status}`);
         return;
       }
-      const md =
-        kind === "image"
-          ? `![${trimmed}](${data.url})`
-          : `[[audio:${data.url}|${trimmed}]]`;
-      const ta = contentRef.current;
-      const before = v.content;
-      const start = ta?.selectionStart ?? before.length;
-      const end = ta?.selectionEnd ?? before.length;
-      const sep = before.length === 0 ? "" : "\n\n";
-      const inserted =
-        before.slice(0, start) +
-        (start === 0 ? "" : sep) +
-        md +
-        (end < before.length ? sep : "") +
-        before.slice(end);
-      setV({ ...v, content: inserted });
+      insertMedia("audio", data.url as string, trimmed);
     } finally {
       setUploading(false);
-      if (imageInputRef.current) imageInputRef.current.value = "";
       if (audioInputRef.current) audioInputRef.current.value = "";
     }
   }
@@ -217,11 +224,16 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
     setError(null);
     const body: Record<string, unknown> = {
       title: v.title,
-      contentJson: plainTextToTiptap(v.content),
       audioPolicy: v.audioPolicy,
       revealMode: v.revealMode,
       skillIds: v.skills.map((s) => s.id),
     };
+    // Tạo mới: luôn gửi nội dung. Sửa: chỉ gửi khi đã sửa (đoạn cũ không bị chuyển đổi, kể cả phần trình soạn chưa hỗ trợ).
+    if (mode === "create" || (dirty && !readOnlyContent)) {
+      const { doc, clipped } = htmlToPassageDocChecked(html);
+      if (clipped) window.alert(`Bảng vượt ${PASSAGE_TABLE_MAX_ROWS} hàng × ${PASSAGE_TABLE_MAX_COLS} cột nên đã được cắt bớt.`);
+      body.contentJson = doc;
+    }
     if (v.audioPolicy === "limited_replay") {
       body.maxAudioPlays = v.maxAudioPlays;
     }
@@ -261,32 +273,20 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
 
       <div>
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium">
-            Nội dung (mỗi dòng trống = đoạn mới; ảnh{" "}
-            <code className="text-xs">![alt](url)</code>; video{" "}
-            <code className="text-xs">[[video:url|alt]]</code>)
-          </label>
+          <label className="block text-sm font-medium">Nội dung</label>
           <div className="flex gap-1">
             <button
               type="button"
-              onClick={() => imageInputRef.current?.click()}
-              disabled={uploading}
-              className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
-            >
-              {uploading ? "Đang tải…" : <><Image className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải ảnh</>}
-            </button>
-            <button
-              type="button"
               onClick={() => audioInputRef.current?.click()}
-              disabled={uploading}
+              disabled={uploading || readOnlyContent}
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
-              <Music className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải audio
+              {uploading ? "Đang tải…" : <><Music className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải audio</>}
             </button>
             <button
               type="button"
               onClick={onInsertVideo}
-              disabled={uploading}
+              disabled={uploading || readOnlyContent}
               className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
             >
               <Video className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> {practiceMode ? "Dán link video" : "Chèn video"}
@@ -295,7 +295,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               <button
                 type="button"
                 onClick={() => videoInputRef.current?.click()}
-                disabled={uploading}
+                disabled={uploading || readOnlyContent}
                 className="rounded border border-default px-2 py-0.5 text-xs hover:bg-white disabled:opacity-50"
               >
                 <Video className="mr-1 inline h-3.5 w-3.5 align-text-bottom" /> Tải video lên
@@ -315,34 +315,44 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
             />
           )}
           <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp,image/gif"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) onUploadFile(f, "image");
-            }}
-          />
-          <input
             ref={audioInputRef}
             type="file"
             accept="audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/mp4"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
-              if (f) onUploadFile(f, "audio");
+              if (f) void onUploadAudio(f);
             }}
           />
         </div>
-        <textarea
-          ref={contentRef}
-          rows={8}
-          value={v.content}
-          onChange={(e) => setV({ ...v, content: e.target.value })}
-          placeholder="Dán nội dung bài đọc ở đây. Cách 1 dòng trắng giữa các đoạn."
-          className="mt-1 w-full rounded border border-default px-3 py-2 text-sm font-mono"
-        />
+        <div className="mt-1">
+          {readOnlyContent && initialDoc ? (
+            // Đoạn có nút trình soạn chưa hỗ trợ: giữ nguyên và chỉ hiện bản học viên thấy.
+            <div className="rounded-lg border border-token bg-[rgb(var(--surface))]">
+              <div className="banner-warning rounded-none border-x-0 border-t-0 px-3 py-2 text-xs">
+                <p className="font-medium">Đoạn này có phần trình soạn chưa hỗ trợ ({unsupportedLabels(unsupported).join(", ")}).</p>
+                <p className="mt-0.5">Mở bằng trình soạn rồi lưu sẽ mất phần đó, nên nội dung đang được giữ nguyên và chỉ hiển thị bên dưới.</p>
+                <button type="button" onClick={startEditingAnyway} className="mt-1.5 rounded border border-current px-2 py-0.5 font-medium opacity-70 hover:opacity-100">
+                  Vẫn dùng trình soạn
+                </button>
+              </div>
+              <div className="prose prose-sm max-h-[28rem] max-w-none overflow-y-auto px-3 py-2 dark:prose-invert">{renderDoc(initialDoc)}</div>
+            </div>
+          ) : (
+            <PassageRichEditor
+              html={html}
+              onChange={(h) => {
+                setHtml(h);
+                setDirty(true);
+              }}
+              onReady={(ed) => {
+                editorRef.current = ed;
+              }}
+              uploadImage={uploadImage}
+              placeholder="Soạn hoặc dán nội dung bài đọc ở đây (dán được cả ảnh từ clipboard)."
+            />
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

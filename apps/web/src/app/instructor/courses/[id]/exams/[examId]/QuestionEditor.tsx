@@ -18,6 +18,7 @@ import {
   type NumericalDraft,
   type DragDropFillDraft,
 } from "@/components/question-editor/types";
+import { isPlayableExamQuestionType } from "@/lib/examQuestionSupport";
 
 // Đợt 8 (thống nhất 10 loại Quiz/Bank/Đề thi) — đủ 10 loại canonical đều mở
 // được ở picker, dùng 4 editor DÙNG CHUNG (apps/web/src/components/question-editor/)
@@ -201,7 +202,9 @@ export default function QuestionEditor({
     return (
       <div className="rounded-lg border-2 border-emerald-300 bg-emerald-50 p-4">
         <QuestionTypePicker
-          types={practiceMode ? EXAM_PICKER_TYPES.filter((t) => t !== "essay") : EXAM_PICKER_TYPES}
+          // Chỉ loại trình làm bài vẽ được (isPlayableExamQuestionType): Sắp xếp, Ghép cặp, Số, Kéo thả tạm ẩn cho tới khi
+          // trình làm bài hỗ trợ — tránh tạo câu học viên không làm được. Câu đã tạo vẫn sửa được.
+          types={(practiceMode ? EXAM_PICKER_TYPES.filter((t) => t !== "essay") : EXAM_PICKER_TYPES).filter(isPlayableExamQuestionType)}
           onPick={(t) => {
             setV((prev) => ({ ...prev, type: t as QType }));
             setPickingType(false);

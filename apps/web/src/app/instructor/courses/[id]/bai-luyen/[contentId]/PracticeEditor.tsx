@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, BookOpen, Pencil, Plus, Trash2 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import { UNPLAYABLE_TYPE_BADGE, UNPLAYABLE_TYPE_HINT, isPlayableExamQuestionType } from "@/lib/examQuestionSupport";
 import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
 import PassageEditor from "../../exams/[examId]/PassageEditor";
 import QuestionEditor from "../../exams/[examId]/QuestionEditor";
@@ -151,6 +152,11 @@ export default function PracticeEditor({
     return (
       <div className="flex flex-wrap items-center gap-2 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-2 text-sm">
         <span className="chip">{TYPE_LABEL[q.type] ?? q.type}</span>
+        {!isPlayableExamQuestionType(q.type) && (
+          <span className="chip bg-amber-100 text-amber-800" title={UNPLAYABLE_TYPE_HINT}>
+            {UNPLAYABLE_TYPE_BADGE} — nên đổi loại
+          </span>
+        )}
         <span className="min-w-0 basis-full break-words sm:basis-0 sm:flex-1">{plain(q.prompt) || <em className="text-faint">(chưa có đề)</em>}</span>
         <span className="flex shrink-0 flex-wrap items-center gap-1">
           <button type="button" className="btn-ghost btn-sm" aria-label="Lên" disabled={working || i === 0} onClick={() => void moveQuestion(list, i, -1, passageId)}>

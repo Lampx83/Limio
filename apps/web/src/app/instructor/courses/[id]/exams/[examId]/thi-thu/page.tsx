@@ -138,7 +138,7 @@ export default async function WrittenExamPreviewPage({
         passageId: q.passageId,
         orderInPassage: q.orderInPassage,
         orderInExam: q.orderInExam,
-        config: toPublicQuestionConfig(q.type, q.config),
+        config: toPublicQuestionConfig(q.type, q.config, `thi-thu:${q.id}`),
       }))}
       shuffleSnapshot={shuffleSnapshot}
       initialAnswers={[]}

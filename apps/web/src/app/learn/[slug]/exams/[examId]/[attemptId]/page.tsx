@@ -122,7 +122,7 @@ export default async function ExamRuntimePage({
         passageId: q.passageId,
         orderInPassage: q.orderInPassage,
         orderInExam: q.orderInExam,
-        config: toPublicQuestionConfig(q.type, q.config),
+        config: toPublicQuestionConfig(q.type, q.config, `${params.attemptId}:${q.id}`),
       }))}
       shuffleSnapshot={runtime.shuffleSnapshot}
       initialAnswers={runtime.answers}

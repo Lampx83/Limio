@@ -6,7 +6,7 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import { isUserEnrolled } from "../learning/enroll";
 import { emitEvent } from "../learning/events";
 import { gradeExamAnswer } from "./grading";
-import { toPublicQuestionConfig } from "./public-config";
+import { toPublicQuestionConfig, withReviewTokens } from "./public-config";
 import { ExamError } from "./types";
 
 /**
@@ -266,7 +266,7 @@ export async function getPracticeSession(userId: string, sessionId: string, db: 
       sectionTitle: q.sectionTitle,
       languageSkill: q.languageSkill,
       // Cấu hình CÔNG KHAI: đáp án đúng chỉ trả về sau khi kiểm tra (checkPracticeAnswer).
-      config: toPublicQuestionConfig(q.type, q.config),
+      config: toPublicQuestionConfig(q.type, q.config, `${userId}:${q.id}`),
     })),
     passages,
     answers: answers.map((a) => ({
@@ -331,11 +331,12 @@ export async function getPracticeForEmbed(userId: string, examId: string, db: Pr
       answers: s.answers,
     };
   }
-  return buildFreshEmbed(examId, exam.title, db);
+  return buildFreshEmbed(examId, exam.title, userId, db);
 }
 
 /** Dữ liệu nhúng khi CHƯA có buổi luyện dở: cả đề, cấu hình công khai (không đáp án), chưa có đáp án nào. */
-async function buildFreshEmbed(examId: string, title: string, db: PrismaClient): Promise<PracticeEmbed> {
+/** `seed`: hạt xáo trộn (mã học viên) — cùng hạt với getPracticeSession nên thứ tự giữ nguyên khi buổi luyện được tạo. */
+async function buildFreshEmbed(examId: string, title: string, seed: string, db: PrismaClient): Promise<PracticeEmbed> {
   const all = await loadExamQuestions(examId, db);
   const passageIds = [...new Set(all.map((q) => q.passageId).filter((x): x is string => !!x))];
   const passages = passageIds.length
@@ -355,7 +356,7 @@ async function buildFreshEmbed(examId: string, title: string, db: PrismaClient):
       passageId: q.passageId,
       sectionTitle: q.sectionTitle,
       languageSkill: q.languageSkill,
-      config: toPublicQuestionConfig(q.type, q.config) as Record<string, unknown>,
+      config: toPublicQuestionConfig(q.type, q.config, `${seed}:${q.id}`) as Record<string, unknown>,
     })),
     passages,
     answers: [],
@@ -368,7 +369,7 @@ async function buildFreshEmbed(examId: string, title: string, db: PrismaClient):
  */
 export async function getPracticePreview(actorUserId: string, examId: string, db: PrismaClient = prisma): Promise<PracticeEmbed> {
   const exam = await loadOwnedPracticeForPreview(actorUserId, examId, db);
-  return buildFreshEmbed(examId, exam.title, db);
+  return buildFreshEmbed(examId, exam.title, actorUserId, db);
 }
 
 async function loadOwnedPracticeForPreview(actorUserId: string, examId: string, db: PrismaClient) {
@@ -390,9 +391,9 @@ export async function previewPracticeCheck(
   const q = (await loadExamQuestions(examId, db)).find((x) => x.id === questionId);
   if (!q) throw new ExamError("validation_failed", { reason: "question_not_in_exam" });
   const g = gradeExamAnswer(q.type as Parameters<typeof gradeExamAnswer>[0], q.config, answerJson, q.points);
-  if (g.needsGrading || g.autoScore === null) return { isCorrect: null, score: null, maxScore: q.points, manual: true, config: q.config };
+  if (g.needsGrading || g.autoScore === null) return { isCorrect: null, score: null, maxScore: q.points, manual: true, config: withReviewTokens(q.type, q.config) };
   const isCorrect = q.points > 0 && g.autoScore >= q.points - EPS;
-  return { isCorrect, score: g.autoScore, maxScore: q.points, manual: false, config: q.config };
+  return { isCorrect, score: g.autoScore, maxScore: q.points, manual: false, config: withReviewTokens(q.type, q.config) };
 }
 
 export async function savePracticeAnswer(
@@ -441,7 +442,7 @@ async function gradeAndStore(
       where: { sessionId_questionId: { sessionId, questionId: q.id } },
       data: { isCorrect: null, score: null, checkedAt: new Date() },
     });
-    return { isCorrect: null, score: null, maxScore: q.points, manual: true, config: q.config };
+    return { isCorrect: null, score: null, maxScore: q.points, manual: true, config: withReviewTokens(q.type, q.config) };
   }
   const isCorrect = q.points > 0 && g.autoScore >= q.points - EPS;
   await db.examPracticeAnswer.update({
@@ -465,7 +466,7 @@ async function gradeAndStore(
     { eventKey: `exam.practice.answered:${sessionId}:${q.id}:${stableHash(answer.answerJson)}` },
     db,
   );
-  return { isCorrect, score: g.autoScore, maxScore: q.points, manual: false, config: q.config };
+  return { isCorrect, score: g.autoScore, maxScore: q.points, manual: false, config: withReviewTokens(q.type, q.config) };
 }
 
 export async function checkPracticeAnswer(
@@ -530,7 +531,7 @@ async function computePracticeResult(sessionId: string, db: PrismaClient): Promi
         answered: !!a,
         languageSkill: q.languageSkill,
         yourAnswer: a?.answerJson ?? null,
-        config: q.config,
+        config: withReviewTokens(q.type, q.config),
       });
     }
   }

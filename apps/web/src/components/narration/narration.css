@@ -43,6 +43,12 @@
   transition: translate 0.2s ease;
 }
 
+/* Cột nút nổi bên phải của khung bài học Language: giảng viên có thêm nút cam "Bảng giảng viên" (bottom-52, cao 2.75rem, tức
+   chiếm 13–15.75rem). Khi nó có mặt, nút AI/Ghi chú và cặp nút cuộn nâng lên nằm trên nút cam để không chồng nhau. Bọc ở
+   `body:has` nên học viên (không có nút cam) giữ vị trí cũ. */
+body:has([data-teacher-fab]) .lesson-fab-panel { bottom: 16.2rem; }
+body:has([data-teacher-fab]) .lesson-fab-scroll { bottom: 19rem; }
+
 /* Sóng âm: bốn thanh nhún theo nhịp khi đang nói; đứng yên khi tạm dừng hoặc khi hệ điều hành xin giảm chuyển động. */
 .narration-wave {
   display: inline-flex;
