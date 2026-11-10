@@ -3,6 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
+import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
 import { Color, FontSize, TextStyle } from "@tiptap/extension-text-style";
 import { PASSAGE_FONT_SIZE_VALUES } from "./passageFontSizes";
 import { passageHighlightColor, passageTextColor } from "./passageColors";
@@ -58,7 +59,6 @@ export const PASSAGE_EXTENSIONS = [
     code: false,
     codeBlock: false,
     horizontalRule: false,
-    strike: false,
     // StarterKit v3 kèm Link/Underline: tắt Link (bài đọc chưa có liên kết), dùng Underline khai báo riêng bên dưới.
     link: false,
     underline: false,
@@ -69,14 +69,22 @@ export const PASSAGE_EXTENSIONS = [
   TextStyle,
   FontSize,
   Color,
+  // Bảng: ô chỉ chứa đoạn văn (không ảnh/danh sách/audio/video trong ô) cho gọn và đọc được trên điện thoại; không kéo đổi độ rộng cột.
+  Table.configure({ resizable: false, HTMLAttributes: { class: "passage-table" } }),
+  TableRow,
+  TableHeader.extend({ content: "paragraph+" }),
+  TableCell.extend({ content: "paragraph+" }),
   PassageAudio,
   PassageVideo,
 ];
 
 
 /** Tập nút/dấu mà `PassageView` vẽ được. Cái gì ngoài tập này là "chưa hỗ trợ". */
-const SUPPORTED_NODES = new Set(["doc", "paragraph", "text", "heading", "bulletList", "orderedList", "listItem", "hardBreak", "image", "audio", "video"]);
-const SUPPORTED_MARKS = new Set(["bold", "italic", "underline", "highlight", "textStyle"]);
+const SUPPORTED_NODES = new Set([
+  "doc", "paragraph", "text", "heading", "bulletList", "orderedList", "listItem", "hardBreak", "image", "audio", "video",
+  "table", "tableRow", "tableHeader", "tableCell",
+]);
+const SUPPORTED_MARKS = new Set(["bold", "italic", "underline", "strike", "highlight", "textStyle"]);
 
 /** Tên các nút/dấu trong `doc` mà trình soạn không biểu diễn được (rỗng = soạn được, không mất gì). */
 export function findUnsupported(doc: unknown): string[] {
@@ -85,6 +93,10 @@ export function findUnsupported(doc: unknown): string[] {
     if (!n || typeof n !== "object") return;
     const node = n as { type?: unknown; marks?: unknown; content?: unknown };
     if (typeof node.type === "string" && !SUPPORTED_NODES.has(node.type)) found.add(node.type);
+    // Ô bảng chỉ chứa đoạn văn: ảnh/danh sách/khối khác trong ô sẽ mất khi sửa nên báo trước.
+    if ((node.type === "tableCell" || node.type === "tableHeader") && Array.isArray(node.content)) {
+      if (node.content.some((c) => (c as { type?: unknown })?.type !== "paragraph")) found.add("nội dung ngoài chữ trong ô bảng");
+    }
     if (Array.isArray(node.marks)) {
       for (const m of node.marks) {
         const t = (m as { type?: unknown })?.type;
@@ -98,9 +110,8 @@ export function findUnsupported(doc: unknown): string[] {
 }
 
 const UNSUPPORTED_LABEL: Record<string, string> = {
-  table: "bảng", tableRow: "bảng", tableCell: "bảng", tableHeader: "bảng",
   blockquote: "khối trích dẫn", codeBlock: "khối mã", horizontalRule: "đường kẻ ngang",
-  "dấu link": "liên kết", "dấu strike": "gạch ngang", "dấu code": "chữ mã",
+  "dấu link": "liên kết", "dấu code": "chữ mã",
   figure: "ảnh có chú thích", figcaption: "ảnh có chú thích",
 };
 
@@ -117,12 +128,21 @@ export function passageDocToHtml(doc: unknown): string {
   return html === "<p></p>" ? "" : html;
 }
 
-/** HTML của ô soạn → Tiptap JSON đúng tập nút mà `PassageView` vẽ (nút lạ bị bỏ). Cần DOM. */
-export function htmlToPassageDoc(html: string): { type: "doc"; content: unknown[] } {
+/**
+ * HTML của ô soạn → Tiptap JSON đúng tập nút mà `PassageView` vẽ (nút lạ bị bỏ), kèm cờ `clipped` nếu một bảng bị cắt về 20 × 8.
+ * Cần DOM.
+ */
+export function htmlToPassageDocChecked(html: string): { doc: { type: "doc"; content: unknown[] }; clipped: boolean } {
   const ed = new Editor({ extensions: PASSAGE_EXTENSIONS, content: html });
   const json = ed.getJSON();
   ed.destroy();
-  return { type: "doc", content: (json.content ?? []).map(keepOnlyPresets) };
+  const state = { clipped: false };
+  const content = (json.content ?? []).map((n) => normalizeTables(keepOnlyPresets(n), state));
+  return { doc: { type: "doc", content }, clipped: state.clipped };
+}
+
+export function htmlToPassageDoc(html: string): { type: "doc"; content: unknown[] } {
+  return htmlToPassageDocChecked(html).doc;
 }
 
 /**
@@ -154,6 +174,54 @@ function keepOnlyPresets(node: JSONContent): JSONContent {
   }
   if (Array.isArray(node.content)) out.content = node.content.map(keepOnlyPresets);
   return out;
+}
+
+/**
+ * HTML dán vào: trong ô bảng (td/th) đổi danh sách thành các đoạn chữ và bỏ ảnh/video/audio, để nội dung ở lại TRONG ô (ô chỉ chứa đoạn
+ * văn; nếu để nguyên, trình phân tích đẩy danh sách ra ngoài bảng). Cần DOM; không có DOM hoặc không có bảng thì trả nguyên văn.
+ */
+export function flattenTableCellsHtml(html: string): string {
+  if (typeof DOMParser === "undefined" || !/<t[dh][\s>]/i.test(html)) return html;
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  doc.querySelectorAll("td, th").forEach((cell) => {
+    cell.querySelectorAll("img, video, audio, figure, iframe").forEach((el) => el.remove());
+    cell.querySelectorAll("li").forEach((li) => {
+      const p = doc.createElement("p");
+      p.innerHTML = li.innerHTML;
+      li.replaceWith(p);
+    });
+    cell.querySelectorAll("ul, ol").forEach((list) => list.replaceWith(...Array.from(list.childNodes)));
+  });
+  return doc.body.innerHTML;
+}
+
+/** Cỡ bảng tối đa: 20 hàng × 8 cột (đủ cho bài đọc; bảng lớn hơn khó đọc trên điện thoại). */
+export const PASSAGE_TABLE_MAX_ROWS = 20;
+export const PASSAGE_TABLE_MAX_COLS = 8;
+
+/**
+ * Bảng trong `node`: cắt về tối đa 20 hàng × 8 cột và tách ô gộp (colspan/rowspan) thành ô thường. Trả cờ `clipped` khi có cắt bớt hàng/cột
+ * (để báo người soạn). Ô gộp không tính là cắt: nội dung ô vẫn còn.
+ */
+function normalizeTables(node: JSONContent, state: { clipped: boolean }): JSONContent {
+  if (node.type === "table" && Array.isArray(node.content)) {
+    if (node.content.length > PASSAGE_TABLE_MAX_ROWS) state.clipped = true;
+    const rows = node.content.slice(0, PASSAGE_TABLE_MAX_ROWS).map((row) => {
+      const cells = Array.isArray(row.content) ? row.content : [];
+      if (cells.length > PASSAGE_TABLE_MAX_COLS) state.clipped = true;
+      return {
+        ...row,
+        content: cells.slice(0, PASSAGE_TABLE_MAX_COLS).map((cell) => ({
+          ...cell,
+          attrs: { ...(cell.attrs ?? {}), colspan: 1, rowspan: 1, colwidth: null },
+          content: (cell.content ?? []).map((c) => normalizeTables(c, state)),
+        })),
+      };
+    });
+    return { ...node, content: rows };
+  }
+  if (Array.isArray(node.content)) return { ...node, content: node.content.map((c) => normalizeTables(c, state)) };
+  return node;
 }
 
 /** Đoạn không có chữ, ảnh, audio hay video nào. */

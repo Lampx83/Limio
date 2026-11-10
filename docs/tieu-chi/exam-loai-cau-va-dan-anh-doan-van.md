@@ -60,6 +60,22 @@
 
 **Ngoài phạm vi:** bảng, liên kết, màu chữ trong bài đọc; sửa `PassageView` (trừ khi thầy chọn thêm liên kết); trình soạn đề câu hỏi (đã giàu định dạng).
 
+## E — Bảng trong Đoạn văn (thầy duyệt 10/11/2026, đã code)
+
+**Hiện trạng:** trình soạn Đoạn văn chưa có bảng; `PassageView` chưa vẽ bảng; bảng dán từ Word/Excel bị đổi thành chữ thường, đoạn cũ có bảng bị khoá chỉ xem (mục D). Thư viện Tiptap đã có sẵn trong dự án (`@tiptap/extension-table`, dùng ở trình soạn bài học).
+
+- **Chèn bảng:** nút **"Bảng"** trên thanh công cụ mở menu chọn cỡ (số hàng × số cột, mặc định 3 × 3; tối đa 20 hàng × 8 cột) và ô "Hàng đầu là hàng tiêu đề" (bật mặc định). Bảng chèn tại con trỏ.
+- **Sửa bảng:** khi con trỏ ở trong bảng, menu "Bảng" có: Thêm hàng phía trên/dưới, Thêm cột bên trái/phải, Xoá hàng, Xoá cột, Xoá bảng. Không gộp ô, không kéo đổi độ rộng cột (ngoài phạm vi).
+- **Nội dung ô:** chữ có định dạng như thân bài (đậm, nghiêng, màu, cỡ chữ…), xuống dòng trong ô được; không chèn ảnh/audio/video/danh sách vào ô (giữ bảng gọn, học viên đọc được trên điện thoại).
+- **Học viên:** `PassageView` vẽ bảng có viền mảnh, hàng tiêu đề nền nhạt và chữ đậm; bảng rộng thì cuộn ngang trong khung (không làm tràn trang) ở màn hẹp.
+- **Dán từ Word/Excel/web:** bảng được giữ (hàng, cột, hàng tiêu đề nếu có), bỏ viền/màu nền/độ rộng gốc; ô gộp (colspan/rowspan) tách thành ô thường; vượt 20 × 8 thì cắt và báo.
+- **Lưu:** Tiptap JSON `table`/`tableRow`/`tableHeader`/`tableCell`; thêm vào tập nút mà `findUnsupported` coi là hỗ trợ (đoạn cũ có bảng **không còn bị khoá**, mở ra sửa được).
+- **Không làm hỏng chỗ khác:** đoạn không có bảng không đổi; bản xem trước và hai nơi dùng (đề thi, Bài luyện) giống nhau.
+
+**Điểm thầy chốt:** (1) có cần gộp ô không (đề xuất: chưa); (2) có cho ảnh/danh sách trong ô không (đề xuất: chưa); (3) bảng làm đề xuất bên cạnh bài đọc thì có nằm trong cột đoạn văn hẹp (cuộn ngang) — đề xuất: có.
+
+**Kiểm thử:** chèn/sửa/xoá bảng; HTML ↔ JSON; đoạn cũ có bảng mở được; dán bảng Word; `PassageView` vẽ bảng; giới hạn kích thước; xem trên trình duyệt ở 1280 và 400 px (đề thi và Bài luyện).
+
 ## Kiểm thử
 
 - A: dán ảnh (không chữ) chèn đúng vị trí; dán chữ giữ nguyên; loại tệp sai/quá cỡ; lỗi tải không đổi nội dung.
@@ -101,4 +117,13 @@ Chấm điểm từng phần cho ghép cặp/kéo thả; loại câu mới; sử
 - **Khối câu hỏi (thầy yêu cầu "stylist cho đẹp"):** `components/exam/QuestionChrome.tsx` dùng chung cho `ExamPlayer` và `PracticePlayer`: "N câu hỏi cho đoạn này" có ô số lượng nổi bật; mỗi câu là một thẻ riêng (viền, bo góc, bóng nhẹ) với thẻ gradient "Câu n", số điểm dạng chip xám và trạng thái ("Đã trả lời", "Đúng/Chưa đúng") dạng chip tròn. Bài luyện nhúng trong bài học (`LessonPractice`) giữ kiểu "CÂU n" đã làm theo Figma. Đã xem trên trình duyệt ở chế độ thi thử của giảng viên (cùng `ExamPlayer`).
 - **Màu chữ và màu tô nổi (thầy yêu cầu có bảng màu):** hai nút "Màu chữ" (9 màu) và "Tô màu" (6 màu) trên thanh công cụ, mỗi nút mở lưới ô màu kèm "Màu mặc định"/"Bỏ tô"; cùng bảng màu với trình soạn bài học (`lib/passageColors.ts`). Chỉ nhận màu trong bảng: màu lạ (màu tên, hex tuỳ ý, dán từ Word) bị bỏ khi lưu và khi vẽ; màu lưu dạng `#rrggbb` (trình duyệt trả `rgb(…)` nên được chuẩn hoá). `PassageView` vẽ màu chữ, màu tô nổi và cỡ chữ cùng lúc. Ba menu (Cỡ chữ, Màu chữ, Tô màu) dùng chung một thành phần `ToolbarMenu` (đóng khi bấm ra ngoài hoặc Esc). Test: `passageColors.test.ts` (4 ca), thêm 4 ca ở `passageDoc.test.ts` và 2 ca ở `PassageView.fontSize.test.tsx`. Đã thử trên trình duyệt ở trình soạn đề thi (chọn chữ rồi chọn màu đỏ, tô xanh dương) và ở **Bài luyện** (dùng chung `PassageEditor`): lưu đoạn có chữ đỏ cỡ lớn và nền xanh lá, hiển thị đúng.
 - **Nút "Màu chữ" trực quan (thầy yêu cầu):** hiện chữ **A** tô đúng màu đang chọn kèm vạch màu bên dưới (như Word); con trỏ ở chữ chưa tô màu thì vẫn hiện màu vừa chọn gần nhất, chưa chọn gì thì A mặc định kèm vạch xám. Đã xem trên trình duyệt (chọn Đỏ → A đỏ, vạch đỏ).
+- **Gạch ngang giữa chữ (thầy yêu cầu):** nút **S** trên thanh công cụ (dấu `strike` của Tiptap); `PassageView` vẽ bằng thẻ `<s>`; dán từ Word/web vẫn giữ chữ gạch ngang. Đã thử trên trình duyệt: chọn "sai" → `<s>sai</s>`. Test: thêm vào ca định dạng của `passageDoc.test.ts` và 1 ca `PassageView.fontSize.test.tsx`.
 
+## Đã làm E (10/11/2026)
+
+- **Trình soạn:** nút "Bảng" trên thanh công cụ. Ngoài bảng: chọn số hàng × số cột (mặc định 3 × 3, tối đa 20 × 8, tự kẹp giá trị), ô "Hàng đầu là hàng tiêu đề", nút "Chèn bảng". Trong bảng: menu hiện "Bảng n hàng × m cột" cùng Thêm hàng phía trên/dưới, Thêm cột bên trái/phải, Xoá hàng, Xoá cột, Xoá bảng; nút thêm bị khoá khi đã đủ 20 hàng hoặc 8 cột. Ô chỉ chứa đoạn văn (chữ có định dạng; không ảnh, danh sách, audio, video).
+- **Dán từ Word/Excel/web:** `flattenTableCellsHtml` đổi danh sách trong ô thành các đoạn chữ ngay trong ô và bỏ ảnh/video/audio (nếu để nguyên, trình phân tích đẩy danh sách ra ngoài bảng); ô gộp tách thành ô thường (colspan/rowspan = 1); bảng vượt 20 × 8 bị cắt và khi lưu có thông báo.
+- **Lưu và đoạn cũ:** nút `table`/`tableRow`/`tableHeader`/`tableCell` thuộc tập hỗ trợ nên đoạn có bảng **không còn bị khoá**; riêng ô chứa thứ ngoài chữ (ảnh, danh sách…) vẫn báo "chưa hỗ trợ" vì sửa sẽ mất.
+- **Học viên:** `PassageView` vẽ bảng trong khung cuộn ngang (`.passage-table-wrap`), viền mảnh, hàng tiêu đề nền nhạt chữ đậm; cùng kiểu CSS với ô soạn.
+- **Kiểm thử:** `passageDoc.test.ts` thêm 6 ca (HTML ↔ JSON, gỡ gộp ô, cắt 20 × 8 và cờ báo, dán danh sách/ảnh trong ô, HTML không bảng đi qua nguyên văn, báo ô chứa ảnh), `PassageView.fontSize.test.tsx` thêm 1 ca. Đã thử trên trình duyệt: chèn 3 × 3 (3 ô tiêu đề + 6 ô thường), thêm hàng/cột, xoá hàng; nhập dữ liệu có chữ đậm và chữ đỏ, lưu, hiển thị đúng như học viên thấy; mở lại sửa không cảnh báo.
+- **Chưa xem tay:** dán bảng Word/Excel thật; bảng rộng trên điện thoại thật; Bài luyện (cùng `PassageEditor`, chưa mở lần này).

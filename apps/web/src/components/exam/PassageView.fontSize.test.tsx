@@ -41,3 +41,26 @@ describe("PassageView — màu chữ và màu tô nổi", () => {
   });
 });
 
+describe("PassageView — gạch ngang", () => {
+  it("vẽ chữ gạch ngang bằng thẻ <s>", () => {
+    const html = renderToStaticMarkup(<>{renderDoc({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "sai", marks: [{ type: "strike" }] }] }] })}</>);
+    expect(html).toContain("<s>sai</s>");
+  });
+});
+
+describe("PassageView — bảng", () => {
+  const cell = (type: string, text: string) => ({ type, content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+  const doc = {
+    type: "doc" as const,
+    content: [{ type: "table", content: [{ type: "tableRow", content: [cell("tableHeader", "Tên"), cell("tableHeader", "Tuổi")] }, { type: "tableRow", content: [cell("tableCell", "An"), cell("tableCell", "12")] }] }],
+  };
+  it("vẽ bảng có hàng tiêu đề (th) và ô thường (td) trong khung cuộn ngang", () => {
+    const html = renderToStaticMarkup(<>{renderDoc(doc)}</>);
+    expect(html).toContain("passage-table-wrap");
+    expect(html).toContain("<table");
+    expect(html).toMatch(/<th><p>Tên<\/p><\/th>/);
+    expect(html).toMatch(/<td><p>12<\/p><\/td>/);
+    expect((html.match(/<tr>/g) ?? []).length).toBe(2);
+  });
+});
+

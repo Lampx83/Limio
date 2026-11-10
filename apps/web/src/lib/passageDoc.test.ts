@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
 import { plainTextToTiptap } from "@/app/instructor/courses/[id]/exams/[examId]/contentHelpers";
-import { findUnsupported, htmlToPassageDoc, passageDocIsEmpty, passageDocToHtml, unsupportedLabels } from "./passageDoc";
+import { findUnsupported, htmlToPassageDoc, htmlToPassageDocChecked, passageDocIsEmpty, passageDocToHtml, flattenTableCellsHtml, unsupportedLabels, PASSAGE_TABLE_MAX_COLS, PASSAGE_TABLE_MAX_ROWS } from "./passageDoc";
 
 // docs/tieu-chi/exam-loai-cau-va-dan-anh-doan-van.md — mục D: soạn Đoạn văn bằng trình soạn giàu định dạng.
 
@@ -42,16 +42,16 @@ describe("đoạn cũ (chỉ chữ, ảnh, audio, video) qua trình soạn khôn
 });
 
 describe("định dạng mới của trình soạn", () => {
-  it("tiêu đề, danh sách chấm/số, chữ đậm/nghiêng/gạch chân/tô nổi đi qua HTML và về lại JSON", () => {
+  it("tiêu đề, danh sách chấm/số, chữ đậm/nghiêng/gạch chân/gạch ngang/tô nổi đi qua HTML và về lại JSON", () => {
     const html =
-      "<h2>Tiêu đề</h2><p>Chữ <strong>đậm</strong>, <em>nghiêng</em>, <u>gạch chân</u>, <mark>tô nổi</mark>.</p>" +
+      "<h2>Tiêu đề</h2><p>Chữ <strong>đậm</strong>, <em>nghiêng</em>, <u>gạch chân</u>, <s>gạch ngang</s>, <mark>tô nổi</mark>.</p>" +
       "<ul><li><p>Một</p></li><li><p>Hai</p></li></ul><ol><li><p>Số một</p></li></ol>";
     const doc = htmlToPassageDoc(html);
     const types = doc.content.map((n) => (n as { type: string }).type);
     expect(types).toEqual(["heading", "paragraph", "bulletList", "orderedList"]);
     expect(findUnsupported(doc)).toEqual([]);
     const marks = JSON.stringify(doc);
-    for (const m of ["bold", "italic", "underline", "highlight"]) expect(marks).toContain(`"${m}"`);
+    for (const m of ["bold", "italic", "underline", "strike", "highlight"]) expect(marks).toContain(`"${m}"`);
     // và đọc lại được thành HTML của ô soạn
     expect(passageDocToHtml(doc)).toContain("<h2>Tiêu đề</h2>");
   });
@@ -64,15 +64,15 @@ describe("định dạng mới của trình soạn", () => {
     expect(nodesOf(doc, "video")[0]!.attrs).toEqual({ src: "https://youtu.be/q", alt: "Xem" });
   });
 
-  it("thứ không có trong tập (liên kết, màu chữ, bảng, gạch ngang) bị bỏ, chữ vẫn còn", () => {
+  it("thứ không có trong tập (liên kết, màu ngoài bảng, mã, trích dẫn) bị bỏ, chữ vẫn còn", () => {
     const doc = htmlToPassageDoc(
-      '<p>Xem <a href="https://x.vn">liên kết</a> và <span style="color: red">đỏ</span> và <s>gạch ngang</s>.</p>' +
-        "<table><tbody><tr><td>ô một</td></tr></tbody></table><blockquote><p>trích dẫn</p></blockquote>",
+      '<p>Xem <a href="https://x.vn">liên kết</a> và <span style="color: red">đỏ</span> và <code>mã</code>.</p>' +
+        "<blockquote><p>trích dẫn</p></blockquote>",
     );
     expect(findUnsupported(doc)).toEqual([]);
     const all = texts(doc).join(" ");
-    for (const w of ["liên kết", "đỏ", "gạch ngang", "ô một", "trích dẫn"]) expect(all).toContain(w);
-    expect(JSON.stringify(doc)).not.toMatch(/"link"|"textStyle"|"table"|"strike"|"blockquote"/);
+    for (const w of ["liên kết", "đỏ", "mã", "trích dẫn"]) expect(all).toContain(w);
+    expect(JSON.stringify(doc)).not.toMatch(/"link"|"textStyle"|"code"|"blockquote"/);
   });
 });
 
@@ -147,17 +147,79 @@ describe("màu chữ và màu tô nổi", () => {
   });
 });
 
+describe("bảng", () => {
+  const TABLE =
+    "<table><tbody><tr><th><p>Tên</p></th><th><p>Tuổi</p></th></tr><tr><td><p>An</p></td><td><p>12</p></td></tr></tbody></table>";
+  const types = (n: unknown): string[] => {
+    const node = n as { type?: string; content?: unknown[] };
+    return [node.type ?? "", ...(node.content ?? []).flatMap(types)];
+  };
+
+  it("bảng đi qua HTML ↔ JSON: hàng tiêu đề, ô thường, chữ trong ô; không bị báo chưa hỗ trợ", () => {
+    const doc = htmlToPassageDoc(TABLE);
+    const all = types(doc);
+    for (const t of ["table", "tableRow", "tableHeader", "tableCell"]) expect(all, t).toContain(t);
+    expect(texts(doc)).toEqual(["Tên", "Tuổi", "An", "12"]);
+    expect(findUnsupported(doc)).toEqual([]);
+    expect(htmlToPassageDoc(passageDocToHtml(doc))).toEqual(doc);
+  });
+
+  it("ô gộp được tách thành ô thường (colspan/rowspan về 1)", () => {
+    const doc = htmlToPassageDoc('<table><tbody><tr><td colspan="2"><p>gộp</p></td></tr><tr><td><p>a</p></td><td rowspan="1"><p>b</p></td></tr></tbody></table>');
+    const cells: Array<{ attrs: { colspan: number; rowspan: number } }> = [];
+    const walk = (n: unknown) => {
+      const node = n as { type?: string; attrs?: { colspan: number; rowspan: number }; content?: unknown[] };
+      if (node.type === "tableCell" || node.type === "tableHeader") cells.push(node as (typeof cells)[number]);
+      node.content?.forEach(walk);
+    };
+    walk(doc);
+    for (const c of cells) expect(c.attrs).toMatchObject({ colspan: 1, rowspan: 1 });
+    expect(texts(doc)).toContain("gộp");
+  });
+
+  it("bảng vượt 20 hàng × 8 cột bị cắt và báo; trong giới hạn thì không báo", () => {
+    const row = (n: number) => `<tr>${Array.from({ length: n }, (_, i) => `<td><p>c${i}</p></td>`).join("")}</tr>`;
+    const big = `<table><tbody>${Array.from({ length: PASSAGE_TABLE_MAX_ROWS + 3 }, () => row(PASSAGE_TABLE_MAX_COLS + 2)).join("")}</tbody></table>`;
+    const r = htmlToPassageDocChecked(big);
+    expect(r.clipped).toBe(true);
+    const table = r.doc.content[0] as { content: Array<{ content: unknown[] }> };
+    expect(table.content).toHaveLength(PASSAGE_TABLE_MAX_ROWS);
+    expect(table.content[0]!.content).toHaveLength(PASSAGE_TABLE_MAX_COLS);
+    expect(htmlToPassageDocChecked(TABLE).clipped).toBe(false);
+  });
+
+  it("dán bảng có danh sách/ảnh trong ô: danh sách thành các đoạn chữ NGAY TRONG ô, ảnh bỏ, không có gì bị đẩy ra ngoài bảng", () => {
+    const pasted = '<table><tbody><tr><td><ul><li><p>một</p></li><li>hai</li></ul><img src="/a.png" alt="x"></td></tr></tbody></table>';
+    const doc = htmlToPassageDoc(flattenTableCellsHtml(pasted));
+    expect(types(doc).filter((t) => t === "table")).toHaveLength(1);
+    expect(doc.content).toHaveLength(1); // chỉ một nút gốc: bảng
+    expect(types(doc)).not.toContain("bulletList");
+    expect(types(doc)).not.toContain("image");
+    expect(texts(doc)).toEqual(["một", "hai"]);
+  });
+
+  it("không có bảng thì HTML dán đi qua nguyên văn", () => {
+    const html = "<p>chữ <strong>đậm</strong></p><ul><li>a</li></ul>";
+    expect(flattenTableCellsHtml(html)).toBe(html);
+  });
+
+  it("đoạn cũ có ô chứa thứ ngoài chữ thì báo chưa hỗ trợ (sửa sẽ mất)", () => {
+    const doc = { type: "doc", content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "image", attrs: { src: "/a.png", alt: "x" } }] }] }] }] };
+    expect(findUnsupported(doc)).toEqual(["nội dung ngoài chữ trong ô bảng"]);
+  });
+});
+
 describe("findUnsupported", () => {
   it("báo nút và dấu ngoài tập mà PassageView vẽ được", () => {
     const doc = {
       type: "doc",
       content: [
         { type: "paragraph", content: [{ type: "text", text: "a", marks: [{ type: "link", attrs: { href: "x" } }] }] },
-        { type: "table", content: [] },
+        { type: "codeBlock", content: [] },
         { type: "blockquote", content: [] },
       ],
     };
-    expect(findUnsupported(doc).sort()).toEqual(["blockquote", "dấu link", "table"]);
+    expect(findUnsupported(doc).sort()).toEqual(["blockquote", "codeBlock", "dấu link"]);
   });
   it("tài liệu rỗng hoặc hỏng không làm sập", () => {
     expect(findUnsupported(null)).toEqual([]);
@@ -167,7 +229,7 @@ describe("findUnsupported", () => {
 
 describe("unsupportedLabels", () => {
   it("đổi tên kỹ thuật sang tiếng Việt, gộp trùng; phần lạ giữ nguyên tên", () => {
-    expect(unsupportedLabels(["table", "tableRow", "tableCell", "dấu link", "figure", "lạLắm"]).sort()).toEqual(["bảng", "liên kết", "lạLắm", "ảnh có chú thích"].sort());
+    expect(unsupportedLabels(["blockquote", "codeBlock", "dấu link", "figure", "figcaption", "lạLắm"]).sort()).toEqual(["khối mã", "khối trích dẫn", "liên kết", "lạLắm", "ảnh có chú thích"].sort());
   });
 });
 

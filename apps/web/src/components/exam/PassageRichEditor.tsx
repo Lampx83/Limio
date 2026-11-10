@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useEditor, useEditorState, EditorContent, type Editor } from "@tiptap/react";
-import { PASSAGE_EXTENSIONS } from "@/lib/passageDoc";
+import { PASSAGE_EXTENSIONS, PASSAGE_TABLE_MAX_COLS, PASSAGE_TABLE_MAX_ROWS, flattenTableCellsHtml } from "@/lib/passageDoc";
 import { PASSAGE_FONT_SIZES } from "@/lib/passageFontSizes";
 import { PASSAGE_HIGHLIGHT_COLORS, PASSAGE_TEXT_COLORS, passageHighlightColor, passageTextColor } from "@/lib/passageColors";
 import { cleanWordHtml } from "@/components/richtext/wordPaste";
@@ -51,7 +51,7 @@ export default function PassageRichEditor({
         "data-placeholder": placeholder,
         style: `min-height: ${minHeight}px;`,
       },
-      transformPastedHTML: cleanWordHtml,
+      transformPastedHTML: (h: string) => flattenTableCellsHtml(cleanWordHtml(h)),
       handlePaste(_view, event) {
         // Chữ có định dạng (Word, web) luôn kèm một bitmap chụp lại vùng chọn trong clipboardData.files: chỉ lấy ảnh khi KHÔNG có chữ.
         const clipHtml = event.clipboardData?.getData("text/html") ?? "";
@@ -105,11 +105,13 @@ export default function PassageRichEditor({
             bold: ed.isActive("bold"),
             italic: ed.isActive("italic"),
             underline: ed.isActive("underline"),
+            strike: ed.isActive("strike"),
             highlight: ed.isActive("highlight"),
             h2: ed.isActive("heading", { level: 2 }),
             h3: ed.isActive("heading", { level: 3 }),
             bullet: ed.isActive("bulletList"),
             ordered: ed.isActive("orderedList"),
+            ...tableInfo(ed),
             fontSize: (ed.getAttributes("textStyle").fontSize as string | undefined) ?? "",
             textColor: passageTextColor(ed.getAttributes("textStyle").color) ?? "",
             highlightColor: ed.isActive("highlight") ? (passageHighlightColor(ed.getAttributes("highlight").color) ?? "default") : "",
@@ -140,6 +142,9 @@ export default function PassageRichEditor({
         </button>
         <button type="button" onClick={() => chain().toggleUnderline().run()} className={btn(!!st?.underline)} title="Gạch chân (Ctrl+U)" aria-label="Gạch chân">
           <u>U</u>
+        </button>
+        <button type="button" onClick={() => chain().toggleStrike().run()} className={btn(!!st?.strike)} title="Gạch ngang giữa chữ" aria-label="Gạch ngang">
+          <s>S</s>
         </button>
         <ToolbarMenu
           label="Màu chữ"
@@ -235,6 +240,23 @@ export default function PassageRichEditor({
           1. List
         </button>
         <span className="mx-1 h-5 w-px bg-token" />
+        <ToolbarMenu label="Bảng" title="Chèn bảng hoặc sửa bảng đang chọn" active={!!st?.inTable} trigger={<>Bảng</>} btn={btn}>
+          {(close) => (
+            <TableMenuBody
+              inTable={!!st?.inTable}
+              rows={st?.tableRows ?? 0}
+              cols={st?.tableCols ?? 0}
+              onInsert={(rows, cols, header) => {
+                chain().insertTable({ rows, cols, withHeaderRow: header }).run();
+                close();
+              }}
+              onAction={(action) => {
+                chain()[action]().run();
+                close();
+              }}
+            />
+          )}
+        </ToolbarMenu>
         <button type="button" onClick={() => fileRef.current?.click()} className={btn(false)} title="Chèn ảnh (cũng có thể dán hoặc kéo thả vào ô)" aria-label="Chèn ảnh">
           🖼️
         </button>
@@ -346,6 +368,83 @@ function SwatchGrid({
       <button type="button" onClick={() => onPick(null)} className="mt-2 w-full rounded border border-token px-2 py-1 text-xs hover:bg-[rgb(var(--surface-muted))]">
         {resetLabel}
       </button>
+    </div>
+  );
+}
+
+/** Cỡ bảng chứa con trỏ (nếu có): số hàng, số cột. Hàng đầu quyết định số cột. */
+function tableInfo(ed: Editor): { inTable: boolean; tableRows: number; tableCols: number } {
+  const { $from } = ed.state.selection;
+  for (let d = $from.depth; d > 0; d--) {
+    const node = $from.node(d);
+    if (node.type.name === "table") return { inTable: true, tableRows: node.childCount, tableCols: node.firstChild?.childCount ?? 0 };
+  }
+  return { inTable: false, tableRows: 0, tableCols: 0 };
+}
+
+type TableAction = "addRowBefore" | "addRowAfter" | "addColumnBefore" | "addColumnAfter" | "deleteRow" | "deleteColumn" | "deleteTable";
+
+/** Nội dung menu "Bảng": chưa ở trong bảng thì chọn cỡ và chèn; ở trong bảng thì thêm/xoá hàng, cột, bảng. */
+function TableMenuBody({
+  inTable,
+  rows,
+  cols,
+  onInsert,
+  onAction,
+}: {
+  inTable: boolean;
+  rows: number;
+  cols: number;
+  onInsert: (rows: number, cols: number, header: boolean) => void;
+  onAction: (action: TableAction) => void;
+}) {
+  const [r, setR] = useState(3);
+  const [c, setC] = useState(3);
+  const [header, setHeader] = useState(true);
+  const clamp = (v: number, max: number) => Math.max(1, Math.min(max, Math.floor(Number.isFinite(v) ? v : 1)));
+  const item = "block w-full px-3 py-1.5 text-left text-sm hover:bg-[rgb(var(--surface-muted))] disabled:cursor-not-allowed disabled:opacity-40";
+
+  if (inTable) {
+    return (
+      <div className="min-w-[13rem] py-1">
+        <p className="px-3 py-1 text-xs text-faint">
+          Bảng {rows} hàng × {cols} cột
+        </p>
+        <button type="button" className={item} disabled={rows >= PASSAGE_TABLE_MAX_ROWS} onClick={() => onAction("addRowBefore")}>Thêm hàng phía trên</button>
+        <button type="button" className={item} disabled={rows >= PASSAGE_TABLE_MAX_ROWS} onClick={() => onAction("addRowAfter")}>Thêm hàng phía dưới</button>
+        <button type="button" className={item} disabled={cols >= PASSAGE_TABLE_MAX_COLS} onClick={() => onAction("addColumnBefore")}>Thêm cột bên trái</button>
+        <button type="button" className={item} disabled={cols >= PASSAGE_TABLE_MAX_COLS} onClick={() => onAction("addColumnAfter")}>Thêm cột bên phải</button>
+        <div className="my-1 border-t border-token" />
+        <button type="button" className={item} disabled={rows <= 1} onClick={() => onAction("deleteRow")}>Xoá hàng</button>
+        <button type="button" className={item} disabled={cols <= 1} onClick={() => onAction("deleteColumn")}>Xoá cột</button>
+        <button type="button" className={`${item} text-danger-600`} onClick={() => onAction("deleteTable")}>Xoá bảng</button>
+        {(rows >= PASSAGE_TABLE_MAX_ROWS || cols >= PASSAGE_TABLE_MAX_COLS) && (
+          <p className="px-3 py-1 text-[11px] text-faint">Tối đa {PASSAGE_TABLE_MAX_ROWS} hàng × {PASSAGE_TABLE_MAX_COLS} cột.</p>
+        )}
+      </div>
+    );
+  }
+  return (
+    <div className="min-w-[13rem] p-3">
+      <div className="flex items-center gap-3 text-sm">
+        <label className="flex items-center gap-1.5">
+          Hàng
+          <input type="number" min={1} max={PASSAGE_TABLE_MAX_ROWS} value={r} onChange={(e) => setR(clamp(Number(e.target.value), PASSAGE_TABLE_MAX_ROWS))} className="w-14 rounded border border-token px-1.5 py-0.5" />
+        </label>
+        <span aria-hidden>×</span>
+        <label className="flex items-center gap-1.5">
+          Cột
+          <input type="number" min={1} max={PASSAGE_TABLE_MAX_COLS} value={c} onChange={(e) => setC(clamp(Number(e.target.value), PASSAGE_TABLE_MAX_COLS))} className="w-14 rounded border border-token px-1.5 py-0.5" />
+        </label>
+      </div>
+      <label className="mt-2 flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={header} onChange={(e) => setHeader(e.target.checked)} />
+        Hàng đầu là hàng tiêu đề
+      </label>
+      <button type="button" onClick={() => onInsert(r, c, header)} className="mt-3 w-full rounded bg-brand-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
+        Chèn bảng
+      </button>
+      <p className="mt-1.5 text-[11px] text-faint">Tối đa {PASSAGE_TABLE_MAX_ROWS} hàng × {PASSAGE_TABLE_MAX_COLS} cột.</p>
     </div>
   );
 }

@@ -200,6 +200,38 @@ function RenderNode({ node }: { node: ElementNode }) {
         </div>
       );
     }
+    case "table":
+      // Bảng rộng cuộn ngang trong khung, không làm tràn trang (đoạn văn nằm trong cột hẹp cạnh câu hỏi, và trên điện thoại).
+      return (
+        <div className="passage-table-wrap">
+          <table className="passage-table">
+            <tbody>
+              {(node.content ?? []).map((c, i) => (
+                <RenderNode key={i} node={c as ElementNode} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    case "tableRow":
+      return (
+        <tr>
+          {(node.content ?? []).map((c, i) => (
+            <RenderNode key={i} node={c as ElementNode} />
+          ))}
+        </tr>
+      );
+    case "tableHeader":
+    case "tableCell": {
+      const Tag = node.type === "tableHeader" ? "th" : "td";
+      return (
+        <Tag>
+          {(node.content ?? []).map((c, i) => (
+            <RenderNode key={i} node={c as ElementNode} />
+          ))}
+        </Tag>
+      );
+    }
     case "hardBreak":
       return <br />;
     case "text":
@@ -282,6 +314,9 @@ function RenderInline({ node }: { node: ElementNode | TextNode }) {
       }
       case "underline":
         el = <u>{el}</u>;
+        break;
+      case "strike":
+        el = <s>{el}</s>;
         break;
       case "textStyle": {
         // Cỡ chữ của đoạn chữ được chọn: chỉ vẽ bốn mức cố định (lib/passageDoc.ts), giá trị khác bỏ qua.

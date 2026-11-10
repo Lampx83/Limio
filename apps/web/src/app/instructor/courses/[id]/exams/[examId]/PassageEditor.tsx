@@ -8,7 +8,7 @@ import { Music, Video } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import SkillPicker from "./SkillPicker";
 import { renderDoc, type TiptapDoc } from "@/components/exam/PassageView";
-import { findUnsupported, htmlToPassageDoc, passageDocToHtml, unsupportedLabels } from "@/lib/passageDoc";
+import { PASSAGE_TABLE_MAX_COLS, PASSAGE_TABLE_MAX_ROWS, findUnsupported, htmlToPassageDocChecked, passageDocToHtml, unsupportedLabels } from "@/lib/passageDoc";
 
 // Trình soạn Tiptap chỉ chạy ở trình duyệt (cần DOM).
 const PassageRichEditor = dynamic(() => import("@/components/exam/PassageRichEditor"), {
@@ -229,7 +229,11 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
       skillIds: v.skills.map((s) => s.id),
     };
     // Tạo mới: luôn gửi nội dung. Sửa: chỉ gửi khi đã sửa (đoạn cũ không bị chuyển đổi, kể cả phần trình soạn chưa hỗ trợ).
-    if (mode === "create" || (dirty && !readOnlyContent)) body.contentJson = htmlToPassageDoc(html);
+    if (mode === "create" || (dirty && !readOnlyContent)) {
+      const { doc, clipped } = htmlToPassageDocChecked(html);
+      if (clipped) window.alert(`Bảng vượt ${PASSAGE_TABLE_MAX_ROWS} hàng × ${PASSAGE_TABLE_MAX_COLS} cột nên đã được cắt bớt.`);
+      body.contentJson = doc;
+    }
     if (v.audioPolicy === "limited_replay") {
       body.maxAudioPlays = v.maxAudioPlays;
     }

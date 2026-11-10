@@ -1242,6 +1242,36 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   background-clip: content-box;
 }
 
+/* Bảng trong Đoạn văn (lib/passageDoc.ts): cùng một kiểu ở trình soạn và ở phía học viên (PassageView). Bảng rộng cuộn ngang trong khung. */
+.passage-table-wrap {
+  @apply my-3 max-w-full overflow-x-auto;
+}
+.passage-table {
+  @apply my-3 border-collapse text-sm;
+  width: 100%;
+}
+.passage-table-wrap .passage-table {
+  @apply my-0;
+}
+.passage-table th,
+.passage-table td {
+  @apply border border-token px-3 py-1.5 align-top;
+  min-width: 4.5rem;
+}
+.passage-table th {
+  @apply font-semibold text-left;
+  background: rgb(var(--surface-muted));
+}
+.ProseMirror .tableWrapper {
+  @apply my-3 max-w-full overflow-x-auto;
+}
+.passage-table p {
+  margin: 0;
+}
+.passage-table p + p {
+  margin-top: 0.35rem;
+}
+
 /* Thẻ audio/video trong trình soạn Đoạn văn (lib/passageDoc.ts): khối không sửa chữ được, chọn rồi xoá như một phần tử. */
 .passage-media-chip {
   @apply my-2 flex items-center gap-2 rounded-lg border border-token px-3 py-2 text-sm;
