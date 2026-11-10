@@ -2,6 +2,8 @@
 
 > Bản nháp **v2** 09/11/2026, **đã duyệt; 3a đã commit (`65c5b66c`), 3b đã code (xem "Đã làm 3b" ở cuối), chưa commit.** v1 dựng câu hỏi tại chỗ trên `Quiz`; v2 đổi sang tái dùng bộ máy **đoạn văn + câu hỏi + luyện đề** của hệ thống Đề thi theo gợi ý của thầy. Thiết kế: Figma "Limio Language", 4 frame bài học. Tiếp nối đợt 1 (`aa9a7e63`) và đợt 2 (`9f03a9da`).
 
+> **Cập nhật 10/11/2026:** cách soạn "chọn một đề thi thử" của khối Bài luyện đã được thay bởi editor riêng — xem `docs/tieu-chi/limio-language-bai-luyen-editor.md` (khối sở hữu nội dung, không qua mục Đề thi).
+
 ## Vì sao làm
 
 Trong Figma, học viên đọc/nghe và **trả lời câu hỏi ngay trong bài**: chọn đáp án, bấm "Kiểm tra câu n", thấy đúng/sai kèm giải thích và dẫn chứng, rồi sang bài kế; có thanh bài trong Unit, bố cục chia đôi (bài đọc | câu hỏi) và bài nghe có transcript.

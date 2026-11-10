@@ -287,12 +287,12 @@ export const GUIDES: readonly GuideEntry[] = [
   {
     id: "giao-trinh-bai-luyen",
     title: "Bài luyện trong bài học (Limio Language)",
-    keywords: ["giáo trình", "bài luyện", "đề thi thử trong bài", "câu hỏi trong bài", "đoạn văn", "đọc hiểu", "kiểm tra câu", "chia đôi"],
-    destinationIds: ["my_courses", "exams"],
-    body: `Để học viên làm câu hỏi ngay trong bài, thầy/cô tạo đề thi thử theo khung và xuất bản đề ở mục Đề thi, rồi trong bài bấm "+ Thêm hoạt động/tài nguyên", chọn "Bài luyện" và chọn "Đề thi thử" đó; học viên ở Limio Language làm ngay trong bài, đoạn văn bên cạnh câu hỏi, bấm "Kiểm tra câu n" để thấy đúng sai và giải thích. Bài luyện không vào sổ điểm nhưng lần kiểm tra đầu của mỗi câu được tính vào nhãn kỹ năng của bài (khoá bật cá nhân hoá).`,
+    keywords: ["giáo trình", "bài luyện", "đoạn văn", "bài nghe", "câu hỏi trong bài", "đọc hiểu", "kiểm tra câu", "giải thích đáp án", "soạn bài luyện", "học liệu"],
+    destinationIds: ["my_courses"],
+    body: `Bài luyện là học liệu nằm ngay trong bài: học viên đọc hoặc nghe một đoạn, trả lời rồi bấm "Kiểm tra câu n" để biết đúng sai và xem giải thích. Thầy/cô không cần dựng đề thi. Ở trang soạn khoá, trong bài bấm "+ Thêm hoạt động/tài nguyên", chọn "Bài luyện", đặt tiêu đề (không bắt buộc) rồi lưu; trang "Soạn bài luyện" mở ra. Ở đó bấm "Thêm đoạn văn / bài nghe" để nhập chữ, chèn ảnh, tải âm thanh, "Tải video lên" từ máy hoặc "Dán link video" (YouTube, Vimeo, Google Drive…), rồi "Thêm câu hỏi vào đoạn này" và chọn dạng câu (một đáp án, nhiều đáp án, Đúng/Sai/Không có thông tin, điền khuyết, trả lời ngắn, sắp xếp, ghép cặp, số, kéo thả). Mỗi câu có ô "Giải thích đáp án" hiện cho học viên sau khi kiểm tra. Dùng nút mũi tên để đổi thứ tự, "Xem trước" để làm thử như học viên (không lưu kết quả). Muốn sửa lại sau này, bấm "Soạn bài luyện" ở hàng khối trong bài. Bài luyện không vào sổ điểm; lần kiểm tra đầu của mỗi câu được tính vào nhãn kỹ năng của bài (khoá bật cá nhân hoá). Khối chưa có câu hỏi thì học viên chưa thấy. Nhân bản bài hoặc khoá thì Bài luyện được sao chép theo.`,
     useCases: [
-      `Dạy một bài đọc hiểu, thầy/cô nhúng đề thi thử có đoạn văn và 5 câu hỏi vào đúng bài để học viên đọc rồi kiểm tra từng câu ngay trên trang.`,
-      `Bài nghe của một unit cần kiểm tra ngay sau khi học viên nghe xong, nên thầy/cô nhúng đề thi thử phần Nghe vào bài đó để học viên làm và xem giải thích từng câu tại chỗ.`,
+      `Dạy một bài đọc hiểu, thầy/cô thêm một đoạn văn và 5 câu hỏi vào đúng bài để học viên đọc rồi kiểm tra từng câu ngay trên trang.`,
+      `Bài nghe của một unit cần kiểm tra ngay sau khi học viên nghe xong, nên thầy/cô tải âm thanh vào một đoạn và thêm câu hỏi nghe hiểu cho đoạn đó.`,
     ],
   },
   {

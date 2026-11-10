@@ -121,7 +121,7 @@ export default async function ExamRoundDetailPage({
   // nhanh" riêng, xem bulkCreateExamSessionsInRound) — loại khỏi bộ chọn để
   // GV khỏi chọn nhầm rồi gặp lỗi.
   const availableExams = await prisma.exam.findMany({
-    where: { courseId: round.course.courseId, kind: "written" },
+    where: { ownerContentItemId: null, courseId: round.course.courseId, kind: "written" },
     orderBy: { title: "asc" },
     select: {
       id: true,
@@ -141,7 +141,7 @@ export default async function ExamRoundDetailPage({
   let readiness = computeRoundReadiness([]);
   if (activeTab === "overview") {
     const examStatuses = await prisma.exam.findMany({
-      where: { id: { in: [...new Set(sessions.map((s) => s.examId))] } },
+      where: { ownerContentItemId: null, id: { in: [...new Set(sessions.map((s) => s.examId))] } },
       select: { id: true, status: true },
     });
     const statusByExam = new Map(examStatuses.map((e) => [e.id, e.status as string]));

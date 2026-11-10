@@ -570,7 +570,7 @@ export async function listExamsForCourse(
 ) {
   await assertCanEditCourse(actorUserId, courseId, db);
   return db.exam.findMany({
-    where: { courseId },
+    where: { ownerContentItemId: null, courseId },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

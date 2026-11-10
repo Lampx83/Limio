@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Blocks,
   Eye,
@@ -129,6 +129,29 @@ export const TYPE_COLOR: Record<string, string> = {
 };
 export const DEFAULT_TYPE_COLOR = "bg-slate-100 text-slate-700";
 
+/** Tóm tắt khối Bài luyện: số đoạn, số câu; báo rõ khi chưa có câu hỏi (học viên sẽ không thấy khối). */
+function PracticeBlockInfo({ contentId }: { contentId: string }) {
+  const [info, setInfo] = useState<{ passages: number; questions: number } | null>(null);
+  useEffect(() => {
+    let alive = true;
+    fetch(apiUrl(`/api/contents/${contentId}/practice-summary`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => alive && d && setInfo(d))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [contentId]);
+  if (!info) return null;
+  return info.questions === 0 ? (
+    <p className="mt-1 text-xs font-medium text-amber-700">Chưa có câu hỏi — học viên chưa thấy bài luyện này.</p>
+  ) : (
+    <p className="mt-1 text-xs text-muted">
+      {info.passages} đoạn · {info.questions} câu hỏi
+    </p>
+  );
+}
+
 export default function ContentItemRow({
   item,
   lessonId,
@@ -154,7 +177,11 @@ export default function ContentItemRow({
   }
 
   async function remove() {
-    if (!confirm(`Xoá content "${item.type}"? Hành động này không thể hoàn tác.`)) return;
+    const message =
+      item.type === "exam_practice"
+        ? "Xoá bài luyện này? Toàn bộ đoạn văn, câu hỏi và kết quả luyện tập của học viên trong bài luyện cũng bị xoá, không hoàn tác được."
+        : `Xoá content "${item.type}"? Hành động này không thể hoàn tác.`;
+    if (!confirm(message)) return;
     setBusy(true);
     let res: Response;
     try {
@@ -232,6 +259,7 @@ export default function ContentItemRow({
         <p className="mt-1 truncate text-sm text-muted">
           {summarize(item.type, item.payload)}
         </p>
+        {item.type === "exam_practice" && <PracticeBlockInfo contentId={item.id} />}
       </div>
 
       <div className="flex shrink-0 items-center gap-1 rounded-lg p-0.5 opacity-70 transition-opacity group-hover:opacity-100 focus-within:opacity-100 max-lg:opacity-100">
@@ -250,6 +278,16 @@ export default function ContentItemRow({
         >
           {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
+        {item.type === "exam_practice" && (
+          <Link
+            href={`${pathname}/bai-luyen/${item.id}`}
+            className="inline-flex shrink-0 items-center gap-1 rounded-md bg-brand-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700"
+            title="Soạn đoạn văn, âm thanh và câu hỏi của bài luyện"
+          >
+            Soạn bài luyện
+            <ExternalLink className="h-3 w-3" aria-hidden />
+          </Link>
+        )}
         {POPOUT_EDITOR_TYPES.has(item.type) && (
           <Link
             href={`${pathname}/contents/${item.id}/edit`}

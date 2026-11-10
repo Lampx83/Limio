@@ -5,6 +5,7 @@ import type { DbClient } from "../auth/tokens";
 import { assertCanEditCourse, CourseAuthzError } from "./authz";
 import { CourseError } from "./courses";
 import { attachLessonActivity } from "./lessonActivity";
+import { copyOwnedPracticeExam } from "./practiceBlock";
 import {
   ensureLessonTag,
   ensureQuestionTag,
@@ -271,6 +272,15 @@ export async function duplicateLesson(
         },
       });
       await attachLessonActivity(tx, dup.id, "content", ciDup.id);
+      // Bài luyện: sao chép SÂU đề ẩn (bản sao độc lập với bản gốc).
+      if (ci.type === "exam_practice") {
+        await copyOwnedPracticeExam(tx, {
+          sourceContentItemId: ci.id,
+          targetContentItemId: ciDup.id,
+          targetCourseId: src.module.courseId,
+          actorUserId,
+        });
+      }
     }
 
     // Assignments

@@ -82,6 +82,7 @@ export async function planAutoRoundSplit(
 
   const examIds = [...new Set(rounds.flatMap((r) => r.sessions.map((s) => s.examId)))];
   const exams = examIds.length
+    // owned-practice-ok: tra tên đề theo id của các ca thi trong đợt; đề có chủ không thuộc ca thi nào.
     ? await db.exam.findMany({ where: { id: { in: examIds } }, select: { id: true, title: true } })
     : [];
   const titleOf = new Map(exams.map((e) => [e.id, e.title]));

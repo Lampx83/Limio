@@ -7,7 +7,7 @@ import { validateContentPayload, type ContentTypeKey } from "./contentSchemas";
 import { attachLessonActivity } from "./lessonActivity";
 import { recordContentVersion } from "./contentVersions";
 import { registerLessonMedia } from "./protectedMedia";
-import { assertPracticeBlockExam } from "./practiceBlock";
+import { createOwnedPracticeExam, syncOwnedPracticeTitle } from "./practiceBlock";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { emitEvent } from "../learning/events";
 
@@ -83,10 +83,6 @@ export async function createContentItem(
     );
   }
 
-  if (parsed.data.type === "exam_practice") {
-    await assertPracticeBlockExam(courseId, (validatedPayload as { examId: string }).examId, db);
-  }
-
   // Wrap entity create + LessonActivity attach in one transaction so a failure
   // attaching to the ordering layer rolls back the entity create.
   const itemId = await (db as typeof prisma).$transaction(async (tx) => {
@@ -99,6 +95,15 @@ export async function createContentItem(
       },
     });
     await attachLessonActivity(tx, lessonId, "content", item.id);
+    // Bài luyện: tạo luôn bản đề ẩn chứa nội dung, CÙNG giao dịch (không để khối lẻ không có đề).
+    if (parsed.data.type === "exam_practice") {
+      await createOwnedPracticeExam(tx, {
+        contentItemId: item.id,
+        courseId,
+        actorUserId,
+        title: (validatedPayload as { title?: string }).title,
+      });
+    }
     return item.id;
   });
   await registerLessonMedia(lessonId, db);
@@ -129,9 +134,6 @@ export async function updateContentItem(
       );
     }
   }
-  if (effectiveType === "exam_practice" && data.payload !== undefined) {
-    await assertPracticeBlockExam(ctx.courseId, (data.payload as { examId: string }).examId, db);
-  }
   if (parsed.data.type !== undefined) data.type = parsed.data.type;
   if (parsed.data.orderIndex !== undefined) data.orderIndex = parsed.data.orderIndex;
   if (parsed.data.isHidden !== undefined) data.isHidden = parsed.data.isHidden;
@@ -144,6 +146,9 @@ export async function updateContentItem(
     }
   }
   await db.contentItem.update({ where: { id: contentId }, data });
+  if (data.payload !== undefined && effectiveType === "exam_practice") {
+    await syncOwnedPracticeTitle(contentId, (data.payload as { title?: string }).title, db);
+  }
   if (data.payload !== undefined) await registerLessonMedia(ctx.lessonId, db);
   if (parsed.data.versionSource === "before_convert") {
     await emitEvent(

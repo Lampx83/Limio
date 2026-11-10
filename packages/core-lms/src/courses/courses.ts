@@ -6,6 +6,7 @@ import { isAdmin } from "../auth/roles";
 import { uniqueCourseSlug } from "./slug";
 import { assertCanEditCourse, assertIsOwner, CourseAuthzError } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
+import { copyOwnedPracticeExam } from "./practiceBlock";
 import {
   backfillCourseTags,
   ensureLessonTag,
@@ -711,8 +712,6 @@ export async function cloneModuleTree(
       },
     });
     for (const c of l.contentItems) {
-      // Khối "Bài luyện" trỏ tới đề của khoá gốc: sang khoá mới thì không còn hợp lệ, bỏ qua (giảng viên thêm lại).
-      if (c.type === "exam_practice") continue;
       const newContent = await tx.contentItem.create({
         data: {
           lessonId: newLesson.id,
@@ -722,6 +721,14 @@ export async function cloneModuleTree(
         },
       });
       await attachLessonActivity(tx, newLesson.id, "content", newContent.id);
+      // Bài luyện: sao chép SÂU đề ẩn sang khoá mới (đoạn, câu, tệp đính kèm độc lập với khoá gốc).
+      if (c.type === "exam_practice") {
+        await copyOwnedPracticeExam(tx, {
+          sourceContentItemId: c.id,
+          targetContentItemId: newContent.id,
+          targetCourseId: newCourseId,
+        });
+      }
     }
     for (const t of l.skillTags) {
       if (isAutoLessonSkillCode(t.skill.code)) continue;

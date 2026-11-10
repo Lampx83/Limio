@@ -97,7 +97,7 @@ export default async function ExamSessionDetailPage({
   // Đề cùng khoá để cho phép đổi đề của ca thi trong form edit.
   // Đề độc lập (không thuộc khoá): chỉ có chính đề của ca để chọn.
   const availableExams = await prisma.exam.findMany({
-    where: detail.courseId ? { courseId: detail.courseId } : { id: detail.examId },
+    where: detail.courseId ? { ownerContentItemId: null, courseId: detail.courseId } : { id: detail.examId },
     orderBy: { createdAt: "asc" },
     select: { id: true, title: true },
   });

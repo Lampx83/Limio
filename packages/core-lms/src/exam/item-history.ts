@@ -110,6 +110,7 @@ export async function getItemTrialHistory(
   });
 
   const examIds = [...new Set(rows.map((r) => r.examId))];
+  // owned-practice-ok: tra tên đề theo id của các lượt thi đã có; đề có chủ không có lượt thi.
   const exams = await db.exam.findMany({
     where: { id: { in: examIds } },
     select: { id: true, title: true, purpose: true },

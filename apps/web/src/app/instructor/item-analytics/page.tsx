@@ -29,7 +29,7 @@ export default async function ItemAnalyticsPage({
 
   // Exams the instructor can see (= exams in courses they instruct).
   const exams = await prisma.exam.findMany({
-    where: { course: { instructors: { some: { userId } } } },
+    where: { ownerContentItemId: null, course: { instructors: { some: { userId } } } },
     orderBy: [{ updatedAt: "desc" }],
     select: {
       id: true,

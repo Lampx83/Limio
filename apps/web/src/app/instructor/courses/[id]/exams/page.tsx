@@ -41,7 +41,7 @@ export default async function InstructorExamsPage({
   }
 
   const exams = await prisma.exam.findMany({
-    where: { courseId: course.id },
+    where: { ownerContentItemId: null, courseId: course.id },
     orderBy: { createdAt: "desc" },
     select: {
       id: true,

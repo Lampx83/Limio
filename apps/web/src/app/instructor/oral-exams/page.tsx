@@ -55,6 +55,7 @@ export default async function OralExamsHubPage() {
   const courseIds = ownedCourses.map((c) => c.id);
   const courseById = new Map(ownedCourses.map((c) => [c.id, c]));
 
+  // owned-practice-ok: chỉ đề vấn đáp (kind = oral); đề có chủ luôn là đề viết.
   const exams = await prisma.exam.findMany({
     where: {
       kind: "oral",

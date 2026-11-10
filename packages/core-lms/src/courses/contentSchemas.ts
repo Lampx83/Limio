@@ -286,13 +286,14 @@ export const TeacherNotePayload = z.object({
 });
 
 /**
- * LANG đợt 3b — khối "Bài luyện": trỏ tới MỘT đề thi thử của cùng khoá (kiểm cùng khoá/đã xuất bản ở contents.ts vì
- * cần DB). `title` tuỳ chọn để giảng viên đặt tên khối; trống thì học viên thấy tên đề.
+ * Khối "Bài luyện": chỉ có tiêu đề tuỳ chọn. Nội dung (đoạn văn, câu hỏi) nằm trong bản đề ẩn gắn với khối
+ * (`Exam.ownerContentItemId`) và soạn ở editor riêng; payload cũ có `examId` bị từ chối (`.strict()`).
  */
-export const ExamPracticePayload = z.object({
-  examId: z.string().uuid(),
-  title: z.string().trim().max(200).optional(),
-});
+export const ExamPracticePayload = z
+  .object({
+    title: z.string().trim().max(200).optional(),
+  })
+  .strict();
 
 const PAYLOAD_BY_TYPE = {
   video: VideoPayload,

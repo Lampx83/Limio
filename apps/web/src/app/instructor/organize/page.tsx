@@ -36,7 +36,7 @@ export default async function OrganizePage({
   const examId = typeof searchParams.examId === "string" ? searchParams.examId : null;
   const exam = examId
     ? await prisma.exam.findFirst({
-        where: {
+        where: { ownerContentItemId: null,
           id: examId,
           kind: "written",
           course: { instructors: { some: { userId: session.user.id } } },

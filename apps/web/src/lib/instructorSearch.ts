@@ -44,7 +44,7 @@ export async function searchInstructorContent(userId: string, rawQuery: string):
           select: { id: true, title: true, module: { select: { courseId: true } } },
         }),
     prisma.exam.findMany({
-      where: {
+      where: { ownerContentItemId: null,
         kind: "written",
         OR: [...(courseIds.length > 0 ? [{ courseId: { in: courseIds } }] : []), { courseId: null, createdById: userId }],
       },

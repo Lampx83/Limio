@@ -12,6 +12,7 @@ import {
   getLessonSlideState,
   ExamError,
   buildLessonFrame,
+  getPracticeBlockSummaries,
   getPracticeForEmbed,
   isUserEnrolled,
   listMockExamsForLearner,
@@ -737,10 +738,14 @@ export default async function LessonPage({
   // thường (không xem thử, không chiếu lớp, không chế độ giảng viên); nơi khác khối không hiện gì.
   const practiceBlocks: Record<string, React.ReactNode> = {};
   if (enrolled && !previewMode && !stageMode && !teacherMode) {
-    for (const it of shownItems) {
-      if (it.type !== "exam_practice") continue;
-      const p = (it.payload ?? {}) as { examId?: string; title?: string };
-      if (!p.examId) continue;
+    // Nội dung Bài luyện nằm trong đề ẩn của chính khối (Exam.ownerContentItemId); khối chưa có câu nào thì học viên không thấy.
+    const practiceItems = shownItems.filter((it) => it.type === "exam_practice");
+    const summaries = await getPracticeBlockSummaries(practiceItems.map((it) => it.id));
+    for (const it of practiceItems) {
+      const p = (it.payload ?? {}) as { title?: string };
+      const info = summaries[it.id];
+      if (!info?.examId || info.questions === 0) continue;
+      const examId = info.examId;
       const title = p.title || "Bài luyện";
       if (!languageSkin) {
         // Vỏ thường chưa có giao diện nhúng: dẫn sang trang luyện đề sẵn có của đề.
@@ -748,23 +753,18 @@ export default async function LessonPage({
           <PracticeBlockNotice
             title={title}
             message="Bài luyện có đoạn văn và câu hỏi, kiểm tra từng câu ngay khi làm."
-            href={`/learn/${params.slug}/exams/${p.examId}/practice`}
+            href={`/learn/${params.slug}/exams/${examId}/practice`}
             cta="Mở bài luyện"
           />
         );
         continue;
       }
       try {
-        const embed = await getPracticeForEmbed(userId, p.examId);
+        const embed = await getPracticeForEmbed(userId, examId);
         practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
-        practiceBlocks[it.id] = (
-          <PracticeBlockNotice
-            title={title}
-            message={e.code === "practice_disabled" ? "Bài luyện đang tắt. Giảng viên sẽ mở khi lớp học tới phần này." : "Bài luyện này hiện chưa dùng được."}
-          />
-        );
+        practiceBlocks[it.id] = <PracticeBlockNotice title={title} message="Bài luyện này hiện chưa dùng được." />;
       }
     }
   }
