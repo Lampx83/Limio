@@ -45,7 +45,8 @@ type ContentSubtype =
   | "audio"
   | "vocab_list"
   | "dialogue"
-  | "exam_practice";
+  | "exam_practice"
+  | "exam_ref";
 
 type Tile = {
   /** Unique key */
@@ -167,6 +168,16 @@ const TILES: Tile[] = [
     description: "Đoạn văn hoặc bài nghe kèm câu hỏi, học viên kiểm tra từng câu ngay trong bài",
     keywords: "bài luyện luyện đề câu hỏi đoạn văn đọc hiểu nghe ngoại ngữ thi thử exam practice",
     pick: { kind: "content", subtype: "exam_practice" },
+  },
+  {
+    key: "exam_ref",
+    group: "resource",
+    icon: ClipboardList,
+    color: "bg-lime-100 text-lime-800",
+    name: "Đề thi",
+    description: "Gắn một đề thi thử đã có của khoá vào bài",
+    keywords: "đề thi thi thử luyện đề kiểm tra exam mock gắn đề cuối unit",
+    pick: { kind: "content", subtype: "exam_ref" },
   },
   {
     key: "pdf",

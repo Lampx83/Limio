@@ -39,6 +39,7 @@ import {
   streakLabel,
 } from "@/lib/courseHomeView";
 import { courseMetaLine, modulePrefix } from "@/lib/courseLabels";
+import MockExamCard from "@/components/exam/MockExamCard";
 import PaymentProcessingNotice from "@/components/PaymentProcessingNotice";
 import LearningPathList from "@/components/LearningPathList";
 import { CourseBookLine, CourseHeroCover } from "@/components/course/CourseHeroBook";
@@ -373,78 +374,9 @@ export default async function LearnCoursePage({
             <section id="luyen-thi" aria-labelledby="mock-exams-title">
               <h2 id="mock-exams-title" className="text-h3">Thi thử</h2>
               <div className="mt-3 grid gap-3">
-                {mockExams.map((e) => {
-                  const a = e.attempt;
-                  const inProgress = a?.status === "in_progress";
-                  const href = `/learn/${params.slug}/exams/${e.examId}`;
-                  // Hai chế độ lưu ở bảng riêng nên trạng thái và nút riêng, hiện thành hai cột (AC6).
-                  const showMock = e.allowMock || inProgress;
-                  const showPractice = e.allowPractice;
-                  const colClass = "flex flex-col gap-2 rounded-lg border border-token p-3";
-                  const btnBase = "inline-flex h-9 shrink-0 items-center whitespace-nowrap rounded-full px-4 text-sm";
-                  return (
-                    <div key={e.examId} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
-                      <div>
-                        <p className="text-body font-semibold">{e.title}</p>
-                        <p className="text-meta">
-                          {e.sections.length} phần · {e.totalMinutes} phút
-                        </p>
-                      </div>
-                      <ul className="mt-3 flex flex-wrap gap-1.5">
-                        {e.sections.map((sec, i) => (
-                          <li key={i} className="rounded-full bg-[rgb(var(--surface-muted))] px-2.5 py-0.5 text-xs text-muted">
-                            {sec.languageSkill &&
-                            isLanguageSkill(sec.languageSkill) &&
-                            LANGUAGE_SKILL_LABEL[sec.languageSkill] !== sec.title
-                              ? `${LANGUAGE_SKILL_LABEL[sec.languageSkill]} · `
-                              : ""}
-                            {sec.title} · {sec.durationMin}′
-                          </li>
-                        ))}
-                      </ul>
-                      <div className={`mt-4 grid gap-3 ${showMock && showPractice ? "sm:grid-cols-2" : ""}`}>
-                        {showMock && (
-                          <div className={colClass} data-testid="exam-col-mock">
-                            <p className="text-sm font-semibold">Thi thử</p>
-                            <p className="text-caption text-muted">Mô phỏng thi thật</p>
-                            <p className="text-meta">{mockStatusText({ attempt: a, attemptCount: e.attemptCount })}</p>
-                            <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                              {a && !inProgress && (
-                                <Link
-                                  href={`${href}/${a.attemptId}/result`}
-                                  className={`${btnBase} border border-token hover:bg-brand-soft`}
-                                >
-                                  Xem kết quả
-                                </Link>
-                              )}
-                              <Link
-                                href={a && !inProgress ? `${href}?retake=1` : href}
-                                className={`${btnBase} bg-brand-600 font-medium text-white hover:bg-brand-700`}
-                              >
-                                {!a ? "Thi thử" : inProgress ? "Tiếp tục thi" : "Thi lại"}
-                              </Link>
-                            </div>
-                          </div>
-                        )}
-                        {showPractice && (
-                          <div className={colClass} data-testid="exam-col-practice">
-                            <p className="text-sm font-semibold">Luyện đề</p>
-                            <p className="text-caption text-muted">Không bấm giờ, xem đáp án ngay</p>
-                            <p className="text-meta">{practiceStatusText(e.practice)}</p>
-                            <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
-                              <Link
-                                href={practiceHref(params.slug, e.examId, e.practice)}
-                                className={`${btnBase} border border-brand-300 bg-brand-soft font-medium text-brand-800 hover:bg-brand-100`}
-                              >
-                                {practiceButtonLabel(e.practice)}
-                              </Link>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                {mockExams.map((e) => (
+                  <MockExamCard key={e.examId} slug={params.slug} exam={e} />
+                ))}
               </div>
             </section>
           )}

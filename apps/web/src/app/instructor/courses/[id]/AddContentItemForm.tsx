@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import ExamRefPicker from "./ExamRefPicker";
 import { FileCheck2, FileUp } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
@@ -104,7 +105,8 @@ type ContentType =
   | "audio"
   | "vocab_list"
   | "dialogue"
-  | "exam_practice";
+  | "exam_practice"
+  | "exam_ref";
 
 const TYPE_LABEL: Record<ContentType, string> = {
   richtext: "Văn bản (rich text)",
@@ -123,6 +125,7 @@ const TYPE_LABEL: Record<ContentType, string> = {
   vocab_list: "Từ vựng (bảng từ)",
   dialogue: "Hội thoại",
   exam_practice: "Bài luyện",
+  exam_ref: "Đề thi",
 };
 
 export default function AddContentItemForm({
@@ -173,6 +176,7 @@ export default function AddContentItemForm({
   // URL khác thì bỏ (không còn đúng file đó nữa).
   const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(null);
   const [linkTitle, setLinkTitle] = useState("");
+  const [examRefId, setExamRefId] = useState<string | null>(null);
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioShowTranscript, setAudioShowTranscript] = useState(true);
   const [vocabValue, setVocabValue] = useState<VocabEditorValue>(() => vocabEditorFromPayload(null));
@@ -280,6 +284,7 @@ export default function AddContentItemForm({
     setFilename("");
     setFileMeta(null);
     setLinkTitle("");
+    setExamRefId(null);
     setScormPackageId("");
     setH5pPackageId("");
     setLtiToolId("");
@@ -487,6 +492,14 @@ export default function AddContentItemForm({
       case "exam_practice":
         // Nội dung (đoạn văn, câu hỏi) soạn ở editor riêng sau khi tạo khối; ở đây chỉ có tiêu đề.
         payload = { title: linkTitle.trim() || undefined };
+        break;
+      case "exam_ref":
+        if (!examRefId) {
+          setError("Chọn một đề thi để gắn vào bài.");
+          setBusy(false);
+          return;
+        }
+        payload = { examId: examRefId, title: linkTitle.trim() || undefined };
         break;
       case "scorm":
         if (!scormPackageId) {
@@ -835,6 +848,19 @@ export default function AddContentItemForm({
 
       {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
       {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
+      {type === "exam_ref" && (
+        <div className="space-y-2">
+          <ExamRefPicker lessonId={lessonId} value={examRefId} onChange={setExamRefId} />
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề khối (không bắt buộc — mặc định là tên đề)"
+            className="input"
+            aria-label="Tiêu đề khối"
+          />
+        </div>
+      )}
       {type === "exam_practice" && (
         <div className="space-y-2">
           <input

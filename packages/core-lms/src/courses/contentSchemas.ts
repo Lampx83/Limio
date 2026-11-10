@@ -295,6 +295,17 @@ export const ExamPracticePayload = z
   })
   .strict();
 
+/**
+ * Khối "Đề thi": trỏ tới một đề thi thử của chính khoá. `examId` null chỉ xuất hiện sau khi nhân bản khoá (đề thuộc khoá cũ nên bỏ liên
+ * kết, hiện "Chưa chọn đề"); tạo/sửa qua `createContentItem`/`updateContentItem` luôn đòi `examId` hợp lệ.
+ */
+export const ExamRefPayload = z
+  .object({
+    examId: z.string().uuid().nullable(),
+    title: z.string().trim().max(200).optional(),
+  })
+  .strict();
+
 const PAYLOAD_BY_TYPE = {
   video: VideoPayload,
   markdown: MarkdownPayload,
@@ -312,6 +323,7 @@ const PAYLOAD_BY_TYPE = {
   vocab_list: VocabListPayload,
   dialogue: DialoguePayload,
   exam_practice: ExamPracticePayload,
+  exam_ref: ExamRefPayload,
 } as const;
 
 export type ContentTypeKey = keyof typeof PAYLOAD_BY_TYPE;

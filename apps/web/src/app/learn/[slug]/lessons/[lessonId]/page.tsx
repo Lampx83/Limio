@@ -14,6 +14,9 @@ import {
   buildLessonFrame,
   getPracticeBlockSummaries,
   getPracticeForEmbed,
+  getPracticePreview,
+  getExamRefStates,
+  getExamRefPreviewCard,
   isUserEnrolled,
   listMockExamsForLearner,
   listThreadsForLesson,
@@ -37,6 +40,7 @@ import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
 import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
 import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel } from "@/lib/lessonFramePolicy";
 import { getSiteSetting } from "@/lib/site-settings";
+import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/ExamRefBlock";
 import LessonPractice from "@/components/language/LessonPractice";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
@@ -736,10 +740,13 @@ export default async function LessonPage({
   const lessonView = split ? parseLessonView(searchParams?.view) : "lesson";
   const shownItems = split ? (lessonView === "vocab" ? split.vocab : split.lesson) : visibleItems;
 
-  // LANG đợt 3b — khối "Bài luyện": dựng sẵn ở máy chủ theo dữ liệu của người xem. Chỉ học viên đã ghi danh ở trang bài
-  // thường (không xem thử, không chiếu lớp, không chế độ giảng viên); nơi khác khối không hiện gì.
+  // LANG đợt 3b — khối "Bài luyện": dựng sẵn ở máy chủ theo dữ liệu của người xem. Học viên đã ghi danh ở trang bài thường
+  // (không chiếu lớp, không chế độ giảng viên) làm thật; giảng viên bấm "Xem như học viên" (`?preview=1`) cũng thấy khối, ở chế
+  // độ xem thử (chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án); nơi khác khối không hiện gì.
   const practiceBlocks: Record<string, React.ReactNode> = {};
-  if (enrolled && !previewMode && !stageMode && !teacherMode) {
+  const practiceForLearner = enrolled && !previewMode && !stageMode && !teacherMode;
+  const practiceForPreview = previewMode && !stageMode && !!userId;
+  if (practiceForLearner || practiceForPreview) {
     // Nội dung Bài luyện nằm trong đề ẩn của chính khối (Exam.ownerContentItemId); khối chưa có câu nào thì học viên không thấy.
     const practiceItems = shownItems.filter((it) => it.type === "exam_practice");
     const summaries = await getPracticeBlockSummaries(practiceItems.map((it) => it.id));
@@ -749,6 +756,18 @@ export default async function LessonPage({
       if (!info?.examId || info.questions === 0) continue;
       const examId = info.examId;
       const title = p.title || "Bài luyện";
+      if (practiceForPreview) {
+        // Xem như học viên: giảng viên thường không ghi danh khoá của mình nên không thể dẫn sang trang luyện đề (sẽ bị chặn);
+        // nhúng thẳng bản xem thử, giống nút "Xem trước" ở trang soạn Bài luyện.
+        try {
+          const embed = await getPracticePreview(userId!, examId);
+          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview />;
+        } catch (e) {
+          if (!(e instanceof ExamError)) throw e;
+          practiceBlocks[it.id] = <PracticeBlockNotice title={title} message="Bài luyện này hiện chưa dùng được." />;
+        }
+        continue;
+      }
       if (!lessonFrame) {
         // Ngoài khung (chiếu lớp, bài có slide, công tắc tắt…) chưa có giao diện nhúng: dẫn sang trang luyện đề sẵn có của đề.
         practiceBlocks[it.id] = (
@@ -767,6 +786,32 @@ export default async function LessonPage({
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
         practiceBlocks[it.id] = <PracticeBlockNotice title={title} message="Bài luyện này hiện chưa dùng được." />;
+      }
+    }
+  }
+
+  // Khối "Đề thi" (exam_ref): gắn một đề thi thử của khoá vào bài. Học viên đã ghi danh thấy đúng thẻ như ở trang khoá (chỉ khi đề dùng
+  // được); giảng viên bấm "Xem như học viên" thấy thẻ hoặc nhãn lý do. Chiếu lớp và trang in không hiện.
+  const examRefBlocks: Record<string, React.ReactNode> = {};
+  const examRefItems = shownItems.filter((it) => it.type === "exam_ref");
+  if (examRefItems.length > 0 && !stageMode && userId) {
+    const courseId = lesson.module.course.id;
+    const refOf = (it: (typeof examRefItems)[number]) => (it.payload ?? {}) as { examId?: string | null; title?: string };
+    if (enrolled && !previewMode && !teacherMode) {
+      const cards = await listMockExamsForLearner(userId, courseId).catch(() => []);
+      for (const it of examRefItems) {
+        const { examId, title } = refOf(it);
+        const card = cards.find((c) => c.examId === examId);
+        if (card) examRefBlocks[it.id] = <ExamRefLearnerBlock slug={params.slug} exam={card} title={title} />;
+      }
+    } else if (previewMode) {
+      const states = await getExamRefStates(courseId, examRefItems.map((it) => refOf(it).examId ?? null));
+      for (const it of examRefItems) {
+        const { examId, title } = refOf(it);
+        const st = states.get(examId ?? null);
+        const issue = st?.issue ?? "not_selected";
+        const card = issue === "ok" && examId ? await getExamRefPreviewCard(courseId, examId) : null;
+        examRefBlocks[it.id] = <ExamRefPreviewBlock slug={params.slug} exam={card} issue={card ? "ok" : issue === "ok" ? "missing" : issue} title={title} />;
       }
     }
   }
@@ -839,39 +884,50 @@ export default async function LessonPage({
         hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
       */}
       <header className={`rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card ${lessonFrame ? "mt-2 p-3 sm:p-4" : "mt-3 p-4 sm:p-5"}`}>
-        {/* Trong khung, tên module đã có ở đường dẫn phía trên nên bỏ chip (tiết kiệm một hàng); chỉ giữ hàng khi còn chip kỹ năng / nút của giảng viên. */}
-        {(!lessonFrame || lesson.languageSkill || (!previewMode && canEdit)) && (
-        <div className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${lessonFrame ? "mb-1" : ""}`}>
-          {!lessonFrame && <span className="chip">{lesson.module.title}</span>}
-          {lessonFrame && lesson.languageSkill && (
-            <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>
-          )}
-          {lessonFrame && !previewMode && canEdit && (
-            <Link
-              href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
-              title="Quay về màn hình soạn nội dung của bài này."
-              className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
-            >
-              <PenLine className="h-4 w-4" aria-hidden />
-              Về soạn nội dung
-            </Link>
-          )}
-        </div>
+        {lessonFrame ? (
+          // Trong khung 3 cột: một hàng gọn — chip kỹ năng + tên bài bên trái, nút "Về soạn nội dung" của giảng viên bên phải. Tên module đã có
+          // ở đường dẫn phía trên nên không lặp lại. Tiêu đề cỡ vừa (2xl) vì cạnh còn thanh bài, nội dung và panel.
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+              {lesson.languageSkill && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
+              <h1 className="h-display min-w-0 text-xl font-bold sm:text-2xl">{lesson.title}</h1>
+            </div>
+            {!previewMode && canEdit && (
+              <Link
+                href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+                title="Quay về màn hình soạn nội dung của bài này."
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+              >
+                <PenLine className="h-4 w-4" aria-hidden />
+                Về soạn nội dung
+              </Link>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="chip">{lesson.module.title}</span>
+            </div>
+            <h1 className="h-display mt-2 text-3xl font-bold sm:text-4xl">{lesson.title}</h1>
+          </>
         )}
-        <h1 className={`h-display font-bold ${lessonFrame ? "text-2xl sm:text-3xl" : "mt-2 text-3xl sm:text-4xl"}`}>
-          {lesson.title}
-        </h1>
-        {lesson.description && (
-          <SafeHtml
-            html={plainToRichHtml(lesson.description)}
-            className={`prose max-w-none text-muted dark:prose-invert ${lessonFrame ? "mt-1 text-sm" : "mt-2 text-base"}`}
-          />
-        )}
+        {lesson.description &&
+          // Trong khung, mô tả trùng tên unit/module (vd. "Lifestyle") chỉ lặp lại thanh bài và đường dẫn nên bỏ.
+          !(
+            lessonFrame &&
+            [lessonFrame.unitTitle, lesson.module.title].some((t) => t.trim().toLowerCase() === htmlToPlainText(lesson.description).trim().toLowerCase())
+          ) && (
+            <SafeHtml
+              html={plainToRichHtml(lesson.description)}
+              className={`prose max-w-none text-muted dark:prose-invert ${lessonFrame ? "mt-1 text-sm" : "mt-2 text-base"}`}
+            />
+          )}
         {lecturerChoice?.mode === "HIEN" && !deckCover && (
           <LecturerInvite courseSlug={params.slug} userId={userId ?? null} name={lecturerChoice.name} accent={lecturerChoice.accent} />
         )}
+        <div className={lessonFrame ? "mt-2 flex flex-wrap items-center gap-x-5 gap-y-2" : undefined}>
         {!previewMode && (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className={`${lessonFrame ? "" : "mt-3 "}flex flex-wrap items-center gap-2`}>
             {/* Các nút nghe nổi bật (Nghe giảng, Podcast, Slide) đứng bên trái; nút công cụ (in) dồn sang phải cùng hàng để đỡ tốn thêm một hàng. */}
             {/* Màn hẹp: các nút nghe chia đều cột, nằm riêng một hàng; từ sm: xếp ngang theo bề rộng cố định của nút. */}
             {(narrations.lecture || narrations.podcast || slideInfo) && (
@@ -904,7 +960,7 @@ export default async function LessonPage({
             là client component; xem LessonCompletionPrompt để biết công
             thức gộp. */}
         {!previewMode && (
-          <div className={lessonFrame ? "mt-2" : "mt-3"}>
+          <div className={lessonFrame ? "min-w-[14rem] flex-1" : "mt-3"}>
             <LessonCompletionPrompt
               inline={!!lessonFrame}
               lessonId={lesson.id}
@@ -914,6 +970,7 @@ export default async function LessonPage({
             />
           </div>
         )}
+        </div>
       </header>
 
       {split && (
@@ -996,7 +1053,7 @@ export default async function LessonPage({
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
           deckCover={deckCover}
-          blocks={practiceBlocks}
+          blocks={{ ...practiceBlocks, ...examRefBlocks }}
           numberTranscripts={languageSkin}
         />
         </div>

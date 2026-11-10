@@ -744,7 +744,13 @@ export async function cloneModuleTree(
         data: {
           lessonId: newLesson.id,
           type: c.type,
-          payload: c.payload === null ? Prisma.JsonNull : (c.payload as Prisma.InputJsonValue),
+          // Khối "Đề thi" (exam_ref): đề thuộc khoá gốc nên bản sao bỏ liên kết (hiện "Chưa chọn đề"), không nhân bản đề.
+          payload:
+            c.payload === null
+              ? Prisma.JsonNull
+              : c.type === "exam_ref"
+                ? ({ ...(c.payload as Record<string, unknown>), examId: null } as Prisma.InputJsonValue)
+                : (c.payload as Prisma.InputJsonValue),
           orderIndex: c.orderIndex,
         },
       });
