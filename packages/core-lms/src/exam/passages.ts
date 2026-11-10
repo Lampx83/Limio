@@ -1,3 +1,4 @@
+import { afterOwnedPracticeChanged } from "../courses/practiceBlock";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
@@ -105,6 +106,7 @@ export async function createPassage(
     return p;
   });
 
+  await afterOwnedPracticeChanged(actorUserId, examId, db);
   return { passageId: passage.id };
 }
 
@@ -159,6 +161,7 @@ export async function updatePassage(
       }
     }
   });
+  await afterOwnedPracticeChanged(actorUserId, p.examId, db);
 }
 
 export async function deletePassage(
@@ -170,6 +173,7 @@ export async function deletePassage(
   if (p.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, p.exam, db);
   await db.examPassage.delete({ where: { id: passageId } });
+  await afterOwnedPracticeChanged(actorUserId, p.examId, db);
 }
 
 /** A7.2.4 — Reorder passages within an exam. Same 2-pass technique as modules. */
@@ -207,4 +211,5 @@ export async function reorderPassages(
       });
     }
   });
+  await afterOwnedPracticeChanged(actorUserId, examId, db);
 }

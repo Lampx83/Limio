@@ -49,6 +49,7 @@ function mockFetch() {
     "PUT /api/practice-sessions/s1/answers/q2": () => ({ json: { ok: true } }),
     "POST /api/practice-sessions/s1/check/q1": () => ({ json: { isCorrect: true, score: 1, maxScore: 1, manual: false, config: checkConfig } }),
     "POST /api/practice-sessions/s1/check/q2": () => ({ json: { isCorrect: false, score: 0, maxScore: 1, manual: false, config: checkConfig } }),
+    "POST /api/practice-preview/ex1/check/q1": () => ({ json: { isCorrect: true, score: 1, maxScore: 1, manual: false, config: checkConfig } }),
     "POST /api/practice-sessions/s1/complete": () => ({
       json: { sessionId: "s1", examId: "ex1", bySkill: [{ skill: "reading", correct: 1, total: 2, answered: 2, manual: 0 }], wrong: [{ questionId: "q2" }] },
     }),
@@ -74,9 +75,9 @@ async function flush(ms = 0) {
   });
 }
 
-async function render(e: PracticeEmbed = embed()) {
+async function render(e: PracticeEmbed = embed(), preview = false) {
   await act(async () => {
-    root.render(<LessonPractice slug="ielts" embed={e} />);
+    root.render(<LessonPractice slug="ielts" embed={e} preview={preview} />);
   });
   await flush();
 }
@@ -261,5 +262,19 @@ describe("LessonPractice — bài luyện nhúng trong bài", () => {
     await render();
     expect(host.innerHTML).not.toContain("Vì A đúng");
     expect(host.innerHTML).not.toContain("isCorrect");
+  });
+  it("xem trước của giảng viên: không tạo buổi, không lưu đáp án, chấm qua API xem trước, không có nút kết thúc", async () => {
+    await render(embed(), true);
+    await click(radios()[0]!);
+    await flush(600);
+    expect(calls).toHaveLength(0); // chọn đáp án không gọi máy chủ
+    await click(button(/Kiểm tra câu 1/));
+    await flush();
+    expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual(["POST /api/practice-preview/ex1/check/q1"]);
+    expect(calls[0]!.body).toEqual({ answerJson: { optionIds: ["a"] } });
+    expect(text()).toContain("Chính xác");
+    expect(text()).toContain("Vì A đúng.");
+    expect(text()).toContain("Xem trước: không lưu đáp án");
+    expect(button(/Kết thúc bài luyện/)).toBeUndefined();
   });
 });

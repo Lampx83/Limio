@@ -316,6 +316,9 @@ export const LearningEventType = {
   // Bài giảng slide của bài học (docs/tieu-chi/nghe-giang-slide.md). Subject là người sửa khoá; payload chỉ mang id.
   LessonDeckAttached: "lesson.deck.attached",
   LessonDeckDetached: "lesson.deck.detached",
+  // LANG — editor riêng của khối "Bài luyện": subject là giảng viên sửa; payload chỉ mang id và số đoạn/câu, KHÔNG mang chữ
+  // của câu hỏi hay đáp án. Không tính là hoạt động học (tiền tố "lesson.practice." trong NON_LEARNER_ACTIVITY_PREFIXES).
+  LessonPracticeUpdated: "lesson.practice.updated",
   // Đồng giảng viên của bài giảng Limio-Live (docs/tieu-chi/dong-giang-vien-bai-giang.md). Subject là chủ bài (hoặc người tự rời); payload chỉ mang id.
   LiveDeckCollaboratorAdded: "live.deck.collaborator_added",
   LiveDeckCollaboratorRemoved: "live.deck.collaborator_removed",
@@ -1272,6 +1275,14 @@ export interface NarrationStoppedPayload {
   /** Phần trăm xa nhất đã nghe tới (0–100) trong lần nghe này. */
   percent: number;
   speed: number;
+}
+
+/** lesson.practice.updated — nội dung Bài luyện vừa đổi; chỉ id và số liệu. */
+export interface LessonPracticeUpdatedPayload {
+  lessonId: string;
+  contentItemId: string;
+  passages: number;
+  questions: number;
 }
 
 export interface LessonDeckAttachedPayload {

@@ -1,3 +1,4 @@
+import { assertCanEditCourse } from "../courses/authz";
 import { createHash } from "node:crypto";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
@@ -330,6 +331,11 @@ export async function getPracticeForEmbed(userId: string, examId: string, db: Pr
       answers: s.answers,
     };
   }
+  return buildFreshEmbed(examId, exam.title, db);
+}
+
+/** Dữ liệu nhúng khi CHƯA có buổi luyện dở: cả đề, cấu hình công khai (không đáp án), chưa có đáp án nào. */
+async function buildFreshEmbed(examId: string, title: string, db: PrismaClient): Promise<PracticeEmbed> {
   const all = await loadExamQuestions(examId, db);
   const passageIds = [...new Set(all.map((q) => q.passageId).filter((x): x is string => !!x))];
   const passages = passageIds.length
@@ -337,7 +343,7 @@ export async function getPracticeForEmbed(userId: string, examId: string, db: Pr
     : [];
   return {
     examId,
-    title: exam.title,
+    title,
     sessionId: null,
     checkEnabled: true,
     timed: false,
@@ -354,6 +360,39 @@ export async function getPracticeForEmbed(userId: string, examId: string, db: Pr
     passages,
     answers: [],
   };
+}
+
+/**
+ * Xem trước của GIẢNG VIÊN cho khối Bài luyện: trả đúng dữ liệu nhúng học viên nhận (cấu hình công khai, không đáp án), không
+ * tạo buổi luyện và không ghi gì. Chỉ đề CÓ CHỦ, và chỉ người sửa được khoá chứa đề.
+ */
+export async function getPracticePreview(actorUserId: string, examId: string, db: PrismaClient = prisma): Promise<PracticeEmbed> {
+  const exam = await loadOwnedPracticeForPreview(actorUserId, examId, db);
+  return buildFreshEmbed(examId, exam.title, db);
+}
+
+async function loadOwnedPracticeForPreview(actorUserId: string, examId: string, db: PrismaClient) {
+  const exam = await db.exam.findUnique({ where: { id: examId }, select: { id: true, title: true, courseId: true, ownerContentItemId: true } });
+  if (!exam || !exam.ownerContentItemId || !exam.courseId) throw new ExamError("exam_not_found");
+  await assertCanEditCourse(actorUserId, exam.courseId, db);
+  return exam;
+}
+
+/** Kiểm tra một đáp án ở chế độ xem trước: chấm như học viên nhưng KHÔNG lưu đáp án, KHÔNG phát sự kiện, KHÔNG ghi nhận kỹ năng. */
+export async function previewPracticeCheck(
+  actorUserId: string,
+  examId: string,
+  questionId: string,
+  answerJson: unknown,
+  db: PrismaClient = prisma,
+): Promise<PracticeCheck> {
+  await loadOwnedPracticeForPreview(actorUserId, examId, db);
+  const q = (await loadExamQuestions(examId, db)).find((x) => x.id === questionId);
+  if (!q) throw new ExamError("validation_failed", { reason: "question_not_in_exam" });
+  const g = gradeExamAnswer(q.type as Parameters<typeof gradeExamAnswer>[0], q.config, answerJson, q.points);
+  if (g.needsGrading || g.autoScore === null) return { isCorrect: null, score: null, maxScore: q.points, manual: true, config: q.config };
+  const isCorrect = q.points > 0 && g.autoScore >= q.points - EPS;
+  return { isCorrect, score: g.autoScore, maxScore: q.points, manual: false, config: q.config };
 }
 
 export async function savePracticeAnswer(
@@ -579,7 +618,7 @@ export async function observePracticeAnswer(
       id: lessonId,
       isHidden: false,
       module: { courseId: exam.courseId, isHidden: false },
-      contentItems: { some: { type: "exam_practice", isHidden: false, payload: { path: ["examId"], equals: s.examId } } },
+      contentItems: { some: { type: "exam_practice", isHidden: false, ownedExam: { is: { id: s.examId } } } },
     },
     select: { id: true },
   });
@@ -609,6 +648,7 @@ export interface PracticeReviewItem {
  */
 export async function getPracticeReviewSummary(userId: string, courseId: string, db: PrismaClient = prisma): Promise<PracticeReviewItem[]> {
   if (!(await isUserEnrolled(userId, courseId, db))) return [];
+  // owned-practice-ok: CỐ Ý gồm cả đề có chủ — câu sai ở Bài luyện cũng là "câu luyện nên làm lại".
   const exams = await db.exam.findMany({
     where: { courseId, status: "published", kind: "written", mockMode: true, allowPractice: true },
     orderBy: { title: "asc" },

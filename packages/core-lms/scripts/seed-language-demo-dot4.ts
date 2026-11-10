@@ -15,13 +15,16 @@
  *
  *   node --env-file=../db/.env --import tsx scripts/seed-language-demo-dot4.ts
  *
- * Cần đã chạy scripts/seed-language-demo.ts và có đề thi thử "Thi thử HSK 3 (demo)". Chỉ dùng cho dev DB.
+ * Cần đã chạy scripts/seed-language-demo.ts và có đề thi thử "Thi thử HSK 3 (demo)" (nguồn để chép nội dung vào Bài luyện).
+ * Bài luyện giờ SỞ HỮU nội dung riêng (docs/tieu-chi/limio-language-bai-luyen-editor.md): script tạo khối, rồi chép đoạn văn và câu
+ * hỏi của đề nguồn vào đề ẩn của khối. Chỉ dùng cho dev DB.
  */
 
 import { prisma } from "@feedbackme/db";
 import { updateCourseLibraryMeta } from "../src/language/library";
 import { createLesson } from "../src/courses/lessons";
-import { createContentItem } from "../src/courses/contents";
+import { createContentItem, updateContentItem } from "../src/courses/contents";
+import { createOwnedPracticeExam, getOwnedPracticeExamId } from "../src/courses/practiceBlock";
 import { setGoal } from "../src/courses/learnerGoals";
 import { checkPracticeAnswer, completePracticeSession, getPracticeSession, savePracticeAnswer, startPracticeSession } from "../src/exam";
 
@@ -113,15 +116,53 @@ async function main() {
   }
   if (dur) log(`đã khai báo thời lượng cho ${dur} bài`);
 
-  // 4. Khối Bài luyện.
+  // 4. Khối Bài luyện (sở hữu nội dung riêng): tạo khối rồi chép đoạn văn + câu hỏi từ đề nguồn nếu khối còn rỗng.
   const reading = byTitle("Đọc: Giới thiệu bản thân");
-  if (exam && reading && !reading.contentItems.some((c) => c.type === "exam_practice")) {
-    await createContentItem(owner.userId, reading.id, {
-      type: "exam_practice",
-      payload: { examId: exam.id, title: "Luyện đọc HSK" },
-      orderIndex: reading.contentItems.length,
-    });
-    log('đã thêm khối "Bài luyện" vào bài "Đọc: Giới thiệu bản thân"');
+  let practiceExamId: string | null = null;
+  if (exam && reading) {
+    let block = reading.contentItems.find((c) => c.type === "exam_practice");
+    if (!block) {
+      const created = await createContentItem(owner.userId, reading.id, {
+        type: "exam_practice",
+        payload: { title: "Luyện đọc HSK" },
+        orderIndex: reading.contentItems.length,
+      });
+      block = { id: created.contentItemId, type: "exam_practice", payload: { title: "Luyện đọc HSK" } } as (typeof reading.contentItems)[number];
+      log('đã thêm khối "Bài luyện" vào bài "Đọc: Giới thiệu bản thân"');
+    } else if ((block.payload as { examId?: string } | null)?.examId) {
+      // Khối kiểu cũ (trỏ examId): đổi sang payload mới, tạo đề ẩn nếu chưa có.
+      await prisma.contentItem.update({ where: { id: block.id }, data: { payload: { title: "Luyện đọc HSK" } } });
+      log("đã đổi khối Bài luyện kiểu cũ sang kiểu mới");
+    }
+    practiceExamId = await getOwnedPracticeExamId(block.id);
+    if (!practiceExamId) {
+      practiceExamId = (await createOwnedPracticeExam(prisma, { contentItemId: block.id, courseId: course.id, actorUserId: owner.userId, title: "Luyện đọc HSK" })).examId;
+    }
+    void updateContentItem;
+    const have = await prisma.examQuestion.count({ where: { examId: practiceExamId } });
+    if (have === 0) {
+      const section = await prisma.examSection.findFirstOrThrow({ where: { examId: practiceExamId }, select: { id: true } });
+      const srcPassages = await prisma.examPassage.findMany({ where: { examId: exam.id }, orderBy: { orderIndex: "asc" } });
+      const srcQuestions = await prisma.examQuestion.findMany({ where: { examId: exam.id, type: { not: "essay" } }, orderBy: { orderInExam: "asc" } });
+      const pmap = new Map<string, string>();
+      for (const p of srcPassages) {
+        const n = await prisma.examPassage.create({
+          data: { examId: practiceExamId, title: p.title, contentJson: p.contentJson as object, orderIndex: p.orderIndex, audioPolicy: p.audioPolicy, maxAudioPlays: p.maxAudioPlays, revealMode: "all_at_once" },
+          select: { id: true },
+        });
+        pmap.set(p.id, n.id);
+      }
+      let i = 0;
+      for (const q of srcQuestions) {
+        const nq = await prisma.examQuestion.create({
+          data: { examId: practiceExamId, passageId: q.passageId ? (pmap.get(q.passageId) ?? null) : null, type: q.type, prompt: q.prompt, config: q.config as object, points: 1, orderInExam: i, orderInPassage: q.orderInPassage },
+          select: { id: true },
+        });
+        await prisma.examSectionItem.create({ data: { sectionId: section.id, examQuestionId: nq.id, orderInSection: i, points: 1 } });
+        i++;
+      }
+      log(`đã chép ${srcPassages.length} đoạn và ${srcQuestions.length} câu từ đề "${EXAM_TITLE}" vào Bài luyện`);
+    }
   } else if (!exam) {
     log(`BỎ QUA Bài luyện: không thấy đề đã xuất bản "${EXAM_TITLE}"`);
   }
@@ -154,10 +195,10 @@ async function main() {
       await setGoal(learner.id, { courseId: course.id, framework: "HSK", targetLevel: "HSK 3", targetDate: day, hoursPerWeek: 4 });
       log("đã đặt mục tiêu HSK 3 cho sv.demo.01");
     }
-    if (exam) {
-      const wrongBefore = await prisma.examPracticeAnswer.count({ where: { session: { userId: learner.id, examId: exam.id }, isCorrect: false } });
+    if (practiceExamId) {
+      const wrongBefore = await prisma.examPracticeAnswer.count({ where: { session: { userId: learner.id, examId: practiceExamId }, isCorrect: false } });
       if (wrongBefore === 0) {
-        const { sessionId } = await startPracticeSession(learner.id, exam.id, { all: true });
+        const { sessionId } = await startPracticeSession(learner.id, practiceExamId, { all: true });
         const s = await getPracticeSession(learner.id, sessionId);
         const q = s.questions.find((x) => x.type === "mcq");
         const wrong = (q?.config as { options?: Array<{ id: string }> } | undefined)?.options?.[1]?.id;

@@ -45,6 +45,7 @@ export async function getLegacyOralReadiness(
 ): Promise<LegacyOralReadiness> {
   const [disabled, byStatus, sessions, inProgress, submitted] = await Promise.all([
     isLegacyOralDisabled(db),
+    // owned-practice-ok: chỉ đề vấn đáp (kind = oral); đề có chủ luôn là đề viết.
     db.exam.groupBy({ by: ["status"], where: { kind: "oral" }, _count: { _all: true } }),
     db.examSession.findMany({
       where: { exam: { kind: "oral" }, status: { not: "closed" } },

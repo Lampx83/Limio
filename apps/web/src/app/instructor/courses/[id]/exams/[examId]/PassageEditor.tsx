@@ -35,6 +35,8 @@ interface Props {
     skills: Skill[];
   };
   onClose: () => void;
+  /** Bài luyện trong bài học: ẩn ô "Hiển thị" và "Skill liên quan" (không có nghĩa với bài luyện). */
+  practiceMode?: boolean;
 }
 
 const EMPTY: PassageInput = {
@@ -46,7 +48,7 @@ const EMPTY: PassageInput = {
   skills: [],
 };
 
-export default function PassageEditor({ mode, examId, passageId, initial, onClose }: Props) {
+export default function PassageEditor({ mode, examId, passageId, initial, onClose, practiceMode = false }: Props) {
   const router = useRouter();
   const [v, setV] = useState<PassageInput>(() =>
     initial
@@ -309,6 +311,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
             />
           </label>
         )}
+        {!practiceMode && (
         <label className="block">
           <span className="block text-sm font-medium">Hiển thị</span>
           <select
@@ -322,14 +325,17 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
             <option value="sequential">Theo từng phần (P2)</option>
           </select>
         </label>
+        )}
       </div>
 
+      {!practiceMode && (
       <div>
         <span className="block text-sm font-medium">Skill liên quan</span>
         <div className="mt-1">
           <SkillPicker value={v.skills} onChange={(s) => setV({ ...v, skills: s })} />
         </div>
       </div>
+      )}
 
       {error && (
         <div className="rounded border border-red-300 bg-red-50 p-2 text-sm text-red-800">

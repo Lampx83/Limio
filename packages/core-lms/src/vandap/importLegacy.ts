@@ -129,6 +129,7 @@ export async function listLegacyOralImportCandidates(
   actorUserId: string,
   db: PrismaClient = prisma,
 ): Promise<LegacyOralImportCandidate[]> {
+  // owned-practice-ok: chỉ đề vấn đáp bản cũ (kind = oral); đề có chủ luôn là đề viết.
   const exams = await db.exam.findMany({
     where: {
       kind: "oral",

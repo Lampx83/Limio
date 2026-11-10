@@ -98,6 +98,8 @@ interface Props {
     skills: Skill[];
   };
   onClose: () => void;
+  /** Bài luyện trong bài học: bỏ ô Điểm và Skill, không có dạng Tự luận (không tự kiểm tra được). */
+  practiceMode?: boolean;
 }
 
 function defaultState(passageId: string | null): State {
@@ -143,6 +145,7 @@ export default function QuestionEditor({
   questionId,
   initial,
   onClose,
+  practiceMode = false,
 }: Props) {
   const router = useRouter();
   const [v, setV] = useState<State>(() => {
@@ -198,7 +201,7 @@ export default function QuestionEditor({
     return (
       <div className="rounded-lg border-2 border-emerald-300 bg-emerald-50 p-4">
         <QuestionTypePicker
-          types={EXAM_PICKER_TYPES}
+          types={practiceMode ? EXAM_PICKER_TYPES.filter((t) => t !== "essay") : EXAM_PICKER_TYPES}
           onPick={(t) => {
             setV((prev) => ({ ...prev, type: t as QType }));
             setPickingType(false);
@@ -346,6 +349,7 @@ export default function QuestionEditor({
             </button>
           </div>
         </div>
+        {!practiceMode && (
         <label className="block">
           <span className="block text-sm font-medium">Điểm</span>
           <input
@@ -357,6 +361,7 @@ export default function QuestionEditor({
             className="mt-1 w-full rounded border border-default px-2 py-1.5 text-sm"
           />
         </label>
+        )}
       </div>
 
       {/* drag_drop_fill có ô "câu hỏi" riêng bên trong DragDropFillEditor
@@ -613,18 +618,20 @@ export default function QuestionEditor({
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
         />
         <p className="mt-1 text-caption text-faint">
-          Ở đề thi, chỉ hiện khi đề bật “Hiện kết quả sau khi nộp”. Ở “Bài luyện” nhúng trong bài học, hiện ngay khi
-          học viên bấm “Kiểm tra câu n”; nên chỉ rõ đoạn nào của bài đọc/bài nghe chứng minh đáp án. Để trống thì học
-          viên không thấy khối giải thích.
+          {practiceMode
+            ? "Hiện cho học viên ngay khi họ bấm “Kiểm tra câu n”; nên chỉ rõ đoạn nào của bài đọc/bài nghe chứng minh đáp án. Để trống thì học viên không thấy khối giải thích."
+            : "Ở đề thi, chỉ hiện khi đề bật “Hiện kết quả sau khi nộp”. Ở “Bài luyện” nhúng trong bài học, hiện ngay khi học viên bấm “Kiểm tra câu n”; nên chỉ rõ đoạn nào của bài đọc/bài nghe chứng minh đáp án. Để trống thì học viên không thấy khối giải thích."}
         </p>
       </div>
 
+      {!practiceMode && (
       <div>
         <span className="block text-sm font-medium">Skill liên quan (bắt buộc khi publish)</span>
         <div className="mt-1">
           <SkillPicker value={v.skills} onChange={(s) => setV({ ...v, skills: s })} />
         </div>
       </div>
+      )}
 
       {error && (
         <div className="rounded border border-red-300 bg-red-50 p-2 text-sm text-red-800">

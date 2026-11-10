@@ -1,3 +1,4 @@
+import { afterOwnedPracticeChanged } from "../courses/practiceBlock";
 import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
@@ -194,6 +195,7 @@ export async function createExamQuestion(
     return q;
   });
 
+  await afterOwnedPracticeChanged(actorUserId, examId, db);
   return { questionId: created.id };
 }
 
@@ -265,6 +267,7 @@ export async function updateExamQuestion(
       }
     }
   });
+  await afterOwnedPracticeChanged(actorUserId, q.examId, db);
 }
 
 export async function deleteExamQuestion(
@@ -276,6 +279,7 @@ export async function deleteExamQuestion(
   if (q.exam.status === "archived") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, q.exam, db);
   await db.examQuestion.delete({ where: { id: questionId } });
+  await afterOwnedPracticeChanged(actorUserId, q.examId, db);
 }
 
 /**
@@ -322,4 +326,5 @@ export async function reorderExamQuestions(
       });
     }
   });
+  await afterOwnedPracticeChanged(actorUserId, examId, db);
 }

@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { FileCheck2, FileUp } from "lucide-react";
 import { parseVideoUrl } from "@/lib/videoUrl";
 import { apiUrl } from "@/lib/apiUrl";
 import { AUDIO_MAX_BYTES, AUDIO_UPLOAD_ACCEPT } from "@/lib/lessonAudio";
 import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
-import PracticeBlockFields from "./PracticeBlockFields";
 import LessonFileUploadPanel from "./LessonFileUploadPanel";
 import {
   dialogueEditorFromPayload,
@@ -148,6 +147,7 @@ export default function AddContentItemForm({
   richtextMode?: "ai" | "wysiwyg";
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(embedded);
 
   function close() {
@@ -173,7 +173,6 @@ export default function AddContentItemForm({
   // URL khác thì bỏ (không còn đúng file đó nữa).
   const [fileMeta, setFileMeta] = useState<{ sizeBytes: number; mimeType: string } | null>(null);
   const [linkTitle, setLinkTitle] = useState("");
-  const [practiceExamId, setPracticeExamId] = useState("");
   const [audioTranscript, setAudioTranscript] = useState("");
   const [audioShowTranscript, setAudioShowTranscript] = useState(true);
   const [vocabValue, setVocabValue] = useState<VocabEditorValue>(() => vocabEditorFromPayload(null));
@@ -486,12 +485,8 @@ export default function AddContentItemForm({
         break;
       }
       case "exam_practice":
-        if (!practiceExamId) {
-          setError("Hãy chọn một đề thi thử cho bài luyện.");
-          setBusy(false);
-          return;
-        }
-        payload = { examId: practiceExamId, title: linkTitle.trim() || undefined };
+        // Nội dung (đoạn văn, câu hỏi) soạn ở editor riêng sau khi tạo khối; ở đây chỉ có tiêu đề.
+        payload = { title: linkTitle.trim() || undefined };
         break;
       case "scorm":
         if (!scormPackageId) {
@@ -535,8 +530,14 @@ export default function AddContentItemForm({
     });
     setBusy(false);
     if (res.ok) {
+      const created = (await res.json().catch(() => ({}))) as { contentItemId?: string };
       reset();
       close();
+      // Bài luyện vừa tạo chưa có câu nào: mở thẳng editor riêng để giảng viên đưa học liệu lên.
+      if (type === "exam_practice" && created.contentItemId) {
+        router.push(`${pathname}/bai-luyen/${created.contentItemId}`);
+        return;
+      }
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
@@ -835,7 +836,19 @@ export default function AddContentItemForm({
       {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
       {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
       {type === "exam_practice" && (
-        <PracticeBlockFields lessonId={lessonId} examId={practiceExamId} title={linkTitle} onExamId={setPracticeExamId} onTitle={setLinkTitle} />
+        <div className="space-y-2">
+          <input
+            value={linkTitle}
+            onChange={(e) => setLinkTitle(e.target.value)}
+            maxLength={200}
+            placeholder="Tiêu đề bài luyện (không bắt buộc)"
+            className="input"
+            aria-label="Tiêu đề bài luyện"
+          />
+          <p className="text-meta text-muted">
+            Sau khi lưu, thầy/cô soạn đoạn văn, âm thanh và câu hỏi trong trình soạn bài luyện riêng.
+          </p>
+        </div>
       )}
 
       {type === "audio" && (

@@ -40,7 +40,7 @@ export default async function InstructorExamsHubPage() {
   const courseById = new Map(ownedCourses.map((c) => [c.id, c]));
 
   const exams = await prisma.exam.findMany({
-    where: {
+    where: { ownerContentItemId: null,
       kind: "written",
       OR: [
         ...(courseIds.length > 0 ? [{ courseId: { in: courseIds } }] : []),

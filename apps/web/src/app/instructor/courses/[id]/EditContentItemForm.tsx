@@ -31,7 +31,6 @@ const PdfViewer = dynamic(() => import("@/components/PdfViewer"), {
 });
 
 import { DialogueEditor, VocabListEditor } from "./LangBlockEditors";
-import PracticeBlockFields from "./PracticeBlockFields";
 import LessonFileUploadPanel from "./LessonFileUploadPanel";
 import {
   dialogueEditorFromPayload,
@@ -98,7 +97,6 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
       : null,
   );
   const [linkTitle, setLinkTitle] = useState<string>(String(initial.title ?? ""));
-  const [practiceExamId, setPracticeExamId] = useState<string>(String(initial.examId ?? ""));
   const [htmlBlockBody, setHtmlBlockBody] = useState<string>(
     String(initial.body ?? ""),
   );
@@ -275,12 +273,7 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
         };
         break;
       case "exam_practice":
-        if (!practiceExamId) {
-          setError("Hãy chọn một đề thi thử cho bài luyện.");
-          setBusy(false);
-          return;
-        }
-        payload = { examId: practiceExamId, title: linkTitle.trim() || undefined };
+        payload = { title: linkTitle.trim() || undefined };
         break;
       case "scorm":
         payload = {
@@ -513,7 +506,14 @@ export default function EditContentItemForm({ item, lessonId, onClose }: Props) 
       {type === "vocab_list" && <VocabListEditor value={vocabValue} onChange={setVocabValue} />}
       {type === "dialogue" && <DialogueEditor value={dialogueValue} onChange={setDialogueValue} />}
       {type === "exam_practice" && (
-        <PracticeBlockFields lessonId={lessonId} examId={practiceExamId} title={linkTitle} onExamId={setPracticeExamId} onTitle={setLinkTitle} />
+        <input
+          value={linkTitle}
+          onChange={(e) => setLinkTitle(e.target.value)}
+          maxLength={200}
+          placeholder="Tiêu đề bài luyện (không bắt buộc)"
+          className="input"
+          aria-label="Tiêu đề bài luyện"
+        />
       )}
 
       {type === "audio" && (

@@ -618,21 +618,19 @@ chưa nhờ AI được. Phần dưới đây là đường của PDF, .txt và 
   (Không gán, Nghe, Nói, Đọc, Viết) và học viên có trang "Hồ sơ 4 kỹ năng" (chỉ nhãn Cần ôn / Nên luyện thêm /
   Vững, không hiện %), khối "Luyện hôm nay". Flashcard "Ôn từ vựng" (lịch ôn cách quãng) không phụ thuộc chế
   độ này.
-- **Bài luyện** (LANG đợt 3b, mới; đã đối chiếu mã 2026-11-09): trong bài học, "+ Thêm hoạt động/tài nguyên" có ô
-  **"Bài luyện"**. Chọn một **đề thi thử đã xuất bản của chính khoá** ở ô "Đề thi thử" (đề khoá khác, đề nháp hoặc
-  đề thi thường không chọn được; đề đang tắt "Cho luyện đề" vẫn chọn được và ô ghi chú rõ), có thể đặt "Tiêu đề bài
-  luyện" (trống thì dùng tên đề). Đề tạo ở mục Đề thi ("Tạo đề thi thử từ khung"), soạn đoạn văn và câu hỏi như đề
-  thi thử. Học viên ở vỏ Limio Language thấy bài luyện **ngay trong trang bài**: đoạn văn bên trái và câu hỏi bên
-  phải ("Chia đôi", có nút "Một cột" để đổi; dưới màn hình lớn luôn xếp dọc), chọn đáp án thì tự lưu, bấm "Kiểm tra
-  câu n" để thấy "Chính xác" hoặc "Chưa chính xác" kèm giải thích của giảng viên (nhập ở câu hỏi của đề); "Kết thúc
-  bài luyện" hiện tóm tắt đúng theo kỹ năng và nút "Luyện lại". Bài luyện **không vào sổ điểm**. Với khoá bật "Cá nhân
-  hoá học tập", **lần kiểm tra đầu tiên của mỗi câu** (làm trong bài học) được tính là một lượt luyện của kỹ năng bài đó:
-  sửa đáp án rồi kiểm tra lại không tính thêm, câu tự luận không tính, và nhãn Cần ôn / Nên luyện / Vững ở "Hồ sơ
-  kỹ năng" chỉ hiện khi kỹ năng đã đủ 5 lượt. Luyện đề làm ở trang riêng (không qua khối "Bài luyện") không làm đổi nhãn.
-  Học viên có thêm trang **"Lịch ôn tập"** trong menu của Limio Language: thẻ từ vựng đến hạn hôm nay, lịch 7 ngày tới,
-  các câu luyện lần gần nhất làm sai ("Làm lại") và gợi ý bài nên luyện. Học viên ở vỏ Limio thường thấy một thẻ dẫn sang trang luyện đề của đề đó. Khi nhân đôi
-  cả khoá, khối "Bài luyện" **không** được chép sang (đề thuộc khoá gốc), thầy/cô thêm lại ở khoá mới; nhân đôi một
-  bài trong cùng khoá thì giữ.
+- **Bài luyện** (LANG, soạn bằng editor riêng; đã đối chiếu mã 2026-11-10): Bài luyện là **học liệu nằm trong bài**, không phải
+  đề thi, nên **không** qua mục Đề thi. Trong bài, "+ Thêm hoạt động/tài nguyên" có ô **"Bài luyện"**: chỉ hỏi "Tiêu đề bài
+  luyện (không bắt buộc)", sau khi lưu mở thẳng trang **"Soạn bài luyện"** (`/instructor/courses/{id}/bai-luyen/{khối}`); hàng khối
+  trong bài có tóm tắt "n đoạn · m câu hỏi" (hoặc cảnh báo "Chưa có câu hỏi — học viên chưa thấy bài luyện này") và nút **"Soạn bài
+  luyện"**. Trang soạn có "Thêm đoạn văn / bài nghe" (tiêu đề, nội dung, ảnh, âm thanh tải lên, "Phát audio": nghe tự do /
+  giới hạn số lần / nghe 1 lần), mỗi đoạn có "Thêm câu hỏi vào đoạn này"; ngoài đoạn còn "Thêm câu hỏi không thuộc đoạn". Dạng câu:
+  một đáp án, nhiều đáp án, Đúng/Sai/Không có thông tin, điền khuyết, trả lời ngắn, sắp xếp, ghép cặp, số, kéo thả điền (**không có
+  tự luận**; không có ô điểm, skill, giờ, phần). Mỗi câu có ô **"Giải thích đáp án"** hiện cho học viên sau khi kiểm tra. Mũi tên lên/
+  xuống đổi thứ tự đoạn và câu; "Sửa", "Xoá" (xoá đoạn hoặc câu có hộp xác nhận nói rõ kết quả luyện của học viên cũng mất); nút
+  **"Xem trước"** mở đúng giao diện học viên, chấm được nhưng không lưu gì. Học viên chỉ thấy bài luyện khi có ít nhất một câu và
+  làm ngay trong trang bài: đoạn văn bên cạnh câu hỏi, bấm "Kiểm tra câu n". Bài luyện **không vào sổ điểm**. Với khoá bật "Cá nhân
+  hoá", lần kiểm tra đầu của mỗi câu được tính vào nhãn kỹ năng của **bài chứa khối** (nhãn chỉ hiện khi đủ 5 lượt). Nhân bản
+  bài hoặc nhân bản khoá **sao chép cả Bài luyện** (bản sao độc lập với bản gốc). Xoá khối xoá luôn nội dung và kết quả luyện.
 - **Thi thử** (HSK, IELTS, TOEIC, Tuỳ chỉnh): trang đề thi của khoá (`/instructor/courses/{id}/exams/new`) có
   "Tạo đề thi thử từ khung" — chọn khung, nhập "Tiêu đề đề thi", "Tạo đề". Tab Nội dung của đề có khối "Đề thi
   thử (HSK · IELTS · TOEIC…)" (giờ riêng từng phần, không quay lại phần đã nộp), hai công tắc "Cho thi thử" và

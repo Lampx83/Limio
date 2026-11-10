@@ -26,8 +26,8 @@ export default async function AssessmentStartPage() {
         bank: { OR: [{ ownerUserId: userId }, { course: myCourses }] },
       },
     }),
-    prisma.exam.count({ where: { kind: "written", status: "published", course: myCourses } }),
-    prisma.exam.count({ where: { kind: "written", status: "draft", course: myCourses } }),
+    prisma.exam.count({ where: { ownerContentItemId: null, kind: "written", status: "published", course: myCourses } }),
+    prisma.exam.count({ where: { ownerContentItemId: null, kind: "written", status: "draft", course: myCourses } }),
     // Không tính ca mặc định do hệ thống tự dựng khi publish: đó chưa phải "đã tổ chức".
     prisma.examSession.count({
       where: { exam: { course: myCourses }, NOT: { code: "CA-DEFAULT" } },

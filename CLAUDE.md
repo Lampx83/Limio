@@ -136,6 +136,8 @@ Cùng một khái niệm chỉ có **một** tên trong chuỗi hiển thị (co
 | **Trưởng đợt** | admin (của đợt) | Người sửa được đợt thi; khác admin nền tảng |
 | **Chốt** | import (câu ngẫu nhiên vào đề) | Cố định bộ câu rút từ ngân hàng vào đề |
 
+**Bài luyện** (khối trong bài học, Limio Language) **không phải Đề thi**: soạn ở editor riêng ("Soạn bài luyện"), không có giờ/phần/trọng số, và không bao giờ hiện ở mục Đề thi. Nội dung nằm trong một đề ẩn (`Exam.ownerContentItemId`); mọi truy vấn **liệt kê/đếm** `exam` phải loại đề có chủ (`ownerContentItemId: null` hoặc ghi chú `owned-practice-ok: <lý do>`), có test quét ở `apps/web/src/lib/ownedPracticeExcluded.test.ts`.
+
 Trạng thái đợt thi (Nháp/Đang mở/Đã đóng/Lưu trữ) **chỉ để phân loại**, không tự mở hay đóng ca — giờ vào thi do từng ca quyết định; giao diện phải nói đúng điều đó.
 
 ### 4.7. Index nóng (xem spec §7.3)

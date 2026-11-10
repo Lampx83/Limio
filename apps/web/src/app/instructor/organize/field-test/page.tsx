@@ -25,7 +25,7 @@ export default async function OrganizeFieldTestPage({
   });
 
   const papers = await prisma.exam.findMany({
-    where: {
+    where: { ownerContentItemId: null,
       courseId: { in: courses.map((c) => c.id) },
       status: { not: "archived" },
       // KHÔNG lọc theo purpose. Thử nghiệm là tính chất của BUỔI THI, nên

@@ -59,7 +59,20 @@ function isAnswered(v: AnswerValue): boolean {
   return false;
 }
 
-export default function LessonPractice({ slug, embed, blockTitle, lessonId }: { slug: string; embed: PracticeEmbed; blockTitle?: string; lessonId?: string }) {
+export default function LessonPractice({
+  slug,
+  embed,
+  blockTitle,
+  lessonId,
+  preview = false,
+}: {
+  slug: string;
+  embed: PracticeEmbed;
+  blockTitle?: string;
+  lessonId?: string;
+  /** Xem trước của giảng viên: chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án, không ghi sự kiện. */
+  preview?: boolean;
+}) {
   const { questions, passages } = embed;
   const steps = useMemo(() => buildSteps(questions), [questions]);
   const numberOf = useMemo(() => new Map(questions.map((q, i) => [q.id, i + 1])), [questions]);
@@ -102,6 +115,7 @@ export default function LessonPractice({ slug, embed, blockTitle, lessonId }: { 
 
   /** Tạo buổi luyện nếu chưa có (một lần, kể cả khi hai thao tác chạy song song). */
   const ensureSession = useCallback(async (): Promise<string> => {
+    if (preview) return "preview";
     if (sessionRef.current) return sessionRef.current;
     if (!startingRef.current) {
       startingRef.current = (async () => {
@@ -120,10 +134,11 @@ export default function LessonPractice({ slug, embed, blockTitle, lessonId }: { 
       });
     }
     return startingRef.current;
-  }, [embed.examId]);
+  }, [embed.examId, preview]);
 
   const save = useCallback(
     async (qid: string, v: AnswerValue) => {
+      if (preview) return; // xem trước: không lưu đáp án
       setSaveState("saving");
       try {
         const sid = await ensureSession();
@@ -140,7 +155,7 @@ export default function LessonPractice({ slug, embed, blockTitle, lessonId }: { 
         setError(err.save);
       }
     },
-    [ensureSession],
+    [ensureSession, preview],
   );
 
   // Nạp lại kết quả của các câu đã kiểm tra từ lần trước (gọi kiểm tra lại là idempotent ở máy chủ).
@@ -187,7 +202,13 @@ export default function LessonPractice({ slug, embed, blockTitle, lessonId }: { 
       clearTimeout(timers.current[qid]);
       await save(qid, answersRef.current[qid] ?? null);
       const sid = await ensureSession();
-      const res = await fetch(apiUrl(`/api/practice-sessions/${sid}/check/${qid}`), checkInit);
+      const res = preview
+        ? await fetch(apiUrl(`/api/practice-preview/${embed.examId}/check/${qid}`), {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ answerJson: answersRef.current[qid] ?? null }),
+          })
+        : await fetch(apiUrl(`/api/practice-sessions/${sid}/check/${qid}`), checkInit);
       if (!res.ok) {
         setError(res.status === 409 ? "Hãy trả lời câu này trước khi kiểm tra." : err.check);
         return;
@@ -427,13 +448,17 @@ export default function LessonPractice({ slug, embed, blockTitle, lessonId }: { 
             Tiếp →
           </button>
         </div>
-        <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-primary btn-sm disabled:opacity-50">
-          {finishing ? "Đang kết thúc…" : "Kết thúc bài luyện"}
-        </button>
+        {!preview && (
+          <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-primary btn-sm disabled:opacity-50">
+            {finishing ? "Đang kết thúc…" : "Kết thúc bài luyện"}
+          </button>
+        )}
       </div>
       <p className="text-caption mt-2 text-muted" aria-live="polite">
-        {saveState === "error" ? "Chưa lưu được" : "Đã lưu câu trả lời"} · {answeredCount} / {questions.length} câu
-        {sessionId ? "" : answeredCount === 0 ? " (bài luyện bắt đầu khi bạn chọn đáp án đầu tiên)" : ""}
+        {preview
+          ? `Xem trước: không lưu đáp án · ${answeredCount} / ${questions.length} câu`
+          : `${saveState === "error" ? "Chưa lưu được" : "Đã lưu câu trả lời"} · ${answeredCount} / ${questions.length} câu`}
+        {preview || sessionId ? "" : answeredCount === 0 ? " (bài luyện bắt đầu khi bạn chọn đáp án đầu tiên)" : ""}
       </p>
     </section>
   );

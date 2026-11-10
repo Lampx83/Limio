@@ -33,7 +33,7 @@ export default async function OrganizeFormalPage({
   });
 
   const papers = await prisma.exam.findMany({
-    where: {
+    where: { ownerContentItemId: null,
       status: { not: "archived" },
       // Vấn đáp AI mở qua Link thi nhanh — chưa có phòng/giám thị nhiều người.
       kind: "written",

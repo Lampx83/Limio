@@ -28,7 +28,7 @@ export async function listMockExamsForLearner(
 ): Promise<MockExamCard[]> {
   if (!(await isUserEnrolled(userId, courseId, db))) throw new ExamError("not_enrolled");
   const exams = await db.exam.findMany({
-    where: {
+    where: { ownerContentItemId: null,
       courseId,
       mockMode: true,
       status: "published",

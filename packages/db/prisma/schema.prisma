@@ -877,6 +877,8 @@ model ContentItem {
   flashcardStates FlashcardState[]
   lessonActivity  LessonActivity?
   versions        ContentItemVersion[]
+  /// LANG — khối "Bài luyện" sở hữu một bản đề ẩn chứa đoạn văn và câu hỏi của nó (Exam.ownerContentItemId).
+  ownedExam       Exam?                @relation("ContentItemOwnedExam")
 
   @@index([lessonId])
 }
@@ -3665,6 +3667,9 @@ model Exam {
   // mã/link mời). Khi null, createdById là chủ sở hữu duy nhất (xem CHECK
   // constraint exam_courseid_or_createdby_check ở migration).
   courseId               String?
+  /// LANG — khác null = đây là NỘI DUNG của một khối "Bài luyện" trong bài học (không phải đề thi): giảng viên soạn ở editor
+  /// riêng, không thấy nó ở mục Đề thi. Xoá khối thì xoá đề này theo. Xem docs/tieu-chi/limio-language-bai-luyen-editor.md.
+  ownerContentItemId     String?             @unique
   title                  String
   // A6.6 (UI) — với kind=oral, đây CŨNG là nội dung hiện ở panel bên phải
   // phòng vấn đáp (richtext, cho phép chèn ảnh) — gộp làm 1 với mô tả chung,
@@ -3745,6 +3750,7 @@ model Exam {
   updatedAt              DateTime            @updatedAt
 
   course           Course?               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  ownerContentItem ContentItem? @relation("ContentItemOwnedExam", fields: [ownerContentItemId], references: [id], onDelete: Cascade)
   createdBy        User?                 @relation("ExamCreator", fields: [createdById], references: [id], onDelete: SetNull)
   wizardConfig     ExamWizardConfig?
   blueprint        ExamBlueprint?

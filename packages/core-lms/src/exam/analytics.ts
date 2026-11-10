@@ -370,6 +370,7 @@ export async function computeAllAnalytics(
   durationMs: number;
 }> {
   const t0 = Date.now();
+  // owned-practice-ok: chỉ đề có lượt thi (attempts); đề có chủ (Bài luyện) chỉ có phiên luyện, không có lượt thi.
   const exams = await db.exam.findMany({
     where: { attempts: { some: { status: { in: ["submitted", "auto_submitted", "graded"] } } } },
     select: { id: true },

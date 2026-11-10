@@ -7,6 +7,7 @@ import { createCourse } from "../../courses/courses";
 import { createModule } from "../../courses/modules";
 import { createLesson } from "../../courses/lessons";
 import { createContentItem } from "../../courses/contents";
+import { getOwnedPracticeExamId } from "../../courses/practiceBlock";
 import {
   abandonPracticeSession,
   checkPracticeAnswer,
@@ -46,13 +47,14 @@ async function setup(tag: string) {
   const m = await createModule(owner, c.courseId, { title: "U1", orderIndex: 0 });
   const withBlock = await createLesson(owner, m.moduleId, { title: "Có bài luyện", orderIndex: 0 });
   const noBlock = await createLesson(owner, m.moduleId, { title: "Không có", orderIndex: 1 });
-  const { examId } = await createExam(owner, c.courseId, { title: `Đề ${tag}`, durationMin: 30, mockMode: true });
-  const sec = await createSection(owner, examId, { title: "Đọc", durationMin: 10, languageSkill: "reading" });
+  // Bài luyện sở hữu đề ẩn (docs/tieu-chi/limio-language-bai-luyen-editor.md): tạo khối rồi thêm câu vào đề của khối.
+  const block = await createContentItem(owner, withBlock.lessonId, { type: "exam_practice", payload: { title: `Đề ${tag}` }, orderIndex: 0 });
+  const examId = (await getOwnedPracticeExamId(block.contentItemId))!;
+  const sec = await prisma.examSection.findFirstOrThrow({ where: { examId }, select: { id: true } });
+  await prisma.examSection.update({ where: { id: sec.id }, data: { languageSkill: "reading" } });
   const q1 = await createExamQuestion(owner, examId, { ...mcq("Câu 1"), sectionId: sec.id });
   const q2 = await createExamQuestion(owner, examId, { ...mcq("Câu 2"), sectionId: sec.id });
   const q3 = await createExamQuestion(owner, examId, { type: "essay", prompt: "Viết", config: {}, points: 5, sectionId: sec.id });
-  await publishExam(owner, examId);
-  const block = await createContentItem(owner, withBlock.lessonId, { type: "exam_practice", payload: { examId }, orderIndex: 0 });
   const learner = await user(`po-l-${tag}@e.com`);
   await enrollInCourse(learner, c.courseId);
   const { sessionId } = await startPracticeSession(learner, examId, { all: true });
@@ -138,16 +140,13 @@ describe("observePracticeAnswer", () => {
     expect((await observePracticeAnswer(s.learner, s.sessionId, s.q1, s.lessonId)).created).toBe(true);
   });
 
-  it("khối trỏ ĐỀ KHÁC thì không tính cho buổi luyện của đề này; hết quyền ghi danh thì không tính", async () => {
+  it("bài chứa khối của ĐỀ KHÁC thì không tính cho buổi luyện của đề này; hết quyền ghi danh thì không tính", async () => {
     const s = await setup("exam");
-    const { examId: other } = await createExam(s.owner, s.courseId, { title: "Đề khác", durationMin: 30, mockMode: true });
-    const sec = await createSection(s.owner, other, { title: "Đọc", durationMin: 10, languageSkill: "reading" });
-    await createExamQuestion(s.owner, other, { ...mcq("X"), sectionId: sec.id });
-    await publishExam(s.owner, other);
-    await prisma.contentItem.update({ where: { id: s.blockId }, data: { payload: { examId: other } } });
+    // Bài thứ hai có khối Bài luyện riêng (đề ẩn khác): quan sát qua bài đó không được tính cho đề của s.
+    const otherBlock = await createContentItem(s.owner, s.otherLessonId, { type: "exam_practice", payload: {}, orderIndex: 0 });
+    expect(await getOwnedPracticeExamId(otherBlock.contentItemId)).not.toBe(s.examId);
     await answerAndCheck(s, s.q1, RIGHT);
-    expect((await observePracticeAnswer(s.learner, s.sessionId, s.q1, s.lessonId)).created).toBe(false);
-    await prisma.contentItem.update({ where: { id: s.blockId }, data: { payload: { examId: s.examId } } });
+    expect((await observePracticeAnswer(s.learner, s.sessionId, s.q1, s.otherLessonId)).created).toBe(false);
     await prisma.enrollment.update({ where: { userId_courseId: { userId: s.learner, courseId: s.courseId } }, data: { status: "dropped" } });
     expect((await observePracticeAnswer(s.learner, s.sessionId, s.q1, s.lessonId)).created).toBe(false);
   });

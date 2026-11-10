@@ -25,7 +25,7 @@ export default async function OrganizeQuickPage({
   });
 
   const papers = await prisma.exam.findMany({
-    where: {
+    where: { ownerContentItemId: null,
       courseId: { in: courses.map((c) => c.id) },
       status: { not: "archived" },
       purpose: "assessment",
