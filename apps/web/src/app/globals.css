@@ -1272,6 +1272,48 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   margin-top: 0.35rem;
 }
 
+/* Bảng trong nội dung bài học (trình soạn bài học và trang học viên): kẻ đủ đường dòng VÀ cột. Kiểu mặc định của `prose` chỉ kẻ ngang
+   giữa các dòng nên bảng khó đọc (không thấy ranh giới cột). Bảng của Đoạn văn có kiểu riêng (.passage-table) nên loại ra. */
+.prose table:not(.passage-table),
+.ProseMirror table:not(.passage-table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+.prose table:not(.passage-table) th,
+.prose table:not(.passage-table) td,
+.ProseMirror table:not(.passage-table) th,
+.ProseMirror table:not(.passage-table) td {
+  position: relative;
+  border: 1px solid rgb(var(--border));
+  padding: 0.4rem 0.75rem;
+  vertical-align: top;
+  min-width: 4rem;
+}
+.prose table:not(.passage-table) th,
+.ProseMirror table:not(.passage-table) th {
+  text-align: left;
+  font-weight: 600;
+  background: rgb(var(--surface-muted));
+}
+.prose table:not(.passage-table) p,
+.ProseMirror table:not(.passage-table) p {
+  margin: 0;
+}
+
+/* Kéo đổi độ rộng cột trong trình soạn bài học (Table resizable của Tiptap): vạch xanh ở đường kẻ đang kéo, con trỏ đổi thành ↔. */
+.ProseMirror .column-resize-handle {
+  @apply bg-brand-400;
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  pointer-events: none;
+}
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
 /* Thẻ audio/video trong trình soạn Đoạn văn (lib/passageDoc.ts): khối không sửa chữ được, chọn rồi xoá như một phần tử. */
 .passage-media-chip {
   @apply my-2 flex items-center gap-2 rounded-lg border border-token px-3 py-2 text-sm;

@@ -37,7 +37,8 @@ export const EXTENSIONS = [
     HTMLAttributes: { class: "max-w-full h-auto rounded-md" },
   }),
   HeadingId,
-  Table.configure({ resizable: false }),
+  // Kéo đường kẻ cột bằng chuột để đổi độ rộng; độ rộng lưu trong ô (data-colwidth + <colgroup>) nên học viên thấy đúng như đã chỉnh.
+  Table.configure({ resizable: true, lastColumnResizable: true, cellMinWidth: 60 }),
   TableRow,
   TableHeader,
   TableCell,
