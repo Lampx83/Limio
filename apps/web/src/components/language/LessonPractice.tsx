@@ -219,7 +219,7 @@ export default function LessonPractice({
    * Dùng bản ghi âm làm câu trả lời: máy chủ chuyển chữ, lưu bản ghi và câu trả lời (đã xoá kết quả kiểm tra và góp ý cũ),
    * rồi trả bản chữ để điền vào ô. Ném `VoiceUseError(mã)` để ô giọng nói hiện lời nhắn đúng; ô gõ vẫn dùng được.
    */
-  async function useVoice(qid: string, file: File): Promise<void> {
+  async function useVoice(qid: string, file: File): Promise<AnswerValue> {
     if (preview) throw new VoiceUseError("preview");
     let sid: string;
     try {
@@ -242,27 +242,36 @@ export default function LessonPractice({
     const data = (await res.json().catch(() => null)) as { text?: unknown } | null;
     if (typeof data?.text !== "string" || data.text.trim() === "") throw new VoiceUseError("no_speech");
     clearTimeout(timers.current[qid]); // chữ gõ dở chưa kịp lưu không được ghi đè bản chữ vừa lưu
-    setAnswers((p) => ({ ...p, [qid]: { text: data.text as string, viaVoice: true } as AnswerValue }));
+    const spoken = { text: data.text as string, viaVoice: true } as AnswerValue;
+    setAnswers((p) => ({ ...p, [qid]: spoken }));
     setChecks((p) => without(p, qid));
     setFeedbacks((p) => without(p, qid));
     setFeedbackErrors((p) => without(p, qid));
     setAudioVer((p) => ({ ...p, [qid]: (p[qid] ?? 0) + 1 }));
     setSaveState("saved");
     setError(null);
+    return spoken;
   }
 
-  async function check(qid: string) {
+  /** Nút "Nhận xét bằng AI" của ngăn ghi âm: lấy bản chữ rồi kiểm tra luôn, học viên không phải bấm "Kiểm tra" thêm lần nữa. */
+  async function useVoiceThenCheck(qid: string, file: File, withFeedback: boolean): Promise<void> {
+    const spoken = await useVoice(qid, file);
+    if (withFeedback) await check(qid, spoken);
+  }
+
+  async function check(qid: string, answerNow?: AnswerValue) {
     setBusyCheck(qid);
     setError(null);
     try {
       clearTimeout(timers.current[qid]);
-      await save(qid, answersRef.current[qid] ?? null);
+      const answerJson = answerNow ?? answersRef.current[qid] ?? null; // sau khi nói, state chưa kịp cập nhật nên nhận đáp án trực tiếp
+      await save(qid, answerJson);
       const sid = await ensureSession();
       const res = preview
         ? await fetch(apiUrl(`/api/practice-preview/${embed.examId}/check/${qid}`), {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ answerJson: answersRef.current[qid] ?? null }),
+            body: JSON.stringify({ answerJson }),
           })
         : await fetch(apiUrl(`/api/practice-sessions/${sid}/check/${qid}`), checkInit);
       if (!res.ok) {
@@ -388,7 +397,8 @@ export default function LessonPractice({
             recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
             viaVoiceText={!!value && "viaVoice" in value && (value as { viaVoice?: unknown }).viaVoice === true}
             hasText={isAnswered(value)}
-            onUse={(file) => useVoice(qid, file)}
+            feedbackOn={aiOn && embed.checkEnabled && !preview}
+            onUse={(file, withFeedback) => useVoiceThenCheck(qid, file, withFeedback)}
           />
         )}
         {embed.checkEnabled && (

@@ -12,7 +12,8 @@
 
 - **Given** học viên ghi danh ở khoá ngoại ngữ, câu hỏi loại `essay`. **When** mở câu. **Then** cạnh ô gõ có nút **"Trả lời bằng giọng nói"** (biểu tượng micro). Gõ chữ vẫn dùng được như cũ.
 - Bấm nút: xin quyền micro (từ chối thì hiện lời nhắn "Hãy gõ câu trả lời, hoặc cho phép micro trong trình duyệt"); ghi âm tối đa **3 phút**, có Dừng, Nghe lại, Ghi lại, hiện thời lượng.
-- Bấm **"Dùng bản ghi này"**: bản ghi được chuyển thành chữ (Whisper, đúng `language` của khoá) và **điền vào ô trả lời** kèm nhãn "Bản chữ từ giọng nói, máy có thể nghe sai: hãy đọc lại và sửa". Học viên sửa được; câu trả lời được lưu như mọi câu trả lời gõ.
+- Câu có góp ý AI: nút chính là **"Nhận xét bằng AI"** — một lần bấm vừa chuyển bản ghi thành chữ vừa kiểm tra và hiện góp ý (không phải bấm "Kiểm tra" thêm); có lối phụ **"Chỉ lấy bản chữ để tự sửa trước"** cho ai muốn đọc lại bản chữ trước khi AI nhận xét. Câu tắt góp ý AI: nút chính là **"Chuyển thành chữ"**, chỉ lấy bản chữ.
+- Lấy bản chữ: bản ghi được chuyển thành chữ (Whisper, đúng `language` của khoá) và **điền vào ô trả lời** kèm nhãn "Bản chữ từ giọng nói, máy có thể nghe sai: hãy đọc lại và sửa". Học viên sửa được; câu trả lời được lưu như mọi câu trả lời gõ.
 - **Lưu bản ghi âm CUỐI CÙNG của học viên** (thầy chốt 11/11/2026; các lần ghi trước bị thay thế và xoá file): file ở lớp `private` của kho, học viên **nghe lại** được ngay trong thẻ câu hỏi; xoá khi xoá tài khoản và có trong export dữ liệu cá nhân; tính vào hạn mức dung lượng như bài nộp. Vì có bản ghi nên góp ý được dùng **số liệu nhịp nói do Whisper đo** (tốc độ, quãng nghỉ dài) cho tiêu chí Lưu loát; vẫn **không chấm phát âm**.
 - Trước lần dùng đầu hiện một dòng: "Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ." Không tự gửi gì khi chưa bấm.
 - Trừ ví token AI của **học viên** theo mức thực dùng; hết hạn mức hoặc chưa cấu hình AI thì báo rõ, ô gõ chữ vẫn dùng được, không trừ token.

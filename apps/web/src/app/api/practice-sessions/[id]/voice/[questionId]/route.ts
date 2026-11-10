@@ -33,7 +33,7 @@ const MIME_TO_EXT: Record<string, string> = {
  * Bài luyện nhúng, câu mở: học viên trả lời bằng giọng nói. Multipart `file` (bản ghi âm).
  * Thứ tự: kiểm quyền và cấu hình câu (chưa đọc tệp) → kích thước và định dạng → chuyển chữ (trừ ví token của HỌC VIÊN) →
  * ghi tệp vào kho `private` → lưu câu trả lời + bản ghi (thay bản cũ) → xoá tệp cũ. Bản ghi chỉ rời trình duyệt khi học viên
- * bấm "Dùng bản ghi này". Xem thử của giảng viên không đi qua route này.
+ * bấm "Chuyển thành chữ". Xem thử của giảng viên không đi qua route này.
  */
 export async function POST(req: Request, { params }: { params: { id: string; questionId: string } }) {
   const userId = await requireUserId();

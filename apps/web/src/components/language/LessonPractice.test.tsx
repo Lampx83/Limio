@@ -570,25 +570,26 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
   });
 
   async function record() {
-    await click(button(/Trả lời bằng giọng nói/));
-    await click(button(/^\s*Ghi âm/));
+    await click(button(/Trả lời bằng giọng nói/)); // bấm là ghi luôn
     await flush();
     await click(button(/Dừng/));
     await flush();
   }
 
-  it("ghi âm → Dùng bản ghi này: tạo buổi, gửi tệp, điền ô trả lời, hiện nhãn bản chữ và trình phát; lần sau không nhắc OpenAI nữa", async () => {
+  it("ghi âm → Chỉ lấy bản chữ: tạo buổi, gửi tệp, điền ô trả lời, hiện nhãn bản chữ và trình phát; lần sau không nhắc OpenAI nữa", async () => {
     await render(essayEmbed());
     await click(button(/Trả lời bằng giọng nói/));
-    expect(text()).toContain("Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ.");
-    expect(button(/Dùng bản ghi này/)).toBeUndefined(); // chưa ghi thì chưa có nút
-    expect(calls).toHaveLength(0); // không tự gửi gì khi chưa bấm
-    await click(button(/^\s*Ghi âm/));
     await flush();
+    expect(text()).toContain("Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ.");
+    expect(button(/Trả lời bằng giọng nói/)).toBeUndefined(); // không còn nút thứ hai nối tiếp
+    expect(button(/^\s*Ghi âm/)).toBeUndefined(); // đã ghi rồi, chỉ còn Dừng
+    expect(button(/Dừng/)).toBeDefined();
+    expect(button(/Chỉ lấy bản chữ/)).toBeUndefined(); // chưa ghi xong thì chưa có nút
+    expect(calls).toHaveLength(0); // không tự gửi gì khi chưa bấm
     await click(button(/Dừng/));
     await flush();
     expect(button(/Ghi lại/)).toBeDefined();
-    await click(button(/Dùng bản ghi này/));
+    await click(button(/Chỉ lấy bản chữ/));
     await flush();
     expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual(["POST /api/exams/ex1/practice", "POST /api/practice-sessions/s1/voice/e1"]);
     expect(calls[1]!.body).toEqual({ file: { name: "ghi-am.webm", type: "audio/webm" } });
@@ -609,7 +610,7 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     expect(text()).not.toContain("Bản chữ từ giọng nói");
     await record();
     expect(text()).toContain("Bản chữ từ giọng nói sẽ thay phần bạn đã gõ.");
-    await click(button(/Dùng bản ghi này/));
+    await click(button(/Chỉ lấy bản chữ/));
     await flush();
     await typeInto(textarea(), "I went to Hanoi last year and it was great.");
     await flush(600);
@@ -620,7 +621,7 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     await render(essayEmbed());
     await record();
     await typeInto(textarea(), "half typed"); // hẹn lưu sau 500 ms
-    await click(button(/Dùng bản ghi này/));
+    await click(button(/Chỉ lấy bản chữ/));
     await flush(1000);
     expect(calls.filter((c) => c.method === "PUT")).toHaveLength(0);
     expect(textarea().value).toBe("I went to Hanoi last year.");
@@ -630,7 +631,7 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     recorderMime = "audio/mp4";
     await render(essayEmbed());
     await record();
-    await click(button(/Dùng bản ghi này/));
+    await click(button(/Chỉ lấy bản chữ/));
     await flush();
     expect(calls.find((c) => c.url.endsWith("/voice/e1"))!.body).toEqual({ file: { name: "ghi-am.m4a", type: "audio/mp4" } });
   });
@@ -649,7 +650,7 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     await record();
     for (const [status, error, snippet] of cases) {
       handlers["POST /api/practice-sessions/s1/voice/e1"] = () => ({ status, json: { error } });
-      await click(button(/Dùng bản ghi này/));
+      await click(button(/Chỉ lấy bản chữ/));
       await flush();
       expect(host.querySelector('[data-testid="lp-voice-error"]')!.textContent).toContain(snippet);
       expect(textarea().value).toBe("my own words");
@@ -667,7 +668,6 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     });
     await render(essayEmbed());
     await click(button(/Trả lời bằng giọng nói/));
-    await click(button(/^\s*Ghi âm/));
     await flush();
     expect(host.querySelector('[role="alert"]')!.textContent).toContain("Chưa có quyền micro");
     await typeInto(textarea(), "typed answer");
@@ -679,9 +679,49 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     await render(essayEmbed());
     await record();
     vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("offline"))));
-    await click(button(/Dùng bản ghi này/));
+    await click(button(/Chỉ lấy bản chữ/));
     await flush();
     expect(host.querySelector('[data-testid="lp-voice-error"]')!.textContent).toContain("Chưa dùng được bản ghi này");
-    expect(button(/Dùng bản ghi này/)).toBeDefined();
+    expect(button(/Chỉ lấy bản chữ/)).toBeDefined();
+  });
+  it("câu có góp ý AI: nút chính là \"Nhận xét bằng AI\", lấy bản chữ rồi kiểm tra luôn và hiện góp ý, không cần bấm Kiểm tra", async () => {
+    handlers["POST /api/practice-sessions/s1/check/e1"] = () => manualCheck({ feedback: FEEDBACK });
+    await render(essayEmbed());
+    await record();
+    expect(button(/^\s*Chuyển thành chữ/)).toBeUndefined();
+    await click(button(/Nhận xét bằng AI/));
+    await flush();
+    expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
+      "POST /api/exams/ex1/practice",
+      "POST /api/practice-sessions/s1/voice/e1",
+      "PUT /api/practice-sessions/s1/answers/e1",
+      "POST /api/practice-sessions/s1/check/e1",
+    ]);
+    expect(calls[2]!.body).toEqual({ answerJson: { text: "I went to Hanoi last year.", viaVoice: true } });
+    expect(textarea().value).toBe("I went to Hanoi last year.");
+    expect(host.querySelector('[data-testid="lp-feedback"]')!.textContent).toContain("A clear answer with good ideas.");
+    expect(host.querySelector('[data-testid="lp-voice-panel"]')).toBeNull();
+  });
+
+  it("câu tắt góp ý AI: nút chính vẫn là \"Chuyển thành chữ\", không tự kiểm tra, không có lối \"Chỉ lấy bản chữ\"", async () => {
+    await render(essayEmbed({}, { aiFeedback: false }));
+    await record();
+    expect(button(/Nhận xét bằng AI/)).toBeUndefined();
+    expect(button(/Chỉ lấy bản chữ/)).toBeUndefined();
+    await click(button(/^\s*Chuyển thành chữ/));
+    await flush();
+    expect(calls.some((c) => c.url.includes("/check/"))).toBe(false);
+    expect(textarea().value).toBe("I went to Hanoi last year.");
+  });
+
+  it("nhận xét lỗi sau khi đã có bản chữ: bản chữ vẫn nằm trong ô, học viên bấm Kiểm tra lại được", async () => {
+    handlers["POST /api/practice-sessions/s1/check/e1"] = () => ({ status: 500, json: { error: "boom" } });
+    await render(essayEmbed());
+    await record();
+    await click(button(/Nhận xét bằng AI/));
+    await flush();
+    expect(textarea().value).toBe("I went to Hanoi last year.");
+    expect(button(/Kiểm tra câu 1/)).toBeDefined();
+    expect(host.querySelector('[data-testid="lp-feedback"]')).toBeNull();
   });
 });
