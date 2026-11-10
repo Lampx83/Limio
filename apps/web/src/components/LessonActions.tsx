@@ -136,9 +136,12 @@ export default function LessonActions({
 export function LessonNotes({
   lessonId,
   hideHeading = false,
+  onCount,
 }: {
   lessonId: string;
   hideHeading?: boolean;
+  /** Báo số ghi chú mỗi khi danh sách đổi (panel phải hiện "Ghi chú · n"). */
+  onCount?: (n: number) => void;
 }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [body, setBody] = useState("");
@@ -150,6 +153,7 @@ export function LessonNotes({
     if (res.ok) {
       const data = await res.json();
       setNotes(data.items);
+      onCount?.((data.items as unknown[]).length);
     }
   }
 

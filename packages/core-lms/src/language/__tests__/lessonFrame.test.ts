@@ -57,6 +57,13 @@ describe("buildLessonFrame (hàm thuần)", () => {
     expect(buildLessonFrame(p, "d", dur())!.next).toBeNull();
   });
 
+  it("bài trước: theo thứ tự khoá, nhảy qua Unit, bỏ qua bài khoá; bài đầu tiên không có bài trước", () => {
+    const p = progress([[{ id: "a" }, { id: "b", locked: true }], [{ id: "c", locked: true }, { id: "d" }, { id: "e" }]]);
+    expect(buildLessonFrame(p, "a", dur())!.prev).toBeNull();
+    expect(buildLessonFrame(p, "d", dur())!.prev).toEqual({ id: "a", title: "Bài a" });
+    expect(buildLessonFrame(p, "e", dur())!.prev).toEqual({ id: "d", title: "Bài d" });
+  });
+
   it("bài không có trong tiến độ (bài/module ẩn) → null để giữ bố cục thường", () => {
     expect(buildLessonFrame(progress([[{ id: "a" }]]), "zzz", dur())).toBeNull();
   });
