@@ -70,7 +70,10 @@ describe("createAccessCodeBatch", () => {
     const ev = await prisma.learningEvent.findFirstOrThrow({ where: { eventType: LearningEventType.CourseAccessBatchCreated, courseId } });
     expect(ev.userId).toBe(owner);
     expect(ev.payload).toEqual({ batchId, courseId, count: 120 }); // không có mã
-    expect(JSON.stringify(ev.payload)).not.toMatch(/[2-9A-Z]{4}-[2-9A-Z]{4}/);
+    // Không dùng regex "trông giống mã" ở đây: batchId là UUID ngẫu nhiên, ví dụ "…9587-4352…" khớp /[2-9A-Z]{4}-[2-9A-Z]{4}/
+    // (xác suất nhỏ nhưng có thật → test đỏ ngẫu nhiên trên CI). So thẳng với các mã đã sinh thì tất định.
+    const payloadText = JSON.stringify(ev.payload);
+    expect(codes.some((c) => payloadText.includes(c.code))).toBe(false);
   });
 
   it("lô lớn nhất (10.000 mã) xong trong một lượt, đủ và không trùng", async () => {
