@@ -8,7 +8,7 @@ import { getStudentMenuContext } from "@/lib/studentMenuContext";
 export const dynamic = "force-dynamic";
 
 /**
- * Khu Limio Language: trang giới thiệu (khách) và Thư viện giáo trình. Học viên đã đăng nhập dùng đúng menu học viên như
+ * Khu Limio Language: trang giới thiệu (khách) và Lịch ôn tập (tạm không có liên kết). Học viên đã đăng nhập dùng đúng menu học viên như
  * mọi trang khác (không còn menu/vỏ riêng — docs/tieu-chi/limio-language-gop-menu.md). Khách chỉ thấy trang giới thiệu,
  * không có menu. Trang giới thiệu có thể được index; phần theo người dùng là riêng tư (từng trang tự đặt `NOINDEX`).
  * Giảng viên/admin được trang của khu này chuyển về khu của họ nên không có menu ở đây.

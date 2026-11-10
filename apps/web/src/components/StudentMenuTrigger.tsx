@@ -9,7 +9,7 @@ type Variant = "header" | "floating";
 
 const PATH_PREFIXES = ["/me", "/learn/"];
 
-// Các trang /language/* (Thư viện giáo trình…) cũng có menu học viên — nhưng chỉ khi đã đăng nhập bằng vai học viên
+// Các trang /language/* (Lịch ôn tập…) cũng có menu học viên — nhưng chỉ khi đã đăng nhập bằng vai học viên
 // (khách ở /language chỉ thấy trang giới thiệu, không có menu để mở).
 const LANGUAGE_PATH_PREFIXES = ["/language"];
 
