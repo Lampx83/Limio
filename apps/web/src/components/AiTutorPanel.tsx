@@ -35,9 +35,35 @@ function splitQuote(content: string): { quote: string | null; text: string } {
   return { quote: q.join("\n"), text: lines.join("\n").replace(/^\n+/, "") };
 }
 
-export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
+export default function AiTutorPanel({
+  lessonId,
+  docked = false,
+  active = false,
+  ask = null,
+  onRequestOpen,
+}: {
+  lessonId: string;
+  /**
+   * Chế độ gắn cố định trong panel phải của khung bài học (docs/tieu-chi/limio-language-bai-hoc-3-cot.md): không có nút nổi,
+   * không có cửa sổ nổi; hiển thị khi `active` (panel mở và đang ở tab AI), vẫn giữ hội thoại khi chuyển tab.
+   */
+  docked?: boolean;
+  active?: boolean;
+  /** Đoạn bôi đen ("Hỏi AI") do panel chuyển xuống; `nonce` đổi mỗi lần để cùng một đoạn vẫn kích hoạt lại. */
+  ask?: { quote: string; nonce: number } | null;
+  /** Chế độ gắn cố định: yêu cầu panel mở (vd. liên kết `?hoi=`). */
+  onRequestOpen?: () => void;
+}) {
   const tokensUnlocked = useAiTokensPageUnlocked();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = docked ? active : openState;
+  const setOpen = (v: boolean) => {
+    if (docked) {
+      if (v) onRequestOpen?.();
+    } else {
+      setOpenState(v);
+    }
+  };
   const [expanded, setExpanded] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -78,6 +104,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
   // "Hỏi AI" từ vùng bôi đen trong bài (LessonAnnotations). Cùng nguyên tắc như
   // trên: mở khung, đính trích đoạn, để người học tự gõ câu hỏi rồi mới gửi.
   useEffect(() => {
+    if (docked) return; // chế độ gắn cố định: panel phải lắng nghe sự kiện và chuyển xuống qua `ask`
     const onAsk = (e: Event) => {
       const q = (e as CustomEvent<{ quote?: string }>).detail?.quote?.trim();
       if (!q) return;
@@ -87,7 +114,15 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
     };
     window.addEventListener("limio:ask-ai", onAsk);
     return () => window.removeEventListener("limio:ask-ai", onAsk);
-  }, []);
+  }, [docked]);
+
+  // Chế độ gắn cố định: nhận đoạn bôi đen từ panel, đính vào câu hỏi kế tiếp (không tự gửi).
+  useEffect(() => {
+    if (!docked || !ask) return;
+    setQuote(ask.quote);
+    setTimeout(() => inputRef.current?.focus(), 80);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [docked, ask?.nonce]);
 
   useEffect(() => {
     if (!open) return;
@@ -224,6 +259,7 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
   }
 
   if (!open) {
+    if (docked) return null;
     return (
       <button
         onClick={() => setOpen(true)}
@@ -245,51 +281,8 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
 
   const empty = messages.length === 0 && !streaming;
 
-  return (
+  const logEl = (
     <div
-      role="dialog"
-      aria-label="Trợ giảng AI"
-      /*
-        Dưới sm: tờ trượt gần toàn màn hình (chừa mép trên để còn thấy mình đang
-        ở bài nào). Từ sm: cửa sổ nổi góc dưới phải, có chế độ mở rộng để đọc
-        câu trả lời dài mà không phải cuộn trong một khung 400px.
-      */
-      className={`fixed inset-x-0 bottom-0 top-10 z-40 flex flex-col overflow-hidden rounded-t-2xl border border-token bg-[rgb(var(--surface))] shadow-card-hover animate-fade-in-up sm:inset-x-auto sm:bottom-6 sm:right-6 sm:top-auto sm:rounded-2xl ${
-        expanded
-          ? "sm:h-[calc(100vh-3rem)] sm:w-[min(760px,calc(100vw-3rem))]"
-          : "sm:h-[min(78vh,720px)] sm:w-[460px]"
-      }`}
-    >
-      <header className="flex items-center gap-3 border-b border-token bg-[rgb(var(--surface))] px-4 py-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-sm">
-          <Sparkles size={18} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold leading-tight">Trợ giảng AI</p>
-          <p className="truncate text-xs text-muted">
-            {budget
-              ? `Còn khoảng ${budget.estimatedTurns} lượt hỏi tháng này`
-              : "Hỏi về nội dung bài đang học"}
-          </p>
-        </div>
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="hidden h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:flex"
-          aria-label={expanded ? "Thu nhỏ" : "Mở rộng"}
-          title={expanded ? "Thu nhỏ" : "Mở rộng"}
-        >
-          {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-        </button>
-        <button
-          onClick={() => setOpen(false)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-          aria-label="Đóng"
-        >
-          <X size={18} />
-        </button>
-      </header>
-
-      <div
         ref={scrollRef}
         role="log"
         aria-live="polite"
@@ -346,7 +339,9 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
           </div>
         )}
       </div>
+  );
 
+  const footerEl = (
       <footer className="border-t border-token bg-[rgb(var(--surface))] p-3">
         {quote && (
           <div className="mb-2 flex items-start gap-2 rounded-xl border border-token bg-[rgb(var(--surface-muted))] px-3 py-2">
@@ -392,6 +387,66 @@ export default function AiTutorPanel({ lessonId }: { lessonId: string }) {
           Enter để gửi · Shift+Enter xuống dòng · AI có thể nhầm, hãy đối chiếu với bài học.
         </p>
       </footer>
+  );
+
+  if (docked) {
+    return (
+      <div className="flex h-full min-h-0 flex-col">
+        <p className="px-4 pt-3 text-xs text-muted">
+          {budget ? `Còn khoảng ${budget.estimatedTurns} lượt hỏi tháng này` : "Hỏi về nội dung bài đang học"}
+        </p>
+        {logEl}
+        {footerEl}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-label="Trợ giảng AI"
+      /*
+        Dưới sm: tờ trượt gần toàn màn hình (chừa mép trên để còn thấy mình đang
+        ở bài nào). Từ sm: cửa sổ nổi góc dưới phải, có chế độ mở rộng để đọc
+        câu trả lời dài mà không phải cuộn trong một khung 400px.
+      */
+      className={`fixed inset-x-0 bottom-0 top-10 z-40 flex flex-col overflow-hidden rounded-t-2xl border border-token bg-[rgb(var(--surface))] shadow-card-hover animate-fade-in-up sm:inset-x-auto sm:bottom-6 sm:right-6 sm:top-auto sm:rounded-2xl ${
+        expanded
+          ? "sm:h-[calc(100vh-3rem)] sm:w-[min(760px,calc(100vw-3rem))]"
+          : "sm:h-[min(78vh,720px)] sm:w-[460px]"
+      }`}
+    >
+      <header className="flex items-center gap-3 border-b border-token bg-[rgb(var(--surface))] px-4 py-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-white shadow-sm">
+          <Sparkles size={18} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-semibold leading-tight">Trợ giảng AI</p>
+          <p className="truncate text-xs text-muted">
+            {budget
+              ? `Còn khoảng ${budget.estimatedTurns} lượt hỏi tháng này`
+              : "Hỏi về nội dung bài đang học"}
+          </p>
+        </div>
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="hidden h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:flex"
+          aria-label={expanded ? "Thu nhỏ" : "Mở rộng"}
+          title={expanded ? "Thu nhỏ" : "Mở rộng"}
+        >
+          {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+        </button>
+        <button
+          onClick={() => setOpen(false)}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
+          aria-label="Đóng"
+        >
+          <X size={18} />
+        </button>
+      </header>
+
+      {logEl}
+      {footerEl}
     </div>
   );
 }

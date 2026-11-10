@@ -2,7 +2,8 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import type { CourseProgress } from "../learning/progress";
 
 /**
- * LANG đợt 3a — dữ liệu khung bài học kiểu Language (thanh bài trong Unit, bài kế tiếp). Chỉ ĐỌC và chỉ dùng nguồn
+ * Dữ liệu khung bài học 3 cột (thanh bài trong Unit/Module, bài trước, bài kế tiếp) — LANG đợt 3a, mở cho mọi khoá theo
+ * docs/tieu-chi/limio-language-bai-hoc-3-cot.md. Chỉ ĐỌC và chỉ dùng nguồn
  * `getCourseProgress` (đã lọc bài/module ẩn) nên số "x / y bài" luôn khớp trang khoá.
  */
 
@@ -23,6 +24,8 @@ export interface LessonFrameData {
   items: LessonRailItem[];
   /** Bài kế tiếp mở được (bỏ qua bài khoá) trong thứ tự khoá; null = đã hết. */
   next: { id: string; title: string } | null;
+  /** Bài liền trước mở được (bỏ qua bài khoá) trong thứ tự khoá; null = đang ở bài đầu tiên. */
+  prev: { id: string; title: string } | null;
 }
 
 export function minutesOf(durationSec: number | null | undefined): number | null {
@@ -51,6 +54,7 @@ export function buildLessonFrame(
   const flat = progress.modules.flatMap((m) => m.lessons);
   const at = flat.findIndex((l) => l.id === currentLessonId);
   const nextLesson = flat.slice(at + 1).find((l) => !l.locked) ?? null;
+  const prevLesson = flat.slice(0, at).reverse().find((l) => !l.locked) ?? null;
 
   return {
     unitTitle: unit.title,
@@ -58,6 +62,7 @@ export function buildLessonFrame(
     unitTotal: unit.lessons.length,
     items,
     next: nextLesson ? { id: nextLesson.id, title: nextLesson.title } : null,
+    prev: prevLesson ? { id: prevLesson.id, title: prevLesson.title } : null,
   };
 }
 
