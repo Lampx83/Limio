@@ -247,7 +247,7 @@ export async function getPracticeSession(userId: string, sessionId: string, db: 
       : Promise.resolve([]),
     db.examPracticeAnswer.findMany({
       where: { sessionId },
-      select: { questionId: true, answerJson: true, isCorrect: true, checkedAt: true },
+      select: { questionId: true, answerJson: true, isCorrect: true, checkedAt: true, aiFeedback: true, audioKey: true },
     }),
   ]);
   return {
@@ -275,8 +275,18 @@ export async function getPracticeSession(userId: string, sessionId: string, db: 
       answerJson: a.answerJson,
       checked: a.checkedAt !== null,
       isCorrect: a.isCorrect,
+      // Bản ghi âm và góp ý AI của chính học viên (Bài luyện, câu mở): để tải lại trang khôi phục. Khoá tệp không lộ ra ngoài.
+      hasAudio: a.audioKey !== null,
+      aiFeedback: publicAiFeedback(a.aiFeedback),
     })),
   };
+}
+
+/** Góp ý AI đưa xuống trình duyệt học viên: bỏ phần nội bộ (toạ độ SSMMD `coding`, số mục bị bộ lọc loại `dropped`). */
+export function publicAiFeedback(raw: unknown): unknown | null {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const { coding: _coding, dropped: _dropped, ...rest } = raw as Record<string, unknown>;
+  return rest;
 }
 
 export interface PracticeEmbed {
@@ -298,7 +308,16 @@ export interface PracticeEmbed {
     config: Record<string, unknown>;
   }>;
   passages: Array<{ id: string; title: string; contentJson: unknown; transcripts?: Record<string, string> }>;
-  answers: Array<{ questionId: string; answerJson: unknown; checked: boolean; isCorrect: boolean | null }>;
+  answers: Array<{
+    questionId: string;
+    answerJson: unknown;
+    checked: boolean;
+    isCorrect: boolean | null;
+    /** Câu mở: học viên đã ghi âm câu trả lời (nghe lại qua route audio). */
+    hasAudio: boolean;
+    /** Câu mở: góp ý AI đã sinh cho câu trả lời hiện tại (null = chưa có). */
+    aiFeedback: unknown | null;
+  }>;
 }
 
 /**
@@ -432,9 +451,119 @@ export async function savePracticeAnswer(
   await db.examPracticeAnswer.upsert({
     where: { sessionId_questionId: { sessionId, questionId } },
     create: { sessionId, questionId, answerJson: answerJson as Prisma.InputJsonValue },
-    // Đổi đáp án → phải kiểm tra lại.
-    update: { answerJson: answerJson as Prisma.InputJsonValue, isCorrect: null, score: null, checkedAt: null },
+    // Đổi đáp án → phải kiểm tra lại, và góp ý AI của đáp án cũ không còn đúng. Bản ghi âm cuối cùng được giữ (học viên có thể
+    // chỉnh chữ sau khi nói; muốn thay thì ghi âm lại).
+    update: { answerJson: answerJson as Prisma.InputJsonValue, isCorrect: null, score: null, checkedAt: null, ...CLEAR_AI_FEEDBACK },
   });
+}
+
+const CLEAR_AI_FEEDBACK = { aiFeedback: Prisma.DbNull, aiFeedbackHash: null, aiFeedbackAt: null } as const;
+
+export interface PracticeVoiceContext {
+  examId: string;
+  courseId: string;
+  /** Mã ngôn ngữ của khoá (`Course.language`), để chuyển chữ đúng thứ tiếng. */
+  language: string;
+  /** Khoá bật chế độ ngoại ngữ: góp ý AI chỉ dành cho khoá này. */
+  languageMode: boolean;
+  voiceAnswer: boolean;
+  aiFeedback: boolean;
+  /** Khoá tệp ghi âm hiện có của câu này (nếu có) để tầng gọi xoá khi thay bằng bản mới. */
+  previousAudioKey: string | null;
+}
+
+/**
+ * Bài luyện nhúng — kiểm tra và nạp ngữ cảnh để học viên trả lời CÂU MỞ bằng giọng nói. Chỉ chủ buổi luyện; buổi phải còn
+ * dở; câu thuộc phạm vi buổi, loại `essay` và không tắt `voiceAnswer`. Lỗi → `ExamError` (không tồn tại/không phải chủ →
+ * practice_session_not_found; buổi đóng → practice_session_closed; còn lại → validation_failed kèm `reason`).
+ */
+export async function getPracticeVoiceContext(
+  userId: string,
+  sessionId: string,
+  questionId: string,
+  db: PrismaClient = prisma,
+): Promise<PracticeVoiceContext> {
+  const s = await loadOwnedSession(userId, sessionId, db);
+  if (s.status !== "in_progress") throw new ExamError("practice_session_closed");
+  const scope = s.scope as unknown as Scope;
+  if (!scope.questionIds?.includes(questionId)) throw new ExamError("validation_failed", { reason: "question_not_in_scope" });
+  const q = await db.examQuestion.findUnique({ where: { id: questionId }, select: { type: true, config: true } });
+  if (!q) throw new ExamError("validation_failed", { reason: "question_not_in_scope" });
+  if (q.type !== "essay") throw new ExamError("validation_failed", { reason: "not_essay" });
+  const cfg = (q.config && typeof q.config === "object" ? q.config : {}) as Record<string, unknown>;
+  if (cfg.voiceAnswer === false) throw new ExamError("validation_failed", { reason: "voice_disabled" });
+  const exam = await db.exam.findUnique({
+    where: { id: s.examId },
+    select: { courseId: true, course: { select: { language: true, languageMode: true } } },
+  });
+  if (!exam?.courseId || !exam.course) throw new ExamError("exam_not_found");
+  const existing = await db.examPracticeAnswer.findUnique({
+    where: { sessionId_questionId: { sessionId, questionId } },
+    select: { audioKey: true },
+  });
+  return {
+    examId: s.examId,
+    courseId: exam.courseId,
+    language: exam.course.language,
+    languageMode: exam.course.languageMode,
+    voiceAnswer: true,
+    aiFeedback: cfg.aiFeedback !== false,
+    previousAudioKey: existing?.audioKey ?? null,
+  };
+}
+
+export interface PracticeVoiceAudioMeta {
+  durationSec: number;
+  mimeType: string;
+  sizeBytes: number;
+  /** Số liệu nhịp nói do bước chuyển chữ đo (cấu trúc do core-feedback quyết định). */
+  metrics?: unknown;
+}
+
+/**
+ * Lưu câu trả lời bằng giọng nói: `text` là bản chữ (cùng dạng `answerJson` của câu mở gõ tay, thêm `viaVoice: true`),
+ * `audioKey` là khoá tệp ghi âm ở kho private (`practice-answers/<sessionId>/<tên>`). Mỗi lần ghi mới thay hẳn bản cũ: kết
+ * quả kiểm tra và góp ý AI cũ bị xoá. Trả `previousAudioKey` để tầng gọi xoá tệp cũ khỏi kho (khác `audioKey` mới).
+ */
+export async function saveVoiceAnswer(
+  userId: string,
+  sessionId: string,
+  questionId: string,
+  input: { text: string; audioKey: string; audioMeta: PracticeVoiceAudioMeta },
+  db: PrismaClient = prisma,
+): Promise<{ previousAudioKey: string | null }> {
+  const ctx = await getPracticeVoiceContext(userId, sessionId, questionId, db);
+  const text = typeof input?.text === "string" ? input.text.trim() : "";
+  const key = typeof input?.audioKey === "string" ? input.audioKey : "";
+  if (!text || !key || !input.audioMeta) throw new ExamError("validation_failed", { reason: "voice_answer_invalid" });
+  const answerJson = { text, viaVoice: true } as Prisma.InputJsonValue;
+  const audioMeta = input.audioMeta as unknown as Prisma.InputJsonValue;
+  await db.examPracticeAnswer.upsert({
+    where: { sessionId_questionId: { sessionId, questionId } },
+    create: { sessionId, questionId, answerJson, audioKey: key, audioMeta },
+    update: { answerJson, audioKey: key, audioMeta, isCorrect: null, score: null, checkedAt: null, ...CLEAR_AI_FEEDBACK },
+  });
+  return { previousAudioKey: ctx.previousAudioKey === key ? null : ctx.previousAudioKey };
+}
+
+/**
+ * Bản ghi âm của chính học viên cho phát lại. Chỉ chủ buổi luyện (kể cả buổi đã đóng: nghe lại bài của mình là quyền của
+ * họ). Chưa ghi âm → null.
+ */
+export async function getPracticeAnswerAudio(
+  userId: string,
+  sessionId: string,
+  questionId: string,
+  db: PrismaClient = prisma,
+): Promise<{ audioKey: string; mimeType: string } | null> {
+  await loadOwnedSession(userId, sessionId, db);
+  const a = await db.examPracticeAnswer.findUnique({
+    where: { sessionId_questionId: { sessionId, questionId } },
+    select: { audioKey: true, audioMeta: true },
+  });
+  if (!a?.audioKey) return null;
+  const meta = (a.audioMeta && typeof a.audioMeta === "object" ? a.audioMeta : {}) as { mimeType?: unknown };
+  return { audioKey: a.audioKey, mimeType: typeof meta.mimeType === "string" ? meta.mimeType : "audio/webm" };
 }
 
 export interface PracticeCheck {

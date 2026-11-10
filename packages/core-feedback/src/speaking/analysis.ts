@@ -145,14 +145,23 @@ export function fluencyLevel(m: SpeechMetrics): WritingLevel {
   return "fair";
 }
 
+/** Hai chiều của nhịp nói (tốc độ, chỗ ngừng) đã chia nhóm — để mỗi nơi dựng câu theo ngôn ngữ của mình mà không lặp ngưỡng. */
+export function fluencyFacets(m: SpeechMetrics): { pace: "slow" | "moderate" | "good"; pauses: "many" | "some" | "few" } {
+  const t = RATE[m.unit];
+  return {
+    pace: m.ratePerMin < t.low ? "slow" : m.ratePerMin >= t.good ? "good" : "moderate",
+    pauses: m.pausesPerMin >= PAUSES_BAD ? "many" : m.pausesPerMin > PAUSES_OK ? "some" : "few",
+  };
+}
+
 /** Nhận xét bằng chữ, KHÔNG có con số. */
 export function fluencyComment(m: SpeechMetrics): string {
-  const t = RATE[m.unit];
-  const pace = m.ratePerMin < t.low ? "nói còn chậm" : m.ratePerMin >= t.good ? "tốc độ nói ổn" : "tốc độ nói vừa phải";
+  const f = fluencyFacets(m);
+  const pace = f.pace === "slow" ? "nói còn chậm" : f.pace === "good" ? "tốc độ nói ổn" : "tốc độ nói vừa phải";
   const pauses =
-    m.pausesPerMin >= PAUSES_BAD
+    f.pauses === "many"
       ? "ngắt quãng khá nhiều chỗ"
-      : m.pausesPerMin > PAUSES_OK
+      : f.pauses === "some"
         ? "có vài chỗ ngừng khá dài"
         : "ít khi ngừng lâu";
   return `Đo từ bản ghi: ${pace}, ${pauses}. Đây chỉ là nhịp nói; phát âm do giảng viên nghe đánh giá.`;

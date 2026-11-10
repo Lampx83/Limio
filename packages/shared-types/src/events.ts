@@ -119,6 +119,9 @@ export const LearningEventType = {
   // LANG đợt 4 — lượt quan sát kỹ năng của Bài luyện nhúng trong bài học: lần kiểm tra ĐẦU TIÊN của mỗi (buổi, câu) áp
   // lên skill gắn vào bài (BKT). Payload chỉ mang id và đúng/sai; eventKey chống tính trùng.
   ExamPracticeObserved: "exam.practice.observed",
+  // LANG — góp ý AI cho câu mở (essay) của Bài luyện nhúng, sinh ra khi học viên bấm "Kiểm tra". Học viên tự bấm nên tính là hoạt
+  // động học (như exam.practice.answered). Payload chỉ mang id, số đếm và toạ độ SSMMD — KHÔNG mang câu trả lời, bài mẫu hay nội dung góp ý.
+  ExamPracticeFeedbackGenerated: "exam.practice.feedback_generated",
   // LANG G6 — góp ý bài viết do AI sinh: sinh ra, giảng viên duyệt, giảng viên từ chối.
   WritingFeedbackGenerated: "writing.feedback.generated",
   WritingFeedbackApproved: "writing.feedback.approved",

@@ -27,6 +27,7 @@ export type StoredFileKind =
   | "lesson_narration"
   | "exam_asset"
   | "submission"
+  | "practice_answer"
   | "proctor_snapshot"
   | "oral_material"
   | "whiteboard_page"
@@ -55,6 +56,7 @@ const KIND_PREFIXES: ReadonlyArray<readonly [string, StoredFileKind]> = [
   ["lesson-narration/", "lesson_narration"],
   ["exam-assets/", "exam_asset"],
   ["submissions/", "submission"],
+  ["practice-answers/", "practice_answer"],
   ["proctor-snapshots/", "proctor_snapshot"],
   ["oral-exam-materials/", "oral_material"],
   ["whiteboard-pages/", "whiteboard_page"],

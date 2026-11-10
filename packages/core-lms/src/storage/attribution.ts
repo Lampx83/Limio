@@ -71,6 +71,19 @@ async function findReference(
         ? { courseId: rows[0].courseId, billedUserId: null, source: "content_item" }
         : null;
     }
+    case "practice_answer": {
+      // Bản ghi âm cuối của học viên cho câu mở trong Bài luyện: tính cho khoá của đề ẩn.
+      const rows = await db.$queryRaw<Array<{ courseId: string | null }>>`
+        SELECT e."courseId" AS "courseId"
+        FROM "ExamPracticeAnswer" a
+        JOIN "ExamPracticeSession" s ON s.id = a."sessionId"
+        JOIN "Exam" e ON e.id = s."examId"
+        WHERE position(${leaf} in coalesce(a."audioKey", '')) > 0
+        LIMIT 1`;
+      return rows[0]?.courseId
+        ? { courseId: rows[0].courseId, billedUserId: null, source: "submission" }
+        : null;
+    }
     case "submission": {
       const rows = await db.$queryRaw<Array<{ courseId: string }>>`
         SELECT m."courseId" AS "courseId"
