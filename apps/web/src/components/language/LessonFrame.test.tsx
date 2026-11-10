@@ -79,6 +79,18 @@ describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
     expect(text(render())).not.toContain("Mục lục khoá học");
   });
 
+  it("mọi dòng cùng độ đậm: bài đang xem không in đậm riêng (chữ đậm rộng hơn làm tên bài xuống dòng khác khi đổi bài)", () => {
+    const html = render();
+    const titleClasses = [...html.matchAll(/<span class="(block text-sm[^"]*)">/g)].map((m) => m[1]!);
+    expect(titleClasses.length).toBeGreaterThanOrEqual(4);
+    for (const c of titleClasses) {
+      expect(c).toContain("font-medium");
+      expect(c).not.toContain("font-semibold");
+    }
+    // vẫn phân biệt được bài đang xem: nền + vạch trái + aria-current
+    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*class="[^"]*border-brand-600 bg-brand-50|class="[^"]*border-brand-600 bg-brand-50[^"]*"[^>]*aria-current="page"/);
+  });
+
   it("từng dòng: số phút chỉ khi có, trạng thái chữ cho bài đã xong/khoá, bài đang xem có aria-current", () => {
     const html = render();
     const t = text(html);

@@ -38,10 +38,13 @@ const RegisterImageInput = z.object({
 async function assertExamEditable(examId: string, actorUserId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
-    select: { courseId: true, createdById: true, status: true },
+    select: { courseId: true, createdById: true, status: true, ownerContentItemId: true },
   });
   if (!exam) throw new ExamError("exam_not_found");
-  if (exam.status !== "draft") throw new ExamError("exam_not_draft");
+  // Đề thi thường: chỉ khi còn nháp (đề đã xuất bản có thể có lượt thi nên các trường khác khoá cho công bằng).
+  // Đề ẩn của khối Bài luyện (`ownerContentItemId`) được tạo sẵn ở trạng thái `published` và không có lượt thi, nhưng giảng viên vẫn
+  // soạn đoạn văn và câu hỏi của nó (xem passages.ts, questions.ts: chỉ chặn đề đã lưu trữ) nên tải ảnh/audio cũng phải được.
+  if (exam.ownerContentItemId ? exam.status === "archived" : exam.status !== "draft") throw new ExamError("exam_not_draft");
   await assertCanEditExam(actorUserId, exam, db);
   return exam;
 }

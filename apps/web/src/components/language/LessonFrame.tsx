@@ -42,14 +42,16 @@ function RailList({ slug, frame }: { slug: string; frame: LessonFrameData }) {
           <>
             <ItemIcon state={it.state} />
             <span className="min-w-0 flex-1">
-              <span className={`block text-sm leading-snug ${it.state === "done" ? "text-muted" : ""} ${it.state === "current" ? "font-semibold" : ""}`}>{it.title}</span>
+              {/* Mọi dòng CÙNG độ đậm: thanh bên hẹp, chữ đậm rộng hơn nên bài đang xem xuống dòng khác các bài còn lại và danh sách "nhảy"
+                  mỗi khi đổi bài. Bài đang xem phân biệt bằng nền, chấm đặc và vạch trái (không đổi bề rộng chữ). */}
+              <span className={`block text-sm font-medium leading-snug ${it.state === "done" ? "text-muted" : ""}`}>{it.title}</span>
               <span className="text-caption text-muted">
                 {[it.minutes ? `${it.minutes} phút` : null, it.state === "done" || it.state === "locked" ? STATE_TEXT[it.state] : null].filter(Boolean).join(" · ")}
               </span>
             </span>
           </>
         );
-        const cls = `flex items-start gap-2.5 rounded-lg px-2.5 py-2 ${it.state === "current" ? "bg-brand-50" : ""}`;
+        const cls = `flex items-start gap-2.5 rounded-lg border-l-2 px-2.5 py-2 ${it.state === "current" ? "border-brand-600 bg-brand-50" : "border-transparent"}`;
         return (
           <li key={it.id}>
             {it.state === "locked" ? (
