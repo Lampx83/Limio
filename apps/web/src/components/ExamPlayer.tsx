@@ -18,6 +18,7 @@ import FullscreenGate from "./exam/FullscreenGate";
 import TabBlurWarning from "./exam/TabBlurWarning";
 import MultiTabDetector from "./exam/MultiTabDetector";
 import SubmitReviewModal from "./exam/SubmitReviewModal";
+import { QUESTION_CARD_CLASS, QuestionNumber, QuestionSetHeader } from "./exam/QuestionChrome";
 
 interface TiptapDoc {
   type: "doc";
@@ -906,17 +907,16 @@ export default function ExamPlayer(props: Props) {
     const num =
       paletteItems.find((it) => it.questionId === q.id)?.displayNumber ?? displayIdx + 1;
     return (
-      <div id={`exam-q-${q.id}`} key={q.id} className="scroll-mt-48 border-b border-default py-4">
-        <div className="mb-2 flex items-baseline justify-between gap-3">
-          <h3 className="text-sm font-medium">
-            Câu {num} <span className="text-faint">({q.points} điểm)</span>
-          </h3>
-          {isAnswered(answers[q.id] ?? null) && (
-            <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
-              Đã trả lời
-            </span>
-          )}
-        </div>
+      <div id={`exam-q-${q.id}`} key={q.id} className={`scroll-mt-48 ${QUESTION_CARD_CLASS}`}>
+        <QuestionNumber
+          n={num}
+          points={q.points}
+          right={
+            isAnswered(answers[q.id] ?? null) ? (
+              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">Đã trả lời</span>
+            ) : null
+          }
+        />
         <ExamQuestion
           question={q}
           value={answers[q.id] ?? null}
@@ -1123,9 +1123,7 @@ export default function ExamPlayer(props: Props) {
             <PassageView passage={passage} attemptId={props.attemptId} />
           </section>
           <section className="rounded border border-default bg-white p-4">
-            <h2 className="mb-2 text-base font-semibold">
-              {qs.length} câu hỏi cho đoạn này
-            </h2>
+            <QuestionSetHeader count={qs.length} />
             {qs.map((q, i) => renderQuestion(q, i))}
           </section>
         </div>

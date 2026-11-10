@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { PASSAGE_FONT_SIZE_VALUES } from "@/lib/passageFontSizes";
+import { passageHighlightColor, passageTextColor } from "@/lib/passageColors";
 import ExamAudioPlayer, { ExamAudioContext, type ExamAudioContextValue } from "./ExamAudioPlayer";
 
 export interface TiptapDoc {
@@ -57,7 +59,11 @@ export default function PassageView({ passage, attemptId, audio }: Props) {
   return (
     <ExamAudioContext.Provider value={audioCtx}>
     <div>
-      <h2 className="mb-3 text-base font-semibold">{passage.title}</h2>
+      {/* Tiêu đề bài đọc: cỡ lớn, đậm, kèm vạch nhấn màu thương hiệu ngắn bên dưới (kiểu tiêu đề báo/sách), tách khỏi phần thân. */}
+      <header className="mb-4">
+        <h2 className="text-h3">{passage.title}</h2>
+        <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
+      </header>
       <div className="prose prose-sm max-w-none select-text">{rendered}</div>
       <details className="mt-4 border-t border-default pt-3">
         <summary className="cursor-pointer text-xs text-faint">
@@ -268,12 +274,23 @@ function RenderInline({ node }: { node: ElementNode | TextNode }) {
       case "italic":
         el = <em>{el}</em>;
         break;
-      case "highlight":
-        el = <mark className="bg-amber-100">{el}</mark>;
+      case "highlight": {
+        // Màu tô nổi: chỉ vẽ màu trong bảng; không có hoặc lạ thì giữ màu mặc định.
+        const bg = passageHighlightColor((mark.attrs as { color?: unknown } | undefined)?.color);
+        el = bg ? <mark style={{ backgroundColor: bg, color: "inherit" }}>{el}</mark> : <mark className="bg-amber-100">{el}</mark>;
         break;
+      }
       case "underline":
         el = <u>{el}</u>;
         break;
+      case "textStyle": {
+        // Cỡ chữ của đoạn chữ được chọn: chỉ vẽ bốn mức cố định (lib/passageDoc.ts), giá trị khác bỏ qua.
+        const attrs = mark.attrs as { fontSize?: unknown; color?: unknown } | undefined;
+        const size = typeof attrs?.fontSize === "string" && PASSAGE_FONT_SIZE_VALUES.has(attrs.fontSize) ? attrs.fontSize : undefined;
+        const color = passageTextColor(attrs?.color) ?? undefined;
+        if (size || color) el = <span style={{ fontSize: size, color }}>{el}</span>;
+        break;
+      }
     }
   }
   return <>{el}</>;

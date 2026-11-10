@@ -1241,3 +1241,12 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   background: rgb(var(--text-muted, 100 116 139) / 0.7);
   background-clip: content-box;
 }
+
+/* Thẻ audio/video trong trình soạn Đoạn văn (lib/passageDoc.ts): khối không sửa chữ được, chọn rồi xoá như một phần tử. */
+.passage-media-chip {
+  @apply my-2 flex items-center gap-2 rounded-lg border border-token px-3 py-2 text-sm;
+  background: rgb(var(--surface-muted));
+}
+.passage-media-chip.ProseMirror-selectednode {
+  @apply ring-2 ring-brand-400;
+}

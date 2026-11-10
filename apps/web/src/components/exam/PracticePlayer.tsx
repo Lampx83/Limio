@@ -7,6 +7,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import PassageView from "./PassageView";
 import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "./ExamQuestion";
 import { QuestionCard } from "./AnswerReview";
+import { QUESTION_CARD_CLASS, QuestionNumber, QuestionSetHeader } from "./QuestionChrome";
 import { formatClock } from "@/lib/audioClock";
 
 interface PQuestion {
@@ -164,17 +165,18 @@ export default function PracticePlayer({
     const value = answers[q.id] ?? null;
     const res = checks[q.id];
     return (
-      <div key={q.id} className="border-b border-default py-4" id={`pq-${q.id}`}>
-        <div className="mb-2 flex items-baseline justify-between gap-3">
-          <h3 className="text-sm font-medium">
-            Câu {numberOf.get(q.id)} <span className="text-faint">({q.points} điểm)</span>
-          </h3>
-          {res && !res.manual && (
-            <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${res.isCorrect ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
-              {res.isCorrect ? "Đúng" : "Chưa đúng"}
-            </span>
-          )}
-        </div>
+      <div key={q.id} className={QUESTION_CARD_CLASS} id={`pq-${q.id}`}>
+        <QuestionNumber
+          n={numberOf.get(q.id) ?? ""}
+          points={q.points}
+          right={
+            res && !res.manual ? (
+              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${res.isCorrect ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
+                {res.isCorrect ? "Đúng" : "Chưa đúng"}
+              </span>
+            ) : null
+          }
+        />
         <ExamQuestion question={q} value={value} onChange={(v) => onChange(q.id, v)} />
         {checkEnabled && (
           <div className="mt-3">
@@ -272,7 +274,7 @@ export default function PracticePlayer({
               })()}
             </section>
             <section className="rounded border border-default bg-white p-4">
-              <h2 className="mb-2 text-base font-semibold">{step.questionIds.length} câu hỏi cho đoạn này</h2>
+              <QuestionSetHeader count={step.questionIds.length} />
               {step.questionIds.map((id) => renderQuestion(qById.get(id)!))}
             </section>
           </div>
