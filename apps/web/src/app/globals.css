@@ -1219,3 +1219,25 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
   }
 }
 
+/* Thanh cuộn LUÔN hiện cho khung cuộn riêng của đoạn văn trong bài luyện: macOS mặc định giấu thanh cuộn nên người học không biết bài đọc còn
+   dài xuống dưới. (Không dùng `scrollbar-width: thin` vì nó làm Chrome bỏ qua kiểu ::-webkit-scrollbar.) */
+.lp-scroll {
+  scrollbar-gutter: stable;
+}
+.lp-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.lp-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+.lp-scroll::-webkit-scrollbar-thumb {
+  background: rgb(var(--text-muted, 100 116 139) / 0.45);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.lp-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--text-muted, 100 116 139) / 0.7);
+  background-clip: content-box;
+}

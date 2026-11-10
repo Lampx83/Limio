@@ -316,7 +316,8 @@ export default function LessonPractice({
         </div>
         <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} />
         {embed.checkEnabled && (
-          <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            {!res ? <span className="text-caption text-muted">Bạn có thể đổi đáp án trước khi kiểm tra.</span> : <span />}
             <button
               type="button"
               onClick={() => void check(qid)}
@@ -325,7 +326,6 @@ export default function LessonPractice({
             >
               {busyCheck === qid ? "Đang kiểm tra…" : `Kiểm tra câu ${n}`}
             </button>
-            {!res && <span className="text-caption text-muted">Bạn có thể đổi đáp án trước khi kiểm tra.</span>}
           </div>
         )}
         {res && res.manual && (
@@ -362,58 +362,75 @@ export default function LessonPractice({
     );
   };
 
+  const layoutToggle = hasPassage ? (
+    <div role="group" aria-label="Bố cục" className="hidden items-center gap-1 lg:flex">
+      <button
+        type="button"
+        aria-pressed={layout === "split"}
+        onClick={() => changeLayout("split")}
+        className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-sm ${layout === "split" ? "border-lime-400 bg-lime-50 font-semibold text-lime-800" : "border-token text-muted"}`}
+      >
+        <Columns2 size={14} aria-hidden /> Chia đôi
+      </button>
+      <button
+        type="button"
+        aria-pressed={layout === "single"}
+        onClick={() => changeLayout("single")}
+        className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-sm ${layout === "single" ? "border-lime-400 bg-lime-50 font-semibold text-lime-800" : "border-token text-muted"}`}
+      >
+        <Rows2 size={14} aria-hidden /> Một cột
+      </button>
+    </div>
+  ) : null;
+
+  const titleBlock = (
+    <div className="min-w-0">
+      <h2 id="lp-title" className="text-base font-semibold leading-snug">
+        {blockTitle || embed.title}
+      </h2>
+      <p className="text-xs text-muted" aria-live="polite">
+        {progressLabel(counts)}
+      </p>
+    </div>
+  );
+
+  const questionNav = (
+    <nav aria-label="Các câu" className="flex flex-wrap justify-end gap-1.5">
+      {questions.map((q) => {
+        const n = numberOf.get(q.id)!;
+        const state = q.id in checks ? "checked" : isAnswered(answers[q.id] ?? null) ? "chosen" : "none";
+        return (
+          <button
+            key={q.id}
+            type="button"
+            onClick={() => jumpTo(q.id)}
+            aria-label={`Câu ${n}${state === "checked" ? ", đã kiểm tra" : state === "chosen" ? ", đã chọn" : ", chưa trả lời"}`}
+            className={`h-8 min-w-8 rounded-lg border px-2 text-sm tabular-nums ${
+              state === "checked" ? "border-lime-600 bg-lime-600 text-white" : state === "chosen" ? "border-lime-300 bg-lime-50 text-lime-800" : "border-token text-muted"
+            }`}
+          >
+            {n}
+          </button>
+        );
+      })}
+    </nav>
+  );
+
+  // Bố cục chia đôi (theo mẫu Figma): tiêu đề, tiến độ, các số câu và nút đổi bố cục gom vào MỘT thẻ đầu cột câu hỏi, nên không tốn
+  // thêm hàng phía trên; thẻ đoạn văn bên trái dính theo cuộn và tự cuộn riêng khi bài đọc dài.
+  const splitView = !!(step?.passageId && split);
+
   return (
     <section aria-labelledby="lp-title" className="my-6" data-testid="lesson-practice">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 id="lp-title" className="text-h3">
-            {blockTitle || embed.title}
-          </h2>
-          <p className="text-meta" aria-live="polite">
-            {progressLabel(counts)}
-          </p>
-        </div>
-        {hasPassage && (
-          <div role="group" aria-label="Bố cục" className="hidden items-center gap-1 lg:flex">
-            <button
-              type="button"
-              aria-pressed={layout === "split"}
-              onClick={() => changeLayout("split")}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-sm ${layout === "split" ? "border-lime-400 bg-lime-50 font-semibold text-lime-800" : "border-token text-muted"}`}
-            >
-              <Columns2 size={14} aria-hidden /> Chia đôi
-            </button>
-            <button
-              type="button"
-              aria-pressed={layout === "single"}
-              onClick={() => changeLayout("single")}
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-sm ${layout === "single" ? "border-lime-400 bg-lime-50 font-semibold text-lime-800" : "border-token text-muted"}`}
-            >
-              <Rows2 size={14} aria-hidden /> Một cột
-            </button>
+      {!splitView && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {titleBlock}
+            {layoutToggle}
           </div>
-        )}
-      </div>
-
-      <nav aria-label="Các câu" className="mt-3 flex flex-wrap gap-1.5">
-        {questions.map((q) => {
-          const n = numberOf.get(q.id)!;
-          const state = q.id in checks ? "checked" : isAnswered(answers[q.id] ?? null) ? "chosen" : "none";
-          return (
-            <button
-              key={q.id}
-              type="button"
-              onClick={() => jumpTo(q.id)}
-              aria-label={`Câu ${n}${state === "checked" ? ", đã kiểm tra" : state === "chosen" ? ", đã chọn" : ", chưa trả lời"}`}
-              className={`h-8 min-w-8 rounded-lg border px-2 text-sm tabular-nums ${
-                state === "checked" ? "border-lime-600 bg-lime-600 text-white" : state === "chosen" ? "border-lime-300 bg-lime-50 text-lime-800" : "border-token text-muted"
-              }`}
-            >
-              {n}
-            </button>
-          );
-        })}
-      </nav>
+          <div className="mt-3">{questionNav}</div>
+        </>
+      )}
 
       {error && (
         <div role="alert" className="mt-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
@@ -423,37 +440,43 @@ export default function LessonPractice({
 
       {step &&
         (step.passageId ? (
-          <div className={`mt-4 grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr]" : ""}`}>
-            <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4 lg:max-h-[calc(100vh-10rem)] lg:overflow-y-auto" data-testid="lp-passage">
+          <div className={`mt-4 grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
+            <div
+              className={`rounded-xl border border-token bg-[rgb(var(--surface))] p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
+              data-testid="lp-passage"
+            >
               {(() => {
                 const p = passages.find((x) => x.id === step.passageId);
                 return p ? <PassageView passage={p as { id: string; title: string; contentJson: { type: "doc"; content: unknown[] } }} attemptId={`lesson-practice-${embed.examId}`} /> : null;
               })()}
             </div>
-            <div className="space-y-3">{step.questionIds.map(renderQuestion)}</div>
+            {/* Chia đôi: cột câu hỏi cũng tự cuộn riêng (như cột đoạn văn) khi nhiều câu dài; thẻ đầu cột (bản đồ câu hỏi) dính ở đỉnh nên luôn thấy. */}
+            <div className={`space-y-3 ${splitView ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : ""}`}>
+              {splitView && (
+                <div className="sticky top-0 z-10 -mb-3 bg-[rgb(var(--bg))] pb-3">
+                <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                    {titleBlock}
+                    {layoutToggle}
+                  </div>
+                  <div className="mt-3">{questionNav}</div>
+                </div>
+                </div>
+              )}
+              {step.questionIds.map(renderQuestion)}
+            </div>
           </div>
         ) : (
           <div className="mt-4 space-y-3">{step.questionIds.map(renderQuestion)}</div>
         ))}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <button type="button" disabled={stepIdx === 0} onClick={() => setStepIdx((i) => Math.max(0, i - 1))} className="btn-ghost btn-sm disabled:opacity-50">
-            ← Quay lại
-          </button>
-          <span className="text-caption tabular-nums text-muted">
-            Bước {stepIdx + 1} / {steps.length}
-          </span>
-          <button type="button" disabled={stepIdx >= steps.length - 1} onClick={() => setStepIdx((i) => Math.min(steps.length - 1, i + 1))} className="btn-ghost btn-sm disabled:opacity-50">
-            Tiếp →
-          </button>
-        </div>
-        {!preview && (
+      {!preview && (
+        <div className="mt-4 flex justify-end">
           <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-primary btn-sm disabled:opacity-50">
             {finishing ? "Đang kết thúc…" : "Kết thúc bài luyện"}
           </button>
-        )}
-      </div>
+        </div>
+      )}
       <p className="text-caption mt-2 text-muted" aria-live="polite">
         {preview
           ? `Xem trước: không lưu đáp án · ${answeredCount} / ${questions.length} câu`
