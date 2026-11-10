@@ -222,14 +222,15 @@ export default function LessonFrameShell({
       </aside>
 
       {/* Nút mở panel khi đang đóng: nút tròn cùng bề rộng (~2.35rem) và cùng mép phải (right-4) với cặp nút cuộn lên/xuống của trang bài
-          (ScrollEnds, bottom-[17rem]), xếp ngay dưới nó cho thành một cột thẳng hàng; `narration-lift` để nâng theo khi có thanh nghe giảng. */}
+          (ScrollEnds, bottom-[17rem]), xếp ngay dưới nó cho thành một cột thẳng hàng; `narration-lift` để nâng theo khi có thanh nghe giảng. Giảng viên có thêm nút cam "Bảng giảng viên"
+          (TeacherBar, bottom-52) cùng cột: khi có nó, `lesson-fab-panel` và `lesson-fab-scroll` được nâng lên trên nút cam (narration.css). */}
       {!open && (
         <button
           type="button"
           onClick={() => openPanel()}
           aria-label="Mở trợ giảng AI và ghi chú"
           title={`AI trợ giảng và Ghi chú${notes > 0 ? ` · ${notes} ghi chú` : ""}`}
-          className="narration-lift fixed bottom-[14.2rem] right-4 z-30 flex h-[2.35rem] w-[2.35rem] items-center justify-center rounded-full bg-brand-gradient text-white shadow-lg ring-2 ring-white/80 transition-transform hover:scale-105 print:hidden"
+          className="narration-lift lesson-fab-panel fixed bottom-[14.2rem] right-4 z-30 flex h-[2.35rem] w-[2.35rem] items-center justify-center rounded-full bg-brand-gradient text-white shadow-lg ring-2 ring-white/80 transition-transform hover:scale-105 print:hidden"
         >
           <Sparkles size={18} aria-hidden />
           {notes > 0 && (
