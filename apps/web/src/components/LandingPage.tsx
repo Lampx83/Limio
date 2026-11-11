@@ -1,8 +1,12 @@
 import Link from "next/link";
 import {
+  Award,
+  BadgeCheck,
   Check,
   ClipboardCheck,
   GraduationCap,
+  Layers,
+  Link2,
   PenLine,
   Presentation,
   ShieldCheck,
@@ -32,6 +36,7 @@ export default function LandingPage({ registerEnabled = true }: { registerEnable
       <Hero registerEnabled={registerEnabled} />
       <Audiences registerEnabled={registerEnabled} />
       <HowItWorks />
+      <MicroCredential />
       <Promises />
       <FinalCta registerEnabled={registerEnabled} />
     </main>
@@ -117,7 +122,7 @@ function Hero({ registerEnabled }: { registerEnabled: boolean }) {
             </Link>
           </div>
           <ul className="mt-8 flex flex-wrap items-center justify-center gap-2 lg:justify-start">
-            {["Dạy, học, thi một chỗ", "Có AI hỗ trợ"].map((t) => (
+            {["Dạy, học, thi một chỗ", "Có AI hỗ trợ", "Hợp với micro-credential"].map((t) => (
               <li
                 key={t}
                 className="flex items-center gap-1.5 rounded-full border border-token bg-white/70 px-3 py-1 text-sm text-muted"
@@ -405,6 +410,120 @@ function HowItWorks() {
   );
 }
 
+// Micro-credential: khoá ngắn tập trung một năng lực, có bằng chứng đạt được và một
+// chứng nhận kiểm chứng công khai được. Mọi ý ở đây đều ứng với tính năng đã có:
+// bài học tự thành chủ đề, thi/vấn đáp, chứng nhận có mã tra cứu ở /verify, và
+// thương hiệu "Limio × tên trường" trên chứng nhận. Chưa hứa các thứ chưa có
+// (huy hiệu chuẩn mở, tích luỹ nhiều chứng nhận thành văn bằng).
+function MicroCredential() {
+  const points = [
+    {
+      icon: <Layers className="h-5 w-5" aria-hidden />,
+      t: "Khoá ngắn, một năng lực",
+      d: "Chia nhỏ thành các bài; mỗi bài tự thành một chủ đề để theo dõi mức thành thạo.",
+    },
+    {
+      icon: <ClipboardCheck className="h-5 w-5" aria-hidden />,
+      t: "Có bằng chứng, không chỉ “đã xem”",
+      d: "Bài kiểm tra, đợt thi và vấn đáp cho thấy học viên thật sự đạt được gì.",
+    },
+    {
+      icon: <Award className="h-5 w-5" aria-hidden />,
+      t: "Chứng nhận khi hoàn thành khoá",
+      d: "Cấp tự động, mang tên đơn vị đào tạo, kèm logo và chữ ký, tải được dạng PDF.",
+    },
+    {
+      icon: <Link2 className="h-5 w-5" aria-hidden />,
+      t: "Kiểm chứng được bằng một đường dẫn",
+      d: "Mỗi chứng nhận có mã riêng và trang tra cứu công khai để nhà tuyển dụng hay đối tác tự kiểm tra.",
+    },
+  ];
+  const fits = ["Bồi dưỡng ngắn hạn", "Kỹ năng nghề", "Đào tạo nội bộ", "Khoá của trường × đối tác"];
+  return (
+    <section id="micro-credential" className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
+      <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.9fr] lg:gap-14">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-pink-50 px-3.5 py-1.5 text-sm font-medium text-pink-700">
+            <BadgeCheck className="h-4 w-4" aria-hidden />
+            Micro-credential
+          </span>
+          <h2 className="h-display mt-4 text-3xl font-bold sm:text-4xl">
+            Học gọn, chứng nhận kiểm chứng được
+          </h2>
+          <p className="mt-3 max-w-xl text-muted">
+            Limio hợp với các khoá ngắn cấp chứng nhận: học viên học đúng một năng lực, có
+            bằng chứng đã đạt, và nhận chứng nhận mà ai cũng tra cứu được.
+          </p>
+
+          <ul className="mt-8 grid gap-5 sm:grid-cols-2">
+            {points.map((p) => (
+              <li key={p.t} className="flex gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
+                  {p.icon}
+                </span>
+                <span>
+                  <span className="block text-base font-semibold leading-tight">{p.t}</span>
+                  <span className="mt-1 block text-sm leading-relaxed text-muted">{p.d}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <ul className="mt-8 flex flex-wrap gap-2" aria-label="Phù hợp với">
+            {fits.map((t) => (
+              <li
+                key={t}
+                className="flex items-center gap-1.5 rounded-full border border-token bg-white/70 px-3 py-1 text-sm text-muted"
+              >
+                <Check className="h-4 w-4 text-brand-600" aria-hidden />
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <CertificateMock />
+      </div>
+    </section>
+  );
+}
+
+// Mockup chứng nhận — tên, khoá và mã đều là chỗ giữ chỗ, có nhãn "Minh hoạ" để không
+// bị đọc thành chứng nhận thật.
+function CertificateMock() {
+  return (
+    <div className="relative mx-auto w-full max-w-md" aria-label="Minh hoạ chứng nhận">
+      <div
+        className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rotate-[4deg] rounded-[2rem] bg-pink-200/60"
+        aria-hidden
+      />
+      <div className="relative rotate-[1.5deg] rounded-[2rem] border border-token bg-[rgb(var(--surface))] p-6 shadow-card-hover transition-transform duration-300 hover:rotate-0 sm:p-7">
+        <div className="flex items-center justify-between">
+          <p className="text-meta">Cấp bởi Limio × Tên đơn vị</p>
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+            <Award className="h-6 w-6" aria-hidden />
+          </span>
+        </div>
+        <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-faint">
+          Chứng nhận hoàn thành
+        </p>
+        <p className="h-display mt-1 text-2xl font-bold">Tên học viên</p>
+        <p className="mt-3 text-sm text-muted">đã hoàn thành khoá học</p>
+        <p className="text-base font-semibold">Tên khoá học ngắn hạn</p>
+
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-brand-50 p-3.5 text-sm">
+          <span className="flex items-center gap-2 font-medium text-brand-700">
+            <BadgeCheck className="h-5 w-5" aria-hidden />
+            Hợp lệ · tra cứu công khai
+          </span>
+          <code className="rounded-md bg-white/80 px-2 py-0.5 text-xs text-muted">FBM-XXXXXXXXXXXX</code>
+        </div>
+        <p className="mt-4 text-center text-xs text-faint">Minh hoạ</p>
+      </div>
+    </div>
+  );
+}
+
 function Promises() {
   const items = [
     {
@@ -425,7 +544,7 @@ function Promises() {
   ];
   return (
     <section className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-3">
         {items.map((f, i) => (
           <div
             key={f.t}
@@ -436,8 +555,8 @@ function Promises() {
             <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${i === 1 ? "bg-pink-100 text-pink-700" : "bg-brand-100 text-brand-700"}`}>
               {f.icon}
             </span>
-            <h3 className="mt-4 text-base font-semibold">{f.t}</h3>
-            <p className="mt-1 text-sm text-muted">{f.d}</p>
+            <h3 className="mt-4 text-base font-semibold leading-tight">{f.t}</h3>
+            <p className="mt-1 text-sm text-muted leading-relaxed">{f.d}</p>
           </div>
         ))}
       </div>
