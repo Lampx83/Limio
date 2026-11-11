@@ -69,7 +69,12 @@ export function toPublicQuestionConfig(
       // Chỉ cần ô nhập số; `expected` và `tolerance` là đáp án.
       return {};
     case "essay":
-      return typeof c.minWords === "number" ? { minWords: c.minWords } : {};
+      // Chỉ số từ tối thiểu và hai công tắc của học viên; bài mẫu, audio mẫu và tiêu chí đánh giá chỉ lộ sau khi kiểm tra.
+      return {
+        ...(typeof c.minWords === "number" ? { minWords: c.minWords } : {}),
+        voiceAnswer: c.voiceAnswer !== false,
+        aiFeedback: c.aiFeedback !== false,
+      };
     case "slider": {
       // Thang trượt của đề Khảo sát — không có đáp án; mã câu (`code`) không gửi xuống.
       const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);

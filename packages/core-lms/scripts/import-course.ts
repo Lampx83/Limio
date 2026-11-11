@@ -46,7 +46,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
@@ -54,9 +54,26 @@ import { createCourse } from "../src/courses/courses";
 import { createModule } from "../src/courses/modules";
 import { createLesson } from "../src/courses/lessons";
 import { createContentItem } from "../src/courses/contents";
+import { createAssignment } from "../src/courses/assignments";
 import { createQuiz } from "../src/quizzes/quizzes";
 import { CreateQuestionInput, createQuestion } from "../src/quizzes/questions";
 import { lessonSkillCode } from "../src/courses/autoTags";
+import { getOwnedPracticeExamId } from "../src/courses/practiceBlock";
+import { createPassage } from "../src/exam/passages";
+import { createExamQuestion } from "../src/exam/questions";
+import { createAudioAsset, createImageAsset } from "../src/exam/assets";
+import {
+  type ExamQuestionSpecT,
+  PracticeSpec,
+  assetProblems,
+  bodyAssetRefs,
+  buildPassageDoc,
+  expandExamQuestion,
+  practiceProblems,
+  practiceQuestionCount,
+  replaceBodyAssetRefs,
+  storePublicFile,
+} from "./practice-spec";
 import {
   LECTURE_INTRO_ANCHOR,
   LECTURE_OUTRO_ANCHOR,
@@ -154,6 +171,19 @@ const PatternsSpec = z.object({
 export function isSafeEmbedUrl(v: string): boolean {
   return /^\/(?![/\\])/.test(v) || /^https:\/\//i.test(v);
 }
+
+/**
+ * Bài tập (Assignment) của bài học. `responseFormat: "audio"` cho bài nói (nút ghi âm + "Nhận góp ý bài nói"), `"text"` cho bài viết
+ * (nút "Nhận góp ý bài viết"); hai góp ý AI chỉ bật ở khoá `languageMode`. Mặc định không tính vào điểm khoá (`countsTowardGrade: false`).
+ */
+export const AssignmentSpec = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().min(1).max(20_000),
+  responseFormat: z.enum(["text", "audio"]).default("text"),
+  maxScore: z.number().int().positive().max(1000).optional(),
+  rubricText: z.string().max(5_000).optional(),
+  countsTowardGrade: z.boolean().default(false),
+});
 
 export const LessonSpec = z.object({
   title: z.string().min(1).max(200),
@@ -279,6 +309,13 @@ export const LessonSpec = z.object({
   lecture: LectureScript.optional(),
   /** Kịch bản podcast hai người dẫn, lưu cùng cách với `lecture`. */
   podcast: PodcastScript.optional(),
+  /**
+   * Khối "Bài luyện" (đoạn văn/bài nghe + câu hỏi tự chấm, đáp án và giải thích hiện sau khi kiểm tra). Xếp sau các khối
+   * văn bản và thẻ ghi nhớ. Tệp audio/ảnh của đoạn nằm trong thư mục `--assets` (mặc định `assets/` cạnh manifest).
+   */
+  practices: z.array(PracticeSpec).max(8).optional(),
+  /** Bài tập nộp bài (nói ghi âm / viết). Học viên nộp ở tab "Bài tập" của bài. */
+  assignments: z.array(AssignmentSpec).max(6).optional(),
   quiz: z
     .object({
       title: z.string().min(1).max(200),
@@ -317,6 +354,8 @@ export const Manifest = z.object({
     level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
     category: z.string().max(80).optional(),
     personalizationEnabled: z.boolean().optional(),
+    /** Khoá ngoại ngữ: bật khung bài học 3 cột và các tính năng Language (cần personalizationEnabled). */
+    languageMode: z.boolean().optional(),
   }),
   /**
    * Lỗi tư duy điển hình của bài. Gắn vào phương án sai để Feedback Engine
@@ -1345,6 +1384,88 @@ export function resolveManifest(p: string): string {
   return p; // để readFileSync ném lỗi với đường dẫn người dùng đã gõ
 }
 
+/** Thân bài/mục có `asset:<tệp>` → tải ảnh lên kho bài học và đổi thành `/api/lesson-media/images/<tên>`. */
+async function withBodyAssets(l: z.infer<typeof LessonSpec>, assetsDir: string, actor: string): Promise<z.infer<typeof LessonSpec>> {
+  const files = new Set<string>([
+    ...bodyAssetRefs(l.body),
+    ...(l.sections ?? []).flatMap((s) => [s.intro, s.outro, ...s.parts.map((x) => x.md)].flatMap(bodyAssetRefs)),
+  ]);
+  if (files.size === 0) return l;
+  const urls = new Map<string, string>();
+  for (const f of files) {
+    const stored = await storePublicFile("lesson-media/images", resolve(assetsDir, f), actor);
+    urls.set(f, `/api/lesson-media/images/${stored.filename}`);
+  }
+  const rep = (t: string | undefined) => (t === undefined ? t : replaceBodyAssetRefs(t, urls));
+  return {
+    ...l,
+    body: rep(l.body),
+    sections: l.sections?.map((s) => ({ ...s, intro: rep(s.intro), outro: rep(s.outro), parts: s.parts.map((x) => ({ ...x, md: rep(x.md) ?? "" })) })),
+  };
+}
+
+/** Tạo một Bài tập nộp bài của bài học (đi qua createAssignment như UI). */
+export async function importAssignment(actor: string, lessonId: string, a: z.infer<typeof AssignmentSpec>) {
+  return createAssignment(actor, lessonId, {
+    title: a.title,
+    description: a.description,
+    responseFormat: a.responseFormat,
+    maxScore: a.maxScore,
+    ...(a.rubricText ? { rubricText: a.rubricText } : {}),
+    countsTowardGrade: a.countsTowardGrade,
+  });
+}
+
+/** Tạo một khối Bài luyện: khối + đề ẩn, rồi từng đoạn (kèm ảnh/audio/transcript) và câu hỏi. */
+export async function importPractice(actor: string, lessonId: string, pr: z.infer<typeof PracticeSpec>, orderIndex: number, assetsDir: string) {
+  const { contentItemId } = await createContentItem(actor, lessonId, { type: "exam_practice", orderIndex, payload: pr.title ? { title: pr.title } : {} });
+  const examId = await getOwnedPracticeExamId(contentItemId);
+  if (!examId) throw new Error("Khối Bài luyện không có đề ẩn");
+  const section = await prisma.examSection.findFirst({ where: { examId }, orderBy: { orderIndex: "asc" }, select: { id: true } });
+  if (!section) throw new Error("Đề ẩn của Bài luyện không có phần");
+
+  for (const ps of pr.passages) {
+    // Tải ảnh/audio lên trước để biết đường dẫn, rồi dựng tài liệu đoạn văn.
+    const srcOf = new Map<string, string>();
+    for (const b of ps.blocks) {
+      if ("image" in b) {
+        const st = await storePublicFile("exam-assets", resolve(assetsDir, b.image), examId);
+        await createImageAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: b.alt });
+        srcOf.set(`image:${b.image}`, `/api/exam-assets/${st.filename}`);
+      } else if ("audio" in b) {
+        const st = await storePublicFile("exam-assets", resolve(assetsDir, b.audio), examId);
+        await createAudioAsset(actor, examId, {
+          s3Key: st.filename,
+          mimeType: st.mime,
+          sizeBytes: st.size,
+          altText: b.alt,
+          ...(b.transcript?.trim() ? { transcript: b.transcript.trim() } : {}),
+        });
+        srcOf.set(`audio:${b.audio}`, `/api/exam-assets/${st.filename}`);
+      }
+    }
+    const doc = buildPassageDoc(ps.blocks, {
+      image: (f) => ({ src: srcOf.get(`image:${f}`)! }),
+      audio: (f) => ({ src: srcOf.get(`audio:${f}`)! }),
+    });
+    const { passageId } = await createPassage(actor, examId, { title: ps.title, contentJson: doc });
+    for (const q of ps.questions) {
+      await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
+    }
+  }
+  for (const q of pr.questions) {
+    await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir)), sectionId: section.id });
+  }
+}
+
+/** Câu essay có `sampleAudio`: ghi tệp vào kho `exam-assets` + `ExamAsset` audio; trả đường dẫn để lưu vào `explanationAudio`. */
+async function storeSampleAudio(actor: string, examId: string, q: ExamQuestionSpecT, assetsDir: string): Promise<string | undefined> {
+  if (!q.sampleAudio) return undefined;
+  const st = await storePublicFile("exam-assets", resolve(assetsDir, q.sampleAudio), examId);
+  await createAudioAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: "Sample answer audio" });
+  return `/api/exam-assets/${st.filename}`;
+}
+
 async function main() {
   const file = arg("file");
   const ownerEmail = arg("owner");
@@ -1376,6 +1497,8 @@ async function main() {
   }
   const manifest = parsed.data;
   setImportLanguage(manifest.course.language);
+  // Thư mục tệp audio/ảnh (ngoài Git): --assets, mặc định `assets/` cạnh file manifest.
+  const assetsDir = resolve(arg("assets") ?? resolve(dirname(resolveManifest(file)), "assets"));
 
   // Kiểm mọi câu hỏi TRƯỚC khi ghi dòng nào. Một câu sai ở bài cuối mà chỉ vỡ
   // lúc đang ghi thì để lại khoá dở dang trên production.
@@ -1392,11 +1515,20 @@ async function main() {
   let questionCount = 0;
   for (const [mi, m] of manifest.modules.entries()) {
     for (const [li, l] of m.lessons.entries()) {
-      if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz && !l.embeds?.length) {
+      if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz && !l.embeds?.length && !l.practices?.length && !l.assignments?.length && !l.sections?.length) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": rỗng — không có nội dung lẫn quiz`);
       }
       for (const msg of lectureAnchorProblems(l)) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": lời giảng: ${msg}`);
+      }
+      for (const [pi, pr] of (l.practices ?? []).entries()) {
+        const where = `module ${mi + 1} / bài ${li + 1} "${l.title}" / Bài luyện ${pi + 1}`;
+        for (const msg of practiceProblems(pr, where)) problems.push(msg);
+        for (const msg of assetProblems(pr, assetsDir, where)) problems.push(msg);
+        questionCount += practiceQuestionCount(pr);
+      }
+      for (const f of [...bodyAssetRefs(l.body), ...(l.sections ?? []).flatMap((s) => [s.intro, s.outro, ...s.parts.map((x) => x.md)].flatMap(bodyAssetRefs))]) {
+        if (!existsSync(resolve(assetsDir, f))) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": không thấy ảnh "${f}" trong ${assetsDir}`);
       }
       for (const msg of embedProblems(l)) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": ${msg}`);
@@ -1498,6 +1630,8 @@ async function main() {
         l.patterns ? `bảng mẫu ${l.patterns.rows.length} dòng` : null,
         l.body ? "nội dung" : null,
         l.embeds?.length ? `${l.embeds.length} khối nhúng` : null,
+        l.assignments?.length ? `${l.assignments.length} bài tập (${l.assignments.map((a) => a.responseFormat).join(", ")})` : null,
+        l.practices?.length ? `${l.practices.length} bài luyện (${l.practices.reduce((n, x) => n + practiceQuestionCount(x), 0)} câu)` : null,
         l.quiz ? `quiz ${l.quiz.questions.length} câu` : null,
       ].filter(Boolean);
       console.log(`      · ${l.title} — ${bits.join(", ") || "trống"}`);
@@ -1613,11 +1747,19 @@ async function main() {
         ...(l.durationMin ? { durationSec: l.durationMin * 60 } : {}),
       });
 
+      // Ảnh trong thân bài viết `asset:<tệp>`: tải lên rồi đổi thành đường dẫn thật.
+      const rl = await withBodyAssets(l, assetsDir, actor);
       // Soạn bằng markdown nhưng lưu thành richtext: markdown render ở cỡ chữ
       // nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
-      for (const [ci, item] of lessonContentItems(l).entries()) {
+      const items = lessonContentItems(rl);
+      for (const [ci, item] of items.entries()) {
         await createContentItem(actor, lessonId, { ...item, orderIndex: ci });
       }
+
+      for (const [pi, pr] of (l.practices ?? []).entries()) {
+        await importPractice(actor, lessonId, pr, items.length + pi, assetsDir);
+      }
+      for (const a of l.assignments ?? []) await importAssignment(actor, lessonId, a);
 
       if (l.quiz) {
         const { quizId } = await createQuiz(

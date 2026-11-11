@@ -869,7 +869,7 @@ export default async function LessonPage({
           )}
         </div>
       )}
-      {previewMode && (
+      {previewMode && !lessonFrame && (
         <Link
           href={`/learn/${params.slug}?preview=1`}
           className="link inline-flex items-center gap-1 text-sm font-medium"
@@ -974,7 +974,7 @@ export default async function LessonPage({
       </header>
 
       {split && (
-        <LessonViewTabs slug={params.slug} lessonId={lesson.id} view={lessonView} vocabCount={split.count} />
+        <LessonViewTabs slug={params.slug} lessonId={lesson.id} view={lessonView} vocabCount={split.count} preview={previewMode} />
       )}
 
       {!previewMode && skipSuggestion?.shouldSkip && (
@@ -1147,6 +1147,7 @@ export default async function LessonPage({
       levelLabel={lessonLevelLabel(languageMode)}
       notesCount={notesCount}
       tocModules={progress.modules}
+      preview={previewMode}
     >
       {body}
     </LessonFrameLayout>

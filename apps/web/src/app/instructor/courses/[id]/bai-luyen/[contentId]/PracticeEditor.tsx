@@ -56,7 +56,7 @@ function plain(html: string): string {
 
 /**
  * Editor Bài luyện: đoạn văn (kèm ảnh, âm thanh) và câu hỏi. Dùng lại trình soạn đoạn và câu hỏi của đề thi nhưng ở chế độ
- * `practiceMode` (không có điểm, skill, tự luận). Mọi thay đổi ghi qua API của đề ẩn gắn với khối.
+ * `practiceMode` (không có điểm, skill; câu tự luận có bài mẫu, audio mẫu, tiêu chí cho AI và công tắc giọng nói / AI). Mọi thay đổi ghi qua API của đề ẩn gắn với khối.
  */
 export default function PracticeEditor({
   examId,

@@ -1,5 +1,6 @@
 "use client";
 
+import { previewHref } from "@/lib/lessonFrameView";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ export default function LessonTocDrawer({
   tooltipLabel = "Mục lục",
   trigger = "fab",
   side = "right",
+  preview,
 }: {
   slug: string;
   currentLessonId: string;
@@ -30,6 +32,8 @@ export default function LessonTocDrawer({
   trigger?: "fab" | "inline";
   /** Ngăn kéo trượt ra từ phía nào (cùng phía với nút). */
   side?: "left" | "right";
+  /** Giảng viên đang xem thử: liên kết bài giữ `preview=1`. */
+  preview?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -183,7 +187,7 @@ export default function LessonTocDrawer({
                         return (
                           <li key={l.id}>
                             <Link
-                              href={`/learn/${slug}/lessons/${l.id}`}
+                              href={previewHref(`/learn/${slug}/lessons/${l.id}`, preview)}
                               aria-current={active ? "page" : undefined}
                               className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors ${
                                 active

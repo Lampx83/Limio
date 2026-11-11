@@ -1,4 +1,4 @@
-import { prisma } from "@feedbackme/db";
+import { Prisma, prisma } from "@feedbackme/db";
 import { logAudit } from "./audit";
 import type { DbClient } from "./tokens";
 
@@ -119,6 +119,20 @@ export async function deleteUser(
         })) > 0;
       if (m && !sharedWithOthers) removedFiles.push(m[1]!);
       await tx.assignmentSubmission.update({ where: { id: s.id }, data: { attachmentUrl: null } });
+    }
+    // Bài luyện nhúng — câu mở trả lời bằng giọng nói: file ghi âm là lời nói riêng của học viên, góp ý AI chứa trích đoạn bài
+    // làm. Gỡ liên kết + góp ý và trả KHOÁ file (khác tên file bài nộp ở trên: dạng `practice-answers/<sessionId>/<tên>`, ở kho
+    // private) cho tầng gọi xoá khỏi kho. Chữ trả lời của buổi luyện vẫn giữ ở dạng ẩn danh như các bài làm khác.
+    const voiceAnswers = await tx.examPracticeAnswer.findMany({
+      where: { session: { userId: targetUserId }, OR: [{ audioKey: { not: null } }, { aiFeedback: { not: Prisma.DbNull } }] },
+      select: { id: true, audioKey: true },
+    });
+    for (const a of voiceAnswers) {
+      if (a.audioKey) removedFiles.push(a.audioKey);
+      await tx.examPracticeAnswer.update({
+        where: { id: a.id },
+        data: { audioKey: null, audioMeta: Prisma.DbNull, aiFeedback: Prisma.DbNull, aiFeedbackHash: null, aiFeedbackAt: null },
+      });
     }
     // CENTER C4/C6 — mục tiêu học tập, nhận xét sau buổi (kể cả nháp) và tình trạng gửi email: nội dung chữ riêng tư về
     // học viên, không có giá trị thống kê sau khi ẩn danh nên xoá hẳn. Ghi chú của giáo viên trong điểm danh (C2) cũng

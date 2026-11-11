@@ -137,6 +137,21 @@ const EXPORT_SELECT = {
         },
         orderBy: { generatedAt: "asc" },
       },
+      // Bài luyện nhúng — câu trả lời, góp ý AI và tên tệp ghi âm (khoá ở kho private) của chính người dùng.
+      examPracticeSessions: {
+        select: {
+          id: true,
+          examId: true,
+          status: true,
+          startedAt: true,
+          completedAt: true,
+          answers: {
+            select: { questionId: true, answerJson: true, isCorrect: true, score: true, aiFeedback: true, aiFeedbackAt: true, audioKey: true, audioMeta: true, updatedAt: true },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+        orderBy: { startedAt: "asc" },
+      },
       verificationTokens: { select: { id: true, purpose: true, createdAt: true, consumedAt: true } },
       portfolio: {
         select: {

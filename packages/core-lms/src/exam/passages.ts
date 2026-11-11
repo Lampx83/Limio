@@ -3,7 +3,7 @@ import { z } from "zod";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { assertCanEditExam } from "../courses/authz";
 import { ExamError } from "./types";
-import { pruneDeletedPassageAssets, pruneRemovedPassageAssets } from "./passageAssets";
+import { canPruneAssets, pruneDeletedPassageAssets, pruneRemovedPassageAssets } from "./passageAssets";
 
 const audioPolicy = z.enum(["free_replay", "limited_replay", "once_only"]);
 const revealMode = z.enum(["all_at_once", "sequential"]);
@@ -175,10 +175,6 @@ export async function updatePassage(
       ? await pruneRemovedPassageAssets(p.examId, passageId, p.contentJson, d.contentJson, db)
       : [];
   return { removedFiles };
-}
-
-function canPruneAssets(exam: { status: string; ownerContentItemId: string | null }): boolean {
-  return exam.ownerContentItemId ? exam.status !== "archived" : exam.status === "draft";
 }
 
 export async function deletePassage(

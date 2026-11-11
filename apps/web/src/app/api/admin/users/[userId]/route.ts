@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { DeleteUserError, deleteUser } from "@feedbackme/core-lms";
 import { requireAdmin } from "@/lib/session";
 import { storageFor } from "@/lib/storage";
-import { submissionKeyFromFilename } from "@/lib/storage-keys";
+import { practiceAnswerKeyFromAudioKey, submissionKeyFromFilename } from "@/lib/storage-keys";
 
 export async function DELETE(
   _req: Request,
@@ -14,9 +14,10 @@ export async function DELETE(
   try {
     const { removedFiles } = await deleteUser(adminId, params.userId);
     // LANG G7e.1 — file ghi âm bài nói của người dùng bị xoá khỏi kho (sổ dung lượng tự đánh dấu đã xoá).
+    // Bản ghi âm câu mở của Bài luyện đến dưới dạng khoá kho `practice-answers/<buổi>/<tên>` (lớp private), không phải tên tệp bài nộp.
     // Hỏng một file không được làm hỏng cả yêu cầu xoá tài khoản (đã hoàn tất ở DB).
     for (const name of removedFiles) {
-      const key = submissionKeyFromFilename(name);
+      const key = name.startsWith("practice-answers/") ? practiceAnswerKeyFromAudioKey(name) : submissionKeyFromFilename(name);
       if (!key) continue;
       try {
         await storageFor(key).delete(key.key);

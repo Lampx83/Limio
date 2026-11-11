@@ -211,6 +211,23 @@ export function oralExamMaterialKey(date: Date, filename: string): StorageKey {
 }
 
 /**
+ * Bản ghi âm câu mở của Bài luyện nhúng (docs/tieu-chi/bai-luyen-tra-loi-bang-giong-noi-va-bai-mau.md, AC1). Lớp `private`:
+ * lời nói riêng của học viên, chỉ chủ buổi luyện nghe lại qua route có kiểm quyền. Khoá lưu trong DB
+ * (`ExamPracticeAnswer.audioKey`) chính là chuỗi `key` này.
+ */
+export function practiceAnswerKey(sessionId: string, filename: string): StorageKey {
+  return { layer: "private", key: `practice-answers/${sessionId}/${filename}` };
+}
+
+const PRACTICE_ANSWER_KEY = /^practice-answers\/[A-Za-z0-9_-]+\/[A-Za-z0-9._-]+$/;
+
+/** Khoá `practice-answers/<sessionId>/<tên>` đã lưu trong DB → khoá kho. Sai dạng (hoặc có `..`) → null, không đoán. */
+export function practiceAnswerKeyFromAudioKey(audioKey: string): StorageKey | null {
+  if (!PRACTICE_ANSWER_KEY.test(audioKey) || audioKey.includes("..")) return null;
+  return { layer: "private", key: audioKey };
+}
+
+/**
  * Recover the sharded key from a filename that embeds `<…>-<unixMs>-<hex>.<ext>`.
  * Used by serving routes which only receive the leaf filename in the URL.
  * Returns null if the filename doesn't carry a parseable timestamp.

@@ -41,10 +41,13 @@ describe("toPublicQuestionConfig — không lộ đáp án xuống trình duyệ
     ).toEqual({});
   });
 
-  it("essay: giữ minWords, bỏ rubric", () => {
-    expect(toPublicQuestionConfig("essay", { rubric: "bí mật", minWords: 100 })).toEqual({
+  it("essay: giữ minWords và hai công tắc (mặc định bật), bỏ rubric, bài mẫu và audio mẫu", () => {
+    expect(toPublicQuestionConfig("essay", { rubric: "bí mật", minWords: 100, explanation: "Bài mẫu", explanationAudio: "/api/exam-assets/a.m4a" })).toEqual({
       minWords: 100,
+      voiceAnswer: true,
+      aiFeedback: true,
     });
+    expect(toPublicQuestionConfig("essay", { voiceAnswer: false, aiFeedback: false })).toEqual({ voiceAnswer: false, aiFeedback: false });
   });
 
   it("loại lạ hoặc config hỏng: trả rỗng thay vì chuyển nguyên xi", () => {

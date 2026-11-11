@@ -19,6 +19,8 @@ import {
   type DragDropFillDraft,
 } from "@/components/question-editor/types";
 import { isPlayableExamQuestionType } from "@/lib/examQuestionSupport";
+import { buildEssayConfig, essayDraftFromConfig } from "@/lib/essayQuestionConfig";
+import EssayAudioField from "./EssayAudioField";
 
 // Đợt 8 (thống nhất 10 loại Quiz/Bank/Đề thi) — đủ 10 loại canonical đều mở
 // được ở picker, dùng 4 editor DÙNG CHUNG (apps/web/src/components/question-editor/)
@@ -100,6 +102,11 @@ interface State {
   shortMatchMode: "exact" | "case_insensitive";
   essayRubric: string;
   essayMinWords: number;
+  /** Audio bài mẫu của câu tự luận (đường dẫn kho đề; rỗng = không có). */
+  essayAudio: string;
+  /** Bài luyện: cho học viên trả lời bằng giọng nói / AI nhận xét (mặc định bật). */
+  essayVoice: boolean;
+  essayAi: boolean;
   // Đợt 8 — 4 loại mới, dùng thẳng shape canonical.
   ordering: OrderingDraft;
   matching: MatchingDraft;
@@ -130,7 +137,7 @@ interface Props {
   /** Đề Khảo sát: không đáp án đúng, không điểm, không giải thích/skill. */
   survey?: boolean;
   onClose: () => void;
-  /** Bài luyện trong bài học: bỏ ô Điểm và Skill, không có dạng Tự luận (không tự kiểm tra được). */
+  /** Bài luyện trong bài học: bỏ ô Điểm và Skill; câu Tự luận có thêm bài mẫu, audio mẫu, tiêu chí cho AI và hai công tắc giọng nói / AI. */
   practiceMode?: boolean;
 }
 
@@ -149,6 +156,9 @@ function defaultState(passageId: string | null): State {
     shortMatchMode: "case_insensitive",
     essayRubric: "",
     essayMinWords: 0,
+    essayAudio: "",
+    essayVoice: true,
+    essayAi: true,
     ordering: {
       items: [
         { id: "o1", label: "" },
@@ -218,8 +228,12 @@ export default function QuestionEditor({
       s.shortAccepted = ((cfg.acceptedAnswers as string[]) ?? []).join("; ");
       s.shortMatchMode = (cfg.matchMode as State["shortMatchMode"]) ?? "case_insensitive";
     } else if (s.type === "essay") {
-      s.essayRubric = plainToRichHtml((cfg.rubric as string) ?? "");
-      s.essayMinWords = (cfg.minWords as number) ?? 0;
+      const e = essayDraftFromConfig(cfg, plainToRichHtml);
+      s.essayRubric = e.rubric;
+      s.essayMinWords = e.minWords;
+      s.essayAudio = e.explanationAudio;
+      s.essayVoice = e.voiceAnswer;
+      s.essayAi = e.aiFeedback;
     } else if (s.type === "ordering") {
       s.ordering = { items: (cfg.items as State["ordering"]["items"]) ?? s.ordering.items };
     } else if (s.type === "matching") {
@@ -279,7 +293,7 @@ export default function QuestionEditor({
         <QuestionTypePicker
           // Chỉ loại trình làm bài vẽ được (isPlayableExamQuestionType): Sắp xếp, Ghép cặp, Số, Kéo thả tạm ẩn cho tới khi
           // trình làm bài hỗ trợ — tránh tạo câu học viên không làm được. Câu đã tạo vẫn sửa được.
-          types={(practiceMode ? EXAM_PICKER_TYPES.filter((t) => t !== "essay") : EXAM_PICKER_TYPES).filter(isPlayableExamQuestionType)}
+          types={EXAM_PICKER_TYPES.filter(isPlayableExamQuestionType)}
           onPick={(t) => {
             setV((prev) => ({ ...prev, type: t as QType }));
             setPickingType(false);
@@ -344,12 +358,16 @@ export default function QuestionEditor({
             .filter(Boolean),
           matchMode: v.shortMatchMode,
         };
-      case "essay": {
-        const out: Record<string, unknown> = {};
-        if (v.essayRubric) out.rubric = v.essayRubric;
-        if (v.essayMinWords > 0) out.minWords = v.essayMinWords;
-        return out;
-      }
+      case "essay":
+        // Hai công tắc và audio mẫu chỉ có ở Bài luyện; ở đề thi thường giữ nguyên như trước (không ghi khoá mới).
+        return buildEssayConfig({
+          rubric: v.essayRubric,
+          minWords: v.essayMinWords,
+          explanation: v.explanation,
+          explanationAudio: practiceMode ? v.essayAudio : "",
+          voiceAnswer: practiceMode ? v.essayVoice : true,
+          aiFeedback: practiceMode ? v.essayAi : true,
+        });
       case "ordering":
         return { items: v.ordering.items.filter((it) => it.label.trim().length > 0) };
       case "matching":
@@ -740,17 +758,24 @@ export default function QuestionEditor({
       )}
 
       {!survey && v.type === "essay" && (
-        <div className="space-y-2 rounded border border-default bg-white p-3">
+        <div className="space-y-3 rounded border border-default bg-white p-3">
           <div>
-            <span className="block text-sm font-medium">Rubric (tuỳ chọn)</span>
+            <span className="block text-sm font-medium">
+              {practiceMode ? "Tiêu chí đánh giá cho AI" : "Rubric (tuỳ chọn)"}
+            </span>
             <div className="mt-1">
               <RichTextEditor
                 value={v.essayRubric}
                 onChange={(html) => setV({ ...v, essayRubric: html })}
-                placeholder="Tiêu chí chấm bài…"
+                placeholder={practiceMode ? "Ví dụ: Nêu ít nhất ba mốc thời gian; dùng thì quá khứ." : "Tiêu chí chấm bài…"}
                 minHeight={100}
               />
             </div>
+            {practiceMode && (
+              <p className="mt-1 text-caption text-faint">
+                Điều AI cần xét khi góp ý; để trống thì AI chỉ dựa vào đề và bài mẫu.
+              </p>
+            )}
           </div>
           <label className="block">
             <span className="block text-sm font-medium">Số từ tối thiểu (0 = không yêu cầu)</span>
@@ -763,6 +788,35 @@ export default function QuestionEditor({
               className="mt-1 w-32 rounded border border-default px-2 py-1 text-sm"
             />
           </label>
+          {practiceMode && (
+            <>
+              <EssayAudioField examId={examId} value={v.essayAudio} onChange={(essayAudio) => setV({ ...v, essayAudio })} />
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={v.essayVoice}
+                  onChange={(e) => setV({ ...v, essayVoice: e.target.checked })}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="block text-sm font-medium">Cho trả lời bằng giọng nói</span>
+                  <span className="block text-caption text-faint">Học viên có nút ghi âm cạnh ô gõ chữ; bản ghi được chuyển thành chữ để học viên sửa.</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={v.essayAi}
+                  onChange={(e) => setV({ ...v, essayAi: e.target.checked })}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="block text-sm font-medium">AI nhận xét câu trả lời</span>
+                  <span className="block text-caption text-faint">Khi học viên bấm “Kiểm tra câu n”, AI góp ý ngay (không chấm điểm, không vào sổ điểm).</span>
+                </span>
+              </label>
+            </>
+          )}
         </div>
       )}
 
@@ -795,18 +849,24 @@ export default function QuestionEditor({
 
       <div className={survey ? "hidden" : undefined}>
         <label className="block text-sm font-medium">
-          Giải thích đáp án{" "}
+          {practiceMode && v.type === "essay" ? "Bài mẫu (Sample answer)" : "Giải thích đáp án"}{" "}
           <span className="font-normal text-faint">(không bắt buộc)</span>
         </label>
         <textarea
-          rows={2}
+          rows={practiceMode && v.type === "essay" ? 4 : 2}
           value={v.explanation}
           onChange={(e) => setV({ ...v, explanation: e.target.value })}
-          placeholder="Vì sao đáp án này đúng — học sinh đọc được sau khi bài được chấm."
+          placeholder={
+            practiceMode && v.type === "essay"
+              ? "Câu trả lời mẫu (ví dụ từ Teacher's Book) để học viên đối chiếu."
+              : "Vì sao đáp án này đúng — học sinh đọc được sau khi bài được chấm."
+          }
           className="mt-1 w-full rounded border border-default px-3 py-2 text-sm"
         />
         <p className="mt-1 text-caption text-faint">
-          {practiceMode
+          {practiceMode && v.type === "essay"
+            ? "Học viên thấy sau khi kiểm tra, dưới câu trả lời của chính họ. AI cũng dùng bài mẫu để so sánh khi góp ý. Để trống thì không hiện khối bài mẫu."
+            : practiceMode
             ? "Hiện cho học viên ngay khi họ bấm “Kiểm tra câu n”; nên chỉ rõ đoạn nào của bài đọc/bài nghe chứng minh đáp án. Để trống thì học viên không thấy khối giải thích."
             : "Ở đề thi, chỉ hiện khi đề bật “Hiện kết quả sau khi nộp”. Ở “Bài luyện” nhúng trong bài học, hiện ngay khi học viên bấm “Kiểm tra câu n”; nên chỉ rõ đoạn nào của bài đọc/bài nghe chứng minh đáp án. Để trống thì học viên không thấy khối giải thích."}
         </p>

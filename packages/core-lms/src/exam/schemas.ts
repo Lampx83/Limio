@@ -70,8 +70,15 @@ export const ShortAnswerConfig = z.object({
 });
 
 export const EssayConfig = z.object({
+  /** Tiêu chí đánh giá: giảng viên viết điều AI cần xét khi góp ý câu trả lời. */
   rubric: z.string().max(5_000).optional(),
   minWords: z.number().int().positive().max(10_000).optional(),
+  /** Bài mẫu (Sample answer) là `explanation`; audio của bài mẫu là đường dẫn tệp trong kho đề (`/api/exam-assets/<tên>`). */
+  explanationAudio: z.string().max(500).regex(/^\/api\/exam-assets\/[A-Za-z0-9._-]+$/).optional(),
+  /** Bài luyện nhúng: cho học viên trả lời bằng giọng nói (mặc định bật). */
+  voiceAnswer: z.boolean().optional(),
+  /** Bài luyện nhúng: AI góp ý câu trả lời ngay khi học viên kiểm tra (mặc định bật). */
+  aiFeedback: z.boolean().optional(),
   ...explanationField,
 });
 

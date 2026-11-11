@@ -131,6 +131,40 @@ export async function pruneDeletedPassageAssets(examId: string, passageId: strin
   return pruneRemovedPassageAssets(examId, passageId, oldDoc, { type: "doc", content: [] }, db);
 }
 
+/** Đề nháp, hoặc đề ẩn của Bài luyện chưa lưu trữ: được dọn tệp mồ côi. Đề thường đã xuất bản thì giữ (có thể đang có người làm). */
+export function canPruneAssets(exam: { status: string; ownerContentItemId: string | null }): boolean {
+  return exam.ownerContentItemId ? exam.status !== "archived" : exam.status === "draft";
+}
+
+/** Tên tệp audio bài mẫu (`explanationAudio`) trong cấu hình một câu hỏi; không có thì null. */
+export function explanationAudioFilename(config: unknown): string | null {
+  if (!config || typeof config !== "object") return null;
+  return examAssetFilename((config as { explanationAudio?: unknown }).explanationAudio);
+}
+
+/**
+ * Sau khi câu hỏi được lưu (cấu hình đã ở DB là bản mới): audio bài mẫu CÓ trong cấu hình cũ mà không còn trong cấu hình mới
+ * (và không đoạn/câu nào của đề nhắc tới) bị xoá khỏi bảng `ExamAsset` của đề. Trả về tên các tệp không còn dòng nào trỏ tới
+ * (kể cả đề khác, vì nhân bản đề dùng chung tệp) để lớp gọi xoá khỏi kho. Chỉ dọn tệp câu này từng dùng.
+ */
+export async function pruneRemovedQuestionAssets(
+  examId: string,
+  oldConfig: unknown,
+  newConfig: unknown,
+  db: PrismaClient = prisma,
+): Promise<string[]> {
+  const oldFile = explanationAudioFilename(oldConfig);
+  if (!oldFile || oldFile === explanationAudioFilename(newConfig)) return [];
+  if (await stillUsedInExam(examId, oldFile, null, db)) return [];
+  await db.examAsset.deleteMany({ where: { examId, s3Key: oldFile } });
+  return (await db.examAsset.count({ where: { s3Key: oldFile } })) === 0 ? [oldFile] : [];
+}
+
+/** Dọn như trên khi cả câu bị xoá (hàng đã xoá khỏi DB). */
+export async function pruneDeletedQuestionAssets(examId: string, oldConfig: unknown, db: PrismaClient = prisma): Promise<string[]> {
+  return pruneRemovedQuestionAssets(examId, oldConfig, {}, db);
+}
+
 async function loadEditableAudio(actorUserId: string, examId: string, filename: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },

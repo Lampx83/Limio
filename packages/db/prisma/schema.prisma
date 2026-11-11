@@ -6132,6 +6132,14 @@ model ExamPracticeAnswer {
   isCorrect  Boolean?
   score      Float?
   checkedAt  DateTime?
+  // Câu mở (essay) trong Bài luyện nhúng: góp ý của AI (đẩy thẳng cho học viên, không qua giảng viên duyệt), băm bản trả lời + bài mẫu +
+  // tiêu chí để không gọi lại AI khi nội dung không đổi, và bản ghi âm CUỐI CÙNG khi học viên trả lời bằng giọng nói (file ở lớp private).
+  aiFeedback     Json?
+  aiFeedbackHash String?
+  aiFeedbackAt   DateTime?
+  audioKey       String?
+  // { durationSec, mimeType, sizeBytes, metrics (số liệu nhịp nói do Whisper đo) }
+  audioMeta      Json?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
