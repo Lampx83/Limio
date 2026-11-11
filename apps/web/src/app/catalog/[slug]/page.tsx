@@ -17,6 +17,7 @@ import { getPaymentEnabled } from "@/lib/site-settings";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import { StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
+import { isMicro4AsiaSlug, M4A_THEME_CSS } from "@/lib/micro4asia";
 import { courseLanguageLabel, courseLevelLabel, modulePrefix } from "@/lib/courseLabels";
 
 export const dynamic = "force-dynamic";
@@ -135,7 +136,11 @@ export default async function CourseDetailPage({
   const showEnrollNudge = !enrolled && !publiclyReadable && course.modules.length > 0;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
+    <main
+      className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10"
+      {...(isMicro4AsiaSlug(params.slug) ? { "data-m4a-theme": "" } : {})}
+    >
+      {isMicro4AsiaSlug(params.slug) && <style>{M4A_THEME_CSS}</style>}
       {/* Bản nháp (chủ khoá xem trước) không khai schema: không có gì để lên SERP. */}
       {course.status === "published" && (
         <JsonLd

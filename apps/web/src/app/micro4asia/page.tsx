@@ -246,12 +246,39 @@ function SiteHeader({ lang }: { lang: M4aLang }) {
           hrefLang={other}
           lang={other}
           aria-label={c.switchLabel}
-          className="shrink-0 border border-[#00528C] px-3 py-1.5 text-sm font-semibold text-[#00528C] transition-colors hover:bg-[#00528C] hover:text-white"
+          title={c.switchTo}
+          className="shrink-0 rounded-sm border border-[#B2B2B2] p-1.5 transition-colors hover:border-[#00528C]"
         >
-          {c.switchTo}
+          <Flag lang={other} />
+          <span className="sr-only">{c.switchTo}</span>
         </Link>
       </div>
     </header>
+  );
+}
+
+/** Cờ của ngôn ngữ sẽ chuyển sang: Việt Nam cho "vi", Vương quốc Anh cho "en". */
+function Flag({ lang }: { lang: M4aLang }) {
+  const cls = "block h-6 w-9 sm:h-7 sm:w-[42px]";
+  if (lang === "vi") {
+    return (
+      <svg viewBox="0 0 30 20" className={cls} aria-hidden>
+        <rect width="30" height="20" fill="#DA251D" />
+        <polygon
+          fill="#FFFF00"
+          points="15,4 16.8,9.3 22.4,9.3 17.8,12.6 19.6,18 15,14.7 10.4,18 12.2,12.6 7.6,9.3 13.2,9.3"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 60 40" className={cls} aria-hidden>
+      <rect width="60" height="40" fill="#012169" />
+      <path d="M0,0 L60,40 M60,0 L0,40" stroke="#fff" strokeWidth="8" />
+      <path d="M0,0 L60,40 M60,0 L0,40" stroke="#C8102E" strokeWidth="3" />
+      <path d="M30,0 V40 M0,20 H60" stroke="#fff" strokeWidth="13" />
+      <path d="M30,0 V40 M0,20 H60" stroke="#C8102E" strokeWidth="8" />
+    </svg>
   );
 }
 
