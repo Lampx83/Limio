@@ -35,7 +35,7 @@ function markNoticeSeen() {
  * Nằm dưới ô gõ. Bấm nút là ghi luôn (≤ 3 phút); một khung duy nhất đi qua ba bước: đang ghi (Dừng) → nghe lại
  * (Chuyển thành chữ / Ghi lại). Bản ghi chỉ rời trình duyệt khi học viên bấm "Chuyển thành chữ". Chữ do máy nghe điền vào ô trả lời (việc đó do `onUse` ở chỗ gọi làm). Gõ chữ luôn dùng được.
  *
- * - `preview`: xem thử của giảng viên — nút hiện nhưng khoá, không gọi máy chủ.
+ * - `preview`: xem thử của giảng viên — ghi âm và chuyển chữ được (trừ ví giảng viên) nhưng không lưu bản ghi và không có nhận xét AI.
  * - `recordingSrc`: có bản ghi cuối cùng của học viên → trình phát "Bản ghi của bạn" (cả sau khi tải lại trang).
  * - `viaVoiceText`: câu trả lời hiện tại đến từ giọng nói → nhãn nhắc đọc lại và sửa.
  */
@@ -71,16 +71,15 @@ export default function EssayVoiceAnswer({
           <button
             type="button"
             className="btn-secondary btn-sm inline-flex items-center gap-1.5"
-            disabled={preview}
             onClick={() => setOpen(true)}
           >
             <Mic size={14} aria-hidden /> Trả lời bằng giọng nói
           </button>
-          {preview && <span className="text-xs text-muted">Xem thử: không chuyển giọng nói thành chữ.</span>}
+          {preview && <span className="text-xs text-muted">Xem thử: ghi âm và chuyển thành chữ được, nhưng không lưu bản ghi.</span>}
         </div>
       )}
 
-      {open && !preview && <VoicePanel hasText={hasText} feedbackOn={feedbackOn} onUse={onUse} onClose={() => setOpen(false)} />}
+      {open && <VoicePanel hasText={hasText} feedbackOn={feedbackOn} onUse={onUse} onClose={() => setOpen(false)} />}
 
       {recordingSrc && !preview && (
         <div data-testid="lp-voice-player">

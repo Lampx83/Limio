@@ -126,18 +126,40 @@ export async function transcribePracticeVoice(
   const { userId, sessionId, questionId, audio } = args;
   const ctx = await loadEssayContext(userId, sessionId, questionId, db);
   if (!ctx.voiceAnswer) throw new PracticeFeedbackError("voice_disabled");
+  return transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+}
+
+/**
+ * Xem thử của GIẢNG VIÊN: cùng bước chuyển chữ nhưng không có buổi luyện. Quyền (sửa được khoá chứa đề), câu là `essay` và
+ * `voiceAnswer` bật do tầng gọi kiểm trước (core-lms `getPreviewVoiceContext`); ở đây chỉ trừ ví của giảng viên rồi gọi Whisper.
+ * Không lưu gì, không ghi sự kiện.
+ */
+export async function transcribePreviewVoice(
+  args: { userId: string; language: string | null; audio: AudioPayload },
+  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  db: PrismaClient = prisma,
+): Promise<PracticeVoiceResult> {
+  return transcribeSpokenAnswer(args, deps, db);
+}
+
+async function transcribeSpokenAnswer(
+  args: { userId: string; language: string | null; audio: AudioPayload },
+  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  db: PrismaClient,
+): Promise<PracticeVoiceResult> {
+  const { userId, language, audio } = args;
   if (audio.buffer.length > MAX_AUDIO_BYTES) {
     throw new PracticeFeedbackError("audio_too_large", { bytes: audio.buffer.length, max: MAX_AUDIO_BYTES });
   }
   if (audio.buffer.length === 0) throw new PracticeFeedbackError("no_speech");
 
-  // Ví của học viên + trần hệ thống — kiểm TRƯỚC khi chạm Whisper.
+  // Ví của người nói + trần hệ thống — kiểm TRƯỚC khi chạm Whisper.
   await assertWithinCaps(userId, db, "generator");
   // Lấy khách hàng OpenAI SAU khi kiểm ví và NGOÀI khối bắt lỗi Whisper: thiếu cấu hình AI phải báo đúng là thiếu cấu hình.
   const transcribe = deps.transcribe ?? openAiTranscriber(typeof deps.openai === "function" ? await deps.openai() : deps.openai);
   let stt: TranscribeResult;
   try {
-    stt = await transcribe(audio, { language: whisperLanguage(ctx.courseLanguage) });
+    stt = await transcribe(audio, { language: whisperLanguage(language) });
   } catch (e) {
     throw new PracticeFeedbackError("stt_failed", { message: (e as Error).message });
   }

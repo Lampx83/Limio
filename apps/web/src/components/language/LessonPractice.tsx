@@ -220,18 +220,24 @@ export default function LessonPractice({
    * rồi trả bản chữ để điền vào ô. Ném `VoiceUseError(mã)` để ô giọng nói hiện lời nhắn đúng; ô gõ vẫn dùng được.
    */
   async function useVoice(qid: string, file: File): Promise<AnswerValue> {
-    if (preview) throw new VoiceUseError("preview");
-    let sid: string;
-    try {
-      sid = await ensureSession();
-    } catch {
-      throw new VoiceUseError("network");
+    // Xem thử của giảng viên: chỉ chuyển chữ (trừ ví giảng viên), không buổi luyện, không lưu bản ghi hay câu trả lời.
+    let url: string;
+    if (preview) {
+      url = apiUrl(`/api/practice-preview/${embed.examId}/voice/${qid}`);
+    } else {
+      let sid: string;
+      try {
+        sid = await ensureSession();
+      } catch {
+        throw new VoiceUseError("network");
+      }
+      url = apiUrl(`/api/practice-sessions/${sid}/voice/${qid}`);
     }
     const form = new FormData();
     form.append("file", file);
     let res: Response;
     try {
-      res = await fetch(apiUrl(`/api/practice-sessions/${sid}/voice/${qid}`), { method: "POST", body: form });
+      res = await fetch(url, { method: "POST", body: form });
     } catch {
       throw new VoiceUseError("network");
     }
@@ -247,8 +253,10 @@ export default function LessonPractice({
     setChecks((p) => without(p, qid));
     setFeedbacks((p) => without(p, qid));
     setFeedbackErrors((p) => without(p, qid));
-    setAudioVer((p) => ({ ...p, [qid]: (p[qid] ?? 0) + 1 }));
-    setSaveState("saved");
+    if (!preview) {
+      setAudioVer((p) => ({ ...p, [qid]: (p[qid] ?? 0) + 1 }));
+      setSaveState("saved");
+    }
     setError(null);
     return spoken;
   }

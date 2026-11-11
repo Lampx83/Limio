@@ -8,26 +8,10 @@ import { getOpenaiClient } from "@/lib/openaiClient";
 import { storageFor } from "@/lib/storage";
 import { practiceAnswerKey, practiceAnswerKeyFromAudioKey } from "@/lib/storage-keys";
 import { mapPracticeAnswerError } from "@/lib/practiceAnswerApi";
+import { readVoiceUpload } from "@/lib/practiceVoiceUpload";
 
 export const runtime = "nodejs";
 export const maxDuration = 120; // Whisper có thể mất hơn một lượt gọi thường
-
-/** Tối đa 25 MB (giới hạn của Whisper); bản ghi 3 phút từ trình duyệt chỉ vài MB. */
-const MAX_BYTES = 25 * 1024 * 1024;
-
-/** Định dạng ghi âm nhận vào → đuôi tệp lưu. Khớp những gì MediaRecorder ra (webm/ogg, mp4 trên Safari) và tệp tải lên thông dụng. */
-const MIME_TO_EXT: Record<string, string> = {
-  "audio/webm": "webm",
-  "audio/ogg": "ogg",
-  "audio/mp4": "m4a",
-  "audio/x-m4a": "m4a",
-  "audio/m4a": "m4a",
-  "audio/mpeg": "mp3",
-  "audio/mp3": "mp3",
-  "audio/wav": "wav",
-  "audio/x-wav": "wav",
-  "audio/wave": "wav",
-};
 
 /**
  * Bài luyện nhúng, câu mở: học viên trả lời bằng giọng nói. Multipart `file` (bản ghi âm).
@@ -44,21 +28,10 @@ export async function POST(req: Request, { params }: { params: { id: string; que
     // Chủ buổi, buổi còn dở, câu là essay và voiceAnswer bật — kiểm TRƯỚC khi đọc tệp lên bộ nhớ.
     await getPracticeVoiceContext(userId, sessionId, questionId);
 
-    let form: FormData;
-    try {
-      form = await req.formData();
-    } catch {
-      return NextResponse.json({ error: "invalid_form_data" }, { status: 400 });
-    }
-    const file = form.get("file");
-    if (!(file instanceof File)) return NextResponse.json({ error: "validation_failed", details: "no_file" }, { status: 400 });
-    if (file.size === 0) return NextResponse.json({ error: "validation_failed", details: "empty_file" }, { status: 400 });
-    if (file.size > MAX_BYTES) return NextResponse.json({ error: "file_too_large", details: { maxBytes: MAX_BYTES } }, { status: 413 });
-    const mimeType = file.type.split(";")[0]!.trim().toLowerCase();
-    const ext = MIME_TO_EXT[mimeType];
-    if (!ext) return NextResponse.json({ error: "unsupported_media_type", details: { allowed: Object.keys(MIME_TO_EXT) } }, { status: 415 });
+    const upload = await readVoiceUpload(req);
+    if (upload instanceof NextResponse) return upload;
+    const { buffer, mimeType, ext } = upload;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
     const stt = await transcribePracticeVoice(
       { userId, sessionId, questionId, audio: { buffer, mimeType } },
       // Lấy khách hàng AI chậm: thiếu cấu hình chỉ lộ khi thật sự cần gọi Whisper.

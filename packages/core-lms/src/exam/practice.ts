@@ -512,6 +512,26 @@ export async function getPracticeVoiceContext(
   };
 }
 
+/**
+ * Xem thử của giảng viên: được ghi âm và chuyển chữ cho một câu `essay` của Bài luyện (không buổi luyện, không lưu gì).
+ * Cùng điều kiện với học viên: câu là `essay` và `voiceAnswer` bật. Chỉ người sửa được khoá chứa đề.
+ */
+export async function getPreviewVoiceContext(
+  actorUserId: string,
+  examId: string,
+  questionId: string,
+  db: PrismaClient = prisma,
+): Promise<{ language: string | null }> {
+  const exam = await loadOwnedPracticeForPreview(actorUserId, examId, db);
+  const q = await db.examQuestion.findUnique({ where: { id: questionId }, select: { examId: true, type: true, config: true } });
+  if (!q || q.examId !== examId) throw new ExamError("validation_failed", { reason: "question_not_in_exam" });
+  if (q.type !== "essay") throw new ExamError("validation_failed", { reason: "not_essay" });
+  const cfg = (q.config && typeof q.config === "object" ? q.config : {}) as Record<string, unknown>;
+  if (cfg.voiceAnswer === false) throw new ExamError("validation_failed", { reason: "voice_disabled" });
+  const course = await db.course.findUnique({ where: { id: exam.courseId! }, select: { language: true } });
+  return { language: course?.language ?? null };
+}
+
 export interface PracticeVoiceAudioMeta {
   durationSec: number;
   mimeType: string;
