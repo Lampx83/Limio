@@ -11,3 +11,6 @@ export const Lexend = font;
 export const Noto_Serif = font;
 export const Inter = font;
 export const Nunito = font;
+
+/** next/font/local: hàm mặc định, cùng kết quả rỗng. */
+export default font;
