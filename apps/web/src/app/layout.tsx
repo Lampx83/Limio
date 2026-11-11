@@ -12,6 +12,10 @@ import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { AiTokensPageProvider } from "@/components/AiTokensPageContext";
 import { getAiTokensPageLocked } from "@/lib/site-settings";
 import { getEnv } from "@/lib/env";
+import { headers } from "next/headers";
+import SpaceFooter from "@/components/SpaceFooter";
+import { getSpaceForPath, toBrand } from "@/lib/space/resolve";
+import { themeCssFor } from "@/lib/space/theme";
 import {
   DEFAULT_OG_IMAGE,
   SITE_DESCRIPTION,
@@ -135,6 +139,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const aiTokensPageUnlocked = !(await getAiTokensPageLocked().catch(() => true));
+  // SPACE: trang thuộc space của trường/dự án (middleware gắn x-space-path) ⇒ đổi màu, logo, chân trang theo space.
+  const spacePath = headers().get("x-space-path");
+  const space = spacePath ? await getSpaceForPath(spacePath) : null;
+  const spaceBrand = space ? toBrand(space) : null;
 
   return (
     <html lang="vi" className={`${inter.variable} ${nunito.variable} ${slideBody.variable}`} suppressHydrationWarning>
@@ -148,16 +156,15 @@ export default async function RootLayout({
             getEnv().NEXT_PUBLIC_GA_MEASUREMENT_ID_ALL,
           ]}
         />
+        {space && <style>{themeCssFor(space)}</style>}
         <Providers>
           <AiTokensPageProvider unlocked={aiTokensPageUnlocked}>
           <ImpersonationBanner />
           <div data-print-hide data-app-chrome className="sticky top-0 z-30">
-            <AppHeader />
+            <AppHeader space={spaceBrand} />
           </div>
           <div className="flex flex-1 flex-col">{children}</div>
-          <FooterGate>
-            <Footer />
-          </FooterGate>
+          <FooterGate>{spaceBrand ? <SpaceFooter space={spaceBrand} /> : <Footer />}</FooterGate>
           <Toaster />
           </AiTokensPageProvider>
         </Providers>
