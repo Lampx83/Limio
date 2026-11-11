@@ -5,6 +5,7 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { getRegisterEnabled } from "@/lib/site-settings";
 import JsonLd from "@/components/JsonLd";
+import M4aRegisterDialog from "@/components/M4aRegisterDialog";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import {
   M4A_COPY,
@@ -23,13 +24,22 @@ type SearchParams = { lang?: string | string[] };
 export function generateMetadata({ searchParams }: { searchParams: SearchParams }): Metadata {
   const lang = resolveM4aLang(searchParams.lang);
   const c = M4A_COPY[lang];
-  return pageMetadata({
+  const base = pageMetadata({
     title: c.metaTitle,
     description: c.metaDescription,
     // Canonical về bản gốc, không kèm ?lang — hai ngôn ngữ cùng một trang.
     path: "/micro4asia",
+    image: "/micro4asia/og",
     locale: lang === "vi" ? "vi_VN" : "en_US",
   });
+  // Link gửi đi mang nhận diện M4A + NEU, không phải Limio: bỏ hậu tố "| Limio" ở title,
+  // đặt tên site theo dự án, ảnh xem trước là /micro4asia/og.
+  return {
+    ...base,
+    title: { absolute: `${c.metaTitle} | NEU` },
+    openGraph: { ...base.openGraph, title: c.metaTitle, siteName: "MICRO4ASIA × NEU" },
+    twitter: { ...base.twitter, title: c.metaTitle },
+  };
 }
 
 /*
@@ -158,26 +168,11 @@ export default async function Micro4AsiaPage({ searchParams }: { searchParams: S
             </li>
           ))}
         </ol>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {showRegister && (
-            <Link
-              href="/register"
-              className="bg-[#00528C] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0E4877]"
-            >
-              {c.register} →
-            </Link>
-          )}
-          <Link
-            href="/catalog"
-            className={
-              showRegister
-                ? "border border-[#00528C] px-6 py-3 text-sm font-bold text-[#00528C] transition-colors hover:bg-[#D6EEFB]/60"
-                : "bg-[#00528C] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0E4877]"
-            }
-          >
-            {c.allCourses}
-          </Link>
-        </div>
+        {showRegister && (
+          <div className="mt-8">
+            <M4aRegisterDialog lang={lang} label={c.register} />
+          </div>
+        )}
       </section>
 
       <footer className="border-t-4 border-[#00528C]">

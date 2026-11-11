@@ -51,17 +51,25 @@ export async function generateMetadata({
   });
   if (!course) return { title: "Không tìm thấy khoá học", robots: { index: false } };
 
-  return pageMetadata({
+  const m4a = isMicro4AsiaSlug(params.slug);
+  const base = pageMetadata({
     title: course.title,
     description:
       htmlToPlainText(course.description ?? "") ||
       `Khoá học ${course.title}${course.category ? ` — ${course.category}` : ""} trên ${SITE_NAME}.`,
     path: `/catalog/${params.slug}`,
-    image: course.coverUrl,
+    // Khoá MICRO4ASIA: link gửi đi mang nhận diện NEU + Micro4Asia thay vì ảnh Limio mặc định.
+    image: m4a ? "/micro4asia/og" : course.coverUrl,
     type: "website",
     locale: course.language === "en" ? "en_US" : undefined,
     noIndex: course.status !== "published",
   });
+  if (!m4a) return base;
+  return {
+    ...base,
+    title: { absolute: `${course.title} | MICRO4ASIA · NEU` },
+    openGraph: { ...base.openGraph, siteName: "MICRO4ASIA × NEU" },
+  };
 }
 
 export default async function CourseDetailPage({

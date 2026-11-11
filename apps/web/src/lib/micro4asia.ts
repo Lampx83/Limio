@@ -137,7 +137,6 @@ export interface M4aCopy {
   stepsTitle: string;
   steps: Array<{ t: string; d: string }>;
   register: string;
-  allCourses: string;
   footnote: string;
   poweredBy: string;
   switchTo: string;
@@ -192,7 +191,6 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
       { t: "Finish and get certified", d: "Complete the course to receive your certificate." },
     ],
     register: "Create an account",
-    allCourses: "Browse all courses",
     footnote:
       "MICRO4ASIA is co-funded by the European Union. This page is hosted on Limio by the School of Technology, NEU. The official project website is micro4asia.eu.",
     poweredBy: "Courses are delivered on the Limio learning platform.",
@@ -246,7 +244,6 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
       { t: "Hoàn thành và nhận chứng nhận", d: "Học xong khoá để nhận chứng nhận." },
     ],
     register: "Tạo tài khoản",
-    allCourses: "Xem tất cả khoá học",
     footnote:
       "MICRO4ASIA được đồng tài trợ bởi Liên minh châu Âu. Trang này do Trường Công nghệ, NEU đăng tải trên Limio. Website chính thức của dự án là micro4asia.eu.",
     poweredBy: "Các khoá học được vận hành trên nền tảng học tập Limio.",
