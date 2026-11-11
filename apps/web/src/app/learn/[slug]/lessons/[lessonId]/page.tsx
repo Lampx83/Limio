@@ -38,7 +38,7 @@ import { getActiveRole } from "@/lib/active-role";
 import { isLearnerRole } from "@/lib/learnerRole";
 import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
 import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
-import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel } from "@/lib/lessonFramePolicy";
+import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel, previewHidesSiteChrome } from "@/lib/lessonFramePolicy";
 import { getSiteSetting } from "@/lib/site-settings";
 import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/ExamRefBlock";
 import LessonPractice from "@/components/language/LessonPractice";
@@ -155,7 +155,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
       // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
@@ -825,7 +825,7 @@ export default async function LessonPage({
       // Trạng thái ban đầu của công tắc ghi chú; sau đó TeacherBar tự đổi thuộc
       // tính này trên <html> để bật/tắt tức thì, không tải lại trang.
       data-gv={teacherMode ? "1" : undefined}
-      data-preview={previewMode ? "1" : undefined}
+      data-preview={previewHidesSiteChrome(!!previewMode, !!lessonFrame) ? "1" : undefined}
       // w-full: <main> là item của một flex column (layout gốc) và có mx-auto, nên
       // không có w-full thì nó co theo nội dung — bài ngắn/không mục lục hẹp hơn
       // hẳn bài có mục lục, chuyển bài qua lại thì độ rộng trang nhảy.
@@ -1141,6 +1141,7 @@ export default async function LessonPage({
       slug={params.slug}
       lessonId={lesson.id}
       courseTitle={lesson.module.course.title}
+      coverUrl={lesson.module.course.coverUrl}
       lessonTitle={lesson.title}
       frame={lessonFrame}
       hasExams={frameHasExams}

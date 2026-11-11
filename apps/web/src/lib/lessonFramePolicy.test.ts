@@ -6,6 +6,7 @@ import {
   lessonLevelLabel,
   panelIsDocked,
   panelWidthClass,
+  previewHidesSiteChrome,
   readPanelOpenPref,
   readPanelTabPref,
   writePanelOpenPref,
@@ -102,5 +103,14 @@ describe("panel phải theo chiều ngang", () => {
     expect(() => writePanelOpenPref(blocked, "mid", true)).not.toThrow();
     expect(readPanelTabPref(blocked)).toBe("ai");
     expect(readPanelOpenPref(null, "wide")).toBeNull();
+  });
+});
+
+describe("xem thử ẩn header/footer của site", () => {
+  it("chỉ ẩn ở xem thử bản cũ không khung; có khung 3 cột thì hiện như học viên; không xem thử thì không ẩn", () => {
+    expect(previewHidesSiteChrome(true, false)).toBe(true);
+    expect(previewHidesSiteChrome(true, true)).toBe(false);
+    expect(previewHidesSiteChrome(false, false)).toBe(false);
+    expect(previewHidesSiteChrome(false, true)).toBe(false);
   });
 });

@@ -16,7 +16,7 @@ vi.mock("next/link", () => ({
 vi.mock("@/components/AiTutorPanel", () => ({ default: () => null }));
 vi.mock("@/components/LessonActions", () => ({ LessonNotes: () => null }));
 
-import LessonFrameLayout, { LessonCrumbs, LessonNavBar, LessonViewTabs } from "./LessonFrame";
+import LessonFrameLayout, { LessonCrumbs, LessonNavBar, LessonViewTabs, RailCourseHeader } from "./LessonFrame";
 
 const text = (h: string) => h.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
 
@@ -201,5 +201,37 @@ describe("LessonNavBar", () => {
     const long = "Tên bài rất rất dài ".repeat(6);
     const html = renderToStaticMarkup(<LessonNavBar slug="s" prev={null} next={{ id: "n", title: long }} />);
     expect(text(html)).toContain("…");
+  });
+});
+
+describe("RailCourseHeader — bìa giáo trình ở đầu thanh bên", () => {
+  it("có bìa: ảnh nhỏ (alt rỗng, trang trí) cạnh 'Về khoá học', không ghi tên sách; bìa và chữ cùng dẫn về trang khoá", () => {
+    const html = renderToStaticMarkup(<RailCourseHeader slug="ielts" coverUrl="/api/course-covers/c1.jpg" />);
+    expect(html).toContain('data-testid="rail-cover"');
+    expect(html).toContain('<img src="/api/course-covers/c1.jpg" alt=""');
+    expect(text(html).trim()).toBe("← Về khoá học");
+    expect((html.match(/href="\/learn\/ielts"/g) ?? []).length).toBe(2);
+  });
+
+  it("chưa có bìa: chỉ còn liên kết 'Về khoá học' như cũ, không ảnh vỡ", () => {
+    const html = renderToStaticMarkup(<RailCourseHeader slug="ielts" coverUrl={null} />);
+    expect(html).not.toContain("<img");
+    expect(html).not.toContain("rail-cover");
+    expect(text(html).trim()).toBe("← Về khoá học");
+  });
+
+  it("xem thử của giảng viên: liên kết giữ preview=1", () => {
+    const html = renderToStaticMarkup(<RailCourseHeader slug="ielts" coverUrl="/a.jpg" preview />);
+    expect(html).toContain('href="/learn/ielts?preview=1"');
+  });
+
+  it("khung bài học: truyền coverUrl thì thanh bên có bìa, không truyền thì không", () => {
+    const withCover = renderToStaticMarkup(
+      <LessonFrameLayout slug="ielts" lessonId="l2" courseTitle="Active Skills" coverUrl="/api/course-covers/c1.jpg" lessonTitle="Reading Skill" frame={frame()} hasExams={false} levelLabel="Unit" notesCount={0}>
+        <main>x</main>
+      </LessonFrameLayout>,
+    );
+    expect(withCover).toContain("rail-cover");
+    expect(render()).not.toContain("rail-cover");
   });
 });

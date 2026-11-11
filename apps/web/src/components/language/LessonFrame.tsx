@@ -72,13 +72,37 @@ function RailList({ slug, frame, preview }: { slug: string; frame: LessonFrameDa
 
 type TocModules = React.ComponentProps<typeof LessonTocDrawer>["modules"];
 
-function RailBody({ slug, frame, hasExams, levelLabel, preview }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean }) {
+/**
+ * Đầu thanh bên: có ảnh bìa giáo trình thì hiện bìa nhỏ, liên kết "← Về khoá học" nằm DƯỚI bìa trên một dòng (bấm bìa cũng về trang khoá; không ghi tên
+ * sách, bìa đã đủ nhận diện); chưa có bìa thì chỉ còn liên kết như cũ. Ảnh trang trí nên alt rỗng.
+ */
+export function RailCourseHeader({ slug, coverUrl, preview }: { slug: string; coverUrl: string | null; preview?: boolean }) {
+  const href = previewHref(`/learn/${slug}`, preview);
+  if (!coverUrl) {
+    return (
+      <Link href={href} className="link text-sm">
+        ← Về khoá học
+      </Link>
+    );
+  }
+  return (
+    <div data-testid="rail-cover">
+      <Link href={href} tabIndex={-1} aria-hidden className="block w-24">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={coverUrl} alt="" className="h-auto w-full rounded-sm object-cover shadow-md ring-1 ring-black/10" />
+      </Link>
+      <Link href={href} className="link mt-2 inline-block whitespace-nowrap text-sm">
+        ← Về khoá học
+      </Link>
+    </div>
+  );
+}
+
+function RailBody({ slug, frame, hasExams, levelLabel, preview, coverUrl }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean; coverUrl: string | null }) {
   const pct = frame.unitTotal === 0 ? 0 : Math.round((frame.unitDone / frame.unitTotal) * 100);
   return (
     <div>
-      <Link href={previewHref(`/learn/${slug}`, preview)} className="link text-sm">
-        ← Về khoá học
-      </Link>
+      <RailCourseHeader slug={slug} coverUrl={coverUrl} preview={preview} />
       <div className="mt-4 text-xs font-bold uppercase tracking-wider text-brand-700">{levelLabel}</div>
       <div className="text-h4 mt-0.5">{frame.unitTitle}</div>
       <div
@@ -197,6 +221,7 @@ export default function LessonFrameLayout({
   slug,
   lessonId,
   courseTitle,
+  coverUrl = null,
   lessonTitle,
   frame,
   hasExams,
@@ -209,6 +234,8 @@ export default function LessonFrameLayout({
   slug: string;
   lessonId: string;
   courseTitle: string;
+  /** Ảnh bìa giáo trình của khoá (`Course.coverUrl`); null thì thanh bên không có bìa. */
+  coverUrl?: string | null;
   lessonTitle: string;
   frame: LessonFrameData;
   hasExams: boolean;
@@ -227,7 +254,7 @@ export default function LessonFrameLayout({
     <LessonFrameShell
       lessonId={lessonId}
       notesCount={notesCount}
-      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} />}
+      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} coverUrl={coverUrl} />}
       railLabel={`Bài trong ${levelLower}`}
       railSummary={`Bài trong ${levelLower} · ${frame.unitDone} / ${frame.unitTotal}`}
       crumbs={
