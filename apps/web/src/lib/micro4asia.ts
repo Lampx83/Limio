@@ -137,7 +137,6 @@ export interface M4aCopy {
   stepsTitle: string;
   steps: Array<{ t: string; d: string }>;
   register: string;
-  allCourses: string;
   footnote: string;
   poweredBy: string;
   switchTo: string;
@@ -192,7 +191,6 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
       { t: "Finish and get certified", d: "Complete the course to receive your certificate." },
     ],
     register: "Create an account",
-    allCourses: "Browse all courses",
     footnote:
       "MICRO4ASIA is co-funded by the European Union. This page is hosted on Limio by the School of Technology, NEU. The official project website is micro4asia.eu.",
     poweredBy: "Courses are delivered on the Limio learning platform.",
@@ -246,7 +244,6 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
       { t: "Hoàn thành và nhận chứng nhận", d: "Học xong khoá để nhận chứng nhận." },
     ],
     register: "Tạo tài khoản",
-    allCourses: "Xem tất cả khoá học",
     footnote:
       "MICRO4ASIA được đồng tài trợ bởi Liên minh châu Âu. Trang này do Trường Công nghệ, NEU đăng tải trên Limio. Website chính thức của dự án là micro4asia.eu.",
     poweredBy: "Các khoá học được vận hành trên nền tảng học tập Limio.",
@@ -255,3 +252,31 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
     breadcrumbHome: "Trang chủ",
   },
 };
+
+const M4A_SLUGS = new Set(M4A_COURSES.map((c) => c.slug));
+
+/** Khoá thuộc dự án MICRO4ASIA — trang khoá học đổi sang tông NEU và logo đồng thương hiệu. */
+export function isMicro4AsiaSlug(slug: string): boolean {
+  return M4A_SLUGS.has(slug);
+}
+
+/**
+ * Tông NEU cho trang khoá học M4A. Palette Tailwind của Limio là hex cố định (không phải biến CSS)
+ * nên không thể đổi bằng biến; ghi đè đúng các lớp trang khoá học đang dùng, gắn vào
+ * `body:has([data-m4a-theme])` để phủ cả header (nằm ngoài <main>) mà không ảnh hưởng trang khác.
+ */
+export const M4A_THEME_CSS = (() => {
+  const S = "body:has([data-m4a-theme])";
+  return [
+    `${S}{--brand:0 82 140;--brand-soft:214 238 251}`,
+    `${S} .bg-brand-gradient{background-image:linear-gradient(135deg,#00528C 0%,#0E4877 100%)}`,
+    `${S} .text-brand-600,${S} .text-brand-700,${S} .hover\\:text-brand-600:hover,${S} .hover\\:text-brand-700:hover,${S} .link{color:#00528C}`,
+    `${S} .bg-brand-50{background-color:#D6EEFB}`,
+    `${S} .bg-brand-500{background-color:#00528C}`,
+    `${S} .border-brand-500{border-color:#00528C}`,
+    `${S} .accent-brand-600{accent-color:#00528C}`,
+    `${S} .btn-primary{background-color:#00528C}`,
+    `${S} .btn-primary:hover{background-color:#0E4877;box-shadow:0 8px 24px -8px rgb(0 82 140/.5)}`,
+    `${S} .shadow-card-hover{box-shadow:0 2px 4px 0 rgb(15 23 42/.06),0 12px 24px -8px rgb(0 82 140/.22)}`,
+  ].join("\n");
+})();

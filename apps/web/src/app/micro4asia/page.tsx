@@ -5,6 +5,7 @@ import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
 import { getRegisterEnabled } from "@/lib/site-settings";
 import JsonLd from "@/components/JsonLd";
+import M4aRegisterDialog from "@/components/M4aRegisterDialog";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 import {
   M4A_COPY,
@@ -23,13 +24,22 @@ type SearchParams = { lang?: string | string[] };
 export function generateMetadata({ searchParams }: { searchParams: SearchParams }): Metadata {
   const lang = resolveM4aLang(searchParams.lang);
   const c = M4A_COPY[lang];
-  return pageMetadata({
+  const base = pageMetadata({
     title: c.metaTitle,
     description: c.metaDescription,
     // Canonical về bản gốc, không kèm ?lang — hai ngôn ngữ cùng một trang.
     path: "/micro4asia",
+    image: "/micro4asia/og",
     locale: lang === "vi" ? "vi_VN" : "en_US",
   });
+  // Link gửi đi mang nhận diện M4A + NEU, không phải Limio: bỏ hậu tố "| Limio" ở title,
+  // đặt tên site theo dự án, ảnh xem trước là /micro4asia/og.
+  return {
+    ...base,
+    title: { absolute: `${c.metaTitle} | NEU` },
+    openGraph: { ...base.openGraph, title: c.metaTitle, siteName: "MICRO4ASIA × NEU" },
+    twitter: { ...base.twitter, title: c.metaTitle },
+  };
 }
 
 /*
@@ -158,26 +168,11 @@ export default async function Micro4AsiaPage({ searchParams }: { searchParams: S
             </li>
           ))}
         </ol>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          {showRegister && (
-            <Link
-              href="/register"
-              className="bg-[#00528C] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0E4877]"
-            >
-              {c.register} →
-            </Link>
-          )}
-          <Link
-            href="/catalog"
-            className={
-              showRegister
-                ? "border border-[#00528C] px-6 py-3 text-sm font-bold text-[#00528C] transition-colors hover:bg-[#D6EEFB]/60"
-                : "bg-[#00528C] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0E4877]"
-            }
-          >
-            {c.allCourses}
-          </Link>
-        </div>
+        {showRegister && (
+          <div className="mt-8">
+            <M4aRegisterDialog lang={lang} label={c.register} />
+          </div>
+        )}
       </section>
 
       <footer className="border-t-4 border-[#00528C]">
@@ -246,12 +241,39 @@ function SiteHeader({ lang }: { lang: M4aLang }) {
           hrefLang={other}
           lang={other}
           aria-label={c.switchLabel}
-          className="shrink-0 border border-[#00528C] px-3 py-1.5 text-sm font-semibold text-[#00528C] transition-colors hover:bg-[#00528C] hover:text-white"
+          title={c.switchTo}
+          className="shrink-0 rounded-sm border border-[#B2B2B2] p-1.5 transition-colors hover:border-[#00528C]"
         >
-          {c.switchTo}
+          <Flag lang={other} />
+          <span className="sr-only">{c.switchTo}</span>
         </Link>
       </div>
     </header>
+  );
+}
+
+/** Cờ của ngôn ngữ sẽ chuyển sang: Việt Nam cho "vi", Vương quốc Anh cho "en". */
+function Flag({ lang }: { lang: M4aLang }) {
+  const cls = "block h-6 w-9 sm:h-7 sm:w-[42px]";
+  if (lang === "vi") {
+    return (
+      <svg viewBox="0 0 30 20" className={cls} aria-hidden>
+        <rect width="30" height="20" fill="#DA251D" />
+        <polygon
+          fill="#FFFF00"
+          points="15,4 16.8,9.3 22.4,9.3 17.8,12.6 19.6,18 15,14.7 10.4,18 12.2,12.6 7.6,9.3 13.2,9.3"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 60 40" className={cls} aria-hidden>
+      <rect width="60" height="40" fill="#012169" />
+      <path d="M0,0 L60,40 M60,0 L0,40" stroke="#fff" strokeWidth="8" />
+      <path d="M0,0 L60,40 M60,0 L0,40" stroke="#C8102E" strokeWidth="3" />
+      <path d="M30,0 V40 M0,20 H60" stroke="#fff" strokeWidth="13" />
+      <path d="M30,0 V40 M0,20 H60" stroke="#C8102E" strokeWidth="8" />
+    </svg>
   );
 }
 

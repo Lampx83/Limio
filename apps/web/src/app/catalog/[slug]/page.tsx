@@ -17,6 +17,7 @@ import { getPaymentEnabled } from "@/lib/site-settings";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import { StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
+import { isMicro4AsiaSlug, M4A_THEME_CSS } from "@/lib/micro4asia";
 import { courseLanguageLabel, courseLevelLabel, modulePrefix } from "@/lib/courseLabels";
 
 export const dynamic = "force-dynamic";
@@ -50,17 +51,25 @@ export async function generateMetadata({
   });
   if (!course) return { title: "Không tìm thấy khoá học", robots: { index: false } };
 
-  return pageMetadata({
+  const m4a = isMicro4AsiaSlug(params.slug);
+  const base = pageMetadata({
     title: course.title,
     description:
       htmlToPlainText(course.description ?? "") ||
       `Khoá học ${course.title}${course.category ? ` — ${course.category}` : ""} trên ${SITE_NAME}.`,
     path: `/catalog/${params.slug}`,
-    image: course.coverUrl,
+    // Khoá MICRO4ASIA: link gửi đi mang nhận diện NEU + Micro4Asia thay vì ảnh Limio mặc định.
+    image: m4a ? "/micro4asia/og" : course.coverUrl,
     type: "website",
     locale: course.language === "en" ? "en_US" : undefined,
     noIndex: course.status !== "published",
   });
+  if (!m4a) return base;
+  return {
+    ...base,
+    title: { absolute: `${course.title} | MICRO4ASIA · NEU` },
+    openGraph: { ...base.openGraph, siteName: "MICRO4ASIA × NEU" },
+  };
 }
 
 export default async function CourseDetailPage({
@@ -135,7 +144,11 @@ export default async function CourseDetailPage({
   const showEnrollNudge = !enrolled && !publiclyReadable && course.modules.length > 0;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
+    <main
+      className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10"
+      {...(isMicro4AsiaSlug(params.slug) ? { "data-m4a-theme": "" } : {})}
+    >
+      {isMicro4AsiaSlug(params.slug) && <style>{M4A_THEME_CSS}</style>}
       {/* Bản nháp (chủ khoá xem trước) không khai schema: không có gì để lên SERP. */}
       {course.status === "published" && (
         <JsonLd

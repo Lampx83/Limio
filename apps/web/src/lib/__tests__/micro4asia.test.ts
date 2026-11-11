@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { M4A_COPY, M4A_COURSES, resolveM4aLang } from "../micro4asia";
+import { M4A_COPY, M4A_COURSES, isMicro4AsiaSlug, resolveM4aLang } from "../micro4asia";
 
 describe("trang MICRO4ASIA", () => {
   it("có đúng sáu vi tín chỉ, slug không trùng", () => {
@@ -31,6 +31,11 @@ describe("trang MICRO4ASIA", () => {
   it("không đưa thông tin nội bộ (kinh phí) lên trang công khai", () => {
     const all = JSON.stringify([M4A_COURSES, M4A_COPY.en, M4A_COPY.vi]).toLowerCase();
     expect(all).not.toMatch(/vnđ|vnd|kinh phí|budget/);
+  });
+
+  it("isMicro4AsiaSlug nhận đúng slug M4A, không nhận khoá khác", () => {
+    expect(isMicro4AsiaSlug("programming-for-data-science")).toBe(true);
+    expect(isMicro4AsiaSlug("mau-mien-phi")).toBe(false);
   });
 
   it("resolveM4aLang mặc định tiếng Anh, chỉ nhận vi khi được yêu cầu", () => {
