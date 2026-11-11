@@ -478,6 +478,13 @@ function MicroCredential() {
               </li>
             ))}
           </ul>
+
+          <Link
+            href="/micro4asia"
+            className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-pink-700 hover:text-pink-800"
+          >
+            Xem chương trình vi tín chỉ MICRO4ASIA →
+          </Link>
         </div>
 
         <SegmentsMock />

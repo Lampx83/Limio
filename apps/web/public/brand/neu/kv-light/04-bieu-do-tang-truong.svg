@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="824.58 99.22 256 256" width="256" height="256">
+  <rect id="kv-growth-l-bg" class="kv-canvas" x="824.58" y="99.22" width="256" height="256" fill="#FFFFFF"/>
+  <path id="kv-growth-l-1" class="kv-p kv-growth-line" fill="none" stroke="#00528C" stroke-width="15" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" transform="matrix(1 0 0 -1 1063.758 119.879)" d="M 0 0 L -113.125 -98.141 L -151.246 -71.055 L -231.219 -138.957"/>
+  <path id="kv-growth-l-2" class="kv-p kv-growth-stub" fill="#0E4877" d="M 827.633 273.129 L 827.633 253.227 L 850.426 253.227 Z M 827.633 273.129"/>
+  <path id="kv-growth-l-3" class="kv-p kv-growth-head" fill="none" stroke="#0E4877" stroke-width="15" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" transform="matrix(1 0 0 -1 1002.893 116.202)" d="M 0.002 -0.001 L 0.002 -0.001"/>
+  <path id="kv-growth-l-4" class="kv-p kv-growth-head" fill="none" stroke="#00528C" stroke-width="15" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" transform="matrix(1 0 0 -1 1072.624 118.04)" d="M 0.001 0.001 L -69.401 0.001"/>
+  <path id="kv-growth-l-5" class="kv-p kv-growth-head" fill="none" stroke="#00528C" stroke-width="15" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" transform="matrix(1 0 0 -1 1066.051 110.231)" d="M 0 0.001 L 0 -69.402"/>
+  <path id="kv-growth-l-6" class="kv-p kv-growth-bar1" fill="#D6EEFB" d="M 896.246 351.605 L 828.734 351.605 L 828.734 286.719 L 896.246 286.719 Z M 896.246 351.605"/>
+  <path id="kv-growth-l-7" class="kv-p kv-growth-bar2" fill="#69A8CB" d="M 984.332 351.605 L 916.816 351.605 L 916.816 248.887 L 984.332 248.887 Z M 984.332 351.605"/>
+  <path id="kv-growth-l-8" class="kv-p kv-growth-bar3" fill="#00528C" d="M 1075.34 351.605 L 1007.828 351.605 L 1007.828 220.77 L 1075.34 220.77 Z M 1075.34 351.605"/>
+</svg>
