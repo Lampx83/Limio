@@ -1,26 +1,39 @@
-import { Be_Vietnam_Pro, Lexend, Noto_Serif } from "next/font/google";
+import localFont from "next/font/local";
 
 /**
- * Ba kiểu chữ của bài học. Nhúng qua next/font (tự host, không gọi Google lúc
- * học viên xem) và chỉ tải ở trang có bài văn bản, nên không làm nặng trang khác.
- * Cả ba đều có bộ ký tự tiếng Việt.
+ * Ba kiểu chữ của bài học, lưu sẵn trong repo (./fonts, giấy phép OFL đi kèm)
+ * và chỉ tải ở trang có bài văn bản, nên không làm nặng trang khác.
+ *
+ * Không dùng next/font/google: lúc build, trình tải của Next đòi đường dẫn tệp
+ * font kết thúc bằng .woff2/.ttf, mà Google trả kiểu đường dẫn khác cho máy
+ * build ở AWS ⇒ build hỏng mỗi lần (11/2026). Mỗi tệp đã cắt còn bộ ký tự
+ * latin + latin-ext + tiếng Việt (fontTools subset → woff2).
  */
-const vietnam = Be_Vietnam_Pro({
-  subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600", "700", "800"],
+const vietnam = localFont({
+  src: [
+    { path: "./fonts/BeVietnamPro-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/BeVietnamPro-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/BeVietnamPro-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/BeVietnamPro-700.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/BeVietnamPro-800.woff2", weight: "800", style: "normal" },
+  ],
   display: "swap",
   variable: "--lk-font-vietnam",
 });
 
-const lexend = Lexend({
-  subsets: ["latin", "vietnamese"],
+const lexend = localFont({
+  src: "./fonts/Lexend-Variable.woff2",
+  weight: "100 900",
+  style: "normal",
   display: "swap",
   variable: "--lk-font-lexend",
 });
 
-const serif = Noto_Serif({
-  subsets: ["latin", "vietnamese"],
-  weight: ["600", "700"],
+const serif = localFont({
+  src: [
+    { path: "./fonts/NotoSerif-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/NotoSerif-700.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
   variable: "--lk-font-serif",
 });
