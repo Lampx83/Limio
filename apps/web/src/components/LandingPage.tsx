@@ -1,12 +1,9 @@
 import Link from "next/link";
 import {
-  Award,
   BadgeCheck,
   Check,
   ClipboardCheck,
   GraduationCap,
-  Layers,
-  Link2,
   PenLine,
   Presentation,
   ShieldCheck,
@@ -410,32 +407,30 @@ function HowItWorks() {
   );
 }
 
-// Micro-credential: khoá ngắn tập trung một năng lực, có bằng chứng đạt được và một
-// chứng nhận kiểm chứng công khai được. Mọi ý ở đây đều ứng với tính năng đã có:
-// bài học tự thành chủ đề, thi/vấn đáp, chứng nhận có mã tra cứu ở /verify, và
-// thương hiệu "Limio × tên trường" trên chứng nhận. Chưa hứa các thứ chưa có
-// (huy hiệu chuẩn mở, tích luỹ nhiều chứng nhận thành văn bằng).
+// Micro-credential — tinh thần: NHỎ (một khoá ngắn, một năng lực), THẬT (có bằng chứng
+// đạt được), MANG THEO ĐƯỢC (chứng nhận kiểm chứng công khai). Hình ảnh là từng "múi
+// chanh" tích dần, bám theo thương hiệu. Mọi ý đều ứng với tính năng đã có (bài học tự
+// thành chủ đề, thi/vấn đáp, chứng nhận có mã ở /verify, thương hiệu "Limio × tên trường").
+// Không hứa những thứ chưa có: huy hiệu chuẩn mở, ghép nhiều chứng nhận thành văn bằng.
 function MicroCredential() {
-  const points = [
+  const principles = [
     {
-      icon: <Layers className="h-5 w-5" aria-hidden />,
-      t: "Khoá ngắn, một năng lực",
-      d: "Chia nhỏ thành các bài; mỗi bài tự thành một chủ đề để theo dõi mức thành thạo.",
+      word: "Nhỏ",
+      tone: "bg-brand-100 text-brand-700",
+      t: "Một khoá ngắn, một năng lực",
+      d: "Học đúng điều cần, không phải cam kết cả một chương trình dài. Mỗi bài tự thành một chủ đề để theo dõi.",
     },
     {
-      icon: <ClipboardCheck className="h-5 w-5" aria-hidden />,
+      word: "Thật",
+      tone: "bg-pink-100 text-pink-700",
       t: "Có bằng chứng, không chỉ “đã xem”",
-      d: "Bài kiểm tra, đợt thi và vấn đáp cho thấy học viên thật sự đạt được gì.",
+      d: "Bài kiểm tra, đợt thi và vấn đáp cho thấy học viên thật sự đạt được gì. Hoàn thành khoá mới có chứng nhận.",
     },
     {
-      icon: <Award className="h-5 w-5" aria-hidden />,
-      t: "Chứng nhận khi hoàn thành khoá",
-      d: "Cấp tự động, mang tên đơn vị đào tạo, kèm logo và chữ ký, tải được dạng PDF.",
-    },
-    {
-      icon: <Link2 className="h-5 w-5" aria-hidden />,
-      t: "Kiểm chứng được bằng một đường dẫn",
-      d: "Mỗi chứng nhận có mã riêng và trang tra cứu công khai để nhà tuyển dụng hay đối tác tự kiểm tra.",
+      word: "Mang theo được",
+      tone: "bg-amber-100 text-amber-800",
+      t: "Kiểm chứng bằng một đường dẫn",
+      d: "Mỗi chứng nhận có mã riêng và trang tra cứu công khai, mang tên đơn vị đào tạo. Gửi cho nhà tuyển dụng, dán vào hồ sơ.",
     },
   ];
   const fits = ["Bồi dưỡng ngắn hạn", "Kỹ năng nghề", "Đào tạo nội bộ", "Khoá của trường × đối tác"];
@@ -448,18 +443,21 @@ function MicroCredential() {
             Micro-credential
           </span>
           <h2 className="h-display mt-4 text-3xl font-bold sm:text-4xl">
-            Học gọn, chứng nhận kiểm chứng được
+            Học từng mảnh nhỏ,{" "}
+            <span className="text-gradient">nhận từng chứng nhận thật</span>
           </h2>
           <p className="mt-3 max-w-xl text-muted">
-            Limio hợp với các khoá ngắn cấp chứng nhận: học viên học đúng một năng lực, có
-            bằng chứng đã đạt, và nhận chứng nhận mà ai cũng tra cứu được.
+            Micro-credential là một khoá ngắn, một năng lực rõ ràng và một chứng nhận ai cũng
+            kiểm chứng được. Limio được làm để dạy, đánh giá và cấp đúng loại chứng nhận đó.
           </p>
 
-          <ul className="mt-8 grid gap-5 sm:grid-cols-2">
-            {points.map((p) => (
-              <li key={p.t} className="flex gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
-                  {p.icon}
+          <ul className="mt-8 space-y-5">
+            {principles.map((p) => (
+              <li key={p.word} className="flex gap-4">
+                <span
+                  className={`flex h-11 min-w-[5.5rem] shrink-0 items-center justify-center rounded-2xl px-3 text-center text-sm font-bold leading-tight ${p.tone}`}
+                >
+                  {p.word}
                 </span>
                 <span>
                   <span className="block text-base font-semibold leading-tight">{p.t}</span>
@@ -482,43 +480,94 @@ function MicroCredential() {
           </ul>
         </div>
 
-        <CertificateMock />
+        <SegmentsMock />
       </div>
     </section>
   );
 }
 
-// Mockup chứng nhận — tên, khoá và mã đều là chỗ giữ chỗ, có nhãn "Minh hoạ" để không
-// bị đọc thành chứng nhận thật.
-function CertificateMock() {
+// Một múi trong vòng tròn chia đều: điểm đầu/cuối tính bằng lượng giác, làm tròn cố định
+// để HTML sinh ở server luôn ổn định.
+function wedgePath(i: number, n: number, r: number, gap: number): string {
+  const cx = 60;
+  const cy = 60;
+  const a0 = (i / n) * Math.PI * 2 - Math.PI / 2 + gap;
+  const a1 = ((i + 1) / n) * Math.PI * 2 - Math.PI / 2 - gap;
+  const p = (a: number) => `${(cx + r * Math.cos(a)).toFixed(2)} ${(cy + r * Math.sin(a)).toFixed(2)}`;
+  return `M ${cx} ${cy} L ${p(a0)} A ${r} ${r} 0 0 1 ${p(a1)} Z`;
+}
+
+// Mockup "múi chanh": mỗi chứng nhận học viên nhận được là một múi, tích dần theo thời gian.
+// Tên khoá và mã là chỗ giữ chỗ, có nhãn "Minh hoạ" để không bị đọc thành chứng nhận thật.
+function SegmentsMock() {
+  const total = 8;
+  // 0..2: múi chanh đã nhận; 3: múi hồng vừa nhận; còn lại: chưa nhận (nét đứt).
+  const earned = [0, 1, 2];
+  const latest = 3;
+  const certs = [
+    { name: "Phân tích dữ liệu cơ bản", code: "FBM-…A1", tone: "text-brand-600" },
+    { name: "Trực quan hoá bằng biểu đồ", code: "FBM-…B2", tone: "text-brand-600" },
+    { name: "SQL nhập môn", code: "FBM-…C3", tone: "text-pink-600" },
+  ];
   return (
-    <div className="relative mx-auto w-full max-w-md" aria-label="Minh hoạ chứng nhận">
+    <div className="relative mx-auto w-full max-w-md" aria-label="Minh hoạ các chứng nhận tích dần">
       <div
         className="absolute inset-0 -z-10 translate-x-3 translate-y-3 rotate-[4deg] rounded-[2rem] bg-pink-200/60"
         aria-hidden
       />
       <div className="relative rotate-[1.5deg] rounded-[2rem] border border-token bg-[rgb(var(--surface))] p-6 shadow-card-hover transition-transform duration-300 hover:rotate-0 sm:p-7">
-        <div className="flex items-center justify-between">
-          <p className="text-meta">Cấp bởi Limio × Tên đơn vị</p>
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-100 text-brand-700">
-            <Award className="h-6 w-6" aria-hidden />
-          </span>
+        <div className="flex items-center gap-5">
+          <svg viewBox="0 0 120 120" className="h-28 w-28 shrink-0" role="img" aria-label="Vòng tròn chia múi, mỗi múi là một chứng nhận">
+            {Array.from({ length: total }, (_, i) => {
+              const isEarned = earned.includes(i);
+              const isLatest = i === latest;
+              const d = wedgePath(i, total, 52, 0.15);
+              if (isEarned || isLatest) {
+                return (
+                  <path
+                    key={i}
+                    d={d}
+                    className={isLatest ? "text-pink-500" : "text-brand-500"}
+                    fill="currentColor"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinejoin="round"
+                  />
+                );
+              }
+              return (
+                <path
+                  key={i}
+                  d={d}
+                  className="text-brand-300"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeDasharray="3 3"
+                  strokeLinejoin="round"
+                />
+              );
+            })}
+          </svg>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-faint">Hồ sơ chứng nhận</p>
+            <p className="h-display mt-1 text-xl font-bold leading-snug">Mỗi múi là một năng lực đã chứng minh</p>
+          </div>
         </div>
-        <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-faint">
-          Chứng nhận hoàn thành
-        </p>
-        <p className="h-display mt-1 text-2xl font-bold">Tên học viên</p>
-        <p className="mt-3 text-sm text-muted">đã hoàn thành khoá học</p>
-        <p className="text-base font-semibold">Tên khoá học ngắn hạn</p>
 
-        <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-brand-50 p-3.5 text-sm">
-          <span className="flex items-center gap-2 font-medium text-brand-700">
-            <BadgeCheck className="h-5 w-5" aria-hidden />
-            Hợp lệ · tra cứu công khai
-          </span>
-          <code className="rounded-md bg-white/80 px-2 py-0.5 text-xs text-muted">FBM-XXXXXXXXXXXX</code>
-        </div>
-        <p className="mt-4 text-center text-xs text-faint">Minh hoạ</p>
+        <ul className="mt-5 space-y-2.5">
+          {certs.map((c) => (
+            <li
+              key={c.name}
+              className="flex items-center gap-3 rounded-2xl bg-[rgb(var(--surface-muted))] px-3.5 py-2.5 text-sm"
+            >
+              <BadgeCheck className={`h-5 w-5 shrink-0 ${c.tone}`} aria-hidden />
+              <span className="min-w-0 flex-1 truncate font-medium">{c.name}</span>
+              <code className="shrink-0 rounded-md bg-white/80 px-2 py-0.5 text-xs text-muted">{c.code}</code>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-center text-xs text-faint">Minh hoạ · mỗi chứng nhận tra cứu công khai được</p>
       </div>
     </div>
   );
