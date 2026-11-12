@@ -483,11 +483,6 @@ export default async function CourseDetailPage({
         {/* Sidebar TOC */}
         <aside className="lg:col-span-1">
           <div className="sticky top-20 space-y-4">
-            <CourseLeaderboardCard
-              courseId={course.id}
-              weekly={weeklyLeaderboard}
-              allTime={allTimeLeaderboard}
-            />
             {course.status === "published" &&
               // Banner "chưa đăng ký"/"liên hệ giáo viên" ở section Nội dung
               // khóa học đã đủ message + action rồi — không lặp lại nút ở
@@ -523,6 +518,12 @@ export default async function CourseDetailPage({
                   )}
                 </div>
               )}
+            {/* Bảng xếp hạng đứng SAU thẻ đăng ký: học viên chưa ghi danh phải thấy nút vào học trước, không phải cuộn qua bảng. */}
+            <CourseLeaderboardCard
+              courseId={course.id}
+              weekly={weeklyLeaderboard}
+              allTime={allTimeLeaderboard}
+            />
           </div>
         </aside>
       </div>

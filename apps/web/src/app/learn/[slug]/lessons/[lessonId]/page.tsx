@@ -37,6 +37,7 @@ import { auth } from "@/lib/auth";
 import { getActiveRole } from "@/lib/active-role";
 import { isLearnerRole } from "@/lib/learnerRole";
 import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
+import EnrollButton from "@/components/EnrollButton";
 import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
 import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel } from "@/lib/lessonFramePolicy";
 import { getSiteSetting } from "@/lib/site-settings";
@@ -385,16 +386,29 @@ export default async function LessonPage({
                   : "Đăng ký miễn phí để học toàn bộ khoá."}
             </p>
           </div>
-          <a
-            href={
-              anonymous
-                ? `/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`
-                : `/catalog/${params.slug}`
-            }
-            className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
-          >
-            {anonymous ? "Đăng nhập" : paid ? "Xem khoá học" : "Đăng ký ngay"}
-          </a>
+          {!anonymous && !paid ? (
+            // Khoá miễn phí: ghi danh ngay tại đây rồi vào học. Trước đây nút chỉ đưa về trang khoá, nơi nút ghi danh nằm
+            // cuối thanh bên — học viên tưởng "đăng ký xong lại bị đá về trang khoá".
+            <EnrollButton
+              courseId={course.id}
+              slug={params.slug}
+              alreadyEnrolled={false}
+              priceCents={0}
+              paymentEnabled={false}
+              freeLabel="Đăng ký ngay"
+            />
+          ) : (
+            <a
+              href={
+                anonymous
+                  ? `/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`
+                  : `/catalog/${params.slug}#dang-ky`
+              }
+              className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+            >
+              {anonymous ? "Đăng nhập" : "Xem khoá học"}
+            </a>
+          )}
         </div>
         {/* Cùng kiểu panel như bản dành cho người đã ghi danh. */}
         <header className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
