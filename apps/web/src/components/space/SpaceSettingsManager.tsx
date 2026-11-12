@@ -206,7 +206,7 @@ export default function SpaceSettingsManager({
 
   const field = "input mt-1.5";
   return (
-    <section className="card p-5" aria-labelledby="space-heading">
+    <section className="card p-4 sm:p-5" aria-labelledby="space-heading">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 id="space-heading" className="text-h4">
@@ -275,7 +275,7 @@ export default function SpaceSettingsManager({
           </label>
         ))}
         {/* Xem trước màu: hero + nút + dải số liệu của trang space. */}
-        <div className="min-w-[16rem] flex-1 overflow-hidden rounded-lg border border-token text-xs" aria-label="Xem trước màu">
+        <div className="basis-full overflow-hidden sm:min-w-[16rem] sm:flex-1 sm:basis-auto rounded-lg border border-token text-xs" aria-label="Xem trước màu">
           <div className="px-4 py-3 text-white" style={{ background: palette.primary }}>
             <div className="font-bold">{name || orgName}</div>
             <span className="mt-1.5 inline-block px-2 py-0.5 font-bold" style={{ background: palette.accent, color: palette.primary }}>Nút chính</span>
@@ -370,12 +370,14 @@ export default function SpaceSettingsManager({
             <li key={`${c.slug}-${i}`} className="rounded-lg border border-token p-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="w-6 text-sm font-bold text-faint">{i + 1}</span>
-                <input className="input w-56 font-mono text-xs" value={c.slug} onChange={(e) => patchCourse(i, { slug: e.target.value.trim() })} aria-label="Slug khoá" placeholder="slug-khoa-hoc" />
-                <input className="input min-w-[12rem] flex-1" value={c.title} onChange={(e) => patchCourse(i, { title: e.target.value })} aria-label="Tên khoá" placeholder="Tên khoá" />
+                <input className="input w-full min-w-0 font-mono text-xs sm:w-56" value={c.slug} onChange={(e) => patchCourse(i, { slug: e.target.value.trim() })} aria-label="Slug khoá" placeholder="slug-khoa-hoc" />
+                <input className="input w-full min-w-0 sm:min-w-[12rem] sm:flex-1 sm:w-auto" value={c.title} onChange={(e) => patchCourse(i, { title: e.target.value })} aria-label="Tên khoá" placeholder="Tên khoá" />
                 <span className={`chip ${st === "published" ? "chip-brand" : ""}`}>{st === "published" ? "Đã xuất bản" : st ? `Trong trường · ${st}` : "Chưa có khoá"}</span>
+                <span className="ml-auto flex items-center">
                 <button type="button" className="btn-ghost btn-sm" onClick={() => move(i, -1)} disabled={i === 0} aria-label="Lên"><ArrowUp className="h-4 w-4" /></button>
                 <button type="button" className="btn-ghost btn-sm" onClick={() => move(i, 1)} disabled={i === courses.length - 1} aria-label="Xuống"><ArrowDown className="h-4 w-4" /></button>
                 <button type="button" className="btn-ghost btn-sm" onClick={() => setCourses((cs) => cs.filter((_, k) => k !== i))} aria-label="Bỏ khỏi space"><Trash2 className="h-4 w-4" /></button>
+                </span>
               </div>
               <details className="mt-2">
                 <summary className="cursor-pointer text-xs text-muted">Chủ đề, chuẩn đầu ra, biểu tượng</summary>
@@ -396,7 +398,7 @@ export default function SpaceSettingsManager({
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {addable.length > 0 && (
           <select
-            className="select w-auto max-w-xs"
+            className="select w-full sm:w-auto sm:max-w-xs"
             value=""
             aria-label="Thêm khoá của trường"
             onChange={(e) => {
@@ -418,8 +420,8 @@ export default function SpaceSettingsManager({
       {error && (
         <div role="alert" className="mt-4 rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">{error}</div>
       )}
-      <div className="mt-5 flex items-center gap-3">
-        <button type="button" className="btn-primary" onClick={save} disabled={busy}>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button type="button" className="btn-primary w-full sm:w-auto" onClick={save} disabled={busy}>
           {busy ? "Đang lưu…" : "Lưu space"}
         </button>
         <span className="text-xs text-muted">Thay đổi áp dụng ngay cho trang công khai.</span>
