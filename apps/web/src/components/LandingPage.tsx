@@ -27,13 +27,20 @@ function AiBadge({ className = "" }: { className?: string }) {
   );
 }
 
-export default function LandingPage({ registerEnabled = true }: { registerEnabled?: boolean }) {
+export default function LandingPage({
+  registerEnabled = true,
+  showM4aLink = false,
+}: {
+  registerEnabled?: boolean;
+  /** Link tới /micro4asia — chỉ máy chủ có space đó (limio.vn) mới bật. */
+  showM4aLink?: boolean;
+}) {
   return (
     <main>
       <Hero registerEnabled={registerEnabled} />
       <Audiences registerEnabled={registerEnabled} />
       <HowItWorks />
-      <MicroCredential />
+      <MicroCredential showM4aLink={showM4aLink} />
       <Promises />
       <FinalCta registerEnabled={registerEnabled} />
     </main>
@@ -412,7 +419,7 @@ function HowItWorks() {
 // chanh" tích dần, bám theo thương hiệu. Mọi ý đều ứng với tính năng đã có (bài học tự
 // thành chủ đề, thi/vấn đáp, chứng nhận có mã ở /verify, thương hiệu "Limio × tên trường").
 // Không hứa những thứ chưa có: huy hiệu chuẩn mở, ghép nhiều chứng nhận thành văn bằng.
-function MicroCredential() {
+function MicroCredential({ showM4aLink }: { showM4aLink: boolean }) {
   const principles = [
     {
       word: "Nhỏ",
@@ -479,12 +486,14 @@ function MicroCredential() {
             ))}
           </ul>
 
-          <Link
-            href="/micro4asia"
-            className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-pink-700 hover:text-pink-800"
-          >
-            Xem chương trình vi tín chỉ MICRO4ASIA →
-          </Link>
+          {showM4aLink && (
+            <Link
+              href="/micro4asia"
+              className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-pink-700 hover:text-pink-800"
+            >
+              Xem chương trình vi tín chỉ MICRO4ASIA →
+            </Link>
+          )}
         </div>
 
         <SegmentsMock />
