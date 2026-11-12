@@ -401,7 +401,7 @@ function CourseCard({
       <h3 className="mt-5 text-lg font-bold leading-snug text-[color:var(--sp)]">{title}</h3>
       <p className="mt-1 text-sm font-semibold text-[#1B2733]">{course.topic[lang]}</p>
 
-      <p className="mt-4 text-xs font-bold uppercase tracking-wider text-[color:var(--sp-accent2)]">{c.youWillBeAbleTo}</p>
+      <p className="mt-4 text-xs font-bold uppercase tracking-wider text-[color:var(--sp-dark)]">{c.youWillBeAbleTo}</p>
       <p className="mt-1 text-sm leading-relaxed text-[#4B5B6B]">{course.outcome[lang]}</p>
 
       <div className="mt-auto flex items-center gap-2 border-t border-[color:var(--sp-soft)] pt-4 text-sm">
