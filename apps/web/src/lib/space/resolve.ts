@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@feedbackme/db";
-import { builtinMicro4Asia, MICRO4ASIA_SLUG } from "./builtin";
+import { builtinMicro4Asia, builtinMicro4AsiaEnabled, MICRO4ASIA_SLUG } from "./builtin";
 import { buildSpaceConfig, dropForeignCourses, isValidSpaceSlug, normalizeStored } from "./settings";
 import type { SpaceBrand, SpaceConfig, SpaceLang } from "./types";
 
@@ -35,7 +35,7 @@ async function loadSpaces(): Promise<SpaceConfig[]> {
   } catch {
     // DB chập chờn: vẫn phục vụ cấu hình dựng sẵn thay vì làm hỏng mọi trang.
   }
-  if (!out.some((s) => s.slug === MICRO4ASIA_SLUG)) out.push(builtinMicro4Asia());
+  if (builtinMicro4AsiaEnabled() && !out.some((s) => s.slug === MICRO4ASIA_SLUG)) out.push(builtinMicro4Asia());
   return out;
 }
 

@@ -4,6 +4,7 @@ import { landingPathForRoles } from "@/lib/landing";
 import JsonLd from "@/components/JsonLd";
 import LandingPage from "@/components/LandingPage";
 import { getRegisterEnabled } from "@/lib/site-settings";
+import { getSpaceBySlug } from "@/lib/space/resolve";
 import { absoluteUrl, organizationJsonLd, webSiteJsonLd } from "@/lib/seo";
 import type { Metadata } from "next";
 
@@ -28,13 +29,14 @@ export default async function HomePage() {
   if (session?.user?.id) redirect(landingPathForRoles(session.user.roles ?? []));
 
   const registerEnabled = await getRegisterEnabled();
+  const showM4aLink = (await getSpaceBySlug("micro4asia")) !== null;
 
   return (
     <>
       {/* Danh tính tổ chức + website cho Google: gắn logo/tên thương hiệu vào
           knowledge panel và mở ô sitelinks search trỏ thẳng vào catalog. */}
       <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
-      <LandingPage registerEnabled={registerEnabled} />
+      <LandingPage registerEnabled={registerEnabled} showM4aLink={showM4aLink} />
     </>
   );
 }

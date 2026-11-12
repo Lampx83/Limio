@@ -92,3 +92,13 @@ export function builtinMicro4Asia(): SpaceConfig {
     })),
   };
 }
+
+/**
+ * Space dựng sẵn (MICRO4ASIA) chỉ phục vụ khi môi trường bật `SPACE_BUILTIN_MICRO4ASIA=1`.
+ * Mỗi máy chủ Limio có dữ liệu riêng (limio.vn, server trường…): nội dung của máy này không được tự xuất hiện trên
+ * máy khác chỉ vì chung mã nguồn. Máy không bật thì /micro4asia là 404, trừ khi một tổ chức bật space "micro4asia" trong DB.
+ */
+export function builtinMicro4AsiaEnabled(): boolean {
+  const v = (process.env.SPACE_BUILTIN_MICRO4ASIA ?? "").trim().toLowerCase();
+  return v === "1" || v === "true";
+}
