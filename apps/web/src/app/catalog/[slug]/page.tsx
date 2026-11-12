@@ -17,7 +17,7 @@ import { getPaymentEnabled } from "@/lib/site-settings";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import { StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
-import { isMicro4AsiaSlug, M4A_THEME_CSS } from "@/lib/micro4asia";
+import { getSpaceForCourseSlug, spaceHomePath } from "@/lib/space/resolve";
 import { courseLanguageLabel, courseLevelLabel, modulePrefix } from "@/lib/courseLabels";
 
 export const dynamic = "force-dynamic";
@@ -51,24 +51,24 @@ export async function generateMetadata({
   });
   if (!course) return { title: "Không tìm thấy khoá học", robots: { index: false } };
 
-  const m4a = isMicro4AsiaSlug(params.slug);
+  const space = await getSpaceForCourseSlug(params.slug);
   const base = pageMetadata({
     title: course.title,
     description:
       htmlToPlainText(course.description ?? "") ||
       `Khoá học ${course.title}${course.category ? ` — ${course.category}` : ""} trên ${SITE_NAME}.`,
     path: `/catalog/${params.slug}`,
-    // Khoá MICRO4ASIA: link gửi đi mang nhận diện NEU + Micro4Asia thay vì ảnh Limio mặc định.
-    image: m4a ? "/micro4asia/og" : course.coverUrl,
+    // Khoá thuộc một space: link gửi đi mang nhận diện của space (ảnh /<space>/og) thay vì ảnh Limio mặc định.
+    image: space ? `${spaceHomePath(space)}/og` : course.coverUrl,
     type: "website",
     locale: course.language === "en" ? "en_US" : undefined,
     noIndex: course.status !== "published",
   });
-  if (!m4a) return base;
+  if (!space) return base;
   return {
     ...base,
-    title: { absolute: `${course.title} | MICRO4ASIA · NEU` },
-    openGraph: { ...base.openGraph, siteName: "MICRO4ASIA × NEU" },
+    title: { absolute: `${course.title} | ${space.name} · ${space.titleSuffix}` },
+    openGraph: { ...base.openGraph, siteName: `${space.name} × ${space.titleSuffix}` },
   };
 }
 
@@ -81,7 +81,11 @@ export default async function CourseDetailPage({
 }) {
   const showPaywall = searchParams?.paywall === "1";
   const showCancelled = searchParams?.cancelled === "1";
-  const [session, paymentEnabled] = await Promise.all([auth(), getPaymentEnabled()]);
+  const [session, paymentEnabled, space] = await Promise.all([
+    auth(),
+    getPaymentEnabled(),
+    getSpaceForCourseSlug(params.slug),
+  ]);
   let course;
   try {
     course = await getCourseDetail(params.slug, session?.user?.id ?? null);
@@ -144,11 +148,7 @@ export default async function CourseDetailPage({
   const showEnrollNudge = !enrolled && !publiclyReadable && course.modules.length > 0;
 
   return (
-    <main
-      className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10"
-      {...(isMicro4AsiaSlug(params.slug) ? { "data-m4a-theme": "" } : {})}
-    >
-      {isMicro4AsiaSlug(params.slug) && <style>{M4A_THEME_CSS}</style>}
+    <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6 pb-28 lg:pb-10">
       {/* Bản nháp (chủ khoá xem trước) không khai schema: không có gì để lên SERP. */}
       {course.status === "published" && (
         <JsonLd
@@ -177,9 +177,15 @@ export default async function CourseDetailPage({
           ]}
         />
       )}
-      <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
-        ← Danh mục khoá học
-      </Link>
+      {space ? (
+        <Link href={`${spaceHomePath(space)}#courses`} className="link inline-flex items-center gap-1 text-sm">
+          ← {space.name}
+        </Link>
+      ) : (
+        <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
+          ← Danh mục khoá học
+        </Link>
+      )}
 
       {/* Paywall notice */}
       {showPaywall && (

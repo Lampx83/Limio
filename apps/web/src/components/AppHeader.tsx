@@ -12,8 +12,8 @@ import HeaderCalendar from "./HeaderCalendar";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
+import type { SpaceBrand } from "@/lib/space/types";
 import HeaderTagline from "./HeaderTagline";
-import HeaderBrand from "./HeaderBrand";
 import { isLearnerRole } from "@/lib/learnerRole";
 
 // Header render trên MỌI trang — cache isAnyOrgAdmin 60s/userId để không query
@@ -24,7 +24,7 @@ const getIsAnyOrgAdminCached = unstable_cache(
   { revalidate: 60, tags: ["user-roles"] },
 );
 
-export default async function AppHeader() {
+export default async function AppHeader({ space = null }: { space?: SpaceBrand | null } = {}) {
   const session = await auth();
   const user = session?.user;
   const roles = switchableRoles(user?.roles ?? []);
@@ -68,7 +68,27 @@ export default async function AppHeader() {
       <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6 short:py-1">
         <div className="flex items-center gap-2 shrink-0">
         <StudentMenuTrigger variant="header" languagePages={languagePages} />
-        <HeaderBrand>
+        {space ? (
+          // Trang thuộc một space (trường/dự án): logo của space thay logo Limio, bấm về trang chủ space.
+          <Link
+            href={space.homeHref}
+            aria-label={space.name}
+            className="flex shrink-0 items-center gap-3 rounded bg-white px-2 py-1"
+          >
+            {space.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={space.logoUrl} alt={space.logoAlt} className="h-8 w-auto max-w-[200px] sm:h-10 sm:max-w-none" />
+            )}
+            {space.logoUrl && space.partnerLogoUrl && <span className="h-8 w-px bg-[#B2B2B2] sm:h-10" aria-hidden />}
+            {space.partnerLogoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={space.partnerLogoUrl} alt={space.partnerLogoAlt} className="h-9 w-auto sm:h-11" />
+            )}
+            {!space.logoUrl && !space.partnerLogoUrl && (
+              <span className="text-xl font-bold tracking-tight">{space.name}</span>
+            )}
+          </Link>
+        ) : (
         <Link href="/" className="group flex items-baseline gap-2 shrink-0">
           <LimeSliceIcon className="h-11 w-11 shrink-0 self-center short:h-8 short:w-8 transition-transform group-hover:scale-105 group-hover:rotate-12" />
           <span className="text-3xl font-bold tracking-tight short:text-2xl">
@@ -76,7 +96,7 @@ export default async function AppHeader() {
           </span>
           <HeaderTagline activeRole={activeRole} roles={roles} guest={!user} />
         </Link>
-        </HeaderBrand>
+        )}
         </div>
 
         <div className="flex items-center gap-2">

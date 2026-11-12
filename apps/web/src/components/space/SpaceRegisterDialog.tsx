@@ -5,15 +5,14 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { withCallbackUrl } from "@/lib/callbackUrl";
-import type { M4aLang } from "@/lib/micro4asia";
+import type { SpaceLang } from "@/lib/space/types";
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const T: Record<
-  M4aLang,
+  SpaceLang,
   {
     title: string;
-    intro: string;
     name: string;
     namePh: string;
     email: string;
@@ -34,7 +33,6 @@ const T: Record<
 > = {
   en: {
     title: "Create your account",
-    intro: "One account for all MICRO4ASIA courses on Limio.",
     name: "Display name",
     namePh: "Your name",
     email: "Email",
@@ -54,7 +52,6 @@ const T: Record<
   },
   vi: {
     title: "Tạo tài khoản",
-    intro: "Một tài khoản cho mọi khoá học MICRO4ASIA trên Limio.",
     name: "Tên hiển thị",
     namePh: "Tên của bạn",
     email: "Email",
@@ -75,7 +72,18 @@ const T: Record<
 };
 
 /** Nút "Create an account" mở hộp thoại đăng ký ngay trên trang /micro4asia — không rời trang. */
-export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; label: string }) {
+export default function SpaceRegisterDialog({
+  lang,
+  label,
+  intro,
+  backPath,
+}: {
+  lang: SpaceLang;
+  label: string;
+  intro: string;
+  /** Trang chủ space — nơi quay lại sau khi đăng ký/đăng nhập. */
+  backPath: string;
+}) {
   const t = T[lang];
   const ref = useRef<HTMLDialogElement>(null);
   const [displayName, setDisplayName] = useState("");
@@ -86,7 +94,7 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
   const [error, setError] = useState<"taken" | string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
 
-  const back = lang === "vi" ? "/micro4asia?lang=vi" : "/micro4asia";
+  const back = lang === "vi" ? `${backPath}?lang=vi` : backPath;
 
   // Bấm ra ngoài hộp thoại thì đóng (phần nền của <dialog> nhận click với target là chính nó).
   useEffect(() => {
@@ -131,44 +139,44 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
   }
 
   const field =
-    "mt-1.5 block w-full border border-[#B2B2B2] bg-white px-3 py-2.5 text-sm text-[#1B2733] focus:border-[#00528C] focus:outline-none focus:ring-2 focus:ring-[#00528C]/20";
+    "mt-1.5 block w-full border border-[#B2B2B2] bg-white px-3 py-2.5 text-sm text-[#1B2733] focus:border-[color:var(--sp)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--sp)_20%,transparent)]";
 
   return (
     <>
       <button
         type="button"
         onClick={() => ref.current?.showModal()}
-        className="bg-[#00528C] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0E4877]"
+        className="bg-[var(--sp)] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[var(--sp-dark)]"
       >
         {label} →
       </button>
 
       <dialog
         ref={ref}
-        aria-labelledby="m4a-reg-title"
-        className="m-auto w-[calc(100%-2rem)] max-w-md border-t-4 border-[#00528C] bg-white p-0 text-[#1B2733] shadow-2xl backdrop:bg-[#0E4877]/60"
+        aria-labelledby="space-reg-title"
+        className="m-auto w-[calc(100%-2rem)] max-w-md border-t-4 border-[color:var(--sp)] bg-white p-0 text-[#1B2733] shadow-2xl backdrop:bg-[color-mix(in_srgb,var(--sp-dark)_60%,transparent)]"
       >
         <div className="relative p-6 sm:p-8">
           <button
             type="button"
             onClick={() => ref.current?.close()}
             aria-label={t.close}
-            className="absolute right-3 top-3 p-1.5 text-[#4B5B6B] hover:bg-[#D6EEFB]/60 hover:text-[#00528C]"
+            className="absolute right-3 top-3 p-1.5 text-[#4B5B6B] hover:bg-[color-mix(in_srgb,var(--sp-soft)_60%,transparent)] hover:text-[color:var(--sp)]"
           >
             <X className="h-5 w-5" aria-hidden />
           </button>
-          <h2 id="m4a-reg-title" className="border-l-4 border-[#FFC101] pl-3 text-2xl font-bold text-[#00528C]">
+          <h2 id="space-reg-title" className="border-l-4 border-[color:var(--sp-accent)] pl-3 text-2xl font-bold text-[color:var(--sp)]">
             {t.title}
           </h2>
-          <p className="mt-2 text-sm text-[#4B5B6B]">{t.intro}</p>
+          <p className="mt-2 text-sm text-[#4B5B6B]">{intro}</p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="m4a-name" className="text-sm font-semibold">
+              <label htmlFor="space-name" className="text-sm font-semibold">
                 {t.name}
               </label>
               <input
-                id="m4a-name"
+                id="space-name"
                 type="text"
                 required
                 value={displayName}
@@ -179,11 +187,11 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
               />
             </div>
             <div>
-              <label htmlFor="m4a-email" className="text-sm font-semibold">
+              <label htmlFor="space-email" className="text-sm font-semibold">
                 {t.email}
               </label>
               <input
-                id="m4a-email"
+                id="space-email"
                 type="email"
                 required
                 value={email}
@@ -194,12 +202,12 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
               />
             </div>
             <div>
-              <label htmlFor="m4a-pw" className="text-sm font-semibold">
+              <label htmlFor="space-pw" className="text-sm font-semibold">
                 {t.password}
               </label>
               <div className="relative">
                 <input
-                  id="m4a-pw"
+                  id="space-pw"
                   type={showPw ? "text" : "password"}
                   required
                   minLength={8}
@@ -212,7 +220,7 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
                   aria-pressed={showPw}
-                  className="absolute inset-y-0 right-0 mt-1.5 px-3 text-xs font-semibold text-[#00528C]"
+                  className="absolute inset-y-0 right-0 mt-1.5 px-3 text-xs font-semibold text-[color:var(--sp)]"
                 >
                   {showPw ? t.hide : t.show}
                 </button>
@@ -223,13 +231,13 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
             <button
               type="submit"
               disabled={status === "submitting"}
-              className="w-full bg-[#00528C] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0E4877] disabled:opacity-60"
+              className="w-full bg-[var(--sp)] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[var(--sp-dark)] disabled:opacity-60"
             >
               {status === "submitting" ? t.submitting : t.submit}
             </button>
 
             {error && (
-              <div role="alert" className="border-l-4 border-[#C41212] bg-[#FDECEC] px-3 py-2 text-sm text-[#8A0E0E]">
+              <div role="alert" className="border-l-4 border-[color:var(--sp-accent2)] bg-[#FDECEC] px-3 py-2 text-sm text-[#8A0E0E]">
                 {error === "taken" ? (
                   <>
                     {t.taken}{" "}
@@ -243,7 +251,7 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
               </div>
             )}
             {info && (
-              <div role="status" className="border-l-4 border-[#00528C] bg-[#D6EEFB] px-3 py-2 text-sm text-[#0E4877]">
+              <div role="status" className="border-l-4 border-[color:var(--sp)] bg-[var(--sp-soft)] px-3 py-2 text-sm text-[color:var(--sp-dark)]">
                 {info}
               </div>
             )}
@@ -251,7 +259,7 @@ export default function M4aRegisterDialog({ lang, label }: { lang: M4aLang; labe
 
           <p className="mt-5 text-center text-sm text-[#4B5B6B]">
             {t.haveAccount}{" "}
-            <a href={withCallbackUrl("/signin", back)} className="font-semibold text-[#00528C] hover:underline">
+            <a href={withCallbackUrl("/signin", back)} className="font-semibold text-[color:var(--sp)] hover:underline">
               {t.signIn}
             </a>
           </p>
