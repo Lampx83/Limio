@@ -1,3 +1,4 @@
+import { isValidSpaceSlug } from "@feedbackme/shared-types";
 import { defaultSpaceCopy } from "./copy";
 import { derivePalette, isHexColor } from "./theme";
 import {
@@ -15,6 +16,10 @@ export interface SpaceStored {
   titleSuffix?: string;
   primary?: string;
   accent?: string;
+  /** Tuỳ chọn: ghi đè tông suy ra từ màu chủ đạo (dùng cho bộ màu thương hiệu chính xác như NEU). */
+  dark?: string;
+  soft?: string;
+  accent2?: string;
   logoUrl?: string;
   logoAlt?: string;
   partnerLogoUrl?: string;
@@ -34,13 +39,9 @@ export interface SpaceStored {
   copy?: Partial<Record<SpaceLang, Partial<SpaceCopy>>>;
 }
 
-/** Slug dùng ở URL /s/<slug>: chữ thường, số, gạch nối. Tên giữ chỗ để không đè route khác. */
-const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const RESERVED_SLUGS = new Set(["admin", "api", "new", "og", "s", "catalog", "learn", "me", "signin", "register"]);
+const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/; // slug khoá học (khác slug space)
 
-export function isValidSpaceSlug(v: unknown): v is string {
-  return typeof v === "string" && v.length >= 2 && v.length <= 40 && SLUG_RE.test(v) && !RESERVED_SLUGS.has(v);
-}
+export { isValidSpaceSlug };
 
 function str(v: unknown, max: number): string | undefined {
   if (typeof v !== "string") return undefined;
@@ -131,6 +132,10 @@ export function normalizeStored(raw: unknown): SpaceStored {
   if (suffix) out.titleSuffix = suffix;
   if (isHexColor(r.primary)) out.primary = r.primary.toUpperCase();
   if (isHexColor(r.accent)) out.accent = r.accent.toUpperCase();
+  for (const k of ["dark", "soft", "accent2"] as const) {
+    const v = r[k];
+    if (isHexColor(v)) out[k] = v.toUpperCase();
+  }
   for (const k of ["logoUrl", "partnerLogoUrl", "heroVisualUrl", "siteUrl"] as const) {
     const u = safeUrl(r[k]);
     if (u) out[k] = u;
@@ -204,7 +209,11 @@ export function buildSpaceConfig(input: {
     source: "db",
     name,
     titleSuffix: stored.titleSuffix ?? orgName,
-    palette: derivePalette(stored.primary ?? "#2563EB", stored.accent ?? "#F59E0B"),
+    palette: derivePalette(stored.primary ?? "#2563EB", stored.accent ?? "#F59E0B", {
+      dark: stored.dark,
+      soft: stored.soft,
+      accent2: stored.accent2,
+    }),
     logoUrl: stored.logoUrl ?? orgLogoUrl,
     logoAlt: stored.logoAlt ?? orgName,
     partnerLogoUrl: stored.partnerLogoUrl ?? null,
@@ -218,4 +227,19 @@ export function buildSpaceConfig(input: {
     copy,
     courses,
   };
+}
+
+/**
+ * Lớp phòng thủ khi dựng space từ DB: bỏ khoá đang thuộc trường KHÁC (organizationId khác và không rỗng), phòng khi
+ * dữ liệu cũ hoặc cách khác lọt qua kiểm tra lúc lưu. Khoá chưa tồn tại (giữ chỗ) hoặc chưa có chủ thì giữ.
+ */
+export function dropForeignCourses<T extends { slug: string }>(
+  courses: T[],
+  ownerOf: ReadonlyMap<string, string | null>,
+  orgId: string,
+): T[] {
+  return courses.filter((c) => {
+    const owner = ownerOf.get(c.slug);
+    return owner === undefined || owner === null || owner === orgId;
+  });
 }

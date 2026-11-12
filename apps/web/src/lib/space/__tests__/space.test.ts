@@ -113,3 +113,38 @@ describe("space: Micro4Asia dựng sẵn", () => {
     expect(resolveSpaceLang("vi", { langs: ["en"], defaultLang: "en" })).toBe("en");
   });
 });
+
+import { dropForeignCourses } from "../settings";
+import { SPACE_TEMPLATES, storedFromConfig } from "../templates";
+
+describe("space: ranh giới khoá và mẫu", () => {
+  it("dropForeignCourses bỏ khoá của trường khác, giữ khoá của mình / chưa có chủ / giữ chỗ", () => {
+    const owners = new Map<string, string | null>([
+      ["mine", "org-1"],
+      ["theirs", "org-2"],
+      ["orphan", null],
+    ]);
+    const kept = dropForeignCourses([{ slug: "mine" }, { slug: "theirs" }, { slug: "orphan" }, { slug: "future" }], owners, "org-1");
+    expect(kept.map((c) => c.slug)).toEqual(["mine", "orphan", "future"]);
+  });
+
+  it("mẫu MICRO4ASIA nạp được vào form rồi chuẩn hoá lại mà không mất dữ liệu quan trọng", () => {
+    const stored = normalizeStored(SPACE_TEMPLATES[0]!.build());
+    expect(stored.courses).toHaveLength(6);
+    expect(stored.primary).toBe("#00528C");
+    expect(stored.soft).toBe("#D6EEFB");
+    expect(stored.logoUrl).toBe("/brand/neu/neu-logo-ngang.svg");
+    // Dựng lại từ phần lưu ra cùng bộ màu NEU.
+    const cfg = buildSpaceConfig({ slug: "micro4asia", orgName: "NEU", orgLogoUrl: null, stored });
+    expect(cfg.palette.dark).toBe("#0E4877");
+    expect(cfg.palette.accent2).toBe("#C41212");
+    expect(storedFromConfig(cfg).courses).toHaveLength(6);
+  });
+
+  it("normalizeStored giữ ghi đè màu hợp lệ và bỏ giá trị hỏng", () => {
+    const s = normalizeStored({ primary: "#112233", dark: "#445566", soft: "nope", accent2: "#AABBCC" });
+    expect(s.dark).toBe("#445566");
+    expect(s.soft).toBeUndefined();
+    expect(s.accent2).toBe("#AABBCC");
+  });
+});

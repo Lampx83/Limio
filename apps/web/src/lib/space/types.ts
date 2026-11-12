@@ -99,4 +99,5 @@ export interface SpaceBrand {
   partnerLogoAlt: string;
   homeHref: string;
   poweredByLabel: string;
+  coursesLabel: string;
 }

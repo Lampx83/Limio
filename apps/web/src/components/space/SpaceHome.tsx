@@ -240,7 +240,7 @@ function SiteHeader({ cfg, lang }: { cfg: SpaceConfig; lang: SpaceLang }) {
             lang={other}
             aria-label={c.switchLabel}
             title={c.switchTo}
-            className="shrink-0 rounded-sm border border-[#B2B2B2] p-1.5 transition-colors hover:border-[color:var(--sp)]"
+            className="block shrink-0 transition-opacity hover:opacity-80"
           >
             <Flag lang={other} />
             <span className="sr-only">{c.switchTo}</span>
@@ -253,14 +253,14 @@ function SiteHeader({ cfg, lang }: { cfg: SpaceConfig; lang: SpaceLang }) {
 
 /** Cờ của ngôn ngữ sẽ chuyển sang: Việt Nam cho "vi", Vương quốc Anh cho "en". */
 function Flag({ lang }: { lang: SpaceLang }) {
-  const cls = "block h-6 w-9 sm:h-7 sm:w-[42px]";
+  const cls = "block h-6 w-9 shadow-[0_0_0_1px_rgba(0,0,0,0.12)] sm:h-7 sm:w-[42px]";
   if (lang === "vi") {
     return (
       <svg viewBox="0 0 30 20" className={cls} aria-hidden>
         <rect width="30" height="20" fill="#DA251D" />
         <polygon
           fill="#FFFF00"
-          points="15,4 16.8,9.3 22.4,9.3 17.8,12.6 19.6,18 15,14.7 10.4,18 12.2,12.6 7.6,9.3 13.2,9.3"
+          points="15.00,3.80 16.39,8.08 20.90,8.08 17.25,10.73 18.64,15.02 15.00,12.37 11.36,15.02 12.75,10.73 9.10,8.08 13.61,8.08"
         />
       </svg>
     );

@@ -10,7 +10,7 @@ export default function SpaceFooter({ space }: { space: SpaceBrand }) {
           {space.name}
         </Link>
         <Link href={`${space.homeHref}#courses`} className="link" prefetch={false}>
-          Courses
+          {space.coursesLabel}
         </Link>
       </nav>
       <p className="mx-auto mt-3 max-w-3xl px-4 text-center text-xs">

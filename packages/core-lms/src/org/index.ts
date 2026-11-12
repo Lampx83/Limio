@@ -8,3 +8,4 @@ export * from "./email-settings";
 export * from "./exam-network";
 export * from "./centerAccess";
 export * from "./centerTeacher";
+export * from "./space";

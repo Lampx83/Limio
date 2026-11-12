@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@feedbackme/db";
 import { builtinMicro4Asia, MICRO4ASIA_SLUG } from "./builtin";
-import { buildSpaceConfig, isValidSpaceSlug, normalizeStored } from "./settings";
+import { buildSpaceConfig, dropForeignCourses, isValidSpaceSlug, normalizeStored } from "./settings";
 import type { SpaceBrand, SpaceConfig, SpaceLang } from "./types";
 
 async function loadSpaces(): Promise<SpaceConfig[]> {
@@ -9,18 +9,29 @@ async function loadSpaces(): Promise<SpaceConfig[]> {
   try {
     const orgs = await prisma.organization.findMany({
       where: { spaceEnabled: true, spaceSlug: { not: null } },
-      select: { spaceSlug: true, name: true, brandingLogoUrl: true, space: true },
+      select: { id: true, spaceSlug: true, name: true, brandingLogoUrl: true, space: true },
     });
-    out = orgs
+    const built = orgs
       .filter((o) => isValidSpaceSlug(o.spaceSlug))
-      .map((o) =>
-        buildSpaceConfig({
+      .map((o) => ({
+        orgId: o.id,
+        cfg: buildSpaceConfig({
           slug: o.spaceSlug!,
           orgName: o.name,
           orgLogoUrl: o.brandingLogoUrl,
           stored: normalizeStored(o.space),
         }),
-      );
+      }));
+    // Mỗi space chỉ được "nhận" khoá thuộc trường của nó (hoặc khoá chưa có chủ / chưa tồn tại).
+    const slugs = Array.from(new Set(built.flatMap((b) => b.cfg.courses.map((c) => c.slug))));
+    const owners = new Map<string, string | null>(
+      slugs.length
+        ? (
+            await prisma.course.findMany({ where: { slug: { in: slugs } }, select: { slug: true, organizationId: true } })
+          ).map((c) => [c.slug, c.organizationId] as [string, string | null])
+        : [],
+    );
+    out = built.map(({ orgId, cfg }) => ({ ...cfg, courses: dropForeignCourses(cfg.courses, owners, orgId) }));
   } catch {
     // DB chập chờn: vẫn phục vụ cấu hình dựng sẵn thay vì làm hỏng mọi trang.
   }
@@ -80,5 +91,6 @@ export function toBrand(cfg: SpaceConfig): SpaceBrand {
     partnerLogoAlt: cfg.partnerLogoAlt,
     homeHref: spaceHomePath(cfg),
     poweredByLabel: cfg.copy[cfg.defaultLang].poweredBy,
+    coursesLabel: cfg.copy[cfg.defaultLang].coursesTitle,
   };
 }
