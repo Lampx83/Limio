@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import { Download, ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
+import { captionTrackFor, type CaptionTrack } from "@/lib/captions";
 import { formatBytes } from "@/lib/formatBytes";
 import { useT } from "@/lib/i18n/client";
 import { deckIdOfUrl } from "@/lib/narration/deckCover";
@@ -57,6 +58,10 @@ interface VideoPayload {
   title?: string;
   caption?: string;
   transcriptUrl?: string;
+  /** BCP-47 của phụ đề `.vtt` (mặc định "en"). */
+  captionLang?: string;
+  /** Nhãn trong menu CC (mặc định theo captionLang, vd "English"). */
+  captionLabel?: string;
   durationSec?: number;
   cuepoints?: Array<{ atSec: number; quizId: string }>;
 }
@@ -253,10 +258,13 @@ function ContentBlock({
       const parsedForTranscript = !isNativeVideo ? parseVideoUrl(p.url) : null;
       const showInteractiveTranscript =
         parsedForTranscript?.kind === "youtube" && isSyncableTranscriptUrl(p.transcriptUrl);
+      // Video tải lên + transcript `.vtt` cùng-origin → phụ đề `<track>` bật/tắt bằng nút CC (mặc định tắt).
+      const caption = captionTrackFor(p);
       return (
         <div>
           {isNativeVideo && hasCuepoints && lessonId ? (
             <VideoWithCuepoints
+              caption={caption}
               url={p.url}
               cuepoints={p.cuepoints!}
               contentItemId={itemId}
@@ -266,7 +274,7 @@ function ContentBlock({
             <YouTubeWithTranscript url={p.url} transcriptUrl={p.transcriptUrl!} />
           ) : (
             <>
-              <VideoEmbed url={p.url} />
+              <VideoEmbed url={p.url} caption={caption} />
               {hasCuepoints && !isNativeVideo && (
                 <p className="mt-1 text-[11px] text-accent-700">
                   Lesson này có {p.cuepoints!.length} cuepoint quiz, nhưng player của
@@ -286,7 +294,7 @@ function ContentBlock({
               )}
             </figcaption>
           )}
-          {p.transcriptUrl && !showInteractiveTranscript && (
+          {p.transcriptUrl && !showInteractiveTranscript && !caption && (
             <a href={p.transcriptUrl} className="link mt-2 inline-block text-sm">
               Xem transcript
             </a>
@@ -540,7 +548,7 @@ function ContentBlock({
 // so existing imports don't break.
 export { isNativeVideoUrl };
 
-function VideoEmbed({ url }: { url: string }) {
+function VideoEmbed({ url, caption }: { url: string; caption?: CaptionTrack | null }) {
   const v = parseVideoUrl(url);
 
   // Recognized provider — render iframe embed.
@@ -570,6 +578,10 @@ function VideoEmbed({ url }: { url: string }) {
       controls
       className="aspect-video w-full rounded-xl bg-black shadow-card"
       preload="metadata"
-    />
+    >
+      {caption && (
+        <track kind="subtitles" src={caption.src} srcLang={caption.srcLang} label={caption.label} />
+      )}
+    </video>
   );
 }
