@@ -38,7 +38,8 @@ import {
   useNarration,
   type NarrationCommands,
 } from "@/lib/narration/store";
-import { LECTURER_NAME, NarrationAvatar, NarrationWave } from "./NarrationAvatar";
+import { NarrationAvatar, NarrationWave } from "./NarrationAvatar";
+import { useT, useUiLang } from "@/lib/i18n/client";
 import PodcastTranscript from "./PodcastTranscript";
 import SlideStage, { SlideDock } from "./SlideStage";
 import { useDeckBridge } from "./useDeckBridge";
@@ -195,6 +196,9 @@ interface Props {
  */
 export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcast, lecturer, deckCover = false }: Props) {
   const ui = useNarration();
+  const tr = useT();
+  const lang = useUiLang();
+  const lecturerDefault = tr("reader.nar.lecturerDefault");
   const audioRef = useRef<HTMLAudioElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
   const dataRef = useRef({ lecture, podcast });
@@ -967,7 +971,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
     const ms = navigator.mediaSession;
     const title = kind === "podcast" ? podcast?.title ?? lessonTitle : lessonTitle;
     try {
-      ms.metadata = new MediaMetadata({ title, artist: kind === "podcast" ? "Podcast · Limio" : `${LECTURER_NAME} · Limio`, album: lessonTitle });
+      ms.metadata = new MediaMetadata({ title, artist: kind === "podcast" ? "Podcast · Limio" : `${lecturerDefault} · Limio`, album: lessonTitle });
       const c = () => narrationCommands();
       ms.setActionHandler("play", () => c()?.toggle());
       ms.setActionHandler("pause", () => c()?.toggle());
@@ -985,26 +989,26 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
         /* bỏ qua */
       }
     };
-  }, [ui.open, kind, lessonTitle, podcast]);
+  }, [ui.open, kind, lessonTitle, podcast, lecturerDefault]);
 
   // ── Giao diện thanh phát ──────────────────────────────────────────────────────
   const c = narrationCommands;
   const showBar = ui.open && kind !== null && data !== null;
   const cur = activeIdx >= 0 ? items[activeIdx] : undefined;
-  const lecturerName = lecturer?.name ?? LECTURER_NAME;
+  const lecturerName = lecturer?.name ?? lecturerDefault;
   let title: string = lecturerName;
   let subline = "";
   if (kind === "lecture") {
     const seg = cur as LectureForLearner["segments"][number] | undefined;
-    subline = seg ? anchorLabel(seg.anchor) : lessonTitle;
+    subline = seg ? anchorLabel(seg.anchor, lang) : lessonTitle;
   } else if (kind === "podcast") {
     const turn = cur as PodcastForLearner["turns"][number] | undefined;
     title = podcast?.title ?? "Podcast";
-    subline = turn ? `${turn.speakerName} đang nói` : lessonTitle;
+    subline = turn ? tr("reader.nar.speaking", { name: turn.speakerName }) : lessonTitle;
   }
-  if (ui.ended) subline = "Đã nghe xong";
-  else if (ui.loading && ui.playing) subline = "Đang tải…";
-  const unit = kind === "podcast" ? "lượt" : "mục";
+  if (ui.ended) subline = tr("reader.nar.finished");
+  else if (ui.loading && ui.playing) subline = tr("reader.nar.loading");
+  const unit = kind === "podcast" ? tr("reader.nar.unit.turn") : tr("reader.nar.unit.section");
   const duration = ui.duration || data?.durationSec || 0;
   const pct = duration > 0 ? Math.min(100, (ui.time / duration) * 100) : 0;
   const canNext = nextStart(items, ui.time) !== null;
@@ -1030,7 +1034,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
           ref={barRef}
           data-narration-bar
           role="region"
-          aria-label={kind === "podcast" ? "Thanh phát podcast" : "Thanh phát nghe giảng"}
+          aria-label={kind === "podcast" ? tr("reader.nar.bar.podcast") : tr("reader.nar.bar.lecture")}
           onKeyDown={(e) => {
             // Phím cách phát/dừng khi tiêu điểm ở thanh phát (nút bấm tự xử lý phím cách của chính nó).
             if (e.key === " " && !(e.target instanceof HTMLButtonElement)) {
@@ -1078,7 +1082,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
               className="nb-title min-w-0 flex-1 text-left sm:pointer-events-none"
               onClick={() => c()?.setExpanded(!ui.expanded)}
               aria-expanded={ui.expanded}
-              aria-label={`${title}. ${subline}. Bấm để ${ui.expanded ? "thu gọn" : "mở rộng"} thanh phát`}
+              aria-label={tr(ui.expanded ? "reader.nar.bar.toggleCollapse" : "reader.nar.bar.toggleExpand", { title, subline })}
             >
               <span className="block truncate text-sm font-semibold">{title}</span>
               <span className="block truncate text-xs text-muted" aria-live="off">
@@ -1096,13 +1100,13 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                   onClick={() => setSpeedOpen((v) => !v)}
                   aria-haspopup="true"
                   aria-expanded={speedOpen}
-                  aria-label={`Tốc độ phát, đang ${speedLabel(ui.speed)}`}
+                  aria-label={tr("reader.nar.speedNow", { speed: speedLabel(ui.speed, lang) })}
                   className="flex h-9 min-w-9 items-center justify-center rounded-full px-2 text-xs font-medium tabular-nums text-muted hover:bg-[rgb(var(--surface-muted))]"
                 >
-                  {speedLabel(ui.speed)}
+                  {speedLabel(ui.speed, lang)}
                 </button>
                 {speedOpen && (
-                  <div role="group" aria-label="Tốc độ phát" className="absolute bottom-full right-0 mb-2 flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface))] p-1 shadow-lg">
+                  <div role="group" aria-label={tr("reader.nar.speed")} className="absolute bottom-full right-0 mb-2 flex items-center gap-1 rounded-full border border-token bg-[rgb(var(--surface))] p-1 shadow-lg">
                     {NARRATION_SPEEDS.map((s) => (
                       <button
                         key={s}
@@ -1116,7 +1120,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                           ui.speed === s ? "bg-[rgb(var(--brand))] text-white" : "text-muted hover:bg-[rgb(var(--surface-muted))]"
                         }`}
                       >
-                        {speedLabel(s)}
+                        {speedLabel(s, lang)}
                       </button>
                     ))}
                   </div>
@@ -1126,7 +1130,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
             <button
               type="button"
               onClick={togglePlay}
-              aria-label={ui.ended ? "Nghe lại" : ui.playing || thinking ? "Tạm dừng" : "Phát"}
+              aria-label={ui.ended ? tr("reader.nar.replay") : ui.playing || thinking ? tr("reader.nar.pause") : tr("reader.nar.play")}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--brand))] text-white shadow transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgb(var(--brand))]"
             >
               {ui.ended ? <RotateCcw size={20} /> : ui.playing || thinking ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
@@ -1134,7 +1138,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
             <button
               type="button"
               onClick={() => c()?.setExpanded(!ui.expanded)}
-              aria-label={ui.expanded ? "Thu gọn thanh phát" : "Mở rộng thanh phát"}
+              aria-label={ui.expanded ? tr("reader.nar.bar.collapse") : tr("reader.nar.bar.expand")}
               aria-expanded={ui.expanded}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-[rgb(var(--surface-muted))] sm:hidden"
             >
@@ -1144,7 +1148,7 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
               <button
                 type="button"
                 onClick={() => c()?.close()}
-                aria-label="Đóng thanh phát"
+                aria-label={tr("reader.nar.bar.close")}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-[rgb(var(--surface-muted))]"
               >
                 <X size={18} />
@@ -1156,10 +1160,10 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
             <div className="nb-offer flex flex-wrap items-center gap-2 border-t border-token px-3 py-2 sm:px-4">
               <button type="button" className="btn-primary" onClick={() => c()?.resumeOffer()}>
                 <Play size={16} />
-                Nghe tiếp từ {formatClock(ui.offerSec)}
+                {tr("reader.nar.resumeFrom", { time: formatClock(ui.offerSec) })}
               </button>
               <button type="button" className="btn-pill" onClick={() => c()?.restart()}>
-                Nghe từ đầu
+                {tr("reader.nar.fromStart")}
               </button>
             </div>
           )}
@@ -1168,17 +1172,17 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
             <div className="flex items-center gap-2 border-t border-token px-3 py-2 sm:px-4">
               <button type="button" className="btn-pill" onClick={() => c()?.refollow()}>
                 <Navigation size={14} />
-                Theo giảng viên
+                {tr("reader.nar.followLecturer")}
               </button>
-              <span className="text-xs text-muted">Trang không còn tự cuộn theo bài giảng.</span>
+              <span className="text-xs text-muted">{tr("reader.nar.noAutoScroll")}</span>
             </div>
           )}
 
           {ui.error && (
             <div role="alert" className="flex flex-wrap items-center gap-2 border-t border-token px-3 py-2 text-sm sm:px-4">
-              <span className="text-[rgb(var(--text))]">Không phát được âm thanh lúc này.</span>
+              <span className="text-[rgb(var(--text))]">{tr("reader.nar.audioError")}</span>
               <button type="button" className="btn-pill" onClick={() => c()?.retry()}>
-                Thử lại
+                {tr("reader.nar.retry")}
               </button>
             </div>
           )}
@@ -1196,8 +1200,8 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                 step={1}
                 value={Math.min(Math.floor(ui.time), Math.max(1, Math.floor(duration)))}
                 style={{ ["--p" as string]: `${pct}%` }}
-                aria-label="Vị trí phát"
-                aria-valuetext={clockText(ui.time, duration)}
+                aria-label={tr("reader.nar.position")}
+                aria-valuetext={clockText(ui.time, duration, lang)}
                 onChange={(e) => c()?.seek(Number(e.target.value))}
               />
               <span className="w-10 shrink-0 tabular-nums text-xs text-muted sm:hidden">{formatClock(duration)}</span>
@@ -1207,24 +1211,24 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                 <button
                   type="button"
                   onClick={() => c()?.previous()}
-                  aria-label={`${kind === "podcast" ? "Lượt" : "Mục"} trước`}
+                  aria-label={kind === "podcast" ? tr("reader.nar.prevTurn") : tr("reader.nar.prevSection")}
                   className="flex h-9 items-center gap-1 rounded-full px-3 text-xs font-medium text-muted hover:bg-[rgb(var(--surface-muted))]"
                 >
                   <SkipBack size={16} />
-                  Trước
+                  {tr("reader.nar.prev")}
                 </button>
                 <button
                   type="button"
                   onClick={() => c()?.next()}
                   disabled={!canNext}
-                  aria-label={`${kind === "podcast" ? "Lượt" : "Mục"} sau`}
+                  aria-label={kind === "podcast" ? tr("reader.nar.nextTurn") : tr("reader.nar.nextSection")}
                   className="flex h-9 items-center gap-1 rounded-full px-3 text-xs font-medium text-muted hover:bg-[rgb(var(--surface-muted))] disabled:opacity-40"
                 >
-                  Sau
+                  {tr("reader.nar.next")}
                   <SkipForward size={16} />
                 </button>
               </div>
-              <div role="group" aria-label="Tốc độ phát" className="flex items-center gap-1">
+              <div role="group" aria-label={tr("reader.nar.speed")} className="flex items-center gap-1">
                 {NARRATION_SPEEDS.map((s) => (
                   <button
                     key={s}
@@ -1235,17 +1239,17 @@ export default function NarrationPlayer({ lessonId, lessonTitle, lecture, podcas
                       ui.speed === s ? "bg-[rgb(var(--brand))] text-white" : "text-muted hover:bg-[rgb(var(--surface-muted))]"
                     }`}
                   >
-                    {speedLabel(s)}
+                    {speedLabel(s, lang)}
                   </button>
                 ))}
               </div>
               {kind === "lecture" && !stageOn && (
                 <button type="button" className="btn-pill" onClick={() => patchNarration({ stage: true })}>
                   <Presentation size={14} />
-                  Trình chiếu
+                  {tr("reader.nar.stage")}
                 </button>
               )}
-              {kind === "lecture" && ui.follow && !stageOn && <span className="ml-auto hidden text-xs text-muted md:inline">Bấm tiêu đề một {unit} để nghe từ đó</span>}
+              {kind === "lecture" && ui.follow && !stageOn && <span className="ml-auto hidden text-xs text-muted md:inline">{tr("reader.nar.tapTitle", { unit })}</span>}
             </div>
           </div>
         </div>

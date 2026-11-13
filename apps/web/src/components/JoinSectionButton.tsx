@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import { enrollErrorMessage } from "@/lib/enrollErrors";
+import { useT, useUiLang } from "@/lib/i18n/client";
 
 export default function JoinSectionButton({
   code,
@@ -15,6 +16,8 @@ export default function JoinSectionButton({
   isLoggedIn: boolean;
   mode?: "join" | "move";
 }) {
+  const t = useT();
+  const lang = useUiLang();
   const [submitting, setSubmitting] = useState(false);
 
   async function onClick() {
@@ -36,23 +39,23 @@ export default function JoinSectionButton({
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       if (data.error === "payment_required") {
-        toast.error("Khoá học có phí", {
-          description: "Vui lòng liên hệ giảng viên để được cấp quyền truy cập.",
+        toast.error(t("catalog.join.paymentTitle"), {
+          description: t("catalog.join.paymentBody"),
         });
       } else if (data.error === "invalid_invite_code") {
-        toast.error("Link không còn hiệu lực", {
-          description: "Liên hệ giảng viên để lấy link mới.",
+        toast.error(t("catalog.join.invalidTitle"), {
+          description: t("catalog.join.invalidBody"),
         });
       } else {
-        toast.error("Tham gia thất bại", {
-          description: enrollErrorMessage(data.error, res.status),
+        toast.error(t("catalog.join.failed"), {
+          description: enrollErrorMessage(data.error, res.status, lang),
         });
       }
       setSubmitting(false);
       return;
     }
-    toast.success(mode === "move" ? "Đã chuyển lớp" : "Tham gia thành công", {
-      description: "Đang chuyển vào khóa…",
+    toast.success(mode === "move" ? t("catalog.join.moved") : t("catalog.join.joined"), {
+      description: t("catalog.enroll.redirecting"),
     });
     window.location.href = `/learn/${data.courseSlug}`;
   }
@@ -65,11 +68,11 @@ export default function JoinSectionButton({
     >
       {submitting
         ? mode === "move"
-          ? "Đang chuyển…"
-          : "Đang tham gia…"
+          ? t("catalog.join.moving")
+          : t("catalog.join.joining")
         : mode === "move"
-          ? "Chuyển sang lớp này"
-          : "Tham gia lớp học"}
+          ? t("catalog.join.move")
+          : t("catalog.join.join")}
     </button>
   );
 }

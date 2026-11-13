@@ -7,6 +7,7 @@ import { Download, ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
 import { formatBytes } from "@/lib/formatBytes";
+import { useT } from "@/lib/i18n/client";
 import { deckIdOfUrl } from "@/lib/narration/deckCover";
 import DeckCover, { type DeckCoverInfo } from "./narration/DeckCover";
 import SafeHtml from "./SafeHtml";
@@ -196,17 +197,18 @@ function TeacherNote({ html }: { html: string }) {
 
 /** Placeholder for players that cannot work without a session. */
 function SignInRequired({ label }: { label: string }) {
+  const t = useT();
   return (
     <div className="rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-6 text-center">
       <p className="text-sm font-semibold">{label}</p>
       <p className="mt-1 text-xs text-muted">
-        Nội dung này cần tài khoản để ghi nhận kết quả học tập.
+        {t("learn.content.signInNeeded")}
       </p>
       <a
         href="/signin"
         className="mt-3 inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
       >
-        Đăng nhập để dùng
+        {t("learn.content.signInToUse")}
       </a>
     </div>
   );
@@ -231,6 +233,7 @@ function ContentBlock({
   deckCover?: DeckCoverInfo | null;
   numberTranscripts?: boolean;
 }) {
+  const t = useT();
   switch (type) {
     case "video": {
       const p = payload as VideoPayload;
@@ -422,7 +425,7 @@ function ContentBlock({
     }
     case "scorm": {
       const p = payload as ScormPayload;
-      if (!interactive) return <SignInRequired label={p.title ?? "Nội dung SCORM"} />;
+      if (!interactive) return <SignInRequired label={p.title ?? t("learn.content.scorm")} />;
       return (
         <div>
           {p.title && (
@@ -442,7 +445,7 @@ function ContentBlock({
     }
     case "lti": {
       const p = payload as LtiPayloadType;
-      if (!interactive) return <SignInRequired label={p.title ?? "Công cụ LTI"} />;
+      if (!interactive) return <SignInRequired label={p.title ?? t("learn.content.lti")} />;
       return (
         <LtiLaunch
           toolId={p.toolId}
@@ -455,7 +458,7 @@ function ContentBlock({
     }
     case "h5p": {
       const p = payload as H5pPayloadType;
-      if (!interactive) return <SignInRequired label={p.title ?? "Nội dung H5P"} />;
+      if (!interactive) return <SignInRequired label={p.title ?? t("learn.content.h5p")} />;
       return (
         <H5pPlayer
           packageId={p.packageId}
@@ -501,7 +504,7 @@ function ContentBlock({
               className="group/link inline-flex items-center gap-1.5 text-base font-semibold text-[rgb(var(--text))] hover:text-brand-700"
             >
               <span className="underline decoration-transparent decoration-2 underline-offset-4 transition-colors group-hover/link:decoration-brand-400">
-                {p.title || "Mở tài nguyên HTML"}
+                {p.title || t("learn.content.openHtml")}
               </span>
               <ExternalLink className="h-4 w-4 shrink-0 text-faint transition-colors group-hover/link:text-brand-600" aria-hidden />
             </a>

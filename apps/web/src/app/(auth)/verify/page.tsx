@@ -3,11 +3,13 @@
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 import { apiUrl } from "@/lib/apiUrl";
 import { sanitizeCallbackUrl, withCallbackUrl } from "@/lib/callbackUrl";
 import { landingPathForRoles } from "@/lib/landing";
 
 export default function VerifyPage() {
+  const t = useT();
   const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
   const [error, setError] = useState<string | null>(null);
   // Link trong email mang theo trang học viên đang muốn tới lúc đăng ký (vd
@@ -67,21 +69,21 @@ export default function VerifyPage() {
           >
             {status === "ok" ? "✓" : status === "error" ? "✕" : ""}
           </div>
-          <h1 className="mt-5 h-display text-2xl font-bold">Xác thực email</h1>
+          <h1 className="mt-5 h-display text-2xl font-bold">{t("auth.verify.title")}</h1>
 
           {status === "loading" && (
-            <p className="mt-4 text-muted">Đang xác thực...</p>
+            <p className="mt-4 text-muted">{t("auth.verify.loading")}</p>
           )}
           {status === "ok" && (
             <>
-              <p className="mt-4 text-success-700">Email của bạn đã được xác thực.</p>
+              <p className="mt-4 text-success-700">{t("auth.verify.ok")}</p>
               {continuePath ? (
                 <Link href={continuePath} className="btn-primary mt-6 inline-flex">
-                  Tiếp tục →
+                  {t("auth.continue")}
                 </Link>
               ) : (
                 <Link href={withCallbackUrl("/signin", callbackPath)} className="btn-primary mt-6 inline-flex">
-                  Đăng nhập →
+                  {t("auth.signIn")} →
                 </Link>
               )}
             </>
@@ -90,16 +92,16 @@ export default function VerifyPage() {
             <>
               <p className="mt-4 text-sm text-danger-700">
                 {error === "network_error"
-                  ? "Chưa kết nối được tới Limio. Hãy kiểm tra mạng rồi mở lại link trong email."
-                  : "Link xác thực đã hết hạn hoặc đã được dùng rồi."}
+                  ? t("auth.verify.networkError")
+                  : t("auth.verify.expired")}
               </p>
               {continuePath ? (
                 <Link href={continuePath} className="btn-secondary mt-6 inline-flex">
-                  Tiếp tục →
+                  {t("auth.continue")}
                 </Link>
               ) : (
                 <Link href={withCallbackUrl("/signin", callbackPath)} className="btn-secondary mt-6 inline-flex">
-                  Quay lại đăng nhập
+                  {t("auth.backToSignIn")}
                 </Link>
               )}
             </>

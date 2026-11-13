@@ -5,6 +5,7 @@ import { Eye, Layers, List, Pause, Volume2 } from "lucide-react";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
 import { useExclusiveAudio } from "./useExclusiveAudio";
 import VocabFlashcards from "./VocabFlashcards";
+import { useT } from "@/lib/i18n/client";
 
 const VIEW_KEY = "limio:vocab-view";
 type View = "list" | "cards";
@@ -46,6 +47,7 @@ export default function VocabListView({
   initialShowReading?: boolean;
   initialShowMeaning?: boolean;
 }) {
+  const t = useT();
   const [showReading, setShowReading] = useState(initialShowReading);
   const [showMeaning, setShowMeaning] = useState(initialShowMeaning);
   const [view, setView] = useState<View>("list");
@@ -68,7 +70,7 @@ export default function VocabListView({
     }
   };
   const hasReading = items.some((i) => !!i.reading);
-  const label = readingLabel?.trim() || "Phiên âm";
+  const label = readingLabel?.trim() || t("practice.fc.vl.reading");
   const anyAudio = items.some((i) => i.audioUrl);
   const anyExample = items.some((i) => !!i.example);
   // Từ md: từ · phiên âm · nghĩa, ví dụ nằm dưới nghĩa. Từ lg nếu có ví dụ: ví dụ sang
@@ -95,25 +97,25 @@ export default function VocabListView({
             <Layers size={16} />
           </span>
           {title && <p className="text-body font-semibold">{title}</p>}
-          <span className="chip shrink-0">{items.length} từ</span>
+          <span className="chip shrink-0">{t("practice.fc.vl.count", { n: items.length })}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div
             role="group"
-            aria-label="Kiểu xem"
+            aria-label={t("practice.fc.vl.viewAria")}
             className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface-muted))] p-0.5"
           >
             <ViewChip pressed={view === "list"} onClick={() => chooseView("list")} icon={<List size={14} aria-hidden />}>
-              Danh sách
+              {t("practice.fc.vl.list")}
             </ViewChip>
             <ViewChip pressed={view === "cards"} onClick={() => chooseView("cards")} icon={<Layers size={14} aria-hidden />}>
-              Thẻ lật
+              {t("practice.fc.vl.cards")}
             </ViewChip>
           </div>
           {(view === "list" || hasReading) && (
             <div
               role="group"
-              aria-label="Hiển thị"
+              aria-label={t("practice.fc.vl.showAria")}
               className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5 pl-3"
             >
               <Eye size={15} aria-hidden className="mr-1.5 text-muted" />
@@ -124,7 +126,7 @@ export default function VocabListView({
               )}
               {view === "list" && (
                 <ToggleChip pressed={showMeaning} onClick={() => setShowMeaning((v) => !v)}>
-                  Nghĩa
+                  {t("practice.fc.vl.meaning")}
                 </ToggleChip>
               )}
             </div>
@@ -137,10 +139,10 @@ export default function VocabListView({
       ) : (
       <>
       <div className={`hidden gap-x-4 border-b border-token px-3 pb-1.5 text-caption font-medium uppercase tracking-wide sm:grid ${cols}`}>
-        <span className={anyAudio ? "pl-9" : undefined}>Từ</span>
+        <span className={anyAudio ? "pl-9" : undefined}>{t("practice.fc.vl.word")}</span>
         {hasReading && <span>{label}</span>}
-        <span>Nghĩa</span>
-        {anyExample && <span className="hidden lg:inline">Ví dụ</span>}
+        <span>{t("practice.fc.vl.meaning")}</span>
+        {anyExample && <span className="hidden lg:inline">{t("practice.fc.vl.example")}</span>}
       </div>
 
       <ul className="space-y-1">
@@ -167,7 +169,7 @@ export default function VocabListView({
                 {it.audioUrl && (
                   <button
                     type="button"
-                    aria-label={`Nghe ${it.term}`}
+                    aria-label={t("practice.fc.listenTerm", { term: it.term })}
                     aria-pressed={playing}
                     onClick={(e) => {
                       e.stopPropagation(); // không để hàng xử lý thêm một lần

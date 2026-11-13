@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml, htmlToPlainText } from "@/lib/richText";
+import { useT } from "@/lib/i18n/client";
 import type { AnswerState, Option, Question, Response } from "./questionInputTypes";
 
 /**
@@ -39,6 +40,7 @@ export function OrderingInput({
   onChange: (r: Response) => void;
   onBlur: () => void;
 }) {
+  const t = useT();
   // Build the working list of option IDs:
   //   1) Start from saved response if it's a string[] (resume case).
   //   2) Filter out IDs no longer in question.options (option deleted server-side).
@@ -123,7 +125,7 @@ export function OrderingInput({
 
       {/* Desktop: horizontal drag-and-drop */}
       <div className="hidden md:block">
-        <p className="mb-2 text-xs text-faint">Kéo thả các thẻ theo thứ tự đúng (trái → phải)</p>
+        <p className="mb-2 text-xs text-faint">{t("practice.quiz.in.orderHint")}</p>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={ids} strategy={horizontalListSortingStrategy}>
             <ol className="flex flex-wrap items-stretch gap-2">
@@ -194,6 +196,7 @@ export function MatchingInput({
    */
   layout?: "side" | "stacked";
 }) {
+  const t = useT();
   const lefts = question.options.filter((o) => o.extra?.side === "left");
   const rights = question.options.filter((o) => o.extra?.side === "right");
   const rightById = new Map(rights.map((r) => [r.id, r]));
@@ -277,7 +280,7 @@ export function MatchingInput({
               aria-label={htmlToPlainText(l.label)}
               className="select min-h-[44px] w-full"
             >
-              <option value="">— chọn —</option>
+              <option value="">{t("practice.quiz.in.choose")}</option>
               {rights.map((r) => (
                 <option key={r.id} value={r.id}>
                   {htmlToPlainText(r.label)}
@@ -291,7 +294,7 @@ export function MatchingInput({
       {/* Desktop: drag from right pool to left slots */}
       <div className="hidden md:block">
         <p className="mb-2 text-xs text-faint">
-          {layout === "stacked" ? "Kéo các thẻ từ kho bên dưới thả vào ô trống tương ứng" : "Kéo các thẻ bên phải thả vào ô trống tương ứng bên trái"}
+          {layout === "stacked" ? t("practice.quiz.in.matchStacked") : t("practice.quiz.in.matchSide")}
         </p>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           {(() => {
@@ -345,6 +348,7 @@ function MatchingLeftSlot({
   /** Cột hẹp: nhãn bên trái chỉ chiếm vừa chữ (tối đa 40%), ô thả dùng hết phần còn lại. */
   compact?: boolean;
 }) {
+  const t = useT();
   const { setNodeRef, isOver } = useDroppable({ id: `left:${leftId}` });
   return (
     <li className="flex items-center gap-2">
@@ -374,13 +378,13 @@ function MatchingLeftSlot({
               type="button"
               onClick={onClear}
               className="shrink-0 px-1 text-xs text-faint hover:text-brand-700"
-              aria-label="Bỏ chọn"
+              aria-label={t("practice.quiz.in.unselect")}
             >
               ✕
             </button>
           </>
         ) : (
-          <span className="text-xs text-faint">— thả vào đây —</span>
+          <span className="text-xs text-faint">{t("practice.quiz.in.dropHere")}</span>
         )}
       </div>
     </li>
@@ -392,6 +396,7 @@ function MatchingPool({
 }: {
   poolRights: Array<{ id: string; label: string }>;
 }) {
+  const t = useT();
   const { setNodeRef, isOver } = useDroppable({ id: "matching:pool" });
   return (
     <div
@@ -401,7 +406,7 @@ function MatchingPool({
       }`}
     >
       {poolRights.length === 0 ? (
-        <span className="text-xs text-faint">Đã ghép hết — kéo thẻ về đây để bỏ chọn</span>
+        <span className="text-xs text-faint">{t("practice.quiz.in.allMatched")}</span>
       ) : (
         poolRights.map((r) => <MatchingDraggable key={r.id} id={r.id} label={r.label} />)
       )}
@@ -464,6 +469,7 @@ export function DragDropFillInput({
   onChange: (r: Response) => void;
   onBlur: () => void;
 }) {
+  const t = useT();
   // Parse prompt into segments split by [[N]] placeholders. Each placeholder
   // becomes a drop-zone slot with blankIndex = N. Plain text segments stay
   // text. Backend strips HTML for grading, so we treat prompt as plain text
@@ -540,8 +546,7 @@ export function DragDropFillInput({
   if (blanksInPrompt.length === 0) {
     return (
       <div className="rounded-lg border border-accent-200 bg-accent-50 p-3 text-sm text-accent-800">
-        Câu hỏi này thiếu ký hiệu ô <code>[[1]]</code>… trong nội dung. Liên hệ
-        giảng viên.
+        {t("practice.quiz.in.noBlanks")}
       </div>
     );
   }
@@ -574,7 +579,7 @@ export function DragDropFillInput({
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-faint">Kéo các từ bên dưới thả vào ô tương ứng:</p>
+      <p className="mt-3 text-xs text-faint">{t("practice.quiz.in.tokenHint")}</p>
       <DragDropTokenPool tokens={poolTokens} />
     </DndContext>
   );
@@ -605,6 +610,7 @@ function DragDropBlank({
   placed: Option | null;
   onClear: () => void;
 }) {
+  const t = useT();
   const { setNodeRef, isOver } = useDroppable({ id: `blank:${blankIndex}` });
   return (
     <span
@@ -624,20 +630,21 @@ function DragDropBlank({
             type="button"
             onClick={onClear}
             className="text-xs text-faint hover:text-danger-600"
-            aria-label="Bỏ chọn token này"
-            title="Bỏ"
+            aria-label={t("practice.quiz.in.unselectToken")}
+            title={t("practice.quiz.in.remove")}
           >
             ×
           </button>
         </>
       ) : (
-        <span className="text-xs text-faint">Ô {blankIndex}</span>
+        <span className="text-xs text-faint">{t("practice.quiz.in.blank", { n: blankIndex })}</span>
       )}
     </span>
   );
 }
 
 function DragDropTokenPool({ tokens }: { tokens: Option[] }) {
+  const t = useT();
   const { setNodeRef, isOver } = useDroppable({ id: "ddf:pool" });
   return (
     <div
@@ -649,9 +656,9 @@ function DragDropTokenPool({ tokens }: { tokens: Option[] }) {
       }`}
     >
       {tokens.length === 0 ? (
-        <span className="text-xs text-faint">Đã đặt hết token. Kéo lại vào đây để bỏ.</span>
+        <span className="text-xs text-faint">{t("practice.quiz.in.allPlaced")}</span>
       ) : (
-        tokens.map((t) => <DragDropToken key={t.id} option={t} />)
+        tokens.map((tk) => <DragDropToken key={tk.id} option={tk} />)
       )}
     </div>
   );

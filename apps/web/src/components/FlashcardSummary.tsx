@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { FLASHCARD_RATINGS, FLASHCARD_RATING_LABEL, type FlashcardRating } from "@feedbackme/shared-types";
+import { FLASHCARD_RATINGS, type FlashcardRating } from "@feedbackme/shared-types";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * LANG G4 — màn tổng kết cuối phiên. Chỉ số đếm theo mức tự đánh giá; không điểm,
@@ -15,25 +18,26 @@ export default function FlashcardSummary({
   /** Có thì hiện nút "Ôn tiếp" (còn thẻ trong ngày). */
   onMore?: () => void;
 }) {
+  const t = useT();
   return (
     <section className="space-y-5 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center" aria-labelledby="fc-done">
-      <h2 id="fc-done" className="text-h3">{`Bạn đã ôn ${summary.total} thẻ`}</h2>
+      <h2 id="fc-done" className="text-h3">{t("practice.fc.sum.done", { n: summary.total })}</h2>
       <ul className="grid grid-cols-4 gap-2">
         {FLASHCARD_RATINGS.map((r) => (
           <li key={r} className="rounded-xl border border-token px-2 py-3">
             <p className="text-xl font-medium">{summary[r]}</p>
-            <p className="text-caption">{FLASHCARD_RATING_LABEL[r]}</p>
+            <p className="text-caption">{t(`practice.fc.rating.${r}`)}</p>
           </li>
         ))}
       </ul>
       <div className="flex flex-wrap justify-center gap-2">
         {onMore && (
           <button type="button" onClick={onMore} className="btn-primary">
-            Ôn tiếp
+            {t("practice.fc.sum.more")}
           </button>
         )}
         <Link href={`/learn/${slug}`} className="btn-secondary">
-          Về trang khoá học
+          {t("practice.fc.sum.back")}
         </Link>
       </div>
     </section>

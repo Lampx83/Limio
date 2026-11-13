@@ -1,4 +1,7 @@
-import { MASTERY_LABEL_TEXT, type MasteryLabel } from "@feedbackme/shared-types";
+"use client";
+
+import type { MasteryLabel } from "@feedbackme/shared-types";
+import { useT } from "@/lib/i18n/client";
 import StatusBadge, { type StatusTone } from "@/components/ui/StatusBadge";
 
 /**
@@ -21,9 +24,10 @@ export default function MasteryBadge({
   label: MasteryLabel;
   className?: string;
 }) {
+  const t = useT();
   return (
     <StatusBadge tone={TONE[label]} className={className}>
-      {MASTERY_LABEL_TEXT[label]}
+      {t(`learn.mastery.${label}`)}
     </StatusBadge>
   );
 }

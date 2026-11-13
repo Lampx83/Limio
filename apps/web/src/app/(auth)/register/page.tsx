@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 import { LimeSliceIcon } from "@/components/BrandIcons";
 import { apiUrl } from "@/lib/apiUrl";
 import { sanitizeCallbackUrl, withCallbackUrl } from "@/lib/callbackUrl";
@@ -22,6 +23,7 @@ export default function RegisterPage() {
 }
 
 function RegisterForm() {
+  const t = useT();
   // Đích quay về (vd link mời vào lớp /enroll/<mã>) — đi theo học viên qua
   // đăng ký, đăng nhập tự động và cả link xác minh trong email.
   const callbackPath = sanitizeCallbackUrl(useSearchParams().get("callbackUrl"));
@@ -54,28 +56,28 @@ function RegisterForm() {
       setStatus("ok");
       setMessage(
         data.emailSent === false
-          ? "Tài khoản đã được tạo nhưng chúng tôi chưa gửi được email xác thực. Vui lòng thử lại sau ít phút hoặc liên hệ quản trị viên."
-          : `Tài khoản đã được tạo. Chúng tôi đã gửi email xác thực tới ${data.email ?? email} — hãy kiểm tra hộp thư (cả mục Spam).`,
+          ? t("auth.register.createdNoEmail")
+          : t("auth.register.createdEmailSent", { email: data.email ?? email }),
       );
     } else {
       setStatus("error");
       if (data.error === "email_taken") {
         setMessage(
           <>
-            <p>Email này đã có tài khoản trên hệ thống.</p>
+            <p>{t("auth.register.emailTaken")}</p>
             <p className="mt-1">
               <Link href={withCallbackUrl("/signin", callbackPath)} className="link font-medium">
-                Đăng nhập
+                {t("auth.signIn")}
               </Link>
-              {" · Chưa từng đặt mật khẩu? "}
+              {" · "}{t("auth.neverSetPasswordQ")}{" "}
               <Link href="/reset-request" className="link font-medium">
-                Quên mật khẩu
+                {t("auth.forgotPassword")}
               </Link>
             </p>
           </>,
         );
       } else {
-        setMessage(data.message ?? `Lỗi: ${data.error ?? "unknown"}`);
+        setMessage(data.message ?? t("auth.errorWith", { error: data.error ?? "unknown" }));
       }
     }
   }
@@ -88,21 +90,20 @@ function RegisterForm() {
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_minmax(380px,420px)] lg:py-20">
         {/* Left — value props */}
         <div className="hidden flex-col justify-center lg:flex">
-          <span className="chip-brand w-max">Bắt đầu miễn phí</span>
+          <span className="chip-brand w-max">{t("auth.register.chip")}</span>
           <h1 className="mt-4 h-display text-4xl font-bold leading-tight">
-            Học thông minh hơn với{" "}
+            {t("auth.register.pitchTitle")}{" "}
             <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
-            Tạo tài khoản học viên trong 30 giây. Vào lớp của thầy cô, làm bài và
-            biết ngay mình đúng, sai ở đâu.
+            {t("auth.register.pitchBody")}
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {[
-              { i: "", t: "Vào lớp bằng link mời", d: "Bấm link hoặc nhập mã thầy cô gửi là vào học" },
-              { i: "", t: "Phản hồi sau mỗi bài", d: "Biết mình sai ở đâu để sửa kịp" },
-              { i: "", t: "Hỏi AI trong bài học", d: "Nhờ giải thích lại hoặc tóm tắt bài đang học" },
-              { i: "", t: "Điểm thưởng & huy hiệu", d: "Giữ nhịp học đều mỗi ngày" },
+              { i: "", t: t("auth.register.feat1.t"), d: t("auth.register.feat1.d") },
+              { i: "", t: t("auth.register.feat2.t"), d: t("auth.register.feat2.d") },
+              { i: "", t: t("auth.register.feat3.t"), d: t("auth.register.feat3.d") },
+              { i: "", t: t("auth.register.feat4.t"), d: t("auth.register.feat4.d") },
             ].map((f) => (
               <div key={f.t} className="rounded-xl border border-token bg-[rgb(var(--surface))/0.6] p-3 backdrop-blur">
                 <div className="text-xl">{f.i}</div>
@@ -118,13 +119,13 @@ function RegisterForm() {
           <div className="card shadow-card-hover">
             <div className="text-center">
               <LimeSliceIcon className="mx-auto h-14 w-14 drop-shadow-md" />
-              <h1 className="mt-4 h-display text-2xl font-bold">Tạo tài khoản học viên</h1>
+              <h1 className="mt-4 h-display text-2xl font-bold">{t("auth.register.title")}</h1>
             </div>
 
             <form onSubmit={onSubmit} className="mt-6 space-y-4">
-              <p className="text-xs text-muted"><span className="text-danger-600" aria-hidden>*</span> Trường bắt buộc</p>
+              <p className="text-xs text-muted"><span className="text-danger-600" aria-hidden>*</span> {t("auth.requiredNote")}</p>
               <div>
-                <label className="label" htmlFor="displayName">Tên hiển thị<span className="text-danger-600" aria-hidden> *</span></label>
+                <label className="label" htmlFor="displayName">{t("auth.register.displayName")}<span className="text-danger-600" aria-hidden> *</span></label>
                 <input
                   id="displayName"
                   type="text"
@@ -133,11 +134,11 @@ function RegisterForm() {
                   required
                   minLength={1}
                   className="input mt-1.5"
-                  placeholder="Nguyễn Văn A"
+                  placeholder={t("auth.register.displayNamePlaceholder")}
                 />
               </div>
               <div>
-                <label className="label" htmlFor="email">Email<span className="text-danger-600" aria-hidden> *</span></label>
+                <label className="label" htmlFor="email">{t("auth.email")}<span className="text-danger-600" aria-hidden> *</span></label>
                 <input
                   id="email"
                   type="email"
@@ -146,11 +147,11 @@ function RegisterForm() {
                   required
                   autoComplete="email"
                   className="input mt-1.5"
-                  placeholder="ban@example.com"
+                  placeholder={t("auth.emailPlaceholder")}
                 />
               </div>
               <div>
-                <label className="label" htmlFor="password">Mật khẩu<span className="text-danger-600" aria-hidden> *</span></label>
+                <label className="label" htmlFor="password">{t("auth.password")}<span className="text-danger-600" aria-hidden> *</span></label>
                 <div className="relative mt-1.5">
                   <input
                     id="password"
@@ -161,26 +162,26 @@ function RegisterForm() {
                     minLength={8}
                     autoComplete="new-password"
                     className="input w-full pr-12"
-                    placeholder="Tối thiểu 8 ký tự"
+                    placeholder={t("auth.passwordPlaceholder")}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                     aria-pressed={showPassword}
                     className="absolute inset-y-0 right-0 flex items-center px-3 text-xs text-neutral-500 hover:text-neutral-700"
                   >
-                    {showPassword ? "Ẩn" : "Hiện"}
+                    {showPassword ? t("auth.hide") : t("auth.show")}
                   </button>
                 </div>
-                <span className="help">Tối thiểu 8 ký tự, nên trộn chữ + số.</span>
+                <span className="help">{t("auth.register.passwordHelp")}</span>
               </div>
               <button
                 type="submit"
                 disabled={status === "submitting"}
                 className="btn-primary w-full"
               >
-                {status === "submitting" ? "Đang xử lý..." : "Đăng ký"}
+                {status === "submitting" ? t("auth.processing") : t("auth.register")}
               </button>
               {message && (
                 <div
@@ -196,21 +197,21 @@ function RegisterForm() {
             </form>
 
             <p className="mt-6 text-center text-sm text-muted">
-              Đã có tài khoản?{" "}
+              {t("auth.haveAccountQ")}{" "}
               <Link href={withCallbackUrl("/signin", callbackPath)} className="link font-medium">
-                Đăng nhập
+                {t("auth.signIn")}
               </Link>
             </p>
             <p className="mt-2 text-center text-sm text-muted">
-              Bạn là giáo viên?{" "}
+              {t("auth.register.askInstructor")}{" "}
               <Link href="/register/instructor" className="link font-medium">
-                Đăng ký tài khoản giáo viên
+                {t("auth.register.instructorLink")}
               </Link>
             </p>
           </div>
 
           <p className="mt-4 text-center text-xs text-faint">
-            Bằng cách đăng ký, bạn đồng ý với điều khoản sử dụng của Limio.
+            {t("auth.register.terms")}
           </p>
         </div>
       </div>

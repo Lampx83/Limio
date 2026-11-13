@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { isFree } from "@/lib/formatPrice";
+import { useT } from "@/lib/i18n/client";
 import EnrollButton, { type AccessPlanOption, type PaymentProviderChoice } from "./EnrollButton";
 
 /**
@@ -34,6 +35,7 @@ export default function EnrollNudgeAction({
   accessPlans?: AccessPlanOption[];
   paymentProviders?: PaymentProviderChoice[];
 }) {
+  const t = useT();
   const [revealed, setRevealed] = useState(false);
   const free = !paymentEnabled || (accessPlans.length === 0 && isFree(priceCents));
 
@@ -47,7 +49,7 @@ export default function EnrollNudgeAction({
         priceCents={priceCents}
         currency={currency}
         paymentEnabled={paymentEnabled}
-        freeLabel="Đăng ký ngay"
+        freeLabel={t("catalog.enroll.now")}
       />
     );
   }
@@ -78,7 +80,7 @@ export default function EnrollNudgeAction({
       onClick={() => setRevealed(true)}
       className="btn-primary btn-sm shrink-0"
     >
-      Đăng ký ngay
+      {t("catalog.enroll.now")}
     </button>
   );
 }

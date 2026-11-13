@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Printer, ArrowLeft } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Thanh điều khiển của trang in — và cú gọi in tự động.
@@ -13,6 +14,7 @@ import { Printer, ArrowLeft } from "lucide-react";
  * hiện, phòng khi trình duyệt chặn hộp thoại in tự động.
  */
 export default function PrintTrigger({ backHref }: { backHref: string }) {
+  const tx = useT();
   const fired = useRef(false);
   const [ready, setReady] = useState(false);
 
@@ -40,16 +42,16 @@ export default function PrintTrigger({ backHref }: { backHref: string }) {
       <div className="mb-6 flex flex-wrap items-center gap-3 print:hidden">
         <Link href={backHref} className="btn btn-ghost btn-sm">
           <ArrowLeft size={16} />
-          Quay lại bài học
+          {tx("learn.print.back")}
         </Link>
         <button type="button" onClick={() => window.print()} className="btn btn-primary btn-sm">
           <Printer size={16} />
-          In / Lưu PDF
+          {tx("learn.printPdf")}
         </button>
         <span className="text-meta text-muted">
           {ready
-            ? "Trong hộp thoại in, chọn “Lưu thành PDF” để tải về máy."
-            : "Đang chuẩn bị bản in…"}
+            ? tx("learn.print.hintReady")
+            : tx("learn.print.hintPreparing")}
         </span>
       </div>
     </>

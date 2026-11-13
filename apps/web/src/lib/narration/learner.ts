@@ -1,3 +1,5 @@
+import { tFor } from "@/lib/i18n/tFor";
+import type { UiLang } from "@/lib/i18n/core";
 import { formatClock } from "@/lib/audioClock";
 import { parseDeckAnchor } from "./deckSync";
 
@@ -13,19 +15,21 @@ export const NARRATION_SPEEDS = [0.75, 1, 1.25, 1.5] as const;
 export type NarrationSpeed = (typeof NARRATION_SPEEDS)[number];
 
 /** 0.75 → "0,75×", 1 → "1×". Tiếng Việt dùng dấu phẩy thập phân. */
-export const speedLabel = (s: number): string => `${String(s).replace(".", ",")}×`;
+export const speedLabel = (s: number, lang: UiLang = "vi"): string =>
+  `${lang === "en" ? String(s) : String(s).replace(".", ",")}×`;
 
 export const isNarrationSpeed = (n: unknown): n is NarrationSpeed =>
   typeof n === "number" && (NARRATION_SPEEDS as readonly number[]).includes(n);
 
 /** 314 s → "5 phút". Bài rất ngắn vẫn là "1 phút", không bao giờ "0 phút". */
-export const minutesLabel = (durationSec: number): string =>
-  `${Math.max(1, Math.round((Number.isFinite(durationSec) ? durationSec : 0) / 60))} phút`;
+export const minutesLabel = (durationSec: number, lang: UiLang = "vi"): string =>
+  tFor(lang)("reader.nar.minutes", { n: Math.max(1, Math.round((Number.isFinite(durationSec) ? durationSec : 0) / 60)) });
 
 export { formatClock };
 
 /** "6:12 trên 8:30" — giá trị đọc được của thanh tua cho trình đọc màn hình. */
-export const clockText = (current: number, total: number): string => `${formatClock(current)} trên ${formatClock(total)}`;
+export const clockText = (current: number, total: number, lang: UiLang = "vi"): string =>
+  tFor(lang)("reader.nar.clockOf", { current: formatClock(current), total: formatClock(total) });
 
 // ── Chọn đoạn theo thời điểm ──────────────────────────────────────────────────
 
@@ -137,13 +141,14 @@ export function resolveAnchors(anchors: readonly string[], headings: readonly (r
 }
 
 /** Chữ hiển thị trên thanh phát cho một anchor. */
-export function anchorLabel(anchor: string): string {
-  if (anchor === ANCHOR_INTRO) return "Mở đầu";
-  if (anchor === ANCHOR_OUTRO) return "Tổng kết";
+export function anchorLabel(anchor: string, lang: UiLang = "vi"): string {
+  const t = tFor(lang);
+  if (anchor === ANCHOR_INTRO) return t("reader.nar.intro");
+  if (anchor === ANCHOR_OUTRO) return t("reader.nar.outro");
   const deck = parseDeckAnchor(anchor);
-  if (deck) return `Slide ${deck.slide + 1}`;
+  if (deck) return t("reader.nar.slideN", { n: deck.slide + 1 });
   const m = /^(.*?)\s*#(\d{1,2})$/.exec(anchor.trim());
-  return m ? `${m[1]} · bước ${m[2]}` : anchor;
+  return m ? t("reader.nar.stepOf", { title: m[1]!, n: m[2]! }) : anchor;
 }
 
 // ── Nhớ vị trí nghe dở ───────────────────────────────────────────────────────

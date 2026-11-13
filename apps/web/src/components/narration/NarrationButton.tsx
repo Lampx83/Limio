@@ -1,5 +1,6 @@
 "use client";
 
+import { useT, useUiLang } from "@/lib/i18n/client";
 import { useEffect, useState } from "react";
 import { Headphones } from "lucide-react";
 import { NarrationWave } from "./NarrationAvatar";
@@ -14,6 +15,8 @@ import { narrationCommands, useNarration } from "@/lib/narration/store";
  */
 export default function NarrationButton({ durationSec, inviteCourseSlug, userId = null }: { durationSec: number; inviteCourseSlug?: string; userId?: string | null }) {
   const ui = useNarration();
+  const tr = useT();
+  const lang = useUiLang();
   // Khoá có lời mời «Học với giảng viên ảo» thì lời mời là cửa vào duy nhất (hai nút cùng mở một bài giảng là thừa);
   // học viên ẩn lời mời rồi thì nút này hiện lại để không mất lối vào.
   const [invited, setInvited] = useState(!!inviteCourseSlug);
@@ -39,8 +42,8 @@ export default function NarrationButton({ durationSec, inviteCourseSlug, userId 
     >
       <span className="listen-icon">{active && ui.playing ? <NarrationWave playing /> : <Headphones size={18} />}</span>
       <span className="listen-label">
-        <span>Nghe giảng</span>
-        <small>{minutesLabel(durationSec)}</small>
+        <span>{tr("reader.nar.listen")}</span>
+        <small>{minutesLabel(durationSec, lang)}</small>
       </span>
     </button>
   );
