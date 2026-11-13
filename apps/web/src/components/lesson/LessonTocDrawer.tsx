@@ -8,8 +8,18 @@ import { createPortal } from "react-dom";
 import { List, X, Check, Lock } from "lucide-react";
 import { FabTip } from "./TeacherBar";
 import { useT } from "@/lib/i18n/client";
+import LessonVideoBadge from "@/components/ui/LessonVideoBadge";
 
-type TocLesson = { id: string; title: string; completed: boolean; locked?: boolean };
+type TocLesson = {
+  id: string;
+  title: string;
+  completed: boolean;
+  locked?: boolean;
+  /** Bài có khối video chưa ẩn — hiện dấu video cạnh tên bài. */
+  hasVideo?: boolean;
+  /** Tổng thời lượng video làm tròn lên phút nếu có khai báo; chỉ dùng khi `hasVideo`. */
+  videoMinutes?: number | null;
+};
 type TocModule = { id: string; title: string; lessons: TocLesson[] };
 
 export default function LessonTocDrawer({
@@ -61,6 +71,10 @@ export default function LessonTocDrawer({
 
   // Running lesson number across the whole course.
   let counter = 0;
+  const videoBadge = (l: TocLesson) => {
+    if (!l.hasVideo) return null;
+    return <LessonVideoBadge label={t("learn.video.has")} duration={l.videoMinutes ? t("learn.minutes", { n: l.videoMinutes }) : null} />;
+  };
 
   return (
     <>
@@ -179,6 +193,7 @@ export default function LessonTocDrawer({
                               >
                                 {num}
                                 <span className="flex-1 truncate">{l.title}</span>
+                                {videoBadge(l)}
                                 <span className="shrink-0 text-[10px] uppercase tracking-wide">
                                   {t("learn.toc.locked")}
                                 </span>
@@ -201,6 +216,7 @@ export default function LessonTocDrawer({
                             >
                               {num}
                               <span className="flex-1 truncate">{l.title}</span>
+                              {videoBadge(l)}
                             </Link>
                           </li>
                         );

@@ -3,6 +3,7 @@ import type { viLearn } from "../vi/learn";
 
 export const enLearn: PartialDict<typeof viLearn> = {
   "learn.minutes": "{n} min",
+  "learn.video.has": "Has video",
   "learn.backToCourse": "← Back to course",
   "learn.printPdf": "Print / Save as PDF",
   "learn.rail.state.done": "Completed",

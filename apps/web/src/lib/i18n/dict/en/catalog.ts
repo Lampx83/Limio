@@ -41,8 +41,6 @@ export const enCatalog: PartialDict<typeof viCatalog> = {
   "catalog.detail.lessonCount": "{n} lessons",
   "catalog.detail.lockedLesson": "Enroll in the course to open this lesson",
   "catalog.detail.preview": "Preview",
-  "catalog.detail.video": "Video",
-  "catalog.detail.videoMinutes": "Video · {n} min",
 
   "catalog.lb.title": "Leaderboard",
   "catalog.lb.full": "View all →",

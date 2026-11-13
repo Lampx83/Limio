@@ -57,6 +57,33 @@ const render = (f = frame(), hasExams = false, levelLabel = "Unit", notesCount =
     </LessonFrameLayout>,
   );
 
+describe("LessonFrameLayout — dấu 'Có video' trong thanh bài", () => {
+  it("chỉ bài có video (theo map) mới có dấu, mỗi dấu một nhãn đọc được", () => {
+    const html = renderToStaticMarkup(
+      <LessonFrameLayout
+        slug="ielts"
+        lessonId="l2"
+        courseTitle="Active Skills"
+        lessonTitle="Reading Skill"
+        frame={frame()}
+        hasExams={false}
+        levelLabel="Unit"
+        notesCount={0}
+        videos={new Map([["l1", { durationSec: 540 }], ["l3", { durationSec: null }]])}
+      >
+        <main>x</main>
+      </LessonFrameLayout>,
+    );
+    const badgeAfter = (title: string) => new RegExp(`${title}\\s*<span[^>]*data-testid="lesson-video-badge"`).test(html);
+    expect(badgeAfter("Before You Read")).toBe(true);
+    expect(badgeAfter("Reading Comprehension")).toBe(true);
+    expect(badgeAfter("Reading Skill")).toBe(false);
+    expect(badgeAfter("Vocabulary Skill")).toBe(false);
+    expect(html).toContain('<span class="sr-only">Có video</span>');
+    expect(render()).not.toContain("lesson-video-badge");
+  });
+});
+
 describe("LessonFrameLayout — thanh bài trong Unit/Module", () => {
   it("có link Về khoá học, tên Unit, 'x / y bài hoàn thành', và bọc đúng nội dung của trang bài", () => {
     const html = render();

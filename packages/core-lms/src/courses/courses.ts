@@ -641,7 +641,13 @@ export async function getCourseDetail(
           lessons: {
             orderBy: { orderIndex: "asc" },
             include: {
-              contentItems: { orderBy: { orderIndex: "asc" } },
+              // Trang catalog chỉ cần biết bài có video (và dài bao lâu) — không kéo payload của mọi khối. Lọc theo
+              // `type: "video"` chứ không đọc `type` từng khối: DB production có thể có loại khối mới hơn Prisma client.
+              contentItems: {
+                where: { type: "video", isHidden: false },
+                orderBy: { orderIndex: "asc" },
+                select: { payload: true },
+              },
               skillTags: { include: { skill: true } },
             },
           },

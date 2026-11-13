@@ -21,6 +21,7 @@ import {
   listMockExamsForLearner,
   listThreadsForLesson,
   loadLessonDurations,
+  minutesOf,
   registerLessonMedia,
   resolveQuizScore,
 } from "@feedbackme/core-lms";
@@ -38,6 +39,7 @@ import { getActiveRole } from "@/lib/active-role";
 import { getT, getUiLang } from "@/lib/i18n/server";
 import { isLearnerRole } from "@/lib/learnerRole";
 import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
+import { loadCourseLessonVideos, type LessonVideoInfo } from "@/lib/lessonVideo";
 import EnrollButton from "@/components/EnrollButton";
 import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
 import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel } from "@/lib/lessonFramePolicy";
@@ -478,7 +480,19 @@ export default async function LessonPage({
       eventKey: `lesson.completed:${userId}:${lesson.id}`,
     },
   });
-  const progress = await getCourseProgress(userId, lesson.module.course.id);
+  const [progress, lessonVideos] = await Promise.all([
+    getCourseProgress(userId, lesson.module.course.id),
+    // Dấu "Có video" trong mục lục / thanh bài. Lỗi ở đây không được làm hỏng trang bài.
+    loadCourseLessonVideos(lesson.module.course.id).catch(() => new Map<string, LessonVideoInfo>()),
+  ]);
+  // Mục lục (client component) nhận dữ liệu thuần JSON: gắn cờ video + số phút vào từng bài.
+  const tocModules = progress.modules.map((m) => ({
+    ...m,
+    lessons: m.lessons.map((l) => {
+      const v = lessonVideos.get(l.id);
+      return v ? { ...l, hasVideo: true, videoMinutes: minutesOf(v.durationSec) } : l;
+    }),
+  }));
   const threads = await listThreadsForLesson(lesson.id);
 
   const skipSuggestion = completedEvent
@@ -1133,7 +1147,7 @@ export default async function LessonPage({
         <LessonTocDrawer
           slug={params.slug}
           currentLessonId={lesson.id}
-          modules={progress.modules}
+          modules={tocModules}
           tooltipLabel={t("learn.toc.tooltip", { n: idx + 1, total: allLessons.length })}
         />
       )}
@@ -1164,7 +1178,8 @@ export default async function LessonPage({
       hasExams={frameHasExams}
       levelLabel={lessonLevelLabel(languageMode)}
       notesCount={notesCount}
-      tocModules={progress.modules}
+      tocModules={tocModules}
+      videos={lessonVideos}
       preview={previewMode}
       lang={lang}
     >

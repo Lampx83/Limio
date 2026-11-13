@@ -5,6 +5,8 @@ import { lessonViewHref, previewHref, type LessonView } from "@/lib/lessonFrameV
 import LessonFrameShell from "./LessonFrameShell";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
 import { tFor } from "@/lib/i18n/tFor";
+import LessonVideoBadge from "@/components/ui/LessonVideoBadge";
+import type { LessonVideoInfo } from "@/lib/lessonVideo";
 import type { UiLang } from "@/lib/i18n/core";
 
 /**
@@ -36,7 +38,7 @@ const STATE_KEY = {
   locked: "learn.rail.state.locked",
 } as const satisfies Record<LessonRailItem["state"], string>;
 
-function RailList({ slug, frame, preview, lang }: { slug: string; frame: LessonFrameData; preview?: boolean; lang?: UiLang }) {
+function RailList({ slug, frame, preview, lang, videos }: { slug: string; frame: LessonFrameData; preview?: boolean; lang?: UiLang; videos?: ReadonlyMap<string, LessonVideoInfo> }) {
   const t = tFor(lang);
   return (
     <ul className="mt-3 space-y-1">
@@ -47,7 +49,10 @@ function RailList({ slug, frame, preview, lang }: { slug: string; frame: LessonF
             <span className="min-w-0 flex-1">
               {/* Mọi dòng CÙNG độ đậm: thanh bên hẹp, chữ đậm rộng hơn nên bài đang xem xuống dòng khác các bài còn lại và danh sách "nhảy"
                   mỗi khi đổi bài. Bài đang xem phân biệt bằng nền, chấm đặc và vạch trái (không đổi bề rộng chữ). */}
-              <span className={`block text-sm font-medium leading-snug ${it.state === "done" ? "text-muted" : ""}`}>{it.title}</span>
+              <span className={`block text-sm font-medium leading-snug ${it.state === "done" ? "text-muted" : ""}`}>
+                {it.title}
+                {videos?.has(it.id) && <LessonVideoBadge label={t("learn.video.has")} className="ml-1.5 align-middle" />}
+              </span>
               <span className="text-caption text-muted">
                 {[it.minutes ? t("learn.minutes", { n: it.minutes }) : null, it.state === "done" || it.state === "locked" ? t(STATE_KEY[it.state]) : null].filter(Boolean).join(" · ")}
               </span>
@@ -75,7 +80,7 @@ function RailList({ slug, frame, preview, lang }: { slug: string; frame: LessonF
 
 type TocModules = React.ComponentProps<typeof LessonTocDrawer>["modules"];
 
-function RailBody({ slug, frame, hasExams, levelLabel, preview, lang }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean; lang?: UiLang }) {
+function RailBody({ slug, frame, hasExams, levelLabel, preview, lang, videos }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean; lang?: UiLang; videos?: ReadonlyMap<string, LessonVideoInfo> }) {
   const t = tFor(lang);
   const pct = frame.unitTotal === 0 ? 0 : Math.round((frame.unitDone / frame.unitTotal) * 100);
   return (
@@ -97,7 +102,7 @@ function RailBody({ slug, frame, hasExams, levelLabel, preview, lang }: { slug: 
       <p className="text-caption mt-1 text-muted">
         {t("learn.rail.unitProgress", { done: frame.unitDone, total: frame.unitTotal })}
       </p>
-      <RailList slug={slug} frame={frame} preview={preview} lang={lang} />
+      <RailList slug={slug} frame={frame} preview={preview} lang={lang} videos={videos} />
       {hasExams && (
         <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
           <div className="text-sm font-bold">{t("learn.rail.readyToApply")}</div>
@@ -210,6 +215,7 @@ export default function LessonFrameLayout({
   levelLabel,
   notesCount,
   tocModules,
+  videos,
   preview,
   lang,
   children,
@@ -226,6 +232,8 @@ export default function LessonFrameLayout({
   notesCount: number;
   /** Các module/bài của cả khoá cho nút "Mục lục khoá học" ở thanh bên; không truyền thì không có nút. */
   tocModules?: TocModules;
+  /** Bài → video (đã lọc khối ẩn): dấu "Có video" cạnh tên bài trong thanh bài. */
+  videos?: ReadonlyMap<string, LessonVideoInfo>;
   /** Giảng viên đang "xem như học viên": mọi liên kết trong khung giữ `preview=1`. */
   preview?: boolean;
   /** Ngôn ngữ giao diện (trang cha lấy bằng `await getUiLang()`); mặc định "vi". */
@@ -238,7 +246,7 @@ export default function LessonFrameLayout({
     <LessonFrameShell
       lessonId={lessonId}
       notesCount={notesCount}
-      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} lang={lang} />}
+      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} lang={lang} videos={videos} />}
       railLabel={t("learn.rail.label", { level: levelLower })}
       railSummary={t("learn.rail.summary", { level: levelLower, done: frame.unitDone, total: frame.unitTotal })}
       crumbs={

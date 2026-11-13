@@ -40,8 +40,6 @@ export const viCatalog = {
   "catalog.detail.lessonCount": "{n} bài",
   "catalog.detail.lockedLesson": "Đăng ký khoá học để mở bài này",
   "catalog.detail.preview": "Preview",
-  "catalog.detail.video": "Video",
-  "catalog.detail.videoMinutes": "Video · {n} phút",
 
   // ── Thẻ bảng xếp hạng ──
   "catalog.lb.title": "Bảng xếp hạng",

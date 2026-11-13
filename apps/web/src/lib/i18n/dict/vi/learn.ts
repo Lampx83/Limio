@@ -1,5 +1,6 @@
 export const viLearn = {
   "learn.minutes": "{n} phút",
+  "learn.video.has": "Có video",
   "learn.backToCourse": "← Về khoá học",
   "learn.printPdf": "In / Lưu PDF",
   "learn.rail.state.done": "Đã xong",
