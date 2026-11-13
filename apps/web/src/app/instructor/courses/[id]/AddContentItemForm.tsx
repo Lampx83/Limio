@@ -2209,7 +2209,7 @@ function TranscriptUploadPanel({
   return (
     <div className="rounded-lg border border-dashed border-token bg-[rgb(var(--surface-muted))/0.5] p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-faint">
-        Transcript (.vtt / .srt) — bật hộp transcript đồng bộ cho video YouTube
+        Transcript (.vtt / .srt) — hộp transcript đồng bộ cho video YouTube; file .vtt cho video tải lên thành phụ đề (nút CC, mặc định tắt)
       </p>
       <input
         type="file"

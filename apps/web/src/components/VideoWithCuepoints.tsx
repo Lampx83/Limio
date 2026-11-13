@@ -29,6 +29,7 @@ import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { useT } from "@/lib/i18n/client";
+import type { CaptionTrack } from "@/lib/captions";
 
 export interface Cuepoint {
   atSec: number;
@@ -69,9 +70,12 @@ interface Props {
   contentItemId: string;
   /** Lesson the video is in — sent in the cuepoint event payload. */
   lessonId: string;
+  /** Phụ đề `.vtt` tuỳ chọn — bật/tắt bằng nút CC của trình duyệt, mặc định tắt. */
+  caption?: CaptionTrack | null;
 }
 
 export default function VideoWithCuepoints({
+  caption,
   url,
   cuepoints,
   contentItemId,
@@ -309,7 +313,11 @@ export default function VideoWithCuepoints({
         style={active ? { pointerEvents: "none" } : undefined}
         className="aspect-video w-full rounded-xl bg-black shadow-card"
         preload="metadata"
-      />
+      >
+        {caption && (
+          <track kind="subtitles" src={caption.src} srcLang={caption.srcLang} label={caption.label} />
+        )}
+      </video>
       {sortedCuepoints.length > 0 && (
         <p className="mt-1 text-[11px] text-faint">
           Có {sortedCuepoints.length} câu hỏi gài trong video — phải trả lời đúng để xem tiếp.

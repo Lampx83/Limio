@@ -52,8 +52,19 @@ export const VideoPayload = z.object({
    * tuyệt đối) — dùng UrlOrPath như field `url` ở trên vì cùng lý do.
    * Đuôi .vtt/.srt bật hộp transcript đồng bộ (chỉ video YouTube); URL khác
    * hoặc video khác YouTube thì giữ hành vi cũ — link "Xem transcript" tĩnh.
+   *
+   * Với video TẢI LÊN (phát bằng `<video>` gốc), `.vtt` cùng-origin còn được gắn làm phụ đề `<track>`
+   * (nút CC của trình duyệt, mặc định tắt) — xem `captionLang`/`captionLabel`.
    */
   transcriptUrl: UrlOrPath.optional(),
+  /** BCP-47 của phụ đề `.vtt` (vd "en", "vi", "zh-Hans"). Mặc định "en". */
+  captionLang: z
+    .string()
+    .regex(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/, "must be a BCP-47 language tag")
+    .max(35)
+    .optional(),
+  /** Nhãn trong menu CC; mặc định suy từ captionLang (vd "English"). */
+  captionLabel: z.string().max(60).optional(),
   durationSec: z.number().int().positive().optional(),
   cuepoints: z.array(VideoCuepoint).max(20).optional(),
 });
