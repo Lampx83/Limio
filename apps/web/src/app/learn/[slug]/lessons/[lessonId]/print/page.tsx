@@ -5,6 +5,7 @@ import { prisma } from "@feedbackme/db";
 import { getT, getUiLang } from "@/lib/i18n/server";
 import { canEditCourse, isUserEnrolled } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getActiveRole } from "@/lib/active-role";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import PrintTrigger from "@/components/lesson/PrintTrigger";
@@ -107,7 +108,8 @@ export default async function LessonPrintPage({
 
   // Ghi chú chỉ đi vào bản in khi CẢ HAI đúng: người xem có quyền sửa khoá, và
   // họ chủ động xin bản có ghi chú. Thiếu một trong hai thì lọc sạch.
-  const canEdit = userId ? await canEditCourse(userId, course.id) : false;
+  const canEdit =
+    userId && getActiveRole(session?.user?.roles ?? []) !== "learner" ? await canEditCourse(userId, course.id) : false;
   const withNotes = canEdit && searchParams?.gv === "1";
   const printItems = lesson.contentItems.filter(
     (c) => c.type !== "teacher_note" || withNotes,
