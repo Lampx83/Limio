@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { CheckCircle2, Columns2, RotateCcw, Rows2, XCircle } from "lucide-react";
 import type { PracticeEmbed, PracticeResult } from "@feedbackme/core-lms";
 import { apiUrl } from "@/lib/apiUrl";
 import {
+  buildSheetSteps,
   buildSteps,
   countProgress,
   progressLabel,
@@ -20,6 +21,9 @@ import PassageView from "@/components/exam/PassageView";
 import { QuestionCard } from "@/components/exam/AnswerReview";
 import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import EssayFeedback from "./EssayFeedback";
+import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
+import { tabLabel, tabShortLabels } from "@/lib/practiceSheetView";
+import { accentVar } from "@/lib/courseAccent";
 import { essayFeedbackEnabled, essayVoiceEnabled, parseFeedback, type FeedbackView } from "@/lib/practiceEssayView";
 
 interface CheckResult {
@@ -40,6 +44,12 @@ const err = {
   check: "Không kiểm tra được. Vui lòng thử lại.",
   start: "Chưa bắt đầu được bài luyện. Vui lòng thử lại.",
 };
+
+/** Màu nhấn của khoá → biến `--brand` của khối (xem lib/courseAccent.ts); không hợp lệ thì mặc định. */
+function accentStyle(accent: string | null): CSSProperties | undefined {
+  const v = accentVar(accent);
+  return v ? ({ ["--brand" as string]: v } as CSSProperties) : undefined;
+}
 
 /** Giải thích của giảng viên nằm trong `config.explanation` (chữ thuần). */
 function explanationOf(config: unknown): string | null {
@@ -65,17 +75,30 @@ export default function LessonPractice({
   blockTitle,
   lessonId,
   preview = false,
+  sheet = false,
+  skillLabel = null,
+  accent = null,
 }: {
   slug: string;
   embed: PracticeEmbed;
   blockTitle?: string;
   lessonId?: string;
+  /** Khoá ngoại ngữ: dựng Phiếu bài tập (tab bài tập, mỗi câu một dòng) thay cho thẻ từng câu. Khoá khác giữ thẻ cũ. */
+  sheet?: boolean;
+  /** Tên kỹ năng của bài học (dải đầu phiếu); null thì không có dải. */
+  skillLabel?: string | null;
+  /** Màu nhấn của bộ sách "r,g,b" (`Course.themeColor`): khối luyện tập dùng cùng màu với thân bài; null = màu Limio. */
+  accent?: string | null;
   /** Xem trước của giảng viên: chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án, không ghi sự kiện. */
   preview?: boolean;
 }) {
   const { questions, passages } = embed;
-  const steps = useMemo(() => buildSteps(questions), [questions]);
-  const numberOf = useMemo(() => new Map(questions.map((q, i) => [q.id, i + 1])), [questions]);
+  const steps = useMemo(() => (sheet ? buildSheetSteps(questions, passages.map((x) => x.id)) : buildSteps(questions)), [questions, passages, sheet]);
+  // Số câu: phiếu bài tập đánh số lại từ 1 trong MỖI bài tập (như sách: Exercise 3A có câu 1–7, Exercise 4A lại bắt đầu từ 1); luyện đề thường đánh liên tục.
+  const numberOf = useMemo(
+    () => (sheet ? new Map(steps.flatMap((st) => st.questionIds.map((id, i) => [id, i + 1] as [string, number]))) : new Map(questions.map((q, i) => [q.id, i + 1]))),
+    [questions, steps, sheet],
+  );
   const qById = useMemo(() => new Map(questions.map((q) => [q.id, q])), [questions]);
   const hasPassage = passages.length > 0;
 
@@ -101,6 +124,7 @@ export default function LessonPractice({
     Object.fromEntries(embed.answers.filter((a) => a.hasAudio).map((a) => [a.questionId, 1])),
   );
   const [busyCheck, setBusyCheck] = useState<string | null>(null);
+  const [batch, setBatch] = useState<{ done: number; total: number } | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [stepIdx, setStepIdx] = useState(0);
@@ -267,7 +291,7 @@ export default function LessonPractice({
     if (withFeedback) await check(qid, spoken);
   }
 
-  async function check(qid: string, answerNow?: AnswerValue) {
+  async function check(qid: string, answerNow?: AnswerValue): Promise<boolean> {
     setBusyCheck(qid);
     setError(null);
     try {
@@ -284,7 +308,7 @@ export default function LessonPractice({
         : await fetch(apiUrl(`/api/practice-sessions/${sid}/check/${qid}`), checkInit);
       if (!res.ok) {
         setError(res.status === 409 ? "Hãy trả lời câu này trước khi kiểm tra." : err.check);
-        return;
+        return false;
       }
       const data = (await res.json()) as CheckResult;
       setChecks((p) => ({ ...p, [qid]: data }));
@@ -293,11 +317,25 @@ export default function LessonPractice({
         setFeedbacks((p) => (f ? { ...p, [qid]: f } : without(p, qid)));
         setFeedbackErrors((p) => (data.feedbackError && !f ? { ...p, [qid]: data.feedbackError } : without(p, qid)));
       }
+      return true;
     } catch {
       setError(err.check);
+      return false;
     } finally {
       setBusyCheck(null);
     }
+  }
+
+  /** Phiếu bài tập: kiểm tra lần lượt nhiều câu như bấm từng nút; lỗi một câu không dừng cả loạt. */
+  async function checkMany(ids: string[]) {
+    setBatch({ done: 0, total: ids.length });
+    let failed = 0;
+    for (let i = 0; i < ids.length; i++) {
+      if (!(await check(ids[i]!))) failed++;
+      setBatch({ done: i + 1, total: ids.length });
+    }
+    setBatch(null);
+    if (failed > 0) setError(`Không kiểm tra được ${failed} câu. Bấm lại để thử lần nữa.`);
   }
 
   async function finish() {
@@ -460,6 +498,28 @@ export default function LessonPractice({
     );
   };
 
+  /** Bài làm và đáp án đầy đủ của một câu đã chấm (dùng trong Phiếu bài tập cho dạng chưa có đáp án bằng chữ). */
+  const reviewCardOf = (qid: string) => {
+    const q = qById.get(qid)!;
+    const res = checks[qid];
+    if (!res) return null;
+    return (
+      <QuestionCard
+        idx={(numberOf.get(qid) ?? 1) - 1}
+        q={{
+          id: q.id,
+          orderInExam: 0,
+          type: q.type,
+          prompt: q.prompt,
+          points: q.points,
+          config: res.config,
+          explanation: null,
+          answer: { answerJson: answers[qid] ?? null, score: res.score, needsGrading: false, comment: null },
+        } as never}
+      />
+    );
+  };
+
   const layoutToggle = hasPassage ? (
     <div role="group" aria-label="Bố cục" className="hidden items-center gap-1 lg:flex">
       <button
@@ -514,13 +574,76 @@ export default function LessonPractice({
     </nav>
   );
 
+  const sheetTitles = steps.map((st) => (st.passageId ? passages.find((x) => x.id === st.passageId)?.title : null));
+  const sheetShorts = tabShortLabels(sheetTitles);
+  const sheetTabs = steps.map((st, i) => ({
+    key: st.key.replace(/[^A-Za-z0-9_-]/g, "-"),
+    label: tabLabel(sheetTitles[i], i),
+    short: sheetShorts[i],
+    questionIds: st.questionIds,
+  }));
+  const sheetNode = sheet ? (
+    <PracticeSheet
+      tabs={sheetTabs}
+      activeIdx={stepIdx}
+      onTab={setStepIdx}
+      questions={qById}
+      numberOf={numberOf}
+      answers={answers}
+      onAnswer={onChange}
+      checks={checks}
+      restoring={restoring}
+      checkEnabled={embed.checkEnabled}
+      batch={batch}
+      onCheck={(ids) => void checkMany(ids)}
+      renderEssay={renderQuestion}
+      renderReview={reviewCardOf}
+      explanationOf={explanationOf}
+      banner={skillLabel}
+      hideTabs
+      header={
+        // Phiếu: một hàng mỏng (tên bài luyện + nút bố cục dạng biểu tượng); tiến độ nằm ở đếm của tab và chân phiếu.
+        <div className="flex items-center justify-end gap-3">
+          {/* Sách không đặt tên cho phần luyện của một bài: tên khối chỉ để trình đọc màn hình, không hiện thành một dòng tiêu đề thừa. */}
+          <h2 id="lp-title" className="sr-only">
+            {blockTitle || embed.title}
+          </h2>
+          {hasPassage && (
+            <div role="group" aria-label="Bố cục" className="hidden shrink-0 items-center gap-1 lg:flex">
+              <button
+                type="button"
+                aria-pressed={layout === "split"}
+                aria-label="Chia đôi"
+                title="Chia đôi: đoạn văn một bên, câu hỏi một bên"
+                onClick={() => changeLayout("split")}
+                className={`rounded-lg border p-1.5 ${layout === "split" ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.08)] text-[rgb(var(--brand))]" : "border-token text-muted"}`}
+              >
+                <Columns2 size={16} aria-hidden />
+              </button>
+              <button
+                type="button"
+                aria-pressed={layout === "single"}
+                aria-label="Một cột"
+                title="Một cột: đoạn văn rồi tới câu hỏi"
+                onClick={() => changeLayout("single")}
+                className={`rounded-lg border p-1.5 ${layout === "single" ? "border-[rgb(var(--brand))] bg-[rgb(var(--brand)/0.08)] text-[rgb(var(--brand))]" : "border-token text-muted"}`}
+              >
+                <Rows2 size={16} aria-hidden />
+              </button>
+            </div>
+          )}
+        </div>
+      }
+    />
+  ) : null;
+
   // Bố cục chia đôi (theo mẫu Figma): tiêu đề, tiến độ, các số câu và nút đổi bố cục gom vào MỘT thẻ đầu cột câu hỏi, nên không tốn
   // thêm hàng phía trên; thẻ đoạn văn bên trái dính theo cuộn và tự cuộn riêng khi bài đọc dài.
   const splitView = !!(step?.passageId && split);
 
   return (
-    <section aria-labelledby="lp-title" className="lp-large my-6" data-testid="lesson-practice">
-      {!splitView && (
+    <section aria-labelledby="lp-title" className="lp-large my-6" data-testid="lesson-practice" style={accentStyle(accent)}>
+      {!splitView && !sheet && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
             {titleBlock}
@@ -536,11 +659,18 @@ export default function LessonPractice({
         </div>
       )}
 
+      {/* Tab đổi cả đoạn văn lẫn phiếu câu hỏi, nên đặt trên cả hai chứ không nằm trong cột câu hỏi. */}
+      {sheet && (
+        <div className="mt-4">
+          <SheetTabBar tabs={sheetTabs} activeIdx={stepIdx} onTab={setStepIdx} questions={qById} answers={answers} checks={checks} standalone />
+        </div>
+      )}
+
       {step &&
         (step.passageId ? (
-          <div className={`mt-4 grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
+          <div className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
             <div
-              className={`rounded-xl border border-token bg-[rgb(var(--surface))] p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
+              className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
               data-testid="lp-passage"
             >
               {(() => {
@@ -549,8 +679,8 @@ export default function LessonPractice({
               })()}
             </div>
             {/* Chia đôi: cột câu hỏi cũng tự cuộn riêng (như cột đoạn văn) khi nhiều câu dài; thẻ đầu cột (bản đồ câu hỏi) dính ở đỉnh nên luôn thấy. */}
-            <div className={`space-y-3 ${splitView ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : ""}`}>
-              {splitView && (
+            <div className={`min-w-0 space-y-3 ${splitView ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : ""}`}>
+              {splitView && !sheet && (
                 <div className="sticky top-0 z-10 -mb-3 bg-[rgb(var(--bg))] pb-3">
                 <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
                   <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
@@ -561,11 +691,11 @@ export default function LessonPractice({
                 </div>
                 </div>
               )}
-              {step.questionIds.map(renderQuestion)}
+              {sheet ? sheetNode : step.questionIds.map(renderQuestion)}
             </div>
           </div>
         ) : (
-          <div className="mt-4 space-y-3">{step.questionIds.map(renderQuestion)}</div>
+          <div className={`${sheet ? "mt-3" : "mt-4"} space-y-3`}>{sheet ? sheetNode : step.questionIds.map(renderQuestion)}</div>
         ))}
 
       {!preview && (

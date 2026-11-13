@@ -1343,3 +1343,582 @@ body[data-stage-timer] main[data-stage="1"] .stage-title {
 .passage-media-chip.ProseMirror-selectednode {
   @apply ring-2 ring-brand-400;
 }
+
+/*
+ * Phiếu bài tập của Bài luyện (khoá ngoại ngữ), docs/tieu-chi/limio-language-phieu-bai-tap.md. Một tờ giấy kem nhẹ (phương án B: không hoạ
+ * tiết, không dòng kẻ, không bóng đổ), chữ học viên màu mực xanh, dấu chấm đỏ/xanh lá. Mọi cặp chữ–nền ≥ 4,5:1 ở chế độ sáng và tối.
+ */
+.practice-sheet,
+.ps-paper-card {
+  /* Cùng nền và viền với các khối của bài (thẻ trắng, viền thường) — một bảng màu: màu nhấn của khoá + trung tính; chỉ ✓/✗ dùng xanh lá/đỏ. */
+  --ps-paper: rgb(var(--surface));
+  --ps-edge: rgb(var(--border));
+  --ps-rule: rgb(var(--border));
+  --ps-ink: rgb(var(--brand));
+  --ps-ok: #1e7b4a;
+  --ps-no: #c62828;
+  --ps-acc: rgb(var(--brand));
+}
+.practice-sheet,
+.ps-paper-card {
+  background: var(--ps-paper);
+  border: 1px solid var(--ps-edge);
+  border-radius: 0.75rem;
+}
+/* Thẻ đoạn văn đứng cạnh phiếu cùng tông giấy (một trang sách, không phải hai thẻ khác màu). */
+.practice-sheet {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  overflow: hidden;
+}
+/* Đoạn văn và phiếu CÙNG cỡ chữ, dãn dòng và màu chữ (không để bên to bên nhỏ, bên xám bên đen). */
+.lp-large .ps-paper-card .prose,
+.lp-large .ps-paper-card .prose-sm {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: rgb(var(--text));
+}
+.lp-large .ps-paper-card p,
+.lp-large .ps-paper-card li {
+  font-size: inherit;
+  line-height: 1.6;
+}
+.dark .practice-sheet,
+.dark .ps-paper-card {
+  --ps-ok: #5fd08f;
+  --ps-no: #ff8a80;
+}
+.ps-head {
+  padding: 0.75rem 1rem 0.25rem;
+}
+.ps-banner {
+  margin: 0 0 0.5rem;
+}
+.ps-banner-k {
+  display: inline-block;
+  background: rgb(var(--brand));
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.9rem 0.15rem 0.75rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  margin-left: -1rem;
+  padding-left: 1rem;
+}
+.ps-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--ps-rule);
+  --ps-ok: #1e7b4a;
+}
+.dark .ps-tabs {
+  --ps-ok: #5fd08f;
+}
+/* Đứng riêng phía trên cả đoạn văn và phiếu: không viền đáy, sát lề hai khối bên dưới. */
+.ps-tabs-standalone {
+  padding: 0;
+  gap: 0.25rem;
+  align-items: flex-end;
+  /* Một hàng, nhiều tab thì cuộn ngang (không xuống hàng làm vỡ hình ngăn hồ sơ). */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  /* Đường kẻ chạy suốt phía dưới các tab: cả hàng tab là "đầu trang" chung của đoạn văn và phiếu. */
+  border-bottom: 0;
+  box-shadow: inset 0 -2px 0 rgb(var(--border));
+}
+.ps-tabs-standalone .ps-tab {
+  flex: none;
+}
+/* Kiểu ngăn hồ sơ: tab bo góc trên, không viền đáy; tab đang mở nhô lên, cùng màu nền với hai khối bên dưới và có vạch màu nhấn ở đỉnh. */
+.ps-tabs-standalone .ps-tab {
+  padding: 0.45rem 0.9rem 0.4rem;
+  border: 1px solid rgb(var(--border));
+  border-bottom: 2px solid rgb(var(--border));
+  border-radius: 0.6rem 0.6rem 0 0;
+  background: rgb(var(--surface-muted));
+  color: rgb(var(--text-muted));
+  box-shadow: none;
+}
+.ps-tabs-standalone .ps-tab:hover {
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  border-color: rgb(var(--border));
+  border-bottom-color: rgb(var(--border));
+}
+.ps-tabs-standalone .ps-tab[aria-selected="true"] {
+  padding: 0.45rem 0.9rem 0.4rem;
+  background: rgb(var(--surface));
+  color: rgb(var(--brand));
+  font-weight: 600;
+  border: 1px solid rgb(var(--border));
+  border-bottom: 2px solid rgb(var(--surface));
+  box-shadow: inset 0 3px 0 rgb(var(--brand));
+}
+.ps-tabs-standalone .ps-tab-label {
+  max-width: 14rem;
+}
+/* Mỗi bài tập là một nút có viền (nhìn là biết bấm được); bài đang mở tô màu nhấn; tên dài được cắt bằng "…", đủ tên ở gợi ý khi rê chuột. */
+.ps-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: rgb(var(--text));
+  background: rgb(var(--surface));
+  border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 55%, transparent);
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+.ps-tab:hover {
+  border-color: rgb(var(--brand));
+  background: rgb(var(--surface-muted));
+}
+.ps-tab[aria-selected="true"] {
+  color: rgb(var(--brand));
+  font-weight: 600;
+  border: 2px solid rgb(var(--brand));
+  padding: calc(0.3rem - 1px) calc(0.65rem - 1px);
+  background: color-mix(in srgb, rgb(var(--brand)) 9%, transparent);
+}
+.ps-tab:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+.ps-tab-label {
+  min-width: 0;
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ps-count {
+  flex: none;
+  min-width: 1.9rem;
+  padding: 0 0.4rem;
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--text-muted));
+  background: rgb(var(--surface-muted));
+  border-radius: 999px;
+}
+.ps-count-done {
+  color: #fff;
+  background: var(--ps-ok);
+}
+.ps-panel {
+  padding: 0.5rem 0.75rem 0.25rem;
+}
+.ps-panel[hidden] {
+  display: none;
+}
+.ps-row {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr) 1.25rem;
+  column-gap: 0.375rem;
+  align-items: baseline;
+  padding: 0.25rem 0;
+}
+.ps-n {
+  text-align: right;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--text-muted));
+}
+.ps-mark {
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+.ps-ok {
+  color: var(--ps-ok);
+}
+.ps-no {
+  color: var(--ps-no);
+}
+.ps-fix {
+  grid-column: 2 / 3;
+  font-size: 0.9375rem;
+  color: var(--ps-no);
+}
+.ps-fix .ps-expl {
+  color: rgb(var(--text-muted));
+}
+.ps-hint {
+  font-size: 0.8125rem;
+  color: rgb(var(--text-muted));
+}
+/* Chỗ trống gạch chân: chỉ có đường kẻ dưới chân, chữ học viên màu mực. */
+.practice-sheet input.ps-blank {
+  display: inline-block;
+  min-height: 0;
+  height: 1.75rem;
+  margin: 0 0.15rem;
+  padding: 0 0.125rem;
+  border: 0;
+  border-bottom: 1.5px solid rgb(var(--text-muted));
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: rgb(var(--text));
+  font: inherit;
+  text-align: center;
+  vertical-align: baseline;
+  max-width: 100%;
+}
+.practice-sheet input.ps-blank:focus {
+  outline: none;
+  border-bottom-color: rgb(var(--brand));
+  border-bottom-width: 2px;
+}
+/* Lựa chọn ngắn ngay trong dòng: nút viền mảnh để nhìn là biết bấm được; chọn rồi thì viền và chữ mực xanh, nền xanh rất nhạt. */
+.ps-alts {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0 0.25rem;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+.ps-alt {
+  display: inline-block;
+  min-height: 2rem;
+  padding: 0 0.75rem;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 55%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: rgb(var(--text));
+  font: inherit;
+  line-height: 1.85rem;
+  cursor: pointer;
+}
+.ps-alt:hover {
+  border-color: rgb(var(--text-muted));
+  background: rgb(var(--surface-muted));
+}
+.ps-alt[aria-pressed="true"] {
+  border: 1.5px solid var(--ps-ink);
+  color: var(--ps-ink);
+  background: color-mix(in srgb, var(--ps-ink) 9%, transparent);
+  font-weight: 600;
+}
+.ps-alt:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 1px;
+}
+.ps-opts {
+  list-style: none;
+  margin: 0.25rem 0 0.25rem 0.375rem;
+  padding: 0 0 0 0.75rem;
+  border-left: 2px solid var(--ps-rule);
+  font-size: 1rem;
+}
+.ps-opt {
+  position: relative;
+  display: block;
+  padding: 0.0625rem 0;
+  cursor: pointer;
+}
+/* Ô chọn gốc ẩn bằng cách thu nhỏ (vẫn nhận bàn phím và đọc màn hình); đáp án đã chọn được KHOANH chữ cái bằng mực xanh như trên giấy. */
+.ps-opt-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.ps-opt-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+.ps-letter {
+  flex: none;
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: calc(1.5rem - 2px);
+  text-align: center;
+  font-size: 0.8125rem;
+  color: rgb(var(--text-muted));
+  border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 55%, transparent);
+  border-radius: 999px;
+}
+.ps-opt:hover .ps-letter {
+  border-color: rgb(var(--text-muted));
+  background: rgb(var(--surface-muted));
+}
+.ps-opt-input:checked + .ps-opt-text {
+  color: var(--ps-ink);
+}
+.ps-opt-input:checked + .ps-opt-text .ps-letter {
+  color: var(--ps-ink);
+  border: 1.5px solid var(--ps-ink);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--ps-ink) 9%, transparent);
+}
+.ps-opt-input:focus-visible + .ps-opt-text .ps-letter {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+.ps-prompt p {
+  margin: 0;
+}
+/* Đề đứng trên, đậm hơn và đúng màu chữ; các lựa chọn thụt vào dưới một vạch, nhỏ hơn: nhìn là biết đâu là câu hỏi, đâu là đáp án. */
+.practice-sheet .ps-prompt {
+  color: rgb(var(--text));
+  font-weight: 500;
+}
+.ps-prompt {
+  font-size: inherit;
+  line-height: inherit;
+}
+.practice-sheet .ps-prompt.prose-sm {
+  font-size: inherit;
+  line-height: inherit;
+}
+.ps-box.ps-legend {
+  flex-direction: column;
+  gap: 0.125rem;
+  margin: 0.25rem 0 0.375rem 1.625rem;
+}
+.ps-group .ps-select-inline {
+  min-width: 3rem;
+}
+.ps-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.125rem 1rem;
+  list-style: none;
+  margin: 0.25rem 0;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.9375rem;
+  background: rgb(var(--surface-muted));
+  border-radius: 0.5rem;
+}
+.ps-words li {
+  padding: 0 0.25rem;
+}
+.ps-used {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+.ps-pairs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ps-pairs li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.125rem 0;
+}
+.ps-sub {
+  display: inline-block;
+  min-width: 1rem;
+  font-size: 0.8125rem;
+  color: rgb(var(--text-muted));
+}
+.practice-sheet select.ps-select {
+  width: auto;
+  min-width: 3.25rem;
+  min-height: 0;
+  height: 2rem;
+  padding: 0 0.25rem;
+  font: inherit;
+  color: var(--ps-ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1.5px solid rgb(var(--text-muted));
+  border-radius: 0;
+}
+.practice-sheet select.ps-select-inline {
+  margin: 0 0.15rem;
+}
+.ps-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--ps-rule);
+  font-size: 0.875rem;
+}
+.ps-status {
+  color: rgb(var(--text-muted));
+}
+.ps-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+@media (max-width: 639.98px) {
+  .ps-actions {
+    width: 100%;
+  }
+  .ps-actions > button {
+    flex: 1 1 auto;
+  }
+  .ps-alt {
+    min-height: 2.75rem;
+    line-height: 2.75rem;
+  }
+  .practice-sheet select.ps-select {
+    height: 2.75rem;
+  }
+}
+
+/* Bài học có Bài luyện (khoá ngoại ngữ): chữ của phần nội dung (richtext) cùng màu với đoạn văn và phiếu, không để một bên xám một bên đen. */
+main:has(.lp-large) .prose {
+  --tw-prose-body: rgb(var(--text));
+}
+
+/*
+ * Bảng một cột trong đoạn văn của Phiếu bài tập = hộp của sách: một ô là BÓNG THOẠI (viền màu, bo tròn; ba bong bóng liền nhau lần lượt xanh, hồng, lục),
+ * nhiều hàng một cột là THẺ BÀI BÁO (nền be, không kẻ ô). Bảng nhiều cột (hộp từ, bảng thông tin) giữ khung kẻ thường. Soạn trong trình soạn Đoạn văn bằng
+ * bảng như mọi bảng khác; kiểu chỉ là cách hiện. Chữ trong bảng cùng cỡ với đoạn văn.
+ */
+.lp-large .ps-paper-card .passage-table {
+  font-size: inherit;
+  line-height: inherit;
+}
+.ps-paper-card .passage-table:not(:has(td + td)):not(:has(th)) {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.ps-paper-card .passage-table:not(:has(td + td)):not(:has(th)):not(:has(tr + tr)) td {
+  border: 2px solid var(--ps-bubble, rgb(var(--brand)));
+  border-radius: 0.9rem;
+  padding: 0.6rem 0.9rem;
+  background: color-mix(in srgb, var(--ps-bubble, rgb(var(--brand))) 6%, transparent);
+}
+.ps-paper-card .passage-table:not(:has(td + td)):not(:has(th)):has(tr + tr) td {
+  border: 0;
+  padding: 0.35rem 0.9rem;
+  background: rgb(var(--surface-muted));
+}
+.ps-paper-card .passage-table:not(:has(td + td)):not(:has(th)):has(tr + tr) tr:first-child td {
+  padding-top: 0.7rem;
+}
+.ps-paper-card .passage-table:not(:has(td + td)):not(:has(th)):has(tr + tr) tr:last-child td {
+  padding-bottom: 0.7rem;
+}
+
+/* Thanh dưới tiêu đề đoạn văn của Phiếu bài tập dùng màu nhấn của khối (mặc định Limio; khoá có màu bộ sách thì cùng màu với thân bài). */
+.ps-paper-card .bg-brand-gradient {
+  background: linear-gradient(90deg, rgb(var(--brand)), rgb(var(--brand) / 0.15));
+}
+
+/* Nút chính trong khối luyện tập theo màu nhấn của khối (mặc định --brand = lime-600 nên không đổi gì khi khoá chưa có màu bộ sách). */
+.lp-large .btn-primary {
+  background-color: rgb(var(--brand));
+}
+.lp-large .btn-primary:hover {
+  background-color: rgb(var(--brand));
+  filter: brightness(0.92);
+}
+
+/* Danh sách và đoạn văn trong thẻ đoạn văn có cùng nhịp (khoảng cách giữa các dòng, các mục) với thân bài: mục cách nhau 0,2 rem, đoạn cách nhau 0,7 rem,
+   đoạn nằm trong mục danh sách không thêm lề riêng. */
+.lp-large .ps-paper-card .prose li {
+  margin: 0.2rem 0;
+}
+.lp-large .ps-paper-card .prose li > p {
+  margin: 0;
+}
+.lp-large .ps-paper-card .prose p {
+  margin: 0.7rem 0;
+}
+.lp-large .ps-paper-card .prose ol,
+.lp-large .ps-paper-card .prose ul {
+  margin: 0.7rem 0;
+}
+
+/* Khoá có màu bộ sách: khung bài học (thanh bài, tab, nút chính) dùng cùng một màu nhấn với thân bài và khối luyện tập. Các lớp brand của Tailwind là mã màu cố định
+   nên đổi ở đây, chỉ trong khung có `data-lesson-accent`. */
+[data-lesson-accent] .bg-brand-500,
+[data-lesson-accent] .bg-brand-600,
+[data-lesson-accent] .btn-primary {
+  background-color: rgb(var(--brand));
+}
+[data-lesson-accent] .btn-primary:hover {
+  background-color: rgb(var(--brand));
+  filter: brightness(0.92);
+}
+[data-lesson-accent] .bg-brand-50 {
+  background-color: rgb(var(--brand) / 0.08);
+}
+[data-lesson-accent] .border-brand-600 {
+  border-color: rgb(var(--brand));
+}
+[data-lesson-accent] .text-brand-700,
+[data-lesson-accent] .text-brand-800,
+[data-lesson-accent] .link {
+  color: rgb(var(--brand));
+}
+
+/* Ghép cặp (ô chọn): ô đóng gọn chỉ thấy chữ cái, danh sách mở ra có cả nghĩa; nghĩa đã chọn hiện ngay dưới từ để khỏi tra bảng phía trên. */
+.ps-pairs-match li {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+.practice-sheet select.ps-select-match {
+  width: 3.1rem;
+  min-width: 0;
+  text-overflow: clip;
+}
+.ps-chosen {
+  flex: 1 0 100%;
+  margin: 0 0 0.4rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: rgb(var(--text-muted));
+}
+
+/* Khối giải thích đáp án (hàng sai của câu ghép cặp, sắp xếp, kéo thả: thẻ "Câu n" kèm các dòng ✓/✗) là phần phụ: chữ nhỏ hơn và dãn dòng
+   chặt hơn chữ của đề, không dùng cỡ chữ lớn của bài luyện. */
+.lp-large .ps-review,
+.lp-large .ps-review :is(.text-sm, .text-xs, .text-base, .prose, .prose-sm, p, li, span, div) {
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+.lp-large .ps-review li {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.lp-large .ps-review ul {
+  margin: 0;
+}
+.lp-large .ps-review :is(p, .prose p, .prose-sm p) {
+  margin: 0;
+}
+
+/* Khối bài làm và đáp án của câu ghép cặp, sắp xếp, kéo thả: gập sẵn (một dòng), bấm mới mở. */
+.ps-review-details > summary {
+  display: inline-block;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--brand));
+  padding: 0.15rem 0;
+}
+.ps-review-details > summary:focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+}
+.ps-review-details[open] > summary {
+  margin-bottom: 0.4rem;
+}

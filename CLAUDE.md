@@ -139,6 +139,8 @@ Cùng một khái niệm chỉ có **một** tên trong chuỗi hiển thị (co
 
 **Bài luyện** (khối trong bài học, Limio Language) **không phải Đề thi**: soạn ở editor riêng ("Soạn bài luyện"), không có giờ/phần/trọng số, và không bao giờ hiện ở mục Đề thi. Nội dung nằm trong một đề ẩn (`Exam.ownerContentItemId`); mọi truy vấn **liệt kê/đếm** `exam` phải loại đề có chủ (`ownerContentItemId: null` hoặc ghi chú `owned-practice-ok: <lý do>`), có test quét ở `apps/web/src/lib/ownedPracticeExcluded.test.ts`.
 
+**Phiếu bài tập**: Bài luyện của khoá `languageMode` hiện bằng `PracticeSheet` (thanh tab bài tập nằm trên cả đoạn văn lẫn phiếu, mỗi câu một dòng, nền trắng như khối bài và một màu nhấn của khoá `Course.themeColor`, không kéo thả), không phải thẻ từng câu; khoá khác giữ thẻ cũ (`sheet` ở `LessonPractice`). Thêm **dạng câu mới** ⇒ thêm vào `sheetKind` (`lib/practiceSheetView.ts`) và `RowBody` (`PracticeSheet.tsx`); dạng chưa biết rơi về `ExamQuestion` nên vẫn làm được nhưng không gọn. Tiêu chí và số đo ở `docs/tieu-chi/limio-language-phieu-bai-tap.md`.
+
 Trạng thái đợt thi (Nháp/Đang mở/Đã đóng/Lưu trữ) **chỉ để phân loại**, không tự mở hay đóng ca — giờ vào thi do từng ca quyết định; giao diện phải nói đúng điều đó.
 
 ### 4.7. Index nóng (xem spec §7.3)

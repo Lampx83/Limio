@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSteps, countProgress, parseLayoutPref, progressLabel, readLayoutPref, stepIndexOf, summaryRows, writeLayoutPref } from "./lessonPracticeView";
+import { buildSheetSteps, buildSteps, countProgress, parseLayoutPref, progressLabel, readLayoutPref, stepIndexOf, summaryRows, writeLayoutPref } from "./lessonPracticeView";
 
 const q = (id: string, passageId: string | null = null) => ({ id, passageId });
 
@@ -61,5 +61,33 @@ describe("lựa chọn bố cục", () => {
     expect(readLayoutPref(bad)).toBe("split");
     expect(() => writeLayoutPref(bad, "single")).not.toThrow();
     expect(readLayoutPref(null)).toBe("split");
+  });
+});
+
+describe("buildSheetSteps (Phiếu bài tập)", () => {
+  it("gộp các câu liền nhau không có đoạn văn thành MỘT bước (khác buildSteps: mỗi câu một bước)", () => {
+    const qs = [
+      { id: "a", passageId: null },
+      { id: "b", passageId: null },
+      { id: "c", passageId: "p1" },
+      { id: "d", passageId: "p1" },
+      { id: "e", passageId: null },
+    ];
+    expect(buildSheetSteps(qs).map((s) => s.questionIds)).toEqual([["a", "b"], ["c", "d"], ["e"]]);
+    expect(buildSteps(qs).map((s) => s.questionIds)).toEqual([["a"], ["b"], ["c", "d"], ["e"]]);
+  });
+
+  it("đoạn văn không có câu hỏi vẫn là một bước, chèn theo thứ tự đoạn văn của đề", () => {
+    const qs = [
+      { id: "a", passageId: "p1" },
+      { id: "b", passageId: "p3" },
+    ];
+    expect(buildSheetSteps(qs, ["p1", "p2", "p3"]).map((s) => [s.passageId, s.questionIds])).toEqual([
+      ["p1", ["a"]],
+      ["p2", []],
+      ["p3", ["b"]],
+    ]);
+    expect(buildSheetSteps(qs, ["p1", "p3", "p4"]).map((s) => s.passageId)).toEqual(["p1", "p3", "p4"]); // đoạn rỗng ở cuối
+    expect(buildSheetSteps(qs).map((s) => s.passageId)).toEqual(["p1", "p3"]); // không biết thứ tự đoạn thì như cũ
   });
 });

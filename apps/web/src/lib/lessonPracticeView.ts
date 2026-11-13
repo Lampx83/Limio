@@ -25,6 +25,31 @@ export function buildSteps(questions: PQ[]): PracticeStep[] {
   return out;
 }
 
+/**
+ * Phiếu bài tập: câu liền nhau cùng một đoạn văn gộp thành một bước, và các câu LIỀN NHAU KHÔNG CÓ đoạn văn cũng gộp thành một bước
+ * (khác `buildSteps`, nơi mỗi câu không đoạn văn là một bước riêng — phiếu không được thành nhiều tab một câu).
+ */
+export function buildSheetSteps(questions: PQ[], passageIds: string[] = []): PracticeStep[] {
+  const out: PracticeStep[] = [];
+  for (const q of questions) {
+    const last = out[out.length - 1];
+    if (last && last.passageId === q.passageId) last.questionIds.push(q.id);
+    else out.push({ key: `${q.passageId ?? "q"}:${q.id}`, passageId: q.passageId, questionIds: [q.id] });
+  }
+  // Đoạn văn không có câu hỏi nào (bài nghe/đọc để nghe và lặp lại) vẫn là một bài tập: chèn bước rỗng theo thứ tự đoạn văn của đề.
+  const have = new Set(out.map((s) => s.passageId).filter(Boolean));
+  const order = new Map(passageIds.map((id, i) => [id, i]));
+  for (const id of passageIds) {
+    if (have.has(id)) continue;
+    const at = order.get(id)!;
+    const i = out.findIndex((s) => s.passageId !== null && (order.get(s.passageId) ?? -1) > at);
+    const empty: PracticeStep = { key: `${id}:empty`, passageId: id, questionIds: [] };
+    if (i >= 0) out.splice(i, 0, empty);
+    else out.push(empty);
+  }
+  return out;
+}
+
 export interface PracticeCounts {
   checked: number;
   chosen: number;

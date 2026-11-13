@@ -347,21 +347,26 @@ export async function getPracticeForEmbed(userId: string, examId: string, db: Pr
         languageSkill: q.languageSkill,
         config: q.config as Record<string, unknown>,
       })),
-      passages: s.passages,
+      passages: await embedPassages(examId, db),
       answers: s.answers,
     };
   }
   return buildFreshEmbed(examId, exam.title, userId, db);
 }
 
+/**
+ * Mọi đoạn văn của đề (theo thứ tự), kể cả đoạn chỉ có bài nghe/đọc mà không có câu hỏi nào ("Listen and repeat"). Trước đây chỉ nạp đoạn có
+ * câu hỏi trỏ tới nên đoạn không câu hỏi biến mất khỏi bài luyện nhúng.
+ */
+async function embedPassages(examId: string, db: PrismaClient) {
+  const all = await db.examPassage.findMany({ where: { examId }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true, contentJson: true } });
+  return withTranscripts(examId, all, db);
+}
+
 /** Dữ liệu nhúng khi CHƯA có buổi luyện dở: cả đề, cấu hình công khai (không đáp án), chưa có đáp án nào. */
 /** `seed`: hạt xáo trộn (mã học viên) — cùng hạt với getPracticeSession nên thứ tự giữ nguyên khi buổi luyện được tạo. */
 async function buildFreshEmbed(examId: string, title: string, seed: string, db: PrismaClient): Promise<PracticeEmbed> {
   const all = await loadExamQuestions(examId, db);
-  const passageIds = [...new Set(all.map((q) => q.passageId).filter((x): x is string => !!x))];
-  const passages = passageIds.length
-    ? await db.examPassage.findMany({ where: { id: { in: passageIds } }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true, contentJson: true } })
-    : [];
   return {
     examId,
     title,
@@ -378,7 +383,7 @@ async function buildFreshEmbed(examId: string, title: string, seed: string, db: 
       languageSkill: q.languageSkill,
       config: toPublicQuestionConfig(q.type, q.config, `${seed}:${q.id}`) as Record<string, unknown>,
     })),
-    passages: await withTranscripts(examId, passages, db),
+    passages: await embedPassages(examId, db),
     answers: [],
   };
 }

@@ -282,4 +282,19 @@ describe("nhân bản sao chép sâu (AC9)", () => {
     await enrollInCourse(learner, s.courseId);
     await expect(getPreviewVoiceContext(learner, p.examId, essay.questionId)).rejects.toThrow(CourseAuthzError);
   });
+
+  it("bài luyện nhúng trả cả đoạn văn không có câu hỏi (bài nghe/đọc), đúng thứ tự", async () => {
+    const s = await setup("emptypassage");
+    const p = await practice(s);
+    const extra = await createPassage(s.owner, p.examId, { title: "Listen and repeat", contentJson: { type: "doc", content: [] } });
+    const learner = await user("pe-l-emptypassage@e.com");
+    await enrollInCourse(learner, s.courseId);
+    const fresh = await getPracticeForEmbed(learner, p.examId);
+    expect(fresh.passages.map((x) => x.id)).toContain(extra.passageId);
+    expect(fresh.questions.every((q) => q.passageId !== extra.passageId)).toBe(true);
+    // Có buổi luyện dở thì vẫn đủ.
+    await startPracticeSession(learner, p.examId, { all: true });
+    const resumed = await getPracticeForEmbed(learner, p.examId);
+    expect(resumed.passages.map((x) => x.id)).toContain(extra.passageId);
+  });
 });

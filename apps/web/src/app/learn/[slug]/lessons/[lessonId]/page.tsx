@@ -155,7 +155,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, themeColor: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
       // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
@@ -761,7 +761,7 @@ export default async function LessonPage({
         // nhúng thẳng bản xem thử, giống nút "Xem trước" ở trang soạn Bài luyện.
         try {
           const embed = await getPracticePreview(userId!, examId);
-          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview />;
+          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
         } catch (e) {
           if (!(e instanceof ExamError)) throw e;
           practiceBlocks[it.id] = <PracticeBlockNotice title={title} message="Bài luyện này hiện chưa dùng được." />;
@@ -782,7 +782,7 @@ export default async function LessonPage({
       }
       try {
         const embed = await getPracticeForEmbed(userId, examId);
-        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} />;
+        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
         practiceBlocks[it.id] = <PracticeBlockNotice title={title} message="Bài luyện này hiện chưa dùng được." />;
@@ -1142,6 +1142,7 @@ export default async function LessonPage({
       lessonId={lesson.id}
       courseTitle={lesson.module.course.title}
       coverUrl={lesson.module.course.coverUrl}
+      accent={lesson.module.course.themeColor}
       lessonTitle={lesson.title}
       frame={lessonFrame}
       hasExams={frameHasExams}

@@ -229,6 +229,7 @@ export default function LessonFrameLayout({
   notesCount,
   tocModules,
   preview,
+  accent = null,
   children,
 }: {
   slug: string;
@@ -247,11 +248,14 @@ export default function LessonFrameLayout({
   tocModules?: TocModules;
   /** Giảng viên đang "xem như học viên": mọi liên kết trong khung giữ `preview=1`. */
   preview?: boolean;
+  /** Màu nhấn của bộ sách (`Course.themeColor`). */
+  accent?: string | null;
   children: React.ReactNode;
 }) {
   const levelLower = levelLabel.toLowerCase();
   return (
     <LessonFrameShell
+      accent={accent}
       lessonId={lessonId}
       notesCount={notesCount}
       rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} coverUrl={coverUrl} />}
