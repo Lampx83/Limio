@@ -8,7 +8,7 @@ import { FabTip } from "./lesson/TeacherBar";
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { useAiTokensPageUnlocked } from "./AiTokensPageContext";
-import { useT } from "@/lib/i18n/client";
+import { useT, useUiLang } from "@/lib/i18n/client";
 import type { MessageKey } from "@/lib/i18n/dict";
 
 interface Message {
@@ -53,6 +53,7 @@ export default function AiTutorPanel({
   onRequestOpen?: () => void;
 }) {
   const t = useT();
+  const uiLang = useUiLang();
   const tokensUnlocked = useAiTokensPageUnlocked();
   const [openState, setOpenState] = useState(false);
   const open = docked ? active : openState;
@@ -189,6 +190,7 @@ export default function AiTutorPanel({
           lessonId,
           message: text,
           conversationId,
+          locale: uiLang,
           ...(attached ? { quote: attached } : {}),
         }),
       });
