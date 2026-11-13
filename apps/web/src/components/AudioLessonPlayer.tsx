@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Pause, Play, Repeat, Volume2, VolumeX } from "lucide-react";
 import { formatClock, progressPct } from "@/lib/audioClock";
 import { paragraphMarker, splitTranscriptParagraphs } from "@/lib/transcriptParagraphs";
+import { useT } from "@/lib/i18n/client";
 
 /** LANG K2 — điều khiển từ ngoài (hội thoại tua tới mốc của một lượt). */
 export interface AudioControl {
@@ -59,6 +60,7 @@ export default function AudioLessonPlayer({
   onPlayingChange?: (playing: boolean) => void;
   onEnded?: () => void;
 }) {
+  const tx = useT();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [speed, setSpeed] = useState<number>(1);
   const [loop, setLoop] = useState(false);
@@ -163,7 +165,7 @@ export default function AudioLessonPlayer({
       >
         <button
           type="button"
-          aria-label={playing ? "Tạm dừng" : "Phát"}
+          aria-label={playing ? tx("learn.audio.pause") : tx("learn.audio.play")}
           onClick={toggle}
           className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700"
         >
@@ -172,8 +174,8 @@ export default function AudioLessonPlayer({
         <span className="w-10 shrink-0 text-right text-sm tabular-nums text-muted">{formatClock(shown)}</span>
         <input
           type="range"
-          aria-label="Tiến độ phát"
-          aria-valuetext={`${formatClock(shown)} trên ${formatClock(duration)}`}
+          aria-label={tx("learn.audio.seek")}
+          aria-valuetext={tx("learn.audio.seekValue", { now: formatClock(shown), total: formatClock(duration) })}
           min={0}
           max={duration > 0 ? duration : 0}
           step={0.1}
@@ -190,7 +192,7 @@ export default function AudioLessonPlayer({
         <span className="w-10 shrink-0 text-sm tabular-nums text-muted">{formatClock(duration)}</span>
         <button
           type="button"
-          aria-label={muted ? "Bật tiếng" : "Tắt tiếng"}
+          aria-label={muted ? tx("learn.audio.unmute") : tx("learn.audio.mute")}
           aria-pressed={muted}
           onClick={() => setMuted((v) => !v)}
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-brand-soft"
@@ -203,8 +205,8 @@ export default function AudioLessonPlayer({
         {/* Tốc độ: một cụm nút liền nhau (chọn một) thay cho 3 nút rời. */}
         <div
           role="group"
-          aria-label="Tốc độ"
-          title="Tốc độ phát"
+          aria-label={tx("learn.audio.speed")}
+          title={tx("learn.audio.speedTitle")}
           className="inline-flex rounded-lg border border-token bg-[rgb(var(--surface))] p-0.5"
         >
           {SPEEDS.map((s) => (
@@ -234,13 +236,13 @@ export default function AudioLessonPlayer({
           }`}
         >
           <Repeat size={14} aria-hidden />
-          Lặp lại
+          {tx("learn.audio.loop")}
         </button>
       </div>
 
       {hasTranscript && (
         <details className="rounded-lg border border-token px-3 py-2">
-          <summary className="cursor-pointer text-sm font-medium">Lời thoại</summary>
+          <summary className="cursor-pointer text-sm font-medium">{tx("learn.audio.transcript")}</summary>
           {paragraphs.length >= 2 ? (
             <ol className="mt-2 space-y-2 text-body" data-testid="numbered-transcript">
               {paragraphs.map((para, i) => (
@@ -248,7 +250,7 @@ export default function AudioLessonPlayer({
                   <span aria-hidden className="shrink-0 font-semibold text-lime-700">
                     {paragraphMarker(i + 1)}
                   </span>
-                  <span className="sr-only">Đoạn {i + 1}. </span>
+                  <span className="sr-only">{tx("learn.audio.paragraph", { n: i + 1 })} </span>
                   <span className="whitespace-pre-line">{para}</span>
                 </li>
               ))}

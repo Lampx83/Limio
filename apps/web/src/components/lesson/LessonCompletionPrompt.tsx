@@ -6,6 +6,7 @@ import { Check, Headphones, Video, ListChecks, ScrollText } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { heardPercent } from "@/lib/narration/deckCover";
 import { getNarrationState, subscribeNarration } from "@/lib/narration/store";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Top-of-lesson "what's left to complete" panel. Owns the auto-complete
@@ -49,6 +50,7 @@ export default function LessonCompletionPrompt({
   inline?: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const [completed, setCompleted] = useState(initiallyCompleted);
   // Video tracker: highest watched ratio across any video on the page.
   const [videoRatio, setVideoRatio] = useState(0);
@@ -226,12 +228,12 @@ export default function LessonCompletionPrompt({
   const progressBar = (
     <div className={`flex items-center gap-3 ${inline ? "" : "mb-2"}`}>
       <p className="shrink-0 text-sm text-muted">
-        <span className="tabular-nums">{lessonProgressPct}%</span> hoàn thành bài học
+        <span className="tabular-nums">{lessonProgressPct}%</span> {t("learn.completion.percentDone")}
       </p>
       <div
         className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
         role="progressbar"
-        aria-label="Tiến độ bài học"
+        aria-label={t("learn.completion.progressAria")}
         aria-valuenow={lessonProgressPct}
         aria-valuemin={0}
         aria-valuemax={100}
@@ -263,7 +265,7 @@ export default function LessonCompletionPrompt({
     rows.push({
       key: "video",
       icon: <Video size={13} />,
-      label: "Video",
+      label: t("learn.completion.video"),
       detail: videoMet ? undefined : `${pct}%/${autoComplete.videoThresholdPct}%`,
       done: videoMet,
     });
@@ -272,7 +274,7 @@ export default function LessonCompletionPrompt({
     rows.push({
       key: "listen",
       icon: <Headphones size={13} />,
-      label: "Nghe giảng",
+      label: t("learn.completion.listen"),
       detail: listenMet ? undefined : `${heardPct}%/${autoComplete.listenThresholdPct}%`,
       done: listenMet,
     });
@@ -282,7 +284,7 @@ export default function LessonCompletionPrompt({
     rows.push({
       key: "activities",
       icon: <ListChecks size={13} />,
-      label: "Hoạt động",
+      label: t("learn.completion.activities"),
       detail: activitiesMet
         ? undefined
         : `${done}/${autoComplete.totalActivityCount}`,
@@ -293,7 +295,7 @@ export default function LessonCompletionPrompt({
     rows.push({
       key: "scroll",
       icon: <ScrollText size={13} />,
-      label: "Đọc hết bài",
+      label: t("learn.completion.readAll"),
       done: scrollMet,
     });
   }
@@ -314,10 +316,10 @@ export default function LessonCompletionPrompt({
             </span>
             <div>
               <p className="text-sm font-semibold text-success-800">
-                Hoàn thành bài học!
+                {t("learn.completion.done")}
               </p>
               <p className="text-xs text-success-700">
-                Đang lưu tiến độ và tải lại trang…
+                {t("learn.completion.saving")}
               </p>
             </div>
           </div>
@@ -336,7 +338,7 @@ export default function LessonCompletionPrompt({
   const chips = (
       <div className="flex flex-wrap items-center gap-2 text-sm">
       <span className="shrink-0 text-xs font-medium text-[rgb(var(--text-muted))]">
-        {allDone ? "Đang lưu…" : "Để hoàn thành bài:"}
+        {allDone ? t("learn.completion.savingShort") : t("learn.completion.toComplete")}
       </span>
       {rows.map((r) => (
         <span

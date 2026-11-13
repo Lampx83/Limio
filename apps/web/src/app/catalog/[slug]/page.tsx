@@ -18,6 +18,7 @@ import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
 import { StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
 import { getSpaceForCourseSlug, spaceHomePath } from "@/lib/space/resolve";
+import { getT, getUiLang } from "@/lib/i18n/server";
 import { courseLanguageLabel, courseLevelLabel, modulePrefix } from "@/lib/courseLabels";
 
 export const dynamic = "force-dynamic";
@@ -49,14 +50,17 @@ export async function generateMetadata({
       updatedAt: true,
     },
   });
-  if (!course) return { title: "Không tìm thấy khoá học", robots: { index: false } };
+  const t = await getT();
+  if (!course) return { title: t("catalog.detail.notFound"), robots: { index: false } };
 
   const space = await getSpaceForCourseSlug(params.slug);
   const base = pageMetadata({
     title: course.title,
     description:
       htmlToPlainText(course.description ?? "") ||
-      `Khoá học ${course.title}${course.category ? ` — ${course.category}` : ""} trên ${SITE_NAME}.`,
+      (course.category
+        ? t("catalog.detail.metaDescriptionCat", { title: course.title, category: course.category, site: SITE_NAME })
+        : t("catalog.detail.metaDescription", { title: course.title, site: SITE_NAME })),
     path: `/catalog/${params.slug}`,
     // Khoá thuộc một space: link gửi đi mang nhận diện của space (ảnh /<space>/og) thay vì ảnh Limio mặc định.
     image: space ? `${spaceHomePath(space)}/og` : course.coverUrl,
@@ -79,6 +83,8 @@ export default async function CourseDetailPage({
   params: { slug: string };
   searchParams?: { paywall?: string; locked?: string; cancelled?: string };
 }) {
+  const t = await getT();
+  const lang = await getUiLang();
   const showPaywall = searchParams?.paywall === "1";
   const showCancelled = searchParams?.cancelled === "1";
   const [session, paymentEnabled, space] = await Promise.all([
@@ -136,12 +142,12 @@ export default async function CourseDetailPage({
 
   const cheapestPlan = accessPlans[0];
   const priceLabel = !paymentEnabled
-    ? "Miễn phí"
+    ? t("catalog.free")
     : cheapestPlan
-      ? `Từ ${formatPrice(cheapestPlan.priceCents, cheapestPlan.currency)}`
+      ? t("catalog.from", { price: formatPrice(cheapestPlan.priceCents, cheapestPlan.currency) })
       : !isFree(course.priceCents)
         ? formatPrice(course.priceCents!, course.currency)
-        : "Miễn phí";
+        : t("catalog.free");
 
   // Banner "chưa đăng ký" trong section Nội dung khóa học đã có đủ message +
   // action (Đăng ký ngay / liên hệ giáo viên) — sidebar không lặp lại nút nữa.
@@ -154,15 +160,16 @@ export default async function CourseDetailPage({
         <JsonLd
           data={[
             breadcrumbJsonLd([
-              { name: "Trang chủ", path: "/" },
-              { name: "Khoá học", path: "/catalog" },
+              { name: t("catalog.home"), path: "/" },
+              { name: t("catalog.courses"), path: "/catalog" },
               { name: course.title, path: `/catalog/${params.slug}` },
             ]),
             courseJsonLd({
               slug: params.slug,
               title: course.title,
               description:
-                htmlToPlainText(course.description ?? "") || `Khoá học ${course.title} trên ${SITE_NAME}.`,
+                htmlToPlainText(course.description ?? "") ||
+                t("catalog.detail.metaDescription", { title: course.title, site: SITE_NAME }),
               language: course.language,
               level: course.level,
               category: course.category,
@@ -183,7 +190,7 @@ export default async function CourseDetailPage({
         </Link>
       ) : (
         <Link href="/catalog" className="link inline-flex items-center gap-1 text-sm">
-          ← Danh mục khoá học
+          ← {t("catalog.backToCatalog")}
         </Link>
       )}
 
@@ -192,9 +199,9 @@ export default async function CourseDetailPage({
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-danger-200 bg-danger-50 px-5 py-4">
           <span className="text-xl"></span>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-danger-700">Nội dung có phí</p>
+            <p className="text-sm font-semibold text-danger-700">{t("catalog.detail.paywallTitle")}</p>
             <p className="text-xs text-danger-600">
-              Bài học này yêu cầu đăng ký khoá học. Mua khoá để truy cập toàn bộ nội dung.
+              {t("catalog.detail.paywallBody")}
             </p>
           </div>
         </div>
@@ -204,8 +211,8 @@ export default async function CourseDetailPage({
       {showCancelled && (
         <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl border border-token bg-base-50 px-5 py-4">
           <div className="flex-1">
-            <p className="text-sm font-semibold">Thanh toán đã huỷ</p>
-            <p className="text-xs text-muted">Bạn có thể chọn lại gói và thử thanh toán bất cứ lúc nào.</p>
+            <p className="text-sm font-semibold">{t("catalog.detail.cancelledTitle")}</p>
+            <p className="text-xs text-muted">{t("catalog.detail.cancelledBody")}</p>
           </div>
         </div>
       )}
@@ -217,7 +224,7 @@ export default async function CourseDetailPage({
           <div className="flex flex-wrap items-center gap-2">
             {course.level && (
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
-                {courseLevelLabel(course.level)}
+                {courseLevelLabel(course.level, lang)}
               </span>
             )}
             {course.category && (
@@ -227,7 +234,7 @@ export default async function CourseDetailPage({
             )}
             {course.language !== "vi" && (
               <span className="inline-flex items-center rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
-                {courseLanguageLabel(course.language)}
+                {courseLanguageLabel(course.language, lang)}
               </span>
             )}
             {course.status !== "published" && (
@@ -240,17 +247,17 @@ export default async function CourseDetailPage({
             {course.personalizationEnabled && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700"
-                title="Sau mỗi bài, Limio chỉ ra chủ đề bạn còn yếu và gợi ý phần nên ôn lại."
+                title={t("catalog.personalizationHint")}
               >
-                🤖 Phản hồi cá nhân hoá
+                🤖 {t("catalog.personalization")}
               </span>
             )}
             {publiclyReadable && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700"
-                title="Đọc được nội dung bài học mà không cần đăng nhập. Đăng ký để lưu tiến độ, làm bài và nhận phản hồi."
+                title={t("catalog.detail.publicHint")}
               >
-                🌐 Công khai
+                🌐 {t("catalog.detail.public")}
               </span>
             )}
           </div>
@@ -259,7 +266,7 @@ export default async function CourseDetailPage({
           </h1>
           {leadInstructors.length > 0 && (
             <p className="mt-3 text-sm text-white/85">
-              <span className="opacity-70">Giảng dạy bởi</span>{" "}
+              <span className="opacity-70">{t("catalog.detail.taughtBy")}</span>{" "}
               <span className="font-medium">
                 {leadInstructors.map((i) => i.user.displayName).join(", ")}
               </span>
@@ -268,11 +275,11 @@ export default async function CourseDetailPage({
 
           {/* Stats — price + enroll moved to sticky sidebar below */}
           <div className="mt-6 flex flex-wrap gap-3">
-            <HeroStat label="Module" value={course.modules.length} />
-            <HeroStat label="Bài học" value={totalLessons} />
+            <HeroStat label={t("catalog.detail.statModules")} value={course.modules.length} />
+            <HeroStat label={t("catalog.detail.statLessons")} value={totalLessons} />
             {paymentEnabled && (
               <div className="rounded-xl bg-white/15 px-4 py-2 backdrop-blur">
-                <div className="text-xs uppercase tracking-wide opacity-70">Học phí</div>
+                <div className="text-xs uppercase tracking-wide opacity-70">{t("catalog.detail.tuition")}</div>
                 <div className="text-lg font-bold tabular-nums">{priceLabel}</div>
               </div>
             )}
@@ -286,7 +293,7 @@ export default async function CourseDetailPage({
         <section className="card mt-6">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-faint">
             <span className="h-1.5 w-1.5 rounded-full bg-brand-500" aria-hidden />
-            Về khóa học
+            {t("catalog.detail.about")}
           </div>
           <SafeHtml
             html={plainToRichHtml(course.description)}
@@ -301,12 +308,12 @@ export default async function CourseDetailPage({
           primary={paymentEnabled ? priceLabel : course.title}
           secondary={
             enrolled
-              ? "Bạn đã đăng ký"
-              : `${course.modules.length} module · ${totalLessons} bài`
+              ? t("catalog.detail.alreadyEnrolled")
+              : t("catalog.detail.moduleLessonCount", { modules: course.modules.length, lessons: totalLessons })
           }
           action={
             course.enrollMode === "invite_only" && !enrolled ? (
-              <span className="text-sm text-muted">Cần link mời của lớp</span>
+              <span className="text-sm text-muted">{t("catalog.detail.inviteNeeded")}</span>
             ) : (
               <EnrollButton
                 courseId={course.id}
@@ -327,9 +334,9 @@ export default async function CourseDetailPage({
         {/* Curriculum — main column */}
         <section className="lg:col-span-2">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-semibold">Nội dung khóa học</h2>
+            <h2 className="text-xl font-semibold">{t("catalog.detail.curriculum")}</h2>
             <span className="text-xs text-faint">
-              {course.modules.length} module · {totalLessons} bài
+              {t("catalog.detail.moduleLessonCount", { modules: course.modules.length, lessons: totalLessons })}
             </span>
           </div>
 
@@ -342,18 +349,17 @@ export default async function CourseDetailPage({
               <Lock className="h-5 w-5 shrink-0" aria-hidden />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold">
-                  Bạn chưa đăng ký khoá học này
+                  {t("catalog.detail.notEnrolledTitle")}
                 </p>
                 {course.enrollMode === "invite_only" ? (
                   // invite_only không có nút đăng ký tự phục vụ nào để bấm —
                   // nói luôn cần gì ở đây thay vì mời bấm vào ngõ cụt.
                   <p className="text-xs">
-                    Hãy liên hệ giáo viên để lấy link vào khoá học.
+                    {t("catalog.detail.contactTeacher")}
                   </p>
                 ) : (
                   <p className="text-xs">
-                    Hãy đăng ký khoá học để bắt đầu nội dung học tập ngay hôm
-                    nay.
+                    {t("catalog.detail.enrollToStart")}
                   </p>
                 )}
               </div>
@@ -379,7 +385,7 @@ export default async function CourseDetailPage({
 
           {course.modules.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-dashed border-token p-10 text-center text-sm text-muted">
-              Chưa có nội dung.
+              {t("catalog.detail.noContent")}
             </div>
           ) : (
             <ol className="mt-4 space-y-4">
@@ -393,7 +399,7 @@ export default async function CourseDetailPage({
                     {m.title}
                   </h3>
                   <span className="text-xs text-faint">
-                    {m.lessons.length} bài
+                    {t("catalog.detail.lessonCount", { n: m.lessons.length })}
                   </span>
                 </header>
                 <ol className="mt-3 space-y-2">
@@ -424,7 +430,7 @@ export default async function CourseDetailPage({
                                nó không mở ra bài. */
                             <a
                               href="#dang-ky"
-                              title="Đăng ký khoá học để mở bài này"
+                              title={t("catalog.detail.lockedLesson")}
                               className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-default"
                             >
                               <Lock className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -435,7 +441,7 @@ export default async function CourseDetailPage({
                               where every lesson is open — the hero chip says it once. */}
                           {l.previewable && !publiclyReadable && !enrolled && (
                             <span className="inline-flex items-center rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
-                              Preview
+                              {t("catalog.detail.preview")}
                             </span>
                           )}
                           {(() => {
@@ -449,7 +455,7 @@ export default async function CourseDetailPage({
                             const mins = secs ? Math.round(secs / 60) : null;
                             return (
                               <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
-                                ▶ Video{mins ? ` · ${mins} phút` : ""}
+                                ▶ {mins ? t("catalog.detail.videoMinutes", { n: mins }) : t("catalog.detail.video")}
                               </span>
                             );
                           })()}
@@ -458,13 +464,13 @@ export default async function CourseDetailPage({
                           <div className="mt-1 flex flex-wrap gap-1">
                             {/* Learners see the skill's human name; the code is
                                 an internal identifier and reads as noise here. */}
-                            {l.skillTags.map((t) => (
+                            {l.skillTags.map((tag) => (
                               <span
-                                key={t.skill.code}
-                                title={t.skill.code}
+                                key={tag.skill.code}
+                                title={tag.skill.code}
                                 className="inline-flex rounded-full bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-[11px] text-faint"
                               >
-                                {t.skill.name}
+                                {tag.skill.name}
                               </span>
                             ))}
                           </div>
@@ -497,7 +503,7 @@ export default async function CourseDetailPage({
                   {paymentEnabled && accessPlans.length === 0 && !isFree(course.priceCents) && (
                     <div className="mb-3">
                       <div className="text-xs uppercase tracking-wide text-faint">
-                        Học phí
+                        {t("catalog.detail.tuition")}
                       </div>
                       <div className="text-2xl font-bold tabular-nums">
                         {formatPrice(course.priceCents!, course.currency)}

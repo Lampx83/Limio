@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Star } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
 
 /**
  * Thang độ tự tin 1–5 dưới dạng sao.
@@ -19,7 +21,13 @@ import { Star } from "lucide-react";
  * phím Tab và có nhãn đọc lên được cho trình đọc màn hình.
  */
 
-const LABELS = ["Đoán thôi", "Không chắc lắm", "Tạm tin", "Khá chắc", "Chắc chắn"];
+const LABEL_KEYS: MessageKey[] = [
+  "practice.quiz.stars.l1",
+  "practice.quiz.stars.l2",
+  "practice.quiz.stars.l3",
+  "practice.quiz.stars.l4",
+  "practice.quiz.stars.l5",
+];
 
 export default function ConfidenceStars({
   value,
@@ -33,13 +41,14 @@ export default function ConfidenceStars({
   readOnly?: boolean;
   size?: number;
 }) {
+  const t = useT();
   const [hover, setHover] = useState<number | null>(null);
   // Rê chuột tới đâu thì tô tới đó, buông ra thì quay về mức đã chọn.
   const shown = hover ?? value ?? 0;
 
   if (readOnly) {
     return (
-      <span className="inline-flex items-center gap-1" aria-label={`Độ tự tin ${value ?? 0}/5`}>
+      <span className="inline-flex items-center gap-1" aria-label={t("practice.quiz.stars.read", { n: value ?? 0 })}>
         {[1, 2, 3, 4, 5].map((n) => (
           <Star
             key={n}
@@ -56,7 +65,7 @@ export default function ConfidenceStars({
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <div
         role="radiogroup"
-        aria-label="Độ tự tin"
+        aria-label={t("practice.quiz.stars.group")}
         className="flex items-center gap-0.5"
         onMouseLeave={() => setHover(null)}
       >
@@ -68,8 +77,8 @@ export default function ConfidenceStars({
               type="button"
               role="radio"
               aria-checked={value === n}
-              aria-label={`${n} trên 5 — ${LABELS[n - 1]}`}
-              title={`${n}/5 — ${LABELS[n - 1]}`}
+              aria-label={t("practice.quiz.stars.aria", { n, label: t(LABEL_KEYS[n - 1]!) })}
+              title={t("practice.quiz.stars.title", { n, label: t(LABEL_KEYS[n - 1]!) })}
               onClick={() => onChange?.(n)}
               onMouseEnter={() => setHover(n)}
               onFocus={() => setHover(n)}

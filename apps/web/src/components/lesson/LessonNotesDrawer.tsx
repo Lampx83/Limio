@@ -4,8 +4,10 @@ import { useEffect, useState } from "react";
 import { Pencil, X } from "lucide-react";
 import { LessonNotes } from "@/components/LessonActions";
 import { FabTip } from "./TeacherBar";
+import { useT } from "@/lib/i18n/client";
 
 export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -23,11 +25,11 @@ export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Mở ghi chú bài học này"
+        aria-label={t("reader.notes.open")}
         className="narration-lift group fixed bottom-36 right-4 z-30 flex h-11 w-11 short:bottom-24 short:right-3 short:h-9 short:w-9 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-transform hover:scale-105"
       >
         <Pencil size={18} />
-              <FabTip>Ghi chú của tôi</FabTip>
+              <FabTip>{t("reader.notes.myNotes")}</FabTip>
       </button>
 
       {open && (
@@ -37,16 +39,16 @@ export default function LessonNotesDrawer({ lessonId }: { lessonId: string }) {
         >
           <aside
             role="dialog"
-            aria-label="Ghi chú bài học này"
+            aria-label={t("reader.notes.thisLesson")}
             className="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto border-l border-token bg-[rgb(var(--surface))] shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <header className="sticky top-0 z-10 flex items-center justify-between border-b border-token bg-[rgb(var(--surface)/0.95)] px-5 py-3 backdrop-blur">
-              <h2 className="text-base font-semibold">Ghi chú bài học này</h2>
+              <h2 className="text-base font-semibold">{t("reader.notes.thisLesson")}</h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Đóng"
+                aria-label={t("reader.notes.close")}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))]"
               >
                 <X size={16} />

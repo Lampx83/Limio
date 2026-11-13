@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { htmlToPlainText, looksLikeHtml, plainToRichHtml } from "@/lib/richText";
+import { useT } from "@/lib/i18n/client";
 
 const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
   ssr: false,
@@ -53,6 +54,7 @@ export default function AdaptiveTextField({
   placeholder?: string;
   minHeight?: number;
 }) {
+  const t = useT();
   const [rich, setRich] = useState(() => needsRich(value));
   const [text, setText] = useState(() => htmlToPlainText(value));
 
@@ -72,7 +74,7 @@ export default function AdaptiveTextField({
   function toPlain() {
     if (
       needsRich(value) &&
-      !confirm("Chuyển sang văn bản thường sẽ bỏ định dạng và ảnh trong ô này. Tiếp tục?")
+      !confirm(t("practice.rich.confirm"))
     ) {
       return;
     }
@@ -111,12 +113,10 @@ export default function AdaptiveTextField({
           onClick={rich ? toPlain : toRich}
           className="link text-xs"
           title={
-            rich
-              ? "Quay về ô nhập chữ thường"
-              : "In đậm, danh sách, công thức, chèn ảnh…"
+            rich ? t("practice.rich.toPlainTitle") : t("practice.rich.toRichTitle")
           }
         >
-          {rich ? "Về văn bản thường" : "Định dạng / chèn ảnh"}
+          {rich ? t("practice.rich.toPlain") : t("practice.rich.toRich")}
         </button>
       </div>
     </div>

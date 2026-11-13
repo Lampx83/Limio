@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { checkQuizLeave } from "@/lib/quizLeaveGuard";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * "← Quay lại khóa học" của trang làm quiz. Nếu người học đã chọn đáp án mà
  * chưa nộp thì hỏi lại trước khi đi, vì rời đi lúc đó là mất các câu đã chọn.
  */
 export default function QuizBackLink({ href }: { href: string }) {
+  const t = useT();
   return (
     <Link
       href={href}
@@ -17,7 +19,7 @@ export default function QuizBackLink({ href }: { href: string }) {
       }}
       className="link inline-flex items-center gap-1 text-sm"
     >
-      ← Quay lại khóa học
+      ← {t("learn.backToCourseLong")}
     </Link>
   );
 }

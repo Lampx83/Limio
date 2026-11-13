@@ -15,6 +15,9 @@ import { LimeSliceIcon } from "./BrandIcons";
 import type { SpaceBrand } from "@/lib/space/types";
 import HeaderTagline from "./HeaderTagline";
 import { isLearnerRole } from "@/lib/learnerRole";
+import { getT } from "@/lib/i18n/server";
+import LangSwitch from "./LangSwitch";
+import { headers } from "next/headers";
 
 // Header render trên MỌI trang — cache isAnyOrgAdmin 60s/userId để không query
 // OrganizationAdmin mỗi request, cùng cách admin/layout.tsx cache isAdmin.
@@ -26,7 +29,10 @@ const getIsAnyOrgAdminCached = unstable_cache(
 
 export default async function AppHeader({ space = null }: { space?: SpaceBrand | null } = {}) {
   const session = await auth();
+  const t = await getT();
   const user = session?.user;
+  // Trang chủ/giới thiệu của space có công tắc ngôn ngữ riêng (?lang=) — không chồng thêm công tắc giao diện lên đó.
+  const showLangSwitch = !/^\/(?:s\/|micro4asia(?:\/|$))/.test(headers().get("x-space-path") ?? "");
   const roles = switchableRoles(user?.roles ?? []);
   const activeRole = getActiveRole(roles);
   // Chỉ cần cho nhánh guest bên dưới — bỏ qua query khi đã đăng nhập.
@@ -102,6 +108,7 @@ export default async function AppHeader({ space = null }: { space?: SpaceBrand |
         <div className="flex items-center gap-2">
           {/* Nút Đấu trường: ẩn khi đang thi (xem TournamentCta). */}
           <TournamentCta activeRole={activeRole} />
+          {showLangSwitch && <LangSwitch />}
 
           {/* Nút quét QR của học viên đang ẩn (ScanQrButton); bật lại bằng cách render nó ở đây. */}
           {user && activeRole === "instructor" && <HeaderCalendar />}
@@ -125,11 +132,11 @@ export default async function AppHeader({ space = null }: { space?: SpaceBrand |
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Link href="/signin" className="btn-primary btn-sm">
-                Đăng nhập
+                {t("header.signIn")}
               </Link>
               {registerEnabled && (
                 <Link href="/register" className="btn-ghost btn-sm">
-                  Đăng ký
+                  {t("header.register")}
                 </Link>
               )}
             </div>

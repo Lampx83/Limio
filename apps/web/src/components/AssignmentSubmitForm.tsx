@@ -13,6 +13,7 @@ import {
   type GenerativeActivityType,
   type ResponseFormat,
 } from "@/lib/generativeActivity";
+import { useT } from "@/lib/i18n/client";
 
 const REFLECTION_MIN_CHARS = 20;
 
@@ -37,6 +38,7 @@ export default function AssignmentSubmitForm({
   /** Bài nhóm đã chấm — nộp lại sẽ đưa cả nhóm về chưa chấm, nên hỏi xác nhận trước. */
   alreadyGraded?: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [body, setBody] = useState("");
@@ -68,8 +70,8 @@ export default function AssignmentSubmitForm({
       );
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        toast.error("Tải lên thất bại", {
-          description: d.error ?? "Vui lòng thử lại.",
+        toast.error(t("practice.asg.uploadFailed"), {
+          description: d.error ?? t("practice.asg.tryAgain"),
         });
       } else {
         const d = (await res.json()) as { url: string };
@@ -77,7 +79,7 @@ export default function AssignmentSubmitForm({
         // nó cũng cần tiền tố như mọi đường dẫn nội bộ khác.
         const absolute = shareUrl(d.url);
         setAttachmentUrl(absolute);
-        toast.success("Đã tải file lên");
+        toast.success(t("practice.asg.uploaded"));
       }
     } finally {
       setUploading(false);
@@ -98,23 +100,21 @@ export default function AssignmentSubmitForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (requireSelfRating && selfRating === "") {
-      toast.error("Hãy chọn mức tự đánh giá trước khi nộp.");
+      toast.error(t("practice.asg.needRating"));
       return;
     }
     if (requireReflection && reflection.trim().length < REFLECTION_MIN_CHARS) {
-      toast.error(
-        `Reflection cần ít nhất ${REFLECTION_MIN_CHARS} ký tự để giúp bạn ghi nhớ tốt hơn.`,
-      );
+      toast.error(t("practice.asg.reflectionMin", { n: REFLECTION_MIN_CHARS }));
       return;
     }
     if (needUpload && !attachmentUrl.trim()) {
-      toast.error("Hoạt động này cần tải lên file hoặc dán URL.");
+      toast.error(t("practice.asg.needUpload"));
       return;
     }
     if (
       teamMode &&
       alreadyGraded &&
-      !window.confirm("Nộp lại sẽ đưa bài của cả nhóm về trạng thái chưa chấm. Tiếp tục?")
+      !window.confirm(t("practice.asg.confirmResubmit"))
     ) {
       return;
     }
@@ -133,23 +133,23 @@ export default function AssignmentSubmitForm({
     });
     setBusy(false);
     if (res.ok) {
-      toast.success("Đã nộp bài", {
+      toast.success(t("practice.asg.submitted"), {
         description: teamMode
-          ? "Cả nhóm đã có bài. Chờ giảng viên chấm."
+          ? t("practice.asg.okTeam")
           : pedagogicalIntent
-            ? "Phản hồi sẽ được tổng hợp dần."
-            : "Chờ instructor chấm điểm.",
+            ? t("practice.asg.okFeedback")
+            : t("practice.asg.okWait"),
       });
       reset();
       setOpen(false);
       router.refresh();
     } else {
       const d = await res.json().catch(() => ({}));
-      toast.error("Nộp bài thất bại", {
+      toast.error(t("practice.asg.failed"), {
         description:
           d.error === "no_team"
-            ? "Bài tập này nộp theo nhóm. Bạn cần vào một nhóm trước khi nộp."
-            : (d.error ?? "Vui lòng thử lại."),
+            ? t("practice.asg.noTeam")
+            : (d.error ?? t("practice.asg.tryAgain")),
       });
       if (d.error === "no_team") router.refresh();
     }
@@ -158,7 +158,7 @@ export default function AssignmentSubmitForm({
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="btn-secondary btn-sm">
-        Nộp bài / sửa bài đã nộp
+        {t("practice.asg.open")}
       </button>
     );
   }
@@ -170,8 +170,8 @@ export default function AssignmentSubmitForm({
     >
       {teamMode && (
         <p className="text-xs text-muted">
-          {teamName ? <>Bạn nộp cho nhóm <span className="font-semibold">{teamName}</span>. </> : null}
-          Một người nộp là cả nhóm có bài.
+          {teamName ? <>{t("practice.asg.teamPre")}<span className="font-semibold">{teamName}</span>. </> : null}
+          {t("practice.asg.teamOne")}
         </p>
       )}
       {promptHint && (
@@ -184,7 +184,7 @@ export default function AssignmentSubmitForm({
         onChange={(e) => setBody(e.target.value)}
         required={!isSpeaking}
         rows={isSpeaking ? 2 : 6}
-        placeholder={isSpeaking ? "Ghi chú thêm cho giảng viên (không bắt buộc)" : "Nội dung bài làm..."}
+        placeholder={isSpeaking ? t("practice.asg.notePh") : t("practice.asg.bodyPh")}
         className="textarea"
       />
       {isSpeaking && <AudioRecorder onRecorded={(f) => void uploadFile(f)} disabled={uploading} />}
@@ -193,7 +193,7 @@ export default function AssignmentSubmitForm({
           <span className="text-xs font-medium text-default">
             {pedagogicalIntent
               ? GENERATIVE_PRESETS[pedagogicalIntent].uploadLabel
-              : "Tải lên file bài làm"}
+              : t("practice.asg.uploadLabel")}
             <span className="text-danger-600"> *</span>
           </span>
           <input
@@ -205,14 +205,14 @@ export default function AssignmentSubmitForm({
           />
           {attachmentUrl && (
             <p className="text-xs text-success-700">
-              ✓ Đã tải:{" "}
+              {t("practice.asg.uploadedLabel")}{" "}
               <a
                 href={attachmentUrl}
                 target="_blank"
                 rel="noopener"
                 className="link"
               >
-                xem file
+                {t("practice.asg.viewFile")}
               </a>
             </p>
           )}
@@ -224,15 +224,14 @@ export default function AssignmentSubmitForm({
         type="url"
         placeholder={
           needUpload
-            ? "Hoặc dán URL ngoài (Miro, YouTube, Google Drive...)"
-            : "URL đính kèm (Google Drive, GitHub...) — optional"
+            ? t("practice.asg.urlPhUpload")
+            : t("practice.asg.urlPh")
         }
         className="input text-xs"
       />
       {/google\.com\//i.test(attachmentUrl) && (
         <p className="banner-warning text-xs">
-          Hãy mở quyền chia sẻ của tài liệu là “Bất kỳ ai có đường liên kết”
-          (người xem) — nếu không, giảng viên sẽ không mở được bài của bạn để chấm.
+          {t("practice.asg.shareWarn")}
         </p>
       )}
 
@@ -241,7 +240,7 @@ export default function AssignmentSubmitForm({
           {requireSelfRating && (
             <label className="block">
               <span className="text-xs font-medium text-default">
-                Bạn tự đánh giá mức độ hiểu bài này như thế nào?
+                {t("practice.asg.selfRatingQ")}
                 <span className="text-danger-600"> *</span>
               </span>
               <div className="mt-1 flex gap-1">
@@ -262,14 +261,14 @@ export default function AssignmentSubmitForm({
                 ))}
               </div>
               <span className="mt-1 block text-xs text-faint">
-                1 = chưa hiểu, 5 = hiểu rất rõ và có thể dạy lại.
+                {t("practice.asg.selfRatingScale")}
               </span>
             </label>
           )}
           {requireReflection && (
             <label className="block">
               <span className="text-xs font-medium text-default">
-                Bạn học được gì từ bài này? Còn điểm nào chưa rõ?
+                {t("practice.asg.reflectionQ")}
                 <span className="text-danger-600"> *</span>
               </span>
               <textarea
@@ -277,11 +276,11 @@ export default function AssignmentSubmitForm({
                 onChange={(e) => setReflection(e.target.value)}
                 rows={3}
                 minLength={REFLECTION_MIN_CHARS}
-                placeholder="Viết tối thiểu 20 ký tự..."
+                placeholder={t("practice.asg.reflectionPh")}
                 className="textarea mt-1 text-sm"
               />
               <span className="mt-1 block text-xs text-faint">
-                {reflection.trim().length}/{REFLECTION_MIN_CHARS} ký tự
+                {t("practice.asg.chars", { c: reflection.trim().length, m: REFLECTION_MIN_CHARS })}
               </span>
             </label>
           )}
@@ -290,20 +289,20 @@ export default function AssignmentSubmitForm({
 
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={busy} className="btn-primary btn-sm">
-          {busy ? "..." : "Nộp bài"}
+          {busy ? "..." : t("practice.asg.submit")}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="btn-secondary btn-sm"
         >
-          Hủy
+          {t("practice.asg.cancel")}
         </button>
       </div>
       <p className="text-xs text-faint">
         {teamMode
-          ? <>Nộp lại sẽ ghi đè bài của cả nhóm và đưa cả nhóm về trạng thái &ldquo;chưa chấm&rdquo;.</>
-          : <>Nộp lại sẽ ghi đè bài cũ và trở về trạng thái &ldquo;chưa chấm&rdquo;.</>}
+          ? t("practice.asg.overwriteTeam")
+          : t("practice.asg.overwrite")}
       </p>
     </form>
   );

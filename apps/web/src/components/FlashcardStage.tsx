@@ -3,12 +3,12 @@
 import { Pause, Volume2 } from "lucide-react";
 import {
   FLASHCARD_RATINGS,
-  FLASHCARD_RATING_LABEL,
   type FlashcardMode,
   type FlashcardRating,
 } from "@feedbackme/shared-types";
 import type { QueueCard } from "@feedbackme/core-feedback";
 import { formatInterval } from "@/lib/flashcardSession";
+import { useT, useUiLang } from "@/lib/i18n/client";
 import { useExclusiveAudio } from "./useExclusiveAudio";
 
 /**
@@ -40,6 +40,8 @@ export default function FlashcardStage({
   onFlip: () => void;
   onRate: (rating: FlashcardRating) => void;
 }) {
+  const t = useT();
+  const lang = useUiLang();
   const { playingId, toggle } = useExclusiveAudio();
   const playing = playingId === card.itemId;
 
@@ -59,15 +61,15 @@ export default function FlashcardStage({
     ) : null;
 
   return (
-    <section aria-label="Thẻ từ vựng" className="space-y-4 pb-32 lg:pb-0">
-      <p className="text-meta">{`Thẻ ${index + 1}/${total}`}</p>
+    <section aria-label={t("practice.fc.cardAria")} className="space-y-4 pb-32 lg:pb-0">
+      <p className="text-meta">{t("practice.fc.cardOf", { i: index + 1, n: total })}</p>
 
       <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center">
         {!flipped ? (
           <>
             {mode === "term_to_meaning" && <p className="text-3xl font-medium">{card.term}</p>}
             {mode === "meaning_to_term" && <p className="text-2xl">{card.meaning}</p>}
-            {mode === "audio_to_term" && listen("Nghe từ", true)}
+            {mode === "audio_to_term" && listen(t("practice.fc.listenWord"), true)}
           </>
         ) : (
           <>
@@ -82,7 +84,7 @@ export default function FlashcardStage({
               </p>
             )}
             {card.note && <p className="text-caption">{card.note}</p>}
-            {listen(`Nghe ${card.term}`)}
+            {listen(t("practice.fc.listenTerm", { term: card.term }))}
           </>
         )}
       </div>
@@ -90,7 +92,7 @@ export default function FlashcardStage({
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-token bg-[rgb(var(--surface))] px-4 py-3 lg:static lg:border-0 lg:bg-transparent lg:p-0">
         {!flipped ? (
           <button type="button" aria-keyshortcuts="Space" onClick={onFlip} className="btn-primary w-full lg:w-auto">
-            Lật thẻ
+            {t("practice.fc.flip")}
           </button>
         ) : (
           <div className="grid grid-cols-4 gap-2">
@@ -102,8 +104,8 @@ export default function FlashcardStage({
                 onClick={() => onRate(r)}
                 className="flex flex-col items-center rounded-xl border border-token px-2 py-2 hover:bg-brand-soft"
               >
-                <span className="text-body font-medium">{FLASHCARD_RATING_LABEL[r]}</span>
-                <span className="text-caption">{formatInterval(card.intervals[r])}</span>
+                <span className="text-body font-medium">{t(`practice.fc.rating.${r}`)}</span>
+                <span className="text-caption">{formatInterval(card.intervals[r], lang)}</span>
               </button>
             ))}
           </div>

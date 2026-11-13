@@ -5,6 +5,7 @@ import { ChevronDown } from "lucide-react";
 import type { PodcastForLearner } from "@feedbackme/core-lms";
 import { formatClock, segmentIndexAt } from "@/lib/narration/learner";
 import { narrationCommands, useNarration } from "@/lib/narration/store";
+import { useT } from "@/lib/i18n/client";
 import "./narration.css";
 
 /**
@@ -13,6 +14,7 @@ import "./narration.css";
  */
 export default function PodcastTranscript({ podcast }: { podcast: PodcastForLearner }) {
   const ui = useNarration();
+  const tr = useT();
   const activeTurn = segmentIndexAt(podcast.turns, ui.time);
   const listRef = useRef<HTMLUListElement>(null);
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -34,7 +36,7 @@ export default function PodcastTranscript({ podcast }: { podcast: PodcastForLear
     <details ref={detailsRef} className="group border-t border-token px-3 py-2 sm:px-4">
       <summary className="flex cursor-pointer list-none items-center gap-1.5 text-xs font-medium text-muted hover:text-[rgb(var(--text))]">
         <ChevronDown size={16} className="transition-transform group-open:rotate-180" aria-hidden="true" />
-        Xem bản chữ theo lượt
+        {tr("reader.nar.transcript")}
       </summary>
       <ul ref={listRef} className="relative mt-2 max-h-[40vh] space-y-1 overflow-y-auto pr-1">
         {podcast.turns.map((t, i) => (

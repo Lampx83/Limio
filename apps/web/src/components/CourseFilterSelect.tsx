@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { BookOpen } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Bộ lọc khoá dạng dropdown (Forum Q&A, tab "Cần chấm" của Assignment) — nhiều khoá thì một hàng chip dài
@@ -16,9 +17,10 @@ export default function CourseFilterSelect({
   value: string;
 }) {
   const router = useRouter();
+  const t = useT();
   return (
     <label className="relative flex w-full items-center sm:inline-flex sm:w-auto">
-      <span className="sr-only">Lọc theo khoá học</span>
+      <span className="sr-only">{t("catalog.filter.byCourse")}</span>
       <BookOpen
         className="pointer-events-none absolute left-3 h-4 w-4 text-muted"
         aria-hidden

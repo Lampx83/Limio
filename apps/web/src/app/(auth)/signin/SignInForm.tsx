@@ -4,6 +4,7 @@ import { getSession, signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 
 // Build-time base path (e.g. "/limio"). Empty string when served from root.
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -75,6 +76,7 @@ export default function SignInForm({
   ssoProviders: string[];
   registerEnabled: boolean;
 }) {
+  const t = useT();
   const searchParams = useSearchParams();
   const callbackPath = sanitizeCallbackUrl(searchParams.get("callbackUrl"));
   const callbackUrl = `${BASE}${callbackPath}`;
@@ -125,8 +127,8 @@ export default function SignInForm({
       setStatus("error");
       setError(
         result.code === "rate_limited"
-          ? "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 15 phút, hoặc dùng “Quên mật khẩu”."
-          : "Email hoặc mật khẩu không đúng.",
+          ? t("auth.signin.rateLimited")
+          : t("auth.signin.invalid"),
       );
     } else {
       // Use a hard navigation so the browser re-fetches the root layout from
@@ -174,19 +176,18 @@ export default function SignInForm({
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-[1fr_minmax(380px,420px)] lg:py-20">
         {/* Left — pitch */}
         <div className="hidden flex-col justify-center lg:flex">
-          <span className="chip-brand w-max">Chào mừng trở lại</span>
+          <span className="chip-brand w-max">{t("auth.signin.chip")}</span>
           <h1 className="mt-4 h-display text-4xl font-bold leading-tight">
-            Quay lại nhịp học cùng <span className="text-gradient">Limio</span>
+            {t("auth.signin.pitchTitle")} <span className="text-gradient">Limio</span>
           </h1>
           <p className="mt-4 max-w-md text-muted">
-            Tiếp tục từ chỗ bạn dừng lại — tiến độ, chuỗi ngày học và điểm thưởng
-            của bạn vẫn được giữ nguyên.
+            {t("auth.signin.pitchBody")}
           </p>
           <ul className="mt-8 space-y-3 text-sm">
             {[
-              "Biết mình đúng, sai ở đâu ngay sau mỗi bài kiểm tra",
-              "Nhờ AI giải thích lại ngay trong bài học",
-              "Điểm thưởng, huy hiệu và bảng xếp hạng giữ nhịp học đều",
+              t("auth.signin.pitch1"),
+              t("auth.signin.pitch2"),
+              t("auth.signin.pitch3"),
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-success-100 text-success-700">
@@ -208,9 +209,10 @@ export default function SignInForm({
           <div className="card shadow-card-hover">
             <div className="text-center">
               <LimeSliceIcon className="mx-auto h-14 w-14 drop-shadow-md" />
-              <h1 className="mt-4 h-display text-2xl font-bold">Đăng nhập</h1>
+              <h1 className="mt-4 h-display text-2xl font-bold">{t("auth.signIn")}</h1>
               <p className="mt-1 text-sm text-muted">
-                Chào mừng quay lại               </p>
+                {t("auth.signin.subtitle")}
+              </p>
             </div>
 
             {hasSso && (
@@ -244,7 +246,7 @@ export default function SignInForm({
                         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.67 2.84C6.71 7.31 9.14 5.38 12 5.38z"
                       />
                     </svg>
-                    Đăng nhập với Google
+                    {t("auth.signin.google")}
                   </button>
                 )}
                 {hasMicrosoft && (
@@ -262,7 +264,7 @@ export default function SignInForm({
                       height={16}
                       className="h-4 w-auto"
                     />
-                    Đăng nhập với Email BK
+                    {t("auth.signin.microsoft")}
                   </button>
                 )}
                 {showPasswordForm && (
@@ -271,7 +273,7 @@ export default function SignInForm({
                       <span className="w-full border-t border-base-200" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-faint">hoặc</span>
+                      <span className="bg-white px-2 text-faint">{t("auth.signin.or")}</span>
                     </div>
                   </div>
                 )}
@@ -281,7 +283,7 @@ export default function SignInForm({
             {showPasswordForm && (
               <form onSubmit={onSubmit} className={hasSso ? "space-y-4" : "mt-6 space-y-4"}>
                 <div>
-                  <label className="label" htmlFor="email">Email</label>
+                  <label className="label" htmlFor="email">{t("auth.email")}</label>
                   <input
                     id="email"
                     type="email"
@@ -290,14 +292,14 @@ export default function SignInForm({
                     required
                     autoComplete="email"
                     className="input mt-1.5"
-                    placeholder="ban@example.com"
+                    placeholder={t("auth.emailPlaceholder")}
                   />
                 </div>
                 <div>
                   <div className="flex items-center justify-between">
-                    <label className="label" htmlFor="password">Mật khẩu</label>
+                    <label className="label" htmlFor="password">{t("auth.password")}</label>
                     <Link href="/reset-request" className="text-xs link">
-                      Quên mật khẩu?
+                      {t("auth.forgotPasswordQ")}
                     </Link>
                   </div>
                   <div className="relative mt-1.5">
@@ -314,11 +316,11 @@ export default function SignInForm({
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                      aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                       aria-pressed={showPassword}
                       className="absolute inset-y-0 right-0 flex items-center px-3 text-xs text-neutral-500 hover:text-neutral-700"
                     >
-                      {showPassword ? "Ẩn" : "Hiện"}
+                      {showPassword ? t("auth.hide") : t("auth.show")}
                     </button>
                   </div>
                 </div>
@@ -327,7 +329,7 @@ export default function SignInForm({
                   disabled={status === "submitting"}
                   className="btn-primary w-full"
                 >
-                  {status === "submitting" ? "Đang xử lý..." : "Đăng nhập"}
+                  {status === "submitting" ? t("auth.processing") : t("auth.signIn")}
                 </button>
                 {error && (
                   <div className="rounded-lg border border-danger-100 bg-danger-50 px-3 py-2 text-sm text-danger-700">
@@ -339,9 +341,9 @@ export default function SignInForm({
 
             {registerEnabled && (
               <p className="mt-6 text-center text-sm text-muted">
-                Chưa có tài khoản?{" "}
+                {t("auth.signin.noAccountQ")}{" "}
                 <Link href={withCallbackUrl("/register", callbackPath)} className="link font-medium">
-                  Đăng ký
+                  {t("auth.register")}
                 </Link>
               </p>
             )}

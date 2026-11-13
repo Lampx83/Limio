@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { getMockSkillSummary, getPracticeSkillSummary, isUserEnrolled } from "@feedbackme/core-lms";
 import { getFlashcardStats, getLanguageProfile, getWritingErrorSummary } from "@feedbackme/core-feedback";
 import { auth } from "@/lib/auth";
+import { getT } from "@/lib/i18n/server";
 import LanguageProfileView from "@/components/LanguageProfileView";
 import MockSkillBlock from "@/components/MockSkillBlock";
 import PracticeSkillBlock from "@/components/PracticeSkillBlock";
@@ -18,6 +19,7 @@ export const dynamic = "force-dynamic";
  * viên qua API /api/courses/:id/language-profile?userId= (màn riêng để sau).
  */
 export default async function LanguageSkillsPage({ params }: { params: { slug: string } }) {
+  const t = await getT();
   const session = await auth();
   if (!session?.user?.id) redirect(`/signin?callbackUrl=/learn/${params.slug}/skills`);
   const userId = session.user.id;
@@ -44,9 +46,9 @@ export default async function LanguageSkillsPage({ params }: { params: { slug: s
       <Link href={`/learn/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
         ← {course.title}
       </Link>
-      <h1 className="text-h1 mt-3">Hồ sơ kỹ năng</h1>
+      <h1 className="text-h1 mt-3">{t("learn.skills.title")}</h1>
       <p className="text-meta mt-1">
-        Tổng hợp từ kết quả làm bài của bạn. Chỉ là gợi ý — bạn vẫn có thể học bất kỳ bài nào.
+        {t("learn.skills.intro")}
       </p>
       <div className="mt-6">
         <LanguageProfileView slug={params.slug} profile={profile} flashcards={flashcards} />
