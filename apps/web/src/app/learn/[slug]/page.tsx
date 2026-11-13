@@ -9,6 +9,7 @@ import {
   getMyCourseTeam,
   isUserEnrolled,
   listMockExamsForLearner,
+  minutesOf,
 } from "@feedbackme/core-lms";
 import { LANGUAGE_SKILL_LABEL, isLanguageSkill } from "@feedbackme/shared-types";
 import {
@@ -26,7 +27,8 @@ import { auth } from "@/lib/auth";
 import { getT, getUiLang } from "@/lib/i18n/server";
 import type { UiLang } from "@/lib/i18n/core";
 import { tFor } from "@/lib/i18n/tFor";
-import { StickyMobileCTA } from "@/components/ui";
+import { LessonVideoBadge, StickyMobileCTA } from "@/components/ui";
+import { loadCourseLessonVideos, type LessonVideoInfo } from "@/lib/lessonVideo";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
 import SmartBackLink from "@/components/SmartBackLink";
 import {
@@ -77,6 +79,7 @@ export default async function LearnCoursePage({
   // khoá, không cần ghi danh, và không đụng dữ liệu học tập của ai (XP, chuỗi
   // ngày, bảng xếp hạng đều gắn với một học viên cụ thể nên bỏ hẳn).
   if (searchParams?.preview === "1" && (await canEditCourse(session.user.id, course.id))) {
+    const previewVideos = await loadCourseLessonVideos(course.id);
     return (
       <main className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6">
         <Link
@@ -102,6 +105,7 @@ export default async function LearnCoursePage({
             slug={params.slug}
             completedSet={new Set()}
             lessonQuery="?preview=1"
+            videos={previewVideos}
           />
         </section>
       </main>
@@ -137,6 +141,7 @@ export default async function LearnCoursePage({
     flashcardStats,
     mockExams,
     teamAssignmentCount,
+    lessonVideos,
   ] = await Promise.all([
     prisma.enrollment.findUniqueOrThrow({
       where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
@@ -162,6 +167,8 @@ export default async function LearnCoursePage({
         lesson: { isHidden: false, module: { courseId: course.id, isHidden: false } },
       },
     }),
+    // Bài nào có video — dấu nhỏ cạnh tên bài trong "Nội dung khoá học". Lỗi ở đây không được làm hỏng cả trang khoá.
+    loadCourseLessonVideos(course.id).catch(() => new Map<string, LessonVideoInfo>()),
   ]);
   const myTeam: CourseTeamState | null =
     teamAssignmentCount > 0
@@ -367,6 +374,7 @@ export default async function LearnCoursePage({
               modules={course.modules}
               slug={params.slug}
               completedSet={completedSet}
+              videos={lessonVideos}
               collapsible
               lang={lang}
               markLessonId={markedLessonId}
@@ -624,6 +632,7 @@ function ModuleList({
   collapsible = false,
   markLessonId = null,
   markKind = null,
+  videos,
   lang,
 }: {
   lang?: UiLang;
@@ -635,8 +644,16 @@ function ModuleList({
   collapsible?: boolean;
   markLessonId?: string | null;
   markKind?: "current" | "next" | null;
+  /** Bài → video (đã lọc khối ẩn). Bài không có trong map thì không có video. */
+  videos?: ReadonlyMap<string, LessonVideoInfo>;
 }) {
   const t = tFor(lang);
+  const videoBadge = (lessonId: string) => {
+    const v = videos?.get(lessonId);
+    if (!v) return null;
+    const mins = minutesOf(v.durationSec);
+    return <LessonVideoBadge label={t("learn.video.has")} duration={mins ? t("learn.minutes", { n: mins }) : null} />;
+  };
   const visibleModules = modules.filter((m) => !m.isHidden);
   const openModuleId =
     visibleModules.find((m) => markLessonId && m.lessons.some((l) => l.id === markLessonId))?.id ??
@@ -714,7 +731,10 @@ function ModuleList({
                                 <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))]">
                                   <Lock className="h-3 w-3" aria-hidden />
                                 </span>
-                                <span className="flex-1 text-sm">{l.title}</span>
+                                <span className="flex flex-1 items-center gap-2 text-sm">
+                                  {l.title}
+                                  {videoBadge(l.id)}
+                                </span>
                                 <span className="text-[10px] uppercase tracking-wide">
                                   {t("learn.toc.locked")}
                                 </span>
@@ -741,12 +761,15 @@ function ModuleList({
                               >
                                 {completed ? "✓" : li + 1}
                               </span>
-                              <span
-                                className={`flex-1 text-sm transition-colors group-hover:text-brand-600 ${
-                                  completed ? "text-muted line-through" : ""
-                                }`}
-                              >
-                                {l.title}
+                              <span className="flex min-w-0 flex-1 items-center gap-2">
+                                <span
+                                  className={`text-sm transition-colors group-hover:text-brand-600 ${
+                                    completed ? "text-muted line-through" : ""
+                                  }`}
+                                >
+                                  {l.title}
+                                </span>
+                                {videoBadge(l.id)}
                               </span>
                               {isMarked && (
                                 <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white">

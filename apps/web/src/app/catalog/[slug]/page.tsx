@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
-import { getCourseDetail, CourseError, isUserEnrolled } from "@feedbackme/core-lms";
+import { getCourseDetail, CourseError, isUserEnrolled, minutesOf } from "@feedbackme/core-lms";
 import { getLeaderboard } from "@feedbackme/core-gamification";
 import { auth } from "@/lib/auth";
 import EnrollButton, { type AccessPlanOption } from "@/components/EnrollButton";
@@ -15,10 +15,11 @@ import { SITE_NAME, breadcrumbJsonLd, courseJsonLd, pageMetadata } from "@/lib/s
 import { isFree, formatPrice } from "@/lib/formatPrice";
 import { getPaymentEnabled } from "@/lib/site-settings";
 import { getConfiguredPaymentProviders } from "@/lib/paymentProviders";
-import { StickyMobileCTA } from "@/components/ui";
+import { LessonVideoBadge, StickyMobileCTA } from "@/components/ui";
 import { Lock } from "lucide-react";
 import { getSpaceForCourseSlug, spaceHomePath } from "@/lib/space/resolve";
 import { getT, getUiLang } from "@/lib/i18n/server";
+import { summarizeLessonVideos } from "@/lib/lessonVideo";
 import { courseLanguageLabel, courseLevelLabel, modulePrefix } from "@/lib/courseLabels";
 
 export const dynamic = "force-dynamic";
@@ -448,15 +449,17 @@ export default async function CourseDetailPage({
                             // Surface which lessons carry a lecture video, and how
                             // long it runs — otherwise the list gives no hint that
                             // some entries are 45 minutes of video and others a read.
-                            const v = l.contentItems.find((c) => c.type === "video");
+                            // getCourseDetail already returns only visible video items.
+                            const v = summarizeLessonVideos(
+                              l.contentItems.map((c) => ({ lessonId: l.id, payload: c.payload })),
+                            ).get(l.id);
                             if (!v) return null;
-                            const secs = (v.payload as { durationSec?: number } | null)
-                              ?.durationSec;
-                            const mins = secs ? Math.round(secs / 60) : null;
+                            const mins = minutesOf(v.durationSec);
                             return (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold text-brand-700">
-                                ▶ {mins ? t("catalog.detail.videoMinutes", { n: mins }) : t("catalog.detail.video")}
-                              </span>
+                              <LessonVideoBadge
+                                label={t("learn.video.has")}
+                                duration={mins ? t("learn.minutes", { n: mins }) : null}
+                              />
                             );
                           })()}
                         </div>
