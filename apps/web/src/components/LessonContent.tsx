@@ -136,7 +136,8 @@ export default function LessonContent({
   interactive?: boolean;
 }) {
   return (
-    <div className="space-y-6">
+    // Khung bài học Language (kiểu sách): các khối liền nhau hơn (câu yêu cầu và phiếu của nó là một cụm), không cách nhau cả một khoảng trắng.
+    <div className={numberTranscripts ? "space-y-4" : "space-y-6"}>
       {items.map((item) =>
         (item.type === "exam_practice" || item.type === "exam_ref") && !blocks?.[item.id] ? null : (
         // data-item-id: mốc neo ổn định giữa cửa sổ điều khiển và màn chiếu.

@@ -21,7 +21,7 @@ Mỗi bài thêm **một khối luyện riêng** "Thử nói với bạn ảo", 
 
 - **Given** khối "Thử nói với bạn ảo". **When** mở. **Then** thấy: tình huống (1–2 câu), **lời mở đầu của bạn ảo** hiện sẵn (không tốn AI), danh sách **cụm gợi ý** (có thể thu gọn), ô nhập và nút **gửi**, nút **ghi âm**, đếm lượt "Lượt n/8", nút **Kết thúc** và nút **Bắt đầu lại**.
 - **Gõ:** tối đa 300 ký tự mỗi lượt; gửi bằng nút hoặc Enter (Shift+Enter xuống dòng).
-- **Nói:** bấm ghi âm (tối đa 30 giây), bấm Dừng thì máy chuyển thành chữ và **điền vào ô nhập** để học viên đọc lại, sửa rồi mới gửi (không tự gửi). Bản ghi âm **không được lưu**. Lần đầu có dòng "Bản ghi âm được gửi tới OpenAI để chuyển thành chữ."
+- **Nói:** bấm ghi âm (tối đa 30 giây), bấm Dừng thì máy chuyển thành chữ và **điền vào ô nhập** để học viên đọc lại, sửa rồi mới gửi (không tự gửi). Bản ghi âm **không được lưu**. ~~Lần đầu có dòng "Bản ghi âm được gửi tới OpenAI…"~~ — đã bỏ khỏi màn này theo yêu cầu 14/11/2026 (từ cùng ngày cũng đã bỏ ở đóng vai và câu mở có ghi âm).
 - Cụm gợi ý nào học viên đã dùng trong lời mình thì được đánh dấu ✓ (so khớp từ, không phân biệt hoa thường và dấu câu). Không có điểm.
 - Hết **số lượt tối đa** (mặc định 8, soạn chỉnh được 4–12) thì khung nhập khoá, hiện nút nhận xét. Bắt đầu lại xoá hội thoại hiện tại (có hộp xác nhận nếu đã có từ 2 lượt).
 - 400 px: khung cuộn trong trang, ô nhập và nút gửi không bị bàn phím che, vùng chạm ≥ 44 px; trình đọc màn hình đọc "Bạn ảo nói…" / "Bạn nói…" và có vùng báo "Bạn ảo đang trả lời".
@@ -68,7 +68,7 @@ Mỗi bài thêm **một khối luyện riêng** "Thử nói với bạn ảo", 
 
 ## Ngoài phạm vi (đợt này)
 
-Bạn ảo đọc to bằng giọng nói (TTS); hội thoại thời gian thực/streaming; chấm phát âm; nhiều học viên cùng một phòng; tình huống tự sinh theo trình độ.
+Hội thoại thời gian thực/streaming; chấm phát âm; nhiều học viên cùng một phòng; tình huống tự sinh theo trình độ.
 
 ## Câu cần thầy chốt
 
@@ -88,3 +88,12 @@ Bạn ảo đọc to bằng giọng nói (TTS); hội thoại thời gian thực
 - **Speakout (3 bài, đã nhập vào dev):** 1.3 Learn to (chọn đồ mang theo), 1.1 Speaking (lối sống), 1.4 Speakout (thành phố hay cộng đồng nhỏ, 7C).
 - **Do rà soát độc lập đã sửa:** "Bắt đầu lại" xoá hẳn bản chữ đã lưu (lưu `{text:""}` thay vì `null`, cả ở đóng vai), hiện lỗi micro, ẩn nút "Nói" khi câu tắt giọng nói, trả tiêu điểm về ô nhập, vùng chạm ≥ 44 px.
 - **Chưa làm / cần thầy quyết:** (1) ~~nhóm đối chứng nghiên cứu~~ — **đã chốt và làm 14/11/2026: nhóm đối chứng (`feedbackVariant = minimal`) bị chặn dùng bạn ảo nói tự do** (403 `control_group`, giao diện báo "Tính năng này chưa mở cho lớp của bạn"; không gọi mô hình, không trừ token). Hội thoại đóng vai theo kịch bản: phần nhận xét AI đã bị chặn như câu mở, phần so từ không dùng AI nên không chặn; (2) lịch sử do trình duyệt giữ nên học viên có thể tự soạn lời "partner" giả trong lịch sử (chỉ tác động tới chính họ và ví của họ); (3) trạng thái "Kết thúc" chưa lưu khi tải lại; (4) lời học viên chưa đặt trong khung dữ liệu riêng (chỉ có luật trong prompt, như AC2 đã nói); (5) chưa thử với mô hình chat thật vì dev chưa cấu hình `LLM_BASE_URL`.
+
+## Bổ sung 14/11/2026 — Bắt đầu, chữ hiện dần, bạn ảo nói thành tiếng
+
+- **AC7 — Bắt đầu.** **Given** khối chưa có hội thoại. **When** mở. **Then** chỉ thấy tình huống, cụm gợi ý và nút **"Bắt đầu"** (chưa có tin nào, chưa gọi AI/giọng). Bấm thì bạn ảo nói câu mở đầu. Hội thoại khôi phục từ bản đã lưu thì không đòi bấm. **"Bắt đầu lại"** xoá hội thoại và quay về màn "Bắt đầu".
+- **AC8 — Chữ hiện dần.** Lời bạn ảo (câu mở đầu và mỗi câu trả lời) hiện dần ~38 ký tự/giây với con trỏ nháy; bấm vào tin hoặc **"Hiện hết"** để bỏ qua; nút **Gửi** khoá cho tới khi chữ hiện hết. Hệ điều hành đặt giảm chuyển động thì hiện ngay. Trình đọc màn hình nghe cả câu một lần, không nghe từng chữ.
+- **AC9 — Giọng bạn ảo.** Mỗi lời bạn ảo được đọc thành tiếng cùng lúc chữ bắt đầu hiện (cùng bộ đọc và chọn giọng theo ngôn ngữ khoá như vấn đáp bằng giọng nói: NEU TTS, rơi về OpenAI TTS). Lời mở đầu: route `…/freechat/{câu}/speak` (không có body, văn bản lấy từ cấu hình câu ở máy chủ — không thể dùng để đọc chữ tuỳ ý; cùng điều kiện truy cập với một lượt hội thoại). Lời trả lời: giọng đọc đi kèm phản hồi lượt (`speech`). **Lỗi đọc là lỗi mềm**: vẫn có chữ, không báo lỗi, không có nút "Nghe" cho câu đó. Không trừ ví token cho giọng đọc (mỗi lời ≤ 300 ký tự).
+- **AC10 — Điều khiển.** Nút **"Nghe"/"Dừng"** từng câu của bạn ảo (nghe lại không gọi máy chủ lần nữa, trừ lời mở đầu chưa có giọng thì lấy theo yêu cầu); **"Giọng bạn ảo: bật/tắt"** (nhớ trong trình duyệt; tắt thì không tự phát nhưng vẫn bấm "Nghe" được). Bấm **Nói** (ghi âm) hoặc **Gửi** thì giọng bạn ảo dừng để micro không thu lại tiếng loa. Phần tử audio được "mở khoá" trong cú bấm "Bắt đầu" để trình duyệt (nhất là Safari) không chặn giọng tải về sau.
+- **Chưa làm:** hội thoại nói bằng giọng nói liên tục kiểu thời gian thực (vẫn là bấm Nói rồi Gửi); giọng đọc cho hội thoại **đóng vai theo kịch bản** (đã có audio mẫu do giảng viên tải lên).
+- **Giao diện kiểu chatbot (14/11/2026):** khung chat có đầu trang (avatar chữ cái + tên bạn ảo + nút bật/tắt giọng, bắt đầu lại), tin bạn ảo bên trái kèm avatar và biểu tượng loa "nghe lại" bên cạnh, tin học viên bên phải màu thương hiệu, ba chấm khi bạn ảo đang trả lời, ô nhập dạng viên có nút mic và nút gửi tròn. Tin gửi đi rời khỏi ô nhập ngay; gửi lỗi thì trả lại vào ô.

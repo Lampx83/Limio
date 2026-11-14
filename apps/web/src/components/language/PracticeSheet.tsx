@@ -46,6 +46,8 @@ export interface SheetTab {
   questionIds: string[];
   /** Đoạn văn chỉ là câu yêu cầu (chữ) hoặc câu yêu cầu kèm trình phát (nút): hiện ở đầu bài tập (một cột) thay vì thẻ đoạn văn bên trái. */
   intro?: ReactNode;
+  /** Tên bài tập (vd "Ex 2D · …") hiện làm tiêu đề phía trên `intro`, cùng kiểu tiêu đề với thẻ đoạn văn, để biết đang làm bài tập nào. */
+  introTitle?: string;
 }
 
 const plain = (prompt: string) => (looksLikeHtml(prompt) ? htmlToPlainText(prompt) : prompt);
@@ -352,7 +354,7 @@ function RowBody({
   }
 
   // Dạng câu phiếu chưa biết dựng: dùng ô nhập của trình làm bài chung để câu vẫn trả lời được (không để một dòng chỉ có đề).
-  return <ExamQuestion question={q} value={value} onChange={onChange} />;
+  return <ExamQuestion question={q} value={value} onChange={onChange} compact />;
 }
 
 /** Sắp xếp không kéo: mỗi mục một ô chọn số thứ tự; chỉ lưu khi mọi mục đã có số và không trùng. Giữ số đang chọn khi chuyển tab. */
@@ -607,6 +609,12 @@ export default function PracticeSheet({
       )}
       {tabs.map((t, i) => (
         <div key={t.key} id={`ps-panel-${t.key}`} role="tabpanel" aria-labelledby={tabs.length > 1 ? `ps-tab-${t.key}` : undefined} hidden={i !== activeIdx} className="ps-panel">
+          {t.intro && t.introTitle && (
+            <header className="ps-intro-head">
+              <h2 className="text-h3">{t.introTitle}</h2>
+              <div className="mt-1.5 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
+            </header>
+          )}
           {t.intro && (typeof t.intro === "string" ? <p className="ps-intro">{t.intro}</p> : <div className="ps-intro-media">{t.intro}</div>)}
           {t.questionIds.length === 0 && <p className="ps-hint ps-empty">Phần này chỉ có nội dung để nghe hoặc đọc, không có câu hỏi.</p>}
           {groupSharedOptions(

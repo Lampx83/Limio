@@ -95,7 +95,7 @@ export function RailCourseHeader({ slug, coverUrl, preview, lang }: { slug: stri
     );
   }
   return (
-    <div data-testid="rail-cover">
+    <div data-testid="rail-cover" className="flex flex-col items-center">
       <Link href={href} tabIndex={-1} aria-hidden className="block w-24">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={coverUrl} alt="" className="h-auto w-full rounded-sm object-cover shadow-md ring-1 ring-black/10" />

@@ -10,6 +10,7 @@ export default defineConfig({
       "@": resolve(__dirname, "src"),
       // next/font chỉ chạy trong trình biên dịch của Next — xem src/test/nextFontStub.ts.
       "next/font/google": resolve(__dirname, "src/test/nextFontStub.ts"),
+      "next/font/local": resolve(__dirname, "src/test/nextFontStub.ts"),
     },
   },
 });

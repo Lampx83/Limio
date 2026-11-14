@@ -13,7 +13,8 @@ vi.mock("next/link", () => ({
     </a>
   ),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, push: () => undefined }) }));
+const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push: () => undefined }) }));
 
 import LessonPractice from "./LessonPractice";
 
@@ -155,6 +156,27 @@ describe("LessonPractice — bài luyện nhúng trong bài", () => {
     expect(answers).toHaveLength(2);
     expect(answers[0]!.hasAttribute("open")).toBe(false);
     expect(answers[1]!.hasAttribute("open")).toBe(true);
+  });
+
+  it("kiểm tra một câu xong thì làm mới dữ liệu máy chủ (để 'Bài luyện n / m' đầu trang và việc tự hoàn thành bài cập nhật); xem thử thì không", async () => {
+    refresh.mockClear();
+    await render();
+    await click(radios()[0]!);
+    await flush(600);
+    expect(refresh).not.toHaveBeenCalled(); // chọn đáp án chưa tính là kiểm tra
+    await click(button(/Kiểm tra câu 1/));
+    await flush();
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    refresh.mockClear();
+    await render(embed(), true);
+    await click(radios()[0]!);
+    await flush(600);
+    await click(button(/Kiểm tra câu 1/));
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("sửa đáp án sau khi kiểm tra thì kết quả cũ biến mất và phải kiểm tra lại", async () => {
@@ -573,11 +595,11 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     await flush();
   }
 
-  it("ghi âm → Chỉ lấy bản chữ: tạo buổi, gửi tệp, điền ô trả lời, hiện nhãn bản chữ và trình phát; lần sau không nhắc OpenAI nữa", async () => {
+  it("ghi âm → Chỉ lấy bản chữ: tạo buổi, gửi tệp, điền ô trả lời, hiện nhãn bản chữ và trình phát; không có dòng nhắc gửi OpenAI", async () => {
     await render(essayEmbed());
     await click(button(/Trả lời bằng giọng nói/));
     await flush();
-    expect(text()).toContain("Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ.");
+    expect(text()).not.toContain("gửi tới OpenAI");
     expect(button(/Trả lời bằng giọng nói/)).toBeUndefined(); // không còn nút thứ hai nối tiếp
     expect(button(/^\s*Ghi âm/)).toBeUndefined(); // đã ghi rồi, chỉ còn Dừng
     expect(button(/Dừng/)).toBeDefined();
@@ -594,7 +616,6 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     expect(text()).toContain("Bản chữ từ giọng nói, máy có thể nghe sai: hãy đọc lại và sửa.");
     expect(host.querySelector('[data-testid="lp-voice-player"] audio')!.getAttribute("src")).toBe("/api/practice-sessions/s1/audio/e1?v=1");
     expect(host.querySelector('[data-testid="lp-voice-panel"]')).toBeNull(); // ngăn ghi âm đóng lại
-    // Lần dùng sau: không nhắc nữa
     await click(button(/Trả lời bằng giọng nói/));
     expect(text()).not.toContain("gửi tới OpenAI");
   });

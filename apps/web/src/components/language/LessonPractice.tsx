@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Columns2, RotateCcw, Rows2, XCircle } from "lucide-react";
 import type { PracticeEmbed, PracticeResult } from "@feedbackme/core-lms";
 import { apiUrl } from "@/lib/apiUrl";
@@ -23,7 +24,7 @@ import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import EssayFeedback from "./EssayFeedback";
 import RolePlay from "./RolePlay";
 import FreeChat, { FreeChatError } from "./FreeChat";
-import { learnerTurnCount, parseFreeChatView, FREECHAT_MIN_FEEDBACK_TURNS } from "@/lib/freeChatView";
+import { learnerTurnCount, parseFreeChatView, asPartnerSpeech, FREECHAT_MIN_FEEDBACK_TURNS, type PartnerReply, type PartnerSpeech } from "@/lib/freeChatView";
 import { instructionOnlyText, isShortAudioPassage } from "@/lib/lessonPracticeView";
 import { parseRolePlay } from "@/lib/rolePlayView";
 import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
@@ -98,6 +99,7 @@ export default function LessonPractice({
   preview?: boolean;
 }) {
   const { questions, passages } = embed;
+  const router = useRouter();
   const steps = useMemo(() => (sheet ? buildSheetSteps(questions, passages.map((x) => x.id)) : buildSteps(questions)), [questions, passages, sheet]);
   // Số câu: phiếu bài tập đánh số lại từ 1 trong MỖI bài tập (như sách: Exercise 3A có câu 1–7, Exercise 4A lại bắt đầu từ 1); luyện đề thường đánh liên tục.
   const numberOf = useMemo(
@@ -334,7 +336,7 @@ export default function LessonPractice({
    * "Thử nói tự do": gửi MỘT lượt cho bạn ảo, trả lời của bạn ảo. Lịch sử do RolePlay-giống-FreeChat giữ ở trình duyệt; máy chủ không lưu.
    * Xem thử của giảng viên dùng route xem thử (không buổi luyện, không lưu gì). Ném `FreeChatError(mã)` khi lỗi.
    */
-  async function sendFreeChat(qid: string, history: Array<{ role: string; text: string }>, message: string): Promise<string> {
+  async function sendFreeChat(qid: string, history: Array<{ role: string; text: string }>, message: string): Promise<PartnerReply> {
     let url: string;
     if (preview) {
       url = apiUrl(`/api/practice-preview/${embed.examId}/freechat/${qid}`);
@@ -362,12 +364,30 @@ export default function LessonPractice({
       const j = (await res.json().catch(() => null)) as { error?: unknown } | null;
       throw new FreeChatError(typeof j?.error === "string" ? j.error : "failed");
     }
-    const data = (await res.json().catch(() => null)) as { reply?: unknown } | null;
+    const data = (await res.json().catch(() => null)) as { reply?: unknown; speech?: unknown } | null;
     if (typeof data?.reply !== "string" || !data.reply.trim()) throw new FreeChatError("openai_error");
-    return data.reply;
+    return { text: data.reply, speech: asPartnerSpeech(data.speech) };
   }
 
-  async function check(qid: string, answerNow?: AnswerValue): Promise<boolean> {
+  /** Giọng đọc lời MỞ ĐẦU của bạn ảo (máy chủ đọc từ cấu hình câu). Lỗi/không có giọng → null: học viên vẫn có chữ. */
+  async function fetchOpeningSpeech(qid: string): Promise<PartnerSpeech | null> {
+    try {
+      let url: string;
+      if (preview) {
+        url = apiUrl(`/api/practice-preview/${embed.examId}/freechat/${qid}/speak`);
+      } else {
+        url = apiUrl(`/api/practice-sessions/${await ensureSession()}/freechat/${qid}/speak`);
+      }
+      const res = await fetch(url, { method: "POST" });
+      if (!res.ok) return null;
+      const data = (await res.json().catch(() => null)) as { speech?: unknown } | null;
+      return asPartnerSpeech(data?.speech);
+    } catch {
+      return null;
+    }
+  }
+
+  async function check(qid: string, answerNow?: AnswerValue, refreshAfter = true): Promise<boolean> {
     setBusyCheck(qid);
     setError(null);
     try {
@@ -388,6 +408,9 @@ export default function LessonPractice({
       }
       const data = (await res.json()) as CheckResult;
       setChecks((p) => ({ ...p, [qid]: data }));
+      // Câu đã kiểm tra tính vào hoàn thành bài: làm mới dữ liệu máy chủ để số "Bài luyện n / m" đầu trang (và việc tự hoàn thành bài) cập nhật,
+      // không tải lại trang đang làm dở. Xem thử của giảng viên không ghi gì nên không cần.
+      if (!preview && refreshAfter) router.refresh();
       if (data.manual) {
         const f = parseFeedback(data.feedback);
         setFeedbacks((p) => (f ? { ...p, [qid]: f } : without(p, qid)));
@@ -407,10 +430,12 @@ export default function LessonPractice({
     setBatch({ done: 0, total: ids.length });
     let failed = 0;
     for (let i = 0; i < ids.length; i++) {
-      if (!(await check(ids[i]!))) failed++;
+      // Không làm mới giữa chừng (làm mới máy chủ khi vòng kiểm tra còn chạy làm gián đoạn nó): một lần sau khi cả loạt xong.
+      if (!(await check(ids[i]!, undefined, false))) failed++;
       setBatch({ done: i + 1, total: ids.length });
     }
     setBatch(null);
+    if (!preview && failed < ids.length) router.refresh();
     if (failed > 0) setError(`Không kiểm tra được ${failed} câu. Bấm lại để thử lần nữa.`);
   }
 
@@ -530,7 +555,11 @@ export default function LessonPractice({
     return (
       <div key={qid} id={`lp-${qid}`} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-lime-700">Câu {n}</h3>
+          {/* Hội thoại với bạn ảo không phải "câu hỏi số n": gọi đúng tên việc học viên làm. Trong phiếu bài tập (kiểu sách) các câu khác chỉ ghi số
+              thứ tự như mọi dòng của phiếu (1, 2, 3…), không có chữ "Câu"; trình đọc màn hình vẫn nghe "Câu n". */}
+          <h3 className="text-xs font-bold uppercase tracking-wider text-lime-700" aria-label={rolePlay || freeChat ? undefined : `Câu ${n}`}>
+            {rolePlay ? "Đóng vai" : freeChat ? "Nói với bạn ảo" : sheet ? String(n) : `Câu ${n}`}
+          </h3>
           {res && !res.manual && (
             <span className={`inline-flex items-center gap-1 text-xs font-semibold ${res.isCorrect ? "text-lime-700" : "text-danger-600"}`}>
               {res.isCorrect ? <CheckCircle2 size={14} aria-hidden /> : <XCircle size={14} aria-hidden />}
@@ -558,37 +587,17 @@ export default function LessonPractice({
               savedText={value && "text" in value ? String(value.text ?? "") : ""}
               preview={preview}
               send={(history, message) => sendFreeChat(qid, history, message)}
+              openingSpeech={() => fetchOpeningSpeech(qid)}
               voiceEnabled={essayVoiceEnabled(q.config)}
               transcribe={(turn, file) => transcribeTurn(qid, turn, file)}
               onAnswer={(text) => onChange(qid, { text } as AnswerValue)}
             />
           </div>
         ) : (
-          <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} />
+          <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} compact />
         )}
-        {isEssay && !rolePlay && !freeChat && essayVoiceEnabled(q.config) && (
-          <EssayVoiceAnswer
-            preview={preview}
-            recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
-            viaVoiceText={!!value && "viaVoice" in value && (value as { viaVoice?: unknown }).viaVoice === true}
-            hasText={isAnswered(value)}
-            feedbackOn={aiOn && embed.checkEnabled && !preview}
-            onUse={(file, withFeedback) => useVoiceThenCheck(qid, file, withFeedback)}
-          />
-        )}
-        {embed.checkEnabled && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            {!res ? (
-              <span className="text-caption text-muted">
-                {freeChat && chatTurns < FREECHAT_MIN_FEEDBACK_TURNS
-                  ? `Cần ít nhất ${FREECHAT_MIN_FEEDBACK_TURNS} lượt của bạn để nhận xét.`
-                  : aiOn && !preview
-                    ? "Khi bấm Kiểm tra, câu trả lời của bạn được gửi tới AI để nhận xét."
-                    : "Bạn có thể đổi đáp án trước khi kiểm tra."}
-              </span>
-            ) : (
-              <span />
-            )}
+        {(() => {
+          const checkButton = embed.checkEnabled ? (
             <button
               type="button"
               onClick={() => void check(qid)}
@@ -597,8 +606,43 @@ export default function LessonPractice({
             >
               {busyCheck === qid ? (aiOn && !preview ? "Đang nhận xét…" : "Đang kiểm tra…") : (rolePlay || freeChat) && aiOn && !preview ? "Nhận xét bằng AI" : `Kiểm tra câu ${n}`}
             </button>
-          </div>
-        )}
+          ) : null;
+          const note = embed.checkEnabled && !res ? (
+            <span className="text-caption text-muted">
+              {freeChat && chatTurns < FREECHAT_MIN_FEEDBACK_TURNS
+                ? `Cần ít nhất ${FREECHAT_MIN_FEEDBACK_TURNS} lượt của bạn để nhận xét.`
+                : aiOn && !preview
+                  ? "Khi bấm Kiểm tra, câu trả lời của bạn được gửi tới AI để nhận xét."
+                  : "Bạn có thể đổi đáp án trước khi kiểm tra."}
+            </span>
+          ) : null;
+          const voiceRow = isEssay && !rolePlay && !freeChat && essayVoiceEnabled(q.config);
+          if (voiceRow) {
+            // Ô gõ → một hàng: [Trả lời bằng giọng nói] … [Kiểm tra] → một dòng chú thích nhỏ.
+            return (
+              <>
+                <EssayVoiceAnswer
+                  preview={preview}
+                  recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
+                  viaVoiceText={!!value && "viaVoice" in value && (value as { viaVoice?: unknown }).viaVoice === true}
+                  hasText={isAnswered(value)}
+                  feedbackOn={aiOn && embed.checkEnabled && !preview}
+                  onUse={(file, withFeedback) => useVoiceThenCheck(qid, file, withFeedback)}
+                  trailing={checkButton}
+                />
+                {note && <p className="mt-1.5">{note}</p>}
+              </>
+            );
+          }
+          return (
+            embed.checkEnabled && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                {note ?? <span />}
+                {checkButton}
+              </div>
+            )
+          );
+        })()}
         {res && res.manual && (
           <EssayFeedback config={res.config} feedback={feedbacks[qid] ?? null} feedbackError={feedbackErrors[qid] ?? null} preview={preview} />
         )}
@@ -714,7 +758,7 @@ export default function LessonPractice({
     label: tabLabel(sheetTitles[i], i),
     short: sheetShorts[i],
     questionIds: st.questionIds,
-    ...(introOf(st) ? { intro: introOf(st) } : {}),
+    ...(introOf(st) ? { intro: introOf(st), introTitle: sheetTitles[i] ?? undefined } : {}),
   }));
   const sheetNode = sheet ? (
     <PracticeSheet
@@ -776,7 +820,7 @@ export default function LessonPractice({
   const splitView = !!(step?.passageId && split);
 
   return (
-    <section aria-labelledby="lp-title" className="lp-large my-6" data-testid="lesson-practice" style={accentStyle(accent)}>
+    <section aria-labelledby="lp-title" className="lp-large my-2" data-testid="lesson-practice" style={accentStyle(accent)}>
       {!splitView && !sheet && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -832,19 +876,20 @@ export default function LessonPractice({
           <div className={`${sheet ? "mt-3" : "mt-4"} space-y-3`}>{sheet ? sheetNode : step.questionIds.map(renderQuestion)}</div>
         ))}
 
-      {!preview && (
-        <div className="mt-4 flex justify-end">
-          <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-primary btn-sm disabled:opacity-50">
+      {/* Một hàng chân khối: trạng thái lưu bên trái, "Kết thúc bài luyện" bên phải ở dạng nút phụ (nút hồng chính chỉ dành cho việc của câu đang làm: Kiểm tra / Nhận xét). */}
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <p className="text-caption text-muted" aria-live="polite">
+          {preview
+            ? `Xem trước: không lưu đáp án · ${answeredCount} / ${questions.length} câu`
+            : `${saveState === "error" ? "Chưa lưu được" : "Đã lưu câu trả lời"} · ${answeredCount} / ${questions.length} câu`}
+          {preview || sessionId ? "" : answeredCount === 0 ? " (bài luyện bắt đầu khi bạn chọn đáp án đầu tiên)" : ""}
+        </p>
+        {!preview && (
+          <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-ghost btn-sm font-semibold disabled:opacity-50">
             {finishing ? "Đang kết thúc…" : "Kết thúc bài luyện"}
           </button>
-        </div>
-      )}
-      <p className="text-caption mt-2 text-muted" aria-live="polite">
-        {preview
-          ? `Xem trước: không lưu đáp án · ${answeredCount} / ${questions.length} câu`
-          : `${saveState === "error" ? "Chưa lưu được" : "Đã lưu câu trả lời"} · ${answeredCount} / ${questions.length} câu`}
-        {preview || sessionId ? "" : answeredCount === 0 ? " (bài luyện bắt đầu khi bạn chọn đáp án đầu tiên)" : ""}
-      </p>
+        )}
+      </div>
     </section>
   );
 }

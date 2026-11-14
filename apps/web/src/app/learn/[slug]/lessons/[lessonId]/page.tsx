@@ -13,6 +13,7 @@ import {
   ExamError,
   buildLessonFrame,
   getPracticeBlockSummaries,
+  getPracticeCheckProgress,
   getPracticeForEmbed,
   getPracticePreview,
   getExamRefStates,
@@ -713,7 +714,7 @@ export default async function LessonPage({
       .length +
     visibleAssignments.filter((a) => a.submissions.length === 0).length;
   const totalActivityCount = visibleQuizzes.length + visibleAssignments.length;
-  const autoCompleteConfig = {
+  const baseAutoComplete = {
     requireVideoWatch: hasNativeVideo,
     videoThresholdPct: lesson.completionThresholdPct ?? 80,
     requireAllActivities: hasAnyActivity,
@@ -795,7 +796,7 @@ export default async function LessonPage({
         // nhúng thẳng bản xem thử, giống nút "Xem trước" ở trang soạn Bài luyện.
         try {
           const embed = await getPracticePreview(userId!, examId);
-          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
+          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
         } catch (e) {
           if (!(e instanceof ExamError)) throw e;
           practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;
@@ -816,13 +817,33 @@ export default async function LessonPage({
       }
       try {
         const embed = await getPracticeForEmbed(userId, examId);
-        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
+        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
         practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;
       }
     }
   }
+
+  // Hoàn thành bài theo Bài luyện (docs/tieu-chi/hoan-thanh-bai-theo-bai-luyen.md): học viên đã ghi danh và đang trong khung bài học (nơi khối luyện
+  // nhúng được) phải bấm Kiểm tra MỌI câu của các khối luyện hiện trong bài; khi đó điều kiện "cuộn hết trang" không còn áp dụng. Xem như học
+  // viên, chiếu lớp, người chưa ghi danh: không tính (không đổi hành vi).
+  const practiceCheck =
+    practiceForLearner && lessonFrame
+      ? await getPracticeCheckProgress(
+          userId!,
+          visibleItems.filter((it) => it.type === "exam_practice").map((it) => it.id),
+        )
+      : { total: 0, checked: 0 };
+  const requirePractice = practiceCheck.total > 0;
+  const autoCompleteConfig = {
+    ...baseAutoComplete,
+    requirePractice,
+    practiceTotal: practiceCheck.total,
+    practiceChecked: practiceCheck.checked,
+    // Bài luyện thay cho "cuộn hết trang" như quiz và bài tập nộp đang làm.
+    requireScrollToEnd: baseAutoComplete.requireScrollToEnd && !requirePractice,
+  };
 
   // Khối "Đề thi" (exam_ref): gắn một đề thi thử của khoá vào bài. Học viên đã ghi danh thấy đúng thẻ như ở trang khoá (chỉ khi đề dùng
   // được); giảng viên bấm "Xem như học viên" thấy thẻ hoặc nhãn lý do. Chiếu lớp và trang in không hiện.
@@ -923,7 +944,8 @@ export default async function LessonPage({
           // ở đường dẫn phía trên nên không lặp lại. Tiêu đề cỡ vừa (2xl) vì cạnh còn thanh bài, nội dung và panel.
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-              {lesson.languageSkill && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
+              {/* Khoá có màu bộ sách đã in dải kỹ năng (READING, SPEAKING…) trong thân bài: không lặp thêm nhãn ở tiêu đề. */}
+              {lesson.languageSkill && !lesson.module.course.themeColor && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
               <h1 className="h-display min-w-0 text-xl font-bold sm:text-2xl">{lesson.title}</h1>
             </div>
             {!previewMode && canEdit && (

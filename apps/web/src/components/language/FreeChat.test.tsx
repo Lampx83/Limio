@@ -27,7 +27,7 @@ vi.mock("@/components/useAudioRecorder", async () => {
 
 import FreeChat, { FreeChatError } from "./FreeChat";
 import { VoiceUseError } from "./EssayVoiceAnswer";
-import { parseFreeChatView, type ChatMsg } from "@/lib/freeChatView";
+import { parseFreeChatView, type ChatMsg, type PartnerReply, type PartnerSpeech } from "@/lib/freeChatView";
 
 const view = parseFreeChatView({
   freechat: { scenario: "Choose what to take.", partnerRole: "Sam", opening: "What would you take?", targets: ["I'm not sure about that", "not really essential"], maxTurns: 4 },
@@ -35,14 +35,32 @@ const view = parseFreeChatView({
 
 let host: HTMLDivElement;
 let root: Root;
-const send = vi.fn<(h: ChatMsg[], m: string) => Promise<string>>();
+const send = vi.fn<(h: ChatMsg[], m: string) => Promise<string | PartnerReply>>();
+const openingSpeech = vi.fn<() => Promise<PartnerSpeech | null>>();
 const transcribe = vi.fn<(t: number, f: File) => Promise<string>>();
 const onAnswer = vi.fn<(t: string) => void>();
 
-async function render(savedText = "", voiceEnabled = true) {
+async function mount(props: { savedText?: string; voiceEnabled?: boolean; animate?: boolean; withSpeech?: boolean } = {}) {
   await act(async () => {
-    root.render(<FreeChat view={view} savedText={savedText} preview={false} voiceEnabled={voiceEnabled} send={send} transcribe={transcribe} onAnswer={onAnswer} />);
+    root.render(
+      <FreeChat
+        view={view}
+        savedText={props.savedText ?? ""}
+        preview={false}
+        voiceEnabled={props.voiceEnabled ?? true}
+        send={send}
+        openingSpeech={props.withSpeech ? openingSpeech : undefined}
+        transcribe={transcribe}
+        onAnswer={onAnswer}
+        animate={props.animate ?? false}
+      />,
+    );
   });
+}
+/** Mở hội thoại và bấm "Bắt đầu" (các bài kiểm cũ không quan tâm hiệu ứng nên tắt animate). */
+async function render(savedText = "", voiceEnabled = true) {
+  await mount({ savedText, voiceEnabled });
+  if (!savedText) await click(button(/^\s*Bắt đầu\s*$/));
 }
 const text = () => host.textContent?.replace(/\s+/g, " ") ?? "";
 const input = () => host.querySelector<HTMLTextAreaElement>("textarea.fc-input")!;
@@ -74,7 +92,12 @@ beforeEach(() => {
   document.body.appendChild(host);
   root = createRoot(host);
   send.mockReset();
+  openingSpeech.mockReset();
   transcribe.mockReset();
+  vi.stubGlobal("Audio", FakeAudio);
+  FakeAudio.instances = [];
+  URL.createObjectURL = vi.fn(() => `blob:${Math.random()}`);
+  URL.revokeObjectURL = vi.fn();
   onAnswer.mockReset();
   localStorage.clear();
 });
@@ -145,8 +168,10 @@ describe("FreeChat — thử nói tự do", () => {
     expect(host.querySelectorAll(".fc-msg").length).toBeGreaterThan(1); // chưa đồng ý thì giữ nguyên
     vi.stubGlobal("confirm", vi.fn(() => true));
     await click(button(/Bắt đầu lại/));
-    expect(host.querySelectorAll(".fc-msg")).toHaveLength(1);
     expect(onAnswer).toHaveBeenLastCalledWith("");
+    expect(host.querySelector(".fc-log")).toBeNull(); // về màn Bắt đầu
+    await click(button(/^\s*Bắt đầu\s*$/));
+    expect(host.querySelectorAll(".fc-msg")).toHaveLength(1);
     expect(host.querySelector("textarea.fc-input")).not.toBeNull();
   });
 
@@ -209,5 +234,131 @@ describe("FreeChat — các điểm rà soát", () => {
     vi.stubGlobal("confirm", vi.fn(() => true));
     await click(button(/Bắt đầu lại/));
     expect(onAnswer).toHaveBeenLastCalledWith("");
+  });
+});
+
+/* ─── Bắt đầu, chữ hiện dần, giọng bạn ảo ───────────────────────────────────── */
+
+class FakeAudio {
+  static instances: FakeAudio[] = [];
+  src = "";
+  onended: (() => void) | null = null;
+  onerror: (() => void) | null = null;
+  played: string[] = [];
+  constructor() {
+    FakeAudio.instances.push(this);
+  }
+  play() {
+    this.played.push(this.src);
+    return Promise.resolve();
+  }
+  pause() {}
+}
+const speech: PartnerSpeech = { audioChunks: [btoa("abc")], contentType: "audio/mpeg" };
+// Không phải tệp âm thanh thật: chỉ cần phát ra đúng nguồn blob.
+const played = () => FakeAudio.instances.flatMap((a) => a.played).filter((u) => u.startsWith("blob:"));
+
+describe("FreeChat — Bắt đầu, chữ hiện dần và giọng bạn ảo", () => {
+  it("chưa bấm Bắt đầu: chỉ có tình huống và nút Bắt đầu, chưa có tin nào, chưa gọi giọng", async () => {
+    await mount({ withSpeech: true });
+    expect(button(/^\s*Bắt đầu\s*$/)).toBeTruthy();
+    expect(host.querySelector(".fc-log")).toBeNull();
+    expect(host.querySelector("textarea.fc-input")).toBeNull();
+    expect(openingSpeech).not.toHaveBeenCalled();
+  });
+
+  it("bấm Bắt đầu: lời mở đầu hiện dần theo nhịp gõ rồi đủ chữ; Gửi khoá cho tới khi gõ xong", async () => {
+    vi.useFakeTimers();
+    try {
+      await mount({ animate: true });
+      await click(button(/^\s*Bắt đầu\s*$/));
+      const p = () => host.querySelector(".fc-msg[data-role=partner] p")!;
+      expect(p().textContent!.length).toBeLessThan("What would you take?".length);
+      expect(host.querySelector(".fc-msg[data-typing]")).not.toBeNull();
+      await typeIn("I would take my phone");
+      expect(button(/^\s*Gửi/).hasAttribute("disabled")).toBe(true);
+      await act(async () => {
+        vi.advanceTimersByTime(3000);
+      });
+      expect(p().textContent).toBe("What would you take?");
+      expect(host.querySelector(".fc-msg[data-typing]")).toBeNull();
+      expect(button(/^\s*Gửi/).hasAttribute("disabled")).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("“Hiện hết” bỏ qua nhịp gõ ngay", async () => {
+    vi.useFakeTimers();
+    try {
+      await mount({ animate: true });
+      await click(button(/^\s*Bắt đầu\s*$/));
+      await click(button(/Hiện hết/));
+      expect(host.querySelector(".fc-msg[data-role=partner] p")!.textContent).toBe("What would you take?");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("có giọng: Bắt đầu lấy giọng lời mở đầu rồi phát; Nghe lại phát lại mà không gọi máy chủ lần nữa", async () => {
+    openingSpeech.mockResolvedValue(speech);
+    await mount({ withSpeech: true });
+    await click(button(/^\s*Bắt đầu\s*$/));
+    expect(openingSpeech).toHaveBeenCalledTimes(1);
+    expect(played()).toHaveLength(1);
+    await click(button(/Dừng nghe/)); // đang phát → bấm là dừng
+    await click(button(/Nghe lại câu này/));
+    expect(played()).toHaveLength(2);
+    expect(openingSpeech).toHaveBeenCalledTimes(1);
+  });
+
+  it("lượt bạn ảo trả lời kèm giọng: phát đúng giọng đó", async () => {
+    openingSpeech.mockResolvedValue(null);
+    await mount({ withSpeech: true });
+    await click(button(/^\s*Bắt đầu\s*$/));
+    send.mockResolvedValueOnce({ text: "Why that?", speech });
+    await typeIn("my phone");
+    await click(button(/^\s*Gửi/));
+    expect(played()).toHaveLength(1);
+    expect([...host.querySelectorAll(".fc-msg p")].map((x) => x.textContent)).toEqual(["What would you take?", "my phone", "Why that?"]);
+  });
+
+  it("giọng lỗi/không có: vẫn có chữ, không có nút Nghe cho tin đó, không báo lỗi", async () => {
+    openingSpeech.mockRejectedValue(new Error("x"));
+    await mount({ withSpeech: true });
+    await click(button(/^\s*Bắt đầu\s*$/));
+    expect(host.querySelector(".fc-msg[data-role=partner] p")!.textContent).toBe("What would you take?");
+    expect(host.querySelector("[data-testid=fc-error]")).toBeNull();
+    expect(played()).toHaveLength(0);
+  });
+
+  it("tắt giọng: Bắt đầu không gọi giọng; bật lại thì Nghe vẫn lấy được lời mở đầu theo yêu cầu", async () => {
+    openingSpeech.mockResolvedValue(speech);
+    localStorage.setItem("freechat-partner-voice-off", "1");
+    await mount({ withSpeech: true });
+    await click(button(/^\s*Bắt đầu\s*$/));
+    expect(openingSpeech).not.toHaveBeenCalled();
+    await click(button(/Nghe lại câu này/));
+    expect(openingSpeech).toHaveBeenCalledTimes(1);
+    expect(played()).toHaveLength(1);
+  });
+
+  it("bấm Nói dừng giọng bạn ảo (không để micro thu lại tiếng loa)", async () => {
+    openingSpeech.mockResolvedValue(speech);
+    await mount({ withSpeech: true });
+    await click(button(/^\s*Bắt đầu\s*$/));
+    expect(button(/Dừng nghe/)).toBeTruthy(); // đang đọc: nút loa thành "Dừng"
+    await click(button(/Ghi âm lời của bạn/));
+    expect(button(/Nghe lại câu này/)).toBeTruthy(); // không còn ở trạng thái "đang đọc"
+  });
+
+  it("Bắt đầu lại đưa về màn Bắt đầu; bấm tiếp thì bạn ảo nói lại câu mở đầu", async () => {
+    await mount({ savedText: "[Free chat]\nPartner: What would you take?\nLearner: hello\nPartner: Hi!" });
+    expect(host.querySelector(".fc-log")).not.toBeNull(); // khôi phục: không đòi bấm Bắt đầu
+    vi.stubGlobal("confirm", vi.fn(() => true));
+    await click(button(/Bắt đầu lại/));
+    expect(host.querySelector(".fc-log")).toBeNull();
+    await click(button(/^\s*Bắt đầu\s*$/));
+    expect(host.querySelectorAll(".fc-msg")).toHaveLength(1);
   });
 });

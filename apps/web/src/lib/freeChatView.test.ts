@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { freeChatErrorMessage, learnerTurnCount, parseFreeChatView, phraseUsed, restoreChat, transcriptOf, usedTargets } from "./freeChatView";
+import { asPartnerSpeech, freeChatErrorMessage, learnerTurnCount, parseFreeChatView, phraseUsed, restoreChat, transcriptOf, usedTargets } from "./freeChatView";
 
 const cfg = { freechat: { scenario: "Choose what to take.", opening: "What would you take?", targets: ["I'm not sure about that", "When was the last time you…?", ""], maxTurns: 99 } };
 
@@ -66,5 +66,15 @@ describe("freeChatErrorMessage", () => {
     expect(freeChatErrorMessage("control_group")).toMatch(/chưa mở cho lớp/);
     expect(freeChatErrorMessage("network")).toMatch(/Mất kết nối/);
     expect(freeChatErrorMessage("lạ")).toMatch(/Có lỗi/);
+  });
+});
+
+describe("asPartnerSpeech", () => {
+  it("nhận đúng dạng; bỏ đoạn rỗng/sai kiểu; sai dạng hoặc không có đoạn nào thì null", () => {
+    expect(asPartnerSpeech({ audioChunks: ["QUJD", "", 5], contentType: "audio/mpeg" })).toEqual({ audioChunks: ["QUJD"], contentType: "audio/mpeg" });
+    expect(asPartnerSpeech({ audioChunks: [], contentType: "audio/mpeg" })).toBeNull();
+    expect(asPartnerSpeech({ audioChunks: ["x"] })).toBeNull();
+    expect(asPartnerSpeech(null)).toBeNull();
+    expect(asPartnerSpeech("x")).toBeNull();
   });
 });

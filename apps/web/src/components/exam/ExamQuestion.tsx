@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import { UNPLAYABLE_FOR_LEARNER } from "@/lib/examQuestionSupport";
@@ -49,9 +49,11 @@ interface Props {
   value: AnswerValue;
   onChange: (v: AnswerValue) => void;
   optionOrder?: string[];
+  /** Trong phiếu bài tập: ô trả lời tự luận thấp (3 dòng) và tự giãn theo chữ gõ, thay vì 8 dòng cố định. */
+  compact?: boolean;
 }
 
-export default function ExamQuestion({ question, value, onChange, optionOrder }: Props) {
+export default function ExamQuestion({ question, value, onChange, optionOrder, compact = false }: Props) {
   const prompt = (
     <SafeHtml
       html={plainToRichHtml(question.prompt)}
@@ -93,7 +95,7 @@ export default function ExamQuestion({ question, value, onChange, optionOrder }:
       case "short_answer":
         return <ShortAnswerInput value={value} onChange={onChange} />;
       case "essay":
-        return <EssayInput value={value} onChange={onChange} />;
+        return <EssayInput value={value} onChange={onChange} compact={compact} />;
       case "ordering":
         return <OrderingQuestion questionId={question.id} config={question.config} value={value} onChange={onChange} />;
       case "matching":
@@ -123,7 +125,7 @@ export default function ExamQuestion({ question, value, onChange, optionOrder }:
           <p role="status" className="text-sm text-amber-800">{UNPLAYABLE_FOR_LEARNER}</p>
         );
     }
-  }, [question, value, onChange, optionOrder]);
+  }, [question, value, onChange, optionOrder, compact]);
 
   return (
     <div>
@@ -283,17 +285,28 @@ function ShortAnswerInput({
 function EssayInput({
   value,
   onChange,
+  compact,
 }: {
   value: AnswerValue;
   onChange: (v: AnswerValue) => void;
+  compact: boolean;
 }) {
   const current = value && "text" in value ? value.text : "";
+  const ref = useRef<HTMLTextAreaElement>(null);
+  // Chế độ gọn: cao vừa chữ đã gõ (tối thiểu 3 dòng, tối đa ~14 dòng rồi cuộn), không chiếm nửa màn hình khi câu chỉ cần một dòng.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!compact || !el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 360)}px`;
+  }, [compact, current]);
   return (
     <textarea
+      ref={ref}
       value={current}
       onChange={(e) => onChange({ text: e.target.value })}
-      rows={8}
-      className="w-full rounded border border-default px-2 py-1 text-sm"
+      rows={compact ? 3 : 8}
+      className={`w-full rounded border border-default px-2 py-1 text-sm ${compact ? "resize-none" : ""}`}
       placeholder="Viết bài làm của bạn ở đây…"
     />
   );

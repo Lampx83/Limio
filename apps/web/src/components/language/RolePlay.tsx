@@ -6,7 +6,7 @@ import { formatClock } from "@/lib/audioRecorder";
 import { useAudioRecorder } from "@/components/useAudioRecorder";
 import { voiceErrorMessage } from "@/lib/practiceEssayView";
 import { answerTextOf, compareSpoken, otherRole, restoreSpoken, type RoleId, type RolePlayConfig } from "@/lib/rolePlayView";
-import { VoiceUseError, markNoticeSeen, noticeSeen } from "./EssayVoiceAnswer";
+import { VoiceUseError } from "./EssayVoiceAnswer";
 
 /** Mỗi lượt ghi tối đa 30 giây (docs/tieu-chi/limio-language-luyen-hoi-thoai-dong-vai.md, AC1). */
 const TURN_MAX_SECONDS = 30;
@@ -44,9 +44,6 @@ export default function RolePlay({
   const [recTurn, setRecTurn] = useState<number | null>(null);
   const [busyTurn, setBusyTurn] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Mặc định coi là đã thấy để máy chủ và trình duyệt dựng giống nhau; đọc localStorage sau khi mount rồi mới hiện lời nhắc.
-  const [seen, setSeen] = useState(true);
-  useEffect(() => setSeen(noticeSeen()), []);
   const [playing, setPlaying] = useState<number | "all" | null>(null);
 
   // Giá trị mới nhất cho các callback chạy muộn (ghi xong, phát xong): tránh đọc state cũ của lần dựng trước.
@@ -74,8 +71,6 @@ export default function RolePlay({
     setError(null);
     try {
       const text = await transcribe(turn, file);
-      markNoticeSeen();
-      setSeen(true);
       const next: Spoken = { ...live.current.spoken, [who]: { ...live.current.spoken[who], [turn]: text } };
       setSpoken(next);
       setSkipped((p) => ({ ...p, [turn]: false }));
@@ -242,7 +237,6 @@ export default function RolePlay({
       <p className="rp-hint" aria-live="polite">
         {total > 0 ? `Em đã nói ${doneCount}/${total} lượt của vai ${role}. ` : ""}
         {preview ? "Xem thử: ghi âm và chuyển chữ được nhưng không lưu gì. " : ""}
-        {!seen ? "Bản ghi âm được gửi tới OpenAI để chuyển thành chữ khi bạn bấm Dừng; hệ thống không lưu bản ghi. " : ""}
         {doneCount > 0 && otherRole(role) ? "Có thể đổi vai để luyện nốt phần còn lại." : ""}
       </p>
 

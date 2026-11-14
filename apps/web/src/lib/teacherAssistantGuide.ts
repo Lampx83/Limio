@@ -322,10 +322,21 @@ export const GUIDES: readonly GuideEntry[] = [
     title: "Hội thoại với bạn ảo trong Bài luyện: đóng vai theo kịch bản hoặc nói tự do",
     keywords: ["hội thoại", "bạn ảo", "đóng vai", "work in pairs", "làm cặp", "nói tự do", "chatbot", "kịch bản hội thoại", "cụm mục tiêu", "luyện nói", "bài luyện"],
     destinationIds: ["my_courses"],
-    body: `Khi sách bảo làm việc theo cặp (work in pairs) mà học viên tự học không có bạn, câu "Tự luận" ở trang "Soạn bài luyện" có ô "Hội thoại với bạn ảo (tuỳ chọn)" với hai kiểu. "Đóng vai theo kịch bản": thầy/cô gõ "Kịch bản hội thoại" (mỗi dòng "A: …" hoặc "B: …", cần ít nhất 2 lượt), có thể đặt "Tên vai A (tuỳ chọn)", "Tên vai B (tuỳ chọn)" và tải "Audio lượt n"; học viên chọn đóng A hoặc B, nghe vai kia, ghi âm lượt của mình và thấy từ nào máy nghe được. "Nói tự do với bạn ảo (chatbot)": thầy/cô điền "Tình huống", "Lời mở đầu của bạn ảo (tiếng Anh)", "Cụm mục tiêu" (mỗi dòng một cụm) và "Số lượt tối đa (4–12)"; học viên gõ hoặc nói chuyện với chatbot đóng vai, thấy cụm nào đã dùng rồi bấm "Nhận xét bằng AI" ở cuối. Cả hai kiểu không lưu bản ghi âm, không có điểm; chọn một kiểu cho mỗi câu.`,
+    body: `Khi sách bảo làm việc theo cặp (work in pairs) mà học viên tự học không có bạn, câu "Tự luận" ở trang "Soạn bài luyện" có ô "Hội thoại với bạn ảo (tuỳ chọn)" với hai kiểu. "Đóng vai theo kịch bản": thầy/cô gõ "Kịch bản hội thoại" (mỗi dòng "A: …" hoặc "B: …", cần ít nhất 2 lượt), có thể đặt "Tên vai A (tuỳ chọn)", "Tên vai B (tuỳ chọn)" và tải "Audio lượt n"; học viên chọn đóng A hoặc B, nghe vai kia, ghi âm lượt của mình và thấy từ nào máy nghe được. "Nói tự do với bạn ảo (chatbot)": thầy/cô điền "Tình huống", "Lời mở đầu của bạn ảo (tiếng Anh)", "Cụm mục tiêu" (mỗi dòng một cụm) và "Số lượt tối đa (4–12)"; học viên bấm "Bắt đầu" thì bạn ảo nói trước, chữ hiện dần như đang gõ và được đọc thành tiếng (có nút nghe lại từng câu và tắt giọng), rồi học viên gõ hoặc nói chuyện với chatbot đóng vai, thấy cụm nào đã dùng và bấm "Nhận xét bằng AI" ở cuối. Cả hai kiểu không lưu bản ghi âm, không có điểm; chọn một kiểu cho mỗi câu.`,
     useCases: [
       `Sách có bài làm cặp (work in pairs, luyện lại các hội thoại) mà học viên tự học không có bạn, nên thầy/cô gõ hội thoại vào "Kịch bản hội thoại" (mỗi dòng "A: …" hoặc "B: …") để học viên đóng một vai còn vai kia là audio mẫu.`,
       `Thầy/cô muốn học viên tự nghĩ câu thay vì đọc kịch bản có sẵn, nên chọn "Nói tự do với bạn ảo (chatbot)", đặt tình huống chọn đồ mang theo khi rời nhà gấp và liệt kê vài cụm mục tiêu của bài.`,
+    ],
+  },
+  {
+    id: "giao-trinh-bai-luyen-hoan-thanh-bai",
+    title: "Bài luyện tính vào việc hoàn thành bài của học viên",
+    keywords: ["hoàn thành bài", "bài xong", "đã xong", "tiến độ", "bài luyện", "kiểm tra mọi câu", "học viên chưa xong bài", "không hoàn thành"],
+    destinationIds: ["my_courses"],
+    body: `Bài có khối Bài luyện thì học viên đã ghi danh chỉ được tính "Đã xong" khi đã bấm kiểm tra mọi câu của các khối luyện trong bài; cuộn hết trang không còn đủ. Đầu trang bài có mục "Bài luyện" kèm số câu đã kiểm tra trên tổng số câu (ví dụ 2/5), và thanh phần trăm gộp cả mục này. Khối luyện bị ẩn hoặc chưa có câu nào thì không tính. Bài đã xong từ trước thì giữ nguyên. Giảng viên bấm "Xem như học viên" chỉ xem thử, không ghi nhận gì. Câu nói với bạn ảo hoặc đóng vai cũng phải kiểm tra, riêng câu tự luận thì vẫn tính là đã kiểm tra dù phần nhận xét của AI chưa có (hết hạn mức hoặc chưa cấu hình AI).`,
+    useCases: [
+      `Học viên báo đã học hết bài mà bài vẫn chưa "Đã xong", thầy/cô hỏi vì sao và được giải thích rằng bài có Bài luyện nên còn câu chưa bấm kiểm tra, mở đầu trang bài sẽ thấy mục Bài luyện cho biết còn thiếu bao nhiêu câu.`,
+      `Thầy/cô muốn học viên bắt buộc làm hết phiếu trước khi qua bài sau, nên thêm khối Bài luyện vào bài thay vì chỉ để học liệu đọc, vì khi đó bài chỉ hoàn thành sau khi mọi câu được kiểm tra.`,
     ],
   },
   {
