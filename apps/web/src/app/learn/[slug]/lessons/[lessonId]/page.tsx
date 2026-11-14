@@ -944,7 +944,8 @@ export default async function LessonPage({
           // ở đường dẫn phía trên nên không lặp lại. Tiêu đề cỡ vừa (2xl) vì cạnh còn thanh bài, nội dung và panel.
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-              {lesson.languageSkill && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
+              {/* Khoá có màu bộ sách đã in dải kỹ năng (READING, SPEAKING…) trong thân bài: không lặp thêm nhãn ở tiêu đề. */}
+              {lesson.languageSkill && !lesson.module.course.themeColor && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
               <h1 className="h-display min-w-0 text-xl font-bold sm:text-2xl">{lesson.title}</h1>
             </div>
             {!previewMode && canEdit && (
