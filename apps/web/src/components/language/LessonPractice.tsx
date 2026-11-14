@@ -21,6 +21,8 @@ import PassageView from "@/components/exam/PassageView";
 import { QuestionCard } from "@/components/exam/AnswerReview";
 import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import EssayFeedback from "./EssayFeedback";
+import RolePlay from "./RolePlay";
+import { parseRolePlay } from "@/lib/rolePlayView";
 import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
 import { tabLabel, tabShortLabels } from "@/lib/practiceSheetView";
 import { accentVar } from "@/lib/courseAccent";
@@ -291,6 +293,40 @@ export default function LessonPractice({
     if (withFeedback) await check(qid, spoken);
   }
 
+  /**
+   * Hội thoại đóng vai: chuyển chữ MỘT lượt nói. Không lưu bản ghi và không lưu câu trả lời (RolePlay đưa bản chữ lên qua `onAnswer`).
+   * Xem thử của giảng viên dùng route xem thử (không buổi luyện, không lưu gì).
+   */
+  async function transcribeTurn(qid: string, turn: number, file: File): Promise<string> {
+    let url: string;
+    if (preview) {
+      url = apiUrl(`/api/practice-preview/${embed.examId}/voice/${qid}`);
+    } else {
+      let sid: string;
+      try {
+        sid = await ensureSession();
+      } catch {
+        throw new VoiceUseError("network");
+      }
+      url = apiUrl(`/api/practice-sessions/${sid}/roleplay/${qid}?turn=${turn}`);
+    }
+    const form = new FormData();
+    form.append("file", file);
+    let res: Response;
+    try {
+      res = await fetch(url, { method: "POST", body: form });
+    } catch {
+      throw new VoiceUseError("network");
+    }
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as { error?: unknown } | null;
+      throw new VoiceUseError(typeof j?.error === "string" ? j.error : "failed");
+    }
+    const data = (await res.json().catch(() => null)) as { text?: unknown } | null;
+    if (typeof data?.text !== "string" || data.text.trim() === "") throw new VoiceUseError("no_speech");
+    return data.text;
+  }
+
   async function check(qid: string, answerNow?: AnswerValue): Promise<boolean> {
     setBusyCheck(qid);
     setError(null);
@@ -424,6 +460,7 @@ export default function LessonPractice({
     const explanation = res ? explanationOf(res.config) : null;
     const isEssay = q.type === "essay";
     const aiOn = isEssay && essayFeedbackEnabled(q.config);
+    const rolePlay = isEssay ? parseRolePlay(q.config) : null;
     const hasRecording = (audioVer[qid] ?? 0) > 0;
     return (
       <div key={qid} id={`lp-${qid}`} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
@@ -436,8 +473,22 @@ export default function LessonPractice({
             </span>
           )}
         </div>
-        <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} />
-        {isEssay && essayVoiceEnabled(q.config) && (
+        {rolePlay ? (
+          <div className="space-y-3">
+            <p className="whitespace-pre-wrap text-[rgb(var(--text))]">{q.prompt}</p>
+            <RolePlay
+              rp={rolePlay}
+              savedText={value && "text" in value ? String(value.text ?? "") : ""}
+              transcribe={(turn, file) => transcribeTurn(qid, turn, file)}
+              onAnswer={(text) => onChange(qid, (text ? { text, viaVoice: true } : null) as AnswerValue)}
+              audioUrl={(path) => apiUrl(path)}
+              preview={preview}
+            />
+          </div>
+        ) : (
+          <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} />
+        )}
+        {isEssay && !rolePlay && essayVoiceEnabled(q.config) && (
           <EssayVoiceAnswer
             preview={preview}
             recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
@@ -462,7 +513,7 @@ export default function LessonPractice({
               disabled={!isAnswered(value) || busyCheck === qid || restoring.has(qid)}
               className="btn-primary btn-sm disabled:opacity-50"
             >
-              {busyCheck === qid ? (aiOn && !preview ? "Đang nhận xét…" : "Đang kiểm tra…") : `Kiểm tra câu ${n}`}
+              {busyCheck === qid ? (aiOn && !preview ? "Đang nhận xét…" : "Đang kiểm tra…") : rolePlay && aiOn && !preview ? "Nhận xét bằng AI" : `Kiểm tra câu ${n}`}
             </button>
           </div>
         )}

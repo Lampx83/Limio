@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
@@ -62,12 +63,22 @@ type EssayCtx = {
   question: { id: string; prompt: string };
   rubric: string;
   sample: string;
+  /** Câu là hội thoại đóng vai (`config.roleplay`): `sample` là kịch bản cả hội thoại. */
+  rolePlay: boolean;
   minWords: number | null;
   voiceAnswer: boolean;
   aiFeedback: boolean;
 };
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+
+/** Kịch bản cả hội thoại (mỗi dòng "A: …") từ `config.roleplay`; rỗng nếu câu không phải hội thoại đóng vai. */
+function scriptOf(rp: unknown): string {
+  if (!isObj(rp) || !Array.isArray(rp.turns)) return "";
+  return rp.turns
+    .flatMap((t) => (isObj(t) && (t.speaker === "A" || t.speaker === "B") && typeof t.text === "string" && t.text.trim() ? [`${t.speaker}: ${t.text.trim()}`] : []))
+    .join("\n");
+}
 
 /**
  * Nạp và kiểm: buổi luyện của chính học viên, câu thuộc đúng đề và nằm trong phạm vi buổi, loại `essay`, khoá `languageMode`.
@@ -95,6 +106,7 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
   const course = session.exam.course;
   if (!session.exam.courseId || !course?.languageMode) throw new PracticeFeedbackError("not_language_course");
   const cfg = isObj(q.config) ? q.config : {};
+  const script = scriptOf(cfg.roleplay);
   return {
     userId,
     examId: session.examId,
@@ -103,7 +115,9 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
     levelBand: course.levelBand,
     question: { id: q.id, prompt: q.prompt },
     rubric: typeof cfg.rubric === "string" ? cfg.rubric.trim() : "",
-    sample: typeof cfg.explanation === "string" ? cfg.explanation.trim() : "",
+    // Hội thoại đóng vai mà giảng viên không viết bài mẫu riêng thì kịch bản chính là bài mẫu.
+    sample: (typeof cfg.explanation === "string" ? cfg.explanation.trim() : "") || script,
+    rolePlay: script !== "",
     minWords: typeof cfg.minWords === "number" ? cfg.minWords : null,
     voiceAnswer: cfg.voiceAnswer !== false,
     aiFeedback: cfg.aiFeedback !== false,
@@ -127,6 +141,31 @@ export async function transcribePracticeVoice(
   const ctx = await loadEssayContext(userId, sessionId, questionId, db);
   if (!ctx.voiceAnswer) throw new PracticeFeedbackError("voice_disabled");
   return transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+}
+
+/**
+ * Hội thoại đóng vai: chuyển chữ MỘT lượt nói của học viên. Cùng thứ tự kiểm và trừ ví như `transcribePracticeVoice`, nhưng câu phải có `roleplay`,
+ * KHÔNG lưu tệp ghi âm (bản ghi chỉ đi tới Whisper rồi bỏ) và ghi sự kiện `exam.practice.roleplay_turn_recorded` (chỉ id, thời lượng, số từ).
+ */
+export async function transcribeRolePlayTurn(
+  args: { userId: string; sessionId: string; questionId: string; turnIndex: number; audio: AudioPayload },
+  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  db: PrismaClient = prisma,
+): Promise<PracticeVoiceResult> {
+  const { userId, sessionId, questionId, turnIndex, audio } = args;
+  const ctx = await loadEssayContext(userId, sessionId, questionId, db);
+  if (!ctx.rolePlay) throw new PracticeFeedbackError("not_essay");
+  if (!ctx.voiceAnswer) throw new PracticeFeedbackError("voice_disabled");
+  const out = await transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+  await emit(
+    userId,
+    ctx.courseId,
+    `exam.practice.roleplay_turn_recorded:${sessionId}:${questionId}:${turnIndex}:${randomUUID().slice(0, 8)}`,
+    { examId: ctx.examId, sessionId, questionId, turnIndex, durationSec: Math.round(out.durationSec), words: out.text.split(/\s+/).filter(Boolean).length },
+    db,
+    LearningEventType.ExamPracticeRoleplayTurnRecorded,
+  );
+  return out;
 }
 
 /**
@@ -176,10 +215,17 @@ async function transcribeSpokenAnswer(
 
 // ─── Góp ý AI ────────────────────────────────────────────────────────────────
 
-async function emit(userId: string, courseId: string, eventKey: string, payload: Record<string, unknown>, db: PrismaClient) {
+async function emit(
+  userId: string,
+  courseId: string,
+  eventKey: string,
+  payload: Record<string, unknown>,
+  db: PrismaClient,
+  eventType: string = LearningEventType.ExamPracticeFeedbackGenerated,
+) {
   try {
     await db.learningEvent.create({
-      data: { userId, courseId, eventType: LearningEventType.ExamPracticeFeedbackGenerated, eventKey, payload: payload as Prisma.InputJsonValue },
+      data: { userId, courseId, eventType, eventKey, payload: payload as Prisma.InputJsonValue },
     });
   } catch (e) {
     if ((e as { code?: string }).code !== "P2002") throw e;
@@ -223,6 +269,7 @@ export async function requestPracticeAnswerFeedback(
     viaVoice,
     courseLanguage: ctx.courseLanguage,
     levelBand: ctx.levelBand,
+    rolePlay: ctx.rolePlay,
   });
   const openai = typeof deps.openai === "function" ? await deps.openai() : deps.openai;
   const { data, inputTokens, outputTokens } = await callJsonModel<unknown>(openai, model, system, user, "practice_answer_feedback", PRACTICE_SCHEMA, 2000);

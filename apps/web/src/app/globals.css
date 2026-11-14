@@ -1922,3 +1922,169 @@ main:has(.lp-large) .prose {
 .ps-review-details[open] > summary {
   margin-bottom: 0.4rem;
 }
+
+/* Hội thoại đóng vai (RolePlay): chọn vai, danh sách lượt, ghi âm từng lượt; một màu nhấn của khoá, không điểm. */
+.rp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.rp-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+.rp-roles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+.rp-bar-label {
+  font-size: 0.875rem;
+  color: rgb(var(--text-muted));
+}
+.rp-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(var(--text-muted));
+  border-radius: 999px;
+}
+.rp-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.5rem;
+  padding: 0.25rem 0.8rem 0.25rem 0.4rem;
+  font-size: 0.9375rem;
+  color: rgb(var(--text));
+  background: rgb(var(--surface));
+  border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 55%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.rp-role[aria-pressed="true"] {
+  color: rgb(var(--brand));
+  font-weight: 600;
+  border: 2px solid rgb(var(--brand));
+  background: color-mix(in srgb, rgb(var(--brand)) 9%, transparent);
+}
+.rp-role[aria-pressed="true"] .rp-badge,
+.rp-turn[data-mine] .rp-badge {
+  background: rgb(var(--brand));
+}
+.rp-role:disabled,
+.rp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.rp-listen,
+.rp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.5rem;
+  padding: 0.2rem 0.8rem;
+  font-size: 0.9375rem;
+  color: rgb(var(--text));
+  background: rgb(var(--surface));
+  border: 1px solid color-mix(in srgb, rgb(var(--text-muted)) 55%, transparent);
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+.rp-btn-primary {
+  color: rgb(var(--brand));
+  border-color: rgb(var(--brand));
+}
+.rp-listen:hover,
+.rp-btn:hover:not(:disabled) {
+  background: rgb(var(--surface-muted));
+}
+.rp-turns {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.rp-turn {
+  display: flex;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.7rem;
+  opacity: 0.88;
+}
+.rp-turn[data-mine] {
+  opacity: 1;
+  background: color-mix(in srgb, rgb(var(--brand)) 6%, transparent);
+  border-color: color-mix(in srgb, rgb(var(--brand)) 40%, transparent);
+}
+.rp-turn[data-current] {
+  border: 2px solid rgb(var(--brand));
+  padding: calc(0.55rem - 1px) calc(0.7rem - 1px);
+}
+.rp-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+.rp-text {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+.rp-miss {
+  color: var(--ps-no, #c62828);
+  text-decoration: underline wavy;
+  text-underline-offset: 3px;
+}
+.rp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.9rem;
+}
+.rp-link {
+  font-size: 0.875rem;
+  color: rgb(var(--text-muted));
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+.rp-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+.rp-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: #c62828;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.rp-heard,
+.rp-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: rgb(var(--text-muted));
+}

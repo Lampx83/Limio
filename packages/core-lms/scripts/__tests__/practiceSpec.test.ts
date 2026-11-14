@@ -243,3 +243,41 @@ describe("importAssignment (DB)", () => {
     ]);
   });
 });
+
+describe("hội thoại đóng vai (roleplay) của câu essay", () => {
+  const turns = [
+    { speaker: "A", text: "Chocolate! It’s good for energy.", audio: "audio/rp-1.m4a" },
+    { speaker: "B", text: "I was thinking the same thing.", audio: "audio/rp-2.m4a" },
+    { speaker: "A", text: "Great, let’s take it." },
+  ];
+  const q = { type: "essay", prompt: "Role-play the conversation.", roleplay: { roles: { A: "Khách", B: "Chủ quán" }, turns } };
+
+  it("đưa kịch bản và đường dẫn audio từng lượt vào cấu hình essay; lượt không audio thì không có khoá audio", () => {
+    const p = PracticeSpec.parse({ questions: [q] });
+    expect(practiceProblems(p, "bài")).toEqual([]);
+    const cfg = expandExamQuestion(p.questions[0]!, undefined, ["/api/exam-assets/a.m4a", "/api/exam-assets/b.m4a", undefined]).config as {
+      roleplay: { roles: unknown; turns: Array<Record<string, unknown>> };
+    };
+    expect(cfg.roleplay.roles).toEqual({ A: "Khách", B: "Chủ quán" });
+    expect(cfg.roleplay.turns).toEqual([
+      { speaker: "A", text: "Chocolate! It’s good for energy.", audio: "/api/exam-assets/a.m4a" },
+      { speaker: "B", text: "I was thinking the same thing.", audio: "/api/exam-assets/b.m4a" },
+      { speaker: "A", text: "Great, let’s take it." },
+    ]);
+  });
+
+  it("dry-run: thiếu tệp audio của một lượt báo lỗi nói rõ lượt nào", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "assets-"));
+    mkdirSync(path.join(dir, "audio"));
+    writeFileSync(path.join(dir, "audio", "rp-1.m4a"), "x");
+    const msgs = assetProblems(PracticeSpec.parse({ questions: [q] }), dir, "bài");
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0]).toMatch(/không thấy tệp audio lượt 2 của hội thoại "audio\/rp-2.m4a"/);
+  });
+
+  it("câu không phải essay có roleplay bị từ chối; ít hơn 2 lượt sai định dạng", () => {
+    const mcq = PracticeSpec.parse({ questions: [{ type: "mcq", prompt: "Q", options: [{ label: "A", isCorrect: true }, { label: "B", isCorrect: false }], roleplay: { turns } }] });
+    expect(practiceProblems(mcq, "bài")[0]).toMatch(/roleplay chỉ dùng cho câu essay/);
+    expect(PracticeSpec.safeParse({ questions: [{ ...q, roleplay: { turns: [turns[0]] } }] }).success).toBe(false);
+  });
+});

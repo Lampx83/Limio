@@ -300,11 +300,17 @@ export interface PracticePromptInput {
   courseLanguage: string | null;
   /** Mức/khoảng CEFR của khoá ("A2", "B1-B2"). */
   levelBand: string | null;
+  /** Hội thoại đóng vai: `answer` là các lượt học viên đã nói (một vai), `sampleAnswer` là kịch bản cả hội thoại. */
+  rolePlay?: boolean;
 }
 
 const fence = (t: string, max: number) => canon(t).slice(0, max).replace(/"""/g, "'''");
 
 export function buildPracticePrompts(input: PracticePromptInput): { system: string; user: string } {
+  const rolePlay = input.rolePlay
+    ? `
+- This is a ROLE-PLAY practice. The learner played ONE role (the first line of the answer says which) and spoke only that role's lines; the reference is the whole scripted conversation. The learner is meant to use the target phrases of the script, so for content you MAY name which scripted phrases they used and which they missed (still in your own words, never as a copy-and-memorise instruction). task = did they say their lines at the right moments of the conversation. Do not mark a line as a mistake just because it differs from the script if it is correct English; do not comment on the other role's lines.`
+    : "";
   const voice = input.viaVoice
     ? `
 - The learner SPOKE this answer and a machine transcribed it, so the text may contain mis-heard words, odd capitalisation and arbitrary punctuation. Do NOT criticise spelling, punctuation or capitalisation, and do NOT report anything that looks like a transcription slip. Report only grammar, vocabulary and word-order problems that are surely the speaker's. Never comment on pronunciation or fluency: you cannot hear the audio, and fluency is measured separately.`
@@ -319,7 +325,7 @@ Hard rules:
 - If the teacher gave criteria, make sure your comments cover them.
 - Each error: category (one of ${PRACTICE_CATEGORIES.join(", ")}), quote (COPY EXACTLY a short part of the learner's answer that contains the mistake), correction, explanation (one short sentence: why it is wrong). Only report mistakes that really exist in the answer; never invent a quote. At most ${MAX_PRACTICE_ERRORS} errors, most important first.
 - nextSteps: ONE concrete thing to practise next (a short list with a single item).
-- Tone: encouraging and specific, about the answer, never about the person. No personal praise like "you are so smart". Each comment at most two short sentences. summary: one or two sentences.${voice}`;
+- Tone: encouraging and specific, about the answer, never about the person. No personal praise like "you are so smart". Each comment at most two short sentences. summary: one or two sentences.${voice}${rolePlay}`;
   const user = `# Question
 """
 ${fence(input.question, 2000)}

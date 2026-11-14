@@ -65,3 +65,13 @@ Hội thoại tự do với AI (AI hỏi tiếp theo câu học viên vừa nói
 1. **Lưu bản ghi âm từng lượt không?** Đề xuất: **không** (nhẹ, ít rủi ro riêng tư); nghe lại chỉ trong phiên. Nếu cần nghe lại sau, phải tính dung lượng vì mỗi hội thoại có 4–8 lượt.
 2. **Có làm hội thoại tự do với AI ở đợt sau không?** Đề xuất: **để đợt sau**, sau khi xem học viên dùng đóng vai có kịch bản. Đây là phần đắt nhất (nghe, hiểu và trả lời theo thời gian thực) và phải có trần token.
 3. **Thứ tự dựng cho Unit 1:** đề xuất 1.3 Exercise 6 (4 hội thoại) trước để thử, rồi các câu thảo luận.
+
+## Đã làm (14/11/2026) và chỗ khác với AC
+
+- **Dữ liệu:** không thêm loại câu mới. Hội thoại là câu `essay` có `config.roleplay` (vai, lượt, audio từng lượt) nên dùng lại ghi âm, ví token, AI nhận xét, lưu câu trả lời. Kịch bản và audio lượt xuống trình duyệt (là nội dung đề), bài mẫu và tiêu chí vẫn giấu.
+- **Học viên:** chọn vai A/B, nghe vai kia (từng lượt hoặc "Nghe cả hội thoại"), ghi âm từng lượt (tối đa 30 giây, bấm "Dừng và kiểm tra" là gửi), thấy câu mẫu đánh dấu từ nghe được/thiếu và từ thừa, không điểm. Đổi vai giữ phần đã nói của vai kia; tải lại trang khôi phục đúng lượt. "Nhận xét bằng AI" dùng đường kiểm tra câu mở sẵn có, kịch bản làm bài mẫu cho AI.
+- **Không lưu bản ghi âm** (đã chốt câu 1): route `POST /api/practice-sessions/{id}/roleplay/{câu}?turn=n` chỉ chuyển chữ và trả chữ. Xem thử của giảng viên dùng route chuyển chữ xem thử sẵn có (không lưu gì).
+- **Sự kiện:** `exam.practice.roleplay_turn_recorded` (payload chỉ id, số lượt, thời lượng, số từ; không mang chữ nói) — tên theo quy ước `<domain>.<entity>.<verb>` của dự án thay vì `practice.roleplay.*` trong AC. Nhận xét AI dùng sự kiện sẵn có `exam.practice.feedback_generated`.
+- **Soạn:** trong "Soạn bài luyện", câu Tự luận có khối "Hội thoại đóng vai (tuỳ chọn)": kịch bản "A: …/B: …", tên hai vai, "Audio lượt n" (tải lên). Khác AC: **chưa có nút "Tạo giọng đọc"** trong trình soạn vì hệ thống chưa có chức năng đó cho bài mẫu; audio tạo bằng công cụ nhập khoá (`roleplay` trong manifest, `turns[].audio`). Xoá lượt hoặc câu thì **file audio lượt chưa được dọn** khỏi kho (chỉ audio bài mẫu được dọn).
+- **Speakout 1.3 Exercise 6B:** 4 hội thoại, 8 audio mẫu (giọng Samantha cho A, Daniel cho B). Hội thoại 3 dùng "Chocolate! It's good for energy." vì dữ liệu sách "good for/to use energy" không thành câu đúng; cần thầy xác nhận.
+- **Chưa kiểm:** ghi âm bằng micro thật và Whisper thật trên dev (chỉ kiểm bằng test với bộ ghi âm giả, route có test, giao diện xem được ở 1.3).

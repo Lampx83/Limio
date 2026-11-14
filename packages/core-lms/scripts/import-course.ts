@@ -1630,11 +1630,11 @@ export async function importPractice(actor: string, lessonId: string, pr: z.infe
     });
     const { passageId } = await createPassage(actor, examId, { title: ps.title, contentJson: doc });
     for (const q of ps.questions) {
-      await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
+      await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
     }
   }
   for (const q of pr.questions) {
-    await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir)), sectionId: section.id });
+    await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir)), sectionId: section.id });
   }
 }
 
@@ -1644,6 +1644,21 @@ async function storeSampleAudio(actor: string, examId: string, q: ExamQuestionSp
   const st = await storePublicFile("exam-assets", resolve(assetsDir, q.sampleAudio), examId);
   await createAudioAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: "Sample answer audio" });
   return `/api/exam-assets/${st.filename}`;
+}
+
+/** Hội thoại đóng vai: ghi audio từng lượt (nếu có) vào kho đề; trả đường dẫn theo đúng thứ tự lượt (lượt không có audio là undefined). */
+async function storeTurnAudio(actor: string, examId: string, q: ExamQuestionSpecT, assetsDir: string): Promise<Array<string | undefined>> {
+  const out: Array<string | undefined> = [];
+  for (const [i, t] of (q.roleplay?.turns ?? []).entries()) {
+    if (!t.audio) {
+      out.push(undefined);
+      continue;
+    }
+    const st = await storePublicFile("exam-assets", resolve(assetsDir, t.audio), examId);
+    await createAudioAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: `Role-play turn ${i + 1} audio` });
+    out.push(`/api/exam-assets/${st.filename}`);
+  }
+  return out;
 }
 
 async function main() {

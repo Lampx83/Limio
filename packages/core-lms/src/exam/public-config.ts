@@ -74,6 +74,8 @@ export function toPublicQuestionConfig(
         ...(typeof c.minWords === "number" ? { minWords: c.minWords } : {}),
         voiceAnswer: c.voiceAnswer !== false,
         aiFeedback: c.aiFeedback !== false,
+        // Hội thoại đóng vai: kịch bản và audio từng lượt là nội dung đề (học viên phải đọc/nghe), không phải đáp án.
+        ...(c.roleplay && typeof c.roleplay === "object" ? { roleplay: c.roleplay } : {}),
       };
     default:
       // true_false_notgiven, short_answer, và mọi loại chưa biết.

@@ -15,14 +15,14 @@ export class VoiceUseError extends Error {
 
 const NOTICE_KEY = "limio:practice-voice-notice";
 
-function noticeSeen(): boolean {
+export function noticeSeen(): boolean {
   try {
     return window.localStorage.getItem(NOTICE_KEY) === "1";
   } catch {
     return false; // lưu trữ bị chặn: cứ nhắc, chỉ thừa chứ không sai
   }
 }
-function markNoticeSeen() {
+export function markNoticeSeen() {
   try {
     window.localStorage.setItem(NOTICE_KEY, "1");
   } catch {

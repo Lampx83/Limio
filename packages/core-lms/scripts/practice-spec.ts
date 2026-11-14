@@ -58,6 +58,13 @@ export const ExamQuestionSpec = z.object({
   voiceAnswer: z.boolean().optional(),
   /** essay: AI góp ý câu trả lời khi học viên kiểm tra (mặc định bật; chỉ ghi vào cấu hình khi tắt). */
   aiFeedback: z.boolean().optional(),
+  /** essay: hội thoại đóng vai — học viên chọn vai A/B, nghe vai kia và ghi âm lượt của mình. `audio` từng lượt tương đối so với thư mục assets. */
+  roleplay: z
+    .object({
+      roles: z.object({ A: z.string().max(60).optional(), B: z.string().max(60).optional() }).optional(),
+      turns: z.array(z.object({ speaker: z.enum(["A", "B"]), text: z.string().min(1).max(600), audio: z.string().min(1).optional() })).min(2).max(40),
+    })
+    .optional(),
 });
 export type ExamQuestionSpecT = z.infer<typeof ExamQuestionSpec>;
 
@@ -146,6 +153,11 @@ export function buildPassageDoc(blocks: PassageBlockT[], assets: AssetUrls): { t
   return { type: "doc", content };
 }
 
+/** Tệp audio mà một câu nhắc tới: audio bài mẫu và audio từng lượt của hội thoại đóng vai. */
+export function questionAudioFiles(q: ExamQuestionSpecT): string[] {
+  return [...(q.sampleAudio ? [q.sampleAudio] : []), ...(q.roleplay?.turns ?? []).flatMap((t) => (t.audio ? [t.audio] : []))];
+}
+
 /** Mọi tệp (ảnh/audio) mà các đoạn nhắc tới, theo thứ tự xuất hiện. */
 export function practiceAssetFiles(p: PracticeSpecT): string[] {
   const out: string[] = [];
@@ -154,16 +166,16 @@ export function practiceAssetFiles(p: PracticeSpecT): string[] {
       if ("image" in b) out.push(b.image);
       if ("audio" in b) out.push(b.audio);
     }
-    for (const q of ps.questions) if (q.sampleAudio) out.push(q.sampleAudio);
+    for (const q of ps.questions) out.push(...questionAudioFiles(q));
   }
-  for (const q of p.questions) if (q.sampleAudio) out.push(q.sampleAudio);
+  for (const q of p.questions) out.push(...questionAudioFiles(q));
   return out;
 }
 
 // ── Câu hỏi → { type, prompt, config } ───────────────────────────────────────
 
 /** `explanationAudio`: đường dẫn `/api/exam-assets/<tên>` của audio bài mẫu — do tầng ghi (đã tải tệp lên) truyền vào. */
-export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: string): { type: ExamQuestionSpecT["type"]; prompt: string; config: unknown; points?: number } {
+export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: string, turnAudio?: Array<string | undefined>): { type: ExamQuestionSpecT["type"]; prompt: string; config: unknown; points?: number } {
   const explanation = q.explanation?.trim() ? { explanation: q.explanation.trim() } : {};
   const matchMode = q.caseSensitive ? "exact" : "case_insensitive";
   let config: unknown;
@@ -200,6 +212,14 @@ export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: stri
         ...(q.voiceAnswer === false ? { voiceAnswer: false } : {}),
         ...(q.aiFeedback === false ? { aiFeedback: false } : {}),
         ...(explanationAudio ? { explanationAudio } : {}),
+        ...(q.roleplay
+          ? {
+              roleplay: {
+                ...(q.roleplay.roles ? { roles: q.roleplay.roles } : {}),
+                turns: q.roleplay.turns.map((t, i) => ({ speaker: t.speaker, text: t.text, ...(turnAudio?.[i] ? { audio: turnAudio[i] } : {}) })),
+              },
+            }
+          : {}),
         ...explanation,
       };
       break;
@@ -212,7 +232,7 @@ export function practiceProblems(p: PracticeSpecT, where: string): string[] {
   const out: string[] = [];
   const check = (q: ExamQuestionSpecT, label: string) => {
     if (q.type !== "essay") {
-      const stray = [q.sampleAudio && "sampleAudio", q.voiceAnswer !== undefined && "voiceAnswer", q.aiFeedback !== undefined && "aiFeedback"].filter(Boolean);
+      const stray = [q.sampleAudio && "sampleAudio", q.voiceAnswer !== undefined && "voiceAnswer", q.aiFeedback !== undefined && "aiFeedback", q.roleplay && "roleplay"].filter(Boolean);
       if (stray.length) out.push(`${where} / ${label}: ${stray.join(", ")} chỉ dùng cho câu essay (câu này là ${q.type})`);
     }
     const e = expandExamQuestion(q);
@@ -265,14 +285,17 @@ export function assetProblems(p: PracticeSpecT, assetsDir: string, where: string
     }
   }
   // Audio bài mẫu của câu essay (câu loại khác đã bị `practiceProblems` báo).
-  const sampleQs = [...p.passages.flatMap((ps) => ps.questions), ...p.questions].filter((q) => q.sampleAudio);
-  for (const q of sampleQs) {
-    const file = q.sampleAudio!;
+  const allQs = [...p.passages.flatMap((ps) => ps.questions), ...p.questions];
+  const audioFiles: Array<{ file: string; what: string }> = [
+    ...allQs.flatMap((q) => (q.sampleAudio ? [{ file: q.sampleAudio, what: "audio bài mẫu" }] : [])),
+    ...allQs.flatMap((q) => (q.roleplay?.turns ?? []).flatMap((t, i) => (t.audio ? [{ file: t.audio, what: `audio lượt ${i + 1} của hội thoại` }] : []))),
+  ];
+  for (const { file, what } of audioFiles) {
     const ext = path.extname(file).toLowerCase();
     const full = path.resolve(assetsDir, file);
-    if (!AUDIO_EXT[ext]) out.push(`${where}: audio bài mẫu "${file}" sai định dạng (${Object.keys(AUDIO_EXT).join(", ")})`);
-    else if (!existsSync(full)) out.push(`${where}: không thấy tệp audio bài mẫu "${file}" trong ${assetsDir}`);
-    else if (statSync(full).size > AUDIO_MAX_BYTES) out.push(`${where}: audio bài mẫu "${file}" quá nặng`);
+    if (!AUDIO_EXT[ext]) out.push(`${where}: ${what} "${file}" sai định dạng (${Object.keys(AUDIO_EXT).join(", ")})`);
+    else if (!existsSync(full)) out.push(`${where}: không thấy tệp ${what} "${file}" trong ${assetsDir}`);
+    else if (statSync(full).size > AUDIO_MAX_BYTES) out.push(`${where}: ${what} "${file}" quá nặng`);
   }
   return out;
 }

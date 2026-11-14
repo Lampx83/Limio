@@ -79,6 +79,25 @@ export const EssayConfig = z.object({
   voiceAnswer: z.boolean().optional(),
   /** Bài luyện nhúng: AI góp ý câu trả lời ngay khi học viên kiểm tra (mặc định bật). */
   aiFeedback: z.boolean().optional(),
+  /**
+   * Hội thoại đóng vai (khoá ngoại ngữ tự học): câu mở này hiện thành hội thoại hai vai A/B; học viên chọn một vai, nghe vai kia bằng audio mẫu của
+   * từng lượt và ghi âm lượt của mình. `audio` là đường dẫn tệp trong kho đề. Kịch bản không phải đáp án nên được gửi cho học viên.
+   */
+  roleplay: z
+    .object({
+      roles: z.object({ A: z.string().max(60).optional(), B: z.string().max(60).optional() }).optional(),
+      turns: z
+        .array(
+          z.object({
+            speaker: z.enum(["A", "B"]),
+            text: z.string().min(1).max(600),
+            audio: z.string().max(500).regex(/^\/api\/exam-assets\/[A-Za-z0-9._-]+$/).optional(),
+          }),
+        )
+        .min(2)
+        .max(40),
+    })
+    .optional(),
   ...explanationField,
 });
 
