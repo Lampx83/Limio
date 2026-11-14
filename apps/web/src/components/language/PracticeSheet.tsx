@@ -96,6 +96,15 @@ function InlineChoices({ options, selected, onPick }: { options: Array<{ id: str
   );
 }
 
+/**
+ * Đề dạng biến đổi câu ("câu gốc / TỪ KHOÁ / câu có chỗ trống", ba phần ngăn bằng xuống dòng trong dữ liệu): hiện trên MỘT dòng — câu gốc, từ khoá
+ * trong ngoặc, rồi phần phải viết lại bằng màu chữ khác để học viên thấy ngay đâu là câu gốc, đâu là câu mình điền. Không đúng dạng thì null.
+ */
+export function splitTransform(text: string): { head: string; key: string; rest: string } | null {
+  const m = /^([^\n]+)\n([A-Z][A-Z' -]+)\n([^\n]+)$/.exec(text);
+  return m ? { head: m[1]!.trim(), key: m[2]!.trim(), rest: m[3]!.trim() } : null;
+}
+
 /** Chữ thuần của đề với một chỗ để gắn điều khiển: nếu đề có dấu trống thì điều khiển thay dấu đó, không thì nằm sau chữ. */
 function PromptWith({ prompt, control }: { prompt: string; control: ReactNode }) {
   const segs = splitBlankPrompt(plain(prompt), 1);
@@ -153,16 +162,24 @@ function RowBody({
     const count = blankCountOf(q);
     const cur = value && "blanks" in value ? value.blanks : {};
     const txt = value && "text" in value ? value.text : "";
-    const segs = splitBlankPrompt(text, count);
+    const tr = splitTransform(text);
+    const segs = splitBlankPrompt(tr ? tr.rest : text, count);
+    const parts = segs.map((s, i) => {
+      if (s.kind === "text") return <span key={i}>{s.text}</span>;
+      const label = `Câu ${n}${count > 1 ? `, chỗ trống ${s.index + 1}` : ""}`;
+      if (q.type === "short_answer" || blanks.length === 0) return <Blank key={i} value={txt} label={label} onChange={(v) => onChange({ text: v })} />;
+      const b = blanks[s.index]!;
+      return <Blank key={i} value={cur[b.id] ?? ""} label={label} onChange={(v) => onChange({ blanks: { ...cur, [b.id]: v } })} />;
+    });
     return (
       <div>
-        {segs.map((s, i) => {
-          if (s.kind === "text") return <span key={i}>{s.text}</span>;
-          const label = `Câu ${n}${count > 1 ? `, chỗ trống ${s.index + 1}` : ""}`;
-          if (q.type === "short_answer" || blanks.length === 0) return <Blank key={i} value={txt} label={label} onChange={(v) => onChange({ text: v })} />;
-          const b = blanks[s.index]!;
-          return <Blank key={i} value={cur[b.id] ?? ""} label={label} onChange={(v) => onChange({ blanks: { ...cur, [b.id]: v } })} />;
-        })}
+        {tr ? (
+          <>
+            <span>{tr.head}</span> <span className="ps-key-inline">({tr.key})</span> <span className="ps-rewrite">{parts}</span>
+          </>
+        ) : (
+          parts
+        )}
       </div>
     );
   }

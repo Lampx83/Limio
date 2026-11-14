@@ -2259,3 +2259,16 @@ textarea.fc-input {
   line-height: 1.6;
   color: rgb(var(--text));
 }
+
+/* Đề biến đổi câu trên một dòng: từ khoá trong ngoặc, phần phải viết lại có màu chữ khác với câu gốc. */
+.ps-key-inline {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgb(var(--text-muted));
+}
+.ps-rewrite {
+  color: rgb(var(--brand));
+}
+.ps-rewrite input.ps-blank {
+  color: var(--ps-ink);
+}

@@ -16,6 +16,7 @@ vi.mock("next/link", () => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, push: () => undefined }) }));
 
 import LessonPractice from "./LessonPractice";
+import { splitTransform } from "./PracticeSheet";
 
 /**
  * Phiếu bài tập (docs/tieu-chi/limio-language-phieu-bai-tap.md): tab bài tập, mỗi câu một dòng, trả lời ngay trong dòng, không kéo thả,
@@ -406,5 +407,30 @@ describe("Phiếu bài tập — đoạn văn chỉ là câu yêu cầu thì m�
     await click(host.querySelectorAll('[role="tab"]')[1]!);
     expect(host.querySelector('[data-testid="lp-passage"]')).not.toBeNull();
     expect(panel().querySelector(".ps-intro, .ps-intro-media")).toBeNull();
+  });
+});
+
+describe("Phiếu bài tập — đề biến đổi câu (câu gốc / TỪ KHOÁ / câu có chỗ trống)", () => {
+  it("splitTransform tách ba phần; không đúng dạng thì null", () => {
+    expect(splitTransform("Someone fixed our washing machine yesterday.\nHAD\nWe ______ yesterday.")).toEqual({ head: "Someone fixed our washing machine yesterday.", key: "HAD", rest: "We ______ yesterday." });
+    expect(splitTransform("Một dòng ______.")).toBeNull();
+    expect(splitTransform("A.\nhad\nB ______.")).toBeNull(); // từ khoá phải viết hoa
+    expect(splitTransform("A.\nHAD\nB.\nC ______.")).toBeNull();
+  });
+
+  it("hiện trên một dòng: câu gốc, từ khoá trong ngoặc, phần viết lại (có chỗ trống) màu khác", async () => {
+    const e = embed();
+    await render({
+      ...e,
+      questions: [{ ...e.questions[0]!, id: "t1", type: "short_answer", passageId: "p1", prompt: "Someone fixed our washing machine yesterday.\nHAD\nWe ______ yesterday.", config: {} }],
+      passages: [e.passages[0]!],
+    });
+    const row = panel().querySelector(".ps-row")!;
+    expect(row.querySelector(".ps-key-inline")!.textContent).toBe("(HAD)");
+    const rewrite = row.querySelector(".ps-rewrite")!;
+    expect(rewrite.textContent).toContain("We");
+    expect(rewrite.textContent).toContain("yesterday.");
+    expect(rewrite.querySelector("input.ps-blank")).not.toBeNull(); // chỗ điền nằm trong phần viết lại
+    expect(row.querySelector(".ps-body")!.textContent).toMatch(/^Someone fixed our washing machine yesterday\. \(HAD\) We/);
   });
 });
