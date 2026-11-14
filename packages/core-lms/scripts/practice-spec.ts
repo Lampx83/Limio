@@ -363,11 +363,23 @@ export async function storePublicFile(kind: string, localPath: string, namePrefi
   return { filename, mime, size: buf.length };
 }
 
+/** Như `storePublicFile` nhưng từ bộ nhớ (audio vừa sinh bằng TTS): ghi vào `public/<kind>/yyyy/mm/` và trả tên tệp. */
+export async function storePublicBuffer(kind: string, ext: string, buf: Buffer, namePrefix: string): Promise<{ filename: string; mime: string; size: number }> {
+  const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext];
+  if (!mime) throw new Error(`Đuôi tệp không hỗ trợ: ${ext}`);
+  const now = new Date();
+  const filename = `${namePrefix}-${now.getTime()}-${randomBytes(8).toString("hex")}${ext}`;
+  const dest = path.join(uploadsRoot(), "public", kind, String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"), filename);
+  await mkdir(path.dirname(dest), { recursive: true });
+  await writeFile(dest, buf);
+  return { filename, mime, size: buf.length };
+}
+
 // ── Tham chiếu ảnh trong thân bài: `asset:<tệp>` → đường dẫn đã tải lên ──────────
 
-const ASSET_REF = /asset:([A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif))/g;
+const ASSET_REF = /asset:([A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|mp3|m4a))/g;
 
-/** Các tệp ảnh được nhắc bằng `asset:<tệp>` trong một đoạn chữ (thân bài markdown). */
+/** Các tệp ảnh/audio được nhắc bằng `asset:<tệp>` trong một đoạn chữ (thân bài markdown). */
 export function bodyAssetRefs(text: string | undefined): string[] {
   return text ? [...text.matchAll(ASSET_REF)].map((m) => m[1]!) : [];
 }
