@@ -100,6 +100,8 @@ export function freeChatErrorMessage(code: string | null | undefined): string {
     case "global_token_cap":
     case "rate_limited":
       return "Hạn mức AI đã hết nên bạn ảo chưa trả lời được. Hãy thử lại sau.";
+    case "control_group":
+      return "Tính năng này chưa mở cho lớp của bạn.";
     case "turn_limit":
       return "Hội thoại đã hết lượt. Bấm “Nhận xét bằng AI” hoặc “Bắt đầu lại”.";
     case "message_invalid":

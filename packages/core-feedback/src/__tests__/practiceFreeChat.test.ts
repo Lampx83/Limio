@@ -107,14 +107,14 @@ describe("buildPracticePrompts — nói tự do", () => {
 
 // ── DB thật ──
 let seq = 0;
-async function fx(config: Record<string, unknown> | null = CFG) {
+async function fx(config: Record<string, unknown> | null = CFG, variant: "personalized" | "minimal" = "personalized") {
   const n = ++seq;
   const course = await prisma.course.create({
     data: { slug: `fc-${Date.now()}-${n}`, title: "Ngoại ngữ", description: "x", language: "en", levelBand: "B1", personalizationEnabled: true, languageMode: true },
   });
   const user = await prisma.user.create({ data: { email: `fc-${Date.now()}-${n}@e.com`, passwordHash: "x", displayName: `HV ${n}` } });
   const other = await prisma.user.create({ data: { email: `fc-o-${Date.now()}-${n}@e.com`, passwordHash: "x", displayName: `HV khác ${n}` } });
-  const section = await prisma.courseSection.create({ data: { courseId: course.id, name: "Lớp", feedbackVariant: "personalized" } });
+  const section = await prisma.courseSection.create({ data: { courseId: course.id, name: "Lớp", feedbackVariant: variant } });
   await prisma.enrollment.create({ data: { userId: user.id, courseId: course.id, sectionId: section.id, courseVersion: 1 } });
   const exam = await prisma.exam.create({ data: { courseId: course.id, title: "Bài luyện", durationMin: 10, openAt: new Date(), closeAt: new Date(Date.now() + 86_400_000) } });
   const q = await prisma.examQuestion.create({ data: { examId: exam.id, type: "essay", prompt: "Free chat", orderInExam: 0, config: (config ?? { explanation: "x" }) as object } });
@@ -194,6 +194,16 @@ describe("runFreeChatTurn (DB)", () => {
       data: { sessionId: f.sessionId, questionId: f.questionId, answerJson: { text: "Partner: Hi!\nLearner: Hello." } },
     });
     await expect(requestPracticeAnswerFeedback(f.userId, f.sessionId, f.questionId, { openai: fakeChat().openai })).rejects.toMatchObject({ code: "empty_answer" });
+  });
+
+  it("nhóm đối chứng (minimal) không được dùng bạn ảo: control_group, chưa gọi mô hình, không trừ token, không sự kiện", async () => {
+    const f = await fx(CFG, "minimal");
+    const before = await getTokenBudget(f.userId);
+    const { openai, calls } = fakeChat();
+    await expect(turn(f, openai, "Hello")).rejects.toMatchObject({ code: "control_group" });
+    expect(calls).toHaveLength(0);
+    expect((await getTokenBudget(f.userId)).total).toBe(before.total);
+    expect(await prisma.learningEvent.count({ where: { userId: f.userId, eventType: LearningEventType.ExamPracticeFreechatTurn } })).toBe(0);
   });
 
   it("câu có cả roleplay và freechat thì đóng vai thắng (freechat bị bỏ qua)", async () => {

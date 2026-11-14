@@ -324,6 +324,8 @@ async function freeChatContext(userId: string, sessionId: string, questionId: st
   // Buổi đã kết thúc thì không gọi thêm bạn ảo (cùng điều kiện với các câu mở khác).
   const session = await db.examPracticeSession.findUnique({ where: { id: sessionId }, select: { status: true } });
   if (session?.status !== "in_progress") throw new PracticeFeedbackError("session_closed");
+  // Nhóm đối chứng của thực nghiệm phản hồi (B16) không được dùng bạn ảo: đó là một can thiệp học tập, như góp ý AI của câu mở.
+  if ((await resolveFeedbackVariant(userId, ctx.courseId, db)).variant === "minimal") throw new PracticeFeedbackError("control_group");
   const used = await db.learningEvent.count({
     where: { userId, eventType: LearningEventType.ExamPracticeFreechatTurn, eventKey: { startsWith: `exam.practice.freechat_turn:${sessionId}:${questionId}:` } },
   });

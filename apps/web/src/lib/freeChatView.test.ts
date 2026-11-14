@@ -63,6 +63,7 @@ describe("freeChatErrorMessage", () => {
   it("mã hạn mức, hết lượt, mạng, không rõ", () => {
     expect(freeChatErrorMessage("daily_token_cap")).toMatch(/Hạn mức AI/);
     expect(freeChatErrorMessage("turn_limit")).toMatch(/hết lượt/);
+    expect(freeChatErrorMessage("control_group")).toMatch(/chưa mở cho lớp/);
     expect(freeChatErrorMessage("network")).toMatch(/Mất kết nối/);
     expect(freeChatErrorMessage("lạ")).toMatch(/Có lỗi/);
   });
