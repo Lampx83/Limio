@@ -790,7 +790,7 @@ export default function LessonPractice({
   const splitView = !!(step?.passageId && split);
 
   return (
-    <section aria-labelledby="lp-title" className="lp-large my-6" data-testid="lesson-practice" style={accentStyle(accent)}>
+    <section aria-labelledby="lp-title" className="lp-large my-2" data-testid="lesson-practice" style={accentStyle(accent)}>
       {!splitView && !sheet && (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -846,19 +846,20 @@ export default function LessonPractice({
           <div className={`${sheet ? "mt-3" : "mt-4"} space-y-3`}>{sheet ? sheetNode : step.questionIds.map(renderQuestion)}</div>
         ))}
 
-      {!preview && (
-        <div className="mt-4 flex justify-end">
-          <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-primary btn-sm disabled:opacity-50">
+      {/* Một hàng chân khối: trạng thái lưu bên trái, "Kết thúc bài luyện" bên phải ở dạng nút phụ (nút hồng chính chỉ dành cho việc của câu đang làm: Kiểm tra / Nhận xét). */}
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <p className="text-caption text-muted" aria-live="polite">
+          {preview
+            ? `Xem trước: không lưu đáp án · ${answeredCount} / ${questions.length} câu`
+            : `${saveState === "error" ? "Chưa lưu được" : "Đã lưu câu trả lời"} · ${answeredCount} / ${questions.length} câu`}
+          {preview || sessionId ? "" : answeredCount === 0 ? " (bài luyện bắt đầu khi bạn chọn đáp án đầu tiên)" : ""}
+        </p>
+        {!preview && (
+          <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-ghost btn-sm font-semibold disabled:opacity-50">
             {finishing ? "Đang kết thúc…" : "Kết thúc bài luyện"}
           </button>
-        </div>
-      )}
-      <p className="text-caption mt-2 text-muted" aria-live="polite">
-        {preview
-          ? `Xem trước: không lưu đáp án · ${answeredCount} / ${questions.length} câu`
-          : `${saveState === "error" ? "Chưa lưu được" : "Đã lưu câu trả lời"} · ${answeredCount} / ${questions.length} câu`}
-        {preview || sessionId ? "" : answeredCount === 0 ? " (bài luyện bắt đầu khi bạn chọn đáp án đầu tiên)" : ""}
-      </p>
+        )}
+      </div>
     </section>
   );
 }
