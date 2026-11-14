@@ -158,3 +158,17 @@ describe("EssayConfig.roleplay — hội thoại đóng vai", () => {
     expect(EssayConfig.safeParse({ roleplay: { turns: [{ speaker: "A", text: "x", audio: "https://evil.example/a.mp3" }, turns[1]] } }).success).toBe(false);
   });
 });
+
+describe("EssayConfig.freechat — thử nói tự do", () => {
+  const fc = { scenario: "Choose what to take.", opening: "What would you take?", targets: ["I'm not sure"], maxTurns: 8 };
+  it("nhận cấu hình đủ và tối thiểu (chỉ tình huống + lời mở đầu)", () => {
+    expect(EssayConfig.safeParse({ freechat: fc }).success).toBe(true);
+    expect(EssayConfig.safeParse({ freechat: { scenario: "x", opening: "y" } }).success).toBe(true);
+  });
+  it("từ chối: thiếu lời mở đầu, số lượt ngoài 4–12, quá 10 cụm", () => {
+    expect(EssayConfig.safeParse({ freechat: { scenario: "x" } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ freechat: { ...fc, maxTurns: 3 } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ freechat: { ...fc, maxTurns: 13 } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ freechat: { ...fc, targets: Array.from({ length: 11 }, () => "x") } }).success).toBe(false);
+  });
+});

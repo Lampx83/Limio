@@ -281,3 +281,21 @@ describe("hội thoại đóng vai (roleplay) của câu essay", () => {
     expect(PracticeSpec.safeParse({ questions: [{ ...q, roleplay: { turns: [turns[0]] } }] }).success).toBe(false);
   });
 });
+
+describe("freechat (thử nói tự do) của câu essay", () => {
+  const fc = { scenario: "Choose what to take.", opening: "What would you take?", targets: ["I'm not sure"], maxTurns: 6 };
+  it("đưa freechat vào cấu hình essay nguyên vẹn", () => {
+    const p = PracticeSpec.parse({ questions: [{ type: "essay", prompt: "Free chat", freechat: fc }] });
+    expect(practiceProblems(p, "bài")).toEqual([]);
+    expect((expandExamQuestion(p.questions[0]!).config as { freechat: unknown }).freechat).toEqual(fc);
+  });
+  it("không dùng cùng roleplay; câu không phải essay bị từ chối; lượt ngoài 4–12 sai định dạng", () => {
+    const both = PracticeSpec.parse({
+      questions: [{ type: "essay", prompt: "x", freechat: fc, roleplay: { turns: [{ speaker: "A", text: "a" }, { speaker: "B", text: "b" }] } }],
+    });
+    expect(practiceProblems(both, "bài").join(" ")).toMatch(/không dùng cùng một câu/);
+    const mcq = PracticeSpec.parse({ questions: [{ type: "mcq", prompt: "Q", options: [{ label: "A", isCorrect: true }, { label: "B", isCorrect: false }], freechat: fc }] });
+    expect(practiceProblems(mcq, "bài")[0]).toMatch(/freechat chỉ dùng cho câu essay/);
+    expect(PracticeSpec.safeParse({ questions: [{ type: "essay", prompt: "x", freechat: { ...fc, maxTurns: 2 } }] }).success).toBe(false);
+  });
+});

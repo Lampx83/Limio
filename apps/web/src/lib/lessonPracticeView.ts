@@ -115,3 +115,46 @@ export function writeLayoutPref(storage: Pick<Storage, "setItem"> | null | undef
     /* chỉ là tiện lợi */
   }
 }
+
+/** Đoạn văn chỉ là câu yêu cầu nếu không dài hơn thế (ký tự); dài hơn là bài đọc thật. */
+export const INSTRUCTION_ONLY_MAX_CHARS = 400;
+
+/**
+ * Đoạn văn của Bài luyện chỉ gồm vài câu chữ (không bài đọc dài, audio, ảnh, bảng, danh sách) thì không cần cột riêng: phiếu hiện nó thành
+ * câu yêu cầu ở đầu bài tập, một cột. Trả chữ thuần của đoạn (các đoạn cách nhau một dòng trống) hoặc null nếu đoạn có nội dung thật.
+ */
+export function instructionOnlyText(contentJson: unknown): string | null {
+  const doc = contentJson as { type?: unknown; content?: unknown } | null;
+  if (!doc || doc.type !== "doc" || !Array.isArray(doc.content) || doc.content.length === 0) return null;
+  const paras: string[] = [];
+  for (const node of doc.content as Array<{ type?: unknown; content?: unknown }>) {
+    if (!node || node.type !== "paragraph") return null; // heading, list, table, image, audio… là nội dung thật
+    const inline = Array.isArray(node.content) ? (node.content as Array<{ type?: unknown; text?: unknown }>) : [];
+    if (inline.some((n) => n.type !== "text" && n.type !== "hardBreak")) return null;
+    paras.push(inline.map((n) => (n.type === "hardBreak" ? "\n" : typeof n.text === "string" ? n.text : "")).join("").trim());
+  }
+  const text = paras.filter(Boolean).join("\n\n");
+  return text && text.length <= INSTRUCTION_ONLY_MAX_CHARS ? text : null;
+}
+
+/**
+ * Đoạn văn chỉ có vài câu chữ NGẮN kèm trình phát audio (bài nghe: "Listen and complete…"): cũng không cần cột riêng, trình phát hiện ngay trên các câu hỏi.
+ * Chỉ nhận đoạn mà mọi khối ở mức trên là đoạn chữ thuần hoặc audio (có ít nhất một audio) và chữ không quá `INSTRUCTION_ONLY_MAX_CHARS`.
+ */
+export function isShortAudioPassage(contentJson: unknown): boolean {
+  const doc = contentJson as { type?: unknown; content?: unknown } | null;
+  if (!doc || doc.type !== "doc" || !Array.isArray(doc.content)) return false;
+  let audio = 0;
+  let chars = 0;
+  for (const node of doc.content as Array<{ type?: unknown; content?: unknown }>) {
+    if (node?.type === "audio") {
+      audio++;
+      continue;
+    }
+    if (node?.type !== "paragraph") return false;
+    const inline = Array.isArray(node.content) ? (node.content as Array<{ type?: unknown; text?: unknown }>) : [];
+    if (inline.some((n) => n.type !== "text" && n.type !== "hardBreak")) return false;
+    chars += inline.reduce((n, x) => n + (typeof x.text === "string" ? x.text.length : 0), 0);
+  }
+  return audio > 0 && chars <= INSTRUCTION_ONLY_MAX_CHARS;
+}

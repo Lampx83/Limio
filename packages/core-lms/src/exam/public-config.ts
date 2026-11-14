@@ -76,6 +76,8 @@ export function toPublicQuestionConfig(
         aiFeedback: c.aiFeedback !== false,
         // Hội thoại đóng vai: kịch bản và audio từng lượt là nội dung đề (học viên phải đọc/nghe), không phải đáp án.
         ...(c.roleplay && typeof c.roleplay === "object" ? { roleplay: c.roleplay } : {}),
+        // "Thử nói tự do": tình huống, lời mở đầu và cụm gợi ý là nội dung đề (học viên đọc), không phải đáp án.
+        ...(c.freechat && typeof c.freechat === "object" ? { freechat: c.freechat } : {}),
       };
     default:
       // true_false_notgiven, short_answer, và mọi loại chưa biết.

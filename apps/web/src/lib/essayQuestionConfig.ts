@@ -7,6 +7,7 @@
  */
 
 import { parseRolePlay, parseScript } from "./rolePlayView";
+import { parseFreeChatView } from "./freeChatView";
 
 /** Hội thoại đóng vai trong trình soạn: kịch bản viết bằng chữ ("A: …"/"B: …" mỗi dòng), tên hai vai và audio từng lượt (theo thứ tự lượt). */
 export interface RolePlayDraft {
@@ -46,6 +47,48 @@ export function buildRolePlayConfig(d: RolePlayDraft): Record<string, unknown> |
   };
 }
 
+/** "Thử nói tự do" với bạn ảo trong trình soạn: tình huống, vai, lời mở đầu, cụm mục tiêu (mỗi dòng một cụm) và số lượt tối đa. */
+export interface FreeChatDraft {
+  scenario: string;
+  partnerRole: string;
+  learnerRole: string;
+  opening: string;
+  targets: string;
+  maxTurns: number;
+}
+
+export const emptyFreeChatDraft = (): FreeChatDraft => ({ scenario: "", partnerRole: "", learnerRole: "", opening: "", targets: "", maxTurns: 8 });
+
+export function freeChatDraftFromConfig(cfg: Record<string, unknown>): FreeChatDraft {
+  const v = parseFreeChatView(cfg);
+  if (!v) return emptyFreeChatDraft();
+  return {
+    scenario: v.scenario,
+    partnerRole: v.partnerRole === "Partner" ? "" : v.partnerRole,
+    learnerRole: v.learnerRole === "You" ? "" : v.learnerRole,
+    opening: v.opening,
+    targets: v.targets.join("\n"),
+    maxTurns: v.maxTurns,
+  };
+}
+
+/** Dựng `config.freechat`; undefined nếu thiếu tình huống hoặc lời mở đầu. Cụm mục tiêu: mỗi dòng một cụm, tối đa 10. Số lượt kẹp 4–12. */
+export function buildFreeChatConfig(d: FreeChatDraft): Record<string, unknown> | undefined {
+  const scenario = d.scenario.trim();
+  const opening = d.opening.trim();
+  if (!scenario || !opening) return undefined;
+  const targets = d.targets.split(/\r?\n/).map((t) => t.trim()).filter(Boolean).slice(0, 10);
+  const turns = Math.min(12, Math.max(4, Math.round(Number.isFinite(d.maxTurns) ? d.maxTurns : 8)));
+  return {
+    scenario: scenario.slice(0, 600),
+    ...(d.partnerRole.trim() ? { partnerRole: d.partnerRole.trim().slice(0, 60) } : {}),
+    ...(d.learnerRole.trim() ? { learnerRole: d.learnerRole.trim().slice(0, 60) } : {}),
+    opening: opening.slice(0, 300),
+    ...(targets.length ? { targets: targets.map((t) => t.slice(0, 120)) } : {}),
+    maxTurns: turns,
+  };
+}
+
 export interface EssayDraft {
   /** Tiêu chí đánh giá cho AI (HTML từ trình soạn chữ). */
   rubric: string;
@@ -82,7 +125,7 @@ export function essayDraftFromConfig(cfg: Record<string, unknown>, rubricToHtml:
 }
 
 /** Dựng `config` của câu essay: chỉ ghi khoá có giá trị; công tắc chỉ ghi khi tắt. */
-export function buildEssayConfig(d: EssayDraft, roleplay?: RolePlayDraft): Record<string, unknown> {
+export function buildEssayConfig(d: EssayDraft, roleplay?: RolePlayDraft, freechat?: FreeChatDraft): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (d.rubric) out.rubric = d.rubric;
   if (d.minWords > 0) out.minWords = d.minWords;
@@ -94,5 +137,8 @@ export function buildEssayConfig(d: EssayDraft, roleplay?: RolePlayDraft): Recor
   if (!d.aiFeedback) out.aiFeedback = false;
   const rp = roleplay ? buildRolePlayConfig(roleplay) : undefined;
   if (rp) out.roleplay = rp;
+  // Hai kiểu hội thoại không dùng cùng một câu: đã có kịch bản thì bỏ qua nói tự do.
+  const fc = !rp && freechat ? buildFreeChatConfig(freechat) : undefined;
+  if (fc) out.freechat = fc;
   return out;
 }

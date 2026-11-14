@@ -380,3 +380,31 @@ describe("Phiếu bài tập — kiểm tra và chấm", () => {
     expect([...panel().querySelectorAll(".ps-n")].map((n) => n.textContent)).toEqual(["1", "2", "3", "4"]);
   });
 });
+
+describe("Phiếu bài tập — đoạn văn chỉ là câu yêu cầu thì một cột", () => {
+  const para = (t: string) => ({ type: "paragraph", content: [{ type: "text", text: t }] });
+  const withP2 = (...content: unknown[]) => ({ id: "p2", title: "Ex 2 · Bài hai", contentJson: { type: "doc", content } });
+
+  it("đoạn chỉ có vài câu chữ hiện thành câu yêu cầu ở đầu bài tập (không thẻ đoạn văn bên trái, không nút chia đôi)", async () => {
+    await render();
+    expect(host.querySelector('[data-testid="lp-passage"]')).toBeNull();
+    expect(panel().querySelector(".ps-intro")!.textContent).toBe("Đoạn một.");
+    expect(host.querySelector('[aria-label="Bố cục"]')).toBeNull();
+  });
+
+  it("bài nghe chỉ có câu yêu cầu ngắn và audio: trình phát hiện ngay trên các câu hỏi (một cột)", async () => {
+    const e = embed();
+    await render({ ...e, passages: [e.passages[0]!, withP2(para("Nghe."), { type: "audio", attrs: { src: "/api/exam-assets/a.m4a" } })] });
+    await click(host.querySelectorAll('[role="tab"]')[1]!);
+    expect(host.querySelector('[data-testid="lp-passage"]')).toBeNull();
+    expect(panel().querySelector(".ps-intro-media")).not.toBeNull();
+  });
+
+  it("đoạn có bài đọc thật (bảng, danh sách, ảnh, tiêu đề hoặc chữ dài) vẫn là thẻ đoạn văn hai cột", async () => {
+    const e = embed();
+    await render({ ...e, passages: [e.passages[0]!, withP2(para("Đọc."), { type: "table", content: [] })] });
+    await click(host.querySelectorAll('[role="tab"]')[1]!);
+    expect(host.querySelector('[data-testid="lp-passage"]')).not.toBeNull();
+    expect(panel().querySelector(".ps-intro, .ps-intro-media")).toBeNull();
+  });
+});

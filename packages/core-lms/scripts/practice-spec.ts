@@ -65,6 +65,17 @@ export const ExamQuestionSpec = z.object({
       turns: z.array(z.object({ speaker: z.enum(["A", "B"]), text: z.string().min(1).max(600), audio: z.string().min(1).optional() })).min(2).max(40),
     })
     .optional(),
+  /** essay: "Thử nói tự do" với bạn ảo (chatbot đóng vai). Không dùng cùng `roleplay`. */
+  freechat: z
+    .object({
+      scenario: z.string().min(1).max(600),
+      partnerRole: z.string().max(60).optional(),
+      learnerRole: z.string().max(60).optional(),
+      opening: z.string().min(1).max(300),
+      targets: z.array(z.string().min(1).max(120)).max(10).optional(),
+      maxTurns: z.number().int().min(4).max(12).optional(),
+    })
+    .optional(),
 });
 export type ExamQuestionSpecT = z.infer<typeof ExamQuestionSpec>;
 
@@ -220,6 +231,7 @@ export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: stri
               },
             }
           : {}),
+        ...(q.freechat ? { freechat: q.freechat } : {}),
         ...explanation,
       };
       break;
@@ -232,9 +244,10 @@ export function practiceProblems(p: PracticeSpecT, where: string): string[] {
   const out: string[] = [];
   const check = (q: ExamQuestionSpecT, label: string) => {
     if (q.type !== "essay") {
-      const stray = [q.sampleAudio && "sampleAudio", q.voiceAnswer !== undefined && "voiceAnswer", q.aiFeedback !== undefined && "aiFeedback", q.roleplay && "roleplay"].filter(Boolean);
+      const stray = [q.sampleAudio && "sampleAudio", q.voiceAnswer !== undefined && "voiceAnswer", q.aiFeedback !== undefined && "aiFeedback", q.roleplay && "roleplay", q.freechat && "freechat"].filter(Boolean);
       if (stray.length) out.push(`${where} / ${label}: ${stray.join(", ")} chỉ dùng cho câu essay (câu này là ${q.type})`);
     }
+    if (q.roleplay && q.freechat) out.push(`${where} / ${label}: roleplay và freechat không dùng cùng một câu (chọn một)`);
     const e = expandExamQuestion(q);
     const base = CreateExamQuestionInput.safeParse({ type: e.type, prompt: e.prompt, config: e.config, points: e.points });
     if (!base.success) {

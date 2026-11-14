@@ -98,6 +98,20 @@ export const EssayConfig = z.object({
         .max(40),
     })
     .optional(),
+  /**
+   * "Thử nói tự do" với bạn ảo (chatbot đóng vai, gõ hoặc nói): tình huống, vai, lời mở đầu của bạn ảo (hiện sẵn), cụm mục tiêu gợi ý cho học viên
+   * và số lượt tối đa. Không dùng cùng `roleplay` trong một câu. Tất cả là nội dung đề, được gửi cho học viên.
+   */
+  freechat: z
+    .object({
+      scenario: z.string().min(1).max(600),
+      partnerRole: z.string().max(60).optional(),
+      learnerRole: z.string().max(60).optional(),
+      opening: z.string().min(1).max(300),
+      targets: z.array(z.string().min(1).max(120)).max(10).optional(),
+      maxTurns: z.number().int().min(4).max(12).optional(),
+    })
+    .optional(),
   ...explanationField,
 });
 

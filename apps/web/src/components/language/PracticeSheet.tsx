@@ -44,6 +44,8 @@ export interface SheetTab {
   /** Nhãn ngắn hiện trên nút tab (mã bài tập); đủ tên ở gợi ý. */
   short?: string;
   questionIds: string[];
+  /** Đoạn văn chỉ là câu yêu cầu (chữ) hoặc câu yêu cầu kèm trình phát (nút): hiện ở đầu bài tập (một cột) thay vì thẻ đoạn văn bên trái. */
+  intro?: ReactNode;
 }
 
 const plain = (prompt: string) => (looksLikeHtml(prompt) ? htmlToPlainText(prompt) : prompt);
@@ -588,6 +590,7 @@ export default function PracticeSheet({
       )}
       {tabs.map((t, i) => (
         <div key={t.key} id={`ps-panel-${t.key}`} role="tabpanel" aria-labelledby={tabs.length > 1 ? `ps-tab-${t.key}` : undefined} hidden={i !== activeIdx} className="ps-panel">
+          {t.intro && (typeof t.intro === "string" ? <p className="ps-intro">{t.intro}</p> : <div className="ps-intro-media">{t.intro}</div>)}
           {t.questionIds.length === 0 && <p className="ps-hint ps-empty">Phần này chỉ có nội dung để nghe hoặc đọc, không có câu hỏi.</p>}
           {groupSharedOptions(
             t.questionIds.map((id) => {

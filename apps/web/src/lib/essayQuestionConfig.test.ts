@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEssayConfig, buildRolePlayConfig, cleanExplanationAudio, emptyEssayDraft, essayDraftFromConfig, rolePlayDraftFromConfig } from "./essayQuestionConfig";
+import { buildEssayConfig, buildFreeChatConfig, freeChatDraftFromConfig, emptyFreeChatDraft, buildRolePlayConfig, cleanExplanationAudio, emptyEssayDraft, essayDraftFromConfig, rolePlayDraftFromConfig } from "./essayQuestionConfig";
 
 // docs/tieu-chi/bai-luyen-tra-loi-bang-giong-noi-va-bai-mau.md — AC3, AC5a.
 
@@ -98,5 +98,35 @@ describe("hội thoại đóng vai trong trình soạn", () => {
     expect(back.roleA).toBe("Khách");
     expect(back.roleB).toBe("");
     expect(back.audio).toEqual(["/api/exam-assets/a.m4a", "", ""]);
+  });
+});
+
+describe("thử nói tự do trong trình soạn", () => {
+  const d = { scenario: " Choose what to take. ", partnerRole: "Sam", learnerRole: "", opening: "What would you take?", targets: "I'm not sure about that\n\n  not really essential \n", maxTurns: 99 };
+
+  it("dựng config: cắt khoảng trắng, mỗi dòng một cụm, số lượt kẹp 4–12, vai trống thì bỏ", () => {
+    expect(buildFreeChatConfig(d)).toEqual({
+      scenario: "Choose what to take.",
+      partnerRole: "Sam",
+      opening: "What would you take?",
+      targets: ["I'm not sure about that", "not really essential"],
+      maxTurns: 12,
+    });
+    expect(buildFreeChatConfig({ ...d, maxTurns: 1 })!.maxTurns).toBe(4);
+  });
+  it("thiếu tình huống hoặc lời mở đầu thì không ghi freechat", () => {
+    expect(buildFreeChatConfig({ ...d, scenario: " " })).toBeUndefined();
+    expect(buildFreeChatConfig({ ...d, opening: "" })).toBeUndefined();
+    expect(buildFreeChatConfig(emptyFreeChatDraft())).toBeUndefined();
+  });
+  it("buildEssayConfig: ghi freechat; có kịch bản đóng vai thì bỏ freechat (chọn một); khứ hồi giữ nguyên nội dung", () => {
+    const cfg = buildEssayConfig(emptyEssayDraft(), undefined, d);
+    expect(cfg).toHaveProperty("freechat");
+    const back = freeChatDraftFromConfig(cfg);
+    expect(back).toMatchObject({ scenario: "Choose what to take.", partnerRole: "Sam", learnerRole: "", opening: "What would you take?", maxTurns: 12 });
+    expect(back.targets).toBe("I'm not sure about that\nnot really essential");
+    const both = buildEssayConfig(emptyEssayDraft(), { text: "A: Hi.\nB: Hello.", roleA: "", roleB: "", audio: [] }, d);
+    expect(both).toHaveProperty("roleplay");
+    expect(both).not.toHaveProperty("freechat");
   });
 });

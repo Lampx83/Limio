@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { CheckCircle2, Columns2, RotateCcw, Rows2, XCircle } from "lucide-react";
 import type { PracticeEmbed, PracticeResult } from "@feedbackme/core-lms";
@@ -22,6 +22,9 @@ import { QuestionCard } from "@/components/exam/AnswerReview";
 import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import EssayFeedback from "./EssayFeedback";
 import RolePlay from "./RolePlay";
+import FreeChat, { FreeChatError } from "./FreeChat";
+import { learnerTurnCount, parseFreeChatView, FREECHAT_MIN_FEEDBACK_TURNS } from "@/lib/freeChatView";
+import { instructionOnlyText, isShortAudioPassage } from "@/lib/lessonPracticeView";
 import { parseRolePlay } from "@/lib/rolePlayView";
 import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
 import { tabLabel, tabShortLabels } from "@/lib/practiceSheetView";
@@ -327,6 +330,43 @@ export default function LessonPractice({
     return data.text;
   }
 
+  /**
+   * "Thử nói tự do": gửi MỘT lượt cho bạn ảo, trả lời của bạn ảo. Lịch sử do RolePlay-giống-FreeChat giữ ở trình duyệt; máy chủ không lưu.
+   * Xem thử của giảng viên dùng route xem thử (không buổi luyện, không lưu gì). Ném `FreeChatError(mã)` khi lỗi.
+   */
+  async function sendFreeChat(qid: string, history: Array<{ role: string; text: string }>, message: string): Promise<string> {
+    let url: string;
+    if (preview) {
+      url = apiUrl(`/api/practice-preview/${embed.examId}/freechat/${qid}`);
+    } else {
+      let sid: string;
+      try {
+        sid = await ensureSession();
+      } catch {
+        throw new FreeChatError("network");
+      }
+      url = apiUrl(`/api/practice-sessions/${sid}/freechat/${qid}`);
+    }
+    let res: Response;
+    // Mô hình treo thì không để dòng "Bạn ảo đang trả lời…" kéo dài: quá 30 giây thì báo, học viên gửi lại được.
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 30_000);
+    try {
+      res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ history, message }), signal: ctl.signal });
+    } catch (e) {
+      throw new FreeChatError((e as { name?: string })?.name === "AbortError" ? "openai_error" : "network");
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!res.ok) {
+      const j = (await res.json().catch(() => null)) as { error?: unknown } | null;
+      throw new FreeChatError(typeof j?.error === "string" ? j.error : "failed");
+    }
+    const data = (await res.json().catch(() => null)) as { reply?: unknown } | null;
+    if (typeof data?.reply !== "string" || !data.reply.trim()) throw new FreeChatError("openai_error");
+    return data.reply;
+  }
+
   async function check(qid: string, answerNow?: AnswerValue): Promise<boolean> {
     setBusyCheck(qid);
     setError(null);
@@ -414,7 +454,30 @@ export default function LessonPractice({
     (id) => id in checks,
   );
   const step = steps[stepIdx];
-  const split = hasPassage && layout === "split" && !!step?.passageId;
+  // Phiếu: đoạn văn chỉ là câu yêu cầu (không bài đọc, audio, ảnh, bảng, danh sách) không cần cột riêng; hiện thành câu yêu cầu ở đầu bài tập, một cột.
+  // Bài nghe chỉ có câu yêu cầu ngắn và trình phát: trình phát hiện ngay trên các câu hỏi (cùng cách).
+  const intros = useMemo(
+    () =>
+      new Map<string, ReactNode>(
+        sheet
+          ? passages.flatMap((x): Array<[string, ReactNode]> => {
+              const text = instructionOnlyText(x.contentJson);
+              if (text) return [[x.id, text]];
+              if (isShortAudioPassage(x.contentJson)) {
+                const p = { ...x, title: "" } as unknown as { id: string; title: string; contentJson: { type: "doc"; content: unknown[] } };
+                return [[x.id, <PassageView key={x.id} passage={p} attemptId={`lesson-practice-${embed.examId}`} />]];
+              }
+              return [];
+            })
+          : [],
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [passages, sheet],
+  );
+  const introOf = (st: { passageId: string | null; questionIds: string[] } | undefined): ReactNode | null =>
+    st?.passageId && st.questionIds.length > 0 ? intros.get(st.passageId) ?? null : null;
+  const lightIntro = introOf(step);
+  const split = hasPassage && layout === "split" && !!step?.passageId && !lightIntro;
 
   function jumpTo(qid: string) {
     const i = stepIndexOf(steps, qid);
@@ -461,6 +524,8 @@ export default function LessonPractice({
     const isEssay = q.type === "essay";
     const aiOn = isEssay && essayFeedbackEnabled(q.config);
     const rolePlay = isEssay ? parseRolePlay(q.config) : null;
+    const freeChat = isEssay && !rolePlay ? parseFreeChatView(q.config) : null;
+    const chatTurns = freeChat && value && "text" in value ? learnerTurnCount(String(value.text ?? "")) : 0;
     const hasRecording = (audioVer[qid] ?? 0) > 0;
     return (
       <div key={qid} id={`lp-${qid}`} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
@@ -480,15 +545,28 @@ export default function LessonPractice({
               rp={rolePlay}
               savedText={value && "text" in value ? String(value.text ?? "") : ""}
               transcribe={(turn, file) => transcribeTurn(qid, turn, file)}
-              onAnswer={(text) => onChange(qid, (text ? { text, viaVoice: true } : null) as AnswerValue)}
+              onAnswer={(text) => onChange(qid, { text, viaVoice: true } as AnswerValue)}
               audioUrl={(path) => apiUrl(path)}
               preview={preview}
+            />
+          </div>
+        ) : freeChat ? (
+          <div className="space-y-3">
+            <p className="whitespace-pre-wrap text-[rgb(var(--text))]">{q.prompt}</p>
+            <FreeChat
+              view={freeChat}
+              savedText={value && "text" in value ? String(value.text ?? "") : ""}
+              preview={preview}
+              send={(history, message) => sendFreeChat(qid, history, message)}
+              voiceEnabled={essayVoiceEnabled(q.config)}
+              transcribe={(turn, file) => transcribeTurn(qid, turn, file)}
+              onAnswer={(text) => onChange(qid, { text } as AnswerValue)}
             />
           </div>
         ) : (
           <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} />
         )}
-        {isEssay && !rolePlay && essayVoiceEnabled(q.config) && (
+        {isEssay && !rolePlay && !freeChat && essayVoiceEnabled(q.config) && (
           <EssayVoiceAnswer
             preview={preview}
             recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
@@ -502,7 +580,11 @@ export default function LessonPractice({
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             {!res ? (
               <span className="text-caption text-muted">
-                {aiOn && !preview ? "Khi bấm Kiểm tra, câu trả lời của bạn được gửi tới AI để nhận xét." : "Bạn có thể đổi đáp án trước khi kiểm tra."}
+                {freeChat && chatTurns < FREECHAT_MIN_FEEDBACK_TURNS
+                  ? `Cần ít nhất ${FREECHAT_MIN_FEEDBACK_TURNS} lượt của bạn để nhận xét.`
+                  : aiOn && !preview
+                    ? "Khi bấm Kiểm tra, câu trả lời của bạn được gửi tới AI để nhận xét."
+                    : "Bạn có thể đổi đáp án trước khi kiểm tra."}
               </span>
             ) : (
               <span />
@@ -510,10 +592,10 @@ export default function LessonPractice({
             <button
               type="button"
               onClick={() => void check(qid)}
-              disabled={!isAnswered(value) || busyCheck === qid || restoring.has(qid)}
+              disabled={!isAnswered(value) || busyCheck === qid || restoring.has(qid) || (!!freeChat && chatTurns < FREECHAT_MIN_FEEDBACK_TURNS)}
               className="btn-primary btn-sm disabled:opacity-50"
             >
-              {busyCheck === qid ? (aiOn && !preview ? "Đang nhận xét…" : "Đang kiểm tra…") : rolePlay && aiOn && !preview ? "Nhận xét bằng AI" : `Kiểm tra câu ${n}`}
+              {busyCheck === qid ? (aiOn && !preview ? "Đang nhận xét…" : "Đang kiểm tra…") : (rolePlay || freeChat) && aiOn && !preview ? "Nhận xét bằng AI" : `Kiểm tra câu ${n}`}
             </button>
           </div>
         )}
@@ -632,6 +714,7 @@ export default function LessonPractice({
     label: tabLabel(sheetTitles[i], i),
     short: sheetShorts[i],
     questionIds: st.questionIds,
+    ...(introOf(st) ? { intro: introOf(st) } : {}),
   }));
   const sheetNode = sheet ? (
     <PracticeSheet
@@ -659,7 +742,7 @@ export default function LessonPractice({
           <h2 id="lp-title" className="sr-only">
             {blockTitle || embed.title}
           </h2>
-          {hasPassage && (
+          {hasPassage && !lightIntro && (
             <div role="group" aria-label="Bố cục" className="hidden shrink-0 items-center gap-1 lg:flex">
               <button
                 type="button"
@@ -718,7 +801,7 @@ export default function LessonPractice({
       )}
 
       {step &&
-        (step.passageId ? (
+        (step.passageId && !lightIntro ? (
           <div className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
             <div
               className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}

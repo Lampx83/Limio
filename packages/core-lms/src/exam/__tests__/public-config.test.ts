@@ -48,6 +48,13 @@ describe("toPublicQuestionConfig — không lộ đáp án xuống trình duyệ
     expect(JSON.stringify(out)).not.toMatch(/bí mật|s\.m4a/);
   });
 
+  it("essay nói tự do: tình huống, lời mở đầu, cụm gợi ý xuống trình duyệt; bài mẫu và tiêu chí vẫn giấu", () => {
+    const freechat = { scenario: "Choose what to take.", partnerRole: "Sam", opening: "What would you take?", targets: ["I'm not sure"], maxTurns: 6 };
+    const out = toPublicQuestionConfig("essay", { freechat, rubric: "bí mật", explanation: "đáp án" });
+    expect(out).toEqual({ voiceAnswer: true, aiFeedback: true, freechat });
+    expect(JSON.stringify(out)).not.toMatch(/bí mật|đáp án/);
+  });
+
   it("essay: giữ minWords và hai công tắc (mặc định bật), bỏ rubric, bài mẫu và audio mẫu", () => {
     expect(toPublicQuestionConfig("essay", { rubric: "bí mật", minWords: 100, explanation: "Bài mẫu", explanationAudio: "/api/exam-assets/a.m4a" })).toEqual({
       minWords: 100,
