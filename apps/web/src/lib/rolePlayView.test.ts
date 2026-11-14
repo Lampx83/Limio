@@ -93,3 +93,39 @@ describe("restoreSpoken", () => {
     expect(restoreSpoken("[Role A]\n", rp)).toBeNull();
   });
 });
+
+describe("compareSpoken — câu mẫu tiếng Trung (so từng chữ Hán, bỏ pinyin và dấu câu khi chấm)", () => {
+  const exp = "我的行李怎么还没出来？是不是丢了？";
+
+  it("nói đúng hết thì khớp mọi chữ Hán", () => {
+    const r = compareSpoken(exp, "我的行李怎么还没出来是不是丢了");
+    expect(r.okCount).toBe(r.total);
+    expect(r.total).toBe(15);
+    expect(r.extra).toEqual([]);
+  });
+
+  it("máy nghe nhầm một chữ (掉 thay 丢) thì chỉ chữ đó bị đánh dấu thiếu", () => {
+    const r = compareSpoken(exp, "我的行李怎么还没出来是不是掉了");
+    expect(r.okCount).toBe(14);
+    expect(r.words.filter((w) => w.scored && !w.ok).map((w) => w.text)).toEqual(["丢"]);
+    expect(r.extra).toEqual(["掉"]);
+  });
+
+  it("pinyin giáo viên ghi kèm trong câu mẫu không tính điểm và vẫn hiện", () => {
+    const withPinyin = `${exp} Wǒ de xínglǐ zěnme hái méi chūlái? Shì bùshì diūle`;
+    const r = compareSpoken(withPinyin, "我的行李怎么还没出来是不是丢了");
+    expect(r.total).toBe(15);
+    expect(r.okCount).toBe(15);
+    expect(r.words.some((w) => w.text === "Wǒ" && w.scored === false && w.ok)).toBe(true);
+  });
+
+  it("hiển thị lại câu mẫu đúng như đã soạn: chữ Hán liền nhau, dấu cách chỉ ở chỗ có trong câu mẫu", () => {
+    const r = compareSpoken("你好吗？ Nǐ hǎo ma?", "");
+    expect(r.words.map((w) => w.text + (w.sep ?? " ")).join("")).toBe("你好吗？ Nǐ hǎo ma?");
+  });
+
+  it("câu mẫu không có chữ Hán giữ cách so cũ (theo từ, bỏ dấu)", () => {
+    const r = compareSpoken("Hello there", "hello THERE");
+    expect(r.okCount).toBe(2);
+  });
+});

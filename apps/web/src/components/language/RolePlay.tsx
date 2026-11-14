@@ -180,7 +180,8 @@ export default function RolePlay({
                   {cmp ? (
                     cmp.words.map((w, k) => (
                       <span key={k} className={w.ok ? undefined : "rp-miss"}>
-                        {w.text}{" "}
+                        {w.text}
+                        {w.sep ?? " "}
                       </span>
                     ))
                   ) : (
