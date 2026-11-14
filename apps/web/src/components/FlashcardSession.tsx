@@ -12,6 +12,7 @@ import {
   summarize,
   type ReviewSubmitter,
 } from "@/lib/flashcardSession";
+import { useT } from "@/lib/i18n/client";
 import FlashcardStage from "./FlashcardStage";
 import FlashcardSummary from "./FlashcardSummary";
 
@@ -33,6 +34,7 @@ export default function FlashcardSession({
   mode: FlashcardMode;
   initialCards: QueueCard[];
 }) {
+  const t = useT();
   const router = useRouter();
   const [state, dispatch] = useReducer(sessionReducer, initialCards, initSession);
   const [saveFailed, setSaveFailed] = useState(false);
@@ -78,7 +80,7 @@ export default function FlashcardSession({
     <div className="space-y-4">
       {saveFailed && (
         <div className="banner-warning text-sm" role="alert">
-          Một số lượt ôn chưa được lưu. Kiểm tra mạng rồi tải lại trang; những thẻ đó sẽ xuất hiện lại.
+          {t("practice.fc.saveFailed")}
         </div>
       )}
       {card ? (

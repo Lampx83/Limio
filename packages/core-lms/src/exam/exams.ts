@@ -37,7 +37,7 @@ export const CreateExamInput = z
     shuffleQuestions: z.boolean().optional(),
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
-    purpose: z.enum(["assessment", "field_test"]).optional(),
+    purpose: z.enum(["assessment", "field_test", "survey"]).optional(),
     // A6.1 — Vấn đáp AI. Bất biến sau khi tạo — đổi kind = tạo Exam mới.
     kind: z.enum(["written", "oral"]).optional(),
     // A6.6 — chỉ có ý nghĩa khi kind=oral.
@@ -81,7 +81,7 @@ export const UpdateExamInput = z
     shuffleQuestions: z.boolean().optional(),
     shuffleOptions: z.boolean().optional(),
     showResultsAfterSubmit: z.boolean().optional(),
-    purpose: z.enum(["assessment", "field_test"]).optional(),
+    purpose: z.enum(["assessment", "field_test", "survey"]).optional(),
     // A6.6 — chỉ có ý nghĩa khi kind=oral. Đổi được cho tới khi có lượt thi (xem `allowed` bên dưới:
     // đổi cách trả lời/ngôn ngữ giữa chừng sẽ làm các lượt thi không cùng điều kiện).
     answerMode: z.enum(["text", "voice"]).optional(),
@@ -133,6 +133,9 @@ export async function createExam(
   if (d.mockMode && d.kind === "oral") {
     throw new ExamError("validation_failed", "mockMode chỉ áp dụng cho đề viết");
   }
+  if (d.purpose === "survey" && d.kind === "oral") {
+    throw new ExamError("validation_failed", "survey_written_only");
+  }
   const exam = await db.exam.create({
     data: {
       courseId,
@@ -155,6 +158,8 @@ export async function createExam(
       showResultsAfterSubmit:
         d.showResultsAfterSubmit ?? (d.purpose === "field_test" ? false : true),
       purpose: d.purpose ?? "assessment",
+      // Đề Khảo sát ghi đè các ô trên: thứ tự câu và lựa chọn là một phần của thang đo.
+      ...(d.purpose === "survey" ? SURVEY_FIXED_SETTINGS : {}),
       kind: d.kind ?? "written",
       answerMode: d.answerMode ?? "text",
       language: d.language ?? "vi",
@@ -290,6 +295,19 @@ export async function createExamFromWizard(
   return { examId: exam.id, fallbackUsed };
 }
 
+/**
+ * Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md): không xáo (thứ tự lựa chọn 1–5 là
+ * thang đo), không hiện kết quả, không giám sát toàn màn hình, không chấm tay.
+ */
+const SURVEY_FIXED_SETTINGS = {
+  shuffleQuestions: false,
+  shuffleOptions: false,
+  showResultsAfterSubmit: false,
+  proctoringLevel: "none",
+  gradingMode: "auto",
+  mockMode: false,
+} as const;
+
 async function loadExam(examId: string, db: PrismaClient) {
   const exam = await db.exam.findUnique({
     where: { id: examId },
@@ -299,6 +317,7 @@ async function loadExam(examId: string, db: PrismaClient) {
       createdById: true,
       status: true,
       kind: true,
+      purpose: true,
     },
   });
   if (!exam) throw new ExamError("exam_not_found");
@@ -322,6 +341,16 @@ export async function updateExam(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined),
   );
   if (Object.keys(data).length === 0) return;
+
+  // Đổi sang hoặc ra khỏi Khảo sát khi đã có lượt làm: câu trả lời cũ thành vô nghĩa
+  // (đáp án/điểm) — chặn ở mọi trạng thái đề, không chỉ khi đã xuất bản.
+  const nextPurpose = (data.purpose as string | undefined) ?? exam.purpose;
+  if (nextPurpose !== exam.purpose && (nextPurpose === "survey" || exam.purpose === "survey")) {
+    if (exam.kind === "oral") throw new ExamError("validation_failed", "survey_written_only");
+    const attempts = await db.examAttempt.count({ where: { examId } });
+    if (attempts > 0) throw new ExamError("exam_has_attempts", { fields: ["purpose"] });
+  }
+  if (nextPurpose === "survey") Object.assign(data, SURVEY_FIXED_SETTINGS);
 
   if (exam.kind !== "oral" && data.attemptPolicy === "multi") {
     throw new ExamError("validation_failed", "attemptPolicy=multi chỉ áp dụng cho đề vấn đáp");

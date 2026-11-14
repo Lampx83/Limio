@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Nút nhảy về đầu / xuống cuối trang.
@@ -19,6 +20,7 @@ export default function ScrollEnds({
   /** Vị trí; mặc định xếp dưới cùng cột nút nổi bên phải. */
   className?: string;
 }) {
+  const t = useT();
   const [scrollable, setScrollable] = useState(false);
 
   useEffect(() => {
@@ -55,11 +57,11 @@ export default function ScrollEnds({
     <div
       className={`${className} flex flex-col overflow-hidden rounded-full border border-token bg-[rgb(var(--surface))] shadow-lg print:hidden`}
     >
-      <button type="button" onClick={() => go("top")} className={btn} title="Lên đầu trang" aria-label="Cuộn lên đầu trang">
+      <button type="button" onClick={() => go("top")} className={btn} title={t("learn.scroll.top")} aria-label={t("learn.scroll.topAria")}>
         <ChevronUp className="h-4 w-4" aria-hidden />
       </button>
       <span className="mx-2 border-t border-token" aria-hidden />
-      <button type="button" onClick={() => go("bottom")} className={btn} title="Xuống cuối trang" aria-label="Cuộn xuống cuối trang">
+      <button type="button" onClick={() => go("bottom")} className={btn} title={t("learn.scroll.bottom")} aria-label={t("learn.scroll.bottomAria")}>
         <ChevronDown className="h-4 w-4" aria-hidden />
       </button>
     </div>

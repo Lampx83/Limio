@@ -6,7 +6,9 @@ import remarkGfm from "remark-gfm";
 import { Download, ExternalLink, Globe } from "lucide-react";
 import { parseVideoUrl, isNativeVideoUrl } from "@/lib/videoUrl";
 import { isSyncableTranscriptUrl } from "@/lib/transcript";
+import { captionTrackFor, type CaptionTrack } from "@/lib/captions";
 import { formatBytes } from "@/lib/formatBytes";
+import { useT } from "@/lib/i18n/client";
 import { deckIdOfUrl } from "@/lib/narration/deckCover";
 import DeckCover, { type DeckCoverInfo } from "./narration/DeckCover";
 import SafeHtml from "./SafeHtml";
@@ -56,6 +58,10 @@ interface VideoPayload {
   title?: string;
   caption?: string;
   transcriptUrl?: string;
+  /** BCP-47 của phụ đề `.vtt` (mặc định "en"). */
+  captionLang?: string;
+  /** Nhãn trong menu CC (mặc định theo captionLang, vd "English"). */
+  captionLabel?: string;
   durationSec?: number;
   cuepoints?: Array<{ atSec: number; quizId: string }>;
 }
@@ -196,17 +202,18 @@ function TeacherNote({ html }: { html: string }) {
 
 /** Placeholder for players that cannot work without a session. */
 function SignInRequired({ label }: { label: string }) {
+  const t = useT();
   return (
     <div className="rounded-2xl border border-token bg-[rgb(var(--surface-muted))] p-6 text-center">
       <p className="text-sm font-semibold">{label}</p>
       <p className="mt-1 text-xs text-muted">
-        Nội dung này cần tài khoản để ghi nhận kết quả học tập.
+        {t("learn.content.signInNeeded")}
       </p>
       <a
         href="/signin"
         className="mt-3 inline-block rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
       >
-        Đăng nhập để dùng
+        {t("learn.content.signInToUse")}
       </a>
     </div>
   );
@@ -231,6 +238,7 @@ function ContentBlock({
   deckCover?: DeckCoverInfo | null;
   numberTranscripts?: boolean;
 }) {
+  const t = useT();
   switch (type) {
     case "video": {
       const p = payload as VideoPayload;
@@ -250,10 +258,13 @@ function ContentBlock({
       const parsedForTranscript = !isNativeVideo ? parseVideoUrl(p.url) : null;
       const showInteractiveTranscript =
         parsedForTranscript?.kind === "youtube" && isSyncableTranscriptUrl(p.transcriptUrl);
+      // Video tải lên + transcript `.vtt` cùng-origin → phụ đề `<track>` bật/tắt bằng nút CC (mặc định tắt).
+      const caption = captionTrackFor(p);
       return (
         <div>
           {isNativeVideo && hasCuepoints && lessonId ? (
             <VideoWithCuepoints
+              caption={caption}
               url={p.url}
               cuepoints={p.cuepoints!}
               contentItemId={itemId}
@@ -263,7 +274,7 @@ function ContentBlock({
             <YouTubeWithTranscript url={p.url} transcriptUrl={p.transcriptUrl!} />
           ) : (
             <>
-              <VideoEmbed url={p.url} />
+              <VideoEmbed url={p.url} caption={caption} />
               {hasCuepoints && !isNativeVideo && (
                 <p className="mt-1 text-[11px] text-accent-700">
                   Lesson này có {p.cuepoints!.length} cuepoint quiz, nhưng player của
@@ -283,7 +294,7 @@ function ContentBlock({
               )}
             </figcaption>
           )}
-          {p.transcriptUrl && !showInteractiveTranscript && (
+          {p.transcriptUrl && !showInteractiveTranscript && !caption && (
             <a href={p.transcriptUrl} className="link mt-2 inline-block text-sm">
               Xem transcript
             </a>
@@ -422,7 +433,7 @@ function ContentBlock({
     }
     case "scorm": {
       const p = payload as ScormPayload;
-      if (!interactive) return <SignInRequired label={p.title ?? "Nội dung SCORM"} />;
+      if (!interactive) return <SignInRequired label={p.title ?? t("learn.content.scorm")} />;
       return (
         <div>
           {p.title && (
@@ -442,7 +453,7 @@ function ContentBlock({
     }
     case "lti": {
       const p = payload as LtiPayloadType;
-      if (!interactive) return <SignInRequired label={p.title ?? "Công cụ LTI"} />;
+      if (!interactive) return <SignInRequired label={p.title ?? t("learn.content.lti")} />;
       return (
         <LtiLaunch
           toolId={p.toolId}
@@ -455,7 +466,7 @@ function ContentBlock({
     }
     case "h5p": {
       const p = payload as H5pPayloadType;
-      if (!interactive) return <SignInRequired label={p.title ?? "Nội dung H5P"} />;
+      if (!interactive) return <SignInRequired label={p.title ?? t("learn.content.h5p")} />;
       return (
         <H5pPlayer
           packageId={p.packageId}
@@ -501,7 +512,7 @@ function ContentBlock({
               className="group/link inline-flex items-center gap-1.5 text-base font-semibold text-[rgb(var(--text))] hover:text-brand-700"
             >
               <span className="underline decoration-transparent decoration-2 underline-offset-4 transition-colors group-hover/link:decoration-brand-400">
-                {p.title || "Mở tài nguyên HTML"}
+                {p.title || t("learn.content.openHtml")}
               </span>
               <ExternalLink className="h-4 w-4 shrink-0 text-faint transition-colors group-hover/link:text-brand-600" aria-hidden />
             </a>
@@ -537,7 +548,7 @@ function ContentBlock({
 // so existing imports don't break.
 export { isNativeVideoUrl };
 
-function VideoEmbed({ url }: { url: string }) {
+function VideoEmbed({ url, caption }: { url: string; caption?: CaptionTrack | null }) {
   const v = parseVideoUrl(url);
 
   // Recognized provider — render iframe embed.
@@ -567,6 +578,10 @@ function VideoEmbed({ url }: { url: string }) {
       controls
       className="aspect-video w-full rounded-xl bg-black shadow-card"
       preload="metadata"
-    />
+    >
+      {caption && (
+        <track kind="subtitles" src={caption.src} srcLang={caption.srcLang} label={caption.label} />
+      )}
+    </video>
   );
 }

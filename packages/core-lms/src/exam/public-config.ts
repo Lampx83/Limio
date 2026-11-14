@@ -79,6 +79,18 @@ export function toPublicQuestionConfig(
         // "Thử nói tự do": tình huống, lời mở đầu và cụm gợi ý là nội dung đề (học viên đọc), không phải đáp án.
         ...(c.freechat && typeof c.freechat === "object" ? { freechat: c.freechat } : {}),
       };
+    case "slider": {
+      // Thang trượt của đề Khảo sát — không có đáp án; mã câu (`code`) không gửi xuống.
+      const num = (v: unknown, d: number) => (typeof v === "number" && Number.isFinite(v) ? v : d);
+      const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+      return {
+        min: num(c.min, 0),
+        max: num(c.max, 100),
+        step: num(c.step, 1),
+        ...(str(c.minLabel) ? { minLabel: str(c.minLabel) } : {}),
+        ...(str(c.maxLabel) ? { maxLabel: str(c.maxLabel) } : {}),
+      };
+    }
     default:
       // true_false_notgiven, short_answer, và mọi loại chưa biết.
       return {};

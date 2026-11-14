@@ -23,6 +23,8 @@ import {
 } from "@/lib/quizPlayerState";
 import { formatTime } from "@/lib/datetime";
 import { plainToRichHtml } from "@/lib/richText";
+import { useT, useUiLang } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
 
 import type { AnswerState, Option, QType, Question, Response } from "@/components/quiz/questionInputTypes";
 import { DragDropFillInput, MatchingInput, OrderingInput } from "@/components/quiz/QuestionInputs";
@@ -40,16 +42,16 @@ interface AttemptData {
   responses: Array<{ questionId: string; response: unknown; confidence: number | null }>;
 }
 
-const TYPE_LABEL: Record<QType, string> = {
-  mcq: "Chọn nhiều",
-  true_false: "Đúng/Sai",
-  fill_in: "Điền từ",
-  ordering: "Sắp xếp",
-  matching: "Ghép cặp",
-  numerical: "Số",
-  essay: "Tự luận",
-  short_answer: "Trả lời ngắn",
-  drag_drop_fill: "Kéo thả",
+const TYPE_LABEL_KEY: Record<QType, MessageKey> = {
+  mcq: "practice.quiz.type.mcq",
+  true_false: "practice.quiz.type.true_false",
+  fill_in: "practice.quiz.type.fill_in",
+  ordering: "practice.quiz.type.ordering",
+  matching: "practice.quiz.type.matching",
+  numerical: "practice.quiz.type.numerical",
+  essay: "practice.quiz.type.essay",
+  short_answer: "practice.quiz.type.short_answer",
+  drag_drop_fill: "practice.quiz.type.drag_drop_fill",
 };
 
 export default function QuizPlayer({
@@ -59,6 +61,8 @@ export default function QuizPlayer({
   attemptId: string;
   courseSlug: string;
 }) {
+  const t = useT();
+  const lang = useUiLang();
   const [data, setData] = useState<AttemptData | null>(null);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -144,7 +148,7 @@ export default function QuizPlayer({
 
   // Rời trang khi còn câu chưa lưu được: hỏi lại. Câu đã lưu thì không mất, vào lại là làm tiếp.
   useEffect(() => {
-    setQuizLeaveGuard(() => (submittedRef.current ? null : leaveWarning(unsavedRef.current)));
+    setQuizLeaveGuard(() => (submittedRef.current ? null : leaveWarning(unsavedRef.current, lang)));
     function onBeforeUnload(e: BeforeUnloadEvent) {
       if (submittedRef.current || unsavedRef.current.length === 0) return;
       e.preventDefault();
@@ -155,7 +159,7 @@ export default function QuizPlayer({
       setQuizLeaveGuard(null);
       window.removeEventListener("beforeunload", onBeforeUnload);
     };
-  }, []);
+  }, [lang]);
 
   // Timer tick — chỉ khi quiz có giới hạn thời gian.
   useEffect(() => {
@@ -225,7 +229,7 @@ export default function QuizPlayer({
   if (!data) {
     return (
       <div className="card text-center text-sm text-faint">
-        <span className="inline-block animate-pulse">Đang tải bài kiểm tra…</span>
+        <span className="inline-block animate-pulse">{t("practice.quiz.loading")}</span>
       </div>
     );
   }
@@ -383,7 +387,7 @@ export default function QuizPlayer({
         else if (s === "needs-confidence") needsConfidence.push(i + 1);
         if (flagged.has(q.id)) flaggedNumbers.push(i + 1);
       });
-      const msg = submitWarning({ empty, needsConfidence, flagged: flaggedNumbers });
+      const msg = submitWarning({ empty, needsConfidence, flagged: flaggedNumbers }, lang);
       if (msg && !window.confirm(msg)) return;
     }
 
@@ -403,7 +407,7 @@ export default function QuizPlayer({
     // Nộp tay mà có câu không lưu được (mất mạng) thì dừng: nộp tiếp là bỏ mất những câu đó.
     // Hết giờ tự nộp thì vẫn phải nộp, vì không còn cách nào khác.
     if (failed.length > 0 && !opts?.auto) {
-      setError(`Chưa lưu được câu ${failed.join(", ")}. Bạn kiểm tra kết nối mạng rồi bấm Nộp bài lại.`);
+      setError(t("practice.quiz.err.saveFailed", { nums: failed.join(", ") }));
       setSubmitting(false);
       return;
     }
@@ -508,7 +512,7 @@ export default function QuizPlayer({
         <header className="mb-4 lg:hidden">
           <h1 className="text-xl font-semibold leading-tight">{quiz.title}</h1>
           <p className="mt-1 text-xs text-faint">
-            Đã trả lời{" "}
+            {t("practice.quiz.answeredLabel")}{" "}
             <span className="font-semibold text-[rgb(var(--text))]">
               {answeredCount}/{quiz.questions.length}
             </span>
@@ -517,7 +521,7 @@ export default function QuizPlayer({
 
         {error && (
           <div className="mb-3 rounded border border-danger-200 bg-danger-50 p-3 text-sm text-danger-700">
-            Lỗi: {error}
+            {t("practice.quiz.errorPrefix")} {error}
           </div>
         )}
 
@@ -537,8 +541,10 @@ export default function QuizPlayer({
                 </span>
                 <span className="chip">
                   {currentQ.type === "mcq" && currentQ.isSingleAnswer
-                    ? "Chọn 1"
-                    : (TYPE_LABEL[currentQ.type] ?? currentQ.type)}
+                    ? t("practice.quiz.type.single")
+                    : TYPE_LABEL_KEY[currentQ.type]
+                      ? t(TYPE_LABEL_KEY[currentQ.type])
+                      : currentQ.type}
                 </span>
               </div>
               <div className="flex items-center gap-3">
@@ -546,7 +552,7 @@ export default function QuizPlayer({
                   type="button"
                   onClick={() => toggleFlag(currentQ.id)}
                   aria-pressed={flagged.has(currentQ.id)}
-                  title="Đánh dấu câu này để xem lại trước khi nộp"
+                  title={t("practice.quiz.flag.title")}
                   className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                     flagged.has(currentQ.id)
                       ? "border-amber-400 bg-amber-100 text-amber-900"
@@ -554,10 +560,10 @@ export default function QuizPlayer({
                   }`}
                 >
                   <Flag size={14} aria-hidden />
-                  {flagged.has(currentQ.id) ? "Đã đánh dấu" : "Đánh dấu"}
+                  {flagged.has(currentQ.id) ? t("practice.quiz.flag.on") : t("practice.quiz.flag.off")}
                 </button>
                 <span className="text-xs font-medium text-faint">
-                  {currentQ.points} điểm
+                  {t("practice.quiz.points", { n: currentQ.points })}
                 </span>
               </div>
             </div>
@@ -599,7 +605,7 @@ export default function QuizPlayer({
             <div className="mb-3 border-b border-token pb-3">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span className="text-sm font-semibold text-[rgb(var(--text))]">
-                  Độ tự tin của bạn với câu này:
+                  {t("practice.quiz.confidence.label")}
                 </span>
                 <ConfidenceStars
                   value={answers[currentQ.id]?.confidence ?? null}
@@ -610,8 +616,7 @@ export default function QuizPlayer({
                 />
               </div>
               <p className="mt-1.5 text-xs leading-relaxed text-muted">
-                Bạn chọn số sao theo mức chắc chắn với đáp án vừa chọn. Số sao không làm tăng hay giảm điểm của
-                câu, nhưng bài này cần có số sao thì câu mới được ghi nhận.
+                {t("practice.quiz.confidence.help")}
               </p>
               {statusOf(currentQ) === "needs-confidence" && (
                 <p
@@ -620,7 +625,7 @@ export default function QuizPlayer({
                 >
                   <span aria-hidden>⚠</span>
                   <span>
-                    Bạn đã chọn đáp án nhưng chưa chọn số sao. Hãy chọn số sao ở trên để câu này được ghi nhận.
+                    {t("practice.quiz.confidence.missing")}
                   </span>
                 </p>
               )}
@@ -633,10 +638,10 @@ export default function QuizPlayer({
               disabled={isFirst}
               className="btn-secondary min-w-[7.5rem] text-base disabled:opacity-40"
             >
-              ← Câu trước
+              {t("practice.quiz.nav.prev")}
             </button>
             <span className="text-base font-medium text-muted tabular-nums">
-              Câu {currentStepIndex + 1}/{quiz.questions.length}
+              {t("practice.quiz.nav.counter", { i: currentStepIndex + 1, n: quiz.questions.length })}
             </span>
             {isLast ? (
               <button
@@ -645,7 +650,7 @@ export default function QuizPlayer({
                 disabled={submitting}
                 className={`${submitClass} min-w-[7.5rem] text-base`}
               >
-                {submitting ? "Đang nộp…" : "Nộp bài"}
+                {submitting ? t("practice.quiz.submitting") : t("practice.quiz.submit")}
               </button>
             ) : (
               <button
@@ -653,7 +658,7 @@ export default function QuizPlayer({
                 onClick={() => jumpTo(currentStepIndex + 1)}
                 className="btn-primary min-w-[7.5rem] text-base"
               >
-                Câu sau →
+                {t("practice.quiz.nav.next")}
               </button>
             )}
           </div>
@@ -662,9 +667,10 @@ export default function QuizPlayer({
           <span className="font-medium text-[rgb(var(--text))]">
             {saveStatusText(saveState, unsavedNumbers.length, (ms) =>
               formatTime(ms, { hour: "2-digit", minute: "2-digit" }),
+              lang,
             )}
           </span>{" "}
-          Bài chưa được nộp: thoát ra thì vào lại bạn làm tiếp từ chỗ đã lưu. Nhớ bấm “Nộp bài” khi xong.
+          {t("practice.quiz.notSubmitted")}
         </p>
       </div>
 
@@ -676,9 +682,9 @@ export default function QuizPlayer({
               {quiz.title}
             </h1>
             <p className="mt-1 text-xs text-faint">
-              {quiz.questions.length} câu ·{" "}
+              {t("practice.quiz.side.count", { n: quiz.questions.length })}{" "}
               <span className="font-semibold text-[rgb(var(--text))]">
-                {answeredCount} đã trả lời
+                {t("practice.quiz.side.answered", { n: answeredCount })}
               </span>
             </p>
           </div>
@@ -686,7 +692,7 @@ export default function QuizPlayer({
           {remainingSec !== null && (
             <div className="rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-3 text-center">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-faint">
-                Thời gian còn lại
+                {t("practice.quiz.timeLeft")}
               </p>
               <p
                 className={`mt-1 font-mono text-2xl font-bold tabular-nums ${
@@ -701,7 +707,7 @@ export default function QuizPlayer({
 
           <div>
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-faint">
-              Bản đồ câu hỏi
+              {t("practice.quiz.map.title")}
             </p>
             <QuestionMap
               cells={mapCells}
@@ -714,9 +720,9 @@ export default function QuizPlayer({
           <div className="border-t border-token pt-4">
             <p className="mb-2 text-xs leading-relaxed text-muted">
               {allAnswered
-                ? "Bạn đã xong tất cả các câu."
-                : `Còn ${quiz.questions.length - answeredCount} câu chưa xong.`}{" "}
-              Nộp bài xong thì không sửa lại được.
+                ? t("practice.quiz.side.allDone")
+                : t("practice.quiz.side.remaining", { n: quiz.questions.length - answeredCount })}{" "}
+              {t("practice.quiz.side.noEdit")}
             </p>
             <button
               type="button"
@@ -724,7 +730,7 @@ export default function QuizPlayer({
               disabled={submitting}
               className={`${submitClass} w-full`}
             >
-              {submitting ? "Đang nộp…" : "Nộp bài"}
+              {submitting ? t("practice.quiz.submitting") : t("practice.quiz.submit")}
             </button>
           </div>
         </div>
@@ -751,7 +757,7 @@ export default function QuizPlayer({
             disabled={submitting}
             className={`${submitClass} btn-sm ml-auto`}
           >
-            {submitting ? "Đang nộp…" : "Nộp bài"}
+            {submitting ? t("practice.quiz.submitting") : t("practice.quiz.submit")}
           </button>
         </div>
         <QuestionMap cells={mapCells} onJump={jumpTo} size="sm" />
@@ -783,6 +789,7 @@ function QuestionMap({
   onJump: (index: number) => void;
   size: "lg" | "sm";
 }) {
+  const t = useT();
   const box = size === "lg" ? "h-9" : "h-8 w-8";
   const grid = size === "lg" ? "grid grid-cols-6 gap-1.5" : "flex flex-wrap gap-1.5";
   return (
@@ -796,10 +803,14 @@ function QuestionMap({
               : "bg-[rgb(var(--surface-muted))] text-muted hover:bg-base-100";
         const ring = c.isCurrent ? "ring-2 ring-offset-1 ring-[rgb(var(--text))]" : "";
         const label =
-          `Câu ${c.number}` +
-          (c.status === "done" ? ", đã xong" : c.status === "needs-confidence" ? ", thiếu số sao độ tự tin" : ", chưa làm") +
-          (c.isFlagged ? ", đã đánh dấu xem lại" : "") +
-          (c.isCurrent ? ", đang xem" : "");
+          t("practice.quiz.map.q", { n: c.number }) +
+          (c.status === "done"
+            ? t("practice.quiz.map.done")
+            : c.status === "needs-confidence"
+              ? t("practice.quiz.map.needs")
+              : t("practice.quiz.map.todo")) +
+          (c.isFlagged ? t("practice.quiz.map.flag") : "") +
+          (c.isCurrent ? t("practice.quiz.map.current") : "");
         return (
           <button
             key={c.id}
@@ -824,29 +835,30 @@ function QuestionMap({
 }
 
 function MapLegend({ showConfidence }: { showConfidence: boolean }) {
+  const t = useT();
   return (
     <ul className="mt-3 space-y-1 text-[11px] text-muted">
       <li className="flex items-center gap-2">
         <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-brand-soft text-brand-700">
           <Check size={10} aria-hidden strokeWidth={3} />
         </span>
-        Đã xong
+        {t("practice.quiz.legend.done")}
       </li>
       {showConfidence && (
         <li className="flex items-center gap-2">
           <span className="inline-block h-4 w-4 rounded border-2 border-amber-400 bg-amber-50" />
-          Đã chọn đáp án, thiếu số sao
+          {t("practice.quiz.legend.needs")}
         </li>
       )}
       <li className="flex items-center gap-2">
         <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-[rgb(var(--surface-muted))]">
           <Flag size={10} aria-hidden className="fill-amber-400 text-amber-600" />
         </span>
-        Đánh dấu xem lại
+        {t("practice.quiz.legend.flag")}
       </li>
       <li className="flex items-center gap-2">
         <span className="inline-block h-4 w-4 rounded bg-[rgb(var(--surface-muted))] ring-2 ring-[rgb(var(--text))]" />
-        Câu đang xem
+        {t("practice.quiz.legend.current")}
       </li>
     </ul>
   );
@@ -863,6 +875,7 @@ function QuestionInput({
   onChange: (r: Response) => void;
   onBlur: () => void;
 }) {
+  const t = useT();
   switch (question.type) {
     case "fill_in":
     case "short_answer":
@@ -873,7 +886,7 @@ function QuestionInput({
           onChange={(e) => onChange(e.target.value)}
           onBlur={onBlur}
           className="input"
-          placeholder="Nhập đáp án của bạn..."
+          placeholder={t("practice.quiz.ph.text")}
         />
       );
 
@@ -885,7 +898,7 @@ function QuestionInput({
           onBlur={onBlur}
           rows={6}
           className="textarea"
-          placeholder="Viết câu trả lời của bạn..."
+          placeholder={t("practice.quiz.ph.essay")}
         />
       );
 
@@ -901,7 +914,7 @@ function QuestionInput({
           }}
           onBlur={onBlur}
           className="input w-48"
-          placeholder="Nhập số..."
+          placeholder={t("practice.quiz.ph.number")}
         />
       );
 

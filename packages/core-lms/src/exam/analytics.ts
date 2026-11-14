@@ -54,6 +54,10 @@ export async function computeExamAnalytics(
   /** Số quan sát chốt vào lịch sử thử nghiệm (chỉ câu có nguồn từ ngân hàng). */
   trialsWritten: number;
 }> {
+  // Phiếu Khảo sát không có điểm — độ khó/độ phân biệt câu vô nghĩa (docs/tieu-chi/de-thi-khao-sat.md AC8).
+  const examPurpose = await db.exam.findUnique({ where: { id: examId }, select: { purpose: true } });
+  if (examPurpose?.purpose === "survey") return { questionsScanned: 0, statsWritten: 0, trialsWritten: 0 };
+
   // Load all submitted/graded attempts + their answers + question metadata.
   const attempts = await db.examAttempt.findMany({
     where: {
@@ -372,7 +376,10 @@ export async function computeAllAnalytics(
   const t0 = Date.now();
   // owned-practice-ok: chỉ đề có lượt thi (attempts); đề có chủ (Bài luyện) chỉ có phiên luyện, không có lượt thi.
   const exams = await db.exam.findMany({
-    where: { attempts: { some: { status: { in: ["submitted", "auto_submitted", "graded"] } } } },
+    where: {
+      attempts: { some: { status: { in: ["submitted", "auto_submitted", "graded"] } } },
+      purpose: { not: "survey" },
+    },
     select: { id: true },
   });
   let questionsWritten = 0;

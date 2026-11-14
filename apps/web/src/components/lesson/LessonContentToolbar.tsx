@@ -1,4 +1,6 @@
 import { Printer } from "lucide-react";
+import { tFor } from "@/lib/i18n/tFor";
+import type { UiLang } from "@/lib/i18n/core";
 
 /**
  * Nút công cụ của bài học.
@@ -13,10 +15,12 @@ import { Printer } from "lucide-react";
 export default function LessonContentToolbar({
   printHref,
   className = "btn-pill",
+  lang,
 }: {
   printHref: string;
   /** Kiểu nút — mặc định đồng bộ với các nút còn lại của bài. */
   className?: string;
+  lang?: UiLang;
 }) {
   return (
     <a
@@ -26,7 +30,7 @@ export default function LessonContentToolbar({
       className={`${className} print:hidden`}
     >
       <Printer size={16} />
-      In / Lưu PDF
+      {tFor(lang)("learn.printPdf")}
     </a>
   );
 }

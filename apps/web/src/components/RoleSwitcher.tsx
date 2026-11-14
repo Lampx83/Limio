@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { apiUrl, withBasePath } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
+import { useT } from "@/lib/i18n/client";
 
-const ROLE_LABELS: Record<string, string> = {
-  learner: "Học viên",
-  instructor: "Giảng viên",
-  admin: "Quản trị",
-  mentor: "Mentor",
-};
+const ROLE_LABEL_KEYS = {
+  learner: "role.learner",
+  instructor: "role.instructor",
+  admin: "role.admin",
+  mentor: "role.mentor",
+} as const;
 
 const ROLE_DEFAULT_PATH: Record<string, string> = {
   admin: "/admin/dashboard",
@@ -27,6 +28,9 @@ export default function RoleSwitcher({
   activeRole: string;
   variant?: "header" | "switch";
 }) {
+  const t = useT();
+  const labelOf = (role: string) =>
+    role in ROLE_LABEL_KEYS ? t(ROLE_LABEL_KEYS[role as keyof typeof ROLE_LABEL_KEYS]) : role;
   const [busy, setBusy] = useState(false);
 
   if (roles.length <= 1) return null;
@@ -50,14 +54,14 @@ export default function RoleSwitcher({
         setBusy(false);
         toast.error(
           res.status === 401
-            ? "Phiên đăng nhập đã hết hạn, hãy tải lại trang"
-            : "Không thể chuyển vai trò, thử lại sau",
+            ? t("role.err.expired")
+            : t("role.err.generic"),
         );
         return;
       }
     } catch {
       setBusy(false);
-      toast.error("Không kết nối được máy chủ, thử lại sau");
+      toast.error(t("role.err.network"));
       return;
     }
 
@@ -78,7 +82,7 @@ export default function RoleSwitcher({
     return (
       <div className="flex flex-col gap-1 py-2">
         <p className="px-1 text-[11px] font-semibold uppercase tracking-wider text-muted">
-          Chuyển vai trò
+          {t("role.switch")}
         </p>
         <div className="flex flex-col gap-1">
           {roles.map((role) => {
@@ -97,7 +101,7 @@ export default function RoleSwitcher({
                 <span
                   className={`h-2 w-2 rounded-full shrink-0 ${isActive ? "bg-brand-500" : "bg-transparent border border-muted"}`}
                 />
-                {ROLE_LABELS[role] ?? role}
+                {labelOf(role)}
               </button>
             );
           })}
@@ -124,7 +128,7 @@ export default function RoleSwitcher({
                 : "text-muted hover:text-[rgb(var(--text))]"
             }`}
           >
-            {ROLE_LABELS[role] ?? role}
+            {labelOf(role)}
           </button>
         );
       })}

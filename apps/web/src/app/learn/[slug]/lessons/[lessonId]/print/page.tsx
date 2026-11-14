@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { blockToPlainLines } from "@/lib/langBlocks";
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
+import { getT, getUiLang } from "@/lib/i18n/server";
 import { canEditCourse, isUserEnrolled } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getActiveRole } from "@/lib/active-role";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
 import PrintTrigger from "@/components/lesson/PrintTrigger";
@@ -34,11 +36,12 @@ export async function generateMetadata({
 }: {
   params: { slug: string; lessonId: string };
 }): Promise<Metadata> {
+  const tx = await getT();
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     select: { title: true, module: { select: { course: { select: { title: true } } } } },
   });
-  if (!lesson) return { title: "Bản in bài học" };
+  if (!lesson) return { title: tx("learn.print.metaTitle") };
   const clean = (v: string) => v.replace(/[/:\\?%*|"<>]/g, "-").trim();
   return { title: `${clean(lesson.title)} — ${clean(lesson.module.course.title)}` };
 }
@@ -53,6 +56,8 @@ export default async function LessonPrintPage({
   /** `gv=1`: bản in kèm ghi chú giảng viên, chỉ dựng cho người có quyền sửa khoá. */
   searchParams?: { gv?: string };
 }) {
+  const tx = await getT();
+  const lang = await getUiLang();
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -103,13 +108,14 @@ export default async function LessonPrintPage({
 
   // Ghi chú chỉ đi vào bản in khi CẢ HAI đúng: người xem có quyền sửa khoá, và
   // họ chủ động xin bản có ghi chú. Thiếu một trong hai thì lọc sạch.
-  const canEdit = userId ? await canEditCourse(userId, course.id) : false;
+  const canEdit =
+    userId && getActiveRole(session?.user?.roles ?? []) !== "learner" ? await canEditCourse(userId, course.id) : false;
   const withNotes = canEdit && searchParams?.gv === "1";
   const printItems = lesson.contentItems.filter(
     (c) => c.type !== "teacher_note" || withNotes,
   );
 
-  const printedAt = new Intl.DateTimeFormat("vi-VN", {
+  const printedAt = new Intl.DateTimeFormat(lang === "en" ? "en-US" : "vi-VN", {
     dateStyle: "long",
     timeZone: "Asia/Ho_Chi_Minh",
   }).format(new Date());
@@ -143,7 +149,7 @@ export default async function LessonPrintPage({
               className="mt-6 border-l-4 border-accent-400 pl-4"
             >
               <p className="text-xs font-bold uppercase tracking-wider text-accent-700">
-                Ghi chú giảng viên · không phát cho học viên
+                {tx("learn.print.teacherNote")}
               </p>
               <SafeHtml
                 html={html}
@@ -185,13 +191,13 @@ export default async function LessonPrintPage({
         return (
           <p key={item.id} className="mt-6 text-body text-muted">
             [{item.type}] {typeof payload.title === "string" ? `${payload.title} — ` : ""}
-            {url ?? "nội dung chỉ xem được trên hệ thống"}
+            {url ?? tx("learn.print.systemOnly")}
           </p>
         );
       })}
 
       <footer className="mt-10 border-t border-token pt-4 text-meta text-muted">
-        {course.title} · {lesson.title} · bản in ngày {printedAt}
+        {tx("learn.print.footer", { course: course.title, lesson: lesson.title, date: printedAt })}
       </footer>
     </main>
   );

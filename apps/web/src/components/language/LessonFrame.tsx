@@ -4,6 +4,10 @@ import type { LessonFrameData, LessonRailItem } from "@feedbackme/core-lms";
 import { lessonViewHref, previewHref, type LessonView } from "@/lib/lessonFrameView";
 import LessonFrameShell from "./LessonFrameShell";
 import LessonTocDrawer from "@/components/lesson/LessonTocDrawer";
+import { tFor } from "@/lib/i18n/tFor";
+import LessonVideoBadge from "@/components/ui/LessonVideoBadge";
+import type { LessonVideoInfo } from "@/lib/lessonVideo";
+import type { UiLang } from "@/lib/i18n/core";
 
 /**
  * Khung bài học 3 cột (Figma "Chi tiết bài học"): thanh bài trong unit/module · nội dung · panel AI trợ giảng + Ghi chú. Làm ở
@@ -27,14 +31,15 @@ function ItemIcon({ state }: { state: LessonRailItem["state"] }) {
   );
 }
 
-const STATE_TEXT: Record<LessonRailItem["state"], string> = {
-  done: "Đã xong",
-  current: "Đang xem",
-  todo: "Chưa học",
-  locked: "Đang khoá",
-};
+const STATE_KEY = {
+  done: "learn.rail.state.done",
+  current: "learn.rail.state.current",
+  todo: "learn.rail.state.todo",
+  locked: "learn.rail.state.locked",
+} as const satisfies Record<LessonRailItem["state"], string>;
 
-function RailList({ slug, frame, preview }: { slug: string; frame: LessonFrameData; preview?: boolean }) {
+function RailList({ slug, frame, preview, lang, videos }: { slug: string; frame: LessonFrameData; preview?: boolean; lang?: UiLang; videos?: ReadonlyMap<string, LessonVideoInfo> }) {
+  const t = tFor(lang);
   return (
     <ul className="mt-3 space-y-1">
       {frame.items.map((it) => {
@@ -44,9 +49,12 @@ function RailList({ slug, frame, preview }: { slug: string; frame: LessonFrameDa
             <span className="min-w-0 flex-1">
               {/* Mọi dòng CÙNG độ đậm: thanh bên hẹp, chữ đậm rộng hơn nên bài đang xem xuống dòng khác các bài còn lại và danh sách "nhảy"
                   mỗi khi đổi bài. Bài đang xem phân biệt bằng nền, chấm đặc và vạch trái (không đổi bề rộng chữ). */}
-              <span className={`block text-sm font-medium leading-snug ${it.state === "done" ? "text-muted" : ""}`}>{it.title}</span>
+              <span className={`block text-sm font-medium leading-snug ${it.state === "done" ? "text-muted" : ""}`}>
+                {it.title}
+                {videos?.has(it.id) && <LessonVideoBadge label={t("learn.video.has")} className="ml-1.5 align-middle" />}
+              </span>
               <span className="text-caption text-muted">
-                {[it.minutes ? `${it.minutes} phút` : null, it.state === "done" || it.state === "locked" ? STATE_TEXT[it.state] : null].filter(Boolean).join(" · ")}
+                {[it.minutes ? t("learn.minutes", { n: it.minutes }) : null, it.state === "done" || it.state === "locked" ? t(STATE_KEY[it.state]) : null].filter(Boolean).join(" · ")}
               </span>
             </span>
           </>
@@ -76,12 +84,13 @@ type TocModules = React.ComponentProps<typeof LessonTocDrawer>["modules"];
  * Đầu thanh bên: có ảnh bìa giáo trình thì hiện bìa nhỏ, liên kết "← Về khoá học" nằm DƯỚI bìa trên một dòng (bấm bìa cũng về trang khoá; không ghi tên
  * sách, bìa đã đủ nhận diện); chưa có bìa thì chỉ còn liên kết như cũ. Ảnh trang trí nên alt rỗng.
  */
-export function RailCourseHeader({ slug, coverUrl, preview }: { slug: string; coverUrl: string | null; preview?: boolean }) {
+export function RailCourseHeader({ slug, coverUrl, preview, lang }: { slug: string; coverUrl: string | null; preview?: boolean; lang?: UiLang }) {
+  const t = tFor(lang);
   const href = previewHref(`/learn/${slug}`, preview);
   if (!coverUrl) {
     return (
       <Link href={href} className="link text-sm">
-        ← Về khoá học
+        {t("learn.backToCourse")}
       </Link>
     );
   }
@@ -92,17 +101,18 @@ export function RailCourseHeader({ slug, coverUrl, preview }: { slug: string; co
         <img src={coverUrl} alt="" className="h-auto w-full rounded-sm object-cover shadow-md ring-1 ring-black/10" />
       </Link>
       <Link href={href} className="link mt-2 inline-block whitespace-nowrap text-sm">
-        ← Về khoá học
+        {t("learn.backToCourse")}
       </Link>
     </div>
   );
 }
 
-function RailBody({ slug, frame, hasExams, levelLabel, preview, coverUrl }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean; coverUrl: string | null }) {
+function RailBody({ slug, frame, hasExams, levelLabel, preview, coverUrl, lang, videos }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean; coverUrl: string | null; lang?: UiLang; videos?: ReadonlyMap<string, LessonVideoInfo> }) {
+  const t = tFor(lang);
   const pct = frame.unitTotal === 0 ? 0 : Math.round((frame.unitDone / frame.unitTotal) * 100);
   return (
     <div>
-      <RailCourseHeader slug={slug} coverUrl={coverUrl} preview={preview} />
+      <RailCourseHeader slug={slug} coverUrl={coverUrl} preview={preview} lang={lang} />
       <div className="mt-4 text-xs font-bold uppercase tracking-wider text-brand-700">{levelLabel}</div>
       <div className="text-h4 mt-0.5">{frame.unitTitle}</div>
       <div
@@ -115,14 +125,14 @@ function RailBody({ slug, frame, hasExams, levelLabel, preview, coverUrl }: { sl
         <div className="h-full rounded-full bg-brand-500" style={{ width: `${pct}%` }} />
       </div>
       <p className="text-caption mt-1 text-muted">
-        {frame.unitDone} / {frame.unitTotal} bài hoàn thành
+        {t("learn.rail.unitProgress", { done: frame.unitDone, total: frame.unitTotal })}
       </p>
-      <RailList slug={slug} frame={frame} preview={preview} />
+      <RailList slug={slug} frame={frame} preview={preview} lang={lang} videos={videos} />
       {hasExams && (
         <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
-          <div className="text-sm font-bold">Sẵn sàng vận dụng?</div>
+          <div className="text-sm font-bold">{t("learn.rail.readyToApply")}</div>
           <Link href={previewHref(`/learn/${slug}#luyen-thi`, preview)} className="link mt-1 inline-block text-sm font-semibold">
-            Thi thử ↗
+            {t("learn.rail.mockExam")}
           </Link>
         </div>
       )}
@@ -131,11 +141,12 @@ function RailBody({ slug, frame, hasExams, levelLabel, preview, coverUrl }: { sl
 }
 
 /** Đường dẫn "Học / Khoá / Unit|Module / Bài" phía trên nội dung (`levelLabel` chỉ dùng cho tên truy cập; chữ hiển thị là tên cấp trên). */
-export function LessonCrumbs({ slug, courseTitle, unitTitle, lessonTitle, preview }: { slug: string; courseTitle: string; unitTitle: string; lessonTitle: string; preview?: boolean }) {
+export function LessonCrumbs({ slug, courseTitle, unitTitle, lessonTitle, preview, lang }: { slug: string; courseTitle: string; unitTitle: string; lessonTitle: string; preview?: boolean; lang?: UiLang }) {
+  const t = tFor(lang);
   return (
-    <nav aria-label="Vị trí bài học" className="text-caption flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-muted">
+    <nav aria-label={t("learn.crumbs.aria")} className="text-caption flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-muted">
       <Link href="/me/dashboard" className="hover:underline">
-        Học
+        {t("learn.crumbs.home")}
       </Link>
       <span aria-hidden>/</span>
       <Link href={previewHref(`/learn/${slug}`, preview)} className="hover:underline">
@@ -152,14 +163,15 @@ export function LessonCrumbs({ slug, courseTitle, unitTitle, lessonTitle, previe
 }
 
 /** Tab "Bài học | Từ vựng · n" — chỉ dựng khi bài có từ vựng. */
-export function LessonViewTabs({ slug, lessonId, view, vocabCount, preview }: { slug: string; lessonId: string; view: LessonView; vocabCount: number; preview?: boolean }) {
+export function LessonViewTabs({ slug, lessonId, view, vocabCount, preview, lang }: { slug: string; lessonId: string; view: LessonView; vocabCount: number; preview?: boolean; lang?: UiLang }) {
   if (vocabCount <= 0) return null;
+  const t = tFor(lang);
   const tabs: Array<[LessonView, string]> = [
-    ["lesson", "Bài học"],
-    ["vocab", `Từ vựng · ${vocabCount}`],
+    ["lesson", t("learn.viewTabs.lesson")],
+    ["vocab", t("learn.viewTabs.vocab", { n: vocabCount })],
   ];
   return (
-    <nav aria-label="Nội dung bài" className="mt-6 flex gap-1 border-b border-token">
+    <nav aria-label={t("learn.viewTabs.aria")} className="mt-6 flex gap-1 border-b border-token">
       {tabs.map(([v, label]) => (
         <Link
           key={v}
@@ -183,16 +195,17 @@ function short(t: string, n = 38): string {
  * Thanh "← Bài trước / Bài tiếp theo →" cố định ở đáy cột nội dung (thầy chốt 10/11/2026): theo thứ tự bài trong khoá, bỏ qua
  * bài khoá; bài đầu không có "Bài trước"; bài cuối thay "Bài tiếp theo" bằng "Về khoá học". Không đánh dấu hoàn thành.
  */
-export function LessonNavBar({ slug, prev, next, preview }: { slug: string; prev: LessonFrameData["prev"]; next: LessonFrameData["next"]; preview?: boolean }) {
+export function LessonNavBar({ slug, prev, next, preview, lang }: { slug: string; prev: LessonFrameData["prev"]; next: LessonFrameData["next"]; preview?: boolean; lang?: UiLang }) {
+  const t = tFor(lang);
   return (
     <nav
-      aria-label="Chuyển bài"
+      aria-label={t("learn.nav.aria")}
       className="sticky bottom-0 z-20 -mx-4 mt-8 flex items-center justify-between gap-3 border-t border-token bg-[rgb(var(--surface)/0.94)] px-4 py-2 backdrop-blur lg:mx-0 lg:rounded-t-xl"
     >
       {prev ? (
         <Link href={lessonViewHref(slug, prev.id, "lesson", preview)} className="btn-ghost btn-sm inline-flex min-w-0 items-center gap-1.5" title={prev.title}>
           <span aria-hidden>←</span>
-          <span className="shrink-0">Bài trước</span>
+          <span className="shrink-0">{t("learn.nav.prev")}</span>
           <span className="hidden min-w-0 truncate text-muted md:inline">· {short(prev.title)}</span>
         </Link>
       ) : (
@@ -200,13 +213,13 @@ export function LessonNavBar({ slug, prev, next, preview }: { slug: string; prev
       )}
       {next ? (
         <Link href={lessonViewHref(slug, next.id, "lesson", preview)} className="btn-primary btn-sm inline-flex min-w-0 items-center gap-1.5" title={next.title}>
-          <span className="shrink-0">Bài tiếp theo</span>
+          <span className="shrink-0">{t("learn.nav.next")}</span>
           <span className="hidden min-w-0 truncate opacity-90 md:inline">· {short(next.title)}</span>
           <span aria-hidden>→</span>
         </Link>
       ) : (
         <Link href={previewHref(`/learn/${slug}`, preview)} className="btn-primary btn-sm">
-          Về khoá học
+          {t("learn.nav.toCourse")}
         </Link>
       )}
     </nav>
@@ -228,8 +241,10 @@ export default function LessonFrameLayout({
   levelLabel,
   notesCount,
   tocModules,
+  videos,
   preview,
   accent = null,
+  lang,
   children,
 }: {
   slug: string;
@@ -246,25 +261,30 @@ export default function LessonFrameLayout({
   notesCount: number;
   /** Các module/bài của cả khoá cho nút "Mục lục khoá học" ở thanh bên; không truyền thì không có nút. */
   tocModules?: TocModules;
+  /** Bài → video (đã lọc khối ẩn): dấu "Có video" cạnh tên bài trong thanh bài. */
+  videos?: ReadonlyMap<string, LessonVideoInfo>;
   /** Giảng viên đang "xem như học viên": mọi liên kết trong khung giữ `preview=1`. */
   preview?: boolean;
   /** Màu nhấn của bộ sách (`Course.themeColor`). */
   accent?: string | null;
+  /** Ngôn ngữ giao diện (trang cha lấy bằng `await getUiLang()`); mặc định "vi". */
+  lang?: UiLang;
   children: React.ReactNode;
 }) {
+  const t = tFor(lang);
   const levelLower = levelLabel.toLowerCase();
   return (
     <LessonFrameShell
       accent={accent}
       lessonId={lessonId}
       notesCount={notesCount}
-      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} coverUrl={coverUrl} />}
-      railLabel={`Bài trong ${levelLower}`}
-      railSummary={`Bài trong ${levelLower} · ${frame.unitDone} / ${frame.unitTotal}`}
+      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} coverUrl={coverUrl} lang={lang} videos={videos} />}
+      railLabel={t("learn.rail.label", { level: levelLower })}
+      railSummary={t("learn.rail.summary", { level: levelLower, done: frame.unitDone, total: frame.unitTotal })}
       crumbs={
         // Mục lục toàn khoá nằm ở hàng đường dẫn (căn phải), tách khỏi danh sách bài của unit ở thanh bên để không lẫn hai loại mục lục.
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <LessonCrumbs slug={slug} courseTitle={courseTitle} unitTitle={frame.unitTitle} lessonTitle={lessonTitle} preview={preview} />
+          <LessonCrumbs slug={slug} courseTitle={courseTitle} unitTitle={frame.unitTitle} lessonTitle={lessonTitle} preview={preview} lang={lang} />
           {tocModules && tocModules.length > 0 && (
             <div className="ml-auto">
               <LessonTocDrawer slug={slug} currentLessonId={lessonId} modules={tocModules} trigger="inline" side="right" preview={preview} />
@@ -272,7 +292,7 @@ export default function LessonFrameLayout({
           )}
         </div>
       }
-      nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} preview={preview} />}
+      nav={<LessonNavBar slug={slug} prev={frame.prev} next={frame.next} preview={preview} lang={lang} />}
     >
       {children}
     </LessonFrameShell>

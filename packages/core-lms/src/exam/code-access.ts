@@ -253,10 +253,16 @@ export async function claimByOpenCode(
           shuffleOptions: true,
           courseId: true,
           kind: true,
+          purpose: true,
         },
       },
     },
   });
+  // Phiếu Khảo sát chỉ nhận người đã đăng nhập (claimByAccount) — tên tự khai thì không
+  // nối được lần trước với lần sau và không biết có ghi danh không.
+  if (sessionMatch?.exam.purpose === "survey") {
+    throw new ExamError("forbidden", { reason: "survey_requires_login" });
+  }
 
   let exam;
   if (sessionMatch) {

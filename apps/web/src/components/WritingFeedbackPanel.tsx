@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { describeWritingError } from "@/lib/writingFeedbackText";
+import { useT, useUiLang } from "@/lib/i18n/client";
 import WritingFeedbackView, { type WritingFeedbackBody } from "./WritingFeedbackView";
 
 export interface LearnerFeedbackState {
@@ -23,6 +24,8 @@ export default function WritingFeedbackPanel({
   submissionId: string;
   initial: LearnerFeedbackState | null;
 }) {
+  const t = useT();
+  const lang = useUiLang();
   const [fb, setFb] = useState<LearnerFeedbackState | null>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +41,7 @@ export default function WritingFeedbackPanel({
         | { error?: string; reused?: boolean; status?: string; body?: WritingFeedbackBody }
         | null;
       if (!res.ok || !j?.body) {
-        setError(describeWritingError(j?.error ?? (res.status === 401 ? "unauthorized" : undefined)));
+        setError(describeWritingError(j?.error ?? (res.status === 401 ? "unauthorized" : undefined), lang));
         return;
       }
       setFb((prev) => ({
@@ -46,30 +49,29 @@ export default function WritingFeedbackPanel({
         body: j.body!,
         reviewerNote: prev?.reviewerNote ?? null,
       }));
-      if (j.reused) setNote("Nội dung bài chưa đổi nên giữ nguyên góp ý trước — không gọi AI và không trừ thêm lượt.");
+      if (j.reused) setNote(t("practice.wf.p.reused"));
     } catch {
-      setError("Chưa nhận được góp ý. Kiểm tra mạng rồi thử lại.");
+      setError(t("practice.wf.p.netError"));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <section className="rounded-lg border border-token p-3" aria-label="Góp ý bài viết bằng AI" data-testid="writing-feedback-panel">
+    <section className="rounded-lg border border-token p-3" aria-label={t("practice.wf.p.aria")} data-testid="writing-feedback-panel">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Góp ý bài viết (AI)</h3>
+        <h3 className="text-sm font-semibold">{t("practice.wf.p.title")}</h3>
         <button
           type="button"
           onClick={() => void request()}
           disabled={busy}
           className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
-          {busy ? "Đang phân tích…" : fb ? "Phân tích lại" : "Nhận góp ý bài viết"}
+          {busy ? t("practice.wf.p.busy") : fb ? t("practice.wf.p.again") : t("practice.wf.p.get")}
         </button>
       </div>
       <p className="text-meta mt-1">
-        Khi bấm, bài viết của bạn được gửi tới nhà cung cấp AI để phân tích và trừ một phần lượt AI trong ví của bạn
-        (không trừ khi nội dung bài chưa đổi). Góp ý hiện ngay kèm nhãn “chưa duyệt” cho tới khi giảng viên duyệt.
+        {t("practice.wf.p.consent")}
       </p>
       {error && (
         <p role="alert" className="banner-danger mt-3 text-sm">

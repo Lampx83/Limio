@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { canViewSession } from "@feedbackme/core-lms";
 import { formatDateTime } from "@/lib/datetime";
+import { apiUrl } from "@/lib/apiUrl";
 import { auth } from "@/lib/auth";
 import ResultsPanel from "../../courses/[id]/exams/[examId]/ResultsPanel";
 
@@ -42,6 +43,7 @@ export default async function ExamRunPage({
           courseId: true,
           durationMin: true,
           kind: true,
+          purpose: true,
           course: { select: { instructors: { where: { userId: session.user.id }, select: { userId: true } } } },
         },
       },
@@ -51,6 +53,7 @@ export default async function ExamRunPage({
       timingMode: true,
       status: true,
       durationOverrideMin: true,
+      surveyPhase: true,
     },
   });
   if (!run) notFound();
@@ -73,6 +76,21 @@ export default async function ExamRunPage({
   }
 
   const durationMin = run.durationOverrideMin ?? run.exam.durationMin;
+
+  // Phiếu Khảo sát: không có điểm để tổng hợp — chỉ đếm lượt và cho xuất câu trả lời
+  // (docs/tieu-chi/de-thi-khao-sat.md AC7).
+  const survey = run.exam.purpose === "survey";
+  const surveyCounts = survey
+    ? await prisma.examAttempt.groupBy({
+        by: ["status"],
+        where: { sessionId: run.id },
+        _count: { _all: true },
+      })
+    : [];
+  const submittedCount = surveyCounts
+    .filter((c) => c.status !== "in_progress")
+    .reduce((n, c) => n + c._count._all, 0);
+  const inProgressCount = surveyCounts.find((c) => c.status === "in_progress")?._count._all ?? 0;
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-6 lg:px-6">
@@ -117,6 +135,37 @@ export default async function ExamRunPage({
         .
       </p>
 
+      {survey ? (
+        <section className="mt-6 rounded border border-default bg-white p-5">
+          <h2 className="text-h4">
+            Phiếu khảo sát
+            {run.surveyPhase === "pre" ? " — lần trước" : run.surveyPhase === "post" ? " — lần sau" : ""}
+          </h2>
+          <p className="mt-1 text-body">
+            <b>{submittedCount}</b> sinh viên đã nộp phiếu · <b>{inProgressCount}</b> đang làm.
+          </p>
+          <p className="mt-1 text-caption text-faint">
+            Phiếu không chấm điểm. Tải câu trả lời ra Excel để phân tích: mỗi lượt nộp một dòng, mỗi câu một cột theo
+            mã câu, kèm sheet “Từ điển câu hỏi”.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a
+              href={apiUrl(`/api/exams/${run.exam.id}/survey-export?sessionId=${run.id}`)}
+              download
+              className="btn-primary"
+            >
+              Xuất câu trả lời (Excel)
+            </a>
+            <a
+              href={apiUrl(`/api/exams/${run.exam.id}/survey-export`)}
+              download
+              className="btn-secondary"
+            >
+              Xuất mọi lần đo của phiếu
+            </a>
+          </div>
+        </section>
+      ) : (
       <div className="mt-6">
         <ResultsPanel
           examId={run.exam.id}
@@ -131,6 +180,7 @@ export default async function ExamRunPage({
           }
         />
       </div>
+      )}
     </main>
   );
 }

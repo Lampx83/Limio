@@ -7,15 +7,26 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { List, X, Check, Lock } from "lucide-react";
 import { FabTip } from "./TeacherBar";
+import { useT } from "@/lib/i18n/client";
+import LessonVideoBadge from "@/components/ui/LessonVideoBadge";
 
-type TocLesson = { id: string; title: string; completed: boolean; locked?: boolean };
+type TocLesson = {
+  id: string;
+  title: string;
+  completed: boolean;
+  locked?: boolean;
+  /** Bài có khối video chưa ẩn — hiện dấu video cạnh tên bài. */
+  hasVideo?: boolean;
+  /** Tổng thời lượng video làm tròn lên phút nếu có khai báo; chỉ dùng khi `hasVideo`. */
+  videoMinutes?: number | null;
+};
 type TocModule = { id: string; title: string; lessons: TocLesson[] };
 
 export default function LessonTocDrawer({
   slug,
   currentLessonId,
   modules,
-  tooltipLabel = "Mục lục",
+  tooltipLabel,
   trigger = "fab",
   side = "right",
   preview,
@@ -36,6 +47,8 @@ export default function LessonTocDrawer({
   preview?: boolean;
 }) {
   const pathname = usePathname();
+  const t = useT();
+  const tip = tooltipLabel ?? t("learn.toc.default");
   const [open, setOpen] = useState(false);
   // Chỉ portal sau khi đã mount: document chưa tồn tại lúc render trên máy chủ.
   const [mounted, setMounted] = useState(false);
@@ -58,6 +71,10 @@ export default function LessonTocDrawer({
 
   // Running lesson number across the whole course.
   let counter = 0;
+  const videoBadge = (l: TocLesson) => {
+    if (!l.hasVideo) return null;
+    return <LessonVideoBadge label={t("learn.video.has")} duration={l.videoMinutes ? t("learn.minutes", { n: l.videoMinutes }) : null} />;
+  };
 
   return (
     <>
@@ -68,25 +85,25 @@ export default function LessonTocDrawer({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Mục lục khoá học"
+          aria-label={t("learn.toc.course")}
           aria-haspopup="dialog"
           aria-expanded={open}
           className="inline-flex items-center gap-1.5 rounded-lg border border-token bg-[rgb(var(--surface))] px-2.5 py-1.5 text-sm font-medium transition-colors hover:bg-brand-soft"
         >
           <List size={15} aria-hidden />
-          Mục lục khoá học
+          {t("learn.toc.course")}
         </button>
       ) : (
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={tooltipLabel}
+        aria-label={tip}
         className="narration-lift group fixed bottom-4 right-4 z-30 flex h-11 w-11 short:bottom-2 short:right-3 short:h-9 short:w-9 items-center justify-center rounded-full bg-pink-500 text-white shadow-lg transition-transform hover:scale-105"
         aria-haspopup="dialog"
         aria-expanded={open}
       >
         <List size={18} />
-        <FabTip>{tooltipLabel}</FabTip>
+        <FabTip>{tip}</FabTip>
       </button>
       )}
 
@@ -104,7 +121,7 @@ export default function LessonTocDrawer({
           className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm"
           onClick={() => setOpen(false)}
           role="dialog"
-          aria-label="Mục lục bài học"
+          aria-label={t("learn.toc.lessons")}
         >
           <aside
             // Ngăn kéo mở từ phía có nút (mặc định phải: nút nổi ở mép phải, nút chữ ở hàng đường dẫn căn phải).
@@ -114,11 +131,11 @@ export default function LessonTocDrawer({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-token px-4 py-3">
-              <span className="text-sm font-semibold text-strong">Mục lục bài học</span>
+              <span className="text-sm font-semibold text-strong">{t("learn.toc.lessons")}</span>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Đóng mục lục"
+                aria-label={t("learn.toc.close")}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))]"
               >
                 <X size={16} />
@@ -172,12 +189,13 @@ export default function LessonTocDrawer({
                             <li key={l.id}>
                               <div
                                 className="flex cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-faint"
-                                title="Nội dung đang khoá — giảng viên sẽ mở sau"
+                                title={t("learn.toc.lockedTitle")}
                               >
                                 {num}
                                 <span className="flex-1 truncate">{l.title}</span>
+                                {videoBadge(l)}
                                 <span className="shrink-0 text-[10px] uppercase tracking-wide">
-                                  Đang khoá
+                                  {t("learn.toc.locked")}
                                 </span>
                               </div>
                             </li>
@@ -198,6 +216,7 @@ export default function LessonTocDrawer({
                             >
                               {num}
                               <span className="flex-1 truncate">{l.title}</span>
+                              {videoBadge(l)}
                             </Link>
                           </li>
                         );

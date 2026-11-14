@@ -28,6 +28,8 @@ import { toast } from "@/lib/toast";
 import { apiUrl } from "@/lib/apiUrl";
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
+import { useT } from "@/lib/i18n/client";
+import type { CaptionTrack } from "@/lib/captions";
 
 export interface Cuepoint {
   atSec: number;
@@ -68,14 +70,18 @@ interface Props {
   contentItemId: string;
   /** Lesson the video is in — sent in the cuepoint event payload. */
   lessonId: string;
+  /** Phụ đề `.vtt` tuỳ chọn — bật/tắt bằng nút CC của trình duyệt, mặc định tắt. */
+  caption?: CaptionTrack | null;
 }
 
 export default function VideoWithCuepoints({
+  caption,
   url,
   cuepoints,
   contentItemId,
   lessonId,
 }: Props) {
+  const tx = useT();
   const videoRef = useRef<HTMLVideoElement>(null);
   // Remembered mute state from before the cuepoint fired. While the overlay is
   // active we force the element muted as a belt-and-suspenders against audio
@@ -142,7 +148,7 @@ export default function VideoWithCuepoints({
     v.muted = true;
     const quiz = await loadQuiz(cp.quizId);
     if (!quiz) {
-      toast.error("Không tải được quiz cho cuepoint này — bỏ qua.");
+      toast.error(tx("learn.cue.loadFailed"));
       // Mark passed so we don't re-trigger this cuepoint forever.
       setPassed((p) => new Set(p).add(cp.atSec));
       // Restore mute before resuming so we don't leave the player silent.
@@ -260,13 +266,13 @@ export default function VideoWithCuepoints({
     } catch (err) {
       console.error("[VideoWithCuepoints] inline-grade network", err);
       setGrading(false);
-      toast.error("Không kết nối được tới server, thử lại.");
+      toast.error(tx("learn.cue.network"));
       return;
     }
     setGrading(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      toast.error(`Lỗi chấm điểm: ${(d as { error?: string }).error ?? res.status}`);
+      toast.error(tx("learn.cue.gradeError", { error: (d as { error?: string }).error ?? res.status }));
       return;
     }
     const data = (await res.json()) as {
@@ -278,7 +284,7 @@ export default function VideoWithCuepoints({
     setFeedback(fb);
 
     if (data.allCorrect) {
-      toast.success("Đúng rồi — xem tiếp nào");
+      toast.success(tx("learn.cue.correct"));
       setPassed((p) => new Set(p).add(active.cuepoint.atSec));
       setActive(null);
       if (v) {
@@ -287,7 +293,7 @@ export default function VideoWithCuepoints({
         v.play().catch(() => {});
       }
     } else {
-      toast.error("Chưa đúng — chọn lại và thử đến khi đúng để xem tiếp.");
+      toast.error(tx("learn.cue.wrongToast"));
       // Bump attempt count; learner can re-submit.
       setActive({ ...active, attemptCount: nextAttemptCount });
     }
@@ -307,7 +313,11 @@ export default function VideoWithCuepoints({
         style={active ? { pointerEvents: "none" } : undefined}
         className="aspect-video w-full rounded-xl bg-black shadow-card"
         preload="metadata"
-      />
+      >
+        {caption && (
+          <track kind="subtitles" src={caption.src} srcLang={caption.srcLang} label={caption.label} />
+        )}
+      </video>
       {sortedCuepoints.length > 0 && (
         <p className="mt-1 text-[11px] text-faint">
           Có {sortedCuepoints.length} câu hỏi gài trong video — phải trả lời đúng để xem tiếp.
@@ -348,6 +358,7 @@ function CuepointOverlay({
   onToggle: (qid: string, optionId: string, single: boolean) => void;
   onSubmit: () => void;
 }) {
+  const tx = useT();
   const mm = String(Math.floor(atSec / 60)).padStart(2, "0");
   const ss = String(Math.floor(atSec % 60)).padStart(2, "0");
 
@@ -363,9 +374,9 @@ function CuepointOverlay({
             <p className="mt-1 text-sm text-muted">{quiz.description}</p>
           )}
           <p className="mt-2 text-xs text-muted">
-            Trả lời đúng tất cả để xem tiếp video.
+            {tx("learn.cue.answerAll")}
             {attemptCount > 0 && (
-              <span> Lần thử: {attemptCount}.</span>
+              <span> {tx("learn.cue.attempt", { n: attemptCount })}</span>
             )}
           </p>
         </div>
@@ -418,7 +429,7 @@ function CuepointOverlay({
                   </div>
                 ) : (
                   <p className="mt-2 rounded border border-accent-200 bg-accent-50 px-3 py-2 text-xs text-accent-700">
-                    Câu hỏi loại "{q.type}" tạm chưa hỗ trợ trả lời inline. Mở quiz đầy đủ để trả lời, sau đó player sẽ cho qua.
+                    {tx("learn.cue.unsupported", { type: q.type })}
                   </p>
                 )}
               </li>
@@ -429,7 +440,7 @@ function CuepointOverlay({
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-token px-5 py-3">
           {feedback && Object.values(feedback).some((f) => f === "wrong") && (
             <p className="mr-auto text-sm font-medium text-danger-700">
-              Chưa đúng — chọn lại và thử đến khi đúng để xem tiếp.
+              {tx("learn.cue.wrongToast")}
             </p>
           )}
           <button
@@ -439,7 +450,7 @@ function CuepointOverlay({
             onClick={onSubmit}
             className="btn-primary btn-sm"
           >
-            {grading ? "Đang chấm..." : feedback ? "Thử lại" : "Trả lời"}
+            {grading ? tx("learn.cue.grading") : feedback ? tx("learn.cue.retry") : tx("learn.cue.answer")}
           </button>
         </div>
       </div>

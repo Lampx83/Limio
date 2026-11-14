@@ -19,6 +19,7 @@ import ConfidenceStars from "@/components/quiz/ConfidenceStars";
 import { plainToRichHtml } from "@/lib/richText";
 import { formatPoints, summarizeScore, xpMultiplierNote } from "@/lib/quizResultView";
 import { Zap } from "lucide-react";
+import { getT, getUiLang } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,8 @@ export default async function ResultPage({
 }: {
   params: { slug: string; attemptId: string };
 }) {
+  const t = await getT();
+  const lang = await getUiLang();
   const session = await auth();
   if (!session?.user?.id) {
     redirect(`/signin?callbackUrl=/learn/${params.slug}/attempts/${params.attemptId}/result`);
@@ -56,12 +59,15 @@ export default async function ResultPage({
   }
 
   const correctCount = result.items.filter((i) => i.isCorrect).length;
-  const scoreSummary = summarizeScore({
-    scorePct: result.attempt.scorePct,
-    totalPoints: result.items.reduce((s, i) => s + i.points, 0),
-    correctCount,
-    totalQuestions: result.items.length,
-  });
+  const scoreSummary = summarizeScore(
+    {
+      scorePct: result.attempt.scorePct,
+      totalPoints: result.items.reduce((s, i) => s + i.points, 0),
+      correctCount,
+      totalQuestions: result.items.length,
+    },
+    lang,
+  );
 
   // B4 AC-2.9 — sau MỌI lần nộp (không chờ trượt 2 lần): nhãn của bài vừa làm
   // + bước tiếp theo trong lộ trình. Quiz không gắn bài thì chưa có nhãn để nói.
@@ -199,8 +205,9 @@ export default async function ResultPage({
   const askMoreHref = (prompt: string) =>
     quizLesson?.lessonId
       ? `/learn/${params.slug}/lessons/${quizLesson.lessonId}?hoi=${encodeURIComponent(
-          `Mình vừa làm sai câu: “${prompt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300)}”. ` +
-            `Bạn giải thích giúp mình vì sao đáp án mình chọn lại chưa đúng nhé.`,
+          t("practice.result.askPrompt", {
+            q: prompt.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300),
+          }),
         )}`
       : null;
 
@@ -210,12 +217,12 @@ export default async function ResultPage({
         href={`/learn/${params.slug}`}
         className="link inline-flex items-center gap-1 text-sm"
       >
-        ← Quay lại khoá học
+        {t("practice.result.back")}
       </Link>
 
       {/* Trang này trước đây không có tiêu đề: người mở lại từ lịch sử không biết đây là kết quả của bài nào. */}
-      <p className="mt-4 text-meta">Kết quả bài kiểm tra</p>
-      <h1 className="h-display text-2xl font-bold">{quizContext?.title ?? "Bài kiểm tra"}</h1>
+      <p className="mt-4 text-meta">{t("practice.result.kicker")}</p>
+      <h1 className="h-display text-2xl font-bold">{quizContext?.title ?? t("practice.result.fallbackTitle")}</h1>
 
       {/* Hero score */}
       <section
@@ -225,18 +232,21 @@ export default async function ResultPage({
         <div className="absolute -bottom-16 -left-12 h-56 w-56 rounded-full bg-white/10 blur-3xl" aria-hidden />
         <div className="relative">
           {greetName && (
-            <p className="mt-3 text-lg font-semibold">Chào {greetName},</p>
+            <p className="mt-3 text-lg font-semibold">{t("practice.result.greet", { name: greetName })}</p>
           )}
           <p className="mt-3 h-display text-5xl font-bold tabular-nums">
-            {result.attempt.scorePct != null ? formatPoints(result.attempt.scorePct) : "—"}
+            {result.attempt.scorePct != null ? formatPoints(result.attempt.scorePct, lang) : "—"}
             <span className="text-3xl opacity-70">%</span>
           </p>
           <p className="mt-2 text-base font-medium">
-            {correctCount}/{result.items.length} câu đúng
+            {t("practice.result.correctCount", { c: correctCount, n: result.items.length })}
             {scoreSummary && (
               <>
                 {" · "}
-                {formatPoints(scoreSummary.earnedPoints)}/{formatPoints(scoreSummary.totalPoints)} điểm
+                {t("practice.result.pointsOf", {
+                  e: formatPoints(scoreSummary.earnedPoints, lang),
+                  t: formatPoints(scoreSummary.totalPoints, lang),
+                })}
               </>
             )}
           </p>
@@ -247,8 +257,8 @@ export default async function ResultPage({
                 <Zap size={18} aria-hidden />
                 <span className="font-semibold">+{xpPayload.amount} XP</span>
               </div>
-              {xpMultiplierNote(xpPayload.adaptiveMultiplier) && (
-                <p className="mt-1 text-sm">{xpMultiplierNote(xpPayload.adaptiveMultiplier)}</p>
+              {xpMultiplierNote(xpPayload.adaptiveMultiplier, lang) && (
+                <p className="mt-1 text-sm">{xpMultiplierNote(xpPayload.adaptiveMultiplier, lang)}</p>
               )}
             </div>
           )}
@@ -259,7 +269,7 @@ export default async function ResultPage({
       {resolvedMcs.length > 0 && (
         <div className="mt-6 rounded-2xl border border-success-100 bg-success-50 p-5">
           <p className="text-sm font-semibold text-success-700">
-            Bạn vừa khắc phục {resolvedMcs.length} lỗi tư duy
+            {t("practice.result.mcResolved", { n: resolvedMcs.length })}
             {resolvedXpTotal > 0 && (
               <span className="ml-2 text-accent-700">+{resolvedXpTotal} XP</span>
             )}
@@ -274,7 +284,7 @@ export default async function ResultPage({
           </ul>
           {resolvedXpTotal === 0 && resolvedMcs.length > 0 && (
             <p className="mt-3 text-xs italic text-success-700/70">
-              (Đã thưởng XP cho lần khắc phục đầu tiên — lần này không cộng thêm.)
+              {t("practice.result.mcNoXp")}
             </p>
           )}
         </div>
@@ -283,14 +293,14 @@ export default async function ResultPage({
       {/* B4 — lộ trình: nhãn bài vừa làm + bước tiếp theo */}
       {pathLesson && pathLabel && (
         <section className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card">
-          <p className="text-meta">Mức nắm vững sau lần làm này</p>
+          <p className="text-meta">{t("practice.result.masteryAfter")}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <span className="break-words font-semibold">{pathLesson.title}</span>
             <MasteryBadge label={pathLabel} />
           </div>
           {nextSteps.length > 0 ? (
             <>
-              <p className="text-meta mt-4">Bước tiếp theo</p>
+              <p className="text-meta mt-4">{t("practice.result.nextStep")}</p>
               <div className="mt-2">
                 <LearningPathList
                   steps={nextSteps}
@@ -301,11 +311,11 @@ export default async function ResultPage({
             </>
           ) : (
             <p className="mt-3 text-sm text-muted">
-              Bạn đã đi hết lộ trình của khoá này.
+              {t("practice.result.pathDone")}
             </p>
           )}
           <Link href={`/learn/${params.slug}`} className="link mt-3 inline-block text-sm">
-            Xem cả lộ trình →
+            {t("practice.result.fullPath")}
           </Link>
         </section>
       )}
@@ -340,13 +350,13 @@ export default async function ResultPage({
                     {isCorrect ? "✓" : "✗"}
                   </span>
                   <span className="text-sm font-semibold">
-                    Câu {i + 1}
-                    <span className="ml-1.5 font-normal opacity-90">({item.points} điểm)</span>
+                    {t("practice.result.q", { n: i + 1 })}
+                    <span className="ml-1.5 font-normal opacity-90">{t("practice.result.qPoints", { p: item.points })}</span>
                   </span>
                 </div>
                 {item.confidence !== null && (
                   <span className="flex items-center gap-1.5 text-xs opacity-80">
-                    Tự tin:
+                    {t("practice.result.confidence")}
                     <ConfidenceStars value={item.confidence} readOnly size={14} />
                   </span>
                 )}
@@ -360,13 +370,13 @@ export default async function ResultPage({
 
                 {/* Bạn đã chọn gì, đáp án đúng là gì — đặt TRƯỚC phản hồi và
                     giải thích, vì cả hai đều nói về những phương án này. */}
-                <AnswerBreakdown item={item} />
+                <AnswerBreakdown item={item} lang={lang} />
 
                 {!isCorrect && fb && (
                   <div className="mt-4 rounded-xl bg-danger-50 p-4">
                     <div className="flex items-baseline justify-between gap-3">
                       <p className="text-xs font-semibold uppercase tracking-wide text-danger-700">
-                        Phản hồi
+                        {t("practice.result.feedback")}
                       </p>
                       <FeedbackRater
                         deliveryId={fb.deliveryId}
@@ -383,13 +393,13 @@ export default async function ResultPage({
                         href={askMoreHref(item.prompt)!}
                         className="mt-3 inline-flex items-center gap-1 rounded-lg border border-danger-200 bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium text-danger-700 transition-colors hover:bg-danger-50"
                       >
-                        Chỗ này mình chưa rõ — hỏi thêm
+                        {t("practice.result.askMore")}
                       </Link>
                     )}
                     {fb.remediationLessonIds.length > 0 && (
                       <div className="mt-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-danger-700">
-                          Tài liệu nên xem lại
+                          {t("practice.result.reviewMaterial")}
                         </p>
                         <ul className="mt-2 space-y-1">
                           {fb.remediationLessonIds.map((lid) => {
@@ -420,14 +430,14 @@ export default async function ResultPage({
                 {!isCorrect && !fb && !item.explanation && (
                   <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
                     <p className="text-sm text-muted">
-                      Câu này chưa có lời giải trong bài. Bạn có thể hỏi trợ giảng AI để hiểu vì sao đáp án chưa đúng.
+                      {t("practice.result.noSolution")}
                     </p>
                     {askMoreHref(item.prompt) && (
                       <Link
                         href={askMoreHref(item.prompt)!}
                         className="mt-3 inline-flex items-center gap-1 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
                       >
-                        Hỏi trợ giảng về câu này
+                        {t("practice.result.askTutor")}
                       </Link>
                     )}
                   </div>
@@ -438,7 +448,7 @@ export default async function ResultPage({
                 {item.explanation && !fb && (
                   <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface-muted))] p-4">
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-                      Giải thích
+                      {t("practice.result.explanation")}
                     </p>
                     <SafeHtml
                       html={plainToRichHtml(item.explanation)}
@@ -451,7 +461,7 @@ export default async function ResultPage({
                         href={askMoreHref(item.prompt)!}
                         className="mt-3 inline-flex items-center gap-1 rounded-lg border border-token bg-[rgb(var(--surface))] px-3 py-1.5 text-xs font-medium transition-colors hover:bg-[rgb(var(--surface-muted))]"
                       >
-                        Hỏi trợ giảng về câu này
+                        {t("practice.result.askTutor")}
                       </Link>
                     )}
                   </div>
@@ -465,16 +475,16 @@ export default async function ResultPage({
       {/* Ô chọn câu: xem lại từng câu mà không phải cuộn dài. Neo # nên không cần JavaScript. */}
       <aside className="mt-6 lg:mt-0">
         <nav
-          aria-label="Chọn câu để xem lại"
+          aria-label={t("practice.result.navAria")}
           className="rounded-2xl border border-token bg-[rgb(var(--surface))] p-4 shadow-card lg:sticky lg:top-6"
         >
-          <p className="text-meta">Xem lại từng câu</p>
+          <p className="text-meta">{t("practice.result.reviewEach")}</p>
           <div className="mt-2 grid grid-cols-6 gap-1.5 lg:grid-cols-5">
             {result.items.map((item, i) => (
               <a
                 key={item.questionId}
                 href={`#cau-${i + 1}`}
-                aria-label={`Câu ${i + 1}: ${item.isCorrect ? "đúng" : "sai"}`}
+                aria-label={t(item.isCorrect ? "practice.result.cellOk" : "practice.result.cellBad", { n: i + 1 })}
                 className={`flex h-9 items-center justify-center rounded-md text-xs font-semibold tabular-nums transition-colors ${
                   item.isCorrect
                     ? "bg-success-50 text-success-700 hover:bg-success-100"
@@ -487,14 +497,14 @@ export default async function ResultPage({
           </div>
           <ul className="mt-3 space-y-1 text-[11px] text-muted">
             <li className="flex items-center gap-2">
-              <span className="inline-block h-3.5 w-3.5 rounded bg-success-50 ring-1 ring-success-200" /> Câu đúng
+              <span className="inline-block h-3.5 w-3.5 rounded bg-success-50 ring-1 ring-success-200" /> {t("practice.result.legendOk")}
             </li>
             <li className="flex items-center gap-2">
-              <span className="inline-block h-3.5 w-3.5 rounded bg-danger-50 ring-1 ring-danger-200" /> Câu sai
+              <span className="inline-block h-3.5 w-3.5 rounded bg-danger-50 ring-1 ring-danger-200" /> {t("practice.result.legendBad")}
             </li>
           </ul>
           <a href="#dau-trang" className="link mt-3 inline-block text-xs">
-            ↑ Về đầu trang
+            {t("practice.result.toTop")}
           </a>
         </nav>
       </aside>

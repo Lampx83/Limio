@@ -1,31 +1,35 @@
+"use client";
+
 import type { WritingErrorSummary } from "@feedbackme/core-feedback";
-import { CATEGORY_LABEL } from "@/lib/writingFeedbackText";
+import { categoryLabel } from "@/lib/writingFeedbackText";
+import { useT, useUiLang } from "@/lib/i18n/client";
 
 /**
  * LANG G6d — khối "Lỗi hay gặp khi viết" trên hồ sơ 4 kỹ năng. Chỉ tính từ các bản góp ý ĐÃ ĐƯỢC GIẢNG
  * VIÊN DUYỆT trong 8 tuần gần nhất. TÁCH HẲN khỏi nhãn Cần ôn / Nên luyện / Vững.
  */
 export default function WritingErrorsBlock({ summary }: { summary: WritingErrorSummary }) {
+  const t = useT();
+  const lang = useUiLang();
   const frequent = summary.categories.filter((c) => c.frequent).slice(0, 3);
   return (
     <section className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4" data-testid="writing-errors-block">
-      <h2 className="text-h3">Lỗi hay gặp khi viết</h2>
+      <h2 className="text-h3">{t("practice.wf.errs.title")}</h2>
       <p className="text-meta mt-1">
-        Tổng hợp từ {summary.feedbackCount} góp ý bài viết đã được giảng viên duyệt trong 8 tuần gần đây. Tách riêng khỏi
-        nhãn kỹ năng ở trên.
+        {t("practice.wf.errs.meta", { n: summary.feedbackCount })}
       </p>
       {frequent.length === 0 ? (
         <p className="text-meta mt-3">
-          Chưa có loại lỗi nào lặp lại từ 3 lần trở lên — {summary.totalErrors === 0 ? "bài viết của bạn chưa có lỗi nào được ghi nhận." : "cứ tiếp tục viết và nhận góp ý để thấy rõ hơn."}
+          {summary.totalErrors === 0 ? t("practice.wf.errs.emptyNone") : t("practice.wf.errs.emptySome")}
         </p>
       ) : (
         <ul className="mt-3 space-y-2">
           {frequent.map((c) => (
             <li key={c.category} className="rounded border border-token px-3 py-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="font-medium">{CATEGORY_LABEL[c.category] ?? c.category}</span>
+                <span className="font-medium">{categoryLabel(c.category, lang)}</span>
                 <span className="tabular-nums text-faint">
-                  {c.count} lần · {Math.round(c.share * 100)}% lỗi
+                  {t("practice.wf.errs.count", { c: c.count, p: Math.round(c.share * 100) })}
                 </span>
               </div>
               {c.examples.map((e, i) => (

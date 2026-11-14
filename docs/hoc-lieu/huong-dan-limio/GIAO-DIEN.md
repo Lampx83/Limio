@@ -205,6 +205,16 @@ gồm nhiều ca" — đã lỗi thời, đừng lặp lại.)
 - Nút xuất bản vẫn ghi "Publish". **Publish chỉ làm đề sẵn sàng, không tự mở thi**; hộp thoại sau Publish
   dẫn sang "Tổ chức thi →". Đề luyện thi (đề thi thử, mục 12) cho học viên đã ghi danh làm ngay, không cần ca.
 - Mỗi thẻ đề có nút "Xoá"; đề đã có lượt thi thì nút khoá kèm lý do ("Đề đã có lượt thi nên không xoá được.").
+- **Phiếu khảo sát** (mới 2026-11-11, `docs/tieu-chi/de-thi-khao-sat.md`): ở biểu mẫu đề, mục "Nâng cao — mục
+  đích, chấm điểm, giám thị, trộn đề…" › "Mục đích" có thêm **"Khảo sát (không chấm điểm)"** (chỉ đề viết). Đề
+  Khảo sát không chấm, không hiện điểm, không trộn câu hay lựa chọn, không giám sát toàn màn hình; đổi sang hoặc
+  ra khỏi Khảo sát bị chặn khi đề đã có lượt làm. Tab Nội dung đổi tiêu đề thành "Nội dung phiếu khảo sát", có
+  hai nút **"Thêm phần"** và **"Câu không thuộc phần nào"** (không có AI import, Excel import, ngân hàng câu
+  hỏi hay chia phần chấm điểm). Mỗi phần có "Tiêu đề phần", "Lời dẫn" (sinh viên đọc ở đầu phần) và **"Dùng ở
+  lần đo"**: Cả hai lần / Chỉ lần trước / Chỉ lần sau. Dạng câu: Một lựa chọn, Nhiều lựa chọn, **Thang trượt**
+  (Nhỏ nhất, Lớn nhất, Bước, nhãn hai đầu), Trả lời ngắn, Trả lời dài; không có đáp án đúng và không có ô điểm.
+  Mỗi câu có ô **"Mã câu"** (vd TT01) làm tiêu đề cột khi xuất, sinh viên không thấy; mã trùng trong phiếu bị
+  từ chối.
 - **"Thi thử"** (mới): đề viết có nút "Thi thử" cho giảng viên (`…/exams/<id>/thi-thu`) — bản thử, không tạo
   lượt thi, không ảnh hưởng điểm hay kết quả. Nộp xong hiện "Đã nộp bản thử" cùng "Thi thử lại" và "Quay lại
   đề thi".
@@ -222,6 +232,13 @@ Lịch sử thi →"). Đi từ đề sang (nút Tổ chức thi) thì hiện "�
    thi / Không hiện) · "Tuỳ chọn nâng cao — giờ mở/đóng" (Hẹn giờ mở, Hẹn giờ đóng) · nút "Mở". Mở xong
    hiện "Đã mở buổi thi.", mã 6 ký tự, nút sao chép link, mã QR, "Mở buổi khác", "Xem kết quả". Không hẹn
    giờ thì buổi mở ngay và đóng khi giảng viên bấm.
+   **Phiếu khảo sát** cũng mở ở đây: danh sách đề ghi "[Khảo sát]" trước tên; chọn phiếu thì ô hiện đáp án
+   biến mất, thay bằng **"Lần đo"** (Lần trước / Lần sau, thêm "Không phân lần" nếu phiếu không có phần gắn
+   lần đo). Mở xong hiện "Đã mở phiếu khảo sát — lần trước." (hoặc lần sau). Sinh viên quét QR phải đăng nhập
+   và đã ghi danh khoá; mỗi người làm một lần cho mỗi lần đo; nộp xong chỉ thấy "Đã ghi nhận phiếu của bạn".
+   "Xem kết quả" của phiếu chỉ đếm số đã nộp / đang làm và có hai nút **"Xuất câu trả lời (Excel)"** (ca này)
+   và **"Xuất mọi lần đo của phiếu"**: mỗi lượt nộp một dòng, mỗi câu một cột theo mã câu, lựa chọn ghi số thứ
+   tự, kèm sheet "Từ điển câu hỏi".
 2. **Thử nghiệm câu hỏi**: cùng một biểu mẫu với link thi nhanh (blurb nói mặc định không hiện đáp án — chưa
    kiểm chứng trong mã).
 3. **Kỳ thi chính thức** (`/instructor/organize/formal`): "Đề thi" · "Tên ca" (tuỳ chọn) · "Mở lúc" ·

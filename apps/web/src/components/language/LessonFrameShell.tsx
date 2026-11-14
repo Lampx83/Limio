@@ -4,6 +4,7 @@ import { accentVar } from "@/lib/courseAccent";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import AiTutorPanel from "@/components/AiTutorPanel";
+import { useT } from "@/lib/i18n/client";
 import { LessonNotes } from "@/components/LessonActions";
 import {
   defaultPanelOpen,
@@ -45,6 +46,7 @@ export default function LessonFrameShell({
   accent?: string | null;
   children: React.ReactNode;
 }) {
+  const t = useT();
   // Lần dựng đầu (kể cả trên máy chủ) luôn đóng; chiều ngang thật chỉ biết sau khi mount.
   const [cls, setCls] = useState<PanelWidthClass>("narrow");
   const [open, setOpen] = useState(false);
@@ -138,7 +140,7 @@ export default function LessonFrameShell({
     }
   };
 
-  const notesLabel = notes > 0 ? `Ghi chú · ${notes}` : "Ghi chú";
+  const notesLabel = notes > 0 ? t("ai.panel.tabNotesN", { n: notes }) : t("ai.panel.tabNotes");
 
   return (
     <div
@@ -172,30 +174,30 @@ export default function LessonFrameShell({
       {open && !docked && <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm xl:hidden" onClick={closePanel} aria-hidden />}
 
       <aside
-        aria-label="Trợ giảng AI và ghi chú"
+        aria-label={t("ai.panel.aria")}
         hidden={!open}
         // `hidden` (lớp) chứ không chỉ thuộc tính: lớp `flex` của Tailwind đè display:none của thuộc tính `hidden`, làm panel đóng vẫn hiện.
         className={`${open ? "flex" : "hidden"} fixed inset-y-0 right-0 z-50 w-full max-w-md flex-col border-l border-token bg-[rgb(var(--surface))] shadow-2xl xl:sticky xl:inset-auto xl:top-20 xl:z-auto xl:h-[calc(100vh-5rem)] xl:max-w-none xl:border-y-0 xl:border-r-0 xl:shadow-none`}
       >
         <div className="flex items-center gap-1 border-b border-token px-3 pt-2">
-          <div role="tablist" aria-label="Công cụ học" className="flex flex-1 gap-1" onKeyDown={onTabKey}>
+          <div role="tablist" aria-label={t("ai.panel.toolsLabel")} className="flex flex-1 gap-1" onKeyDown={onTabKey}>
             {(
               [
-                ["ai", "AI trợ giảng"],
+                ["ai", t("ai.panel.tabAi")],
                 ["notes", notesLabel],
               ] as Array<[PanelTab, string]>
-            ).map(([t, label]) => (
+            ).map(([tabKey, label]) => (
               <button
-                key={t}
+                key={tabKey}
                 type="button"
                 role="tab"
-                id={`lesson-panel-tab-${t}`}
-                aria-selected={tab === t}
-                aria-controls={`lesson-panel-${t}`}
-                tabIndex={tab === t ? 0 : -1}
-                onClick={() => chooseTab(t)}
+                id={`lesson-panel-tab-${tabKey}`}
+                aria-selected={tab === tabKey}
+                aria-controls={`lesson-panel-${tabKey}`}
+                tabIndex={tab === tabKey ? 0 : -1}
+                onClick={() => chooseTab(tabKey)}
                 className={`-mb-px border-b-2 px-3 py-2 text-sm ${
-                  tab === t ? "border-brand-600 font-semibold text-brand-800" : "border-transparent text-muted hover:text-[rgb(var(--text))]"
+                  tab === tabKey ? "border-brand-600 font-semibold text-brand-800" : "border-transparent text-muted hover:text-[rgb(var(--text))]"
                 }`}
               >
                 {label}
@@ -206,7 +208,7 @@ export default function LessonFrameShell({
             ref={closeRef}
             type="button"
             onClick={closePanel}
-            aria-label="Đóng panel"
+            aria-label={t("ai.panel.close")}
             className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:bg-[rgb(var(--surface-muted))]"
           >
             <X size={16} aria-hidden />
@@ -235,8 +237,8 @@ export default function LessonFrameShell({
         <button
           type="button"
           onClick={() => openPanel()}
-          aria-label="Mở trợ giảng AI và ghi chú"
-          title={`AI trợ giảng và Ghi chú${notes > 0 ? ` · ${notes} ghi chú` : ""}`}
+          aria-label={t("ai.panel.openAria")}
+          title={notes > 0 ? t("ai.panel.openTitleN", { n: notes }) : t("ai.panel.openTitle")}
           className="narration-lift lesson-fab-panel fixed bottom-[14.2rem] right-4 z-30 flex h-[2.35rem] w-[2.35rem] items-center justify-center rounded-full bg-brand-gradient text-white shadow-lg ring-2 ring-white/80 transition-transform hover:scale-105 print:hidden"
         >
           <Sparkles size={18} aria-hidden />

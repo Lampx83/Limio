@@ -51,6 +51,11 @@ const PRIVATE_PREFIXES = [
  */
 const PUBLIC_LESSON_RE = /^\/learn\/[^/]+\/lessons\/[^/]+\/?$/;
 
+/** Nhánh có thể thuộc một space: trang chủ space, catalog và khu học của khoá. */
+const SPACE_PATH_RE = /^\/(?:s\/|micro4asia(?:\/|$)|catalog\/|learn\/)/;
+
+const COURSE_SLUG_RE = /^\/(?:catalog|learn)\/([^/]+)/;
+
 function isPrivate(pathname: string): boolean {
   if (PUBLIC_LESSON_RE.test(pathname)) return false;
   if (pathname === "/learn" || pathname.startsWith("/learn/")) return true;
@@ -67,13 +72,28 @@ export function middleware(req: NextRequest) {
     languageHost: process.env.LANGUAGE_HOST,
     pathname: req.nextUrl.pathname,
   });
+  // SPACE: layout gốc cần biết trang đang xem có thuộc space của trường nào không (để đổi màu/logo/chân trang).
+  // Chỉ gắn header cho vài nhánh liên quan, để mọi trang khác không đổi gì.
+  const reqHeaders = new Headers(req.headers);
+  reqHeaders.delete("x-space-path"); // không tin giá trị do client gửi
+  if (SPACE_PATH_RE.test(req.nextUrl.pathname)) reqHeaders.set("x-space-path", req.nextUrl.pathname);
+  // I18N: slug khoá đang xem (để layout gốc chọn ngôn ngữ giao diện theo course.language).
+  reqHeaders.delete("x-course-slug");
+  const courseSlug = COURSE_SLUG_RE.exec(req.nextUrl.pathname)?.[1];
+  if (courseSlug) {
+    try {
+      reqHeaders.set("x-course-slug", decodeURIComponent(courseSlug));
+    } catch {
+      /* slug hỏng mã hoá — bỏ qua, giao diện về mặc định */
+    }
+  }
   let res: NextResponse;
   if (rewriteTo) {
     const url = req.nextUrl.clone();
     url.pathname = rewriteTo;
-    res = NextResponse.rewrite(url);
+    res = NextResponse.rewrite(url, { request: { headers: reqHeaders } });
   } else {
-    res = NextResponse.next();
+    res = NextResponse.next({ request: { headers: reqHeaders } });
   }
   // `pathname` đã bỏ basePath, nên danh sách trên viết theo đường dẫn app —
   // giống mọi nơi khác trong codebase (xem `lib/apiUrl.ts`).

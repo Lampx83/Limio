@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Pause, RotateCw, Shuffle, Volume2 } from "lucide-react";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
+import { useT } from "@/lib/i18n/client";
 import type { VocabViewItem } from "./VocabListView";
 
 /**
@@ -21,6 +22,7 @@ export default function VocabFlashcards({
   playingId: string | null;
   onToggleAudio: (id: string, url: string) => void;
 }) {
+  const t = useT();
   const [order, setOrder] = useState<number[]>(() => items.map((_, i) => i));
   const [pos, setPos] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -93,29 +95,29 @@ export default function VocabFlashcards({
   );
   const front = reverse ? meaningFace : termFace;
   const back = reverse ? termFace : meaningFace;
-  const hint = reverse ? "Bấm để xem từ" : "Bấm để xem nghĩa";
+  const hint = reverse ? t("practice.fc.vf.hintTerm") : t("practice.fc.vf.hintMeaning");
 
   return (
     <div
       ref={rootRef}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      aria-label="Thẻ ghi nhớ"
+      aria-label={t("practice.fc.vf.aria")}
       className="space-y-3 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-brand-300"
     >
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted">
         <span className="tabular-nums" aria-live="polite">
-          Thẻ {pos + 1} / {total}
+          {t("practice.fc.vf.pos", { a: pos + 1, b: total })}
         </span>
         <span className="inline-flex items-center gap-1">
-          <button type="button" onClick={() => { setReverse((v) => !v); setFlipped(false); }} className="btn-pill" aria-pressed={reverse} title="Đổi mặt trước: từ hay nghĩa">
+          <button type="button" onClick={() => { setReverse((v) => !v); setFlipped(false); }} className="btn-pill" aria-pressed={reverse} title={t("practice.fc.vf.switchTitle")}>
             <RotateCw size={14} aria-hidden />
-            {reverse ? "Mặt trước: nghĩa" : "Mặt trước: từ"}
+            {reverse ? t("practice.fc.vf.frontMeaning") : t("practice.fc.vf.frontTerm")}
           </button>
           {total > 1 && (
-            <button type="button" onClick={shuffle} className="btn-pill" title="Xáo thứ tự thẻ">
+            <button type="button" onClick={shuffle} className="btn-pill" title={t("practice.fc.vf.shuffleTitle")}>
               <Shuffle size={14} aria-hidden />
-              Xáo thẻ
+              {t("practice.fc.vf.shuffle")}
             </button>
           )}
         </span>
@@ -136,7 +138,7 @@ export default function VocabFlashcards({
             if (e.detail <= 1 && window.getSelection()?.toString()) return;
             setFlipped((v) => !v);
           }}
-          aria-label={flipped ? "Lật về mặt trước" : "Lật thẻ"}
+          aria-label={flipped ? t("practice.fc.vf.flipBack") : t("practice.fc.flip")}
           className="flip-card-inner relative block min-h-[17rem] w-full cursor-pointer rounded-2xl text-center sm:min-h-[19rem]"
         >
           <span
@@ -156,7 +158,7 @@ export default function VocabFlashcards({
         {item.audioUrl && (
           <button
             type="button"
-            aria-label={`Nghe ${item.term}`}
+            aria-label={t("practice.fc.listenTerm", { term: item.term })}
             aria-pressed={playing}
             onClick={() => onToggleAudio(item.id, item.audioUrl!)}
             className={`absolute right-3 top-3 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
@@ -169,22 +171,22 @@ export default function VocabFlashcards({
       </div>
 
       <div className="mx-auto flex w-full max-w-xl items-center gap-3">
-        <button type="button" onClick={() => go(pos - 1)} disabled={pos === 0} className="btn-secondary btn-sm" aria-label="Thẻ trước">
+        <button type="button" onClick={() => go(pos - 1)} disabled={pos === 0} className="btn-secondary btn-sm" aria-label={t("practice.fc.vf.prevAria")}>
           <ArrowLeft size={16} aria-hidden />
-          Trước
+          {t("practice.fc.vf.prev")}
         </button>
         <div
           className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
           role="progressbar"
-          aria-label="Thẻ đã xem"
+          aria-label={t("practice.fc.vf.seen")}
           aria-valuenow={pos + 1}
           aria-valuemin={1}
           aria-valuemax={total}
         >
           <div className="h-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all" style={{ width: `${progress}%` }} />
         </div>
-        <button type="button" onClick={() => go(pos + 1)} disabled={pos === total - 1} className="btn-primary btn-sm" aria-label="Thẻ sau">
-          Sau
+        <button type="button" onClick={() => go(pos + 1)} disabled={pos === total - 1} className="btn-primary btn-sm" aria-label={t("practice.fc.vf.nextAria")}>
+          {t("practice.fc.vf.next")}
           <ArrowRight size={16} aria-hidden />
         </button>
       </div>

@@ -8,6 +8,8 @@ import { FabTip } from "./lesson/TeacherBar";
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { useAiTokensPageUnlocked } from "./AiTokensPageContext";
+import { useT, useUiLang } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
 
 interface Message {
   id: string;
@@ -16,11 +18,7 @@ interface Message {
   createdAt: string | Date;
 }
 
-const SUGGESTIONS = [
-  "Tóm tắt các ý chính của bài này",
-  "Giải thích lại đơn giản hơn cho mình",
-  "Cho mình một câu hỏi để tự kiểm tra",
-];
+const SUGGESTIONS: MessageKey[] = ["ai.suggest.summary", "ai.suggest.simplify", "ai.suggest.quiz"];
 
 /**
  * Tách phần trích dẫn đứng đầu tin nhắn ("> đoạn bôi đen") khỏi câu hỏi. Server
@@ -54,6 +52,8 @@ export default function AiTutorPanel({
   /** Chế độ gắn cố định: yêu cầu panel mở (vd. liên kết `?hoi=`). */
   onRequestOpen?: () => void;
 }) {
+  const t = useT();
+  const uiLang = useUiLang();
   const tokensUnlocked = useAiTokensPageUnlocked();
   const [openState, setOpenState] = useState(false);
   const open = docked ? active : openState;
@@ -190,6 +190,7 @@ export default function AiTutorPanel({
           lessonId,
           message: text,
           conversationId,
+          locale: uiLang,
           ...(attached ? { quote: attached } : {}),
         }),
       });
@@ -263,8 +264,8 @@ export default function AiTutorPanel({
     return (
       <button
         onClick={() => setOpen(true)}
-        aria-label="Mở trợ giảng AI"
-        title="Trợ giảng AI — hỏi lại phần chưa hiểu trong bài"
+        aria-label={t("ai.open.aria")}
+        title={t("ai.open.title")}
         /*
           Nút tròn 44px, xếp thành cột nút nổi bên phải cùng nút ghi chú và nút
           giảng viên: ba nút cùng cỡ, cùng lề phải, cách đều nhau. Trước đây đây
@@ -274,7 +275,7 @@ export default function AiTutorPanel({
         className="narration-lift group fixed bottom-20 right-4 z-30 flex h-11 w-11 short:bottom-[3.25rem] short:right-3 short:h-9 short:w-9 items-center justify-center rounded-full bg-brand-gradient text-white shadow-brand-glow transition-transform hover:scale-105"
       >
         <Bot size={20} />
-        <FabTip>Trợ giảng AI</FabTip>
+        <FabTip>{t("ai.open.tip")}</FabTip>
       </button>
     );
   }
@@ -293,21 +294,17 @@ export default function AiTutorPanel({
             <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-brand-glow">
               <Sparkles size={22} />
             </span>
-            <h3 className="mt-3 text-base font-semibold">Bạn đang vướng chỗ nào?</h3>
-            <p className="mt-1 text-sm text-muted">
-              Mình sẽ gợi ý từng bước để bạn tự hiểu, không đưa thẳng đáp án bài
-              tập. Mẹo: bôi đen một đoạn trong bài, bấm chuột phải rồi chọn
-              “Hỏi AI”.
-            </p>
+            <h3 className="mt-3 text-base font-semibold">{t("ai.empty.title")}</h3>
+            <p className="mt-1 text-sm text-muted">{t("ai.empty.body")}</p>
             <div className="mt-4 flex flex-col gap-2">
-              {SUGGESTIONS.map((s) => (
+              {SUGGESTIONS.map((k) => (
                 <button
-                  key={s}
+                  key={k}
                   type="button"
-                  onClick={() => void send(s)}
+                  onClick={() => void send(t(k))}
                   className="rounded-xl border border-token bg-[rgb(var(--surface))] px-3.5 py-2.5 text-left text-sm transition-colors hover:border-brand-500 hover:bg-[rgb(var(--surface-muted))]"
                 >
-                  {s}
+                  {t(k)}
                 </button>
               ))}
             </div>
@@ -350,7 +347,7 @@ export default function AiTutorPanel({
             <button
               type="button"
               onClick={() => setQuote(null)}
-              aria-label="Bỏ đoạn trích"
+              aria-label={t("ai.quote.remove")}
               className="shrink-0 rounded p-0.5 text-faint hover:text-[rgb(var(--text))]"
             >
               <X size={14} />
@@ -370,21 +367,21 @@ export default function AiTutorPanel({
             }}
             disabled={streaming}
             rows={1}
-            placeholder={quote ? "Bạn muốn hỏi gì về đoạn này?" : "Hỏi về bài học…"}
+            placeholder={quote ? t("ai.placeholder.quote") : t("ai.placeholder.default")}
             className="max-h-36 min-h-[36px] flex-1 resize-none bg-transparent py-2 text-sm outline-none placeholder:text-[rgb(var(--text-faint))] disabled:opacity-60"
           />
           <button
             type="button"
             onClick={() => void send()}
             disabled={streaming || !input.trim()}
-            aria-label="Gửi"
+            aria-label={t("ai.send")}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:opacity-40"
           >
             <SendHorizontal size={17} />
           </button>
         </div>
         <p className="mt-1.5 px-1 text-[11px] text-faint">
-          Enter để gửi · Shift+Enter xuống dòng · AI có thể nhầm, hãy đối chiếu với bài học.
+          {t("ai.hint")}
         </p>
       </footer>
   );
@@ -393,7 +390,7 @@ export default function AiTutorPanel({
     return (
       <div className="flex h-full min-h-0 flex-col">
         <p className="px-4 pt-3 text-xs text-muted">
-          {budget ? `Còn khoảng ${budget.estimatedTurns} lượt hỏi tháng này` : "Hỏi về nội dung bài đang học"}
+          {budget ? t("ai.budget", { n: budget.estimatedTurns }) : t("ai.subtitle")}
         </p>
         {logEl}
         {footerEl}
@@ -404,7 +401,7 @@ export default function AiTutorPanel({
   return (
     <div
       role="dialog"
-      aria-label="Trợ giảng AI"
+      aria-label={t("ai.dialog")}
       /*
         Dưới sm: tờ trượt gần toàn màn hình (chừa mép trên để còn thấy mình đang
         ở bài nào). Từ sm: cửa sổ nổi góc dưới phải, có chế độ mở rộng để đọc
@@ -421,25 +418,23 @@ export default function AiTutorPanel({
           <Sparkles size={18} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold leading-tight">Trợ giảng AI</p>
+          <p className="text-[15px] font-semibold leading-tight">{t("ai.dialog")}</p>
           <p className="truncate text-xs text-muted">
-            {budget
-              ? `Còn khoảng ${budget.estimatedTurns} lượt hỏi tháng này`
-              : "Hỏi về nội dung bài đang học"}
+            {budget ? t("ai.budget", { n: budget.estimatedTurns }) : t("ai.subtitle")}
           </p>
         </div>
         <button
           onClick={() => setExpanded((v) => !v)}
           className="hidden h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))] sm:flex"
-          aria-label={expanded ? "Thu nhỏ" : "Mở rộng"}
-          title={expanded ? "Thu nhỏ" : "Mở rộng"}
+          aria-label={expanded ? t("ai.collapse") : t("ai.expand")}
+          title={expanded ? t("ai.collapse") : t("ai.expand")}
         >
           {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
         </button>
         <button
           onClick={() => setOpen(false)}
           className="flex h-8 w-8 items-center justify-center rounded-lg text-muted transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
-          aria-label="Đóng"
+          aria-label={t("ai.close")}
         >
           <X size={18} />
         </button>
@@ -452,42 +447,37 @@ export default function AiTutorPanel({
 }
 
 function ErrorMessage({ code, tokensUnlocked }: { code: string; tokensUnlocked: boolean }) {
+  const t = useT();
   switch (code) {
     case "openai_not_configured":
-      return <p>Trợ giảng AI chưa được cấu hình. Báo quản trị viên kiểm tra ở /admin/integrations.</p>;
+      return <p>{t("ai.err.notConfigured")}</p>;
     case "openai_busy":
-      return <p>Hệ thống AI đang quá tải, đợi vài giây rồi hỏi lại nhé.</p>;
+      return <p>{t("ai.err.busy")}</p>;
     case "rate_limited":
-      return <p>Bạn đã hỏi quá nhiều trong 1 giờ, đợi chút nhé.</p>;
+      return <p>{t("ai.err.rateLimited")}</p>;
     case "no_token_budget":
       return (
         <p>
-          Bạn đã dùng hết lượt hỏi của tháng này. Hạn mức được cấp lại vào đầu tháng sau.
+          {t("ai.err.noBudget")}
           {tokensUnlocked && (
             <>
               {" "}
               <a href={apiUrl("/me/ai-tokens")} className="link underline">
-                Mua thêm lượt
+                {t("ai.err.buyLink")}
               </a>{" "}
-              nếu cần dùng ngay.
+              {t("ai.err.buySuffix")}
             </>
           )}
         </p>
       );
     case "global_token_cap":
-      return (
-        <p>
-          Cả hệ thống đã chạm trần AI hôm nay. Đây là hạn mức chung, không phải lỗi của bạn
-          — báo giảng viên hoặc thử lại ngày mai.
-        </p>
-      );
+      return <p>{t("ai.err.globalCap")}</p>;
     case "not_enrolled":
-      return <p>Bạn cần ghi danh khoá học này để hỏi trợ giảng AI.</p>;
+      return <p>{t("ai.err.notEnrolled")}</p>;
     default:
       return (
         <p>
-          Không gửi được câu hỏi. Thử lại sau ít phút.{" "}
-          <span className="text-xs opacity-70">({code})</span>
+          {t("ai.err.default")} <span className="text-xs opacity-70">({code})</span>
         </p>
       );
   }
@@ -502,12 +492,13 @@ function AssistantAvatar() {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const t = useT();
   const [done, setDone] = useState(false);
   return (
     <button
       type="button"
-      aria-label="Sao chép câu trả lời"
-      title="Sao chép"
+      aria-label={t("ai.copy.aria")}
+      title={t("ai.copy.label")}
       onClick={() => {
         void navigator.clipboard?.writeText(text).then(() => {
           setDone(true);
@@ -517,7 +508,7 @@ function CopyButton({ text }: { text: string }) {
       className="mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-faint opacity-0 transition-opacity hover:text-[rgb(var(--text))] focus-visible:opacity-100 group-hover/msg:opacity-100"
     >
       {done ? <Check size={12} /> : <Copy size={12} />}
-      {done ? "Đã chép" : "Sao chép"}
+      {done ? t("ai.copy.done") : t("ai.copy.label")}
     </button>
   );
 }

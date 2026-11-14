@@ -187,6 +187,10 @@ export function gradeExamAnswer(
       return gradeNumerical(config, answerJson, points);
     case "drag_drop_fill":
       return gradeDragDropFill(config, answerJson, points);
+    case "slider":
+      // Thang trượt chỉ có ở đề Khảo sát — không bao giờ chấm (submission.ts bỏ qua
+      // chấm với đề Khảo sát); trả 0 để các đường chấm lại không treo ở "chờ chấm".
+      return { autoScore: 0, needsGrading: false };
     case "essay":
     case "short_answer":
       // SHORT auto-grade with fuzzy + accept-list lands in P1. Treat as manual

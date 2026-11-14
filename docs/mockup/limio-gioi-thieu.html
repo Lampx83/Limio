@@ -313,6 +313,12 @@ h2 em, h1 em { font-style: normal; background: linear-gradient(transparent 60%, 
 @media (prefers-reduced-motion: reduce) { .cover .big-icon svg { animation: none; } }
 @media print { .cover .big-icon svg { animation: none; } }
 
+
+.grid6.g4.plain.tight { gap: 22px; }
+.grid6.g4.plain.tight .item { padding: 24px 30px 28px; }
+.grid6.g4.plain.tight .item .ico { width: 60px; height: 60px; font-size: 36px; margin-bottom: 12px; }
+.grid6.g4.plain.tight .item p { font-size: 40px; line-height: 1.36; }
+
 /* Lời giảng: chỉ người trình bày thấy, bật bằng phím N */
 .notes { display: none; }
 #notesbar {
@@ -371,6 +377,10 @@ body.show-notes #notesbar { display: block; }
     <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
     <symbol id="i-medal" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="M8.5 13.5L7 21l5-3 5 3-1.5-7.5"/></symbol>
     <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 0-8z"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.7a3.5 3.5 0 0 1 0 6.6M18 14a6.5 6.5 0 0 1 3.5 6"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></symbol>
     <symbol id="i-slides" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
   </defs>
 </svg>
@@ -385,7 +395,7 @@ body.show-notes #notesbar { display: block; }
   <h1 class="rv" style="--i:1">Limio giúp mỗi người học có <em>một lộ trình riêng</em></h1>
   <div class="notes">
     <p>Kính chào quý vị. Hôm nay chúng tôi xin giới thiệu Limio cho những người chưa từng sử dụng. Bài trình bày đi từ một vấn đề quen thuộc, rồi nói Limio là gì, và sau đó đi vào ba nhóm tính năng chính: cá nhân hoá cho người học, thanh toán, và bảo vệ học liệu.</p>
-    <p>Bài có hai mươi sáu slide, chia làm ba phần. Mỗi phần mở đầu bằng một câu hỏi để dễ theo dõi.</p>
+    <p>Bài có ba mươi tám slide, chia làm năm phần: ba phần đầu nói về người học, và hai phần sau nói về người dạy và người quản lý. Mỗi phần mở đầu bằng một câu hỏi để dễ theo dõi.</p>
   </div>
 </section>
 <!-- 2. Vấn đề quen thuộc -->
@@ -473,7 +483,7 @@ body.show-notes #notesbar { display: block; }
 </section>
 <!-- 7. Ba nhóm tính năng -->
 <section class="slide s-lime" aria-label="Ba nhóm tính năng">
-  <h2 class="rv" style="--i:0">Hôm nay chúng ta sẽ xem <em>ba nhóm tính năng chính</em> của Limio</h2>
+  <h2 class="rv" style="--i:0">Trước hết, chúng ta xem <em>ba nhóm tính năng chính</em> của Limio</h2>
   <div class="cards c3">
     <div class="card rv" style="--i:1"><span class="bg-n" aria-hidden="true">1</span><div class="badge"><svg class="ic"><use href="#i-sparkle"/></svg></div>
       <p><b>Cá nhân hoá</b> giúp mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp.</p></div>
@@ -483,7 +493,7 @@ body.show-notes #notesbar { display: block; }
       <p><b>Bảo vệ học liệu</b> giúp tệp học liệu chỉ đến đúng người có quyền.</p></div>
   </div>
   <div class="notes">
-    <p>Từ đây, chúng ta xem ba nhóm tính năng chính. Nhóm thứ nhất là cá nhân hoá cho người học: mỗi người biết mình hiểu đến đâu và nên làm gì tiếp. Nhóm thứ hai là kênh thanh toán: người học vào khoá dễ dàng bằng thanh toán trực tiếp hoặc bằng mã. Nhóm thứ ba là bảo vệ học liệu: tệp học liệu chỉ đến đúng người có quyền.</p>
+    <p>Từ đây, chúng ta xem ba nhóm tính năng chính. Nhóm thứ nhất là cá nhân hoá cho người học: mỗi người biết mình hiểu đến đâu và nên làm gì tiếp. Nhóm thứ hai là kênh thanh toán: người học vào khoá dễ dàng bằng thanh toán trực tiếp hoặc bằng mã. Nhóm thứ ba là bảo vệ học liệu: tệp học liệu chỉ đến đúng người có quyền. Sau ba nhóm này, chúng tôi sẽ giới thiệu thêm công cụ dành cho người dạy và người quản lý.</p>
   </div>
 </section>
 <!-- 8. Phần một -->
@@ -725,19 +735,191 @@ body.show-notes #notesbar { display: block; }
     <p><b>Ghi chú cho người trình bày, cần nói thật:</b> với thẻ quốc tế qua Stripe, hoàn tiền toàn bộ tự đóng quyền học. Với VNPay, quản trị viên đóng quyền bằng tay, và chưa có đối soát tự động khi VNPay không gửi được thông báo.</p>
   </div>
 </section>
-<!-- 22. Ba điều cần nhớ -->
-<section class="slide s-lime" aria-label="Ba điều cần nhớ">
-  <h2 class="rv" style="--i:0"><em>Ba điều</em> cần nhớ về Limio</h2>
-  <div class="cards c3">
-    <div class="card rv" style="--i:1"><span class="bg-n" aria-hidden="true">1</span><div class="badge"><svg class="ic"><use href="#i-sparkle"/></svg></div>
-      <p><b>Cá nhân hoá</b> giúp mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp, kể cả khi không có giáo viên.</p></div>
-    <div class="card rv" style="--i:2"><span class="bg-n" aria-hidden="true">2</span><div class="badge"><svg class="ic"><use href="#i-cart"/></svg></div>
-      <p><b>Thanh toán</b> cho phép người học vào khoá bằng thanh toán trực tiếp qua VNPay hoặc bằng mã kích hoạt.</p></div>
-    <div class="card rv" style="--i:3"><span class="bg-n" aria-hidden="true">3</span><div class="badge"><svg class="ic"><use href="#i-lock"/></svg></div>
-      <p><b>Bảo vệ</b> bảo đảm tệp học liệu chỉ mở cho người có quyền, và quyền truy cập có thời hạn, thu hồi được.</p></div>
+<!-- Phần bốn -->
+<section class="slide s-dark cover end" aria-label="Phần bốn" data-n="4">
+  <p class="lead rv" style="--i:0; margin-bottom:28px">Phần bốn</p>
+  <h2 class="rv" style="--i:1">Làm sao người dạy soạn bài, dạy học và theo dõi lớp <em>nhẹ nhàng hơn</em>?</h2>
+  <p class="lead rv" style="--i:2">Các công cụ dành cho người dạy sẽ giúp trả lời câu hỏi này.</p>
+  <div class="notes">
+    <p>Phần bốn nói về người dạy. Câu hỏi là: làm sao người dạy soạn bài, dạy học và theo dõi lớp nhẹ nhàng hơn? Các công cụ dành cho người dạy của Limio sẽ giúp trả lời câu hỏi này.</p>
+  </div>
+</section>
+
+<!-- Người dạy: soạn học liệu -->
+<section class="slide" aria-label="Soạn học liệu nhanh hơn">
+  <h2 class="rv" style="--i:0">Người dạy soạn học liệu <em>nhanh hơn</em> nhờ tài liệu có sẵn và trí tuệ nhân tạo</h2>
+  <div class="grid6 g4 plain tight">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-file"/></svg></div><p><b>Tệp Word hoặc Markdown vào thẳng một bài học,</b> và giữ nguyên tiêu đề, bảng và hình ảnh.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-sparkle"/></svg></div><p><b>Trí tuệ nhân tạo đề xuất dàn ý</b> từ tài liệu PDF hoặc văn bản, và người dạy duyệt rồi mới tạo bài.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-pencil"/></svg></div><p><b>Người dạy nhờ trí tuệ nhân tạo sửa từng đoạn,</b> như viết ngắn hơn hoặc thêm ví dụ, rồi tự quyết định có dùng hay không.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-list"/></svg></div><p><b>Ngân hàng câu hỏi nhận câu hỏi từ tệp Excel</b> hoặc từ văn bản dán vào, với mười loại câu hỏi.</p></div>
   </div>
   <div class="notes">
-    <p>Xin tóm tắt ba điều cần nhớ. Một, cá nhân hoá: mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp, kể cả khi không có giáo viên. Hai, thanh toán: người học vào khoá bằng thanh toán trực tiếp qua VNPay hoặc bằng mã kích hoạt. Ba, bảo vệ: tệp học liệu chỉ mở cho người có quyền, và quyền truy cập có thời hạn, thu hồi được.</p>
+    <p>Trước hết là việc soạn học liệu. Người dạy thường đã có sẵn tài liệu, nên Limio cho phép đưa tài liệu vào thay vì gõ lại. Tệp Word hoặc Markdown đi thẳng vào một bài học và giữ nguyên tiêu đề, bảng và hình ảnh. Với tài liệu PDF hoặc văn bản dán vào, trí tuệ nhân tạo đề xuất dàn ý, người dạy duyệt rồi mới tạo bài.</p>
+    <p>Người dạy còn có thể nhờ trí tuệ nhân tạo sửa từng đoạn: viết ngắn hơn, dễ hiểu hơn, thêm ví dụ hoặc sửa chính tả. Trí tuệ nhân tạo chỉ đưa ra bản đề xuất bên cạnh bản hiện tại, và người dạy tự quyết định có dùng hay không. Ngân hàng câu hỏi nhận câu hỏi từ tệp Excel hoặc từ văn bản dán vào, với mười loại câu hỏi.</p>
+    <p><b>Ghi chú cho người trình bày:</b> mỗi tài liệu chỉ tạo ra một bài học và tối đa bốn nghìn từ. Tệp PDF chụp ảnh, không có lớp chữ, chưa đọc được chữ. Trí tuệ nhân tạo chỉ chạy khi người dạy bấm, và mỗi lần tốn một lượt hỏi AI trong hạn mức.</p>
+  </div>
+</section>
+
+<!-- Người dạy: Limio-Live -->
+<section class="slide s-lime" aria-label="Limio-Live">
+  <h2 class="rv" style="--i:0">Limio-Live giúp người dạy soạn bài giảng <em>tương tác</em> từ một ý tưởng hoặc một tài liệu</h2>
+  <div class="cards c3 three-ic">
+    <div class="card rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-slides"/></svg></div><p><b>Người dạy mô tả một ý tưởng hoặc gửi một tài liệu,</b> và Limio soạn dàn ý bài giảng để người dạy duyệt.</p></div>
+    <div class="card rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-clock"/></svg></div><p><b>Người dạy chọn thời lượng từ 15 đến 90 phút,</b> và mỗi bài giảng có sẵn nhiều slide tương tác.</p></div>
+    <div class="card rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-upload"/></svg></div><p><b>Người dạy có thể nhập một tệp PowerPoint,</b> và Limio soạn lại thành bài giảng kèm nội dung tương tác.</p></div>
+  </div>
+  <div class="notes">
+    <p>Limio-Live là công cụ dạy trực tiếp. Người dạy mô tả một ý tưởng hoặc gửi một tài liệu, và Limio soạn dàn ý bài giảng để người dạy duyệt. Người dạy chọn thời lượng từ mười lăm đến chín mươi phút, và mỗi bài giảng có sẵn nhiều slide tương tác, như câu hỏi và bỏ phiếu. Nếu đã có tệp PowerPoint, người dạy có thể nhập vào để Limio soạn lại thành bài giảng kèm nội dung tương tác.</p>
+    <p><b>Ghi chú cho người trình bày:</b> khi soạn từ ý tưởng mà không có tài liệu, nội dung do trí tuệ nhân tạo viết từ kiến thức chung và Limio nhắc người dạy kiểm tra trước khi dạy. Chất lượng bài soạn phụ thuộc mô hình ngôn ngữ chạy trên máy chủ. Tính năng này cần được cấp quyền, và tài khoản miễn phí được dùng thử.</p>
+  </div>
+</section>
+
+<!-- Người dạy: hoạt động nhanh -->
+<section class="slide" aria-label="Hoạt động nhanh">
+  <h2 class="rv" style="--i:0">Người dạy có thêm các hoạt động nhanh để dùng <em>ngay giữa buổi học</em></h2>
+  <div class="grid6 g4 plain tight">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-list"/></svg></div><p><b>Vote và Word Cloud</b> cho phép cả lớp bỏ phiếu và gửi từ khoá ngay trong buổi học.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-layers"/></svg></div><p><b>Padlet, vẽ chung và bảng trắng</b> cho phép cả lớp ghi ý tưởng và vẽ trên cùng một bảng.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-users"/></svg></div><p><b>Đếm ngược, gọi tên và phân nhóm</b> giúp người dạy điều hành lớp học.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-trophy"/></svg></div><p><b>Gameshow</b> biến phần ôn tập thành một trò chơi có nhạc trên màn chiếu.</p></div>
+  </div>
+  <div class="notes">
+    <p>Ngoài bài giảng soạn sẵn, người dạy có các hoạt động nhanh để dùng ngay giữa buổi học. Vote và Word Cloud cho phép cả lớp bỏ phiếu và gửi từ khoá. Padlet, vẽ chung và bảng trắng cho phép cả lớp ghi ý tưởng và vẽ trên cùng một bảng. Đếm ngược, gọi tên và phân nhóm giúp người dạy điều hành lớp. Gameshow biến phần ôn tập thành một trò chơi có nhạc trên màn chiếu.</p>
+    <p><b>Ghi chú cho người trình bày:</b> nhạc của Gameshow chỉ phát ở màn hình của người dạy, không phát trên máy học viên. Chưa có chọn bài nhạc hay chỉnh âm lượng riêng.</p>
+  </div>
+</section>
+
+<!-- Người dạy: kiểm tra đánh giá -->
+<section class="slide s-lime" aria-label="Kiểm tra đánh giá">
+  <h2 class="rv" style="--i:0">Kiểm tra đánh giá đi qua <em>ba bước</em>, từ ngân hàng câu hỏi đến tổ chức thi</h2>
+  <div class="nodes">
+    <div class="node rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-list"/></svg></div><p><b>Ngân hàng câu hỏi</b> lưu câu hỏi theo mười loại và theo trạng thái thẩm định.</p></div>
+    <div class="arr rv" style="--i:2"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="node rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-file"/></svg></div><p><b>Đề thi</b> chọn câu từ ngân hàng, trộn câu và đáp án, và đặt mức giám thị.</p></div>
+    <div class="arr rv" style="--i:4"><svg class="ic"><use href="#i-arrow"/></svg></div>
+    <div class="node core rv" style="--i:5"><div class="ico"><svg class="ic"><use href="#i-cal"/></svg></div><p><b>Tổ chức thi</b> mở bằng link thi nhanh hoặc bằng ca thi chia phòng.</p></div>
+  </div>
+  <p class="note-line soft rv" style="--i:6">Câu tự luận có thể kèm rubric chấm, và người dạy được thi thử đề trước khi phát cho học viên.</p>
+  <div class="notes">
+    <p>Kiểm tra đánh giá đi qua ba bước. Bước một là ngân hàng câu hỏi, nơi lưu câu hỏi theo mười loại và theo trạng thái thẩm định. Bước hai là đề thi, nơi người dạy chọn câu từ ngân hàng, trộn câu và đáp án, và đặt mức giám thị. Bước ba là tổ chức thi: mở nhanh bằng một đường dẫn, hoặc tổ chức kỳ thi chính thức theo ca và theo phòng.</p>
+    <p>Câu tự luận có thể kèm rubric chấm, và rubric hiện ngay khi người dạy chấm bài. Người dạy cũng được thi thử đề trước khi phát cho học viên; bản thử không tạo lượt thi và không ảnh hưởng điểm.</p>
+    <p><b>Ghi chú cho người trình bày:</b> mức giám thị có ba lựa chọn là không, cơ bản và nghiêm ngặt. Việc xuất bản đề chỉ làm đề sẵn sàng, không tự mở thi; giờ vào thi do từng ca quyết định.</p>
+  </div>
+</section>
+
+<!-- Người dạy: vấn đáp AI -->
+<section class="slide" aria-label="Vấn đáp AI">
+  <h2 class="rv" style="--i:0">Trí tuệ nhân tạo có thể đóng vai <em>giám khảo</em> trong buổi vấn đáp</h2>
+  <div class="grid6 g4 plain tight">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-mic"/></svg></div><p><b>Học viên trả lời bằng giọng nói hoặc bằng văn bản,</b> và trí tuệ nhân tạo hỏi tiếp theo câu trả lời.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-book"/></svg></div><p><b>Người dạy chọn ngôn ngữ hỏi đáp,</b> gồm tiếng Việt, tiếng Anh và tiếng Trung.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-file"/></svg></div><p><b>Người dạy đưa tài liệu cho trí tuệ nhân tạo bám theo,</b> và chọn chế độ thi hoặc chế độ luyện.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-check"/></svg></div><p><b>Trí tuệ nhân tạo chỉ đề xuất điểm theo rubric,</b> còn người dạy là người xem và lưu điểm.</p></div>
+  </div>
+  <div class="notes">
+    <p>Vấn đáp AI để trí tuệ nhân tạo đóng vai giám khảo. Học viên trả lời bằng giọng nói hoặc bằng văn bản, và trí tuệ nhân tạo hỏi tiếp theo câu trả lời. Người dạy chọn ngôn ngữ hỏi đáp, gồm tiếng Việt, tiếng Anh và tiếng Trung, đưa tài liệu cho trí tuệ nhân tạo bám theo, và chọn chế độ thi hoặc chế độ luyện. Khi chấm, trí tuệ nhân tạo chỉ đề xuất điểm theo rubric; người dạy là người xem và lưu điểm.</p>
+    <p><b>Ghi chú cho người trình bày:</b> tính năng này cần được cấp quyền. Văn bản tài liệu cho một đề vấn đáp có giới hạn mười lăm nghìn ký tự. Ngôn ngữ hỏi đáp không đổi được sau khi tạo đề. Chi phí chủ yếu là nhận dạng giọng nói và đọc thành tiếng, tính theo từng lượt vấn đáp.</p>
+  </div>
+</section>
+
+<!-- Người dạy: theo dõi lớp -->
+<section class="slide s-lime" aria-label="Theo dõi lớp">
+  <h2 class="rv" style="--i:0">Người dạy <em>theo dõi lớp</em> và học viên ngay trên Limio</h2>
+  <ul class="pts mid">
+    <li class="rv" style="--i:1"><b>Người dạy tạo lớp, gửi link mời hoặc mã QR,</b> và nhập danh sách học viên từ tệp CSV.</li>
+    <li class="rv" style="--i:2"><b>Người dạy xem tiến độ và điểm quiz của từng học viên,</b> và tải bảng điểm về máy.</li>
+    <li class="rv" style="--i:3"><b>Chuông thông báo nhắc những việc đang chờ,</b> như bài chờ chấm và học viên không hoạt động quá mười bốn ngày.</li>
+    <li class="rv" style="--i:4"><b>Lily, trợ lý ảo của Limio, hướng dẫn người dạy cách làm từng việc</b> ngay trên màn hình đang dùng.</li>
+  </ul>
+  <div class="notes">
+    <p>Người dạy theo dõi lớp ngay trên Limio. Người dạy tạo lớp, gửi link mời hoặc mã QR, và nhập danh sách học viên từ tệp CSV. Người dạy xem tiến độ và điểm quiz của từng học viên, và tải bảng điểm về máy. Chuông thông báo nhắc những việc đang chờ, như bài chờ chấm và học viên không hoạt động quá mười bốn ngày. Lily, trợ lý ảo của Limio, hướng dẫn người dạy cách làm từng việc ngay trên màn hình đang dùng.</p>
+    <p><b>Ghi chú cho người trình bày:</b> điểm, huy hiệu và bảng xếp hạng người dạy chỉ xem, không cấu hình; người dạy chỉ đặt điểm trong Đấu trường. Lily chỉ trả lời cách dùng Limio, không đọc dữ liệu khoá học của người dạy.</p>
+  </div>
+</section>
+
+<!-- Phần năm -->
+<section class="slide s-dark cover end" aria-label="Phần năm" data-n="5">
+  <p class="lead rv" style="--i:0; margin-bottom:28px">Phần năm</p>
+  <h2 class="rv" style="--i:1">Làm sao người quản lý nắm được lớp học, giáo viên và học viên <em>đang vận hành ra sao</em>?</h2>
+  <p class="lead rv" style="--i:2">Các công cụ dành cho người quản lý sẽ giúp trả lời câu hỏi này.</p>
+  <div class="notes">
+    <p>Phần năm nói về người quản lý. Câu hỏi là: làm sao người quản lý nắm được lớp học, giáo viên và học viên đang vận hành ra sao? Các công cụ dành cho người quản lý sẽ giúp trả lời câu hỏi này. Ngoài các công cụ trong phần này, người quản lý khoá còn dùng mã kích hoạt theo lô, gói truy cập và việc thu hồi quyền đã nói ở phần hai và phần ba.</p>
+  </div>
+</section>
+
+<!-- Người quản lý: Lịch dạy -->
+<section class="slide" aria-label="Lịch dạy">
+  <h2 class="rv" style="--i:0">Người quản lý đặt lịch dạy <em>một lần</em>, và Limio tự sinh các buổi học</h2>
+  <div class="grid6 g4 plain tight">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-cal"/></svg></div><p><b>Người quản lý đặt quy tắc lịch cho lớp,</b> chẳng hạn thứ ba và thứ năm lúc 18 giờ 30, và Limio tự sinh các buổi học.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-ban"/></svg></div><p><b>Buổi bị huỷ được đánh dấu rõ,</b> và người quản lý thêm buổi dạy bù vào đúng vị trí theo thời gian.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-shield"/></svg></div><p><b>Limio cảnh báo khi hai buổi trùng giờ</b> của cùng một giáo viên hoặc cùng một phòng, nhưng không chặn cứng.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-users"/></svg></div><p><b>Giáo viên và học viên xem lịch theo tuần hoặc theo tháng</b> ngay trên trang cá nhân của mình.</p></div>
+  </div>
+  <div class="notes">
+    <p>Trước hết là lịch dạy. Người quản lý đặt quy tắc lịch cho lớp, chẳng hạn thứ ba và thứ năm lúc mười tám giờ ba mươi, và Limio tự sinh các buổi học. Buổi bị huỷ được đánh dấu rõ, và người quản lý thêm buổi dạy bù vào đúng vị trí theo thời gian. Limio cảnh báo khi hai buổi trùng giờ của cùng một giáo viên hoặc cùng một phòng, nhưng không chặn cứng, vì trung tâm nhỏ đôi khi dạy ghép. Giáo viên và học viên xem lịch theo tuần hoặc theo tháng ngay trên trang cá nhân của mình.</p>
+    <p><b>Ghi chú cho người trình bày:</b> nhóm tính năng này xuất phát từ nhu cầu của trung tâm ngoại ngữ nhỏ, nhưng phần lịch, điểm danh và nhận xét dùng được cho mọi khoá. Limio không phải phần mềm quản lý toàn bộ trung tâm: chưa có học phí, lương hay quản lý tuyển sinh. Các tính năng này chỉ hiện khi quản trị viên của trường bật tính năng trung tâm.</p>
+  </div>
+</section>
+
+<!-- Người quản lý: Điểm danh và đối chiếu -->
+<section class="slide s-lime" aria-label="Điểm danh và đối chiếu">
+  <h2 class="rv" style="--i:0">Người quản lý nắm được <em>chuyên cần</em> của học viên và lịch dạy thực tế của giáo viên</h2>
+  <div class="grid6 g4 plain tight">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-check"/></svg></div><p><b>Giáo viên điểm danh học viên</b> ngay trên điện thoại, và bảng chuyên cần tổng hợp theo từng lớp.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-fire"/></svg></div><p><b>Limio cảnh báo khi một học viên vắng hai buổi liên tiếp,</b> để người quản lý kịp nhắc.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-chart"/></svg></div><p><b>Giáo viên bấm bắt đầu buổi,</b> và người quản lý xem báo cáo tuần về buổi đúng giờ, buổi trễ và buổi dạy thay.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-list"/></svg></div><p><b>Buổi đã diễn ra mà chưa điểm danh</b> được đánh dấu, để người quản lý nhắc giáo viên.</p></div>
+  </div>
+  <div class="notes">
+    <p>Tiếp theo là điểm danh và đối chiếu. Giáo viên điểm danh học viên ngay trên điện thoại, và bảng chuyên cần tổng hợp theo từng lớp. Limio cảnh báo khi một học viên vắng hai buổi liên tiếp, để người quản lý kịp nhắc. Giáo viên bấm bắt đầu buổi khi vào dạy, và người quản lý xem báo cáo tuần về buổi đúng giờ, buổi trễ và buổi dạy thay. Buổi đã diễn ra mà chưa điểm danh được đánh dấu, để người quản lý nhắc giáo viên.</p>
+    <p><b>Ghi chú cho người trình bày:</b> cách trình bày là “đối chiếu lịch để xếp dạy bù”, không phải chấm công. Giáo viên chỉ xem số liệu của chính mình; chỉ quản trị viên của tổ chức xem được của tất cả. Giáo viên quên bấm thì quản trị viên sửa được sau, kèm lý do.</p>
+  </div>
+</section>
+
+<!-- Người quản lý: Giáo án, nhận xét và mục tiêu -->
+<section class="slide" aria-label="Giáo án, nhận xét và mục tiêu">
+  <h2 class="rv" style="--i:0">Người quản lý chuẩn hoá <em>giáo án</em> và theo dõi mục tiêu của học viên</h2>
+  <div class="grid6 g4 plain tight">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-book"/></svg></div><p><b>Giáo trình dựng sẵn theo từng buổi</b> được sao thành một khoá, và mỗi buổi của lớp dạy một chương.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-pencil"/></svg></div><p><b>Giáo viên điều chỉnh kế hoạch của từng buổi,</b> chẳng hạn thêm bài vào đúng buổi đó.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-file"/></svg></div><p><b>Sau mỗi buổi, giáo viên soạn nhận xét cho từng học viên,</b> duyệt rồi gửi qua email.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-route"/></svg></div><p><b>Học viên đặt mục tiêu học tập,</b> như cấp độ HSK hoặc IELTS cần đạt, và Limio cho biết họ đang đúng kế hoạch, chậm hay vượt.</p></div>
+  </div>
+  <div class="notes">
+    <p>Phần thứ ba là giáo án, nhận xét và mục tiêu. Giáo trình dựng sẵn theo từng buổi được sao thành một khoá, và mỗi buổi của lớp dạy một chương. Giáo viên điều chỉnh kế hoạch của từng buổi, chẳng hạn thêm bài vào đúng buổi đó. Sau mỗi buổi, giáo viên soạn nhận xét cho từng học viên, duyệt rồi gửi qua email. Học viên đặt mục tiêu học tập, như cấp độ HSK hoặc IELTS cần đạt, và Limio cho biết họ đang đúng kế hoạch, chậm hay vượt.</p>
+    <p><b>Ghi chú cho người trình bày, cần nói thật:</b> gói giáo trình mẫu hiện mới có sáu buổi Tiếng Trung; chưa có giao diện quản trị để phát hành thêm gói. Nhận xét hiện gửi qua email và thông báo trong ứng dụng, chưa gửi qua Zalo. Mục tiêu theo cấp độ như HSK, IELTS, TOEIC hay CEFR dành cho học ngoại ngữ.</p>
+  </div>
+</section>
+
+<!-- Người quản lý: Điều hành thành viên và thương hiệu -->
+<section class="slide s-lime" aria-label="Điều hành thành viên và thương hiệu">
+  <h2 class="rv" style="--i:0">Quản trị viên của một trường điều hành <em>thành viên, thương hiệu và lịch học</em></h2>
+  <div class="grid6 g4 plain tight">
+    <div class="item rv" style="--i:1"><div class="ico"><svg class="ic"><use href="#i-users"/></svg></div><p><b>Quản trị viên trường thêm thành viên và cấp vai trò,</b> chẳng hạn giảng viên trung tâm chỉ dạy, không soạn khoá.</p></div>
+    <div class="item rv" style="--i:2"><div class="ico"><svg class="ic"><use href="#i-clock"/></svg></div><p><b>Giảng viên trung tâm có trang chủ riêng</b> với các buổi mình dạy trong ngày hôm nay.</p></div>
+    <div class="item rv" style="--i:3"><div class="ico"><svg class="ic"><use href="#i-slides"/></svg></div><p><b>Quản trị viên trường đặt kỳ học và lịch,</b> thêm logo của trường, và quy định giới hạn mạng khi học viên vào thi.</p></div>
+    <div class="item rv" style="--i:4"><div class="ico"><svg class="ic"><use href="#i-shield"/></svg></div><p><b>Quản trị viên trường bật hoặc tắt tính năng trung tâm.</b> Tắt chỉ ẩn tính năng, và không xoá dữ liệu.</p></div>
+  </div>
+  <div class="notes">
+    <p>Cuối cùng là việc điều hành thành viên và thương hiệu của một trường. Quản trị viên trường thêm thành viên và cấp vai trò, chẳng hạn giảng viên trung tâm chỉ dạy mà không soạn khoá. Giảng viên trung tâm có trang chủ riêng với các buổi mình dạy trong ngày hôm nay. Quản trị viên trường đặt kỳ học và lịch, thêm logo của trường, và quy định giới hạn mạng khi học viên vào thi. Quản trị viên cũng bật hoặc tắt tính năng trung tâm; tắt chỉ ẩn tính năng và không xoá dữ liệu.</p>
+    <p><b>Ghi chú cho người trình bày:</b> lịch kỳ học do quản trị viên trường đặt; giảng viên chỉ thấy nhãn tuần. Việc phát mã theo lô, đặt gói truy cập và thu hồi quyền cũng là việc của người quản lý khoá, đã nói ở phần hai và phần ba.</p>
+  </div>
+</section>
+
+<!-- 22. Ba điều cần nhớ -->
+<section class="slide s-lime" aria-label="Năm điều cần nhớ">
+  <h2 class="rv" style="--i:0"><em>Năm điều</em> cần nhớ về Limio</h2>
+  <ul class="pts">
+    <li class="rv" style="--i:1"><b>Cá nhân hoá</b> giúp mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp, kể cả khi không có giáo viên.</li>
+    <li class="rv" style="--i:2"><b>Thanh toán</b> cho phép người học vào khoá bằng thanh toán trực tiếp qua VNPay hoặc bằng mã kích hoạt.</li>
+    <li class="rv" style="--i:3"><b>Bảo vệ</b> bảo đảm tệp học liệu chỉ mở cho người có quyền, và quyền truy cập có thời hạn, thu hồi được.</li>
+    <li class="rv" style="--i:4"><b>Công cụ cho người dạy</b> giúp soạn bài, dạy trực tiếp, tổ chức thi và theo dõi lớp nhanh hơn.</li>
+    <li class="rv" style="--i:5"><b>Công cụ cho người quản lý</b> giúp điều hành lịch dạy, chuyên cần, giáo viên và thành viên.</li>
+  </ul>
+  <div class="notes">
+    <p>Xin tóm tắt năm điều cần nhớ. Một, cá nhân hoá giúp mỗi người học biết mình hiểu đến đâu và nên làm gì tiếp, kể cả khi không có giáo viên. Hai, thanh toán cho phép người học vào khoá bằng thanh toán trực tiếp qua VNPay hoặc bằng mã kích hoạt. Ba, bảo vệ bảo đảm tệp học liệu chỉ mở cho người có quyền, và quyền truy cập có thời hạn, thu hồi được. Bốn, công cụ cho người dạy giúp soạn bài, dạy trực tiếp, tổ chức thi và theo dõi lớp nhanh hơn. Năm, công cụ cho người quản lý giúp điều hành lịch dạy, chuyên cần, giáo viên và thành viên.</p>
   </div>
 </section>
 <!-- 23. Bắt đầu -->

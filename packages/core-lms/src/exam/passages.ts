@@ -27,6 +27,8 @@ export const CreatePassageInput = z
     maxAudioPlays: z.number().int().min(1).max(10).optional(),
     revealMode: revealMode.optional(),
     skillIds: z.array(z.string().uuid()).max(20).optional(),
+    // Đề Khảo sát: phần này dùng ở lần đo nào (null = cả hai lần).
+    surveyPhase: z.enum(["pre", "post"]).nullable().optional(),
   })
   .refine(
     (d) =>
@@ -46,6 +48,7 @@ export const UpdatePassageInput = z
     maxAudioPlays: z.number().int().min(1).max(10).nullable().optional(),
     revealMode: revealMode.optional(),
     skillIds: z.array(z.string().uuid()).max(20).optional(),
+    surveyPhase: z.enum(["pre", "post"]).nullable().optional(),
   });
 
 async function assertExamDraft(examId: string, db: PrismaClient) {
@@ -95,6 +98,7 @@ export async function createPassage(
         maxAudioPlays:
           d.audioPolicy === "limited_replay" ? (d.maxAudioPlays ?? null) : null,
         revealMode: d.revealMode ?? "all_at_once",
+        surveyPhase: d.surveyPhase ?? null,
       },
       select: { id: true },
     });
@@ -145,6 +149,7 @@ export async function updatePassage(
     if (d.audioPolicy !== undefined) data.audioPolicy = d.audioPolicy;
     if (d.maxAudioPlays !== undefined) data.maxAudioPlays = d.maxAudioPlays;
     if (d.revealMode !== undefined) data.revealMode = d.revealMode;
+    if (d.surveyPhase !== undefined) data.surveyPhase = d.surveyPhase;
     // Clear maxAudioPlays when policy is not limited.
     if (d.audioPolicy && d.audioPolicy !== "limited_replay") {
       data.maxAudioPlays = null;

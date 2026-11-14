@@ -28,7 +28,8 @@ export default async function OrganizeQuickPage({
     where: { ownerContentItemId: null,
       courseId: { in: courses.map((c) => c.id) },
       status: { not: "archived" },
-      purpose: "assessment",
+      // Đề Khảo sát cũng mở bằng QR ở đây (docs/tieu-chi/de-thi-khao-sat.md AC5).
+      purpose: { in: ["assessment", "survey"] },
       // Vấn đáp AI không phát mã/QR — luồng "mở buổi" riêng nằm ngay trên
       // trang quản lý đề (xem OralSessionControl), không qua đây nữa.
       kind: "written",
@@ -38,6 +39,8 @@ export default async function OrganizeQuickPage({
       id: true,
       title: true,
       courseId: true,
+      purpose: true,
+      passages: { where: { surveyPhase: { not: null } }, select: { id: true }, take: 1 },
       _count: { select: { questions: true } },
     },
     orderBy: { updatedAt: "desc" },
@@ -73,6 +76,8 @@ export default async function OrganizeQuickPage({
             courseId: p.courseId!,
             courseTitle: courseTitleById.get(p.courseId!) ?? "",
             questionCount: p._count.questions,
+            survey: p.purpose === "survey",
+            hasPhases: p.purpose === "survey" && p.passages.length > 0,
           }))}
         />
       )}

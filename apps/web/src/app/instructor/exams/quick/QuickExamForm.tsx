@@ -29,6 +29,10 @@ interface Paper {
   courseId: string;
   courseTitle: string;
   questionCount: number;
+  /** Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md AC5): không có chính sách đáp án, có lần đo. */
+  survey?: boolean;
+  /** Đề Khảo sát có phần gắn lần đo → bắt buộc chọn lần đo khi mở. */
+  hasPhases?: boolean;
 }
 
 /** datetime-local cần giờ ĐỊA PHƯƠNG, không phải ISO UTC. */
@@ -77,6 +81,8 @@ export default function QuickExamForm({
   const [reveal, setReveal] = useState<RevealPolicy>(
     purpose === "field_test" ? "never" : "immediately",
   );
+  const [surveyPhase, setSurveyPhase] = useState<"" | "pre" | "post" | "none">("");
+  const isSurvey = !!paper?.survey;
   const [advanced, setAdvanced] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [scheduleClose, setScheduleClose] = useState(false);
@@ -103,6 +109,10 @@ export default function QuickExamForm({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!paper) return;
+    if (isSurvey && paper.hasPhases && (surveyPhase === "" || surveyPhase === "none")) {
+      setErr("Chọn lần đo: lần trước hay lần sau.");
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
@@ -115,10 +125,15 @@ export default function QuickExamForm({
         body: JSON.stringify({
           timingMode: scheduled ? "scheduled" : "manual",
           durationMin,
-          revealAnswers: reveal,
-          // Mục đích thuộc BUỔI THI: cùng một gói đề, mở từ trang thử nghiệm
-          // thì buổi đó là đợt thử; mở từ link nhanh thì là bài thi thật.
-          purpose,
+          // Phiếu Khảo sát: máy chủ luôn đặt "không hiện"; mục đích là của đề.
+          ...(isSurvey
+            ? { surveyPhase: surveyPhase === "pre" || surveyPhase === "post" ? surveyPhase : null }
+            : {
+                revealAnswers: reveal,
+                // Mục đích thuộc BUỔI THI: cùng một gói đề, mở từ trang thử nghiệm
+                // thì buổi đó là đợt thử; mở từ link nhanh thì là bài thi thật.
+                purpose,
+              }),
           ...(scheduleOpen ? { opensAt: new Date(opensAt).toISOString() } : {}),
           ...(scheduleClose ? { closesAt: new Date(closesAt).toISOString() } : {}),
         }),
@@ -170,7 +185,11 @@ export default function QuickExamForm({
     const fullUrl = shareUrl(result.path);
     return (
       <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50 p-5">
-        <p className="text-sm font-medium text-emerald-900">Đã mở buổi thi.</p>
+        <p className="text-sm font-medium text-emerald-900">
+          {isSurvey
+            ? `Đã mở phiếu khảo sát${surveyPhase === "pre" ? " — lần trước" : surveyPhase === "post" ? " — lần sau" : ""}.`
+            : "Đã mở buổi thi."}
+        </p>
         <div className="mt-3 flex items-center gap-2">
           <span className="font-mono text-lg font-semibold tracking-widest text-emerald-900">
             {result.code}
@@ -209,7 +228,7 @@ export default function QuickExamForm({
           <div className="mt-3 flex flex-col items-start gap-2">
             {/* Nền trắng + viền quiet zone: QR trên nền màu hoặc sát mép thì
                 máy quét hay không bắt được. */}
-            <QrZoom url={fullUrl} title="Quét để vào thi" code={result.code} copyable>
+            <QrZoom url={fullUrl} title={isSurvey ? "Quét để làm phiếu" : "Quét để vào thi"} code={result.code} copyable>
               <div className="rounded-lg border border-emerald-300 bg-white p-2">
                 <QRCode value={fullUrl} size={112} level="M" />
               </div>
@@ -264,6 +283,7 @@ export default function QuickExamForm({
         >
           {papers.map((p) => (
             <option key={p.id} value={p.id}>
+              {p.survey ? "[Khảo sát] " : ""}
               {p.title} — {p.questionCount} câu
               {courses.length > 1 ? ` · ${p.courseTitle}` : ""}
             </option>
@@ -290,7 +310,29 @@ export default function QuickExamForm({
         </span>
       </label>
 
-      <label className="block">
+      {isSurvey && (
+        <label className="block">
+          <span className="block text-sm font-medium">Lần đo</span>
+          <select
+            value={surveyPhase}
+            onChange={(e) => setSurveyPhase(e.target.value as typeof surveyPhase)}
+            className="mt-1 w-full rounded border border-default bg-white px-3 py-2 text-sm"
+          >
+            <option value="" disabled>
+              — Chọn lần đo —
+            </option>
+            <option value="pre">Lần trước (đầu thực nghiệm)</option>
+            <option value="post">Lần sau (kết thúc thực nghiệm)</option>
+            {!paper?.hasPhases && <option value="none">Không phân lần</option>}
+          </select>
+          <span className="mt-1 block text-caption text-faint">
+            Phiếu chỉ hiện các phần dùng cho lần đo này. Mỗi sinh viên làm một lần cho mỗi lần đo; sinh viên phải
+            đăng nhập và đã ghi danh khoá. Phiếu không chấm và không hiện điểm.
+          </span>
+        </label>
+      )}
+
+      <label className={isSurvey ? "hidden" : "block"}>
         <span className="block text-sm font-medium">Hiện đáp án và kết quả</span>
         <select
           value={reveal}

@@ -31,6 +31,7 @@ export async function POST(
       courseId: true,
       createdById: true,
       status: true,
+      purpose: true,
       passages: { select: { id: true, title: true }, orderBy: { orderIndex: "asc" } },
       _count: { select: { attempts: true } },
     },
@@ -38,6 +39,10 @@ export async function POST(
   if (!exam) return NextResponse.json({ error: "exam_not_found" }, { status: 404 });
   if (!(await canEditExam(userId, exam))) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+  // Nhập Excel/AI sinh câu có đáp án đúng — không dùng cho đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md).
+  if (exam.purpose === "survey") {
+    return NextResponse.json({ error: "survey_import_unsupported" }, { status: 400 });
   }
   if (exam.status === "published" && exam._count.attempts > 0) {
     return NextResponse.json({ error: "exam_has_attempts" }, { status: 409 });

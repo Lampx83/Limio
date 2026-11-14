@@ -10,15 +10,19 @@ import { getPaymentEnabled } from "@/lib/site-settings";
 import { EmptyState } from "@/components/ui";
 import JsonLd from "@/components/JsonLd";
 import { courseLanguageLabel, courseLevelLabel } from "@/lib/courseLabels";
+import { getT, getUiLang } from "@/lib/i18n/server";
+import type { UiLang } from "@/lib/i18n/core";
+import type { MessageKey } from "@/lib/i18n/dict";
 import { absoluteUrl, breadcrumbJsonLd, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export function generateMetadata({
+export async function generateMetadata({
   searchParams,
 }: {
   searchParams: { category?: string; level?: string; language?: string; q?: string };
-}): Metadata {
+}): Promise<Metadata> {
+  const t = await getT();
   // Thứ tự cố định (không theo thứ tự user gõ) để `?q=a&level=b` và
   // `?level=b&q=a` ra cùng một canonical.
   const qs = new URLSearchParams();
@@ -28,10 +32,8 @@ export function generateMetadata({
   const filtered = qs.toString().length > 0;
 
   return pageMetadata({
-    title: "Khám phá khoá học",
-    description:
-      "Duyệt toàn bộ khoá học đang mở trên Limio — lọc theo danh mục, cấp độ và ngôn ngữ. " +
-      "Khoá miễn phí lẫn có phí, kèm phản hồi cá nhân hoá theo năng lực của bạn.",
+    title: t("catalog.list.title"),
+    description: t("catalog.list.metaDescription"),
     // Canonical tự trỏ chính nó. Trỏ bản đã lọc về `/catalog` trong khi vẫn
     // `noindex` là hai chỉ thị đá nhau — Google khuyên không trộn; ở đây chỉ cần
     // một tín hiệu: đừng index bản đã lọc.
@@ -61,6 +63,8 @@ export default async function CatalogPage({
 }: {
   searchParams: { category?: string; level?: string; language?: string; q?: string };
 }) {
+  const t = await getT();
+  const lang = await getUiLang();
   const hasFilter =
     !!(searchParams.q || searchParams.level || searchParams.language || searchParams.category);
 
@@ -115,9 +119,9 @@ export default async function CatalogPage({
   };
   if (searchParams.q) activeChips.push({ label: `"${searchParams.q}"`, clearHref: baseParams("q") });
   if (searchParams.level)
-    activeChips.push({ label: courseLevelLabel(searchParams.level), clearHref: baseParams("level") });
+    activeChips.push({ label: courseLevelLabel(searchParams.level, lang), clearHref: baseParams("level") });
   if (searchParams.language)
-    activeChips.push({ label: courseLanguageLabel(searchParams.language), clearHref: baseParams("language") });
+    activeChips.push({ label: courseLanguageLabel(searchParams.language, lang), clearHref: baseParams("language") });
   if (searchParams.category)
     activeChips.push({ label: searchParams.category, clearHref: baseParams("category") });
 
@@ -126,13 +130,13 @@ export default async function CatalogPage({
       <JsonLd
         data={[
           breadcrumbJsonLd([
-            { name: "Trang chủ", path: "/" },
-            { name: "Khoá học", path: "/catalog" },
+            { name: t("catalog.home"), path: "/" },
+            { name: t("catalog.courses"), path: "/catalog" },
           ]),
           {
             "@context": "https://schema.org",
             "@type": "ItemList",
-            name: "Khoá học trên Limio",
+            name: t("catalog.list.jsonLdName"),
             numberOfItems: items.length,
             itemListElement: items.map((c, i) => ({
               "@type": "ListItem",
@@ -148,25 +152,25 @@ export default async function CatalogPage({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           {session?.user?.id ? (
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-meta">
+            <nav aria-label={t("catalog.list.breadcrumbAria")} className="flex items-center gap-1.5 text-meta">
               <Link
                 href={isInstructor ? "/instructor/dashboard" : "/me/dashboard"}
                 className="flex items-center gap-1.5 hover:text-[rgb(var(--text))]"
               >
                 <Home size={13} />
-                Trang chủ
+                {t("catalog.home")}
               </Link>
               <span aria-hidden="true">/</span>
-              <span className="text-[rgb(var(--text))]">Danh mục khoá học</span>
+              <span className="text-[rgb(var(--text))]">{t("catalog.list.crumb")}</span>
             </nav>
           ) : (
-            <span className="chip-brand">Danh mục khoá học</span>
+            <span className="chip-brand">{t("catalog.list.crumb")}</span>
           )}
-          <h1 className="mt-3 h-display text-h1">Khám phá khoá học</h1>
+          <h1 className="mt-3 h-display text-h1">{t("catalog.list.title")}</h1>
           <p className="mt-2 text-meta">
             {items.length > 0
-              ? `${items.length} khoá học đang được cộng đồng theo học`
-              : "Chưa có khoá học nào được publish."}
+              ? t("catalog.list.count", { n: items.length })
+              : t("catalog.list.none")}
           </p>
         </div>
       </div>
@@ -179,7 +183,7 @@ export default async function CatalogPage({
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4 lg:cursor-default">
           <span className="flex items-center gap-2 text-sm font-semibold">
             <span aria-hidden>🔍</span>
-            Bộ lọc
+            {t("catalog.list.filters")}
             {activeChips.length > 0 && (
               <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold text-brand-700">
                 {activeChips.length}
@@ -197,40 +201,40 @@ export default async function CatalogPage({
             <input
               name="q"
               defaultValue={searchParams.q ?? ""}
-              placeholder="Tìm khoá học theo tên hoặc mô tả..."
+              placeholder={t("catalog.list.searchPlaceholder")}
               className="input pl-9"
-              aria-label="Từ khoá tìm kiếm"
+              aria-label={t("catalog.list.searchAria")}
             />
           </div>
           <select
             name="level"
             defaultValue={searchParams.level ?? ""}
             className="select max-w-[160px]"
-            aria-label="Cấp độ"
+            aria-label={t("catalog.list.levelAria")}
           >
-            <option value="">Mọi trình độ</option>
-            <option value="beginner">Cơ bản</option>
-            <option value="intermediate">Trung cấp</option>
-            <option value="advanced">Nâng cao</option>
+            <option value="">{t("catalog.list.anyLevel")}</option>
+            <option value="beginner">{courseLevelLabel("beginner", lang)}</option>
+            <option value="intermediate">{courseLevelLabel("intermediate", lang)}</option>
+            <option value="advanced">{courseLevelLabel("advanced", lang)}</option>
           </select>
           <select
             name="language"
             defaultValue={searchParams.language ?? ""}
             className="select max-w-[160px]"
-            aria-label="Ngôn ngữ"
+            aria-label={t("catalog.list.languageAria")}
           >
-            <option value="">Mọi ngôn ngữ</option>
-            <option value="vi">Tiếng Việt</option>
-            <option value="en">Tiếng Anh</option>
+            <option value="">{t("catalog.list.anyLanguage")}</option>
+            <option value="vi">{courseLanguageLabel("vi", lang)}</option>
+            <option value="en">{courseLanguageLabel("en", lang)}</option>
           </select>
           {categories.length > 0 && (
             <select
               name="category"
               defaultValue={searchParams.category ?? ""}
               className="select max-w-[180px]"
-              aria-label="Danh mục"
+              aria-label={t("catalog.list.categoryAria")}
             >
-              <option value="">Mọi danh mục</option>
+              <option value="">{t("catalog.list.anyCategory")}</option>
               {categories.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -238,10 +242,10 @@ export default async function CatalogPage({
               ))}
             </select>
           )}
-          <button className="btn-primary">Lọc</button>
+          <button className="btn-primary">{t("catalog.list.apply")}</button>
           {hasFilter && (
             <Link href="/catalog" className="btn-ghost btn-sm">
-              Xoá lọc
+              {t("catalog.list.clear")}
             </Link>
           )}
         </form>
@@ -249,14 +253,14 @@ export default async function CatalogPage({
 
       {/* Active filter chips */}
       {activeChips.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2" role="list" aria-label="Bộ lọc đang áp dụng">
+        <div className="mt-3 flex flex-wrap gap-2" role="list" aria-label={t("catalog.list.activeFilters")}>
           {activeChips.map((c, i) => (
             <Link
               key={i}
               href={c.clearHref}
               role="listitem"
               className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100"
-              aria-label={`Bỏ lọc ${c.label}`}
+              aria-label={t("catalog.list.removeFilter", { label: c.label })}
               prefetch={false}
             >
               {c.label}
@@ -271,9 +275,9 @@ export default async function CatalogPage({
         <div className="mt-12">
           <EmptyState
             icon="🔎"
-            title="Chưa tìm thấy khoá học phù hợp"
-            description="Thử bỏ bớt bộ lọc hoặc xem tất cả khoá học đang publish."
-            actions={hasFilter ? [{ label: "Xem tất cả khoá học", href: "/catalog" }] : undefined}
+            title={t("catalog.list.emptyTitle")}
+            description={t("catalog.list.emptyDesc")}
+            actions={hasFilter ? [{ label: t("catalog.list.seeAll"), href: "/catalog" }] : undefined}
           />
         </div>
       ) : !hasFilter && sections.length > 0 ? (
@@ -288,12 +292,14 @@ export default async function CatalogPage({
                   <span className="h-6 w-1.5 shrink-0 rounded-full bg-brand-gradient" aria-hidden />
                   <h2 className="h-display text-h3">{section.title}</h2>
                 </div>
-                <span className="text-meta">{section.courses.length} khoá học</span>
+                <span className="text-meta">{t("catalog.list.sectionCount", { n: section.courses.length })}</span>
               </div>
               <CourseGrid
                 courses={section.courses}
                 paymentEnabled={paymentEnabled}
                 enrolledCourseIds={enrolledCourseIds}
+                t={t}
+                lang={lang}
               />
             </section>
           ))}
@@ -303,6 +309,8 @@ export default async function CatalogPage({
           courses={items}
           paymentEnabled={paymentEnabled}
           enrolledCourseIds={enrolledCourseIds}
+          t={t}
+          lang={lang}
           className="mt-8"
         />
       )}
@@ -328,11 +336,15 @@ function CourseGrid({
   courses,
   paymentEnabled,
   enrolledCourseIds,
+  t,
+  lang,
   className = "",
 }: {
   courses: CourseCardData[];
   paymentEnabled: boolean;
   enrolledCourseIds: Set<string>;
+  t: (key: MessageKey, params?: Record<string, string | number>) => string;
+  lang: UiLang;
   className?: string;
 }) {
   return (
@@ -367,7 +379,7 @@ function CourseGrid({
               <div className="absolute bottom-3 left-4 right-4 flex flex-wrap gap-1.5">
                 {c.level && (
                   <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-bold text-brand-700 shadow">
-                    {courseLevelLabel(c.level)}
+                    {courseLevelLabel(c.level, lang)}
                   </span>
                 )}
                 {c.category && (
@@ -387,29 +399,31 @@ function CourseGrid({
               <div className="mt-3 flex items-center gap-1.5">
                 <span
                   className="rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-semibold text-brand-700"
-                  title="Sau mỗi bài, Limio chỉ ra chủ đề bạn còn yếu và gợi ý phần nên ôn lại."
+                  title={t("catalog.personalizationHint")}
                 >
-                  🤖 Phản hồi cá nhân hoá
+                  🤖 {t("catalog.personalization")}
                 </span>
               </div>
             )}
 
             <div className="mt-3 flex items-center justify-between border-t border-token pt-3 text-xs">
               {enrolled ? (
-                <span className="font-semibold text-success-600">✓ Đã ghi danh</span>
+                <span className="font-semibold text-success-600">{t("catalog.list.enrolled")}</span>
               ) : paymentEnabled && c.cheapestAccessPlan ? (
                 <span className="font-semibold text-accent-600">
-                  Từ {formatPrice(c.cheapestAccessPlan.priceCents, c.cheapestAccessPlan.currency)}
+                  {t("catalog.from", {
+                    price: formatPrice(c.cheapestAccessPlan.priceCents, c.cheapestAccessPlan.currency),
+                  })}
                 </span>
               ) : paymentEnabled && !isFree(c.priceCents) ? (
                 <span className="font-semibold text-accent-600">
                   {formatPrice(c.priceCents!, c.currency)}
                 </span>
               ) : (
-                <span className="font-semibold text-success-600">Miễn phí</span>
+                <span className="font-semibold text-success-600">{t("catalog.free")}</span>
               )}
               <span className="ml-auto font-semibold text-brand-600 group-hover:text-brand-700">
-                {enrolled ? "Tiếp tục học →" : "Xem chi tiết →"}
+                {enrolled ? t("catalog.list.continue") : t("catalog.list.viewDetails")}
               </span>
             </div>
           </Link>

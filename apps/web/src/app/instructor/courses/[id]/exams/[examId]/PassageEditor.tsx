@@ -33,6 +33,8 @@ interface PassageInput {
   maxAudioPlays: number;
   revealMode: "all_at_once" | "sequential";
   skills: Skill[];
+  /** Đề Khảo sát: lần đo dùng phần này. "" = cả hai lần. */
+  surveyPhase: "" | "pre" | "post";
 }
 
 interface Props {
@@ -46,7 +48,10 @@ interface Props {
     maxAudioPlays: number | null;
     revealMode: PassageInput["revealMode"];
     skills: Skill[];
+    surveyPhase?: "pre" | "post" | null;
   };
+  /** Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md AC4): đoạn văn là "phần" của phiếu. */
+  survey?: boolean;
   onClose: () => void;
   /** Bài luyện trong bài học: ẩn ô "Hiển thị" và "Skill liên quan" (không có nghĩa với bài luyện). */
   practiceMode?: boolean;
@@ -58,9 +63,10 @@ const EMPTY: PassageInput = {
   maxAudioPlays: 2,
   revealMode: "all_at_once",
   skills: [],
+  surveyPhase: "",
 };
 
-export default function PassageEditor({ mode, examId, passageId, initial, onClose, practiceMode = false }: Props) {
+export default function PassageEditor({ mode, examId, passageId, initial, onClose, practiceMode = false, survey = false }: Props) {
   const router = useRouter();
   const [v, setV] = useState<PassageInput>(() =>
     initial
@@ -70,6 +76,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
           maxAudioPlays: initial.maxAudioPlays ?? 2,
           revealMode: initial.revealMode,
           skills: initial.skills,
+          surveyPhase: initial.surveyPhase ?? "",
         }
       : EMPTY,
   );
@@ -311,6 +318,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
       if (clipped) window.alert(`Bảng vượt ${PASSAGE_TABLE_MAX_ROWS} hàng × ${PASSAGE_TABLE_MAX_COLS} cột nên đã được cắt bớt.`);
       body.contentJson = doc;
     }
+    if (survey) body.surveyPhase = v.surveyPhase || null;
     if (v.audioPolicy === "limited_replay") {
       body.maxAudioPlays = v.maxAudioPlays;
     }
@@ -339,7 +347,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
       className="space-y-4 rounded-lg border-2 border-blue-300 bg-blue-50 p-4"
     >
       <div>
-        <label className="block text-sm font-medium">Tiêu đề đoạn</label>
+        <label className="block text-sm font-medium">{survey ? "Tiêu đề phần" : "Tiêu đề đoạn"}</label>
         <input
           required
           value={v.title}
@@ -350,8 +358,14 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
 
       <div>
         <div className="flex items-center justify-between">
-          <label className="block text-sm font-medium">Nội dung</label>
-          <div className="flex gap-1">
+          {survey ? (
+            <label className="block text-sm font-medium">
+              Lời dẫn <span className="font-normal text-faint">(không bắt buộc; sinh viên đọc ở đầu phần)</span>
+            </label>
+          ) : (
+            <label className="block text-sm font-medium">Nội dung</label>
+          )}
+          <div className={survey ? "hidden" : "flex gap-1"}>
             <button
               type="button"
               onClick={() => openUploadDialog("audio")}
@@ -405,13 +419,35 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
               }}
               uploadImage={uploadImage}
               media={{ transcriptFlags: flags, onEditTranscript: (src, alt, kind) => void openTranscriptEditor(src, alt, kind) }}
-              placeholder="Soạn hoặc dán nội dung bài đọc ở đây (dán được cả ảnh từ clipboard)."
+              placeholder={
+                survey
+                  ? "Ví dụ: Hãy ghi một số từ 0 đến 100. 0 = hoàn toàn không làm được, 100 = hoàn toàn chắc chắn làm được."
+                  : "Soạn hoặc dán nội dung bài đọc ở đây (dán được cả ảnh từ clipboard)."
+              }
             />
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {survey && (
+        <label className="block">
+          <span className="block text-sm font-medium">Dùng ở lần đo</span>
+          <select
+            value={v.surveyPhase}
+            onChange={(e) => setV({ ...v, surveyPhase: e.target.value as PassageInput["surveyPhase"] })}
+            className="mt-1 w-full max-w-xs rounded border border-default px-2 py-1 text-sm"
+          >
+            <option value="">Cả hai lần</option>
+            <option value="pre">Chỉ lần trước</option>
+            <option value="post">Chỉ lần sau</option>
+          </select>
+          <span className="mt-1 block text-caption text-faint">
+            Khi mở phiếu bằng mã QR, thầy/cô chọn lần đo; phiếu chỉ hiện các phần của lần đó.
+          </span>
+        </label>
+      )}
+
+      <div className={survey ? "hidden" : "grid grid-cols-1 gap-3 sm:grid-cols-2"}>
         <label className="block">
           <span className="block text-sm font-medium">Phát audio (P1)</span>
           <select
@@ -456,7 +492,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
         )}
       </div>
 
-      {!practiceMode && (
+      {!practiceMode && !survey && (
       <div>
         <span className="block text-sm font-medium">Skill liên quan</span>
         <div className="mt-1">
@@ -484,7 +520,7 @@ export default function PassageEditor({ mode, examId, passageId, initial, onClos
           disabled={saving}
           className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
         >
-          {saving ? "Đang lưu…" : mode === "create" ? "Thêm đoạn" : "Lưu"}
+          {saving ? "Đang lưu…" : mode === "create" ? (survey ? "Thêm phần" : "Thêm đoạn") : "Lưu"}
         </button>
       </div>
       {pendingMedia && (

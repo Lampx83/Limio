@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { prisma } from "@feedbackme/db";
-import { LOBBY_LEAD_MIN, effectiveAccessMode, lobbyPhase, resolveLobbyTarget, sessionOpenState } from "@feedbackme/core-lms";
+import { LOBBY_LEAD_MIN, effectiveAccessMode, filterSurveyContent, lobbyPhase, resolveLobbyTarget, sessionOpenState } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import NetworkBlocked from "@/components/exam/NetworkBlocked";
 import EntryShell, { EntryGreeting } from "@/components/exam/EntryShell";
@@ -298,11 +298,23 @@ export default async function ExamClaimPage({
   const subtitleParts = sessionName
     ? [examName, meta?.exam.course?.title]
     : [meta?.exam.course?.title];
+  // Phiếu Khảo sát: chỉ đếm câu của các phần thuộc lần đo của ca (docs/tieu-chi/de-thi-khao-sat.md AC4).
+  let surveyQuestionCount: number | null = null;
+  if (target?.isSurvey) {
+    const s = await prisma.examSession.findUnique({
+      where: { id: target.sessionId },
+      select: {
+        surveyPhase: true,
+        exam: { select: { passages: { select: { id: true, surveyPhase: true } }, questions: { select: { passageId: true } } } },
+      },
+    });
+    if (s) surveyQuestionCount = filterSurveyContent(s.exam.passages, s.exam.questions, s.surveyPhase).questions.length;
+  }
   const entryMeta = {
     headline,
     subtitle: subtitleParts.filter(Boolean).join(" · ") || null,
     durationMin: meta?.durationOverrideMin ?? meta?.exam.durationMin ?? 0,
-    questionCount: meta?.exam._count.questions ?? 0,
+    questionCount: surveyQuestionCount ?? meta?.exam._count.questions ?? 0,
     manual: meta?.timingMode === "manual",
     strict: meta ? requiresSeb(meta.exam.proctoringLevel) : false,
   };
@@ -381,6 +393,7 @@ export default async function ExamClaimPage({
         questionCount={entryMeta.questionCount}
         resuming={resuming}
         submitted={submitted}
+        survey={target?.isSurvey ?? false}
       />
     );
   }

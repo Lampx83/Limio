@@ -3,23 +3,20 @@ import { notFound, redirect } from "next/navigation";
 import { prisma } from "@feedbackme/db";
 import { isUserEnrolled } from "@feedbackme/core-lms";
 import { getFlashcardQueue, type FlashcardQueueReason } from "@feedbackme/core-feedback";
-import {
-  FLASHCARD_MODES,
-  FLASHCARD_MODE_LABEL,
-  isFlashcardMode,
-} from "@feedbackme/shared-types";
+import { FLASHCARD_MODES, isFlashcardMode } from "@feedbackme/shared-types";
+import { getT } from "@/lib/i18n/server";
 import { auth } from "@/lib/auth";
 import EmptyState from "@/components/ui/EmptyState";
 import FlashcardSession from "@/components/FlashcardSession";
 
 export const dynamic = "force-dynamic";
 
-const EMPTY_TEXT: Record<FlashcardQueueReason, string> = {
-  not_enrolled: "Bạn cần ghi danh khoá học để ôn từ vựng.",
-  empty_deck: "Khoá học này chưa có bảng từ vựng nào.",
-  no_audio_cards: "Chưa có từ nào kèm audio để luyện nghe. Hãy chọn chế độ khác.",
-  all_done: "Hôm nay bạn đã ôn xong. Quay lại vào ngày mai nhé.",
-};
+const EMPTY_KEY = {
+  not_enrolled: "learn.flash.empty.not_enrolled",
+  empty_deck: "learn.flash.empty.empty_deck",
+  no_audio_cards: "learn.flash.empty.no_audio_cards",
+  all_done: "learn.flash.empty.all_done",
+} as const satisfies Record<FlashcardQueueReason, string>;
 
 /**
  * LANG G4 — ôn flashcard từ vựng của chính học viên đang đăng nhập. Không nhận userId
@@ -32,6 +29,7 @@ export default async function FlashcardsPage({
   params: { slug: string };
   searchParams?: { mode?: string };
 }) {
+  const t = await getT();
   const session = await auth();
   if (!session?.user?.id) redirect(`/signin?callbackUrl=/learn/${params.slug}/flashcards`);
   const userId = session.user.id;
@@ -51,9 +49,9 @@ export default async function FlashcardsPage({
       <Link href={`/learn/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
         ← {course.title}
       </Link>
-      <h1 className="text-h1 mt-3">Ôn từ vựng</h1>
+      <h1 className="text-h1 mt-3">{t("learn.flash.title")}</h1>
 
-      <nav aria-label="Chế độ ôn" className="mt-4 flex flex-wrap gap-2">
+      <nav aria-label={t("learn.flash.modesAria")} className="mt-4 flex flex-wrap gap-2">
         {FLASHCARD_MODES.map((m) => (
           <Link
             key={m}
@@ -63,7 +61,7 @@ export default async function FlashcardsPage({
               m === mode ? "border-brand-200 bg-brand-soft text-brand-700" : "border-token hover:bg-brand-soft"
             }`}
           >
-            {FLASHCARD_MODE_LABEL[m]}
+            {t(`learn.flash.mode.${m}`)}
           </Link>
         ))}
       </nav>
@@ -78,7 +76,7 @@ export default async function FlashcardsPage({
             initialCards={queue.cards}
           />
         ) : (
-          <EmptyState title="Ôn từ vựng" description={EMPTY_TEXT[queue.reason ?? "all_done"]} />
+          <EmptyState title={t("learn.flash.title")} description={t(EMPTY_KEY[queue.reason ?? "all_done"])} />
         )}
       </div>
     </main>

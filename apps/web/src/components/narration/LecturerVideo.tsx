@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { pickRendition, videoSeekTarget } from "@/lib/narration/lecturerVideoPlan";
 import { NarrationAvatar } from "./NarrationAvatar";
@@ -24,6 +25,7 @@ export default function LecturerVideo({
   accent?: string;
   speaking: boolean;
 }) {
+  const tr = useT();
   const ref = useRef<HTMLVideoElement>(null);
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -76,7 +78,7 @@ export default function LecturerVideo({
       disablePictureInPicture
       disableRemotePlayback
       controlsList="nodownload noplaybackrate nofullscreen"
-      aria-label={name ? `${name} đang giảng` : "Giảng viên ảo đang giảng"}
+      aria-label={name ? tr("reader.nar.lecturerTeaching", { name }) : tr("reader.nar.lecturerTeachingDefault")}
       className="slide-avatar-video"
       onError={() => setFailed(true)}
       draggable={false}

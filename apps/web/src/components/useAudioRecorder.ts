@@ -7,6 +7,7 @@ import {
   pickRecorderMime,
   recorderErrorText,
 } from "@/lib/audioRecorder";
+import { useUiLang } from "@/lib/i18n/client";
 
 export type RecorderState = "idle" | "recording" | "done";
 
@@ -25,6 +26,7 @@ export function useAudioRecorder({
   /** Trần thời lượng một bản ghi (mặc định 3 phút); hội thoại đóng vai ghi từng lượt ngắn. */
   maxSeconds?: number;
 }) {
+  const lang = useUiLang();
   const [state, setState] = useState<RecorderState>("idle");
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export function useAudioRecorder({
   async function start() {
     setError(null);
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setError(recorderErrorText("unsupported"));
+      setError(recorderErrorText("unsupported", lang));
       return;
     }
     try {
@@ -71,7 +73,7 @@ export function useAudioRecorder({
         const blob = new Blob(chunksRef.current, { type });
         if (blob.size === 0) {
           setState("idle");
-          setError(recorderErrorText("other"));
+          setError(recorderErrorText("other", lang));
           return;
         }
         if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -95,7 +97,7 @@ export function useAudioRecorder({
     } catch (e) {
       release();
       setState("idle");
-      setError(recorderErrorText((e as { name?: string })?.name ?? "other"));
+      setError(recorderErrorText((e as { name?: string })?.name ?? "other", lang));
     }
   }
 

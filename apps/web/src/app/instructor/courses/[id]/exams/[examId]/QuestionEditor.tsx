@@ -50,6 +50,31 @@ interface Skill {
   name: string;
 }
 
+/** Đề Khảo sát (docs/tieu-chi/de-thi-khao-sat.md AC2–AC3) — câu không có đáp án đúng. */
+const SURVEY_TYPES = ["mcq", "multi", "slider", "short_answer", "essay"] as const;
+const SURVEY_TYPE_LABELS: Record<string, string> = {
+  mcq: "Một lựa chọn",
+  multi: "Nhiều lựa chọn",
+  slider: "Thang trượt",
+  short_answer: "Trả lời ngắn",
+  essay: "Trả lời dài",
+};
+const SURVEY_TYPE_HINT: Record<string, string> = {
+  mcq: "Ví dụ thang 1–5 (Hoàn toàn không đúng … Hoàn toàn đúng)",
+  multi: "Chọn tất cả ý đúng với mình",
+  slider: "Kéo chọn một số, ví dụ 0–100",
+  short_answer: "Một dòng chữ",
+  essay: "Câu hỏi mở, nhiều dòng",
+};
+
+interface SliderDraft {
+  min: number;
+  max: number;
+  step: number;
+  minLabel: string;
+  maxLabel: string;
+}
+
 const TYPE_LABELS: Record<string, string> = {
   mcq: "Trắc nghiệm 1 đáp án (MCQ)",
   multi: "Trắc nghiệm nhiều đáp án (MULTI)",
@@ -61,6 +86,7 @@ const TYPE_LABELS: Record<string, string> = {
   matching: "Ghép cặp",
   numerical: "Đáp án dạng số",
   drag_drop_fill: "Kéo thả từ/câu",
+  slider: "Thang trượt",
 };
 
 type QType = keyof typeof TYPE_LABELS;
@@ -95,6 +121,9 @@ interface State {
   /** Giải thích đáp án — HS đọc sau khi bài được chấm. Lưu trong config. */
   explanation: string;
   skills: Skill[];
+  /** Đề Khảo sát: mã câu (tiêu đề cột khi xuất) và cấu hình thang trượt. */
+  code: string;
+  slider: SliderDraft;
 }
 
 interface Props {
@@ -111,6 +140,8 @@ interface Props {
     config: Record<string, unknown>;
     skills: Skill[];
   };
+  /** Đề Khảo sát: không đáp án đúng, không điểm, không giải thích/skill. */
+  survey?: boolean;
   onClose: () => void;
   /** Bài luyện trong bài học: bỏ ô Điểm và Skill; câu Tự luận có thêm bài mẫu, audio mẫu, tiêu chí cho AI và hai công tắc giọng nói / AI. */
   practiceMode?: boolean;
@@ -154,6 +185,8 @@ function defaultState(passageId: string | null): State {
     dragDropFill: { tokens: [] },
     explanation: "",
     skills: [],
+    code: "",
+    slider: { min: 0, max: 100, step: 10, minLabel: "", maxLabel: "" },
   };
 }
 
@@ -164,6 +197,7 @@ export default function QuestionEditor({
   sectionId,
   questionId,
   initial,
+  survey = false,
   onClose,
   practiceMode = false,
 }: Props) {
@@ -177,6 +211,16 @@ export default function QuestionEditor({
     s.skills = initial.skills;
     const cfg = initial.config;
     s.explanation = (cfg.explanation as string) ?? "";
+    s.code = typeof cfg.code === "string" ? cfg.code : "";
+    if (s.type === "slider") {
+      s.slider = {
+        min: typeof cfg.min === "number" ? cfg.min : 0,
+        max: typeof cfg.max === "number" ? cfg.max : 100,
+        step: typeof cfg.step === "number" ? cfg.step : 1,
+        minLabel: typeof cfg.minLabel === "string" ? cfg.minLabel : "",
+        maxLabel: typeof cfg.maxLabel === "string" ? cfg.maxLabel : "",
+      };
+    }
     if (s.type === "mcq" || s.type === "multi") {
       s.options = (cfg.options as State["options"]) ?? s.options;
     } else if (s.type === "true_false_notgiven") {
@@ -224,6 +268,37 @@ export default function QuestionEditor({
   // các field khác, y như trước).
   const [pickingType, setPickingType] = useState(mode === "create");
 
+  if (pickingType && survey) {
+    return (
+      <div className="rounded-lg border-2 border-emerald-300 bg-emerald-50 p-4">
+        <p className="mb-3 text-sm font-medium">Chọn dạng câu</p>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {SURVEY_TYPES.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => {
+                setV((prev) => ({ ...prev, type: t as QType }));
+                setPickingType(false);
+              }}
+              className="rounded border border-default bg-white px-3 py-2 text-left hover:border-brand-300 hover:bg-brand-soft"
+            >
+              <span className="block text-sm font-medium">{SURVEY_TYPE_LABELS[t]}</span>
+              <span className="block text-caption text-faint">{SURVEY_TYPE_HINT[t]}</span>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={mode === "create" ? onClose : () => setPickingType(false)}
+          className="mt-3 text-sm text-faint hover:underline"
+        >
+          Huỷ
+        </button>
+      </div>
+    );
+  }
+
   if (pickingType) {
     return (
       <div className="rounded-lg border-2 border-emerald-300 bg-emerald-50 p-4">
@@ -242,9 +317,31 @@ export default function QuestionEditor({
   }
 
   function buildConfig(): unknown {
+    if (survey) {
+      const code = v.code.trim();
+      return { ...(buildSurveyConfig() as Record<string, unknown>), ...(code ? { code } : {}) };
+    }
     const base = buildTypeConfig();
     const explanation = v.explanation.trim();
     return explanation ? { ...(base as Record<string, unknown>), explanation } : base;
+  }
+
+  function buildSurveyConfig(): unknown {
+    switch (v.type) {
+      case "mcq":
+      case "multi":
+        return { options: v.options.map((o) => ({ id: o.id, label: o.label })) };
+      case "slider":
+        return {
+          min: v.slider.min,
+          max: v.slider.max,
+          step: v.slider.step,
+          ...(v.slider.minLabel.trim() ? { minLabel: v.slider.minLabel.trim() } : {}),
+          ...(v.slider.maxLabel.trim() ? { maxLabel: v.slider.maxLabel.trim() } : {}),
+        };
+      default:
+        return {};
+    }
   }
 
   function buildTypeConfig(): unknown {
@@ -300,15 +397,23 @@ export default function QuestionEditor({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (survey && v.type === "slider") {
+      const { min, max, step } = v.slider;
+      if (!(max > min)) return setError("“Lớn nhất” phải lớn hơn “Nhỏ nhất”.");
+      if (!(step > 0) || (max - min) % step !== 0)
+        return setError("(Lớn nhất − Nhỏ nhất) phải chia hết cho “Bước”.");
+    }
+    if (survey && v.code.trim() && !/^[\p{L}\p{N}_.-]+$/u.test(v.code.trim()))
+      return setError("Mã câu chỉ gồm chữ, số và các dấu _ . - (không có khoảng trắng).");
     setSaving(true);
     setError(null);
     const body: Record<string, unknown> = {
       type: v.type,
       prompt: v.prompt,
-      points: v.points,
+      points: survey ? 0 : v.points,
       passageId,
       config: buildConfig(),
-      skillIds: v.skills.map((s) => s.id),
+      skillIds: survey ? [] : v.skills.map((s) => s.id),
     };
     if (mode === "create" && sectionId) body.sectionId = sectionId;
     const url =
@@ -323,7 +428,12 @@ export default function QuestionEditor({
     setSaving(false);
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
-      setError(typeof d?.error === "string" ? d.error : "save_failed");
+      const raw = typeof d?.error === "string" ? d.error : "save_failed";
+      setError(
+        JSON.stringify(d).includes("survey_code_duplicate")
+          ? "Mã câu này đã dùng cho một câu khác trong phiếu."
+          : raw,
+      );
       return;
     }
     // Thêm vào 1 section có sẵn (khung "Phần N") làm itemCount của nó lệch
@@ -371,7 +481,7 @@ export default function QuestionEditor({
           <span className="block text-sm font-medium">Loại câu hỏi</span>
           <div className="mt-1 flex items-center gap-2">
             <span className="rounded border border-emerald-300 bg-white px-2 py-1.5 text-sm font-medium text-emerald-700">
-              {TYPE_LABELS[v.type]}
+              {survey ? SURVEY_TYPE_LABELS[v.type] ?? TYPE_LABELS[v.type] : TYPE_LABELS[v.type]}
             </span>
             <button
               type="button"
@@ -382,7 +492,22 @@ export default function QuestionEditor({
             </button>
           </div>
         </div>
-        {!practiceMode && (
+        {survey ? (
+          <label className="block">
+            <span className="block text-sm font-medium">
+              Mã câu <span className="font-normal text-faint">(không bắt buộc)</span>
+            </span>
+            <input
+              type="text"
+              maxLength={20}
+              value={v.code}
+              onChange={(e) => setV({ ...v, code: e.target.value })}
+              placeholder="vd TT01"
+              className="mt-1 w-full rounded border border-default px-2 py-1.5 font-mono text-sm"
+            />
+            <span className="mt-1 block text-caption text-faint">Tiêu đề cột khi xuất Excel; sinh viên không thấy.</span>
+          </label>
+        ) : !practiceMode && (
         <label className="block">
           <span className="block text-sm font-medium">Điểm</span>
           <input
@@ -415,29 +540,35 @@ export default function QuestionEditor({
       {(v.type === "mcq" || v.type === "multi") && (
         <div className="rounded border border-default bg-white p-3">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm font-medium">Đáp án</span>
+            <span className="text-sm font-medium">{survey ? "Các lựa chọn (theo thứ tự xuất 1, 2, 3…)" : "Đáp án"}</span>
             <button
               type="button"
               onClick={addOption}
-              className="rounded border border-default px-2 py-0.5 text-xs"
+              disabled={survey && v.options.length >= 10}
+              className="rounded border border-default px-2 py-0.5 text-xs disabled:opacity-40"
             >
-              + Đáp án
+              {survey ? "+ Lựa chọn" : "+ Đáp án"}
             </button>
           </div>
           <ul className="space-y-2">
-            {v.options.map((o) => (
+            {v.options.map((o, oi) => (
               <li key={o.id} className="flex items-center gap-2">
+                {survey ? (
+                  <span className="w-5 text-right text-xs font-medium text-faint">{oi + 1}</span>
+                ) : (
                 <input
                   type={v.type === "mcq" ? "radio" : "checkbox"}
                   checked={o.isCorrect}
                   onChange={() => toggleCorrect(o.id)}
                   name="correct"
                 />
+                )}
                 <input
                   type="text"
                   value={o.label}
+                  required={survey}
                   onChange={(e) => setOption(o.id, { label: e.target.value })}
-                  placeholder={`Đáp án ${o.id.toUpperCase()}`}
+                  placeholder={survey ? `Lựa chọn ${oi + 1}` : `Đáp án ${o.id.toUpperCase()}`}
                   className="flex-1 rounded border border-default px-2 py-1 text-sm"
                 />
                 {v.options.length > 2 && (
@@ -453,9 +584,11 @@ export default function QuestionEditor({
             ))}
           </ul>
           <p className="mt-2 text-xs text-faint">
-            {v.type === "mcq"
-              ? "Chọn đúng 1 đáp án đúng."
-              : "Chọn ≥ 1 đáp án đúng. Học viên phải chọn đúng cả tập để được điểm."}
+            {survey
+              ? "Không có đáp án đúng. Khi xuất Excel, mỗi lựa chọn ghi bằng số thứ tự ở bên trái."
+              : v.type === "mcq"
+                ? "Chọn đúng 1 đáp án đúng."
+                : "Chọn ≥ 1 đáp án đúng. Học viên phải chọn đúng cả tập để được điểm."}
           </p>
         </div>
       )}
@@ -551,7 +684,59 @@ export default function QuestionEditor({
         </div>
       )}
 
-      {v.type === "short_answer" && (
+      {survey && v.type === "slider" && (
+        <div className="grid grid-cols-1 gap-3 rounded border border-default bg-white p-3 sm:grid-cols-3">
+          {(
+            [
+              ["min", "Nhỏ nhất"],
+              ["max", "Lớn nhất"],
+              ["step", "Bước"],
+            ] as const
+          ).map(([k, label]) => (
+            <label key={k} className="block">
+              <span className="block text-sm font-medium">{label}</span>
+              <input
+                type="number"
+                required
+                min={k === "step" ? 1 : -1000}
+                max={1000}
+                value={v.slider[k]}
+                onChange={(e) => setV({ ...v, slider: { ...v.slider, [k]: Number(e.target.value) } })}
+                className="mt-1 w-full rounded border border-default px-2 py-1 text-sm"
+              />
+            </label>
+          ))}
+          <label className="block sm:col-span-3 sm:grid sm:grid-cols-2 sm:gap-3">
+            <span className="block">
+              <span className="block text-sm font-medium">Nhãn đầu nhỏ</span>
+              <input
+                type="text"
+                maxLength={60}
+                value={v.slider.minLabel}
+                onChange={(e) => setV({ ...v, slider: { ...v.slider, minLabel: e.target.value } })}
+                placeholder="vd Rất thấp"
+                className="mt-1 w-full rounded border border-default px-2 py-1 text-sm"
+              />
+            </span>
+            <span className="mt-3 block sm:mt-0">
+              <span className="block text-sm font-medium">Nhãn đầu lớn</span>
+              <input
+                type="text"
+                maxLength={60}
+                value={v.slider.maxLabel}
+                onChange={(e) => setV({ ...v, slider: { ...v.slider, maxLabel: e.target.value } })}
+                placeholder="vd Rất cao"
+                className="mt-1 w-full rounded border border-default px-2 py-1 text-sm"
+              />
+            </span>
+          </label>
+          <p className="text-caption text-faint sm:col-span-3">
+            (Lớn nhất − Nhỏ nhất) phải chia hết cho Bước. Sinh viên chưa chạm vào thanh thì câu được tính là chưa trả lời.
+          </p>
+        </div>
+      )}
+
+      {!survey && v.type === "short_answer" && (
         <div className="space-y-2 rounded border border-default bg-white p-3">
           <label className="block">
             <span className="block text-sm font-medium">
@@ -584,7 +769,7 @@ export default function QuestionEditor({
         </div>
       )}
 
-      {v.type === "essay" && (
+      {!survey && v.type === "essay" && (
         <div className="space-y-3 rounded border border-default bg-white p-3">
           <div>
             <span className="block text-sm font-medium">
@@ -683,7 +868,7 @@ export default function QuestionEditor({
         </div>
       )}
 
-      <div>
+      <div className={survey ? "hidden" : undefined}>
         <label className="block text-sm font-medium">
           {practiceMode && v.type === "essay" ? "Bài mẫu (Sample answer)" : "Giải thích đáp án"}{" "}
           <span className="font-normal text-faint">(không bắt buộc)</span>
@@ -708,7 +893,7 @@ export default function QuestionEditor({
         </p>
       </div>
 
-      {!practiceMode && (
+      {!practiceMode && !survey && (
       <div>
         <span className="block text-sm font-medium">Skill liên quan (bắt buộc khi publish)</span>
         <div className="mt-1">

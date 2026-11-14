@@ -7,3 +7,4 @@ export { default as KpiCard, type KpiTone } from "./KpiCard";
 export { default as ShareCard } from "./ShareCard";
 export { default as BackButton } from "./BackButton";
 export { default as QrZoom } from "./QrZoom";
+export { default as LessonVideoBadge } from "./LessonVideoBadge";

@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
+import type { TParams } from "@/lib/i18n/core";
 
 interface Thread {
   id: string;
@@ -41,23 +44,19 @@ function hashIdx(s: string, mod: number): number {
   return Math.abs(h) % mod;
 }
 
-function relativeTime(d: Date): string {
+function relativeTime(d: Date, tx: (key: MessageKey, params?: TParams) => string): string {
   const diff = Date.now() - new Date(d).getTime();
   const m = Math.floor(diff / 60000);
-  if (m < 1) return "vừa xong";
-  if (m < 60) return `${m} phút trước`;
+  if (m < 1) return tx("learn.forum.justNow");
+  if (m < 60) return tx("learn.forum.minAgo", { n: m });
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} giờ trước`;
+  if (h < 24) return tx("learn.forum.hourAgo", { n: h });
   const day = Math.floor(h / 24);
-  if (day < 7) return `${day} ngày trước`;
+  if (day < 7) return tx("learn.forum.dayAgo", { n: day });
   return formatDate(d);
 }
 
-const PROMPT_SUGGESTIONS = [
-  "Mình không hiểu chỗ...",
-  "Có ai gặp lỗi tương tự không?",
-  "Tại sao lại dùng cách này?",
-];
+const PROMPT_KEYS = ["learn.forum.prompt1", "learn.forum.prompt2", "learn.forum.prompt3"] as const;
 
 export default function LessonForumSection({
   lessonId,
@@ -69,6 +68,7 @@ export default function LessonForumSection({
   threads: Thread[];
 }) {
   const router = useRouter();
+  const tx = useT();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -112,27 +112,26 @@ export default function LessonForumSection({
       <div>
         {!open ? (
           <div>
-            <p className="text-base font-bold">💬 Cùng thảo luận về bài này</p>
+            <p className="text-base font-bold">{tx("learn.forum.inviteTitle")}</p>
             <p className="mt-1 text-sm text-muted">
-              Có chỗ chưa rõ hay muốn chia sẻ góc nhìn? Đặt câu hỏi để cả lớp
-              cùng trao đổi nhé ✨
+              {tx("learn.forum.inviteBody")}
             </p>
             <button
               type="button"
               onClick={() => openComposer()}
               className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-brand-700 hover:shadow-md hover:-translate-y-0.5"
             >
-              + Viết câu hỏi
+              {tx("learn.forum.write")}
             </button>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {PROMPT_SUGGESTIONS.map((p) => (
+              {PROMPT_KEYS.map((k) => (
                 <button
-                  key={p}
+                  key={k}
                   type="button"
-                  onClick={() => openComposer(p)}
+                  onClick={() => openComposer(tx(k))}
                   className="rounded-full border border-token bg-[rgb(var(--surface-muted))] px-3 py-1 text-xs text-muted transition-colors hover:bg-brand-50 hover:text-brand-700 hover:border-brand-200 dark:hover:bg-brand-950/40 dark:hover:text-brand-300"
                 >
-                  {p}
+                  {tx(k)}
                 </button>
               ))}
             </div>
@@ -144,7 +143,7 @@ export default function LessonForumSection({
               onChange={(e) => setTitle(e.target.value)}
               required
               maxLength={200}
-              placeholder="Tiêu đề câu hỏi"
+              placeholder={tx("learn.forum.titlePlaceholder")}
               className="input"
               autoFocus
             />
@@ -153,7 +152,7 @@ export default function LessonForumSection({
               onChange={(e) => setBody(e.target.value)}
               required
               rows={4}
-              placeholder="Mô tả chi tiết — context, đã thử gì, lỗi gặp phải..."
+              placeholder={tx("learn.forum.bodyPlaceholder")}
               className="textarea"
             />
             <div className="flex flex-wrap items-center gap-2">
@@ -162,7 +161,7 @@ export default function LessonForumSection({
                 disabled={busy}
                 className="btn-primary btn-sm"
               >
-                {busy ? "..." : "Đăng câu hỏi"}
+                {busy ? "..." : tx("learn.forum.post")}
               </button>
               <button
                 type="button"
@@ -174,10 +173,10 @@ export default function LessonForumSection({
                 }}
                 className="btn-secondary btn-sm"
               >
-                Hủy
+                {tx("learn.forum.cancel")}
               </button>
               {error && (
-                <span className="text-xs text-danger-600">Lỗi: {error}</span>
+                <span className="text-xs text-danger-600">{tx("learn.forum.error", { error })}</span>
               )}
             </div>
           </form>
@@ -190,20 +189,20 @@ export default function LessonForumSection({
     <section>
       {/* Header row — social proof */}
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-xl font-semibold">💬 Thảo luận</h2>
+        <h2 className="text-xl font-semibold">{tx("learn.forum.heading")}</h2>
         {threads.length > 0 && (
           <p className="text-xs text-muted">
             <span className="font-semibold text-[rgb(var(--text))]">
               {threads.length}
             </span>{" "}
-            câu hỏi
+            {tx("learn.forum.questions")}
             {uniqueAuthors > 1 && (
               <>
                 {" · "}
                 <span className="font-semibold text-[rgb(var(--text))]">
                   {uniqueAuthors}
                 </span>{" "}
-                học viên đang trao đổi
+                {tx("learn.forum.learnersTalking")}
               </>
             )}
           </p>
@@ -217,11 +216,10 @@ export default function LessonForumSection({
           <div className="mt-6 rounded-2xl border-2 border-dashed border-token bg-gradient-to-br from-amber-50/50 via-rose-50/30 to-violet-50/50 p-10 text-center dark:from-amber-950/20 dark:via-rose-950/20 dark:to-violet-950/20">
             <div className="text-5xl">🎉</div>
             <p className="mt-4 text-base font-semibold">
-              Chưa có câu hỏi nào ở bài này
+              {tx("learn.forum.emptyTitle")}
             </p>
             <p className="mt-1 text-sm text-muted">
-              Hãy là người đầu tiên khơi mào — câu hỏi của bạn có thể giúp
-              hàng chục bạn khác sau này.
+              {tx("learn.forum.emptyBody")}
             </p>
           </div>
         </div>
@@ -250,7 +248,7 @@ export default function LessonForumSection({
 
                 {t.resolvedPostId && (
                   <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-success-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
-                    ✓ Đã xử lý
+                    {tx("learn.forum.resolved")}
                   </span>
                 )}
 
@@ -273,7 +271,7 @@ export default function LessonForumSection({
                         {t.author.displayName}
                       </p>
                       <p className="text-[11px] text-faint">
-                        {relativeTime(t.createdAt)}
+                        {relativeTime(t.createdAt, tx)}
                       </p>
                     </div>
                   </div>

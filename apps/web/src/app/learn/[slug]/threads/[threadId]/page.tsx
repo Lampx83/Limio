@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ForumError, getThread, isUserEnrolled } from "@feedbackme/core-lms";
 import { prisma } from "@feedbackme/db";
 import { auth } from "@/lib/auth";
+import { getT } from "@/lib/i18n/server";
 import ThreadReplyForm from "./ThreadReplyForm";
 import MarkResolvedButton from "./MarkResolvedButton";
 import { EmptyState, UserAvatar, DateTime, StatusBadge } from "@/components/ui";
@@ -14,6 +15,7 @@ export default async function ThreadPage({
 }: {
   params: { slug: string; threadId: string };
 }) {
+  const t = await getT();
   const session = await auth();
   if (!session?.user?.id) {
     redirect(
@@ -59,7 +61,7 @@ export default async function ThreadPage({
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="h-display text-h3">{thread.title}</h1>
               {isResolvedThread && (
-                <StatusBadge tone="success">Đã xử lý</StatusBadge>
+                <StatusBadge tone="success">{t("learn.thread.resolved")}</StatusBadge>
               )}
             </div>
             <p className="mt-1 text-caption">
@@ -79,7 +81,7 @@ export default async function ThreadPage({
       {/* Replies */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold">
-          Trả lời{" "}
+          {t("learn.thread.replies")}{" "}
           <span className="text-sm font-normal text-faint">
             ({thread.posts.length})
           </span>
@@ -88,8 +90,8 @@ export default async function ThreadPage({
           <div className="mt-3">
             <EmptyState
               icon="💬"
-              title="Chưa có ai trả lời"
-              description="Hãy là người đầu tiên giúp đỡ — kéo xuống dưới hoặc dùng form ở dưới cùng để trả lời."
+              title={t("learn.thread.noReplies")}
+              description={t("learn.thread.noRepliesHint")}
             />
           </div>
         ) : (
@@ -106,7 +108,7 @@ export default async function ThreadPage({
                   {isResolved && (
                     <div className="flex items-center gap-1.5 bg-success-50 px-4 py-1.5 text-xs font-semibold text-success-700">
                       <span aria-hidden>✓</span>
-                      Câu trả lời được chấp nhận
+                      {t("learn.thread.accepted")}
                     </div>
                   )}
                   <div className="p-4">

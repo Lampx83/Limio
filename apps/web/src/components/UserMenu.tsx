@@ -7,12 +7,13 @@ const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 import { useEffect, useRef, useState } from "react";
 import RoleSwitcher from "./RoleSwitcher";
 import { useEffectiveRole } from "./useEffectiveRole";
+import { useT } from "@/lib/i18n/client";
 
-const ROLE_BADGES: Record<string, { label: string; className: string }> = {
-  learner:    { label: "Học viên",   className: "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300" },
-  instructor: { label: "Giảng viên", className: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" },
-  admin:      { label: "Quản trị",   className: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" },
-  mentor:     { label: "Mentor",     className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
+const ROLE_BADGES: Record<string, { label: "role.learner" | "role.instructor" | "role.admin" | "role.mentor"; className: string }> = {
+  learner:    { label: "role.learner",   className: "bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300" },
+  instructor: { label: "role.instructor", className: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300" },
+  admin:      { label: "role.admin",   className: "bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300" },
+  mentor:     { label: "role.mentor",     className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" },
 };
 
 export default function UserMenu({
@@ -34,6 +35,7 @@ export default function UserMenu({
   /** True nếu user là OrgAdmin của ≥1 trường (hoặc Platform Admin) — xem isAnyOrgAdmin. */
   isOrgAdmin?: boolean;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const activeRole = useEffectiveRole(cookieRole, roles);
@@ -88,7 +90,7 @@ export default function UserMenu({
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full border border-token bg-[rgb(var(--surface))] py-1 pl-1 pr-3 text-sm transition-shadow hover:shadow-card"
-        aria-label="Tài khoản"
+        aria-label={t("header.account")}
       >
         {smallAvatar}
         <span className="hidden font-medium sm:inline short:hidden">{name}</span>
@@ -107,7 +109,7 @@ export default function UserMenu({
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {activeBadge && (
                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${activeBadge.className}`}>
-                      {activeBadge.label}
+                      {t(activeBadge.label)}
                     </span>
                   )}
                   {isResearcher && (
@@ -122,11 +124,11 @@ export default function UserMenu({
 
           {/* Account links */}
           <div className="py-1">
-            <Item href="/me/dashboard" onClick={close}>Tổng quan của tôi</Item>
-            <Item href="/me/settings" onClick={close}>Cài đặt tài khoản</Item>
+            <Item href="/me/dashboard" onClick={close}>{t("userMenu.dashboard")}</Item>
+            <Item href="/me/settings" onClick={close}>{t("userMenu.settings")}</Item>
             {isOrgAdmin && (
               <Item href="/org-admin/settings" onClick={close}>
-                Quản trị trường (OrgAdmin)
+                {t("userMenu.orgAdmin")}
               </Item>
             )}
           </div>
@@ -143,7 +145,7 @@ export default function UserMenu({
             onClick={() => signOut({ callbackUrl: `${BASE}/` })}
             className="block w-full border-t border-token px-4 py-2.5 text-left text-sm font-medium text-danger-600 transition-colors hover:bg-danger-50 dark:hover:bg-danger-950/30"
           >
-            Đăng xuất
+            {t("userMenu.signOut")}
           </button>
         </div>
       )}

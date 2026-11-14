@@ -8,6 +8,7 @@ import AcademicTermsManager from "./AcademicTermsManager";
 import ExamNetworkSettings from "./ExamNetworkSettings";
 import OrgBrandSettings from "./OrgBrandSettings";
 import OrgCenterToggle from "@/components/OrgCenterToggle";
+import SpaceSettingsSection from "@/components/space/SpaceSettingsSection";
 import { toDayKey } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +97,10 @@ export default async function OrgSettingsPage() {
           logoUrl={primary.organization.brandingLogoUrl}
           initialSettings={primary.organization.slideBrand}
         />
+      </div>
+
+      <div className="mt-6">
+        <SpaceSettingsSection organizationId={primary.organizationId} />
       </div>
 
       <div className="mt-6">

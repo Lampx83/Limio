@@ -11,7 +11,7 @@ import {
   remainingSec as calcRemainingSec,
   retryDelayMs,
 } from "@/lib/examPlayerSync";
-import PassageView from "./exam/PassageView";
+import PassageView, { renderDoc } from "./exam/PassageView";
 import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "./exam/ExamQuestion";
 import QuestionPalette from "./exam/QuestionPalette";
 import FullscreenGate from "./exam/FullscreenGate";
@@ -89,6 +89,11 @@ interface Props {
    * localStorage của chính giáo viên và bị xoá khi nộp bản thử.
    */
   preview?: boolean;
+  /**
+   * Phiếu Khảo sát (docs/tieu-chi/de-thi-khao-sat.md AC6): không có điểm, nói "phiếu"
+   * thay cho "bài", mỗi phần hiện lời dẫn ngay trên các câu của nó.
+   */
+  survey?: boolean;
   attemptId: string;
   sessionToken: string;
   startedAt: string;
@@ -910,7 +915,8 @@ export default function ExamPlayer(props: Props) {
       <div id={`exam-q-${q.id}`} key={q.id} className={`scroll-mt-48 ${QUESTION_CARD_CLASS}`}>
         <QuestionNumber
           n={num}
-          points={q.points}
+          // Phiếu Khảo sát không có điểm (docs/tieu-chi/de-thi-khao-sat.md AC6).
+          points={props.survey ? undefined : q.points}
           right={
             isAnswered(answers[q.id] ?? null) ? (
               <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">Đã trả lời</span>
@@ -937,7 +943,7 @@ export default function ExamPlayer(props: Props) {
         // proctoringLevel=none". Nên đề khai báo KHÔNG giám sát vẫn ép toàn
         // màn hình, và trên iPad thì đó là ép vào một chế độ mà bàn phím ảo
         // không bật lên được.
-        required={props.exam.proctoringLevel !== "none"}
+        required={!props.survey && props.exam.proctoringLevel !== "none"}
       />
       <TabBlurWarning onBlur={() => logIncident("tab_blur")} />
       <MultiTabDetector
@@ -1010,6 +1016,7 @@ export default function ExamPlayer(props: Props) {
         }}
         onJump={jumpToQuestion}
         section={props.mock ? { title: props.mock.sections[props.mock.activeIndex]!.title, isLast: true } : undefined}
+        survey={props.survey}
       />
       {props.mock && (
         <SubmitReviewModal
@@ -1071,15 +1078,17 @@ export default function ExamPlayer(props: Props) {
               disabled={submitting}
               className="rounded bg-blue-600 px-4 py-1.5 text-sm font-medium text-white disabled:opacity-50"
             >
-              {submitting ? "Đang nộp…" : "Nộp bài"}
+              {submitting ? "Đang nộp…" : props.survey ? "Nộp phiếu" : "Nộp bài"}
             </button>
           </div>
         </header>
         )}
         {/* Trình duyệt không cho cảnh báo ngay lúc bấm chuyển tab, nên nhắc sẵn trước khi thí sinh bấm. */}
-        <p className="mb-2 text-xs font-medium text-danger-700">
-          Không rời khỏi trang thi. Mọi lần rời trang đều được ghi lại.
-        </p>
+        {!props.survey && (
+          <p className="mb-2 text-xs font-medium text-danger-700">
+            Không rời khỏi trang thi. Mọi lần rời trang đều được ghi lại.
+          </p>
+        )}
         <QuestionPalette items={paletteItems} onJump={jumpToQuestion} />
       </div>
 
@@ -1097,7 +1106,7 @@ export default function ExamPlayer(props: Props) {
         onPrev={() => setCurrentStepIndex((i) => Math.max(0, i - 1))}
         onNext={() => setCurrentStepIndex((i) => Math.min(steps.length - 1, i + 1))}
         onSubmit={() => (props.mock && !isLastSection ? setSectionConfirmOpen(true) : setReviewOpen(true))}
-        submitLabel={props.mock && !isLastSection ? "Nộp phần này" : "Nộp bài"}
+        submitLabel={props.mock && !isLastSection ? "Nộp phần này" : props.survey ? "Nộp phiếu" : "Nộp bài"}
         unansweredCount={paletteItems.filter((p) => !p.answered).length}
         submitting={submitting}
       />
@@ -1117,6 +1126,16 @@ export default function ExamPlayer(props: Props) {
       const qs = step.questionIds
         .map((qid) => props.questions.find((q) => q.id === qid))
         .filter((q): q is QuestionData => !!q);
+      if (props.survey) {
+        // Phần của phiếu: tiêu đề + lời dẫn ở trên, các câu ngay dưới (một cột, kể cả máy tính).
+        return (
+          <section className="mx-auto max-w-3xl rounded border border-default bg-white p-4 sm:p-6">
+            <h2 className="text-base font-semibold">{passage.title}</h2>
+            <div className="prose prose-sm mt-2 max-w-none text-muted">{renderDoc(passage.contentJson)}</div>
+            <div className="mt-2">{qs.map((q, i) => renderQuestion(q, i))}</div>
+          </section>
+        );
+      }
       return (
         <div className="grid gap-4 lg:grid-cols-[1.1fr_1fr]">
           <section className="lg:sticky lg:top-[12rem] lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto rounded border border-default bg-white p-4">

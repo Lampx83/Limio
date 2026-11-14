@@ -2,6 +2,7 @@ import Link from "next/link";
 import { previewSectionInvite } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import JoinSectionButton from "@/components/JoinSectionButton";
+import { getT } from "@/lib/i18n/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ export default async function EnrollByCodePage({
 }: {
   params: { code: string };
 }) {
+  const t = await getT();
   const session = await auth();
   const userId = session?.user?.id ?? null;
   const code = params.code.trim().toUpperCase();
@@ -19,9 +21,9 @@ export default async function EnrollByCodePage({
   if (!invite) {
     return (
       <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
-        <h1 className="text-h1">Link không hợp lệ</h1>
+        <h1 className="text-h1">{t("catalog.invite.invalidTitle")}</h1>
         <p className="text-body text-slate-600">
-          Link mời này không còn tồn tại hoặc đã bị thu hồi. Liên hệ giảng viên để lấy link mới.
+          {t("catalog.invite.invalidBody")}
         </p>
       </main>
     );
@@ -35,10 +37,10 @@ export default async function EnrollByCodePage({
         <div className="w-full rounded-2xl border border-token bg-[rgb(var(--surface))] p-8">
           <h1 className="text-2xl font-bold">{invite.courseTitle}</h1>
           <p className="mt-2 text-sm text-muted">
-            Bạn đã ở lớp <strong>{invite.sectionName}</strong> rồi.
+            <Bold text={t("catalog.invite.alreadyHere")} name={invite.sectionName} />
           </p>
           <Link href={`/learn/${invite.courseSlug}`} className="btn-primary mt-6 inline-block">
-            Vào học
+            {t("catalog.invite.enter")}
           </Link>
         </div>
       </main>
@@ -51,10 +53,10 @@ export default async function EnrollByCodePage({
     <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center gap-6 px-4 py-16 text-center">
       <div className="w-full rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-8 text-white shadow-lg">
         <p className="text-xs font-medium uppercase tracking-wide opacity-70">
-          {moving ? "Chuyển lớp" : "Lời mời tham gia lớp học"}
+          {moving ? t("catalog.invite.moveLabel") : t("catalog.invite.joinLabel")}
         </p>
         <h1 className="mt-2 text-2xl font-bold">{invite.courseTitle}</h1>
-        <p className="mt-1 text-sm opacity-90">Lớp: {invite.sectionName}</p>
+        <p className="mt-1 text-sm opacity-90">{t("catalog.invite.section", { name: invite.sectionName })}</p>
 
         {/*
           Người đã ghi danh khoá này bằng đường khác — thường là qua link giới
@@ -69,15 +71,14 @@ export default async function EnrollByCodePage({
                 không phải một lớp. Nói thẳng ra thế thay vì ghép tên nó vào
                 câu "bạn đang ở lớp …". */}
             {invite.current!.isDefault ? (
-              <p>Bạn đã ghi danh khoá này nhưng chưa được xếp vào lớp nào.</p>
+              <p>{t("catalog.invite.noSection")}</p>
             ) : (
               <p>
-                Bạn đang ở lớp <strong>{invite.current!.sectionName}</strong>.
+                <Bold text={t("catalog.invite.currentSection")} name={invite.current!.sectionName} />
               </p>
             )}
             <p className="mt-1 opacity-90">
-              Bấm nút dưới đây để chuyển sang <strong>{invite.sectionName}</strong>. Toàn bộ
-              tiến độ và bài đã làm của bạn được giữ nguyên.
+              <Bold text={t("catalog.invite.moveHint")} name={invite.sectionName} />
             </p>
           </div>
         )}
@@ -91,5 +92,17 @@ export default async function EnrollByCodePage({
         </div>
       </div>
     </main>
+  );
+}
+
+/** Chèn tên lớp in đậm vào chỗ `{name}` của câu đã dịch — vị trí tên khác nhau giữa các ngôn ngữ nên không ghép cứng. */
+function Bold({ text, name }: { text: string; name: string }) {
+  const [before, after = ""] = text.split("{name}");
+  return (
+    <>
+      {before}
+      <strong>{name}</strong>
+      {after}
+    </>
   );
 }
