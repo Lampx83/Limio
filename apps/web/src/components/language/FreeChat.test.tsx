@@ -506,14 +506,14 @@ describe("FreeChat — scaffolding cho người nói yếu (mốc 1)", () => {
     expect(dlg()).toBeNull();
   });
 
-  it("nút Bắt đầu trong popup: đóng popup và bắt đầu hội thoại (hiện khung chat, khay); sau khi bắt đầu không còn nút Chuẩn bị", async () => {
+  it("nút Bắt đầu trong popup: đóng popup và bắt đầu hội thoại (hiện khung chat, khay); nút Chuẩn bị chuyển lên đầu khung chat để mở lại khi bị bí", async () => {
     await mountSc();
     await openPrep();
     await click(dlgButton(/Bắt đầu/));
     expect(dlg()).toBeNull();
     expect(host.querySelector(".fc-log")).not.toBeNull();
     expect(host.querySelector("[data-testid=fc-tray]")).not.toBeNull();
-    expect(prepButton()).toBeNull();
+    expect(prepButton().textContent?.trim()).toBe("Chuẩn bị"); // nút ở đầu khung chat để mở lại, không kèm số
   });
 
   it("gõ đè chỗ trống rồi gửi được; còn chỗ trống ___ thì Gửi và Enter không gửi, báo lỗi, không tốn lượt, lời báo biến mất khi điền xong", async () => {
@@ -577,6 +577,68 @@ describe("FreeChat — scaffolding cho người nói yếu (mốc 1)", () => {
     expect(frameSpeech).toHaveBeenLastCalledWith(1);
     expect(listen()).toHaveLength(1); // mẫu 1 đọc lỗi: nút biến mất, không báo lỗi
     expect(host.querySelector("[data-testid=fc-error]")).toBeNull();
+  });
+
+  it("bị bí giữa chừng: bấm Chuẩn bị ở đầu khung chat mở lại popup (có Đóng, không có Bắt đầu); bấm mẫu câu chèn vào ô, bôi đen chỗ trống đầu tiên, rồi đóng popup", async () => {
+    await mountSc();
+    await click(button(/^\s*Bắt đầu\s*$/));
+    await openPrep();
+    expect(dlgButton(/^\s*Bắt đầu\s*$/)).toBeUndefined();
+    expect(dlgButton(/^\s*Đóng\s*$/)).toBeDefined();
+    expect(frameButtons()).toHaveLength(2);
+    await click(frameButtons()[0]!);
+    await settle();
+    expect(dlg()).toBeNull();
+    expect(input().value).toBe("I would take ___ because ___.");
+    expect(sel()).toBe("___");
+    expect(host.textContent).toContain("Đã chèn vào ô nhập");
+  });
+
+  it("còn chỗ trống ___ thì Gửi và Enter không gửi, báo lỗi, không tốn lượt; gõ đè xong gửi được và mẫu câu có ✓ trong popup", async () => {
+    await mountSc();
+    await click(button(/^\s*Bắt đầu\s*$/));
+    await openPrep();
+    await click(frameButtons()[0]!);
+    await settle();
+    await click(button(/^\s*Gửi/));
+    await press("Enter");
+    expect(send).not.toHaveBeenCalled();
+    expect(host.querySelector("[data-testid=fc-error]")!.textContent).toContain("Còn chỗ trống");
+    expect(text()).toContain("Lượt 1/4");
+    await typeIn("I would take my phone because it has my photos.");
+    expect(host.querySelector("[data-testid=fc-error]")).toBeNull();
+    send.mockResolvedValueOnce("Why?");
+    await click(button(/^\s*Gửi/));
+    expect(send).toHaveBeenCalledWith([], "I would take my phone because it has my photos.");
+    await openPrep();
+    expect(dlgText()).toContain("Mẫu câu (1/2 đã dùng)");
+    expect(prepButton().textContent?.trim()).toBe("Chuẩn bị"); // nút không hiện số
+  });
+
+  it("bấm cụm từ hữu ích và từ vựng trong popup chèn đúng", async () => {
+    await mountSc();
+    await click(button(/^\s*Bắt đầu\s*$/));
+    await openPrep();
+    await click(dlgButton(/Chèn từ: passport/));
+    await settle();
+    expect(input().value).toBe("passport");
+    await openPrep();
+    await click(dlgButton(/Chèn cụm từ: take my passport/));
+    await settle();
+    expect(input().value).toBe("passport take my passport");
+  });
+
+  it("chèn từ popup khi bạn ảo còn đang gõ dần vẫn được (popup đóng, ô nhập có chữ)", async () => {
+    await act(async () => {
+      root.render(<FreeChat view={scView} savedText="" preview={false} send={send} frameSpeech={frameSpeech} language="en" transcribe={transcribe} onAnswer={onAnswer} animate />);
+    });
+    await click(button(/^\s*Bắt đầu\s*$/));
+    expect(host.querySelector(".fc-msg[data-typing]")).not.toBeNull(); // lời mở đầu đang hiện dần
+    await openPrep();
+    await click(frameButtons()[0]!);
+    await settle();
+    expect(dlg()).toBeNull();
+    expect(input().value).toBe("I would take ___ because ___.");
   });
 
   it("không truyền frameSpeech thì mẫu câu không có nút nghe", async () => {

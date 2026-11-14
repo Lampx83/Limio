@@ -583,6 +583,11 @@ export default function FreeChat({
             <span>{t("practice.say.partner")}</span>
           </div>
           <div className="fc-chat-tools">
+            {scaffold && started && (
+              <button type="button" className="fc-btn fc-btn-ghost fc-btn-sm" onClick={openPrep} data-testid="fc-prep-open">
+                <BookOpen size={14} aria-hidden /> {t("practice.say.prepButton")}
+              </button>
+            )}
             {openingSpeech && (
               <button type="button" className="fc-tool" onClick={toggleVoice} aria-pressed={voiceOn} aria-label={t("practice.say.voice")} title={voiceOn ? t("practice.say.voiceOn") : t("practice.say.voiceOff")}>
                 {voiceOn ? <Volume2 size={17} aria-hidden /> : <VolumeX size={17} aria-hidden />}
