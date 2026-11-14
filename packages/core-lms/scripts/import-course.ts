@@ -83,7 +83,7 @@ import {
   PodcastScript,
   saveNarrationScript,
 } from "../src/narration";
-import { LESSON_FONT_KEYS, LESSON_LAYOUT_KEYS, LESSON_PALETTE_KEYS } from "@feedbackme/shared-types";
+import { LANGUAGE_SKILLS, LESSON_FONT_KEYS, LESSON_LAYOUT_KEYS, LESSON_PALETTE_KEYS } from "@feedbackme/shared-types";
 
 // ── Định dạng file học liệu ───────────────────────────────────────────────────
 // Giữ cho người soạn bài đọc và sửa được: `pairs`, `sequence`, `answers` là
@@ -257,6 +257,8 @@ export const LessonSpec = z.object({
    * dối.
    */
   durationMin: z.number().int().min(1).max(600).optional(),
+  /** Kỹ năng chính của bài (nghe/nói/đọc/viết): hồ sơ kỹ năng và thẻ "Tiến độ theo kỹ năng" của khoá ngoại ngữ đếm bài theo trường này. */
+  languageSkill: z.enum(LANGUAGE_SKILLS).optional(),
   /**
    * Bảng màu + phông chữ của bài (giống nút "Giao diện" khi giảng viên sửa khối văn bản). Áp cho mọi khối
    * văn bản của bài, để cả bài một giọng.
@@ -1976,6 +1978,7 @@ async function main() {
         orderIndex: li,
         // Thời lượng thật để trang Bắt đầu và trang khoá ghi "Khoảng N phút".
         ...(l.durationMin ? { durationSec: l.durationMin * 60 } : {}),
+        ...(l.languageSkill ? { languageSkill: l.languageSkill } : {}),
       });
 
       // Ảnh trong thân bài viết `asset:<tệp>`: tải lên rồi đổi thành đường dẫn thật.

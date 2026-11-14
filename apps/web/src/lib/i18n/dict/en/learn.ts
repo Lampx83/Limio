@@ -142,7 +142,7 @@ export const enLearn: PartialDict<typeof viLearn> = {
   "learn.home.courseDone": "You have completed this course!",
   "learn.home.skillsAria": "Progress by skill — view your skills profile",
   "learn.home.skillsTitle": "Progress by skill",
-  "learn.home.skillsBasis": "Based on completed lessons",
+  "learn.home.skillsBasis": "Based on lessons you have practised",
   "learn.home.skillsProfile": "View skills profile →",
   "learn.home.reviewTitle": "Time to review",
   "learn.home.quests": "Today's quests",

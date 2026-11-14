@@ -796,7 +796,7 @@ export default async function LessonPage({
         // nhúng thẳng bản xem thử, giống nút "Xem trước" ở trang soạn Bài luyện.
         try {
           const embed = await getPracticePreview(userId!, examId);
-          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
+          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
         } catch (e) {
           if (!(e instanceof ExamError)) throw e;
           practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;
@@ -817,7 +817,7 @@ export default async function LessonPage({
       }
       try {
         const embed = await getPracticeForEmbed(userId, examId);
-        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
+        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
         practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;

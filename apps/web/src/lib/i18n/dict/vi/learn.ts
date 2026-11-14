@@ -139,7 +139,7 @@ export const viLearn = {
   "learn.home.courseDone": "Bạn đã hoàn thành khoá học này!",
   "learn.home.skillsAria": "Tiến độ theo kỹ năng — xem hồ sơ kỹ năng",
   "learn.home.skillsTitle": "Tiến độ theo kỹ năng",
-  "learn.home.skillsBasis": "Dựa trên bài học đã hoàn thành",
+  "learn.home.skillsBasis": "Dựa trên bài đã luyện",
   "learn.home.skillsProfile": "Xem hồ sơ kỹ năng →",
   "learn.home.reviewTitle": "Đến lúc ôn lại",
   "learn.home.quests": "Nhiệm vụ hôm nay",
