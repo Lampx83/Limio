@@ -23,10 +23,18 @@ export default function EssayAudioField({
   examId,
   value,
   onChange,
+  label = "Audio bài mẫu",
+  altText = SAMPLE_AUDIO_ALT,
+  hint,
 }: {
   examId: string;
   value: string;
   onChange: (url: string) => void;
+  /** Tên ô (mặc định "Audio bài mẫu"); hội thoại đóng vai dùng "Audio lượt n". */
+  label?: string;
+  altText?: string;
+  /** Dòng chú thích dưới ô; mặc định là chú thích của audio bài mẫu. */
+  hint?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +53,7 @@ export default function EssayAudioField({
     try {
       const form = new FormData();
       form.append("file", f);
-      form.append("altText", SAMPLE_AUDIO_ALT);
+      form.append("altText", altText);
       const res = await fetch(apiUrl(`/api/exams/${examId}/assets`), { method: "POST", body: form });
       const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
       if (!res.ok || !data.url) {
@@ -63,7 +71,7 @@ export default function EssayAudioField({
 
   return (
     <div>
-      <span className="block text-sm font-medium">Audio bài mẫu</span>
+      <span className="block text-sm font-medium">{label}</span>
       <div className="mt-1 flex flex-wrap items-center gap-2">
         <label className="inline-flex cursor-pointer items-center rounded border border-default px-3 py-1 text-sm hover:bg-gray-50">
           {busy ? "Đang tải…" : value ? "Chọn tệp khác" : "Tải tệp audio lên"}
@@ -74,7 +82,7 @@ export default function EssayAudioField({
             disabled={busy}
             onChange={(e) => void pick(e.target.files?.[0] ?? null)}
             className="sr-only"
-            aria-label="Tải tệp audio bài mẫu lên"
+            aria-label={`Tải tệp lên: ${label}`}
           />
         </label>
         {value && (
@@ -91,8 +99,8 @@ export default function EssayAudioField({
           </button>
         )}
       </div>
-      {value && <audio controls preload="none" src={apiUrl(value)} className="mt-2 w-full max-w-md" aria-label="Nghe thử audio bài mẫu" />}
-      <p className="mt-1 text-caption text-faint">{AUDIO_DIALOG_HINT} Học viên nghe ngay dưới bài mẫu sau khi kiểm tra. Có thể để trống.</p>
+      {value && <audio controls preload="none" src={apiUrl(value)} className="mt-2 w-full max-w-md" aria-label={`Nghe thử: ${label}`} />}
+      <p className="mt-1 text-caption text-faint">{hint ?? `${AUDIO_DIALOG_HINT} Học viên nghe ngay dưới bài mẫu sau khi kiểm tra. Có thể để trống.`}</p>
       {error && (
         <p role="alert" className="mt-1 text-caption text-red-700">
           {error}

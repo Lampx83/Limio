@@ -367,15 +367,12 @@ describe("LessonPractice — câu mở (essay)", () => {
     expect(text()).toContain("Bạn có thể đổi đáp án trước khi kiểm tra.");
   });
 
-  it("xem thử của giảng viên: nút hiện nhưng khoá, ghi rõ không chuyển giọng nói, không gọi máy chủ", async () => {
+  it("xem thử của giảng viên: nút dùng được và ghi rõ không lưu bản ghi; chưa ghi thì chưa gọi máy chủ", async () => {
     await render(essayEmbed(), true);
     const b = button(/Trả lời bằng giọng nói/) as HTMLButtonElement;
-    expect(b.disabled).toBe(true);
-    expect(text()).toContain("Xem thử: không chuyển giọng nói thành chữ.");
-    await click(b);
-    expect(host.querySelector('[data-testid="lp-voice-panel"]')).toBeNull();
+    expect(b.disabled).toBe(false);
+    expect(text()).toContain("Xem thử: ghi âm và chuyển thành chữ được, nhưng không lưu bản ghi.");
     expect(calls).toHaveLength(0);
-    expect(text()).not.toContain("gửi tới AI");
   });
 
   it("sau Kiểm tra: khối Góp ý (nhãn AI, tiêu chí + mức, lỗi, bước tiếp) rồi khối Bài mẫu có audio, đều DƯỚI ô trả lời; không còn dòng cảnh báo vàng", async () => {
@@ -723,5 +720,33 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     expect(textarea().value).toBe("I went to Hanoi last year.");
     expect(button(/Kiểm tra câu 1/)).toBeDefined();
     expect(host.querySelector('[data-testid="lp-feedback"]')).toBeNull();
+  });
+  it("xem thử của giảng viên: ghi âm → chuyển chữ qua lối xem thử, điền ô trả lời, KHÔNG tạo buổi, KHÔNG lưu, KHÔNG có trình phát hay nút nhận xét AI", async () => {
+    handlers["POST /api/practice-preview/ex1/voice/e1"] = () => ({ json: { text: "I went to Hanoi last year.", durationSec: 8.2 } });
+    await render(essayEmbed(), true);
+    await click(button(/Trả lời bằng giọng nói/));
+    await flush();
+    await click(button(/Dừng/));
+    await flush();
+    expect(button(/Nhận xét bằng AI/)).toBeUndefined(); // xem thử không có nhận xét AI
+    await click(button(/^\s*Chuyển thành chữ/));
+    await flush(600);
+    expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual(["POST /api/practice-preview/ex1/voice/e1"]);
+    expect(textarea().value).toBe("I went to Hanoi last year.");
+    expect(host.querySelector('[data-testid="lp-voice-player"]')).toBeNull();
+    expect(host.querySelector('[data-testid="lp-voice-panel"]')).toBeNull();
+  });
+
+  it("xem thử: lỗi từ máy chủ (chưa bật chuyển giọng) hiện lời nhắn, ô gõ không đổi", async () => {
+    handlers["POST /api/practice-preview/ex1/voice/e1"] = () => ({ status: 503, json: { error: "openai_not_configured" } });
+    await render(essayEmbed(), true);
+    await click(button(/Trả lời bằng giọng nói/));
+    await flush();
+    await click(button(/Dừng/));
+    await flush();
+    await click(button(/^\s*Chuyển thành chữ/));
+    await flush();
+    expect(host.querySelector('[data-testid="lp-voice-error"]')!.textContent).toContain("chưa bật chuyển giọng nói thành chữ");
+    expect(textarea().value).toBe("");
   });
 });

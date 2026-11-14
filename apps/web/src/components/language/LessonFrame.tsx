@@ -80,14 +80,39 @@ function RailList({ slug, frame, preview, lang, videos }: { slug: string; frame:
 
 type TocModules = React.ComponentProps<typeof LessonTocDrawer>["modules"];
 
-function RailBody({ slug, frame, hasExams, levelLabel, preview, lang, videos }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean; lang?: UiLang; videos?: ReadonlyMap<string, LessonVideoInfo> }) {
+/**
+ * Đầu thanh bên: có ảnh bìa giáo trình thì hiện bìa nhỏ, liên kết "← Về khoá học" nằm DƯỚI bìa trên một dòng (bấm bìa cũng về trang khoá; không ghi tên
+ * sách, bìa đã đủ nhận diện); chưa có bìa thì chỉ còn liên kết như cũ. Ảnh trang trí nên alt rỗng.
+ */
+export function RailCourseHeader({ slug, coverUrl, preview, lang }: { slug: string; coverUrl: string | null; preview?: boolean; lang?: UiLang }) {
+  const t = tFor(lang);
+  const href = previewHref(`/learn/${slug}`, preview);
+  if (!coverUrl) {
+    return (
+      <Link href={href} className="link text-sm">
+        {t("learn.backToCourse")}
+      </Link>
+    );
+  }
+  return (
+    <div data-testid="rail-cover">
+      <Link href={href} tabIndex={-1} aria-hidden className="block w-24">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={coverUrl} alt="" className="h-auto w-full rounded-sm object-cover shadow-md ring-1 ring-black/10" />
+      </Link>
+      <Link href={href} className="link mt-2 inline-block whitespace-nowrap text-sm">
+        {t("learn.backToCourse")}
+      </Link>
+    </div>
+  );
+}
+
+function RailBody({ slug, frame, hasExams, levelLabel, preview, coverUrl, lang, videos }: { slug: string; frame: LessonFrameData; hasExams: boolean; levelLabel: string; preview?: boolean; coverUrl: string | null; lang?: UiLang; videos?: ReadonlyMap<string, LessonVideoInfo> }) {
   const t = tFor(lang);
   const pct = frame.unitTotal === 0 ? 0 : Math.round((frame.unitDone / frame.unitTotal) * 100);
   return (
     <div>
-      <Link href={previewHref(`/learn/${slug}`, preview)} className="link text-sm">
-        {t("learn.backToCourse")}
-      </Link>
+      <RailCourseHeader slug={slug} coverUrl={coverUrl} preview={preview} lang={lang} />
       <div className="mt-4 text-xs font-bold uppercase tracking-wider text-brand-700">{levelLabel}</div>
       <div className="text-h4 mt-0.5">{frame.unitTitle}</div>
       <div
@@ -209,6 +234,7 @@ export default function LessonFrameLayout({
   slug,
   lessonId,
   courseTitle,
+  coverUrl = null,
   lessonTitle,
   frame,
   hasExams,
@@ -217,12 +243,15 @@ export default function LessonFrameLayout({
   tocModules,
   videos,
   preview,
+  accent = null,
   lang,
   children,
 }: {
   slug: string;
   lessonId: string;
   courseTitle: string;
+  /** Ảnh bìa giáo trình của khoá (`Course.coverUrl`); null thì thanh bên không có bìa. */
+  coverUrl?: string | null;
   lessonTitle: string;
   frame: LessonFrameData;
   hasExams: boolean;
@@ -236,6 +265,8 @@ export default function LessonFrameLayout({
   videos?: ReadonlyMap<string, LessonVideoInfo>;
   /** Giảng viên đang "xem như học viên": mọi liên kết trong khung giữ `preview=1`. */
   preview?: boolean;
+  /** Màu nhấn của bộ sách (`Course.themeColor`). */
+  accent?: string | null;
   /** Ngôn ngữ giao diện (trang cha lấy bằng `await getUiLang()`); mặc định "vi". */
   lang?: UiLang;
   children: React.ReactNode;
@@ -244,9 +275,10 @@ export default function LessonFrameLayout({
   const levelLower = levelLabel.toLowerCase();
   return (
     <LessonFrameShell
+      accent={accent}
       lessonId={lessonId}
       notesCount={notesCount}
-      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} lang={lang} videos={videos} />}
+      rail={<RailBody slug={slug} frame={frame} hasExams={hasExams} levelLabel={levelLabel} preview={preview} coverUrl={coverUrl} lang={lang} videos={videos} />}
       railLabel={t("learn.rail.label", { level: levelLower })}
       railSummary={t("learn.rail.summary", { level: levelLower, done: frame.unitDone, total: frame.unitTotal })}
       crumbs={

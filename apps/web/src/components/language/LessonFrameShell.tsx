@@ -1,5 +1,6 @@
 "use client";
 
+import { accentVar } from "@/lib/courseAccent";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import AiTutorPanel from "@/components/AiTutorPanel";
@@ -31,6 +32,7 @@ export default function LessonFrameShell({
   railSummary,
   crumbs,
   nav,
+  accent = null,
   children,
 }: {
   lessonId: string;
@@ -40,6 +42,8 @@ export default function LessonFrameShell({
   railSummary: string;
   crumbs: React.ReactNode;
   nav: React.ReactNode;
+  /** Màu nhấn của bộ sách (`Course.themeColor`); trống = màu Limio. */
+  accent?: string | null;
   children: React.ReactNode;
 }) {
   const t = useT();
@@ -142,6 +146,9 @@ export default function LessonFrameShell({
     <div
       // Dấu hiệu cho CSS: trong khung, nút nổi "Về trang chủ học viên" (góc dưới trái) bị rail che/đè chữ nên ẩn từ `lg` (globals.css).
       data-lesson-frame=""
+      // Khoá có màu bộ sách: biến --brand của khung (thanh bài, nút, đường kẻ) đổi theo; CSS `[data-lesson-accent]` (globals.css) đổi các lớp brand cố định.
+      data-lesson-accent={accentVar(accent) ? "" : undefined}
+      style={accentVar(accent) ? ({ ["--brand" as string]: accentVar(accent) } as React.CSSProperties) : undefined}
       // Ba dải toàn chiều cao như thiết kế Figma (thanh bài | nội dung | panel), ngăn bằng đường kẻ; không bọc khung/lề ngoài để nội dung
       // dùng hết bề ngang. Thanh bài 12rem, panel 20rem ở 1280–1535 px; nới ra 13rem/22rem từ 1536 px.
       className={`w-full lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] ${

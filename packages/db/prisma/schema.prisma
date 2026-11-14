@@ -482,6 +482,8 @@ model Course {
   /// LANG đợt 2 (docs/tieu-chi/limio-language-hoc-vien-dot-2.md) — Thư viện giáo trình. Chỉ có tác dụng khi khoá
   /// `published` và `enrollMode = open`. Mặc định tắt: khoá đang có không tự xuất hiện ở thư viện.
   inLibrary              Boolean      @default(false)
+  /// Màu nhấn của bộ sách ("r,g,b", vd "229,0,92"): trang học viên của khoá dùng màu này cho khối luyện tập để khớp với thân bài. Trống = màu Limio.
+  themeColor             String?
   publisher              String?
   authors                String?
   edition                String?

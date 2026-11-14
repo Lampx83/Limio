@@ -122,6 +122,11 @@ export const LearningEventType = {
   // LANG — góp ý AI cho câu mở (essay) của Bài luyện nhúng, sinh ra khi học viên bấm "Kiểm tra". Học viên tự bấm nên tính là hoạt
   // động học (như exam.practice.answered). Payload chỉ mang id, số đếm và toạ độ SSMMD — KHÔNG mang câu trả lời, bài mẫu hay nội dung góp ý.
   ExamPracticeFeedbackGenerated: "exam.practice.feedback_generated",
+  // LANG — hội thoại đóng vai (câu mở có `roleplay`): học viên ghi âm một lượt và máy chuyển thành chữ. Học viên tự bấm nên tính là hoạt động học.
+  // Payload chỉ mang id, số lượt, thời lượng và số từ — KHÔNG mang chữ học viên nói.
+  ExamPracticeRoleplayTurnRecorded: "exam.practice.roleplay_turn_recorded",
+  // LANG — "Thử nói tự do": học viên gửi một lượt cho bạn ảo (chatbot đóng vai) trong câu mở có `freechat`. Payload chỉ id, số lượt, độ dài, token — KHÔNG mang chữ.
+  ExamPracticeFreechatTurn: "exam.practice.freechat_turn",
   // LANG G6 — góp ý bài viết do AI sinh: sinh ra, giảng viên duyệt, giảng viên từ chối.
   WritingFeedbackGenerated: "writing.feedback.generated",
   WritingFeedbackApproved: "writing.feedback.approved",

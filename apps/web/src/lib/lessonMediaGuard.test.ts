@@ -4,10 +4,11 @@ import { NextResponse } from "next/server";
 /** Cổng học liệu bản quyền (AC1): bảng tra, quyết định theo phiên, cache, header. */
 
 const findProtectingCourseIds = vi.fn();
+const findProtectingCourseIdsForExamAsset = vi.fn();
 const canAccessProtectedMedia = vi.fn();
 const auth = vi.fn();
 
-vi.mock("@feedbackme/core-lms", () => ({ findProtectingCourseIds, canAccessProtectedMedia }));
+vi.mock("@feedbackme/core-lms", () => ({ findProtectingCourseIds, findProtectingCourseIdsForExamAsset, canAccessProtectedMedia }));
 vi.mock("@/lib/auth", () => ({ auth }));
 
 const FILE = "u1-1790000000000-aaaa1111bbbb2222.pdf";
@@ -22,6 +23,7 @@ async function load() {
 describe("guardedLessonMedia", () => {
   beforeEach(async () => {
     findProtectingCourseIds.mockReset().mockResolvedValue([]);
+    findProtectingCourseIdsForExamAsset.mockReset().mockResolvedValue([]);
     canAccessProtectedMedia.mockReset().mockResolvedValue(true);
     auth.mockReset().mockResolvedValue({ user: { id: "u-1" } });
     (await load()).resetLessonMediaGuardCache();
@@ -145,5 +147,57 @@ describe("guardedLessonMedia", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("guardedExamAsset (audio/ảnh của Bài luyện)", () => {
+  const AUDIO = "11111111-2222-4333-8444-555555555555-1790000000000-aaaa1111bbbb2222.m4a";
+
+  beforeEach(async () => {
+    findProtectingCourseIds.mockReset().mockResolvedValue([]);
+    findProtectingCourseIdsForExamAsset.mockReset().mockResolvedValue([]);
+    canAccessProtectedMedia.mockReset().mockResolvedValue(true);
+    auth.mockReset().mockResolvedValue({ user: { id: "u-1" } });
+    (await load()).resetLessonMediaGuardCache();
+  });
+
+  it("đề thi thường: đi thẳng, giữ cache công khai, không đụng tới phiên", async () => {
+    const { guardedExamAsset } = await load();
+    const res = await guardedExamAsset(async () => ok())(req(), ctx(AUDIO));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("public, max-age=604800, immutable");
+    expect(auth).not.toHaveBeenCalled();
+    expect(findProtectingCourseIds).not.toHaveBeenCalled();
+  });
+
+  it("audio của Bài luyện trong khoá bản quyền: người chưa có quyền → 403, handler không chạy", async () => {
+    findProtectingCourseIdsForExamAsset.mockResolvedValue(["c-1"]);
+    canAccessProtectedMedia.mockResolvedValue(false);
+    const handler = vi.fn(async () => ok());
+    const { guardedExamAsset } = await load();
+    const res = await guardedExamAsset(handler)(req(), ctx(AUDIO));
+    expect(res.status).toBe(403);
+    expect(handler).not.toHaveBeenCalled();
+    expect(findProtectingCourseIdsForExamAsset).toHaveBeenCalledWith(AUDIO);
+  });
+
+  it("có quyền → phục vụ với cache private; tra lỗi → 503", async () => {
+    findProtectingCourseIdsForExamAsset.mockResolvedValue(["c-1"]);
+    const { guardedExamAsset } = await load();
+    const res = await guardedExamAsset(async () => ok())(req(), ctx(AUDIO));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("private, max-age=3600");
+
+    (await load()).resetLessonMediaGuardCache();
+    findProtectingCourseIdsForExamAsset.mockRejectedValue(new Error("db down"));
+    expect((await guardedExamAsset(async () => ok())(req(), ctx(AUDIO))).status).toBe(503);
+  });
+
+  it("khoá cache tách khỏi file học liệu cùng tên", async () => {
+    findProtectingCourseIds.mockResolvedValue(["c-1"]);
+    findProtectingCourseIdsForExamAsset.mockResolvedValue([]);
+    const { guardedLessonMedia, guardedExamAsset } = await load();
+    expect((await guardedLessonMedia(async () => ok())(req(), ctx(AUDIO))).headers.get("cache-control")).toBe("private, max-age=3600");
+    expect((await guardedExamAsset(async () => ok())(req(), ctx(AUDIO))).headers.get("cache-control")).toBe("public, max-age=604800, immutable");
   });
 });

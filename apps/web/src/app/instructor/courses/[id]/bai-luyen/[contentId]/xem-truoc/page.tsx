@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { CourseAuthzError, ExamError, getPracticeEditorData, getPracticePreview } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { NOINDEX } from "@/lib/seo";
+import { prisma } from "@feedbackme/db";
 import LessonPractice from "@/components/language/LessonPractice";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export default async function PracticePreviewPage({ params }: { params: { id: st
     throw e;
   }
   if (data.courseId !== params.id) notFound();
+  const course = await prisma.course.findUnique({ where: { id: data.courseId }, select: { languageMode: true } });
   const back = `/instructor/courses/${data.courseId}/bai-luyen/${data.contentItemId}`;
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
@@ -39,7 +41,7 @@ export default async function PracticePreviewPage({ params }: { params: { id: st
         {embed.questions.length === 0 ? (
           <p className="text-meta">Bài luyện chưa có câu hỏi, học viên sẽ không thấy khối này.</p>
         ) : (
-          <LessonPractice slug="" embed={embed} blockTitle={data.blockTitle || undefined} preview />
+          <LessonPractice slug="" embed={embed} blockTitle={data.blockTitle || undefined} preview sheet={!!course?.languageMode} />
         )}
       </div>
     </main>

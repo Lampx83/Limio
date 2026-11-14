@@ -19,7 +19,8 @@ import {
   type DragDropFillDraft,
 } from "@/components/question-editor/types";
 import { isPlayableExamQuestionType } from "@/lib/examQuestionSupport";
-import { buildEssayConfig, essayDraftFromConfig } from "@/lib/essayQuestionConfig";
+import { buildEssayConfig, emptyFreeChatDraft, essayDraftFromConfig, freeChatDraftFromConfig, rolePlayDraftFromConfig, type FreeChatDraft, type RolePlayDraft } from "@/lib/essayQuestionConfig";
+import { parseScript } from "@/lib/rolePlayView";
 import EssayAudioField from "./EssayAudioField";
 
 // Đợt 8 (thống nhất 10 loại Quiz/Bank/Đề thi) — đủ 10 loại canonical đều mở
@@ -107,6 +108,11 @@ interface State {
   /** Bài luyện: cho học viên trả lời bằng giọng nói / AI nhận xét (mặc định bật). */
   essayVoice: boolean;
   essayAi: boolean;
+  /** Bài luyện: hội thoại đóng vai (kịch bản chữ, tên vai, audio từng lượt). */
+  roleplay: RolePlayDraft;
+  /** Bài luyện: kiểu hội thoại với bạn ảo của câu tự luận (chọn một) và cấu hình "nói tự do". */
+  convMode: "none" | "script" | "free";
+  freechat: FreeChatDraft;
   // Đợt 8 — 4 loại mới, dùng thẳng shape canonical.
   ordering: OrderingDraft;
   matching: MatchingDraft;
@@ -159,6 +165,9 @@ function defaultState(passageId: string | null): State {
     essayAudio: "",
     essayVoice: true,
     essayAi: true,
+    roleplay: { text: "", roleA: "", roleB: "", audio: [] },
+    convMode: "none",
+    freechat: emptyFreeChatDraft(),
     ordering: {
       items: [
         { id: "o1", label: "" },
@@ -234,6 +243,9 @@ export default function QuestionEditor({
       s.essayAudio = e.explanationAudio;
       s.essayVoice = e.voiceAnswer;
       s.essayAi = e.aiFeedback;
+      s.roleplay = rolePlayDraftFromConfig(cfg);
+      s.freechat = freeChatDraftFromConfig(cfg);
+      s.convMode = cfg.freechat ? "free" : cfg.roleplay ? "script" : "none";
     } else if (s.type === "ordering") {
       s.ordering = { items: (cfg.items as State["ordering"]["items"]) ?? s.ordering.items };
     } else if (s.type === "matching") {
@@ -367,7 +379,7 @@ export default function QuestionEditor({
           explanationAudio: practiceMode ? v.essayAudio : "",
           voiceAnswer: practiceMode ? v.essayVoice : true,
           aiFeedback: practiceMode ? v.essayAi : true,
-        });
+        }, practiceMode && v.convMode === "script" ? v.roleplay : undefined, practiceMode && v.convMode === "free" ? v.freechat : undefined);
       case "ordering":
         return { items: v.ordering.items.filter((it) => it.label.trim().length > 0) };
       case "matching":
@@ -791,6 +803,15 @@ export default function QuestionEditor({
           {practiceMode && (
             <>
               <EssayAudioField examId={examId} value={v.essayAudio} onChange={(essayAudio) => setV({ ...v, essayAudio })} />
+              <ConversationFields
+                examId={examId}
+                mode={v.convMode}
+                onMode={(convMode) => setV({ ...v, convMode })}
+                roleplay={v.roleplay}
+                onRoleplay={(roleplay) => setV({ ...v, roleplay })}
+                freechat={v.freechat}
+                onFreechat={(freechat) => setV({ ...v, freechat })}
+              />
               <label className="flex items-start gap-2">
                 <input
                   type="checkbox"
@@ -904,5 +925,163 @@ export default function QuestionEditor({
         </button>
       </div>
     </form>
+  );
+}
+
+/**
+ * Hội thoại đóng vai của câu tự luận trong Bài luyện (docs/tieu-chi/limio-language-luyen-hoi-thoai-dong-vai.md): kịch bản viết bằng chữ, mỗi dòng
+ * "A: câu" hoặc "B: câu"; có từ 2 lượt thì câu hiện thành hội thoại cho học viên chọn vai và ghi âm. Audio từng lượt tải lên theo thứ tự lượt.
+ */
+function RolePlayFields({ examId, value, onChange }: { examId: string; value: RolePlayDraft; onChange: (v: RolePlayDraft) => void }) {
+  const { turns, badLines } = parseScript(value.text);
+  const active = turns.length >= 2;
+  return (
+    <div className="space-y-2 rounded border border-default p-3" data-testid="roleplay-fields">
+      <div>
+        <span className="block text-sm font-medium">Hội thoại đóng vai (tuỳ chọn)</span>
+        <p className="text-caption text-faint">
+          Mỗi dòng một lượt, bắt đầu bằng "A:" hoặc "B:". Có từ 2 lượt thì học viên chọn đóng A hoặc B, nghe vai kia và ghi âm lượt của mình; AI nhận xét so với kịch bản này. Để trống thì câu là câu mở thường.
+        </p>
+      </div>
+      <textarea
+        value={value.text}
+        onChange={(e) => onChange({ ...value, text: e.target.value })}
+        rows={6}
+        placeholder={"A: Chocolate! It's good for energy.\nB: I was thinking the same thing."}
+        className="w-full rounded border border-default px-2 py-1 text-sm"
+        aria-label="Kịch bản hội thoại"
+      />
+      {badLines.length > 0 && (
+        <p role="alert" className="text-caption text-red-700">
+          Dòng {badLines.join(", ")} không bắt đầu bằng "A:" hoặc "B:" nên bị bỏ qua.
+        </p>
+      )}
+      {value.text.trim() && !active && (
+        <p className="text-caption text-red-700">Cần ít nhất 2 lượt thì mới thành hội thoại; hiện chỉ có {turns.length}.</p>
+      )}
+      {active && (
+        <>
+          <div className="flex flex-wrap gap-3">
+            <label className="block">
+              <span className="block text-sm font-medium">Tên vai A (tuỳ chọn)</span>
+              <input value={value.roleA} maxLength={60} onChange={(e) => onChange({ ...value, roleA: e.target.value })} className="mt-1 w-44 rounded border border-default px-2 py-1 text-sm" />
+            </label>
+            <label className="block">
+              <span className="block text-sm font-medium">Tên vai B (tuỳ chọn)</span>
+              <input value={value.roleB} maxLength={60} onChange={(e) => onChange({ ...value, roleB: e.target.value })} className="mt-1 w-44 rounded border border-default px-2 py-1 text-sm" />
+            </label>
+          </div>
+          <p className="text-caption text-faint">
+            Audio từng lượt (tuỳ chọn): tải lên theo đúng thứ tự lượt. Đổi thứ tự hoặc xoá lượt thì kiểm lại audio.
+          </p>
+          <ol className="space-y-2">
+            {turns.map((t, i) => (
+              <li key={i} className="rounded border border-default p-2">
+                <p className="mb-1 text-sm">
+                  <b>
+                    {i + 1}. {t.speaker}:
+                  </b>{" "}
+                  {t.text}
+                </p>
+                <EssayAudioField
+                  examId={examId}
+                  value={value.audio[i] ?? ""}
+                  onChange={(url) => {
+                    const audio = [...value.audio];
+                    while (audio.length < turns.length) audio.push("");
+                    audio[i] = url;
+                    onChange({ ...value, audio });
+                  }}
+                  label={`Audio lượt ${i + 1}`}
+                  altText={`Hội thoại, lượt ${i + 1}`}
+                  hint="Có thể để trống: lượt không có audio thì học viên chỉ đọc chữ."
+                />
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Hội thoại với bạn ảo của câu tự luận trong Bài luyện: chọn MỘT kiểu — không, "Đóng vai theo kịch bản" (nghe vai kia, ghi âm lượt của mình) hoặc
+ * "Nói tự do với bạn ảo" (chatbot đóng vai, gõ hoặc nói). docs/tieu-chi/limio-language-noi-tu-do-voi-ban-ao.md (AC5).
+ */
+function ConversationFields({
+  examId,
+  mode,
+  onMode,
+  roleplay,
+  onRoleplay,
+  freechat,
+  onFreechat,
+}: {
+  examId: string;
+  mode: "none" | "script" | "free";
+  onMode: (m: "none" | "script" | "free") => void;
+  roleplay: RolePlayDraft;
+  onRoleplay: (v: RolePlayDraft) => void;
+  freechat: FreeChatDraft;
+  onFreechat: (v: FreeChatDraft) => void;
+}) {
+  return (
+    <div className="space-y-2 rounded border border-default p-3" data-testid="conversation-fields">
+      <label className="block">
+        <span className="block text-sm font-medium">Hội thoại với bạn ảo (tuỳ chọn)</span>
+        <select value={mode} onChange={(e) => onMode(e.target.value as "none" | "script" | "free")} className="mt-1 rounded border border-default px-2 py-1 text-sm" aria-label="Kiểu hội thoại với bạn ảo">
+          <option value="none">Không (câu mở thường)</option>
+          <option value="script">Đóng vai theo kịch bản</option>
+          <option value="free">Nói tự do với bạn ảo (chatbot)</option>
+        </select>
+      </label>
+      {mode === "script" && <RolePlayFields examId={examId} value={roleplay} onChange={onRoleplay} />}
+      {mode === "free" && <FreeChatFields value={freechat} onChange={onFreechat} />}
+    </div>
+  );
+}
+
+function FreeChatFields({ value, onChange }: { value: FreeChatDraft; onChange: (v: FreeChatDraft) => void }) {
+  const set = (patch: Partial<FreeChatDraft>) => onChange({ ...value, ...patch });
+  const missing = !value.scenario.trim() || !value.opening.trim();
+  return (
+    <div className="space-y-2" data-testid="freechat-fields">
+      <p className="text-caption text-faint">
+        Học viên trò chuyện với một chatbot đóng vai (gõ hoặc nói, tối đa 8 lượt mặc định); AI nhận xét lời của học viên ở cuối. Cần có tình huống và lời mở đầu của bạn ảo.
+      </p>
+      <label className="block">
+        <span className="block text-sm font-medium">Tình huống</span>
+        <textarea value={value.scenario} maxLength={600} rows={2} onChange={(e) => set({ scenario: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder="Hai người bạn chọn đồ mang theo khi phải rời nhà gấp." aria-label="Tình huống" />
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium">Lời mở đầu của bạn ảo (tiếng Anh)</span>
+        <input value={value.opening} maxLength={300} onChange={(e) => set({ opening: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder="Our house is on fire! What would you take?" aria-label="Lời mở đầu của bạn ảo" />
+      </label>
+      <div className="flex flex-wrap gap-3">
+        <label className="block">
+          <span className="block text-sm font-medium">Tên vai của bạn ảo (tuỳ chọn)</span>
+          <input value={value.partnerRole} maxLength={60} onChange={(e) => set({ partnerRole: e.target.value })} className="mt-1 w-44 rounded border border-default px-2 py-1 text-sm" />
+        </label>
+        <label className="block">
+          <span className="block text-sm font-medium">Tên vai của học viên (tuỳ chọn)</span>
+          <input value={value.learnerRole} maxLength={60} onChange={(e) => set({ learnerRole: e.target.value })} className="mt-1 w-44 rounded border border-default px-2 py-1 text-sm" />
+        </label>
+        <label className="block">
+          <span className="block text-sm font-medium">Số lượt tối đa (4–12)</span>
+          <input type="number" min={4} max={12} value={value.maxTurns} onChange={(e) => set({ maxTurns: Number(e.target.value) })} className="mt-1 w-24 rounded border border-default px-2 py-1 text-sm" />
+        </label>
+      </div>
+      <label className="block">
+        <span className="block text-sm font-medium">Cụm mục tiêu (mỗi dòng một cụm, tối đa 10)</span>
+        <textarea value={value.targets} rows={4} onChange={(e) => set({ targets: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder={"I'm not sure about that\nThat's not really essential"} aria-label="Cụm mục tiêu" />
+        <span className="block text-caption text-faint">Học viên thấy các cụm này để dùng; cụm nào đã dùng thì được đánh dấu ✓. Bạn ảo cũng dùng tự nhiên một vài cụm. Có "…" ở cuối thì chỉ cần dùng phần đầu.</span>
+      </label>
+      {missing && (
+        <p role="alert" className="text-caption text-red-700">
+          Chưa đủ tình huống và lời mở đầu thì câu này vẫn là câu mở thường.
+        </p>
+      )}
+    </div>
   );
 }

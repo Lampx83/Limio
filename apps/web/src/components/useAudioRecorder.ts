@@ -19,9 +19,12 @@ export type RecorderState = "idle" | "recording" | "done";
 export function useAudioRecorder({
   onRecorded,
   autoStart,
+  maxSeconds = MAX_RECORD_SECONDS,
 }: {
   onRecorded: (file: File) => void;
   autoStart?: boolean;
+  /** Trần thời lượng một bản ghi (mặc định 3 phút); hội thoại đóng vai ghi từng lượt ngắn. */
+  maxSeconds?: number;
 }) {
   const lang = useUiLang();
   const [state, setState] = useState<RecorderState>("idle");
@@ -84,8 +87,8 @@ export function useAudioRecorder({
       setState("recording");
       tickRef.current = setInterval(() => {
         setSeconds((s) => {
-          if (s + 1 >= MAX_RECORD_SECONDS) {
-            // Hết 3 phút: tự dừng (onstop sẽ nộp bản ghi).
+          if (s + 1 >= maxSeconds) {
+            // Hết thời lượng tối đa: tự dừng (onstop sẽ nộp bản ghi).
             if (rec.state !== "inactive") rec.stop();
           }
           return s + 1;

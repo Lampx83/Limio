@@ -73,12 +73,21 @@ AC1 (bảo vệ học liệu) → AC2 (lô mã + xuất file) → AC3 (thời h�
 - Đã thử trên dev: người lạ 403, học viên đã ghi danh 200 kèm `cache-control: private`, ảnh trong trang bài hiện đủ, đổi ghi danh sang `refunded` thì file 403 trong vòng 62 giây, khoá tắt cờ vẫn `public, immutable`.
 - **Chưa làm ở AC1:** nút "Tải về" của file đính kèm ở khoá bản quyền (câu hỏi Q4: cần cờ riêng, nằm ngoài các AC phía trên); ảnh trong slide tạo từ bài (xem Giới hạn).
 
+### AC1b — Bài luyện nhúng của khoá bản quyền (14/11/2026)
+
+Bài luyện của khoá ngoại ngữ mang video, audio bài nghe, audio lượt hội thoại và bài mẫu; cờ ở AC1 ban đầu không với tới vì chúng nằm trong đề ẩn chứ không trong nội dung bài.
+
+- **Given** khoá bật cờ, **When** người chưa đăng nhập hoặc chưa ghi danh gọi thẳng URL video (`/api/lesson-media/videos/…`) hay audio/ảnh của đề ẩn (`/api/exam-assets/…`) của khối Bài luyện, **Then** 403; học viên ghi danh, giảng viên và admin xem bình thường (video tua được), cache `private`.
+- Video, ảnh nhắc trong đoạn văn và câu hỏi của đề ẩn được đăng ký vào bảng bảo vệ khi bật cờ và khi dựng trang bài (như AC1). File kho đề **không** qua bảng tra: tên file luôn mở đầu bằng id đề, nên route tra đề → khối bài học → khoá; chỉ đề là nội dung của khối Bài luyện trong bài không xem thử của khoá đã bật cờ mới bị bảo vệ.
+- **Không hồi quy:** đề thi thật (đợt thi, đề độc lập, đề của khoá không phải khối bài học), bài xem thử, và khoá chưa bật cờ phục vụ như trước (`public, immutable`); thêm đúng một truy vấn theo khoá chính cho mỗi file kho đề, cache 30 giây.
+- Công cụ nhập khoá có trường `course.protectedMedia` để bật cờ sau khi nhập (khoá demo Speakout dùng).
+
 ### Giới hạn (ghi rõ để không hứa quá với nhà xuất bản)
 
 - File vừa được đăng ký bảo vệ có thể còn phục vụ công khai tới **30 giây** trên các bản chạy khác của web (cache bảng tra).
 - Người vừa bị thu quyền xem được file thêm tối đa **60 giây**.
 - Khoá đã mở công khai (`publicAccess`) và đang xuất bản: file mở cho mọi người, đúng theo cổng của trang bài; cờ bản quyền không có tác dụng với khoá đó.
-- Chỉ phủ nội dung bài (khối nội dung và mô tả bài). Ảnh / file trong câu hỏi quiz, bài tập và đề thi dùng route khác, chưa bảo vệ.
+- Phủ nội dung bài (khối nội dung, mô tả bài) và **Bài luyện nhúng** (xem "AC1b"). Ảnh / file trong câu hỏi quiz, bài tập và **đề thi thật** dùng route khác, chưa bảo vệ.
 
 - Chặn **chia sẻ liên kết** và **người chưa mua**. **Không** chặn người đã mua tự lưu file về (PDF xem được thì lưu được), và **không** chống chụp màn hình.
 - Chưa có watermark theo người xem, chưa giới hạn số thiết bị / phiên, chưa DRM.

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { DEFAULT_MODEL, assertWithinCaps, recordAiUsage } from "../aiTutor/aiTutor";
@@ -20,6 +21,7 @@ import {
   type Transcriber,
 } from "../speaking/feedback";
 import type { OpenAiSource } from "../writing/feedback";
+import { type FreeChatReply, emitFreeChatTurn, generateFreeChatReply, parseFreeChat, type FreeChatConfig } from "./freechat";
 import {
   PRACTICE_PROMPT_VERSION,
   PRACTICE_SCHEMA,
@@ -62,12 +64,24 @@ type EssayCtx = {
   question: { id: string; prompt: string };
   rubric: string;
   sample: string;
+  /** Câu là hội thoại đóng vai (`config.roleplay`): `sample` là kịch bản cả hội thoại. */
+  rolePlay: boolean;
+  /** Câu là "Thử nói tự do" với bạn ảo (`config.freechat`). */
+  freeChat: FreeChatConfig | null;
   minWords: number | null;
   voiceAnswer: boolean;
   aiFeedback: boolean;
 };
 
 const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+
+/** Kịch bản cả hội thoại (mỗi dòng "A: …") từ `config.roleplay`; rỗng nếu câu không phải hội thoại đóng vai. */
+function scriptOf(rp: unknown): string {
+  if (!isObj(rp) || !Array.isArray(rp.turns)) return "";
+  return rp.turns
+    .flatMap((t) => (isObj(t) && (t.speaker === "A" || t.speaker === "B") && typeof t.text === "string" && t.text.trim() ? [`${t.speaker}: ${t.text.trim()}`] : []))
+    .join("\n");
+}
 
 /**
  * Nạp và kiểm: buổi luyện của chính học viên, câu thuộc đúng đề và nằm trong phạm vi buổi, loại `essay`, khoá `languageMode`.
@@ -95,6 +109,7 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
   const course = session.exam.course;
   if (!session.exam.courseId || !course?.languageMode) throw new PracticeFeedbackError("not_language_course");
   const cfg = isObj(q.config) ? q.config : {};
+  const script = scriptOf(cfg.roleplay);
   return {
     userId,
     examId: session.examId,
@@ -103,7 +118,11 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
     levelBand: course.levelBand,
     question: { id: q.id, prompt: q.prompt },
     rubric: typeof cfg.rubric === "string" ? cfg.rubric.trim() : "",
-    sample: typeof cfg.explanation === "string" ? cfg.explanation.trim() : "",
+    // Hội thoại đóng vai mà giảng viên không viết bài mẫu riêng thì kịch bản chính là bài mẫu.
+    sample: (typeof cfg.explanation === "string" ? cfg.explanation.trim() : "") || script,
+    rolePlay: script !== "",
+    // Một câu không dùng cả hai kiểu: đã có kịch bản đóng vai thì bỏ qua nói tự do (UI cũng ưu tiên đóng vai).
+    freeChat: script !== "" ? null : parseFreeChat(cfg),
     minWords: typeof cfg.minWords === "number" ? cfg.minWords : null,
     voiceAnswer: cfg.voiceAnswer !== false,
     aiFeedback: cfg.aiFeedback !== false,
@@ -126,18 +145,65 @@ export async function transcribePracticeVoice(
   const { userId, sessionId, questionId, audio } = args;
   const ctx = await loadEssayContext(userId, sessionId, questionId, db);
   if (!ctx.voiceAnswer) throw new PracticeFeedbackError("voice_disabled");
+  return transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+}
+
+/**
+ * Hội thoại đóng vai: chuyển chữ MỘT lượt nói của học viên. Cùng thứ tự kiểm và trừ ví như `transcribePracticeVoice`, nhưng câu phải có `roleplay`,
+ * KHÔNG lưu tệp ghi âm (bản ghi chỉ đi tới Whisper rồi bỏ) và ghi sự kiện `exam.practice.roleplay_turn_recorded` (chỉ id, thời lượng, số từ).
+ */
+export async function transcribeRolePlayTurn(
+  args: { userId: string; sessionId: string; questionId: string; turnIndex: number; audio: AudioPayload },
+  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  db: PrismaClient = prisma,
+): Promise<PracticeVoiceResult> {
+  const { userId, sessionId, questionId, turnIndex, audio } = args;
+  const ctx = await loadEssayContext(userId, sessionId, questionId, db);
+  if (!ctx.rolePlay && !ctx.freeChat) throw new PracticeFeedbackError("not_essay");
+  if (!ctx.voiceAnswer) throw new PracticeFeedbackError("voice_disabled");
+  const out = await transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+  await emit(
+    userId,
+    ctx.courseId,
+    `exam.practice.roleplay_turn_recorded:${sessionId}:${questionId}:${turnIndex}:${randomUUID().slice(0, 8)}`,
+    { examId: ctx.examId, sessionId, questionId, turnIndex, durationSec: Math.round(out.durationSec), words: out.text.split(/\s+/).filter(Boolean).length },
+    db,
+    LearningEventType.ExamPracticeRoleplayTurnRecorded,
+  );
+  return out;
+}
+
+/**
+ * Xem thử của GIẢNG VIÊN: cùng bước chuyển chữ nhưng không có buổi luyện. Quyền (sửa được khoá chứa đề), câu là `essay` và
+ * `voiceAnswer` bật do tầng gọi kiểm trước (core-lms `getPreviewVoiceContext`); ở đây chỉ trừ ví của giảng viên rồi gọi Whisper.
+ * Không lưu gì, không ghi sự kiện.
+ */
+export async function transcribePreviewVoice(
+  args: { userId: string; language: string | null; audio: AudioPayload },
+  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  db: PrismaClient = prisma,
+): Promise<PracticeVoiceResult> {
+  return transcribeSpokenAnswer(args, deps, db);
+}
+
+async function transcribeSpokenAnswer(
+  args: { userId: string; language: string | null; audio: AudioPayload },
+  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  db: PrismaClient,
+): Promise<PracticeVoiceResult> {
+  const { userId, language, audio } = args;
   if (audio.buffer.length > MAX_AUDIO_BYTES) {
     throw new PracticeFeedbackError("audio_too_large", { bytes: audio.buffer.length, max: MAX_AUDIO_BYTES });
   }
   if (audio.buffer.length === 0) throw new PracticeFeedbackError("no_speech");
 
-  // Ví của học viên + trần hệ thống — kiểm TRƯỚC khi chạm Whisper.
+  // Ví của người nói + trần hệ thống — kiểm TRƯỚC khi chạm Whisper.
   await assertWithinCaps(userId, db, "generator");
   // Lấy khách hàng OpenAI SAU khi kiểm ví và NGOÀI khối bắt lỗi Whisper: thiếu cấu hình AI phải báo đúng là thiếu cấu hình.
   const transcribe = deps.transcribe ?? openAiTranscriber(typeof deps.openai === "function" ? await deps.openai() : deps.openai);
   let stt: TranscribeResult;
   try {
-    stt = await transcribe(audio, { language: whisperLanguage(ctx.courseLanguage) });
+    stt = await transcribe(audio, { language: whisperLanguage(language) });
   } catch (e) {
     throw new PracticeFeedbackError("stt_failed", { message: (e as Error).message });
   }
@@ -154,10 +220,17 @@ export async function transcribePracticeVoice(
 
 // ─── Góp ý AI ────────────────────────────────────────────────────────────────
 
-async function emit(userId: string, courseId: string, eventKey: string, payload: Record<string, unknown>, db: PrismaClient) {
+async function emit(
+  userId: string,
+  courseId: string,
+  eventKey: string,
+  payload: Record<string, unknown>,
+  db: PrismaClient,
+  eventType: string = LearningEventType.ExamPracticeFeedbackGenerated,
+) {
   try {
     await db.learningEvent.create({
-      data: { userId, courseId, eventType: LearningEventType.ExamPracticeFeedbackGenerated, eventKey, payload: payload as Prisma.InputJsonValue },
+      data: { userId, courseId, eventType, eventKey, payload: payload as Prisma.InputJsonValue },
     });
   } catch (e) {
     if ((e as { code?: string }).code !== "P2002") throw e;
@@ -182,6 +255,8 @@ export async function requestPracticeAnswerFeedback(
   const answer = await db.examPracticeAnswer.findUnique({ where: { sessionId_questionId: { sessionId, questionId } } });
   const { text, viaVoice } = readAnswerText(answer?.answerJson);
   if (!answer || text === "") throw new PracticeFeedbackError("empty_answer");
+  // "Thử nói tự do": cần ít nhất 2 lượt của học viên (dòng "Learner: …") mới nhận xét, kiểm cả ở máy chủ chứ không chỉ nút ở trình duyệt.
+  if (ctx.freeChat && text.split(/\r?\n/).filter((l) => l.startsWith("Learner: ")).length < 2) throw new PracticeFeedbackError("empty_answer");
 
   // Đầu vào không đổi → bản cũ: không đòi cấu hình AI, không gọi mô hình, không trừ token.
   const hash = hashPracticeInputs({ answer: text, sample: ctx.sample, rubric: ctx.rubric, viaVoice });
@@ -201,6 +276,8 @@ export async function requestPracticeAnswerFeedback(
     viaVoice,
     courseLanguage: ctx.courseLanguage,
     levelBand: ctx.levelBand,
+    rolePlay: ctx.rolePlay,
+    freeChat: ctx.freeChat ? { scenario: ctx.freeChat.scenario, targets: ctx.freeChat.targets } : undefined,
   });
   const openai = typeof deps.openai === "function" ? await deps.openai() : deps.openai;
   const { data, inputTokens, outputTokens } = await callJsonModel<unknown>(openai, model, system, user, "practice_answer_feedback", PRACTICE_SCHEMA, 2000);
@@ -234,4 +311,57 @@ export async function requestPracticeAnswerFeedback(
     db,
   );
   return { reused: false, body };
+}
+
+// ─── Thử nói tự do (bạn ảo là chatbot) ───────────────────────────────────────
+
+/** Trần tổng số lượt gửi cho bạn ảo của MỘT câu trong MỘT buổi: rộng hơn `maxTurns` vì "Bắt đầu lại" cho chơi lại (lịch sử do trình duyệt giữ nên máy chủ đếm bằng sự kiện). */
+export const FREECHAT_TURN_CAP_FACTOR = 3;
+
+async function freeChatContext(userId: string, sessionId: string, questionId: string, db: PrismaClient) {
+  const ctx = await loadEssayContext(userId, sessionId, questionId, db);
+  if (!ctx.freeChat) throw new PracticeFeedbackError("not_essay");
+  // Buổi đã kết thúc thì không gọi thêm bạn ảo (cùng điều kiện với các câu mở khác).
+  const session = await db.examPracticeSession.findUnique({ where: { id: sessionId }, select: { status: true } });
+  if (session?.status !== "in_progress") throw new PracticeFeedbackError("session_closed");
+  // Nhóm đối chứng của thực nghiệm phản hồi (B16) không được dùng bạn ảo: đó là một can thiệp học tập, như góp ý AI của câu mở.
+  if ((await resolveFeedbackVariant(userId, ctx.courseId, db)).variant === "minimal") throw new PracticeFeedbackError("control_group");
+  const used = await db.learningEvent.count({
+    where: { userId, eventType: LearningEventType.ExamPracticeFreechatTurn, eventKey: { startsWith: `exam.practice.freechat_turn:${sessionId}:${questionId}:` } },
+  });
+  if (used >= ctx.freeChat.maxTurns * FREECHAT_TURN_CAP_FACTOR) throw new PracticeFeedbackError("turn_limit");
+  return { ctx, cfg: ctx.freeChat };
+}
+
+/**
+ * Một lượt "Thử nói tự do" của học viên trong buổi luyện. Kiểm quyền và cấu hình câu như các hàm khác của câu mở, rồi để bạn ảo trả lời
+ * (trừ ví của HỌC VIÊN) và ghi sự kiện `exam.practice.freechat_turn`. Không lưu hội thoại: trình duyệt giữ lịch sử.
+ */
+export async function runFreeChatTurn(
+  args: { userId: string; sessionId: string; questionId: string; history: unknown; message: unknown },
+  deps: { openai: OpenAiSource; model?: string },
+  db: PrismaClient = prisma,
+): Promise<FreeChatReply> {
+  const { ctx, cfg } = await freeChatContext(args.userId, args.sessionId, args.questionId, db);
+  const reply = await generateFreeChatReply(
+    { userId: args.userId, cfg, language: ctx.courseLanguage, levelBand: ctx.levelBand, history: args.history, message: args.message },
+    deps,
+    db,
+  );
+  // Ghi sự kiện không phải bước quyết định: lỗi ở đây chỉ ghi log, không làm mất lời bạn ảo (token đã trừ).
+  try {
+    await emitFreeChatTurn(db, {
+      userId: args.userId,
+      courseId: ctx.courseId,
+      examId: ctx.examId,
+      sessionId: args.sessionId,
+      questionId: args.questionId,
+      reply,
+      learnerChars: typeof args.message === "string" ? args.message.trim().length : 0,
+      eventKey: `exam.practice.freechat_turn:${args.sessionId}:${args.questionId}:${reply.turn}:${randomUUID().slice(0, 8)}`,
+    });
+  } catch (e) {
+    console.error("[freechat] không ghi được sự kiện", e);
+  }
+  return reply;
 }

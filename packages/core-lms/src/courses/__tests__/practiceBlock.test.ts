@@ -17,6 +17,7 @@ import {
   deletePassage,
   getPracticeForEmbed,
   getPracticePreview,
+  getPreviewVoiceContext,
   listExamsForCourse,
   previewPracticeCheck,
   reorderExamQuestions,
@@ -262,5 +263,38 @@ describe("nhân bản sao chép sâu (AC9)", () => {
     expect(exam2.courseId).toBe(c2.courseId);
     expect(await prisma.examQuestion.count({ where: { examId: examId2 } })).toBe(3);
     expect(await prisma.examPracticeSession.count({ where: { examId: examId2 } })).toBe(0);
+  });
+
+  it("xem trước ghi âm của giảng viên: chỉ người sửa được khoá, câu essay còn bật voiceAnswer; trả ngôn ngữ của khoá; không tạo buổi luyện", async () => {
+    const s = await setup("previewvoice");
+    const p = await practice(s);
+    await prisma.course.update({ where: { id: s.courseId }, data: { language: "en" } });
+    const essay = await createExamQuestion(s.owner, p.examId, { type: "essay", prompt: "Talk about your day", config: { minWords: 5 }, points: 5 });
+    const noVoice = await createExamQuestion(s.owner, p.examId, { type: "essay", prompt: "Write only", config: { voiceAnswer: false }, points: 5 });
+    const sessionsBefore = await prisma.examPracticeSession.count({ where: { examId: p.examId } });
+    expect(await getPreviewVoiceContext(s.owner, p.examId, essay.questionId)).toEqual({ language: "en" });
+    expect(await prisma.examPracticeSession.count({ where: { examId: p.examId } })).toBe(sessionsBefore);
+    await expect(getPreviewVoiceContext(s.owner, p.examId, noVoice.questionId)).rejects.toMatchObject({ code: "validation_failed" });
+    await expect(getPreviewVoiceContext(s.owner, p.examId, p.q1)).rejects.toMatchObject({ code: "validation_failed" }); // mcq
+    const stranger = await user("pe-x-previewvoice@e.com");
+    await expect(getPreviewVoiceContext(stranger, p.examId, essay.questionId)).rejects.toThrow(CourseAuthzError);
+    const learner = await user("pe-l-previewvoice@e.com");
+    await enrollInCourse(learner, s.courseId);
+    await expect(getPreviewVoiceContext(learner, p.examId, essay.questionId)).rejects.toThrow(CourseAuthzError);
+  });
+
+  it("bài luyện nhúng trả cả đoạn văn không có câu hỏi (bài nghe/đọc), đúng thứ tự", async () => {
+    const s = await setup("emptypassage");
+    const p = await practice(s);
+    const extra = await createPassage(s.owner, p.examId, { title: "Listen and repeat", contentJson: { type: "doc", content: [] } });
+    const learner = await user("pe-l-emptypassage@e.com");
+    await enrollInCourse(learner, s.courseId);
+    const fresh = await getPracticeForEmbed(learner, p.examId);
+    expect(fresh.passages.map((x) => x.id)).toContain(extra.passageId);
+    expect(fresh.questions.every((q) => q.passageId !== extra.passageId)).toBe(true);
+    // Có buổi luyện dở thì vẫn đủ.
+    await startPracticeSession(learner, p.examId, { all: true });
+    const resumed = await getPracticeForEmbed(learner, p.examId);
+    expect(resumed.passages.map((x) => x.id)).toContain(extra.passageId);
   });
 });

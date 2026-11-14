@@ -58,6 +58,24 @@ export const ExamQuestionSpec = z.object({
   voiceAnswer: z.boolean().optional(),
   /** essay: AI góp ý câu trả lời khi học viên kiểm tra (mặc định bật; chỉ ghi vào cấu hình khi tắt). */
   aiFeedback: z.boolean().optional(),
+  /** essay: hội thoại đóng vai — học viên chọn vai A/B, nghe vai kia và ghi âm lượt của mình. `audio` từng lượt tương đối so với thư mục assets. */
+  roleplay: z
+    .object({
+      roles: z.object({ A: z.string().max(60).optional(), B: z.string().max(60).optional() }).optional(),
+      turns: z.array(z.object({ speaker: z.enum(["A", "B"]), text: z.string().min(1).max(600), audio: z.string().min(1).optional() })).min(2).max(40),
+    })
+    .optional(),
+  /** essay: "Thử nói tự do" với bạn ảo (chatbot đóng vai). Không dùng cùng `roleplay`. */
+  freechat: z
+    .object({
+      scenario: z.string().min(1).max(600),
+      partnerRole: z.string().max(60).optional(),
+      learnerRole: z.string().max(60).optional(),
+      opening: z.string().min(1).max(300),
+      targets: z.array(z.string().min(1).max(120)).max(10).optional(),
+      maxTurns: z.number().int().min(4).max(12).optional(),
+    })
+    .optional(),
 });
 export type ExamQuestionSpecT = z.infer<typeof ExamQuestionSpec>;
 
@@ -73,6 +91,8 @@ export const PassageBlock = z.union([
   z.object({ image: z.string().min(1), alt: z.string().min(1) }),
   /** Audio: `file` tương đối so với thư mục assets; transcript hiện cho học viên khi luyện (bấm mở/ẩn). */
   z.object({ audio: z.string().min(1), alt: z.string().min(1), transcript: z.string().optional() }),
+  /** Video (tệp .mp4/.webm tối đa 100 MB): `file` tương đối so với thư mục assets; học viên xem ngay trong đoạn văn, transcript hiện khi luyện. */
+  z.object({ video: z.string().min(1), alt: z.string().min(1), transcript: z.string().optional() }),
 ]);
 export type PassageBlockT = z.infer<typeof PassageBlock>;
 
@@ -124,6 +144,7 @@ const para = (text: string) => {
 export interface AssetUrls {
   image: (file: string, alt: string) => { src: string };
   audio: (file: string, alt: string, transcript?: string) => { src: string };
+  video: (file: string, alt: string) => { src: string };
 }
 
 /** Khối đơn giản → tài liệu Tiptap `{type:"doc"}` (đúng tập nút của trình soạn Đoạn văn). */
@@ -142,8 +163,14 @@ export function buildPassageDoc(blocks: PassageBlockT[], assets: AssetUrls): { t
       content.push({ type: "table", content: rows });
     } else if ("image" in b) content.push({ type: "image", attrs: { ...assets.image(b.image, b.alt), alt: b.alt } });
     else if ("audio" in b) content.push({ type: "audio", attrs: { ...assets.audio(b.audio, b.alt, b.transcript), alt: b.alt } });
+    else if ("video" in b) content.push({ type: "video", attrs: { ...assets.video(b.video, b.alt), alt: b.alt } });
   }
   return { type: "doc", content };
+}
+
+/** Tệp audio mà một câu nhắc tới: audio bài mẫu và audio từng lượt của hội thoại đóng vai. */
+export function questionAudioFiles(q: ExamQuestionSpecT): string[] {
+  return [...(q.sampleAudio ? [q.sampleAudio] : []), ...(q.roleplay?.turns ?? []).flatMap((t) => (t.audio ? [t.audio] : []))];
 }
 
 /** Mọi tệp (ảnh/audio) mà các đoạn nhắc tới, theo thứ tự xuất hiện. */
@@ -153,17 +180,18 @@ export function practiceAssetFiles(p: PracticeSpecT): string[] {
     for (const b of ps.blocks) {
       if ("image" in b) out.push(b.image);
       if ("audio" in b) out.push(b.audio);
+      if ("video" in b) out.push(b.video);
     }
-    for (const q of ps.questions) if (q.sampleAudio) out.push(q.sampleAudio);
+    for (const q of ps.questions) out.push(...questionAudioFiles(q));
   }
-  for (const q of p.questions) if (q.sampleAudio) out.push(q.sampleAudio);
+  for (const q of p.questions) out.push(...questionAudioFiles(q));
   return out;
 }
 
 // ── Câu hỏi → { type, prompt, config } ───────────────────────────────────────
 
 /** `explanationAudio`: đường dẫn `/api/exam-assets/<tên>` của audio bài mẫu — do tầng ghi (đã tải tệp lên) truyền vào. */
-export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: string): { type: ExamQuestionSpecT["type"]; prompt: string; config: unknown; points?: number } {
+export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: string, turnAudio?: Array<string | undefined>): { type: ExamQuestionSpecT["type"]; prompt: string; config: unknown; points?: number } {
   const explanation = q.explanation?.trim() ? { explanation: q.explanation.trim() } : {};
   const matchMode = q.caseSensitive ? "exact" : "case_insensitive";
   let config: unknown;
@@ -200,6 +228,15 @@ export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: stri
         ...(q.voiceAnswer === false ? { voiceAnswer: false } : {}),
         ...(q.aiFeedback === false ? { aiFeedback: false } : {}),
         ...(explanationAudio ? { explanationAudio } : {}),
+        ...(q.roleplay
+          ? {
+              roleplay: {
+                ...(q.roleplay.roles ? { roles: q.roleplay.roles } : {}),
+                turns: q.roleplay.turns.map((t, i) => ({ speaker: t.speaker, text: t.text, ...(turnAudio?.[i] ? { audio: turnAudio[i] } : {}) })),
+              },
+            }
+          : {}),
+        ...(q.freechat ? { freechat: q.freechat } : {}),
         ...explanation,
       };
       break;
@@ -212,9 +249,10 @@ export function practiceProblems(p: PracticeSpecT, where: string): string[] {
   const out: string[] = [];
   const check = (q: ExamQuestionSpecT, label: string) => {
     if (q.type !== "essay") {
-      const stray = [q.sampleAudio && "sampleAudio", q.voiceAnswer !== undefined && "voiceAnswer", q.aiFeedback !== undefined && "aiFeedback"].filter(Boolean);
+      const stray = [q.sampleAudio && "sampleAudio", q.voiceAnswer !== undefined && "voiceAnswer", q.aiFeedback !== undefined && "aiFeedback", q.roleplay && "roleplay", q.freechat && "freechat"].filter(Boolean);
       if (stray.length) out.push(`${where} / ${label}: ${stray.join(", ")} chỉ dùng cho câu essay (câu này là ${q.type})`);
     }
+    if (q.roleplay && q.freechat) out.push(`${where} / ${label}: roleplay và freechat không dùng cùng một câu (chọn một)`);
     const e = expandExamQuestion(q);
     const base = CreateExamQuestionInput.safeParse({ type: e.type, prompt: e.prompt, config: e.config, points: e.points });
     if (!base.success) {
@@ -245,7 +283,9 @@ export function practiceQuestionCount(p: PracticeSpecT): number {
 
 export const AUDIO_EXT: Record<string, string> = { ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".wav": "audio/wav", ".ogg": "audio/ogg", ".weba": "audio/webm" };
 export const IMAGE_EXT: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
+export const VIDEO_EXT: Record<string, string> = { ".mp4": "video/mp4", ".webm": "video/webm" };
 export const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
+export const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 /** Lỗi của các tệp mà Bài luyện nhắc tới: thiếu tệp, sai đuôi, quá nặng. */
@@ -253,26 +293,29 @@ export function assetProblems(p: PracticeSpecT, assetsDir: string, where: string
   const out: string[] = [];
   for (const ps of p.passages) {
     for (const b of ps.blocks) {
-      const file = "image" in b ? b.image : "audio" in b ? b.audio : null;
+      const file = "image" in b ? b.image : "audio" in b ? b.audio : "video" in b ? b.video : null;
       if (!file) continue;
-      const kind = "image" in b ? "ảnh" : "audio";
+      const kind = "image" in b ? "ảnh" : "video" in b ? "video" : "audio";
       const ext = path.extname(file).toLowerCase();
-      const table = "image" in b ? IMAGE_EXT : AUDIO_EXT;
+      const table = "image" in b ? IMAGE_EXT : "video" in b ? VIDEO_EXT : AUDIO_EXT;
       const full = path.resolve(assetsDir, file);
       if (!table[ext]) out.push(`${where}: ${kind} "${file}" sai định dạng (${Object.keys(table).join(", ")})`);
       else if (!existsSync(full)) out.push(`${where}: không thấy tệp ${kind} "${file}" trong ${assetsDir}`);
-      else if (statSync(full).size > ("image" in b ? IMAGE_MAX_BYTES : AUDIO_MAX_BYTES)) out.push(`${where}: ${kind} "${file}" quá nặng`);
+      else if (statSync(full).size > ("image" in b ? IMAGE_MAX_BYTES : "video" in b ? VIDEO_MAX_BYTES : AUDIO_MAX_BYTES)) out.push(`${where}: ${kind} "${file}" quá nặng`);
     }
   }
   // Audio bài mẫu của câu essay (câu loại khác đã bị `practiceProblems` báo).
-  const sampleQs = [...p.passages.flatMap((ps) => ps.questions), ...p.questions].filter((q) => q.sampleAudio);
-  for (const q of sampleQs) {
-    const file = q.sampleAudio!;
+  const allQs = [...p.passages.flatMap((ps) => ps.questions), ...p.questions];
+  const audioFiles: Array<{ file: string; what: string }> = [
+    ...allQs.flatMap((q) => (q.sampleAudio ? [{ file: q.sampleAudio, what: "audio bài mẫu" }] : [])),
+    ...allQs.flatMap((q) => (q.roleplay?.turns ?? []).flatMap((t, i) => (t.audio ? [{ file: t.audio, what: `audio lượt ${i + 1} của hội thoại` }] : []))),
+  ];
+  for (const { file, what } of audioFiles) {
     const ext = path.extname(file).toLowerCase();
     const full = path.resolve(assetsDir, file);
-    if (!AUDIO_EXT[ext]) out.push(`${where}: audio bài mẫu "${file}" sai định dạng (${Object.keys(AUDIO_EXT).join(", ")})`);
-    else if (!existsSync(full)) out.push(`${where}: không thấy tệp audio bài mẫu "${file}" trong ${assetsDir}`);
-    else if (statSync(full).size > AUDIO_MAX_BYTES) out.push(`${where}: audio bài mẫu "${file}" quá nặng`);
+    if (!AUDIO_EXT[ext]) out.push(`${where}: ${what} "${file}" sai định dạng (${Object.keys(AUDIO_EXT).join(", ")})`);
+    else if (!existsSync(full)) out.push(`${where}: không thấy tệp ${what} "${file}" trong ${assetsDir}`);
+    else if (statSync(full).size > AUDIO_MAX_BYTES) out.push(`${where}: ${what} "${file}" quá nặng`);
   }
   return out;
 }
@@ -284,7 +327,7 @@ export function uploadsRoot(): string {
 /** Ghi một tệp vào lớp `public` của kho cục bộ: `<kind>/yyyy/mm/<tên>`. Trả tên tệp, loại và dung lượng. */
 export async function storePublicFile(kind: string, localPath: string, namePrefix: string): Promise<{ filename: string; mime: string; size: number }> {
   const ext = path.extname(localPath).toLowerCase();
-  const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext];
+  const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext] ?? VIDEO_EXT[ext];
   if (!mime) throw new Error(`Đuôi tệp không hỗ trợ: ${localPath}`);
   const buf = await readFile(localPath);
   const now = new Date();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSteps, countProgress, parseLayoutPref, progressLabel, readLayoutPref, stepIndexOf, summaryRows, writeLayoutPref } from "./lessonPracticeView";
+import { buildSheetSteps, buildSteps, countProgress, instructionOnlyText, isShortAudioPassage, parseLayoutPref, progressLabel, readLayoutPref, stepIndexOf, summaryRows, writeLayoutPref } from "./lessonPracticeView";
 
 const q = (id: string, passageId: string | null = null) => ({ id, passageId });
 
@@ -61,5 +61,72 @@ describe("lựa chọn bố cục", () => {
     expect(readLayoutPref(bad)).toBe("split");
     expect(() => writeLayoutPref(bad, "single")).not.toThrow();
     expect(readLayoutPref(null)).toBe("split");
+  });
+});
+
+describe("buildSheetSteps (Phiếu bài tập)", () => {
+  it("gộp các câu liền nhau không có đoạn văn thành MỘT bước (khác buildSteps: mỗi câu một bước)", () => {
+    const qs = [
+      { id: "a", passageId: null },
+      { id: "b", passageId: null },
+      { id: "c", passageId: "p1" },
+      { id: "d", passageId: "p1" },
+      { id: "e", passageId: null },
+    ];
+    expect(buildSheetSteps(qs).map((s) => s.questionIds)).toEqual([["a", "b"], ["c", "d"], ["e"]]);
+    expect(buildSteps(qs).map((s) => s.questionIds)).toEqual([["a"], ["b"], ["c", "d"], ["e"]]);
+  });
+
+  it("đoạn văn không có câu hỏi vẫn là một bước, chèn theo thứ tự đoạn văn của đề", () => {
+    const qs = [
+      { id: "a", passageId: "p1" },
+      { id: "b", passageId: "p3" },
+    ];
+    expect(buildSheetSteps(qs, ["p1", "p2", "p3"]).map((s) => [s.passageId, s.questionIds])).toEqual([
+      ["p1", ["a"]],
+      ["p2", []],
+      ["p3", ["b"]],
+    ]);
+    expect(buildSheetSteps(qs, ["p1", "p3", "p4"]).map((s) => s.passageId)).toEqual(["p1", "p3", "p4"]); // đoạn rỗng ở cuối
+    expect(buildSheetSteps(qs).map((s) => s.passageId)).toEqual(["p1", "p3"]); // không biết thứ tự đoạn thì như cũ
+  });
+});
+
+describe("instructionOnlyText — đoạn văn chỉ là câu yêu cầu", () => {
+  const para = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+  const doc = (...content: unknown[]) => ({ type: "doc", content });
+  it("vài đoạn chữ ngắn: trả chữ thuần, các đoạn cách nhau một dòng trống", () => {
+    expect(instructionOnlyText(doc(para("Read sentences 1–4."), para(" Answer the questions. ")))).toBe("Read sentences 1–4.\n\nAnswer the questions.");
+    expect(instructionOnlyText(doc({ type: "paragraph", content: [{ type: "text", text: "A" }, { type: "hardBreak" }, { type: "text", text: "B" }] }))).toBe("A\nB");
+  });
+  it("có tiêu đề, danh sách, bảng, ảnh, audio hoặc nút nhúng thì là nội dung thật (null)", () => {
+    for (const node of [{ type: "heading", content: [{ type: "text", text: "T" }] }, { type: "bulletList" }, { type: "table" }, { type: "image" }, { type: "audio" }]) {
+      expect(instructionOnlyText(doc(para("Listen."), node))).toBeNull();
+    }
+    expect(instructionOnlyText(doc({ type: "paragraph", content: [{ type: "image" }] }))).toBeNull();
+  });
+  it("quá dài (bài đọc), rỗng hoặc không phải tài liệu thì null", () => {
+    expect(instructionOnlyText(doc(para("x ".repeat(250))))).toBeNull();
+    expect(instructionOnlyText(doc(para("   ")))).toBeNull();
+    expect(instructionOnlyText(doc())).toBeNull();
+    expect(instructionOnlyText(null)).toBeNull();
+    expect(instructionOnlyText({ type: "other" })).toBeNull();
+  });
+});
+
+describe("isShortAudioPassage — bài nghe chỉ có câu yêu cầu và trình phát", () => {
+  const para = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+  const doc = (...content: unknown[]) => ({ type: "doc", content });
+  it("chữ ngắn kèm audio (kể cả chỉ audio) thì đúng", () => {
+    expect(isShortAudioPassage(doc(para("Listen and complete."), { type: "audio" }))).toBe(true);
+    expect(isShortAudioPassage(doc({ type: "audio" }))).toBe(true);
+  });
+  it("không có audio, có bảng/ảnh/danh sách/tiêu đề, hoặc chữ dài (có bài đọc) thì sai", () => {
+    expect(isShortAudioPassage(doc(para("Only text.")))).toBe(false);
+    for (const node of [{ type: "table" }, { type: "image" }, { type: "orderedList" }, { type: "heading" }]) {
+      expect(isShortAudioPassage(doc({ type: "audio" }, node))).toBe(false);
+    }
+    expect(isShortAudioPassage(doc({ type: "audio" }, para("x ".repeat(250))))).toBe(false);
+    expect(isShortAudioPassage(null)).toBe(false);
   });
 });
