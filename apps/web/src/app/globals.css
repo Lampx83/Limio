@@ -45,6 +45,12 @@
 }
 
 @layer base {
+  /* Vùng nội dung là flex cột (layout.tsx). Trong flex cột, `mx-auto` khiến phần tử co theo nội dung thay vì giãn
+     tới max-w-*, nên trang rộng/hẹp tuỳ độ dài chữ (vd. thẻ ôn từ vựng). Ép đầy chiều ngang cho mọi khối `mx-auto`
+     nằm trực tiếp trong vùng này; `:where` giữ độ ưu tiên bằng 0 nên `w-fit`/`w-auto`/`max-w-*` vẫn thắng. */
+  :where([data-app-content] > .mx-auto) {
+    width: 100%;
+  }
   html {
     font-size: 106.25%; /* 17px — tăng nhẹ toàn bộ cỡ chữ (rem) */
     -webkit-font-smoothing: antialiased;

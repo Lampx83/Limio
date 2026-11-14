@@ -286,7 +286,13 @@ export async function storePublicFile(kind: string, localPath: string, namePrefi
   const ext = path.extname(localPath).toLowerCase();
   const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext];
   if (!mime) throw new Error(`Đuôi tệp không hỗ trợ: ${localPath}`);
-  const buf = await readFile(localPath);
+  return storePublicBuffer(kind, ext, await readFile(localPath), namePrefix);
+}
+
+/** Như `storePublicFile` nhưng nhận nội dung có sẵn (vd. MP3 vừa sinh từ TTS). `ext` kèm dấu chấm. */
+export async function storePublicBuffer(kind: string, ext: string, buf: Buffer, namePrefix: string): Promise<{ filename: string; mime: string; size: number }> {
+  const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext];
+  if (!mime) throw new Error(`Đuôi tệp không hỗ trợ: ${ext}`);
   const now = new Date();
   const filename = `${namePrefix}-${now.getTime()}-${randomBytes(8).toString("hex")}${ext}`;
   const dest = path.join(uploadsRoot(), "public", kind, String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"), filename);

@@ -47,7 +47,7 @@ export default async function FlashcardsPage({
   const queue = await getFlashcardQueue(userId, course.id, { mode });
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6 lg:px-6">
+    <main className="mx-auto w-full max-w-2xl px-4 py-6 lg:px-6">
       <Link href={`/learn/${params.slug}`} className="link inline-flex items-center gap-1 text-sm">
         ← {course.title}
       </Link>
