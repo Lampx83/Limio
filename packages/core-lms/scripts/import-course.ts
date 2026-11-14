@@ -51,6 +51,7 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { createCourse } from "../src/courses/courses";
+import { setCourseProtectedMedia } from "../src/courses/protectedMedia";
 import { createModule } from "../src/courses/modules";
 import { createLesson } from "../src/courses/lessons";
 import { createContentItem } from "../src/courses/contents";
@@ -357,6 +358,8 @@ export const Manifest = z.object({
     personalizationEnabled: z.boolean().optional(),
     /** Khoá ngoại ngữ: bật khung bài học 3 cột và các tính năng Language (cần personalizationEnabled). */
     languageMode: z.boolean().optional(),
+    /** Học liệu có bản quyền: bật cờ `protectedMedia` sau khi nhập (file chỉ mở cho người có quyền vào khoá). */
+    protectedMedia: z.boolean().optional(),
     /** Phong cách sách giáo trình: màu nhấn "r,g,b" (xem `setBookStyle`). */
     bookStyle: z.object({ accent: z.string().regex(/^\d{1,3},\d{1,3},\d{1,3}$/) }).optional(),
   }),
@@ -2010,6 +2013,12 @@ async function main() {
 
       console.log(`  ✔ ${m.title} / ${l.title}`);
     }
+  }
+
+  // Cờ bản quyền bật SAU khi nội dung đã có đủ: bật xong thì quét cả khoá (kể cả video/audio trong Bài luyện).
+  if (manifest.course.protectedMedia) {
+    const r = await setCourseProtectedMedia(actor, course.courseId, true);
+    console.log(`✔ Học liệu có bản quyền: đã bảo vệ ${r.files} file học liệu bài học (audio kho đề được bảo vệ theo đề).`);
   }
 
   console.log(

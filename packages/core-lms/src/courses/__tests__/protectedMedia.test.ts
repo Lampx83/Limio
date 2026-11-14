@@ -7,12 +7,14 @@ import { createCourse, publishCourse } from "../courses";
 import { createModule } from "../modules";
 import { createLesson } from "../lessons";
 import { createContentItem, updateContentItem } from "../contents";
+import { getOwnedPracticeExamId } from "../practiceBlock";
 import { addCoInstructorByEmail } from "../instructors";
 import { CourseAuthzError } from "../authz";
 import {
   canAccessProtectedMedia,
   extractLessonMediaFilenames,
   findProtectingCourseIds,
+  findProtectingCourseIdsForExamAsset,
   registerLessonMedia,
   setCourseProtectedMedia,
   syncProtectedMediaForCourse,
@@ -255,5 +257,59 @@ describe("canAccessProtectedMedia — ai được xem", () => {
     await enrollInCourse(learner, b.courseId);
     expect(await canAccessProtectedMedia(learner, [a.courseId])).toBe(false);
     expect(await canAccessProtectedMedia(learner, [a.courseId, b.courseId])).toBe(true);
+  });
+});
+
+describe("Bài luyện nhúng trong khoá bản quyền (đề ẩn)", () => {
+  /** Một bài có khối Bài luyện; đoạn văn của đề ẩn mang URL video bài học. Trả id khoá, bài và đề. */
+  async function makePracticeCourse(email: string, slug: string, opts: { previewable?: boolean } = {}) {
+    const owner = await makeUser(email);
+    const { courseId, moduleId } = await makeCourse(owner, slug);
+    const { lessonId } = await createLesson(owner, moduleId, { title: "L", orderIndex: 0 });
+    if (opts.previewable) await prisma.lesson.update({ where: { id: lessonId }, data: { previewable: true } });
+    const { contentItemId } = await createContentItem(owner, lessonId, { type: "exam_practice", orderIndex: 0, payload: {} });
+    const examId = (await getOwnedPracticeExamId(contentItemId))!;
+    await prisma.examPassage.create({
+      data: { examId, title: "P", orderIndex: 0, contentJson: { type: "doc", content: [{ type: "video", attrs: { src: `/api/lesson-media/videos/${VID}` } }] } },
+    });
+    return { owner, courseId, lessonId, examId };
+  }
+
+  it("bật cờ: video trong đoạn văn của đề ẩn vào bảng bảo vệ; audio kho đề được bảo vệ theo đề chủ", async () => {
+    const { owner, courseId, examId } = await makePracticeCourse("pm-pr1@e.com", "pm-pr1");
+    const audio = `${examId}-1790000000100-0123456789abcdef.m4a`;
+    expect(await findProtectingCourseIdsForExamAsset(audio)).toEqual([]);
+
+    await setCourseProtectedMedia(owner, courseId, true);
+    expect(await findProtectingCourseIds(VID)).toEqual([courseId]);
+    expect(await findProtectingCourseIdsForExamAsset(audio)).toEqual([courseId]);
+
+    await setCourseProtectedMedia(owner, courseId, false);
+    expect(await findProtectingCourseIds(VID)).toEqual([]);
+    expect(await findProtectingCourseIdsForExamAsset(audio)).toEqual([]);
+  });
+
+  it("registerLessonMedia (trang bài của học viên) cũng nhặt video của đề ẩn", async () => {
+    const { courseId, lessonId } = await makePracticeCourse("pm-pr2@e.com", "pm-pr2");
+    await prisma.course.update({ where: { id: courseId }, data: { protectedMedia: true } });
+    expect(await registerLessonMedia(lessonId)).toBe(1);
+    expect(await findProtectingCourseIds(VID)).toEqual([courseId]);
+  });
+
+  it("bài xem thử không bị bảo vệ (cả video lẫn audio kho đề)", async () => {
+    const { owner, courseId, examId } = await makePracticeCourse("pm-pr3@e.com", "pm-pr3", { previewable: true });
+    await setCourseProtectedMedia(owner, courseId, true);
+    expect(await findProtectingCourseIds(VID)).toEqual([]);
+    expect(await findProtectingCourseIdsForExamAsset(`${examId}-1790000000101-0123456789abcdef.m4a`)).toEqual([]);
+  });
+
+  it("đề thi thật (không phải khối bài học) và tên file lạ phục vụ công khai như trước", async () => {
+    const owner = await makeUser("pm-pr4@e.com");
+    const { courseId } = await makeCourse(owner, "pm-pr4");
+    await setCourseProtectedMedia(owner, courseId, true);
+    const exam = await prisma.exam.create({ data: { courseId, createdById: owner, title: "Thi thật", durationMin: 30, openAt: new Date(), closeAt: new Date(Date.now() + 3600_000) } });
+    expect(await findProtectingCourseIdsForExamAsset(`${exam.id}-1790000000102-0123456789abcdef.png`)).toEqual([]);
+    expect(await findProtectingCourseIdsForExamAsset("khong-co-tien-to-id-de.png")).toEqual([]);
+    expect(await findProtectingCourseIdsForExamAsset("00000000-0000-4000-8000-000000000000-1-ab.png")).toEqual([]);
   });
 });
