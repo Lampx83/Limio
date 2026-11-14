@@ -8,6 +8,7 @@ import {
   QuizError,
 } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getActiveRole } from "@/lib/active-role";
 import QuizPlayer from "@/components/QuizPlayer";
 import QuizBackLink from "@/components/QuizBackLink";
 import ExamRoomChrome from "@/components/exam/ExamRoomChrome";
@@ -47,9 +48,11 @@ export default async function QuizPage({
   if (!course || course.slug !== params.slug) notFound();
 
   const enrolled = await isUserEnrolled(userId, quiz.courseId);
-  const instructorPreview = !enrolled
-    ? await canEditCourse(userId, quiz.courseId)
-    : false;
+  // Vai "học viên" đang chọn: không có chế độ xem thử của giảng viên, y hệt học viên thật.
+  const instructorPreview =
+    !enrolled && getActiveRole(session?.user?.roles ?? []) !== "learner"
+      ? await canEditCourse(userId, quiz.courseId)
+      : false;
   if (!enrolled && !instructorPreview) {
     redirect(`/catalog/${params.slug}`);
   }

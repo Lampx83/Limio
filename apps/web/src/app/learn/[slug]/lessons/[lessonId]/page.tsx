@@ -230,7 +230,10 @@ export default async function LessonPage({
   // Người dạy khoá này vào được bài mà không cần ghi danh — trước đây họ bị đá
   // về trang giới thiệu, tức là muốn xem bài mình vừa soạn thì phải tự ghi danh
   // vào khoá của chính mình.
-  const canEdit = userId ? await canEditCourse(userId, lesson.module.course.id) : false;
+  // Đang chọn vai "học viên" (RoleSwitcher) thì trang phải y hệt học viên thật: không nút Slide, không ghi chú giảng viên,
+  // không vào bài khi chưa ghi danh — dù tài khoản này có quyền sửa khoá.
+  const viewingAsLearner = getActiveRole(session?.user?.roles ?? []) === "learner";
+  const canEdit = userId && !viewingAsLearner ? await canEditCourse(userId, lesson.module.course.id) : false;
   // Ẩn cả module thì bài bên trong cũng phải khoá lại, không thì học viên biết
   // đường dẫn vẫn vào thẳng được. Người dạy khoá này thì vẫn vào — họ cần soạn
   // và chiếu thử nội dung chưa mở cho lớp.
