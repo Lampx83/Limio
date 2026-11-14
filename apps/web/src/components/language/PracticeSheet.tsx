@@ -613,7 +613,7 @@ export default function PracticeSheet({
         <div key={t.key} id={`ps-panel-${t.key}`} role="tabpanel" aria-labelledby={tabs.length > 1 ? `ps-tab-${t.key}` : undefined} hidden={i !== activeIdx} className="ps-panel">
           {t.intro && t.introTitle && (
             <header className="ps-intro-head">
-              <h2 className="text-h3 flex items-center gap-2.5">
+              <h2 className="text-h4 flex items-center gap-2.5">
                 {t.introIcon && (
                   <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lime-100 text-lime-700" aria-hidden>
                     {t.introIcon}
