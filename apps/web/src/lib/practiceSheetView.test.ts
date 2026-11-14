@@ -153,6 +153,9 @@ describe("tabShortLabels", () => {
   it("mã bài tập của sách thành nhãn ngắn", () => {
     expect(tabShortLabels(["Exercise 7A · Three lifestyles", "Ex 3B · Match the sentences", "Ex 2B–2C · ▶ 1.3", "Ex 4A · Find and correct the mistakes"])).toEqual(["7A", "3B", "2B–2C", "4A"]);
   });
+  it("tiêu đề theo kiểu sách, không có chữ Ex: '2A · …' cũng ra nhãn ngắn", () => {
+    expect(tabShortLabels(["2A · Talk with a virtual partner", "3A\u20133B · Make sentences", "5B\u20135C · Stress patterns", "Ex 7D · True or false?"])).toEqual(["2A", "3A\u20133B", "5B\u20135C", "7D"]);
+  });
   it("không có mã: lấy phần sau dấu ·, hoặc tiêu đề cắt ngắn, hoặc 'Bài n'", () => {
     expect(tabShortLabels(["Choose the alternatives · Conversation 1", "Listening · ▶ 1.7", "A very long title without a code at all", "", null])).toEqual(["Conversation 1", "▶ 1.7", "A very long t…", "Bài 4", "Bài 5"]);
   });

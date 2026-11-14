@@ -564,31 +564,10 @@ export default function LessonPractice({
             />
           </div>
         ) : (
-          <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} />
+          <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} compact />
         )}
-        {isEssay && !rolePlay && !freeChat && essayVoiceEnabled(q.config) && (
-          <EssayVoiceAnswer
-            preview={preview}
-            recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
-            viaVoiceText={!!value && "viaVoice" in value && (value as { viaVoice?: unknown }).viaVoice === true}
-            hasText={isAnswered(value)}
-            feedbackOn={aiOn && embed.checkEnabled && !preview}
-            onUse={(file, withFeedback) => useVoiceThenCheck(qid, file, withFeedback)}
-          />
-        )}
-        {embed.checkEnabled && (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            {!res ? (
-              <span className="text-caption text-muted">
-                {freeChat && chatTurns < FREECHAT_MIN_FEEDBACK_TURNS
-                  ? `Cần ít nhất ${FREECHAT_MIN_FEEDBACK_TURNS} lượt của bạn để nhận xét.`
-                  : aiOn && !preview
-                    ? "Khi bấm Kiểm tra, câu trả lời của bạn được gửi tới AI để nhận xét."
-                    : "Bạn có thể đổi đáp án trước khi kiểm tra."}
-              </span>
-            ) : (
-              <span />
-            )}
+        {(() => {
+          const checkButton = embed.checkEnabled ? (
             <button
               type="button"
               onClick={() => void check(qid)}
@@ -597,8 +576,43 @@ export default function LessonPractice({
             >
               {busyCheck === qid ? (aiOn && !preview ? "Đang nhận xét…" : "Đang kiểm tra…") : (rolePlay || freeChat) && aiOn && !preview ? "Nhận xét bằng AI" : `Kiểm tra câu ${n}`}
             </button>
-          </div>
-        )}
+          ) : null;
+          const note = embed.checkEnabled && !res ? (
+            <span className="text-caption text-muted">
+              {freeChat && chatTurns < FREECHAT_MIN_FEEDBACK_TURNS
+                ? `Cần ít nhất ${FREECHAT_MIN_FEEDBACK_TURNS} lượt của bạn để nhận xét.`
+                : aiOn && !preview
+                  ? "Khi bấm Kiểm tra, câu trả lời của bạn được gửi tới AI để nhận xét."
+                  : "Bạn có thể đổi đáp án trước khi kiểm tra."}
+            </span>
+          ) : null;
+          const voiceRow = isEssay && !rolePlay && !freeChat && essayVoiceEnabled(q.config);
+          if (voiceRow) {
+            // Ô gõ → một hàng: [Trả lời bằng giọng nói] … [Kiểm tra] → một dòng chú thích nhỏ.
+            return (
+              <>
+                <EssayVoiceAnswer
+                  preview={preview}
+                  recordingSrc={hasRecording && sessionId ? apiUrl(`/api/practice-sessions/${sessionId}/audio/${qid}?v=${audioVer[qid]}`) : null}
+                  viaVoiceText={!!value && "viaVoice" in value && (value as { viaVoice?: unknown }).viaVoice === true}
+                  hasText={isAnswered(value)}
+                  feedbackOn={aiOn && embed.checkEnabled && !preview}
+                  onUse={(file, withFeedback) => useVoiceThenCheck(qid, file, withFeedback)}
+                  trailing={checkButton}
+                />
+                {note && <p className="mt-1.5">{note}</p>}
+              </>
+            );
+          }
+          return (
+            embed.checkEnabled && (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                {note ?? <span />}
+                {checkButton}
+              </div>
+            )
+          );
+        })()}
         {res && res.manual && (
           <EssayFeedback config={res.config} feedback={feedbacks[qid] ?? null} feedbackError={feedbackErrors[qid] ?? null} preview={preview} />
         )}
@@ -714,7 +728,7 @@ export default function LessonPractice({
     label: tabLabel(sheetTitles[i], i),
     short: sheetShorts[i],
     questionIds: st.questionIds,
-    ...(introOf(st) ? { intro: introOf(st) } : {}),
+    ...(introOf(st) ? { intro: introOf(st), introTitle: sheetTitles[i] ?? undefined } : {}),
   }));
   const sheetNode = sheet ? (
     <PracticeSheet

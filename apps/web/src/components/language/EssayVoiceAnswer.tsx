@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Mic, Square } from "lucide-react";
 import { MAX_RECORD_SECONDS, formatClock } from "@/lib/audioRecorder";
 import { useAudioRecorder } from "@/components/useAudioRecorder";
@@ -46,6 +46,7 @@ export default function EssayVoiceAnswer({
   hasText,
   feedbackOn,
   onUse,
+  trailing,
 }: {
   preview: boolean;
   recordingSrc: string | null;
@@ -55,6 +56,8 @@ export default function EssayVoiceAnswer({
   feedbackOn: boolean;
   /** `withFeedback`: kiểm tra và nhận xét ngay sau khi có bản chữ. */
   onUse: (file: File, withFeedback: boolean) => Promise<void>;
+  /** Nút của chỗ gọi (vd "Kiểm tra câu n") đặt cùng hàng với nút giọng nói, căn phải, để hai việc không chiếm hai dòng. */
+  trailing?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -67,19 +70,27 @@ export default function EssayVoiceAnswer({
       )}
 
       {!open && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <button
-            type="button"
-            className="btn-secondary btn-sm inline-flex items-center gap-1.5"
-            onClick={() => setOpen(true)}
-          >
-            <Mic size={14} aria-hidden /> Trả lời bằng giọng nói
-          </button>
-          {preview && <span className="text-xs text-muted">Xem thử: ghi âm và chuyển thành chữ được, nhưng không lưu bản ghi.</span>}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <button
+              type="button"
+              className="btn-secondary btn-sm inline-flex items-center gap-1.5"
+              onClick={() => setOpen(true)}
+            >
+              <Mic size={14} aria-hidden /> Trả lời bằng giọng nói
+            </button>
+            {preview && <span className="text-xs text-muted">Xem thử: ghi âm và chuyển thành chữ được, nhưng không lưu bản ghi.</span>}
+          </div>
+          {trailing}
         </div>
       )}
 
-      {open && <VoicePanel hasText={hasText} feedbackOn={feedbackOn} onUse={onUse} onClose={() => setOpen(false)} />}
+      {open && (
+        <>
+          <VoicePanel hasText={hasText} feedbackOn={feedbackOn} onUse={onUse} onClose={() => setOpen(false)} />
+          {trailing && <div className="flex justify-end">{trailing}</div>}
+        </>
+      )}
 
       {recordingSrc && !preview && (
         <div data-testid="lp-voice-player">

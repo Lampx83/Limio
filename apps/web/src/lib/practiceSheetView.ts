@@ -116,7 +116,8 @@ export function tabShortLabels(titles: Array<string | null | undefined>): string
   const base = titles.map((raw, i) => {
     const t = (raw ?? "").trim();
     if (t === "") return `Bài ${i + 1}`;
-    const m = /^Ex(?:ercise)?\.?\s*(\d+[A-E](?:\s*[\u2013-]\s*\d*[A-E])?)\b/i.exec(t);
+    // Sách in nhãn "2A" không có chữ "Ex"; tiêu đề cũ "Ex 2A · …" vẫn nhận.
+    const m = /^(?:Ex(?:ercise)?\.?\s*)?(\d+[A-E](?:\s*[\u2013-]\s*\d*[A-E])?)\b/i.exec(t);
     if (m) return m[1]!.replace(/\s+/g, "");
     const parts = t.split(" \u00b7 ");
     return clip((parts.length > 1 ? parts[parts.length - 1]!.trim() : t).split("/")[0]!.trim());

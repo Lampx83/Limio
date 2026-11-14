@@ -1818,7 +1818,8 @@ main:has(.lp-large) .prose {
 }
 
 /* Thanh dưới tiêu đề đoạn văn của Phiếu bài tập dùng màu nhấn của khối (mặc định Limio; khoá có màu bộ sách thì cùng màu với thân bài). */
-.ps-paper-card .bg-brand-gradient {
+.ps-paper-card .bg-brand-gradient,
+.ps-intro-head .bg-brand-gradient {
   background: linear-gradient(90deg, rgb(var(--brand)), rgb(var(--brand) / 0.15));
 }
 
@@ -1845,6 +1846,22 @@ main:has(.lp-large) .prose {
 .lp-large .ps-paper-card .prose ol,
 .lp-large .ps-paper-card .prose ul {
   margin: 0.7rem 0;
+}
+/* Bảng trong thẻ đoạn văn: chữ trong ô không nhận lề đoạn 0,7 rem của thân bài (làm mỗi hàng cao gấp đôi); ô gọn, dãn dòng vừa phải.
+   Bong bóng/thẻ một cột có padding riêng ở dưới (độ ưu tiên cao hơn) nên không bị đổi. */
+.lp-large .ps-paper-card .passage-table p {
+  margin: 0;
+  line-height: 1.45;
+}
+.lp-large .ps-paper-card .passage-table p + p {
+  margin-top: 0.25rem;
+}
+.lp-large .ps-paper-card .passage-table th,
+.lp-large .ps-paper-card .passage-table td {
+  padding: 0.3rem 0.65rem;
+}
+.lp-large .ps-paper-card .passage-table-wrap {
+  margin: 0.5rem 0;
 }
 
 /* Khoá có màu bộ sách: khung bài học (thanh bài, tab, nút chính) dùng cùng một màu nhấn với thân bài và khối luyện tập. Các lớp brand của Tailwind là mã màu cố định
@@ -2242,6 +2259,10 @@ textarea.fc-input {
 }
 
 /* Câu yêu cầu của bài tập (đoạn văn chỉ gồm chữ) ở đầu phiếu, cỡ chữ như phiếu; dòng thường, không khung. */
+/* Tên bài tập phía trên câu yêu cầu của phiếu một cột (cùng kiểu tiêu đề với thẻ đoạn văn nhưng sát hơn). */
+.ps-intro-head {
+  margin: 0 0 0.6rem;
+}
 .ps-intro {
   margin: 0 0 0.6rem;
   white-space: pre-line;
