@@ -110,6 +110,15 @@ export const EssayConfig = z.object({
       opening: z.string().min(1).max(300),
       targets: z.array(z.string().min(1).max(120)).max(10).optional(),
       maxTurns: z.number().int().min(4).max(12).optional(),
+      scaffold: z
+        .object({
+          ideas: z.array(z.string().min(1).max(120)).max(4).optional(),
+          frames: z.array(z.object({ en: z.string().min(1).max(120), vi: z.string().max(120).optional() })).max(8).optional(),
+          phrases: z.array(z.object({ en: z.string().min(1).max(40), vi: z.string().max(60).optional() })).max(12).optional(),
+          vocab: z.array(z.object({ en: z.string().min(1).max(40), vi: z.string().max(60).optional() })).max(12).optional(),
+          model: z.object({ text: z.string().min(1).max(700), audio: z.string().max(300).optional() }).optional(),
+        })
+        .optional(),
     })
     .optional(),
   ...explanationField,

@@ -130,3 +130,49 @@ describe("thử nói tự do trong trình soạn", () => {
     expect(both).not.toHaveProperty("freechat");
   });
 });
+
+describe("scaffold của bạn ảo trong trình soạn", () => {
+  const base = { scenario: "Choose what to take.", partnerRole: "", learnerRole: "", opening: "What would you take?", targets: "I would take…", maxTurns: 8 };
+  it("dựng scaffold: mỗi dòng một mục, dấu | tách nghĩa, dòng thiếu nghĩa vẫn lưu, quá giới hạn thì cắt", () => {
+    const cfg = buildFreeChatConfig({
+      ...base,
+      ideas: "Chọn một món\n\n Nói vì sao \nÝ 3\nÝ 4\nÝ 5",
+      frames: "I would take ___ because ___. | Tôi sẽ mang ___ vì ___.\nWhat about you?",
+      phrases: "take my passport | mang hộ chiếu\nleave it behind",
+      vocab: "passport | hộ chiếu\nvaluable",
+      modelText: " **I would take** my phone. ",
+      modelAudio: "/api/exam-assets/m.m4a",
+    })!;
+    expect(cfg.scaffold).toEqual({
+      ideas: ["Chọn một món", "Nói vì sao", "Ý 3", "Ý 4"],
+      frames: [
+        { en: "I would take ___ because ___.", vi: "Tôi sẽ mang ___ vì ___." },
+        { en: "What about you?", vi: "" },
+      ],
+      phrases: [
+        { en: "take my passport", vi: "mang hộ chiếu" },
+        { en: "leave it behind", vi: "" },
+      ],
+      vocab: [
+        { en: "passport", vi: "hộ chiếu" },
+        { en: "valuable", vi: "" },
+      ],
+      model: { text: "**I would take** my phone.", audio: "/api/exam-assets/m.m4a" },
+    });
+  });
+  it("không điền gì thì không ghi scaffold (cấu hình cũ giữ nguyên)", () => {
+    expect(buildFreeChatConfig(base)).not.toHaveProperty("scaffold");
+    expect(buildFreeChatConfig({ ...base, ideas: " ", frames: "|", phrases: "", vocab: "", modelText: " " })).not.toHaveProperty("scaffold");
+  });
+  it("khứ hồi: dựng rồi đọc lại ra đúng ba ô", () => {
+    const d = { ...base, ideas: "Chọn một món", frames: "I would take ___. | Tôi sẽ mang ___.\nWhat about you?", phrases: "take my passport | mang hộ chiếu", vocab: "passport | hộ chiếu", modelText: "**I would take** my phone.", modelAudio: "/api/exam-assets/m.m4a" };
+    const back = freeChatDraftFromConfig(buildEssayConfig(emptyEssayDraft(), undefined, d));
+    expect(back.ideas).toBe("Chọn một món");
+    expect(back.frames).toBe("I would take ___. | Tôi sẽ mang ___.\nWhat about you?");
+    expect(back.phrases).toBe("take my passport | mang hộ chiếu");
+    expect(back.vocab).toBe("passport | hộ chiếu");
+    expect(back.modelText).toBe("**I would take** my phone.");
+    expect(back.modelAudio).toBe("/api/exam-assets/m.m4a");
+    expect(freeChatDraftFromConfig({}).frames).toBe("");
+  });
+});

@@ -2141,6 +2141,249 @@ main:has(.lp-large) .prose {
   color: var(--ps-ok, #1e7b4a);
   font-weight: 600;
 }
+/* Scaffolding (docs/tieu-chi/limio-language-ban-ao-scaffolding-moc-1.md): công thức 3 bước, mẫu câu có nghĩa, từ hữu ích, khay "Khi bị bí". */
+.fc-formula {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.fc-formula-step {
+  display: inline-block;
+  margin-right: 0.6rem;
+  font-weight: 600;
+  color: rgb(var(--brand));
+}
+.fc-formula-eg {
+  display: block;
+  font-size: 0.875rem;
+  color: rgb(var(--text-muted));
+}
+.fc-targets ul.fc-frames {
+  gap: 0.25rem;
+}
+.fc-frames li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.fc-mark {
+  flex: none;
+  width: 1rem;
+  text-align: center;
+}
+.fc-frame {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.05rem;
+  padding: 0.3rem 0.6rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+button.fc-frame:hover {
+  border-color: rgb(var(--brand));
+}
+.fc-frame-static {
+  cursor: default;
+}
+.fc-frame-en {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.fc-frame-vi {
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: rgb(var(--text-muted));
+}
+.fc-words {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  gap: 0.35rem !important;
+}
+.fc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: inherit;
+  white-space: nowrap;
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: 999px;
+  cursor: pointer;
+}
+button.fc-chip:hover:not(:disabled) {
+  border-color: rgb(var(--brand));
+}
+.fc-chip:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fc-chip-static {
+  cursor: default;
+}
+.fc-chip span {
+  font-size: 0.8125rem;
+  color: rgb(var(--text-muted));
+}
+/* Phần chuẩn bị: MỘT popup mở bằng nút "Chuẩn bị" (đoạn mẫu có audio và chữ tô sáng, rồi ý tưởng, mẫu câu, cụm từ, từ vựng). */
+.fc-start-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.fc-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.9rem;
+  font: inherit;
+  font-weight: 600;
+  color: rgb(var(--brand));
+  background: none;
+  border: 1px solid rgb(var(--brand));
+  border-radius: 999px;
+  cursor: pointer;
+}
+.fc-btn-sm {
+  min-height: 2.25rem;
+  padding: 0.1rem 0.7rem;
+  font-size: 0.875rem;
+}
+.fc-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(0 0 0 / 0.6);
+}
+.fc-modal-card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 40rem;
+  max-height: min(90vh, 52rem);
+  overflow: hidden;
+  color: rgb(var(--text));
+  background: rgb(var(--surface));
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgb(0 0 0 / 0.35);
+}
+.fc-modal-head,
+.fc-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgb(var(--border));
+}
+.fc-modal-foot {
+  justify-content: flex-end;
+  border-top: 1px solid rgb(var(--border));
+  border-bottom: 0;
+}
+.fc-modal-head h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+.fc-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  overflow-y: auto;
+  counter-reset: fcstep;
+}
+.fc-modal-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fc-modal-step + .fc-modal-step {
+  padding-top: 0.9rem;
+  border-top: 1px solid rgb(var(--border));
+}
+.fc-modal-step h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgb(var(--brand));
+}
+.fc-modal-step h3::before {
+  counter-increment: fcstep;
+  content: counter(fcstep) ". ";
+}
+.fc-modal-step h4 {
+  margin: 0.4rem 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.fc-ideas,
+.fc-modal-step ul.fc-frames {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.fc-ideas li {
+  font-size: 0.9375rem;
+}
+.fc-model-audio {
+  display: block;
+  width: 100%;
+  margin: 0.5rem 0 0.25rem;
+}
+.fc-transcript {
+  margin: 0.4rem 0;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+}
+mark.fc-hl {
+  padding: 0.05rem 0.2rem;
+  color: inherit;
+  font-weight: 600;
+  background: color-mix(in srgb, rgb(var(--brand)) 22%, transparent);
+  border-radius: 0.25rem;
+}
+.fc-tray {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+  scrollbar-width: thin;
+}
+.fc-tray-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.35rem;
+}
+.fc-tray-label {
+  flex: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--text-muted));
+}
 /* Khung chat: đầu trang (avatar + tên), vùng tin nền nhạt, ô nhập ở đáy. Tin bạn ảo bên trái kèm avatar, tin học viên bên phải màu thương hiệu. */
 .fc-chat {
   display: flex;

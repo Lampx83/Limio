@@ -3,6 +3,9 @@
  * nhãn hiển thị, lời nhắn lỗi tiếng Việt. Xem docs/tieu-chi/bai-luyen-tra-loi-bang-giong-noi-va-bai-mau.md (AC1–AC4).
  */
 
+import { tFor } from "@/lib/i18n/tFor";
+import type { UiLang } from "@/lib/i18n/core";
+
 export type FeedbackLevel = "needs_work" | "fair" | "good";
 export type CriterionKey = "task" | "content" | "language" | "fluency";
 
@@ -94,34 +97,35 @@ export function essayFeedbackEnabled(config: unknown): boolean {
 }
 
 /** Lời nhắn khi chuyển giọng nói lỗi. Luôn nói rõ ô gõ vẫn dùng được; không đổ lỗi cho học viên. */
-export function voiceErrorMessage(code: string | null | undefined): string {
+export function voiceErrorMessage(code: string | null | undefined, lang: UiLang = "vi"): string {
+  const t = tFor(lang);
   switch (code) {
     case "openai_not_configured":
-      return "Hệ thống chưa bật chuyển giọng nói thành chữ. Bạn hãy gõ câu trả lời.";
+      return t("practice.say.verr.notConfigured");
     case "daily_token_cap":
     case "no_token_budget":
     case "global_token_cap":
-      return "Hạn mức AI đã hết nên chưa chuyển được giọng nói thành chữ. Bạn hãy gõ câu trả lời, hoặc thử lại sau.";
+      return t("practice.say.verr.quota");
     case "rate_limited":
-      return "Bạn thao tác hơi nhanh. Hãy đợi một lát rồi thử lại, hoặc gõ câu trả lời.";
+      return t("practice.say.verr.rate");
     case "audio_too_long":
     case "audio_too_large":
     case "file_too_large":
-      return "Bản ghi quá dài (tối đa 3 phút). Hãy ghi ngắn hơn, hoặc gõ câu trả lời.";
+      return t("practice.say.verr.long");
     case "no_speech":
-      return "Không nghe thấy tiếng nói trong bản ghi. Hãy ghi lại gần micro hơn, hoặc gõ câu trả lời.";
+      return t("practice.say.verr.noSpeech");
     case "unsupported_media_type":
-      return "Định dạng bản ghi chưa được hỗ trợ. Hãy ghi lại bằng nút Ghi âm.";
+      return t("practice.say.verr.format");
     case "practice_session_closed":
-      return "Buổi luyện đã kết thúc nên không nhận thêm câu trả lời.";
+      return t("practice.say.verr.closed");
     case "not_language_course":
-      return "Trả lời bằng giọng nói chỉ có ở khoá ngoại ngữ. Bạn hãy gõ câu trả lời.";
+      return t("practice.say.verr.notLanguage");
     case "stt_failed":
     case "analysis_empty":
     case "openai_error":
-      return "Chưa chuyển được giọng nói thành chữ. Hãy thử lại, hoặc gõ câu trả lời.";
+      return t("practice.say.verr.failed");
     default:
-      return "Chưa dùng được bản ghi này. Hãy thử lại, hoặc gõ câu trả lời.";
+      return t("practice.say.verr.other");
   }
 }
 

@@ -206,6 +206,11 @@ export const LessonSpec = z.object({
    */
   objectivesLead: z.string().min(1).max(200).optional(),
   /**
+   * Bỏ dải "n phút · n phần · n câu" đầu bài. Khoá ngoại ngữ theo sách: thanh bài bên trái đã có số phút,
+   * còn "1 section" không nói gì với người học, nên dải chỉ làm trang thêm một khối trống.
+   */
+  hideMeta: z.boolean().optional(),
+  /**
    * Tổng kết cuối bài — vài ý người học nên mang theo. Chèn NGAY TRƯỚC mục
    * luyện tập chứ không phải sau cùng: đọc xong nội dung là tới tổng kết, rồi
    * mới tới bài tập; đặt sau phần nguồn tham khảo thì không ai còn đọc.
@@ -1393,7 +1398,7 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   if (l.quiz?.questions.length) chips.push(T().questions(l.quiz.questions.length));
 
   const head =
-    (chips.length > 1 ? metaBar(chips) : "") +
+    (chips.length > 1 && !l.hideMeta ? metaBar(chips) : "") +
     (l.objectives?.length ? objectivesBox(l.objectives, l.objectivesLead) : "");
   if (head) blocks.push(head);
 
@@ -1659,7 +1664,7 @@ export async function importPractice(actor: string, lessonId: string, pr: z.infe
     });
     const { passageId } = await createPassage(actor, examId, { title: ps.title, contentJson: doc });
     for (const q of ps.questions) {
-      await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
+      await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir), await storeModelAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
     }
   }
   for (const q of pr.questions) {
@@ -1688,6 +1693,15 @@ async function storeTurnAudio(actor: string, examId: string, q: ExamQuestionSpec
     out.push(`/api/exam-assets/${st.filename}`);
   }
   return out;
+}
+
+/** "Thử nói tự do": audio đoạn nói mẫu (`freechat.scaffold.model.audio`) vào kho đề; trả đường dẫn để đặt vào cấu hình câu. */
+async function storeModelAudio(actor: string, examId: string, q: ExamQuestionSpecT, assetsDir: string): Promise<string | undefined> {
+  const file = q.freechat?.scaffold?.model?.audio;
+  if (!file) return undefined;
+  const st = await storePublicFile("exam-assets", resolve(assetsDir, file), examId);
+  await createAudioAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: "Example answer audio" });
+  return `/api/exam-assets/${st.filename}`;
 }
 
 async function main() {

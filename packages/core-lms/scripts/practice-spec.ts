@@ -74,6 +74,15 @@ export const ExamQuestionSpec = z.object({
       opening: z.string().min(1).max(300),
       targets: z.array(z.string().min(1).max(120)).max(10).optional(),
       maxTurns: z.number().int().min(4).max(12).optional(),
+      scaffold: z
+        .object({
+          ideas: z.array(z.string().min(1).max(120)).max(4).optional(),
+          frames: z.array(z.object({ en: z.string().min(1).max(120), vi: z.string().max(120).optional() })).max(8).optional(),
+          phrases: z.array(z.object({ en: z.string().min(1).max(40), vi: z.string().max(60).optional() })).max(12).optional(),
+          vocab: z.array(z.object({ en: z.string().min(1).max(40), vi: z.string().max(60).optional() })).max(12).optional(),
+          model: z.object({ text: z.string().min(1).max(700), audio: z.string().max(300).optional() }).optional(),
+        })
+        .optional(),
     })
     .optional(),
 });
@@ -170,7 +179,11 @@ export function buildPassageDoc(blocks: PassageBlockT[], assets: AssetUrls): { t
 
 /** Tệp audio mà một câu nhắc tới: audio bài mẫu và audio từng lượt của hội thoại đóng vai. */
 export function questionAudioFiles(q: ExamQuestionSpecT): string[] {
-  return [...(q.sampleAudio ? [q.sampleAudio] : []), ...(q.roleplay?.turns ?? []).flatMap((t) => (t.audio ? [t.audio] : []))];
+  return [
+    ...(q.sampleAudio ? [q.sampleAudio] : []),
+    ...(q.roleplay?.turns ?? []).flatMap((t) => (t.audio ? [t.audio] : [])),
+    ...(q.freechat?.scaffold?.model?.audio ? [q.freechat.scaffold.model.audio] : []),
+  ];
 }
 
 /** Mọi tệp (ảnh/audio) mà các đoạn nhắc tới, theo thứ tự xuất hiện. */
@@ -190,8 +203,19 @@ export function practiceAssetFiles(p: PracticeSpecT): string[] {
 
 // ── Câu hỏi → { type, prompt, config } ───────────────────────────────────────
 
+/**
+ * `scaffold.model.audio` trong tệp nguồn là đường dẫn tương đối so với thư mục assets; trong cấu hình câu thì là `/api/exam-assets/<tên>` của tệp đã tải lên
+ * (`modelAudio`, do tầng ghi truyền vào). Chưa có tệp đã tải thì bỏ trường audio (đoạn mẫu chỉ có chữ).
+ */
+function withModelAudio<T extends { scaffold?: { model?: { text: string; audio?: string } } }>(fc: T, modelAudio?: string): T {
+  const model = fc.scaffold?.model;
+  if (!model) return fc;
+  const { audio: _file, ...rest } = model;
+  return { ...fc, scaffold: { ...fc.scaffold, model: { ...rest, ...(modelAudio ? { audio: modelAudio } : {}) } } };
+}
+
 /** `explanationAudio`: đường dẫn `/api/exam-assets/<tên>` của audio bài mẫu — do tầng ghi (đã tải tệp lên) truyền vào. */
-export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: string, turnAudio?: Array<string | undefined>): { type: ExamQuestionSpecT["type"]; prompt: string; config: unknown; points?: number } {
+export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: string, turnAudio?: Array<string | undefined>, modelAudio?: string): { type: ExamQuestionSpecT["type"]; prompt: string; config: unknown; points?: number } {
   const explanation = q.explanation?.trim() ? { explanation: q.explanation.trim() } : {};
   const matchMode = q.caseSensitive ? "exact" : "case_insensitive";
   let config: unknown;
@@ -236,7 +260,7 @@ export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: stri
               },
             }
           : {}),
-        ...(q.freechat ? { freechat: q.freechat } : {}),
+        ...(q.freechat ? { freechat: withModelAudio(q.freechat, modelAudio) } : {}),
         ...explanation,
       };
       break;
@@ -309,6 +333,7 @@ export function assetProblems(p: PracticeSpecT, assetsDir: string, where: string
   const audioFiles: Array<{ file: string; what: string }> = [
     ...allQs.flatMap((q) => (q.sampleAudio ? [{ file: q.sampleAudio, what: "audio bài mẫu" }] : [])),
     ...allQs.flatMap((q) => (q.roleplay?.turns ?? []).flatMap((t, i) => (t.audio ? [{ file: t.audio, what: `audio lượt ${i + 1} của hội thoại` }] : []))),
+    ...allQs.flatMap((q) => (q.freechat?.scaffold?.model?.audio ? [{ file: q.freechat.scaffold.model.audio, what: "audio đoạn nói mẫu của bạn ảo" }] : [])),
   ];
   for (const { file, what } of audioFiles) {
     const ext = path.extname(file).toLowerCase();

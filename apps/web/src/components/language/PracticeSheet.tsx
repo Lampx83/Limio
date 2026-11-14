@@ -48,6 +48,8 @@ export interface SheetTab {
   intro?: ReactNode;
   /** Tên bài tập (vd "Ex 2D · …") hiện làm tiêu đề phía trên `intro`, cùng kiểu tiêu đề với thẻ đoạn văn, để biết đang làm bài tập nào. */
   introTitle?: string;
+  /** Biểu tượng đặt trước tên bài tập (vd micro cho bài nói với bạn ảo / đóng vai), để nhận ra ngay đây là phần phải nói. */
+  introIcon?: ReactNode;
 }
 
 const plain = (prompt: string) => (looksLikeHtml(prompt) ? htmlToPlainText(prompt) : prompt);
@@ -611,7 +613,14 @@ export default function PracticeSheet({
         <div key={t.key} id={`ps-panel-${t.key}`} role="tabpanel" aria-labelledby={tabs.length > 1 ? `ps-tab-${t.key}` : undefined} hidden={i !== activeIdx} className="ps-panel">
           {t.intro && t.introTitle && (
             <header className="ps-intro-head">
-              <h2 className="text-h3">{t.introTitle}</h2>
+              <h2 className="text-h3 flex items-center gap-2.5">
+                {t.introIcon && (
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-lime-100 text-lime-700" aria-hidden>
+                    {t.introIcon}
+                  </span>
+                )}
+                {t.introTitle}
+              </h2>
               <div className="mt-1.5 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
             </header>
           )}
