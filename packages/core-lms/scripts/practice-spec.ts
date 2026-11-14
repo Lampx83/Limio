@@ -91,6 +91,8 @@ export const PassageBlock = z.union([
   z.object({ image: z.string().min(1), alt: z.string().min(1) }),
   /** Audio: `file` tương đối so với thư mục assets; transcript hiện cho học viên khi luyện (bấm mở/ẩn). */
   z.object({ audio: z.string().min(1), alt: z.string().min(1), transcript: z.string().optional() }),
+  /** Video (tệp .mp4/.webm tối đa 100 MB): `file` tương đối so với thư mục assets; học viên xem ngay trong đoạn văn, transcript hiện khi luyện. */
+  z.object({ video: z.string().min(1), alt: z.string().min(1), transcript: z.string().optional() }),
 ]);
 export type PassageBlockT = z.infer<typeof PassageBlock>;
 
@@ -142,6 +144,7 @@ const para = (text: string) => {
 export interface AssetUrls {
   image: (file: string, alt: string) => { src: string };
   audio: (file: string, alt: string, transcript?: string) => { src: string };
+  video: (file: string, alt: string) => { src: string };
 }
 
 /** Khối đơn giản → tài liệu Tiptap `{type:"doc"}` (đúng tập nút của trình soạn Đoạn văn). */
@@ -160,6 +163,7 @@ export function buildPassageDoc(blocks: PassageBlockT[], assets: AssetUrls): { t
       content.push({ type: "table", content: rows });
     } else if ("image" in b) content.push({ type: "image", attrs: { ...assets.image(b.image, b.alt), alt: b.alt } });
     else if ("audio" in b) content.push({ type: "audio", attrs: { ...assets.audio(b.audio, b.alt, b.transcript), alt: b.alt } });
+    else if ("video" in b) content.push({ type: "video", attrs: { ...assets.video(b.video, b.alt), alt: b.alt } });
   }
   return { type: "doc", content };
 }
@@ -176,6 +180,7 @@ export function practiceAssetFiles(p: PracticeSpecT): string[] {
     for (const b of ps.blocks) {
       if ("image" in b) out.push(b.image);
       if ("audio" in b) out.push(b.audio);
+      if ("video" in b) out.push(b.video);
     }
     for (const q of ps.questions) out.push(...questionAudioFiles(q));
   }
@@ -278,7 +283,9 @@ export function practiceQuestionCount(p: PracticeSpecT): number {
 
 export const AUDIO_EXT: Record<string, string> = { ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".wav": "audio/wav", ".ogg": "audio/ogg", ".weba": "audio/webm" };
 export const IMAGE_EXT: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif" };
+export const VIDEO_EXT: Record<string, string> = { ".mp4": "video/mp4", ".webm": "video/webm" };
 export const AUDIO_MAX_BYTES = 25 * 1024 * 1024;
+export const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
 export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 
 /** Lỗi của các tệp mà Bài luyện nhắc tới: thiếu tệp, sai đuôi, quá nặng. */
@@ -286,15 +293,15 @@ export function assetProblems(p: PracticeSpecT, assetsDir: string, where: string
   const out: string[] = [];
   for (const ps of p.passages) {
     for (const b of ps.blocks) {
-      const file = "image" in b ? b.image : "audio" in b ? b.audio : null;
+      const file = "image" in b ? b.image : "audio" in b ? b.audio : "video" in b ? b.video : null;
       if (!file) continue;
-      const kind = "image" in b ? "ảnh" : "audio";
+      const kind = "image" in b ? "ảnh" : "video" in b ? "video" : "audio";
       const ext = path.extname(file).toLowerCase();
-      const table = "image" in b ? IMAGE_EXT : AUDIO_EXT;
+      const table = "image" in b ? IMAGE_EXT : "video" in b ? VIDEO_EXT : AUDIO_EXT;
       const full = path.resolve(assetsDir, file);
       if (!table[ext]) out.push(`${where}: ${kind} "${file}" sai định dạng (${Object.keys(table).join(", ")})`);
       else if (!existsSync(full)) out.push(`${where}: không thấy tệp ${kind} "${file}" trong ${assetsDir}`);
-      else if (statSync(full).size > ("image" in b ? IMAGE_MAX_BYTES : AUDIO_MAX_BYTES)) out.push(`${where}: ${kind} "${file}" quá nặng`);
+      else if (statSync(full).size > ("image" in b ? IMAGE_MAX_BYTES : "video" in b ? VIDEO_MAX_BYTES : AUDIO_MAX_BYTES)) out.push(`${where}: ${kind} "${file}" quá nặng`);
     }
   }
   // Audio bài mẫu của câu essay (câu loại khác đã bị `practiceProblems` báo).
@@ -320,7 +327,7 @@ export function uploadsRoot(): string {
 /** Ghi một tệp vào lớp `public` của kho cục bộ: `<kind>/yyyy/mm/<tên>`. Trả tên tệp, loại và dung lượng. */
 export async function storePublicFile(kind: string, localPath: string, namePrefix: string): Promise<{ filename: string; mime: string; size: number }> {
   const ext = path.extname(localPath).toLowerCase();
-  const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext];
+  const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext] ?? VIDEO_EXT[ext];
   if (!mime) throw new Error(`Đuôi tệp không hỗ trợ: ${localPath}`);
   const buf = await readFile(localPath);
   const now = new Date();

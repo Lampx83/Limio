@@ -62,6 +62,7 @@ import { getOwnedPracticeExamId } from "../src/courses/practiceBlock";
 import { createPassage } from "../src/exam/passages";
 import { createExamQuestion } from "../src/exam/questions";
 import { createAudioAsset, createImageAsset } from "../src/exam/assets";
+import { setVideoTranscript } from "../src/exam/passageAssets";
 import {
   type ExamQuestionSpecT,
   PracticeSpec,
@@ -1603,6 +1604,9 @@ export async function importAssignment(actor: string, lessonId: string, a: z.inf
   });
 }
 
+/** Video đã lưu trong lần nhập này (đường dẫn nguồn → tên file), để một clip dùng nhiều chỗ không bị lưu lặp. */
+const videoFilesStored = new Map<string, string>();
+
 /** Tạo một khối Bài luyện: khối + đề ẩn, rồi từng đoạn (kèm ảnh/audio/transcript) và câu hỏi. */
 export async function importPractice(actor: string, lessonId: string, pr: z.infer<typeof PracticeSpec>, orderIndex: number, assetsDir: string) {
   const { contentItemId } = await createContentItem(actor, lessonId, { type: "exam_practice", orderIndex, payload: pr.title ? { title: pr.title } : {} });
@@ -1629,11 +1633,24 @@ export async function importPractice(actor: string, lessonId: string, pr: z.infe
           ...(b.transcript?.trim() ? { transcript: b.transcript.trim() } : {}),
         });
         srcOf.set(`audio:${b.audio}`, `/api/exam-assets/${st.filename}`);
+      } else if ("video" in b) {
+        // Video nằm ở kho video bài học (phát có Range); transcript (nếu có) ở một dòng ExamAsset của đề.
+        // Cùng một clip dùng ở nhiều phiếu thì chỉ lưu một bản (file video lớn).
+        const abs = resolve(assetsDir, b.video);
+        let filename = videoFilesStored.get(abs);
+        if (!filename) {
+          filename = (await storePublicFile("lesson-media/videos", abs, examId)).filename;
+          videoFilesStored.set(abs, filename);
+        }
+        const src = `/api/lesson-media/videos/${filename}`;
+        srcOf.set(`video:${b.video}`, src);
+        if (b.transcript?.trim()) await setVideoTranscript(actor, examId, src, b.transcript.trim(), b.alt);
       }
     }
     const doc = buildPassageDoc(ps.blocks, {
       image: (f) => ({ src: srcOf.get(`image:${f}`)! }),
       audio: (f) => ({ src: srcOf.get(`audio:${f}`)! }),
+      video: (f) => ({ src: srcOf.get(`video:${f}`)! }),
     });
     const { passageId } = await createPassage(actor, examId, { title: ps.title, contentJson: doc });
     for (const q of ps.questions) {

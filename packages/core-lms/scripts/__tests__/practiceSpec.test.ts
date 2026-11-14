@@ -299,3 +299,44 @@ describe("freechat (thử nói tự do) của câu essay", () => {
     expect(PracticeSpec.safeParse({ questions: [{ type: "essay", prompt: "x", freechat: { ...fc, maxTurns: 2 } }] }).success).toBe(false);
   });
 });
+
+describe("video trong đoạn văn của Bài luyện", () => {
+  const spec = { passages: [{ title: "DVD", blocks: [{ p: "Watch." }, { video: "video/clip.mp4", alt: "Clip", transcript: "A: Hello." }], questions: [{ type: "essay", prompt: "Q" }] }], questions: [] };
+
+  it("spec nhận khối video; buildPassageDoc dựng nút video có alt và đường dẫn do tầng ghi cấp", () => {
+    const p = PracticeSpec.parse(spec);
+    const doc = buildPassageDoc(p.passages[0]!.blocks, { image: () => ({ src: "" }), audio: () => ({ src: "" }), video: (f) => ({ src: `/api/lesson-media/videos/${f}` }) });
+    expect(doc.content).toContainEqual({ type: "video", attrs: { src: "/api/lesson-media/videos/video/clip.mp4", alt: "Clip" } });
+  });
+
+  it("dry-run: thiếu tệp, sai đuôi, quá nặng đều báo lỗi", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "assets-"));
+    mkdirSync(path.join(dir, "video"));
+    writeFileSync(path.join(dir, "video", "clip.mp4"), "x");
+    expect(assetProblems(PracticeSpec.parse(spec), dir, "bài")).toEqual([]);
+    const bad = PracticeSpec.parse({ passages: [{ title: "D", blocks: [{ video: "video/none.mp4", alt: "a" }, { video: "video/clip.avi", alt: "b" }], questions: [] }], questions: [] });
+    const msgs = assetProblems(bad, dir, "bài");
+    expect(msgs).toHaveLength(2);
+    expect(msgs[0]).toMatch(/không thấy tệp video "video\/none.mp4"/);
+    expect(msgs[1]).toMatch(/video "video\/clip.avi" sai định dạng/);
+  });
+
+  it("importPractice (DB): ghi tệp vào kho video bài học, nút video trỏ đúng, transcript lưu ở ExamAsset video", async () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "assets-"));
+    mkdirSync(path.join(dir, "video"));
+    writeFileSync(path.join(dir, "video", "clip.mp4"), Buffer.from("fake-mp4"));
+    process.env.UPLOADS_ROOT = mkdtempSync(path.join(tmpdir(), "uploads-"));
+    const owner = (await registerUser({ email: "ps-video@e.com", password: "password1234", displayName: "O" }, "http://localhost:3000")).userId;
+    const c = await createCourse(owner, { title: "Speakout video", description: "x", slug: "ps-video-course" });
+    const m = await createModule(owner, c.courseId, { title: "Unit 1", orderIndex: 0 });
+    const l = await createLesson(owner, m.moduleId, { title: "1.4 View", orderIndex: 0 });
+    await importPractice(owner, l.lessonId, PracticeSpec.parse(spec), 0, dir);
+    const block = await prisma.contentItem.findFirstOrThrow({ where: { lessonId: l.lessonId, type: "exam_practice" } });
+    const exam = await prisma.exam.findUniqueOrThrow({ where: { ownerContentItemId: block.id }, include: { passages: true, assets: true } });
+    const node = (exam.passages[0]!.contentJson as { content: Array<{ type: string; attrs?: { src?: string; alt?: string } }> }).content.find((n) => n.type === "video")!;
+    expect(node.attrs!.src).toMatch(/^\/api\/lesson-media\/videos\/[A-Za-z0-9._-]+\.mp4$/);
+    expect(node.attrs!.alt).toBe("Clip");
+    const v = exam.assets.find((a) => a.type === "video")!;
+    expect(v).toMatchObject({ transcript: "A: Hello.", s3Key: node.attrs!.src!.split("/").pop() });
+  });
+});
