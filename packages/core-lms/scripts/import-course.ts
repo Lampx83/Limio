@@ -789,6 +789,13 @@ export function markdownToHtml(
         i++;
         continue;
       }
+      // `:::folio 9` — số trang của sách ở đầu khối bài (một dòng nhỏ, mờ, căn phải): học viên có sách đối chiếu được, người không có sách vẫn đọc bình thường.
+      const folio = BOOK ? /^:::folio\s+(\d+)\s*$/.exec(t) : null;
+      if (folio) {
+        out.push(`<p style="margin:0 0 .6rem;text-align:right;font-size:.8125rem;letter-spacing:.04em;color:${MUTED}">Student\u2019s Book \u00b7 page ${folio[1]}</p>`);
+        i++;
+        continue;
+      }
       const ref = BOOK ? /^:::ref\b\s*(.*)$/.exec(t) : null;
       if (ref) {
         // Dòng chỉ dẫn của sách: "page 104 LANGUAGEBANK" -> tam giác màu nhấn, số trang nhạt, tên ngân hàng đậm (một dòng, không đóng :::).

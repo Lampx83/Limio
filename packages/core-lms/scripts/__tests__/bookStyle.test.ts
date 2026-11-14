@@ -87,6 +87,19 @@ describe("markdownToHtml — phong cách sách", () => {
     expect(html).toContain("Sau đó là đoạn văn.");
   });
 
+  it("`:::folio 9` thành một dòng nhỏ 'Student’s Book · page 9' căn phải, một dòng không cần đóng :::", () => {
+    setBookStyle("229,0,92");
+    const html = markdownToHtml(":::folio 9\n\nĐoạn văn.");
+    expect(html).toContain("Student\u2019s Book \u00b7 page 9");
+    expect(html).toContain("text-align:right");
+    expect(html).toContain("Đoạn văn.");
+    expect(markdownToHtml(":::folio x\n\nA")).not.toContain("page x"); // số không hợp lệ thì không dựng dòng trang
+  });
+
+  it("không bật bookStyle thì chỉ thị folio và các chỉ thị hộp không có tác dụng đặc biệt (không dựng hộp sách)", () => {
+    expect(markdownToHtml(":::folio 9")).not.toContain("page 9");
+  });
+
   it("không bật bookStyle thì các chỉ thị hộp không có tác dụng đặc biệt (không dựng hộp sách)", () => {
     expect(markdownToHtml(":::rules\nx\n:::")).not.toContain("writing-mode");
   });
