@@ -284,4 +284,6 @@ export const viLearn = {
   "learn.task.teamsLocked": "Danh sách nhóm đã khoá — bạn liên hệ giảng viên để được xếp nhóm.",
   "learn.task.joinTeam": "Tạo hoặc vào nhóm →",
   "learn.task.empty": "Bài học này chưa có bài tập nào.",
+  "learn.practice.roleplay": "Đóng vai",
+  "learn.practice.freechat": "Nói với bạn ảo",
 } as const;

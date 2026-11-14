@@ -287,4 +287,6 @@ export const enLearn: PartialDict<typeof viLearn> = {
   "learn.task.teamsLocked": "The group list is locked — contact your instructor to be assigned to a group.",
   "learn.task.joinTeam": "Create or join a group →",
   "learn.task.empty": "This lesson has no assignments yet.",
+  "learn.practice.roleplay": "Role-play",
+  "learn.practice.freechat": "Talk with a virtual partner",
 };

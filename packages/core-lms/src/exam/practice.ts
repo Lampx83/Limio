@@ -292,6 +292,8 @@ export function publicAiFeedback(raw: unknown): unknown | null {
 export interface PracticeEmbed {
   examId: string;
   title: string;
+  /** Ngôn ngữ của khoá chứa đề (để giao diện biết có hiện bộ câu tiếng Anh cố định hay không). Thiếu = không rõ. */
+  courseLanguage?: string | null;
   /** null = chưa có buổi luyện dở: buổi chỉ được tạo khi học viên chọn đáp án đầu tiên. */
   sessionId: string | null;
   checkEnabled: boolean;
@@ -334,6 +336,7 @@ export async function getPracticeForEmbed(userId: string, examId: string, db: Pr
     return {
       examId,
       title: exam.title,
+      courseLanguage: await courseLanguageOfExam(examId, db),
       sessionId: s.sessionId,
       checkEnabled: s.checkEnabled,
       timed: s.timed,
@@ -363,6 +366,12 @@ async function embedPassages(examId: string, db: PrismaClient) {
   return withTranscripts(examId, all, db);
 }
 
+/** Ngôn ngữ của khoá chứa đề (null nếu đề không thuộc khoá hoặc khoá chưa đặt). */
+async function courseLanguageOfExam(examId: string, db: PrismaClient): Promise<string | null> {
+  const e = await db.exam.findUnique({ where: { id: examId }, select: { course: { select: { language: true } } } });
+  return e?.course?.language ?? null;
+}
+
 /** Dữ liệu nhúng khi CHƯA có buổi luyện dở: cả đề, cấu hình công khai (không đáp án), chưa có đáp án nào. */
 /** `seed`: hạt xáo trộn (mã học viên) — cùng hạt với getPracticeSession nên thứ tự giữ nguyên khi buổi luyện được tạo. */
 async function buildFreshEmbed(examId: string, title: string, seed: string, db: PrismaClient): Promise<PracticeEmbed> {
@@ -370,6 +379,7 @@ async function buildFreshEmbed(examId: string, title: string, seed: string, db: 
   return {
     examId,
     title,
+    courseLanguage: await courseLanguageOfExam(examId, db),
     sessionId: null,
     checkEnabled: true,
     timed: false,

@@ -1037,12 +1037,12 @@ function ConversationFields({
         </select>
       </label>
       {mode === "script" && <RolePlayFields examId={examId} value={roleplay} onChange={onRoleplay} />}
-      {mode === "free" && <FreeChatFields value={freechat} onChange={onFreechat} />}
+      {mode === "free" && <FreeChatFields examId={examId} value={freechat} onChange={onFreechat} />}
     </div>
   );
 }
 
-function FreeChatFields({ value, onChange }: { value: FreeChatDraft; onChange: (v: FreeChatDraft) => void }) {
+function FreeChatFields({ examId, value, onChange }: { examId: string; value: FreeChatDraft; onChange: (v: FreeChatDraft) => void }) {
   const set = (patch: Partial<FreeChatDraft>) => onChange({ ...value, ...patch });
   const missing = !value.scenario.trim() || !value.opening.trim();
   return (
@@ -1076,6 +1076,39 @@ function FreeChatFields({ value, onChange }: { value: FreeChatDraft; onChange: (
         <span className="block text-sm font-medium">Cụm mục tiêu (mỗi dòng một cụm, tối đa 10)</span>
         <textarea value={value.targets} rows={4} onChange={(e) => set({ targets: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder={"I'm not sure about that\nThat's not really essential"} aria-label="Cụm mục tiêu" />
         <span className="block text-caption text-faint">Học viên thấy các cụm này để dùng; cụm nào đã dùng thì được đánh dấu ✓. Bạn ảo cũng dùng tự nhiên một vài cụm. Có "…" ở cuối thì chỉ cần dùng phần đầu.</span>
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium">Đoạn nói mẫu (tiếng Anh, 3–5 câu; bọc mẫu câu trong **…** để tô sáng)</span>
+        <textarea value={value.modelText ?? ""} rows={4} maxLength={700} onChange={(e) => set({ modelText: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder={"**I would take** my phone **because** it has all my photos. What about you?"} aria-label="Đoạn nói mẫu" />
+        <span className="block text-caption text-faint">Học viên nghe và đọc đoạn này trước khi nói; phần trong ** ** được tô sáng để họ nhận ra mẫu câu dùng được. Nên dùng đúng các mẫu câu và cụm từ bên dưới.</span>
+      </label>
+      <EssayAudioField
+        examId={examId}
+        value={value.modelAudio ?? ""}
+        onChange={(modelAudio) => set({ modelAudio })}
+        label="Audio đoạn nói mẫu"
+        altText="Audio đoạn nói mẫu của bạn ảo"
+        hint="Có thể để trống: khi đó học viên chỉ đọc chữ."
+      />
+      <label className="block">
+        <span className="block text-sm font-medium">Ý tưởng gợi ý (tiếng Việt, mỗi dòng một ý)</span>
+        <textarea value={value.ideas ?? ""} rows={3} onChange={(e) => set({ ideas: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder={"Chọn một món và nói vì sao\nNghĩ tới giấy tờ, điện thoại, ảnh gia đình"} aria-label="Ý tưởng gợi ý" />
+        <span className="block text-caption text-faint">Tối đa 4 ý. Học viên đọc khi bí ý; viết ngắn, bằng tiếng Việt.</span>
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium">Mẫu câu (mỗi dòng: câu tiếng Anh có ___ | nghĩa tiếng Việt)</span>
+        <textarea value={value.frames ?? ""} rows={4} onChange={(e) => set({ frames: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder={"I would take ___ because ___. | Tôi sẽ mang ___ vì ___.\nThe first thing I'd grab is ___. | Thứ đầu tiên tôi lấy là ___."} aria-label="Mẫu câu" />
+        <span className="block text-caption text-faint">Tối đa 8 mẫu. Học viên bấm để chèn vào ô, chỗ trống ___ phải điền mới gửi được. Mẫu thay cho danh sách cụm mục tiêu ở màn học viên (✓ tính theo phần đầu của mẫu); nên để mỗi cụm mục tiêu là phần đầu của một mẫu.</span>
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium">Cụm từ hữu ích (mỗi dòng: cụm từ | nghĩa)</span>
+        <textarea value={value.phrases ?? ""} rows={4} onChange={(e) => set({ phrases: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder={"take my passport | mang theo hộ chiếu\nit has great value to me | nó rất có giá trị với tôi"} aria-label="Cụm từ hữu ích" />
+        <span className="block text-caption text-faint">Tối đa 12 cụm dùng được ngay (vd. "stick to a routine"). Học viên bấm để chèn cụm vào ô.</span>
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium">Từ vựng (mỗi dòng: từ | nghĩa)</span>
+        <textarea value={value.vocab ?? ""} rows={4} onChange={(e) => set({ vocab: e.target.value })} className="mt-1 w-full rounded border border-default px-2 py-1 text-sm" placeholder={"passport | hộ chiếu\nvaluable | đáng giá"} aria-label="Từ vựng" />
+        <span className="block text-caption text-faint">Tối đa 12 từ. Học viên bấm để chèn từ vào ô.</span>
       </label>
       {missing && (
         <p role="alert" className="text-caption text-red-700">

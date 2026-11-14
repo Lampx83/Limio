@@ -7,6 +7,7 @@ import { useAudioRecorder } from "@/components/useAudioRecorder";
 import { voiceErrorMessage } from "@/lib/practiceEssayView";
 import { answerTextOf, compareSpoken, otherRole, restoreSpoken, type RoleId, type RolePlayConfig } from "@/lib/rolePlayView";
 import { VoiceUseError } from "./EssayVoiceAnswer";
+import { useT, useUiLang } from "@/lib/i18n/client";
 
 /** Mỗi lượt ghi tối đa 30 giây (docs/tieu-chi/limio-language-luyen-hoi-thoai-dong-vai.md, AC1). */
 const TURN_MAX_SECONDS = 30;
@@ -37,6 +38,8 @@ export default function RolePlay({
   audioUrl: (path: string) => string;
   preview: boolean;
 }) {
+  const t = useT();
+  const lang = useUiLang();
   const restored = useRef(restoreSpoken(savedText, rp));
   const [role, setRole] = useState<RoleId>(restored.current?.role ?? "A");
   const [spoken, setSpoken] = useState<Spoken>(() => ({ A: {}, B: {}, ...(restored.current ? { [restored.current.role]: restored.current.spoken } : {}) }) as Spoken);
@@ -76,7 +79,7 @@ export default function RolePlay({
       setSkipped((p) => ({ ...p, [turn]: false }));
       onAnswer(answerTextOf(who, rp, next[who]));
     } catch (e) {
-      setError(voiceErrorMessage(e instanceof VoiceUseError ? e.code : "network"));
+      setError(voiceErrorMessage(e instanceof VoiceUseError ? e.code : "network", lang));
     } finally {
       setBusyTurn(null);
     }
@@ -146,8 +149,8 @@ export default function RolePlay({
   return (
     <div className="rp" data-testid="roleplay">
       <div className="rp-bar">
-        <div role="group" aria-label="Chọn vai" className="rp-roles">
-          <span className="rp-bar-label">Em đóng vai</span>
+        <div role="group" aria-label={t("practice.rp.chooseRole")} className="rp-roles">
+          <span className="rp-bar-label">{t("practice.rp.youPlay")}</span>
           {(["A", "B"] as const).map((r) => (
             <button key={r} type="button" aria-pressed={role === r} className="rp-role" onClick={() => changeRole(r)} disabled={recTurn !== null || busyTurn !== null}>
               <span className="rp-badge">{r}</span> {rp.roles[r] !== r ? rp.roles[r] : ""}
@@ -156,21 +159,21 @@ export default function RolePlay({
         </div>
         {hasAnyAudio && (
           <button type="button" className="rp-listen" onClick={() => (playing === "all" ? stopAudio() : void playAll())}>
-            {playing === "all" ? <Square size={14} aria-hidden /> : <Play size={14} aria-hidden />} {playing === "all" ? "Dừng nghe" : "Nghe cả hội thoại"}
+            {playing === "all" ? <Square size={14} aria-hidden /> : <Play size={14} aria-hidden />} {playing === "all" ? t("practice.say.stopListening") : t("practice.rp.hearAll")}
           </button>
         )}
       </div>
 
       <ol className="rp-turns">
-        {rp.turns.map((t, i) => {
-          const isMine = t.speaker === role;
+        {rp.turns.map((turn, i) => {
+          const isMine = turn.speaker === role;
           const heard = mine[i];
-          const cmp = isMine && heard !== undefined ? compareSpoken(t.text, heard) : null;
-          const label = `Lượt ${i + 1}, vai ${t.speaker}${isMine ? ", của bạn" : ", của bạn ảo"}`;
+          const cmp = isMine && heard !== undefined ? compareSpoken(turn.text, heard) : null;
+          const label = t(isMine ? "practice.rp.turnLabelMine" : "practice.rp.turnLabelPartner", { n: i + 1, r: turn.speaker });
           return (
             <li key={i} className="rp-turn" data-mine={isMine ? "" : undefined} data-current={isMine && i === nextTurn && !recording ? "" : undefined} aria-label={label}>
               <span className="rp-badge" aria-hidden>
-                {t.speaker}
+                {turn.speaker}
               </span>
               <div className="rp-body">
                 <p className="rp-text">
@@ -181,13 +184,13 @@ export default function RolePlay({
                       </span>
                     ))
                   ) : (
-                    t.text
+                    turn.text
                   )}
                 </p>
 
-                {!isMine && t.audio && (
-                  <button type="button" className="rp-btn" onClick={() => (playing === i ? stopAudio() : void playTurn(i))} aria-label={`${playing === i ? "Dừng nghe" : "Nghe"} lượt ${i + 1}`}>
-                    {playing === i ? <Square size={14} aria-hidden /> : <Play size={14} aria-hidden />} {playing === i ? "Dừng" : "Nghe"}
+                {!isMine && turn.audio && (
+                  <button type="button" className="rp-btn" onClick={() => (playing === i ? stopAudio() : void playTurn(i))} aria-label={playing === i ? t("practice.rp.stopTurn", { n: i + 1 }) : t("practice.rp.listenTurn", { n: i + 1 })}>
+                    {playing === i ? <Square size={14} aria-hidden /> : <Play size={14} aria-hidden />} {playing === i ? t("practice.say.stop") : t("practice.say.listen")}
                   </button>
                 )}
 
@@ -195,8 +198,8 @@ export default function RolePlay({
                   <div className="rp-actions">
                     {recording && recTurn === i ? (
                       <>
-                        <button type="button" className="rp-btn rp-btn-primary" onClick={rec.stop} aria-label="Dừng ghi âm và kiểm tra">
-                          <Square size={14} aria-hidden /> Dừng và kiểm tra
+                        <button type="button" className="rp-btn rp-btn-primary" onClick={rec.stop} aria-label={t("practice.rp.stopCheckAria")}>
+                          <Square size={14} aria-hidden /> {t("practice.rp.stopCheck")}
                         </button>
                         <span role="timer" aria-live="off" className="rp-timer">
                           <span className="rp-dot" aria-hidden /> {formatClock(rec.seconds)} / {formatClock(TURN_MAX_SECONDS)}
@@ -204,19 +207,19 @@ export default function RolePlay({
                       </>
                     ) : busyTurn === i ? (
                       <span className="rp-hint" aria-live="polite">
-                        Đang nghe…
+                        {t("practice.rp.hearing")}
                       </span>
                     ) : (
                       <>
                         <button type="button" className="rp-btn rp-btn-primary" disabled={recTurn !== null || busyTurn !== null} onClick={() => void startRecording(i)}>
-                          <Mic size={14} aria-hidden /> {heard !== undefined ? "Ghi lại" : "Ghi âm"}
+                          <Mic size={14} aria-hidden /> {heard !== undefined ? t("practice.rp.rerecord") : t("practice.rp.record")}
                         </button>
                         {heard === undefined && !skipped[i] && (
                           <button type="button" className="rp-link" disabled={recTurn !== null || busyTurn !== null} onClick={() => setSkipped((p) => ({ ...p, [i]: true }))}>
-                            Bỏ qua lượt này
+                            {t("practice.rp.skip")}
                           </button>
                         )}
-                        {skipped[i] && heard === undefined && <span className="rp-hint">Đã bỏ qua</span>}
+                        {skipped[i] && heard === undefined && <span className="rp-hint">{t("practice.rp.skipped")}</span>}
                       </>
                     )}
                   </div>
@@ -224,8 +227,8 @@ export default function RolePlay({
 
                 {cmp && (
                   <p className="rp-heard" data-testid="rp-heard">
-                    Máy nghe được: “{heard}” · {cmp.okCount}/{cmp.total} từ khớp câu mẫu
-                    {cmp.extra.length > 0 && <> · thừa/khác: {cmp.extra.join(", ")}</>}
+                    {t("practice.rp.heard", { heard: heard ?? "", ok: cmp.okCount, total: cmp.total })}
+                    {cmp.extra.length > 0 && t("practice.rp.extra", { w: cmp.extra.join(", ") })}
                   </p>
                 )}
               </div>
@@ -235,9 +238,9 @@ export default function RolePlay({
       </ol>
 
       <p className="rp-hint" aria-live="polite">
-        {total > 0 ? `Em đã nói ${doneCount}/${total} lượt của vai ${role}. ` : ""}
-        {preview ? "Xem thử: ghi âm và chuyển chữ được nhưng không lưu gì. " : ""}
-        {doneCount > 0 && otherRole(role) ? "Có thể đổi vai để luyện nốt phần còn lại." : ""}
+        {total > 0 ? t("practice.rp.summary", { done: doneCount, total, role }) : ""}
+        {preview ? t("practice.rp.previewNote") : ""}
+        {doneCount > 0 && otherRole(role) ? t("practice.rp.swap") : ""}
       </p>
 
       {err && (

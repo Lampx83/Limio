@@ -9,10 +9,15 @@ import {
   FREECHAT_FALLBACK,
   buildFreeChatMessages,
   guardPartnerReply,
+  frameSpeechText,
   nextTurnNumber,
   parseFreeChat,
+  parseScaffold,
+  phraseUsed,
   sanitizeHistory,
+  unusedTargets,
 } from "../practiceAnswer/freechat";
+import { frameTextOf } from "../practiceAnswer/feedback";
 
 // docs/tieu-chi/limio-language-noi-tu-do-voi-ban-ao.md
 
@@ -39,6 +44,71 @@ describe("parseFreeChat", () => {
     expect(parseFreeChat({ freechat: { opening: "y" } })).toBeNull();
     expect(parseFreeChat({})).toBeNull();
     expect(parseFreeChat(null)).toBeNull();
+  });
+});
+
+describe("scaffolding mốc 1 — dữ liệu và so khớp", () => {
+  // BẢNG DÙNG CHUNG với apps/web/src/lib/freeChatView.test.ts: hai bản phraseUsed phải cho cùng kết quả trên từng dòng.
+  const PHRASE_CASES: Array<[string, string, boolean]> = [
+    ["I'm not sure about that", "Hmm, i’m NOT sure about that!", true],
+    ["I'm not sure about that", "I am not sure about that", false],
+    ["When was the last time you…?", "When was the last time you cooked?", true],
+    ["not really", "That is nothing really", false],
+    ["sure", "I am unsure", false],
+    ["…", "anything", false],
+    ["I would take…", "I would take my phone because it is useful", true],
+    ["I prefer … because …", "I prefer cities because it's lively", true],
+    ["One advantage of … is …", "One advantage of living here is the quiet", true],
+    ["One advantage of … is …", "It is quiet. One advantage of it", false],
+    ["I prefer … because …", "Because it is calm I prefer cities", false],
+  ];
+  it.each(PHRASE_CASES)("phraseUsed(%j, %j) = %s", (target, text, want) => {
+    expect(phraseUsed(target, text)).toBe(want);
+  });
+
+  it("parseScaffold: cắt giới hạn, bỏ mục sai dạng hoặc thiếu chữ Anh, rỗng hết thì null", () => {
+    const sc = parseScaffold({
+      ideas: ["Chọn một món", "", 5, "x".repeat(300)],
+      frames: [{ en: "I would take ___ because ___.", vi: "Tôi sẽ mang ___ vì ___." }, { en: "", vi: "bỏ" }, "sai", { en: "Only English" }],
+      phrases: Array.from({ length: 20 }, (_, i) => ({ en: `p${i}`, vi: "nghĩa" })),
+      vocab: Array.from({ length: 20 }, (_, i) => ({ en: `v${i}`, vi: "nghĩa" })),
+      model: { text: "**I would take** my phone.", audio: "/api/exam-assets/x.m4a" },
+    })!;
+    expect(sc.ideas).toHaveLength(2);
+    expect(sc.ideas[1]).toHaveLength(120);
+    expect(sc.frames).toEqual([
+      { en: "I would take ___ because ___.", vi: "Tôi sẽ mang ___ vì ___." },
+      { en: "Only English", vi: "" },
+    ]);
+    expect(sc.phrases).toHaveLength(12);
+    expect(sc.vocab).toHaveLength(12);
+    expect(sc.model).toEqual({ text: "**I would take** my phone.", audio: "/api/exam-assets/x.m4a" });
+    expect(parseScaffold({ model: { text: "Hi", audio: "https://evil.example/x.mp3" } })!.model).toEqual({ text: "Hi", audio: "" }); // audio ngoài kho đề bị bỏ
+    expect(parseScaffold({ ideas: [], frames: [], phrases: [], vocab: [] })).toBeNull();
+    expect(parseScaffold("x")).toBeNull();
+    expect(parseScaffold(undefined)).toBeNull();
+  });
+
+  it("parseFreeChat mang scaffold (null khi không có)", () => {
+    expect(parseFreeChat(CFG)!.scaffold).toBeNull();
+    const withSc = parseFreeChat({ freechat: { ...CFG.freechat, scaffold: { frames: [{ en: "I prefer ___.", vi: "Tôi thích ___." }] } } })!;
+    expect(withSc.scaffold!.frames).toHaveLength(1);
+  });
+
+  it("frameSpeechText: chỗ trống thành quãng nghỉ; frameTextOf chỉ nhận chỉ số hợp lệ", () => {
+    expect(frameSpeechText("I would take ___ because ___.")).toBe("I would take, because, .");
+    expect(frameSpeechText("___ is important.")).toBe("is important.");
+    const cfg = parseFreeChat({ freechat: { ...CFG.freechat, scaffold: { frames: [{ en: "I prefer ___ because ___.", vi: "" }, { en: "___", vi: "" }] } } })!;
+    expect(frameTextOf(cfg, 0)).toBe("I prefer, because, .");
+    for (const bad of [1, 2, -1, 1.5, Number.NaN]) expect(() => frameTextOf(cfg, bad)).toThrow(PracticeFeedbackError); // 1 = chỉ có chỗ trống, không có chữ để đọc
+    expect(() => frameTextOf(parseFreeChat(CFG)!, 0)).toThrow(PracticeFeedbackError);
+  });
+
+  it("unusedTargets: giữ thứ tự soạn, loại cụm đã dùng ở bất kỳ lời nào", () => {
+    const targets = ["I prefer … because …", "One advantage of … is …", "It depends on …"];
+    expect(unusedTargets(targets, [])).toEqual(targets);
+    expect(unusedTargets(targets, ["I prefer cities because it's lively."])).toEqual(["One advantage of … is …", "It depends on …"]);
+    expect(unusedTargets(targets, ["it depends on the day", "One advantage of cities is jobs"])).toEqual(["I prefer … because …"]);
   });
 });
 
@@ -71,6 +141,23 @@ describe("buildFreeChatMessages", () => {
     expect(m[0]!.content).toContain('"I\'m not sure about that"');
     expect(m[1]).toEqual({ role: "assistant", content: CFG.freechat.opening });
     expect(m.at(-1)).toEqual({ role: "user", content: "I take my phone." });
+  });
+});
+
+describe("buildFreeChatMessages — dẫn cụm chưa dùng và recast", () => {
+  const cfg = parseFreeChat(CFG)!;
+  it("luôn dặn recast (dùng lại dạng đúng, không chỉ lỗi, không nói 'nên nói')", () => {
+    const sys = buildFreeChatMessages(cfg, [], "I take phone.", { language: "en", levelBand: null })[0]!.content;
+    expect(sys).toMatch(/quietly use the correct form/);
+    expect(sys).toMatch(/never say what they "should" say/);
+  });
+  it("có cụm chưa dùng thì dặn hỏi MỘT câu cần cụm đó, không nhắc tên cụm; không có thì không có đoạn này", () => {
+    const none = buildFreeChatMessages(cfg, [], "x", { language: "en", levelBand: null })[0]!.content;
+    expect(none).not.toMatch(/has not yet had the chance/);
+    const sys = buildFreeChatMessages(cfg, [], "x", { language: "en", levelBand: null }, { unused: ["I prefer … because …"] })[0]!.content;
+    expect(sys).toMatch(/has not yet had the chance to use: "I prefer … because …"/);
+    expect(sys).toMatch(/Never mention the phrase, never tell the learner to use it/);
+    expect(sys).toMatch(/simpler question instead/);
   });
 });
 
@@ -147,6 +234,25 @@ describe("runFreeChatTurn (DB)", () => {
     expect(ev).toHaveLength(1);
     expect(ev[0]!.payload).toMatchObject({ turn: 1, learnerChars: 23, tokensIn: 120, tokensOut: 15 });
     expect(JSON.stringify(ev[0]!.payload)).not.toContain("laptop");
+  });
+
+  it("dẫn học viên vào cụm chưa dùng: không ở lượt 1, có từ lượt 2 (chỉ cụm chưa dùng), không ở lượt cuối", async () => {
+    const f = await fx();
+    const sysOf = (c: { messages: { role: string; content: string }[] }) => c.messages[0]!.content;
+    const pair = (a: string) => [
+      { role: "learner", text: a },
+      { role: "partner", text: "Why?" },
+    ];
+    const first = fakeChat();
+    await turn(f, first.openai, "I'm not sure about that.");
+    expect(sysOf(first.calls[0]!)).not.toMatch(/has not yet had the chance/); // lượt 1: để hội thoại mở đầu tự nhiên
+    const second = fakeChat();
+    await turn(f, second.openai, "My phone.", pair("I'm not sure about that."));
+    expect(sysOf(second.calls[0]!)).toMatch(/has not yet had the chance to use: "That's not really essential"/); // cụm đã dùng ở lượt 1 không bị dẫn lại
+    expect(sysOf(second.calls[0]!)).not.toMatch(/has not yet had the chance to use: [^\n]*I'm not sure about that/);
+    const last = fakeChat();
+    await turn(f, last.openai, "Done.", [...pair("a"), ...pair("b"), ...pair("c")]);
+    expect(sysOf(last.calls[0]!)).not.toMatch(/has not yet had the chance/); // lượt 4/4: không còn lượt nào để học viên nói
   });
 
   it("lượt thứ hai mang lịch sử; quá số lượt thì turn_limit, chưa gọi mô hình", async () => {

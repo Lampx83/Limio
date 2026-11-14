@@ -21,7 +21,7 @@ import {
   type Transcriber,
 } from "../speaking/feedback";
 import type { OpenAiSource } from "../writing/feedback";
-import { type FreeChatReply, emitFreeChatTurn, generateFreeChatReply, parseFreeChat, type FreeChatConfig } from "./freechat";
+import { type FreeChatReply, emitFreeChatTurn, frameSpeechText, generateFreeChatReply, parseFreeChat, type FreeChatConfig } from "./freechat";
 import {
   PRACTICE_PROMPT_VERSION,
   PRACTICE_SCHEMA,
@@ -377,4 +377,24 @@ export async function getFreeChatOpening(
 ): Promise<{ opening: string; language: string | null }> {
   const { ctx, cfg } = await freeChatContext(args.userId, args.sessionId, args.questionId, db);
   return { opening: cfg.opening, language: ctx.courseLanguage };
+}
+
+/**
+ * Chữ đọc thành tiếng của MỘT mẫu câu trong `scaffold.frames` (màn chuẩn bị, docs/tieu-chi/limio-language-ban-ao-scaffolding-moc-1.md AC3). Cùng điều kiện
+ * truy cập với lời mở đầu; văn bản luôn lấy từ cấu hình câu ở máy chủ, chỉ số ngoài khoảng thì `not_found`.
+ */
+export async function getFreeChatFrame(
+  args: { userId: string; sessionId: string; questionId: string; frame: number },
+  db: PrismaClient = prisma,
+): Promise<{ text: string; language: string | null }> {
+  const { ctx, cfg } = await freeChatContext(args.userId, args.sessionId, args.questionId, db);
+  return { text: frameTextOf(cfg, args.frame), language: ctx.courseLanguage };
+}
+
+/** Chữ đọc của mẫu câu thứ `frame` của cấu hình (dùng chung cho buổi luyện và xem thử); chỉ số sai hoặc mẫu rỗng thì `not_found`. */
+export function frameTextOf(cfg: { scaffold: { frames: Array<{ en: string }> } | null }, frame: number): string {
+  const f = Number.isInteger(frame) ? cfg.scaffold?.frames[frame] : undefined;
+  const text = f ? frameSpeechText(f.en) : "";
+  if (!text) throw new PracticeFeedbackError("not_found");
+  return text;
 }

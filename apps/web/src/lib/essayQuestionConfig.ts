@@ -7,7 +7,7 @@
  */
 
 import { parseRolePlay, parseScript } from "./rolePlayView";
-import { parseFreeChatView } from "./freeChatView";
+import { parseFreeChatView, parseScaffoldView } from "./freeChatView";
 
 /** Hội thoại đóng vai trong trình soạn: kịch bản viết bằng chữ ("A: …"/"B: …" mỗi dòng), tên hai vai và audio từng lượt (theo thứ tự lượt). */
 export interface RolePlayDraft {
@@ -55,9 +55,27 @@ export interface FreeChatDraft {
   opening: string;
   targets: string;
   maxTurns: number;
+  /**
+   * Gợi ý soạn sẵn (docs/tieu-chi/limio-language-ban-ao-scaffolding-moc-1.md AC4): ý tưởng (mỗi dòng một ý), mẫu câu "câu có ___ | nghĩa", cụm từ và từ vựng
+   * "mục | nghĩa", đoạn nói mẫu (`modelText` có `**…**` tô sáng mẫu câu) và audio của nó (`modelAudio`, đường dẫn `/api/exam-assets/<tên>`).
+   */
+  ideas?: string;
+  frames?: string;
+  phrases?: string;
+  vocab?: string;
+  modelText?: string;
+  modelAudio?: string;
 }
 
-export const emptyFreeChatDraft = (): FreeChatDraft => ({ scenario: "", partnerRole: "", learnerRole: "", opening: "", targets: "", maxTurns: 8 });
+export const emptyFreeChatDraft = (): FreeChatDraft => ({ scenario: "", partnerRole: "", learnerRole: "", opening: "", targets: "", maxTurns: 8, ideas: "", frames: "", phrases: "", vocab: "", modelText: "", modelAudio: "" });
+
+/** "câu | nghĩa" → { en, vi }; thiếu nghĩa thì vi rỗng. Dấu `|` đầu tiên là chỗ tách. */
+const splitPair = (line: string): { en: string; vi: string } => {
+  const i = line.indexOf("|");
+  return i < 0 ? { en: line.trim(), vi: "" } : { en: line.slice(0, i).trim(), vi: line.slice(i + 1).trim() };
+};
+const joinPairs = (a: Array<{ en: string; vi: string }>): string => a.map((x) => (x.vi ? `${x.en} | ${x.vi}` : x.en)).join("\n");
+const lines = (t: string): string[] => t.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
 
 export function freeChatDraftFromConfig(cfg: Record<string, unknown>): FreeChatDraft {
   const v = parseFreeChatView(cfg);
@@ -69,6 +87,12 @@ export function freeChatDraftFromConfig(cfg: Record<string, unknown>): FreeChatD
     opening: v.opening,
     targets: v.targets.join("\n"),
     maxTurns: v.maxTurns,
+    ideas: (v.scaffold?.ideas ?? []).join("\n"),
+    frames: joinPairs(v.scaffold?.frames ?? []),
+    phrases: joinPairs(v.scaffold?.phrases ?? []),
+    vocab: joinPairs(v.scaffold?.vocab ?? []),
+    modelText: v.scaffold?.model?.text ?? "",
+    modelAudio: v.scaffold?.model?.audio ?? "",
   };
 }
 
@@ -79,6 +103,13 @@ export function buildFreeChatConfig(d: FreeChatDraft): Record<string, unknown> |
   if (!scenario || !opening) return undefined;
   const targets = d.targets.split(/\r?\n/).map((t) => t.trim()).filter(Boolean).slice(0, 10);
   const turns = Math.min(12, Math.max(4, Math.round(Number.isFinite(d.maxTurns) ? d.maxTurns : 8)));
+  const scaffold = parseScaffoldView({
+    ideas: lines(d.ideas ?? ""),
+    frames: lines(d.frames ?? "").map(splitPair),
+    phrases: lines(d.phrases ?? "").map(splitPair),
+    vocab: lines(d.vocab ?? "").map(splitPair),
+    model: (d.modelText ?? "").trim() ? { text: (d.modelText ?? "").trim(), audio: (d.modelAudio ?? "").trim() } : undefined,
+  });
   return {
     scenario: scenario.slice(0, 600),
     ...(d.partnerRole.trim() ? { partnerRole: d.partnerRole.trim().slice(0, 60) } : {}),
@@ -86,6 +117,7 @@ export function buildFreeChatConfig(d: FreeChatDraft): Record<string, unknown> |
     opening: opening.slice(0, 300),
     ...(targets.length ? { targets: targets.map((t) => t.slice(0, 120)) } : {}),
     maxTurns: turns,
+    ...(scaffold ? { scaffold } : {}),
   };
 }
 

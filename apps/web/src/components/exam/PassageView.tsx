@@ -69,10 +69,13 @@ export default function PassageView({ passage, attemptId, audio }: Props) {
     <AudioTranscriptContext.Provider value={passage.transcripts ?? null}>
     <div>
       {/* Tiêu đề bài đọc: cỡ lớn, đậm, kèm vạch nhấn màu thương hiệu ngắn bên dưới (kiểu tiêu đề báo/sách), tách khỏi phần thân. */}
-      <header className="mb-4">
-        <h2 className="text-h3">{passage.title}</h2>
-        <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
-      </header>
+      {/* Tiêu đề rỗng (phiếu bài tập đã có tên bài ở trên) thì bỏ cả phần tiêu đề: không để lại vạch nhấn mồ côi. */}
+      {passage.title.trim() && (
+        <header className="mb-4">
+          <h2 className="text-h3">{passage.title}</h2>
+          <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
+        </header>
+      )}
       <div className="prose prose-sm max-w-none select-text">{rendered}</div>
       <details className="mt-4 border-t border-default pt-3">
         <summary className="cursor-pointer text-xs text-faint">

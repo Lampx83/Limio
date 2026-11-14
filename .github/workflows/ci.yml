@@ -76,6 +76,10 @@ jobs:
         run: pnpm --filter @feedbackme/db exec prisma migrate deploy
 
       - name: Typecheck
+        # tsc của apps/web đã vượt heap mặc định ~2 GB (OOM, exit 134). Runner
+        # ubuntu-latest có ≥7 GB, nên nâng trần cho riêng bước này.
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: pnpm typecheck
 
       - name: Test
