@@ -1,10 +1,56 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { prisma } from "@feedbackme/db";
 import { previewSectionInvite } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import JoinSectionButton from "@/components/JoinSectionButton";
 import { getT } from "@/lib/i18n/server";
+import { htmlToPlainText } from "@/lib/richText";
+import { SITE_NAME, pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * Link mời lớp thường được dán vào Zalo/Facebook. Không khai metadata riêng thì
+ * bản xem trước thừa hưởng thẻ chung của site (logo Limio + khẩu hiệu), người
+ * nhận không thấy mình sắp vào khoá nào. Ở đây lấy tên và ảnh bìa của chính khoá.
+ *
+ * Luôn noindex: link mời là của riêng một lớp, không phải trang giới thiệu khoá
+ * (trang đó là /catalog/<slug>). Chỉ đọc tên khoá, mô tả và ảnh bìa — những thứ
+ * vốn đã công khai ở catalog — nên không lộ gì thêm cho người chỉ có link.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: { code: string };
+}): Promise<Metadata> {
+  const code = params.code.trim().toUpperCase();
+  const section = await prisma.courseSection.findUnique({
+    where: { inviteCode: code },
+    select: {
+      name: true,
+      isDefault: true,
+      course: { select: { title: true, description: true, coverUrl: true } },
+    },
+  });
+  if (!section || section.isDefault) {
+    return pageMetadata({
+      title: "Lời mời tham gia lớp học",
+      description: `Lời mời tham gia lớp học trên ${SITE_NAME}.`,
+      path: `/enroll/${code}`,
+      noIndex: true,
+    });
+  }
+  return pageMetadata({
+    title: `Tham gia lớp ${section.name} — ${section.course.title}`,
+    description:
+      htmlToPlainText(section.course.description ?? "") ||
+      `Bạn được mời tham gia lớp ${section.name} của khoá ${section.course.title} trên ${SITE_NAME}.`,
+    path: `/enroll/${code}`,
+    image: section.course.coverUrl,
+    noIndex: true,
+  });
+}
 
 export default async function EnrollByCodePage({
   params,
