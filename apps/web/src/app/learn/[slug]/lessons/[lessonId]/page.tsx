@@ -13,6 +13,7 @@ import {
   ExamError,
   buildLessonFrame,
   getPracticeBlockSummaries,
+  getPracticeCheckProgress,
   getPracticeForEmbed,
   getPracticePreview,
   getExamRefStates,
@@ -713,7 +714,7 @@ export default async function LessonPage({
       .length +
     visibleAssignments.filter((a) => a.submissions.length === 0).length;
   const totalActivityCount = visibleQuizzes.length + visibleAssignments.length;
-  const autoCompleteConfig = {
+  const baseAutoComplete = {
     requireVideoWatch: hasNativeVideo,
     videoThresholdPct: lesson.completionThresholdPct ?? 80,
     requireAllActivities: hasAnyActivity,
@@ -823,6 +824,26 @@ export default async function LessonPage({
       }
     }
   }
+
+  // Hoàn thành bài theo Bài luyện (docs/tieu-chi/hoan-thanh-bai-theo-bai-luyen.md): học viên đã ghi danh và đang trong khung bài học (nơi khối luyện
+  // nhúng được) phải bấm Kiểm tra MỌI câu của các khối luyện hiện trong bài; khi đó điều kiện "cuộn hết trang" không còn áp dụng. Xem như học
+  // viên, chiếu lớp, người chưa ghi danh: không tính (không đổi hành vi).
+  const practiceCheck =
+    practiceForLearner && lessonFrame
+      ? await getPracticeCheckProgress(
+          userId!,
+          visibleItems.filter((it) => it.type === "exam_practice").map((it) => it.id),
+        )
+      : { total: 0, checked: 0 };
+  const requirePractice = practiceCheck.total > 0;
+  const autoCompleteConfig = {
+    ...baseAutoComplete,
+    requirePractice,
+    practiceTotal: practiceCheck.total,
+    practiceChecked: practiceCheck.checked,
+    // Bài luyện thay cho "cuộn hết trang" như quiz và bài tập nộp đang làm.
+    requireScrollToEnd: baseAutoComplete.requireScrollToEnd && !requirePractice,
+  };
 
   // Khối "Đề thi" (exam_ref): gắn một đề thi thử của khoá vào bài. Học viên đã ghi danh thấy đúng thẻ như ở trang khoá (chỉ khi đề dùng
   // được); giảng viên bấm "Xem như học viên" thấy thẻ hoặc nhãn lý do. Chiếu lớp và trang in không hiện.

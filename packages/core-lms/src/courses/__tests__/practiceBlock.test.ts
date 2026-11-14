@@ -7,7 +7,7 @@ import { createCourse, duplicateCourse } from "../courses";
 import { createModule } from "../modules";
 import { createLesson, duplicateLesson } from "../lessons";
 import { createContentItem, deleteContentItem, updateContentItem } from "../contents";
-import { getOwnedPracticeExamId, getPracticeBlockSummaries, getPracticeEditorData } from "../practiceBlock";
+import { getOwnedPracticeExamId, getPracticeBlockSummaries, getPracticeCheckProgress, getPracticeEditorData } from "../practiceBlock";
 import { CourseAuthzError } from "../authz";
 import {
   checkPracticeAnswer,
@@ -296,5 +296,73 @@ describe("nhân bản sao chép sâu (AC9)", () => {
     await startPracticeSession(learner, p.examId, { all: true });
     const resumed = await getPracticeForEmbed(learner, p.examId);
     expect(resumed.passages.map((x) => x.id)).toContain(extra.passageId);
+  });
+});
+
+describe("getPracticeCheckProgress — hoàn thành bài theo Bài luyện", () => {
+  async function checked(learner: string, examId: string, qid: string, session?: string) {
+    const sessionId = session ?? (await startPracticeSession(learner, examId, { all: true })).sessionId;
+    await savePracticeAnswer(learner, sessionId, qid, { optionIds: ["a"] });
+    await checkPracticeAnswer(learner, sessionId, qid);
+    return sessionId;
+  }
+
+  it("không có khối, hoặc khối chưa có câu nào: 0 / 0 (không đòi gì ở học viên)", async () => {
+    const s = await setup("cp-empty");
+    const learner = await user("cp-l-empty@e.com");
+    await enrollInCourse(learner, s.courseId);
+    expect(await getPracticeCheckProgress(learner, [])).toEqual({ total: 0, checked: 0 });
+    const { contentItemId } = await createContentItem(s.owner, s.lessonId, { type: "exam_practice", payload: {}, orderIndex: 0 });
+    expect(await getPracticeCheckProgress(learner, [contentItemId])).toEqual({ total: 0, checked: 0 });
+  });
+
+  it("chỉ đếm câu ĐÃ KIỂM TRA: trả lời mà chưa bấm Kiểm tra thì chưa tính; kiểm tra hết thì đủ", async () => {
+    const s = await setup("cp-part");
+    const p = await practice(s);
+    const learner = await user("cp-l-part@e.com");
+    await enrollInCourse(learner, s.courseId);
+    expect(await getPracticeCheckProgress(learner, [p.contentItemId])).toEqual({ total: 3, checked: 0 });
+
+    const { sessionId } = await startPracticeSession(learner, p.examId, { all: true });
+    await savePracticeAnswer(learner, sessionId, p.q1, { optionIds: ["a"] }); // đã trả lời, chưa kiểm tra
+    expect(await getPracticeCheckProgress(learner, [p.contentItemId])).toEqual({ total: 3, checked: 0 });
+
+    await checkPracticeAnswer(learner, sessionId, p.q1);
+    expect(await getPracticeCheckProgress(learner, [p.contentItemId])).toEqual({ total: 3, checked: 1 });
+    await checked(learner, p.examId, p.q2, sessionId);
+    await checked(learner, p.examId, p.q3, sessionId);
+    expect(await getPracticeCheckProgress(learner, [p.contentItemId])).toEqual({ total: 3, checked: 3 });
+  });
+
+  it("nhiều khối cộng lại; kết thúc hoặc bỏ buổi luyện không làm câu mất trạng thái đã kiểm tra", async () => {
+    const s = await setup("cp-multi");
+    const p1 = await practice(s);
+    const { contentItemId: c2 } = await createContentItem(s.owner, s.lessonId, { type: "exam_practice", payload: {}, orderIndex: 1 });
+    const e2 = (await getOwnedPracticeExamId(c2))!;
+    const sec2 = (await prisma.examSection.findFirstOrThrow({ where: { examId: e2 }, select: { id: true } })).id;
+    const q4 = (await createExamQuestion(s.owner, e2, { ...mcq("Khối 2"), sectionId: sec2 })).questionId;
+    const learner = await user("cp-l-multi@e.com");
+    await enrollInCourse(learner, s.courseId);
+
+    const sid = await checked(learner, p1.examId, p1.q1);
+    await checked(learner, e2, q4);
+    expect(await getPracticeCheckProgress(learner, [p1.contentItemId, c2])).toEqual({ total: 4, checked: 2 });
+
+    await prisma.examPracticeSession.update({ where: { id: sid }, data: { status: "abandoned" } });
+    expect(await getPracticeCheckProgress(learner, [p1.contentItemId, c2])).toEqual({ total: 4, checked: 2 });
+  });
+
+  it("câu kiểm tra ở buổi khác của cùng đề vẫn được tính; dữ liệu của người khác không lẫn vào", async () => {
+    const s = await setup("cp-who");
+    const p = await practice(s);
+    const a = await user("cp-l-a@e.com");
+    const b = await user("cp-l-b@e.com");
+    await enrollInCourse(a, s.courseId);
+    await enrollInCourse(b, s.courseId);
+    const sid = await checked(a, p.examId, p.q1);
+    await prisma.examPracticeSession.update({ where: { id: sid }, data: { status: "completed" } });
+    await checked(a, p.examId, p.q2); // buổi mới sau khi buổi đầu đã kết thúc
+    expect(await getPracticeCheckProgress(a, [p.contentItemId])).toEqual({ total: 3, checked: 2 });
+    expect(await getPracticeCheckProgress(b, [p.contentItemId])).toEqual({ total: 3, checked: 0 });
   });
 });

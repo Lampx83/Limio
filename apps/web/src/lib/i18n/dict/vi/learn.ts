@@ -33,6 +33,7 @@ export const viLearn = {
   "learn.completion.video": "Video",
   "learn.completion.listen": "Nghe giảng",
   "learn.completion.activities": "Hoạt động",
+  "learn.completion.practice": "Bài luyện",
   "learn.completion.readAll": "Đọc hết bài",
   "learn.completion.done": "Hoàn thành bài học!",
   "learn.completion.saving": "Đang lưu tiến độ và tải lại trang…",

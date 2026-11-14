@@ -28,6 +28,10 @@ interface AutoCompleteConfig {
   pendingActivityCount: number;
   totalActivityCount: number;
   requireScrollToEnd: boolean;
+  /** Bài có Bài luyện: phải bấm Kiểm tra mọi câu của các khối luyện (docs/tieu-chi/hoan-thanh-bai-theo-bai-luyen.md). Tuỳ chọn để trang cũ vẫn chạy. */
+  requirePractice?: boolean;
+  practiceTotal?: number;
+  practiceChecked?: number;
   /** Bài có màn hình bìa: phải nghe đủ lời giảng (docs/tieu-chi/bai-slide-man-hinh-bia.md, AC4). */
   requireListen: boolean;
   listenThresholdPct: number;
@@ -57,6 +61,7 @@ export default function LessonCompletionPrompt({
   const [videoMet, setVideoMet] = useState(false);
   const activitiesMet =
     !autoComplete.requireAllActivities || autoComplete.pendingActivityCount === 0;
+  const practiceMet = !autoComplete.requirePractice || (autoComplete.practiceChecked ?? 0) >= (autoComplete.practiceTotal ?? 0);
   const [scrollMet, setScrollMet] = useState(false);
   const heardPct = useSyncExternalStore(subscribeNarration, heardPctSnapshot, () => 0);
   const listenMet = !autoComplete.requireListen || heardPct >= autoComplete.listenThresholdPct;
@@ -166,7 +171,7 @@ export default function LessonCompletionPrompt({
     const videoOK = !autoComplete.requireVideoWatch || videoMet;
     const activitiesOK = !autoComplete.requireAllActivities || activitiesMet;
     const scrollOK = !autoComplete.requireScrollToEnd || scrollMet;
-    if (!(videoOK && activitiesOK && scrollOK && listenMet)) return;
+    if (!(videoOK && activitiesOK && scrollOK && practiceMet && listenMet)) return;
     const reason: "watched_threshold" | "listened_threshold" | "all_activities_completed" | "scrolled_to_end" =
       autoComplete.requireListen
         ? "listened_threshold"
@@ -186,6 +191,7 @@ export default function LessonCompletionPrompt({
     completed,
     fireComplete,
     listenMet,
+    practiceMet,
     autoComplete.requireListen,
     scrollMet,
     videoMet,
@@ -212,6 +218,10 @@ export default function LessonCompletionPrompt({
   }
   if (autoComplete.requireScrollToEnd) {
     progressFractions.push(scrollMet ? 1 : 0);
+  }
+  if (autoComplete.requirePractice) {
+    const total = autoComplete.practiceTotal ?? 0;
+    progressFractions.push(total > 0 ? Math.min(1, (autoComplete.practiceChecked ?? 0) / total) : 1);
   }
   if (autoComplete.requireListen) {
     // Cùng cách tính với video: so với ngưỡng yêu cầu.
@@ -289,6 +299,15 @@ export default function LessonCompletionPrompt({
         ? undefined
         : `${done}/${autoComplete.totalActivityCount}`,
       done: activitiesMet,
+    });
+  }
+  if (autoComplete.requirePractice) {
+    rows.push({
+      key: "practice",
+      icon: <ListChecks size={13} />,
+      label: t("learn.completion.practice"),
+      detail: practiceMet ? undefined : `${autoComplete.practiceChecked ?? 0}/${autoComplete.practiceTotal ?? 0}`,
+      done: practiceMet,
     });
   }
   if (autoComplete.requireScrollToEnd) {

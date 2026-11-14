@@ -13,7 +13,8 @@ vi.mock("next/link", () => ({
     </a>
   ),
 }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: () => undefined, push: () => undefined }) }));
+const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push: () => undefined }) }));
 
 import LessonPractice from "./LessonPractice";
 
@@ -155,6 +156,27 @@ describe("LessonPractice — bài luyện nhúng trong bài", () => {
     expect(answers).toHaveLength(2);
     expect(answers[0]!.hasAttribute("open")).toBe(false);
     expect(answers[1]!.hasAttribute("open")).toBe(true);
+  });
+
+  it("kiểm tra một câu xong thì làm mới dữ liệu máy chủ (để 'Bài luyện n / m' đầu trang và việc tự hoàn thành bài cập nhật); xem thử thì không", async () => {
+    refresh.mockClear();
+    await render();
+    await click(radios()[0]!);
+    await flush(600);
+    expect(refresh).not.toHaveBeenCalled(); // chọn đáp án chưa tính là kiểm tra
+    await click(button(/Kiểm tra câu 1/));
+    await flush();
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    act(() => root.unmount());
+    root = createRoot(host);
+    refresh.mockClear();
+    await render(embed(), true);
+    await click(radios()[0]!);
+    await flush(600);
+    await click(button(/Kiểm tra câu 1/));
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("sửa đáp án sau khi kiểm tra thì kết quả cũ biến mất và phải kiểm tra lại", async () => {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Columns2, RotateCcw, Rows2, XCircle } from "lucide-react";
 import type { PracticeEmbed, PracticeResult } from "@feedbackme/core-lms";
 import { apiUrl } from "@/lib/apiUrl";
@@ -98,6 +99,7 @@ export default function LessonPractice({
   preview?: boolean;
 }) {
   const { questions, passages } = embed;
+  const router = useRouter();
   const steps = useMemo(() => (sheet ? buildSheetSteps(questions, passages.map((x) => x.id)) : buildSteps(questions)), [questions, passages, sheet]);
   // Số câu: phiếu bài tập đánh số lại từ 1 trong MỖI bài tập (như sách: Exercise 3A có câu 1–7, Exercise 4A lại bắt đầu từ 1); luyện đề thường đánh liên tục.
   const numberOf = useMemo(
@@ -367,7 +369,7 @@ export default function LessonPractice({
     return data.reply;
   }
 
-  async function check(qid: string, answerNow?: AnswerValue): Promise<boolean> {
+  async function check(qid: string, answerNow?: AnswerValue, refreshAfter = true): Promise<boolean> {
     setBusyCheck(qid);
     setError(null);
     try {
@@ -388,6 +390,9 @@ export default function LessonPractice({
       }
       const data = (await res.json()) as CheckResult;
       setChecks((p) => ({ ...p, [qid]: data }));
+      // Câu đã kiểm tra tính vào hoàn thành bài: làm mới dữ liệu máy chủ để số "Bài luyện n / m" đầu trang (và việc tự hoàn thành bài) cập nhật,
+      // không tải lại trang đang làm dở. Xem thử của giảng viên không ghi gì nên không cần.
+      if (!preview && refreshAfter) router.refresh();
       if (data.manual) {
         const f = parseFeedback(data.feedback);
         setFeedbacks((p) => (f ? { ...p, [qid]: f } : without(p, qid)));
@@ -407,10 +412,12 @@ export default function LessonPractice({
     setBatch({ done: 0, total: ids.length });
     let failed = 0;
     for (let i = 0; i < ids.length; i++) {
-      if (!(await check(ids[i]!))) failed++;
+      // Không làm mới giữa chừng (làm mới máy chủ khi vòng kiểm tra còn chạy làm gián đoạn nó): một lần sau khi cả loạt xong.
+      if (!(await check(ids[i]!, undefined, false))) failed++;
       setBatch({ done: i + 1, total: ids.length });
     }
     setBatch(null);
+    if (!preview && failed < ids.length) router.refresh();
     if (failed > 0) setError(`Không kiểm tra được ${failed} câu. Bấm lại để thử lần nữa.`);
   }
 

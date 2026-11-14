@@ -36,6 +36,7 @@ export const enLearn: PartialDict<typeof viLearn> = {
   "learn.completion.video": "Video",
   "learn.completion.listen": "Listen to the lecture",
   "learn.completion.activities": "Activities",
+  "learn.completion.practice": "Practice",
   "learn.completion.readAll": "Read to the end",
   "learn.completion.done": "Lesson completed!",
   "learn.completion.saving": "Saving your progress and reloading the page…",

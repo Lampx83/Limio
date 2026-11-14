@@ -329,6 +329,17 @@ export const GUIDES: readonly GuideEntry[] = [
     ],
   },
   {
+    id: "giao-trinh-bai-luyen-hoan-thanh-bai",
+    title: "Bài luyện tính vào việc hoàn thành bài của học viên",
+    keywords: ["hoàn thành bài", "bài xong", "đã xong", "tiến độ", "bài luyện", "kiểm tra mọi câu", "học viên chưa xong bài", "không hoàn thành"],
+    destinationIds: ["my_courses"],
+    body: `Bài có khối Bài luyện thì học viên đã ghi danh chỉ được tính "Đã xong" khi đã bấm kiểm tra mọi câu của các khối luyện trong bài; cuộn hết trang không còn đủ. Đầu trang bài có mục "Bài luyện" kèm số câu đã kiểm tra trên tổng số câu (ví dụ 2/5), và thanh phần trăm gộp cả mục này. Khối luyện bị ẩn hoặc chưa có câu nào thì không tính. Bài đã xong từ trước thì giữ nguyên. Giảng viên bấm "Xem như học viên" chỉ xem thử, không ghi nhận gì. Câu nói với bạn ảo hoặc đóng vai cũng phải kiểm tra, riêng câu tự luận thì vẫn tính là đã kiểm tra dù phần nhận xét của AI chưa có (hết hạn mức hoặc chưa cấu hình AI).`,
+    useCases: [
+      `Học viên báo đã học hết bài mà bài vẫn chưa "Đã xong", thầy/cô hỏi vì sao và được giải thích rằng bài có Bài luyện nên còn câu chưa bấm kiểm tra, mở đầu trang bài sẽ thấy mục Bài luyện cho biết còn thiếu bao nhiêu câu.`,
+      `Thầy/cô muốn học viên bắt buộc làm hết phiếu trước khi qua bài sau, nên thêm khối Bài luyện vào bài thay vì chỉ để học liệu đọc, vì khi đó bài chỉ hoàn thành sau khi mọi câu được kiểm tra.`,
+    ],
+  },
+  {
     id: "bai-giang-tao",
     title: "Tạo slide tương tác (Limio-Live)",
     keywords: ["bài giảng", "slide", "powerpoint", "pptx", "limio-live", "dàn ý", "tài liệu", "bài giảng tương tác", "slide tương tác", "mô tả chủ đề", "soạn bài giảng", "tạo bài giảng", "nhập powerpoint"],
