@@ -537,7 +537,11 @@ export default function LessonPractice({
     return (
       <div key={qid} id={`lp-${qid}`} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-lime-700">Câu {n}</h3>
+          {/* Hội thoại với bạn ảo không phải "câu hỏi số n": gọi đúng tên việc học viên làm. Trong phiếu bài tập (kiểu sách) các câu khác chỉ ghi số
+              thứ tự như mọi dòng của phiếu (1, 2, 3…), không có chữ "Câu"; trình đọc màn hình vẫn nghe "Câu n". */}
+          <h3 className="text-xs font-bold uppercase tracking-wider text-lime-700" aria-label={rolePlay || freeChat ? undefined : `Câu ${n}`}>
+            {rolePlay ? "Đóng vai" : freeChat ? "Nói với bạn ảo" : sheet ? String(n) : `Câu ${n}`}
+          </h3>
           {res && !res.manual && (
             <span className={`inline-flex items-center gap-1 text-xs font-semibold ${res.isCorrect ? "text-lime-700" : "text-danger-600"}`}>
               {res.isCorrect ? <CheckCircle2 size={14} aria-hidden /> : <XCircle size={14} aria-hidden />}
