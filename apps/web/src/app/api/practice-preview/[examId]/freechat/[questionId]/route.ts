@@ -5,6 +5,7 @@ import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 import { getOpenaiClient } from "@/lib/openaiClient";
 import { mapPracticeAnswerError } from "@/lib/practiceAnswerApi";
+import { speakPartnerLine } from "@/lib/freeChatSpeech";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -30,7 +31,8 @@ export async function POST(req: Request, { params }: { params: { examId: string;
       { userId, cfg, language: ctx.language, levelBand: ctx.levelBand, history: body.history ?? [], message: body.message },
       { openai: () => getOpenaiClient() },
     );
-    return NextResponse.json({ reply: r.reply, turn: r.turn, maxTurns: r.maxTurns });
+    const speech = await speakPartnerLine(r.reply, ctx.language);
+    return NextResponse.json({ reply: r.reply, turn: r.turn, maxTurns: r.maxTurns, speech });
   } catch (e) {
     const practice = mapPracticeAnswerError(e);
     if (practice) return practice;

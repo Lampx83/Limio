@@ -4,7 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { getTokenBudget } from "../aiTutor/tokenWallet";
 import { PracticeFeedbackError, buildPracticePrompts } from "../practiceAnswer/analysis";
-import { requestPracticeAnswerFeedback, runFreeChatTurn, transcribeRolePlayTurn } from "../practiceAnswer/feedback";
+import { getFreeChatOpening, requestPracticeAnswerFeedback, runFreeChatTurn, transcribeRolePlayTurn } from "../practiceAnswer/feedback";
 import {
   FREECHAT_FALLBACK,
   buildFreeChatMessages,
@@ -139,7 +139,7 @@ describe("runFreeChatTurn (DB)", () => {
     const before = await getTokenBudget(f.userId);
     const { openai, calls } = fakeChat();
     const r = await turn(f, openai, "I would take my laptop.");
-    expect(r).toMatchObject({ reply: "Really? Why would you take that?", turn: 1, maxTurns: 4 });
+    expect(r).toMatchObject({ reply: "Really? Why would you take that?", turn: 1, maxTurns: 4, language: "en" }); // language: để tầng web chọn giọng đọc
     expect(calls[0]!.messages.at(-1)).toEqual({ role: "user", content: "I would take my laptop." });
     const after = await getTokenBudget(f.userId);
     expect(before.total - after.total).toBe(135);
@@ -261,5 +261,27 @@ describe("runFreeChatTurn (DB)", () => {
     expect(seen[0]).toContain("FREE CONVERSATION");
     expect(seen[0]).toContain("Learner: I would take my laptop.");
     expect(seen[0]).toContain("I'm not sure about that");
+  });
+});
+
+describe("getFreeChatOpening (DB) — giọng đọc lời mở đầu", () => {
+  it("trả lời mở đầu từ cấu hình + ngôn ngữ khoá; không gọi mô hình, không trừ ví, không sự kiện", async () => {
+    const f = await fx();
+    const before = await getTokenBudget(f.userId);
+    const r = await getFreeChatOpening({ userId: f.userId, sessionId: f.sessionId, questionId: f.questionId });
+    expect(r).toEqual({ opening: "Our house is on fire! What would you take?", language: "en" });
+    expect((await getTokenBudget(f.userId)).total).toBe(before.total);
+    expect(await prisma.learningEvent.count({ where: { userId: f.userId, eventType: LearningEventType.ExamPracticeFreechatTurn } })).toBe(0);
+  });
+  it("chỉ chủ buổi; câu không có freechat; buổi đã đóng; nhóm đối chứng đều bị chặn như một lượt hội thoại", async () => {
+    const f = await fx();
+    await expect(getFreeChatOpening({ userId: f.otherUserId, sessionId: f.sessionId, questionId: f.questionId })).rejects.toMatchObject({ code: "forbidden" });
+    const plain = await fx(null);
+    await expect(getFreeChatOpening({ userId: plain.userId, sessionId: plain.sessionId, questionId: plain.questionId })).rejects.toMatchObject({ code: "not_essay" });
+    const closed = await fx();
+    await prisma.examPracticeSession.update({ where: { id: closed.sessionId }, data: { status: "completed" } });
+    await expect(getFreeChatOpening({ userId: closed.userId, sessionId: closed.sessionId, questionId: closed.questionId })).rejects.toMatchObject({ code: "session_closed" });
+    const ctrl = await fx(CFG, "minimal");
+    await expect(getFreeChatOpening({ userId: ctrl.userId, sessionId: ctrl.sessionId, questionId: ctrl.questionId })).rejects.toMatchObject({ code: "control_group" });
   });
 });

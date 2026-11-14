@@ -8,6 +8,8 @@ vi.mock("@feedbackme/core-feedback", async () => {
   return { ...actual, runFreeChatTurn: run };
 });
 vi.mock("@/lib/openaiClient", () => ({ getOpenaiClient: vi.fn(async () => ({})) }));
+const speak = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/freeChatSpeech", () => ({ speakPartnerLine: speak }));
 
 import { AiTutorError, PracticeFeedbackError } from "@feedbackme/core-feedback";
 import { POST } from "./route";
@@ -19,7 +21,8 @@ const call = (body: unknown | "bad") =>
 
 beforeEach(() => {
   state.userId = "u1";
-  run.mockReset().mockResolvedValue({ reply: "Why that?", turn: 1, maxTurns: 8 });
+  run.mockReset().mockResolvedValue({ reply: "Why that?", turn: 1, maxTurns: 8, language: "en" });
+  speak.mockReset().mockResolvedValue({ audioChunks: ["QUJD"], contentType: "audio/mpeg" });
 });
 
 describe("POST /api/practice-sessions/[id]/freechat/[questionId]", () => {
@@ -31,15 +34,23 @@ describe("POST /api/practice-sessions/[id]/freechat/[questionId]", () => {
     expect(run).not.toHaveBeenCalled();
   });
 
-  it("thành công: chỉ trả { reply, turn, maxTurns }; truyền đúng người, buổi, câu, lịch sử và lời nhắn", async () => {
+  it("thành công: trả { reply, turn, maxTurns, speech }; giọng đọc đúng lời bạn ảo theo ngôn ngữ khoá; truyền đúng người, buổi, câu, lịch sử và lời nhắn", async () => {
     const hist = [{ role: "learner", text: "A" }, { role: "partner", text: "B" }];
     const res = await call({ history: hist, message: "Hello" });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ reply: "Why that?", turn: 1, maxTurns: 8 });
+    expect(await res.json()).toEqual({ reply: "Why that?", turn: 1, maxTurns: 8, speech: { audioChunks: ["QUJD"], contentType: "audio/mpeg" } });
+    expect(speak).toHaveBeenCalledWith("Why that?", "en");
     expect(run).toHaveBeenCalledWith(
       { userId: "u1", sessionId: "s1", questionId: "q1", history: hist, message: "Hello" },
       expect.objectContaining({ openai: expect.any(Function) }),
     );
+  });
+
+  it("đọc giọng lỗi (null) thì vẫn trả chữ với speech null", async () => {
+    speak.mockResolvedValueOnce(null);
+    const res = await call({ message: "Hi" });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ reply: "Why that?", turn: 1, maxTurns: 8, speech: null });
   });
 
   it("thiếu history thì coi là rỗng", async () => {

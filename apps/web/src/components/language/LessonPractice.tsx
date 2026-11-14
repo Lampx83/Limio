@@ -24,7 +24,7 @@ import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import EssayFeedback from "./EssayFeedback";
 import RolePlay from "./RolePlay";
 import FreeChat, { FreeChatError } from "./FreeChat";
-import { learnerTurnCount, parseFreeChatView, FREECHAT_MIN_FEEDBACK_TURNS } from "@/lib/freeChatView";
+import { learnerTurnCount, parseFreeChatView, asPartnerSpeech, FREECHAT_MIN_FEEDBACK_TURNS, type PartnerReply, type PartnerSpeech } from "@/lib/freeChatView";
 import { instructionOnlyText, isShortAudioPassage } from "@/lib/lessonPracticeView";
 import { parseRolePlay } from "@/lib/rolePlayView";
 import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
@@ -336,7 +336,7 @@ export default function LessonPractice({
    * "Thử nói tự do": gửi MỘT lượt cho bạn ảo, trả lời của bạn ảo. Lịch sử do RolePlay-giống-FreeChat giữ ở trình duyệt; máy chủ không lưu.
    * Xem thử của giảng viên dùng route xem thử (không buổi luyện, không lưu gì). Ném `FreeChatError(mã)` khi lỗi.
    */
-  async function sendFreeChat(qid: string, history: Array<{ role: string; text: string }>, message: string): Promise<string> {
+  async function sendFreeChat(qid: string, history: Array<{ role: string; text: string }>, message: string): Promise<PartnerReply> {
     let url: string;
     if (preview) {
       url = apiUrl(`/api/practice-preview/${embed.examId}/freechat/${qid}`);
@@ -364,9 +364,27 @@ export default function LessonPractice({
       const j = (await res.json().catch(() => null)) as { error?: unknown } | null;
       throw new FreeChatError(typeof j?.error === "string" ? j.error : "failed");
     }
-    const data = (await res.json().catch(() => null)) as { reply?: unknown } | null;
+    const data = (await res.json().catch(() => null)) as { reply?: unknown; speech?: unknown } | null;
     if (typeof data?.reply !== "string" || !data.reply.trim()) throw new FreeChatError("openai_error");
-    return data.reply;
+    return { text: data.reply, speech: asPartnerSpeech(data.speech) };
+  }
+
+  /** Giọng đọc lời MỞ ĐẦU của bạn ảo (máy chủ đọc từ cấu hình câu). Lỗi/không có giọng → null: học viên vẫn có chữ. */
+  async function fetchOpeningSpeech(qid: string): Promise<PartnerSpeech | null> {
+    try {
+      let url: string;
+      if (preview) {
+        url = apiUrl(`/api/practice-preview/${embed.examId}/freechat/${qid}/speak`);
+      } else {
+        url = apiUrl(`/api/practice-sessions/${await ensureSession()}/freechat/${qid}/speak`);
+      }
+      const res = await fetch(url, { method: "POST" });
+      if (!res.ok) return null;
+      const data = (await res.json().catch(() => null)) as { speech?: unknown } | null;
+      return asPartnerSpeech(data?.speech);
+    } catch {
+      return null;
+    }
   }
 
   async function check(qid: string, answerNow?: AnswerValue, refreshAfter = true): Promise<boolean> {
@@ -569,6 +587,7 @@ export default function LessonPractice({
               savedText={value && "text" in value ? String(value.text ?? "") : ""}
               preview={preview}
               send={(history, message) => sendFreeChat(qid, history, message)}
+              openingSpeech={() => fetchOpeningSpeech(qid)}
               voiceEnabled={essayVoiceEnabled(q.config)}
               transcribe={(turn, file) => transcribeTurn(qid, turn, file)}
               onAnswer={(text) => onChange(qid, { text } as AnswerValue)}

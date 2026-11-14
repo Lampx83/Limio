@@ -141,9 +141,9 @@ describe("RolePlay — hội thoại đóng vai", () => {
     expect(host.querySelector(".rp-turn[data-current]")!.getAttribute("aria-label")).toContain("Lượt 1");
   });
 
-  it("'Bỏ qua lượt này' đánh dấu bỏ qua và lượt nhấn mạnh chuyển sang lượt kế; câu hướng dẫn gửi OpenAI hiện tới khi đã dùng một lần", async () => {
+  it("'Bỏ qua lượt này' đánh dấu bỏ qua và lượt nhấn mạnh chuyển sang lượt kế; không còn dòng nhắc gửi OpenAI", async () => {
     await render();
-    expect(text()).toContain("gửi tới OpenAI");
+    expect(text()).not.toContain("gửi tới OpenAI");
     await click(button(/Bỏ qua lượt này/));
     expect(text()).toContain("Đã bỏ qua");
     expect(host.querySelector(".rp-turn[data-current]")!.getAttribute("aria-label")).toContain("Lượt 3");

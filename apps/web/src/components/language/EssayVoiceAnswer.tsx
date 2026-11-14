@@ -13,22 +13,6 @@ export class VoiceUseError extends Error {
   }
 }
 
-const NOTICE_KEY = "limio:practice-voice-notice";
-
-export function noticeSeen(): boolean {
-  try {
-    return window.localStorage.getItem(NOTICE_KEY) === "1";
-  } catch {
-    return false; // lưu trữ bị chặn: cứ nhắc, chỉ thừa chứ không sai
-  }
-}
-export function markNoticeSeen() {
-  try {
-    window.localStorage.setItem(NOTICE_KEY, "1");
-  } catch {
-    /* bỏ qua */
-  }
-}
 
 /**
  * Câu mở của Bài luyện nhúng: trả lời bằng giọng nói (docs/tieu-chi/bai-luyen-tra-loi-bang-giong-noi-va-bai-mau.md, AC1).
@@ -108,7 +92,6 @@ function VoicePanel({ hasText, feedbackOn, onUse, onClose }: { hasText: boolean;
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [useError, setUseError] = useState<string | null>(null);
-  const [seen, setSeen] = useState(() => (typeof window === "undefined" ? true : noticeSeen()));
   const rec = useAudioRecorder({
     autoStart: true,
     onRecorded: (f) => {
@@ -124,8 +107,6 @@ function VoicePanel({ hasText, feedbackOn, onUse, onClose }: { hasText: boolean;
     setUseError(null);
     try {
       await onUse(file, withFeedback);
-      markNoticeSeen();
-      setSeen(true);
       onClose();
     } catch (e) {
       setUseError(voiceErrorMessage(e instanceof VoiceUseError ? e.code : "network"));
@@ -195,7 +176,6 @@ function VoicePanel({ hasText, feedbackOn, onUse, onClose }: { hasText: boolean;
         <p className="text-xs text-muted">
           {done && feedbackOn ? "AI nghe bản ghi, điền chữ vào ô trả lời rồi nhận xét ngay. " : ""}
           {done && hasText ? "Bản chữ từ giọng nói sẽ thay phần bạn đã gõ. " : ""}
-          {!seen ? "Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ." : ""}
         </p>
       )}
 

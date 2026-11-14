@@ -341,7 +341,7 @@ export async function runFreeChatTurn(
   args: { userId: string; sessionId: string; questionId: string; history: unknown; message: unknown },
   deps: { openai: OpenAiSource; model?: string },
   db: PrismaClient = prisma,
-): Promise<FreeChatReply> {
+): Promise<FreeChatReply & { language: string | null }> {
   const { ctx, cfg } = await freeChatContext(args.userId, args.sessionId, args.questionId, db);
   const reply = await generateFreeChatReply(
     { userId: args.userId, cfg, language: ctx.courseLanguage, levelBand: ctx.levelBand, history: args.history, message: args.message },
@@ -363,5 +363,18 @@ export async function runFreeChatTurn(
   } catch (e) {
     console.error("[freechat] không ghi được sự kiện", e);
   }
-  return reply;
+  // `language` để tầng web chọn giọng đọc đúng ngôn ngữ khoá cho lời bạn ảo.
+  return { ...reply, language: ctx.courseLanguage };
+}
+
+/**
+ * Lời mở đầu của bạn ảo + ngôn ngữ khoá, để tầng web đọc thành tiếng. Cùng điều kiện với một lượt hội thoại (buổi của chính học viên, còn mở,
+ * câu có `freechat`, không phải nhóm đối chứng) nhưng KHÔNG gọi mô hình và KHÔNG trừ ví; văn bản lấy từ cấu hình câu chứ không nhận từ trình duyệt.
+ */
+export async function getFreeChatOpening(
+  args: { userId: string; sessionId: string; questionId: string },
+  db: PrismaClient = prisma,
+): Promise<{ opening: string; language: string | null }> {
+  const { ctx, cfg } = await freeChatContext(args.userId, args.sessionId, args.questionId, db);
+  return { opening: cfg.opening, language: ctx.courseLanguage };
 }

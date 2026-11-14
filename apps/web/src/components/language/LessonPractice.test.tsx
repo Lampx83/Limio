@@ -595,11 +595,11 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     await flush();
   }
 
-  it("ghi âm → Chỉ lấy bản chữ: tạo buổi, gửi tệp, điền ô trả lời, hiện nhãn bản chữ và trình phát; lần sau không nhắc OpenAI nữa", async () => {
+  it("ghi âm → Chỉ lấy bản chữ: tạo buổi, gửi tệp, điền ô trả lời, hiện nhãn bản chữ và trình phát; không có dòng nhắc gửi OpenAI", async () => {
     await render(essayEmbed());
     await click(button(/Trả lời bằng giọng nói/));
     await flush();
-    expect(text()).toContain("Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ.");
+    expect(text()).not.toContain("gửi tới OpenAI");
     expect(button(/Trả lời bằng giọng nói/)).toBeUndefined(); // không còn nút thứ hai nối tiếp
     expect(button(/^\s*Ghi âm/)).toBeUndefined(); // đã ghi rồi, chỉ còn Dừng
     expect(button(/Dừng/)).toBeDefined();
@@ -616,7 +616,6 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     expect(text()).toContain("Bản chữ từ giọng nói, máy có thể nghe sai: hãy đọc lại và sửa.");
     expect(host.querySelector('[data-testid="lp-voice-player"] audio')!.getAttribute("src")).toBe("/api/practice-sessions/s1/audio/e1?v=1");
     expect(host.querySelector('[data-testid="lp-voice-panel"]')).toBeNull(); // ngăn ghi âm đóng lại
-    // Lần dùng sau: không nhắc nữa
     await click(button(/Trả lời bằng giọng nói/));
     expect(text()).not.toContain("gửi tới OpenAI");
   });

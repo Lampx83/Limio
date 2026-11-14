@@ -15,6 +15,25 @@ export interface FreeChatView {
   maxTurns: number;
 }
 
+/** Giọng đọc lời bạn ảo do máy chủ trả: các đoạn âm thanh base64 phát nối tiếp. */
+export interface PartnerSpeech {
+  audioChunks: string[];
+  contentType: string;
+}
+
+/** Đọc `speech` trong phản hồi máy chủ (dữ liệu không đáng tin): đúng dạng thì trả lại, sai/thiếu thì null (chỉ có chữ). */
+export function asPartnerSpeech(v: unknown): PartnerSpeech | null {
+  if (!isObj(v) || typeof v.contentType !== "string" || !Array.isArray(v.audioChunks)) return null;
+  const chunks = v.audioChunks.filter((c): c is string => typeof c === "string" && c !== "");
+  return chunks.length > 0 ? { audioChunks: chunks, contentType: v.contentType } : null;
+}
+
+/** Một lượt bạn ảo trả lời: chữ, kèm giọng đọc nếu máy chủ đọc được (null/thiếu → chỉ có chữ). */
+export interface PartnerReply {
+  text: string;
+  speech?: PartnerSpeech | null;
+}
+
 export interface ChatMsg {
   role: "learner" | "partner";
   text: string;
