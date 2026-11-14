@@ -1,0 +1,16 @@
+{
+  "course": {
+    "title": "Prompt Engineering",
+    "slug": "prompt-engineering",
+    "language": "en",
+    "level": "beginner",
+    "category": "Artificial Intelligence",
+    "personalizationEnabled": true,
+    "description": "Practical skills for working with generative AI in academic and business tasks — no programming required. You use chatbots, define a task and its success criteria, design prompts, improve answers with follow-ups, choose a prompting strategy and evaluate the result.\n\nYou practise on two connected retail cases built on a 200-transaction CSV: a regional sales visualisation and a business investigation that ends in an action plan. Along the way you verify every figure and claim, build reusable workflows, and apply privacy, security and documentation habits.\n\n14 periods in five modules, following one cycle: **Define → Design → Execute → Evaluate → Refine**. Every period has a lesson, practice questions with feedback on the exact misconception behind a wrong answer, and flashcards for spaced review. The lecture notes, slides and activity sheets are attached."
+  },
+  "startModule": {
+    "title": "Start here",
+    "description": "The syllabus, what the course covers, how it is assessed and how to study it.",
+    "lessons": []
+  }
+}

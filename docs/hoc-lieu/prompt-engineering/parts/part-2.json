@@ -1,0 +1,1961 @@
+{
+  "module": {
+    "title": "Module 2 — Design: Prompts and Prompting Strategies",
+    "description": "Three periods on the Design step of the cycle: build a complete prompt from five functions, improve an answer with targeted follow-ups, and choose a prompting strategy (examples, clarification, explanation or chaining). Practised on the regional net-sales task, with every figure checked against the CSV.",
+    "lessons": [
+      {
+        "title": "Module 2 materials: lecture notes, slides and the retail CSV",
+        "durationMin": 6,
+        "description": "Which attached files support Module 2, where Periods 4, 5 and 6 sit in each of them, and how to use them next to the three lessons.",
+        "look": {
+          "palette": "forest",
+          "font": "modern"
+        },
+        "body": "Module 2 comes with attached files written by the course team. They are a reference, not a prerequisite: each lesson stands on its own, and you open the files when you want the original wording, the full slide or the data.\n\n## What is attached\n\n| File | What it is | Use it for |\n|---|---|---|\n| Lecture notes (PDF, whole course) | The written text of all 14 periods. Each period has numbered sections (4.1, 4.2 ...), key concepts, a summary and four review questions | Reading the full explanation and trying the review questions |\n| Slides, 150 pages (PDF) | The complete deck: one slide per idea, plus activity, \"Review the prompts\" and checkpoint slides | Seeing each prompt exactly as shown in class; the checkpoint questions |\n| Slides, 81 pages (PDF) | A shorter deck with the core slides of the long one | A quick preview or revision |\n| Activity sheets 1-3, Student versions (PDF) | The three guided activities of the course | Looking ahead only: Activity 1 starts at Period 7 (Module 3) |\n| Retail sales CSV | 200 transactions with 13 columns, among them `Transaction_ID`, `Store_Region`, `Product_Category`, `Gross_Amount`, `Discount_Amount` and `Net_Sales_Amount` | Every \"Check it yourself\" box in this module |\n\n> [!ghi-nho] The CSV has **no dates, no currency, no costs, no store coverage and no profit data**. That is deliberate: it is why you will keep seeing prompts that say \"leave the currency unspecified\" and \"do not infer profit\".\n\n## Where each period is\n\n| Period | Lecture notes | Slides (150 pages) | Slides (81 pages) |\n|---|---|---|---|\n| 4 Prompt Anatomy | Period 4, sections 4.1-4.5 | 37-45 | 20-24 |\n| 5 Follow-up Prompts | Period 5, sections 5.1-5.5 | 46-55 | 25-31 |\n| 6 Prompting Strategies | Period 6, sections 6.1-6.5 | 56-65 (references on slide 66) | 32-38 |\n\nThe longer deck also has the activity slides of this module (\"Write a Category Prompt\", \"Refine the Answer\", \"Choose a Prompting Strategy\"), the \"Review the prompts\" slide and the key takeaways for each period. The lessons contain the same activities.\n\n## How to use them\n\n1. **Before a period:** skim the matching slides to see the shape of the topic.\n2. **In the lesson:** try each \"Predict before you read\" and \"Find the error\" box yourself before you open the answer, then take the quiz and rate your confidence for each question.\n3. **Check it yourself:** open the CSV in a spreadsheet and recompute the figures named in the box. A pivot table or `SUMIF` is enough; no programming is needed.\n4. **After the quiz:** read the matching section of the lecture notes and try its review questions.\n5. **For revision:** use the flashcards at the end of each lesson, then return to the slides.\n\n> [!meo] Where a chatbot cannot read files or draw charts, paste a verified table from your spreadsheet instead and write down that limitation. The module asks you to do this in several places.",
+        "summary": [
+          "Module 2 is supported by the lecture notes, a 150-page deck, an 81-page deck and the retail CSV; the activity sheets start at Period 7.",
+          "The table shows where Periods 4, 5 and 6 sit in each file, and the CSV (no dates, currency, costs or profit) backs every check-it-yourself box."
+        ]
+      },
+      {
+        "title": "Period 4 · Prompt Anatomy",
+        "durationMin": 45,
+        "description": "Five functions of a prompt (instruction, context, input, output, constraints), how OpenAI, Google and Anthropic group them, and how to cut every sentence that does not earn its place.",
+        "look": {
+          "palette": "forest",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Identify the instruction, context, input, output and constraints in a prompt",
+          "Build a complete task-specific prompt for a net-sales question using exact column names",
+          "Compare how OpenAI-, Google- and Anthropic-style layouts group the same requirements",
+          "Decide whether each sentence of a prompt changes an observable property of the answer, and cut it if not",
+          "Adapt a finished prompt to a new grouping and name one independent check"
+        ],
+        "body": "Your Period 3 task brief is finished: a question (which regions have the highest and lowest total net sales?), a reader (a retail manager), an expected result (a ranked four-row table) and success criteria. Now you have to turn it into the message the chatbot actually receives. A brief is not yet a prompt: until the question, the evidence, the output and the limits are written into the message, the chatbot has to guess them.\n\n> [!ghi-nho] A prompt is complete when it holds enough information to guide the task **and** to judge the answer. Nothing in a prompt, however well written, replaces checking the result.\n\n:::Predict before you read\nA colleague sends a chatbot only this: \"Study this file.\" You may add one sentence. Which would help most: \"You are a world-class analyst\", \"Sum net sales by region\", or \"Be thorough and professional\"? Decide, then say what you could check in the answer for each choice. Compare with the table of optional elements below.\n:::",
+        "sections": [
+          {
+            "layout": "cards",
+            "title": "Five functions of a prompt",
+            "intro": "A useful prompt does five jobs. Their order can vary, and one sentence may do two jobs at once.",
+            "parts": [
+              {
+                "title": "Instruction",
+                "md": "The action you request.\n\n*Sum `Net_Sales_Amount` for each `Store_Region`.*"
+              },
+              {
+                "title": "Context",
+                "md": "Who will use the answer and for what decision.\n\n*A retail manager reviewing regional activity.*"
+              },
+              {
+                "title": "Input",
+                "md": "The source material or data the answer must rest on.\n\n*The attached retail CSV and its real column names.*"
+              },
+              {
+                "title": "Output",
+                "md": "The format and content of the result.\n\n*A four-row table, ranked highest to lowest, with two observations.*"
+              },
+              {
+                "title": "Constraints",
+                "md": "Boundaries and quality rules.\n\n*Include all regions; do not invent currency; do not infer profit or causes.*"
+              }
+            ],
+            "outro": "A **role** (who the assistant should act as) and **examples** are optional extras that help with some tasks. None of the five functions, and neither extra, replaces verifying the result.\n\n> [!canh-bao] If the chatbot cannot open the CSV, the input is missing, however elegant the rest of the prompt sounds. Attach the file, paste a verified table, or say plainly that the data is not available."
+          },
+          {
+            "layout": "text",
+            "title": "From a vague prompt to a complete one",
+            "parts": [
+              {
+                "md": "Compare two prompts for the same job.\n\n```prompt Prompt A (weak)\nStudy this file.\n```\n\n**Why it is weak:** it names no metric, no grouping, no output and no limits. The chatbot must guess all four, and you cannot judge the answer because you never said what a right answer looks like.\n\n```prompt Prompt B (complete)\nA retail manager needs to review sales performance across regions.\nUsing the attached retail CSV, sum Net_Sales_Amount for each Store_Region.\nReturn a four-row table with region, transaction count and total net sales, ranked from highest to lowest, then two short observations, one of which states a limitation of the data.\nCheck that the four regional totals add up to the total for the whole file.\nThe currency is not given in the file: leave it unspecified.\nInclude all regions. Do not infer profit, dates or the causes of regional differences.\n```\n\n**Why it works:** read it line by line and label each one.\n\n| Line of Prompt B | Function |\n|---|---|\n| A retail manager needs to review sales performance across regions. | Context |\n| Using the attached retail CSV, sum Net_Sales_Amount for each Store_Region. | Instruction and input |\n| Return a four-row table ... then two short observations ... | Output |\n| Check that the four regional totals add up to the whole-file total. | Constraint (a quality rule you can test) |\n| The currency is not given ... Do not infer profit, dates or causes. | Constraints (limits on claims) |\n\nThe prompt makes the task checkable because it names the exact fields and asks for a reconciliation. A good answer has four regions, a correct total and restrained interpretation.\n\n**Two ways it can still fail.** The table might use `Gross_Amount` instead of `Net_Sales_Amount`, or the answer might say that North achieved the highest *profit*. Check the metric label and the figures, then revise the one instruction that failed instead of simply adding more words.\n\n> [!vi-du] The same prompt works for categories. Replace `Store_Region` with `Product_Category`, keep the calculation and the check, and you still get four groups. You will try this in \"Your turn\" below."
+              }
+            ]
+          },
+          {
+            "layout": "cards",
+            "title": "Three providers, one set of ideas",
+            "intro": "The course adapts published prompting guidance from OpenAI, Google and Anthropic. Each groups the same needs under its own labels.",
+            "parts": [
+              {
+                "title": "OpenAI-inspired",
+                "md": "**Identity**, **instructions**, optional **examples** and **context**.\n\nOutput and constraints sit inside the instructions; the data sits in the context. Identity sets the role."
+              },
+              {
+                "title": "Google-inspired",
+                "md": "**Input**, **instructions**, **context**, **constraints**, **response format**, and examples where useful.\n\nThe response format is what this course calls the output."
+              },
+              {
+                "title": "Anthropic-inspired",
+                "md": "An optional **role**, **clear instructions**, **context**, **source material**, and short examples only when needed.\n\nThe instructions include the output and the limits."
+              }
+            ],
+            "outro": "For a beginner the three questions that matter stay the same under every layout: **Is the task clear? Is the needed evidence present? Is the output testable?**\n\n> [!canh-bao] Do not memorise one template as if it were a rule. If two prompts hold the same task, data and restrictions but arrange them differently, you cannot tell which is better by looking at them. Run both, score the outputs against one rubric and keep what works."
+          },
+          {
+            "layout": "text",
+            "title": "Optional elements: when they help, how they backfire",
+            "parts": [
+              {
+                "md": "Role, examples, exact column names, an output schema and boundaries are all choices, not obligations.\n\n| Element | Often useful when | Risk if misused |\n|---|---|---|\n| Role or audience | Tone or professional framing matters | Invents authority or competence |\n| Examples | The output pattern is hard to describe | The model copies a misleading example |\n| Exact column names | You are working with a file | You ask for fields that do not exist |\n| Output schema | Reports must be comparable | A rigid but unhelpful structure |\n| Boundaries | Sources are incomplete or sensitive | Over-broad bans block the task |\n\nA role alone does not name the measure or stop invented explanations: the instruction must still say `Net_Sales_Amount` and the limits.\n\n> [!ghi-nho] A longer prompt can be better, equal or worse than a short one. It may add conflicting instructions or accidental assumptions. For each sentence ask: *if I deleted this, what would change in the answer I can observe?* If nothing, delete it.\n\n> [!meo] When two versions of a prompt look equally good, do not argue about wording. Give both the same data, score both answers on the same short rubric (right measure, four regions, totals reconcile, caveat visible) and keep the winner."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Find the problems in this prompt",
+            "parts": [
+              {
+                "md": "This prompt looks thorough. It is not.\n\n```prompt Prompt C (looks thorough)\nYou are the world's best retail data scientist with 30 years of experience. Please study the attached sales file very carefully and give me revenue in dollars for each region, plus how profit changed month by month. Be extremely detailed and professional. Do a great job.\n```\n\nFind at least five problems before you open the answer.\n\n:::Open the answer after you have tried\n1. **The role claim** (\"world's best ... 30 years\") changes nothing you can check; it invents authority.\n2. **\"Revenue\"** names no column. The file has `Gross_Amount` and `Net_Sales_Amount`, and they give different totals.\n3. **\"In dollars\":** the CSV has no currency. The prompt invites a guessed unit.\n4. **\"Profit\":** the file has no costs, so profit cannot be calculated or its change described.\n5. **\"Month by month\":** the file has no dates, so no monthly view is possible.\n6. **\"Extremely detailed\"** conflicts with a manager who needs a short answer, and no output format is given.\n7. There is **no check** asked for, for example reconciling the regional totals with the file total.\n\nA fix is Prompt B: the same job with exact fields, the output shape, an unspecified currency and explicit limits.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Your turn: write the category prompt",
+            "parts": [
+              {
+                "md": "A new business question: **which product categories have the highest and lowest total net sales?** Using the regional prompt as a pattern, not as text to copy:\n\n1. Write a short prompt that uses `Product_Category` and `Net_Sales_Amount`.\n2. State who will use the answer and choose a suitable output format.\n3. Include relevant limits and say how you would check the result.\n4. Label the instruction, context, input, output and constraints in your own prompt.\n\nA role or an example is optional: add one only if it adds useful guidance.\n\n:::Open the model answer after you have tried\n```prompt Model category prompt\nA retail manager wants to know which product categories to review first.\nUsing the attached retail CSV, sum Net_Sales_Amount for each Product_Category.\nReturn a four-row table with category, transaction count and total net sales, ranked from highest to lowest, then two short observations, one of which states a limitation of the data.\nCheck that the four category totals add up to the total for the whole file.\nThe currency is not given in the file: leave it unspecified.\nDo not infer profit, dates or the reasons for differences between categories.\n```\n\nOnly the grouping field changed. For your own check, the CSV gives:\n\n| Product_Category | Transactions | Net sales |\n|---|---|---|\n| Apparel | 54 | 259,252.42 |\n| Furniture | 51 | 231,255.44 |\n| Grocery | 49 | 201,931.10 |\n| Electronics | 46 | 199,813.15 |\n| **All** | **200** | **892,252.11** |\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Common confusions",
+            "parts": [
+              {
+                "title": "Does every prompt need a role?",
+                "md": "No. A role is optional. It can help set tone or audience, but it cannot make an answer accurate. Include it only if it changes something you can observe."
+              },
+              {
+                "title": "What is the difference between the instruction and the output?",
+                "md": "The instruction says what to do (sum net sales by region). The output specification says what shape to return (a four-row ranked table). Some providers fold the output into the instructions; what matters is that both are present."
+              },
+              {
+                "title": "Which provider's layout should I use?",
+                "md": "Whichever states your task, evidence and checks clearly. The layouts are different presentations of overlapping ideas. If you cannot decide, test both against the same rubric."
+              },
+              {
+                "title": "Can examples replace the data?",
+                "md": "No. An example shows a pattern or tone. Only the CSV or a verified table supplies figures. A prompt with examples but no data leaves the model to invent the numbers."
+              },
+              {
+                "title": "Is a longer prompt safer?",
+                "md": "No. Long prompts can contain conflicting instructions and accidental assumptions. Keep a sentence only if it changes a property of the answer you can test."
+              },
+              {
+                "title": "The store might be in the US. Can I ask for dollars?",
+                "md": "Not unless the file says so. The CSV has no currency, so ask for the unit to stay unspecified and say so in the answer."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "md": "Use the CSV in a spreadsheet; no code is needed.\n\n- Sum `Net_Sales_Amount` by `Store_Region` and by `Product_Category` (a pivot table or `SUMIF`). Each set of four totals must add up to **892,252.11**, and the transaction counts to **200**.\n- Compare with the chatbot's table. Check that it used `Net_Sales_Amount` and not `Gross_Amount`: the whole-file gross total is 1,038,118.63, so mixing the two columns is easy to see.\n- Read the answer for any word about **profit, currency, months or causes**. The file contains none of these, so any such claim has no source."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Prompt anatomy",
+          "items": [
+            {
+              "term": "Prompt anatomy",
+              "meaning": "A practical breakdown of a prompt into functions. It is not a compulsory sentence order."
+            },
+            {
+              "term": "Instruction",
+              "meaning": "The action you ask the system to perform.",
+              "example": "Sum Net_Sales_Amount for each Store_Region."
+            },
+            {
+              "term": "Context",
+              "meaning": "The purpose and audience: who uses the answer and for what decision.",
+              "example": "A retail manager reviewing regional activity."
+            },
+            {
+              "term": "Input",
+              "meaning": "The source material or data. If the model cannot access it, the input is missing."
+            },
+            {
+              "term": "Output specification",
+              "meaning": "The required structure and content of the result.",
+              "example": "A four-row table ranked highest to lowest, plus two observations."
+            },
+            {
+              "term": "Constraint",
+              "meaning": "A defined boundary on the answer: what to include or avoid.",
+              "example": "Do not invent currency or infer profit."
+            },
+            {
+              "term": "Role (optional)",
+              "meaning": "Sets the assistant's purpose or tone. It cannot make a numerical answer accurate."
+            },
+            {
+              "term": "Provider layouts",
+              "meaning": "OpenAI, Google and Anthropic group the same needs differently; none is mandatory. Compare layouts by testing outputs against one rubric."
+            },
+            {
+              "term": "Does this sentence earn its place?",
+              "meaning": "Keep a sentence only if removing it would change an observable property of the answer."
+            },
+            {
+              "term": "Exact field names",
+              "meaning": "Naming real columns (Net_Sales_Amount, Store_Region) keeps the task checkable; asking for fields that do not exist invites invention."
+            }
+          ]
+        },
+        "summary": [
+          "A complete prompt names the instruction, context, input, output and constraints, in any order, and still has to be verified.",
+          "OpenAI-, Google- and Anthropic-style layouts group the same needs differently; judge them by testing outputs, not by their labels.",
+          "A role, examples or extra length help only when they change a result you can test; the data must be present and the file's gaps (currency, profit, dates) respected.",
+          "To reuse a prompt, change only the grouping field and keep the calculation and the independent check."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 4",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p04.pe021",
+              "type": "mcq",
+              "prompt": "Which prompt component identifies the desired deliverable?",
+              "explanation": "Output format states the form of the deliverable, such as a four-row ranked table. A background anecdote, a persona or a model nickname tells the model nothing about what to hand back. The optional persona is the tempting wrong choice because it feels like part of a serious prompt, but it sets a voice, not a deliverable.",
+              "options": [
+                {
+                  "label": "Background anecdote",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "Output format",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Optional persona",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.role-for-substance"
+                },
+                {
+                  "label": "Model nickname",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe022",
+              "type": "mcq",
+              "prompt": "A prompt says, “Study this file.” Which addition most improves task clarity?",
+              "explanation": "'Study this file' names no metric and no grouping. 'Sum net sales by region' supplies both, so the answer can be checked against the CSV. Tone, pretended familiarity and 'every possible topic' add words but not a task. Polished language is the most tempting wrong answer, but nobody can verify a tone against the data.",
+              "options": [
+                {
+                  "label": "Sum net sales by region",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Pretend to know the retailer",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.role-for-substance"
+                },
+                {
+                  "label": "Consider every possible topic",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.vague-task"
+                },
+                {
+                  "label": "Use very professional language",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.role-for-substance"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe023",
+              "type": "mcq",
+              "prompt": "In the OpenAI-inspired layout shown in class, where are task steps mainly placed?",
+              "explanation": "In an OpenAI-inspired layout the task steps sit mainly in the instructions. Identity assigns a role, context supplies data and background, and examples show a pattern. Identity is the easy mistake because 'You help retail managers...' sounds like an order, but it says who the assistant is, not what to do.",
+              "options": [
+                {
+                  "label": "Task instructions",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Supplied context",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "Model identity",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "Worked examples",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe024",
+              "type": "mcq",
+              "prompt": "A student needs a specific four-column output. What should the prompt include?",
+              "explanation": "Exact column headings constrain the structure of the answer: they say which four fields to return. A vague style, an unrelated example or a longer role biography leaves the structure open. The role biography looks like helpful detail but changes no observable property of the table.",
+              "options": [
+                {
+                  "label": "An unspecified reporting style",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.vague-task"
+                },
+                {
+                  "label": "The exact column headings",
+                  "isCorrect": true
+                },
+                {
+                  "label": "An unrelated worked example",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.longer-is-better"
+                },
+                {
+                  "label": "A longer role biography",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.role-for-substance"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe025",
+              "type": "mcq",
+              "prompt": "A prompt includes examples but omits the actual CSV. What is the likely problem?",
+              "explanation": "Examples illustrate a format or behaviour; they are not records. Without the CSV the model has no source rows, so any totals it gives are made up. The idea that the model 'must ignore examples' is also wrong: the examples still shape the format, they just cannot supply the data.",
+              "options": [
+                {
+                  "label": "The output is necessarily too short",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.missing-input"
+                },
+                {
+                  "label": "The model lacks source records",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The model must ignore examples",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.missing-input"
+                },
+                {
+                  "label": "The task becomes a security test",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.missing-input"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe026",
+              "type": "mcq",
+              "prompt": "Which item is a constraint rather than a data field?",
+              "explanation": "A constraint limits what the answer may claim. 'Profit is not observed' is such a limit. Net sales, transaction ID and store region are columns that exist in the CSV, so they are data fields. 'Net sales is recorded' is tempting because it also sounds like a rule, but it describes what the file contains, not what the answer may say.",
+              "options": [
+                {
+                  "label": "Net sales is recorded",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "Transaction ID is recorded",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "Store region is recorded",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "Profit is not observed",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe027",
+              "type": "mcq",
+              "prompt": "A category summary should be reusable by a colleague. Which prompt detail is most useful?",
+              "explanation": "A colleague can reuse a prompt only if it says what to group (category), what to measure (net sales) and how. Flattering role titles, 'maximum creative freedom' and hiding the field definitions all make the result vary from run to run.",
+              "options": [
+                {
+                  "label": "Add several flattering role titles",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.role-for-substance"
+                },
+                {
+                  "label": "Ask for maximum creative freedom",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.vague-task"
+                },
+                {
+                  "label": "Hide the data-field definitions",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.vague-task"
+                },
+                {
+                  "label": "Name category, metric and grouping",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe028",
+              "type": "mcq",
+              "prompt": "Two prompts contain the same task, data and restrictions but organise them differently. How should they be judged?",
+              "explanation": "Two layouts with the same task, data and restrictions are alternatives, not a ranking. Run both and score the outputs against one rubric. A mandatory provider layout, a longer format or more headings do not make an answer better by themselves.",
+              "options": [
+                {
+                  "label": "Declare one provider layout mandatory",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.one-true-layout"
+                },
+                {
+                  "label": "Assume the longer format wins",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.longer-is-better"
+                },
+                {
+                  "label": "Prefer the one with more headings",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.longer-is-better"
+                },
+                {
+                  "label": "Test their outputs against one rubric",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe029",
+              "type": "mcq",
+              "prompt": "A prompt requests revenue in dollars, but the CSV has no currency. What should be changed?",
+              "explanation": "The CSV has no currency, so the prompt should keep the unit unspecified rather than guess. Keeping 'dollars', switching to profit or substituting estimates each add a fact the data does not hold. 'A plausible guess' tempts because it sounds reasonable, but a plausible guess is still an unsupported claim.",
+              "options": [
+                {
+                  "label": "Convert net sales into profit",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.guess-the-gap"
+                },
+                {
+                  "label": "Require units to remain unspecified",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Replace all values with estimates",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.guess-the-gap"
+                },
+                {
+                  "label": "Keep dollars as a plausible guess",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.guess-the-gap"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe030",
+              "type": "mcq",
+              "prompt": "A simple task works with one direct instruction. A revised prompt adds six personas and examples. What is prudent?",
+              "explanation": "Every sentence should earn its place by changing an observable property of the answer, so keep only the additions that improve testing. Keeping them all 'to look rigorous' mistakes volume for quality; rejecting the original without comparing the two is the same mistake in reverse.",
+              "options": [
+                {
+                  "label": "Reject the original without comparison",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.longer-is-better"
+                },
+                {
+                  "label": "Treat more context as proven accuracy",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.longer-is-better"
+                },
+                {
+                  "label": "Keep every addition to appear rigorous",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.longer-is-better"
+                },
+                {
+                  "label": "Retain only additions that improve testing",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.pe031",
+              "type": "mcq",
+              "prompt": "A manager needs a concise category table, but a prompt produces an essay. Which component needs adjustment?",
+              "explanation": "A table that comes back as an essay is an output mismatch, so the output specification (a table, one row per category, named columns) needs tightening. The model's vocabulary, the retailer's historical name and the number of vendors do not control the response format.",
+              "options": [
+                {
+                  "label": "The model's training vocabulary",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "The requested output structure",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The retailer's historical name",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                },
+                {
+                  "label": "The number of tool vendors",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.component-mixup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.x1",
+              "type": "matching",
+              "points": 3,
+              "prompt": "Match each part of the complete regional prompt to the function it performs.",
+              "explanation": "The instruction is the action (sum by region); the context is who the answer is for; the input is the source data; the output specification is the shape of the result; the constraint is a limit on what may be claimed. Notice that a column name sits inside the instruction and the input, but is not itself a constraint.",
+              "pairs": [
+                {
+                  "left": "Sum Net_Sales_Amount for each Store_Region",
+                  "right": "Instruction"
+                },
+                {
+                  "left": "The reader is a retail manager choosing regions to review",
+                  "right": "Context"
+                },
+                {
+                  "left": "The attached retail transaction CSV",
+                  "right": "Input"
+                },
+                {
+                  "left": "A four-row table ranked from highest to lowest",
+                  "right": "Output specification"
+                },
+                {
+                  "left": "Do not invent currency or infer profit",
+                  "right": "Constraint"
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.x2",
+              "type": "true_false",
+              "points": 1,
+              "prompt": "If a prompt begins 'You are an expert statistician', the totals in the answer no longer need to be checked.",
+              "explanation": "False. A role can set tone and framing, but it cannot supply data or guarantee that a calculation is right. Totals still have to be recomputed from the CSV or a spreadsheet, whatever role the prompt assigns.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p04.role-for-substance"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p04.x3",
+              "type": "fill_in",
+              "points": 1,
+              "prompt": "You adapt the regional prompt to compare categories. Which CSV column replaces Store_Region? Write the exact column name.",
+              "explanation": "Product_Category. The instruction, output and constraints stay the same; only the grouping field changes, and the four category totals must still add up to the whole-file net sales.",
+              "answers": [
+                "product_category",
+                "product category"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "title": "Period 5 · Follow-up Prompts",
+        "durationMin": 45,
+        "description": "Improve an answer with targeted follow-ups, tell a format correction from a factual correction, keep data and measure stable, and verify that no revision introduced a new error.",
+        "look": {
+          "palette": "forest",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Write a follow-up that names one defect, the fix you want and what must stay unchanged",
+          "Distinguish a format correction from a factual correction and word each appropriately",
+          "Add context (audience, time, length) that changes the answer, and leave out detail that does not",
+          "Reconcile regional totals with the whole-file total and report any discrepancy",
+          "Re-check a revised answer against the same criteria to catch newly introduced errors",
+          "Keep a prompt log of version, problem observed, revision and result check"
+        ],
+        "body": "You sent a first prompt to compare net sales by region. The reply is long, wanders, and calls the numbers profit. You could rewrite the whole prompt, but you rarely need to. A **follow-up prompt** uses the conversation you already have to ask for one specific change. This period is about choosing the right change, and then checking that the change did not break something else.\n\n> [!ghi-nho] Start simple, then refine. A good follow-up names the defect, names the fix you want, and says what must stay unchanged.\n\n:::Predict before you read\nA reply has two problems: it is far longer than a manager wants, and it labels the totals \"profit\". Would one follow-up, \"Make it shorter\", fix both? Which of the two problems is more serious, and why? You will compare your answer with the \"format versus factual correction\" box below.\n:::",
+        "sections": [
+          {
+            "layout": "cards",
+            "title": "Four jobs for a follow-up",
+            "intro": "After you read an answer, decide what is missing. A follow-up can do one of four jobs, and each needs different wording.",
+            "parts": [
+              {
+                "title": "Presentation",
+                "md": "Change length, format or order.\n\n*Replace the explanation with a four-row table.*"
+              },
+              {
+                "title": "Scope or audience",
+                "md": "Narrow the task or sharpen who it is for.\n\n*The manager has 30 seconds: four rows and one caution.*"
+              },
+              {
+                "title": "Missing check",
+                "md": "Ask for a calculation or a reconciliation.\n\n*Show the aggregation for each region.*"
+              },
+              {
+                "title": "Correction",
+                "md": "Remove or fix an unsupported claim.\n\n*The file has no costs; remove the profit claim.*"
+              }
+            ],
+            "outro": "> [!canh-bao] **A format correction changes how an answer looks; a factual correction changes what it claims.** Asking for a shorter answer does not remove a false currency label, and a tidy table does not make a wrong quantity right. When the problem is factual, say what the data does or does not contain."
+          },
+          {
+            "layout": "steps",
+            "title": "Worked example: three turns",
+            "intro": "This is a hypothetical teaching sequence: no model run is claimed, and the only real figures are the CSV results at the end. Before you press **Next step**, write down what Turn 2 should say.",
+            "reveal": true,
+            "parts": [
+              {
+                "title": "Turn 1: start simple",
+                "md": "```prompt Turn 1\nUsing the attached retail CSV, compare total net sales by Store_Region. Summarise the result for a retail manager.\n```\n\nWhy: one turn is enough to begin an ordinary task. Read what comes back before deciding what detail to add."
+              },
+              {
+                "title": "Turn 2: fix the format",
+                "md": "Suppose the reply is long-winded.\n\n```prompt Turn 2 (follow-up)\nKeep the same data and measure. Replace the explanation with a table showing region, transaction count and total Net_Sales_Amount, sorted by the total. Under the table, add one short sentence identifying the highest and lowest totals.\n```\n\nWhy: it names the defect (too much explanation), the fix (a table, a sort order, one sentence) and what stays fixed (data and measure). It does not restart the task."
+              },
+              {
+                "title": "Turn 3: correct the claim",
+                "md": "Suppose the reply now calls the values profit.\n\n```prompt Turn 3 (follow-up)\nThese numbers are net sales, not profit. Correct the heading and wording. State that currency is not provided. Reconcile the regional totals with the full-file Net_Sales_Amount total, and report any discrepancy.\n```\n\nWhy: this is a factual correction, so it says what the measure is, what the file lacks, and asks for an evidence check instead of just a nicer wording."
+              },
+              {
+                "title": "Check against the file",
+                "md": "The CSV gives these totals:\n\n| Region | Transactions | Net sales |\n|---|---|---|\n| North | 57 | 260,026.33 |\n| South | 53 | 236,980.99 |\n| West | 51 | 213,240.41 |\n| East | 39 | 182,004.38 |\n| **All** | **200** | **892,252.11** |\n\nIf the chatbot's table disagrees, calculate directly in a spreadsheet and use the source-derived values. The checked numbers decide, not the fluency of the reply."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Targeted or vague?",
+            "parts": [
+              {
+                "md": "Compare vague follow-ups with targeted ones.\n\n| Vague | Targeted |\n|---|---|\n| Make this better. | Replace the long explanation with a four-row table and one sentence of interpretation. |\n| Fix the numbers. | The East total does not reconcile with the file total. Recalculate Net_Sales_Amount for East and show the calculation. |\n| Sound more professional. | The reader is a manager with five minutes. Keep the table; write two plain sentences and one caution. |\n| Try again. | Keep the same data and measure; only change the column names to Rank, Region and Total net sales. |\n\nThe targeted versions can be assessed: you can read the next answer and say whether the defect is gone. Avoid rewriting the entire task unless the earlier task definition was itself wrong."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Add context, and guide the format with an example",
+            "parts": [
+              {
+                "md": "A follow-up may sharpen the audience: \"The manager has 30 seconds. Use four rows and one caution.\" Context counts when it changes the answer: **audience**, **purpose** (choose a region to review) and **length** (a five-minute update). A long background story or a role description is unnecessary for this task.\n\nWhen the problem is the *format*, show only the intended structure:\n\n```prompt Format follow-up\nUse columns Rank | Region | Total net sales.\nSort from highest to lowest and keep all four rows.\nDo not change the figures.\n```\n\nA format example does not need numbers. Inspect the next response: the column names and ranking should change as asked, while the CSV-derived totals stay the same.\n\n> [!meo] State what must stay unchanged: the dataset, the filters and the aggregation. If you change them between turns you cannot tell which change caused which difference.\n\nWhen the conversation has grown long or drifted from the original task (**context drift**), restate the task and the evidence, or start a clean conversation with the verified brief. Keep a short prompt log so you can tell which change produced which result."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Correct unsupported claims and check every revision",
+            "parts": [
+              {
+                "md": "If the chatbot describes net sales as profit or invents a currency, say so explicitly:\n\n```prompt Correction follow-up\nThe CSV contains no costs and gives no currency. Correct the wording, retain the verified net-sales totals and remove unsupported profitability claims.\n```\n\nKeep the useful parts and ask for a change to the specific problem. Then **evaluate after every meaningful revision**, using the same criteria each time:\n\n- Does the table still show all four regions?\n- Is the measure still net sales?\n- Do the totals reconcile with the whole-file total?\n- Is the caveat visible?\n- Did the new wording accidentally imply a time trend or a cause?\n\n> [!ghi-nho] Improvements to layout are valuable, but they cannot make up for an incorrect quantity.\n\n**Why not compare prompts that use different measures?** If one prompt sums `Net_Sales_Amount` and another sums `Gross_Amount`, the whole-file totals are 892,252.11 and 1,038,118.63. The gap comes from the column choice, not from the prompt wording, so any comparison of the two prompts would be meaningless. Compare prompts only on the same data and the same criteria."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Find the error: a revision that looks better",
+            "parts": [
+              {
+                "md": "You send this follow-up to the table you had already checked:\n\n```prompt Turn 4 (follow-up)\nMake it shorter and more persuasive for the manager.\n```\n\nand the (hypothetical) reply is:\n\n```prompt Hypothetical reply, Turn 4\nRegion | Net sales\nNorth | 260,026.33\nSouth | 236,980.99\nWest | 213,240.41\nEast | 182,040.38\n\nNorth leads thanks to its strong promotions. East needs urgent attention.\n```\n\nThe reply is shorter and reads well. Compare it with your checked totals and find at least three problems.\n\n:::Open the answer after you have tried\n1. **A number changed.** East is 182,004.38 in the file, not 182,040.38 (two digits swapped). With this value the four totals add up to 892,288.11, which differs from the file total 892,252.11 by 36.00. You see this only because you reconcile.\n2. **A cause was added.** \"Thanks to its strong promotions\": the file contains no promotion data.\n3. **An unsupported judgement.** \"Urgent attention\" is not supported by net sales alone.\n4. **A caveat disappeared.** The note that currency is not provided vanished in the shortening.\n\n\"Persuasive\" invited the extra claims. A better follow-up:\n\n```prompt Targeted repair\nKeep the shorter format. East's net sales are 182,004.38, not 182,040.38: restore the checked figure. Remove the sentences about promotions and urgency, and add back the note that currency is not provided.\n```\n\nYou keep the useful edit (shorter) and repair only what broke.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Practice: refine the answer",
+            "parts": [
+              {
+                "md": "Use the retail CSV and a chatbot, and keep a log of every turn.\n\n1. **Start simple.** Ask: \"Compare total net sales across regions in the attached CSV. Show a ranked table and two observations.\" Save the response.\n2. **Improve one aspect.** Read the answer. Write one follow-up that improves its length, format or explanation. If it already meets the task, adapt it for a five-minute manager briefing.\n3. **Refine and review.** Read the revised answer and send a second follow-up that improves it for the manager. Save all three versions, explain the changes, and check one total against the CSV.\n\nA log like this one makes the cycle visible:\n\n| Version | Problem observed | Revision (follow-up sent) | Result check |\n|---|---|---|---|\n| 1 | | | |\n| 2 | | | |\n| 3 | | | |\n\nIf your chatbot cannot read files or draw charts, paste the verified regional table into the conversation and record that limitation in your log."
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Common confusions",
+            "parts": [
+              {
+                "title": "Should I rewrite the whole prompt each time?",
+                "md": "No. Start simple and add the missing detail in the conversation. Rewrite the whole task only if the original task definition was wrong."
+              },
+              {
+                "title": "How many follow-ups should I send?",
+                "md": "As many as it takes to meet your criteria, one defect at a time. If you keep patching and the conversation drifts, restate the task and evidence or start a fresh chat with the verified brief."
+              },
+              {
+                "title": "Can a format example contain numbers?",
+                "md": "Avoid it. A format example should show the structure only. Made-up numbers in an example may be copied into the answer."
+              },
+              {
+                "title": "The answer is accurate but too long. Is that a factual problem?",
+                "md": "No, it is a format problem, so ask for the format you want (a table, two sentences). Keep the checked figures and tell the chatbot to leave them unchanged."
+              },
+              {
+                "title": "A revision changed a number that was correct. What now?",
+                "md": "Restore the checked number, say so in the next follow-up, and keep the other valid edits. Do not accept a figure because the new explanation sounds better."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "md": "- Compute net sales by `Store_Region` in a spreadsheet: North 260,026.33, South 236,980.99, West 213,240.41 and East 182,004.38 should add to **892,252.11**.\n- Count the transactions per region (57, 53, 51, 39). They must add to **200**.\n- After every follow-up, compare each figure in the new table with these values and look at the measure label: it must say net sales.\n- Read the revision for any new word about profit, currency, trend or cause. The file supports none of them."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Follow-up prompts",
+          "items": [
+            {
+              "term": "Follow-up prompt",
+              "meaning": "An instruction that builds on an earlier answer to refine it, instead of restarting the task."
+            },
+            {
+              "term": "Targeted follow-up",
+              "meaning": "One that names the defect, the desired fix and what must stay unchanged.",
+              "example": "Keep the table; shorten the explanation to two sentences."
+            },
+            {
+              "term": "Format correction",
+              "meaning": "A change in how the answer looks (length, columns, order). Does not alter what it claims."
+            },
+            {
+              "term": "Factual correction",
+              "meaning": "A change in what the answer claims. Say what the data does or does not contain.",
+              "example": "The CSV has no currency and no costs; do not call these values profit."
+            },
+            {
+              "term": "Iteration",
+              "meaning": "Repeated execution, checking and adjustment: read, name the defect, follow up, re-check."
+            },
+            {
+              "term": "Context drift",
+              "meaning": "The conversation moving away from the original task. Restate the task and evidence, or start a clean chat with the verified brief."
+            },
+            {
+              "term": "Reconciliation",
+              "meaning": "Checking that component values agree with a valid total.",
+              "example": "Four regional totals must add to 892,252.11."
+            },
+            {
+              "term": "Format-only example",
+              "meaning": "A sample that shows structure (Rank | Region | Total net sales) without figures that could be copied."
+            },
+            {
+              "term": "Prompt log",
+              "meaning": "A short record of prompt version, problem observed, revision and result check."
+            },
+            {
+              "term": "Same-criteria comparison",
+              "meaning": "Compare outputs only on the same data, measure and criteria, for example not net sales against gross sales."
+            }
+          ]
+        },
+        "summary": [
+          "Start with a short request, read the answer, then use follow-ups that name a defect and the change wanted.",
+          "Use format follow-ups for how the answer looks and factual corrections for what it claims; say what the data lacks.",
+          "Keep the data, measure and checked figures stable while testing a change, and keep a prompt log.",
+          "Every revision can introduce a new error: re-check the same criteria and reconcile the totals each time."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 5",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p05.pe032",
+              "type": "mcq",
+              "prompt": "What is a follow-up prompt?",
+              "explanation": "A follow-up is a further instruction that builds on an answer already in the conversation, usually to change format, scope or content. It does not verify anything by itself, so 'a replacement for checking data' confuses revising an answer with checking it.",
+              "options": [
+                {
+                  "label": "A file generated before the task",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.definition-confusion"
+                },
+                {
+                  "label": "A request that builds on an answer",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A replacement for checking data",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.skip-recheck"
+                },
+                {
+                  "label": "A separate model evaluation contract",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.definition-confusion"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe033",
+              "type": "mcq",
+              "prompt": "AI gives a regional ranking without showing how totals were made. What follow-up helps?",
+              "explanation": "Asking the chatbot to 'show the aggregation for each region' exposes how each total was made, so you can recompute it. A second dataset, richer adjectives and a new job title for the manager do not show where the numbers came from.",
+              "options": [
+                {
+                  "label": "Show the aggregation for each region",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Add a second unrelated dataset",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.vague-followup"
+                },
+                {
+                  "label": "Describe the chart in more adjectives",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.vague-followup"
+                },
+                {
+                  "label": "Assign the manager a new title",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.vague-followup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe034",
+              "type": "mcq",
+              "prompt": "Which detail is relevant context for a regional briefing?",
+              "explanation": "Context counts when it changes the answer. Five minutes limits the length and the number of points. Office artwork, a colourful avatar or a notebook preference changes nothing about the decision the briefing supports.",
+              "options": [
+                {
+                  "label": "The company office has artwork",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.irrelevant-context"
+                },
+                {
+                  "label": "The model has a colourful avatar",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.irrelevant-context"
+                },
+                {
+                  "label": "The manager has five minutes",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The analyst prefers blue notebooks",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.irrelevant-context"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe035",
+              "type": "mcq",
+              "prompt": "A learner wants each finding to include evidence and a caveat. Which technique helps?",
+              "explanation": "To get evidence and a caveat in every finding, show a short example of one finding in that pattern (with placeholders, not made-up numbers). Removing sections, praising the model or inviting guesses does not specify the pattern. Praise is the tempting wrong answer because it feels encouraging, but it tells the model nothing about structure.",
+              "options": [
+                {
+                  "label": "Remove required output sections",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.surface-fix"
+                },
+                {
+                  "label": "Give a concise output example",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Add generic praise repeatedly",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.vague-followup"
+                },
+                {
+                  "label": "Ask it to invent facts",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.invent-to-fix"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe036",
+              "type": "mcq",
+              "prompt": "AI states that high net sales show high profitability. Which follow-up fits the dataset?",
+              "explanation": "Net sales alone cannot show profitability, because the file has no costs. The right follow-up removes the unsupported profit claim and keeps what the data does support. Inventing a margin or blaming discounts adds new unsupported claims, and translating the sentence leaves the problem untouched.",
+              "options": [
+                {
+                  "label": "Translate the claim into another language",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.vague-followup"
+                },
+                {
+                  "label": "Remove the unsupported profit claim",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Conclude discounts explain the margin",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.invent-to-fix"
+                },
+                {
+                  "label": "Add an invented margin estimate",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.invent-to-fix"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe037",
+              "type": "mcq",
+              "prompt": "A first answer is accurate but too detailed for a slide. What follow-up fits?",
+              "explanation": "Condensing to three supported points meets the new need (a slide) while keeping the evidence. A poem, an invented 'simpler' number or removing all numerical evidence damage fidelity.",
+              "options": [
+                {
+                  "label": "Replace the table with a poem",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.surface-fix"
+                },
+                {
+                  "label": "Invent a simpler number for each region",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.invent-to-fix"
+                },
+                {
+                  "label": "Condense it to three supported points",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Remove all numerical evidence",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.surface-fix"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe038",
+              "type": "mcq",
+              "prompt": "What should happen after a questionable AI claim is spotted?",
+              "explanation": "When a claim looks questionable, check that exact claim against the source and correct it, keeping the valid parts of the answer. Accepting it for consistency, saving it as a future example or deleting everything is not evaluation.",
+              "options": [
+                {
+                  "label": "Add the claim to future examples",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.skip-recheck"
+                },
+                {
+                  "label": "Check and correct the exact claim",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Accept the claim for consistency",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.skip-recheck"
+                },
+                {
+                  "label": "Delete every part of the response",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.overcorrect"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe039",
+              "type": "mcq",
+              "prompt": "A follow-up changes a correct number while improving the explanation. Which response is appropriate?",
+              "explanation": "Refinement must protect verified results. Restore the checked number and keep the valid edits. A fluent new narrative is not evidence; hiding the disagreement or discarding the whole first answer throws away either the truth or the good work.",
+              "options": [
+                {
+                  "label": "Discard the entire first answer untested",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.overcorrect"
+                },
+                {
+                  "label": "Hide the disagreement from the manager",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.skip-recheck"
+                },
+                {
+                  "label": "Accept the new number for its fluency",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.skip-recheck"
+                },
+                {
+                  "label": "Restore the checked number; keep valid edits",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe040",
+              "type": "mcq",
+              "prompt": "The table is right but the reader cannot tell which region comes first. Which follow-up is most targeted?",
+              "explanation": "The only defect is presentation (the order), so sorting by net sales from highest to lowest is the targeted fix. It leaves the metric alone. A longer answer, an unrelated KPI or adjectives instead of amounts change what is being compared.",
+              "options": [
+                {
+                  "label": "Expand the answer to five pages",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.vague-followup"
+                },
+                {
+                  "label": "Generate a new unrelated KPI",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.vague-followup"
+                },
+                {
+                  "label": "Sort by net sales, highest first",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Swap all amounts for adjectives",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.surface-fix"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe041",
+              "type": "mcq",
+              "prompt": "An AI summary uses technical jargon for a non-specialist manager. What follow-up helps?",
+              "explanation": "The reader is a non-specialist manager, so the answer should be rewritten in plain management language. More acronyms, code details or removing the business question work against the reader.",
+              "options": [
+                {
+                  "label": "Increase the number of acronyms",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.irrelevant-context"
+                },
+                {
+                  "label": "Remove the business question",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.irrelevant-context"
+                },
+                {
+                  "label": "Rewrite in plain management language",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Add advanced coding details",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.irrelevant-context"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.pe042",
+              "type": "mcq",
+              "prompt": "A follow-up produces a shorter answer but drops a data limitation. How should it be assessed?",
+              "explanation": "A revision is judged against every criterion, not one surface feature. A shorter answer that drops a required limitation fails the completeness check, however neat or formal it reads.",
+              "options": [
+                {
+                  "label": "Ignore the missing limitation entirely",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.skip-recheck"
+                },
+                {
+                  "label": "Fail the completeness check despite brevity",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Pass because the word count fell",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.surface-fix"
+                },
+                {
+                  "label": "Pass because the tone sounds formal",
+                  "isCorrect": false,
+                  "misconception": "pe.p05.surface-fix"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.x1",
+              "type": "ordering",
+              "points": 2,
+              "prompt": "Put the steps of one refinement cycle in a sensible order.",
+              "explanation": "Read and compare first, so you know what is actually wrong. Name one defect, write a follow-up that states the change and what stays fixed, then re-check the new answer against the source, because revisions can add errors. Finally log the cycle so you can tell which change produced which result.",
+              "sequence": [
+                "Read the answer and compare it with the task criteria",
+                "Name the one defect you want fixed",
+                "Write a follow-up that states the change and keeps the data and measure fixed",
+                "Re-check the revised figures and wording against the CSV",
+                "Record the version, problem, revision and result check in your prompt log"
+              ]
+            },
+            {
+              "key": "pe.p05.x2",
+              "type": "matching",
+              "points": 3,
+              "prompt": "Match each observed problem to the most targeted follow-up.",
+              "explanation": "Each follow-up names the defect and the fix. A format problem is solved by naming the format; a wrong measure label and an invented currency are factual corrections that must say what the data does or does not contain, while keeping the verified totals; an ordering problem needs only a sort instruction.",
+              "pairs": [
+                {
+                  "left": "The answer is three paragraphs; the manager wants a table",
+                  "right": "Replace the explanation with a four-row table and one sentence under it"
+                },
+                {
+                  "left": "The totals are called 'profit'",
+                  "right": "These are net sales, not profit; correct the wording and keep the totals"
+                },
+                {
+                  "left": "The answer states amounts in dollars",
+                  "right": "The file gives no currency; leave it unspecified and say so"
+                },
+                {
+                  "left": "The correct table lists regions in no order",
+                  "right": "Sort by total net sales, highest first"
+                }
+              ]
+            },
+            {
+              "key": "pe.p05.x3",
+              "type": "fill_in",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "The regional totals are North 260,026.33 and East 182,004.38. By how much do North's net sales exceed East's? Give the difference to two decimal places.",
+              "explanation": "260,026.33 - 182,004.38 = 78,021.95. Working with checked totals like these is how you notice when a revision quietly changes a number.",
+              "answers": [
+                "78021.95",
+                "78,021.95",
+                "78 021.95"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "title": "Period 6 · Prompting Strategies",
+        "durationMin": 45,
+        "description": "Choose between zero-shot, one-shot and few-shot prompts, clarification, concise method explanations and prompt chaining, and plan a checked sequence for a retail task.",
+        "look": {
+          "palette": "forest",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Choose zero-shot, one-/few-shot, clarification, chaining or a method explanation for a retail task and justify the choice",
+          "Write a format-only example that cannot be mistaken for data",
+          "Turn an ambiguous request such as 'find our best region' into one focused clarification question",
+          "Plan a three-stage prompt chain with a human checkpoint between stages",
+          "Request a checkable method description and verify it against the CSV without treating it as proof"
+        ],
+        "body": "A manager says: \"Find our best region.\" You could open a chat and start typing, but the first decision is not wording, it is **strategy**. Should the chatbot get a direct request, an example, a short explanation of the method, a question back, or a sequence of checked stages? This period gives you five strategies and a way to choose between them.\n\n> [!ghi-nho] The right strategy depends on the task. Choose the simplest one that produces a checkable result, and use the same data and criteria whenever you compare strategies.\n\n:::Predict before you read\n\"Find our best region.\" If you simply run the analysis by total net sales, what could go wrong? What is the first thing you would do instead? Hold your answer until you reach the clarification section.\n:::",
+        "sections": [
+          {
+            "layout": "text",
+            "title": "Five strategies at a glance",
+            "parts": [
+              {
+                "md": "| Situation | Strategy | Reason to choose it | Evidence of success |\n|---|---|---|---|\n| Clear request, simple output | Zero-shot | Low overhead | Correct result in the required format |\n| Unusual output pattern | One-shot or few-shot | Makes the pattern visible | Output follows the example without copying false facts |\n| Ambiguous decision question | Clarification | Prevents guessing | Agreed metric and audience |\n| Multi-stage analysis | Chaining | Allows checks between steps | Verified intermediate table and chart |\n| You need to explain a method | Concise explanation | Supports understanding | You can reproduce the calculation |\n\nPrompt selection is a practical decision. A strategy that works in one interface or task may not work equally well elsewhere, so compare strategies on the same data and the same evaluation criteria."
+              }
+            ]
+          },
+          {
+            "layout": "cards",
+            "title": "Zero-shot, one-shot and few-shot",
+            "intro": "The words count the **worked examples** in the prompt. The attached CSV is data, not an example of the answer.",
+            "parts": [
+              {
+                "title": "Zero-shot",
+                "md": "A direct request with no worked example.\n\nStart here when the task and the desired answer are easy to describe, such as a table of regional net sales."
+              },
+              {
+                "title": "One-shot",
+                "md": "One complete input-output example.\n\nUse it to clarify a format, tone or the handling of a special case."
+              },
+              {
+                "title": "Few-shot",
+                "md": "Several examples.\n\nUseful when the wording or classification is hard to describe. Examples must be relevant, correct and clearly separated from the data being analysed."
+              }
+            ],
+            "outro": "```prompt Few-shot prompt (examples are for style only)\nUsing the attached retail CSV, compare total net sales across regions.\nWrite one observation per region in the style of the examples below. The examples are for style only; take every figure from the CSV.\n\nExample 1\nInput: North net sales = 120; South = 80.\nOutput: North has higher net sales than South; these totals do not explain why.\n\nExample 2\nInput: East net sales = 90; West = 90.\nOutput: East and West have equal net sales; these totals do not establish equal profit.\n```\n\n**Why it works:** the examples show the style (state the comparison, then say what it does not prove) and are labelled as illustrative; the final line makes the CSV the only source of figures.\n\n> [!canh-bao] An example can bias the answer. If a sample table contains a made-up total, mark it as format-only and insist that every calculation comes from the file. For a four-region sum, column names and a validation rule may be enough: long demonstrations add noise."
+          },
+          {
+            "layout": "text",
+            "title": "Ask for a checkable method, not a reasoning story",
+            "parts": [
+              {
+                "md": "**Chain-of-thought** prompting asks for intermediate steps, and it is an active research topic. In introductory business work it is usually more practical to request a **concise, checkable method** and intermediate outputs.\n\n```prompt Method prompt\nUsing the attached retail CSV, sum net sales and count transactions by region. Divide the sum by the count to get net sales per transaction. Show these steps briefly, then name the leading region on each measure.\n```\n\nYou can check every figure it should show:\n\n| Region | Transactions | Net sales | Net sales per transaction |\n|---|---|---|---|\n| North | 57 | 260,026.33 | 4,561.87 |\n| South | 53 | 236,980.99 | 4,471.34 |\n| West | 51 | 213,240.41 | 4,181.18 |\n| East | 39 | 182,004.38 | 4,666.78 |\n\nNorth leads on **total net sales**; East leads on **net sales per transaction**. So \"best\" depends on the measure, which is exactly why a clarification may come first.\n\nAnother useful request is: \"Show which columns you used, define the aggregation, and provide a short verification checklist.\"\n\n> [!ghi-nho] An explanation request gives you an *observable account of the method*. It is not direct access to the model's private reasoning, and it is not a substitute for calculation. A convincing explanation can still sit on a wrong number: you verify the figures."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Clarification: ask before analysing",
+            "parts": [
+              {
+                "md": "Back to the manager's \"Find our best region.\" Best by **total net sales**, by **net sales per transaction**, or by something else the data supports (for example, discount rate)? The answer changes the whole task, so confirm it before writing the calculation prompt.\n\n```prompt Clarification prompt\nBefore analysing, ask me what I mean by \"best\" and what decision the comparison supports.\n```\n\nClarification is useful when the question itself is ambiguous. Ask **one focused question** when the answer would change the task. When the request is already clear, avoid unnecessary questions.\n\nA second case: a chatbot proposes a **month-by-month** comparison, but the CSV has no dates. The right move is to request dates (or drop the monthly question) rather than infer months from the filename, the transaction IDs or the region labels.\n\n> [!canh-bao] When the question is ambiguous or the data cannot answer it, guessing is the failure. Ask, or say that the data is not available."
+              }
+            ]
+          },
+          {
+            "layout": "steps",
+            "title": "Worked example: a three-stage chain for a regional chart",
+            "intro": "Task: present regional net sales visually, without programming. **Prompt chaining** sends the *checked* output of one stage into the next. Reveal the stages one at a time and think about where you would stop and check.",
+            "reveal": true,
+            "parts": [
+              {
+                "title": "Stage 1: inspect",
+                "md": "```prompt Stage 1\nInspect the CSV and identify the fields needed to compare net sales across regions. State any missing information that limits interpretation. Do not draw a chart yet.\n```\n\nWhy: you confirm the right columns and surface what is missing (no dates, currency or costs) before any calculation."
+              },
+              {
+                "title": "Stage 2: calculate and reconcile",
+                "md": "```prompt Stage 2\nUsing Store_Region and Net_Sales_Amount, produce a four-row table of recorded transaction counts and summed net sales. Show the aggregation rule and reconcile the four totals with the file total. Pause for my confirmation.\n```\n\nWhy: this is where numbers are created, so it ends with a reconciliation and a pause."
+              },
+              {
+                "title": "Your checkpoint",
+                "md": "Before sending Stage 3, **you** compare the table with the CSV or a spreadsheet: four regions, the right measure, totals that add to 892,252.11.\n\nA wrong total caught here cannot reach the chart. If the chatbot has no file tool, create the verified table in a spreadsheet and paste it as the input to Stage 3. No coding is required."
+              },
+              {
+                "title": "Stage 3: chart the verified table",
+                "md": "```prompt Stage 3\nUsing the verified table, create a horizontal bar chart, or provide a reproducible chart specification if drawing is unavailable. Start the value axis at zero, label net sales with unspecified currency, and state one supported observation and one important limitation.\n```\n\nWhy: the chart is built from the accepted table, with explicit rules for the axis, the unit and the claims."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Find the error: one prompt, five strategies at once",
+            "parts": [
+              {
+                "md": "A classmate proposes this single prompt:\n\n```prompt Classmate's prompt\nUsing the attached CSV, find our best region by month, explain which region is most profitable, and draw the chart. For example: North = 120, South = 80 -> North is best because it has the highest profit.\n```\n\nFind at least four problems.\n\n:::Open the answer after you have tried\n1. **\"Best\"** is undefined: highest total, highest per transaction, or something else? This needs a clarification first.\n2. **\"By month\":** the CSV has no dates.\n3. **\"Profitable\":** the CSV has no costs, so profit cannot be calculated.\n4. **The example teaches the wrong thing.** It uses made-up figures that are not marked as format-only, and it models a profit claim the data cannot support.\n5. **Three tasks in one prompt** (calculate, interpret, chart) with no checkpoint: a wrong total would flow straight into the chart. This calls for a chain.\n6. No reconciliation with the file total is requested.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Your turn: a chain for a category chart",
+            "parts": [
+              {
+                "md": "Draft a three-stage prompt chain for a **category-level** net-sales chart. State what you would check between stages and what you would do if the chatbot could not read the file.\n\n:::Open a model chain after you have tried\n```prompt Stage 1\nInspect the CSV and identify the fields needed to compare net sales across product categories. State any missing information that limits interpretation. Do not draw a chart yet.\n```\n\n```prompt Stage 2\nUsing Product_Category and Net_Sales_Amount, produce a four-row table of transaction counts and summed net sales. Show the aggregation rule and reconcile the four totals with the file total. Pause for my confirmation.\n```\n\n```prompt Stage 3\nUsing the verified table, create a horizontal bar chart. Start the value axis at zero, label net sales with unspecified currency, and state one supported observation and one limitation.\n```\n\n**Your checkpoint after Stage 2:** the four category totals must add to 892,252.11 and the counts to 200.\n:::"
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Common confusions",
+            "parts": [
+              {
+                "title": "Is zero-shot worse than few-shot?",
+                "md": "No. Zero-shot is often enough for a clear, familiar output and has the least overhead. Add examples only when they address a need, such as a pattern that is hard to describe."
+              },
+              {
+                "title": "How many examples should I give?",
+                "md": "As few as needed. One correct example often clarifies the format; long demonstrations add noise. Keep examples relevant, correct and separate from the data."
+              },
+              {
+                "title": "Does asking the model to show its steps prove the answer is right?",
+                "md": "No. It gives you a checkable account of the method. You still verify the figures yourself; a fluent explanation can accompany a wrong number."
+              },
+              {
+                "title": "Should I always use a chain?",
+                "md": "No. If a direct request already meets your criteria, keep it and verify. Use a chain when intermediate results need scrutiny or will be reused."
+              },
+              {
+                "title": "Will the same strategy work in every chatbot?",
+                "md": "Not necessarily. A strategy that works in one interface or task may not work equally well elsewhere. Test on the same data with the same criteria."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "md": "- In a spreadsheet, divide each region's net-sales sum by its transaction count: East 182,004.38 / 39 should give **4,666.78**, and North 260,026.33 / 57 should give **4,561.87**. Confirm which region leads on each measure.\n- At the Stage 2 checkpoint, confirm the four regional totals add to **892,252.11** and the counts to **200**.\n- Read each chatbot method description against your own calculation. If a column, aggregation or total differs, the explanation does not matter: the figure is wrong.\n- Check that no answer used months, profit or currency, which the file does not contain."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Prompting strategies",
+          "items": [
+            {
+              "term": "Zero-shot",
+              "meaning": "A direct request with no worked example. The attached data is not an example of the answer."
+            },
+            {
+              "term": "One-shot",
+              "meaning": "A request that includes one complete input-output example to clarify a format, tone or special case."
+            },
+            {
+              "term": "Few-shot",
+              "meaning": "A request with several examples, useful when the pattern is hard to describe.",
+              "example": "Two sample observations in the same style."
+            },
+            {
+              "term": "Format-only example",
+              "meaning": "An example marked as illustrative so its numbers cannot be copied as data; every real figure comes from the file."
+            },
+            {
+              "term": "Concise method explanation",
+              "meaning": "A request to show the columns, the aggregation and the input totals so you can recompute them. It is not proof of correctness."
+            },
+            {
+              "term": "Clarification prompting",
+              "meaning": "Asking one focused question when the answer would change the task.",
+              "example": "What do you mean by 'best' region?"
+            },
+            {
+              "term": "Prompt chaining",
+              "meaning": "Staged prompts linked by reviewed outputs: the checked result of one stage feeds the next."
+            },
+            {
+              "term": "Intermediate check",
+              "meaning": "A verification before proceeding, such as reconciling regional totals with the file total before charting."
+            },
+            {
+              "term": "Strategy selection",
+              "meaning": "Choose by what the task needs, not by how long or impressive the plan looks. If a simple request works, keep it and verify."
+            }
+          ]
+        },
+        "summary": [
+          "Zero-shot, one-shot and few-shot differ only in the number of worked examples; examples clarify a pattern and must be marked as format-only.",
+          "Clarification removes ambiguity before work starts; use one focused question when the answer would change the task.",
+          "A concise method explanation helps you verify a calculation but never certifies it: recompute the figures yourself.",
+          "Chaining puts checkpoints between stages; verify the table before interpreting or charting it, and keep simple requests simple."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 6",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p06.pe043",
+              "type": "mcq",
+              "prompt": "What does zero-shot prompting mean here?",
+              "explanation": "Zero-shot means a direct request with no worked example. The attached CSV is data, not an example of the answer. 'Exactly three worked examples' is a different (few-shot) setup, and the other options describe unrelated workflow choices.",
+              "options": [
+                {
+                  "label": "Giving exactly three worked examples",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                },
+                {
+                  "label": "Using only non-text inputs",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                },
+                {
+                  "label": "Giving a direct request without examples",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Sending separate prompts each hour",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe044",
+              "type": "mcq",
+              "prompt": "What distinguishes one-shot from few-shot prompting?",
+              "explanation": "The difference is the number of worked examples: one for one-shot, several for few-shot. The number of chatbots, reviewers or uploaded files is a different dimension.",
+              "options": [
+                {
+                  "label": "One versus several chatbot products",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                },
+                {
+                  "label": "One versus several human reviewers",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                },
+                {
+                  "label": "One versus several uploaded files",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                },
+                {
+                  "label": "One versus several worked examples",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe045",
+              "type": "mcq",
+              "prompt": "A model misreads the required style of a sales observation. What strategy may help?",
+              "explanation": "A style problem is solved by showing one correct input-output example of the style. A fictional profit figure cannot teach style and adds a false fact, while ignoring columns or starting with an unrelated summary does not address the style at all.",
+              "options": [
+                {
+                  "label": "Ask it to ignore supplied columns",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.wrong-strategy"
+                },
+                {
+                  "label": "Add a fictional profit figure",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.example-as-data"
+                },
+                {
+                  "label": "Show one correct input-output example",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Request an unrelated summary first",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.wrong-strategy"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe046",
+              "type": "mcq",
+              "prompt": "A learner needs to check a regional sum. Which instruction is most useful?",
+              "explanation": "To check a regional sum you need the formula and the input totals you can recompute. A statement of confidence, an analogy or 'hidden reasoning' is not source evidence, and a model's private reasoning is not available to you anyway. Confidence is the tempting wrong answer because it sounds like assurance.",
+              "options": [
+                {
+                  "label": "Explain only the model's confidence",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.explanation-as-proof"
+                },
+                {
+                  "label": "Show the formula and input totals",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Replace calculation with an analogy",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.explanation-as-proof"
+                },
+                {
+                  "label": "Reveal hidden private model reasoning",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.explanation-as-proof"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe047",
+              "type": "mcq",
+              "prompt": "What is prompt chaining?",
+              "explanation": "Prompt chaining links successive task-specific prompts, passing reviewed output from one stage to the next. Piling adjectives into one prompt, running with no inputs or comparing brand names are not chains.",
+              "options": [
+                {
+                  "label": "Linking successive task-specific prompts",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Running a task without any inputs",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                },
+                {
+                  "label": "Adding many adjectives to one prompt",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                },
+                {
+                  "label": "Selecting four competing brand names",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.strategy-terms"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe048",
+              "type": "mcq",
+              "prompt": "The business request lacks a clear decision. Which strategy should come first?",
+              "explanation": "When the decision is unclear, ask a focused clarifying question first. Inventing a decision, charting without context or scheduling an automatic run all commit to a task that may be the wrong one.",
+              "options": [
+                {
+                  "label": "Ask a focused clarifying question",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Invent a decision and continue",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.invent-or-guess"
+                },
+                {
+                  "label": "Schedule an automatic weekly run",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.wrong-strategy"
+                },
+                {
+                  "label": "Create a chart without context",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.invent-or-guess"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe049",
+              "type": "mcq",
+              "prompt": "A chain computes totals then writes recommendations. What control belongs between stages?",
+              "explanation": "Verify the totals before interpreting them. That checkpoint stops a wrong total flowing into the recommendation. Styling first, letting the system invent targets or turning every number into prose adds no control.",
+              "options": [
+                {
+                  "label": "Translate every number into prose",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.chain-without-checks"
+                },
+                {
+                  "label": "Let the system invent missing targets",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.invent-or-guess"
+                },
+                {
+                  "label": "Apply the final style before calculation",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.chain-without-checks"
+                },
+                {
+                  "label": "Verify the totals before interpretation",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe050",
+              "type": "mcq",
+              "prompt": "You know the desired output but the model struggles with formatting. Which strategy best fits?",
+              "explanation": "If you know the output you want but the model struggles with the format, show an illustrative example of it. Clarification fits ambiguity, not formatting, and scheduling or switching the question solves a different problem.",
+              "options": [
+                {
+                  "label": "Provide an illustrative output example",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Schedule the task for next month",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.wrong-strategy"
+                },
+                {
+                  "label": "Switch to a different business question",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.wrong-strategy"
+                },
+                {
+                  "label": "Ask an open-ended clarification sequence",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.wrong-strategy"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe051",
+              "type": "mcq",
+              "prompt": "A straightforward request already yields correct results. What is an efficient next step?",
+              "explanation": "If a direct request already meets your criteria, the efficient step is to keep it and verify the result. Five default examples, ten chained prompts or a longer prompt add complexity without a need.",
+              "options": [
+                {
+                  "label": "Add five examples by default",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.technique-by-default"
+                },
+                {
+                  "label": "Divide it into ten chained prompts",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.technique-by-default"
+                },
+                {
+                  "label": "Rewrite it to request more tokens",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.technique-by-default"
+                },
+                {
+                  "label": "Keep the simple prompt and verify",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe052",
+              "type": "mcq",
+              "prompt": "A chatbot proposes comparing sales by month with an undated CSV. What should the learner do?",
+              "explanation": "A monthly analysis needs valid dates, and the CSV has none. Ask for them before doing any monthly aggregation, or drop the monthly question. Filenames, transaction IDs and region labels are not defensible substitutes.",
+              "options": [
+                {
+                  "label": "Use transaction IDs as dates",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.invent-or-guess"
+                },
+                {
+                  "label": "Request dates before monthly analysis",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Treat region labels as months",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.invent-or-guess"
+                },
+                {
+                  "label": "Infer months from the filename",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.invent-or-guess"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe053",
+              "type": "mcq",
+              "prompt": "A task requires extract, compare and brief. Which workflow is suitable?",
+              "explanation": "Extract the facts, verify them, then write the brief: three stages with a check before the synthesis. The other orders commit to a conclusion or publication before the evidence is checked.",
+              "options": [
+                {
+                  "label": "Publish first, then extract data",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.chain-without-checks"
+                },
+                {
+                  "label": "Brief first, then invent facts",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.chain-without-checks"
+                },
+                {
+                  "label": "Extract facts, verify, then brief",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Choose a claim, then find support",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.chain-without-checks"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe054",
+              "type": "mcq",
+              "prompt": "A model presents a persuasive explanation of a calculation but no verifiable figures. What should be requested?",
+              "explanation": "Ask for a compact calculation with checkable inputs. A persuasive story, a more elaborate account of 'internal reasoning' or a stronger claim of certainty can all sound right and be wrong; only recomputation tells you.",
+              "options": [
+                {
+                  "label": "A compact calculation with checkable inputs",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A more elaborate internal reasoning account",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.explanation-as-proof"
+                },
+                {
+                  "label": "A longer management-style narrative",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.explanation-as-proof"
+                },
+                {
+                  "label": "A stronger claim about certainty",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.explanation-as-proof"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.pe055",
+              "type": "mcq",
+              "prompt": "A manager is unsure whether to use a direct prompt or a chain. Which factor matters most?",
+              "explanation": "Choose a chain when intermediate results need checking or are reused later. How impressive the result sounds, how long the prompt is or how colourful the interface looks are weak selection rules.",
+              "options": [
+                {
+                  "label": "Whether the result sounds impressive",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.technique-by-default"
+                },
+                {
+                  "label": "Whether the prompt is very long",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.technique-by-default"
+                },
+                {
+                  "label": "Whether the interface is colourful",
+                  "isCorrect": false,
+                  "misconception": "pe.p06.technique-by-default"
+                },
+                {
+                  "label": "Whether intermediate checks are needed",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.x1",
+              "type": "matching",
+              "points": 3,
+              "prompt": "Match each situation to the prompting strategy that fits it best.",
+              "explanation": "Choose by what the task needs. A clear, familiar request starts zero-shot. A pattern that is hard to describe is shown with an example. An ambiguous question ('best') is clarified before any calculation. A multi-stage analysis uses a chain with checks, and a calculation you must reproduce is explained as a short, checkable method.",
+              "pairs": [
+                {
+                  "left": "A clear request for a simple table of regional net sales",
+                  "right": "Zero-shot"
+                },
+                {
+                  "left": "An unusual output pattern that is hard to describe in words",
+                  "right": "One-shot or few-shot example"
+                },
+                {
+                  "left": "The manager asks you to 'find our best region'",
+                  "right": "Clarification"
+                },
+                {
+                  "left": "Inspect the fields, calculate and reconcile, then chart",
+                  "right": "Prompt chaining"
+                },
+                {
+                  "left": "You must be able to reproduce the calculation yourself",
+                  "right": "A concise, checkable method explanation"
+                }
+              ]
+            },
+            {
+              "key": "pe.p06.x2",
+              "type": "ordering",
+              "points": 2,
+              "prompt": "Put the stages of a prompt chain for a regional net-sales chart in the right order.",
+              "explanation": "First inspect the fields and note what is missing, then calculate and reconcile the table. You check that table yourself before it moves on, so a wrong total cannot propagate. Only the verified table is used for the chart and the observation.",
+              "sequence": [
+                "Inspect the CSV fields and note what information is missing",
+                "Build the four-row table and reconcile it with the file total",
+                "Check the table yourself against the CSV or a spreadsheet",
+                "Create the chart from the verified table and add one observation and one limitation"
+              ]
+            },
+            {
+              "key": "pe.p06.x3",
+              "type": "fill_in",
+              "points": 1,
+              "workOnPaper": true,
+              "prompt": "East has total net sales of 182,004.38 over 39 transactions. What are its net sales per transaction, to two decimal places?",
+              "explanation": "182,004.38 / 39 = 4,666.78. East has the lowest total net sales but the highest net sales per transaction, which is why 'best region' needs a clarification of what 'best' means.",
+              "answers": [
+                "4666.78",
+                "4,666.78",
+                "4 666.78"
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "misconceptions": [
+    {
+      "code": "pe.p04.vague-task",
+      "name": "Leaves the task, metric or grouping unnamed",
+      "description": "Believes a prompt can stay general ('study this file', 'consider everything', a more formal tone) and the chatbot will work out the analysis. It cannot: without a named metric, grouping and output, the model guesses and you have nothing specific to check. Sign: the prompt has no column name and no format."
+    },
+    {
+      "code": "pe.p04.role-for-substance",
+      "name": "Expects a role, persona or polished tone to supply the missing task details",
+      "description": "Treats 'You are an expert...' or flattering titles as if they gave the model skill, knowledge of the retailer or accuracy. A role sets a voice at most; it does not name the measure, supply data or make a total correct. Sign: the prompt spends words on who the model is and none on what to calculate."
+    },
+    {
+      "code": "pe.p04.longer-is-better",
+      "name": "Treats a longer or more elaborate prompt as a better prompt",
+      "description": "Assumes more personas, examples, headings or context always improve the result, or that a revised long prompt must beat a short one that already works. Extra text can add conflicting instructions or false assumptions. Sign: words are added without testing whether the output changed."
+    },
+    {
+      "code": "pe.p04.missing-input",
+      "name": "Thinks examples or description can stand in for the source data",
+      "description": "Believes that describing the task, or showing worked examples, gives the model what it needs even though the actual CSV or table is not supplied. Examples show a pattern; only the data supplies figures. Sign: the prompt has samples but no attachment or pasted table."
+    },
+    {
+      "code": "pe.p04.component-mixup",
+      "name": "Confuses which prompt function a piece of text performs",
+      "description": "Mixes up instruction, context, input, output specification, constraint and role, or treats a data field as a rule. The functions do different jobs: the instruction says what to do, the output says what shape to return, a constraint limits what may be claimed. Sign: labelling a column name as a constraint, or identity as an instruction."
+    },
+    {
+      "code": "pe.p04.guess-the-gap",
+      "name": "Fills a gap in the data with a plausible guess",
+      "description": "When the file lacks something (currency, profit, dates) the learner keeps a plausible default, asks for an estimate or swaps in another measure. The prompt must respect what the source contains and say the rest is unspecified. Sign: 'dollars', 'profit' or 'monthly' appear although the CSV has no such field."
+    },
+    {
+      "code": "pe.p04.one-true-layout",
+      "name": "Believes one provider's layout is mandatory or automatically better",
+      "description": "Thinks a single named template, or the layout with more headings, produces better answers. OpenAI-, Google- and Anthropic-style layouts group the same needs differently; none is required. Sign: choosing a layout by label or length instead of testing outputs against one rubric."
+    },
+    {
+      "code": "pe.p05.definition-confusion",
+      "name": "Misdefines what a follow-up prompt is",
+      "description": "Thinks a follow-up is a file, a contract or a check on the data, rather than a further instruction that builds on an answer already in the conversation. A follow-up refines; it does not verify. Sign: calling a follow-up 'a replacement for checking' or describing it as something produced before the task."
+    },
+    {
+      "code": "pe.p05.vague-followup",
+      "name": "Sends a vague or unrelated follow-up instead of naming the defect and the fix",
+      "description": "Reaches for 'make it better', more adjectives, a new dataset or a different KPI instead of naming the one observed weakness and the change wanted. Such follow-ups cannot be assessed and often change what is being compared. Sign: the follow-up does not say what was wrong with the last answer."
+    },
+    {
+      "code": "pe.p05.irrelevant-context",
+      "name": "Adds context or detail that does not serve the reader or the decision",
+      "description": "Includes details that change nothing about the task (office decor, a tool's avatar, jargon, code) or removes the business question, instead of audience, purpose and length. Context counts only if it changes the answer. Sign: the added sentence could be deleted without any change to the result."
+    },
+    {
+      "code": "pe.p05.skip-recheck",
+      "name": "Accepts or hides a revised answer without re-checking it",
+      "description": "Treats a fluent or consistent revision as correct, or leaves an unresolved discrepancy unmentioned. Revisions can introduce new errors, so every meaningful revision has to be checked against the same task criteria and the source. Sign: 'it reads better' used as the reason to keep a number."
+    },
+    {
+      "code": "pe.p05.invent-to-fix",
+      "name": "Repairs a gap by inventing figures, margins or explanations",
+      "description": "When the data does not support a claim, asks for an invented margin, a simpler number or a cause (such as discounts) instead of removing or qualifying the claim. Sign: the follow-up adds a new unsupported statement while claiming to fix the old one."
+    },
+    {
+      "code": "pe.p05.overcorrect",
+      "name": "Overcorrects by throwing away or restarting everything",
+      "description": "Discards the whole answer when one claim is wrong, instead of checking that exact claim and keeping the valid work. Targeted repair preserves verified results and the time already spent. Sign: 'delete it all and start again' for a single wrong label."
+    },
+    {
+      "code": "pe.p05.surface-fix",
+      "name": "Repairs or judges an answer by surface features, losing evidence or criteria",
+      "description": "Judges a revision by shortness, tone or polish, or changes its form (a poem, adjectives instead of numbers, removed sections) without checking that required evidence and caveats are still there. A shorter answer that drops a required limitation fails. Sign: word count or style cited as the reason a revision is good."
+    },
+    {
+      "code": "pe.p06.strategy-terms",
+      "name": "Mixes up the names or meaning of the prompting strategies",
+      "description": "Confuses zero-shot, one-shot, few-shot and chaining, for example by counting files, reviewers or chatbots instead of worked examples, or by describing adjectives or brand choices as a chain. The strategies differ in what the prompt contains: examples (how many) or linked stages. Sign: a definition that talks about hours, products or file counts."
+    },
+    {
+      "code": "pe.p06.wrong-strategy",
+      "name": "Picks a strategy that does not address the problem observed",
+      "description": "Reaches for clarification when the problem is formatting, for scheduling when the question is unclear, or for an unrelated step. Each strategy solves a particular kind of problem: examples for a hard-to-describe pattern, clarification for ambiguity, chaining for staged checks. Sign: the chosen technique would not change the defect you described."
+    },
+    {
+      "code": "pe.p06.explanation-as-proof",
+      "name": "Treats an explanation, confidence or hidden reasoning as proof of correctness",
+      "description": "Believes a persuasive method story, a statement of confidence or access to the model's 'private reasoning' shows that a number is right. A concise, checkable method (columns, aggregation, input totals) helps you reproduce the calculation; it does not certify it. Sign: asking for more elaborate reasoning instead of checkable figures."
+    },
+    {
+      "code": "pe.p06.chain-without-checks",
+      "name": "Chains or orders stages without a verification step between them",
+      "description": "Lets errors flow forward by styling before calculating, interpreting before verifying, or committing to a conclusion before the evidence has been checked. A chain is useful because of the checkpoints between its stages. Sign: the plan goes straight from extraction to recommendation."
+    },
+    {
+      "code": "pe.p06.invent-or-guess",
+      "name": "Guesses or invents when the question or data is ambiguous or missing",
+      "description": "Continues with an invented decision, treats region labels, filenames or IDs as dates, lets the system invent targets, or charts without context instead of asking a clarifying question or saying the data is not there. Sign: a monthly, profit or target analysis is attempted on a file that has none of those."
+    },
+    {
+      "code": "pe.p06.example-as-data",
+      "name": "Treats made-up numbers in an example as data",
+      "description": "Uses fictional figures in a worked example (for instance a profit figure) as if they could teach the style or fill the file. Examples should be marked format-only and may not carry false facts. Sign: example values appear in the answer."
+    },
+    {
+      "code": "pe.p06.technique-by-default",
+      "name": "Adds examples, steps or length by default, or because it looks rigorous",
+      "description": "Assumes more techniques are always better: five examples by default, ten chained prompts, longer prompts, an impressive result or a colourful interface. The right choice depends on whether the task needs examples, clarification or intermediate checks. Sign: the reason given is how the plan looks, not what the task needs."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "pe.p04.vague-task",
+      "body": "A prompt needs a named measure, a grouping and an output you can check. Look at your prompt: could someone else tell which column to sum and by which column to group? If not, add the exact field names and the shape of the result. Tone and breadth words do not tell the chatbot what to calculate.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p04.role-for-substance",
+      "body": "A role changes voice, not accuracy: it cannot give the model the data or make a number right. Ask what the sentence lets you observe or check in the answer. Spend the words on the measure, the grouping, the output format and the limits, and verify the figures independently.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p04.longer-is-better",
+      "body": "Length is not quality. Extra personas, headings or examples can introduce conflicts or false assumptions. For each sentence ask: if I delete it, what changes in the answer? Keep what improves a result you can test, and compare two versions on the same rubric before deciding.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p04.missing-input",
+      "body": "Examples show a pattern; they are not records. If the CSV or a verified table is not in the conversation, the model has no source rows, so any totals would be invented. Attach the file or paste the table, or say clearly that the data is not available, before polishing anything else.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p04.component-mixup",
+      "body": "Sort each sentence by the job it does: what to do (instruction), who it is for (context), what to use (input), what shape to return (output), what to avoid or include (constraint). A column that exists in the file is data; a limit on what you may claim is a constraint. Re-label your prompt line by line to check.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p04.guess-the-gap",
+      "body": "If the file does not contain something, the prompt must not assume it. Check the field list: no currency, no costs, no dates. Ask for the unit to stay unspecified, and do not substitute another measure or an estimate. A plausible guess is still an unsupported claim.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p04.one-true-layout",
+      "body": "The provider layouts group the same needs under different names, so none is compulsory. When two prompts hold the same task, data and limits, do not rank them by look or length: run both, score the outputs against one rubric and keep the one that does the job.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p05.definition-confusion",
+      "body": "A follow-up is a further instruction that uses the conversation you already have to ask for one change. It does not check the data for you. Whenever a follow-up changes anything, you still compare the new answer with the source. Ask: what does this message change, and how will I check it?",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p05.vague-followup",
+      "body": "A follow-up works when it names what is wrong and what you want instead, and says what must stay fixed. Look at yours: could a colleague tell which defect you meant and how you would know it is fixed? If not, rewrite it as 'defect + desired change + keep unchanged'.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p05.irrelevant-context",
+      "body": "Add context only if it changes the answer: audience, purpose, time available, length. Ask of every detail you add: would the answer or the decision be different without it? If not, leave it out, and do not remove the business question the answer is supposed to serve.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p05.skip-recheck",
+      "body": "A revision can fix one thing and break another, and a smooth narrative is not evidence. After each follow-up, compare the new answer with the same criteria as before: right measure, all regions, totals reconcile, caveat still visible. If a checked number changed, restore it and say so.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p05.invent-to-fix",
+      "body": "A claim the data cannot support is repaired by removing or qualifying it, not by adding another unsupported figure or cause. Check what the file actually contains (no costs, no currency, no dates) and ask the chatbot to correct the wording while keeping the verified totals.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p05.overcorrect",
+      "body": "When one claim is wrong, check and correct that exact claim and keep everything valid. Deleting the whole answer throws away verified work and gives you nothing to compare against. Name the specific problem in the next prompt and ask for a revised answer.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p05.surface-fix",
+      "body": "Do not judge a revision by length, tone or polish. Check it against all the task criteria: the right measure, all regions, evidence still present, required limitations still visible. A shorter answer that drops a caveat or a number has failed the completeness check, however neat it looks.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p06.strategy-terms",
+      "body": "Name the strategies by what the prompt contains: zero-shot has no worked example, one-shot has one, few-shot has several, chaining links separate prompts through checked outputs. Counts of files, reviewers or chatbots are different dimensions. Re-read the definition and match it to what you would see in the prompt.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p06.wrong-strategy",
+      "body": "Start from the problem, then choose the strategy. A format that is wrong needs an example; an ambiguous question needs a clarification; a multi-stage analysis needs a chain with checks. Ask: would this technique actually change the defect I observed? If not, pick a different one.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p06.explanation-as-proof",
+      "body": "A fluent explanation or a stated confidence is not evidence, and a model's private reasoning is not something you can inspect. Ask instead for a compact, checkable method: the columns used, the aggregation and the input totals. Then recompute them from the CSV or a spreadsheet yourself.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p06.chain-without-checks",
+      "body": "A chain earns its value from the checks between stages. Put the verification (totals reconciled with the file) before interpretation, and do not style or conclude first. Look at your plan and mark where you would stop and check the intermediate output.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p06.invent-or-guess",
+      "body": "When the question is ambiguous or the file lacks what a task needs (dates, costs, targets), do not guess. Ask one focused clarifying question, or request the missing data. Filenames, IDs and region labels are not substitutes for the real field.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p06.example-as-data",
+      "body": "An example teaches format or tone; its numbers are not data. Mark examples as format-only, keep them free of false facts, and tell the model that every figure in the answer must come from the file. Fictional profit figures cannot teach style and may be copied.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p06.technique-by-default",
+      "body": "Do not add techniques because they look rigorous. If a simple request already meets your criteria, keep it and verify. Add examples when the pattern is hard to describe, chaining when you need checks between steps, and clarification when the question is ambiguous. Choose by what the task needs.",
+      "priority": 10
+    }
+  ]
+}

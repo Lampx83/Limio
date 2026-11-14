@@ -1,0 +1,2049 @@
+{
+  "module": {
+    "title": "Module 4 — Prompting for Data-Driven Problem Solving",
+    "description": "Case 2 on the same 200-transaction retail CSV: diagnose why East's recorded net sales total is low, develop and challenge evidence-based options, then plan and measure a next action with a human decision pause. Includes the Module 4 lecture notes, slides, Activity 3 sheet and the CSV.",
+    "lessons": [
+      {
+        "title": "Module 4 materials: lecture notes, slides, Activity 3 and the CSV",
+        "durationMin": 6,
+        "description": "What the Module 4 files contain, which part of each file belongs to Periods 10, 11 and 12, and how to work through Case 2 with the CSV and the Activity 3 sheet.",
+        "look": {
+          "palette": "vibrant",
+          "font": "modern"
+        },
+        "body": "Module 4 is **Case 2**. You keep the 200-transaction retail CSV from Case 1, but the task changes: instead of drawing charts, you investigate one region, compare options and plan a next step for a manager. Everything you need is attached to this lesson.\n\n## The files\n\n| File | What it holds | Use it for |\n|---|---|---|\n| **Lecture notes** (PDF, whole course) | Period 10 sections 10.1 to 10.5, Period 11 sections 11.1 to 11.4, Period 12 sections 12.1 to 12.7, each with worked prompts, checked tables, key concepts and review questions | The full wording of each prompt and every table of figures |\n| **Slides, 150 pages** (PDF) | The complete deck. Each period has a checkpoint question and a key-takeaways slide; Periods 10 and 11 also have a \"Review the prompts\" slide | Following the prompt sequence slide by slide |\n| **Slides, 81 pages** (PDF) | A short version of the same deck. It keeps the main prompt slides and drops the dividers, review slides, checkpoints and takeaways | A quick preview or revision |\n| **Activity 3 sheet, Student version** (PDF) | \"Evidence-Based Retail Decision Making\": a guided workflow, evidence ledger, option matrix, handover checklist and a practice rubric. About 100 to 130 minutes | The hands-on task. It is also set as the assignment of Period 12 |\n| **Slidescope_Retail_Store_Sales_Enhanced_2025.csv** | 200 transactions, 13 columns | Recalculating every figure yourself |\n\n## Where each period is\n\n| Period | Lecture notes | 150-page slides | 81-page slides |\n|---|---|---|---|\n| 10 Diagnose with Data (Case 2) | 10.1 to 10.5 | 99 to 108 | 54 to 59 |\n| 11 Develop Evidence-Based Options | 11.1 to 11.4 | 109 to 116 | 60 only |\n| 12 Plan and Measure Action | 12.1 to 12.7 | 117 to 127 | 61 to 65 |\n\n> [!meo] The short deck keeps only one Period 11 slide (Generate Options). The comparison, challenge and choice steps are on slides 111 to 113 of the 150-page deck, so use that deck, or the lesson, for them.\n\n## What the CSV can and cannot tell you\n\nThe file has thirteen columns: `Transaction_ID`, `Store_Region` (East, North, South, West), `Product_Category` (Apparel, Electronics, Furniture, Grocery), `Payment_Method`, `Customer_Type`, `Unit_Price`, `Items_Sold`, `Gross_Amount`, `Discount_Percent`, `Discount_Amount`, `Net_Sales_Amount`, `Average_Price_Per_Item` and `Effective_Discount_Per_Item`.\n\nIt has **no** transaction dates, store identifiers or store counts, operating days, currency, targets, costs, profit or campaign results. Throughout Module 4 you will meet claims that need one of these. The right response is to name the missing input, not to guess it.\n\n## How to study this module\n\n1. **Open the CSV in a spreadsheet** and keep it open. Every table of figures in the lessons can be reproduced with a pivot table or `COUNTIFS` and `SUMIFS`.\n2. **Read a period lesson**, trying each \"Predict before you read\" and \"Find the error\" box before you open it.\n3. **Do the quiz** with a confidence rating for each answer. Questions that need a calculation are marked as work-on-paper: do them in the spreadsheet first.\n4. **Open the matching lecture notes sections** for the full worked prompts, and use the slides as a checklist of the prompt sequence.\n5. **After Period 12, do Activity 3.** Its first four stages follow Periods 10 to 12. Its handover folder uses the documentation habits you meet in Periods 13 and 14, so you may finish that part after Module 5.\n\n> [!ghi-nho] Do not upload customer names, phone numbers, employee data or private business exports to a chatbot. The practice CSV contains none of these, and the Activity 3 sheet asks you to keep it that way.",
+        "summary": [
+          "Four files support Module 4: the lecture notes, the 150-page and 81-page slide decks, the Activity 3 sheet (Student version) and the CSV.",
+          "The tables in this lesson map each of Periods 10, 11 and 12 to its notes sections and slide pages; the short deck has only one Period 11 slide.",
+          "The CSV has no dates, store IDs, currency, costs or profit, and Module 4 depends on noticing that.",
+          "Recalculate figures from the CSV yourself, then do Activity 3 after Period 12."
+        ]
+      },
+      {
+        "title": "Period 10 · Diagnose with Data — Case 2",
+        "durationMin": 45,
+        "description": "Case 2 begins. Frame a constrained investigation, build and check a regional overview, drill into East by product category, and write a working diagnosis that separates verified facts from hypotheses.",
+        "look": {
+          "palette": "vibrant",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Write a task brief for a constrained business investigation: audience, input, decision, outputs and success criteria",
+          "Build a regional overview of transaction count, total net sales and net sales per transaction, and reconcile it to the 200-row CSV",
+          "Explain why a low regional total can come from fewer records, a lower value per record, or both",
+          "Break one region down by product category and check that the categories add back to the region",
+          "Sort claims into verified finding, working hypothesis, missing input and decision to defer",
+          "Write a two-sentence diagnosis that contains one verified fact and one clearly labelled hypothesis"
+        ],
+        "body": "A retail manager has time to investigate **one** region. In Case 1 you drew the regional bar chart, and one bar was clearly the shortest: East. Now the manager asks, \"Why is East low, and what should we do about it?\"\n\nThis period answers only the first half of that question, and answers it honestly. You will check the numbers, find out *what kind* of low East is, and stop at the edge of what the file can tell you.\n\n> [!ghi-nho] A total is **count × average value**. A low total can mean few records, small records, or both. Find out which one before anyone proposes a fix.\n\n:::Predict before you read\nEast has the smallest total net sales of the four regions. Before you look at any table, write down which you expect: (a) East has the fewest transactions, (b) East has the lowest net sales per transaction, or (c) both. Add one line of reasoning. You will check your prediction in the section \"Explore: build and check the overview\".\n:::",
+        "sections": [
+          {
+            "layout": "text",
+            "title": "Define: frame the problem",
+            "parts": [
+              {
+                "md": "The CSV holds transaction records and nothing else about the business. So the first job is not \"fix East\". It is to **find a pattern worth investigating** and to say what extra evidence you would need. Asking for a promotion strategy or a sales forecast at this point would be premature.\n\nWrite a task brief before the first analysis prompt:\n\n| Element | Case 2 |\n|---|---|\n| Audience | The retailer's manager |\n| Input | The 200-row CSV |\n| Decision | What to investigate first, before committing resources |\n| Outputs | Regional evidence table, East category breakdown, supported diagnosis, alternative explanations, missing-data request |\n| Success | Correct totals, explicit limitations, a defensible pause before any intervention |\n\n```prompt Clarification prompt (use before analysing)\nBefore analysing, ask me what one decision the manager needs to make, what data are available and what output will help. Ask only questions that could change the task. Then draft a four-part brief for my confirmation.\n```\n\n**Why it works:** it makes the AI ask about the decision before it touches the data, and the limit (\"only questions that could change the task\") stops it from interrogating you. You still confirm the brief, so the task stays yours.\n\nNow compare two ways of asking for the first analysis.\n\n```prompt Prompt A — weak\nWhy is East doing badly? Tell me how to fix it.\n```\n\n**Why it is weak:** \"badly\" is assumed, not shown. \"Why\" asks for a cause the file cannot give. \"Fix it\" asks for an action before any figure has been checked. No calculation rule is named, so nobody could verify the answer.\n\n```prompt Prompt B — regional overview\nUse the supplied CSV to show each Store_Region's transaction count, SUM(Net_Sales_Amount), and net sales per transaction (regional sum divided by count). Sort by total recorded net sales. Include an all-region total, state the calculation rule, and identify one surprising pattern to examine. Do not recommend an intervention yet.\n```\n\n**Why it is better:** it names the fields and the formula, fixes the sort order, asks for an all-region total you can reconcile, and holds recommendations back.\n\n> [!meo] Use an AI chatbot with file-analysis capability if you have one. If yours cannot analyse files, build the tables in a spreadsheet, paste the *verified* tables into the chat with a source label, and ask the AI to help with the diagnosis. Record what each tool actually did."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Explore: build and check the overview",
+            "parts": [
+              {
+                "md": "Here is the regional overview, recalculated from all 200 rows of the CSV.\n\n| Store region | Transactions | Total net sales | Net sales per transaction |\n|---|---|---|---|\n| North | 57 | 260,026.33 | 4,561.87 |\n| South | 53 | 236,980.99 | 4,471.34 |\n| West | 51 | 213,240.41 | 4,181.18 |\n| East | 39 | 182,004.38 | 4,666.78 |\n| **All regions** | **200** | **892,252.11** | **4,461.26** |\n\nNet sales per transaction is each group's sum divided by **its own** record count. For East: 182,004.38 / 39 = 4,666.78. The all-region figure is 892,252.11 / 200.\n\n> [!canh-bao] The all-region average, 4,461.26, is **not** the plain average of the four regional averages. That unweighted average is 4,470.29, which is wrong because North has 57 records and East only 39. Divide the total by the total count.\n\n**Verified finding.** East has the smallest total and the fewest recorded transactions, yet the highest net sales per recorded transaction. So its low total is associated with fewer records, not with an unusually low value per record. The evidence does not say *why* fewer records were captured, and a small count alone does not establish weak demand.\n\nNow check your prediction. Only (a) is right. East is lowest on count but **highest** on value per transaction, so (b) and (c) are wrong.\n\n> [!vi-du] Currency is not stated in the file, so the figures above have no currency symbol. If an AI answer adds a dollar or dong sign, treat that as invented."
+              }
+            ]
+          },
+          {
+            "layout": "compare",
+            "title": "Two measures, two different stories",
+            "intro": "Total net sales = transactions × net sales per transaction. Split East's low total into its two parts and compare each with the other regions.",
+            "parts": [
+              {
+                "title": "How many records (count)",
+                "md": "- East: **39**, the fewest\n- North 57, South 53, West 51\n- East holds **19.5%** of the 200 records\n- Fewer records pull East's total down\n- Possible reasons are untested: fewer stores in the extract, a shorter reporting window, or really fewer purchases"
+              },
+              {
+                "title": "How much per record (value)",
+                "md": "- East: **4,666.78**, the highest\n- North 4,561.87, South 4,471.34, West 4,181.18\n- East holds **20.4%** of net sales, a little more than its share of records\n- Value per record does not explain East's low total; it works the other way\n- Value is a mean, so a few large sales can move it"
+              }
+            ],
+            "outro": "> [!ghi-nho] Show count and value on **separate** charts. They are different measures with different scales, and one unlabelled axis hides the difference."
+          },
+          {
+            "layout": "text",
+            "title": "Spot unusual patterns",
+            "parts": [
+              {
+                "md": "Compare recorded counts and per-transaction values using two clearly labelled charts. For a beginner, two small bar charts are easier to read than a dual-axis chart.\n\n```prompt Follow-up — explain the pattern\nMake separate bar charts for transaction counts and net sales per transaction. Use the verified regional table. Explain how the two measures differ. State one supported observation about East and two explanations we cannot test with these fields.\n```\n\n**Why it works:** it reuses the table you already checked instead of asking for a fresh calculation, and it forces the AI to separate what is observed from what is only possible.\n\nA defensible reading is: East has 39 records and 4,666.78 net sales per transaction. Candidate reasons for the count difference include a different number of stores, a shorter observation window, or genuine differences in purchase activity. **All three remain untested.** A difference in counts can motivate a follow-up question; it does not establish demand or reporting coverage."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Break down the results: East by category",
+            "parts": [
+              {
+                "md": "To see where East's records are concentrated, filter to East and group by `Product_Category`.\n\n```prompt Follow-up — East category breakdown\nFilter Store_Region to East and group by Product_Category. Return transaction counts, total net sales and net sales per transaction for each category. Show full values and reconcile the categories with East's 39 transactions and 182,004.38 total net sales. Identify the category with the fewest records.\n```\n\n| East product category | Transactions | Net sales | Net sales per transaction |\n|---|---|---|---|\n| Apparel | 12 | 60,036.03 | 5,003.00 |\n| Electronics | 4 | 10,559.24 | 2,639.81 |\n| Furniture | 10 | 59,183.24 | 5,918.32 |\n| Grocery | 13 | 52,225.87 | 4,017.37 |\n| **East total** | **39** | **182,004.38** | **4,666.78** |\n\n**Reconcile first.** 12 + 4 + 10 + 13 = 39, and the four category totals add to 182,004.38. If your own table does not reconcile, stop and find the cause before reading any further into it.\n\nElectronics has the fewest records, only four. That makes it a **candidate investigation point**, not evidence that the Electronics business failed. Four rows is a small subgroup: one large or small sale moves its average a lot, and the result can depend on which stores or periods the extract happens to include.\n\n> [!canh-bao] A segment that looks odd is a question to ask, not a finding to announce. \"Electronics has 4 records\" is a fact. \"East has an Electronics problem\" is a hypothesis that needs more evidence."
+              }
+            ]
+          },
+          {
+            "layout": "cards",
+            "title": "Form a working diagnosis: the claim register",
+            "intro": "Keep different levels of certainty apart. A claim register gives every statement one of five labels and says what supports it.",
+            "parts": [
+              {
+                "title": "Verified finding",
+                "md": "*East has 39 records and 182,004.38 net sales.*\n\nSupported by: grouped CSV calculations."
+              },
+              {
+                "title": "Verified comparison",
+                "md": "*East has the highest net sales per recorded transaction.*\n\nSupported by: regional ratios checked from the CSV."
+              },
+              {
+                "title": "Working hypothesis",
+                "md": "*East may have fewer active stores or a shorter reporting window.*\n\nPlausible, but **not tested** by the CSV."
+              },
+              {
+                "title": "Missing input",
+                "md": "*Store identifiers, extraction dates, store opening days.*\n\nNeeded to assess comparable activity."
+              },
+              {
+                "title": "Decision to defer",
+                "md": "*Do not choose a promotion solely from regional totals.*\n\nCause and exposure are unknown."
+              }
+            ],
+            "outro": "```prompt Synthesis prompt\nCombine the regional overview and East category table. Write two checked findings, one cautious working diagnosis, and two alternative explanations. Label the alternatives as hypotheses. End with the most useful question for the data owner. Do not imply that a hypothesis has been confirmed.\n```\n\n**Why it works:** the labels in the prompt become labels in the answer, so you can scan for a hypothesis dressed as a finding.\n\nThe next sensible question is whether the **same stores and time windows** were represented in all four regions. That decides whether a fair comparison of transaction activity is possible at all. The CSV contains no store identifiers, transaction dates, profit or currency, and none of them should be made up."
+          },
+          {
+            "layout": "faq",
+            "title": "Questions that come up",
+            "parts": [
+              {
+                "title": "Why not ask the AI straight away for the cause of East's low total?",
+                "md": "Because the file cannot contain a cause. It holds what was recorded, not why. An AI will still produce a confident-sounding cause if you ask for one, so ask for observations, alternatives and the data that would separate them."
+              },
+              {
+                "title": "Is East underperforming?",
+                "md": "Not on the evidence you have. East is lowest on total and count and highest on value per record. \"Underperforming\" needs a target or a fair baseline, such as transactions per active store per operating day, and the file provides neither."
+              },
+              {
+                "title": "Is the highest value per record just a few big sales?",
+                "md": "Worth checking. Individual transactions range from 77.30 to 16,008.39, so a mean can be pulled by large sales. East also has the highest **median** net sales per transaction (4,272.72, against 3,613.42 for North, 2,899.77 for West and 2,742.34 for South), so the reading does not depend on a handful of sales. Checking a second statistic is a good habit."
+              },
+              {
+                "title": "The chatbot gave a total that does not match mine. Which do I use?",
+                "md": "The file is the benchmark. Recompute with a pivot table, find where the two differ (a missing region, a rounded figure, a different filter) and reconcile before you go on. Never adjust a regional figure to make a total fit."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "md": "Reproduce these figures in a spreadsheet before the quiz.\n\n1. Insert a pivot table on the full CSV: rows `Store_Region`, values **Count of Transaction_ID** and **Sum of Net_Sales_Amount**. Divide each sum by its count at full precision and round only for display.\n2. Confirm that the four counts add to 200, the four sums add to 892,252.11, and the count of unique `Transaction_ID` values is 200 (it should equal the row count).\n3. Filter to East, pivot on `Product_Category`, and confirm that the category counts add to 39 and the totals to 182,004.38.\n4. Optional: compute the median of `Net_Sales_Amount` for each region and see whether East is still highest.\n\n:::Find the error\nAn AI summary says: \"East is our weakest region: only 182,004.38 in net sales from 39 transactions, about 4,667 per transaction. East customers clearly spend less, so weak demand is the cause and a promotion will lift East immediately.\"\n\nFind at least three problems before you open this box.\n:::\n\n:::Open the solution after you have tried\n1. \"Weakest\" rests on the total alone. East's 4,667 per transaction is the **highest** of the four regions, so \"customers spend less\" contradicts the figures the summary itself quotes.\n2. \"Weak demand is the cause\" is a hypothesis. The file has no store, date or traffic data, so fewer stores or a shorter reporting window fit the same numbers.\n3. \"A promotion will lift East immediately\" is a forecast. The CSV contains no experiment, cost or campaign result that could support it.\n:::"
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Diagnose with Data",
+          "items": [
+            {
+              "term": "Task brief",
+              "meaning": "A short statement of audience, input, decision, outputs and success criteria, written before the first analysis prompt.",
+              "example": "Audience: the manager. Input: the 200-row CSV. Decision: what to investigate first."
+            },
+            {
+              "term": "Net sales per transaction",
+              "meaning": "A group's summed net sales divided by its own transaction count, calculated at full precision and rounded only for display.",
+              "example": "East: 182,004.38 / 39 = 4,666.78."
+            },
+            {
+              "term": "Reconcile",
+              "meaning": "Check that parts add back to the whole and that your figures match the file: regional counts to 200, regional sums to 892,252.11, categories to the region.",
+              "example": "East categories: 12 + 4 + 10 + 13 = 39."
+            },
+            {
+              "term": "Descriptive analysis",
+              "meaning": "Reporting the patterns that are present in the supplied data, without claiming why they exist."
+            },
+            {
+              "term": "Candidate investigation point",
+              "meaning": "A small or odd segment worth a closer look, not evidence of a failure or a cause.",
+              "example": "East Electronics: 4 records."
+            },
+            {
+              "term": "Coverage",
+              "meaning": "Which stores, entities and time periods a data extract includes. Unequal coverage can make counts incomparable."
+            },
+            {
+              "term": "Hypothesis",
+              "meaning": "A possible explanation that has not been tested with the evidence you hold.",
+              "example": "East may have fewer active stores or a shorter reporting window."
+            },
+            {
+              "term": "Working diagnosis",
+              "meaning": "A provisional interpretation linking observed evidence to a question; it names checked findings, labelled hypotheses and the data still missing."
+            },
+            {
+              "term": "Claim register",
+              "meaning": "A table that labels each statement as verified finding, verified comparison, working hypothesis, missing input or decision to defer, with what supports it."
+            }
+          ]
+        },
+        "summary": [
+          "Frame the investigation with a task brief, then ask for a checked regional overview with the calculation rule stated.",
+          "East has the lowest total and fewest records (39) but the highest net sales per transaction (4,666.78): its low total is associated with fewer recorded transactions, not low value per record.",
+          "Break East down by category and reconcile it; Electronics has four records, a point to investigate, not a cause.",
+          "Separate verified findings from hypotheses and missing inputs, and ask first whether store and time coverage are comparable."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 10",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p10.pe091",
+              "type": "mcq",
+              "prompt": "What is the first numerical overview used in the retail diagnosis?",
+              "explanation": "The CSV records net sales by region and category, so a regional total of Net_Sales_Amount is the first overview you can build and check. Customer lifetime value, monthly profit by store and campaign return all need fields the file does not have (customer history, costs, dates, store IDs, campaign data).",
+              "options": [
+                {
+                  "label": "Customer lifetime value by city",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                },
+                {
+                  "label": "Monthly profit by store",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.profit-confusion"
+                },
+                {
+                  "label": "Net sales totals by region",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Campaign return on investment",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe092",
+              "type": "mcq",
+              "prompt": "A manager asks which region should receive an initial review based on total net sales. Which is the lowest?",
+              "explanation": "East's total is 182,004.38, below West (213,240.41), South (236,980.99) and North (260,026.33). The ranking is a verified fact, but it does not say why East is lowest. North is the highest, not the lowest, a common slip when a table is read in the wrong direction.",
+              "options": [
+                {
+                  "label": "East: 182,004.38",
+                  "isCorrect": true
+                },
+                {
+                  "label": "North: 260,026.33",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "South: 236,980.99",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "West: 213,240.41",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe093",
+              "type": "mcq",
+              "prompt": "What does a transaction count represent in this dataset?",
+              "explanation": "Each row is one transaction, so the count is the number of recorded transactions. The file has no store ID, date or customer ID, so stores, operating days and repeat customers cannot be inferred from the row count.",
+              "options": [
+                {
+                  "label": "The number of recorded transactions",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The number of operating business days",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                },
+                {
+                  "label": "The number of unique store locations",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                },
+                {
+                  "label": "The number of repeat customers",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe094",
+              "type": "mcq",
+              "prompt": "East records fewer transactions but high net sales per transaction. Which interpretation is safest?",
+              "explanation": "A total is count times average value, so East's low total and high value per transaction together show that the total reflects both. \"Fewer stores\" is a plausible hypothesis but stores are not in the file, and margin and purchasing power would need cost and customer data.",
+              "options": [
+                {
+                  "label": "The region has the smallest profit margin",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.profit-confusion"
+                },
+                {
+                  "label": "The region has the weakest purchasing power",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.cause-from-pattern"
+                },
+                {
+                  "label": "The region operates with fewer stores",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.hypothesis-as-fact"
+                },
+                {
+                  "label": "The observed totals reflect both count and value",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe095",
+              "type": "mcq",
+              "prompt": "Which CSV field identifies the retail product group?",
+              "explanation": "Product_Category defines Apparel, Electronics, Furniture and Grocery. Transaction_ID identifies a record, Customer_Type describes the buyer type and Payment_Method records how the sale was paid, so none of them groups products.",
+              "options": [
+                {
+                  "label": "Product_Category",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Transaction_ID",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "Customer_Type",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "Payment_Method",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe096",
+              "type": "mcq",
+              "prompt": "A student wants to investigate East's category mix. Which grouping should be used?",
+              "explanation": "Store_Region and Product_Category are both in the file, so East records grouped by Product_Category is a breakdown you can build. The CSV has no month, store ID or profit field, so the other groupings cannot be calculated from it.",
+              "options": [
+                {
+                  "label": "All records grouped by estimated profit",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.profit-confusion"
+                },
+                {
+                  "label": "East records grouped by transaction month",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                },
+                {
+                  "label": "All records grouped by unknown store IDs",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                },
+                {
+                  "label": "East records grouped by Product_Category",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe097",
+              "type": "mcq",
+              "prompt": "Regional net-sales sums total 892,252.11. An AI summary reports 890,000.00. What is best?",
+              "explanation": "The sum from the file, 892,252.11, is the benchmark. The AI figure is 2,252.11 lower, so recompute from the file and find the difference. Bending a regional figure, calling the gap a loss, or using a rounded number unchecked all skip that reconciliation.",
+              "options": [
+                {
+                  "label": "Adjust one region to fit the AI figure",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.unchecked-number"
+                },
+                {
+                  "label": "Describe the gap as an observed loss",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.unchecked-number"
+                },
+                {
+                  "label": "Reconcile the sum against the file",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Use the rounded AI number without checking",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.unchecked-number"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe098",
+              "type": "mcq",
+              "prompt": "East has the fewest recorded transactions. What is a defensible first management question?",
+              "explanation": "Fewer recorded transactions could reflect fewer stores, a shorter extraction window or lower activity, and the file cannot tell them apart. The defensible first question is whether store and time coverage are comparable, before anyone sets targets, closes stores or blames a promotion.",
+              "options": [
+                {
+                  "label": "Should East's profit target increase now?",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.premature-action"
+                },
+                {
+                  "label": "Are store and time coverage comparable?",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Should all East stores be closed now?",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.premature-action"
+                },
+                {
+                  "label": "Did a specific promotion cause the gap?",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.cause-from-pattern"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe099",
+              "type": "mcq",
+              "prompt": "A model claims that discounts caused East's lower sales total. What is the key weakness?",
+              "explanation": "Even a real pattern between discounts and sales would not show that discounts caused East's lower total, because the CSV has no experiment or design that could identify a cause. The file does contain discount fields, so \"discount amounts are absent\" is false, but their presence does not prove the claim.",
+              "options": [
+                {
+                  "label": "A causal effect has not been established",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Discount amounts are absent from the CSV",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "All regions have identical net sales",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.unchecked-number"
+                },
+                {
+                  "label": "The dataset includes controlled experiments",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.cause-from-pattern"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe100",
+              "type": "mcq",
+              "prompt": "What is net sales per transaction calculated as?",
+              "explanation": "Net sales per transaction is the total net sales of a group divided by that group's own transaction count: for East, 182,004.38 / 39 = 4,666.78. The other ratios (discount shares, units per transaction) answer different questions.",
+              "options": [
+                {
+                  "label": "Total discounts divided by total gross sales",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "Total net sales divided by transaction count",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Total units divided by transaction count",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "Total net sales divided by total discounts",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe101",
+              "type": "mcq",
+              "prompt": "East's net sales per transaction are about 4,666.78. What should the analyst avoid concluding?",
+              "explanation": "4,666.78 is an average of net sales over East's 39 records. It describes value per record, not margin, and the file has no costs, so it cannot show profitability. The other three statements correctly describe what the measure is.",
+              "options": [
+                {
+                  "label": "The calculation uses East transactions only",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "The measure differs from total net sales",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "High transaction value proves high profitability",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The amount is an average over records",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe102",
+              "type": "mcq",
+              "prompt": "A table compares East product categories. Which accompanying statement best protects interpretation?",
+              "explanation": "East's categories have different counts (from 4 to 13) and each total mixes count and value, so a table should say that counts may affect total comparisons. Identical prices, seasonal shifts and equal market coverage are not established by the CSV.",
+              "options": [
+                {
+                  "label": "All categories have identical prices",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.measure-mixup"
+                },
+                {
+                  "label": "The data establish seasonal category shifts",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                },
+                {
+                  "label": "Each category has equal market coverage",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.hypothesis-as-fact"
+                },
+                {
+                  "label": "Category counts may affect total comparisons",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe103",
+              "type": "mcq",
+              "prompt": "Two sources agree on East's total but differ on why it is low. How should findings be reported?",
+              "explanation": "The total is a checked fact and the explanations are hypotheses. Report the total, label both explanations as competing hypotheses and say what data would separate them. Blending them, picking the more persuasive one, or calling them tested adds certainty the evidence lacks.",
+              "options": [
+                {
+                  "label": "Present the total; flag competing hypotheses",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Average the explanations into a single cause",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.hypothesis-as-fact"
+                },
+                {
+                  "label": "Choose whichever explanation sounds stronger",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.hypothesis-as-fact"
+                },
+                {
+                  "label": "State both causes were experimentally verified",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.hypothesis-as-fact"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.pe104",
+              "type": "mcq",
+              "prompt": "A manager asks for a root-cause report immediately. Which output is supportable now?",
+              "explanation": "With transaction-level fields you can give a descriptive diagnosis and list the data gaps. A proven causal model, a profit forecast or a store productivity ranking would need store, date, cost or experiment data that the file does not hold.",
+              "options": [
+                {
+                  "label": "A preliminary diagnosis with data gaps",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A proven causal model of demand",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.cause-from-pattern"
+                },
+                {
+                  "label": "A profit-improvement forecast for East",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.profit-confusion"
+                },
+                {
+                  "label": "A confirmed store-level productivity ranking",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.missing-field"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.x1",
+              "type": "matching",
+              "prompt": "Match each statement from the East claim register to its label.",
+              "explanation": "Counts and totals checked in the CSV are verified findings. A plausible explanation the file cannot test is a working hypothesis. The fields you would need to test it are missing inputs. A choice you postpone until evidence exists is a decision to defer.",
+              "pairs": [
+                {
+                  "left": "East has 39 records and 182,004.38 net sales.",
+                  "right": "Verified finding"
+                },
+                {
+                  "left": "East may have fewer active stores or a shorter reporting window.",
+                  "right": "Working hypothesis"
+                },
+                {
+                  "left": "Store identifiers, extraction dates and opening days.",
+                  "right": "Missing input"
+                },
+                {
+                  "left": "Do not choose a promotion solely from regional totals.",
+                  "right": "Decision to defer"
+                }
+              ]
+            },
+            {
+              "key": "pe.p10.x2",
+              "type": "fill_in",
+              "workOnPaper": true,
+              "prompt": "All four regions together have 892,252.11 in net sales from 200 transactions. What is the overall net sales per transaction, to two decimal places?",
+              "explanation": "Divide the total by the total count: 892,252.11 / 200 = 4,461.26. The plain average of the four regional averages is 4,470.29, a different number, because it ignores that the regions have different record counts.",
+              "answers": [
+                "4461.26",
+                "4,461.26",
+                "4461.260"
+              ]
+            },
+            {
+              "key": "pe.p10.x3",
+              "type": "true_false",
+              "prompt": "East's Electronics subgroup has only 4 recorded transactions, so this proves that East's Electronics business is failing.",
+              "explanation": "False. Four records is a small subgroup and a candidate investigation point. It is a fact about what was recorded; it does not show a failure or a cause, and it can depend on which stores or periods the extract includes.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p10.cause-from-pattern"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "title": "Period 11 · Develop Evidence-Based Options",
+        "durationMin": 45,
+        "description": "Turn the East diagnosis into three investigative options, compare them on evidence and assumptions, challenge an attractive promotion idea and record a human choice.",
+        "look": {
+          "palette": "vibrant",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Ask AI for three next-step options that each state the evidence they respond to, an unconfirmed assumption and the new information required",
+          "Compare options in a four-column table and judge which new data would most change the decision",
+          "Challenge an unsupported promotion proposal by naming two alternative explanations and a check for each",
+          "Explain why historical discount values in the CSV do not establish the effect of a future promotion",
+          "Record a human-approved direction with a justification and the findings that would change it",
+          "Check an AI option table against five questions before using it"
+        ],
+        "body": "On Monday the manager reads your East diagnosis and says: \"Good. Let's run a discount promotion in East next week.\" It sounds decisive, and an AI assistant will happily write the campaign.\n\nStop and list what you actually know. East has 39 recorded transactions, the fewest, and the highest net sales per transaction. The file has no store list, no dates, no costs and no campaign history. Nothing in it says *why* East has fewer records, or that a discount would change that.\n\n> [!ghi-nho] At this stage ask AI for **next steps for investigation**, not for actions that spend money. A good option list shows what you would need to know in order to choose safely.\n\n:::Predict before you read\nThe manager proposes a discount promotion for East. List two things, other than weak customer demand, that could explain East's low record count. Then write one check that could tell each of them apart from weak demand. You will compare your list with the challenge section.\n:::",
+        "sections": [
+          {
+            "layout": "text",
+            "title": "Generate options",
+            "parts": [
+              {
+                "md": "Ask for investigative options and make the AI expose what each one rests on.\n\n```prompt Prompt A — weak\nWhat should we do to boost East sales?\n```\n\n**Why it is weak:** it assumes East needs a boost, asks for actions instead of investigations, and does not ask the AI to show evidence, assumptions or data needs. The answer will sound actionable and be impossible to check.\n\n```prompt Prompt B — option generation\nUsing the verified East diagnosis, suggest three useful next steps. For each, state the observed evidence it responds to, an unconfirmed assumption, and new information required. Include at least one data-coverage check. Keep sales interventions conditional on additional evidence.\n```\n\n**Why it is better:** the three fields it demands (evidence, assumption, new information) turn each option into something you can test, and the coverage check keeps the most basic question on the list.\n\nA suitable answer would suggest checking reporting coverage, comparing store-level activity and investigating customer acquisition **only if** a meaningful activity shortfall remains after that. These are proposed approaches, not results of any business experiment."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Compare the options",
+            "parts": [
+              {
+                "md": "Put the options side by side so their evidence and assumptions are visible before you choose.\n\n```prompt Follow-up — comparison table\nPut these options in a comparison table: option, current evidence, assumption to test, and information needed. Keep each entry brief; treat assumptions as unconfirmed.\n```\n\n| Option | Current evidence | Assumption to test | Information needed |\n|---|---|---|---|\n| Check source coverage | East has 39 records, the fewest | Source includes unequal periods or stores | Store list, dates, extraction rules |\n| Compare activity on a common basis | East's net sales per record is comparatively high | Stores may differ in activity | Store IDs, opening days, customer visits |\n| Investigate acquisition | East has fewer recorded transactions | Customer demand may be weaker | Traffic or visits, conversion, campaign costs |\n\nEvery option has different prerequisites:\n\n- **Source-coverage check.** Conceptually simple, and it protects every later analysis.\n- **Common-basis comparison.** Needs a fair denominator, such as transactions per active store per operating day, *if* the organisation can supply and validate those fields.\n- **Acquisition analysis.** Needs evidence of demand, the costs, and a proper evaluation design before any claim about performance.\n\nTwo test questions help you choose when only one check can be funded this week. Would the extra data **materially change the decision**? And what is the **information value relative to the effort**? An option that sounds impressive but cannot change what you do is a poor first choice.\n\n> [!canh-bao] The table must label assumptions as assumptions. If the \"Assumption\" column reads like a finding (\"East demand is weaker\"), the AI has smuggled a hypothesis in as evidence."
+              }
+            ]
+          },
+          {
+            "layout": "compare",
+            "title": "Challenge an option",
+            "intro": "An AI may suggest: *\"Run a discount promotion in East to increase purchases.\"* It is attractive because it sounds like action. A good reviewer asks what else could explain the problem and what is missing.",
+            "parts": [
+              {
+                "title": "Why the idea is attractive",
+                "md": "- It is concrete and quick to explain\n- East has the fewest records, so \"more purchases\" seems the obvious goal\n- The CSV even contains discount columns, so it feels data-backed"
+              },
+              {
+                "title": "What the file does not contain",
+                "md": "- Store identifiers and reporting dates, so coverage is unknown\n- Costs, gross margin or profit\n- Any experiment or campaign result\n- Customer visits or traffic\n\nDiscounts are recorded only as past values on each transaction. They cannot show what a future promotion would do."
+              }
+            ],
+            "outro": "```prompt Challenge prompt\nChallenge the proposal to run a promotion in East. Identify two alternative reasons for its smaller recorded transaction count. For each, state a check that could distinguish it from lower customer demand. Explain which facts must be established before we spend on a promotion.\n```\n\n**Why it works:** it asks for alternatives *and* a way to tell them apart, so the answer is a to-do list rather than an opinion.\n\nTwo basic alternatives are **fewer stores represented in the extract** and **a shorter reporting period**. Checking store and time coverage is a prerequisite for any comparison. Even if East's count stays low after adjusting for coverage, customer traffic, pricing, product availability and competing conditions may matter. Do not say any of them is responsible until it has been measured.\n\nIf you listed fewer stores, a shorter window or a different traffic level in the \"Predict\" box, you were on the right lines. Each of those has a check: the store list, the extraction dates, the visit counts.\n\n> [!vi-du] The CSV does show that East's overall discount rate (total `Discount_Amount` divided by total `Gross_Amount`) is 12.45%, the lowest of the four regions (North 13.32%, South 14.28%, West 15.97%). Someone could tell a story from that: \"East discounts least, so fewer people buy.\" It is only a story. The file has no experiment, so it fits equally well with discounts being irrelevant to the count."
+          },
+          {
+            "layout": "steps",
+            "title": "Select a direction: the human decision gate",
+            "intro": "The AI may recommend, but a person chooses. The teaching example chooses **verify coverage first**. This is a human decision based on missing source information and the risk of misreading transaction counts. It is not proof that East has a coverage error.",
+            "parts": [
+              {
+                "title": "State the choice",
+                "md": "Name one direction in plain words: *check regional store and reporting coverage before any campaign.*"
+              },
+              {
+                "title": "Justify it with verified evidence",
+                "md": "```prompt Human-approved choice prompt\nWe choose to check regional store and reporting coverage before any campaign. Write a two-sentence justification using the verified East evidence. Then identify what outcome from the coverage check would justify a deeper sales investigation. Do not claim that the coverage problem has already been found.\n```\n\nA useful justification: *East has fewer recorded transactions while having the highest recorded net sales per transaction. Without comparable store and reporting-period coverage, these counts do not establish a demand problem.*"
+              },
+              {
+                "title": "Say what would change the choice",
+                "md": "For example: if the coverage check shows the same stores and the same period in every region, the low count is more likely to be real activity, and a deeper look at demand becomes justified."
+              },
+              {
+                "title": "Record the decision",
+                "md": "| Field | Entry |\n|---|---|\n| Direction chosen | Check coverage first |\n| Chosen by | The manager or named decision owner |\n| Evidence used | East: 39 records, 4,666.78 per transaction |\n| Assumptions | Coverage may differ between regions |\n| Deferred options | Promotion; acquisition analysis |\n| What would change it | Matching coverage with the count still low |"
+              }
+            ],
+            "outro": "> [!ghi-nho] The value of this choice is that the next analysis will be better specified. Save the options and challenge record, so a later reviewer can see why the promotion was deferred."
+          },
+          {
+            "layout": "cards",
+            "title": "Check the recommendation before use",
+            "intro": "Before you accept an AI option table, ask these five questions.",
+            "parts": [
+              {
+                "title": "1. Traceable?",
+                "md": "Is every stated number or observation traceable to the CSV and a calculation you have seen?"
+              },
+              {
+                "title": "2. Assumptions labelled?",
+                "md": "Does the table mark assumptions as assumptions, not as findings?"
+              },
+              {
+                "title": "3. Requests necessary?",
+                "md": "Is each new data request needed to choose between the options?"
+              },
+              {
+                "title": "4. Feasible follow-up?",
+                "md": "Does the proposal give a follow-up you can actually do, rather than an unsupported causal conclusion?"
+              },
+              {
+                "title": "5. A person chose?",
+                "md": "Has a named person, not the chatbot, picked the next step?"
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Questions that come up",
+            "parts": [
+              {
+                "title": "Is a coverage check just a way of delaying?",
+                "md": "No. It is cheap, it protects every later analysis, and it can change the decision. If East's low count turns out to be a coverage artefact, a promotion would have treated a data problem as a business problem."
+              },
+              {
+                "title": "Can the AI choose between the options?",
+                "md": "It can rank and justify them, which is useful input. The choice, and the accountability for it, stays with the manager or designated decision owner."
+              },
+              {
+                "title": "Two options cite the same East total but recommend opposite actions. How do I decide?",
+                "md": "Compare their assumptions and the evidence for each. Shared descriptive data can support different hypotheses, so the assumptions decide whether an action is justified. Do not average the two actions or pick the one that sounds more confident."
+              },
+              {
+                "title": "What if an option needs data we do not have, such as customer visits?",
+                "md": "Keep it on the list as **contingent on new evidence**. You cannot estimate visits from transaction IDs, and you should not report the effect as proven."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself",
+            "parts": [
+              {
+                "md": "1. In the spreadsheet, compute each region's discount rate as the sum of `Discount_Amount` divided by the sum of `Gross_Amount`. You should get East 12.45%, North 13.32%, South 14.28% and West 15.97%. Then write one sentence about what this does **not** show.\n2. Take an AI-written option table and, for every number in it, find the cell or pivot that supports it. Any number you cannot trace is unverified.\n3. Write two questions that would test whether East's 39 transactions are comparable to another region's count.\n\n:::Find the error\nAn AI option list says: \"Option 1: run a 15% discount in East. East customers respond poorly to current pricing, and this will raise transactions by about 12% within a month. Information needed: none, the CSV is sufficient.\"\n\nFind at least three problems before you open this box.\n:::\n\n:::Open the solution after you have tried\n1. \"East customers respond poorly to current pricing\" is an unlabelled assumption. Nothing in the CSV measures how customers respond to price.\n2. \"Raise transactions by about 12% within a month\" is an invented forecast. There is no experiment, baseline or timing in the file.\n3. \"Information needed: none\" is false. A promotion needs coverage, cost and demand evidence, and an evaluation design, none of which the CSV holds.\n:::"
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Evidence-Based Options",
+          "items": [
+            {
+              "term": "Option",
+              "meaning": "A candidate course of action or investigation. At this stage, prefer investigations that expose what you would need to know."
+            },
+            {
+              "term": "Assumption",
+              "meaning": "A statement used for planning that has not been established. An option table must label assumptions as assumptions.",
+              "example": "Customer demand may be weaker in East."
+            },
+            {
+              "term": "Alternative explanation",
+              "meaning": "Another plausible account of the same observation.",
+              "example": "East's smaller count could reflect fewer stores or a shorter reporting period."
+            },
+            {
+              "term": "Evidence gap",
+              "meaning": "Missing information that limits a conclusion, such as store IDs, dates or customer visits."
+            },
+            {
+              "term": "Four-column comparison",
+              "meaning": "Option, current evidence, assumption to test and information needed, kept brief so differences are visible."
+            },
+            {
+              "term": "Information value relative to effort",
+              "meaning": "The best criterion when only one check can be funded: how much the answer would change the decision, against how hard it is to get."
+            },
+            {
+              "term": "Challenge prompt",
+              "meaning": "A prompt that asks for alternative explanations and a check to tell them apart, to expose assumptions rather than to add certainty."
+            },
+            {
+              "term": "Decision gate",
+              "meaning": "An explicit human approval before moving from options to action."
+            },
+            {
+              "term": "Contingent option",
+              "meaning": "An option that depends on evidence you do not yet hold, so it stays a hypothesis to investigate."
+            }
+          ]
+        },
+        "summary": [
+          "Produce options only after the evidence is understood, and ask for next investigative steps with their evidence, assumptions and information needed.",
+          "Compare options in a table where assumptions are labelled, then challenge the most attractive one: historical discount values cannot show what a future promotion would do.",
+          "A person chooses the direction and records why. In the East example, verifying store and reporting coverage comes first.",
+          "Check every AI option table for traceable numbers, labelled assumptions, necessary data requests, a feasible follow-up and a human choice."
+        ],
+        "quiz": {
+          "title": "Quiz · Period 11",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p11.pe105",
+              "type": "mcq",
+              "prompt": "After diagnosing East's recorded sales, what should AI help generate?",
+              "explanation": "After a diagnosis, AI's job is to propose next investigation steps and what each would need. It cannot supply past dates the file lacks, guarantee a campaign result or approve spending; spending needs a person's approval.",
+              "options": [
+                {
+                  "label": "Unverified historical dates",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.invented-data"
+                },
+                {
+                  "label": "Next investigation options",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Automatic expenditure approvals",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.ai-decides"
+                },
+                {
+                  "label": "Guaranteed campaign results",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe106",
+              "type": "mcq",
+              "prompt": "East appears to have low recorded activity. Which next step addresses comparability?",
+              "explanation": "Store counts and reporting coverage test directly whether East's recorded count is comparable with the other regions. Assuming equal stores, concluding that East has fewer customers, or raising prices all act on an explanation that has not been checked.",
+              "options": [
+                {
+                  "label": "Check store counts and reporting coverage",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Assume the sample contains equal stores",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.demand-assumed"
+                },
+                {
+                  "label": "Conclude the region has fewer customers",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.demand-assumed"
+                },
+                {
+                  "label": "Increase prices before gathering evidence",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.demand-assumed"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe107",
+              "type": "mcq",
+              "prompt": "What should an options comparison make explicit?",
+              "explanation": "A comparison is useful when it shows what evidence each option needs, so you can see which ones can be tested now. Prompt length, colour preferences and the chatbot's writing style say nothing about the quality of an option.",
+              "options": [
+                {
+                  "label": "Evidence needed for each option",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The length of the generated prompt",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "The manager's preferred slide colors",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "The chatbot's favorite writing style",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe108",
+              "type": "mcq",
+              "prompt": "A manager can fund only one diagnostic check this week. Which criterion best guides selection?",
+              "explanation": "With one check to fund, choose the one whose answer would change the decision most for the effort it takes. Enthusiasm, length and the number of tool names are presentation, not value.",
+              "options": [
+                {
+                  "label": "How enthusiastic the AI sounds",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "Which option has the longest description",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "Information value relative to effort",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Which option uses the most tool names",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe109",
+              "type": "mcq",
+              "prompt": "AI suggests a discount campaign because East has low total sales. What challenge is most pertinent?",
+              "explanation": "The suggestion assumes discounts are linked to East's low total, and the CSV has no experiment or cost data to show that, so ask what evidence links them. Stronger wording or another chart colour changes presentation only, and a made-up baseline would be invented.",
+              "options": [
+                {
+                  "label": "Can the recommendation use stronger adjectives?",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "Can the manager add a fictional baseline?",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.invented-data"
+                },
+                {
+                  "label": "What evidence links discounts to the problem?",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Would another chart color improve the claim?",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe110",
+              "type": "mcq",
+              "prompt": "Three options each require different new inputs. What should the comparison table include?",
+              "explanation": "A comparison table should show the data each option needs, what it is likely to be worth and the effort it takes. Guaranteed financial effects cannot be known from this file, and headlines or popularity do not support a reasoned choice.",
+              "options": [
+                {
+                  "label": "Guaranteed financial effects for each",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                },
+                {
+                  "label": "Only a persuasive headline per option",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "Required data, likely value and effort",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Only estimated popularity and font style",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe111",
+              "type": "mcq",
+              "prompt": "What is the purpose of challenging an AI-proposed option?",
+              "explanation": "Challenge makes hidden assumptions visible and shows what evidence is missing. It does not make a recommendation more certain, change the business question or throw away totals you have already verified.",
+              "options": [
+                {
+                  "label": "Make every recommendation more certain",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.assumptions-untested"
+                },
+                {
+                  "label": "Replace the business question entirely",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.assumptions-untested"
+                },
+                {
+                  "label": "Discard all independently checked totals",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.assumptions-untested"
+                },
+                {
+                  "label": "Reveal assumptions and missing evidence",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe112",
+              "type": "mcq",
+              "prompt": "One option seems attractive but needs customer visit data unavailable today. What is most defensible?",
+              "explanation": "An option that needs unavailable visit data stays a hypothesis, contingent on obtaining that data. Calling the effect proven or the gap irrelevant ignores the gap, and visits cannot be estimated from transaction IDs.",
+              "options": [
+                {
+                  "label": "Report the visitor effect as proven",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                },
+                {
+                  "label": "Treat the data gap as irrelevant",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.assumptions-untested"
+                },
+                {
+                  "label": "Estimate visits from transaction IDs",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.invented-data"
+                },
+                {
+                  "label": "Describe it as contingent on new evidence",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe113",
+              "type": "mcq",
+              "prompt": "The manager wants to choose between immediate advertising and a coverage audit. What should guide the choice?",
+              "explanation": "The choice between advertising now and a coverage audit rests on whether recorded activity is comparable, because that decides whether the baseline can be trusted. Slide count, adjective count and the order in which the AI lists options are not evidence.",
+              "options": [
+                {
+                  "label": "Which idea fits on fewer slides",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "The number of adjectives in the draft",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "Which choice AI mentions first",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "Whether recorded activity is comparable",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe114",
+              "type": "mcq",
+              "prompt": "Two alternatives cite the same East total but propose opposite actions. What test is useful?",
+              "explanation": "When two options start from the same East total but recommend opposite actions, the difference lies in their assumptions. Compare each option's assumptions and the evidence for them. Blending the actions, hiding the conflict or choosing the more confident voice does not resolve it.",
+              "options": [
+                {
+                  "label": "Compare each option's assumptions and evidence",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Average the two actions into one plan",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.assumptions-untested"
+                },
+                {
+                  "label": "Hide the inconsistency from stakeholders",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.assumptions-untested"
+                },
+                {
+                  "label": "Choose the one with more confident language",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe115",
+              "type": "mcq",
+              "prompt": "A store-coverage audit is feasible and informs all later options. Why might it come first?",
+              "explanation": "A coverage audit can show whether East's count is comparable, which reduces uncertainty for every later option. It does not give a profit margin, replace later business evaluation or guarantee growth.",
+              "options": [
+                {
+                  "label": "It establishes a precise profit margin",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                },
+                {
+                  "label": "It reduces uncertainty before intervention",
+                  "isCorrect": true
+                },
+                {
+                  "label": "It replaces later business evaluation",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                },
+                {
+                  "label": "It guarantees future regional growth",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe116",
+              "type": "mcq",
+              "prompt": "AI presents three actions but no evidence required to evaluate them. What is missing?",
+              "explanation": "An option without the information needed to test it cannot be prioritised or verified. Headings, extra paragraphs about AI or longer lists add volume but not decision logic.",
+              "options": [
+                {
+                  "label": "A more formal heading for each action",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "An extra paragraph about AI capabilities",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "A longer list of unrelated activities",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.style-over-substance"
+                },
+                {
+                  "label": "Testable information needs for each action",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.pe117",
+              "type": "mcq",
+              "prompt": "A team must choose one next investigation. What makes its justification strongest?",
+              "explanation": "The strongest justification records the trade-off between what you expect to learn and the effort and feasibility of getting it. Promises of success, the AI's ranking or dismissing all other options are claims of authority, not reasons.",
+              "options": [
+                {
+                  "label": "A recorded trade-off between value and feasibility",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A promise that the chosen option will succeed",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                },
+                {
+                  "label": "A choice based solely on the AI's ranking",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.ai-decides"
+                },
+                {
+                  "label": "A claim that all other options are useless",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.certainty-without-evidence"
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.x1",
+              "type": "true_false",
+              "prompt": "East has the fewest recorded transactions, so the data show that East customers are less interested in buying and a promotion should be the next step.",
+              "explanation": "False. The count can reflect fewer stores, a shorter reporting window or lower activity, and the CSV cannot separate them. Comparable coverage has to be checked before the count is read as a demand problem or a promotion is chosen.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p11.demand-assumed"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p11.x2",
+              "type": "ordering",
+              "prompt": "Put the steps of the Period 11 option process in the correct order.",
+              "explanation": "Options come first, from the verified diagnosis. Next they are compared in a table so evidence and assumptions are visible. The most attractive one is then challenged, and only after that does a person choose a direction and record the reasoning.",
+              "sequence": [
+                "Generate three next-step options from the verified diagnosis",
+                "Compare them in a table of evidence, assumption and information needed",
+                "Challenge the most attractive option and name alternative explanations",
+                "A person chooses a direction and records the justification"
+              ]
+            },
+            {
+              "key": "pe.p11.x3",
+              "type": "matching",
+              "prompt": "Match each option to the information it needs.",
+              "explanation": "A coverage check needs the store list, dates and extraction rules. A common-basis comparison needs store IDs, opening days and visits. Acquisition work needs traffic, conversion and campaign costs. A promotion proposal needs two alternative explanations that could be tested before any spending.",
+              "pairs": [
+                {
+                  "left": "Check source coverage",
+                  "right": "Store list, dates and extraction rules"
+                },
+                {
+                  "left": "Compare activity on a common basis",
+                  "right": "Store IDs, opening days and customer visits"
+                },
+                {
+                  "left": "Investigate acquisition",
+                  "right": "Traffic or visits, conversion and campaign costs"
+                },
+                {
+                  "left": "Challenge a promotion proposal",
+                  "right": "Two alternative explanations and a check for each"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "title": "Period 12 · Plan and Measure Action",
+        "durationMin": 45,
+        "description": "Turn the chosen direction into actions, owners and deliverables, define success without inventing an uplift, assemble a one-page recommendation and save the investigation as a reusable prompt chain with a human pause.",
+        "look": {
+          "palette": "vibrant",
+          "font": "modern"
+        },
+        "objectivesLead": "By the end of this period you can:",
+        "objectives": [
+          "Turn a chosen direction into one action that names the information to obtain, why it is needed, a proposed role and a deliverable",
+          "Build a three-row action plan with owner, data or approval needed, deliverable and an observable success condition",
+          "Explain why transactions per operating store-day cannot be calculated from the current CSV",
+          "Write a one-page recommendation with a question, verified evidence, a limitation, a next action with proposed owner and a checkable outcome",
+          "Assemble the six-stage prompt chain and place the human pause before planning",
+          "Change one stage of a saved chain, such as a category comparison, without discarding checked work"
+        ],
+        "body": "The manager has read your options table and approved one thing: **confirm comparable store and reporting coverage first.** Then comes the next question: \"Fine. Who does what, and how will we know it worked?\"\n\nYou cannot answer with a sales target, because the file contains none. What you can write is a plan whose actions, owners and outcomes are all **observable**, and a recommendation that ends honestly: the next step is to obtain better information.\n\n> [!ghi-nho] An evidence-based decision process can sensibly end with a request for more reliable data. That is a result, not a failure to reach one.\n\n:::Predict before you read\nA colleague suggests the success measure \"East net sales up 10% next quarter\". Before reading on, write down what is wrong with it. Then think of a success measure for a coverage check that you could verify as done or not done.\n:::",
+        "sections": [
+          {
+            "layout": "text",
+            "title": "Specify the next action",
+            "parts": [
+              {
+                "md": "A useful action says **what** should be requested, **who** can provide or verify it, and **what output** resolves the question. Because the CSV has no store or date fields, the action is to *obtain new approved information*, not to manufacture a normalised metric from data you do not have.\n\n```prompt Action prompt\nTurn the chosen direction, confirm comparable regional coverage, into one practical action. Name the necessary store and date information, why it is needed, the proposed responsible role, and the deliverable the retail manager will review. Leave timing and resources open for human confirmation.\n```\n\n**Why it works:** it asks for one action, not a programme. It leaves timing and resources open, so the AI cannot invent a deadline or a budget.\n\nAn appropriate deliverable is a **documented coverage table**: which stores are represented, which reporting dates are included, which operating days are valid and which extraction rules were applied. With it, the manager can agree a scope for a fair comparison.\n\n> [!canh-bao] The lecture materials give a plan **example**. It is not a completed data acquisition or a store-level analysis, and your answers should not read as if it were."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Build an action plan",
+            "parts": [
+              {
+                "md": "```prompt Follow-up — action plan\nExpand this action into a short plan: action, proposed owner, data needed and deliverable. Ask about timing and resources that have not been agreed.\n```\n\n| Action | Proposed owner | Data or approval needed | Deliverable | Success condition |\n|---|---|---|---|---|\n| Confirm coverage | Data analyst or data owner | Store list, extraction dates, rules | Validated coverage summary | Comparable scope established, or gaps documented |\n| Compare activity fairly | Retail analyst | Store IDs, operating days, transaction counts | Activity comparison | Denominators and definitions checked |\n| Decide next action | Retail manager | The comparison and operational context | Approved next-step brief | Choice and reasoning documented |\n\nProposed owners are **role examples, not assignments**. A real organisation must confirm roles, deadlines, resources and permitted sources. The plan should not state a fixed duration or a sales uplift, because neither is supplied. If coverage cannot be matched, the plan reports that constraint and proposes another way to obtain comparable data.\n\n**A future measure.** Once the data exist, a fair comparison metric would be *recorded transactions per operating store-day*: count transactions in a validated common scope and divide by the total store-days. For example, if validated data list each active store and its operating days for a common period, you could do exactly that. The current CSV supports none of it, since it has no store or day fields. Label the metric a **future measure**, never a current result."
+              }
+            ]
+          },
+          {
+            "layout": "cards",
+            "title": "Define success and write the recommendation",
+            "intro": "Success is an observable deliverable: confirmed comparable store and date coverage, a valid activity denominator and a manager-approved next decision. A one-page recommendation has five elements.",
+            "parts": [
+              {
+                "title": "1. A clear question",
+                "md": "What the manager needs to decide: should East's low count be treated as a business issue or a data issue?"
+              },
+              {
+                "title": "2. Verified evidence",
+                "md": "East: 39 transactions, 182,004.38 net sales, 4,666.78 per transaction, from the CSV."
+              },
+              {
+                "title": "3. An unresolved limitation",
+                "md": "No store or date fields, so counts cannot be normalised for coverage."
+              },
+              {
+                "title": "4. A next action with proposed ownership",
+                "md": "A data analyst drafts a validated store-and-period inventory for the manager."
+              },
+              {
+                "title": "5. A checkable outcome",
+                "md": "A coverage summary exists and the manager can say whether a sales intervention needs further examination."
+              }
+            ],
+            "outro": "```prompt Final-briefing prompt\nCombine the verified regional diagnosis, the human-approved decision to check coverage, and the action plan into a one-page management brief. Include the exact East transaction count, East net sales and East net sales per transaction, state the data limitation, identify proposed owners, and describe how the coverage check will support a subsequent decision. Keep hypotheses labelled.\n```\n\n**Why it works:** it asks for exact figures you can check, states the limitation as a required element, and keeps hypotheses labelled instead of letting them harden.\n\n**Brief excerpt.** East has 39 recorded transactions, 182,004.38 in net sales and 4,666.78 in net sales per recorded transaction. This is the smallest recorded total and the highest per-transaction value among the regions. The file lacks stores and dates, so observed counts cannot be normalised for coverage. Request a validated store-and-period inventory before evaluating East's transaction activity. A retail manager reviews the comparable summary and decides whether commercial action is necessary.\n\nIt is reasonable to recommend **an investigation** rather than a promotion when key evidence is absent."
+          },
+          {
+            "layout": "steps",
+            "title": "The reusable six-stage chain",
+            "intro": "Periods 10 to 12 follow one logic that you can save as a template. It works inside the course cycle (Define, Design, Execute, Evaluate, Refine) and does not replace it.",
+            "parts": [
+              {
+                "title": "1. Explore",
+                "md": "Calculate checked regional net sales, counts and net sales per transaction, and reconcile all totals."
+              },
+              {
+                "title": "2. Visualise and break down",
+                "md": "Plot or specify suitable comparisons, then examine one selected region by product category."
+              },
+              {
+                "title": "3. Diagnose",
+                "md": "Give verified findings, alternative explanations and missing data."
+              },
+              {
+                "title": "4. Develop options",
+                "md": "Present three next steps with evidence, assumptions and required new information. Challenge the leading option."
+              },
+              {
+                "title": "5. Pause for human choice",
+                "md": "The AI recommends a direction and then **waits** for your explicit confirmation."
+              },
+              {
+                "title": "6. Plan and summarise",
+                "md": "Only after you confirm: actions, proposed owners, data requests, deliverables and success measures, then a one-page draft."
+              }
+            ],
+            "outro": "```prompt Reusable Case 2 chain\nYou are helping a retail manager investigate one priority using an approved transaction CSV. First confirm the decision question, source, audience and success criteria. Ask only for missing information that changes the task.\n1. EXPLORE. Calculate checked regional net sales, transaction counts and net sales per transaction. Reconcile all totals.\n2. VISUALISE AND BREAK DOWN. Plot or specify suitable comparisons, then examine one selected region by product category.\n3. DIAGNOSE. Give verified findings, alternative explanations and missing data.\n4. DEVELOP OPTIONS. Present three next steps with evidence, assumptions and required new information. Challenge the leading option.\n5. PAUSE. Recommend a direction, then wait for my explicit confirmation.\n6. PLAN AND SUMMARISE. Only after confirmation, create actions, proposed owners, data requests, deliverables and success measures. Draft one page.\nNever invent currency, dates, store counts, profit or causal explanations. Keep intermediate evidence accessible and stop if a critical check fails.\n```\n\n**What makes it good:** stages 1 to 3 repeat Period 10, stage 4 repeats Period 11 and stage 6 is this period. The last line is the safety rail: it forbids the exact inventions this module warns against and tells the AI to stop when a check fails.\n\n> [!canh-bao] The written pause is only a request. If your chatbot cannot reliably stop inside one long prompt, split the chain into separate turns and send stage 6 only after you have approved the direction."
+          },
+          {
+            "layout": "text",
+            "title": "Reuse the chain: revise, decide, save time",
+            "parts": [
+              {
+                "md": "**Revise one stage without starting again.** Suppose the manager now wants Electronics compared across regions. Change only the relevant stage and keep the work you have verified.\n\n```prompt Targeted revision\nKeep the checked regional totals. For Stage 2, compare Electronics transaction counts and net sales by region. Update the diagnosis and options to reflect that comparison. Preserve unsupported explanations as hypotheses and pause again before Stage 6.\n```\n\nA new grouping must be verified independently. Recalculated from the CSV:\n\n| Region | Electronics transactions | Electronics net sales | Per transaction |\n|---|---|---|---|\n| East | 4 | 10,559.24 | 2,639.81 |\n| North | 16 | 81,249.22 | 5,078.08 |\n| South | 14 | 68,454.87 | 4,889.63 |\n| West | 12 | 39,549.82 | 3,295.82 |\n| **All regions** | **46** | **199,813.15** | **4,343.76** |\n\nEast has 4 Electronics records against 12 to 16 elsewhere, and Electronics is 10.3% of East's records against 23.5% to 28.1% in the other regions. That sharpens the question, but it still does not say why. If the new comparison changes your recommended direction, the person who chose the direction must **approve it again**.\n\n**Decide and plan.** Stages 4 to 6 are the continuation: develop options with data needs and assumptions, stop and request the manager's choice, and only after confirmation plan the actions, owners, data and measures. Keep the checked regional and East category figures in view throughout.\n\n**Save time safely.** To reuse the reviewed chain on a similar question, replace the task brief and the source file. Each run must inspect the input, **recalculate** the summaries and record new limitations. Previously recorded outputs must never be carried over as if they described the new data. A reusable prompt reduces drafting work; you still test the outputs and approve business actions. A scheduled run is optional and needs access to approved input files and human review."
+              }
+            ]
+          },
+          {
+            "layout": "faq",
+            "title": "Questions that come up",
+            "parts": [
+              {
+                "title": "Is a plan that ends in \"get more data\" too weak for a manager?",
+                "md": "Not if it says exactly which data, who obtains them, what the deliverable is and how the manager will use it. It prevents the much more expensive mistake of spending on an intervention that addresses a data difference."
+              },
+              {
+                "title": "Can the AI name the real owner and the deadline?",
+                "md": "It can propose roles and a timeline, clearly marked as proposals. The organisation confirms real people, deadlines and resources. The AI should ask about anything not agreed instead of inventing it."
+              },
+              {
+                "title": "What if the chatbot gives a polished plan but one figure in it is unchecked?",
+                "md": "Hold approval until the figure is verified. A material unchecked input may change the recommended action, and a clear narrative does not make a number correct."
+              },
+              {
+                "title": "My chain worked for East. Can I run it for North?",
+                "md": "Run it again with North as the input and recheck every output. The instructions are reusable; the East numbers and conclusions are not."
+              }
+            ]
+          },
+          {
+            "layout": "text",
+            "title": "Check it yourself, then do Activity 3",
+            "parts": [
+              {
+                "md": "1. Build a three-row action plan for East with roles, inputs and observable outcomes. Make sure no row contains a sales target, deadline or budget you invented.\n2. Explain in one sentence why transactions per store-day cannot be computed from the current file.\n3. Write a 120-word brief with one verified observation, one limitation and one next step. Check every figure against the CSV.\n4. Pick a different product category and edit the chain to study it while keeping the data checks.\n\n:::Find the error\nAn AI-drafted brief says: \"East is weak. The AI assistant will launch a 10% promotion on Monday and expect sales to rise by next quarter. Store coverage is probably fine, so no check is needed.\"\n\nFind at least four problems before you open this box.\n:::\n\n:::Open the solution after you have tried\n1. \"East is weak\" is a verdict on total alone; East's value per transaction is the highest.\n2. \"The AI assistant will launch\" gives the AI the decision. A person must approve any action with real-world effects.\n3. \"Expect sales to rise\" is an unsupported uplift claim. The file has no baseline, cost or experiment.\n4. \"Coverage is probably fine\" is an unverified assumption, and it is the very thing the chosen direction was meant to check.\n:::\n\n> [!ghi-nho] **Activity 3** puts the whole chain into practice on the CSV: regional and East tables with an independent spreadsheet check, an evidence ledger, a three-option matrix, your own decision, an action plan and a one-page recommendation. Open the **Assignments** tab of this lesson to submit it."
+              }
+            ]
+          }
+        ],
+        "flashcards": {
+          "title": "Flashcards · Plan and Measure Action",
+          "items": [
+            {
+              "term": "Action plan",
+              "meaning": "Activities with proposed owners, required information, deliverables and success conditions."
+            },
+            {
+              "term": "Proposed owner",
+              "meaning": "A role example, such as data analyst or retail manager, that the organisation must confirm. It is not an assignment made by the AI."
+            },
+            {
+              "term": "Deliverable",
+              "meaning": "The output someone will review, such as a validated coverage summary or an approved next-step brief."
+            },
+            {
+              "term": "Success measure",
+              "meaning": "An observable condition showing that an action is complete, not an invented uplift target.",
+              "example": "Comparable store and date coverage is confirmed, or the gaps are documented."
+            },
+            {
+              "term": "Future measure",
+              "meaning": "A metric that needs data you do not have yet, and so must not be reported as a current result.",
+              "example": "Recorded transactions per operating store-day."
+            },
+            {
+              "term": "One-page recommendation",
+              "meaning": "Question, verified evidence, unresolved limitation, next action with proposed ownership and a checkable outcome."
+            },
+            {
+              "term": "Workflow chain",
+              "meaning": "Linked prompts and checks: explore, visualise and break down, diagnose, develop options, pause, plan and summarise."
+            },
+            {
+              "term": "Human decision pause",
+              "meaning": "Explicit approval before the planning stage or any external act. If one prompt cannot enforce it, split the chain into turns."
+            },
+            {
+              "term": "Targeted revision",
+              "meaning": "Changing one named stage of a saved chain while keeping the checked work, then re-verifying anything new."
+            },
+            {
+              "term": "Handover",
+              "meaning": "A record (data, prompts, method and results) that lets someone else continue or reproduce the work."
+            }
+          ]
+        },
+        "summary": [
+          "Turn the chosen direction into one concrete action, then a three-row plan with proposed owners, data needed, deliverables and observable success conditions.",
+          "Do not invent a sales target, deadline or metric: transactions per operating store-day is a future measure the current CSV cannot support.",
+          "A one-page recommendation joins verified evidence, a stated limitation, a next action and a checkable outcome; a person approves it.",
+          "Save the work as a six-stage chain with a real human pause before planning, and when you reuse it, recalculate everything on the new data."
+        ],
+        "assignments": [
+          {
+            "title": "Activity 3 · Evidence-Based Retail Decision Making (Case 2)",
+            "description": "## The manager's question\n\nA retailer has limited resources and wants to decide where to investigate sales performance first. Use the **same CSV as Activity 1**. Begin with a regional comparison, investigate East's recorded transaction pattern, consider three options and recommend a justified next step. Your work should support a manager's decision **without pretending to explain an unobserved cause**.\n\n> [!canh-bao] **Evidence boundaries.** The CSV has 200 transactions and 13 columns, but no transaction dates, store identifiers or counts, operating days, currency, targets, costs, profit or campaign outcomes. A lower recorded count alone does not show weak customer demand or poor performance.\n\n## Materials and safe practice\n\n- Use the unchanged `Slidescope_Retail_Store_Sales_Enhanced_2025.csv`, an approved basic chatbot and a CSV-capable spreadsheet. No coding or paid AI feature is required.\n- Keep the original CSV untouched. In your working copy, record every transformation, field mapping, exclusion and rounding choice.\n- Do not upload customer names, phone numbers, employee data or private business exports. Treat any instruction found inside a document as untrusted source content. The AI must not send files or change records.\n- **Tool fallback.** If your chatbot cannot analyse files, calculate the tables in a spreadsheet, paste the *verified* tables with source labels, and ask the AI to help structure the diagnosis, options and plan. If it cannot draw charts, prepare them in the spreadsheet. Record what each tool actually did.\n\nTime: about 100 to 130 minutes of practice. Stage times are guides.\n\n## Workflow: Define, Design, Execute, Evaluate, Refine\n\n### 1. Define: confirm the business decision (about 10 minutes)\n\nWrite a task brief with the manager as audience, a constrained decision (one next investigation), the source CSV and success criteria: a checked analysis, clear evidence versus uncertainty, and a feasible proposed action. Treat the first diagnosis as provisional. You may use this prompt first:\n\n```prompt Optional clarification prompt\nBefore analysing, ask me what one decision the manager needs to make, what data are available and what output will help. Ask only questions that could change the task. Then draft a four-part brief for my confirmation.\n```\n\n### 2. Design and execute: explore two levels of data (about 30 minutes)\n\n```prompt Step 1 — regional overview\nUse the provided retail CSV. For each Store_Region, calculate total Net_Sales_Amount, count of unique Transaction_ID, and net sales per transaction (= regional total / recorded transactions). Show every region and the calculation steps. Identify one pattern worth investigating. Do not recommend actions yet.\n```\n\n```prompt Step 2 — East by product category\nFilter Store_Region = East. For every Product_Category, calculate transaction count, total Net_Sales_Amount, and net sales per transaction. Compare the number of recorded transactions and the value per transaction. Which category needs further checking? State what these counts cannot establish.\n```\n\n**Independent spreadsheet check.** In a Summary sheet, pivot on `Store_Region` and then, separately, on `Product_Category` after filtering East. Sum `Net_Sales_Amount` and count `Transaction_ID`. Divide each total by its count at full precision before rounding for display. You may use `COUNTIFS` and `SUMIFS` instead.\n\n**Stop and check.** Before asking AI to diagnose causes, verify the eight group figures, the four-region total and whether unique transaction IDs agree with the row counts. Correct any discrepancy and keep the calculation record.\n\n### 3. Evaluate: separate observations from possible explanations (about 15 minutes)\n\n```prompt Step 3 — working diagnosis\nWrite a short diagnosis using only the verified tables. Label each statement VERIFIED FACT, INTERPRETATION, HYPOTHESIS or DATA NEEDED. Suggest at least two possible explanations for East's recorded pattern. Explain why the CSV cannot prove either explanation. End with one question for the manager.\n```\n\nComplete an **evidence ledger** with at least three entries (claim or question, label, source or check, or the missing evidence) before you choose an option. A fact is something the CSV and your calculation directly establish; a hypothesis requires additional evidence.\n\n### 4. Design and evaluate: challenge three options (about 20 minutes)\n\n```prompt Step 4 — option matrix\nSuggest three possible next steps, including a check of store/reporting coverage and one intervention someone might propose. For each, show supporting evidence, the unconfirmed assumption, and additional data required. Challenge the suggestion \"Run a promotion to increase East transactions.\" Give two alternative explanations for the lower recorded count.\n```\n\nRecord the three options in a table with the columns **Option, Verified evidence, Assumption, Data needed**.\n\n> [!ghi-nho] **Human decision gate.** Stop here. You act as the manager: choose a direction and write a two-sentence justification. Do not let the chatbot approve its own recommended action. If the evidence is insufficient, choose a data-checking step and explain why.\n\n### 5. Refine: turn your chosen direction into a plan (about 20 minutes)\n\n```prompt Steps 5 and 6 — plan after my approval\nI choose [your direction] because [verified evidence + uncertainty]. Draft a short plan: action, proposed owner, additional data, deliverable and measurable success criterion. Ask about unagreed timing and resources. Then write a one-page recommendation separating evidence, uncertainty, the approved next step and what the manager should decide after reviewing the new data. Draft only; do not send or change records.\n```\n\nA completion criterion should be testable (for example, whether comparable coverage can be established), not an invented uplift target. Owner, deadline and resource proposals remain subject to manager approval.\n\n### 6. Evidence and handover (about 15 minutes)\n\nDescribe a folder such as `Retail_Review_East/` containing `01_data` (unaltered CSV), `02_prompts` (final chain and meaningful follow-ups), `03_analysis` (spreadsheet, charts and `method_note.txt`), `04_final` (reviewed one-page recommendation) and `README.txt` (dataset version, task and file locations). If project tools are unavailable, ordinary local folders work. The documentation habits behind this folder are taught in Periods 13 and 14.\n\n## What to submit\n\nSubmit one text response containing, in this order:\n\n1. **Task brief** (audience, decision, source, success criteria).\n2. **Regional table** and **East category table** (group, transactions, total net sales, net sales per transaction), with one line stating how you verified them independently in the spreadsheet.\n3. **Evidence ledger** with at least three entries, each labelled VERIFIED FACT, INTERPRETATION, HYPOTHESIS or DATA NEEDED.\n4. **Option matrix** with three options, and your challenge of the promotion suggestion with two alternative explanations.\n5. **Your chosen direction** and a two-sentence justification, written by you.\n6. **Action plan** (action, proposed owner, data needed, deliverable, measurable success criterion) and the **one-page recommendation**.\n7. **Prompt trail and method note**: your final chain, the follow-ups that mattered, which tool was used, run conditions, the source filename and your rounding choices.\n8. **Handover folder structure**, plus a statement of how a peer could reproduce East's transaction count and net sales without the chatbot.\n9. **Reflection**, in a few sentences each: (a) Does East's smaller recorded count establish weak demand? What comparison would be needed? (b) What could go wrong if a promotion starts before comparable store and date coverage is established? (c) What would your peer need to reproduce the recommendation if your chat history disappeared?\n\n## Checklist before you submit\n\n- Regional and East-category tables, with a source-based independent spreadsheet verification.\n- Evidence ledger separating fact, interpretation, hypothesis and missing information.\n- Three-option comparison and an explicit promotion challenge.\n- Human-approved direction and a one-page recommendation with action, proposed owner, data, deliverable and success criterion.\n- Full prompt trail, run conditions, source filename, method note and handover folder structure.\n- A peer or reviewer could reproduce East's count and net sales without the chatbot.",
+            "responseFormat": "text",
+            "maxScore": 10,
+            "rubricText": "Practice rubric (from the Activity 3 Student sheet). Score each of the five criteria 0, 1 or 2; the practice total is out of 10. A formal course weighting is not specified.\n\n0 = missing or incorrect. 1 = partly met. 2 = fully met.\n\n1. Task and workflow (0-2). 2 points: connected prompts follow the manager's decision and preserve the human pause.\n2. Calculation and evidence (0-2). 2 points: regional and category checks are reproducible and correct against the source CSV.\n3. Reasoning (0-2). 2 points: facts, hypotheses and missing inputs are clearly distinguished.\n4. Options and decision (0-2). 2 points: three compared options, the promotion challenged, and a defensible choice made by the learner.\n5. Action and handover (0-2). 2 points: a practical action with owner, data and outcome, and a complete working record.\n\nThings to look for: no invented currency, dates, store counts, profit, uplift targets or causes; evidence boundaries respected; calculations done at full precision before rounding; the learner, not the chatbot, approves the direction; a peer could reproduce East's count and net sales without the chatbot.",
+            "countsTowardGrade": false
+          }
+        ],
+        "quiz": {
+          "title": "Quiz · Period 12",
+          "passThresholdPct": 70,
+          "requireConfidence": true,
+          "questions": [
+            {
+              "key": "pe.p12.pe118",
+              "type": "mcq",
+              "prompt": "Who owns the final approval of an AI-assisted action plan?",
+              "explanation": "A responsible person keeps decision authority. The AI drafts, formulas calculate and a template repeats a process, but none of them is accountable for approving an operational action.",
+              "options": [
+                {
+                  "label": "The spreadsheet calculation model",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.ai-owns-decision"
+                },
+                {
+                  "label": "The chatbot drafting the plan",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.ai-owns-decision"
+                },
+                {
+                  "label": "The responsible human manager",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The reusable workflow template",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.ai-owns-decision"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe119",
+              "type": "mcq",
+              "prompt": "An action plan says “Check coverage.” What addition makes it executable?",
+              "explanation": "\"Check coverage\" becomes executable when it names who does it, what inputs they need and when it is due, with the deadline proposed by the AI and confirmed by the manager. Praise, a fancier role prompt or another causal claim tell nobody what to do.",
+              "options": [
+                {
+                  "label": "Longer praise for the manager",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.polish-over-plan"
+                },
+                {
+                  "label": "Named owner, inputs and deadline",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A more elaborate role prompt",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.polish-over-plan"
+                },
+                {
+                  "label": "Another unsupported causal claim",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe120",
+              "type": "mcq",
+              "prompt": "What is a success measure used for?",
+              "explanation": "A success measure is an observable test of whether an action achieved what it was meant to. It does not hide uncertainty, prove that a campaign caused a result or replace the original goal.",
+              "options": [
+                {
+                  "label": "Hiding uncertainty in a briefing",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unchecked-before-approval"
+                },
+                {
+                  "label": "Assuming a campaign caused results",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "Judging whether an action worked",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Replacing the original business goal",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.success-undefined"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe121",
+              "type": "mcq",
+              "prompt": "A coverage audit aims to compare regional activity fairly. Which output indicates completion?",
+              "explanation": "The audit's aim is a fair comparison, so completion looks like a verified comparison of stores and dates. An unlabelled chart, a predicted profit rise or a claim that demand has recovered says nothing about whether coverage was matched.",
+              "options": [
+                {
+                  "label": "A verified comparison of stores and dates",
+                  "isCorrect": true
+                },
+                {
+                  "label": "An unlabeled new sales chart",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.success-undefined"
+                },
+                {
+                  "label": "A predicted profit rise in East",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "A claim that demand has recovered",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe122",
+              "type": "mcq",
+              "prompt": "The recommendation contains a diagnosis and action but no evidence. What should be added?",
+              "explanation": "A manager needs to trace the diagnosis to a checked figure and its source, for example East's 39 transactions and 182,004.38 net sales from the CSV. Testimonials, claims of success or text about the chatbot add persuasion but no evidence.",
+              "options": [
+                {
+                  "label": "A checked figure with its data source",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A longer description of the chatbot",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.polish-over-plan"
+                },
+                {
+                  "label": "A fictional testimonial from customers",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "A strong claim of immediate success",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe123",
+              "type": "mcq",
+              "prompt": "Why use a connected prompt chain in the business case?",
+              "explanation": "A chain carries checked outputs from one stage to the next so you do not rebuild the context each time. It does not guarantee a good decision, replace the checking of intermediate results or remove the human.",
+              "options": [
+                {
+                  "label": "To guarantee a profitable decision",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "To carry verified outputs between stages",
+                  "isCorrect": true
+                },
+                {
+                  "label": "To avoid checking intermediate results",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unchecked-before-approval"
+                },
+                {
+                  "label": "To remove human participation completely",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.ai-owns-decision"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe124",
+              "type": "mcq",
+              "prompt": "Before AI drafts the final plan, the manager must choose a direction. Where should the workflow pause?",
+              "explanation": "The pause belongs after the options have been compared and before planning, so a person chooses the direction the plan will serve. Pausing before the task exists, at an irrelevant event or after publication would reverse the control.",
+              "options": [
+                {
+                  "label": "After automatically publishing the plan",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.gate-misplaced"
+                },
+                {
+                  "label": "Before the task is defined",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.gate-misplaced"
+                },
+                {
+                  "label": "Only when the report file is deleted",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.gate-misplaced"
+                },
+                {
+                  "label": "After comparing options, before planning",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe125",
+              "type": "mcq",
+              "prompt": "A reusable chain works for East but is later applied to North. What must be changed?",
+              "explanation": "A reusable chain keeps its instructions but must be re-run on the new inputs, with every figure recalculated. East's numbers and recommendations describe East's data and do not carry over to North.",
+              "options": [
+                {
+                  "label": "Copy East's recommendations word for word",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.reuse-without-recheck"
+                },
+                {
+                  "label": "Assume earlier findings apply to North",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.reuse-without-recheck"
+                },
+                {
+                  "label": "Keep all East-specific numbers unchanged",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.reuse-without-recheck"
+                },
+                {
+                  "label": "Replace the region inputs and recheck outputs",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe126",
+              "type": "mcq",
+              "prompt": "An operational plan names a data analyst as owner. What else should the plan specify?",
+              "explanation": "Naming an owner is only useful if the plan says what evidence that person must deliver. Invented benchmarks, guarantees of success and a model persona are not deliverables.",
+              "options": [
+                {
+                  "label": "A fabricated benchmark for every store",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "A guarantee of intervention success",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "The evidence the analyst must deliver",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The AI model's preferred persona",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.polish-over-plan"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe127",
+              "type": "mcq",
+              "prompt": "A manager compares results before and after an intervention, but store coverage differs. What is the main caution?",
+              "explanation": "If store coverage differs between the two periods, a change may come from the coverage rather than the intervention. Compare on matching coverage before drawing a conclusion. A chatbot cannot verify causation, and nothing here shows a currency change.",
+              "options": [
+                {
+                  "label": "The chatbot has verified causation",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "The currency must have changed",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "The comparison may reflect coverage changes",
+                  "isCorrect": true
+                },
+                {
+                  "label": "The intervention certainly improved demand",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe128",
+              "type": "mcq",
+              "prompt": "What should a one-page management recommendation include?",
+              "explanation": "A one-page recommendation links verified evidence to a chosen action and to a way of reviewing the outcome. Raw chat logs, colour palettes and unsupported causes break that chain.",
+              "options": [
+                {
+                  "label": "All raw chatbot messages without summary",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.polish-over-plan"
+                },
+                {
+                  "label": "Only the final chart's color palette",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.polish-over-plan"
+                },
+                {
+                  "label": "Evidence, chosen action and review measure",
+                  "isCorrect": true
+                },
+                {
+                  "label": "A list of unsupported business causes",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe129",
+              "type": "mcq",
+              "prompt": "A prompt-based chain suggests a customer-facing policy change. What control is essential?",
+              "explanation": "A model-generated proposal is not an approval. A change with real-world consequences, such as a customer-facing policy, needs accountable human authorisation, and the data limitations must stay visible.",
+              "options": [
+                {
+                  "label": "Require human authorization before action",
+                  "isCorrect": true
+                },
+                {
+                  "label": "Allow AI to publish the policy immediately",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.ai-owns-decision"
+                },
+                {
+                  "label": "Treat the suggestion as an approved rule",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.ai-owns-decision"
+                },
+                {
+                  "label": "Hide the supporting data limitations",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unchecked-before-approval"
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.pe130",
+              "type": "mcq",
+              "prompt": "The workflow generates a compelling recommendation while one calculation remains unchecked. How should it proceed?",
+              "explanation": "If an unchecked figure might change the recommended action, hold approval until it is verified. A clear narrative does not make a number correct, and removing the figure while claiming it was checked is worse.",
+              "options": [
+                {
+                  "label": "Assume one error cannot affect the choice",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unchecked-before-approval"
+                },
+                {
+                  "label": "Remove the figure and claim it was checked",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unchecked-before-approval"
+                },
+                {
+                  "label": "Approve it because the narrative is clear",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unchecked-before-approval"
+                },
+                {
+                  "label": "Hold approval until the figure is verified",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "key": "pe.p12.x1",
+              "type": "ordering",
+              "prompt": "Put the six stages of the reusable Case 2 chain in the correct order.",
+              "explanation": "The chain runs from the checked overview to the plan. The pause for human choice comes after options have been developed and challenged, and before any planning, so a person decides what the plan will serve.",
+              "sequence": [
+                "Explore: checked regional totals, counts and net sales per transaction",
+                "Visualise and break down: compare regions, then examine one region by category",
+                "Diagnose: verified findings, alternatives and missing data",
+                "Develop options: three next steps, with the leading option challenged",
+                "Pause: recommend a direction and wait for explicit human confirmation",
+                "Plan and summarise: actions, owners, data requests, measures and a one-page draft"
+              ]
+            },
+            {
+              "key": "pe.p12.x2",
+              "type": "fill_in",
+              "workOnPaper": true,
+              "prompt": "A new comparison groups the full 200-row CSV by Electronics only. How many Electronics transactions are recorded in the North region?",
+              "explanation": "North has 16 Electronics transactions, against 4 in East, 14 in South and 12 in West (46 in all). A new grouping like this one must be verified independently in the spreadsheet, and a different pattern in the comparison could change the recommended direction and require renewed approval.",
+              "answers": [
+                "16",
+                "sixteen"
+              ]
+            },
+            {
+              "key": "pe.p12.x3",
+              "type": "true_false",
+              "prompt": "The comparison metric \"recorded transactions per operating store-day\" can be calculated from the current CSV.",
+              "explanation": "False. The CSV has no store or date fields, so there is no store count or operating-day count to divide by. It is a future measure that needs validated store and day information.",
+              "options": [
+                {
+                  "label": "True",
+                  "isCorrect": false,
+                  "misconception": "pe.p12.unsupported-claim"
+                },
+                {
+                  "label": "False",
+                  "isCorrect": true
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "misconceptions": [
+    {
+      "code": "pe.p10.cause-from-pattern",
+      "name": "Turns a recorded pattern into a cause or a verdict on demand",
+      "description": "You read East's low count or total as proof of weak demand, a failed promotion or some other mechanism. A pattern in one file shows what was recorded, not why; causes need extra evidence such as store, date or experiment data. A warning sign is a word like \"because\", \"caused\" or \"proves\" next to a count."
+    },
+    {
+      "code": "pe.p10.profit-confusion",
+      "name": "Treats net sales or transaction value as profit or profitability",
+      "description": "You move from net sales or value per transaction to margin, profit or return on investment. The CSV has no costs, so none of these can be computed or forecast from it. A warning sign is \"profitable\", \"margin\" or \"ROI\" in a conclusion drawn only from sales columns."
+    },
+    {
+      "code": "pe.p10.missing-field",
+      "name": "Relies on a grouping or measure the CSV cannot support",
+      "description": "You accept a measure that needs stores, months, operating days or repeat customers. The file has 13 columns and none of these, and they cannot be recovered from row counts. A warning sign is an answer about store productivity or monthly trends from a file with no store ID or date."
+    },
+    {
+      "code": "pe.p10.unchecked-number",
+      "name": "Accepts, adjusts or explains away a figure without reconciling it to the file",
+      "description": "You take an AI figure at face value, round it, or bend another number to make it fit instead of recomputing from the CSV. The file is the benchmark, and a mismatch is a prompt to find the cause. A warning sign is a total you cannot trace to a pivot or a formula."
+    },
+    {
+      "code": "pe.p10.measure-mixup",
+      "name": "Mixes up which measure, field or rank answers the question",
+      "description": "You choose the wrong field, ratio or end of a ranking, for instance reading the highest region as the lowest, or confusing a count with a value. Each measure answers one question, so check what is being divided by what. A warning sign is an answer that does not use the figure the question names."
+    },
+    {
+      "code": "pe.p10.premature-action",
+      "name": "Jumps to a management action before checking whether the data are comparable",
+      "description": "You answer a pattern with a target, a closure or a campaign. Before any action, you must know whether the recorded counts are comparable across regions. A warning sign is an action verb (raise, close, promote) appearing before the words coverage or comparable."
+    },
+    {
+      "code": "pe.p10.hypothesis-as-fact",
+      "name": "Treats a plausible explanation as established, or chooses between explanations by how convincing they sound",
+      "description": "You present a hypothesis such as fewer stores as if it were checked, or settle between two explanations by tone or by averaging them. Competing explanations stay labelled hypotheses until data separates them. A warning sign is the absence of a stated check for each explanation."
+    },
+    {
+      "code": "pe.p11.style-over-substance",
+      "name": "Judges options by style, length or labels instead of by evidence",
+      "description": "You pick or rank an option because it is longer, more enthusiastic, better formatted or uses more technical names. These features describe the writing, not the option. A warning sign is a reason that would still be true if the option were wrong."
+    },
+    {
+      "code": "pe.p11.certainty-without-evidence",
+      "name": "Presents an option's effect as guaranteed, proven or settled",
+      "description": "You accept a promise of success, a guaranteed financial effect or a claim that other options are useless. The CSV holds historical records with no experiment, so it cannot establish what any future action will do. A warning sign is certain language such as \"will\", \"proven\" or \"guaranteed\" about an action."
+    },
+    {
+      "code": "pe.p11.demand-assumed",
+      "name": "Assumes East's low count means weak demand, or acts on it before checking coverage",
+      "description": "You read fewer recorded transactions as fewer customers, or you move straight to price changes or promotions. Counts depend on the stores and the period the extract covers, which the file does not show. A warning sign is an action chosen before the words store list or reporting period appear."
+    },
+    {
+      "code": "pe.p11.invented-data",
+      "name": "Fills an evidence gap with made-up or inferred numbers",
+      "description": "You supply a baseline, a date or a visit count that the file does not contain, or try to derive it from something else such as transaction IDs. An invented number makes an option look testable when it is not. A warning sign is a figure with no cell in the CSV behind it."
+    },
+    {
+      "code": "pe.p11.assumptions-untested",
+      "name": "Settles a choice, or \"challenges\" an option, without testing its assumptions",
+      "description": "You use challenge to add certainty, to drop checked findings, to ignore a data gap, or you settle a conflict by blending options or hiding it. A challenge should expose what would have to be true and what evidence is missing. A warning sign is a conflict resolved without comparing assumptions."
+    },
+    {
+      "code": "pe.p11.ai-decides",
+      "name": "Lets the AI approve, rank or choose instead of a person",
+      "description": "You treat an AI ranking, or an automatic approval of spending, as the decision. The AI can recommend and justify; the manager or named decision owner chooses and is accountable. A warning sign is a plan that starts without a recorded human choice."
+    },
+    {
+      "code": "pe.p12.ai-owns-decision",
+      "name": "Lets an AI, a model or a template own or approve the decision",
+      "description": "You treat the chatbot, a calculation or a saved workflow as the party that approves an action. These tools draft, compute and repeat; they are not accountable. A warning sign is a plan that goes ahead, or publishes, with no named person approving it."
+    },
+    {
+      "code": "pe.p12.gate-misplaced",
+      "name": "Puts the human pause at the wrong point in the workflow",
+      "description": "You place the pause before the task is defined, at an irrelevant event, or after the plan is already published. The pause belongs after the options are compared and challenged and before planning begins. A warning sign is a step that produces a plan before anyone has chosen a direction."
+    },
+    {
+      "code": "pe.p12.polish-over-plan",
+      "name": "Treats style, length, persona or raw volume as what makes a plan or brief useful",
+      "description": "You add praise, a more elaborate role prompt, a longer description or the whole chat log to a plan. None of these says who does what or what the evidence is. A warning sign is an addition that would still be there if the plan were unusable."
+    },
+    {
+      "code": "pe.p12.unsupported-claim",
+      "name": "Asserts an outcome, benchmark, cause or measure the file cannot support",
+      "description": "You write an uplift, a profit rise, a testimonial, a benchmark or a causal verdict into a plan or recommendation. The CSV has no baseline, costs, experiment or store and date fields to support them. A warning sign is a number or a cause with no cell in the CSV behind it."
+    },
+    {
+      "code": "pe.p12.success-undefined",
+      "name": "Defines success vaguely or as something that cannot be checked",
+      "description": "You describe the end of an action as an unlabelled chart, a changed goal or a feeling. A success measure should be observable and tied to the action's aim, such as confirmed comparable coverage. A warning sign is a measure nobody could tick off as done or not done."
+    },
+    {
+      "code": "pe.p12.reuse-without-recheck",
+      "name": "Reuses a chain or earlier results on new data without recalculating",
+      "description": "You copy the East numbers, recommendations or assumptions into a run for another region or file. Instructions can be reused, but inputs and conclusions are specific to the data. A warning sign is a figure that appears in the new brief without a new calculation behind it."
+    },
+    {
+      "code": "pe.p12.unchecked-before-approval",
+      "name": "Pushes ahead while a figure is unchecked or a limitation is hidden",
+      "description": "You approve, publish or rely on a recommendation although a number has not been verified, or you leave out the data limitations. An unchecked figure can change the recommended action. A warning sign is a clear narrative that nobody has traced back to the CSV."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "pe.p10.cause-from-pattern",
+      "body": "A count or a total tells you what was recorded, not why. Look for the word that jumps from \"East has fewer records\" to a reason such as weak demand or a promotion, and ask what evidence in the file could support that reason. Rewrite the claim as an observation plus a labelled hypothesis, and name the data that would test it.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p10.profit-confusion",
+      "body": "Net sales and value per transaction are revenue figures. Profit, margin and return need costs, and this CSV has none. Before you accept a conclusion about profitability, ask which column holds the cost, and if there is none, restate the claim in terms of net sales only.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p10.missing-field",
+      "body": "Check the 13 columns before accepting a measure. There is no store ID, date, operating-day or customer ID field, so anything that depends on them cannot be built or inferred from row counts. Replace it with a grouping the columns do support, such as region or product category, and list the missing field as a data request.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p10.unchecked-number",
+      "body": "A figure that does not match the file is a signal to recompute, not to adjust, round or explain away. Rebuild the total with a pivot table, compare it with the AI figure, and find where they differ. Only a reconciled number should go into a table or a diagnosis.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p10.measure-mixup",
+      "body": "Re-read what the question asks for and name the measure: a count, a total, a value per transaction, or a rank. Then check the formula (for example total net sales divided by the group's own transaction count) and which end of the ranking you need. Reading the table again with that definition in hand usually settles it.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p10.premature-action",
+      "body": "Before acting on a regional pattern, ask whether the recorded counts are comparable: the same stores, the same period, the same extraction rules. The file cannot show this, so the first move is to ask for that information. Write down what you would do if coverage matched and what you would do if it did not.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p10.hypothesis-as-fact",
+      "body": "A plausible reason is still a hypothesis until data separates it from the alternatives. Label each explanation as a hypothesis, write the check that would distinguish it from the others, and never merge two explanations into a single cause or pick one for sounding stronger.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p11.style-over-substance",
+      "body": "Length, tone and formatting tell you how an option is written, not how good it is. Ask instead what evidence the option needs, how much its answer would change the decision and how hard it is to get. Rank options on those, and ignore which one sounds most polished.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p11.certainty-without-evidence",
+      "body": "The CSV records what happened; it contains no experiment, so it cannot guarantee what an action will do. Look for words like \"will\", \"proven\" or \"guaranteed\" and replace them with \"may\" plus the evidence still needed. A good option states what it would test, not what it will deliver.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p11.demand-assumed",
+      "body": "A low recorded count can come from fewer stores, a shorter reporting window or lower activity, and the file cannot tell you which. Before treating the count as weak demand, ask what store and date coverage each region has. Put the coverage check first and keep any price or promotion idea on hold.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p11.invented-data",
+      "body": "If the file does not hold a number, you cannot create it or derive it from something else, such as visits from transaction IDs. Mark it as an evidence gap and say who could supply it. An option that depends on it stays contingent until the real data arrive.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p11.assumptions-untested",
+      "body": "A challenge should make an option's hidden assumptions visible, not make it sound stronger or remove inconvenient findings. Ask what would have to be true for the option to work and what evidence is missing. When two options conflict, compare their assumptions side by side before choosing.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p11.ai-decides",
+      "body": "An AI can propose, rank and justify options, but it cannot approve spending or choose a direction. Name the person who owns the decision and record their choice and reasoning before any plan is written. If you cannot name that person, the plan is not ready.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p12.ai-owns-decision",
+      "body": "Decision authority stays with a named person. A chatbot drafts, a spreadsheet computes and a template repeats a process, and none of them is accountable for approving an action. Add a line to the plan naming who approves it and when, and do not let any tool publish or act before that approval.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p12.gate-misplaced",
+      "body": "Put the human pause after the options are compared and challenged and before any planning or action. Check your workflow: is there a step that produces a plan, or sends something, before a person has chosen a direction? If so, move the pause earlier, or split the chain into separate turns.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p12.polish-over-plan",
+      "body": "A plan becomes usable through what it says, not how it sounds: who does it, which inputs they need, what they must deliver and how the outcome will be checked. Remove praise, persona text and bulk material, and ask whether a colleague could carry out the plan from what remains.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p12.unsupported-claim",
+      "body": "If the CSV has no cell behind a number or a cause, it does not belong in a plan as a fact. Look for uplift, benchmarks, profit, testimonials and causal claims, and either delete them or label them as hypotheses to test. State the data you would need to support each.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p12.success-undefined",
+      "body": "State success as something observable that you could tick off: for example, comparable store and date coverage confirmed, or the gaps documented. Avoid measures such as an unlabelled chart or a changed goal. Ask whether two reviewers would agree on whether it was met.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p12.reuse-without-recheck",
+      "body": "A saved chain keeps its instructions, but every input and output belongs to the file it was run on. When you reuse it, swap in the new region or file, recalculate each figure and record the new limitations. Never paste results from the earlier run into the new brief.",
+      "priority": 10
+    },
+    {
+      "misconception": "pe.p12.unchecked-before-approval",
+      "body": "Before approving, trace each figure in the recommendation to a cell or a pivot you have seen, and keep the data limitations in the brief. If one calculation is unchecked, hold approval until it is verified, since it could change the action. A clear narrative is not evidence.",
+      "priority": 10
+    }
+  ]
+}
