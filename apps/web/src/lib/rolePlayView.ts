@@ -3,6 +3,8 @@
  * an toàn từ dữ liệu máy chủ, so lời học viên nói với câu mẫu (không điểm), dựng bản chữ để lưu và để AI nhận xét.
  */
 
+import { toSimplified } from "./hanScript";
+
 export type RoleId = "A" | "B";
 
 export interface RoleTurn {
@@ -100,7 +102,7 @@ function lcsMark(ek: string[], hk: string[]): { ok: boolean[]; used: boolean[] }
 const HAN = /[\u3400-\u9fff]/;
 
 /**
- * So lời học viên nói với câu mẫu tiếng Trung. Mỗi chữ Hán là một đơn vị; mọi chữ không phải chữ Hán trong câu mẫu (phiên âm pinyin giáo viên
+ * So lời học viên nói với câu mẫu tiếng Trung. Mỗi chữ Hán là một đơn vị (phồn thể và giản thể coi là một); mọi chữ không phải chữ Hán trong câu mẫu (phiên âm pinyin giáo viên
  * ghi kèm, dấu câu, "App"…) chỉ để HIỆN, không tính điểm; trong lời nghe được cũng chỉ lấy chữ Hán (máy không "nói" dấu câu hay pinyin).
  */
 function compareSpokenHan(expected: string, spoken: string): SpokenComparison {
@@ -113,7 +115,8 @@ function compareSpokenHan(expected: string, spoken: string): SpokenComparison {
   const scoredIdx = tokens.flatMap((t, k) => (t.scored ? [k] : []));
   const ek = scoredIdx.map((k) => tokens[k]!.text);
   const heard = [...spoken].filter((c) => HAN.test(c));
-  const { ok, used } = lcsMark(ek, heard);
+  // So theo dạng giản thể: máy chuyển giọng nói hay trả chữ phồn thể (這/嗎/麼…) còn câu mẫu là giản thể. Chữ hiển thị giữ nguyên.
+  const { ok, used } = lcsMark(ek.map(toSimplified), heard.map(toSimplified));
   const okByToken = new Map(scoredIdx.map((k, x) => [k, ok[x]!]));
   return {
     words: tokens.map((t, k) => ({ text: t.text, ok: t.scored ? okByToken.get(k)! : true, sep: t.sep, scored: t.scored })),
