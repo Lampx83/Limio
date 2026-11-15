@@ -2,8 +2,10 @@ import { Prisma, prisma, type PrismaClient } from "@feedbackme/db";
 import {
   LectureScript,
   PodcastScript,
+  hasEnglishMarkup,
   parseScript,
   scriptHash,
+  stripEnglishMarkup,
   type NarrationKind,
 } from "./script";
 import type { SegmentTimes } from "./generate";
@@ -193,7 +195,7 @@ export async function getLearnerNarrations(
     const version = row.generatedAt ? row.generatedAt.getTime() : 0;
     if (row.kind === "lecture") {
       const script = LectureScript.safeParse(row.script);
-      const textOf = new Map(script.success ? script.data.map((s) => [s.anchor, s.text] as const) : []);
+      const textOf = new Map(script.success ? script.data.map((s) => [s.anchor, stripEnglishMarkup(s.text)] as const) : []);
       lecture = {
         kind: "lecture",
         version,
@@ -310,6 +312,8 @@ export interface CourseNarrationRow {
   voices: Record<string, string> | null;
   /** Số ký tự của kịch bản — để ước lượng thời gian tạo. */
   chars: number;
+  /** Lời giảng có đoạn `[en: …]`: khi tạo giọng phải có thêm giọng tiếng Anh. */
+  hasEnglish: boolean;
 }
 
 export async function listCourseNarrations(courseId: string, db: PrismaClient = prisma): Promise<CourseNarrationRow[]> {
@@ -337,6 +341,7 @@ export async function listCourseNarrations(courseId: string, db: PrismaClient = 
     generatedAt: r.generatedAt,
     voices: (r.voices as Record<string, string> | null) ?? null,
     chars: JSON.stringify(r.script).length,
+    hasEnglish: r.kind === "lecture" && hasEnglishMarkup(JSON.stringify(r.script)),
   }));
 }
 

@@ -5,6 +5,7 @@ import {
   planNarration,
   type LectureScript,
   type NarrationKind,
+  PAUSE_BETWEEN_VOICES_SEC,
   type PlannedUnit,
   type PodcastScript,
   type VoiceRole,
@@ -87,12 +88,18 @@ export async function generateNarrationAudio(
   let reused = 0;
 
   for (const unit of units) {
-    const voice = voices[unit.role];
-    if (!voice) throw new NarrationGenerationError("tts_failed", unit.id, undefined, `thiếu giọng cho vai ${unit.role}`);
+    // Kiểm đủ giọng cho MỌI vai của mục trước khi đọc, để thiếu giọng thì không tốn lần gọi bộ đọc nào.
+    for (const role of new Set<VoiceRole>([unit.role, ...(unit.chunkRoles ?? [])])) {
+      if (!voices[role]) throw new NarrationGenerationError("tts_failed", unit.id, undefined, `thiếu giọng cho vai ${role}`);
+    }
     const startSec = timeline.seconds;
 
     for (const [ci, text] of unit.chunks.entries()) {
       if (await deps.shouldAbort?.()) throw new NarrationGenerationError("aborted", unit.id, ci);
+      const role = unit.chunkRoles?.[ci] ?? unit.role;
+      const voice = voices[role]!;
+      // Đổi giọng giữa chừng một mục thì chen một nhịp ngắn cho tai kịp chuyển.
+      if (ci > 0 && unit.chunkRoles && unit.chunkRoles[ci - 1] !== role) timeline.addSilence(PAUSE_BETWEEN_VOICES_SEC);
       const key = chunkCacheKey(voice, text);
       let wav = (await deps.cache?.get(key)) ?? null;
       if (wav) {

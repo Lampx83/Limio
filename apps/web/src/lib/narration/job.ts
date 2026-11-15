@@ -23,15 +23,7 @@ import { getSynthesizer, NarrationTtsNotConfiguredError } from "./tts";
  */
 
 export type NarrationVoices = Partial<Record<VoiceRole, string>>;
-
-/** Vai giọng cần có cho từng loại — để route báo thiếu ngay thay vì tạo xong nửa chừng mới lỗi. */
-export function requiredRoles(kind: NarrationKind): VoiceRole[] {
-  return kind === "lecture" ? ["lecturer"] : ["A", "B"];
-}
-
-export function missingVoice(kind: NarrationKind, voices: NarrationVoices): VoiceRole | null {
-  return requiredRoles(kind).find((r) => !voices[r]?.trim()) ?? null;
-}
+export { missingVoice, requiredRoles } from "./voiceRoles";
 
 function failureMessage(e: unknown): string {
   if (e instanceof NarrationGenerationError || e instanceof NarrationTtsNotConfiguredError) return e.message;

@@ -13,6 +13,8 @@ const Body = z.object({
     lecturer: z.string().trim().min(1).max(100).optional(),
     A: z.string().trim().min(1).max(100).optional(),
     B: z.string().trim().min(1).max(100).optional(),
+    /** Giọng tiếng Anh cho các đoạn `[en: …]` của lời giảng song ngữ. */
+    en: z.string().trim().min(1).max(100).optional(),
   }),
   /** Bỏ trống = mọi dòng chưa có giọng, giọng đã cũ hoặc đang lỗi. Có `ids` thì làm đúng các dòng đó (kể cả "Tạo lại"). */
   ids: z.array(z.string().uuid()).max(100).optional(),
@@ -41,7 +43,7 @@ export async function POST(req: Request, { params }: { params: { courseId: strin
   const targets = wanted.filter((r) => !running.has(r.id));
 
   for (const t of targets) {
-    const missing = missingVoice(t.kind as NarrationKind, voices);
+    const missing = missingVoice(t.kind as NarrationKind, voices, t.hasEnglish);
     if (missing) return NextResponse.json({ error: "voice_required", role: missing, lessonTitle: t.lessonTitle, kind: t.kind }, { status: 400 });
   }
   if (targets.length === 0) return NextResponse.json({ ok: true, queued: 0, alreadyRunning: running.size }, { status: ids && running.size ? 409 : 200 });

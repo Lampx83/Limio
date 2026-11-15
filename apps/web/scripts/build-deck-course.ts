@@ -10,9 +10,8 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { JSDOM } from "jsdom";
-import { deckAnchor } from "../src/lib/narration/deckSync";
+import { buildDeckLecture } from "../src/lib/narration/deckLecture";
 import { loadDeck } from "../src/lib/slideDeck/decks";
-import { cleanNarration } from "../src/lib/smartdocConvert";
 
 (globalThis as unknown as Record<string, unknown>).DOMParser = new JSDOM("").window.DOMParser;
 
@@ -46,14 +45,7 @@ function loadQuiz(id: string): QuizSource | null {
 type Deck = { slides: { id: string; loiGiang?: { buoc?: string[] } }[] };
 
 export function deckLecture(deck: Deck): { anchor: string; text: string }[] {
-  const out: { anchor: string; text: string }[] = [];
-  deck.slides.forEach((s, i) => {
-    (s.loiGiang?.buoc ?? []).forEach((step, b) => {
-      const text = cleanNarration([step], PERSONA);
-      if (text) out.push({ anchor: deckAnchor(i, b), text });
-    });
-  });
-  return out;
+  return buildDeckLecture(deck, PERSONA);
 }
 
 function main() {

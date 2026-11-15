@@ -20,6 +20,8 @@ interface Row {
   sizeBytes: number | null;
   generatedAt: string | null;
   chars: number;
+  /** Lời giảng có đoạn tiếng Anh `[en: …]`: cần thêm giọng tiếng Anh. */
+  hasEnglish: boolean;
 }
 
 interface ListResponse {
@@ -52,6 +54,8 @@ interface Voices {
   lecturer: string;
   A: string;
   B: string;
+  /** Giọng tiếng Anh của lời giảng song ngữ. */
+  en: string;
 }
 
 const KIND_LABEL: Record<Row["kind"], string> = { lecture: "Nghe giảng", podcast: "Podcast" };
@@ -86,7 +90,7 @@ function loadVoices(): Partial<Voices> {
 export default function NarrationsManager({ courseId }: { courseId: string }) {
   const [data, setData] = useState<ListResponse | null>(null);
   const [voiceList, setVoiceList] = useState<VoicesResponse | null>(null);
-  const [voices, setVoices] = useState<Voices>({ lecturer: "", A: "", B: "" });
+  const [voices, setVoices] = useState<Voices>({ lecturer: "", A: "", B: "", en: "" });
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -106,7 +110,10 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
       const saved = loadVoices();
       const first = j.default && names.has(j.default) ? j.default : (j.voices?.[0]?.voice ?? "");
       const pick = (v: string | undefined) => (v && names.has(v) ? v : first);
-      setVoices({ lecturer: pick(saved.lecturer), A: pick(saved.A), B: pick(saved.B) });
+      // Giọng tiếng Anh chỉ chọn trong các giọng `en`; chưa chọn thì gợi ý af_heart (Mỹ, nữ, cùng giọng bạn ảo Alex).
+      const english = (j.voices ?? []).filter((v) => v.language === "en").map((v) => v.voice);
+      const defaultEn = english.includes("af_heart") ? "af_heart" : (english[0] ?? "");
+      setVoices({ lecturer: pick(saved.lecturer), A: pick(saved.A), B: pick(saved.B), en: saved.en && english.includes(saved.en) ? saved.en : defaultEn });
     })();
   }, []);
 
@@ -182,7 +189,8 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
     }
   };
 
-  const voicesReady = voices.lecturer && voices.A && voices.B;
+  const needsEnglish = data?.rows.some((r) => r.hasEnglish) ?? false;
+  const voicesReady = voices.lecturer && voices.A && voices.B && (!needsEnglish || voices.en);
 
   async function generate(ids?: string[]) {
     setBusy(true);
@@ -195,7 +203,7 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
       });
       const j = (await r.json().catch(() => ({}))) as { queued?: number; alreadyRunning?: number; error?: string; lessonTitle?: string };
       if (r.status === 409) setMessage({ tone: "error", text: "Dòng này đang được tạo giọng. Đợi xong rồi bấm lại nếu cần." });
-      else if (!r.ok) setMessage({ tone: "error", text: j.error === "voice_required" ? "Chọn giọng cho đủ ba vai rồi bấm lại." : "Không bắt đầu được việc tạo giọng. Thử lại sau." });
+      else if (!r.ok) setMessage({ tone: "error", text: j.error === "voice_required" ? "Chọn giọng cho đủ các vai rồi bấm lại." : "Không bắt đầu được việc tạo giọng. Thử lại sau." });
       else setMessage({ tone: "ok", text: `Đã xếp ${j.queued ?? 0} việc tạo giọng, chạy lần lượt. Bạn có thể rời trang; kết quả hiện ở đây.` });
       await refresh();
     } finally {
@@ -235,12 +243,13 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
           Bấm “Nghe thử” để nghe giọng đang chọn. Lần đầu hệ thống tạo bản thử rồi lưu lại, các lần sau nghe ngay. Nghe
           xong, thầy/cô bấm “Miền Bắc” hoặc “Miền Nam” để gắn nhãn; giọng được xếp nhóm theo nhãn cho mọi khoá học.
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className={`mt-4 grid gap-3 ${needsEnglish ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}>
           {(
             [
               ["lecturer", "Giảng viên (Nghe giảng)"],
               ["A", "Người dẫn 1 (Podcast)"],
               ["B", "Người dẫn 2 (Podcast)"],
+              ...(needsEnglish ? ([["en", "Giọng tiếng Anh (câu ví dụ trong Nghe giảng)"]] as const) : []),
             ] as const
           ).map(([role, label]) => (
             <div key={role} className="text-sm">
@@ -256,7 +265,7 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
                   disabled={!voiceList.voices?.length}
                 >
                   {REGION_GROUPS.map(({ region, label: groupLabel }) => {
-                    const group = (voiceList.voices ?? []).filter((v) => v.region === region);
+                    const group = (voiceList.voices ?? []).filter((v) => v.region === region && (role === "en" ? v.language === "en" : true));
                     if (group.length === 0) return null;
                     return (
                       <optgroup key={groupLabel} label={groupLabel}>
@@ -288,7 +297,7 @@ export default function NarrationsManager({ courseId }: { courseId: string }) {
                   Không phát được bản thử, thử lại sau.
                 </p>
               )}
-              {voices[role] && (
+              {voices[role] && role !== "en" && (
                 <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                   <span className="text-muted">Giọng này là:</span>
                   {(["bac", "nam"] as const).map((region) => {
