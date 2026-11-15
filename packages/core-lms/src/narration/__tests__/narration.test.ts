@@ -286,6 +286,31 @@ describe("LessonNarration trong cơ sở dữ liệu", () => {
     expect((await getLearnerNarrations(lessonId)).lecture).not.toBeNull();
   });
 
+  // docs/tieu-chi/slide-giang-song-ngu.md S5: học viên không bao giờ nhận thẻ [en: …] trong phụ đề, lưu cả hai vai giọng.
+  it("lời giảng song ngữ: phụ đề bỏ thẻ [en: …] nhưng giữ chữ tiếng Anh; voices ghi cả hai vai", async () => {
+    const { lessonId } = await makeLesson("n6en");
+    const script: LectureScript = [{ anchor: "s0b0", text: "Ta nói [en: I had my car repaired], nghĩa là xe được sửa." }];
+    const { id } = await saveNarrationScript(lessonId, "lecture", script);
+    await claimNarrationForGeneration(id);
+    const gen = await generateNarrationAudio("lecture", script, { lecturer: "v", en: "e" }, { synthesize: synth });
+    await finishNarration(id, {
+      audioKey: `private/narration/${id}.mp3`,
+      contentType: "audio/mpeg",
+      sizeBytes: gen.mp3.length,
+      durationSec: gen.durationSec,
+      segments: gen.segments,
+      voices: { lecturer: "v", en: "e" },
+      generatedHash: scriptHash(script),
+    });
+    const seen = await getLearnerNarrations(lessonId);
+    expect(seen.lecture?.segments.map((s) => s.text)).toEqual(["Ta nói I had my car repaired, nghĩa là xe được sửa."]);
+    expect(JSON.stringify(seen)).not.toContain("[en");
+    const row = await prisma.lessonNarration.findUniqueOrThrow({ where: { id } });
+    expect(row.voices).toEqual({ lecturer: "v", en: "e" });
+    const listed = await listCourseNarrations((await prisma.lesson.findUniqueOrThrow({ where: { id: lessonId }, select: { module: { select: { courseId: true } } } })).module.courseId);
+    expect(listed[0]!.hasEnglish).toBe(true);
+  });
+
   it("học viên chỉ thấy bản khớp kịch bản, và không thấy khoá tệp", async () => {
     const { lessonId } = await makeLesson("n6");
     expect(await getLearnerNarrations(lessonId)).toEqual({ lecture: null, podcast: null });

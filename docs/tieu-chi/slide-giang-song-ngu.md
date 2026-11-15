@@ -64,7 +64,7 @@ Kho đã lưu giọng **theo vai** (`LessonNarration.voices`, podcast dùng vai 
 - **L2.** `deckLecture` (`build-deck-course.ts`) và `build-deck-lecture.ts` cho ra cùng định dạng đoạn `{ anchor, text }`; `text` có thể chứa `[en: …]`.
 - **L3.** `import-course` và `update-lesson` nhận kịch bản có `[en: …]` mà không cần cờ mới; giới hạn cũ giữ nguyên (≤ 60 đoạn, ≤ 8.000
   ký tự mỗi đoạn, ≤ 40.000 ký tự cả bài). Bài 1.1 Grammar phải nằm gọn trong 56 đoạn để còn chỗ sửa.
-- **L4.** Bộ slide tiếng Anh khai báo `"ngonNgu": "en"` để chữ trên khung (nút, nhãn) hiện tiếng Anh; chữ của slide tuỳ người soạn.
+- **L4.** (Sửa 15/11/2026) Bài Grammar khai báo `"ngonNgu": "vi"`: người học là học viên Việt, lời giảng và nút trong ô nhập đáp án của khung vốn là tiếng Việt, nên nhãn khối (ĐỊNH NGHĨA, VÍ DỤ, LƯU Ý) cũng tiếng Việt cho đồng nhất. Chữ của slide thì tiếng Anh ở phần ví dụ.
 
 ## B. Bài Grammar 1.1 (nội dung)
 
@@ -72,6 +72,7 @@ Kho đã lưu giọng **theo vai** (`LessonNarration.voices`, podcast dùng vai 
   Toán 10 (10 câu, mỗi phương án nhiễu gắn một lỗi tư duy thật, mã `en1.1.*`).
 - **B2.** Mạch bài: dẫn nhập từ chủ đề lối sống; bị động (hình thức, khi nào dùng); causative have (hình thức); phân biệt hai
   cấu trúc; bắt lỗi sai; nhập đáp án; cầu nối sang mục Speaking ("When was the last time you…?").
+- **B3a.** (Thêm 15/11/2026) Khung `.nhap-dap-an` chỉ chấm toán, nên thêm kiểu `data-loai="chu"` cho bài ngoại ngữ: không phân biệt hoa thường, bỏ dấu câu thường gặp, nháy cong = nháy thẳng, giữ nháy đơn và gạch nối; nhiều đáp án ngăn bằng `|`. Kiểu cũ không đổi (có test).
 - **B3.** Mỗi slide có ít nhất một thao tác của học viên (trắc nghiệm, ghép đôi, nhập đáp án, hiện dần) trong 12 slide; không có slide chỉ đọc chữ liền ba slide.
 - **B4.** Ví dụ, câu hỏi và bài kiểm tra **do em tự soạn**; không chép bài đọc, câu ví dụ hay bài tập của sách. Mỗi ví dụ tiếng Anh nằm trong `[en: …]` để có giọng.
 - **B5.** Lời giảng tiếng Việt xưng "thầy/cô – em", văn phong khoa học, câu đầy đủ, thuật ngữ tiếng Anh kèm tiếng Việt lần đầu (quy ước học liệu của thầy).
@@ -94,3 +95,12 @@ Kho đã lưu giọng **theo vai** (`LessonNarration.voices`, podcast dùng vai 
 1. **Giọng Anh Mỹ**, không dùng giọng Anh (`bf_/bm_`) dù sách là tiếng Anh Anh; đồng nhất với bạn ảo Alex và các đoạn mẫu Prepare.
 2. **Giảng viên của bài này: Bảo Trang (nữ)**, giọng Anh đi kèm là `af_heart`. Bộ slide khai báo `macDinh: "baotrang"` (các bộ Toán 10 vẫn là Tiến Đạt).
 3. **Nút nghe lại cụm tiếng Anh trên slide:** để đợt sau.
+
+## Phát hiện khi làm thật (15/11/2026)
+
+- **Giảng viên ảo là cài đặt toàn hệ thống** (`virtual_lecturer.default_lecturer`, hiện là Tiến Đạt); khoá chỉ chọn được mức hiện (`virtualLecturerMode`),
+  không chọn được người. Bài Grammar xưng "cô Bảo Trang" nhưng bìa và avatar vẫn là Tiến Đạt. Cần quyết: thêm giảng viên theo khoá (cột mới,
+  cần migration) hay đổi mặc định cả hệ thống (ảnh hưởng 5 bài Toán 10 đang xưng "thầy Tiến Đạt").
+- Bộ giọng giả của dev chưa có giọng `en`: đã thêm `af_gia` để thử luồng hai vai (V8).
+- `update-lesson.ts --create` trước đây chỉ tạo khối chữ nên bài slide ra rỗng; đã dùng `lessonContentItems` (khối nhúng, thẻ ghi nhớ) và lưu luôn lời giảng.
+- CSS của khung làm thẻ tab đang chọn mất chữ ở giao diện Học liệu (trắng trên trắng); đã sửa một dòng, các bộ Toán 10 cũng hưởng.

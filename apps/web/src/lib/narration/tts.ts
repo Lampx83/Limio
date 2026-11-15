@@ -78,6 +78,8 @@ async function fetchNarrationVoices(): Promise<NarrationVoiceList> {
         { voice: "gia-giang-vien", language: "vi", region: "bac" },
         { voice: "gia-nguoi-dan-1", language: "vi", region: "nam" },
         { voice: "gia-nguoi-dan-2", language: "vi", region: null },
+        // Giọng Anh giả cho lời giảng song ngữ ([en: …]); tên giống cách NEU đặt (af_ = nữ Mỹ).
+        { voice: "af_gia", language: "en", region: null },
       ],
       default: "gia-giang-vien",
     };

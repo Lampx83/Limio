@@ -1,0 +1,180 @@
+{
+  "tieuDe": "Passive và have + vật + past participle",
+  "mau": "xanh",
+  "ngonNgu": "vi",
+  "nguoiGiang": {
+    "macDinh": "baotrang",
+    "dsGiangVien": [
+      {
+        "ma": "baotrang",
+        "ten": "Bảo Trang",
+        "gioi": "nu",
+        "xung": "cô"
+      }
+    ],
+    "xungHoHs": "em",
+    "phatAm": {}
+  },
+  "slides": [
+    {
+      "id": "pc-01",
+      "html": "<section class=\"bia\"><h1>Câu bị động và <i>have</i> + vật + past participle</h1><p class=\"phu-de\">Nói việc gì được làm, và việc gì mình nhờ người khác làm</p><ul class=\"hien-dan\"><li>Biết khi nào nên dùng câu bị động (the passive)</li><li>Nhờ người khác làm giúp bằng <b>have + vật + past participle</b></li><li>Tự nói và viết câu về cuộc sống của em</li></ul></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Chào em! {{Tx}} là {{gv}}. Hôm nay mình học hai cấu trúc rất hay gặp khi nói về lối sống: câu bị động, tiếng Anh gọi là [en: the passive], và cấu trúc nhờ người khác làm giúp. [dừng 1] Em thử nghĩ xem: em đã bao giờ nói câu [en: I had my hair cut] chưa?",
+          "Việc thứ nhất: biết khi nào nên dùng câu bị động.",
+          "Việc thứ hai: dùng [en: have], cộng với vật, cộng với quá khứ phân từ, để nói việc mình nhờ người khác làm giúp.",
+          "Việc thứ ba: tự nói và viết câu về cuộc sống của chính em. [dừng 1] Mình bắt đầu nhé!"
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "pc-02",
+      "html": "<section class=\"hai-cot\"><h2>Ai làm, và ai quan trọng?</h2><div class=\"cot\"><div class=\"vi-du\" data-chi=\"cau-1\">Someone <b>waters</b> the plants every morning.</div><div class=\"vi-du\" data-chi=\"cau-2\">The plants <b>are watered</b> every morning.</div><p class=\"phu-de\">Hai câu nói cùng một việc.</p></div><div class=\"cot\"><div class=\"trac-nghiem\" data-kiem=\"pc-02-a\"><p class=\"cau\">Câu nào nói về <b>những cái cây</b>, chứ không nói về người tưới?</p><button class=\"lc\" data-gt=\"Someone waters the plants every morning.\" data-phan-hoi=\"Câu này bắt đầu bằng someone, tức là đang nói về người tưới.\">Someone waters the plants every morning.</button><button class=\"lc dung\" data-gt=\"The plants are watered every morning.\" data-phan-hoi=\"Đúng: chủ ngữ là the plants, và are watered là dạng bị động.\">The plants are watered every morning.</button><button class=\"lc\" data-gt=\"The plants water every morning.\" data-phan-hoi=\"Câu này sai nghĩa: cây không tự tưới được, và thiếu dạng bị động.\">The plants water every morning.</button><div class=\"giai-thich\">Câu bị động đặt <b>vật được tác động</b> lên đầu câu.</div></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Mình bắt đầu bằng hai câu bên trái. [chỉ: cau-1] Câu đầu nói: [en: Someone waters the plants every morning]. Chủ ngữ là một người, đang tưới cây. [chỉ: cau-2] Câu thứ hai nói: [en: The plants are watered every morning]. Chủ ngữ bây giờ là những cái cây.",
+          "Việc xảy ra vẫn y như nhau. Chỉ khác là người nói đang chú ý vào thứ gì: người tưới, hay những cái cây được tưới. Câu thứ hai là câu bị động. [dừng 1] Em chọn câu trả lời bên phải nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "pc-03",
+      "html": "<section><h2>Câu bị động: hình thức</h2><div class=\"dinh-nghia\" data-chi=\"cong-thuc\">Câu bị động = một dạng của <b>be</b> + <b>past participle</b> (quá khứ phân từ, cột 3 của động từ)</div><div class=\"tabs\" data-chi=\"tabs\"><div class=\"tab\" data-ten=\"Hiện tại đơn\"><p><b>am / is / are + past participle</b></p><div class=\"vi-du\">Rice <b>is grown</b> in the Mekong Delta.</div><p class=\"phu-de\">Gạo được trồng ở đồng bằng sông Cửu Long.</p></div><div class=\"tab\" data-ten=\"Quá khứ đơn\"><p><b>was / were + past participle</b></p><div class=\"vi-du\">This bridge <b>was built</b> last year.</div><p class=\"phu-de\">Cây cầu này được xây năm ngoái.</p></div><div class=\"tab\" data-ten=\"Hiện tại hoàn thành\"><p><b>has / have been + past participle</b></p><div class=\"vi-du\">The road <b>has been repaired</b>.</div><p class=\"phu-de\">Con đường đã được sửa xong.</p></div><div class=\"tab\" data-ten=\"Tương lai\"><p><b>will be + past participle</b></p><div class=\"vi-du\">The results <b>will be announced</b> on Friday.</div><p class=\"phu-de\">Kết quả sẽ được công bố vào thứ Sáu.</p></div><div class=\"tab\" data-ten=\"Động từ khuyết thiếu\"><p><b>can / must + be + past participle</b></p><div class=\"vi-du\">Phones <b>must be switched</b> off.</div><p class=\"phu-de\">Điện thoại phải được tắt.</p></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Câu bị động luôn gồm hai phần. [chỉ: cong-thuc] Một dạng của động từ [en: be], cộng với quá khứ phân từ của động từ chính, tiếng Anh gọi là [en: past participle]. Ví dụ, [en: steal] có quá khứ phân từ là [en: stolen], còn [en: build] là [en: built].",
+          "Động từ [en: be] sẽ đổi theo thì của câu. [chỉ: tabs] Em bấm lần lượt từng thẻ. Thẻ đầu là hiện tại đơn: [en: Rice is grown in the Mekong Delta]. Gạo được trồng ở đồng bằng sông Cửu Long. [chờ: Em bấm lần lượt từng thẻ để xem các thì]",
+          "Quá khứ đơn dùng [en: was] hoặc [en: were]: [en: This bridge was built last year]. Hiện tại hoàn thành dùng [en: has been] hoặc [en: have been]: [en: The road has been repaired]. Tương lai dùng [en: will be]: [en: The results will be announced on Friday]. Với động từ khuyết thiếu như [en: can] hay [en: must], ta dùng [en: be] nguyên dạng: [en: Phones must be switched off]."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "pc-04",
+      "html": "<section><h2>Ghép câu chủ động với câu bị động</h2><div class=\"ghep-doi\" data-chi=\"ghep\"><div class=\"cap\"><span class=\"a\">A chef prepares the soup every day.</span><span class=\"b\">The soup is prepared every day.</span></div><div class=\"cap\"><span class=\"a\">They built this school in the nineties.</span><span class=\"b\">This school was built in the nineties.</span></div><div class=\"cap\"><span class=\"a\">The council has closed the old market.</span><span class=\"b\">The old market has been closed.</span></div><div class=\"cap\"><span class=\"a\">The company will launch a new app soon.</span><span class=\"b\">A new app will be launched soon.</span></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Bây giờ em tự ghép nhé. [chỉ: ghep] Bên trái là câu chủ động, bên phải là câu bị động có cùng ý.",
+          "Gợi ý: nhìn thì của động từ ở câu bên trái. Thì đó không đổi khi em chuyển sang bị động, chỉ có động từ [en: be] đổi theo. Em chọn một ô bên trái, rồi chọn một ô bên phải."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "pc-05",
+      "html": "<section class=\"hai-cot\"><h2>Khi nào dùng câu bị động?</h2><div class=\"cot\"><ul class=\"hien-dan\"><li data-chi=\"r1\"><b>Không biết ai làm</b><br>My bike was stolen last night.</li><li data-chi=\"r2\"><b>Ai làm không quan trọng</b><br>The shop is closed on Sundays.</li><li data-chi=\"r3\"><b>Muốn nhấn mạnh kết quả</b><br>Dinner has been cooked.</li></ul></div><div class=\"cot\"><div class=\"dinh-nghia hien\" data-chi=\"by\"><b>by + người làm</b> chỉ thêm khi thông tin đó mới hoặc quan trọng.<br>This song was written <b>by my brother</b>.</div><div class=\"meo hien\" data-chi=\"meo\">Nếu câu chủ động nghe tự nhiên hơn, cứ dùng câu chủ động.</div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Vậy khi nào nên dùng câu bị động? Có ba lí do chính.",
+          "[chỉ: r1] Một, khi không biết ai làm. [en: My bike was stolen last night]. Em đâu biết ai đã lấy xe.",
+          "[chỉ: r2] Hai, khi ai làm không quan trọng. [en: The shop is closed on Sundays]. Không cần biết ai đóng cửa.",
+          "[chỉ: r3] Ba, khi em muốn nhấn mạnh kết quả. [en: Dinner has been cooked]. Bữa tối đã nấu xong, thế là đủ.",
+          "[chỉ: by] Còn người làm thì sao? Em chỉ thêm [en: by] cộng người làm khi thông tin đó mới hoặc quan trọng. Ví dụ: [en: This song was written by my brother].",
+          "[chỉ: meo] Và nhớ nhé: nếu câu chủ động nghe tự nhiên hơn, em cứ dùng câu chủ động. Câu bị động không phải lúc nào cũng hay hơn."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "pc-06",
+      "html": "<section class=\"hai-cot\"><h2>Em thử: chọn dạng đúng</h2><div class=\"cot\"><div class=\"trac-nghiem\" data-kiem=\"pc-06-a\" data-chi=\"cau-a\"><p class=\"cau\">My wallet ____ on the bus yesterday.</p><button class=\"lc\" data-gt=\"stole\" data-phan-hoi=\"Stole là quá khứ của động từ chủ động. Ví không thể tự lấy cắp.\">stole</button><button class=\"lc dung\" data-gt=\"was stolen\" data-phan-hoi=\"Đúng: quá khứ đơn bị động, was + stolen.\">was stolen</button><button class=\"lc\" data-gt=\"has stolen\" data-phan-hoi=\"Has stolen là chủ động, và ví không thể đi lấy cắp.\">has stolen</button><button class=\"lc\" data-gt=\"is stolen\" data-phan-hoi=\"Is chỉ hiện tại, mà việc xảy ra hôm qua.\">is stolen</button><div class=\"giai-thich\"><b>was</b> (quá khứ, số ít) + <b>stolen</b> (past participle của steal).</div></div></div><div class=\"cot\"><div class=\"trac-nghiem\" data-kiem=\"pc-06-b\" data-chi=\"cau-b\"><p class=\"cau\">These documents ____ already ____ to the office.</p><button class=\"lc\" data-gt=\"are / sent\" data-phan-hoi=\"Thiếu been. Hiện tại hoàn thành bị động cần have been.\">are / sent</button><button class=\"lc\" data-gt=\"have / sent\" data-phan-hoi=\"Đây là chủ động, nhưng giấy tờ không tự gửi đi được.\">have / sent</button><button class=\"lc dung\" data-gt=\"have / been sent\" data-phan-hoi=\"Đúng: documents là số nhiều nên dùng have, rồi been + sent.\">have / been sent</button><button class=\"lc\" data-gt=\"has / been sent\" data-phan-hoi=\"Documents là số nhiều, nên phải là have, không phải has.\">has / been sent</button><div class=\"giai-thich\">Hiện tại hoàn thành bị động: <b>have / has been + past participle</b>.</div></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Đến lượt em thử hai câu. [chỉ: cau-a] Câu bên trái nói về một cái ví bị mất hôm qua. Hãy nghĩ: động từ ở quá khứ hay hiện tại, và ví có tự làm việc đó được không?",
+          "[chỉ: cau-b] Câu bên phải nói về những giấy tờ đã được gửi. Chú ý hai điều: giấy tờ là số nhiều, và thì là hiện tại hoàn thành. [dừng 1] Em làm cả hai câu nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "pc-07",
+      "html": "<section class=\"hai-cot\"><h2>Nhờ người khác làm giúp</h2><div class=\"cot\"><div class=\"dinh-nghia\" data-chi=\"ct\"><b>have</b> + vật + <b>past participle</b><br>= nhờ hoặc thuê người khác làm việc đó cho mình.</div><ul class=\"hien-dan\"><li data-chi=\"v1\">I <b>had my hair cut</b> yesterday.</li><li data-chi=\"v2\">She <b>has her nails done</b> every month.</li><li data-chi=\"v3\">We are <b>having the kitchen painted</b>.</li></ul></div><div class=\"cot\"><div class=\"vi-du hien\" data-chi=\"so-voi\"><b>Tự làm:</b> I cut my hair. (em tự cắt)<br><b>Nhờ người khác:</b> I had my hair cut. (thợ cắt cho em)</div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Cấu trúc thứ hai là nhờ người khác làm giúp. [chỉ: ct] Công thức là [en: have], cộng với vật, cộng với quá khứ phân từ. Nghĩa là em nhờ hoặc thuê một người khác làm việc đó cho mình.",
+          "[chỉ: v1] [en: I had my hair cut yesterday]. Hôm qua em đi cắt tóc, người cắt là thợ, không phải em.",
+          "[chỉ: v2] [en: She has her nails done every month]. Mỗi tháng cô ấy đi làm móng.",
+          "[chỉ: v3] [en: We are having the kitchen painted]. Nhà mình đang thuê người sơn lại căn bếp. Ở đây [en: have] chia theo thì của câu, còn quá khứ phân từ giữ nguyên.",
+          "[chỉ: so-voi] So sánh hai câu này nhé. [en: I cut my hair] nghĩa là em tự cắt. [en: I had my hair cut] nghĩa là có người cắt cho em."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "pc-08",
+      "html": "<section><h2>Tự làm hay nhờ người khác?</h2><div class=\"so-sanh\"><div class=\"cot\"><h3>Tự làm</h3><p>I repaired my bike. (em tự sửa xe)</p></div><div class=\"cot\"><h3>Nhờ người khác</h3><p>I had my bike repaired. (thợ sửa cho em)</p></div></div><div class=\"canh-bao hien\" data-chi=\"thu-tu\">Thứ tự là have + <b>vật</b> + past participle. Sai: I had repaired my bike.</div><div class=\"luu-y hien\" data-chi=\"khong-may\">Cấu trúc này cũng dùng cho chuyện không may: <b>I had my bike stolen.</b></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Mình so sánh hai câu. Cả hai đều nói về việc sửa xe.",
+          "Cột bên trái: [en: I repaired my bike]. Chủ ngữ tự làm việc đó. Em tự sửa xe.",
+          "Cột bên phải: [en: I had my bike repaired]. Em không tự làm, mà nhờ thợ sửa cho em.",
+          "[chỉ: thu-tu] Lỗi hay gặp nhất là sai thứ tự. Sau [en: had] phải là cái vật, rồi mới đến quá khứ phân từ. Câu [en: I had repaired my bike] là sai.",
+          "[chỉ: khong-may] Một lưu ý nữa: cấu trúc này còn dùng cho chuyện không may. [en: I had my bike stolen]. Em không nhờ ai lấy xe cả, nhưng câu vẫn có dạng như vậy."
+        ],
+        "dungCuoi": false
+      }
+    },
+    {
+      "id": "pc-09",
+      "html": "<section><h2>Ghép tình huống với câu tiếng Anh</h2><div class=\"ghep-doi\" data-chi=\"ghep\"><div class=\"cap\"><span class=\"a\">Laptop hỏng, em mang ra tiệm để thợ sửa.</span><span class=\"b\">I had my laptop repaired.</span></div><div class=\"cap\"><span class=\"a\">Mẹ thuê thợ sơn lại phòng khách.</span><span class=\"b\">Mom had the living room painted.</span></div><div class=\"cap\"><span class=\"a\">Chị ấy đến tiệm để làm tóc.</span><span class=\"b\">She had her hair done.</span></div><div class=\"cap\"><span class=\"a\">Em được thợ chụp ảnh chân dung.</span><span class=\"b\">I had my portrait taken.</span></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Giờ em ghép tình huống tiếng Việt với câu tiếng Anh nhé. [chỉ: ghep] Hãy tìm xem trong tình huống ai là người làm việc, em hay người khác.",
+          "Nếu người khác làm giúp em, ta dùng [en: have] cộng vật cộng quá khứ phân từ. Em chọn một ô bên trái, rồi một ô bên phải."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "pc-10",
+      "html": "<section class=\"hai-cot\"><h2>Bắt lỗi và phân biệt</h2><div class=\"cot\"><div class=\"trac-nghiem\" data-kiem=\"pc-10-a\" data-chi=\"cau-a\"><p class=\"cau\">Câu nào <b>sai</b>?</p><button class=\"lc\" data-gt=\"She had her car washed.\" data-phan-hoi=\"Câu này đúng: have + her car + washed.\">She had her car washed.</button><button class=\"lc dung\" data-gt=\"I had repaired my phone.\" data-phan-hoi=\"Đúng, đây là câu sai: phải là I had my phone repaired. Vật đứng trước past participle.\">I had repaired my phone.</button><button class=\"lc\" data-gt=\"We are having the roof fixed.\" data-phan-hoi=\"Câu này đúng: are having + the roof + fixed.\">We are having the roof fixed.</button><button class=\"lc\" data-gt=\"He had his wallet stolen on the bus.\" data-phan-hoi=\"Câu này đúng, dùng cho chuyện không may.\">He had his wallet stolen on the bus.</button><div class=\"giai-thich\">Sai thứ tự: <b>had repaired my phone</b>. Đúng: <b>had my phone repaired</b>.</div></div></div><div class=\"cot\"><div class=\"trac-nghiem\" data-kiem=\"pc-10-b\" data-chi=\"cau-b\"><p class=\"cau\">Câu nào nói rằng người nói <b>tự làm</b>?</p><button class=\"lc dung\" data-gt=\"I cleaned my room.\" data-phan-hoi=\"Đúng: không có have + vật + past participle, nên em tự dọn phòng.\">I cleaned my room.</button><button class=\"lc\" data-gt=\"I had my room cleaned.\" data-phan-hoi=\"Câu này nói em nhờ người khác dọn.\">I had my room cleaned.</button><button class=\"lc\" data-gt=\"My room was cleaned.\" data-phan-hoi=\"Câu bị động: không nói ai dọn, nhưng thường không phải em.\">My room was cleaned.</button><div class=\"giai-thich\"><b>cleaned</b> là động từ chủ động: em là người làm.</div></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Thử hai câu hỏi cuối phần này. [chỉ: cau-a] Bên trái: tìm câu sai. Gợi ý: kiểm tra thứ tự, vật đứng ở đâu so với quá khứ phân từ?",
+          "[chỉ: cau-b] Bên phải: câu nào nói người nói tự làm? [dừng 1] Em làm cả hai câu nhé."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "pc-11",
+      "html": "<section class=\"hai-cot\"><h2>Em tự viết</h2><div class=\"cot\"><div class=\"nhap-dap-an\" data-loai=\"chu\" data-dap-an=\"was stolen\" data-kiem=\"pc-11-a\"><p class=\"cau\">Viết lại bằng câu bị động: <i>Someone stole my bag.</i><br>My bag ____ .</p><div class=\"go-y\">Câu gốc ở quá khứ đơn. Vật my bag là số ít, vậy be là was hay were?</div><div class=\"go-y\">Past participle của steal là gì? Bộ ba: steal, stole, ____.</div><div class=\"loi-sai\" data-khi=\"stolen\">Còn thiếu be. Câu bị động cần was hoặc were trước stolen.</div><div class=\"loi-sai\" data-khi=\"was stole|were stolen\">Be phải là was (my bag là số ít), và sau đó là past participle stolen.</div><div class=\"giai-thich\">My bag <b>was stolen</b>: was (quá khứ, số ít) + stolen.</div></div></div><div class=\"cot\"><div class=\"nhap-dap-an\" data-loai=\"chu\" data-dap-an=\"had my motorbike fixed|had my motorbike repaired\" data-kiem=\"pc-11-b\"><p class=\"cau\">Em nhờ thợ sửa xe máy hôm qua. Hoàn thành: <i>I ____ .</i> (dùng motorbike, fix)</p><div class=\"go-y\">Việc đã xảy ra hôm qua, vậy have ở thì nào?</div><div class=\"go-y\">Thứ tự: have + vật + past participle.</div><div class=\"loi-sai\" data-khi=\"had fixed my motorbike\">Sai thứ tự. Vật phải đứng trước past participle: had my motorbike fixed.</div><div class=\"loi-sai\" data-khi=\"have my motorbike fixed\">Việc xảy ra hôm qua, nên dùng had, không dùng have.</div><div class=\"loi-sai\" data-khi=\"had my motorbike fix\">Cần past participle: fixed, không phải fix.</div><div class=\"giai-thich\">I <b>had my motorbike fixed</b>.</div></div></div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Giờ em tự viết nhé. Ở cột bên trái, em viết lại câu thành câu bị động. Ở cột bên phải, em hoàn thành câu nói em nhờ thợ sửa xe máy. Có thể bấm gợi ý nếu cần. [dừng 1] Gõ xong thì bấm kiểm tra."
+        ],
+        "dungCuoi": true
+      }
+    },
+    {
+      "id": "pc-12",
+      "html": "<section class=\"tong-ket\"><h2>Tóm tắt</h2><ul class=\"hien-dan\"><li><b>Bị động:</b> be + past participle, be đổi theo thì</li><li>Dùng khi <b>không biết ai làm</b>, ai làm không quan trọng, hoặc muốn nhấn mạnh kết quả</li><li><b>Nhờ người khác làm giúp:</b> have + vật + past participle</li><li>Cùng cấu trúc đó dùng cho chuyện không may: I had my bike stolen</li></ul><div class=\"bam-de-xem\" data-nhan=\"Việc tiếp theo\">Quay lại mục Speaking của bài 1.1 và hỏi bạn: <i>Have you ever had something repaired or cut or painted?</i> Rồi hỏi tiếp một câu để biết thêm chi tiết.</div></section>",
+      "ghiChu": "",
+      "loiGiang": {
+        "buoc": [
+          "Mình cùng tóm tắt nhé.",
+          "Một: câu bị động gồm [en: be] cộng quá khứ phân từ, và [en: be] đổi theo thì.",
+          "Hai: dùng câu bị động khi không biết ai làm, khi ai làm không quan trọng, hoặc khi em muốn nhấn mạnh kết quả.",
+          "Ba: muốn nói em nhờ người khác làm giúp, dùng [en: have], cộng vật, cộng quá khứ phân từ.",
+          "Bốn: cấu trúc ấy cũng dùng cho chuyện không may, như [en: I had my bike stolen].",
+          "Việc tiếp theo: em quay lại mục Speaking của bài 1.1, rồi hỏi bạn một câu như [en: Have you ever had something repaired?] Nhớ hỏi thêm một câu nữa để biết chi tiết. Hẹn gặp lại em!"
+        ],
+        "dungCuoi": false
+      }
+    }
+  ]
+}

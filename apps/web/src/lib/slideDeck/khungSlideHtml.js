@@ -503,6 +503,7 @@ export const CSS_HOC_LIEU = `
 [data-kieu="hoclieu"] .quy-trinh .buoc { background: var(--the); }
 [data-kieu="hoclieu"] .quy-trinh .buoc::before { border-radius: 16px; }
 [data-kieu="hoclieu"] .tab-nut { border-width: 2px; background: var(--the); }
+[data-kieu="hoclieu"] .tab-nut.dang { background: linear-gradient(135deg, var(--mau), var(--mau-2)); border-color: transparent; }
 [data-kieu="hoclieu"] .tabs .tab { background: var(--the); padding: 22px 28px; }
 [data-kieu="hoclieu"] .tabs .tab > .trac-nghiem { padding: 0; border: 0; background: transparent; box-shadow: none; margin: 0; }
 [data-kieu="hoclieu"] section table { margin: 0 0 .6em; border: 2px solid var(--vien); border-radius: var(--bo); background: var(--the); box-shadow: var(--bong); }

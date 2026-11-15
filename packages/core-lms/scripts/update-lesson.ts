@@ -34,6 +34,7 @@ import {
   Manifest,
   countSections,
   expandQuestion,
+  lessonContentItems,
   renderLessonBlocks,
   upsertFeedbackTemplate,
   resolveManifest,
@@ -248,10 +249,11 @@ async function main() {
       return;
     }
     const orderIndex = Math.max(-1, ...mod.lessons.map((l) => l.orderIndex)) + 1;
-    const blocks = renderLessonBlocks(spec);
+    // Cả khối nhúng (bài slide `/decks/<id>`) lẫn thẻ ghi nhớ, đúng như lúc nhập khoá; trước đây chỉ có khối chữ nên bài slide ra rỗng.
+    const items = lessonContentItems(spec);
     console.log(
       `  + BÀI MỚI trong "${mod.title}" (vị trí ${orderIndex + 1}): ${spec.title}\n` +
-        `    ${blocks.length} khối nội dung · ${spec.quiz?.questions.length ?? 0} câu hỏi`,
+        `    ${items.length} khối nội dung · ${spec.quiz?.questions.length ?? 0} câu hỏi · lời giảng ${spec.lecture?.length ?? 0} đoạn`,
     );
     if (dryRun) {
       console.log("\n[dry-run] Không ghi gì.");
@@ -262,14 +264,11 @@ async function main() {
       description: spec.description,
       orderIndex,
     });
-    for (const [ci, html] of blocks.entries()) {
-      await createContentItem(owner.id, lessonId, {
-        type: "richtext",
-        orderIndex: ci,
-        payload: { html },
-      });
+    for (const [ci, item] of items.entries()) {
+      await createContentItem(owner.id, lessonId, { ...item, orderIndex: ci });
     }
     await createLessonQuiz(lessonId);
+    if (spec.lecture) await saveNarrationScript(lessonId, "lecture", spec.lecture);
     console.log(`\n✔ Đã tạo bài "${spec.title}" (${lessonId}).`);
     return;
   }

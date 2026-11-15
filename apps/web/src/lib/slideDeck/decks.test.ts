@@ -28,7 +28,7 @@ describe("bộ slide tương tác", () => {
     expect(loadDeck("khong-co-bo-nay")).toBeNull();
   });
 
-  it.each(ids)("%s: dựng đủ slide, có khung điều khiển và công thức KaTeX", (id) => {
+  it.each(ids)("%s: dựng đủ slide, có khung điều khiển (và KaTeX nếu có công thức)", (id) => {
     const deck = loadDeck(id)!;
     const html = buildDeckHtml(deck);
     expect((html.match(/<section/g) ?? []).length).toBeGreaterThanOrEqual(deck.slides.length);
@@ -36,7 +36,8 @@ describe("bộ slide tương tác", () => {
     // Có sẵn CSS ẩn thanh đáy nhưng chưa bật: bài đọc thường vẫn lật slide được, trình chiếu mới bật (useDeckBridge).
     expect(html).toContain("html[data-an-thanh]");
     expect(html).not.toContain('data-an-thanh="1"');
-    expect(html).toContain("katex");
+    // KaTeX chỉ nạp khi bộ slide có công thức; bài ngoại ngữ không có thì không cần.
+    if (deck.slides.some((x) => x.html.includes("\\("))) expect(html).toContain("katex");
     // Giao diện Limio, mở bằng nền sáng.
     const root = html.slice(0, html.indexOf(">", html.indexOf("<html")));
     expect(root).toContain('data-mau="limio"');

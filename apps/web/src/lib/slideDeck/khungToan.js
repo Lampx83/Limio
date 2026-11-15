@@ -653,7 +653,15 @@ export function chayToan(tuyChon) {
       var s = chuan(s0).replace(/(\d),(\d)/g, "$1.$2").replace(/^(y|[a-z]\([a-z]\))=/i, "");
       return phanTich(s, { bien: [], tuDo: true });
     };
+    /**
+     * Kiểu "chu" (bài ngoại ngữ): đáp án là chữ. So khớp không phân biệt hoa thường, bỏ dấu câu thường gặp (. , ! ? ; : và nháy kép),
+     * đưa nháy cong về nháy thẳng, gộp khoảng trắng. KHÔNG bỏ dấu nháy đơn và gạch nối (isn't, well-known khác isnt, wellknown).
+     */
+    var chuanChu = function (s) {
+      return String(s).toLowerCase().replace(/[\u2018\u2019\u02bc`\u00b4]/g, "'").replace(/[.,!?;:"\u201c\u201d]/g, " ").replace(/\s+/g, " ").trim();
+    };
     var docGiaTri = function (loai, s) {
+      if (loai === "chu") return chuanChu(s);
       if (loai === "diem") return docDiem(s);
       if (loai === "khoang") return docKhoang(s);
       if (loai === "tap-hop") return docTapHop(s);
@@ -713,7 +721,7 @@ export function chayToan(tuyChon) {
 
     return {
       phanTich: phanTich, tinh: tinh, bienDich: bienDich, inDep: inDep, bienTrong: bienTrong, soDep: soDep,
-      huuTi: huuTi, tinhParabol: tinhParabol, chamDapAn: chamDapAn, chuan: chuan, docGiaTri: docGiaTri, HAM: HAM, HANG: HANG
+      huuTi: huuTi, tinhParabol: tinhParabol, chamDapAn: chamDapAn, chuanChu: chuanChu, chuan: chuan, docGiaTri: docGiaTri, HAM: HAM, HANG: HANG
     };
   })();
 
@@ -1352,7 +1360,8 @@ export function chayToan(tuyChon) {
     diem: "Nhập toạ độ dạng (x; y)",
     khoang: "Ví dụ: (-oo; 2] hoặc (-oo; 1) U (3; +oo)",
     "tap-hop": "Ví dụ: {1; 3}",
-    "bieu-thuc": "Ví dụ: x^2 - 4x + 3"
+    "bieu-thuc": "Ví dụ: x^2 - 4x + 3",
+    chu: "Gõ tiếng Anh"
   };
   var dapAnDep = function (s) {
     return String(s).trim().replace(/-/g, "−").replace(/\+?oo/g, function (m) { return m.charAt(0) === "+" ? "+∞" : "∞"; })
@@ -1439,7 +1448,7 @@ export function chayToan(tuyChon) {
           dsGoY[bacGoY].classList.add("tq-mo");
           bacGoY++;
         } else if (giai && !xong) {
-          noi("sai", "nhac", "Đáp án: " + dapAnDep(dapAn.split("|")[0]) + " — em đọc kĩ lời giải nhé.");
+          noi("sai", "nhac", "Đáp án: " + (loai === "chu" ? dapAn.split("|")[0].trim() : dapAnDep(dapAn.split("|")[0])) + " — em đọc kĩ lời giải nhé.");
           baoLan(false, "xem-loi-giai");
           ketThuc(false);
         }
@@ -1488,7 +1497,7 @@ export function chayToan(tuyChon) {
       baoLan(false, khop ? (khop.getAttribute("data-khi") || "").split("|")[0].trim() : L.chuan(v));
       if (khop) khop.classList.add("tq-mo");
       if (soSai >= 3) {
-        noi("sai", "sai", "Chưa đúng. Đáp án: " + dapAnDep(dapAn.split("|")[0]) + (giai ? " — xem lời giải bên dưới." : "."));
+        noi("sai", "sai", "Chưa đúng. Đáp án: " + (loai === "chu" ? dapAn.split("|")[0].trim() : dapAnDep(dapAn.split("|")[0])) + (giai ? " — xem lời giải bên dưới." : "."));
         ketThuc(false);
       } else {
         noi("sai", "sai", (khop ? "Chưa đúng — xem nhận xét bên dưới" : "Chưa đúng, em thử lại nhé") + " (lần " + soSai + "/3)." +
