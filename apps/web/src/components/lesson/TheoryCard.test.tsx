@@ -44,4 +44,11 @@ describe("TheoryCard", () => {
     expect(html.match(/data-testid="lesson-theory"/g)).toHaveLength(1);
     expect(html).toContain("border-b border-token");
   });
+
+  it("chữ in đậm của sách trong phần lý thuyết được bôi màu (cùng lớp pv-hl-bold với bài luyện)", () => {
+    const html = renderToStaticMarkup(<TheoryCard html="<blockquote><em>I <strong>keep up with</strong> everything.</em></blockquote>" />);
+    expect(html).toContain("pv-hl-bold");
+    expect(html).toContain("<strong>keep up with</strong>");
+  });
 });
+

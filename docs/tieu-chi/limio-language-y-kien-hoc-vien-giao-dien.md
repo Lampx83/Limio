@@ -53,8 +53,8 @@ Một lesson là trọn một phần của sách; bên trong, lý thuyết đứ
 
 ## AC7 — Chữ in đậm của sách được bôi màu
 
-- Trong thẻ đoạn văn của **Bài luyện nhúng**, chữ in đậm của sách (từ vựng mục tiêu, vd "early bird" ở 1.1 Vocabulary) có **nền màu nhấn** của khối (cùng màu với dải kỹ năng và tab), bo nhẹ, đọc vẫn rõ ở nền sáng và tối.
-- Chỉ áp trong Bài luyện nhúng; phòng thi, Luyện đề toàn trang và phần chữ bài học **không đổi**.
+- Trong thẻ đoạn văn của **Bài luyện nhúng**, chữ in đậm của sách (từ vựng mục tiêu, vd "early bird" ở 1.1 Vocabulary) **đổi sang màu nhấn** của khối (cùng màu với dải kỹ năng và tab) kèm **một vạch nền mảnh ở nửa dưới dòng**, kiểu bút dạ quang; **không tô kín cả cụm** (thầy chốt 15/11/2026: tô kín quá nặng, nhất là trên khung lời bình nền hồng). Đọc vẫn rõ ở nền sáng và tối.
+- Áp cho cả **phần lý thuyết** của bài ngoại ngữ (vd lời bình của Jodi, Victor, Alejandra ở 1.2 Vocabulary, nơi cả đoạn là chữ nghiêng): chữ đậm đổi màu như trên, trừ chữ đậm làm nhãn: trong tiêu đề, hộp mẹo/quy tắc và tên người nói ("Jodi:"). Phòng thi, Luyện đề toàn trang và bài không thuộc khung ngoại ngữ **không đổi**.
 
 ## AC8 — Bài đọc dài là lý thuyết ở trên đầu (thầy chốt 15/11/2026)
 

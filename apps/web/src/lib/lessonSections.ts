@@ -94,6 +94,11 @@ export function dropRepeatedBannerTitle(html: string, lessonTitle: string): stri
   });
 }
 
+/** Chữ đậm làm nhãn người nói ("Jodi:", "Victor:") không phải từ vựng mục tiêu: đánh dấu để không bôi màu như chữ đậm trong câu. */
+export function markLabelBold(html: string): string {
+  return html.replace(/<strong>([^<]{1,40}:)(\s*)<\/strong>/g, '<strong class="pv-nohl">$1$2</strong>');
+}
+
 /** Tên tab dự phòng: tên khối, bỏ đuôi " · Practice" mà bộ nhập khoá thêm cho khối gộp. */
 export function practiceTabLabel(title: string): string {
   const t = title.replace(/\s*·\s*Practice\s*$/i, "").trim();

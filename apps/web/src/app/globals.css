@@ -2753,11 +2753,19 @@ textarea.fc-input {
   color: var(--ps-ink);
 }
 
-/* Chữ in đậm của sách trong bài luyện nhúng (từ vựng mục tiêu): bôi màu nhấn của khối (--brand, theo bộ sách) cho nổi bật. */
+/* Chữ in đậm của sách (từ vựng mục tiêu) trong bài học ngoại ngữ: đổi sang màu nhấn của khối (--brand, theo bộ sách) kèm một vạch nền mảnh ở nửa dưới
+   dòng, kiểu bút dạ quang. Không tô kín cả cụm: trên nền hồng của khung lời bình, ô tô kín quá nặng. */
 .pv-hl-bold strong {
-  background: rgb(var(--brand) / 0.16);
-  border-radius: 0.25rem;
-  padding: 0 0.2em;
+  color: rgb(var(--brand));
+  background: linear-gradient(to bottom, transparent 62%, rgb(var(--brand) / 0.22) 62%);
+  padding: 0 0.1em;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
+}
+/* Chữ đậm làm nhãn (tiêu đề, hộp mẹo/quy tắc, tên người nói "Jodi:") không đổi màu: chỉ từ vựng mục tiêu trong câu. */
+.pv-hl-bold :is(h1, h2, h3, h4, h5, h6, aside) strong,
+.pv-hl-bold strong.pv-nohl {
+  color: inherit;
+  background: none;
+  padding: 0;
 }

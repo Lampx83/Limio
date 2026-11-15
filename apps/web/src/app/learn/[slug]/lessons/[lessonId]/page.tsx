@@ -53,7 +53,7 @@ import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
 import TheoryCard from "@/components/lesson/TheoryCard";
-import { arrangeTabs, dropRepeatedBannerTitle, exerciseLabels, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
+import { arrangeTabs, dropRepeatedBannerTitle, exerciseLabels, markLabelBold, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
 import { splitEmbedByExercise } from "@/lib/practiceExerciseSplit";
 import { dedupeHoisted, hoistReadingPassages, type HoistedPassage } from "@/lib/practiceHoist";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
@@ -1225,7 +1225,7 @@ export default async function LessonPage({
         <div className="relative">
         <div id="lesson-content">
         {theoryAsOneCard ? (
-          <TheoryCard title={titleInTheory ? lessonTitleRow : undefined} html={dropRepeatedBannerTitle(sections!.theory.map((it) => (it.payload as { html: string }).html).join(""), lesson.title)}>
+          <TheoryCard title={titleInTheory ? lessonTitleRow : undefined} html={markLabelBold(dropRepeatedBannerTitle(sections!.theory.map((it) => (it.payload as { html: string }).html).join(""), lesson.title))}>
             {dedupeHoisted(hoistedPassages).map((h) => (
               <div key={h.id} className="[&_p]:leading-8">
                 <PassageView passage={{ id: h.id, title: h.title, contentJson: h.contentJson, transcripts: h.transcripts }} attemptId={`lesson-reading-${h.id}`} hideNote emphasizeBold bodySize="body" />

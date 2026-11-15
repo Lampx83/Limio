@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitLessonSections, practiceTabLabel, arrangeTabs, mergeTabsByLabel, passageDisplayTitle, dropRepeatedBannerTitle, type SectionItem } from "./lessonSections";
+import { splitLessonSections, practiceTabLabel, arrangeTabs, mergeTabsByLabel, passageDisplayTitle, dropRepeatedBannerTitle, markLabelBold, type SectionItem } from "./lessonSections";
 
 /** docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md — AC5, AC6. HTML mẫu giống hệt bộ nhập khoá Speakout tạo ra. */
 const NUM = (n: string) => `<span style="color:rgb(229,0,92);font-size:1.6em;font-weight:700;line-height:1;margin-right:.3rem">${n}</span>`;
@@ -255,3 +255,16 @@ describe("dropRepeatedBannerTitle — dòng phụ của banner trùng tên bài 
     expect(dropRepeatedBannerTitle("<p>x</p>", "1.1 Reading")).toBe("<p>x</p>");
   });
 });
+
+describe("markLabelBold — chữ đậm làm nhãn người nói không bôi màu", () => {
+  it("chữ đậm kết thúc bằng dấu hai chấm (Jodi:) đánh dấu pv-nohl; từ vựng đậm giữ nguyên", () => {
+    const out = markLabelBold("<p><strong>Jodi:</strong> I feel <strong>overwhelmed by</strong> work.</p>");
+    expect(out).toContain('<strong class="pv-nohl">Jodi:</strong>');
+    expect(out).toContain("<strong>overwhelmed by</strong>");
+  });
+  it("chữ đậm dài hoặc không có dấu hai chấm: giữ nguyên", () => {
+    const html = "<p><strong>keep up with</strong> and <strong>" + "x".repeat(60) + ":</strong></p>";
+    expect(markLabelBold(html)).toBe(html);
+  });
+});
+
