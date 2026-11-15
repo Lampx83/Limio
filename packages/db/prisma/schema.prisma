@@ -482,6 +482,8 @@ model Course {
   /// LANG đợt 2 (docs/tieu-chi/limio-language-hoc-vien-dot-2.md) — Thư viện giáo trình. Chỉ có tác dụng khi khoá
   /// `published` và `enrollMode = open`. Mặc định tắt: khoá đang có không tự xuất hiện ở thư viện.
   inLibrary              Boolean      @default(false)
+  /// Màu nhấn của bộ sách ("r,g,b", vd "229,0,92"): trang học viên của khoá dùng màu này cho khối luyện tập để khớp với thân bài. Trống = màu Limio.
+  themeColor             String?
   publisher              String?
   authors                String?
   edition                String?
@@ -5449,6 +5451,12 @@ model Organization {
   // CENTER: bật các tính năng trung tâm (lịch dạy, giáo trình dựng sẵn, điểm danh, chuyên cần) cho thành viên của
   // trường. Chỉ ẩn/hiện ở giao diện; dữ liệu và API không đổi. Mặc định TẮT. Platform Admin hoặc OrgAdmin đổi được.
   centerEnabled              Boolean  @default(false)
+  // SPACE: trang giới thiệu riêng của trường/dự án tại /s/<spaceSlug> kèm nhận diện thương hiệu (màu, logo, chữ, danh
+  // sách khoá). Khi bật, mọi trang của các khoá trong danh sách (catalog, học, thi) đổi theo thương hiệu đó. `space`
+  // là JSON chuẩn hoá bởi apps/web/src/lib/space/settings.ts; null = dùng mặc định theo tên trường. OrgAdmin sửa được.
+  spaceEnabled               Boolean  @default(false)
+  spaceSlug                  String?  @unique
+  space                      Json?
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 

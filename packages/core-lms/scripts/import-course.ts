@@ -51,6 +51,7 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { prisma } from "@feedbackme/db";
 import { createCourse } from "../src/courses/courses";
+import { setCourseProtectedMedia } from "../src/courses/protectedMedia";
 import { createModule } from "../src/courses/modules";
 import { createLesson } from "../src/courses/lessons";
 import { createContentItem } from "../src/courses/contents";
@@ -62,7 +63,10 @@ import { getOwnedPracticeExamId } from "../src/courses/practiceBlock";
 import { createPassage } from "../src/exam/passages";
 import { createExamQuestion } from "../src/exam/questions";
 import { createAudioAsset, createImageAsset } from "../src/exam/assets";
+import { attachDialogueAudio, prepareDialogueAudio, type DialogueAudioContext } from "./dialogue-audio";
 import { attachVocabAudio, createNeuVocabSynth, lessonAudioStore, type VocabAudioContext } from "./vocab-audio";
+import { validateContentPayload } from "../src/courses/contentSchemas";
+import { setVideoTranscript } from "../src/exam/passageAssets";
 import {
   type ExamQuestionSpecT,
   PracticeSpec,
@@ -82,7 +86,7 @@ import {
   PodcastScript,
   saveNarrationScript,
 } from "../src/narration";
-import { LESSON_FONT_KEYS, LESSON_LAYOUT_KEYS, LESSON_PALETTE_KEYS } from "@feedbackme/shared-types";
+import { LANGUAGE_SKILLS, LESSON_FONT_KEYS, LESSON_LAYOUT_KEYS, LESSON_PALETTE_KEYS } from "@feedbackme/shared-types";
 
 // ── Định dạng file học liệu ───────────────────────────────────────────────────
 // Giữ cho người soạn bài đọc và sửa được: `pairs`, `sequence`, `answers` là
@@ -158,6 +162,57 @@ const DialogueSpec = z.object({
 });
 
 /**
+ * Tài nguyên hội thoại của LMS (loại `dialogue`): mỗi lượt có chữ gốc, phiên âm (`reading`) và bản dịch (`translation`) để học viên bật/tắt
+ * riêng, cùng audio từng lượt. Khác `DialogueSpec` ở trên (chỉ vẽ HTML cố định trong thân bài). Đặt giữa thân bài bằng mốc `:::dialogue n`.
+ */
+const DialogueItemTurn = z.object({
+  speaker: z.string().min(1).max(40),
+  text: z.string().min(1).max(1_000),
+  reading: z.string().max(1_000).optional(),
+  translation: z.string().max(1_000).optional(),
+  /** Audio của lượt: đường dẫn tương đối trong thư mục assets (vd do `make-dialogue-audio.ts` sinh). */
+  audio: z.string().min(1).max(300).optional(),
+});
+
+const DialogueItemSpec = z.object({
+  title: z.string().max(200).optional(),
+  caption: z.string().max(600).optional(),
+  readingLabel: z.string().max(40).optional(),
+  turns: z.array(DialogueItemTurn).min(1).max(100),
+});
+type DialogueItemSpecT = z.infer<typeof DialogueItemSpec>;
+
+/**
+ * Khối audio của LMS (loại `audio`): một trình phát đặt giữa thân bài (vd nghe và đọc theo các từ mới), không có câu hỏi. Bài luyện chỉ có audio
+ * không hiện trên trang vì không có câu hỏi nào, nên dùng khối này. Tệp nằm trong thư mục assets; đặt bằng mốc `:::audio n`.
+ */
+const AudioItemSpec = z.object({
+  audio: z.string().min(1).max(300),
+  title: z.string().max(200).optional(),
+  caption: z.string().max(600).optional(),
+});
+type AudioItemSpecT = z.infer<typeof AudioItemSpec>;
+
+export function audioPayload(a: AudioItemSpecT, url: string): { url: string } & Record<string, unknown> {
+  return { url, ...(a.title ? { title: a.title } : {}), ...(a.caption ? { caption: a.caption } : {}) };
+}
+
+/** Payload của mục `dialogue` (chưa có audio). */
+export function dialoguePayload(d: DialogueItemSpecT): { turns: Array<{ speaker: string; text: string; reading?: string; translation?: string; audioUrl?: string }> } & Record<string, unknown> {
+  return {
+    ...(d.title ? { title: d.title } : {}),
+    ...(d.caption ? { caption: d.caption } : {}),
+    readingLabel: d.readingLabel ?? "Pinyin",
+    turns: d.turns.map((t) => ({
+      speaker: t.speaker,
+      text: t.text,
+      ...(t.reading ? { reading: t.reading } : {}),
+      ...(t.translation ? { translation: t.translation } : {}),
+    })),
+  };
+}
+
+/**
  * Bảng hai cột chữ Hán → nghĩa (mẫu câu, cách đọc…). Phải là dữ liệu có cấu
  * trúc chứ không viết vào `body`: bảng markdown chỉ render được ở cỡ chữ nền
  * 14px, chữ Hán bé tí bên cạnh hội thoại 28px.
@@ -191,6 +246,10 @@ export const LessonSpec = z.object({
   description: z.string().max(2_000).optional(),
   vocab: z.array(VocabItem).optional(),
   dialogue: DialogueSpec.optional(),
+  /** Tài nguyên hội thoại của LMS (có phiên âm, bản dịch bật/tắt và audio từng lượt); đặt giữa thân bài bằng `:::dialogue n`. */
+  dialogues: z.array(DialogueItemSpec).max(8).optional(),
+  /** Khối audio của LMS (trình phát, không câu hỏi); đặt giữa thân bài bằng `:::audio n`. */
+  audios: z.array(AudioItemSpec).max(12).optional(),
   patterns: PatternsSpec.optional(),
   body: z.string().optional(),
   /**
@@ -204,6 +263,11 @@ export const LessonSpec = z.object({
    * viên); khoá nói với giảng viên đặt "Học xong bài này, thầy/cô có thể:".
    */
   objectivesLead: z.string().min(1).max(200).optional(),
+  /**
+   * Bỏ dải "n phút · n phần · n câu" đầu bài. Khoá ngoại ngữ theo sách: thanh bài bên trái đã có số phút,
+   * còn "1 section" không nói gì với người học, nên dải chỉ làm trang thêm một khối trống.
+   */
+  hideMeta: z.boolean().optional(),
   /**
    * Tổng kết cuối bài — vài ý người học nên mang theo. Chèn NGAY TRƯỚC mục
    * luyện tập chứ không phải sau cùng: đọc xong nội dung là tới tổng kết, rồi
@@ -256,6 +320,8 @@ export const LessonSpec = z.object({
    * dối.
    */
   durationMin: z.number().int().min(1).max(600).optional(),
+  /** Kỹ năng chính của bài (nghe/nói/đọc/viết): hồ sơ kỹ năng và thẻ "Tiến độ theo kỹ năng" của khoá ngoại ngữ đếm bài theo trường này. */
+  languageSkill: z.enum(LANGUAGE_SKILLS).optional(),
   /**
    * Bảng màu + phông chữ của bài (giống nút "Giao diện" khi giảng viên sửa khối văn bản). Áp cho mọi khối
    * văn bản của bài, để cả bài một giọng.
@@ -357,6 +423,10 @@ export const Manifest = z.object({
     personalizationEnabled: z.boolean().optional(),
     /** Khoá ngoại ngữ: bật khung bài học 3 cột và các tính năng Language (cần personalizationEnabled). */
     languageMode: z.boolean().optional(),
+    /** Học liệu có bản quyền: bật cờ `protectedMedia` sau khi nhập (file chỉ mở cho người có quyền vào khoá). */
+    protectedMedia: z.boolean().optional(),
+    /** Phong cách sách giáo trình: màu nhấn "r,g,b" (xem `setBookStyle`). */
+    bookStyle: z.object({ accent: z.string().regex(/^\d{1,3},\d{1,3},\d{1,3}$/) }).optional(),
   }),
   /**
    * Lỗi tư duy điển hình của bài. Gắn vào phương án sai để Feedback Engine
@@ -489,7 +559,16 @@ const SUB_SIZE = "1.05rem";
  * văn, danh sách, ô bảng, trích dẫn — dùng CHUNG một cỡ để trang không nhấp
  * nhô; chỉ tiêu đề và chú thích hình lệch ra khỏi thang này.
  */
-const TEXT = "1.25rem";
+let TEXT = "1.25rem";
+/**
+ * Phong cách sách giáo trình (`course.bookStyle`): bài viết theo giao diện trang sách — dải tên kỹ năng, số và chữ cái bài tập màu nhấn của sách, hộp
+ * TIP kẻ hai đầu, chữ và dãn dòng cùng cỡ với phiếu bài tập. Một màu nhấn duy nhất (r,g,b) thay cho bảng màu nhiều mục của các khoá khác.
+ */
+let BOOK: { acc: string } | null = null;
+export function setBookStyle(acc: string | null): void {
+  BOOK = acc ? { acc } : null;
+  TEXT = acc ? "1.0625rem" : "1.25rem";
+}
 const CAPTION = "1rem";
 /**
  * Màu nhận diện cho từng mục cấp 2, lặp lại theo thứ tự.
@@ -663,12 +742,12 @@ export function markdownToHtml(
   // Màu của mục đang đọc dở — bảng, trích dẫn trong mục lấy theo màu này.
   // Khối gấp gọn render lồng nên phải nhận màu của mục cha, nếu không nội dung
   // bên trong nó đột ngột đổi sang màu của mục 1.
-  let hue: string = opts.hue ?? SECTION_HUES[0]!;
-  let textHue: string = opts.textHue ?? SECTION_TEXT_HUES[0]!;
+  let hue: string = BOOK ? BOOK.acc : (opts.hue ?? SECTION_HUES[0]!);
+  let textHue: string = BOOK ? BOOK.acc : (opts.textHue ?? SECTION_TEXT_HUES[0]!);
   // Mục lục đánh số 1. 2. 3. thì tiêu đề trong bài cũng phải mang số ấy —
   // không có số thì người đọc phải dò lại bằng tên, đúng việc mà mục lục sinh
   // ra để khỏi phải làm.
-  const wantToc = (opts.toc ?? h2Total >= 4) && h2Total >= 2;
+  const wantToc = !BOOK && (opts.toc ?? h2Total >= 4) && h2Total >= 2;
   let h2Index = 0;
   const p = `margin:.7rem 0;font-size:${TEXT};line-height:1.8`;
   const td = `padding:.55rem .6rem;border-bottom:1px solid ${RULE};font-size:${TEXT};line-height:1.7;vertical-align:top`;
@@ -771,6 +850,132 @@ export function markdownToHtml(
       // `:::mau <tiêu đề>` — từ khoá loại đứng ngay sau ba dấu hai chấm, không
       // đoán theo chữ đầu: tiêu đề tiếng Việt cũng có thể bắt đầu bằng chữ
       // thường, đoán mò thì có ngày nuốt mất một từ của tiêu đề.
+      // `:::practice n` — chỗ đặt Bài luyện số n (1, 2, …) GIỮA thân bài, đúng thứ tự của sách. Không có dấu này thì mọi bài luyện nằm sau
+      // toàn bộ phần chữ. Dấu này chỉ là mốc để cắt khối lúc nhập (xem `placePractices`), không bao giờ được lưu vào bài.
+      const slot = /^:::practice\s+(\d+)\s*$/.exec(t);
+      if (slot) {
+        out.push(`<div data-practice-slot="${slot[1]}"></div>`);
+        i++;
+        continue;
+      }
+      // `:::folio 9` — số trang của sách ở đầu khối bài (một dòng nhỏ, mờ, căn phải): học viên có sách đối chiếu được, người không có sách vẫn đọc bình thường.
+      // `:::player /api/lesson-media/audio/<tệp>` (viết `:::player asset:<tệp>` trong học liệu; importer tải lên rồi đổi thành đường dẫn thật) —
+      // trình phát audio nằm ngay trong khối chữ, vd đầu khung từ mới.
+      const player = /^:::player\s+(\/api\/lesson-media\/audio\/[A-Za-z0-9._-]+)\s*$/.exec(t);
+      if (player) {
+        out.push(`<audio controls preload="metadata" src="${esc(player[1]!)}" style="display:block;width:100%;margin:.2rem 0 .9rem"></audio>`);
+        i++;
+        continue;
+      }
+      // `:::dialogue n` — chỗ đặt tài nguyên hội thoại số n (1, 2, …) giữa thân bài; cùng cơ chế với `:::practice n`.
+      const dslot = /^:::dialogue\s+(\d+)\s*$/.exec(t);
+      if (dslot) {
+        out.push(`<div data-dialogue-slot="${dslot[1]}"></div>`);
+        i++;
+        continue;
+      }
+      // `:::audio n` — chỗ đặt khối audio số n giữa thân bài.
+      const aslot = /^:::audio\s+(\d+)\s*$/.exec(t);
+      if (aslot) {
+        out.push(`<div data-audio-slot="${aslot[1]}"></div>`);
+        i++;
+        continue;
+      }
+      const folio = BOOK ? /^:::folio\s+(\d+)\s*$/.exec(t) : null;
+      if (folio) {
+        out.push(`<p style="margin:0 0 .6rem;text-align:right;font-size:.8125rem;letter-spacing:.04em;color:${MUTED}">Student\u2019s Book \u00b7 page ${folio[1]}</p>`);
+        i++;
+        continue;
+      }
+      const ref = BOOK ? /^:::ref\b\s*(.*)$/.exec(t) : null;
+      if (ref) {
+        // Dòng chỉ dẫn của sách: "page 104 LANGUAGEBANK" -> tam giác màu nhấn, số trang nhạt, tên ngân hàng đậm (một dòng, không đóng :::).
+        const m2 = /^(page\s+\d+)\s+(.*)$/i.exec(ref[1]!.trim());
+        out.push(
+          `<p style="margin:.9rem 0;font-size:.95rem">` +
+            `<span style="color:rgb(${BOOK!.acc});margin-right:.4rem">\u25b7</span>` +
+            (m2
+              ? `<span style="color:${MUTED}">${esc(m2[1]!)}</span> <strong style="color:rgb(${BOOK!.acc});letter-spacing:.02em;margin-left:.3rem">${esc(m2[2]!)}</strong>`
+              : esc(ref[1]!)) +
+            `</p>`,
+        );
+        i++;
+        continue;
+      }
+      const bar = BOOK ? /^:::lessonbar\b\s*(.*)$/.exec(t) : null;
+      if (bar) {
+        // Dải đầu bài của sách: số bài + tên bài chữ hoa, bên phải các dòng G/P/V (ngữ pháp, phát âm, từ vựng) có vòng chữ cái.
+        const [num, ...nameParts] = bar[1]!.split("|").map((x) => x.trim());
+        const items: string[] = [];
+        i++;
+        while (i < lines.length && lines[i]!.trim() !== ":::") {
+          const m3 = /^([A-Z])\s+(.*)$/.exec(lines[i]!.trim());
+          if (m3) {
+            items.push(
+              `<li style="display:flex;align-items:center;gap:.5rem;margin:.1rem 0"><span style="flex:none;width:1.3rem;height:1.3rem;border-radius:50%;` +
+                `background:#fff;color:rgb(${BOOK!.acc});font-size:.8rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center">${esc(m3[1]!)}</span>` +
+                `<span>${inline(m3[2]!)}</span></li>`,
+            );
+          }
+          i++;
+        }
+        i++;
+        out.push(
+          `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.4rem;margin:0 0 1.2rem;padding:.8rem 1.1rem;color:#fff;` +
+            `background:linear-gradient(90deg,rgb(120,0,52),rgb(${BOOK!.acc}));border-radius:.35rem">` +
+            `<span style="font-size:1.6rem;font-weight:700;line-height:1">${esc(num ?? "")}</span>` +
+            `<span style="font-size:1.6rem;letter-spacing:.02em;text-transform:uppercase;flex:1 1 11rem;line-height:1.15">${esc(nameParts.join(" | "))}</span>` +
+            (items.length ? `<ul style="list-style:none;margin:0;padding:0;font-size:.95rem;flex:1 1 15rem">${items.join("")}</ul>` : "") +
+            `</div>`,
+        );
+        continue;
+      }
+      const box = BOOK ? /^:::(box|rules)\b\s*(.*)$/.exec(t) : null;
+      if (box) {
+        // Hộp của sách: `:::box [TIÊU ĐỀ]` (khung viền màu nhấn, vd. hộp từ, KEY PHRASES) và `:::rules` (hộp RULES có nhãn dọc ở mép trái).
+        const inner: string[] = [];
+        i++;
+        while (i < lines.length && lines[i]!.trim() !== ":::") {
+          inner.push(lines[i]!);
+          i++;
+        }
+        i++;
+        const content = markdownToHtml(inner.join("\n"), { toc: false });
+        const acc = BOOK!.acc;
+        if (box[1] === "rules") {
+          out.push(
+            `<div style="display:flex;gap:.8rem;margin:1.2rem 0;border:1.5px solid rgba(${acc},.7);background:rgba(${acc},.04)">` +
+              `<div style="flex:none;writing-mode:vertical-rl;transform:rotate(180deg);padding:.6rem .35rem;font-weight:700;letter-spacing:.12em;` +
+              `font-size:.85rem;color:rgb(${acc});border-left:1.5px solid rgba(${acc},.7)">RULES</div>` +
+              `<div style="flex:1;min-width:0;padding:.2rem .9rem .2rem 0">${content}</div></div>`,
+          );
+        } else {
+          const title = box[2]!.trim();
+          out.push(
+            `<div style="margin:1.1rem 0;border:1.5px solid rgba(${acc},.7);padding:.5rem .9rem">` +
+              (title ? `<div style="font-weight:700;letter-spacing:.08em;font-size:.9rem;color:rgb(${acc});margin:0 0 .25rem">${esc(title)}</div>` : "") +
+              `${content}</div>`,
+          );
+        }
+        continue;
+      }
+      const tip = BOOK ? /^:::tip\b\s*(.*)$/.exec(t) : null;
+      if (tip) {
+        // Hộp "speakout TIP": kẻ màu nhấn hai đầu, tiêu đề đậm, chữ thường ở giữa.
+        const inner: string[] = [];
+        i++;
+        while (i < lines.length && lines[i]!.trim() !== ":::") {
+          inner.push(lines[i]!.trim());
+          i++;
+        }
+        i++;
+        out.push(
+          `<aside style="margin:1.4rem 0;border-top:2px solid rgb(${BOOK!.acc});border-bottom:2px solid rgb(${BOOK!.acc});padding:.6rem .2rem">` +
+            `<div style="font-weight:700;font-size:1.15rem;margin:0 0 .3rem"><span style="color:rgb(${BOOK!.acc})">speakout</span> ${esc(tip[1] || "TIP")}</div>` +
+            `<div style="font-size:${TEXT};line-height:1.6">${inline(inner.filter(Boolean).join(" "))}</div></aside>`,
+        );
+        continue;
+      }
       const open = /^:::(mau)\b\s*(.*)$/.exec(t);
       const title = (open ? open[2]! : t.slice(3)).trim() || T().moreTitle;
       i++;
@@ -806,14 +1011,30 @@ export function markdownToHtml(
       used.set(id, seen + 1);
       if (seen > 0) id = `${id}-${seen + 1}`;
       if (level === 2) headings.push({ id, text, at: out.length });
-      if (level === 2) {
+      if (level === 2 && !BOOK) {
         hue = SECTION_HUES[h2Index % SECTION_HUES.length]!;
         textHue = SECTION_TEXT_HUES[h2Index % SECTION_TEXT_HUES.length]!;
       }
       const num = level === 2 && wantToc ? ++h2Index : null;
       // scroll-margin-top: chừa chỗ cho thanh tiêu đề dính trên cùng, nếu
       // không thì nhảy tới neo sẽ để tiêu đề nằm khuất dưới thanh đó.
-      if (level === 2) {
+      if (level === 2 && BOOK) {
+        // Dải tên kỹ năng như đầu mục của sách: "GRAMMAR · PRESENT TENSES" -> dải màu chuyển nhạt dần có tên kỹ năng chữ trắng, dòng phụ in hoa dưới dải.
+        const parts = text.split(" · ");
+        const name = parts[0]!;
+        const sub = parts.length > 1 ? parts.slice(1).join(" · ") : "";
+        const plus = /\bplus$/i.test(name) ? name.replace(/\s*plus$/i, "") : null;
+        out.push(
+          `<h2 id="${id}" style="font-size:1rem;margin:2rem 0 .8rem;scroll-margin-top:5rem">` +
+            `<span style="display:block;padding:.2rem 1rem;background:linear-gradient(90deg,rgb(${BOOK.acc}),rgba(${BOOK.acc},.1));` +
+            `color:#fff;font-size:1.3rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase">` +
+            `${plus !== null ? `${esc(plus)} <i style="opacity:.85">plus</i>` : inline(name)}</span>` +
+            (sub
+              ? `<span style="display:block;margin:.4rem 0 0 .25rem;font-size:1.05rem;font-weight:700;letter-spacing:.02em;text-transform:uppercase">${inline(sub)}</span>`
+              : "") +
+            `</h2>`,
+        );
+      } else if (level === 2) {
         const badge = num
           ? `<span style="display:inline-flex;align-items:center;justify-content:center;` +
             `min-width:2rem;height:2rem;border-radius:.5rem;background:rgba(${hue},.16);` +
@@ -904,6 +1125,22 @@ export function markdownToHtml(
       continue;
     }
 
+    // Nhãn bài tập của sách: "**3 C** lời dặn", "**B** lời dặn", "**5** lời dặn" -> số lớn và chữ cái màu nhấn, lời dặn chữ thường.
+    const label = BOOK ? /^\*\*(?:(\d+)\s+)?([A-E])\*\*\s+(.*)$|^\*\*(\d+)\*\*\s+(.*)$/.exec(t) : null;
+    if (label) {
+      const num = label[1] ?? label[4];
+      const letter = label[2];
+      const rest = label[3] ?? label[5] ?? "";
+      out.push(
+        `<p style="margin:1.1rem 0 .35rem;font-size:${TEXT};line-height:1.6;${num ? "" : "padding-left:1.4rem"}">` +
+          (num ? `<span style="color:rgb(${BOOK!.acc});font-size:1.6em;font-weight:700;line-height:1;margin-right:.3rem">${esc(num)}</span>` : "") +
+          (letter ? `<span style="color:rgb(${BOOK!.acc});font-weight:700;margin-right:.45rem">${esc(letter)}</span>` : "") +
+          `${inline(rest)}</p>`,
+      );
+      i++;
+      continue;
+    }
+
     const para: string[] = [];
     while (i < lines.length && lines[i]!.trim() !== "" && !/^(#{2,4}\s|[-*]\s|\d+\.\s|\||>\s|---$|!\[|```)/.test(lines[i]!.trim())) {
       para.push(lines[i]!.trim());
@@ -954,7 +1191,8 @@ export function markdownToHtml(
     );
   }
 
-  return out.join("");
+  const html = out.join("");
+  return BOOK ? html.replace(/line-height:1\.[78]\b/g, "line-height:1.6") : html;
 }
 
 /**
@@ -1240,7 +1478,7 @@ export function renderLessonBlocks(l: z.infer<typeof LessonSpec>): string[] {
   if (l.quiz?.questions.length) chips.push(T().questions(l.quiz.questions.length));
 
   const head =
-    (chips.length > 1 ? metaBar(chips) : "") +
+    (chips.length > 1 && !l.hideMeta ? metaBar(chips) : "") +
     (l.objectives?.length ? objectivesBox(l.objectives, l.objectivesLead) : "");
   if (head) blocks.push(head);
 
@@ -1366,6 +1604,68 @@ export function lessonContentItems(l: z.infer<typeof LessonSpec>): ContentItem[]
   return items;
 }
 
+const PRACTICE_SLOT = /<div data-(practice|dialogue|audio)-slot="(\d+)"><\/div>/g;
+
+/** Số thứ tự (1-based) các Bài luyện được thân bài đánh dấu bằng `:::practice n`, theo thứ tự xuất hiện. */
+export function practiceSlotsOf(body: string | undefined): number[] {
+  return [...(body ?? "").matchAll(/^:::practice\s+(\d+)\s*$/gm)].map((m) => Number(m[1]));
+}
+
+export type PlacedBlock = { item: ContentItem } | { practice: number } | { dialogue: number } | { audio: number };
+
+/** Số thứ tự (1-based) các khối audio được thân bài đánh dấu bằng `:::audio n`. */
+export function audioSlotsOf(body: string | undefined): number[] {
+  return [...(body ?? "").matchAll(/^:::audio\s+(\d+)\s*$/gm)].map((m) => Number(m[1]));
+}
+
+/** Số thứ tự (1-based) các tài nguyên hội thoại được thân bài đánh dấu bằng `:::dialogue n`. */
+export function dialogueSlotsOf(body: string | undefined): number[] {
+  return [...(body ?? "").matchAll(/^:::dialogue\s+(\d+)\s*$/gm)].map((m) => Number(m[1]));
+}
+
+/**
+ * Xếp khối nội dung và Bài luyện theo đúng thứ tự cuối cùng. Khối chữ có mốc `:::practice n` được CẮT tại mốc: Bài luyện n (0-based n-1)
+ * nằm giữa phần chữ trước và sau mốc. Bài luyện không có mốc (hoặc bài không dùng mốc nào) giữ nếp cũ: nằm sau mọi khối chữ, theo thứ tự khai báo.
+ */
+export function placePractices(items: ContentItem[], practiceCount: number, dialogueCount = 0, audioCount = 0): PlacedBlock[] {
+  const out: PlacedBlock[] = [];
+  const placedP = new Set<number>();
+  const placedD = new Set<number>();
+  const placedA = new Set<number>();
+  for (const it of items) {
+    const html = typeof it.payload.html === "string" ? it.payload.html : null;
+    if (it.type !== "richtext" || html === null || !/data-(practice|dialogue|audio)-slot/.test(html)) {
+      out.push({ item: it });
+      continue;
+    }
+    const parts = html.split(PRACTICE_SLOT); // [chữ, loại, số, chữ, loại, số, chữ…]
+    for (let k = 0; k < parts.length; k += 3) {
+      if (parts[k]!.trim() !== "") out.push({ item: { ...it, payload: { ...it.payload, html: parts[k]! } } });
+      if (k + 2 >= parts.length) break;
+      const kind = parts[k + 1];
+      const idx = Number(parts[k + 2]) - 1;
+      if (kind === "practice") {
+        if (idx >= 0 && idx < practiceCount && !placedP.has(idx)) {
+          placedP.add(idx);
+          out.push({ practice: idx });
+        }
+      } else if (kind === "audio") {
+        if (idx >= 0 && idx < audioCount && !placedA.has(idx)) {
+          placedA.add(idx);
+          out.push({ audio: idx });
+        }
+      } else if (idx >= 0 && idx < dialogueCount && !placedD.has(idx)) {
+        placedD.add(idx);
+        out.push({ dialogue: idx });
+      }
+    }
+  }
+  for (let i = 0; i < audioCount; i++) if (!placedA.has(i)) out.push({ audio: i });
+  for (let i = 0; i < dialogueCount; i++) if (!placedD.has(i)) out.push({ dialogue: i });
+  for (let i = 0; i < practiceCount; i++) if (!placedP.has(i)) out.push({ practice: i });
+  return out;
+}
+
 // ── Chạy ──────────────────────────────────────────────────────────────────────
 
 function arg(name: string): string | undefined {
@@ -1394,8 +1694,10 @@ async function withBodyAssets(l: z.infer<typeof LessonSpec>, assetsDir: string, 
   if (files.size === 0) return l;
   const urls = new Map<string, string>();
   for (const f of files) {
-    const stored = await storePublicFile("lesson-media/images", resolve(assetsDir, f), actor);
-    urls.set(f, `/api/lesson-media/images/${stored.filename}`);
+    // Ảnh vào kho ảnh bài học, audio (nhúng bằng `:::player asset:<tệp>`) vào kho audio bài học.
+    const isAudio = /\.(mp3|m4a)$/i.test(f);
+    const stored = await storePublicFile(isAudio ? "lesson-media/audio" : "lesson-media/images", resolve(assetsDir, f), actor);
+    urls.set(f, `/api/lesson-media/${isAudio ? "audio" : "images"}/${stored.filename}`);
   }
   const rep = (t: string | undefined) => (t === undefined ? t : replaceBodyAssetRefs(t, urls));
   return {
@@ -1416,6 +1718,9 @@ export async function importAssignment(actor: string, lessonId: string, a: z.inf
     countsTowardGrade: a.countsTowardGrade,
   });
 }
+
+/** Video đã lưu trong lần nhập này (đường dẫn nguồn → tên file), để một clip dùng nhiều chỗ không bị lưu lặp. */
+const videoFilesStored = new Map<string, string>();
 
 /** Tạo một khối Bài luyện: khối + đề ẩn, rồi từng đoạn (kèm ảnh/audio/transcript) và câu hỏi. */
 export async function importPractice(actor: string, lessonId: string, pr: z.infer<typeof PracticeSpec>, orderIndex: number, assetsDir: string) {
@@ -1468,20 +1773,33 @@ async function prepareVocabAudio(manifest: z.infer<typeof Manifest>, actor: stri
           ...(b.transcript?.trim() ? { transcript: b.transcript.trim() } : {}),
         });
         srcOf.set(`audio:${b.audio}`, `/api/exam-assets/${st.filename}`);
+      } else if ("video" in b) {
+        // Video nằm ở kho video bài học (phát có Range); transcript (nếu có) ở một dòng ExamAsset của đề.
+        // Cùng một clip dùng ở nhiều phiếu thì chỉ lưu một bản (file video lớn).
+        const abs = resolve(assetsDir, b.video);
+        let filename = videoFilesStored.get(abs);
+        if (!filename) {
+          filename = (await storePublicFile("lesson-media/videos", abs, examId)).filename;
+          videoFilesStored.set(abs, filename);
+        }
+        const src = `/api/lesson-media/videos/${filename}`;
+        srcOf.set(`video:${b.video}`, src);
+        if (b.transcript?.trim()) await setVideoTranscript(actor, examId, src, b.transcript.trim(), b.alt);
       }
     }
     const doc = buildPassageDoc(ps.blocks, {
       image: (f) => ({ src: srcOf.get(`image:${f}`)! }),
       audio: (f) => ({ src: srcOf.get(`audio:${f}`)! }),
+      video: (f) => ({ src: srcOf.get(`video:${f}`)! }),
     });
         "  --no-vocab-audio          không sinh giọng NEU TTS cho từ vựng (khoá ngoại ngữ)\n" +
     const { passageId } = await createPassage(actor, examId, { title: ps.title, contentJson: doc });
     for (const q of ps.questions) {
-      await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
+      await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir), await storeModelAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
     }
   }
   for (const q of pr.questions) {
-    await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir)), sectionId: section.id });
+    await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir)), sectionId: section.id });
   }
 }
 
@@ -1491,6 +1809,146 @@ async function storeSampleAudio(actor: string, examId: string, q: ExamQuestionSp
   const st = await storePublicFile("exam-assets", resolve(assetsDir, q.sampleAudio), examId);
   await createAudioAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: "Sample answer audio" });
   return `/api/exam-assets/${st.filename}`;
+}
+
+/** Hội thoại đóng vai: ghi audio từng lượt (nếu có) vào kho đề; trả đường dẫn theo đúng thứ tự lượt (lượt không có audio là undefined). */
+async function storeTurnAudio(actor: string, examId: string, q: ExamQuestionSpecT, assetsDir: string): Promise<Array<string | undefined>> {
+  const out: Array<string | undefined> = [];
+  for (const [i, t] of (q.roleplay?.turns ?? []).entries()) {
+    if (!t.audio) {
+      out.push(undefined);
+      continue;
+    }
+    const st = await storePublicFile("exam-assets", resolve(assetsDir, t.audio), examId);
+    await createAudioAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: `Role-play turn ${i + 1} audio` });
+    out.push(`/api/exam-assets/${st.filename}`);
+  }
+  return out;
+}
+
+/** "Thử nói tự do": audio đoạn nói mẫu (`freechat.scaffold.model.audio`) vào kho đề; trả đường dẫn để đặt vào cấu hình câu. */
+async function storeModelAudio(actor: string, examId: string, q: ExamQuestionSpecT, assetsDir: string): Promise<string | undefined> {
+  const file = q.freechat?.scaffold?.model?.audio;
+  if (!file) return undefined;
+  const st = await storePublicFile("exam-assets", resolve(assetsDir, file), examId);
+  await createAudioAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: "Example answer audio" });
+  return `/api/exam-assets/${st.filename}`;
+}
+
+/**
+ * Chỉ khoá `languageMode` có ngôn ngữ khác tiếng Việt và có thẻ ghi nhớ mới sinh giọng (`--no-vocab-audio` để tắt).
+ * Trả null khi không cần hoặc không làm được; lý do in ra để người nhập biết vì sao không có nút nghe.
+ */
+async function prepareVocabAudio(manifest: z.infer<typeof Manifest>, actor: string): Promise<VocabAudioContext | null> {
+  const language = (manifest.course.language ?? "vi").toLowerCase().split("-")[0]!;
+  if (!manifest.course.languageMode || language === "vi" || process.argv.includes("--no-vocab-audio")) return null;
+  if (!manifest.modules.some((m) => m.lessons.some((l) => l.flashcards))) return null;
+  try {
+    const synth = await createNeuVocabSynth();
+    if (!synth) {
+      console.warn("⚠ Chưa cấu hình NEU TTS (Quản trị › Tích hợp, hoặc NEUTTS_BASE_URL/NEUTTS_API_KEY): từ vựng chưa có audio.");
+      return null;
+    }
+    if (!synth.voiceFor(language)) {
+      console.warn(`⚠ NEU TTS không có giọng "${language}": từ vựng chưa có audio.`);
+      return null;
+    }
+    return { synth, language, store: lessonAudioStore(actor), warn: (m) => console.warn(`⚠ ${m}`) };
+  } catch (e) {
+    console.warn(`⚠ Không gọi được NEU TTS (${(e as Error).message}): từ vựng chưa có audio.`);
+    return null;
+  }
+}
+
+/** Trạng thái dùng chung khi dựng nội dung nhiều bài (bộ nhớ đệm audio, số liệu, cấu hình giọng). */
+export interface PopulateCtx {
+  dialogueCtx: DialogueAudioContext | null;
+  /** (giọng|chữ) → audioUrl đã sinh trong lần chạy. */
+  dialogueCache: Map<string, string>;
+  /** Tệp audio trong assets → đường dẫn đã tải lên (mỗi tệp một lần). */
+  dialogueFileCache: Map<string, string>;
+  dialogueTotals: { attached: number; failed: number; uploaded: number; reused?: number };
+  /** Làm mới bài: audio cũ của lượt hội thoại ("người nói|chữ" → audioUrl); lượt không đổi chữ thì giữ audio cũ, khỏi sinh lại. */
+  reuseTurnAudio?: Map<string, string>;
+  /** Giọng đọc từ vựng (thẻ ghi nhớ) của khoá ngoại ngữ; không có thì từ vựng không có nút nghe. */
+  vocabCtx?: VocabAudioContext | null;
+  vocabCache?: Map<string, string>;
+  vocabTotals?: { attached: number; failed: number };
+}
+
+/**
+ * Dựng toàn bộ nội dung một bài (khối chữ, khối audio, hội thoại, Bài luyện, bài tập nộp) theo manifest. Dùng chung cho nhập mới
+ * (`import-course.ts`) và làm mới từng bài (`refresh-course.ts`). Không đụng quiz / lời giảng (caller lo).
+ */
+export async function populateLessonContent(
+  actor: string,
+  lessonId: string,
+  l: z.infer<typeof LessonSpec>,
+  assetsDir: string,
+  ctx: PopulateCtx,
+): Promise<void> {
+  const { dialogueCtx, dialogueCache, dialogueFileCache, dialogueTotals } = ctx;
+  // Ảnh trong thân bài viết `asset:<tệp>`: tải lên rồi đổi thành đường dẫn thật.
+  const rl = await withBodyAssets(l, assetsDir, actor);
+  // Soạn bằng markdown nhưng lưu thành richtext: markdown render ở cỡ chữ
+  // nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
+  const items = lessonContentItems(rl);
+  if (ctx.vocabCtx) {
+    for (const it of items) {
+      if (it.type !== "vocab_list" || !Array.isArray(it.payload.items)) continue;
+      const r = await attachVocabAudio(it.payload.items as Array<Record<string, unknown>>, ctx.vocabCtx, ctx.vocabCache ?? new Map());
+      if (ctx.vocabTotals) {
+        ctx.vocabTotals.attached += r.attached;
+        ctx.vocabTotals.failed += r.failed;
+      }
+    }
+  }
+  const placedBlocks = placePractices(items, l.practices?.length ?? 0, l.dialogues?.length ?? 0, l.audios?.length ?? 0);
+  for (const [ci, b] of placedBlocks.entries()) {
+    if ("item" in b) await createContentItem(actor, lessonId, { ...b.item, orderIndex: ci });
+    else if ("audio" in b) {
+      const a = l.audios![b.audio]!;
+      let url = dialogueFileCache.get(a.audio);
+      if (!url) {
+        const stored = await storePublicFile("lesson-media/audio", resolve(assetsDir, a.audio), actor);
+        url = `/api/lesson-media/audio/${stored.filename}`;
+        dialogueFileCache.set(a.audio, url);
+      }
+      await createContentItem(actor, lessonId, { type: "audio", orderIndex: ci, payload: audioPayload(a, url) });
+    } else if ("dialogue" in b) {
+      const dlg = l.dialogues![b.dialogue]!;
+      const payload = dialoguePayload(dlg);
+      // Audio đã có sẵn (tệp trong assets): tải lên kho bài học, mỗi tệp một lần.
+      for (const [ti, t] of dlg.turns.entries()) {
+        if (!t.audio) continue;
+        let url = dialogueFileCache.get(t.audio);
+        if (!url) {
+          const stored = await storePublicFile("lesson-media/audio", resolve(assetsDir, t.audio), actor);
+          url = `/api/lesson-media/audio/${stored.filename}`;
+          dialogueFileCache.set(t.audio, url);
+        }
+        payload.turns[ti]!.audioUrl = url;
+        dialogueTotals.uploaded += 1;
+      }
+      // Làm mới bài: lượt giữ nguyên người nói + chữ thì giữ audio cũ (không sinh lại).
+      if (ctx.reuseTurnAudio) {
+        for (const t of payload.turns) {
+          const old = ctx.reuseTurnAudio.get(`${t.speaker}|${t.text}`);
+          if (old && !t.audioUrl) {
+            t.audioUrl = old;
+            dialogueTotals.reused = (dialogueTotals.reused ?? 0) + 1;
+          }
+        }
+      }
+      if (dialogueCtx) {
+        const r = await attachDialogueAudio(payload.turns, dialogueCtx, dialogueCache);
+        dialogueTotals.attached += r.attached;
+        dialogueTotals.failed += r.failed;
+      }
+      await createContentItem(actor, lessonId, { type: "dialogue", orderIndex: ci, payload });
+    } else await importPractice(actor, lessonId, l.practices![b.practice]!, ci, assetsDir);
+  }
+  for (const a of l.assignments ?? []) await importAssignment(actor, lessonId, a);
 }
 
 async function main() {
@@ -1509,6 +1967,8 @@ async function main() {
         "  --owner <email>           tài khoản giảng viên sở hữu khoá\n" +
         "  --into <courseId>         nối module vào khoá đã có (thay vì tạo mới)\n" +
         "  --replace                 xoá khoá cùng slug rồi nhập lại (chỉ khi draft + 0 học viên)\n" +
+        "  --no-dialogue-audio       không sinh giọng NEU TTS từng lượt cho tài nguyên hội thoại\n" +
+        "  --no-vocab-audio          không sinh giọng NEU TTS cho từ vựng (khoá ngoại ngữ)\n" +
         "  --dry-run                 chỉ kiểm tra, không ghi",
     );
     process.exitCode = 1;
@@ -1524,6 +1984,7 @@ async function main() {
   }
   const manifest = parsed.data;
   setImportLanguage(manifest.course.language);
+  setBookStyle(manifest.course.bookStyle?.accent ?? null);
   // Thư mục tệp audio/ảnh (ngoài Git): --assets, mặc định `assets/` cạnh file manifest.
   const assetsDir = resolve(arg("assets") ?? resolve(dirname(resolveManifest(file)), "assets"));
 
@@ -1542,11 +2003,44 @@ async function main() {
   let questionCount = 0;
   for (const [mi, m] of manifest.modules.entries()) {
     for (const [li, l] of m.lessons.entries()) {
-      if (!l.body && !l.vocab?.length && !l.dialogue && !l.patterns && !l.quiz && !l.embeds?.length && !l.practices?.length && !l.assignments?.length && !l.sections?.length) {
+      if (!l.body && !l.vocab?.length && !l.dialogue && !l.dialogues?.length && !l.audios?.length && !l.patterns && !l.quiz && !l.embeds?.length && !l.practices?.length && !l.assignments?.length && !l.sections?.length) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": rỗng — không có nội dung lẫn quiz`);
       }
       for (const msg of lectureAnchorProblems(l)) {
         problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": lời giảng: ${msg}`);
+      }
+      {
+        const slots = practiceSlotsOf(l.body);
+        const n = l.practices?.length ?? 0;
+        for (const k of slots) if (k < 1 || k > n) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": ":::practice ${k}" nhưng bài chỉ có ${n} bài luyện`);
+        if (new Set(slots).size !== slots.length) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": có ":::practice n" bị lặp (mỗi bài luyện chỉ đặt một chỗ)`);
+      }
+      {
+        const dslots = dialogueSlotsOf(l.body);
+        const dn = l.dialogues?.length ?? 0;
+        for (const k of dslots) if (k < 1 || k > dn) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": ":::dialogue ${k}" nhưng bài chỉ có ${dn} hội thoại`);
+        if (new Set(dslots).size !== dslots.length) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": có ":::dialogue n" bị lặp`);
+        for (const [di, d] of (l.dialogues ?? []).entries()) {
+          try {
+            validateContentPayload("dialogue", dialoguePayload(d));
+          } catch (e) {
+            problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}" / hội thoại ${di + 1}: ${(e as Error).message.slice(0, 200)}`);
+          }
+          for (const t of d.turns) {
+            if (t.audio && !existsSync(resolve(assetsDir, t.audio))) {
+              problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}" / hội thoại ${di + 1}: không thấy audio "${t.audio}" trong ${assetsDir}`);
+            }
+          }
+        }
+      }
+      {
+        const aslots = audioSlotsOf(l.body);
+        const an = l.audios?.length ?? 0;
+        for (const k of aslots) if (k < 1 || k > an) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": ":::audio ${k}" nhưng bài chỉ có ${an} khối audio`);
+        if (new Set(aslots).size !== aslots.length) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": có ":::audio n" bị lặp`);
+        for (const a of l.audios ?? []) {
+          if (!existsSync(resolve(assetsDir, a.audio))) problems.push(`module ${mi + 1} / bài ${li + 1} "${l.title}": không thấy audio "${a.audio}" trong ${assetsDir}`);
+        }
       }
       for (const [pi, pr] of (l.practices ?? []).entries()) {
         const where = `module ${mi + 1} / bài ${li + 1} "${l.title}" / Bài luyện ${pi + 1}`;
@@ -1745,7 +2239,25 @@ async function main() {
   const course = target
     ? { courseId: target.id, slug: target.slug }
     : await createCourse(actor, manifest.course);
+  // Màu nhấn của bộ sách cũng lưu vào khoá để khối luyện tập của trang học viên dùng cùng màu với thân bài.
+  if (manifest.course.bookStyle) await prisma.course.update({ where: { id: course.courseId }, data: { themeColor: manifest.course.bookStyle.accent } });
   const moduleOffset = target?.nextModuleIndex ?? 0;
+
+  // Giọng đọc từng lượt cho tài nguyên hội thoại (NEU TTS, một lần cho cả lần nhập). Thiếu cấu hình / giọng / cổng lỗi chỉ cảnh báo.
+  // `--no-dialogue-audio` để tắt.
+  const dialogueLang = (manifest.course.language ?? "vi").toLowerCase().split("-")[0]!;
+  const dialogueCtx: DialogueAudioContext | null =
+    manifest.course.languageMode && dialogueLang !== "vi" && !process.argv.includes("--no-dialogue-audio") && manifest.modules.some((m) => m.lessons.some((l) => l.dialogues?.length))
+      ? await prepareDialogueAudio(dialogueLang, actor)
+      : null;
+  const dialogueCache = new Map<string, string>();
+  const dialogueTotals: PopulateCtx["dialogueTotals"] = { attached: 0, failed: 0, uploaded: 0 };
+  const dialogueFileCache = new Map<string, string>();
+  // Giọng đọc cho từ vựng (khoá ngoại ngữ): NEU TTS, một lần cho cả lần nhập. Thiếu cấu hình / giọng / cổng lỗi chỉ cảnh báo.
+  const vocabCtx = await prepareVocabAudio(manifest, actor);
+  const vocabCache = new Map<string, string>();
+  const vocabTotals = { attached: 0, failed: 0 };
+  const populateCtx: PopulateCtx = { dialogueCtx, dialogueCache, dialogueFileCache, dialogueTotals, vocabCtx, vocabCache, vocabTotals };
 
   if (carriedInstructors.length > 0) {
     await prisma.courseInstructor.createMany({
@@ -1786,25 +2298,10 @@ async function main() {
         orderIndex: li,
         // Thời lượng thật để trang Bắt đầu và trang khoá ghi "Khoảng N phút".
         ...(l.durationMin ? { durationSec: l.durationMin * 60 } : {}),
+        ...(l.languageSkill ? { languageSkill: l.languageSkill } : {}),
       });
 
-      // Ảnh trong thân bài viết `asset:<tệp>`: tải lên rồi đổi thành đường dẫn thật.
-      const rl = await withBodyAssets(l, assetsDir, actor);
-      // Soạn bằng markdown nhưng lưu thành richtext: markdown render ở cỡ chữ
-      // nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
-      const items = lessonContentItems(rl);
-  if (vocabCtx) {
-    console.log(`\n✔ Giọng từ vựng (NEU TTS): ${vocabTotals.attached} từ có audio` + (vocabTotals.failed ? `, ${vocabTotals.failed} từ lỗi (không có nút nghe)` : ""));
-  }
-
-      for (const [ci, item] of items.entries()) {
-        await createContentItem(actor, lessonId, { ...item, orderIndex: ci });
-      }
-
-      for (const [pi, pr] of (l.practices ?? []).entries()) {
-        await importPractice(actor, lessonId, pr, items.length + pi, assetsDir);
-      }
-      for (const a of l.assignments ?? []) await importAssignment(actor, lessonId, a);
+      await populateLessonContent(actor, lessonId, l, assetsDir, populateCtx);
 
       if (l.quiz) {
         const { quizId } = await createQuiz(
@@ -1829,6 +2326,21 @@ async function main() {
 
       console.log(`  ✔ ${m.title} / ${l.title}`);
     }
+  }
+
+  if (dialogueTotals.uploaded) console.log(`\n✔ Audio hội thoại từ tệp: ${dialogueTotals.uploaded} lượt`);
+  if (dialogueCtx) {
+    console.log(`\n✔ Giọng hội thoại (NEU TTS): ${dialogueTotals.attached} lượt có audio` + (dialogueTotals.failed ? `, ${dialogueTotals.failed} lượt lỗi (không có nút nghe)` : ""));
+  }
+
+  if (vocabCtx) {
+    console.log(`\n✔ Giọng từ vựng (NEU TTS): ${vocabTotals.attached} từ có audio` + (vocabTotals.failed ? `, ${vocabTotals.failed} từ lỗi (không có nút nghe)` : ""));
+  }
+
+  // Cờ bản quyền bật SAU khi nội dung đã có đủ: bật xong thì quét cả khoá (kể cả video/audio trong Bài luyện).
+  if (manifest.course.protectedMedia) {
+    const r = await setCourseProtectedMedia(actor, course.courseId, true);
+    console.log(`✔ Học liệu có bản quyền: đã bảo vệ ${r.files} file học liệu bài học (audio kho đề được bảo vệ theo đề).`);
   }
 
   console.log(

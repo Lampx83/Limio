@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n/client";
 import { apiUrl } from "@/lib/apiUrl";
 
 interface AttemptInit {
@@ -36,6 +37,7 @@ export default function ScormPlayer({
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const apiInstalledRef = useRef(false);
+  const tx = useT();
   const [status, setStatus] = useState<string>("loading");
   const [error, setError] = useState<string | null>(null);
 
@@ -266,16 +268,16 @@ export default function ScormPlayer({
 
   if (error) {
     const errorMessages: Record<string, string> = {
-      attempt_init_failed_401: "Chưa đăng nhập",
-      attempt_init_failed_403: "Không có quyền truy cập",
-      attempt_init_failed: "Không thể tạo phiên làm bài",
-      scorm_lib_import_failed: "Không thể tải thư viện SCORM",
-      scorm_api_load_failed: "Không thể khởi tạo SCORM API",
+      attempt_init_failed_401: tx("learn.scorm.e401"),
+      attempt_init_failed_403: tx("learn.scorm.e403"),
+      attempt_init_failed: tx("learn.scorm.eInit"),
+      scorm_lib_import_failed: tx("learn.scorm.eLib"),
+      scorm_api_load_failed: tx("learn.scorm.eApi"),
     };
-    const msg = errorMessages[error] || `Lỗi: ${error}`;
+    const msg = errorMessages[error] || tx("learn.scorm.eGeneric", { error });
     return (
       <div className="rounded-lg border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">
-        ⚠️ {msg}. Hãy tải lại trang hoặc liên hệ hỗ trợ nếu lỗi vẫn tiếp tục.
+        ⚠️ {msg}{tx("learn.scorm.retry")}
       </div>
     );
   }
@@ -289,7 +291,7 @@ export default function ScormPlayer({
       <div className="flex items-center justify-between text-xs">
         <span className="text-faint">SCORM 1.2</span>
         <span className={isComplete ? "chip-success" : isLoading ? "chip" : "chip"}>
-          {isLoading ? "⏳ Đang tải..." : status}
+          {isLoading ? tx("learn.scorm.loading") : status}
         </span>
       </div>
       <div className="relative">
@@ -297,7 +299,7 @@ export default function ScormPlayer({
           <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/50 backdrop-blur-sm">
             <div className="text-center">
               <div className="animate-spin mb-2">⚙️</div>
-              <p className="text-xs text-muted">Đang khởi tạo...</p>
+              <p className="text-xs text-muted">{tx("learn.scorm.starting")}</p>
             </div>
           </div>
         )}

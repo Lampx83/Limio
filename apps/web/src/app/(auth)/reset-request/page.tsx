@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useT } from "@/lib/i18n/client";
 import { apiUrl } from "@/lib/apiUrl";
 
 export default function ResetRequestPage() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "submitting" | "ok">("idle");
 
@@ -30,16 +32,16 @@ export default function ResetRequestPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-brand-gradient text-lg font-bold text-white shadow-brand-glow">
                           </div>
             <h1 className="mt-4 h-display text-2xl font-bold">
-              Đặt lại mật khẩu
+              {t("auth.resetRequest.title")}
             </h1>
             <p className="mt-1 text-sm text-muted">
-              Nhập email — em sẽ gửi link đặt lại.
+              {t("auth.resetRequest.subtitle")}
             </p>
           </div>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div>
-              <label className="label" htmlFor="rr-email">Email</label>
+              <label className="label" htmlFor="rr-email">{t("auth.email")}</label>
               <input
                 id="rr-email"
                 type="email"
@@ -47,7 +49,7 @@ export default function ResetRequestPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                placeholder="ban@example.com"
+                placeholder={t("auth.emailPlaceholder")}
                 className="input mt-1.5"
               />
             </div>
@@ -56,19 +58,19 @@ export default function ResetRequestPage() {
               disabled={status !== "idle"}
               className="btn-primary w-full"
             >
-              {status === "submitting" ? "Đang gửi..." : "Gửi link đặt lại"}
+              {status === "submitting" ? t("auth.sending") : t("auth.resetRequest.submit")}
             </button>
             {status === "ok" && (
               <div className="rounded-lg border border-success-100 bg-success-50 px-3 py-2 text-sm text-success-700">
-                ✓ Nếu email này đã đăng ký, chúng tôi vừa gửi link đặt lại mật khẩu. Bạn kiểm tra hộp thư (cả mục thư rác) nhé.
+                {t("auth.resetRequest.sent")}
               </div>
             )}
           </form>
 
           <p className="mt-6 text-center text-sm text-muted">
-            Nhớ ra rồi?{" "}
+            {t("auth.resetRequest.rememberedQ")}{" "}
             <Link href="/signin" className="link font-medium">
-              Đăng nhập
+              {t("auth.signIn")}
             </Link>
           </p>
         </div>

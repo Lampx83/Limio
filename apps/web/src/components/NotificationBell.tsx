@@ -22,6 +22,9 @@ import {
 } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate } from "@/lib/datetime";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
+import type { TParams } from "@/lib/i18n/core";
 
 /** Sự kiện cửa sổ để nơi khác (vd. trang chủ giảng viên) mở chuông thông báo. */
 export const OPEN_NOTIFICATIONS_EVENT = "limio:open-notifications";
@@ -57,14 +60,14 @@ const ICON: Record<string, { Icon: typeof Bell; cls: string }> = {
   question:        { Icon: HelpCircle, cls: "bg-sky-100 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300" },
 };
 
-function relative(iso: string): string {
+function relative(iso: string, t: (key: MessageKey, params?: TParams) => string): string {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return "vừa xong";
-  if (m < 60) return `${m}p`;
+  if (m < 1) return t("notif.justNow");
+  if (m < 60) return t("notif.minutes", { n: m });
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h`;
+  if (h < 24) return t("notif.hours", { n: h });
   const d = Math.floor(h / 24);
-  if (d < 7) return `${d}n`;
+  if (d < 7) return t("notif.days", { n: d });
   return formatDate(iso);
 }
 
@@ -77,6 +80,7 @@ export default function NotificationBell({
   initialLastSeen: string | null;
   role?: "learner" | "instructor" | "admin" | "mentor";
 }) {
+  const t = useT();
   const qs = `?role=${role}`;
   const allHref =
     role === "instructor" ? "/instructor/notifications" : "/me/notifications";
@@ -154,7 +158,7 @@ export default function NotificationBell({
       <button
         type="button"
         onClick={toggle}
-        aria-label={unread > 0 ? `${unread} thông báo chưa đọc` : "Thông báo"}
+        aria-label={unread > 0 ? t("notif.unreadAria", { n: unread }) : t("notif.titleNone")}
         aria-expanded={open}
         className="relative flex h-9 w-9 items-center justify-center rounded-full text-[rgb(var(--text-muted))] transition-colors hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
       >
@@ -169,19 +173,19 @@ export default function NotificationBell({
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-[360px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-2xl">
           <header className="flex items-center justify-between border-b border-token px-4 py-3">
-            <p className="text-sm font-semibold">Thông báo</p>
+            <p className="text-sm font-semibold">{t("notif.titleNone")}</p>
             <Link
               href={allHref}
               onClick={() => setOpen(false)}
               className="text-xs text-brand-700 hover:underline dark:text-brand-300"
             >
-              Xem tất cả
+              {t("notif.viewAll")}
             </Link>
           </header>
 
           <div className="max-h-[60vh] overflow-y-auto">
             {loading && items === null ? (
-              <div className="p-6 text-center text-sm text-faint">Đang tải...</div>
+              <div className="p-6 text-center text-sm text-faint">{t("notif.loading")}</div>
             ) : items && items.length > 0 ? (
               <ul className="divide-y divide-token">
                 {items.map((n) => {
@@ -211,7 +215,7 @@ export default function NotificationBell({
                             </p>
                           )}
                           <p className="mt-0.5 text-[11px] text-faint">
-                            {relative(n.createdAt)}
+                            {relative(n.createdAt, t)}
                           </p>
                         </div>
                         {isNew && (
@@ -228,9 +232,9 @@ export default function NotificationBell({
             ) : (
               <div className="px-6 py-10 text-center">
                 <div className="text-3xl">🔕</div>
-                <p className="mt-3 text-sm font-medium">Chưa có thông báo</p>
+                <p className="mt-3 text-sm font-medium">{t("notif.empty")}</p>
                 <p className="mt-1 text-xs text-muted">
-                  Tin mới về bài tập, peer review, forum sẽ hiện ở đây.
+                  {t("notif.emptyHint")}
                 </p>
               </div>
             )}

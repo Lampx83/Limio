@@ -18,11 +18,13 @@ export function lessonBottomTabs(input: {
   tasksCount: number;
   tasksUndone: number;
   threadsCount: number;
+  /** Nhãn theo ngôn ngữ giao diện của người xem. */
+  labels: { tasks: string; forum: string };
 }): { tabs: BottomTab[]; defaultTab: TabKey } {
-  const { languageMode, tasksCount, tasksUndone, threadsCount } = input;
+  const { languageMode, tasksCount, tasksUndone, threadsCount, labels } = input;
   const tabs: BottomTab[] = [];
-  if (!languageMode || tasksCount > 0) tabs.push({ key: "tasks", label: "Bài tập", icon: "📝", count: tasksUndone });
-  if (!languageMode || threadsCount > 0) tabs.push({ key: "forum", label: "Thảo luận", icon: "💬", count: threadsCount });
+  if (!languageMode || tasksCount > 0) tabs.push({ key: "tasks", label: labels.tasks, icon: "📝", count: tasksUndone });
+  if (!languageMode || threadsCount > 0) tabs.push({ key: "forum", label: labels.forum, icon: "💬", count: threadsCount });
   const wanted: TabKey = tasksUndone > 0 ? "tasks" : "forum";
   const defaultTab = tabs.some((t) => t.key === wanted) ? wanted : (tabs[0]?.key ?? wanted);
   return { tabs, defaultTab };

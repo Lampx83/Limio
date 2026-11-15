@@ -5,6 +5,7 @@ import { LimioLearningLogo } from "@/components/BrandIcons";
 import { prisma } from "@feedbackme/db";
 import { getCourseProgress, isUserEnrolled, issueCertificate } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
+import { getT } from "@/lib/i18n/server";
 import { formatVN } from "@/lib/datetime";
 import CertificateCanvas from "./CertificateCanvas";
 import CertificateSeal from "./CertificateSeal";
@@ -21,6 +22,7 @@ export default async function CertificatePage({
 }: {
   params: { slug: string };
 }) {
+  const t = await getT();
   const session = await auth();
   if (!session?.user?.id) {
     redirect(`/signin?callbackUrl=/learn/${params.slug}/certificate`);
@@ -48,10 +50,10 @@ export default async function CertificatePage({
         </Link>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-6">
           <p className="text-sm font-semibold text-accent-700">
-            Bạn chưa hoàn thành khóa này ({progress.courseCompletionPct}%)
+            {t("learn.cert.incomplete", { pct: progress.courseCompletionPct })}
           </p>
           <p className="mt-2 text-sm text-accent-700/90">
-            Hãy hoàn thành tất cả bài học để nhận chứng nhận.
+            {t("learn.cert.incompleteHint")}
           </p>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/60">
             <div
@@ -285,7 +287,7 @@ export default async function CertificatePage({
 
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3 print:hidden">
         <a href={`/api/certificates/${params.slug}/pdf`} className="btn-primary">
-          Tải PDF
+          {t("learn.cert.downloadPdf")}
         </a>
         <a
           href={linkedinUrl}
@@ -293,10 +295,10 @@ export default async function CertificatePage({
           rel="noopener noreferrer"
           className="btn-secondary"
         >
-          Thêm vào LinkedIn
+          {t("learn.cert.linkedin")}
         </a>
         <Link href={`/verify/${certificate.certNumber}`} className="link text-sm">
-          Xem trang xác thực công khai →
+          {t("learn.cert.verifyPage")}
         </Link>
       </div>
     </main>

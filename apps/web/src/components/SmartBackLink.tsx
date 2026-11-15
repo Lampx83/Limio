@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * "← Quay lại" đưa người dùng về đúng trang họ vừa đến, thay vì một trang cố định.
@@ -11,13 +12,14 @@ import Link from "next/link";
  */
 export default function SmartBackLink({
   fallbackHref,
-  label = "Quay lại",
+  label,
   className = "link inline-flex items-center gap-1 text-sm",
 }: {
   fallbackHref: string;
   label?: string;
   className?: string;
 }) {
+  const t = useT();
   return (
     <Link
       href={fallbackHref}
@@ -34,7 +36,7 @@ export default function SmartBackLink({
         }
       }}
     >
-      ← {label}
+      ← {label ?? t("learn.back")}
     </Link>
   );
 }

@@ -1,3 +1,6 @@
+import { translate, type UiLang } from "@/lib/i18n/core";
+import { EN, VI } from "@/lib/i18n/dict";
+
 /**
  * LANG G7a.1 — ghi âm trong trình duyệt (MediaRecorder). Phần thuần: chọn định dạng, đồng hồ, lời nhắn lỗi.
  */
@@ -22,16 +25,16 @@ export function formatClock(totalSec: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }
 
-export function recorderErrorText(name: string): string {
+export function recorderErrorText(name: string, lang: UiLang = "vi"): string {
   switch (name) {
     case "NotAllowedError":
     case "SecurityError":
-      return "Chưa có quyền micro. Hãy cho phép trang này dùng micro (biểu tượng ổ khoá cạnh địa chỉ), hoặc tải file ghi âm lên thay thế.";
+      return translate(VI, EN, lang, "practice.rec.err.denied");
     case "NotFoundError":
-      return "Không tìm thấy micro trên thiết bị này. Hãy cắm micro hoặc tải file ghi âm lên thay thế.";
+      return translate(VI, EN, lang, "practice.rec.err.notFound");
     case "unsupported":
-      return "Trình duyệt này chưa hỗ trợ ghi âm trực tiếp. Hãy ghi âm bằng ứng dụng khác rồi tải file lên.";
+      return translate(VI, EN, lang, "practice.rec.err.unsupported");
     default:
-      return "Không bắt đầu được việc ghi âm. Hãy thử lại hoặc tải file ghi âm lên.";
+      return translate(VI, EN, lang, "practice.rec.err.other");
   }
 }

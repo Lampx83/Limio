@@ -25,11 +25,15 @@ import {
 } from "lucide-react";
 import { useAiTokensPageUnlocked, AI_TOKENS_HREF } from "./AiTokensPageContext";
 import { CENTER_LEARNER_HREF, LEARNER_GOALS_HREF } from "@/lib/centerAccess.constants";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
 
 export const STUDENT_MENU_TOGGLE_EVENT = "fbm:student-menu:toggle";
 
 type Item = {
   label: string;
+  /** Khoá dịch của nhãn; `label` (tiếng Việt) giữ cho test và làm khoá React. */
+  labelKey: MessageKey;
   href: string;
   icon: LucideIcon;
   // Hook cho HelpTour (components/HelpTour.tsx) highlight đúng mục nav.
@@ -39,6 +43,7 @@ type Item = {
 type Group = {
   id: string;
   label: string;
+  labelKey: MessageKey;
   items: Item[];
 };
 
@@ -55,39 +60,39 @@ export type StudentMenuFlags = {
 const GROUPS: Group[] = [
   {
     id: "learning",
-    label: "Học tập",
+    label: "Học tập", labelKey: "nav.group.learning",
     items: [
-      { label: "Khoá học của tôi", href: "/me/enrollments", icon: BookOpen, tourId: "help-tour-nav-courses" },
-      { label: "Lịch học", href: CENTER_LEARNER_HREF, icon: CalendarDays },
-      { label: "Mục tiêu", href: LEARNER_GOALS_HREF, icon: Target },
-      { label: "Ghi chú", href: "/me/notes", icon: Pencil, tourId: "help-tour-nav-notes" },
-      { label: "Kỹ năng", href: "/me/skills", icon: Brain, tourId: "help-tour-nav-skills" },
-      { label: "Huy hiệu", href: "/me/badges", icon: Award, tourId: "help-tour-nav-badges" },
-      { label: "e-Portfolio của tôi", href: "/me/portfolio", icon: FolderOpen, tourId: "help-tour-nav-portfolio" },
+      { label: "Khoá học của tôi", labelKey: "nav.myCourses", href: "/me/enrollments", icon: BookOpen, tourId: "help-tour-nav-courses" },
+      { label: "Lịch học", labelKey: "nav.schedule", href: CENTER_LEARNER_HREF, icon: CalendarDays },
+      { label: "Mục tiêu", labelKey: "nav.goals", href: LEARNER_GOALS_HREF, icon: Target },
+      { label: "Ghi chú", labelKey: "nav.notes", href: "/me/notes", icon: Pencil, tourId: "help-tour-nav-notes" },
+      { label: "Kỹ năng", labelKey: "nav.skills", href: "/me/skills", icon: Brain, tourId: "help-tour-nav-skills" },
+      { label: "Huy hiệu", labelKey: "nav.badges", href: "/me/badges", icon: Award, tourId: "help-tour-nav-badges" },
+      { label: "e-Portfolio của tôi", labelKey: "nav.portfolio", href: "/me/portfolio", icon: FolderOpen, tourId: "help-tour-nav-portfolio" },
     ],
   },
   {
     id: "feedback",
-    label: "Phản hồi",
+    label: "Phản hồi", labelKey: "nav.group.feedback",
     items: [
-      { label: "Chấm bài bạn học", href: "/me/reviews", icon: Star, tourId: "help-tour-nav-reviews" },
+      { label: "Chấm bài bạn học", labelKey: "nav.peerReview", href: "/me/reviews", icon: Star, tourId: "help-tour-nav-reviews" },
     ],
   },
   {
     id: "explore",
-    label: "Khám phá",
+    label: "Khám phá", labelKey: "nav.group.explore",
     items: [
-      { label: "Danh mục khoá học", href: "/catalog", icon: Compass, tourId: "help-tour-nav-catalog" },
-      { label: "Đấu trường", href: "/tournaments", icon: Trophy, tourId: "help-tour-nav-tournaments" },
-      { label: "Bảng xếp hạng", href: "/leaderboard", icon: BarChart3, tourId: "help-tour-nav-leaderboard" },
+      { label: "Danh mục khoá học", labelKey: "nav.catalog", href: "/catalog", icon: Compass, tourId: "help-tour-nav-catalog" },
+      { label: "Đấu trường", labelKey: "nav.tournaments", href: "/tournaments", icon: Trophy, tourId: "help-tour-nav-tournaments" },
+      { label: "Bảng xếp hạng", labelKey: "nav.leaderboard", href: "/leaderboard", icon: BarChart3, tourId: "help-tour-nav-leaderboard" },
     ],
   },
   {
     id: "account",
-    label: "Tài khoản",
+    label: "Tài khoản", labelKey: "nav.group.account",
     items: [
-      { label: "Token AI", href: "/me/ai-tokens", icon: Coins, tourId: "help-tour-nav-ai-tokens" },
-      { label: "Cài đặt", href: "/me/settings", icon: Settings, tourId: "help-tour-nav-settings" },
+      { label: "Token AI", labelKey: "nav.aiTokens", href: "/me/ai-tokens", icon: Coins, tourId: "help-tour-nav-ai-tokens" },
+      { label: "Cài đặt", labelKey: "nav.settings", href: "/me/settings", icon: Settings, tourId: "help-tour-nav-settings" },
     ],
   },
 ];
@@ -126,6 +131,7 @@ export default function StudentLeftMenu({
   /** Lớp có lịch hoặc đang có mục tiêu → hiện mục "Mục tiêu". */
   showGoals?: boolean;
 }) {
+  const t = useT();
   const tokensUnlocked = useAiTokensPageUnlocked();
   const { pathname, collapsed, toggle, pendingHref, linkProps } = useSidebarNav(LS_KEY);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -166,10 +172,10 @@ export default function StudentLeftMenu({
           </div>
           <div className="min-w-0">
             <div className="text-xs font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-              Khu vực
+              {t("nav.area")}
             </div>
             <div className="truncate text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-              Học viên
+              {t("nav.learnerArea")}
             </div>
           </div>
         </Link>
@@ -184,7 +190,7 @@ export default function StudentLeftMenu({
           >
             <PlayCircle size={18} strokeWidth={2.5} className="shrink-0" />
             <div className="min-w-0">
-              <div className="text-sm font-semibold leading-tight">Tiếp tục học</div>
+              <div className="text-sm font-semibold leading-tight">{t("nav.continue")}</div>
               <div className="truncate text-[11px] text-white/80">{continueTo.title}</div>
             </div>
           </Link>
@@ -202,7 +208,7 @@ export default function StudentLeftMenu({
               className="group flex w-full items-center gap-2 px-1 pt-3 pb-1.5 text-left"
             >
               <span className="flex-1 text-[11px] font-extrabold uppercase tracking-[0.14em] text-brand-700 dark:text-brand-400">
-                {g.label}
+                {t(g.labelKey)}
               </span>
               <ChevronRight
                 size={12}
@@ -235,7 +241,7 @@ export default function StudentLeftMenu({
                           className={`shrink-0 ${active ? "text-emerald-600 dark:text-emerald-300" : ""}`}
                           strokeWidth={active ? 2.5 : 2}
                         />
-                        <span className="flex-1 truncate">{it.label}</span>
+                        <span className="flex-1 truncate">{t(it.labelKey)}</span>
                         {badges[it.href] && badges[it.href]!.count > 0 && (
                           <span
                             className={`inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold text-white ${
@@ -245,7 +251,7 @@ export default function StudentLeftMenu({
                                   ? "bg-amber-500"
                                   : "bg-brand-600"
                             }`}
-                            aria-label={`${badges[it.href]!.count} mục cần xử lý`}
+                            aria-label={t("nav.pendingAria", { n: badges[it.href]!.count })}
                           >
                             {badges[it.href]!.count}
                           </span>
@@ -276,7 +282,7 @@ export default function StudentLeftMenu({
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              aria-label="Đóng menu"
+              aria-label={t("nav.close")}
               className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))]"
             >
               <X size={16} />

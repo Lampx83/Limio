@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { canAccessProtectedMedia, findProtectingCourseIds } from "@feedbackme/core-lms";
+import { canAccessProtectedMedia, findProtectingCourseIds, findProtectingCourseIdsForExamAsset } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { isSafeFilename } from "@/lib/storage-serve";
 
@@ -57,16 +57,20 @@ export type LessonMediaAccess =
   | { allowed: true; protected: boolean }
   | { allowed: false; response: NextResponse };
 
-export async function lessonMediaAccess(filename: string): Promise<LessonMediaAccess> {
-  let courseIds = recall(protectionCache, filename);
+/** `lesson`: file học liệu bài học (tra bảng); `exam`: file kho đề của khối Bài luyện (tra theo đề chủ). */
+export type MediaKind = "lesson" | "exam";
+
+export async function lessonMediaAccess(filename: string, kind: MediaKind = "lesson"): Promise<LessonMediaAccess> {
+  const cacheKey = kind === "lesson" ? filename : `exam:${filename}`;
+  let courseIds = recall(protectionCache, cacheKey);
   if (courseIds === undefined) {
     try {
-      courseIds = await findProtectingCourseIds(filename);
+      courseIds = kind === "lesson" ? await findProtectingCourseIds(filename) : await findProtectingCourseIdsForExamAsset(filename);
     } catch {
       // Không biết file có được bảo vệ không thì không phục vụ: đóng còn hơn lộ.
       return { allowed: false, response: new NextResponse("unavailable", { status: 503 }) };
     }
-    remember(protectionCache, filename, courseIds, PROTECTION_LOOKUP_TTL_MS);
+    remember(protectionCache, cacheKey, courseIds, PROTECTION_LOOKUP_TTL_MS);
   }
   if (courseIds.length === 0) return { allowed: true, protected: false };
 
@@ -93,10 +97,22 @@ type MediaHandler = (req: Request, ctx: { params: { file: string } }) => Promise
  * handler để nó tự trả 403 như trước (không tra bảng với chuỗi lạ).
  */
 export function guardedLessonMedia(handler: MediaHandler): MediaHandler {
+  return guardedMedia(handler, "lesson");
+}
+
+/**
+ * Bọc handler của `/api/exam-assets/[file]`: audio/ảnh của đề ẩn trong khối Bài luyện của khoá bản quyền chỉ
+ * mở cho người có quyền vào khoá. Đề thi thật không có chủ là khối bài học nên đi qua như trước.
+ */
+export function guardedExamAsset(handler: MediaHandler): MediaHandler {
+  return guardedMedia(handler, "exam");
+}
+
+function guardedMedia(handler: MediaHandler, kind: MediaKind): MediaHandler {
   return async (req, ctx) => {
     const file = ctx.params.file;
     if (!isSafeFilename(file)) return handler(req, ctx);
-    const access = await lessonMediaAccess(file);
+    const access = await lessonMediaAccess(file, kind);
     if (!access.allowed) return access.response;
     const res = await handler(req, ctx);
     if (access.protected && res.status < 400) res.headers.set("cache-control", PROTECTED_CACHE_CONTROL);

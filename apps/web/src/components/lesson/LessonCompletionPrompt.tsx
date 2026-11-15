@@ -6,6 +6,7 @@ import { Check, Headphones, Video, ListChecks, ScrollText } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
 import { heardPercent } from "@/lib/narration/deckCover";
 import { getNarrationState, subscribeNarration } from "@/lib/narration/store";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Top-of-lesson "what's left to complete" panel. Owns the auto-complete
@@ -27,6 +28,10 @@ interface AutoCompleteConfig {
   pendingActivityCount: number;
   totalActivityCount: number;
   requireScrollToEnd: boolean;
+  /** Bài có Bài luyện: phải bấm Kiểm tra mọi câu của các khối luyện (docs/tieu-chi/hoan-thanh-bai-theo-bai-luyen.md). Tuỳ chọn để trang cũ vẫn chạy. */
+  requirePractice?: boolean;
+  practiceTotal?: number;
+  practiceChecked?: number;
   /** Bài có màn hình bìa: phải nghe đủ lời giảng (docs/tieu-chi/bai-slide-man-hinh-bia.md, AC4). */
   requireListen: boolean;
   listenThresholdPct: number;
@@ -49,12 +54,14 @@ export default function LessonCompletionPrompt({
   inline?: boolean;
 }) {
   const router = useRouter();
+  const t = useT();
   const [completed, setCompleted] = useState(initiallyCompleted);
   // Video tracker: highest watched ratio across any video on the page.
   const [videoRatio, setVideoRatio] = useState(0);
   const [videoMet, setVideoMet] = useState(false);
   const activitiesMet =
     !autoComplete.requireAllActivities || autoComplete.pendingActivityCount === 0;
+  const practiceMet = !autoComplete.requirePractice || (autoComplete.practiceChecked ?? 0) >= (autoComplete.practiceTotal ?? 0);
   const [scrollMet, setScrollMet] = useState(false);
   const heardPct = useSyncExternalStore(subscribeNarration, heardPctSnapshot, () => 0);
   const listenMet = !autoComplete.requireListen || heardPct >= autoComplete.listenThresholdPct;
@@ -164,7 +171,7 @@ export default function LessonCompletionPrompt({
     const videoOK = !autoComplete.requireVideoWatch || videoMet;
     const activitiesOK = !autoComplete.requireAllActivities || activitiesMet;
     const scrollOK = !autoComplete.requireScrollToEnd || scrollMet;
-    if (!(videoOK && activitiesOK && scrollOK && listenMet)) return;
+    if (!(videoOK && activitiesOK && scrollOK && practiceMet && listenMet)) return;
     const reason: "watched_threshold" | "listened_threshold" | "all_activities_completed" | "scrolled_to_end" =
       autoComplete.requireListen
         ? "listened_threshold"
@@ -184,6 +191,7 @@ export default function LessonCompletionPrompt({
     completed,
     fireComplete,
     listenMet,
+    practiceMet,
     autoComplete.requireListen,
     scrollMet,
     videoMet,
@@ -211,6 +219,10 @@ export default function LessonCompletionPrompt({
   if (autoComplete.requireScrollToEnd) {
     progressFractions.push(scrollMet ? 1 : 0);
   }
+  if (autoComplete.requirePractice) {
+    const total = autoComplete.practiceTotal ?? 0;
+    progressFractions.push(total > 0 ? Math.min(1, (autoComplete.practiceChecked ?? 0) / total) : 1);
+  }
   if (autoComplete.requireListen) {
     // Cùng cách tính với video: so với ngưỡng yêu cầu.
     progressFractions.push(autoComplete.listenThresholdPct > 0 ? Math.min(1, heardPct / autoComplete.listenThresholdPct) : 1);
@@ -226,12 +238,12 @@ export default function LessonCompletionPrompt({
   const progressBar = (
     <div className={`flex items-center gap-3 ${inline ? "" : "mb-2"}`}>
       <p className="shrink-0 text-sm text-muted">
-        <span className="tabular-nums">{lessonProgressPct}%</span> hoàn thành bài học
+        <span className="tabular-nums">{lessonProgressPct}%</span> {t("learn.completion.percentDone")}
       </p>
       <div
         className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[rgb(var(--surface-muted))]"
         role="progressbar"
-        aria-label="Tiến độ bài học"
+        aria-label={t("learn.completion.progressAria")}
         aria-valuenow={lessonProgressPct}
         aria-valuemin={0}
         aria-valuemax={100}
@@ -263,7 +275,7 @@ export default function LessonCompletionPrompt({
     rows.push({
       key: "video",
       icon: <Video size={13} />,
-      label: "Video",
+      label: t("learn.completion.video"),
       detail: videoMet ? undefined : `${pct}%/${autoComplete.videoThresholdPct}%`,
       done: videoMet,
     });
@@ -272,7 +284,7 @@ export default function LessonCompletionPrompt({
     rows.push({
       key: "listen",
       icon: <Headphones size={13} />,
-      label: "Nghe giảng",
+      label: t("learn.completion.listen"),
       detail: listenMet ? undefined : `${heardPct}%/${autoComplete.listenThresholdPct}%`,
       done: listenMet,
     });
@@ -282,18 +294,27 @@ export default function LessonCompletionPrompt({
     rows.push({
       key: "activities",
       icon: <ListChecks size={13} />,
-      label: "Hoạt động",
+      label: t("learn.completion.activities"),
       detail: activitiesMet
         ? undefined
         : `${done}/${autoComplete.totalActivityCount}`,
       done: activitiesMet,
     });
   }
+  if (autoComplete.requirePractice) {
+    rows.push({
+      key: "practice",
+      icon: <ListChecks size={13} />,
+      label: t("learn.completion.practice"),
+      detail: practiceMet ? undefined : `${autoComplete.practiceChecked ?? 0}/${autoComplete.practiceTotal ?? 0}`,
+      done: practiceMet,
+    });
+  }
   if (autoComplete.requireScrollToEnd) {
     rows.push({
       key: "scroll",
       icon: <ScrollText size={13} />,
-      label: "Đọc hết bài",
+      label: t("learn.completion.readAll"),
       done: scrollMet,
     });
   }
@@ -314,10 +335,10 @@ export default function LessonCompletionPrompt({
             </span>
             <div>
               <p className="text-sm font-semibold text-success-800">
-                Hoàn thành bài học!
+                {t("learn.completion.done")}
               </p>
               <p className="text-xs text-success-700">
-                Đang lưu tiến độ và tải lại trang…
+                {t("learn.completion.saving")}
               </p>
             </div>
           </div>
@@ -336,7 +357,7 @@ export default function LessonCompletionPrompt({
   const chips = (
       <div className="flex flex-wrap items-center gap-2 text-sm">
       <span className="shrink-0 text-xs font-medium text-[rgb(var(--text-muted))]">
-        {allDone ? "Đang lưu…" : "Để hoàn thành bài:"}
+        {allDone ? t("learn.completion.savingShort") : t("learn.completion.toComplete")}
       </span>
       {rows.map((r) => (
         <span

@@ -41,7 +41,10 @@ export interface LanguageSkillRow {
   label: MasteryLabel;
   /** Số bài (học viên thấy được) thuộc kỹ năng này. */
   lessonsTotal: number;
-  /** Số bài trong đó đã có ít nhất một lượt trả lời. */
+  /**
+   * Số bài đã luyện: có trạng thái kỹ năng (BKT, từ quiz chấm tự động) HOẶC học viên đã trả lời ít nhất một câu của Bài luyện nhúng trong bài
+   * (hội thoại bạn ảo, phiếu bài tập). Bài luyện chưa nuôi BKT nên trước đây luyện nói/viết không làm thanh kỹ năng nhúc nhích.
+   */
   lessonsPracticed: number;
   /** CHỈ audience "instructor": trung bình mastery; null = chưa có lượt trả lời nào. */
   mastery?: number | null;
@@ -146,6 +149,15 @@ export async function getLanguageProfile(
     };
   });
 
+  // Bài luyện nhúng trong bài (đề ẩn có chủ là khối nội dung của bài): bài nào học viên đã trả lời ít nhất một câu thì tính là đã luyện.
+  const practiceSessions = await db.examPracticeSession.findMany({
+    where: { userId, answers: { some: {} }, exam: { ownerContentItem: { lessonId: { in: lessonIds } } } },
+    select: { exam: { select: { ownerContentItem: { select: { lessonId: true } } } } },
+  });
+  const practicedViaPractice = new Set(
+    practiceSessions.flatMap((s) => (s.exam.ownerContentItem ? [s.exam.ownerContentItem.lessonId] : [])),
+  );
+
   const states = await db.learnerSkillState.findMany({
     where: { userId, skillId: { in: [...skillLang.keys()] } },
     select: { skillId: true, masteryProbability: true, attempts: true },
@@ -169,7 +181,7 @@ export async function getLanguageProfile(
       skill,
       label,
       lessonsTotal: inSkill.length,
-      lessonsPracticed: inSkill.filter((l) => l.skillIds.some((id) => stateBySkill.has(id))).length,
+      lessonsPracticed: inSkill.filter((l) => practicedViaPractice.has(l.id) || l.skillIds.some((id) => stateBySkill.has(id))).length,
     };
     return { row: base, mastery, evidence };
   });

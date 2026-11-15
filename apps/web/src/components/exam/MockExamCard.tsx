@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { MockExamCard as MockExamCardData } from "@feedbackme/core-lms";
 import { LANGUAGE_SKILL_LABEL, isLanguageSkill } from "@feedbackme/shared-types";
+import { tFor } from "@/lib/i18n/tFor";
+import type { UiLang } from "@/lib/i18n/core";
 import { mockStatusText, practiceButtonLabel, practiceHref, practiceStatusText } from "@/lib/courseHomeView";
 
 /**
@@ -8,7 +10,8 @@ import { mockStatusText, practiceButtonLabel, practiceHref, practiceStatusText }
  * lưu ở bảng riêng). Dùng chung ở khối "Thi thử" của trang khoá và ở khối "Đề thi" trong bài học (docs/tieu-chi/bai-hoc-gan-de-thi.md) để hai nơi
  * luôn giống nhau. Thuần trình bày: nhận dữ liệu của `listMockExamsForLearner`.
  */
-export default function MockExamCard({ slug, exam: e, titleOverride }: { slug: string; exam: MockExamCardData; titleOverride?: string }) {
+export default function MockExamCard({ slug, exam: e, titleOverride, lang }: { slug: string; exam: MockExamCardData; titleOverride?: string; lang?: UiLang }) {
+  const t = tFor(lang);
   const a = e.attempt;
   const inProgress = a?.status === "in_progress";
   const href = `/learn/${slug}/exams/${e.examId}`;
@@ -22,7 +25,7 @@ export default function MockExamCard({ slug, exam: e, titleOverride }: { slug: s
       <div>
         <p className="text-body font-semibold">{titleOverride || e.title}</p>
         <p className="text-meta">
-          {e.sections.length} phần · {e.totalMinutes} phút
+          {t("learn.examCard.parts", { parts: e.sections.length, min: e.totalMinutes })}
         </p>
       </div>
       <ul className="mt-3 flex flex-wrap gap-1.5">
@@ -38,35 +41,35 @@ export default function MockExamCard({ slug, exam: e, titleOverride }: { slug: s
       <div className={`mt-4 grid gap-3 ${showMock && showPractice ? "sm:grid-cols-2" : ""}`}>
         {showMock && (
           <div className={colClass} data-testid="exam-col-mock">
-            <p className="text-sm font-semibold">Thi thử</p>
-            <p className="text-caption text-muted">Mô phỏng thi thật</p>
-            <p className="text-meta">{mockStatusText({ attempt: a, attemptCount: e.attemptCount })}</p>
+            <p className="text-sm font-semibold">{t("learn.examCard.mock")}</p>
+            <p className="text-caption text-muted">{t("learn.examCard.mockSub")}</p>
+            <p className="text-meta">{mockStatusText({ attempt: a, attemptCount: e.attemptCount }, lang)}</p>
             <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
               {a && !inProgress && (
                 <Link href={`${href}/${a.attemptId}/result`} className={`${btnBase} border border-token hover:bg-brand-soft`}>
-                  Xem kết quả
+                  {t("learn.examCard.viewResult")}
                 </Link>
               )}
               <Link
                 href={a && !inProgress ? `${href}?retake=1` : href}
                 className={`${btnBase} bg-brand-600 font-medium text-white hover:bg-brand-700`}
               >
-                {!a ? "Thi thử" : inProgress ? "Tiếp tục thi" : "Thi lại"}
+                {!a ? t("learn.examCard.mock") : inProgress ? t("learn.examCard.continueMock") : t("learn.examCard.retake")}
               </Link>
             </div>
           </div>
         )}
         {showPractice && (
           <div className={colClass} data-testid="exam-col-practice">
-            <p className="text-sm font-semibold">Luyện đề</p>
-            <p className="text-caption text-muted">Không bấm giờ, xem đáp án ngay</p>
-            <p className="text-meta">{practiceStatusText(e.practice)}</p>
+            <p className="text-sm font-semibold">{t("learn.examCard.practice")}</p>
+            <p className="text-caption text-muted">{t("learn.examCard.practiceSub")}</p>
+            <p className="text-meta">{practiceStatusText(e.practice, lang)}</p>
             <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
               <Link
                 href={practiceHref(slug, e.examId, e.practice)}
                 className={`${btnBase} border border-brand-300 bg-brand-soft font-medium text-brand-800 hover:bg-brand-100`}
               >
-                {practiceButtonLabel(e.practice)}
+                {practiceButtonLabel(e.practice, lang)}
               </Link>
             </div>
           </div>

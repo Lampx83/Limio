@@ -1,3 +1,6 @@
+import { translate, type UiLang } from "@/lib/i18n/core";
+import { EN, VI, type MessageKey } from "@/lib/i18n/dict";
+
 /**
  * Nhãn hiển thị cho siêu dữ liệu khoá học. Cột `Course.level` / `Course.language`
  * lưu mã ("beginner", "vi") — in thẳng ra là học viên thấy "beginner · vi".
@@ -14,11 +17,18 @@ export const COURSE_LANGUAGE_LABEL: Record<string, string> = {
   zh: "Tiếng Trung",
 };
 
-export function courseLevelLabel(level: string): string {
+/** `lang` mặc định "vi" — giữ nguyên hành vi cũ cho chỗ gọi không truyền; "en" lấy nhãn tiếng Anh từ dict catalog.*. */
+export function courseLevelLabel(level: string, lang: UiLang = "vi"): string {
+  if (lang === "en" && level in COURSE_LEVEL_LABEL) {
+    return translate(VI, EN, lang, `catalog.level.${level}` as MessageKey);
+  }
   return COURSE_LEVEL_LABEL[level] ?? level;
 }
 
-export function courseLanguageLabel(language: string): string {
+export function courseLanguageLabel(language: string, lang: UiLang = "vi"): string {
+  if (lang === "en" && language in COURSE_LANGUAGE_LABEL) {
+    return translate(VI, EN, lang, `catalog.language.${language}` as MessageKey);
+  }
   return COURSE_LANGUAGE_LABEL[language] ?? language;
 }
 
@@ -26,9 +36,9 @@ export function courseLanguageLabel(language: string): string {
  * Dòng nhỏ trên đầu trang khoá: trình độ, kèm ngôn ngữ khi khoá không dạy bằng
  * tiếng Việt (gần như mọi khoá là tiếng Việt — ghi ra chỉ thêm nhiễu).
  */
-export function courseMetaLine(level: string, language: string): string {
-  const parts = [courseLevelLabel(level)];
-  if (language !== "vi") parts.push(courseLanguageLabel(language));
+export function courseMetaLine(level: string, language: string, lang: UiLang = "vi"): string {
+  const parts = [courseLevelLabel(level, lang)];
+  if (language !== "vi") parts.push(courseLanguageLabel(language, lang));
   return parts.join(" · ");
 }
 

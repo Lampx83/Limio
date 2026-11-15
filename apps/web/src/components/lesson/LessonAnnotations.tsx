@@ -10,6 +10,11 @@ import {
   type CapturedAnchor,
 } from "@/lib/annotationAnchor";
 import DateTime from "@/components/ui/DateTime";
+import { useT } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
+import type { TParams } from "@/lib/i18n/core";
+
+type TFn = (key: MessageKey, params?: TParams) => string;
 
 /**
  * Bôi đen một cụm chữ trong bài → chuột phải → "Viết annotation" / "Hỏi AI".
@@ -83,12 +88,12 @@ function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(n, hi));
 }
 
-const ERROR_TEXT: Record<string, string> = {
-  not_enrolled: "Bạn cần ghi danh khoá học để ghi chú.",
-  too_many: "Bạn đã đạt số annotation tối đa cho bài này.",
-  not_published: "Hãy chia sẻ annotation với cả lớp trước khi trả lời.",
-  validation_failed: "Nội dung chưa hợp lệ — kiểm tra lại đoạn chọn và ghi chú.",
-  lesson_not_found: "Bài học này hiện chưa mở.",
+const ERROR_KEY: Record<string, MessageKey> = {
+  not_enrolled: "reader.ann.err.notEnrolled",
+  too_many: "reader.ann.err.tooMany",
+  not_published: "reader.ann.err.notPublished",
+  validation_failed: "reader.ann.err.validation",
+  lesson_not_found: "reader.ann.err.lessonNotFound",
 };
 
 async function api(
@@ -105,9 +110,9 @@ async function api(
   return { ok: res.ok, data };
 }
 
-function errText(data: Record<string, unknown>): string {
+function errText(data: Record<string, unknown>, t: TFn): string {
   const code = typeof data.error === "string" ? data.error : "unknown";
-  return ERROR_TEXT[code] ?? "Có lỗi xảy ra, thử lại sau.";
+  return t(ERROR_KEY[code] ?? "reader.ann.err.generic");
 }
 
 export default function LessonAnnotations({
@@ -125,6 +130,7 @@ export default function LessonAnnotations({
   canModerate: boolean;
   aiEnabled: boolean;
 }) {
+  const t = useT();
   const [items, setItems] = useState<Annotation[]>([]);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [composer, setComposer] = useState<{ anchor: CapturedAnchor; x: number; y: number } | null>(null);
@@ -379,7 +385,7 @@ export default function LessonAnnotations({
           markers.map((m) => {
             const a = items.find((x) => x.id === m.id);
             if (!a) return null;
-            const name = a.mine ? "Bạn" : a.author.displayName;
+            const name = a.mine ? t("reader.ann.you") : a.author.displayName;
             const kind = !a.mine ? "others" : a.visibility === "published" ? "shared" : "private";
             const tone = {
               private: "border-amber-300 bg-amber-100/80 text-amber-900",
@@ -401,8 +407,8 @@ export default function LessonAnnotations({
                   setComposer(null);
                   setThread({ id: m.id, x: e.clientX, y: e.clientY });
                 }}
-                title={`${name}${kind === "private" ? " · riêng tư" : ""}${replies ? ` · ${replies} trả lời` : ""}`}
-                aria-label={`Annotation của ${name}${replies ? `, ${replies} trả lời` : ""}. Bấm để mở`}
+                title={`${name}${kind === "private" ? t("reader.ann.marker.private") : ""}${replies ? t("reader.ann.marker.replies", { n: replies }) : ""}`}
+                aria-label={`${t("reader.ann.marker.aria", { name })}${replies ? t("reader.ann.marker.ariaReplies", { n: replies }) : ""}${t("reader.ann.marker.ariaOpen")}`}
                 className={`pointer-events-auto absolute left-2 flex h-6 max-w-[calc(100%-0.5rem)] items-center gap-1 rounded-full border px-1.5 text-[11px] font-medium leading-none shadow-sm transition-shadow hover:shadow-md ${tone} ${
                   thread?.id === m.id ? "ring-2 ring-brand-500" : ""
                 }`}
@@ -420,7 +426,7 @@ export default function LessonAnnotations({
         <div
           ref={menuRef}
           role="menu"
-          aria-label="Thao tác với đoạn đã chọn"
+          aria-label={t("reader.ann.menu.aria")}
           // Giữ nguyên vùng bôi đen khi bấm vào menu.
           onMouseDown={(e) => e.preventDefault()}
           className="fixed z-50 rounded-xl border border-token bg-[rgb(var(--surface))] p-1 shadow-card-hover animate-fade-in-up"
@@ -439,10 +445,10 @@ export default function LessonAnnotations({
           >
             <MessageSquarePlus size={16} className="mt-0.5 shrink-0 text-brand-600" />
             <span>
-              <span className="block font-medium">Viết annotation</span>
+              <span className="block font-medium">{t("reader.ann.menu.write")}</span>
               {!menu.anchor && (
                 <span className="block text-xs text-faint">
-                  Hãy chọn trong cùng một đoạn nội dung
+                  {t("reader.ann.menu.sameBlock")}
                 </span>
               )}
             </span>
@@ -455,7 +461,7 @@ export default function LessonAnnotations({
               className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-[rgb(var(--surface-muted))]"
             >
               <Sparkles size={16} className="shrink-0 text-brand-600" />
-              <span className="font-medium">Hỏi AI về đoạn này</span>
+              <span className="font-medium">{t("reader.ann.menu.askAi")}</span>
             </button>
           )}
         </div>
@@ -578,6 +584,7 @@ function Composer({
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
+  const t = useT();
   const [body, setBody] = useState("");
   const [published, setPublished] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -594,25 +601,25 @@ function Composer({
         published,
       });
       if (!ok) {
-        setError(errText(data));
+        setError(errText(data, t));
         setSaving(false);
         return;
       }
       await onSaved();
     } catch {
-      setError("Không kết nối được máy chủ.");
+      setError(t("reader.ann.err.network"));
       setSaving(false);
     }
   }
 
   return (
-    <FloatingCard x={x} y={y} label="Viết annotation" onClose={onClose}>
+    <FloatingCard x={x} y={y} label={t("reader.ann.menu.write")} onClose={onClose}>
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-semibold">Annotation mới</p>
+        <p className="text-sm font-semibold">{t("reader.ann.new")}</p>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Đóng"
+          aria-label={t("reader.ann.close")}
           className="rounded-full p-1 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
         >
           <X size={16} />
@@ -631,7 +638,7 @@ function Composer({
         }}
         rows={3}
         maxLength={2000}
-        placeholder="Bạn nghĩ gì về đoạn này?"
+        placeholder={t("reader.ann.placeholder")}
         className="textarea mt-3 resize-none"
       />
       <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm">
@@ -642,20 +649,20 @@ function Composer({
           className="mt-0.5 h-4 w-4 rounded border-token"
         />
         <span>
-          <span className="font-medium">Chia sẻ với cả lớp</span>
+          <span className="font-medium">{t("reader.ann.shareClass")}</span>
           <span className="block text-xs text-faint">
             {published
-              ? "Mọi người trong khoá sẽ thấy và trả lời được annotation này."
-              : "Chỉ mình bạn thấy. Có thể chia sẻ sau."}
+              ? t("reader.ann.shareOnHint")
+              : t("reader.ann.shareOffHint")}
           </span>
         </span>
       </label>
       {error && <p className="mt-2 text-xs text-danger-700">{error}</p>}
       <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-[11px] text-faint">Ctrl/⌘ + Enter để lưu</span>
+        <span className="text-[11px] text-faint">{t("reader.ann.saveHint")}</span>
         <div className="flex gap-2">
           <button type="button" onClick={onClose} className="btn-sm rounded-lg px-3 text-muted hover:bg-[rgb(var(--surface-muted))]">
-            Huỷ
+            {t("reader.ann.cancel")}
           </button>
           <button
             type="button"
@@ -663,7 +670,7 @@ function Composer({
             disabled={!body.trim() || saving}
             className="btn-sm rounded-lg bg-brand-600 px-4 font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
-            {saving ? "Đang lưu…" : "Lưu"}
+            {saving ? t("reader.ann.saving") : t("reader.ann.save")}
           </button>
         </div>
       </div>
@@ -690,6 +697,7 @@ function Thread({
   onChanged: () => void | Promise<void>;
   onDeleted: () => void | Promise<void>;
 }) {
+  const t = useT();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(a.body);
   const [reply, setReply] = useState("");
@@ -704,10 +712,10 @@ function Thread({
     setError(null);
     try {
       const r = await fn();
-      if (!r.ok) setError(errText(r.data));
+      if (!r.ok) setError(errText(r.data, t));
       else await after();
     } catch {
-      setError("Không kết nối được máy chủ.");
+      setError(t("reader.ann.err.network"));
     }
     setBusy(false);
   }
@@ -715,24 +723,24 @@ function Thread({
   const canDelete = a.mine || (canModerate && published);
 
   return (
-    <FloatingCard x={x} y={y} label="Annotation" onClose={onClose}>
+    <FloatingCard x={x} y={y} label={t("reader.ann.thread")} onClose={onClose}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{a.mine ? "Bạn" : a.author.displayName}</p>
+          <p className="truncate text-sm font-semibold">{a.mine ? t("reader.ann.you") : a.author.displayName}</p>
           <p className="flex items-center gap-1.5 text-xs text-faint">
             <DateTime value={a.createdAt} format="relative" />
             <span aria-hidden>·</span>
             {published ? (
-              <span className="inline-flex items-center gap-1"><Globe size={11} /> Cả lớp</span>
+              <span className="inline-flex items-center gap-1"><Globe size={11} /> {t("reader.ann.wholeClass")}</span>
             ) : (
-              <span className="inline-flex items-center gap-1"><Lock size={11} /> Riêng tư</span>
+              <span className="inline-flex items-center gap-1"><Lock size={11} /> {t("reader.ann.private")}</span>
             )}
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Đóng"
+          aria-label={t("reader.ann.close")}
           className="rounded-full p-1 text-faint hover:bg-[rgb(var(--surface-muted))] hover:text-[rgb(var(--text))]"
         >
           <X size={16} />
@@ -755,7 +763,7 @@ function Thread({
           />
           <div className="mt-2 flex justify-end gap-2">
             <button type="button" onClick={() => { setEditing(false); setDraft(a.body); }} className="btn-sm rounded-lg px-3 text-muted hover:bg-[rgb(var(--surface-muted))]">
-              Huỷ
+              {t("reader.ann.cancel")}
             </button>
             <button
               type="button"
@@ -768,7 +776,7 @@ function Thread({
               }
               className="btn-sm rounded-lg bg-brand-600 px-4 font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
             >
-              Lưu
+              {t("reader.ann.save")}
             </button>
           </div>
         </div>
@@ -781,7 +789,7 @@ function Thread({
           {a.mine && (
             <>
               <button type="button" onClick={() => setEditing(true)} className="inline-flex items-center gap-1 rounded-lg border border-token px-2.5 py-1 text-xs hover:bg-[rgb(var(--surface-muted))]">
-                <Pencil size={12} /> Sửa
+                <Pencil size={12} /> {t("reader.ann.edit")}
               </button>
               <button
                 type="button"
@@ -794,7 +802,7 @@ function Thread({
                 }
                 className="inline-flex items-center gap-1 rounded-lg border border-token px-2.5 py-1 text-xs hover:bg-[rgb(var(--surface-muted))] disabled:opacity-50"
               >
-                {published ? <><Lock size={12} /> Chuyển về riêng tư</> : <><Globe size={12} /> Chia sẻ với cả lớp</>}
+                {published ? <><Lock size={12} /> {t("reader.ann.makePrivate")}</> : <><Globe size={12} /> {t("reader.ann.shareClass")}</>}
               </button>
             </>
           )}
@@ -804,14 +812,14 @@ function Thread({
               disabled={busy}
               onClick={() => {
                 const msg = a.mine
-                  ? "Xoá annotation này? Các trả lời bên dưới cũng bị xoá."
-                  : "Gỡ annotation công khai này khỏi bài?";
+                  ? t("reader.ann.confirmDelete")
+                  : t("reader.ann.confirmRemove");
                 if (!window.confirm(msg)) return;
                 void run(() => api(base, "DELETE"), onDeleted);
               }}
               className="inline-flex items-center gap-1 rounded-lg border border-token px-2.5 py-1 text-xs text-danger-700 hover:bg-danger-50 disabled:opacity-50"
             >
-              <Trash2 size={12} /> {a.mine ? "Xoá" : "Gỡ"}
+              <Trash2 size={12} /> {a.mine ? t("reader.ann.delete") : t("reader.ann.remove")}
             </button>
           )}
         </div>
@@ -825,16 +833,16 @@ function Thread({
                 <li key={r.id} className="text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-xs">
-                      <span className="font-semibold">{r.mine ? "Bạn" : r.author.displayName}</span>{" "}
+                      <span className="font-semibold">{r.mine ? t("reader.ann.you") : r.author.displayName}</span>{" "}
                       <span className="text-faint"><DateTime value={r.createdAt} format="relative" /></span>
                     </p>
                     {(r.mine || canModerate) && (
                       <button
                         type="button"
-                        aria-label="Xoá trả lời"
+                        aria-label={t("reader.ann.deleteReply")}
                         disabled={busy}
                         onClick={() => {
-                          if (!window.confirm("Xoá trả lời này?")) return;
+                          if (!window.confirm(t("reader.ann.confirmDeleteReply"))) return;
                           void run(
                             () => api(`${base}/replies/${r.id}`, "DELETE"),
                             onChanged,
@@ -863,13 +871,13 @@ function Thread({
               }}
               rows={1}
               maxLength={2000}
-              placeholder="Trả lời…"
+              placeholder={t("reader.ann.replyPlaceholder")}
               className="textarea min-h-[38px] flex-1 resize-none"
             />
             <button
               id={`reply-send-${a.id}`}
               type="button"
-              aria-label="Gửi trả lời"
+              aria-label={t("reader.ann.sendReply")}
               disabled={!reply.trim() || busy}
               onClick={() =>
                 run(
@@ -885,7 +893,7 @@ function Thread({
         </div>
       ) : (
         <p className="mt-3 text-xs text-faint">
-          Chia sẻ annotation với cả lớp để mọi người cùng trả lời.
+          {t("reader.ann.shareToReply")}
         </p>
       )}
       {error && <p className="mt-2 text-xs text-danger-700">{error}</p>}

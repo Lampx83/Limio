@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Nút "Đấu trường" trên thanh đầu trang. Ẩn khi học viên đang thi: đường dẫn
@@ -19,6 +20,7 @@ export function isExamPath(pathname: string): boolean {
 }
 
 export default function TournamentCta({ activeRole }: { activeRole: string }) {
+  const t = useT();
   const pathname = usePathname() ?? "";
   if (isExamPath(pathname)) return null;
   return (
@@ -31,7 +33,7 @@ export default function TournamentCta({ activeRole }: { activeRole: string }) {
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
         <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
       </span>
-      🏆 Đấu trường
+      🏆 {t("header.tournament")}
     </Link>
   );
 }

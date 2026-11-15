@@ -1,4 +1,7 @@
-import { CATEGORY_LABEL, CRITERION_LABEL, LEVEL_LABEL } from "@/lib/writingFeedbackText";
+"use client";
+
+import { categoryLabel, criterionLabel, levelLabel } from "@/lib/writingFeedbackText";
+import { useT, useUiLang } from "@/lib/i18n/client";
 
 export interface WritingFeedbackBody {
   summary: string;
@@ -20,21 +23,22 @@ export default function WritingFeedbackView({
   review: "unreviewed" | "approved";
   reviewerNote?: string | null;
 }) {
+  const t = useT();
+  const lang = useUiLang();
   return (
     <div className="space-y-4" data-testid="writing-feedback-view">
       {review === "unreviewed" ? (
         <p className="banner-warning text-sm" role="note">
-          <b>Chưa được giảng viên duyệt.</b> Góp ý này do AI tạo nên có thể sai hoặc chưa phù hợp — hãy đối chiếu với giáo
-          trình và hỏi giảng viên khi nghi ngờ.
+          <b>{t("practice.wf.v.unrevB")}</b> {t("practice.wf.v.unrev")}
         </p>
       ) : (
         <p className="banner-success text-sm" role="note">
-          <b>Giảng viên đã duyệt</b> góp ý này.
+          <b>{t("practice.wf.v.apprB")}</b> {t("practice.wf.v.appr")}
         </p>
       )}
       {review === "approved" && reviewerNote && (
         <p className="rounded border border-token px-3 py-2 text-sm">
-          <span className="font-medium">Ghi chú của giảng viên: </span>
+          <span className="font-medium">{t("practice.wf.v.reviewerNote")}</span>
           {reviewerNote}
         </p>
       )}
@@ -42,13 +46,13 @@ export default function WritingFeedbackView({
       {body.summary && <p className="text-body">{body.summary}</p>}
 
       {body.criteria.length > 0 && (
-        <ul className="grid gap-2 sm:grid-cols-2" aria-label="Các tiêu chí">
+        <ul className="grid gap-2 sm:grid-cols-2" aria-label={t("practice.wf.v.criteriaAria")}>
           {body.criteria.map((c) => {
-            const lv = LEVEL_LABEL[c.level];
+            const lv = levelLabel(c.level, lang);
             return (
               <li key={c.key} className="rounded border border-token px-3 py-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{CRITERION_LABEL[c.key] ?? c.key}</span>
+                  <span className="font-medium">{criterionLabel(c.key, lang)}</span>
                   {lv && <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${lv.cls}`}>{lv.text}</span>}
                 </div>
                 {c.comment && <p className="text-meta mt-1">{c.comment}</p>}
@@ -58,16 +62,16 @@ export default function WritingFeedbackView({
         </ul>
       )}
 
-      <section aria-label="Các lỗi cần sửa">
-        <h4 className="text-sm font-semibold">Lỗi cần sửa ({body.errors.length})</h4>
+      <section aria-label={t("practice.wf.v.errorsAria")}>
+        <h4 className="text-sm font-semibold">{t("practice.wf.v.errorsTitle", { n: body.errors.length })}</h4>
         {body.errors.length === 0 ? (
-          <p className="text-meta mt-1">Không thấy lỗi nào cần sửa trong bài này.</p>
+          <p className="text-meta mt-1">{t("practice.wf.v.noErrors")}</p>
         ) : (
           <ul className="mt-2 space-y-2">
             {body.errors.map((e) => (
               <li key={e.id} className="rounded border border-token px-3 py-2 text-sm">
                 <span className="mb-1 inline-block rounded bg-[rgb(var(--surface-muted))] px-2 py-0.5 text-xs text-muted">
-                  {CATEGORY_LABEL[e.category] ?? e.category}
+                  {categoryLabel(e.category, lang)}
                 </span>
                 <p>
                   <span className="rounded bg-red-50 px-1 text-red-800 line-through decoration-red-400">{e.quote}</span>
@@ -82,8 +86,8 @@ export default function WritingFeedbackView({
       </section>
 
       {body.nextSteps.length > 0 && (
-        <section aria-label="Nên luyện tiếp">
-          <h4 className="text-sm font-semibold">Nên luyện tiếp</h4>
+        <section aria-label={t("practice.wf.v.next")}>
+          <h4 className="text-sm font-semibold">{t("practice.wf.v.next")}</h4>
           <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
             {body.nextSteps.map((s, i) => (
               <li key={i}>{s}</li>

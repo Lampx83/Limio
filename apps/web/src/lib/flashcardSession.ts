@@ -6,6 +6,8 @@ import {
 } from "@feedbackme/shared-types";
 import type { QueueCard } from "@feedbackme/core-feedback";
 import { apiUrl } from "@/lib/apiUrl";
+import { translate, type UiLang } from "@/lib/i18n/core";
+import { EN, VI } from "@/lib/i18n/dict";
 
 /**
  * LANG G4 — điều khiển phiên ôn flashcard ở máy khách. Tách khỏi component để thử
@@ -58,11 +60,11 @@ export function ratingForKey(key: string): FlashcardRating | null {
 }
 
 /** Nhãn khoảng ôn tới trên nút: ngày → tuần → tháng → năm. */
-export function formatInterval(days: number): string {
-  if (days < 7) return `${days} ngày`;
-  if (days < 30) return `${Math.round(days / 7)} tuần`;
-  if (days < 365) return `${Math.round(days / 30)} tháng`;
-  return "1 năm";
+export function formatInterval(days: number, lang: UiLang = "vi"): string {
+  if (days < 7) return translate(VI, EN, lang, "practice.fc.interval.days", { n: days });
+  if (days < 30) return translate(VI, EN, lang, "practice.fc.interval.weeks", { n: Math.round(days / 7) });
+  if (days < 365) return translate(VI, EN, lang, "practice.fc.interval.months", { n: Math.round(days / 30) });
+  return translate(VI, EN, lang, "practice.fc.interval.year");
 }
 
 /** Số thẻ một phiên hôm nay có thể lấy: đến hạn + thẻ mới còn được ôn, tối đa 20. */

@@ -5,7 +5,7 @@ import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { AiGenerationError } from "../aiTutor/generators";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
-import { requestPracticeAnswerFeedback, transcribePracticeVoice } from "../practiceAnswer/feedback";
+import { requestPracticeAnswerFeedback, transcribePracticeVoice, transcribePreviewVoice } from "../practiceAnswer/feedback";
 import type { Transcriber } from "../speaking/feedback";
 import { measureSpeech } from "../speaking/analysis";
 
@@ -486,5 +486,40 @@ describe("transcribePracticeVoice", () => {
     const f = await fx({ variant: "minimal" });
     await expect(run(f, { transcribe: fakeStt().transcribe })).resolves.toMatchObject({ text: SPOKEN });
     await expect(ask(f, fakeOpenAI().openai)).rejects.toMatchObject({ code: "control_group" });
+  });
+});
+
+describe("transcribePreviewVoice (xem thử của giảng viên)", () => {
+  const audio = { buffer: Buffer.alloc(1000, 1), mimeType: "audio/webm" };
+  const transcribe: Transcriber = async () => ({
+    text: SPOKEN,
+    durationSec: 40,
+    words: Array.from({ length: 16 }, (_, i) => ({ start: 2 + i * 0.7, end: 2 + i * 0.7 + 0.5 })),
+  });
+
+  it("chuyển chữ với ngôn ngữ truyền vào, trừ ví của NGƯỜI NÓI (giảng viên), không cần buổi luyện và không ghi buổi hay đáp án", async () => {
+    const f = await fx({ answer: null });
+    const sessionsBefore = await prisma.examPracticeSession.count();
+    const before = await getTokenBudget(f.otherUserId);
+    const r = await transcribePreviewVoice({ userId: f.otherUserId, language: "en", audio }, { openai: fakeOpenAI().openai, transcribe });
+    expect(r.text).toBe(SPOKEN);
+    expect(before.total - (await getTokenBudget(f.otherUserId)).total).toBe(4000);
+    expect(await prisma.examPracticeSession.count()).toBe(sessionsBefore);
+    expect(await prisma.examPracticeAnswer.count({ where: { sessionId: f.sessionId } })).toBe(0);
+  });
+
+  it("tệp rỗng, quá lớn và hết hạn mức bị chặn trước khi gọi Whisper", async () => {
+    const f = await fx({ answer: null });
+    let called = 0;
+    const counting: Transcriber = async (a, o) => {
+      called++;
+      return transcribe(a, o);
+    };
+    const deps = { openai: fakeOpenAI().openai, transcribe: counting };
+    await expect(transcribePreviewVoice({ userId: f.otherUserId, language: "en", audio: { buffer: Buffer.alloc(0), mimeType: "audio/webm" } }, deps)).rejects.toMatchObject({ code: "no_speech" });
+    await expect(transcribePreviewVoice({ userId: f.otherUserId, language: "en", audio: { buffer: Buffer.alloc(30 * 1024 * 1024, 1), mimeType: "audio/webm" } }, deps)).rejects.toMatchObject({ code: "audio_too_large" });
+    await chargeTokens(f.otherUserId, 10_000_000, null);
+    await expect(transcribePreviewVoice({ userId: f.otherUserId, language: "en", audio }, deps)).rejects.toBeInstanceOf(AiTutorError);
+    expect(called).toBe(0);
   });
 });

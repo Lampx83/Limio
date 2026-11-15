@@ -3,6 +3,7 @@
 import { Podcast } from "lucide-react";
 import { NarrationWave } from "./NarrationAvatar";
 import "./narration.css";
+import { useUiLang } from "@/lib/i18n/client";
 import { minutesLabel } from "@/lib/narration/learner";
 import { narrationCommands, useNarration } from "@/lib/narration/store";
 
@@ -12,6 +13,7 @@ import { narrationCommands, useNarration } from "@/lib/narration/store";
  */
 export default function PodcastButton({ durationSec, title }: { durationSec: number; title: string }) {
   const ui = useNarration();
+  const lang = useUiLang();
   const active = ui.open && ui.kind === "podcast";
   return (
     <button
@@ -28,7 +30,7 @@ export default function PodcastButton({ durationSec, title }: { durationSec: num
       <span className="listen-icon">{active && ui.playing ? <NarrationWave playing /> : <Podcast size={18} />}</span>
       <span className="listen-label">
         <span>Podcast</span>
-        <small>{minutesLabel(durationSec)}</small>
+        <small>{minutesLabel(durationSec, lang)}</small>
       </span>
     </button>
   );

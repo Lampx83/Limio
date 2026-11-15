@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { useT } from "@/lib/i18n/client";
 
 export default function FeedbackRater({
   deliveryId,
@@ -10,6 +11,7 @@ export default function FeedbackRater({
   deliveryId: string;
   initialRating: number | null;
 }) {
+  const t = useT();
   const [rating, setRating] = useState<number | null>(initialRating);
   const [busy, setBusy] = useState(false);
 
@@ -29,11 +31,11 @@ export default function FeedbackRater({
 
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-xs font-medium text-faint">Hữu ích?</span>
+      <span className="text-xs font-medium text-faint">{t("ai.rate.prompt")}</span>
       <button
         onClick={() => rate(5)}
         disabled={busy}
-        title="Hữu ích"
+        title={t("ai.rate.up")}
         className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
           isUp
             ? "bg-success-100 ring-1 ring-success-400"
@@ -44,7 +46,7 @@ export default function FeedbackRater({
       <button
         onClick={() => rate(1)}
         disabled={busy}
-        title="Không hữu ích"
+        title={t("ai.rate.down")}
         className={`flex h-7 w-7 items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
           isDown
             ? "bg-accent-100 ring-1 ring-accent-400"

@@ -7,6 +7,11 @@
  */
 
 /** done = đã trả lời và (nếu bắt buộc) đã chọn độ tự tin; câu này được lưu và tính điểm. */
+import { translate, type TParams, type UiLang } from "@/lib/i18n/core";
+import { EN, VI, type MessageKey } from "@/lib/i18n/dict";
+
+const tr = (lang: UiLang, key: MessageKey, params?: TParams) => translate(VI, EN, lang, key, params);
+
 export type QuestionStatus = "done" | "needs-confidence" | "empty";
 
 export function questionStatus(input: {
@@ -19,11 +24,11 @@ export function questionStatus(input: {
   return "done";
 }
 
-/** [3] → "3"; [3, 5] → "3 và 5"; [3, 5, 7] → "3, 5 và 7". */
-export function joinNumbers(nums: number[]): string {
+/** [3] → "3"; [3, 5] → "3 và 5"; [3, 5, 7] → "3, 5 và 7" (en: "3 and 5"). */
+export function joinNumbers(nums: number[], lang: UiLang = "vi"): string {
   if (nums.length === 0) return "";
   if (nums.length === 1) return String(nums[0]);
-  return `${nums.slice(0, -1).join(", ")} và ${nums[nums.length - 1]}`;
+  return tr(lang, "practice.quiz.joinAnd", { list: nums.slice(0, -1).join(", "), last: nums[nums.length - 1]! });
 }
 
 /**
@@ -37,23 +42,21 @@ export function submitWarning(input: {
   empty: number[];
   needsConfidence: number[];
   flagged: number[];
-}): string | null {
+}, lang: UiLang = "vi"): string | null {
   const { empty, needsConfidence, flagged } = input;
   if (empty.length === 0 && needsConfidence.length === 0 && flagged.length === 0) return null;
 
   const lines: string[] = [];
   if (empty.length > 0) {
-    lines.push(`• Câu ${joinNumbers(empty)} bạn chưa trả lời.`);
+    lines.push(tr(lang, "practice.quiz.warn.empty", { nums: joinNumbers(empty, lang) }));
   }
   if (needsConfidence.length > 0) {
-    lines.push(
-      `• Câu ${joinNumbers(needsConfidence)} bạn đã chọn đáp án nhưng chưa chọn độ tự tin, nên chưa được lưu và sẽ tính là bỏ trống.`,
-    );
+    lines.push(tr(lang, "practice.quiz.warn.needsConfidence", { nums: joinNumbers(needsConfidence, lang) }));
   }
   if (flagged.length > 0) {
-    lines.push(`• Câu ${joinNumbers(flagged)} bạn đã đánh dấu để xem lại.`);
+    lines.push(tr(lang, "practice.quiz.warn.flagged", { nums: joinNumbers(flagged, lang) }));
   }
-  return `Trước khi nộp, bạn kiểm tra lại:\n${lines.join("\n")}\n\nNộp bài xong thì không sửa lại được. Bạn vẫn muốn nộp?`;
+  return tr(lang, "practice.quiz.warn.submit", { lines: lines.join("\n") });
 }
 
 /**
@@ -61,11 +64,11 @@ export function submitWarning(input: {
  * hoặc vừa chọn xong chưa kịp lưu). Null nếu mọi câu đã chọn đều đã lưu: lượt làm bài
  * vẫn còn, người học vào lại là làm tiếp.
  */
-export function leaveWarning(unsavedNumbers: number[]): string | null {
+export function leaveWarning(unsavedNumbers: number[], lang: UiLang = "vi"): string | null {
   if (unsavedNumbers.length === 0) return null;
-  return `Câu ${joinNumbers(unsavedNumbers)} chưa được lưu. Nếu rời đi bây giờ, ${
-    unsavedNumbers.length === 1 ? "câu đó" : "những câu đó"
-  } sẽ không còn khi bạn quay lại. Bạn vẫn muốn rời đi?`;
+  return tr(lang, unsavedNumbers.length === 1 ? "practice.quiz.warn.leaveOne" : "practice.quiz.warn.leaveMany", {
+    nums: joinNumbers(unsavedNumbers, lang),
+  });
 }
 
 /** Chữ ký của một đáp án (nội dung + độ tự tin), để biết câu nào đã lưu đúng bản đang hiện. */
@@ -87,12 +90,13 @@ export function saveStatusText(
   state: SaveState,
   unsavedCount: number,
   formatClock: (ms: number) => string,
+  lang: UiLang = "vi",
 ): string {
-  if (state.kind === "saving") return "Đang lưu…";
-  if (state.kind === "error") return "Chưa lưu được. Bạn kiểm tra kết nối mạng rồi chọn lại đáp án.";
-  if (unsavedCount > 0) return `Còn ${unsavedCount} câu chưa được lưu.`;
-  if (state.kind === "saved") return `Đã lưu lúc ${formatClock(state.at)}.`;
-  return "Bài làm được lưu ngay khi bạn chọn xong mỗi câu.";
+  if (state.kind === "saving") return tr(lang, "practice.quiz.save.saving");
+  if (state.kind === "error") return tr(lang, "practice.quiz.save.error");
+  if (unsavedCount > 0) return tr(lang, "practice.quiz.save.unsaved", { n: unsavedCount });
+  if (state.kind === "saved") return tr(lang, "practice.quiz.save.saved", { time: formatClock(state.at) });
+  return tr(lang, "practice.quiz.save.idle");
 }
 
 /** Khoá localStorage cho các câu đánh dấu xem lại của một lượt làm bài. */

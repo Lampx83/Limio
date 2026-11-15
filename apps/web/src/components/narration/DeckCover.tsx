@@ -6,6 +6,7 @@ import { deckCoverLabel, resumeSlideNumber } from "@/lib/narration/deckCover";
 import { minutesLabel, readResume, safeStorage } from "@/lib/narration/learner";
 import { getNarrationState, narrationCommands, patchNarration, subscribeNarration } from "@/lib/narration/store";
 import { NarrationAvatar } from "./NarrationAvatar";
+import { useT, useUiLang } from "@/lib/i18n/client";
 import "./narration.css";
 
 export interface DeckCoverInfo {
@@ -33,6 +34,8 @@ const heardSnapshot = (): number => getNarrationState().heard;
  * thật dưới một lớp phủ, không bấm được; bấm nút thì vào trình chiếu, và NarrationPlayer đưa đúng khung này ra toàn màn hình.
  */
 export default function DeckCover({ url, info }: { url: string; info: DeckCoverInfo }) {
+  const tr = useT();
+  const lang = useUiLang();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const stageOn = useSyncExternalStore(subscribeNarration, stageOnSnapshot, () => false);
@@ -72,17 +75,17 @@ export default function DeckCover({ url, info }: { url: string; info: DeckCoverI
     wasStage.current = stageOn;
   }, [stageOn]);
 
-  const label = deckCoverLabel({ resumeSlide, completed: info.completed, heard, thresholdPct: info.thresholdPct });
+  const label = deckCoverLabel({ resumeSlide, completed: info.completed, heard, thresholdPct: info.thresholdPct }, lang);
 
   return (
     <div className="deck-cover">
-      <iframe ref={frameRef} src={url} title={`Bài giảng của ${info.lecturerName}`} className="w-full rounded-xl border border-token shadow-card" allowFullScreen />
+      <iframe ref={frameRef} src={url} title={tr("reader.nar.cover.iframe", { name: info.lecturerName })} className="w-full rounded-xl border border-token shadow-card" allowFullScreen />
       {!stageOn && (
         <div className="deck-cover-scrim print:hidden">
           <NarrationAvatar who="lecturer" name={info.lecturerName} accent={info.lecturerAccent} />
-          <p className="text-lg font-semibold">{info.lecturerName} giảng bài này</p>
+          <p className="text-lg font-semibold">{tr("reader.nar.cover.teaches", { name: info.lecturerName })}</p>
           <p className="text-sm opacity-90">
-            {minutesLabel(info.durationSec)} · {info.slideCount} slide
+            {minutesLabel(info.durationSec, lang)} · {tr("reader.nar.cover.slides", { n: info.slideCount })}
           </p>
           <button
             ref={buttonRef}

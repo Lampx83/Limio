@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   configSchemaForType,
   DragDropFillConfig,
+  EssayConfig,
   MatchingConfig,
   NumericalConfig,
   OrderingConfig,
@@ -138,5 +139,54 @@ describe("configSchemaForType — loại chưa biết vẫn bị từ chối (kh
   });
   it("loại lạ bất kỳ", () => {
     expect(configSchemaForType("hoi_dap_mo").safeParse({}).success).toBe(false);
+  });
+});
+
+describe("EssayConfig.roleplay — hội thoại đóng vai", () => {
+  const turns = [
+    { speaker: "A", text: "Hi.", audio: "/api/exam-assets/a1.m4a" },
+    { speaker: "B", text: "Hello." },
+  ];
+  it("nhận kịch bản hai vai có audio từng lượt; vai không bắt buộc đặt tên", () => {
+    expect(EssayConfig.safeParse({ roleplay: { turns } }).success).toBe(true);
+    expect(EssayConfig.safeParse({ roleplay: { roles: { A: "Khách", B: "Chủ quán" }, turns } }).success).toBe(true);
+  });
+  it("từ chối: ít hơn 2 lượt, vai ngoài A/B, lượt rỗng, audio ngoài kho đề", () => {
+    expect(EssayConfig.safeParse({ roleplay: { turns: [turns[0]] } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ roleplay: { turns: [{ speaker: "C", text: "x" }, turns[1]] } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ roleplay: { turns: [{ speaker: "A", text: "" }, turns[1]] } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ roleplay: { turns: [{ speaker: "A", text: "x", audio: "https://evil.example/a.mp3" }, turns[1]] } }).success).toBe(false);
+  });
+});
+
+describe("EssayConfig.freechat — thử nói tự do", () => {
+  const fc = { scenario: "Choose what to take.", opening: "What would you take?", targets: ["I'm not sure"], maxTurns: 8 };
+  it("nhận cấu hình đủ và tối thiểu (chỉ tình huống + lời mở đầu)", () => {
+    expect(EssayConfig.safeParse({ freechat: fc }).success).toBe(true);
+    expect(EssayConfig.safeParse({ freechat: { scenario: "x", opening: "y" } }).success).toBe(true);
+  });
+  it("từ chối: thiếu lời mở đầu, số lượt ngoài 4–12, quá 10 cụm", () => {
+    expect(EssayConfig.safeParse({ freechat: { scenario: "x" } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ freechat: { ...fc, maxTurns: 3 } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ freechat: { ...fc, maxTurns: 13 } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ freechat: { ...fc, targets: Array.from({ length: 11 }, () => "x") } }).success).toBe(false);
+  });
+});
+
+describe("promptAid — chú giải đề không bị zod xoá khi lưu", () => {
+  const aid = { reading: "Nǐ hǎo ma?", translation: "How are you?" };
+  const cases: Array<[string, unknown]> = [
+    ["mcq", { options: [{ id: "a", label: "A", isCorrect: true }, { id: "b", label: "B", isCorrect: false }] }],
+    ["essay", {}],
+    ["gap_fill", { blanks: [{ id: "b1", acceptedAnswers: ["x"] }] }],
+    ["drag_drop_fill", { tokens: [{ id: "t1", label: "x", blankIndex: 1 }] }],
+  ];
+  it.each(cases)("%s giữ promptAid", (type, base) => {
+    const r = configSchemaForType(type as never).safeParse({ ...(base as object), promptAid: aid });
+    expect(r.success && (r.data as { promptAid?: unknown }).promptAid).toEqual(aid);
+  });
+  it("chuỗi rỗng hoặc quá dài bị từ chối", () => {
+    expect(EssayConfig.safeParse({ promptAid: { reading: "" } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ promptAid: { translation: "x".repeat(1_201) } }).success).toBe(false);
   });
 });

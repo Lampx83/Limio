@@ -5,11 +5,12 @@ import Link from "next/link";
 import { Crown, Info, Trophy } from "lucide-react";
 import type { BoardResponse, Period } from "@feedbackme/core-gamification";
 import { UserAvatar } from "@/components/ui";
-import { gapText, gapToNextRank } from "@/lib/courseHomeView";
+import { gapToNextRank } from "@/lib/courseHomeView";
+import { useT, useUiLang } from "@/lib/i18n/client";
 
-const TABS: { period: Period; label: string }[] = [
-  { period: "weekly", label: "Tuần này" },
-  { period: "all_time", label: "Toàn bộ" },
+const TABS: { period: Period; labelKey: "catalog.lb.thisWeek" | "catalog.lb.allTime" }[] = [
+  { period: "weekly", labelKey: "catalog.lb.thisWeek" },
+  { period: "all_time", labelKey: "catalog.lb.allTime" },
 ];
 
 // Course-scoped leaderboard sidebar card dùng chung giữa /catalog/[slug] và
@@ -29,6 +30,8 @@ export default function CourseLeaderboardCard({
   /** Trang khoá học đã có liên kết "Cách tính điểm" ở khối tiến độ; hiện thêm ở đây là hai nút cho một việc. */
   showGuideLink?: boolean;
 }) {
+  const t = useT();
+  const numLocale = useUiLang() === "en" ? "en-US" : "vi-VN";
   const [period, setPeriod] = useState<Period>("weekly");
   const board = period === "weekly" ? weekly : allTime;
   const meInList = board.entries.some((e) => e.isYou);
@@ -37,12 +40,12 @@ export default function CourseLeaderboardCard({
   return (
     <div className="card">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold">Bảng xếp hạng</h2>
+        <h2 className="text-base font-semibold">{t("catalog.lb.title")}</h2>
         <Link
           href={`/leaderboard?scope=course&courseId=${courseId}&period=${period}`}
           className="link text-xs"
         >
-          Đầy đủ →
+          {t("catalog.lb.full")}
         </Link>
       </div>
 
@@ -50,24 +53,24 @@ export default function CourseLeaderboardCard({
         <div
           className="inline-flex gap-0.5 rounded-full border border-token bg-[rgb(var(--surface-muted))] p-0.5"
           role="tablist"
-          aria-label="Khoảng thời gian"
+          aria-label={t("catalog.lb.periodAria")}
         >
-          {TABS.map((t) => {
-            const active = t.period === period;
+          {TABS.map((tab) => {
+            const active = tab.period === period;
             return (
               <button
-                key={t.period}
+                key={tab.period}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                onClick={() => setPeriod(t.period)}
+                onClick={() => setPeriod(tab.period)}
                 className={
                   active
                     ? "rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-brand-700 shadow-sm"
                     : "rounded-full px-2.5 py-1 text-xs font-medium text-muted transition-colors hover:text-brand-700"
                 }
               >
-                {t.label}
+                {t(tab.labelKey)}
               </button>
             );
           })}
@@ -76,24 +79,28 @@ export default function CourseLeaderboardCard({
           <Link
             href="/xp-guide"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface-muted))] text-muted transition-colors hover:text-brand-700"
-            aria-label="Cách tính điểm"
-            title="Cách tính điểm"
+            aria-label={t("catalog.lb.guide")}
+            title={t("catalog.lb.guide")}
           >
             <Info className="h-4 w-4" aria-hidden />
           </Link>
         )}
       </div>
 
-      <p className="mt-2 text-xs text-faint">{board.totalParticipants} người tham gia</p>
+      <p className="mt-2 text-xs text-faint">{t("catalog.lb.participants", { n: board.totalParticipants })}</p>
       {gap && !board.selfOptedOut && (
-        <p className="mt-1 text-xs font-medium text-brand-700">{gapText(gap)}</p>
+        <p className="mt-1 text-xs font-medium text-brand-700">
+          {gap.gapXp === 0
+            ? t("catalog.lb.gapTie", { rank: gap.aboveRank })
+            : t("catalog.lb.gapXp", { rank: gap.aboveRank, xp: gap.gapXp.toLocaleString(numLocale) })}
+        </p>
       )}
 
       {board.selfOptedOut && (
         <p className="mt-2 text-xs text-faint">
-          Bạn đã tắt BXH. Bật lại trong{" "}
+          {t("catalog.lb.optedOut")}{" "}
           <Link href="/me/settings" className="link">
-            cài đặt
+            {t("catalog.lb.settings")}
           </Link>
           .
         </p>
@@ -105,14 +112,10 @@ export default function CourseLeaderboardCard({
             <Trophy className="h-5 w-5" aria-hidden />
           </span>
           <p className="text-sm font-medium">
-            {period === "weekly"
-              ? "Chưa có ai ghi điểm tuần này"
-              : "Chưa có học viên nào tích lũy XP"}
+            {period === "weekly" ? t("catalog.lb.emptyWeekly") : t("catalog.lb.emptyAll")}
           </p>
           <p className="text-xs text-faint">
-            {period === "weekly"
-              ? "Hoàn thành một bài học để trở thành người dẫn đầu đầu tiên."
-              : "Hãy là người đầu tiên xuất hiện trên bảng xếp hạng."}
+            {period === "weekly" ? t("catalog.lb.emptyWeeklyHint") : t("catalog.lb.emptyAllHint")}
           </p>
         </div>
       ) : (
@@ -149,7 +152,7 @@ export default function CourseLeaderboardCard({
                   {crown ? (
                     <span
                       className={`relative flex items-center justify-center rounded-full ${crown.wrap}`}
-                      title={`Hạng ${e.rank}`}
+                      title={t("catalog.lb.rank", { rank: e.rank })}
                     >
                       <Crown className={crown.icon} fill="currentColor" aria-hidden />
                       <span
@@ -167,7 +170,7 @@ export default function CourseLeaderboardCard({
                 <UserAvatar name={e.displayName} imageUrl={e.avatarUrl} size="sm" />
                 <span className="min-w-0 flex-1 truncate text-sm">{e.displayName}</span>
                 <span className="shrink-0 text-[11px] font-semibold tabular-nums text-brand-700">
-                  {e.xp.toLocaleString("vi-VN")} XP
+                  {e.xp.toLocaleString(numLocale)} XP
                 </span>
               </li>
             );
@@ -177,7 +180,7 @@ export default function CourseLeaderboardCard({
 
       {board.me && !meInList && !board.selfOptedOut && (
         <p className="mt-3 rounded-lg bg-[rgb(var(--surface-muted))] px-3 py-2 text-xs">
-          Bạn ở hạng #{board.me.rank} · {board.me.xp.toLocaleString("vi-VN")} XP
+          {t("catalog.lb.you", { rank: board.me.rank, xp: board.me.xp.toLocaleString(numLocale) })}
         </p>
       )}
     </div>

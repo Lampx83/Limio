@@ -1,13 +1,10 @@
+"use client";
+
 import type { PathStep, PathSurface } from "@feedbackme/core-feedback";
+import { useT } from "@/lib/i18n/client";
 import MasteryBadge from "@/components/MasteryBadge";
 import PathStepLink from "@/components/PathStepLink";
 
-const REASON: Record<PathStep["kind"], string> = {
-  review: "Ôn lại trước khi học tiếp",
-  next: "Bài tiếp theo",
-  practice: "Luyện thêm cho chắc",
-  skim: "Có thể lướt qua",
-};
 
 /** B4 — danh sách bước lộ trình; dùng chung cho trang khoá và trang kết quả quiz. */
 export default function LearningPathList({
@@ -19,6 +16,7 @@ export default function LearningPathList({
   courseSlug: string;
   surface: PathSurface;
 }) {
+  const t = useT();
   return (
     <ol className="space-y-2">
       {steps.map((s, i) => (
@@ -37,7 +35,7 @@ export default function LearningPathList({
               {i + 1}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="text-meta block">{REASON[s.kind]}</span>
+              <span className="text-meta block">{t(`learn.path.${s.kind}`)}</span>
               <span className="block break-words text-sm font-semibold">{s.lessonTitle}</span>
               <span className="text-caption block truncate text-faint">{s.moduleTitle}</span>
             </span>

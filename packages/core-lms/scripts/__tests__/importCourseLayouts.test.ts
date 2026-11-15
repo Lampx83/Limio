@@ -57,6 +57,14 @@ describe("lessonContentItems", () => {
   it("bảng màu lạ bị từ chối ngay khi đọc file", () => {
     expect(LessonSpec.safeParse({ title: "x", look: { palette: "neon" } }).success).toBe(false);
   });
+
+  it("kỹ năng ngôn ngữ của bài: nhận nghe/nói/đọc/viết, từ chối giá trị lạ, mặc định không gán", () => {
+    for (const k of ["listening", "speaking", "reading", "writing"]) {
+      expect(LessonSpec.parse({ title: "x", languageSkill: k }).languageSkill).toBe(k);
+    }
+    expect(LessonSpec.parse({ title: "x" }).languageSkill).toBeUndefined();
+    expect(LessonSpec.safeParse({ title: "x", languageSkill: "grammar" }).success).toBe(false);
+  });
 });
 
 describe("expandQuestion — kéo thả vào chỗ trống", () => {

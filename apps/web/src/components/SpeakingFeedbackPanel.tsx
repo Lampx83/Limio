@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
-import { SPEAKING_CONSENT, SPEAKING_NOTICE, describeSpeakingError } from "@/lib/speakingFeedbackText";
+import { describeSpeakingError } from "@/lib/speakingFeedbackText";
+import { useT, useUiLang } from "@/lib/i18n/client";
 import SpeakingFeedbackView from "./SpeakingFeedbackView";
 import type { WritingFeedbackBody } from "./WritingFeedbackView";
 
@@ -25,6 +26,8 @@ export default function SpeakingFeedbackPanel({
   submissionId: string;
   initial: LearnerSpeakingState | null;
 }) {
+  const t = useT();
+  const lang = useUiLang();
   const [fb, setFb] = useState<LearnerSpeakingState | null>(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +43,7 @@ export default function SpeakingFeedbackPanel({
         | { error?: string; reused?: boolean; status?: string; body?: WritingFeedbackBody; transcript?: { text: string } }
         | null;
       if (!res.ok || !j?.body) {
-        setError(describeSpeakingError(j?.error ?? (res.status === 401 ? "unauthorized" : undefined)));
+        setError(describeSpeakingError(j?.error ?? (res.status === 401 ? "unauthorized" : undefined), lang));
         return;
       }
       setFb((prev) => ({
@@ -49,29 +52,29 @@ export default function SpeakingFeedbackPanel({
         reviewerNote: prev?.reviewerNote ?? null,
         transcript: j.transcript ?? prev?.transcript ?? { text: "" },
       }));
-      if (j.reused) setNote("Bản ghi chưa đổi nên giữ nguyên góp ý trước — không gọi AI và không trừ thêm lượt.");
+      if (j.reused) setNote(t("practice.sf.p.reused"));
     } catch {
-      setError("Chưa nhận được góp ý. Kiểm tra mạng rồi thử lại.");
+      setError(t("practice.wf.p.netError"));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <section className="rounded-lg border border-token p-3" aria-label="Góp ý bài nói bằng AI" data-testid="speaking-feedback-panel">
+    <section className="rounded-lg border border-token p-3" aria-label={t("practice.sf.p.aria")} data-testid="speaking-feedback-panel">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">Góp ý bài nói (AI)</h3>
+        <h3 className="text-sm font-semibold">{t("practice.sf.p.title")}</h3>
         <button
           type="button"
           onClick={() => void request()}
           disabled={busy}
           className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
         >
-          {busy ? "Đang chuyển thành chữ và chấm…" : fb ? "Chấm lại" : "Nhận góp ý bài nói"}
+          {busy ? t("practice.sf.p.busy") : fb ? t("practice.sf.p.again") : t("practice.sf.p.get")}
         </button>
       </div>
-      <p className="text-meta mt-1">{SPEAKING_CONSENT}</p>
-      {!fb && <p className="text-meta mt-1">{SPEAKING_NOTICE}</p>}
+      <p className="text-meta mt-1">{t("practice.sf.consent")}</p>
+      {!fb && <p className="text-meta mt-1">{t("practice.sf.notice")}</p>}
       {error && (
         <p role="alert" className="banner-danger mt-3 text-sm">
           {error}

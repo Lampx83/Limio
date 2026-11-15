@@ -15,10 +15,10 @@
 - Câu có góp ý AI: nút chính là **"Nhận xét bằng AI"** — một lần bấm vừa chuyển bản ghi thành chữ vừa kiểm tra và hiện góp ý (không phải bấm "Kiểm tra" thêm); có lối phụ **"Chỉ lấy bản chữ để tự sửa trước"** cho ai muốn đọc lại bản chữ trước khi AI nhận xét. Câu tắt góp ý AI: nút chính là **"Chuyển thành chữ"**, chỉ lấy bản chữ.
 - Lấy bản chữ: bản ghi được chuyển thành chữ (Whisper, đúng `language` của khoá) và **điền vào ô trả lời** kèm nhãn "Bản chữ từ giọng nói, máy có thể nghe sai: hãy đọc lại và sửa". Học viên sửa được; câu trả lời được lưu như mọi câu trả lời gõ.
 - **Lưu bản ghi âm CUỐI CÙNG của học viên** (thầy chốt 11/11/2026; các lần ghi trước bị thay thế và xoá file): file ở lớp `private` của kho, học viên **nghe lại** được ngay trong thẻ câu hỏi; xoá khi xoá tài khoản và có trong export dữ liệu cá nhân; tính vào hạn mức dung lượng như bài nộp. Vì có bản ghi nên góp ý được dùng **số liệu nhịp nói do Whisper đo** (tốc độ, quãng nghỉ dài) cho tiêu chí Lưu loát; vẫn **không chấm phát âm**.
-- Trước lần dùng đầu hiện một dòng: "Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ." Không tự gửi gì khi chưa bấm.
+- ~~Trước lần dùng đầu hiện một dòng: "Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ."~~ — đã bỏ dòng này (14/11/2026, theo yêu cầu của thầy, cả ở câu mở, đóng vai và nói tự do). Không tự gửi gì khi chưa bấm.
 - Trừ ví token AI của **học viên** theo mức thực dùng; hết hạn mức hoặc chưa cấu hình AI thì báo rõ, ô gõ chữ vẫn dùng được, không trừ token.
 - Bản ghi quá 3 phút hoặc quá 25 MB: báo rõ, không gửi.
-- Xem thử của giảng viên: nút hiện nhưng không gọi AI (ghi "Xem thử: không chuyển giọng nói thành chữ").
+- Xem thử của giảng viên (chốt 11/11/2026): ghi âm và chuyển thành chữ **dùng được** để giảng viên thấy trải nghiệm của học viên, nhưng **không lưu gì** (không tạo buổi luyện, không lưu bản ghi hay câu trả lời, không có trình phát "Bản ghi của bạn", không ghi sự kiện) và không có nhận xét AI; nút chính là "Chuyển thành chữ". Chuyển chữ trừ ví token của GIẢNG VIÊN, qua lối riêng `POST /api/practice-preview/{examId}/voice/{questionId}` (chỉ người sửa được khoá chứa đề; câu phải là essay và còn bật giọng nói). Ghi "Xem thử: ghi âm và chuyển thành chữ được, nhưng không lưu bản ghi".
 - Không áp dụng cho đề thi thử (thi chính thức), chỉ Bài luyện nhúng trong bài (xem câu hỏi 3).
 
 ## AC2 — Bài mẫu hiện cho học viên sau khi kiểm tra
@@ -74,7 +74,7 @@ Mọi thứ của tính năng này soạn và sửa được ngay trong trang "S
 
 - Bài mẫu chỉ có trong kết quả kiểm tra, không có trong dữ liệu công khai của câu.
 - Khối "Sample answer": có/không có chữ, có/không audio, nằm dưới câu trả lời.
-- Ghi âm → chuyển chữ (Whisper giả): điền ô, trừ token, hết hạn mức, chưa cấu hình AI, quá dài, từ chối micro; xem thử không gọi AI.
+- Ghi âm → chuyển chữ (Whisper giả): điền ô, trừ token, hết hạn mức, chưa cấu hình AI, quá dài, từ chối micro; xem thử chuyển chữ qua lối riêng, không lưu gì.
 - Soạn audio mẫu: tải lên sai định dạng/quá nặng, xoá dọn tệp; nhập khoá có `sampleAudio`.
 - Xem trên trình duyệt ở 400 và 1280 px.
 
@@ -111,4 +111,4 @@ Chấm phát âm; số điểm tự động cho câu mở; dùng trong luyện �
 - `POST /api/practice-sessions/[sessionId]/voice/[questionId]` (multipart `file`): chuyển chữ, lưu tệp ghi âm vào kho private, `saveVoiceAnswer`, xoá tệp cũ, trả `{ text, durationSec }`.
 - `GET /api/practice-sessions/[sessionId]/audio/[questionId]`: phát lại bản ghi của chính học viên.
 - Route kiểm tra `/api/practice-sessions/[sessionId]/check/[questionId]`: sau khi kiểm tra câu essay chấm tay có `aiFeedback` bật, gọi `requestPracticeAnswerFeedback`; trả `{...check, feedback?, feedbackError?}`.
-- Xem thử của giảng viên: không gọi AI, không ghi âm lên máy chủ.
+- Xem thử của giảng viên: không nhận xét AI, không lưu bản ghi (âm thanh chỉ đi tới dịch vụ chuyển chữ rồi bỏ).

@@ -1,3 +1,5 @@
+import { tFor } from "@/lib/i18n/tFor";
+import type { UiLang } from "@/lib/i18n/core";
 import { isDeckLecture, parseDeckAnchor } from "./deckSync";
 import { segmentIndexAt, type KeyValueStore } from "./learner";
 
@@ -48,10 +50,14 @@ export function resumeSlideNumber(segments: ReadonlyArray<{ anchor: string; star
   return pos ? pos.slide + 1 : null;
 }
 
-export function deckCoverLabel(opts: { resumeSlide: number | null; completed: boolean; heard: number; thresholdPct: number }): string {
-  if (opts.resumeSlide !== null) return `Học tiếp từ slide ${opts.resumeSlide}`;
-  if (opts.completed || heardEnough(opts.heard, opts.thresholdPct)) return "Học lại";
-  return "Bắt đầu học";
+export function deckCoverLabel(
+  opts: { resumeSlide: number | null; completed: boolean; heard: number; thresholdPct: number },
+  lang: UiLang = "vi",
+): string {
+  const t = tFor(lang);
+  if (opts.resumeSlide !== null) return t("reader.nar.cover.resume", { n: opts.resumeSlide });
+  if (opts.completed || heardEnough(opts.heard, opts.thresholdPct)) return t("reader.nar.cover.again");
+  return t("reader.nar.cover.start");
 }
 
 // ── Phần lời giảng đã nghe ───────────────────────────────────────────────────

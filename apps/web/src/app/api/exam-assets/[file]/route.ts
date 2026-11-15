@@ -1,5 +1,6 @@
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { guardedExamAsset } from "@/lib/lessonMediaGuard";
 import { examAssetKeyFromFilename } from "@/lib/storage-keys";
 import { isSafeFilename, resolveKey } from "@/lib/storage-serve";
 
@@ -24,7 +25,7 @@ const MIME_BY_EXT: Record<string, string> = {
   ".m4a": "audio/mp4",
 };
 
-export async function GET(
+export const GET = guardedExamAsset(async function GET(
   _req: Request,
   { params }: { params: { file: string } },
 ) {
@@ -46,4 +47,4 @@ export async function GET(
       "cache-control": "public, max-age=604800, immutable",
     },
   });
-}
+});

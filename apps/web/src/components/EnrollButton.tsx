@@ -7,25 +7,28 @@ import { formatPrice, isFree } from "@/lib/formatPrice";
 import { apiUrl } from "@/lib/apiUrl";
 import { enrollErrorMessage } from "@/lib/enrollErrors";
 import { accessSummary } from "@/lib/accessSummary";
+import { useT, useUiLang } from "@/lib/i18n/client";
+import type { MessageKey } from "@/lib/i18n/dict";
 
-const REDEEM_ERROR_LABEL: Record<string, string> = {
-  code_not_found: "Không tìm thấy mã này. Kiểm tra lại chữ/số đã gõ.",
-  code_already_used: "Mã này đã được dùng rồi.",
-  code_revoked: "Mã này đã bị thu hồi.",
-  code_expired: "Mã này đã hết hạn kích hoạt. Bạn hỏi lại người đã gửi mã nhé.",
-  course_not_enrollable: "Khoá học hiện chưa mở đăng ký.",
-  rate_limited: "Bạn thử quá nhiều lần, vui lòng đợi một chút rồi thử lại.",
-  validation_failed: "Vui lòng nhập mã.",
-};
+// Mã lỗi → khoá dict (catalog.redeemErr.* / catalog.checkoutErr.*). Mã lạ rơi về câu "thử lại" chung.
+const REDEEM_ERROR_CODES = new Set([
+  "code_not_found",
+  "code_already_used",
+  "code_revoked",
+  "code_expired",
+  "course_not_enrollable",
+  "rate_limited",
+  "validation_failed",
+]);
 
-const CHECKOUT_ERROR_LABEL: Record<string, string> = {
-  stripe_not_configured: "Thanh toán thẻ hiện chưa khả dụng. Vui lòng dùng mã kích hoạt.",
-  access_plan_not_found: "Gói này không còn bán. Vui lòng tải lại trang.",
-  course_is_free: "Khoá học này miễn phí.",
-  vnpay_not_configured: "Thanh toán VNPay hiện chưa khả dụng. Vui lòng chọn cách khác hoặc dùng mã kích hoạt.",
-  currency_not_supported: "Khoá này chưa thanh toán được qua VNPay (chỉ hỗ trợ VND).",
-  course_not_enrollable: "Khoá học hiện chưa mở đăng ký.",
-};
+const CHECKOUT_ERROR_CODES = new Set([
+  "stripe_not_configured",
+  "access_plan_not_found",
+  "course_is_free",
+  "vnpay_not_configured",
+  "currency_not_supported",
+  "course_not_enrollable",
+]);
 
 export type PaymentProviderChoice = "stripe" | "vnpay";
 
@@ -37,10 +40,13 @@ export interface AccessPlanOption {
   currency: string;
 }
 
-function durationSuffix(months: number | null): string {
-  if (months === null) return "vĩnh viễn";
-  if (months % 12 === 0) return `${months / 12} năm`;
-  return `${months} tháng`;
+function durationSuffix(months: number | null, t: (key: MessageKey, params?: Record<string, string | number>) => string): string {
+  if (months === null) return t("catalog.enroll.lifetime");
+  if (months % 12 === 0) {
+    const n = months / 12;
+    return t(n === 1 ? "catalog.enroll.yearOne" : "catalog.enroll.years", { n });
+  }
+  return t(months === 1 ? "catalog.enroll.monthOne" : "catalog.enroll.months", { months, n: months });
 }
 
 export default function EnrollButton({
@@ -56,7 +62,7 @@ export default function EnrollButton({
   // giá/thẻ "Miễn phí" nên hợp ngữ cảnh; nơi nào không có gì để so sánh giá
   // bên cạnh (banner "chưa đăng ký" trên trang khoá) thì truyền nhãn trung
   // tính hơn như "Đăng ký ngay" — nút vẫn làm đúng một việc, chỉ đổi chữ.
-  freeLabel = "Đăng ký miễn phí",
+  freeLabel,
 }: {
   courseId: string;
   slug: string;
@@ -70,6 +76,8 @@ export default function EnrollButton({
   paymentProviders?: PaymentProviderChoice[];
   freeLabel?: string;
 }) {
+  const t = useT();
+  const lang = useUiLang();
   const [submitting, setSubmitting] = useState(false);
   const [code, setCode] = useState("");
   const [redeeming, setRedeeming] = useState(false);
@@ -86,7 +94,7 @@ export default function EnrollButton({
         href={`/learn/${slug}`}
         className="inline-flex items-center gap-2 rounded-xl bg-success-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:scale-[1.02] hover:bg-success-700"
       >
-        Tiếp tục học
+        {t("catalog.enroll.continue")}
       </Link>
     );
   }
@@ -98,7 +106,7 @@ export default function EnrollButton({
     try {
       res = await fetch(apiUrl(`/api/courses/${slug}/enroll`), { method: "POST" });
     } catch {
-      setEnrollError(enrollErrorMessage("network_error"));
+      setEnrollError(enrollErrorMessage("network_error", undefined, lang));
       setSubmitting(false);
       return;
     }
@@ -109,11 +117,11 @@ export default function EnrollButton({
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       // Lỗi hiện thành banner cố định cạnh nút (toast tự tắt sau 4s nên dễ lỡ).
-      setEnrollError(enrollErrorMessage(data?.error, res.status));
+      setEnrollError(enrollErrorMessage(data?.error, res.status, lang));
       setSubmitting(false);
       return;
     }
-    toast.success("Đăng ký thành công", { description: "Đang chuyển vào khóa…" });
+    toast.success(t("catalog.enroll.success"), { description: t("catalog.enroll.redirecting") });
     window.location.href = `/learn/${slug}`;
   }
 
@@ -134,14 +142,16 @@ export default function EnrollButton({
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      toast.error("Kích hoạt thất bại", {
-        description: REDEEM_ERROR_LABEL[data.error] ?? "Vui lòng thử lại.",
+      toast.error(t("catalog.enroll.redeemFailed"), {
+        description: REDEEM_ERROR_CODES.has(data.error)
+          ? t(`catalog.redeemErr.${data.error}` as MessageKey)
+          : t("catalog.enroll.tryAgain"),
       });
       setRedeeming(false);
       return;
     }
-    toast.success("Kích hoạt thành công", {
-      description: `${accessSummary(data.accessExpiresAt)} Đang chuyển vào khóa…`,
+    toast.success(t("catalog.enroll.redeemSuccess"), {
+      description: `${accessSummary(data.accessExpiresAt, lang)} ${t("catalog.enroll.redirecting")}`,
     });
     window.location.href = `/learn/${data.courseSlug ?? slug}`;
   }
@@ -165,8 +175,10 @@ export default function EnrollButton({
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data.url) {
-      toast.error("Không mở được trang thanh toán", {
-        description: CHECKOUT_ERROR_LABEL[data.error] ?? "Vui lòng thử lại sau.",
+      toast.error(t("catalog.enroll.checkoutFailed"), {
+        description: CHECKOUT_ERROR_CODES.has(data.error)
+          ? t(`catalog.checkoutErr.${data.error}` as MessageKey)
+          : t("catalog.enroll.tryLater"),
       });
       setCheckingOut(false);
       return;
@@ -181,7 +193,7 @@ export default function EnrollButton({
     const selected = accessPlans.find((p) => p.id === selectedPlanId) ?? accessPlans[0];
     return (
       <div className="space-y-3">
-        <div role="radiogroup" aria-label="Chọn gói truy cập" className="space-y-2">
+        <div role="radiogroup" aria-label={t("catalog.enroll.choosePlan")} className="space-y-2">
           {accessPlans.map((p) => (
             <label
               key={p.id}
@@ -201,7 +213,7 @@ export default function EnrollButton({
                 />
                 <span>
                   <span className="block font-medium">{p.label}</span>
-                  <span className="block text-xs text-faint">Truy cập {durationSuffix(p.durationMonths)}</span>
+                  <span className="block text-xs text-faint">{t("catalog.enroll.accessFor", { duration: durationSuffix(p.durationMonths, t) })}</span>
                 </span>
               </span>
               <span className="font-bold tabular-nums">{formatPrice(p.priceCents, p.currency)}</span>
@@ -216,7 +228,7 @@ export default function EnrollButton({
               disabled={checkingOut || !selectedPlanId}
               className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {checkingOut ? "Đang mở trang thanh toán…" : "Thanh toán qua VNPay (ATM, QR, thẻ)"}
+              {checkingOut ? t("catalog.enroll.opening") : t("catalog.enroll.payVnpay")}
             </button>
             {paymentProviders.includes("stripe") && (
               <button
@@ -225,7 +237,7 @@ export default function EnrollButton({
                 disabled={checkingOut || !selectedPlanId}
                 className="btn-secondary w-full disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Thanh toán bằng thẻ quốc tế
+                {t("catalog.enroll.payIntl")}
               </button>
             )}
           </div>
@@ -236,7 +248,7 @@ export default function EnrollButton({
             disabled={checkingOut || !selectedPlanId}
             className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {checkingOut ? "Đang mở trang thanh toán…" : "Thanh toán qua thẻ"}
+            {checkingOut ? t("catalog.enroll.opening") : t("catalog.enroll.payCard")}
           </button>
         )}
         {!showRedeem ? (
@@ -245,7 +257,7 @@ export default function EnrollButton({
             onClick={() => setShowRedeem(true)}
             className="text-xs text-muted underline-offset-2 hover:underline"
           >
-            Đã có mã kích hoạt?
+            {t("catalog.enroll.haveCode")}
           </button>
         ) : (
           <div className="flex flex-wrap gap-2">
@@ -253,7 +265,7 @@ export default function EnrollButton({
               value={code}
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void onRedeemCode()}
-              placeholder="Nhập mã kích hoạt"
+              placeholder={t("catalog.enroll.codePlaceholder")}
               className="input min-w-0 flex-1 font-mono uppercase tracking-wider"
             />
             <button
@@ -262,7 +274,7 @@ export default function EnrollButton({
               disabled={redeeming || !code.trim()}
               className="btn-secondary shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {redeeming ? "Đang kích hoạt…" : "Kích hoạt"}
+              {redeeming ? t("catalog.enroll.activating") : t("catalog.enroll.activate")}
             </button>
           </div>
         )}
@@ -274,7 +286,7 @@ export default function EnrollButton({
     return (
       <div className="space-y-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-faint">Học phí</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-faint">{t("catalog.enroll.tuition")}</p>
           <p className="text-xl font-bold tabular-nums">{formatPrice(priceCents!, currency)}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -282,7 +294,7 @@ export default function EnrollButton({
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && void onRedeemCode()}
-            placeholder="Nhập mã kích hoạt"
+            placeholder={t("catalog.enroll.codePlaceholder")}
             className="input min-w-0 flex-1 font-mono uppercase tracking-wider"
           />
           <button
@@ -291,11 +303,11 @@ export default function EnrollButton({
             disabled={redeeming || !code.trim()}
             className="btn-primary shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {redeeming ? "Đang kích hoạt…" : "Kích hoạt"}
+            {redeeming ? t("catalog.enroll.activating") : t("catalog.enroll.activate")}
           </button>
         </div>
         <p className="text-xs text-muted">
-          Chưa có mã? Liên hệ ngay với chúng tôi để nhận mã kích hoạt.
+          {t("catalog.enroll.noCode")}
         </p>
       </div>
     );
@@ -308,7 +320,7 @@ export default function EnrollButton({
       disabled={submitting}
       className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:hover:scale-100"
     >
-      {submitting ? "Đang đăng ký…" : freeLabel}
+      {submitting ? t("catalog.enroll.enrolling") : (freeLabel ?? t("catalog.enroll.free"))}
     </button>
     {enrollError && (
       <div role="alert" className="banner-danger text-sm">

@@ -8,6 +8,7 @@ import { getBrowserAudioPlayer } from "@/lib/exclusiveAudio";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
 import { createTurnSequencer } from "@/lib/turnSequencer";
 import { useExclusiveAudio } from "./useExclusiveAudio";
+import { useT } from "@/lib/i18n/client";
 
 /** Màu avatar + tên theo thứ tự người nói. Chuỗi class viết đủ để Tailwind quét được. */
 const SPEAKER_TONES = [
@@ -67,6 +68,7 @@ export default function DialogueView({
   initialShowReading?: boolean;
   initialShowTranslation?: boolean;
 }) {
+  const tx = useT();
   const [showReading, setShowReading] = useState(initialShowReading);
   const [showTranslation, setShowTranslation] = useState(initialShowTranslation);
   // Phải khai báo TRƯỚC useExclusiveAudio: khi rời trang, cleanup chạy theo thứ tự
@@ -122,7 +124,7 @@ export default function DialogueView({
   for (const t of turns) if (!speakers.includes(t.speaker)) speakers.push(t.speaker);
   const hasTranslation = turns.some((t) => !!t.translation);
   const hasReading = turns.some((t) => !!t.reading);
-  const readingName = readingLabel?.trim() || "Phiên âm";
+  const readingName = readingLabel?.trim() || tx("learn.dialogue.reading");
 
   return (
     <section className="space-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
@@ -142,14 +144,14 @@ export default function DialogueView({
               }`}
             >
               {sequenceOn ? <Square size={15} aria-hidden /> : <Volume2 size={16} aria-hidden />}
-              {sequenceOn ? "Dừng" : "Nghe cả đoạn"}
+              {sequenceOn ? tx("learn.dialogue.stop") : tx("learn.dialogue.playAll")}
             </button>
           )}
           {(hasReading || hasTranslation) && (
             // Một cụm liền: biểu tượng mắt (= "hiện") rồi các nút bật/tắt cùng chiều cao với nút phát.
             <div
               role="group"
-              aria-label="Hiển thị"
+              aria-label={tx("learn.dialogue.display")}
               className="inline-flex h-9 items-center gap-0.5 rounded-full border border-token bg-[rgb(var(--surface))] p-0.5 pl-3"
             >
               <Eye size={15} aria-hidden className="mr-1.5 text-muted" />
@@ -160,7 +162,7 @@ export default function DialogueView({
               )}
               {hasTranslation && (
                 <ToggleChip pressed={showTranslation} onClick={() => setShowTranslation((v) => !v)}>
-                  Bản dịch
+                  {tx("learn.dialogue.translation")}
                 </ToggleChip>
               )}
             </div>
@@ -244,7 +246,7 @@ export default function DialogueView({
                   {t.audioUrl && (
                     <button
                       type="button"
-                      aria-label={`Nghe câu của ${t.speaker}`}
+                      aria-label={tx("learn.dialogue.listenTurn", { speaker: t.speaker })}
                       aria-pressed={ownPlaying}
                       onClick={(e) => {
                         e.stopPropagation(); // không để hàng xử lý thêm một lần

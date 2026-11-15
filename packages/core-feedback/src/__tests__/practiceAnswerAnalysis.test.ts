@@ -251,3 +251,16 @@ describe("buildPracticePrompts", () => {
     expect(system).toMatch(/There is no reference answer/);
   });
 });
+
+describe("buildPracticePrompts — hội thoại đóng vai", () => {
+  const base = { question: "Role-play the conversation.", answer: "[Role A]\nA: hi", sampleAnswer: "A: Hi.\nB: Hello.", rubric: "", minWords: null, viaVoice: true, courseLanguage: "en", levelBand: "B1" };
+  it("có rolePlay thì prompt dặn đây là đóng vai một vai, so với kịch bản, không chấm vai kia", () => {
+    const { system, user } = buildPracticePrompts({ ...base, rolePlay: true });
+    expect(system).toContain("ROLE-PLAY");
+    expect(system).toContain("ONE role");
+    expect(user).toContain("B: Hello.");
+  });
+  it("không có rolePlay thì prompt như cũ (không nhắc đóng vai)", () => {
+    expect(buildPracticePrompts(base).system).not.toContain("ROLE-PLAY");
+  });
+});

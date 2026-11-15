@@ -1,4 +1,5 @@
 import OrgCenterToggle from "@/components/OrgCenterToggle";
+import SpaceSettingsSection from "@/components/space/SpaceSettingsSection";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -76,6 +77,10 @@ export default async function AdminOrgDetailPage({
 
       <section className="mt-6">
         <OrgCenterToggle organizationId={org.id} initialEnabled={org.centerEnabled} />
+      </section>
+
+      <section className="mt-6">
+        <SpaceSettingsSection organizationId={org.id} />
       </section>
 
       <section className="mt-6">

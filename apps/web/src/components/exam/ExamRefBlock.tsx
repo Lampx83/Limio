@@ -1,15 +1,16 @@
 import type { ExamRefIssue, MockExamCard as MockExamCardData } from "@feedbackme/core-lms";
 import MockExamCard from "./MockExamCard";
+import type { UiLang } from "@/lib/i18n/core";
 
 /**
  * Khối "Đề thi" (exam_ref) trong bài học — docs/tieu-chi/bai-hoc-gan-de-thi.md. Học viên thấy đúng thẻ đề như ở trang khoá; giảng viên ở
  * "Xem như học viên" thấy thẻ (không bấm được) hoặc nhãn nói rõ vì sao học viên chưa thấy khối này.
  */
 
-export function ExamRefLearnerBlock({ slug, exam, title }: { slug: string; exam: MockExamCardData; title?: string }) {
+export function ExamRefLearnerBlock({ slug, exam, title, lang }: { slug: string; exam: MockExamCardData; title?: string; lang?: UiLang }) {
   return (
     <section className="my-6" aria-label={title || exam.title}>
-      <MockExamCard slug={slug} exam={exam} titleOverride={title} />
+      <MockExamCard slug={slug} exam={exam} titleOverride={title} lang={lang} />
     </section>
   );
 }

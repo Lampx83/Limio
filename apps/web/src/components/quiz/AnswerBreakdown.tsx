@@ -1,5 +1,7 @@
 import SafeHtml from "@/components/SafeHtml";
 import { plainToRichHtml } from "@/lib/richText";
+import { translate, type UiLang } from "@/lib/i18n/core";
+import { EN, VI, type MessageKey } from "@/lib/i18n/dict";
 
 /**
  * Đáp án của một câu sau khi nộp: người học đã chọn gì, đáp án đúng là gì.
@@ -90,19 +92,24 @@ function textOf(v: unknown): string {
 }
 
 /** Không trả lời — dùng chung cho mọi loại câu. */
-function Blank() {
-  return <span className="text-sm italic text-faint">(bỏ trống)</span>;
+function Blank({ text }: { text: string }) {
+  return <span className="text-sm italic text-faint">{text}</span>;
 }
 
-export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
+/**
+ * Server component (không dùng hook): ngôn ngữ truyền qua prop `lang` (trang cha lấy từ getUiLang()); mặc định "vi".
+ */
+export default function AnswerBreakdown({ item, lang = "vi" }: { item: ReviewItem; lang?: UiLang }) {
   const { type, options, yourResponse } = item;
+  const t = (key: MessageKey, params?: Record<string, string | number>) => translate(VI, EN, lang, key, params);
+  const blank = <Blank text={t("practice.ans.blank")} />;
 
   // ── Chọn phương án ────────────────────────────────────────────────────────
   if (type === "mcq" || type === "true_false") {
     const picked = new Set(asStringArray(yourResponse));
     return (
       <section className="mt-4">
-        <p className={LABEL}>Các phương án</p>
+        <p className={LABEL}>{t("practice.ans.options")}</p>
         <ul className="mt-2 space-y-1.5">
           {options.map((o) => {
             const chosen = picked.has(o.id);
@@ -113,8 +120,8 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
                 state={state}
                 chips={
                   <>
-                    {chosen && <Chip tone={o.isCorrect ? "correct" : "wrong"}>Bạn chọn</Chip>}
-                    {o.isCorrect && <Chip tone="correct">Đáp án đúng</Chip>}
+                    {chosen && <Chip tone={o.isCorrect ? "correct" : "wrong"}>{t("practice.ans.youChose")}</Chip>}
+                    {o.isCorrect && <Chip tone="correct">{t("practice.ans.correct")}</Chip>}
                   </>
                 }
               >
@@ -123,7 +130,7 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
             );
           })}
         </ul>
-        {picked.size === 0 && <p className="mt-2 text-sm italic text-faint">Bạn không chọn phương án nào.</p>}
+        {picked.size === 0 && <p className="mt-2 text-sm italic text-faint">{t("practice.ans.noneChosen")}</p>}
       </section>
     );
   }
@@ -136,22 +143,22 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
     return (
       <section className="mt-4 grid gap-4 md:grid-cols-2">
         <div>
-          <p className={LABEL}>Thứ tự bạn xếp</p>
+          <p className={LABEL}>{t("practice.ans.yourOrder")}</p>
           {yours.length === 0 ? (
-            <p className="mt-2"><Blank /></p>
+            <p className="mt-2">{blank}</p>
           ) : (
             <ol className="mt-2 space-y-1.5">
               {yours.map((o, i) => (
                 <Row key={i} state={canonical[i]?.id === o?.id ? "correct" : "wrong"}>
                   <span className="mr-2 text-sm font-semibold tabular-nums text-muted">{i + 1}.</span>
-                  {o ? <OptionLabel text={o.label} /> : <Blank />}
+                  {o ? <OptionLabel text={o.label} /> : blank}
                 </Row>
               ))}
             </ol>
           )}
         </div>
         <div>
-          <p className={LABEL}>Thứ tự đúng</p>
+          <p className={LABEL}>{t("practice.ans.rightOrder")}</p>
           <ol className="mt-2 space-y-1.5">
             {canonical.map((o, i) => (
               <Row key={o.id} state="correct">
@@ -179,7 +186,7 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
     const yourRightFor = new Map(pairs.map((p) => [p.leftId as string, p.rightId as string]));
     return (
       <section className="mt-4">
-        <p className={LABEL}>Từng cặp bạn nối</p>
+        <p className={LABEL}>{t("practice.ans.yourPairs")}</p>
         <ul className="mt-2 space-y-1.5">
           {lefts.map((left) => {
             const correctRight = options.find(
@@ -192,10 +199,10 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
                 <div className="text-sm">
                   <span className="font-medium">{left.label}</span>
                   <span className="mx-2 text-faint">→</span>
-                  {yourRight ? <span>{yourRight.label}</span> : <Blank />}
+                  {yourRight ? <span>{yourRight.label}</span> : blank}
                   {!ok && correctRight && (
                     <div className="mt-1 text-sm text-success-700">
-                      Đúng phải là: <span className="font-medium">{correctRight.label}</span>
+                      {t("practice.ans.shouldBe")} <span className="font-medium">{correctRight.label}</span>
                     </div>
                   )}
                 </div>
@@ -221,7 +228,7 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
       (yourResponse as { tokens?: Record<string, unknown> } | null)?.tokens ?? {};
     return (
       <section className="mt-4">
-        <p className={LABEL}>Từng ô trống</p>
+        <p className={LABEL}>{t("practice.ans.eachBlank")}</p>
         <ul className="mt-2 space-y-1.5">
           {expected.map((o) => {
             const idx = blankIndex(o)!;
@@ -231,11 +238,11 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
             return (
               <Row key={o.id} state={ok ? "correct" : "wrong"}>
                 <div className="text-sm">
-                  <span className="font-semibold tabular-nums text-muted">Ô {idx}:</span>{" "}
-                  {placed ? <span className="font-medium">{placed.label}</span> : <Blank />}
+                  <span className="font-semibold tabular-nums text-muted">{t("practice.ans.blankN", { n: idx })}</span>{" "}
+                  {placed ? <span className="font-medium">{placed.label}</span> : blank}
                   {!ok && (
                     <div className="mt-1 text-sm text-success-700">
-                      Đúng phải là: <span className="font-medium">{o.label}</span>
+                      {t("practice.ans.shouldBe")} <span className="font-medium">{o.label}</span>
                     </div>
                   )}
                 </div>
@@ -252,9 +259,9 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
     const text = textOf(yourResponse);
     return (
       <section className="mt-4">
-        <p className={LABEL}>Bài làm của bạn</p>
+        <p className={LABEL}>{t("practice.ans.yourWork")}</p>
         <div className="mt-2 whitespace-pre-wrap rounded-xl border border-token px-3 py-2 text-sm">
-          {text || <Blank />}
+          {text || blank}
         </div>
       </section>
     );
@@ -266,17 +273,17 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
   return (
     <section className="mt-4 space-y-3">
       <div>
-        <p className={LABEL}>Bạn trả lời</p>
+        <p className={LABEL}>{t("practice.ans.yourAnswer")}</p>
         <div className="mt-2 rounded-xl border border-token px-3 py-2 text-sm">
-          {yourText || <Blank />}
+          {yourText || blank}
         </div>
       </div>
       <div>
-        <p className={LABEL}>Đáp án được chấp nhận</p>
+        <p className={LABEL}>{t("practice.ans.accepted")}</p>
         {type === "numerical" && item.meta.expected !== null ? (
           <p className="mt-2 text-sm font-medium text-success-700">
             {item.meta.expected}
-            {item.meta.tolerance ? ` (sai số cho phép ±${item.meta.tolerance})` : ""}
+            {item.meta.tolerance ? t("practice.ans.tolerance", { tol: item.meta.tolerance }) : ""}
           </p>
         ) : accepted.length > 0 ? (
           <ul className="mt-2 flex flex-wrap gap-1.5">
@@ -290,7 +297,7 @@ export default function AnswerBreakdown({ item }: { item: ReviewItem }) {
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-sm italic text-faint">Câu này do giảng viên chấm.</p>
+          <p className="mt-2 text-sm italic text-faint">{t("practice.ans.graded")}</p>
         )}
       </div>
     </section>

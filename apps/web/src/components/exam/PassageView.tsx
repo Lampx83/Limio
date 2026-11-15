@@ -73,7 +73,8 @@ export default function PassageView({ passage, attemptId, audio, hideNote = fals
     <AudioTranscriptContext.Provider value={passage.transcripts ?? null}>
     <div>
       {/* Tiêu đề bài đọc: cỡ lớn, đậm, kèm vạch nhấn màu thương hiệu ngắn bên dưới (kiểu tiêu đề báo/sách), tách khỏi phần thân. */}
-      {!hideTitle && (
+      {/* Tiêu đề rỗng (phiếu bài tập đã có tên bài ở trên) hoặc bài luyện nhúng đã có khối đề bài riêng thì bỏ cả phần tiêu đề: không để lại vạch nhấn mồ côi. */}
+      {!hideTitle && passage.title.trim() && (
         <header className="mb-4">
           <h2 className="text-h3">{passage.title}</h2>
           <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />

@@ -12,6 +12,8 @@ import type {
   ResponseFormat,
 } from "@/lib/generativeActivity";
 import { formatDateTime } from "@/lib/datetime";
+import { tFor } from "@/lib/i18n/tFor";
+import type { UiLang } from "@/lib/i18n/core";
 
 export type QuizItem = {
   kind: "quiz";
@@ -83,12 +85,13 @@ function StatusChip({
   );
 }
 
-function QuizCard({ item, courseSlug }: { item: QuizItem; courseSlug: string }) {
+function QuizCard({ item, courseSlug, lang }: { item: QuizItem; courseSlug: string; lang?: UiLang }) {
+  const t = tFor(lang);
   const chip = !item.attempted ? (
-    <StatusChip variant="todo">Chưa làm</StatusChip>
+    <StatusChip variant="todo">{t("learn.task.quizTodo")}</StatusChip>
   ) : (
     <StatusChip variant="graded">
-      Đã làm {item.scorePct !== null ? `· ${Math.round(item.scorePct)}%` : ""}
+      {item.scorePct !== null ? t("learn.task.quizDoneScore", { pct: Math.round(item.scorePct) }) : t("learn.task.quizDone")}
     </StatusChip>
   );
 
@@ -108,7 +111,7 @@ function QuizCard({ item, courseSlug }: { item: QuizItem; courseSlug: string }) 
           <p className="truncate text-sm font-medium transition-colors group-hover:text-brand-600">
             {item.title}
           </p>
-          <p className="text-xs text-faint">Quiz</p>
+          <p className="text-xs text-faint">{t("learn.task.quizLabel")}</p>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-2">
@@ -125,22 +128,25 @@ function AssignmentCard({
   item,
   courseSlug,
   teamContext,
+  lang,
 }: {
   item: AssignmentItem;
   courseSlug: string;
   teamContext: TeamContext | null;
+  lang?: UiLang;
 }) {
+  const t = tFor(lang);
   const sub = item.submission;
   const isTeam = item.submissionMode === "team";
   const hasTeam = !!teamContext?.team;
   const chip = !sub ? (
-    <StatusChip variant="todo">Chưa nộp</StatusChip>
+    <StatusChip variant="todo">{t("learn.task.asgTodo")}</StatusChip>
   ) : sub.status === "graded" ? (
     <StatusChip variant="graded">
-      ✓ Đã chấm {sub.score !== null ? `· ${sub.score}/${item.maxScore}` : ""}
+      {sub.score !== null ? t("learn.task.asgGradedScore", { score: sub.score, max: item.maxScore }) : t("learn.task.asgGraded")}
     </StatusChip>
   ) : (
-    <StatusChip variant="submitted">Đã nộp · chờ chấm</StatusChip>
+    <StatusChip variant="submitted">{t("learn.task.asgSubmitted")}</StatusChip>
   );
 
   return (
@@ -157,11 +163,11 @@ function AssignmentCard({
             <p className="truncate text-sm font-medium">{item.title}</p>
             <p className="text-xs text-faint">
               {isTeam && (
-                <span className="chip-brand mr-1.5 px-2 py-0 text-[11px]">Bài tập nhóm</span>
+                <span className="chip-brand mr-1.5 px-2 py-0 text-[11px]">{t("learn.task.teamChip")}</span>
               )}
-              Assignment · max {item.maxScore}đ
+              {t("learn.task.asgMeta", { max: item.maxScore })}
               {item.dueAt && (
-                <> · hạn {formatDateTime(item.dueAt)}</>
+                <> {t("learn.task.due", { date: formatDateTime(item.dueAt) })}</>
               )}
             </p>
           </div>
@@ -187,15 +193,15 @@ function AssignmentCard({
 
         {isTeam && sub?.teamSubmittedAt && (
           <p className="text-meta mt-3">
-            Nộp lần cuối bởi{" "}
-            <span className="font-medium text-[rgb(var(--text))]">{sub.submittedByName ?? "một thành viên"}</span>{" "}
-            lúc <DateTime value={sub.teamSubmittedAt.toISOString()} />
+            {t("learn.task.lastBy")}{" "}
+            <span className="font-medium text-[rgb(var(--text))]">{sub.submittedByName ?? t("learn.task.aMember")}</span>{" "}
+            {t("learn.task.at")} <DateTime value={sub.teamSubmittedAt.toISOString()} />
           </p>
         )}
 
         {sub?.status === "graded" && sub.feedback && (
           <div className="mt-3 rounded-lg border border-success-100 bg-success-50 p-3">
-            <p className="text-xs font-semibold text-success-700">Nhận xét</p>
+            <p className="text-xs font-semibold text-success-700">{t("learn.task.feedback")}</p>
             <p className="mt-1 whitespace-pre-wrap text-sm text-success-700/90">
               {sub.feedback}
             </p>
@@ -223,12 +229,12 @@ function AssignmentCard({
         <div className="mt-4">
           {isTeam && !hasTeam ? (
             <div className="banner-info flex-col gap-1">
-              <p>Bài tập này nộp theo nhóm. Bạn cần vào một nhóm trước khi nộp.</p>
+              <p>{t("learn.task.needTeam")}</p>
               {teamContext?.locked ? (
-                <p className="text-meta">Danh sách nhóm đã khoá — bạn liên hệ giảng viên để được xếp nhóm.</p>
+                <p className="text-meta">{t("learn.task.teamsLocked")}</p>
               ) : (
                 <Link href={`/learn/${courseSlug}#${COURSE_TEAM_ANCHOR}`} className="link text-sm font-medium">
-                  Tạo hoặc vào nhóm →
+                  {t("learn.task.joinTeam")}
                 </Link>
               )}
             </div>
@@ -256,15 +262,18 @@ export default function LessonTasksTab({
   items,
   courseSlug,
   teamContext = null,
+  lang,
 }: {
   items: TaskItem[];
   courseSlug: string;
   teamContext?: TeamContext | null;
+  lang?: UiLang;
 }) {
+  const t = tFor(lang);
   if (items.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-token px-4 py-8 text-center text-sm text-faint">
-        Bài học này chưa có bài tập nào.
+        {t("learn.task.empty")}
       </p>
     );
   }
@@ -274,9 +283,9 @@ export default function LessonTasksTab({
       {items.map((it) => (
         <li key={`${it.kind}:${it.id}`}>
           {it.kind === "quiz" ? (
-            <QuizCard item={it} courseSlug={courseSlug} />
+            <QuizCard item={it} courseSlug={courseSlug} lang={lang} />
           ) : (
-            <AssignmentCard item={it} courseSlug={courseSlug} teamContext={teamContext} />
+            <AssignmentCard item={it} courseSlug={courseSlug} teamContext={teamContext} lang={lang} />
           )}
         </li>
       ))}

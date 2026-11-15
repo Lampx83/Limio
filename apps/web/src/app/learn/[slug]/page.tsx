@@ -9,6 +9,7 @@ import {
   getMyCourseTeam,
   isUserEnrolled,
   listMockExamsForLearner,
+  minutesOf,
 } from "@feedbackme/core-lms";
 import { LANGUAGE_SKILL_LABEL, isLanguageSkill } from "@feedbackme/shared-types";
 import {
@@ -23,7 +24,11 @@ import {
 import { getFlashcardStats, getLanguageProfile, getLearningPath, recordPathShown } from "@feedbackme/core-feedback";
 import { reviewableToday } from "@/lib/flashcardSession";
 import { auth } from "@/lib/auth";
-import { StickyMobileCTA } from "@/components/ui";
+import { getT, getUiLang } from "@/lib/i18n/server";
+import type { UiLang } from "@/lib/i18n/core";
+import { tFor } from "@/lib/i18n/tFor";
+import { LessonVideoBadge, StickyMobileCTA } from "@/components/ui";
+import { loadCourseLessonVideos, type LessonVideoInfo } from "@/lib/lessonVideo";
 import CourseLeaderboardCard from "@/components/CourseLeaderboardCard";
 import SmartBackLink from "@/components/SmartBackLink";
 import {
@@ -54,6 +59,8 @@ export default async function LearnCoursePage({
   params: { slug: string };
   searchParams?: { paid?: string; preview?: string };
 }) {
+  const t = await getT();
+  const lang = await getUiLang();
   const session = await auth();
   if (!session?.user?.id) redirect(`/signin?callbackUrl=/learn/${params.slug}`);
 
@@ -72,30 +79,33 @@ export default async function LearnCoursePage({
   // khoá, không cần ghi danh, và không đụng dữ liệu học tập của ai (XP, chuỗi
   // ngày, bảng xếp hạng đều gắn với một học viên cụ thể nên bỏ hẳn).
   if (searchParams?.preview === "1" && (await canEditCourse(session.user.id, course.id))) {
+    const previewVideos = await loadCourseLessonVideos(course.id);
     return (
       <main className="mx-auto w-full max-w-6xl px-4 py-6 lg:px-6">
         <Link
           href={`/instructor/courses/${course.id}?tab=content`}
           className="link inline-flex items-center gap-1 text-sm"
         >
-          ← Quay lại soạn khoá
+          {t("learn.home.backToEditor")}
         </Link>
         <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-6 text-white shadow-card-hover sm:p-8">
           <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
           <div className="relative">
             <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
-              {courseMetaLine(course.level, course.language)}
+              {courseMetaLine(course.level, course.language, lang)}
             </span>
             <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">{course.title}</h1>
           </div>
         </header>
         <section className="mt-8">
-          <h2 className="text-xl font-semibold">Lộ trình học</h2>
+          <h2 className="text-xl font-semibold">{t("learn.home.path")}</h2>
           <ModuleList
+            lang={lang}
             modules={course.modules}
             slug={params.slug}
             completedSet={new Set()}
             lessonQuery="?preview=1"
+            videos={previewVideos}
           />
         </section>
       </main>
@@ -131,6 +141,7 @@ export default async function LearnCoursePage({
     flashcardStats,
     mockExams,
     teamAssignmentCount,
+    lessonVideos,
   ] = await Promise.all([
     prisma.enrollment.findUniqueOrThrow({
       where: { userId_courseId: { userId: session.user.id, courseId: course.id } },
@@ -156,14 +167,16 @@ export default async function LearnCoursePage({
         lesson: { isHidden: false, module: { courseId: course.id, isHidden: false } },
       },
     }),
+    // Bài nào có video — dấu nhỏ cạnh tên bài trong "Nội dung khoá học". Lỗi ở đây không được làm hỏng cả trang khoá.
+    loadCourseLessonVideos(course.id).catch(() => new Map<string, LessonVideoInfo>()),
   ]);
   const myTeam: CourseTeamState | null =
     teamAssignmentCount > 0
-      ? await getMyCourseTeam(session.user.id, course.id).then((t) => ({
-          settings: t.settings,
-          team: t.team && {
-            ...t.team,
-            members: t.team.members.map((m) => ({ ...m, joinedAt: m.joinedAt.toISOString() })),
+      ? await getMyCourseTeam(session.user.id, course.id).then((mt) => ({
+          settings: mt.settings,
+          team: mt.team && {
+            ...mt.team,
+            members: mt.team.members.map((m) => ({ ...m, joinedAt: m.joinedAt.toISOString() })),
           },
         }))
       : null;
@@ -173,13 +186,13 @@ export default async function LearnCoursePage({
     course.languageMode && learningPath.enabled
       ? await getLanguageProfile(session.user.id, course.id, "learner").catch(() => null)
       : null;
-  const skillRows = languageProfile?.enabled ? skillProgressRows(languageProfile.skills) : null;
+  const skillRows = languageProfile?.enabled ? skillProgressRows(languageProfile.skills, lang) : null;
   const reviewCard =
     flashcardStats.total > 0
       ? reviewCardView({
           reviewable: reviewableToday(flashcardStats),
           suggestionLessonTitle: languageProfile?.enabled ? languageProfile.suggestion?.lessonTitle : null,
-        })
+        }, lang)
       : null;
   const earnedCodes = new Set(earned.map((u) => u.badge.code));
   const completedSet = new Set(
@@ -196,7 +209,7 @@ export default async function LearnCoursePage({
     progress.modules.flatMap((m) => m.lessons),
   );
   const continueLessonId = continuePick?.id;
-  const continueLabel = continuePick ? (enrollment.lastLessonId ? "Tiếp tục" : "Bắt đầu") : null;
+  const continueLabel = continuePick ? (enrollment.lastLessonId ? t("learn.home.ctaContinue") : t("learn.home.ctaStart")) : null;
   const lessonTitleById = new Map(
     course.modules.flatMap((m) => m.lessons.map((l) => [l.id, l.title] as const)),
   );
@@ -225,7 +238,7 @@ export default async function LearnCoursePage({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-medium backdrop-blur">
-                {courseMetaLine(course.level, course.language)}
+                {courseMetaLine(course.level, course.language, lang)}
               </span>
               <h1 className="mt-3 h-display text-3xl font-bold sm:text-4xl">
                 {course.title}
@@ -235,17 +248,16 @@ export default async function LearnCoursePage({
             {streak.currentStreak > 0 && (
               <div
                 className="flex items-center gap-2 rounded-xl bg-accent-500/95 px-3 py-2 text-sm font-semibold shadow-sm"
-                title={`Kỷ lục dài nhất: ${streak.longestStreak} ngày. ${
-                  streak.freezeAvailable
-                    ? "Đóng băng streak sẵn sàng: bỏ lỡ 1 ngày không mất chuỗi."
-                    : "Đóng băng streak đang nghỉ (dùng lại sau 7 ngày)."
-                }`}
+                title={t("learn.home.streakTitle", {
+                  n: streak.longestStreak,
+                  freeze: streak.freezeAvailable ? t("learn.home.freezeReady") : t("learn.home.freezeResting"),
+                })}
               >
                 <span aria-hidden className="text-lg leading-none">🔥</span>
                 <span>
-                  {streakLabel(streak.currentStreak)}
+                  {streakLabel(streak.currentStreak, lang)}
                   {streak.isActiveToday && (
-                    <span className="ml-1 text-xs opacity-80">· hôm nay ✓</span>
+                    <span className="ml-1 text-xs opacity-80">{t("learn.home.todayDone")}</span>
                   )}
                 </span>
               </div>
@@ -255,14 +267,14 @@ export default async function LearnCoursePage({
           {/* Progress + XP */}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <ProgressTile
-              label="Tiến độ học"
+              label={t("learn.home.tileProgress")}
               value={`${progress.courseCompletionPct}%`}
               pct={progress.courseCompletionPct}
               barClass="bg-white"
               tone="white"
             />
             <ProgressTile
-              label="Điểm tương tác"
+              label={t("learn.home.tilePoints")}
               value={`${xp.xp} XP`}
               hint={(() => {
                 const { head, more } = describeLevelParts({
@@ -270,7 +282,7 @@ export default async function LearnCoursePage({
                   levelName: xp.levelName,
                   xpToNext: xp.xpToNext,
                   isMaxLevel: xp.isMaxLevel,
-                });
+                }, lang);
                 // Màn hẹp (< sm) chỉ giữ "Cấp n · Tên cấp"; câu "Cần thêm … XP" hiện từ sm.
                 return more ? (
                   <>
@@ -289,7 +301,7 @@ export default async function LearnCoursePage({
                   href="/xp-guide"
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-xs font-medium text-white backdrop-blur transition-colors hover:bg-white/30"
                 >
-                  Cách tính điểm
+                  {t("learn.home.xpGuide")}
                 </Link>
               }
             />
@@ -302,7 +314,7 @@ export default async function LearnCoursePage({
                 href={`/learn/${params.slug}/lessons/${continueLessonId}`}
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm transition-all hover:scale-[1.02]"
               >
-                {continueButtonText(enrollment.lastLessonId ? "continue" : "start", continueTitle)}
+                {continueButtonText(enrollment.lastLessonId ? "continue" : "start", continueTitle, lang)}
               </Link>
             )}
             {isComplete && (
@@ -310,7 +322,7 @@ export default async function LearnCoursePage({
                 href={`/learn/${params.slug}/certificate`}
                 className="inline-flex items-center gap-2 rounded-lg border-2 border-accent-300 bg-accent-400/20 px-4 py-2 text-sm font-semibold backdrop-blur transition-all hover:bg-accent-400/30"
               >
-                Xem chứng nhận
+                {t("learn.home.viewCertificate")}
               </Link>
             )}
           </div>
@@ -325,9 +337,9 @@ export default async function LearnCoursePage({
           {/* B4 — lộ trình cá nhân hoá */}
           {learningPath.steps.length > 0 && (
             <section>
-              <h2 className="text-h3">Lộ trình của bạn</h2>
+              <h2 className="text-h3">{t("learn.home.yourPath")}</h2>
               <p className="text-meta mt-1">
-                Gợi ý dựa trên kết quả làm bài của bạn. Bạn vẫn có thể học bất kỳ bài nào.
+                {t("learn.home.yourPathHint")}
               </p>
               <div className="mt-3">
                 <LearningPathList
@@ -342,7 +354,7 @@ export default async function LearnCoursePage({
           {/* Modules */}
           <section>
             <div className="flex items-baseline justify-between">
-              <h2 className="text-xl font-semibold">Nội dung khoá học</h2>
+              <h2 className="text-xl font-semibold">{t("learn.home.content")}</h2>
               <span className="text-xs text-faint">
                 {
                   course.modules
@@ -355,14 +367,16 @@ export default async function LearnCoursePage({
                     .flatMap((m) => m.lessons)
                     .filter((l) => !l.isHidden).length
                 }{" "}
-                bài đã hoàn thành
+                {t("learn.home.lessonsCompleted")}
               </span>
             </div>
             <ModuleList
               modules={course.modules}
               slug={params.slug}
               completedSet={completedSet}
+              videos={lessonVideos}
               collapsible
+              lang={lang}
               markLessonId={markedLessonId}
               markKind={currentMark}
             />
@@ -372,10 +386,10 @@ export default async function LearnCoursePage({
               đường nào vào đề thi từ trang khoá (chỉ qua link giảng viên gửi). */}
           {mockExams.length > 0 && (
             <section id="luyen-thi" aria-labelledby="mock-exams-title">
-              <h2 id="mock-exams-title" className="text-h3">Thi thử</h2>
+              <h2 id="mock-exams-title" className="text-h3">{t("learn.home.mockExams")}</h2>
               <div className="mt-3 grid gap-3">
                 {mockExams.map((e) => (
-                  <MockExamCard key={e.examId} slug={params.slug} exam={e} />
+                  <MockExamCard key={e.examId} slug={params.slug} exam={e} lang={lang} />
                 ))}
               </div>
             </section>
@@ -391,7 +405,7 @@ export default async function LearnCoursePage({
             <div className="rounded-2xl border border-success-100 bg-success-50 p-5 text-center">
               <p className="text-2xl"></p>
               <p className="mt-1 font-semibold text-success-700">
-                Bạn đã hoàn thành khoá học này!
+                {t("learn.home.courseDone")}
               </p>
             </div>
           )}
@@ -404,9 +418,9 @@ export default async function LearnCoursePage({
             <Link
               href={`/learn/${params.slug}/skills`}
               className="card block transition-colors hover:bg-brand-soft"
-              aria-label="Tiến độ theo kỹ năng — xem hồ sơ kỹ năng"
+              aria-label={t("learn.home.skillsAria")}
             >
-              <h2 className="text-base font-semibold">Tiến độ theo kỹ năng</h2>
+              <h2 className="text-base font-semibold">{t("learn.home.skillsTitle")}</h2>
               <ul className="mt-4 space-y-3">
                 {skillRows.map((r) => (
                   <li key={r.skill}>
@@ -424,15 +438,15 @@ export default async function LearnCoursePage({
                   </li>
                 ))}
               </ul>
-              <p className="text-caption mt-3 text-faint">Dựa trên bài học đã hoàn thành</p>
-              <p className="mt-1 text-sm font-medium text-brand-600">Xem hồ sơ kỹ năng →</p>
+              <p className="text-caption mt-3 text-faint">{t("learn.home.skillsBasis")}</p>
+              <p className="mt-1 text-sm font-medium text-brand-600">{t("learn.home.skillsProfile")}</p>
             </Link>
           )}
           {reviewCard && (
             <section className="rounded-2xl border border-success-100 bg-success-50 p-5">
               <h2 className="flex items-center gap-2 text-base font-semibold">
                 <RotateCcw className="h-5 w-5 text-success-700" aria-hidden />
-                Đến lúc ôn lại
+                {t("learn.home.reviewTitle")}
               </h2>
               <p className="mt-3 text-sm text-muted">{reviewCard.headline}</p>
               {reviewCard.fromLine && <p className="text-sm text-muted">{reviewCard.fromLine}</p>}
@@ -446,16 +460,16 @@ export default async function LearnCoursePage({
           )}
           {mockExams.length > 0 && (
             <section className="card">
-              <h2 className="text-base font-semibold">Sẵn sàng vận dụng?</h2>
+              <h2 className="text-base font-semibold">{t("learn.rail.readyToApply")}</h2>
               <a href="#luyen-thi" className="link mt-2 inline-flex items-center gap-1 text-sm font-medium">
-                Thi thử <span aria-hidden>↗</span>
+                {t("learn.home.mockExams")} <span aria-hidden>↗</span>
               </a>
             </section>
           )}
           {/* Daily quests */}
           {dailyQuests.length > 0 && (
             <section className="card">
-              <h2 className="text-base font-semibold">Nhiệm vụ hôm nay</h2>
+              <h2 className="text-base font-semibold">{t("learn.home.quests")}</h2>
               <ul className="mt-4 space-y-3">
                 {dailyQuests.map((q) => {
                   const pct = Math.min(100, Math.round((q.count / q.target) * 100));
@@ -486,7 +500,7 @@ export default async function LearnCoursePage({
                         />
                       </div>
                       <p className="mt-1.5 text-xs text-faint">
-                        {q.completed ? "✓ Đã hoàn thành" : `${q.count} / ${q.target}`}
+                        {q.completed ? t("learn.home.questDone") : `${q.count} / ${q.target}`}
                       </p>
                     </li>
                   );
@@ -509,10 +523,10 @@ export default async function LearnCoursePage({
               <div className="flex items-baseline justify-between">
                 <h2 className="text-base font-semibold">Champions</h2>
                 <span className="text-xs text-faint">
-                  {champions.lookbackDays} ngày
+                  {t("learn.home.championsDays", { n: champions.lookbackDays })}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-faint">Khắc phục lỗi tư duy</p>
+              <p className="mt-1 text-xs text-faint">{t("learn.home.championsSub")}</p>
               <ol className="mt-3 space-y-1">
                 {champions.entries.map((e) => (
                   <li
@@ -545,7 +559,7 @@ export default async function LearnCoursePage({
           {/* Badges */}
           <section className="card">
             <div className="flex items-baseline justify-between">
-              <h2 className="text-base font-semibold">Huy hiệu</h2>
+              <h2 className="text-base font-semibold">{t("learn.home.badges")}</h2>
               <span className="text-xs text-faint">
                 {earnedCodes.size}/{catalog.length}
               </span>
@@ -581,14 +595,14 @@ export default async function LearnCoursePage({
 
       {continueLessonId && continueLabel && (
         <StickyMobileCTA
-          primary={`${continueLabel} bài học`}
-          secondary={`${progress.courseCompletionPct}% hoàn thành · ${xp.xp} XP`}
+          primary={continueLabel}
+          secondary={t("learn.home.ctaSecondary", { pct: progress.courseCompletionPct, xp: xp.xp })}
           action={
             <Link
               href={`/learn/${params.slug}/lessons/${continueLessonId}`}
               className="btn-primary"
             >
-              Vào học →
+              {t("learn.home.ctaGo")}
             </Link>
           }
         />
@@ -618,7 +632,10 @@ function ModuleList({
   collapsible = false,
   markLessonId = null,
   markKind = null,
+  videos,
+  lang,
 }: {
+  lang?: UiLang;
   modules: ModuleForList[];
   slug: string;
   completedSet: Set<string>;
@@ -627,7 +644,16 @@ function ModuleList({
   collapsible?: boolean;
   markLessonId?: string | null;
   markKind?: "current" | "next" | null;
+  /** Bài → video (đã lọc khối ẩn). Bài không có trong map thì không có video. */
+  videos?: ReadonlyMap<string, LessonVideoInfo>;
 }) {
+  const t = tFor(lang);
+  const videoBadge = (lessonId: string) => {
+    const v = videos?.get(lessonId);
+    if (!v) return null;
+    const mins = minutesOf(v.durationSec);
+    return <LessonVideoBadge label={t("learn.video.has")} duration={mins ? t("learn.minutes", { n: mins }) : null} />;
+  };
   const visibleModules = modules.filter((m) => !m.isHidden);
   const openModuleId =
     visibleModules.find((m) => markLessonId && m.lessons.some((l) => l.id === markLessonId))?.id ??
@@ -700,14 +726,17 @@ function ModuleList({
                             <li key={l.id}>
                               <div
                                 className="flex cursor-not-allowed items-center gap-3 rounded-lg px-2 py-1.5 text-faint"
-                                title="Nội dung đang khoá — giảng viên sẽ mở sau"
+                                title={t("learn.toc.lockedTitle")}
                               >
                                 <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgb(var(--surface-muted))]">
                                   <Lock className="h-3 w-3" aria-hidden />
                                 </span>
-                                <span className="flex-1 text-sm">{l.title}</span>
+                                <span className="flex flex-1 items-center gap-2 text-sm">
+                                  {l.title}
+                                  {videoBadge(l.id)}
+                                </span>
                                 <span className="text-[10px] uppercase tracking-wide">
-                                  Đang khoá
+                                  {t("learn.toc.locked")}
                                 </span>
                               </div>
                             </li>
@@ -732,16 +761,19 @@ function ModuleList({
                               >
                                 {completed ? "✓" : li + 1}
                               </span>
-                              <span
-                                className={`flex-1 text-sm transition-colors group-hover:text-brand-600 ${
-                                  completed ? "text-muted line-through" : ""
-                                }`}
-                              >
-                                {l.title}
+                              <span className="flex min-w-0 flex-1 items-center gap-2">
+                                <span
+                                  className={`text-sm transition-colors group-hover:text-brand-600 ${
+                                    completed ? "text-muted line-through" : ""
+                                  }`}
+                                >
+                                  {l.title}
+                                </span>
+                                {videoBadge(l.id)}
                               </span>
                               {isMarked && (
                                 <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-semibold text-white">
-                                  {markKind === "current" ? "Đang học" : "Bài tiếp theo"}
+                                  {markKind === "current" ? t("learn.home.markCurrent") : t("learn.home.markNext")}
                                 </span>
                               )}
                               <span className="text-xs text-faint opacity-0 transition-opacity group-hover:opacity-100">

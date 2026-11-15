@@ -13,6 +13,7 @@ import {
   ExamError,
   buildLessonFrame,
   getPracticeBlockSummaries,
+  getPracticeCheckProgress,
   getPracticeForEmbed,
   getPracticePreview,
   type PracticeEmbed,
@@ -22,6 +23,7 @@ import {
   listMockExamsForLearner,
   listThreadsForLesson,
   loadLessonDurations,
+  minutesOf,
   registerLessonMedia,
   resolveQuizScore,
 } from "@feedbackme/core-lms";
@@ -36,10 +38,13 @@ import { LANGUAGE_SKILL_LABEL, LearningEventType } from "@feedbackme/shared-type
 import { estimateLessonDeckTokens, formatTokenCount } from "@/lib/limioLiveLessonDeck";
 import { auth } from "@/lib/auth";
 import { getActiveRole } from "@/lib/active-role";
+import { getT, getUiLang } from "@/lib/i18n/server";
 import { isLearnerRole } from "@/lib/learnerRole";
 import { parseLessonView, splitLessonItems } from "@/lib/lessonFrameView";
+import { loadCourseLessonVideos, type LessonVideoInfo } from "@/lib/lessonVideo";
+import EnrollButton from "@/components/EnrollButton";
 import LessonFrameLayout, { LessonViewTabs } from "@/components/language/LessonFrame";
-import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel } from "@/lib/lessonFramePolicy";
+import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFrameApplies, lessonLevelLabel, previewHidesSiteChrome } from "@/lib/lessonFramePolicy";
 import { getSiteSetting } from "@/lib/site-settings";
 import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/ExamRefBlock";
 import LessonPractice from "@/components/language/LessonPractice";
@@ -96,6 +101,7 @@ export async function generateMetadata({
 }: {
   params: { slug: string; lessonId: string };
 }): Promise<Metadata> {
+  const t = await getT();
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     select: {
@@ -113,7 +119,7 @@ export async function generateMetadata({
     },
   });
 
-  if (!lesson) return { title: "Không tìm thấy bài học", robots: { index: false } };
+  if (!lesson) return { title: t("learn.lesson.notFound"), robots: { index: false } };
 
   const course = lesson.module.course;
   const indexable =
@@ -123,7 +129,7 @@ export async function generateMetadata({
     title: `${lesson.title} — ${course.title}`,
     description:
       htmlToPlainText(lesson.description) ||
-      `Bài học "${lesson.title}" thuộc khoá ${course.title} trên ${SITE_NAME}.`,
+      t("learn.lesson.metaDesc", { lesson: lesson.title, course: course.title, site: SITE_NAME }),
     path: `/learn/${params.slug}/lessons/${params.lessonId}`,
     image: course.coverUrl,
     type: "article",
@@ -152,6 +158,8 @@ export default async function LessonPage({
    */
   searchParams?: { gv?: string; stage?: string; preview?: string; view?: string };
 }) {
+  const t = await getT();
+  const lang = await getUiLang();
   const session = await auth();
   // May be null: courses with `publicAccess` are readable logged-out. Everything
   // downstream that filters by user must handle that — see NO_USER below.
@@ -160,7 +168,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, themeColor: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
       // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
@@ -228,7 +236,10 @@ export default async function LessonPage({
   // Người dạy khoá này vào được bài mà không cần ghi danh — trước đây họ bị đá
   // về trang giới thiệu, tức là muốn xem bài mình vừa soạn thì phải tự ghi danh
   // vào khoá của chính mình.
-  const canEdit = userId ? await canEditCourse(userId, lesson.module.course.id) : false;
+  // Đang chọn vai "học viên" (RoleSwitcher) thì trang phải y hệt học viên thật: không nút Slide, không ghi chú giảng viên,
+  // không vào bài khi chưa ghi danh — dù tài khoản này có quyền sửa khoá.
+  const viewingAsLearner = getActiveRole(session?.user?.roles ?? []) === "learner";
+  const canEdit = userId && !viewingAsLearner ? await canEditCourse(userId, lesson.module.course.id) : false;
   // Ẩn cả module thì bài bên trong cũng phải khoá lại, không thì học viên biết
   // đường dẫn vẫn vào thẳng được. Người dạy khoá này thì vẫn vào — họ cần soạn
   // và chiếu thử nội dung chưa mở cho lớp.
@@ -289,11 +300,10 @@ export default async function LessonPage({
           <h1 className="mt-4 text-xl font-semibold">{lesson.title}</h1>
           <p className="mt-1 text-sm text-faint">{lesson.module.title}</p>
           <p className="mt-4 text-sm text-muted">
-            Nội dung bài này đang khoá. Giảng viên sẽ mở khi lớp học tới phần
-            này — bạn không cần làm gì thêm.
+            {t("learn.lesson.lockedBody")}
           </p>
           <Link href={`/learn/${params.slug}`} className="btn-primary mt-6 inline-block">
-            Về trang khoá học
+            {t("learn.lesson.toCoursePage")}
           </Link>
         </div>
       </main>
@@ -325,8 +335,8 @@ export default async function LessonPage({
     <JsonLd
       data={[
         breadcrumbJsonLd([
-          { name: "Trang chủ", path: "/" },
-          { name: "Khoá học", path: "/catalog" },
+          { name: t("learn.lesson.crumbHome"), path: "/" },
+          { name: t("learn.lesson.crumbCourses"), path: "/catalog" },
           { name: lesson.module.course.title, path: `/catalog/${params.slug}` },
           { name: lesson.title, path: `/learn/${params.slug}/lessons/${lesson.id}` },
         ]),
@@ -380,26 +390,39 @@ export default async function LessonPage({
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200 bg-brand-soft px-5 py-3">
           <div>
             <p className="text-sm font-semibold text-brand-700">
-              {anonymous ? "Bạn đang xem thử công khai" : "Bài học preview miễn phí"}
+              {anonymous ? t("learn.lesson.previewPublic") : t("learn.lesson.previewFree")}
             </p>
             <p className="text-sm text-brand-600">
               {anonymous
-                ? "Đăng nhập để lưu tiến độ, làm bài tập, thảo luận và nhận phản hồi."
+                ? t("learn.lesson.signInToSave")
                 : paid
-                  ? "Mua khoá học để truy cập toàn bộ nội dung."
-                  : "Đăng ký miễn phí để học toàn bộ khoá."}
+                  ? t("learn.lesson.buyToAccess")
+                  : t("learn.lesson.enrollFreeFull")}
             </p>
           </div>
-          <a
-            href={
-              anonymous
-                ? `/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`
-                : `/catalog/${params.slug}`
-            }
-            className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
-          >
-            {anonymous ? "Đăng nhập" : paid ? "Xem khoá học" : "Đăng ký ngay"}
-          </a>
+          {!anonymous && !paid ? (
+            // Khoá miễn phí: ghi danh ngay tại đây rồi vào học. Trước đây nút chỉ đưa về trang khoá, nơi nút ghi danh nằm
+            // cuối thanh bên — học viên tưởng "đăng ký xong lại bị đá về trang khoá".
+            <EnrollButton
+              courseId={course.id}
+              slug={params.slug}
+              alreadyEnrolled={false}
+              priceCents={0}
+              paymentEnabled={false}
+              freeLabel={t("learn.lesson.enrollNow")}
+            />
+          ) : (
+            <a
+              href={
+                anonymous
+                  ? `/signin?callbackUrl=/learn/${params.slug}/lessons/${params.lessonId}`
+                  : `/catalog/${params.slug}#dang-ky`
+              }
+              className="shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-brand-700"
+            >
+              {anonymous ? t("learn.lesson.signIn") : t("learn.lesson.viewCourse")}
+            </a>
+          )}
         </div>
         {/* Cùng kiểu panel như bản dành cho người đã ghi danh. */}
         <header className="mt-6 rounded-2xl border border-token bg-[rgb(var(--surface))] p-5 shadow-card sm:p-6">
@@ -422,7 +445,7 @@ export default async function LessonPage({
               className="btn-pill"
             >
               <Download size={16} />
-              In / Lưu PDF
+              {t("learn.printPdf")}
             </a>
           </div>
         </header>
@@ -466,7 +489,19 @@ export default async function LessonPage({
       eventKey: `lesson.completed:${userId}:${lesson.id}`,
     },
   });
-  const progress = await getCourseProgress(userId, lesson.module.course.id);
+  const [progress, lessonVideos] = await Promise.all([
+    getCourseProgress(userId, lesson.module.course.id),
+    // Dấu "Có video" trong mục lục / thanh bài. Lỗi ở đây không được làm hỏng trang bài.
+    loadCourseLessonVideos(lesson.module.course.id).catch(() => new Map<string, LessonVideoInfo>()),
+  ]);
+  // Mục lục (client component) nhận dữ liệu thuần JSON: gắn cờ video + số phút vào từng bài.
+  const tocModules = progress.modules.map((m) => ({
+    ...m,
+    lessons: m.lessons.map((l) => {
+      const v = lessonVideos.get(l.id);
+      return v ? { ...l, hasVideo: true, videoMinutes: minutesOf(v.durationSec) } : l;
+    }),
+  }));
   const threads = await listThreadsForLesson(lesson.id);
 
   const skipSuggestion = completedEvent
@@ -623,8 +658,8 @@ export default async function LessonPage({
     .map(({ _sort, ...rest }: any) => rest);
 
   const tasksUndone =
-    tasks.filter((t) =>
-      t.kind === "quiz" ? !t.attempted : t.submission?.status !== "graded",
+    tasks.filter((task) =>
+      task.kind === "quiz" ? !task.attempted : task.submission?.status !== "graded",
     ).length;
 
   const { tabs: bottomTabs, defaultTab } = lessonBottomTabs({
@@ -632,6 +667,7 @@ export default async function LessonPage({
     tasksCount: tasks.length,
     tasksUndone,
     threadsCount: threads.length,
+    labels: { tasks: t("learn.tabs.tasks"), forum: t("learn.tabs.forum") },
   });
 
   // Auto-complete criteria. Computed server-side because we already know all
@@ -689,7 +725,7 @@ export default async function LessonPage({
       .length +
     visibleAssignments.filter((a) => a.submissions.length === 0).length;
   const totalActivityCount = visibleQuizzes.length + visibleAssignments.length;
-  const autoCompleteConfig = {
+  const baseAutoComplete = {
     requireVideoWatch: hasNativeVideo,
     videoThresholdPct: lesson.completionThresholdPct ?? 80,
     requireAllActivities: hasAnyActivity,
@@ -767,17 +803,17 @@ export default async function LessonPage({
       const info = summaries[it.id];
       if (!info?.examId || info.questions === 0) continue;
       const examId = info.examId;
-      const title = p.title || "Bài luyện";
+      const title = p.title || t("learn.lesson.practiceDefaultTitle");
       if (practiceForPreview) {
         // Xem như học viên: giảng viên thường không ghi danh khoá của mình nên không thể dẫn sang trang luyện đề (sẽ bị chặn);
         // nhúng thẳng bản xem thử, giống nút "Xem trước" ở trang soạn Bài luyện.
         try {
           const embed = await getPracticePreview(userId!, examId);
           practiceEmbeds.set(it.id, { embed, preview: true, title: p.title });
-          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview />;
+          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
         } catch (e) {
           if (!(e instanceof ExamError)) throw e;
-          practiceBlocks[it.id] = <PracticeBlockNotice title={title} message="Bài luyện này hiện chưa dùng được." />;
+          practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;
         }
         continue;
       }
@@ -786,9 +822,9 @@ export default async function LessonPage({
         practiceBlocks[it.id] = (
           <PracticeBlockNotice
             title={title}
-            message="Bài luyện có đoạn văn và câu hỏi, kiểm tra từng câu ngay khi làm."
+            message={t("learn.lesson.practiceNotice")}
             href={`/learn/${params.slug}/exams/${examId}/practice`}
-            cta="Mở bài luyện"
+            cta={t("learn.lesson.practiceOpen")}
           />
         );
         continue;
@@ -796,10 +832,10 @@ export default async function LessonPage({
       try {
         const embed = await getPracticeForEmbed(userId, examId);
         practiceEmbeds.set(it.id, { embed, preview: false, title: p.title });
-        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} />;
+        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
-        practiceBlocks[it.id] = <PracticeBlockNotice title={title} message="Bài luyện này hiện chưa dùng được." />;
+        practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;
       }
     }
   }
@@ -809,6 +845,26 @@ export default async function LessonPage({
   const practiceIds = new Set(Object.keys(practiceBlocks));
   const sections =
     languageSkin && lessonFrame && practiceIds.size > 0 && lessonView === "lesson" ? splitLessonSections(shownItems, practiceIds, new Map([...practiceEmbeds].map(([id, v]) => [id, v.embed.passages.map((x) => x.title)]))) : null;
+
+  // Hoàn thành bài theo Bài luyện (docs/tieu-chi/hoan-thanh-bai-theo-bai-luyen.md): học viên đã ghi danh và đang trong khung bài học (nơi khối luyện
+  // nhúng được) phải bấm Kiểm tra MỌI câu của các khối luyện hiện trong bài; khi đó điều kiện "cuộn hết trang" không còn áp dụng. Xem như học
+  // viên, chiếu lớp, người chưa ghi danh: không tính (không đổi hành vi).
+  const practiceCheck =
+    practiceForLearner && lessonFrame
+      ? await getPracticeCheckProgress(
+          userId!,
+          visibleItems.filter((it) => it.type === "exam_practice").map((it) => it.id),
+        )
+      : { total: 0, checked: 0 };
+  const requirePractice = practiceCheck.total > 0;
+  const autoCompleteConfig = {
+    ...baseAutoComplete,
+    requirePractice,
+    practiceTotal: practiceCheck.total,
+    practiceChecked: practiceCheck.checked,
+    // Bài luyện thay cho "cuộn hết trang" như quiz và bài tập nộp đang làm.
+    requireScrollToEnd: baseAutoComplete.requireScrollToEnd && !requirePractice,
+  };
 
   // Khối "Đề thi" (exam_ref): gắn một đề thi thử của khoá vào bài. Học viên đã ghi danh thấy đúng thẻ như ở trang khoá (chỉ khi đề dùng
   // được); giảng viên bấm "Xem như học viên" thấy thẻ hoặc nhãn lý do. Chiếu lớp và trang in không hiện.
@@ -822,7 +878,7 @@ export default async function LessonPage({
       for (const it of examRefItems) {
         const { examId, title } = refOf(it);
         const card = cards.find((c) => c.examId === examId);
-        if (card) examRefBlocks[it.id] = <ExamRefLearnerBlock slug={params.slug} exam={card} title={title} />;
+        if (card) examRefBlocks[it.id] = <ExamRefLearnerBlock slug={params.slug} exam={card} title={title} lang={lang} />;
       }
     } else if (previewMode) {
       const states = await getExamRefStates(courseId, examRefItems.map((it) => refOf(it).examId ?? null));
@@ -845,7 +901,7 @@ export default async function LessonPage({
       // Trạng thái ban đầu của công tắc ghi chú; sau đó TeacherBar tự đổi thuộc
       // tính này trên <html> để bật/tắt tức thì, không tải lại trang.
       data-gv={teacherMode ? "1" : undefined}
-      data-preview={previewMode ? "1" : undefined}
+      data-preview={previewHidesSiteChrome(!!previewMode, !!lessonFrame) ? "1" : undefined}
       // w-full: <main> là item của một flex column (layout gốc) và có mx-auto, nên
       // không có w-full thì nó co theo nội dung — bài ngắn/không mục lục hẹp hơn
       // hẳn bài có mục lục, chuyển bài qua lại thì độ rộng trang nhảy.
@@ -880,11 +936,11 @@ export default async function LessonPage({
           {canEdit && (
             <Link
               href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
-              title="Quay về màn hình soạn nội dung của bài này."
+              title={t("learn.lesson.backToEditorTitle")}
               className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
             >
               <PenLine className="h-4 w-4" aria-hidden />
-              Về soạn nội dung
+              {t("learn.lesson.backToEditor")}
             </Link>
           )}
         </div>
@@ -894,7 +950,7 @@ export default async function LessonPage({
           href={`/learn/${params.slug}?preview=1`}
           className="link inline-flex items-center gap-1 text-sm font-medium"
         >
-          ← Về trang khoá học
+          {t("learn.lesson.backToCoursePage")}
         </Link>
       )}
 
@@ -909,17 +965,18 @@ export default async function LessonPage({
           // ở đường dẫn phía trên nên không lặp lại. Tiêu đề cỡ vừa (2xl) vì cạnh còn thanh bài, nội dung và panel.
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
             <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-              {lesson.languageSkill && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
+              {/* Khoá có màu bộ sách đã in dải kỹ năng (READING, SPEAKING…) trong thân bài: không lặp thêm nhãn ở tiêu đề. */}
+              {lesson.languageSkill && !lesson.module.course.themeColor && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
               <h1 className="h-display min-w-0 text-xl font-bold sm:text-2xl">{lesson.title}</h1>
             </div>
             {!previewMode && canEdit && (
               <Link
                 href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
-                title="Quay về màn hình soạn nội dung của bài này."
+                title={t("learn.lesson.backToEditorTitle")}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
               >
                 <PenLine className="h-4 w-4" aria-hidden />
-                Về soạn nội dung
+                {t("learn.lesson.backToEditor")}
               </Link>
             )}
           </div>
@@ -935,7 +992,7 @@ export default async function LessonPage({
           // Trong khung, mô tả trùng tên unit/module (vd. "Lifestyle") chỉ lặp lại thanh bài và đường dẫn nên bỏ.
           !(
             lessonFrame &&
-            [lessonFrame.unitTitle, lesson.module.title].some((t) => t.trim().toLowerCase() === htmlToPlainText(lesson.description).trim().toLowerCase())
+            [lessonFrame.unitTitle, lesson.module.title].some((x) => x.trim().toLowerCase() === htmlToPlainText(lesson.description).trim().toLowerCase())
           ) && (
             <SafeHtml
               html={plainToRichHtml(lesson.description)}
@@ -969,6 +1026,7 @@ export default async function LessonPage({
                   printHref={`/learn/${params.slug}/lessons/${params.lessonId}/print${
                     teacherMode ? "?gv=1" : ""
                   }`}
+                  lang={lang}
                 />
               </div>
             )}
@@ -994,7 +1052,7 @@ export default async function LessonPage({
       </header>
 
       {split && (
-        <LessonViewTabs slug={params.slug} lessonId={lesson.id} view={lessonView} vocabCount={split.count} preview={previewMode} />
+        <LessonViewTabs slug={params.slug} lessonId={lesson.id} view={lessonView} vocabCount={split.count} preview={previewMode} lang={lang} />
       )}
 
       {!previewMode && skipSuggestion?.shouldSkip && (
@@ -1090,7 +1148,17 @@ export default async function LessonPage({
                     label: g.label ?? t.label,
                     virtualPartner: t.virtualPartner,
                     content: (
-                      <LessonPractice slug={params.slug} embed={g.embed} blockTitle={info.title} lessonId={lesson.id} preview={info.preview} subset />
+                      <LessonPractice
+                        slug={params.slug}
+                        embed={g.embed}
+                        blockTitle={info.title}
+                        lessonId={lesson.id}
+                        preview={info.preview}
+                        subset
+                        sheet={languageMode}
+                        accent={lesson.module.course.themeColor}
+                        skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
+                      />
                     ),
                   }));
                 }
@@ -1141,20 +1209,20 @@ export default async function LessonPage({
       <LessonTabs defaultTab={defaultTab} tabs={bottomTabs}>
         {{
           tasks: (
-            <LessonTasksTab items={tasks} courseSlug={params.slug} teamContext={teamContext} />
+            <LessonTasksTab items={tasks} courseSlug={params.slug} teamContext={teamContext} lang={lang} />
           ),
           forum: (
             <LessonForumSection
               lessonId={lesson.id}
               courseSlug={params.slug}
-              threads={threads.map((t) => ({
-                id: t.id,
-                title: t.title,
-                body: t.body,
-                resolvedPostId: t.resolvedPostId,
-                createdAt: t.createdAt,
-                author: { displayName: t.author.displayName },
-                _count: { posts: t._count.posts },
+              threads={threads.map((th) => ({
+                id: th.id,
+                title: th.title,
+                body: th.body,
+                resolvedPostId: th.resolvedPostId,
+                createdAt: th.createdAt,
+                author: { displayName: th.author.displayName },
+                _count: { posts: th._count.posts },
               }))}
             />
           ),
@@ -1182,8 +1250,8 @@ export default async function LessonPage({
         <LessonTocDrawer
           slug={params.slug}
           currentLessonId={lesson.id}
-          modules={progress.modules}
-          tooltipLabel={`Mục lục khoá · bài ${idx + 1}/${allLessons.length}`}
+          modules={tocModules}
+          tooltipLabel={t("learn.toc.tooltip", { n: idx + 1, total: allLessons.length })}
         />
       )}
 
@@ -1208,13 +1276,17 @@ export default async function LessonPage({
       slug={params.slug}
       lessonId={lesson.id}
       courseTitle={lesson.module.course.title}
+      coverUrl={lesson.module.course.coverUrl}
+      accent={lesson.module.course.themeColor}
       lessonTitle={lesson.title}
       frame={lessonFrame}
       hasExams={frameHasExams}
       levelLabel={lessonLevelLabel(languageMode)}
       notesCount={notesCount}
-      tocModules={progress.modules}
+      tocModules={tocModules}
+      videos={lessonVideos}
       preview={previewMode}
+      lang={lang}
     >
       {body}
     </LessonFrameLayout>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil } from "lucide-react";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Hai phần nhắc học sinh giải ra giấy (docs/tieu-chi/quiz-nhap-ra-giay.md): màn hình chuẩn bị trước câu đầu, và khung che đáp án
@@ -19,29 +20,31 @@ function PaperIllustration() {
 }
 
 export function WorkOnPaperIntro({ title, questionCount, points, onReady }: { title: string; questionCount: number; points: number; onReady: () => void }) {
+  const t = useT();
   return (
     <section className="card mx-auto flex max-w-xl flex-col items-center gap-3 px-6 py-10 text-center">
       <p className="text-sm text-muted">{title}</p>
       <PaperIllustration />
-      <h1 className="text-h3">Em chuẩn bị giấy và bút nhé</h1>
-      <p className="text-sm leading-relaxed text-muted">Bài này cần tính toán. Em giải ra giấy rồi mới trả lời.</p>
+      <h1 className="text-h3">{t("practice.quiz.paper.title")}</h1>
+      <p className="text-sm leading-relaxed text-muted">{t("practice.quiz.paper.body")}</p>
       <p className="text-xs text-faint">
-        {questionCount} câu · {points} điểm
+        {t("practice.quiz.paper.meta", { n: questionCount, p: points })}
       </p>
       <button type="button" autoFocus className="btn-primary mt-2 min-h-[44px]" onClick={onReady}>
-        Em đã sẵn sàng
+        {t("practice.quiz.paper.ready")}
       </button>
     </section>
   );
 }
 
 export function CoveredOptions({ onReveal }: { onReveal: () => void }) {
+  const t = useT();
   return (
     <div className="flex min-h-[12rem] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-token p-6 text-center">
       <Pencil size={22} className="text-muted" aria-hidden />
-      <p className="text-sm leading-relaxed text-muted">Các đáp án đang được che. Em giải ra giấy trước đã.</p>
+      <p className="text-sm leading-relaxed text-muted">{t("practice.quiz.paper.covered")}</p>
       <button type="button" className="btn-primary min-h-[44px]" onClick={onReveal}>
-        Em giải xong rồi
+        {t("practice.quiz.paper.reveal")}
       </button>
     </div>
   );

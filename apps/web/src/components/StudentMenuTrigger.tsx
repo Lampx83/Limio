@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Menu, Home } from "lucide-react";
@@ -28,6 +29,7 @@ export default function StudentMenuTrigger({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const t = useT();
   if (!shouldShow(pathname, languagePages)) return null;
   // Giảng viên xem thử bài (?preview=1): trang chỉ còn tên bài + nội dung.
   if (searchParams.get("preview") === "1") return null;
@@ -48,7 +50,7 @@ export default function StudentMenuTrigger({
       <Link
         data-app-chrome
         href={teaching ? "/instructor/dashboard" : "/me/dashboard"}
-        aria-label={teaching ? "Về dashboard giảng viên" : "Về trang chủ học viên"}
+        aria-label={teaching ? t("header.teachingHome") : t("header.learnerHome")}
         className={`narration-lift fixed bottom-24 left-4 z-30 flex h-11 w-11 short:bottom-2 short:left-3 short:h-9 short:w-9 items-center justify-center rounded-full text-white shadow-lg transition-transform hover:scale-105 ${
           // Cùng tông với left menu tương ứng: giảng viên hổ phách (xem
           // InstructorLeftMenu), học viên xanh ngọc (xem StudentLeftMenu).
@@ -65,7 +67,7 @@ export default function StudentMenuTrigger({
     <button
       type="button"
       onClick={dispatch}
-      aria-label="Mở menu học viên"
+      aria-label={t("header.openStudentMenu")}
       className="flex h-9 w-9 items-center justify-center rounded-lg text-[rgb(var(--text-muted))] hover:bg-[rgb(var(--surface-muted))] lg:hidden"
     >
       <Menu size={18} />

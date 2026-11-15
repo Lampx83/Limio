@@ -4,6 +4,7 @@ import { useState } from "react";
 import { masteryLabel } from "@feedbackme/shared-types";
 import { apiUrl } from "@/lib/apiUrl";
 import MasteryBadge from "@/components/MasteryBadge";
+import { useT } from "@/lib/i18n/client";
 
 interface MasteryRow {
   skillCode: string;
@@ -22,6 +23,7 @@ export default function SkipLessonBanner({
   nextLessonId: string | null;
   masteries: MasteryRow[];
 }) {
+  const t = useT();
   const [dismissed, setDismissed] = useState(false);
   const [skipping, setSkipping] = useState(false);
 
@@ -48,10 +50,10 @@ export default function SkipLessonBanner({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-sm font-semibold text-success-700">
-            Bạn có thể bỏ qua bài này
+            {t("learn.skip.title")}
           </p>
           <p className="mt-2 text-xs text-success-700/90">
-            Hệ thống thấy bạn đã nắm vững các chủ đề liên quan:
+            {t("learn.skip.intro")}
           </p>
           <ul className="mt-2 space-y-1">
             {masteries.map((m) => (
@@ -65,8 +67,7 @@ export default function SkipLessonBanner({
             ))}
           </ul>
           <p className="mt-3 text-xs italic text-success-700/80">
-            Bỏ qua sẽ đánh dấu bài này hoàn thành. Bạn vẫn có thể đọc nội dung
-            bên dưới nếu muốn.
+            {t("learn.skip.note")}
           </p>
         </div>
         <div className="flex flex-col gap-2">
@@ -75,13 +76,13 @@ export default function SkipLessonBanner({
             disabled={skipping}
             className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg bg-success-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-success-700 disabled:opacity-50"
           >
-            {skipping ? "Đang xử lý..." : "Bỏ qua →"}
+            {skipping ? t("learn.skip.busy") : t("learn.skip.go")}
           </button>
           <button
             onClick={() => setDismissed(true)}
             className="btn-sm inline-flex items-center justify-center gap-2 rounded-lg border border-success-200 bg-[rgb(var(--surface))] px-3 py-1.5 font-medium text-success-700 transition-colors hover:bg-success-50"
           >
-            Học bình thường
+            {t("learn.skip.dismiss")}
           </button>
         </div>
       </div>

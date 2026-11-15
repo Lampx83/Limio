@@ -212,6 +212,40 @@ export async function getPracticeBlockSummaries(contentItemIds: string[], db: Db
   return out;
 }
 
+export interface PracticeCheckProgress {
+  /** Tổng số câu của các khối luyện (chỉ khối có ≥ 1 câu). */
+  total: number;
+  /** Số câu học viên đã bấm Kiểm tra (ở bất kỳ buổi luyện nào của đề đó). */
+  checked: number;
+}
+
+/**
+ * Hoàn thành bài theo Bài luyện (docs/tieu-chi/hoan-thanh-bai-theo-bai-luyen.md): với các khối luyện đưa vào, đếm tổng số câu và số câu học viên
+ * ĐÃ KIỂM TRA (`ExamPracticeAnswer.checkedAt` khác rỗng, buổi nào cũng được — làm lại, bỏ buổi hay kết thúc buổi không làm mất trạng thái).
+ * Khối chưa có câu nào không tính. Chỉ đọc dữ liệu của chính học viên.
+ */
+export async function getPracticeCheckProgress(userId: string, contentItemIds: string[], db: DbClient = prisma): Promise<PracticeCheckProgress> {
+  if (contentItemIds.length === 0) return { total: 0, checked: 0 };
+  const exams = await db.exam.findMany({
+    where: { ownerContentItemId: { in: contentItemIds } },
+    select: { id: true, questions: { select: { id: true } } },
+  });
+  const withQuestions = exams.filter((e) => e.questions.length > 0);
+  if (withQuestions.length === 0) return { total: 0, checked: 0 };
+  const rows = await db.examPracticeAnswer.findMany({
+    where: { checkedAt: { not: null }, session: { userId, examId: { in: withQuestions.map((e) => e.id) } } },
+    select: { questionId: true },
+  });
+  const checkedIds = new Set(rows.map((r) => r.questionId));
+  let total = 0;
+  let checked = 0;
+  for (const e of withQuestions) {
+    total += e.questions.length;
+    checked += e.questions.filter((q) => checkedIds.has(q.id)).length;
+  }
+  return { total, checked };
+}
+
 /** Tóm tắt một khối cho giảng viên sửa được khoá (hàng khối trong bài). Khối không phải Bài luyện → `not_found`. */
 export async function getPracticeBlockSummaryForEditor(actorUserId: string, contentItemId: string, db: DbClient = prisma): Promise<PracticeBlockSummary> {
   const item = await db.contentItem.findUnique({

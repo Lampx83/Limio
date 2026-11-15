@@ -12,8 +12,12 @@ import HeaderCalendar from "./HeaderCalendar";
 import { getUnreadCount, getLastSeenIso, type Role } from "@/lib/notifications";
 import { getActiveRole, switchableRoles } from "@/lib/active-role";
 import { LimeSliceIcon } from "./BrandIcons";
+import type { SpaceBrand } from "@/lib/space/types";
 import HeaderTagline from "./HeaderTagline";
 import { isLearnerRole } from "@/lib/learnerRole";
+import { getT } from "@/lib/i18n/server";
+import LangSwitch from "./LangSwitch";
+import { headers } from "next/headers";
 
 // Header render trên MỌI trang — cache isAnyOrgAdmin 60s/userId để không query
 // OrganizationAdmin mỗi request, cùng cách admin/layout.tsx cache isAdmin.
@@ -23,9 +27,12 @@ const getIsAnyOrgAdminCached = unstable_cache(
   { revalidate: 60, tags: ["user-roles"] },
 );
 
-export default async function AppHeader() {
+export default async function AppHeader({ space = null }: { space?: SpaceBrand | null } = {}) {
   const session = await auth();
+  const t = await getT();
   const user = session?.user;
+  // Trang chủ/giới thiệu của space có công tắc ngôn ngữ riêng (?lang=) — không chồng thêm công tắc giao diện lên đó.
+  const showLangSwitch = !/^\/(?:s\/|micro4asia(?:\/|$))/.test(headers().get("x-space-path") ?? "");
   const roles = switchableRoles(user?.roles ?? []);
   const activeRole = getActiveRole(roles);
   // Chỉ cần cho nhánh guest bên dưới — bỏ qua query khi đã đăng nhập.
@@ -67,6 +74,27 @@ export default async function AppHeader() {
       <div className="flex w-full items-center justify-between px-4 py-3 sm:px-6 short:py-1">
         <div className="flex items-center gap-2 shrink-0">
         <StudentMenuTrigger variant="header" languagePages={languagePages} />
+        {space ? (
+          // Trang thuộc một space (trường/dự án): logo của space thay logo Limio, bấm về trang chủ space.
+          <Link
+            href={space.homeHref}
+            aria-label={space.name}
+            className="flex shrink-0 items-center gap-3 rounded bg-white px-2 py-1"
+          >
+            {space.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={space.logoUrl} alt={space.logoAlt} className="h-8 w-auto max-w-[200px] sm:h-10 sm:max-w-none" />
+            )}
+            {space.logoUrl && space.partnerLogoUrl && <span className="h-8 w-px bg-[#B2B2B2] sm:h-10" aria-hidden />}
+            {space.partnerLogoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={space.partnerLogoUrl} alt={space.partnerLogoAlt} className="h-9 w-auto sm:h-11" />
+            )}
+            {!space.logoUrl && !space.partnerLogoUrl && (
+              <span className="text-xl font-bold tracking-tight">{space.name}</span>
+            )}
+          </Link>
+        ) : (
         <Link href="/" className="group flex items-baseline gap-2 shrink-0">
           <LimeSliceIcon className="h-11 w-11 shrink-0 self-center short:h-8 short:w-8 transition-transform group-hover:scale-105 group-hover:rotate-12" />
           <span className="text-3xl font-bold tracking-tight short:text-2xl">
@@ -74,11 +102,13 @@ export default async function AppHeader() {
           </span>
           <HeaderTagline activeRole={activeRole} roles={roles} guest={!user} />
         </Link>
+        )}
         </div>
 
         <div className="flex items-center gap-2">
           {/* Nút Đấu trường: ẩn khi đang thi (xem TournamentCta). */}
           <TournamentCta activeRole={activeRole} />
+          {showLangSwitch && <LangSwitch />}
 
           {/* Nút quét QR của học viên đang ẩn (ScanQrButton); bật lại bằng cách render nó ở đây. */}
           {user && activeRole === "instructor" && <HeaderCalendar />}
@@ -102,11 +132,11 @@ export default async function AppHeader() {
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">
               <Link href="/signin" className="btn-primary btn-sm">
-                Đăng nhập
+                {t("header.signIn")}
               </Link>
               {registerEnabled && (
                 <Link href="/register" className="btn-ghost btn-sm">
-                  Đăng ký
+                  {t("header.register")}
                 </Link>
               )}
             </div>

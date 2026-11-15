@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { useT } from "@/lib/i18n/client";
 
 interface Note {
   id: string;
@@ -143,6 +144,7 @@ export function LessonNotes({
   /** Báo số ghi chú mỗi khi danh sách đổi (panel phải hiện "Ghi chú · n"). */
   onCount?: (n: number) => void;
 }) {
+  const t = useT();
   const [notes, setNotes] = useState<Note[]>([]);
   const [body, setBody] = useState("");
   const [timestamp, setTimestamp] = useState<string>("");
@@ -188,7 +190,7 @@ export function LessonNotes({
   return (
     <section>
       {!hideHeading && (
-        <h2 className="text-xl font-semibold">Ghi chú của tôi</h2>
+        <h2 className="text-xl font-semibold">{t("ai.notes.heading")}</h2>
       )}
       <form
         onSubmit={onSubmit}
@@ -198,7 +200,7 @@ export function LessonNotes({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           rows={2}
-          placeholder="Viết ghi chú... (insight, câu hỏi, link tham khảo)"
+          placeholder={t("ai.notes.placeholder")}
           className="textarea"
         />
         <div className="flex items-center gap-2">
@@ -207,9 +209,9 @@ export function LessonNotes({
             min={0}
             value={timestamp}
             onChange={(e) => setTimestamp(e.target.value)}
-            placeholder="Giây"
-            title="Mốc thời gian trong video (giây) — có thể bỏ trống"
-            aria-label="Mốc thời gian (giây), có thể bỏ trống"
+            placeholder={t("ai.notes.secPlaceholder")}
+            title={t("ai.notes.secTitle")}
+            aria-label={t("ai.notes.secAria")}
             className="input w-20 text-sm"
           />
           <button
@@ -217,14 +219,14 @@ export function LessonNotes({
             disabled={submitting || !body.trim()}
             className="btn-primary btn-sm ml-auto"
           >
-            Lưu ghi chú
+            {t("ai.notes.save")}
           </button>
         </div>
       </form>
 
       {notes.length === 0 ? (
         <div className="mt-3 rounded-xl border border-dashed border-token px-3 py-3 text-center text-sm text-faint">
-          Chưa có ghi chú nào.
+          {t("ai.notes.empty")}
         </div>
       ) : (
         <ul className="mt-3 space-y-1.5">
@@ -245,7 +247,7 @@ export function LessonNotes({
                 onClick={() => onDelete(n.id)}
                 className="text-xs font-medium text-danger-600 hover:underline"
               >
-                Xóa
+                {t("ai.notes.delete")}
               </button>
             </li>
           ))}

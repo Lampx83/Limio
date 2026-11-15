@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
+import { useT } from "@/lib/i18n/client";
 import {
   PDF_VIEW_EVENT,
   PDF_VIEW_REQUEST_EVENT,
@@ -36,6 +37,7 @@ export default function PdfViewer({
   /** Cùng với `contentItemId`: ghi lại việc học viên bấm mở PDF ở tab mới (AC6). */
   lessonId?: string;
 }) {
+  const t = useT();
   const viewerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -304,13 +306,13 @@ export default function PdfViewer({
 
       {loading && (
         <div className="flex h-48 w-full items-center justify-center rounded-xl border border-token bg-[rgb(var(--surface))]">
-          <p className="text-sm text-muted">Đang tải PDF...</p>
+          <p className="text-sm text-muted">{t("learn.pdf.loading")}</p>
         </div>
       )}
 
       {error && (
         <div className="w-full rounded-xl border border-danger-100 bg-danger-50 px-4 py-3 text-sm text-danger-700">
-          Không thể tải PDF.{" "}
+          {t("learn.pdf.error")}{" "}
           <a
             href={url}
             target="_blank"
@@ -319,7 +321,7 @@ export default function PdfViewer({
             onClick={recordOpen}
             onAuxClick={onAuxClick}
           >
-            Mở trong tab mới
+            {t("learn.pdf.openTab")}
           </a>
         </div>
       )}
@@ -341,7 +343,7 @@ export default function PdfViewer({
                 className="btn-secondary btn-sm ml-4"
                 data-view-keep
               >
-                Thoát toàn màn hình
+                {t("learn.pdf.exitFs")}
               </button>
             </div>
           ) : (
@@ -360,7 +362,7 @@ export default function PdfViewer({
                   className="btn-secondary btn-sm"
                   data-view-keep
                 >
-                  Toàn màn hình
+                  {t("learn.pdf.enterFs")}
                 </button>
               )}
             </div>
@@ -390,7 +392,7 @@ export default function PdfViewer({
               onClick={recordOpen}
               onAuxClick={onAuxClick}
             >
-              Mở PDF trong tab mới
+              {t("learn.pdf.openPdfTab")}
             </a>
           )}
         </>

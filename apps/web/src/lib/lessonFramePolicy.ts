@@ -94,3 +94,11 @@ export function writePanelTabPref(storage: StorageLike | null, tab: PanelTab): v
     /* như trên */
   }
 }
+
+/**
+ * Xem thử của giảng viên (`?preview=1`) có ẩn header và footer của site không. Bản cũ (không khung) chỉ còn tên bài + nội dung nên ẩn
+ * cho gọn; khi có khung 3 cột, xem thử phải giống hệt học viên đã ghi danh (thầy 11/11/2026) nên header và footer hiện như thường.
+ */
+export function previewHidesSiteChrome(previewMode: boolean, frameOn: boolean): boolean {
+  return previewMode && !frameOn;
+}

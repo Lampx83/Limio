@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Mic, Square } from "lucide-react";
 import { MAX_RECORD_SECONDS, formatClock } from "@/lib/audioRecorder";
 import { useAudioRecorder } from "@/components/useAudioRecorder";
@@ -13,29 +13,13 @@ export class VoiceUseError extends Error {
   }
 }
 
-const NOTICE_KEY = "limio:practice-voice-notice";
-
-function noticeSeen(): boolean {
-  try {
-    return window.localStorage.getItem(NOTICE_KEY) === "1";
-  } catch {
-    return false; // lưu trữ bị chặn: cứ nhắc, chỉ thừa chứ không sai
-  }
-}
-function markNoticeSeen() {
-  try {
-    window.localStorage.setItem(NOTICE_KEY, "1");
-  } catch {
-    /* bỏ qua */
-  }
-}
 
 /**
  * Câu mở của Bài luyện nhúng: trả lời bằng giọng nói (docs/tieu-chi/bai-luyen-tra-loi-bang-giong-noi-va-bai-mau.md, AC1).
  * Nằm dưới ô gõ. Bấm nút là ghi luôn (≤ 3 phút); một khung duy nhất đi qua ba bước: đang ghi (Dừng) → nghe lại
  * (Chuyển thành chữ / Ghi lại). Bản ghi chỉ rời trình duyệt khi học viên bấm "Chuyển thành chữ". Chữ do máy nghe điền vào ô trả lời (việc đó do `onUse` ở chỗ gọi làm). Gõ chữ luôn dùng được.
  *
- * - `preview`: xem thử của giảng viên — nút hiện nhưng khoá, không gọi máy chủ.
+ * - `preview`: xem thử của giảng viên — ghi âm và chuyển chữ được (trừ ví giảng viên) nhưng không lưu bản ghi và không có nhận xét AI.
  * - `recordingSrc`: có bản ghi cuối cùng của học viên → trình phát "Bản ghi của bạn" (cả sau khi tải lại trang).
  * - `viaVoiceText`: câu trả lời hiện tại đến từ giọng nói → nhãn nhắc đọc lại và sửa.
  */
@@ -46,6 +30,7 @@ export default function EssayVoiceAnswer({
   hasText,
   feedbackOn,
   onUse,
+  trailing,
 }: {
   preview: boolean;
   recordingSrc: string | null;
@@ -55,6 +40,8 @@ export default function EssayVoiceAnswer({
   feedbackOn: boolean;
   /** `withFeedback`: kiểm tra và nhận xét ngay sau khi có bản chữ. */
   onUse: (file: File, withFeedback: boolean) => Promise<void>;
+  /** Nút của chỗ gọi (vd "Kiểm tra câu n") đặt cùng hàng với nút giọng nói, căn phải, để hai việc không chiếm hai dòng. */
+  trailing?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -67,20 +54,27 @@ export default function EssayVoiceAnswer({
       )}
 
       {!open && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <button
-            type="button"
-            className="btn-secondary btn-sm inline-flex items-center gap-1.5"
-            disabled={preview}
-            onClick={() => setOpen(true)}
-          >
-            <Mic size={14} aria-hidden /> Trả lời bằng giọng nói
-          </button>
-          {preview && <span className="text-xs text-muted">Xem thử: không chuyển giọng nói thành chữ.</span>}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <button
+              type="button"
+              className="btn-secondary btn-sm inline-flex items-center gap-1.5"
+              onClick={() => setOpen(true)}
+            >
+              <Mic size={14} aria-hidden /> Trả lời bằng giọng nói
+            </button>
+            {preview && <span className="text-xs text-muted">Xem thử: ghi âm và chuyển thành chữ được, nhưng không lưu bản ghi.</span>}
+          </div>
+          {trailing}
         </div>
       )}
 
-      {open && !preview && <VoicePanel hasText={hasText} feedbackOn={feedbackOn} onUse={onUse} onClose={() => setOpen(false)} />}
+      {open && (
+        <>
+          <VoicePanel hasText={hasText} feedbackOn={feedbackOn} onUse={onUse} onClose={() => setOpen(false)} />
+          {trailing && <div className="flex justify-end">{trailing}</div>}
+        </>
+      )}
 
       {recordingSrc && !preview && (
         <div data-testid="lp-voice-player">
@@ -98,7 +92,6 @@ function VoicePanel({ hasText, feedbackOn, onUse, onClose }: { hasText: boolean;
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [useError, setUseError] = useState<string | null>(null);
-  const [seen, setSeen] = useState(() => (typeof window === "undefined" ? true : noticeSeen()));
   const rec = useAudioRecorder({
     autoStart: true,
     onRecorded: (f) => {
@@ -114,8 +107,6 @@ function VoicePanel({ hasText, feedbackOn, onUse, onClose }: { hasText: boolean;
     setUseError(null);
     try {
       await onUse(file, withFeedback);
-      markNoticeSeen();
-      setSeen(true);
       onClose();
     } catch (e) {
       setUseError(voiceErrorMessage(e instanceof VoiceUseError ? e.code : "network"));
@@ -185,7 +176,6 @@ function VoicePanel({ hasText, feedbackOn, onUse, onClose }: { hasText: boolean;
         <p className="text-xs text-muted">
           {done && feedbackOn ? "AI nghe bản ghi, điền chữ vào ô trả lời rồi nhận xét ngay. " : ""}
           {done && hasText ? "Bản chữ từ giọng nói sẽ thay phần bạn đã gõ. " : ""}
-          {!seen ? "Bản ghi âm sẽ được gửi tới OpenAI để chuyển thành chữ." : ""}
         </p>
       )}
 

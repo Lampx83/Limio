@@ -1,4 +1,6 @@
-import { SPEAKING_NOTICE } from "@/lib/speakingFeedbackText";
+"use client";
+
+import { useT } from "@/lib/i18n/client";
 import WritingFeedbackView, { type WritingFeedbackBody } from "./WritingFeedbackView";
 
 /**
@@ -17,15 +19,16 @@ export default function SpeakingFeedbackView({
   reviewerNote?: string | null;
   transcript: string;
 }) {
+  const t = useT();
   return (
     <div className="space-y-4" data-testid="speaking-feedback-view">
       <p className="banner-info text-sm" role="note">
-        {SPEAKING_NOTICE}
+        {t("practice.sf.notice")}
       </p>
       <WritingFeedbackView body={body} review={review} reviewerNote={reviewerNote} />
-      <section aria-label="Bản chữ máy nghe được">
+      <section aria-label={t("practice.sf.v.transcriptAria")}>
         <h4 className="text-sm font-semibold">
-          Máy nghe được <span className="text-meta font-normal">(có thể nghe sai)</span>
+          {t("practice.sf.v.heard")} <span className="text-meta font-normal">{t("practice.sf.v.mayBeWrong")}</span>
         </h4>
         <p className="mt-1 whitespace-pre-wrap rounded border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-sm">
           {transcript}

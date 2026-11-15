@@ -4,6 +4,7 @@ import { Captions, CaptionsOff, ChevronLeft, ChevronRight, Maximize, Minimize, X
 import { useEffect, useState, type RefObject } from "react";
 import { NarrationAvatar, lecturerPhoto } from "./NarrationAvatar";
 import LecturerVideo from "./LecturerVideo";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * Phần khung của chế độ trình chiếu (docs/tieu-chi/trinh-chieu-giang-vien.md): nút thoát ở góc trên trái và ảnh giảng viên.
@@ -22,9 +23,10 @@ export default function SlideStage({
   speaking: boolean;
   onExit: () => void;
 }) {
+  const tr = useT();
   return (
     <>
-      <button type="button" className="slide-pill slide-exit print:hidden" onClick={onExit} aria-label="Thoát trình chiếu (Esc)">
+      <button type="button" className="slide-pill slide-exit print:hidden" onClick={onExit} aria-label={tr("reader.nar.stage.exit")}>
         <X size={20} />
       </button>
 
@@ -70,6 +72,7 @@ export function SlideDock({
   onPrev: (() => void) | null;
   onNext: (() => void) | null;
 }) {
+  const tr = useT();
   const [full, setFull] = useState(false);
   useEffect(() => {
     const sync = () => setFull(!!document.fullscreenElement);
@@ -88,7 +91,7 @@ export function SlideDock({
   return (
     <div className="slide-dock print:hidden">
       <div className="slide-pill slide-nav">
-        <button type="button" className="slide-btn" onClick={() => onPrev?.()} disabled={!onPrev} aria-label="Slide trước">
+        <button type="button" className="slide-btn" onClick={() => onPrev?.()} disabled={!onPrev} aria-label={tr("reader.nar.stage.prev")}>
           <ChevronLeft size={20} />
         </button>
         {showCount && (
@@ -101,9 +104,9 @@ export function SlideDock({
           className={`slide-btn ${waiting ? "slide-btn-go" : ""}`}
           onClick={() => onNext?.()}
           disabled={!onNext}
-          aria-label={waiting ? "Tiếp tục" : "Slide sau"}
+          aria-label={waiting ? tr("reader.nar.stage.continue") : tr("reader.nar.stage.next")}
         >
-          {waiting && <span className="text-sm font-medium">Tiếp tục</span>}
+          {waiting && <span className="text-sm font-medium">{tr("reader.nar.stage.continue")}</span>}
           <ChevronRight size={20} />
         </button>
         <span className="slide-sep" aria-hidden="true" />
@@ -112,12 +115,12 @@ export function SlideDock({
           className="slide-btn"
           onClick={onToggleSubtitles}
           aria-pressed={showSubtitles}
-          aria-label={showSubtitles ? "Tắt phụ đề" : "Bật phụ đề"}
+          aria-label={showSubtitles ? tr("reader.nar.stage.subOff") : tr("reader.nar.stage.subOn")}
         >
           {showSubtitles ? <Captions size={20} /> : <CaptionsOff size={20} />}
         </button>
         {canFull && (
-          <button type="button" className="slide-btn" onClick={toggleFull} aria-pressed={full} aria-label={full ? "Thoát toàn màn hình" : "Toàn màn hình"}>
+          <button type="button" className="slide-btn" onClick={toggleFull} aria-pressed={full} aria-label={full ? tr("reader.nar.stage.fullExit") : tr("reader.nar.stage.full")}>
             {full ? <Minimize size={20} /> : <Maximize size={20} />}
           </button>
         )}
@@ -133,7 +136,7 @@ export function SlideDock({
             <b className="slide-wait-prompt">{prompt}</b>
           ) : (
             <>
-              Em làm xong rồi bấm <b>Tiếp tục</b> nhé
+              {tr("reader.nar.stage.waitBefore")}<b>{tr("reader.nar.stage.continue")}</b>{tr("reader.nar.stage.waitAfter")}
             </>
           )}
         </p>

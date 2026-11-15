@@ -173,10 +173,14 @@ export async function assertWithinCaps(
   }
 }
 
-interface LessonContext {
+export interface LessonContext {
   lessonId: string;
   lessonTitle: string;
   courseTitle: string;
+  /** `Course.language` (mã như "en", "vi"). Chỉ là gợi ý dự phòng — ngôn ngữ trả lời theo tin nhắn của người học. */
+  courseLanguage?: string | null;
+  /** Ngôn ngữ giao diện của người học ("vi" | "en"); dự phòng sau `courseLanguage`. */
+  uiLocale?: string | null;
   /** Concatenated markdown content + content item descriptions. Truncated to ~6KB. */
   contextText: string;
   /** Skills tagged on the lesson with current learner mastery. */
@@ -192,11 +196,12 @@ export async function buildLessonContext(
   userId: string,
   lessonId: string,
   db: PrismaClient = prisma,
+  uiLocale?: string | null,
 ): Promise<LessonContext> {
   const lesson = await db.lesson.findUnique({
     where: { id: lessonId },
     include: {
-      module: { include: { course: { select: { title: true } } } },
+      module: { include: { course: { select: { title: true, language: true } } } },
       contentItems: {
         orderBy: { orderIndex: "asc" },
         select: { type: true, payload: true },
@@ -249,9 +254,50 @@ export async function buildLessonContext(
     lessonId,
     lessonTitle: lesson.title,
     courseTitle: lesson.module.course.title,
+    courseLanguage: lesson.module.course.language,
+    uiLocale: uiLocale ?? null,
     contextText,
     skillStates,
   };
+}
+
+/** Tên tiếng Anh của ngôn ngữ — prompt viết bằng tiếng Anh để chính chỉ dẫn không kéo model sang tiếng Việt. */
+const TUTOR_LANGUAGE_NAMES: Record<string, string> = {
+  vi: "Vietnamese",
+  en: "English",
+  zh: "Chinese",
+  ja: "Japanese",
+  ko: "Korean",
+  fr: "French",
+  de: "German",
+};
+
+function languageNameOf(code: string | null | undefined): string | null {
+  const base = (code ?? "").trim().toLowerCase().split(/[-_]/)[0] ?? "";
+  return TUTOR_LANGUAGE_NAMES[base] ?? null;
+}
+
+/**
+ * Ngôn ngữ dự phòng khi tin nhắn quá ngắn/mơ hồ để đoán: ngôn ngữ của khoá học
+ * (`Course.language`), rồi mới tới ngôn ngữ giao diện, rồi tiếng Việt (mặc định
+ * của nền tảng). Mã lạ không có trong bảng tên thì bị bỏ qua, không đoán.
+ */
+export function resolveTutorFallbackLanguage(
+  courseLanguage: string | null | undefined,
+  uiLocale: string | null | undefined,
+): string {
+  return languageNameOf(courseLanguage) ?? languageNameOf(uiLocale) ?? "Vietnamese";
+}
+
+/**
+ * Chỉ dẫn ngôn ngữ trả lời. Có mặt ở ĐẦU và CUỐI system prompt: chỉ dẫn cuối
+ * thắng khi phần giữa (nội dung bài học, tên skill) viết bằng tiếng khác — chính
+ * là lỗi gốc: nội dung/skill bằng tiếng Việt kéo câu trả lời sang tiếng Việt dù
+ * học viên hỏi bằng tiếng Anh.
+ */
+export function tutorLanguageRule(ctx: Pick<LessonContext, "courseLanguage" | "uiLocale">): string {
+  const fallback = resolveTutorFallbackLanguage(ctx.courseLanguage, ctx.uiLocale);
+  return `LANGUAGE RULE (highest priority): Always answer in the language of the user's LAST message — English question → English answer, Vietnamese → Vietnamese, any other language → that language. Decide it from the user's own words, NOT from the language of the lesson content, the course title, the skill names, or earlier assistant replies. Everything you write — explanations, Socratic questions, quiz/practice questions and their option labels, headings, hints, closing lines — must be in that same language; never mix in another language, except quoted lesson terms. Only if the last message is too short or ambiguous to tell its language (e.g. a single word, a number, an emoji), answer in ${fallback} (the course's language, otherwise the interface language).`;
 }
 
 export function buildSystemPrompt(ctx: LessonContext): string {
@@ -263,29 +309,34 @@ export function buildSystemPrompt(ctx: LessonContext): string {
     .filter((s) => s.masteryProbability >= 0.8)
     .map((s) => s.skillName)
     .join(", ");
+  const languageRule = tutorLanguageRule(ctx);
 
-  return `Bạn là AI tutor cho FeedBackMe — nền tảng học cá nhân hóa.
+  return `${languageRule}
 
-Khóa học: "${ctx.courseTitle}"
-Bài học hiện tại: "${ctx.lessonTitle}"
+You are the AI tutor of FeedBackMe, a personalised learning platform.
 
-Nội dung bài học (để bạn tham khảo):
+Course: "${ctx.courseTitle}"
+Current lesson: "${ctx.lessonTitle}"
+
+Lesson content (for your reference; it may be in a different language from the user's message):
 """
-${ctx.contextText || "(không có nội dung text)"}
+${ctx.contextText || "(no text content)"}
 """
 
-Tình trạng học của user trên các skill liên quan:
-${weak ? `- Đang yếu: ${weak}` : "- Không có skill yếu rõ rệt."}
-${strong ? `- Đã thành thạo: ${strong}` : ""}
+The learner's status on the skills related to this lesson:
+${weak ? `- Weak: ${weak}` : "- No clearly weak skills."}
+${strong ? `- Mastered: ${strong}` : ""}
 
-Nguyên tắc giảng dạy:
-1. Phương pháp Socratic — hỏi ngược, gợi ý từng bước, KHÔNG đưa thẳng đáp án bài tập / quiz.
-2. Trả lời tiếng Việt nếu user dùng tiếng Việt; tiếng Anh nếu user dùng tiếng Anh.
-3. Tham chiếu nội dung bài học khi giải thích — đừng nói chung chung.
-4. Nếu user hỏi ngoài phạm vi bài học, lịch sự hướng họ về phía bài học.
-5. Tôn trọng skill yếu của user — bắt đầu từ kiến thức nền, không dùng từ chuyên môn cao cấp với họ.
+Teaching principles:
+1. Socratic method: ask guiding questions and give hints step by step; do NOT hand over the answers to exercises or quizzes.
+2. Refer to the lesson content when explaining; do not stay generic.
+3. If the user asks about something outside the lesson, politely steer them back to the lesson.
+4. Respect the learner's weak skills: start from foundations and avoid advanced jargon with them.
+5. When asked to summarise, simplify or quiz, do it on the lesson content above. Weak-skill remarks and quiz questions follow the language rule too.
 
-Trả lời ngắn gọn, dùng markdown khi cần (list, code block).`;
+Keep answers short; use markdown when helpful (lists, code blocks).
+
+${languageRule}`;
 }
 
 interface ChatTurnInput {
@@ -300,6 +351,8 @@ interface ChatTurnInput {
    * "ý này nghĩa là gì?" vẫn còn nguyên nó đang hỏi về chỗ nào.
    */
   quote?: string;
+  /** Ngôn ngữ giao diện của người học ("vi" | "en") — dự phòng cuối cho ngôn ngữ trả lời. */
+  uiLocale?: string;
   /** OpenAI client — caller injects so we can swap providers / mock in tests. */
   openai: OpenAI;
   model?: string;
@@ -346,7 +399,7 @@ export async function runChatTurn(
     ? `${quote.split("\n").map((l) => `> ${l}`).join("\n")}\n\n${rawText}`
     : rawText;
 
-  const ctx = await buildLessonContext(input.userId, conv.lessonId, db);
+  const ctx = await buildLessonContext(input.userId, conv.lessonId, db, input.uiLocale);
   const system = buildSystemPrompt(ctx);
   // KHÔNG dùng conv.model: đó là model lúc tạo hội thoại (các hội thoại cũ ghi
   // "gpt-4o-mini"), gửi tên đó sang LLM tự host sẽ lỗi "model không tồn tại".

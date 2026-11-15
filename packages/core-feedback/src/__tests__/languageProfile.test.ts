@@ -331,3 +331,48 @@ describe("getLanguageProfile — gợi ý 'Luyện hôm nay' (G3.4.3)", () => {
     expect(Object.keys(s).sort()).toEqual(["lessonId", "lessonTitle", "reason", "skill"]);
   });
 });
+
+describe("getLanguageProfile — bài đã luyện tính cả Bài luyện nhúng", () => {
+  /** Một khối "Bài luyện" của bài (đề ẩn có chủ) kèm phiên luyện của học viên; `answers` = số câu đã trả lời trong phiên. */
+  async function practiceBlock(f: Fx, lessonIndex: number, opts: { answers: number; userId?: string }) {
+    const lessonId = f.lessonIds[lessonIndex]!;
+    const item = await prisma.contentItem.create({
+      data: { lessonId, type: "exam_practice", payload: {}, orderIndex: 100 + lessonIndex },
+    });
+    const exam = await prisma.exam.create({
+      data: { courseId: f.courseId, title: "Bài luyện", durationMin: 10, openAt: new Date(), closeAt: new Date(Date.now() + 86_400_000), ownerContentItemId: item.id },
+    });
+    const session = await prisma.examPracticeSession.create({ data: { examId: exam.id, userId: opts.userId ?? f.userId, scope: {} } });
+    for (let i = 0; i < opts.answers; i++) {
+      const q = await prisma.examQuestion.create({ data: { examId: exam.id, type: "essay", prompt: `Câu ${i + 1}`, orderInExam: i, config: {} } });
+      await prisma.examPracticeAnswer.create({ data: { sessionId: session.id, questionId: q.id, answerJson: { text: "Hello" } } });
+    }
+  }
+
+  it("luyện nói (câu mở) trong Bài luyện của bài Nói mà chưa có BKT: lessonsPracticed của Nói tăng, nhãn vẫn 'Chưa đủ dữ liệu'", async () => {
+    const f = await fx([{ skill: "speaking" }, { skill: "speaking" }, { skill: "reading" }]);
+    await practiceBlock(f, 0, { answers: 1 });
+    const p = await getLanguageProfile(f.userId, f.courseId, "learner");
+    expect(row(p, "speaking")).toMatchObject({ lessonsTotal: 2, lessonsPracticed: 1, label: "no_data" });
+    expect(row(p, "reading").lessonsPracticed).toBe(0); // kỹ năng khác không bị kéo theo
+  });
+
+  it("phiên luyện chưa trả lời câu nào không tính; BKT và Bài luyện cùng một bài chỉ đếm một lần", async () => {
+    const f = await fx([{ skill: "speaking" }, { skill: "listening", state: [0.9, 6] }]);
+    await practiceBlock(f, 0, { answers: 0 });
+    expect(row(await getLanguageProfile(f.userId, f.courseId, "learner"), "speaking").lessonsPracticed).toBe(0);
+    await practiceBlock(f, 1, { answers: 2 });
+    expect(row(await getLanguageProfile(f.userId, f.courseId, "learner"), "listening").lessonsPracticed).toBe(1);
+  });
+
+  it("chỉ tính phiên của CHÍNH học viên; bài không thuộc một trong bốn kỹ năng không làm thẻ nhúc nhích", async () => {
+    const f = await fx([{ skill: "speaking" }, { skill: null }]);
+    const other = await prisma.user.create({ data: { email: `lp-o-${Date.now()}@e.com`, passwordHash: "x", displayName: "Người khác" } });
+    await practiceBlock(f, 0, { answers: 3, userId: other.id });
+    await practiceBlock(f, 1, { answers: 3 });
+    const p = await getLanguageProfile(f.userId, f.courseId, "learner");
+    expect(row(p, "speaking").lessonsPracticed).toBe(0);
+    for (const r of p.skills) expect(r.lessonsPracticed).toBe(0);
+  });
+});
+

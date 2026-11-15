@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { apiUrl } from "@/lib/apiUrl";
 import { toast } from "@/lib/toast";
+import { useT } from "@/lib/i18n/client";
 
 export default function MarkResolvedButton({
   threadId,
@@ -13,6 +14,7 @@ export default function MarkResolvedButton({
   postId: string;
 }) {
   const router = useRouter();
+  const t = useT();
   const [busy, setBusy] = useState(false);
 
   async function onClick() {
@@ -24,10 +26,10 @@ export default function MarkResolvedButton({
     });
     setBusy(false);
     if (res.ok) {
-      toast.success("Đã đánh dấu câu trả lời");
+      toast.success(t("learn.thread.resolvedMarked"));
       router.refresh();
     } else {
-      toast.error("Không lưu được, vui lòng thử lại");
+      toast.error(t("learn.thread.saveFailed"));
     }
   }
 
@@ -35,12 +37,12 @@ export default function MarkResolvedButton({
     <button
       onClick={onClick}
       disabled={busy}
-      title="Chọn câu này là câu trả lời chính thức cho thread của bạn"
-      aria-label="Đánh dấu câu trả lời được chấp nhận"
+      title={t("learn.thread.markTitle")}
+      aria-label={t("learn.thread.markAria")}
       className="inline-flex items-center gap-1 rounded-md border border-success-300 bg-success-50 px-2.5 py-1 text-xs font-semibold text-success-700 hover:bg-success-100 disabled:opacity-50"
     >
       <span aria-hidden>✓</span>
-      {busy ? "Đang lưu..." : "Đánh dấu là câu trả lời"}
+      {busy ? t("learn.thread.saving") : t("learn.thread.markButton")}
     </button>
   );
 }

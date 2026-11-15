@@ -114,3 +114,8 @@
 
 - Header trong khung 3 cột (thầy: "header 1.1 Vocabulary quá rộng, tối ưu không gian") trước gồm 4–5 hàng: nút "Về soạn nội dung", tên bài cỡ 3xl, dòng mô tả (hay trùng tên unit, vd. "Lifestyle"), hàng nút Slide/Nghe giảng, hàng thanh tiến độ. Nay còn **2 hàng**: (1) chip kỹ năng + tên bài (cỡ 2xl) bên trái, "Về soạn nội dung" bên phải; (2) nút Slide/Nghe giảng cùng hàng với thanh tiến độ và chip "Để hoàn thành bài". Mô tả trùng tên unit/module thì bỏ. Giao diện bài học ngoài khung giữ nguyên.
 
+
+## Bổ sung 11/11/2026 — bìa giáo trình ở đầu thanh bên
+
+- Khoá có ảnh bìa (`Course.coverUrl`, giảng viên tải ở "Thông tin sách") thì đầu thanh bên, chỗ "← Về khoá học", hiện **bìa nhỏ**, liên kết "← Về khoá học" nằm **dưới bìa**, một dòng (chỉ bìa, **không ghi tên sách**: thầy 11/11/2026); bấm bìa hay chữ đều về trang khoá. Khoá chưa có bìa: chỉ còn liên kết "← Về khoá học" như cũ (không ô trống, không ảnh vỡ). Ảnh trang trí nên alt rỗng. Xem thử của giảng viên giữ `preview=1`.
+- Cách làm: `RailCourseHeader` (`LessonFrame.tsx`), `LessonFrameLayout` nhận thêm `coverUrl`, trang bài lấy từ `Course.coverUrl`. Test: `LessonFrame.test.tsx` (có bìa, không bìa, preview, qua khung).

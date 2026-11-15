@@ -25,6 +25,16 @@ import { CourseAuthzError, canGradeCourse, isCourseOwner } from "./authz";
 
 const MEDIA_URL = /\/api\/lesson-media\/(?:images|videos|audio|pdfs|html|files|transcripts)\/([A-Za-z0-9._-]+)/g;
 
+/**
+ * Phần của đề ẩn của khối Bài luyện có thể mang URL học liệu bài học (video, ảnh trong đoạn văn, ảnh trong câu hỏi).
+ * Audio và ảnh upload riêng cho đề nằm ở `/api/exam-assets/*` và được bảo vệ theo đề chứ không theo tên file
+ * (`findProtectingCourseIdsForExamAsset`).
+ */
+const OWNED_PRACTICE_MEDIA_SELECT = {
+  passages: { select: { contentJson: true } },
+  questions: { select: { prompt: true, config: true } },
+} as const;
+
 /** Mọi tên file học liệu được nhắc tới trong một giá trị JSON bất kỳ (payload khối, HTML văn bản, mô tả). */
 export function extractLessonMediaFilenames(value: unknown): string[] {
   const found = new Set<string>();
@@ -85,12 +95,15 @@ export async function syncProtectedMediaForCourse(courseId: string, db: DbClient
   }
   const lessons = await db.lesson.findMany({
     where: { module: { courseId }, previewable: false },
-    select: { description: true, contentItems: { select: { payload: true } } },
+    select: { description: true, contentItems: { select: { payload: true, ownedExam: { select: OWNED_PRACTICE_MEDIA_SELECT } } } },
   });
   const names = new Set<string>();
   for (const l of lessons) {
     for (const n of extractLessonMediaFilenames(l.description)) names.add(n);
-    for (const c of l.contentItems) for (const n of extractLessonMediaFilenames(c.payload)) names.add(n);
+    for (const c of l.contentItems) {
+      for (const n of extractLessonMediaFilenames(c.payload)) names.add(n);
+      for (const n of extractLessonMediaFilenames(c.ownedExam)) names.add(n);
+    }
   }
   const list = [...names];
   await db.protectedMediaFile.deleteMany({ where: { courseId, filename: { notIn: list } } });
@@ -115,12 +128,15 @@ export async function registerLessonMedia(lessonId: string, db: DbClient = prism
         previewable: true,
         description: true,
         module: { select: { courseId: true, course: { select: { protectedMedia: true } } } },
-        contentItems: { select: { payload: true } },
+        contentItems: { select: { payload: true, ownedExam: { select: OWNED_PRACTICE_MEDIA_SELECT } } },
       },
     });
     if (!lesson?.module.course.protectedMedia || lesson.previewable) return 0;
     const names = new Set<string>(extractLessonMediaFilenames(lesson.description));
-    for (const c of lesson.contentItems) for (const n of extractLessonMediaFilenames(c.payload)) names.add(n);
+    for (const c of lesson.contentItems) {
+      for (const n of extractLessonMediaFilenames(c.payload)) names.add(n);
+      for (const n of extractLessonMediaFilenames(c.ownedExam)) names.add(n);
+    }
     if (names.size === 0) return 0;
     const r = await db.protectedMediaFile.createMany({
       data: [...names].map((filename) => ({ filename, courseId: lesson.module.courseId })),
@@ -139,6 +155,32 @@ export async function findProtectingCourseIds(filename: string, db: DbClient = p
     select: { courseId: true },
   });
   return rows.map((r) => r.courseId);
+}
+
+const EXAM_ID_PREFIX = /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-/i;
+
+/**
+ * Khoá bản quyền đang bảo vệ một file của kho đề (`/api/exam-assets/<tên>`). Tên file luôn bắt đầu bằng id đề
+ * (`<examId>-<ms>-<hex>.<đuôi>`), nên không cần bảng tra: đề là nội dung của một khối Bài luyện trong bài học
+ * thường (không phải bài xem thử) của khoá đã bật cờ thì file được bảo vệ. Đề thi thật (không có chủ là khối
+ * bài học) trả rỗng, phục vụ công khai như trước.
+ */
+export async function findProtectingCourseIdsForExamAsset(filename: string, db: DbClient = prisma): Promise<string[]> {
+  const examId = EXAM_ID_PREFIX.exec(filename)?.[1];
+  if (!examId) return [];
+  const exam = await db.exam.findUnique({
+    where: { id: examId },
+    select: {
+      ownerContentItem: {
+        select: {
+          lesson: { select: { previewable: true, module: { select: { courseId: true, course: { select: { protectedMedia: true } } } } } },
+        },
+      },
+    },
+  });
+  const lesson = exam?.ownerContentItem?.lesson;
+  if (!lesson || lesson.previewable || !lesson.module.course.protectedMedia) return [];
+  return [lesson.module.courseId];
 }
 
 /**

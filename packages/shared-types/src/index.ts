@@ -14,3 +14,4 @@ export * from "./aiGrading";
 export * from "./liveIllustrations";
 export * from "./deckLanguage";
 export * from "./goals";
+export * from "./space";

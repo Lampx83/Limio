@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
+import { useT } from "@/lib/i18n/client";
 
 export type TabKey = "tasks" | "forum";
 
@@ -22,6 +23,7 @@ export default function LessonTabs({
   children: Partial<Record<TabKey, React.ReactNode>>;
 }) {
   const router = useRouter();
+  const t = useT();
   const sp = useSearchParams();
   const raw = sp.get("tab");
   const active: TabKey = useMemo(() => {
@@ -39,7 +41,7 @@ export default function LessonTabs({
     <div className="mt-10">
       <div
         role="tablist"
-        aria-label="Hoạt động của bài học"
+        aria-label={t("learn.tabs.aria")}
         className="-mx-2 flex gap-2 overflow-x-auto border-b border-token px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((t) => {

@@ -16,7 +16,7 @@ function objects(v: unknown): Array<Record<string, unknown>> {
   return Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === "object") : [];
 }
 
-export function toPublicQuestionConfig(
+function toPublicQuestionConfigCore(
   type: string,
   config: unknown,
   /**
@@ -74,6 +74,10 @@ export function toPublicQuestionConfig(
         ...(typeof c.minWords === "number" ? { minWords: c.minWords } : {}),
         voiceAnswer: c.voiceAnswer !== false,
         aiFeedback: c.aiFeedback !== false,
+        // Hội thoại đóng vai: kịch bản và audio từng lượt là nội dung đề (học viên phải đọc/nghe), không phải đáp án.
+        ...(c.roleplay && typeof c.roleplay === "object" ? { roleplay: c.roleplay } : {}),
+        // "Thử nói tự do": tình huống, lời mở đầu và cụm gợi ý là nội dung đề (học viên đọc), không phải đáp án.
+        ...(c.freechat && typeof c.freechat === "object" ? { freechat: c.freechat } : {}),
       };
     case "slider": {
       // Thang trượt của đề Khảo sát — không có đáp án; mã câu (`code`) không gửi xuống.
@@ -91,6 +95,21 @@ export function toPublicQuestionConfig(
       // true_false_notgiven, short_answer, và mọi loại chưa biết.
       return {};
   }
+}
+
+/** Chú giải đề (`promptAid`: phiên âm + bản dịch) là nội dung đề, mọi loại câu đều gửi nếu có. Chỉ giữ hai chuỗi đã biết, bỏ khoá lạ. */
+function publicPromptAid(config: unknown): Record<string, unknown> {
+  const a = config && typeof config === "object" ? (config as Record<string, unknown>).promptAid : null;
+  if (!a || typeof a !== "object") return {};
+  const { reading, translation } = a as Record<string, unknown>;
+  const out: Record<string, string> = {};
+  if (typeof reading === "string" && reading.trim()) out.reading = reading;
+  if (typeof translation === "string" && translation.trim()) out.translation = translation;
+  return Object.keys(out).length ? { promptAid: out } : {};
+}
+
+export function toPublicQuestionConfig(type: string, config: unknown, seed = ""): Record<string, unknown> {
+  return { ...toPublicQuestionConfigCore(type, config, seed), ...publicPromptAid(config) };
 }
 
 /**
