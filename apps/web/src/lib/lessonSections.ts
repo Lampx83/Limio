@@ -96,6 +96,14 @@ export function dropRepeatedBannerTitle(html: string, lessonTitle: string): stri
   });
 }
 
+/**
+ * Banner "Exercise 1" của sách (một thanh tô màu hoặc dòng tiêu đề chỉ có chữ "Exercise" và số): số exercise đã nằm trên tab nên bỏ thanh này khỏi phần lý thuyết.
+ * Banner có chữ khác (Reading, Vocabulary, Grammar…) giữ nguyên.
+ */
+export function dropExerciseBanner(html: string): string {
+  return html.replace(/<h([2-4])\b[^>]*>\s*(?:<span\b[^>]*>\s*)?Exercises?\s+\d+\s*(?:<\/span>\s*)?<\/h\1>/gi, "");
+}
+
 /** Chữ đậm làm nhãn người nói ("Jodi:", "Victor:") không phải từ vựng mục tiêu: đánh dấu để không bôi màu như chữ đậm trong câu. */
 export function markLabelBold(html: string): string {
   return html.replace(/<strong>([^<]{1,40}:)(\s*)<\/strong>/g, '<strong class="pv-nohl">$1$2</strong>');
@@ -280,12 +288,29 @@ export function splitLessonSections<T extends SectionItem>(
     if (chunk && lead && lead.end === chunk.nodes.length) unlabel.set(i - 1, lead.start);
   });
 
-  // nhãn câu yêu cầu của sách đứng ngay trước một khối (dự phòng cho tên tab)
-  const labelBefore = (i: number): string | null => {
+  // Câu yêu cầu đứng ngay trước một khối: các câu liền nhau cuối khối chữ (1A rồi 1B) là một cụm. Khối bài tập không có tên riêng thuộc
+  // về câu ĐẦU của cụm (1A là việc làm trên khối, 1B là câu hỏi thảo luận đi sau); phiếu bạn ảo thuộc về câu cuối (đã xử lý ở trên).
+  const leadBefore = (i: number, virtualPartner: boolean): { chunk: Chunk; lead: Lead } | null => {
     const chunk = i > 0 ? chunks.get(i - 1) : undefined;
-    const lead = chunk?.leads[chunk.leads.length - 1];
-    if (!chunk || !lead || lead.end !== chunk.nodes.length || !lead.label.num) return null;
-    return `${lead.label.num}${lead.label.letter ?? ""}`;
+    const last = chunk?.leads[chunk.leads.length - 1];
+    if (!chunk || !last || last.end !== chunk.nodes.length || !last.label.num) return null;
+    if (virtualPartner) return { chunk, lead: last };
+    let first = last;
+    for (let j = chunk.leads.length - 2; j >= 0; j--) {
+      const ld = chunk.leads[j]!;
+      if (ld.end !== first.start || ld.label.num !== last.label.num) break;
+      first = ld;
+    }
+    return { chunk, lead: first };
+  };
+  const labelBefore = (i: number, virtualPartner = false): string | null => {
+    const found = leadBefore(i, virtualPartner);
+    return found ? `${found.lead.label.num}${found.lead.label.letter ?? ""}` : null;
+  };
+  const isVpBlock = (it: T) => isVirtualPartner(String((it.payload as { title?: unknown } | null)?.title ?? ""));
+  const hasOwnLabel = (it: T) => {
+    const title = String((it.payload as { title?: unknown } | null)?.title ?? "");
+    return !!exerciseLabels([title]) || (passageTitles?.get(it.id) ?? []).some((t) => !!exerciseLabels([t]));
   };
 
   // 2b) câu yêu cầu của exercise CHƯA có tab (chỉ có chữ, vd 7A, 7B, 8B ở 1.2 Writing) thành một tab riêng: câu yêu cầu + phần đi kèm tới tiêu đề/hộp kế tiếp.
@@ -295,9 +320,20 @@ export function splitLessonSections<T extends SectionItem>(
     const title = String((it.payload as { title?: unknown } | null)?.title ?? "");
     const own = [exerciseLabels([title]), ...(passageTitles?.get(it.id) ?? []).map((t) => exerciseLabels([t]))].filter((l): l is string => !!l);
     // Khối không có nhãn riêng thì tên tab lấy từ câu yêu cầu đứng ngay trước: số đó đã có tab.
-    for (const l of own.length > 0 ? own : [labelBefore(i)]) if (l) codesOf(l).forEach((c) => covered.add(c));
+    for (const l of own.length > 0 ? own : [labelBefore(i, isVpBlock(it))]) if (l) codesOf(l).forEach((c) => covered.add(c));
   });
   const stmtCuts = new Map<number, Array<[number, number]>>();
+  // Khối bài tập không có tên riêng lấy tên từ câu yêu cầu liền trước: câu đó (và phần đi kèm) xuống ngồi trong tab của khối.
+  items.forEach((it, i) => {
+    if (it.type !== "exam_practice" || !practiceIds.has(it.id) || isVpBlock(it) || hasOwnLabel(it) || sharedReadingIds?.has(it.id)) return;
+    const found = leadBefore(i, false);
+    if (!found) return;
+    const { chunk, lead } = found;
+    const src = items[i - 1]!;
+    const html = [stripStatementLabel(chunk.nodes[lead.start]!), ...chunk.nodes.slice(lead.start + 1, lead.end)].join("");
+    leadOf.set(i, [{ ...src, id: `${src.id}~${it.id}`, payload: { ...(src.payload as object), html } } as T]);
+    stmtCuts.set(i - 1, [...(stmtCuts.get(i - 1) ?? []), [lead.start, lead.end]]);
+  });
   const stmtTabs: SectionTab<T>[] = [];
   chunks.forEach((chunk, i) => {
     for (const lead of chunk.leads) {
@@ -325,7 +361,7 @@ export function splitLessonSections<T extends SectionItem>(
     if (it.type === "exam_practice" && practiceIds.has(it.id)) {
       const title = String((it.payload as { title?: unknown } | null)?.title ?? "");
       const label =
-        exerciseLabels([title]) ?? exerciseLabels(passageTitles?.get(it.id) ?? []) ?? labelBefore(i) ?? practiceTabLabel(title);
+        exerciseLabels([title]) ?? exerciseLabels(passageTitles?.get(it.id) ?? []) ?? labelBefore(i, isVirtualPartner(title)) ?? practiceTabLabel(title);
       tabs.push({ id: it.id, label, lead: leadOf.get(i) ?? [], virtualPartner: isVirtualPartner(title), statement: false });
       return;
     }

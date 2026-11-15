@@ -54,7 +54,7 @@ import LessonContent from "@/components/LessonContent";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
 import StatementTab from "@/components/lesson/StatementTab";
 import TheoryCard from "@/components/lesson/TheoryCard";
-import { arrangeTabs, dropRepeatedBannerTitle, exerciseLabels, markLabelBold, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
+import { arrangeTabs, dropExerciseBanner, dropRepeatedBannerTitle, exerciseLabels, markLabelBold, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
 import { splitEmbedByExercise } from "@/lib/practiceExerciseSplit";
 import { dedupeHoisted, hoistReadingPassages, type HoistedPassage } from "@/lib/practiceHoist";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
@@ -945,7 +945,12 @@ export default async function LessonPage({
                 id: `${tab.id}~${k}`,
                 label: g.label ?? tab.label,
                 virtualPartner: tab.virtualPartner,
-                build: () => renderBlock(g.embed, info, true),
+                build: () => (
+                  <>
+                    {k === 0 ? leadNode : null}
+                    {renderBlock(g.embed, info, true)}
+                  </>
+                ),
               }));
             }
             if (tab.statement) {
@@ -1236,7 +1241,7 @@ export default async function LessonPage({
         <div className="relative">
         <div id="lesson-content">
         {theoryAsOneCard ? (
-          <TheoryCard title={titleInTheory ? lessonTitleRow : undefined} html={markLabelBold(dropRepeatedBannerTitle(sections!.theory.map((it) => (it.payload as { html: string }).html).join(""), lesson.title))}>
+          <TheoryCard title={titleInTheory ? lessonTitleRow : undefined} html={markLabelBold(dropExerciseBanner(dropRepeatedBannerTitle(sections!.theory.map((it) => (it.payload as { html: string }).html).join(""), lesson.title)))}>
             {dedupeHoisted(hoistedPassages).map((h) => (
               <div key={h.id} className="[&_p]:leading-8">
                 <PassageView passage={{ id: h.id, title: h.title, contentJson: h.contentJson, transcripts: h.transcripts }} attemptId={`lesson-reading-${h.id}`} hideNote emphasizeBold bodySize="body" />
