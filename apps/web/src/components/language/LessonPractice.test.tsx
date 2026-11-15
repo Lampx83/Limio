@@ -768,3 +768,21 @@ describe("LessonPractice — khối đề bài riêng và không có ghi chú c�
     expect(host.querySelector("textarea")).toBeNull();
   });
 });
+
+describe("LessonPractice — chế độ tab con của một exercise (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC5)", () => {
+  it("mặc định có nút Kết thúc bài luyện; ở chế độ tab con thì không có nút, vẫn làm và kiểm tra từng câu bình thường", async () => {
+    await render(embed());
+    expect(button(/Kết thúc bài luyện/)).toBeDefined();
+    act(() => root.unmount());
+    root = createRoot(host);
+    await act(async () => {
+      root.render(<LessonPractice slug="ielts" embed={embed()} subset />);
+    });
+    await flush();
+    expect(button(/Kết thúc bài luyện/)).toBeUndefined();
+    await click(radios()[0]!);
+    await flush(600);
+    expect(button(/Kiểm tra câu 1/)).toBeDefined();
+    expect(text()).toContain("Đã lưu câu trả lời");
+  });
+});

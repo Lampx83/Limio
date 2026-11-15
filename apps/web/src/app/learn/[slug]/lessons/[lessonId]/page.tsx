@@ -15,6 +15,7 @@ import {
   getPracticeBlockSummaries,
   getPracticeForEmbed,
   getPracticePreview,
+  type PracticeEmbed,
   getExamRefStates,
   getExamRefPreviewCard,
   isUserEnrolled,
@@ -44,6 +45,9 @@ import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/Exam
 import LessonPractice from "@/components/language/LessonPractice";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
+import PracticeTabs from "@/components/lesson/PracticeTabs";
+import { arrangeTabs, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
+import { splitEmbedByExercise } from "@/lib/practiceExerciseSplit";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
@@ -750,6 +754,8 @@ export default async function LessonPage({
   // (không chiếu lớp, không chế độ giảng viên) làm thật; giảng viên bấm "Xem như học viên" (`?preview=1`) cũng thấy khối, ở chế
   // độ xem thử (chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án); nơi khác khối không hiện gì.
   const practiceBlocks: Record<string, React.ReactNode> = {};
+  // Dữ liệu nhúng của từng khối: tên tab theo số exercise lấy từ nhãn các đoạn, và khối gom nhiều exercise được tách thành từng tab.
+  const practiceEmbeds = new Map<string, { embed: PracticeEmbed; preview: boolean; title?: string }>();
   const practiceForLearner = enrolled && !previewMode && !stageMode && !teacherMode;
   const practiceForPreview = previewMode && !stageMode && !!userId;
   if (practiceForLearner || practiceForPreview) {
@@ -767,6 +773,7 @@ export default async function LessonPage({
         // nhúng thẳng bản xem thử, giống nút "Xem trước" ở trang soạn Bài luyện.
         try {
           const embed = await getPracticePreview(userId!, examId);
+          practiceEmbeds.set(it.id, { embed, preview: true, title: p.title });
           practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview />;
         } catch (e) {
           if (!(e instanceof ExamError)) throw e;
@@ -788,6 +795,7 @@ export default async function LessonPage({
       }
       try {
         const embed = await getPracticeForEmbed(userId, examId);
+        practiceEmbeds.set(it.id, { embed, preview: false, title: p.title });
         practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
@@ -795,6 +803,12 @@ export default async function LessonPage({
       }
     }
   }
+
+  // Bài ngoại ngữ trong khung: lý thuyết ở trên, mỗi khối Bài luyện một tab (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC5–AC6).
+  // Chỉ khi người xem thật sự thấy khối bài luyện, và không ở màn "Từ vựng".
+  const practiceIds = new Set(Object.keys(practiceBlocks));
+  const sections =
+    languageSkin && lessonFrame && practiceIds.size > 0 && lessonView === "lesson" ? splitLessonSections(shownItems, practiceIds, new Map([...practiceEmbeds].map(([id, v]) => [id, v.embed.passages.map((x) => x.title)]))) : null;
 
   // Khối "Đề thi" (exam_ref): gắn một đề thi thử của khoá vào bài. Học viên đã ghi danh thấy đúng thẻ như ở trang khoá (chỉ khi đề dùng
   // được); giảng viên bấm "Xem như học viên" thấy thẻ hoặc nhãn lý do. Chiếu lớp và trang in không hiện.
@@ -1055,13 +1069,64 @@ export default async function LessonPage({
         <div className="relative">
         <div id="lesson-content">
         <LessonContent
-          items={shownItems}
+          items={sections ? sections.theory : shownItems}
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
           deckCover={deckCover}
           blocks={{ ...practiceBlocks, ...examRefBlocks }}
           numberTranscripts={languageSkin}
         />
+        {sections && (
+          <PracticeTabs
+            tabs={arrangeTabs(
+              mergeTabsByLabel(
+              sections.tabs.flatMap((t) => {
+                const info = practiceEmbeds.get(t.id);
+                const groups = info ? splitEmbedByExercise(info.embed) : [];
+                // Khối gom nhiều exercise (vd Grammar: 3A, 3B, 3C, 5): mỗi exercise một tab, dùng chung một buổi luyện.
+                if (info && groups.length >= 2) {
+                  return groups.map((g, k) => ({
+                    id: `${t.id}~${k}`,
+                    label: g.label ?? t.label,
+                    virtualPartner: t.virtualPartner,
+                    content: (
+                      <LessonPractice slug={params.slug} embed={g.embed} blockTitle={info.title} lessonId={lesson.id} preview={info.preview} subset />
+                    ),
+                  }));
+                }
+                return [
+                  {
+                    id: t.id,
+                    label: t.label,
+                    virtualPartner: t.virtualPartner,
+                    content: (
+                      <>
+                        {t.lead.length > 0 && (
+                          <LessonContent items={t.lead} courseId={lesson.module.course.id} lessonId={lesson.id} numberTranscripts={languageSkin} />
+                        )}
+                        {practiceBlocks[t.id]}
+                      </>
+                    ),
+                  },
+                ];
+              }),
+              (group) => ({
+                ...group[0]!,
+                id: group.map((g) => g.id).join("+"),
+                content: (
+                  <>
+                    {group.map((g) => (
+                      <div key={g.id} className="mt-6 first:mt-0">
+                        {g.content}
+                      </div>
+                    ))}
+                  </>
+                ),
+              }),
+              ),
+            )}
+          />
+        )}
         </div>
         <div
           id="lesson-annotation-gutter"

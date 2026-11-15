@@ -66,11 +66,14 @@ export default function LessonPractice({
   blockTitle,
   lessonId,
   preview = false,
+  subset = false,
 }: {
   slug: string;
   embed: PracticeEmbed;
   blockTitle?: string;
   lessonId?: string;
+  /** Tab con của MỘT exercise trong khối gom nhiều exercise: các tab dùng chung một buổi luyện nên không có nút "Kết thúc bài luyện" (nút đó kết thúc cả khối). */
+  subset?: boolean;
   /** Xem trước của giảng viên: chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án, không ghi sự kiện. */
   preview?: boolean;
 }) {
@@ -577,7 +580,7 @@ export default function LessonPractice({
           <div className="mt-4 space-y-3">{step.questionIds.map(renderQuestion)}</div>
         ))}
 
-      {!preview && (
+      {!preview && !subset && (
         <div className="mt-4 flex justify-end">
           <button type="button" onClick={() => void finish()} disabled={finishing} className="btn-primary btn-sm disabled:opacity-50">
             {finishing ? "Đang kết thúc…" : "Kết thúc bài luyện"}
