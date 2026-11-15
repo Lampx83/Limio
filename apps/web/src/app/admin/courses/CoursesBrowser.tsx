@@ -17,6 +17,8 @@ interface CourseRow {
   isSample: boolean;
   /** null = theo mặc định hệ thống. */
   virtualLecturerMode: string | null;
+  /** Người giảng ảo riêng của khoá; null = theo mặc định hệ thống. */
+  virtualLecturerCode: string | null;
   isLearnerSample: boolean;
   enrollMode: string;
   activeAccessPlanCount: number;
@@ -94,7 +96,12 @@ function SampleSwitch({
   );
 }
 
-export default function CoursesBrowser() {
+export default function CoursesBrowser({
+  lecturers,
+}: {
+  /** Danh mục giảng viên ảo, truyền từ server page để không kéo core-lms vào bundle trình duyệt. */
+  lecturers: { code: string; name: string; gender: "female" | "male" }[];
+}) {
   const [data, setData] = useState<CoursesResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
@@ -171,6 +178,30 @@ export default function CoursesBrowser() {
       }
       setData((d) =>
         d ? { ...d, courses: d.courses.map((x) => (x.id === c.id ? { ...x, virtualLecturerMode: mode } : x)) } : d,
+      );
+    } finally {
+      setSavingSample(null);
+    }
+  }
+
+  async function changeVirtualLecturerCode(c: CourseRow, value: string) {
+    setSampleError(null);
+    setSavingSample(c.id);
+    try {
+      const lecturerCode = value === "" ? null : value;
+      const r = await fetch(apiUrl(`/api/admin/courses/${c.id}/virtual-lecturer`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lecturerCode }),
+      });
+      if (!r.ok) {
+        setSampleError("Không lưu được, thử lại sau.");
+        return;
+      }
+      setData((d) =>
+        d
+          ? { ...d, courses: d.courses.map((x) => (x.id === c.id ? { ...x, virtualLecturerCode: lecturerCode } : x)) }
+          : d,
       );
     } finally {
       setSavingSample(null);
@@ -321,6 +352,23 @@ export default function CoursesBrowser() {
                           {VIRTUAL_LECTURER_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>
                               {o.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="flex items-center gap-2 text-xs text-muted">
+                        <span className="shrink-0">Người giảng</span>
+                        <select
+                          value={c.virtualLecturerCode ?? ""}
+                          disabled={busy}
+                          aria-label={`Người giảng ảo: ${c.title}`}
+                          onChange={(e) => void changeVirtualLecturerCode(c, e.target.value)}
+                          className="rounded-md border border-token bg-[rgb(var(--surface))] px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                        >
+                          <option value="">Theo mặc định hệ thống</option>
+                          {lecturers.map((l) => (
+                            <option key={l.code} value={l.code}>
+                              {l.name} ({l.gender === "female" ? "nữ" : "nam"})
                             </option>
                           ))}
                         </select>

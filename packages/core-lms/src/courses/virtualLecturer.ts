@@ -170,6 +170,35 @@ export async function setCourseVirtualLecturerMode(
   );
 }
 
+/**
+ * Chỉ admin nền tảng. `null` = «Theo mặc định hệ thống». Chỉ ghi AuditLog khi giá trị đổi thật
+ * (docs/tieu-chi/giang-vien-ao-theo-khoa.md, AC1).
+ */
+export async function setCourseVirtualLecturerCode(
+  actorUserId: string,
+  courseId: string,
+  code: string | null,
+  db: PrismaClient = prisma,
+): Promise<void> {
+  if (!(await isAdmin(actorUserId, db))) throw new CourseAuthzError("forbidden");
+  if (code !== null && !isLecturerCode(code)) throw new CourseError("validation_failed", { field: "lecturerCode" });
+  const course = await db.course.findUnique({
+    where: { id: courseId },
+    select: { virtualLecturerCode: true },
+  });
+  if (!course) throw new CourseAuthzError("not_found");
+  if (course.virtualLecturerCode === code) return;
+  await db.course.update({ where: { id: courseId }, data: { virtualLecturerCode: code } });
+  await logAudit(
+    {
+      action: "course.virtual_lecturer_code.changed",
+      actorUserId,
+      payload: { courseId, from: course.virtualLecturerCode, to: code },
+    },
+    db,
+  );
+}
+
 export interface EffectiveVirtualLecturer {
   mode: VirtualLecturerModeValue;
   lecturerCode: string;
@@ -186,7 +215,10 @@ export async function getEffectiveVirtualLecturer(
 ): Promise<EffectiveVirtualLecturer> {
   const [settings, course, teaches] = await Promise.all([
     getVirtualLecturerSettings(db),
-    db.course.findUnique({ where: { id: courseId }, select: { virtualLecturerMode: true } }),
+    db.course.findUnique({
+      where: { id: courseId },
+      select: { virtualLecturerMode: true, virtualLecturerCode: true },
+    }),
     viewerUserId ? canEditCourse(viewerUserId, courseId, db) : Promise.resolve(false),
   ]);
   if (!course) throw new CourseAuthzError("not_found");
@@ -197,6 +229,7 @@ export async function getEffectiveVirtualLecturer(
       courseMode: course.virtualLecturerMode,
       viewerTeachesCourse: teaches,
     }),
-    lecturerCode: settings.defaultLecturer,
+    // Người riêng của khoá thắng mặc định hệ thống; mã đã bị bỏ khỏi danh mục thì rơi về mặc định.
+    lecturerCode: isLecturerCode(course.virtualLecturerCode) ? course.virtualLecturerCode : settings.defaultLecturer,
   };
 }

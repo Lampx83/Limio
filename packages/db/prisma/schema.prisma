@@ -510,6 +510,9 @@ model Course {
   /// Mức giảng viên ảo RIÊNG của khoá; null = theo mặc định hệ thống (docs/tieu-chi/giang-vien-ao.md, AC1).
   virtualLecturerMode    VirtualLecturerMode?
   /// Khoá mẫu cho HỌC VIÊN (khác isSample — mẫu cho giảng viên): thẻ "Thử học ngay" trên trang Bắt đầu của
+  /// Người giảng ảo RIÊNG của khoá (mã trong VIRTUAL_LECTURERS, không phải khoá ngoại); null = theo mặc định
+  /// hệ thống (docs/tieu-chi/giang-vien-ao-theo-khoa.md).
+  virtualLecturerCode    String?
   /// học viên chưa có khoá nào (docs/hoc-vien/trang-dau-hoc-vien-AC.md, AC3). null = không phải mẫu; có giá
   /// trị = lúc admin bật, trang Bắt đầu lấy khoá bật gần nhất. Chỉ bật được khi khoá published + tự ghi danh
   /// + miễn phí (setCourseLearnerSample), vì "Học thử" ghi danh thật để học viên làm được bài kiểm tra.

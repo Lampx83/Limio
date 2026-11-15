@@ -1,3 +1,4 @@
+import { VIRTUAL_LECTURERS } from "@feedbackme/core-lms";
 import CoursesBrowser from "./CoursesBrowser";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,13 @@ export default function AdminCoursesPage() {
           Tìm khoá học để quản lý gói bán theo thời hạn (1 năm, 2 năm, vĩnh viễn) và đánh dấu khoá mẫu: cho giảng viên mới xem, hoặc cho học viên chưa có khoá học thử.
         </p>
       </header>
-      <CoursesBrowser />
+      <CoursesBrowser
+        lecturers={VIRTUAL_LECTURERS.map((l) => ({
+          code: l.code,
+          name: l.name,
+          gender: l.gender,
+        }))}
+      />
     </main>
   );
 }

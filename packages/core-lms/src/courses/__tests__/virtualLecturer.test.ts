@@ -10,6 +10,7 @@ import {
   getEffectiveVirtualLecturer,
   getVirtualLecturerSettings,
   resolveVirtualLecturerMode,
+  setCourseVirtualLecturerCode,
   setCourseVirtualLecturerMode,
   setVirtualLecturerSettings,
   type VirtualLecturerModeValue,
@@ -214,6 +215,70 @@ describe("getEffectiveVirtualLecturer — trang và API cùng gọi một chỗ"
     });
     const e = await getEffectiveVirtualLecturer(s.courseId, s.learnerId);
     expect(e.lecturerCode).toBe(lecturerCode(3));
+  });
+});
+
+describe("người giảng riêng của khoá (giang-vien-ao-theo-khoa.md)", () => {
+  it("AC1: chỉ admin đặt; mã lạ bị từ chối; lưu lại giá trị cũ không ghi AuditLog; null xoá", async () => {
+    const s = await setup("vl9");
+    await expect(
+      setCourseVirtualLecturerCode(s.ownerId, s.courseId, "bao-trang"),
+    ).rejects.toMatchObject({ message: "forbidden" });
+    await expect(
+      setCourseVirtualLecturerCode(s.adminId, s.courseId, "khong-ton-tai"),
+    ).rejects.toMatchObject({ message: "validation_failed" });
+    await expect(
+      setCourseVirtualLecturerCode(s.adminId, "00000000-0000-4000-8000-000000000000", "bao-trang"),
+    ).rejects.toMatchObject({ message: "not_found" });
+
+    await setCourseVirtualLecturerCode(s.adminId, s.courseId, "bao-trang");
+    await setCourseVirtualLecturerCode(s.adminId, s.courseId, "bao-trang"); // lưu lại: không phải sự kiện
+    await setCourseVirtualLecturerCode(s.adminId, s.courseId, null);
+
+    const course = await prisma.course.findUniqueOrThrow({ where: { id: s.courseId } });
+    expect(course.virtualLecturerCode).toBeNull();
+    const rows = await prisma.auditLog.findMany({
+      where: { action: "course.virtual_lecturer_code.changed", actorUserId: s.adminId },
+      orderBy: { occurredAt: "asc" },
+    });
+    expect(rows.map((r) => r.payload)).toEqual([
+      { courseId: s.courseId, from: null, to: "bao-trang" },
+      { courseId: s.courseId, from: "bao-trang", to: null },
+    ]);
+  });
+
+  it("AC1: đổi người của khoá này không đụng khoá khác", async () => {
+    const s = await setup("vl10");
+    const other = await createCourse(s.ownerId, { title: "Khoá khác", description: "mô tả", slug: "vl10-other" });
+    await setCourseVirtualLecturerCode(s.adminId, s.courseId, "bao-trang");
+    const o = await prisma.course.findUniqueOrThrow({ where: { id: other.courseId } });
+    expect(o.virtualLecturerCode).toBeNull();
+  });
+
+  it("AC2: người của khoá thắng mặc định hệ thống; null thì theo mặc định", async () => {
+    const s = await setup("vl11");
+    await setVirtualLecturerSettings(s.adminId, { enabled: true, defaultLecturer: "tien-dat" });
+    expect((await getEffectiveVirtualLecturer(s.courseId, s.learnerId)).lecturerCode).toBe("tien-dat");
+    await setCourseVirtualLecturerCode(s.adminId, s.courseId, "bao-trang");
+    expect((await getEffectiveVirtualLecturer(s.courseId, s.learnerId)).lecturerCode).toBe("bao-trang");
+    await setCourseVirtualLecturerCode(s.adminId, s.courseId, null);
+    expect((await getEffectiveVirtualLecturer(s.courseId, s.learnerId)).lecturerCode).toBe("tien-dat");
+  });
+
+  it("AC2: mã trong cột không còn trong danh mục → rơi về mặc định hệ thống, không ném lỗi", async () => {
+    const s = await setup("vl12");
+    await setVirtualLecturerSettings(s.adminId, { enabled: true, defaultLecturer: "kim-oanh" });
+    await prisma.course.update({ where: { id: s.courseId }, data: { virtualLecturerCode: "da-bo" } });
+    expect((await getEffectiveVirtualLecturer(s.courseId, s.learnerId)).lecturerCode).toBe("kim-oanh");
+  });
+
+  it("AC2: có người riêng không làm hiện ra thứ đang bị chặn (hệ thống tắt / khoá «Không hiện»)", async () => {
+    const s = await setup("vl13");
+    await setCourseVirtualLecturerCode(s.adminId, s.courseId, "bao-trang");
+    expect((await getEffectiveVirtualLecturer(s.courseId, s.learnerId)).mode).toBe("AN"); // hệ thống tắt
+    await setVirtualLecturerSettings(s.adminId, { enabled: true });
+    await setCourseVirtualLecturerMode(s.adminId, s.courseId, "AN");
+    expect((await getEffectiveVirtualLecturer(s.courseId, s.learnerId)).mode).toBe("AN");
   });
 });
 
