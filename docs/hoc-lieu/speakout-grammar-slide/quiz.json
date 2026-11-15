@@ -1,0 +1,227 @@
+{
+  "_ghiChu": "Quiz cuối bài 1.1 Grammar (docs/tieu-chi/slide-giang-song-ngu.md, B1). 10 câu TỰ SOẠN, không chép bài tập của sách. Mỗi phương án nhiễu gắn một lỗi tư duy (mã en1.1.*). build-deck-lesson.ts --quiz đọc file này.",
+  "quiz": {
+    "title": "Kiểm tra nhanh: câu bị động và have + vật + past participle",
+    "passThresholdPct": 70,
+    "requireConfidence": false,
+    "questions": [
+      {
+        "key": "en1.1.q01",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Câu nào đúng?",
+        "explanation": "Câu bị động ở hiện tại đơn cần dạng của be (is, am, are) cộng past participle. Chủ ngữ the museum là số ít nên dùng is: The museum is visited by thousands of tourists every year.",
+        "options": [
+          { "label": "The museum visited by thousands of tourists every year.", "isCorrect": false, "misconception": "en1.1.thieu-be" },
+          { "label": "The museum are visited by thousands of tourists every year.", "isCorrect": false, "misconception": "en1.1.be-sai-so" },
+          { "label": "The museum is visited by thousands of tourists every year.", "isCorrect": true },
+          { "label": "The museum visits by thousands of tourists every year.", "isCorrect": false, "misconception": "en1.1.chu-dong-nham" }
+        ]
+      },
+      {
+        "key": "en1.1.q02",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Chọn dạng đúng của động từ: This poem was ____ by a famous poet in 1990.",
+        "explanation": "Sau was là past participle của động từ chính. Write có ba dạng: write, wrote, written. Cột thứ ba, written, mới dùng trong câu bị động.",
+        "options": [
+          { "label": "wrote", "isCorrect": false, "misconception": "en1.1.pp-sai" },
+          { "label": "written", "isCorrect": true },
+          { "label": "write", "isCorrect": false, "misconception": "en1.1.pp-sai" },
+          { "label": "writing", "isCorrect": false, "misconception": "en1.1.pp-sai" }
+        ]
+      },
+      {
+        "key": "en1.1.q03",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Chọn câu đúng: These cars ____ in Japan last year.",
+        "explanation": "Last year là quá khứ, và cars là số nhiều, nên ta dùng were + made. Hai lỗi hay gặp là chia be sai thì (are made) và sai số (was made).",
+        "options": [
+          { "label": "are made", "isCorrect": false, "misconception": "en1.1.be-sai-thi" },
+          { "label": "was made", "isCorrect": false, "misconception": "en1.1.be-sai-so" },
+          { "label": "were making", "isCorrect": false, "misconception": "en1.1.chu-dong-nham" },
+          { "label": "were made", "isCorrect": true }
+        ]
+      },
+      {
+        "key": "en1.1.q04",
+        "type": "true_false",
+        "points": 1,
+        "prompt": "Đúng hay sai? Câu I had repaired my phone có nghĩa là em nhờ thợ sửa điện thoại giúp mình.",
+        "explanation": "Sai. Muốn nói nhờ người khác làm, thứ tự phải là have + vật + past participle: I had my phone repaired. Câu I had repaired my phone có nghĩa khác: trước thời điểm đó, em đã tự sửa điện thoại xong.",
+        "options": [
+          { "label": "Đúng", "isCorrect": false, "misconception": "en1.1.sai-thu-tu-have" },
+          { "label": "Sai", "isCorrect": true }
+        ]
+      },
+      {
+        "key": "en1.1.q05",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Chiều qua Minh nhờ tiệm may cắt ngắn chiếc áo khoác của mình (his jacket, shorten). Câu nào diễn đạt đúng?",
+        "explanation": "Dùng cấu trúc have + vật + past participle, và have chia ở quá khứ vì việc đã xảy ra: Minh had his jacket shortened yesterday.",
+        "options": [
+          { "label": "Minh had his jacket shortened yesterday.", "isCorrect": true },
+          { "label": "Minh had shortened his jacket yesterday.", "isCorrect": false, "misconception": "en1.1.sai-thu-tu-have" },
+          { "label": "Minh has his jacket shortened yesterday.", "isCorrect": false, "misconception": "en1.1.have-sai-thi" },
+          { "label": "Minh shortened his jacket yesterday.", "isCorrect": false, "misconception": "en1.1.nham-tu-lam" }
+        ]
+      },
+      {
+        "key": "en1.1.q06",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Câu nào cho biết người nói KHÔNG trực tiếp lau cửa sổ?",
+        "explanation": "I had the windows cleaned = have + vật + past participle, nghĩa là có người khác lau giúp. Ba câu còn lại đều có nghĩa người nói tự làm: lau (cleaned), đang lau (was cleaning), hoặc đã lau xong (have cleaned).",
+        "options": [
+          { "label": "I cleaned the windows.", "isCorrect": false, "misconception": "en1.1.nham-tu-lam" },
+          { "label": "I was cleaning the windows.", "isCorrect": false, "misconception": "en1.1.nham-tu-lam" },
+          { "label": "I had the windows cleaned.", "isCorrect": true },
+          { "label": "I have cleaned the windows.", "isCorrect": false, "misconception": "en1.1.nham-tu-lam" }
+        ]
+      },
+      {
+        "key": "en1.1.q07",
+        "type": "fill_in",
+        "points": 1,
+        "prompt": "Viết lại thành câu bị động. Someone broke the window last night. → The window ____ last night. (điền hai từ)",
+        "explanation": "Câu gốc ở quá khứ đơn, the window là số ít, nên ta dùng was + broken: The window was broken last night.",
+        "answers": [
+          "was broken"
+        ]
+      },
+      {
+        "key": "en1.1.q08",
+        "type": "fill_in",
+        "points": 1,
+        "prompt": "Tuần trước nhà em thuê thợ lắp điều hoà. Điền một từ: We ____ the air conditioner installed last week.",
+        "explanation": "Cấu trúc nhờ người khác làm giúp là have + vật + past participle. Việc xảy ra tuần trước nên have chia ở quá khứ, là had.",
+        "answers": [
+          "had"
+        ]
+      },
+      {
+        "key": "en1.1.q09",
+        "type": "ordering",
+        "points": 1,
+        "prompt": "Sắp xếp các phần thành câu đúng, nói rằng hôm qua cô ấy nhờ người sao chụp hộ chiếu.",
+        "explanation": "Thứ tự là chủ ngữ, had, vật, past participle, rồi mới đến thời gian: She had her passport photocopied yesterday.",
+        "sequence": [
+          "She",
+          "had",
+          "her passport",
+          "photocopied",
+          "yesterday"
+        ]
+      },
+      {
+        "key": "en1.1.q10",
+        "type": "mcq",
+        "points": 1,
+        "prompt": "Em không biết ai đã lấy cắp xe đạp của mình. Câu nào tự nhiên nhất?",
+        "explanation": "Khi không biết ai làm, ta dùng câu bị động và bỏ phần by + người làm: My bicycle was stolen outside the library. Thêm by somebody là thừa, vì ai làm vốn không được biết.",
+        "options": [
+          { "label": "My bicycle was stolen by somebody outside the library.", "isCorrect": false, "misconception": "en1.1.by-thua" },
+          { "label": "My bicycle was stolen outside the library.", "isCorrect": true },
+          { "label": "Somebody stolen my bicycle outside the library.", "isCorrect": false, "misconception": "en1.1.thieu-be" },
+          { "label": "My bicycle stole outside the library.", "isCorrect": false, "misconception": "en1.1.chu-dong-nham" }
+        ]
+      }
+    ]
+  },
+  "misconceptions": [
+    {
+      "code": "en1.1.thieu-be",
+      "name": "Thiếu động từ be trong câu bị động",
+      "description": "Đặt past participle một mình sau chủ ngữ, quên rằng câu bị động cần một dạng của be (is, was, has been, will be…) đứng trước."
+    },
+    {
+      "code": "en1.1.be-sai-thi",
+      "name": "Chia be sai thì trong câu bị động",
+      "description": "Dùng be ở hiện tại cho việc đã xảy ra, hoặc ngược lại. Thì của câu bị động nằm ở động từ be, còn past participle thì giữ nguyên."
+    },
+    {
+      "code": "en1.1.be-sai-so",
+      "name": "Chia be sai số (số ít, số nhiều)",
+      "description": "Dùng is hoặc was với chủ ngữ số nhiều, hoặc are hoặc were với chủ ngữ số ít. Be của câu bị động hoà theo chủ ngữ, tức là vật được nói tới."
+    },
+    {
+      "code": "en1.1.chu-dong-nham",
+      "name": "Dùng dạng chủ động khi vật không tự làm được",
+      "description": "Giữ động từ ở dạng chủ động trong khi chủ ngữ là vật chịu tác động (cái ví, cái xe, cửa sổ). Vật không tự làm việc đó, nên phải dùng be + past participle."
+    },
+    {
+      "code": "en1.1.pp-sai",
+      "name": "Nhầm past participle với dạng khác của động từ",
+      "description": "Dùng quá khứ đơn (wrote, stole), nguyên mẫu (write) hoặc V-ing thay cho past participle. Với động từ bất quy tắc, cột thứ ba thường khác cột thứ hai."
+    },
+    {
+      "code": "en1.1.sai-thu-tu-have",
+      "name": "Sai thứ tự trong have + vật + past participle",
+      "description": "Đặt past participle ngay sau have rồi mới đến vật (had repaired my phone). Thứ tự đúng là have + vật + past participle; viết sai thứ tự còn đổi nghĩa thành thì quá khứ hoàn thành."
+    },
+    {
+      "code": "en1.1.have-sai-thi",
+      "name": "Chia have sai thì khi nhờ người làm giúp",
+      "description": "Dùng have hoặc has cho việc đã xảy ra. Trong cấu trúc này, have chia theo thì của câu, còn past participle giữ nguyên."
+    },
+    {
+      "code": "en1.1.nham-tu-lam",
+      "name": "Nhầm việc tự làm với việc nhờ người khác làm",
+      "description": "Coi câu chủ động như I cleaned hay I repaired là nhờ người làm giúp. Chỉ khi có have + vật + past participle mới có nghĩa là người khác làm cho mình."
+    },
+    {
+      "code": "en1.1.by-thua",
+      "name": "Thêm by + người làm khi không cần",
+      "description": "Luôn viết by somebody hoặc by people trong câu bị động. Phần by chỉ thêm khi thông tin người làm mới hoặc quan trọng; không biết ai làm thì bỏ."
+    }
+  ],
+  "feedbackTemplates": [
+    {
+      "misconception": "en1.1.thieu-be",
+      "body": "Câu bị động luôn có một dạng của be đứng trước past participle. Em thử đọc lại câu và tự hỏi: động từ be nằm ở đâu? Ví dụ: The window was broken, không phải The window broken.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.be-sai-thi",
+      "body": "Em hãy nhìn mốc thời gian trong câu (last year, yesterday, now…). Thì của câu bị động nằm ở động từ be: quá khứ dùng was hoặc were, hiện tại dùng is, am hoặc are. Past participle thì không đổi.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.be-sai-so",
+      "body": "Be của câu bị động hoà theo chủ ngữ, tức là vật được nói tới. Chủ ngữ số ít dùng is hoặc was; số nhiều dùng are hoặc were. Em hãy xác định chủ ngữ là số ít hay số nhiều trước khi chọn.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.chu-dong-nham",
+      "body": "Em hãy hỏi: chủ ngữ của câu có tự làm việc này được không? Một cái xe hay một cái ví không tự lấy cắp được, nên phải dùng be + past participle, ví dụ was stolen.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.pp-sai",
+      "body": "Sau be, em cần past participle, tức cột thứ ba của động từ: write, wrote, written. Em nên học thuộc ba cột của các động từ bất quy tắc hay gặp như write, steal, take, break.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.sai-thu-tu-have",
+      "body": "Thứ tự đúng là have + vật + past participle: had my phone repaired. Nếu đặt past participle ngay sau had (had repaired my phone) thì câu đổi nghĩa thành em đã tự sửa xong. Em hãy chen cái vật vào giữa have và past participle.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.have-sai-thi",
+      "body": "Trong cấu trúc nhờ người làm giúp, have chia theo thì của câu. Việc đã xảy ra thì dùng had; past participle luôn giữ nguyên. Em hãy tìm từ chỉ thời gian trong câu để chọn thì cho have.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.nham-tu-lam",
+      "body": "Câu chủ động như I cleaned the windows nghĩa là em tự làm. Muốn nói có người khác làm giúp, em cần have + vật + past participle: I had the windows cleaned. Hãy kiểm tra xem câu có đủ ba phần đó không.",
+      "priority": 10
+    },
+    {
+      "misconception": "en1.1.by-thua",
+      "body": "Phần by + người làm chỉ thêm khi thông tin đó mới hoặc quan trọng. Khi em không biết ai làm, hay ai làm không quan trọng, hãy bỏ by somebody đi; câu bị động nghe tự nhiên hơn.",
+      "priority": 10
+    }
+  ]
+}

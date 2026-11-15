@@ -6,9 +6,9 @@
  *   pnpm --filter @feedbackme/core-lms update:lesson -- --file lesson.json --owner gv@example.com --lesson "Slide có giảng viên ảo" --create --dry-run
  *
  * Giảng viên (xưng hô, tên) lấy từ `nguoiGiang.macDinh` của chính bộ slide; lời giảng có thể chứa `[en: …]`
- * (docs/tieu-chi/slide-giang-song-ngu.md). Bộ slide bài này không có quiz; quiz nạp riêng khi đã soạn.
+ * (docs/tieu-chi/slide-giang-song-ngu.md). Quiz cuối bài nạp bằng `--quiz <file.json>` (không bắt buộc).
  */
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { JSDOM } from "jsdom";
 import { buildDeckLecture } from "../src/lib/narration/deckLecture";
 import { loadDeck } from "../src/lib/slideDeck/decks";
@@ -36,6 +36,12 @@ if (!deck) throw new Error(`Thiếu bộ slide ${deckId}`);
 const gv = deck.nguoiGiang?.dsGiangVien?.find((g) => g.ma === deck.nguoiGiang?.macDinh) ?? deck.nguoiGiang?.dsGiangVien?.[0];
 if (!gv) throw new Error("Bộ slide chưa khai báo nguoiGiang.dsGiangVien");
 
+// Quiz cuối bài (tuỳ chọn): file { quiz, misconceptions, feedbackTemplates } — xem docs/hoc-lieu/speakout-grammar-slide/quiz.json.
+const quizFile = arg("quiz");
+const quizPack = quizFile
+  ? (JSON.parse(readFileSync(quizFile, "utf8")) as { quiz: unknown; misconceptions?: unknown[]; feedbackTemplates?: unknown[] })
+  : null;
+
 const lecture = buildDeckLecture(deck, { xung: gv.xung, ten: gv.ten });
 const chars = lecture.reduce((n, s) => n + s.text.length, 0);
 const manifest = {
@@ -47,6 +53,8 @@ const manifest = {
     language: arg("language") ?? "en",
     level: "intermediate" as const,
   },
+  ...(quizPack?.misconceptions ? { misconceptions: quizPack.misconceptions } : {}),
+  ...(quizPack?.feedbackTemplates ? { feedbackTemplates: quizPack.feedbackTemplates } : {}),
   modules: [
     {
       title: need("module"),
@@ -58,6 +66,7 @@ const manifest = {
           durationMin: Math.max(1, Math.round(chars / CHARS_PER_MINUTE)),
           embeds: [{ url: `/decks/${deckId}`, height: 720 }],
           lecture,
+          ...(quizPack ? { quiz: quizPack.quiz } : {}),
         },
       ],
     },
