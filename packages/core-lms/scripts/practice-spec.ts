@@ -31,6 +31,9 @@ export const ExamQuestionSpec = z.object({
   type: QuestionType,
   prompt: z.string().min(1).max(5_000),
   explanation: z.string().max(2_000).optional(),
+  /** Mọi loại: phiên âm của đề (hiện sẵn dưới đề) và bản dịch (ẩn, học viên bấm mới thấy) — chú giải cho học viên ngoại ngữ. */
+  promptReading: z.string().max(1_200).optional(),
+  promptTranslation: z.string().max(1_200).optional(),
   points: z.number().int().min(0).max(1_000).optional(),
   /** mcq / multi */
   options: z.array(z.object({ label: z.string().min(1), isCorrect: z.boolean() })).optional(),
@@ -265,6 +268,9 @@ export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: stri
       };
       break;
   }
+  const reading = q.promptReading?.trim();
+  const translation = q.promptTranslation?.trim();
+  if (reading || translation) config = { ...(config as object), promptAid: { ...(reading ? { reading } : {}), ...(translation ? { translation } : {}) } };
   return { type: q.type, prompt: q.prompt.trim(), config, ...(q.points !== undefined ? { points: q.points } : {}) };
 }
 

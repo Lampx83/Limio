@@ -409,6 +409,8 @@ export const viPractice = {
   "practice.say.verr.other": "Chưa dùng được bản ghi này. Hãy thử lại, hoặc gõ câu trả lời.",
   "practice.rp.chooseRole": "Chọn vai",
   "practice.rp.youPlay": "Em đóng vai",
+  "practice.aid.showTranslation": "Hiện bản dịch",
+  "practice.aid.hideTranslation": "Ẩn bản dịch",
   "practice.rp.hearAll": "Nghe cả hội thoại",
   "practice.rp.turnLabelMine": "Lượt {n}, vai {r}, của bạn",
   "practice.rp.turnLabelPartner": "Lượt {n}, vai {r}, của bạn ảo",

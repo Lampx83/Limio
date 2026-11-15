@@ -412,6 +412,8 @@ export const enPractice: PartialDict<typeof viPractice> = {
   "practice.say.verr.other": "This recording can't be used. Try again, or type your answer.",
   "practice.rp.chooseRole": "Choose your role",
   "practice.rp.youPlay": "You play",
+  "practice.aid.showTranslation": "Show translation",
+  "practice.aid.hideTranslation": "Hide translation",
   "practice.rp.hearAll": "Listen to the whole dialogue",
   "practice.rp.turnLabelMine": "Turn {n}, role {r}, yours",
   "practice.rp.turnLabelPartner": "Turn {n}, role {r}, the virtual partner's",

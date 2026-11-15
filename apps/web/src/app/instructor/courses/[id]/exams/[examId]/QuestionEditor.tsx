@@ -92,6 +92,8 @@ const TYPE_LABELS: Record<string, string> = {
 type QType = keyof typeof TYPE_LABELS;
 
 interface State {
+  /** Chú giải đề (phiên âm + bản dịch) đã lưu: form chưa có ô sửa, nhưng phải giữ nguyên khi lưu câu để không mất. */
+  promptAid?: Record<string, unknown>;
   type: QType;
   prompt: string;
   points: number;
@@ -211,6 +213,7 @@ export default function QuestionEditor({
     s.skills = initial.skills;
     const cfg = initial.config;
     s.explanation = (cfg.explanation as string) ?? "";
+    if (cfg.promptAid && typeof cfg.promptAid === "object") s.promptAid = cfg.promptAid as Record<string, unknown>;
     s.code = typeof cfg.code === "string" ? cfg.code : "";
     if (s.type === "slider") {
       s.slider = {
@@ -323,7 +326,8 @@ export default function QuestionEditor({
     }
     const base = buildTypeConfig();
     const explanation = v.explanation.trim();
-    return explanation ? { ...(base as Record<string, unknown>), explanation } : base;
+    const withAid = v.promptAid ? { ...(base as Record<string, unknown>), promptAid: v.promptAid } : base;
+    return explanation ? { ...(withAid as Record<string, unknown>), explanation } : withAid;
   }
 
   function buildSurveyConfig(): unknown {

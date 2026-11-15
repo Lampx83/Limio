@@ -70,3 +70,23 @@ describe("toPublicQuestionConfig — không lộ đáp án xuống trình duyệ
     expect(toPublicQuestionConfig("mcq", { options: "oops" })).toEqual({ options: [] });
   });
 });
+
+describe("toPublicQuestionConfig — chú giải đề (promptAid)", () => {
+  const aid = { reading: "Nǐ hǎo ma?", translation: "How are you?" };
+
+  it.each(["mcq", "essay", "gap_fill", "drag_drop_fill", "short_answer", "true_false_notgiven"])("giữ phiên âm và bản dịch ở loại %s", (type) => {
+    const out = toPublicQuestionConfig(type, { promptAid: aid, options: [], blanks: [], tokens: [] });
+    expect(out.promptAid).toEqual(aid);
+  });
+
+  it("chỉ giữ hai chuỗi đã biết, bỏ khoá lạ và chuỗi rỗng; không có thì không thêm khoá", () => {
+    expect(toPublicQuestionConfig("essay", { promptAid: { reading: "x", secret: "đáp án", translation: "  " } }).promptAid).toEqual({ reading: "x" });
+    expect(toPublicQuestionConfig("essay", { promptAid: {} })).not.toHaveProperty("promptAid");
+    expect(toPublicQuestionConfig("mcq", { options: [] })).not.toHaveProperty("promptAid");
+  });
+
+  it("không làm lộ đáp án của câu trắc nghiệm", () => {
+    const out = toPublicQuestionConfig("mcq", { options: [{ id: "a", label: "A", isCorrect: true }], promptAid: aid });
+    expect(JSON.stringify(out)).not.toContain("isCorrect");
+  });
+});

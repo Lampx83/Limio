@@ -172,3 +172,21 @@ describe("EssayConfig.freechat — thử nói tự do", () => {
     expect(EssayConfig.safeParse({ freechat: { ...fc, targets: Array.from({ length: 11 }, () => "x") } }).success).toBe(false);
   });
 });
+
+describe("promptAid — chú giải đề không bị zod xoá khi lưu", () => {
+  const aid = { reading: "Nǐ hǎo ma?", translation: "How are you?" };
+  const cases: Array<[string, unknown]> = [
+    ["mcq", { options: [{ id: "a", label: "A", isCorrect: true }, { id: "b", label: "B", isCorrect: false }] }],
+    ["essay", {}],
+    ["gap_fill", { blanks: [{ id: "b1", acceptedAnswers: ["x"] }] }],
+    ["drag_drop_fill", { tokens: [{ id: "t1", label: "x", blankIndex: 1 }] }],
+  ];
+  it.each(cases)("%s giữ promptAid", (type, base) => {
+    const r = configSchemaForType(type as never).safeParse({ ...(base as object), promptAid: aid });
+    expect(r.success && (r.data as { promptAid?: unknown }).promptAid).toEqual(aid);
+  });
+  it("chuỗi rỗng hoặc quá dài bị từ chối", () => {
+    expect(EssayConfig.safeParse({ promptAid: { reading: "" } }).success).toBe(false);
+    expect(EssayConfig.safeParse({ promptAid: { translation: "x".repeat(1_201) } }).success).toBe(false);
+  });
+});
