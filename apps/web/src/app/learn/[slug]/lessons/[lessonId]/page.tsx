@@ -51,7 +51,8 @@ import LessonAnnotations from "@/components/lesson/LessonAnnotations";
 import { withoutHiddenAudioTranscripts } from "@/lib/lessonAudio";
 import SafeHtml from "@/components/SafeHtml";
 import { htmlToPlainText, plainToRichHtml } from "@/lib/richText";
-import LessonTabs, { type TabKey } from "@/components/lesson/LessonTabs";
+import LessonTabs from "@/components/lesson/LessonTabs";
+import { lessonBottomTabs } from "@/lib/lessonBottomTabs";
 import LessonTasksTab, {
   type TaskItem,
 } from "@/components/lesson/LessonTasksTab";
@@ -622,7 +623,12 @@ export default async function LessonPage({
       t.kind === "quiz" ? !t.attempted : t.submission?.status !== "graded",
     ).length;
 
-  const defaultTab: TabKey = tasksUndone > 0 ? "tasks" : "forum";
+  const { tabs: bottomTabs, defaultTab } = lessonBottomTabs({
+    languageMode: lesson.module.course.languageMode,
+    tasksCount: tasks.length,
+    tasksUndone,
+    threadsCount: threads.length,
+  });
 
   // Auto-complete criteria. Computed server-side because we already know all
   // the inputs here (content shape + per-user activity status). Client-side
@@ -1066,13 +1072,8 @@ export default async function LessonPage({
         </div>
       </div>
 
-      <LessonTabs
-        defaultTab={defaultTab}
-        tabs={[
-          { key: "tasks", label: "Bài tập", icon: "📝", count: tasksUndone },
-          { key: "forum", label: "Thảo luận", icon: "💬", count: threads.length },
-        ]}
-      >
+      {bottomTabs.length > 0 && (
+      <LessonTabs defaultTab={defaultTab} tabs={bottomTabs}>
         {{
           tasks: (
             <LessonTasksTab items={tasks} courseSlug={params.slug} teamContext={teamContext} />
@@ -1094,6 +1095,7 @@ export default async function LessonPage({
           ),
         }}
       </LessonTabs>
+      )}
 
       {!previewMode && !lessonFrame && <LessonNotesDrawer lessonId={lesson.id} />}
 

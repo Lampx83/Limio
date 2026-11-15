@@ -21,6 +21,7 @@ import { QuestionCard } from "@/components/exam/AnswerReview";
 import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import EssayFeedback from "./EssayFeedback";
 import { essayFeedbackEnabled, essayVoiceEnabled, parseFeedback, type FeedbackView } from "@/lib/practiceEssayView";
+import { splitPassageInstruction, type PassageDoc } from "@/lib/passageInstruction";
 
 interface CheckResult {
   isCorrect: boolean | null;
@@ -332,7 +333,11 @@ export default function LessonPractice({
     (id) => id in checks,
   );
   const step = steps[stepIdx];
-  const split = hasPassage && layout === "split" && !!step?.passageId;
+  // Tên đoạn + đề bài là khối riêng rộng bằng bài (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2); thẻ nội dung chỉ giữ phần còn lại.
+  const stepPassage = step?.passageId ? passages.find((x) => x.id === step.passageId) : undefined;
+  const parts = stepPassage ? splitPassageInstruction(stepPassage.contentJson as PassageDoc) : null;
+  const hasBody = !!parts && parts.rest.content.length > 0;
+  const split = hasPassage && layout === "split" && !!step?.passageId && hasBody;
 
   function jumpTo(qid: string) {
     const i = stepIndexOf(steps, qid);
@@ -528,18 +533,30 @@ export default function LessonPractice({
         </div>
       )}
 
+      {stepPassage && parts && (
+        <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface))] p-5" data-testid="lp-instruction">
+          <h3 className="text-h3">{stepPassage.title}</h3>
+          <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
+          {parts.instruction && <p className="mt-3 text-body leading-8">{parts.instruction}</p>}
+        </div>
+      )}
+
       {step &&
         (step.passageId ? (
           <div className={`mt-4 grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
-            <div
-              className={`rounded-xl border border-token bg-[rgb(var(--surface))] p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
-              data-testid="lp-passage"
-            >
-              {(() => {
-                const p = passages.find((x) => x.id === step.passageId);
-                return p ? <PassageView passage={p as { id: string; title: string; contentJson: { type: "doc"; content: unknown[] } }} attemptId={`lesson-practice-${embed.examId}`} /> : null;
-              })()}
-            </div>
+            {hasBody && stepPassage && parts && (
+              <div
+                className={`rounded-xl border border-token bg-[rgb(var(--surface))] p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
+                data-testid="lp-passage"
+              >
+                <PassageView
+                  passage={{ id: stepPassage.id, title: stepPassage.title, contentJson: parts.rest, transcripts: (stepPassage as { transcripts?: Record<string, string> }).transcripts }}
+                  attemptId={`lesson-practice-${embed.examId}`}
+                  hideTitle
+                  hideNote
+                />
+              </div>
+            )}
             {/* Chia đôi: cột câu hỏi cũng tự cuộn riêng (như cột đoạn văn) khi nhiều câu dài; thẻ đầu cột (bản đồ câu hỏi) dính ở đỉnh nên luôn thấy. */}
             <div className={`space-y-3 ${splitView ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : ""}`}>
               {splitView && (

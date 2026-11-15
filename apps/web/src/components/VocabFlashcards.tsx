@@ -75,10 +75,9 @@ export default function VocabFlashcards({
       {showReading && item.reading && <p className="mt-2 text-lg text-muted">{item.reading}</p>}
     </>
   );
-  const meaningFace = (
+  // Ghi chú và ví dụ đi cùng nhau ở mặt sau: ví dụ chứa chính từ cần đoán nên không bao giờ nằm ở mặt trước.
+  const extras = (
     <>
-      {/* Nghĩa dài (cả câu định nghĩa) thì chữ nhỏ hơn để thẻ không tràn. */}
-      <p className={`font-semibold leading-snug text-[rgb(var(--text))] ${item.meaning.length > 60 ? "text-lg sm:text-xl" : "text-2xl sm:text-3xl"}`}>{item.meaning}</p>
       {item.note && <p className="mt-2 text-sm italic text-muted">{item.note}</p>}
       {item.example && (
         <div className="mt-4 w-full max-w-md border-l-2 border-brand-300 bg-brand-soft/60 py-1.5 pl-3 pr-2 text-left">
@@ -91,8 +90,22 @@ export default function VocabFlashcards({
       )}
     </>
   );
-  const front = reverse ? meaningFace : termFace;
-  const back = reverse ? termFace : meaningFace;
+  const meaningText = (
+    /* Nghĩa dài (cả câu định nghĩa) thì chữ nhỏ hơn để thẻ không tràn. */
+    <p className={`font-semibold leading-snug text-[rgb(var(--text))] ${item.meaning.length > 60 ? "text-lg sm:text-xl" : "text-2xl sm:text-3xl"}`}>{item.meaning}</p>
+  );
+  const front = reverse ? meaningText : termFace;
+  const back = reverse ? (
+    <>
+      {termFace}
+      {extras}
+    </>
+  ) : (
+    <>
+      {meaningText}
+      {extras}
+    </>
+  );
   const hint = reverse ? "Bấm để xem từ" : "Bấm để xem nghĩa";
 
   return (

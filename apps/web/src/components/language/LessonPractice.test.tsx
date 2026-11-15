@@ -725,3 +725,46 @@ describe("LessonPractice — trả lời câu mở bằng giọng nói", () => {
     expect(host.querySelector('[data-testid="lp-feedback"]')).toBeNull();
   });
 });
+
+describe("LessonPractice — khối đề bài riêng và không có ghi chú cá nhân (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2, AC4)", () => {
+  const para = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
+  const withDoc = (title: string, content: unknown[]) =>
+    embed({ passages: [{ id: "p1", title, contentJson: { type: "doc", content } }] });
+
+  it("đề bài là khối riêng phía trên, có tên đoạn; thẻ nội dung không lặp lại tên và đề bài", async () => {
+    await render(withDoc("7B · Multi-word verbs", [para("Find the ten multi-word verbs in the texts."), para("Nội dung bài đọc.")]));
+    const block = host.querySelector('[data-testid="lp-instruction"]')!;
+    expect(block).not.toBeNull();
+    expect(block.textContent).toContain("7B · Multi-word verbs");
+    expect(block.textContent).toContain("Find the ten multi-word verbs in the texts.");
+    const card = host.querySelector('[data-testid="lp-passage"]')!;
+    expect(card.textContent).toContain("Nội dung bài đọc.");
+    expect(card.textContent).not.toContain("Find the ten multi-word verbs");
+    expect(card.textContent).not.toContain("7B · Multi-word verbs");
+    // khối đề bài đứng TRƯỚC thẻ nội dung trong cây DOM
+    expect(block.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("đoạn không có đề bài nhận ra được: khối riêng chỉ có tên đoạn, nội dung giữ nguyên", async () => {
+    await render(withDoc("Endangered Species", [{ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: "Lifestyle" }] }, para("Một đoạn dài.")]));
+    const block = host.querySelector('[data-testid="lp-instruction"]')!;
+    expect(block.textContent).toContain("Endangered Species");
+    const card = host.querySelector('[data-testid="lp-passage"]')!;
+    expect(card.textContent).toContain("Lifestyle");
+    expect(card.textContent).toContain("Một đoạn dài.");
+    expect(card.textContent).not.toContain("Endangered Species");
+  });
+
+  it("phiếu bạn ảo (đoạn chỉ có đề bài): không còn thẻ nội dung trống, cột câu hỏi vẫn có", async () => {
+    await render(withDoc("2A · Talk with a virtual partner", [para("No partner? Discuss the questions with your virtual partner.")]));
+    expect(host.querySelector('[data-testid="lp-instruction"]')!.textContent).toContain("No partner? Discuss the questions");
+    expect(host.querySelector('[data-testid="lp-passage"]')).toBeNull();
+    expect(text()).toContain("Câu hỏi một?");
+  });
+
+  it("không có ô \"Ghi chú cá nhân\" dưới nội dung", async () => {
+    await render(withDoc("7B · Multi-word verbs", [para("Find the ten multi-word verbs."), para("Nội dung bài đọc.")]));
+    expect(text()).not.toContain("Ghi chú cá nhân");
+    expect(host.querySelector("textarea")).toBeNull();
+  });
+});

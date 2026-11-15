@@ -23,6 +23,10 @@ interface Props {
   attemptId: string;
   /** G5b — đề thi thử: giới hạn lượt nghe. Không truyền = trình phát gốc như cũ. */
   audio?: Omit<ExamAudioContextValue, "attemptId" | "passageId">;
+  /** Bài luyện nhúng trong bài học: ghi chú đã có ở panel "Ghi chú", không để ô ghi chú tạm ngay dưới nội dung. */
+  hideNote?: boolean;
+  /** Bài luyện nhúng: tên đoạn đã nằm ở khối đề bài riêng phía trên, không lặp trong thẻ nội dung. */
+  hideTitle?: boolean;
 }
 
 /**
@@ -34,7 +38,7 @@ interface Props {
  * `exam:{attemptId}:passage:{id}`. Notes (if needed later) can share the key.
  * No sync to server — explicit warning banner shown.
  */
-export default function PassageView({ passage, attemptId, audio }: Props) {
+export default function PassageView({ passage, attemptId, audio, hideNote = false, hideTitle = false }: Props) {
   const lsKey = `exam:${attemptId}:passage:${passage.id}`;
   const [note, setNote] = useState("");
 
@@ -69,23 +73,27 @@ export default function PassageView({ passage, attemptId, audio }: Props) {
     <AudioTranscriptContext.Provider value={passage.transcripts ?? null}>
     <div>
       {/* Tiêu đề bài đọc: cỡ lớn, đậm, kèm vạch nhấn màu thương hiệu ngắn bên dưới (kiểu tiêu đề báo/sách), tách khỏi phần thân. */}
-      <header className="mb-4">
-        <h2 className="text-h3">{passage.title}</h2>
-        <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
-      </header>
+      {!hideTitle && (
+        <header className="mb-4">
+          <h2 className="text-h3">{passage.title}</h2>
+          <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
+        </header>
+      )}
       <div className="prose prose-sm max-w-none select-text">{rendered}</div>
-      <details className="mt-4 border-t border-default pt-3">
-        <summary className="cursor-pointer text-xs text-faint">
-          Ghi chú cá nhân (chỉ lưu trên thiết bị này)
-        </summary>
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={4}
-          placeholder="Ghi chú tạm khi đọc bài… (không tính điểm)"
-          className="mt-2 w-full rounded border border-default p-2 text-sm"
-        />
-      </details>
+      {!hideNote && (
+        <details className="mt-4 border-t border-default pt-3">
+          <summary className="cursor-pointer text-xs text-faint">
+            Ghi chú cá nhân (chỉ lưu trên thiết bị này)
+          </summary>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={4}
+            placeholder="Ghi chú tạm khi đọc bài… (không tính điểm)"
+            className="mt-2 w-full rounded border border-default p-2 text-sm"
+          />
+        </details>
+      )}
     </div>
     </AudioTranscriptContext.Provider>
     </ExamAudioContext.Provider>
