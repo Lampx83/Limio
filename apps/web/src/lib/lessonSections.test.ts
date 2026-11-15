@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitLessonSections, practiceTabLabel, arrangeTabs, mergeTabsByLabel, type SectionItem } from "./lessonSections";
+import { splitLessonSections, practiceTabLabel, arrangeTabs, mergeTabsByLabel, passageDisplayTitle, type SectionItem } from "./lessonSections";
 
 /** docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md — AC5, AC6. HTML mẫu giống hệt bộ nhập khoá Speakout tạo ra. */
 const NUM = (n: string) => `<span style="color:rgb(229,0,92);font-size:1.6em;font-weight:700;line-height:1;margin-right:.3rem">${n}</span>`;
@@ -182,5 +182,19 @@ describe("mergeTabsByLabel — một exercise chỉ một tab", () => {
   it("không trùng nhãn: không đổi gì", () => {
     const input = [tab("a", "1A"), tab("b", "1B")];
     expect(mergeTabsByLabel(input, combine)).toEqual(input);
+  });
+});
+
+describe("passageDisplayTitle — phiếu bạn ảo là phần nhỏ của exercise, không đánh lại mã bài", () => {
+  it("tiêu đề phiếu bạn ảo bỏ mã bài ở đầu (mã đã có trên tab)", () => {
+    expect(passageDisplayTitle("3D · Talk with a virtual partner")).toBe("Talk with a virtual partner");
+    expect(passageDisplayTitle("2A–2C · Talk with a virtual partner")).toBe("Talk with a virtual partner");
+    expect(passageDisplayTitle("6 · Talk with a virtual partner")).toBe("Talk with a virtual partner");
+    expect(passageDisplayTitle("8A · Plan with a virtual partner")).toBe("Plan with a virtual partner");
+  });
+  it("tiêu đề khác giữ nguyên, kể cả có mã bài", () => {
+    expect(passageDisplayTitle("3D · More examples in the article")).toBe("3D · More examples in the article");
+    expect(passageDisplayTitle("The world’s favourite drug")).toBe("The world’s favourite drug");
+    expect(passageDisplayTitle("Free practice · Talk with a virtual partner")).toBe("Free practice · Talk with a virtual partner");
   });
 });

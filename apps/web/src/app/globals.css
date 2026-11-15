@@ -2752,3 +2752,12 @@ textarea.fc-input {
 .ps-rewrite input.ps-blank {
   color: var(--ps-ink);
 }
+
+/* Chữ in đậm của sách trong bài luyện nhúng (từ vựng mục tiêu): bôi màu nhấn của khối (--brand, theo bộ sách) cho nổi bật. */
+.pv-hl-bold strong {
+  background: rgb(var(--brand) / 0.16);
+  border-radius: 0.25rem;
+  padding: 0 0.2em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}

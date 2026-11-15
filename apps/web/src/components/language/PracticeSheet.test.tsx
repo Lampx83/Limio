@@ -158,9 +158,10 @@ describe("Phiếu bài tập — khung và tab", () => {
 
   it("chuyển tab đổi bài tập và đoạn văn; mũi tên trái/phải đổi tab; tab chỉ một bước thì không có thanh tab", async () => {
     await render();
-    expect(text()).toContain("Đoạn một.");
+    // Đoạn chỉ có câu yêu cầu: tên đoạn + câu yêu cầu ở khối đề bài riêng phía trên (AC2), không nằm trong thẻ phiếu.
+    expect(host.querySelector('[data-testid="lp-instruction"]')!.textContent).toContain("Đoạn một.");
     await click(button(/Bài 2/));
-    expect(text()).toContain("Đoạn hai.");
+    expect(host.querySelector('[data-testid="lp-instruction"]')!.textContent).toContain("Đoạn hai.");
     expect(panel().querySelectorAll(".ps-row")).toHaveLength(4);
     const e = embed();
     await render({ ...e, questions: e.questions.slice(0, 2), passages: [e.passages[0]!] });
@@ -389,7 +390,9 @@ describe("Phiếu bài tập — đoạn văn chỉ là câu yêu cầu thì m�
   it("đoạn chỉ có vài câu chữ hiện thành câu yêu cầu ở đầu bài tập (không thẻ đoạn văn bên trái, không nút chia đôi)", async () => {
     await render();
     expect(host.querySelector('[data-testid="lp-passage"]')).toBeNull();
-    expect(panel().querySelector(".ps-intro")!.textContent).toBe("Đoạn một.");
+    // Câu yêu cầu nằm ở khối đề bài riêng rộng bằng bài, không lặp trong thẻ phiếu.
+    expect(host.querySelector('[data-testid="lp-instruction"]')!.textContent).toContain("Đoạn một.");
+    expect(panel().querySelector(".ps-intro")).toBeNull();
     expect(host.querySelector('[aria-label="Bố cục"]')).toBeNull();
   });
 

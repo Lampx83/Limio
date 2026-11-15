@@ -9,7 +9,7 @@ export interface PracticeTab {
 }
 
 /**
- * Khu "Luyện tập" của bài ngoại ngữ: mỗi khối Bài luyện là một tab (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md, AC5).
+ * Khu bài luyện của bài ngoại ngữ (không có tiêu đề riêng: thanh tab là đủ): mỗi khối Bài luyện là một tab (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md, AC5).
  * Mọi tab đều nằm trong cây (tab không chọn chỉ ẩn) nên bài đang làm không mất khi chuyển qua lại.
  * Chỉ một khối thì không có thanh tab.
  */
@@ -23,7 +23,6 @@ export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
 
   return (
     <section className="mt-8" data-testid="practice-tabs">
-      <h2 className="text-h3 mb-2">Luyện tập</h2>
       <div
         role="tablist"
         aria-label="Bài luyện của bài học"

@@ -33,6 +33,7 @@ import { tabLabel, tabShortLabels } from "@/lib/practiceSheetView";
 import { accentVar } from "@/lib/courseAccent";
 import { essayFeedbackEnabled, essayVoiceEnabled, parseFeedback, type FeedbackView } from "@/lib/practiceEssayView";
 import { splitPassageInstruction, type PassageDoc } from "@/lib/passageInstruction";
+import { passageDisplayTitle } from "@/lib/lessonSections";
 
 interface CheckResult {
   isCorrect: boolean | null;
@@ -492,30 +493,34 @@ export default function LessonPractice({
   const stepPassage = step?.passageId ? passages.find((x) => x.id === step.passageId) : undefined;
   const parts = stepPassage ? splitPassageInstruction(stepPassage.contentJson as PassageDoc) : null;
   const hasBody = !!parts && parts.rest.content.length > 0;
-  // Phiếu: đoạn văn chỉ là câu yêu cầu (không bài đọc, audio, ảnh, bảng, danh sách) không cần cột riêng; hiện thành câu yêu cầu ở đầu bài tập, một cột.
-  // Bài nghe chỉ có câu yêu cầu ngắn và trình phát: trình phát hiện ngay trên các câu hỏi (cùng cách).
-  const intros = useMemo(
-    () =>
-      new Map<string, ReactNode>(
-        sheet
-          ? passages.flatMap((x): Array<[string, ReactNode]> => {
-              const text = instructionOnlyText(x.contentJson);
-              if (text) return [[x.id, text]];
-              if (isShortAudioPassage(x.contentJson)) {
-                const p = { ...x, title: "" } as unknown as { id: string; title: string; contentJson: { type: "doc"; content: unknown[] } };
-                return [[x.id, <PassageView key={x.id} passage={p} attemptId={`lesson-practice-${embed.examId}`} />]];
-              }
-              return [];
-            })
-          : [],
-      ),
+  // Phiếu: đoạn văn chỉ là câu yêu cầu (không bài đọc, audio, ảnh, bảng, danh sách) không cần cột riêng; câu yêu cầu và tên đoạn nằm ở khối đề bài
+  // riêng phía trên (AC2). Bài nghe chỉ có câu yêu cầu ngắn và trình phát: trình phát hiện ngay trên các câu hỏi, không kèm câu yêu cầu.
+  const { intros, light } = useMemo(() => {
+    const nodes = new Map<string, ReactNode>();
+    const lightIds = new Set<string>();
+    if (sheet) {
+      for (const x of passages) {
+        if (instructionOnlyText(x.contentJson)) {
+          lightIds.add(x.id);
+          continue;
+        }
+        if (isShortAudioPassage(x.contentJson)) {
+          lightIds.add(x.id);
+          const rest = splitPassageInstruction(x.contentJson as PassageDoc).rest;
+          const p = { ...x, title: "", contentJson: rest } as unknown as { id: string; title: string; contentJson: { type: "doc"; content: unknown[] } };
+          nodes.set(x.id, <PassageView key={x.id} passage={p} attemptId={`lesson-practice-${embed.examId}`} hideNote emphasizeBold />);
+        }
+      }
+    }
+    return { intros: nodes, light: lightIds };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [passages, sheet],
-  );
+  }, [passages, sheet]);
   const introOf = (st: { passageId: string | null; questionIds: string[] } | undefined): ReactNode | null =>
     st?.passageId && st.questionIds.length > 0 ? intros.get(st.passageId) ?? null : null;
-  const lightIntro = introOf(step);
-  const split = hasPassage && layout === "split" && !!step?.passageId && (sheet ? !lightIntro : hasBody);
+  const lightIntro = !!(step?.passageId && step.questionIds.length > 0 && light.has(step.passageId));
+  // Đoạn chỉ có câu yêu cầu (phiếu): câu đó là đề bài, hiện ở khối đề bài riêng.
+  const lightText = lightIntro && stepPassage ? instructionOnlyText(stepPassage.contentJson) : null;
+  const split = hasPassage && layout === "split" && !!step?.passageId && !lightIntro && hasBody;
 
   function jumpTo(qid: string) {
     const i = stepIndexOf(steps, qid);
@@ -782,7 +787,7 @@ export default function LessonPractice({
     label: tabLabel(sheetTitles[i], i),
     short: sheetShorts[i],
     questionIds: st.questionIds,
-    ...(introOf(st) ? { intro: introOf(st), introTitle: sheetTitles[i] ?? undefined } : {}),
+    ...(introOf(st) ? { intro: introOf(st) } : {}),
     ...(st.questionIds.some((id) => isSpeakingChat(qById.get(id))) ? { introIcon: <Mic size={20} /> } : {}),
   }));
   const sheetNode = sheet ? (
@@ -869,44 +874,31 @@ export default function LessonPractice({
         </div>
       )}
 
-      {/* Bài luyện kiểu thẻ (không phải phiếu): tên đoạn + đề bài là khối riêng rộng bằng bài (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
-      {!sheet && stepPassage && parts && (
-        <div className="mt-4 rounded-xl border border-token bg-[rgb(var(--surface))] p-5" data-testid="lp-instruction">
-          <h3 className="text-h3">{stepPassage.title}</h3>
+      {/* Tên đoạn + đề bài là khối riêng rộng bằng bài, cả kiểu phiếu lẫn kiểu thẻ (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
+      {stepPassage && parts && (
+        <div className={`mt-4 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5`} data-testid="lp-instruction">
+          <h3 className="text-h3">{passageDisplayTitle(stepPassage.title)}</h3>
           <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
-          {parts.instruction && <p className="mt-3 text-body leading-8">{parts.instruction}</p>}
+          {(lightText ?? parts.instruction) && <p className="mt-3 whitespace-pre-line text-body leading-8">{lightText ?? parts.instruction}</p>}
         </div>
       )}
 
       {step &&
         (step.passageId && !lightIntro ? (
           <div className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
-            {sheet ? (
+            {hasBody && !lightIntro && stepPassage && parts && (
               <div
-                className={`ps-paper-card p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
+                className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
                 data-testid="lp-passage"
               >
-                {(() => {
-                  const p = passages.find((x) => x.id === step.passageId);
-                  return p ? <PassageView passage={p as { id: string; title: string; contentJson: { type: "doc"; content: unknown[] } }} attemptId={`lesson-practice-${embed.examId}`} /> : null;
-                })()}
+                <PassageView
+                  passage={{ id: stepPassage.id, title: stepPassage.title, contentJson: parts.rest, transcripts: (stepPassage as { transcripts?: Record<string, string> }).transcripts }}
+                  attemptId={`lesson-practice-${embed.examId}`}
+                  hideTitle
+                  hideNote
+                  emphasizeBold
+                />
               </div>
-            ) : (
-              hasBody &&
-              stepPassage &&
-              parts && (
-                <div
-                  className={`rounded-xl border border-token bg-[rgb(var(--surface))] p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
-                  data-testid="lp-passage"
-                >
-                  <PassageView
-                    passage={{ id: stepPassage.id, title: stepPassage.title, contentJson: parts.rest, transcripts: (stepPassage as { transcripts?: Record<string, string> }).transcripts }}
-                    attemptId={`lesson-practice-${embed.examId}`}
-                    hideTitle
-                    hideNote
-                  />
-                </div>
-              )
             )}
             {/* Chia đôi: cột câu hỏi cũng tự cuộn riêng (như cột đoạn văn) khi nhiều câu dài; thẻ đầu cột (bản đồ câu hỏi) dính ở đỉnh nên luôn thấy. */}
             <div className={`min-w-0 space-y-3 ${splitView ? "lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll" : ""}`}>

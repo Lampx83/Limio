@@ -23,3 +23,22 @@ describe("PassageView — ghi chú cá nhân và tiêu đề", () => {
     expect(html).toContain("Nội dung.");
   });
 });
+
+describe("PassageView — chữ in đậm của sách (từ vựng mục tiêu) được bôi màu trong bài luyện nhúng", () => {
+  const bold = {
+    id: "p2",
+    title: "1A · Lifestyle questions",
+    contentJson: {
+      type: "doc" as const,
+      content: [{ type: "paragraph", content: [{ type: "text", text: "I'm an " }, { type: "text", text: "early bird", marks: [{ type: "bold" }] }, { type: "text", text: "." }] }],
+    },
+  };
+  it("emphasizeBold: vùng nội dung có lớp bôi màu cho chữ đậm", () => {
+    const html = renderToStaticMarkup(<PassageView passage={bold} attemptId="a" emphasizeBold />);
+    expect(html).toContain("pv-hl-bold");
+    expect(html).toContain("<strong>early bird</strong>");
+  });
+  it("mặc định (phòng thi, luyện đề): không đổi", () => {
+    expect(renderToStaticMarkup(<PassageView passage={bold} attemptId="a" />)).not.toContain("pv-hl-bold");
+  });
+});

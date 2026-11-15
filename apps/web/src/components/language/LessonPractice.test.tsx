@@ -832,3 +832,19 @@ describe("LessonPractice — chế độ tab con của một exercise (docs/tieu
     expect(text()).toContain("Đã lưu câu trả lời");
   });
 });
+
+describe("LessonPractice — chữ đậm của sách được bôi màu (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC7)", () => {
+  it("thẻ đoạn văn của bài luyện có lớp bôi màu chữ đậm", async () => {
+    const e = embed({
+      passages: [
+        {
+          id: "p1",
+          title: "1A · Lifestyle",
+          contentJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Hello." }] }, { type: "paragraph", content: [{ type: "text", text: "early bird", marks: [{ type: "bold" }] }] }] },
+        },
+      ],
+    });
+    await render(e);
+    expect(host.querySelector('[data-testid="lp-passage"] .pv-hl-bold strong')).not.toBeNull();
+  });
+});

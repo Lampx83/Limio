@@ -71,6 +71,16 @@ export function exerciseLabels(titles: readonly string[]): string | null {
   return parts.map((r) => (r.from ? (r.to && r.to !== r.from ? `${r.num}${r.from}–${r.num}${r.to}` : `${r.num}${r.from}`) : r.num)).join(", ");
 }
 
+/**
+ * Tiêu đề hiện ở khối đề bài. Phiếu bạn ảo là phần nhỏ của exercise (vd "3D · Talk with a virtual partner" nằm trong tab 3D) nên không đánh lại mã bài:
+ * bỏ mã ở đầu, chỉ giữ "Talk with a virtual partner". Tiêu đề khác giữ nguyên.
+ */
+export function passageDisplayTitle(title: string): string {
+  const m = /^(\S+)\s·\s(.+)$/.exec(title);
+  if (m && LABEL_RE.test(m[1]!) && /virtual partner/i.test(m[2]!)) return m[2]!;
+  return title;
+}
+
 /** Tên tab dự phòng: tên khối, bỏ đuôi " · Practice" mà bộ nhập khoá thêm cho khối gộp. */
 export function practiceTabLabel(title: string): string {
   const t = title.replace(/\s*·\s*Practice\s*$/i, "").trim();

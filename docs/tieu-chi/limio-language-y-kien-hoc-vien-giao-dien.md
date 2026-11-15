@@ -36,20 +36,25 @@ Ví dụ "7B · Multi-word verbs" kèm "Find the ten multi-word verbs in the tex
 Một lesson là trọn một phần của sách; bên trong, lý thuyết đứng trước, phần luyện đứng sau.
 
 - Trong **khung bài học của khoá ngoại ngữ**, phần không phải bài luyện (chữ của sách, hộp quy tắc, mẹo, ảnh, audio, video) hiện **phía trên**, giữ đúng thứ tự cũ.
-- Bên dưới là khu **"Luyện tập"**: **mỗi exercise của sách là một tab**, tên tab là số exercise: "3A", "3B", "5", "2A–2C", "7". Mở sẵn tab đầu. Chuyển tab **không mất** bài đang làm. Trong mỗi tab vẫn có "Chia đôi / Một cột" và khối đề bài riêng (AC2).
+- Bên dưới là khu bài luyện, **không có tiêu đề riêng** (thanh tab là đủ): **mỗi exercise của sách là một tab**, tên tab là số exercise: "3A", "3B", "5", "2A–2C", "7". Mở sẵn tab đầu. Chuyển tab **không mất** bài đang làm. Trong mỗi tab vẫn có "Chia đôi / Một cột" và khối đề bài riêng (AC2).
 - Khối Bài luyện gom nhiều exercise (vd Grammar: 3A, 3B, 3C, 5) được **tách theo đoạn**: các đoạn liên tiếp cùng nhãn (7B, 7B) thuộc một tab; đoạn không có nhãn đi cùng tab đứng trước nó. Mỗi tab có dải số câu riêng, đánh số từ 1.
 - Khối chỉ có một exercise thì là một tab. Tên lấy theo thứ tự: nhãn ở đầu tên khối, nhãn các đoạn, nhãn câu yêu cầu của sách đứng ngay trước khối ("2B"), rồi tên khối (bỏ đuôi " · Practice"). **Một exercise chỉ một tab:** các khối cùng nhãn (vd bài viết 3D và phiếu bạn ảo 3D) gộp vào một tab, xếp lần lượt trong tab đó, không tách thành hai tab trùng tên.
 - Các tab của cùng một khối **dùng chung một buổi luyện** (đáp án lưu chung như cũ). Trong tab con **không có nút "Kết thúc bài luyện"** (nút đó kết thúc cả khối nên không đặt trong từng tab); điểm theo kỹ năng không đổi vì vẫn ghi theo lượt kiểm tra từng câu.
 - Bài chỉ có **một** tab: không hiện thanh tab, khối đứng ngay dưới phần lý thuyết (nút "Kết thúc bài luyện" vẫn như cũ).
 - Bài không có khối nào, hoặc người xem không thấy khối (không phải học viên / xem thử): hiện như cũ.
 - Khoá thường, chiếu lớp, giảng viên đứng lớp, bài slide: **không đổi**.
-- Phiếu bạn ảo là một tab của chính lesson đó, không tách thành lesson riêng.
+- Phiếu bạn ảo là một tab của chính lesson đó, không tách thành lesson riêng. Nó là **phần nhỏ của exercise** nên khối đề bài của nó **không đánh lại mã bài**: trong tab 3D chỉ ghi "Talk with a virtual partner", không ghi "3D · Talk with a virtual partner".
 
 ## AC6 — Chữ của sách đi cùng phiếu bạn ảo
 
 - Câu yêu cầu của sách ("2 A Work in pairs. Discuss the questions.") đứng **ngay trước** phiếu bạn ảo **cùng số/chữ** (2A) thì chuyển vào tab của phiếu, cùng danh sách, bảng, ảnh đi kèm. Riêng **câu yêu cầu bị bỏ**, vì khối đề bài của phiếu ("No partner? Discuss the questions…") đã thay.
 - Câu yêu cầu của bài tập **khác** (không phải bạn ảo) giữ nguyên ở phần lý thuyết, không mất chữ nào.
 - Không khớp số/chữ, hoặc không đứng ngay trước phiếu: giữ ở phần lý thuyết.
+
+## AC7 — Chữ in đậm của sách được bôi màu
+
+- Trong thẻ đoạn văn của **Bài luyện nhúng**, chữ in đậm của sách (từ vựng mục tiêu, vd "early bird" ở 1.1 Vocabulary) có **nền màu nhấn** của khối (cùng màu với dải kỹ năng và tab), bo nhẹ, đọc vẫn rõ ở nền sáng và tối.
+- Chỉ áp trong Bài luyện nhúng; phòng thi, Luyện đề toàn trang và phần chữ bài học **không đổi**.
 
 ## Chưa làm (cần thầy chốt)
 
