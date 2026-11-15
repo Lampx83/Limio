@@ -876,10 +876,9 @@ export default function LessonPractice({
 
       {/* Tên đoạn + đề bài là khối riêng rộng bằng bài, cả kiểu phiếu lẫn kiểu thẻ (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
       {stepPassage && parts && (
-        <div className={`mt-4 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5`} data-testid="lp-instruction">
-          <h3 className="text-h3">{passageDisplayTitle(stepPassage.title)}</h3>
-          <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
-          {(lightText ?? parts.instruction) && <p className="mt-3 whitespace-pre-line text-body leading-8">{lightText ?? parts.instruction}</p>}
+        <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
+          <h3 className="text-h4">{passageDisplayTitle(stepPassage.title)}</h3>
+          {(lightText ?? parts.instruction) && <p className="mt-1 whitespace-pre-line text-body leading-7">{lightText ?? parts.instruction}</p>}
         </div>
       )}
 
@@ -897,6 +896,7 @@ export default function LessonPractice({
                   hideTitle
                   hideNote
                   emphasizeBold
+                  bodySize="body"
                 />
               </div>
             )}

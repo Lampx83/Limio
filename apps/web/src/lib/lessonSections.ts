@@ -81,6 +81,19 @@ export function passageDisplayTitle(title: string): string {
   return title;
 }
 
+/**
+ * Banner của sách có hai dòng (vd "Reading" / "The world's favourite drug"); dòng phụ trùng với tên bài (đã hiện ở đầu trang) thì bỏ để
+ * tiêu đề không lặp. Không phải banner hai dòng, hoặc dòng phụ khác tên bài: giữ nguyên.
+ */
+export function dropRepeatedBannerTitle(html: string, lessonTitle: string): string {
+  const norm = (t: string) => t.toLowerCase().replace(/[’‘`]/g, "'").replace(/[^a-z0-9]+/g, " ").trim();
+  const title = norm(lessonTitle);
+  return html.replace(/(<h2\b[^>]*>\s*<span\b[^>]*>[^<]*<\/span>)\s*<span\b[^>]*>([^<]*)<\/span>(\s*<\/h2>)/i, (all, head: string, sub: string, tail: string) => {
+    const n = norm(sub);
+    return n && title.includes(n) ? head + tail : all;
+  });
+}
+
 /** Tên tab dự phòng: tên khối, bỏ đuôi " · Practice" mà bộ nhập khoá thêm cho khối gộp. */
 export function practiceTabLabel(title: string): string {
   const t = title.replace(/\s*·\s*Practice\s*$/i, "").trim();
@@ -137,6 +150,12 @@ interface Label {
   letter?: string;
 }
 
+/** Bỏ các nhãn số/chữ tô màu ở đầu câu yêu cầu, giữ nguyên chữ. */
+function stripStatementLabel(node: string): string {
+  const m = STATEMENT.exec(node);
+  return m ? node.replace(m[1]!, "") : node;
+}
+
 function parseStatement(node: string, currentNum: string | undefined): Label | null {
   const m = STATEMENT.exec(node);
   if (!m) return null;
@@ -189,6 +208,8 @@ export function splitLessonSections<T extends SectionItem>(
   practiceIds: ReadonlySet<string>,
   /** Tiêu đề các đoạn của từng khối bài luyện (id khối → tiêu đề), để lấy số exercise khi tên khối không có. */
   passageTitles?: ReadonlyMap<string, readonly string[]>,
+  /** Khối có bài đọc đã được đưa lên phần lý thuyết (dùng chung cho nhiều exercise): câu dẫn đứng ngay trước nó không mang nhãn exercise. */
+  sharedReadingIds?: ReadonlySet<string>,
 ): { theory: T[]; tabs: SectionTab<T>[] } {
   // 1) với mỗi khối chữ: tách nút và tìm các câu yêu cầu (số của câu chỉ-có-chữ-cái nối tiếp số câu trước)
   const chunks = new Map<number, Chunk>();
@@ -214,7 +235,8 @@ export function splitLessonSections<T extends SectionItem>(
     chunks.set(i, { nodes, leads });
   });
 
-  // 2) gắn phần chữ đi cùng vào tab của phiếu bạn ảo (khối chữ liền trước, câu yêu cầu cuối cùng, kéo tới hết khối, khớp số/chữ)
+  // 2) gắn phần chữ đi cùng vào tab của PHIẾU BẠN ẢO (khối chữ liền trước, câu yêu cầu cuối cùng, kéo tới hết khối, khớp số/chữ):
+  //    bỏ câu yêu cầu (đề bài của phiếu đã thay), giữ phần đi kèm. Câu yêu cầu của bài tập khác ở lại phần lý thuyết.
   const removed = new Map<number, [number, number]>();
   const leadOf = new Map<number, T[]>();
   items.forEach((it, i) => {
@@ -230,6 +252,15 @@ export function splitLessonSections<T extends SectionItem>(
       const src = items[i - 1]!;
       leadOf.set(i, [{ ...src, id: `${src.id}~${it.id}`, payload: { ...(src.payload as object), html: rest.join("") } } as T]);
     }
+  });
+
+  // Bài đọc dùng chung: câu dẫn đứng ngay trước khối giữ chữ nhưng bỏ nhãn số/chữ ("2 B").
+  const unlabel = new Map<number, number>();
+  items.forEach((it, i) => {
+    if (it.type !== "exam_practice" || !sharedReadingIds?.has(it.id) || i === 0 || removed.has(i - 1)) return;
+    const chunk = chunks.get(i - 1);
+    const lead = chunk?.leads[chunk.leads.length - 1];
+    if (chunk && lead && lead.end === chunk.nodes.length) unlabel.set(i - 1, lead.start);
   });
 
   // nhãn câu yêu cầu của sách đứng ngay trước một khối (dự phòng cho tên tab)
@@ -253,6 +284,13 @@ export function splitLessonSections<T extends SectionItem>(
     }
     const cut = removed.get(i);
     if (!cut) {
+      const at = unlabel.get(i);
+      if (at !== undefined) {
+        const nodes = chunks.get(i)!.nodes.slice();
+        nodes[at] = stripStatementLabel(nodes[at]!);
+        theory.push({ ...it, payload: { ...(it.payload as object), html: nodes.join("") } } as T);
+        return;
+      }
       theory.push(it);
       return;
     }

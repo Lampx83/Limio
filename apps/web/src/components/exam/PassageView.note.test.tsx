@@ -42,3 +42,23 @@ describe("PassageView — chữ in đậm của sách (từ vựng mục tiêu) 
     expect(renderToStaticMarkup(<PassageView passage={bold} attemptId="a" />)).not.toContain("pv-hl-bold");
   });
 });
+
+describe("PassageView — cỡ chữ của bài đọc trong bài học (AC8)", () => {
+  const doc = {
+    id: "p3",
+    title: "Reading",
+    contentJson: { type: "doc" as const, content: [{ type: "paragraph", content: [{ type: "text", text: "Coffee was discovered in Ethiopia." }] }] },
+  };
+  it("bodySize=\"body\": cùng cỡ chữ với câu dẫn và câu hỏi (1.0625rem), không còn prose-sm", () => {
+    const html = renderToStaticMarkup(<PassageView passage={doc} attemptId="a" bodySize="body" />);
+    expect(html).toContain("prose-base");
+    expect(html).not.toContain("prose-sm");
+    expect(html).toContain("1.0625rem");
+  });
+  it("mặc định (phòng thi, luyện đề): giữ prose-sm", () => {
+    const html = renderToStaticMarkup(<PassageView passage={doc} attemptId="a" />);
+    expect(html).toContain("prose-sm");
+    expect(html).not.toContain("1.0625rem");
+  });
+});
+

@@ -40,21 +40,30 @@ Một lesson là trọn một phần của sách; bên trong, lý thuyết đứ
 - Khối Bài luyện gom nhiều exercise (vd Grammar: 3A, 3B, 3C, 5) được **tách theo đoạn**: các đoạn liên tiếp cùng nhãn (7B, 7B) thuộc một tab; đoạn không có nhãn đi cùng tab đứng trước nó. Mỗi tab có dải số câu riêng, đánh số từ 1.
 - Khối chỉ có một exercise thì là một tab. Tên lấy theo thứ tự: nhãn ở đầu tên khối, nhãn các đoạn, nhãn câu yêu cầu của sách đứng ngay trước khối ("2B"), rồi tên khối (bỏ đuôi " · Practice"). **Một exercise chỉ một tab:** các khối cùng nhãn (vd bài viết 3D và phiếu bạn ảo 3D) gộp vào một tab, xếp lần lượt trong tab đó, không tách thành hai tab trùng tên.
 - Các tab của cùng một khối **dùng chung một buổi luyện** (đáp án lưu chung như cũ). Trong tab con **không có nút "Kết thúc bài luyện"** (nút đó kết thúc cả khối nên không đặt trong từng tab); điểm theo kỹ năng không đổi vì vẫn ghi theo lượt kiểm tra từng câu.
-- Bài chỉ có **một** tab: không hiện thanh tab, khối đứng ngay dưới phần lý thuyết (nút "Kết thúc bài luyện" vẫn như cũ).
+- Bài chỉ có **một** tab: tab **vẫn hiện số exercise** (vd "6", "2A") để học viên biết đang làm bài tập nào (thầy chốt 15/11/2026); chỉ khi tên không phải số exercise (tên chữ dự phòng) mới không có thanh tab. Nút "Kết thúc bài luyện" vẫn như cũ.
 - Bài không có khối nào, hoặc người xem không thấy khối (không phải học viên / xem thử): hiện như cũ.
 - Khoá thường, chiếu lớp, giảng viên đứng lớp, bài slide: **không đổi**.
-- Phiếu bạn ảo là một tab của chính lesson đó, không tách thành lesson riêng. Nó là **phần nhỏ của exercise** nên khối đề bài của nó **không đánh lại mã bài**: trong tab 3D chỉ ghi "Talk with a virtual partner", không ghi "3D · Talk with a virtual partner".
+- Phiếu bạn ảo là một tab của chính lesson đó, không tách thành lesson riêng. Nó là **phần nhỏ của exercise** nên khối đề bài của nó **không đánh lại mã bài**, dù đứng một mình hay chung tab: mã đã có trên tab, khối chỉ ghi "Talk with a virtual partner" (không ghi "6 · …" hay "3D · …").
 
 ## AC6 — Chữ của sách đi cùng phiếu bạn ảo
 
 - Câu yêu cầu của sách ("2 A Work in pairs. Discuss the questions.") đứng **ngay trước** phiếu bạn ảo **cùng số/chữ** (2A) thì chuyển vào tab của phiếu, cùng danh sách, bảng, ảnh đi kèm. Riêng **câu yêu cầu bị bỏ**, vì khối đề bài của phiếu ("No partner? Discuss the questions…") đã thay.
 - Câu yêu cầu của bài tập **khác** (không phải bạn ảo) giữ nguyên ở phần lý thuyết, không mất chữ nào.
-- Không khớp số/chữ, hoặc không đứng ngay trước phiếu: giữ ở phần lý thuyết.
+- Không khớp số/chữ hoặc không đứng ngay trước phiếu: giữ ở phần lý thuyết.
 
 ## AC7 — Chữ in đậm của sách được bôi màu
 
 - Trong thẻ đoạn văn của **Bài luyện nhúng**, chữ in đậm của sách (từ vựng mục tiêu, vd "early bird" ở 1.1 Vocabulary) có **nền màu nhấn** của khối (cùng màu với dải kỹ năng và tab), bo nhẹ, đọc vẫn rõ ở nền sáng và tối.
 - Chỉ áp trong Bài luyện nhúng; phòng thi, Luyện đề toàn trang và phần chữ bài học **không đổi**.
+
+## AC8 — Bài đọc dài là lý thuyết ở trên đầu (thầy chốt 15/11/2026)
+
+- Đoạn văn **dài** của một khối bài luyện (bài đọc: từ **120 từ** trở lên, không có audio) được **đưa lên phần lý thuyết** phía trên các tab, ngay sau chữ của sách: vd bài "The world's favourite drug" của 1.1 Reading nằm dưới câu "2 B Read the article about coffee…", cả bài hiện nổi bật trên cùng.
+- Tab của exercise đó chỉ còn **đề bài và câu hỏi** (một cột), không lặp bài đọc.
+- Bài đọc dùng chung cho nhiều exercise (2A, 2B…) nên câu dẫn của sách đứng ngay trước nó ("Read the article about coffee. What information is new to you?") **không mang nhãn exercise** ("2 B") ở phần lý thuyết; chữ giữ nguyên.
+- Đoạn ngắn (câu, bảng nhỏ, danh sách), đoạn có audio: **không đổi**.
+- Không mất chữ nào: bài đọc hiện đủ một lần, ở phần lý thuyết.
+- **Phần lý thuyết là MỘT thẻ** (thầy chốt 15/11/2026: không tách thành nhiều thẻ): banner, câu dẫn, hộp quy tắc, mẹo và bài đọc nằm liền trong một thẻ, ngăn nhau bằng khoảng cách chứ không bằng viền. Chỉ áp khi toàn bộ phần lý thuyết là chữ và không dùng bảng màu riêng của bài; bài có audio, video hay bảng màu riêng giữ cách hiện cũ. **Tên bài làm đầu thẻ đó** (phương án A, thầy chốt 15/11/2026): dòng chip kỹ năng + tên bài (+ nút "Về soạn nội dung" của giảng viên) nằm ở đầu thẻ lý thuyết, không còn thẻ tên bài riêng; dòng phụ của banner trùng tên bài thì bỏ, chỉ giữ chữ "READING". Bài có mô tả riêng (không trùng tên unit) giữ thẻ tên bài như cũ.
 
 ## Chưa làm (cần thầy chốt)
 

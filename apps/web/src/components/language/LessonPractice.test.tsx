@@ -848,3 +848,22 @@ describe("LessonPractice — chữ đậm của sách được bôi màu (docs/t
     expect(host.querySelector('[data-testid="lp-passage"] .pv-hl-bold strong')).not.toBeNull();
   });
 });
+
+describe("LessonPractice — phiếu bạn ảo không lặp mã bài (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC5)", () => {
+  const vp = (title: string) =>
+    embed({
+      passages: [{ id: "p1", title, contentJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "No partner? Practise with a virtual partner." }] }] } }],
+    });
+
+  it("phiếu bạn ảo là phần nhỏ của exercise: mã bài đã có trên tab nên khối đề bài chỉ ghi \"Talk with a virtual partner\", dù đứng một mình hay chung tab", async () => {
+    await render(vp("6 · Talk with a virtual partner"));
+    expect(host.querySelector('[data-testid="lp-instruction"] h3')!.textContent).toBe("Talk with a virtual partner");
+    await render(vp("3D · Talk with a virtual partner"));
+    expect(host.querySelector('[data-testid="lp-instruction"] h3')!.textContent).toBe("Talk with a virtual partner");
+  });
+
+  it("đoạn khác vẫn ghi mã bài", async () => {
+    await render(vp("3A · Sentences from the article"));
+    expect(host.querySelector('[data-testid="lp-instruction"] h3')!.textContent).toBe("3A · Sentences from the article");
+  });
+});

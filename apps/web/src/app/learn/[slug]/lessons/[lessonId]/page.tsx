@@ -48,11 +48,14 @@ import { LESSON_FRAME_ALL_COURSES_KEY, isLessonFrameAllCoursesEnabled, lessonFra
 import { getSiteSetting } from "@/lib/site-settings";
 import { ExamRefLearnerBlock, ExamRefPreviewBlock } from "@/components/exam/ExamRefBlock";
 import LessonPractice from "@/components/language/LessonPractice";
+import PassageView from "@/components/exam/PassageView";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
-import { arrangeTabs, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
+import TheoryCard from "@/components/lesson/TheoryCard";
+import { arrangeTabs, dropRepeatedBannerTitle, exerciseLabels, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
 import { splitEmbedByExercise } from "@/lib/practiceExerciseSplit";
+import { dedupeHoisted, hoistReadingPassages, type HoistedPassage } from "@/lib/practiceHoist";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
 import AiTutorPanel from "@/components/AiTutorPanel";
@@ -844,7 +847,12 @@ export default async function LessonPage({
   // Chỉ khi người xem thật sự thấy khối bài luyện, và không ở màn "Từ vựng".
   const practiceIds = new Set(Object.keys(practiceBlocks));
   const sections =
-    languageSkin && lessonFrame && practiceIds.size > 0 && lessonView === "lesson" ? splitLessonSections(shownItems, practiceIds, new Map([...practiceEmbeds].map(([id, v]) => [id, v.embed.passages.map((x) => x.title)]))) : null;
+    languageSkin && lessonFrame && practiceIds.size > 0 && lessonView === "lesson" ? splitLessonSections(
+          shownItems,
+          practiceIds,
+          new Map([...practiceEmbeds].map(([id, v]) => [id, v.embed.passages.map((x) => x.title)])),
+          new Set([...practiceEmbeds].filter(([, v]) => hoistReadingPassages(v.embed).hoisted.length > 0).map(([id]) => id)),
+        ) : null;
 
   // Hoàn thành bài theo Bài luyện (docs/tieu-chi/hoan-thanh-bai-theo-bai-luyen.md): học viên đã ghi danh và đang trong khung bài học (nơi khối luyện
   // nhúng được) phải bấm Kiểm tra MỌI câu của các khối luyện hiện trong bài; khi đó điều kiện "cuộn hết trang" không còn áp dụng. Xem như học
@@ -865,6 +873,110 @@ export default async function LessonPage({
     // Bài luyện thay cho "cuộn hết trang" như quiz và bài tập nộp đang làm.
     requireScrollToEnd: baseAutoComplete.requireScrollToEnd && !requirePractice,
   };
+
+  // Bài đọc dài của khối luyện lên phần lý thuyết (AC8); mỗi exercise một tab (AC5); khối gom nhiều exercise tách theo đoạn.
+  const hoistedPassages: HoistedPassage[] = [];
+  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean) => (
+    <LessonPractice
+      slug={params.slug}
+      embed={embed}
+      blockTitle={info.title}
+      lessonId={lesson.id}
+      preview={info.preview || undefined}
+      subset={subset || undefined}
+      sheet={languageMode}
+      accent={lesson.module.course.themeColor}
+      skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
+    />
+  );
+  // Phần lý thuyết là MỘT thẻ (AC8) khi toàn chữ và không dùng bảng màu riêng của bài; còn không giữ cách hiện cũ.
+  const theoryAsOneCard =
+    !!sections &&
+    sections.theory.length > 0 &&
+    sections.theory.every((it) => it.type === "richtext" && typeof (it.payload as { html?: unknown } | null)?.html === "string" && !(it.payload as { look?: unknown }).look);
+  // Dòng tên bài: chip kỹ năng + tên bài (+ nút "Về soạn nội dung" của giảng viên). Khoá ngoại ngữ có thẻ lý thuyết thì nó là đầu thẻ đó (phương án A),
+  // không còn thẻ tên bài riêng.
+  const lessonTitleRow = (
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+          {/* Khoá có màu bộ sách đã in dải kỹ năng (READING, SPEAKING…) trong thân bài: không lặp thêm nhãn ở tiêu đề. */}
+          {lesson.languageSkill && !lesson.module.course.themeColor && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
+          <h1 className="h-display min-w-0 text-xl font-bold sm:text-2xl">{lesson.title}</h1>
+        </div>
+        {!previewMode && canEdit && (
+          <Link
+            href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+            title={t("learn.lesson.backToEditorTitle")}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+          >
+            <PenLine className="h-4 w-4" aria-hidden />
+            {t("learn.lesson.backToEditor")}
+          </Link>
+        )}
+      </div>
+  );
+  const descriptionShown =
+    !!lesson.description &&
+    !(
+      lessonFrame &&
+      [lessonFrame.unitTitle, lesson.module.title].some((x) => x.trim().toLowerCase() === htmlToPlainText(lesson.description!).trim().toLowerCase())
+    );
+  const titleInTheory = theoryAsOneCard && !!lessonFrame && !descriptionShown;
+  const practiceTabItems = sections
+    ? arrangeTabs(
+        mergeTabsByLabel(
+          sections.tabs.flatMap((tab) => {
+            const info = practiceEmbeds.get(tab.id);
+            const hoist = info ? hoistReadingPassages(info.embed) : null;
+            if (hoist) hoistedPassages.push(...hoist.hoisted);
+            // Bài đọc đã lên trên: trong tab, tên đoạn là số exercise (tên bài đọc dài đã ở phần lý thuyết).
+            const embed =
+              hoist && hoist.hoisted.length > 0
+                ? { ...hoist.embed, passages: hoist.embed.passages.map((p) => (hoist.hoisted.some((h) => h.id === p.id) ? { ...p, title: exerciseLabels([p.title]) ? p.title : tab.label } : p)) }
+                : info?.embed;
+            const groups = embed ? splitEmbedByExercise(embed) : [];
+            const leadNode =
+              tab.lead.length > 0 ? (
+                <LessonContent items={tab.lead} courseId={lesson.module.course.id} lessonId={lesson.id} numberTranscripts={languageSkin} />
+              ) : null;
+            if (info && groups.length >= 2) {
+              return groups.map((g, k) => ({
+                id: `${tab.id}~${k}`,
+                label: g.label ?? tab.label,
+                virtualPartner: tab.virtualPartner,
+                build: () => renderBlock(g.embed, info, true),
+              }));
+            }
+            return [
+              {
+                id: tab.id,
+                label: tab.label,
+                virtualPartner: tab.virtualPartner,
+                build: () => (
+                  <>
+                    {leadNode}
+                    {info && embed && hoist && hoist.hoisted.length > 0 ? renderBlock(embed, info, false) : practiceBlocks[tab.id]}
+                  </>
+                ),
+              },
+            ];
+          }),
+          (group) => ({
+            ...group[0]!,
+            id: group.map((g) => g.id).join("+"),
+            build: () => (
+              <>
+                {group.map((g) => (
+                  <div key={g.id} className="mt-6 first:mt-0">
+                    {g.build()}
+                  </div>
+                ))}
+              </>
+            ),
+          }),
+        ),
+      ).map((t) => ({ id: t.id, label: t.label, virtualPartner: t.virtualPartner, content: t.build() }))
+    : [];
 
   // Khối "Đề thi" (exam_ref): gắn một đề thi thử của khoá vào bài. Học viên đã ghi danh thấy đúng thẻ như ở trang khoá (chỉ khi đề dùng
   // được); giảng viên bấm "Xem như học viên" thấy thẻ hoặc nhãn lý do. Chiếu lớp và trang in không hiện.
@@ -959,27 +1071,12 @@ export default async function LessonPage({
         chúng thao tác lên chính bài này, nên đặt cạnh tên bài thì rõ phạm vi
         hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
       */}
+      {!titleInTheory && (
       <header className={`rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card ${lessonFrame ? "mt-2 p-3 sm:p-4" : "mt-3 p-4 sm:p-5"}`}>
         {lessonFrame ? (
           // Trong khung 3 cột: một hàng gọn — chip kỹ năng + tên bài bên trái, nút "Về soạn nội dung" của giảng viên bên phải. Tên module đã có
           // ở đường dẫn phía trên nên không lặp lại. Tiêu đề cỡ vừa (2xl) vì cạnh còn thanh bài, nội dung và panel.
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-              {/* Khoá có màu bộ sách đã in dải kỹ năng (READING, SPEAKING…) trong thân bài: không lặp thêm nhãn ở tiêu đề. */}
-              {lesson.languageSkill && !lesson.module.course.themeColor && <span className="chip-brand">{LANGUAGE_SKILL_LABEL[lesson.languageSkill]}</span>}
-              <h1 className="h-display min-w-0 text-xl font-bold sm:text-2xl">{lesson.title}</h1>
-            </div>
-            {!previewMode && canEdit && (
-              <Link
-                href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
-                title={t("learn.lesson.backToEditorTitle")}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
-              >
-                <PenLine className="h-4 w-4" aria-hidden />
-                {t("learn.lesson.backToEditor")}
-              </Link>
-            )}
-          </div>
+          lessonTitleRow
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -1050,6 +1147,7 @@ export default async function LessonPage({
         )}
         </div>
       </header>
+      )}
 
       {split && (
         <LessonViewTabs slug={params.slug} lessonId={lesson.id} view={lessonView} vocabCount={split.count} preview={previewMode} lang={lang} />
@@ -1126,7 +1224,17 @@ export default async function LessonPage({
             quan sát DOM của #lesson-content, nên dấu ở lề đặt trong đó sẽ tự kích hoạt vòng vẽ lại. */}
         <div className="relative">
         <div id="lesson-content">
-        <LessonContent
+        {theoryAsOneCard ? (
+          <TheoryCard title={titleInTheory ? lessonTitleRow : undefined} html={dropRepeatedBannerTitle(sections!.theory.map((it) => (it.payload as { html: string }).html).join(""), lesson.title)}>
+            {dedupeHoisted(hoistedPassages).map((h) => (
+              <div key={h.id} className="[&_p]:leading-8">
+                <PassageView passage={{ id: h.id, title: h.title, contentJson: h.contentJson, transcripts: h.transcripts }} attemptId={`lesson-reading-${h.id}`} hideNote emphasizeBold bodySize="body" />
+              </div>
+            ))}
+          </TheoryCard>
+        ) : (
+          <>
+          <LessonContent
           items={sections ? sections.theory : shownItems}
           courseId={lesson.module.course.id}
           lessonId={lesson.id}
@@ -1134,67 +1242,18 @@ export default async function LessonPage({
           blocks={{ ...practiceBlocks, ...examRefBlocks }}
           numberTranscripts={languageSkin}
         />
-        {sections && (
-          <PracticeTabs
-            tabs={arrangeTabs(
-              mergeTabsByLabel(
-              sections.tabs.flatMap((t) => {
-                const info = practiceEmbeds.get(t.id);
-                const groups = info ? splitEmbedByExercise(info.embed) : [];
-                // Khối gom nhiều exercise (vd Grammar: 3A, 3B, 3C, 5): mỗi exercise một tab, dùng chung một buổi luyện.
-                if (info && groups.length >= 2) {
-                  return groups.map((g, k) => ({
-                    id: `${t.id}~${k}`,
-                    label: g.label ?? t.label,
-                    virtualPartner: t.virtualPartner,
-                    content: (
-                      <LessonPractice
-                        slug={params.slug}
-                        embed={g.embed}
-                        blockTitle={info.title}
-                        lessonId={lesson.id}
-                        preview={info.preview}
-                        subset
-                        sheet={languageMode}
-                        accent={lesson.module.course.themeColor}
-                        skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
-                      />
-                    ),
-                  }));
-                }
-                return [
-                  {
-                    id: t.id,
-                    label: t.label,
-                    virtualPartner: t.virtualPartner,
-                    content: (
-                      <>
-                        {t.lead.length > 0 && (
-                          <LessonContent items={t.lead} courseId={lesson.module.course.id} lessonId={lesson.id} numberTranscripts={languageSkin} />
-                        )}
-                        {practiceBlocks[t.id]}
-                      </>
-                    ),
-                  },
-                ];
-              }),
-              (group) => ({
-                ...group[0]!,
-                id: group.map((g) => g.id).join("+"),
-                content: (
-                  <>
-                    {group.map((g) => (
-                      <div key={g.id} className="mt-6 first:mt-0">
-                        {g.content}
-                      </div>
-                    ))}
-                  </>
-                ),
-              }),
-              ),
-            )}
-          />
+          {dedupeHoisted(hoistedPassages).length > 0 && (
+            <div className="mt-6 space-y-6" data-testid="lesson-reading">
+              {dedupeHoisted(hoistedPassages).map((h) => (
+                <section key={h.id} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-5 [&_p]:leading-8">
+                  <PassageView passage={{ id: h.id, title: h.title, contentJson: h.contentJson, transcripts: h.transcripts }} attemptId={`lesson-reading-${h.id}`} hideNote emphasizeBold bodySize="body" />
+                </section>
+              ))}
+            </div>
+          )}
+          </>
         )}
+        {practiceTabItems.length > 0 && <PracticeTabs tabs={practiceTabItems} />}
         </div>
         <div
           id="lesson-annotation-gutter"

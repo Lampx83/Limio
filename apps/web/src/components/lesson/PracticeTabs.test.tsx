@@ -60,8 +60,16 @@ describe("PracticeTabs — mỗi khối bài luyện một tab", () => {
     expect(tabEls()[0]!.getAttribute("aria-selected")).toBe("true");
   });
 
-  it("chỉ một khối: không có thanh tab, nội dung hiện thẳng", async () => {
-    await render([tabs[1]!]);
+  it("chỉ một khối mà tên là số exercise (\"6\", \"2A\"): vẫn hiện số bài tập (thanh tab một tab), nội dung bên dưới", async () => {
+    await render([{ id: "x", label: "6", content: <p>Nội dung sáu</p> }]);
+    const bar = host.querySelector('[role="tablist"]');
+    expect(bar).not.toBeNull();
+    expect([...host.querySelectorAll('[role="tab"]')].map((t) => t.textContent)).toEqual(["6"]);
+    expect(host.textContent).toContain("Nội dung sáu");
+  });
+
+  it("chỉ một khối không có số exercise (tên chữ): không có thanh tab, nội dung hiện thẳng", async () => {
+    await render([{ id: "y", label: "Fair Isle: fact file", content: <p>Nội dung B</p> }]);
     expect(host.querySelector('[role="tablist"]')).toBeNull();
     expect(host.textContent).toContain("Nội dung B");
   });

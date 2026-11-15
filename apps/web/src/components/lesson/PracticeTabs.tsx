@@ -11,18 +11,19 @@ export interface PracticeTab {
 /**
  * Khu bài luyện của bài ngoại ngữ (không có tiêu đề riêng: thanh tab là đủ): mỗi khối Bài luyện là một tab (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md, AC5).
  * Mọi tab đều nằm trong cây (tab không chọn chỉ ẩn) nên bài đang làm không mất khi chuyển qua lại.
- * Chỉ một khối thì không có thanh tab.
+ * Chỉ một khối mà tên không phải số exercise thì không có thanh tab.
  */
 export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
   const uid = useId();
   const [active, setActive] = useState(0);
   if (tabs.length === 0) return null;
-  if (tabs.length === 1) return <div>{tabs[0]!.content}</div>;
+  // Một khối: không cần chuyển tab, nhưng nếu tên là số exercise ("6", "2A") thì vẫn hiện số đó để biết đang làm bài tập nào.
+  if (tabs.length === 1 && !/^\d/.test(tabs[0]!.label)) return <div>{tabs[0]!.content}</div>;
   const cur = Math.min(active, tabs.length - 1);
   const go = (i: number) => setActive((i + tabs.length) % tabs.length);
 
   return (
-    <section className="mt-8" data-testid="practice-tabs">
+    <section className="mt-5" data-testid="practice-tabs">
       <div
         role="tablist"
         aria-label="Bài luyện của bài học"

@@ -29,6 +29,8 @@ interface Props {
   hideTitle?: boolean;
   /** Bài luyện nhúng: chữ in đậm của sách (từ vựng mục tiêu) được bôi màu cho nổi bật. */
   emphasizeBold?: boolean;
+  /** Bài đọc trong bài học: cùng cỡ chữ với câu dẫn và câu hỏi (mặc định "sm" như phòng thi). */
+  bodySize?: "sm" | "body";
 }
 
 /**
@@ -40,7 +42,7 @@ interface Props {
  * `exam:{attemptId}:passage:{id}`. Notes (if needed later) can share the key.
  * No sync to server — explicit warning banner shown.
  */
-export default function PassageView({ passage, attemptId, audio, hideNote = false, hideTitle = false, emphasizeBold = false }: Props) {
+export default function PassageView({ passage, attemptId, audio, hideNote = false, hideTitle = false, emphasizeBold = false, bodySize = "sm" }: Props) {
   const lsKey = `exam:${attemptId}:passage:${passage.id}`;
   const [note, setNote] = useState("");
 
@@ -82,7 +84,11 @@ export default function PassageView({ passage, attemptId, audio, hideNote = fals
           <div className="mt-2 h-1 w-12 rounded-full bg-brand-gradient" aria-hidden />
         </header>
       )}
-      <div className={`prose prose-sm max-w-none select-text${emphasizeBold ? " pv-hl-bold" : ""}`}>{rendered}</div>
+      <div
+        className={`prose ${bodySize === "body" ? "prose-base [&_li]:text-[1.0625rem] [&_p]:text-[1.0625rem] [&_td]:text-[1.0625rem]" : "prose-sm"} max-w-none select-text${emphasizeBold ? " pv-hl-bold" : ""}`}
+      >
+        {rendered}
+      </div>
       {!hideNote && (
         <details className="mt-4 border-t border-default pt-3">
           <summary className="cursor-pointer text-xs text-faint">

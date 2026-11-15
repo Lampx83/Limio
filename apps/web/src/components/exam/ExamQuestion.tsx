@@ -286,6 +286,9 @@ function ShortAnswerInput({
   );
 }
 
+/** Ô viết gọn luôn cao ít nhất 3 dòng (72px). */
+const ESSAY_MIN_PX = 72;
+
 function EssayInput({
   value,
   onChange,
@@ -298,11 +301,21 @@ function EssayInput({
   const current = value && "text" in value ? value.text : "";
   const ref = useRef<HTMLTextAreaElement>(null);
   // Chế độ gọn: cao vừa chữ đã gõ (tối thiểu 3 dòng, tối đa ~14 dòng rồi cuộn), không chiếm nửa màn hình khi câu chỉ cần một dòng.
+  // Dựng trong vùng đang ẩn (tab chưa mở) thì scrollHeight = 0: không để ô co về 0, và đo lại khi ô hiện ra.
   useLayoutEffect(() => {
     const el = ref.current;
     if (!compact || !el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 360)}px`;
+    const fit = () => {
+      el.style.height = "auto";
+      el.style.height = `${Math.min(Math.max(el.scrollHeight, ESSAY_MIN_PX), 360)}px`;
+    };
+    fit();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      if (el.offsetWidth > 0 && el.scrollHeight > parseInt(el.style.height || "0", 10)) fit();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [compact, current]);
   return (
     <textarea
@@ -310,7 +323,7 @@ function EssayInput({
       value={current}
       onChange={(e) => onChange({ text: e.target.value })}
       rows={compact ? 3 : 8}
-      className={`w-full rounded border border-default px-2 py-1 text-sm ${compact ? "resize-none" : ""}`}
+      className={`w-full rounded border border-default px-2 py-1 text-sm ${compact ? "min-h-[4.5rem] resize-none" : ""}`}
       placeholder="Viết bài làm của bạn ở đây…"
     />
   );

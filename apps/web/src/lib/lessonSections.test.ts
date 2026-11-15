@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitLessonSections, practiceTabLabel, arrangeTabs, mergeTabsByLabel, passageDisplayTitle, type SectionItem } from "./lessonSections";
+import { splitLessonSections, practiceTabLabel, arrangeTabs, mergeTabsByLabel, passageDisplayTitle, dropRepeatedBannerTitle, type SectionItem } from "./lessonSections";
 
 /** docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md — AC5, AC6. HTML mẫu giống hệt bộ nhập khoá Speakout tạo ra. */
 const NUM = (n: string) => `<span style="color:rgb(229,0,92);font-size:1.6em;font-weight:700;line-height:1;margin-right:.3rem">${n}</span>`;
@@ -52,9 +52,17 @@ describe("splitLessonSections — chữ của sách đi cùng phiếu bạn ảo
     expect(lead).not.toContain("Work in pairs");
   });
 
-  it("câu yêu cầu của bài tập KHÔNG phải bạn ảo: ở lại lý thuyết, không mất chữ", () => {
+  it("câu yêu cầu của bài tập KHÔNG phải bạn ảo: ở lại phần lý thuyết, không mất chữ (kể cả khi tên tab lấy nhãn từ chính câu đó)", () => {
     const chunk = rich(stmt("2", "B", "Read the article about coffee. What information is new to you?"));
     const r = splitLessonSections([chunk, practice("p1", "The world's favourite drug")], ids("p1"));
+    expect(r.tabs[0]!.label).toBe("2B");
+    expect(r.tabs[0]!.lead).toEqual([]);
+    expect(r.theory.map(html).join("")).toContain("Read the article about coffee");
+  });
+
+  it("bài tập khác nhưng số/chữ không khớp khối: ở lại lý thuyết, không mất chữ", () => {
+    const chunk = rich(stmt("2", "B", "Read the article about coffee."));
+    const r = splitLessonSections([chunk, practice("p1", "2D · Questions")], ids("p1"));
     expect(r.tabs[0]!.lead).toEqual([]);
     expect(r.theory.map(html).join("")).toContain("Read the article about coffee");
   });
@@ -196,5 +204,54 @@ describe("passageDisplayTitle — phiếu bạn ảo là phần nhỏ của exer
     expect(passageDisplayTitle("3D · More examples in the article")).toBe("3D · More examples in the article");
     expect(passageDisplayTitle("The world’s favourite drug")).toBe("The world’s favourite drug");
     expect(passageDisplayTitle("Free practice · Talk with a virtual partner")).toBe("Free practice · Talk with a virtual partner");
+  });
+});
+
+describe("splitLessonSections — bài đọc dùng chung: câu dẫn ở trên đầu không mang nhãn exercise (AC8)", () => {
+  it("khối có bài đọc đã lên trên: câu yêu cầu đứng ngay trước mất nhãn số/chữ, giữ nguyên chữ và phần đi kèm", () => {
+    const chunk = rich(folio + stmt("2", "B", "Read the article about coffee. What information is new to you?"));
+    const r = splitLessonSections([chunk, practice("p1", "The world's favourite drug")], ids("p1"), undefined, ids("p1"));
+    const theory = r.theory.map(html).join("");
+    expect(theory).toContain("Read the article about coffee. What information is new to you?");
+    expect(theory).toContain("Student’s Book");
+    expect(theory).not.toContain("color:rgb(229,0,92)");
+    expect(theory).not.toMatch(/>2</);
+    expect(theory).not.toMatch(/>B</);
+    expect(theory).toMatch(/^<p[^>]*>.*<\/p>|<p[^>]*>Read the article/);
+  });
+
+  it("không có trong tập bài đọc đã lên trên: giữ nhãn như cũ", () => {
+    const chunk = rich(stmt("2", "B", "Read the article about coffee."));
+    const r = splitLessonSections([chunk, practice("p1", "The world's favourite drug")], ids("p1"));
+    expect(r.theory.map(html).join("")).toContain("color:rgb(229,0,92)");
+  });
+
+  it("nhãn tab vẫn lấy từ câu yêu cầu (2B) dù nhãn trong chữ đã bỏ", () => {
+    const chunk = rich(stmt("2", "B", "Read the article about coffee."));
+    const r = splitLessonSections([chunk, practice("p1", "The world's favourite drug")], ids("p1"), undefined, ids("p1"));
+    expect(r.tabs[0]!.label).toBe("2B");
+  });
+});
+
+describe("dropRepeatedBannerTitle — dòng phụ của banner trùng tên bài thì bỏ", () => {
+  const banner = (sub: string) =>
+    `<p>Student’s Book · page 8</p><h2 id="muc-reading" style="margin:2rem 0 .8rem"><span style="display:block">Reading</span><span style="display:block;margin:.4rem 0 0 .25rem">${sub}</span></h2><p>Read the article.</p>`;
+
+  it("dòng phụ nằm trong tên bài: bỏ dòng phụ, giữ chữ READING và phần còn lại", () => {
+    const out = dropRepeatedBannerTitle(banner("The world’s favourite drug"), "1.1 Reading · The world's favourite drug");
+    expect(out).toContain("Reading");
+    expect(out).not.toContain("favourite drug");
+    expect(out).toContain("Student’s Book · page 8");
+    expect(out).toContain("<p>Read the article.</p>");
+    expect(out).toContain("</span></h2>");
+  });
+  it("dòng phụ khác tên bài: giữ nguyên", () => {
+    const html = banner("Something else entirely");
+    expect(dropRepeatedBannerTitle(html, "1.1 Reading · The world's favourite drug")).toBe(html);
+  });
+  it("banner chỉ một dòng hoặc không có banner: giữ nguyên", () => {
+    const one = '<h2><span>Reading</span></h2>';
+    expect(dropRepeatedBannerTitle(one, "1.1 Reading")).toBe(one);
+    expect(dropRepeatedBannerTitle("<p>x</p>", "1.1 Reading")).toBe("<p>x</p>");
   });
 });
