@@ -56,6 +56,10 @@ export function wordKey(w: string): string {
 export interface CompareWord {
   text: string;
   ok: boolean;
+  /** Chuỗi ngăn đặt SAU từ khi hiển thị lại câu mẫu (mặc định một dấu cách; "" giữa hai chữ Hán liền nhau). */
+  sep?: string;
+  /** false: không tính điểm (phiên âm, dấu câu trong câu mẫu tiếng Trung); mặc định true. */
+  scored?: boolean;
 }
 
 export interface SpokenComparison {
@@ -66,16 +70,9 @@ export interface SpokenComparison {
   extra: string[];
 }
 
-/**
- * So từng từ của câu mẫu với lời máy nghe được (dãy con chung dài nhất, nên nói thêm hay thiếu từ không làm lệch cả câu). Không phán đúng/sai
- * cả câu và không có điểm: chỉ đánh dấu từ nào nghe được và từ nào thiếu.
- */
-export function compareSpoken(expected: string, spoken: string): SpokenComparison {
-  const exp = expected.split(/\s+/).filter(Boolean);
-  const heard = spoken.split(/\s+/).filter(Boolean);
-  const ek = exp.map(wordKey);
-  const hk = heard.map(wordKey);
-  const n = exp.length;
+/** Dãy con chung dài nhất giữa `ek` (mẫu) và `hk` (nghe được): đánh dấu phần tử mẫu khớp và phần tử nghe được đã dùng. Khoá rỗng không bao giờ khớp. */
+function lcsMark(ek: string[], hk: string[]): { ok: boolean[]; used: boolean[] } {
+  const n = ek.length;
   const m = hk.length;
   const dp: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--) {
@@ -96,6 +93,47 @@ export function compareSpoken(expected: string, spoken: string): SpokenCompariso
     } else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) i++;
     else j++;
   }
+  return { ok, used };
+}
+
+/** Chữ Hán (gồm khối mở rộng A). Câu mẫu có chữ Hán thì so TỪNG CHỮ HÁN: tiếng Trung không có dấu cách giữa các từ. */
+const HAN = /[\u3400-\u9fff]/;
+
+/**
+ * So lời học viên nói với câu mẫu tiếng Trung. Mỗi chữ Hán là một đơn vị; mọi chữ không phải chữ Hán trong câu mẫu (phiên âm pinyin giáo viên
+ * ghi kèm, dấu câu, "App"…) chỉ để HIỆN, không tính điểm; trong lời nghe được cũng chỉ lấy chữ Hán (máy không "nói" dấu câu hay pinyin).
+ */
+function compareSpokenHan(expected: string, spoken: string): SpokenComparison {
+  const tokens: Array<{ text: string; scored: boolean; sep: string }> = [];
+  for (const m of expected.matchAll(/([\u3400-\u9fff])|([^\u3400-\u9fff\s]+)|(\s+)/g)) {
+    if (m[3] !== undefined) {
+      if (tokens.length) tokens[tokens.length - 1]!.sep = " ";
+    } else tokens.push({ text: m[0], scored: m[1] !== undefined, sep: "" });
+  }
+  const scoredIdx = tokens.flatMap((t, k) => (t.scored ? [k] : []));
+  const ek = scoredIdx.map((k) => tokens[k]!.text);
+  const heard = [...spoken].filter((c) => HAN.test(c));
+  const { ok, used } = lcsMark(ek, heard);
+  const okByToken = new Map(scoredIdx.map((k, x) => [k, ok[x]!]));
+  return {
+    words: tokens.map((t, k) => ({ text: t.text, ok: t.scored ? okByToken.get(k)! : true, sep: t.sep, scored: t.scored })),
+    okCount: ok.filter(Boolean).length,
+    total: ek.length,
+    extra: heard.filter((_, k) => !used[k]),
+  };
+}
+
+/**
+ * So từng từ của câu mẫu với lời máy nghe được (dãy con chung dài nhất, nên nói thêm hay thiếu từ không làm lệch cả câu). Không phán đúng/sai
+ * cả câu và không có điểm: chỉ đánh dấu từ nào nghe được và từ nào thiếu. Câu mẫu có chữ Hán thì so từng chữ Hán (xem `compareSpokenHan`).
+ */
+export function compareSpoken(expected: string, spoken: string): SpokenComparison {
+  if (HAN.test(expected)) return compareSpokenHan(expected, spoken);
+  const exp = expected.split(/\s+/).filter(Boolean);
+  const heard = spoken.split(/\s+/).filter(Boolean);
+  const ek = exp.map(wordKey);
+  const hk = heard.map(wordKey);
+  const { ok, used } = lcsMark(ek, hk);
   return {
     words: exp.map((text, k) => ({ text, ok: ok[k]! })),
     okCount: ok.filter(Boolean).length,

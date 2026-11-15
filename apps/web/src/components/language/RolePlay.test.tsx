@@ -73,7 +73,7 @@ afterEach(async () => {
 });
 
 describe("RolePlay — hội thoại đóng vai", () => {
-  it("hiện hai vai (mặc định A đang chọn), cả hội thoại, nút nghe cho lượt của bạn ảo và 'Nghe cả hội thoại'", async () => {
+  it("hiện hai vai (mặc định A đang chọn), cả hội thoại, nút nghe mẫu cho mọi lượt có audio và 'Nghe cả hội thoại'", async () => {
     await render();
     const roles = [...host.querySelectorAll<HTMLButtonElement>(".rp-role")];
     expect(roles.map((r) => r.getAttribute("aria-pressed"))).toEqual(["true", "false"]);
@@ -81,7 +81,7 @@ describe("RolePlay — hội thoại đóng vai", () => {
     expect(text()).toContain("Chủ quán");
     expect(host.querySelectorAll(".rp-turn")).toHaveLength(3);
     expect(button(/Nghe lượt 2/)).toBeTruthy(); // lượt 2 là của B (bạn ảo) có audio
-    expect(host.querySelector('[aria-label^="Nghe lượt 1"]')).toBeNull(); // lượt 1 là của mình: không có nút nghe
+    expect(button(/Nghe lượt 1/)).toBeTruthy(); // lượt 1 là của mình: vẫn nghe được bản mẫu trước khi nói
     expect(button(/Nghe cả hội thoại/)).toBeTruthy();
     expect(host.querySelector(".rp-turn[data-current]")!.getAttribute("aria-label")).toContain("Lượt 1");
   });

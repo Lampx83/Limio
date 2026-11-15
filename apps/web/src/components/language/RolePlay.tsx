@@ -15,7 +15,7 @@ const TURN_MAX_SECONDS = 30;
 type Spoken = Record<RoleId, Record<number, string>>;
 
 /**
- * Hội thoại đóng vai: học viên chọn A hoặc B, nghe vai kia bằng audio mẫu của từng lượt và ghi âm lượt của mình. Mỗi lượt ghi xong được
+ * Hội thoại đóng vai: học viên chọn A hoặc B, nghe audio mẫu của từng lượt (cả lượt của vai kia lẫn lượt của mình, để nghe mẫu trước khi nói) và ghi âm lượt của mình. Mỗi lượt ghi xong được
  * chuyển thành chữ (`transcribe`) rồi so với câu mẫu — chỉ đánh dấu từ nghe được/thiếu, KHÔNG có điểm. Bản ghi âm không được lưu. Câu trả
  * lời (bản chữ các lượt đã nói của vai đang chọn) đưa lên qua `onAnswer`; nút "Nhận xét bằng AI" nằm ở thẻ câu hỏi bên ngoài.
  * Hai vai được tính riêng: đổi vai không xoá phần đã nói ở vai kia.
@@ -180,7 +180,8 @@ export default function RolePlay({
                   {cmp ? (
                     cmp.words.map((w, k) => (
                       <span key={k} className={w.ok ? undefined : "rp-miss"}>
-                        {w.text}{" "}
+                        {w.text}
+                        {w.sep ?? " "}
                       </span>
                     ))
                   ) : (
@@ -188,7 +189,7 @@ export default function RolePlay({
                   )}
                 </p>
 
-                {!isMine && turn.audio && (
+                {turn.audio && (
                   <button type="button" className="rp-btn" onClick={() => (playing === i ? stopAudio() : void playTurn(i))} aria-label={playing === i ? t("practice.rp.stopTurn", { n: i + 1 }) : t("practice.rp.listenTurn", { n: i + 1 })}>
                     {playing === i ? <Square size={14} aria-hidden /> : <Play size={14} aria-hidden />} {playing === i ? t("practice.say.stop") : t("practice.say.listen")}
                   </button>

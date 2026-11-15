@@ -31,6 +31,9 @@ export const ExamQuestionSpec = z.object({
   type: QuestionType,
   prompt: z.string().min(1).max(5_000),
   explanation: z.string().max(2_000).optional(),
+  /** Mọi loại: phiên âm của đề (hiện sẵn dưới đề) và bản dịch (ẩn, học viên bấm mới thấy) — chú giải cho học viên ngoại ngữ. */
+  promptReading: z.string().max(1_200).optional(),
+  promptTranslation: z.string().max(1_200).optional(),
   points: z.number().int().min(0).max(1_000).optional(),
   /** mcq / multi */
   options: z.array(z.object({ label: z.string().min(1), isCorrect: z.boolean() })).optional(),
@@ -265,6 +268,9 @@ export function expandExamQuestion(q: ExamQuestionSpecT, explanationAudio?: stri
       };
       break;
   }
+  const reading = q.promptReading?.trim();
+  const translation = q.promptTranslation?.trim();
+  if (reading || translation) config = { ...(config as object), promptAid: { ...(reading ? { reading } : {}), ...(translation ? { translation } : {}) } };
   return { type: q.type, prompt: q.prompt.trim(), config, ...(q.points !== undefined ? { points: q.points } : {}) };
 }
 
@@ -363,11 +369,23 @@ export async function storePublicFile(kind: string, localPath: string, namePrefi
   return { filename, mime, size: buf.length };
 }
 
+/** Như `storePublicFile` nhưng từ bộ nhớ (audio vừa sinh bằng TTS): ghi vào `public/<kind>/yyyy/mm/` và trả tên tệp. */
+export async function storePublicBuffer(kind: string, ext: string, buf: Buffer, namePrefix: string): Promise<{ filename: string; mime: string; size: number }> {
+  const mime = AUDIO_EXT[ext] ?? IMAGE_EXT[ext];
+  if (!mime) throw new Error(`Đuôi tệp không hỗ trợ: ${ext}`);
+  const now = new Date();
+  const filename = `${namePrefix}-${now.getTime()}-${randomBytes(8).toString("hex")}${ext}`;
+  const dest = path.join(uploadsRoot(), "public", kind, String(now.getUTCFullYear()), String(now.getUTCMonth() + 1).padStart(2, "0"), filename);
+  await mkdir(path.dirname(dest), { recursive: true });
+  await writeFile(dest, buf);
+  return { filename, mime, size: buf.length };
+}
+
 // ── Tham chiếu ảnh trong thân bài: `asset:<tệp>` → đường dẫn đã tải lên ──────────
 
-const ASSET_REF = /asset:([A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif))/g;
+const ASSET_REF = /asset:([A-Za-z0-9_./-]+\.(?:png|jpe?g|webp|gif|mp3|m4a))/g;
 
-/** Các tệp ảnh được nhắc bằng `asset:<tệp>` trong một đoạn chữ (thân bài markdown). */
+/** Các tệp ảnh/audio được nhắc bằng `asset:<tệp>` trong một đoạn chữ (thân bài markdown). */
 export function bodyAssetRefs(text: string | undefined): string[] {
   return text ? [...text.matchAll(ASSET_REF)].map((m) => m[1]!) : [];
 }

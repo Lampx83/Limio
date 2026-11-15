@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useMemo, useRef } from "react";
 import SafeHtml from "@/components/SafeHtml";
+import PromptAid from "@/components/language/PromptAid";
 import { plainToRichHtml } from "@/lib/richText";
 import { UNPLAYABLE_FOR_LEARNER } from "@/lib/examQuestionSupport";
 import { DragDropFillQuestion, MatchingQuestion, NumericalQuestion, OrderingQuestion } from "./ExamQuestionExtraTypes";
@@ -131,7 +132,10 @@ export default function ExamQuestion({ question, value, onChange, optionOrder, c
     <div>
       {/* Kéo thả điền tự vẽ đề (kèm ô thả tại chỗ [[N]]), nên bỏ khối đề chung để không hiện ký hiệu [[N]] thô. */}
       {question.type !== "drag_drop_fill" && prompt}
+      {/* Chú giải đề (phiên âm + bản dịch ẩn). Kéo thả điền tự vẽ đề nên chú giải đặt sau phần kéo thả. */}
+      {question.type !== "drag_drop_fill" && <PromptAid config={question.config} />}
       {inner}
+      {question.type === "drag_drop_fill" && <PromptAid config={question.config} />}
     </div>
   );
 }

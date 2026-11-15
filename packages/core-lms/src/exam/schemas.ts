@@ -15,6 +15,16 @@ import { z } from "zod";
  */
 const explanationField = {
   explanation: z.string().trim().max(2_000).optional(),
+  /**
+   * Chú giải ĐỀ câu hỏi cho học viên ngoại ngữ: phiên âm (hiện sẵn dưới đề) và bản dịch (ẩn, bấm mới hiện). Là nội dung đề chứ không phải đáp án
+   * nên được gửi cho học viên (xem `toPublicQuestionConfig`). Dùng chung mọi loại câu vì nằm trong `explanationField`.
+   */
+  promptAid: z
+    .object({
+      reading: z.string().trim().min(1).max(1_200).optional(),
+      translation: z.string().trim().min(1).max(1_200).optional(),
+    })
+    .optional(),
 };
 
 const optionSchema = z.object({

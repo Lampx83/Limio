@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import SafeHtml from "@/components/SafeHtml";
+import PromptAid from "./PromptAid";
 import { htmlToPlainText, looksLikeHtml, plainToRichHtml } from "@/lib/richText";
 import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "@/components/exam/ExamQuestion";
 import {
@@ -356,7 +357,8 @@ function RowBody({
   }
 
   // Dạng câu phiếu chưa biết dựng: dùng ô nhập của trình làm bài chung để câu vẫn trả lời được (không để một dòng chỉ có đề).
-  return <ExamQuestion question={q} value={value} onChange={onChange} compact />;
+  // Chú giải đề do hàng phiếu vẽ (bên dưới RowBody), nên bỏ khỏi cấu hình đưa cho ExamQuestion để không hiện hai lần.
+  return <ExamQuestion question={{ ...q, config: { ...q.config, promptAid: undefined } }} value={value} onChange={onChange} compact />;
 }
 
 /** Sắp xếp không kéo: mỗi mục một ô chọn số thứ tự; chỉ lưu khi mọi mục đã có số và không trùng. Giữ số đang chọn khi chuyển tab. */
@@ -567,6 +569,7 @@ export default function PracticeSheet({
         <span className="ps-n">{n}</span>
         <div className="ps-body">
           <RowBody q={q} n={n} value={answers[qid] ?? null} onChange={(v) => onAnswer(qid, v)} shared={shared} />
+          {!shared && <PromptAid config={q.config} />}
         </div>
         <span className="ps-mark">
           {graded && (
