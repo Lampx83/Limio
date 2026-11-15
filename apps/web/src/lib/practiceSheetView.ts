@@ -229,3 +229,21 @@ export function groupSharedOptions(list: Array<{ id: string; type: string; label
 export function optionLabelsOf(config: Record<string, unknown>): string[] {
   return optionLabels(config);
 }
+
+/**
+ * Câu ghép cặp: sách đánh chữ cái cho các vế phải ("a) for habits…") và số cho các vế trái ("1 She is studying…"), còn phiếu tự gán chữ cái theo thứ tự
+ * hiện và tự đánh số hàng, nên chữ của sách lặp lại và còn lệch nhau ("a." đứng cạnh "b) for facts"). Bỏ chữ cái của sách khi MỌI vế phải đều có,
+ * bỏ số của sách ở vế trái khi số đó trùng số hàng. Không đổi id; nhãn nào bỏ xong mà trống thì giữ nguyên.
+ */
+export function cleanMatchingLabels<T extends { label: string }>(lefts: readonly T[], rights: readonly T[]): { lefts: T[]; rights: T[] } {
+  const letter = /^[a-z]\)\s+/i;
+  const allLettered = rights.length > 0 && rights.every((r) => letter.test(r.label) && r.label.replace(letter, "").trim() !== "");
+  const outRights = rights.map((r) => (allLettered ? { ...r, label: r.label.replace(letter, "") } : { ...r }));
+  const outLefts = lefts.map((l, i) => {
+    const m = new RegExp(`^${i + 1}[.)]?\\s+`).exec(l.label);
+    const rest = m ? l.label.slice(m[0].length) : l.label;
+    return m && rest.trim() !== "" ? { ...l, label: rest } : { ...l };
+  });
+  return { lefts: outLefts, rights: outRights };
+}
+

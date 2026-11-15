@@ -15,6 +15,7 @@ import {
   splitDragPrompt,
   tabShortLabels,
   tabLabel,
+  cleanMatchingLabels,
 } from "./practiceSheetView";
 
 describe("splitBlankPrompt", () => {
@@ -161,5 +162,29 @@ describe("tabShortLabels", () => {
   });
   it("hai tab trùng nhãn ngắn thì thêm mô tả để phân biệt", () => {
     expect(tabShortLabels(["Exercise 7B · take and hand", "Exercise 7B · put, look and keep", "Exercise 7C · Complete the examples"])).toEqual(["7B take and h…", "7B put, look…", "7C"]);
+  });
+});
+
+describe("cleanMatchingLabels — câu ghép cặp không đánh số hai lần", () => {
+  const mk = (labels: string[]) => labels.map((label, i) => ({ id: String(i), label }));
+  it("bỏ chữ cái của sách (a), b)…) ở các vế phải khi MỌI vế đều có, vì phiếu gán chữ cái theo thứ tự hiện", () => {
+    const r = cleanMatchingLabels(mk(["1 One", "2 Two"]), mk(["b) for facts", "a) for habits", "c) for states"]));
+    expect(r.rights.map((x) => x.label)).toEqual(["for facts", "for habits", "for states"]);
+  });
+  it("bỏ số thứ tự của sách ở các vế trái khi số đó trùng số hàng (1, 2, 3…)", () => {
+    const r = cleanMatchingLabels(mk(["1 She is studying", "2 I often work", "3 I want people"]), mk(["x", "y"]));
+    expect(r.lefts.map((x) => x.label)).toEqual(["She is studying", "I often work", "I want people"]);
+  });
+  it("giữ nguyên khi chỉ một vài vế có chữ cái/số, hoặc số không trùng số hàng", () => {
+    const rights = mk(["b) one", "plain two"]);
+    const lefts = mk(["5 five", "6 six"]);
+    const r = cleanMatchingLabels(lefts, rights);
+    expect(r.rights.map((x) => x.label)).toEqual(["b) one", "plain two"]);
+    expect(r.lefts.map((x) => x.label)).toEqual(["5 five", "6 six"]);
+  });
+  it("không đổi id, và không làm trống nhãn", () => {
+    const r = cleanMatchingLabels(mk(["1 "]), mk(["a) ", "b) x"]));
+    expect(r.lefts[0]!.id).toBe("0");
+    expect(r.rights[0]!.label.length).toBeGreaterThan(0);
   });
 });

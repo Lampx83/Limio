@@ -867,3 +867,34 @@ describe("LessonPractice — phiếu bạn ảo không lặp mã bài (docs/tieu
     expect(host.querySelector('[data-testid="lp-instruction"] h3')!.textContent).toBe("3A · Sentences from the article");
   });
 });
+
+describe("LessonPractice — đề bài phiếu bạn ảo rút gọn khi tab đã có câu yêu cầu của sách (AC6)", () => {
+  const long = "No partner? Tick the points in the article that you agree with and put a question mark next to any you disagree with, then discuss them with your virtual partner. You can type or speak.";
+  const vp = () =>
+    embed({ passages: [{ id: "p1", title: "7C · Talk with a virtual partner", contentJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: long }] }] } }] });
+
+  it("mặc định: giữ nguyên đề bài đầy đủ của phiếu", async () => {
+    await render(vp());
+    expect(host.querySelector('[data-testid="lp-instruction"]')!.textContent).toContain("Tick the points in the article");
+  });
+
+  it("shortPartner: bỏ phần lặp câu yêu cầu của sách, chỉ còn lời mời bạn ảo (giữ \"No partner?\")", async () => {
+    await act(async () => {
+      root.render(<LessonPractice slug="ielts" embed={vp()} shortPartner />);
+    });
+    await flush();
+    const t = host.querySelector('[data-testid="lp-instruction"]')!.textContent!;
+    expect(t).toContain("No partner? Practise with a virtual partner. You can type or speak.");
+    expect(t).not.toContain("Tick the points");
+  });
+
+  it("shortPartner không đụng tới đoạn không phải phiếu bạn ảo", async () => {
+    const e = embed({ passages: [{ id: "p1", title: "3A · Sentences", contentJson: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Read sentences 1–4." }] }, { type: "paragraph", content: [{ type: "text", text: "Body text of the passage here." }] }] } }] });
+    await act(async () => {
+      root.render(<LessonPractice slug="ielts" embed={e} shortPartner />);
+    });
+    await flush();
+    expect(host.querySelector('[data-testid="lp-instruction"]')!.textContent).toContain("Read sentences 1–4.");
+  });
+});
+

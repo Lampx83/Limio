@@ -11,23 +11,39 @@ export interface ExerciseGroup {
  * Tách một khối Bài luyện gom nhiều exercise (vd Grammar: 3A, 3B, 3C, 5) thành từng exercise — mỗi cái là một tab
  * (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md, AC5).
  *
- * Nhóm theo THỨ TỰ CÂU: đoạn có nhãn mở nhóm mới (đoạn liên tiếp cùng nhãn dồn một nhóm); đoạn không có nhãn và câu không thuộc
- * đoạn nào đi cùng nhóm đứng trước. Mỗi nhóm giữ nguyên đề, buổi luyện và cấu hình; chỉ chia câu, đoạn và đáp án.
+ * Nhóm theo THỨ TỰ ĐOẠN của đề: đoạn có nhãn mở nhóm mới (đoạn liên tiếp cùng nhãn dồn một nhóm; đoạn không có câu hỏi, vd bài nghe
+ * chỉ có audio, vẫn là một nhóm); đoạn không có nhãn và câu không thuộc đoạn nào đi cùng nhóm đứng trước. Mỗi nhóm giữ nguyên đề, buổi luyện và cấu hình; chỉ chia câu, đoạn và đáp án.
  * Chỉ một nhóm → trả mảng rỗng (không cần tách).
  */
 export function splitEmbedByExercise(embed: PracticeEmbed): ExerciseGroup[] {
-  const passageById = new Map(embed.passages.map((p) => [p.id, p]));
-  const groups: { label: string | null; passageIds: Set<string>; questionIds: Set<string> }[] = [];
-  for (const q of embed.questions) {
-    const p = q.passageId ? passageById.get(q.passageId) : undefined;
-    const label = p ? exerciseLabels([p.title]) : null;
+  const questionPassage = new Map(embed.questions.map((q) => [q.id, q.passageId]));
+  type G = { label: string | null; passageIds: Set<string>; questionIds: Set<string> };
+  const groups: G[] = [];
+  const groupOfPassage = new Map<string, G>();
+  // Theo thứ tự đoạn của đề: kể cả đoạn KHÔNG có câu hỏi (bài nghe chỉ có audio, vd 5A) vẫn là một exercise.
+  for (const p of embed.passages) {
+    const label = exerciseLabels([p.title]);
     const last = groups[groups.length - 1];
     if (last && (label === null || last.label === label)) {
-      last.questionIds.add(q.id);
-      if (p) last.passageIds.add(p.id);
+      last.passageIds.add(p.id);
+      groupOfPassage.set(p.id, last);
     } else {
-      groups.push({ label, passageIds: new Set(p ? [p.id] : []), questionIds: new Set([q.id]) });
+      const g: G = { label, passageIds: new Set([p.id]), questionIds: new Set() };
+      groups.push(g);
+      groupOfPassage.set(p.id, g);
     }
+  }
+  // Câu hỏi về nhóm của đoạn của nó; câu không thuộc đoạn nào (hoặc đoạn lạ) đi cùng nhóm đứng trước, nhóm đầu nếu chưa có.
+  let prev: G | undefined;
+  for (const q of embed.questions) {
+    const pid = questionPassage.get(q.id);
+    const g = (pid ? groupOfPassage.get(pid) : undefined) ?? prev ?? groups[0];
+    if (!g) {
+      groups.push((prev = { label: null, passageIds: new Set(), questionIds: new Set([q.id]) }));
+      continue;
+    }
+    g.questionIds.add(q.id);
+    prev = g;
   }
   if (groups.length < 2) return [];
   return groups.map((g) => ({

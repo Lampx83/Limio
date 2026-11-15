@@ -52,6 +52,7 @@ import PassageView from "@/components/exam/PassageView";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
+import StatementTab from "@/components/lesson/StatementTab";
 import TheoryCard from "@/components/lesson/TheoryCard";
 import { arrangeTabs, dropRepeatedBannerTitle, exerciseLabels, markLabelBold, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
 import { splitEmbedByExercise } from "@/lib/practiceExerciseSplit";
@@ -876,7 +877,7 @@ export default async function LessonPage({
 
   // Bài đọc dài của khối luyện lên phần lý thuyết (AC8); mỗi exercise một tab (AC5); khối gom nhiều exercise tách theo đoạn.
   const hoistedPassages: HoistedPassage[] = [];
-  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean) => (
+  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false) => (
     <LessonPractice
       slug={params.slug}
       embed={embed}
@@ -884,6 +885,7 @@ export default async function LessonPage({
       lessonId={lesson.id}
       preview={info.preview || undefined}
       subset={subset || undefined}
+      shortPartner={shortPartner || undefined}
       sheet={languageMode}
       accent={lesson.module.course.themeColor}
       skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
@@ -935,10 +937,9 @@ export default async function LessonPage({
                 ? { ...hoist.embed, passages: hoist.embed.passages.map((p) => (hoist.hoisted.some((h) => h.id === p.id) ? { ...p, title: exerciseLabels([p.title]) ? p.title : tab.label } : p)) }
                 : info?.embed;
             const groups = embed ? splitEmbedByExercise(embed) : [];
-            const leadNode =
-              tab.lead.length > 0 ? (
-                <LessonContent items={tab.lead} courseId={lesson.module.course.id} lessonId={lesson.id} numberTranscripts={languageSkin} />
-              ) : null;
+            // Câu yêu cầu của sách đi cùng phiếu bạn ảo: cùng khuôn với tab chỉ có chữ (tiêu đề là số exercise, rồi câu yêu cầu).
+            const leadHtml = (tab.lead[0]?.payload as { html?: string } | undefined)?.html;
+            const leadNode = tab.lead.length > 0 && leadHtml ? <StatementTab code={tab.label} html={leadHtml} /> : null;
             if (info && groups.length >= 2) {
               return groups.map((g, k) => ({
                 id: `${tab.id}~${k}`,
@@ -946,6 +947,16 @@ export default async function LessonPage({
                 virtualPartner: tab.virtualPartner,
                 build: () => renderBlock(g.embed, info, true),
               }));
+            }
+            if (tab.statement) {
+              return [
+                {
+                  id: tab.id,
+                  label: tab.label,
+                  virtualPartner: false,
+                  build: () => <StatementTab code={tab.label} html={(tab.lead[0]?.payload as { html?: string } | undefined)?.html ?? ""} />,
+                },
+              ];
             }
             return [
               {
@@ -955,7 +966,7 @@ export default async function LessonPage({
                 build: () => (
                   <>
                     {leadNode}
-                    {info && embed && hoist && hoist.hoisted.length > 0 ? renderBlock(embed, info, false) : practiceBlocks[tab.id]}
+                    {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode) : practiceBlocks[tab.id]}
                   </>
                 ),
               },

@@ -88,6 +88,7 @@ export default function LessonPractice({
   sheet = false,
   skillLabel = null,
   accent = null,
+  shortPartner = false,
 }: {
   slug: string;
   embed: PracticeEmbed;
@@ -101,6 +102,8 @@ export default function LessonPractice({
   skillLabel?: string | null;
   /** Màu nhấn của bộ sách "r,g,b" (`Course.themeColor`): khối luyện tập dùng cùng màu với thân bài; null = màu Limio. */
   accent?: string | null;
+  /** Tab đã hiện câu yêu cầu của sách ngay trên phiếu bạn ảo: đề bài của phiếu bỏ phần lặp lại ý đó, chỉ còn lời mời bạn ảo. */
+  shortPartner?: boolean;
   /** Xem trước của giảng viên: chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án, không ghi sự kiện. */
   preview?: boolean;
 }) {
@@ -520,6 +523,12 @@ export default function LessonPractice({
   const lightIntro = !!(step?.passageId && step.questionIds.length > 0 && light.has(step.passageId));
   // Đoạn chỉ có câu yêu cầu (phiếu): câu đó là đề bài, hiện ở khối đề bài riêng.
   const lightText = lightIntro && stepPassage ? instructionOnlyText(stepPassage.contentJson) : null;
+  // Phiếu bạn ảo ngay dưới câu yêu cầu của sách: bỏ phần lặp lại ("Tick the points…"), giữ "No partner?"/"No group?" và lời mời bạn ảo.
+  const fullInstruction = lightText ?? parts?.instruction ?? null;
+  const instructionText =
+    shortPartner && stepPassage && /virtual partner/i.test(stepPassage.title) && fullInstruction
+      ? `${/^No (?:partner|group)\?/i.exec(fullInstruction)?.[0] ?? "No partner?"} Practise with a virtual partner. You can type or speak.`
+      : fullInstruction;
   const split = hasPassage && layout === "split" && !!step?.passageId && !lightIntro && hasBody;
 
   function jumpTo(qid: string) {
@@ -878,7 +887,7 @@ export default function LessonPractice({
       {stepPassage && parts && (
         <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
           <h3 className="text-h4">{passageDisplayTitle(stepPassage.title)}</h3>
-          {(lightText ?? parts.instruction) && <p className="mt-1 whitespace-pre-line text-body leading-7">{lightText ?? parts.instruction}</p>}
+          {instructionText && <p className="mt-1 whitespace-pre-line text-body leading-7">{instructionText}</p>}
         </div>
       )}
 

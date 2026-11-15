@@ -9,6 +9,7 @@ import {
   blankCountOf,
   blankWidthCh,
   groupSharedOptions,
+  cleanMatchingLabels,
   letterOf,
   optionLabelsOf,
   questionsToCheck,
@@ -265,8 +266,7 @@ function RowBody({
   }
 
   if (kind === "matching") {
-    const lefts = items(q.config.lefts);
-    const rights = items(q.config.rights);
+    const { lefts, rights } = cleanMatchingLabels(items(q.config.lefts), items(q.config.rights));
     const matched = value && "matched" in value ? value.matched : {};
     const used = new Set(Object.values(matched).filter(Boolean));
     const set = (leftId: string, rightId: string) => {

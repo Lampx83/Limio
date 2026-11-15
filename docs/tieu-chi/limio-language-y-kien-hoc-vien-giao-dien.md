@@ -47,8 +47,10 @@ Một lesson là trọn một phần của sách; bên trong, lý thuyết đứ
 
 ## AC6 — Chữ của sách đi cùng phiếu bạn ảo
 
-- Câu yêu cầu của sách ("2 A Work in pairs. Discuss the questions.") đứng **ngay trước** phiếu bạn ảo **cùng số/chữ** (2A) thì chuyển vào tab của phiếu, cùng danh sách, bảng, ảnh đi kèm. Riêng **câu yêu cầu bị bỏ**, vì khối đề bài của phiếu ("No partner? Discuss the questions…") đã thay.
-- Câu yêu cầu của bài tập **khác** (không phải bạn ảo) giữ nguyên ở phần lý thuyết, không mất chữ nào.
+- Câu yêu cầu của sách ("2 A Work in pairs. Discuss the questions.") đứng **ngay trước** phiếu bạn ảo **cùng số/chữ** (2A) thì chuyển vào tab của phiếu, **giữ nguyên chữ** (bỏ nhãn số/chữ vì số đã có trên tab), cùng danh sách, bảng, ảnh đi kèm; trong tab nó hiện thành khối câu yêu cầu cùng khuôn với tab chỉ có chữ (tiêu đề là số exercise, rồi câu yêu cầu), phiếu bạn ảo "Talk with a virtual partner" là phần nhỏ bên dưới (thầy chốt 15/11/2026: không bỏ câu yêu cầu của sách).
+- Câu yêu cầu của bài tập **khác** (không phải bạn ảo):
+  - exercise đó **chưa có tab** (chỉ có chữ, không có bài luyện, vd 7A "Can you think of any reasons…", 7B, 8B ở 1.2 Writing) thì thành **một tab riêng** mang số exercise, chứa câu yêu cầu cùng danh sách/ảnh đi kèm tới tiêu đề hay hộp kế tiếp (thầy chốt 15/11/2026: mỗi exercise một tab);
+  - exercise đó **đã có tab** (vd 2B ở 1.1 Reading có bài đọc) thì giữ nguyên ở phần lý thuyết, không mất chữ nào.
 - Không khớp số/chữ hoặc không đứng ngay trước phiếu: giữ ở phần lý thuyết.
 
 ## AC7 — Chữ in đậm của sách được bôi màu

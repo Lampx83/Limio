@@ -40,7 +40,7 @@ describe("splitLessonSections — lý thuyết ở trên, mỗi khối bài luy�
 });
 
 describe("splitLessonSections — chữ của sách đi cùng phiếu bạn ảo (AC6)", () => {
-  it("câu yêu cầu 2A + danh sách ngay trước phiếu 2A: danh sách vào tab, câu yêu cầu bị bỏ, phần mở đầu ở lại lý thuyết", () => {
+  it("câu yêu cầu 2A + danh sách ngay trước phiếu 2A: cả hai vào tab của phiếu (câu yêu cầu bỏ nhãn số/chữ), phần mở đầu ở lại lý thuyết", () => {
     const chunk = rich(folio + banner + stmt("2", "A", "Work in pairs. Discuss the questions.") + list("Are tea and coffee important?", "Have you drunk any today?"));
     const r = splitLessonSections([chunk, practice("vp", "2A · Talk with a virtual partner")], ids("vp"));
     expect(r.theory).toHaveLength(1);
@@ -48,8 +48,9 @@ describe("splitLessonSections — chữ của sách đi cùng phiếu bạn ảo
     expect(html(r.theory[0]!)).not.toContain("Discuss the questions");
     expect(html(r.theory[0]!)).not.toContain("Are tea and coffee important?");
     const lead = r.tabs[0]!.lead.map(html).join("");
+    expect(lead).toContain("Work in pairs. Discuss the questions.");
     expect(lead).toContain("Are tea and coffee important?");
-    expect(lead).not.toContain("Work in pairs");
+    expect(lead).not.toContain("color:rgb(229,0,92)");
   });
 
   it("câu yêu cầu của bài tập KHÔNG phải bạn ảo: ở lại phần lý thuyết, không mất chữ (kể cả khi tên tab lấy nhãn từ chính câu đó)", () => {
@@ -60,25 +61,29 @@ describe("splitLessonSections — chữ của sách đi cùng phiếu bạn ảo
     expect(r.theory.map(html).join("")).toContain("Read the article about coffee");
   });
 
-  it("bài tập khác nhưng số/chữ không khớp khối: ở lại lý thuyết, không mất chữ", () => {
+  it("câu yêu cầu số/chữ không khớp khối đứng sau: exercise đó chưa có tab nên thành tab riêng, không mất chữ", () => {
     const chunk = rich(stmt("2", "B", "Read the article about coffee."));
     const r = splitLessonSections([chunk, practice("p1", "2D · Questions")], ids("p1"));
-    expect(r.tabs[0]!.lead).toEqual([]);
-    expect(r.theory.map(html).join("")).toContain("Read the article about coffee");
+    expect(r.tabs.map((t) => t.label)).toEqual(["2B", "2D"]);
+    expect(r.tabs[0]!.lead.map(html).join("")).toContain("Read the article about coffee");
+    expect(r.theory).toEqual([]);
   });
 
-  it("số/chữ không khớp phiếu: ở lại lý thuyết", () => {
+  it("số/chữ không khớp phiếu: câu yêu cầu không gắn vào phiếu mà thành tab riêng của exercise đó", () => {
     const chunk = rich(stmt("2", "A", "Work in pairs. Discuss the questions.") + list("one"));
     const r = splitLessonSections([chunk, practice("vp", "2D · Talk with a virtual partner")], ids("vp"));
-    expect(r.tabs[0]!.lead).toEqual([]);
-    expect(r.theory.map(html).join("")).toContain("Work in pairs. Discuss the questions.");
+    expect(r.tabs.map((t) => t.label)).toEqual(["2A", "2D"]);
+    expect(r.tabs[1]!.lead).toEqual([]);
+    expect(r.tabs[0]!.lead.map(html).join("")).toContain("Work in pairs. Discuss the questions.");
   });
 
   it("nhãn chỉ có chữ (B) nối tiếp số của câu trước; nhãn chỉ có số (6) cũng nhận ra", () => {
     const c1 = rich(stmt("6", "A", "Work in pairs. Make questions.") + stmt(null, "B", "Add two more questions."));
     const r1 = splitLessonSections([c1, practice("vp", "6B · Talk with a virtual partner")], ids("vp"));
-    expect(r1.tabs[0]!.lead.map(html).join("")).not.toContain("Add two more questions");
-    expect(r1.theory.map(html).join("")).toContain("Make questions");
+    // 6A chưa có tab: thành tab riêng (AC6); câu 6B đi cùng phiếu 6B
+    expect(r1.tabs.map((t) => t.label)).toEqual(["6A", "6B"]);
+    expect(r1.tabs[0]!.lead.map(html).join("")).toContain("Make questions");
+    expect(r1.tabs[1]!.lead.map(html).join("")).toContain("Add two more questions");
     const c2 = rich(stmt("6", null, "Work in pairs. Choose four questions.") + list("q1", "q2"));
     const r2 = splitLessonSections([c2, practice("vp", "6 · Talk with a virtual partner")], ids("vp"));
     expect(r2.tabs[0]!.lead.map(html).join("")).toContain("q1");
@@ -90,14 +95,15 @@ describe("splitLessonSections — chữ của sách đi cùng phiếu bạn ảo
     expect(r.tabs[0]!.lead.map(html).join("")).toContain("<li>x</li>");
   });
 
-  it("chỉ câu cuối của khối chữ gắn vào phiếu; các câu trước (bài tập khác) ở lại lý thuyết", () => {
+  it("chỉ câu cuối của khối chữ gắn vào phiếu; các câu trước (bài tập khác chưa có tab) thành tab riêng, không mất chữ", () => {
     const chunk = rich(stmt("7", "A", "Can you think of reasons?") + stmt(null, "B", "Read the article.") + stmt(null, "C", "Work in pairs. Tick the points.") + list("p1"));
     const r = splitLessonSections([chunk, practice("vp", "7C · Talk with a virtual partner")], ids("vp"));
-    const theory = r.theory.map(html).join("");
-    expect(theory).toContain("Can you think of reasons?");
-    expect(theory).toContain("Read the article.");
-    expect(theory).not.toContain("Tick the points");
-    expect(r.tabs[0]!.lead.map(html).join("")).toContain("<li>p1</li>");
+    expect(r.tabs.map((t) => t.label)).toEqual(["7A", "7B", "7C"]);
+    expect(r.tabs[0]!.lead.map(html).join("")).toContain("Can you think of reasons?");
+    expect(r.tabs[1]!.lead.map(html).join("")).toContain("Read the article.");
+    expect(r.theory.map(html).join("")).not.toContain("Tick the points");
+    expect(r.tabs[2]!.lead.map(html).join("")).toContain("Tick the points");
+    expect(r.tabs[2]!.lead.map(html).join("")).toContain("<li>p1</li>");
   });
 
   it("có tiêu đề hoặc hộp quy tắc chen sau câu yêu cầu: câu đó không còn ngay trước phiếu, ở lại lý thuyết", () => {
@@ -265,6 +271,70 @@ describe("markLabelBold — chữ đậm làm nhãn người nói không bôi m�
   it("chữ đậm dài hoặc không có dấu hai chấm: giữ nguyên", () => {
     const html = "<p><strong>keep up with</strong> and <strong>" + "x".repeat(60) + ":</strong></p>";
     expect(markLabelBold(html)).toBe(html);
+  });
+});
+
+describe("splitLessonSections — câu yêu cầu chưa có tab thành tab riêng (AC6)", () => {
+  const h3 = "<h3>Seven reasons why being bored is good for you</h3>";
+  const para = "<p>As society gets busier and busier, we find that even when we are alone we are constantly stimulated.</p>";
+
+  it("7A, 7B chỉ có chữ (không bài luyện): mỗi câu một tab; bài báo sau tiêu đề ở lại lý thuyết", () => {
+    const chunk = rich(folio + banner + stmt("7", "A", "Can you think of any reasons why being bored might be good for you?") + stmt(null, "B", "Read the article. Does it mention any of your ideas?") + h3 + para + stmt("7", "C", "Tick the points you agree with."));
+    const r = splitLessonSections([chunk, practice("vp", "7C · Talk with a virtual partner")], ids("vp"));
+    expect(r.tabs.map((t) => t.label)).toEqual(["7A", "7B", "7C"]);
+    const a = r.tabs[0]!;
+    expect(a.lead.map(html).join("")).toContain("Can you think of any reasons");
+    expect(r.tabs[1]!.lead.map(html).join("")).toContain("Read the article");
+    const theory = r.theory.map(html).join("");
+    expect(theory).toContain("Seven reasons why being bored");
+    expect(theory).toContain("constantly stimulated");
+    expect(theory).not.toContain("Can you think of any reasons");
+    expect(theory).not.toContain("Read the article. Does it mention");
+    expect(theory).toContain("Student’s Book");
+  });
+
+  it("câu yêu cầu của exercise ĐÃ có tab (khối 2B của bài đọc): ở lại lý thuyết", () => {
+    const chunk = rich(stmt("2", "B", "Read the article about coffee."));
+    const r = splitLessonSections([chunk, practice("p1", "2B · The world's favourite drug")], ids("p1"));
+    expect(r.tabs.map((t) => t.label)).toEqual(["2B"]);
+    expect(r.theory.map(html).join("")).toContain("Read the article about coffee");
+  });
+
+  it("exercise đã có trong nhãn các đoạn của một khối gom (3A–3C): không thêm tab", () => {
+    const chunk = rich(stmt("3", "B", "Choose the correct alternatives."));
+    const r = splitLessonSections([chunk, practice("p1", "The passive · Practice")], ids("p1"), new Map([["p1", ["3A · x", "3B · y", "3C · z"]]]));
+    expect(r.tabs.map((t) => t.label)).toEqual(["3A–3C"]);
+    expect(r.theory.map(html).join("")).toContain("Choose the correct alternatives.");
+  });
+
+  it("exercise chưa có tab: tab không có khối bài luyện (không bạn ảo), danh sách đi kèm vào tab", () => {
+    const chunk = rich(stmt("8", "B", "Write your listicle.") + list("one", "two"));
+    const r = splitLessonSections([rich(banner), chunk, practice("vp", "8A · Plan with a virtual partner")], ids("vp"));
+    const t = r.tabs.find((x) => x.label === "8B")!;
+    expect(t.virtualPartner).toBe(false);
+    expect(t.lead.map(html).join("")).toContain("<li>two</li>");
+  });
+
+  it("không còn khối chữ rỗng trong lý thuyết khi cả khối chỉ gồm câu yêu cầu đã chuyển thành tab", () => {
+    const chunk = rich(stmt("8", "B", "Write your listicle."));
+    const r = splitLessonSections([chunk, practice("vp", "8A · Plan")], ids("vp"));
+    expect(r.theory).toEqual([]);
+  });
+
+  it("trong tab riêng của câu yêu cầu, nhãn số/chữ của sách bị bỏ (số đã có trên tab), chữ giữ nguyên", () => {
+    const chunk = rich(stmt("7", "A", "Can you think of any reasons?") + list("x"));
+    const r = splitLessonSections([chunk, practice("vp", "7C · Talk with a virtual partner")], ids("vp"));
+    const lead = r.tabs.find((t) => t.label === "7A")!.lead.map(html).join("");
+    expect(lead).toContain("Can you think of any reasons?");
+    expect(lead).toContain("<li>x</li>");
+    expect(lead).not.toContain("color:rgb(229,0,92)");
+    expect(lead).not.toMatch(/>7</);
+  });
+
+  it("tab của câu yêu cầu đánh dấu statement; tab của bài luyện thì không", () => {
+    const chunk = rich(stmt("7", "A", "Can you think of any reasons?") + stmt("7", "C", "Tick the points."));
+    const r = splitLessonSections([chunk, practice("vp", "7C · Talk with a virtual partner")], ids("vp"));
+    expect(r.tabs.map((t) => [t.label, t.statement])).toEqual([["7A", true], ["7C", false]]);
   });
 });
 

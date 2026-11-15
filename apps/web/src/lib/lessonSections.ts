@@ -18,6 +18,8 @@ export interface SectionTab<T extends SectionItem> {
   lead: T[];
   /** Khối là phiếu "Talk with a virtual partner": để phân biệt khi trùng nhãn. */
   virtualPartner: boolean;
+  /** Tab của exercise chỉ có chữ (không có khối bài luyện): nội dung là câu yêu cầu và phần đi kèm. */
+  statement: boolean;
 }
 
 /**
@@ -97,6 +99,18 @@ export function dropRepeatedBannerTitle(html: string, lessonTitle: string): stri
 /** Chữ đậm làm nhãn người nói ("Jodi:", "Victor:") không phải từ vựng mục tiêu: đánh dấu để không bôi màu như chữ đậm trong câu. */
 export function markLabelBold(html: string): string {
   return html.replace(/<strong>([^<]{1,40}:)(\s*)<\/strong>/g, '<strong class="pv-nohl">$1$2</strong>');
+}
+
+/** "3A–3C, 5" → ["3A","3B","3C","5"]; "2B–2C" → ["2B","2C"]; "7" → ["7"]. */
+function codesOf(label: string): string[] {
+  const out: string[] = [];
+  for (const part of label.split(",").map((x) => x.trim())) {
+    const m = /^(\d+)([A-E])?(?:[–-]\d*([A-E]))?$/.exec(part);
+    if (!m) continue;
+    if (!m[2]) out.push(m[1]!);
+    else for (let c = m[2].charCodeAt(0); c <= (m[3] ?? m[2]).charCodeAt(0); c++) out.push(`${m[1]}${String.fromCharCode(c)}`);
+  }
+  return out;
 }
 
 /** Tên tab dự phòng: tên khối, bỏ đuôi " · Practice" mà bộ nhập khoá thêm cho khối gộp. */
@@ -240,8 +254,7 @@ export function splitLessonSections<T extends SectionItem>(
     chunks.set(i, { nodes, leads });
   });
 
-  // 2) gắn phần chữ đi cùng vào tab của PHIẾU BẠN ẢO (khối chữ liền trước, câu yêu cầu cuối cùng, kéo tới hết khối, khớp số/chữ):
-  //    bỏ câu yêu cầu (đề bài của phiếu đã thay), giữ phần đi kèm. Câu yêu cầu của bài tập khác ở lại phần lý thuyết.
+  // 2) gắn câu yêu cầu của sách và phần đi kèm vào tab của PHIẾU BẠN ẢO (khối chữ liền trước, câu yêu cầu cuối cùng, kéo tới hết khối, khớp số/chữ).
   const removed = new Map<number, [number, number]>();
   const leadOf = new Map<number, T[]>();
   items.forEach((it, i) => {
@@ -251,12 +264,11 @@ export function splitLessonSections<T extends SectionItem>(
     const chunk = chunks.get(i - 1);
     const lead = chunk?.leads[chunk.leads.length - 1];
     if (!chunk || !lead || lead.end !== chunk.nodes.length || !matches(lead.label, title)) return;
-    const rest = chunk.nodes.slice(lead.start + 1, lead.end);
+    // Câu yêu cầu của sách ở lại (bỏ nhãn số/chữ vì số đã có trên tab) cùng phần đi kèm; phiếu bạn ảo là phần nhỏ bên dưới.
+    const keep = [stripStatementLabel(chunk.nodes[lead.start]!), ...chunk.nodes.slice(lead.start + 1, lead.end)];
     removed.set(i - 1, [lead.start, lead.end]);
-    if (rest.length > 0) {
-      const src = items[i - 1]!;
-      leadOf.set(i, [{ ...src, id: `${src.id}~${it.id}`, payload: { ...(src.payload as object), html: rest.join("") } } as T]);
-    }
+    const src = items[i - 1]!;
+    leadOf.set(i, [{ ...src, id: `${src.id}~${it.id}`, payload: { ...(src.payload as object), html: keep.join("") } } as T]);
   });
 
   // Bài đọc dùng chung: câu dẫn đứng ngay trước khối giữ chữ nhưng bỏ nhãn số/chữ ("2 B").
@@ -276,6 +288,36 @@ export function splitLessonSections<T extends SectionItem>(
     return `${lead.label.num}${lead.label.letter ?? ""}`;
   };
 
+  // 2b) câu yêu cầu của exercise CHƯA có tab (chỉ có chữ, vd 7A, 7B, 8B ở 1.2 Writing) thành một tab riêng: câu yêu cầu + phần đi kèm tới tiêu đề/hộp kế tiếp.
+  const covered = new Set<string>();
+  items.forEach((it, i) => {
+    if (it.type !== "exam_practice" || !practiceIds.has(it.id)) return;
+    const title = String((it.payload as { title?: unknown } | null)?.title ?? "");
+    const own = [exerciseLabels([title]), ...(passageTitles?.get(it.id) ?? []).map((t) => exerciseLabels([t]))].filter((l): l is string => !!l);
+    // Khối không có nhãn riêng thì tên tab lấy từ câu yêu cầu đứng ngay trước: số đó đã có tab.
+    for (const l of own.length > 0 ? own : [labelBefore(i)]) if (l) codesOf(l).forEach((c) => covered.add(c));
+  });
+  const stmtCuts = new Map<number, Array<[number, number]>>();
+  const stmtTabs: SectionTab<T>[] = [];
+  chunks.forEach((chunk, i) => {
+    for (const lead of chunk.leads) {
+      if (!lead.label.num || removed.get(i)?.[0] === lead.start) continue;
+      const code = `${lead.label.num}${lead.label.letter ?? ""}`;
+      if (covered.has(code)) continue;
+      const src = items[i]!;
+      // Số exercise đã có trên tab: bỏ nhãn số/chữ ở đầu câu yêu cầu để không lặp lại.
+      const html = [stripStatementLabel(chunk.nodes[lead.start]!), ...chunk.nodes.slice(lead.start + 1, lead.end)].join("");
+      stmtTabs.push({
+        id: `${src.id}~s${lead.start}`,
+        label: code,
+        lead: [{ ...src, id: `${src.id}~s${lead.start}`, payload: { ...(src.payload as object), html } } as T],
+        virtualPartner: false,
+        statement: true,
+      });
+      stmtCuts.set(i, [...(stmtCuts.get(i) ?? []), [lead.start, lead.end]]);
+    }
+  });
+
   // 3) dựng kết quả
   const theory: T[] = [];
   const tabs: SectionTab<T>[] = [];
@@ -284,11 +326,11 @@ export function splitLessonSections<T extends SectionItem>(
       const title = String((it.payload as { title?: unknown } | null)?.title ?? "");
       const label =
         exerciseLabels([title]) ?? exerciseLabels(passageTitles?.get(it.id) ?? []) ?? labelBefore(i) ?? practiceTabLabel(title);
-      tabs.push({ id: it.id, label, lead: leadOf.get(i) ?? [], virtualPartner: isVirtualPartner(title) });
+      tabs.push({ id: it.id, label, lead: leadOf.get(i) ?? [], virtualPartner: isVirtualPartner(title), statement: false });
       return;
     }
-    const cut = removed.get(i);
-    if (!cut) {
+    const cuts = [...(removed.has(i) ? [removed.get(i)!] : []), ...(stmtCuts.get(i) ?? [])];
+    if (cuts.length === 0) {
       const at = unlabel.get(i);
       if (at !== undefined) {
         const nodes = chunks.get(i)!.nodes.slice();
@@ -300,8 +342,8 @@ export function splitLessonSections<T extends SectionItem>(
       return;
     }
     const nodes = chunks.get(i)!.nodes;
-    const html = [...nodes.slice(0, cut[0]), ...nodes.slice(cut[1])].join("");
+    const html = nodes.filter((_, k) => !cuts.some(([a, b]) => k >= a && k < b)).join("");
     if (html.trim()) theory.push({ ...it, payload: { ...(it.payload as object), html } } as T);
   });
-  return { theory, tabs: arrangeTabs(tabs) };
+  return { theory, tabs: arrangeTabs([...tabs, ...stmtTabs]) };
 }

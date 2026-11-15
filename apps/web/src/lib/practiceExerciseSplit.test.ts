@@ -77,4 +77,24 @@ describe("splitEmbedByExercise", () => {
     expect(splitEmbedByExercise(embed({ passages: [ps("a", "1A · x")], questions: [q("1", "a"), q("2", "a")] }))).toEqual([]);
     expect(splitEmbedByExercise(embed({ questions: [q("1", null), q("2", null)] }))).toEqual([]);
   });
+
+  it("đoạn không có câu hỏi (bài nghe 5A) vẫn là một exercise riêng, đứng đúng thứ tự", () => {
+    const e = embed({
+      passages: [ps("a", "5A"), ps("bc", "5B–5C")],
+      questions: [q("1", "bc"), q("2", "bc")],
+    });
+    const r = splitEmbedByExercise(e);
+    expect(r.map((g) => g.label)).toEqual(["5A", "5B–5C"]);
+    expect(r[0]!.embed.questions).toEqual([]);
+    expect(r[0]!.embed.passages.map((x) => x.id)).toEqual(["a"]);
+    expect(r[1]!.embed.questions.map((x) => x.id)).toEqual(["1", "2"]);
+  });
+
+  it("đoạn không có câu hỏi và không nhãn: đi cùng exercise đứng trước, không thành tab riêng", () => {
+    const e = embed({ passages: [ps("a", "1A · x"), ps("note", "Intro text"), ps("b", "1B · y")], questions: [q("1", "a"), q("2", "b")] });
+    const r = splitEmbedByExercise(e);
+    expect(r.map((g) => g.label)).toEqual(["1A", "1B"]);
+    expect(r[0]!.embed.passages.map((x) => x.id)).toEqual(["a", "note"]);
+  });
 });
+
