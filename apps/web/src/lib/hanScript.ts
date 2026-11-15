@@ -69,3 +69,16 @@ export function toSimplified(text: string): string {
 
 /** Số cặp trong bảng (dùng cho kiểm thử). */
 export const SIMPLIFY_TABLE_SIZE = T2S.size;
+
+/** Ngôn ngữ khoá dạy chữ phồn thể (zh-TW, zh-HK, zh-Hant…); mọi `zh` còn lại (zh, zh-CN, zh-Hans) dạy giản thể. */
+const TRADITIONAL_LOCALE = /^zh[-_](tw|hk|mo|hant)/i;
+
+/**
+ * Chữ máy chuyển giọng nói trả về, đổi sang giản thể khi khoá dạy tiếng Trung giản thể (Whisper hay trả chữ phồn thể). Ngôn ngữ khác và
+ * khoá tiếng Trung phồn thể giữ nguyên.
+ */
+export function simplifyChineseTranscript(text: string, language: string | null): string {
+  const lang = (language ?? "").trim().toLowerCase();
+  if (!/^zh([-_]|$)/.test(lang) || TRADITIONAL_LOCALE.test(lang)) return text;
+  return toSimplified(text);
+}

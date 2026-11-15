@@ -4,6 +4,7 @@ import { transcribeRolePlayTurn } from "@feedbackme/core-feedback";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 import { getOpenaiClient } from "@/lib/openaiClient";
+import { simplifyChineseTranscript } from "@/lib/hanScript";
 import { mapPracticeAnswerError } from "@/lib/practiceAnswerApi";
 import { readVoiceUpload } from "@/lib/practiceVoiceUpload";
 
@@ -31,7 +32,7 @@ export async function POST(req: Request, { params }: { params: { id: string; que
     if (upload instanceof NextResponse) return upload;
     const stt = await transcribeRolePlayTurn(
       { userId, sessionId, questionId, turnIndex: turn, audio: { buffer: upload.buffer, mimeType: upload.mimeType } },
-      { openai: () => getOpenaiClient({ needsOpenaiKey: true }) },
+      { openai: () => getOpenaiClient({ needsOpenaiKey: true }), normalizeText: simplifyChineseTranscript },
     );
     return NextResponse.json({ text: stt.text, durationSec: stt.durationSec });
   } catch (e) {

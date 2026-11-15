@@ -392,8 +392,27 @@ describe("transcribePracticeVoice", () => {
     };
     return { transcribe, calls };
   }
-  const run = (f: Fx, d: { transcribe?: Transcriber; openai?: OpenAI | (() => Promise<OpenAI>) }, a = audio(), who = f.userId) =>
-    transcribePracticeVoice({ userId: who, sessionId: f.sessionId, questionId: f.questionId, audio: a }, { openai: d.openai ?? fakeOpenAI().openai, transcribe: d.transcribe });
+  const run = (
+    f: Fx,
+    d: { transcribe?: Transcriber; openai?: OpenAI | (() => Promise<OpenAI>); normalizeText?: (t: string, lang: string | null) => string },
+    a = audio(),
+    who = f.userId,
+  ) =>
+    transcribePracticeVoice(
+      { userId: who, sessionId: f.sessionId, questionId: f.questionId, audio: a },
+      { openai: d.openai ?? fakeOpenAI().openai, transcribe: d.transcribe, normalizeText: d.normalizeText },
+    );
+
+  it("normalizeText chạy trên chữ Whisper trả về (kèm ngôn ngữ khoá) trước khi trả chữ về", async () => {
+    const f = await fx({ answer: null });
+    const seen: Array<string | null> = [];
+    const r = await run(f, {
+      transcribe: fakeStt({ text: `  ${SPOKEN} ` }).transcribe,
+      normalizeText: (t, lang) => (seen.push(lang), t.toUpperCase()),
+    });
+    expect(r.text).toBe(SPOKEN.toUpperCase());
+    expect(seen).toEqual(["en"]);
+  });
 
   it("kiểm ví → Whisper có ngôn ngữ của khoá → trừ ví theo thời lượng (40 giây = 4.000 token) → trả chữ + số liệu nhịp nói", async () => {
     const f = await fx({ answer: null });

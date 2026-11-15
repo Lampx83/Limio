@@ -131,6 +131,17 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
 
 // ─── Giọng nói → chữ ─────────────────────────────────────────────────────────
 
+/** Phụ thuộc của bước chuyển giọng nói thành chữ. */
+export type SttDeps = {
+  openai: OpenAiSource;
+  transcribe?: Transcriber;
+  /**
+   * Chuẩn hoá chữ Whisper trả về theo ngôn ngữ khoá, vd. tiếng Trung giản thể (Whisper hay trả chữ phồn thể dù khoá dạy giản thể).
+   * Chạy trước khi đo nhịp nói và trước khi trả chữ về, nên chữ lưu, chữ so với câu mẫu và chữ đưa cho AI cùng một dạng.
+   */
+  normalizeText?: (text: string, language: string | null) => string;
+};
+
 /**
  * Chuyển giọng nói của học viên thành chữ bằng Whisper (có mốc từng từ để đo nhịp nói). Thứ tự bắt buộc:
  * kiểm quyền + cấu hình câu → kích thước → ví HỌC VIÊN → Whisper → ghi sổ trừ ví theo thời lượng NGAY SAU Whisper
@@ -139,7 +150,7 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
  */
 export async function transcribePracticeVoice(
   args: { userId: string; sessionId: string; questionId: string; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient = prisma,
 ): Promise<PracticeVoiceResult> {
   const { userId, sessionId, questionId, audio } = args;
@@ -154,7 +165,7 @@ export async function transcribePracticeVoice(
  */
 export async function transcribeRolePlayTurn(
   args: { userId: string; sessionId: string; questionId: string; turnIndex: number; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient = prisma,
 ): Promise<PracticeVoiceResult> {
   const { userId, sessionId, questionId, turnIndex, audio } = args;
@@ -180,7 +191,7 @@ export async function transcribeRolePlayTurn(
  */
 export async function transcribePreviewVoice(
   args: { userId: string; language: string | null; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient = prisma,
 ): Promise<PracticeVoiceResult> {
   return transcribeSpokenAnswer(args, deps, db);
@@ -188,7 +199,7 @@ export async function transcribePreviewVoice(
 
 async function transcribeSpokenAnswer(
   args: { userId: string; language: string | null; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient,
 ): Promise<PracticeVoiceResult> {
   const { userId, language, audio } = args;
@@ -212,7 +223,7 @@ async function transcribeSpokenAnswer(
   if (stt.durationSec > MAX_SPEAKING_SECONDS + SPEAKING_SECONDS_TOLERANCE) {
     throw new PracticeFeedbackError("audio_too_long", { seconds: Math.round(stt.durationSec), max: MAX_SPEAKING_SECONDS });
   }
-  const text = stt.text.trim();
+  const text = (deps.normalizeText ? deps.normalizeText(stt.text, language) : stt.text).trim();
   const metrics = measureSpeech(text, stt.words, stt.durationSec);
   if (metrics.silent) throw new PracticeFeedbackError("no_speech");
   return { text, durationSec: stt.durationSec, metrics };

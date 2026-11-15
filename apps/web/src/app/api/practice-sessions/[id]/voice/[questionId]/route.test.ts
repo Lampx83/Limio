@@ -60,7 +60,7 @@ describe("POST /api/practice-sessions/[id]/voice/[questionId]", () => {
     expect(context).toHaveBeenCalledWith("u1", "s1", "q1");
     expect(transcribe).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "u1", sessionId: "s1", questionId: "q1", audio: expect.objectContaining({ mimeType: "audio/webm" }) }),
-      expect.objectContaining({ openai: expect.any(Function) }),
+      expect.objectContaining({ openai: expect.any(Function), normalizeText: expect.any(Function) }),
     );
     const key = storageFor.mock.calls[0]![0] as { layer: string; key: string };
     expect(key.layer).toBe("private");

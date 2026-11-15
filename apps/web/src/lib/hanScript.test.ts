@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SIMPLIFY_TABLE_SIZE, toSimplified } from "./hanScript";
+import { SIMPLIFY_TABLE_SIZE, simplifyChineseTranscript, toSimplified } from "./hanScript";
 
 describe("toSimplified", () => {
   it("đổi phồn thể sang giản thể theo từng chữ", () => {
@@ -15,5 +15,19 @@ describe("toSimplified", () => {
   });
   it("bảng đủ lớn", () => {
     expect(SIMPLIFY_TABLE_SIZE).toBeGreaterThan(2500);
+  });
+});
+
+describe("simplifyChineseTranscript — chữ máy nghe được theo ngôn ngữ khoá", () => {
+  const trad = "這是楊同樂嗎";
+  it("khoá tiếng Trung giản thể (zh, zh-CN, zh-Hans) đổi sang giản thể", () => {
+    for (const lang of ["zh", "ZH", "zh-CN", "zh_cn", "zh-Hans"]) expect(simplifyChineseTranscript(trad, lang), lang).toBe("这是杨同乐吗");
+  });
+  it("khoá tiếng Trung phồn thể giữ nguyên", () => {
+    for (const lang of ["zh-TW", "zh-HK", "zh-Hant", "zh_tw"]) expect(simplifyChineseTranscript(trad, lang), lang).toBe(trad);
+  });
+  it("ngôn ngữ khác hoặc không có thì giữ nguyên", () => {
+    for (const lang of ["en", "ja", "vi", "", null]) expect(simplifyChineseTranscript(trad, lang), String(lang)).toBe(trad);
+    expect(simplifyChineseTranscript("zhong wen", "zh")).toBe("zhong wen");
   });
 });
