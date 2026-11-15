@@ -168,7 +168,7 @@ export default async function RootLayout({
           <div data-print-hide data-app-chrome className="sticky top-0 z-30">
             <AppHeader space={spaceBrand} />
           </div>
-          <div className="flex flex-1 flex-col">{children}</div>
+          <div data-app-content className="flex flex-1 flex-col">{children}</div>
           <FooterGate>{spaceBrand ? <SpaceFooter space={spaceBrand} /> : <Footer />}</FooterGate>
           <Toaster />
           </AiTokensPageProvider>

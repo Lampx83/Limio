@@ -64,7 +64,7 @@ export default function FlashcardStage({
     <section aria-label={t("practice.fc.cardAria")} className="space-y-4 pb-32 lg:pb-0">
       <p className="text-meta">{t("practice.fc.cardOf", { i: index + 1, n: total })}</p>
 
-      <div className="flex min-h-[16rem] flex-col items-center justify-center gap-4 rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center">
+      <div className="flex min-h-[16rem] w-full flex-col items-center justify-center gap-4 break-words rounded-2xl border border-token bg-[rgb(var(--surface))] p-6 text-center sm:min-h-[20rem]">
         {!flipped ? (
           <>
             {mode === "term_to_meaning" && <p className="text-3xl font-medium">{card.term}</p>}

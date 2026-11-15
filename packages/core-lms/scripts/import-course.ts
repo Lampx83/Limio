@@ -64,6 +64,7 @@ import { createPassage } from "../src/exam/passages";
 import { createExamQuestion } from "../src/exam/questions";
 import { createAudioAsset, createImageAsset } from "../src/exam/assets";
 import { attachDialogueAudio, prepareDialogueAudio, type DialogueAudioContext } from "./dialogue-audio";
+import { attachVocabAudio, createNeuVocabSynth, lessonAudioStore, type VocabAudioContext } from "./vocab-audio";
 import { validateContentPayload } from "../src/courses/contentSchemas";
 import { setVideoTranscript } from "../src/exam/passageAssets";
 import {
@@ -1808,6 +1809,31 @@ async function storeModelAudio(actor: string, examId: string, q: ExamQuestionSpe
   return `/api/exam-assets/${st.filename}`;
 }
 
+/**
+ * Chỉ khoá `languageMode` có ngôn ngữ khác tiếng Việt và có thẻ ghi nhớ mới sinh giọng (`--no-vocab-audio` để tắt).
+ * Trả null khi không cần hoặc không làm được; lý do in ra để người nhập biết vì sao không có nút nghe.
+ */
+async function prepareVocabAudio(manifest: z.infer<typeof Manifest>, actor: string): Promise<VocabAudioContext | null> {
+  const language = (manifest.course.language ?? "vi").toLowerCase().split("-")[0]!;
+  if (!manifest.course.languageMode || language === "vi" || process.argv.includes("--no-vocab-audio")) return null;
+  if (!manifest.modules.some((m) => m.lessons.some((l) => l.flashcards))) return null;
+  try {
+    const synth = await createNeuVocabSynth();
+    if (!synth) {
+      console.warn("⚠ Chưa cấu hình NEU TTS (Quản trị › Tích hợp, hoặc NEUTTS_BASE_URL/NEUTTS_API_KEY): từ vựng chưa có audio.");
+      return null;
+    }
+    if (!synth.voiceFor(language)) {
+      console.warn(`⚠ NEU TTS không có giọng "${language}": từ vựng chưa có audio.`);
+      return null;
+    }
+    return { synth, language, store: lessonAudioStore(actor), warn: (m) => console.warn(`⚠ ${m}`) };
+  } catch (e) {
+    console.warn(`⚠ Không gọi được NEU TTS (${(e as Error).message}): từ vựng chưa có audio.`);
+    return null;
+  }
+}
+
 /** Trạng thái dùng chung khi dựng nội dung nhiều bài (bộ nhớ đệm audio, số liệu, cấu hình giọng). */
 export interface PopulateCtx {
   dialogueCtx: DialogueAudioContext | null;
@@ -1818,6 +1844,10 @@ export interface PopulateCtx {
   dialogueTotals: { attached: number; failed: number; uploaded: number; reused?: number };
   /** Làm mới bài: audio cũ của lượt hội thoại ("người nói|chữ" → audioUrl); lượt không đổi chữ thì giữ audio cũ, khỏi sinh lại. */
   reuseTurnAudio?: Map<string, string>;
+  /** Giọng đọc từ vựng (thẻ ghi nhớ) của khoá ngoại ngữ; không có thì từ vựng không có nút nghe. */
+  vocabCtx?: VocabAudioContext | null;
+  vocabCache?: Map<string, string>;
+  vocabTotals?: { attached: number; failed: number };
 }
 
 /**
@@ -1837,6 +1867,16 @@ export async function populateLessonContent(
   // Soạn bằng markdown nhưng lưu thành richtext: markdown render ở cỡ chữ
   // nền 14px cho cả khối, không tách được chữ Hán ra để phóng to.
   const items = lessonContentItems(rl);
+  if (ctx.vocabCtx) {
+    for (const it of items) {
+      if (it.type !== "vocab_list" || !Array.isArray(it.payload.items)) continue;
+      const r = await attachVocabAudio(it.payload.items as Array<Record<string, unknown>>, ctx.vocabCtx, ctx.vocabCache ?? new Map());
+      if (ctx.vocabTotals) {
+        ctx.vocabTotals.attached += r.attached;
+        ctx.vocabTotals.failed += r.failed;
+      }
+    }
+  }
   const placedBlocks = placePractices(items, l.practices?.length ?? 0, l.dialogues?.length ?? 0, l.audios?.length ?? 0);
   for (const [ci, b] of placedBlocks.entries()) {
     if ("item" in b) await createContentItem(actor, lessonId, { ...b.item, orderIndex: ci });
@@ -1902,6 +1942,7 @@ async function main() {
         "  --into <courseId>         nối module vào khoá đã có (thay vì tạo mới)\n" +
         "  --replace                 xoá khoá cùng slug rồi nhập lại (chỉ khi draft + 0 học viên)\n" +
         "  --no-dialogue-audio       không sinh giọng NEU TTS từng lượt cho tài nguyên hội thoại\n" +
+        "  --no-vocab-audio          không sinh giọng NEU TTS cho từ vựng (khoá ngoại ngữ)\n" +
         "  --dry-run                 chỉ kiểm tra, không ghi",
     );
     process.exitCode = 1;
@@ -2180,7 +2221,11 @@ async function main() {
   const dialogueCache = new Map<string, string>();
   const dialogueTotals: PopulateCtx["dialogueTotals"] = { attached: 0, failed: 0, uploaded: 0 };
   const dialogueFileCache = new Map<string, string>();
-  const populateCtx: PopulateCtx = { dialogueCtx, dialogueCache, dialogueFileCache, dialogueTotals };
+  // Giọng đọc cho từ vựng (khoá ngoại ngữ): NEU TTS, một lần cho cả lần nhập. Thiếu cấu hình / giọng / cổng lỗi chỉ cảnh báo.
+  const vocabCtx = await prepareVocabAudio(manifest, actor);
+  const vocabCache = new Map<string, string>();
+  const vocabTotals = { attached: 0, failed: 0 };
+  const populateCtx: PopulateCtx = { dialogueCtx, dialogueCache, dialogueFileCache, dialogueTotals, vocabCtx, vocabCache, vocabTotals };
 
   if (carriedInstructors.length > 0) {
     await prisma.courseInstructor.createMany({
@@ -2246,6 +2291,10 @@ async function main() {
   if (dialogueTotals.uploaded) console.log(`\n✔ Audio hội thoại từ tệp: ${dialogueTotals.uploaded} lượt`);
   if (dialogueCtx) {
     console.log(`\n✔ Giọng hội thoại (NEU TTS): ${dialogueTotals.attached} lượt có audio` + (dialogueTotals.failed ? `, ${dialogueTotals.failed} lượt lỗi (không có nút nghe)` : ""));
+  }
+
+  if (vocabCtx) {
+    console.log(`\n✔ Giọng từ vựng (NEU TTS): ${vocabTotals.attached} từ có audio` + (vocabTotals.failed ? `, ${vocabTotals.failed} từ lỗi (không có nút nghe)` : ""));
   }
 
   // Cờ bản quyền bật SAU khi nội dung đã có đủ: bật xong thì quét cả khoá (kể cả video/audio trong Bài luyện).
