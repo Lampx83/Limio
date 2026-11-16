@@ -129,3 +129,26 @@ describe("compareSpoken — câu mẫu tiếng Trung (so từng chữ Hán, bỏ
     expect(r.okCount).toBe(2);
   });
 });
+
+describe("compareSpoken — máy trả chữ phồn thể, câu mẫu giản thể", () => {
+  const exp = "这是杨同乐吗？他怎么跟白家月在一起？";
+
+  it("chữ phồn thể cùng nghĩa khớp với giản thể", () => {
+    const r = compareSpoken(exp, "這是楊同樂嗎?他怎麼跟白家月在一起?");
+    expect(r.okCount).toBe(r.total);
+    expect(r.extra).toEqual([]);
+  });
+
+  it("chỉ chữ nghe nhầm thật mới bị đánh dấu; phần thừa giữ nguyên dạng nghe được", () => {
+    const r = compareSpoken(exp, "這是楊同樂嗎?他怎麼跟白兆越在一起?");
+    expect(r.total).toBe(16);
+    expect(r.okCount).toBe(14);
+    expect(r.words.filter((w) => w.scored && !w.ok).map((w) => w.text)).toEqual(["家", "月"]);
+    expect(r.extra).toEqual(["兆", "越"]);
+  });
+
+  it("câu mẫu viết phồn thể thì nói giản thể cũng khớp", () => {
+    const r = compareSpoken("你好嗎？", "你好吗");
+    expect(r.okCount).toBe(r.total);
+  });
+});

@@ -879,7 +879,7 @@ export default async function LessonPage({
 
   // Bài đọc dài của khối luyện lên phần lý thuyết (AC8); mỗi exercise một tab (AC5); khối gom nhiều exercise tách theo đoạn.
   const hoistedPassages: HoistedPassage[] = [];
-  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false) => (
+  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false, lead?: { code: string; title?: string; html: string }) => (
     <LessonPractice
       slug={params.slug}
       embed={embed}
@@ -888,6 +888,7 @@ export default async function LessonPage({
       preview={info.preview || undefined}
       subset={subset || undefined}
       shortPartner={shortPartner || undefined}
+      lead={lead}
       sheet={languageMode}
       accent={lesson.module.course.themeColor}
       skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
@@ -995,8 +996,9 @@ export default async function LessonPage({
                 build: () => (
                   <>
                     {introNode}
-                    {leadNode}
-                    {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode) : info && embed && !tab.virtualPartner && splitEmbedByPassage(embed).length >= 2 ? renderStacked(embed, info, false) : practiceBlocks[tab.id]}
+                    {/* Tab bạn ảo có câu yêu cầu của sách: câu đó nằm CHUNG thẻ đề với lời mời bạn ảo (LessonPractice `lead`), không dựng thẻ riêng. */}
+                    {info && embed && tab.virtualPartner && leadNode ? null : leadNode}
+                    {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode, tab.virtualPartner && leadNode && leadHtml ? { code: tab.label, title: leadTitle, html: leadHtml } : undefined) : info && embed && !tab.virtualPartner && splitEmbedByPassage(embed).length >= 2 ? renderStacked(embed, info, false) : practiceBlocks[tab.id]}
                   </>
                 ),
               },
@@ -1250,7 +1252,7 @@ export default async function LessonPage({
       {/* Khối phóng toàn màn hình là #lesson-stage. Bài không còn mục lục
           "Trong bài này" (đã bỏ 2026-11-10: chỉ bài có từ 2 tiêu đề mới có, nên
           các bài không đồng nhất), nội dung thẳng hàng với tiêu đề bài. */}
-      <div id="lesson-stage" className="mt-8">
+      <div id="lesson-stage" className={lessonFrame ? "mt-0" : "mt-8"}>
         <div>
         {/* Trên màn chiếu, tên bài nằm ở đầu trang và cuộn đi cùng nội dung. Từng
             dính theo mép trên, nhưng header site bị ẩn nên offset 74px chừa một

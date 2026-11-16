@@ -36,7 +36,6 @@ export interface OralUiText {
   listeningAndComposing: string;
   speaking: string;
   endedBanner: string;
-  pinnedQuestion: string;
   send: string;
   finish: string;
   endExam: string;
@@ -120,7 +119,6 @@ const vi: OralUiText = {
   listeningAndComposing: "AI giám khảo đang nghe và soạn câu hỏi…",
   speaking: "🔊 AI giám khảo đang đọc câu hỏi…",
   endedBanner: "Buổi vấn đáp đã kết thúc. Bạn đọc xong nhận xét thì bấm “Hoàn tất” để tiếp tục.",
-  pinnedQuestion: "Câu hỏi: ",
   send: "Gửi",
   finish: "Hoàn tất",
   endExam: "Kết thúc buổi vấn đáp",
@@ -232,7 +230,6 @@ const en: OralUiText = {
   listeningAndComposing: "The AI examiner is listening and preparing a question…",
   speaking: "🔊 The AI examiner is reading the question…",
   endedBanner: "The oral exam has ended. When you have read the feedback, press “Finish” to continue.",
-  pinnedQuestion: "Question: ",
   send: "Send",
   finish: "Finish",
   endExam: "End the oral exam",

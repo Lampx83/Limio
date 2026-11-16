@@ -24,5 +24,6 @@ export function splitPassageInstruction(doc: PassageDoc): { instruction: string 
   if (text.length === 0 || text.length > MAX_INSTRUCTION_CHARS) return unchanged;
   const rest = doc.content.slice(1);
   if (rest.length === 0 && !VIRTUAL_PARTNER_LEAD.test(text)) return unchanged;
-  return { instruction: text, rest: { type: "doc", content: rest } };
+  // Giữ các khoá khác ở gốc tài liệu (vd. `look` của bài đọc kiểu trang báo): phần còn lại vẫn là cùng một đoạn văn.
+  return { instruction: text, rest: { ...doc, type: "doc", content: rest } };
 }

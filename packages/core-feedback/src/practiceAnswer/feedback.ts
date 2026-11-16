@@ -27,6 +27,8 @@ import {
   PRACTICE_SCHEMA,
   PracticeFeedbackError,
   buildPracticePrompts,
+  feedbackLanguageOf,
+  type FeedbackLanguage,
   hashPracticeInputs,
   normalizePracticeFeedback,
   readAnswerText,
@@ -131,6 +133,17 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
 
 // ─── Giọng nói → chữ ─────────────────────────────────────────────────────────
 
+/** Phụ thuộc của bước chuyển giọng nói thành chữ. */
+export type SttDeps = {
+  openai: OpenAiSource;
+  transcribe?: Transcriber;
+  /**
+   * Chuẩn hoá chữ Whisper trả về theo ngôn ngữ khoá, vd. tiếng Trung giản thể (Whisper hay trả chữ phồn thể dù khoá dạy giản thể).
+   * Chạy trước khi đo nhịp nói và trước khi trả chữ về, nên chữ lưu, chữ so với câu mẫu và chữ đưa cho AI cùng một dạng.
+   */
+  normalizeText?: (text: string, language: string | null) => string;
+};
+
 /**
  * Chuyển giọng nói của học viên thành chữ bằng Whisper (có mốc từng từ để đo nhịp nói). Thứ tự bắt buộc:
  * kiểm quyền + cấu hình câu → kích thước → ví HỌC VIÊN → Whisper → ghi sổ trừ ví theo thời lượng NGAY SAU Whisper
@@ -139,7 +152,7 @@ async function loadEssayContext(userId: string, sessionId: string, questionId: s
  */
 export async function transcribePracticeVoice(
   args: { userId: string; sessionId: string; questionId: string; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient = prisma,
 ): Promise<PracticeVoiceResult> {
   const { userId, sessionId, questionId, audio } = args;
@@ -154,7 +167,7 @@ export async function transcribePracticeVoice(
  */
 export async function transcribeRolePlayTurn(
   args: { userId: string; sessionId: string; questionId: string; turnIndex: number; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient = prisma,
 ): Promise<PracticeVoiceResult> {
   const { userId, sessionId, questionId, turnIndex, audio } = args;
@@ -180,7 +193,7 @@ export async function transcribeRolePlayTurn(
  */
 export async function transcribePreviewVoice(
   args: { userId: string; language: string | null; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient = prisma,
 ): Promise<PracticeVoiceResult> {
   return transcribeSpokenAnswer(args, deps, db);
@@ -188,7 +201,7 @@ export async function transcribePreviewVoice(
 
 async function transcribeSpokenAnswer(
   args: { userId: string; language: string | null; audio: AudioPayload },
-  deps: { openai: OpenAiSource; transcribe?: Transcriber },
+  deps: SttDeps,
   db: PrismaClient,
 ): Promise<PracticeVoiceResult> {
   const { userId, language, audio } = args;
@@ -212,7 +225,7 @@ async function transcribeSpokenAnswer(
   if (stt.durationSec > MAX_SPEAKING_SECONDS + SPEAKING_SECONDS_TOLERANCE) {
     throw new PracticeFeedbackError("audio_too_long", { seconds: Math.round(stt.durationSec), max: MAX_SPEAKING_SECONDS });
   }
-  const text = stt.text.trim();
+  const text = (deps.normalizeText ? deps.normalizeText(stt.text, language) : stt.text).trim();
   const metrics = measureSpeech(text, stt.words, stt.durationSec);
   if (metrics.silent) throw new PracticeFeedbackError("no_speech");
   return { text, durationSec: stt.durationSec, metrics };
@@ -242,10 +255,11 @@ export async function requestPracticeAnswerFeedback(
   sessionId: string,
   questionId: string,
   deps: { openai: OpenAiSource },
-  opts: { model?: string } = {},
+  opts: { model?: string; /** Ngôn ngữ viết lời nhận xét (theo giao diện học viên); mặc định tiếng Anh. */ feedbackLanguage?: FeedbackLanguage } = {},
   db: PrismaClient = prisma,
 ): Promise<PracticeFeedbackResult> {
   const model = opts.model ?? DEFAULT_MODEL;
+  const feedbackLanguage = feedbackLanguageOf(opts.feedbackLanguage);
   const ctx = await loadEssayContext(userId, sessionId, questionId, db);
   if (!ctx.aiFeedback) throw new PracticeFeedbackError("feedback_disabled");
   if ((await resolveFeedbackVariant(userId, ctx.courseId, db)).variant === "minimal") {
@@ -259,7 +273,7 @@ export async function requestPracticeAnswerFeedback(
   if (ctx.freeChat && text.split(/\r?\n/).filter((l) => l.startsWith("Learner: ")).length < 2) throw new PracticeFeedbackError("empty_answer");
 
   // Đầu vào không đổi → bản cũ: không đòi cấu hình AI, không gọi mô hình, không trừ token.
-  const hash = hashPracticeInputs({ answer: text, sample: ctx.sample, rubric: ctx.rubric, viaVoice });
+  const hash = hashPracticeInputs({ answer: text, sample: ctx.sample, rubric: ctx.rubric, viaVoice, feedbackLanguage });
   if (answer.aiFeedbackHash === hash && isObj(answer.aiFeedback)) {
     return { reused: true, body: answer.aiFeedback as unknown as PracticeFeedbackBody };
   }
@@ -275,6 +289,7 @@ export async function requestPracticeAnswerFeedback(
     minWords: ctx.minWords,
     viaVoice,
     courseLanguage: ctx.courseLanguage,
+    feedbackLanguage,
     levelBand: ctx.levelBand,
     rolePlay: ctx.rolePlay,
     freeChat: ctx.freeChat ? { scenario: ctx.freeChat.scenario, targets: ctx.freeChat.targets } : undefined,
@@ -304,6 +319,7 @@ export async function requestPracticeAnswerFeedback(
       elaboration: body.coding.elaboration,
       sourceKind: body.coding.sourceKind,
       promptVersion: PRACTICE_PROMPT_VERSION,
+      feedbackLanguage,
       model,
       tokensIn: inputTokens,
       tokensOut: outputTokens,

@@ -49,7 +49,7 @@ describe("POST /api/practice-sessions/[id]/roleplay/[questionId] — chuyển ch
     expect(context).toHaveBeenCalledWith("u1", "s1", "q1");
     expect(transcribe).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "u1", sessionId: "s1", questionId: "q1", turnIndex: 2, audio: expect.objectContaining({ mimeType: "audio/webm" }) }),
-      expect.objectContaining({ openai: expect.any(Function) }),
+      expect.objectContaining({ openai: expect.any(Function), normalizeText: expect.any(Function) }),
     );
   });
 

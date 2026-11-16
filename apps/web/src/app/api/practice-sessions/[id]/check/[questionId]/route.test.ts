@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const state = vi.hoisted(() => ({ userId: "u1" as string | null }));
+const state = vi.hoisted(() => ({ userId: "u1" as string | null, lang: "vi" as string }));
 vi.mock("@/lib/session", () => ({ requireUserId: async () => state.userId }));
 
 const check = vi.hoisted(() => vi.fn());
@@ -15,6 +15,7 @@ vi.mock("@feedbackme/core-feedback", async () => {
   const actual = await vi.importActual<typeof import("@feedbackme/core-feedback")>("@feedbackme/core-feedback");
   return { ...actual, updateLearnerStateForLessonObservation: bkt, requestPracticeAnswerFeedback: feedback };
 });
+vi.mock("@/lib/i18n/server", () => ({ getUiLang: async () => state.lang }));
 vi.mock("@/lib/openaiClient", () => ({ getOpenaiClient: vi.fn(async () => ({})) }));
 
 import { ExamError } from "@feedbackme/core-lms";
@@ -33,6 +34,7 @@ const call = (body?: unknown) =>
 
 beforeEach(() => {
   state.userId = "u1";
+  state.lang = "vi";
   check.mockReset().mockResolvedValue({ isCorrect: true, score: 1, maxScore: 1, manual: false, config: {} });
   observe.mockReset().mockResolvedValue({ created: true, correct: true });
   bkt.mockReset().mockResolvedValue({ skillsUpdated: 1, newlyMastered: [] });
@@ -118,7 +120,7 @@ describe("POST /api/practice-sessions/[id]/check/[questionId] — góp ý AI cho
     const res = await call({ lessonId: "l1" });
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(feedback).toHaveBeenCalledWith("u1", "s1", "q1", { openai: expect.any(Function) });
+    expect(feedback).toHaveBeenCalledWith("u1", "s1", "q1", { openai: expect.any(Function) }, { feedbackLanguage: "vi" });
     expect(json.manual).toBe(true);
     expect(json.config.explanation).toContain("Mẫu");
     expect(json.feedbackReused).toBe(true);
@@ -177,3 +179,21 @@ describe("POST /api/practice-sessions/[id]/check/[questionId] — góp ý AI cho
   });
 });
 
+
+describe("lời nhận xét của AI theo ngôn ngữ giao diện của học viên", () => {
+  const manual = { isCorrect: null, score: null, maxScore: 5, manual: true, config: {} };
+  const body = { summary: "ok" };
+
+  it.each([
+    ["vi", "vi"],
+    ["en", "en"],
+    ["fr", "en"],
+  ])("giao diện %s → nhận xét bằng %s", async (lang, expected) => {
+    state.lang = lang;
+    check.mockResolvedValue(manual);
+    feedback.mockResolvedValue({ reused: false, body });
+    await call({ lessonId: "l1" });
+    expect(feedback).toHaveBeenCalledTimes(1);
+    expect(feedback.mock.calls[0]![4]).toEqual({ feedbackLanguage: expected });
+  });
+});
