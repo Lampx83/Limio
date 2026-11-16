@@ -2862,3 +2862,77 @@ textarea.fc-input {
     column-span: all;
   }
 }
+
+/*
+ * Bài đọc kiểu bảng thông tin (Đoạn văn có `look: "factfile"`, PassageView): bảng hai cột nhãn/giá trị (fact file, thông tin nhanh) thành MỘT thẻ: viền trái màu
+ * nhấn của khoá, nhãn nhỏ viết hoa ở cột trái, giá trị đậm ở cột phải, kẻ ngang mảnh giữa các dòng, không kẻ cột. Dòng nào dài vẫn xuống dòng bình thường.
+ * Chọn bằng ba lớp để thắng quy tắc bảng chung của thẻ đoạn văn trong khung bài học (`.lp-large .ps-paper-card .passage-table td`).
+ */
+.pv-factfile {
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-left: 4px solid rgb(var(--brand));
+  border-radius: 0.75rem;
+  padding: 0.25rem 1.25rem;
+}
+.pv-factfile .passage-table-wrap {
+  margin: 0;
+  overflow: visible;
+}
+.pv-factfile .passage-table-wrap .passage-table {
+  border-collapse: collapse;
+  font-size: inherit;
+}
+.pv-factfile .passage-table-wrap .passage-table td {
+  border: 0;
+  border-bottom: 1px solid rgb(var(--border));
+  background: none;
+  padding: 0.75rem 0.5rem;
+  vertical-align: baseline;
+}
+.pv-factfile .passage-table-wrap .passage-table tr:last-child td {
+  border-bottom: 0;
+}
+.pv-factfile .passage-table-wrap .passage-table td:first-child {
+  width: 36%;
+  color: rgb(var(--brand));
+}
+.pv-factfile .passage-table-wrap .passage-table td:first-child p {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.pv-factfile .passage-table-wrap .passage-table td:last-child p {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: rgb(var(--text));
+}
+
+/*
+ * Bài đọc kiểu các bài đăng ngắn (Đoạn văn có `look: "posts"`, PassageView): lời của vài người (A, B, C) mỗi người một thẻ. Chữ cái đầu đoạn (chữ đậm) thành nhãn tròn ở bên
+ * trái; chỉ đoạn mở đầu bằng chữ đậm mới thành thẻ nên câu dẫn và đoạn thường không bị đổi. Nhãn viền màu nhấn trên nền thẻ (tương phản như chữ thân bài).
+ */
+.pv-posts .prose p:has(> strong:first-child) {
+  position: relative;
+  margin: 0.75rem 0;
+  padding: 0.85rem 1rem 0.85rem 3.6rem;
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: 0.9rem;
+}
+.pv-posts .prose p > strong:first-child {
+  position: absolute;
+  left: 0.85rem;
+  top: 0.8rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid rgb(var(--brand));
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: rgb(var(--brand));
+  background: rgb(var(--surface));
+}

@@ -10,6 +10,7 @@ import { createLesson } from "../../src/courses/lessons";
 import { getPracticePreview } from "../../src/exam/practice";
 import { AssignmentSpec, importAssignment, importPractice } from "../import-course";
 import {
+  PassageSpec,
   PracticeSpec,
   assetProblems,
   bodyAssetRefs,
@@ -342,10 +343,21 @@ describe("video trong đoạn văn của Bài luyện", () => {
   });
 });
 
+describe("PassageSpec.look", () => {
+  const base = { title: "T", blocks: [{ p: "x" }] };
+  it("nhận ba kiểu và từ chối kiểu lạ", () => {
+    for (const look of ["newspaper", "factfile", "posts"]) expect(PassageSpec.safeParse({ ...base, look }).success).toBe(true);
+    expect(PassageSpec.safeParse({ ...base, look: "comic" }).success).toBe(false);
+    expect(PassageSpec.safeParse(base).success).toBe(true);
+  });
+});
+
 describe("withPassageLook", () => {
   it("gắn look vào gốc tài liệu đoạn; không có look thì giữ nguyên tài liệu", () => {
     const doc = buildPassageDoc([{ p: "Hello" }], { image: () => ({ src: "" }), audio: () => ({ src: "" }), video: () => ({ src: "" }) });
     expect(withPassageLook(doc, "newspaper")).toMatchObject({ type: "doc", look: "newspaper" });
+    expect(withPassageLook(doc, "factfile")).toMatchObject({ look: "factfile" });
+    expect(withPassageLook(doc, "posts")).toMatchObject({ look: "posts" });
     expect(withPassageLook(doc, undefined)).toBe(doc);
     expect("look" in withPassageLook(doc, undefined)).toBe(false);
   });

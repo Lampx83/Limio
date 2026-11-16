@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PASSAGE_FONT_SIZE_VALUES } from "@/lib/passageFontSizes";
 import { passageHighlightColor, passageTextColor } from "@/lib/passageColors";
+import { passageLook } from "@/lib/passageLook";
 import AudioTranscript, { AudioTranscriptContext } from "./AudioTranscript";
 import PassageImage from "./PassageImage";
 import ExamAudioPlayer, { ExamAudioContext, type ExamAudioContextValue } from "./ExamAudioPlayer";
@@ -66,8 +67,8 @@ export default function PassageView({ passage, attemptId, audio, hideNote = fals
   }, [lsKey, note]);
 
   const rendered = useMemo(() => renderDoc(passage.contentJson), [passage.contentJson]);
-  // Kiểu trình bày của đoạn: `look` nằm ở gốc tài liệu (importer đặt cho bài báo). Giá trị lạ thì bỏ qua, hiện như cũ.
-  const newspaper = (passage.contentJson as { look?: unknown }).look === "newspaper";
+  // Kiểu trình bày của đoạn: `look` nằm ở gốc tài liệu (importer đặt theo thể loại: báo, bảng thông tin, bài đăng). Giá trị lạ thì bỏ qua, hiện như cũ.
+  const look = passageLook(passage.contentJson);
 
   const audioCtx = useMemo<ExamAudioContextValue | null>(
     () => (audio ? { ...audio, attemptId, passageId: passage.id } : null),
@@ -77,7 +78,7 @@ export default function PassageView({ passage, attemptId, audio, hideNote = fals
   return (
     <ExamAudioContext.Provider value={audioCtx}>
     <AudioTranscriptContext.Provider value={passage.transcripts ?? null}>
-    <div className={newspaper ? "pv-newspaper" : undefined} data-look={newspaper ? "newspaper" : undefined}>
+    <div className={look ? `pv-${look}` : undefined} data-look={look ?? undefined}>
       {/* Tiêu đề bài đọc: cỡ lớn, đậm, kèm vạch nhấn màu thương hiệu ngắn bên dưới (kiểu tiêu đề báo/sách), tách khỏi phần thân. */}
       {/* Tiêu đề rỗng (phiếu bài tập đã có tên bài ở trên) hoặc bài luyện nhúng đã có khối đề bài riêng thì bỏ cả phần tiêu đề: không để lại vạch nhấn mồ côi. */}
       {!hideTitle && passage.title.trim() && (

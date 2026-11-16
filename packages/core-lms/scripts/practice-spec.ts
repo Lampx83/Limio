@@ -108,10 +108,20 @@ export const PassageBlock = z.union([
 ]);
 export type PassageBlockT = z.infer<typeof PassageBlock>;
 
+/** Các kiểu trình bày của bài đọc; lặp ở apps/web/src/lib/passageLook.ts (core-lms không import apps/web). */
+export const PASSAGE_LOOKS = ["newspaper", "factfile", "posts"] as const;
+export type PassageLookT = (typeof PASSAGE_LOOKS)[number];
+
 export const PassageSpec = z.object({
   title: z.string().min(1).max(300),
-  /** Kiểu trình bày của bài đọc: "newspaper" = trang báo (giấy kem, tít serif, sapo, thân bài hai cột khi đủ rộng). Bỏ trống = hiện như cũ. */
-  look: z.enum(["newspaper"]).optional(),
+  /**
+   * Kiểu trình bày của bài đọc theo thể loại. Bỏ trống = hiện như cũ.
+   * "newspaper" = trang báo (giấy kem, tít serif, sapo, thân bài hai cột khi đủ rộng);
+   * "factfile" = bảng thông tin (bảng hai cột nhãn/giá trị thành thẻ có nhãn nhỏ viết hoa);
+   * "posts" = các bài đăng ngắn (mỗi đoạn một thẻ, chữ cái A/B/C đầu đoạn thành nhãn tròn).
+   * Danh sách lặp ở apps/web/src/lib/passageLook.ts (PASSAGE_LOOKS).
+   */
+  look: z.enum(PASSAGE_LOOKS).optional(),
   blocks: z.array(PassageBlock).min(1),
   questions: z.array(ExamQuestionSpec).default([]),
 });
@@ -183,7 +193,7 @@ export function buildPassageDoc(blocks: PassageBlockT[], assets: AssetUrls): { t
 }
 
 /** Gắn kiểu trình bày vào gốc tài liệu đoạn (PassageView đọc `look`); không có kiểu thì trả đúng tài liệu đã nhận. */
-export function withPassageLook<T extends object>(doc: T, look: "newspaper" | undefined): T & { look?: "newspaper" } {
+export function withPassageLook<T extends object>(doc: T, look: PassageLookT | undefined): T & { look?: PassageLookT } {
   return look ? { ...doc, look } : doc;
 }
 
