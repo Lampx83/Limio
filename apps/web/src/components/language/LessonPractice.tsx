@@ -20,6 +20,7 @@ import {
 } from "@/lib/lessonPracticeView";
 import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "@/components/exam/ExamQuestion";
 import PassageView from "@/components/exam/PassageView";
+import LessonRichText from "@/components/lesson/LessonRichText";
 import { QuestionCard } from "@/components/exam/AnswerReview";
 import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import EssayFeedback from "./EssayFeedback";
@@ -90,6 +91,7 @@ export default function LessonPractice({
   skillLabel = null,
   accent = null,
   shortPartner = false,
+  lead,
 }: {
   slug: string;
   embed: PracticeEmbed;
@@ -105,6 +107,8 @@ export default function LessonPractice({
   accent?: string | null;
   /** Tab đã hiện câu yêu cầu của sách ngay trên phiếu bạn ảo: đề bài của phiếu bỏ phần lặp lại ý đó, chỉ còn lời mời bạn ảo. */
   shortPartner?: boolean;
+  /** Câu yêu cầu của sách đi cùng phiếu bạn ảo (mã bài · tên + nội dung): hiện chung MỘT thẻ đề với lời mời bạn ảo, thay vì hai thẻ liền nhau. */
+  lead?: { code: string; title?: string; html: string };
   /** Xem trước của giảng viên: chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án, không ghi sự kiện. */
   preview?: boolean;
 }) {
@@ -595,7 +599,12 @@ export default function LessonPractice({
     const chatTurns = freeChat && value && "text" in value ? learnerTurnCount(String(value.text ?? "")) : 0;
     const hasRecording = (audioVer[qid] ?? 0) > 0;
     return (
-      <div key={qid} id={`lp-${qid}`} className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4">
+      <div
+        key={qid}
+        id={`lp-${qid}`}
+        // Hội thoại bạn ảo trong phiếu: khung ngoài đã là phiếu, nên không thêm khung thứ hai quanh nó; khung chat rộng bằng các khối khác của tab; "Prepare" là nút cạnh "Start".
+        className={sheet && freeChat ? "" : "rounded-xl border border-token bg-[rgb(var(--surface))] p-4"}
+      >
         <div className="mb-2 flex items-center justify-between gap-2">
           {/* Hội thoại với bạn ảo không phải "câu hỏi số n": gọi đúng tên việc học viên làm. Trong phiếu bài tập (kiểu sách) các câu khác chỉ ghi số
               thứ tự như mọi dòng của phiếu (1, 2, 3…), không có chữ "Câu"; trình đọc màn hình vẫn nghe "Câu n". */}
@@ -872,34 +881,18 @@ export default function LessonPractice({
   // Bố cục chia đôi (theo mẫu Figma): tiêu đề, tiến độ, các số câu và nút đổi bố cục gom vào MỘT thẻ đầu cột câu hỏi, nên không tốn
   // thêm hàng phía trên; thẻ đoạn văn bên trái dính theo cuộn và tự cuộn riêng khi bài đọc dài.
   const splitView = !!(step?.passageId && split);
-
-  return (
-    <section aria-labelledby="lp-title" className="lp-large my-2" data-testid="lesson-practice" style={accentStyle(accent)}>
-      {!splitView && !sheet && (
-        <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {titleBlock}
-            {layoutToggle}
-          </div>
-          <div className="mt-3">{questionNav}</div>
-        </>
-      )}
-
-      {error && (
-        <div role="alert" className="mt-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
-          {error}
+  const headCards = (
+    <>
+      {lead && (
+        <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
+          <h3 className="text-h4">{lead.title ? `${lead.code} · ${lead.title}` : lead.code}</h3>
+          <LessonRichText html={lead.html} className="!m-0 !rounded-none !border-0 !bg-transparent !p-0 sm:!p-0 [&_p]:!mb-0 [&_p]:!mt-1 [&_p]:!leading-7" />
+          {stepPassage && parts && instructionText && (
+            <p className="mt-3 whitespace-pre-line border-t border-token pt-3 text-body leading-7 text-muted">{instructionText}</p>
+          )}
         </div>
       )}
-
-      {/* Tab đổi cả đoạn văn lẫn phiếu câu hỏi, nên đặt trên cả hai chứ không nằm trong cột câu hỏi. */}
-      {sheet && (
-        <div className="mt-4">
-          <SheetTabBar tabs={sheetTabs} activeIdx={stepIdx} onTab={setStepIdx} questions={qById} answers={answers} checks={checks} standalone />
-        </div>
-      )}
-
-      {/* Tên đoạn + đề bài là khối riêng rộng bằng bài, cả kiểu phiếu lẫn kiểu thẻ (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
-      {stepPassage && parts && (
+      {!lead && stepPassage && parts && (
         <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
           {/* Tab đã có thẻ đề với "mã · tên" đậm (shortPartner): thẻ này chỉ còn lời mời bạn ảo, không lặp lại tên. */}
           {!(shortPartner && instructionText) && (
@@ -908,8 +901,9 @@ export default function LessonPractice({
           {instructionText && <p className="mt-1 whitespace-pre-line text-body leading-7">{instructionText}</p>}
         </div>
       )}
-
-      {step &&
+    </>
+  );
+  const bodyBlock = (step &&
         (step.passageId && !lightIntro ? (
           <div className={`${sheet ? "mt-3" : "mt-4"} grid gap-4 ${split ? "lg:grid-cols-[1.1fr_1fr] lg:items-start lg:gap-2.5" : ""}`}>
             {hasBody && !lightIntro && stepPassage && parts && (
@@ -945,7 +939,36 @@ export default function LessonPractice({
           </div>
         ) : (
           <div className={`${sheet ? "mt-3" : "mt-4"} space-y-3`}>{sheet ? sheetNode : step.questionIds.map(renderQuestion)}</div>
-        ))}
+        )));
+
+  return (
+    <section aria-labelledby="lp-title" className="lp-large my-2" data-testid="lesson-practice" style={accentStyle(accent)}>
+      {!splitView && !sheet && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {titleBlock}
+            {layoutToggle}
+          </div>
+          <div className="mt-3">{questionNav}</div>
+        </>
+      )}
+
+      {error && (
+        <div role="alert" className="mt-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
+      {/* Tab đổi cả đoạn văn lẫn phiếu câu hỏi, nên đặt trên cả hai chứ không nằm trong cột câu hỏi. */}
+      {sheet && (
+        <div className="mt-4">
+          <SheetTabBar tabs={sheetTabs} activeIdx={stepIdx} onTab={setStepIdx} questions={qById} answers={answers} checks={checks} standalone />
+        </div>
+      )}
+
+      {/* Tên đoạn + đề bài là khối riêng rộng bằng bài, cả kiểu phiếu lẫn kiểu thẻ (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
+      {headCards}
+      {bodyBlock}
 
       {/* Một hàng chân khối: trạng thái lưu bên trái, "Kết thúc bài luyện" bên phải ở dạng nút phụ (nút hồng chính chỉ dành cho việc của câu đang làm: Kiểm tra / Nhận xét). */}
       <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">

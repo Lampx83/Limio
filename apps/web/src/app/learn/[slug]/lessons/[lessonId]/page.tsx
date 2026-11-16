@@ -879,7 +879,7 @@ export default async function LessonPage({
 
   // Bài đọc dài của khối luyện lên phần lý thuyết (AC8); mỗi exercise một tab (AC5); khối gom nhiều exercise tách theo đoạn.
   const hoistedPassages: HoistedPassage[] = [];
-  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false) => (
+  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false, lead?: { code: string; title?: string; html: string }) => (
     <LessonPractice
       slug={params.slug}
       embed={embed}
@@ -888,6 +888,7 @@ export default async function LessonPage({
       preview={info.preview || undefined}
       subset={subset || undefined}
       shortPartner={shortPartner || undefined}
+      lead={lead}
       sheet={languageMode}
       accent={lesson.module.course.themeColor}
       skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
@@ -995,8 +996,9 @@ export default async function LessonPage({
                 build: () => (
                   <>
                     {introNode}
-                    {leadNode}
-                    {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode) : info && embed && !tab.virtualPartner && splitEmbedByPassage(embed).length >= 2 ? renderStacked(embed, info, false) : practiceBlocks[tab.id]}
+                    {/* Tab bạn ảo có câu yêu cầu của sách: câu đó nằm CHUNG thẻ đề với lời mời bạn ảo (LessonPractice `lead`), không dựng thẻ riêng. */}
+                    {info && embed && tab.virtualPartner && leadNode ? null : leadNode}
+                    {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode, tab.virtualPartner && leadNode && leadHtml ? { code: tab.label, title: leadTitle, html: leadHtml } : undefined) : info && embed && !tab.virtualPartner && splitEmbedByPassage(embed).length >= 2 ? renderStacked(embed, info, false) : practiceBlocks[tab.id]}
                   </>
                 ),
               },
