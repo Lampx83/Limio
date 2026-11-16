@@ -1250,7 +1250,7 @@ export default async function LessonPage({
       {/* Khối phóng toàn màn hình là #lesson-stage. Bài không còn mục lục
           "Trong bài này" (đã bỏ 2026-11-10: chỉ bài có từ 2 tiêu đề mới có, nên
           các bài không đồng nhất), nội dung thẳng hàng với tiêu đề bài. */}
-      <div id="lesson-stage" className="mt-8">
+      <div id="lesson-stage" className={lessonFrame ? "mt-0" : "mt-8"}>
         <div>
         {/* Trên màn chiếu, tên bài nằm ở đầu trang và cuộn đi cùng nội dung. Từng
             dính theo mép trên, nhưng header site bị ẩn nên offset 74px chừa một
