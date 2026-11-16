@@ -1,5 +1,6 @@
 "use client";
 
+import { Children } from "react";
 import LessonRichText from "./LessonRichText";
 
 /**
@@ -11,7 +12,7 @@ export default function TheoryCard({ html, title, children }: { html: string; /*
     <div className="rounded-xl border border-token bg-[rgb(var(--surface))] p-4 sm:p-5" data-testid="lesson-theory">
       {title && <div className="mb-3 border-b border-token pb-3">{title}</div>}
       <LessonRichText html={html} className="pv-hl-bold !m-0 !rounded-none !border-0 !bg-transparent !p-0 sm:!p-0 [&_h2]:!mb-2 [&_h2]:!mt-2 [&_p]:!mb-1 [&_p]:!mt-1" />
-      {children && <div className="mt-6 space-y-6 border-t border-token pt-6">{children}</div>}
+      {Children.toArray(children).length > 0 && <div className="mt-6 space-y-6 border-t border-token pt-6">{children}</div>}
     </div>
   );
 }

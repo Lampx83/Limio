@@ -79,3 +79,43 @@ describe("PracticeTabs — mỗi khối bài luyện một tab", () => {
     expect(host.innerHTML).toBe("");
   });
 });
+
+describe("PracticeTabs — thẻ bài tập (loại bài, tên bài, tiến độ)", () => {
+  const withMeta = [
+    { id: "a", label: "5A", content: <p>A</p>, meta: { title: "Complete the phrases", kind: "write" as const, ids: ["q1", "q2", "q3"], answered: ["q1"], checked: [] } },
+    { id: "b", label: "Free practice · Talk with a virtual partner", content: <p>B</p>, meta: { title: "Free practice", kind: "speak" as const, ids: ["q9"], answered: [], checked: [] } },
+  ];
+  const progress = (detail: { ids: string[]; answered: string[]; checked: string[] }) =>
+    act(async () => void window.dispatchEvent(new CustomEvent("limio:practice-progress", { detail })));
+
+  it("thẻ có nhãn Exercise, mã bài và tên bài", async () => {
+    await render(withMeta);
+    expect(tabEls()[0]!.textContent).toContain("Exercise");
+    expect(tabEls()[0]!.textContent).toContain("5A");
+    expect(tabEls()[0]!.textContent).toContain("Complete the phrases");
+    expect(tabEls()[0]!.textContent).toContain("1/3 câu");
+  });
+
+  it("nhãn chữ không có mã bài tập: cả nhãn là tên bài, không có huy hiệu", async () => {
+    await render(withMeta);
+    const t = tabEls()[1]!.textContent!;
+    expect(t).toContain("Activity");
+    expect(t).toContain("Free practice: Talk with a virtual partner");
+    expect(t).toContain("1 câu");
+    expect(tabEls()[1]!.getAttribute("title")).toBe("Nói với bạn ảo");
+  });
+
+  it("khối luyện báo tiến độ: đếm câu đã làm cập nhật, kiểm tra hết thì hiện Xong", async () => {
+    await render(withMeta);
+    await progress({ ids: ["q1", "q2", "q3"], answered: ["q1", "q2"], checked: [] });
+    expect(tabEls()[0]!.textContent).toContain("2/3 câu");
+    await progress({ ids: ["q1", "q2", "q3"], answered: ["q1", "q2", "q3"], checked: ["q1", "q2", "q3"] });
+    expect(tabEls()[0]!.textContent).toContain("Xong");
+    expect(tabEls()[1]!.textContent).not.toContain("Xong");
+  });
+
+  it("tab không có thông tin bài tập (cũ): chỉ có nhãn, không có trạng thái", async () => {
+    await render([{ id: "x", label: "7A", content: <p>x</p> }, { id: "y", label: "7B", content: <p>y</p> }]);
+    expect(tabEls().map((t) => t.textContent)).toEqual(["7A", "7B"]);
+  });
+});

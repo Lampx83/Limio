@@ -57,6 +57,7 @@ import LessonRichText from "@/components/lesson/LessonRichText";
 import TheoryCard from "@/components/lesson/TheoryCard";
 import { arrangeTabs, dropExerciseBanner, dropRepeatedBannerTitle, exerciseLabels, markLabelBold, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
 import { splitEmbedByExercise, splitEmbedByPassage } from "@/lib/practiceExerciseSplit";
+import { mergePracticeMeta, practiceTabMeta } from "@/lib/practiceTabMeta";
 import { dedupeHoisted, hoistReadingPassages, type HoistedPassage } from "@/lib/practiceHoist";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
@@ -878,7 +879,7 @@ export default async function LessonPage({
 
   // Bài đọc dài của khối luyện lên phần lý thuyết (AC8); mỗi exercise một tab (AC5); khối gom nhiều exercise tách theo đoạn.
   const hoistedPassages: HoistedPassage[] = [];
-  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false) => (
+  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false, keepTitle = false) => (
     <LessonPractice
       slug={params.slug}
       embed={embed}
@@ -887,6 +888,7 @@ export default async function LessonPage({
       preview={info.preview || undefined}
       subset={subset || undefined}
       shortPartner={shortPartner || undefined}
+      hideBareTitle={(!keepTitle && (sections?.tabs.length ?? 0) >= 2) || undefined}
       sheet={languageMode}
       accent={lesson.module.course.themeColor}
       skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
@@ -900,7 +902,7 @@ export default async function LessonPage({
     return (
       <div className="space-y-6">
         {parts.map((pe, j) => (
-          <div key={pe.passages[0]?.id ?? j}>{renderBlock(pe, info, subset || j < parts.length - 1)}</div>
+          <div key={pe.passages[0]?.id ?? j}>{renderBlock(pe, info, subset || j < parts.length - 1, false, true)}</div>
         ))}
       </div>
     );
@@ -962,6 +964,7 @@ export default async function LessonPage({
                 id: `${tab.id}~${k}`,
                 label: g.label ?? tab.label,
                 virtualPartner: tab.virtualPartner,
+                meta: practiceTabMeta(g.embed, tab.virtualPartner),
                 build: () => (
                   <>
                     {k === 0 ? introNode : null}
@@ -977,6 +980,7 @@ export default async function LessonPage({
                   id: tab.id,
                   label: tab.label,
                   virtualPartner: false,
+                  meta: { kind: "read" as const },
                   build: () => <StatementTab code={tab.label} html={(tab.lead[0]?.payload as { html?: string } | undefined)?.html ?? ""} />,
                 },
               ];
@@ -986,6 +990,7 @@ export default async function LessonPage({
                 id: tab.id,
                 label: tab.label,
                 virtualPartner: tab.virtualPartner,
+                meta: info && embed ? practiceTabMeta(embed, tab.virtualPartner, info.title) : undefined,
                 build: () => (
                   <>
                     {introNode}
@@ -999,6 +1004,7 @@ export default async function LessonPage({
           (group) => ({
             ...group[0]!,
             id: group.map((g) => g.id).join("+"),
+            meta: mergePracticeMeta(group.map((g) => g.meta)),
             build: () => (
               <>
                 {group.map((g) => (
@@ -1010,7 +1016,7 @@ export default async function LessonPage({
             ),
           }),
         ),
-      ).map((t) => ({ id: t.id, label: t.label, virtualPartner: t.virtualPartner, content: t.build() }))
+      ).map((t) => ({ id: t.id, label: t.label, virtualPartner: t.virtualPartner, meta: t.meta, content: t.build() }))
     : [];
 
   // Khối "Đề thi" (exam_ref): gắn một đề thi thử của khoá vào bài. Học viên đã ghi danh thấy đúng thẻ như ở trang khoá (chỉ khi đề dùng

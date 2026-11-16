@@ -30,6 +30,7 @@ import { instructionOnlyText, isShortAudioPassage } from "@/lib/lessonPracticeVi
 import { parseRolePlay } from "@/lib/rolePlayView";
 import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
 import { tabLabel, tabShortLabels } from "@/lib/practiceSheetView";
+import { PRACTICE_PROGRESS_EVENT } from "@/lib/practiceTabMeta";
 import { accentVar } from "@/lib/courseAccent";
 import { essayFeedbackEnabled, essayVoiceEnabled, parseFeedback, type FeedbackView } from "@/lib/practiceEssayView";
 import { splitPassageInstruction, type PassageDoc } from "@/lib/passageInstruction";
@@ -89,6 +90,7 @@ export default function LessonPractice({
   skillLabel = null,
   accent = null,
   shortPartner = false,
+  hideBareTitle = false,
 }: {
   slug: string;
   embed: PracticeEmbed;
@@ -104,6 +106,8 @@ export default function LessonPractice({
   accent?: string | null;
   /** Tab đã hiện câu yêu cầu của sách ngay trên phiếu bạn ảo: đề bài của phiếu bỏ phần lặp lại ý đó, chỉ còn lời mời bạn ảo. */
   shortPartner?: boolean;
+  /** Thẻ tab của trang bài học đã ghi mã và tên bài tập: khối chỉ có MỘT đoạn mà không có câu yêu cầu thì bỏ thẻ tiêu đề lặp lại tên đó. */
+  hideBareTitle?: boolean;
   /** Xem trước của giảng viên: chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án, không ghi sự kiện. */
   preview?: boolean;
 }) {
@@ -126,6 +130,20 @@ export default function LessonPractice({
   const [checks, setChecks] = useState<Record<string, CheckResult>>({});
   // Câu đã kiểm tra ở lần mở trước: kết quả không được lưu phía trình duyệt, nên nạp lại từ máy chủ khi mở bài.
   const [restoring, setRestoring] = useState<Set<string>>(() => new Set(embed.answers.filter((a) => a.checked).map((a) => a.questionId)));
+
+  // Báo tiến độ cho thẻ tab bài tập của trang bài học (câu đã làm / đã kiểm tra). Câu đang nạp lại kết quả coi là đã kiểm tra để thẻ không nhấp nháy.
+  useEffect(() => {
+    if (typeof window === "undefined" || questions.length === 0) return;
+    window.dispatchEvent(
+      new CustomEvent(PRACTICE_PROGRESS_EVENT, {
+        detail: {
+          ids: questions.map((q) => q.id),
+          answered: questions.filter((q) => isAnswered(answers[q.id] ?? null)).map((q) => q.id),
+          checked: questions.filter((q) => q.id in checks || restoring.has(q.id)).map((q) => q.id),
+        },
+      }),
+    );
+  }, [questions, answers, checks, restoring]);
   // Câu mở: góp ý AI hiện có (khôi phục từ máy chủ khi mở lại bài), lý do chưa có góp ý, và bản ghi âm của học viên
   // (số lần ghi: 0 = chưa ghi; dùng làm tham số chống bộ nhớ đệm của trình phát).
   const [feedbacks, setFeedbacks] = useState<Record<string, FeedbackView>>(() => {
@@ -884,7 +902,7 @@ export default function LessonPractice({
       )}
 
       {/* Tên đoạn + đề bài là khối riêng rộng bằng bài, cả kiểu phiếu lẫn kiểu thẻ (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
-      {stepPassage && parts && (
+      {stepPassage && parts && !(hideBareTitle && passages.length === 1 && !instructionText) && (
         <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
           <h3 className="text-h4">{passageDisplayTitle(stepPassage.title)}</h3>
           {instructionText && <p className="mt-1 whitespace-pre-line text-body leading-7">{instructionText}</p>}
