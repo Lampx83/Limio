@@ -3,7 +3,7 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { auth } from "@/lib/auth";
 import { prisma } from "@feedbackme/db";
-import { isAnyOrgAdmin } from "@feedbackme/core-lms";
+import { hasAnyReportAccess, isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { getRegisterEnabled } from "@/lib/site-settings";
 import UserMenu from "./UserMenu";
 import StudentMenuTrigger from "./StudentMenuTrigger";
@@ -24,6 +24,13 @@ import { headers } from "next/headers";
 const getIsAnyOrgAdminCached = unstable_cache(
   async (userId: string) => isAnyOrgAdmin(userId),
   ["header-is-any-org-admin"],
+  { revalidate: 60, tags: ["user-roles"] },
+);
+
+// Lối vào "Báo cáo nhà xuất bản" (docs/tieu-chi/bao-cao-nha-xuat-ban.md) — cùng cách cache như trên.
+const getHasReportsCached = unstable_cache(
+  async (userId: string) => hasAnyReportAccess(userId),
+  ["header-has-publisher-reports"],
   { revalidate: 60, tags: ["user-roles"] },
 );
 
@@ -128,6 +135,7 @@ export default async function AppHeader({ space = null }: { space?: SpaceBrand |
               activeRole={activeRole}
               isResearcher={(user.roles ?? []).includes("researcher")}
               isOrgAdmin={user.id ? await getIsAnyOrgAdminCached(user.id).catch(() => false) : false}
+              hasReports={user.id ? await getHasReportsCached(user.id).catch(() => false) : false}
             />
           ) : (
             <div className="flex items-center gap-1.5 sm:gap-2">

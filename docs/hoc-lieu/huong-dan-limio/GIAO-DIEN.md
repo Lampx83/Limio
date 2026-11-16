@@ -852,6 +852,14 @@ hạng (giao diện dùng "nhiệm vụ", không dùng "mission"). Đây là nơ
 - **Trong ngăn kéo:** hội thoại và ô nhập nằm chung một khung; chỉ báo "Em đang soạn câu trả lời…"; chữ hiện dần; liên kết chữ dẫn thẳng vào tính năng (kể cả đúng khoá của giảng viên); nút "Cuộc trò chuyện mới". **Trên máy tính khung chat kéo thả được**: nắm thanh tiêu đề ("Trợ lý Lily") kéo tới bất cứ đâu trên màn hình (vị trí được nhớ trong phiên; nhấp đúp thanh tiêu đề để đưa về góc dưới phải). Khung thu về nút nổi khi bấm nút X ("Thu nhỏ trợ lý") hoặc bấm vào **chỗ trống** của khung (không phải nút, ô nhập, chữ hay liên kết; bấm lên thanh tiêu đề không thu); bấm ra ngoài khung hay nhấn Esc thì khung không thu (trên điện thoại thì có). Mỗi câu hỏi trừ hạn mức Token AI.
 - Lily chỉ chọn điểm đến trong danh mục cố định, chỉ trả lời nghiệp vụ Limio, không tiết lộ kỹ thuật, và trả lời cách dùng theo kho `teacherAssistantGuide.ts` (lấy từ tệp này).
 
+## 18. Mã kích hoạt và "Báo cáo nhà xuất bản" (mới 2026-11-16, `instructor/courses/[id]/AccessCodesPanel.tsx`, `app/bao-cao/`)
+
+- **Khối "Mã kích hoạt"** nằm ở tab Tổng quan của khoá, **chỉ hiện khi khoá có giá lớn hơn 0** và mở cho mọi người tự đăng ký. Nút "Tạo lô" tạo một lô mã cho một đợt in; mỗi lô có nút "Xuất CSV mã chưa dùng" và "Thu hồi cả lô"; ô "Tra cứu một mã: XXXX-XXXX-XXXX" để tra một mã.
+- Cạnh tiêu đề khối có liên kết **"Xem báo cáo phát hành và doanh thu"**, mở trang Báo cáo nhà xuất bản của đúng khoá đó.
+- **Trang "Báo cáo nhà xuất bản"** (`/bao-cao`): chỉ đọc, gồm bốn phần: **Phát hành** (mã đã kích hoạt theo lô và theo tuần), **Doanh thu** (đơn mua trực tiếp theo tháng, theo gói, có nút "Xuất CSV đối soát"), **Người học** (số người, nguồn ghi danh, không kèm tên) và **Học liệu** (mức nắm vững theo bài, câu hỏi bị sai nhiều, tỉ lệ mở bài nên xem lại). Nhóm dưới 10 người không hiện tỉ lệ. Chọn khoảng thời gian "30 ngày", "90 ngày" hoặc "Từ đầu".
+- **Ai mở được:** giảng viên chủ khoá hoặc đồng giảng viên (chỉ các khoá có bán), quản trị trường và người được cấp quyền xem báo cáo của trường (mọi khoá gắn với trường). Chỉ quản trị viên nền tảng gắn được khoá vào trường, ở trang "Quản lý khoá học" của khu quản trị; giảng viên không tự gắn được. Lối vào: menu tài khoản "Báo cáo nhà xuất bản", và mục cùng tên ở thanh trái của trang quản trị trường.
+- **Cấp quyền xem:** quản trị trường vào "Thành viên trường", phần "Người xem báo cáo", nhập email rồi bấm "Cấp quyền xem báo cáo"; nút "Thu quyền" để thu lại. Người được cấp không sửa được khoá, không xem được danh sách học viên.
+
 ## Không được viết (chưa có hoặc chưa tới tay giảng viên)
 
 - thông báo lớp · kéo thả chương (đổi bằng ô Order) · bảng tiêu chí chấm có cấu trúc cho bài tập / đề thi /

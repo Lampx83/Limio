@@ -4,6 +4,7 @@ import { isAnyOrgAdmin } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import EmptyState from "@/components/ui/EmptyState";
 import OrgMembersClient from "./OrgMembersClient";
+import ReportViewersSection from "./ReportViewersSection";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ export default async function OrgMembersPage() {
       </div>
 
       <OrgMembersClient organizationId={primary.organizationId} />
+      <ReportViewersSection organizationId={primary.organizationId} />
     </div>
   );
 }

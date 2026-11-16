@@ -24,6 +24,7 @@ export default function UserMenu({
   activeRole: cookieRole,
   isResearcher = false,
   isOrgAdmin = false,
+  hasReports = false,
 }: {
   name: string;
   email: string;
@@ -34,6 +35,8 @@ export default function UserMenu({
   isResearcher?: boolean;
   /** True nếu user là OrgAdmin của ≥1 trường (hoặc Platform Admin) — xem isAnyOrgAdmin. */
   isOrgAdmin?: boolean;
+  /** True nếu user mở được trang Báo cáo nhà xuất bản — xem hasAnyReportAccess. */
+  hasReports?: boolean;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -129,6 +132,11 @@ export default function UserMenu({
             {isOrgAdmin && (
               <Item href="/org-admin/settings" onClick={close}>
                 {t("userMenu.orgAdmin")}
+              </Item>
+            )}
+            {hasReports && (
+              <Item href="/bao-cao" onClick={close}>
+                {t("userMenu.publisherReport")}
               </Item>
             )}
           </div>

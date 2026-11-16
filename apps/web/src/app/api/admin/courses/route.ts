@@ -45,6 +45,7 @@ export async function GET(req: Request) {
         virtualLecturerCode: true,
         learnerSampleAt: true,
         enrollMode: true,
+        organization: { select: { id: true, name: true } },
         _count: { select: { accessPlans: { where: { isActive: true } } } },
       },
     }),
@@ -64,6 +65,8 @@ export async function GET(req: Request) {
     isLearnerSample: c.learnerSampleAt !== null,
     enrollMode: c.enrollMode,
     activeAccessPlanCount: c._count.accessPlans,
+    organizationId: c.organization?.id ?? null,
+    organizationName: c.organization?.name ?? null,
   }));
 
   return NextResponse.json({

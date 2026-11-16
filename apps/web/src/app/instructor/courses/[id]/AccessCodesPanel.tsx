@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { apiUrl } from "@/lib/apiUrl";
 import { formatDate, formatDateTime } from "@/lib/datetime";
 import { formatPrice } from "@/lib/formatPrice";
@@ -146,7 +147,12 @@ export default function AccessCodesPanel({ courseId }: { courseId: string }) {
   return (
     <div>
       <header className="mb-3">
-        <h2 className="text-base font-semibold">Mã kích hoạt</h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-base font-semibold">Mã kích hoạt</h2>
+          <Link href={`/bao-cao?course=${courseId}`} className="text-xs text-brand-700 underline">
+            Xem báo cáo phát hành và doanh thu
+          </Link>
+        </div>
         <p className="mt-0.5 text-xs text-muted">
           Dùng cho người trả tiền ngoài hệ thống (chuyển khoản, tiền mặt, mã in trong sách). Tạo một lô mã, xuất
           CSV gửi nhà in hoặc gửi cho từng người; ai gõ mã vào là được ghi danh ngay, không cần ai duyệt lại.

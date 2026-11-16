@@ -93,6 +93,15 @@ export const LearningEventType = {
   OrgMemberAdded: "org.member.added",
   OrgMemberRemoved: "org.member.removed",
 
+  // Báo cáo cho nhà xuất bản (docs/tieu-chi/bao-cao-nha-xuat-ban.md). Subject là người xem/người cấp;
+  // payload chỉ mang id và loại tệp, không mang số liệu hay danh tính người học. Không tính là hoạt động học.
+  ReportViewerGranted: "report.viewer.granted",
+  ReportViewerRevoked: "report.viewer.revoked",
+  ReportPublisherViewed: "report.publisher.viewed",
+  ReportPublisherExported: "report.publisher.exported",
+  /** Platform Admin gắn/gỡ khoá khỏi tổ chức (core-lms/src/org/courseOrganization.ts). Payload chỉ id. */
+  CourseOrganizationChanged: "course.organization.changed",
+
   // Session — không gắn courseId (đăng nhập không thuộc một khoá cụ thể).
   /** Đăng nhập thành công, mọi provider. Payload chỉ mang phân loại thô — xem SessionStartedPayload. */
   SessionStarted: "session.started",

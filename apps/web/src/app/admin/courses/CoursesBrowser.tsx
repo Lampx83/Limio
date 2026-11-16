@@ -22,6 +22,15 @@ interface CourseRow {
   isLearnerSample: boolean;
   enrollMode: string;
   activeAccessPlanCount: number;
+  /** Tổ chức sở hữu khoá (nhà xuất bản/trường); quyết định ai xem được Báo cáo nhà xuất bản. */
+  organizationId: string | null;
+  organizationName: string | null;
+}
+
+interface OrgOption {
+  id: string;
+  name: string;
+  code: string;
 }
 
 interface CoursesResponse {
@@ -108,6 +117,51 @@ export default function CoursesBrowser({
   const [page, setPage] = useState(0);
   const [sampleError, setSampleError] = useState<string | null>(null);
   const [savingSample, setSavingSample] = useState<string | null>(null);
+  const [orgs, setOrgs] = useState<OrgOption[]>([]);
+
+  useEffect(() => {
+    fetch(apiUrl("/api/admin/orgs"))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { organizations: OrgOption[] } | null) => setOrgs(d?.organizations ?? []))
+      .catch(() => setOrgs([]));
+  }, []);
+
+  // Gắn khoá vào tổ chức = cho quản trị và người xem báo cáo của tổ chức thấy doanh thu, số liệu học tập tổng hợp
+  // (docs/tieu-chi/bao-cao-nha-xuat-ban.md, AC8). Hỏi lại trước khi đổi vì đây là quyết định chia sẻ dữ liệu.
+  async function changeOrganization(c: CourseRow, value: string) {
+    const next = value === "" ? null : value;
+    if (next === c.organizationId) return;
+    const nextName = orgs.find((o) => o.id === next)?.name ?? "";
+    const question = next
+      ? `Gắn "${c.title}" vào ${nextName}? Quản trị viên và người xem báo cáo của ${nextName} sẽ thấy doanh thu và số liệu học tập tổng hợp của khoá này.`
+      : `Gỡ "${c.title}" khỏi ${c.organizationName ?? "tổ chức"}? Họ sẽ không xem được báo cáo của khoá này nữa.`;
+    if (!window.confirm(question)) return;
+    setSampleError(null);
+    setSavingSample(c.id);
+    try {
+      const r = await fetch(apiUrl(`/api/admin/courses/${c.id}/organization`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationId: next }),
+      });
+      if (!r.ok) {
+        setSampleError("Không lưu được tổ chức của khoá, thử lại sau.");
+        return;
+      }
+      setData((d) =>
+        d
+          ? {
+              ...d,
+              courses: d.courses.map((x) =>
+                x.id === c.id ? { ...x, organizationId: next, organizationName: next ? nextName : null } : x,
+              ),
+            }
+          : d,
+      );
+    } finally {
+      setSavingSample(null);
+    }
+  }
 
   async function toggleSample(c: CourseRow, next: boolean) {
     setSampleError(null);
@@ -265,7 +319,7 @@ export default function CoursesBrowser({
             <tr>
               <th className="px-4 py-2.5 text-left font-medium">Khoá học</th>
               <th className="px-4 py-2.5 text-left font-medium">Trạng thái</th>
-              <th className="px-4 py-2.5 text-left font-medium">Giá &amp; gói bán</th>
+              <th className="px-4 py-2.5 text-left font-medium">Giá, gói bán &amp; tổ chức</th>
               <th className="px-4 py-2.5 text-left font-medium">Dùng làm khoá mẫu</th>
               <th className="px-4 py-2.5 text-right font-medium">Thao tác</th>
             </tr>
@@ -313,6 +367,27 @@ export default function CoursesBrowser({
                         ? "Chưa có gói bán"
                         : `${c.activeAccessPlanCount} gói đang bán`}
                     </p>
+                    <label className="mt-1.5 flex items-center gap-2 text-xs text-muted">
+                      <span className="shrink-0">Tổ chức</span>
+                      <select
+                        value={c.organizationId ?? ""}
+                        disabled={busy}
+                        aria-label={`Tổ chức sở hữu khoá: ${c.title}`}
+                        title="Quản trị viên và người xem báo cáo của tổ chức sẽ thấy doanh thu và số liệu học tập tổng hợp của khoá"
+                        onChange={(e) => void changeOrganization(c, e.target.value)}
+                        className="max-w-[12rem] rounded-md border border-token bg-[rgb(var(--surface))] px-2 py-1 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      >
+                        <option value="">Chưa thuộc tổ chức nào</option>
+                        {c.organizationId && !orgs.some((o) => o.id === c.organizationId) && (
+                          <option value={c.organizationId}>{c.organizationName ?? "Tổ chức hiện tại"}</option>
+                        )}
+                        {orgs.map((o) => (
+                          <option key={o.id} value={o.id}>
+                            {o.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   </td>
                   <td className="whitespace-nowrap px-4 py-3">
                     <div className="space-y-1.5">

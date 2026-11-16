@@ -431,6 +431,17 @@ export const GUIDES: readonly GuideEntry[] = [
       `Thầy/cô khuyến khích học viên bôi đen đoạn khó trong bài và hỏi AI để hiểu ngay tại chỗ.`,
     ],
   },
+  {
+    id: "ma-kich-hoat-va-bao-cao",
+    title: "Mã kích hoạt và Báo cáo nhà xuất bản",
+    keywords: ["mã kích hoạt", "mã sách", "in mã", "lô mã", "nhà xuất bản", "sách điện tử", "bán khoá", "doanh thu", "đối soát", "báo cáo", "bao nhiêu người mua", "kích hoạt", "người xem báo cáo"],
+    destinationIds: ["my_courses"],
+    body: `Khối "Mã kích hoạt" nằm ở tab Tổng quan của khoá và chỉ hiện khi khoá có giá lớn hơn 0 và mở cho mọi người tự đăng ký. Bấm "Tạo lô" để tạo một lô mã cho một đợt in; mỗi lô có nút "Xuất CSV mã chưa dùng" để gửi nhà in và nút "Thu hồi cả lô" khi lô bị thất lạc (người đã kích hoạt vẫn giữ quyền học). Cạnh tiêu đề khối có liên kết "Xem báo cáo phát hành và doanh thu", mở trang "Báo cáo nhà xuất bản" của khoá đó; trang này cũng mở được từ menu tài khoản ở góc trên bên phải. Trang chỉ để xem, gồm bốn phần: Phát hành (mã đã kích hoạt theo lô và theo tuần), Doanh thu (đơn mua trực tiếp theo tháng và theo gói, có nút "Xuất CSV đối soát"), Người học (số người và nguồn ghi danh, không kèm tên) và Học liệu (mức nắm vững theo bài, câu hỏi bị sai nhiều, tỉ lệ học viên mở bài nên xem lại). Chọn khoảng "30 ngày", "90 ngày" hoặc "Từ đầu" ở góc trên. Nhóm dưới 10 người thì trang không hiện tỉ lệ để không suy ra được từng người. Quản trị trường có thể cho người của nhà xuất bản xem báo cáo mà không sửa được khoá: vào "Thành viên trường", phần "Người xem báo cáo", nhập email rồi bấm "Cấp quyền xem báo cáo"; bấm "Thu quyền" để thu lại. Người của trường chỉ thấy các khoá đã được gắn vào trường; việc gắn khoá do quản trị viên nền tảng làm, giảng viên không tự gắn được, nên thầy/cô cần nhờ quản trị viên nếu khoá chưa hiện trong báo cáo của trường.`,
+    useCases: [
+      `Sau một đợt in sách kèm mã, thầy/cô mở báo cáo để xem đã có bao nhiêu mã được kích hoạt mỗi tuần và lô nào sắp hết hạn kích hoạt.`,
+      `Cuối tháng, thầy/cô xuất tệp đối soát doanh thu để gửi bộ phận kế toán của nhà xuất bản.`,
+    ],
+  },
 ];
 
 /** Những điều Limio CHƯA có, để trợ lý không hứa nhầm. Luôn đưa vào prompt (ngắn). */

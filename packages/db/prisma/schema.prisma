@@ -159,6 +159,7 @@ model User {
   // PR2.17 — Multi-tenancy
   organization Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   orgAdminOf   OrganizationAdmin[]
+  orgReportViewerOf OrganizationReportViewer[]
 
   // Classroom tools
   classroomRandomPicks               ClassroomRandomPick[]
@@ -5463,6 +5464,7 @@ model Organization {
   users               User[]
   courses             Course[]
   admins              OrganizationAdmin[]
+  reportViewers       OrganizationReportViewer[]
   sessionTemplates    ExamSessionTemplate[]
   emailTemplates      EmailTemplate[]
   emailBatches        EmailDispatchBatch[]
@@ -5493,6 +5495,22 @@ model AcademicTerm {
 }
 
 model OrganizationAdmin {
+  organizationId  String
+  userId          String
+  grantedAt       DateTime @default(now())
+  grantedByUserId String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([organizationId, userId])
+  @@index([userId])
+}
+
+/// Quyền "Xem báo cáo" của một tổ chức (docs/tieu-chi/bao-cao-nha-xuat-ban.md, AC1): chỉ xem số liệu
+/// tổng hợp ẩn danh của các khoá thuộc tổ chức. KHÔNG kéo theo quyền sửa khoá, chấm bài, xem học viên
+/// hay quản trị tổ chức. OrgAdmin/Platform Admin cấp và thu (core-lms/src/reports/viewers.ts).
+model OrganizationReportViewer {
   organizationId  String
   userId          String
   grantedAt       DateTime @default(now())

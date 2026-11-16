@@ -9,7 +9,7 @@ export default function AdminCoursesPage() {
       <header className="mb-6">
         <h1 className="h-display text-2xl font-bold sm:text-3xl">Quản lý khoá học</h1>
         <p className="mt-1 text-sm text-muted">
-          Tìm khoá học để quản lý gói bán theo thời hạn (1 năm, 2 năm, vĩnh viễn) và đánh dấu khoá mẫu: cho giảng viên mới xem, hoặc cho học viên chưa có khoá học thử.
+          Tìm khoá học để quản lý gói bán theo thời hạn (1 năm, 2 năm, vĩnh viễn), gắn khoá vào tổ chức (nhà xuất bản, trường) để tổ chức đó xem được báo cáo của khoá, và đánh dấu khoá mẫu: cho giảng viên mới xem, hoặc cho học viên chưa có khoá học thử.
         </p>
       </header>
       <CoursesBrowser

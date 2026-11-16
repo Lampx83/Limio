@@ -19,6 +19,7 @@ export const viHeader = {
   "userMenu.dashboard": "Tổng quan của tôi",
   "userMenu.settings": "Cài đặt tài khoản",
   "userMenu.orgAdmin": "Quản trị trường (OrgAdmin)",
+  "userMenu.publisherReport": "Báo cáo nhà xuất bản",
   "userMenu.signOut": "Đăng xuất",
 
   "notif.titleNone": "Thông báo",

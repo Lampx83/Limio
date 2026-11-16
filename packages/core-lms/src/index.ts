@@ -1,6 +1,7 @@
 export * from "./auth/index";
 export * from "./email/index";
 export * from "./org/index";
+export * from "./reports/index";
 export * from "./courses/index";
 export * from "./teams/index";
 export * from "./learning/index";
