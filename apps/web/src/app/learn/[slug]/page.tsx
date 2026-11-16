@@ -595,6 +595,7 @@ export default async function LearnCoursePage({
 
       {continueLessonId && continueLabel && (
         <StickyMobileCTA
+          label={t("reader.mainActions")}
           primary={continueLabel}
           secondary={t("learn.home.ctaSecondary", { pct: progress.courseCompletionPct, xp: xp.xp })}
           action={

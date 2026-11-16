@@ -320,7 +320,7 @@ export default function VideoWithCuepoints({
       </video>
       {sortedCuepoints.length > 0 && (
         <p className="mt-1 text-[11px] text-faint">
-          Có {sortedCuepoints.length} câu hỏi gài trong video — phải trả lời đúng để xem tiếp.
+          {tx("reader.video.cuepoints", { n: sortedCuepoints.length })}
         </p>
       )}
       {active && (
