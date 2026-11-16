@@ -19,6 +19,7 @@ import {
   practiceProblems,
   practiceQuestionCount,
   replaceBodyAssetRefs,
+  withPassageLook,
 } from "../practice-spec";
 
 // Bài luyện trong manifest học liệu (khoá Speakout Intermediate Plus).
@@ -338,5 +339,14 @@ describe("video trong đoạn văn của Bài luyện", () => {
     expect(node.attrs!.alt).toBe("Clip");
     const v = exam.assets.find((a) => a.type === "video")!;
     expect(v).toMatchObject({ transcript: "A: Hello.", s3Key: node.attrs!.src!.split("/").pop() });
+  });
+});
+
+describe("withPassageLook", () => {
+  it("gắn look vào gốc tài liệu đoạn; không có look thì giữ nguyên tài liệu", () => {
+    const doc = buildPassageDoc([{ p: "Hello" }], { image: () => ({ src: "" }), audio: () => ({ src: "" }), video: () => ({ src: "" }) });
+    expect(withPassageLook(doc, "newspaper")).toMatchObject({ type: "doc", look: "newspaper" });
+    expect(withPassageLook(doc, undefined)).toBe(doc);
+    expect("look" in withPassageLook(doc, undefined)).toBe(false);
   });
 });

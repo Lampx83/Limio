@@ -2769,3 +2769,96 @@ textarea.fc-input {
   background: none;
   padding: 0;
 }
+
+/*
+ * Bài đọc kiểu trang báo (Đoạn văn có `look: "newspaper"`, PassageView): giấy kem, tít chữ có chân đậm giữa hai vạch đôi, sapo nghiêng, thân bài chữ có chân
+ * dàn đều. Khung đủ rộng (container query, không phải bề rộng màn hình: đoạn văn cũng nằm trong cột hẹp cạnh câu hỏi) thì thân bài chia hai cột có vạch giữa,
+ * sapo và tít vắt ngang cả hai cột. Số đoạn (chữ đậm) giữ nguyên để khớp câu hỏi. Chữ ≥ 17px, tương phản mực/giấy > 12:1.
+ */
+.pv-newspaper {
+  --np-paper: #f8f3e7;
+  --np-ink: #1f1c15;
+  --np-rule: #cdc3aa;
+  container-type: inline-size;
+  container-name: np;
+  background: var(--np-paper);
+  color: var(--np-ink);
+  border: 1px solid var(--np-rule);
+  border-radius: 0.25rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.04), 0 10px 22px -14px rgb(70 50 10 / 0.45);
+  font-family: Georgia, "Times New Roman", "Noto Serif", serif;
+}
+.dark .pv-newspaper {
+  --np-paper: #2a2620;
+  --np-ink: #efe8d8;
+  --np-rule: #554f42;
+  box-shadow: none;
+}
+.pv-newspaper > header {
+  margin-bottom: 1rem;
+  padding: 0.6rem 0 0.9rem;
+  border-top: 4px double var(--np-ink);
+  border-bottom: 1px solid var(--np-rule);
+}
+.pv-newspaper > header > div {
+  display: none;
+}
+.pv-newspaper > header h2 {
+  font-family: inherit;
+  font-size: clamp(1.6rem, 2.2vw + 0.8rem, 2.35rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--np-ink);
+}
+.pv-newspaper .prose {
+  color: var(--np-ink);
+  font-family: inherit;
+}
+.pv-newspaper .passage-table-wrap {
+  margin: 0;
+  overflow: visible;
+}
+.pv-newspaper .passage-table,
+.pv-newspaper .passage-table tbody,
+.pv-newspaper .passage-table tr,
+.pv-newspaper .passage-table td {
+  display: block;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.pv-newspaper .passage-table p {
+  margin: 0 0 0.95rem;
+  font-size: 1.125rem;
+  line-height: 1.75;
+  text-align: justify;
+  hyphens: auto;
+  orphans: 3;
+  widows: 3;
+  color: var(--np-ink);
+}
+/* Hàng đầu của bảng là sapo: nghiêng, cỡ lớn hơn, kẻ chân. */
+.pv-newspaper .passage-table tr:first-child p {
+  margin-bottom: 1.1rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid var(--np-rule);
+  font-size: 1.3rem;
+  line-height: 1.55;
+  font-style: italic;
+  text-align: left;
+}
+@container np (min-width: 46rem) {
+  .pv-newspaper .passage-table tbody {
+    column-count: 2;
+    column-gap: 2.5rem;
+    column-rule: 1px solid var(--np-rule);
+  }
+  .pv-newspaper .passage-table tr:first-child {
+    column-span: all;
+  }
+}

@@ -110,6 +110,8 @@ export type PassageBlockT = z.infer<typeof PassageBlock>;
 
 export const PassageSpec = z.object({
   title: z.string().min(1).max(300),
+  /** Kiểu trình bày của bài đọc: "newspaper" = trang báo (giấy kem, tít serif, sapo, thân bài hai cột khi đủ rộng). Bỏ trống = hiện như cũ. */
+  look: z.enum(["newspaper"]).optional(),
   blocks: z.array(PassageBlock).min(1),
   questions: z.array(ExamQuestionSpec).default([]),
 });
@@ -178,6 +180,11 @@ export function buildPassageDoc(blocks: PassageBlockT[], assets: AssetUrls): { t
     else if ("video" in b) content.push({ type: "video", attrs: { ...assets.video(b.video, b.alt), alt: b.alt } });
   }
   return { type: "doc", content };
+}
+
+/** Gắn kiểu trình bày vào gốc tài liệu đoạn (PassageView đọc `look`); không có kiểu thì trả đúng tài liệu đã nhận. */
+export function withPassageLook<T extends object>(doc: T, look: "newspaper" | undefined): T & { look?: "newspaper" } {
+  return look ? { ...doc, look } : doc;
 }
 
 /** Tệp audio mà một câu nhắc tới: audio bài mẫu và audio từng lượt của hội thoại đóng vai. */

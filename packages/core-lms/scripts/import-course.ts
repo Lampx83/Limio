@@ -77,6 +77,7 @@ import {
   practiceProblems,
   practiceQuestionCount,
   replaceBodyAssetRefs,
+  withPassageLook,
   storePublicFile,
 } from "./practice-spec";
 import {
@@ -1762,11 +1763,11 @@ export async function importPractice(actor: string, lessonId: string, pr: z.infe
         if (b.transcript?.trim()) await setVideoTranscript(actor, examId, src, b.transcript.trim(), b.alt);
       }
     }
-    const doc = buildPassageDoc(ps.blocks, {
+    const doc = withPassageLook(buildPassageDoc(ps.blocks, {
       image: (f) => ({ src: srcOf.get(`image:${f}`)! }),
       audio: (f) => ({ src: srcOf.get(`audio:${f}`)! }),
       video: (f) => ({ src: srcOf.get(`video:${f}`)! }),
-    });
+    }), ps.look);
     const { passageId } = await createPassage(actor, examId, { title: ps.title, contentJson: doc });
     for (const q of ps.questions) {
       await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir), await storeModelAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
