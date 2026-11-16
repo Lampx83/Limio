@@ -91,12 +91,15 @@ export async function listNeuVoices(config: Pick<NeuTtsConfig, "baseUrl" | "apiK
   });
 }
 
+/** Giọng NEU không dùng (bản sao có chủ ý của `AVOIDED_NEU_VOICES` ở core-lms/scripts/dialogue-audio.ts; hai module không import nhau). */
+const AVOIDED_NEU_VOICES: readonly string[] = ["zf_xiaoni"];
+
 /**
  * Giọng đọc cho ngôn ngữ của đề. Giọng đã cấu hình được giữ nếu cùng ngôn ngữ; không thì lấy giọng đầu tiên
  * của ngôn ngữ đó; không có giọng nào của ngôn ngữ đó thì trả null để caller lùi về bộ đọc khác.
  */
 export function pickNeuVoice(voices: NeuVoice[], language: string, configured?: string): string | null {
-  const ofLang = voices.filter((v) => v.language === language);
+  const ofLang = voices.filter((v) => v.language === language && !AVOIDED_NEU_VOICES.includes(v.voice));
   if (configured && ofLang.some((v) => v.voice === configured)) return configured;
   return ofLang[0]?.voice ?? null;
 }

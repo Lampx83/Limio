@@ -54,6 +54,9 @@ export function dialogueAudioFile(speaker: string, text: string): string {
 
 export type Gender = "f" | "m";
 
+/** Giọng NEU không dùng cho học liệu (chủ khoá không muốn nghe): bị loại khỏi danh sách giọng, kể cả khi admin đã chọn làm giọng mặc định. */
+export const AVOIDED_NEU_VOICES: readonly string[] = ["zf_xiaoni"];
+
 /** Giới tính của giọng NEU theo tên (`zf_xiaobei` nữ, `zm_yunxi` nam); không nhận ra thì null. */
 export function voiceGender(voice: string): Gender | null {
   const m = /^[a-z]{1,3}([fm])_/i.exec(voice);
@@ -175,7 +178,7 @@ export async function resolveNeu(
   } catch {
     // route /v1/voices không mở qua gateway: dùng giọng đã chọn
   }
-  const voices = [...(configured ? [configured] : []), ...listed.filter((v) => v !== configured)];
+  const voices = [...(configured ? [configured] : []), ...listed.filter((v) => v !== configured)].filter((v) => !AVOIDED_NEU_VOICES.includes(v));
   if (voices.length === 0) throw new Error(`không có giọng "${language}" (chưa chọn neutts.voice_${language} và cổng không liệt kê giọng)`);
   return { synth: makeNeuSynth(baseUrl, apiKey, fetchImpl), voices };
 }

@@ -97,4 +97,10 @@ describe("pickNeuVoice", () => {
   it("không có giọng của ngôn ngữ đó thì trả null", () => {
     expect(pickNeuVoice(voices.filter((v) => v.language === "vi"), "zh")).toBeNull();
   });
+  it("không bao giờ chọn zf_xiaoni, kể cả khi là giọng đầu tiên hoặc đã cấu hình", () => {
+    const withNi = [{ voice: "zf_xiaoni", language: "zh" }, ...voices];
+    expect(pickNeuVoice(withNi, "zh")).toBe("xiaoxiao");
+    expect(pickNeuVoice(withNi, "zh", "zf_xiaoni")).toBe("xiaoxiao");
+    expect(pickNeuVoice([{ voice: "zf_xiaoni", language: "zh" }], "zh")).toBeNull();
+  });
 });

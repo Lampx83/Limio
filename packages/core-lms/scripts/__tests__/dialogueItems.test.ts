@@ -119,6 +119,13 @@ describe("cổng NEU", () => {
     expect((await resolveNeu("zh", f, secret)).voices).toEqual(["vz", "a"]);
   });
 
+  it("loại giọng zf_xiaoni khỏi danh sách, kể cả khi admin chọn làm giọng mặc định", async () => {
+    const f = (async () => Response.json({ voices: [{ voice: "zf_xiaobei", language: "zh" }, { voice: "zf_xiaoni", language: "zh" }, { voice: "zm_yunxi", language: "zh" }] })) as unknown as typeof fetch;
+    expect((await resolveNeu("zh", f, secret)).voices).toEqual(["vz", "zf_xiaobei", "zm_yunxi"]);
+    const chosen = async (key: string) => (key === "neutts.voice_zh" ? "zf_xiaoni" : secrets[key]!);
+    expect((await resolveNeu("zh", f, chosen)).voices).toEqual(["zf_xiaobei", "zm_yunxi"]);
+  });
+
   it("không có giọng nào thì báo lỗi rõ ràng", async () => {
     const noVoice = async (key: string) => (key === "neutts.voice_zh" ? Promise.reject(new Error("nf")) : secrets[key]!);
     await expect(resolveNeu("zh", voices404, noVoice)).rejects.toThrow(/không có giọng "zh"/);
