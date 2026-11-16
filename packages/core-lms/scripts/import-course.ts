@@ -1738,31 +1738,6 @@ export async function importPractice(actor: string, lessonId: string, pr: z.infe
         const st = await storePublicFile("exam-assets", resolve(assetsDir, b.image), examId);
         await createImageAsset(actor, examId, { s3Key: st.filename, mimeType: st.mime, sizeBytes: st.size, altText: b.alt });
         srcOf.set(`image:${b.image}`, `/api/exam-assets/${st.filename}`);
-/**
- * Chỉ khoá `languageMode` có ngôn ngữ khác tiếng Việt và có thẻ ghi nhớ mới sinh giọng (`--no-vocab-audio` để tắt).
- * Trả null khi không cần hoặc không làm được; lý do in ra để người nhập biết vì sao không có nút nghe.
- */
-async function prepareVocabAudio(manifest: z.infer<typeof Manifest>, actor: string): Promise<VocabAudioContext | null> {
-  const language = (manifest.course.language ?? "vi").toLowerCase().split("-")[0]!;
-  if (!manifest.course.languageMode || language === "vi" || process.argv.includes("--no-vocab-audio")) return null;
-  if (!manifest.modules.some((m) => m.lessons.some((l) => l.flashcards))) return null;
-  try {
-    const synth = await createNeuVocabSynth();
-    if (!synth) {
-      console.warn("⚠ Chưa cấu hình NEU TTS (Quản trị › Tích hợp, hoặc NEUTTS_BASE_URL/NEUTTS_API_KEY): từ vựng chưa có audio.");
-      return null;
-    }
-    if (!synth.voiceFor(language)) {
-      console.warn(`⚠ NEU TTS không có giọng "${language}": từ vựng chưa có audio.`);
-      return null;
-    }
-    return { synth, language, store: lessonAudioStore(actor), warn: (m) => console.warn(`⚠ ${m}`) };
-  } catch (e) {
-    console.warn(`⚠ Không gọi được NEU TTS (${(e as Error).message}): từ vựng chưa có audio.`);
-    return null;
-  }
-}
-
       } else if ("audio" in b) {
         const st = await storePublicFile("exam-assets", resolve(assetsDir, b.audio), examId);
         await createAudioAsset(actor, examId, {
@@ -1792,7 +1767,6 @@ async function prepareVocabAudio(manifest: z.infer<typeof Manifest>, actor: stri
       audio: (f) => ({ src: srcOf.get(`audio:${f}`)! }),
       video: (f) => ({ src: srcOf.get(`video:${f}`)! }),
     });
-        "  --no-vocab-audio          không sinh giọng NEU TTS cho từ vựng (khoá ngoại ngữ)\n" +
     const { passageId } = await createPassage(actor, examId, { title: ps.title, contentJson: doc });
     for (const q of ps.questions) {
       await createExamQuestion(actor, examId, { ...expandExamQuestion(q, await storeSampleAudio(actor, examId, q, assetsDir), await storeTurnAudio(actor, examId, q, assetsDir), await storeModelAudio(actor, examId, q, assetsDir)), passageId, sectionId: section.id });
@@ -2201,12 +2175,6 @@ async function main() {
       `\n✔ Đã xoá khoá cũ (${lessons.length} bài, ${removed.count} chủ đề tự sinh` +
         (carriedInstructors.length > 0
           ? `, giữ lại ${carriedInstructors.length} giảng viên để gắn lại)`
-  // Giọng đọc cho từ vựng (khoá ngoại ngữ): NEU TTS, một lần cho cả lần nhập. Thiếu cấu hình / giọng / cổng lỗi chỉ
-  // cảnh báo — khoá vẫn nhập được, chỉ không có nút nghe.
-  const vocabCtx = await prepareVocabAudio(manifest, actor);
-  const vocabCache = new Map<string, string>();
-  const vocabTotals = { attached: 0, failed: 0 };
-
           : ")"),
     );
   }
@@ -2263,14 +2231,6 @@ async function main() {
     await prisma.courseInstructor.createMany({
       data: carriedInstructors.map((ci) => ({
         courseId: course.courseId,
-      if (vocabCtx) {
-        for (const it of items) {
-          if (it.type !== "vocab_list" || !Array.isArray(it.payload.items)) continue;
-          const r = await attachVocabAudio(it.payload.items as Array<Record<string, unknown>>, vocabCtx, vocabCache);
-          vocabTotals.attached += r.attached;
-          vocabTotals.failed += r.failed;
-        }
-      }
         userId: ci.userId,
         role: ci.role,
       })),
