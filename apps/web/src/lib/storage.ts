@@ -333,6 +333,9 @@ function s3Client(): S3Client | null {
       httpAgent: new HttpAgent({ keepAlive: true, maxSockets: 256 }),
       httpsAgent: new HttpsAgent({ keepAlive: true, maxSockets: 256 }),
       connectionTimeout: 5_000,
+      // Socket im lặng quá 30 s thì cắt. Thiếu dòng này, khi NAS nghẽn (sự cố 15–16/11/2026: hết bộ nhớ TCP
+      // trên NAS, đọc được vài KB rồi đứng) các luồng đứng vĩnh viễn, giữ socket, dồn lại thành cả web không đọc được gì.
+      requestTimeout: 30_000,
       socketAcquisitionWarningTimeout: 5_000,
     },
     region: process.env.S3_REGION ?? "us-east-1",
