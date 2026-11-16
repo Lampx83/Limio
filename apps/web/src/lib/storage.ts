@@ -318,14 +318,114 @@ export function withLedger(
   };
 }
 
+/**
+ * Hai NAS hỗ trợ nhau: đọc từ kho chính, kho chính lỗi/đứng thì đọc từ bản sao (NAS thứ hai).
+ *
+ * - Ghi: bắt buộc thành công trên kho chính; bản sao ghi kèm theo kiểu cố gắng (lỗi chỉ cảnh báo) —
+ *   dữ liệu cũ do script `replicate-storage` đuổi theo.
+ * - Đọc: kho chính trả lời được thì dùng. Có lỗi/quá chậm/không thấy thì thử bản sao; sau mỗi lần kho chính
+ *   hỏng, các yêu cầu kế tiếp đi thẳng sang bản sao trong SICK_MS để không ai phải chờ timeout lần nữa.
+ * - Một luồng đang phát dở mà kho chính đứt thì không nối sang bản sao giữa chừng được; trình duyệt tự xin lại
+ *   Range và lần xin đó đi vào bản sao nhờ cờ "ốm" ở trên.
+ */
+const SICK_MS = 60_000;
+const PROBE_MS = 4_000;
+
+export class ReplicaReadAdapter implements StorageAdapter {
+  private sickUntil = 0;
+  constructor(
+    private primary: StorageAdapter,
+    private replica: StorageAdapter,
+  ) {}
+
+  private sick(): boolean {
+    return Date.now() < this.sickUntil;
+  }
+  private markSick(why: string): void {
+    if (!this.sick()) console.error(`[storage] kho chính lỗi (${why}) — chuyển sang bản sao ${SICK_MS / 1000}s`);
+    this.sickUntil = Date.now() + SICK_MS;
+  }
+  private async withProbeTimeout<T>(p: Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, rej) => {
+      timer = setTimeout(() => rej(new Error("primary_timeout")), PROBE_MS);
+    });
+    return Promise.race([p, timeout]).finally(() => clearTimeout(timer));
+  }
+
+  async put(key: string, body: Buffer, contentType?: string): Promise<void> {
+    await this.primary.put(key, body, contentType);
+    await this.replica.put(key, body, contentType).catch((e) =>
+      console.warn(`[storage] ghi bản sao ${key} thất bại:`, (e as Error).message),
+    );
+  }
+  async get(key: string): Promise<Buffer> {
+    if (!this.sick()) {
+      try {
+        return await this.withProbeTimeout(this.primary.get(key));
+      } catch (e) {
+        this.markSick((e as Error).message);
+      }
+    }
+    return this.replica.get(key);
+  }
+  async exists(key: string): Promise<boolean> {
+    if (!this.sick()) {
+      try {
+        if (await this.withProbeTimeout(this.primary.exists(key))) return true;
+      } catch (e) {
+        this.markSick((e as Error).message);
+      }
+    }
+    return this.replica.exists(key);
+  }
+  async delete(key: string): Promise<void> {
+    await this.primary.delete(key);
+    await this.replica.delete(key).catch(() => {});
+  }
+  async copy(srcKey: string, destKey: string): Promise<void> {
+    await this.primary.copy(srcKey, destKey);
+    await this.replica.copy(srcKey, destKey).catch(() => {});
+  }
+  publicUrl(key: string): string | null {
+    return this.primary.publicUrl(key);
+  }
+  async sizeOf(key: string): Promise<number | null> {
+    if (!this.sick()) {
+      try {
+        const n = await this.withProbeTimeout(this.primary.sizeOf(key));
+        if (n !== null) return n;
+      } catch (e) {
+        this.markSick((e as Error).message);
+      }
+    }
+    return this.replica.sizeOf(key);
+  }
+  async getRange(key: string, start: number, end?: number): Promise<RangeRead | null> {
+    if (!this.sick() && this.primary.getRange) {
+      try {
+        const part = await this.withProbeTimeout(this.primary.getRange(key, start, end));
+        if (part) {
+          part.body.once("error", (e) => this.markSick(`stream: ${(e as Error).message}`));
+          return part;
+        }
+      } catch (e) {
+        this.markSick((e as Error).message);
+      }
+    }
+    return this.replica.getRange ? this.replica.getRange(key, start, end) : null;
+  }
+}
+
 const localCache = new Map<StorageLayer, LocalFsAdapter>();
 // combinedCache giữ adapter THÔ (không bọc sổ) — cần cho `instanceof LocalFsAdapter`
 // ở localAbsPath. ledgerCache là bản đã bọc sổ, đây mới là thứ app dùng.
 const combinedCache = new Map<StorageLayer, StorageAdapter>();
 const ledgerCache = new Map<StorageLayer, StorageAdapter>();
 
-function s3Client(): S3Client | null {
-  if (!process.env.S3_BUCKET) return null;
+function s3Client(envPrefix = "S3"): S3Client | null {
+  const env = (k: string) => process.env[`${envPrefix}_${k}`];
+  if (!env("BUCKET")) return null;
   return new S3Client({
     // Mặc định SDK chỉ mở 50 socket tới mỗi endpoint và để yêu cầu thứ 51 xếp hàng vô hạn; một đợt xem video
     // đông làm cả web đứng hình. Nới pool và đặt hạn chờ kết nối (cảnh báo sớm khi pool lại đầy).
@@ -338,37 +438,37 @@ function s3Client(): S3Client | null {
       requestTimeout: 30_000,
       socketAcquisitionWarningTimeout: 5_000,
     },
-    region: process.env.S3_REGION ?? "us-east-1",
-    ...(process.env.S3_ENDPOINT && {
-      endpoint: process.env.S3_ENDPOINT,
+    region: env("REGION") ?? process.env.S3_REGION ?? "us-east-1",
+    ...(env("ENDPOINT") && {
+      endpoint: env("ENDPOINT"),
       forcePathStyle: true,
     }),
-    ...(process.env.S3_ACCESS_KEY_ID &&
-      process.env.S3_SECRET_ACCESS_KEY && {
+    ...(env("ACCESS_KEY_ID") &&
+      env("SECRET_ACCESS_KEY") && {
         credentials: {
-          accessKeyId: process.env.S3_ACCESS_KEY_ID,
-          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+          accessKeyId: env("ACCESS_KEY_ID")!,
+          secretAccessKey: env("SECRET_ACCESS_KEY")!,
         },
       }),
   });
 }
 
-function buildS3Adapter(layer: StorageLayer): S3Adapter | null {
-  const client = s3Client();
+function buildS3Adapter(layer: StorageLayer, envPrefix = "S3"): S3Adapter | null {
+  const client = s3Client(envPrefix);
   if (!client) return null;
   // Allow each layer to live in its own bucket if desired (recommended for prod
   // so public bucket can have CDN/anonymous-read while private bucket can't).
   // Compose's `${VAR:-}` substitution yields an empty string (not undefined)
   // when the .env.prod key is blank, so `??` never falls through — use `||`.
-  const layerBucket = process.env[`S3_BUCKET_${layer.toUpperCase()}`];
-  const sharedBucket = process.env.S3_BUCKET!;
+  const layerBucket = process.env[`${envPrefix}_BUCKET_${layer.toUpperCase()}`];
+  const sharedBucket = process.env[`${envPrefix}_BUCKET`]!;
   return new S3Adapter(
     client,
     layerBucket || sharedBucket,
     // When sharing one bucket across layers, prefix each layer's keys with the
     // layer name to keep them separable in lifecycle rules / IAM policies.
     layerBucket ? "" : layer,
-    layer === "public" ? (process.env.S3_PUBLIC_BASE_URL || null) : null,
+    layer === "public" && envPrefix === "S3" ? (process.env.S3_PUBLIC_BASE_URL || null) : null,
   );
 }
 
@@ -384,8 +484,11 @@ function getRawLayerStorage(layer: StorageLayer): StorageAdapter {
   const cached = combinedCache.get(layer);
   if (cached) return cached;
   const s3 = buildS3Adapter(layer);
-  const adapter: StorageAdapter = s3
-    ? new FallbackReadAdapter(s3, localAdapterFor(layer))
+  // Bản sao ở NAS thứ hai (S3_REPLICA_*): không cấu hình thì hành vi như cũ.
+  const replica = s3 ? buildS3Adapter(layer, "S3_REPLICA") : null;
+  const primary: StorageAdapter | null = s3 && replica ? new ReplicaReadAdapter(s3, replica) : s3;
+  const adapter: StorageAdapter = primary
+    ? new FallbackReadAdapter(primary, localAdapterFor(layer))
     : localAdapterFor(layer);
   combinedCache.set(layer, adapter);
   return adapter;
