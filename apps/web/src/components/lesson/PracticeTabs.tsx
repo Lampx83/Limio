@@ -132,7 +132,9 @@ export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
           const pr = progressOf(t.meta, live);
           const kindLabel = kind ? PRACTICE_KIND_LABEL[kind] : "";
           // Có thông tin bài tập: nhãn dài ("Free practice · Talk with a virtual partner") tách thành mã ngắn trên huy hiệu và tên bài bên dưới.
-          const [head, ...restParts] = t.meta ? t.label.split(" · ") : [t.label];
+          // "6 Listen to two lifestyles" (mã dính liền chữ): mã thành huy hiệu, phần còn lại là tên.
+          const glued = t.meta ? /^(\d+[A-E]?(?:[–-]\d*[A-E])?)\s+([^·].*)$/.exec(t.label) : null;
+          const [head, ...restParts] = glued ? [glued[1]!, glued[2]!] : t.meta ? t.label.split(" · ") : [t.label];
           const isCode = !t.meta || EXERCISE_CODE.test(head ?? "");
           // Mã bài tập của sách ("5A", "5B–5C") thành huy hiệu; nhãn chữ ("Free practice · Talk with…") không có mã nên cả nhãn là tên bài.
           const badge = isCode ? (head ?? t.label) : "";

@@ -1,4 +1,5 @@
 import type { PracticeEmbed } from "@feedbackme/core-lms";
+import { splitPassageInstruction, type PassageDoc } from "./passageInstruction";
 
 /**
  * Thông tin hiện trên thẻ của mỗi tab bài tập (loại bài, tên bài, tiến độ), để học viên biết một tab là một bài tập và đang ở trạng thái nào.
@@ -41,6 +42,13 @@ function hasAudio(node: unknown): boolean {
   return Array.isArray(n.content) && n.content.some(hasAudio);
 }
 
+/** Chữ của đoạn văn đầu tiên trong tài liệu (khi cả đoạn chỉ có một câu yêu cầu thì splitPassageInstruction coi đó là nội dung chứ không phải đề bài). */
+function firstParagraphText(doc: unknown): string {
+  const first = (doc as { content?: Array<{ type?: string; content?: Array<{ text?: string }> }> } | null)?.content?.[0];
+  if (!first || first.type !== "paragraph") return "";
+  return (first.content ?? []).map((n) => n.text ?? "").join("");
+}
+
 const isAnsweredJson = (v: unknown) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0);
 
 /** Phần tên bài của tiêu đề đoạn ("5A · Complete the phrases · Agreeing" → "Complete the phrases"); các đoạn khác nhau hoàn toàn → rỗng. */
@@ -53,6 +61,53 @@ export function practiceTabTitle(passageTitles: readonly string[], blockTitle?: 
   if (first && heads.every((h) => h === first)) return first;
   const block = (blockTitle ?? "").replace(/\s*·\s*Practice\s*$/i, "").trim();
   return block;
+}
+
+/** Mở đầu chung chung của câu yêu cầu ("Work in pairs.") không đủ để gọi tên bài tập: bỏ qua, lấy câu kế tiếp. */
+const GENERIC_OPENER = /^(?:work (?:in|with)\b|in (?:pairs|groups)\b|then\b|now\b|and\b)/i;
+const MAX_TITLE_WORDS = 8;
+/** Từ không được đứng cuối một tên bị cắt ("…about their", "…how the words are"): lùi lại cho tới khi gặp từ có nghĩa. */
+const DANGLING = new Set(
+  "a an the of to in on at for with about by from into onto over as and or but so that than if when while why how what which who whose where it its this these those their his her our your my you we they them are is was were be been do does did can could will would should have has had not no each any more most both either being".split(" "),
+);
+/** Chỗ ngắt mệnh đề tự nhiên: cắt tại đây thì tên vẫn trọn ý ("Listen to the radio programme and answer the questions" → "Listen to the radio programme"). */
+const CLAUSE_BREAK = /,|\s(?:and|then|so that|because|using|including|before|after)\s/i;
+
+/**
+ * Tên ngắn cho bài tập sách không đặt tên: câu đầu có nghĩa của câu yêu cầu ("Which word has the main stress? Listen and check." → "Which word has the main stress?").
+ * Câu quá dài thì cắt ở chỗ ngắt mệnh đề; không có thì cắt theo từ rồi lùi bỏ các từ nối/giới từ treo ở cuối, rồi mới thêm "…". Không có câu nào → rỗng.
+ */
+export function titleFromInstruction(text: string): string {
+  const flat = text.replace(/\s+/g, " ").trim();
+  if (!flat) return "";
+  const sentences = flat.split(/(?<=[.?!:])\s+/).map((x) => x.trim()).filter(Boolean);
+  const pick = sentences.find((x) => !GENERIC_OPENER.test(x)) ?? sentences[0] ?? "";
+  const clean = pick.replace(/[.:]+$/, "");
+  const words = clean.split(" ");
+  if (words.length <= MAX_TITLE_WORDS) return clean;
+  // 1) cắt tại chỗ ngắt mệnh đề đầu tiên nằm trong khoảng 3–8 từ
+  const m = CLAUSE_BREAK.exec(clean);
+  if (m) {
+    const head = clean.slice(0, m.index).replace(/[,\s]+$/, "");
+    const n = head.split(" ").length;
+    if (n >= 3 && n <= MAX_TITLE_WORDS) return head;
+  }
+  // 2) cắt theo từ, lùi bỏ từ treo ở cuối (và "Exercise" mất số bài)
+  let cut = words.slice(0, MAX_TITLE_WORDS);
+  while (cut.length > 3 && (DANGLING.has(cut[cut.length - 1]!.toLowerCase().replace(/[^a-z']/g, "")) || /^exercises?$/i.test(cut[cut.length - 1]!))) cut = cut.slice(0, -1);
+  return `${cut.join(" ").replace(/[,;]+$/, "")}…`;
+}
+
+/**
+ * Tiêu đề thẻ đề bài của một đoạn: đoạn đã có tên ("3D · More examples in the article") giữ nguyên; đoạn chỉ có mã bài ("4A", "5") thì thêm tên rút từ câu
+ * yêu cầu ("5 · Complete the second sentence so that it…"), để mọi bài tập đều có tiêu đề đậm giống nhau.
+ */
+export function headingTitleOf(title: string, contentJson: unknown): string {
+  const t = title.trim();
+  if (!CODE.test(t)) return title;
+  const instruction = splitPassageInstruction(contentJson as PassageDoc).instruction ?? firstParagraphText(contentJson);
+  const name = titleFromInstruction(instruction);
+  return name ? `${t} · ${name}` : title;
 }
 
 export function practiceKindOf(embed: PracticeEmbed, virtualPartner: boolean): PracticeKind {
@@ -71,8 +126,10 @@ export function practiceKindOf(embed: PracticeEmbed, virtualPartner: boolean): P
 export function practiceTabMeta(embed: PracticeEmbed, virtualPartner: boolean, blockTitle?: string): PracticeTabMeta {
   const ids = embed.questions.map((q) => q.id);
   const own = new Set(ids);
+  const first = embed.passages[0];
+  const instruction = first ? splitPassageInstruction(first.contentJson as PassageDoc).instruction : null;
   return {
-    title: practiceTabTitle(embed.passages.map((p) => p.title), blockTitle) || undefined,
+    title: practiceTabTitle(embed.passages.map((p) => p.title), blockTitle) || titleFromInstruction(instruction ?? firstParagraphText(first?.contentJson)) || undefined,
     kind: practiceKindOf(embed, virtualPartner),
     ids,
     answered: embed.answers.filter((a) => own.has(a.questionId) && isAnsweredJson(a.answerJson)).map((a) => a.questionId),

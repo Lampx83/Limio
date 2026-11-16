@@ -30,7 +30,7 @@ import { instructionOnlyText, isShortAudioPassage } from "@/lib/lessonPracticeVi
 import { parseRolePlay } from "@/lib/rolePlayView";
 import PracticeSheet, { SheetTabBar } from "./PracticeSheet";
 import { tabLabel, tabShortLabels } from "@/lib/practiceSheetView";
-import { PRACTICE_PROGRESS_EVENT } from "@/lib/practiceTabMeta";
+import { PRACTICE_PROGRESS_EVENT, headingTitleOf } from "@/lib/practiceTabMeta";
 import { accentVar } from "@/lib/courseAccent";
 import { essayFeedbackEnabled, essayVoiceEnabled, parseFeedback, type FeedbackView } from "@/lib/practiceEssayView";
 import { splitPassageInstruction, type PassageDoc } from "@/lib/passageInstruction";
@@ -90,7 +90,6 @@ export default function LessonPractice({
   skillLabel = null,
   accent = null,
   shortPartner = false,
-  hideBareTitle = false,
 }: {
   slug: string;
   embed: PracticeEmbed;
@@ -106,8 +105,6 @@ export default function LessonPractice({
   accent?: string | null;
   /** Tab đã hiện câu yêu cầu của sách ngay trên phiếu bạn ảo: đề bài của phiếu bỏ phần lặp lại ý đó, chỉ còn lời mời bạn ảo. */
   shortPartner?: boolean;
-  /** Thẻ tab của trang bài học đã ghi mã và tên bài tập: khối chỉ có MỘT đoạn mà không có câu yêu cầu thì bỏ thẻ tiêu đề lặp lại tên đó. */
-  hideBareTitle?: boolean;
   /** Xem trước của giảng viên: chấm như học viên nhưng không tạo buổi luyện, không lưu đáp án, không ghi sự kiện. */
   preview?: boolean;
 }) {
@@ -902,9 +899,12 @@ export default function LessonPractice({
       )}
 
       {/* Tên đoạn + đề bài là khối riêng rộng bằng bài, cả kiểu phiếu lẫn kiểu thẻ (docs/tieu-chi/limio-language-y-kien-hoc-vien-giao-dien.md AC2). */}
-      {stepPassage && parts && !(hideBareTitle && passages.length === 1 && !instructionText) && (
+      {stepPassage && parts && (
         <div className={`mt-3 ${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} px-4 py-3`} data-testid="lp-instruction">
-          <h3 className="text-h4">{passageDisplayTitle(stepPassage.title)}</h3>
+          {/* Tab đã có thẻ đề với "mã · tên" đậm (shortPartner): thẻ này chỉ còn lời mời bạn ảo, không lặp lại tên. */}
+          {!(shortPartner && instructionText) && (
+            <h3 className="text-h4">{passageDisplayTitle(sheet ? headingTitleOf(stepPassage.title, stepPassage.contentJson) : stepPassage.title)}</h3>
+          )}
           {instructionText && <p className="mt-1 whitespace-pre-line text-body leading-7">{instructionText}</p>}
         </div>
       )}

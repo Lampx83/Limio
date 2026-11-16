@@ -20,4 +20,9 @@ describe("StatementTab", () => {
     const html = renderToStaticMarkup(<StatementTab code="8B" html="<p>Write your listicle.</p><ol><li>one</li></ol>" />);
     expect(html).toContain("<li>one</li>");
   });
+
+  it("có tên bài tập thì tiêu đề là mã bài và tên, vẫn trước câu yêu cầu", () => {
+    const html = renderToStaticMarkup(<StatementTab code="4A" title="Which word is stressed?" html="<p>Which word is stressed? Listen and check.</p>" />);
+    expect(html).toMatch(/<h3[^>]*>4A · Which word is stressed\?<\/h3>/);
+  });
 });

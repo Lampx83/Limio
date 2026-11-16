@@ -57,7 +57,7 @@ import LessonRichText from "@/components/lesson/LessonRichText";
 import TheoryCard from "@/components/lesson/TheoryCard";
 import { arrangeTabs, dropExerciseBanner, dropRepeatedBannerTitle, exerciseLabels, markLabelBold, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
 import { splitEmbedByExercise, splitEmbedByPassage } from "@/lib/practiceExerciseSplit";
-import { mergePracticeMeta, practiceTabMeta } from "@/lib/practiceTabMeta";
+import { mergePracticeMeta, practiceTabMeta, titleFromInstruction } from "@/lib/practiceTabMeta";
 import { dedupeHoisted, hoistReadingPassages, type HoistedPassage } from "@/lib/practiceHoist";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
@@ -879,7 +879,7 @@ export default async function LessonPage({
 
   // Bài đọc dài của khối luyện lên phần lý thuyết (AC8); mỗi exercise một tab (AC5); khối gom nhiều exercise tách theo đoạn.
   const hoistedPassages: HoistedPassage[] = [];
-  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false, keepTitle = false) => (
+  const renderBlock = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean, shortPartner = false) => (
     <LessonPractice
       slug={params.slug}
       embed={embed}
@@ -888,7 +888,6 @@ export default async function LessonPage({
       preview={info.preview || undefined}
       subset={subset || undefined}
       shortPartner={shortPartner || undefined}
-      hideBareTitle={(!keepTitle && (sections?.tabs.length ?? 0) >= 2) || undefined}
       sheet={languageMode}
       accent={lesson.module.course.themeColor}
       skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
@@ -902,7 +901,7 @@ export default async function LessonPage({
     return (
       <div className="space-y-6">
         {parts.map((pe, j) => (
-          <div key={pe.passages[0]?.id ?? j}>{renderBlock(pe, info, subset || j < parts.length - 1, false, true)}</div>
+          <div key={pe.passages[0]?.id ?? j}>{renderBlock(pe, info, subset || j < parts.length - 1)}</div>
         ))}
       </div>
     );
@@ -955,7 +954,9 @@ export default async function LessonPage({
             const groups = embed ? splitEmbedByExercise(embed) : [];
             // Câu yêu cầu của sách đi cùng phiếu bạn ảo: cùng khuôn với tab chỉ có chữ (tiêu đề là số exercise, rồi câu yêu cầu).
             const leadHtml = (tab.lead[0]?.payload as { html?: string } | undefined)?.html;
-            const leadNode = tab.lead.length > 0 && leadHtml ? <StatementTab code={tab.label} html={leadHtml} /> : null;
+            // Tên bài tập của tab (cùng tên với thẻ tab) hiện đậm cạnh mã bài trên thẻ đề: "1B · Talk with a virtual partner".
+            const leadTitle = (groups.length >= 2 ? practiceTabMeta(groups[0]!.embed, tab.virtualPartner) : embed ? practiceTabMeta(embed, tab.virtualPartner, info?.title) : null)?.title;
+            const leadNode = tab.lead.length > 0 && leadHtml ? <StatementTab code={tab.label} html={leadHtml} title={leadTitle} /> : null;
             // Banner phần của sách (FUNCTION, LEARN TO) và số trang đứng trước khối: nằm ở đầu tab đầu tiên của khối.
             const introHtml = (tab.intro ?? []).map((x) => (x.payload as { html?: string } | undefined)?.html ?? "").join("");
             const introNode = introHtml ? <LessonRichText html={markLabelBold(introHtml)} className="!mb-3" /> : null;
@@ -980,8 +981,8 @@ export default async function LessonPage({
                   id: tab.id,
                   label: tab.label,
                   virtualPartner: false,
-                  meta: { kind: "read" as const },
-                  build: () => <StatementTab code={tab.label} html={(tab.lead[0]?.payload as { html?: string } | undefined)?.html ?? ""} />,
+                  meta: { kind: "read" as const, title: titleFromInstruction(htmlToPlainText((tab.lead[0]?.payload as { html?: string } | undefined)?.html ?? "")) || undefined },
+                  build: () => <StatementTab code={tab.label} html={(tab.lead[0]?.payload as { html?: string } | undefined)?.html ?? ""} title={titleFromInstruction(htmlToPlainText((tab.lead[0]?.payload as { html?: string } | undefined)?.html ?? "")) || undefined} />,
                 },
               ];
             }
