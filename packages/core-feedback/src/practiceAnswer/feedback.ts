@@ -8,10 +8,12 @@ import {
   MAX_AUDIO_BYTES,
   MAX_SPEAKING_SECONDS,
   SPEAKING_SECONDS_TOLERANCE,
+  fluencyLevel,
   measureSpeech,
   whisperChargeTokens,
   type SpeechMetrics,
 } from "../speaking/analysis";
+import { bandGroupOf, mergeSpeechMetrics, parseSpeechMetrics } from "../speaking/fluency";
 import {
   SPEAKING_STT_MODEL,
   openAiTranscriber,
@@ -158,7 +160,9 @@ export async function transcribePracticeVoice(
   const { userId, sessionId, questionId, audio } = args;
   const ctx = await loadEssayContext(userId, sessionId, questionId, db);
   if (!ctx.voiceAnswer) throw new PracticeFeedbackError("voice_disabled");
-  return transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+  const out = await transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+  await emitSpeechMeasured(ctx, { sessionId, questionId, source: "voice_answer", metrics: out.metrics }, db);
+  return out;
 }
 
 /**
@@ -175,6 +179,7 @@ export async function transcribeRolePlayTurn(
   if (!ctx.rolePlay && !ctx.freeChat) throw new PracticeFeedbackError("not_essay");
   if (!ctx.voiceAnswer) throw new PracticeFeedbackError("voice_disabled");
   const out = await transcribeSpokenAnswer({ userId, language: ctx.courseLanguage, audio }, deps, db);
+  await emitSpeechMeasured(ctx, { sessionId, questionId, source: "turn", turnIndex, metrics: out.metrics }, db);
   await emit(
     userId,
     ctx.courseId,
@@ -226,7 +231,7 @@ async function transcribeSpokenAnswer(
     throw new PracticeFeedbackError("audio_too_long", { seconds: Math.round(stt.durationSec), max: MAX_SPEAKING_SECONDS });
   }
   const text = (deps.normalizeText ? deps.normalizeText(stt.text, language) : stt.text).trim();
-  const metrics = measureSpeech(text, stt.words, stt.durationSec);
+  const metrics = measureSpeech(text, stt.words, stt.durationSec, stt.speechSegments);
   if (metrics.silent) throw new PracticeFeedbackError("no_speech");
   return { text, durationSec: stt.durationSec, metrics };
 }
@@ -248,6 +253,74 @@ async function emit(
   } catch (e) {
     if ((e as { code?: string }).code !== "P2002") throw e;
   }
+}
+
+/**
+ * Ghi số đo nhịp nói của một lần ghi âm (xem LearningEventType.ExamPracticeSpeechMeasured). Chỉ số liệu, không chữ. Lỗi ở đây chỉ ghi log:
+ * bản ghi đã chuyển chữ xong và đã trừ ví, không được mất kết quả vì không ghi được một sự kiện.
+ */
+async function emitSpeechMeasured(
+  ctx: { userId: string; courseId: string; examId: string; levelBand: string | null },
+  e: { sessionId: string; questionId: string; source: "voice_answer" | "turn"; turnIndex?: number; metrics: SpeechMetrics },
+  db: PrismaClient,
+) {
+  try {
+    const band = bandGroupOf(ctx.levelBand);
+    await emit(
+      ctx.userId,
+      ctx.courseId,
+      `exam.practice.speech_measured:${e.source}:${e.sessionId}:${e.questionId}:${e.turnIndex ?? 0}:${randomUUID().slice(0, 8)}`,
+      {
+        examId: ctx.examId,
+        sessionId: e.sessionId,
+        questionId: e.questionId,
+        source: e.source,
+        ...(e.turnIndex !== undefined ? { turnIndex: e.turnIndex } : {}),
+        level: fluencyLevel(e.metrics, band),
+        band,
+        fluencyVersion: e.metrics.fluency?.version ?? null,
+        metrics: e.metrics,
+      },
+      db,
+      LearningEventType.ExamPracticeSpeechMeasured,
+    );
+  } catch (err) {
+    console.error("[speech] không ghi được sự kiện đo nhịp nói", err);
+  }
+}
+
+/** Số lượt nói bằng mic tối đa gộp cho nhận xét một hội thoại (lượt cũ hơn của lần chơi trước không được kéo vào). */
+const MAX_TURNS_FOR_FLUENCY = 20;
+/** Cần ít nhất ngần này lượt nói bằng mic mới nhận xét Trôi chảy của hội thoại (ít hơn thì không đủ để nói gì về nhịp nói). */
+export const MIN_MIC_TURNS_FOR_FLUENCY = 2;
+
+/**
+ * Số đo GỘP các lượt học viên nói bằng mic của một hội thoại, lấy từ sự kiện `speech_measured` kiểu `turn` (máy chủ không lưu hội thoại nên đây là nguồn duy nhất).
+ * `learnerTurns` là số lượt học viên trong bản chữ hiện tại: chỉ lấy tối đa ngần ấy lượt GẦN NHẤT để lần chơi cũ (đã "Bắt đầu lại") không bị kéo vào.
+ * Dưới `MIN_MIC_TURNS_FOR_FLUENCY` lượt thì null — không nhận xét Trôi chảy.
+ */
+export async function chatSpeechMetrics(
+  userId: string,
+  sessionId: string,
+  questionId: string,
+  learnerTurns: number | null,
+  db: PrismaClient = prisma,
+): Promise<SpeechMetrics | null> {
+  const rows = await db.learningEvent.findMany({
+    where: {
+      userId,
+      eventType: LearningEventType.ExamPracticeSpeechMeasured,
+      eventKey: { startsWith: `exam.practice.speech_measured:turn:${sessionId}:${questionId}:` },
+    },
+    orderBy: { occurredAt: "desc" },
+    take: Math.min(learnerTurns ?? MAX_TURNS_FOR_FLUENCY, MAX_TURNS_FOR_FLUENCY),
+    select: { payload: true },
+  });
+  const list = rows
+    .map((r) => (isObj(r.payload) ? parseSpeechMetrics(r.payload.metrics) : null))
+    .filter((m): m is SpeechMetrics => m !== null && !m.silent);
+  if (list.length < MIN_MIC_TURNS_FOR_FLUENCY) return null;
+  return mergeSpeechMetrics(list);
 }
 
 export async function requestPracticeAnswerFeedback(
@@ -281,6 +354,11 @@ export async function requestPracticeAnswerFeedback(
   // Ví của HỌC VIÊN — kiểm trước khi gọi mô hình, ghi sổ sau.
   await assertWithinCaps(userId, db, "generator");
   const metrics = viaVoice ? readSpeechMetrics(answer.audioMeta) : null;
+  // Hội thoại (bạn ảo, đóng vai): Trôi chảy tổng hợp từ các lượt học viên nói bằng mic; lượt gõ tay không có số đo.
+  const turnMetrics =
+    !viaVoice && (ctx.freeChat || ctx.rolePlay)
+      ? await chatSpeechMetrics(userId, sessionId, questionId, ctx.freeChat ? text.split(/\r?\n/).filter((l) => l.startsWith("Learner: ")).length : null, db)
+      : null;
   const { system, user } = buildPracticePrompts({
     question: ctx.question.prompt,
     answer: text,
@@ -298,7 +376,7 @@ export async function requestPracticeAnswerFeedback(
   const { data, inputTokens, outputTokens } = await callJsonModel<unknown>(openai, model, system, user, "practice_answer_feedback", PRACTICE_SCHEMA, 2000);
   await recordAiUsage(userId, model, inputTokens, outputTokens, db);
 
-  const body = normalizePracticeFeedback(data, { answerText: text, sampleAnswer: ctx.sample, viaVoice, metrics });
+  const body = normalizePracticeFeedback(data, { answerText: text, sampleAnswer: ctx.sample, viaVoice, metrics, turnMetrics, levelBand: ctx.levelBand });
   await db.examPracticeAnswer.update({
     where: { id: answer.id },
     data: { aiFeedback: body as unknown as Prisma.InputJsonValue, aiFeedbackHash: hash, aiFeedbackAt: new Date() },

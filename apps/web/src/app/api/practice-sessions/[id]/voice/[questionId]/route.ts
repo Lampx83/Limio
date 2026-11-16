@@ -5,6 +5,7 @@ import { transcribePracticeVoice } from "@feedbackme/core-feedback";
 import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 import { getOpenaiClient } from "@/lib/openaiClient";
+import { resolveTranscriber } from "@/lib/speechProvider";
 import { simplifyChineseTranscript } from "@/lib/hanScript";
 import { storageFor } from "@/lib/storage";
 import { practiceAnswerKey, practiceAnswerKeyFromAudioKey } from "@/lib/storage-keys";
@@ -36,7 +37,7 @@ export async function POST(req: Request, { params }: { params: { id: string; que
     const stt = await transcribePracticeVoice(
       { userId, sessionId, questionId, audio: { buffer, mimeType } },
       // Lấy khách hàng AI chậm: thiếu cấu hình chỉ lộ khi thật sự cần gọi Whisper.
-      { openai: () => getOpenaiClient({ needsOpenaiKey: true }), normalizeText: simplifyChineseTranscript },
+      { openai: () => getOpenaiClient({ needsOpenaiKey: true }), transcribe: await resolveTranscriber(() => getOpenaiClient({ needsOpenaiKey: true })), normalizeText: simplifyChineseTranscript },
     );
 
     const filename = `${questionId}-${randomBytes(4).toString("hex")}.${ext}`;

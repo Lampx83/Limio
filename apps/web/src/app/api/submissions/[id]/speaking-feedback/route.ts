@@ -4,6 +4,7 @@ import { requireUserId } from "@/lib/session";
 import { mapKnownError } from "@/lib/apiHelpers";
 import { mapSpeakingError } from "@/lib/speakingFeedbackApi";
 import { getOpenaiClient } from "@/lib/openaiClient";
+import { resolveTranscriber } from "@/lib/speechProvider";
 import { loadSubmissionAudio } from "@/lib/submissionAudioLoader";
 
 export const runtime = "nodejs";
@@ -26,7 +27,8 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   try {
     const r = await requestSpeakingFeedback(userId, params.id, {
       // Lấy khách hàng AI CHẬM: bản cũ/lỗi điều kiện không đòi cấu hình AI.
-      openai: () => getOpenaiClient({ needsOpenaiKey: true }), // còn dùng Whisper
+      openai: () => getOpenaiClient({ needsOpenaiKey: true }), // còn dùng Whisper khi chưa có dịch vụ phân tích tiếng nói hoặc dịch vụ lỗi
+      transcribe: await resolveTranscriber(() => getOpenaiClient({ needsOpenaiKey: true })),
       loadAudio: (url) => loadSubmissionAudio(url, userId),
     });
     return NextResponse.json(r, { status: r.reused ? 200 : 201 });

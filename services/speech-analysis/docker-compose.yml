@@ -1,0 +1,23 @@
+# Chạy trên MÁY GPU (không nằm trong docker-compose.prod.yml của Limio: máy chạy web không có GPU).
+# Chưa thử trên máy thật: xem docs/van-hanh/phan-tich-tieng-noi.md.
+services:
+  speech-analysis:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080" # đặt sau Kong/Caddy như NEU TTS; không mở thẳng ra ngoài
+    environment:
+      SPEECH_API_KEY: ${SPEECH_API_KEY:?đặt SPEECH_API_KEY}
+      SPEECH_MODEL: ${SPEECH_MODEL:-large-v3}
+      SPEECH_DEVICE: ${SPEECH_DEVICE:-auto}
+      SPEECH_COMPUTE_TYPE: ${SPEECH_COMPUTE_TYPE:-auto}
+      # Tệp khoá GPU dùng chung với vLLM và các việc GPU khác: PHẢI trùng đường dẫn mà các dịch vụ kia giữ.
+      SPEECH_LOCK_FILE: /locks/GPU.lock
+      SPEECH_LOCK_WAIT_SEC: ${SPEECH_LOCK_WAIT_SEC:-30}
+    volumes:
+      - models:/models
+      - ${GPU_LOCK_DIR:-/var/lock/gpu}:/locks
+    # Bỏ dấu # hai dòng dưới khi chạy bản GPU (cần NVIDIA Container Toolkit):
+    # deploy: { resources: { reservations: { devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }] } } }
+volumes:
+  models:

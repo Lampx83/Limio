@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { WRITING_CATEGORIES, WRITING_LEVELS, type WritingCategory, type WritingCoding, type WritingLevel } from "../writing/analysis";
 import { fluencyFacets, fluencyLevel, type SpeechMetrics } from "../speaking/analysis";
+import { bandGroupOf, fluencyCommentEn, parseSpeechMetrics, type BandGroup } from "../speaking/fluency";
 
 /**
  * Góp ý AI cho CÂU MỞ (essay) của Bài luyện nhúng trong bài học. File này CHỈ chứa phần thuần: băm đầu vào,
@@ -78,7 +79,7 @@ export interface PracticeFeedbackBody {
   viaVoice: boolean;
   generatedAt: string;
   /** Toạ độ SSMMD (§4.8) của chính bản góp ý này, ghi lúc sinh. */
-  coding: WritingCoding & { promptVersion: string };
+  coding: WritingCoding & { promptVersion: string; /** Có khi tiêu chí Trôi chảy đo từ giọng nói được đưa vào: phiên bản luật/ngưỡng đã dùng. */ fluencyVersion?: string };
   /** Số mục của mô hình bị bộ lọc loại bỏ (trích đoạn bịa, danh mục lạ, câu lộ bài mẫu, câu có điểm số...). */
   dropped: number;
 }
@@ -114,29 +115,17 @@ export function readAnswerText(answerJson: unknown): { text: string; viaVoice: b
   };
 }
 
-/** Số liệu nhịp nói trong `audioMeta.metrics`; null nếu thiếu hoặc hỏng (không đoán). */
+/** Số liệu nhịp nói trong `audioMeta.metrics`; null nếu thiếu hoặc hỏng (không đoán). Số đo mới hỏng thì bỏ riêng phần đó. */
 export function readSpeechMetrics(audioMeta: unknown): SpeechMetrics | null {
-  if (!isObj(audioMeta) || !isObj(audioMeta.metrics)) return null;
-  const m = audioMeta.metrics;
-  const nums = ["durationSec", "speakingSec", "units", "ratePerMin", "longPauses", "pausesPerMin"] as const;
-  if (!nums.every((k) => typeof m[k] === "number" && Number.isFinite(m[k] as number))) return null;
-  if (m.unit !== "word" && m.unit !== "char") return null;
-  return {
-    durationSec: m.durationSec as number,
-    speakingSec: m.speakingSec as number,
-    units: m.units as number,
-    unit: m.unit,
-    ratePerMin: m.ratePerMin as number,
-    longPauses: m.longPauses as number,
-    pausesPerMin: m.pausesPerMin as number,
-    silent: m.silent === true,
-  };
+  if (!isObj(audioMeta)) return null;
+  return parseSpeechMetrics(audioMeta.metrics);
 }
 
 // ─── Lưu loát (tiếng Anh, từ số liệu đo) ─────────────────────────────────────
 
 /** Nhận xét Lưu loát bằng tiếng Anh, KHÔNG có con số; cùng ngưỡng với `fluencyLevel`/`fluencyComment` của G7. */
-export function practiceFluencyComment(m: SpeechMetrics): string {
+export function practiceFluencyComment(m: SpeechMetrics, band: BandGroup = "B"): string {
+  if (m.fluency) return fluencyCommentEn(m, band);
   const f = fluencyFacets(m);
   const pace = f.pace === "slow" ? "your pace is still a little slow" : f.pace === "good" ? "your speaking pace is comfortable" : "your speaking pace is steady";
   const pauses = f.pauses === "many" ? "with quite a few pauses" : f.pauses === "some" ? "with a few longer pauses" : "and you rarely pause for long";
@@ -201,6 +190,13 @@ export interface NormalizeCtx {
   viaVoice: boolean;
   /** Chỉ có khi trả lời bằng giọng nói và đã đo được. */
   metrics: SpeechMetrics | null;
+  /**
+   * Hội thoại (bạn ảo, đóng vai): số đo GỘP của các lượt học viên nói bằng mic (cần từ 2 lượt trở lên; tầng gọi tự kiểm). Câu trả lời của hội thoại
+   * là bản chữ cả hai bên nên `viaVoice` luôn false; có số này thì vẫn thêm Trôi chảy. Chỉ dùng khi `metrics` không áp dụng.
+   */
+  turnMetrics?: SpeechMetrics | null;
+  /** Mức CEFR của khoá (chọn nhóm ngưỡng Trôi chảy); thiếu thì nhóm B. */
+  levelBand?: string | null;
   now?: Date;
 }
 
@@ -262,8 +258,10 @@ export function normalizePracticeFeedback(raw: unknown, ctx: NormalizeCtx): Prac
   if (errors.length === 0 && criteria.length === 0 && nextSteps.length === 0 && summary === "") {
     throw new PracticeFeedbackError("analysis_empty");
   }
-  if (ctx.viaVoice && ctx.metrics && !ctx.metrics.silent) {
-    criteria.push({ key: "fluency", level: fluencyLevel(ctx.metrics), comment: practiceFluencyComment(ctx.metrics) });
+  const fluencySource = ctx.viaVoice && ctx.metrics && !ctx.metrics.silent ? ctx.metrics : ctx.turnMetrics && !ctx.turnMetrics.silent ? ctx.turnMetrics : null;
+  if (fluencySource) {
+    const band = bandGroupOf(ctx.levelBand);
+    criteria.push({ key: "fluency", level: fluencyLevel(fluencySource, band), comment: practiceFluencyComment(fluencySource, band) });
   }
   criteria.sort((a, b) => PRACTICE_CRITERIA.indexOf(a.key) - PRACTICE_CRITERIA.indexOf(b.key));
 
@@ -274,7 +272,11 @@ export function normalizePracticeFeedback(raw: unknown, ctx: NormalizeCtx): Prac
     nextSteps,
     viaVoice: ctx.viaVoice,
     generatedAt: (ctx.now ?? new Date()).toISOString(),
-    coding: { ...codePracticeFeedback({ errors, nextSteps }), promptVersion: PRACTICE_PROMPT_VERSION },
+    coding: {
+      ...codePracticeFeedback({ errors, nextSteps }),
+      promptVersion: PRACTICE_PROMPT_VERSION,
+      ...(fluencySource?.fluency ? { fluencyVersion: fluencySource.fluency.version } : {}),
+    },
     dropped,
   };
   return body;

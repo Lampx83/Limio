@@ -136,6 +136,10 @@ export const LearningEventType = {
   ExamPracticeRoleplayTurnRecorded: "exam.practice.roleplay_turn_recorded",
   // LANG — "Thử nói tự do": học viên gửi một lượt cho bạn ảo (chatbot đóng vai) trong câu mở có `freechat`. Payload chỉ id, số lượt, độ dài, token — KHÔNG mang chữ.
   ExamPracticeFreechatTurn: "exam.practice.freechat_turn",
+  // LANG — đo nhịp nói (trôi chảy) từ bản ghi âm của học viên: một lần trả lời câu mở bằng giọng (`voice_answer`) hoặc một lượt nói bằng mic trong hội thoại
+  // (`turn`). Học viên tự ghi âm nên tính là hoạt động học. Payload chỉ mang id, nguồn, số lượt, mức, phiên bản luật và SỐ ĐO (thời lượng, số từ, chỗ ngừng...) —
+  // KHÔNG mang chữ, âm thanh hay từ nào học viên nói. Số đo của các lượt `turn` được gộp lại cho nhận xét cuối buổi.
+  ExamPracticeSpeechMeasured: "exam.practice.speech_measured",
   // LANG G6 — góp ý bài viết do AI sinh: sinh ra, giảng viên duyệt, giảng viên từ chối.
   WritingFeedbackGenerated: "writing.feedback.generated",
   WritingFeedbackApproved: "writing.feedback.approved",

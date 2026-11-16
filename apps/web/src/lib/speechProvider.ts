@@ -3,9 +3,13 @@ import {
   listNeuVoices,
   neuTextToSpeech,
   openAiTextToSpeech,
+  openAiTranscriber,
   pickNeuVoice,
+  speechServiceTranscriber,
+  withSpeechFallback,
   type NeuVoice,
   type TextToSpeechFn,
+  type Transcriber,
 } from "@feedbackme/core-feedback";
 import { getIntegrationSecret, IntegrationError } from "@feedbackme/core-lms";
 
@@ -55,4 +59,28 @@ export async function resolveTextToSpeech(openai: OpenAI, language: string = "vi
     console.warn("[oral-exam] không lấy được danh sách giọng NEU, dùng OpenAI TTS:", (e as Error).message);
   }
   return openAiTextToSpeech(openai);
+}
+
+/**
+ * Bộ chuyển chữ cho MỌI đường học viên nói bằng mic (câu mở, hội thoại, đóng vai, xem thử, bài nói nộp giảng viên).
+ * Đã cấu hình dịch vụ phân tích tiếng nói nội bộ (`speech_analysis.base_url` + `.api_key`) thì gọi nó trước — giọng nói ở lại máy chủ của mình, và có
+ * thêm các đoạn có tiếng (VAD) để đo chỗ ngừng chính xác hơn; bận, quá giờ, mạng hay phản hồi lỗi thì tự rơi về Whisper qua OpenAI như trước.
+ * Chưa cấu hình thì trả `undefined` để nơi gọi dùng đường Whisper cũ nguyên vẹn.
+ *
+ * Khách hàng OpenAI chỉ được tạo khi thật sự phải rơi về Whisper: dịch vụ chạy được thì thiếu cấu hình OpenAI không lộ ra.
+ */
+export async function resolveTranscriber(getOpenai: () => Promise<OpenAI>): Promise<Transcriber | undefined> {
+  const baseUrl = await optionalSecret("speech_analysis.base_url");
+  if (!baseUrl) return undefined;
+  const apiKey = await optionalSecret("speech_analysis.api_key");
+  if (!apiKey) {
+    console.warn("[speech] đã có speech_analysis.base_url nhưng thiếu speech_analysis.api_key: dùng Whisper qua OpenAI");
+    return undefined;
+  }
+  return withSpeechFallback(
+    speechServiceTranscriber({ baseUrl, apiKey }),
+    async (audio, opts) => openAiTranscriber(await getOpenai())(audio, opts),
+    // Chỉ ghi MÃ lý do (busy, timeout, network, http_5xx, bad_response), không ghi chữ hay âm thanh.
+    (reason) => console.warn(`[speech] dịch vụ phân tích tiếng nói không dùng được (${reason}): dùng Whisper qua OpenAI`),
+  );
 }

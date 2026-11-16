@@ -4,7 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import { getTokenBudget } from "../aiTutor/tokenWallet";
 import { PracticeFeedbackError, buildPracticePrompts } from "../practiceAnswer/analysis";
-import { getFreeChatOpening, requestPracticeAnswerFeedback, runFreeChatTurn, transcribeRolePlayTurn } from "../practiceAnswer/feedback";
+import { chatSpeechMetrics, getFreeChatOpening, requestPracticeAnswerFeedback, runFreeChatTurn, transcribeRolePlayTurn } from "../practiceAnswer/feedback";
 import {
   FREECHAT_FALLBACK,
   buildFreeChatMessages,
@@ -389,5 +389,93 @@ describe("getFreeChatOpening (DB) — giọng đọc lời mở đầu", () => {
     await expect(getFreeChatOpening({ userId: closed.userId, sessionId: closed.sessionId, questionId: closed.questionId })).rejects.toMatchObject({ code: "session_closed" });
     const ctrl = await fx(CFG, "minimal");
     await expect(getFreeChatOpening({ userId: ctrl.userId, sessionId: ctrl.sessionId, questionId: ctrl.questionId })).rejects.toMatchObject({ code: "control_group" });
+  });
+});
+
+// docs/tieu-chi/limio-language-cham-noi-bang-mic.md AC3 — Trôi chảy của hội thoại (các lượt nói bằng mic)
+describe("Trôi chảy của hội thoại — các lượt nói bằng mic", () => {
+  type F = Awaited<ReturnType<typeof fx>>;
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  /** Một lượt nói bằng mic: `n` từ liền nhau (0,1 giây giữa các từ), cách lượt sau không đáng kể. */
+  const mic = async (f: F, turnIndex: number, n: number, gapAt?: number) => {
+    const text = Array.from({ length: n }, (_, i) => `secretword${turnIndex}x${i}`).join(" ");
+    let t = 0;
+    const words = Array.from({ length: n }, (_, i) => {
+      const start = t;
+      t += 0.3 + (gapAt === i ? 2 : 0.1);
+      return { start, end: start + 0.3 };
+    });
+    const out = await transcribeRolePlayTurn(
+      { userId: f.userId, sessionId: f.sessionId, questionId: f.questionId, turnIndex, audio: { buffer: Buffer.from([1, 2, 3]), mimeType: "audio/webm" } },
+      { openai: {} as OpenAI, transcribe: async () => ({ text, durationSec: t, words }) },
+    );
+    await wait(8); // sự kiện cách nhau để thứ tự "gần nhất" xác định
+    return out;
+  };
+  const measured = (f: F) =>
+    prisma.learningEvent.findMany({ where: { userId: f.userId, eventType: LearningEventType.ExamPracticeSpeechMeasured }, orderBy: { occurredAt: "asc" } });
+  const chatAnswer = (f: F, learnerTurns: number) =>
+    prisma.examPracticeAnswer.create({
+      data: {
+        sessionId: f.sessionId,
+        questionId: f.questionId,
+        answerJson: { text: Array.from({ length: learnerTurns }, (_, i) => `Partner: Why ${i}?\nLearner: Because it is useful number ${i}.`).join("\n") },
+      },
+    });
+  const reviewer = (content: unknown = { summary: "Good.", criteria: [{ key: "task", level: "good", comment: "ok" }], errors: [], nextSteps: ["Keep going."] }) =>
+    ({ chat: { completions: { create: async () => ({ choices: [{ message: { content: JSON.stringify(content) } }], usage: { prompt_tokens: 100, completion_tokens: 50 } }) } } }) as unknown as OpenAI;
+
+  it("mỗi lượt mic ghi sự kiện exam.practice.speech_measured: chỉ số đo, KHÔNG có chữ học viên nói", async () => {
+    const f = await fx();
+    await mic(f, 0, 12);
+    const ev = await measured(f);
+    expect(ev).toHaveLength(1);
+    expect(ev[0]!.payload).toMatchObject({ sessionId: f.sessionId, questionId: f.questionId, source: "turn", turnIndex: 0, band: "B", fluencyVersion: "fluency.v1" });
+    expect((ev[0]!.payload as { metrics: { units: number } }).metrics.units).toBe(12);
+    expect(JSON.stringify(ev[0]!.payload)).not.toContain("secretword");
+    // sự kiện cũ vẫn còn, và cũng không mang chữ
+    const old = await prisma.learningEvent.findMany({ where: { userId: f.userId, eventType: LearningEventType.ExamPracticeRoleplayTurnRecorded } });
+    expect(old).toHaveLength(1);
+    expect(JSON.stringify(old[0]!.payload)).not.toContain("secretword");
+  });
+
+  it("nhận xét cuối buổi: từ 2 lượt mic thì có tiêu chí Trôi chảy (do luật), nhận xét không có con số, coding ghi phiên bản luật", async () => {
+    const f = await fx();
+    await mic(f, 0, 14);
+    await mic(f, 1, 14, 6); // lượt 2 có một chỗ ngừng dài
+    await chatAnswer(f, 2);
+    const r = await requestPracticeAnswerFeedback(f.userId, f.sessionId, f.questionId, { openai: reviewer({ summary: "Good.", criteria: [{ key: "task", level: "good", comment: "ok" }, { key: "fluency", level: "good", comment: "MÔ HÌNH BỊA" }], errors: [], nextSteps: ["Keep going."] }) });
+    const fl = r.body.criteria.find((c) => c.key === "fluency")!;
+    expect(fl).toBeTruthy();
+    expect(fl.comment).not.toContain("MÔ HÌNH BỊA");
+    expect(fl.comment).toMatch(/Measured from your recording/);
+    expect(fl.comment).not.toMatch(/\d/);
+    expect(r.body.coding.fluencyVersion).toBe("fluency.v1");
+    expect(r.body.viaVoice).toBe(false);
+  });
+
+  it("chỉ 1 lượt mic hoặc toàn lượt gõ tay thì KHÔNG có Trôi chảy", async () => {
+    const one = await fx();
+    await mic(one, 0, 14);
+    await chatAnswer(one, 2);
+    expect((await requestPracticeAnswerFeedback(one.userId, one.sessionId, one.questionId, { openai: reviewer() })).body.criteria.some((c) => c.key === "fluency")).toBe(false);
+
+    const typed = await fx();
+    await chatAnswer(typed, 3);
+    expect((await requestPracticeAnswerFeedback(typed.userId, typed.sessionId, typed.questionId, { openai: reviewer() })).body.criteria.some((c) => c.key === "fluency")).toBe(false);
+  });
+
+  it("chatSpeechMetrics: gộp đúng các lượt, chỉ lấy ngần ấy lượt GẦN NHẤT (lần chơi cũ không bị kéo vào), không lẫn người khác", async () => {
+    const f = await fx();
+    await mic(f, 0, 5);
+    await mic(f, 1, 8);
+    await mic(f, 2, 11);
+    const all = await chatSpeechMetrics(f.userId, f.sessionId, f.questionId, null);
+    expect(all!.units).toBe(24);
+    const lastTwo = await chatSpeechMetrics(f.userId, f.sessionId, f.questionId, 2);
+    expect(lastTwo!.units).toBe(19); // 8 + 11
+    expect(lastTwo!.fluency).toBeTruthy();
+    expect(await chatSpeechMetrics(f.userId, f.sessionId, f.questionId, 1)).toBeNull(); // một lượt: không đủ
+    expect(await chatSpeechMetrics(f.otherUserId, f.sessionId, f.questionId, null)).toBeNull();
   });
 });

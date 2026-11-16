@@ -103,6 +103,10 @@ export const INTEGRATION_KEYS = [
   // Giọng NEU quyết định ngôn ngữ đọc: đề tiếng Trung/Anh dùng giọng riêng, không dùng giọng Việt ở trên.
   "neutts.voice_zh",
   "neutts.voice_en",
+  // Dịch vụ phân tích tiếng nói nội bộ (services/speech-analysis): chuyển chữ + mốc thời gian + đoạn có tiếng cho phần nói bằng mic.
+  // Có base_url thì mọi đường nói bằng mic dùng nó trước, lỗi thì rơi về Whisper qua OpenAI; không có thì dùng Whisper như trước.
+  "speech_analysis.base_url",
+  "speech_analysis.api_key",
   // Limio-Live: tìm trang trên internet khi soạn bài giảng từ mô tả chủ đề (apps/web/src/lib/webSearch.ts).
   "websearch.tavily",
 ] as const;
@@ -195,6 +199,10 @@ function envFallbackName(key: string): string | null {
       return "NEUTTS_VOICE_ZH";
     case "neutts.voice_en":
       return "NEUTTS_VOICE_EN";
+    case "speech_analysis.base_url":
+      return "SPEECH_ANALYSIS_BASE_URL";
+    case "speech_analysis.api_key":
+      return "SPEECH_ANALYSIS_API_KEY";
     case "websearch.tavily":
       return "TAVILY_API_KEY";
     default:

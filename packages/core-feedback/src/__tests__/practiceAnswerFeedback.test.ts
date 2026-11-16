@@ -435,6 +435,25 @@ describe("transcribePracticeVoice", () => {
     expect(seen).toEqual(["en"]);
   });
 
+  it("ghi sự kiện đo nhịp nói (voice_answer): có số đo mới và mức, KHÔNG có chữ; số đo mới nằm trong kết quả trả về", async () => {
+    const f = await fx({ answer: null });
+    const r = await run(f, { transcribe: fakeStt().transcribe });
+    expect(r.metrics.fluency?.version).toBe("fluency.v1");
+    const ev = await prisma.learningEvent.findMany({ where: { userId: f.userId, eventType: "exam.practice.speech_measured" } });
+    expect(ev).toHaveLength(1);
+    expect(ev[0]!.payload).toMatchObject({ sessionId: f.sessionId, questionId: f.questionId, source: "voice_answer", band: "B", fluencyVersion: "fluency.v1" });
+    expect(["needs_work", "fair", "good"]).toContain((ev[0]!.payload as { level: string }).level);
+    expect(JSON.stringify(ev[0]!.payload)).not.toContain("library");
+    expect(JSON.stringify(ev[0]!.payload)).not.toContain("Anna");
+  });
+
+  it("câu mở trả lời bằng giọng: tiêu chí Trôi chảy dùng số đo mới và ghi phiên bản luật vào coding", async () => {
+    const f = await fx({ answer: { text: SPOKEN, viaVoice: true }, audioMeta: { durationSec: 40, mimeType: "audio/webm", sizeBytes: 1000, metrics: measureSpeech(SPOKEN, Array.from({ length: 16 }, (_, i) => ({ start: 1 + i * 0.5, end: 1.3 + i * 0.5 })), 10) } });
+    const r = await ask(f, fakeOpenAI().openai);
+    expect(r.body.criteria.some((c) => c.key === "fluency")).toBe(true);
+    expect(r.body.coding.fluencyVersion).toBe("fluency.v1");
+  });
+
   it("kiểm ví → Whisper có ngôn ngữ của khoá → trừ ví theo thời lượng (40 giây = 4.000 token) → trả chữ + số liệu nhịp nói", async () => {
     const f = await fx({ answer: null });
     const before = await getTokenBudget(f.userId);

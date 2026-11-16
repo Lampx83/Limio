@@ -26,6 +26,7 @@ import {
   type TimedWord,
 } from "./analysis";
 import { WRITING_LEVELS } from "../writing/analysis";
+import { bandGroupOf } from "./fluency";
 import type { OpenAiSource } from "../writing/feedback";
 
 /**
@@ -48,6 +49,10 @@ export interface TranscribeResult {
   durationSec: number;
   words: TimedWord[];
   language?: string;
+  /** Các đoạn có tiếng nói do VAD cắt (chỉ dịch vụ phân tích nội bộ có): đo chỗ ngừng chính xác hơn mốc từ. */
+  speechSegments?: TimedWord[];
+  /** Bộ máy đã chuyển chữ (chỉ dịch vụ phân tích nội bộ có), để ghi lại phiên bản đã dùng. */
+  engine?: { name: string; model: string; version: string };
 }
 export type Transcriber = (audio: AudioPayload, opts: { language?: string }) => Promise<TranscribeResult>;
 
@@ -199,7 +204,7 @@ export async function createSubmissionTranscript(
   // Whisper đã chạy: ghi sổ + trừ ví theo thời lượng, KỂ CẢ khi sau đó không có tiếng nói/quá dài.
   await recordAiUsage(args.chargeUserId, SPEAKING_STT_MODEL, whisperChargeTokens(stt.durationSec), 0, db);
   const text = stt.text.trim();
-  const metrics = measureSpeech(text, stt.words, stt.durationSec);
+  const metrics = measureSpeech(text, stt.words, stt.durationSec, stt.speechSegments);
   try {
     return await db.submissionTranscript.create({
       data: {
@@ -241,7 +246,7 @@ export async function requestSpeakingFeedback(
           title: true,
           description: true,
           rubricText: true,
-          lesson: { select: { module: { select: { courseId: true, course: { select: { languageMode: true, language: true } } } } } },
+          lesson: { select: { module: { select: { courseId: true, course: { select: { languageMode: true, language: true, levelBand: true } } } } } },
         },
       },
     },
@@ -325,7 +330,7 @@ export async function requestSpeakingFeedback(
   );
   await recordAiUsage(userId, model, inputTokens, outputTokens, db);
 
-  const analysis = normalizeSpeakingAnalysis(data, transcript.text, metrics);
+  const analysis = normalizeSpeakingAnalysis(data, transcript.text, metrics, bandGroupOf(mod.course.levelBand));
   const coding = codeSpeakingFeedback(analysis);
   const row = await db.speakingFeedback.create({
     data: {

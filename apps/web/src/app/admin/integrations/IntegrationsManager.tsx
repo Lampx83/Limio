@@ -46,6 +46,16 @@ const LABELS: Record<
   "momo.secret": { name: "Momo secret", placeholder: "MOMO_SECRET_KEY", emoji: "" },
   "vbee.app_id": { name: "App-Id", placeholder: "App-Id" },
   "vbee.token": { name: "Token", placeholder: "Token" },
+  "speech_analysis.base_url": {
+    name: "Địa chỉ dịch vụ",
+    placeholder: "http://<máy GPU>:8080/speech",
+    help: "Gốc của dịch vụ phân tích tiếng nói (không kèm /v1/analyze). Để trống = chuyển chữ bằng Whisper qua OpenAI như trước.",
+  },
+  "speech_analysis.api_key": {
+    name: "Khoá API",
+    placeholder: "Khoá của dịch vụ",
+    help: "Cùng giá trị với SPEECH_API_KEY của dịch vụ. Gửi kèm mỗi lần gọi (Authorization: Bearer và x-api-key).",
+  },
   "neutts.base_url": {
     name: "Base URL (Kong)",
     placeholder: "http://<host>:8037/tts",
@@ -107,6 +117,11 @@ const GROUPS: Record<
     // độc lập, không có một giá trị "đang gõ" duy nhất để test tạm. Test
     // luôn nhắm vào cặp ĐÃ LƯU, và chỉ bật khi cả hai đã cấu hình.
     testEndpoint: "/api/admin/integrations/vbee/test",
+  },
+  speech_analysis: {
+    name: "Phân tích tiếng nói — nhịp nói khi học viên nói bằng mic",
+    help: "Dịch vụ nội bộ chạy trên máy GPU: chuyển chữ, mốc thời gian và đoạn có tiếng để đo độ trôi chảy; giọng nói không rời máy chủ của mình. Lỗi hoặc quá bận thì tự dùng Whisper qua OpenAI. Xem docs/van-hanh/phan-tich-tieng-noi.md.",
+    keys: ["speech_analysis.base_url", "speech_analysis.api_key"],
   },
   neutts: {
     name: "NEU TTS — đọc giọng vấn đáp (Việt, Trung, Anh)",

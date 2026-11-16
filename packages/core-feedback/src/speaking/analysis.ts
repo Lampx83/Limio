@@ -5,6 +5,7 @@ import {
   type WritingCoding,
   type WritingLevel,
 } from "../writing/analysis";
+import { fluencyCommentVi, fluencyLevelFrom, measureFluencyExtras, rateWindowMinutes, type BandGroup, type FluencyExtras } from "./fluency";
 
 /**
  * LANG G7 — phân tích bài nói ngoại ngữ. File này CHỈ chứa phần thuần: đo nhịp nói, chuẩn hoá đầu ra mô
@@ -92,29 +93,41 @@ export interface SpeechMetrics {
   longPauses: number;
   pausesPerMin: number;
   silent: boolean;
+  /** Số đo mới (chuỗi nói liền, ngừng ba cỡ, chữ đệm, từ lặp — xem fluency.ts). Thiếu ở bản ghi cũ hoặc khi không có mốc thời gian từng từ. */
+  fluency?: FluencyExtras;
 }
 
 export const LONG_PAUSE_SEC = 1.5;
 const MIN_UNITS_FOR_SPEECH = 3;
 const CJK = /[㐀-鿿豈-﫿぀-ヿ가-힯]/g;
 
-export function measureSpeech(text: string, words: TimedWord[], durationSec: number): SpeechMetrics {
+const validSpan = (w: TimedWord) => Number.isFinite(w.start) && Number.isFinite(w.end) && w.end >= w.start;
+
+/**
+ * Số đo nhịp nói. `speechSegments` (khi có) là các đoạn có tiếng nói do bộ phát hiện tiếng nói (VAD) của dịch vụ phân tích nội bộ cắt ra: chỗ ngừng tính
+ * từ khe giữa các đoạn đó, tin cậy hơn mốc từ của Whisper (mốc từ hay lệch trong im lặng). Không có hoặc hỏng thì dùng mốc từng từ như trước.
+ */
+export function measureSpeech(text: string, words: TimedWord[], durationSec: number, speechSegments?: TimedWord[]): SpeechMetrics {
   const units = countWritingUnits(text);
   const cjk = (text.match(CJK) ?? []).length;
   const unit: "word" | "char" = cjk > 0 && cjk >= units / 2 ? "char" : "word";
-  const timed = words.filter((w) => Number.isFinite(w.start) && Number.isFinite(w.end) && w.end >= w.start);
+  const timed = words.filter(validSpan);
+  const segments = (speechSegments ?? []).filter(validSpan);
+  const useSegments = segments.length >= 1;
+  const spans = useSegments ? segments : timed;
 
   let speakingSec = durationSec;
   let longPauses = 0;
-  if (timed.length >= 2) {
-    const sorted = [...timed].sort((a, b) => a.start - b.start);
+  if (spans.length >= (useSegments ? 1 : 2)) {
+    const sorted = [...spans].sort((a, b) => a.start - b.start);
     speakingSec = sorted[sorted.length - 1]!.end - sorted[0]!.start;
     for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i]!.start - sorted[i - 1]!.end > LONG_PAUSE_SEC) longPauses++;
+      if (Math.round((sorted[i]!.start - sorted[i - 1]!.end) * 1000) / 1000 > LONG_PAUSE_SEC) longPauses++;
     }
   }
   if (!(speakingSec > 0)) speakingSec = Math.max(durationSec, 0);
   const minutes = speakingSec / 60;
+  const fluency = measureFluencyExtras({ text, words: spans, unit, units, speakingSec, minSpans: useSegments ? 1 : 2 });
   return {
     durationSec,
     speakingSec,
@@ -122,8 +135,10 @@ export function measureSpeech(text: string, words: TimedWord[], durationSec: num
     unit,
     ratePerMin: minutes > 0 ? units / minutes : 0,
     longPauses,
-    pausesPerMin: minutes > 0 ? longPauses / minutes : 0,
+    // Chia cho cửa sổ tối thiểu 30 giây: bản ghi ngắn không bị thổi phồng tỉ lệ ngừng (xem MIN_RATE_WINDOW_SEC).
+    pausesPerMin: longPauses / rateWindowMinutes(speakingSec),
     silent: units < MIN_UNITS_FOR_SPEECH,
+    ...(fluency ? { fluency } : {}),
   };
 }
 
@@ -138,11 +153,8 @@ const RATE: Record<"word" | "char", { low: number; good: number }> = {
 const PAUSES_BAD = 4; // chỗ ngừng dài / phút
 const PAUSES_OK = 1.5;
 
-export function fluencyLevel(m: SpeechMetrics): WritingLevel {
-  const t = RATE[m.unit];
-  if (m.ratePerMin < t.low || m.pausesPerMin >= PAUSES_BAD) return "needs_work";
-  if (m.ratePerMin >= t.good && m.pausesPerMin <= PAUSES_OK) return "good";
-  return "fair";
+export function fluencyLevel(m: SpeechMetrics, band: BandGroup = "B"): WritingLevel {
+  return fluencyLevelFrom(m, band);
 }
 
 /** Hai chiều của nhịp nói (tốc độ, chỗ ngừng) đã chia nhóm — để mỗi nơi dựng câu theo ngôn ngữ của mình mà không lặp ngưỡng. */
@@ -154,8 +166,9 @@ export function fluencyFacets(m: SpeechMetrics): { pace: "slow" | "moderate" | "
   };
 }
 
-/** Nhận xét bằng chữ, KHÔNG có con số. */
-export function fluencyComment(m: SpeechMetrics): string {
+/** Nhận xét bằng chữ, KHÔNG có con số. Có số đo mới thì nêu một điều tốt và một điều nên sửa; bản ghi cũ giữ lời cũ. */
+export function fluencyComment(m: SpeechMetrics, band: BandGroup = "B"): string {
+  if (m.fluency) return fluencyCommentVi(m, band);
   const f = fluencyFacets(m);
   const pace = f.pace === "slow" ? "nói còn chậm" : f.pace === "good" ? "tốc độ nói ổn" : "tốc độ nói vừa phải";
   const pauses =
@@ -198,7 +211,7 @@ export function hashSpeakingText(text: string): string {
   return createHash("sha256").update(canon(text)).digest("hex");
 }
 
-export function normalizeSpeakingAnalysis(raw: unknown, transcript: string, metrics: SpeechMetrics): SpeakingAnalysis {
+export function normalizeSpeakingAnalysis(raw: unknown, transcript: string, metrics: SpeechMetrics, band: BandGroup = "B"): SpeakingAnalysis {
   if (!isObj(raw)) throw new SpeakingFeedbackError("analysis_empty");
   const haystack = squash(transcript);
   let dropped = 0;
@@ -249,7 +262,7 @@ export function normalizeSpeakingAnalysis(raw: unknown, transcript: string, metr
     throw new SpeakingFeedbackError("analysis_empty");
   }
   if (!metrics.silent) {
-    criteria.push({ key: "fluency", level: fluencyLevel(metrics), comment: fluencyComment(metrics) });
+    criteria.push({ key: "fluency", level: fluencyLevel(metrics, band), comment: fluencyComment(metrics, band) });
   }
   criteria.sort((a, b) => SPEAKING_CRITERIA.indexOf(a.key) - SPEAKING_CRITERIA.indexOf(b.key));
   return { summary, criteria, errors, nextSteps, dropped };
