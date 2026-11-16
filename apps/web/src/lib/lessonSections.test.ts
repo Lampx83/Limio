@@ -181,8 +181,14 @@ describe("arrangeTabs — xếp tab theo số exercise", () => {
     expect(arrangeTabs([t("8B"), t("7"), t("8A"), t("10A"), t("3A–3D, 5")]).map((x) => x.label)).toEqual(["3A–3D, 5", "7", "8A", "8B", "10A"]);
     expect(arrangeTabs([t("3D"), t("3D", true), t("3C")]).map((x) => `${x.label}${x.virtualPartner ? "*" : ""}`)).toEqual(["3C", "3D", "3D*"]);
   });
-  it("có tab không bắt đầu bằng số (tên khối): giữ nguyên thứ tự cũ", () => {
-    expect(arrangeTabs([t("8B"), t("Fair Isle: fact file"), t("1A")]).map((x) => x.label)).toEqual(["8B", "Fair Isle: fact file", "1A"]);
+  it("tab không bắt đầu bằng số (tên khối, Free practice): đứng sau các tab có số, giữ thứ tự cũ với nhau", () => {
+    expect(arrangeTabs([t("8B"), t("Fair Isle: fact file"), t("1A"), t("Free practice")]).map((x) => x.label)).toEqual(["1A", "8B", "Fair Isle: fact file", "Free practice"]);
+  });
+  it("khoá tiếng Trung: nhãn kiểu \"2 (1) · …\" không phải mã exercise, nên không bị kéo lên trước tab chữ (giữ thứ tự cũ)", () => {
+    const labels = ["Match the words with the pictures", "2 (1) · Talk with a virtual partner", "2 (2) · Talk with a virtual partner"];
+    expect(arrangeTabs(labels.map((l) => t(l, true))).map((x) => x.label)).toEqual(labels);
+    const text = ["课文1 · Listen", "课文1 · Role-play", "课文1 · Speaking: answer the questions", "小语讲堂 1"];
+    expect(arrangeTabs(text.map((l) => t(l))).map((x) => x.label)).toEqual(text);
   });
 });
 

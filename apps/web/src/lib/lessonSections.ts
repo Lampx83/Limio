@@ -24,26 +24,23 @@ export interface SectionTab<T extends SectionItem> {
 
 /**
  * Xếp tab theo số exercise của sách (7, 8A, 8B, …) để vào bài nào cũng thấy theo thứ tự quen thuộc.
- * Chỉ xếp lại khi MỌI tab đều có nhãn bắt đầu bằng số; còn không giữ nguyên thứ tự cũ.
- * Xếp ổn định: cùng số/chữ thì giữ thứ tự cũ.
+ * Mọi tab đều bắt đầu bằng số: xếp theo số rồi chữ cái (như trước).
+ * Có tab không phải số ("Free practice", tên khối): chỉ khi nhãn là mã exercise đúng nghĩa ("1B", "3A–3D, 5", "7 · …") mới xếp theo số
+ * và đứng trước; các tab còn lại ("Match the words…", "2 (1) · Talk…" của khoá tiếng Trung) đứng sau, giữ thứ tự cũ với nhau.
+ * Không có mã exercise nào thì giữ nguyên thứ tự. Xếp ổn định: cùng số/chữ thì giữ thứ tự cũ.
  */
 export function arrangeTabs<T extends { label: string; virtualPartner: boolean }>(tabs: readonly T[]): T[] {
-  const key = (label: string): [number, string] | null => {
-    const m = /^(\d+)([A-E])?/.exec(label);
+  const key = (label: string, strict: boolean): [number, string] | null => {
+    const m = (strict ? /^(\d+)([A-E])?(?:[–-]\d*[A-E])?(?=,|$| · )/ : /^(\d+)([A-E])?/).exec(label);
     return m ? [Number(m[1]), m[2] ?? ""] : null;
   };
-  let out = tabs.map((t) => ({ ...t }));
-  if (out.every((t) => key(t.label))) {
-    out = out
-      .map((t, i) => ({ t, i }))
-      .sort((a, b) => {
-        const ka = key(a.t.label)!;
-        const kb = key(b.t.label)!;
-        return ka[0] - kb[0] || ka[1].localeCompare(kb[1]) || a.i - b.i;
-      })
-      .map((x) => x.t);
-  }
-  return out;
+  const cmp = (a: { k: [number, string]; i: number }, b: { k: [number, string]; i: number }) =>
+    a.k[0] - b.k[0] || a.k[1].localeCompare(b.k[1]) || a.i - b.i;
+  const all = tabs.every((t) => key(t.label, false));
+  const items = tabs.map((t, i) => ({ t: { ...t }, i, k: key(t.label, !all) }));
+  const numbered = items.filter((x) => x.k) as { t: T; i: number; k: [number, string] }[];
+  const plain = items.filter((x) => !x.k).map((x) => x.t);
+  return [...numbered.sort(cmp).map((x) => x.t), ...plain];
 }
 
 /** Một exercise chỉ một tab: các tab cùng nhãn (vd bài viết 3D và phiếu bạn ảo 3D) gộp thành một, đứng ở vị trí của tab đầu. */
