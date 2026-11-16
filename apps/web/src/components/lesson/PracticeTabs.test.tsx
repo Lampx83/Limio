@@ -119,3 +119,32 @@ describe("PracticeTabs — thẻ bài tập (loại bài, tên bài, tiến đ�
     expect(tabEls().map((t) => t.textContent)).toEqual(["7A", "7B"]);
   });
 });
+
+describe("PracticeTabs — nhiều thẻ: mũi tên và mờ mép", () => {
+  const many = Array.from({ length: 9 }, (_, i) => ({ id: `t${i}`, label: `${i + 1}A`, content: <p>{i}</p> }));
+  const bar = () => host.querySelector<HTMLElement>('[role="tablist"]')!;
+  const setScroll = async (scrollLeft: number) => {
+    const el = bar();
+    Object.defineProperty(el, "scrollWidth", { configurable: true, value: 1000 });
+    Object.defineProperty(el, "clientWidth", { configurable: true, value: 300 });
+    el.scrollLeft = scrollLeft;
+    await act(async () => void el.dispatchEvent(new Event("scroll")));
+  };
+  const arrow = (side: "trái" | "phải") => host.querySelector(`button[aria-label="Cuộn hàng bài tập sang ${side}"]`);
+
+  it("còn thẻ bị che ở bên phải: có nút sang phải, chưa có nút sang trái; cuộn tới cuối thì đảo lại", async () => {
+    await render(many);
+    await setScroll(0);
+    expect(arrow("phải")).not.toBeNull();
+    expect(arrow("trái")).toBeNull();
+    await setScroll(700);
+    expect(arrow("trái")).not.toBeNull();
+    expect(arrow("phải")).toBeNull();
+  });
+
+  it("vừa một hàng thì không có mũi tên nào", async () => {
+    await render(many.slice(0, 2));
+    expect(arrow("phải")).toBeNull();
+    expect(arrow("trái")).toBeNull();
+  });
+});

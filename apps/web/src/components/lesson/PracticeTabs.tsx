@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
-import { BookOpen, Check, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { BookOpen, Check, ChevronLeft, ChevronRight, Headphones, ListChecks, Mic, Shuffle, TextCursorInput, type LucideIcon } from "lucide-react";
 import { PRACTICE_KIND_LABEL, PRACTICE_PROGRESS_EVENT, type PracticeKind, type PracticeProgressDetail, type PracticeTabMeta } from "@/lib/practiceTabMeta";
 
 export interface PracticeTab {
@@ -63,6 +63,36 @@ export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
     window.addEventListener(PRACTICE_PROGRESS_EVENT, onProgress);
     return () => window.removeEventListener(PRACTICE_PROGRESS_EVENT, onProgress);
   }, []);
+  // Hàng thẻ cuộn ngang: biết còn thẻ bị che ở mép nào để mờ mép và hiện nút mũi tên.
+  const barRef = useRef<HTMLDivElement>(null);
+  const [edge, setEdge] = useState({ left: false, right: false });
+  const measure = useCallback(() => {
+    const el = barRef.current;
+    if (!el) return;
+    const left = el.scrollLeft > 2;
+    const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 2;
+    setEdge((e) => (e.left === left && e.right === right ? e : { left, right }));
+  }, []);
+  useEffect(() => {
+    measure();
+    const el = barRef.current;
+    window.addEventListener("resize", measure);
+    const ro = typeof ResizeObserver !== "undefined" && el ? new ResizeObserver(measure) : null;
+    if (ro && el) ro.observe(el);
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro?.disconnect();
+    };
+  }, [measure, tabs.length]);
+  // Thẻ đang mở luôn nằm trong tầm nhìn (chỉ cuộn trong hàng thẻ, không cuộn cả trang).
+  useEffect(() => {
+    const bar = barRef.current;
+    const el = document.getElementById(`${uid}-tab-${active}`);
+    if (!bar || !el || bar.scrollWidth <= bar.clientWidth) return;
+    if (el.offsetLeft < bar.scrollLeft) bar.scrollTo({ left: Math.max(0, el.offsetLeft - 40), behavior: "smooth" });
+    else if (el.offsetLeft + el.offsetWidth > bar.scrollLeft + bar.clientWidth) bar.scrollTo({ left: el.offsetLeft + el.offsetWidth - bar.clientWidth + 40, behavior: "smooth" });
+  }, [active, uid]);
+  const scrollBar = (dir: -1 | 1) => barRef.current?.scrollBy({ left: dir * Math.max(120, (barRef.current?.clientWidth ?? 300) * 0.7), behavior: "smooth" });
   if (tabs.length === 0) return null;
   // Một khối: không cần chuyển tab, nhưng nếu tên là số exercise ("6", "2A") thì vẫn hiện số đó để biết đang làm bài tập nào.
   if (tabs.length === 1 && !/^\d/.test(tabs[0]!.label)) return <div>{tabs[0]!.content}</div>;
@@ -71,10 +101,27 @@ export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
 
   return (
     <section className="mt-5" data-testid="practice-tabs">
+      <div className="relative">
+      {edge.left && (
+        <button type="button" onClick={() => scrollBar(-1)} aria-label="Cuộn hàng bài tập sang trái" className="absolute left-0 top-10 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-muted shadow-sm hover:text-[rgb(var(--text))]">
+          <ChevronLeft size={18} aria-hidden />
+        </button>
+      )}
+      {edge.right && (
+        <button type="button" onClick={() => scrollBar(1)} aria-label="Cuộn hàng bài tập sang phải" className="absolute right-0 top-10 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-muted shadow-sm hover:text-[rgb(var(--text))]">
+          <ChevronRight size={18} aria-hidden />
+        </button>
+      )}
       <div
+        ref={barRef}
+        onScroll={measure}
         role="tablist"
         aria-label="Bài luyện của bài học"
-        className="-mx-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="relative -mx-2 overflow-x-auto px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{
+          maskImage: `linear-gradient(to right, transparent 0, #000 ${edge.left ? "2.5rem" : "0px"}, #000 calc(100% - ${edge.right ? "2.5rem" : "0px"}), transparent 100%)`,
+          WebkitMaskImage: `linear-gradient(to right, transparent 0, #000 ${edge.left ? "2.5rem" : "0px"}, #000 calc(100% - ${edge.right ? "2.5rem" : "0px"}), transparent 100%)`,
+        }}
       >
         {/* Đường kẻ màu nhấn chạy suốt dưới hàng thẻ; thẻ đang mở hở đáy và nối thẳng vào nó, nên thấy rõ thẻ nào đang mở nội dung bên dưới. */}
         <div className="flex w-max min-w-full items-end gap-2 border-b-2 border-brand-600">
@@ -152,6 +199,7 @@ export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
           );
         })}
         </div>
+      </div>
       </div>
       {tabs.map((t, i) => (
         <div key={t.id} role="tabpanel" id={`${uid}-panel-${i}`} aria-labelledby={`${uid}-tab-${i}`} hidden={i !== cur} className="pt-3">
