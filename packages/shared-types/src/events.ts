@@ -309,6 +309,9 @@ export const LearningEventType = {
   // CENTER C3 — giáo trình dựng sẵn. Subject là giảng viên thao tác.
   CoursePackUsed: "course.pack.used",
   CoursePackUpdated: "course.pack.updated",
+  // CENTER K — phân phối chương trình (bài theo buổi cho mọi lớp của khoá). Subject là người quản khoá thao tác; payload chỉ id
+  // và số đếm, không mang tên bài hay chủ đề buổi. Không tính là hoạt động học.
+  CourseSessionPlanUpdated: "course.session_plan.updated",
   // AC1 học liệu bản quyền (docs/tieu-chi/hoc-lieu-nha-xuat-ban-P0.md). Subject là người bật/tắt cờ;
   // payload chỉ mang id và số file, không tính là hoạt động học.
   CourseProtectedMediaEnabled: "course.protected_media.enabled",
@@ -1138,6 +1141,17 @@ export interface TeacherCheckInEditedPayload {
   /** Trường đã đổi: teacherId | checkedInAt | checkedOutAt. Không mang lý do, chỉ độ dài. */
   changed: string[];
   reasonLength: number;
+}
+
+export interface CourseSessionPlanUpdatedPayload {
+  courseId: string;
+  /** Số buổi và tổng số lượt bài trong bảng SAU khi lưu (0 khi xoá bảng). */
+  sessions: number;
+  lessons: number;
+  /** Số buổi đã kết thúc được chụp lại giáo án thành kế hoạch riêng trước khi bảng đổi. */
+  frozenMeetings: number;
+  /** true = "Xoá phân phối" (khoá quay về chương số N). */
+  cleared: boolean;
 }
 
 export interface ClassPlanChangedPayload {

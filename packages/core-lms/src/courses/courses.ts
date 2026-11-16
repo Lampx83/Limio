@@ -7,6 +7,7 @@ import { uniqueCourseSlug } from "./slug";
 import { assertCanEditCourse, assertIsOwner, CourseAuthzError } from "./authz";
 import { attachLessonActivity } from "./lessonActivity";
 import { copyOwnedPracticeExam } from "./practiceBlock";
+import { cloneCourseSessionPlan } from "./courseSessionPlan";
 import {
   backfillCourseTags,
   ensureLessonTag,
@@ -724,7 +725,8 @@ export async function cloneModuleTree(
   m: ModuleTree,
   newCourseId: string,
   orderIndex: number,
-): Promise<{ moduleId: string }> {
+): Promise<{ moduleId: string; lessonIdMap: Map<string, string> }> {
+  const lessonIdMap = new Map<string, string>();
   const newModule = await tx.module.create({
     data: {
       courseId: newCourseId,
@@ -745,6 +747,7 @@ export async function cloneModuleTree(
         languageSkill: l.languageSkill,
       },
     });
+    lessonIdMap.set(l.id, newLesson.id);
     for (const c of l.contentItems) {
       const newContent = await tx.contentItem.create({
         data: {
@@ -855,7 +858,7 @@ export async function cloneModuleTree(
     }
   }
 
-  return { moduleId: newModule.id };
+  return { moduleId: newModule.id, lessonIdMap };
 }
 
 /**
@@ -935,9 +938,13 @@ export async function cloneCourseUnchecked(
       data: { courseId: newCourse.id, userId: actorUserId, role: "owner" },
     });
 
+    const lessonIdMap = new Map<string, string>();
     for (const m of src.modules) {
-      await cloneModuleTree(tx, m, newCourse.id, m.orderIndex);
+      const { lessonIdMap: ids } = await cloneModuleTree(tx, m, newCourse.id, m.orderIndex);
+      for (const [a, b] of ids) lessonIdMap.set(a, b);
     }
+    // CENTER K — bảng phân phối chương trình đi theo bản sao, trỏ vào bài của bản sao.
+    await cloneCourseSessionPlan(tx, sourceCourseId, newCourse.id, lessonIdMap);
 
     await logAudit(
       {

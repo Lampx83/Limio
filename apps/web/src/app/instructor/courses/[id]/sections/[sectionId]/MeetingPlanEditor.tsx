@@ -3,12 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
+import LessonPicker, { type CourseTreeModule } from "../../LessonPicker";
 
-export interface CourseTreeModule {
-  id: string;
-  title: string;
-  lessons: Array<{ id: string; title: string; hidden: boolean }>;
-}
+export type { CourseTreeModule };
 
 interface PlanLesson {
   id: string;
@@ -57,8 +54,6 @@ export default function MeetingPlanEditor({
   const [lessons, setLessons] = useState<PlanLesson[]>([]);
   const [topic, setTopic] = useState("");
   const [picking, setPicking] = useState(false);
-  const [query, setQuery] = useState("");
-  const [picked, setPicked] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -84,10 +79,6 @@ export default function MeetingPlanEditor({
   }, [view, lessons, topic]);
 
   const have = new Set(lessons.map((l) => l.id));
-  const q = query.trim().toLowerCase();
-  const tree = courseTree
-    .map((m) => ({ ...m, lessons: m.lessons.filter((l) => !q || l.title.toLowerCase().includes(q) || m.title.toLowerCase().includes(q)) }))
-    .filter((m) => m.lessons.length > 0);
 
   const move = (i: number, d: -1 | 1) =>
     setLessons((ls) => {
@@ -98,16 +89,11 @@ export default function MeetingPlanEditor({
       return next;
     });
 
-  const addPicked = () => {
-    const additions: PlanLesson[] = [];
-    for (const m of courseTree)
-      for (const l of m.lessons) if (picked.has(l.id) && !have.has(l.id)) additions.push({ id: l.id, title: l.title, moduleTitle: m.title, hidden: l.hidden });
+  const addPicked = (additions: PlanLesson[]) => {
     if (lessons.length + additions.length > MAX_LESSONS) return setError(errText("too_many_lessons"));
     setError(null);
     setLessons((ls) => [...ls, ...additions]);
-    setPicked(new Set());
     setPicking(false);
-    setQuery("");
   };
 
   const call = async (method: string, body?: unknown, done?: string) => {
@@ -213,52 +199,13 @@ export default function MeetingPlanEditor({
       )}
 
       {editable && picking && (
-        <div className="space-y-2 rounded-lg border border-token bg-[rgb(var(--surface))] p-3">
-          <input className="input w-full" placeholder="Tìm bài hoặc chương" aria-label="Tìm bài hoặc chương" value={query} onChange={(e) => setQuery(e.target.value)} />
-          <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-            {tree.length === 0 && <p className="text-sm text-muted">Không có bài nào khớp.</p>}
-            {tree.map((m) => (
-              <div key={m.id}>
-                <p className="text-meta font-semibold text-muted">{m.title}</p>
-                <ul className="mt-1 space-y-0.5">
-                  {m.lessons.map((l) => {
-                    const already = have.has(l.id);
-                    return (
-                      <li key={l.id}>
-                        <label className={`flex items-center gap-2 text-sm ${already ? "opacity-50" : "cursor-pointer"}`}>
-                          <input
-                            type="checkbox"
-                            disabled={already}
-                            checked={already || picked.has(l.id)}
-                            onChange={(e) =>
-                              setPicked((p) => {
-                                const n = new Set(p);
-                                if (e.target.checked) n.add(l.id);
-                                else n.delete(l.id);
-                                return n;
-                              })
-                            }
-                          />
-                          <span>{l.title}</span>
-                          {already && <span className="text-meta text-muted">đã có</span>}
-                          {l.hidden && <span className="chip text-xs">ẩn</span>}
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <button type="button" className="btn-primary btn-sm" disabled={picked.size === 0} onClick={addPicked}>
-              Thêm {picked.size > 0 ? `${picked.size} bài` : "bài đã chọn"} vào buổi
-            </button>
-            <button type="button" className="btn-ghost btn-sm" onClick={() => { setPicking(false); setPicked(new Set()); }}>
-              Huỷ
-            </button>
-          </div>
-        </div>
+        <LessonPicker
+          courseTree={courseTree}
+          have={have}
+          addLabel={(n) => `Thêm ${n > 0 ? `${n} bài` : "bài đã chọn"} vào buổi`}
+          onAdd={addPicked}
+          onCancel={() => setPicking(false)}
+        />
       )}
 
       {error && <p className="banner-danger text-sm" role="alert">{error}</p>}

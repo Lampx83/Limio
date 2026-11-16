@@ -66,6 +66,35 @@ export interface MeetingNoteFacts {
 
 // ── Thu thập dữ kiện (C4.7) ──────────────────────────────────────────────
 
+/** Giáo án mặc định của buổi số `seq` (nhìn như học viên): bảng phân phối của khoá nếu có, không thì chương cùng số. */
+async function defaultSessionPlan(
+  db: PrismaClient,
+  courseId: string,
+  seq: number,
+): Promise<{ title: string | null; lessons: Array<{ id: string; title: string }> } | null> {
+  if ((await db.courseSession.count({ where: { courseId } })) > 0) {
+    const row = await db.courseSession.findUnique({
+      where: { courseId_sessionNo: { courseId, sessionNo: seq } },
+      select: {
+        topic: true,
+        lessons: {
+          where: { lesson: { isHidden: false, module: { isHidden: false } } },
+          orderBy: { orderIndex: "asc" },
+          select: { lesson: { select: { id: true, title: true } } },
+        },
+      },
+    });
+    return row ? { title: row.topic, lessons: row.lessons.map((r) => r.lesson) } : null;
+  }
+  return db.module.findFirst({
+    where: { courseId, sessionNo: seq, isHidden: false },
+    select: {
+      title: true,
+      lessons: { where: { isHidden: false }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true } },
+    },
+  });
+}
+
 export async function gatherMeetingNoteFacts(
   meetingId: string,
   userId: string,
@@ -81,9 +110,10 @@ export async function gatherMeetingNoteFacts(
   const [user, attendance, mod] = await Promise.all([
     db.user.findUniqueOrThrow({ where: { id: userId }, select: { displayName: true } }),
     db.studentAttendance.findUnique({ where: { meetingId_userId: { meetingId, userId } }, select: { status: true } }),
-    // Kế hoạch hiệu lực của buổi (CENTER J): danh sách riêng nếu giáo viên đã tuỳ chỉnh (kể cả rỗng — không rơi về giáo
-    // trình), nếu không thì chương giáo trình cùng số buổi. Cùng quy tắc với core-lms/sessionPlan.resolveMeetingPlans;
-    // viết lại ở đây vì core-feedback không import core-lms (CLAUDE.md §4.3). Bài và chương ẩn không vào nhận xét.
+    // Kế hoạch hiệu lực của buổi: danh sách riêng nếu giáo viên đã tuỳ chỉnh (CENTER J, kể cả rỗng), nếu không thì dòng
+    // cùng số buổi trong bảng phân phối của khoá (CENTER K), khoá chưa có bảng thì chương cùng số buổi (C3). Cùng quy tắc
+    // với core-lms/sessionPlan.resolveMeetingPlans; viết lại ở đây vì core-feedback không import core-lms (CLAUDE.md
+    // §4.3). Bài và chương ẩn không vào nhận xét.
     meeting.planCustomized
       ? db.classMeetingLesson
           .findMany({
@@ -93,13 +123,7 @@ export async function gatherMeetingNoteFacts(
           })
           .then((rows) => ({ title: meeting.planTopic, lessons: rows.map((r) => r.lesson) }))
       : meeting.seq != null
-        ? db.module.findFirst({
-            where: { courseId: meeting.section.courseId, sessionNo: meeting.seq, isHidden: false },
-            select: {
-              title: true,
-              lessons: { where: { isHidden: false }, orderBy: { orderIndex: "asc" }, select: { id: true, title: true } },
-            },
-          })
+        ? defaultSessionPlan(db, meeting.section.courseId, meeting.seq)
         : Promise.resolve(null),
   ]);
   const lessonRows = mod?.lessons ?? [];

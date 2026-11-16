@@ -270,6 +270,30 @@ Thứ tự làm: **C1 → C2 → C3 → C4 → C5 → C6**. Không làm P1/P2 c�
 
 **Chưa làm (P1):** kéo thả đổi thứ tự; chép kế hoạch buổi này sang buổi khác hoặc sang lớp khác; gắn bài tập hoặc quiz riêng lẻ (hiện chỉ gắn bài, và bài mang theo quiz/bài tập của nó); xem trước kế hoạch cả khoá dạng bảng.
 
+## K · Phân phối chương trình (bài theo buổi cho cả khoá)
+
+**Trạng thái (2026-11-16, chưa commit):** K1–K11 đã code. Bảng `CourseSession` + `CourseSessionLesson` (migration `20261116150000_course_session_plan`, đã áp DB dev và test); `core-lms/courses/courseSessionPlan.ts` (`getCourseSessionPlan`, `saveCourseSessionPlan`, `clearCourseSessionPlan`, `cloneCourseSessionPlan`); `sessionPlan.loadSessionPlans` ưu tiên bảng; `core-feedback/meetingNotes` viết lại cùng quy tắc; API `/api/courses/[id]/session-plan`; tab "Phân phối chương trình" (`CourseSessionPlanEditor`), bộ chọn bài tách thành `LessonPicker` dùng chung với nút "Kế hoạch". Test: 12 test core-lms, 1 test core-feedback, 4 test chia bài. Đã xem bằng mắt trên dev (desktop + điện thoại): chia 48 bài cho 24 buổi, thêm bài, đặt chủ đề, lưu, xoá; thanh lưu dính đáy căn giữa để tránh nút "Hỏi Lily". Chưa xem dòng "Giáo án:" ở trang lớp (đã có test).
+
+**Lý do (2026-11-16):** một khoá dạy nhiều lớp (ví dụ HSK 3.0: 8 chương, 48 bài, các trung tâm dạy 24 buổi; giáo viên trung tâm được thêm vào khoá với vai trò chỉ dạy). Cách "chương N = buổi N" (C3) chỉ phủ 8 buổi và mỗi buổi phải dạy cả chương; nút "Kế hoạch" (J) phải bấm cho từng buổi của từng lớp. Cần một bảng "buổi nào học bài nào" soạn **một lần** cho cả khoá.
+
+**Quyết định (chủ dự án chốt 2026-11-16):** (1a) bảng soạn trên trang khoá, chung cho mọi lớp; (2a) có nút chia bài theo số buổi rồi chỉnh tay; (3a) chỉ người quản khoá (chủ khoá, đồng giảng viên, Platform Admin) sửa, người chỉ dạy chỉ xem; (4a) khoá đã có bảng thì chỉ dùng bảng, khoá chưa có bảng mới dùng chương số N.
+
+**Thứ tự ưu tiên của giáo án một buổi:** kế hoạch riêng của buổi (J) → bảng phân phối của khoá (K) → chương `sessionNo = N` (C3, chỉ khi khoá chưa có bảng).
+
+- [x] **K1 Nơi soạn.** Trang khoá có tab **"Phân phối chương trình"** khi tài khoản đã bật tính năng trung tâm, hoặc khoá đã có bảng. Tab liệt kê **"Buổi 1"**, **"Buổi 2"**… mỗi buổi gồm ô **"Chủ đề buổi"** (không bắt buộc, tối đa 120 ký tự) và danh sách bài theo thứ tự; thêm bài bằng bộ chọn của nút "Kế hoạch" (cây chương, tìm theo tên, chọn nhiều), bỏ bài, đổi thứ tự lên/xuống, **"+ Thêm buổi"**, **"Bỏ buổi"**, rồi **"Lưu phân phối"** (lưu một lần cả bảng).
+- [x] **K2 Chia nhanh.** Ô số buổi và nút **"Chia bài theo số buổi"**: lấy mọi bài đang hiện của khoá theo đúng thứ tự chương rồi bài, chia liền mạch cho n buổi, các buổi chênh nhau nhiều nhất một bài (48 bài, 24 buổi → 2 bài mỗi buổi; 50 bài, 24 buổi → 2 buổi đầu 3 bài). Số buổi lớn hơn số bài thì buổi cuối để trống. Kết quả chỉ nằm trên màn hình cho tới khi bấm "Lưu phân phối"; bảng đang có thì hỏi xác nhận trước khi thay.
+- [x] **K3 Ràng buộc.** Bài phải thuộc đúng khoá; một bài chỉ một lần trong một buổi nhưng được ở nhiều buổi; tối đa 30 bài mỗi buổi và 200 buổi; bài ẩn thêm được (giáo viên thấy, học viên không). Màn hình báo **số bài chưa được xếp vào buổi nào**.
+- [x] **K4 Mọi lớp tự theo bảng.** Buổi số N (chưa tuỳ chỉnh) của mọi lớp trong khoá hiện bài của dòng N ở mọi nơi đang dùng giáo án (J7): tab "Lịch dạy" của lớp, trang "Lịch dạy" của giáo viên (cả người chỉ dạy), "Lịch học" của học viên, tổng kết gửi lớp, bản nháp nhận xét. Tên giáo án là chủ đề buổi; chưa có chủ đề thì hiện "Buổi N". Huỷ buổi thì giáo án dịch theo số như C3.
+- [x] **K5 Kế hoạch riêng vẫn thắng.** Buổi đã bấm "Kế hoạch" để chỉnh riêng giữ bài đã chọn; "Đặt lại theo giáo trình" đưa buổi về bảng phân phối (nhãn nút giữ nguyên).
+- [x] **K6 Buổi đã kết thúc không đổi ngược.** Lưu hoặc xoá bảng chỉ đổi giáo án của buổi **chưa kết thúc**. Trước khi ghi, buổi đã kết thúc (C4) mà còn theo mặc định được chụp lại giáo án hiện tại thành kế hoạch riêng của buổi đó.
+- [x] **K7 Xoá bảng.** Nút **"Xoá phân phối"** (hỏi xác nhận) đưa khoá về cách chương số N; khoá không có chương đánh số thì buổi trống.
+- [x] **K8 Quyền.** Chỉ người quản khoá lưu hoặc xoá bảng; người chỉ dạy và trợ giảng mở tab chỉ xem; học viên và người lạ bị chặn ở API. Có test.
+- [x] **K9 Sao khoá.** "Duplicate" và "Dùng giáo trình này" mang bảng sang khoá mới, trỏ đúng bài của bản sao. Xoá bài khỏi khoá thì bài tự biến khỏi bảng.
+- [x] **K10 Sự kiện.** Phát `course.session_plan.updated` khi lưu hoặc xoá bảng (id khoá, số buổi, số bài, số buổi đã kết thúc được chụp lại, có xoá hay không); không mang tên bài hay chủ đề; namespace không tính là hoạt động học.
+- [x] **K11 Tài liệu.** `GIAO-DIEN.md` và hướng dẫn của Lily; ghi rõ thứ tự ưu tiên ở K4–K5.
+
+**Chưa làm:** xem trước giáo trình dựng sẵn (`/instructor/giao-trinh/[packId]`) và cập nhật giáo trình có bản mới vẫn đi theo chương; kéo thả; lệch buổi giữa các lớp (lớp vào muộn bắt đầu từ buổi khác 1).
+
 ## Ngoài phạm vi (cố ý)
 
 - Học phí, hoá đơn, công nợ, lương giáo viên, CRM tuyển sinh, quản lý nhiều cơ sở theo chuỗi.

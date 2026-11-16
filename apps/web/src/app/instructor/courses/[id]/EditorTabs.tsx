@@ -8,6 +8,7 @@ import {
   BarChart3,
   Trophy,
   Lock,
+  CalendarRange,
   type LucideIcon,
 } from "lucide-react";
 
@@ -27,6 +28,7 @@ export type EditorTab =
   | "content"
   | "students"
   | "sections"
+  | "plan"
   | "assignments"
   | "analytics"
   | "gamification";
@@ -35,6 +37,7 @@ const TABS: Array<{ key: EditorTab; label: string; icon: LucideIcon }> = [
   { key: "overview", label: "Tổng quan", icon: Info },
   { key: "content", label: "Nội dung", icon: BookOpen },
   { key: "sections", label: "Lớp học", icon: School },
+  { key: "plan", label: "Phân phối chương trình", icon: CalendarRange },
   { key: "students", label: "Học viên", icon: Users },
   { key: "assignments", label: "Grade", icon: GraduationCap },
   { key: "analytics", label: "Phân tích", icon: BarChart3 },

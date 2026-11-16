@@ -30,6 +30,7 @@ export * from "./coursePacks";
 export * from "./teachingScope";
 export * from "./scheduleSummary";
 export * from "./meetingPlan";
+export * from "./courseSessionPlan";
 export * from "./teacherCheckInCalc";
 export * from "./teacherCheckIn";
 export * from "./protectedMedia";

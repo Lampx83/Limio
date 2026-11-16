@@ -1,5 +1,8 @@
 /**
- * Giáo án theo buổi (CENTER C3): chương có `sessionNo = N` là giáo án của buổi học số N trong khoá.
+ * Giáo án theo buổi. Thứ tự ưu tiên của một buổi:
+ *   1. kế hoạch riêng của buổi (CENTER J, `ClassMeetingLesson`);
+ *   2. bảng phân phối chương trình của khoá (CENTER K, `CourseSession`): buổi số N học các bài của dòng N;
+ *   3. chương có `sessionNo = N` (CENTER C3) — CHỈ khi khoá chưa có dòng phân phối nào.
  *
  * Buổi học của lớp có `seq` (số thứ tự theo thời gian trong các buổi không huỷ — xem classSchedule.ts),
  * nên huỷ hay dạy bù không làm lệch giáo án: buổi nào đang mang số N thì dạy chương N.
@@ -28,17 +31,47 @@ export interface MeetingPlan {
 
 export type PlanAudience = "teacher" | "learner";
 
-/** courseId → (sessionNo → giáo án). Khoá không có chương nào gắn buổi thì không có mặt trong map. */
+/**
+ * courseId → (sessionNo → giáo án mặc định của buổi số N). Khoá có bảng phân phối (CENTER K) thì chỉ lấy từ bảng, kể cả
+ * buổi không có bài; khoá chưa có bảng thì lấy chương `sessionNo`. Khoá không có gì thì không có mặt trong map.
+ */
 export async function loadSessionPlans(
   courseIds: readonly string[],
   audience: PlanAudience,
   db: DbClient = prisma,
 ): Promise<Map<string, Map<number, MeetingPlan>>> {
   const out = new Map<string, Map<number, MeetingPlan>>();
-  if (courseIds.length === 0) return out;
+  const ids = [...new Set(courseIds)];
+  if (ids.length === 0) return out;
   const learner = audience === "learner";
+
+  const planned = await db.courseSession.findMany({
+    where: { courseId: { in: ids } },
+    orderBy: [{ courseId: "asc" }, { sessionNo: "asc" }],
+    select: {
+      courseId: true,
+      sessionNo: true,
+      topic: true,
+      course: { select: { slug: true } },
+      lessons: {
+        orderBy: { orderIndex: "asc" },
+        select: { lesson: { select: { id: true, title: true, isHidden: true, module: { select: { isHidden: true } } } } },
+      },
+    },
+  });
+  for (const p of planned) {
+    const byNo = out.get(p.courseId) ?? new Map<number, MeetingPlan>();
+    const lessons = p.lessons
+      .filter((r) => !(learner && (r.lesson.isHidden || r.lesson.module.isHidden)))
+      .map((r) => ({ id: r.lesson.id, title: r.lesson.title }));
+    byNo.set(p.sessionNo, { courseSlug: p.course.slug, sessionNo: p.sessionNo, moduleId: null, title: p.topic, lessons, customized: false });
+    out.set(p.courseId, byNo);
+  }
+
+  const byChapter = ids.filter((id) => !out.has(id));
+  if (byChapter.length === 0) return out;
   const modules = await db.module.findMany({
-    where: { courseId: { in: [...new Set(courseIds)] }, sessionNo: { not: null }, ...(learner ? { isHidden: false } : {}) },
+    where: { courseId: { in: byChapter }, sessionNo: { not: null }, ...(learner ? { isHidden: false } : {}) },
     orderBy: [{ courseId: "asc" }, { sessionNo: "asc" }],
     select: {
       id: true,
@@ -72,7 +105,7 @@ export interface PlanMeetingRef {
 
 /**
  * CENTER J — kế hoạch HIỆU LỰC của từng buổi: danh sách riêng nếu giáo viên đã tuỳ chỉnh (kể cả rỗng), nếu không thì
- * chương giáo trình cùng số buổi. Buổi huỷ và buổi chưa tuỳ chỉnh mà không có chương cùng số thì không có kế hoạch
+ * giáo án mặc định cùng số buổi (bảng phân phối của khoá, hoặc chương — xem loadSessionPlans). Buổi huỷ và buổi chưa tuỳ chỉnh mà không có chương cùng số thì không có kế hoạch
  * (không có mặt trong kết quả). Học viên không thấy bài/chương ẩn.
  */
 export async function resolveMeetingPlans(

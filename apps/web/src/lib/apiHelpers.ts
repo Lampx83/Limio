@@ -12,6 +12,7 @@ import {
   CourseAuthzError,
   CourseError,
   CoursePackError,
+  CourseSessionPlanError,
   CourseTeamError,
   EnrollError,
   ExamError,
@@ -93,6 +94,9 @@ export function mapKnownError(err: unknown): NextResponse | null {
   if (err instanceof MeetingNoteDraftError) {
     const status = err.code === "meeting_not_found" ? 404 : err.code === "not_closed" || err.code === "already_sent" ? 409 : 400;
     return NextResponse.json({ error: err.code }, { status });
+  }
+  if (err instanceof CourseSessionPlanError) {
+    return NextResponse.json(err.details ? { error: err.code, details: err.details } : { error: err.code }, { status: 400 });
   }
   if (err instanceof MeetingPlanError) {
     const status = err.code === "meeting_not_found" ? 404 : err.code === "meeting_locked" ? 409 : 400;

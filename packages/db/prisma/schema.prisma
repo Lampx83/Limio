@@ -538,6 +538,8 @@ model Course {
   // CENTER C3 — khoá này là nơi soạn của một gói (tối đa một), và gói mà khoá này được sao ra.
   packAuthored          CoursePack?            @relation("PackSource")
   fromPack              CoursePack?            @relation("CourseFromPack", fields: [sourcePackId], references: [id], onDelete: SetNull)
+  // CENTER K — phân phối chương trình: bài theo buổi cho mọi lớp của khoá.
+  sessionPlan           CourseSession[]
   liveDeckGroups        LiveDeckGroup[]
   userRoles             UserRole[]
   userProgress          UserCourseProgress[]
@@ -685,6 +687,7 @@ model Lesson {
   liveDeckId        String?               @unique
   liveDeck          LiveDeck?             @relation("LessonLiveDeck", fields: [liveDeckId], references: [id], onDelete: SetNull)
   classMeetings     ClassMeetingLesson[]  @relation("LessonClassMeetings")
+  courseSessions    CourseSessionLesson[] @relation("LessonCourseSessions")
 
   @@unique([moduleId, orderIndex])
   @@index([moduleId])
@@ -4597,6 +4600,36 @@ model TeacherCheckIn {
 
 // CENTER J — bài (lesson) nằm trong kế hoạch giảng dạy của một buổi, có thứ tự. Gắn theo BUỔI chứ không theo số buổi,
 // nên huỷ hay thêm buổi không làm lệch. Xoá bài khỏi khoá thì dòng này tự biến theo.
+/// CENTER K — Phân phối chương trình (docs/CENTER-schedule-attendance-AC.md, mục K): buổi số N của MỌI lớp trong khoá
+/// học các bài của dòng N. Khoá có ít nhất một dòng thì chỉ dùng bảng này (không rơi về chương `sessionNo`); kế hoạch
+/// riêng của một buổi (ClassMeetingLesson) vẫn thắng.
+model CourseSession {
+  id        String   @id @default(uuid())
+  courseId  String
+  sessionNo Int
+  topic     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course  Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons CourseSessionLesson[]
+
+  @@unique([courseId, sessionNo])
+  @@map("CourseSession")
+}
+
+model CourseSessionLesson {
+  sessionId  String
+  lessonId   String
+  orderIndex Int
+
+  session CourseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  lesson  Lesson        @relation("LessonCourseSessions", fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([sessionId, lessonId])
+  @@index([lessonId])
+}
+
 model ClassMeetingLesson {
   meetingId  String
   lessonId   String

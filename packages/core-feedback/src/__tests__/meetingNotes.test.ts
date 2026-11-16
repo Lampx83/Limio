@@ -134,6 +134,33 @@ describe("gatherMeetingNoteFacts — chỉ dữ liệu của chính học viên 
   });
 });
 
+describe("gatherMeetingNoteFacts — bảng phân phối chương trình của khoá (CENTER K)", () => {
+  it("khoá có bảng thì bài của buổi lấy từ dòng cùng số buổi, không lấy chương; bài ẩn bị bỏ; buổi tuỳ chỉnh vẫn thắng", async () => {
+    const f = await fx();
+    const row = await prisma.courseSession.create({ data: { courseId: f.courseId, sessionNo: 1, topic: "Ôn chào hỏi" } });
+    await prisma.courseSessionLesson.create({ data: { sessionId: row.id, lessonId: f.lessons[1]!.id, orderIndex: 0 } });
+    const facts = await gatherMeetingNoteFacts(f.meetingId, f.a);
+    expect(facts.planTitle).toBe("Ôn chào hỏi");
+    expect(facts.lessons.map((l) => l.title)).toEqual(["Hội thoại — Làm quen"]);
+    expect(facts.homework).toEqual([]); // bài tập nằm ở bài 1, không thuộc buổi này nữa
+
+    await prisma.lesson.update({ where: { id: f.lessons[1]!.id }, data: { isHidden: true } });
+    expect((await gatherMeetingNoteFacts(f.meetingId, f.a)).lessons).toEqual([]);
+
+    // Khoá có bảng nhưng không có dòng số 1 nữa: KHÔNG rơi về chương 1.
+    await prisma.courseSession.update({ where: { id: row.id }, data: { sessionNo: 2 } });
+    const none = await gatherMeetingNoteFacts(f.meetingId, f.a);
+    expect(none.planTitle).toBeNull();
+    expect(none.lessons).toEqual([]);
+
+    await prisma.classMeeting.update({ where: { id: f.meetingId }, data: { planCustomized: true, planTopic: "Riêng" } });
+    await prisma.classMeetingLesson.create({ data: { meetingId: f.meetingId, lessonId: f.lessons[0]!.id, orderIndex: 0 } });
+    const own = await gatherMeetingNoteFacts(f.meetingId, f.a);
+    expect(own.planTitle).toBe("Riêng");
+    expect(own.lessons.map((l) => l.title)).toEqual(["Từ vựng — Xin chào"]);
+  });
+});
+
 describe("composeRuleNote — mẫu có sẵn, không bịa (C4.8, C4.14)", () => {
   const base: MeetingNoteFacts = {
     version: 1, meetingId: "m", seq: 1, planTitle: "Buổi 1: Xin chào", attendance: "present", learnerName: "An",
