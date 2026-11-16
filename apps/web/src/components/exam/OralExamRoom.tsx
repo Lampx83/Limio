@@ -145,7 +145,6 @@ export default function OralExamRoom({
   // Ước lượng số câu theo giờ (≈ 0,8 lượt/phút, khớp typicalQuestionCount ở core-feedback) — chỉ để sinh viên
   // biết mình đang ở đâu, KHÔNG phải hạn mức.
   const typicalQuestions = durationSec >= 300 ? Math.max(3, Math.round((durationSec / 60) * 0.8)) : null;
-  const [pinExpanded, setPinExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Bộ gõ (Telex/VNI…) đang giữ từ cuối ở trạng thái "đang soạn" (gạch chân).
   const composingRef = useRef(false);
@@ -401,7 +400,6 @@ export default function OralExamRoom({
     };
   }, []);
 
-  const lastExaminer = [...turns].reverse().find((t) => t.role === "examiner") ?? null;
   // Đếm lượt nói của giám khảo (gồm cả lượt chào/nêu chủ đề) — chỉ để định hướng, lệch 1–2 đơn vị không sao.
   const questionNumber = turns.filter((t) => t.role === "examiner").length;
 
@@ -602,18 +600,6 @@ export default function OralExamRoom({
           </div>
 
           <footer className="border-t border-token bg-[rgb(var(--surface))] p-3 sm:p-4">
-            {/* Bàn phím ảo mở thì khung chat gần như biến mất — ghim câu hỏi hiện tại sát ô nhập để khỏi phải
-                tắt bàn phím đi đọc lại (phản ánh thật của sinh viên). Chạm để xem đủ. */}
-            {stageHidden && canAnswer && lastExaminer && (
-              <button
-                type="button"
-                onClick={() => setPinExpanded((v) => !v)}
-                className={`mx-auto mb-2 w-full max-w-2xl rounded-lg border border-token bg-[rgb(var(--surface-muted))] px-3 py-2 text-left text-base sm:text-sm ${compact ? "block" : "block lg:hidden"}`}
-              >
-                <span className="font-semibold text-brand-700">{t.pinnedQuestion}</span>
-                <span className={pinExpanded ? "" : "line-clamp-2"}>{lastExaminer.content}</span>
-              </button>
-            )}
             <div className="mx-auto flex max-w-2xl gap-2">
               <textarea
                 ref={textareaRef}
