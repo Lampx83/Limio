@@ -4,6 +4,7 @@ import { requestPracticeAnswerFeedback, updateLearnerStateForLessonObservation }
 import { requireUserId } from "@/lib/session";
 import { mapKnownError, readJson } from "@/lib/apiHelpers";
 import { getOpenaiClient } from "@/lib/openaiClient";
+import { getUiLang } from "@/lib/i18n/server";
 import { feedbackErrorCode, publicFeedback, type PracticeFeedbackErrorCode } from "@/lib/practiceAnswerApi";
 
 export const runtime = "nodejs";
@@ -64,10 +65,18 @@ async function essayFeedback(
   questionId: string,
 ): Promise<{ feedback?: unknown; feedbackReused?: boolean; feedbackError?: PracticeFeedbackErrorCode }> {
   try {
-    const r = await requestPracticeAnswerFeedback(userId, sessionId, questionId, {
-      // Lấy khách hàng AI chậm: bản cũ (cùng đầu vào) không đòi cấu hình AI.
-      openai: () => getOpenaiClient(),
-    });
+    // Lời nhận xét viết bằng ngôn ngữ giao diện của học viên (Việt hoặc Anh); đổi ngôn ngữ thì đầu vào băm khác nên sinh lại.
+    const feedbackLanguage = (await getUiLang()) === "vi" ? "vi" : "en";
+    const r = await requestPracticeAnswerFeedback(
+      userId,
+      sessionId,
+      questionId,
+      {
+        // Lấy khách hàng AI chậm: bản cũ (cùng đầu vào) không đòi cấu hình AI.
+        openai: () => getOpenaiClient(),
+      },
+      { feedbackLanguage },
+    );
     return { feedback: publicFeedback(r.body), feedbackReused: r.reused };
   } catch (e) {
     const code = (e as { code?: unknown } | null)?.code;

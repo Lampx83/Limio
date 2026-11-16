@@ -5,6 +5,7 @@ import { DEFAULT_MODEL } from "../aiTutor/aiTutor";
 import { AiTutorError } from "../aiTutor/errors";
 import { AiGenerationError } from "../aiTutor/generators";
 import { chargeTokens, getTokenBudget } from "../aiTutor/tokenWallet";
+import { buildPracticePrompts, feedbackLanguageOf, hashPracticeInputs } from "../practiceAnswer/analysis";
 import { requestPracticeAnswerFeedback, transcribePracticeVoice, transcribePreviewVoice } from "../practiceAnswer/feedback";
 import type { Transcriber } from "../speaking/feedback";
 import { measureSpeech } from "../speaking/analysis";
@@ -115,8 +116,8 @@ function fakeOpenAI(content: unknown = analysis(), usage = { prompt_tokens: 500,
 }
 const failingOpenAI = { chat: { completions: { create: async () => { throw new Error("boom"); } } } } as unknown as OpenAI;
 
-const ask = (f: Fx, openai: OpenAI | (() => Promise<OpenAI>), who = f.userId) =>
-  requestPracticeAnswerFeedback(who, f.sessionId, f.questionId, { openai });
+const ask = (f: Fx, openai: OpenAI | (() => Promise<OpenAI>), who = f.userId, opts: { feedbackLanguage?: "en" | "vi" } = {}) =>
+  requestPracticeAnswerFeedback(who, f.sessionId, f.questionId, { openai }, opts);
 const row = (f: Fx) => prisma.examPracticeAnswer.findUniqueOrThrow({ where: { sessionId_questionId: { sessionId: f.sessionId, questionId: f.questionId } } });
 
 describe("requestPracticeAnswerFeedback — đường chính", () => {
@@ -163,6 +164,26 @@ describe("requestPracticeAnswerFeedback — đường chính", () => {
     expect(user).toContain("Name two firsts; use the past tense.");
     expect(sys).toMatch(/level B1/);
     expect(sys).toMatch(/NEVER quote or copy sentences from the reference answer/);
+  });
+
+  it("feedbackLanguage 'vi': gửi mô hình yêu cầu viết bằng tiếng Việt, ghi vào event; bản tiếng Anh đã lưu KHÔNG được dùng lại, và ngược lại", async () => {
+    const f = await fx();
+    const en = fakeOpenAI();
+    await ask(f, en.openai); // mặc định tiếng Anh
+    expect(en.calls[0]!.messages.find((m) => m.role === "system")!.content).toContain("simple ENGLISH");
+
+    const vi = fakeOpenAI();
+    const r = await ask(f, vi.openai, f.userId, { feedbackLanguage: "vi" });
+    expect(r.reused).toBe(false); // đổi ngôn ngữ → sinh lại
+    expect(vi.calls).toHaveLength(1);
+    expect(vi.calls[0]!.messages.find((m) => m.role === "system")!.content).toContain("simple VIETNAMESE");
+
+    const again = fakeOpenAI();
+    expect((await ask(f, again.openai, f.userId, { feedbackLanguage: "vi" })).reused).toBe(true); // cùng ngôn ngữ → dùng lại
+    expect(again.calls).toHaveLength(0);
+
+    const ev = await prisma.learningEvent.findMany({ where: { userId: f.userId, eventType: "exam.practice.feedback_generated" } });
+    expect(ev.map((e) => (e.payload as { feedbackLanguage?: string }).feedbackLanguage).sort()).toEqual(["en", "vi"]);
   });
 
   it("body mang toạ độ SSMMD của chính nó (macro llm / meso / micro), không bao giờ self", async () => {
@@ -540,5 +561,35 @@ describe("transcribePreviewVoice (xem thử của giảng viên)", () => {
     await chargeTokens(f.otherUserId, 10_000_000, null);
     await expect(transcribePreviewVoice({ userId: f.otherUserId, language: "en", audio }, deps)).rejects.toBeInstanceOf(AiTutorError);
     expect(called).toBe(0);
+  });
+});
+
+describe("ngôn ngữ lời nhận xét của AI", () => {
+  const base = { question: "Why?", answer: "Because.", sampleAnswer: "", rubric: "", minWords: null, viaVoice: false, courseLanguage: "zh", levelBand: null };
+
+  it("mặc định tiếng Anh; 'vi' viết lời nhận xét bằng tiếng Việt, trích dẫn lỗi vẫn theo ngôn ngữ của câu trả lời", () => {
+    const en = buildPracticePrompts(base).system;
+    const vi = buildPracticePrompts({ ...base, feedbackLanguage: "vi" }).system;
+    expect(en).toContain("simple ENGLISH");
+    expect(vi).toContain("simple VIETNAMESE");
+    expect(vi).not.toContain("simple ENGLISH");
+    expect(vi).toContain('only the error "quote" and "correction" use the language of the answer');
+  });
+
+  it("câu về hội thoại đóng vai không còn ép 'correct English' (khoá tiếng Trung)", () => {
+    const rp = buildPracticePrompts({ ...base, feedbackLanguage: "vi", rolePlay: true }).system;
+    expect(rp).not.toContain("correct English");
+    expect(rp).toContain("correct in the language being learned");
+  });
+
+  it("feedbackLanguageOf chỉ nhận 'vi'", () => {
+    expect(feedbackLanguageOf("vi")).toBe("vi");
+    for (const v of ["en", "fr", "", null, undefined, 3]) expect(feedbackLanguageOf(v)).toBe("en");
+  });
+
+  it("băm: tiếng Anh giữ nguyên băm cũ (bản đã lưu không phải sinh lại), tiếng Việt thì khác", () => {
+    const i = { answer: "a", sample: "s", rubric: "r", viaVoice: false };
+    expect(hashPracticeInputs({ ...i, feedbackLanguage: "en" })).toBe(hashPracticeInputs(i));
+    expect(hashPracticeInputs({ ...i, feedbackLanguage: "vi" })).not.toBe(hashPracticeInputs(i));
   });
 });

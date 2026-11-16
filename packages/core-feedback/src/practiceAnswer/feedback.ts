@@ -27,6 +27,8 @@ import {
   PRACTICE_SCHEMA,
   PracticeFeedbackError,
   buildPracticePrompts,
+  feedbackLanguageOf,
+  type FeedbackLanguage,
   hashPracticeInputs,
   normalizePracticeFeedback,
   readAnswerText,
@@ -253,10 +255,11 @@ export async function requestPracticeAnswerFeedback(
   sessionId: string,
   questionId: string,
   deps: { openai: OpenAiSource },
-  opts: { model?: string } = {},
+  opts: { model?: string; /** Ngôn ngữ viết lời nhận xét (theo giao diện học viên); mặc định tiếng Anh. */ feedbackLanguage?: FeedbackLanguage } = {},
   db: PrismaClient = prisma,
 ): Promise<PracticeFeedbackResult> {
   const model = opts.model ?? DEFAULT_MODEL;
+  const feedbackLanguage = feedbackLanguageOf(opts.feedbackLanguage);
   const ctx = await loadEssayContext(userId, sessionId, questionId, db);
   if (!ctx.aiFeedback) throw new PracticeFeedbackError("feedback_disabled");
   if ((await resolveFeedbackVariant(userId, ctx.courseId, db)).variant === "minimal") {
@@ -270,7 +273,7 @@ export async function requestPracticeAnswerFeedback(
   if (ctx.freeChat && text.split(/\r?\n/).filter((l) => l.startsWith("Learner: ")).length < 2) throw new PracticeFeedbackError("empty_answer");
 
   // Đầu vào không đổi → bản cũ: không đòi cấu hình AI, không gọi mô hình, không trừ token.
-  const hash = hashPracticeInputs({ answer: text, sample: ctx.sample, rubric: ctx.rubric, viaVoice });
+  const hash = hashPracticeInputs({ answer: text, sample: ctx.sample, rubric: ctx.rubric, viaVoice, feedbackLanguage });
   if (answer.aiFeedbackHash === hash && isObj(answer.aiFeedback)) {
     return { reused: true, body: answer.aiFeedback as unknown as PracticeFeedbackBody };
   }
@@ -286,6 +289,7 @@ export async function requestPracticeAnswerFeedback(
     minWords: ctx.minWords,
     viaVoice,
     courseLanguage: ctx.courseLanguage,
+    feedbackLanguage,
     levelBand: ctx.levelBand,
     rolePlay: ctx.rolePlay,
     freeChat: ctx.freeChat ? { scenario: ctx.freeChat.scenario, targets: ctx.freeChat.targets } : undefined,
@@ -315,6 +319,7 @@ export async function requestPracticeAnswerFeedback(
       elaboration: body.coding.elaboration,
       sourceKind: body.coding.sourceKind,
       promptVersion: PRACTICE_PROMPT_VERSION,
+      feedbackLanguage,
       model,
       tokensIn: inputTokens,
       tokensOut: outputTokens,
