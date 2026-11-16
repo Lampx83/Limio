@@ -118,6 +118,10 @@ describe("scaffolding mốc 1", () => {
     ["One advantage of … is …", "One advantage of living here is the quiet", true],
     ["One advantage of … is …", "It is quiet. One advantage of it", false],
     ["I prefer … because …", "Because it is calm I prefer cities", false],
+    ["我的护照丢了", "你好，我的护照丢了。", true],
+    ["我…丢了", "我的护照丢了", true],
+    ["我…丢了", "丢了我的护照", false],
+    ["请问…在哪儿", "请问 洗手间 在哪儿？", true],
   ];
   it.each(PHRASE_CASES)("phraseUsed(%j, %j) = %s", (target, text, want) => {
     expect(phraseUsed(target, text)).toBe(want);

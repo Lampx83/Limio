@@ -102,11 +102,12 @@ export function parseFreeChatView(config: unknown): FreeChatView | null {
   };
 }
 
+const HAS_CJK = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
 const norm = (t: string) =>
   t
     .toLowerCase()
     .replace(/[‘’]/g, "'")
-    .replace(/[^a-z0-9' ]+/g, " ")
+    .replace(/[^a-z0-9' \u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]+/g, " ")
     .replace(/'/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -121,6 +122,17 @@ export function phraseUsed(target: string, text: string): boolean {
     .map(norm)
     .filter(Boolean);
   if (!segments.length) return false;
+  // Chữ Hán/Nhật/Hàn không có dấu cách giữa từ: so theo dãy ký tự liền nhau (bỏ hết dấu cách), vẫn theo thứ tự các đoạn.
+  if (segments.some((x) => HAS_CJK.test(x))) {
+    const flat = norm(text).replace(/ /g, "");
+    let at = 0;
+    for (const seg of segments) {
+      const i = flat.indexOf(seg.replace(/ /g, ""), at);
+      if (i < 0) return false;
+      at = i + seg.replace(/ /g, "").length;
+    }
+    return true;
+  }
   const hay = ` ${norm(text)} `;
   let pos = 0;
   for (const seg of segments) {

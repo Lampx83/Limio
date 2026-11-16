@@ -61,6 +61,10 @@ describe("scaffolding mốc 1 — dữ liệu và so khớp", () => {
     ["One advantage of … is …", "One advantage of living here is the quiet", true],
     ["One advantage of … is …", "It is quiet. One advantage of it", false],
     ["I prefer … because …", "Because it is calm I prefer cities", false],
+    ["我的护照丢了", "你好，我的护照丢了。", true],
+    ["我…丢了", "我的护照丢了", true],
+    ["我…丢了", "丢了我的护照", false],
+    ["请问…在哪儿", "请问 洗手间 在哪儿？", true],
   ];
   it.each(PHRASE_CASES)("phraseUsed(%j, %j) = %s", (target, text, want) => {
     expect(phraseUsed(target, text)).toBe(want);
@@ -158,6 +162,25 @@ describe("buildFreeChatMessages — dẫn cụm chưa dùng và recast", () => {
     expect(sys).toMatch(/has not yet had the chance to use: "I prefer … because …"/);
     expect(sys).toMatch(/Never mention the phrase, never tell the learner to use it/);
     expect(sys).toMatch(/simpler question instead/);
+  });
+});
+
+describe("bạn ảo nói tiếng Trung", () => {
+  const cfg = parseFreeChat(CFG)!;
+  it("prompt yêu cầu trả lời bằng tiếng Trung, giới hạn theo ký tự; khoá vi/không rõ giữ tiếng Anh", () => {
+    const zh = buildFreeChatMessages(cfg, [], "我护照丢了", { language: "zh", levelBand: null })[0]!.content;
+    expect(zh).toContain("learner of Chinese");
+    expect(zh).toContain("Reply ONLY in simple, natural Chinese");
+    expect(zh).toContain("characters");
+    expect(zh).not.toContain("English learner");
+    const vi = buildFreeChatMessages(cfg, [], "x", { language: "vi", levelBand: null })[0]!.content;
+    expect(vi).toContain("learner of English");
+  });
+  it("guardPartnerReply cắt theo câu 。！？ và ký tự, trả câu dự phòng tiếng Trung", () => {
+    expect(guardPartnerReply("一。二。三。四。", "Sam", "zh")).toBe("一。二。");
+    expect(guardPartnerReply("好".repeat(60), "Sam", "zh-CN").length).toBeLessThanOrEqual(46);
+    expect(guardPartnerReply("服务员：您的护照是在哪儿丢的？", "服务员", "zh")).toBe("您的护照是在哪儿丢的？");
+    expect(guardPartnerReply("我是人工智能语言模型。", "Sam", "zh")).toBe("对不起，我没听清楚。你能再说一遍吗？");
   });
 });
 
