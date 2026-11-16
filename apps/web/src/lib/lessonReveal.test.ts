@@ -56,4 +56,16 @@ describe("lời giải hiện từng bước", () => {
     showSteps(section, 2);
     expect(second.classList.contains("lk-just-revealed")).toBe(false);
   });
+
+  it("khoá tiếng Anh: nút và bộ đếm theo nhãn truyền vào, kể cả sau khi bấm", () => {
+    const en = { next: "Next step", all: "Show all", reset: "Start over", count: "Step {n}/{total}" };
+    const root = document.createElement("div");
+    root.innerHTML = buildStepReveal(steps(true), en);
+    expect(root.querySelector("[data-step-next]")!.textContent).toBe("Next step");
+    expect(root.querySelector("[data-step-all]")!.textContent).toBe("Show all");
+    expect(root.querySelector(".lk-reveal-count")!.textContent).toBe("Step 1/3");
+    showSteps(root.querySelector<HTMLElement>(".lk-reveal")!, 2);
+    expect(root.querySelector(".lk-reveal-count")!.textContent).toBe("Step 2/3");
+    expect(root.textContent).not.toMatch(/Bước tiếp|Xem hết/);
+  });
 });

@@ -116,4 +116,13 @@ export const viReader = {
   "reader.nar.stage.full": "Toàn màn hình",
   "reader.nar.stage.waitBefore": "Em làm xong rồi bấm ",
   "reader.nar.stage.waitAfter": " nhé",
+  "reader.steps.next": "Bước tiếp",
+  "reader.steps.all": "Xem hết",
+  "reader.steps.reset": "Xem lại từ đầu",
+  "reader.steps.count": "Bước {n}/{total}",
+  "reader.video.cuepoints": "Có {n} câu hỏi gài trong video — phải trả lời đúng để xem tiếp.",
+  "reader.pdf.page": "Trang {page} / {total}",
+  "reader.pdf.prev": "← Trước",
+  "reader.pdf.next": "Sau →",
+  "reader.mainActions": "Hành động chính",
 } as const;

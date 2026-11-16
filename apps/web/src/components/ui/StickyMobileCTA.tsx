@@ -15,6 +15,8 @@ interface StickyMobileCTAProps {
   /** Nút action chính (đặt button/link tự chuẩn bị, vd .btn-primary). */
   action: ReactNode;
   className?: string;
+  /** Tên vùng cho trình đọc màn hình — truyền chuỗi đã dịch ở trang có giao diện tiếng Anh. */
+  label?: string;
 }
 
 export default function StickyMobileCTA({
@@ -22,6 +24,7 @@ export default function StickyMobileCTA({
   secondary,
   action,
   className = "",
+  label = "Hành động chính",
 }: StickyMobileCTAProps) {
   return (
     <div
@@ -29,7 +32,8 @@ export default function StickyMobileCTA({
       // safe-area cho iPhone
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
       role="region"
-      aria-label="Hành động chính"
+      aria-label={label}
+      data-sticky-cta
     >
       <div className="flex items-center gap-3">
         {(primary || secondary) && (

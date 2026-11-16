@@ -18,7 +18,7 @@ export const APP_LOCALE = "vi-VN";
 
 type DateInput = Date | string | number;
 
-function resolveTimeZone(): string {
+export function resolveTimeZone(): string {
   // Single switch point: return a per-user tz here to go multi-timezone later.
   return APP_TIMEZONE;
 }
