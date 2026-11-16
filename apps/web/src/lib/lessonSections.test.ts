@@ -412,13 +412,13 @@ describe("splitLessonSections — banner phần của sách (FUNCTION, LEARN TO)
     expect(r.tabs[0]!.intro).toBeUndefined();
   });
 
-  it("số trang còn lại sau khi câu yêu cầu xuống tab phiếu bạn ảo: đi cùng tab đó, không đứng trơ ở lý thuyết", () => {
+  it("chỉ còn dòng số trang sau khi câu yêu cầu xuống tab phiếu bạn ảo: bỏ hẳn, không thành thẻ trống", () => {
     const top = rich(brand("Vocabulary", "x") + page(14));
     const s4b = rich(page(15) + exh(4) + stmt("4", "B", "Choose three items.") + `<p>A: It’s made of leather.</p>`);
     const r = splitLessonSections([top, practice("p1", "4A · Complete"), s4b, practice("p2", "4B · Talk with a virtual partner")], ids("p1", "p2"));
     expect(r.theory.map((i) => i.id)).toEqual([top.id]);
     const t = r.tabs.find((x) => x.id === "p2")!;
-    expect(html(t.intro![0]!)).toContain("page 15");
+    expect(t.intro).toBeUndefined();
     expect(html(t.lead[0]!)).toContain("Choose three items.");
   });
 

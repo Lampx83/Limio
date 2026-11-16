@@ -374,7 +374,7 @@ export function splitLessonSections<T extends SectionItem>(
       return;
     }
     const cuts = [...(removed.has(i) ? [removed.get(i)!] : []), ...(stmtCuts.get(i) ?? [])];
-    // Khối chữ chỉ còn banner phần / số trang / tiêu đề "Exercise N" mà liền sau là một khối bài luyện: phần đó đi cùng tab đầu của khối.
+    // Khối chữ chỉ còn banner phần / số trang / tiêu đề "Exercise N" mà liền sau là một khối bài luyện: banner đi cùng tab đầu của khối; số trang đơn lẻ bỏ.
     // Banner đầu bài (chưa có lý thuyết nào đứng trước) ở lại để trang vẫn mở đầu bằng banner.
     const next = items[i + 1];
     const chunk = chunks.get(i);
@@ -383,7 +383,8 @@ export function splitLessonSections<T extends SectionItem>(
       const bodyNodes = rest.filter((n) => !EXERCISE_HEAD.test(n));
       const isBanner = (n: string) => SECTION_BANNER.test(n);
       if (bodyNodes.length > 0 && bodyNodes.every((n) => isBanner(n) || PAGE_MARK.test(n)) && (theory.length > 0 || !bodyNodes.some(isBanner))) {
-        introOf.set(i + 1, [{ ...it, id: `${it.id}~intro`, payload: { ...(it.payload as object), html: bodyNodes.join("") } } as T]);
+        // Chỉ còn dòng số trang (không có banner): bỏ hẳn, vì thẻ chỉ có "Student's Book · page 15" chiếm chỗ mà không có thông tin.
+        if (bodyNodes.some(isBanner)) introOf.set(i + 1, [{ ...it, id: `${it.id}~intro`, payload: { ...(it.payload as object), html: bodyNodes.join("") } } as T]);
         return;
       }
     }
