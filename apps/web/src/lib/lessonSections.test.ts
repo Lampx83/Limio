@@ -385,3 +385,48 @@ describe("dropExerciseBanner — bỏ thanh \"Exercise N\" khỏi lý thuyết",
     expect(dropExerciseBanner(h)).toBe(h);
   });
 });
+
+describe("splitLessonSections — banner phần của sách (FUNCTION, LEARN TO) đi cùng tab đầu của khối liền sau", () => {
+  const brand = (name: string, sub: string) =>
+    `<h2 id="muc-${name}"><span style="display:block;background:linear-gradient(90deg,rgb(229,0,92),rgba(229,0,92,.1));color:#fff">${name}</span><span>${sub}</span></h2>`;
+  const page = (n: number) => `<p style="text-align:right">Student’s Book · page ${n}</p>`;
+  const exh = (n: number) => `<h3 id="muc-exercise-${n}" style="color:rgb(229,0,92)">Exercise ${n}</h3>`;
+
+  it("banner + số trang + \"Exercise N\" đứng giữa bài: thành intro của khối kế tiếp, không còn ở lý thuyết", () => {
+    const top = rich(brand("Vocabulary", "Everyday objects") + page(14));
+    const fn = rich(brand("Function", "Describing objects") + page(14) + exh(2));
+    const r = splitLessonSections([top, practice("p1", "Match"), fn, practice("p2", "Describing objects · Practice")], ids("p1", "p2"));
+    expect(r.theory.map((i) => i.id)).toEqual([top.id]);
+    const t = r.tabs.find((x) => x.id === "p2")!;
+    expect(t.intro).toHaveLength(1);
+    expect(html(t.intro![0]!)).toContain("Function");
+    expect(html(t.intro![0]!)).toContain("page 14");
+    expect(html(t.intro![0]!)).not.toContain("Exercise 2");
+    expect(r.tabs.find((x) => x.id === "p1")!.intro).toBeUndefined();
+  });
+
+  it("banner đầu bài (chưa có lý thuyết nào đứng trước) ở lại để bài vẫn mở đầu bằng banner", () => {
+    const first = rich(brand("Reading", "Coffee") + page(8));
+    const r = splitLessonSections([first, practice("p1", "7 · X")], ids("p1"));
+    expect(r.theory.map((i) => i.id)).toEqual([first.id]);
+    expect(r.tabs[0]!.intro).toBeUndefined();
+  });
+
+  it("số trang còn lại sau khi câu yêu cầu xuống tab phiếu bạn ảo: đi cùng tab đó, không đứng trơ ở lý thuyết", () => {
+    const top = rich(brand("Vocabulary", "x") + page(14));
+    const s4b = rich(page(15) + exh(4) + stmt("4", "B", "Choose three items.") + `<p>A: It’s made of leather.</p>`);
+    const r = splitLessonSections([top, practice("p1", "4A · Complete"), s4b, practice("p2", "4B · Talk with a virtual partner")], ids("p1", "p2"));
+    expect(r.theory.map((i) => i.id)).toEqual([top.id]);
+    const t = r.tabs.find((x) => x.id === "p2")!;
+    expect(html(t.intro![0]!)).toContain("page 15");
+    expect(html(t.lead[0]!)).toContain("Choose three items.");
+  });
+
+  it("khối chữ có nội dung khác (đoạn văn, danh sách) thì không bị coi là banner trơ: giữ nguyên ở lý thuyết", () => {
+    const top = rich(brand("Vocabulary", "x") + page(14));
+    const mid = rich(brand("Function", "y") + page(14) + `<p>Some real explanation.</p>`);
+    const r = splitLessonSections([top, practice("p1", "A"), mid, practice("p2", "B")], ids("p1", "p2"));
+    expect(r.theory.map((i) => i.id)).toEqual([top.id, mid.id]);
+    expect(r.tabs.every((t) => !t.intro)).toBe(true);
+  });
+});

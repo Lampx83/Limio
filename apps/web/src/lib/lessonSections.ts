@@ -16,6 +16,11 @@ export interface SectionTab<T extends SectionItem> {
   id: string;
   label: string;
   lead: T[];
+  /**
+   * Banner phần của sách (FUNCTION, LEARN TO) và số trang đứng ngay trước khối này: đi cùng tab đầu tiên của khối thay vì đứng trơ trọi trên
+   * đầu bài. Không có thì bỏ trống.
+   */
+  intro?: T[];
   /** Khối là phiếu "Talk with a virtual partner": để phân biệt khi trùng nhãn. */
   virtualPartner: boolean;
   /** Tab của exercise chỉ có chữ (không có khối bài luyện): nội dung là câu yêu cầu và phần đi kèm. */
@@ -168,6 +173,10 @@ function topLevelNodes(html: string): string[] | null {
 // Câu yêu cầu của sách do bộ nhập khoá dựng: đoạn văn mở đầu bằng số và/hoặc chữ cái (A–E) tô màu thương hiệu.
 const STATEMENT = /^<p\b[^>]*>\s*((?:<span\b[^>]*color:\s*rgb\(229,\s*0,\s*92\)[^>]*>[^<]{1,4}<\/span>\s*){1,2})/i;
 const BOUNDARY = /^<(?:h[1-6]|aside)\b/i;
+// Banner phần của sách (thanh tô màu thương hiệu), dòng số trang và tiêu đề "Exercise N" mà bộ nhập khoá dựng quanh mỗi phần.
+const SECTION_BANNER = /^<h2\b[^>]*>[\s\S]*rgb\(229,\s*0,\s*92\)/i;
+const PAGE_MARK = /^<p\b[^>]*>\s*Student[’']s Book\s*·\s*page\s*\d+\s*<\/p>\s*$/i;
+const EXERCISE_HEAD = /^<h[2-4]\b[^>]*>\s*(?:<span\b[^>]*>\s*)?Exercises?\s+\d+\s*(?:<\/span>\s*)?<\/h[2-4]>\s*$/i;
 
 interface Label {
   num?: string;
@@ -354,15 +363,30 @@ export function splitLessonSections<T extends SectionItem>(
   // 3) dựng kết quả
   const theory: T[] = [];
   const tabs: SectionTab<T>[] = [];
+  const introOf = new Map<number, T[]>();
   items.forEach((it, i) => {
     if (it.type === "exam_practice" && practiceIds.has(it.id)) {
       const title = String((it.payload as { title?: unknown } | null)?.title ?? "");
       const label =
         exerciseLabels([title]) ?? exerciseLabels(passageTitles?.get(it.id) ?? []) ?? labelBefore(i, isVirtualPartner(title)) ?? practiceTabLabel(title);
-      tabs.push({ id: it.id, label, lead: leadOf.get(i) ?? [], virtualPartner: isVirtualPartner(title), statement: false });
+      const intro = introOf.get(i);
+      tabs.push({ id: it.id, label, lead: leadOf.get(i) ?? [], ...(intro ? { intro } : {}), virtualPartner: isVirtualPartner(title), statement: false });
       return;
     }
     const cuts = [...(removed.has(i) ? [removed.get(i)!] : []), ...(stmtCuts.get(i) ?? [])];
+    // Khối chữ chỉ còn banner phần / số trang / tiêu đề "Exercise N" mà liền sau là một khối bài luyện: phần đó đi cùng tab đầu của khối.
+    // Banner đầu bài (chưa có lý thuyết nào đứng trước) ở lại để trang vẫn mở đầu bằng banner.
+    const next = items[i + 1];
+    const chunk = chunks.get(i);
+    if (it.type === "richtext" && chunk && next && next.type === "exam_practice" && practiceIds.has(next.id) && !sharedReadingIds?.has(next.id)) {
+      const rest = chunk.nodes.filter((_, k) => !cuts.some(([a, b]) => k >= a && k < b));
+      const bodyNodes = rest.filter((n) => !EXERCISE_HEAD.test(n));
+      const isBanner = (n: string) => SECTION_BANNER.test(n);
+      if (bodyNodes.length > 0 && bodyNodes.every((n) => isBanner(n) || PAGE_MARK.test(n)) && (theory.length > 0 || !bodyNodes.some(isBanner))) {
+        introOf.set(i + 1, [{ ...it, id: `${it.id}~intro`, payload: { ...(it.payload as object), html: bodyNodes.join("") } } as T]);
+        return;
+      }
+    }
     if (cuts.length === 0) {
       const at = unlabel.get(i);
       if (at !== undefined) {

@@ -56,3 +56,27 @@ export function splitEmbedByExercise(embed: PracticeEmbed): ExerciseGroup[] {
     },
   }));
 }
+
+/**
+ * Một exercise có nhiều đoạn (vd 5A gồm Agreeing / Disagreeing / Giving your opinion; 1A gồm hai bộ ảnh) → mỗi đoạn một khối riêng, xếp nối nhau
+ * trong CÙNG tab bài tập, để không có tab nằm trong tab. Mỗi khối giữ tên đoạn làm tiêu đề và đánh số câu từ 1 như khi là tab con.
+ *
+ * Câu không thuộc đoạn nào (hoặc đoạn lạ) đi cùng đoạn đứng trước, đoạn đầu nếu chưa có. Dưới hai đoạn → mảng rỗng (không cần tách).
+ */
+export function splitEmbedByPassage(embed: PracticeEmbed): PracticeEmbed[] {
+  if (embed.passages.length < 2) return [];
+  const known = new Set(embed.passages.map((p) => p.id));
+  const owner = new Map<string, string>();
+  let prev = embed.passages[0]!.id;
+  for (const q of embed.questions) {
+    const own = q.passageId && known.has(q.passageId) ? q.passageId : prev;
+    owner.set(q.id, own);
+    prev = own;
+  }
+  return embed.passages.map((p) => ({
+    ...embed,
+    passages: [p],
+    questions: embed.questions.filter((q) => owner.get(q.id) === p.id),
+    answers: embed.answers.filter((a) => owner.get(a.questionId) === p.id),
+  }));
+}

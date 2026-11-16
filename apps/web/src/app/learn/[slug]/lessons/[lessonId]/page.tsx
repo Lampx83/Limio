@@ -53,9 +53,10 @@ import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
 import StatementTab from "@/components/lesson/StatementTab";
+import LessonRichText from "@/components/lesson/LessonRichText";
 import TheoryCard from "@/components/lesson/TheoryCard";
 import { arrangeTabs, dropExerciseBanner, dropRepeatedBannerTitle, exerciseLabels, markLabelBold, mergeTabsByLabel, splitLessonSections } from "@/lib/lessonSections";
-import { splitEmbedByExercise } from "@/lib/practiceExerciseSplit";
+import { splitEmbedByExercise, splitEmbedByPassage } from "@/lib/practiceExerciseSplit";
 import { dedupeHoisted, hoistReadingPassages, type HoistedPassage } from "@/lib/practiceHoist";
 import SkipLessonBanner from "@/components/SkipLessonBanner";
 import LessonForumSection from "@/components/LessonForumSection";
@@ -891,6 +892,19 @@ export default async function LessonPage({
       skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
     />
   );
+  // Một exercise có nhiều đoạn (5A: Agreeing / Disagreeing / Giving your opinion) hiện nối nhau trong cùng tab bài tập, mỗi đoạn một khối có tên đoạn,
+  // không dùng tab con: tab nằm trong tab khó nhìn. Khối nào chỉ có một đoạn giữ nguyên.
+  const renderStacked = (embed: PracticeEmbed, info: { preview: boolean; title?: string }, subset: boolean) => {
+    const parts = splitEmbedByPassage(embed);
+    if (parts.length < 2) return renderBlock(embed, info, subset);
+    return (
+      <div className="space-y-6">
+        {parts.map((pe, j) => (
+          <div key={pe.passages[0]?.id ?? j}>{renderBlock(pe, info, subset || j < parts.length - 1)}</div>
+        ))}
+      </div>
+    );
+  };
   // Phần lý thuyết là MỘT thẻ (AC8) khi toàn chữ và không dùng bảng màu riêng của bài; còn không giữ cách hiện cũ.
   const theoryAsOneCard =
     !!sections &&
@@ -940,6 +954,9 @@ export default async function LessonPage({
             // Câu yêu cầu của sách đi cùng phiếu bạn ảo: cùng khuôn với tab chỉ có chữ (tiêu đề là số exercise, rồi câu yêu cầu).
             const leadHtml = (tab.lead[0]?.payload as { html?: string } | undefined)?.html;
             const leadNode = tab.lead.length > 0 && leadHtml ? <StatementTab code={tab.label} html={leadHtml} /> : null;
+            // Banner phần của sách (FUNCTION, LEARN TO) và số trang đứng trước khối: nằm ở đầu tab đầu tiên của khối.
+            const introHtml = (tab.intro ?? []).map((x) => (x.payload as { html?: string } | undefined)?.html ?? "").join("");
+            const introNode = introHtml ? <LessonRichText html={markLabelBold(introHtml)} className="!mb-3" /> : null;
             if (info && groups.length >= 2) {
               return groups.map((g, k) => ({
                 id: `${tab.id}~${k}`,
@@ -947,8 +964,9 @@ export default async function LessonPage({
                 virtualPartner: tab.virtualPartner,
                 build: () => (
                   <>
+                    {k === 0 ? introNode : null}
                     {k === 0 ? leadNode : null}
-                    {renderBlock(g.embed, info, true)}
+                    {renderStacked(g.embed, info, true)}
                   </>
                 ),
               }));
@@ -970,8 +988,9 @@ export default async function LessonPage({
                 virtualPartner: tab.virtualPartner,
                 build: () => (
                   <>
+                    {introNode}
                     {leadNode}
-                    {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode) : practiceBlocks[tab.id]}
+                    {info && embed && ((hoist && hoist.hoisted.length > 0) || (tab.virtualPartner && leadNode)) ? renderBlock(embed, info, false, tab.virtualPartner && !!leadNode) : info && embed && !tab.virtualPartner && splitEmbedByPassage(embed).length >= 2 ? renderStacked(embed, info, false) : practiceBlocks[tab.id]}
                   </>
                 ),
               },
