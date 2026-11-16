@@ -8,13 +8,34 @@ import type { MouseEvent } from "react";
  * đều thấy đủ lời giải. Việc ẩn/hiện chỉ xảy ra ở đây, trên HTML đã làm sạch, ở trình duyệt.
  */
 
-export function buildStepReveal(html: string): string {
+/** Chữ trên nút theo ngôn ngữ giao diện; `count` có `{n}` và `{total}`. Mặc định tiếng Việt (bài cũ, test). */
+export interface StepRevealLabels {
+  next: string;
+  all: string;
+  reset: string;
+  count: string;
+}
+export const VI_STEP_LABELS: StepRevealLabels = {
+  next: "Bước tiếp",
+  all: "Xem hết",
+  reset: "Xem lại từ đầu",
+  count: "Bước {n}/{total}",
+};
+
+const countText = (tpl: string, n: number, total: number) =>
+  tpl.replace("{n}", String(n)).replace("{total}", String(total));
+
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+export function buildStepReveal(html: string, labels: StepRevealLabels = VI_STEP_LABELS): string {
   if (!html.includes("data-reveal")) return html;
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, "text/html");
   doc.body.querySelectorAll('section.lesson-section[data-layout="steps"][data-reveal]').forEach((section) => {
     const parts = Array.from(section.children).filter((c) => c.classList.contains("lesson-part"));
     if (parts.length < 2) return;
     section.classList.add("lk-reveal");
+    // Mẫu "Bước {n}/{total}" theo ngôn ngữ, để refresh() (chạy sau mỗi lần bấm) viết lại đúng ngôn ngữ.
+    section.setAttribute("data-step-count", labels.count);
     parts.forEach((p, i) => {
       if (i > 0) p.setAttribute("data-hidden", "1");
     });
@@ -22,10 +43,10 @@ export function buildStepReveal(html: string): string {
     const ctl = doc.createElement("div");
     ctl.className = "lk-reveal-ctl";
     ctl.innerHTML =
-      `<button type="button" data-step-next>Bước tiếp</button>` +
-      `<button type="button" data-step-all>Xem hết</button>` +
-      `<button type="button" data-step-reset hidden>Xem lại từ đầu</button>` +
-      `<span class="lk-reveal-count" aria-live="polite">Bước 1/${parts.length}</span>`;
+      `<button type="button" data-step-next>${esc(labels.next)}</button>` +
+      `<button type="button" data-step-all>${esc(labels.all)}</button>` +
+      `<button type="button" data-step-reset hidden>${esc(labels.reset)}</button>` +
+      `<span class="lk-reveal-count" aria-live="polite">${esc(countText(labels.count, 1, parts.length))}</span>`;
     parts[parts.length - 1]!.after(ctl);
   });
   return doc.body.innerHTML;
@@ -42,7 +63,7 @@ function refresh(section: HTMLElement) {
   section.querySelector<HTMLElement>("[data-step-reset]")!.toggleAttribute("hidden", !done);
   // Chỉ ghi khi đổi: trình quan sát DOM của Nghe giảng chạy lại mỗi khi có nút chữ mới, ghi thừa là vòng lặp vô tận.
   const count = section.querySelector<HTMLElement>(".lk-reveal-count")!;
-  const label = `Bước ${shown.length}/${parts.length}`;
+  const label = countText(section.getAttribute("data-step-count") ?? VI_STEP_LABELS.count, shown.length, parts.length);
   if (count.textContent !== label) count.textContent = label;
 }
 

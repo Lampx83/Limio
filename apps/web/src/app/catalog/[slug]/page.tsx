@@ -306,6 +306,7 @@ export default async function CourseDetailPage({
       {/* Sticky mobile CTA — desktop dùng sidebar */}
       {course.status === "published" && (
         <StickyMobileCTA
+          label={t("reader.mainActions")}
           primary={paymentEnabled ? priceLabel : course.title}
           secondary={
             enrolled

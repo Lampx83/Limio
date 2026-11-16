@@ -262,7 +262,7 @@ export default function PdfViewer({
 
   const pageLabel = (
     <span className="min-w-[80px] text-center text-sm text-muted">
-      Trang {page} / {totalPages}
+      {t("reader.pdf.page", { page, total: totalPages })}
     </span>
   );
   const prevBtn = (
@@ -273,7 +273,7 @@ export default function PdfViewer({
       className="btn-secondary btn-sm"
       data-view-keep
     >
-      ← Trước
+      {t("reader.pdf.prev")}
     </button>
   );
   const nextBtn = (
@@ -284,7 +284,7 @@ export default function PdfViewer({
       className="btn-secondary btn-sm"
       data-view-keep
     >
-      Sau →
+      {t("reader.pdf.next")}
     </button>
   );
 

@@ -119,4 +119,13 @@ export const enReader: PartialDict<typeof viReader> = {
   "reader.nar.stage.full": "Full screen",
   "reader.nar.stage.waitBefore": "When you've finished, click ",
   "reader.nar.stage.waitAfter": " to go on",
+  "reader.steps.next": "Next step",
+  "reader.steps.all": "Show all",
+  "reader.steps.reset": "Start over",
+  "reader.steps.count": "Step {n}/{total}",
+  "reader.video.cuepoints": "This video has {n} embedded questions — answer each one correctly to keep watching.",
+  "reader.pdf.page": "Page {page} / {total}",
+  "reader.pdf.prev": "← Previous",
+  "reader.pdf.next": "Next →",
+  "reader.mainActions": "Main actions",
 };
