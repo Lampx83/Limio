@@ -5,6 +5,7 @@ import {
   COURSE_PLAN_MAX_SESSIONS,
   clearCourseSessionPlan,
   getCourseSessionPlan,
+  listCourseSessionPlanSummaries,
   saveCourseSessionPlan,
 } from "../courseSessionPlan";
 import { MEETING_PLAN_MAX_LESSONS, resetMeetingPlan, setMeetingPlan } from "../meetingPlan";
@@ -196,5 +197,30 @@ describe("sao khoá và xoá bài (K9)", () => {
     await saveCourseSessionPlan(s.teacher, s.courseId, { sessions: [{ lessonIds: [s.lessons[0], s.lessons[1]] }] });
     await deleteLesson(s.teacher, s.lessons[1]!);
     expect(lessonIds(await teacherPlan(s, 0))).toEqual([s.lessons[0]]);
+  });
+});
+
+describe("listCourseSessionPlanSummaries — trang Giáo trình", () => {
+  it("chỉ khoá có tên mình (không lấy khoá lưu trữ); đếm buổi, bài chưa xếp; người chỉ dạy thì chỉ xem", async () => {
+    const s = await setup("csp-list");
+    const other = await setup("csp-list-other");
+    const empty = await setup("csp-list-none", { withPlan: false });
+    await prisma.courseInstructor.create({ data: { courseId: empty.courseId, userId: s.teacher, role: "owner" } });
+
+    let list = await listCourseSessionPlanSummaries(s.teacher);
+    expect(list.map((c) => c.courseId).sort()).toEqual([s.courseId, empty.courseId].sort());
+    expect(list.find((c) => c.courseId === s.courseId)).toMatchObject({ editable: true, source: "chapters", sessions: 3, lessons: 6, unplannedLessons: 0 });
+    expect(list.find((c) => c.courseId === empty.courseId)).toMatchObject({ source: "none", sessions: 0, lessons: 0 });
+    expect(list.some((c) => c.courseId === other.courseId)).toBe(false);
+
+    await saveCourseSessionPlan(s.teacher, s.courseId, { sessions: [{ lessonIds: [s.lessons[0]] }, { lessonIds: [] }] });
+    list = await listCourseSessionPlanSummaries(s.teacher);
+    expect(list.find((c) => c.courseId === s.courseId)).toMatchObject({ source: "plan", sessions: 2, unplannedLessons: 5 });
+
+    const t = await teachOnly(s, "list-t");
+    expect(await listCourseSessionPlanSummaries(t)).toEqual([expect.objectContaining({ courseId: s.courseId, editable: false })]);
+
+    await prisma.course.update({ where: { id: empty.courseId }, data: { status: "archived" } });
+    expect((await listCourseSessionPlanSummaries(s.teacher)).map((c) => c.courseId)).toEqual([s.courseId]);
   });
 });

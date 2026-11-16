@@ -99,9 +99,8 @@ không sửa** (hệ thống không kiểm tra khoá rỗng) — nên nhắc th�
 **Trình soạn khoá** (`/instructor/courses/[id]`):
 - Đầu trang: "← Khóa của tôi", nhãn trạng thái (Nháp / Đã publish / Lưu trữ), nút
   xanh **Publish**, nút **"Chế độ đứng lớp"** (mở bài ở tab mới, chế độ giảng viên).
-- Các tab theo thứ tự: **Tổng quan · Nội dung · Lớp học · Phân phối chương trình · Học viên · Grade · Phân tích · Gamification**
-  (Lớp học đứng TRƯỚC Học viên). "Phân phối chương trình" chỉ hiện khi tài khoản đã bật tính năng trung tâm hoặc khoá đã có bảng
-  (xem mục "Phân phối chương trình" bên dưới). Khoá còn nháp chỉ hiện Tổng quan, Nội dung và (nếu có) Phân phối chương trình. "Phân tích" chỉ dành cho
+- Các tab theo thứ tự: **Tổng quan · Nội dung · Lớp học · Học viên · Grade · Phân tích · Gamification**
+  (Lớp học đứng TRƯỚC Học viên). Khoá còn nháp chỉ hiện Tổng quan và Nội dung. "Phân tích" chỉ dành cho
   nhà nghiên cứu — không nhắc.
 - **Tổng quan** là bản tóm tắt chỉ đọc (Level, Ngôn ngữ, Category, Giá, thẻ "Chế độ": "LMS thường" /
   "AI Feedback" / "Ngoại ngữ (4 kỹ năng)") kèm nút "Sửa". Biểu mẫu "Sửa" có: ô **"Cá nhân hoá học tập"**
@@ -430,8 +429,8 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   có "Sửa" và **"Huỷ buổi"** (hỏi lý do; huỷ thì các buổi sau tự lùi số thứ tự); **"+ Thêm buổi dạy bù"** có thể
   gắn với một buổi đã huỷ. Trùng giáo viên hoặc phòng giữa các lớp chỉ hiện cảnh báo, vẫn lưu. Buổi học cũng hiện (chấm xanh, nhãn "Buổi học") trong widget **"Lịch"** ở trang chủ của giảng viên, bấm vào mở trang điểm danh; buổi huỷ hiện
   "Đã huỷ". Học viên xem ở widget "Lịch" và thẻ **"Chuyên cần của bạn"** trên trang tổng quan, hoặc ở mục **"Lịch học"** trong menu của mình (`/me/lich-hoc`).
-- **Giáo trình dựng sẵn** (mới, CENTER C3): mục **"Giáo trình"** trong menu LMS mở trang **"Giáo trình dựng sẵn"** (`/instructor/giao-trinh`)
-  liệt kê các giáo trình quản trị đã phát hành (tên, ngôn ngữ, "đầu ra", số buổi, số bài). **"Xem trước"** mở
+- **Giáo trình dựng sẵn** (mới, CENTER C3): khối **"Giáo trình dựng sẵn"** ở cuối trang **"Giáo trình"** (`/instructor/giao-trinh`, chỉ hiện
+  khi thư viện có giáo trình) liệt kê các giáo trình quản trị đã phát hành (tên, ngôn ngữ, "đầu ra", số buổi, số bài). **"Xem trước"** mở
   `/instructor/giao-trinh/[packId]`: mô tả và danh sách buổi, bấm một buổi để xổ các bài kèm loại nội dung (từ vựng,
   hội thoại, audio, quiz, bài tập về nhà, ghi chú cho giáo viên). **"Dùng giáo trình này"** sao cả giáo trình về
   thành một khoá nháp của giảng viên rồi mở trang khoá đó; khoá còn nháp nên giảng viên bấm **"Publish"** thì mới có tab "Lớp học" để tạo lớp. Sửa bản sao không đụng bản gốc. Mỗi chương
@@ -497,17 +496,22 @@ học viên" hoặc "Chưa vào lớp nào". Hạn chỉ lưu khi bấm "Lưu" c
   (mọi lần đặt và đổi, kèm giá trị cũ và mới); mục tiêu đã đóng có **"Theo đuổi lại"**; **"Mục tiêu chung"** không gắn khoá chỉ chính học
   viên xem. Mục tiêu bị xoá hẳn khi xoá tài khoản và có trong bản xuất dữ liệu cá nhân. Chưa có: cảnh báo học viên lệch kế hoạch hai tuần
   liền, gợi ý bài luyện theo mục tiêu, kết quả thi thử trong tiến độ.
-- **Phân phối chương trình** (mới, CENTER K): tab **"Phân phối chương trình"** của trang khoá là bảng "buổi nào học bài nào" cho
-  **mọi lớp** của khoá. Mỗi buổi là một thẻ **"Buổi N"** gồm ô **"Chủ đề buổi (không bắt buộc)"**, danh sách bài theo thứ tự (kèm tên
-  chương, nhãn "Đang ẩn với học viên"), mũi tên đổi thứ tự, dấu X bỏ bài, **"Thêm bài"** (cùng bộ chọn với nút "Kế hoạch") và **"Bỏ buổi"**.
-  Chia nhanh: nhập **"Số buổi"** rồi bấm **"Chia bài theo số buổi"** — mọi bài đang hiện của khoá được chia liền mạch theo đúng thứ tự,
-  các buổi chênh nhau nhiều nhất một bài (48 bài, 24 buổi → 2 bài mỗi buổi); kết quả chỉ nằm trên màn hình cho tới khi bấm
-  **"Lưu phân phối"** (nằm ở thanh dính cuối màn hình, kèm dòng đếm số buổi và số bài chưa xếp vào buổi nào, và thông báo đã lưu).
-  **"Thêm buổi"** nằm cuối danh sách; **"Xoá phân phối"** (khi khoá đã có bảng; hỏi xác nhận) nằm cạnh nút chia nhanh. Khoá đang theo chương (giáo trình dựng sẵn) thì bảng mở ra chép sẵn từ các chương, kèm dòng giải thích.
-  Thứ tự ưu tiên giáo án của một buổi: kế hoạch riêng của buổi (nút "Kế hoạch") → bảng phân phối của khoá → chương cùng số buổi (chỉ khi
-  khoá chưa có bảng). Lưu hoặc xoá bảng không đổi buổi đã kết thúc (giáo án của chúng được giữ lại). Chỉ người quản khoá (chủ khoá, đồng
-  giảng viên, Platform Admin) sửa; người chỉ dạy mở tab chỉ xem. "Duplicate" và "Dùng giáo trình này" mang bảng sang bản sao. Nhãn ở
-  nút "Kế hoạch" vẫn ghi "Theo giáo trình" khi buổi đang theo bảng phân phối. Chưa có: kéo thả; lớp vào muộn bắt đầu từ buổi khác 1.
+- **Phân phối chương trình** (mới, CENTER K): mục **"Giáo trình"** trong menu LMS (chỉ hiện khi bật tính năng trung tâm) mở trang
+  **"Giáo trình"** (`/instructor/giao-trinh`): mỗi khoá thầy/cô có tên (trừ khoá lưu trữ) là một thẻ ghi trạng thái, số buổi và số bài chưa
+  xếp ("Chưa phân phối", "n buổi theo chương" hoặc "n buổi · còn m bài chưa xếp"), nút **"Phân phối chương trình"** (người chỉ dạy thấy
+  "Xem phân phối chương trình", thẻ ghi "chỉ xem"). Nút mở `/instructor/giao-trinh/khoa/[courseId]`: tiêu đề là tên khoá, liên kết
+  **"Mở nội dung khoá"** (người quản khoá), rồi bảng "buổi nào học bài nào" cho **mọi lớp** của khoá. Mỗi buổi là một thẻ **"Buổi N"** gồm
+  ô **"Chủ đề buổi (không bắt buộc)"** (trên điện thoại nằm dòng riêng), danh sách bài theo thứ tự (kèm tên chương, nhãn "Đang ẩn với học
+  viên"), mũi tên đổi thứ tự, dấu X bỏ bài, **"Thêm bài"** (cùng bộ chọn với nút "Kế hoạch") và **"Bỏ buổi"**. Chia nhanh: nhập
+  **"Số buổi"** rồi bấm **"Chia bài theo số buổi"** — mọi bài đang hiện của khoá được chia liền mạch theo đúng thứ tự, các buổi chênh nhau
+  nhiều nhất một bài (48 bài, 24 buổi → 2 bài mỗi buổi); kết quả chỉ nằm trên màn hình cho tới khi bấm **"Lưu phân phối"** (thanh dính
+  cuối màn hình, kèm dòng đếm số buổi, số bài chưa xếp và thông báo đã lưu). **"Thêm buổi"** nằm cuối danh sách; **"Xoá phân phối"**
+  (khi khoá đã có bảng; hỏi xác nhận) nằm cạnh nút chia nhanh. Khoá đang theo chương (giáo trình dựng sẵn) thì bảng mở ra chép sẵn từ các
+  chương, kèm dòng giải thích. Thứ tự ưu tiên giáo án của một buổi: kế hoạch riêng của buổi (nút "Kế hoạch") → phân phối chương trình
+  của khoá → chương cùng số buổi (chỉ khi khoá chưa có bảng). Lưu hoặc xoá bảng không đổi buổi đã kết thúc. Chỉ người quản khoá (chủ khoá,
+  đồng giảng viên, Platform Admin) sửa; người chỉ dạy chỉ xem. Ở tab "Lịch dạy" của trang lớp, người quản khoá có nút **"Sửa phân phối
+  chương trình"** cạnh "+ Thêm buổi dạy bù". "Duplicate" và "Dùng giáo trình này" mang bảng sang bản sao. Nhãn ở nút "Kế hoạch" vẫn ghi
+  "Theo giáo trình" khi buổi đang theo phân phối. Chưa có: kéo thả; lớp vào muộn bắt đầu từ buổi khác 1.
 - **Kế hoạch giảng dạy của từng buổi** (mới, CENTER J): ở tab **"Lịch dạy"** của trang lớp, mỗi buổi chưa huỷ có nút **"Kế hoạch"** mở phần
   soạn ngay dưới dòng buổi: danh sách bài theo thứ tự (kèm tên chương, nhãn "Đang ẩn với học viên"), ô **"Chủ đề buổi (không bắt buộc)"**,
   **"Thêm bài"** (cây chương và bài của khoá, ô tìm, chọn nhiều bài; bài đã có hiện "đã có"), mũi tên đổi thứ tự, dấu X bỏ bài, **"Lưu kế hoạch"**

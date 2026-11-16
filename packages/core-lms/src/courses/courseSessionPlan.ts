@@ -16,7 +16,7 @@ import { prisma, type PrismaClient } from "@feedbackme/db";
 import { LearningEventType } from "@feedbackme/shared-types";
 import type { DbClient } from "../auth/tokens";
 import { emitEvent } from "../learning/events";
-import { CourseAuthzError } from "./authz";
+import { CourseAuthzError, EDIT_ROLES } from "./authz";
 import { assertCanManageCourse, getTeachingScope } from "./teachingScope";
 import { resolveMeetingPlans } from "./sessionPlan";
 import { MEETING_PLAN_MAX_LESSONS, MEETING_PLAN_TOPIC_MAX } from "./meetingPlan";
@@ -233,4 +233,53 @@ export async function cloneCourseSessionPlan(
     }).map((x, orderIndex) => ({ ...x, orderIndex })),
   );
   if (links.length) await tx.courseSessionLesson.createMany({ data: links });
+}
+
+export interface CourseSessionPlanSummary {
+  courseId: string;
+  title: string;
+  status: string;
+  /** Người gọi sửa được bảng (chủ khoá, đồng giảng viên); false = chỉ xem. */
+  editable: boolean;
+  source: CourseSessionPlanView["source"];
+  sessions: number;
+  lessons: number;
+  unplannedLessons: number;
+}
+
+/**
+ * Trang "Giáo trình": các khoá người gọi có tên trong đó (mọi vai trò), trừ khoá đã lưu trữ, kèm số buổi đã phân phối và
+ * số bài chưa xếp. Không liệt kê mọi khoá cho Platform Admin (trang này là của giảng viên).
+ */
+export async function listCourseSessionPlanSummaries(actorUserId: string, db: PrismaClient = prisma): Promise<CourseSessionPlanSummary[]> {
+  const rows = await db.courseInstructor.findMany({
+    where: { userId: actorUserId, course: { status: { not: "archived" } } },
+    select: { role: true, course: { select: { id: true, title: true, status: true, updatedAt: true } } },
+    orderBy: { course: { updatedAt: "desc" } },
+  });
+  const ids = rows.map((r) => r.course.id);
+  if (ids.length === 0) return [];
+  const [planned, chapters, lessons] = await Promise.all([
+    db.courseSession.findMany({ where: { courseId: { in: ids } }, select: { courseId: true, lessons: { select: { lessonId: true } } } }),
+    db.module.findMany({ where: { courseId: { in: ids }, sessionNo: { not: null } }, select: { courseId: true, lessons: { select: { id: true } } } }),
+    db.lesson.findMany({ where: { module: { courseId: { in: ids } } }, select: { id: true, module: { select: { courseId: true } } } }),
+  ]);
+  const editRoles = new Set<string>(EDIT_ROLES);
+  return rows.map(({ role, course }) => {
+    const plan = planned.filter((p) => p.courseId === course.id);
+    const chap = chapters.filter((m) => m.courseId === course.id);
+    const source: CourseSessionPlanView["source"] = plan.length ? "plan" : chap.length ? "chapters" : "none";
+    const used = new Set(source === "plan" ? plan.flatMap((p) => p.lessons.map((l) => l.lessonId)) : chap.flatMap((m) => m.lessons.map((l) => l.id)));
+    const all = lessons.filter((l) => l.module.courseId === course.id);
+    return {
+      courseId: course.id,
+      title: course.title,
+      status: course.status,
+      editable: editRoles.has(role),
+      source,
+      sessions: source === "plan" ? plan.length : chap.length,
+      lessons: all.length,
+      unplannedLessons: all.filter((l) => !used.has(l.id)).length,
+    };
+  });
 }

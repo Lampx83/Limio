@@ -35,8 +35,6 @@ import AnalyticsDashboard from "./AnalyticsDashboard";
 import GamificationTab from "./GamificationTab";
 import InstructorsSection from "./InstructorsSection";
 import SectionsClient from "./SectionsClient";
-import CourseSessionPlanEditor from "./CourseSessionPlanEditor";
-import { getInstructorCenterAccess } from "@/lib/centerAccess";
 import ExportButtons from "./ExportButtons";
 import ActivityLogButton from "./ActivityLogButton";
 import CourseGradeOverview from "../../assignments/CourseGradeOverview";
@@ -73,7 +71,6 @@ export default async function InstructorCourseEditPage({
     "content",
     "students",
     "sections",
-    "plan",
     "assignments",
     "analytics",
     "gamification",
@@ -123,7 +120,7 @@ export default async function InstructorCourseEditPage({
   // non-editing-teacher/teaching-assistant reach the page at all (they need
   // "Học viên" for grading context). Content-edit UI is separately gated by
   // canEdit below.
-  const [canAccess, canEdit, isOwner, canViewAnalytics, canResearch, centerAccess, sessionPlanRows] = await Promise.all([
+  const [canAccess, canEdit, isOwner, canViewAnalytics, canResearch] = await Promise.all([
     canGradeCourse(userId, course.id),
     canEditCourse(userId, course.id),
     isCourseOwner(userId, course.id),
@@ -133,9 +130,6 @@ export default async function InstructorCourseEditPage({
     // Công cụ nghiên cứu chỉ hiện với role Researcher — giảng viên thường
     // không thấy để giao diện không lẫn thứ họ không cần.
     isResearcher(userId),
-    // CENTER K — tab "Phân phối chương trình" chỉ hiện khi tài khoản đã bật tính năng trung tâm, hoặc khoá đã có bảng.
-    getInstructorCenterAccess(userId),
-    prisma.courseSession.count({ where: { courseId: course.id } }),
   ]);
   if (!canAccess) redirect("/instructor/courses");
   // AC1 tự học cá nhân hoá — bảng "Sẵn sàng" và cờ khoá bán cho cảnh báo lúc Publish. Chỉ người sửa được khoá.
@@ -150,7 +144,6 @@ export default async function InstructorCourseEditPage({
     ...(!canViewAnalytics ? (["analytics", "gamification"] as const) : []),
     // Tab Phân tích là khu vực nghiên cứu: chỉ Researcher thấy.
     ...(!canResearch ? (["analytics"] as const) : []),
-    ...(!centerAccess && sessionPlanRows === 0 ? (["plan"] as const) : []),
     ...(course.status === "draft"
       ? (["students", "sections", "assignments", "analytics", "gamification"] as const)
       : []),
@@ -613,20 +606,6 @@ export default async function InstructorCourseEditPage({
             )}
           </div>
           <SectionsClient courseId={course.id} showResearch={canResearch} />
-        </div>
-      )}
-
-      {/* TAB: Phân phối chương trình (CENTER K) — bài theo buổi cho mọi lớp của khoá. */}
-      {tab === "plan" && (
-        <div className="mt-8">
-          <CourseSessionPlanEditor
-            courseId={course.id}
-            courseTree={course.modules.map((m) => ({
-              id: m.id,
-              title: m.title,
-              lessons: m.lessons.map((l) => ({ id: l.id, title: l.title, hidden: l.isHidden || m.isHidden })),
-            }))}
-          />
         </div>
       )}
 

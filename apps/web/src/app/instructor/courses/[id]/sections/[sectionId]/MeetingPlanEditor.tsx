@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import { apiUrl } from "@/lib/apiUrl";
-import LessonPicker, { type CourseTreeModule } from "../../LessonPicker";
+import LessonPicker, { type CourseTreeModule } from "@/components/course-plan/LessonPicker";
 
 export type { CourseTreeModule };
 

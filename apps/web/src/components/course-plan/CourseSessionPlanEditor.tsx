@@ -34,7 +34,7 @@ const errText = (c?: string) => ERRORS[c ?? ""] ?? `Có lỗi xảy ra${c ? ` ($
 
 /**
  * CENTER K — Phân phối chương trình: bảng "buổi nào học bài nào" cho mọi lớp của khoá. Chia nhanh theo số buổi rồi chỉnh
- * tay; lưu một lần cả bảng. Người chỉ dạy chỉ xem.
+ * tay; lưu một lần cả bảng. Người chỉ dạy chỉ xem. Đặt ở menu "Giáo trình" (/instructor/giao-trinh/khoa/[courseId]).
  */
 export default function CourseSessionPlanEditor({ courseId, courseTree }: { courseId: string; courseTree: CourseTreeModule[] }) {
   const nextKey = useRef(1);
@@ -137,15 +137,6 @@ export default function CourseSessionPlanEditor({ courseId, courseTree }: { cour
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-h3">Phân phối chương trình</h2>
-        <p className="mt-1 max-w-3xl text-sm text-muted">
-          Bảng này cho biết buổi nào học bài nào. Mọi lớp của khoá tự theo bảng: buổi số N của lớp hiện các bài của &quot;Buổi N&quot; ở
-          lịch dạy của giáo viên và lịch học của học viên. Buổi nào đã chỉnh riêng bằng nút &quot;Kế hoạch&quot; ở trang lớp thì giữ
-          nguyên; buổi đã kết thúc không bị đổi.
-        </p>
-      </div>
-
       {view.source === "chapters" && (
         <p className="banner-info text-sm">
           Khoá đang theo chương: chương số N là giáo án của buổi N. Bảng dưới đây chép từ các chương đó; bấm &quot;Lưu phân phối&quot; thì

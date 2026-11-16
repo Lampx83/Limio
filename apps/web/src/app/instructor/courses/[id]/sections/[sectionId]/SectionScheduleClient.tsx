@@ -410,6 +410,11 @@ export default function SectionScheduleClient({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-h4">Các buổi học ({detail.countedMeetings})</h3>
         {canManage && (
+        <span className="flex flex-wrap items-center gap-2">
+        {/* CENTER K — bài của từng buổi lấy từ phân phối chương trình của khoá (menu "Giáo trình"). */}
+        <Link href={`/instructor/giao-trinh/khoa/${courseId}`} className="btn-ghost btn-sm">
+          Sửa phân phối chương trình
+        </Link>
         <button
           type="button"
           className="btn-secondary btn-sm"
@@ -417,6 +422,7 @@ export default function SectionScheduleClient({
         >
           + Thêm buổi dạy bù
         </button>
+        </span>
         )}
       </div>
 
