@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { CourseHeroCover } from "@/components/course/CourseHeroBook";
+import { taughtByNames } from "@/lib/taughtBy";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@feedbackme/db";
@@ -105,9 +107,8 @@ export default async function CourseDetailPage({
   // but only once published.
   const publiclyReadable = course.publicAccess && course.status === "published";
 
-  // "Giảng dạy bởi" names the lead instructor(s), not everyone with edit rights —
-  // co-instructors and TAs keep their access without appearing on the hero.
-  const leadInstructors = course.instructors.filter((i) => i.role === "owner");
+  // "Giảng dạy bởi": trường Tác giả của khoá nếu có, không thì giảng viên chính — xem taughtByNames.
+  const taughtBy = taughtByNames(course);
 
   const totalLessons = course.modules.reduce((s, m) => s + m.lessons.length, 0);
 
@@ -179,7 +180,7 @@ export default async function CourseDetailPage({
               currency: cheapestPlan?.currency ?? course.currency,
               publishedAt: course.publishedAt,
               paymentEnabled,
-              instructors: leadInstructors.map((i) => i.user.displayName),
+              instructors: taughtBy,
               modules: course.modules.map((m) => m.title),
             }),
           ]}
@@ -221,7 +222,9 @@ export default async function CourseDetailPage({
       {/* Hero */}
       <header className="relative mt-4 overflow-hidden rounded-2xl bg-brand-gradient p-8 text-white shadow-card-hover sm:p-10">
         <div className="absolute inset-0 bg-hero-grid opacity-20" style={{ backgroundSize: "20px 20px" }} aria-hidden />
-        <div className="relative">
+        {/* Ảnh bìa cột phải như banner trang học (chỉ từ lg); khoá không có bìa thì cột chữ chiếm cả bề ngang như cũ. */}
+        <div className="relative flex items-start gap-8">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {course.level && (
               <span className="inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
@@ -265,11 +268,11 @@ export default async function CourseDetailPage({
           <h1 className="mt-4 h-display text-3xl font-bold leading-tight sm:text-5xl">
             {course.title}
           </h1>
-          {leadInstructors.length > 0 && (
+          {taughtBy.length > 0 && (
             <p className="mt-3 text-sm text-white/85">
               <span className="opacity-70">{t("catalog.detail.taughtBy")}</span>{" "}
               <span className="font-medium">
-                {leadInstructors.map((i) => i.user.displayName).join(", ")}
+                {taughtBy.join(", ")}
               </span>
             </p>
           )}
@@ -286,6 +289,8 @@ export default async function CourseDetailPage({
             )}
           </div>
 
+        </div>
+        <CourseHeroCover url={course.coverUrl} />
         </div>
       </header>
 
