@@ -194,7 +194,7 @@ export const enLearn: PartialDict<typeof viLearn> = {
   "learn.verify.issuedOn": "Issued on",
   "learn.verify.certNumber": "Certificate number",
   "learn.verify.issuedBy": "Issued by {issuer}",
-  "learn.verify.m4a": "Part of the MICRO4ASIA micro-credentials of the School of Technology, National Economics University (NEU). The project is co-funded by the European Union.",
+  "learn.verify.m4a": "Part of the MICRO4ASIA micro-credentials of the College of Technology, National Economics University (NEU). The project is co-funded by the European Union.",
   "learn.verify.notFound": "Certificate not found",
   "learn.verify.notFoundDesc": "No certificate matches the code \"{code}\".",
   "learn.path.review": "Review before moving on",

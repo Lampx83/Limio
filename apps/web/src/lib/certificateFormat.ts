@@ -53,7 +53,7 @@ export const CERT_STRINGS = {
     m4aTag: "MICRO-CREDENTIAL · MICRO4ASIA",
     m4aNote:
       "Micro-credential of the MICRO4ASIA project, co-funded by the European Union",
-    m4aIssuerName: "School of Technology",
+    m4aIssuerName: "College of Technology",
     m4aIssuerCaption: "National Economics University (NEU)",
   },
 } as const satisfies Record<CertLocale, Record<string, string>>;

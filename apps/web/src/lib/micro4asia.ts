@@ -148,12 +148,12 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
   en: {
     metaTitle: "MICRO4ASIA micro-credentials",
     metaDescription:
-      "Six short online courses in data and AI skills from the School of Technology, National Economics University, delivered through the MICRO4ASIA project, each ending in a verifiable certificate.",
+      "Six short online courses in data and AI skills from the College of Technology, National Economics University, delivered through the MICRO4ASIA project, each ending in a verifiable certificate.",
     eyebrow: "MICRO4ASIA × Limio",
     heroLead: "Six micro-credentials for",
     heroAccent: "data and AI skills",
     intro:
-      "Short, focused online courses in English from the School of Technology, National Economics University (NEU), delivered through the MICRO4ASIA project. Learn one skill at a time, show it in an assessment, and earn a certificate anyone can verify.",
+      "Short, focused online courses in English from the College of Technology, National Economics University (NEU), delivered through the MICRO4ASIA project. Learn one skill at a time, show it in an assessment, and earn a certificate anyone can verify.",
     browse: "See the six courses",
     aboutProject: "About MICRO4ASIA",
     statsCredentials: "micro-credentials",
@@ -192,7 +192,7 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
     ],
     register: "Create an account",
     footnote:
-      "MICRO4ASIA is co-funded by the European Union. This page is hosted on Limio by the School of Technology, NEU. The official project website is micro4asia.eu.",
+      "MICRO4ASIA is co-funded by the European Union. This page is hosted on Limio by the College of Technology, NEU. The official project website is micro4asia.eu.",
     poweredBy: "Courses are delivered on the Limio learning platform.",
     switchTo: "Tiếng Việt",
     switchLabel: "Xem bằng tiếng Việt",
