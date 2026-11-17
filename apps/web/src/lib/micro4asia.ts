@@ -252,3 +252,8 @@ export const M4A_COPY: Record<M4aLang, M4aCopy> = {
     breadcrumbHome: "Trang chủ",
   },
 };
+
+/** Khoá có thuộc sáu vi tín chỉ MICRO4ASIA không — chứng nhận của các khoá này in thêm dòng chứng chỉ vi mô. */
+export function isM4aCourseSlug(slug: string | null | undefined): boolean {
+  return !!slug && M4A_COURSES.some((c) => c.slug === slug);
+}

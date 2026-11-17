@@ -15,14 +15,22 @@ import {
   Image,
 } from "@react-pdf/renderer";
 import { slugify } from "@feedbackme/core-lms";
-import { tracked, formatDuration } from "@/lib/certificateFormat";
+import {
+  tracked,
+  formatDuration,
+  CERT_STRINGS,
+  certificateLocales,
+  certificateSkillChips,
+  isCompactCertificate,
+  type CertLocale,
+} from "@/lib/certificateFormat";
 import {
   ROBOTO_REGULAR_VIETNAMESE_DATA_URL,
   ROBOTO_BOLD_VIETNAMESE_DATA_URL,
 } from "@/assets/fonts/robotoFontData";
 
-// A6 — Chứng nhận hoàn thành khoá học, xuất PDF thật. Song ngữ: trang 1
-// tiếng Việt, trang 2 tiếng Anh, cùng 1 file. Bố cục học theo mẫu chứng nhận
+// A6 — Chứng nhận hoàn thành khoá học, xuất PDF thật. Song ngữ: 2 trang Việt/Anh
+// cùng 1 file, ngôn ngữ của khoá đứng trước (certificateLocales). Bố cục học theo mẫu chứng nhận
 // LinkedIn Learning — tiêu đề lớn là TÊN KHOÁ (không phải tên học viên), câu
 // "hoàn thành bởi X · thời lượng", dải màu chéo 2 góc phía sau khung trắng,
 // con dấu tròn kiểu huy hiệu góc dưới thay vì vòng tròn trơn — nhưng đổi màu
@@ -178,33 +186,21 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   footerLabel: { fontSize: 11.25, color: "#9ca3af" },
+  // Bố cục gọn (isCompactCertificate) — ghi đè cỡ chữ/khoảng cách của các style trên.
+  kickerCompact: { fontSize: 20, marginTop: 12 },
+  titleCompact: { fontSize: 36, marginTop: 12 },
+  sublineNameCompact: { fontSize: 24, marginTop: 16 },
+  skillsLabelCompact: { marginTop: 14 },
+  badgeCompact: { fontSize: 12.5, paddingVertical: 4 },
+  bottomRowCompact: { marginTop: 18 },
+  footerCenterCompact: { marginTop: 10 },
+  m4aTag: { fontSize: 12, fontWeight: "bold", color: "#1e3a8a", marginTop: 6 },
+  m4aNote: { fontSize: 9.5, color: MUTED, textAlign: "center", maxWidth: 560, marginBottom: 3 },
   footerMono: { fontSize: 12.75, color: MUTED, marginTop: 1 },
 });
 
-const STRINGS = {
-  vi: {
-    kicker: "CHỨNG NHẬN HOÀN THÀNH",
-    skillsLabel: "KỸ NĂNG ĐÃ ĐẠT",
-    issuerCaption: "Nền tảng học tập cá nhân hoá",
-    certId: "Mã chứng nhận",
-    verifyAt: "Xác thực tại",
-    dateLocale: "vi-VN",
-    hours: "giờ",
-    minutes: "phút",
-  },
-  en: {
-    kicker: "CERTIFICATE OF COMPLETION",
-    skillsLabel: "SKILLS ACHIEVED",
-    issuerCaption: "Personalized Learning Platform",
-    certId: "Certificate ID",
-    verifyAt: "Verify at",
-    dateLocale: "en-US",
-    hours: "hr",
-    minutes: "min",
-  },
-} as const;
-
-type Locale = keyof typeof STRINGS;
+const STRINGS = CERT_STRINGS;
+type Locale = CertLocale;
 
 /**
  * Lát chanh — logo thật của Limio (xem apps/web/src/components/BrandIcons.tsx
@@ -372,6 +368,10 @@ export interface CertificatePdfProps {
   totalStudySec: number;
   certNumber: string;
   verifyUrl: string;
+  /** Ngôn ngữ khoá học — quyết định trang nào đứng đầu PDF (xem `certificateLocales`). */
+  courseLanguage?: string | null;
+  /** Khoá thuộc MICRO4ASIA — in thêm dòng chứng chỉ vi mô và ghi chú dự án. */
+  isM4a?: boolean;
 }
 
 function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
@@ -393,8 +393,13 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
     totalStudySec,
     certNumber,
     verifyUrl,
+    isM4a,
   } = props;
   const t = STRINGS[locale];
+  const compact = isCompactCertificate(courseTitle, !!isM4a);
+  const skillChips = certificateSkillChips(skillBadgeNames, t.moreSkills, compact);
+  // Ghép style gọn lên style gốc khi cần — chỉ truyền mảng khi có style ghi đè.
+  const cs = <A, B>(base: A, extra: B) => (compact ? [base, extra] : base);
   const dateLabel = new Intl.DateTimeFormat(t.dateLocale, {
     year: "numeric",
     month: "long",
@@ -432,22 +437,23 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
             ) : (
               <LimioLearningLogo />
             )}
-            <Text style={styles.kicker}>{tracked(t.kicker)}</Text>
+            <Text style={cs(styles.kicker, styles.kickerCompact)}>{tracked(t.kicker)}</Text>
+            {isM4a && <Text style={styles.m4aTag}>{tracked(t.m4aTag)}</Text>}
 
-            <Text style={styles.title}>{courseTitle}</Text>
+            <Text style={cs(styles.title, styles.titleCompact)}>{courseTitle}</Text>
 
-            <Text style={styles.sublineName}>{userName}</Text>
+            <Text style={cs(styles.sublineName, styles.sublineNameCompact)}>{userName}</Text>
             <Text style={styles.dateLine}>
               {dateLabel}
               {durationLabel ? ` · ${durationLabel}` : ""}
             </Text>
 
-            {skillBadgeNames.length > 0 && (
+            {skillChips.length > 0 && (
               <>
-                <Text style={styles.skillsLabel}>{tracked(t.skillsLabel)}</Text>
+                <Text style={cs(styles.skillsLabel, styles.skillsLabelCompact)}>{tracked(t.skillsLabel)}</Text>
                 <View style={styles.badgesRow}>
-                  {skillBadgeNames.map((name, i) => (
-                    <Text key={i} style={styles.badge}>
+                  {skillChips.map((name, i) => (
+                    <Text key={i} style={cs(styles.badge, styles.badgeCompact)}>
                       {name}
                     </Text>
                   ))}
@@ -455,7 +461,7 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
               </>
             )}
 
-            <View style={styles.bottomRow}>
+            <View style={cs(styles.bottomRow, styles.bottomRowCompact)}>
               {issuerOrgName ? (
                 <View style={styles.signatureColumnsRow}>
                   <View style={styles.signatureBlock}>
@@ -495,7 +501,8 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
               <SealBadge />
             </View>
 
-            <View style={styles.footerCenter}>
+            <View style={cs(styles.footerCenter, styles.footerCenterCompact)}>
+              {isM4a && <Text style={styles.m4aNote}>{t.m4aNote}</Text>}
               <Text style={styles.footerLabel}>
                 {t.certId}: <Text style={styles.footerMono}>{certNumber}</Text>
                 {"   ·   "}
@@ -513,8 +520,9 @@ export function CertificatePdfDocument(props: CertificatePdfProps) {
   ensureFontRegistered();
   return (
     <Document title={`Certificate - ${props.courseTitle} - ${props.userName}`} author={props.issuerName} creator="Limio">
-      <CertificatePageBody {...props} locale="vi" />
-      <CertificatePageBody {...props} locale="en" />
+      {certificateLocales(props.courseLanguage).map((locale) => (
+        <CertificatePageBody key={locale} {...props} locale={locale} />
+      ))}
     </Document>
   );
 }

@@ -6,10 +6,17 @@ import { prisma } from "@feedbackme/db";
 import { getCourseProgress, isUserEnrolled, issueCertificate } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
-import { formatVN } from "@/lib/datetime";
 import CertificateCanvas from "./CertificateCanvas";
 import CertificateSeal from "./CertificateSeal";
-import { formatDuration, tracked } from "@/lib/certificateFormat";
+import {
+  CERT_STRINGS,
+  certificateLocales,
+  certificateSkillChips,
+  formatDuration,
+  isCompactCertificate,
+  tracked,
+} from "@/lib/certificateFormat";
+import { isM4aCourseSlug } from "@/lib/micro4asia";
 
 export const dynamic = "force-dynamic";
 
@@ -87,8 +94,25 @@ export default async function CertificatePage({
   ]);
 
   const verifyUrl = `${(process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "")}/verify/${certificate.certNumber}`;
-  const issuedAtLabel = formatVN(certificate.issuedAt, { year: "numeric", month: "long", day: "numeric" });
-  const durationLabel = formatDuration(engagement._sum.activeSec ?? 0, { hours: "giờ", minutes: "phút" });
+  // Bản xem trước = trang đầu của PDF: in bằng ngôn ngữ của khoá (khoá tiếng Anh ⇒ chứng nhận tiếng Anh), không theo
+  // ngôn ngữ giao diện của người đang xem.
+  const [certLocale] = certificateLocales(course.language);
+  const ct = CERT_STRINGS[certLocale];
+  const isM4a = isM4aCourseSlug(params.slug);
+  // Cùng quy tắc bố cục gọn + rút gọn kỹ năng với bản PDF (styles.*Compact trong certificatePdf.tsx).
+  const compact = isCompactCertificate(certificate.courseTitleSnapshot, isM4a);
+  const skillChips = certificateSkillChips(
+    skillBadges.map((sb) => sb.badge.name),
+    ct.moreSkills,
+    compact,
+  );
+  const issuedAtLabel = new Intl.DateTimeFormat(ct.dateLocale, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Asia/Ho_Chi_Minh",
+  }).format(certificate.issuedAt);
+  const durationLabel = formatDuration(engagement._sum.activeSec ?? 0, ct);
 
   // LinkedIn "Add to Profile" — mở sẵn form Licenses & Certifications điền
   // trước tên/khoá/ngày cấp + link xác thực. Không cần OAuth hay LinkedIn
@@ -118,6 +142,7 @@ export default async function CertificatePage({
           bên đó thì sửa cả ở đây. */}
       <CertificateCanvas>
         <article
+          lang={certLocale}
           className={`${roboto.className} relative h-full w-full overflow-hidden bg-white text-center`}
         >
           {/* Hai góc màu chéo phía sau khung trắng (CORNER_LIME / CORNER_PINK) */}
@@ -166,16 +191,21 @@ export default async function CertificatePage({
                 )}
 
                 <p
-                  aria-label="Chứng nhận hoàn thành"
-                  className="mt-[18px] whitespace-pre text-[22.5px] font-bold leading-normal text-[#3f6212]"
+                  aria-label={ct.kicker}
+                  className={`${compact ? "mt-3 text-[20px]" : "mt-[18px] text-[22.5px]"} whitespace-pre font-bold leading-normal text-[#3f6212]`}
                 >
-                  {tracked("CHỨNG NHẬN HOÀN THÀNH")}
+                  {tracked(ct.kicker)}
                 </p>
+                {isM4a && (
+                  <p className="mt-1.5 whitespace-pre text-[12px] font-bold leading-normal text-[#1e3a8a]">
+                    {tracked(ct.m4aTag)}
+                  </p>
+                )}
 
-                <p className="mt-5 max-w-[620px] text-[51px] font-bold leading-[1.15] text-[#1f2937]">
+                <p className={`${compact ? "mt-3 text-[36px]" : "mt-5 text-[51px]"} max-w-[620px] font-bold leading-[1.15] text-[#1f2937]`}>
                   {certificate.courseTitleSnapshot}
                 </p>
-                <p className="mt-[22px] text-[26px] font-bold leading-normal text-[#1f2937]">
+                <p className={`${compact ? "mt-4 text-[24px]" : "mt-[22px] text-[26px]"} font-bold leading-normal text-[#1f2937]`}>
                   {certificate.userNameSnapshot}
                 </p>
                 <p className="mt-1 text-[15.75px] leading-normal text-[#9ca3af]">
@@ -183,18 +213,18 @@ export default async function CertificatePage({
                   {durationLabel ? ` · ${durationLabel}` : ""}
                 </p>
 
-                {skillBadges.length > 0 && (
+                {skillChips.length > 0 && (
                   <>
-                    <p className="mt-[26px] whitespace-pre text-[13.5px] font-bold leading-normal text-[#9ca3af]">
-                      {tracked("KỸ NĂNG ĐÃ ĐẠT")}
+                    <p className={`${compact ? "mt-3.5" : "mt-[26px]"} whitespace-pre text-[13.5px] font-bold leading-normal text-[#9ca3af]`}>
+                      {tracked(ct.skillsLabel)}
                     </p>
                     <ul className="mt-2.5 flex max-w-[560px] flex-wrap justify-center gap-[7px]">
-                      {skillBadges.map((sb) => (
+                      {skillChips.map((name, i) => (
                         <li
-                          key={sb.id}
-                          className="rounded-xl border-[0.75px] border-[#d9f99d] px-3 py-[5px] text-[14.25px] leading-normal text-[#3f6212]"
+                          key={i}
+                          className={`${compact ? "py-1 text-[12.5px]" : "py-[5px] text-[14.25px]"} rounded-xl border-[0.75px] border-[#d9f99d] px-3 leading-normal text-[#3f6212]`}
                         >
-                          {sb.badge.name}
+                          {name}
                         </li>
                       ))}
                     </ul>
@@ -202,7 +232,7 @@ export default async function CertificatePage({
                 )}
 
                 {/* Hàng dưới: chữ ký bên trái, con dấu bên phải (bottomRow của PDF) */}
-                <div className="mt-9 flex w-full items-end justify-between">
+                <div className={`${compact ? "mt-[18px]" : "mt-9"} flex w-full items-end justify-between`}>
                   {certificate.issuerOrgName ? (
                     <div className="flex gap-7">
                       <div className="flex flex-col items-center">
@@ -219,7 +249,7 @@ export default async function CertificatePage({
                           {certificate.platformSignatureName || "Limio Learning"}
                         </p>
                         <p className="mt-0.5 text-[9.5px] leading-normal text-[#6b7280]">
-                          {certificate.platformSignatureTitle || "Nền tảng học tập cá nhân hoá"}
+                          {certificate.platformSignatureTitle || ct.issuerCaption}
                         </p>
                       </div>
                       <div className="flex flex-col items-center">
@@ -267,17 +297,22 @@ export default async function CertificatePage({
                         {certificate.platformSignatureName || certificate.issuerName}
                       </p>
                       <p className="mt-0.5 text-[9.5px] leading-normal text-[#6b7280]">
-                        {certificate.platformSignatureTitle || "Nền tảng học tập cá nhân hoá"}
+                        {certificate.platformSignatureTitle || ct.issuerCaption}
                       </p>
                     </div>
                   )}
                   <CertificateSeal />
                 </div>
 
-                <p className="mt-3.5 w-full text-center text-[11.25px] leading-normal text-[#9ca3af]">
-                  Mã chứng nhận: <span className="text-[12.75px] text-[#6b7280]">{certificate.certNumber}</span>
+                {isM4a && (
+                  <p className={`${compact ? "mt-2.5" : "mt-3.5"} text-center text-[9.5px] leading-normal text-[#6b7280]`}>
+                    {ct.m4aNote}
+                  </p>
+                )}
+                <p className={`${isM4a ? "mt-[3px]" : compact ? "mt-2.5" : "mt-3.5"} w-full text-center text-[11.25px] leading-normal text-[#9ca3af]`}>
+                  {ct.certId}: <span className="text-[12.75px] text-[#6b7280]">{certificate.certNumber}</span>
                   {"   ·   "}
-                  Xác thực tại: <span className="text-[12.75px] text-[#6b7280]">{verifyUrl}</span>
+                  {ct.verifyAt}: <span className="text-[12.75px] text-[#6b7280]">{verifyUrl}</span>
                 </p>
               </div>
             </div>
