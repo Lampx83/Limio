@@ -145,11 +145,12 @@ export default function FreeChat({
   }, [reveal.revealed, typing]);
 
   const turns = history.length / 2;
-  const live = useRef({ history });
-  live.current = { history };
+  // Trạng thái mới nhất cho các callback chạy muộn (ghi âm xong → chuyển chữ → gửi): tránh đọc state cũ của lần dựng trước.
+  const live = useRef({ history, draft: "", finished: false, isTyping: false });
   const log = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const isTyping = typing !== null;
+  live.current = { history, draft, finished, isTyping };
   const busy = pending !== null || stt || preparing;
   const rec = useAudioRecorder({ maxSeconds: VOICE_MAX_SECONDS, onRecorded: (file) => void handleRecorded(file) });
   const recording = rec.state === "recording";
@@ -229,7 +230,12 @@ export default function FreeChat({
     setError(null);
     try {
       const text = await transcribe(live.current.history.length / 2, file);
-      setDraft((d) => `${d ? `${d.trim()} ` : ""}${text.trim()}`.slice(0, FREECHAT_MAX_CHARS));
+      const message = `${live.current.draft ? `${live.current.draft.trim()} ` : ""}${text.trim()}`.replace(/\s+/g, " ").trim().slice(0, FREECHAT_MAX_CHARS);
+      setStt(false);
+      // Bấm "Kết thúc và gửi": chuyển chữ xong thì gửi luôn cho bạn ảo (AI), không phải bấm Gửi thêm lần nữa. Chưa gửi được (bạn ảo đang gõ, hội thoại đã kết thúc,
+      // còn chỗ trống chưa điền) thì để chữ vào ô như trước để sửa rồi gửi.
+      if (message && !live.current.finished && !live.current.isTyping && !hasBlank(message)) await sendMessage(message);
+      else if (message) setDraft(message);
     } catch (e) {
       setError(voiceErrorMessage(e instanceof VoiceUseError ? e.code : "network", lang));
     } finally {
@@ -244,15 +250,21 @@ export default function FreeChat({
       setError(freeChatErrorMessage("blank_left", lang)); // không tốn lượt, không gọi AI
       return;
     }
+    await sendMessage(message);
+  }
+
+  /** Gửi một lời cho bạn ảo: dùng chung cho nút Gửi và cho ghi âm (kết thúc ghi âm là gửi). Đọc lịch sử mới nhất từ `live`. */
+  async function sendMessage(message: string) {
+    const hist = live.current.history;
     modelAudio.current?.pause();
     voice.stop();
     setPending(message);
     setDraft(""); // tin đã chuyển lên khung chat như ứng dụng nhắn tin; lỗi thì trả lại vào ô bên dưới
     setError(null);
     try {
-      const out = await send(history, message);
+      const out = await send(hist, message);
       const reply = typeof out === "string" ? { text: out, speech: null } : out;
-      const next: ChatMsg[] = [...history, { role: "learner", text: message }, { role: "partner", text: reply.text }];
+      const next: ChatMsg[] = [...hist, { role: "learner", text: message }, { role: "partner", text: reply.text }];
       setHistory(next);
       deliver(next.length, reply.text, reply.speech);
       onAnswer(transcriptOf(view, next));
@@ -693,15 +705,15 @@ export default function FreeChat({
                 }}
               />
               {recording ? (
-                <button type="button" className="fc-stop" onClick={rec.stop} aria-label={t("practice.say.stopRec")}>
-                  <Square size={12} aria-hidden /> {t("practice.say.stop")}{" "}
+                <button type="button" className="fc-stop" onClick={rec.stop} aria-label={t("practice.say.endSendAria")}>
+                  <Square size={12} aria-hidden /> {t("practice.say.endSend")}{" "}
                   <span role="timer" aria-live="off" className="fc-timer">
                     {formatClock(rec.seconds)} / {formatClock(VOICE_MAX_SECONDS)}
                   </span>
                 </button>
               ) : voiceEnabled ? (
-                <button type="button" className="fc-icon" disabled={busy} onClick={() => void startMic()} aria-label={stt ? t("practice.say.transcribing") : t("practice.say.record")} title={t("practice.say.speak")} aria-busy={stt}>
-                  <Mic size={18} aria-hidden />
+                <button type="button" className="fc-start" disabled={busy} onClick={() => void startMic()} aria-label={stt ? t("practice.say.transcribing") : t("practice.say.record")} title={t("practice.say.startSpeakTitle")} aria-busy={stt}>
+                  <Mic size={16} aria-hidden /> {stt ? t("practice.say.transcribingShort") : t("practice.say.startSpeak")}
                 </button>
               ) : null}
               <button type="button" className="fc-send" disabled={busy || recording || isTyping || !draft.trim()} onClick={() => void submit()} aria-label={t("practice.say.send")} title={t("practice.say.sendTitle")}>

@@ -5,7 +5,8 @@
 const BLANK = /[_＿]{3,}/g;
 
 export function splitSingleBlank(prompt: string): { before: string; after: string } | null {
-  if (/[\n\r<>]/.test(prompt)) return null;
+  // Đề phải là câu chữ Hán: câu hướng dẫn tiếng Việt có "______" minh hoạ ("Điền vào ba chỗ trống (______) của đoạn hội thoại…") không phải chỗ để gõ.
+  if (/[\n\r<>]/.test(prompt) || !/[\u3400-\u9fff]/.test(prompt)) return null;
   const found = Array.from(prompt.matchAll(BLANK));
   if (found.length !== 1) return null;
   const m = found[0]!;

@@ -13,5 +13,7 @@ describe("splitSingleBlank", () => {
     expect(splitSingleBlank("dòng một\nA ___ B")).toBeNull();
     expect(splitSingleBlank("<b>x</b> ___")).toBeNull();
     expect(splitSingleBlank("a __ b")).toBeNull();
+    // câu hướng dẫn tiếng Việt có chỗ trống minh hoạ không phải chỗ để gõ
+    expect(splitSingleBlank("Điền vào ba chỗ trống (______) của đoạn hội thoại cho Hình 1.")).toBeNull();
   });
 });

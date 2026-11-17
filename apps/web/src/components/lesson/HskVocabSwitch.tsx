@@ -6,6 +6,7 @@ import VocabFlashcards from "@/components/VocabFlashcards";
 import type { VocabViewItem } from "@/components/VocabListView";
 import { parseVocabTable } from "@/lib/lessonVocabRuby";
 import { hskT } from "./hskT";
+import HanziStrokeDialog from "./HanziStrokeDialog";
 import type { UiLang } from "@/lib/i18n/core";
 
 /**
@@ -16,6 +17,7 @@ import type { UiLang } from "@/lib/i18n/core";
 export default function HskVocabSwitch({ html, children, lang = "vi" }: { html: string; children: React.ReactNode; lang?: UiLang }) {
   const t = (key: Parameters<typeof hskT>[1]) => hskT(lang, key);
   const [view, setView] = useState<"cards" | "flash">("cards");
+  const [strokeTerm, setStrokeTerm] = useState<string | null>(null);
   // Flashcard: che pinyin để tự đoán cách đọc (mặt trước chỉ còn chữ Hán); bật lại để xem.
   const [showReading, setShowReading] = useState(true);
   const [rows, setRows] = useState<ReturnType<typeof parseVocabTable>>(null);
@@ -67,7 +69,26 @@ export default function HskVocabSwitch({ html, children, lang = "vi" }: { html: 
           </div>
         </div>
       )}
-      {view === "flash" && canSwitch ? <VocabFlashcards items={items} showReading={showReading} playingId={null} onToggleAudio={() => undefined} /> : children}
+      {view === "flash" && canSwitch ? <VocabFlashcards items={items} showReading={showReading} playingId={null} onToggleAudio={() => undefined} /> : (
+        // Bấm (hoặc Enter/Space) vào thẻ từ có chữ Hán thì mở "Cách viết": thẻ là HTML dựng sẵn nên lắng nghe ở khung ngoài.
+        <div
+          onClick={(e) => {
+            const term = (e.target as Element).closest?.(".hsk-wc[data-term]")?.getAttribute("data-term");
+            if (term) setStrokeTerm(term);
+          }}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            const card = (e.target as Element).closest?.(".hsk-wc[data-term]");
+            if (card && e.target === card) {
+              e.preventDefault();
+              setStrokeTerm(card.getAttribute("data-term"));
+            }
+          }}
+        >
+          {children}
+        </div>
+      )}
+      {strokeTerm && <HanziStrokeDialog term={strokeTerm} lang={lang} onClose={() => setStrokeTerm(null)} />}
     </div>
   );
 }

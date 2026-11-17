@@ -5,6 +5,7 @@ import SafeHtml from "@/components/SafeHtml";
 import { lessonStyleVars } from "@/lib/lessonLook";
 import { buildFaqDetails } from "@/lib/lessonFaq";
 import { buildVocabCards, buildVocabRuby } from "@/lib/lessonVocabRuby";
+import { hskGoalsHtml, hskPairHtml } from "@/lib/hskWarmup";
 import { hskGrammarHtml, type HskGrammarPoint } from "@/lib/hskGrammar";
 import { hskActivityHtml, hskBriefHtml, hskScenarioHtml } from "@/lib/hskActivity";
 import { hskDropPageRef, hskDropVocabLabel, hskIntroHtml, hskRecolor, type HskKind } from "@/lib/hskLesson";
@@ -53,7 +54,7 @@ export default function LessonRichText({
     },
     [t, hskKind, hskGrammar],
   );
-  const base = `prose prose-sm max-w-none rounded-xl border border-token p-4 dark:prose-invert${hskKind && hskKind !== "other" ? ` hsk-plain hsk-${hskKind}` : ""}`;
+  const base = `prose prose-sm max-w-none rounded-xl border border-token p-4 dark:prose-invert${hskKind ? ` hsk-plain hsk-${hskKind}` : ""}`; // mọi khối bài HSK không khung viền (khung viền kép với thẻ tình huống…)
   if (!look) {
     return (
       <SafeHtml
@@ -87,5 +88,7 @@ function prepareHsk(html: string, kind: HskKind, grammar?: Record<string, HskGra
   if (kind === "vocab") return buildVocabCards(hskDropVocabLabel(hskDropPageRef(h)));
   if (kind === "activity") return hskActivityHtml(hskIntroHtml(h));
   if (kind === "grammar") return hskGrammarHtml(hskDropPageRef(h), grammar);
+  if (kind === "goals") return hskGoalsHtml(hskIntroHtml(h)); // bỏ cả dải tên bài (热身) lặp với đầu bài
+  if (kind === "pair") return hskPairHtml(hskDropPageRef(h));
   return hskScenarioHtml(hskDropPageRef(h));
 }

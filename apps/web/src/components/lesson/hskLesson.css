@@ -208,6 +208,17 @@
   border-radius: 1rem;
   background: rgb(var(--surface));
 }
+.lesson-hsk .hsk-wc[data-term] {
+  position: relative;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.lesson-hsk .hsk-wc[data-term]:hover,
+.lesson-hsk .hsk-wc[data-term]:focus-visible {
+  border-color: var(--hk-pink-line);
+  box-shadow: 0 2px 10px rgb(var(--hk-pink) / 0.15);
+  outline: none;
+}
 .lesson-hsk .hsk-pos {
   display: inline-block;
   padding: 0.1rem 0.5rem;
@@ -406,23 +417,29 @@
 }
 .lesson-hsk .hsk-scn-han {
   margin: 0 0 0.4rem;
-  font: 400 1.2rem/1.9 var(--hk-han);
+  font: 400 1.25rem/2 var(--hk-han);
+  color: var(--hk-deep);
 }
 .lesson-hsk .hsk-scn-vi {
   margin: 0;
   color: rgb(var(--text-muted));
 }
 .lesson-hsk .hsk-role {
-  display: inline-grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
   margin: 0 0.25rem;
   border-radius: 50%;
-  font: 700 0.8rem/1 var(--font-sans, inherit);
+  /* Khai từng thuộc tính (không dùng font viết tắt): chữ cái vai dùng font hệ thống cỡ nhỏ, không thừa hưởng font chữ Hán cỡ lớn của câu. */
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
   color: #fff;
   background: rgb(var(--brand));
-  vertical-align: 0.1em;
+  vertical-align: 0.15em;
 }
 .lesson-hsk .hsk-role[data-r="B"] {
   background: rgb(var(--hk-pink));
@@ -715,4 +732,132 @@
 .lesson-hsk .practice-sheet .rp-link,
 .lesson-hsk [data-testid="lesson-practice"] .rp-link {
   color: rgb(var(--hk-pink-deep));
+}
+
+/* ---------- Bài Khởi động: mục tiêu và hoạt động theo cặp ---------- */
+.lesson-hsk .hsk-goals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.lesson-hsk .hsk-goal {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgb(var(--border));
+  border-left: 4px solid rgb(var(--brand));
+  border-radius: 1rem;
+  background: rgb(var(--surface));
+}
+.lesson-hsk .hsk-goal .ck {
+  flex: none;
+  position: relative;
+  width: 1.65rem;
+  height: 1.65rem;
+  margin-top: 0.15rem;
+  border-radius: 50%;
+  background: rgb(var(--brand));
+}
+.lesson-hsk .hsk-goal .ck::after {
+  content: "";
+  position: absolute;
+  left: 0.55rem;
+  top: 0.3rem;
+  width: 0.35rem;
+  height: 0.7rem;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(40deg);
+}
+.lesson-hsk .hsk-goal .han {
+  margin: 0;
+  font: 400 1.3rem/1.5 var(--hk-han);
+  color: var(--hk-deep);
+}
+.lesson-hsk .hsk-goal .vi2 {
+  margin: 0.1rem 0 0;
+  font-size: 0.95rem;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-pair-lead {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0 0 0.8rem;
+}
+.lesson-hsk .hsk-pair-lead .hz {
+  font: 400 1.35rem/1.5 var(--hk-han);
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-pair-lead .vi {
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-pair .hsk-exs {
+  margin-top: 0;
+}
+.lesson-hsk .hsk-pair .hsk-ex {
+  border: 1px solid rgb(var(--border));
+  border-left: 4px solid rgb(var(--hk-pink));
+}
+.lesson-hsk .hsk-pair .hsk-ex .n {
+  background: rgb(var(--hk-pink));
+}
+.lesson-hsk .hsk-pair .hsk-exb .han {
+  font: 400 1.25rem/1.55 var(--hk-han);
+  color: var(--hk-deep);
+}
+.lesson-hsk .hsk-lead-sep {
+  margin-top: 1.4rem;
+  padding-top: 1.1rem;
+  border-top: 1px dashed var(--hk-line);
+}
+
+/* Các bước của tình huống (mỗi vế là việc của một vai): nền và màu chữ theo vai, A xanh, B hồng */
+.lesson-hsk .hsk-steps {
+  list-style: none;
+  margin: 0.25rem 0 0.2rem;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.lesson-hsk .hsk-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0.65rem 0.95rem;
+  border-left: 4px solid rgb(var(--brand));
+  border-radius: 0.9rem;
+  background: var(--hk-soft);
+}
+.lesson-hsk .hsk-step[data-r="B"] {
+  border-left-color: rgb(var(--hk-pink));
+  background: var(--hk-pink-soft);
+}
+.lesson-hsk .hsk-role-lg {
+  flex: none;
+  width: 1.95rem;
+  height: 1.95rem;
+  margin: 0.15rem 0 0;
+  font-size: 1rem;
+}
+.lesson-hsk .hsk-step-body {
+  min-width: 0;
+}
+.lesson-hsk .hsk-step-han {
+  margin: 0;
+  font: 400 1.25rem/1.9 var(--hk-han);
+  color: var(--hk-deep);
+}
+.lesson-hsk .hsk-step[data-r="B"] .hsk-step-han {
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-step-vi {
+  margin: 0.05rem 0 0;
+  font-size: 0.95rem;
+  color: rgb(var(--text-muted));
 }

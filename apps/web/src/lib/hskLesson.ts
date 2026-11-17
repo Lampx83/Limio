@@ -4,7 +4,7 @@
  * lúc hiển thị, không cần nhập lại bài. Chỉ dùng khi khoá có chế độ ngoại ngữ và ngôn ngữ là tiếng Trung.
  */
 
-export type HskKind = "intro" | "intro-brief" | "dialogue" | "vocab" | "grammar" | "activity" | "other";
+export type HskKind = "intro" | "intro-brief" | "dialogue" | "vocab" | "grammar" | "activity" | "goals" | "pair" | "other";
 
 export interface HskSection {
   zh: string;
@@ -17,6 +17,8 @@ export const HSK_SECTIONS: Record<Exclude<HskKind, "intro" | "intro-brief" | "ot
   vocab: { zh: "生词", vi: "Từ mới" },
   grammar: { zh: "小语讲堂", vi: "Lớp học của Tiểu Ngữ" },
   activity: { zh: "课堂活动", vi: "Hoạt động trên lớp" },
+  goals: { zh: "目标", vi: "Mục tiêu" },
+  pair: { zh: "双人对话", vi: "Thảo luận theo cặp" },
   practice: { zh: "练习", vi: "Luyện tập" },
 };
 
@@ -37,6 +39,8 @@ export function classifyHskItem(item: ItemLike, index: number): HskKind {
   const html = htmlOf(item);
   if (/小语讲堂/.test(html)) return "grammar";
   if (/课堂活动/.test(html)) return "activity";
+  if (/<h2\b[^>]*>(?:(?!<\/h2>)[\s\S])*目标/.test(html)) return "goals";
+  if (index > 0 && /两人一组/.test(html)) return "pair";
   if (/生词/.test(html) && /<table/i.test(html)) return "vocab";
   return index === 0 ? "intro" : "other";
 }
@@ -52,7 +56,7 @@ export function planHskSections(items: ItemLike[]): { kinds: HskKind[]; headAt: 
   const seen = new Set<HskKind>();
   let no = 0;
   kinds.forEach((k, i) => {
-    if ((k === "dialogue" || k === "vocab" || k === "grammar" || k === "activity") && !seen.has(k)) {
+    if ((k === "dialogue" || k === "vocab" || k === "grammar" || k === "activity" || k === "goals" || k === "pair") && !seen.has(k)) {
       seen.add(k);
       no += 1;
       headAt.set(kinds[i - 1] === "intro-brief" ? i - 1 : i, { no, section: HSK_SECTIONS[k] });

@@ -24,6 +24,8 @@ import LessonRichText from "@/components/lesson/LessonRichText";
 import { QuestionCard } from "@/components/exam/AnswerReview";
 import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
 import { splitSingleBlank } from "@/lib/inlineBlank";
+import PassageBlanks from "./PassageBlanks";
+import { joinBlankAnswers, parsePassageBlanks, splitBlankAnswers } from "@/lib/passageBlanks";
 import EssayFeedback from "./EssayFeedback";
 import RolePlay from "./RolePlay";
 import FreeChat, { FreeChatError } from "./FreeChat";
@@ -516,6 +518,10 @@ export default function LessonPractice({
   const stepPassage = step?.passageId ? passages.find((x) => x.id === step.passageId) : undefined;
   const parts = stepPassage ? splitPassageInstruction(stepPassage.contentJson as PassageDoc) : null;
   const hasBody = !!parts && parts.rest.content.length > 0;
+  // Đoạn hội thoại có chỗ trống + MỘT câu tự luận "Điền vào … chỗ trống…": gõ thẳng vào chỗ trống trong đoạn thoại, không có ô soạn thảo riêng ở câu hỏi.
+  const blankQ = step && step.questionIds.length === 1 ? questions.find((q) => q.id === step.questionIds[0]) : undefined;
+  const blankMode = parts && blankQ && blankQ.type === "essay" && /chỗ trống|blank/i.test(blankQ.prompt) ? parsePassageBlanks(parts.rest) : null;
+  const blankQid = blankMode && blankQ ? blankQ.id : null;
   // Phiếu: đoạn văn chỉ là câu yêu cầu (không bài đọc, audio, ảnh, bảng, danh sách) không cần cột riêng; câu yêu cầu và tên đoạn nằm ở khối đề bài
   // riêng phía trên (AC2). Bài nghe chỉ có câu yêu cầu ngắn và trình phát: trình phát hiện ngay trên các câu hỏi, không kèm câu yêu cầu.
   const { intros, light } = useMemo(() => {
@@ -655,7 +661,7 @@ export default function LessonPractice({
             />
           </div>
         ) : (
-          <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} compact />
+          <ExamQuestion question={q} value={value} onChange={(v) => onChange(qid, v)} compact hideAnswerInput={qid === blankQid} />
         )}
         {(() => {
           const checkButton = embed.checkEnabled ? (
@@ -679,7 +685,7 @@ export default function LessonPractice({
           ) : null;
           // Câu gõ thẳng vào chỗ trống (đề có một chỗ trống, xem ExamQuestion) là bài tập gõ chữ: không có phần trả lời bằng giọng nói.
           const typedInBlank = !!splitSingleBlank(q.prompt);
-          const voiceRow = isEssay && !rolePlay && !freeChat && !typedInBlank && essayVoiceEnabled(q.config);
+          const voiceRow = isEssay && !rolePlay && !freeChat && !typedInBlank && qid !== blankQid && essayVoiceEnabled(q.config);
           if (voiceRow) {
             // Ô gõ → một hàng: [Trả lời bằng giọng nói] … [Kiểm tra] → một dòng chú thích nhỏ.
             return (
@@ -914,14 +920,27 @@ export default function LessonPractice({
                 className={`${sheet ? "ps-paper-card" : "rounded-xl border border-token bg-[rgb(var(--surface))]"} p-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lp-scroll ${split ? "lg:sticky lg:top-20" : ""} [&_p]:leading-8`}
                 data-testid="lp-passage"
               >
-                <PassageView
-                  passage={{ id: stepPassage.id, title: stepPassage.title, contentJson: parts.rest, transcripts: (stepPassage as { transcripts?: Record<string, string> }).transcripts }}
-                  attemptId={`lesson-practice-${embed.examId}`}
-                  hideTitle
-                  hideNote
-                  emphasizeBold
-                  bodySize="body"
-                />
+                {blankMode && blankQ ? (
+                  <PassageBlanks
+                    nodes={blankMode.nodes}
+                    values={splitBlankAnswers(String((answers[blankQ.id] as { text?: string } | null)?.text ?? ""), blankMode.count)}
+                    onChange={(i, v) => {
+                      const cur = splitBlankAnswers(String((answers[blankQ.id] as { text?: string } | null)?.text ?? ""), blankMode.count);
+                      cur[i] = v;
+                      onChange(blankQ.id, { text: joinBlankAnswers(cur) } as AnswerValue);
+                    }}
+                    imageUrl={(src) => apiUrl(src)}
+                  />
+                ) : (
+                  <PassageView
+                    passage={{ id: stepPassage.id, title: stepPassage.title, contentJson: parts.rest, transcripts: (stepPassage as { transcripts?: Record<string, string> }).transcripts }}
+                    attemptId={`lesson-practice-${embed.examId}`}
+                    hideTitle
+                    hideNote
+                    emphasizeBold
+                    bodySize="body"
+                  />
+                )}
               </div>
             )}
             {/* Chia đôi: cột câu hỏi cũng tự cuộn riêng (như cột đoạn văn) khi nhiều câu dài; thẻ đầu cột (bản đồ câu hỏi) dính ở đỉnh nên luôn thấy. */}

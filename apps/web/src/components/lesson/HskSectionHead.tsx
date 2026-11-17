@@ -10,6 +10,8 @@ const KEYS: Record<string, MessageKey> = {
   "生词": "learn.hsk.sec.vocab",
   "小语讲堂": "learn.hsk.sec.grammar",
   "课堂活动": "learn.hsk.sec.activity",
+  "目标": "learn.hsk.sec.goals",
+  "双人对话": "learn.hsk.sec.pair",
   "练习": "learn.hsk.sec.practice",
 };
 

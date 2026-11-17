@@ -183,25 +183,33 @@ describe("FreeChat — thử nói tự do", () => {
     expect(host.querySelector("textarea.fc-input")).toBeNull();
   });
 
-  it("nói: ghi âm → chuyển chữ điền vào ô (không tự gửi), sửa được rồi mới gửi", async () => {
+  it("nói: bấm Bắt đầu rồi Kết thúc và gửi → chuyển chữ xong tự gửi luôn cho bạn ảo (không phải bấm Gửi)", async () => {
     transcribe.mockResolvedValue("I take my phone");
+    send.mockResolvedValueOnce("Nice choice.");
     await render();
-    await click(button(/Ghi âm lời của bạn/));
-    await click(button(/Dừng ghi âm/));
+    await click(button(/Bắt đầu nói/));
+    await click(button(/Kết thúc và gửi/));
     expect(transcribe).toHaveBeenCalledWith(0, expect.any(File));
+    expect(send).toHaveBeenCalledWith([], "I take my phone");
+    expect(input().value).toBe(""); // đã gửi, ô trống
+    expect(text()).toContain("Nice choice.");
+  });
+
+  it("nói: gửi lỗi thì lời đã nói trả lại vào ô để gửi lại, không mất", async () => {
+    transcribe.mockResolvedValue("I take my phone");
+    send.mockRejectedValueOnce(new Error("boom"));
+    await render();
+    await click(button(/Bắt đầu nói/));
+    await click(button(/Kết thúc và gửi/));
+    expect(send).toHaveBeenCalledWith([], "I take my phone");
     expect(input().value).toBe("I take my phone");
-    expect(send).not.toHaveBeenCalled();
-    await typeIn("I take my phone and wallet");
-    send.mockResolvedValueOnce("Nice.");
-    await click(button(/^\s*Gửi/));
-    expect(send).toHaveBeenCalledWith([], "I take my phone and wallet");
   });
 
   it("lỗi chuyển chữ hiện lời nhắn tiếng Việt, không điền gì", async () => {
     transcribe.mockRejectedValue(new VoiceUseError("no_speech"));
     await render();
-    await click(button(/Ghi âm lời của bạn/));
-    await click(button(/Dừng ghi âm/));
+    await click(button(/Bắt đầu nói/));
+    await click(button(/Kết thúc và gửi/));
     expect(host.querySelector("[data-testid=fc-error]")!.textContent).toContain("Không nghe thấy tiếng nói");
     expect(input().value).toBe("");
   });

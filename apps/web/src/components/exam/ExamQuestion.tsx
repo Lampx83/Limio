@@ -56,9 +56,11 @@ interface Props {
   optionOrder?: string[];
   /** Trong phiếu bài tập: ô trả lời tự luận thấp (3 dòng) và tự giãn theo chữ gõ, thay vì 8 dòng cố định. */
   compact?: boolean;
+  /** Đáp án gõ ở nơi khác trên trang (vd. ô trống trong đoạn hội thoại của bài luyện): không vẽ ô soạn thảo ở câu tự luận. */
+  hideAnswerInput?: boolean;
 }
 
-export default function ExamQuestion({ question, value, onChange, optionOrder, compact = false }: Props) {
+export default function ExamQuestion({ question, value, onChange, optionOrder, compact = false, hideAnswerInput = false }: Props) {
   // Câu tự luận trong phiếu bài tập có đúng một chỗ trống trong đề: gõ thẳng vào chỗ trống, không có ô soạn thảo riêng.
   const inlineBlank = useMemo(() => (question.type === "essay" && compact ? splitSingleBlank(question.prompt) : null), [question.type, question.prompt, compact]);
   // Đề chữ Hán có pinyin ghép được: hiện pinyin dưới từng chữ (ruby), không lặp dòng pinyin riêng bên dưới.
@@ -108,7 +110,7 @@ export default function ExamQuestion({ question, value, onChange, optionOrder, c
       case "short_answer":
         return <ShortAnswerInput value={value} onChange={onChange} />;
       case "essay":
-        return inlineBlank ? null : <EssayInput value={value} onChange={onChange} compact={compact} />;
+        return inlineBlank || hideAnswerInput ? null : <EssayInput value={value} onChange={onChange} compact={compact} />;
       case "ordering":
         return <OrderingQuestion questionId={question.id} config={question.config} value={value} onChange={onChange} />;
       case "matching":
@@ -138,7 +140,7 @@ export default function ExamQuestion({ question, value, onChange, optionOrder, c
           <p role="status" className="text-sm text-amber-800">{UNPLAYABLE_FOR_LEARNER}</p>
         );
     }
-  }, [question, value, onChange, optionOrder, compact, inlineBlank]);
+  }, [question, value, onChange, optionOrder, compact, inlineBlank, hideAnswerInput]);
 
   return (
     <div>

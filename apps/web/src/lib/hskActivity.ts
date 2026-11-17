@@ -13,25 +13,45 @@ function el(doc: Document, tag: string, cls?: string, text?: string): HTMLElemen
   return e;
 }
 
-/** Một đoạn tình huống → thẻ. Không đúng khuôn (không có <em> dịch hoặc không có span tên) thì trả null để giữ nguyên đoạn gốc. */
+/** Một bước của tình huống: mỗi vế của câu mô tả (tách ở "；") là việc của MỘT vai; vai đứng đầu vế là vai của bước. */
+function stepsOf(doc: Document, nodes: ChildNode[]): Array<{ role: string | null; han: HTMLElement }> {
+  const clauses: ChildNode[][] = [[]];
+  for (const n of nodes) {
+    clauses[clauses.length - 1]!.push(n);
+    if (/；\s*$/.test(n.textContent ?? "")) clauses.push([]);
+  }
+  const out: Array<{ role: string | null; han: HTMLElement }> = [];
+  for (const c of clauses) {
+    if (!c.length) continue;
+    const first = c[0]!;
+    const role = first.nodeType === 3 && /^\s*[A-Z]\s*$/.test(first.textContent ?? "") ? (first.textContent ?? "").trim() : null;
+    const han = el(doc, "p", "hsk-step-han");
+    han.lang = "zh-Hans";
+    for (const n of role ? c.slice(1) : c) {
+      const t = n.textContent ?? "";
+      if (n.nodeType === 3 && /^\s*[A-Z]\s*$/.test(t)) {
+        const r = el(doc, "b", "hsk-role", t.trim());
+        r.dataset.r = t.trim();
+        han.appendChild(r);
+      } else han.appendChild(doc.createTextNode(t));
+    }
+    out.push({ role, han });
+  }
+  return out;
+}
+
+/** Một đoạn tình huống → thẻ. Câu mô tả có từ hai vế trở lên thì mỗi vế là một bước (nền và màu theo vai A/B). Không đúng khuôn (không có <em> dịch hoặc không có span tên) thì trả null để giữ nguyên đoạn gốc. */
 function sceneCard(doc: Document, p: HTMLParagraphElement): HTMLElement | null {
   const nodes = Array.from(p.childNodes);
   const titleEl = nodes.find((n): n is HTMLElement => n.nodeType === 1 && (n as HTMLElement).tagName === "SPAN");
   const emEl = nodes.find((n): n is HTMLElement => n.nodeType === 1 && (n as HTMLElement).tagName === "EM");
   if (!titleEl || !emEl) return null;
   const titleHan = (titleEl.textContent ?? "").trim();
-  const han = el(doc, "p", "hsk-scn-han");
-  han.lang = "zh-Hans";
-  for (const n of nodes.slice(nodes.indexOf(titleEl) + 1, nodes.indexOf(emEl))) {
-    const t = n.textContent ?? "";
-    if (n.nodeType === 3 && /^\s*[A-Z]\s*$/.test(t)) {
-      const role = el(doc, "b", "hsk-role", t.trim());
-      role.dataset.r = t.trim();
-      han.appendChild(role);
-    } else han.appendChild(doc.createTextNode(t));
-  }
+  const steps = stepsOf(doc, nodes.slice(nodes.indexOf(titleEl) + 1, nodes.indexOf(emEl)));
   const vi = (emEl.textContent ?? "").trim();
   const m = /^(Tình huống\s*\d+\s*[:：][^.]*?)\.\s+([\s\S]*)$/.exec(vi);
+  const rest = m ? m[2]! : vi;
+  const sentences = rest.split(/(?<=[.!?])\s+/).filter(Boolean);
   const card = el(doc, "div", "hsk-scn");
   const head = el(doc, "p", "hsk-scn-title");
   const hz = el(doc, "span", "hz", titleHan);
@@ -39,8 +59,36 @@ function sceneCard(doc: Document, p: HTMLParagraphElement): HTMLElement | null {
   head.appendChild(hz);
   if (m) head.appendChild(el(doc, "span", "vi", m[1]));
   card.appendChild(head);
-  card.appendChild(han);
-  card.appendChild(el(doc, "p", "hsk-scn-vi", m ? m[2] : vi));
+  if (steps.length >= 2) {
+    // Bản dịch cũng tách theo câu khi số câu khớp số bước: mỗi bước có Hán và Việt của nó; không khớp thì để cả đoạn dịch bên dưới.
+    const perStep = sentences.length === steps.length;
+    const ol = el(doc, "ol", "hsk-steps");
+    steps.forEach((st, i) => {
+      const li = el(doc, "li", "hsk-step");
+      if (st.role) li.dataset.r = st.role;
+      const mark = el(doc, "b", "hsk-role hsk-role-lg", st.role ?? String(i + 1));
+      if (st.role) mark.dataset.r = st.role;
+      const body = el(doc, "div", "hsk-step-body");
+      body.appendChild(st.han);
+      if (perStep) body.appendChild(el(doc, "p", "hsk-step-vi", sentences[i]!));
+      li.append(mark, body);
+      ol.appendChild(li);
+    });
+    card.appendChild(ol);
+    if (!perStep) card.appendChild(el(doc, "p", "hsk-scn-vi", rest));
+  } else {
+    const han = el(doc, "p", "hsk-scn-han");
+    han.lang = "zh-Hans";
+    const only = steps[0];
+    if (only?.role) {
+      const r = el(doc, "b", "hsk-role", only.role);
+      r.dataset.r = only.role;
+      han.appendChild(r);
+    }
+    if (only) for (const c of Array.from(only.han.childNodes)) han.appendChild(c.cloneNode(true));
+    card.appendChild(han);
+    card.appendChild(el(doc, "p", "hsk-scn-vi", rest));
+  }
   return card;
 }
 

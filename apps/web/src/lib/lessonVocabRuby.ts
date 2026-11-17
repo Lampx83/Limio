@@ -111,7 +111,9 @@ export function buildVocabCards(html: string): string {
             .map((t) => (t.scored ? `<ruby class="ruby-han"><span>${esc(t.text)}</span><rt>${esc(syl[k++] ?? "")}</rt></ruby>` : esc(t.text) + (t.sep ? " " : "")))
             .join("")
         : `${esc(r.term)}${r.reading ? `<span class="vocab-reading">${esc(r.reading)}</span>` : ""}`;
-      return `<li class="hsk-wc">${r.pos ? `<span class="hsk-pos">${esc(r.pos)}</span>` : ""}<p class="hsk-wc-han">${han}</p><p class="hsk-wc-mean">${esc(r.meaning)}</p></li>`;
+      // Từ có chữ Hán: thẻ bấm được (mở "Cách viết"); khung lắng nghe nằm ở HskVocabSwitch.
+      const writable = /[\u3400-\u4dbf\u4e00-\u9fff]/.test(r.term) ? ` role="button" tabindex="0" data-term="${esc(r.term)}"` : "";
+      return `<li class="hsk-wc"${writable}>${r.pos ? `<span class="hsk-pos">${esc(r.pos)}</span>` : ""}<p class="hsk-wc-han">${han}</p><p class="hsk-wc-mean">${esc(r.meaning)}</p></li>`;
     })
     .join("");
   const ul = doc.createElement("ul");
