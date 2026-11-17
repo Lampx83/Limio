@@ -181,6 +181,7 @@ export const viLearn = {
   "learn.thread.accepted": "Câu trả lời được chấp nhận",
   "learn.cert.incomplete": "Bạn chưa hoàn thành khóa này ({pct}%)",
   "learn.cert.incompleteHint": "Hãy hoàn thành tất cả bài học để nhận chứng nhận.",
+  "learn.cert.incompleteHintMin": "Hoàn thành ít nhất {min}% bài học để nhận chứng nhận.",
   "learn.cert.downloadPdf": "Tải PDF",
   "learn.cert.linkedin": "Thêm vào LinkedIn",
   "learn.cert.verifyPage": "Xem trang xác thực công khai →",

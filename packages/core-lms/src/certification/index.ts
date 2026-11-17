@@ -8,7 +8,8 @@ import { getCourseProgress } from "../learning/progress";
 /**
  * A6 — Certification.
  *
- * Cấp 1 chứng nhận / user / course, ngay khi khoá học đạt 100% hoàn thành.
+ * Cấp 1 chứng nhận / user / course, ngay khi học viên hoàn thành đủ
+ * `course.certificateMinCompletionPct` % bài học (mặc định 100; MICRO4ASIA 90).
  * Tên học viên + tên khoá được snapshot lúc cấp (không đọc lại User/Course
  * mỗi lần hiển thị) — đổi tên sau đó không được phép sửa lại chứng nhận đã
  * cấp, đúng như một bản in giấy thật.
@@ -41,9 +42,53 @@ async function generateUniqueCertNumber(db: PrismaClient): Promise<string> {
   }
 }
 
+/** Đủ điều kiện nhận chứng nhận khi % bài đã hoàn thành ≥ ngưỡng của khoá. */
+export function meetsCertificateThreshold(completionPct: number, minCompletionPct: number): boolean {
+  return completionPct >= minCompletionPct;
+}
+
+export interface CertificateEligibility {
+  completionPct: number;
+  minCompletionPct: number;
+  eligible: boolean;
+}
+
+export async function getCertificateEligibility(
+  userId: string,
+  courseId: string,
+  db: PrismaClient = prisma,
+): Promise<CertificateEligibility> {
+  const [progress, course] = await Promise.all([
+    getCourseProgress(userId, courseId, db),
+    db.course.findUniqueOrThrow({ where: { id: courseId }, select: { certificateMinCompletionPct: true } }),
+  ]);
+  return {
+    completionPct: progress.courseCompletionPct,
+    minCompletionPct: course.certificateMinCompletionPct,
+    eligible: meetsCertificateThreshold(progress.courseCompletionPct, course.certificateMinCompletionPct),
+  };
+}
+
+/**
+ * Gọi sau mỗi bài học hoàn thành: vừa chạm ngưỡng thì cấp luôn, chưa đủ thì thôi (không ném lỗi). Trả về chứng
+ * nhận nếu học viên đã có/được cấp. Ngưỡng < 100 nên không thể chỉ chờ sự kiện course.completed.
+ */
+export async function issueCertificateIfEligible(
+  userId: string,
+  courseId: string,
+  db: PrismaClient = prisma,
+) {
+  try {
+    return await issueCertificate(userId, courseId, db);
+  } catch (e) {
+    if (e instanceof CertificationError && (e.code === "not_completed" || e.code === "not_enrolled")) return null;
+    throw e;
+  }
+}
+
 /**
  * Idempotent: gọi nhiều lần cho cùng (userId, courseId) chỉ tạo 1 hàng.
- * Throws nếu chưa enroll hoặc chưa hoàn thành 100% — caller (route hoàn
+ * Throws nếu chưa enroll hoặc chưa đạt ngưỡng hoàn thành của khoá — caller (route hoàn
  * thành bài học) chỉ nên gọi khi đã biết `courseCompleted = true`, nhưng hàm
  * tự kiểm tra lại vì đây cũng là entrypoint của trang xem chứng nhận.
  */
@@ -60,8 +105,8 @@ export async function issueCertificate(
   if (!(await isUserEnrolled(userId, courseId, db))) {
     throw new CertificationError("not_enrolled");
   }
-  const progress = await getCourseProgress(userId, courseId, db);
-  if (progress.courseCompletionPct < 100) {
+  const { eligible } = await getCertificateEligibility(userId, courseId, db);
+  if (!eligible) {
     throw new CertificationError("not_completed");
   }
 

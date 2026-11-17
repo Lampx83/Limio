@@ -28,6 +28,12 @@ import {
   ROBOTO_REGULAR_VIETNAMESE_DATA_URL,
   ROBOTO_BOLD_VIETNAMESE_DATA_URL,
 } from "@/assets/fonts/robotoFontData";
+import {
+  M4A_LOGO_ASPECT,
+  M4A_LOGO_PNG_DATA_URL,
+  NEU_LOGO_ASPECT,
+  NEU_LOGO_PNG_DATA_URL,
+} from "@/assets/certificateLogos";
 
 // A6 — Chứng nhận hoàn thành khoá học, xuất PDF thật. Song ngữ: 2 trang Việt/Anh
 // cùng 1 file, ngôn ngữ của khoá đứng trước (certificateLocales). Bố cục học theo mẫu chứng nhận
@@ -186,6 +192,10 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   footerLabel: { fontSize: 11.25, color: "#9ca3af" },
+  // Khoá MICRO4ASIA: logo NEU + logo dự án thay cho logo Limio.
+  m4aLogoRow: { flexDirection: "row", alignItems: "center", gap: 14 },
+  m4aNeuLogo: { height: 34, width: 34 * NEU_LOGO_ASPECT },
+  m4aProjectLogo: { height: 50, width: 50 * M4A_LOGO_ASPECT },
   // Bố cục gọn (isCompactCertificate) — ghi đè cỡ chữ/khoảng cách của các style trên.
   kickerCompact: { fontSize: 20, marginTop: 12 },
   titleCompact: { fontSize: 36, marginTop: 12 },
@@ -428,7 +438,13 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
         </View>
         <View style={styles.outerFrame}>
           <View style={styles.innerFrame}>
-            {issuerLogoUrl ? (
+            {isM4a ? (
+              <View style={styles.m4aLogoRow}>
+                <Image src={NEU_LOGO_PNG_DATA_URL} style={styles.m4aNeuLogo} />
+                <View style={styles.topRowDivider} />
+                <Image src={M4A_LOGO_PNG_DATA_URL} style={styles.m4aProjectLogo} />
+              </View>
+            ) : issuerLogoUrl ? (
               <View style={styles.topRow}>
                 <LimioLearningLogo />
                 <View style={styles.topRowDivider} />
@@ -462,7 +478,14 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
             )}
 
             <View style={cs(styles.bottomRow, styles.bottomRowCompact)}>
-              {issuerOrgName ? (
+              {isM4a ? (
+                // Chứng chỉ vi mô do Trường Công nghệ (NEU) cấp — không in chữ ký/tên Limio.
+                <View style={styles.signatureBlock}>
+                  <View style={styles.signatureRule} />
+                  <Text style={styles.issuerName}>{t.m4aIssuerName}</Text>
+                  <Text style={styles.issuerCaption}>{t.m4aIssuerCaption}</Text>
+                </View>
+              ) : issuerOrgName ? (
                 <View style={styles.signatureColumnsRow}>
                   <View style={styles.signatureBlock}>
                     {platformSignatureUrl && (
@@ -498,7 +521,7 @@ function CertificatePageBody(props: CertificatePdfProps & { locale: Locale }) {
                   <Text style={styles.issuerCaption}>{platformSignatureTitle || t.issuerCaption}</Text>
                 </View>
               )}
-              <SealBadge />
+              {!isM4a && <SealBadge />}
             </View>
 
             <View style={cs(styles.footerCenter, styles.footerCenterCompact)}>

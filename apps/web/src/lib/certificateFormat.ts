@@ -36,7 +36,9 @@ export const CERT_STRINGS = {
     moreSkills: "+{n} kỹ năng khác",
     m4aTag: "CHỨNG CHỈ VI MÔ · MICRO4ASIA",
     m4aNote:
-      "Trường Công nghệ, Đại học Kinh tế Quốc dân (NEU) · Dự án MICRO4ASIA, Liên minh châu Âu đồng tài trợ",
+      "Chứng chỉ vi mô thuộc dự án MICRO4ASIA, được Liên minh châu Âu đồng tài trợ",
+    m4aIssuerName: "Trường Công nghệ",
+    m4aIssuerCaption: "Đại học Kinh tế Quốc dân",
   },
   en: {
     kicker: "CERTIFICATE OF COMPLETION",
@@ -50,7 +52,9 @@ export const CERT_STRINGS = {
     moreSkills: "+{n} more",
     m4aTag: "MICRO-CREDENTIAL · MICRO4ASIA",
     m4aNote:
-      "School of Technology, National Economics University (NEU) · MICRO4ASIA project, co-funded by the European Union",
+      "Micro-credential of the MICRO4ASIA project, co-funded by the European Union",
+    m4aIssuerName: "School of Technology",
+    m4aIssuerCaption: "National Economics University (NEU)",
   },
 } as const satisfies Record<CertLocale, Record<string, string>>;
 

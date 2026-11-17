@@ -4,6 +4,8 @@ import { LearningEventType } from "@feedbackme/shared-types";
 import {
   CertificationError,
   getCertificateByNumber,
+  getCertificateEligibility,
+  issueCertificateIfEligible,
   getCertificateForUser,
   issueCertificate,
 } from "../index";
@@ -96,5 +98,60 @@ describe("issueCertificate — A6", () => {
     expect(byNumber?.id).toBe(issued.id);
 
     expect(await getCertificateByNumber("FBM-DOESNOTEXIST")).toBeNull();
+  });
+});
+
+describe("ngưỡng hoàn thành theo khoá (MICRO4ASIA 90%) — A6", () => {
+  async function setupTen(slug: string, minPct: number) {
+    const owner = await registerUser(
+      { email: `o-${slug}@e.com`, password: "password1234", displayName: "GV" },
+      BASE,
+    );
+    const learner = await registerUser(
+      { email: `l-${slug}@e.com`, password: "password1234", displayName: "Trần Thị Bình" },
+      BASE,
+    );
+    const c = await createCourse(owner.userId, { title: `Khoá ${slug}`, description: "x", slug });
+    const m = await createModule(owner.userId, c.courseId, { title: "M", orderIndex: 0 });
+    const lessonIds: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const l = await createLesson(owner.userId, m.moduleId, { title: `L${i}`, orderIndex: i });
+      lessonIds.push(l.lessonId);
+    }
+    await publishCourse(owner.userId, c.courseId);
+    await prisma.course.update({ where: { id: c.courseId }, data: { certificateMinCompletionPct: minPct } });
+    await enrollInCourse(learner.userId, c.courseId);
+    return { learnerId: learner.userId, courseId: c.courseId, lessonIds };
+  }
+
+  it("mặc định khoá mới vẫn đòi 100%", async () => {
+    const { courseId } = await setup("cert-default");
+    const c = await prisma.course.findUniqueOrThrow({ where: { id: courseId } });
+    expect(c.certificateMinCompletionPct).toBe(100);
+  });
+
+  it("Given ngưỡng 90%, When học 8/10 bài, Then chưa được cấp; When học bài thứ 9, Then được cấp dù chưa hoàn thành khoá", async () => {
+    const { learnerId, courseId, lessonIds } = await setupTen("cert-m4a-90", 90);
+    for (const id of lessonIds.slice(0, 8)) await completeLesson(learnerId, id);
+
+    expect(await getCertificateEligibility(learnerId, courseId)).toEqual({
+      completionPct: 80,
+      minCompletionPct: 90,
+      eligible: false,
+    });
+    expect(await issueCertificateIfEligible(learnerId, courseId)).toBeNull();
+    await expect(issueCertificate(learnerId, courseId)).rejects.toMatchObject({ code: "not_completed" });
+
+    const r = await completeLesson(learnerId, lessonIds[8]!);
+    expect(r.courseCompleted).toBe(false); // hoàn thành khoá vẫn là 100%
+    const cert = await issueCertificateIfEligible(learnerId, courseId);
+    expect(cert?.userNameSnapshot).toBe("Trần Thị Bình");
+    expect((await getCertificateEligibility(learnerId, courseId)).eligible).toBe(true);
+  });
+
+  it("Given ngưỡng 100% (mặc định), When học 9/10 bài, Then chưa được cấp", async () => {
+    const { learnerId, courseId, lessonIds } = await setupTen("cert-default-100", 100);
+    for (const id of lessonIds.slice(0, 9)) await completeLesson(learnerId, id);
+    expect(await issueCertificateIfEligible(learnerId, courseId)).toBeNull();
   });
 });
