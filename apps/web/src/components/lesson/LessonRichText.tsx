@@ -4,6 +4,7 @@ import { readLessonLook } from "@feedbackme/shared-types";
 import SafeHtml from "@/components/SafeHtml";
 import { lessonStyleVars } from "@/lib/lessonLook";
 import { buildFaqDetails } from "@/lib/lessonFaq";
+import { buildVocabRuby } from "@/lib/lessonVocabRuby";
 import { useCallback } from "react";
 import { useT, useUiLang } from "@/lib/i18n/client";
 import { buildStepReveal, handleStepRevealClick } from "@/lib/lessonReveal";
@@ -33,7 +34,7 @@ export default function LessonRichText({
   // giao diện; SafeHtml không theo dõi transform, nên `key={lang}` dựng lại khung khi đổi EN/VI.
   const dress = useCallback(
     (h: string) =>
-      buildStepReveal(buildFaqDetails(h), {
+      buildStepReveal(buildFaqDetails(buildVocabRuby(h)), {
         next: t("reader.steps.next"),
         all: t("reader.steps.all"),
         reset: t("reader.steps.reset"),

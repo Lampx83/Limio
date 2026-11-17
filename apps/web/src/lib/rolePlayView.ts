@@ -170,7 +170,7 @@ export function alignReading(main: string, reading: string): string[] | null {
   if (!reading || /[A-Za-z\u3040-\u30ff\uac00-\ud7af]/.test(main)) return null;
   const hanCount = [...main].filter((c) => HAN.test(c)).length;
   const syl: string[] = [];
-  for (const raw of reading.split(/[\s'’\-]+/)) {
+  for (const raw of reading.split(/[\s'’\-/／,，;；]+/)) {
     const word = raw.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "");
     if (!word) continue;
     const parts = pinyinSyllables(word);

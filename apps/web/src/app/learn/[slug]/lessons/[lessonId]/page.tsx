@@ -51,6 +51,7 @@ import LessonPractice from "@/components/language/LessonPractice";
 import PassageView from "@/components/exam/PassageView";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
+import HanFontLoader from "@/components/HanFontLoader";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
 import StatementTab from "@/components/lesson/StatementTab";
 import LessonRichText from "@/components/lesson/LessonRichText";
@@ -174,7 +175,7 @@ export default async function LessonPage({
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.lessonId },
     include: {
-      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, themeColor: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true } } } },
+      module: { include: { course: { select: { id: true, slug: true, title: true, coverUrl: true, themeColor: true, priceCents: true, currency: true, version: true, status: true, publicAccess: true, languageMode: true, language: true } } } },
       // isLocked của bài nằm sẵn trong `lesson`; của module lấy qua include ở trên.
       contentItems: { orderBy: { orderIndex: "asc" } },
       quizzes: {
@@ -1063,8 +1064,9 @@ export default async function LessonPage({
       // hẳn bài có mục lục, chuyển bài qua lại thì độ rộng trang nhảy.
       // Trong khung 3 cột, khung ngoài đã lo lề: bỏ max-w-6xl + px-6 (chúng làm cột giữa hẹp thêm ~3rem) và dùng hết bề ngang cột giữa
       // (không căn giữa/giới hạn: thầy thấy khoảng trắng hai bên thừa).
-      className={lessonFrame ? "w-full py-6" : "mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"}
+      className={`${lessonFrame ? "w-full py-6" : "mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"} lesson-han`}
     >
+      {lesson.module.course.language === "zh" && <HanFontLoader lang="zh-Hans" />}
       {stageMode && <StageListener lessonId={lesson.id} />}
       {structuredData}
       {/*

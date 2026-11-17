@@ -25,10 +25,25 @@ describe("VocabListView — G2.3.1 / 2.3.2 / 2.3.4 / 2.3.5 / 2.3.6", () => {
     renderToStaticMarkup(<VocabListView items={items} {...p} />);
 
   it("hiện từ, phiên âm, nghĩa, ví dụ và bản dịch ví dụ", () => {
-    const t = text(render());
-    for (const s of ["朋友", "péngyou", "bạn bè", "他是我的朋友。", "Anh ấy là bạn tôi.", "你好", "xin chào"]) {
-      expect(t).toContain(s);
+    const out = render();
+    // Phiên âm nằm dưới từng chữ (ruby), nên chữ Hán và pinyin không còn liền nhau trong markup: kiểm riêng từng phần.
+    for (const s of ["朋友", "bạn bè", "他是我的朋友。", "Anh ấy là bạn tôi.", "你好", "xin chào"]) {
+      expect(plain(out)).toContain(s);
     }
+    for (const s of ["péng", "you", "nǐ", "hǎo"]) expect(text(out)).toContain(s);
+    expect(out).toContain("<ruby");
+  });
+
+  it("phiên âm không còn cột riêng: dưới từ, nên hàng chỉ có cột từ · nghĩa · ví dụ", () => {
+    const out = render();
+    expect(out).not.toContain("minmax(4.5rem,6.5rem)");
+    expect(out).not.toContain("minmax(5rem,9rem)");
+  });
+
+  it("phiên âm không ghép được từng chữ thì hiện thành dòng dưới từ, không ghép bừa", () => {
+    const out = render({ items: [{ id: "z", term: "你好吗", reading: "nǐ hǎo", meaning: "khoẻ không" }] });
+    expect(out).not.toContain("<ruby");
+    expect(text(out)).toContain("nǐ hǎo");
   });
 
   it("tiêu đề khối và nhãn cột phiên âm: mặc định 'Phiên âm', giảng viên đặt được", () => {
@@ -93,13 +108,13 @@ describe("VocabListView — G2.3.1 / 2.3.2 / 2.3.4 / 2.3.5 / 2.3.6", () => {
 
   it("tối ưu chỗ: có câu ví dụ thì từ màn hình rộng (lg) ví dụ sang cột riêng cùng hàng với từ; header có cột 'Ví dụ'; không có ví dụ thì không có cột đó", () => {
     const out = render();
-    expect(out).toContain("lg:col-start-4"); // ví dụ ở cột 4 (có phiên âm)
+    expect(out).toContain("lg:col-start-3"); // ví dụ ở cột 3: từ · nghĩa · ví dụ
     expect(out).toContain("lg:grid-cols-[");
     expect(text(out.split('aria-label="Hiển thị"')[1] ?? "")).toContain("Ví dụ");
     const noEx = render({ items: items.map((i) => ({ id: i.id, term: i.term, reading: i.reading, meaning: i.meaning })) });
-    expect(noEx).not.toContain("lg:col-start-4");
+    expect(noEx).not.toContain("lg:col-start-3");
     expect(text(noEx)).not.toContain("Ví dụ");
-    // không có phiên âm: ví dụ ở cột 3
+    // không có phiên âm: vẫn ví dụ ở cột 3
     const noReading = render({
       items: items.map((i) => ({ id: i.id, term: i.term, meaning: i.meaning, example: i.example })),
     });
@@ -109,7 +124,7 @@ describe("VocabListView — G2.3.1 / 2.3.2 / 2.3.4 / 2.3.5 / 2.3.6", () => {
   it("nút nghe nằm ngay trước chữ ở cột 1 (không còn cột nút riêng cuối hàng)", () => {
     const row = render().split('id="vocab-i1"')[1]!.split("</li>")[0]!;
     expect(row.indexOf('aria-label="Nghe 朋友"')).toBeGreaterThan(-1);
-    expect(row.indexOf('aria-label="Nghe 朋友"')).toBeLessThan(row.indexOf("朋友</"));
+    expect(row.indexOf('aria-label="Nghe 朋友"')).toBeLessThan(row.indexOf("<ruby"));
   });
 
   it("G2.3.6: phần 'từ' không bao giờ bị che (đó là câu hỏi để tự kiểm tra)", () => {
@@ -126,13 +141,14 @@ describe("màu lời gốc (chữ Hán…)", () => {
       <DialogueView turns={[{ id: "t1", speaker: "A", text: "你好！" }]} />,
     );
     const classOf = (html: string, str: string) => html.split(str)[0]!.split("<").pop() ?? "";
-    expect(classOf(vocab, ">朋友</")).toContain(SOURCE_TEXT_COLOR);
+    // từ có pinyin ghép được: chữ Hán nằm trong <ruby>, khung ngoài của từ mang màu
+    expect(vocab).toMatch(new RegExp(`class="[^"]*${SOURCE_TEXT_COLOR}[^"]*"[^>]*><span class="whitespace-nowrap"><span><ruby`));
     expect(classOf(vocab, ">他是我的朋友。</")).toContain(SOURCE_TEXT_COLOR);
     expect(classOf(dlg, ">你好！</")).toContain(SOURCE_TEXT_COLOR);
   });
   it("phiên âm và nghĩa KHÔNG dùng màu của lời gốc", () => {
     const vocab = renderToStaticMarkup(<VocabListView items={items} />);
-    expect(classOf2(vocab, ">péngyou</")).not.toContain(SOURCE_TEXT_COLOR);
+    expect(classOf2(vocab, ">péng</")).not.toContain(SOURCE_TEXT_COLOR);
     expect(classOf2(vocab, ">bạn bè</")).not.toContain(SOURCE_TEXT_COLOR);
   });
 });
