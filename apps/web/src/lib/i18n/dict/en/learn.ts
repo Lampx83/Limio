@@ -184,6 +184,7 @@ export const enLearn: PartialDict<typeof viLearn> = {
   "learn.thread.accepted": "Accepted answer",
   "learn.cert.incomplete": "You have not finished this course yet ({pct}%)",
   "learn.cert.incompleteHint": "Complete all the lessons to receive your certificate.",
+  "learn.cert.incompleteHintMin": "Complete at least {min}% of the lessons to receive your certificate.",
   "learn.cert.downloadPdf": "Download PDF",
   "learn.cert.linkedin": "Add to LinkedIn",
   "learn.cert.verifyPage": "View the public verification page →",

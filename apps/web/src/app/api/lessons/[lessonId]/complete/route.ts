@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   completeLesson,
   issueCertificate,
+  issueCertificateIfEligible,
   type LessonCompleteReason,
 } from "@feedbackme/core-lms";
 import {
@@ -57,6 +58,9 @@ export async function POST(
       // A6 — cấp chứng nhận ngay khi hoàn thành, không đợi tới lúc học viên
       // mở trang /certificate mới cấp (idempotent nên gọi lại vẫn an toàn).
       await issueCertificate(userId, result.courseId);
+    } else if (result.newlyCompleted) {
+      // Khoá có ngưỡng < 100% (MICRO4ASIA: 90%) — chạm ngưỡng là cấp luôn, không chờ học hết.
+      await issueCertificateIfEligible(userId, result.courseId);
     }
 
     // B4 — log the path event when a learner accepts a skip suggestion.

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Roboto } from "next/font/google";
 import { LimioLearningLogo } from "@/components/BrandIcons";
 import { prisma } from "@feedbackme/db";
-import { getCourseProgress, isUserEnrolled, issueCertificate } from "@feedbackme/core-lms";
+import { getCertificateEligibility, isUserEnrolled, issueCertificate } from "@feedbackme/core-lms";
 import { auth } from "@/lib/auth";
 import { getT } from "@/lib/i18n/server";
 import CertificateCanvas from "./CertificateCanvas";
@@ -45,8 +45,8 @@ export default async function CertificatePage({
     redirect(`/catalog/${params.slug}`);
   }
 
-  const progress = await getCourseProgress(userId, course.id);
-  if (progress.courseCompletionPct < 100) {
+  const eligibility = await getCertificateEligibility(userId, course.id);
+  if (!eligibility.eligible) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
         <Link
@@ -57,15 +57,17 @@ export default async function CertificatePage({
         </Link>
         <div className="mt-6 rounded-2xl border border-accent-200 bg-accent-50 p-6">
           <p className="text-sm font-semibold text-accent-700">
-            {t("learn.cert.incomplete", { pct: progress.courseCompletionPct })}
+            {t("learn.cert.incomplete", { pct: eligibility.completionPct })}
           </p>
           <p className="mt-2 text-sm text-accent-700/90">
-            {t("learn.cert.incompleteHint")}
+            {eligibility.minCompletionPct < 100
+              ? t("learn.cert.incompleteHintMin", { min: eligibility.minCompletionPct })
+              : t("learn.cert.incompleteHint")}
           </p>
           <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/60">
             <div
               className="h-2 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 transition-all"
-              style={{ width: `${progress.courseCompletionPct}%` }}
+              style={{ width: `${eligibility.completionPct}%` }}
             />
           </div>
         </div>
@@ -120,7 +122,7 @@ export default async function CertificatePage({
   const linkedinParams = new URLSearchParams({
     startTask: "CERTIFICATION_NAME",
     name: course.title,
-    organizationName: certificate.issuerName,
+    organizationName: isM4a ? `${ct.m4aIssuerName}, ${ct.m4aIssuerCaption}` : certificate.issuerName,
     issueYear: String(certificate.issuedAt.getFullYear()),
     issueMonth: String(certificate.issuedAt.getMonth() + 1),
     certUrl: verifyUrl,
@@ -175,7 +177,15 @@ export default async function CertificatePage({
             {/* Khung đôi: ngoài 1.5px (padding 5) + trong 0.75px, góc vuông */}
             <div className="absolute inset-0 flex border-[1.5px] border-[#3f6212] p-[5px]">
               <div className="relative flex flex-1 flex-col items-center justify-center border-[0.75px] border-[#3f6212] px-16 py-[30px]">
-                {certificate.issuerLogoUrl ? (
+                {isM4a ? (
+                  <div className="flex items-center gap-3.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/brand/neu/neu-logo-ngang.svg" alt="National Economics University" className="h-[34px] w-auto" />
+                    <div className="h-7 w-px bg-[#d1d5db]" aria-hidden />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/brand/micro4asia/logo.png" alt="MICRO4ASIA" className="h-[50px] w-auto" />
+                  </div>
+                ) : certificate.issuerLogoUrl ? (
                   <div className="flex items-center gap-3.5">
                     <LimioLearningLogo className="h-10 w-auto shrink-0" />
                     <div className="h-7 w-px bg-[#d1d5db]" aria-hidden />
@@ -233,7 +243,13 @@ export default async function CertificatePage({
 
                 {/* Hàng dưới: chữ ký bên trái, con dấu bên phải (bottomRow của PDF) */}
                 <div className={`${compact ? "mt-[18px]" : "mt-9"} flex w-full items-end justify-between`}>
-                  {certificate.issuerOrgName ? (
+                  {isM4a ? (
+                    <div className="flex flex-col items-center">
+                      <div className="mb-1.5 h-[0.75px] w-[110px] bg-[#a3a3a3]" />
+                      <p className="text-sm font-bold leading-normal text-[#1f2937]">{ct.m4aIssuerName}</p>
+                      <p className="mt-0.5 text-[9.5px] leading-normal text-[#6b7280]">{ct.m4aIssuerCaption}</p>
+                    </div>
+                  ) : certificate.issuerOrgName ? (
                     <div className="flex gap-7">
                       <div className="flex flex-col items-center">
                         {certificate.platformSignatureUrl && (
@@ -301,7 +317,7 @@ export default async function CertificatePage({
                       </p>
                     </div>
                   )}
-                  <CertificateSeal />
+                  {!isM4a && <CertificateSeal />}
                 </div>
 
                 {isM4a && (

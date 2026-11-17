@@ -6,6 +6,7 @@ import { LANG_COOKIE, resolveUiLang, translate, type TParams, type UiLang } from
 import { EN, VI, type MessageKey } from "@/lib/i18n/dict";
 import { resolveTimeZone } from "@/lib/datetime";
 import { M4A_COURSES } from "@/lib/micro4asia";
+import { CERT_STRINGS } from "@/lib/certificateFormat";
 import EmptyState from "@/components/ui/EmptyState";
 
 export const dynamic = "force-dynamic";
@@ -88,7 +89,11 @@ export default async function VerifyCertificatePage({ params }: Props) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={cert.issuerLogoUrl} alt="" className="h-4 w-4 object-contain" />
         )}
-        {t("learn.verify.issuedBy", { issuer: cert.issuerName })}
+        {t("learn.verify.issuedBy", {
+          issuer: isM4a
+            ? `${CERT_STRINGS[lang].m4aIssuerName}, ${CERT_STRINGS[lang].m4aIssuerCaption}`
+            : cert.issuerName,
+        })}
       </p>
     </main>
   );

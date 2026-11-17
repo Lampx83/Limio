@@ -200,6 +200,8 @@ export default async function LearnCoursePage({
   );
 
   const isComplete = progress.courseCompletionPct >= 100;
+  // Nút "Xem chứng nhận" hiện khi đạt ngưỡng của khoá (MICRO4ASIA 90%), không nhất thiết phải học hết.
+  const canViewCertificate = progress.courseCompletionPct >= course.certificateMinCompletionPct;
 
   // Bài để vào học tiếp — chung cho nút "Tiếp tục", dấu "Đang học/Bài tiếp theo" trong danh sách và nút
   // cuối trang trên điện thoại. Không cá nhân hoá, nên lớp đối chứng và khoá tắt cá nhân hoá cũng có
@@ -317,7 +319,7 @@ export default async function LearnCoursePage({
                 {continueButtonText(enrollment.lastLessonId ? "continue" : "start", continueTitle, lang)}
               </Link>
             )}
-            {isComplete && (
+            {canViewCertificate && (
               <Link
                 href={`/learn/${params.slug}/certificate`}
                 className="inline-flex items-center gap-2 rounded-lg border-2 border-accent-300 bg-accent-400/20 px-4 py-2 text-sm font-semibold backdrop-blur transition-all hover:bg-accent-400/30"

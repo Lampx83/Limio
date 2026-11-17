@@ -461,6 +461,9 @@ model Course {
   title                  String
   description            String       @db.Text
   language               String       @default("vi")
+  // A6 — % bài học phải hoàn thành để được cấp chứng nhận (mặc định 100 = học hết). Khoá MICRO4ASIA đặt 90.
+  // Khác "hoàn thành khoá" (course.completed, luôn là 100%): đây chỉ là điều kiện nhận chứng nhận.
+  certificateMinCompletionPct Int       @default(100)
   level                  String       @default("beginner") // beginner | intermediate | advanced
   category               String?
   coverUrl               String?
