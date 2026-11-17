@@ -72,3 +72,14 @@ describe("VocabFlashcards — ví dụ không lộ đáp án", () => {
     for (const s of ["take over", "/teɪk ˈəʊvə/", "I took over the family", "separable? no"]) expect(back).toContain(s);
   });
 });
+
+describe("VocabFlashcards — che phiên âm bằng cách làm mờ", () => {
+  it("showReading=false: phiên âm vẫn có trong thẻ nhưng bị làm mờ; bật thì hết mờ", () => {
+    act(() => root.render(<VocabFlashcards items={items} showReading={false} playingId={null} onToggleAudio={() => undefined} />));
+    const el = host.querySelector('[data-masked="true"]');
+    expect(el?.textContent).toBe("/teɪk ˈəʊvə/");
+    expect(el?.className).toContain("blur-sm");
+    act(() => root.render(<VocabFlashcards items={items} showReading playingId={null} onToggleAudio={() => undefined} />));
+    expect(host.querySelector('[data-masked="true"]')).toBeNull();
+  });
+});

@@ -44,7 +44,7 @@ function progressOf(meta: PracticeTabMeta | undefined, live: Live) {
  * Mọi tab đều nằm trong cây (tab không chọn chỉ ẩn) nên bài đang làm không mất khi chuyển qua lại.
  * Chỉ một khối mà tên không phải số exercise thì không có thanh tab.
  */
-export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
+export default function PracticeTabs({ tabs, hsk = false }: { tabs: PracticeTab[]; hsk?: boolean }) {
   const uid = useId();
   const [active, setActive] = useState(0);
   const [live, setLive] = useState<Live>({});
@@ -99,8 +99,69 @@ export default function PracticeTabs({ tabs }: { tabs: PracticeTab[] }) {
   const cur = Math.min(active, tabs.length - 1);
   const go = (i: number) => setActive((i + tabs.length) % tabs.length);
 
+  if (hsk) {
+    // Giao diện bài HSK: lưới thẻ hoạt động (biểu tượng, tên, số câu, thanh tiến độ); thẻ đang mở màu hồng, nội dung mở ngay bên dưới.
+    return (
+      <section className="hsk-tabs" data-testid="practice-tabs">
+        <div role="tablist" aria-label="Bài luyện của bài học" className="hsk-tablist">
+          {tabs.map((t, i) => {
+            const on = i === cur;
+            const kind = t.meta?.kind;
+            const Icon = kind ? KIND_ICON[kind] : null;
+            const pr = progressOf(t.meta, live);
+            const glued = t.meta ? /^(\d+[A-E]?(?:[–-]\d*[A-E])?)\s+([^·].*)$/.exec(t.label) : null;
+            const [head, ...restParts] = glued ? [glued[1]!, glued[2]!] : t.meta ? t.label.split(" · ") : [t.label];
+            const isCode = !t.meta || EXERCISE_CODE.test(head ?? "");
+            const title = !t.meta ? t.label : isCode ? (t.meta.title && t.meta.title !== head ? t.meta.title : restParts.join(" · ") || (head ?? t.label)) : t.label.replace(" · ", ": ");
+            const sub = pr.done ? "Xong" : pr.total === 0 ? (kind ? PRACTICE_KIND_LABEL[kind] : "") : pr.answered > 0 ? `${pr.answered}/${pr.total} câu` : `${pr.total} câu`;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                id={`${uid}-tab-${i}`}
+                aria-selected={on}
+                aria-controls={`${uid}-panel-${i}`}
+                tabIndex={on ? 0 : -1}
+                onClick={() => setActive(i)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    go(cur + 1);
+                  } else if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    go(cur - 1);
+                  }
+                }}
+                className="hsk-tab"
+              >
+                <span className="hsk-tab-ic" aria-hidden>
+                  {pr.done ? <Check size={20} /> : Icon ? <Icon size={20} /> : <BookOpen size={20} />}
+                </span>
+                <span className="min-w-0">
+                  <b className="hsk-tab-t">{title}</b>
+                  {sub && <small>{sub}</small>}
+                </span>
+                {pr.total > 0 && (
+                  <span className="hsk-tab-bar" aria-hidden>
+                    <i style={{ width: `${Math.round((pr.done ? 1 : pr.answered / pr.total) * 100)}%` }} />
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {tabs.map((t, i) => (
+          <div key={t.id} role="tabpanel" id={`${uid}-panel-${i}`} aria-labelledby={`${uid}-tab-${i}`} hidden={i !== cur}>
+            {t.content}
+          </div>
+        ))}
+      </section>
+    );
+  }
+
   return (
-    <section className="mt-5" data-testid="practice-tabs">
+    <section className={hsk ? "hsk-tabs mt-5" : "mt-5"} data-testid="practice-tabs">
       <div className="relative">
       {edge.left && (
         <button type="button" onClick={() => scrollBar(-1)} aria-label="Cuộn hàng bài tập sang trái" className="absolute left-0 top-10 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-token bg-[rgb(var(--surface))] text-muted shadow-sm hover:text-[rgb(var(--text))]">

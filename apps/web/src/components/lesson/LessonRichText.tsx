@@ -4,7 +4,10 @@ import { readLessonLook } from "@feedbackme/shared-types";
 import SafeHtml from "@/components/SafeHtml";
 import { lessonStyleVars } from "@/lib/lessonLook";
 import { buildFaqDetails } from "@/lib/lessonFaq";
-import { buildVocabRuby } from "@/lib/lessonVocabRuby";
+import { buildVocabCards, buildVocabRuby } from "@/lib/lessonVocabRuby";
+import { hskGrammarHtml, type HskGrammarPoint } from "@/lib/hskGrammar";
+import { hskActivityHtml, hskBriefHtml, hskScenarioHtml } from "@/lib/hskActivity";
+import { hskDropPageRef, hskDropVocabLabel, hskIntroHtml, hskRecolor, type HskKind } from "@/lib/hskLesson";
 import { useCallback } from "react";
 import { useT, useUiLang } from "@/lib/i18n/client";
 import { buildStepReveal, handleStepRevealClick } from "@/lib/lessonReveal";
@@ -21,8 +24,14 @@ export default function LessonRichText({
   html,
   look: rawLook,
   className = "",
+  hskKind,
+  hskGrammar,
 }: {
+  /** Nội dung bổ sung của các điểm ngữ pháp (chỉ khối ngữ pháp bài HSK): xem lib/hskGrammar.ts. */
+  hskGrammar?: Record<string, HskGrammarPoint>;
   html: string;
+  /** Khối của bài HSK (giao diện HSK): chuẩn bị HTML theo loại khối và bỏ khung thẻ. Không đặt = hành vi cũ. */
+  hskKind?: HskKind;
   /** `payload.look` — không tin cậy, đọc lại qua readLessonLook. */
   look?: unknown;
   className?: string;
@@ -33,16 +42,18 @@ export default function LessonRichText({
   // Hỏi-đáp gập mở rồi lời giải hiện dần; hai bố cục khác nhau nên không đụng nhau. Nút "Bước tiếp" theo ngôn ngữ
   // giao diện; SafeHtml không theo dõi transform, nên `key={lang}` dựng lại khung khi đổi EN/VI.
   const dress = useCallback(
-    (h: string) =>
-      buildStepReveal(buildFaqDetails(buildVocabRuby(h)), {
+    (h0: string) => {
+      const h = hskKind ? prepareHsk(h0, hskKind, hskGrammar) : h0;
+      return buildStepReveal(buildFaqDetails(hskKind === "vocab" ? h : buildVocabRuby(h)), {
         next: t("reader.steps.next"),
         all: t("reader.steps.all"),
         reset: t("reader.steps.reset"),
         count: t("reader.steps.count"),
-      }),
-    [t],
+      });
+    },
+    [t, hskKind, hskGrammar],
   );
-  const base = "prose prose-sm max-w-none rounded-xl border border-token p-4 dark:prose-invert";
+  const base = `prose prose-sm max-w-none rounded-xl border border-token p-4 dark:prose-invert${hskKind && hskKind !== "other" ? ` hsk-plain hsk-${hskKind}` : ""}`;
   if (!look) {
     return (
       <SafeHtml
@@ -65,4 +76,16 @@ export default function LessonRichText({
       attrs={{ "data-palette": look.palette, "data-font": look.font }}
     />
   );
+}
+
+
+/** Chuẩn bị HTML nhập sẵn của từng loại khối HSK: đổi màu cam sang màu chính, bỏ dải tiêu đề/nhãn/số trang đã có ở đầu bài và tiêu đề mục. */
+function prepareHsk(html: string, kind: HskKind, grammar?: Record<string, HskGrammarPoint>): string {
+  const h = hskRecolor(html);
+  if (kind === "intro") return hskIntroHtml(h);
+  if (kind === "intro-brief") return hskBriefHtml(hskIntroHtml(h));
+  if (kind === "vocab") return buildVocabCards(hskDropVocabLabel(hskDropPageRef(h)));
+  if (kind === "activity") return hskActivityHtml(hskIntroHtml(h));
+  if (kind === "grammar") return hskGrammarHtml(hskDropPageRef(h), grammar);
+  return hskScenarioHtml(hskDropPageRef(h));
 }

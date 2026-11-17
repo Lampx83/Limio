@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -13,6 +14,10 @@ import { deckIdOfUrl } from "@/lib/narration/deckCover";
 import DeckCover, { type DeckCoverInfo } from "./narration/DeckCover";
 import SafeHtml from "./SafeHtml";
 import LessonRichText from "./lesson/LessonRichText";
+import HskSectionHead from "./lesson/HskSectionHead";
+import HskVocabSwitch from "./lesson/HskVocabSwitch";
+import { planHskSections, type HskKind } from "@/lib/hskLesson";
+import { readGrammarData } from "@/lib/hskGrammar";
 import AudioLessonPlayer from "./AudioLessonPlayer";
 import VocabListView, { type VocabViewItem } from "./VocabListView";
 import DialogueView, { type DialogueViewTurn } from "./DialogueView";
@@ -114,8 +119,14 @@ export default function LessonContent({
   deckCover,
   blocks,
   numberTranscripts = false,
+  hsk = false,
+  hskLang = "vi",
 }: {
   items: ContentItem[];
+  /** Ngôn ngữ của khoá cho tiêu đề mục và nhãn của giao diện HSK ("vi" mặc định). */
+  hskLang?: "vi" | "en";
+  /** Giao diện bài HSK (xem lib/hskLesson.ts): mục đánh số, khối không khung, thẻ từ mới có flashcard. */
+  hsk?: boolean;
   courseId?: string;
   lessonId?: string;
   /**
@@ -135,15 +146,18 @@ export default function LessonContent({
    */
   interactive?: boolean;
 }) {
+  const plan = hsk ? planHskSections(items) : null;
   return (
     // Khung bài học Language (kiểu sách): các khối liền nhau hơn (câu yêu cầu và phiếu của nó là một cụm), không cách nhau cả một khoảng trắng.
     <div className={numberTranscripts ? "space-y-4" : "space-y-6"}>
-      {items.map((item) =>
+      {items.map((item, idx) =>
         (item.type === "exam_practice" || item.type === "exam_ref") && !blocks?.[item.id] ? null : (
-        // data-item-id: mốc neo ổn định giữa cửa sổ điều khiển và màn chiếu.
-        // Không đánh theo thứ tự được — cửa sổ điều khiển có thêm các khối ghi
-        // chú giảng viên xen giữa, nên khối thứ 3 ở hai bên là hai thứ khác nhau.
-        <div key={item.id} data-item-id={item.id}>
+        <Fragment key={item.id}>
+        {plan?.headAt.get(idx) && <HskSectionHead no={plan.headAt.get(idx)!.no} section={plan.headAt.get(idx)!.section} lang={hskLang} />}
+        {/* data-item-id: mốc neo ổn định giữa cửa sổ điều khiển và màn chiếu.
+            Không đánh theo thứ tự được — cửa sổ điều khiển có thêm các khối ghi
+            chú giảng viên xen giữa, nên khối thứ 3 ở hai bên là hai thứ khác nhau. */}
+        <div data-item-id={item.id}>
           {item.type === "exam_practice" || item.type === "exam_ref" ? (
             blocks?.[item.id]
           ) : (
@@ -156,9 +170,12 @@ export default function LessonContent({
               interactive={interactive}
               deckCover={deckCover}
               numberTranscripts={numberTranscripts}
+              hskKind={plan?.kinds[idx]}
+              hskLang={hskLang}
             />
           )}
         </div>
+        </Fragment>
         ),
       )}
     </div>
@@ -229,8 +246,11 @@ function ContentBlock({
   interactive,
   deckCover,
   numberTranscripts,
+  hskKind,
+  hskLang,
 }: {
   type: string;
+  hskLang?: "vi" | "en";
   payload: unknown;
   itemId: string;
   courseId?: string;
@@ -238,6 +258,8 @@ function ContentBlock({
   interactive: boolean;
   deckCover?: DeckCoverInfo | null;
   numberTranscripts?: boolean;
+  /** Loại khối trong bài HSK (có giao diện HSK); undefined = giao diện thường. */
+  hskKind?: HskKind;
 }) {
   const t = useT();
   switch (type) {
@@ -343,6 +365,8 @@ function ContentBlock({
           readingLabel={p.readingLabel}
           audioUrl={p.audioUrl}
           turns={turns}
+          hsk={hskKind === "dialogue"}
+          hskLang={hskLang}
         />
       );
     }
@@ -373,6 +397,10 @@ function ContentBlock({
     }
     case "richtext": {
       const p = payload as RichTextPayload;
+      if (hskKind && !p.look) {
+        const node = <LessonRichText html={p.html} hskKind={hskKind} hskGrammar={hskKind === "grammar" ? readGrammarData((p as { hskGrammar?: unknown }).hskGrammar) : undefined} />;
+        return hskKind === "vocab" ? <HskVocabSwitch html={p.html} lang={hskLang}>{node}</HskVocabSwitch> : node;
+      }
       return <LessonRichText html={p.html} look={p.look} />;
     }
     /**

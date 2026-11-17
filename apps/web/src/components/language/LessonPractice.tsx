@@ -23,6 +23,7 @@ import PassageView from "@/components/exam/PassageView";
 import LessonRichText from "@/components/lesson/LessonRichText";
 import { QuestionCard } from "@/components/exam/AnswerReview";
 import EssayVoiceAnswer, { VoiceUseError } from "./EssayVoiceAnswer";
+import { splitSingleBlank } from "@/lib/inlineBlank";
 import EssayFeedback from "./EssayFeedback";
 import RolePlay from "./RolePlay";
 import FreeChat, { FreeChatError } from "./FreeChat";
@@ -676,7 +677,9 @@ export default function LessonPractice({
                   : t("practice.say.changeNote")}
             </span>
           ) : null;
-          const voiceRow = isEssay && !rolePlay && !freeChat && essayVoiceEnabled(q.config);
+          // Câu gõ thẳng vào chỗ trống (đề có một chỗ trống, xem ExamQuestion) là bài tập gõ chữ: không có phần trả lời bằng giọng nói.
+          const typedInBlank = !!splitSingleBlank(q.prompt);
+          const voiceRow = isEssay && !rolePlay && !freeChat && !typedInBlank && essayVoiceEnabled(q.config);
           if (voiceRow) {
             // Ô gõ → một hàng: [Trả lời bằng giọng nói] … [Kiểm tra] → một dòng chú thích nhỏ.
             return (

@@ -77,12 +77,19 @@ export default function VocabListView({
   const anyExample = items.some((i) => !!i.example);
   // Từ md: từ · phiên âm · nghĩa, ví dụ nằm dưới nghĩa. Từ lg nếu có ví dụ: ví dụ sang
   // cột riêng cùng hàng — mỗi từ chỉ cao một dòng thay vì ba, người học đỡ phải cuộn.
-  // Phiên âm nằm DƯỚI từ (ruby thẳng hàng từng chữ, hoặc một dòng nhỏ dưới từ nếu không ghép được), không còn cột riêng: từ · nghĩa · ví dụ.
-  const cols = `sm:grid-cols-[minmax(8rem,14rem)_minmax(0,1fr)] ${
-    anyExample ? "lg:grid-cols-[minmax(8rem,12rem)_minmax(9rem,1fr)_minmax(0,1.5fr)]" : ""
-  }`;
-  const meaningColStart = "sm:col-start-2";
-  const exampleCls = "sm:col-start-2 lg:col-start-3 lg:row-start-1";
+  // Từ chữ Hán/kana/Hangul: phiên âm nằm DƯỚI từ (ruby thẳng hàng từng chữ, hoặc một dòng nhỏ dưới từ nếu không ghép được), không có cột riêng: từ · nghĩa · ví dụ.
+  // Khoá khác (từ viết bằng chữ Latin, phiên âm IPA…) giữ nguyên bố cục cũ với cột phiên âm riêng.
+  const readingBelow = items.some((i) => /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/.test(i.term));
+  const sideReading = hasReading && !readingBelow;
+  const cols = sideReading
+    ? `sm:grid-cols-[minmax(7rem,12rem)_minmax(5rem,9rem)_minmax(0,1fr)] ${
+        anyExample ? "lg:grid-cols-[minmax(6.5rem,9rem)_minmax(4.5rem,6.5rem)_minmax(9rem,1fr)_minmax(0,1.5fr)]" : ""
+      }`
+    : readingBelow
+      ? `sm:grid-cols-[minmax(8rem,14rem)_minmax(0,1fr)] ${anyExample ? "lg:grid-cols-[minmax(8rem,12rem)_minmax(9rem,1fr)_minmax(0,1.5fr)]" : ""}`
+      : `sm:grid-cols-[minmax(7rem,12rem)_minmax(0,1fr)] ${anyExample ? "lg:grid-cols-[minmax(6.5rem,9rem)_minmax(9rem,1fr)_minmax(0,1.5fr)]" : ""}`;
+  const meaningColStart = sideReading ? "sm:col-start-3" : "sm:col-start-2";
+  const exampleCls = sideReading ? "sm:col-start-3 lg:col-start-4 lg:row-start-1" : "sm:col-start-2 lg:col-start-3 lg:row-start-1";
   const mask = (on: boolean) => (on ? "true" : undefined);
   const blur = (hidden: boolean) => (hidden ? "select-none blur-sm" : "");
 
@@ -137,6 +144,7 @@ export default function VocabListView({
       <>
       <div className={`hidden gap-x-4 border-b border-token px-3 pb-1.5 text-caption font-medium uppercase tracking-wide sm:grid ${cols}`}>
         <span className={anyAudio ? "pl-9" : undefined}>{t("practice.fc.vl.word")}</span>
+        {sideReading && <span>{label}</span>}
         <span>{t("practice.fc.vl.meaning")}</span>
         {anyExample && <span className="hidden lg:inline">{t("practice.fc.vl.example")}</span>}
       </div>
@@ -144,7 +152,7 @@ export default function VocabListView({
       <ul className="space-y-1">
         {items.map((it) => {
           const playing = playingId === it.id;
-          const plan = rubyPlan(it.term, it.reading);
+          const plan = readingBelow ? rubyPlan(it.term, it.reading) : { syllables: null, lang: undefined };
           return (
             <li
               key={it.id}
@@ -190,13 +198,18 @@ export default function VocabListView({
                   >
                     {plan.syllables ? <RubyText text={it.term} syllables={plan.syllables} masked={!showReading} /> : it.term}
                   </span>
-                  {!plan.syllables && it.reading && (
+                  {readingBelow && !plan.syllables && it.reading && (
                     <span data-masked={mask(!showReading)} className={`py-latin block text-body text-muted ${blur(!showReading)}`}>
                       {it.reading}
                     </span>
                   )}
                 </div>
               </div>
+              {sideReading && (
+                <span data-masked={mask(!showReading && !!it.reading)} className={`text-body text-muted sm:pt-0.5 ${blur(!showReading)}`}>
+                  {it.reading}
+                </span>
+              )}
               <div className={`space-y-1 sm:pt-0.5 ${meaningColStart} ${!it.example && anyExample ? "lg:col-span-2" : ""}`}>
                 <p data-masked={mask(!showMeaning)} className={`text-body font-medium text-[rgb(var(--text))] ${blur(!showMeaning)}`}>
                   {it.meaning}

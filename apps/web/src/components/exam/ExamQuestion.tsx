@@ -3,7 +3,11 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
 import SafeHtml from "@/components/SafeHtml";
 import PromptAid from "@/components/language/PromptAid";
+import RubyText from "@/components/RubyText";
+import { parsePromptAid } from "@/lib/promptAid";
+import { promptSyllables, sliceByHan } from "@/lib/promptRuby";
 import { plainToRichHtml } from "@/lib/richText";
+import { splitSingleBlank } from "@/lib/inlineBlank";
 import { UNPLAYABLE_FOR_LEARNER } from "@/lib/examQuestionSupport";
 import { DragDropFillQuestion, MatchingQuestion, NumericalQuestion, OrderingQuestion } from "./ExamQuestionExtraTypes";
 
@@ -55,7 +59,15 @@ interface Props {
 }
 
 export default function ExamQuestion({ question, value, onChange, optionOrder, compact = false }: Props) {
-  const prompt = (
+  // Câu tự luận trong phiếu bài tập có đúng một chỗ trống trong đề: gõ thẳng vào chỗ trống, không có ô soạn thảo riêng.
+  const inlineBlank = useMemo(() => (question.type === "essay" && compact ? splitSingleBlank(question.prompt) : null), [question.type, question.prompt, compact]);
+  // Đề chữ Hán có pinyin ghép được: hiện pinyin dưới từng chữ (ruby), không lặp dòng pinyin riêng bên dưới.
+  const syl = useMemo(() => promptSyllables(question.prompt, parsePromptAid(question.config)?.reading), [question.prompt, question.config]);
+  const prompt = syl ? (
+    <p className="han-text ruby-line mb-2 text-lg" lang="zh-Hans">
+      <RubyText text={question.prompt} syllables={syl} />
+    </p>
+  ) : (
     <SafeHtml
       html={plainToRichHtml(question.prompt)}
       className="prose prose-sm mb-2 max-w-none dark:prose-invert"
@@ -96,7 +108,7 @@ export default function ExamQuestion({ question, value, onChange, optionOrder, c
       case "short_answer":
         return <ShortAnswerInput value={value} onChange={onChange} />;
       case "essay":
-        return <EssayInput value={value} onChange={onChange} compact={compact} />;
+        return inlineBlank ? null : <EssayInput value={value} onChange={onChange} compact={compact} />;
       case "ordering":
         return <OrderingQuestion questionId={question.id} config={question.config} value={value} onChange={onChange} />;
       case "matching":
@@ -126,14 +138,18 @@ export default function ExamQuestion({ question, value, onChange, optionOrder, c
           <p role="status" className="text-sm text-amber-800">{UNPLAYABLE_FOR_LEARNER}</p>
         );
     }
-  }, [question, value, onChange, optionOrder, compact]);
+  }, [question, value, onChange, optionOrder, compact, inlineBlank]);
 
   return (
     <div>
       {/* Kéo thả điền tự vẽ đề (kèm ô thả tại chỗ [[N]]), nên bỏ khối đề chung để không hiện ký hiệu [[N]] thô. */}
-      {question.type !== "drag_drop_fill" && prompt}
+      {inlineBlank ? (
+        <InlineBlankPrompt before={inlineBlank.before} after={inlineBlank.after} syllables={syl} value={value} onChange={onChange} />
+      ) : (
+        question.type !== "drag_drop_fill" && prompt
+      )}
       {/* Chú giải đề (phiên âm + bản dịch ẩn). Kéo thả điền tự vẽ đề nên chú giải đặt sau phần kéo thả. */}
-      {question.type !== "drag_drop_fill" && <PromptAid config={question.config} />}
+      {question.type !== "drag_drop_fill" && <PromptAid config={question.config} hideReading={!!syl} />}
       {inner}
       {question.type === "drag_drop_fill" && <PromptAid config={question.config} />}
     </div>
@@ -392,5 +408,27 @@ function SliderInput({
         )}
       </p>
     </div>
+  );
+}
+
+/** Đề có một chỗ trống: chữ trước + ô gõ + chữ sau trên một dòng. Đáp án là chữ điền vào chỗ trống (cùng dạng `{ text }` với ô soạn thảo). Mọi chữ là text node (React tự thoát HTML). */
+function InlineBlankPrompt({ before, after, syllables, value, onChange }: { before: string; after: string; syllables: string[] | null; value: AnswerValue; onChange: (v: AnswerValue) => void }) {
+  const text = value && "text" in value ? value.text : "";
+  const [sb, sa] = syllables ? sliceByHan(syllables, [before, after]) : [null, null];
+  return (
+    <p className={`mb-2 text-lg ${syllables ? "han-text ruby-line" : "leading-10"}`} lang={syllables ? "zh-Hans" : undefined} data-testid="inline-blank">
+      {sb ? <RubyText text={before} syllables={sb} /> : before}
+      <input
+        type="text"
+        value={text}
+        onChange={(e) => onChange({ text: e.target.value })}
+        aria-label="Điền vào chỗ trống"
+        autoComplete="off"
+        spellCheck={false}
+        size={Math.max(6, text.length + 2)}
+        className="exam-inline-blank"
+      />
+      {sa ? <RubyText text={after} syllables={sa} /> : after}
+    </p>
   );
 }

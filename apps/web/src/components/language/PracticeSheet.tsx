@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import SafeHtml from "@/components/SafeHtml";
 import PromptAid from "./PromptAid";
+import RubyText from "@/components/RubyText";
+import { parsePromptAid } from "@/lib/promptAid";
+import { promptSyllables, sliceByHan } from "@/lib/promptRuby";
 import { htmlToPlainText, looksLikeHtml, plainToRichHtml } from "@/lib/richText";
 import ExamQuestion, { isAnswerValueAnswered as isAnswered, type AnswerValue } from "@/components/exam/ExamQuestion";
 import {
@@ -143,6 +146,15 @@ function RowBody({
 }) {
   const kind = sheetKind(q);
   const text = plain(q.prompt);
+  const rubySyl = rowRubySyllables(q, shared);
+  // Đề chữ thường: pinyin dưới từng chữ Hán khi ghép được, không thì chữ thường như cũ.
+  const textNode = rubySyl ? (
+    <span className="han-text ruby-line" lang="zh-Hans">
+      <RubyText text={text} syllables={rubySyl} />
+    </span>
+  ) : (
+    <span>{text}</span>
+  );
 
   if (shared) {
     const opts = items(q.config.options);
@@ -161,7 +173,13 @@ function RowBody({
       </div>
     );
   }
-  const prompt = <SafeHtml html={plainToRichHtml(q.prompt)} className="prose prose-sm ps-prompt max-w-none dark:prose-invert" />;
+  const prompt = rubySyl ? (
+    <p className="han-text ruby-line ps-prompt" lang="zh-Hans">
+      <RubyText text={text} syllables={rubySyl} />
+    </p>
+  ) : (
+    <SafeHtml html={plainToRichHtml(q.prompt)} className="prose prose-sm ps-prompt max-w-none dark:prose-invert" />
+  );
 
   if (kind === "gap") {
     const blanks = Array.isArray(q.config.blanks) ? (q.config.blanks as Array<{ id: string }>) : [];
@@ -170,15 +188,23 @@ function RowBody({
     const txt = value && "text" in value ? value.text : "";
     const tr = splitTransform(text);
     const segs = splitBlankPrompt(tr ? tr.rest : text, count);
+    // Đề chữ Hán có pinyin ghép được: pinyin dưới từng chữ ở các đoạn chữ (ô gõ nằm giữa); không có thì như cũ.
+    const syl = rubySyl;
+    const textSegs = segs.filter((s) => s.kind === "text") as Array<{ kind: "text"; text: string }>;
+    const slices = syl ? sliceByHan(syl, textSegs.map((s) => s.text)) : null;
+    let ti = 0;
     const parts = segs.map((s, i) => {
-      if (s.kind === "text") return <span key={i}>{s.text}</span>;
+      if (s.kind === "text") {
+        const sl = slices?.[ti++];
+        return sl ? <RubyText key={i} text={s.text} syllables={sl} /> : <span key={i}>{s.text}</span>;
+      }
       const label = `Câu ${n}${count > 1 ? `, chỗ trống ${s.index + 1}` : ""}`;
       if (q.type === "short_answer" || blanks.length === 0) return <Blank key={i} value={txt} label={label} onChange={(v) => onChange({ text: v })} />;
       const b = blanks[s.index]!;
       return <Blank key={i} value={cur[b.id] ?? ""} label={label} onChange={(v) => onChange({ blanks: { ...cur, [b.id]: v } })} />;
     });
     return (
-      <div>
+      <div className={syl ? "han-text ruby-line" : undefined} lang={syl ? "zh-Hans" : undefined}>
         {tr ? (
           <>
             <span>{tr.head}</span> <span className="ps-key-inline">({tr.key})</span> <span className="ps-rewrite">{parts}</span>
@@ -201,7 +227,7 @@ function RowBody({
       </div>
     ) : (
       <div>
-        <span>{text} </span>
+        {textNode} 
         {control}
       </div>
     );
@@ -216,7 +242,7 @@ function RowBody({
     ];
     return (
       <div>
-        <span>{text} </span>
+        {textNode} 
         <InlineChoices options={opts} selected={cur} onPick={(id) => onChange({ correct: id as "true" | "false" | "notgiven" })} />
       </div>
     );
@@ -259,7 +285,7 @@ function RowBody({
     const raw = value && "value" in value ? String(value.value) : "";
     return (
       <div>
-        <span>{text} </span>
+        {textNode} 
         <Blank value={raw} inputMode="decimal" label={`Câu ${n}`} onChange={(v) => onChange({ value: v })} />
       </div>
     );
@@ -569,7 +595,7 @@ export default function PracticeSheet({
         <span className="ps-n">{n}</span>
         <div className="ps-body">
           <RowBody q={q} n={n} value={answers[qid] ?? null} onChange={(v) => onAnswer(qid, v)} shared={shared} />
-          {!shared && <PromptAid config={q.config} />}
+          {!shared && <PromptAid config={q.config} hideReading={!!rowRubySyllables(q)} />}
         </div>
         <span className="ps-mark">
           {graded && (
@@ -671,4 +697,19 @@ export default function PracticeSheet({
       </div>
     </div>
   );
+}
+
+
+/**
+ * Dạng câu nào hiện pinyin dưới từng chữ Hán của đề: chỉ các dạng vẽ đề bằng chữ thường (`prompt`/`text`) ở RowBody; đề có chèn ô chọn giữa câu ("____" + viên thuốc)
+ * hoặc dạng "viết lại câu (từ khoá)" giữ cách hiện cũ. Trả dãy âm tiết cho cả đề (đề chữ Hán, pinyin ghép được từng chữ), không thì null.
+ */
+function rowRubySyllables(q: SheetQuestion, shared = false): string[] | null {
+  if (shared) return null;
+  const kind = sheetKind(q);
+  if (!["gap", "choice-inline", "tfng", "numerical", "choice-list", "multi-list", "matching", "ordering"].includes(kind)) return null;
+  const text = plain(q.prompt);
+  if (kind === "gap" && splitTransform(text)) return null;
+  if (kind === "choice-inline" && splitBlankPrompt(text, 1).some((s) => s.kind === "blank") && /_{3,}/.test(text)) return null;
+  return promptSyllables(text, parsePromptAid(q.config)?.reading);
 }

@@ -9,15 +9,16 @@ import { useT } from "@/lib/i18n/client";
  * Chú giải dưới đề câu hỏi của khoá ngoại ngữ: phiên âm hiện sẵn (chữ nhỏ, màu nhạt); bản dịch ẩn, học viên bấm "Hiện bản dịch" mới thấy
  * (đề là một phần của bài đọc hiểu nên không dịch sẵn). Không có `promptAid` thì không vẽ gì.
  */
-export default function PromptAid({ config }: { config: unknown }) {
+export default function PromptAid({ config, hideReading = false }: { config: unknown; /** Đề đã hiện pinyin dưới từng chữ Hán: không lặp lại dòng pinyin. */ hideReading?: boolean }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const aid = parsePromptAid(config);
   if (!aid) return null;
   return (
     <div className="mb-2 space-y-1" data-testid="prompt-aid">
-      {aid.reading && (
-        <p className="text-sm text-muted" data-testid="prompt-aid-reading">
+      {aid.reading && !hideReading && (
+        // Pinyin nhỏ, màu nhạt, dính sát dưới đề (không tách thành một dòng to riêng).
+        <p className="py-latin -mt-0.5 text-[0.8125rem] leading-snug text-muted" data-testid="prompt-aid-reading">
           {aid.reading}
         </p>
       )}

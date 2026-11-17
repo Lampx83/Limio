@@ -2998,3 +2998,21 @@ textarea.fc-input {
   color: rgb(var(--brand));
   background: rgb(var(--surface));
 }
+
+/* Ô gõ ngay tại chỗ trống của câu tự luận trong phiếu bài tập (components/exam/ExamQuestion InlineBlankPrompt). */
+.exam-inline-blank {
+  margin: 0 0.2rem;
+  padding: 0 0.45rem;
+  border: 0;
+  border-bottom: 2px solid rgb(var(--brand));
+  border-radius: 0.3rem 0.3rem 0 0;
+  background: color-mix(in srgb, rgb(var(--brand)) 9%, transparent);
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  outline: none;
+}
+.exam-inline-blank:focus {
+  background: color-mix(in srgb, rgb(var(--brand)) 16%, transparent);
+  box-shadow: 0 2px 0 rgb(var(--brand));
+}

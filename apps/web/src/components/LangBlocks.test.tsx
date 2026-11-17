@@ -40,6 +40,14 @@ describe("VocabListView — G2.3.1 / 2.3.2 / 2.3.4 / 2.3.5 / 2.3.6", () => {
     expect(out).not.toContain("minmax(5rem,9rem)");
   });
 
+  it("khoá không phải chữ Hán (từ Latin + phiên âm IPA…) giữ nguyên bố cục cũ: cột phiên âm riêng, không dựng ruby", () => {
+    const out = render({ items: [{ id: "e1", term: "apple", reading: "/ˈæp.əl/", meaning: "quả táo" }] });
+    expect(out).toContain("minmax(5rem,9rem)"); // cột phiên âm
+    expect(out).not.toContain("<ruby");
+    expect(out).not.toContain("py-latin"); // phiên âm không bị đẩy xuống dưới từ
+    expect(text(out)).toContain("/ˈæp.əl/");
+  });
+
   it("phiên âm không ghép được từng chữ thì hiện thành dòng dưới từ, không ghép bừa", () => {
     const out = render({ items: [{ id: "z", term: "你好吗", reading: "nǐ hǎo", meaning: "khoẻ không" }] });
     expect(out).not.toContain("<ruby");
@@ -299,6 +307,27 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
     const out = render({ turns: [{ id: "x", speaker: "<i>A</i>", text: "<img src=x onerror=alert(1)>" }] });
     expect(out).not.toContain("<img");
     expect(out).not.toContain("<i>");
+  });
+});
+
+describe("LessonContent — giao diện bài HSK (hsk)", () => {
+  const items = [
+    { id: "i0", type: "richtext", orderIndex: 0, payload: { html: "<p>在家里</p>" } },
+    { id: "i1", type: "dialogue", orderIndex: 1, payload: { turns: [{ id: "t1", speaker: "A", text: "你好！" }] } },
+    { id: "i2", type: "richtext", orderIndex: 2, payload: { html: "<div>生词 TỪ MỚI</div><table><tr><th>词</th><th>Pinyin</th></tr></table>" } },
+    { id: "i3", type: "richtext", orderIndex: 3, payload: { html: "<h2>小语讲堂</h2><p>x</p>" } },
+  ];
+  it("hsk: tiêu đề mục 01–03 đúng chỗ, theo thứ tự có mặt; không bật thì không có", () => {
+    const on = renderToStaticMarkup(<LessonContent items={items as never} hsk />);
+    expect((on.match(/class="hsk-sn"/g) ?? []).length).toBe(3);
+    expect(on.indexOf("对话")).toBeLessThan(on.indexOf("生词"));
+    expect(on.indexOf("生词")).toBeLessThan(on.indexOf("小语讲堂"));
+    // Tiêu đề mục theo ngôn ngữ của khoá, không theo ngôn ngữ giao diện: mặc định tiếng Việt, hskLang="en" cho bản tiếng Anh.
+    expect(on).toContain("Hội thoại");
+    expect(on).toContain("Từ mới");
+    expect(renderToStaticMarkup(<LessonContent items={items as never} hsk hskLang="en" />)).toContain("Dialogue");
+    const off = renderToStaticMarkup(<LessonContent items={items as never} />);
+    expect(off).not.toContain("hsk-sn");
   });
 });
 

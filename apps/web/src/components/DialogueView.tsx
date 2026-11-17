@@ -10,6 +10,7 @@ import { getBrowserAudioPlayer } from "@/lib/exclusiveAudio";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
 import { createTurnSequencer } from "@/lib/turnSequencer";
 import { useExclusiveAudio } from "./useExclusiveAudio";
+import { hskT } from "./lesson/hskT";
 import { useT } from "@/lib/i18n/client";
 
 /** Màu avatar + tên theo thứ tự người nói. Chuỗi class viết đủ để Tailwind quét được. */
@@ -61,7 +62,13 @@ export default function DialogueView({
   turns,
   initialShowReading = true,
   initialShowTranslation = true,
+  hsk = false,
+  hskLang = "vi",
 }: {
+  /** Ngôn ngữ của khoá cho chuỗi giao diện HSK (thanh phát…), không theo ngôn ngữ trình duyệt. */
+  hskLang?: "vi" | "en";
+  /** Giao diện bài HSK: thanh phát hiện sẵn thay nút "Nghe cả đoạn", nút loa từng lượt chỉ hiện khi rê chuột. */
+  hsk?: boolean;
   title?: string;
   caption?: string;
   readingLabel?: string;
@@ -122,6 +129,7 @@ export default function DialogueView({
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ block: "nearest", behavior: reduce ? "auto" : "smooth" });
   }, [litId]);
+  const litIdx = litId ? turns.findIndex((x) => x.id === litId) : -1;
   const speakers: string[] = [];
   for (const t of turns) if (!speakers.includes(t.speaker)) speakers.push(t.speaker);
   const hasTranslation = turns.some((t) => !!t.translation);
@@ -129,14 +137,14 @@ export default function DialogueView({
   const readingName = readingLabel?.trim() || tx("learn.dialogue.reading");
 
   return (
-    <section className="space-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3">
+    <section className={hsk ? "hsk-dlg" : "space-y-2 rounded-xl border border-token bg-[rgb(var(--surface))] p-3"}>
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0">
           {title && <p className="text-body font-semibold">{title}</p>}
           {caption && <p className="text-meta">{caption}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          {hasTurnAudio && (
+          {hasTurnAudio && !hsk && (
             <button
               type="button"
               aria-pressed={sequenceOn}
@@ -171,6 +179,24 @@ export default function DialogueView({
           )}
         </div>
       </div>
+
+      {hsk && hasTurnAudio && !audioUrl && (
+        <div className="hsk-player" role="group" aria-label={tx("learn.dialogue.playAll")}>
+          <button
+            type="button"
+            className="hsk-player-btn"
+            aria-pressed={sequenceOn}
+            aria-label={hskT(hskLang, sequenceOn ? "learn.hsk.player.pause" : "learn.hsk.player.play")}
+            onClick={() => (sequenceOn ? sequencer?.stop() : sequencer?.start())}
+          >
+            {sequenceOn ? <Square size={15} aria-hidden /> : <Volume2 size={16} aria-hidden />}
+          </button>
+          <div className="hsk-player-track" aria-hidden>
+            <i style={{ width: `${sequenceOn && litIdx >= 0 ? ((litIdx + 1) / turns.length) * 100 : 0}%` }} />
+          </div>
+          <span className="hsk-player-time">{hskT(hskLang, "learn.hsk.player.turns", { n: sequenceOn && litIdx >= 0 ? litIdx + 1 : 0, total: turns.length })}</span>
+        </div>
+      )}
 
       {audioUrl && (
         <AudioLessonPlayer
@@ -209,6 +235,7 @@ export default function DialogueView({
               key={t.id}
               id={turnDomId(t.id)}
               data-speaker={speakerIdx}
+              data-tone={hsk ? speakerIdx % 2 : undefined}
               data-playing={playing ? "true" : undefined}
               onClick={
                 clickable
@@ -231,15 +258,15 @@ export default function DialogueView({
               }
               // Hàng gọn, không khung: mobile xếp dọc (lời → phiên âm → dịch); từ md
               // bản dịch sang cột phải cùng hàng để mỗi lượt chỉ cao bằng 2 dòng.
-              className={`grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 rounded-lg px-2 py-2 transition-colors md:grid-cols-[1.75rem_minmax(0,1.15fr)_minmax(0,1fr)] ${
+              className={`${hsk ? "hsk-turn " : ""}grid grid-cols-[1.75rem_minmax(0,1fr)] items-start gap-x-3 gap-y-0.5 rounded-lg px-2 py-2 transition-colors md:grid-cols-[1.75rem_minmax(0,1.15fr)_minmax(0,1fr)] ${
                 playing ? "bg-brand-soft ring-2 ring-brand-300" : ""
               } ${clickable ? "cursor-pointer hover:bg-[rgb(var(--surface-muted))/0.5]" : ""}`}
             >
               <span
                 aria-hidden
                 title={t.speaker}
-                className={`row-span-2 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold md:row-span-1 ${
-                  tone.avatar
+                className={`${hsk ? "hsk-av " : ""}row-span-2 mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold md:row-span-1 ${
+                  hsk ? "" : tone.avatar
                 } ${playing ? "ring-2 ring-brand-400" : ""}`}
               >
                 {initial}
@@ -256,7 +283,7 @@ export default function DialogueView({
                         sequencer?.cancel(); // nút riêng của lượt: người học tự điều khiển
                         toggle(t.id, t.audioUrl!);
                       }}
-                      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                      className={`${hsk ? "hsk-dlg-loa " : ""}inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
                         ownPlaying
                           ? "border-brand-400 bg-brand-100 text-brand-800"
                           : "border-token bg-[rgb(var(--surface))] hover:bg-brand-soft"
@@ -268,11 +295,11 @@ export default function DialogueView({
                   {!t.audioUrl && hasTurnAudio && <span className="h-7 w-7 shrink-0" aria-hidden />}
                   <div className="min-w-0">
                     <HanFontLoader lang={plan.lang} />
-                    {showName && <p className={`text-caption font-semibold ${tone.name}`}>{t.speaker}</p>}
+                    {showName && <p className={`${hsk ? "hsk-name " : ""}text-caption font-semibold ${hsk ? "" : tone.name}`}>{t.speaker}</p>}
                     {/* Pinyin ghép được từng chữ thì hiện thẳng hàng dưới chữ Hán; không thì để ở dòng riêng bên dưới. */}
                     <p
                       lang={plan.lang}
-                      className={`text-xl font-medium ${plan.syllables ? "ruby-line" : "leading-snug"} ${hanTextProps(plan.lang).className} ${SOURCE_TEXT_COLOR}`}
+                      className={`${hsk ? "hsk-han " : ""}text-xl font-medium ${plan.syllables ? "ruby-line" : "leading-snug"} ${hanTextProps(plan.lang).className} ${hsk ? "" : SOURCE_TEXT_COLOR}`}
                     >
                       {plan.syllables ? <RubyText text={t.text} syllables={plan.syllables} masked={!showReading} /> : t.text}
                     </p>

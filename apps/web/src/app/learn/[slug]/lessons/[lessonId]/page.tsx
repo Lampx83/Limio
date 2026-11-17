@@ -52,6 +52,9 @@ import PassageView from "@/components/exam/PassageView";
 import PracticeBlockNotice from "@/components/language/PracticeBlockNotice";
 import LessonContent from "@/components/LessonContent";
 import HanFontLoader from "@/components/HanFontLoader";
+import HskHero from "@/components/lesson/HskHero";
+import HskSectionHead from "@/components/lesson/HskSectionHead";
+import { HSK_DECOR_SLUGS_KEY, HSK_SECTIONS, hskDecorLang, isHskDecorCourse, planHskSections } from "@/lib/hskLesson";
 import PracticeTabs from "@/components/lesson/PracticeTabs";
 import StatementTab from "@/components/lesson/StatementTab";
 import LessonRichText from "@/components/lesson/LessonRichText";
@@ -780,6 +783,10 @@ export default async function LessonPage({
     hasDeckCover: !!deckCover,
   });
   const languageSkin = frameOn && languageMode;
+  // Giao diện bài HSK (đầu bài có con dấu, mục đánh số…): chỉ khoá nằm trong danh sách slug của cài đặt hệ thống, và chỉ trong khung bài học ngoại ngữ.
+  const hskSlugsSetting = await getSiteSetting(HSK_DECOR_SLUGS_KEY);
+  const hskDecor = !!languageSkin && isHskDecorCourse(params.slug, hskSlugsSetting);
+  const hskLang = hskDecorLang(params.slug, hskSlugsSetting);
   const lessonFrame = frameOn
     ? buildLessonFrame(progress, lesson.id, await loadLessonDurations(progress.modules.flatMap((m) => m.lessons.map((l) => l.id))))
     : null;
@@ -817,7 +824,7 @@ export default async function LessonPage({
         try {
           const embed = await getPracticePreview(userId!, examId);
           practiceEmbeds.set(it.id, { embed, preview: true, title: p.title });
-          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
+          practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} preview sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor && !hskDecor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
         } catch (e) {
           if (!(e instanceof ExamError)) throw e;
           practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;
@@ -839,7 +846,7 @@ export default async function LessonPage({
       try {
         const embed = await getPracticeForEmbed(userId, examId);
         practiceEmbeds.set(it.id, { embed, preview: false, title: p.title });
-        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
+        practiceBlocks[it.id] = <LessonPractice slug={params.slug} embed={embed} blockTitle={p.title} lessonId={lesson.id} sheet={languageMode} accent={lesson.module.course.themeColor} skillLabel={lesson.languageSkill && !lesson.module.course.themeColor && !hskDecor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null} />;
       } catch (e) {
         if (!(e instanceof ExamError)) throw e;
         practiceBlocks[it.id] = <PracticeBlockNotice title={title} message={t("learn.lesson.practiceUnavailable")} />;
@@ -892,7 +899,7 @@ export default async function LessonPage({
       lead={lead}
       sheet={languageMode}
       accent={lesson.module.course.themeColor}
-      skillLabel={lesson.languageSkill && !lesson.module.course.themeColor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
+      skillLabel={lesson.languageSkill && !lesson.module.course.themeColor && !hskDecor ? LANGUAGE_SKILL_LABEL[lesson.languageSkill] : null}
     />
   );
   // Một exercise có nhiều đoạn (5A: Agreeing / Disagreeing / Giving your opinion) hiện nối nhau trong cùng tab bài tập, mỗi đoạn một khối có tên đoạn,
@@ -910,6 +917,7 @@ export default async function LessonPage({
   };
   // Phần lý thuyết là MỘT thẻ (AC8) khi toàn chữ và không dùng bảng màu riêng của bài; còn không giữ cách hiện cũ.
   const theoryAsOneCard =
+    !hskDecor &&
     !!sections &&
     sections.theory.length > 0 &&
     sections.theory.every((it) => it.type === "richtext" && typeof (it.payload as { html?: unknown } | null)?.html === "string" && !(it.payload as { look?: unknown }).look);
@@ -1064,7 +1072,7 @@ export default async function LessonPage({
       // hẳn bài có mục lục, chuyển bài qua lại thì độ rộng trang nhảy.
       // Trong khung 3 cột, khung ngoài đã lo lề: bỏ max-w-6xl + px-6 (chúng làm cột giữa hẹp thêm ~3rem) và dùng hết bề ngang cột giữa
       // (không căn giữa/giới hạn: thầy thấy khoảng trắng hai bên thừa).
-      className={`${lessonFrame ? "w-full py-6" : "mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"} lesson-han`}
+      className={`${lessonFrame ? "w-full py-6" : "mx-auto w-full max-w-6xl px-4 py-6 lg:px-6"}${lesson.module.course.language === "zh" ? " lesson-han" : ""}${hskDecor ? " lesson-hsk" : ""}`}
     >
       {lesson.module.course.language === "zh" && <HanFontLoader lang="zh-Hans" />}
       {stageMode && <StageListener lessonId={lesson.id} />}
@@ -1118,8 +1126,26 @@ export default async function LessonPage({
         hơn là thả nổi ở mép trên trang. Thanh tiến độ khoá khép panel lại.
       */}
       {!titleInTheory && (
-      <header className={`rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card ${lessonFrame ? "mt-2 p-3 sm:p-4" : "mt-3 p-4 sm:p-5"}`}>
-        {lessonFrame ? (
+      <header className={hskDecor ? "mt-2" : `rounded-2xl border border-token bg-[rgb(var(--surface))] shadow-card ${lessonFrame ? "mt-2 p-3 sm:p-4" : "mt-3 p-4 sm:p-5"}`}>
+        {hskDecor && lessonFrame ? (
+          <HskHero
+            unit={lessonFrame.unitTitle}
+            title={lesson.title}
+            description={descriptionShown ? htmlToPlainText(lesson.description!) : null}
+            action={
+              !previewMode && canEdit ? (
+                <Link
+                  href={`/instructor/courses/${lesson.module.course.id}?tab=content&lesson=${lesson.id}`}
+                  title={t("learn.lesson.backToEditorTitle")}
+                  className="relative inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-brand-200 bg-brand-soft px-3 py-1 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-100"
+                >
+                  <PenLine className="h-4 w-4" aria-hidden />
+                  {t("learn.lesson.backToEditor")}
+                </Link>
+              ) : null
+            }
+          />
+        ) : lessonFrame ? (
           // Trong khung 3 cột: một hàng gọn — chip kỹ năng + tên bài bên trái, nút "Về soạn nội dung" của giảng viên bên phải. Tên module đã có
           // ở đường dẫn phía trên nên không lặp lại. Tiêu đề cỡ vừa (2xl) vì cạnh còn thanh bài, nội dung và panel.
           lessonTitleRow
@@ -1131,7 +1157,7 @@ export default async function LessonPage({
             <h1 className="h-display mt-2 text-3xl font-bold sm:text-4xl">{lesson.title}</h1>
           </>
         )}
-        {lesson.description &&
+        {!hskDecor && lesson.description &&
           // Trong khung, mô tả trùng tên unit/module (vd. "Lifestyle") chỉ lặp lại thanh bài và đường dẫn nên bỏ.
           !(
             lessonFrame &&
@@ -1287,6 +1313,8 @@ export default async function LessonPage({
           deckCover={deckCover}
           blocks={{ ...practiceBlocks, ...examRefBlocks }}
           numberTranscripts={languageSkin}
+          hsk={hskDecor}
+          hskLang={hskLang}
         />
           {dedupeHoisted(hoistedPassages).length > 0 && (
             <div className="mt-6 space-y-6" data-testid="lesson-reading">
@@ -1299,7 +1327,12 @@ export default async function LessonPage({
           )}
           </>
         )}
-        {practiceTabItems.length > 0 && <PracticeTabs tabs={practiceTabItems} />}
+        {practiceTabItems.length > 0 && (
+          <>
+            {hskDecor && <HskSectionHead no={planHskSections(sections ? sections.theory : shownItems).count + 1} section={HSK_SECTIONS.practice} tone="pink" lang={hskLang} />}
+            <PracticeTabs tabs={practiceTabItems} hsk={hskDecor} />
+          </>
+        )}
         </div>
         <div
           id="lesson-annotation-gutter"

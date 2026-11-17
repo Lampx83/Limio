@@ -34,3 +34,28 @@ describe("EssayInput gọn — chiều cao tối thiểu", () => {
     expect(parseInt(ta.style.height, 10)).toBeGreaterThanOrEqual(72);
   });
 });
+
+describe("câu tự luận có một chỗ trống trong đề — gõ thẳng vào chỗ trống", () => {
+  const q = (prompt: string) => ({ id: "q2", type: "essay", prompt, points: 1, config: {} });
+  it("phiếu bài tập (gọn): có ô gõ tại chỗ trống, không có ô soạn thảo riêng; gõ thì đáp án là chữ điền vào", async () => {
+    const onChange = vi.fn();
+    await act(async () => {
+      root.render(<ExamQuestion question={q("你______，好好休息一下吧。")} value={{ text: "看上去很累" }} onChange={onChange} compact />);
+    });
+    expect(host.querySelector("textarea")).toBeNull();
+    const input = host.querySelector<HTMLInputElement>('[data-testid="inline-blank"] input')!;
+    expect(input.value).toBe("看上去很累");
+    expect(host.querySelector('[data-testid="inline-blank"]')!.textContent).toBe("你，好好休息一下吧。"); // chữ đề giữ nguyên, ô nằm giữa
+  });
+  it("không gọn (đề thi) hoặc nhiều chỗ trống: vẫn là ô soạn thảo", async () => {
+    await act(async () => {
+      root.render(<ExamQuestion question={q("你______，好好休息一下吧。")} value={null} onChange={() => {}} />);
+    });
+    expect(host.querySelector("textarea")).not.toBeNull();
+    expect(host.querySelector('[data-testid="inline-blank"]')).toBeNull();
+    await act(async () => {
+      root.render(<ExamQuestion question={q("A ______ B ______ C")} value={null} onChange={() => {}} compact />);
+    });
+    expect(host.querySelector("textarea")).not.toBeNull();
+  });
+});

@@ -1,0 +1,718 @@
+/*
+ * Giao diện bài học HSK: xanh chanh Limio (--brand) là màu chính, hồng (pink-500, màu chữ "io" ở logo) làm điểm nhấn.
+ * Chỉ có tác dụng trong .lesson-hsk (khoá nằm trong danh sách `lesson_decor.hsk_slugs`, xem lib/hskLesson.ts).
+ * Mọi màu lấy từ biến hệ thống nên tự theo chế độ tối; màu chính tự theo --brand của khoá (khoá đặt màu bộ sách thì ra màu đó).
+ */
+.lesson-hsk {
+  --hk-pink: 236 72 153;
+  --hk-pink-deep: 190 24 93;
+  --hk-soft: color-mix(in srgb, rgb(var(--brand)) 11%, rgb(var(--surface)));
+  --hk-soft2: color-mix(in srgb, rgb(var(--brand)) 20%, rgb(var(--surface)));
+  --hk-line: color-mix(in srgb, rgb(var(--brand)) 32%, rgb(var(--border)));
+  --hk-deep: color-mix(in srgb, rgb(var(--brand)) 72%, #000);
+  --hk-pink-soft: color-mix(in srgb, rgb(var(--hk-pink)) 9%, rgb(var(--surface)));
+  --hk-pink-line: color-mix(in srgb, rgb(var(--hk-pink)) 38%, rgb(var(--border)));
+  --hk-han: "LXGW WenKai", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
+}
+.dark .lesson-hsk {
+  --hk-pink-deep: 244 114 182;
+  --hk-deep: color-mix(in srgb, rgb(var(--brand)) 75%, #fff);
+}
+
+/* ---------- Đầu bài ---------- */
+.lesson-hsk .hsk-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--hk-line);
+  border-radius: 1.5rem;
+  padding: 1.5rem 1.5rem 1.25rem;
+  background: linear-gradient(135deg, var(--hk-soft2) 0%, var(--hk-soft) 55%, var(--hk-pink-soft) 100%);
+  box-shadow: none;
+}
+.lesson-hsk .hsk-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 92% 18%, rgb(var(--hk-pink) / 0.14) 0 70px, transparent 71px),
+    radial-gradient(circle at 100% 60%, rgb(var(--brand) / 0.1) 0 120px, transparent 121px);
+}
+.lesson-hsk .hsk-hero::after {
+  content: attr(data-wm);
+  position: absolute;
+  right: 1.1rem;
+  bottom: -2.1rem;
+  font: 400 190px/1 var(--hk-han);
+  color: rgb(var(--hk-pink) / 0.09);
+  pointer-events: none;
+}
+.lesson-hsk .hsk-hero-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+}
+.lesson-hsk .hsk-seal {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 4.75rem;
+  height: 4.75rem;
+  border-radius: 1rem;
+  color: #fff;
+  background: rgb(var(--brand));
+  box-shadow: 0 6px 0 var(--hk-deep), 0 12px 24px rgb(var(--brand) / 0.28);
+  transform: rotate(-4deg);
+  font-family: var(--hk-han);
+  line-height: 1.1;
+}
+.lesson-hsk .hsk-seal b {
+  font-weight: 400;
+  font-size: 1.85rem;
+}
+.lesson-hsk .hsk-seal[data-long="true"] b {
+  font-size: 1.15rem;
+}
+.lesson-hsk .hsk-seal i {
+  font-style: normal;
+  font-size: 1.6rem;
+  margin-top: 0.1rem;
+}
+.lesson-hsk .hsk-kicker {
+  margin: 0 0 0.15rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--hk-deep);
+}
+.lesson-hsk .hsk-title {
+  margin: 0 0 0.4rem;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+.lesson-hsk .hsk-desc {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-hz {
+  font-family: var(--hk-han);
+  font-size: 1.12em;
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-hero-tools {
+  position: relative;
+  margin-top: 0.9rem;
+}
+@media (max-width: 640px) {
+  .lesson-hsk .hsk-hero {
+    padding: 1.15rem 1.1rem 1rem;
+  }
+  .lesson-hsk .hsk-seal {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+  .lesson-hsk .hsk-seal b {
+    font-size: 1.45rem;
+  }
+  .lesson-hsk .hsk-seal i {
+    font-size: 1.25rem;
+  }
+}
+
+/* ---------- Tiêu đề mục 01–04 ---------- */
+.lesson-hsk .hsk-sh {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 2.25rem 0 0.9rem;
+}
+.lesson-hsk .hsk-sn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.875rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(var(--brand));
+}
+.lesson-hsk .hsk-sn[data-tone="pink"] {
+  background: rgb(var(--hk-pink));
+}
+.lesson-hsk .hsk-sh h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.lesson-hsk .hsk-sh .zh {
+  margin-right: 0.5rem;
+  font: 400 1.375rem var(--hk-han);
+}
+
+/* ---------- Khối văn bản không khung (khối tiêu đề, từ mới, ngữ pháp) ---------- */
+.lesson-hsk .hsk-plain {
+  border-color: transparent;
+  background: transparent;
+  padding: 0;
+}
+.lesson-hsk .hsk-grammar {
+  border: 1px solid var(--hk-line);
+  border-radius: 1.4rem;
+  background: var(--hk-soft);
+  padding: 1.25rem 1.4rem;
+}
+.lesson-hsk .hsk-grammar h2 {
+  display: none; /* tên mục đã có ở tiêu đề mục 03 */
+}
+
+/* ---------- Từ mới: lưới thẻ + thanh audio ---------- */
+/* Khung viền bọc ngoài là khung nhập sẵn từ sách (style viết cứng trong HTML): bỏ, vì mục đã có tiêu đề riêng. */
+.lesson-hsk .hsk-vocab > div[style*="border"] {
+  border: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+.lesson-hsk .hsk-vocab audio {
+  display: block;
+  width: 100%;
+  height: 2.75rem;
+  margin: 0 0 0.9rem;
+  border-radius: 999px;
+  accent-color: rgb(var(--brand));
+}
+.lesson-hsk .hsk-words {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 0.75rem;
+}
+.lesson-hsk .hsk-wc {
+  margin: 0;
+  padding: 0.75rem 0.9rem 0.9rem;
+  border: 1px solid rgb(var(--border));
+  border-top: 3px solid var(--hk-pink-line);
+  border-radius: 1rem;
+  background: rgb(var(--surface));
+}
+.lesson-hsk .hsk-pos {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgb(var(--hk-pink-deep));
+  background: var(--hk-pink-soft);
+}
+.lesson-hsk .hsk-wc-han {
+  margin: 0.45rem 0 0.3rem;
+  font: 400 2.1rem/1.3 var(--hk-han);
+}
+.lesson-hsk .hsk-wc-han .rb-line {
+  font-size: 2.1rem;
+}
+.lesson-hsk .hsk-wc-mean {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ---------- Hội thoại ---------- */
+.lesson-hsk .hsk-player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 0.9rem;
+  padding: 0.5rem 1rem 0.5rem 0.5rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 999px;
+  background: rgb(var(--surface));
+}
+.lesson-hsk .hsk-player-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(var(--brand));
+  box-shadow: 0 3px 0 var(--hk-deep);
+  cursor: pointer;
+}
+.lesson-hsk .hsk-player-track {
+  flex: 1;
+  height: 0.375rem;
+  border-radius: 0.2rem;
+  background: color-mix(in srgb, rgb(var(--brand)) 14%, rgb(var(--border)));
+  overflow: hidden;
+}
+.lesson-hsk .hsk-player-track i {
+  display: block;
+  height: 100%;
+  border-radius: 0.2rem;
+  background: rgb(var(--brand));
+  transition: width 0.25s;
+}
+.lesson-hsk .hsk-player-time {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-dlg-loa {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.lesson-hsk li:hover > div .hsk-dlg-loa,
+.lesson-hsk .hsk-dlg-loa[aria-pressed="true"],
+.lesson-hsk .hsk-dlg-loa:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .lesson-hsk .hsk-dlg-loa {
+    opacity: 1;
+  }
+}
+
+/* ---------- Luyện tập: lưới thẻ hoạt động ---------- */
+.lesson-hsk .hsk-tablist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+}
+.lesson-hsk .hsk-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.75rem 0.9rem 0.85rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 1rem;
+  background: rgb(var(--surface));
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s;
+}
+.lesson-hsk .hsk-tab:hover {
+  border-color: var(--hk-pink-line);
+}
+.lesson-hsk .hsk-tab[aria-selected="true"] {
+  border-color: var(--hk-pink-line);
+  background: var(--hk-pink-soft);
+  box-shadow: inset 0 -3px 0 rgb(var(--hk-pink));
+}
+.lesson-hsk .hsk-tab-ic {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.8rem;
+  color: rgb(var(--hk-pink-deep));
+  background: var(--hk-pink-soft);
+}
+.lesson-hsk .hsk-tab[aria-selected="true"] .hsk-tab-ic {
+  color: #fff;
+  background: rgb(var(--hk-pink));
+}
+.lesson-hsk .hsk-tab-t {
+  display: block;
+  /* Tên hoạt động trộn chữ Hán và tiếng Việt ("课文1: Nói"): KHÔNG đặt font chữ Hán ở đây, để tiếng Việt dùng font Inter của trang;
+     chữ Hán tự rơi sang LXGW theo bộ font của .lesson-han. */
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.lesson-hsk .hsk-tab small {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.75rem;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-tab-bar {
+  position: absolute;
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: 0.4rem;
+  height: 3px;
+  border-radius: 2px;
+  background: color-mix(in srgb, rgb(var(--hk-pink)) 14%, rgb(var(--border)));
+}
+.lesson-hsk .hsk-tab-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: rgb(var(--hk-pink));
+}
+
+/* ---------- Hoạt động trên lớp: nhãn hoạt động + thẻ tình huống ---------- */
+.lesson-hsk .hsk-act-tag {
+  margin: 0 0 0.6rem;
+}
+.lesson-hsk .hsk-act-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.3rem 0.95rem;
+  border: 1px solid var(--hk-pink-line);
+  border-radius: 999px;
+  background: var(--hk-pink-soft);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-act-pill .hz {
+  font: 400 1.125rem var(--hk-han);
+}
+.lesson-hsk .hsk-scn {
+  margin: 0.75rem 0;
+  padding: 1rem 1.15rem 1.05rem;
+  border: 1px solid rgb(var(--border));
+  border-left: 5px solid rgb(var(--hk-pink));
+  border-radius: 1rem;
+  background: rgb(var(--surface));
+}
+.lesson-hsk .hsk-scn-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin: 0 0 0.5rem;
+}
+.lesson-hsk .hsk-scn-title .hz {
+  font: 400 1.3rem/1.3 var(--hk-han);
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-scn-title .vi {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-scn-han {
+  margin: 0 0 0.4rem;
+  font: 400 1.2rem/1.9 var(--hk-han);
+}
+.lesson-hsk .hsk-scn-vi {
+  margin: 0;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-role {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0 0.25rem;
+  border-radius: 50%;
+  font: 700 0.8rem/1 var(--font-sans, inherit);
+  color: #fff;
+  background: rgb(var(--brand));
+  vertical-align: 0.1em;
+}
+.lesson-hsk .hsk-role[data-r="B"] {
+  background: rgb(var(--hk-pink));
+}
+
+/* ---------- Hội thoại: khung, dải nhắc, hàng thoại ---------- */
+.lesson-hsk .hsk-intro-brief {
+  margin: 0 0 0.9rem;
+}
+.lesson-hsk .hsk-scene {
+  margin: 0 0 0.6rem;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-brief {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0 0 0.6rem;
+  padding: 0.65rem 0.95rem;
+  border-radius: 0.9rem;
+  background: var(--hk-soft2);
+  color: var(--hk-deep);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+.lesson-hsk .hsk-brief::before {
+  content: "";
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 14v-2a9 9 0 0 1 18 0v2'/><path d='M21 15a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2zM3 15a2 2 0 0 0 2 2h1v-5H5a2 2 0 0 0-2 2z'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M3 14v-2a9 9 0 0 1 18 0v2'/><path d='M21 15a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2zM3 15a2 2 0 0 0 2 2h1v-5H5a2 2 0 0 0-2 2z'/></svg>") center / contain no-repeat;
+}
+.lesson-hsk .hsk-brief span {
+  font-size: 1.1em !important;
+}
+.lesson-hsk .hsk-dlg {
+  padding: 0.4rem;
+  border: 1px solid rgb(var(--border));
+  border-radius: 1.25rem;
+  background: rgb(var(--surface));
+}
+.lesson-hsk .hsk-dlg > ul {
+  border: 0;
+}
+.lesson-hsk .hsk-dlg ul > li.hsk-turn {
+  padding: 1rem 0.75rem;
+  border-radius: 0.9rem;
+}
+.lesson-hsk .hsk-dlg ul > li.hsk-turn + li.hsk-turn {
+  border-top: 1px dashed rgb(var(--border));
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+.lesson-hsk .hsk-dlg ul > li.hsk-turn:hover {
+  background: var(--hk-soft);
+}
+.lesson-hsk .hsk-dlg ul > li.hsk-turn[data-playing="true"] {
+  background: var(--hk-soft2);
+  box-shadow: none;
+}
+.lesson-hsk .hsk-av {
+  width: 1.9rem;
+  height: 1.9rem;
+  color: #fff;
+  font: 400 1rem var(--hk-han);
+  background: rgb(var(--brand));
+}
+.lesson-hsk li[data-tone="1"] .hsk-av {
+  background: rgb(var(--hk-pink));
+}
+.lesson-hsk .hsk-name {
+  margin: 0 0 0.1rem;
+  font-size: 0.78rem;
+  color: var(--hk-deep);
+}
+.lesson-hsk li[data-tone="1"] .hsk-name {
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-han {
+  color: var(--hk-deep);
+}
+.lesson-hsk li[data-tone="1"] .hsk-han {
+  color: rgb(var(--text));
+}
+
+/* ---------- Ngữ pháp: cụm khoá, giải thích, ví dụ ---------- */
+.lesson-hsk .hsk-gp + .hsk-gp {
+  margin-top: 1.4rem;
+  padding-top: 1.2rem;
+  border-top: 1px dashed var(--hk-line);
+}
+.lesson-hsk .hsk-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.85rem;
+}
+.lesson-hsk .hsk-pill {
+  padding: 0.3rem 1rem 0.35rem;
+  border: 2px solid rgb(var(--hk-pink));
+  border-radius: 0.9rem;
+  background: rgb(var(--surface));
+  font: 400 1.6rem/1.3 var(--hk-han);
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-eq {
+  font-weight: 700;
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-gp-title {
+  margin: 0 0 0.7rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.lesson-hsk .hsk-gx {
+  margin: 0 0 0.5rem;
+}
+.lesson-hsk .hsk-exs {
+  list-style: none;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.lesson-hsk .hsk-ex {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.9rem;
+  background: rgb(var(--surface));
+}
+.lesson-hsk .hsk-ex .n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  margin-top: 0.2rem;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgb(var(--brand));
+}
+.lesson-hsk .hsk-ex .han {
+  font: 400 1.3rem/1.5 var(--hk-han);
+}
+.lesson-hsk .hsk-try {
+  margin: 0.9rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--hk-line);
+  color: var(--hk-deep);
+  font-weight: 500;
+}
+
+/* ---------- Ngữ pháp: khối Nghĩa / Cách dùng, ví dụ có pinyin và dịch, lưu ý ---------- */
+.lesson-hsk .hsk-pill {
+  line-height: 1.25;
+}
+.lesson-hsk .hsk-pill-py,
+.lesson-hsk .hsk-py {
+  display: block;
+  font: 400 0.85rem/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-gexp {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.2rem 0 0.9rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 0.95rem;
+  background: color-mix(in srgb, rgb(var(--surface)) 78%, transparent);
+}
+.lesson-hsk .hsk-gr {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+}
+.lesson-hsk .hsk-gr b {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hk-deep);
+}
+.lesson-hsk .hsk-gr p {
+  margin: 0;
+  font-size: 0.97rem;
+  line-height: 1.55;
+}
+.lesson-hsk .hsk-gr .hz {
+  font-family: var(--hk-han);
+  font-size: 1.12em;
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-exb {
+  min-width: 0;
+}
+.lesson-hsk .hsk-exb .han {
+  margin: 0;
+  font: 400 1.3rem/1.5 var(--hk-han);
+}
+.lesson-hsk .hsk-exb .han.ruby-line {
+  line-height: 1.3;
+}
+.lesson-hsk .hsk-exb .vi2 {
+  margin: 0.1rem 0 0;
+  font-size: 0.95rem;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-gnote {
+  margin: 0.85rem 0 0;
+  padding: 0.6rem 0.9rem;
+  border-radius: 0.8rem;
+  background: rgb(var(--surface));
+  font-size: 0.9rem;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .hsk-gnote b {
+  margin-right: 0.6rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(var(--hk-pink-deep));
+}
+.lesson-hsk .hsk-gnote .hz {
+  font-family: var(--hk-han);
+  color: rgb(var(--hk-pink-deep));
+}
+@media (max-width: 640px) {
+  .lesson-hsk .hsk-gr {
+    grid-template-columns: 1fr;
+    gap: 0.1rem;
+  }
+}
+
+/* ---------- Phiếu bài tập (Nghe, điền chỗ trống, tự luận): chữ Hán to và có màu, số câu, viên thuốc lựa chọn ---------- */
+.lesson-hsk [data-testid="lesson-practice"] .han-text {
+  font-size: 1.6rem;
+  line-height: 1.35;
+  color: var(--hk-deep);
+}
+.lesson-hsk [data-testid="lesson-practice"] .han-text ruby.ruby-han > rt {
+  font-size: 0.8125rem;
+  color: rgb(var(--text-muted));
+}
+.lesson-hsk .practice-sheet .ps-row {
+  grid-template-columns: 1.75rem minmax(0, 1fr) 1.25rem;
+  column-gap: 0.75rem;
+  align-items: start;
+  padding: 0.6rem 0;
+}
+.lesson-hsk .practice-sheet .ps-n {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-top: 0.3rem;
+  border-radius: 50%;
+  background: var(--hk-soft2);
+  color: var(--hk-deep);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.lesson-hsk .practice-sheet .ps-alt {
+  min-height: 2.5rem;
+  padding: 0 1.05rem;
+  border: 1.5px solid var(--hk-line);
+  background: rgb(var(--surface));
+  font: 400 1.3rem/2.3rem var(--hk-han);
+  transition: border-color 0.15s, background 0.15s;
+}
+.lesson-hsk .practice-sheet .ps-alt:hover {
+  border-color: var(--hk-pink-line);
+  background: var(--hk-pink-soft);
+}
+.lesson-hsk .practice-sheet .ps-alt[aria-pressed="true"] {
+  border-color: rgb(var(--hk-pink));
+  background: var(--hk-pink-soft);
+  color: rgb(var(--hk-pink-deep));
+  font-weight: 400;
+}
+.lesson-hsk .practice-sheet .rp-link,
+.lesson-hsk [data-testid="lesson-practice"] .rp-link {
+  color: rgb(var(--hk-pink-deep));
+}

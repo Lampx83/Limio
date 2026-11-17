@@ -74,7 +74,12 @@ export default function VocabFlashcards({
   const termFace = (
     <>
       <p className={`text-3xl font-semibold leading-snug sm:text-4xl ${SOURCE_TEXT_COLOR}`}>{item.term}</p>
-      {showReading && item.reading && <p className="mt-2 text-lg text-muted">{item.reading}</p>}
+      {/* Tắt phiên âm = làm mờ, không gỡ khỏi thẻ: chữ của từ giữ nguyên vị trí, người học vẫn thấy chỗ đó có phiên âm. */}
+      {item.reading && (
+        <p data-masked={showReading ? undefined : "true"} className={`mt-2 text-lg text-muted ${showReading ? "" : "select-none blur-sm"}`}>
+          {item.reading}
+        </p>
+      )}
     </>
   );
   // Ghi chú và ví dụ đi cùng nhau ở mặt sau: ví dụ chứa chính từ cần đoán nên không bao giờ nằm ở mặt trước.
@@ -85,7 +90,11 @@ export default function VocabFlashcards({
         <div className="mt-4 w-full max-w-md border-l-2 border-brand-300 bg-brand-soft/60 py-1.5 pl-3 pr-2 text-left">
           <p className="text-body">
             <span className={SOURCE_TEXT_COLOR}>{item.example}</span>
-            {showReading && item.exampleReading && <span className="ml-2 text-meta text-muted">{item.exampleReading}</span>}
+            {item.exampleReading && (
+              <span data-masked={showReading ? undefined : "true"} className={`ml-2 text-meta text-muted ${showReading ? "" : "select-none blur-sm"}`}>
+                {item.exampleReading}
+              </span>
+            )}
           </p>
           {item.exampleMeaning && <p className="text-meta text-muted">{item.exampleMeaning}</p>}
         </div>
