@@ -712,7 +712,7 @@ export default function FreeChat({
                   </span>
                 </button>
               ) : voiceEnabled ? (
-                <button type="button" className="fc-start" disabled={busy} onClick={() => void startMic()} aria-label={stt ? t("practice.say.transcribing") : t("practice.say.record")} title={t("practice.say.startSpeakTitle")} aria-busy={stt}>
+                <button type="button" className="fc-mic-start" disabled={busy} onClick={() => void startMic()} aria-label={stt ? t("practice.say.transcribing") : t("practice.say.record")} title={t("practice.say.startSpeakTitle")} aria-busy={stt}>
                   <Mic size={16} aria-hidden /> {stt ? t("practice.say.transcribingShort") : t("practice.say.startSpeak")}
                 </button>
               ) : null}

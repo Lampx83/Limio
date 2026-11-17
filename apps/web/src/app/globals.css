@@ -3018,7 +3018,7 @@ textarea.fc-input {
 }
 
 /* Nút "Bắt đầu nói" ở khung gõ của bạn ảo: có chữ (cùng kiểu với "Kết thúc và gửi" khi đang ghi), không chỉ là biểu tượng micro. */
-.fc-start {
+.fc-mic-start {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -3035,10 +3035,10 @@ textarea.fc-input {
   cursor: pointer;
   white-space: nowrap;
 }
-.fc-start:hover:not(:disabled) {
+.fc-mic-start:hover:not(:disabled) {
   background: color-mix(in srgb, rgb(var(--brand)) 18%, transparent);
 }
-.fc-start:disabled {
+.fc-mic-start:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
