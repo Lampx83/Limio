@@ -4,6 +4,7 @@ import { prisma } from "@feedbackme/db";
 import { CertificationError, issueCertificate } from "@feedbackme/core-lms";
 import { requireUserId } from "@/lib/session";
 import { CertificatePdfDocument, buildCertificatePdfFilename } from "@/lib/certificatePdf";
+import { isM4aCourseSlug } from "@/lib/micro4asia";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,7 @@ export async function GET(
 
   const course = await prisma.course.findUnique({
     where: { slug: params.courseSlug },
-    select: { id: true, title: true },
+    select: { id: true, title: true, language: true },
   });
   if (!course) return NextResponse.json({ error: "course_not_found" }, { status: 404 });
 
@@ -80,6 +81,8 @@ export async function GET(
       totalStudySec: engagement._sum.activeSec ?? 0,
       certNumber: certificate.certNumber,
       verifyUrl,
+      courseLanguage: course.language,
+      isM4a: isM4aCourseSlug(params.courseSlug),
     }),
   );
 
