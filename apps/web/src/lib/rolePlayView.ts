@@ -141,6 +141,8 @@ export function hanTokens(text: string): Array<{ text: string; scored: boolean; 
 /** Nguyên âm của pinyin (có dấu thanh), dùng để tách âm tiết. */
 const PY_V = "aeiouüvāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜê";
 const PY_SYLLABLE = new RegExp(`^(?:zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?[${PY_V}]+(?:ng(?![${PY_V}])|n(?![${PY_V}]))?`);
+/** Âm tiết "er" (二 èr, 耳 ěr, 儿 ér): chữ "r" là một phần của âm tiết, không phải âm 儿 hoá gắn sau âm tiết khác. */
+const PY_ER = new RegExp(`^[eēéěè]r(?![${PY_V}])`);
 
 /**
  * Tách một từ pinyin giáo viên ghi liền ("xiǎomāo", "yìdiǎnr") thành các âm tiết. "n"/"ng" cuối chỉ dính vào âm tiết khi sau nó không phải nguyên âm; "r" lẻ ở cuối là âm 儿 (er hóa).
@@ -153,6 +155,12 @@ export function pinyinSyllables(word: string): string[] | null {
     if (out.length && rest === "r") {
       out.push("r");
       break;
+    }
+    const er = PY_ER.exec(rest);
+    if (er) {
+      out.push(er[0]);
+      rest = rest.slice(er[0].length);
+      continue;
     }
     const m = PY_SYLLABLE.exec(rest);
     if (!m) return null;

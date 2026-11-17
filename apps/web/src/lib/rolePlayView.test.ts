@@ -194,6 +194,11 @@ describe("pinyinSyllables / alignReading — pinyin thẳng hàng dưới từng
     expect(pinyinSyllables("yìdiǎnr")).toEqual(["yì", "diǎn", "r"]);
     expect(pinyinSyllables("nǚ")).toEqual(["nǚ"]);
     expect(pinyinSyllables("123")).toBeNull();
+    // âm tiết "er": chữ r thuộc về âm tiết (二, 耳, 儿子, 女儿), khác âm 儿 hoá gắn sau âm tiết khác (diǎnr)
+    expect(pinyinSyllables("èrshí")).toEqual(["èr", "shí"]);
+    expect(pinyinSyllables("ěrduo")).toEqual(["ěr", "duo"]);
+    expect(pinyinSyllables("érzi")).toEqual(["ér", "zi"]);
+    expect(pinyinSyllables("huār")).toEqual(["huā", "r"]);
   });
   it("ghép đủ một âm tiết cho mỗi chữ Hán, bỏ dấu câu", () => {
     const main = "这只小猫你们养了多久了?";
@@ -211,6 +216,9 @@ describe("pinyinSyllables / alignReading — pinyin thẳng hàng dưới từng
     expect(alignReading("我用 App 学习。", "Wǒ yòng App xuéxí.")).toBeNull();
     expect(alignReading("日本語です。", "Nihongo desu.")).toBeNull();
     expect(alignReading("你好", "")).toBeNull();
+    expect(alignReading("二十", "èrshí")).toEqual(["èr", "shí"]);
+    expect(alignReading("女儿", "nǚ'ér")).toEqual(["nǚ", "ér"]); // dấu ' tách âm tiết như chính tả pinyin
+    expect(alignReading("他有两个儿子。", "Tā yǒu liǎng ge érzi.")).toEqual(["tā", "yǒu", "liǎng", "ge", "ér", "zi"]);
   });
   it("mainTextLang phân biệt Trung/Nhật/Hàn", () => {
     expect(mainTextLang("你好吗？")).toBe("zh-Hans");
