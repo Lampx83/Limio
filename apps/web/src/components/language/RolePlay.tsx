@@ -5,8 +5,10 @@ import { Mic, Play, Square } from "lucide-react";
 import { formatClock } from "@/lib/audioRecorder";
 import { useAudioRecorder } from "@/components/useAudioRecorder";
 import { voiceErrorMessage } from "@/lib/practiceEssayView";
-import { answerTextOf, compareSpoken, otherRole, restoreSpoken, type RoleId, type RolePlayConfig } from "@/lib/rolePlayView";
+import { answerTextOf, compareSpoken, otherRole, restoreSpoken, splitReading, type RoleId, type RolePlayConfig } from "@/lib/rolePlayView";
 import { VoiceUseError } from "./EssayVoiceAnswer";
+import RubyText, { hanTextProps, rubyPlan } from "../RubyText";
+import HanFontLoader from "../HanFontLoader";
 import { useT, useUiLang } from "@/lib/i18n/client";
 
 /** Mỗi lượt ghi tối đa 30 giây (docs/tieu-chi/limio-language-luyen-hoi-thoai-dong-vai.md, AC1). */
@@ -168,7 +170,11 @@ export default function RolePlay({
         {rp.turns.map((turn, i) => {
           const isMine = turn.speaker === role;
           const heard = mine[i];
-          const cmp = isMine && heard !== undefined ? compareSpoken(turn.text, heard) : null;
+          // Câu mẫu có phiên âm kèm theo thì hiện hai dòng: chữ Hán (to) rồi pinyin (nhỏ, mờ). Phiên âm không tính điểm nên so khớp chỉ cần phần chính.
+          const { main, reading } = splitReading(turn.text);
+          const cmp = isMine && heard !== undefined ? compareSpoken(main, heard) : null;
+          const plan = rubyPlan(main, reading);
+          const syllables = plan.syllables;
           const label = t(isMine ? "practice.rp.turnLabelMine" : "practice.rp.turnLabelPartner", { n: i + 1, r: turn.speaker });
           return (
             <li key={i} className="rp-turn" data-mine={isMine ? "" : undefined} data-current={isMine && i === nextTurn && !recording ? "" : undefined} aria-label={label}>
@@ -176,8 +182,12 @@ export default function RolePlay({
                 {turn.speaker}
               </span>
               <div className="rp-body">
-                <p className="rp-text">
-                  {cmp ? (
+                <HanFontLoader lang={plan.lang} />
+                {/* Có pinyin ghép được từng chữ thì hiện thẳng hàng dưới chữ Hán; không thì hai dòng (chữ Hán rồi pinyin). */}
+                <p className={`rp-text ${hanTextProps(plan.lang).className} ${syllables ? "ruby-line" : ""}`} lang={plan.lang}>
+                  {syllables ? (
+                    <RubyText text={main} words={cmp?.words} syllables={syllables} />
+                  ) : cmp ? (
                     cmp.words.map((w, k) => (
                       <span key={k} className={w.ok ? undefined : "rp-miss"}>
                         {w.text}
@@ -185,44 +195,45 @@ export default function RolePlay({
                       </span>
                     ))
                   ) : (
-                    turn.text
+                    main
                   )}
                 </p>
+                {reading && !syllables && <p className="rp-reading py-latin">{reading}</p>}
 
-                {turn.audio && (
-                  <button type="button" className="rp-btn" onClick={() => (playing === i ? stopAudio() : void playTurn(i))} aria-label={playing === i ? t("practice.rp.stopTurn", { n: i + 1 }) : t("practice.rp.listenTurn", { n: i + 1 })}>
-                    {playing === i ? <Square size={14} aria-hidden /> : <Play size={14} aria-hidden />} {playing === i ? t("practice.say.stop") : t("practice.say.listen")}
-                  </button>
-                )}
-
-                {isMine && (
+                {(turn.audio || isMine) && (
                   <div className="rp-actions">
-                    {recording && recTurn === i ? (
-                      <>
-                        <button type="button" className="rp-btn rp-btn-primary" onClick={rec.stop} aria-label={t("practice.rp.stopCheckAria")}>
-                          <Square size={14} aria-hidden /> {t("practice.rp.stopCheck")}
-                        </button>
-                        <span role="timer" aria-live="off" className="rp-timer">
-                          <span className="rp-dot" aria-hidden /> {formatClock(rec.seconds)} / {formatClock(TURN_MAX_SECONDS)}
-                        </span>
-                      </>
-                    ) : busyTurn === i ? (
-                      <span className="rp-hint" aria-live="polite">
-                        {t("practice.rp.hearing")}
-                      </span>
-                    ) : (
-                      <>
-                        <button type="button" className="rp-btn rp-btn-primary" disabled={recTurn !== null || busyTurn !== null} onClick={() => void startRecording(i)}>
-                          <Mic size={14} aria-hidden /> {heard !== undefined ? t("practice.rp.rerecord") : t("practice.rp.record")}
-                        </button>
-                        {heard === undefined && !skipped[i] && (
-                          <button type="button" className="rp-link" disabled={recTurn !== null || busyTurn !== null} onClick={() => setSkipped((p) => ({ ...p, [i]: true }))}>
-                            {t("practice.rp.skip")}
-                          </button>
-                        )}
-                        {skipped[i] && heard === undefined && <span className="rp-hint">{t("practice.rp.skipped")}</span>}
-                      </>
+                    {turn.audio && (
+                      <button type="button" className="rp-btn" onClick={() => (playing === i ? stopAudio() : void playTurn(i))} aria-label={playing === i ? t("practice.rp.stopTurn", { n: i + 1 }) : t("practice.rp.listenTurn", { n: i + 1 })}>
+                        {playing === i ? <Square size={14} aria-hidden /> : <Play size={14} aria-hidden />} {playing === i ? t("practice.say.stop") : t("practice.say.listen")}
+                      </button>
                     )}
+                    {isMine &&
+                      (recording && recTurn === i ? (
+                        <>
+                          <button type="button" className="rp-btn rp-btn-primary" onClick={rec.stop} aria-label={t("practice.rp.stopCheckAria")}>
+                            <Square size={14} aria-hidden /> {t("practice.rp.stopCheck")}
+                          </button>
+                          <span role="timer" aria-live="off" className="rp-timer">
+                            <span className="rp-dot" aria-hidden /> {formatClock(rec.seconds)} / {formatClock(TURN_MAX_SECONDS)}
+                          </span>
+                        </>
+                      ) : busyTurn === i ? (
+                        <span className="rp-hint" aria-live="polite">
+                          {t("practice.rp.hearing")}
+                        </span>
+                      ) : (
+                        <>
+                          <button type="button" className="rp-btn rp-btn-primary" disabled={recTurn !== null || busyTurn !== null} onClick={() => void startRecording(i)}>
+                            <Mic size={14} aria-hidden /> {heard !== undefined ? t("practice.rp.rerecord") : t("practice.rp.record")}
+                          </button>
+                          {heard === undefined && !skipped[i] && (
+                            <button type="button" className="rp-link" disabled={recTurn !== null || busyTurn !== null} onClick={() => setSkipped((p) => ({ ...p, [i]: true }))}>
+                              {t("practice.rp.skip")}
+                            </button>
+                          )}
+                          {skipped[i] && heard === undefined && <span className="rp-hint">{t("practice.rp.skipped")}</span>}
+                        </>
+                      ))}
                   </div>
                 )}
 

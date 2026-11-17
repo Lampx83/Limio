@@ -11,6 +11,8 @@ vi.mock("next/dynamic", () => ({ default: () => () => null }));
 
 const AUDIO = "/api/lesson-media/audio/11111111-2222-4333-8444-555555555555-1790000000000-ab12cd34ef567890.mp3";
 const text = (out: string) => out.replace(/<[^>]+>/g, "");
+/** Chữ hiển thị bỏ phần pinyin dưới từng chữ (<rt>): để kiểm lời gốc liền mạch dù pinyin đã xen vào markup. */
+const plain = (out: string) => text(out.replace(/<rt\b[^>]*>.*?<\/rt>/g, ""));
 const count = (out: string, re: RegExp) => (out.match(re) ?? []).length;
 
 const items = [
@@ -149,10 +151,26 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
     renderToStaticMarkup(<DialogueView turns={turns} {...p} />);
 
   it("hiện người nói, lời, phiên âm và bản dịch", () => {
-    const t = text(render({ title: "Hội thoại bài 5", caption: "Nghe hai lần." }));
-    for (const s of ["Hội thoại bài 5", "Nghe hai lần.", "A", "B", "你好！", "Nǐ hǎo!", "Xin chào!", "好久不见"]) {
-      expect(t).toContain(s);
+    const out = render({ title: "Hội thoại bài 5", caption: "Nghe hai lần." });
+    for (const s of ["Hội thoại bài 5", "Nghe hai lần.", "A", "B", "你好！", "Xin chào!", "好久不见"]) {
+      expect(plain(out)).toContain(s);
     }
+    // Phiên âm ghép được từng chữ thì nằm dưới chữ Hán của nó (ruby), không còn ở dòng riêng.
+    expect(out).toContain("<ruby");
+    expect(text(out)).toContain("nǐ");
+    expect(text(out)).toContain("hǎo");
+    expect(text(out)).not.toContain("Nǐ hǎo!");
+  });
+
+  it("phiên âm không ghép được từng chữ (thiếu/thừa âm tiết) thì hiện ở dòng riêng bên dưới, không ghép bừa", () => {
+    const out = render({ turns: [{ id: "t1", speaker: "A", text: "你好吗？", reading: "Nǐ hǎo?" }] });
+    expect(out).not.toContain("<ruby");
+    expect(text(out)).toContain("Nǐ hǎo?");
+  });
+
+  it("chữ Hán có lang riêng để trình duyệt chọn đúng kiểu nét; lời không có chữ Hán thì không đặt lang", () => {
+    expect(render()).toContain('lang="zh-Hans"');
+    expect(render({ turns: [{ id: "e", speaker: "A", text: "Hello there" }] })).not.toContain("lang=");
   });
 
   it("K1: có lượt nào có audio thì có nút 'Nghe cả đoạn'; không có lượt nào có audio thì không", () => {
@@ -242,15 +260,15 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
     const both = render();
     expect(count(both, /data-masked="true"/g)).toBe(0);
     const noReading = render({ initialShowReading: false });
-    expect(count(noReading, /data-masked="true"/g)).toBe(1); // chỉ t1 có phiên âm
+    expect(count(noReading, /data-masked="true"/g)).toBe(2); // chỉ t1 có phiên âm: 2 âm tiết, mỗi âm tiết dưới một chữ
     const noTranslation = render({ initialShowTranslation: false });
     expect(count(noTranslation, /data-masked="true"/g)).toBe(2); // t1, t2 có bản dịch
     const neither = render({ initialShowReading: false, initialShowTranslation: false });
-    expect(count(neither, /data-masked="true"/g)).toBe(3);
-    // chữ gốc không bao giờ bị che
-    for (const s of ["你好！", "你好，好久不见。", "最近忙吗？"]) expect(text(neither)).toContain(s);
-    const lineOf = (s: string) => neither.split(s)[0]!.split("<").pop() ?? "";
-    expect(lineOf("你好！")).not.toContain("data-masked");
+    expect(count(neither, /data-masked="true"/g)).toBe(4); // 2 âm tiết của t1 + bản dịch t1, t2
+    // chữ gốc không bao giờ bị che: chỉ phiên âm (<rt>) bị che, chữ Hán nằm ngoài
+    for (const s of ["你好！", "你好，好久不见。", "最近忙吗？"]) expect(plain(neither)).toContain(s);
+    expect(neither).toContain("<span>你</span>");
+    expect(neither).toContain('<rt data-masked="true">nǐ</rt>');
   });
 
   it("nút 'Bản dịch' bật/tắt: tắt thì bản dịch được che, lời gốc vẫn hiện", () => {
@@ -258,7 +276,7 @@ describe("DialogueView — G2.3.3 / 2.3.4 / 2.3.5", () => {
     expect(count(render(), /data-masked="true"/g)).toBe(0);
     const hidden = render({ initialShowTranslation: false });
     expect(count(hidden, /data-masked="true"/g)).toBe(2); // t1 và t2 có bản dịch
-    expect(text(hidden)).toContain("你好！");
+    expect(plain(hidden)).toContain("你好！");
   });
 
   it("G2.3.4: HTML trong lời hiện nguyên chữ", () => {

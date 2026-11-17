@@ -2068,8 +2068,59 @@ main:has(.lp-large) .prose {
 }
 .rp-text {
   margin: 0;
-  font-size: 1.0625rem;
-  line-height: 1.5;
+  font-size: 1.125rem;
+  line-height: 1.55;
+}
+/* Phiên âm (pinyin, romaji…) nằm dòng riêng dưới chữ Hán: nhỏ hơn và mờ hơn để chữ Hán là thứ đầu tiên mắt đọc. */
+.rp-reading {
+  margin: -0.15rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: rgb(var(--text-muted));
+}
+
+/* Chữ Hán/Nhật/Hàn: khai báo font rõ ràng thay vì để mỗi máy tự chọn font dự phòng (Windows hay ra SimSun, Linux ra font tuỳ ý). Dùng font có sẵn trên máy, không tải thêm. */
+.han-text[lang="zh-Hans"] {
+  /* LXGW WenKai nạp theo từng mảnh bởi components/HanFontLoader (public/fonts/lxgw-wenkai); chưa tải xong thì dùng font hệ thống đứng sau. */
+  font-family: "LXGW WenKai", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+}
+.han-text[lang="ja"] {
+  font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", "Noto Sans JP", sans-serif;
+}
+.han-text[lang="ko"] {
+  font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", "Noto Sans KR", sans-serif;
+}
+/* Pinyin: font hệ thống có đủ dấu thanh (ǎ ǐ ǒ ǔ ǚ). Inter của trang chỉ nạp latin + vietnamese nên các dấu này bị vẽ bằng font khác, lệch nét giữa một dòng. */
+.py-latin,
+ruby.ruby-han > rt {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+/* Pinyin thẳng hàng dưới từng chữ Hán (ruby). Mỗi chữ là một ô dạng cột (chữ trên, pinyin dưới) có đệm hai bên: ô tự giãn theo bên rộng hơn nên các âm tiết không dính nhau
+   như khi để trình duyệt tự xếp ruby (pinyin tràn sang chữ bên cạnh). Pinyin nhỏ, mờ, không in đậm theo chữ Hán. */
+.ruby-line {
+  line-height: 1.3;
+}
+ruby.ruby-han {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: top;
+  padding: 0 0.14em;
+  margin-block: 0.15em;
+}
+ruby.ruby-han > rt {
+  display: block;
+  margin-top: 0.1em;
+  font-size: 0.6em;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: rgb(var(--text-muted));
+  user-select: none; /* bôi đen để sao chép/tra từ chỉ lấy chữ Hán, không lẫn pinyin xen giữa */
+}
+ruby.ruby-han > rt[data-masked="true"] {
+  filter: blur(4px);
 }
 .rp-miss {
   color: var(--ps-no, #c62828);

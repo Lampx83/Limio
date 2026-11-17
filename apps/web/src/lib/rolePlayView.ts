@@ -98,20 +98,101 @@ function lcsMark(ek: string[], hk: string[]): { ok: boolean[]; used: boolean[] }
   return { ok, used };
 }
 
+/** Chữ thuộc hệ chữ không phải Latin của câu mẫu (Hán, kana, Hangul): phần câu mẫu "chính" kết thúc ở chữ cuối cùng thuộc nhóm này. */
+const NON_LATIN_SCRIPT = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
+/** Dấu câu đứng sát sau chữ cuối: đi cùng phần chính, không đẩy xuống dòng phiên âm. */
+const TRAILING_PUNCT = /^[\s。，、！？；：…“”‘’「」）)!?.,;:"'~～—-]*/;
+
+/**
+ * Tách câu mẫu thành phần chính (chữ Hán/kana/Hangul, kèm dấu câu) và phần phiên âm giáo viên ghi kèm (pinyin, romaji…) đứng sau, để hiện thành hai dòng.
+ * Câu không có chữ Hán/kana/Hangul, hoặc không có phiên âm đi sau, thì giữ nguyên làm phần chính và `reading` rỗng.
+ */
+export function splitReading(text: string): { main: string; reading: string } {
+  const t = text.trim();
+  let last = -1;
+  for (let i = t.length - 1; i >= 0; i--) {
+    if (NON_LATIN_SCRIPT.test(t[i]!)) {
+      last = i;
+      break;
+    }
+  }
+  if (last < 0) return { main: t, reading: "" };
+  const rest = t.slice(last + 1);
+  const punct = TRAILING_PUNCT.exec(rest)![0];
+  const tail = rest.slice(punct.length).trim();
+  if (!/\p{L}/u.test(tail)) return { main: t, reading: "" };
+  return { main: t.slice(0, last + 1 + punct.length).trim(), reading: tail };
+}
+
 /** Chữ Hán (gồm khối mở rộng A). Câu mẫu có chữ Hán thì so TỪNG CHỮ HÁN: tiếng Trung không có dấu cách giữa các từ. */
 const HAN = /[\u3400-\u9fff]/;
+
+/** Cắt câu mẫu thành đơn vị hiển thị: mỗi chữ Hán một đơn vị (`scored`), mỗi đoạn không phải chữ Hán (dấu câu, "App"…) một đơn vị; `sep` = " " nếu sau nó có khoảng trắng. */
+export function hanTokens(text: string): Array<{ text: string; scored: boolean; sep: string }> {
+  const tokens: Array<{ text: string; scored: boolean; sep: string }> = [];
+  for (const m of text.matchAll(/([\u3400-\u9fff])|([^\u3400-\u9fff\s]+)|(\s+)/g)) {
+    if (m[3] !== undefined) {
+      if (tokens.length) tokens[tokens.length - 1]!.sep = " ";
+    } else tokens.push({ text: m[0], scored: m[1] !== undefined, sep: "" });
+  }
+  return tokens;
+}
+
+/** Nguyên âm của pinyin (có dấu thanh), dùng để tách âm tiết. */
+const PY_V = "aeiouüvāáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜê";
+const PY_SYLLABLE = new RegExp(`^(?:zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw])?[${PY_V}]+(?:ng(?![${PY_V}])|n(?![${PY_V}]))?`);
+
+/**
+ * Tách một từ pinyin giáo viên ghi liền ("xiǎomāo", "yìdiǎnr") thành các âm tiết. "n"/"ng" cuối chỉ dính vào âm tiết khi sau nó không phải nguyên âm; "r" lẻ ở cuối là âm 儿 (er hóa).
+ * Gặp gì không tách nổi thì trả null (người gọi rơi về cách hiện hai dòng).
+ */
+export function pinyinSyllables(word: string): string[] | null {
+  const out: string[] = [];
+  let rest = word.toLowerCase();
+  while (rest) {
+    if (out.length && rest === "r") {
+      out.push("r");
+      break;
+    }
+    const m = PY_SYLLABLE.exec(rest);
+    if (!m) return null;
+    out.push(m[0]);
+    rest = rest.slice(m[0].length);
+  }
+  return out;
+}
+
+/**
+ * Ghép pinyin vào TỪNG chữ Hán của phần chính để hiện thẳng hàng dưới chữ (kiểu giáo trình). Trả đúng một âm tiết cho mỗi chữ Hán theo thứ tự, hoặc null khi không ghép chắc được:
+ * phần chính có chữ Latin/kana/Hangul, hoặc số âm tiết khác số chữ Hán (pinyin thiếu/thừa, sai chính tả…). Khi đó hiện pinyin ở dòng riêng, không ghép bừa.
+ */
+export function alignReading(main: string, reading: string): string[] | null {
+  if (!reading || /[A-Za-z\u3040-\u30ff\uac00-\ud7af]/.test(main)) return null;
+  const hanCount = [...main].filter((c) => HAN.test(c)).length;
+  const syl: string[] = [];
+  for (const raw of reading.split(/[\s'’\-]+/)) {
+    const word = raw.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, "");
+    if (!word) continue;
+    const parts = pinyinSyllables(word);
+    if (!parts) return null;
+    syl.push(...parts);
+  }
+  return syl.length === hanCount && hanCount > 0 ? syl : null;
+}
+
+/** Ngôn ngữ của phần chính để trình duyệt chọn đúng kiểu chữ (chữ Hán dùng chung giữa Trung/Nhật; không đặt lang thì dễ ra nét kiểu Nhật). */
+export function mainTextLang(main: string): "zh-Hans" | "ja" | "ko" | undefined {
+  if (/[\u3040-\u30ff]/.test(main)) return "ja";
+  if (/[\uac00-\ud7af]/.test(main)) return "ko";
+  return HAN.test(main) ? "zh-Hans" : undefined;
+}
 
 /**
  * So lời học viên nói với câu mẫu tiếng Trung. Mỗi chữ Hán là một đơn vị (phồn thể và giản thể coi là một); mọi chữ không phải chữ Hán trong câu mẫu (phiên âm pinyin giáo viên
  * ghi kèm, dấu câu, "App"…) chỉ để HIỆN, không tính điểm; trong lời nghe được cũng chỉ lấy chữ Hán (máy không "nói" dấu câu hay pinyin).
  */
 function compareSpokenHan(expected: string, spoken: string): SpokenComparison {
-  const tokens: Array<{ text: string; scored: boolean; sep: string }> = [];
-  for (const m of expected.matchAll(/([\u3400-\u9fff])|([^\u3400-\u9fff\s]+)|(\s+)/g)) {
-    if (m[3] !== undefined) {
-      if (tokens.length) tokens[tokens.length - 1]!.sep = " ";
-    } else tokens.push({ text: m[0], scored: m[1] !== undefined, sep: "" });
-  }
+  const tokens = hanTokens(expected);
   const scoredIdx = tokens.flatMap((t, k) => (t.scored ? [k] : []));
   const ek = scoredIdx.map((k) => tokens[k]!.text);
   const heard = [...spoken].filter((c) => HAN.test(c));

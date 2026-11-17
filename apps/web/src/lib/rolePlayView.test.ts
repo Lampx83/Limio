@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { restoreSpoken, answerTextOf, compareSpoken, otherRole, parseRolePlay, parseScript, scriptTextOf, wordKey } from "./rolePlayView";
+import { restoreSpoken, answerTextOf, compareSpoken, otherRole, parseRolePlay, parseScript, scriptTextOf, splitReading, alignReading, pinyinSyllables, mainTextLang, wordKey } from "./rolePlayView";
 
 const cfg = {
   roleplay: {
@@ -150,5 +150,72 @@ describe("compareSpoken — máy trả chữ phồn thể, câu mẫu giản th�
   it("câu mẫu viết phồn thể thì nói giản thể cũng khớp", () => {
     const r = compareSpoken("你好嗎？", "你好吗");
     expect(r.okCount).toBe(r.total);
+  });
+});
+
+describe("splitReading — tách chữ Hán và phiên âm để hiện hai dòng", () => {
+  it("câu có pinyin đi sau: chữ Hán (kèm dấu câu) là phần chính, pinyin là dòng phiên âm", () => {
+    expect(splitReading("这只小猫你们养了多久了?  Zhè zhī xiǎomāo nǐmen yǎng le duō jiǔ le?")).toEqual({
+      main: "这只小猫你们养了多久了?",
+      reading: "Zhè zhī xiǎomāo nǐmen yǎng le duō jiǔ le?",
+    });
+    expect(splitReading("已经一年多了。第一天看见它的时候，它又脏又小。 Yǐjīng yì nián duō le. Dìyī tiān kànjiàn tā.")).toEqual({
+      main: "已经一年多了。第一天看见它的时候，它又脏又小。",
+      reading: "Yǐjīng yì nián duō le. Dìyī tiān kànjiàn tā.",
+    });
+  });
+  it("chữ Latin lẫn trong câu chữ Hán vẫn ở phần chính", () => {
+    expect(splitReading("我用 App 学习。 Wǒ yòng App xuéxí.")).toEqual({ main: "我用 App 学习。", reading: "Wǒ yòng App xuéxí." });
+  });
+  it("tiếng Nhật: kana cũng là phần chính, romaji là phiên âm", () => {
+    expect(splitReading("日本語です。 Nihongo desu.")).toEqual({ main: "日本語です。", reading: "Nihongo desu." });
+  });
+  it("không có phiên âm đi sau, hoặc câu không có chữ Hán, thì giữ nguyên", () => {
+    expect(splitReading("你好吗？")).toEqual({ main: "你好吗？", reading: "" });
+    expect(splitReading("I’ve got that, too.")).toEqual({ main: "I’ve got that, too.", reading: "" });
+    expect(splitReading("")).toEqual({ main: "", reading: "" });
+  });
+  it("tách xong chấm điểm vẫn như cũ: phiên âm không tính", () => {
+    const text = "你好吗？ Nǐ hǎo ma?";
+    const a = compareSpoken(text, "你好吗");
+    const b = compareSpoken(splitReading(text).main, "你好吗");
+    expect([b.okCount, b.total]).toEqual([a.okCount, a.total]);
+  });
+});
+
+describe("pinyinSyllables / alignReading — pinyin thẳng hàng dưới từng chữ Hán", () => {
+  it("tách từ ghi liền thành âm tiết", () => {
+    expect(pinyinSyllables("xiǎomāo")).toEqual(["xiǎo", "māo"]);
+    expect(pinyinSyllables("nǐmen")).toEqual(["nǐ", "men"]);
+    expect(pinyinSyllables("Yǐjīng")).toEqual(["yǐ", "jīng"]);
+    expect(pinyinSyllables("xiānggǎng")).toEqual(["xiāng", "gǎng"]);
+    expect(pinyinSyllables("piàoliang")).toEqual(["piào", "liang"]);
+    expect(pinyinSyllables("gānjìng")).toEqual(["gān", "jìng"]);
+    expect(pinyinSyllables("yìdiǎnr")).toEqual(["yì", "diǎn", "r"]);
+    expect(pinyinSyllables("nǚ")).toEqual(["nǚ"]);
+    expect(pinyinSyllables("123")).toBeNull();
+  });
+  it("ghép đủ một âm tiết cho mỗi chữ Hán, bỏ dấu câu", () => {
+    const main = "这只小猫你们养了多久了?";
+    const reading = "Zhè zhī xiǎomāo nǐmen yǎng le duō jiǔ le?";
+    expect(alignReading(main, reading)).toEqual(["zhè", "zhī", "xiǎo", "māo", "nǐ", "men", "yǎng", "le", "duō", "jiǔ", "le"]);
+  });
+  it("câu nhiều đoạn, dấu phẩy, chấm", () => {
+    const syl = alignReading("已经一年多了。第一天看见它的时候，它又脏又小。", "Yǐjīng yì nián duō le. Dìyī tiān kànjiàn tā de shíhou, tā yòu zāng yòu xiǎo.");
+    expect(syl).toHaveLength(20);
+    expect(syl?.[0]).toBe("yǐ");
+    expect(syl?.[19]).toBe("xiǎo");
+  });
+  it("số âm tiết khác số chữ Hán, hoặc có chữ Latin/kana, thì không ghép (null)", () => {
+    expect(alignReading("你好吗？", "Nǐ hǎo?")).toBeNull();
+    expect(alignReading("我用 App 学习。", "Wǒ yòng App xuéxí.")).toBeNull();
+    expect(alignReading("日本語です。", "Nihongo desu.")).toBeNull();
+    expect(alignReading("你好", "")).toBeNull();
+  });
+  it("mainTextLang phân biệt Trung/Nhật/Hàn", () => {
+    expect(mainTextLang("你好吗？")).toBe("zh-Hans");
+    expect(mainTextLang("日本語です。")).toBe("ja");
+    expect(mainTextLang("안녕하세요")).toBe("ko");
+    expect(mainTextLang("Hello")).toBeUndefined();
   });
 });

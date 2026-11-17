@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Eye, Pause, Square, Volume2 } from "lucide-react";
 import AudioLessonPlayer, { type AudioControl } from "./AudioLessonPlayer";
+import RubyText, { hanTextProps, rubyPlan } from "./RubyText";
+import HanFontLoader from "./HanFontLoader";
 import { activeTurnIndex, hasMarks, turnClickAction } from "@/lib/dialogueTiming";
 import { getBrowserAudioPlayer } from "@/lib/exclusiveAudio";
 import { SOURCE_TEXT_COLOR } from "@/lib/langText";
@@ -201,6 +203,7 @@ export default function DialogueView({
           const initial = (graphemes[0] ?? "?").toUpperCase();
           // Tên dài hơn một ký tự thì avatar không đủ phân biệt → in tên nhỏ trước lời.
           const showName = graphemes.length > 1;
+          const plan = rubyPlan(t.text, t.reading);
           return (
             <li
               key={t.id}
@@ -263,17 +266,22 @@ export default function DialogueView({
                     </button>
                   )}
                   {!t.audioUrl && hasTurnAudio && <span className="h-7 w-7 shrink-0" aria-hidden />}
-                  <p className={`min-w-0 text-xl font-medium leading-snug ${SOURCE_TEXT_COLOR}`}>
-                    {showName && (
-                      <span className={`mr-2 align-middle text-caption font-semibold ${tone.name}`}>{t.speaker}</span>
-                    )}
-                    {t.text}
-                  </p>
+                  <div className="min-w-0">
+                    <HanFontLoader lang={plan.lang} />
+                    {showName && <p className={`text-caption font-semibold ${tone.name}`}>{t.speaker}</p>}
+                    {/* Pinyin ghép được từng chữ thì hiện thẳng hàng dưới chữ Hán; không thì để ở dòng riêng bên dưới. */}
+                    <p
+                      lang={plan.lang}
+                      className={`text-xl font-medium ${plan.syllables ? "ruby-line" : "leading-snug"} ${hanTextProps(plan.lang).className} ${SOURCE_TEXT_COLOR}`}
+                    >
+                      {plan.syllables ? <RubyText text={t.text} syllables={plan.syllables} masked={!showReading} /> : t.text}
+                    </p>
+                  </div>
                 </div>
-                {t.reading && (
+                {t.reading && !plan.syllables && (
                   <p
                     data-masked={showReading ? undefined : "true"}
-                    className={`text-meta text-muted ${hasTurnAudio ? "pl-9" : ""} ${showReading ? "" : "select-none blur-sm"}`}
+                    className={`text-meta text-muted py-latin ${hasTurnAudio ? "pl-9" : ""} ${showReading ? "" : "select-none blur-sm"}`}
                   >
                     {t.reading}
                   </p>
@@ -282,7 +290,7 @@ export default function DialogueView({
               {t.translation && (
                 <p
                   data-masked={showTranslation ? undefined : "true"}
-                  className={`col-start-2 text-meta text-muted md:col-start-3 md:row-start-1 ${
+                  className={`col-start-2 text-body text-muted md:col-start-3 md:row-start-1 ${
                     showTranslation ? "" : "select-none blur-sm"
                   }`}
                 >
